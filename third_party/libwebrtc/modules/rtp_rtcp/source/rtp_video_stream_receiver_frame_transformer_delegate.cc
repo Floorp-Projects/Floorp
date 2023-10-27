@@ -46,7 +46,7 @@ class TransformableVideoReceiverFrame
   }
 
   uint8_t GetPayloadType() const override { return frame_->PayloadType(); }
-  uint32_t GetSsrc() const override { return metadata_.GetSsrc(); }
+  uint32_t GetSsrc() const override { return Metadata().GetSsrc(); }
   uint32_t GetTimestamp() const override { return frame_->Timestamp(); }
   void SetRTPTimestamp(uint32_t timestamp) override {
     frame_->SetTimestamp(timestamp);
@@ -63,9 +63,16 @@ class TransformableVideoReceiverFrame
 
   VideoFrameMetadata Metadata() const override { return metadata_; }
 
-  void SetMetadata(const VideoFrameMetadata&) override {
-    RTC_DCHECK_NOTREACHED()
-        << "TransformableVideoReceiverFrame::SetMetadata is not implemented";
+  void SetMetadata(const VideoFrameMetadata& metadata) override {
+    // Create |new_metadata| from existing metadata and change only frameId and
+    // dependencies.
+    VideoFrameMetadata new_metadata = Metadata();
+    new_metadata.SetFrameId(metadata.GetFrameId());
+    new_metadata.SetFrameDependencies(metadata.GetFrameDependencies());
+    RTC_DCHECK(new_metadata == metadata)
+        << "TransformableVideoReceiverFrame::SetMetadata can be only used to "
+           "change frameID and dependencies";
+    frame_->SetHeaderFromMetadata(new_metadata);
   }
 
   std::unique_ptr<RtpFrameObject> ExtractFrame() && {

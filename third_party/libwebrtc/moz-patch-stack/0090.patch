@@ -150,7 +150,7 @@ index 8b32b8d7c8..7547785ea0 100644
    // happen if a hardware encoder was used.
    std::unique_ptr<TaskQueueBase, TaskQueueDeleter> transformation_queue_;
 diff --git a/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.cc b/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.cc
-index 5dd316e206..5c6b62d068 100644
+index 79a3238522..99fc711579 100644
 --- a/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.cc
 +++ b/modules/rtp_rtcp/source/rtp_video_stream_receiver_frame_transformer_delegate.cc
 @@ -56,6 +56,11 @@ class TransformableVideoReceiverFrame
@@ -164,4 +164,4 @@ index 5dd316e206..5c6b62d068 100644
 +
    VideoFrameMetadata Metadata() const override { return metadata_; }
  
-   void SetMetadata(const VideoFrameMetadata&) override {
+   void SetMetadata(const VideoFrameMetadata& metadata) override {
