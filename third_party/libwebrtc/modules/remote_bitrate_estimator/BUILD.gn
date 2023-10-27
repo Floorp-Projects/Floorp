@@ -46,6 +46,7 @@ rtc_library("remote_bitrate_estimator") {
     "../../modules:module_api_public",
     "../../modules/congestion_controller/goog_cc:link_capacity_estimator",
     "../../modules/rtp_rtcp:rtp_rtcp_format",
+    "../../rtc_base:bitrate_tracker",
     "../../rtc_base:checks",
     "../../rtc_base:logging",
     "../../rtc_base:rate_statistics",

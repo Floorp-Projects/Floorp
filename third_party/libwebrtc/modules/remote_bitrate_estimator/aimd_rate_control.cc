@@ -152,7 +152,7 @@ DataRate AimdRateControl::Update(const RateControlInput& input,
   // TODO(bugs.webrtc.org/9379): The comment above doesn't match to the code.
   if (!bitrate_is_initialized_) {
     const TimeDelta kInitializationTime = TimeDelta::Seconds(5);
-    RTC_DCHECK_LE(kBitrateWindowMs, kInitializationTime.ms());
+    RTC_DCHECK_LE(kBitrateWindow, kInitializationTime);
     if (time_first_throughput_estimate_.IsInfinite()) {
       if (input.estimated_throughput)
         time_first_throughput_estimate_ = at_time;
