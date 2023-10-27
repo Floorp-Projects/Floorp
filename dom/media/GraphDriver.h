@@ -538,7 +538,6 @@ struct TrackAndPromiseForOperation {
   MozPromiseHolder<MediaTrackGraph::AudioContextOperationPromise> mHolder;
 };
 
-enum class AsyncCubebOperation { INIT, NAME_CHANGE, SHUTDOWN };
 enum class AudioInputType { Unknown, Voice };
 
 /**
@@ -669,7 +668,7 @@ class AudioCallbackDriver : public GraphDriver, public MixerCallbackReceiver {
   void DeviceChangedCallback();
   /* Start the cubeb stream */
   bool StartStream();
-  friend class AsyncCubebTask;
+  friend class MediaTrackGraphInitThreadRunnable;
   void Init(const nsCString& aStreamName);
   void SetCubebStreamName(const nsCString& aStreamName);
   void Stop();
@@ -692,7 +691,7 @@ class AudioCallbackDriver : public GraphDriver, public MixerCallbackReceiver {
 
   /* This is true when the method is executed on CubebOperation thread pool. */
   bool OnCubebOperationThread() {
-    return mInitShutdownThread->IsOnCurrentThreadInfallible();
+    return mCubebOperationThread->IsOnCurrentThreadInfallible();
   }
 
   /* MediaTrackGraphs are always down/up mixed to output channels. */
@@ -730,8 +729,9 @@ class AudioCallbackDriver : public GraphDriver, public MixerCallbackReceiver {
   };
 
   /* Shared thread pool with up to one thread for off-main-thread
-   * initialization and shutdown of the audio stream via AsyncCubebTask. */
-  const RefPtr<SharedThreadPool> mInitShutdownThread;
+   * initialization and shutdown of the audio stream and for other tasks that
+   * must run serially for access to mAudioStream. */
+  const RefPtr<SharedThreadPool> mCubebOperationThread;
   cubeb_device_pref mInputDevicePreference;
   /* The mixer that the graph mixes into during an iteration. Audio thread only.
    */
@@ -745,10 +745,10 @@ class AudioCallbackDriver : public GraphDriver, public MixerCallbackReceiver {
   /* State of the audio stream, see inline comments. */
   enum class AudioStreamState {
     /* There is no cubeb_stream or mAudioStream is in CUBEB_STATE_ERROR or
-     * CUBEB_STATE_STOPPED and no pending AsyncCubebTask exists to INIT a new
+     * CUBEB_STATE_STOPPED and no pending task exists to Init() a new
      * cubeb_stream. */
     None,
-    /* An AsyncCubebTask to INIT a new cubeb_stream is pending. */
+    /* A task to Init() a new cubeb_stream is pending. */
     Pending,
     /* cubeb_start_stream() is about to be or has been called on mAudioStream.
      * Any previous cubeb_streams have been destroyed. */
@@ -791,33 +791,6 @@ class AudioCallbackDriver : public GraphDriver, public MixerCallbackReceiver {
 
   virtual ~AudioCallbackDriver();
   const bool mSandboxed = false;
-};
-
-class AsyncCubebTask : public Runnable {
- public:
-  // aName is not required for AsyncCubebOperation::SHUTDOWN
-  AsyncCubebTask(AudioCallbackDriver* aDriver, AsyncCubebOperation aOperation,
-                 const nsACString& aName = VoidCString());
-
-  nsresult Dispatch(uint32_t aFlags = NS_DISPATCH_NORMAL) {
-    return mDriver->mInitShutdownThread->Dispatch(this, aFlags);
-  }
-
-  nsresult DispatchAndSpinEventLoopUntilComplete(
-      const nsACString& aVeryGoodReasonToDoThis) {
-    return NS_DispatchAndSpinEventLoopUntilComplete(
-        aVeryGoodReasonToDoThis, mDriver->mInitShutdownThread, do_AddRef(this));
-  }
-
- protected:
-  virtual ~AsyncCubebTask();
-
- private:
-  NS_IMETHOD Run() final;
-
-  RefPtr<AudioCallbackDriver> mDriver;
-  AsyncCubebOperation mOperation;
-  nsCString mName;
 };
 
 }  // namespace mozilla
