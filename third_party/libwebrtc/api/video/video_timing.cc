@@ -10,6 +10,8 @@
 
 #include "api/video/video_timing.h"
 
+#include <algorithm>
+
 #include "api/array_view.h"
 #include "api/units/time_delta.h"
 #include "rtc_base/logging.h"
@@ -96,6 +98,25 @@ std::string TimingFrameInfo::ToString() const {
      << IsTimerTriggered();
 
   return sb.str();
+}
+
+VideoPlayoutDelay::VideoPlayoutDelay(TimeDelta min, TimeDelta max)
+    : min_ms(std::clamp(min, TimeDelta::Zero(), kMax).ms()),
+      max_ms(std::clamp(max, min, kMax).ms()) {
+  if (!(TimeDelta::Zero() <= min && min <= max && max <= kMax)) {
+    RTC_LOG(LS_ERROR) << "Invalid video playout delay: [" << min << "," << max
+                      << "]. Clamped to [" << this->min() << "," << this->max()
+                      << "]";
+  }
+}
+
+bool VideoPlayoutDelay::Set(TimeDelta min, TimeDelta max) {
+  if (TimeDelta::Zero() <= min && min <= max && max <= kMax) {
+    min_ms = min.ms();
+    max_ms = max.ms();
+    return true;
+  }
+  return false;
 }
 
 }  // namespace webrtc

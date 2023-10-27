@@ -700,13 +700,10 @@ void VideoReceiveStream2::RequestKeyFrame(Timestamp now) {
 void VideoReceiveStream2::OnCompleteFrame(std::unique_ptr<EncodedFrame> frame) {
   RTC_DCHECK_RUN_ON(&worker_sequence_checker_);
 
-  const VideoPlayoutDelay& playout_delay = frame->EncodedImage().playout_delay_;
-  if (playout_delay.min_ms >= 0) {
-    frame_minimum_playout_delay_ = TimeDelta::Millis(playout_delay.min_ms);
-    UpdatePlayoutDelays();
-  }
-  if (playout_delay.max_ms >= 0) {
-    frame_maximum_playout_delay_ = TimeDelta::Millis(playout_delay.max_ms);
+  if (absl::optional<VideoPlayoutDelay> playout_delay =
+          frame->EncodedImage().PlayoutDelay()) {
+    frame_minimum_playout_delay_ = playout_delay->min();
+    frame_maximum_playout_delay_ = playout_delay->max();
     UpdatePlayoutDelays();
   }
 
