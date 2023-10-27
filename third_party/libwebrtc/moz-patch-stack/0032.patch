@@ -193,7 +193,7 @@ index 661e36f16a..155e3862af 100644
      } else {
        deps += [
 diff --git a/api/BUILD.gn b/api/BUILD.gn
-index ca5a869a40..9a60e912ec 100644
+index b2a7947c77..9acc8d9949 100644
 --- a/api/BUILD.gn
 +++ b/api/BUILD.gn
 @@ -35,7 +35,7 @@ rtc_source_set("callfactory_api") {
@@ -722,7 +722,7 @@ index e7e84c781c..5b41a9ccda 100644
  using webrtc::FrameDecryptorInterface;
  using webrtc::FrameEncryptorInterface;
 diff --git a/modules/audio_coding/BUILD.gn b/modules/audio_coding/BUILD.gn
-index 1420aa6385..143a6eca41 100644
+index 8f5019b4c2..06f7e64f11 100644
 --- a/modules/audio_coding/BUILD.gn
 +++ b/modules/audio_coding/BUILD.gn
 @@ -553,7 +553,7 @@ rtc_library("webrtc_opus_wrapper") {
@@ -735,7 +735,7 @@ index 1420aa6385..143a6eca41 100644
  }
  
 diff --git a/modules/audio_device/BUILD.gn b/modules/audio_device/BUILD.gn
-index 162981c427..0bfad84206 100644
+index f1ab09d154..4726f93279 100644
 --- a/modules/audio_device/BUILD.gn
 +++ b/modules/audio_device/BUILD.gn
 @@ -30,6 +30,7 @@ rtc_source_set("audio_device_default") {
@@ -744,7 +744,7 @@ index 162981c427..0bfad84206 100644
  rtc_source_set("audio_device") {
 +if (!build_with_mozilla) { # See Bug 1820869.
    visibility = [ "*" ]
-   public_deps = [
+   public_deps += [  # no-presubmit-check TODO(webrtc:8603)
      ":audio_device_api",
 @@ -40,6 +41,7 @@ rtc_source_set("audio_device") {
      ":audio_device_impl",
@@ -1225,7 +1225,7 @@ index 77f5139a2f..486b37590c 100644
      deps += [
        "..:logging",
 diff --git a/test/BUILD.gn b/test/BUILD.gn
-index 89b934e596..6cc033318e 100644
+index e8d4fdbc04..0ec960e46b 100644
 --- a/test/BUILD.gn
 +++ b/test/BUILD.gn
 @@ -241,6 +241,7 @@ rtc_library("audio_test_common") {
@@ -1257,7 +1257,7 @@ index 89b934e596..6cc033318e 100644
  
    deps = [
      "../api:array_view",
-@@ -561,7 +567,9 @@ rtc_library("video_test_support") {
+@@ -560,7 +566,9 @@ rtc_library("video_test_support") {
    absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
  
    if (!is_ios) {
@@ -1267,7 +1267,7 @@ index 89b934e596..6cc033318e 100644
      sources += [ "testsupport/jpeg_frame_writer.cc" ]
    } else {
      sources += [ "testsupport/jpeg_frame_writer_ios.cc" ]
-@@ -1320,6 +1328,7 @@ if (!build_with_chromium) {
+@@ -1319,6 +1327,7 @@ if (!build_with_chromium) {
    }
  }
  
@@ -1275,7 +1275,7 @@ index 89b934e596..6cc033318e 100644
  if (!build_with_chromium && is_android) {
    rtc_android_library("native_test_java") {
      testonly = true
-@@ -1333,6 +1342,7 @@ if (!build_with_chromium && is_android) {
+@@ -1332,6 +1341,7 @@ if (!build_with_chromium && is_android) {
      ]
    }
  }
@@ -1306,7 +1306,7 @@ index e0ef6fab8f..33c9e82c9e 100644
      "../api/adaptation:resource_adaptation_api",
      "../api/task_queue:pending_task_safety_flag",
 diff --git a/webrtc.gni b/webrtc.gni
-index 7c53911b82..27ae728817 100644
+index f0729175f0..ff01196517 100644
 --- a/webrtc.gni
 +++ b/webrtc.gni
 @@ -35,6 +35,11 @@ if (is_mac) {
@@ -1378,7 +1378,7 @@ index 7c53911b82..27ae728817 100644
    # Experimental: enable use of Android AAudio which requires Android SDK 26 or above
    # and NDK r16 or above.
    rtc_enable_android_aaudio = false
-@@ -271,7 +278,7 @@ declare_args() {
+@@ -280,7 +287,7 @@ declare_args() {
    rtc_build_json = !build_with_mozilla
    rtc_build_libsrtp = !build_with_mozilla
    rtc_build_libvpx = !build_with_mozilla
@@ -1387,7 +1387,7 @@ index 7c53911b82..27ae728817 100644
    rtc_build_opus = !build_with_mozilla
    rtc_build_ssl = !build_with_mozilla
  
-@@ -290,7 +297,7 @@ declare_args() {
+@@ -299,7 +306,7 @@ declare_args() {
  
    # Chromium uses its own IO handling, so the internal ADM is only built for
    # standalone WebRTC.
@@ -1396,7 +1396,7 @@ index 7c53911b82..27ae728817 100644
  
    # Set this to true to enable the avx2 support in webrtc.
    # TODO: Make sure that AVX2 works also for non-clang compilers.
-@@ -334,6 +341,9 @@ declare_args() {
+@@ -343,6 +350,9 @@ declare_args() {
    rtc_enable_grpc = rtc_enable_protobuf && (is_linux || is_mac)
  }
  
@@ -1406,7 +1406,7 @@ index 7c53911b82..27ae728817 100644
  # Make it possible to provide custom locations for some libraries (move these
  # up into declare_args should we need to actually use them for the GN build).
  rtc_libvpx_dir = "//third_party/libvpx"
-@@ -1132,7 +1142,7 @@ if (is_mac || is_ios) {
+@@ -1147,7 +1157,7 @@ if (is_mac || is_ios) {
    }
  }
  
