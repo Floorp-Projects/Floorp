@@ -159,7 +159,7 @@ ifeq (.,$(DEPTH))
 # This is required so that the pre-export tier sees the rules in
 # mobile/android
 ifeq ($(MOZ_WIDGET_TOOLKIT),android)
-recurse_pre-export:: mobile/android/pre-export
+recurse_pre-export: mobile/android/pre-export
 endif
 
 # CSS2Properties.webidl needs ServoCSSPropList.py from layout/style
@@ -234,7 +234,7 @@ $(addprefix build/unix/stdc++compat/,target host) build/clang-plugin/host: confi
 # that run cbindgen, tricking Make into keeping them early.
 $(rust_targets): $(DEPTH)/.cargo/config
 ifndef TEST_MOZBUILD
-pre-export:: $(DEPTH)/.cargo/config
+recurse_pre-export: $(DEPTH)/.cargo/config
 endif
 
 # When building gtest as part of the build (LINK_GTEST_DURING_COMPILE),

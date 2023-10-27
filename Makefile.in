@@ -28,6 +28,8 @@ $(MDDEPDIR)/buildid.h.stub $(MDDEPDIR)/source-repo.h.stub: FORCE
 endif
 source-repo.h: $(MDDEPDIR)/source-repo.h.stub
 buildid.h: $(MDDEPDIR)/buildid.h.stub
+# Add explicit dependencies that moz.build can't declare yet.
+build/$(MDDEPDIR)/application.ini.stub: source-repo.h buildid.h
 
 BUILD_BACKEND_FILES := $(addprefix backend.,$(addsuffix Backend,$(BUILD_BACKENDS)))
 
@@ -98,11 +100,11 @@ install-test-files:
 include $(topsrcdir)/build/moz-automation.mk
 
 # Dummy rule for the cases below where we don't depend on dist/include
-recurse_pre-export::
+recurse_pre-export:
 
 # For the binaries rule, not all the install manifests matter, so force only
 # the interesting ones to be done.
-recurse_pre-export:: install-manifests
+recurse_pre-export: install-manifests
 binaries::
 	@$(MAKE) install-manifests install_manifests=dist/include
 
