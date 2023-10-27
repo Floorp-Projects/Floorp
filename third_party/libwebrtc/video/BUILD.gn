@@ -418,7 +418,6 @@ rtc_library("video_stream_encoder_impl") {
     "../rtc_base:safe_conversions",
     "../rtc_base:stringutils",
     "../rtc_base:timeutils",
-    "../rtc_base/experiments:alr_experiment",
     "../rtc_base/experiments:balanced_degradation_settings",
     "../rtc_base/experiments:encoder_info_settings",
     "../rtc_base/experiments:field_trial_parser",
