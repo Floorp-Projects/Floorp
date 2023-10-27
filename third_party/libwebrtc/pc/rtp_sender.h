@@ -288,6 +288,8 @@ class RtpSenderBase : public RtpSenderInternal, public ObserverInterface {
   rtc::scoped_refptr<FrameTransformerInterface> frame_transformer_;
   std::unique_ptr<VideoEncoderFactory::EncoderSelectorInterface>
       encoder_selector_;
+
+  virtual RTCError GenerateKeyFrame(const std::vector<std::string>& rids) = 0;
 };
 
 // LocalAudioSinkAdapter receives data callback as a sink to the local
