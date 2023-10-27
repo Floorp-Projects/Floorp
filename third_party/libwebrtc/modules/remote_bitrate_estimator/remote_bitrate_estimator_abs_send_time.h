@@ -104,7 +104,7 @@ class RemoteBitrateEstimatorAbsSendTime : public RemoteBitrateEstimator {
   std::unique_ptr<InterArrival> inter_arrival_;
   std::unique_ptr<OveruseEstimator> estimator_;
   OveruseDetector detector_;
-  RateStatistics incoming_bitrate_{kBitrateWindowMs, 8000};
+  RateStatistics incoming_bitrate_{kBitrateWindow.ms(), 8000};
   bool incoming_bitrate_initialized_ = false;
   std::list<Probe> probes_;
   size_t total_probes_received_ = 0;

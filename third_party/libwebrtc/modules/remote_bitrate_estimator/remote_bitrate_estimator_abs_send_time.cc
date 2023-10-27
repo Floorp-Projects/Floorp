@@ -345,7 +345,7 @@ TimeDelta RemoteBitrateEstimatorAbsSendTime::Process() {
 
 void RemoteBitrateEstimatorAbsSendTime::TimeoutStreams(Timestamp now) {
   for (auto it = ssrcs_.begin(); it != ssrcs_.end();) {
-    if (now - it->second > TimeDelta::Millis(kStreamTimeOutMs)) {
+    if (now - it->second > kStreamTimeOut) {
       ssrcs_.erase(it++);
     } else {
       ++it;
