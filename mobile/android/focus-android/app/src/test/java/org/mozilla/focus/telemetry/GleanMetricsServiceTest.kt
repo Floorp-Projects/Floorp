@@ -9,6 +9,7 @@ import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.search.telemetry.ads.AdsTelemetry
 import mozilla.components.feature.search.telemetry.incontent.InContentTelemetry
+import mozilla.components.support.test.robolectric.testContext
 import org.junit.Test
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.mock
@@ -29,9 +30,9 @@ class GleanMetricsServiceTest {
         doReturn(searchExtension).`when`(components).searchTelemetry
         val glean = GleanMetricsService(mock(Context::class.java))
 
-        glean.installSearchTelemetryExtensions(components)
+        glean.installSearchTelemetryExtensions(components, testContext)
 
-        verify(adsExtension).install(engine, store)
-        verify(searchExtension).install(engine, store)
+        verify(adsExtension).install(engine, store, mock())
+        verify(searchExtension).install(engine, store, mock())
     }
 }

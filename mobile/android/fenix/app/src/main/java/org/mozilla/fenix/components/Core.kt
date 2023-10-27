@@ -12,6 +12,9 @@ import androidx.appcompat.content.res.AppCompatResources.getDrawable
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.drawable.toBitmap
 import androidx.datastore.preferences.preferencesDataStore
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import mozilla.components.browser.domains.autocomplete.BaseDomainAutocompleteProvider
 import mozilla.components.browser.domains.autocomplete.ShippedDomainsProvider
 import mozilla.components.browser.engine.gecko.GeckoEngine
@@ -309,11 +312,13 @@ class Core(
             // Install the "icons" WebExtension to automatically load icons for every visited website.
             icons.install(engine, this)
 
-            // Install the "ads" WebExtension to get the links in an partner page.
-            adsTelemetry.install(engine, this)
+            CoroutineScope(Dispatchers.Main).launch {
+                // Install the "ads" WebExtension to get the links in an partner page.
+                adsTelemetry.install(engine, this@apply, context.filesDir)
 
-            // Install the "cookies" WebExtension and tracks user interaction with SERPs.
-            searchTelemetry.install(engine, this)
+                // Install the "cookies" WebExtension and tracks user interaction with SERPs.
+                searchTelemetry.install(engine, this@apply, context.filesDir)
+            }
 
             WebNotificationFeature(
                 context,

@@ -5,32 +5,51 @@
 package mozilla.components.feature.search.telemetry
 
 import mozilla.components.support.base.log.logger.Logger
-import mozilla.components.support.ktx.android.org.json.asSequence
 import mozilla.components.support.ktx.android.org.json.toList
+import mozilla.components.support.remotesettings.RemoteSettingsClient
+import mozilla.components.support.remotesettings.RemoteSettingsResult
 import org.json.JSONArray
 import org.json.JSONException
 import org.json.JSONObject
+import java.io.File
+
+internal const val REMOTE_ENDPOINT_URL = "https://firefox.settings.services.mozilla.com"
+internal const val REMOTE_ENDPOINT_BUCKET_NAME = "main"
 
 /**
  * Parse SERP Telemetry json from remote config.
  */
-
-class SERPTelemetryJsonParser {
-    private val remoteSettingsDownloader = RemoteSettingsDownloader()
-
-    val searchProviders = remoteSettingsDownloader.telemetryJson().toSearchProviders()
+class SerpTelemetryFetcher(
+    rootStorageDirectory: File,
+    collectionName: String,
+    serverUrl: String = REMOTE_ENDPOINT_URL,
+    bucketName: String = REMOTE_ENDPOINT_BUCKET_NAME,
+) {
+    val logger = Logger("SerpTelemetryFetcher")
+    private val remoteSettingsClient = RemoteSettingsClient(
+        serverUrl = serverUrl,
+        bucketName = bucketName,
+        collectionName = collectionName,
+        storageRootDirectory = rootStorageDirectory,
+    )
 
     /**
-     * Converts the json data into a list of [SearchProviderModel].
+     * Returns search providers.
      */
-    private fun JSONObject.toSearchProviders(): List<SearchProviderModel>? =
-        try {
-            getJSONArray("data").asSequence { i -> getJSONObject(i) }
-                .mapNotNull { it.toSearchModelProvider() }
-                .toList()
-        } catch (e: JSONException) {
-            Logger.warn("Could not parse telemetry data", e)
-            null
+    suspend fun fetchSearchProviders(): List<SearchProviderModel> =
+        when (val result = remoteSettingsClient.fetch()) {
+            is RemoteSettingsResult.Success -> {
+                result.response.records.mapNotNull { record ->
+                    record.fields.toSearchModelProvider()
+                }.also { searchProviderModels ->
+                    // Update local cache if we successfully fetched new results
+                    if (searchProviderModels.isNotEmpty()) {
+                        remoteSettingsClient.write(result.response)
+                    }
+                }
+            }
+
+            else -> emptyList()
         }
 
     private fun JSONObject.toSearchModelProvider(): SearchProviderModel? =
@@ -40,16 +59,17 @@ class SERPTelemetryJsonParser {
                 taggedCodes = getJSONArray("taggedCodes").toList(),
                 telemetryId = optString("telemetryId"),
                 organicCodes = getJSONArray("organicCodes").toList(),
-                searchPageRegexp = optString("searchPageRegexp"),
-                queryParamName = optString("queryParamName"),
                 codeParamName = optString("codeParamName"),
+                followOnCookies = optJSONArray("followOnCookies")?.toListOfCookies(),
+                queryParamNames = optJSONArray("queryParamNames").toList(),
+                searchPageRegexp = optString("searchPageRegexp"),
+                adServerAttributes = optJSONArray("adServerAttributes").toList(),
                 followOnParamNames = optJSONArray("followOnParamNames")?.toList(),
                 extraAdServersRegexps = getJSONArray("extraAdServersRegexps").toList(),
-                followOnCookies = optJSONArray("followOnCookies")?.toListOfCookies(),
                 expectedOrganicCodes = optJSONArray("expectedOrganicCodes")?.toList(),
             )
         } catch (e: JSONException) {
-            Logger.debug("JSONException while trying to parse remote config", e)
+            logger.error("JSONException while trying to parse remote config", e)
             null
         }
 
@@ -64,10 +84,9 @@ class SERPTelemetryJsonParser {
                 host = optString("host"),
                 name = optString("name"),
                 codeParamName = optString("codeParamName"),
-                codePrefixes = optJSONArray("codePrefixes")?.toList() ?: emptyList(),
             )
         } catch (e: JSONException) {
-            Logger.debug("JSONException while trying to parse remote config", e)
+            logger.error("JSONException while trying to parse remote config", e)
             null
         }
 }

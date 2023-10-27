@@ -14,6 +14,7 @@ import mozilla.components.feature.search.telemetry.getTrackKey
 import mozilla.components.support.base.facts.Fact
 import mozilla.components.support.ktx.android.org.json.toList
 import org.json.JSONObject
+import java.io.File
 
 /**
  * Telemetry for knowing of in-web-content searches (including follow-on searches) and the provider used.
@@ -23,15 +24,19 @@ import org.json.JSONObject
  */
 class InContentTelemetry : BaseSearchTelemetry() {
 
-    override fun install(engine: Engine, store: BrowserStore) {
+    override suspend fun install(engine: Engine, store: BrowserStore, rootStorageDirectory: File) {
         val info = ExtensionInfo(
             id = SEARCH_EXTENSION_ID,
             resourceUrl = SEARCH_EXTENSION_RESOURCE_URL,
             messageId = SEARCH_MESSAGE_ID,
         )
         installWebExtension(engine, store, info)
+        initializeProviderList(rootStorageDirectory)
     }
 
+    /**
+     * Processes a message containing search-related information.
+     */
     override fun processMessage(message: JSONObject) {
         val cookies = message.getJSONArray(SEARCH_MESSAGE_LIST_KEY).toList<JSONObject>()
         trackPartnerUrlTypeMetric(message.getString(SEARCH_MESSAGE_SESSION_URL_KEY), cookies)
@@ -39,14 +44,18 @@ class InContentTelemetry : BaseSearchTelemetry() {
 
     @VisibleForTesting
     internal fun trackPartnerUrlTypeMetric(url: String, cookies: List<JSONObject>) {
+        println("before trackPartnerUrlTypeMetric")
         val provider = getProviderForUrl(url) ?: return
+        println("After trackPartnerUrlTypeMetric")
         val uri = Uri.parse(url)
         val paramSet = uri.queryParameterNames
-
-        if (!paramSet.contains(provider.queryParamName)) {
+        println("paramSet $paramSet")
+        val containsQueryParam = provider.queryParamNames?.any { paramSet.contains(it) }
+        println("containsQueryParam $containsQueryParam")
+        if (containsQueryParam == false) {
             return
         }
-
+        println("containsQueryParam $containsQueryParam")
         emitFact(
             IN_CONTENT_SEARCH,
             getTrackKey(provider, uri, cookies),

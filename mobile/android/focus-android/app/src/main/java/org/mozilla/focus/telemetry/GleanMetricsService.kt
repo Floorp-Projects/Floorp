@@ -13,6 +13,7 @@ import androidx.core.app.NotificationManagerCompat
 import androidx.preference.PreferenceManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
@@ -108,7 +109,7 @@ class GleanMetricsService(context: Context) : MetricsService {
         Glean.registerPings(Pings)
 
         if (telemetryEnabled) {
-            installSearchTelemetryExtensions(components)
+            installSearchTelemetryExtensions(components, context)
         }
 
         // Do this immediately after init.
@@ -203,11 +204,13 @@ class GleanMetricsService(context: Context) : MetricsService {
     }
 
     @VisibleForTesting
-    internal fun installSearchTelemetryExtensions(components: Components) {
+    internal fun installSearchTelemetryExtensions(components: Components, context: Context) {
         val engine = components.engine
         components.store.apply {
-            components.adsTelemetry.install(engine, this)
-            components.searchTelemetry.install(engine, this)
+            CoroutineScope(Dispatchers.Main).launch {
+                components.adsTelemetry.install(engine, this@apply, context.filesDir)
+                components.searchTelemetry.install(engine, this@apply, context.filesDir)
+            }
         }
     }
 }

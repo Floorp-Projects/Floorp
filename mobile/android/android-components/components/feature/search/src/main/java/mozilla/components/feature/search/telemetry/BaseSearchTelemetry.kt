@@ -21,22 +21,34 @@ import mozilla.components.support.base.facts.collect
 import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.ktx.kotlinx.coroutines.flow.filterChanged
 import org.json.JSONObject
+import java.io.File
+
+internal const val COLLECTION_NAME = "search-telemetry-v2"
 
 /**
  * Main configuration and functionality for tracking ads / web searches with specific providers.
  */
-abstract class BaseSearchTelemetry(
-    private val providerList: List<SearchProviderModel>? = SERPTelemetryJsonParser().searchProviders,
-) {
+abstract class BaseSearchTelemetry {
+    @VisibleForTesting
+    internal var providerList: List<SearchProviderModel>? = emptyList()
+
+    @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
+    internal suspend fun initializeProviderList(rootStorageDirectory: File) {
+        providerList = SerpTelemetryFetcher(rootStorageDirectory, COLLECTION_NAME).fetchSearchProviders()
+    }
+
+    /**
+     * Finds provider among list of providers that matches regex in url.
+     * This may additionally return null if the provider list is still being initialized.
+     */
+    @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
+    internal fun getProviderForUrl(url: String): SearchProviderModel? =
+        providerList?.find { provider -> provider.searchPageRegexp.containsMatchIn(url) }
 
     /**
      * Install the web extensions that this functionality is based on and start listening for updates.
      */
-    abstract fun install(engine: Engine, store: BrowserStore)
-
-    @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
-    internal fun getProviderForUrl(url: String): SearchProviderModel? =
-        providerList?.find { provider -> provider.searchPageRegexp.containsMatchIn(url) }
+    abstract suspend fun install(engine: Engine, store: BrowserStore, rootStorageDirectory: File)
 
     @VisibleForTesting(otherwise = VisibleForTesting.PROTECTED)
     internal fun installWebExtension(
@@ -48,7 +60,9 @@ abstract class BaseSearchTelemetry(
             id = extensionInfo.id,
             url = extensionInfo.resourceUrl,
             onSuccess = { extension ->
-                store.flowScoped { flow -> subscribeToUpdates(flow, extension, extensionInfo) }
+                store.flowScoped { flow ->
+                    subscribeToUpdates(flow, extension, extensionInfo)
+                }
             },
             onError = { throwable ->
                 Logger.error("Could not install ${extensionInfo.id} extension", throwable)

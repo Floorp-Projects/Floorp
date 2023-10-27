@@ -15,7 +15,7 @@ class SearchProviderModelTest {
             telemetryId = "test",
             organicCodes = listOf(),
             codeParamName = "tt",
-            queryParamName = "q",
+            queryParamNames = listOf("q"),
             searchPageRegexp = "^https://www\\.ecosia\\.org/",
             expectedOrganicCodes = listOf(),
             extraAdServersRegexps = listOf(

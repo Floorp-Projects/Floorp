@@ -53,6 +53,7 @@ dependencies {
     implementation project(':support-remotesettings')
 
     implementation ComponentsDependencies.androidx_core_ktx
+    implementation ComponentsDependencies.mozilla_remote_settings
 
     testImplementation project(':support-test')
     testImplementation project(':support-test-fakes')

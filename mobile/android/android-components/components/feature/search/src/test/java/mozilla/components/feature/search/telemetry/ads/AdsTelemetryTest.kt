@@ -5,9 +5,12 @@
 package mozilla.components.feature.search.telemetry.ads
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import kotlinx.coroutines.runBlocking
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.Engine
 import mozilla.components.feature.search.telemetry.ExtensionInfo
+import mozilla.components.feature.search.telemetry.SearchProviderCookie
+import mozilla.components.feature.search.telemetry.SearchProviderModel
 import mozilla.components.feature.search.telemetry.ads.AdsTelemetry.Companion.ADS_EXTENSION_ID
 import mozilla.components.feature.search.telemetry.ads.AdsTelemetry.Companion.ADS_EXTENSION_RESOURCE_URL
 import mozilla.components.feature.search.telemetry.ads.AdsTelemetry.Companion.ADS_MESSAGE_COOKIES_KEY
@@ -19,6 +22,7 @@ import mozilla.components.support.base.facts.Action
 import mozilla.components.support.base.facts.Fact
 import mozilla.components.support.base.facts.FactProcessor
 import mozilla.components.support.base.facts.Facts
+import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
@@ -29,12 +33,71 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.spy
 import org.mockito.Mockito.verify
 
 @RunWith(AndroidJUnit4::class)
 class AdsTelemetryTest {
     private lateinit var telemetry: AdsTelemetry
+
+    fun createMockProviderList(): List<SearchProviderModel> = listOf(
+        SearchProviderModel(
+            schema = 1671479978127,
+            taggedCodes = listOf("monline_7_dg", "monline_4_dg", "monline_3_dg", "monline_dg"),
+            telemetryId = "baidu",
+            organicCodes = emptyList(),
+            codeParamName = "tn",
+            followOnParamNames = listOf("oq"),
+            queryParamNames = listOf("wd", "word"),
+            searchPageRegexp = "^https://(?:m|www)\\.baidu\\.com/(?:s|baidu)",
+            extraAdServersRegexps = listOf("^https?://www\\.baidu\\.com/baidu\\.php?"),
+            expectedOrganicCodes = emptyList(),
+        ),
+        SearchProviderModel(
+            schema = 1671479978127,
+            taggedCodes = listOf("firefox-b-m", "fpas", "lm"),
+            telemetryId = "duckduckgo",
+            organicCodes = emptyList(),
+            codeParamName = "t",
+            queryParamNames = listOf("q"),
+            searchPageRegexp = "^https:\\/\\/duckduckgo\\.com\\/",
+            extraAdServersRegexps = listOf("^https://duckduckgo.com/y\\.js?.*ad_provider\\="),
+            expectedOrganicCodes = emptyList(),
+        ),
+        SearchProviderModel(
+            schema = 1671479978127,
+            taggedCodes = listOf("firefox-b-m", "fpas", "def"),
+            telemetryId = "google",
+            organicCodes = emptyList(),
+            codeParamName = "client",
+            followOnParamNames = listOf("oq", "ved", "ei"),
+            queryParamNames = listOf("q"),
+            searchPageRegexp = "^https://www\\.google\\.(?:.+)/search",
+            extraAdServersRegexps = listOf("^https?://www\\.google(?:adservices)?\\.com/(?:pagead/)?aclk"),
+            expectedOrganicCodes = emptyList(),
+        ),
+        SearchProviderModel(
+            schema = 1671479978127,
+            taggedCodes = listOf("MOZMBA", "MOZL", "def"),
+            telemetryId = "bing",
+            organicCodes = emptyList(),
+            codeParamName = "pc",
+            queryParamNames = listOf("q"),
+            searchPageRegexp = "^https://www\\.bing\\.com/search",
+            extraAdServersRegexps = listOf("^https://www\\.bing\\.com/acli?c?k"),
+            followOnCookies = listOf(
+                SearchProviderCookie(
+                    extraCodeParamName = "form",
+                    extraCodePrefixes = listOf("QBRE"),
+                    host = "www.bing.com",
+                    name = "SRCHS",
+                    codeParamName = "PC",
+                ),
+            ),
+            expectedOrganicCodes = emptyList(),
+        ),
+    )
 
     @Before
     fun setUp() {
@@ -47,7 +110,10 @@ class AdsTelemetryTest {
         val store: BrowserStore = mock()
         val extensionCaptor = argumentCaptor<ExtensionInfo>()
 
-        telemetry.install(engine, store)
+        runBlocking {
+            doReturn(Unit).`when`(telemetry).initializeProviderList(any())
+            telemetry.install(engine, store, mock())
+        }
 
         verify(telemetry).installWebExtension(eq(engine), eq(store), extensionCaptor.capture())
         assertEquals(ADS_EXTENSION_ID, extensionCaptor.value.id)
@@ -91,6 +157,7 @@ class AdsTelemetryTest {
     @Test
     fun `GIVEN ads are in the redirect path WHEN checkIfAddWasClicked is called THEN emit an appropriate SERP_ADD_CLICKED Fact`() {
         val sessionUrl = "https://www.google.com/search?q=aaa"
+        telemetry.providerList = createMockProviderList()
         val facts = mutableListOf<Fact>()
         Facts.registerProcessor(
             object : FactProcessor {
@@ -124,6 +191,7 @@ class AdsTelemetryTest {
         message.put(ADS_MESSAGE_DOCUMENT_URLS_KEY, urls)
         message.put(ADS_MESSAGE_SESSION_URL_KEY, "https://www.google.com/search?q=aaa")
         message.put(ADS_MESSAGE_COOKIES_KEY, cookies)
+        telemetry.providerList = createMockProviderList()
         val facts = mutableListOf<Fact>()
         Facts.registerProcessor(
             object : FactProcessor {
@@ -170,7 +238,8 @@ class AdsTelemetryTest {
 
     @Test
     fun `GIVEN a Bing sap-follow-on with cookies WHEN checkIfAddWasClicked is called THEN emit an appropriate SERP_ADD_CLICKED Fact`() {
-        val url = "https://www.bing.com/search?q=aaa&pc=MOZL&form=QBRERANDOM"
+        val url = "https://www.bing.com/search?q=aaa&form=QBRERANDOM"
+        telemetry.providerList = createMockProviderList()
         telemetry.cachedCookies = createCookieList()
         val facts = mutableListOf<Fact>()
         Facts.registerProcessor(

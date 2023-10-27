@@ -347,7 +347,7 @@ android.applicationVariants.configureEach { variant ->
     if (!isDebug) {
         buildConfigField 'boolean', 'TELEMETRY', 'true'
     } else {
-        buildConfigField 'boolean', 'TELEMETRY', 'true'
+        buildConfigField 'boolean', 'TELEMETRY', 'false'
     }
 
     def buildDate = Config.generateBuildDate()
