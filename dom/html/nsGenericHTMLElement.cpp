@@ -3471,25 +3471,23 @@ void nsGenericHTMLElement::FocusPopover() {
     doc->FlushPendingNotifications(FlushType::Frames);
   }
 
-  // This diverges from the spec a bit,
-  // see https://github.com/whatwg/html/pull/8998
-  RefPtr<Element> control =
-      GetBoolAttr(nsGkAtoms::autofocus)
-          ? this
-          : GetFocusDelegate(false /* aWithMouse */, true /* aAutofocusOnly */);
+  RefPtr<Element> control = GetBoolAttr(nsGkAtoms::autofocus)
+                                ? this
+                                : GetAutofocusDelegate(false /* aWithMouse */);
+
   if (!control) {
     return;
   }
-  FocusCandidate(*control, false /* aClearUpFocus */);
+  FocusCandidate(control, false /* aClearUpFocus */);
 }
 
-void nsGenericHTMLElement::FocusCandidate(Element& aControl,
+void nsGenericHTMLElement::FocusCandidate(Element* aControl,
                                           bool aClearUpFocus) {
   // 1) Run the focusing steps given control.
   IgnoredErrorResult rv;
-  nsIFrame* frame = aControl.GetPrimaryFrame();
-  if (frame && frame->IsFocusable()) {
-    aControl.Focus(FocusOptions(), CallerType::NonSystem, rv);
+  if (RefPtr<Element> elementToFocus = nsFocusManager::GetTheFocusableArea(
+          aControl, nsFocusManager::ProgrammaticFocusFlags(FocusOptions()))) {
+    elementToFocus->Focus(FocusOptions(), CallerType::NonSystem, rv);
     if (rv.Failed()) {
       return;
     }
@@ -3505,7 +3503,7 @@ void nsGenericHTMLElement::FocusCandidate(Element& aControl,
   // browsing context's top-level browsing context.
   // 3) If control's node document's origin is not the same as the origin of
   // topDocument, then return.
-  BrowsingContext* bc = aControl.OwnerDoc()->GetBrowsingContext();
+  BrowsingContext* bc = aControl->OwnerDoc()->GetBrowsingContext();
   if (bc && bc->IsInProcess() && bc->SameOriginWithTop()) {
     if (nsCOMPtr<nsIDocShell> docShell = bc->Top()->GetDocShell()) {
       if (Document* topDocument = docShell->GetExtantDocument()) {

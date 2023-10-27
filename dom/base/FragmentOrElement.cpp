@@ -1037,8 +1037,22 @@ bool nsIContent::IsFocusable(int32_t* aTabIndex, bool aWithMouse) {
   return false;
 }
 
-Element* nsIContent::GetFocusDelegate(bool aWithMouse,
-                                      bool aAutofocusOnly) const {
+Element* nsIContent::GetAutofocusDelegate(bool aWithMouse) const {
+  for (nsINode* node = GetFirstChild(); node; node = node->GetNextNode(this)) {
+    auto* descendant = Element::FromNode(*node);
+    if (!descendant || !descendant->GetBoolAttr(nsGkAtoms::autofocus)) {
+      continue;
+    }
+
+    nsIFrame* frame = descendant->GetPrimaryFrame();
+    if (frame && frame->IsFocusable(aWithMouse)) {
+      return descendant;
+    }
+  }
+  return nullptr;
+}
+
+Element* nsIContent::GetFocusDelegate(bool aWithMouse) const {
   const nsIContent* whereToLook = this;
   if (ShadowRoot* root = GetShadowRoot()) {
     if (!root->DelegatesFocus()) {
@@ -1069,9 +1083,6 @@ Element* nsIContent::GetFocusDelegate(bool aWithMouse,
 
     const bool autofocus = el->GetBoolAttr(nsGkAtoms::autofocus);
 
-    if (aAutofocusOnly && !autofocus) {
-      continue;
-    }
     if (autofocus) {
       if (IsFocusable(el)) {
         // Found an autofocus candidate.
