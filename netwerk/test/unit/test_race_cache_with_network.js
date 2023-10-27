@@ -186,7 +186,7 @@ function* testSteps() {
   channel
     .QueryInterface(Ci.nsIRaceCacheWithNetwork)
     .test_delayCacheEntryOpeningBy(100000);
-  channel.QueryInterface(Ci.nsIRaceCacheWithNetwork).test_triggerNetwork(100);
+  channel.QueryInterface(Ci.nsIRaceCacheWithNetwork).test_triggerNetwork(5000);
   channel.asyncOpen(new ChannelListener(checkContent, null));
   channel
     .QueryInterface(Ci.nsIRaceCacheWithNetwork)
