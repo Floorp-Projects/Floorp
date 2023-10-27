@@ -310,7 +310,7 @@ impl SendStream for SendMessage {
         data_frame.encode(&mut enc);
         self.stream.buffer(enc.as_ref());
         self.stream.buffer(buf);
-        let _ = self.stream.send_buffer(conn)?;
+        _ = self.stream.send_buffer(conn)?;
         Ok(())
     }
 }

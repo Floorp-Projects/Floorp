@@ -30,7 +30,7 @@ const DEFAULT_IDLE_TIMEOUT: Duration = Duration::from_secs(30);
 const MAX_QUEUED_DATAGRAMS_DEFAULT: usize = 10;
 
 /// What to do with preferred addresses.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub enum PreferredAddressConfig {
     /// Disabled, whether for client or server.
     Disabled,

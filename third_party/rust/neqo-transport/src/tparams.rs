@@ -23,7 +23,7 @@ use std::{
     cell::RefCell,
     collections::HashMap,
     convert::TryFrom,
-    net::{IpAddr, Ipv4Addr, Ipv6Addr, SocketAddr},
+    net::{Ipv4Addr, Ipv6Addr, SocketAddrV4, SocketAddrV6},
     rc::Rc,
 };
 
@@ -61,10 +61,10 @@ tpids! {
     VERSION_NEGOTIATION = 0xff73db,
 }
 
-#[derive(Clone, Debug, Copy)]
+#[derive(Clone, Debug)]
 pub struct PreferredAddress {
-    v4: Option<SocketAddr>,
-    v6: Option<SocketAddr>,
+    v4: Option<SocketAddrV4>,
+    v6: Option<SocketAddrV6>,
 }
 
 impl PreferredAddress {
@@ -73,33 +73,46 @@ impl PreferredAddress {
     /// # Panics
     /// If neither address is provided, or if either address is of the wrong type.
     #[must_use]
-    pub fn new(v4: Option<SocketAddr>, v6: Option<SocketAddr>) -> Self {
+    pub fn new(v4: Option<SocketAddrV4>, v6: Option<SocketAddrV6>) -> Self {
         assert!(v4.is_some() || v6.is_some());
         if let Some(a) = v4 {
-            if let IpAddr::V4(addr) = a.ip() {
-                assert!(!addr.is_unspecified());
-            } else {
-                panic!("invalid address type for v4 address");
-            }
+            assert!(!a.ip().is_unspecified());
             assert_ne!(a.port(), 0);
         }
         if let Some(a) = v6 {
-            if let IpAddr::V6(addr) = a.ip() {
-                assert!(!addr.is_unspecified());
-            } else {
-                panic!("invalid address type for v6 address");
-            }
+            assert!(!a.ip().is_unspecified());
             assert_ne!(a.port(), 0);
         }
         Self { v4, v6 }
     }
 
+    /// A generic version of `new()` for testing.
     #[must_use]
-    pub fn ipv4(&self) -> Option<SocketAddr> {
+    #[cfg(test)]
+    pub fn new_any(v4: Option<std::net::SocketAddr>, v6: Option<std::net::SocketAddr>) -> Self {
+        use std::net::SocketAddr;
+
+        let v4 = v4.map(|v4| {
+            let SocketAddr::V4(v4) = v4 else {
+                panic!("not v4");
+            };
+            v4
+        });
+        let v6 = v6.map(|v6| {
+            let SocketAddr::V6(v6) = v6 else {
+                panic!("not v6");
+            };
+            v6
+        });
+        Self::new(v4, v6)
+    }
+
+    #[must_use]
+    pub fn ipv4(&self) -> Option<SocketAddrV4> {
         self.v4
     }
     #[must_use]
-    pub fn ipv6(&self) -> Option<SocketAddr> {
+    pub fn ipv6(&self) -> Option<SocketAddrV6> {
         self.v6
     }
 }
@@ -110,8 +123,8 @@ pub enum TransportParameter {
     Integer(u64),
     Empty,
     PreferredAddress {
-        v4: Option<SocketAddr>,
-        v6: Option<SocketAddr>,
+        v4: Option<SocketAddrV4>,
+        v6: Option<SocketAddrV6>,
         cid: ConnectionId,
         srt: [u8; 16],
     },
@@ -140,23 +153,13 @@ impl TransportParameter {
             Self::PreferredAddress { v4, v6, cid, srt } => {
                 enc.encode_vvec_with(|enc_inner| {
                     if let Some(v4) = v4 {
-                        debug_assert!(v4.is_ipv4());
-                        if let IpAddr::V4(a) = v4.ip() {
-                            enc_inner.encode(&a.octets()[..]);
-                        } else {
-                            unreachable!();
-                        }
+                        enc_inner.encode(&v4.ip().octets()[..]);
                         enc_inner.encode_uint(2, v4.port());
                     } else {
                         enc_inner.encode(&[0; 6]);
                     }
                     if let Some(v6) = v6 {
-                        debug_assert!(v6.is_ipv6());
-                        if let IpAddr::V6(a) = v6.ip() {
-                            enc_inner.encode(&a.octets()[..]);
-                        } else {
-                            unreachable!();
-                        }
+                        enc_inner.encode(&v6.ip().octets()[..]);
                         enc_inner.encode_uint(2, v6.port());
                     } else {
                         enc_inner.encode(&[0; 18]);
@@ -188,7 +191,7 @@ impl TransportParameter {
         let v4 = if v4port == 0 {
             None
         } else {
-            Some(SocketAddr::new(IpAddr::V4(v4ip), v4port))
+            Some(SocketAddrV4::new(v4ip, v4port))
         };
 
         // IPv6 address (mostly the same as v4)
@@ -201,7 +204,7 @@ impl TransportParameter {
         let v6 = if v6port == 0 {
             None
         } else {
-            Some(SocketAddr::new(IpAddr::V6(v6ip), v6port))
+            Some(SocketAddrV6::new(v6ip, v6port, 0, 0))
         };
         // Need either v4 or v6 to be present.
         if v4.is_none() && v6.is_none() {
@@ -790,13 +793,12 @@ mod tests {
 
     fn make_spa() -> TransportParameter {
         TransportParameter::PreferredAddress {
-            v4: Some(SocketAddr::new(
-                IpAddr::V4(Ipv4Addr::from(0xc000_0201)),
+            v4: Some(SocketAddrV4::new(Ipv4Addr::from(0xc000_0201), 443)),
+            v6: Some(SocketAddrV6::new(
+                Ipv6Addr::from(0xfe80_0000_0000_0000_0000_0000_0000_0001),
                 443,
-            )),
-            v6: Some(SocketAddr::new(
-                IpAddr::V6(Ipv6Addr::from(0xfe80_0000_0000_0000_0000_0000_0000_0001)),
-                443,
+                0,
+                0,
             )),
             cid: ConnectionId::from(&[1, 2, 3, 4, 5]),
             srt: [3; 16],
@@ -824,7 +826,7 @@ mod tests {
 
     fn mutate_spa<F>(wrecker: F) -> TransportParameter
     where
-        F: FnOnce(&mut Option<SocketAddr>, &mut Option<SocketAddr>, &mut ConnectionId),
+        F: FnOnce(&mut Option<SocketAddrV4>, &mut Option<SocketAddrV6>, &mut ConnectionId),
     {
         let mut spa = make_spa();
         if let TransportParameter::PreferredAddress {
@@ -874,10 +876,10 @@ mod tests {
         }));
         // Either IP being zero is bad.
         assert_invalid_spa(mutate_spa(|v4, _, _| {
-            v4.as_mut().unwrap().set_ip(IpAddr::V4(Ipv4Addr::from(0)));
+            v4.as_mut().unwrap().set_ip(Ipv4Addr::from(0));
         }));
         assert_invalid_spa(mutate_spa(|_, v6, _| {
-            v6.as_mut().unwrap().set_ip(IpAddr::V6(Ipv6Addr::from(0)));
+            v6.as_mut().unwrap().set_ip(Ipv6Addr::from(0));
         }));
         // Either address being absent is OK.
         assert_valid_spa(mutate_spa(|v4, _, _| {
@@ -917,24 +919,6 @@ mod tests {
 
     #[test]
     #[should_panic]
-    fn preferred_address_wrong_family_v4() {
-        mutate_spa(|v4, _, _| {
-            v4.as_mut().unwrap().set_ip(IpAddr::V6(Ipv6Addr::from(0)));
-        })
-        .encode(&mut Encoder::new(), PREFERRED_ADDRESS);
-    }
-
-    #[test]
-    #[should_panic]
-    fn preferred_address_wrong_family_v6() {
-        mutate_spa(|_, v6, _| {
-            v6.as_mut().unwrap().set_ip(IpAddr::V4(Ipv4Addr::from(0)));
-        })
-        .encode(&mut Encoder::new(), PREFERRED_ADDRESS);
-    }
-
-    #[test]
-    #[should_panic]
     fn preferred_address_neither() {
         _ = PreferredAddress::new(None, None);
     }
@@ -942,17 +926,14 @@ mod tests {
     #[test]
     #[should_panic]
     fn preferred_address_v4_unspecified() {
-        _ = PreferredAddress::new(
-            Some(SocketAddr::new(IpAddr::V4(Ipv4Addr::from(0)), 443)),
-            None,
-        );
+        _ = PreferredAddress::new(Some(SocketAddrV4::new(Ipv4Addr::from(0), 443)), None);
     }
 
     #[test]
     #[should_panic]
     fn preferred_address_v4_zero_port() {
         _ = PreferredAddress::new(
-            Some(SocketAddr::new(IpAddr::V4(Ipv4Addr::from(0xc000_0201)), 0)),
+            Some(SocketAddrV4::new(Ipv4Addr::from(0xc000_0201), 0)),
             None,
         );
     }
@@ -960,40 +941,13 @@ mod tests {
     #[test]
     #[should_panic]
     fn preferred_address_v6_unspecified() {
-        _ = PreferredAddress::new(
-            None,
-            Some(SocketAddr::new(IpAddr::V6(Ipv6Addr::from(0)), 443)),
-        );
+        _ = PreferredAddress::new(None, Some(SocketAddrV6::new(Ipv6Addr::from(0), 443, 0, 0)));
     }
 
     #[test]
     #[should_panic]
     fn preferred_address_v6_zero_port() {
-        _ = PreferredAddress::new(
-            None,
-            Some(SocketAddr::new(IpAddr::V6(Ipv6Addr::from(1)), 0)),
-        );
-    }
-
-    #[test]
-    #[should_panic]
-    fn preferred_address_v4_is_v6() {
-        _ = PreferredAddress::new(
-            Some(SocketAddr::new(IpAddr::V6(Ipv6Addr::from(1)), 443)),
-            None,
-        );
-    }
-
-    #[test]
-    #[should_panic]
-    fn preferred_address_v6_is_v4() {
-        _ = PreferredAddress::new(
-            None,
-            Some(SocketAddr::new(
-                IpAddr::V4(Ipv4Addr::from(0xc000_0201)),
-                443,
-            )),
-        );
+        _ = PreferredAddress::new(None, Some(SocketAddrV6::new(Ipv6Addr::from(1), 0, 0, 0)));
     }
 
     #[test]

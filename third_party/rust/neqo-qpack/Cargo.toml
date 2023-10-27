@@ -13,13 +13,13 @@
 edition = "2018"
 rust-version = "1.65.0"
 name = "neqo-qpack"
-version = "0.6.5"
+version = "0.6.6"
 authors = ["Dragana Damjanovic <dragana.damjano@gmail.com>"]
-license = "MIT/Apache-2.0"
+license = "MIT OR Apache-2.0"
 
 [dependencies]
 lazy_static = "1.3.0"
-qlog = "0.4.0"
+qlog = "0.9.0"
 static_assertions = "1.1.0"
 
 [dependencies.log]
@@ -39,5 +39,4 @@ path = "./../neqo-transport"
 path = "../test-fixture"
 
 [features]
-default = ["deny-warnings"]
 deny-warnings = []

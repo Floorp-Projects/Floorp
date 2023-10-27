@@ -37,6 +37,32 @@ pub enum InvalidFormatDescription {
         /// The zero-based index where the component name should start.
         index: usize,
     },
+    /// A required modifier is missing.
+    #[non_exhaustive]
+    MissingRequiredModifier {
+        /// The name of the modifier that is missing.
+        name: &'static str,
+        /// The zero-based index of the component.
+        index: usize,
+    },
+    /// Something was expected, but not found.
+    #[non_exhaustive]
+    Expected {
+        /// What was expected to be present, but wasn't.
+        what: &'static str,
+        /// The zero-based index the item was expected to be found at.
+        index: usize,
+    },
+    /// Certain behavior is not supported in the given context.
+    #[non_exhaustive]
+    NotSupported {
+        /// The behavior that is not supported.
+        what: &'static str,
+        /// The context in which the behavior is not supported.
+        context: &'static str,
+        /// The zero-based index the error occurred at.
+        index: usize,
+    },
 }
 
 impl From<InvalidFormatDescription> for crate::Error {
@@ -71,6 +97,28 @@ impl fmt::Display for InvalidFormatDescription {
             }
             MissingComponentName { index } => {
                 write!(f, "missing component name at byte index {index}")
+            }
+            MissingRequiredModifier { name, index } => {
+                write!(
+                    f,
+                    "missing required modifier `{name}` for component at byte index {index}"
+                )
+            }
+            Expected {
+                what: expected,
+                index,
+            } => {
+                write!(f, "expected {expected} at byte index {index}")
+            }
+            NotSupported {
+                what,
+                context,
+                index,
+            } => {
+                write!(
+                    f,
+                    "{what} is not supported in {context} at byte index {index}"
+                )
             }
         }
     }

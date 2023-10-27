@@ -11,11 +11,14 @@ pub struct Header {
 }
 
 impl Header {
-    #[allow(clippy::needless_pass_by_value)]
-    pub fn new(name: impl ToString, value: impl ToString) -> Self {
+    pub fn new<N, V>(name: N, value: V) -> Self
+    where
+        N: Into<String> + ?Sized,
+        V: Into<String> + ?Sized,
+    {
         Self {
-            name: name.to_string(),
-            value: value.to_string(),
+            name: name.into(),
+            value: value.into(),
         }
     }
 

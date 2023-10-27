@@ -1,8 +1,11 @@
 //! Typed, validated representation of a parsed format description.
 
+use alloc::boxed::Box;
 use alloc::string::String;
+use core::num::NonZeroU16;
+use core::str::{self, FromStr};
 
-use super::{ast, Error};
+use super::{ast, unused, Error, Span, Spanned};
 
 /// Parse an AST iterator into a sequence of format items.
 pub(super) fn parse<'a>(
@@ -12,12 +15,25 @@ pub(super) fn parse<'a>(
 }
 
 /// A description of how to format and parse one part of a type.
-#[allow(variant_size_differences)]
 pub(super) enum Item<'a> {
     /// A literal string.
     Literal(&'a [u8]),
     /// Part of a type, along with its modifiers.
     Component(Component),
+    /// A sequence of optional items.
+    Optional {
+        /// The items themselves.
+        value: Box<[Self]>,
+        /// The span of the full sequence.
+        span: Span,
+    },
+    /// The first matching parse of a sequence of format descriptions.
+    First {
+        /// The sequence of format descriptions.
+        value: Box<[Box<[Self]>]>,
+        /// The span of the full sequence.
+        span: Span,
+    },
 }
 
 impl Item<'_> {
@@ -32,20 +48,86 @@ impl Item<'_> {
                 _trailing_whitespace: _,
                 _closing_bracket: _,
             } => Item::Component(component_from_ast(&name, &modifiers)?),
-            ast::Item::Literal { value, _span: _ } => Item::Literal(value),
+            ast::Item::Literal(Spanned { value, span: _ }) => Item::Literal(value),
             ast::Item::EscapedBracket {
                 _first: _,
                 _second: _,
             } => Item::Literal(b"["),
+            ast::Item::Optional {
+                opening_bracket,
+                _leading_whitespace: _,
+                _optional_kw: _,
+                _whitespace: _,
+                nested_format_description,
+                closing_bracket,
+            } => {
+                let items = nested_format_description
+                    .items
+                    .into_vec()
+                    .into_iter()
+                    .map(Item::from_ast)
+                    .collect::<Result<_, _>>()?;
+                Item::Optional {
+                    value: items,
+                    span: opening_bracket.to(closing_bracket),
+                }
+            }
+            ast::Item::First {
+                opening_bracket,
+                _leading_whitespace: _,
+                _first_kw: _,
+                _whitespace: _,
+                nested_format_descriptions,
+                closing_bracket,
+            } => {
+                let items = nested_format_descriptions
+                    .into_vec()
+                    .into_iter()
+                    .map(|nested_format_description| {
+                        nested_format_description
+                            .items
+                            .into_vec()
+                            .into_iter()
+                            .map(Item::from_ast)
+                            .collect()
+                    })
+                    .collect::<Result<_, _>>()?;
+                Item::First {
+                    value: items,
+                    span: opening_bracket.to(closing_bracket),
+                }
+            }
         })
     }
 }
 
-impl<'a> From<Item<'a>> for crate::format_description::FormatItem<'a> {
-    fn from(item: Item<'a>) -> Self {
+impl<'a> TryFrom<Item<'a>> for crate::format_description::FormatItem<'a> {
+    type Error = Error;
+
+    fn try_from(item: Item<'a>) -> Result<Self, Self::Error> {
         match item {
-            Item::Literal(literal) => Self::Literal(literal),
-            Item::Component(component) => Self::Component(component.into()),
+            Item::Literal(literal) => Ok(Self::Literal(literal)),
+            Item::Component(component) => Ok(Self::Component(component.into())),
+            Item::Optional { value: _, span } => Err(Error {
+                _inner: unused(span.error(
+                    "optional items are not supported in runtime-parsed format descriptions",
+                )),
+                public: crate::error::InvalidFormatDescription::NotSupported {
+                    what: "optional item",
+                    context: "runtime-parsed format descriptions",
+                    index: span.start.byte as _,
+                },
+            }),
+            Item::First { value: _, span } => Err(Error {
+                _inner: unused(span.error(
+                    "'first' items are not supported in runtime-parsed format descriptions",
+                )),
+                public: crate::error::InvalidFormatDescription::NotSupported {
+                    what: "'first' item",
+                    context: "runtime-parsed format descriptions",
+                    index: span.start.byte as _,
+                },
+            }),
         }
     }
 }
@@ -55,17 +137,43 @@ impl From<Item<'_>> for crate::format_description::OwnedFormatItem {
         match item {
             Item::Literal(literal) => Self::Literal(literal.to_vec().into_boxed_slice()),
             Item::Component(component) => Self::Component(component.into()),
+            Item::Optional { value, span: _ } => Self::Optional(Box::new(value.into())),
+            Item::First { value, span: _ } => {
+                Self::First(value.into_vec().into_iter().map(Into::into).collect())
+            }
+        }
+    }
+}
+
+impl<'a> From<Box<[Item<'a>]>> for crate::format_description::OwnedFormatItem {
+    fn from(items: Box<[Item<'a>]>) -> Self {
+        let items = items.into_vec();
+        if items.len() == 1 {
+            if let Ok([item]) = <[_; 1]>::try_from(items) {
+                item.into()
+            } else {
+                bug!("the length was just checked to be 1")
+            }
+        } else {
+            Self::Compound(items.into_iter().map(Self::from).collect())
         }
     }
 }
 
 /// Declare the `Component` struct.
 macro_rules! component_definition {
+    (@if_required required then { $($then:tt)* } $(else { $($else:tt)* })?) => { $($then)* };
+    (@if_required then { $($then:tt)* } $(else { $($else:tt)* })?) => { $($($else)*)? };
+    (@if_from_str from_str then { $($then:tt)* } $(else { $($else:tt)* })?) => { $($then)* };
+    (@if_from_str then { $($then:tt)* } $(else { $($else:tt)* })?) => { $($($else)*)? };
+
     ($vis:vis enum $name:ident {
-        $($variant:ident = $parse_variant:literal {
-            $($field:ident = $parse_field:literal:
-                Option<$field_type:ty> => $target_field:ident),* $(,)?
-        }),* $(,)?
+        $($variant:ident = $parse_variant:literal {$(
+            $(#[$required:tt])?
+            $field:ident = $parse_field:literal:
+            Option<$(#[$from_str:tt])? $field_type:ty>
+            => $target_field:ident
+        ),* $(,)?}),* $(,)?
     }) => {
         $vis enum $name {
             $($variant($variant),)*
@@ -77,24 +185,47 @@ macro_rules! component_definition {
 
         $(impl $variant {
             /// Parse the component from the AST, given its modifiers.
-            fn with_modifiers(modifiers: &[ast::Modifier<'_>]) -> Result<Self, Error> {
+            fn with_modifiers(
+                modifiers: &[ast::Modifier<'_>],
+                _component_span: Span,
+            ) -> Result<Self, Error>
+            {
                 let mut this = Self {
                     $($field: None),*
                 };
 
                 for modifier in modifiers {
-                    $(if modifier.key.value.eq_ignore_ascii_case($parse_field) {
-                        this.$field = <$field_type>::from_modifier_value(&modifier.value)?;
+                    $(#[allow(clippy::string_lit_as_bytes)]
+                    if modifier.key.eq_ignore_ascii_case($parse_field.as_bytes()) {
+                        this.$field = component_definition!(@if_from_str $($from_str)?
+                            then {
+                                parse_from_modifier_value::<$field_type>(&modifier.value)?
+                            } else {
+                                <$field_type>::from_modifier_value(&modifier.value)?
+                            });
                         continue;
                     })*
                     return Err(Error {
-                        _inner: modifier.key.span.error("invalid modifier key"),
+                        _inner: unused(modifier.key.span.error("invalid modifier key")),
                         public: crate::error::InvalidFormatDescription::InvalidModifier {
-                            value: String::from_utf8_lossy(modifier.key.value).into_owned(),
-                            index: modifier.key.span.start_byte(),
+                            value: String::from_utf8_lossy(*modifier.key).into_owned(),
+                            index: modifier.key.span.start.byte as _,
                         }
                     });
                 }
+
+                $(component_definition! { @if_required $($required)? then {
+                    if this.$field.is_none() {
+                        return Err(Error {
+                            _inner: unused(_component_span.error("missing required modifier")),
+                            public:
+                                crate::error::InvalidFormatDescription::MissingRequiredModifier {
+                                    name: $parse_field,
+                                    index: _component_span.start.byte as _,
+                                }
+                        });
+                    }
+                }})*
 
                 Ok(this)
             }
@@ -106,7 +237,16 @@ macro_rules! component_definition {
                     $name::$variant($variant { $($field),* }) => {
                         $crate::format_description::component::Component::$variant(
                             $crate::format_description::modifier::$variant {$(
-                                $target_field: $field.unwrap_or_default().into()
+                                $target_field: component_definition! { @if_required $($required)?
+                                    then {
+                                        match $field {
+                                            Some(value) => value.into(),
+                                            None => bug!("required modifier was not set"),
+                                        }
+                                    } else {
+                                        $field.unwrap_or_default().into()
+                                    }
+                                }
                             ),*}
                         )
                     }
@@ -116,17 +256,18 @@ macro_rules! component_definition {
 
         /// Parse a component from the AST, given its name and modifiers.
         fn component_from_ast(
-            name: &ast::Name<'_>,
+            name: &Spanned<&[u8]>,
             modifiers: &[ast::Modifier<'_>],
         ) -> Result<Component, Error> {
-            $(if name.value.eq_ignore_ascii_case($parse_variant) {
-                return Ok(Component::$variant($variant::with_modifiers(&modifiers)?));
+            $(#[allow(clippy::string_lit_as_bytes)]
+            if name.eq_ignore_ascii_case($parse_variant.as_bytes()) {
+                return Ok(Component::$variant($variant::with_modifiers(&modifiers, name.span)?,));
             })*
             Err(Error {
-                _inner: name.span.error("invalid component"),
+                _inner: unused(name.span.error("invalid component")),
                 public: crate::error::InvalidFormatDescription::InvalidComponentName {
-                    name: String::from_utf8_lossy(name.value).into_owned(),
-                    index: name.span.start_byte(),
+                    name: String::from_utf8_lossy(name).into_owned(),
+                    index: name.span.start.byte as _,
                 },
             })
         }
@@ -136,58 +277,66 @@ macro_rules! component_definition {
 // Keep in alphabetical order.
 component_definition! {
     pub(super) enum Component {
-        Day = b"day" {
-            padding = b"padding": Option<Padding> => padding,
+        Day = "day" {
+            padding = "padding": Option<Padding> => padding,
         },
-        Hour = b"hour" {
-            padding = b"padding": Option<Padding> => padding,
-            base = b"repr": Option<HourBase> => is_12_hour_clock,
+        Hour = "hour" {
+            padding = "padding": Option<Padding> => padding,
+            base = "repr": Option<HourBase> => is_12_hour_clock,
         },
-        Minute = b"minute" {
-            padding = b"padding": Option<Padding> => padding,
+        Ignore = "ignore" {
+            #[required]
+            count = "count": Option<#[from_str] NonZeroU16> => count,
         },
-        Month = b"month" {
-            padding = b"padding": Option<Padding> => padding,
-            repr = b"repr": Option<MonthRepr> => repr,
-            case_sensitive = b"case_sensitive": Option<MonthCaseSensitive> => case_sensitive,
+        Minute = "minute" {
+            padding = "padding": Option<Padding> => padding,
         },
-        OffsetHour = b"offset_hour" {
-            sign_behavior = b"sign": Option<SignBehavior> => sign_is_mandatory,
-            padding = b"padding": Option<Padding> => padding,
+        Month = "month" {
+            padding = "padding": Option<Padding> => padding,
+            repr = "repr": Option<MonthRepr> => repr,
+            case_sensitive = "case_sensitive": Option<MonthCaseSensitive> => case_sensitive,
         },
-        OffsetMinute = b"offset_minute" {
-            padding = b"padding": Option<Padding> => padding,
+        OffsetHour = "offset_hour" {
+            sign_behavior = "sign": Option<SignBehavior> => sign_is_mandatory,
+            padding = "padding": Option<Padding> => padding,
         },
-        OffsetSecond = b"offset_second" {
-            padding = b"padding": Option<Padding> => padding,
+        OffsetMinute = "offset_minute" {
+            padding = "padding": Option<Padding> => padding,
         },
-        Ordinal = b"ordinal" {
-            padding = b"padding": Option<Padding> => padding,
+        OffsetSecond = "offset_second" {
+            padding = "padding": Option<Padding> => padding,
         },
-        Period = b"period" {
-            case = b"case": Option<PeriodCase> => is_uppercase,
-            case_sensitive = b"case_sensitive": Option<PeriodCaseSensitive> => case_sensitive,
+        Ordinal = "ordinal" {
+            padding = "padding": Option<Padding> => padding,
         },
-        Second = b"second" {
-            padding = b"padding": Option<Padding> => padding,
+        Period = "period" {
+            case = "case": Option<PeriodCase> => is_uppercase,
+            case_sensitive = "case_sensitive": Option<PeriodCaseSensitive> => case_sensitive,
         },
-        Subsecond = b"subsecond" {
-            digits = b"digits": Option<SubsecondDigits> => digits,
+        Second = "second" {
+            padding = "padding": Option<Padding> => padding,
         },
-        Weekday = b"weekday" {
-            repr = b"repr": Option<WeekdayRepr> => repr,
-            one_indexed = b"one_indexed": Option<WeekdayOneIndexed> => one_indexed,
-            case_sensitive = b"case_sensitive": Option<WeekdayCaseSensitive> => case_sensitive,
+        Subsecond = "subsecond" {
+            digits = "digits": Option<SubsecondDigits> => digits,
         },
-        WeekNumber = b"week_number" {
-            padding = b"padding": Option<Padding> => padding,
-            repr = b"repr": Option<WeekNumberRepr> => repr,
+        UnixTimestamp = "unix_timestamp" {
+            precision = "precision": Option<UnixTimestampPrecision> => precision,
+            sign_behavior = "sign": Option<SignBehavior> => sign_is_mandatory,
         },
-        Year = b"year" {
-            padding = b"padding": Option<Padding> => padding,
-            repr = b"repr": Option<YearRepr> => repr,
-            base = b"base": Option<YearBase> => iso_week_based,
-            sign_behavior = b"sign": Option<SignBehavior> => sign_is_mandatory,
+        Weekday = "weekday" {
+            repr = "repr": Option<WeekdayRepr> => repr,
+            one_indexed = "one_indexed": Option<WeekdayOneIndexed> => one_indexed,
+            case_sensitive = "case_sensitive": Option<WeekdayCaseSensitive> => case_sensitive,
+        },
+        WeekNumber = "week_number" {
+            padding = "padding": Option<Padding> => padding,
+            repr = "repr": Option<WeekNumberRepr> => repr,
+        },
+        Year = "year" {
+            padding = "padding": Option<Padding> => padding,
+            repr = "repr": Option<YearRepr> => repr,
+            base = "base": Option<YearBase> => iso_week_based,
+            sign_behavior = "sign": Option<SignBehavior> => sign_is_mandatory,
         },
     }
 }
@@ -209,19 +358,6 @@ macro_rules! target_value {
     };
     ($name:ident $variant:ident) => {
         $crate::format_description::modifier::$name::$variant
-    };
-}
-
-// TODO use `#[derive(Default)]` on enums once MSRV is 1.62 (NET 2022-12-30)
-/// Simulate `#[derive(Default)]` on enums.
-macro_rules! derived_default_on_enum {
-    ($type:ty; $default:expr) => {};
-    ($attr:meta $type:ty; $default:expr) => {
-        impl Default for $type {
-            fn default() -> Self {
-                $default
-            }
-        }
     };
 }
 
@@ -251,25 +387,22 @@ macro_rules! modifier {
             ),* $(,)?
         }
     )+) => {$(
+        #[derive(Default)]
         enum $name {
-            $($variant),*
+            $($(#[$attr])? $variant),*
         }
-
-        $(derived_default_on_enum! {
-            $($attr)? $name; $name::$variant
-        })*
 
         impl $name {
             /// Parse the modifier from its string representation.
-            fn from_modifier_value(value: &ast::Value<'_>) -> Result<Option<Self>, Error> {
-                $(if value.value.eq_ignore_ascii_case($parse_variant) {
+            fn from_modifier_value(value: &Spanned<&[u8]>) -> Result<Option<Self>, Error> {
+                $(if value.eq_ignore_ascii_case($parse_variant) {
                     return Ok(Some(Self::$variant));
                 })*
                 Err(Error {
-                    _inner: value.span.error("invalid modifier value"),
+                    _inner: unused(value.span.error("invalid modifier value")),
                     public: crate::error::InvalidFormatDescription::InvalidModifier {
-                        value: String::from_utf8_lossy(value.value).into_owned(),
-                        index: value.span.start_byte(),
+                        value: String::from_utf8_lossy(value).into_owned(),
+                        index: value.span.start.byte as _,
                     },
                 })
             }
@@ -345,6 +478,14 @@ modifier! {
         OneOrMore = b"1+",
     }
 
+    enum UnixTimestampPrecision {
+        #[default]
+        Second = b"second",
+        Millisecond = b"millisecond",
+        Microsecond = b"microsecond",
+        Nanosecond = b"nanosecond",
+    }
+
     enum WeekNumberRepr {
         #[default]
         Iso = b"iso",
@@ -383,4 +524,19 @@ modifier! {
         Full = b"full",
         LastTwo = b"last_two",
     }
+}
+
+/// Parse a modifier value using `FromStr`. Requires the modifier value to be valid UTF-8.
+fn parse_from_modifier_value<T: FromStr>(value: &Spanned<&[u8]>) -> Result<Option<T>, Error> {
+    str::from_utf8(value)
+        .ok()
+        .and_then(|val| val.parse::<T>().ok())
+        .map(|val| Some(val))
+        .ok_or_else(|| Error {
+            _inner: unused(value.span.error("invalid modifier value")),
+            public: crate::error::InvalidFormatDescription::InvalidModifier {
+                value: String::from_utf8_lossy(value).into_owned(),
+                index: value.span.start.byte as _,
+            },
+        })
 }

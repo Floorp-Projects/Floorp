@@ -12,11 +12,6 @@ use crate::{
         ConnectionId, ConnectionIdEntry, ConnectionIdGenerator, ConnectionIdManager,
         ConnectionIdRef, ConnectionIdStore, LOCAL_ACTIVE_CID_LIMIT,
     },
-};
-
-use crate::recv_stream::RecvStreamStats;
-pub use crate::send_stream::{RetransmissionPriority, SendStreamStats, TransmissionPriority};
-use crate::{
     crypto::{Crypto, CryptoDxState, CryptoSpace},
     dump::*,
     events::{ConnectionEvent, ConnectionEvents, OutgoingDatagramOutcome},
@@ -29,6 +24,7 @@ use crate::{
     qlog,
     quic_datagrams::{DatagramTracking, QuicDatagrams},
     recovery::{LossRecovery, RecoveryToken, SendProfile},
+    recv_stream::RecvStreamStats,
     rtt::GRANULARITY,
     stats::{Stats, StatsCell},
     stream_id::StreamType,
@@ -70,6 +66,7 @@ mod state;
 #[cfg(test)]
 pub mod test_internal;
 
+pub use crate::send_stream::{RetransmissionPriority, SendStreamStats, TransmissionPriority};
 pub use params::{ConnectionParameters, ACK_RATIO_SCALE};
 pub use state::{ClosingFrame, State};
 
@@ -1705,8 +1702,8 @@ impl Connection {
             // be needed to work out how to get addresses from a different family.
             let prev = self.paths.primary().borrow().remote_address();
             let remote = match prev.ip() {
-                IpAddr::V4(_) => addr.ipv4(),
-                IpAddr::V6(_) => addr.ipv6(),
+                IpAddr::V4(_) => addr.ipv4().map(SocketAddr::V4),
+                IpAddr::V6(_) => addr.ipv6().map(SocketAddr::V6),
             };
 
             if let Some(remote) = remote {

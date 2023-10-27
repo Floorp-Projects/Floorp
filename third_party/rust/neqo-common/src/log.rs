@@ -29,7 +29,7 @@ macro_rules! do_log {
             );
         }
     });
-    ($lvl:expr, $($arg:tt)+) => ($crate::do_log!(target: ::log::__log_module_path!(), $lvl, $($arg)+))
+    ($lvl:expr, $($arg:tt)+) => ($crate::do_log!(target: module_path!(), $lvl, $($arg)+))
 }
 
 #[macro_export]

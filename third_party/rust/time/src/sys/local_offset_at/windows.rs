@@ -2,6 +2,7 @@
 
 use core::mem::MaybeUninit;
 
+use crate::convert::*;
 use crate::{OffsetDateTime, UtcOffset};
 
 // ffi: WINAPI FILETIME struct
@@ -56,7 +57,7 @@ fn systemtime_to_filetime(systime: &SystemTime) -> Option<FileTime> {
 /// Convert a `FILETIME` to an `i64`, representing a number of seconds.
 fn filetime_to_secs(filetime: &FileTime) -> i64 {
     /// FILETIME represents 100-nanosecond intervals
-    const FT_TO_SECS: i64 = 10_000_000;
+    const FT_TO_SECS: i64 = Nanosecond.per(Second) as i64 / 100;
     ((filetime.dwHighDateTime as i64) << 32 | filetime.dwLowDateTime as i64) / FT_TO_SECS
 }
 
@@ -101,14 +102,9 @@ pub(super) fn local_offset_at(datetime: OffsetDateTime) -> Option<UtcOffset> {
     let ft_system = systemtime_to_filetime(&systime_utc)?;
     let ft_local = systemtime_to_filetime(&systime_local)?;
 
-    let diff_secs: i32 = (filetime_to_secs(&ft_local) - filetime_to_secs(&ft_system))
+    let diff_secs = (filetime_to_secs(&ft_local) - filetime_to_secs(&ft_system))
         .try_into()
         .ok()?;
 
-    UtcOffset::from_hms(
-        (diff_secs / 3_600) as _,
-        ((diff_secs / 60) % 60) as _,
-        (diff_secs % 60) as _,
-    )
-    .ok()
+    UtcOffset::from_whole_seconds(diff_secs).ok()
 }

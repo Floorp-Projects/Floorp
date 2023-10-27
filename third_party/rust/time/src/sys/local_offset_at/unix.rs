@@ -2,7 +2,25 @@
 
 use core::mem::MaybeUninit;
 
+use crate::util::local_offset::{self, Soundness};
 use crate::{OffsetDateTime, UtcOffset};
+
+/// Whether the operating system has a thread-safe environment. This allows bypassing the check for
+/// if the process is multi-threaded.
+// This is the same value as `cfg!(target_os = "x")`.
+// Use byte-strings to work around current limitations of const eval.
+const OS_HAS_THREAD_SAFE_ENVIRONMENT: bool = match std::env::consts::OS.as_bytes() {
+    // https://github.com/illumos/illumos-gate/blob/0fb96ba1f1ce26ff8b286f8f928769a6afcb00a6/usr/src/lib/libc/port/gen/getenv.c
+    b"illumos"
+    // https://github.com/NetBSD/src/blob/f45028636a44111bc4af44d460924958a4460844/lib/libc/stdlib/getenv.c
+    // https://github.com/NetBSD/src/blob/f45028636a44111bc4af44d460924958a4460844/lib/libc/stdlib/setenv.c
+    | b"netbsd"
+    // https://github.com/apple-oss-distributions/Libc/blob/d526593760f0f79dfaeb8b96c3c8a42c791156ff/stdlib/FreeBSD/getenv.c
+    // https://github.com/apple-oss-distributions/Libc/blob/d526593760f0f79dfaeb8b96c3c8a42c791156ff/stdlib/FreeBSD/setenv.c
+    | b"macos"
+    => true,
+    _ => false,
+};
 
 /// Convert the given Unix timestamp to a `libc::tm`. Returns `None` on any error.
 ///
@@ -59,65 +77,33 @@ unsafe fn timestamp_to_tm(timestamp: i64) -> Option<libc::tm> {
     target_os = "netbsd",
     target_os = "haiku",
 ))]
-fn tm_to_offset(tm: libc::tm) -> Option<UtcOffset> {
-    let seconds: i32 = tm.tm_gmtoff.try_into().ok()?;
-    UtcOffset::from_hms(
-        (seconds / 3_600) as _,
-        ((seconds / 60) % 60) as _,
-        (seconds % 60) as _,
-    )
-    .ok()
+fn tm_to_offset(_unix_timestamp: i64, tm: libc::tm) -> Option<UtcOffset> {
+    let seconds = tm.tm_gmtoff.try_into().ok()?;
+    UtcOffset::from_whole_seconds(seconds).ok()
 }
 
 /// Convert a `libc::tm` to a `UtcOffset`. Returns `None` on any error.
-#[cfg(all(
-    not(unsound_local_offset),
-    not(any(
-        target_os = "redox",
-        target_os = "linux",
-        target_os = "l4re",
-        target_os = "android",
-        target_os = "emscripten",
-        target_os = "macos",
-        target_os = "ios",
-        target_os = "watchos",
-        target_os = "freebsd",
-        target_os = "dragonfly",
-        target_os = "openbsd",
-        target_os = "netbsd",
-        target_os = "haiku",
-    ))
-))]
-#[allow(unused_variables, clippy::missing_const_for_fn)]
-fn tm_to_offset(tm: libc::tm) -> Option<UtcOffset> {
-    None
-}
-
-/// Convert a `libc::tm` to a `UtcOffset`. Returns `None` on any error.
-// This method can return an incorrect value, as it only approximates the `tm_gmtoff` field. As such
-// it is gated behind `--cfg unsound_local_offset`. The reason it can return an incorrect value is
-// that daylight saving time does not start on the same date every year, nor are the rules for
-// daylight saving time the same for every year. This implementation assumes 1970 is equivalent to
-// every other year, which is not always the case.
-#[cfg(all(
-    unsound_local_offset,
-    not(any(
-        target_os = "redox",
-        target_os = "linux",
-        target_os = "l4re",
-        target_os = "android",
-        target_os = "emscripten",
-        target_os = "macos",
-        target_os = "ios",
-        target_os = "watchos",
-        target_os = "freebsd",
-        target_os = "dragonfly",
-        target_os = "openbsd",
-        target_os = "netbsd",
-        target_os = "haiku",
-    ))
-))]
-fn tm_to_offset(tm: libc::tm) -> Option<UtcOffset> {
+///
+/// This method can return an incorrect value, as it only approximates the `tm_gmtoff` field. The
+/// reason for this is that daylight saving time does not start on the same date every year, nor are
+/// the rules for daylight saving time the same for every year. This implementation assumes 1970 is
+/// equivalent to every other year, which is not always the case.
+#[cfg(not(any(
+    target_os = "redox",
+    target_os = "linux",
+    target_os = "l4re",
+    target_os = "android",
+    target_os = "emscripten",
+    target_os = "macos",
+    target_os = "ios",
+    target_os = "watchos",
+    target_os = "freebsd",
+    target_os = "dragonfly",
+    target_os = "openbsd",
+    target_os = "netbsd",
+    target_os = "haiku",
+)))]
+fn tm_to_offset(unix_timestamp: i64, tm: libc::tm) -> Option<UtcOffset> {
     use crate::Date;
 
     let mut tm = tm;
@@ -138,32 +124,34 @@ fn tm_to_offset(tm: libc::tm) -> Option<UtcOffset> {
             .assume_utc()
             .unix_timestamp();
 
-    let diff_secs: i32 = (local_timestamp - datetime.unix_timestamp())
-        .try_into()
-        .ok()?;
+    let diff_secs = (local_timestamp - unix_timestamp).try_into().ok()?;
 
-    UtcOffset::from_hms(
-        (diff_secs / 3_600) as _,
-        ((diff_secs / 60) % 60) as _,
-        (diff_secs % 60) as _,
-    )
-    .ok()
+    UtcOffset::from_whole_seconds(diff_secs).ok()
 }
 
 /// Obtain the system's UTC offset.
 pub(super) fn local_offset_at(datetime: OffsetDateTime) -> Option<UtcOffset> {
-    // Ensure that the process is single-threaded unless the user has explicitly opted out of this
-    // check. This is to prevent issues with the environment being mutated by a different thread in
-    // the process while execution of this function is taking place, which can cause a segmentation
-    // fault by dereferencing a dangling pointer.
+    // Continue to obtaining the UTC offset if and only if the call is sound or the user has
+    // explicitly opted out of soundness.
+    //
+    // Soundness can be guaranteed either by knowledge of the operating system or knowledge that the
+    // process is single-threaded. If the process is single-threaded, then the environment cannot
+    // be mutated by a different thread in the process while execution of this function is taking
+    // place, which can cause a segmentation fault by dereferencing a dangling pointer.
+    //
     // If the `num_threads` crate is incapable of determining the number of running threads, then
     // we conservatively return `None` to avoid a soundness bug.
-    if !cfg!(unsound_local_offset) && num_threads::is_single_threaded() != Some(true) {
-        return None;
-    }
 
-    // Safety: We have just confirmed that the process is single-threaded or the user has explicitly
-    // opted out of soundness.
-    let tm = unsafe { timestamp_to_tm(datetime.unix_timestamp()) }?;
-    tm_to_offset(tm)
+    if OS_HAS_THREAD_SAFE_ENVIRONMENT
+        || local_offset::get_soundness() == Soundness::Unsound
+        || num_threads::is_single_threaded() == Some(true)
+    {
+        let unix_timestamp = datetime.unix_timestamp();
+        // Safety: We have just confirmed that the process is single-threaded or the user has
+        // explicitly opted out of soundness.
+        let tm = unsafe { timestamp_to_tm(unix_timestamp) }?;
+        tm_to_offset(unix_timestamp, tm)
+    } else {
+        None
+    }
 }

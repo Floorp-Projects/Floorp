@@ -4,13 +4,15 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use std::cell::RefCell;
-use std::fmt;
-use std::path::{Path, PathBuf};
-use std::rc::Rc;
+use std::{
+    cell::RefCell,
+    fmt,
+    path::{Path, PathBuf},
+    rc::Rc,
+};
 
 use qlog::{
-    self, CommonFields, Configuration, QlogStreamer, TimeUnits, Trace, VantagePoint,
+    self, streamer::QlogStreamer, CommonFields, Configuration, TraceSeq, VantagePoint,
     VantagePointType,
 };
 
@@ -55,11 +57,24 @@ impl NeqoQlog {
     /// If logging enabled, closure may generate an event to be logged.
     pub fn add_event<F>(&mut self, f: F)
     where
-        F: FnOnce() -> Option<qlog::event::Event>,
+        F: FnOnce() -> Option<qlog::events::Event>,
     {
         self.add_event_with_stream(|s| {
             if let Some(evt) = f() {
                 s.add_event(evt)?;
+            }
+            Ok(())
+        });
+    }
+
+    /// If logging enabled, closure may generate an event to be logged.
+    pub fn add_event_data<F>(&mut self, f: F)
+    where
+        F: FnOnce() -> Option<qlog::events::EventData>,
+    {
+        self.add_event_with_stream(|s| {
+            if let Some(ev_data) = f() {
+                s.add_event_data_now(ev_data)?;
             }
             Ok(())
         });
@@ -99,8 +114,8 @@ impl Drop for NeqoQlogShared {
 }
 
 #[must_use]
-pub fn new_trace(role: Role) -> qlog::Trace {
-    Trace {
+pub fn new_trace(role: Role) -> qlog::TraceSeq {
+    TraceSeq {
         vantage_point: VantagePoint {
             name: Some(format!("neqo-{role}")),
             ty: match role {
@@ -112,26 +127,20 @@ pub fn new_trace(role: Role) -> qlog::Trace {
         title: Some(format!("neqo-{role} trace")),
         description: Some("Example qlog trace description".to_string()),
         configuration: Some(Configuration {
-            time_offset: Some("0".into()),
-            time_units: Some(TimeUnits::Us),
+            time_offset: Some(0.0),
             original_uris: None,
         }),
         common_fields: Some(CommonFields {
             group_id: None,
             protocol_type: None,
             reference_time: {
-                let datetime = time::OffsetDateTime::now_utc();
-                datetime
-                    .format(&time::format_description::well_known::Rfc3339)
-                    .ok() // This is expected to never fail.
+                // It is better to allow this than deal with a conversion from i64 to f64.
+                // We can't do the obvious two-step conversion with f64::from(i32::try_from(...)),
+                // because that overflows earlier than is ideal.  This should be fine for a while.
+                #[allow(clippy::cast_precision_loss)]
+                Some(time::OffsetDateTime::now_utc().unix_timestamp() as f64)
             },
+            time_format: Some("relative".to_string()),
         }),
-        event_fields: vec![
-            "relative_time".to_string(),
-            "category".to_string(),
-            "event".to_string(),
-            "data".to_string(),
-        ],
-        events: Vec::new(),
     }
 }

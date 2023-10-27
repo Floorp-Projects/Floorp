@@ -4,26 +4,28 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use super::super::{Connection, Output, State, StreamType};
 use super::{
+    super::{Connection, Output, State, StreamType},
     connect_fail, connect_force_idle, connect_rtt_idle, default_client, default_server,
     maybe_authenticate, new_client, new_server, send_something, CountingConnectionIdGenerator,
 };
-use crate::cid::LOCAL_ACTIVE_CID_LIMIT;
-use crate::frame::FRAME_TYPE_NEW_CONNECTION_ID;
-use crate::packet::PacketBuilder;
-use crate::path::{PATH_MTU_V4, PATH_MTU_V6};
-use crate::tparams::{self, PreferredAddress, TransportParameter};
 use crate::{
+    cid::LOCAL_ACTIVE_CID_LIMIT,
+    frame::FRAME_TYPE_NEW_CONNECTION_ID,
+    packet::PacketBuilder,
+    path::{PATH_MTU_V4, PATH_MTU_V6},
+    tparams::{self, PreferredAddress, TransportParameter},
     ConnectionError, ConnectionId, ConnectionIdDecoder, ConnectionIdGenerator, ConnectionIdRef,
     ConnectionParameters, EmptyConnectionIdGenerator, Error,
 };
 
 use neqo_common::{Datagram, Decoder};
-use std::cell::RefCell;
-use std::net::{IpAddr, Ipv6Addr, SocketAddr};
-use std::rc::Rc;
-use std::time::{Duration, Instant};
+use std::{
+    cell::RefCell,
+    net::{IpAddr, Ipv6Addr, SocketAddr},
+    rc::Rc,
+    time::{Duration, Instant},
+};
 use test_fixture::{
     self, addr, addr_v4,
     assertions::{assert_v4_path, assert_v6_path},
@@ -504,10 +506,9 @@ fn preferred_address(hs_client: SocketAddr, hs_server: SocketAddr, preferred: So
         now(),
     )
     .unwrap();
-    let spa = if preferred.ip().is_ipv6() {
-        PreferredAddress::new(None, Some(preferred))
-    } else {
-        PreferredAddress::new(Some(preferred), None)
+    let spa = match preferred {
+        SocketAddr::V6(v6) => PreferredAddress::new(None, Some(v6)),
+        SocketAddr::V4(v4) => PreferredAddress::new(Some(v4), None),
     };
     let mut server = new_server(ConnectionParameters::default().preferred_address(spa));
 
@@ -605,13 +606,13 @@ fn preferred_address_ignored(spa: PreferredAddress) {
 /// Using a loopback address in the preferred address is ignored.
 #[test]
 fn preferred_address_ignore_loopback() {
-    preferred_address_ignored(PreferredAddress::new(None, Some(loopback())));
+    preferred_address_ignored(PreferredAddress::new_any(None, Some(loopback())));
 }
 
 /// A preferred address in the wrong address family is ignored.
 #[test]
 fn preferred_address_ignore_different_family() {
-    preferred_address_ignored(PreferredAddress::new(Some(addr_v4()), None));
+    preferred_address_ignored(PreferredAddress::new_any(Some(addr_v4()), None));
 }
 
 /// Disabling preferred addresses at the client means that it ignores a perfectly
@@ -621,7 +622,7 @@ fn preferred_address_disabled_client() {
     let mut client = new_client(ConnectionParameters::default().disable_preferred_address());
     let mut preferred = addr();
     preferred.set_ip(IpAddr::V6(Ipv6Addr::new(0xfe80, 0, 0, 0, 0, 0, 0, 2)));
-    let spa = PreferredAddress::new(None, Some(preferred));
+    let spa = PreferredAddress::new_any(None, Some(preferred));
     let mut server = new_server(ConnectionParameters::default().preferred_address(spa));
 
     expect_no_migration(&mut client, &mut server);
@@ -631,7 +632,7 @@ fn preferred_address_disabled_client() {
 fn preferred_address_empty_cid() {
     fixture_init();
 
-    let spa = PreferredAddress::new(None, Some(new_port(addr())));
+    let spa = PreferredAddress::new_any(None, Some(new_port(addr())));
     let res = Connection::new_server(
         test_fixture::DEFAULT_KEYS,
         test_fixture::DEFAULT_ALPN,

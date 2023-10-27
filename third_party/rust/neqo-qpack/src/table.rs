@@ -197,7 +197,7 @@ impl HeaderTable {
             can_block
         );
         let mut name_match = None;
-        for iter in HEADER_STATIC_TABLE.iter() {
+        for iter in HEADER_STATIC_TABLE {
             if iter.name() == name {
                 if iter.value() == value {
                     return Some(LookupResult {

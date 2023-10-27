@@ -991,6 +991,7 @@ mod tests {
     }
 
     #[test]
+    #[allow(unknown_lints, clippy::single_range_in_vec_init)] // Because that lint makes no sense here.
     fn recv_noncontiguous() {
         // Non-contiguous with the start, no data available.
         recv_ranges(&[10..20], 0);
@@ -1109,7 +1110,7 @@ mod tests {
         s.inbound_frame(offset, &[0; EXTRA_SIZE]);
 
         // Read, providing only enough space for the first.
-        let mut buf = vec![0; 100];
+        let mut buf = [0; 100];
         let count = s.read(&mut buf[..CHUNK_SIZE]);
         assert_eq!(count, CHUNK_SIZE);
         let count = s.read(&mut buf[..]);

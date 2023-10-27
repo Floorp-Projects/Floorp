@@ -827,7 +827,7 @@ version = "0.16.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e859cd57d0710d9e06c381b550c06e76992472a8c6d527aecd2fc673dcc231fb"
 dependencies = [
- "time 0.3.17",
+ "time 0.3.23",
  "version_check",
 ]
 
@@ -3778,21 +3778,21 @@ dependencies = [
 
 [[package]]
 name = "neqo-common"
-version = "0.6.5"
-source = "git+https://github.com/mozilla/neqo?tag=v0.6.5#23ae8e8b75b412c1c10fa44fc3f68e5422342b86"
+version = "0.6.6"
+source = "git+https://github.com/mozilla/neqo?tag=v0.6.6#34b2c3c45dc8c396f82ef5c3a5246f04bf0adad3"
 dependencies = [
  "env_logger",
  "lazy_static",
  "log",
  "qlog",
- "time 0.3.17",
+ "time 0.3.23",
  "winapi",
 ]
 
 [[package]]
 name = "neqo-crypto"
-version = "0.6.5"
-source = "git+https://github.com/mozilla/neqo?tag=v0.6.5#23ae8e8b75b412c1c10fa44fc3f68e5422342b86"
+version = "0.6.6"
+source = "git+https://github.com/mozilla/neqo?tag=v0.6.6#34b2c3c45dc8c396f82ef5c3a5246f04bf0adad3"
 dependencies = [
  "bindgen 0.64.999",
  "log",
@@ -3805,8 +3805,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-http3"
-version = "0.6.5"
-source = "git+https://github.com/mozilla/neqo?tag=v0.6.5#23ae8e8b75b412c1c10fa44fc3f68e5422342b86"
+version = "0.6.6"
+source = "git+https://github.com/mozilla/neqo?tag=v0.6.6#34b2c3c45dc8c396f82ef5c3a5246f04bf0adad3"
 dependencies = [
  "enumset",
  "lazy_static",
@@ -3823,8 +3823,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-qpack"
-version = "0.6.5"
-source = "git+https://github.com/mozilla/neqo?tag=v0.6.5#23ae8e8b75b412c1c10fa44fc3f68e5422342b86"
+version = "0.6.6"
+source = "git+https://github.com/mozilla/neqo?tag=v0.6.6#34b2c3c45dc8c396f82ef5c3a5246f04bf0adad3"
 dependencies = [
  "lazy_static",
  "log",
@@ -3837,8 +3837,8 @@ dependencies = [
 
 [[package]]
 name = "neqo-transport"
-version = "0.6.5"
-source = "git+https://github.com/mozilla/neqo?tag=v0.6.5#23ae8e8b75b412c1c10fa44fc3f68e5422342b86"
+version = "0.6.6"
+source = "git+https://github.com/mozilla/neqo?tag=v0.6.6#34b2c3c45dc8c396f82ef5c3a5246f04bf0adad3"
 dependencies = [
  "indexmap 1.9.3",
  "lazy_static",
@@ -4327,7 +4327,7 @@ dependencies = [
  "indexmap 1.9.3",
  "line-wrap",
  "serde",
- "time 0.3.17",
+ "time 0.3.23",
  "xml-rs",
 ]
 
@@ -4466,14 +4466,15 @@ dependencies = [
 
 [[package]]
 name = "qlog"
-version = "0.4.0"
+version = "0.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8777d5490145d6907198d48b3a907447689ce80e071b3d8a16a9d9fb3df02bc1"
+checksum = "321df7a3199d152be256a416096136191e88b7716f1e2e4c8c05b9f77ffb648b"
 dependencies = [
  "serde",
  "serde_derive",
  "serde_json",
  "serde_with 1.999.999",
+ "smallvec",
 ]
 
 [[package]]
@@ -5481,9 +5482,9 @@ dependencies = [
 
 [[package]]
 name = "time"
-version = "0.3.17"
+version = "0.3.23"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a561bf4617eebd33bca6434b988f39ed798e527f51a1e797d0ee4f61c0a38376"
+checksum = "59e399c068f43a5d116fedaf73b203fa4f9c519f17e2b34f63221d3792f81446"
 dependencies = [
  "itoa",
  "serde",
@@ -5493,15 +5494,15 @@ dependencies = [
 
 [[package]]
 name = "time-core"
-version = "0.1.0"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "2e153e1f1acaef8acc537e68b44906d2db6436e2b35ac2c6b42640fff91f00fd"
+checksum = "7300fbefb4dadc1af235a9cef3737cea692a9d97e1b9cbcd4ebdae6f8868e6fb"
 
 [[package]]
 name = "time-macros"
-version = "0.2.6"
+version = "0.2.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d967f99f534ca7e495c575c62638eebc2898a8c84c119b89e250477bc4ba16b2"
+checksum = "96ba15a897f3c86766b757e5ac7221554c6750054d74d5b28844fce5fb36a6c4"
 dependencies = [
  "time-core",
 ]
@@ -6176,7 +6177,7 @@ dependencies = [
  "serde",
  "serde_derive",
  "serde_json",
- "time 0.3.17",
+ "time 0.3.23",
  "tokio",
  "tokio-stream",
  "unicode-segmentation",

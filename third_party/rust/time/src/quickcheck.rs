@@ -38,6 +38,8 @@ use alloc::boxed::Box;
 
 use quickcheck::{empty_shrinker, single_shrinker, Arbitrary, Gen};
 
+use crate::convert::*;
+use crate::date_time::{DateTime, MaybeOffset};
 use crate::{Date, Duration, Month, OffsetDateTime, PrimitiveDateTime, Time, UtcOffset, Weekday};
 
 /// Obtain an arbitrary value between the minimum and maximum inclusive.
@@ -98,10 +100,10 @@ impl Arbitrary for Duration {
 impl Arbitrary for Time {
     fn arbitrary(g: &mut Gen) -> Self {
         Self::__from_hms_nanos_unchecked(
-            arbitrary_between!(u8; g, 0, 23),
-            arbitrary_between!(u8; g, 0, 59),
-            arbitrary_between!(u8; g, 0, 59),
-            arbitrary_between!(u32; g, 0, 999_999_999),
+            arbitrary_between!(u8; g, 0, Hour.per(Day) - 1),
+            arbitrary_between!(u8; g, 0, Minute.per(Hour) - 1),
+            arbitrary_between!(u8; g, 0, Second.per(Minute) - 1),
+            arbitrary_between!(u32; g, 0, Nanosecond.per(Second) - 1),
         )
     }
 
@@ -118,25 +120,22 @@ impl Arbitrary for Time {
 
 impl Arbitrary for PrimitiveDateTime {
     fn arbitrary(g: &mut Gen) -> Self {
-        Self::new(<_>::arbitrary(g), <_>::arbitrary(g))
+        Self(<_>::arbitrary(g))
     }
 
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
-        Box::new(
-            (self.date, self.time)
-                .shrink()
-                .map(|(date, time)| Self { date, time }),
-        )
+        Box::new(self.0.shrink().map(Self))
     }
 }
 
 impl Arbitrary for UtcOffset {
     fn arbitrary(g: &mut Gen) -> Self {
-        let seconds = arbitrary_between!(i32; g, -86_399, 86_399);
+        let seconds =
+            arbitrary_between!(i32; g, -(Second.per(Day) as i32 - 1), Second.per(Day) as i32 - 1);
         Self::__from_hms_unchecked(
-            (seconds / 3600) as _,
-            ((seconds % 3600) / 60) as _,
-            (seconds % 60) as _,
+            (seconds / Second.per(Hour) as i32) as _,
+            ((seconds % Second.per(Hour) as i32) / Minute.per(Hour) as i32) as _,
+            (seconds % Second.per(Minute) as i32) as _,
         )
     }
 
@@ -151,15 +150,28 @@ impl Arbitrary for UtcOffset {
 
 impl Arbitrary for OffsetDateTime {
     fn arbitrary(g: &mut Gen) -> Self {
-        let datetime = PrimitiveDateTime::arbitrary(g);
-        datetime.assume_offset(<_>::arbitrary(g))
+        Self(<_>::arbitrary(g))
+    }
+
+    fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
+        Box::new(self.0.shrink().map(Self))
+    }
+}
+
+impl<O: MaybeOffset + 'static> Arbitrary for DateTime<O> {
+    fn arbitrary(g: &mut Gen) -> Self {
+        Self {
+            date: <_>::arbitrary(g),
+            time: <_>::arbitrary(g),
+            offset: <_>::arbitrary(g),
+        }
     }
 
     fn shrink(&self) -> Box<dyn Iterator<Item = Self>> {
         Box::new(
-            (self.local_datetime, self.offset)
+            (self.date, self.time, self.offset)
                 .shrink()
-                .map(|(local_datetime, offset)| local_datetime.assume_offset(offset)),
+                .map(|(date, time, offset)| Self { date, time, offset }),
         )
     }
 }

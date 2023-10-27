@@ -164,9 +164,9 @@ impl HpKey {
 
             Self::Chacha(key) => {
                 let params: CK_CHACHA20_PARAMS = CK_CHACHA20_PARAMS {
-                    pBlockCounter: sample.as_ptr() as *mut u8,
+                    pBlockCounter: sample.as_ptr().cast_mut(),
                     blockCounterBits: 32,
-                    pNonce: sample[4..Self::SAMPLE_SIZE].as_ptr() as *mut _,
+                    pNonce: sample[4..Self::SAMPLE_SIZE].as_ptr().cast_mut(),
                     ulNonceBits: 96,
                 };
                 let mut output_len: c_uint = 0;

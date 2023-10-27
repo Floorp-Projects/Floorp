@@ -21,7 +21,7 @@ pub const CUBIC_C: f64 = 0.4;
 pub const CUBIC_ALPHA: f64 = 3.0 * (1.0 - 0.7) / (1.0 + 0.7);
 
 // CUBIC_BETA = 0.7;
-pub const CUBIC_BETA_USIZE_QUOTIENT: usize = 7;
+pub const CUBIC_BETA_USIZE_DIVIDEND: usize = 7;
 pub const CUBIC_BETA_USIZE_DIVISOR: usize = 10;
 
 /// The fast convergence ratio further reduces the congestion window when a congestion event
@@ -188,8 +188,8 @@ impl WindowAdjustment for Cubic {
         };
         self.ca_epoch_start = None;
         (
-            curr_cwnd * CUBIC_BETA_USIZE_QUOTIENT / CUBIC_BETA_USIZE_DIVISOR,
-            acked_bytes * CUBIC_BETA_USIZE_QUOTIENT / CUBIC_BETA_USIZE_DIVISOR,
+            curr_cwnd * CUBIC_BETA_USIZE_DIVIDEND / CUBIC_BETA_USIZE_DIVISOR,
+            acked_bytes * CUBIC_BETA_USIZE_DIVIDEND / CUBIC_BETA_USIZE_DIVISOR,
         )
     }
 

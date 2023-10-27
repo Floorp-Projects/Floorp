@@ -338,7 +338,7 @@ impl Http3ClientEvents {
     }
 
     pub fn has_push(&self, push_id: u64) -> bool {
-        for iter in self.events.borrow().iter() {
+        for iter in &*self.events.borrow() {
             if matches!(iter, Http3ClientEvent::PushPromise{push_id:x, ..} if *x == push_id) {
                 return true;
             }

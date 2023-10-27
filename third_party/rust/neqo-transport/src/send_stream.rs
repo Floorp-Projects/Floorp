@@ -1807,7 +1807,7 @@ mod tests {
 
         // Mark all as sent. Get nothing
         txb.mark_as_sent(0, SEND_BUFFER_SIZE);
-        assert!(matches!(txb.next_bytes(), None));
+        assert!(txb.next_bytes().is_none());
 
         // Mark as lost. Get it again
         txb.mark_as_lost(one_byte_from_end, 1);
@@ -1908,7 +1908,7 @@ mod tests {
 
         // No more bytes.
         txb.mark_as_sent(range_a_end, 60);
-        assert!(matches!(txb.next_bytes(), None));
+        assert!(txb.next_bytes().is_none());
     }
 
     #[test]

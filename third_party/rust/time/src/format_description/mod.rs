@@ -2,8 +2,10 @@
 //!
 //! The formatted value will be output to the provided writer. Format descriptions can be
 //! [well-known](crate::format_description::well_known) or obtained by using the
-//! [`format_description!`](crate::macros::format_description) macro, the
-//! [`format_description::parse`](crate::format_description::parse()) function.
+//! [`format_description!`](crate::macros::format_description) macro or a function listed below.
+//!
+//! For examples, see the implementors of [Formattable](crate::formatting::Formattable),
+//! e.g. [`well_known::Rfc3339`].
 
 mod borrowed_format_item;
 mod component;
@@ -19,7 +21,7 @@ pub use owned_format_item::OwnedFormatItem;
 
 pub use self::component::Component;
 #[cfg(feature = "alloc")]
-pub use self::parse::{parse, parse_owned};
+pub use self::parse::{parse, parse_borrowed, parse_owned};
 
 /// Well-known formats, typically standards.
 pub mod well_known {

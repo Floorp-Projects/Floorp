@@ -3,9 +3,6 @@ use std::fmt;
 
 use proc_macro::{Delimiter, Group, Ident, Literal, Punct, Spacing, Span, TokenStream, TokenTree};
 
-#[cfg(any(feature = "formatting", feature = "parsing"))]
-use crate::format_description::error::InvalidFormatDescription;
-
 trait WithSpan {
     fn with_span(self, span: Span) -> Self;
 }
@@ -38,12 +35,6 @@ pub(crate) enum Error {
         tree: TokenTree,
     },
     UnexpectedEndOfInput,
-    #[cfg(any(feature = "formatting", feature = "parsing"))]
-    InvalidFormatDescription {
-        error: InvalidFormatDescription,
-        span_start: Option<Span>,
-        span_end: Option<Span>,
-    },
     Custom {
         message: Cow<'static, str>,
         span_start: Option<Span>,
@@ -59,11 +50,9 @@ impl fmt::Display for Error {
                 write!(f, "invalid component: {name} was {value}")
             }
             #[cfg(any(feature = "formatting", feature = "parsing"))]
-            Self::ExpectedString { .. } => f.write_str("expected string"),
+            Self::ExpectedString { .. } => f.write_str("expected string literal"),
             Self::UnexpectedToken { tree } => write!(f, "unexpected token: {tree}"),
             Self::UnexpectedEndOfInput => f.write_str("unexpected end of input"),
-            #[cfg(any(feature = "formatting", feature = "parsing"))]
-            Self::InvalidFormatDescription { error, .. } => error.fmt(f),
             Self::Custom { message, .. } => f.write_str(message),
         }
     }
@@ -76,8 +65,7 @@ impl Error {
             | Self::InvalidComponent { span_start, .. }
             | Self::Custom { span_start, .. } => *span_start,
             #[cfg(any(feature = "formatting", feature = "parsing"))]
-            Self::ExpectedString { span_start, .. }
-            | Self::InvalidFormatDescription { span_start, .. } => *span_start,
+            Self::ExpectedString { span_start, .. } => *span_start,
             Self::UnexpectedToken { tree } => Some(tree.span()),
             Self::UnexpectedEndOfInput => Some(Span::mixed_site()),
         }
@@ -90,8 +78,7 @@ impl Error {
             | Self::InvalidComponent { span_end, .. }
             | Self::Custom { span_end, .. } => *span_end,
             #[cfg(any(feature = "formatting", feature = "parsing"))]
-            Self::ExpectedString { span_end, .. }
-            | Self::InvalidFormatDescription { span_end, .. } => *span_end,
+            Self::ExpectedString { span_end, .. } => *span_end,
             Self::UnexpectedToken { tree, .. } => Some(tree.span()),
             Self::UnexpectedEndOfInput => Some(Span::mixed_site()),
         }

@@ -376,7 +376,7 @@ impl QPackEncoder {
 
         let mut ref_entries = HashSet::new();
 
-        for iter in h.iter() {
+        for iter in h {
             let name = iter.name().as_bytes().to_vec();
             let value = iter.value().as_bytes().to_vec();
             qtrace!("encoding {:x?} {:x?}.", name, value);
@@ -450,7 +450,7 @@ impl QPackEncoder {
         if !ref_entries.is_empty() {
             self.unacked_header_blocks
                 .entry(stream_id)
-                .or_insert_with(VecDeque::new)
+                .or_default()
                 .push_front(ref_entries);
             self.stats.dynamic_table_references += 1;
         }

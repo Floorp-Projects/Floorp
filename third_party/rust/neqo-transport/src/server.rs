@@ -14,6 +14,7 @@ use neqo_crypto::{
     encode_ech_config, AntiReplay, Cipher, PrivateKey, PublicKey, ZeroRttCheckResult,
     ZeroRttChecker,
 };
+use qlog::streamer::QlogStreamer;
 
 pub use crate::addr_valid::ValidateAddress;
 use crate::addr_valid::{AddressValidation, AddressValidationResult};
@@ -400,13 +401,14 @@ impl Server {
                 Ok(f) => {
                     qinfo!("Qlog output to {}", qlog_path.display());
 
-                    let streamer = ::qlog::QlogStreamer::new(
+                    let streamer = QlogStreamer::new(
                         qlog::QLOG_VERSION.to_string(),
                         Some("Neqo server qlog".to_string()),
                         Some("Neqo server qlog".to_string()),
                         None,
                         std::time::Instant::now(),
                         common::qlog::new_trace(Role::Server),
+                        qlog::events::EventImportance::Base,
                         Box::new(f),
                     );
                     let n_qlog = NeqoQlog::enabled(streamer, qlog_path);
