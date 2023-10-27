@@ -73,6 +73,15 @@ function runTests(testFile, order) {
   }
 
   function runServiceWorkerTest() {
+    if (
+      navigator.serviceWorker == null &&
+      SpecialPowers.getBoolPref("dom.cache.privateBrowsing.enabled")
+    ) {
+      return new Promise(function (resolve, reject) {
+        resolve(true);
+      });
+    }
+
     return serviceWorkerTestExec(testFile);
   }
 

@@ -1,0 +1,9 @@
+[DEFAULT]
+prefs = [ "browser.privatebrowsing.autostart=true",
+          "dom.cache.privateBrowsing.enabled=true",]
+
+dupe-manifest = true
+
+tags = "dom-cache-api dom-cache-api-private"
+
+["include:mochitest-common.ini"]
