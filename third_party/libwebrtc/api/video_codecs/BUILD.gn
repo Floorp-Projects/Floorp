@@ -68,6 +68,13 @@ rtc_library("video_codecs_api") {
     "vp9_profile.h",
   ]
 
+  if (rtc_use_h265) {
+    sources += [
+      "h265_profile_tier_level.cc",
+      "h265_profile_tier_level.h",
+    ]
+  }
+
   deps = [
     ":scalability_mode",
     "..:fec_controller_api",

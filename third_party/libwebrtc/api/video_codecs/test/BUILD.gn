@@ -19,6 +19,10 @@ if (rtc_include_tests) {
       "video_encoder_software_fallback_wrapper_unittest.cc",
     ]
 
+    if (rtc_use_h265) {
+      sources += [ "h265_profile_tier_level_unittest.cc" ]
+    }
+
     deps = [
       ":video_decoder_factory_template_tests",
       ":video_encoder_factory_template_tests",
