@@ -245,6 +245,10 @@ void MPRISServiceHandler::OnNameLost(GDBusConnection* aConnection,
     return;
   }
 
+  if (!aConnection) {
+    return;
+  }
+
   if (g_dbus_connection_unregister_object(aConnection, mRootRegistrationId)) {
     mRootRegistrationId = 0;
   } else {
@@ -297,20 +301,54 @@ void MPRISServiceHandler::OnBusAcquired(GDBusConnection* aConnection,
   }
 }
 
-bool MPRISServiceHandler::Open() {
-  MOZ_ASSERT(!mInitialized);
-  MOZ_ASSERT(NS_IsMainThread());
+void MPRISServiceHandler::SetServiceName(const char* aName) {
+  nsCString dbusName(aName);
+  dbusName.ReplaceChar(':', '_');
+  dbusName.ReplaceChar('.', '_');
+  mServiceName =
+      nsCString(DBUS_MPRIS_SERVICE_NAME) + nsCString(".instance") + dbusName;
+}
+
+const char* MPRISServiceHandler::GetServiceName() { return mServiceName.get(); }
+
+/* static */
+void g_bus_get_callback(GObject* aSourceObject, GAsyncResult* aRes,
+                        gpointer aUserData) {
   GUniquePtr<GError> error;
-  gchar serviceName[256];
+
+  GDBusConnection* conn = g_bus_get_finish(aRes, getter_Transfers(error));
+  if (!conn) {
+    NS_WARNING(nsPrintfCString("Failure at g_bus_get_finish: %s",
+                               error ? error->message : "Unknown Error")
+                   .get());
+    return;
+  }
+
+  MPRISServiceHandler* handler = static_cast<MPRISServiceHandler*>(aUserData);
+  if (!handler) {
+    NS_WARNING(
+        nsPrintfCString("Failure to get a MPRISServiceHandler*: %p", handler)
+            .get());
+    return;
+  }
+
+  handler->OwnName(conn);
+}
+
+void MPRISServiceHandler::OwnName(GDBusConnection* aConnection) {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  SetServiceName(g_dbus_connection_get_unique_name(aConnection));
+
+  GUniquePtr<GError> error;
 
   InitIdentity();
-  SprintfLiteral(serviceName, DBUS_MPRIS_SERVICE_NAME ".instance%d", getpid());
-  mOwnerId =
-      g_bus_own_name(G_BUS_TYPE_SESSION, serviceName,
-                     // Enter a waiting queue until this service name is free
-                     // (likely another FF instance is running/has been crashed)
-                     G_BUS_NAME_OWNER_FLAGS_NONE, OnBusAcquiredStatic,
-                     OnNameAcquiredStatic, OnNameLostStatic, this, nullptr);
+  mOwnerId = g_bus_own_name_on_connection(
+      aConnection, GetServiceName(),
+      // Enter a waiting queue until this service name is free
+      // (likely another FF instance is running/has been crashed)
+      G_BUS_NAME_OWNER_FLAGS_NONE, OnNameAcquiredStatic, OnNameLostStatic, this,
+      nullptr);
 
   /* parse introspection data */
   mIntrospectionData = dont_AddRef(
@@ -319,8 +357,18 @@ bool MPRISServiceHandler::Open() {
   if (!mIntrospectionData) {
     LOGMPRIS("Failed at parsing XML Interface definition: %s",
              error ? error->message : "Unknown Error");
-    return false;
+    return;
   }
+
+  OnBusAcquired(aConnection, GetServiceName());
+}
+
+bool MPRISServiceHandler::Open() {
+  MOZ_ASSERT(!mInitialized);
+  MOZ_ASSERT(NS_IsMainThread());
+
+  mDBusGetCancellable = dont_AddRef(g_cancellable_new());
+  g_bus_get(G_BUS_TYPE_SESSION, mDBusGetCancellable, g_bus_get_callback, this);
 
   mInitialized = true;
   return true;
@@ -332,14 +380,16 @@ MPRISServiceHandler::~MPRISServiceHandler() {
 }
 
 void MPRISServiceHandler::Close() {
-  gchar serviceName[256];
-  SprintfLiteral(serviceName, DBUS_MPRIS_SERVICE_NAME ".instance%d", getpid());
-
   // Reset playback state and metadata before disconnect from dbus.
   SetPlaybackState(dom::MediaSessionPlaybackState::None);
   ClearMetadata();
 
-  OnNameLost(mConnection, serviceName);
+  OnNameLost(mConnection, GetServiceName());
+
+  if (mDBusGetCancellable) {
+    g_cancellable_cancel(mDBusGetCancellable);
+    mDBusGetCancellable = nullptr;
+  }
 
   if (mOwnerId != 0) {
     g_bus_unown_name(mOwnerId);
