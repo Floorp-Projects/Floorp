@@ -212,10 +212,6 @@ class nsTableFrame : public nsContainerFrame {
   nsMargin GetUsedPadding() const override;
   nsMargin GetUsedMargin() const override;
 
-  // Get the offset from the border box to the area where the row groups fit
-  LogicalMargin GetChildAreaOffset(const WritingMode aWM,
-                                   const ReflowInput* aReflowInput) const;
-
   /** helper method to find the table parent of any table frame object */
   static nsTableFrame* GetTableFrame(nsIFrame* aSourceFrame);
 
