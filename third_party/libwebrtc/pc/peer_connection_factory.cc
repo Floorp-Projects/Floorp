@@ -224,11 +224,6 @@ PeerConnectionFactory::CreatePeerConnectionOrError(
         configuration.port_allocator_config.flags);
   }
 
-  if (!dependencies.async_resolver_factory) {
-    dependencies.async_resolver_factory =
-        std::make_unique<webrtc::BasicAsyncResolverFactory>();
-  }
-
   if (!dependencies.ice_transport_factory) {
     dependencies.ice_transport_factory =
         std::make_unique<DefaultIceTransportFactory>();

@@ -24,6 +24,7 @@
 #include "api/scoped_refptr.h"
 #include "api/task_queue/default_task_queue_factory.h"
 #include "api/task_queue/task_queue_factory.h"
+#include "api/test/mock_async_dns_resolver.h"
 #include "media/base/fake_media_engine.h"
 #include "media/base/media_engine.h"
 #include "p2p/base/mock_async_resolver.h"
@@ -259,7 +260,7 @@ class PeerConnectionUsageHistogramTest : public ::testing::Test {
 
   WrapperPtr CreatePeerConnectionWithMdns(const RTCConfiguration& config) {
     auto resolver_factory =
-        std::make_unique<NiceMock<webrtc::MockAsyncResolverFactory>>();
+        std::make_unique<NiceMock<webrtc::MockAsyncDnsResolverFactory>>();
 
     webrtc::PeerConnectionDependencies deps(nullptr /* observer_in */);
 
@@ -273,7 +274,7 @@ class PeerConnectionUsageHistogramTest : public ::testing::Test {
             fake_network,
             std::make_unique<rtc::BasicPacketSocketFactory>(vss_.get())));
 
-    deps.async_resolver_factory = std::move(resolver_factory);
+    deps.async_dns_resolver_factory = std::move(resolver_factory);
     deps.allocator = std::move(port_allocator);
 
     return CreatePeerConnection(
