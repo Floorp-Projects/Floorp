@@ -2365,25 +2365,15 @@ void VideoStreamEncoder::OnBitrateUpdated(DataRate target_bitrate,
   }
 }
 
-bool VideoStreamEncoder::DropDueToSize(uint32_t pixel_count) const {
+bool VideoStreamEncoder::DropDueToSize(uint32_t source_pixel_count) const {
   if (!encoder_ || !stream_resource_manager_.DropInitialFrames() ||
-      !encoder_target_bitrate_bps_.has_value()) {
+      !encoder_target_bitrate_bps_ ||
+      !stream_resource_manager_.SingleActiveStreamPixels()) {
     return false;
   }
 
-  bool simulcast_or_svc =
-      (send_codec_.codecType == VideoCodecType::kVideoCodecVP9 &&
-       send_codec_.VP9().numberOfSpatialLayers > 1) ||
-      (send_codec_.numberOfSimulcastStreams > 1 ||
-       encoder_config_.simulcast_layers.size() > 1);
-
-  if (simulcast_or_svc) {
-    if (stream_resource_manager_.SingleActiveStreamPixels()) {
-      pixel_count = stream_resource_manager_.SingleActiveStreamPixels().value();
-    } else {
-      return false;
-    }
-  }
+  int pixel_count = std::min(
+      source_pixel_count, *stream_resource_manager_.SingleActiveStreamPixels());
 
   uint32_t bitrate_bps =
       stream_resource_manager_.UseBandwidthAllocationBps().value_or(

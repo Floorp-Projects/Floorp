@@ -5636,6 +5636,44 @@ TEST_F(VideoStreamEncoderTest,
   video_stream_encoder_->Stop();
 }
 
+TEST_F(VideoStreamEncoderTest, InitialFrameDropAccountsForResolutionScaling) {
+  VideoEncoderConfig video_encoder_config;
+  webrtc::VideoEncoder::EncoderInfo encoder_info;
+  test::FillEncoderConfiguration(PayloadStringToCodecType("VP8"), 1,
+                                 &video_encoder_config);
+  video_encoder_config.video_stream_factory =
+      rtc::make_ref_counted<cricket::EncoderStreamFactory>(
+          "VP8", /*max qp*/ 56, /*screencast*/ false,
+          /*screenshare enabled*/ false, encoder_info);
+  for (auto& layer : video_encoder_config.simulcast_layers) {
+    layer.num_temporal_layers = 1;
+    layer.max_framerate = kDefaultFramerate;
+  }
+  video_encoder_config.max_bitrate_bps = kSimulcastTargetBitrate.bps();
+  video_encoder_config.content_type =
+      VideoEncoderConfig::ContentType::kRealtimeVideo;
+
+  video_encoder_config.simulcast_layers[0].active = true;
+  video_encoder_config.simulcast_layers[0].scale_resolution_down_by = 4;
+
+  video_stream_encoder_->ConfigureEncoder(video_encoder_config.Copy(),
+                                          kMaxPayloadLength);
+  video_stream_encoder_->WaitUntilTaskQueueIsIdle();
+
+  // Bitrate is not enough for 720p.
+  video_stream_encoder_->OnBitrateUpdatedAndWaitForManagedResources(
+      DataRate::KilobitsPerSec(30), DataRate::KilobitsPerSec(30),
+      DataRate::KilobitsPerSec(30), 0, 0, 0);
+
+  // Pass 720p frame. Resolution scaling factor is set to 4 which means that
+  // the target encode resolution is 180p. The default initial frame dropping
+  // should not be active for 180p no matter of available bitrate.
+  video_source_.IncomingCapturedFrame(CreateFrame(1, 1280, 720));
+  WaitForEncodedFrame(1);
+
+  video_stream_encoder_->Stop();
+}
+
 TEST_F(VideoStreamEncoderTest, InitialFrameDropActivatesWhenLayersChange) {
   const DataRate kLowTargetBitrate = DataRate::KilobitsPerSec(400);
   // Set simulcast.
