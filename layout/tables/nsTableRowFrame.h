@@ -206,6 +206,7 @@ class nsTableRowFrame : public nsContainerFrame {
 
   nscoord GetInitialBSize(nscoord aBasis = 0) const;
 
+  nsTableRowFrame* GetPrevRow() const;
   nsTableRowFrame* GetNextRow() const;
 
   bool HasUnpaginatedBSize() const {

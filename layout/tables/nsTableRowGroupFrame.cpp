@@ -1041,16 +1041,6 @@ void nsTableRowGroupFrame::UndoContinuedRow(nsPresContext* aPresContext,
   }
 }
 
-static nsTableRowFrame* GetRowBefore(nsTableRowFrame& aStartRow,
-                                     nsTableRowFrame& aRow) {
-  nsTableRowFrame* rowBefore = nullptr;
-  for (nsTableRowFrame* sib = &aStartRow; sib && (sib != &aRow);
-       sib = sib->GetNextRow()) {
-    rowBefore = sib;
-  }
-  return rowBefore;
-}
-
 void nsTableRowGroupFrame::SplitRowGroup(nsPresContext* aPresContext,
                                          ReflowOutput& aDesiredSize,
                                          const ReflowInput& aReflowInput,
@@ -1241,8 +1231,7 @@ void nsTableRowGroupFrame::SplitRowGroup(nsPresContext* aPresContext,
           }
         } else {
           // Try to put firstTruncateRow on the next page
-          nsTableRowFrame* rowBefore =
-              ::GetRowBefore(*firstRowThisPage, *firstTruncatedRow);
+          nsTableRowFrame* rowBefore = firstTruncatedRow->GetPrevRow();
           const nscoord oldSpanningRowBEnd = spanningRowBEnd;
           spanningRowBEnd =
               rowBefore->GetLogicalNormalRect(wm, containerSize).BEnd(wm);
