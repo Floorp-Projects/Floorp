@@ -35,6 +35,7 @@ if (rtc_include_tests) {
       "../../../modules/video_coding:webrtc_vp8",
       "../../../rtc_base:checks",
       "../../../rtc_base:rtc_base_tests_utils",
+      "../../../test:fake_video_codecs",
       "../../../test:field_trial",
       "../../../test:test_support",
       "../../../test:video_test_common",

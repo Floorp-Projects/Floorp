@@ -1030,7 +1030,10 @@ rtc_library("fake_video_codecs") {
     "../rtc_base/synchronization:mutex",
     "../system_wrappers",
   ]
-  absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
+  absl_deps = [
+    "//third_party/abseil-cpp/absl/strings",
+    "//third_party/abseil-cpp/absl/types:optional",
+  ]
 }
 
 rtc_library("null_transport") {
