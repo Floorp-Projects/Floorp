@@ -258,6 +258,15 @@ export class SuggestBackendJs extends BaseFeature {
     this.#emitter.emit("config-set");
   }
 
+  async _test_syncAll() {
+    if (this.#rs) {
+      // `RemoteSettingsClient` won't start another import if it's already
+      // importing. Wait for it to finish before starting the new one.
+      await this.#rs._importingPromise;
+      await this.#syncAll();
+    }
+  }
+
   // The `RemoteSettings` client.
   #rs = null;
 

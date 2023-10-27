@@ -7,7 +7,6 @@
 "use strict";
 
 ChromeUtils.defineESModuleGetters(this, {
-  MockRustSuggest: "resource://testing-common/QuickSuggestTestUtils.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
@@ -27,28 +26,24 @@ const REMOTE_SETTINGS_SUGGESTION = {
   impression_url: "http://example.com/amp-impression",
   advertiser: "Amp",
   iab_category: "22 - Shopping",
+  icon: "1234",
 };
-
-let gMockRustSuggest;
 
 add_setup(async function () {
   initUpdateTimerManager();
 
-  // Since we are specifically testing init behavior of the Rust backend, we
-  // avoid `QuickSuggestTestUtils.ensureQuickSuggestInit()` so we have more
-  // control.
-  gMockRustSuggest = new MockRustSuggest({
-    data: [
+  await QuickSuggestTestUtils.ensureQuickSuggestInit({
+    remoteSettingsRecords: [
       {
         type: "data",
         attachment: [REMOTE_SETTINGS_SUGGESTION],
       },
     ],
+    prefs: [
+      ["suggest.quicksuggest.sponsored", true],
+      ["quicksuggest.rustEnabled", false],
+    ],
   });
-  UrlbarPrefs.set("quicksuggest.rustEnabled", false);
-  UrlbarPrefs.set("quicksuggest.enabled", true);
-  UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
-  QuickSuggest.init();
 });
 
 // IMPORTANT: This task must run first!
@@ -58,6 +53,11 @@ add_setup(async function () {
 add_task(async function firstRun() {
   Assert.ok(
     !UrlbarPrefs.get("quicksuggest.rustEnabled"),
+    "rustEnabled pref is initially false (this task must run first!)"
+  );
+  Assert.strictEqual(
+    QuickSuggest.rustBackend.isEnabled,
+    false,
     "Rust backend is initially disabled (this task must run first!)"
   );
   Assert.ok(
@@ -67,6 +67,7 @@ add_task(async function firstRun() {
 
   info("Enabling the Rust backend");
   UrlbarPrefs.set("quicksuggest.rustEnabled", true);
+  Assert.ok(QuickSuggest.rustBackend.isEnabled, "Rust backend is now enabled");
   let { ingestPromise } = QuickSuggest.rustBackend;
   Assert.ok(ingestPromise, "Ingest started");
 
@@ -116,38 +117,54 @@ add_task(async function interval() {
 
   // Wait for a few ingests to happen.
   for (let i = 0; i < 3; i++) {
+    info("Preparing for ingest at index " + i);
+
     // Set a new suggestion so we can make sure ingest really happened.
     let suggestion = {
       ...REMOTE_SETTINGS_SUGGESTION,
       url: REMOTE_SETTINGS_SUGGESTION.url + "/" + i,
     };
-    gMockRustSuggest.update({
-      data: [
+    await QuickSuggestTestUtils.setRemoteSettingsRecords(
+      [
         {
           type: "data",
           attachment: [suggestion],
         },
       ],
-    });
-
-    // Wait for ingest.
-    await TestUtils.waitForCondition(
-      () => QuickSuggest.rustBackend.ingestPromise != ingestPromise,
-      "Waiting for ingest timer to fire and backend to start new ingest"
+      // Don't force sync since the whole point here is to make sure the backend
+      // ingests on its own!
+      { forceSync: false }
     );
 
-    ({ ingestPromise } = QuickSuggest.rustBackend);
+    // Wait for ingest to start and finish.
+    info("Waiting for ingest to start at index " + i);
+    ({ ingestPromise } = await waitForIngestStart(ingestPromise));
+    info("Waiting for ingest to finish at index " + i);
     await ingestPromise;
     await checkSuggestions([suggestion]);
   }
 
-  // Disable the backend. Ingestion should stop.
-  let waitSecs = 3 * intervalSecs;
-  info(`Disabling the backend and waiting ${waitSecs}s`);
+  // In the loop above, there was one additional async call after awaiting the
+  // ingest promise, to `checkSuggestions()`. It's possible, though unlikely,
+  // that call took so long that another ingest has started. To be sure, wait
+  // for one final ingest to start before continuing.
+  ({ ingestPromise } = await waitForIngestStart(ingestPromise));
+
+  // Now immediately disable the backend. New ingests should not start, but the
+  // final one will still be ongoing.
+  info("Disabling the backend");
   UrlbarPrefs.set("quicksuggest.rustEnabled", false);
 
+  info("Awaiting final ingest promise");
+  await ingestPromise;
+
+  // Wait a few seconds.
+  let waitSecs = 3 * intervalSecs;
+  info(`Waiting ${waitSecs}s...`);
   // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
   await new Promise(r => setTimeout(r, 1000 * waitSecs));
+
+  // No new ingests should have started.
   Assert.equal(
     QuickSuggest.rustBackend.ingestPromise,
     ingestPromise,
@@ -156,6 +173,29 @@ add_task(async function interval() {
 
   UrlbarPrefs.clear("quicksuggest.rustIngestIntervalSeconds");
 });
+
+async function waitForIngestStart(oldIngestPromise) {
+  let newIngestPromise;
+  await TestUtils.waitForCondition(() => {
+    let { ingestPromise } = QuickSuggest.rustBackend;
+    if (ingestPromise != oldIngestPromise) {
+      newIngestPromise = ingestPromise;
+      return true;
+    }
+    return false;
+  }, "Waiting for a new ingest to start");
+
+  Assert.equal(
+    QuickSuggest.rustBackend.ingestPromise,
+    newIngestPromise,
+    "Sanity check: ingestPromise hasn't changed since waitForCondition returned"
+  );
+
+  // A bare promise can't be returned because it will cause the awaiting caller
+  // to await that promise! We're simply trying to return the promise, which the
+  // caller can later await.
+  return { ingestPromise: newIngestPromise };
+}
 
 async function checkSuggestions(expected = [REMOTE_SETTINGS_SUGGESTION]) {
   let actual = await QuickSuggest.rustBackend.query("amp");

@@ -147,7 +147,7 @@ export class SuggestBackendRust extends BaseFeature {
   /**
    * nsITimerCallback
    */
-  async notify() {
+  notify() {
     this.logger.info("Ingest timer fired");
     this.#ingest();
   }
@@ -164,7 +164,10 @@ export class SuggestBackendRust extends BaseFeature {
     let path = this.#storePath;
     this.logger.info("Initializing SuggestStore: " + path);
     try {
-      this.#store = lazy.SuggestStore.init(path);
+      this.#store = lazy.SuggestStore.init(
+        path,
+        SuggestBackendRust._test_remoteSettingsConfig
+      );
     } catch (error) {
       this.logger.error("Error initializing SuggestStore:");
       this.logger.error(error);
@@ -210,8 +213,19 @@ export class SuggestBackendRust extends BaseFeature {
     this.#ingestPromise = this.#store.ingest(
       new lazy.SuggestIngestionConstraints()
     );
-    await this.#ingestPromise;
+    try {
+      await this.#ingestPromise;
+    } catch (error) {
+      // Ingest can throw a `SuggestApiError` subclass called `Other` that has a
+      // custom `reason` message, which is very helpful for diagnosing problems
+      // with remote settings data in tests in particular.
+      this.logger.error("Ingest error: " + (error.reason ?? error));
+    }
     this.logger.info("Finished ingest");
+  }
+
+  async _test_ingest() {
+    await this.#ingest();
   }
 
   // The `SuggestStore` instance.

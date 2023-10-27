@@ -176,17 +176,16 @@ const MERINO_UNKNOWN_SUGGESTION = {
 };
 
 add_setup(async function init() {
-  UrlbarPrefs.set("quicksuggest.enabled", true);
-  UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
-  UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
-  UrlbarPrefs.set("addons.featureGate", true);
-
   // Disable search suggestions so we don't hit the network.
   Services.prefs.setBoolPref("browser.search.suggest.enabled", false);
 
   await QuickSuggestTestUtils.ensureQuickSuggestInit({
-    remoteSettingsResults: REMOTE_SETTINGS_RECORDS,
+    remoteSettingsRecords: REMOTE_SETTINGS_RECORDS,
     merinoSuggestions: [],
+    prefs: [
+      ["suggest.quicksuggest.sponsored", true],
+      ["suggest.quicksuggest.nonsponsored", true],
+    ],
   });
 });
 
@@ -472,7 +471,7 @@ add_task(async function sponsoredWith_addonWith_addonWins_both() {
 });
 
 add_task(async function merino_sponsored_addon_sponsoredWins() {
-  await QuickSuggestTestUtils.setRemoteSettingsResults([]);
+  await QuickSuggestTestUtils.setRemoteSettingsRecords([]);
 
   MerinoTestUtils.server.response.body.suggestions = [
     MERINO_SPONSORED_SUGGESTION,
@@ -494,11 +493,11 @@ add_task(async function merino_sponsored_addon_sponsoredWins() {
     }),
   });
 
-  await QuickSuggestTestUtils.setRemoteSettingsResults(REMOTE_SETTINGS_RECORDS);
+  await QuickSuggestTestUtils.setRemoteSettingsRecords(REMOTE_SETTINGS_RECORDS);
 });
 
 add_task(async function merino_sponsored_addon_addonWins() {
-  await QuickSuggestTestUtils.setRemoteSettingsResults([]);
+  await QuickSuggestTestUtils.setRemoteSettingsRecords([]);
 
   MerinoTestUtils.server.response.body.suggestions = [
     MERINO_SPONSORED_SUGGESTION,
@@ -519,11 +518,11 @@ add_task(async function merino_sponsored_addon_addonWins() {
     }),
   });
 
-  await QuickSuggestTestUtils.setRemoteSettingsResults(REMOTE_SETTINGS_RECORDS);
+  await QuickSuggestTestUtils.setRemoteSettingsRecords(REMOTE_SETTINGS_RECORDS);
 });
 
 add_task(async function merino_sponsored_unknown_sponsoredWins() {
-  await QuickSuggestTestUtils.setRemoteSettingsResults([]);
+  await QuickSuggestTestUtils.setRemoteSettingsRecords([]);
 
   MerinoTestUtils.server.response.body.suggestions = [
     MERINO_SPONSORED_SUGGESTION,
@@ -545,11 +544,11 @@ add_task(async function merino_sponsored_unknown_sponsoredWins() {
     }),
   });
 
-  await QuickSuggestTestUtils.setRemoteSettingsResults(REMOTE_SETTINGS_RECORDS);
+  await QuickSuggestTestUtils.setRemoteSettingsRecords(REMOTE_SETTINGS_RECORDS);
 });
 
 add_task(async function merino_sponsored_unknown_unknownWins() {
-  await QuickSuggestTestUtils.setRemoteSettingsResults([]);
+  await QuickSuggestTestUtils.setRemoteSettingsRecords([]);
 
   MerinoTestUtils.server.response.body.suggestions = [
     MERINO_SPONSORED_SUGGESTION,
@@ -569,7 +568,7 @@ add_task(async function merino_sponsored_unknown_unknownWins() {
     }),
   });
 
-  await QuickSuggestTestUtils.setRemoteSettingsResults(REMOTE_SETTINGS_RECORDS);
+  await QuickSuggestTestUtils.setRemoteSettingsRecords(REMOTE_SETTINGS_RECORDS);
 });
 
 add_task(async function stringValue() {

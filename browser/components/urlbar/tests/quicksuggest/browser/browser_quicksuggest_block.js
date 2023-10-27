@@ -2,6 +2,9 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 // Tests quick suggest dismissals ("blocks").
+//
+// TODO (bug 1859389): Make this work with Rust enabled once timestamp templates
+// are handled.
 
 "use strict";
 
@@ -56,7 +59,7 @@ add_setup(async function () {
   Services.telemetry.clearEvents();
 
   await QuickSuggestTestUtils.ensureQuickSuggestInit({
-    remoteSettingsResults: [
+    remoteSettingsRecords: [
       {
         type: "data",
         attachment: REMOTE_SETTINGS_RESULTS,

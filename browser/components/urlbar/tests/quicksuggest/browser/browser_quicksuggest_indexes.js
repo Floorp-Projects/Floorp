@@ -43,12 +43,10 @@ const REMOTE_SETTINGS_RESULTS = [
   },
 ];
 
-add_setup(async function () {
-  // This test intermittently times out on Mac TV WebRender.
-  if (AppConstants.platform == "macosx") {
-    requestLongerTimeout(3);
-  }
+// Trying to avoid timeouts.
+requestLongerTimeout(3);
 
+add_setup(async function () {
   await PlacesUtils.history.clear();
   await PlacesUtils.bookmarks.eraseEverything();
   await UrlbarTestUtils.formHistory.clear();
@@ -57,7 +55,7 @@ add_setup(async function () {
   await SearchTestUtils.installSearchExtension({}, { setAsDefault: true });
 
   await QuickSuggestTestUtils.ensureQuickSuggestInit({
-    remoteSettingsResults: [
+    remoteSettingsRecords: [
       {
         type: "data",
         attachment: REMOTE_SETTINGS_RESULTS,
