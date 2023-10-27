@@ -2937,8 +2937,7 @@ HTMLInputElement* HTMLInputElement::GetSelectedRadioButton() const {
   nsAutoString name;
   GetAttr(nsGkAtoms::name, name);
 
-  HTMLInputElement* selected = container->GetCurrentRadioButton(name);
-  return selected;
+  return container->GetCurrentRadioButton(name);
 }
 
 void HTMLInputElement::MaybeSubmitForm(nsPresContext* aPresContext) {
@@ -6275,6 +6274,9 @@ void HTMLInputElement::AddToRadioGroup() {
     // Make sure not to notify if we're still being created.
     //
     RadioSetChecked(mDoneCreating);
+  } else {
+    bool indeterminate = !container->GetCurrentRadioButton(name);
+    SetStates(ElementState::INDETERMINATE, indeterminate, mDoneCreating);
   }
 
   //
@@ -6310,6 +6312,8 @@ void HTMLInputElement::RemoveFromRadioGroup() {
     container->SetCurrentRadioButton(name, nullptr);
     nsCOMPtr<nsIRadioVisitor> visitor = new nsRadioUpdateStateVisitor(this);
     VisitGroup(visitor);
+  } else {
+    AddStates(ElementState::INDETERMINATE);
   }
 
   // Remove this radio from its group in the container.
