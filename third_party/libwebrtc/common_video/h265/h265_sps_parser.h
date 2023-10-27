@@ -75,15 +75,15 @@ class H265SpsParser {
   // The parsed state of the SPS. Only some select values are stored.
   // Add more as they are actually needed.
   struct SpsState {
-    SpsState();
+    SpsState() = default;
 
-    uint32_t sps_max_sub_layers_minus1;
+    uint32_t sps_max_sub_layers_minus1 = 0;
     uint32_t chroma_format_idc = 0;
     uint32_t separate_colour_plane_flag = 0;
     uint32_t pic_width_in_luma_samples = 0;
     uint32_t pic_height_in_luma_samples = 0;
     uint32_t log2_max_pic_order_cnt_lsb_minus4 = 0;
-    uint32_t sps_max_dec_pic_buffering_minus1[kMaxSubLayers];
+    uint32_t sps_max_dec_pic_buffering_minus1[kMaxSubLayers] = {};
     uint32_t log2_min_luma_coding_block_size_minus3 = 0;
     uint32_t log2_diff_max_min_luma_coding_block_size = 0;
     uint32_t sample_adaptive_offset_enabled_flag = 0;
@@ -91,7 +91,6 @@ class H265SpsParser {
     std::vector<H265SpsParser::ShortTermRefPicSet> short_term_ref_pic_set;
     uint32_t long_term_ref_pics_present_flag = 0;
     uint32_t num_long_term_ref_pics_sps = 0;
-    std::vector<uint32_t> lt_ref_pic_poc_lsb_sps;
     std::vector<uint32_t> used_by_curr_pic_lt_sps_flag;
     uint32_t sps_temporal_mvp_enabled_flag = 0;
     uint32_t width = 0;
@@ -100,7 +99,6 @@ class H265SpsParser {
     uint32_t vps_id = 0;
     uint32_t pic_width_in_ctbs_y = 0;
     uint32_t pic_height_in_ctbs_y = 0;
-    uint32_t ctb_log2_size_y = 0;
     uint32_t bit_depth_luma_minus8 = 0;
   };
 

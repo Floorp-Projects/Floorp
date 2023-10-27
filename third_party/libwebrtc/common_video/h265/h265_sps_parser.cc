@@ -63,8 +63,6 @@ constexpr int kMaxNumCoefs = 64;
 
 namespace webrtc {
 
-H265SpsParser::SpsState::SpsState() = default;
-
 H265SpsParser::ShortTermRefPicSet::ShortTermRefPicSet() = default;
 
 H265SpsParser::ProfileTierLevel::ProfileTierLevel() = default;
@@ -113,30 +111,23 @@ absl::optional<H265SpsParser::SpsState> H265SpsParser::ParseSps(
 }
 
 bool H265SpsParser::ParseScalingListData(BitstreamReader& reader) {
-  uint32_t scaling_list_pred_mode_flag[kMaxNumSizeIds][kMaxNumMatrixIds];
-  int scaling_list_pred_matrix_id_delta[kMaxNumSizeIds][kMaxNumMatrixIds];
   int32_t scaling_list_dc_coef_minus8[kMaxNumSizeIds][kMaxNumMatrixIds];
-  int32_t scaling_list[kMaxNumSizeIds][kMaxNumMatrixIds][kMaxNumCoefs];
   for (int size_id = 0; size_id < kMaxNumSizeIds; size_id++) {
     for (int matrix_id = 0; matrix_id < kMaxNumMatrixIds;
          matrix_id += (size_id == 3) ? 3 : 1) {
       // scaling_list_pred_mode_flag: u(1)
-      scaling_list_pred_mode_flag[size_id][matrix_id] = reader.Read<bool>();
-      if (!scaling_list_pred_mode_flag[size_id][matrix_id]) {
+      bool scaling_list_pred_mode_flag = reader.Read<bool>();
+      if (!scaling_list_pred_mode_flag) {
         // scaling_list_pred_matrix_id_delta: ue(v)
-        scaling_list_pred_matrix_id_delta[size_id][matrix_id] =
-            reader.ReadExponentialGolomb();
+        int scaling_list_pred_matrix_id_delta = reader.ReadExponentialGolomb();
         if (size_id <= 2) {
-          IN_RANGE_OR_RETURN_FALSE(
-              scaling_list_pred_matrix_id_delta[size_id][matrix_id], 0,
-              matrix_id);
+          IN_RANGE_OR_RETURN_FALSE(scaling_list_pred_matrix_id_delta, 0,
+                                   matrix_id);
         } else {  // size_id == 3
-          IN_RANGE_OR_RETURN_FALSE(
-              scaling_list_pred_matrix_id_delta[size_id][matrix_id], 0,
-              matrix_id / 3);
+          IN_RANGE_OR_RETURN_FALSE(scaling_list_pred_matrix_id_delta, 0,
+                                   matrix_id / 3);
         }
       } else {
-        int32_t next_coef = 8;
         uint32_t coef_num = std::min(kMaxNumCoefs, 1 << (4 + (size_id << 1)));
         if (size_id > 1) {
           // scaling_list_dc_coef_minus8: se(v)
@@ -144,15 +135,12 @@ bool H265SpsParser::ParseScalingListData(BitstreamReader& reader) {
               reader.ReadSignedExponentialGolomb();
           IN_RANGE_OR_RETURN_FALSE(
               scaling_list_dc_coef_minus8[size_id - 2][matrix_id], -7, 247);
-          next_coef = scaling_list_dc_coef_minus8[size_id - 2][matrix_id] + 8;
         }
         for (uint32_t i = 0; i < coef_num; i++) {
           // scaling_list_delta_coef: se(v)
           int32_t scaling_list_delta_coef =
               reader.ReadSignedExponentialGolomb();
           IN_RANGE_OR_RETURN_FALSE(scaling_list_delta_coef, -128, 127);
-          next_coef = (next_coef + scaling_list_delta_coef + 256) % 256;
-          scaling_list[size_id][matrix_id][i] = next_coef;
         }
       }
     }
@@ -192,7 +180,7 @@ H265SpsParser::ParseShortTermRefPicSet(
     uint32_t ref_rps_idx = st_rps_idx - (delta_idx_minus1 + 1);
     uint32_t num_delta_pocs =
         short_term_ref_pic_set[ref_rps_idx].num_delta_pocs;
-    RTC_CHECK_LT(num_delta_pocs, kMaxShortTermRefPicSets);
+    IN_RANGE_OR_RETURN_NULL(num_delta_pocs, 0, kMaxShortTermRefPicSets);
     const ShortTermRefPicSet& ref_set = short_term_ref_pic_set[ref_rps_idx];
     bool used_by_curr_pic_flag[kMaxShortTermRefPicSets];
     bool use_delta_flag[kMaxShortTermRefPicSets];
@@ -212,8 +200,9 @@ H265SpsParser::ParseShortTermRefPicSet(
     // and num_positive_pics.
     // Equation 7-61
     int i = 0;
-    RTC_CHECK_LE(ref_set.num_negative_pics + ref_set.num_positive_pics,
-                 kMaxShortTermRefPicSets);
+    IN_RANGE_OR_RETURN_NULL(
+        ref_set.num_negative_pics + ref_set.num_positive_pics, 0,
+        kMaxShortTermRefPicSets);
     for (int j = ref_set.num_positive_pics - 1; j >= 0; --j) {
       int d_poc = ref_set.delta_poc_s1[j] + delta_rps;
       if (d_poc < 0 && use_delta_flag[ref_set.num_negative_pics + j]) {
@@ -258,6 +247,11 @@ H265SpsParser::ParseShortTermRefPicSet(
       }
     }
     st_ref_pic_set.num_positive_pics = i;
+    IN_RANGE_OR_RETURN_NULL(st_ref_pic_set.num_negative_pics, 0,
+                            sps_max_dec_pic_buffering_minus1);
+    IN_RANGE_OR_RETURN_NULL(
+        st_ref_pic_set.num_positive_pics, 0,
+        sps_max_dec_pic_buffering_minus1 - st_ref_pic_set.num_negative_pics);
 
   } else {
     // num_negative_pics: ue(v)
@@ -643,14 +637,12 @@ absl::optional<H265SpsParser::SpsState> H265SpsParser::ParseSpsInternal(
     sps.num_long_term_ref_pics_sps = reader.ReadExponentialGolomb();
     IN_RANGE_OR_RETURN_NULL(sps.num_long_term_ref_pics_sps, 0,
                             kMaxLongTermRefPicSets);
-    sps.lt_ref_pic_poc_lsb_sps.resize(sps.num_long_term_ref_pics_sps, 0);
     sps.used_by_curr_pic_lt_sps_flag.resize(sps.num_long_term_ref_pics_sps, 0);
     for (uint32_t i = 0; i < sps.num_long_term_ref_pics_sps; i++) {
       // lt_ref_pic_poc_lsb_sps: u(v)
       uint32_t lt_ref_pic_poc_lsb_sps_bits =
           sps.log2_max_pic_order_cnt_lsb_minus4 + 4;
-      sps.lt_ref_pic_poc_lsb_sps[i] =
-          reader.ReadBits(lt_ref_pic_poc_lsb_sps_bits);
+      reader.ConsumeBits(lt_ref_pic_poc_lsb_sps_bits);
       // used_by_curr_pic_lt_sps_flag: u(1)
       sps.used_by_curr_pic_lt_sps_flag[i] = reader.Read<bool>();
     }
