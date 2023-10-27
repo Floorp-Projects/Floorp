@@ -942,10 +942,6 @@ int OpenSSLStreamAdapter::ContinueSSL() {
                            << ERR_GET_REASON(err_code);
       if (handshake_error_) {
         handshake_error_(ssl_handshake_err);
-      } else {
-        // TODO(bugs.webrtc.org/11943): SignalSSLHandshakeError usage has been
-        // deprecated. Remove once external usage has been cleaned up.
-        SignalSSLHandshakeError(ssl_handshake_err);
       }
       return (ssl_error != 0) ? ssl_error : -1;
   }
