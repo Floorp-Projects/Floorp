@@ -115,6 +115,7 @@ rtc_library("rtc_p2p") {
     "../api/units:time_delta",
     "../api/units:timestamp",
     "../logging:ice_log",
+    "../rtc_base:async_dns_resolver",
     "../rtc_base:async_packet_socket",
     "../rtc_base:async_resolver_interface",
     "../rtc_base:async_tcp_socket",
