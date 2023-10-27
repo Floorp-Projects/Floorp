@@ -625,8 +625,8 @@ void TCPConnection::ConnectSocketSignals(rtc::AsyncPacketSocket* socket) {
   }
   socket->SignalReadPacket.connect(this, &TCPConnection::OnReadPacket);
   socket->SignalReadyToSend.connect(this, &TCPConnection::OnReadyToSend);
-  socket->SubscribeClose(this, [this, safety = network_safety_.flag()](
-                                   rtc::AsyncPacketSocket* s, int err) {
+  socket->SubscribeCloseEvent(this, [this, safety = network_safety_.flag()](
+                                        rtc::AsyncPacketSocket* s, int err) {
     if (safety->alive())
       OnClose(s, err);
   });
@@ -638,7 +638,7 @@ void TCPConnection::DisconnectSocketSignals(rtc::AsyncPacketSocket* socket) {
   }
   socket->SignalReadPacket.disconnect(this);
   socket->SignalReadyToSend.disconnect(this);
-  socket->UnsubscribeClose(this);
+  socket->UnsubscribeCloseEvent(this);
 }
 
 }  // namespace cricket
