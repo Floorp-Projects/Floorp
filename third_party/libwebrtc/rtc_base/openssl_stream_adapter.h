@@ -19,6 +19,7 @@
 #include <string>
 #include <vector>
 
+#include "absl/functional/any_invocable.h"
 #include "absl/strings/string_view.h"
 #include "absl/types/optional.h"
 #include "rtc_base/buffer.h"
@@ -72,7 +73,9 @@ RTC_EXPORT void SetAllowLegacyTLSProtocols(const absl::optional<bool>& allow);
 
 class OpenSSLStreamAdapter final : public SSLStreamAdapter {
  public:
-  explicit OpenSSLStreamAdapter(std::unique_ptr<StreamInterface> stream);
+  OpenSSLStreamAdapter(
+      std::unique_ptr<StreamInterface> stream,
+      absl::AnyInvocable<void(SSLHandshakeError)> handshake_error);
   ~OpenSSLStreamAdapter() override;
 
   void SetIdentity(std::unique_ptr<SSLIdentity> identity) override;
@@ -202,6 +205,7 @@ class OpenSSLStreamAdapter final : public SSLStreamAdapter {
   }
 
   const std::unique_ptr<StreamInterface> stream_;
+  absl::AnyInvocable<void(SSLHandshakeError)> handshake_error_;
 
   rtc::Thread* const owner_;
   webrtc::ScopedTaskSafety task_safety_;
