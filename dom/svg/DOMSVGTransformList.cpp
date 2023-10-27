@@ -130,7 +130,9 @@ void DOMSVGTransformList::Clear(ErrorResult& error) {
     mAList->InternalBaseValListWillChangeLengthTo(0);
 
     mItems.Clear();
-    InternalList().Clear();
+    auto* alist = Element()->GetAnimatedTransformList();
+    alist->mBaseVal.Clear();
+    alist->mIsBaseSet = false;
   }
 }
 

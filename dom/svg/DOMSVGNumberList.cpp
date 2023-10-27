@@ -129,7 +129,9 @@ void DOMSVGNumberList::Clear(ErrorResult& error) {
     mAList->InternalBaseValListWillChangeTo(SVGNumberList());
 
     mItems.Clear();
-    InternalList().Clear();
+    auto* alist = Element()->GetAnimatedNumberList(AttrEnum());
+    alist->mBaseVal.Clear();
+    alist->mIsBaseSet = false;
   }
 }
 

@@ -60,7 +60,7 @@ nsresult SVGAnimatedTransformList::SetBaseValue(const SVGTransformList& aValue,
     // back to the same length:
     domWrapper->InternalBaseValListWillChangeLengthTo(mBaseVal.Length());
   } else {
-    mIsAttrSet = true;
+    mIsBaseSet = true;
     // We only need to treat this as a creation or removal of a transform if the
     // frame already exists and it didn't have an existing one.
     mCreatedOrRemovedOnLastChange =
@@ -79,7 +79,7 @@ void SVGAnimatedTransformList::ClearBaseValue() {
     domWrapper->InternalBaseValListWillChangeLengthTo(0);
   }
   mBaseVal.Clear();
-  mIsAttrSet = false;
+  mIsBaseSet = false;
   // Caller notifies
 }
 
@@ -155,14 +155,14 @@ bool SVGAnimatedTransformList::IsExplicitlySet() const {
   // been explicitly set.
   //
   // There are three ways an animated list can become set:
-  // 1) Markup -- we set mIsAttrSet to true on any successful call to
+  // 1) Markup -- we set mIsBaseSet to true on any successful call to
   //    SetBaseValueString and clear it on ClearBaseValue (as called by
   //    SVGElement::UnsetAttr or a failed SVGElement::ParseAttribute)
   // 2) DOM call -- simply fetching the baseVal doesn't mean the transform value
   //    has been set. It is set if that baseVal has one or more transforms in
   //    the list.
   // 3) Animation -- which will cause the mAnimVal member to be allocated
-  return mIsAttrSet || !mBaseVal.IsEmpty() || mAnimVal;
+  return mIsBaseSet || !mBaseVal.IsEmpty() || mAnimVal;
 }
 
 UniquePtr<SMILAttr> SVGAnimatedTransformList::ToSMILAttr(
