@@ -16,8 +16,6 @@
 #include "nsISupports.h"
 
 #include "nsCycleCollectionParticipant.h"
-#include "nsHashKeys.h"
-#include "nsTHashtable.h"
 #include "nsWeakReference.h"
 
 class nsIPrincipal;
