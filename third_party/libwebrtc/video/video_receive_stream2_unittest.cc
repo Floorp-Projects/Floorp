@@ -314,18 +314,19 @@ TEST_P(VideoReceiveStream2Test, CreateFrameFromH264FmtpSpropAndIdr) {
 }
 
 TEST_P(VideoReceiveStream2Test, PlayoutDelay) {
-  const VideoPlayoutDelay kPlayoutDelayMs = {123, 321};
+  const VideoPlayoutDelay kPlayoutDelay(TimeDelta::Millis(123),
+                                        TimeDelta::Millis(321));
   std::unique_ptr<test::FakeEncodedFrame> test_frame =
       test::FakeFrameBuilder()
           .Id(0)
-          .PlayoutDelay(kPlayoutDelayMs)
+          .PlayoutDelay(kPlayoutDelay)
           .AsLast()
           .Build();
 
   video_receive_stream_->OnCompleteFrame(std::move(test_frame));
   auto timings = timing_->GetTimings();
-  EXPECT_EQ(kPlayoutDelayMs.min_ms, timings.min_playout_delay.ms());
-  EXPECT_EQ(kPlayoutDelayMs.max_ms, timings.max_playout_delay.ms());
+  EXPECT_EQ(kPlayoutDelay.min(), timings.min_playout_delay);
+  EXPECT_EQ(kPlayoutDelay.max(), timings.max_playout_delay);
 
   // Check that the biggest minimum delay is chosen.
   video_receive_stream_->SetMinimumPlayoutDelay(400);
@@ -373,7 +374,7 @@ TEST_P(VideoReceiveStream2Test, UseLowLatencyRenderingSetFromPlayoutDelay) {
   std::unique_ptr<test::FakeEncodedFrame> test_frame1 =
       test::FakeFrameBuilder()
           .Id(1)
-          .PlayoutDelay({/*min_ms=*/0, /*max_ms=*/500})
+          .PlayoutDelay({TimeDelta::Zero(), TimeDelta::Millis(500)})
           .AsLast()
           .Build();
   video_receive_stream_->OnCompleteFrame(std::move(test_frame1));
@@ -404,7 +405,7 @@ TEST_P(VideoReceiveStream2Test, MaxCompositionDelaySetFromMaxPlayoutDelay) {
           .Id(1)
           .Time(RtpTimestampForFrame(1))
           .ReceivedTime(ReceiveTimeForFrame(1))
-          .PlayoutDelay({0, 0})
+          .PlayoutDelay(VideoPlayoutDelay::Minimal())
           .AsLast()
           .Build();
   video_receive_stream_->OnCompleteFrame(std::move(test_frame1));
@@ -418,7 +419,7 @@ TEST_P(VideoReceiveStream2Test, MaxCompositionDelaySetFromMaxPlayoutDelay) {
           .Id(2)
           .Time(RtpTimestampForFrame(2))
           .ReceivedTime(ReceiveTimeForFrame(2))
-          .PlayoutDelay({10, 30})
+          .PlayoutDelay({TimeDelta::Millis(10), TimeDelta::Millis(30)})
           .AsLast()
           .Build();
   video_receive_stream_->OnCompleteFrame(std::move(test_frame2));
@@ -434,7 +435,7 @@ TEST_P(VideoReceiveStream2Test, MaxCompositionDelaySetFromMaxPlayoutDelay) {
           .Id(3)
           .Time(RtpTimestampForFrame(3))
           .ReceivedTime(ReceiveTimeForFrame(3))
-          .PlayoutDelay({0, 50})
+          .PlayoutDelay({TimeDelta::Zero(), TimeDelta::Millis(50)})
           .AsLast()
           .Build();
   video_receive_stream_->OnCompleteFrame(std::move(test_frame3));

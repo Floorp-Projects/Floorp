@@ -787,10 +787,10 @@ index 9ca092c0cf..971f49b949 100644
    method_ = new_method;
  }
 diff --git a/modules/rtp_rtcp/source/rtp_header_extensions.cc b/modules/rtp_rtcp/source/rtp_header_extensions.cc
-index 4745b10e54..d5a75d71cd 100644
+index e42a84bd06..b86a7d775c 100644
 --- a/modules/rtp_rtcp/source/rtp_header_extensions.cc
 +++ b/modules/rtp_rtcp/source/rtp_header_extensions.cc
-@@ -421,6 +421,45 @@ bool PlayoutDelayLimits::Write(rtc::ArrayView<uint8_t> data,
+@@ -423,6 +423,45 @@ bool PlayoutDelayLimits::Write(rtc::ArrayView<uint8_t> data,
    return true;
  }
  
@@ -837,7 +837,7 @@ index 4745b10e54..d5a75d71cd 100644
  //
  // E.g. default video or screenshare.
 diff --git a/modules/rtp_rtcp/source/rtp_header_extensions.h b/modules/rtp_rtcp/source/rtp_header_extensions.h
-index 04b2cd63a6..e085f89c03 100644
+index 739d4765d0..fff7db0294 100644
 --- a/modules/rtp_rtcp/source/rtp_header_extensions.h
 +++ b/modules/rtp_rtcp/source/rtp_header_extensions.h
 @@ -298,6 +298,21 @@ class ColorSpaceExtension {
@@ -878,7 +878,7 @@ index 2a95a3a816..b152cdbd9e 100644
    }
  }
 diff --git a/modules/rtp_rtcp/source/rtp_packet_unittest.cc b/modules/rtp_rtcp/source/rtp_packet_unittest.cc
-index bf9f757647..09a1c87eb7 100644
+index a1d1c9d4df..b3a9452df9 100644
 --- a/modules/rtp_rtcp/source/rtp_packet_unittest.cc
 +++ b/modules/rtp_rtcp/source/rtp_packet_unittest.cc
 @@ -123,6 +123,18 @@ constexpr uint8_t kPacketWithMid[] = {
@@ -900,7 +900,7 @@ index bf9f757647..09a1c87eb7 100644
  constexpr uint32_t kCsrcs[] = {0x34567890, 0x32435465};
  constexpr uint8_t kPayload[] = {'p', 'a', 'y', 'l', 'o', 'a', 'd'};
  constexpr uint8_t kPacketPaddingSize = 8;
-@@ -395,6 +407,24 @@ TEST(RtpPacketTest, FailsToSetUnregisteredExtension) {
+@@ -397,6 +409,24 @@ TEST(RtpPacketTest, FailsToSetUnregisteredExtension) {
    EXPECT_EQ(packet.GetExtension<TransportSequenceNumber>(), absl::nullopt);
  }
  

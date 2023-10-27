@@ -177,9 +177,10 @@ TEST_F(GenericDecoderTest, IsLowLatencyStreamFalseByDefault) {
 
 TEST_F(GenericDecoderTest, IsLowLatencyStreamActivatedByPlayoutDelay) {
   VCMEncodedFrame encoded_frame;
-  const VideoPlayoutDelay kPlayoutDelay = {0, 50};
-  timing_.set_min_playout_delay(TimeDelta::Millis(kPlayoutDelay.min_ms));
-  timing_.set_max_playout_delay(TimeDelta::Millis(kPlayoutDelay.max_ms));
+  const VideoPlayoutDelay kPlayoutDelay(TimeDelta::Zero(),
+                                        TimeDelta::Millis(50));
+  timing_.set_min_playout_delay(kPlayoutDelay.min());
+  timing_.set_max_playout_delay(kPlayoutDelay.max());
   generic_decoder_.Decode(encoded_frame, clock_->CurrentTime());
   time_controller_.AdvanceTime(TimeDelta::Millis(10));
   absl::optional<VideoFrame> decoded_frame = user_callback_.PopLastFrame();
