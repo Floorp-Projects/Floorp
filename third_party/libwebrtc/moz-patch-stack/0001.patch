@@ -1,35 +1,79 @@
-From: Harald Alvestrand <hta@webrtc.org>
-Date: Thu, 31 Aug 2023 09:25:06 +0000
-Subject: (cherry-pick-branch-heads/5938) [Merge to 117] CHECK against
- overwrites in send_modules_map_
+From: Byron Campen <docfaraday@gmail.com>
+Date: Fri, 27 Oct 2023 15:10:51 -0500
+Subject: (tmp-cherry-pick) Revert "Per default enable
+ RobustThroughputEstimator" (4ef01d41b7)
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-(cherry picked from commit 9d8fb97b3ca56ec9920271d8e545ae2ac76b143c)
+This reverts commit d017b1e306186252ed52ab84459d05efc4eb9fd4.
 
-No-try: true
-Bug: chromium:1477075
-Change-Id: Ia05a868bfab9e99ef66704e8d6bce516a7a43b0a
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/318440
-Reviewed-by: Sergey Silkin <ssilkin@webrtc.org>
-Commit-Queue: Harald Alvestrand <hta@webrtc.org>
-Cr-Original-Commit-Position: refs/heads/main@{#40673}
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/319100
-Reviewed-by: Taylor Brandstetter <deadbeef@webrtc.org>
-Cr-Commit-Position: refs/branch-heads/5938@{#2}
-Cr-Branched-From: 82e5f91a2bdf955aa870142008fbdc9ac12f6acd-refs/heads/main@{#40524}
+Reason for revert: Breaks downstream test.
+
+Original change's description:
+> Per default enable RobustThroughputEstimator
+>
+> Experiments has not showed significant metric changes. However, simulations has showed that RobustThroughputEstimator better follow the actually receive rate better. Especially during bursts of sent packets. Code is also simpler.
+>
+>
+> Bug: webrtc:13402 chromium:1411666
+> Change-Id: I38c309f74e8e1322602196354545b3a465866263
+> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/318040
+> Reviewed-by: Björn Terelius <terelius@webrtc.org>
+> Commit-Queue: Per Kjellander <perkj@webrtc.org>
+> Cr-Commit-Position: refs/heads/main@{#40653}
+
+Bug: webrtc:13402 chromium:1411666 b/298001595
+Change-Id: Ic68ef954f462021e991f3183b94d85eb6a44fac0
+No-Presubmit: true
+No-Tree-Checks: true
+No-Try: true
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/318141
+Owners-Override: Mirko Bonadei <mbonadei@webrtc.org>
+Bot-Commit: rubber-stamper@appspot.gserviceaccount.com <rubber-stamper@appspot.gserviceaccount.com>
+Commit-Queue: Mirko Bonadei <mbonadei@webrtc.org>
+Cr-Commit-Position: refs/heads/main@{#40658}
 ---
- modules/pacing/packet_router.cc | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ .../acknowledged_bitrate_estimator_interface.h      |  4 +---
+ .../goog_cc/robust_throughput_estimator_unittest.cc | 13 -------------
+ 2 files changed, 1 insertion(+), 16 deletions(-)
 
-diff --git a/modules/pacing/packet_router.cc b/modules/pacing/packet_router.cc
-index ba133f3d1f..4c986ad027 100644
---- a/modules/pacing/packet_router.cc
-+++ b/modules/pacing/packet_router.cc
-@@ -68,7 +68,7 @@ void PacketRouter::AddSendRtpModule(RtpRtcpInterface* rtp_module,
- void PacketRouter::AddSendRtpModuleToMap(RtpRtcpInterface* rtp_module,
-                                          uint32_t ssrc) {
-   RTC_DCHECK_RUN_ON(&thread_checker_);
--  RTC_DCHECK(send_modules_map_.find(ssrc) == send_modules_map_.end());
-+  RTC_CHECK(send_modules_map_.find(ssrc) == send_modules_map_.end());
+diff --git a/modules/congestion_controller/goog_cc/acknowledged_bitrate_estimator_interface.h b/modules/congestion_controller/goog_cc/acknowledged_bitrate_estimator_interface.h
+index 6184cdc114..515af1efc9 100644
+--- a/modules/congestion_controller/goog_cc/acknowledged_bitrate_estimator_interface.h
++++ b/modules/congestion_controller/goog_cc/acknowledged_bitrate_estimator_interface.h
+@@ -33,9 +33,7 @@ struct RobustThroughputEstimatorSettings {
+   explicit RobustThroughputEstimatorSettings(
+       const FieldTrialsView* key_value_config);
  
-   // Signal to module that the pacer thread is attached and can send packets.
-   rtp_module->OnPacketSendingThreadSwitched();
+-  // Set `enabled` to true to use the RobustThroughputEstimator, false to use
+-  // the AcknowledgedBitrateEstimator.
+-  bool enabled = true;
++  bool enabled = false;  // Set to true to use RobustThroughputEstimator.
+ 
+   // The estimator keeps the smallest window containing at least
+   // `window_packets` and at least the packets received during the last
+diff --git a/modules/congestion_controller/goog_cc/robust_throughput_estimator_unittest.cc b/modules/congestion_controller/goog_cc/robust_throughput_estimator_unittest.cc
+index f41ee7f3d6..9a013aa6d0 100644
+--- a/modules/congestion_controller/goog_cc/robust_throughput_estimator_unittest.cc
++++ b/modules/congestion_controller/goog_cc/robust_throughput_estimator_unittest.cc
+@@ -63,19 +63,6 @@ class FeedbackGenerator {
+   uint16_t sequence_number_ = 100;
+ };
+ 
+-TEST(RobustThroughputEstimatorTest, DefaultEnabled) {
+-  RobustThroughputEstimatorSettings settings =
+-      CreateRobustThroughputEstimatorSettings("");
+-  EXPECT_TRUE(settings.enabled);
+-}
+-
+-TEST(RobustThroughputEstimatorTest, CanDisable) {
+-  RobustThroughputEstimatorSettings settings =
+-      CreateRobustThroughputEstimatorSettings(
+-          "WebRTC-Bwe-RobustThroughputEstimatorSettings/enabled:false/");
+-  EXPECT_FALSE(settings.enabled);
+-}
+-
+ TEST(RobustThroughputEstimatorTest, InitialEstimate) {
+   FeedbackGenerator feedback_generator;
+   RobustThroughputEstimator throughput_estimator(
