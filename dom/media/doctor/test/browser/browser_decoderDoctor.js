@@ -106,7 +106,7 @@ async function test_decoder_doctor_notification(
           // will permanently fail on Linux.
           if (label.l10nId === "moz-support-link-text") {
             MozXULElement.insertFTLIfNeeded(
-              "browser/components/mozSupportLink.ftl"
+              "toolkit/global/mozSupportLink.ftl"
             );
           }
           label = await document.l10n.formatValue(label.l10nId);

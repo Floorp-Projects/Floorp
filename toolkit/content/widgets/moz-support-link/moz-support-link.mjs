@@ -2,9 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-window.MozXULElement?.insertFTLIfNeeded(
-  "browser/components/mozSupportLink.ftl"
-);
+window.MozXULElement?.insertFTLIfNeeded("toolkit/global/mozSupportLink.ftl");
 
 /**
  * An extension of the anchor element that helps create links to Mozilla's
