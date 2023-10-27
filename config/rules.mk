@@ -224,7 +224,7 @@ endif
 ifdef MACH
 ifndef NO_BUILDSTATUS_MESSAGES
 define BUILDSTATUS
-@echo 'BUILDSTATUS $1'
+@echo 'BUILDSTATUS@$(relativesrcdir) $1'
 
 endef
 endif
