@@ -31,6 +31,9 @@ async function waitForRecentlyClosedTabsList(doc) {
   let cardMainSlotNode = Array.from(
     cardContainer?.mainSlot?.assignedNodes()
   )[0];
+  await TestUtils.waitForCondition(() => {
+    return cardMainSlotNode.rowEls.length;
+  });
   return [cardMainSlotNode, cardMainSlotNode.rowEls];
 }
 

@@ -33,6 +33,35 @@ add_setup(async () => {
   });
 });
 
+add_task(async function firefox_view_entered_telemetry() {
+  await clearAllParentTelemetryEvents();
+  await withFirefoxView({}, async browser => {
+    const { document } = browser.contentWindow;
+    is(document.location.href, "about:firefoxview-next");
+    let enteredAndTabSelectedEvents = [tabSelectedTelemetry, enteredTelemetry];
+    await telemetryEvent(enteredAndTabSelectedEvents);
+
+    enteredTelemetry[4] = { page: "recentlyclosed" };
+    enteredAndTabSelectedEvents = [tabSelectedTelemetry, enteredTelemetry];
+
+    navigateToCategory(document, "recentlyclosed");
+    await clearAllParentTelemetryEvents();
+    await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:robots");
+    is(
+      gBrowser.selectedBrowser.currentURI.spec,
+      "about:robots",
+      "The selected tab is about:robots"
+    );
+    await switchToFxViewTab(browser.ownerGlobal);
+    await telemetryEvent(enteredAndTabSelectedEvents);
+    await SpecialPowers.popPrefEnv();
+    // clean up extra tabs
+    while (gBrowser.tabs.length > 1) {
+      BrowserTestUtils.removeTab(gBrowser.tabs.at(-1));
+    }
+  });
+});
+
 add_task(async function test_collapse_and_expand_card() {
   await withFirefoxView({}, async browser => {
     const { document } = browser.contentWindow;
@@ -129,6 +158,9 @@ add_task(async function test_context_menu_telemetry() {
     navigateToCategory(document, "history");
     let historyComponent = document.querySelector("view-history");
     await TestUtils.waitForCondition(() => historyComponent.fullyUpdated);
+    await TestUtils.waitForCondition(
+      () => historyComponent.lists[0].rowEls.length
+    );
     let firstTabList = historyComponent.lists[0];
     let firstItem = firstTabList.rowEls[0];
     let panelList = historyComponent.panelList;
@@ -216,35 +248,6 @@ add_task(async function test_context_menu_telemetry() {
   });
 });
 
-add_task(async function firefox_view_entered_telemetry() {
-  await clearAllParentTelemetryEvents();
-  await withFirefoxView({}, async browser => {
-    const { document } = browser.contentWindow;
-    is(document.location.href, "about:firefoxview-next");
-    let enteredAndTabSelectedEvents = [tabSelectedTelemetry, enteredTelemetry];
-    await telemetryEvent(enteredAndTabSelectedEvents);
-
-    enteredTelemetry[4] = { page: "recentlyclosed" };
-    enteredAndTabSelectedEvents = [tabSelectedTelemetry, enteredTelemetry];
-
-    navigateToCategory(document, "recentlyclosed");
-    await clearAllParentTelemetryEvents();
-    await BrowserTestUtils.openNewForegroundTab(gBrowser, "about:robots");
-    is(
-      gBrowser.selectedBrowser.currentURI.spec,
-      "about:robots",
-      "The selected tab is about:robots"
-    );
-    await switchToFxViewTab(browser.ownerGlobal);
-    await telemetryEvent(enteredAndTabSelectedEvents);
-    await SpecialPowers.popPrefEnv();
-    // clean up extra tabs
-    while (gBrowser.tabs.length > 1) {
-      BrowserTestUtils.removeTab(gBrowser.tabs.at(-1));
-    }
-  });
-});
-
 add_task(async function test_browser_context_menu_telemetry() {
   await SpecialPowers.pushPrefEnv({ set: [[FXVIEW_NEXT_ENABLED_PREF, true]] });
   const menu = document.getElementById("contentAreaContextMenu");
@@ -255,6 +258,11 @@ add_task(async function test_browser_context_menu_telemetry() {
 
     // Test browser context menu options
     const openTabsComponent = document.querySelector("view-opentabs");
+    await TestUtils.waitForCondition(
+      () =>
+        openTabsComponent.shadowRoot.querySelector("view-opentabs-card").tabList
+          .rowEls.length
+    );
     const [openTabsRow] =
       openTabsComponent.shadowRoot.querySelector("view-opentabs-card").tabList
         .rowEls;

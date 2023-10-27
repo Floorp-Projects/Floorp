@@ -26,7 +26,8 @@ function getCards(openTabs) {
   return openTabs.shadowRoot.querySelectorAll("view-opentabs-card");
 }
 
-function getRowsForCard(card) {
+async function getRowsForCard(card) {
+  await TestUtils.waitForCondition(() => card.tabList.rowEls.length);
   return card.tabList.rowEls;
 }
 
@@ -47,7 +48,7 @@ async function moreMenuSetup(document) {
   });
   is(cards.length, 1, "There is one open window.");
 
-  let rows = getRowsForCard(cards[0]);
+  let rows = await getRowsForCard(cards[0]);
   is(rows.length, 3, "There are three tabs in the open tabs list.");
 
   let firstTab = rows[0];
@@ -188,8 +189,8 @@ add_task(async function test_more_menus() {
     await BrowserTestUtils.waitForMutationCondition(
       cards[0].shadowRoot,
       { characterData: true, childList: true, subtree: true },
-      () => {
-        rows = getRowsForCard(cards[0]);
+      async () => {
+        rows = await getRowsForCard(cards[0]);
         firstTab = rows[0];
         return firstTab.url == TEST_URL3;
       }
