@@ -1,53 +1,23 @@
-From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Mon, 5 Sep 2022 13:56:00 +0000
-Subject: Bug 1786502 - Lock access to DeviceInfo devicechange callbacks.
- r=webrtc-reviewers,jib
+From: Michael Froman <mjfroman@mac.com>
+Date: Tue, 21 Jun 2022 11:17:46 -0500
+Subject: Bug 1772380 - to upstream - ref count this in lambda capture
 
-Differential Revision: https://phabricator.services.mozilla.com/D155365
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/e826dfadfe1264c59d9b13e3c17d6f75a40f5c33
 ---
- modules/video_capture/video_capture.h | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+ modules/video_capture/linux/video_capture_v4l2.cc | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/modules/video_capture/video_capture.h b/modules/video_capture/video_capture.h
-index 58485f28e9..04203033b0 100644
---- a/modules/video_capture/video_capture.h
-+++ b/modules/video_capture/video_capture.h
-@@ -16,6 +16,8 @@
- #include "modules/desktop_capture/desktop_capture_types.h"
- #include "modules/video_capture/raw_video_sink_interface.h"
- #include "modules/video_capture/video_capture_defines.h"
-+#include "rtc_base/synchronization/mutex.h"
-+#include "rtc_base/thread_annotations.h"
- #include <set>
- 
- #if defined(ANDROID)
-@@ -40,15 +42,18 @@ class VideoCaptureModule : public rtc::RefCountInterface {
-     virtual uint32_t NumberOfDevices() = 0;
-     virtual int32_t Refresh() = 0;
-     virtual void DeviceChange() {
-+      MutexLock lock(&_inputCallbacksMutex);
-       for (auto inputCallBack : _inputCallBacks) {
-         inputCallBack->OnDeviceChange();
-       }
-     }
-     virtual void RegisterVideoInputFeedBack(VideoInputFeedBack* callBack) {
-+      MutexLock lock(&_inputCallbacksMutex);
-       _inputCallBacks.insert(callBack);
-     }
- 
-     virtual void DeRegisterVideoInputFeedBack(VideoInputFeedBack* callBack) {
-+      MutexLock lock(&_inputCallbacksMutex);
-       auto it = _inputCallBacks.find(callBack);
-       if (it != _inputCallBacks.end()) {
-         _inputCallBacks.erase(it);
-@@ -102,7 +107,8 @@ class VideoCaptureModule : public rtc::RefCountInterface {
- 
-     virtual ~DeviceInfo() {}
-    private:
--    std::set<VideoInputFeedBack*> _inputCallBacks;
-+    Mutex _inputCallbacksMutex;
-+    std::set<VideoInputFeedBack*> _inputCallBacks RTC_GUARDED_BY(_inputCallbacksMutex);
-   };
- 
-   //   Register capture data callback
+diff --git a/modules/video_capture/linux/video_capture_v4l2.cc b/modules/video_capture/linux/video_capture_v4l2.cc
+index 00cede01cb..d6813b13fd 100644
+--- a/modules/video_capture/linux/video_capture_v4l2.cc
++++ b/modules/video_capture/linux/video_capture_v4l2.cc
+@@ -296,8 +296,8 @@ int32_t VideoCaptureModuleV4L2::StartCapture(
+   if (_captureThread.empty()) {
+     quit_ = false;
+     _captureThread = rtc::PlatformThread::SpawnJoinable(
+-        [this] {
+-          while (CaptureProcess()) {
++        [self = rtc::scoped_refptr(this)] {
++          while (self->CaptureProcess()) {
+           }
+         },
+         "CaptureThread",

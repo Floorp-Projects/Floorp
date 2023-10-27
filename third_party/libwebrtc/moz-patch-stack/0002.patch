@@ -1,43 +1,35 @@
-From: Nico Grunbaum <na-g@nostrum.com>
-Date: Sat, 13 Feb 2021 04:20:00 -0800
-Subject: Bug 1654112 - Add pid_t to desktop_capture_types.h; r=pehrsons
+From: Harald Alvestrand <hta@webrtc.org>
+Date: Thu, 31 Aug 2023 09:25:06 +0000
+Subject: (cherry-pick-branch-heads/5938) [Merge to 117] CHECK against
+ overwrites in send_modules_map_
 
-Upstreaming bug 1697385
+(cherry picked from commit 9d8fb97b3ca56ec9920271d8e545ae2ac76b143c)
 
-Also includes:
-Bug 1654112 - Clarifying prev. rev that moved pid_t into the global namespace; r=dminor
-
-Differential Revision: https://phabricator.services.mozilla.com/D107897
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/539b69f0e21118a1898f1ef689577c7193ff7be7
+No-try: true
+Bug: chromium:1477075
+Change-Id: Ia05a868bfab9e99ef66704e8d6bce516a7a43b0a
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/318440
+Reviewed-by: Sergey Silkin <ssilkin@webrtc.org>
+Commit-Queue: Harald Alvestrand <hta@webrtc.org>
+Cr-Original-Commit-Position: refs/heads/main@{#40673}
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/319100
+Reviewed-by: Taylor Brandstetter <deadbeef@webrtc.org>
+Cr-Commit-Position: refs/branch-heads/5938@{#2}
+Cr-Branched-From: 82e5f91a2bdf955aa870142008fbdc9ac12f6acd-refs/heads/main@{#40524}
 ---
- modules/desktop_capture/desktop_capture_types.h | 4 ++++
- modules/video_capture/video_capture.h           | 1 +
- 2 files changed, 5 insertions(+)
+ modules/pacing/packet_router.cc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/modules/desktop_capture/desktop_capture_types.h b/modules/desktop_capture/desktop_capture_types.h
-index a4e3e897fd..e777a45f92 100644
---- a/modules/desktop_capture/desktop_capture_types.h
-+++ b/modules/desktop_capture/desktop_capture_types.h
-@@ -13,6 +13,10 @@
+diff --git a/modules/pacing/packet_router.cc b/modules/pacing/packet_router.cc
+index ba133f3d1f..4c986ad027 100644
+--- a/modules/pacing/packet_router.cc
++++ b/modules/pacing/packet_router.cc
+@@ -68,7 +68,7 @@ void PacketRouter::AddSendRtpModule(RtpRtcpInterface* rtp_module,
+ void PacketRouter::AddSendRtpModuleToMap(RtpRtcpInterface* rtp_module,
+                                          uint32_t ssrc) {
+   RTC_DCHECK_RUN_ON(&thread_checker_);
+-  RTC_DCHECK(send_modules_map_.find(ssrc) == send_modules_map_.end());
++  RTC_CHECK(send_modules_map_.find(ssrc) == send_modules_map_.end());
  
- #include <stdint.h>
- 
-+#ifdef XP_WIN      // Moving this into the global namespace
-+typedef int pid_t; // matching what used to be in
-+#endif             // video_capture_defines.h
-+
- namespace webrtc {
- 
- enum class CaptureType { kWindow, kScreen, kAnyScreenContent };
-diff --git a/modules/video_capture/video_capture.h b/modules/video_capture/video_capture.h
-index e207598d68..58485f28e9 100644
---- a/modules/video_capture/video_capture.h
-+++ b/modules/video_capture/video_capture.h
-@@ -13,6 +13,7 @@
- 
- #include "api/video/video_rotation.h"
- #include "api/video/video_sink_interface.h"
-+#include "modules/desktop_capture/desktop_capture_types.h"
- #include "modules/video_capture/raw_video_sink_interface.h"
- #include "modules/video_capture/video_capture_defines.h"
- #include <set>
+   // Signal to module that the pacer thread is attached and can send packets.
+   rtp_module->OnPacketSendingThreadSwitched();

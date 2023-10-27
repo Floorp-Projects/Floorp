@@ -1,47 +1,38 @@
-From: "Byron Campen [:bwc]" <docfaraday@gmail.com>
-Date: Thu, 29 Apr 2021 18:25:00 +0000
-Subject: Bug 1654112 - Work around the old (<1.5) libxrandr headers on our
- build machines. r=mjf,ng
+From: Nico Grunbaum <na-g@nostrum.com>
+Date: Wed, 10 Feb 2021 12:24:00 -0800
+Subject: Bug 1654112 - Use newer thread run callback, and adapt
+ PlatformUIThread; r=pehrsons
 
-Differential Revision: https://phabricator.services.mozilla.com/D113830
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/c91f12b557a1d23b468c75c4f2fc00eb0f8d541a
+Differential Revision: https://phabricator.services.mozilla.com/D107879
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/bb6417a4cfac1416a8e2565bd68b66c40be4827b
 ---
- X11/extensions/Xrandr.h | 29 +++++++++++++++++++++++++++++
- 1 file changed, 29 insertions(+)
- create mode 100644 X11/extensions/Xrandr.h
+ rtc_base/platform_thread.h | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/X11/extensions/Xrandr.h b/X11/extensions/Xrandr.h
-new file mode 100644
-index 0000000000..876e8b4c7f
---- /dev/null
-+++ b/X11/extensions/Xrandr.h
-@@ -0,0 +1,29 @@
-+/* This Source Code Form is subject to the terms of the Mozilla Public
-+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
-+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+diff --git a/rtc_base/platform_thread.h b/rtc_base/platform_thread.h
+index befd61849d..5b7c6884fe 100644
+--- a/rtc_base/platform_thread.h
++++ b/rtc_base/platform_thread.h
+@@ -21,8 +21,13 @@
+ #include "absl/types/optional.h"
+ #include "rtc_base/platform_thread_types.h"
+ 
++#include "rtc_base/deprecated/recursive_critical_section.h"
 +
-+// Hack to compensate for the old (<1.5) Xrandr development headers on
-+// Mozilla's build boxes.
+ namespace rtc {
+ 
++// Bug 1691641
++class PlatformUIThread;
 +
-+#ifndef _XRANDR_H_WRAPPER_HACK_
-+#define _XRANDR_H_WRAPPER_HACK_
-+
-+#include_next <X11/extensions/Xrandr.h>
-+
-+#if RANDR_MAJOR == 1 && RANDR_MINOR < 5 // defined in randr.h
-+typedef struct _XRRMonitorInfo {
-+    Atom name;
-+    Bool primary;
-+    Bool automatic;
-+    int noutput;
-+    int x;
-+    int y;
-+    int width;
-+    int height;
-+    int mwidth;
-+    int mheight;
-+    RROutput *outputs;
-+} XRRMonitorInfo;
-+#endif
-+
-+#endif // _XRANDR_H_WRAPPER_HACK_
+ enum class ThreadPriority {
+   kLow = 1,
+   kNormal,
+@@ -113,6 +118,8 @@ class PlatformThread final {
+ 
+   absl::optional<Handle> handle_;
+   bool joinable_ = false;
++  // Bug 1691641
++  friend PlatformUIThread;
+ };
+ 
+ }  // namespace rtc
