@@ -277,7 +277,7 @@ class WebPlatformTestsServeRunner(MozbuildObject):
 
             for url_base, paths in iteritems(test_paths):
                 if url_base != "/":
-                    route_builder.add_mount_point(url_base, paths["tests_path"])
+                    route_builder.add_mount_point(url_base, paths.tests_path)
 
             return route_builder
 
