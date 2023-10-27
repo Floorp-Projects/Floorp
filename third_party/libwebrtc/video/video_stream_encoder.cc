@@ -43,7 +43,6 @@
 #include "rtc_base/arraysize.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/event.h"
-#include "rtc_base/experiments/alr_experiment.h"
 #include "rtc_base/experiments/encoder_info_settings.h"
 #include "rtc_base/experiments/rate_control_settings.h"
 #include "rtc_base/logging.h"
@@ -186,26 +185,6 @@ bool RequiresEncoderReset(const VideoCodec& prev_send_codec,
   }
 
   return false;
-}
-
-std::array<uint8_t, 2> GetExperimentGroups() {
-  std::array<uint8_t, 2> experiment_groups;
-  absl::optional<AlrExperimentSettings> experiment_settings =
-      AlrExperimentSettings::CreateFromFieldTrial(
-          AlrExperimentSettings::kStrictPacingAndProbingExperimentName);
-  if (experiment_settings) {
-    experiment_groups[0] = experiment_settings->group_id + 1;
-  } else {
-    experiment_groups[0] = 0;
-  }
-  experiment_settings = AlrExperimentSettings::CreateFromFieldTrial(
-      AlrExperimentSettings::kScreenshareProbingBweExperimentName);
-  if (experiment_settings) {
-    experiment_groups[1] = experiment_settings->group_id + 1;
-  } else {
-    experiment_groups[1] = 0;
-  }
-  return experiment_groups;
 }
 
 // Limit allocation across TLs in bitrate allocation according to number of TLs
@@ -711,7 +690,6 @@ VideoStreamEncoder::VideoStreamEncoder(
       cwnd_frame_counter_(0),
       next_frame_types_(1, VideoFrameType::kVideoFrameDelta),
       frame_encode_metadata_writer_(this),
-      experiment_groups_(GetExperimentGroups()),
       automatic_animation_detection_experiment_(
           ParseAutomatincAnimationDetectionFieldTrial()),
       input_state_provider_(encoder_stats_observer),
