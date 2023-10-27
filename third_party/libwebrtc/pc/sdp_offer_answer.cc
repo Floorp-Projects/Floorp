@@ -417,14 +417,18 @@ RTCError ValidateBundledPayloadTypes(
   for (const cricket::ContentGroup* bundle_group : bundle_groups) {
     std::map<int, RtpCodecParameters> payload_to_codec_parameters;
     for (const std::string& content_name : bundle_group->content_names()) {
-      const cricket::MediaContentDescription* media_description =
-          description.GetContentDescriptionByName(content_name);
-      if (!media_description) {
+      const ContentInfo* content_description =
+          description.GetContentByName(content_name);
+      if (!content_description) {
         LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_PARAMETER,
                              "A BUNDLE group contains a MID='" + content_name +
                                  "' matching no m= section.");
       }
-      if (!media_description->has_codecs()) {
+      const cricket::MediaContentDescription* media_description =
+          content_description->media_description();
+      RTC_DCHECK(media_description);
+      if (content_description->rejected || !media_description ||
+          !media_description->has_codecs()) {
         continue;
       }
       const auto type = media_description->type();
@@ -480,13 +484,21 @@ RTCError ValidateBundledRtpHeaderExtensions(
   for (const cricket::ContentGroup* bundle_group : bundle_groups) {
     std::map<int, RtpExtension> id_to_extension;
     for (const std::string& content_name : bundle_group->content_names()) {
-      const cricket::MediaContentDescription* media_description =
-          description.GetContentDescriptionByName(content_name);
-      if (!media_description) {
+      const ContentInfo* content_description =
+          description.GetContentByName(content_name);
+      if (!content_description) {
         LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_PARAMETER,
                              "A BUNDLE group contains a MID='" + content_name +
                                  "' matching no m= section.");
       }
+      const cricket::MediaContentDescription* media_description =
+          content_description->media_description();
+      RTC_DCHECK(media_description);
+      if (content_description->rejected || !media_description ||
+          !media_description->has_codecs()) {
+        continue;
+      }
+
       for (const auto& extension : media_description->rtp_header_extensions()) {
         auto error =
             FindDuplicateHeaderExtensionIds(extension, id_to_extension);
@@ -502,7 +514,7 @@ RTCError ValidateBundledRtpHeaderExtensions(
 RTCError ValidateRtpHeaderExtensionsForSpecSimulcast(
     const cricket::SessionDescription& description) {
   for (const ContentInfo& content : description.contents()) {
-    if (content.type != MediaProtocolType::kRtp) {
+    if (content.type != MediaProtocolType::kRtp || content.rejected) {
       continue;
     }
     const auto media_description = content.media_description();
