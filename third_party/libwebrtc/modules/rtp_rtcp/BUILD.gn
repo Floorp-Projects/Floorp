@@ -652,6 +652,7 @@ if (rtc_include_tests) {
       "../../api/transport/rtp:dependency_descriptor",
       "../../api/units:data_rate",
       "../../api/units:data_size",
+      "../../api/units:frequency",
       "../../api/units:time_delta",
       "../../api/units:timestamp",
       "../../api/video:encoded_image",
