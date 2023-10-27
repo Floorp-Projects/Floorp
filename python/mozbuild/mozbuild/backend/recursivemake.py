@@ -773,17 +773,11 @@ class RecursiveMakeBackend(MakeBackend):
         # - nodes that are not dependended upon by anything. Typically, this
         #   would include programs, that need to be recursed, but that nothing
         #   depends on.
-        # - nodes that have no dependencies of their own. Technically, this is
-        #   not necessary, because other things have dependencies on them, and
-        #   they all end up rooting to nodes from the above category. But the
-        #   way make works[1] is such that there can be benefits listing them
-        #   as direct dependencies of the top recursion target, to somehow
-        #   prioritize them.
-        #   1. See bug 1262241 comment 5.
+        # - nodes that are rust targets.
         compile_roots = [
             t
             for t, deps in six.iteritems(self._compile_graph)
-            if not deps or t not in all_compile_deps
+            if t in self._rust_targets or t not in all_compile_deps
         ]
 
         def add_category_rules(category, roots, graph):
