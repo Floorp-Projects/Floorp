@@ -540,13 +540,13 @@ absl::optional<H265SpsParser::SpsState> H265SpsParser::ParseSpsInternal(
   }
   // log2_min_luma_coding_block_size_minus3: ue(v)
   sps.log2_min_luma_coding_block_size_minus3 = reader.ReadExponentialGolomb();
-  TRUE_OR_RETURN(sps.log2_min_luma_coding_block_size_minus3 <= 27);
+  IN_RANGE_OR_RETURN_NULL(sps.log2_min_luma_coding_block_size_minus3, 0, 27);
   // log2_diff_max_min_luma_coding_block_size: ue(v)
   sps.log2_diff_max_min_luma_coding_block_size = reader.ReadExponentialGolomb();
   int min_cb_log2_size_y = sps.log2_min_luma_coding_block_size_minus3 + 3;
   int ctb_log2_size_y = min_cb_log2_size_y;
   ctb_log2_size_y += sps.log2_diff_max_min_luma_coding_block_size;
-  TRUE_OR_RETURN(ctb_log2_size_y <= 30);
+  IN_RANGE_OR_RETURN_NULL(ctb_log2_size_y, 0, 30);
   int min_cb_size_y = 1 << min_cb_log2_size_y;
   int ctb_size_y = 1 << ctb_log2_size_y;
   sps.pic_width_in_ctbs_y =
