@@ -49,10 +49,6 @@ if [ "x$MOZ_ADVANCE_ONE_COMMIT" = "x" ]; then
   MOZ_ADVANCE_ONE_COMMIT=""
 fi
 
-# if [ "x$SKIP_NEXT_REVERT_CHK" = "x" ]; then
-#   SKIP_NEXT_REVERT_CHK="0"
-# fi
-
 MOZ_CHANGED=0
 GIT_CHANGED=0
 HANDLE_NOOP_COMMIT=""
@@ -83,6 +79,7 @@ SKIP_NEXT_REVERT_CHK=""
 if [ -f $STATE_DIR/loop.skip-revert-detect ]; then
   SKIP_NEXT_REVERT_CHK=`tail -1 $STATE_DIR/loop.skip-revert-detect`
 fi
+echo "SKIP_NEXT_REVERT_CHK: '$SKIP_NEXT_REVERT_CHK'" 2>&1| tee -a $LOOP_OUTPUT_LOG
 
 ERROR_HELP=$"
 It appears that verification of initial vendoring from our local copy
@@ -139,6 +136,8 @@ COMMITS_REMAINING=`cd $MOZ_LIBWEBRTC_SRC ; \
    | wc -l | tr -d " "`
 echo_log "Commits remaining: $COMMITS_REMAINING"
 
+echo "Before revert detection, SKIP_NEXT_REVERT_CHK: '$SKIP_NEXT_REVERT_CHK'" 2>&1| tee -a $LOOP_OUTPUT_LOG
+echo "Before revert detection, RESUME: '$RESUME'" 2>&1| tee -a $LOOP_OUTPUT_LOG
 ERROR_HELP=$"Some portion of the detection and/or fixing of upstream revert commits
 has failed.  Please fix the state of the git hub repo at: $MOZ_LIBWEBRTC_SRC.
 When fixed, please resume this script with the following command:
@@ -188,7 +187,7 @@ if [ "x$HANDLE_NOOP_COMMIT" == "x1" ]; then
   echo_log "NO-OP commit detected, we expect file changed counts to differ"
 elif [ $MOZ_CHANGED -ne $GIT_CHANGED ]; then
   echo_log "MOZ_CHANGED $MOZ_CHANGED should equal GIT_CHANGED $GIT_CHANGED"
-  echo "$FILE_CNT_MISMATCH_MSG"
+  echo "$FILE_CNT_MISMATCH_MSG" 2>&1| tee -a $LOOP_OUTPUT_LOG
   exit 1
 fi
 HANDLE_NOOP_COMMIT=""
@@ -276,6 +275,9 @@ if [ ! "x$MOZ_ADVANCE_ONE_COMMIT" = "x" ]; then
   echo_log "Done advancing one commit."
   exit
 fi
+
+# successfully completed one iteration through the loop, so we can reset RESUME
+RESUME=""
 
 done
 
