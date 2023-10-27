@@ -432,33 +432,6 @@ $(1):
 
 endef
 
-# make_cargo_rule(target, real-target [, extra-deps])
-# Generates a rule suitable to rebuild $(target) only if its dependencies are
-# obsolete.
-# It relies on the fact that upon build, cargo generates a dependency file named
-# `$(target).d'. Unfortunately the lhs of the rule has an absolute path,
-# so we extract it under the name $(target)_deps below.
-#
-# If the dependencies are empty, the file was not created so we force a rebuild.
-# Otherwise we add it to the dependency list.
-#
-# The actual rule is a bit tricky. The `+' prefix allow for recursive parallel
-# make, and it's skipped (`:') if we already triggered a rebuild as part of the
-# dependency chain.
-#
-# Another tricky thing: some dependencies may contain escaped spaces, and they
-# need to be preserved, but $(foreach) splits on spaces, so we replace escaped
-# spaces with some unlikely string for the foreach, and replace them back in the
-# loop itself.
-define make_cargo_rule
-$(1)_deps := $$(wordlist 2, 10000000, $$(if $$(wildcard $(basename $(1)).d),$$(shell cat $(basename $(1)).d)))
-$(1): $(CARGO_FILE) $(3) $$(if $$($(1)_deps),$$($(1)_deps),$(2))
-	$$(REPORT_BUILD)
-	$$(if $$($(1)_deps),+$(MAKE) $(2),:)
-
-$$(foreach dep, $$(call normalize_sep,$$(subst \ ,_^_^_^_,$$($(1)_deps))),$$(eval $$(call make_default_rule,$$(subst _^_^_^_,\ ,$$(dep)))))
-endef
-
 ifdef RUST_LIBRARY_FILE
 
 rust_features_flag := --features '$(if $(RUST_LIBRARY_FEATURES),$(RUST_LIBRARY_FEATURES) )mozilla-central-workspace-hack'
@@ -476,9 +449,15 @@ endif
 # has full visibility into how changes in Rust sources might affect the final
 # build.
 force-cargo-library-build:
+	$(REPORT_BUILD)
 	$(call BUILDSTATUS,START_Rust $(notdir $(RUST_LIBRARY_FILE)))
 	$(call CARGO_BUILD) --lib $(cargo_target_flag) $(rust_features_flag) -- $(cargo_rustc_flags)
 	$(call BUILDSTATUS,END_Rust $(notdir $(RUST_LIBRARY_FILE)))
+
+RUST_LIBRARY_DEP_FILE := $(basename $(RUST_LIBRARY_FILE)).d
+RUST_LIBRARY_DEPS := $(wordlist 2, 10000000, $(if $(wildcard $(RUST_LIBRARY_DEP_FILE)),$(shell cat $(RUST_LIBRARY_DEP_FILE))))
+$(RUST_LIBRARY_FILE): $(CARGO_FILE) $(if $(RUST_LIBRARY_DEPS),$(RUST_LIBRARY_DEPS), force-cargo-library-build)
+	$(if $(RUST_LIBRARY_DEPS),+$(MAKE) force-cargo-library-build,:)
 # When we are building in --enable-release mode; we add an additional check to confirm
 # that we are not importing any networking-related functions in rust code. This reduces
 # the chance of proxy bypasses originating from rust code.
@@ -489,14 +468,15 @@ ifeq ($(OS_ARCH), Linux)
 ifeq (,$(rustflags_sancov)$(MOZ_ASAN)$(MOZ_TSAN)$(MOZ_UBSAN))
 ifndef MOZ_LTO_RUST_CROSS
 ifneq (,$(filter -Clto,$(cargo_rustc_flags)))
-	$(call py_action,check_binary $(@F),--networking $(RUST_LIBRARY_FILE))
+	$(call py_action,check_binary $(@F),--networking $@)
 endif
 endif
 endif
 endif
 endif
 
-$(eval $(call make_cargo_rule,$(RUST_LIBRARY_FILE),force-cargo-library-build))
+$(foreach dep, $(call normalize_sep,$(RUST_LIBRARY_DEPS)),$(eval $(call make_default_rule,$(dep))))
+
 
 SUGGEST_INSTALL_ON_FAILURE = (ret=$$?; if [ $$ret = 101 ]; then echo If $1 is not installed, install it using: cargo install $1; fi; exit $$ret)
 
@@ -533,11 +513,12 @@ ifdef HOST_RUST_LIBRARY_FILE
 host_rust_features_flag := --features '$(if $(HOST_RUST_LIBRARY_FEATURES),$(HOST_RUST_LIBRARY_FEATURES) )mozilla-central-workspace-hack'
 
 force-cargo-host-library-build:
+	$(REPORT_BUILD)
 	$(call BUILDSTATUS,START_Rust $(notdir $(HOST_RUST_LIBRARY_FILE)))
 	$(call CARGO_BUILD) --lib $(cargo_host_flag) $(host_rust_features_flag)
 	$(call BUILDSTATUS,END_Rust $(notdir $(HOST_RUST_LIBRARY_FILE)))
 
-$(eval $(call make_cargo_rule,$(HOST_RUST_LIBRARY_FILE),force-cargo-host-library-build))
+$(HOST_RUST_LIBRARY_FILE): force-cargo-host-library-build ;
 
 ifndef CARGO_NO_AUTO_ARG
 force-cargo-host-library-%:
@@ -557,11 +538,33 @@ ifdef RUST_PROGRAMS
 program_features_flag := --features mozilla-central-workspace-hack
 
 force-cargo-program-build: $(call resfile,module)
+	$(REPORT_BUILD)
 	$(call BUILDSTATUS,START_Rust $(RUST_CARGO_PROGRAMS))
 	$(call CARGO_BUILD) $(addprefix --bin ,$(RUST_CARGO_PROGRAMS)) $(cargo_target_flag) $(program_features_flag) -- $(addprefix -C link-arg=$(CURDIR)/,$(call resfile,module)) $(CARGO_RUSTCFLAGS)
 	$(call BUILDSTATUS,END_Rust $(RUST_CARGO_PROGRAMS))
 
-$(foreach RUST_PROGRAM,$(RUST_PROGRAMS), $(eval $(call make_cargo_rule,$(RUST_PROGRAM),force-cargo-program-build,$(call resfile,module))))
+# RUST_PROGRAM_DEPENDENCIES(RUST_PROGRAM)
+# Generates a rule suitable to rebuild RUST_PROGRAM only if its dependencies are
+# obsolete.
+# It relies on the fact that upon build, cargo generates a dependency file named
+# `$(RUST_PROGRAM).d'. Unfortunately the lhs of the rule has an absolute path,
+# so we extract it under the name $(RUST_PROGRAM)_deps below.
+#
+# If the dependencies are empty, the file was not created so we force a rebuild.
+# Otherwise we add it to the dependency list.
+#
+# The actual rule is a bit tricky. The `+' prefix allow for recursive parallel
+# make, and it's skipped (`:') if we already triggered a rebuild as part of the
+# dependency chain.
+#
+define RUST_PROGRAM_DEPENDENCIES
+$(1)_deps := $(wordlist 2, 10000000, $(if $(wildcard $(1).d),$(shell cat $(1).d)))
+$(1): $(CARGO_FILE) $(call resfile,module) $$(if $$($(1)_deps),$$($(1)_deps),force-cargo-program-build)
+	$$(if $$($(1)_deps),+$(MAKE) force-cargo-program-build,:)
+$$(foreach dep,$$(call normalize_sep, %.h,$$($(1)_deps)),$$(eval $$(call make_default_rule,$$(dep))))
+endef
+
+$(foreach RUST_PROGRAM,$(RUST_PROGRAMS), $(eval $(call RUST_PROGRAM_DEPENDENCIES,$(RUST_PROGRAM))))
 
 ifndef CARGO_NO_AUTO_ARG
 force-cargo-program-%:
@@ -580,14 +583,16 @@ ifdef HOST_RUST_PROGRAMS
 host_program_features_flag := --features mozilla-central-workspace-hack
 
 force-cargo-host-program-build:
+	$(REPORT_BUILD)
 	$(call BUILDSTATUS,START_Rust $(HOST_RUST_CARGO_PROGRAMS))
 	$(call CARGO_BUILD) $(addprefix --bin ,$(HOST_RUST_CARGO_PROGRAMS)) $(cargo_host_flag) $(host_program_features_flag)
 	$(call BUILDSTATUS,END_Rust $(HOST_RUST_CARGO_PROGRAMS))
 
-$(foreach HOST_RUST_PROGRAM,$(HOST_RUST_PROGRAMS), $(eval $(call make_cargo_rule,$(HOST_RUST_PROGRAM),force-cargo-host-program-build)))
+$(HOST_RUST_PROGRAMS): force-cargo-host-program-build ;
 
 ifndef CARGO_NO_AUTO_ARG
 force-cargo-host-program-%:
+	$(REPORT_BUILD)
 	$(call BUILDSTATUS,START_Rust $(HOST_RUST_CARGO_PROGRAMS))
 	$(call RUN_CARGO,$*) $(addprefix --bin ,$(HOST_RUST_CARGO_PROGRAMS)) $(cargo_host_flag) $(host_program_features_flag)
 	$(call BUILDSTATUS,END_Rust $(HOST_RUST_CARGO_PROGRAMS))
