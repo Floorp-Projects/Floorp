@@ -482,7 +482,7 @@ already_AddRefed<CacheStorage> CacheStorage::Constructor(
     }
   }
 
-  if (privateBrowsing) {
+  if (privateBrowsing && !StaticPrefs::dom_cache_privateBrowsing_enabled()) {
     RefPtr<CacheStorage> ref = new CacheStorage(NS_ERROR_DOM_SECURITY_ERR);
     return ref.forget();
   }
