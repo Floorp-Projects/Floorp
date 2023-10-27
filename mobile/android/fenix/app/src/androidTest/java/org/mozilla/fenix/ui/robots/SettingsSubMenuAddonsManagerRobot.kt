@@ -10,6 +10,7 @@ import android.util.Log
 import android.widget.RelativeLayout
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
+import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.RootMatchers.isDialog
 import androidx.test.espresso.matcher.ViewMatchers.Visibility
@@ -84,36 +85,47 @@ class SettingsSubMenuAddonsManagerRobot {
     }
 
     fun clickInstallAddon(addonName: String) {
-        mDevice.waitNotNull(
-            Until.findObject(By.textContains(addonName)),
-            waitingTime,
-        )
+        mDevice.findObject(
+            UiSelector().resourceId("$packageName:id/add_ons_list"),
+        ).waitForExists(waitingTime)
 
         installButtonForAddon(addonName)
+            .perform(scrollTo())
             .check(matches(isCompletelyDisplayed()))
             .perform(click())
+        Log.e("TestLog", "Clicked Install $addonName button")
     }
 
     fun verifyAddonInstallCompleted(addonName: String, activityTestRule: HomeActivityIntentTestRule) {
         for (i in 1..RETRY_COUNT) {
             try {
                 assertFalse(
+                    "$addonName failed to install",
                     mDevice.findObject(UiSelector().text("Failed to install $addonName"))
                         .waitForExists(waitingTimeShort),
                 )
 
                 assertTrue(
+                    "$addonName failed to install",
                     mDevice.findObject(UiSelector().text("Okay, Got it"))
                         .waitForExists(waitingTimeLong),
                 )
+                Log.e("TestLog", "$addonName installed successfully.")
                 break
             } catch (e: AssertionError) {
                 if (i == RETRY_COUNT) {
                     throw e
                 } else {
-                    Log.e("TestLog", "Addon failed to install on try #$i")
+                    Log.e("TestLog", "$addonName failed to install on try #$i")
                     restartApp(activityTestRule)
-                    installAddon(addonName)
+                    homeScreen {
+                    }.openThreeDotMenu {
+                    }.openAddonsManagerMenu {
+                        scrollToElementByText(addonName)
+                        clickInstallAddon(addonName)
+                        verifyAddonPermissionPrompt(addonName)
+                        acceptPermissionToInstallAddon()
+                    }
                 }
             }
         }
@@ -160,13 +172,14 @@ class SettingsSubMenuAddonsManagerRobot {
         onView(withId(R.id.allow_in_private_browsing)).click()
     }
 
-    fun installAddon(addonName: String) {
+    fun installAddon(addonName: String, activityTestRule: HomeActivityIntentTestRule) {
         homeScreen {
         }.openThreeDotMenu {
         }.openAddonsManagerMenu {
             clickInstallAddon(addonName)
             verifyAddonPermissionPrompt(addonName)
             acceptPermissionToInstallAddon()
+            verifyAddonInstallCompleted(addonName, activityTestRule)
         }
     }
 

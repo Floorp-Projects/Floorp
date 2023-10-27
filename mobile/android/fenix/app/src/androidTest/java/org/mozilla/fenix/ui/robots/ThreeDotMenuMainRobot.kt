@@ -38,6 +38,7 @@ import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdAndTextExists
 import org.mozilla.fenix.helpers.MatcherHelper.checkedItemWithResIdAndText
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithDescription
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdAndText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
@@ -173,6 +174,11 @@ class ThreeDotMenuMainRobot {
                 }
             }
         }
+    }
+
+    fun verifyTrackersBlockedByUblock() {
+        assertTrue(itemWithResId("$packageName:id/badge_text").waitForExists(waitingTime))
+        assertTrue(itemWithResId("$packageName:id/badge_text").text.toInt() > 0)
     }
 
     fun clickQuit() {

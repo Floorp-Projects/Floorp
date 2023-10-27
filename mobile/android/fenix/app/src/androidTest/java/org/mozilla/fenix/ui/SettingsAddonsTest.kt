@@ -17,12 +17,10 @@ import org.mozilla.fenix.helpers.AppAndSystemHelper.registerAndCleanupIdlingReso
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.RecyclerViewIdlingResource
 import org.mozilla.fenix.helpers.TestAssetHelper.getEnhancedTrackingProtectionAsset
-import org.mozilla.fenix.helpers.TestAssetHelper.getGenericAsset
 import org.mozilla.fenix.helpers.TestHelper.verifySnackBarText
 import org.mozilla.fenix.helpers.TestHelper.waitUntilSnackbarGone
 import org.mozilla.fenix.ui.robots.addonsMenu
 import org.mozilla.fenix.ui.robots.homeScreen
-import org.mozilla.fenix.ui.robots.navigationToolbar
 
 /**
  *  Tests for verifying the functionality of installing or removing addons
@@ -101,8 +99,7 @@ class SettingsAddonsTest {
         val addonName = "uBlock Origin"
 
         addonsMenu {
-            installAddon(addonName)
-            verifyAddonInstallCompleted(addonName, activityTestRule)
+            installAddon(addonName, activityTestRule)
             closeAddonInstallCompletePrompt()
         }.openDetailedMenuForAddon(addonName) {
         }.removeAddon(activityTestRule) {
@@ -116,24 +113,34 @@ class SettingsAddonsTest {
     }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/561600
-    // Installs uBlock add-on and checks that the app doesn't crash while loading pages with trackers
+    // Installs 3 add-on and checks that the app doesn't crash while navigating the app
     @SmokeTest
     @Test
     fun noCrashWithAddonInstalledTest() {
         // setting ETP to Strict mode to test it works with add-ons
         activityTestRule.activity.settings().setStrictETP()
 
-        val addonName = "uBlock Origin"
+        val uBlockAddon = "uBlock Origin"
+        val tampermonkeyAddon = "Tampermonkey"
+        val privacyBadgerAddon = "Privacy Badger"
         val trackingProtectionPage = getEnhancedTrackingProtectionAsset(mockWebServer)
 
         addonsMenu {
-            installAddon(addonName)
-            verifyAddonInstallCompleted(addonName, activityTestRule)
+            installAddon(uBlockAddon, activityTestRule)
+            closeAddonInstallCompletePrompt()
+            installAddon(tampermonkeyAddon, activityTestRule)
+            closeAddonInstallCompletePrompt()
+            installAddon(privacyBadgerAddon, activityTestRule)
             closeAddonInstallCompletePrompt()
         }.goBack {
         }.openNavigationToolbar {
         }.enterURLAndEnterToBrowser(trackingProtectionPage.url) {
             verifyUrl(trackingProtectionPage.url.toString())
+        }.goToHomescreen {
+        }.openTopSiteTabWithTitle("Top Articles") {
+        }.openThreeDotMenu {
+        }.openSettings {
+            verifySettingsView()
         }
     }
 
@@ -142,21 +149,36 @@ class SettingsAddonsTest {
     @Test
     fun verifyUBlockWorksInPrivateModeTest() {
         val addonName = "uBlock Origin"
-        val genericPage = getGenericAsset(mockWebServer, 1)
 
         addonsMenu {
-            installAddon(addonName)
-            verifyAddonInstallCompleted(addonName, activityTestRule)
+            installAddon(addonName, activityTestRule)
             selectAllowInPrivateBrowsing()
             closeAddonInstallCompletePrompt()
         }.goBack {
-        }.togglePrivateBrowsingMode()
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(genericPage.url) {
-            verifyPageContent(genericPage.content)
+        }.openContextMenuOnSponsoredShortcut("Top Articles") {
+        }.openTopSiteInPrivateTab {
+            waitForPageToLoad()
         }.openThreeDotMenu {
             openAddonsSubList()
             verifyAddonAvailableInMainMenu(addonName)
+            verifyTrackersBlockedByUblock()
+        }
+    }
+
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/875785
+    @Test
+    fun verifyUBlockWorksInNormalModeTest() {
+        val addonName = "uBlock Origin"
+
+        addonsMenu {
+            installAddon(addonName, activityTestRule)
+            closeAddonInstallCompletePrompt()
+        }.goBack {
+        }.openTopSiteTabWithTitle("Top Articles") {
+            waitForPageToLoad()
+        }.openThreeDotMenu {
+            openAddonsSubList()
+            verifyTrackersBlockedByUblock()
         }
     }
 }
