@@ -171,6 +171,18 @@ async function top_level_about_blank({ legacyBehavior = false } = {}) {
       makeJsFile(filename);
     }
   }
+
+  // Send an explicit test message in the last script which is expected to only
+  // be injected if the legacy behavior pref is set to true, if this is sent
+  // when running the test for the new expected behavior then hitting this message
+  // will trigger an additional explicit test failure due to the non handled
+  // "legacy-matching-script:executed" test message, on the contrary when
+  // the test is executed for the legacy matchAboutBlank behavior the test
+  // will await for that message explicitly to avoid intermittent failures.
+  files["5.should_not_run_because_matches_does_not_match_all_urls.js"] += `
+    browser.test.sendMessage("legacy-matching-script:executed");
+  `;
+
   function background() {
     let tabId;
     browser.test.onMessage.addListener(async (msg, expected, description) => {
@@ -187,6 +199,7 @@ async function top_level_about_blank({ legacyBehavior = false } = {}) {
       }
       browser.test.assertEq("seenScripts_check", msg, "Checking seenScripts");
       try {
+        browser.test.log("Checking seen content scripts");
         let [ seenScripts ] = await browser.tabs.executeScript(
           tabId,
           {
@@ -247,6 +260,13 @@ async function top_level_about_blank({ legacyBehavior = false } = {}) {
     // Start of "Testing legacy behavior".
     await extension.startup();
     await openAboutBlankTab();
+
+    // Await explicitly for the last content script that we expect to be
+    // matching the top level about:blank page while running on legacy
+    // behavior, otherwise we hit an intermittent failure due to the
+    // get_seenScript.js being executed before any of the other
+    // content scripts.
+    await extension.awaitMessage("legacy-matching-script:executed");
 
     // Legacy behavior: tabs.executeScript works in top-level about:blank
     // without granted activeTab.
