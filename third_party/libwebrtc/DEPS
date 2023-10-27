@@ -2709,7 +2709,6 @@ hooks = [
                '--reproxy_cfg_template',
                'reproxy.cfg.template',
                '--quiet',
-               '--hook',
                ],
   },
 ]
