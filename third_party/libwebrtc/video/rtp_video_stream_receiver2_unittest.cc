@@ -1224,7 +1224,7 @@ TEST_P(RtpVideoStreamReceiver2TestPlayoutDelay, PlayoutDelay) {
   EXPECT_CALL(mock_on_complete_frame_callback_, DoOnCompleteFrame(_))
       .WillOnce(Invoke([expected_playout_delay =
                             GetParam().expected_delay](EncodedFrame* frame) {
-        EXPECT_EQ(frame->EncodedImage().playout_delay_, expected_playout_delay);
+        EXPECT_EQ(frame->EncodedImage().PlayoutDelay(), expected_playout_delay);
       }));
   rtp_video_stream_receiver_->OnReceivedPayloadData(
       received_packet.PayloadBuffer(), received_packet, video_header);

@@ -139,19 +139,11 @@ class RTC_EXPORT EncodedImage {
   }
 
   absl::optional<VideoPlayoutDelay> PlayoutDelay() const {
-    if (playout_delay_.Valid()) {
-      return playout_delay_;
-    }
-    return absl::nullopt;
+    return playout_delay_;
   }
 
   void SetPlayoutDelay(absl::optional<VideoPlayoutDelay> playout_delay) {
-    if (playout_delay.has_value()) {
-      playout_delay_ = *playout_delay;
-    } else {
-      playout_delay_.min_ms = -1;
-      playout_delay_.max_ms = -1;
-    }
+    playout_delay_ = playout_delay;
   }
 
   // These methods along with the private member video_frame_tracking_id_ are
@@ -220,13 +212,6 @@ class RTC_EXPORT EncodedImage {
   VideoContentType content_type_ = VideoContentType::UNSPECIFIED;
   int qp_ = -1;  // Quantizer value.
 
-  // When an application indicates non-zero values here, it is taken as an
-  // indication that all future frames will be constrained with those limits
-  // until the application indicates a change again.
-  // TODO(bugs.webrc.org/13756): Make private and represent unset value with
-  // optional.
-  VideoPlayoutDelay playout_delay_;
-
   struct Timing {
     uint8_t flags = VideoSendTiming::kInvalid;
     int64_t encode_start_ms = 0;
@@ -241,6 +226,10 @@ class RTC_EXPORT EncodedImage {
 
  private:
   size_t capacity() const { return encoded_data_ ? encoded_data_->size() : 0; }
+
+  // When set, indicates that all future frames will be constrained with those
+  // limits until the application indicates a change again.
+  absl::optional<VideoPlayoutDelay> playout_delay_;
 
   rtc::scoped_refptr<EncodedImageBufferInterface> encoded_data_;
   size_t size_ = 0;  // Size of encoded frame data.
