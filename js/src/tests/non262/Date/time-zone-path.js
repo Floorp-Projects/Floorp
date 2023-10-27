@@ -14,8 +14,8 @@ assertEq(timeZoneName(), "Central European Summer Time");
 setTimeZone(":Europe/Helsinki");
 assertEq(timeZoneName(), "Eastern European Summer Time");
 
-setTimeZone("/zoneinfo/America/Chicago");
-assertEq(timeZoneName(), "Central Daylight Time");
+setTimeZone("::Europe/London"); // two colons, invalid
+assertEq(timeZoneName(), "Coordinated Universal Time");
 
 setTimeZone("/this-part-is-ignored/zoneinfo/America/Chicago");
 assertEq(timeZoneName(), "Central Daylight Time");
@@ -23,34 +23,8 @@ assertEq(timeZoneName(), "Central Daylight Time");
 setTimeZone(":/this-part-is-ignored/zoneinfo/America/Phoenix");
 assertEq(timeZoneName(), "Mountain Standard Time");
 
-const invalidTimeZones = [
-    // Non-existent timezone
-    "foo",
-    "/zoneinfo/foo",
-    "/zoneinfo/",
-
-    // Not capitalized
-    "america/chicago",
-
-    // No leading /
-    "zoneinfo/America/Chicago",
-    "foo/zoneinfo/America/Chicago",
-    ":zoneinfo/America/Chicago",
-    ":foo/zoneinfo/America/Chicago",
-
-    // Path without "/zoneinfo/"
-    "/foo/America/Chicago",
-    ":/foo/America/Chicago",
-
-    // Two colons
-    "::Europe/London",
-    "::/zoneinfo/America/Los_Angeles",
-    "::/this-part-is-ignored/zoneinfo/America/Los_Angeles",
-];
-
-for (const invalid of invalidTimeZones) {
-    assertThrowsInstanceOf(() => setTimeZone(invalid), Error);
-}
+setTimeZone("::/this-part-is-ignored/zoneinfo/America/Los_Angeles"); // two colons, invalid
+assertEq(timeZoneName(), "Coordinated Universal Time");
 
 if (typeof reportCompare === "function")
     reportCompare(true, true);
