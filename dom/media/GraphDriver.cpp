@@ -300,8 +300,7 @@ AsyncCubebTask::AsyncCubebTask(AudioCallbackDriver* aDriver,
     : Runnable("AsyncCubebTask"),
       mDriver(aDriver),
       mOperation(aOperation),
-      mName(aName),
-      mShutdownGrip(aDriver->Graph()) {
+      mName(aName) {
   MOZ_ASSERT((aOperation == AsyncCubebOperation::SHUTDOWN) == aName.IsVoid());
   MOZ_ASSERT(aOperation != AsyncCubebOperation::INIT ||
                  mDriver->mAudioStreamState ==
@@ -333,7 +332,6 @@ AsyncCubebTask::Run() {
                             mDriver->Graph(), mDriver.get()));
       mDriver->Stop();
       mDriver = nullptr;
-      mShutdownGrip = nullptr;
       break;
     }
     default:

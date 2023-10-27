@@ -818,7 +818,6 @@ class AsyncCubebTask : public Runnable {
   RefPtr<AudioCallbackDriver> mDriver;
   AsyncCubebOperation mOperation;
   nsCString mName;
-  RefPtr<GraphInterface> mShutdownGrip;
 };
 
 }  // namespace mozilla
