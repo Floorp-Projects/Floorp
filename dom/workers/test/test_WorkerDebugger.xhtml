@@ -86,7 +86,7 @@
         info("Create a shared worker with the same URL and check that its " +
              "debugger is not registered again.");
         let listener = {
-          onRegistered: function () {
+          onRegistered () {
             ok(false,
                "Shared worker debugger should not be registered again.");
           },

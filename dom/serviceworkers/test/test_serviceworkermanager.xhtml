@@ -44,7 +44,7 @@
                "listeners when a service worker is registered with the same " +
                "scope as an existing registration.");
           let listener = {
-            onRegister: function () {
+            onRegister () {
               ok(false, "Listener should not have been notified.");
             }
           };

@@ -32,7 +32,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=800386
   // Now jump through some hoops to get us a getInterface call from C++
 
   var requestor = {
-    getInterface: function(aIID) {
+    getInterface(aIID) {
       if (aIID.equals(Ci.nsIProgressEventSink)) {
         triedForwarding = true;
         try {

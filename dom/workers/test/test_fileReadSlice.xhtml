@@ -71,7 +71,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=664783
       finish();
     };
 
-    var params = {blob: blob, start: start, end: end};
+    var params = {blob, start, end};
     worker.postMessage(params);
     waitForWorkerFinish();
   }

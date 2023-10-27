@@ -120,7 +120,7 @@ function runTest(win, expectSystem) {
 
     let array = Array.from(t.input, function(c) { return c.charCodeAt(c); });
     let inputs = [
-      {array: array, name: "parseFromBuffer (array)"},
+      {array, name: "parseFromBuffer (array)"},
       {array: new Uint8Array(array), name: "parseFromBuffer (Uint8Array)"},
     ];
     for (let input of inputs) {

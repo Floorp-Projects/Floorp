@@ -26,7 +26,7 @@
     }
     DummyHelperSubclass.prototype = {
       __proto__: DOMRequestIpcHelper.prototype,
-      uninit: function() {
+      uninit() {
         if (typeof this.onuninit === "function") {
           this.onuninit();
         }
@@ -132,7 +132,7 @@
       // can then reasonably expect uninitCalled to be set properly on the
       // next tick.
       let observer = {
-        observe: function(aSubject, aTopic, aData) {
+        observe(aSubject, aTopic, aData) {
           if (aTopic !== TOPIC) {
             return;
           }
@@ -422,7 +422,7 @@
         var id;
         var resolver;
         var promise = dummy.createPromise(function(resolve, reject) {
-          var r = { resolve: resolve, reject: reject };
+          var r = { resolve, reject };
           id = dummy.getPromiseResolverId(r);
           resolver = r;
           ok(typeof id === "string", "id is a string");
@@ -437,7 +437,7 @@
         info("== Test removeResolver");
         var id;
         var promise = dummy.createPromise(function(resolve, reject) {
-          var r = { resolve: resolve, reject: reject };
+          var r = { resolve, reject };
           id = dummy.getPromiseResolverId(r);
           ok(typeof id === "string", "id is a string");
 
@@ -458,7 +458,7 @@
         var id;
         var resolver;
         var promise = dummy.createPromise(function(resolve, reject) {
-          var r = { resolve: resolve, reject: reject };
+          var r = { resolve, reject };
           id = dummy.getPromiseResolverId(r);
           resolver = r;
           ok(typeof id === "string", "id is a string");

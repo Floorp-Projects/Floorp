@@ -28,7 +28,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=
         return this;
       throw Components.Exception("", Cr.NS_NOINTERFACE);
     },
-    observe: function(subject, topic, data) {
+    observe(subject, topic, data) {
       obs.removeObserver(observer, "cycle-collector-begin");
       observer = null;
       didCall = true;
