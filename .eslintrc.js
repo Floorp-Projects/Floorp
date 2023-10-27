@@ -1987,12 +1987,5 @@ module.exports = {
         "mozilla/reject-chromeutils-import": "error",
       },
     },
-    {
-      files: ["toolkit/**"],
-      excludedFiles: ["toolkit/**/test/**", "toolkit/**/tests/**"],
-      rules: {
-        "mozilla/no-browser-refs-in-toolkit": "warn",
-      },
-    },
   ],
 };
