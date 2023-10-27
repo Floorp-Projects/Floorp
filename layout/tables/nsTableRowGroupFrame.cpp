@@ -296,10 +296,9 @@ void nsTableRowGroupFrame::InitChildReflowInput(nsPresContext* aPresContext,
                                                 ReflowInput& aReflowInput) {
   const auto childWM = aReflowInput.GetWritingMode();
   LogicalMargin border(childWM);
-  if (nsTableRowFrame* rowFrame = do_QueryFrame(aReflowInput.mFrame)) {
-    if (aBorderCollapse) {
-      border = rowFrame->GetBCBorderWidth(childWM);
-    }
+  if (aBorderCollapse) {
+    auto* rowFrame = static_cast<nsTableRowFrame*>(aReflowInput.mFrame);
+    border = rowFrame->GetBCBorderWidth(childWM);
   }
   const LogicalMargin zeroPadding(childWM);
   aReflowInput.Init(aPresContext, Nothing(), Some(border), Some(zeroPadding));
