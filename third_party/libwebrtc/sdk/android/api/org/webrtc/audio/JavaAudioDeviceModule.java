@@ -418,6 +418,12 @@ public class JavaAudioDeviceModule implements AudioDeviceModule {
     audioInput.setMicrophoneMute(mute);
   }
 
+  @Override
+  public boolean setNoiseSuppressorEnabled(boolean enabled) {
+    Logging.d(TAG, "setNoiseSuppressorEnabled: " + enabled);
+    return audioInput.setNoiseSuppressorEnabled(enabled);
+  }
+
   /**
    * Start to prefer a specific {@link AudioDeviceInfo} device for recording. Typically this should
    * only be used if a client gives an explicit option for choosing a physical device to record
