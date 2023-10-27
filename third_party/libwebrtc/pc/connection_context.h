@@ -100,7 +100,10 @@ class ConnectionContext final
   // use RTX, but so far, no code has been found that sets it to false.
   // Kept in the API in order to ease introduction if we want to resurrect
   // the functionality.
-  bool use_rtx() { return true; }
+  bool use_rtx() { return use_rtx_; }
+
+  // For use by tests.
+  void set_use_rtx(bool use_rtx) { use_rtx_ = use_rtx; }
 
  protected:
   explicit ConnectionContext(PeerConnectionFactoryDependencies* dependencies);
@@ -139,6 +142,10 @@ class ConnectionContext final
   std::unique_ptr<rtc::PacketSocketFactory> default_socket_factory_
       RTC_GUARDED_BY(signaling_thread_);
   std::unique_ptr<SctpTransportFactoryInterface> const sctp_factory_;
+
+  // Controls whether to announce support for the the rfc4588 payload format
+  // for retransmitted video packets.
+  bool use_rtx_;
 };
 
 }  // namespace webrtc
