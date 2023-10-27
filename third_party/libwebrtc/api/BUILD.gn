@@ -291,7 +291,7 @@ if (!build_with_mozilla) {
     "dtmf_sender_interface.h",
     "rtp_sender_interface.h",
   ]
-  public_deps = [  # no-presubmit-check TODO(webrtc:8603)
+  public_deps += [  # no-presubmit-check TODO(webrtc:8603)
     # Remove when downstream has been updated
     ":dtmf_sender_interface",
     ":rtp_sender_interface",
