@@ -10,7 +10,7 @@ vars = {
   # chromium waterfalls. More info at: crbug.com/570091.
   'checkout_configuration': 'default',
   'checkout_instrumented_libraries': 'checkout_linux and checkout_configuration == "default"',
-  'chromium_revision': '8486e164785d01f31c689705ff51746359a768a0',
+  'chromium_revision': '2e8499587925806a24959e258eb82ba4728268df',
 
   # Fetch the prebuilt binaries for llvm-cov and llvm-profdata. Needed to
   # process the raw profiles produced by instrumented targets (built with
@@ -61,13 +61,13 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/ios': {
-    'url': 'https://chromium.googlesource.com/chromium/src/ios@4f770be4d155107890194fe6f6a4be50321f8649',
+    'url': 'https://chromium.googlesource.com/chromium/src/ios@79e86db4ef2eeb5f8ecf11e11b8f97fb956b66ef',
     'condition': 'checkout_ios',
   },
   'src/testing':
-    'https://chromium.googlesource.com/chromium/src/testing@66561fe49bc7b1069181086501d56af6c426cc2e',
+    'https://chromium.googlesource.com/chromium/src/testing@1734d6819b1e3aef0e87ddc016797680ea090736',
   'src/third_party':
-    'https://chromium.googlesource.com/chromium/src/third_party@bf88197c11267ec13131f582cb7546ed521930c7',
+    'https://chromium.googlesource.com/chromium/src/third_party@63b588ca73b249afc22162b4f958b404fb86d5f4',
 
   'src/buildtools/linux64': {
     'packages': [
@@ -295,7 +295,7 @@ deps = {
       'condition': 'checkout_android',
   },
   'src/third_party/perfetto':
-    'https://android.googlesource.com/platform/external/perfetto.git@750c6cc9bab16a510d740efc1a9a03eb79ac62dd',
+    'https://android.googlesource.com/platform/external/perfetto.git@7f196bdc6e5ebe2bca86482fa245aefaeb0cb862',
   'src/third_party/libvpx/source/libvpx':
     'https://chromium.googlesource.com/webm/libvpx.git@335728c987b3164ff25c58c06d29eb49e19e21d4',
   'src/third_party/libyuv':
@@ -344,7 +344,7 @@ deps = {
     'condition': 'checkout_android',
   },
   'src/tools':
-    'https://chromium.googlesource.com/chromium/src/tools@547556f857eb587ada71487fe96115f6a4465459',
+    'https://chromium.googlesource.com/chromium/src/tools@003a883f5bd5d54aa23053b6ccfdd2ef9bc44619',
 
   'src/third_party/accessibility_test_framework': {
       'packages': [
@@ -416,7 +416,7 @@ deps = {
     'packages': [
       {
           'package': 'chromium/third_party/androidx',
-          'version': 's0BP2VzrfVz8BFQGrKsjEs-LG7f8nkOTToR3K5KrMWgC',
+          'version': 'QhmFBViaQStJmS7n0QkXytrQaPXncS01RrtkmnE99s0C',
       },
     ],
     'condition': 'checkout_android',
