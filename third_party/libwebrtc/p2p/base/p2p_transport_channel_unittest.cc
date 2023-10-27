@@ -63,7 +63,6 @@ using ::testing::Combine;
 using ::testing::Contains;
 using ::testing::DoAll;
 using ::testing::InSequence;
-using ::testing::InvokeArgument;
 using ::testing::InvokeWithoutArgs;
 using ::testing::MockFunction;
 using ::testing::Return;
@@ -203,7 +202,9 @@ class ResolverFactoryFixture : public webrtc::MockAsyncDnsResolverFactory {
   ResolverFactoryFixture() {
     mock_async_dns_resolver_ = std::make_unique<webrtc::MockAsyncDnsResolver>();
     EXPECT_CALL(*mock_async_dns_resolver_, Start(_, _))
-        .WillRepeatedly(InvokeArgument<1>());
+        .WillRepeatedly(
+            [](const rtc::SocketAddress& addr,
+               absl::AnyInvocable<void()> callback) { callback(); });
     EXPECT_CALL(*mock_async_dns_resolver_, result())
         .WillOnce(ReturnRef(mock_async_dns_resolver_result_));
 
@@ -227,7 +228,10 @@ class ResolverFactoryFixture : public webrtc::MockAsyncDnsResolverFactory {
     // This function must be called before Create().
     ASSERT_TRUE(!!mock_async_dns_resolver_);
     EXPECT_CALL(*mock_async_dns_resolver_, Start(_, _))
-        .WillOnce(SaveArg<1>(&saved_callback_));
+        .WillOnce([this](const rtc::SocketAddress& addr,
+                         absl::AnyInvocable<void()> callback) {
+          saved_callback_ = std::move(callback);
+        });
   }
   void FireDelayedResolution() {
     // This function must be called after Create().
@@ -238,7 +242,7 @@ class ResolverFactoryFixture : public webrtc::MockAsyncDnsResolverFactory {
  private:
   std::unique_ptr<webrtc::MockAsyncDnsResolver> mock_async_dns_resolver_;
   webrtc::MockAsyncDnsResolverResult mock_async_dns_resolver_result_;
-  std::function<void()> saved_callback_;
+  absl::AnyInvocable<void()> saved_callback_;
 };
 
 bool HasLocalAddress(const cricket::CandidatePairInterface* pair,

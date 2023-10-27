@@ -40,16 +40,17 @@ class AsyncDnsResolver : public AsyncDnsResolverInterface {
  public:
   // Start address resolution of the hostname in `addr`.
   void Start(const rtc::SocketAddress& addr,
-             std::function<void()> callback) override;
+             absl::AnyInvocable<void()> callback) override;
   // Start address resolution of the hostname in `addr` matching `family`.
   void Start(const rtc::SocketAddress& addr,
              int family,
-             std::function<void()> callback) override;
+             absl::AnyInvocable<void()> callback) override;
   const AsyncDnsResolverResult& result() const override;
 
  private:
   ScopedTaskSafety safety_;
   AsyncDnsResolverResultImpl result_;
+  absl::AnyInvocable<void()> callback_;
 };
 
 }  // namespace webrtc
