@@ -157,7 +157,7 @@ Result<SplitNodeResult, nsresult> SplitNodeTransaction::DoTransactionInternal(
   Result<SplitNodeResult, nsresult> splitNodeResult = aHTMLEditor.DoSplitNode(
       EditorDOMPoint(&aSplittingContent,
                      std::min(aSplitOffset, aSplittingContent.Length())),
-      aNewContent, GetSplitNodeDirection());
+      aNewContent);
   if (MOZ_UNLIKELY(splitNodeResult.isErr())) {
     NS_WARNING("HTMLEditor::DoSplitNode() failed");
     return splitNodeResult;
@@ -195,8 +195,7 @@ NS_IMETHODIMP SplitNodeTransaction::UndoTransaction() {
       joinedPoint.Set(keepingContent, 0u);
       trackJoinedPoint.emplace(htmlEditor->RangeUpdaterRef(), &joinedPoint);
     }
-    rv = htmlEditor->DoJoinNodes(keepingContent, removingContent,
-                                 GetJoinNodesDirection());
+    rv = htmlEditor->DoJoinNodes(keepingContent, removingContent);
   }
   if (NS_SUCCEEDED(rv)) {
     // Adjust split offset for redo here

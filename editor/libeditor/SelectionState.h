@@ -220,12 +220,9 @@ class MOZ_STACK_CLASS RangeUpdater final {
    *                            it.
    * @param aNewContent         The new content node which was inserted into
    *                            the DOM tree.
-   * @param aSplitNodeDirection Whether aNewNode was inserted before or after
-   *                            aOriginalContent.
    */
   nsresult SelAdjSplitNode(nsIContent& aOriginalContent, uint32_t aSplitOffset,
-                           nsIContent& aNewContent,
-                           SplitNodeDirection aSplitNodeDirection);
+                           nsIContent& aNewContent);
 
   /**
    * SelAdjJoinNodes() is called immediately after joining aRemovedContent and
@@ -242,8 +239,7 @@ class MOZ_STACK_CLASS RangeUpdater final {
    */
   nsresult SelAdjJoinNodes(const EditorRawDOMPoint& aStartOfRightContent,
                            const nsIContent& aRemovedContent,
-                           const EditorDOMPoint& aOldPointAtRightContent,
-                           JoinNodesDirection aJoinNodesDirection);
+                           const EditorDOMPoint& aOldPointAtRightContent);
   void SelAdjInsertText(const dom::Text& aTextNode, uint32_t aOffset,
                         uint32_t aInsertedLength);
   void SelAdjDeleteText(const dom::Text& aTextNode, uint32_t aOffset,
