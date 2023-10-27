@@ -76,12 +76,11 @@ class RtxLoopBackTransport : public webrtc::Transport {
     packet_loss_ = 0;
   }
 
-  bool SendRtp(const uint8_t* data,
-               size_t len,
+  bool SendRtp(rtc::ArrayView<const uint8_t> data,
                const PacketOptions& options) override {
     count_++;
     RtpPacketReceived packet;
-    if (!packet.Parse(data, len))
+    if (!packet.Parse(data))
       return false;
     if (packet.Ssrc() == rtx_ssrc_) {
       count_rtx_ssrc_++;
@@ -102,8 +101,8 @@ class RtxLoopBackTransport : public webrtc::Transport {
     return true;
   }
 
-  bool SendRtcp(const uint8_t* data, size_t len) override {
-    module_->IncomingRtcpPacket(rtc::MakeArrayView((const uint8_t*)data, len));
+  bool SendRtcp(rtc::ArrayView<const uint8_t> data) override {
+    module_->IncomingRtcpPacket(data);
     return true;
   }
   int count_;

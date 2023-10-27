@@ -138,19 +138,17 @@ class FakeNetworkPipe : public SimulatedPacketReceiverInterface {
   // be passed to the transport instance given in SetReceiverTransport(). These
   // methods should only be called if a Transport instance was provided in the
   // constructor.
-  bool SendRtp(const uint8_t* packet,
-               size_t length,
+  bool SendRtp(rtc::ArrayView<const uint8_t> packet,
                const PacketOptions& options);
-  bool SendRtcp(const uint8_t* packet, size_t length);
+  bool SendRtcp(rtc::ArrayView<const uint8_t> packet);
 
   // Methods for use with Transport interface. When/if packets are delivered,
   // they will be passed to the instance specified by the `transport` parameter.
   // Note that that instance must be in the map of active transports.
-  bool SendRtp(const uint8_t* packet,
-               size_t length,
+  bool SendRtp(rtc::ArrayView<const uint8_t> packet,
                const PacketOptions& options,
                Transport* transport);
-  bool SendRtcp(const uint8_t* packet, size_t length, Transport* transport);
+  bool SendRtcp(rtc::ArrayView<const uint8_t> packet, Transport* transport);
 
   // Implements the PacketReceiver interface. When/if packets are delivered,
   // they will be passed directly to the receiver instance given in

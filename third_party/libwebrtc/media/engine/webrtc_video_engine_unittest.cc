@@ -930,11 +930,11 @@ TEST_F(WebRtcVideoEngineTest, SendsFeedbackAfterUnsignaledRtxPacket) {
   MockNetworkInterface network;
   RtcpPacketParser rtcp_parser;
   ON_CALL(network, SendRtcp)
-      .WillByDefault(testing::DoAll(
-          WithArg<0>([&](rtc::CopyOnWriteBuffer* packet) {
-            ASSERT_TRUE(rtcp_parser.Parse(packet->cdata(), packet->size()));
-          }),
-          Return(true)));
+      .WillByDefault(
+          testing::DoAll(WithArg<0>([&](rtc::CopyOnWriteBuffer* packet) {
+                           ASSERT_TRUE(rtcp_parser.Parse(*packet));
+                         }),
+                         Return(true)));
   std::unique_ptr<VideoMediaSendChannelInterface> send_channel =
       engine_.CreateSendChannel(call_.get(), GetMediaConfig(), VideoOptions(),
                                 webrtc::CryptoOptions(),

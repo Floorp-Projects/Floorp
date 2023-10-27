@@ -114,8 +114,8 @@ TEST_F(AudioIngressTest, PlayingAfterStartAndStop) {
 
 TEST_F(AudioIngressTest, GetAudioFrameAfterRtpReceived) {
   rtc::Event event;
-  auto handle_rtp = [&](const uint8_t* packet, size_t length, Unused) {
-    ingress_->ReceivedRTPPacket(rtc::ArrayView<const uint8_t>(packet, length));
+  auto handle_rtp = [&](rtc::ArrayView<const uint8_t> packet, Unused) {
+    ingress_->ReceivedRTPPacket(packet);
     event.Set();
     return true;
   };
@@ -144,8 +144,8 @@ TEST_F(AudioIngressTest, TestSpeechOutputLevelAndEnergyDuration) {
   constexpr int kNumRtp = 6;
   int rtp_count = 0;
   rtc::Event event;
-  auto handle_rtp = [&](const uint8_t* packet, size_t length, Unused) {
-    ingress_->ReceivedRTPPacket(rtc::ArrayView<const uint8_t>(packet, length));
+  auto handle_rtp = [&](rtc::ArrayView<const uint8_t> packet, Unused) {
+    ingress_->ReceivedRTPPacket(packet);
     if (++rtp_count == kNumRtp) {
       event.Set();
     }
@@ -175,8 +175,8 @@ TEST_F(AudioIngressTest, TestSpeechOutputLevelAndEnergyDuration) {
 
 TEST_F(AudioIngressTest, PreferredSampleRate) {
   rtc::Event event;
-  auto handle_rtp = [&](const uint8_t* packet, size_t length, Unused) {
-    ingress_->ReceivedRTPPacket(rtc::ArrayView<const uint8_t>(packet, length));
+  auto handle_rtp = [&](rtc::ArrayView<const uint8_t> packet, Unused) {
+    ingress_->ReceivedRTPPacket(packet);
     event.Set();
     return true;
   };
@@ -204,8 +204,8 @@ TEST_F(AudioIngressTest, GetMutedAudioFrameAfterRtpReceivedAndStopPlay) {
   constexpr int kNumRtp = 6;
   int rtp_count = 0;
   rtc::Event event;
-  auto handle_rtp = [&](const uint8_t* packet, size_t length, Unused) {
-    ingress_->ReceivedRTPPacket(rtc::ArrayView<const uint8_t>(packet, length));
+  auto handle_rtp = [&](rtc::ArrayView<const uint8_t> packet, Unused) {
+    ingress_->ReceivedRTPPacket(packet);
     if (++rtp_count == kNumRtp) {
       event.Set();
     }

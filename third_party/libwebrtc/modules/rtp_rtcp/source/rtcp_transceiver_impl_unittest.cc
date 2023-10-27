@@ -130,7 +130,7 @@ class FakeRtcpTransport {
 std::function<void(rtc::ArrayView<const uint8_t>)> RtcpParserTransport(
     RtcpPacketParser& parser) {
   return [&parser](rtc::ArrayView<const uint8_t> packet) {
-    return parser.Parse(packet.data(), packet.size());
+    return parser.Parse(packet);
   };
 }
 

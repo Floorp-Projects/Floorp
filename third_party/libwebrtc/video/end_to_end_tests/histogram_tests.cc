@@ -66,7 +66,7 @@ void HistogramTest::VerifyHistogramStats(bool use_rtx,
       }
     }
 
-    Action OnSendRtp(const uint8_t* packet, size_t length) override {
+    Action OnSendRtp(rtc::ArrayView<const uint8_t> packet) override {
       if (MinMetricRunTimePassed() && MinNumberOfFramesReceived())
         observation_complete_.Set();
 
