@@ -964,6 +964,48 @@ pub unsafe extern "C" fn wgpu_client_create_bind_group_layout(
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn wgpu_client_render_pipeline_get_bind_group_layout(
+    client: &Client,
+    pipeline_id: id::RenderPipelineId,
+    index: u32,
+    bb: &mut ByteBuf,
+) -> id::BindGroupLayoutId {
+    let backend = pipeline_id.backend();
+    let bgl_id = client
+        .identities
+        .lock()
+        .select(backend)
+        .bind_group_layouts
+        .alloc(backend);
+
+    let action = DeviceAction::RenderPipelineGetBindGroupLayout(pipeline_id, index, bgl_id);
+    *bb = make_byte_buf(&action);
+
+    bgl_id
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn wgpu_client_compute_pipeline_get_bind_group_layout(
+    client: &Client,
+    pipeline_id: id::ComputePipelineId,
+    index: u32,
+    bb: &mut ByteBuf,
+) -> id::BindGroupLayoutId {
+    let backend = pipeline_id.backend();
+    let bgl_id = client
+        .identities
+        .lock()
+        .select(backend)
+        .bind_group_layouts
+        .alloc(backend);
+
+    let action = DeviceAction::ComputePipelineGetBindGroupLayout(pipeline_id, index, bgl_id);
+    *bb = make_byte_buf(&action);
+
+    bgl_id
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn wgpu_client_create_pipeline_layout(
     client: &Client,
     device_id: id::DeviceId,

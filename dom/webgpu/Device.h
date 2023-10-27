@@ -109,6 +109,8 @@ class Device final : public DOMEventTargetHelper, public SupportsWeakPtr {
   bool IsLost() const;
   bool IsBridgeAlive() const;
 
+  RawId GetId() const { return mId; }
+
  private:
   ~Device();
   void Cleanup();

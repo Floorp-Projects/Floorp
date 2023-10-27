@@ -680,6 +680,18 @@ impl Global {
                     error_buf.init(err);
                 }
             }
+            DeviceAction::RenderPipelineGetBindGroupLayout(pipeline_id, index, bgl_id) => {
+                let (_, error) = self.render_pipeline_get_bind_group_layout::<A>(pipeline_id, index, bgl_id);
+                if let Some(err) = error {
+                    error_buf.init(err);
+                }
+            }
+            DeviceAction::ComputePipelineGetBindGroupLayout(pipeline_id, index, bgl_id) => {
+                let (_, error) = self.compute_pipeline_get_bind_group_layout::<A>(pipeline_id, index, bgl_id);
+                if let Some(err) = error {
+                    error_buf.init(err);
+                }
+            }
             DeviceAction::CreatePipelineLayout(id, desc) => {
                 let (_, error) = self.device_create_pipeline_layout::<A>(self_id, &desc, id);
                 if let Some(err) = error {
