@@ -1,64 +1,33 @@
-From: Paul Adenot <paul@paul.cx>
-Date: Wed, 4 Nov 2020 13:03:00 +0000
-Subject: Bug 1675042 - Put IR camera last in the device selection list, so
- that they are never the default. r=dminor
+From: Dan Minor <dminor@mozilla.com>
+Date: Wed, 12 Feb 2020 17:19:00 +0000
+Subject: Bug 1578073 - Suppress MissingPermission lint in Camera2Session;
+ r=snorp
 
-Differential Revision: https://phabricator.services.mozilla.com/D95764
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/754900ff2a2b1c32878baf3c76d7c0e8219419ff
+Depends on D61861
+
+Differential Revision: https://phabricator.services.mozilla.com/D62457
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/722c4a6d1dad867f9ce47fe96d71b5dedb4cbaa8
 ---
- sdk/android/api/org/webrtc/Camera1Enumerator.java |  5 +++++
- sdk/android/api/org/webrtc/Camera2Enumerator.java | 12 ++++++++++++
- sdk/android/api/org/webrtc/CameraEnumerator.java  |  1 +
- 3 files changed, 18 insertions(+)
+ sdk/android/src/java/org/webrtc/Camera2Session.java | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/sdk/android/api/org/webrtc/Camera1Enumerator.java b/sdk/android/api/org/webrtc/Camera1Enumerator.java
-index fb1a21f323..4a1aacdb05 100644
---- a/sdk/android/api/org/webrtc/Camera1Enumerator.java
-+++ b/sdk/android/api/org/webrtc/Camera1Enumerator.java
-@@ -63,6 +63,11 @@ public class Camera1Enumerator implements CameraEnumerator {
-     return info != null && info.facing == android.hardware.Camera.CameraInfo.CAMERA_FACING_BACK;
+diff --git a/sdk/android/src/java/org/webrtc/Camera2Session.java b/sdk/android/src/java/org/webrtc/Camera2Session.java
+index dec97a2c25..d5ee80c73e 100644
+--- a/sdk/android/src/java/org/webrtc/Camera2Session.java
++++ b/sdk/android/src/java/org/webrtc/Camera2Session.java
+@@ -10,6 +10,7 @@
+ 
+ package org.webrtc;
+ 
++import android.annotation.SuppressLint;
+ import android.content.Context;
+ import android.hardware.camera2.CameraAccessException;
+ import android.hardware.camera2.CameraCaptureSession;
+@@ -347,6 +348,7 @@ class Camera2Session implements CameraSession {
+     Logging.d(TAG, "Using capture format: " + captureFormat);
    }
  
-+  @Override
-+  public boolean isInfrared(String deviceName) {
-+    return false;
-+  }
-+
-   @Override
-   public List<CaptureFormat> getSupportedFormats(String deviceName) {
-     return getSupportedFormats(getCameraIndex(deviceName));
-diff --git a/sdk/android/api/org/webrtc/Camera2Enumerator.java b/sdk/android/api/org/webrtc/Camera2Enumerator.java
-index 456d8cd060..44e239ad8e 100644
---- a/sdk/android/api/org/webrtc/Camera2Enumerator.java
-+++ b/sdk/android/api/org/webrtc/Camera2Enumerator.java
-@@ -74,6 +74,18 @@ public class Camera2Enumerator implements CameraEnumerator {
-         == CameraMetadata.LENS_FACING_BACK;
-   }
++  @SuppressLint("MissingPermission")
+   private void openCamera() {
+     checkIsOnCameraThread();
  
-+  @Override
-+  public boolean isInfrared(String deviceName) {
-+    CameraCharacteristics characteristics = getCameraCharacteristics(deviceName);
-+
-+    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-+      Integer colors = characteristics.get(CameraCharacteristics.SENSOR_INFO_COLOR_FILTER_ARRANGEMENT);
-+      return colors != null && colors.equals(CameraCharacteristics.SENSOR_INFO_COLOR_FILTER_ARRANGEMENT_NIR);
-+    }
-+
-+    return false;
-+  }
-+
-   @Nullable
-   @Override
-   public List<CaptureFormat> getSupportedFormats(String deviceName) {
-diff --git a/sdk/android/api/org/webrtc/CameraEnumerator.java b/sdk/android/api/org/webrtc/CameraEnumerator.java
-index dc954b62e0..db34d542c8 100644
---- a/sdk/android/api/org/webrtc/CameraEnumerator.java
-+++ b/sdk/android/api/org/webrtc/CameraEnumerator.java
-@@ -18,6 +18,7 @@ public interface CameraEnumerator {
-   public String[] getDeviceNames();
-   public boolean isFrontFacing(String deviceName);
-   public boolean isBackFacing(String deviceName);
-+  public boolean isInfrared(String deviceName);
-   public List<CaptureFormat> getSupportedFormats(String deviceName);
- 
-   public CameraVideoCapturer createCapturer(

@@ -1,44 +1,46 @@
 From: Dan Minor <dminor@mozilla.com>
-Date: Fri, 29 Mar 2019 18:43:00 +0000
-Subject: Bug 1539220 - Prefer non-RGB24 capabilities when available;
- r=pehrsons
+Date: Mon, 5 Nov 2018 10:33:00 -0500
+Subject: Bug 1376873 - Reduce thread stack size in platform_thread.cc; r=bwc
 
-We've hit a number of problems with handling of RGB24 video capture on
-Windows. This adds a check that will ignore any RGB24 capture capabilities
-when determining a best match if there are other capabilities available to
-workaround the problems.
+Summary:
+The current default stack size of 1M results in intermittent OOMs on win32
+builds while running web-platform tests. The value of 256k was chosen for
+consistency with the default value used elsewhere in Gecko, which is defined in
+nsIThreadManager.idl.
 
-Differential Revision: https://phabricator.services.mozilla.com/D25449
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/c12307f3817bec87712ab5930493c3135c76b0a0
+Reviewers: bwc
+
+Tags: #secure-revision
+
+Bug #: 1376873
+
+Differential Revision: https://phabricator.services.mozilla.com/D11090
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/e83c311e5293902be4db4ecea17cff87c633f7cf
 ---
- modules/video_capture/device_info_impl.cc | 13 +++++++++++++
- 1 file changed, 13 insertions(+)
+ rtc_base/platform_thread.cc | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/modules/video_capture/device_info_impl.cc b/modules/video_capture/device_info_impl.cc
-index 7cccdb51a7..2a6afb3147 100644
---- a/modules/video_capture/device_info_impl.cc
-+++ b/modules/video_capture/device_info_impl.cc
-@@ -100,10 +100,23 @@ int32_t DeviceInfoImpl::GetBestMatchedCapability(
-   const int32_t numberOfCapabilies =
-       static_cast<int32_t>(_captureCapabilities.size());
- 
-+  bool hasNonRGB24Capability = false;
-   for (int32_t tmp = 0; tmp < numberOfCapabilies;
-        ++tmp)  // Loop through all capabilities
-   {
-     VideoCaptureCapability& capability = _captureCapabilities[tmp];
-+    if (capability.videoType != VideoType::kRGB24) {
-+      hasNonRGB24Capability = true;
-+    }
-+  }
-+
-+  for (int32_t tmp = 0; tmp < numberOfCapabilies;
-+       ++tmp)  // Loop through all capabilities
-+  {
-+    VideoCaptureCapability& capability = _captureCapabilities[tmp];
-+    if (hasNonRGB24Capability && capability.videoType == VideoType::kRGB24) {
-+      continue;
-+    }
- 
-     const int32_t diffWidth = capability.width - requested.width;
-     const int32_t diffHeight = capability.height - requested.height;
+diff --git a/rtc_base/platform_thread.cc b/rtc_base/platform_thread.cc
+index 6d369d747e..556204ac89 100644
+--- a/rtc_base/platform_thread.cc
++++ b/rtc_base/platform_thread.cc
+@@ -189,15 +189,17 @@ PlatformThread PlatformThread::SpawnThread(
+   // Set the reserved stack stack size to 1M, which is the default on Windows
+   // and Linux.
+   DWORD thread_id = 0;
++  // Mozilla: Set to 256kb for consistency with nsIThreadManager.idl
+   PlatformThread::Handle handle = ::CreateThread(
+-      nullptr, 1024 * 1024, &RunPlatformThread, start_thread_function_ptr,
++      nullptr, 256 * 1024, &RunPlatformThread, start_thread_function_ptr,
+       STACK_SIZE_PARAM_IS_A_RESERVATION, &thread_id);
+   RTC_CHECK(handle) << "CreateThread failed";
+ #else
+   pthread_attr_t attr;
+   pthread_attr_init(&attr);
+   // Set the stack stack size to 1M.
+-  pthread_attr_setstacksize(&attr, 1024 * 1024);
++  // Mozilla: Set to 256kb for consistency with nsIThreadManager.idl
++  pthread_attr_setstacksize(&attr, 256 * 1024);
+   pthread_attr_setdetachstate(
+       &attr, joinable ? PTHREAD_CREATE_JOINABLE : PTHREAD_CREATE_DETACHED);
+   PlatformThread::Handle handle;

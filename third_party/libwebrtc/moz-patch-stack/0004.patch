@@ -1,46 +1,43 @@
-From: Dan Minor <dminor@mozilla.com>
-Date: Wed, 18 Nov 2020 13:33:00 -0500
-Subject: Bug 1654112 - Suppress -Wclass-varargs warning in logging.h. r=ng
+From: Nico Grunbaum <na-g@nostrum.com>
+Date: Sat, 13 Feb 2021 04:20:00 -0800
+Subject: Bug 1654112 - Add pid_t to desktop_capture_types.h; r=pehrsons
 
-This needs some investigation to see why we get this warning when it is not
-present upstream.
+Upstreaming bug 1697385
 
-Since both were doing the same thing for different compiler chains,
-also includes:
-Bug 1654112 - linux build fix (pragmas) for base-toolchains* . r=ng
+Also includes:
+Bug 1654112 - Clarifying prev. rev that moved pid_t into the global namespace; r=dminor
 
-Differential Revision: https://phabricator.services.mozilla.com/D130086
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/8d832e832ffe513246c0763a56376a8022b2447b
+Differential Revision: https://phabricator.services.mozilla.com/D107897
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/539b69f0e21118a1898f1ef689577c7193ff7be7
 ---
- rtc_base/logging.h | 13 +++++++++++++
- 1 file changed, 13 insertions(+)
+ modules/desktop_capture/desktop_capture_types.h | 4 ++++
+ modules/video_capture/video_capture.h           | 1 +
+ 2 files changed, 5 insertions(+)
 
-diff --git a/rtc_base/logging.h b/rtc_base/logging.h
-index df7f173f58..a3733d7543 100644
---- a/rtc_base/logging.h
-+++ b/rtc_base/logging.h
-@@ -48,6 +48,14 @@
- #ifndef RTC_BASE_LOGGING_H_
- #define RTC_BASE_LOGGING_H_
+diff --git a/modules/desktop_capture/desktop_capture_types.h b/modules/desktop_capture/desktop_capture_types.h
+index a4e3e897fd..e777a45f92 100644
+--- a/modules/desktop_capture/desktop_capture_types.h
++++ b/modules/desktop_capture/desktop_capture_types.h
+@@ -13,6 +13,10 @@
  
-+#pragma GCC diagnostic push
-+#pragma GCC diagnostic ignored "-Wvarargs"
+ #include <stdint.h>
+ 
++#ifdef XP_WIN      // Moving this into the global namespace
++typedef int pid_t; // matching what used to be in
++#endif             // video_capture_defines.h
 +
-+#if defined(__clang__)
-+#  pragma clang diagnostic push
-+#  pragma clang diagnostic ignored "-Wclass-varargs"
-+#endif
-+
- #include <errno.h>
+ namespace webrtc {
  
- #include <atomic>
-@@ -764,4 +772,9 @@ inline const char* AdaptString(const std::string& str) {
+ enum class CaptureType { kWindow, kScreen, kAnyScreenContent };
+diff --git a/modules/video_capture/video_capture.h b/modules/video_capture/video_capture.h
+index e207598d68..58485f28e9 100644
+--- a/modules/video_capture/video_capture.h
++++ b/modules/video_capture/video_capture.h
+@@ -13,6 +13,7 @@
  
- }  // namespace rtc
- 
-+#pragma GCC diagnostic pop
-+#if defined(__clang__)
-+#  pragma clang diagnostic pop
-+#endif
-+
- #endif  // RTC_BASE_LOGGING_H_
+ #include "api/video/video_rotation.h"
+ #include "api/video/video_sink_interface.h"
++#include "modules/desktop_capture/desktop_capture_types.h"
+ #include "modules/video_capture/raw_video_sink_interface.h"
+ #include "modules/video_capture/video_capture_defines.h"
+ #include <set>

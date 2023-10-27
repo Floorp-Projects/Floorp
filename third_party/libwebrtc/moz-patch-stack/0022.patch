@@ -1,26 +1,53 @@
-From: Dan Minor <dminor@mozilla.com>
-Date: Wed, 9 Oct 2019 20:12:00 +0000
-Subject: Bug 1587159 - Fix undefined shift in g722_encode.c; r=ng
+From: Alex Chronopoulos <achronop@gmail.com>
+Date: Wed, 18 Sep 2019 13:12:00 +0000
+Subject: Bug 1572281 - Remove audio device change notifications from video
+ capture in Windows. r=dminor
 
-Left shifting a negative value results in undefined behaviour. It is safer to
-multiply in this case.
+Video capture used to provide device change notifications for audio and video devices. From now on, CubebDeviceEnumerator will provide audio device change notifications thus video capture is updated to notify only changes of the video device. This is the windows part.
 
-Differential Revision: https://phabricator.services.mozilla.com/D48751
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/385d660fac359c907986e08d1d89ab5a353f30b2
+Differential Revision: https://phabricator.services.mozilla.com/D46274
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/a5c23245837ebdd99532e8bfaca05774c5c96d9d
 ---
- modules/third_party/g722/g722_encode.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ modules/video_capture/windows/device_info_ds.cc | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/modules/third_party/g722/g722_encode.c b/modules/third_party/g722/g722_encode.c
-index 10a5bcfe7c..fedf9f5961 100644
---- a/modules/third_party/g722/g722_encode.c
-+++ b/modules/third_party/g722/g722_encode.c
-@@ -74,7 +74,7 @@ static void block4(G722EncoderState *s, int band, int d)
-     /* Block 4, UPPOL2 */
-     for (i = 0;  i < 3;  i++)
-         s->band[band].sg[i] = s->band[band].p[i] >> 15;
--    wd1 = saturate(s->band[band].a[1] << 2);
-+    wd1 = saturate(s->band[band].a[1] * 4);
+diff --git a/modules/video_capture/windows/device_info_ds.cc b/modules/video_capture/windows/device_info_ds.cc
+index a7eca19bbf..9d22f42f4d 100644
+--- a/modules/video_capture/windows/device_info_ds.cc
++++ b/modules/video_capture/windows/device_info_ds.cc
+@@ -20,7 +20,7 @@
+ namespace webrtc {
+ namespace videocapturemodule {
  
-     wd2 = (s->band[band].sg[0] == s->band[band].sg[1])  ?  -wd1  :  wd1;
-     if (wd2 > 32767)
+-BOOL isCaptureDevice(DEV_BROADCAST_HDR *pHdr)
++BOOL isVideoDevice(DEV_BROADCAST_HDR *pHdr)
+ {
+   if (pHdr == NULL) {
+     return FALSE;
+@@ -29,7 +29,7 @@ BOOL isCaptureDevice(DEV_BROADCAST_HDR *pHdr)
+     return FALSE;
+   }
+   DEV_BROADCAST_DEVICEINTERFACE* pDi = (DEV_BROADCAST_DEVICEINTERFACE*)pHdr;
+-  return pDi->dbcc_classguid == KSCATEGORY_CAPTURE;
++  return pDi->dbcc_classguid == KSCATEGORY_VIDEO_CAMERA;
+ }
+ 
+ LRESULT CALLBACK WndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lParam)
+@@ -47,7 +47,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT uiMsg, WPARAM wParam, LPARAM lParam)
+     else if (uiMsg == WM_DEVICECHANGE)
+     {
+         pParent = (DeviceInfoDS*)GetWindowLongPtr(hWnd, GWLP_USERDATA);
+-        if (pParent && isCaptureDevice((PDEV_BROADCAST_HDR)lParam))
++        if (pParent && isVideoDevice((PDEV_BROADCAST_HDR)lParam))
+         {
+             pParent->DeviceChange();
+         }
+@@ -128,7 +128,7 @@ DeviceInfoDS::DeviceInfoDS()
+     DEV_BROADCAST_DEVICEINTERFACE di = { 0 };
+     di.dbcc_size = sizeof(di);
+     di.dbcc_devicetype  = DBT_DEVTYP_DEVICEINTERFACE;
+-    di.dbcc_classguid  = KSCATEGORY_CAPTURE;
++    di.dbcc_classguid  = KSCATEGORY_VIDEO_CAMERA;
+ 
+     _hdevnotify = RegisterDeviceNotification(_hwnd, &di,
+                                              DEVICE_NOTIFY_WINDOW_HANDLE);
