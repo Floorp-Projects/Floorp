@@ -157,6 +157,7 @@ class BasicPortAllocatorTestBase : public ::testing::Test,
   BasicPortAllocatorTestBase()
       : vss_(new rtc::VirtualSocketServer()),
         fss_(new rtc::FirewallSocketServer(vss_.get())),
+        socket_factory_(fss_.get()),
         thread_(fss_.get()),
         // Note that the NAT is not used by default. ResetWithStunServerAndNat
         // must be called.
@@ -172,9 +173,7 @@ class BasicPortAllocatorTestBase : public ::testing::Test,
     stun_servers.insert(kStunAddr);
 
     allocator_ = std::make_unique<BasicPortAllocator>(
-        &network_manager_,
-        std::make_unique<rtc::BasicPacketSocketFactory>(fss_.get()),
-        stun_servers, &field_trials_);
+        &network_manager_, &socket_factory_, stun_servers, &field_trials_);
     allocator_->Initialize();
     allocator_->set_step_delay(kMinimumStepDelay);
     allocator_->SetIceTiebreaker(kTiebreakerDefault);
@@ -518,6 +517,7 @@ class BasicPortAllocatorTestBase : public ::testing::Test,
 
   std::unique_ptr<rtc::VirtualSocketServer> vss_;
   std::unique_ptr<rtc::FirewallSocketServer> fss_;
+  rtc::BasicPacketSocketFactory socket_factory_;
   rtc::AutoSocketServerThread thread_;
   std::unique_ptr<rtc::NATServer> nat_server_;
   rtc::NATSocketFactory nat_factory_;
