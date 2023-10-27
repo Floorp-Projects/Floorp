@@ -106,35 +106,31 @@ panel {
   }
 }
 
-@media (-moz-platform: linux) or (-moz-platform: windows) {
-  menupopup {
+menupopup {
+  @media (-moz-platform: linux) or (-moz-platform: windows) {
     /* Also apply the padding in the inline axis for menus */
     --panel-padding: var(--panel-padding-block);
   }
-  menupopup > menu > menupopup {
-    /* Vertically align nested menupopups: the shadow plus the top padding */
-    margin-top: calc(-1 * (var(--panel-shadow-margin) + var(--panel-padding-block)));
-  }
-}
 
-@media (-moz-platform: macos) {
-  menupopup {
+  @media (-moz-platform: macos) {
     --panel-padding-block: 4px;
   }
-  menupopup > menu > menupopup {
-    margin-top: -4px;
+
+  @media (-moz-platform: windows) {
+    > menu,
+    > menuitem {
+      padding-block: 0.5em;
+      padding-inline-start: 1em;
+    }
+  }
+
+  > menu > menupopup {
+    /* Vertically align nested menupopups: the shadow plus the top padding plus top border */
+    margin-top: calc(-1 * (var(--panel-shadow-margin) + var(--panel-padding-block) + 1px));
   }
 }
 
-@media (-moz-platform: windows) {
-  menupopup > menuitem,
-  menupopup > menu {
-    padding-block: 0.5em;
-    padding-inline-start: 1em;
-  }
-}
-
-/* rules for popups associated with menulists */
+/* Rules for popups associated with menulists */
 menulist > menupopup {
   min-width: 0;
 
