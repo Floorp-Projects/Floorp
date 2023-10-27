@@ -55,6 +55,7 @@
 #include "video/alignment_adjuster.h"
 #include "video/config/encoder_stream_factory.h"
 #include "video/frame_cadence_adapter.h"
+#include "video/frame_dumping_encoder.h"
 
 namespace webrtc {
 
@@ -950,8 +951,10 @@ void VideoStreamEncoder::ReconfigureEncoder() {
     // supports only single instance of encoder of given type.
     encoder_.reset();
 
-    encoder_ = settings_.encoder_factory->CreateVideoEncoder(
-        encoder_config_.video_format);
+    encoder_ = MaybeCreateFrameDumpingEncoderWrapper(
+        settings_.encoder_factory->CreateVideoEncoder(
+            encoder_config_.video_format),
+        field_trials_);
     if (!encoder_) {
       RTC_LOG(LS_ERROR) << "CreateVideoEncoder failed, failing encoder format: "
                         << encoder_config_.video_format.ToString();
