@@ -106,16 +106,38 @@ struct TimingFrameInfo {
 // Minimum and maximum playout delay values from capture to render.
 // These are best effort values.
 //
-// A value < 0 indicates no change from previous valid value.
-//
 // min = max = 0 indicates that the receiver should try and render
 // frame as soon as possible.
 //
 // min = x, max = y indicates that the receiver is free to adapt
 // in the range (x, y) based on network jitter.
 struct VideoPlayoutDelay {
+  // Maximum supported value for the delay limit.
+  static constexpr TimeDelta kMax = TimeDelta::Millis(10) * 0xFFF;
+
+  // Creates delay limits that indicates receiver should try to render frame
+  // as soon as possible.
+  static VideoPlayoutDelay Minimal() {
+    return VideoPlayoutDelay(TimeDelta::Zero(), TimeDelta::Zero());
+  }
+
   VideoPlayoutDelay() = default;
   VideoPlayoutDelay(int min_ms, int max_ms) : min_ms(min_ms), max_ms(max_ms) {}
+  VideoPlayoutDelay(TimeDelta min, TimeDelta max);
+
+  bool Set(TimeDelta min, TimeDelta max);
+
+  TimeDelta min() const { return TimeDelta::Millis(min_ms); }
+  TimeDelta max() const { return TimeDelta::Millis(max_ms); }
+
+  // TODO(bugs.webrtc.org/13756): Make members private and enforce the invariant
+  // in the constructors and setter.
+  bool Valid() const {
+    return TimeDelta::Zero() <= min() && min() <= max() && max() <= kMax;
+  }
+
+  // TODO(bugs.webrtc.org/13756): Make members private and change their type to
+  // TimeDelta.
   int min_ms = -1;
   int max_ms = -1;
 

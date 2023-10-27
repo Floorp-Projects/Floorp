@@ -138,6 +138,22 @@ class RTC_EXPORT EncodedImage {
     color_space_ = color_space;
   }
 
+  absl::optional<VideoPlayoutDelay> PlayoutDelay() const {
+    if (playout_delay_.Valid()) {
+      return playout_delay_;
+    }
+    return absl::nullopt;
+  }
+
+  void SetPlayoutDelay(absl::optional<VideoPlayoutDelay> playout_delay) {
+    if (playout_delay.has_value()) {
+      playout_delay_ = *playout_delay;
+    } else {
+      playout_delay_.min_ms = -1;
+      playout_delay_.max_ms = -1;
+    }
+  }
+
   // These methods along with the private member video_frame_tracking_id_ are
   // meant for media quality testing purpose only.
   absl::optional<uint16_t> VideoFrameTrackingId() const {
@@ -207,6 +223,8 @@ class RTC_EXPORT EncodedImage {
   // When an application indicates non-zero values here, it is taken as an
   // indication that all future frames will be constrained with those limits
   // until the application indicates a change again.
+  // TODO(bugs.webrc.org/13756): Make private and represent unset value with
+  // optional.
   VideoPlayoutDelay playout_delay_;
 
   struct Timing {
