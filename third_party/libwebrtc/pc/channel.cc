@@ -166,14 +166,17 @@ bool BaseChannel::ConnectToRtpTransport_n() {
   if (!rtp_transport_->RegisterRtpDemuxerSink(demuxer_criteria_, this)) {
     return false;
   }
-  rtp_transport_->SignalReadyToSend.connect(
-      this, &BaseChannel::OnTransportReadyToSend);
-  rtp_transport_->SignalNetworkRouteChanged.connect(
-      this, &BaseChannel::OnNetworkRouteChanged);
-  rtp_transport_->SignalWritableState.connect(this,
-                                              &BaseChannel::OnWritableState);
-  rtp_transport_->SignalSentPacket.connect(this,
-                                           &BaseChannel::SignalSentPacket_n);
+  rtp_transport_->SubscribeReadyToSend(
+      this, [this](bool ready) { OnTransportReadyToSend(ready); });
+  rtp_transport_->SubscribeNetworkRouteChanged(
+      this, [this](absl::optional<rtc::NetworkRoute> route) {
+        OnNetworkRouteChanged(route);
+      });
+  rtp_transport_->SubscribeWritableState(
+      this, [this](bool state) { OnWritableState(state); });
+  rtp_transport_->SubscribeSentPacket(
+      this,
+      [this](const rtc::SentPacket& packet) { SignalSentPacket_n(packet); });
   return true;
 }
 
@@ -181,10 +184,10 @@ void BaseChannel::DisconnectFromRtpTransport_n() {
   RTC_DCHECK(rtp_transport_);
   RTC_DCHECK(media_send_channel());
   rtp_transport_->UnregisterRtpDemuxerSink(this);
-  rtp_transport_->SignalReadyToSend.disconnect(this);
-  rtp_transport_->SignalNetworkRouteChanged.disconnect(this);
-  rtp_transport_->SignalWritableState.disconnect(this);
-  rtp_transport_->SignalSentPacket.disconnect(this);
+  rtp_transport_->UnsubscribeReadyToSend(this);
+  rtp_transport_->UnsubscribeNetworkRouteChanged(this);
+  rtp_transport_->UnsubscribeWritableState(this);
+  rtp_transport_->UnsubscribeSentPacket(this);
   rtp_transport_ = nullptr;
   media_send_channel()->SetInterface(nullptr);
   media_receive_channel()->SetInterface(nullptr);
