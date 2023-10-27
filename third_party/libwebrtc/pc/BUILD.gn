@@ -139,7 +139,6 @@ rtc_source_set("dtls_srtp_transport") {
     "../rtc_base:checks",
     "../rtc_base:logging",
     "../rtc_base:ssl",
-    "../rtc_base/third_party/sigslot",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
@@ -1250,7 +1249,6 @@ rtc_source_set("peer_connection") {
     "../rtc_base:threading",
     "../rtc_base:unique_id_generator",
     "../rtc_base:weak_ptr",
-    "../rtc_base/third_party/sigslot",
     "../system_wrappers:metrics",
   ]
   absl_deps = [
@@ -1661,7 +1659,6 @@ rtc_library("rtp_transmission_manager") {
     "../rtc_base:ssl",
     "../rtc_base:threading",
     "../rtc_base:weak_ptr",
-    "../rtc_base/third_party/sigslot",
   ]
   absl_deps = [
     "//third_party/abseil-cpp/absl/algorithm:container",
