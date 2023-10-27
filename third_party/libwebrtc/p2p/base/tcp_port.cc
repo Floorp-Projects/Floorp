@@ -356,7 +356,11 @@ TCPConnection::TCPConnection(rtc::WeakPtr<Port> tcp_port,
       connection_pending_(false),
       pretending_to_be_writable_(false),
       reconnection_timeout_(cricket::CONNECTION_WRITE_CONNECT_TIMEOUT) {
+  RTC_DCHECK_RUN_ON(network_thread_);
   RTC_DCHECK_EQ(port()->GetProtocol(), PROTO_TCP);  // Needs to be TCPPort.
+
+  SignalDestroyed.connect(this, &TCPConnection::OnDestroyed);
+
   if (outgoing_) {
     CreateOutgoingTcpSocket();
   } else {
@@ -496,6 +500,7 @@ void TCPConnection::OnConnect(rtc::AsyncPacketSocket* socket) {
 }
 
 void TCPConnection::OnClose(rtc::AsyncPacketSocket* socket, int error) {
+  RTC_DCHECK_RUN_ON(network_thread());
   RTC_DCHECK_EQ(socket, socket_.get());
   RTC_LOG(LS_INFO) << ToString() << ": Connection closed with error " << error;
 
@@ -532,12 +537,13 @@ void TCPConnection::OnClose(rtc::AsyncPacketSocket* socket, int error) {
     // initial connect() (i.e. `pretending_to_be_writable_` is false) . We have
     // to manually destroy here as this connection, as never connected, will not
     // be scheduled for ping to trigger destroy.
-    socket_->UnsubscribeClose(this);
+    DisconnectSocketSignals(socket_.get());
     port()->DestroyConnectionAsync(this);
   }
 }
 
 void TCPConnection::MaybeReconnect() {
+  RTC_DCHECK_RUN_ON(network_thread());
   // Only reconnect for an outgoing TCPConnection when OnClose was signaled and
   // no outstanding reconnect is pending.
   if (connected() || connection_pending_ || !outgoing_) {
@@ -557,13 +563,23 @@ void TCPConnection::OnReadPacket(rtc::AsyncPacketSocket* socket,
                                  size_t size,
                                  const rtc::SocketAddress& remote_addr,
                                  const int64_t& packet_time_us) {
+  RTC_DCHECK_RUN_ON(network_thread());
   RTC_DCHECK_EQ(socket, socket_.get());
   Connection::OnReadPacket(data, size, packet_time_us);
 }
 
 void TCPConnection::OnReadyToSend(rtc::AsyncPacketSocket* socket) {
+  RTC_DCHECK_RUN_ON(network_thread());
   RTC_DCHECK_EQ(socket, socket_.get());
   Connection::OnReadyToSend();
+}
+
+void TCPConnection::OnDestroyed(Connection* c) {
+  RTC_DCHECK_RUN_ON(network_thread());
+  RTC_DCHECK_EQ(c, this);
+  if (socket_) {
+    DisconnectSocketSignals(socket_.get());
+  }
 }
 
 void TCPConnection::CreateOutgoingTcpSocket() {
@@ -573,7 +589,7 @@ void TCPConnection::CreateOutgoingTcpSocket() {
                  : 0;
 
   if (socket_) {
-    socket_->UnsubscribeClose(this);
+    DisconnectSocketSignals(socket_.get());
   }
 
   rtc::PacketSocketTcpOptions tcp_opts;
@@ -614,6 +630,15 @@ void TCPConnection::ConnectSocketSignals(rtc::AsyncPacketSocket* socket) {
     if (safety->alive())
       OnClose(s, err);
   });
+}
+
+void TCPConnection::DisconnectSocketSignals(rtc::AsyncPacketSocket* socket) {
+  if (outgoing_) {
+    socket->SignalConnect.disconnect(this);
+  }
+  socket->SignalReadPacket.disconnect(this);
+  socket->SignalReadyToSend.disconnect(this);
+  socket->UnsubscribeClose(this);
 }
 
 }  // namespace cricket
