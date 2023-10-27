@@ -1652,8 +1652,6 @@ void nsTableFrame::Reflow(nsPresContext* aPresContext,
     CalcBCBorders();
   }
 
-  aDesiredSize.ISize(wm) = aReflowInput.AvailableISize();
-
   // Check for an overflow list, and append any row group frames being pushed
   MoveOverflowToChildList();
 
@@ -1934,11 +1932,12 @@ void nsTableFrame::ReflowTable(ReflowOutput& aDesiredSize,
   // flow). and our reflow bsize to our avail bsize minus border, padding,
   // cellspacing
   WritingMode wm = aReflowInput.GetWritingMode();
-  aDesiredSize.ISize(wm) =
+  LogicalSize availSize(
+      wm,
       aReflowInput.ComputedISize() +
-      aReflowInput.ComputedLogicalBorderPadding(wm).IStartEnd(wm);
-  TableReflowInput reflowInput(
-      aReflowInput, LogicalSize(wm, aDesiredSize.ISize(wm), aAvailBSize));
+          aReflowInput.ComputedLogicalBorderPadding(wm).IStartEnd(wm),
+      aAvailBSize);
+  TableReflowInput reflowInput(aReflowInput, availSize);
   ReflowChildren(reflowInput, aStatus, aLastChildReflowed,
                  aDesiredSize.mOverflowAreas);
 
