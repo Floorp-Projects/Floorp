@@ -69,7 +69,6 @@ UNIFIED_SOURCES += [
     "IDBTransaction.cpp",
     "IndexedDatabase.cpp",
     "IndexedDatabaseManager.cpp",
-    "IndexedDBCipherKeyManager.cpp",
     "IndexedDBCommon.cpp",
     "KeyPath.cpp",
     "ProfilerHelpers.cpp",

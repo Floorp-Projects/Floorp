@@ -29,6 +29,7 @@ EXPORTS.mozilla.dom.quota += [
     "AssertionsImpl.h",
     "CachingDatabaseConnection.h",
     "CheckedUnsafePtr.h",
+    "CipherKeyManager.h",
     "CipherStrategy.h",
     "Client.h",
     "ClientImpl.h",

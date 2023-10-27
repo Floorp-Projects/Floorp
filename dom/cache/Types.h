@@ -10,6 +10,7 @@
 #include <functional>
 #include <stdint.h>
 #include "mozilla/dom/quota/CommonMetadata.h"
+#include "mozilla/dom/quota/PersistenceType.h"
 #include "nsCOMPtr.h"
 #include "nsIFile.h"
 #include "nsIInputStream.h"
@@ -31,17 +32,20 @@ struct CacheDirectoryMetadata : quota::ClientMetadata {
   nsCOMPtr<nsIFile> mDir;
   int64_t mDirectoryLockId = -1;
 
-  explicit CacheDirectoryMetadata(quota::PrincipalMetadata aPrincipalMetadata)
+  explicit CacheDirectoryMetadata(
+      const quota::PrincipalMetadata& aPrincipalMetadata)
       : quota::ClientMetadata(
-            quota::OriginMetadata{std::move(aPrincipalMetadata),
-                                  quota::PERSISTENCE_TYPE_DEFAULT},
+            quota::OriginMetadata{aPrincipalMetadata,
+                                  aPrincipalMetadata.mIsPrivate
+                                      ? quota::PERSISTENCE_TYPE_PRIVATE
+                                      : quota::PERSISTENCE_TYPE_DEFAULT},
             quota::Client::Type::DOMCACHE) {}
 
   explicit CacheDirectoryMetadata(quota::OriginMetadata aOriginMetadata)
       : quota::ClientMetadata(std::move(aOriginMetadata),
                               quota::Client::Type::DOMCACHE) {
-    MOZ_DIAGNOSTIC_ASSERT(aOriginMetadata.mPersistenceType ==
-                          quota::PERSISTENCE_TYPE_DEFAULT);
+    MOZ_DIAGNOSTIC_ASSERT(mPersistenceType == quota::PERSISTENCE_TYPE_DEFAULT ||
+                          mPersistenceType == quota::PERSISTENCE_TYPE_PRIVATE);
   }
 };
 

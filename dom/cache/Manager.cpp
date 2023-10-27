@@ -7,6 +7,7 @@
 #include "mozilla/dom/cache/Manager.h"
 
 #include "mozilla/AppShutdown.h"
+#include "mozilla/Assertions.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/StaticMutex.h"
@@ -30,13 +31,14 @@
 #include "nsID.h"
 #include "nsIFile.h"
 #include "nsIThread.h"
+#include "nsIUUIDGenerator.h"
 #include "nsThreadUtils.h"
 #include "nsTObserverArray.h"
 #include "QuotaClientImpl.h"
+#include "Types.h"
 
 namespace mozilla::dom::cache {
 
-using mozilla::dom::quota::Client;
 using mozilla::dom::quota::CloneFileAndAppend;
 using mozilla::dom::quota::DirectoryLock;
 
@@ -65,6 +67,24 @@ nsresult MaybeUpdatePaddingFile(nsIFile* aBaseDir, mozIStorageConnection* aConn,
       *aBaseDir, *aConn, aIncreaseSize, aDecreaseSize, aCommitHook)));
 
   return NS_OK;
+}
+
+Maybe<CipherKey> GetOrCreateCipherKey(NotNull<Context*> aContext,
+                                      const nsID& aBodyId, bool aCreate) {
+  const auto& maybeMetadata = aContext->MaybeCacheDirectoryMetadataRef();
+  MOZ_DIAGNOSTIC_ASSERT(maybeMetadata);
+
+  auto privateOrigin = maybeMetadata->mIsPrivate;
+  if (!privateOrigin) {
+    return Nothing{};
+  }
+
+  nsCString bodyIdStr{aBodyId.ToString().get()};
+
+  auto& cipherKeyManager = aContext->MutableCipherKeyManagerRef();
+
+  return aCreate ? Some(cipherKeyManager.Ensure(bodyIdStr))
+                 : cipherKeyManager.Get(bodyIdStr);
 }
 
 // An Action that is executed when a Context is first created.  It ensures that
@@ -173,7 +193,8 @@ class DeleteOrphanedBodyAction final : public Action {
 
   void RunOnTarget(SafeRefPtr<Resolver> aResolver,
                    const Maybe<CacheDirectoryMetadata>& aDirectoryMetadata,
-                   Data*) override {
+                   Data*,
+                   const Maybe<CipherKey>& /*aMaybeCipherKey*/) override {
     MOZ_DIAGNOSTIC_ASSERT(aResolver);
     MOZ_DIAGNOSTIC_ASSERT(aDirectoryMetadata);
     MOZ_DIAGNOSTIC_ASSERT(aDirectoryMetadata->mDir);
@@ -635,10 +656,15 @@ class Manager::CacheMatchAction final : public Manager::BaseAction {
       return NS_OK;
     }
 
+    const auto& bodyId = mResponse.mBodyId;
+
     nsCOMPtr<nsIInputStream> stream;
     if (mArgs.openMode() == OpenMode::Eager) {
-      QM_TRY_UNWRAP(stream,
-                    BodyOpen(aDirectoryMetadata, *aDBDir, mResponse.mBodyId));
+      QM_TRY_UNWRAP(
+          stream,
+          BodyOpen(aDirectoryMetadata, *aDBDir, bodyId,
+                   GetOrCreateCipherKey(WrapNotNull(mManager->mContext), bodyId,
+                                        /* aCreate */ false)));
     }
 
     mStreamList->Add(mResponse.mBodyId, std::move(stream));
@@ -697,10 +723,15 @@ class Manager::CacheMatchAllAction final : public Manager::BaseAction {
         continue;
       }
 
+      const auto& bodyId = mSavedResponses[i].mBodyId;
+
       nsCOMPtr<nsIInputStream> stream;
       if (mArgs.openMode() == OpenMode::Eager) {
-        QM_TRY_UNWRAP(stream, BodyOpen(aDirectoryMetadata, *aDBDir,
-                                       mSavedResponses[i].mBodyId));
+        QM_TRY_UNWRAP(stream,
+                      BodyOpen(aDirectoryMetadata, *aDBDir, bodyId,
+                               GetOrCreateCipherKey(
+                                   WrapNotNull(mManager->mContext), bodyId,
+                                   /* aCreate */ false)));
       }
 
       mStreamList->Add(mSavedResponses[i].mBodyId, std::move(stream));
@@ -971,12 +1002,12 @@ class Manager::CachePutAllAction final : public DBAction {
   struct Entry {
     CacheRequest mRequest;
     nsCOMPtr<nsIInputStream> mRequestStream;
-    nsID mRequestBodyId;
+    nsID mRequestBodyId{};
     nsCOMPtr<nsISupports> mRequestCopyContext;
 
     CacheResponse mResponse;
     nsCOMPtr<nsIInputStream> mResponseStream;
-    nsID mResponseBodyId;
+    nsID mResponseBodyId{};
     nsCOMPtr<nsISupports> mResponseCopyContext;
   };
 
@@ -1001,10 +1032,22 @@ class Manager::CachePutAllAction final : public DBAction {
     if (!source) {
       return NS_OK;
     }
+    QM_TRY_INSPECT(const auto& idGen,
+                   MOZ_TO_RESULT_GET_TYPED(nsCOMPtr<nsIUUIDGenerator>,
+                                           MOZ_SELECT_OVERLOAD(do_GetService),
+                                           "@mozilla.org/uuid-generator;1"));
 
-    QM_TRY_INSPECT((const auto& [bodyId, copyContext]),
-                   BodyStartWriteStream(aDirectoryMetadata, *mDBDir, *source,
-                                        this, AsyncCopyCompleteFunc));
+    nsID bodyId{};
+    QM_TRY(MOZ_TO_RESULT(idGen->GenerateUUIDInPlace(&bodyId)));
+
+    Maybe<CipherKey> maybeKey =
+        GetOrCreateCipherKey(WrapNotNull(mManager->mContext), bodyId,
+                             /* aCreate */ true);
+
+    QM_TRY_INSPECT(
+        const auto& copyContext,
+        BodyStartWriteStream(aDirectoryMetadata, *mDBDir, bodyId, maybeKey,
+                             *source, this, AsyncCopyCompleteFunc));
 
     if (aStreamId == RequestStream) {
       aEntry.mRequestBodyId = bodyId;
@@ -1218,10 +1261,15 @@ class Manager::CacheKeysAction final : public Manager::BaseAction {
         continue;
       }
 
+      const auto& bodyId = mSavedRequests[i].mBodyId;
+
       nsCOMPtr<nsIInputStream> stream;
       if (mArgs.openMode() == OpenMode::Eager) {
-        QM_TRY_UNWRAP(stream, BodyOpen(aDirectoryMetadata, *aDBDir,
-                                       mSavedRequests[i].mBodyId));
+        QM_TRY_UNWRAP(stream,
+                      BodyOpen(aDirectoryMetadata, *aDBDir, bodyId,
+                               GetOrCreateCipherKey(
+                                   WrapNotNull(mManager->mContext), bodyId,
+                                   /* aCreate */ false)));
       }
 
       mStreamList->Add(mSavedRequests[i].mBodyId, std::move(stream));
@@ -1283,10 +1331,15 @@ class Manager::StorageMatchAction final : public Manager::BaseAction {
       return NS_OK;
     }
 
+    const auto& bodyId = mSavedResponse.mBodyId;
+
     nsCOMPtr<nsIInputStream> stream;
     if (mArgs.openMode() == OpenMode::Eager) {
-      QM_TRY_UNWRAP(stream, BodyOpen(aDirectoryMetadata, *aDBDir,
-                                     mSavedResponse.mBodyId));
+      QM_TRY_UNWRAP(
+          stream,
+          BodyOpen(aDirectoryMetadata, *aDBDir, bodyId,
+                   GetOrCreateCipherKey(WrapNotNull(mManager->mContext), bodyId,
+                                        /* aCreate */ false)));
     }
 
     mStreamList->Add(mSavedResponse.mBodyId, std::move(stream));
@@ -1511,7 +1564,11 @@ class Manager::OpenStreamAction final : public Manager::BaseAction {
       mozIStorageConnection* aConn) override {
     MOZ_DIAGNOSTIC_ASSERT(aDBDir);
 
-    QM_TRY_UNWRAP(mBodyStream, BodyOpen(aDirectoryMetadata, *aDBDir, mBodyId));
+    QM_TRY_UNWRAP(
+        mBodyStream,
+        BodyOpen(aDirectoryMetadata, *aDBDir, mBodyId,
+                 GetOrCreateCipherKey(WrapNotNull(mManager->mContext), mBodyId,
+                                      /* aCreate */ false)));
 
     return NS_OK;
   }

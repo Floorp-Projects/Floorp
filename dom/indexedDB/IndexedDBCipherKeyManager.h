@@ -7,47 +7,25 @@
 #ifndef DOM_INDEXEDDB_INDEXEDDBCIPHERKEYMANAGER_H_
 #define DOM_INDEXEDDB_INDEXEDDBCIPHERKEYMANAGER_H_
 
-#include "FlippedOnce.h"
-#include "mozilla/DataMutex.h"
+#include "mozilla/dom/quota/CipherKeyManager.h"
 #include "mozilla/dom/quota/IPCStreamCipherStrategy.h"
-#include "nsTHashMap.h"
 
-namespace mozilla::dom::indexedDB {
+namespace mozilla::dom {
 
-using IndexedDBCipherStrategy = quota::IPCStreamCipherStrategy;
+// IndexedDBCipherKeyManager is used by IndexedDB operations to store/retrieve
+// keys in private browsing mode. All data in IndexedDB must be encrypted
+// using a cipher key and unique IV (Initialization Vector). While there's a
+// separate cipher key for every blob file; the SQLite database gets encrypted
+// using the commmon database key. All keys pertaining to a single IndexedDB
+// database get stored together using quota::CipherKeyManager. So, the hashmap
+// can be used to look up the common database key and blob keys using "default"
+// and blob file ids respectively.
+
+using IndexedDBCipherStrategy = mozilla::dom::quota::IPCStreamCipherStrategy;
+using IndexedDBCipherKeyManager =
+    mozilla::dom::quota::CipherKeyManager<IndexedDBCipherStrategy>;
 using CipherKey = IndexedDBCipherStrategy::KeyType;
 
-class IndexedDBCipherKeyManager {
-  // This helper class is used by IndexedDB operations to store/retrieve cipher
-  // keys in private browsing mode. All data in IndexedDB must be encrypted
-  // using a cipher key and unique IV (Initialization Vector). While there's a
-  // separate cipher key for every blob file; the SQLite database gets encrypted
-  // using the commmon database key. All keys pertaining to a single IndexedDB
-  // database get stored together in a hashmap. So the hashmap can be used to
-  // to look up the common database key and blob keys using "default" and blob
-  // file ids respectively.
-
- public:
-  IndexedDBCipherKeyManager() : mCipherKeys("IndexedDBCipherKeyManager"){};
-
-  Maybe<CipherKey> Get(const nsACString& aKeyId = "default"_ns);
-
-  CipherKey Ensure(const nsACString& aKeyId = "default"_ns);
-
-  bool Invalidated();
-
-  // After calling this method, callers should not call any more methods on this
-  // class.
-  void Invalidate();
-
- private:
-  // XXX Maybe we can avoid a mutex here by moving all accesses to the
-  // background thread.
-  DataMutex<nsTHashMap<nsCStringHashKey, CipherKey>> mCipherKeys;
-
-  FlippedOnce<false> mInvalidated;
-};
-
-}  // namespace mozilla::dom::indexedDB
+}  // namespace mozilla::dom
 
 #endif  // DOM_INDEXEDDB_INDEXEDDBCIPHERKEYMANAGER_H_

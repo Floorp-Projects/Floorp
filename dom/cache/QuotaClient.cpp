@@ -8,11 +8,13 @@
 
 #include "DBAction.h"
 #include "FileUtilsImpl.h"
+#include "mozilla/DebugOnly.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Unused.h"
 #include "mozilla/dom/cache/DBSchema.h"
 #include "mozilla/dom/cache/Manager.h"
+#include "mozilla/dom/quota/PersistenceType.h"
 #include "mozilla/dom/quota/QuotaCommon.h"
 #include "mozilla/dom/quota/QuotaManager.h"
 #include "mozilla/dom/quota/UsageInfo.h"
@@ -29,8 +31,7 @@ using mozilla::dom::quota::DatabaseUsageType;
 using mozilla::dom::quota::GetDirEntryKind;
 using mozilla::dom::quota::nsIFileKind;
 using mozilla::dom::quota::OriginMetadata;
-using mozilla::dom::quota::PERSISTENCE_TYPE_DEFAULT;
-using mozilla::dom::quota::PersistenceType;
+using mozilla::dom::quota::PrincipalMetadata;
 using mozilla::dom::quota::QuotaManager;
 using mozilla::dom::quota::UsageInfo;
 using mozilla::ipc::AssertIsOnBackgroundThread;
@@ -123,7 +124,8 @@ Result<UsageInfo, nsresult> GetBodyUsage(nsIFile& aMorgueDir,
 }
 
 Result<int64_t, nsresult> GetPaddingSizeFromDB(
-    nsIFile& aDir, nsIFile& aDBFile, const OriginMetadata& aOriginMetadata) {
+    nsIFile& aDir, nsIFile& aDBFile, const OriginMetadata& aOriginMetadata,
+    const Maybe<CipherKey>& aMaybeCipherKey) {
   CacheDirectoryMetadata directoryMetadata(aOriginMetadata);
   // directoryMetadata.mDirectoryLockId must be -1 (which is default for new
   // CacheDirectoryMetadata) because this method should only be called from
@@ -142,7 +144,7 @@ Result<int64_t, nsresult> GetPaddingSizeFromDB(
 #endif
 
   QM_TRY_INSPECT(const auto& conn,
-                 OpenDBConnection(directoryMetadata, aDBFile));
+                 OpenDBConnection(directoryMetadata, aDBFile, aMaybeCipherKey));
 
   // Make sure that the database has the latest schema before we try to read
   // from it. We have to do this because GetPaddingSizeFromDB is called
@@ -236,10 +238,19 @@ Result<UsageInfo, nsresult> CacheQuotaClient::InitOrigin(
   // XXX Ensure the -wel file is removed if the caches.sqlite doesn't exist.
   QM_TRY(OkIf(!!cachesSQLiteFile), UsageInfo{});
 
+  const auto maybeCipherKey = [this, &aOriginMetadata] {
+    Maybe<CipherKey> maybeCipherKey;
+    auto cipherKeyManager = GetOrCreateCipherKeyManager(aOriginMetadata);
+    if (cipherKeyManager) {
+      maybeCipherKey = Some(cipherKeyManager->Ensure());
+    }
+    return maybeCipherKey;
+  }();
+
   QM_TRY_INSPECT(
       const auto& paddingSize,
-      ([dir, cachesSQLiteFile,
-        &aOriginMetadata]() -> Result<int64_t, nsresult> {
+      ([dir, cachesSQLiteFile, &aOriginMetadata,
+        &maybeCipherKey]() -> Result<int64_t, nsresult> {
         if (!DirectoryPaddingFileExists(*dir, DirPaddingFile::TMP_FILE)) {
           QM_WARNONLY_TRY_UNWRAP(const auto maybePaddingSize,
                                  DirectoryPaddingGet(*dir));
@@ -251,8 +262,8 @@ Result<UsageInfo, nsresult> CacheQuotaClient::InitOrigin(
         // If the temporary file still exists or failing to get the padding size
         // from the padding file, then we need to get the padding size from the
         // database and restore the padding file.
-        QM_TRY_RETURN(
-            GetPaddingSizeFromDB(*dir, *cachesSQLiteFile, aOriginMetadata));
+        QM_TRY_RETURN(GetPaddingSizeFromDB(*dir, *cachesSQLiteFile,
+                                           aOriginMetadata, maybeCipherKey));
       }()));
 
   QM_TRY_INSPECT(
@@ -343,13 +354,20 @@ Result<UsageInfo, nsresult> CacheQuotaClient::GetUsageForOrigin(
   QuotaManager* quotaManager = QuotaManager::Get();
   MOZ_ASSERT(quotaManager);
 
-  return quotaManager->GetUsageForClient(PERSISTENCE_TYPE_DEFAULT,
+  return quotaManager->GetUsageForClient(aOriginMetadata.mPersistenceType,
                                          aOriginMetadata, Client::DOMCACHE);
 }
 
 void CacheQuotaClient::OnOriginClearCompleted(PersistenceType aPersistenceType,
                                               const nsACString& aOrigin) {
-  // Nothing to do here.
+  AssertIsOnIOThread();
+
+  if (aPersistenceType == quota::PERSISTENCE_TYPE_PRIVATE) {
+    if (auto entry = mCipherKeyManagers.Lookup(aOrigin)) {
+      entry.Data()->Invalidate();
+      entry.Remove();
+    }
+  }
 }
 
 void CacheQuotaClient::OnRepositoryClearCompleted(
@@ -490,6 +508,20 @@ nsresult CacheQuotaClient::WipePaddingFileInternal(
   QM_TRY(MOZ_TO_RESULT(DirectoryPaddingInit(*aBaseDir)));
 
   return NS_OK;
+}
+
+RefPtr<CipherKeyManager> CacheQuotaClient::GetOrCreateCipherKeyManager(
+    const PrincipalMetadata& aMetadata) {
+  AssertIsOnIOThread();
+
+  auto privateOrigin = aMetadata.mIsPrivate;
+  if (!privateOrigin) {
+    return nullptr;
+  }
+
+  const auto& origin = aMetadata.mOrigin;
+  return mCipherKeyManagers.LookupOrInsertWith(
+      origin, [] { return new CipherKeyManager("CacheCipherKeyManager"); });
 }
 
 CacheQuotaClient::~CacheQuotaClient() {

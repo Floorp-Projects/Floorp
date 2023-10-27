@@ -32,7 +32,7 @@ class DatabaseFileManager final
   const nsString mDatabaseName;
   const nsCString mDatabaseID;
 
-  mutable IndexedDBCipherKeyManager mCipherKeyManager;
+  RefPtr<IndexedDBCipherKeyManager> mCipherKeyManager;
 
   LazyInitializedOnce<const nsString> mDirectoryPath;
   LazyInitializedOnce<const nsString> mJournalDirectoryPath;
@@ -84,7 +84,10 @@ class DatabaseFileManager final
   const nsCString& DatabaseID() const { return mDatabaseID; }
 
   IndexedDBCipherKeyManager& MutableCipherKeyManagerRef() const {
-    return mCipherKeyManager;
+    MOZ_ASSERT(mIsInPrivateBrowsingMode);
+    MOZ_ASSERT(mCipherKeyManager);
+
+    return *mCipherKeyManager;
   }
 
   auto IsInPrivateBrowsingMode() const { return mIsInPrivateBrowsingMode; }
