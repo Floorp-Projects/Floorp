@@ -192,12 +192,6 @@ endif
 
 # Interdependencies that moz.build world don't know about yet for compilation.
 # Note some others are hardcoded or "guessed" in recursivemake.py and emitter.py
-ifdef RELRHACK
-# When building with RELR-based ELF hack, we need to build the relevant parts
-# before any target.
-$(filter %/target,$(compile_targets)): build/unix/elfhack/host build/unix/elfhack/inject/target-objects
-endif
-
 ifdef MOZ_USING_WASM_SANDBOXING
 security/rlbox/pre-compile media/libsoundtouch/src/pre-compile: config/external/wasm2c_sandbox_compiler/host
 dom/media/ogg/target-objects extensions/spellcheck/hunspell/glue/target-objects gfx/thebes/target-objects parser/expat/target-objects parser/htmlparser/target-objects gfx/ots/src/target-objects: security/rlbox/pre-compile

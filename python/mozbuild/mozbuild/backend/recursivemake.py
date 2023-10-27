@@ -437,6 +437,7 @@ class RecursiveMakeBackend(MakeBackend):
 
         if isinstance(obj, Linkable):
             self._process_test_support_file(obj)
+            self._process_relrhack(obj)
 
         if isinstance(obj, DirectoryTraversal):
             self._process_directory_traversal(obj, backend_file)
@@ -1236,6 +1237,16 @@ class RecursiveMakeBackend(MakeBackend):
 
     def _process_host_simple_program(self, program, backend_file):
         backend_file.write("HOST_SIMPLE_PROGRAMS += %s\n" % program)
+
+    def _process_relrhack(self, obj):
+        if isinstance(
+            obj, (SimpleProgram, Program, SharedLibrary)
+        ) and obj.config.substs.get("RELRHACK"):
+            # When building with RELR-based ELF hack, we need to build the relevant parts
+            # before any target.
+            node = self._compile_graph[self._build_target_for_obj(obj)]
+            node.add("build/unix/elfhack/host")
+            node.add("build/unix/elfhack/inject/target-objects")
 
     def _process_test_support_file(self, obj):
         # Ensure test support programs and libraries are tracked by an
