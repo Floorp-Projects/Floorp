@@ -29,7 +29,6 @@
 #include "mozilla/StaticPrefs_html5.h"
 #include "mozilla/StaticPrefs_intl.h"
 #include "mozilla/StaticPrefs_network.h"
-#include "mozilla/TaskCategory.h"
 #include "mozilla/TextUtils.h"
 
 #include "mozilla/UniquePtrExtensions.h"
