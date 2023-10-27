@@ -10,6 +10,7 @@
 
 #include "video/frame_cadence_adapter.h"
 
+#include <algorithm>
 #include <atomic>
 #include <deque>
 #include <memory>
@@ -377,13 +378,14 @@ void ZeroHertzAdapterMode::OnFrame(Timestamp post_time,
   queued_frames_.push_back(frame);
   current_frame_id_++;
   scheduled_repeat_ = absl::nullopt;
+  TimeDelta time_spent_since_post = clock_->CurrentTime() - post_time;
   queue_->PostDelayedHighPrecisionTask(
       SafeTask(safety_.flag(),
                [this] {
                  RTC_DCHECK_RUN_ON(&sequence_checker_);
                  ProcessOnDelayedCadence();
                }),
-      frame_delay_);
+      std::max(frame_delay_ - time_spent_since_post, TimeDelta::Zero()));
 }
 
 void ZeroHertzAdapterMode::OnDiscardedFrame() {

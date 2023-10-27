@@ -38,6 +38,7 @@ namespace {
 using ::testing::_;
 using ::testing::ElementsAre;
 using ::testing::Invoke;
+using ::testing::InvokeWithoutArgs;
 using ::testing::Mock;
 using ::testing::Pair;
 using ::testing::Values;
@@ -239,6 +240,50 @@ TEST(FrameCadenceAdapterTest, ForwardsFramesDelayed) {
     time_controller.AdvanceTime(TimeDelta::Seconds(1));
     frame = CreateFrameWithTimestamps(&time_controller);
   }
+}
+
+TEST(FrameCadenceAdapterTest, DelayedProcessingUnderSlightContention) {
+  ZeroHertzFieldTrialEnabler enabler;
+  GlobalSimulatedTimeController time_controller(Timestamp::Zero());
+  auto adapter = CreateAdapter(enabler, time_controller.GetClock());
+  MockCallback callback;
+  adapter->Initialize(&callback);
+  adapter->SetZeroHertzModeEnabled(
+      FrameCadenceAdapterInterface::ZeroHertzModeParams{});
+  adapter->OnConstraintsChanged(VideoTrackSourceConstraints{0, 1});
+
+  // Expect frame delivery at 1 sec despite target sequence not running
+  // callbacks for the time skipped.
+  constexpr TimeDelta time_skipped = TimeDelta::Millis(999);
+  EXPECT_CALL(callback, OnFrame).WillOnce(InvokeWithoutArgs([&] {
+    EXPECT_EQ(time_controller.GetClock()->CurrentTime(),
+              Timestamp::Zero() + TimeDelta::Seconds(1));
+  }));
+  adapter->OnFrame(CreateFrame());
+  time_controller.SkipForwardBy(time_skipped);
+  time_controller.AdvanceTime(TimeDelta::Seconds(1) - time_skipped);
+}
+
+TEST(FrameCadenceAdapterTest, DelayedProcessingUnderHeavyContention) {
+  ZeroHertzFieldTrialEnabler enabler;
+  GlobalSimulatedTimeController time_controller(Timestamp::Zero());
+  auto adapter = CreateAdapter(enabler, time_controller.GetClock());
+  MockCallback callback;
+  adapter->Initialize(&callback);
+  adapter->SetZeroHertzModeEnabled(
+      FrameCadenceAdapterInterface::ZeroHertzModeParams{});
+  adapter->OnConstraintsChanged(VideoTrackSourceConstraints{0, 1});
+
+  // Expect frame delivery at origin + `time_skipped` when the target sequence
+  // is not running callbacks for the initial 1+ sec.
+  constexpr TimeDelta time_skipped =
+      TimeDelta::Seconds(1) + TimeDelta::Micros(1);
+  EXPECT_CALL(callback, OnFrame).WillOnce(InvokeWithoutArgs([&] {
+    EXPECT_EQ(time_controller.GetClock()->CurrentTime(),
+              Timestamp::Zero() + time_skipped);
+  }));
+  adapter->OnFrame(CreateFrame());
+  time_controller.SkipForwardBy(time_skipped);
 }
 
 TEST(FrameCadenceAdapterTest, RepeatsFramesDelayed) {
