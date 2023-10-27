@@ -15,6 +15,7 @@
 #include "api/async_dns_resolver.h"
 #include "api/sequence_checker.h"
 #include "api/task_queue/pending_task_safety_flag.h"
+#include "rtc_base/ref_counted_object.h"
 #include "rtc_base/thread_annotations.h"
 
 namespace webrtc {
@@ -38,6 +39,8 @@ class AsyncDnsResolverResultImpl : public AsyncDnsResolverResult {
 
 class AsyncDnsResolver : public AsyncDnsResolverInterface {
  public:
+  AsyncDnsResolver();
+  ~AsyncDnsResolver();
   // Start address resolution of the hostname in `addr`.
   void Start(const rtc::SocketAddress& addr,
              absl::AnyInvocable<void()> callback) override;
@@ -48,7 +51,9 @@ class AsyncDnsResolver : public AsyncDnsResolverInterface {
   const AsyncDnsResolverResult& result() const override;
 
  private:
-  ScopedTaskSafety safety_;
+  class State;
+  ScopedTaskSafety safety_;          // To check for client going away
+  rtc::scoped_refptr<State> state_;  // To check for "this" going away
   AsyncDnsResolverResultImpl result_;
   absl::AnyInvocable<void()> callback_;
 };
