@@ -801,14 +801,17 @@ JSString* js::FunctionToString(JSContext* cx, HandleFunction fun,
     // can be matched as the 'PropertyName' grammar production.
     if (fun->explicitName() &&
         (fun->kind() == FunctionFlags::NormalFunction ||
+         (fun->isBuiltinNative() && (fun->kind() == FunctionFlags::Getter ||
+                                     fun->kind() == FunctionFlags::Setter)) ||
          fun->kind() == FunctionFlags::Wasm ||
          fun->kind() == FunctionFlags::ClassConstructor)) {
       if (!out.append(' ')) {
         return nullptr;
       }
 
-      // Built-in getters or setters are classified as normal
-      // functions, strip any leading "get " or "set " if present.
+      // Built-in getters or setters are classified as one of
+      // NormalFunction, Getter, or Setter. Strip any leading "get " or "set "
+      // if present.
       JSAtom* name = fun->explicitName();
       size_t offset = hasGetterOrSetterPrefix(name) ? 4 : 0;
       if (!out.appendSubstring(name, offset, name->length() - offset)) {

@@ -116,7 +116,8 @@ static bool DefineAccessorPropertyById(JSContext* cx, JS::Handle<JSObject*> obj,
     if (!atom) {
       return false;
     }
-    getter = NewNativeFunction(cx, get.op, 0, atom);
+    getter = NewNativeFunction(cx, get.op, 0, atom, gc::AllocKind::FUNCTION,
+                               TenuredObject, FunctionFlags::GETTER_KIND);
     if (!getter) {
       return false;
     }
@@ -133,7 +134,8 @@ static bool DefineAccessorPropertyById(JSContext* cx, JS::Handle<JSObject*> obj,
     if (!atom) {
       return false;
     }
-    setter = NewNativeFunction(cx, set.op, 1, atom);
+    setter = NewNativeFunction(cx, set.op, 1, atom, gc::AllocKind::FUNCTION,
+                               TenuredObject, FunctionFlags::SETTER_KIND);
     if (!setter) {
       return false;
     }
