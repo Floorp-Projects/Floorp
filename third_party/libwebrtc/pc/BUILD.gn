@@ -443,6 +443,7 @@ rtc_source_set("rtp_transport") {
     ":rtp_transport_internal",
     ":session_description",
     "../api:array_view",
+    "../api/task_queue:pending_task_safety_flag",
     "../api/units:timestamp",
     "../call:rtp_receiver",
     "../call:video_stream_api",

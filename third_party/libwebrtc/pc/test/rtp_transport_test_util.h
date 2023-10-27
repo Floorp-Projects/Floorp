@@ -11,6 +11,8 @@
 #ifndef PC_TEST_RTP_TRANSPORT_TEST_UTIL_H_
 #define PC_TEST_RTP_TRANSPORT_TEST_UTIL_H_
 
+#include <utility>
+
 #include "call/rtp_packet_sink_interface.h"
 #include "modules/rtp_rtcp/source/rtp_packet_received.h"
 #include "pc/rtp_transport_internal.h"
@@ -65,6 +67,9 @@ class TransportObserver : public RtpPacketSinkInterface {
   }
 
   void OnReadyToSend(bool ready) {
+    if (action_on_ready_to_send_) {
+      action_on_ready_to_send_(ready);
+    }
     ready_to_send_signal_count_++;
     ready_to_send_ = ready;
   }
@@ -72,6 +77,10 @@ class TransportObserver : public RtpPacketSinkInterface {
   bool ready_to_send() { return ready_to_send_; }
 
   int ready_to_send_signal_count() { return ready_to_send_signal_count_; }
+
+  void SetActionOnReadyToSend(absl::AnyInvocable<void(bool)> action) {
+    action_on_ready_to_send_ = std::move(action);
+  }
 
  private:
   bool ready_to_send_ = false;
@@ -81,6 +90,7 @@ class TransportObserver : public RtpPacketSinkInterface {
   int ready_to_send_signal_count_ = 0;
   rtc::CopyOnWriteBuffer last_recv_rtp_packet_;
   rtc::CopyOnWriteBuffer last_recv_rtcp_packet_;
+  absl::AnyInvocable<void(bool)> action_on_ready_to_send_;
 };
 
 }  // namespace webrtc

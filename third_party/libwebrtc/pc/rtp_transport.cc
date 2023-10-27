@@ -285,8 +285,18 @@ void RtpTransport::MaybeSignalReadyToSend() {
   bool ready_to_send =
       rtp_ready_to_send_ && (rtcp_ready_to_send_ || rtcp_mux_enabled_);
   if (ready_to_send != ready_to_send_) {
+    if (processing_ready_to_send_) {
+      // Delay ReadyToSend processing until current operation is finished.
+      // Note that this may not cause a signal, since ready_to_send may
+      // have a new value by the time this executes.
+      TaskQueueBase::Current()->PostTask(
+          SafeTask(safety_.flag(), [this] { MaybeSignalReadyToSend(); }));
+      return;
+    }
     ready_to_send_ = ready_to_send;
+    processing_ready_to_send_ = true;
     SendReadyToSend(ready_to_send);
+    processing_ready_to_send_ = false;
   }
 }
 
