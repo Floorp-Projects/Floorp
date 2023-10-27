@@ -11,7 +11,6 @@
 #include "cubeb_resampler.h"
 #include "cubeb_triple_buffer.h"
 #include <aaudio/AAudio.h>
-#include <android/api-level.h>
 #include <atomic>
 #include <cassert>
 #include <chrono>
@@ -25,6 +24,7 @@
 #include <mutex>
 #include <thread>
 #include <time.h>
+#include <vector>
 
 using namespace std;
 
@@ -157,7 +157,7 @@ struct cubeb_stream {
   // changing device.
   std::mutex mutex;
 
-  std::unique_ptr<char[]> in_buf;
+  std::vector<uint8_t> in_buf;
   unsigned in_frame_size{}; // size of one input frame
 
   unique_ptr<cubeb_stream_params> output_stream_params;
@@ -702,13 +702,16 @@ aaudio_duplex_data_cb(AAudioStream * astream, void * user_data,
     return AAUDIO_CALLBACK_RESULT_CONTINUE;
   }
 
+  if (num_frames * stm->in_frame_size > stm->in_buf.size()) {
+    stm->in_buf.resize(num_frames * stm->in_frame_size);
+  }
   // The aaudio docs state that AAudioStream_read must not be called on
   // the stream associated with a callback. But we call it on the input stream
   // while this callback is for the output stream so this is ok.
   // We also pass timeout 0, giving us strong non-blocking guarantees.
   // This is exactly how it's done in the aaudio duplex example code snippet.
   long in_num_frames =
-      WRAP(AAudioStream_read)(stm->istream, stm->in_buf.get(), num_frames, 0);
+      WRAP(AAudioStream_read)(stm->istream, stm->in_buf.data(), num_frames, 0);
   if (in_num_frames < 0) { // error
     stm->state.store(stream_state::ERROR);
     LOG("AAudioStream_read: %s",
@@ -729,13 +732,13 @@ aaudio_duplex_data_cb(AAudioStream * astream, void * user_data,
     // LOG("AAudioStream_read returned not enough frames: %ld instead of %d",
     //   in_num_frames, num_frames);
     unsigned left = num_frames - in_num_frames;
-    char * buf = stm->in_buf.get() + in_num_frames * stm->in_frame_size;
+    uint8_t * buf = stm->in_buf.data() + in_num_frames * stm->in_frame_size;
     std::memset(buf, 0x0, left * stm->in_frame_size);
     in_num_frames = num_frames;
   }
 
   long done_frames =
-      cubeb_resampler_fill(stm->resampler, stm->in_buf.get(), &in_num_frames,
+      cubeb_resampler_fill(stm->resampler, stm->in_buf.data(), &in_num_frames,
                            audio_data, num_frames);
 
   if (done_frames < 0 || done_frames > num_frames) {
@@ -1160,7 +1163,7 @@ aaudio_stream_init_impl(cubeb_stream * stm, lock_guard<mutex> & lock)
         WRAP(AAudioStream_getBufferSizeInFrames)(stm->istream));
     LOG("AAudio input stream buffer rate: %d", rate);
 
-    stm->in_buf.reset(new char[bcap * frame_size]());
+    stm->in_buf.resize(bcap * frame_size);
     assert(!stm->sample_rate ||
            stm->sample_rate == stm->input_stream_params->rate);
 
@@ -1705,9 +1708,6 @@ const static struct cubeb_ops aaudio_ops = {
 extern "C" /*static*/ int
 aaudio_init(cubeb ** context, char const * /* context_name */)
 {
-  if (android_get_device_api_level() <= 30) {
-    return CUBEB_ERROR;
-  }
   // load api
   void * libaaudio = nullptr;
 #ifndef DISABLE_LIBAAUDIO_DLOPEN
