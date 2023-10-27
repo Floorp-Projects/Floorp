@@ -870,10 +870,10 @@ index 9093a68cf3..3003a585bd 100644
      } else {
        cflags = [
 diff --git a/modules/desktop_capture/BUILD.gn b/modules/desktop_capture/BUILD.gn
-index 6f3e9d26c5..42d72865b9 100644
+index fcf1836930..344c8a1531 100644
 --- a/modules/desktop_capture/BUILD.gn
 +++ b/modules/desktop_capture/BUILD.gn
-@@ -341,37 +341,12 @@ rtc_library("desktop_capture") {
+@@ -343,37 +343,12 @@ rtc_library("desktop_capture") {
      ]
      deps += [ ":desktop_capture_objc" ]
    }
@@ -911,7 +911,7 @@ index 6f3e9d26c5..42d72865b9 100644
    }
  
    if (rtc_use_x11_extensions) {
-@@ -537,9 +512,7 @@ rtc_library("desktop_capture") {
+@@ -539,9 +514,7 @@ rtc_library("desktop_capture") {
      deps += [ "../../rtc_base:sanitizer" ]
    }
  
