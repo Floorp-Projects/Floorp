@@ -292,6 +292,10 @@ H265BitstreamParser::Result H265BitstreamParser::ParseNonParameterSetNalu(
       }
 
       // Equation 7-57
+      IN_RANGE_OR_RETURN(ref_pic_set->num_negative_pics, 0,
+                         kMaxShortTermRefPicSets);
+      IN_RANGE_OR_RETURN(ref_pic_set->num_positive_pics, 0,
+                         kMaxShortTermRefPicSets);
       for (uint32_t i = 0; i < ref_pic_set->num_negative_pics; i++) {
         if (ref_pic_set->used_by_curr_pic_s0[i]) {
           num_pic_total_curr++;
