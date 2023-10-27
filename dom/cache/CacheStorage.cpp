@@ -175,7 +175,8 @@ already_AddRefed<CacheStorage> CacheStorage::CreateOnWorker(
   MOZ_DIAGNOSTIC_ASSERT(aWorkerPrivate);
   aWorkerPrivate->AssertIsOnWorkerThread();
 
-  if (aWorkerPrivate->GetOriginAttributes().mPrivateBrowsingId > 0) {
+  if (aWorkerPrivate->GetOriginAttributes().mPrivateBrowsingId > 0 &&
+      !StaticPrefs::dom_cache_privateBrowsing_enabled()) {
     NS_WARNING("CacheStorage not supported during private browsing.");
     RefPtr<CacheStorage> ref = new CacheStorage(NS_ERROR_DOM_SECURITY_ERR);
     return ref.forget();
@@ -574,16 +575,17 @@ bool CacheStorage::HasStorageAccess(UseCounter aLabel,
     }
   }
 
-  // Deny storage access for private browsing.
+  // Deny storage access for private browsing unless pref is toggled on.
   if (nsIPrincipal* principal = mGlobal->PrincipalOrNull()) {
     if (!principal->IsSystemPrincipal() &&
         principal->GetPrivateBrowsingId() !=
-            nsIScriptSecurityManager::DEFAULT_PRIVATE_BROWSING_ID) {
+            nsIScriptSecurityManager::DEFAULT_PRIVATE_BROWSING_ID &&
+        !StaticPrefs::dom_cache_privateBrowsing_enabled()) {
       return false;
     }
   }
 
-  return access > StorageAccess::ePrivateBrowsing ||
+  return access > StorageAccess::eDeny ||
          (StaticPrefs::
               privacy_partition_always_partition_third_party_non_cookie_storage() &&
           ShouldPartitionStorage(access));
