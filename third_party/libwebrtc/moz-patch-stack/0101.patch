@@ -1,43 +1,28 @@
 From: Andreas Pehrson <apehrson@mozilla.com>
-Date: Wed, 18 Oct 2023 18:51:00 +0000
-Subject: Bug 1857862 - (fix-34d82df2ba) Guard clang-specific pragmas in
- libwebrtc/api/call/transport.h. r=webrtc-reviewers,mjf
+Date: Wed, 18 Oct 2023 17:25:00 +0000
+Subject: Bug 1857862 - (fix-32a8169a65) Don't call non-constexpr
+ RTC_CHECK_NOTREACHED from constexpr VideoFrameTypeToString under gcc-8.
+ r=webrtc-reviewers,mjf
 
-Differential Revision: https://phabricator.services.mozilla.com/D191312
-Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/3b5018d89fa118d1f227346ddd67a1fe1db4d4c1
+Differential Revision: https://phabricator.services.mozilla.com/D191308
+Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/8a4449ba24fa3192b44863ed8ba96f6f94a6e88d
 ---
- api/call/transport.h | 11 +++++++++++
- 1 file changed, 11 insertions(+)
+ api/video/video_frame_type.h | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/api/call/transport.h b/api/call/transport.h
-index 6c6cbb8941..52c577ba83 100644
---- a/api/call/transport.h
-+++ b/api/call/transport.h
-@@ -48,8 +48,15 @@ class Transport {
-   // New style functions. Default implementations are to accomodate
-   // subclasses that haven't been converted to new style yet.
-   // TODO(bugs.webrtc.org/14870): Deprecate and remove old functions.
-+  // Mozilla: Add GCC pragmas for now. They will be removed soon:
-+  //   https://webrtc.googlesource.com/src/+/e14d122a7b24bf78c02b8a4ce23716f79451dd23
-+#if defined(__clang__)
- #pragma clang diagnostic push
- #pragma clang diagnostic ignored "-Wdeprecated-declarations"
-+#elif defined(__GNUC__)
-+#pragma GCC diagnostic push
-+#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-+#endif
-   virtual bool SendRtp(rtc::ArrayView<const uint8_t> packet,
-                        const PacketOptions& options) {
-     return SendRtp(packet.data(), packet.size(), options);
-@@ -57,7 +64,11 @@ class Transport {
-   virtual bool SendRtcp(rtc::ArrayView<const uint8_t> packet) {
-     return SendRtcp(packet.data(), packet.size());
+diff --git a/api/video/video_frame_type.h b/api/video/video_frame_type.h
+index 9079829ff8..3665a80cd8 100644
+--- a/api/video/video_frame_type.h
++++ b/api/video/video_frame_type.h
+@@ -34,7 +34,11 @@ inline constexpr absl::string_view VideoFrameTypeToString(
+     case VideoFrameType::kVideoFrameDelta:
+       return "delta";
    }
-+#if defined(__clang__)
- #pragma clang diagnostic pop
-+#elif defined(__GNUC__)
-+#pragma GCC diagnostic pop
++// Mozilla:
++//   gcc-8 complains about a constexpr function calling a non-constexpr ditto.
++#if defined(__clang__) || (defined(__GNUC__) && __GNUC__ >= 9)
+   RTC_CHECK_NOTREACHED();
 +#endif
-   // Old style functions.
-   [[deprecated("Use ArrayView version")]] virtual bool
-   SendRtp(const uint8_t* packet, size_t length, const PacketOptions& options) {
+   return "";
+ }
+ 
