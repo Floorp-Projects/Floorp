@@ -407,6 +407,166 @@ add_task(async function test_serializeNodeChildren() {
   });
 });
 
+add_task(async function test_serializeNodeEmbeddedWithin() {
+  await loadURL(inline("<div>"));
+
+  await runTestInContent(() => {
+    // Add the used elements to the cache so that we know the unique reference.
+    const bodyEl = content.document.body;
+    const domEl = bodyEl.querySelector("div");
+    const domElRef = nodeCache.getOrCreateNodeReference(domEl, seenNodeIds);
+
+    const dataSet = [
+      {
+        embedder: "array",
+        wrapper: node => [node],
+        serialized: {
+          type: "array",
+          value: [
+            {
+              type: "node",
+              sharedId: domElRef,
+              value: {
+                attributes: {},
+                childNodeCount: 0,
+                localName: "div",
+                namespaceURI: "http://www.w3.org/1999/xhtml",
+                nodeType: 1,
+                shadowRoot: null,
+              },
+            },
+          ],
+        },
+      },
+      {
+        embedder: "map",
+        wrapper: node => {
+          const map = new Map();
+          map.set(node, "elem");
+          return map;
+        },
+        serialized: {
+          type: "map",
+          value: [
+            [
+              {
+                type: "node",
+                sharedId: domElRef,
+                value: {
+                  attributes: {},
+                  childNodeCount: 0,
+                  localName: "div",
+                  namespaceURI: "http://www.w3.org/1999/xhtml",
+                  nodeType: 1,
+                  shadowRoot: null,
+                },
+              },
+              {
+                type: "string",
+                value: "elem",
+              },
+            ],
+          ],
+        },
+      },
+      {
+        embedder: "map",
+        wrapper: node => {
+          const map = new Map();
+          map.set("elem", node);
+          return map;
+        },
+        serialized: {
+          type: "map",
+          value: [
+            [
+              "elem",
+              {
+                type: "node",
+                sharedId: domElRef,
+                value: {
+                  attributes: {},
+                  childNodeCount: 0,
+                  localName: "div",
+                  namespaceURI: "http://www.w3.org/1999/xhtml",
+                  nodeType: 1,
+                  shadowRoot: null,
+                },
+              },
+            ],
+          ],
+        },
+      },
+      {
+        embedder: "object",
+        wrapper: node => ({ elem: node }),
+        serialized: {
+          type: "object",
+          value: [
+            [
+              "elem",
+              {
+                type: "node",
+                sharedId: domElRef,
+                value: {
+                  attributes: {},
+                  childNodeCount: 0,
+                  localName: "div",
+                  namespaceURI: "http://www.w3.org/1999/xhtml",
+                  nodeType: 1,
+                  shadowRoot: null,
+                },
+              },
+            ],
+          ],
+        },
+      },
+      {
+        embedder: "set",
+        wrapper: node => {
+          const set = new Set();
+          set.add(node);
+          return set;
+        },
+        serialized: {
+          type: "set",
+          value: [
+            {
+              type: "node",
+              sharedId: domElRef,
+              value: {
+                attributes: {},
+                childNodeCount: 0,
+                localName: "div",
+                namespaceURI: "http://www.w3.org/1999/xhtml",
+                nodeType: 1,
+                shadowRoot: null,
+              },
+            },
+          ],
+        },
+      },
+    ];
+
+    for (const { embedder, wrapper, serialized } of dataSet) {
+      info(`Checking embedding node within ${embedder}`);
+
+      const serializationInternalMap = new Map();
+
+      const serializedValue = serialize(
+        wrapper(domEl),
+        { maxDomDepth: 0 },
+        "none",
+        serializationInternalMap,
+        realm,
+        { nodeCache }
+      );
+
+      Assert.deepEqual(serializedValue, serialized, "Got expected structure");
+    }
+  });
+});
+
 add_task(async function test_serializeShadowRoot() {
   await runTestInContent(() => {
     for (const mode of ["open", "closed"]) {

@@ -860,7 +860,8 @@ export function serialize(
         serializationOptions,
         ownershipType,
         serializationInternalMap,
-        realm
+        realm,
+        extraOptions
       );
     }
     return serialized;
@@ -874,7 +875,8 @@ export function serialize(
         serializationOptions,
         ownershipType,
         serializationInternalMap,
-        realm
+        realm,
+        extraOptions
       );
     }
     return serialized;
