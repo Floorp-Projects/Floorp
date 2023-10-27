@@ -9,7 +9,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/82877c8a864072c03
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/sdk/android/api/org/webrtc/TextureBufferImpl.java b/sdk/android/api/org/webrtc/TextureBufferImpl.java
-index c08fc4c29b..8e0e40ef70 100644
+index 7e2bed84fc..43470d6e39 100644
 --- a/sdk/android/api/org/webrtc/TextureBufferImpl.java
 +++ b/sdk/android/api/org/webrtc/TextureBufferImpl.java
 @@ -136,8 +136,8 @@ public class TextureBufferImpl implements VideoFrame.TextureBuffer {
@@ -22,4 +22,4 @@ index c08fc4c29b..8e0e40ef70 100644
 +        Math.round(unscaledHeight * cropHeight / (float) height), scaleWidth, scaleHeight);
    }
  
-   /**
+   @Override
