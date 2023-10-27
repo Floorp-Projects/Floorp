@@ -221,7 +221,7 @@ def record_cargo_timings(resource_monitor, timings_path):
 
     for name, start, duration in data:
         resource_monitor.record_marker(
-            "Rust", cargo_start + start, cargo_start + start + duration, name
+            "RustCrate", cargo_start + start, cargo_start + start + duration, name
         )
 
 
