@@ -278,8 +278,7 @@ RTCPSender::FeedbackState ModuleRtpRtcpImpl::GetFeedbackState() {
         rtp_stats.transmitted.packets + rtx_stats.transmitted.packets;
     state.media_bytes_sent = rtp_stats.transmitted.payload_bytes +
                              rtx_stats.transmitted.payload_bytes;
-    state.send_bitrate =
-        rtp_sender_->packet_sender.GetSendRates().Sum().bps<uint32_t>();
+    state.send_bitrate = rtp_sender_->packet_sender.GetSendRates().Sum();
   }
   state.receiver = &rtcp_receiver_;
 
