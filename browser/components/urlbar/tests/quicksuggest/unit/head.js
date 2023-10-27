@@ -32,19 +32,46 @@ function add_tasks_with_rust(...args) {
 
   for (let rustEnabled of [false, true]) {
     let newTaskFn = async (...taskFnArgs) => {
-      info("Setting rustEnabled: " + rustEnabled);
+      info("add_tasks_with_rust: Setting rustEnabled: " + rustEnabled);
       UrlbarPrefs.set("quicksuggest.rustEnabled", rustEnabled);
-      info("Done setting rustEnabled: " + rustEnabled);
+      info("add_tasks_with_rust: Done setting rustEnabled: " + rustEnabled);
+
+      // The current backend may now start syncing, so wait for it to finish.
+      info("add_tasks_with_rust: Forcing sync");
+      await QuickSuggestTestUtils.forceSync();
+      info("add_tasks_with_rust: Done forcing sync");
 
       let rv;
       try {
-        info("Calling original task function: " + taskFn.name);
+        info(
+          "add_tasks_with_rust: Calling original task function: " + taskFn.name
+        );
         rv = await taskFn(...taskFnArgs);
+      } catch (e) {
+        // Clearly report any unusual errors to make them easier to spot and to
+        // make the flow of the test clearer. The harness throws NS_ERROR_ABORT
+        // when a normal assertion fails, so don't report that.
+        if (e.result != Cr.NS_ERROR_ABORT) {
+          Assert.ok(
+            false,
+            "add_tasks_with_rust: The original task function threw an error: " +
+              e
+          );
+        }
+        throw e;
       } finally {
-        info("Done calling original task function: " + taskFn.name);
-        info("Clearing rustEnabled");
+        info(
+          "add_tasks_with_rust: Done calling original task function: " +
+            taskFn.name
+        );
+        info("add_tasks_with_rust: Clearing rustEnabled");
         UrlbarPrefs.clear("quicksuggest.rustEnabled");
-        info("Done clearing rustEnabled");
+        info("add_tasks_with_rust: Done clearing rustEnabled");
+
+        // The current backend may now start syncing, so wait for it to finish.
+        info("add_tasks_with_rust: Forcing sync");
+        await QuickSuggestTestUtils.forceSync();
+        info("add_tasks_with_rust: Done forcing sync");
       }
       return rv;
     };
@@ -433,7 +460,7 @@ async function doShowLessFrequentlyTests({
   keyword,
 }) {
   // Do some sanity checks on the keyword. Any checks that fail are errors in
-  // the test. This function assumes
+  // the test.
   let spaceIndex = keyword.indexOf(" ");
   if (spaceIndex < 0) {
     throw new Error("keyword must contain a space");
@@ -485,16 +512,19 @@ async function doShowLessFrequentlyTests({
     },
   ];
 
-  info("Testing 'show less frequently' with cap in remote settings");
-  await doOneShowLessFrequentlyTest({
-    tests,
-    feature,
-    expectedResult,
-    showLessFrequentlyCountPref,
-    rs: {
-      show_less_frequently_cap: 3,
-    },
-  });
+  // The Rust implementation doesn't support the remote settings config.
+  if (!UrlbarPrefs.get("quicksuggest.rustEnabled")) {
+    info("Testing 'show less frequently' with cap in remote settings");
+    await doOneShowLessFrequentlyTest({
+      tests,
+      feature,
+      expectedResult,
+      showLessFrequentlyCountPref,
+      rs: {
+        show_less_frequently_cap: 3,
+      },
+    });
+  }
 
   // Nimbus should override remote settings.
   info("Testing 'show less frequently' with cap in Nimbus and remote settings");

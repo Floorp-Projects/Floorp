@@ -97,20 +97,19 @@ ChromeUtils.defineLazyGetter(
 );
 
 add_task(async function init() {
-  UrlbarPrefs.set("quicksuggest.enabled", true);
-  UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
-  UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
-  UrlbarPrefs.set("quicksuggest.shouldShowOnboardingDialog", false);
-
   await MerinoTestUtils.server.start();
 
   // Set up the remote settings client with the test data.
   await QuickSuggestTestUtils.ensureQuickSuggestInit({
-    remoteSettingsResults: [
+    remoteSettingsRecords: [
       {
         type: "data",
         attachment: REMOTE_SETTINGS_RESULTS,
       },
+    ],
+    prefs: [
+      ["suggest.quicksuggest.nonsponsored", true],
+      ["suggest.quicksuggest.sponsored", true],
     ],
   });
 
@@ -131,7 +130,7 @@ add_task(async function merinoDisabled() {
   // Clear the remote settings suggestions so that if Merino is actually queried
   // -- which would be a bug -- we don't accidentally mask the Merino suggestion
   // by also matching an RS suggestion with the same or higher score.
-  await QuickSuggestTestUtils.setRemoteSettingsResults([]);
+  await QuickSuggestTestUtils.setRemoteSettingsRecords([]);
 
   let histograms = MerinoTestUtils.getAndClearHistograms();
 
@@ -153,7 +152,7 @@ add_task(async function merinoDisabled() {
 
   UrlbarPrefs.set("merino.endpointURL", mockEndpointUrl);
 
-  await QuickSuggestTestUtils.setRemoteSettingsResults([
+  await QuickSuggestTestUtils.setRemoteSettingsRecords([
     {
       type: "data",
       attachment: REMOTE_SETTINGS_RESULTS,
@@ -169,7 +168,7 @@ add_task(async function dataCollectionDisabled() {
   // Clear the remote settings suggestions so that if Merino is actually queried
   // -- which would be a bug -- we don't accidentally mask the Merino suggestion
   // by also matching an RS suggestion with the same or higher score.
-  await QuickSuggestTestUtils.setRemoteSettingsResults([]);
+  await QuickSuggestTestUtils.setRemoteSettingsRecords([]);
 
   let context = createContext(SEARCH_STRING, {
     providers: [UrlbarProviderQuickSuggest.name],
@@ -180,7 +179,7 @@ add_task(async function dataCollectionDisabled() {
     matches: [],
   });
 
-  await QuickSuggestTestUtils.setRemoteSettingsResults([
+  await QuickSuggestTestUtils.setRemoteSettingsRecords([
     {
       type: "data",
       attachment: REMOTE_SETTINGS_RESULTS,
