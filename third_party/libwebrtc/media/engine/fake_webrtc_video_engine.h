@@ -45,7 +45,7 @@ class FakeWebRtcVideoDecoder : public webrtc::VideoDecoder {
   ~FakeWebRtcVideoDecoder();
 
   bool Configure(const Settings& settings) override;
-  int32_t Decode(const webrtc::EncodedImage&, bool, int64_t) override;
+  int32_t Decode(const webrtc::EncodedImage&, int64_t) override;
   int32_t RegisterDecodeCompleteCallback(
       webrtc::DecodedImageCallback*) override;
   int32_t Release() override;

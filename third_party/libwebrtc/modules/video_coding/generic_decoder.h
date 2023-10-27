@@ -120,8 +120,7 @@ class VCMGenericDecoder {
  private:
   int32_t Decode(const EncodedImage& frame,
                  Timestamp now,
-                 int64_t render_time_ms,
-                 int64_t missing_frame);
+                 int64_t render_time_ms);
   VCMDecodedFrameCallback* _callback = nullptr;
   VideoDecoder* const decoder_;
   VideoContentType _last_keyframe_content_type;

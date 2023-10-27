@@ -98,6 +98,7 @@ void decompressionOutputCallback(void *decoderRef,
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
+// TODO(bugs.webrtc.org/15444): Remove obsolete missingFrames param.
 - (NSInteger)decode:(RTC_OBJC_TYPE(RTCEncodedImage) *)inputImage
         missingFrames:(BOOL)missingFrames
     codecSpecificInfo:(nullable id<RTC_OBJC_TYPE(RTCCodecSpecificInfo)>)info

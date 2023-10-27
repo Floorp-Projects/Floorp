@@ -62,8 +62,6 @@ class EncodedFrame : public EncodedImage {
 
   uint8_t PayloadType() const { return _payloadType; }
 
-  bool MissingFrame() const { return _missingFrame; }
-
   void SetRenderTime(const int64_t renderTimeMs) {
     _renderTimeMs = renderTimeMs;
   }
@@ -94,7 +92,6 @@ class EncodedFrame : public EncodedImage {
   // getters/setters as needed.
   int64_t _renderTimeMs = -1;
   uint8_t _payloadType = 0;
-  bool _missingFrame = false;
   CodecSpecificInfo _codecSpecificInfo;
   VideoCodecType _codec = kVideoCodecGeneric;
 

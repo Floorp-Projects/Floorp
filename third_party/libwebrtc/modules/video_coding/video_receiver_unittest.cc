@@ -109,7 +109,7 @@ class TestVideoReceiver : public ::testing::Test {
       ++header->sequenceNumber;
     }
     receiver_.Process();
-    EXPECT_CALL(decoder_, Decode(_, _, _)).Times(0);
+    EXPECT_CALL(decoder_, Decode(_, _)).Times(0);
     EXPECT_EQ(VCM_FRAME_NOT_READY, receiver_.Decode(kMaxWaitTimeMs));
   }
 
@@ -123,7 +123,7 @@ class TestVideoReceiver : public ::testing::Test {
     EXPECT_CALL(packet_request_callback_, ResendPackets(_, _)).Times(0);
 
     receiver_.Process();
-    EXPECT_CALL(decoder_, Decode(_, _, _)).Times(1);
+    EXPECT_CALL(decoder_, Decode(_, _)).Times(1);
     EXPECT_EQ(0, receiver_.Decode(kMaxWaitTimeMs));
   }
 
