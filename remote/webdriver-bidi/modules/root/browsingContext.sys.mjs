@@ -51,8 +51,8 @@ const MAX_WINDOW_SIZE = 10000000;
  * @enum {ClipRectangleType}
  */
 export const ClipRectangleType = {
+  Box: "box",
   Element: "element",
-  Viewport: "viewport",
 };
 
 /**
@@ -209,11 +209,11 @@ class BrowsingContextModule extends Module {
 
   /**
    * Used as an argument for browsingContext.captureScreenshot command
-   * to represent a viewport which is going to be a target of the command.
+   * to represent a box which is going to be a target of the command.
    *
    * @typedef BoxClipRectangle
    *
-   * @property {ClipRectangleType} [type=ClipRectangleType.Viewport]
+   * @property {ClipRectangleType} [type=ClipRectangleType.Box]
    * @property {number} x
    * @property {number} y
    * @property {number} width
@@ -238,7 +238,7 @@ class BrowsingContextModule extends Module {
    * @param {string} options.context
    *     Id of the browsing context to screenshot.
    * @param {ClipRectangle=} options.clip
-   *     An element or a viewport of which a screenshot should be taken.
+   *     A box or an element of which a screenshot should be taken.
    *     If not present, take a screenshot of the whole viewport.
    *
    * @throws {NoSuchFrameError}
@@ -258,6 +258,23 @@ class BrowsingContextModule extends Module {
 
       const { type } = clip;
       switch (type) {
+        case ClipRectangleType.Box: {
+          const { x, y, width, height } = clip;
+
+          lazy.assert.number(x, `Expected "x" to be a number, got ${x}`);
+          lazy.assert.number(y, `Expected "y" to be a number, got ${y}`);
+          lazy.assert.number(
+            width,
+            `Expected "width" to be a number, got ${width}`
+          );
+          lazy.assert.number(
+            height,
+            `Expected "height" to be a number, got ${height}`
+          );
+
+          break;
+        }
+
         case ClipRectangleType.Element: {
           const { element, scrollIntoView = null } = clip;
 
@@ -272,23 +289,6 @@ class BrowsingContextModule extends Module {
               `Expected "scrollIntoView" to be a boolean, got ${scrollIntoView}`
             );
           }
-
-          break;
-        }
-
-        case ClipRectangleType.Viewport: {
-          const { x, y, width, height } = clip;
-
-          lazy.assert.number(x, `Expected "x" to be a number, got ${x}`);
-          lazy.assert.number(y, `Expected "y" to be a number, got ${y}`);
-          lazy.assert.number(
-            width,
-            `Expected "width" to be a number, got ${width}`
-          );
-          lazy.assert.number(
-            height,
-            `Expected "height" to be a number, got ${height}`
-          );
 
           break;
         }

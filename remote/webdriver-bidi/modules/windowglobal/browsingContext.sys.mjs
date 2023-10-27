@@ -255,6 +255,11 @@ class BrowsingContextModule extends WindowGlobalBiDiModule {
 
     if (clip !== null) {
       switch (clip.type) {
+        case lazy.ClipRectangleType.Box: {
+          clipRect = new DOMRect(clip.x, clip.y, clip.width, clip.height);
+          break;
+        }
+
         case lazy.ClipRectangleType.Element: {
           const realm = this.messageHandler.getRealm();
           const element = this.deserialize(realm, clip.element);
@@ -264,10 +269,6 @@ class BrowsingContextModule extends WindowGlobalBiDiModule {
           }
 
           clipRect = element.getBoundingClientRect();
-          break;
-        }
-        case lazy.ClipRectangleType.Viewport: {
-          clipRect = new DOMRect(clip.x, clip.y, clip.width, clip.height);
           break;
         }
       }
