@@ -309,8 +309,9 @@ class BuildMonitor(MozbuildObject):
         # does not interfere with our parsing of the line.
         plain_line = self._terminal.strip(line) if self._terminal else line.strip()
         if plain_line.startswith("BUILDSTATUS"):
-            args = plain_line.split()[1:]
+            args = plain_line.split()
 
+            _, _, disambiguator = args.pop(0).partition("@")
             action = args.pop(0)
             update_needed = True
 
@@ -325,13 +326,17 @@ class BuildMonitor(MozbuildObject):
                 self.tiers.finish_tier(tier)
             elif action == "OBJECT_FILE":
                 self.build_objects.append(args[0])
-                self.resources.begin_marker("Object", args[0])
+                self.resources.begin_marker("Object", args[0], disambiguator)
                 update_needed = False
             elif action.startswith("START_"):
-                self.resources.begin_marker(action[len("START_") :], " ".join(args))
+                self.resources.begin_marker(
+                    action[len("START_") :], " ".join(args), disambiguator
+                )
                 update_needed = False
             elif action.startswith("END_"):
-                self.resources.end_marker(action[len("END_") :], " ".join(args))
+                self.resources.end_marker(
+                    action[len("END_") :], " ".join(args), disambiguator
+                )
                 update_needed = False
             elif action == "BUILD_VERBOSE":
                 build_dir = args[0]

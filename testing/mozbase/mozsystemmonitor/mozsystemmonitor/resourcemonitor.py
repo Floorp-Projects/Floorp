@@ -453,18 +453,21 @@ class SystemResourceMonitor(object):
             SystemResourceMonitor.instance.markers.append((name, start, end, text))
 
     @staticmethod
-    def begin_marker(name, text):
+    def begin_marker(name, text, disambiguator=None):
         if SystemResourceMonitor.instance:
-            SystemResourceMonitor.instance._active_markers[
-                name + ":" + text
-            ] = time.monotonic()
+            id = name + ":" + text
+            if disambiguator:
+                id += ":" + disambiguator
+            SystemResourceMonitor.instance._active_markers[id] = time.monotonic()
 
     @staticmethod
-    def end_marker(name, text):
+    def end_marker(name, text, disambiguator=None):
         if not SystemResourceMonitor.instance:
             return
         end = time.monotonic()
         id = name + ":" + text
+        if disambiguator:
+            id += ":" + disambiguator
         if not id in SystemResourceMonitor.instance._active_markers:
             return
         start = SystemResourceMonitor.instance._active_markers.pop(id)
