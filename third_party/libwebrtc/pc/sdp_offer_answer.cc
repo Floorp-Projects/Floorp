@@ -535,6 +535,33 @@ RTCError ValidateRtpHeaderExtensionsForSpecSimulcast(
   return RTCError::OK();
 }
 
+RTCError ValidateSsrcGroups(const cricket::SessionDescription& description) {
+  for (const ContentInfo& content : description.contents()) {
+    if (content.type != MediaProtocolType::kRtp) {
+      continue;
+    }
+    for (const StreamParams& stream : content.media_description()->streams()) {
+      for (const cricket::SsrcGroup& group : stream.ssrc_groups) {
+        // Validate the number of SSRCs for standard SSRC group semantics such
+        // as FID and FEC-FR and the non-standard SIM group.
+        if ((group.semantics == cricket::kFidSsrcGroupSemantics &&
+             group.ssrcs.size() != 2) ||
+            (group.semantics == cricket::kFecFrSsrcGroupSemantics &&
+             group.ssrcs.size() != 2) ||
+            (group.semantics == cricket::kSimSsrcGroupSemantics &&
+             group.ssrcs.size() > kMaxSimulcastStreams)) {
+          LOG_AND_RETURN_ERROR(RTCErrorType::INVALID_PARAMETER,
+                               "The media section with MID='" + content.mid() +
+                                   "' has a ssrc-group with semantics " +
+                                   group.semantics +
+                                   " and an unexpected number of SSRCs.");
+        }
+      }
+    }
+  }
+  return RTCError::OK();
+}
+
 bool IsValidOfferToReceiveMedia(int value) {
   typedef PeerConnectionInterface::RTCOfferAnswerOptions Options;
   return (value >= Options::kUndefined) &&
@@ -3544,6 +3571,13 @@ RTCError SdpOfferAnswerHandler::ValidateSessionDescription(
   // TODO(bugs.webrtc.org/14782): remove killswitch after rollout.
   if (!error.ok() && !pc_->trials().IsDisabled(
                          "WebRTC-PreventBundleHeaderExtensionIdCollision")) {
+    return error;
+  }
+
+  // TODO(crbug.com/1459124): remove killswitch after rollout.
+  error = ValidateSsrcGroups(*sdesc->description());
+  if (!error.ok() &&
+      !pc_->trials().IsDisabled("WebRTC-PreventSsrcGroupsWithUnexpectedSize")) {
     return error;
   }
 
