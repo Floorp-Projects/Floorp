@@ -1179,7 +1179,12 @@ var snapshotFormatters = {
 
       function formatCodecRowForLackOfExtension(codec, sw) {
         let swCell = $.new("td", sw ? supportText : unsupportedText);
-        let hwCell = $.new("td", lackOfExtensionText);
+        // Link to AV1 extension on MS store.
+        let hwCell = $.new("td", [
+          $.new("a", lackOfExtensionText, null, {
+            href: "ms-windows-store://pdp/?ProductId=9MVZQVXJBQ9V",
+          }),
+        ]);
         if (sw) {
           swCell.classList.add("supported");
         } else {
