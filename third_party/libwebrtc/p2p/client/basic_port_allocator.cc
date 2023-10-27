@@ -193,22 +193,6 @@ BasicPortAllocator::BasicPortAllocator(
 
 BasicPortAllocator::BasicPortAllocator(
     rtc::NetworkManager* network_manager,
-    std::unique_ptr<rtc::PacketSocketFactory> owned_socket_factory,
-    const ServerAddresses& stun_servers,
-    const webrtc::FieldTrialsView* field_trials)
-    : field_trials_(field_trials),
-      network_manager_(network_manager),
-      socket_factory_(std::move(owned_socket_factory)) {
-  Init(nullptr);
-  RTC_DCHECK(relay_port_factory_ != nullptr);
-  RTC_DCHECK(network_manager_ != nullptr);
-  RTC_CHECK(socket_factory_ != nullptr);
-  SetConfiguration(stun_servers, std::vector<RelayServerConfig>(), 0,
-                   webrtc::NO_PRUNE, nullptr);
-}
-
-BasicPortAllocator::BasicPortAllocator(
-    rtc::NetworkManager* network_manager,
     rtc::PacketSocketFactory* socket_factory,
     const ServerAddresses& stun_servers,
     const webrtc::FieldTrialsView* field_trials)
