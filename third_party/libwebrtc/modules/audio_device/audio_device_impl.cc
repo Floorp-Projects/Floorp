@@ -872,10 +872,8 @@ int32_t AudioDeviceModuleImpl::EnableBuiltInNS(bool enable) {
 }
 
 int32_t AudioDeviceModuleImpl::GetPlayoutUnderrunCount() const {
-  RTC_LOG(LS_INFO) << __FUNCTION__;
   CHECKinitialized_();
   int32_t underrunCount = audio_device_->GetPlayoutUnderrunCount();
-  RTC_LOG(LS_INFO) << "output: " << underrunCount;
   return underrunCount;
 }
 
