@@ -784,6 +784,14 @@ void HttpChannelChild::DoOnProgress(nsIRequest* aRequest, int64_t progress,
       mProgressSink->OnProgress(aRequest, progress, progressMax);
     }
   }
+
+  // mOnProgressEventSent indicates we have flushed all the
+  // progress events on the main thread. It is needed if
+  // we do not want to dispatch OnDataFinished before sending
+  // all of the progress updates.
+  if (progress == progressMax) {
+    mOnProgressEventSent = true;
+  }
 }
 
 void HttpChannelChild::DoOnDataAvailable(nsIRequest* aRequest,
@@ -805,6 +813,13 @@ void HttpChannelChild::DoOnDataAvailable(nsIRequest* aRequest,
 void HttpChannelChild::SendOnDataFinished(const nsresult& aChannelStatus) {
   LOG(("HttpChannelChild::SendOnDataFinished [this=%p]\n", this));
   if (mCanceled) return;
+
+  // we need to ensure we OnDataFinished only after all the progress
+  // updates are dispatched on the main thread
+  if (StaticPrefs::network_send_OnDataFinished_after_progress_updates() &&
+      !mOnProgressEventSent) {
+    return;
+  }
 
   if (mListener) {
     nsCOMPtr<nsIThreadRetargetableStreamListener> omtEventListener =
