@@ -65,7 +65,7 @@ class FakeEncoder : public VideoEncoder {
   int GetNumInitializations() const RTC_LOCKS_EXCLUDED(mutex_);
   const VideoCodec& config() const RTC_LOCKS_EXCLUDED(mutex_);
 
-  static const char* kImplementationName;
+  static constexpr char kImplementationName[] = "fake_encoder";
 
  protected:
   struct FrameInfo {
