@@ -1689,6 +1689,13 @@ void DataChannelConnection::HandleDataMessage(const void* data, size_t length,
     return;
   }
 
+  // RFC8832: "MUST be sent ordered, ... After the DATA_CHANNEL_ACK **or any
+  // other message** has been received on the data channel".
+  // If the channel was opened on this side, and a message is received, this
+  // indicates that the peer has already received the DATA_CHANNEL_ACK, as the
+  // channel is ordered initially.
+  channel->mFlags &= ~DATA_CHANNEL_FLAGS_WAITING_ACK;
+
   bool is_binary = true;
   uint8_t bufferFlags;
   int32_t type;
@@ -2576,12 +2583,12 @@ already_AddRefed<DataChannel> DataChannelConnection::OpenFinish(
                               DATA_CHANNEL_PPID_DOMSTRING);
 #endif
 
-  if (!channel->mOrdered) {
-    // Don't send unordered until this gets cleared
-    channel->mFlags |= DATA_CHANNEL_FLAGS_WAITING_ACK;
-  }
-
   if (!channel->mNegotiated) {
+    if (!channel->mOrdered) {
+      // Don't send unordered until this gets cleared.
+      channel->mFlags |= DATA_CHANNEL_FLAGS_WAITING_ACK;
+    }
+
     int error = SendOpenRequestMessage(channel->mLabel, channel->mProtocol,
                                        stream, !channel->mOrdered,
                                        channel->mPrPolicy, channel->mPrValue);
