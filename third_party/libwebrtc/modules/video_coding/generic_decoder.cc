@@ -201,7 +201,8 @@ void VCMDecodedFrameCallback::Decoded(VideoFrame& decodedImage,
   decodedImage.set_timestamp_us(
       frame_info->render_time ? frame_info->render_time->us() : -1);
   _receiveCallback->FrameToRender(decodedImage, qp, decode_time,
-                                  frame_info->content_type);
+                                  frame_info->content_type,
+                                  frame_info->frame_type);
 }
 
 void VCMDecodedFrameCallback::OnDecoderInfoChanged(
@@ -285,6 +286,7 @@ int32_t VCMGenericDecoder::Decode(const VCMEncodedFrame& frame, Timestamp now) {
   } else {
     frame_info.content_type = _last_keyframe_content_type;
   }
+  frame_info.frame_type = frame.FrameType();
   _callback->Map(std::move(frame_info));
 
   int32_t ret = decoder_->Decode(frame.EncodedImage(), frame.MissingFrame(),

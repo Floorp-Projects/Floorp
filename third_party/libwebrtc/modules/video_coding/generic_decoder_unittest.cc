@@ -35,7 +35,8 @@ class ReceiveCallback : public VCMReceiveCallback {
   int32_t FrameToRender(VideoFrame& frame,
                         absl::optional<uint8_t> qp,
                         TimeDelta decode_time,
-                        VideoContentType content_type) override {
+                        VideoContentType content_type,
+                        VideoFrameType frame_type) override {
     frames_.push_back(frame);
     return 0;
   }
