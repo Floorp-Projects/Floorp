@@ -328,6 +328,10 @@ config("common_config") {
     defines += [ "WEBRTC_ABSL_MUTEX" ]
   }
 
+  if (rtc_enable_libevent) {
+    defines += [ "WEBRTC_ENABLE_LIBEVENT" ]
+  }
+
   if (rtc_disable_logging) {
     defines += [ "RTC_DISABLE_LOGGING" ]
   }
