@@ -50,10 +50,20 @@ pub enum DomMutationOperation {
 }
 
 impl DomMutationOperation {
-    fn accept(&self, d: &Dependency) -> bool {
+    fn accept<E: TElement>(&self, d: &Dependency, e: E) -> bool {
         match self {
-            Self::Insert | Self::Append | Self::Remove => true,
-            Self::SideEffectPrevSibling => d.right_combinator_is_next_sibling(),
+            Self::Insert | Self::Append | Self::Remove => {
+                e.relative_selector_search_direction().is_some()
+            },
+            // `:has(+ .a + .b)` with `.anchor + .a + .remove + .b` - `.a` would be present
+            // in the search path.
+            Self::SideEffectPrevSibling => {
+                e.relative_selector_search_direction().is_some() &&
+                    d.right_combinator_is_next_sibling()
+            },
+            // If an element is being removed and would cause next-sibling match to happen,
+            // e.g. `:has(+ .a)` with `.anchor + .remove + .a`, `.a` isn't yet searched
+            // for relative selector matching.
             Self::SideEffectNextSibling => d.dependency_is_relative_with_single_next_sibling(),
         }
     }
@@ -356,9 +366,6 @@ where
                     dependency.parent.is_some(),
                     "Orphaned inner relative selector?"
                 );
-                if element.relative_selector_search_direction().is_none() {
-                    return;
-                }
                 if element != self.top &&
                     matches!(
                         kind,
@@ -453,7 +460,7 @@ where
             .map(|v| match map.map.id_to_selector.get(v, quirks_mode) {
                 Some(v) => {
                     for dependency in v {
-                        if !operation.accept(dependency) {
+                        if !operation.accept(dependency, element) {
                             continue;
                         }
                         self.add_dependency(dependency, element, scope);
@@ -464,7 +471,7 @@ where
         element.each_class(|v| match map.map.class_to_selector.get(v, quirks_mode) {
             Some(v) => {
                 for dependency in v {
-                    if !operation.accept(dependency) {
+                    if !operation.accept(dependency, element) {
                         continue;
                     }
                     self.add_dependency(dependency, element, scope);
@@ -476,7 +483,7 @@ where
             |v| match map.map.other_attribute_affecting_selectors.get(v) {
                 Some(v) => {
                     for dependency in v {
-                        if !operation.accept(dependency) {
+                        if !operation.accept(dependency, element) {
                             continue;
                         }
                         self.add_dependency(dependency, element, scope);
@@ -496,7 +503,7 @@ where
                 if !dependency.state.intersects(state) {
                     return true;
                 }
-                if !operation.accept(&dependency.dep) {
+                if !operation.accept(&dependency.dep, element) {
                     return true;
                 }
                 self.add_dependency(&dependency.dep, element, scope);
@@ -506,7 +513,7 @@ where
 
         if let Some(v) = map.type_to_selector.get(element.local_name()) {
             for dependency in v {
-                if !operation.accept(dependency) {
+                if !operation.accept(dependency, element) {
                     continue;
                 }
                 self.add_dependency(dependency, element, scope);
@@ -514,7 +521,7 @@ where
         }
 
         for dependency in &map.any_to_selector {
-            if !operation.accept(dependency) {
+            if !operation.accept(dependency, element) {
                 continue;
             }
             self.add_dependency(dependency, element, scope);
