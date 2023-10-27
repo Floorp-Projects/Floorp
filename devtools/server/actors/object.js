@@ -170,16 +170,6 @@ class ObjectActor extends Actor {
       return g;
     }
 
-    if (unwrapped?.isProxy) {
-      // Proxy objects can run traps when accessed, so just create a preview with
-      // the target and the handler.
-      g.class = "Proxy";
-      this.hooks.incrementGripDepth();
-      previewers.Proxy[0](this, g, null);
-      this.hooks.decrementGripDepth();
-      return g;
-    }
-
     // Only process custom formatters if the feature is enabled.
     if (this.thread?._parent?.customFormatters) {
       const result = customFormatterHeader(this);
@@ -192,6 +182,16 @@ class ObjectActor extends Actor {
           ...header,
         };
       }
+    }
+
+    if (unwrapped?.isProxy) {
+      // Proxy objects can run traps when accessed, so just create a preview with
+      // the target and the handler.
+      g.class = "Proxy";
+      this.hooks.incrementGripDepth();
+      previewers.Proxy[0](this, g, null);
+      this.hooks.decrementGripDepth();
+      return g;
     }
 
     const ownPropertyLength = this._getOwnPropertyLength();
