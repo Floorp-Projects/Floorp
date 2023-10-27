@@ -289,10 +289,33 @@ var Harness = {
       }
     }
 
-    if (!result) {
-      panel.secondaryButton.click();
+    const panelEl = panel.closest("panel");
+    const panelState = panelEl.state;
+
+    const clickButton = () => {
+      info(`Clicking ${result ? "primary" : "secondary"} panel button`);
+      Assert.equal(
+        panelEl.state,
+        "open",
+        "Expect panel state to be open when clicking panel buttons"
+      );
+      if (!result) {
+        panel.secondaryButton.click();
+      } else {
+        panel.button.click();
+      }
+    };
+
+    if (panelState === "showing") {
+      info(
+        "panel is still showing, wait for 'popup-shown' topic to be notified"
+      );
+      BrowserUtils.promiseObserved(
+        "popup-shown",
+        shownPanel => shownPanel === panelEl
+      ).then(clickButton);
     } else {
-      panel.button.click();
+      clickButton();
     }
   },
 
