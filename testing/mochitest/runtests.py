@@ -151,6 +151,8 @@ class MessageLogger(object):
         [
             "suite_start",
             "suite_end",
+            "group_start",
+            "group_end",
             "test_start",
             "test_end",
             "test_status",
@@ -3426,6 +3428,7 @@ toolbar#nav-bar {
 
         origPrefs = self.extraPrefs.copy()
         for m in sorted(manifests):
+            self.log.group_start(name=m)
             self.log.info("Running manifest: {}".format(m))
 
             args = list(self.args_by_manifest[m])[0]
@@ -3476,6 +3479,7 @@ toolbar#nav-bar {
 
             # Dump the logging buffer
             self.message_logger.dump_buffered()
+            self.log.group_end(name=m)
 
             if res == -1:
                 break
