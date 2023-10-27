@@ -1,296 +1,48 @@
-From: Byron Campen <docfaraday@gmail.com>
-Date: Fri, 27 Oct 2023 11:24:51 -0500
-Subject: (tmp-cherry-pick) Revert "Cleanup calculating time between RTCP
- reports" (3b75c39d59)
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+From: Tommi <tommi@webrtc.org>
+Date: Fri, 25 Aug 2023 01:12:04 +0200
+Subject: (cherry-pick-branch-heads/5938) [M117][SctpDataChannel] Don't use
+ PostTask for observer registration.
 
-This reverts commit 762f193ca4cf7f32c665461e92b36811b1ef6fbd.
+Instead, use BlockingCall to match with how unregistration is done.
+This is needed because the ThreadWrapper implementation in Chromium, overriding the Thread implementation in WebRTC, does not order sent (blocking) tasks along with posted tasks.
 
-Reason for revert: breaks downstream test
+That makes the functional difference that Thread1 posting and sending
+tasks to Thread2, can not assume that the tasks run in the order they
+were posted and sent. I.e. in this case:
 
-Original change's description:
-> Cleanup calculating time between RTCP reports
->
-> Move that calculation into dedicated function, move comment why it is calculated the way it is into the same function.
-> Cleanup that comment - remove parts unused by current code, in particular remove description of code that was deleted a while ago
-> Use more strict types for the calculation to make it clearer.
-> Replace DCHECK result can't be zero with a clamp to ensure it can't be zero, because with large bitrates it may.
->
-> Bug: None
-> Change-Id: Ie8c6b9720095cd1cc3f9814b9df16700119337c5
-> Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/315143
-> Reviewed-by: Åsa Persson <asapersson@webrtc.org>
-> Commit-Queue: Danil Chapovalov <danilchap@webrtc.org>
-> Cr-Commit-Position: refs/heads/main@{#40529}
+  // Running on Thread1.
+  thread2->PostTask([](){ Foo(); });
+  thread2->BlockingCall([](){ Bar(); });
 
-Bug: None
-Change-Id: I8c83013523120a84f236e8efa0d122363e7a228b
-Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/315381
-Bot-Commit: rubber-stamper@appspot.gserviceaccount.com <rubber-stamper@appspot.gserviceaccount.com>
-Commit-Queue: Danil Chapovalov <danilchap@webrtc.org>
-Reviewed-by: Åsa Persson <asapersson@webrtc.org>
-Cr-Commit-Position: refs/heads/main@{#40535}
+Thread2 may actually execute Bar() first, and then Foo().
+
+(cherry picked from commit 70cea9bda8b8815be3c5bae4b6fa8053713efcac)
+
+No-Try: true
+Bug: chromium:1470992
+Change-Id: I1f83f12ce39c09279c0f2b3bc71c3a33e2cb16c5
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/317700
+Commit-Queue: Tomas Gunnarsson <tommi@webrtc.org>
+Reviewed-by: Harald Alvestrand <hta@webrtc.org>
+Cr-Original-Commit-Position: refs/heads/main@{#40624}
+Reviewed-on: https://webrtc-review.googlesource.com/c/src/+/318360
+Reviewed-by: Mirko Bonadei <mbonadei@webrtc.org>
+Cr-Commit-Position: refs/branch-heads/5938@{#1}
+Cr-Branched-From: 82e5f91a2bdf955aa870142008fbdc9ac12f6acd-refs/heads/main@{#40524}
 ---
- modules/rtp_rtcp/source/rtcp_sender.cc    | 126 ++++++++++++++--------
- modules/rtp_rtcp/source/rtcp_sender.h     |   8 +-
- modules/rtp_rtcp/source/rtp_rtcp_config.h |   3 +
- modules/rtp_rtcp/source/rtp_rtcp_impl.cc  |   3 +-
- modules/rtp_rtcp/source/rtp_rtcp_impl2.cc |   4 +-
- 5 files changed, 93 insertions(+), 51 deletions(-)
+ pc/sctp_data_channel.cc | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/modules/rtp_rtcp/source/rtcp_sender.cc b/modules/rtp_rtcp/source/rtcp_sender.cc
-index 57940f347a..e057005b16 100644
---- a/modules/rtp_rtcp/source/rtcp_sender.cc
-+++ b/modules/rtp_rtcp/source/rtcp_sender.cc
-@@ -91,7 +91,7 @@ class RTCPSender::PacketSender {
- RTCPSender::FeedbackState::FeedbackState()
-     : packets_sent(0),
-       media_bytes_sent(0),
--      send_bitrate(DataRate::Zero()),
-+      send_bitrate(0),
-       remote_sr(0),
-       receiver(nullptr) {}
- 
-@@ -360,7 +360,65 @@ int32_t RTCPSender::SetCNAME(absl::string_view c_name) {
-   return 0;
+diff --git a/pc/sctp_data_channel.cc b/pc/sctp_data_channel.cc
+index a17008fb3f..8fdbf4cb92 100644
+--- a/pc/sctp_data_channel.cc
++++ b/pc/sctp_data_channel.cc
+@@ -396,7 +396,7 @@ void SctpDataChannel::RegisterObserver(DataChannelObserver* observer) {
+   if (network_thread_ == current_thread) {
+     register_observer();
+   } else {
+-    network_thread_->PostTask(std::move(register_observer));
++    network_thread_->BlockingCall(std::move(register_observer));
+   }
  }
- 
--bool RTCPSender::TimeToSendRTCPReport(bool send_keyframe_before_rtp) const {
-+bool RTCPSender::TimeToSendRTCPReport(bool sendKeyframeBeforeRTP) const {
-+  /*
-+      For audio we use a configurable interval (default: 5 seconds)
-+
-+      For video we use a configurable interval (default: 1 second) for a BW
-+          smaller than 360 kbit/s, technicaly we break the max 5% RTCP BW for
-+          video below 10 kbit/s but that should be extremely rare
-+
-+
-+  From RFC 3550
-+
-+      MAX RTCP BW is 5% if the session BW
-+          A send report is approximately 65 bytes inc CNAME
-+          A receiver report is approximately 28 bytes
-+
-+      The RECOMMENDED value for the reduced minimum in seconds is 360
-+        divided by the session bandwidth in kilobits/second.  This minimum
-+        is smaller than 5 seconds for bandwidths greater than 72 kb/s.
-+
-+      If the participant has not yet sent an RTCP packet (the variable
-+        initial is true), the constant Tmin is set to half of the configured
-+        interval.
-+
-+      The interval between RTCP packets is varied randomly over the
-+        range [0.5,1.5] times the calculated interval to avoid unintended
-+        synchronization of all participants
-+
-+      if we send
-+      If the participant is a sender (we_sent true), the constant C is
-+        set to the average RTCP packet size (avg_rtcp_size) divided by 25%
-+        of the RTCP bandwidth (rtcp_bw), and the constant n is set to the
-+        number of senders.
-+
-+      if we receive only
-+        If we_sent is not true, the constant C is set
-+        to the average RTCP packet size divided by 75% of the RTCP
-+        bandwidth.  The constant n is set to the number of receivers
-+        (members - senders).  If the number of senders is greater than
-+        25%, senders and receivers are treated together.
-+
-+      reconsideration NOT required for peer-to-peer
-+        "timer reconsideration" is
-+        employed.  This algorithm implements a simple back-off mechanism
-+        which causes users to hold back RTCP packet transmission if the
-+        group sizes are increasing.
-+
-+        n = number of members
-+        C = avg_size/(rtcpBW/4)
-+
-+     3. The deterministic calculated interval Td is set to max(Tmin, n*C).
-+
-+     4. The calculated interval T is set to a number uniformly distributed
-+        between 0.5 and 1.5 times the deterministic calculated interval.
-+
-+     5. The resulting value of T is divided by e-3/2=1.21828 to compensate
-+        for the fact that the timer reconsideration algorithm converges to
-+        a value of the RTCP bandwidth below the intended average
-+  */
-+
-   Timestamp now = clock_->CurrentTime();
- 
-   MutexLock lock(&mutex_rtcp_sender_);
-@@ -370,10 +428,10 @@ bool RTCPSender::TimeToSendRTCPReport(bool send_keyframe_before_rtp) const {
-   if (method_ == RtcpMode::kOff)
-     return false;
- 
--  if (!audio_ && send_keyframe_before_rtp) {
--    // For video key-frames we want to send the RTCP before the large key-frame
-+  if (!audio_ && sendKeyframeBeforeRTP) {
-+    // for video key-frames we want to send the RTCP before the large key-frame
-     // if we have a 100 ms margin
--    now += TimeDelta::Millis(100);
-+    now += RTCP_SEND_BEFORE_KEY_FRAME;
-   }
- 
-   return now >= *next_time_to_send_rtcp_;
-@@ -701,42 +759,6 @@ absl::optional<int32_t> RTCPSender::ComputeCompoundRTCPPacket(
-   return absl::nullopt;
- }
- 
--TimeDelta RTCPSender::ComputeTimeUntilNextReport(DataRate send_bitrate) {
--  /*
--      For audio we use a configurable interval (default: 5 seconds)
--
--      For video we use a configurable interval (default: 1 second)
--          for a BW smaller than ~200 kbit/s, technicaly we break the max 5% RTCP
--          BW for video but that should be extremely rare
--
--  From RFC 3550, https://www.rfc-editor.org/rfc/rfc3550#section-6.2
--
--      The RECOMMENDED value for the reduced minimum in seconds is 360
--        divided by the session bandwidth in kilobits/second.  This minimum
--        is smaller than 5 seconds for bandwidths greater than 72 kb/s.
--
--      The interval between RTCP packets is varied randomly over the
--        range [0.5,1.5] times the calculated interval to avoid unintended
--        synchronization of all participants
--  */
--
--  TimeDelta min_interval = report_interval_;
--
--  if (!audio_ && sending_ && send_bitrate > DataRate::BitsPerSec(72'000)) {
--    // Calculate bandwidth for video; 360 / send bandwidth in kbit/s per
--    // https://www.rfc-editor.org/rfc/rfc3550#section-6.2 recommendation.
--    min_interval = std::min(TimeDelta::Seconds(360) / send_bitrate.kbps(),
--                            report_interval_);
--  }
--
--  // The interval between RTCP packets is varied randomly over the
--  // range [1/2,3/2] times the calculated interval.
--  TimeDelta time_to_next = min_interval * (0.5 + random_.Rand<double>());
--
--  // To be safer clamp the result.
--  return std::max(time_to_next, TimeDelta::Millis(1));
--}
--
- void RTCPSender::PrepareReport(const FeedbackState& feedback_state) {
-   bool generate_report;
-   if (IsFlagPresent(kRtcpSr) || IsFlagPresent(kRtcpRr)) {
-@@ -761,8 +783,26 @@ void RTCPSender::PrepareReport(const FeedbackState& feedback_state) {
-       SetFlag(kRtcpAnyExtendedReports, true);
-     }
- 
--    SetNextRtcpSendEvaluationDuration(
--        ComputeTimeUntilNextReport(feedback_state.send_bitrate));
-+    // generate next time to send an RTCP report
-+    TimeDelta min_interval = report_interval_;
-+
-+    if (!audio_ && sending_) {
-+      // Calculate bandwidth for video; 360 / send bandwidth in kbit/s.
-+      int send_bitrate_kbit = feedback_state.send_bitrate / 1000;
-+      if (send_bitrate_kbit != 0) {
-+        min_interval = std::min(TimeDelta::Millis(360000 / send_bitrate_kbit),
-+                                report_interval_);
-+      }
-+    }
-+
-+    // The interval between RTCP packets is varied randomly over the
-+    // range [1/2,3/2] times the calculated interval.
-+    int min_interval_int = rtc::dchecked_cast<int>(min_interval.ms());
-+    TimeDelta time_to_next = TimeDelta::Millis(
-+        random_.Rand(min_interval_int * 1 / 2, min_interval_int * 3 / 2));
-+
-+    RTC_DCHECK(!time_to_next.IsZero());
-+    SetNextRtcpSendEvaluationDuration(time_to_next);
- 
-     // RtcpSender expected to be used for sending either just sender reports
-     // or just receiver reports.
-diff --git a/modules/rtp_rtcp/source/rtcp_sender.h b/modules/rtp_rtcp/source/rtcp_sender.h
-index 0ceec9a64a..6dae9dbd61 100644
---- a/modules/rtp_rtcp/source/rtcp_sender.h
-+++ b/modules/rtp_rtcp/source/rtcp_sender.h
-@@ -20,7 +20,6 @@
- #include "absl/strings/string_view.h"
- #include "absl/types/optional.h"
- #include "api/call/transport.h"
--#include "api/units/data_rate.h"
- #include "api/units/time_delta.h"
- #include "api/units/timestamp.h"
- #include "api/video/video_bitrate_allocation.h"
-@@ -93,7 +92,7 @@ class RTCPSender final {
- 
-     uint32_t packets_sent;
-     size_t media_bytes_sent;
--    DataRate send_bitrate;
-+    uint32_t send_bitrate;
- 
-     uint32_t remote_sr;
-     NtpTime last_rr;
-@@ -142,7 +141,7 @@ class RTCPSender final {
-   int32_t SetCNAME(absl::string_view cName)
-       RTC_LOCKS_EXCLUDED(mutex_rtcp_sender_);
- 
--  bool TimeToSendRTCPReport(bool send_keyframe_before_rtp = false) const
-+  bool TimeToSendRTCPReport(bool sendKeyframeBeforeRTP = false) const
-       RTC_LOCKS_EXCLUDED(mutex_rtcp_sender_);
- 
-   int32_t SendRTCP(const FeedbackState& feedback_state,
-@@ -193,9 +192,6 @@ class RTCPSender final {
-       const uint16_t* nack_list,
-       PacketSender& sender) RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_rtcp_sender_);
- 
--  TimeDelta ComputeTimeUntilNextReport(DataRate send_bitrate)
--      RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_rtcp_sender_);
--
-   // Determine which RTCP messages should be sent and setup flags.
-   void PrepareReport(const FeedbackState& feedback_state)
-       RTC_EXCLUSIVE_LOCKS_REQUIRED(mutex_rtcp_sender_);
-diff --git a/modules/rtp_rtcp/source/rtp_rtcp_config.h b/modules/rtp_rtcp/source/rtp_rtcp_config.h
-index 0b87d6d065..3e6aa3baae 100644
---- a/modules/rtp_rtcp/source/rtp_rtcp_config.h
-+++ b/modules/rtp_rtcp/source/rtp_rtcp_config.h
-@@ -11,11 +11,14 @@
- #ifndef MODULES_RTP_RTCP_SOURCE_RTP_RTCP_CONFIG_H_
- #define MODULES_RTP_RTCP_SOURCE_RTP_RTCP_CONFIG_H_
- 
-+#include "api/units/time_delta.h"
-+
- // Configuration file for RTP utilities (RTPSender, RTPReceiver ...)
- namespace webrtc {
- constexpr int kDefaultMaxReorderingThreshold = 50;  // In sequence numbers.
- constexpr int kRtcpMaxNackFields = 253;
- 
-+constexpr TimeDelta RTCP_SEND_BEFORE_KEY_FRAME = TimeDelta::Millis(100);
- constexpr int RTCP_MAX_REPORT_BLOCKS = 31;  // RFC 3550 page 37
- }  // namespace webrtc
- 
-diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl.cc b/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
-index 3f9e093ff0..5a7624f42b 100644
---- a/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
-+++ b/modules/rtp_rtcp/source/rtp_rtcp_impl.cc
-@@ -278,7 +278,8 @@ RTCPSender::FeedbackState ModuleRtpRtcpImpl::GetFeedbackState() {
-         rtp_stats.transmitted.packets + rtx_stats.transmitted.packets;
-     state.media_bytes_sent = rtp_stats.transmitted.payload_bytes +
-                              rtx_stats.transmitted.payload_bytes;
--    state.send_bitrate = rtp_sender_->packet_sender.GetSendRates().Sum();
-+    state.send_bitrate =
-+        rtp_sender_->packet_sender.GetSendRates().Sum().bps<uint32_t>();
-   }
-   state.receiver = &rtcp_receiver_;
- 
-diff --git a/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc b/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc
-index 800ec77d3e..62c5ad38f5 100644
---- a/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc
-+++ b/modules/rtp_rtcp/source/rtp_rtcp_impl2.cc
-@@ -260,7 +260,9 @@ RTCPSender::FeedbackState ModuleRtpRtcpImpl2::GetFeedbackState() {
-     state.media_bytes_sent = rtp_stats.transmitted.payload_bytes +
-                              rtx_stats.transmitted.payload_bytes;
-     state.send_bitrate =
--        rtp_sender_->packet_sender.GetSendRates(clock_->CurrentTime()).Sum();
-+        rtp_sender_->packet_sender.GetSendRates(clock_->CurrentTime())
-+            .Sum()
-+            .bps<uint32_t>();
-   }
-   state.receiver = &rtcp_receiver_;
  
