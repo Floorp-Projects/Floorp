@@ -151,8 +151,6 @@ H265BitstreamParser::Result H265BitstreamParser::ParseNonParameterSetNalu(
     }
     uint32_t num_long_term_sps = 0;
     uint32_t num_long_term_pics = 0;
-    std::vector<uint32_t> lt_idx_sps;
-    std::vector<uint32_t> poc_lsb_lt;
     std::vector<bool> used_by_curr_pic_lt_flag;
     bool short_term_ref_pic_set_sps_flag = false;
     uint32_t short_term_ref_pic_set_idx = 0;
@@ -188,6 +186,8 @@ H265BitstreamParser::Result H265BitstreamParser::ParseNonParameterSetNalu(
         if (short_term_ref_pic_set_idx_bits > 0) {
           short_term_ref_pic_set_idx =
               slice_reader.ReadBits(short_term_ref_pic_set_idx_bits);
+          IN_RANGE_OR_RETURN(short_term_ref_pic_set_idx, 0,
+                             sps->num_short_term_ref_pic_sets - 1);
         }
       }
       if (sps->long_term_ref_pics_present_flag) {
@@ -201,27 +201,26 @@ H265BitstreamParser::Result H265BitstreamParser::ParseNonParameterSetNalu(
         num_long_term_pics = slice_reader.ReadExponentialGolomb();
         IN_RANGE_OR_RETURN(num_long_term_pics, 0,
                            kMaxLongTermRefPicSets - num_long_term_sps);
-        lt_idx_sps.resize(num_long_term_sps + num_long_term_pics, 0);
         used_by_curr_pic_lt_flag.resize(num_long_term_sps + num_long_term_pics,
                                         0);
-        poc_lsb_lt.resize(num_long_term_sps + num_long_term_pics, 0);
         for (uint32_t i = 0; i < num_long_term_sps + num_long_term_pics; i++) {
           if (i < num_long_term_sps) {
-            uint32_t lt_idx_sps_bits = 0;
+            uint32_t lt_idx_sps = 0;
             if (sps->num_long_term_ref_pics_sps > 1) {
               // lt_idx_sps: u(v)
-              lt_idx_sps_bits =
+              uint32_t lt_idx_sps_bits =
                   H265::Log2Ceiling(sps->num_long_term_ref_pics_sps);
-              lt_idx_sps[i] = slice_reader.ReadBits(lt_idx_sps_bits);
+              lt_idx_sps = slice_reader.ReadBits(lt_idx_sps_bits);
+              IN_RANGE_OR_RETURN(lt_idx_sps, 0,
+                                 sps->num_long_term_ref_pics_sps - 1);
             }
-            poc_lsb_lt[i] = sps->lt_ref_pic_poc_lsb_sps[lt_idx_sps_bits];
             used_by_curr_pic_lt_flag[i] =
-                sps->used_by_curr_pic_lt_sps_flag[lt_idx_sps_bits];
+                sps->used_by_curr_pic_lt_sps_flag[lt_idx_sps];
           } else {
             // poc_lsb_lt: u(v)
             uint32_t poc_lsb_lt_bits =
                 sps->log2_max_pic_order_cnt_lsb_minus4 + 4;
-            poc_lsb_lt[i] = slice_reader.ReadBits(poc_lsb_lt_bits);
+            slice_reader.ConsumeBits(poc_lsb_lt_bits);
             // used_by_curr_pic_lt_flag: u(1)
             used_by_curr_pic_lt_flag[i] = slice_reader.Read<bool>();
           }
@@ -375,20 +374,22 @@ H265BitstreamParser::Result H265BitstreamParser::ParseNonParameterSetNalu(
         return kUnsupportedStream;
       }
       // five_minus_max_num_merge_cand: ue(v)
-      int five_minus_max_num_merge_cand = slice_reader.ReadExponentialGolomb();
+      uint32_t five_minus_max_num_merge_cand =
+          slice_reader.ReadExponentialGolomb();
       IN_RANGE_OR_RETURN(5 - five_minus_max_num_merge_cand, 1, 5);
     }
   }
 
   // slice_qp_delta: se(v)
   int32_t last_slice_qp_delta = slice_reader.ReadSignedExponentialGolomb();
-  IN_RANGE_OR_RETURN(26 + pps->init_qp_minus26 + last_slice_qp_delta,
-                     -pps->qp_bd_offset_y, 51);
   if (!slice_reader.Ok() || (abs(last_slice_qp_delta) > kMaxAbsQpDeltaValue)) {
     // Something has gone wrong, and the parsed value is invalid.
-    RTC_LOG(LS_WARNING) << "Parsed QP value out of range.";
+    RTC_LOG(LS_ERROR) << "Parsed QP value out of range.";
     return kInvalidStream;
   }
+  // 7-54 in H265 spec.
+  IN_RANGE_OR_RETURN(26 + pps->init_qp_minus26 + last_slice_qp_delta,
+                     -pps->qp_bd_offset_y, 51);
 
   last_slice_qp_delta_ = last_slice_qp_delta;
   last_slice_pps_id_ = pps_id;
