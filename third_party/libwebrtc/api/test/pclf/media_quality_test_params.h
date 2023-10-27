@@ -15,7 +15,7 @@
 #include <string>
 #include <vector>
 
-#include "api/async_resolver_factory.h"
+#include "api/async_dns_resolver.h"
 #include "api/audio/audio_mixer.h"
 #include "api/call/call_factory_interface.h"
 #include "api/fec_controller.h"
@@ -85,7 +85,8 @@ struct PeerConnectionComponents {
 
   rtc::NetworkManager* const network_manager;
   rtc::PacketSocketFactory* const packet_socket_factory;
-  std::unique_ptr<webrtc::AsyncResolverFactory> async_resolver_factory;
+  std::unique_ptr<webrtc::AsyncDnsResolverFactoryInterface>
+      async_dns_resolver_factory;
   std::unique_ptr<rtc::RTCCertificateGeneratorInterface> cert_generator;
   std::unique_ptr<rtc::SSLCertificateVerifier> tls_cert_verifier;
   std::unique_ptr<IceTransportFactory> ice_transport_factory;
