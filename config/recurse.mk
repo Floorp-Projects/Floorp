@@ -196,19 +196,6 @@ endif
 
 # Interdependencies that moz.build world don't know about yet for compilation.
 # Note some others are hardcoded or "guessed" in recursivemake.py and emitter.py
-ifndef MOZ_FOLD_LIBS
-ifndef MOZ_SYSTEM_NSS
-netwerk/test/http3server/target: security/nss/lib/nss/nss_nss3/target security/nss/lib/ssl/ssl_ssl3/target
-endif
-ifndef MOZ_SYSTEM_NSPR
-netwerk/test/http3server/target: config/external/nspr/pr/target
-endif
-else
-ifndef MOZ_SYSTEM_NSS
-netwerk/test/http3server/target: security/target
-endif
-endif
-
 ifdef RELRHACK
 # When building with RELR-based ELF hack, we need to build the relevant parts
 # before any target.

@@ -554,6 +554,7 @@ class RecursiveMakeBackend(MakeBackend):
 
         elif isinstance(obj, RustProgram):
             self._process_rust_program(obj, backend_file)
+            self._process_linked_libraries(obj, backend_file)
             # Hook the program into the compile graph.
             build_target = self._build_target_for_obj(obj)
             self._compile_graph[build_target]
@@ -561,6 +562,7 @@ class RecursiveMakeBackend(MakeBackend):
 
         elif isinstance(obj, HostRustProgram):
             self._process_host_rust_program(obj, backend_file)
+            self._process_linked_libraries(obj, backend_file)
             # Hook the program into the compile graph.
             build_target = self._build_target_for_obj(obj)
             self._compile_graph[build_target]
