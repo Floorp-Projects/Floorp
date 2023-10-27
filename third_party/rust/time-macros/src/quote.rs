@@ -67,6 +67,7 @@ macro_rules! quote_inner {
     ($ts:ident ! $($tail:tt)*) => { sym!($ts '!'); quote_inner!($ts $($tail)*); };
     ($ts:ident | $($tail:tt)*) => { sym!($ts '|'); quote_inner!($ts $($tail)*); };
     ($ts:ident * $($tail:tt)*) => { sym!($ts '*'); quote_inner!($ts $($tail)*); };
+    ($ts:ident + $($tail:tt)*) => { sym!($ts '+'); quote_inner!($ts $($tail)*); };
 
     // Identifier
     ($ts:ident $i:ident $($tail:tt)*) => {
@@ -78,6 +79,10 @@ macro_rules! quote_inner {
     };
 
     // Literal
+    ($ts:ident 0 $($tail:tt)*) => {
+        $ts.extend([::proc_macro::TokenTree::from(::proc_macro::Literal::usize_unsuffixed(0))]);
+        quote_inner!($ts $($tail)*);
+    };
     ($ts:ident $l:literal $($tail:tt)*) => {
         $ts.extend([::proc_macro::TokenTree::from(::proc_macro::Literal::string(&$l))]);
         quote_inner!($ts $($tail)*);

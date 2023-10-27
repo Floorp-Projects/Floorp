@@ -1,8 +1,8 @@
 # time
 
-[![minimum rustc: 1.60](https://img.shields.io/badge/minimum%20rustc-1.60-yellowgreen?logo=rust&style=flat-square)](https://www.whatrustisit.com)
+[![minimum rustc: 1.65](https://img.shields.io/badge/minimum%20rustc-1.65-yellowgreen?logo=rust&style=flat-square)](https://www.whatrustisit.com)
 [![version](https://img.shields.io/crates/v/time?color=blue&logo=rust&style=flat-square)](https://crates.io/crates/time)
-[![build status](https://img.shields.io/github/workflow/status/time-rs/time/Build/main?style=flat-square)](https://github.com/time-rs/time/actions)
+[![build status](https://img.shields.io/github/actions/workflow/status/time-rs/time/build.yaml?branch=main&style=flat-square)](https://github.com/time-rs/time/actions)
 [![codecov](https://codecov.io/gh/time-rs/time/branch/main/graph/badge.svg?token=yt4XSmQNKQ)](https://codecov.io/gh/time-rs/time)
 
 Documentation:
@@ -13,9 +13,18 @@ Documentation:
 
 ## Minimum Rust version policy
 
-The time crate is guaranteed to compile with any release of rustc from the past six months.
-Optional feature flags that enable interoperability with third-party crates (e.g. rand)
-follow the policy of that crate if stricter.
+`time` is guaranteed to compile with the latest stable release of Rust in addition to the two prior
+minor releases. For example, if the latest stable Rust release is 1.70, then `time` is guaranteed to
+compile with Rust 1.68, 1.69, and 1.70.
+
+The minimum supported Rust version may be increased to one of the aforementioned versions if doing
+so provides the end user a benefit. However, the minimum supported Rust version may also be bumped
+to a version four minor releases prior to the most recent stable release if doing so improves code
+quality or maintainability.
+
+For interoperability with third-party crates, it is guaranteed that there exists a version of that
+crate that supports the minimum supported Rust version of `time`. This does not mean that the latest
+version of the third-party crate supports the minimum supported Rust version of `time`.
 
 ## Contributing
 

@@ -1,40 +1,171 @@
-mod component;
-pub(crate) mod error;
-pub(crate) mod modifier;
-pub(crate) mod parse;
+//! Parser for format descriptions.
 
-use proc_macro::{Literal, TokenStream};
+use std::vec::Vec;
 
-pub(crate) use self::component::Component;
-pub(crate) use self::parse::parse;
-use crate::to_tokens::ToTokenStream;
+macro_rules! version {
+    ($range:expr) => {
+        $range.contains(&VERSION)
+    };
+}
 
-mod helper {
-    #[must_use = "This does not modify the original slice."]
-    pub(crate) fn consume_whitespace<'a>(bytes: &'a [u8], index: &mut usize) -> &'a [u8] {
-        let first_non_whitespace = bytes
-            .iter()
-            .position(|c| !c.is_ascii_whitespace())
-            .unwrap_or(bytes.len());
-        *index += first_non_whitespace;
-        &bytes[first_non_whitespace..]
+mod ast;
+mod format_item;
+mod lexer;
+mod public;
+
+pub(crate) fn parse_with_version(
+    version: Option<crate::FormatDescriptionVersion>,
+    s: &[u8],
+    proc_span: proc_macro::Span,
+) -> Result<Vec<crate::format_description::public::OwnedFormatItem>, crate::Error> {
+    match version {
+        Some(crate::FormatDescriptionVersion::V1) | None => parse::<1>(s, proc_span),
+        Some(crate::FormatDescriptionVersion::V2) => parse::<2>(s, proc_span),
     }
 }
 
-#[allow(single_use_lifetimes)] // false positive
-#[allow(variant_size_differences)]
-pub(crate) enum FormatItem<'a> {
-    Literal(&'a [u8]),
-    Component(Component),
+fn parse<const VERSION: u8>(
+    s: &[u8],
+    proc_span: proc_macro::Span,
+) -> Result<Vec<crate::format_description::public::OwnedFormatItem>, crate::Error> {
+    let mut lexed = lexer::lex::<VERSION>(s, proc_span);
+    let ast = ast::parse::<_, VERSION>(&mut lexed);
+    let format_items = format_item::parse(ast);
+    Ok(format_items
+        .map(|res| res.map(Into::into))
+        .collect::<Result<_, _>>()?)
 }
 
-impl ToTokenStream for FormatItem<'_> {
-    fn append_to(self, ts: &mut TokenStream) {
-        quote_append! { ts
-            ::time::format_description::FormatItem::#S(match self {
-                FormatItem::Literal(bytes) => quote! { Literal(#(Literal::byte_string(bytes))) },
-                FormatItem::Component(component) => quote! { Component(#S(component)) },
-            })
+#[derive(Clone, Copy)]
+struct Location {
+    byte: u32,
+    proc_span: proc_macro::Span,
+}
+
+impl Location {
+    fn to(self, end: Self) -> Span {
+        Span { start: self, end }
+    }
+
+    #[must_use = "this does not modify the original value"]
+    fn offset(&self, offset: u32) -> Self {
+        Self {
+            byte: self.byte + offset,
+            proc_span: self.proc_span,
         }
     }
+
+    fn error(self, message: &'static str) -> Error {
+        Error {
+            message,
+            _span: unused(Span {
+                start: self,
+                end: self,
+            }),
+            proc_span: self.proc_span,
+        }
+    }
+}
+
+#[derive(Clone, Copy)]
+struct Span {
+    #[allow(clippy::missing_docs_in_private_items)]
+    start: Location,
+    #[allow(clippy::missing_docs_in_private_items)]
+    end: Location,
+}
+
+impl Span {
+    #[must_use = "this does not modify the original value"]
+    const fn shrink_to_start(&self) -> Self {
+        Self {
+            start: self.start,
+            end: self.start,
+        }
+    }
+
+    #[must_use = "this does not modify the original value"]
+    const fn shrink_to_end(&self) -> Self {
+        Self {
+            start: self.end,
+            end: self.end,
+        }
+    }
+
+    #[must_use = "this does not modify the original value"]
+    const fn shrink_to_before(&self, pos: u32) -> Self {
+        Self {
+            start: self.start,
+            end: Location {
+                byte: self.start.byte + pos - 1,
+                proc_span: self.start.proc_span,
+            },
+        }
+    }
+
+    #[must_use = "this does not modify the original value"]
+    fn shrink_to_after(&self, pos: u32) -> Self {
+        Self {
+            start: Location {
+                byte: self.start.byte + pos + 1,
+                proc_span: self.start.proc_span,
+            },
+            end: self.end,
+        }
+    }
+
+    fn error(self, message: &'static str) -> Error {
+        Error {
+            message,
+            _span: unused(self),
+            proc_span: self.start.proc_span,
+        }
+    }
+}
+
+#[derive(Clone, Copy)]
+struct Spanned<T> {
+    value: T,
+    span: Span,
+}
+
+impl<T> core::ops::Deref for Spanned<T> {
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        &self.value
+    }
+}
+
+trait SpannedValue: Sized {
+    fn spanned(self, span: Span) -> Spanned<Self>;
+}
+
+impl<T> SpannedValue for T {
+    fn spanned(self, span: Span) -> Spanned<Self> {
+        Spanned { value: self, span }
+    }
+}
+
+struct Error {
+    message: &'static str,
+    _span: Unused<Span>,
+    proc_span: proc_macro::Span,
+}
+
+impl From<Error> for crate::Error {
+    fn from(error: Error) -> Self {
+        Self::Custom {
+            message: error.message.into(),
+            span_start: Some(error.proc_span),
+            span_end: Some(error.proc_span),
+        }
+    }
+}
+
+struct Unused<T>(core::marker::PhantomData<T>);
+
+#[allow(clippy::missing_const_for_fn)] // false positive
+fn unused<T>(_: T) -> Unused<T> {
+    Unused(core::marker::PhantomData)
 }

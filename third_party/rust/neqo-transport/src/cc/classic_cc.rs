@@ -17,6 +17,8 @@ use crate::cc::MAX_DATAGRAM_SIZE;
 use crate::qlog::{self, QlogMetric};
 use crate::sender::PACING_BURST_SIZE;
 use crate::tracking::SentPacket;
+use ::qlog::events::quic::CongestionStateUpdated;
+use ::qlog::events::EventData;
 use neqo_common::{const_max, const_min, qdebug, qinfo, qlog::NeqoQlog, qtrace};
 
 pub const CWND_INITIAL_PKTS: usize = 10;
@@ -363,15 +365,17 @@ impl<T: WindowAdjustment> ClassicCongestionControl<T> {
         if self.state != state {
             qdebug!([self], "state -> {:?}", state);
             let old_state = self.state;
-            self.qlog.add_event(|| {
+            self.qlog.add_event_data(|| {
                 // No need to tell qlog about exit from transient states.
                 if old_state.transient() {
                     None
                 } else {
-                    Some(::qlog::event::Event::congestion_state_updated(
-                        Some(old_state.to_qlog().to_owned()),
-                        state.to_qlog().to_owned(),
-                    ))
+                    let ev_data = EventData::CongestionStateUpdated(CongestionStateUpdated {
+                        old: Some(old_state.to_qlog().to_owned()),
+                        new: state.to_qlog().to_owned(),
+                        trigger: None,
+                    });
+                    Some(ev_data)
                 }
             });
             self.state = state;
@@ -433,10 +437,13 @@ impl<T: WindowAdjustment> ClassicCongestionControl<T> {
 
     #[must_use]
     fn after_recovery_start(&mut self, packet: &SentPacket) -> bool {
-        // At the start of the first recovery period, if the state is
-        // transient, all packets will have been sent before recovery.
-        self.recovery_start
-            .map_or(!self.state.transient(), |t| packet.time_sent >= t)
+        // At the start of the recovery period, the state is transient and
+        // all packets will have been sent before recovery. When sending out
+        // the first packet we transition to the non-transient `Recovery`
+        // state and update the variable `self.recovery_start`. Before the
+        // first recovery, all packets were sent after the recovery event,
+        // allowing to reduce the cwnd on congestion events.
+        !self.state.transient() && self.recovery_start.map_or(true, |t| packet.time_sent >= t)
     }
 
     /// Handle a congestion event.
@@ -494,7 +501,7 @@ mod tests {
     use super::{
         ClassicCongestionControl, WindowAdjustment, CWND_INITIAL, CWND_MIN, PERSISTENT_CONG_THRESH,
     };
-    use crate::cc::cubic::{Cubic, CUBIC_BETA_USIZE_DIVISOR, CUBIC_BETA_USIZE_QUOTIENT};
+    use crate::cc::cubic::{Cubic, CUBIC_BETA_USIZE_DIVIDEND, CUBIC_BETA_USIZE_DIVISOR};
     use crate::cc::new_reno::NewReno;
     use crate::cc::{
         CongestionControl, CongestionControlAlgorithm, CWND_INITIAL_PKTS, MAX_DATAGRAM_SIZE,
@@ -580,7 +587,7 @@ mod tests {
         );
         persistent_congestion_by_algorithm(
             CongestionControlAlgorithm::Cubic,
-            CWND_INITIAL * CUBIC_BETA_USIZE_QUOTIENT / CUBIC_BETA_USIZE_DIVISOR,
+            CWND_INITIAL * CUBIC_BETA_USIZE_DIVIDEND / CUBIC_BETA_USIZE_DIVISOR,
             lost_packets,
             persistent_expected,
         );

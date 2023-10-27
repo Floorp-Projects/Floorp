@@ -63,7 +63,9 @@ impl ControlStreamLocal {
     ) -> Res<()> {
         // send all necessary priority updates
         while let Some(update_id) = self.outstanding_priority_update.pop_front() {
-            let Some(update_stream) = recv_conn.get_mut(&update_id) else { continue };
+            let Some(update_stream) = recv_conn.get_mut(&update_id) else {
+                continue;
+            };
 
             // can assert and unwrap here, because priority updates can only be added to
             // HttpStreams in [Http3Connection::queue_update_priority}

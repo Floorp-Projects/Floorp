@@ -743,7 +743,7 @@ mod tests {
         assert_closed(&mut hconn, &Error::HttpStreamCreation);
     }
 
-    //// Test reading of a slowly streamed frame. bytes are received one by one
+    /// Test reading of a slowly streamed frame. bytes are received one by one
     #[test]
     fn test_server_frame_reading() {
         let (mut hconn, mut peer_conn) = connect_and_receive_settings();

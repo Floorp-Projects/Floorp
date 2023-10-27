@@ -11,7 +11,7 @@ use crate::{
     cc::{
         classic_cc::{ClassicCongestionControl, CWND_INITIAL},
         cubic::{
-            Cubic, CUBIC_ALPHA, CUBIC_BETA_USIZE_DIVISOR, CUBIC_BETA_USIZE_QUOTIENT, CUBIC_C,
+            Cubic, CUBIC_ALPHA, CUBIC_BETA_USIZE_DIVIDEND, CUBIC_BETA_USIZE_DIVISOR, CUBIC_C,
             CUBIC_FAST_CONVERGENCE,
         },
         CongestionControl, MAX_DATAGRAM_SIZE, MAX_DATAGRAM_SIZE_F64,
@@ -30,9 +30,9 @@ const RTT: Duration = Duration::from_millis(100);
 const CWND_INITIAL_F64: f64 = 10.0 * MAX_DATAGRAM_SIZE_F64;
 const CWND_INITIAL_10_F64: f64 = 10.0 * CWND_INITIAL_F64;
 const CWND_INITIAL_10: usize = 10 * CWND_INITIAL;
-const CWND_AFTER_LOSS: usize = CWND_INITIAL * CUBIC_BETA_USIZE_QUOTIENT / CUBIC_BETA_USIZE_DIVISOR;
+const CWND_AFTER_LOSS: usize = CWND_INITIAL * CUBIC_BETA_USIZE_DIVIDEND / CUBIC_BETA_USIZE_DIVISOR;
 const CWND_AFTER_LOSS_SLOW_START: usize =
-    (CWND_INITIAL + MAX_DATAGRAM_SIZE) * CUBIC_BETA_USIZE_QUOTIENT / CUBIC_BETA_USIZE_DIVISOR;
+    (CWND_INITIAL + MAX_DATAGRAM_SIZE) * CUBIC_BETA_USIZE_DIVIDEND / CUBIC_BETA_USIZE_DIVISOR;
 
 fn fill_cwnd(cc: &mut ClassicCongestionControl<Cubic>, mut next_pn: u64, now: Instant) -> u64 {
     while cc.bytes_in_flight() < cc.cwnd() {

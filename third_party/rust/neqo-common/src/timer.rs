@@ -75,7 +75,7 @@ impl<T> Timer<T> {
     #[inline]
     #[allow(clippy::cast_possible_truncation)] // guarded by assertion
     fn delta(&self, time: Instant) -> usize {
-        // This really should use Instant::div_duration(), but it can't yet.
+        // This really should use Duration::div_duration_f??(), but it can't yet.
         ((time - self.now).as_nanos() / self.granularity.as_nanos()) as usize
     }
 
@@ -151,7 +151,10 @@ impl<T> Timer<T> {
             return None;
         }
         let bucket = self.time_bucket(time);
-        let Ok(start_index) = self.items[bucket].binary_search_by_key(&time, TimerItem::time) else { return None };
+        let Ok(start_index) = self.items[bucket].binary_search_by_key(&time, TimerItem::time)
+        else {
+            return None;
+        };
         // start_index is just one of potentially many items with the same time.
         // Search backwards for a match, ...
         for i in (0..=start_index).rev() {

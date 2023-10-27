@@ -5,6 +5,7 @@ use core::ops::Neg;
 #[cfg(feature = "formatting")]
 use std::io;
 
+use crate::convert::*;
 use crate::error;
 #[cfg(feature = "formatting")]
 use crate::formatting::Formattable;
@@ -59,8 +60,8 @@ impl UtcOffset {
             debug_assert!(seconds >= 0);
         }
         debug_assert!(hours.unsigned_abs() < 24);
-        debug_assert!(minutes.unsigned_abs() < 60);
-        debug_assert!(seconds.unsigned_abs() < 60);
+        debug_assert!(minutes.unsigned_abs() < Minute.per(Hour));
+        debug_assert!(seconds.unsigned_abs() < Second.per(Minute));
 
         Self {
             hours,
@@ -87,8 +88,12 @@ impl UtcOffset {
         mut seconds: i8,
     ) -> Result<Self, error::ComponentRange> {
         ensure_value_in_range!(hours in -23 => 23);
-        ensure_value_in_range!(minutes in -59 => 59);
-        ensure_value_in_range!(seconds in -59 => 59);
+        ensure_value_in_range!(
+            minutes in -(Minute.per(Hour) as i8 - 1) => Minute.per(Hour) as i8 - 1
+        );
+        ensure_value_in_range!(
+            seconds in -(Second.per(Minute) as i8 - 1) => Second.per(Minute) as i8 - 1
+        );
 
         if (hours > 0 && minutes < 0) || (hours < 0 && minutes > 0) {
             minutes *= -1;
@@ -112,12 +117,14 @@ impl UtcOffset {
     /// # Ok::<_, time::Error>(())
     /// ```
     pub const fn from_whole_seconds(seconds: i32) -> Result<Self, error::ComponentRange> {
-        ensure_value_in_range!(seconds in -86_399 => 86_399);
+        ensure_value_in_range!(
+            seconds in -24 * Second.per(Hour) as i32 - 1 => 24 * Second.per(Hour) as i32 - 1
+        );
 
         Ok(Self::__from_hms_unchecked(
-            (seconds / 3_600) as _,
-            ((seconds / 60) % 60) as _,
-            (seconds % 60) as _,
+            (seconds / Second.per(Hour) as i32) as _,
+            ((seconds % Second.per(Hour) as i32) / Minute.per(Hour) as i32) as _,
+            (seconds % Second.per(Minute) as i32) as _,
         ))
     }
     // endregion constructors
@@ -156,7 +163,7 @@ impl UtcOffset {
     /// assert_eq!(offset!(-1:02:03).whole_minutes(), -62);
     /// ```
     pub const fn whole_minutes(self) -> i16 {
-        self.hours as i16 * 60 + self.minutes as i16
+        self.hours as i16 * Minute.per(Hour) as i16 + self.minutes as i16
     }
 
     /// Obtain the number of minutes past the hour the offset is from UTC. A positive value
@@ -182,7 +189,9 @@ impl UtcOffset {
     // This may be useful for anyone manually implementing arithmetic, as it
     // would let them construct a `Duration` directly.
     pub const fn whole_seconds(self) -> i32 {
-        self.hours as i32 * 3_600 + self.minutes as i32 * 60 + self.seconds as i32
+        self.hours as i32 * Second.per(Hour) as i32
+            + self.minutes as i32 * Second.per(Minute) as i32
+            + self.seconds as i32
     }
 
     /// Obtain the number of seconds past the minute the offset is from UTC. A positive value

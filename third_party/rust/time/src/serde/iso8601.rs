@@ -40,7 +40,7 @@ pub fn serialize<S: Serializer>(
 /// Deserialize an [`OffsetDateTime`] from its ISO 8601 representation.
 #[cfg(feature = "parsing")]
 pub fn deserialize<'a, D: Deserializer<'a>>(deserializer: D) -> Result<OffsetDateTime, D::Error> {
-    deserializer.deserialize_any(Visitor::<Iso8601<SERDE_CONFIG>>(PhantomData))
+    deserializer.deserialize_str(Visitor::<Iso8601<SERDE_CONFIG>>(PhantomData))
 }
 
 /// Use the well-known ISO 8601 format when serializing and deserializing an

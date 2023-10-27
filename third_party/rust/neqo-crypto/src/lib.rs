@@ -120,6 +120,8 @@ fn version_check() {
 }
 
 /// Initialize NSS.  This only executes the initialization routines once, so if there is any chance that
+/// # Panics
+/// When NSS initialization fails.
 pub fn init() {
     // Set time zero.
     time::init();

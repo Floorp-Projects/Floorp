@@ -4,14 +4,10 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use crate::huffman::decode_huffman;
-use crate::prefix::Prefix;
-use crate::{Error, Res};
+use crate::{huffman::decode_huffman, prefix::Prefix, Error, Res};
 use neqo_common::{qdebug, qerror};
 use neqo_transport::{Connection, StreamId};
-use std::convert::TryInto;
-use std::mem;
-use std::str;
+use std::{convert::TryInto, mem, str};
 
 pub trait ReadByte {
     /// # Errors
@@ -130,9 +126,9 @@ impl<'a> ReceiverBufferWrapper<'a> {
             .try_into()
             .or(Err(Error::DecompressionFailed))?;
         if use_huffman {
-            Ok(to_string(&decode_huffman(self.slice(length)?)?)?)
+            Ok(parse_utf8(&decode_huffman(self.slice(length)?)?)?.to_string())
         } else {
-            Ok(to_string(self.slice(length)?)?)
+            Ok(parse_utf8(self.slice(length)?)?.to_string())
         }
     }
 
@@ -314,12 +310,9 @@ impl LiteralReader {
 /// This is a helper function used only by `ReceiverBufferWrapper`, therefore it returns
 /// `DecompressionFailed` if any error happens.
 /// # Errors
-/// If an parsing error occurred, the function returns `ToStringFailed`.
-pub fn to_string(v: &[u8]) -> Res<String> {
-    match str::from_utf8(v) {
-        Ok(s) => Ok(s.to_string()),
-        Err(_) => Err(Error::ToStringFailed),
-    }
+/// If an parsing error occurred, the function returns `BadUtf8`.
+pub fn parse_utf8(v: &[u8]) -> Res<&str> {
+    str::from_utf8(v).map_err(|_| Error::BadUtf8)
 }
 
 #[cfg(test)]
@@ -366,7 +359,7 @@ pub(crate) mod test_receiver {
 mod tests {
 
     use super::{
-        str, test_receiver, to_string, Error, IntReader, LiteralReader, ReadByte,
+        parse_utf8, str, test_receiver, Error, IntReader, LiteralReader, ReadByte,
         ReceiverBufferWrapper, Res,
     };
     use test_receiver::TestReceiver;
@@ -531,7 +524,7 @@ mod tests {
             let mut test_receiver: TestReceiver = TestReceiver::default();
             test_receiver.write(&buf[1..]);
             assert_eq!(
-                to_string(&reader.read(&mut test_receiver).unwrap()).unwrap(),
+                parse_utf8(&reader.read(&mut test_receiver).unwrap()).unwrap(),
                 *value
             );
         }

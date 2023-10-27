@@ -107,9 +107,10 @@ impl<'a> Decoder<'a> {
     }
 
     /// Decodes a QUIC varint.
-    #[allow(clippy::missing_panics_doc)] // See https://github.com/rust-lang/rust-clippy/issues/6699
     pub fn decode_varint(&mut self) -> Option<u64> {
-        let Some(b1) = self.decode_byte() else { return None };
+        let Some(b1) = self.decode_byte() else {
+            return None;
+        };
         match b1 >> 6 {
             0 => Some(u64::from(b1 & 0x3f)),
             1 => Some((u64::from(b1 & 0x3f) << 8) | self.decode_uint(1)?),
@@ -127,8 +128,7 @@ impl<'a> Decoder<'a> {
     }
 
     fn decode_checked(&mut self, n: Option<u64>) -> Option<&'a [u8]> {
-        let Some(len) = n else { return None };
-        if let Ok(l) = usize::try_from(len) {
+        if let Ok(l) = usize::try_from(n?) {
             self.decode(l)
         } else {
             // sizeof(usize) < sizeof(u64) and the value is greater than
@@ -203,11 +203,11 @@ impl Encoder {
     #[must_use]
     pub const fn varint_len(v: u64) -> usize {
         match () {
-            _ if v < (1 << 6) => 1,
-            _ if v < (1 << 14) => 2,
-            _ if v < (1 << 30) => 4,
-            _ if v < (1 << 62) => 8,
-            _ => panic!("Varint value too large"),
+            () if v < (1 << 6) => 1,
+            () if v < (1 << 14) => 2,
+            () if v < (1 << 30) => 4,
+            () if v < (1 << 62) => 8,
+            () => panic!("Varint value too large"),
         }
     }
 
@@ -309,11 +309,11 @@ impl Encoder {
     pub fn encode_varint<T: Into<u64>>(&mut self, v: T) -> &mut Self {
         let v = v.into();
         match () {
-            _ if v < (1 << 6) => self.encode_uint(1, v),
-            _ if v < (1 << 14) => self.encode_uint(2, v | (1 << 14)),
-            _ if v < (1 << 30) => self.encode_uint(4, v | (2 << 30)),
-            _ if v < (1 << 62) => self.encode_uint(8, v | (3 << 62)),
-            _ => panic!("Varint value too large"),
+            () if v < (1 << 6) => self.encode_uint(1, v),
+            () if v < (1 << 14) => self.encode_uint(2, v | (1 << 14)),
+            () if v < (1 << 30) => self.encode_uint(4, v | (2 << 30)),
+            () if v < (1 << 62) => self.encode_uint(8, v | (3 << 62)),
+            () => panic!("Varint value too large"),
         };
         self
     }
@@ -378,11 +378,11 @@ impl Encoder {
         self.buf[start] = (v & 0xff) as u8;
         let (count, bits) = match () {
             // Great.  The byte we have is enough.
-            _ if v < (1 << 6) => return self,
-            _ if v < (1 << 14) => (1, 1 << 6),
-            _ if v < (1 << 30) => (3, 2 << 22),
-            _ if v < (1 << 62) => (7, 3 << 54),
-            _ => panic!("Varint value too large"),
+            () if v < (1 << 6) => return self,
+            () if v < (1 << 14) => (1, 1 << 6),
+            () if v < (1 << 30) => (3, 2 << 22),
+            () if v < (1 << 62) => (7, 3 << 54),
+            () => panic!("Varint value too large"),
         };
         // Now, we need to encode the high bits after the main block, ...
         self.encode_uint(count, (v >> 8) | bits);

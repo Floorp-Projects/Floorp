@@ -237,7 +237,7 @@ impl Item {
     pub fn wrap(buf: &[u8]) -> SECItem {
         SECItem {
             type_: SECItemType::siBuffer,
-            data: buf.as_ptr() as *mut u8,
+            data: buf.as_ptr().cast_mut(),
             len: c_uint::try_from(buf.len()).unwrap(),
         }
     }
@@ -247,9 +247,10 @@ impl Item {
     /// Minimally, it can only be passed as a `const SECItem*` argument to functions,
     /// or those that treat their argument as `const`.
     pub fn wrap_struct<T>(v: &T) -> SECItem {
+        let data: *const T = v;
         SECItem {
             type_: SECItemType::siBuffer,
-            data: (v as *const T as *mut T).cast(),
+            data: data.cast_mut().cast(),
             len: c_uint::try_from(mem::size_of::<T>()).unwrap(),
         }
     }

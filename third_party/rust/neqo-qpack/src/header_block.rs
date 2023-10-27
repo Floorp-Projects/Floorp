@@ -4,19 +4,24 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use crate::prefix::{
-    BASE_PREFIX_NEGATIVE, BASE_PREFIX_POSITIVE, HEADER_FIELD_INDEX_DYNAMIC,
-    HEADER_FIELD_INDEX_DYNAMIC_POST, HEADER_FIELD_INDEX_STATIC, HEADER_FIELD_LITERAL_NAME_LITERAL,
-    HEADER_FIELD_LITERAL_NAME_REF_DYNAMIC, HEADER_FIELD_LITERAL_NAME_REF_DYNAMIC_POST,
-    HEADER_FIELD_LITERAL_NAME_REF_STATIC, NO_PREFIX,
+use crate::{
+    prefix::{
+        BASE_PREFIX_NEGATIVE, BASE_PREFIX_POSITIVE, HEADER_FIELD_INDEX_DYNAMIC,
+        HEADER_FIELD_INDEX_DYNAMIC_POST, HEADER_FIELD_INDEX_STATIC,
+        HEADER_FIELD_LITERAL_NAME_LITERAL, HEADER_FIELD_LITERAL_NAME_REF_DYNAMIC,
+        HEADER_FIELD_LITERAL_NAME_REF_DYNAMIC_POST, HEADER_FIELD_LITERAL_NAME_REF_STATIC,
+        NO_PREFIX,
+    },
+    qpack_send_buf::QpackData,
+    reader::{parse_utf8, ReceiverBufferWrapper},
+    table::HeaderTable,
+    Error, Res,
 };
-use crate::qpack_send_buf::QpackData;
-use crate::reader::{to_string, ReceiverBufferWrapper};
-use crate::table::HeaderTable;
-use crate::{Error, Res};
 use neqo_common::{qtrace, Header};
-use std::mem;
-use std::ops::{Deref, Div};
+use std::{
+    mem,
+    ops::{Deref, Div},
+};
 
 #[derive(Default, Debug, PartialEq)]
 pub struct HeaderEncoder {
@@ -331,8 +336,8 @@ impl<'a> HeaderDecoder<'a> {
         qtrace!([self], "decoder static indexed {}.", index);
         let entry = HeaderTable::get_static(index)?;
         Ok(Header::new(
-            to_string(entry.name())?,
-            to_string(entry.value())?,
+            parse_utf8(entry.name())?,
+            parse_utf8(entry.value())?,
         ))
     }
 
@@ -343,8 +348,8 @@ impl<'a> HeaderDecoder<'a> {
         qtrace!([self], "decoder dynamic indexed {}.", index);
         let entry = table.get_dynamic(index, self.base, false)?;
         Ok(Header::new(
-            to_string(entry.name())?,
-            to_string(entry.value())?,
+            parse_utf8(entry.name())?,
+            parse_utf8(entry.value())?,
         ))
     }
 
@@ -355,8 +360,8 @@ impl<'a> HeaderDecoder<'a> {
         qtrace!([self], "decode post-based {}.", index);
         let entry = table.get_dynamic(index, self.base, true)?;
         Ok(Header::new(
-            to_string(entry.name())?,
-            to_string(entry.value())?,
+            parse_utf8(entry.name())?,
+            parse_utf8(entry.value())?,
         ))
     }
 
@@ -371,7 +376,7 @@ impl<'a> HeaderDecoder<'a> {
             .read_prefixed_int(HEADER_FIELD_LITERAL_NAME_REF_STATIC.len())?;
 
         Ok(Header::new(
-            to_string(HeaderTable::get_static(index)?.name())?,
+            parse_utf8(HeaderTable::get_static(index)?.name())?,
             self.buf.read_literal_from_buffer(0)?,
         ))
     }
@@ -387,7 +392,7 @@ impl<'a> HeaderDecoder<'a> {
             .read_prefixed_int(HEADER_FIELD_LITERAL_NAME_REF_DYNAMIC.len())?;
 
         Ok(Header::new(
-            to_string(table.get_dynamic(index, self.base, false)?.name())?,
+            parse_utf8(table.get_dynamic(index, self.base, false)?.name())?,
             self.buf.read_literal_from_buffer(0)?,
         ))
     }
@@ -400,7 +405,7 @@ impl<'a> HeaderDecoder<'a> {
             .read_prefixed_int(HEADER_FIELD_LITERAL_NAME_REF_DYNAMIC_POST.len())?;
 
         Ok(Header::new(
-            to_string(table.get_dynamic(index, self.base, true)?.name())?,
+            parse_utf8(table.get_dynamic(index, self.base, true)?.name())?,
             self.buf.read_literal_from_buffer(0)?,
         ))
     }

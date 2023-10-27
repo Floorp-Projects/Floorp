@@ -50,7 +50,7 @@ pub enum Error {
     NeedMoreData, // Return when an input stream does not have more data that a decoder needs.(It does not mean that a stream is closed.)
     HeaderLookup,
     HuffmanDecompressionFailed,
-    ToStringFailed,
+    BadUtf8,
     ChangeCapacity,
     DynamicTableFull,
     IncrementAck,

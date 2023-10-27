@@ -73,16 +73,10 @@
 //!   Enables [wasm-bindgen](https://github.com/rustwasm/wasm-bindgen) support for converting
 //!   [JavaScript dates](https://rustwasm.github.io/wasm-bindgen/api/js_sys/struct.Date.html), as
 //!   well as obtaining the UTC offset from JavaScript.
-//!
-//! <small>
-//! One feature only available to end users is the <code>unsound_local_offset</code> cfg. This
-//! enables obtaining the system's UTC offset even when it is unsound. To enable this, use the
-//! <code>RUSTFLAGS</code> environment variable. This is untested and officially unsupported. Do not
-//! use this unless you understand the risk.
-//! </small>
 
 #![doc(html_playground_url = "https://play.rust-lang.org")]
 #![cfg_attr(__time_03_docs, feature(doc_auto_cfg, doc_notable_trait))]
+#![cfg_attr(coverage_nightly, feature(no_coverage))]
 #![cfg_attr(not(feature = "std"), no_std)]
 #![deny(
     anonymous_parameters,
@@ -92,7 +86,6 @@
     clippy::obfuscated_if_else,
     clippy::std_instead_of_core,
     clippy::undocumented_unsafe_blocks,
-    const_err,
     illegal_floating_point_literal_pattern,
     late_bound_lifetime_arguments,
     path_statements,
@@ -115,6 +108,7 @@
     clippy::print_stdout,
     clippy::todo,
     clippy::unimplemented,
+    clippy::uninlined_format_args,
     clippy::unnested_or_patterns,
     clippy::unwrap_in_result,
     clippy::unwrap_used,
@@ -138,6 +132,13 @@
 #[allow(unused_extern_crates)]
 #[cfg(feature = "alloc")]
 extern crate alloc;
+
+// TODO(jhpratt) remove this after a while
+#[cfg(unsound_local_offset)]
+compile_error!(
+    "The `unsound_local_offset` flag was removed in time 0.3.18. If you need this functionality, \
+     see the `time::util::local_offset::set_soundness` function."
+);
 
 // region: macros
 /// Helper macro for easily implementing `OpAssign`.
@@ -203,13 +204,15 @@ macro_rules! cascade {
     (@year year) => {};
 
     // Cascade an out-of-bounds value from "from" to "to".
-    ($from:ident in $min:literal.. $max:literal => $to:tt) => {
+    ($from:ident in $min:literal.. $max:expr => $to:tt) => {
         #[allow(unused_comparisons, unused_assignments)]
-        if $from >= $max {
-            $from -= $max - $min;
+        let min = $min;
+        let max = $max;
+        if $from >= max {
+            $from -= max - min;
             $to += 1;
-        } else if $from < $min {
-            $from += $max - $min;
+        } else if $from < min {
+            $from += max - min;
             $to -= 1;
         }
     };
@@ -299,9 +302,18 @@ macro_rules! expect_opt {
         }
     };
 }
+
+/// `unreachable!()`, but better.
+macro_rules! bug {
+    () => { compile_error!("provide an error message to help fix a possible bug") };
+    ($descr:literal $($rest:tt)?) => {
+        panic!(concat!("internal error: ", $descr) $($rest)?)
+    }
+}
 // endregion macros
 
 mod date;
+mod date_time;
 mod duration;
 pub mod error;
 pub mod ext;
@@ -333,7 +345,11 @@ mod utc_offset;
 pub mod util;
 mod weekday;
 
+// Not public yet.
+use time_core::convert;
+
 pub use crate::date::Date;
+use crate::date_time::DateTime;
 pub use crate::duration::Duration;
 pub use crate::error::Error;
 #[cfg(feature = "std")]

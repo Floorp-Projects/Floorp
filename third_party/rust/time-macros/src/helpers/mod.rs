@@ -4,17 +4,15 @@ mod string;
 use std::iter::Peekable;
 use std::str::FromStr;
 
-#[cfg(any(feature = "formatting", feature = "parsing"))]
-use proc_macro::TokenStream;
 use proc_macro::{token_stream, Span, TokenTree};
 use time_core::util::{days_in_year, is_leap_year};
 
 use crate::Error;
 
 #[cfg(any(feature = "formatting", feature = "parsing"))]
-pub(crate) fn get_string_literal(tokens: TokenStream) -> Result<(Span, Vec<u8>), Error> {
-    let mut tokens = tokens.into_iter();
-
+pub(crate) fn get_string_literal(
+    mut tokens: impl Iterator<Item = TokenTree>,
+) -> Result<(Span, Vec<u8>), Error> {
     match (tokens.next(), tokens.next()) {
         (Some(TokenTree::Literal(literal)), None) => string::parse(&literal),
         (Some(tree), None) => Err(Error::ExpectedString {

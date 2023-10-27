@@ -927,12 +927,13 @@ fn ech_retry() {
         Some(&ConnectionError::Transport(Error::PeerError(0x100 + 121)))
     );
 
-    let Some(ConnectionError::Transport(Error::EchRetry(updated_config))) = client.state().error() else {
-            panic!(
-                "Client state should be failed with EchRetry, is {:?}",
-                client.state()
-            );
-        };
+    let Some(ConnectionError::Transport(Error::EchRetry(updated_config))) = client.state().error()
+    else {
+        panic!(
+            "Client state should be failed with EchRetry, is {:?}",
+            client.state()
+        );
+    };
 
     let mut server = default_server();
     server

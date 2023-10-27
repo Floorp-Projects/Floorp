@@ -1140,7 +1140,7 @@ fn connect_w_different_limit(bidi_limit: u64, unidi_limit: u64) {
                     unidi_events += 1;
                 }
             }
-            ConnectionEvent::StateChange(state) if state == State::Connected => {
+            ConnectionEvent::StateChange(State::Connected) => {
                 connected_events += 1;
             }
             _ => {}

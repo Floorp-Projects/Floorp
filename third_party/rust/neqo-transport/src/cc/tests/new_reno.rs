@@ -129,3 +129,83 @@ fn issue_876() {
     cwnd_is_halved(&cc);
     assert_eq!(cc.bytes_in_flight(), 4 * MAX_DATAGRAM_SIZE);
 }
+
+#[test]
+// https://github.com/mozilla/neqo/pull/1465
+fn issue_1465() {
+    let mut cc = ClassicCongestionControl::new(NewReno::default());
+    let mut pn = 0;
+    let mut now = now();
+    let mut next_packet = |now| {
+        let p = SentPacket::new(
+            PacketType::Short,
+            pn,                // pn
+            now,               // time_sent
+            true,              // ack eliciting
+            Vec::new(),        // tokens
+            MAX_DATAGRAM_SIZE, // size
+        );
+        pn += 1;
+        p
+    };
+    let mut send_next = |cc: &mut ClassicCongestionControl<NewReno>, now| {
+        let p = next_packet(now);
+        cc.on_packet_sent(&p);
+        p
+    };
+
+    let p1 = send_next(&mut cc, now);
+    let p2 = send_next(&mut cc, now);
+    let p3 = send_next(&mut cc, now);
+
+    assert_eq!(cc.acked_bytes(), 0);
+    cwnd_is_default(&cc);
+    assert_eq!(cc.bytes_in_flight(), 3 * MAX_DATAGRAM_SIZE);
+
+    // advance one rtt to detect lost packet there this simplifies the timers, because on_packet_loss
+    // would only be called after RTO, but that is not relevant to the problem
+    now += RTT;
+    cc.on_packets_lost(Some(now), None, PTO, &[p1]);
+
+    // We are now in recovery
+    assert!(cc.recovery_packet());
+    assert_eq!(cc.acked_bytes(), 0);
+    cwnd_is_halved(&cc);
+    assert_eq!(cc.bytes_in_flight(), 2 * MAX_DATAGRAM_SIZE);
+
+    // Don't reduce the cwnd again on second packet loss
+    cc.on_packets_lost(Some(now), None, PTO, &[p3]);
+    assert_eq!(cc.acked_bytes(), 0);
+    cwnd_is_halved(&cc); // still the same as after first packet loss
+    assert_eq!(cc.bytes_in_flight(), MAX_DATAGRAM_SIZE);
+
+    // the acked packets before on_packet_sent were the cause of
+    // https://github.com/mozilla/neqo/pull/1465
+    cc.on_packets_acked(&[p2], RTT, now);
+
+    assert_eq!(cc.bytes_in_flight(), 0);
+
+    // send out recovery packet and get it acked to get out of recovery state
+    let p4 = send_next(&mut cc, now);
+    cc.on_packet_sent(&p4);
+    now += RTT;
+    cc.on_packets_acked(&[p4], RTT, now);
+
+    // do the same as in the first rtt but now the bug appears
+    let p5 = send_next(&mut cc, now);
+    let p6 = send_next(&mut cc, now);
+    now += RTT;
+
+    let cur_cwnd = cc.cwnd();
+    cc.on_packets_lost(Some(now), None, PTO, &[p5]);
+
+    // go back into recovery
+    assert!(cc.recovery_packet());
+    assert_eq!(cc.cwnd(), cur_cwnd / 2);
+    assert_eq!(cc.acked_bytes(), 0);
+    assert_eq!(cc.bytes_in_flight(), 2 * MAX_DATAGRAM_SIZE);
+
+    // this shouldn't introduce further cwnd reduction, but it did before https://github.com/mozilla/neqo/pull/1465
+    cc.on_packets_lost(Some(now), None, PTO, &[p6]);
+    assert_eq!(cc.cwnd(), cur_cwnd / 2);
+}

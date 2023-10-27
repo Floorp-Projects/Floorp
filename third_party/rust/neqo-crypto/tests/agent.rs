@@ -439,7 +439,7 @@ fn ech_retry() {
         HandshakeState::EchFallbackAuthenticationPending(String::from(PUBLIC_NAME))
     );
     client.authenticated(AuthenticationStatus::Ok);
-    let Err(Error::EchRetry(updated_config)) = client.handshake_raw(now(), None)  else {
+    let Err(Error::EchRetry(updated_config)) = client.handshake_raw(now(), None) else {
         panic!(
             "Handshake should fail with EchRetry, state is instead {:?}",
             client.state()
