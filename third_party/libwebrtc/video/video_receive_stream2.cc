@@ -1009,7 +1009,7 @@ void VideoReceiveStream2::UpdatePlayoutDelays() const {
       RTC_LOG(LS_WARNING)
           << "Multiple playout delays set. Actual delay value set to "
           << *minimum_delay << " frame min delay="
-          << OptionalDelayToLogString(frame_maximum_playout_delay_)
+          << OptionalDelayToLogString(frame_minimum_playout_delay_)
           << " base min delay="
           << OptionalDelayToLogString(base_minimum_playout_delay_)
           << " sync min delay="
