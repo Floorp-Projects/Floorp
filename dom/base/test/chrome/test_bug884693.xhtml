@@ -21,20 +21,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=884693
     const INVALID_XML = "InvalidXML";
     const XML_WITHOUT_ROOT = "<?xml version='1.0'?>";
 
-    let consoleService = Cc["@mozilla.org/consoleservice;1"].
-                         getService(Ci.nsIConsoleService)
-
     function runTest(status, statusText, body, expectedResponse, expectedMessages)
     {
       return new Promise((resolve, reject) => {
-        consoleService.reset();
+        Services.console.reset();
 
         let xhr = new XMLHttpRequest();
 
         xhr.onload = () => {
           is(xhr.responseText, expectedResponse, "Correct responseText returned");
 
-          let messages = consoleService.getMessageArray() || [];
+          let messages = Services.console.getMessageArray() || [];
           // broadcastlisteners can happen and cause false alarm.
           messages = messages.filter(msg =>
             !(msg instanceof Ci.nsIScriptError &&

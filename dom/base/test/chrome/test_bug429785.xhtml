@@ -19,8 +19,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429785
     /** Test for Bug 429785 **/
     SimpleTest.waitForExplicitFinish();
     var errorLogged = false;
-    const serv = Cc["@mozilla.org/consoleservice;1"]
-                   .getService(Ci.nsIConsoleService);
     var listener = {
       QueryInterface: ChromeUtils.generateQI(["nsIConsoleListener"]),
       observe(msg) { errorLogged = true; }
@@ -29,7 +27,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429785
     function step2() {
       is(errorLogged, false, "Should be no errors");
 
-      serv.logStringMessage("This is a test");
+      Services.console.logStringMessage("This is a test");
 
       setTimeout(step3, 0);
 
@@ -37,11 +35,11 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=429785
 
     function step3() {
       is(errorLogged, true, "Should see errors when they happen");
-      serv.unregisterListener(listener);
+      Services.console.unregisterListener(listener);
       SimpleTest.finish();
     }
         
-    serv.registerListener(listener);    
+    Services.console.registerListener(listener);
 
     var p = new DOMParser();
     p.parseFromString("<root/>", "application/xml");

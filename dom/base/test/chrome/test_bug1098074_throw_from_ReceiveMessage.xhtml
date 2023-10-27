@@ -28,6 +28,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1098074
     // Cleanup the monitor after we throw.
     SimpleTest.executeSoon(SimpleTest.endMonitorConsole);
 
+    // eslint-disable-next-line no-throw-literal
     throw "acopia";
   });
 

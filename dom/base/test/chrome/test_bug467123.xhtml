@@ -18,9 +18,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=467123
   <!-- test code goes here -->
   <script type="application/javascript"><![CDATA[
     /** Test for Bug 467123 **/
-    let url = Cc["@mozilla.org/network/io-service;1"]
-                .getService(Ci.nsIIOService)
-                .newURI(document.location.href);
+    let url = Services.io.newURI(document.location.href);
     let file = Cc["@mozilla.org/chrome/chrome-registry;1"]
                  .getService(Ci.nsIChromeRegistry)
                  .convertChromeURL(url)
