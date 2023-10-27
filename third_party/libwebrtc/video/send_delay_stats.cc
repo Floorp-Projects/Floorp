@@ -20,11 +20,11 @@ namespace {
 // Packet with a larger delay are removed and excluded from the delay stats.
 // Set to larger than max histogram delay which is 10 seconds.
 constexpr TimeDelta kMaxSentPacketDelay = TimeDelta::Seconds(11);
-const size_t kMaxPacketMapSize = 2000;
+constexpr size_t kMaxPacketMapSize = 2000;
 
 // Limit for the maximum number of streams to calculate stats for.
-const size_t kMaxSsrcMapSize = 50;
-const int kMinRequiredPeriodicSamples = 5;
+constexpr size_t kMaxSsrcMapSize = 50;
+constexpr int kMinRequiredPeriodicSamples = 5;
 }  // namespace
 
 SendDelayStats::SendDelayStats(Clock* clock)
@@ -42,8 +42,8 @@ SendDelayStats::~SendDelayStats() {
 
 void SendDelayStats::UpdateHistograms() {
   MutexLock lock(&mutex_);
-  for (const auto& it : send_delay_counters_) {
-    AggregatedStats stats = it.second->GetStats();
+  for (auto& [unused, counter] : send_delay_counters_) {
+    AggregatedStats stats = counter.GetStats();
     if (stats.num_samples >= kMinRequiredPeriodicSamples) {
       RTC_HISTOGRAM_COUNTS_10000("WebRTC.Video.SendDelayInMs", stats.average);
       RTC_LOG(LS_INFO) << "WebRTC.Video.SendDelayInMs, " << stats.ToString();
@@ -53,20 +53,11 @@ void SendDelayStats::UpdateHistograms() {
 
 void SendDelayStats::AddSsrcs(const VideoSendStream::Config& config) {
   MutexLock lock(&mutex_);
-  if (ssrcs_.size() > kMaxSsrcMapSize)
+  if (send_delay_counters_.size() + config.rtp.ssrcs.size() > kMaxSsrcMapSize)
     return;
-  for (const auto& ssrc : config.rtp.ssrcs)
-    ssrcs_.insert(ssrc);
-}
-
-AvgCounter* SendDelayStats::GetSendDelayCounter(uint32_t ssrc) {
-  const auto& it = send_delay_counters_.find(ssrc);
-  if (it != send_delay_counters_.end())
-    return it->second.get();
-
-  AvgCounter* counter = new AvgCounter(clock_, nullptr, false);
-  send_delay_counters_[ssrc].reset(counter);
-  return counter;
+  for (uint32_t ssrc : config.rtp.ssrcs) {
+    send_delay_counters_.try_emplace(ssrc, clock_, nullptr, false);
+  }
 }
 
 void SendDelayStats::OnSendPacket(uint16_t packet_id,
@@ -74,17 +65,24 @@ void SendDelayStats::OnSendPacket(uint16_t packet_id,
                                   uint32_t ssrc) {
   // Packet sent to transport.
   MutexLock lock(&mutex_);
-  if (ssrcs_.find(ssrc) == ssrcs_.end())
+  auto it = send_delay_counters_.find(ssrc);
+  if (it == send_delay_counters_.end())
     return;
 
   Timestamp now = clock_->CurrentTime();
-  RemoveOld(now, &packets_);
+  RemoveOld(now);
 
   if (packets_.size() > kMaxPacketMapSize) {
     ++num_skipped_packets_;
     return;
   }
-  packets_.insert(std::make_pair(packet_id, Packet(ssrc, capture_time, now)));
+  // `send_delay_counters_` is an std::map - adding new entries doesn't
+  // invalidate existent iterators, and it has pointer stability for values.
+  // Entries are never remove from the `send_delay_counters_`.
+  // Thus memorizing pointer to the AvgCounter is safe.
+  packets_.emplace(packet_id, Packet{.send_delay = &it->second,
+                                     .capture_time = capture_time,
+                                     .send_time = now});
 }
 
 bool SendDelayStats::OnSentPacket(int packet_id, Timestamp time) {
@@ -100,18 +98,18 @@ bool SendDelayStats::OnSentPacket(int packet_id, Timestamp time) {
   // TODO(asapersson): Remove SendSideDelayUpdated(), use capture -> sent.
   // Elapsed time from send (to transport) -> sent (leaving socket).
   TimeDelta diff = time - it->second.send_time;
-  GetSendDelayCounter(it->second.ssrc)->Add(diff.ms());
+  it->second.send_delay->Add(diff.ms());
   packets_.erase(it);
   return true;
 }
 
-void SendDelayStats::RemoveOld(Timestamp now, PacketMap* packets) {
-  while (!packets->empty()) {
-    auto it = packets->begin();
+void SendDelayStats::RemoveOld(Timestamp now) {
+  while (!packets_.empty()) {
+    auto it = packets_.begin();
     if (now - it->second.capture_time < kMaxSentPacketDelay)
       break;
 
-    packets->erase(it);
+    packets_.erase(it);
     ++num_old_packets_;
   }
 }
