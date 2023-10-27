@@ -8,7 +8,6 @@
 #include "AutoRangeArray.h"  // for AutoRangeArray
 #include "EditorUtils.h"     // for EditorUtils, AutoRangeArray
 #include "ErrorList.h"
-#include "JoinSplitNodeDirection.h"  // for JoinNodesDirection, SplitNodeDirection
 
 #include "mozilla/Assertions.h"    // for MOZ_ASSERT, etc.
 #include "mozilla/IntegerRange.h"  // for IntegerRange

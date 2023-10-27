@@ -455,42 +455,6 @@ class HTMLEditor final : public EditorBase,
   }
 
   /**
-   * Enable/disable Gecko's traditional join/split node direction, that is,
-   * creating left node at splitting a node and removing left node at joining 2
-   * nodes.  This is acceptable only before first join/split transaction is
-   * created.
-   */
-  bool EnableCompatibleJoinSplitNodeDirection(bool aEnable) {
-    if (!CanChangeJoinSplitNodeDirection()) {
-      return false;
-    }
-    mUseGeckoTraditionalJoinSplitBehavior = !aEnable;
-    return true;
-  }
-
-  /**
-   * Return true if the instance works with the legacy join/split node
-   * direction.
-   */
-  [[nodiscard]] bool IsCompatibleJoinSplitNodeDirectionEnabled() const {
-    return !mUseGeckoTraditionalJoinSplitBehavior;
-  }
-
-  /**
-   * Return true if web apps can still change the join split node direction.
-   * For saving the footprint, each transaction does not store join/split node
-   * direction at first run.  Therefore, join/split node transactions need to
-   * refer the direction of corresponding HTMLEditor.  So if the direction were
-   * changed after creating join/split transactions, they would break the DOM
-   * tree with undoing/redoing within wrong direction.  Therefore, once this
-   * instance created a join or split node transaction, this returns false to
-   * block to change the direction.
-   */
-  [[nodiscard]] bool CanChangeJoinSplitNodeDirection() const {
-    return !mMaybeHasJoinSplitTransactions;
-  }
-
-  /**
    * returns the deepest absolutely positioned container of the selection
    * if it exists or null.
    */
@@ -2702,12 +2666,6 @@ class HTMLEditor final : public EditorBase,
   MOZ_CAN_RUN_SCRIPT nsresult OnDocumentModified();
 
  protected:  // Called by helper classes.
-  /**
-   * Get split/join node(s) direction for **this** instance.
-   */
-  [[nodiscard]] inline SplitNodeDirection GetSplitNodeDirection() const;
-  [[nodiscard]] inline JoinNodesDirection GetJoinNodesDirection() const;
-
   MOZ_CAN_RUN_SCRIPT void OnStartToHandleTopLevelEditSubAction(
       EditSubAction aTopLevelEditSubAction,
       nsIEditor::EDirection aDirectionOfTopLevelEditSubAction,
@@ -4452,10 +4410,6 @@ class HTMLEditor final : public EditorBase,
 
   bool mCRInParagraphCreatesParagraph;
 
-  // Whether use Blink/WebKit compatible joining nodes and split a node
-  // direction or Gecko's traditional direction.
-  bool mUseGeckoTraditionalJoinSplitBehavior;
-
   // resizing
   bool mIsObjectResizingEnabled;
   bool mIsResizing;
@@ -4549,10 +4503,6 @@ class HTMLEditor final : public EditorBase,
 
   bool mHasBeforeInputBeenCanceled = false;
 
-  // Set to true once the instance creates a JoinNodesTransaction or
-  // SplitNodeTransaction.  See also CanChangeJoinSplitNodeDirection().
-  bool mMaybeHasJoinSplitTransactions = false;
-
   ParagraphSeparator mDefaultParagraphSeparator;
 
   friend class AlignStateAtSelection;  // CollectEditableTargetNodes,
@@ -4574,8 +4524,7 @@ class HTMLEditor final : public EditorBase,
                             // RemoveEmptyInclusiveAncestorInlineElements,
                             // mComposerUpdater, mHasBeforeInputBeenCanceled
   friend class JoinNodesTransaction;  // DidJoinNodesTransaction, DoJoinNodes,
-                                      // DoSplitNode, GetJoinNodesDirection,
-                                      // RangeUpdaterRef
+                                      // DoSplitNode, // RangeUpdaterRef
   friend class ListElementSelectionState;      // CollectEditTargetNodes,
                                                // CollectNonEditableNodes
   friend class ListItemElementSelectionState;  // CollectEditTargetNodes,
@@ -4589,8 +4538,7 @@ class HTMLEditor final : public EditorBase,
                                            // CollectNonEditableNodes,
                                            // CollectTableChildren
   friend class SlurpBlobEventListener;     // BlobReader
-  friend class SplitNodeTransaction;       // DoJoinNodes, DoSplitNode,
-                                           // GetSplitNodeDirection
+  friend class SplitNodeTransaction;       // DoJoinNodes, DoSplitNode
   friend class TransactionManager;  // DidDoTransaction, DidRedoTransaction,
                                     // DidUndoTransaction
   friend class

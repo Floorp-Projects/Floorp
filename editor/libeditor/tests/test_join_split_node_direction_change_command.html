@@ -22,172 +22,32 @@ SimpleTest.waitForFocus(async () => {
   }
 
   await resetIframe();
-  await SpecialPowers.pushPrefEnv({
-    set: [["editor.join_split_direction.compatible_with_the_other_browsers", false]],
-  });
-  (function test_command_when_legacy_behavior_is_enabled_by_default() {
-    iframe.contentDocument.body.innerHTML = "<div contenteditable><br></div>";
-    ok(
-      iframe.contentDocument.queryCommandSupported("enableCompatibleJoinSplitDirection"),
-      "test_command_when_legacy_behavior_is_enabled_by_default: command should be supported"
-    );
-    ok(
-      iframe.contentDocument.queryCommandEnabled("enableCompatibleJoinSplitDirection"),
-      "test_command_when_legacy_behavior_is_enabled_by_default: command should be enabled"
-    );
-    ok(
-      !iframe.contentDocument.queryCommandState("enableCompatibleJoinSplitDirection"),
-      "test_command_when_legacy_behavior_is_enabled_by_default: command state should be false"
-    );
-    is(
-      iframe.contentDocument.queryCommandValue("enableCompatibleJoinSplitDirection"),
-      "",
-      "test_command_when_legacy_behavior_is_enabled_by_default: command value should be empty string"
-    );
-    ok(
-      iframe.contentDocument.execCommand("enableCompatibleJoinSplitDirection", false, "true"),
-      "test_command_when_legacy_behavior_is_enabled_by_default: command to enable it should return true"
-    );
-  })();
-
-  (function test_command_when_enabling_new_behavior_when_legacy_one_is_enabled_by_default() {
-    ok(
-      iframe.contentDocument.queryCommandSupported("enableCompatibleJoinSplitDirection"),
-      "test_command_when_enabling_new_behavior_when_legacy_one_is_enabled_by_default: command should be supported"
-    );
-    ok(
-      iframe.contentDocument.queryCommandEnabled("enableCompatibleJoinSplitDirection"),
-      "test_command_when_enabling_new_behavior_when_legacy_one_is_enabled_by_default: command should be enabled"
-    );
-    ok(
-      iframe.contentDocument.queryCommandState("enableCompatibleJoinSplitDirection"),
-      "test_command_when_enabling_new_behavior_when_legacy_one_is_enabled_by_default: command state should be true"
-    );
-    is(
-      iframe.contentDocument.queryCommandValue("enableCompatibleJoinSplitDirection"),
-      "",
-      "test_command_when_enabling_new_behavior_when_legacy_one_is_enabled_by_default: command value should be empty string"
-    );
-
-    ok(
-      iframe.contentDocument.execCommand("enableCompatibleJoinSplitDirection", false, "false"),
-      "test_command_when_enabling_new_behavior_when_legacy_one_is_enabled_by_default: command to disable it should return true"
-    );
-  })();
-
-  (function test_command_when_disabling_new_behavior_when_the_legacy_one_is_enabled_by_default() {
-    ok(
-      iframe.contentDocument.queryCommandSupported("enableCompatibleJoinSplitDirection"),
-      "test_command_when_disabling_new_behavior_when_the_legacy_one_is_enabled_by_default: command should be supported"
-    );
-    ok(
-      iframe.contentDocument.queryCommandEnabled("enableCompatibleJoinSplitDirection"),
-      "test_command_when_disabling_new_behavior_when_the_legacy_one_is_enabled_by_default: command should be enabled"
-    );
-    ok(
-      !iframe.contentDocument.queryCommandState("enableCompatibleJoinSplitDirection"),
-      "test_command_when_disabling_new_behavior_when_the_legacy_one_is_enabled_by_default: command state should be false"
-    );
-    is(
-      iframe.contentDocument.queryCommandValue("enableCompatibleJoinSplitDirection"),
-      "",
-      "test_command_when_disabling_new_behavior_when_the_legacy_one_is_enabled_by_default: command value should be empty string"
-    );
-  })();
-
-  await resetIframe();
-  await SpecialPowers.pushPrefEnv({
-    set: [["editor.join_split_direction.compatible_with_the_other_browsers", true]],
-  });
-  (function test_command_when_new_behavior_is_enabled_by_default() {
-    iframe.contentDocument.body.innerHTML = "<div contenteditable><br></div>";
-    ok(
-      iframe.contentDocument.queryCommandSupported("enableCompatibleJoinSplitDirection"),
-      "test_command_when_new_behavior_is_enabled_by_default: command should be supported"
-    );
-    ok(
-      iframe.contentDocument.queryCommandEnabled("enableCompatibleJoinSplitDirection"),
-      "test_command_when_new_behavior_is_enabled_by_default: command should be enabled"
-    );
-    ok(
-      iframe.contentDocument.queryCommandState("enableCompatibleJoinSplitDirection"),
-      "test_command_when_new_behavior_is_enabled_by_default: command state should be true"
-    );
-    is(
-      iframe.contentDocument.queryCommandValue("enableCompatibleJoinSplitDirection"),
-      "",
-      "test_command_when_new_behavior_is_enabled_by_default: command value should be empty string"
-    );
-    ok(
-      !iframe.contentDocument.execCommand("enableCompatibleJoinSplitDirection", false, "false"),
-      "test_command_when_new_behavior_is_enabled_by_default: command to disable it should return false"
-    );
-    ok(
-      iframe.contentDocument.queryCommandState("enableCompatibleJoinSplitDirection"),
-      "test_command_when_new_behavior_is_enabled_by_default: command state should be true even after executing the command to disable it"
-    );
-  })();
-
-  await resetIframe();
-  await SpecialPowers.pushPrefEnv({
-    set: [["editor.join_split_direction.compatible_with_the_other_browsers", false]],
-  });
-  (function test_command_disabled_after_joining_nodes() {
-    iframe.contentDocument.body.innerHTML = "<div contenteditable><p>abc</p><p>def</p></div>";
-    iframe.contentWindow.getSelection().collapse(iframe.contentDocument.querySelector("p + p").firstChild, 0);
-    iframe.contentDocument.execCommand("delete");
-    ok(
-      !iframe.contentDocument.execCommand("enableCompatibleJoinSplitDirection", false, "true"),
-      "test_command_disabled_after_joining_nodes: command should return false"
-    );
-    ok(
-      !iframe.contentDocument.queryCommandEnabled("enableCompatibleJoinSplitDirection"),
-      "test_command_when_new_behavior_is_enabled_by_default: command should be disabled"
-    );
-    ok(
-      !iframe.contentDocument.queryCommandState("enableCompatibleJoinSplitDirection"),
-      "test_command_when_new_behavior_is_enabled_by_default: command state should be false"
-    );
-  })();
-
-  await resetIframe();
-  await SpecialPowers.pushPrefEnv({
-    set: [["editor.join_split_direction.compatible_with_the_other_browsers", false]],
-  });
-  (function test_command_disabled_after_splitting_node() {
-    iframe.contentDocument.body.innerHTML = "<div contenteditable><p>abcdef</p></div>";
-    iframe.contentWindow.getSelection().collapse(iframe.contentDocument.querySelector("p").firstChild, "abc".length);
-    iframe.contentDocument.execCommand("insertParagraph");
-    ok(
-      !iframe.contentDocument.execCommand("enableCompatibleJoinSplitDirection", false, "true"),
-      "test_command_disabled_after_splitting_node: command should return false"
-    );
-    ok(
-      !iframe.contentDocument.queryCommandEnabled("enableCompatibleJoinSplitDirection"),
-      "test_command_disabled_after_splitting_node: command should be disabled"
-    );
-    ok(
-      !iframe.contentDocument.queryCommandState("enableCompatibleJoinSplitDirection"),
-      "test_command_disabled_after_splitting_node: command state should be false"
-    );
-  })();
-
-  await resetIframe();
-  await SpecialPowers.pushPrefEnv({
-    set: [["editor.join_split_direction.compatible_with_the_other_browsers", false]],
-  });
-  (function test_split_direction_after_enabling_new_direction() {
-    iframe.contentDocument.body.innerHTML = "<div contenteditable><p>abc</p><p>def</p></div>";
-    const rightP = iframe.contentDocument.querySelector("p + p");
-    iframe.contentWindow.getSelection().collapse(rightP.firstChild, 0);
-    iframe.contentDocument.execCommand("delete");
-    iframe.contentDocument.execCommand("enableCompatibleJoinSplitDirection", false, "true");
-    is(
-      iframe.contentDocument.querySelector("p"),
-      rightP,
-      "test_split_direction_after_enabling_new_direction: left paragraph should be deleted and right paragraph should be alive"
-    );
-  })();
+  iframe.contentDocument.body.innerHTML = "<div contenteditable><br></div>";
+  ok(
+    iframe.contentDocument.queryCommandSupported("enableCompatibleJoinSplitDirection"),
+    "command should be supported"
+  );
+  ok(
+    iframe.contentDocument.queryCommandEnabled("enableCompatibleJoinSplitDirection"),
+    "command should be enabled"
+  );
+  ok(
+    iframe.contentDocument.queryCommandState("enableCompatibleJoinSplitDirection"),
+    "command state should be true"
+  );
+  is(
+    iframe.contentDocument.queryCommandValue("enableCompatibleJoinSplitDirection"),
+    "",
+    "command value should be empty string"
+  );
+  ok(
+    !iframe.contentDocument.execCommand("enableCompatibleJoinSplitDirection", false, "false"),
+    "command to disable it should return false"
+  );
+  ok(
+    iframe.contentDocument.queryCommandState("enableCompatibleJoinSplitDirection"),
+    "command state should be true even after executing the command to disable it"
+  );
 
   SimpleTest.finish();
 });
