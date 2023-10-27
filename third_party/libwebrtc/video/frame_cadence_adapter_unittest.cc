@@ -563,6 +563,29 @@ TEST(FrameCadenceAdapterTest, AcceptsUnconfiguredLayerFeedback) {
   adapter->UpdateLayerStatus(2, false);
 }
 
+TEST(FrameCadenceAdapterTest, IgnoresDropInducedCallbacksPostDestruction) {
+  ZeroHertzFieldTrialEnabler enabler;
+  auto callback = std::make_unique<MockCallback>();
+  GlobalSimulatedTimeController time_controller(Timestamp::Zero());
+  auto queue = time_controller.GetTaskQueueFactory()->CreateTaskQueue(
+      "queue", TaskQueueFactory::Priority::NORMAL);
+  auto adapter = FrameCadenceAdapterInterface::Create(
+      time_controller.GetClock(), queue.get(), enabler);
+  queue->PostTask([&adapter, &callback] {
+    adapter->Initialize(callback.get());
+    adapter->SetZeroHertzModeEnabled(
+        FrameCadenceAdapterInterface::ZeroHertzModeParams{});
+  });
+  time_controller.AdvanceTime(TimeDelta::Zero());
+  constexpr int kMaxFps = 10;
+  adapter->OnConstraintsChanged(VideoTrackSourceConstraints{0, kMaxFps});
+  adapter->OnDiscardedFrame();
+  time_controller.AdvanceTime(TimeDelta::Zero());
+  callback = nullptr;
+  queue->PostTask([adapter = std::move(adapter)]() mutable {});
+  time_controller.AdvanceTime(3 * TimeDelta::Seconds(1) / kMaxFps);
+}
+
 class FrameCadenceAdapterSimulcastLayersParamTest
     : public ::testing::TestWithParam<int> {
  public:

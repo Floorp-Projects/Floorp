@@ -102,6 +102,7 @@ class ZeroHertzAdapterMode : public AdapterMode {
                        Clock* clock,
                        FrameCadenceAdapterInterface::Callback* callback,
                        double max_fps);
+  ~ZeroHertzAdapterMode() { refresh_frame_requester_.Stop(); }
 
   // Reconfigures according to parameters.
   // All spatial layer trackers are initialized as unconverged by this method.
