@@ -355,10 +355,10 @@ class BuildMonitor(MozbuildObject):
             return BuildOutputResult(None, False, None)
 
         warning = None
+        message = line
 
         try:
             warning = self._warnings_collector.process_line(line)
-            message = line
         except Exception:
             pass
 
