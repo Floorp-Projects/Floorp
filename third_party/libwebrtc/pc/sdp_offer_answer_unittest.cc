@@ -890,4 +890,44 @@ TEST_F(SdpOfferAnswerTest,
   EXPECT_FALSE(pc->SetLocalDescription(std::move(modified_offer)));
 }
 
+TEST_F(SdpOfferAnswerTest, AllowOnlyOneSsrcGroupPerSemanticAndPrimarySsrc) {
+  auto pc = CreatePeerConnection();
+
+  pc->AddAudioTrack("audio_track", {});
+  pc->AddVideoTrack("video_track", {});
+  auto offer = pc->CreateOffer();
+  auto& offer_contents = offer->description()->contents();
+  ASSERT_EQ(offer_contents.size(), 2u);
+  uint32_t audio_ssrc = offer_contents[0].media_description()->first_ssrc();
+  ASSERT_EQ(offer_contents[1].media_description()->streams().size(), 1u);
+  auto& video_stream = offer->description()
+                           ->contents()[1]
+                           .media_description()
+                           ->mutable_streams()[0];
+  ASSERT_EQ(video_stream.ssrcs.size(), 2u);
+  ASSERT_EQ(video_stream.ssrc_groups.size(), 1u);
+  video_stream.ssrcs.push_back(audio_ssrc);
+  video_stream.ssrc_groups.push_back(
+      {cricket::kFidSsrcGroupSemantics, {video_stream.ssrcs[0], audio_ssrc}});
+  std::string sdp;
+  offer->ToString(&sdp);
+
+  // Trim the last two lines which contain ssrc-specific attributes
+  // that we change/munge above. Guarded with expectation about what
+  // should be removed in case the SDP generation changes.
+  size_t end = sdp.rfind("\r\n");
+  end = sdp.rfind("\r\n", end - 2);
+  end = sdp.rfind("\r\n", end - 2);
+  EXPECT_EQ(sdp.substr(end + 2), "a=ssrc:" + rtc::ToString(audio_ssrc) +
+                                     " cname:" + video_stream.cname +
+                                     "\r\n"
+                                     "a=ssrc:" +
+                                     rtc::ToString(audio_ssrc) +
+                                     " msid:- video_track\r\n");
+
+  auto modified_offer =
+      CreateSessionDescription(SdpType::kOffer, sdp.substr(0, end + 2));
+  EXPECT_FALSE(pc->SetLocalDescription(std::move(modified_offer)));
+}
+
 }  // namespace webrtc
