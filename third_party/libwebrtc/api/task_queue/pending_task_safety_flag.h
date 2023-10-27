@@ -19,6 +19,7 @@
 #include "api/sequence_checker.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/system/no_unique_address.h"
+#include "rtc_base/system/rtc_export.h"
 
 namespace webrtc {
 
@@ -58,7 +59,7 @@ namespace webrtc {
 //
 //   my_task_queue_->PostTask(SafeTask(safety_flag_, [this] { MyMethod(); }));
 //
-class PendingTaskSafetyFlag final
+class RTC_EXPORT PendingTaskSafetyFlag final
     : public rtc::RefCountedNonVirtual<PendingTaskSafetyFlag> {
  public:
   static rtc::scoped_refptr<PendingTaskSafetyFlag> Create();
@@ -116,7 +117,7 @@ class PendingTaskSafetyFlag final
 // This should be used by the class that wants tasks dropped after destruction.
 // The requirement is that the instance has to be constructed and destructed on
 // the same thread as the potentially dropped tasks would be running on.
-class ScopedTaskSafety final {
+class RTC_EXPORT ScopedTaskSafety final {
  public:
   ScopedTaskSafety() = default;
   explicit ScopedTaskSafety(rtc::scoped_refptr<PendingTaskSafetyFlag> flag)
@@ -140,7 +141,7 @@ class ScopedTaskSafety final {
 
 // Like ScopedTaskSafety, but allows construction on a different thread than
 // where the flag will be used.
-class ScopedTaskSafetyDetached final {
+class RTC_EXPORT ScopedTaskSafetyDetached final {
  public:
   ScopedTaskSafetyDetached() = default;
   ~ScopedTaskSafetyDetached() { flag_->SetNotAlive(); }
