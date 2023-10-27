@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1857303
+-->
+<head>
+    <meta charset="utf-8">
+    <title>Test for contenteditable copy event fired even when selection is empty</title>
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <script src="/tests/SimpleTest/EventUtils.js"></script>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+    <div contenteditable=true id="elem">Copy</div>
+    <script>
+        SimpleTest.waitForExplicitFinish();
+        SimpleTest.waitForFocus(() => {
+            let copyEventFired = false;
+            const editableDiv = document.getElementById("elem");
+
+            editableDiv.addEventListener("copy", function () {
+                copyEventFired = true;
+            });
+
+            editableDiv.focus();
+            synthesizeKey("c", { accelKey: true });
+            ok(copyEventFired, "Copy event should be fired");
+
+            SimpleTest.finish();
+        });
+    </script>
+</body>
+</html>

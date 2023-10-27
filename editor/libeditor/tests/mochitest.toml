@@ -420,6 +420,8 @@ skip-if = ["os == 'android'"] #Bug 1575739
 
 ["test_composition_with_highlight_in_texteditor.html"]
 
+["test_contenteditable_copy_empty_selection.html"]
+
 ["test_contenteditable_focus.html"]
 
 ["test_cut_copy_delete_command_enabled.html"]
