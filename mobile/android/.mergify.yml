@@ -2,6 +2,7 @@ queue_rules:
   - name: default
     conditions:
       - status-success=complete-pr
+    allow_checks_interruption: false
     priority_rules:
       - name: high priority
         conditions:
