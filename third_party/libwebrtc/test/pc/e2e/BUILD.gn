@@ -130,6 +130,7 @@ if (!build_with_chromium) {
         "../../../api/test/video:test_video_track_source",
         "../../../api/video:video_frame",
       ]
+      absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
     }
 
     rtc_library("media_helper") {
