@@ -1024,12 +1024,9 @@ class HTMLEditor final : public EditorBase,
    * @param aNewNode            The new node called.  The previous or following
    *                            content of aStartOfRightNode will be moved into
    *                            this node.
-   * @param aDirection          Whether aNewNode will have previous or following
-   *                            content of aStartOfRightNode.
    */
   MOZ_CAN_RUN_SCRIPT Result<SplitNodeResult, nsresult> DoSplitNode(
-      const EditorDOMPoint& aStartOfRightNode, nsIContent& aNewNode,
-      SplitNodeDirection aDirection);
+      const EditorDOMPoint& aStartOfRightNode, nsIContent& aNewNode);
 
   /**
    * DoJoinNodes() merges contents in aContentToRemove to aContentToKeep and
@@ -1042,13 +1039,9 @@ class HTMLEditor final : public EditorBase,
    * @param aContentToRemove  The node that will be joined with aContentToKeep.
    *                          There is no requirement that the two nodes be of
    *                          the same type.
-   * @param aDirection        Whether aContentToKeep is right node or left node,
-   *                          and whether aContentToRemove is left node or right
-   *                          node.
    */
   [[nodiscard]] MOZ_CAN_RUN_SCRIPT nsresult
-  DoJoinNodes(nsIContent& aContentToKeep, nsIContent& aContentToRemove,
-              JoinNodesDirection aDirection);
+  DoJoinNodes(nsIContent& aContentToKeep, nsIContent& aContentToRemove);
 
   /**
    * Routines for managing the preservation of selection across

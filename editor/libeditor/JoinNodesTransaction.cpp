@@ -159,8 +159,7 @@ nsresult JoinNodesTransaction::DoTransactionInternal(
   {
     AutoTrackDOMPoint trackJoinNodePoint(htmlEditor->RangeUpdaterRef(),
                                          &joinNodesPoint);
-    rv = htmlEditor->DoJoinNodes(keepingContent, removingContent,
-                                 GetJoinNodesDirection());
+    rv = htmlEditor->DoJoinNodes(keepingContent, removingContent);
     NS_WARNING_ASSERTION(NS_SUCCEEDED(rv), "HTMLEditor::DoJoinNodes() failed");
   }
   // Adjust join node offset to the actual offset where the original first
@@ -189,9 +188,8 @@ NS_IMETHODIMP JoinNodesTransaction::UndoTransaction() {
   const OwningNonNull<HTMLEditor> htmlEditor = *mHTMLEditor;
   const OwningNonNull<nsIContent> removedContent = *mRemovedContent;
 
-  Result<SplitNodeResult, nsresult> splitNodeResult =
-      htmlEditor->DoSplitNode(CreateJoinedPoint<EditorDOMPoint>(),
-                              removedContent, GetSplitNodeDirection());
+  Result<SplitNodeResult, nsresult> splitNodeResult = htmlEditor->DoSplitNode(
+      CreateJoinedPoint<EditorDOMPoint>(), removedContent);
   if (MOZ_UNLIKELY(splitNodeResult.isErr())) {
     NS_WARNING("HTMLEditor::DoSplitNode() failed");
     return splitNodeResult.unwrapErr();

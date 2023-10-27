@@ -300,8 +300,7 @@ void RangeUpdater::SelAdjDeleteNode(nsINode& aNodeToDelete) {
 
 nsresult RangeUpdater::SelAdjSplitNode(nsIContent& aOriginalContent,
                                        uint32_t aSplitOffset,
-                                       nsIContent& aNewContent,
-                                       SplitNodeDirection aSplitNodeDirection) {
+                                       nsIContent& aNewContent) {
   if (mLocked) {
     // lock set by Will/DidReplaceParent, etc...
     return NS_OK;
@@ -319,28 +318,15 @@ nsresult RangeUpdater::SelAdjSplitNode(nsIContent& aOriginalContent,
   auto AdjustDOMPoint = [&](nsCOMPtr<nsINode>& aContainer,
                             uint32_t& aOffset) -> void {
     if (aContainer == atNewNode.GetContainer()) {
-      if (aSplitNodeDirection == SplitNodeDirection::LeftNodeIsNewOne) {
-        // When we create a left node, we insert it before the right node.
-        // In this case,
-        // - `{}<right/>` should become `{}<left/><right/>` (0 -> 0)
-        // - `<right/>{}` should become `<left/><right/>{}` (1 -> 2)
-        // - `{<right/>}` should become `{<left/><right/>}` (0 -> 0, 1 -> 2}
-        // Therefore, we need to increate the offset only when the offset is
-        // larger than the offset at the left node.
-        if (aOffset > atNewNode.Offset()) {
-          aOffset++;
-        }
-      } else {
-        // When we create a right node, we insert it after the left node.
-        // In this case,
-        // - `{}<left/>` should become `{}<left/><right/>` (0 -> 0)
-        // - `<left/>{}` should become `<left/><right/>{}` (1 -> 2)
-        // - `{<left/>}` should become `{<left/><right/>}` (0 -> 0, 1 -> 2}
-        // Therefore, we need to increate the offset only when the offset equals
-        // or is larger than the offset at the right node.
-        if (aOffset >= atNewNode.Offset()) {
-          aOffset++;
-        }
+      // When we create a right node, we insert it after the left node.
+      // In this case,
+      // - `{}<left/>` should become `{}<left/><right/>` (0 -> 0)
+      // - `<left/>{}` should become `<left/><right/>{}` (1 -> 2)
+      // - `{<left/>}` should become `{<left/><right/>}` (0 -> 0, 1 -> 2}
+      // Therefore, we need to increate the offset only when the offset equals
+      // or is larger than the offset at the right node.
+      if (aOffset >= atNewNode.Offset()) {
+        aOffset++;
       }
     }
     // If point is in the range which are moved from aOriginalContent to
@@ -350,13 +336,7 @@ nsresult RangeUpdater::SelAdjSplitNode(nsIContent& aOriginalContent,
     if (aContainer != &aOriginalContent) {
       return;
     }
-    if (aSplitNodeDirection == SplitNodeDirection::LeftNodeIsNewOne) {
-      if (aOffset > aSplitOffset) {
-        aOffset -= aSplitOffset;
-      } else {
-        aContainer = &aNewContent;
-      }
-    } else if (aOffset >= aSplitOffset) {
+    if (aOffset >= aSplitOffset) {
       aContainer = &aNewContent;
       aOffset -= aSplitOffset;
     }
@@ -375,8 +355,7 @@ nsresult RangeUpdater::SelAdjSplitNode(nsIContent& aOriginalContent,
 nsresult RangeUpdater::SelAdjJoinNodes(
     const EditorRawDOMPoint& aStartOfRightContent,
     const nsIContent& aRemovedContent,
-    const EditorDOMPoint& aOldPointAtRightContent,
-    JoinNodesDirection aJoinNodesDirection) {
+    const EditorDOMPoint& aOldPointAtRightContent) {
   MOZ_ASSERT(aStartOfRightContent.IsSetAndValid());
   MOZ_ASSERT(aOldPointAtRightContent.IsSet());  // Invalid point in most cases
   MOZ_ASSERT(aOldPointAtRightContent.HasOffset());
@@ -402,9 +381,7 @@ nsresult RangeUpdater::SelAdjJoinNodes(
       // right node, the offset should be same.  Otherwise, we need to advance
       // the offset to length of the removed content.
       aContainer = aStartOfRightContent.GetContainer();
-      if (aJoinNodesDirection == JoinNodesDirection::RightNodeIntoLeftNode) {
-        aOffset += aStartOfRightContent.Offset();
-      }
+      aOffset += aStartOfRightContent.Offset();
     }
     // TODO: If aOldPointAtRightContent.GetContainer() was in aRemovedContent,
     //       we fail to adjust container and offset here because we need to
@@ -422,12 +399,6 @@ nsresult RangeUpdater::SelAdjJoinNodes(
       else if (aOffset == aOldPointAtRightContent.Offset()) {
         aContainer = aStartOfRightContent.GetContainer();
         aOffset = aStartOfRightContent.Offset();
-      }
-    } else if (aContainer == aStartOfRightContent.GetContainer()) {
-      // If the point is in joined node, and removed content is moved to
-      // start of the joined node, we need to adjust the offset.
-      if (aJoinNodesDirection == JoinNodesDirection::LeftNodeIntoRightNode) {
-        aOffset += aStartOfRightContent.Offset();
       }
     }
   };
