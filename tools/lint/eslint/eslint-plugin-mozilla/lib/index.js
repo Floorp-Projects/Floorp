@@ -53,6 +53,7 @@ module.exports = {
     "no-aArgs": require("../lib/rules/no-aArgs"),
     "no-addtask-setup": require("../lib/rules/no-addtask-setup"),
     "no-arbitrary-setTimeout": require("../lib/rules/no-arbitrary-setTimeout"),
+    "no-browser-refs-in-toolkit": require("../lib/rules/no-browser-refs-in-toolkit"),
     "no-compare-against-boolean-literals": require("../lib/rules/no-compare-against-boolean-literals"),
     "no-cu-reportError": require("../lib/rules/no-cu-reportError"),
     "no-define-cc-etc": require("../lib/rules/no-define-cc-etc"),
