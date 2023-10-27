@@ -46,6 +46,7 @@ struct FrameInfo {
   int64_t ntp_time_ms;
   RtpPacketInfos packet_infos;
   // ColorSpace is not stored here, as it might be modified by decoders.
+  VideoFrameType frame_type;
 };
 
 class VCMDecodedFrameCallback : public DecodedImageCallback {
