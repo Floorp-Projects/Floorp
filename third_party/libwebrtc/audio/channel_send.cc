@@ -325,13 +325,6 @@ int32_t ChannelSend::SendRtpAudio(AudioFrameType frameType,
                                   uint32_t rtp_timestamp_without_offset,
                                   rtc::ArrayView<const uint8_t> payload,
                                   int64_t absolute_capture_timestamp_ms) {
-  if (include_audio_level_indication_.load()) {
-    // Store current audio level in the RTP sender.
-    // The level will be used in combination with voice-activity state
-    // (frameType) to add an RTP header extension
-    rtp_sender_audio_->SetAudioLevel(rms_level_.Average());
-  }
-
   // E2EE Custom Audio Frame Encryption (This is optional).
   // Keep this buffer around for the lifetime of the send call.
   rtc::Buffer encrypted_audio_payload;
@@ -388,10 +381,19 @@ int32_t ChannelSend::SendRtpAudio(AudioFrameType frameType,
   // knowledge of the offset to a single place.
 
   // This call will trigger Transport::SendPacket() from the RTP/RTCP module.
-  if (!rtp_sender_audio_->SendAudio(
-          frameType, payloadType,
-          rtp_timestamp_without_offset + rtp_rtcp_->StartTimestamp(),
-          payload.data(), payload.size(), absolute_capture_timestamp_ms)) {
+  RTPSenderAudio::RtpAudioFrame frame = {
+      .type = frameType,
+      .payload = payload,
+      .payload_id = payloadType,
+      .rtp_timestamp =
+          rtp_timestamp_without_offset + rtp_rtcp_->StartTimestamp()};
+  if (absolute_capture_timestamp_ms > 0) {
+    frame.capture_time = Timestamp::Millis(absolute_capture_timestamp_ms);
+  }
+  if (include_audio_level_indication_.load()) {
+    frame.audio_level_dbov = rms_level_.Average();
+  }
+  if (!rtp_sender_audio_->SendAudio(frame)) {
     RTC_DLOG(LS_ERROR)
         << "ChannelSend::SendData() failed to send data to RTP/RTCP module";
     return -1;
