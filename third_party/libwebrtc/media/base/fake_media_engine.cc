@@ -76,7 +76,7 @@ const AudioOptions& FakeVoiceMediaReceiveChannel::options() const {
 int FakeVoiceMediaReceiveChannel::max_bps() const {
   return max_bps_;
 }
-bool FakeVoiceMediaReceiveChannel::SetRecvParameters(
+bool FakeVoiceMediaReceiveChannel::SetReceiverParameters(
     const AudioReceiverParameters& params) {
   set_recv_rtcp_parameters(params.rtcp);
   return (SetRecvCodecs(params.codecs) &&
@@ -235,7 +235,7 @@ const AudioOptions& FakeVoiceMediaSendChannel::options() const {
 int FakeVoiceMediaSendChannel::max_bps() const {
   return max_bps_;
 }
-bool FakeVoiceMediaSendChannel::SetSendParameters(
+bool FakeVoiceMediaSendChannel::SetSenderParameters(
     const AudioSenderParameter& params) {
   set_send_rtcp_parameters(params.rtcp);
   SetExtmapAllowMixed(params.extmap_allow_mixed);
@@ -355,7 +355,7 @@ const VideoOptions& FakeVideoMediaSendChannel::options() const {
 int FakeVideoMediaSendChannel::max_bps() const {
   return max_bps_;
 }
-bool FakeVideoMediaSendChannel::SetSendParameters(
+bool FakeVideoMediaSendChannel::SetSenderParameters(
     const VideoSenderParameters& params) {
   set_send_rtcp_parameters(params.rtcp);
   SetExtmapAllowMixed(params.extmap_allow_mixed);
@@ -441,7 +441,7 @@ FakeVideoMediaReceiveChannel::sinks() const {
 int FakeVideoMediaReceiveChannel::max_bps() const {
   return max_bps_;
 }
-bool FakeVideoMediaReceiveChannel::SetRecvParameters(
+bool FakeVideoMediaReceiveChannel::SetReceiverParameters(
     const VideoReceiverParameters& params) {
   set_recv_rtcp_parameters(params.rtcp);
   return (SetRecvCodecs(params.codecs) &&
