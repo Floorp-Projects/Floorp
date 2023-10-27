@@ -34,6 +34,7 @@
 #include "rtc_base/stream.h"
 #include "rtc_base/system/rtc_export.h"
 #include "rtc_base/task_utils/repeating_task.h"
+#include "rtc_base/third_party/sigslot/sigslot.h"
 
 namespace rtc {
 
@@ -71,7 +72,8 @@ class SSLCertChain;
 // configuration is restored.
 RTC_EXPORT void SetAllowLegacyTLSProtocols(const absl::optional<bool>& allow);
 
-class OpenSSLStreamAdapter final : public SSLStreamAdapter {
+class OpenSSLStreamAdapter final : public SSLStreamAdapter,
+                                   public sigslot::has_slots<> {
  public:
   OpenSSLStreamAdapter(
       std::unique_ptr<StreamInterface> stream,

@@ -24,7 +24,6 @@
 #include "rtc_base/ssl_certificate.h"
 #include "rtc_base/ssl_identity.h"
 #include "rtc_base/stream.h"
-#include "rtc_base/third_party/sigslot/sigslot.h"
 
 namespace rtc {
 
@@ -113,7 +112,7 @@ enum { SSE_MSG_TRUNC = 0xff0001 };
 // Used to send back UMA histogram value. Logged when Dtls handshake fails.
 enum class SSLHandshakeError { UNKNOWN, INCOMPATIBLE_CIPHERSUITE, MAX_VALUE };
 
-class SSLStreamAdapter : public StreamInterface, public sigslot::has_slots<> {
+class SSLStreamAdapter : public StreamInterface {
  public:
   // Instantiate an SSLStreamAdapter wrapping the given stream,
   // (using the selected implementation for the platform).
@@ -262,9 +261,6 @@ class SSLStreamAdapter : public StreamInterface, public sigslot::has_slots<> {
   // Returns true by default, else false if explicitly set to disable client
   // authentication.
   bool GetClientAuthEnabled() const { return client_auth_enabled_; }
-
-  // TODO(bugs.webrtc.org/11943): Remove after updating downstream code.
-  sigslot::signal1<SSLHandshakeError> SignalSSLHandshakeError;
 
  private:
   // If true (default), the client is required to provide a certificate during
