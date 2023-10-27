@@ -57,7 +57,7 @@ add_setup(async function () {
   await SearchTestUtils.installSearchExtension({}, { setAsDefault: true });
 
   await QuickSuggestTestUtils.ensureQuickSuggestInit({
-    remoteSettingsRecords: [
+    remoteSettingsResults: [
       {
         type: "data",
         attachment: REMOTE_SETTINGS_RESULTS,

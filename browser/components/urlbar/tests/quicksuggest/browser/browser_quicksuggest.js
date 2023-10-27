@@ -18,8 +18,6 @@ const REMOTE_SETTINGS_RESULTS = [
     click_url: "http://click.reporting.test.com/",
     impression_url: "http://impression.reporting.test.com/",
     advertiser: "TestAdvertiser",
-    iab_category: "22 - Shopping",
-    icon: "1234",
   },
   {
     id: 2,
@@ -28,9 +26,8 @@ const REMOTE_SETTINGS_RESULTS = [
     keywords: ["nonspon"],
     click_url: "http://click.reporting.test.com/nonsponsored",
     impression_url: "http://impression.reporting.test.com/nonsponsored",
-    advertiser: "Wikipedia",
+    advertiser: "TestAdvertiserNonSponsored",
     iab_category: "5 - Education",
-    icon: "1234",
   },
 ];
 
@@ -40,7 +37,7 @@ add_setup(async function () {
   await UrlbarTestUtils.formHistory.clear();
 
   await QuickSuggestTestUtils.ensureQuickSuggestInit({
-    remoteSettingsRecords: [
+    remoteSettingsResults: [
       {
         type: "data",
         attachment: REMOTE_SETTINGS_RESULTS,
@@ -50,7 +47,7 @@ add_setup(async function () {
 });
 
 // Tests a sponsored result and keyword highlighting.
-add_tasks_with_rust(async function sponsored() {
+add_task(async function sponsored() {
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
     value: "fra",
@@ -76,7 +73,7 @@ add_tasks_with_rust(async function sponsored() {
 });
 
 // Tests a non-sponsored result.
-add_tasks_with_rust(async function nonSponsored() {
+add_task(async function nonSponsored() {
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
     value: "nonspon",
@@ -91,7 +88,7 @@ add_tasks_with_rust(async function nonSponsored() {
 });
 
 // Tests sponsored priority feature.
-add_tasks_with_rust(async function sponsoredPriority() {
+add_task(async function sponsoredPriority() {
   const cleanUpNimbus = await UrlbarTestUtils.initNimbusFeature({
     quickSuggestSponsoredPriority: true,
   });
@@ -134,33 +131,31 @@ add_tasks_with_rust(async function sponsoredPriority() {
 });
 
 // Tests sponsored priority feature does not affect to non-sponsored suggestion.
-add_tasks_with_rust(
-  async function sponsoredPriorityButNotSponsoredSuggestion() {
-    const cleanUpNimbus = await UrlbarTestUtils.initNimbusFeature({
-      quickSuggestSponsoredPriority: true,
-    });
+add_task(async function sponsoredPriorityButNotSponsoredSuggestion() {
+  const cleanUpNimbus = await UrlbarTestUtils.initNimbusFeature({
+    quickSuggestSponsoredPriority: true,
+  });
 
-    await UrlbarTestUtils.promiseAutocompleteResultPopup({
-      window,
-      value: "nonspon",
-    });
-    await QuickSuggestTestUtils.assertIsQuickSuggest({
-      window,
-      index: 1,
-      isSponsored: false,
-      url: `${TEST_URL}?q=nonsponsored`,
-    });
+  await UrlbarTestUtils.promiseAutocompleteResultPopup({
+    window,
+    value: "nonspon",
+  });
+  await QuickSuggestTestUtils.assertIsQuickSuggest({
+    window,
+    index: 1,
+    isSponsored: false,
+    url: `${TEST_URL}?q=nonsponsored`,
+  });
 
-    let row = await UrlbarTestUtils.waitForAutocompleteResultAt(window, 1);
-    let before = window.getComputedStyle(row, "::before");
-    Assert.equal(before.content, "attr(label)", "::before.content is enabled");
-    Assert.equal(
-      row.getAttribute("label"),
-      "Firefox Suggest",
-      "Row has general group label for quick suggest"
-    );
+  let row = await UrlbarTestUtils.waitForAutocompleteResultAt(window, 1);
+  let before = window.getComputedStyle(row, "::before");
+  Assert.equal(before.content, "attr(label)", "::before.content is enabled");
+  Assert.equal(
+    row.getAttribute("label"),
+    "Firefox Suggest",
+    "Row has general group label for quick suggest"
+  );
 
-    await UrlbarTestUtils.promisePopupClose(window);
-    await cleanUpNimbus();
-  }
-);
+  await UrlbarTestUtils.promisePopupClose(window);
+  await cleanUpNimbus();
+});

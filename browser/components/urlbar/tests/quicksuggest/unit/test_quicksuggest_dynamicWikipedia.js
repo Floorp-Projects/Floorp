@@ -24,12 +24,14 @@ const MERINO_SUGGESTIONS = [
 ];
 
 add_setup(async function init() {
+  UrlbarPrefs.set("quicksuggest.enabled", true);
+  UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
+
   // Disable search suggestions so we don't hit the network.
   Services.prefs.setBoolPref("browser.search.suggest.enabled", false);
 
   await QuickSuggestTestUtils.ensureQuickSuggestInit({
     merinoSuggestions: MERINO_SUGGESTIONS,
-    prefs: [["suggest.quicksuggest.nonsponsored", true]],
   });
 });
 

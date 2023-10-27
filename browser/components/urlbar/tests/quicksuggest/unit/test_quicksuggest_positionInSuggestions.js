@@ -415,9 +415,13 @@ const TEST_CASES = [
 ];
 
 add_setup(async function () {
+  UrlbarPrefs.set("quicksuggest.enabled", true);
+  UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
+  UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
+
   // Setup for quick suggest result.
   await QuickSuggestTestUtils.ensureQuickSuggestInit({
-    remoteSettingsRecords: [
+    remoteSettingsResults: [
       {
         type: "data",
         attachment: [
@@ -430,10 +434,6 @@ add_setup(async function () {
           THIRD_POSITION_RESULT,
         ],
       },
-    ],
-    prefs: [
-      ["suggest.quicksuggest.sponsored", true],
-      ["suggest.quicksuggest.nonsponsored", true],
     ],
   });
 

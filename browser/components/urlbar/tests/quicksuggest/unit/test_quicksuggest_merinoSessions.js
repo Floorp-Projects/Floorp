@@ -15,13 +15,12 @@ ChromeUtils.defineLazyGetter(
 );
 
 add_task(async function init() {
+  UrlbarPrefs.set("quicksuggest.enabled", true);
+  UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
+  UrlbarPrefs.set("quicksuggest.dataCollection.enabled", true);
+
   await MerinoTestUtils.server.start();
-  await QuickSuggestTestUtils.ensureQuickSuggestInit({
-    prefs: [
-      ["suggest.quicksuggest.sponsored", true],
-      ["quicksuggest.dataCollection.enabled", true],
-    ],
-  });
+  await QuickSuggestTestUtils.ensureQuickSuggestInit();
 });
 
 // In a single engagement, all requests should use the same session ID and the

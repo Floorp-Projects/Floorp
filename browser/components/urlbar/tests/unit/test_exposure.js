@@ -101,17 +101,20 @@ add_setup(async function test_setup() {
   // FOG needs to be initialized in order for data to flow.
   Services.fog.initializeFOG();
 
+  UrlbarPrefs.set("quicksuggest.enabled", true);
+  UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
+  UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
+  UrlbarPrefs.set("quicksuggest.shouldShowOnboardingDialog", false);
+
+  await MerinoTestUtils.server.start();
+
   // Set up the remote settings client with the test data.
   await QuickSuggestTestUtils.ensureQuickSuggestInit({
-    remoteSettingsRecords: [
+    remoteSettingsResults: [
       {
         type: "data",
         attachment: REMOTE_SETTINGS_RESULTS,
       },
-    ],
-    prefs: [
-      ["suggest.quicksuggest.nonsponsored", true],
-      ["suggest.quicksuggest.sponsored", true],
     ],
   });
 });

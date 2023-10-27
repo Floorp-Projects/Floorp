@@ -45,7 +45,7 @@ const REMOTE_SETTINGS_RESULTS = [
         keywords: ["first", "1st", "two words", "a b c"],
         description: "Description for the First Addon",
         number_of_ratings: 1256,
-        score: 0.25,
+        is_top_pick: true,
       },
       {
         url: "https://example.com/second-addon",
@@ -56,7 +56,7 @@ const REMOTE_SETTINGS_RESULTS = [
         keywords: ["second", "2nd"],
         description: "Description for the Second Addon",
         number_of_ratings: 256,
-        score: 0.25,
+        is_top_pick: false,
       },
       {
         url: "https://example.com/third-addon",
@@ -67,7 +67,6 @@ const REMOTE_SETTINGS_RESULTS = [
         keywords: ["third", "3rd"],
         description: "Description for the Third Addon",
         number_of_ratings: 3,
-        score: 0.25,
       },
       {
         url: "https://example.com/fourth-addon?utm_medium=aaa&utm_source=bbb",
@@ -78,21 +77,23 @@ const REMOTE_SETTINGS_RESULTS = [
         keywords: ["fourth", "4th"],
         description: "Description for the Fourth Addon",
         number_of_ratings: 4,
-        score: 0.25,
       },
     ],
   },
 ];
 
 add_setup(async function init() {
+  UrlbarPrefs.set("quicksuggest.enabled", true);
+  UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
+
   // Disable search suggestions so we don't hit the network.
   Services.prefs.setBoolPref("browser.search.suggest.enabled", false);
 
   await QuickSuggestTestUtils.ensureQuickSuggestInit({
-    remoteSettingsRecords: REMOTE_SETTINGS_RESULTS,
+    remoteSettingsResults: REMOTE_SETTINGS_RESULTS,
     merinoSuggestions: MERINO_SUGGESTIONS,
-    prefs: [["suggest.quicksuggest.nonsponsored", true]],
   });
+  await waitForRemoteSettingsSuggestions();
 });
 
 add_task(async function telemetryType() {
@@ -132,7 +133,7 @@ add_tasks_with_rust(async function quickSuggestPrefsDisabled() {
     });
 
     UrlbarPrefs.set(pref, true);
-    await QuickSuggestTestUtils.forceSync();
+    await waitForRemoteSettingsSuggestions();
   }
 });
 
@@ -167,7 +168,7 @@ add_tasks_with_rust(async function addonSuggestionsSpecificPrefDisabled() {
 
     // Revert.
     UrlbarPrefs.clear(pref);
-    await QuickSuggestTestUtils.forceSync();
+    await waitForRemoteSettingsSuggestions();
   }
 });
 
@@ -188,7 +189,7 @@ add_tasks_with_rust(async function nimbus() {
   const cleanUpNimbusEnable = await UrlbarTestUtils.initNimbusFeature({
     addonsFeatureGate: true,
   });
-  await QuickSuggestTestUtils.forceSync();
+  await waitForRemoteSettingsSuggestions();
   await check_results({
     context: createContext("test", {
       providers: [UrlbarProviderQuickSuggest.name],
@@ -205,7 +206,7 @@ add_tasks_with_rust(async function nimbus() {
 
   // Enable locally.
   UrlbarPrefs.set("addons.featureGate", true);
-  await QuickSuggestTestUtils.forceSync();
+  await waitForRemoteSettingsSuggestions();
 
   // Disable by Nimbus.
   const cleanUpNimbusDisable = await UrlbarTestUtils.initNimbusFeature({
@@ -222,7 +223,7 @@ add_tasks_with_rust(async function nimbus() {
 
   // Revert.
   UrlbarPrefs.clear("addons.featureGate");
-  await QuickSuggestTestUtils.forceSync();
+  await waitForRemoteSettingsSuggestions();
 });
 
 add_tasks_with_rust(async function hideIfAlreadyInstalled() {
@@ -263,7 +264,6 @@ add_tasks_with_rust(async function hideIfAlreadyInstalled() {
   xpi.remove(false);
 });
 
-// TODO (bug 1861220): The Rust implementation doesn't support prefix matching.
 add_tasks_with_rust(async function remoteSettings() {
   const testCases = [
     {
@@ -495,10 +495,6 @@ add_task(async function merinoIsTopPick() {
 });
 
 // Tests the "show less frequently" behavior.
-//
-// TODO (bug 1861220, bug 1861228): The Rust implementation doesn't support
-// prefix matching or the remote settings config, so this task is not run with
-// Rust enabled.
 add_task(async function showLessFrequently() {
   await doShowLessFrequentlyTests({
     feature: QuickSuggest.getFeature("AddonSuggestions"),
@@ -564,4 +560,12 @@ function makeExpectedResult({ suggestion, source, setUtmParams = true }) {
       provider,
     },
   };
+}
+
+async function waitForRemoteSettingsSuggestions(keyword = "first") {
+  let feature = QuickSuggest.getFeature("AddonSuggestions");
+  await TestUtils.waitForCondition(async () => {
+    let suggestions = await feature.queryRemoteSettings(keyword);
+    return !!suggestions.length;
+  }, "Waiting for AddonSuggestions to serve remote settings suggestions");
 }

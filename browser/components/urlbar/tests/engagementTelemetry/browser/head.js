@@ -93,7 +93,7 @@ function _assertGleanTelemetry(telemetryName, expectedExtraList) {
 async function ensureQuickSuggestInit({ ...args } = {}) {
   return lazy.QuickSuggestTestUtils.ensureQuickSuggestInit({
     ...args,
-    remoteSettingsRecords: [
+    remoteSettingsResults: [
       {
         type: "data",
         attachment: [
@@ -106,7 +106,6 @@ async function ensureQuickSuggestInit({ ...args } = {}) {
             impression_url: "https://example.com/impression",
             advertiser: "TestAdvertiser",
             iab_category: "22 - Shopping",
-            icon: "1234",
           },
           {
             id: 2,
@@ -115,9 +114,8 @@ async function ensureQuickSuggestInit({ ...args } = {}) {
             keywords: ["nonsponsored"],
             click_url: "https://example.com/click",
             impression_url: "https://example.com/impression",
-            advertiser: "Wikipedia",
+            advertiser: "TestAdvertiser",
             iab_category: "5 - Education",
-            icon: "1234",
           },
         ],
       },
