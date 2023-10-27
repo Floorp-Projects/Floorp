@@ -148,11 +148,6 @@ class RTPSender {
     return flexfec_ssrc_;
   }
 
-  // Sends packet to `transport_` or to the pacer, depending on configuration.
-  // TODO(bugs.webrtc.org/XXX): Remove in favor of EnqueuePackets().
-  bool SendToNetwork(std::unique_ptr<RtpPacketToSend> packet)
-      RTC_LOCKS_EXCLUDED(send_mutex_);
-
   // Pass a set of packets to RtpPacketSender instance, for paced or immediate
   // sending to the network.
   void EnqueuePackets(std::vector<std::unique_ptr<RtpPacketToSend>> packets)
