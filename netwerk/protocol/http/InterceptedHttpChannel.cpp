@@ -1195,6 +1195,20 @@ InterceptedHttpChannel::OnDataAvailable(nsIRequest* aRequest,
 }
 
 NS_IMETHODIMP
+InterceptedHttpChannel::OnDataFinished(nsresult aStatus) {
+  if (mCanceled || !mListener) {
+    return aStatus;
+  }
+  nsCOMPtr<nsIThreadRetargetableStreamListener> retargetableListener =
+      do_QueryInterface(mListener);
+  if (retargetableListener) {
+    return retargetableListener->OnDataFinished(aStatus);
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 InterceptedHttpChannel::RetargetDeliveryTo(nsISerialEventTarget* aNewTarget) {
   MOZ_ASSERT(NS_IsMainThread());
   NS_ENSURE_ARG(aNewTarget);

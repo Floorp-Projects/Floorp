@@ -133,5 +133,8 @@ void nsStreamLoader::ReleaseData() { mData.clearAndFree(); }
 NS_IMETHODIMP
 nsStreamLoader::CheckListenerChain() { return NS_OK; }
 
+NS_IMETHODIMP
+nsStreamLoader::OnDataFinished(nsresult) { return NS_OK; }
+
 }  // namespace net
 }  // namespace mozilla

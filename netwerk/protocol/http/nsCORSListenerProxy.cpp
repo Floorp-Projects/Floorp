@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsIThreadRetargetableStreamListener.h"
 #include "nsString.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/LinkedList.h"
@@ -704,6 +705,25 @@ nsCORSListenerProxy::OnDataAvailable(nsIRequest* aRequest,
     listener = mOuterListener;
   }
   return listener->OnDataAvailable(aRequest, aInputStream, aOffset, aCount);
+}
+
+NS_IMETHODIMP
+nsCORSListenerProxy::OnDataFinished(nsresult aStatus) {
+  nsCOMPtr<nsIStreamListener> listener;
+  {
+    MutexAutoLock lock(mMutex);
+    listener = mOuterListener;
+  }
+  if (!listener) {
+    return NS_ERROR_FAILURE;
+  }
+  nsCOMPtr<nsIThreadRetargetableStreamListener> retargetableListener =
+      do_QueryInterface(listener);
+  if (retargetableListener) {
+    return retargetableListener->OnDataFinished(aStatus);
+  }
+
+  return NS_OK;
 }
 
 void nsCORSListenerProxy::SetInterceptController(

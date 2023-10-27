@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsIStreamListener.idl"
+#include "nsIThreadRetargetableStreamListener.idl"
 
 interface nsIChannel;
 interface nsIInputStream;
@@ -52,7 +52,7 @@ interface nsIInputStream;
  */
 
 [scriptable, uuid(0b6e2c69-5cf5-48b0-9dfd-c95950e2cc7b)]
-interface nsIStreamConverter : nsIStreamListener {
+interface nsIStreamConverter : nsIThreadRetargetableStreamListener {
 
     /**
      * <b>SYNCRONOUS VERSION</b>
