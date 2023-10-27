@@ -46,11 +46,9 @@ class FunctionFlags {
     // WARNING: This is independent from Flags::CONSTRUCTOR.
     ClassConstructor,
 
-    // Getter and setter syntax in objects or classes.
-    // This kind is used only by scripted function.
-    //
-    // NOTE: Native getter and setter created from JSPropertySpec don't use
-    //       this kind, but use NormalFunction.
+    // Getter and setter syntax in objects or classes, or
+    // native getter and setter created from JSPropertySpec.
+    // This kind is used both by scripted functions and native functions.
     Getter,
     Setter,
 
@@ -256,13 +254,11 @@ class FunctionFlags {
         MOZ_ASSERT(!hasFlags(WASM_JIT_ENTRY));
         break;
       case FunctionKind::Getter:
-        MOZ_ASSERT(hasFlags(BASESCRIPT) || hasFlags(SELFHOSTLAZY));
         MOZ_ASSERT(!hasFlags(CONSTRUCTOR));
         MOZ_ASSERT(!hasFlags(LAMBDA));
         MOZ_ASSERT(!hasFlags(WASM_JIT_ENTRY));
         break;
       case FunctionKind::Setter:
-        MOZ_ASSERT(hasFlags(BASESCRIPT) || hasFlags(SELFHOSTLAZY));
         MOZ_ASSERT(!hasFlags(CONSTRUCTOR));
         MOZ_ASSERT(!hasFlags(LAMBDA));
         MOZ_ASSERT(!hasFlags(WASM_JIT_ENTRY));
