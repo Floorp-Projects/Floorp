@@ -303,6 +303,7 @@ void PlotCollection::PrintPythonCode(
   printf("import matplotlib.patheffects as pe\n");
   printf("import colorsys\n");
   printf("import os\n");
+  printf("plt.rcParams['figure.figsize'] = [10, 3]\n");
   for (size_t i = 0; i < plots_.size(); i++) {
     printf("plt.figure(%zu)\n", i);
     if (shared_xaxis) {
