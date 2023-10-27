@@ -28,12 +28,10 @@
               "revision": "git_revision:59ddedfe3849abf560cbe0b41bb8e431041cd2bb"
             }
           ],
-          "dimension_sets": [
-            {
-              "os": "iOS-15.7",
-              "pool": "chrome.tests"
-            }
-          ],
+          "dimensions": {
+            "os": "iOS-16.6",
+            "pool": "chrome.tests"
+          },
           "named_caches": [
             {
               "name": "xcode_ios_14c18",
@@ -69,12 +67,10 @@
               "revision": "git_revision:59ddedfe3849abf560cbe0b41bb8e431041cd2bb"
             }
           ],
-          "dimension_sets": [
-            {
-              "os": "iOS-15.7",
-              "pool": "chrome.tests"
-            }
-          ],
+          "dimensions": {
+            "os": "iOS-16.6",
+            "pool": "chrome.tests"
+          },
           "named_caches": [
             {
               "name": "xcode_ios_14c18",
@@ -111,12 +107,10 @@
               "revision": "git_revision:59ddedfe3849abf560cbe0b41bb8e431041cd2bb"
             }
           ],
-          "dimension_sets": [
-            {
-              "os": "iOS-15.7",
-              "pool": "chrome.tests"
-            }
-          ],
+          "dimensions": {
+            "os": "iOS-16.6",
+            "pool": "chrome.tests"
+          },
           "hard_timeout": 7200,
           "io_timeout": 7200,
           "named_caches": [
@@ -155,12 +149,10 @@
               "revision": "git_revision:59ddedfe3849abf560cbe0b41bb8e431041cd2bb"
             }
           ],
-          "dimension_sets": [
-            {
-              "os": "iOS-15.7",
-              "pool": "chrome.tests"
-            }
-          ],
+          "dimensions": {
+            "os": "iOS-16.6",
+            "pool": "chrome.tests"
+          },
           "named_caches": [
             {
               "name": "xcode_ios_14c18",
@@ -197,12 +189,10 @@
               "revision": "git_revision:59ddedfe3849abf560cbe0b41bb8e431041cd2bb"
             }
           ],
-          "dimension_sets": [
-            {
-              "os": "iOS-15.7",
-              "pool": "chrome.tests"
-            }
-          ],
+          "dimensions": {
+            "os": "iOS-16.6",
+            "pool": "chrome.tests"
+          },
           "named_caches": [
             {
               "name": "xcode_ios_14c18",
@@ -238,12 +228,10 @@
               "revision": "git_revision:59ddedfe3849abf560cbe0b41bb8e431041cd2bb"
             }
           ],
-          "dimension_sets": [
-            {
-              "os": "iOS-15.7",
-              "pool": "chrome.tests"
-            }
-          ],
+          "dimensions": {
+            "os": "iOS-16.6",
+            "pool": "chrome.tests"
+          },
           "named_caches": [
             {
               "name": "xcode_ios_14c18",
@@ -279,12 +267,10 @@
               "revision": "git_revision:59ddedfe3849abf560cbe0b41bb8e431041cd2bb"
             }
           ],
-          "dimension_sets": [
-            {
-              "os": "iOS-15.7",
-              "pool": "chrome.tests"
-            }
-          ],
+          "dimensions": {
+            "os": "iOS-16.6",
+            "pool": "chrome.tests"
+          },
           "named_caches": [
             {
               "name": "xcode_ios_14c18",
@@ -320,12 +306,10 @@
               "revision": "git_revision:59ddedfe3849abf560cbe0b41bb8e431041cd2bb"
             }
           ],
-          "dimension_sets": [
-            {
-              "os": "iOS-15.7",
-              "pool": "chrome.tests"
-            }
-          ],
+          "dimensions": {
+            "os": "iOS-16.6",
+            "pool": "chrome.tests"
+          },
           "named_caches": [
             {
               "name": "xcode_ios_14c18",
@@ -361,12 +345,10 @@
               "revision": "git_revision:59ddedfe3849abf560cbe0b41bb8e431041cd2bb"
             }
           ],
-          "dimension_sets": [
-            {
-              "os": "iOS-15.7",
-              "pool": "chrome.tests"
-            }
-          ],
+          "dimensions": {
+            "os": "iOS-16.6",
+            "pool": "chrome.tests"
+          },
           "named_caches": [
             {
               "name": "xcode_ios_14c18",
@@ -402,12 +384,10 @@
               "revision": "git_revision:59ddedfe3849abf560cbe0b41bb8e431041cd2bb"
             }
           ],
-          "dimension_sets": [
-            {
-              "os": "iOS-15.7",
-              "pool": "chrome.tests"
-            }
-          ],
+          "dimensions": {
+            "os": "iOS-16.6",
+            "pool": "chrome.tests"
+          },
           "named_caches": [
             {
               "name": "xcode_ios_14c18",
@@ -443,12 +423,10 @@
               "revision": "git_revision:59ddedfe3849abf560cbe0b41bb8e431041cd2bb"
             }
           ],
-          "dimension_sets": [
-            {
-              "os": "iOS-15.7",
-              "pool": "chrome.tests"
-            }
-          ],
+          "dimensions": {
+            "os": "iOS-16.6",
+            "pool": "chrome.tests"
+          },
           "named_caches": [
             {
               "name": "xcode_ios_14c18",
@@ -495,13 +473,11 @@
               "revision": "git_revision:59ddedfe3849abf560cbe0b41bb8e431041cd2bb"
             }
           ],
-          "dimension_sets": [
-            {
-              "id": "mac-254-e504",
-              "os": "iOS-12.4.1",
-              "pool": "WebRTC"
-            }
-          ],
+          "dimensions": {
+            "id": "mac-254-e504",
+            "os": "iOS-12.4.1",
+            "pool": "WebRTC"
+          },
           "hard_timeout": 10800,
           "idempotent": false,
           "io_timeout": 10800,
@@ -544,12 +520,10 @@
               "revision": "git_revision:59ddedfe3849abf560cbe0b41bb8e431041cd2bb"
             }
           ],
-          "dimension_sets": [
-            {
-              "os": "iOS-15.7",
-              "pool": "chrome.tests"
-            }
-          ],
+          "dimensions": {
+            "os": "iOS-16.6",
+            "pool": "chrome.tests"
+          },
           "named_caches": [
             {
               "name": "xcode_ios_14c18",
@@ -585,12 +559,10 @@
               "revision": "git_revision:59ddedfe3849abf560cbe0b41bb8e431041cd2bb"
             }
           ],
-          "dimension_sets": [
-            {
-              "os": "iOS-15.7",
-              "pool": "chrome.tests"
-            }
-          ],
+          "dimensions": {
+            "os": "iOS-16.6",
+            "pool": "chrome.tests"
+          },
           "named_caches": [
             {
               "name": "xcode_ios_14c18",
@@ -627,12 +599,10 @@
               "revision": "git_revision:59ddedfe3849abf560cbe0b41bb8e431041cd2bb"
             }
           ],
-          "dimension_sets": [
-            {
-              "os": "iOS-15.7",
-              "pool": "chrome.tests"
-            }
-          ],
+          "dimensions": {
+            "os": "iOS-16.6",
+            "pool": "chrome.tests"
+          },
           "hard_timeout": 7200,
           "io_timeout": 7200,
           "named_caches": [
@@ -671,12 +641,10 @@
               "revision": "git_revision:59ddedfe3849abf560cbe0b41bb8e431041cd2bb"
             }
           ],
-          "dimension_sets": [
-            {
-              "os": "iOS-15.7",
-              "pool": "chrome.tests"
-            }
-          ],
+          "dimensions": {
+            "os": "iOS-16.6",
+            "pool": "chrome.tests"
+          },
           "named_caches": [
             {
               "name": "xcode_ios_14c18",
@@ -713,12 +681,10 @@
               "revision": "git_revision:59ddedfe3849abf560cbe0b41bb8e431041cd2bb"
             }
           ],
-          "dimension_sets": [
-            {
-              "os": "iOS-15.7",
-              "pool": "chrome.tests"
-            }
-          ],
+          "dimensions": {
+            "os": "iOS-16.6",
+            "pool": "chrome.tests"
+          },
           "named_caches": [
             {
               "name": "xcode_ios_14c18",
@@ -754,12 +720,10 @@
               "revision": "git_revision:59ddedfe3849abf560cbe0b41bb8e431041cd2bb"
             }
           ],
-          "dimension_sets": [
-            {
-              "os": "iOS-15.7",
-              "pool": "chrome.tests"
-            }
-          ],
+          "dimensions": {
+            "os": "iOS-16.6",
+            "pool": "chrome.tests"
+          },
           "named_caches": [
             {
               "name": "xcode_ios_14c18",
@@ -795,12 +759,10 @@
               "revision": "git_revision:59ddedfe3849abf560cbe0b41bb8e431041cd2bb"
             }
           ],
-          "dimension_sets": [
-            {
-              "os": "iOS-15.7",
-              "pool": "chrome.tests"
-            }
-          ],
+          "dimensions": {
+            "os": "iOS-16.6",
+            "pool": "chrome.tests"
+          },
           "named_caches": [
             {
               "name": "xcode_ios_14c18",
@@ -836,12 +798,10 @@
               "revision": "git_revision:59ddedfe3849abf560cbe0b41bb8e431041cd2bb"
             }
           ],
-          "dimension_sets": [
-            {
-              "os": "iOS-15.7",
-              "pool": "chrome.tests"
-            }
-          ],
+          "dimensions": {
+            "os": "iOS-16.6",
+            "pool": "chrome.tests"
+          },
           "named_caches": [
             {
               "name": "xcode_ios_14c18",
@@ -877,12 +837,10 @@
               "revision": "git_revision:59ddedfe3849abf560cbe0b41bb8e431041cd2bb"
             }
           ],
-          "dimension_sets": [
-            {
-              "os": "iOS-15.7",
-              "pool": "chrome.tests"
-            }
-          ],
+          "dimensions": {
+            "os": "iOS-16.6",
+            "pool": "chrome.tests"
+          },
           "named_caches": [
             {
               "name": "xcode_ios_14c18",
@@ -918,12 +876,10 @@
               "revision": "git_revision:59ddedfe3849abf560cbe0b41bb8e431041cd2bb"
             }
           ],
-          "dimension_sets": [
-            {
-              "os": "iOS-15.7",
-              "pool": "chrome.tests"
-            }
-          ],
+          "dimensions": {
+            "os": "iOS-16.6",
+            "pool": "chrome.tests"
+          },
           "named_caches": [
             {
               "name": "xcode_ios_14c18",
@@ -959,12 +915,10 @@
               "revision": "git_revision:59ddedfe3849abf560cbe0b41bb8e431041cd2bb"
             }
           ],
-          "dimension_sets": [
-            {
-              "os": "iOS-15.7",
-              "pool": "chrome.tests"
-            }
-          ],
+          "dimensions": {
+            "os": "iOS-16.6",
+            "pool": "chrome.tests"
+          },
           "named_caches": [
             {
               "name": "xcode_ios_14c18",

@@ -64,10 +64,10 @@
       'has_native_resultdb_integration': True
     }
   },
-  'ios-device-15.7': {
+  'ios-device-16.6': {
     'swarming': {
       'dimensions': {
-        'os': 'iOS-15.7',
+        'os': 'iOS-16.6',
         'pool': 'chrome.tests'
       }
     }
