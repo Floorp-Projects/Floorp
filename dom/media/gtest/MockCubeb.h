@@ -152,7 +152,8 @@ class MockCubebStream {
   enum class KeepProcessing { No, Yes };
   enum class RunningMode { Automatic, Manual };
 
-  MockCubebStream(cubeb* aContext, cubeb_devid aInputDevice,
+  MockCubebStream(cubeb* aContext, char const* aStreamName,
+                  cubeb_devid aInputDevice,
                   cubeb_stream_params* aInputStreamParams,
                   cubeb_devid aOutputDevice,
                   cubeb_stream_params* aOutputStreamParams,
@@ -167,12 +168,14 @@ class MockCubebStream {
   int Stop();
   uint64_t Position();
   void Destroy();
+  int SetName(char const* aName);
   int RegisterDeviceChangedCallback(
       cubeb_device_changed_callback aDeviceChangedCallback);
 
   cubeb_stream* AsCubebStream();
   static MockCubebStream* AsMock(cubeb_stream* aStream);
 
+  char const* StreamName() const { return mName.get(); }
   cubeb_devid GetInputDeviceID() const;
   cubeb_devid GetOutputDeviceID() const;
 
@@ -202,6 +205,7 @@ class MockCubebStream {
   // only works once.
   nsTArray<AudioDataValue>&& TakeRecordedInput();
 
+  MediaEventSource<nsCString>& NameSetEvent();
   MediaEventSource<cubeb_state>& StateEvent();
   MediaEventSource<uint32_t>& FramesProcessedEvent();
   MediaEventSource<uint32_t>& FramesVerifiedEvent();
@@ -249,6 +253,8 @@ class MockCubebStream {
   cubeb_state_callback mStateCallback = nullptr;
   // The device changed callback
   cubeb_device_changed_callback mDeviceChangedCallback = nullptr;
+  // A name for this stream
+  nsCString mName;
   // The stream params
   cubeb_stream_params mOutputParams = {};
   cubeb_stream_params mInputParams = {};
@@ -265,6 +271,7 @@ class MockCubebStream {
   AudioGenerator<AudioDataValue> mAudioGenerator;
   AudioVerifier<AudioDataValue> mAudioVerifier;
 
+  MediaEventProducer<nsCString> mNameSetEvent;
   MediaEventProducer<cubeb_state> mStateEvent;
   MediaEventProducer<uint32_t> mFramesProcessedEvent;
   MediaEventProducer<uint32_t> mFramesVerifiedEvent;
@@ -285,14 +292,15 @@ class SmartMockCubebStream
       public SupportsThreadSafeWeakPtr<SmartMockCubebStream> {
  public:
   MOZ_DECLARE_REFCOUNTED_TYPENAME(SmartMockCubebStream)
-  SmartMockCubebStream(cubeb* aContext, cubeb_devid aInputDevice,
+  SmartMockCubebStream(cubeb* aContext, char const* aStreamName,
+                       cubeb_devid aInputDevice,
                        cubeb_stream_params* aInputStreamParams,
                        cubeb_devid aOutputDevice,
                        cubeb_stream_params* aOutputStreamParams,
                        cubeb_data_callback aDataCallback,
                        cubeb_state_callback aStateCallback, void* aUserPtr,
                        RunningMode aRunningMode, bool aFrozenStart)
-      : MockCubebStream(aContext, aInputDevice, aInputStreamParams,
+      : MockCubebStream(aContext, aStreamName, aInputDevice, aInputStreamParams,
                         aOutputDevice, aOutputStreamParams, aDataCallback,
                         aStateCallback, aUserPtr, this, aRunningMode,
                         aFrozenStart) {}
@@ -387,7 +395,7 @@ class MockCubeb {
   void UnforceAudioThread();
 
   int StreamInit(cubeb* aContext, cubeb_stream** aStream,
-                 cubeb_devid aInputDevice,
+                 char const* aStreamName, cubeb_devid aInputDevice,
                  cubeb_stream_params* aInputStreamParams,
                  cubeb_devid aOutputDevice,
                  cubeb_stream_params* aOutputStreamParams,
@@ -483,8 +491,9 @@ int cubeb_mock_stream_init(
     unsigned int latency, cubeb_data_callback data_callback,
     cubeb_state_callback state_callback, void* user_ptr) {
   return MockCubeb::AsMock(context)->StreamInit(
-      context, stream, input_device, input_stream_params, output_device,
-      output_stream_params, data_callback, state_callback, user_ptr);
+      context, stream, stream_name, input_device, input_stream_params,
+      output_device, output_stream_params, data_callback, state_callback,
+      user_ptr);
 }
 
 int cubeb_mock_stream_start(cubeb_stream* stream) {
@@ -524,6 +533,7 @@ static int cubeb_mock_stream_set_volume(cubeb_stream* stream, float volume) {
 
 static int cubeb_mock_stream_set_name(cubeb_stream* stream,
                                       char const* stream_name) {
+  return MockCubebStream::AsMock(stream)->SetName(stream_name);
   return CUBEB_OK;
 }
 
