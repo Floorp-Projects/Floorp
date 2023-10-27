@@ -430,10 +430,10 @@ class VoiceChannel : public BaseChannel {
       RTC_RUN_ON(worker_thread()) override;
 
   // Last AudioSenderParameter sent down to the media_channel() via
-  // SetSendParameters.
+  // SetSenderParameters.
   AudioSenderParameter last_send_params_ RTC_GUARDED_BY(worker_thread());
   // Last AudioReceiverParameters sent down to the media_channel() via
-  // SetRecvParameters.
+  // SetReceiverParameters.
   AudioReceiverParameters last_recv_params_ RTC_GUARDED_BY(worker_thread());
 };
 
@@ -499,10 +499,10 @@ class VideoChannel : public BaseChannel {
       RTC_RUN_ON(worker_thread()) override;
 
   // Last VideoSenderParameters sent down to the media_channel() via
-  // SetSendParameters.
+  // SetSenderParameters.
   VideoSenderParameters last_send_params_ RTC_GUARDED_BY(worker_thread());
   // Last VideoReceiverParameters sent down to the media_channel() via
-  // SetRecvParameters.
+  // SetReceiverParameters.
   VideoReceiverParameters last_recv_params_ RTC_GUARDED_BY(worker_thread());
 };
 

@@ -1262,11 +1262,11 @@ bool WebRtcVoiceSendChannel::SetOptions(const AudioOptions& options) {
   return true;
 }
 
-bool WebRtcVoiceSendChannel::SetSendParameters(
+bool WebRtcVoiceSendChannel::SetSenderParameters(
     const AudioSenderParameter& params) {
-  TRACE_EVENT0("webrtc", "WebRtcVoiceMediaChannel::SetSendParameters");
+  TRACE_EVENT0("webrtc", "WebRtcVoiceMediaChannel::SetSenderParameters");
   RTC_DCHECK_RUN_ON(worker_thread_);
-  RTC_LOG(LS_INFO) << "WebRtcVoiceMediaChannel::SetSendParameters: "
+  RTC_LOG(LS_INFO) << "WebRtcVoiceMediaChannel::SetSenderParameters: "
                    << params.ToString();
   // TODO(pthatcher): Refactor this to be more clean now that we have
   // all the information at once.
@@ -1342,7 +1342,7 @@ absl::optional<Codec> WebRtcVoiceSendChannel::GetSendCodec() const {
   return absl::nullopt;
 }
 
-// Utility function called from SetSendParameters() to extract current send
+// Utility function called from SetSenderParameters() to extract current send
 // codec settings from the given list of codecs (originally from SDP). Both send
 // and receive streams may be reconfigured based on the new settings.
 bool WebRtcVoiceSendChannel::SetSendCodecs(
@@ -2042,11 +2042,11 @@ WebRtcVoiceReceiveChannel::~WebRtcVoiceReceiveChannel() {
   }
 }
 
-bool WebRtcVoiceReceiveChannel::SetRecvParameters(
+bool WebRtcVoiceReceiveChannel::SetReceiverParameters(
     const AudioReceiverParameters& params) {
-  TRACE_EVENT0("webrtc", "WebRtcVoiceMediaChannel::SetRecvParameters");
+  TRACE_EVENT0("webrtc", "WebRtcVoiceMediaChannel::SetReceiverParameters");
   RTC_DCHECK_RUN_ON(worker_thread_);
-  RTC_LOG(LS_INFO) << "WebRtcVoiceMediaChannel::SetRecvParameters: "
+  RTC_LOG(LS_INFO) << "WebRtcVoiceMediaChannel::SetReceiverParameters: "
                    << params.ToString();
   // TODO(pthatcher): Refactor this to be more clean now that we have
   // all the information at once.
@@ -2069,7 +2069,7 @@ bool WebRtcVoiceReceiveChannel::SetRecvParameters(
   return true;
 }
 
-webrtc::RtpParameters WebRtcVoiceReceiveChannel::GetRtpReceiveParameters(
+webrtc::RtpParameters WebRtcVoiceReceiveChannel::GetRtpReceiverParameters(
     uint32_t ssrc) const {
   RTC_DCHECK_RUN_ON(worker_thread_);
   webrtc::RtpParameters rtp_params;

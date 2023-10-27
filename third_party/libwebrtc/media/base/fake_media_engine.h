@@ -118,7 +118,7 @@ class RtpReceiveChannelHelper : public Base, public MediaChannelUtil {
     return RemoveStreamBySsrc(&receive_streams_, ssrc);
   }
 
-  webrtc::RtpParameters GetRtpReceiveParameters(uint32_t ssrc) const override {
+  webrtc::RtpParameters GetRtpReceiverParameters(uint32_t ssrc) const override {
     auto parameters_iterator = rtp_receive_parameters_.find(ssrc);
     if (parameters_iterator != rtp_receive_parameters_.end()) {
       return parameters_iterator->second;
@@ -469,7 +469,7 @@ class FakeVoiceMediaReceiveChannel
     return cricket::MEDIA_TYPE_AUDIO;
   }
 
-  bool SetRecvParameters(const AudioReceiverParameters& params) override;
+  bool SetReceiverParameters(const AudioReceiverParameters& params) override;
   void SetPlayout(bool playout) override;
 
   bool AddRecvStream(const StreamParams& sp) override;
@@ -559,7 +559,7 @@ class FakeVoiceMediaSendChannel
     return cricket::MEDIA_TYPE_AUDIO;
   }
 
-  bool SetSendParameters(const AudioSenderParameter& params) override;
+  bool SetSenderParameters(const AudioSenderParameter& params) override;
   void SetSend(bool send) override;
   bool SetAudioSend(uint32_t ssrc,
                     bool enable,
@@ -644,7 +644,7 @@ class FakeVideoMediaReceiveChannel
   const std::map<uint32_t, rtc::VideoSinkInterface<webrtc::VideoFrame>*>&
   sinks() const;
   int max_bps() const;
-  bool SetRecvParameters(const VideoReceiverParameters& params) override;
+  bool SetReceiverParameters(const VideoReceiverParameters& params) override;
 
   bool SetSink(uint32_t ssrc,
                rtc::VideoSinkInterface<webrtc::VideoFrame>* sink) override;
@@ -717,7 +717,7 @@ class FakeVideoMediaSendChannel
   const std::map<uint32_t, rtc::VideoSinkInterface<webrtc::VideoFrame>*>&
   sinks() const;
   int max_bps() const;
-  bool SetSendParameters(const VideoSenderParameters& params) override;
+  bool SetSenderParameters(const VideoSenderParameters& params) override;
 
   absl::optional<Codec> GetSendCodec() const override;
 
