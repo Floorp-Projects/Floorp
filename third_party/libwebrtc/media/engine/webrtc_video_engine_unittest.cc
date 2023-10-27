@@ -4836,6 +4836,39 @@ TEST_F(WebRtcVideoChannelTest, SetSendCodecsRejectsMaxLessThanMinBitrate) {
   EXPECT_FALSE(send_channel_->SetSendParameters(send_parameters_));
 }
 
+TEST_F(WebRtcVideoChannelTest,
+       SetSendParametersRemovesSelectedCodecFromRtpParameters) {
+  EXPECT_TRUE(AddSendStream());
+  cricket::VideoSenderParameters parameters;
+  parameters.codecs.push_back(cricket::CreateVideoCodec(100, "VP8"));
+  parameters.codecs.push_back(cricket::CreateVideoCodec(100, "VP9"));
+  send_channel_->SetSendParameters(parameters);
+
+  webrtc::RtpParameters initial_params =
+      send_channel_->GetRtpSendParameters(last_ssrc_);
+
+  webrtc::RtpCodec vp9_rtp_codec;
+  vp9_rtp_codec.name = "VP9";
+  vp9_rtp_codec.kind = cricket::MEDIA_TYPE_VIDEO;
+  vp9_rtp_codec.clock_rate = 90000;
+  initial_params.encodings[0].codec = vp9_rtp_codec;
+
+  // We should be able to set the params with the VP9 codec that has been
+  // negotiated.
+  EXPECT_TRUE(
+      send_channel_->SetRtpSendParameters(last_ssrc_, initial_params).ok());
+
+  parameters.codecs.clear();
+  parameters.codecs.push_back(cricket::CreateVideoCodec(100, "VP8"));
+  send_channel_->SetSendParameters(parameters);
+
+  // Since VP9 is no longer negotiated, the RTP parameters should not have a
+  // forced codec anymore.
+  webrtc::RtpParameters new_params =
+      send_channel_->GetRtpSendParameters(last_ssrc_);
+  EXPECT_EQ(new_params.encodings[0].codec, absl::nullopt);
+}
+
 // Test that when both the codec-specific bitrate params and max_bandwidth_bps
 // are present in the same send parameters, the settings are combined correctly.
 TEST_F(WebRtcVideoChannelTest, SetSendCodecsWithBitratesAndMaxSendBandwidth) {

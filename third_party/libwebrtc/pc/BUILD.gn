@@ -2770,6 +2770,7 @@ if (rtc_include_tests && !build_with_chromium) {
       "../api:media_stream_interface",
       "../api:rtc_error",
       "../api:rtc_stats_api",
+      "../api:rtp_parameters",
       "../api:scoped_refptr",
       "../api:sequence_checker",
       "../api/audio:audio_mixer_api",
@@ -2827,6 +2828,7 @@ if (rtc_include_tests && !build_with_chromium) {
     ]
     absl_deps = [
       "//third_party/abseil-cpp/absl/algorithm:container",
+      "//third_party/abseil-cpp/absl/strings",
       "//third_party/abseil-cpp/absl/types:optional",
     ]
   }

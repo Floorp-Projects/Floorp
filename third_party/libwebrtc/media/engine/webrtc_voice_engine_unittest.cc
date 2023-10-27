@@ -15,8 +15,10 @@
 
 #include "absl/memory/memory.h"
 #include "absl/strings/match.h"
+#include "absl/types/optional.h"
 #include "api/audio_codecs/builtin_audio_decoder_factory.h"
 #include "api/audio_codecs/builtin_audio_encoder_factory.h"
+#include "api/media_types.h"
 #include "api/rtc_event_log/rtc_event_log.h"
 #include "api/rtp_parameters.h"
 #include "api/scoped_refptr.h"
@@ -1368,6 +1370,41 @@ TEST_P(WebRtcVoiceEngineTestFake, SetAndGetRtpSendParameters) {
   webrtc::RtpParameters new_params =
       send_channel_->GetRtpSendParameters(kSsrcX);
   EXPECT_EQ(initial_params, send_channel_->GetRtpSendParameters(kSsrcX));
+}
+
+// Test that we remove the codec from RTP parameters if it's not negotiated
+// anymore.
+TEST_P(WebRtcVoiceEngineTestFake,
+       SetSendParametersRemovesSelectedCodecFromRtpParameters) {
+  EXPECT_TRUE(SetupSendStream());
+  cricket::AudioSenderParameter parameters;
+  parameters.codecs.push_back(kOpusCodec);
+  parameters.codecs.push_back(kPcmuCodec);
+  SetSendParameters(parameters);
+
+  webrtc::RtpParameters initial_params =
+      send_channel_->GetRtpSendParameters(kSsrcX);
+
+  webrtc::RtpCodec opus_rtp_codec;
+  opus_rtp_codec.name = "opus";
+  opus_rtp_codec.kind = cricket::MEDIA_TYPE_AUDIO;
+  opus_rtp_codec.num_channels = 2;
+  opus_rtp_codec.clock_rate = 48000;
+  initial_params.encodings[0].codec = opus_rtp_codec;
+
+  // We should be able to set the params with the opus codec that has been
+  // negotiated.
+  EXPECT_TRUE(send_channel_->SetRtpSendParameters(kSsrcX, initial_params).ok());
+
+  parameters.codecs.clear();
+  parameters.codecs.push_back(kPcmuCodec);
+  SetSendParameters(parameters);
+
+  // Since Opus is no longer negotiated, the RTP parameters should not have a
+  // forced codec anymore.
+  webrtc::RtpParameters new_params =
+      send_channel_->GetRtpSendParameters(kSsrcX);
+  EXPECT_EQ(new_params.encodings[0].codec, absl::nullopt);
 }
 
 // Test that max_bitrate_bps in send stream config gets updated correctly when
