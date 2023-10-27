@@ -1000,7 +1000,7 @@ $(foreach category,$(INSTALL_TARGETS),\
 )
 
 $(foreach tier,$(INSTALL_TARGETS_TIERS), \
-  $(eval $(tier):: $(INSTALL_TARGETS_FILES_$(tier)) $(INSTALL_TARGETS_EXECUTABLES_$(tier))) \
+  $(eval $(if $(filter .,$(DEPTH)),recurse_$(tier):,$(tier)::) $(INSTALL_TARGETS_FILES_$(tier)) $(INSTALL_TARGETS_EXECUTABLES_$(tier))) \
 )
 
 install_targets_sanity = $(if $(filter-out $(notdir $@),$(notdir $(<))),$(error Looks like $@ has an unexpected dependency on $< which breaks INSTALL_TARGETS))
@@ -1070,7 +1070,7 @@ $(foreach category,$(PP_TARGETS), \
 )
 
 $(foreach tier,$(PP_TARGETS_TIERS), \
-  $(eval $(tier):: $(PP_TARGETS_RESULTS_$(tier))) \
+  $(eval $(if $(filter .,$(DEPTH)),recurse_$(tier):,$(tier)::) $(PP_TARGETS_RESULTS_$(tier))) \
 )
 
 PP_TARGETS_ALL_RESULTS := $(sort $(foreach tier,$(PP_TARGETS_TIERS),$(PP_TARGETS_RESULTS_$(tier))))
