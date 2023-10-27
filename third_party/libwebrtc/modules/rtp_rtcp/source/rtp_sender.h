@@ -65,10 +65,6 @@ class RTPSender {
   uint16_t SequenceNumber() const RTC_LOCKS_EXCLUDED(send_mutex_);
   void SetSequenceNumber(uint16_t seq) RTC_LOCKS_EXCLUDED(send_mutex_);
 
-  [[deprecated("Pass csrcs in the AllocatePacket")]]  //
-  void
-  SetCsrcs(const std::vector<uint32_t>& csrcs) RTC_LOCKS_EXCLUDED(send_mutex_);
-
   void SetMaxRtpPacketSize(size_t max_packet_size)
       RTC_LOCKS_EXCLUDED(send_mutex_);
 
@@ -212,7 +208,6 @@ class RTPSender {
   // when to stop sending the MID and RID header extensions.
   bool ssrc_has_acked_ RTC_GUARDED_BY(send_mutex_);
   bool rtx_ssrc_has_acked_ RTC_GUARDED_BY(send_mutex_);
-  std::vector<uint32_t> csrcs_ RTC_GUARDED_BY(send_mutex_);
   // Maximum number of csrcs this sender is used with.
   size_t max_num_csrcs_ RTC_GUARDED_BY(send_mutex_) = 0;
   int rtx_ RTC_GUARDED_BY(send_mutex_);
