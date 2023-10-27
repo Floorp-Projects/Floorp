@@ -295,7 +295,6 @@ class ReadableStreamFromAlgorithms final
               }
 
               JS::Rooted<JSObject*> iterResult(aCx, &aIterResult.toObject());
-              JSAutoRealm ar(aCx, iterResult);
 
               // Step 4.2. Let done be ? IteratorComplete(iterResult).
               bool done = false;
