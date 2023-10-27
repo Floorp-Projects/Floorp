@@ -871,11 +871,11 @@ bool GlobalObject::getSelfHostedFunction(JSContext* cx,
                                          MutableHandleValue funVal) {
   if (global->maybeGetIntrinsicValue(selfHostedName, funVal.address(), cx)) {
     RootedFunction fun(cx, &funVal.toObject().as<JSFunction>());
-    if (fun->explicitName() == name) {
+    if (fun->fullExplicitName() == name) {
       return true;
     }
 
-    if (fun->explicitName() == selfHostedName) {
+    if (fun->fullExplicitName() == selfHostedName) {
       // This function was initially cloned because it was called by
       // other self-hosted code, so the clone kept its self-hosted name,
       // instead of getting the name it's intended to have in content

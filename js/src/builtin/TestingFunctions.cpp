@@ -4620,7 +4620,10 @@ static bool DisplayName(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   JSFunction* fun = &args[0].toObject().as<JSFunction>();
-  JSString* str = fun->displayAtom();
+  JS::Rooted<JSAtom*> str(cx);
+  if (!fun->getDisplayAtom(cx, &str)) {
+    return false;
+  }
   args.rval().setString(str ? str : cx->runtime()->emptyString.ref());
   return true;
 }

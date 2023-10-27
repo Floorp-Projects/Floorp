@@ -6987,7 +6987,7 @@ static bool HandleInstantiationFailure(JSContext* cx, CallArgs args,
                                        const AsmJSMetadata& metadata) {
   using js::frontend::FunctionSyntaxKind;
 
-  Rooted<JSAtom*> name(cx, args.callee().as<JSFunction>().explicitName());
+  Rooted<JSAtom*> name(cx, args.callee().as<JSFunction>().fullExplicitName());
 
   if (cx->isExceptionPending()) {
     return false;
@@ -7305,7 +7305,7 @@ JSString* js::AsmJSModuleToString(JSContext* cx, HandleFunction fun,
     if (!out.append("function ")) {
       return nullptr;
     }
-    if (fun->explicitName() && !out.append(fun->explicitName())) {
+    if (fun->fullExplicitName() && !out.append(fun->fullExplicitName())) {
       return nullptr;
     }
     if (!out.append("() {\n    [native code]\n}")) {
@@ -7354,8 +7354,8 @@ JSString* js::AsmJSFunctionToString(JSContext* cx, HandleFunction fun) {
 
   if (!haveSource) {
     // asm.js functions can't be anonymous
-    MOZ_ASSERT(fun->explicitName());
-    if (!out.append(fun->explicitName())) {
+    MOZ_ASSERT(fun->fullExplicitName());
+    if (!out.append(fun->fullExplicitName())) {
       return nullptr;
     }
     if (!out.append("() {\n    [native code]\n}")) {

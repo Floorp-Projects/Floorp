@@ -988,8 +988,9 @@ static UniqueChars GetFunctionDesc(const char* tierName, JSContext* cx,
                                    const char* stubName = nullptr) {
   MOZ_ASSERT(script && tierName && cx);
   UniqueChars funName;
-  if (script->function() && script->function()->displayAtom()) {
-    funName = AtomToPrintableString(cx, script->function()->displayAtom());
+  if (script->function() && script->function()->maybePartialDisplayAtom()) {
+    funName = AtomToPrintableString(
+        cx, script->function()->maybePartialDisplayAtom());
   }
 
   if (stubName) {

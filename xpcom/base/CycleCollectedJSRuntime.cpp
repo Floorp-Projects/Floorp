@@ -819,7 +819,7 @@ void CycleCollectedJSRuntime::DescribeGCThing(
       // Nothing else to do!
     } else if (js::IsFunctionObject(obj)) {
       JSFunction* fun = JS_GetObjectFunction(obj);
-      JSString* str = JS_GetFunctionDisplayId(fun);
+      JSString* str = JS_GetMaybePartialFunctionDisplayId(fun);
       if (str) {
         JSLinearString* linear = JS_ASSERT_STRING_IS_LINEAR(str);
         nsAutoString chars;

@@ -302,16 +302,21 @@ bool DebuggerScript::CallData::getDisplayName() {
   if (!ensureScriptMaybeLazy()) {
     return false;
   }
-  JSFunction* func = obj->getReferentScript()->function();
-  Debugger* dbg = obj->owner();
 
-  JSString* name = func ? func->displayAtom() : nullptr;
+  JSFunction* func = obj->getReferentScript()->function();
+  if (!func) {
+    args.rval().setUndefined();
+    return true;
+  }
+
+  JSAtom* name = func->fullDisplayAtom();
   if (!name) {
     args.rval().setUndefined();
     return true;
   }
 
   RootedValue namev(cx, StringValue(name));
+  Debugger* dbg = obj->owner();
   if (!dbg->wrapDebuggeeValue(cx, &namev)) {
     return false;
   }

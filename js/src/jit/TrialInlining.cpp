@@ -82,8 +82,9 @@ bool DoTrialInlining(JSContext* cx, BaselineFrame* frame) {
       }
     }
     UniqueChars funName;
-    if (script->function() && script->function()->displayAtom()) {
-      funName = AtomToPrintableString(cx, script->function()->displayAtom());
+    if (script->function() && script->function()->fullDisplayAtom()) {
+      funName =
+          AtomToPrintableString(cx, script->function()->fullDisplayAtom());
     }
 
     JitSpew(
@@ -535,8 +536,8 @@ TrialInliningDecision TrialInliner::getInliningDecision(JSFunction* target,
         target->hasBaseScript() ? target->baseScript() : nullptr;
 
     UniqueChars funName;
-    if (target->displayAtom()) {
-      funName = AtomToPrintableString(cx(), target->displayAtom());
+    if (target->maybePartialDisplayAtom()) {
+      funName = AtomToPrintableString(cx(), target->maybePartialDisplayAtom());
     }
 
     JitSpew(JitSpew_WarpTrialInlining,

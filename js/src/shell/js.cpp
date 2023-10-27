@@ -8294,7 +8294,7 @@ class ShellAutoEntryMonitor : JS::dbg::AutoEntryMonitor {
     MOZ_ASSERT(!enteredWithoutExit);
     enteredWithoutExit = true;
 
-    RootedString displayId(cx, JS_GetFunctionDisplayId(function));
+    RootedString displayId(cx, JS_GetMaybePartialFunctionDisplayId(function));
     if (displayId) {
       UniqueChars displayIdStr = JS_EncodeStringToUTF8(cx, displayId);
       if (!displayIdStr) {

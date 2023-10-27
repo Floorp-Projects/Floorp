@@ -2775,9 +2775,9 @@ static void dumpValue(const Value& v, js::GenericPrinter& out) {
     case ValueType::Object:
       if (v.toObject().is<JSFunction>()) {
         JSFunction* fun = &v.toObject().as<JSFunction>();
-        if (fun->displayAtom()) {
+        if (fun->maybePartialDisplayAtom()) {
           out.put("<function ");
-          EscapedStringPrinter(out, fun->displayAtom(), 0);
+          EscapedStringPrinter(out, fun->maybePartialDisplayAtom(), 0);
         } else {
           out.put("<unnamed function");
         }

@@ -374,7 +374,7 @@ void CacheIRSpewer::valueProperty(const char* name, const Value& v) {
     j.formatProperty("value", "%p (shape: %p)", &object, object.shape());
 
     if (object.is<JSFunction>()) {
-      if (JSAtom* name = object.as<JSFunction>().displayAtom()) {
+      if (JSAtom* name = object.as<JSFunction>().maybePartialDisplayAtom()) {
         j.property("funName", name);
       }
     }

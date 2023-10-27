@@ -3395,7 +3395,7 @@ bool JSScript::dump(JSContext* cx, JS::Handle<JSScript*> script,
     if (script->isFunction()) {
       JS::Rooted<JSFunction*> fun(cx, script->function());
 
-      JS::Rooted<JSAtom*> name(cx, fun->displayAtom());
+      JS::Rooted<JSAtom*> name(cx, fun->fullDisplayAtom());
       if (name) {
         UniqueChars bytes = JS_EncodeStringToUTF8(cx, name);
         if (!bytes) {
@@ -3613,8 +3613,8 @@ bool JSScript::dumpGCThings(JSContext* cx, JS::Handle<JSScript*> script,
       if (obj->is<JSFunction>()) {
         sp->put("Function   ");
         JS::Rooted<JSFunction*> fun(cx, &obj->as<JSFunction>());
-        if (fun->displayAtom()) {
-          JS::Rooted<JSAtom*> name(cx, fun->displayAtom());
+        if (fun->fullDisplayAtom()) {
+          JS::Rooted<JSAtom*> name(cx, fun->fullDisplayAtom());
           JS::UniqueChars utf8chars = JS_EncodeStringToUTF8(cx, name);
           if (!utf8chars) {
             return false;

@@ -237,14 +237,16 @@ static bool SandboxImport(JSContext* cx, unsigned argc, Value* vp) {
     JSAutoRealm ar(cx, funobj);
 
     RootedValue funval(cx, ObjectValue(*funobj));
-    JSFunction* fun = JS_ValueToFunction(cx, funval);
+    JS::Rooted<JSFunction*> fun(cx, JS_ValueToFunction(cx, funval));
     if (!fun) {
       XPCThrower::Throw(NS_ERROR_INVALID_ARG, cx);
       return false;
     }
 
     // Use the actual function name as the name.
-    funname = JS_GetFunctionId(fun);
+    if (!JS_GetFunctionId(cx, fun, &funname)) {
+      return false;
+    }
     if (!funname) {
       XPCThrower::Throw(NS_ERROR_INVALID_ARG, cx);
       return false;

@@ -268,7 +268,7 @@ static bool FormatFrame(JSContext* cx, const FrameIter& iter, Sprinter& sp,
   Rooted<JSFunction*> fun(cx, iter.maybeCallee(cx));
   Rooted<JSString*> funname(cx);
   if (fun) {
-    funname = fun->displayAtom();
+    funname = fun->fullDisplayAtom();
   }
 
   Rooted<Value> thisVal(cx);

@@ -45,7 +45,8 @@ static JSObject* FindNamedConstructorForXray(
        slot < JSCLASS_RESERVED_SLOTS(JS::GetClass(interfaceObject)); ++slot) {
     JSObject* constructor =
         &JS::GetReservedSlot(interfaceObject, slot).toObject();
-    if (JS_GetFunctionId(JS_GetObjectFunction(constructor)) == aId.toString()) {
+    if (JS_GetMaybePartialFunctionId(JS_GetObjectFunction(constructor)) ==
+        aId.toString()) {
       return constructor;
     }
   }

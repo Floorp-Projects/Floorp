@@ -4733,8 +4733,12 @@ void MacroAssembler::loadFunctionName(Register func, Register output,
   load32(Address(func, JSFunction::offsetOfFlagsAndArgCount()), output);
 
   // If the name was previously resolved, the name property may be shadowed.
-  branchTest32(Assembler::NonZero, output, Imm32(FunctionFlags::RESOLVED_NAME),
-               slowPath);
+  // If the function is an accessor with lazy name, AtomSlot contains the
+  // unprefixed name.
+  branchTest32(
+      Assembler::NonZero, output,
+      Imm32(FunctionFlags::RESOLVED_NAME | FunctionFlags::LAZY_ACCESSOR_NAME),
+      slowPath);
 
   Label noName, done;
   branchTest32(Assembler::NonZero, output,

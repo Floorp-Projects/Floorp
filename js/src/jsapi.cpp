@@ -2308,12 +2308,33 @@ JS_PUBLIC_API JSFunction* JS::NewFunctionFromSpec(JSContext* cx,
 
 JS_PUBLIC_API JSObject* JS_GetFunctionObject(JSFunction* fun) { return fun; }
 
-JS_PUBLIC_API JSString* JS_GetFunctionId(JSFunction* fun) {
-  return fun->explicitName();
+JS_PUBLIC_API bool JS_GetFunctionId(JSContext* cx, JS::Handle<JSFunction*> fun,
+                                    JS::MutableHandle<JSString*> name) {
+  JS::Rooted<JSAtom*> atom(cx);
+  if (!fun->getExplicitName(cx, &atom)) {
+    return false;
+  }
+  name.set(atom);
+  return true;
 }
 
-JS_PUBLIC_API JSString* JS_GetFunctionDisplayId(JSFunction* fun) {
-  return fun->displayAtom();
+JS_PUBLIC_API JSString* JS_GetMaybePartialFunctionId(JSFunction* fun) {
+  return fun->maybePartialExplicitName();
+}
+
+JS_PUBLIC_API bool JS_GetFunctionDisplayId(JSContext* cx,
+                                           JS::Handle<JSFunction*> fun,
+                                           JS::MutableHandle<JSString*> name) {
+  JS::Rooted<JSAtom*> atom(cx);
+  if (!fun->getDisplayAtom(cx, &atom)) {
+    return false;
+  }
+  name.set(atom);
+  return true;
+}
+
+JS_PUBLIC_API JSString* JS_GetMaybePartialFunctionDisplayId(JSFunction* fun) {
+  return fun->maybePartialDisplayAtom();
 }
 
 JS_PUBLIC_API uint16_t JS_GetFunctionArity(JSFunction* fun) {

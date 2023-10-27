@@ -569,7 +569,7 @@ JSAtom* FrameIter::maybeFunctionDisplayAtom() const {
         return wasmFrame().functionDisplayAtom();
       }
       if (isFunctionFrame()) {
-        return calleeTemplate()->displayAtom();
+        return calleeTemplate()->fullDisplayAtom();
       }
       return nullptr;
   }

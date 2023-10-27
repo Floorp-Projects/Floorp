@@ -1239,7 +1239,7 @@ bool ModuleObject::instantiateFunctionDeclarations(JSContext* cx,
       return false;
     }
 
-    name = fun->explicitName()->asPropertyName();
+    name = fun->fullExplicitName()->asPropertyName();
     value = ObjectValue(*obj);
     if (!SetProperty(cx, env, name, value)) {
       return false;

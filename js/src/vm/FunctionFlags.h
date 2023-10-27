@@ -105,7 +105,10 @@ class FunctionFlags {
     // WARNING: This is independent from FunctionKind::ClassConstructor.
     CONSTRUCTOR = 1 << 7,
 
-    // (1 << 8) is unused.
+    // Function is either getter or setter, with "get " or "set " prefix,
+    // but JSFunction::AtomSlot contains unprefixed name, and the function name
+    // is lazily constructed on the first access.
+    LAZY_ACCESSOR_NAME = 1 << 8,
 
     // Function comes from a FunctionExpression, ArrowFunction, or Function()
     // call (not a FunctionDeclaration).
@@ -162,6 +165,8 @@ class FunctionFlags {
     // Derived Flags combinations to use when creating functions.
     NATIVE_FUN = NORMAL_KIND,
     NATIVE_CTOR = CONSTRUCTOR | NORMAL_KIND,
+    NATIVE_GETTER_WITH_LAZY_NAME = LAZY_ACCESSOR_NAME | GETTER_KIND,
+    NATIVE_SETTER_WITH_LAZY_NAME = LAZY_ACCESSOR_NAME | SETTER_KIND,
     ASMJS_CTOR = CONSTRUCTOR | ASMJS_KIND,
     ASMJS_LAMBDA_CTOR = CONSTRUCTOR | LAMBDA | ASMJS_KIND,
     WASM = WASM_KIND,
@@ -232,24 +237,28 @@ class FunctionFlags {
   void assertFunctionKindIntegrity() {
     switch (kind()) {
       case FunctionKind::NormalFunction:
+        MOZ_ASSERT(!hasFlags(LAZY_ACCESSOR_NAME));
         MOZ_ASSERT(!hasFlags(WASM_JIT_ENTRY));
         break;
 
       case FunctionKind::Arrow:
         MOZ_ASSERT(hasFlags(BASESCRIPT) || hasFlags(SELFHOSTLAZY));
         MOZ_ASSERT(!hasFlags(CONSTRUCTOR));
+        MOZ_ASSERT(!hasFlags(LAZY_ACCESSOR_NAME));
         MOZ_ASSERT(hasFlags(LAMBDA));
         MOZ_ASSERT(!hasFlags(WASM_JIT_ENTRY));
         break;
       case FunctionKind::Method:
         MOZ_ASSERT(hasFlags(BASESCRIPT) || hasFlags(SELFHOSTLAZY));
         MOZ_ASSERT(!hasFlags(CONSTRUCTOR));
+        MOZ_ASSERT(!hasFlags(LAZY_ACCESSOR_NAME));
         MOZ_ASSERT(!hasFlags(LAMBDA));
         MOZ_ASSERT(!hasFlags(WASM_JIT_ENTRY));
         break;
       case FunctionKind::ClassConstructor:
         MOZ_ASSERT(hasFlags(BASESCRIPT) || hasFlags(SELFHOSTLAZY));
         MOZ_ASSERT(hasFlags(CONSTRUCTOR));
+        MOZ_ASSERT(!hasFlags(LAZY_ACCESSOR_NAME));
         MOZ_ASSERT(!hasFlags(LAMBDA));
         MOZ_ASSERT(!hasFlags(WASM_JIT_ENTRY));
         break;
@@ -267,12 +276,14 @@ class FunctionFlags {
       case FunctionKind::AsmJS:
         MOZ_ASSERT(!hasFlags(BASESCRIPT));
         MOZ_ASSERT(!hasFlags(SELFHOSTLAZY));
+        MOZ_ASSERT(!hasFlags(LAZY_ACCESSOR_NAME));
         MOZ_ASSERT(!hasFlags(WASM_JIT_ENTRY));
         break;
       case FunctionKind::Wasm:
         MOZ_ASSERT(!hasFlags(BASESCRIPT));
         MOZ_ASSERT(!hasFlags(SELFHOSTLAZY));
         MOZ_ASSERT(!hasFlags(CONSTRUCTOR));
+        MOZ_ASSERT(!hasFlags(LAZY_ACCESSOR_NAME));
         MOZ_ASSERT(!hasFlags(LAMBDA));
         break;
       default:
@@ -347,6 +358,8 @@ class FunctionFlags {
   bool isGetter() const { return kind() == Getter; }
   bool isSetter() const { return kind() == Setter; }
 
+  bool isAccessorWithLazyName() const { return hasFlags(LAZY_ACCESSOR_NAME); }
+
   bool allowSuperProperty() const {
     return isMethod() || isGetter() || isSetter();
   }
@@ -399,6 +412,10 @@ class FunctionFlags {
   FunctionFlags& clearSelfHostedLazy() { return clearFlags(SELFHOSTLAZY); }
   FunctionFlags& setBaseScript() { return setFlags(BASESCRIPT); }
   FunctionFlags& clearBaseScript() { return clearFlags(BASESCRIPT); }
+
+  FunctionFlags& clearLazyAccessorName() {
+    return clearFlags(LAZY_ACCESSOR_NAME);
+  }
 
   FunctionFlags& setWasmJitEntry() { return setFlags(WASM_JIT_ENTRY); }
 
