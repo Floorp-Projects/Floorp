@@ -832,7 +832,9 @@ class ThunderbirdMixin(object):
     trust_domain = "comm"
     product = "thunderbird"
     try_tree = "try-comm-central"
-
+    default_candidate_trees = [
+        "releases/comm-release",
+    ]
     nightly_candidate_trees = [
         "comm-central",
     ]
