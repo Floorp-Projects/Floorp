@@ -2835,9 +2835,7 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
       LogicalSize kidAvailSize(aReflowInput.mAvailSize);
       allowRepeatedFooter = false;
       if (isPaginated && (NS_UNCONSTRAINEDSIZE != kidAvailSize.BSize(wm))) {
-        nsTableRowGroupFrame* kidRG =
-            static_cast<nsTableRowGroupFrame*>(kidFrame);
-        if (kidRG != thead && kidRG != tfoot && tfoot &&
+        if (kidFrame != thead && kidFrame != tfoot && tfoot &&
             tfoot->IsRepeatable()) {
           // the child is a tbody and there is a repeatable footer
           NS_ASSERTION(tfoot == rowGroups[rowGroups.Length() - 1],
