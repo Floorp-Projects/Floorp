@@ -1255,6 +1255,14 @@ void nsTableRowFrame::InsertCellFrame(nsTableCellFrame* aFrame,
   mFrames.InsertFrame(this, priorCell, aFrame);
 }
 
+nsTableRowFrame* nsTableRowFrame::GetPrevRow() const {
+  nsIFrame* prevSibling = GetPrevSibling();
+  MOZ_ASSERT(
+      !prevSibling || static_cast<nsTableRowFrame*>(do_QueryFrame(prevSibling)),
+      "How do we have a non-row sibling?");
+  return static_cast<nsTableRowFrame*>(prevSibling);
+}
+
 nsTableRowFrame* nsTableRowFrame::GetNextRow() const {
   nsIFrame* nextSibling = GetNextSibling();
   MOZ_ASSERT(
