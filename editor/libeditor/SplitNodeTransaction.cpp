@@ -10,8 +10,7 @@
 #include "HTMLEditor.h"       // for HTMLEditor
 #include "HTMLEditorInlines.h"
 #include "HTMLEditUtils.h"
-#include "JoinSplitNodeDirection.h"  // for SplitNodeDirection
-#include "SelectionState.h"          // for AutoTrackDOMPoint and RangeUpdater
+#include "SelectionState.h"  // for AutoTrackDOMPoint and RangeUpdater
 
 #include "mozilla/Logging.h"
 #include "mozilla/Maybe.h"
@@ -71,9 +70,7 @@ std::ostream& operator<<(std::ostream& aStream,
     aStream << " (" << *aTransaction.mSplitContent << ")";
   }
   aStream << ", mSplitOffset=" << aTransaction.mSplitOffset
-          << ", mHTMLEditor=" << aTransaction.mHTMLEditor.get()
-          << ", GetSplitNodeDirection()="
-          << aTransaction.GetSplitNodeDirection() << " }";
+          << ", mHTMLEditor=" << aTransaction.mHTMLEditor.get() << " }";
   return aStream;
 }
 
@@ -85,16 +82,6 @@ NS_IMPL_ADDREF_INHERITED(SplitNodeTransaction, EditTransactionBase)
 NS_IMPL_RELEASE_INHERITED(SplitNodeTransaction, EditTransactionBase)
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(SplitNodeTransaction)
 NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
-
-SplitNodeDirection SplitNodeTransaction::GetSplitNodeDirection() const {
-  return MOZ_LIKELY(mHTMLEditor) ? mHTMLEditor->GetSplitNodeDirection()
-                                 : SplitNodeDirection::LeftNodeIsNewOne;
-}
-
-JoinNodesDirection SplitNodeTransaction::GetJoinNodesDirection() const {
-  return MOZ_LIKELY(mHTMLEditor) ? mHTMLEditor->GetJoinNodesDirection()
-                                 : JoinNodesDirection::LeftNodeIntoRightNode;
-}
 
 NS_IMETHODIMP SplitNodeTransaction::DoTransaction() {
   MOZ_LOG(GetLogModule(), LogLevel::Info,
@@ -183,20 +170,12 @@ NS_IMETHODIMP SplitNodeTransaction::UndoTransaction() {
   const OwningNonNull<HTMLEditor> htmlEditor = *mHTMLEditor;
   const OwningNonNull<nsIContent> keepingContent = *mSplitContent;
   const OwningNonNull<nsIContent> removingContent = *mNewContent;
-  nsresult rv;
   EditorDOMPoint joinedPoint;
-  {
-    // Unfortunately, we cannot track joining point if moving right node content
-    // into left node since it cannot track changes from web apps and HTMLEditor
-    // never removes the content of the left node.  So it should be true that
-    // we don't need to track the point in the direction.
-    Maybe<AutoTrackDOMPoint> trackJoinedPoint;
-    if (GetJoinNodesDirection() == JoinNodesDirection::LeftNodeIntoRightNode) {
-      joinedPoint.Set(keepingContent, 0u);
-      trackJoinedPoint.emplace(htmlEditor->RangeUpdaterRef(), &joinedPoint);
-    }
-    rv = htmlEditor->DoJoinNodes(keepingContent, removingContent);
-  }
+  // Unfortunately, we cannot track joining point if moving right node content
+  // into left node since it cannot track changes from web apps and HTMLEditor
+  // never removes the content of the left node.  So it should be true that
+  // we don't need to track the point in this case.
+  nsresult rv = htmlEditor->DoJoinNodes(keepingContent, removingContent);
   if (NS_SUCCEEDED(rv)) {
     // Adjust split offset for redo here
     if (joinedPoint.IsSet()) {

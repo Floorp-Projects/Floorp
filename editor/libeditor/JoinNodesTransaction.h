@@ -60,11 +60,6 @@ class JoinNodesTransaction final : public EditTransactionBase {
 
   MOZ_CAN_RUN_SCRIPT NS_IMETHOD RedoTransaction() override;
 
-  // Note that we don't support join/split node direction switching per
-  // transaction.
-  [[nodiscard]] SplitNodeDirection GetSplitNodeDirection() const;
-  [[nodiscard]] JoinNodesDirection GetJoinNodesDirection() const;
-
   /**
    * GetExistingContent() and GetRemovedContent() never returns nullptr
    * unless the cycle collector clears them out.

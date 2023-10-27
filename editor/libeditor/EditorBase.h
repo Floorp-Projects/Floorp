@@ -849,8 +849,7 @@ class EditorBase : public nsIEditor,
     void WillDeleteContent(EditorBase& aEditorBase,
                            nsIContent& aRemovingContent);
     void DidSplitContent(EditorBase& aEditorBase, nsIContent& aSplitContent,
-                         nsIContent& aNewContent,
-                         SplitNodeDirection aSplitNodeDirection);
+                         nsIContent& aNewContent);
     void DidJoinContents(EditorBase& aEditorBase,
                          const EditorRawDOMPoint& aJoinedPoint);
     void DidInsertText(EditorBase& aEditorBase,
