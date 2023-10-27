@@ -192,6 +192,9 @@ add_task(async function test_list_ordering() {
 
     // Select first history item in first card
     await clearAllParentTelemetryEvents();
+    await TestUtils.waitForCondition(() => {
+      return historyComponent.lists[0].rowEls.length;
+    });
     let firstHistoryLink = historyComponent.lists[0].rowEls[0].mainEl;
     await EventUtils.synthesizeMouseAtCenter(firstHistoryLink, {}, content);
     await historyTelemetry();
@@ -349,15 +352,11 @@ add_task(async function test_observers_removed_when_view_is_hidden() {
     navigateToCategory(document, "history");
     const historyComponent = document.querySelector("view-history");
     historyComponent.profileAge = 8;
-    const visitList = await TestUtils.waitForCondition(() =>
+    let visitList = await TestUtils.waitForCondition(() =>
       historyComponent.cards?.[0]?.querySelector("fxview-tab-list")
     );
     info("The list should show a visit from the new tab.");
-    await BrowserTestUtils.waitForMutationCondition(
-      visitList,
-      { childList: true },
-      () => visitList.rowEls.length === 1
-    );
+    await TestUtils.waitForCondition(() => visitList.rowEls.length === 1);
 
     await BrowserTestUtils.switchTab(gBrowser, tab);
     const { date } = await PlacesUtils.history
@@ -374,11 +373,10 @@ add_task(async function test_observers_removed_when_view_is_hidden() {
 
     info("The list should update when Firefox View is visible.");
     await switchToFxViewTab(browser.ownerGlobal);
-    await BrowserTestUtils.waitForMutationCondition(
-      visitList,
-      { childList: true },
-      () => visitList.rowEls.length > 1
+    visitList = await TestUtils.waitForCondition(() =>
+      historyComponent.cards?.[0]?.querySelector("fxview-tab-list")
     );
+    await TestUtils.waitForCondition(() => visitList.rowEls.length > 1);
 
     BrowserTestUtils.removeTab(tab);
   });

@@ -145,7 +145,7 @@ async function checkTabList(browser, expected) {
   await tabsView.getUpdateComplete();
   const tabList = openTabsCard.shadowRoot.querySelector("fxview-tab-list");
   Assert.ok(tabList, "Found the tab list element");
-
+  await TestUtils.waitForCondition(() => tabList.rowEls.length);
   let actual = Array.from(tabList.rowEls).map(row => row.url);
   Assert.deepEqual(
     actual,

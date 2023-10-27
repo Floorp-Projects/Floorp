@@ -50,6 +50,7 @@ class SyncedTabsInView extends ViewPage {
 
   static queries = {
     emptyState: "fxview-empty-state",
+    tabLists: { all: "fxview-tab-list" },
   };
 
   connectedCallback() {

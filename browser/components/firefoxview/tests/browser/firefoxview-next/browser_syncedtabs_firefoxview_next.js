@@ -296,10 +296,11 @@ add_task(async function test_tabs() {
     );
     ok(headers[1].innerHTML.includes("icon phone"), "Icon should be phone");
 
-    let tabLists =
-      syncedTabsComponent.shadowRoot.querySelectorAll("fxview-tab-list");
-
-    let tabRow1 = tabLists[0].shadowRoot.querySelectorAll("fxview-tab-row");
+    let tabLists = syncedTabsComponent.tabLists;
+    await TestUtils.waitForCondition(() => {
+      return tabLists[0].rowEls.length;
+    });
+    let tabRow1 = tabLists[0].rowEls;
     ok(
       tabRow1[0].shadowRoot.textContent.includes,
       "Internet for people, not profits - Mozilla"
