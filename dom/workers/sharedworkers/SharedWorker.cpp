@@ -83,14 +83,14 @@ already_AddRefed<SharedWorker> SharedWorker::Constructor(
   }
 
   if (storageAllowed == StorageAccess::eDeny) {
-    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    aRv.ThrowSecurityError("StorageAccess denied.");
     return nullptr;
   }
 
   if (ShouldPartitionStorage(storageAllowed) &&
       !StoragePartitioningEnabled(
           storageAllowed, window->GetExtantDoc()->CookieJarSettings())) {
-    aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+    aRv.ThrowSecurityError("StoragePartitioning not enabled.");
     return nullptr;
   }
 
@@ -108,6 +108,7 @@ already_AddRefed<SharedWorker> SharedWorker::Constructor(
 
   PBackgroundChild* actorChild = BackgroundChild::GetOrCreateForCurrentThread();
   if (!actorChild || !actorChild->CanSend()) {
+    aRv.ThrowSecurityError("PBackground not available.");
     return nullptr;
   }
 
@@ -160,19 +161,19 @@ already_AddRefed<SharedWorker> SharedWorker::Constructor(
       BasePrincipal::Cast(loadInfo.mPrincipal)->IsContentPrincipal()) {
     nsCOMPtr<nsIScriptObjectPrincipal> sop = do_QueryInterface(window);
     if (!sop) {
-      aRv.Throw(NS_ERROR_FAILURE);
+      aRv.ThrowSecurityError("ScriptObjectPrincipal not available.");
       return nullptr;
     }
 
     nsIPrincipal* windowPrincipal = sop->GetPrincipal();
     if (!windowPrincipal) {
-      aRv.Throw(NS_ERROR_UNEXPECTED);
+      aRv.ThrowSecurityError("WindowPrincipal not available.");
       return nullptr;
     }
 
     nsIPrincipal* windowPartitionedPrincipal = sop->PartitionedPrincipal();
     if (!windowPartitionedPrincipal) {
-      aRv.Throw(NS_ERROR_UNEXPECTED);
+      aRv.ThrowSecurityError("WindowPartitionedPrincipal not available.");
       return nullptr;
     }
 
@@ -257,6 +258,7 @@ already_AddRefed<SharedWorker> SharedWorker::Constructor(
       remoteWorkerData, loadInfo.mWindowID, portIdentifier.release());
   if (!pActor) {
     MOZ_ASSERT_UNREACHABLE("We already checked PBackground above.");
+    aRv.ThrowSecurityError("PBackground not available.");
     return nullptr;
   }
 
