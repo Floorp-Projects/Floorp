@@ -25290,3 +25290,6 @@ d95382fab7
 # MOZ_LIBWEBRTC_SRC=/home/bcampen/checkouts/elm/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
 # base of lastest vendoring
 63dc56cff0
+# MOZ_LIBWEBRTC_SRC=/home/bcampen/checkouts/elm/.moz-fast-forward/moz-libwebrtc MOZ_LIBWEBRTC_BRANCH=mozpatches bash dom/media/webrtc/third_party_build/fast-forward-libwebrtc.sh
+# base of lastest vendoring
+240e783d7f
