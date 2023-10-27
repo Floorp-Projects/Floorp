@@ -280,7 +280,7 @@ std::vector<RtpStreamSender> CreateRtpStreamSenders(
         crypto_options.sframe.require_frame_encryption;
     video_config.field_trials = &trials;
     video_config.enable_retransmit_all_layers =
-        video_config.field_trials->IsEnabled(
+        !video_config.field_trials->IsDisabled(
             "WebRTC-Video-EnableRetransmitAllLayers");
 
     const bool using_flexfec =
