@@ -706,7 +706,7 @@ void CreateTracksFromSsrcInfos(const SsrcInfoVec& ssrc_infos,
                                absl::string_view msid_track_id,
                                StreamParamsVec* tracks,
                                int msid_signaling) {
-  RTC_DCHECK(tracks != NULL);
+  RTC_DCHECK(tracks);
   for (const SsrcInfo& ssrc_info : ssrc_infos) {
     // According to https://tools.ietf.org/html/rfc5576#section-6.1, the CNAME
     // attribute is mandatory, but we relax that restriction.
@@ -726,15 +726,8 @@ void CreateTracksFromSsrcInfos(const SsrcInfoVec& ssrc_infos,
       track_id = ssrc_info.track_id;
     } else {
       // Since no media streams isn't supported with older SDP signaling, we
-      // use a default a stream id.
+      // use a default stream id.
       stream_ids.push_back(kDefaultMsid);
-    }
-    // If a track ID wasn't populated from the SSRC attributes OR the
-    // msid attribute, use default/random values.
-    if (track_id.empty()) {
-      // TODO(ronghuawu): What should we do if the track id doesn't appear?
-      // Create random string (which will be used as track label later)?
-      track_id = rtc::CreateRandomString(8);
     }
 
     auto track_it = absl::c_find_if(
@@ -750,6 +743,14 @@ void CreateTracksFromSsrcInfos(const SsrcInfoVec& ssrc_infos,
     track.cname = ssrc_info.cname;
     track.set_stream_ids(stream_ids);
     track.id = track_id;
+  }
+  for (StreamParams& stream : *tracks) {
+    // If a track ID wasn't populated from the SSRC attributes OR the
+    // msid attribute, use default/random values. This happens after
+    // deduplication.
+    if (stream.id.empty()) {
+      stream.id = rtc::CreateRandomString(8);
+    }
   }
 }
 
