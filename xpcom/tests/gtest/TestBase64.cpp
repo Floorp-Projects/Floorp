@@ -178,7 +178,7 @@ bool FakeInputStream::NextTest() {
   mChunk = &mTest->mChunks[0];
   mClosed = false;
 
-  return mTest->mChunks ? true : false;
+  return mTest->mChunks != nullptr;
 }
 
 void FakeInputStream::CheckTest(nsACString& aResult) {
@@ -187,7 +187,7 @@ void FakeInputStream::CheckTest(nsACString& aResult) {
 
 void FakeInputStream::CheckTest(nsAString& aResult) {
   ASSERT_TRUE(aResult.EqualsASCII(mTest->mResult))
-  << "Actual:   " << aResult.BeginReading() << std::endl
+  << "Actual:   " << NS_ConvertUTF16toUTF8(aResult).get() << '\n'
   << "Expected: " << mTest->mResult;
 }
 
