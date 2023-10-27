@@ -7,7 +7,7 @@
         "args": [
           "--xctest",
           "--xcode-build-version",
-          "14c18",
+          "15a5229h",
           "--out-dir",
           "${ISOLATED_OUTDIR}"
         ],
@@ -34,7 +34,7 @@
           },
           "named_caches": [
             {
-              "name": "xcode_ios_14c18",
+              "name": "xcode_ios_15a5229h",
               "path": "Xcode.app"
             }
           ],
@@ -46,7 +46,7 @@
         "args": [
           "--xctest",
           "--xcode-build-version",
-          "14c18",
+          "15a5229h",
           "--out-dir",
           "${ISOLATED_OUTDIR}"
         ],
@@ -73,7 +73,7 @@
           },
           "named_caches": [
             {
-              "name": "xcode_ios_14c18",
+              "name": "xcode_ios_15a5229h",
               "path": "Xcode.app"
             }
           ],
@@ -86,7 +86,7 @@
           "--readline-timeout=1200",
           "--xctest",
           "--xcode-build-version",
-          "14c18",
+          "15a5229h",
           "--out-dir",
           "${ISOLATED_OUTDIR}"
         ],
@@ -115,7 +115,7 @@
           "io_timeout": 7200,
           "named_caches": [
             {
-              "name": "xcode_ios_14c18",
+              "name": "xcode_ios_15a5229h",
               "path": "Xcode.app"
             }
           ],
@@ -128,7 +128,7 @@
         "args": [
           "--xctest",
           "--xcode-build-version",
-          "14c18",
+          "15a5229h",
           "--out-dir",
           "${ISOLATED_OUTDIR}"
         ],
@@ -155,7 +155,7 @@
           },
           "named_caches": [
             {
-              "name": "xcode_ios_14c18",
+              "name": "xcode_ios_15a5229h",
               "path": "Xcode.app"
             }
           ],
@@ -168,7 +168,7 @@
         "args": [
           "--xctest",
           "--xcode-build-version",
-          "14c18",
+          "15a5229h",
           "--out-dir",
           "${ISOLATED_OUTDIR}"
         ],
@@ -195,7 +195,7 @@
           },
           "named_caches": [
             {
-              "name": "xcode_ios_14c18",
+              "name": "xcode_ios_15a5229h",
               "path": "Xcode.app"
             }
           ],
@@ -207,7 +207,7 @@
         "args": [
           "--xctest",
           "--xcode-build-version",
-          "14c18",
+          "15a5229h",
           "--out-dir",
           "${ISOLATED_OUTDIR}"
         ],
@@ -234,7 +234,7 @@
           },
           "named_caches": [
             {
-              "name": "xcode_ios_14c18",
+              "name": "xcode_ios_15a5229h",
               "path": "Xcode.app"
             }
           ],
@@ -246,7 +246,7 @@
         "args": [
           "--xctest",
           "--xcode-build-version",
-          "14c18",
+          "15a5229h",
           "--out-dir",
           "${ISOLATED_OUTDIR}"
         ],
@@ -273,7 +273,7 @@
           },
           "named_caches": [
             {
-              "name": "xcode_ios_14c18",
+              "name": "xcode_ios_15a5229h",
               "path": "Xcode.app"
             }
           ],
@@ -285,7 +285,7 @@
         "args": [
           "--xctest",
           "--xcode-build-version",
-          "14c18",
+          "15a5229h",
           "--out-dir",
           "${ISOLATED_OUTDIR}"
         ],
@@ -312,7 +312,7 @@
           },
           "named_caches": [
             {
-              "name": "xcode_ios_14c18",
+              "name": "xcode_ios_15a5229h",
               "path": "Xcode.app"
             }
           ],
@@ -324,7 +324,7 @@
         "args": [
           "--xctest",
           "--xcode-build-version",
-          "14c18",
+          "15a5229h",
           "--out-dir",
           "${ISOLATED_OUTDIR}"
         ],
@@ -351,7 +351,7 @@
           },
           "named_caches": [
             {
-              "name": "xcode_ios_14c18",
+              "name": "xcode_ios_15a5229h",
               "path": "Xcode.app"
             }
           ],
@@ -363,7 +363,7 @@
         "args": [
           "--xctest",
           "--xcode-build-version",
-          "14c18",
+          "15a5229h",
           "--out-dir",
           "${ISOLATED_OUTDIR}"
         ],
@@ -390,7 +390,7 @@
           },
           "named_caches": [
             {
-              "name": "xcode_ios_14c18",
+              "name": "xcode_ios_15a5229h",
               "path": "Xcode.app"
             }
           ],
@@ -402,7 +402,7 @@
         "args": [
           "--xctest",
           "--xcode-build-version",
-          "14c18",
+          "15a5229h",
           "--out-dir",
           "${ISOLATED_OUTDIR}"
         ],
@@ -429,7 +429,7 @@
           },
           "named_caches": [
             {
-              "name": "xcode_ios_14c18",
+              "name": "xcode_ios_15a5229h",
               "path": "Xcode.app"
             }
           ],
@@ -499,7 +499,7 @@
         "args": [
           "--xctest",
           "--xcode-build-version",
-          "14c18",
+          "15a5229h",
           "--out-dir",
           "${ISOLATED_OUTDIR}"
         ],
@@ -526,7 +526,7 @@
           },
           "named_caches": [
             {
-              "name": "xcode_ios_14c18",
+              "name": "xcode_ios_15a5229h",
               "path": "Xcode.app"
             }
           ],
@@ -538,7 +538,7 @@
         "args": [
           "--xctest",
           "--xcode-build-version",
-          "14c18",
+          "15a5229h",
           "--out-dir",
           "${ISOLATED_OUTDIR}"
         ],
@@ -565,7 +565,7 @@
           },
           "named_caches": [
             {
-              "name": "xcode_ios_14c18",
+              "name": "xcode_ios_15a5229h",
               "path": "Xcode.app"
             }
           ],
@@ -578,7 +578,7 @@
           "--readline-timeout=1200",
           "--xctest",
           "--xcode-build-version",
-          "14c18",
+          "15a5229h",
           "--out-dir",
           "${ISOLATED_OUTDIR}"
         ],
@@ -607,7 +607,7 @@
           "io_timeout": 7200,
           "named_caches": [
             {
-              "name": "xcode_ios_14c18",
+              "name": "xcode_ios_15a5229h",
               "path": "Xcode.app"
             }
           ],
@@ -620,7 +620,7 @@
         "args": [
           "--xctest",
           "--xcode-build-version",
-          "14c18",
+          "15a5229h",
           "--out-dir",
           "${ISOLATED_OUTDIR}"
         ],
@@ -647,7 +647,7 @@
           },
           "named_caches": [
             {
-              "name": "xcode_ios_14c18",
+              "name": "xcode_ios_15a5229h",
               "path": "Xcode.app"
             }
           ],
@@ -660,7 +660,7 @@
         "args": [
           "--xctest",
           "--xcode-build-version",
-          "14c18",
+          "15a5229h",
           "--out-dir",
           "${ISOLATED_OUTDIR}"
         ],
@@ -687,7 +687,7 @@
           },
           "named_caches": [
             {
-              "name": "xcode_ios_14c18",
+              "name": "xcode_ios_15a5229h",
               "path": "Xcode.app"
             }
           ],
@@ -699,7 +699,7 @@
         "args": [
           "--xctest",
           "--xcode-build-version",
-          "14c18",
+          "15a5229h",
           "--out-dir",
           "${ISOLATED_OUTDIR}"
         ],
@@ -726,7 +726,7 @@
           },
           "named_caches": [
             {
-              "name": "xcode_ios_14c18",
+              "name": "xcode_ios_15a5229h",
               "path": "Xcode.app"
             }
           ],
@@ -738,7 +738,7 @@
         "args": [
           "--xctest",
           "--xcode-build-version",
-          "14c18",
+          "15a5229h",
           "--out-dir",
           "${ISOLATED_OUTDIR}"
         ],
@@ -765,7 +765,7 @@
           },
           "named_caches": [
             {
-              "name": "xcode_ios_14c18",
+              "name": "xcode_ios_15a5229h",
               "path": "Xcode.app"
             }
           ],
@@ -777,7 +777,7 @@
         "args": [
           "--xctest",
           "--xcode-build-version",
-          "14c18",
+          "15a5229h",
           "--out-dir",
           "${ISOLATED_OUTDIR}"
         ],
@@ -804,7 +804,7 @@
           },
           "named_caches": [
             {
-              "name": "xcode_ios_14c18",
+              "name": "xcode_ios_15a5229h",
               "path": "Xcode.app"
             }
           ],
@@ -816,7 +816,7 @@
         "args": [
           "--xctest",
           "--xcode-build-version",
-          "14c18",
+          "15a5229h",
           "--out-dir",
           "${ISOLATED_OUTDIR}"
         ],
@@ -843,7 +843,7 @@
           },
           "named_caches": [
             {
-              "name": "xcode_ios_14c18",
+              "name": "xcode_ios_15a5229h",
               "path": "Xcode.app"
             }
           ],
@@ -855,7 +855,7 @@
         "args": [
           "--xctest",
           "--xcode-build-version",
-          "14c18",
+          "15a5229h",
           "--out-dir",
           "${ISOLATED_OUTDIR}"
         ],
@@ -882,7 +882,7 @@
           },
           "named_caches": [
             {
-              "name": "xcode_ios_14c18",
+              "name": "xcode_ios_15a5229h",
               "path": "Xcode.app"
             }
           ],
@@ -894,7 +894,7 @@
         "args": [
           "--xctest",
           "--xcode-build-version",
-          "14c18",
+          "15a5229h",
           "--out-dir",
           "${ISOLATED_OUTDIR}"
         ],
@@ -921,7 +921,7 @@
           },
           "named_caches": [
             {
-              "name": "xcode_ios_14c18",
+              "name": "xcode_ios_15a5229h",
               "path": "Xcode.app"
             }
           ],
