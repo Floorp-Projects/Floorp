@@ -138,7 +138,12 @@ class nsTextControlFrame : public nsContainerFrame,
                     SelectionDirection = SelectionDirection::None) override;
   NS_IMETHOD GetOwnedSelectionController(
       nsISelectionController** aSelCon) override;
-  nsFrameSelection* GetOwnedFrameSelection() override;
+  nsFrameSelection* GetOwnedFrameSelection() override {
+    return ControlElement()->GetConstFrameSelection();
+  }
+  nsISelectionController* GetSelectionController() {
+    return ControlElement()->GetSelectionController();
+  }
 
   void PlaceholderChanged(const nsAttrValue* aOld, const nsAttrValue* aNew);
 
@@ -199,12 +204,13 @@ class nsTextControlFrame : public nsContainerFrame,
   nsresult MaybeBeginSecureKeyboardInput();
   void MaybeEndSecureKeyboardInput();
 
-#define DEFINE_TEXTCTRL_CONST_FORWARDER(type, name)          \
-  type name() const {                                        \
-    mozilla::TextControlElement* textControlElement =        \
-        mozilla::TextControlElement::FromNode(GetContent()); \
-    return textControlElement->name();                       \
+  mozilla::TextControlElement* ControlElement() const {
+    MOZ_ASSERT(mozilla::TextControlElement::FromNode(GetContent()));
+    return static_cast<mozilla::TextControlElement*>(GetContent());
   }
+
+#define DEFINE_TEXTCTRL_CONST_FORWARDER(type, name) \
+  type name() const { return ControlElement()->name(); }
 
   DEFINE_TEXTCTRL_CONST_FORWARDER(bool, IsSingleLineTextControl)
   DEFINE_TEXTCTRL_CONST_FORWARDER(bool, IsTextArea)
