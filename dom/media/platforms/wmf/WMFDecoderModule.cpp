@@ -87,6 +87,7 @@ static bool IsRemoteAcceleratedCompositor(
 
 static Atomic<bool> sSupportedTypesInitialized(false);
 static EnumSet<WMFStreamType> sSupportedTypes;
+static EnumSet<WMFStreamType> sLackOfExtensionTypes;
 
 /* static */
 void WMFDecoderModule::Init(Config aConfig) {
@@ -135,6 +136,7 @@ void WMFDecoderModule::Init(Config aConfig) {
   mozilla::mscom::EnsureMTA([&]() {
     // Store the supported MFT decoders.
     sSupportedTypes.clear();
+    sLackOfExtensionTypes.clear();
     // i = 1 to skip Unknown.
     for (uint32_t i = 1; i < static_cast<uint32_t>(WMFStreamType::SENTINEL);
          i++) {
@@ -151,6 +153,12 @@ void WMFDecoderModule::Init(Config aConfig) {
         WmfDecoderModuleMarkerAndLog("WMFInit Decoder Failed",
                                      "%s failed with code 0x%lx",
                                      StreamTypeToString(type), hr);
+        if (hr == WINCODEC_ERR_COMPONENTNOTFOUND &&
+            type == WMFStreamType::AV1) {
+          WmfDecoderModuleMarkerAndLog("No AV1 extension",
+                                       "Lacking of AV1 extension");
+          sLackOfExtensionTypes += type;
+        }
       }
     }
   });
@@ -375,8 +383,9 @@ media::DecodeSupportSet WMFDecoderModule::Supports(
       return media::DecodeSupport::SoftwareDecode;
     }
   }
-
-  return media::DecodeSupportSet{};
+  return sLackOfExtensionTypes.contains(type)
+             ? media::DecodeSupport::UnsureDueToLackOfExtension
+             : media::DecodeSupportSet{};
 }
 
 nsresult WMFDecoderModule::Startup() {

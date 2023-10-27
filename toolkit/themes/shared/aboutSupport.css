@@ -87,6 +87,10 @@ td.integer {
   color: var(--codec-text-supported);
 }
 
+#codec-table tr > td.lack-of-extension {
+  font-weight: var(--font-weight-bold);
+}
+
 #codec-table tr:nth-child(even) > td.unsupported {
   background-color: var(--codec-bg-unsupported-even);
 }
@@ -101,6 +105,14 @@ td.integer {
 
 #codec-table tr:nth-child(odd) > td.supported {
   background-color: var(--codec-bg-supported-odd);
+}
+
+#codec-table tr:nth-child(even) > td.lack-of-extension {
+  background-color: var(--in-content-box-background-even);
+}
+
+#codec-table tr:nth-child(odd) > td.lack-of-extension {
+  background-color: var(--in-content-box-background-odd);
 }
 
 #update-dir-row > td:dir(rtl),
