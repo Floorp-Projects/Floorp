@@ -512,12 +512,25 @@ size_t RTPSender::ExpectedPerPacketOverhead() const {
   return max_media_packet_header_;
 }
 
-std::unique_ptr<RtpPacketToSend> RTPSender::AllocatePacket() const {
+std::unique_ptr<RtpPacketToSend> RTPSender::AllocatePacket(
+    rtc::ArrayView<const uint32_t> csrcs) {
   MutexLock lock(&send_mutex_);
+  // TODO(danilchap): Remove this fallback together with SetCsrcs.
+  // New code shouldn't set csrcs_, keeping it empty,
+  // Old code would pass default value for csrcs, which is empty.
+  RTC_DCHECK(csrcs.empty() || csrcs_.empty());
+  if (csrcs.empty()) {
+    csrcs = csrcs_;
+  }
+  RTC_DCHECK_LE(csrcs.size(), kRtpCsrcSize);
+  if (csrcs.size() > max_num_csrcs_) {
+    max_num_csrcs_ = csrcs.size();
+    UpdateHeaderSizes();
+  }
   auto packet = std::make_unique<RtpPacketToSend>(&rtp_header_extension_map_,
                                                   max_packet_size_);
   packet->SetSsrc(ssrc_);
-  packet->SetCsrcs(csrcs_);
+  packet->SetCsrcs(csrcs);
 
   // Reserve extensions, if registered, RtpSender set in SendToNetwork.
   packet->ReserveExtension<AbsoluteSendTime>();
@@ -613,16 +626,10 @@ void RTPSender::SetMid(absl::string_view mid) {
   UpdateHeaderSizes();
 }
 
-std::vector<uint32_t> RTPSender::Csrcs() const {
-  MutexLock lock(&send_mutex_);
-  return csrcs_;
-}
-
 void RTPSender::SetCsrcs(const std::vector<uint32_t>& csrcs) {
   RTC_DCHECK_LE(csrcs.size(), kRtpCsrcSize);
   MutexLock lock(&send_mutex_);
   csrcs_ = csrcs;
-  UpdateHeaderSizes();
 }
 
 static void CopyHeaderAndExtensionsToRtxPacket(const RtpPacketToSend& packet,
@@ -776,7 +783,7 @@ RtpState RTPSender::GetRtxRtpState() const {
 
 void RTPSender::UpdateHeaderSizes() {
   const size_t rtp_header_length =
-      kRtpHeaderLength + sizeof(uint32_t) * csrcs_.size();
+      kRtpHeaderLength + sizeof(uint32_t) * max_num_csrcs_;
 
   max_padding_fec_packet_header_ =
       rtp_header_length + RtpHeaderExtensionSize(kFecOrPaddingExtensionSizes,

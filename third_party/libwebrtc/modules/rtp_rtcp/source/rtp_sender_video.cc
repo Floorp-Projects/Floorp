@@ -527,10 +527,8 @@ bool RTPSenderVideo::SendVideo(int payload_type,
     packet_capacity -= rtp_sender_->RtxPacketOverhead();
   }
 
-  rtp_sender_->SetCsrcs(std::move(csrcs));
-
   std::unique_ptr<RtpPacketToSend> single_packet =
-      rtp_sender_->AllocatePacket();
+      rtp_sender_->AllocatePacket(csrcs);
   RTC_DCHECK_LE(packet_capacity, single_packet->capacity());
   single_packet->SetPayloadType(payload_type);
   single_packet->SetTimestamp(rtp_timestamp);
@@ -766,7 +764,7 @@ bool RTPSenderVideo::SendEncodedImage(int payload_type,
   return SendVideo(payload_type, codec_type, rtp_timestamp,
                    encoded_image.CaptureTime(), encoded_image,
                    encoded_image.size(), video_header,
-                   expected_retransmission_time, rtp_sender_->Csrcs());
+                   expected_retransmission_time, /*csrcs=*/{});
 }
 
 DataRate RTPSenderVideo::PostEncodeOverhead() const {
