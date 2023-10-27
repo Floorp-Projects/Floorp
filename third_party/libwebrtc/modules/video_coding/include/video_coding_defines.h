@@ -50,22 +50,11 @@ enum VCMVideoProtection {
 // rendered.
 class VCMReceiveCallback {
  public:
-  // TODO(bugs.webrtc.org/14728): make pure virtual again.
   virtual int32_t FrameToRender(VideoFrame& videoFrame,  // NOLINT
                                 absl::optional<uint8_t> qp,
                                 TimeDelta decode_time,
                                 VideoContentType content_type,
-                                VideoFrameType frame_type) {
-    return FrameToRender(videoFrame, qp, decode_time, content_type);
-  }
-  // TODO(bugs.webrtc.org/14728): remove this signature.
-  virtual int32_t FrameToRender(VideoFrame& videoFrame,  // NOLINT
-                                absl::optional<uint8_t> qp,
-                                TimeDelta decode_time,
-                                VideoContentType content_type) {
-    return FrameToRender(videoFrame, qp, decode_time, content_type,
-                         VideoFrameType::kEmptyFrame);
-  }
+                                VideoFrameType frame_type) = 0;
 
   virtual void OnDroppedFrames(uint32_t frames_dropped);
 
