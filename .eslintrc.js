@@ -507,24 +507,6 @@ module.exports = {
       },
     },
     {
-      files: [
-        "dom/base/test/chrome/test_bug1098074_throw_from_ReceiveMessage.xhtml",
-        "dom/base/test/chrome/test_bug429785.xhtml",
-        "dom/base/test/chrome/test_bug467123.xhtml",
-        "dom/base/test/chrome/test_bug884693.xhtml",
-        "dom/base/test/chrome/window_nsITextInputProcessor.xhtml",
-        "dom/base/test/chrome/window_swapFrameLoaders.xhtml",
-      ],
-      rules: {
-        "mozilla/use-services": "off",
-        "no-caller": "off",
-        "no-lone-blocks": "off",
-        "no-redeclare": "off",
-        "no-shadow": "off",
-        "no-throw-literal": "off",
-      },
-    },
-    {
       // Rules of Hooks broadly checks for camelCase "use" identifiers, so
       // enable only for paths actually using React to avoid false positives.
       extends: ["plugin:react-hooks/recommended"],

@@ -187,15 +187,13 @@ Test swapFrameLoaders with different frame types and remoteness
       }
 
       // Check height after swap
-      {
-        if (frameA.getContentDimensions) {
-          let { height } = await frameA.getContentDimensions();
-          is(height, heightB, "Frame A's content height is 400px after swap");
-        }
-        if (frameB.getContentDimensions) {
-          let { height } = await frameB.getContentDimensions();
-          is(height, heightA, "Frame B's content height is 200px after swap");
-        }
+      if (frameA.getContentDimensions) {
+        let { height } = await frameA.getContentDimensions();
+        is(height, heightB, "Frame A's content height is 400px after swap");
+      }
+      if (frameB.getContentDimensions) {
+        let { height } = await frameB.getContentDimensions();
+        is(height, heightA, "Frame B's content height is 200px after swap");
       }
 
       // Ping after swap using message managers acquired after
