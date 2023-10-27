@@ -281,19 +281,30 @@ bool VCMGenericDecoder::Configure(const VideoDecoder::Settings& settings) {
   return ok;
 }
 
+int32_t VCMGenericDecoder::Decode(const EncodedFrame& frame, Timestamp now) {
+  return Decode(frame, now, frame.RenderTimeMs(), frame.MissingFrame());
+}
+
 int32_t VCMGenericDecoder::Decode(const VCMEncodedFrame& frame, Timestamp now) {
+  return Decode(frame, now, frame.RenderTimeMs(), frame.MissingFrame());
+}
+
+int32_t VCMGenericDecoder::Decode(const EncodedImage& frame,
+                                  Timestamp now,
+                                  int64_t render_time_ms,
+                                  int64_t missing_frame) {
   TRACE_EVENT1("webrtc", "VCMGenericDecoder::Decode", "timestamp",
                frame.Timestamp());
   FrameInfo frame_info;
   frame_info.rtp_timestamp = frame.Timestamp();
   frame_info.decode_start = now;
   frame_info.render_time =
-      frame.RenderTimeMs() >= 0
-          ? absl::make_optional(Timestamp::Millis(frame.RenderTimeMs()))
+      render_time_ms >= 0
+          ? absl::make_optional(Timestamp::Millis(render_time_ms))
           : absl::nullopt;
   frame_info.rotation = frame.rotation();
   frame_info.timing = frame.video_timing();
-  frame_info.ntp_time_ms = frame.EncodedImage().ntp_time_ms_;
+  frame_info.ntp_time_ms = frame.ntp_time_ms_;
   frame_info.packet_infos = frame.PacketInfos();
 
   // Set correctly only for key frames. Thus, use latest key frame
@@ -308,8 +319,7 @@ int32_t VCMGenericDecoder::Decode(const VCMEncodedFrame& frame, Timestamp now) {
   frame_info.frame_type = frame.FrameType();
   _callback->Map(std::move(frame_info));
 
-  int32_t ret = decoder_->Decode(frame.EncodedImage(), frame.MissingFrame(),
-                                 frame.RenderTimeMs());
+  int32_t ret = decoder_->Decode(frame, missing_frame, render_time_ms);
   VideoDecoder::DecoderInfo decoder_info = decoder_->GetDecoderInfo();
   if (decoder_info != decoder_info_) {
     RTC_LOG(LS_INFO) << "Changed decoder implementation to: "

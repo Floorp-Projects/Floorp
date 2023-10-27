@@ -201,6 +201,14 @@ class RTC_EXPORT EncodedImage {
     at_target_quality_ = at_target_quality;
   }
 
+  webrtc::VideoFrameType FrameType() const { return _frameType; }
+
+  void SetFrameType(webrtc::VideoFrameType frame_type) {
+    _frameType = frame_type;
+  }
+  VideoContentType contentType() const { return content_type_; }
+  VideoRotation rotation() const { return rotation_; }
+
   uint32_t _encodedWidth = 0;
   uint32_t _encodedHeight = 0;
   // NTP time of the capture time in local timebase in milliseconds.
@@ -223,6 +231,8 @@ class RTC_EXPORT EncodedImage {
     int64_t receive_start_ms = 0;
     int64_t receive_finish_ms = 0;
   } timing_;
+  EncodedImage::Timing video_timing() const { return timing_; }
+  EncodedImage::Timing* video_timing_mutable() { return &timing_; }
 
  private:
   size_t capacity() const { return encoded_data_ ? encoded_data_->size() : 0; }
