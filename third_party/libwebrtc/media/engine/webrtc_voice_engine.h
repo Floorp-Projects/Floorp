@@ -290,7 +290,8 @@ class WebRtcVoiceSendChannel final : public MediaChannelUtil,
 
  private:
   bool SetOptions(const AudioOptions& options);
-  bool SetSendCodecs(const std::vector<AudioCodec>& codecs);
+  bool SetSendCodecs(const std::vector<Codec>& codecs,
+                     absl::optional<Codec> preferred_codec);
   bool SetLocalSource(uint32_t ssrc, AudioSource* source);
   bool MuteStream(uint32_t ssrc, bool mute);
 

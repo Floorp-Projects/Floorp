@@ -994,9 +994,36 @@ bool WebRtcVideoSendChannel::GetChangedSendParameters(
       codec.flexfec_payload_type = -1;
   }
 
+  absl::optional<VideoCodecSettings> force_codec;
+  if (!send_streams_.empty()) {
+    // Since we do not support mixed-codec simulcast yet,
+    // all send streams must have the same codec value.
+    auto rtp_parameters = send_streams_.begin()->second->GetRtpParameters();
+    if (rtp_parameters.encodings[0].codec) {
+      auto matched_codec =
+          absl::c_find_if(negotiated_codecs, [&](auto negotiated_codec) {
+            return negotiated_codec.codec.MatchesRtpCodec(
+                *rtp_parameters.encodings[0].codec);
+          });
+      if (matched_codec != negotiated_codecs.end()) {
+        force_codec = *matched_codec;
+      } else {
+        // The requested codec has been negotiated away, we clear it from the
+        // parameters.
+        for (auto& encoding : rtp_parameters.encodings) {
+          encoding.codec.reset();
+        }
+        send_streams_.begin()->second->SetRtpParameters(rtp_parameters,
+                                                        nullptr);
+      }
+    }
+  }
+
   if (negotiated_codecs_ != negotiated_codecs) {
     if (negotiated_codecs.empty()) {
       changed_params->send_codec = absl::nullopt;
+    } else if (force_codec) {
+      changed_params->send_codec = force_codec;
     } else if (send_codec() != negotiated_codecs.front()) {
       changed_params->send_codec = negotiated_codecs.front();
     }
@@ -1264,6 +1291,24 @@ webrtc::RTCError WebRtcVideoSendChannel::SetRtpSendParameters(
         new_dscp = rtc::DSCP_AF41;
         break;
     }
+
+    // TODO(orphis): Support mixed-codec simulcast
+    if (parameters.encodings[0].codec && send_codec_ &&
+        !send_codec_->codec.MatchesRtpCodec(*parameters.encodings[0].codec)) {
+      RTC_LOG(LS_ERROR) << "Trying to change codec to "
+                        << parameters.encodings[0].codec->name;
+      auto matched_codec =
+          absl::c_find_if(negotiated_codecs_, [&](auto negotiated_codec) {
+            return negotiated_codec.codec.MatchesRtpCodec(
+                *parameters.encodings[0].codec);
+          });
+      RTC_CHECK(matched_codec != negotiated_codecs_.end());
+
+      ChangedSendParameters params;
+      params.send_codec = *matched_codec;
+      ApplyChangedParams(params);
+    }
+
     SetPreferredDscp(new_dscp);
   }
 

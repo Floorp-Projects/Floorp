@@ -1521,7 +1521,7 @@ bool CompareCodecs(const std::vector<webrtc::RtpCodecCapability>& capabilities,
          absl::c_equal(
              capabilities_no_rtx, codecs_no_rtx,
              [](const webrtc::RtpCodecCapability& capability, const C& codec) {
-               return codec.MatchesCapability(capability);
+               return codec.MatchesRtpCodec(capability);
              });
 }
 

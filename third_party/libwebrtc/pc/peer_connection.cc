@@ -1106,14 +1106,20 @@ PeerConnection::AddTransceiver(
   }
 
   std::vector<cricket::VideoCodec> codecs;
+  // Gather the current codec capabilities to allow checking scalabilityMode and
+  // codec selection against supported values.
   if (media_type == cricket::MEDIA_TYPE_VIDEO) {
-    // Gather the current codec capabilities to allow checking scalabilityMode
-    // against supported values.
     codecs = context_->media_engine()->video().send_codecs(false);
+  } else {
+    codecs = context_->media_engine()->voice().send_codecs();
   }
 
-  auto result = cricket::CheckRtpParametersValues(parameters, codecs);
+  auto result =
+      cricket::CheckRtpParametersValues(parameters, codecs, absl::nullopt);
   if (!result.ok()) {
+    if (result.type() == RTCErrorType::INVALID_MODIFICATION) {
+      result.set_type(RTCErrorType::UNSUPPORTED_OPERATION);
+    }
     LOG_AND_RETURN_ERROR(result.type(), result.message());
   }
 
