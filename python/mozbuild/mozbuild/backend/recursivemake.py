@@ -1460,7 +1460,16 @@ class RecursiveMakeBackend(MakeBackend):
                 backend_file.write("%s: %s\n" % (obj_target, objs_ref))
 
         elif (
-            not isinstance(obj, (HostLibrary, StaticLibrary, SandboxedWasmLibrary))
+            not isinstance(
+                obj,
+                (
+                    HostLibrary,
+                    HostRustProgram,
+                    RustProgram,
+                    StaticLibrary,
+                    SandboxedWasmLibrary,
+                ),
+            )
             or isinstance(obj, (StaticLibrary, SandboxedWasmLibrary))
             and obj.no_expand_lib
         ):
