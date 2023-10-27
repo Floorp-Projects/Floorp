@@ -83,7 +83,8 @@ AimdRateControl::AimdRateControl(const FieldTrialsView& key_value_config,
       initial_backoff_interval_("initial_backoff_interval"),
       link_capacity_fix_("link_capacity_fix") {
   ParseFieldTrial(
-      {&disable_estimate_bounded_increase_},
+      {&disable_estimate_bounded_increase_,
+       &use_current_estimate_as_min_upper_bound_},
       key_value_config.Lookup("WebRTC-Bwe-EstimateBoundedIncrease"));
   // E.g
   // WebRTC-BweAimdRateControlConfig/initial_backoff_interval:100ms/
@@ -350,7 +351,10 @@ void AimdRateControl::ChangeBitrate(const RateControlInput& input,
 DataRate AimdRateControl::ClampBitrate(DataRate new_bitrate) const {
   if (!disable_estimate_bounded_increase_ && network_estimate_ &&
       network_estimate_->link_capacity_upper.IsFinite()) {
-    DataRate upper_bound = network_estimate_->link_capacity_upper;
+    DataRate upper_bound =
+        use_current_estimate_as_min_upper_bound_
+            ? std::max(network_estimate_->link_capacity_upper, current_bitrate_)
+            : network_estimate_->link_capacity_upper;
     new_bitrate = std::min(upper_bound, new_bitrate);
   }
   if (network_estimate_ && network_estimate_->link_capacity_lower.IsFinite() &&
