@@ -213,12 +213,4 @@ ifndef TEST_MOZBUILD
 recurse_pre-export: $(DEPTH)/.cargo/config
 endif
 
-# When building gtest as part of the build (LINK_GTEST_DURING_COMPILE),
-# force the build system to get to it first, so that it can be linked
-# quickly without LTO, allowing the build system to go ahead with
-# plain gkrust and libxul while libxul-gtest is being linked and
-# dump-sym'ed.
-ifneq (,$(filter toolkit/library/gtest/rust/target-objects,$(compile_targets)))
-toolkit/library/rust/target-objects: toolkit/library/gtest/rust/target-objects
-endif
 endif
