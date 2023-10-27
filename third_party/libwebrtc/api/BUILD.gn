@@ -434,6 +434,7 @@ rtc_source_set("async_dns_resolver") {
     "../rtc_base:socket_address",
     "../rtc_base/system:rtc_export",
   ]
+  absl_deps = [ "//third_party/abseil-cpp/absl/functional:any_invocable" ]
 }
 
 rtc_source_set("wrapping_async_dns_resolver") {

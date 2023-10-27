@@ -1132,7 +1132,8 @@ class PeerConnectionIntegrationWrapper : public webrtc::PeerConnectionObserver,
         remote_async_dns_resolved_addr_ = local_candidate.address();
         remote_async_dns_resolved_addr_.SetResolvedIP(resolved_ip);
         EXPECT_CALL(*remote_async_dns_resolver_, Start(_, _))
-            .WillOnce(InvokeArgument<1>());
+            .WillOnce([](const rtc::SocketAddress& addr,
+                         absl::AnyInvocable<void()> callback) { callback(); });
         EXPECT_CALL(*remote_async_dns_resolver_, result())
             .WillOnce(ReturnRef(remote_async_dns_resolver_result_));
         EXPECT_CALL(remote_async_dns_resolver_result_, GetResolvedAddress(_, _))
