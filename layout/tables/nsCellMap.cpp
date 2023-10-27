@@ -1420,15 +1420,13 @@ CellData* nsCellMap::AppendCell(nsTableCellMap& aMap,
 bool nsCellMap::CellsSpanOut(nsTArray<nsTableRowFrame*>& aRows) const {
   int32_t numNewRows = aRows.Length();
   for (int32_t rowX = 0; rowX < numNewRows; rowX++) {
-    nsIFrame* rowFrame = (nsIFrame*)aRows.ElementAt(rowX);
-    for (nsIFrame* childFrame : rowFrame->PrincipalChildList()) {
-      nsTableCellFrame* cellFrame = do_QueryFrame(childFrame);
-      if (cellFrame) {
-        bool zeroSpan;
-        int32_t rowSpan = GetRowSpanForNewCell(cellFrame, rowX, zeroSpan);
-        if (zeroSpan || rowX + rowSpan > numNewRows) {
-          return true;
-        }
+    nsTableRowFrame* rowFrame = aRows.ElementAt(rowX);
+    for (nsTableCellFrame* cellFrame = rowFrame->GetFirstCell(); cellFrame;
+         cellFrame = cellFrame->GetNextCell()) {
+      bool zeroSpan;
+      int32_t rowSpan = GetRowSpanForNewCell(cellFrame, rowX, zeroSpan);
+      if (zeroSpan || rowX + rowSpan > numNewRows) {
+        return true;
       }
     }
   }
@@ -1586,12 +1584,10 @@ void nsCellMap::ExpandWithRows(nsTableCellMap& aMap,
     nsTableRowFrame* rFrame = aRowFrames.ElementAt(newRowIndex);
     // append cells
     int32_t colIndex = 0;
-    for (nsIFrame* cFrame : rFrame->PrincipalChildList()) {
-      nsTableCellFrame* cellFrame = do_QueryFrame(cFrame);
-      if (cellFrame) {
-        AppendCell(aMap, cellFrame, rowX, false, aRgFirstRowIndex, aDamageArea,
-                   &colIndex);
-      }
+    for (nsTableCellFrame* cellFrame = rFrame->GetFirstCell(); cellFrame;
+         cellFrame = cellFrame->GetNextCell()) {
+      AppendCell(aMap, cellFrame, rowX, false, aRgFirstRowIndex, aDamageArea,
+                 &colIndex);
     }
     newRowIndex++;
   }
@@ -2002,11 +1998,9 @@ void nsCellMap::RebuildConsideringRows(
     int32_t numNewRows = aRowsToInsert->Length();
     for (int32_t newRowX = 0; newRowX < numNewRows; newRowX++) {
       nsTableRowFrame* rFrame = aRowsToInsert->ElementAt(newRowX);
-      for (nsIFrame* cFrame : rFrame->PrincipalChildList()) {
-        nsTableCellFrame* cellFrame = do_QueryFrame(cFrame);
-        if (cellFrame) {
-          AppendCell(aMap, cellFrame, rowX, false, 0, damageArea);
-        }
+      for (nsTableCellFrame* cellFrame = rFrame->GetFirstCell(); cellFrame;
+           cellFrame = cellFrame->GetNextCell()) {
+        AppendCell(aMap, cellFrame, rowX, false, 0, damageArea);
       }
       rowX++;
     }
