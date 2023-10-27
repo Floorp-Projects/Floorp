@@ -11605,6 +11605,10 @@ DatabaseFileManager::DatabaseFileManager(
       mOriginMetadata(aOriginMetadata),
       mDatabaseName(aDatabaseName),
       mDatabaseID(aDatabaseID),
+      mCipherKeyManager(
+          aIsInPrivateBrowsingMode
+              ? new IndexedDBCipherKeyManager("IndexedDBCipherKeyManager")
+              : nullptr),
       mEnforcingQuota(aEnforcingQuota),
       mIsInPrivateBrowsingMode(aIsInPrivateBrowsingMode) {}
 
@@ -11963,7 +11967,9 @@ nsresult DatabaseFileManager::SyncDeleteFile(nsIFile& aFile,
 }
 
 nsresult DatabaseFileManager::Invalidate() {
-  mCipherKeyManager.Invalidate();
+  if (mCipherKeyManager) {
+    mCipherKeyManager->Invalidate();
+  }
 
   QM_TRY(MOZ_TO_RESULT(FileInfoManager::Invalidate()));
 

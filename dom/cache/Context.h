@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_cache_Context_h
 #define mozilla_dom_cache_Context_h
 
+#include "CacheCipherKeyManager.h"
 #include "mozilla/dom/SafeRefPtr.h"
 #include "mozilla/dom/cache/Types.h"
 #include "nsCOMPtr.h"
@@ -125,6 +126,10 @@ class Context final : public SafeRefCounted<Context> {
 
   Maybe<DirectoryLock&> MaybeDirectoryLockRef() const;
 
+  CipherKeyManager& MutableCipherKeyManagerRef();
+
+  const Maybe<CacheDirectoryMetadata>& MaybeCacheDirectoryMetadataRef() const;
+
   // Cancel any Actions running or waiting to run.  This should allow the
   // Context to be released and Listener::RemoveContext() will be called
   // when complete.
@@ -178,7 +183,8 @@ class Context final : public SafeRefCounted<Context> {
   void DispatchAction(SafeRefPtr<Action> aAction, bool aDoomData = false);
   void OnQuotaInit(nsresult aRv,
                    const Maybe<CacheDirectoryMetadata>& aDirectoryMetadata,
-                   already_AddRefed<DirectoryLock> aDirectoryLock);
+                   already_AddRefed<DirectoryLock> aDirectoryLock,
+                   already_AddRefed<CipherKeyManager> aCipherKeyManager);
 
   SafeRefPtr<ThreadsafeHandle> CreateThreadsafeHandle();
 
@@ -206,6 +212,7 @@ class Context final : public SafeRefCounted<Context> {
   SafeRefPtr<ThreadsafeHandle> mThreadsafeHandle;
 
   RefPtr<DirectoryLock> mDirectoryLock;
+  RefPtr<CipherKeyManager> mCipherKeyManager;
   SafeRefPtr<Context> mNextContext;
 
  public:
