@@ -77,7 +77,6 @@ int32_t FakeVp8Decoder::Release() {
   return WEBRTC_VIDEO_CODEC_OK;
 }
 
-const char* FakeVp8Decoder::kImplementationName = "fake_vp8_decoder";
 VideoDecoder::DecoderInfo FakeVp8Decoder::GetDecoderInfo() const {
   DecoderInfo info;
   info.implementation_name = kImplementationName;
