@@ -170,7 +170,7 @@ cricket::Candidate CreateUdpCandidate(absl::string_view type,
 
 cricket::BasicPortAllocator* CreateBasicPortAllocator(
     rtc::NetworkManager* network_manager,
-    rtc::SocketServer* socket_server,
+    rtc::PacketSocketFactory* socket_factory,
     const cricket::ServerAddresses& stun_servers,
     const rtc::SocketAddress& turn_server_udp,
     const rtc::SocketAddress& turn_server_tcp) {
@@ -187,9 +187,8 @@ cricket::BasicPortAllocator* CreateBasicPortAllocator(
   std::vector<cricket::RelayServerConfig> turn_servers(1, turn_server);
 
   std::unique_ptr<cricket::BasicPortAllocator> allocator =
-      std::make_unique<cricket::BasicPortAllocator>(
-          network_manager,
-          std::make_unique<rtc::BasicPacketSocketFactory>(socket_server));
+      std::make_unique<cricket::BasicPortAllocator>(network_manager,
+                                                    socket_factory);
   allocator->Initialize();
   allocator->SetConfiguration(stun_servers, turn_servers, 0, webrtc::NO_PRUNE);
   return allocator.release();
@@ -282,6 +281,7 @@ class P2PTransportChannelTestBase : public ::testing::Test,
         vss_(new rtc::VirtualSocketServer()),
         nss_(new rtc::NATSocketServer(vss_.get())),
         ss_(new rtc::FirewallSocketServer(nss_.get())),
+        socket_factory_(new rtc::BasicPacketSocketFactory(ss_.get())),
         main_(ss_.get()),
         stun_server_(TestStunServer::Create(ss_.get(), kStunAddr)),
         turn_server_(&main_, ss_.get(), kTurnUdpIntAddr, kTurnUdpExtAddr),
@@ -300,11 +300,11 @@ class P2PTransportChannelTestBase : public ::testing::Test,
     ServerAddresses stun_servers;
     stun_servers.insert(kStunAddr);
     ep1_.allocator_.reset(CreateBasicPortAllocator(
-        &ep1_.network_manager_, ss_.get(), stun_servers, kTurnUdpIntAddr,
-        rtc::SocketAddress()));
+        &ep1_.network_manager_, socket_factory_.get(), stun_servers,
+        kTurnUdpIntAddr, rtc::SocketAddress()));
     ep2_.allocator_.reset(CreateBasicPortAllocator(
-        &ep2_.network_manager_, ss_.get(), stun_servers, kTurnUdpIntAddr,
-        rtc::SocketAddress()));
+        &ep2_.network_manager_, socket_factory_.get(), stun_servers,
+        kTurnUdpIntAddr, rtc::SocketAddress()));
 
     ep1_.SetIceTiebreaker(kTiebreakerDefault);
     ep1_.allocator_->SetIceTiebreaker(kTiebreakerDefault);
@@ -1018,6 +1018,8 @@ class P2PTransportChannelTestBase : public ::testing::Test,
   std::unique_ptr<rtc::VirtualSocketServer> vss_;
   std::unique_ptr<rtc::NATSocketServer> nss_;
   std::unique_ptr<rtc::FirewallSocketServer> ss_;
+  std::unique_ptr<rtc::BasicPacketSocketFactory> socket_factory_;
+
   rtc::AutoSocketServerThread main_;
   rtc::scoped_refptr<PendingTaskSafetyFlag> safety_ =
       PendingTaskSafetyFlag::Create();
@@ -5039,9 +5041,9 @@ class P2PTransportChannelMostLikelyToWorkFirstTest
                      kTurnUdpIntAddr,
                      kTurnUdpExtAddr) {
     network_manager_.AddInterface(kPublicAddrs[0]);
-    allocator_.reset(
-        CreateBasicPortAllocator(&network_manager_, ss(), ServerAddresses(),
-                                 kTurnUdpIntAddr, rtc::SocketAddress()));
+    allocator_.reset(CreateBasicPortAllocator(
+        &network_manager_, packet_socket_factory(), ServerAddresses(),
+        kTurnUdpIntAddr, rtc::SocketAddress()));
     allocator_->set_flags(allocator_->flags() | PORTALLOCATOR_DISABLE_STUN |
                           PORTALLOCATOR_DISABLE_TCP);
     allocator_->set_step_delay(kMinimumStepDelay);

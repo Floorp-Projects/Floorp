@@ -757,10 +757,11 @@ class PeerConnectionIntegrationWrapper : public webrtc::PeerConnectionObserver,
     fake_network_manager_.reset(new rtc::FakeNetworkManager());
     fake_network_manager_->AddInterface(kDefaultLocalAddress);
 
+    socket_factory_.reset(new rtc::BasicPacketSocketFactory(socket_server));
+
     std::unique_ptr<cricket::PortAllocator> port_allocator(
-        new cricket::BasicPortAllocator(
-            fake_network_manager_.get(),
-            std::make_unique<rtc::BasicPacketSocketFactory>(socket_server)));
+        new cricket::BasicPortAllocator(fake_network_manager_.get(),
+                                        socket_factory_.get()));
     port_allocator_ = port_allocator.get();
     fake_audio_capture_module_ = FakeAudioCaptureModule::Create();
     if (!fake_audio_capture_module_) {
@@ -1173,6 +1174,7 @@ class PeerConnectionIntegrationWrapper : public webrtc::PeerConnectionObserver,
   std::string debug_name_;
 
   std::unique_ptr<rtc::FakeNetworkManager> fake_network_manager_;
+  std::unique_ptr<rtc::BasicPacketSocketFactory> socket_factory_;
   // Reference to the mDNS responder owned by `fake_network_manager_` after set.
   webrtc::FakeMdnsResponder* mdns_responder_ = nullptr;
 
