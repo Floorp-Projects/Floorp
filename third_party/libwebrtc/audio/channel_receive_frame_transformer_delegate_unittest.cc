@@ -146,7 +146,7 @@ TEST(ChannelReceiveFrameTransformerDelegateTest,
 
   delegate->Reset();
   EXPECT_CALL(mock_channel, ReceiveFrame).Times(0);
-  delegate->OnTransformedFrame(std::make_unique<MockTransformableFrame>());
+  delegate->OnTransformedFrame(std::make_unique<MockTransformableAudioFrame>());
   rtc::ThreadManager::ProcessAllMessageQueuesForTesting();
 }
 

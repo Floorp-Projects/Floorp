@@ -160,19 +160,25 @@ void ChannelSendFrameTransformerDelegate::SendFrame(
     std::unique_ptr<TransformableFrameInterface> frame) const {
   MutexLock lock(&send_lock_);
   RTC_DCHECK_RUN_ON(encoder_queue_);
-  RTC_CHECK_EQ(frame->GetDirection(),
-               TransformableFrameInterface::Direction::kSender);
   if (!send_frame_callback_)
     return;
+  uint32_t rtp_start_timestamp = 0;
+  if (frame->GetDirection() ==
+      TransformableFrameInterface::Direction::kSender) {
+    auto* outgoing_frame =
+        static_cast<TransformableOutgoingAudioFrame*>(frame.get());
+    rtp_start_timestamp = outgoing_frame->GetStartTimestamp();
+  }
   auto* transformed_frame =
-      static_cast<TransformableOutgoingAudioFrame*>(frame.get());
+      static_cast<TransformableAudioFrameInterface*>(frame.get());
   send_frame_callback_(
       InterfaceFrameTypeToInternalFrameType(transformed_frame->Type()),
       transformed_frame->GetPayloadType(),
-      transformed_frame->GetTimestamp() -
-          transformed_frame->GetStartTimestamp(),
+      transformed_frame->GetTimestamp() - rtp_start_timestamp,
       transformed_frame->GetData(),
-      *transformed_frame->AbsoluteCaptureTimestamp());
+      transformed_frame->AbsoluteCaptureTimestamp()
+          ? *transformed_frame->AbsoluteCaptureTimestamp()
+          : 0);
 }
 
 std::unique_ptr<TransformableAudioFrameInterface> CloneSenderAudioFrame(
