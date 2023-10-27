@@ -735,32 +735,32 @@ impl<Impl: SelectorImpl> Selector<Impl> {
 
     #[inline]
     pub fn specificity(&self) -> u32 {
-        self.0.header.specificity()
+        self.0.header.specificity
     }
 
     #[inline]
-    fn flags(&self) -> SelectorFlags {
+    pub(crate) fn flags(&self) -> SelectorFlags {
         self.0.header.flags
     }
 
     #[inline]
     pub fn has_pseudo_element(&self) -> bool {
-        self.0.header.has_pseudo_element()
+        self.flags().intersects(SelectorFlags::HAS_PSEUDO)
     }
 
     #[inline]
     pub fn has_parent_selector(&self) -> bool {
-        self.0.header.has_parent_selector()
+        self.flags().intersects(SelectorFlags::HAS_PARENT)
     }
 
     #[inline]
     pub fn is_slotted(&self) -> bool {
-        self.0.header.is_slotted()
+        self.flags().intersects(SelectorFlags::HAS_SLOTTED)
     }
 
     #[inline]
     pub fn is_part(&self) -> bool {
-        self.0.header.is_part()
+        self.flags().intersects(SelectorFlags::HAS_PART)
     }
 
     #[inline]
@@ -855,27 +855,12 @@ impl<Impl: SelectorImpl> Selector<Impl> {
         }
     }
 
-    /// Whether this selector is a featureless :host selector, with no
-    /// combinators to the left, and optionally has a pseudo-element to the
-    /// right.
+    /// Whether this selector is a featureless :host selector, with no combinators to the left, and
+    /// optionally has a pseudo-element to the right.
     #[inline]
     pub fn is_featureless_host_selector_or_pseudo_element(&self) -> bool {
-        let mut iter = self.iter();
-        if !self.has_pseudo_element() {
-            return iter.is_featureless_host_selector();
-        }
-
-        // Skip the pseudo-element.
-        for _ in &mut iter {}
-
-        match iter.next_sequence() {
-            None => return false,
-            Some(combinator) => {
-                debug_assert_eq!(combinator, Combinator::PseudoElement);
-            },
-        }
-
-        iter.is_featureless_host_selector()
+        let flags = self.flags();
+        flags.intersects(SelectorFlags::HAS_HOST) && !flags.intersects(SelectorFlags::HAS_NON_FEATURELESS_COMPONENT)
     }
 
     /// Returns an iterator over this selector in matching order (right-to-left),
@@ -955,27 +940,22 @@ impl<Impl: SelectorImpl> Selector<Impl> {
     }
 
     pub fn replace_parent_selector(&self, parent: &SelectorList<Impl>) -> Self {
-        // FIXME(emilio): Shouldn't allow replacing if parent has a pseudo-element selector
-        // or what not.
-        let flags = self.flags() - SelectorFlags::HAS_PARENT;
-        let mut specificity = Specificity::from(self.specificity());
-        let parent_specificity =
-            Specificity::from(selector_list_specificity_and_flags(parent.slice().iter()).specificity());
+        let parent_specificity_and_flags = selector_list_specificity_and_flags(parent.slice().iter());
 
-        // The specificity at this point will be wrong, we replace it by the correct one after the
-        // fact.
-        let specificity_and_flags = SpecificityAndFlags {
-            specificity: self.specificity(),
-            flags,
-        };
+        let mut specificity = Specificity::from(self.specificity());
+        let mut flags = self.flags() - SelectorFlags::HAS_PARENT;
 
         fn replace_parent_on_selector_list<Impl: SelectorImpl>(
             orig: &[Selector<Impl>],
             parent: &SelectorList<Impl>,
             specificity: &mut Specificity,
-            with_specificity: bool,
+            flags: &mut SelectorFlags,
+            propagate_specificity: bool,
+            flags_to_propagate: SelectorFlags,
         ) -> Option<SelectorList<Impl>> {
-            let mut any = false;
+            if !orig.iter().any(|s| s.has_parent_selector()) {
+                return None;
+            }
 
             let result = SelectorList::from_iter(
                 orig
@@ -984,23 +964,19 @@ impl<Impl: SelectorImpl> Selector<Impl> {
                         if !s.has_parent_selector() {
                             return s.clone();
                         }
-                        any = true;
                         s.replace_parent_selector(parent)
                     })
             );
 
-            if !any {
-                return None;
+            let result_specificity_and_flags =
+                selector_list_specificity_and_flags(result.slice().iter());
+            if propagate_specificity {
+                *specificity += Specificity::from(
+                    result_specificity_and_flags.specificity -
+                        selector_list_specificity_and_flags(orig.iter()).specificity,
+                );
             }
-
-            if !with_specificity {
-                return Some(result);
-            }
-
-            *specificity += Specificity::from(
-                selector_list_specificity_and_flags(result.slice().iter()).specificity -
-                    selector_list_specificity_and_flags(orig.iter()).specificity,
-            );
+            flags.insert(result_specificity_and_flags.flags.intersection(flags_to_propagate));
             Some(result)
         }
 
@@ -1008,6 +984,8 @@ impl<Impl: SelectorImpl> Selector<Impl> {
             orig: &[RelativeSelector<Impl>],
             parent: &SelectorList<Impl>,
             specificity: &mut Specificity,
+            flags: &mut SelectorFlags,
+            flags_to_propagate: SelectorFlags,
         ) -> Vec<RelativeSelector<Impl>> {
             let mut any = false;
 
@@ -1029,8 +1007,10 @@ impl<Impl: SelectorImpl> Selector<Impl> {
                 return result;
             }
 
+            let result_specificity_and_flags = relative_selector_list_specificity_and_flags(&result);
+            flags.insert(result_specificity_and_flags.flags.intersection(flags_to_propagate));
             *specificity += Specificity::from(
-                relative_selector_list_specificity_and_flags(&result).specificity -
+                result_specificity_and_flags.specificity -
                     relative_selector_list_specificity_and_flags(orig).specificity,
             );
             result
@@ -1040,12 +1020,15 @@ impl<Impl: SelectorImpl> Selector<Impl> {
             orig: &Selector<Impl>,
             parent: &SelectorList<Impl>,
             specificity: &mut Specificity,
+            flags: &mut SelectorFlags,
+            flags_to_propagate: SelectorFlags,
         ) -> Selector<Impl> {
             if !orig.has_parent_selector() {
                 return orig.clone();
             }
             let new_selector = orig.replace_parent_selector(parent);
             *specificity += Specificity::from(new_selector.specificity() - orig.specificity());
+            flags.insert(new_selector.flags().intersection(flags_to_propagate));
             new_selector
         }
 
@@ -1053,7 +1036,8 @@ impl<Impl: SelectorImpl> Selector<Impl> {
             // Implicit `&` plus descendant combinator.
             let iter = self.iter_raw_match_order();
             let len = iter.len() + 2;
-            specificity += parent_specificity;
+            specificity += Specificity::from(parent_specificity_and_flags.specificity);
+            flags.insert(parent_specificity_and_flags.flags);
             let iter = iter
                 .cloned()
                 .chain(std::iter::once(Component::Combinator(
@@ -1062,7 +1046,7 @@ impl<Impl: SelectorImpl> Selector<Impl> {
                 .chain(std::iter::once(Component::Is(
                     parent.clone()
                 )));
-            UniqueArc::from_header_and_iter_with_size(specificity_and_flags, iter, len)
+            UniqueArc::from_header_and_iter_with_size(Default::default(), iter, len)
         } else {
             let iter = self.iter_raw_match_order().map(|component| {
                 use self::Component::*;
@@ -1090,7 +1074,8 @@ impl<Impl: SelectorImpl> Selector<Impl> {
                     Invalid(..) |
                     RelativeSelectorAnchor => component.clone(),
                     ParentSelector => {
-                        specificity += parent_specificity;
+                        specificity += Specificity::from(parent_specificity_and_flags.specificity);
+                        flags.insert(parent_specificity_and_flags.flags);
                         Is(parent.clone())
                     },
                     Negation(ref selectors) => {
@@ -1098,7 +1083,9 @@ impl<Impl: SelectorImpl> Selector<Impl> {
                             selectors.slice(),
                             parent,
                             &mut specificity,
-                            /* with_specificity = */ true,
+                            &mut flags,
+                            /* propagate_specificity = */ true,
+                            SelectorFlags::all(),
                         ).unwrap_or_else(|| selectors.clone()))
                     },
                     Is(ref selectors) => {
@@ -1106,7 +1093,9 @@ impl<Impl: SelectorImpl> Selector<Impl> {
                             selectors.slice(),
                             parent,
                             &mut specificity,
-                            /* with_specificity = */ true,
+                            &mut flags,
+                            /* propagate_specificity = */ true,
+                            SelectorFlags::all(),
                         ).unwrap_or_else(|| selectors.clone()))
                     },
                     Where(ref selectors) => {
@@ -1114,13 +1103,17 @@ impl<Impl: SelectorImpl> Selector<Impl> {
                             selectors.slice(),
                             parent,
                             &mut specificity,
-                            /* with_specificity = */ false,
+                            &mut flags,
+                            /* propagate_specificity = */ false,
+                            SelectorFlags::all(),
                         ).unwrap_or_else(|| selectors.clone()))
                     },
                     Has(ref selectors) => Has(replace_parent_on_relative_selector_list(
                         selectors,
                         parent,
                         &mut specificity,
+                        &mut flags,
+                        SelectorFlags::all(),
                     )
                     .into_boxed_slice()),
 
@@ -1128,13 +1121,17 @@ impl<Impl: SelectorImpl> Selector<Impl> {
                         selector,
                         parent,
                         &mut specificity,
+                        &mut flags,
+                        SelectorFlags::all() - SelectorFlags::HAS_NON_FEATURELESS_COMPONENT,
                     ))),
                     NthOf(ref data) => {
                         let selectors = replace_parent_on_selector_list(
                             data.selectors(),
                             parent,
                             &mut specificity,
-                            /* with_specificity = */ true,
+                            &mut flags,
+                            /* propagate_specificity = */ true,
+                            SelectorFlags::all(),
                         );
                         NthOf(match selectors {
                             Some(s) => NthOfSelectorData::new(
@@ -1148,12 +1145,17 @@ impl<Impl: SelectorImpl> Selector<Impl> {
                         selector,
                         parent,
                         &mut specificity,
+                        &mut flags,
+                        SelectorFlags::all(),
                     )),
                 }
             });
-            UniqueArc::from_header_and_iter(specificity_and_flags, iter)
+            UniqueArc::from_header_and_iter(Default::default(), iter)
         };
-        items.header_mut().specificity = specificity.into();
+        *items.header_mut() = SpecificityAndFlags {
+            specificity: specificity.into(),
+            flags,
+        };
         Selector(items.shareable())
     }
 
@@ -1291,7 +1293,7 @@ impl<'a, Impl: 'a + SelectorImpl> SelectorIter<'a, Impl> {
     #[inline]
     pub(crate) fn is_featureless_host_selector(&mut self) -> bool {
         self.selector_length() > 0 &&
-            self.all(|component| component.is_host()) &&
+            self.all(|component| component.matches_featureless_host()) &&
             self.next_sequence().is_none()
     }
 
@@ -1955,6 +1957,22 @@ impl<Impl: SelectorImpl> Component<Impl> {
     #[inline]
     pub fn is_host(&self) -> bool {
         matches!(*self, Component::Host(..))
+    }
+
+    /// Returns true if this is a :host() selector.
+    #[inline]
+    pub fn matches_featureless_host(&self) -> bool {
+        match *self {
+            Component::Host(..) => true,
+            Component::Where(ref l) |
+            Component::Is(ref l) => {
+                // TODO(emilio): For now we use .all() rather than .any(), because not doing so
+                // brings up a fair amount of extra complexity (we can't make the decision on
+                // whether to walk out statically).
+                l.slice().iter().all(|i| i.is_featureless_host_selector_or_pseudo_element())
+            },
+            _ => false,
+        }
     }
 
     /// Returns the value as a combinator if applicable, None otherwise.
