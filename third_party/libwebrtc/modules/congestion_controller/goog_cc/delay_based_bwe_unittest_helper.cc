@@ -144,11 +144,9 @@ int64_t StreamGenerator::GenerateFrame(std::vector<PacketResult>* packets,
 }
 }  // namespace test
 
-DelayBasedBweTest::DelayBasedBweTest() : DelayBasedBweTest("") {}
-
-DelayBasedBweTest::DelayBasedBweTest(absl::string_view field_trial_string)
-    : field_trial(
-          std::make_unique<test::ScopedFieldTrials>(field_trial_string)),
+DelayBasedBweTest::DelayBasedBweTest()
+    : field_trial(std::make_unique<test::ScopedFieldTrials>(
+          "WebRTC-Bwe-RobustThroughputEstimatorSettings/enabled:true/")),
       clock_(100000000),
       acknowledged_bitrate_estimator_(
           AcknowledgedBitrateEstimatorInterface::Create(&field_trial_config_)),

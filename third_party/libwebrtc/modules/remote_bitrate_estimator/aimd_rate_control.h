@@ -108,8 +108,6 @@ class AimdRateControl {
   FieldTrialParameter<bool> use_current_estimate_as_min_upper_bound_{"c_upper",
                                                                      false};
   absl::optional<DataRate> last_decrease_;
-  FieldTrialOptional<TimeDelta> initial_backoff_interval_;
-  FieldTrialFlag link_capacity_fix_;
 };
 }  // namespace webrtc
 
