@@ -646,4 +646,118 @@ class FxSuggestFactsMiddlewareTest {
             assertEquals(4, position)
         }
     }
+
+    @Test
+    fun `GIVEN 1 Wikipedia suggestion is visible WHEN the engagement is completed THEN 1 impression fact is collected`() {
+        val provider: AwesomeBar.SuggestionProvider = mock()
+        val providerGroup = AwesomeBar.SuggestionProviderGroup(listOf(provider))
+        val providerGroupSuggestions = listOf(
+            AwesomeBar.Suggestion(provider),
+            AwesomeBar.Suggestion(
+                provider = provider,
+                metadata = mapOf(
+                    FxSuggestSuggestionProvider.MetadataKeys.IMPRESSION_INFO to FxSuggestInteractionInfo.Wikipedia(
+                        contextId = "c303282d-f2e6-46ca-a04a-35d3d873712d",
+                    ),
+                    FxSuggestSuggestionProvider.MetadataKeys.CLICK_INFO to FxSuggestInteractionInfo.Wikipedia(
+                        contextId = "c303282d-f2e6-46ca-a04a-35d3d873712d",
+                    ),
+                ),
+            ),
+        )
+        val store = BrowserStore(
+            initialState = BrowserState(
+                awesomeBarState = AwesomeBarState(
+                    visibilityState = AwesomeBar.VisibilityState(
+                        visibleProviderGroups = mapOf(providerGroup to providerGroupSuggestions),
+                    ),
+                ),
+            ),
+            middleware = listOf(FxSuggestFactsMiddleware()),
+        )
+
+        store.dispatch(AwesomeBarAction.EngagementFinished(abandoned = false)).joinBlocking()
+
+        assertEquals(1, processor.facts.size)
+        processor.facts[0].apply {
+            assertEquals(Component.FEATURE_FXSUGGEST, component)
+            assertEquals(Action.DISPLAY, action)
+            assertEquals(FxSuggestFacts.Items.WIKIPEDIA_SUGGESTION_IMPRESSED, item)
+
+            assertEquals(setOf(FxSuggestFacts.MetadataKeys.INTERACTION_INFO, FxSuggestFacts.MetadataKeys.POSITION, FxSuggestFacts.MetadataKeys.IS_CLICKED), metadata?.keys)
+
+            val impressionInfo = requireNotNull(metadata?.get(FxSuggestFacts.MetadataKeys.INTERACTION_INFO) as? FxSuggestInteractionInfo.Wikipedia)
+            assertEquals("c303282d-f2e6-46ca-a04a-35d3d873712d", impressionInfo.contextId)
+
+            val position = requireNotNull(metadata?.get(FxSuggestFacts.MetadataKeys.POSITION) as? Long)
+            assertEquals(2, position)
+
+            val isClicked = requireNotNull(metadata?.get(FxSuggestFacts.MetadataKeys.IS_CLICKED) as? Boolean)
+            assertFalse(isClicked)
+        }
+    }
+
+    @Test
+    fun `GIVEN 1 Wikipedia suggestion is visible and clicked WHEN the engagement is completed THEN 1 impression fact and 1 click fact are collected`() {
+        val provider: AwesomeBar.SuggestionProvider = mock()
+        val providerGroup = AwesomeBar.SuggestionProviderGroup(listOf(provider))
+        val providerGroupSuggestions = listOf(
+            AwesomeBar.Suggestion(provider),
+            AwesomeBar.Suggestion(
+                provider = provider,
+                metadata = mapOf(
+                    FxSuggestSuggestionProvider.MetadataKeys.IMPRESSION_INFO to FxSuggestInteractionInfo.Wikipedia(
+                        contextId = "c303282d-f2e6-46ca-a04a-35d3d873712d",
+                    ),
+                    FxSuggestSuggestionProvider.MetadataKeys.CLICK_INFO to FxSuggestInteractionInfo.Wikipedia(
+                        contextId = "c303282d-f2e6-46ca-a04a-35d3d873712d",
+                    ),
+                ),
+            ),
+        )
+        val store = BrowserStore(
+            initialState = BrowserState(
+                awesomeBarState = AwesomeBarState(
+                    visibilityState = AwesomeBar.VisibilityState(
+                        visibleProviderGroups = mapOf(providerGroup to providerGroupSuggestions),
+                    ),
+                    clickedSuggestion = providerGroupSuggestions[1],
+                ),
+            ),
+            middleware = listOf(FxSuggestFactsMiddleware()),
+        )
+
+        store.dispatch(AwesomeBarAction.EngagementFinished(abandoned = false)).joinBlocking()
+
+        assertEquals(2, processor.facts.size)
+        processor.facts[0].apply {
+            assertEquals(Component.FEATURE_FXSUGGEST, component)
+            assertEquals(Action.DISPLAY, action)
+            assertEquals(FxSuggestFacts.Items.WIKIPEDIA_SUGGESTION_IMPRESSED, item)
+
+            assertEquals(setOf(FxSuggestFacts.MetadataKeys.INTERACTION_INFO, FxSuggestFacts.MetadataKeys.POSITION, FxSuggestFacts.MetadataKeys.IS_CLICKED), metadata?.keys)
+
+            val impressionInfo = requireNotNull(metadata?.get(FxSuggestFacts.MetadataKeys.INTERACTION_INFO) as? FxSuggestInteractionInfo.Wikipedia)
+            assertEquals("c303282d-f2e6-46ca-a04a-35d3d873712d", impressionInfo.contextId)
+
+            val position = requireNotNull(metadata?.get(FxSuggestFacts.MetadataKeys.POSITION) as? Long)
+            assertEquals(2, position)
+
+            val isClicked = requireNotNull(metadata?.get(FxSuggestFacts.MetadataKeys.IS_CLICKED) as? Boolean)
+            assertTrue(isClicked)
+        }
+        processor.facts[1].apply {
+            assertEquals(Component.FEATURE_FXSUGGEST, component)
+            assertEquals(Action.INTERACTION, action)
+            assertEquals(FxSuggestFacts.Items.WIKIPEDIA_SUGGESTION_CLICKED, item)
+
+            assertEquals(setOf(FxSuggestFacts.MetadataKeys.INTERACTION_INFO, FxSuggestFacts.MetadataKeys.POSITION), metadata?.keys)
+
+            val clickInfo = requireNotNull(metadata?.get(FxSuggestFacts.MetadataKeys.INTERACTION_INFO) as? FxSuggestInteractionInfo.Wikipedia)
+            assertEquals("c303282d-f2e6-46ca-a04a-35d3d873712d", clickInfo.contextId)
+
+            val position = requireNotNull(metadata?.get(FxSuggestFacts.MetadataKeys.POSITION) as? Long)
+            assertEquals(2, position)
+        }
+    }
 }

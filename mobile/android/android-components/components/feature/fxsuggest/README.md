@@ -18,10 +18,12 @@ implementation "org.mozilla.components:feature-fxsuggest:{latest-version}"
 
 This component emits the following [Facts](../../support/base/README.md#Facts):
 
-| Action        | Item                       | Extras                        | Description                                                                    |
-|---------------|----------------------------|-------------------------------|--------------------------------------------------------------------------------|
-| `INTERACTION` | `amp_suggestion_clicked`   | `suggestion_clicked_extras`   | The user clicked on a Firefox Suggestion.                                      |
-| `DISPLAY`     | `amp_suggestion_impressed` | `suggestion_impressed_extras` | The user saw a Firefox Suggestion just before they navigated to a destination. |
+| Action        | Item                             | Extras                        | Description                                                                                         |
+|---------------|----------------------------------|-------------------------------|-----------------------------------------------------------------------------------------------------|
+| `INTERACTION` | `amp_suggestion_clicked`         | `suggestion_clicked_extras`   | The user clicked on a Firefox Suggestion from adMarketplace.                                        |
+| `DISPLAY`     | `amp_suggestion_impressed`       | `suggestion_impressed_extras` | The user saw a Firefox Suggestion from adMarketplace just before they navigated to a destination.   |
+| `INTERACTION` | `wikipedia_suggestion_clicked`   | `suggestion_clicked_extras`   | The user clicked on a Firefox Suggestion for a Wikipedia page.                                      |
+| `DISPLAY`     | `wikipedia_suggestion_impressed` | `suggestion_impressed_extras` | The user saw a Firefox Suggestion for a Wikipedia page just before they navigated to a destination. |
 
 #### `suggestion_clicked_extras`
 

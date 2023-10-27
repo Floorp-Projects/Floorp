@@ -10969,7 +10969,7 @@ fx_suggest:
   block_id:
     type: quantity
     description: |
-      A unique identifier for the suggestion (a.k.a. a keywords block).
+      A unique identifier for a sponsored suggestion. Not set for non-sponsored suggestions.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1857092
     data_reviews:
@@ -11025,7 +11025,8 @@ fx_suggest:
   reporting_url:
     type: url
     description: |
-      The url to report this interaction to.
+      If this ping is for a sponsored suggestion, the partner URL for reporting this interaction.
+      Not set for non-sponsored suggestions.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1857092
     data_reviews:
@@ -11061,7 +11062,8 @@ fx_suggest:
   iab_category:
     type: string
     description: |
-      The suggestion's category. Either "22 - Shopping" or "5 - Educational".
+      The suggestion's advertising category. "22 - Shopping" for sponsored suggestions.
+      Not set for non-sponsored suggestions.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1857092
     data_reviews:

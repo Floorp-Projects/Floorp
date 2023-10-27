@@ -95,20 +95,25 @@ class FxSuggestSuggestionProvider(
                         )
                     },
                 )
-                is Suggestion.Wikipedia -> SuggestionDetails(
-                    title = suggestion.title,
-                    url = suggestion.url,
-                    fullKeyword = suggestion.fullKeyword,
-                    isSponsored = false,
-                    icon = suggestion.icon,
-                )
+                is Suggestion.Wikipedia -> {
+                    val interactionInfo = contextId?.let {
+                        FxSuggestInteractionInfo.Wikipedia(contextId = it)
+                    }
+                    SuggestionDetails(
+                        title = suggestion.title,
+                        url = suggestion.url,
+                        fullKeyword = suggestion.fullKeyword,
+                        isSponsored = false,
+                        icon = suggestion.icon,
+                        clickInfo = interactionInfo,
+                        impressionInfo = interactionInfo,
+                    )
+                }
                 else -> return@mapNotNull null
             }
             AwesomeBar.Suggestion(
                 provider = this@FxSuggestSuggestionProvider,
-                icon = details.icon?.let {
-                    it.toUByteArray().asByteArray().toBitmap()
-                },
+                icon = details.icon?.toUByteArray()?.asByteArray()?.toBitmap(),
                 title = details.title,
                 description = if (details.isSponsored) {
                     resources.getString(R.string.sponsored_suggestion_description)
@@ -155,6 +160,15 @@ sealed interface FxSuggestInteractionInfo {
         val advertiser: String,
         val reportingUrl: String,
         val iabCategory: String,
+        val contextId: String,
+    ) : FxSuggestInteractionInfo
+
+    /**
+     * Interaction information for a Firefox Suggest search suggestion from Wikipedia.
+     *
+     * @param contextId The contextual services user identifier.
+     */
+    data class Wikipedia(
         val contextId: String,
     ) : FxSuggestInteractionInfo
 }

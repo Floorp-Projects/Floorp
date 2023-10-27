@@ -280,23 +280,33 @@ internal class ReleaseMetricController(
             }
         }
 
-        Component.FEATURE_FXSUGGEST to FxSuggestFacts.Items.AMP_SUGGESTION_CLICKED -> {
+        Component.FEATURE_FXSUGGEST to FxSuggestFacts.Items.AMP_SUGGESTION_CLICKED,
+        Component.FEATURE_FXSUGGEST to FxSuggestFacts.Items.WIKIPEDIA_SUGGESTION_CLICKED,
+        -> {
             FxSuggest.pingType.set("fxsuggest-click")
             FxSuggest.isClicked.set(true)
             (metadata?.get(FxSuggestFacts.MetadataKeys.POSITION) as? Long)?.let {
                 FxSuggest.position.set(it)
             }
-            (metadata?.get(FxSuggestFacts.MetadataKeys.INTERACTION_INFO) as? FxSuggestInteractionInfo.Amp)?.let {
-                FxSuggest.blockId.set(it.blockId)
-                FxSuggest.advertiser.set(it.advertiser)
-                FxSuggest.reportingUrl.set(it.reportingUrl)
-                FxSuggest.iabCategory.set(it.iabCategory)
-                FxSuggest.contextId.set(UUID.fromString(it.contextId))
+            when (val clickInfo = metadata?.get(FxSuggestFacts.MetadataKeys.INTERACTION_INFO)) {
+                is FxSuggestInteractionInfo.Amp -> {
+                    FxSuggest.blockId.set(clickInfo.blockId)
+                    FxSuggest.advertiser.set(clickInfo.advertiser)
+                    FxSuggest.reportingUrl.set(clickInfo.reportingUrl)
+                    FxSuggest.iabCategory.set(clickInfo.iabCategory)
+                    FxSuggest.contextId.set(UUID.fromString(clickInfo.contextId))
+                }
+                is FxSuggestInteractionInfo.Wikipedia -> {
+                    FxSuggest.advertiser.set("wikipedia")
+                    FxSuggest.contextId.set(UUID.fromString(clickInfo.contextId))
+                }
             }
             Pings.fxSuggest.submit()
         }
 
-        Component.FEATURE_FXSUGGEST to FxSuggestFacts.Items.AMP_SUGGESTION_IMPRESSED -> {
+        Component.FEATURE_FXSUGGEST to FxSuggestFacts.Items.AMP_SUGGESTION_IMPRESSED,
+        Component.FEATURE_FXSUGGEST to FxSuggestFacts.Items.WIKIPEDIA_SUGGESTION_IMPRESSED,
+        -> {
             FxSuggest.pingType.set("fxsuggest-impression")
             (metadata?.get(FxSuggestFacts.MetadataKeys.IS_CLICKED) as? Boolean)?.let {
                 FxSuggest.isClicked.set(it)
@@ -304,12 +314,18 @@ internal class ReleaseMetricController(
             (metadata?.get(FxSuggestFacts.MetadataKeys.POSITION) as? Long)?.let {
                 FxSuggest.position.set(it)
             }
-            (metadata?.get(FxSuggestFacts.MetadataKeys.INTERACTION_INFO) as? FxSuggestInteractionInfo.Amp)?.let {
-                FxSuggest.blockId.set(it.blockId)
-                FxSuggest.advertiser.set(it.advertiser)
-                FxSuggest.reportingUrl.set(it.reportingUrl)
-                FxSuggest.iabCategory.set(it.iabCategory)
-                FxSuggest.contextId.set(UUID.fromString(it.contextId))
+            when (val impressionInfo = metadata?.get(FxSuggestFacts.MetadataKeys.INTERACTION_INFO)) {
+                is FxSuggestInteractionInfo.Amp -> {
+                    FxSuggest.blockId.set(impressionInfo.blockId)
+                    FxSuggest.advertiser.set(impressionInfo.advertiser)
+                    FxSuggest.reportingUrl.set(impressionInfo.reportingUrl)
+                    FxSuggest.iabCategory.set(impressionInfo.iabCategory)
+                    FxSuggest.contextId.set(UUID.fromString(impressionInfo.contextId))
+                }
+                is FxSuggestInteractionInfo.Wikipedia -> {
+                    FxSuggest.advertiser.set("wikipedia")
+                    FxSuggest.contextId.set(UUID.fromString(impressionInfo.contextId))
+                }
             }
             Pings.fxSuggest.submit()
         }

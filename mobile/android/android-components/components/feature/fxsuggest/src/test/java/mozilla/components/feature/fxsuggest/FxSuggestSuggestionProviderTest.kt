@@ -179,7 +179,15 @@ class FxSuggestSuggestionProviderTest {
         assertEquals("Las Vegas", suggestions.first().title)
         assertNull(suggestions.first().description)
         assertNull(suggestions.first().icon)
-        assertTrue(suggestions.first().metadata.isNullOrEmpty())
+        suggestions.first().metadata?.let {
+            assertEquals(setOf(FxSuggestSuggestionProvider.MetadataKeys.CLICK_INFO, FxSuggestSuggestionProvider.MetadataKeys.IMPRESSION_INFO), it.keys)
+
+            val clickInfo = requireNotNull(it[FxSuggestSuggestionProvider.MetadataKeys.CLICK_INFO] as? FxSuggestInteractionInfo.Wikipedia)
+            assertEquals("c303282d-f2e6-46ca-a04a-35d3d873712d", clickInfo.contextId)
+
+            val impressionInfo = requireNotNull(it[FxSuggestSuggestionProvider.MetadataKeys.IMPRESSION_INFO] as? FxSuggestInteractionInfo.Wikipedia)
+            assertEquals("c303282d-f2e6-46ca-a04a-35d3d873712d", impressionInfo.contextId)
+        }
     }
 
     @Test
