@@ -141,12 +141,14 @@ void cubeb_mock_destroy(cubeb* context) {
   MockCubeb::AsMock(context)->Destroy();
 }
 
-MockCubebStream::MockCubebStream(
-    cubeb* aContext, char const* aStreamName, cubeb_devid aInputDevice,
-    cubeb_stream_params* aInputStreamParams, cubeb_devid aOutputDevice,
-    cubeb_stream_params* aOutputStreamParams, cubeb_data_callback aDataCallback,
-    cubeb_state_callback aStateCallback, void* aUserPtr,
-    SmartMockCubebStream* aSelf, RunningMode aRunningMode, bool aFrozenStart)
+MockCubebStream::MockCubebStream(cubeb* aContext, cubeb_devid aInputDevice,
+                                 cubeb_stream_params* aInputStreamParams,
+                                 cubeb_devid aOutputDevice,
+                                 cubeb_stream_params* aOutputStreamParams,
+                                 cubeb_data_callback aDataCallback,
+                                 cubeb_state_callback aStateCallback,
+                                 void* aUserPtr, SmartMockCubebStream* aSelf,
+                                 RunningMode aRunningMode, bool aFrozenStart)
     : context(aContext),
       mUserPtr(aUserPtr),
       mRunningMode(aRunningMode),
@@ -157,7 +159,6 @@ MockCubebStream::MockCubebStream(
       mFrozenStart(aFrozenStart),
       mDataCallback(aDataCallback),
       mStateCallback(aStateCallback),
-      mName(aStreamName),
       mInputDeviceID(aInputDevice),
       mOutputDeviceID(aOutputDevice),
       mAudioGenerator(aInputStreamParams ? aInputStreamParams->channels
@@ -251,12 +252,6 @@ void MockCubebStream::Destroy() {
   MockCubeb::AsMock(context)->StreamDestroy(this);
 }
 
-int MockCubebStream::SetName(char const* aName) {
-  mName = aName;
-  mNameSetEvent.Notify(mName);
-  return CUBEB_OK;
-}
-
 int MockCubebStream::RegisterDeviceChangedCallback(
     cubeb_device_changed_callback aDeviceChangedCallback) {
   if (mDeviceChangedCallback && aDeviceChangedCallback) {
@@ -329,10 +324,6 @@ void MockCubebStream::SetOutputRecordingEnabled(bool aEnabled) {
 
 void MockCubebStream::SetInputRecordingEnabled(bool aEnabled) {
   mInputRecordingEnabled = aEnabled;
-}
-
-MediaEventSource<nsCString>& MockCubebStream::NameSetEvent() {
-  return mNameSetEvent;
 }
 
 MediaEventSource<cubeb_state>& MockCubebStream::StateEvent() {
@@ -621,7 +612,7 @@ void MockCubeb::UnforceAudioThread() {
 }
 
 int MockCubeb::StreamInit(cubeb* aContext, cubeb_stream** aStream,
-                          char const* aStreamName, cubeb_devid aInputDevice,
+                          cubeb_devid aInputDevice,
                           cubeb_stream_params* aInputStreamParams,
                           cubeb_devid aOutputDevice,
                           cubeb_stream_params* aOutputStreamParams,
@@ -633,7 +624,7 @@ int MockCubeb::StreamInit(cubeb* aContext, cubeb_stream** aStream,
   }
 
   auto mockStream = MakeRefPtr<SmartMockCubebStream>(
-      aContext, aStreamName, aInputDevice, aInputStreamParams, aOutputDevice,
+      aContext, aInputDevice, aInputStreamParams, aOutputDevice,
       aOutputStreamParams, aDataCallback, aStateCallback, aUserPtr,
       mRunningMode, mStreamStartFreezeEnabled);
   *aStream = mockStream->AsCubebStream();

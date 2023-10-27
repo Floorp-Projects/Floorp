@@ -11,7 +11,6 @@
 #include "CrossGraphPort.h"
 #include "VideoSegment.h"
 #include "nsContentUtils.h"
-#include "nsGlobalWindowInner.h"
 #include "nsPrintfCString.h"
 #include "nsServiceManagerUtils.h"
 #include "prerror.h"
@@ -27,7 +26,6 @@
 #endif  // MOZ_WEBRTC
 #include "MediaTrackListener.h"
 #include "mozilla/dom/BaseAudioContextBinding.h"
-#include "mozilla/dom/Document.h"
 #include "mozilla/dom/WorkletThread.h"
 #include "mozilla/media/MediaUtils.h"
 #include <algorithm>
@@ -1682,40 +1680,6 @@ MediaTrackGraphImpl::Notify(nsITimer* aTimer) {
   return NS_OK;
 }
 
-static nsCString GetDocumentTitle(uint64_t aWindowID) {
-  MOZ_ASSERT(NS_IsMainThread());
-  nsCString title;
-  auto* win = nsGlobalWindowInner::GetInnerWindowWithId(aWindowID);
-  if (!win) {
-    return title;
-  }
-  Document* doc = win->GetExtantDoc();
-  if (!doc) {
-    return title;
-  }
-  nsAutoString titleUTF16;
-  doc->GetTitle(titleUTF16);
-  CopyUTF16toUTF8(titleUTF16, title);
-  return title;
-}
-
-NS_IMETHODIMP
-MediaTrackGraphImpl::Observe(nsISupports* aSubject, const char* aTopic,
-                             const char16_t* aData) {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(strcmp(aTopic, "document-title-changed") == 0);
-  nsCString streamName = GetDocumentTitle(mWindowID);
-  LOG(LogLevel::Debug, ("%p: document title: %s", this, streamName.get()));
-  if (streamName.IsEmpty()) {
-    return NS_OK;
-  }
-  QueueControlMessageWithNoShutdown(
-      [self = RefPtr{this}, this, streamName = std::move(streamName)] {
-        CurrentDriver()->SetStreamName(streamName);
-      });
-  return NS_OK;
-}
-
 bool MediaTrackGraphImpl::AddShutdownBlocker() {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!mShutdownBlocker);
@@ -3290,9 +3254,6 @@ MediaTrackGraphImpl::MediaTrackGraphImpl(
     } else {
       mDriver = new SystemClockDriver(this, nullptr, mSampleRate);
     }
-    nsCString streamName = GetDocumentTitle(aWindowID);
-    LOG(LogLevel::Debug, ("%p: document title: %s", this, streamName.get()));
-    mDriver->SetStreamName(streamName);
   } else {
     mDriver =
         new OfflineClockDriver(this, mSampleRate, MEDIA_GRAPH_TARGET_PERIOD_MS);
@@ -3380,12 +3341,6 @@ MediaTrackGraphImpl* MediaTrackGraphImpl::GetInstance(
       aOutputDeviceID, aMainThread);
   MOZ_ALWAYS_TRUE(graphs->add(addPtr, graph));
 
-  nsCOMPtr<nsIObserverService> observerService =
-      mozilla::services::GetObserverService();
-  if (observerService) {
-    observerService->AddObserver(graph, "document-title-changed", false);
-  }
-
   LOG(LogLevel::Debug, ("Starting up MediaTrackGraph %p for window 0x%" PRIx64,
                         graph, aWindowID));
 
@@ -3430,8 +3385,8 @@ void MediaTrackGraph::ForceShutDown() {
   graph->ForceShutDown();
 }
 
-NS_IMPL_ISUPPORTS(MediaTrackGraphImpl, nsIMemoryReporter, nsIObserver,
-                  nsIThreadObserver, nsITimerCallback, nsINamed)
+NS_IMPL_ISUPPORTS(MediaTrackGraphImpl, nsIMemoryReporter, nsIThreadObserver,
+                  nsITimerCallback, nsINamed)
 
 NS_IMETHODIMP
 MediaTrackGraphImpl::CollectReports(nsIHandleReportCallback* aHandleReport,
@@ -3625,12 +3580,6 @@ void MediaTrackGraphImpl::RemoveTrack(MediaTrack* aTrack) {
           graphs->lookup({mWindowID, mSampleRate, mOutputDeviceID});
       MOZ_ASSERT(*p == this);
       graphs->remove(p);
-
-      nsCOMPtr<nsIObserverService> observerService =
-          mozilla::services::GetObserverService();
-      if (observerService) {
-        observerService->RemoveObserver(this, "document-title-changed");
-      }
     }
     // The graph thread will shut itself down soon, but won't be able to do
     // that if JS continues to run.

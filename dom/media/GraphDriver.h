@@ -277,9 +277,6 @@ class GraphDriver {
   virtual void Start() = 0;
   /* Shutdown GraphDriver */
   MOZ_CAN_RUN_SCRIPT virtual void Shutdown() = 0;
-  /* Set the UTF-8 name for system audio streams.
-   * Graph thread, or main thread if the graph is not running. */
-  virtual void SetStreamName(const nsACString& aStreamName);
   /* Rate at which the GraphDriver runs, in ms. This can either be user
    * controlled (because we are using a {System,Offline}ClockDriver, and decide
    * how often we want to wakeup/how much we want to process per iteration), or
@@ -318,8 +315,7 @@ class GraphDriver {
    * Set the state of the driver so it can start at the right point in time,
    * after switching from another driver.
    */
-  void SetState(const nsACString& aStreamName, GraphTime aIterationEnd,
-                GraphTime aStateComputedTime);
+  void SetState(GraphTime aIterationEnd, GraphTime aStateComputedTime);
 
   GraphInterface* Graph() const { return mGraphInterface; }
 
@@ -349,8 +345,6 @@ class GraphDriver {
   }
 
  protected:
-  // The UTF-8 name for system audio streams.  Graph thread.
-  nsCString mStreamName;
   // Time of the end of this graph iteration.
   GraphTime mIterationEnd = 0;
   // Time until which the graph has processed data.
@@ -538,7 +532,7 @@ struct TrackAndPromiseForOperation {
   MozPromiseHolder<MediaTrackGraph::AudioContextOperationPromise> mHolder;
 };
 
-enum class AsyncCubebOperation { INIT, NAME_CHANGE, SHUTDOWN };
+enum class AsyncCubebOperation { INIT, SHUTDOWN };
 enum class AudioInputType { Unknown, Voice };
 
 /**
@@ -579,7 +573,6 @@ class AudioCallbackDriver : public GraphDriver, public MixerCallbackReceiver {
 
   void Start() override;
   MOZ_CAN_RUN_SCRIPT void Shutdown() override;
-  void SetStreamName(const nsACString& aStreamName) override;
 
   /* Static wrapper function cubeb calls back. */
   static long DataCallback_s(cubeb_stream* aStream, void* aUser,
@@ -670,8 +663,7 @@ class AudioCallbackDriver : public GraphDriver, public MixerCallbackReceiver {
   /* Start the cubeb stream */
   bool StartStream();
   friend class AsyncCubebTask;
-  void Init(const nsCString& aStreamName);
-  void SetCubebStreamName(const nsCString& aStreamName);
+  void Init();
   void Stop();
   /**
    *  Fall back to a SystemClockDriver using a normal thread. If needed,
@@ -795,9 +787,7 @@ class AudioCallbackDriver : public GraphDriver, public MixerCallbackReceiver {
 
 class AsyncCubebTask : public Runnable {
  public:
-  // aName is not required for AsyncCubebOperation::SHUTDOWN
-  AsyncCubebTask(AudioCallbackDriver* aDriver, AsyncCubebOperation aOperation,
-                 const nsACString& aName = VoidCString());
+  AsyncCubebTask(AudioCallbackDriver* aDriver, AsyncCubebOperation aOperation);
 
   nsresult Dispatch(uint32_t aFlags = NS_DISPATCH_NORMAL) {
     return mDriver->mInitShutdownThread->Dispatch(this, aFlags);
@@ -817,7 +807,7 @@ class AsyncCubebTask : public Runnable {
 
   RefPtr<AudioCallbackDriver> mDriver;
   AsyncCubebOperation mOperation;
-  nsCString mName;
+  RefPtr<GraphInterface> mShutdownGrip;
 };
 
 }  // namespace mozilla
