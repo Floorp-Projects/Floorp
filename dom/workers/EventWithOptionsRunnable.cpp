@@ -157,6 +157,13 @@ bool EventWithOptionsRunnable::WorkerRun(JSContext* aCx,
   }
 
   MOZ_ASSERT(aWorkerPrivate == GetWorkerPrivateFromContext(aCx));
+  MOZ_ASSERT(aWorkerPrivate->GlobalScope());
+
+  // If the worker start shutting down, don't dispatch the event.
+  if (NS_FAILED(
+          aWorkerPrivate->GlobalScope()->CheckCurrentGlobalCorrectness())) {
+    return true;
+  }
 
   return BuildAndFireEvent(aCx, aWorkerPrivate, aWorkerPrivate->GlobalScope());
 }
