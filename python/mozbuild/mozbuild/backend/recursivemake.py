@@ -369,6 +369,13 @@ class RecursiveMakeBackend(MakeBackend):
         self._gkrust_target = None
         self._pre_compile = set()
 
+        # For a given file produced by the build, gives the top-level target
+        # that will produce it.
+        self._target_per_file = {}
+        # A set of dependencies that need correlation after everything has
+        # been processed.
+        self._post_process_dependencies = []
+
         self._no_skip = {
             "pre-export": set(),
             "export": set(),
@@ -538,12 +545,20 @@ class RecursiveMakeBackend(MakeBackend):
             else:
                 self._no_skip[tier].add(relobjdir)
             backend_file.write_once("include $(topsrcdir)/config/AB_rCD.mk\n")
-            relobjdir = mozpath.relpath(obj.objdir, backend_file.objdir)
+            reldir = mozpath.relpath(obj.objdir, backend_file.objdir)
+            if not reldir:
+                for out in obj.outputs:
+                    out = mozpath.join(relobjdir, out)
+                    assert out not in self._target_per_file
+                    self._target_per_file[out] = (relobjdir, tier)
+                for input in obj.inputs:
+                    if isinstance(input, ObjDirPath):
+                        self._post_process_dependencies.append((relobjdir, tier, input))
             # For generated files that we handle in the top-level backend file,
             # we want to have a `directory/tier` target depending on the file.
             # For the others, we want a `tier` target.
-            if tier != "pre-compile" and relobjdir:
-                tier = "%s/%s" % (relobjdir, tier)
+            if tier != "pre-compile" and reldir:
+                tier = "%s/%s" % (reldir, tier)
             for stmt in self._format_statements_for_generated_file(
                 obj, tier, extra_dependencies="backend.mk" if obj.flags else ""
             ):
@@ -580,6 +595,10 @@ class RecursiveMakeBackend(MakeBackend):
         elif isinstance(obj, HostProgram):
             self._process_host_program(obj, backend_file)
             self._process_linked_libraries(obj, backend_file)
+            self._target_per_file[obj.output_path.full_path] = (
+                backend_file.relobjdir,
+                obj.KIND,
+            )
 
         elif isinstance(obj, SimpleProgram):
             self._process_simple_program(obj, backend_file)
@@ -823,6 +842,12 @@ class RecursiveMakeBackend(MakeBackend):
         add_category_rules("compile", compile_roots, self._compile_graph)
         for category, graph in sorted(six.iteritems(non_default_graphs)):
             add_category_rules(category, non_default_roots[category], graph)
+
+        for relobjdir, tier, input in self._post_process_dependencies:
+            dep = self._target_per_file.get(input.full_path)
+            if dep:
+                rule = root_deps_mk.create_rule([mozpath.join(relobjdir, tier)])
+                rule.add_dependencies([mozpath.join(*dep)])
 
         root_mk = Makefile()
 
