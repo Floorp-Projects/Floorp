@@ -106,8 +106,9 @@ absl::optional<VideoPlayoutDelay> LoadVideoPlayoutDelayOverride(
   ParseFieldTrial({&playout_delay_max_ms, &playout_delay_min_ms},
                   key_value_config->Lookup("WebRTC-ForceSendPlayoutDelay"));
   return playout_delay_max_ms && playout_delay_min_ms
-             ? absl::make_optional<VideoPlayoutDelay>(*playout_delay_min_ms,
-                                                      *playout_delay_max_ms)
+             ? absl::make_optional<VideoPlayoutDelay>(
+                   TimeDelta::Millis(*playout_delay_min_ms),
+                   TimeDelta::Millis(*playout_delay_max_ms))
              : absl::nullopt;
 }
 
@@ -860,11 +861,6 @@ void RTPSenderVideo::MaybeUpdateCurrentPlayoutDelay(
                                         : header.playout_delay;
 
   if (!requested_delay.has_value()) {
-    return;
-  }
-
-  if (!requested_delay->Valid()) {
-    RTC_DLOG(LS_ERROR) << "Requested playout delay values out of order";
     return;
   }
 

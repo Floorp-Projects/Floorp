@@ -112,7 +112,9 @@ struct RTC_EXPORT TimingFrameInfo {
 //
 // min = x, max = y indicates that the receiver is free to adapt
 // in the range (x, y) based on network jitter.
-struct RTC_EXPORT VideoPlayoutDelay {
+// This class ensures invariant 0 <= min <= max <= kMax.
+class RTC_EXPORT VideoPlayoutDelay {
+ public:
   // Maximum supported value for the delay limit.
   static constexpr TimeDelta kMax = TimeDelta::Millis(10) * 0xFFF;
 
@@ -122,29 +124,25 @@ struct RTC_EXPORT VideoPlayoutDelay {
     return VideoPlayoutDelay(TimeDelta::Zero(), TimeDelta::Zero());
   }
 
+  // Creates valid, but unspecified limits.
   VideoPlayoutDelay() = default;
-  VideoPlayoutDelay(int min_ms, int max_ms) : min_ms(min_ms), max_ms(max_ms) {}
+  VideoPlayoutDelay(const VideoPlayoutDelay&) = default;
+  VideoPlayoutDelay& operator=(const VideoPlayoutDelay&) = default;
   VideoPlayoutDelay(TimeDelta min, TimeDelta max);
 
   bool Set(TimeDelta min, TimeDelta max);
 
-  TimeDelta min() const { return TimeDelta::Millis(min_ms); }
-  TimeDelta max() const { return TimeDelta::Millis(max_ms); }
+  TimeDelta min() const { return min_; }
+  TimeDelta max() const { return max_; }
 
-  // TODO(bugs.webrtc.org/13756): Make members private and enforce the invariant
-  // in the constructors and setter.
-  bool Valid() const {
-    return TimeDelta::Zero() <= min() && min() <= max() && max() <= kMax;
+  friend bool operator==(const VideoPlayoutDelay& lhs,
+                         const VideoPlayoutDelay& rhs) {
+    return lhs.min_ == rhs.min_ && lhs.max_ == rhs.max_;
   }
 
-  // TODO(bugs.webrtc.org/13756): Make members private and change their type to
-  // TimeDelta.
-  int min_ms = -1;
-  int max_ms = -1;
-
-  bool operator==(const VideoPlayoutDelay& rhs) const {
-    return min_ms == rhs.min_ms && max_ms == rhs.max_ms;
-  }
+ private:
+  TimeDelta min_ = TimeDelta::Zero();
+  TimeDelta max_ = kMax;
 };
 
 }  // namespace webrtc

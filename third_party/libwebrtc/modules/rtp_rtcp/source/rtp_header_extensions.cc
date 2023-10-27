@@ -402,22 +402,24 @@ bool PlayoutDelayLimits::Parse(rtc::ArrayView<const uint8_t> data,
   uint32_t raw = ByteReader<uint32_t, 3>::ReadBigEndian(data.data());
   uint16_t min_raw = (raw >> 12);
   uint16_t max_raw = (raw & 0xfff);
-  if (min_raw > max_raw)
-    return false;
-  playout_delay->min_ms = min_raw * kGranularityMs;
-  playout_delay->max_ms = max_raw * kGranularityMs;
-  return true;
+  return playout_delay->Set(min_raw * kGranularity, max_raw * kGranularity);
 }
 
 bool PlayoutDelayLimits::Write(rtc::ArrayView<uint8_t> data,
                                const VideoPlayoutDelay& playout_delay) {
   RTC_DCHECK_EQ(data.size(), 3);
-  RTC_DCHECK_LE(0, playout_delay.min_ms);
-  RTC_DCHECK_LE(playout_delay.min_ms, playout_delay.max_ms);
-  RTC_DCHECK_LE(playout_delay.max_ms, kMaxMs);
-  // Convert MS to value to be sent on extension header.
-  uint32_t min_delay = playout_delay.min_ms / kGranularityMs;
-  uint32_t max_delay = playout_delay.max_ms / kGranularityMs;
+
+  // Convert TimeDelta to value to be sent on extension header.
+  auto idiv = [](TimeDelta num, TimeDelta den) { return num.us() / den.us(); };
+  int64_t min_delay = idiv(playout_delay.min(), kGranularity);
+  int64_t max_delay = idiv(playout_delay.max(), kGranularity);
+
+  // Double check min/max boundaries guaranteed by the `VideoPlayouDelay` type.
+  RTC_DCHECK_GE(min_delay, 0);
+  RTC_DCHECK_LT(min_delay, 1 << 12);
+  RTC_DCHECK_GE(max_delay, 0);
+  RTC_DCHECK_LT(max_delay, 1 << 12);
+
   ByteWriter<uint32_t, 3>::WriteBigEndian(data.data(),
                                           (min_delay << 12) | max_delay);
   return true;

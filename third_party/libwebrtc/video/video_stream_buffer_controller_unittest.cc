@@ -827,7 +827,7 @@ TEST_P(LowLatencyVideoStreamBufferControllerTest,
   auto frame = test::FakeFrameBuilder()
                    .Id(0)
                    .Time(0)
-                   .PlayoutDelay({0, 10})
+                   .PlayoutDelay({TimeDelta::Zero(), TimeDelta::Millis(10)})
                    .AsLast()
                    .Build();
   buffer_->InsertFrame(std::move(frame));
@@ -839,7 +839,7 @@ TEST_P(LowLatencyVideoStreamBufferControllerTest,
   frame = test::FakeFrameBuilder()
               .Id(1)
               .Time(kFps30Rtp)
-              .PlayoutDelay({0, 10})
+              .PlayoutDelay({TimeDelta::Zero(), TimeDelta::Millis(10)})
               .AsLast()
               .Build();
   buffer_->InsertFrame(std::move(frame));
@@ -857,7 +857,7 @@ TEST_P(LowLatencyVideoStreamBufferControllerTest, ZeroPlayoutDelayFullQueue) {
   auto frame = test::FakeFrameBuilder()
                    .Id(0)
                    .Time(0)
-                   .PlayoutDelay({0, 10})
+                   .PlayoutDelay({TimeDelta::Zero(), TimeDelta::Millis(10)})
                    .AsLast()
                    .Build();
   // Playout delay of 0 implies low-latency rendering.
@@ -869,7 +869,7 @@ TEST_P(LowLatencyVideoStreamBufferControllerTest, ZeroPlayoutDelayFullQueue) {
     frame = test::FakeFrameBuilder()
                 .Id(id)
                 .Time(kFps30Rtp * id)
-                .PlayoutDelay({0, 10})
+                .PlayoutDelay({TimeDelta::Zero(), TimeDelta::Millis(10)})
                 .AsLast()
                 .Build();
     buffer_->InsertFrame(std::move(frame));
