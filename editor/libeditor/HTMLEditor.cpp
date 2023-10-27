@@ -5116,8 +5116,7 @@ Result<SplitNodeResult, nsresult> HTMLEditor::SplitNodeWithTransaction(
     return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
   }
 
-  return SplitNodeResult(*newContent, *splitContent,
-                         transaction->GetSplitNodeDirection());
+  return SplitNodeResult(*newContent, *splitContent);
 }
 
 Result<SplitNodeResult, nsresult> HTMLEditor::SplitNodeDeepWithTransaction(
@@ -5138,8 +5137,7 @@ Result<SplitNodeResult, nsresult> HTMLEditor::SplitNodeDeepWithTransaction(
   EditorDOMPoint atStartOfRightNode(aDeepestStartOfRightNode);
   // lastResult is as explained by its name, the last result which may not be
   // split a node actually.
-  SplitNodeResult lastResult =
-      SplitNodeResult::NotHandled(atStartOfRightNode, GetSplitNodeDirection());
+  SplitNodeResult lastResult = SplitNodeResult::NotHandled(atStartOfRightNode);
   MOZ_ASSERT(lastResult.AtSplitPoint<EditorRawDOMPoint>()
                  .IsSetAndValidInComposedDoc());
 
@@ -5202,7 +5200,7 @@ Result<SplitNodeResult, nsresult> HTMLEditor::SplitNodeDeepWithTransaction(
     // allowed to create empty container node, try to split its parent after it.
     else if (!atStartOfRightNode.IsStartOfContainer()) {
       lastResult = SplitNodeResult::HandledButDidNotSplitDueToEndOfContainer(
-          *splittingContent, GetSplitNodeDirection(), &lastResult);
+          *splittingContent, &lastResult);
       MOZ_ASSERT(lastResult.AtSplitPoint<EditorRawDOMPoint>()
                      .IsSetAndValidInComposedDoc());
       if (splittingContent == &aMostAncestorToSplit) {
@@ -5217,15 +5215,14 @@ Result<SplitNodeResult, nsresult> HTMLEditor::SplitNodeDeepWithTransaction(
     else {
       if (splittingContent == &aMostAncestorToSplit) {
         return SplitNodeResult::HandledButDidNotSplitDueToStartOfContainer(
-            *splittingContent, GetSplitNodeDirection(), &lastResult);
+            *splittingContent, &lastResult);
       }
 
       // Try to split its parent before current node.
       // XXX This is logically wrong.  If we've already split something but
       //     this is the last splitable content node in the limiter, this
       //     method will return "not handled".
-      lastResult = SplitNodeResult::NotHandled(
-          atStartOfRightNode, GetSplitNodeDirection(), &lastResult);
+      lastResult = SplitNodeResult::NotHandled(atStartOfRightNode, &lastResult);
       MOZ_ASSERT(lastResult.AtSplitPoint<EditorRawDOMPoint>()
                      .IsSetAndValidInComposedDoc());
       atStartOfRightNode.Set(splittingContent);
@@ -5531,8 +5528,8 @@ Result<SplitNodeResult, nsresult> HTMLEditor::DoSplitNode(
   NS_WARNING_ASSERTION(NS_SUCCEEDED(rvIgnored),
                        "RangeUpdater::SelAdjSplitNode() failed, but ignored");
 
-  return SplitNodeResult(aNewNode, *aStartOfRightNode.ContainerAs<nsIContent>(),
-                         aDirection);
+  return SplitNodeResult(aNewNode,
+                         *aStartOfRightNode.ContainerAs<nsIContent>());
 }
 
 Result<JoinNodesResult, nsresult> HTMLEditor::JoinNodesWithTransaction(
@@ -5592,8 +5589,7 @@ Result<JoinNodesResult, nsresult> HTMLEditor::JoinNodesWithTransaction(
   }
 
   return JoinNodesResult(transaction->CreateJoinedPoint<EditorDOMPoint>(),
-                         *transaction->GetRemovedContent(),
-                         transaction->GetJoinNodesDirection());
+                         *transaction->GetRemovedContent());
 }
 
 void HTMLEditor::DidJoinNodesTransaction(
