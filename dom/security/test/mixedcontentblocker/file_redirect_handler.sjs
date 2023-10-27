@@ -30,6 +30,5 @@ function handleRequest(request, response) {
   if (queryStr === "load") {
     response.setHeader("Content-Type", "text/html", false);
     response.write("foo");
-    return;
   }
 }

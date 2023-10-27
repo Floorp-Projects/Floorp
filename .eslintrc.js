@@ -460,7 +460,6 @@ module.exports = {
         "no-unreachable": "off",
         "no-useless-call": "off",
         "no-useless-concat": "off",
-        "no-useless-return": "off",
       },
     },
     {
@@ -543,7 +542,6 @@ module.exports = {
         "no-redeclare": "off",
         "no-shadow": "off",
         "no-throw-literal": "off",
-        "no-useless-return": "off",
         "object-shorthand": "off",
       },
     },

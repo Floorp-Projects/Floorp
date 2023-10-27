@@ -38,10 +38,8 @@ SpecialPowers.registerConsoleListener(function ConsoleMsgListener(aMsg) {
       startTest = false;
       ok(true, "CSP header with a hostname similar to keyword should be warned");
       SimpleTest.executeSoon(cleanup);
-    } else {
-      // don't see the warning yet? wait.
-      return;
     }
+    // Otherwise, the warning hasn't happened yet so we wait.
   }
 });
 

@@ -49,7 +49,6 @@ function delayByInterval(iterations) {
       count += 1;
       if (count >= iterations) {
         resolve();
-        return;
       }
     }
     setInterval(tick, 0);

@@ -18,10 +18,10 @@ if (mode !== "no-fetch") {
     if (mode === "reset-fetch") {
       // Don't invoke respondWith, resetting the interception.
       return;
-    } else if (mode === "proxy-fetch") {
+    }
+    if (mode === "proxy-fetch") {
       // Per the spec, there's an automatic waitUntil() on this too.
       event.respondWith(fetch(event.request));
-      return;
     }
   });
 }

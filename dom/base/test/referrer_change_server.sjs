@@ -87,7 +87,8 @@ function handleRequest(request, response) {
     setSharedState(sharedKey, JSON.stringify(state));
     response.write("");
     return;
-  } else if (action === "test") {
+  }
+  if (action === "test") {
     // ?action=test&policy=origin&name=name
     var policy = params[1].split("=")[1];
     var name = params[2].split("=")[1];
@@ -133,13 +134,15 @@ function handleRequest(request, response) {
     }
 
     return;
-  } else if (action === "get-test-results") {
+  }
+  if (action === "get-test-results") {
     // ?action=get-result
     response.setHeader("Cache-Control", "no-cache", false);
     response.setHeader("Content-Type", "text/plain", false);
     response.write(getSharedState(sharedKey));
     return;
-  } else if (action === "generate-policy-test") {
+  }
+  if (action === "generate-policy-test") {
     // ?action=generate-policy-test&referrerPolicy=b64-encoded-string&name=name&newPolicy=b64-encoded-string
     response.setHeader("Cache-Control", "no-cache", false);
     response.setHeader("Content-Type", "text/html; charset=utf-8", false);
@@ -149,7 +152,8 @@ function handleRequest(request, response) {
 
     response.write(createTest(referrerPolicy, newPolicy, name));
     return;
-  } else if (action === "generate-policy-test2") {
+  }
+  if (action === "generate-policy-test2") {
     // ?action=generate-policy-test2&referrerPolicy=b64-encoded-string&name=name&newPolicy=b64-encoded-string
     response.setHeader("Cache-Control", "no-cache", false);
     response.setHeader("Content-Type", "text/html; charset=utf-8", false);
@@ -159,8 +163,7 @@ function handleRequest(request, response) {
 
     response.write(createTest2(referrerPolicy, newPolicy, name));
     return;
-  } else {
-    response.write("I don't know action " + action);
-    return;
   }
+
+  response.write("I don't know action " + action);
 }

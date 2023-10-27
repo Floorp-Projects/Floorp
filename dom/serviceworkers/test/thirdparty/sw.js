@@ -28,6 +28,5 @@ self.addEventListener("fetch", function (event) {
         headers: { "Content-Type": "application/javascript" },
       })
     );
-    return;
   }
 });

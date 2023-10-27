@@ -40,11 +40,8 @@ SpecialPowers.registerConsoleListener(function ConsoleMsgListener(aMsg) {
 
     ok(true, "report-uri not specified in Report-Only should throw a CSP warning.");
     SimpleTest.executeSoon(cleanup);
-    return;
-  } else {
-    // if some other console message is present, we wait
-    return;
   }
+  // Otherwise, if some other console message is present, we wait.
 });
 
 

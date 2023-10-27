@@ -88,5 +88,4 @@ function handleRequest(request, response) {
   }
 
   setSharedState(SHARED_KEY, JSON.stringify(state));
-  return;
 }

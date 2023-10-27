@@ -136,6 +136,5 @@ function handleRequest(request, response) {
         resource +
         '?res=loadBlobWorkerThatMakesRequests&id=from-blob-worker"></script>'
     );
-    return;
   }
 }

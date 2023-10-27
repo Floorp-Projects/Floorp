@@ -43,7 +43,6 @@ function workify(func, blob, content) {
 
       if (e.data.type == "info") {
         info(e.data.message);
-        return;
       }
     };
   });

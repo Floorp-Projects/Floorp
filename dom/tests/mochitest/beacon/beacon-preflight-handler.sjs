@@ -33,6 +33,5 @@ function handleRequest(request, response) {
     setState("preflight", "oops");
     response.setStatusLine(null, 200, "OK");
     response.write("DONE");
-    return;
   }
 }

@@ -67,7 +67,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=238987
   function handleBlur(e) {
     if (e.target.id == "begin" || e.target.id == "end") {
       return;
-    } else if (activateShift) {
+    }
+    if (activateShift) {
       var expected = backwardBlurArray.pop();
       ok(expected == e.target.id,
          "(blur) backward tabbing, expected [" +

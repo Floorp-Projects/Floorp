@@ -689,5 +689,4 @@ function handleRequest(request, response) {
   }
 
   response.write("I don't know action " + action);
-  return;
 }

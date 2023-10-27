@@ -13,5 +13,4 @@ function handleRequest(request, response) {
   var loc = "http://example.com/some/fake/path";
   response.setStatusLine("1.1", redirect, "Found");
   response.setHeader("Location", loc, false);
-  return;
 }

@@ -143,7 +143,6 @@ function handleRequest(request, response) {
             " got " +
             cookies[name]
         );
-        return;
       }
     });
   }
