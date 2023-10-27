@@ -1141,12 +1141,14 @@ var snapshotFormatters = {
         codecNameHeaderText,
         codecSWDecodeText,
         codecHWDecodeText,
+        lackOfExtensionText,
       ] = await document.l10n.formatValues([
         "media-codec-support-supported",
         "media-codec-support-unsupported",
         "media-codec-support-codec-name",
         "media-codec-support-sw-decoding",
         "media-codec-support-hw-decoding",
+        "media-codec-support-lack-of-extension",
       ]);
 
       function formatCodecRowHeader(a, b, c) {
@@ -1175,6 +1177,18 @@ var snapshotFormatters = {
         return $.new("tr", [$.new("td", codec), swCell, hwCell]);
       }
 
+      function formatCodecRowForLackOfExtension(codec, sw) {
+        let swCell = $.new("td", sw ? supportText : unsupportedText);
+        let hwCell = $.new("td", lackOfExtensionText);
+        if (sw) {
+          swCell.classList.add("supported");
+        } else {
+          swCell.classList.add("unsupported");
+        }
+        hwCell.classList.add("lack-of-extension");
+        return $.new("tr", [$.new("td", codec), swCell, hwCell]);
+      }
+
       // Parse codec support string and create dictionary containing
       // SW/HW support information for each codec found
       let codecs = {};
@@ -1188,6 +1202,7 @@ var snapshotFormatters = {
             name: codec_name,
             sw: false,
             hw: false,
+            lackOfExtension: false,
           };
         }
 
@@ -1197,6 +1212,9 @@ var snapshotFormatters = {
         if (codec_support.includes("HW")) {
           codecs[codec_name].hw = true;
         }
+        if (codec_support.includes("LACK_OF_EXTENSION")) {
+          codecs[codec_name].lackOfExtension = true;
+        }
       }
 
       // Create row in support table for each codec
@@ -1205,9 +1223,15 @@ var snapshotFormatters = {
         if (!codecs.hasOwnProperty(c)) {
           continue;
         }
-        codecSupportRows.push(
-          formatCodecRow(codecs[c].name, codecs[c].sw, codecs[c].hw)
-        );
+        if (codecs[c].lackOfExtension) {
+          codecSupportRows.push(
+            formatCodecRowForLackOfExtension(codecs[c].name, codecs[c].sw)
+          );
+        } else {
+          codecSupportRows.push(
+            formatCodecRow(codecs[c].name, codecs[c].sw, codecs[c].hw)
+          );
+        }
       }
 
       let codecSupportTable = $.new("table", [

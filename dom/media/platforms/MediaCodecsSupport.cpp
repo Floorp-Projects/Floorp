@@ -84,6 +84,9 @@ MediaCodecsSupported MCSInfo::GetDecodeMediaCodecsSupported(
   if (aSupportSet.contains(DecodeSupport::HardwareDecode)) {
     support += supportInfo.hwDecodeSupport;
   }
+  if (aSupportSet.contains(DecodeSupport::UnsureDueToLackOfExtension)) {
+    support += supportInfo.lackOfHWExtenstion;
+  }
   return support;
 }
 
@@ -125,6 +128,10 @@ void MCSInfo::GetMediaCodecsSupportedString(
     }
     if (aSupportedCodecs.contains(it.hwDecodeSupport)) {
       aSupportString.Append(" HW"_ns);
+      foundSupport = true;
+    }
+    if (aSupportedCodecs.contains(it.lackOfHWExtenstion)) {
+      aSupportString.Append(" LACK_OF_EXTENSION"_ns);
       foundSupport = true;
     }
     if (!foundSupport) {
@@ -281,40 +288,41 @@ std::array<CodecDefinition, 13> MCSInfo::GetAllCodecDefinitions() {
   static constexpr std::array<CodecDefinition, 13> codecDefinitions = {
       {{MediaCodec::H264, "H264", "video/avc",
         MediaCodecsSupport::H264SoftwareDecode,
-        MediaCodecsSupport::H264HardwareDecode},
+        MediaCodecsSupport::H264HardwareDecode, MediaCodecsSupport::SENTINEL},
        {MediaCodec::VP9, "VP9", "video/vp9",
         MediaCodecsSupport::VP9SoftwareDecode,
-        MediaCodecsSupport::VP9HardwareDecode},
+        MediaCodecsSupport::VP9HardwareDecode, MediaCodecsSupport::SENTINEL},
        {MediaCodec::VP8, "VP8", "video/vp8",
         MediaCodecsSupport::VP8SoftwareDecode,
-        MediaCodecsSupport::VP8HardwareDecode},
+        MediaCodecsSupport::VP8HardwareDecode, MediaCodecsSupport::SENTINEL},
        {MediaCodec::AV1, "AV1", "video/av1",
         MediaCodecsSupport::AV1SoftwareDecode,
-        MediaCodecsSupport::AV1HardwareDecode},
+        MediaCodecsSupport::AV1HardwareDecode,
+        MediaCodecsSupport::AV1LackOfExtension},
        {MediaCodec::HEVC, "HEVC", "video/hevc",
         MediaCodecsSupport::HEVCSoftwareDecode,
-        MediaCodecsSupport::HEVCHardwareDecode},
+        MediaCodecsSupport::HEVCHardwareDecode, MediaCodecsSupport::SENTINEL},
        {MediaCodec::Theora, "Theora", "video/theora",
         MediaCodecsSupport::TheoraSoftwareDecode,
-        MediaCodecsSupport::TheoraHardwareDecode},
+        MediaCodecsSupport::TheoraHardwareDecode, MediaCodecsSupport::SENTINEL},
        {MediaCodec::AAC, "AAC", "audio/mp4a-latm",
         MediaCodecsSupport::AACSoftwareDecode,
-        MediaCodecsSupport::AACHardwareDecode},
+        MediaCodecsSupport::AACHardwareDecode, MediaCodecsSupport::SENTINEL},
        {MediaCodec::MP3, "MP3", "audio/mpeg",
         MediaCodecsSupport::MP3SoftwareDecode,
-        MediaCodecsSupport::MP3HardwareDecode},
+        MediaCodecsSupport::MP3HardwareDecode, MediaCodecsSupport::SENTINEL},
        {MediaCodec::Opus, "Opus", "audio/opus",
         MediaCodecsSupport::OpusSoftwareDecode,
-        MediaCodecsSupport::OpusHardwareDecode},
+        MediaCodecsSupport::OpusHardwareDecode, MediaCodecsSupport::SENTINEL},
        {MediaCodec::Vorbis, "Vorbis", "audio/vorbis",
         MediaCodecsSupport::VorbisSoftwareDecode,
-        MediaCodecsSupport::VorbisHardwareDecode},
+        MediaCodecsSupport::VorbisHardwareDecode, MediaCodecsSupport::SENTINEL},
        {MediaCodec::FLAC, "FLAC", "audio/flac",
         MediaCodecsSupport::FLACSoftwareDecode,
-        MediaCodecsSupport::FLACHardwareDecode},
+        MediaCodecsSupport::FLACHardwareDecode, MediaCodecsSupport::SENTINEL},
        {MediaCodec::Wave, "Wave", "audio/x-wav",
         MediaCodecsSupport::WaveSoftwareDecode,
-        MediaCodecsSupport::WaveHardwareDecode},
+        MediaCodecsSupport::WaveHardwareDecode, MediaCodecsSupport::SENTINEL},
        {MediaCodec::SENTINEL, "Undefined codec name",
         "Undefined MIME type string", MediaCodecsSupport::SENTINEL,
         MediaCodecsSupport::SENTINEL}}};
