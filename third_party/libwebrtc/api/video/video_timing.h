@@ -17,12 +17,13 @@
 #include <string>
 
 #include "api/units/time_delta.h"
+#include "rtc_base/system/rtc_export.h"
 
 namespace webrtc {
 
 // Video timing timestamps in ms counted from capture_time_ms of a frame.
 // This structure represents data sent in video-timing RTP header extension.
-struct VideoSendTiming {
+struct RTC_EXPORT VideoSendTiming {
   enum TimingFrameFlags : uint8_t {
     kNotTriggered = 0,  // Timing info valid, but not to be transmitted.
                         // Used on send-side only.
@@ -51,7 +52,7 @@ struct VideoSendTiming {
 // timestamps for a lifetime of that specific frame. Reported as a string via
 // GetStats(). Only frame which took the longest between two GetStats calls is
 // reported.
-struct TimingFrameInfo {
+struct RTC_EXPORT TimingFrameInfo {
   TimingFrameInfo();
 
   // Returns end-to-end delay of a frame, if sender and receiver timestamps are
@@ -111,7 +112,7 @@ struct TimingFrameInfo {
 //
 // min = x, max = y indicates that the receiver is free to adapt
 // in the range (x, y) based on network jitter.
-struct VideoPlayoutDelay {
+struct RTC_EXPORT VideoPlayoutDelay {
   // Maximum supported value for the delay limit.
   static constexpr TimeDelta kMax = TimeDelta::Millis(10) * 0xFFF;
 
