@@ -40,6 +40,12 @@ Allowed actions, and subfields:
       name - Name for the subsuite (must be unique)
       run_info - Updates to the suite run_info (optional)
 
+  group_start
+      name - Name for the test group
+
+  group_end
+      name - Name for the test group
+
   suite_end
 
   test_start
@@ -400,6 +406,26 @@ class StructuredLogger(object):
         data["run_info"] = run_info
         self._state.subsuites.add(data["name"])
         self._log_data("add_subsuite", data)
+
+    @log_action(
+        Unicode("name"),
+    )
+    def group_start(self, data):
+        """Log a group_start message
+
+        :param str name: Name to identify the test group.
+        """
+        self._log_data("group_start", data)
+
+    @log_action(
+        Unicode("name"),
+    )
+    def group_end(self, data):
+        """Log a group_end message
+
+        :param str name: Name to identify the test group.
+        """
+        self._log_data("group_end", data)
 
     @log_action(Dict(Any, "extra", default=None, optional=True))
     def suite_end(self, data):
