@@ -3,17 +3,6 @@
 
 "use strict";
 
-const PIVOT_LANGUAGE = "en";
-
-const LANGUAGE_PAIRS = [
-  { fromLang: PIVOT_LANGUAGE, toLang: "es" },
-  { fromLang: "es", toLang: PIVOT_LANGUAGE },
-  { fromLang: PIVOT_LANGUAGE, toLang: "fr" },
-  { fromLang: "fr", toLang: PIVOT_LANGUAGE },
-  { fromLang: PIVOT_LANGUAGE, toLang: "pl" },
-  { fromLang: "pl", toLang: PIVOT_LANGUAGE },
-];
-
 async function runLangTagsTest(
   {
     systemLocales,
