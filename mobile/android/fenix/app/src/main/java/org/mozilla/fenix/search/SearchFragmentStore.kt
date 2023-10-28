@@ -101,9 +101,9 @@ sealed class SearchEngineSource {
  * the current search engine.
  * @property showAllSessionSuggestions Whether or not to show the session suggestion in the AwesomeBar.
  * @property showSponsoredSuggestions Whether or not to show sponsored Firefox Suggest search suggestions in the
- * AwesomeBar. Always `false` when a non-default engine is selected.
+ * AwesomeBar. Always `false` in private mode, or when a non-default engine is selected.
  * @property showNonSponsoredSuggestions Whether or not to show Firefox Suggest search suggestions for web content
- * in the AwesomeBar. Always `false` when a non-default engine is selected.
+ * in the AwesomeBar. Always `false` in private mode, or when a non-default engine is selected.
  * @property tabId The ID of the current tab.
  * @property pastedText The text pasted from the long press toolbar menu.
  * @property searchAccessPoint The source of the performed search.
@@ -184,8 +184,10 @@ fun createInitialSearchFragmentState(
         showAllSyncedTabsSuggestions = settings.shouldShowSyncedTabsSuggestions,
         showSessionSuggestionsForCurrentEngine = false,
         showAllSessionSuggestions = true,
-        showSponsoredSuggestions = settings.showSponsoredSuggestions,
-        showNonSponsoredSuggestions = settings.showNonSponsoredSuggestions,
+        showSponsoredSuggestions = activity.browsingModeManager.mode == BrowsingMode.Normal &&
+            settings.showSponsoredSuggestions,
+        showNonSponsoredSuggestions = activity.browsingModeManager.mode == BrowsingMode.Normal &&
+            settings.showNonSponsoredSuggestions,
         tabId = tabId,
         pastedText = pastedText,
         searchAccessPoint = searchAccessPoint,
@@ -283,8 +285,10 @@ private fun searchStateReducer(state: SearchFragmentState, action: SearchFragmen
                 showSyncedTabsSuggestionsForCurrentEngine = false, // we'll show all synced tabs
                 showAllSyncedTabsSuggestions = action.settings.shouldShowSyncedTabsSuggestions,
                 showSessionSuggestionsForCurrentEngine = false, // we'll show all local tabs
-                showSponsoredSuggestions = action.settings.showSponsoredSuggestions,
-                showNonSponsoredSuggestions = action.settings.showNonSponsoredSuggestions,
+                showSponsoredSuggestions = action.browsingMode == BrowsingMode.Normal &&
+                    action.settings.showSponsoredSuggestions,
+                showNonSponsoredSuggestions = action.browsingMode == BrowsingMode.Normal &&
+                    action.settings.showNonSponsoredSuggestions,
                 showAllSessionSuggestions = true,
             )
         is SearchFragmentAction.SearchShortcutEngineSelected ->
