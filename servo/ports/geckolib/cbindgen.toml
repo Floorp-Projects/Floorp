@@ -823,6 +823,9 @@ renaming_overrides_prefixing = true
 "GenericGradient" = """
   inline bool Repeating() const;
   bool IsOpaque() const;
+
+  // Return the color interpolation method of the gradient.
+  inline const StyleColorInterpolationMethod& ColorInterpolationMethod() const;
 """
 
 "GenericGridLine" = """
