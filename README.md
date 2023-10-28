@@ -42,6 +42,19 @@
   </p>
 </div>
 
+## 📄 Sponsorship
+
+Floorp Browser is a free and open-source project. If you like Floorp Browser, please consider sponsoring us. Your sponsorship will help us to continue development and pay for the server costs. You may advertise if you continuously sponsor a minimum of $100 per month.
+
+- [GitHub Sponsors](https://github.com/sponsors/Ablaze-MIRAI)
+
+<div align="left">
+  <h2> 💕 Special Sponsors </h2>
+  <a href="https://www.cube-soft.jp/">
+    <img src="https://avatars.githubusercontent.com/u/346808?s=200&v=4" alt="CubeSoft, Inc." width="100" height="100">
+    <h4 align="left">CubeSoft, Inc.</h4>
+  </a>
+</div>
 
 ## ⚡ Get Started
 
@@ -126,6 +139,14 @@ You can download the latest version of Floorp Browser from the official website:
 - [Ablaze Privacy Policy](https://docs.ablaze.one/privacy_policy)
 
 - [Floorp Privacy Policy](https://docs.ablaze.one/floorp_privacy_policy)
+
+### 📜 About Forks
+
+- Floorp is independent of Mozilla Firefox. Floorp is not affiliated with Mozilla & Mozilla Firefox. 
+
+- We are also unaffiliated with the browser that is forking Floorp and we are developing it on our own.
+
+- We are not affiliated with any organization other than Ablaze.
 
 ---
 
