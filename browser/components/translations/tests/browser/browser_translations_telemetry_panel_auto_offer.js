@@ -8,7 +8,7 @@
  */
 add_task(async function test_translations_panel_auto_offer() {
   const { cleanup } = await loadTestPage({
-    page: TRANSLATIONS_TESTER_ES,
+    page: SPANISH_PAGE_URL,
     languagePairs: LANGUAGE_PAIRS,
     autoOffer: true,
   });
@@ -40,7 +40,7 @@ add_task(async function test_translations_panel_auto_offer() {
   });
 
   await navigate("Navigate to another page on the same domain.", {
-    url: TRANSLATIONS_TESTER_ES_2,
+    url: SPANISH_PAGE_URL_2,
   });
 
   await assertTranslationsButton(
@@ -49,7 +49,7 @@ add_task(async function test_translations_panel_auto_offer() {
   );
 
   await navigate("Navigate to a page on a different domain.", {
-    url: TRANSLATIONS_TESTER_ES_DOT_ORG,
+    url: SPANISH_PAGE_URL_DOT_ORG,
     onOpenPanel: assertPanelDefaultView,
   });
 

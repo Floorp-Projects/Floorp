@@ -45,7 +45,7 @@ add_task(async function test_lang_tags_direct_translations() {
       systemLocales: ["en"],
       appLocales: ["en"],
       webLanguages: ["en"],
-      page: TRANSLATIONS_TESTER_ES,
+      page: SPANISH_PAGE_URL,
     },
     {
       docLangTag: "es",
@@ -62,7 +62,7 @@ add_task(async function test_lang_tags_with_pivots() {
       systemLocales: ["fr"],
       appLocales: ["fr", "en"],
       webLanguages: ["fr", "en"],
-      page: TRANSLATIONS_TESTER_ES,
+      page: SPANISH_PAGE_URL,
     },
     {
       docLangTag: "es",
@@ -81,7 +81,7 @@ add_task(async function test_lang_tags_with_pivots_second_preferred() {
       systemLocales: ["it"],
       appLocales: ["it", "en"],
       webLanguages: ["it", "en"],
-      page: TRANSLATIONS_TESTER_ES,
+      page: SPANISH_PAGE_URL,
     },
     {
       docLangTag: "es",
@@ -98,7 +98,7 @@ add_task(async function test_lang_tags_with_non_supported_doc_language() {
       systemLocales: ["fr"],
       appLocales: ["fr", "en"],
       webLanguages: ["fr", "en"],
-      page: TRANSLATIONS_TESTER_ES,
+      page: SPANISH_PAGE_URL,
       languagePairs: [
         { fromLang: PIVOT_LANGUAGE, toLang: "fr" },
         { fromLang: "fr", toLang: PIVOT_LANGUAGE },
