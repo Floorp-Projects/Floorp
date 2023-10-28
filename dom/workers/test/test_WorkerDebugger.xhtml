@@ -4,8 +4,7 @@
   http://creativecommons.org/publicdomain/zero/1.0/
 -->
 <window title="Test for WorkerDebugger"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="test();">
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
   <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
@@ -18,11 +17,8 @@
     const CHILD_WORKER_URL = "WorkerDebugger_childWorker.js";
     const SHARED_WORKER_URL = "WorkerDebugger_sharedWorker.js";
 
-    function test() {
-      (async function() {
-        SimpleTest.waitForExplicitFinish();
-        SimpleTest.requestLongerTimeout(5);
-
+    add_task(
+      async function runTest() {
         info("Create a top-level chrome worker that creates a non-top-level " +
              "content worker and wait for their debuggers to be registered.");
         let promise = waitForMultiple([
@@ -93,7 +89,7 @@
         };
         wdm.addListener(listener);
 
-        worker = new SharedWorker(SHARED_WORKER_URL);
+        let secondWorker = new SharedWorker(SHARED_WORKER_URL);
 
         info("Send a message to the shared worker to tell it to close " +
              "itself, and wait for its debugger to be closed.");
@@ -101,12 +97,16 @@
           waitForUnregister(SHARED_WORKER_URL),
           waitForDebuggerClose(sharedDbg)
         ]);
-        worker.port.start();
-        worker.port.postMessage("close");
+        secondWorker.port.start();
+        secondWorker.port.postMessage("close");
         await promise;
+        worker = null;
+        secondWorker = null;
 
+        info("Create a SharedWorker again for the infinite loop test.")
         promise = waitForRegister(SHARED_WORKER_URL);
-        worker = new SharedWorker(SHARED_WORKER_URL);
+        // Give it an explicit name so we don't reuse the above SharedWorker.
+        worker = new SharedWorker(SHARED_WORKER_URL, "loopy");
         sharedDbg = await promise;
 
         info("Send a message to the shared worker to tell it to close " +
@@ -118,20 +118,20 @@
 
         // When the closing process begins, we schedule a timer to terminate
         // the worker in case it's in an infinite loop, which is exactly what
-        // we do in this test.  We want a duration long enough that we can be
-        // confident that the infinite loop was entered as measured by
-        // performance.now() and that we terminated it, but not as long as our
-        // 30 second default we currently ship.
-        await SpecialPowers.pushPrefEnv({"set": [[ "dom.worker.canceling.timeoutMilliseconds", 15000 ]]});
+        // we do in this test.  The default delay is 30 seconds.  This test
+        // previously waited 15 seconds for reasons that were poorly justified.
+        // We now set it to 100ms because we just want to make sure that the
+        // timeout mechanism to force cancellation from the parent properly
+        // works (as long as the parent thread isn't blocked).
+        await SpecialPowers.pushPrefEnv({"set": [[ "dom.worker.canceling.timeoutMilliseconds", 100 ]]});
 
         worker.port.start();
         worker.port.postMessage("close_loop");
         await promise;
 
         wdm.removeListener(listener);
-        SimpleTest.finish();
-      })();
-    }
+      }
+    );
 
   ]]>
   </script>

@@ -63,10 +63,6 @@ support-files = [
 ["test_WorkerDebugger.postMessage.xhtml"]
 
 ["test_WorkerDebugger.xhtml"]
-skip-if = [
-  "true",
-  "(verify && !debug && os == 'linux')", # Frequent intermittent on QR platforms Bug 1454935
-]
 
 ["test_WorkerDebuggerGlobalScope.createSandbox.xhtml"]
 
@@ -77,7 +73,6 @@ skip-if = [
 ["test_WorkerDebuggerGlobalScope.setImmediate.xhtml"]
 
 ["test_WorkerDebuggerManager.xhtml"]
-skip-if = ["true"] # Frequent intermittent on QR platforms Bug 1454935
 
 ["test_WorkerDebugger_console.xhtml"]
 
