@@ -4,8 +4,7 @@
   http://creativecommons.org/publicdomain/zero/1.0/
 -->
 <window title="Test for WorkerDebugger with frozen workers"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="test();">
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
   <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
@@ -20,11 +19,9 @@
     const WORKER1_URL = "WorkerDebugger_frozen_worker1.js";
     const WORKER2_URL = "WorkerDebugger_frozen_worker2.js";
 
-    function test() {
-      (async function() {
-        SimpleTest.waitForExplicitFinish();
-
-        SpecialPowers.pushPrefEnv({set:
+    add_task(
+      async function runTest() {
+        await SpecialPowers.pushPrefEnv({set:
           [["browser.sessionhistory.max_total_viewers", 10]]});
 
         let promise = waitForMultiple([
@@ -60,10 +57,8 @@
            "debugger for worker on page 1 should not be closed");
         is(dbg2.isClosed, true,
            "debugger for worker on page 2 should be closed");
-
-        SimpleTest.finish();
-      })();
-    }
+      }
+    );
 
   ]]>
   </script>

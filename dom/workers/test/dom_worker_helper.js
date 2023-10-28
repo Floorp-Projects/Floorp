@@ -147,25 +147,10 @@ function waitForWorkerMessage(worker, message) {
 }
 
 function waitForMultiple(promises) {
-  return new Promise(function (resolve) {
-    let values = [];
-    for (let i = 0; i < promises.length; ++i) {
-      let index = i;
-      promises[i].then(function (value) {
-        is(
-          index + 1,
-          values.length + 1,
-          "Promise " +
-            (values.length + 1) +
-            " out of " +
-            promises.length +
-            " should be resolved."
-        );
-        values.push(value);
-        if (values.length === promises.length) {
-          resolve(values);
-        }
-      });
-    }
-  });
+  // There used to be old logic which expects promises to be resolved in
+  // succession, but where it seems like this was an incorrect assumption.
+  // Assuming this change sticks, bug 1861778 tracks removing this method
+  // entirely in favor of Promise.all at the call-sites or transform the callers
+  // into explicitly documented awaited sequences.
+  return Promise.all(promises);
 }
