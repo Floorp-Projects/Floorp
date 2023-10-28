@@ -62,6 +62,8 @@ class SharedWorker final : public DOMEventTargetHelper {
 
   void GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
 
+  void DisconnectFromOwner() override;
+
   void ErrorPropagation(nsresult aError);
 
   // Methods called from the window.
