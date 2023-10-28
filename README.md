@@ -107,7 +107,7 @@ Winget repository provided by [@Hibi_10000](https://github.com/Hibi-10000)
 
 4. AUR (Arch-based distributions)        "https://aur.archlinux.org/packages/floorp/" **Unofficial**
 
-5. Nix (NixOS / Anywhere Nix runs)      "https://github.com/NixOS/nixpkgs/blob/master/pkgs/applications/networking/browsers/floorp/default.nix"
+5. Nix (NixOS / Anywhere Nix runs)      "https://github.com/NixOS/nixpkgs/blob/master/pkgs/applications/networking/browsers/floorp/default.nix" **Unofficial**
 ```
 
 ### 📥 Download & 📦 Install
