@@ -2375,6 +2375,120 @@ bool nsRefreshDriver::ShouldStopActivityGracePeriod() const {
              StaticPrefs::layout_oopif_activity_grace_period_ms());
 }
 
+bool nsRefreshDriver::TickObserverArray(uint32_t aIdx, TimeStamp aNowTime) {
+  for (RefPtr<nsARefreshObserver> obs : mObservers[aIdx].EndLimitedRange()) {
+    obs->WillRefresh(aNowTime);
+
+    if (!mPresContext || !mPresContext->GetPresShell()) {
+      return false;
+    }
+  }
+
+  // Any animation timelines updated above may cause animations to queue
+  // Promise resolution microtasks. We shouldn't run these, however, until we
+  // have fully updated the animation state.
+  //
+  // As per the "update animations and send events" procedure[1], we should
+  // remove replaced animations and then run these microtasks before
+  // dispatching the corresponding animation events.
+  //
+  // [1]
+  // https://drafts.csswg.org/web-animations-1/#update-animations-and-send-events
+  if (aIdx == 1) {
+    nsAutoMicroTask mt;
+    ReduceAnimations(*mPresContext->Document());
+  }
+
+  // Check if running the microtask checkpoint caused the pres context to
+  // be destroyed.
+  if (aIdx == 1 && (!mPresContext || !mPresContext->GetPresShell())) {
+    return false;
+  }
+
+  if (aIdx == 1) {
+    // This is the FlushType::Style case.
+
+    FlushAutoFocusDocuments();
+    DispatchScrollEvents();
+    DispatchVisualViewportScrollEvents();
+    DispatchAnimationEvents();
+    RunFullscreenSteps();
+    RunFrameRequestCallbacks(aNowTime);
+    MaybeIncreaseMeasuredTicksSinceLoading();
+
+    if (mPresContext && mPresContext->GetPresShell()) {
+      AutoTArray<PresShell*, 16> observers;
+      observers.AppendElements(mStyleFlushObservers);
+      for (uint32_t j = observers.Length();
+           j && mPresContext && mPresContext->GetPresShell(); --j) {
+        // Make sure to not process observers which might have been removed
+        // during previous iterations.
+        PresShell* rawPresShell = observers[j - 1];
+        if (!mStyleFlushObservers.RemoveElement(rawPresShell)) {
+          continue;
+        }
+
+        LogPresShellObserver::Run run(rawPresShell, this);
+
+        RefPtr<PresShell> presShell = rawPresShell;
+        presShell->mObservingStyleFlushes = false;
+        presShell->FlushPendingNotifications(
+            ChangesToFlush(FlushType::Style, false));
+        // Inform the FontFaceSet that we ticked, so that it can resolve its
+        // ready promise if it needs to (though it might still be waiting on
+        // a layout flush).
+        presShell->NotifyFontFaceSetOnRefresh();
+        mNeedToRecomputeVisibility = true;
+
+        // Record the telemetry for events that occurred between ticks.
+        presShell->PingPerTickTelemetry(FlushType::Style);
+      }
+    }
+  } else if (aIdx == 2) {
+    // This is the FlushType::Layout case.
+    AutoTArray<PresShell*, 16> observers;
+    observers.AppendElements(mLayoutFlushObservers);
+    for (uint32_t j = observers.Length();
+         j && mPresContext && mPresContext->GetPresShell(); --j) {
+      // Make sure to not process observers which might have been removed
+      // during previous iterations.
+      PresShell* rawPresShell = observers[j - 1];
+      if (!mLayoutFlushObservers.RemoveElement(rawPresShell)) {
+        continue;
+      }
+
+      LogPresShellObserver::Run run(rawPresShell, this);
+
+      RefPtr<PresShell> presShell = rawPresShell;
+      presShell->mObservingLayoutFlushes = false;
+      presShell->mWasLastReflowInterrupted = false;
+      const auto flushType = HasPendingAnimations(presShell)
+                                 ? FlushType::Layout
+                                 : FlushType::InterruptibleLayout;
+      const ChangesToFlush ctf(flushType, false);
+      presShell->FlushPendingNotifications(ctf);
+      if (presShell->FixUpFocus()) {
+        presShell->FlushPendingNotifications(ctf);
+      }
+
+      // Inform the FontFaceSet that we ticked, so that it can resolve its
+      // ready promise if it needs to.
+      presShell->NotifyFontFaceSetOnRefresh();
+      mNeedToRecomputeVisibility = true;
+
+      // Record the telemetry for events that occurred between ticks.
+      presShell->PingPerTickTelemetry(FlushType::Layout);
+    }
+  }
+
+  // The pres context may be destroyed during we do the flushing.
+  if (!mPresContext || !mPresContext->GetPresShell()) {
+    return false;
+  }
+
+  return true;
+}
+
 void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime,
                            IsExtraTick aIsExtraTick /* = No */) {
   MOZ_ASSERT(!nsContentUtils::GetCurrentJSContext(),
@@ -2551,118 +2665,11 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime,
    * The timer holds a reference to |this| while calling |Notify|.
    * However, implementations of |WillRefresh| are permitted to destroy
    * the pres context, which will cause our |mPresContext| to become
-   * null.  If this happens, we must stop notifying observers.
+   * null.  If this happens, TickObserverArray will tell us by returning
+   * false, and we must stop notifying observers.
    */
   for (uint32_t i = 0; i < ArrayLength(mObservers); ++i) {
-    for (RefPtr<nsARefreshObserver> obs : mObservers[i].EndLimitedRange()) {
-      obs->WillRefresh(aNowTime);
-
-      if (!mPresContext || !mPresContext->GetPresShell()) {
-        StopTimer();
-        return;
-      }
-    }
-
-    // Any animation timelines updated above may cause animations to queue
-    // Promise resolution microtasks. We shouldn't run these, however, until we
-    // have fully updated the animation state.
-    //
-    // As per the "update animations and send events" procedure[1], we should
-    // remove replaced animations and then run these microtasks before
-    // dispatching the corresponding animation events.
-    //
-    // [1]
-    // https://drafts.csswg.org/web-animations-1/#update-animations-and-send-events
-    if (i == 1) {
-      nsAutoMicroTask mt;
-      ReduceAnimations(*mPresContext->Document());
-    }
-
-    // Check if running the microtask checkpoint caused the pres context to
-    // be destroyed.
-    if (i == 1 && (!mPresContext || !mPresContext->GetPresShell())) {
-      StopTimer();
-      return;
-    }
-
-    if (i == 1) {
-      // This is the FlushType::Style case.
-
-      FlushAutoFocusDocuments();
-      DispatchScrollEvents();
-      DispatchVisualViewportScrollEvents();
-      DispatchAnimationEvents();
-      RunFullscreenSteps();
-      RunFrameRequestCallbacks(aNowTime);
-      MaybeIncreaseMeasuredTicksSinceLoading();
-
-      if (mPresContext && mPresContext->GetPresShell()) {
-        AutoTArray<PresShell*, 16> observers;
-        observers.AppendElements(mStyleFlushObservers);
-        for (uint32_t j = observers.Length();
-             j && mPresContext && mPresContext->GetPresShell(); --j) {
-          // Make sure to not process observers which might have been removed
-          // during previous iterations.
-          PresShell* rawPresShell = observers[j - 1];
-          if (!mStyleFlushObservers.RemoveElement(rawPresShell)) {
-            continue;
-          }
-
-          LogPresShellObserver::Run run(rawPresShell, this);
-
-          RefPtr<PresShell> presShell = rawPresShell;
-          presShell->mObservingStyleFlushes = false;
-          presShell->FlushPendingNotifications(
-              ChangesToFlush(FlushType::Style, false));
-          // Inform the FontFaceSet that we ticked, so that it can resolve its
-          // ready promise if it needs to (though it might still be waiting on
-          // a layout flush).
-          presShell->NotifyFontFaceSetOnRefresh();
-          mNeedToRecomputeVisibility = true;
-
-          // Record the telemetry for events that occurred between ticks.
-          presShell->PingPerTickTelemetry(FlushType::Style);
-        }
-      }
-    } else if (i == 2) {
-      // This is the FlushType::Layout case.
-      AutoTArray<PresShell*, 16> observers;
-      observers.AppendElements(mLayoutFlushObservers);
-      for (uint32_t j = observers.Length();
-           j && mPresContext && mPresContext->GetPresShell(); --j) {
-        // Make sure to not process observers which might have been removed
-        // during previous iterations.
-        PresShell* rawPresShell = observers[j - 1];
-        if (!mLayoutFlushObservers.RemoveElement(rawPresShell)) {
-          continue;
-        }
-
-        LogPresShellObserver::Run run(rawPresShell, this);
-
-        RefPtr<PresShell> presShell = rawPresShell;
-        presShell->mObservingLayoutFlushes = false;
-        presShell->mWasLastReflowInterrupted = false;
-        const auto flushType = HasPendingAnimations(presShell)
-                                   ? FlushType::Layout
-                                   : FlushType::InterruptibleLayout;
-        const ChangesToFlush ctf(flushType, false);
-        presShell->FlushPendingNotifications(ctf);
-        if (presShell->FixUpFocus()) {
-          presShell->FlushPendingNotifications(ctf);
-        }
-
-        // Inform the FontFaceSet that we ticked, so that it can resolve its
-        // ready promise if it needs to.
-        presShell->NotifyFontFaceSetOnRefresh();
-        mNeedToRecomputeVisibility = true;
-
-        // Record the telemetry for events that occurred between ticks.
-        presShell->PingPerTickTelemetry(FlushType::Layout);
-      }
-    }
-
-    // The pres context may be destroyed during we do the flushing.
-    if (!mPresContext || !mPresContext->GetPresShell()) {
+    if (!TickObserverArray(i, aNowTime)) {
       StopTimer();
       return;
     }
