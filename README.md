@@ -48,11 +48,11 @@ Floorp Browser is a free and open-source project. If you like Floorp Browser, pl
 
 - [GitHub Sponsors](https://github.com/sponsors/Ablaze-MIRAI)
 
-<div align="left">
-  <h2> 💕 Special Sponsors </h2>
-  <a href="https://www.cube-soft.jp/">
+<h2> 💕 Special Sponsors </h2>
+<div align="left" style="display: flex; flex-wrap: wrap;">
+  <a href="https://www.cube-soft.jp/" style="margin: 10px; overflow: hidden; padding: 0px 30px;">
     <img src="https://avatars.githubusercontent.com/u/346808?s=200&v=4" alt="CubeSoft, Inc." width="100" height="100">
-    <h4 align="left">CubeSoft, Inc.</h4>
+    <h4 style="text-align: center;">CubeSoft, Inc.</h4>
   </a>
 </div>
 
