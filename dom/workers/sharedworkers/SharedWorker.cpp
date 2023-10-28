@@ -427,6 +427,11 @@ void SharedWorker::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
   DOMEventTargetHelper::GetEventTargetParent(aVisitor);
 }
 
+void SharedWorker::DisconnectFromOwner() {
+  Close();
+  DOMEventTargetHelper::DisconnectFromOwner();
+}
+
 void SharedWorker::ErrorPropagation(nsresult aError) {
   AssertIsOnMainThread();
   MOZ_ASSERT(mActor);
