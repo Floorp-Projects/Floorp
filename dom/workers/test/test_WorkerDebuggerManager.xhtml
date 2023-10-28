@@ -4,8 +4,7 @@
   http://creativecommons.org/publicdomain/zero/1.0/
 -->
 <window title="Test for WorkerDebuggerManager"
-        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        onload="test();">
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"/>
   <script src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
@@ -17,10 +16,8 @@
     const WORKER_URL = "WorkerDebuggerManager_worker.js";
     const CHILD_WORKER_URL = "WorkerDebuggerManager_childWorker.js";
 
-    function test() {
-      (async function() {
-        SimpleTest.waitForExplicitFinish();
-
+    add_task(
+      async function runTest() {
         info("Check that worker debuggers are not enumerated before they are " +
              "registered.");
         ok(!findDebugger(WORKER_URL),
@@ -87,10 +84,8 @@
         assertThrows(() => childDbg.url,
                      "Property accesses on child worker debugger should " +
                      "throw after it is closed.");
-
-        SimpleTest.finish();
-      })();
-    }
+      }
+    );
 
   ]]>
   </script>
