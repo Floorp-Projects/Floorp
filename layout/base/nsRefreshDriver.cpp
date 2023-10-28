@@ -2395,18 +2395,17 @@ bool nsRefreshDriver::TickObserverArray(uint32_t aIdx, TimeStamp aNowTime) {
   // [1]
   // https://drafts.csswg.org/web-animations-1/#update-animations-and-send-events
   if (aIdx == 1) {
-    nsAutoMicroTask mt;
-    ReduceAnimations(*mPresContext->Document());
-  }
-
-  // Check if running the microtask checkpoint caused the pres context to
-  // be destroyed.
-  if (aIdx == 1 && (!mPresContext || !mPresContext->GetPresShell())) {
-    return false;
-  }
-
-  if (aIdx == 1) {
     // This is the FlushType::Style case.
+    {
+      nsAutoMicroTask mt;
+      ReduceAnimations(*mPresContext->Document());
+    }
+
+    // Check if running the microtask checkpoint caused the pres context to
+    // be destroyed.
+    if (!mPresContext || !mPresContext->GetPresShell()) {
+      return false;
+    }
 
     FlushAutoFocusDocuments();
     DispatchScrollEvents();
