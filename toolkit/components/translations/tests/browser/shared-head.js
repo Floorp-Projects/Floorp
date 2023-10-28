@@ -24,6 +24,16 @@ const TRANSLATIONS_TESTER_ES_DOT_ORG =
 const TRANSLATIONS_TESTER_NO_TAG =
   URL_COM_PREFIX + DIR_PATH + "translations-tester-no-tag.html";
 
+const PIVOT_LANGUAGE = "en";
+const LANGUAGE_PAIRS = [
+  { fromLang: PIVOT_LANGUAGE, toLang: "es" },
+  { fromLang: "es", toLang: PIVOT_LANGUAGE },
+  { fromLang: PIVOT_LANGUAGE, toLang: "fr" },
+  { fromLang: "fr", toLang: PIVOT_LANGUAGE },
+  { fromLang: PIVOT_LANGUAGE, toLang: "uk" },
+  { fromLang: "uk", toLang: PIVOT_LANGUAGE },
+];
+
 /**
  * The mochitest runs in the parent process. This function opens up a new tab,
  * opens up about:translations, and passes the test requirements into the content process.
@@ -64,7 +74,7 @@ async function openAboutTranslations({
   runInPage,
   detectedLanguageConfidence,
   detectedLangTag,
-  languagePairs = DEFAULT_LANGUAGE_PAIRS,
+  languagePairs = LANGUAGE_PAIRS,
   prefs,
 }) {
   await SpecialPowers.pushPrefEnv({
@@ -382,16 +392,8 @@ async function setupActorTest({
   };
 }
 
-/**
- * Provide some default language pairs when none are provided.
- */
-const DEFAULT_LANGUAGE_PAIRS = [
-  { fromLang: "en", toLang: "es" },
-  { fromLang: "es", toLang: "en" },
-];
-
 async function createAndMockRemoteSettings({
-  languagePairs = DEFAULT_LANGUAGE_PAIRS,
+  languagePairs = LANGUAGE_PAIRS,
   detectedLanguageConfidence = 0.5,
   detectedLangTag = "en",
   autoDownloadFromRemoteSettings = false,
@@ -865,13 +867,13 @@ async function selectAboutPreferencesElements() {
 
   const rows = await waitForCondition(() => {
     const elements = document.querySelectorAll(".translations-manage-language");
-    if (elements.length !== 3) {
+    if (elements.length !== 4) {
       return false;
     }
     return elements;
   }, "Waiting for manage language rows.");
 
-  const [downloadAllRow, frenchRow, spanishRow] = rows;
+  const [downloadAllRow, frenchRow, spanishRow, ukrainianRow] = rows;
 
   const downloadAllLabel = downloadAllRow.querySelector("label");
   const downloadAll = downloadAllRow.querySelector(
@@ -894,6 +896,13 @@ async function selectAboutPreferencesElements() {
   const spanishDelete = spanishRow.querySelector(
     `[data-l10n-id="translations-manage-language-remove-button"]`
   );
+  const ukrainianLabel = ukrainianRow.querySelector("label");
+  const ukrainianDownload = ukrainianRow.querySelector(
+    `[data-l10n-id="translations-manage-language-install-button"]`
+  );
+  const ukrainianDelete = ukrainianRow.querySelector(
+    `[data-l10n-id="translations-manage-language-remove-button"]`
+  );
 
   return {
     document,
@@ -903,6 +912,9 @@ async function selectAboutPreferencesElements() {
     frenchLabel,
     frenchDownload,
     frenchDelete,
+    ukrainianLabel,
+    ukrainianDownload,
+    ukrainianDelete,
     spanishLabel,
     spanishDownload,
     spanishDelete,

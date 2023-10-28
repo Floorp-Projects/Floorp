@@ -26,13 +26,11 @@ add_task(async function test_about_preferences_manage_languages() {
       spanishLabel,
       spanishDownload,
       spanishDelete,
+      ukrainianLabel,
+      ukrainianDownload,
+      ukrainianDelete,
     },
-  } = await setupAboutPreferences([
-    { fromLang: "en", toLang: "fr" },
-    { fromLang: "fr", toLang: "en" },
-    { fromLang: "en", toLang: "es" },
-    { fromLang: "es", toLang: "en" },
-  ]);
+  } = await setupAboutPreferences(LANGUAGE_PAIRS);
 
   is(
     downloadAllLabel.getAttribute("data-l10n-id"),
@@ -41,11 +39,17 @@ add_task(async function test_about_preferences_manage_languages() {
   );
   is(frenchLabel.textContent, "French", "There is a French row.");
   is(spanishLabel.textContent, "Spanish", "There is a Spanish row.");
+  is(ukrainianLabel.textContent, "Ukrainian", "There is a Ukrainian row.");
 
   await assertVisibility({
     message: "Everything starts out as available to download",
-    visible: { downloadAll, frenchDownload, spanishDownload },
-    hidden: { deleteAll, frenchDelete, spanishDelete },
+    visible: {
+      downloadAll,
+      frenchDownload,
+      spanishDownload,
+      ukrainianDownload,
+    },
+    hidden: { deleteAll, frenchDelete, spanishDelete, ukrainianDelete },
   });
 
   click(frenchDownload, "Downloading French");
@@ -60,16 +64,27 @@ add_task(async function test_about_preferences_manage_languages() {
 
   await assertVisibility({
     message: "French can now be deleted, and delete all is available.",
-    visible: { downloadAll, deleteAll, frenchDelete, spanishDownload },
-    hidden: { frenchDownload, spanishDelete },
+    visible: {
+      downloadAll,
+      deleteAll,
+      frenchDelete,
+      spanishDownload,
+      ukrainianDownload,
+    },
+    hidden: { frenchDownload, spanishDelete, ukrainianDelete },
   });
 
   click(frenchDelete, "Deleting French");
 
   await assertVisibility({
     message: "Everything can be downloaded.",
-    visible: { downloadAll, frenchDownload, spanishDownload },
-    hidden: { deleteAll, frenchDelete, spanishDelete },
+    visible: {
+      downloadAll,
+      frenchDownload,
+      spanishDownload,
+      ukrainianDownload,
+    },
+    hidden: { deleteAll, frenchDelete, spanishDelete, ukrainianDelete },
   });
 
   click(downloadAll, "Downloading all languages.");
@@ -77,16 +92,22 @@ add_task(async function test_about_preferences_manage_languages() {
   const allModels = [
     "lex.50.50.enes.s2t.bin",
     "lex.50.50.enfr.s2t.bin",
+    "lex.50.50.enuk.s2t.bin",
     "lex.50.50.esen.s2t.bin",
     "lex.50.50.fren.s2t.bin",
+    "lex.50.50.uken.s2t.bin",
     "model.enes.intgemm.alphas.bin",
     "model.enfr.intgemm.alphas.bin",
+    "model.enuk.intgemm.alphas.bin",
     "model.esen.intgemm.alphas.bin",
     "model.fren.intgemm.alphas.bin",
+    "model.uken.intgemm.alphas.bin",
     "vocab.enes.spm",
     "vocab.enfr.spm",
+    "vocab.enuk.spm",
     "vocab.esen.spm",
     "vocab.fren.spm",
+    "vocab.uken.spm",
   ];
   Assert.deepEqual(
     await remoteClients.translationModels.resolvePendingDownloads(
@@ -108,20 +129,26 @@ add_task(async function test_about_preferences_manage_languages() {
 
   await assertVisibility({
     message: "Everything can be deleted.",
-    visible: { deleteAll, frenchDelete, spanishDelete },
-    hidden: { downloadAll, frenchDownload, spanishDownload },
+    visible: { deleteAll, frenchDelete, spanishDelete, ukrainianDelete },
+    hidden: { downloadAll, frenchDownload, spanishDownload, ukrainianDownload },
   });
 
   click(deleteAll, "Deleting all languages.");
 
   await assertVisibility({
     message: "Everything can be downloaded again",
-    visible: { downloadAll, frenchDownload, spanishDownload },
-    hidden: { deleteAll, frenchDelete, spanishDelete },
+    visible: {
+      downloadAll,
+      frenchDownload,
+      spanishDownload,
+      ukrainianDownload,
+    },
+    hidden: { deleteAll, frenchDelete, spanishDelete, ukrainianDelete },
   });
 
   click(frenchDownload, "Downloading French.");
   click(spanishDownload, "Downloading Spanish.");
+  click(ukrainianDownload, "Downloading Ukrainian.");
 
   Assert.deepEqual(
     await remoteClients.translationModels.resolvePendingDownloads(
@@ -136,11 +163,11 @@ add_task(async function test_about_preferences_manage_languages() {
 
   await assertVisibility({
     message: "Everything is downloaded again.",
-    visible: { deleteAll, frenchDelete, spanishDelete },
-    hidden: { downloadAll, frenchDownload, spanishDownload },
+    visible: { deleteAll, frenchDelete, spanishDelete, ukrainianDelete },
+    hidden: { downloadAll, frenchDownload, spanishDownload, ukrainianDownload },
   });
 
-  return cleanup();
+  await cleanup();
 });
 
 add_task(async function test_about_preferences_download_reject() {
@@ -148,12 +175,7 @@ add_task(async function test_about_preferences_download_reject() {
     cleanup,
     remoteClients,
     elements: { document, frenchDownload },
-  } = await setupAboutPreferences([
-    { fromLang: "en", toLang: "fr" },
-    { fromLang: "fr", toLang: "en" },
-    { fromLang: "en", toLang: "es" },
-    { fromLang: "es", toLang: "en" },
-  ]);
+  } = await setupAboutPreferences(LANGUAGE_PAIRS);
 
   click(frenchDownload, "Downloading French");
 
@@ -191,5 +213,5 @@ add_task(async function test_about_preferences_download_reject() {
     "The error message is hidden again."
   );
 
-  return cleanup();
+  await cleanup();
 });
