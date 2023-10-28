@@ -16890,19 +16890,6 @@
     "n_values": 20,
     "description": "Cumulative no. bookmark of searches performed before selecting a link."
   },
-  "NOTIFY_OBSERVERS_LATENCY_MS": {
-    "record_in_processes": ["main", "content", "gpu"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": ["nika@thelayzells.com"],
-    "bug_numbers": [1368524],
-    "expires_in_version": "70",
-    "kind": "exponential",
-    "low": 3,
-    "high": 512,
-    "n_buckets": 20,
-    "keyed": true,
-    "description": "Measures the number of milliseconds we spend synchronously notifying observers, keyed by topic. Note: only NotifyObservers calls which take over 500 microseconds are included in this probe."
-  },
   "HOVER_UNTIL_UNSELECTED_TAB_OPENED": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec"],
@@ -17470,19 +17457,6 @@
     "n_buckets": 100,
     "keyed": true,
     "description": "How many milliseconds it took before 100 wakeups for the thread was done because of new Runnables."
-  },
-  "REFRESH_DRIVER_TICK_PHASE_WEIGHT": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": ["layout-telemetry-alerts@mozilla.com"],
-    "bug_numbers": [1568107, 1616147],
-    "expires_in_version": "82",
-    "keyed": true,
-    "keys": ["Event", "Style", "Reflow", "Display", "Paint", "Other"],
-    "kind": "linear",
-    "high": 100,
-    "n_buckets": 12,
-    "description": "Percentages of times for phases in an expensive refresh tick relative to the time spent in the entire tick (REFRESH_DRIVER_TICK)."
   },
   "PRESSHELL_REQS_PER_STYLE_FLUSH": {
     "record_in_processes": ["main", "content"],

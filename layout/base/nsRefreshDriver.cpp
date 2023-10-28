@@ -132,23 +132,6 @@ namespace {
 // disconnected). When this reaches zero we will call
 // nsRefreshDriver::Shutdown.
 static uint32_t sRefreshDriverCount = 0;
-
-// RAII-helper for recording elapsed duration for refresh tick phases.
-class AutoRecordPhase {
- public:
-  explicit AutoRecordPhase(double* aResultMs)
-      : mTotalMs(aResultMs), mStartTime(TimeStamp::Now()) {
-    MOZ_ASSERT(mTotalMs);
-  }
-  ~AutoRecordPhase() {
-    *mTotalMs = (TimeStamp::Now() - mStartTime).ToMilliseconds();
-  }
-
- private:
-  double* mTotalMs;
-  mozilla::TimeStamp mStartTime;
-};
-
 }  // namespace
 
 namespace mozilla {
@@ -2564,10 +2547,6 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime,
   }
   DispatchVisualViewportResizeEvents();
 
-  double phaseMetrics[MOZ_ARRAY_LENGTH(mObservers)] = {
-      0.0,
-  };
-
   /*
    * The timer holds a reference to |this| while calling |Notify|.
    * However, implementations of |WillRefresh| are permitted to destroy
@@ -2575,8 +2554,6 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime,
    * null.  If this happens, we must stop notifying observers.
    */
   for (uint32_t i = 0; i < ArrayLength(mObservers); ++i) {
-    AutoRecordPhase phaseRecord(&phaseMetrics[i]);
-
     for (RefPtr<nsARefreshObserver> obs : mObservers[i].EndLimitedRange()) {
       obs->WillRefresh(aNowTime);
 
@@ -2720,10 +2697,8 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime,
 
   UpdateAnimatedImages(previousRefresh, aNowTime);
 
-  double phasePaint = 0.0;
   bool dispatchTasksAfterTick = false;
   if (mViewManagerFlushIsPending && !mThrottled) {
-    AutoRecordPhase paintRecord(&phasePaint);
     nsCString transactionId;
     if (profiler_thread_is_being_profiled_for_markers()) {
       transactionId.AppendLiteral("Transaction ID: ");
@@ -2793,36 +2768,11 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime,
     mCompositionPayloads.Clear();
   }
 
-  double totalMs = (TimeStamp::Now() - mTickStart).ToMilliseconds();
-
 #ifndef ANDROID /* bug 1142079 */
+  double totalMs = (TimeStamp::Now() - mTickStart).ToMilliseconds();
   mozilla::Telemetry::Accumulate(mozilla::Telemetry::REFRESH_DRIVER_TICK,
                                  static_cast<uint32_t>(totalMs));
 #endif
-
-  // Bug 1568107: If the totalMs is greater than 1/60th second (ie. 1000/60 ms)
-  // then record, via telemetry, the percentage of time spent in each
-  // sub-system.
-  if (totalMs > 1000.0 / 60.0) {
-    auto record = [=](const nsCString& aKey, double aDurationMs) -> void {
-      MOZ_ASSERT(aDurationMs <= totalMs);
-      auto phasePercent = static_cast<uint32_t>(aDurationMs * 100.0 / totalMs);
-      Telemetry::Accumulate(Telemetry::REFRESH_DRIVER_TICK_PHASE_WEIGHT, aKey,
-                            phasePercent);
-    };
-
-    record("Event"_ns, phaseMetrics[0]);
-    record("Style"_ns, phaseMetrics[1]);
-    record("Reflow"_ns, phaseMetrics[2]);
-    record("Display"_ns, phaseMetrics[3]);
-    record("Paint"_ns, phasePaint);
-
-    // Explicitly record the time unaccounted for.
-    double other = totalMs -
-                   std::accumulate(phaseMetrics, ArrayEnd(phaseMetrics), 0.0) -
-                   phasePaint;
-    record("Other"_ns, other);
-  }
 
   if (mNotifyDOMContentFlushed) {
     mNotifyDOMContentFlushed = false;
