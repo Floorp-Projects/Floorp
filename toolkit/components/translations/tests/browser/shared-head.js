@@ -11,17 +11,17 @@ const URL_COM_PREFIX = "https://example.com/browser/";
 const URL_ORG_PREFIX = "https://example.org/browser/";
 const CHROME_URL_PREFIX = "chrome://mochitests/content/browser/";
 const DIR_PATH = "toolkit/components/translations/tests/browser/";
-const TRANSLATIONS_TESTER_EN =
+const ENGLISH_PAGE_URL =
   URL_COM_PREFIX + DIR_PATH + "translations-tester-en.html";
-const TRANSLATIONS_TESTER_ES =
+const SPANISH_PAGE_URL =
   URL_COM_PREFIX + DIR_PATH + "translations-tester-es.html";
-const TRANSLATIONS_TESTER_FR =
+const FRENCH_PAGE_URL =
   URL_COM_PREFIX + DIR_PATH + "translations-tester-fr.html";
-const TRANSLATIONS_TESTER_ES_2 =
+const SPANISH_PAGE_URL_2 =
   URL_COM_PREFIX + DIR_PATH + "translations-tester-es-2.html";
-const TRANSLATIONS_TESTER_ES_DOT_ORG =
+const SPANISH_PAGE_URL_DOT_ORG =
   URL_ORG_PREFIX + DIR_PATH + "translations-tester-es.html";
-const TRANSLATIONS_TESTER_NO_TAG =
+const NO_LANGUAGE_URL =
   URL_COM_PREFIX + DIR_PATH + "translations-tester-no-tag.html";
 
 const PIVOT_LANGUAGE = "en";
@@ -375,7 +375,7 @@ async function setupActorTest({
   // Create a new tab so each test gets a new actor, and doesn't re-use the old one.
   const tab = await BrowserTestUtils.openNewForegroundTab(
     gBrowser,
-    TRANSLATIONS_TESTER_EN,
+    ENGLISH_PAGE_URL,
     true // waitForLoad
   );
 
