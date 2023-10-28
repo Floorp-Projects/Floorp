@@ -461,6 +461,18 @@ inline bool StyleGradient::Repeating() const {
 template <>
 bool StyleGradient::IsOpaque() const;
 
+template <>
+inline const StyleColorInterpolationMethod&
+StyleGradient::ColorInterpolationMethod() const {
+  if (IsLinear()) {
+    return AsLinear().color_interpolation_method;
+  }
+  if (IsRadial()) {
+    return AsRadial().color_interpolation_method;
+  }
+  return AsConic().color_interpolation_method;
+}
+
 template <typename Integer>
 inline StyleGenericGridLine<Integer>::StyleGenericGridLine()
     : ident(do_AddRef(static_cast<nsAtom*>(nsGkAtoms::_empty))),
