@@ -771,13 +771,6 @@ class nsHtml5StreamParser final : public nsISupports {
    * nsHtml5StreamListener::mDelegateMonitor passed in the OnStopRequest
    */
   bool mOnStopCalled{false};
-
-  /*
-   * Used for telemetry about OnStopRequest vs OnDataFinished
-   */
-  // guarded by nsHtml5StreamListener::mDelegateMonitor
-  mozilla::TimeStamp mOnStopRequestTime;
-  mozilla::TimeStamp mOnDataFinishedTime;
 };
 
 #endif  // nsHtml5StreamParser_h
