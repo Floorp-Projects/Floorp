@@ -446,7 +446,7 @@ data class ContextMenuCandidate(
             action = { tab, hitResult ->
                 contextMenuUseCases.injectDownload(
                     tab.id,
-                    DownloadState(hitResult.src, skipConfirmation = true, private = tab.content.private),
+                    DownloadState(hitResult.getLink(), skipConfirmation = true, private = tab.content.private),
                 )
             },
         )

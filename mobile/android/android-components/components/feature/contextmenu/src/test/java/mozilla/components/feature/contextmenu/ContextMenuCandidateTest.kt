@@ -963,7 +963,7 @@ class ContextMenuCandidateTest {
             store.state.tabs.first(),
             HitResult.IMAGE_SRC(
                 "https://www.mozilla.org/media/img/logos/firefox/logo-quantum.9c5e96634f92.png",
-                "https://firefox.com",
+                "https://www.mozilla.org/en-US/privacy-policy.pdf",
             ),
         )
 
@@ -971,7 +971,7 @@ class ContextMenuCandidateTest {
 
         assertNotNull(store.state.tabs.first().content.download)
         assertEquals(
-            "https://www.mozilla.org/media/img/logos/firefox/logo-quantum.9c5e96634f92.png",
+            "https://www.mozilla.org/en-US/privacy-policy.pdf",
             store.state.tabs.first().content.download!!.url,
         )
         assertTrue(
