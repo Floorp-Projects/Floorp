@@ -353,13 +353,17 @@ void HttpChannelChild::ProcessOnStartRequest(
   LOG(("HttpChannelChild::ProcessOnStartRequest [this=%p]\n", this));
   MOZ_ASSERT(OnSocketThread());
 
+  TimeStamp start = TimeStamp::Now();
+
   mAltDataInputStream = DeserializeIPCStream(aAltData.altDataInputStream());
 
   mEventQ->RunOrEnqueue(new NeckoTargetChannelFunctionEvent(
-      this,
-      [self = UnsafePtr<HttpChannelChild>(this), aResponseHead,
-       aUseResponseHead, aRequestHeaders, aArgs, aOnStartRequestStartTime]() {
-        self->mOnStartRequestStartTime = aOnStartRequestStartTime;
+      this, [self = UnsafePtr<HttpChannelChild>(this), aResponseHead,
+             aUseResponseHead, aRequestHeaders, aArgs, start]() {
+        TimeDuration delay = TimeStamp::Now() - start;
+        glean::networking::http_content_onstart_delay.AccumulateRawDuration(
+            delay);
+
         self->OnStartRequest(aResponseHead, aUseResponseHead, aRequestHeaders,
                              aArgs);
       }));
@@ -856,6 +860,7 @@ void HttpChannelChild::ProcessOnStopRequest(
     mTransferSize = aTiming.transferSize();
     mEncodedBodySize = aTiming.encodedBodySize();
   }
+  TimeStamp start = TimeStamp::Now();
   if (StaticPrefs::network_send_OnDataFinished()) {
     mEventQ->RunOrEnqueue(new ChannelFunctionEvent(
         [self = UnsafePtr<HttpChannelChild>(this)]() {
@@ -869,8 +874,10 @@ void HttpChannelChild::ProcessOnStopRequest(
       this, [self = UnsafePtr<HttpChannelChild>(this), aChannelStatus, aTiming,
              aResponseTrailers,
              consoleReports = CopyableTArray{aConsoleReports.Clone()},
-             aFromSocketProcess, aOnStopRequestStartTime]() mutable {
-        self->mOnStopRequestStartTime = aOnStopRequestStartTime;
+             aFromSocketProcess, start]() mutable {
+        TimeDuration delay = TimeStamp::Now() - start;
+        glean::networking::http_content_onstop_delay.AccumulateRawDuration(
+            delay);
         self->OnStopRequest(aChannelStatus, aTiming, aResponseTrailers);
         if (!aFromSocketProcess) {
           self->DoOnConsoleReport(std::move(consoleReports));
