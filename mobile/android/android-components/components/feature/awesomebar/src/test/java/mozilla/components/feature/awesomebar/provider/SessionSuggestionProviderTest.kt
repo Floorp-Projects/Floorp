@@ -15,6 +15,7 @@ import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.feature.tabs.TabsUseCases
+import mozilla.components.support.ktx.android.net.sameHostWithoutMobileSubdomainAs
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -366,7 +367,9 @@ class SessionSuggestionProviderTest {
             resources = resources,
             store = store,
             selectTabUseCase = mock(),
-            resultsUriFilter = "https://mozilla.org".toUri(),
+            resultsUriFilter = {
+                it.sameHostWithoutMobileSubdomainAs("https://mozilla.org".toUri())
+            },
         )
 
         val suggestions = provider.onInputChanged("moz")
@@ -399,7 +402,9 @@ class SessionSuggestionProviderTest {
             resources = resources,
             store = store,
             selectTabUseCase = mock(),
-            resultsUriFilter = uriFilter,
+            resultsUriFilter = {
+                it.sameHostWithoutMobileSubdomainAs(uriFilter)
+            },
         )
 
         val suggestions = provider.onInputChanged("moz")

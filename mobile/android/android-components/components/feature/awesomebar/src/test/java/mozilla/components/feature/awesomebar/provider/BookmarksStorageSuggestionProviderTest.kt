@@ -13,6 +13,7 @@ import mozilla.components.concept.storage.BookmarkInfo
 import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarkNodeType
 import mozilla.components.concept.storage.BookmarksStorage
+import mozilla.components.support.ktx.android.net.sameHostWithoutMobileSubdomainAs
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import mozilla.components.support.utils.StorageUtils.levenshteinDistance
@@ -179,7 +180,9 @@ class BookmarksStorageSuggestionProviderTest {
         val provider = BookmarksStorageSuggestionProvider(
             bookmarksStorage = bookmarksSpy,
             loadUrlUseCase = mock(),
-            resultsUriFilter = "https://www.test.com".toUri(),
+            resultsUriFilter = {
+                it.sameHostWithoutMobileSubdomainAs("https://www.test.com".toUri())
+            },
         )
 
         provider.onInputChanged("moz")
@@ -196,7 +199,9 @@ class BookmarksStorageSuggestionProviderTest {
         val provider = BookmarksStorageSuggestionProvider(
             bookmarksStorage = bookmarksSpy,
             loadUrlUseCase = mock(),
-            resultsUriFilter = "https://mozilla.com".toUri(),
+            resultsUriFilter = {
+                it.sameHostWithoutMobileSubdomainAs("https://mozilla.com".toUri())
+            },
         )
 
         bookmarks.addItem("Other", "https://mozilla.com/firefox", newItem.title!!, null)

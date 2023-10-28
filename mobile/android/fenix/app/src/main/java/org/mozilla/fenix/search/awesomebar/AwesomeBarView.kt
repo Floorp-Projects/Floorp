@@ -32,6 +32,8 @@ import mozilla.components.feature.syncedtabs.DeviceIndicators
 import mozilla.components.feature.syncedtabs.SyncedTabsStorageSuggestionProvider
 import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.ktx.android.content.getColorFromAttr
+import mozilla.components.support.ktx.android.net.sameHostWithoutMobileSubdomainAs
+import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
@@ -363,7 +365,7 @@ class AwesomeBarView(
                 maxNumberOfSuggestions = METADATA_SUGGESTION_LIMIT,
                 showEditSuggestion = false,
                 suggestionsHeader = activity.getString(R.string.firefox_suggest_header),
-                resultsUriFilter = searchEngineUriFilter,
+                resultsUriFilter = { it.sameHostWithoutMobileSubdomainAs(searchEngineUriFilter) },
             )
         } else {
             HistoryStorageSuggestionProvider(
@@ -374,7 +376,7 @@ class AwesomeBarView(
                 maxNumberOfSuggestions = METADATA_SUGGESTION_LIMIT,
                 showEditSuggestion = false,
                 suggestionsHeader = activity.getString(R.string.firefox_suggest_header),
-                resultsUriFilter = searchEngineUriFilter,
+                resultsUriFilter = { it.sameHostWithoutMobileSubdomainAs(searchEngineUriFilter) },
             )
         }
     }
@@ -483,7 +485,9 @@ class AwesomeBarView(
                 getDrawable(activity, R.drawable.ic_search_results_device_tablet),
             ),
             suggestionsHeader = activity.getString(R.string.firefox_suggest_header),
-            resultsHostFilter = searchEngineHostFilter,
+            resultsUrlFilter = searchEngineHostFilter?.let {
+                { url -> url.tryGetHostFromUrl() == searchEngineHostFilter }
+            },
         )
     }
 
@@ -514,7 +518,9 @@ class AwesomeBarView(
             getDrawable(activity, R.drawable.ic_search_results_tab),
             excludeSelectedSession = !fromHomeFragment,
             suggestionsHeader = activity.getString(R.string.firefox_suggest_header),
-            resultsUriFilter = searchEngineUriFilter,
+            resultsUriFilter = searchEngineUriFilter?.let {
+                { uri -> uri.sameHostWithoutMobileSubdomainAs(it) }
+            },
         )
     }
 
@@ -545,7 +551,9 @@ class AwesomeBarView(
             engine = engineForSpeculativeConnects,
             showEditSuggestion = false,
             suggestionsHeader = activity.getString(R.string.firefox_suggest_header),
-            resultsUriFilter = searchEngineHostFilter,
+            resultsUriFilter = searchEngineHostFilter?.let {
+                { uri -> uri.sameHostWithoutMobileSubdomainAs(it) }
+            },
         )
     }
 

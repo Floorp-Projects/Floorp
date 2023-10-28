@@ -17,6 +17,7 @@ import mozilla.components.support.base.facts.Action
 import mozilla.components.support.base.facts.Fact
 import mozilla.components.support.base.facts.FactProcessor
 import mozilla.components.support.base.facts.Facts
+import mozilla.components.support.ktx.android.net.sameHostWithoutMobileSubdomainAs
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
@@ -326,7 +327,9 @@ class HistoryStorageSuggestionProviderTest {
             historyStorage = history,
             loadUrlUseCase = mock(),
             maxNumberOfSuggestions = 13,
-            resultsUriFilter = "test".toUri(),
+            resultsUriFilter = {
+                it.sameHostWithoutMobileSubdomainAs("test".toUri())
+            },
         )
         val expectedQueryCount = 13 * HISTORY_RESULTS_TO_FILTER_SCALE_FACTOR
 
@@ -351,7 +354,9 @@ class HistoryStorageSuggestionProviderTest {
         val provider = HistoryStorageSuggestionProvider(
             historyStorage = history,
             loadUrlUseCase = mock(),
-            resultsUriFilter = "https://mozilla.com".toUri(),
+            resultsUriFilter = {
+                it.sameHostWithoutMobileSubdomainAs("https://mozilla.com".toUri())
+            },
         )
 
         val suggestions = provider.onInputChanged("moz")
@@ -376,7 +381,9 @@ class HistoryStorageSuggestionProviderTest {
         val provider = HistoryStorageSuggestionProvider(
             historyStorage = history,
             loadUrlUseCase = mock(),
-            resultsUriFilter = "https://mozilla.com".toUri(),
+            resultsUriFilter = {
+                it.sameHostWithoutMobileSubdomainAs("https://mozilla.com".toUri())
+            },
         )
 
         val suggestions = provider.onInputChanged("moz")

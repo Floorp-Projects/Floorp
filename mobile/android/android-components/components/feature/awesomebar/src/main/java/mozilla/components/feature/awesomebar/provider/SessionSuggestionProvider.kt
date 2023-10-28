@@ -20,7 +20,6 @@ import mozilla.components.concept.awesomebar.AwesomeBar
 import mozilla.components.feature.awesomebar.R
 import mozilla.components.feature.awesomebar.facts.emitOpenTabSuggestionClickedFact
 import mozilla.components.feature.tabs.TabsUseCases
-import mozilla.components.support.ktx.android.net.sameHostWithoutMobileSubdomainAs
 import java.util.UUID
 
 /**
@@ -36,7 +35,7 @@ class SessionSuggestionProvider(
     private val indicatorIcon: Drawable? = null,
     private val excludeSelectedSession: Boolean = false,
     private val suggestionsHeader: String? = null,
-    @get:VisibleForTesting val resultsUriFilter: Uri? = null,
+    @get:VisibleForTesting val resultsUriFilter: ((Uri) -> Boolean)? = null,
 ) : AwesomeBar.SuggestionProvider {
     override val id: String = UUID.randomUUID().toString()
 
@@ -62,7 +61,7 @@ class SessionSuggestionProvider(
         val searchWords = searchText.split(" ")
         tabs.zip(iconRequests) { result, icon ->
             if (
-                resultsUriFilter?.sameHostWithoutMobileSubdomainAs(result.content.url.toUri()) != false &&
+                resultsUriFilter?.invoke(result.content.url.toUri()) != false &&
                 searchWords.all { result.contains(it) } &&
                 !result.content.private &&
                 shouldIncludeSelectedTab(state, result)

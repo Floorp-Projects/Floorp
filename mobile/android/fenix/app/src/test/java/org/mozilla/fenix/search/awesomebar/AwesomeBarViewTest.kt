@@ -186,7 +186,7 @@ class AwesomeBarViewTest {
 
         val historyProvider = result.firstOrNull { it is CombinedHistorySuggestionProvider }
         assertNotNull(historyProvider)
-        assertEquals(url, (historyProvider as CombinedHistorySuggestionProvider).resultsUriFilter)
+        assertNotNull((historyProvider as CombinedHistorySuggestionProvider).resultsUriFilter)
         assertEquals(AwesomeBarView.METADATA_SUGGESTION_LIMIT, historyProvider.getMaxNumberOfSuggestions())
     }
 
@@ -562,7 +562,7 @@ class AwesomeBarViewTest {
 
         val historyProvider = result.firstOrNull { it is HistoryStorageSuggestionProvider }
         assertNotNull(historyProvider)
-        assertEquals(url, (historyProvider as HistoryStorageSuggestionProvider).resultsUriFilter)
+        assertNotNull((historyProvider as HistoryStorageSuggestionProvider).resultsUriFilter)
         assertEquals(AwesomeBarView.METADATA_SUGGESTION_LIMIT, historyProvider.getMaxNumberOfSuggestions())
     }
 
@@ -662,7 +662,7 @@ class AwesomeBarViewTest {
 
         val localSessionsProviders = result.filterIsInstance<SessionSuggestionProvider>()
         assertEquals(1, localSessionsProviders.size)
-        assertEquals(url, localSessionsProviders[0].resultsUriFilter)
+        assertNotNull(localSessionsProviders[0].resultsUriFilter)
     }
 
     @Test
@@ -697,7 +697,7 @@ class AwesomeBarViewTest {
 
         val localSessionsProviders = result.filterIsInstance<SyncedTabsStorageSuggestionProvider>()
         assertEquals(1, localSessionsProviders.size)
-        assertNull(localSessionsProviders[0].resultsHostFilter)
+        assertNull(localSessionsProviders[0].resultsUrlFilter)
     }
 
     @Test
@@ -718,7 +718,7 @@ class AwesomeBarViewTest {
 
         val localSessionsProviders = result.filterIsInstance<SyncedTabsStorageSuggestionProvider>()
         assertEquals(1, localSessionsProviders.size)
-        assertEquals("test", localSessionsProviders[0].resultsHostFilter)
+        assertNotNull(localSessionsProviders[0].resultsUrlFilter)
     }
 
     @Test
@@ -761,7 +761,7 @@ class AwesomeBarViewTest {
 
         val localSessionsProviders = result.filterIsInstance<BookmarksStorageSuggestionProvider>()
         assertEquals(1, localSessionsProviders.size)
-        assertEquals(url, localSessionsProviders[0].resultsUriFilter)
+        assertNotNull(localSessionsProviders[0].resultsUriFilter)
     }
 
     @Test
@@ -800,17 +800,17 @@ class AwesomeBarViewTest {
         val bookmarksProviders: List<BookmarksStorageSuggestionProvider> = result.filterIsInstance<BookmarksStorageSuggestionProvider>()
         assertEquals(2, bookmarksProviders.size)
         assertNull(bookmarksProviders[0].resultsUriFilter) // the general bookmarks provider
-        assertEquals(url, bookmarksProviders[1].resultsUriFilter) // the filtered bookmarks provider
+        assertNotNull(bookmarksProviders[1].resultsUriFilter) // the filtered bookmarks provider
         assertEquals(1, result.filterIsInstance<SearchActionProvider>().size)
         assertEquals(1, result.filterIsInstance<SearchSuggestionProvider>().size)
         val syncedTabsProviders: List<SyncedTabsStorageSuggestionProvider> = result.filterIsInstance<SyncedTabsStorageSuggestionProvider>()
         assertEquals(2, syncedTabsProviders.size)
-        assertNull(syncedTabsProviders[0].resultsHostFilter) // the general synced tabs provider
-        assertEquals("www.test.com", syncedTabsProviders[1].resultsHostFilter) // the filtered synced tabs provider
+        assertNull(syncedTabsProviders[0].resultsUrlFilter) // the general synced tabs provider
+        assertNotNull(syncedTabsProviders[1].resultsUrlFilter) // the filtered synced tabs provider
         val localTabsProviders: List<SessionSuggestionProvider> = result.filterIsInstance<SessionSuggestionProvider>()
         assertEquals(2, localTabsProviders.size)
         assertNull(localTabsProviders[0].resultsUriFilter) // the general tabs provider
-        assertEquals(url, localTabsProviders[1].resultsUriFilter) // the filtered tabs provider
+        assertNotNull(localTabsProviders[1].resultsUriFilter) // the filtered tabs provider
         assertEquals(1, result.filterIsInstance<SearchEngineSuggestionProvider>().size)
     }
 

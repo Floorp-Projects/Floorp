@@ -73,7 +73,9 @@ class SyncedTabsStorageSuggestionProviderTest {
             loadUrlUseCase = mock(),
             icons = mock(),
             deviceIndicators = indicatorIcon,
-            resultsHostFilter = "https://foo.bar".tryGetHostFromUrl(),
+            resultsUrlFilter = {
+                it.tryGetHostFromUrl() == "https://foo.bar".tryGetHostFromUrl()
+            },
         )
 
         val suggestions = provider.onInputChanged("foo")

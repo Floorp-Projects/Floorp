@@ -14,7 +14,6 @@ import mozilla.components.feature.session.SessionUseCases
 import mozilla.components.feature.syncedtabs.ext.getActiveDeviceTabs
 import mozilla.components.feature.syncedtabs.facts.emitSyncedTabSuggestionClickedFact
 import mozilla.components.feature.syncedtabs.storage.SyncedTabsStorage
-import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 import java.util.UUID
 
 /**
@@ -27,7 +26,7 @@ class SyncedTabsStorageSuggestionProvider(
     private val icons: BrowserIcons? = null,
     private val deviceIndicators: DeviceIndicators = DeviceIndicators(),
     private val suggestionsHeader: String? = null,
-    @get:VisibleForTesting val resultsHostFilter: String? = null,
+    @get:VisibleForTesting val resultsUrlFilter: ((String) -> Boolean)? = null,
 ) : AwesomeBar.SuggestionProvider {
     override val id: String = UUID.randomUUID().toString()
 
@@ -43,7 +42,7 @@ class SyncedTabsStorageSuggestionProvider(
         val results = syncedTabs.getActiveDeviceTabs { tab ->
             // This is a fairly naive match implementation, but this is what we do on Desktop 🤷.
             (tab.url.contains(text, ignoreCase = true) || tab.title.contains(text, ignoreCase = true)) &&
-                resultsHostFilter?.equals(tab.url.tryGetHostFromUrl()) != false
+                resultsUrlFilter?.invoke(tab.url) != false
         }
 
         return results.sortedByDescending { it.lastUsed }.into()

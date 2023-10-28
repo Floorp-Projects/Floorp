@@ -14,6 +14,7 @@ import mozilla.components.concept.storage.HistoryMetadataKey
 import mozilla.components.concept.storage.HistoryMetadataStorage
 import mozilla.components.concept.storage.HistoryStorage
 import mozilla.components.concept.storage.SearchResult
+import mozilla.components.support.ktx.android.net.sameHostWithoutMobileSubdomainAs
 import mozilla.components.support.test.eq
 import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
@@ -298,7 +299,9 @@ class CombinedHistorySuggestionProviderTest {
             historyMetadataStorage = metadata,
             loadUrlUseCase = mock(),
             showEditSuggestion = false,
-            resultsUriFilter = "test".toUri(),
+            resultsUriFilter = {
+                it.sameHostWithoutMobileSubdomainAs("test".toUri())
+            },
         )
 
         provider.onInputChanged("moz")
@@ -327,7 +330,9 @@ class CombinedHistorySuggestionProviderTest {
             historyMetadataStorage = metadata,
             loadUrlUseCase = mock(),
             showEditSuggestion = false,
-            resultsUriFilter = "https://mozilla.com".toUri(),
+            resultsUriFilter = {
+                it.sameHostWithoutMobileSubdomainAs("https://mozilla.com".toUri())
+            },
         )
 
         val suggestions = provider.onInputChanged("moz")
@@ -358,7 +363,9 @@ class CombinedHistorySuggestionProviderTest {
             historyMetadataStorage = metadata,
             loadUrlUseCase = mock(),
             showEditSuggestion = false,
-            resultsUriFilter = "https://mozilla.com".toUri(),
+            resultsUriFilter = {
+                it.sameHostWithoutMobileSubdomainAs("https://mozilla.com".toUri())
+            },
         )
 
         val suggestions = provider.onInputChanged("moz")

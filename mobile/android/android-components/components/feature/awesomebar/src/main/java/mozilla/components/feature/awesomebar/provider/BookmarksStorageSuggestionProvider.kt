@@ -17,7 +17,6 @@ import mozilla.components.concept.storage.BookmarkNode
 import mozilla.components.concept.storage.BookmarksStorage
 import mozilla.components.feature.awesomebar.facts.emitBookmarkSuggestionClickedFact
 import mozilla.components.feature.session.SessionUseCases
-import mozilla.components.support.ktx.android.net.sameHostWithoutMobileSubdomainAs
 import java.util.UUID
 
 /**
@@ -46,7 +45,7 @@ internal const val BOOKMARKS_RESULTS_TO_FILTER_SCALE_FACTOR = 10
  * highest scored suggestion URL.
  * @param showEditSuggestion optional parameter to specify if the suggestion should show the edit button
  * @param suggestionsHeader optional parameter to specify if the suggestion should have a header
- * @param resultsUriFilter Optional filter for the host url of the suggestions to show.
+ * @param resultsUriFilter Optional predicate to filter matching suggestions by URL.
  */
 class BookmarksStorageSuggestionProvider(
     @get:VisibleForTesting internal val bookmarksStorage: BookmarksStorage,
@@ -56,7 +55,7 @@ class BookmarksStorageSuggestionProvider(
     private val engine: Engine? = null,
     @get:VisibleForTesting val showEditSuggestion: Boolean = true,
     private val suggestionsHeader: String? = null,
-    @get:VisibleForTesting val resultsUriFilter: Uri? = null,
+    @get:VisibleForTesting val resultsUriFilter: ((Uri) -> Boolean)? = null,
 ) : AwesomeBar.SuggestionProvider {
     override val id: String = UUID.randomUUID().toString()
 
@@ -73,7 +72,7 @@ class BookmarksStorageSuggestionProvider(
 
         val suggestions = when (resultsUriFilter) {
             null -> getBookmarksSuggestions(text)
-            else -> getBookmarksSuggestionsFromHost(resultsUriFilter, text)
+            else -> getFilteredBookmarksSuggestions(text, resultsUriFilter)
         }
 
         suggestions.firstOrNull()?.url?.let { url -> engine?.speculativeConnect(url) }
@@ -93,15 +92,15 @@ class BookmarksStorageSuggestionProvider(
         .sortedBy { it.guid }
 
     /**
-     * Get up to [BOOKMARKS_SUGGESTION_LIMIT] bookmarks matching [query] from the indicated [url].
+     * Get up to [BOOKMARKS_SUGGESTION_LIMIT] bookmarks matching [query] and [filter].
      *
      * @param query String to filter bookmarks' title or URL by.
-     * @param url URL to filter all bookmarks' URL host by.
+     * @param filter Predicate to filter the URLs of the bookmarks that match the [query].
      */
-    private suspend fun getBookmarksSuggestionsFromHost(url: Uri, query: String) = bookmarksStorage
+    private suspend fun getFilteredBookmarksSuggestions(query: String, filter: (Uri) -> Boolean) = bookmarksStorage
         .searchBookmarks(query, BOOKMARKS_SUGGESTION_LIMIT * BOOKMARKS_RESULTS_TO_FILTER_SCALE_FACTOR)
         .filter {
-            it.url?.toUri()?.sameHostWithoutMobileSubdomainAs(url) ?: true
+            it.url?.toUri()?.let(filter) ?: true
         }
         .distinctBy { it.url }
         .sortedBy { it.guid }
