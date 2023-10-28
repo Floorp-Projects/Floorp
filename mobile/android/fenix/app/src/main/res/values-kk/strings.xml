@@ -693,6 +693,8 @@
     <!-- Add-ons general availability nimbus message-->
     <!-- Title of the Nimbus message for add-ons general availability-->
     <string name="addon_ga_message_title" tools:ignore="UnusedResources">Жаңа қосымшалар енді қолжетімді</string>
+    <!-- Body of the Nimbus message for add-ons general availability. 'Firefox' intentionally hardcoded here-->
+    <string name="addon_ga_message_body" tools:ignore="UnusedResources">Firefox-ты өзіндік етіп қылуға мүмкіндік беретін 100+ жаңа кеңейтулерді қараңыз.</string>
     <!-- Button text of the Nimbus message for add-ons general availability. -->
     <string name="addon_ga_message_button" tools:ignore="UnusedResources">Қосымшаларды шолу</string>
 
