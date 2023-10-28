@@ -2668,11 +2668,20 @@ void nsRefreshDriver::Tick(VsyncId aId, TimeStamp aNowTime,
    * null.  If this happens, TickObserverArray will tell us by returning
    * false, and we must stop notifying observers.
    */
-  for (uint32_t i = 0; i < ArrayLength(mObservers); ++i) {
-    if (!TickObserverArray(i, aNowTime)) {
-      StopTimer();
-      return;
-    }
+  // XXXdholbert This would be cleaner as a loop, but for now it's helpful to
+  // have these calls separated out, so that we can figure out which
+  // observer-category is involved from the backtrace of crash reports.
+  bool keepGoing = true;
+  MOZ_ASSERT(ArrayLength(mObservers) == 4,
+             "if this changes, then we need to add or remove calls to "
+             "TickObserverArray below");
+  keepGoing = keepGoing && TickObserverArray(0, aNowTime);
+  keepGoing = keepGoing && TickObserverArray(1, aNowTime);
+  keepGoing = keepGoing && TickObserverArray(2, aNowTime);
+  keepGoing = keepGoing && TickObserverArray(3, aNowTime);
+  if (!keepGoing) {
+    StopTimer();
+    return;
   }
 
   // Recompute approximate frame visibility if it's necessary and enough time
