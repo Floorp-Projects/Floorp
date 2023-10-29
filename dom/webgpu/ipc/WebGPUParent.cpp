@@ -1023,7 +1023,8 @@ ipc::IPCResult WebGPUParent::GetFrontBufferSnapshot(
     IProtocol* aProtocol, const layers::RemoteTextureOwnerId& aOwnerId,
     Maybe<Shmem>& aShmem, gfx::IntSize& aSize) {
   const auto& lookup = mPresentationDataMap.find(aOwnerId);
-  if (lookup == mPresentationDataMap.end() || !mRemoteTextureOwner) {
+  if (lookup == mPresentationDataMap.end() || !mRemoteTextureOwner ||
+      !mRemoteTextureOwner->IsRegistered(aOwnerId)) {
     return IPC_OK();
   }
 

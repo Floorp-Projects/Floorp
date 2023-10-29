@@ -29,6 +29,9 @@ class ExternalTextureD3D11 final : public ExternalTexture {
 
   Maybe<layers::SurfaceDescriptor> ToSurfaceDescriptor() override;
 
+  void GetSnapshot(const ipc::Shmem& aDestShmem,
+                   const gfx::IntSize& aSize) override;
+
  protected:
   RefPtr<ID3D11Texture2D> mTexture;
 };
