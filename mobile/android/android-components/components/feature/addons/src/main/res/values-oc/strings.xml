@@ -84,6 +84,8 @@
     <string name="mozac_feature_addons_learn_more">Per ne saber mai sus las permissions</string>
     <!-- The rating of the add-on. -->
     <string name="mozac_feature_addons_rating">Apreciacion</string>
+    <!-- A link that points to the detail page of the add-on. -->
+    <string name="mozac_feature_addons_more_info_link">Mai de detalhs sus aqueste modul</string>
     <!-- The settings of the add-on. -->
     <string name="mozac_feature_addons_settings">Paramètres</string>
     <!-- Indicates the add-on is enabled. -->
@@ -142,6 +144,12 @@
     <string name="mozac_feature_addons_addons">Moduls complementaris</string>
     <!-- Label for add-ons sub menu item for add-ons manager-->
     <string name="mozac_feature_addons_addons_manager">Gestionari de moduls complementaris</string>
+    <!-- The title of the "crash" notification in the add-ons manager -->
+    <string name="mozac_feature_addons_manager_notification_title_text">Los moduls son temporàriament desactivats</string>
+    <!-- The content of the "crash" notification in the add-ons manager -->
+    <string name="mozac_feature_addons_manager_notification_content_text">Un o mai de moduls complementaris an quitat de foncionar, fa venir vòstre sistèma instable.</string>
+    <!-- Button to re-enable the add-ons in the "crash" notification -->
+    <string name="mozac_feature_addons_manager_notification_restart_button">Reïnicializar los moduls</string>
     <!-- Button in the add-ons manager that opens AMO in a tab -->
     <string name="mozac_feature_addons_find_more_addons_button_text">Trobar mai de moduls</string>
     <!-- The label of the allow button, this will be shown to the user when an add-on needs new permissions, with the button the user will indicate that they want to accept the new permissions and update the add-on-->
