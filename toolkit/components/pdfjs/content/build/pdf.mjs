@@ -551,7 +551,6 @@ class util_FeatureTest {
   }
   static get platform() {
     return shadow(this, "platform", {
-      isWin: navigator.platform.includes("Win"),
       isMac: navigator.platform.includes("Mac")
     });
   }
@@ -8046,7 +8045,7 @@ function getDocument(src) {
   }
   const fetchDocParams = {
     docId,
-    apiVersion: '4.0.107',
+    apiVersion: '4.0.158',
     data,
     password,
     disableAutoFetch,
@@ -9670,8 +9669,8 @@ class InternalRenderTask {
     }
   }
 }
-const version = '4.0.107';
-const build = '377af6892';
+const version = '4.0.158';
+const build = '0329b5e13';
 
 ;// CONCATENATED MODULE: ./src/display/text_layer.js
 
@@ -11074,11 +11073,7 @@ class WidgetAnnotationElement extends AnnotationElement {
     }
   }
   _getKeyModifier(event) {
-    const {
-      isWin,
-      isMac
-    } = util_FeatureTest.platform;
-    return isWin && event.ctrlKey || isMac && event.metaKey;
+    return util_FeatureTest.platform.isMac ? event.metaKey : event.ctrlKey;
   }
   _setEventListener(element, elementData, baseName, eventName, valueGetter) {
     if (baseName.includes("mouse")) {
@@ -14843,8 +14838,8 @@ class AnnotationEditorLayer {
 
 
 
-const pdfjsVersion = '4.0.107';
-const pdfjsBuild = '377af6892';
+const pdfjsVersion = '4.0.158';
+const pdfjsBuild = '0329b5e13';
 
 var __webpack_exports__AbortException = __webpack_exports__.AbortException;
 var __webpack_exports__AnnotationEditorLayer = __webpack_exports__.AnnotationEditorLayer;
