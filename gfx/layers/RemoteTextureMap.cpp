@@ -349,6 +349,7 @@ void RemoteTextureMap::GetLatestBufferSnapshot(
   // The compositable ref of remote texture should be updated in mMonitor lock.
   CompositableTextureHostRef textureHostRef;
   RefPtr<TextureHost> releasingTexture;  // Release outside the monitor
+  std::shared_ptr<webgpu::ExternalTexture> externalTexture;
   {
     MonitorAutoLock lock(mMonitor);
 
@@ -360,18 +361,14 @@ void RemoteTextureMap::GetLatestBufferSnapshot(
 
     // Get latest TextureHost of remote Texture.
     if (owner->mWaitingTextureDataHolders.empty() &&
-        !owner->mLatestTextureHost) {
+        owner->mUsingTextureDataHolders.empty()) {
       return;
     }
-    TextureHost* textureHost =
-        !owner->mWaitingTextureDataHolders.empty()
-            ? owner->mWaitingTextureDataHolders.back()->mTextureHost
-            : owner->mLatestTextureHost;
-    if (!textureHost->AsBufferTextureHost()) {
-      // Only BufferTextureHost is supported for now.
-      MOZ_ASSERT_UNREACHABLE("unexpected to be called");
-      return;
-    }
+    const auto* holder = !owner->mWaitingTextureDataHolders.empty()
+                             ? owner->mWaitingTextureDataHolders.back().get()
+                             : owner->mUsingTextureDataHolders.back().get();
+    TextureHost* textureHost = holder->mTextureHost;
+
     if (textureHost->GetSize() != aSize) {
       MOZ_ASSERT_UNREACHABLE("unexpected to be called");
       return;
@@ -381,17 +378,29 @@ void RemoteTextureMap::GetLatestBufferSnapshot(
       MOZ_ASSERT_UNREACHABLE("unexpected to be called");
       return;
     }
-    // Increment compositable ref to prevent that TextureHost is removed during
-    // memcpy.
-    textureHostRef = textureHost;
+    if (holder->mResourceWrapper &&
+        holder->mResourceWrapper->mExternalTexture) {
+      // Increment compositable ref to prevent that TextureDataHolder is removed
+      // during memcpy.
+      textureHostRef = textureHost;
+      externalTexture = holder->mResourceWrapper->mExternalTexture;
+    } else if (textureHost->AsBufferTextureHost()) {
+      // Increment compositable ref to prevent that TextureDataHolder is removed
+      // during memcpy.
+      textureHostRef = textureHost;
+    } else {
+      MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+      return;
+    }
   }
 
   if (!textureHostRef) {
     return;
   }
 
-  auto* bufferTextureHost = textureHostRef->AsBufferTextureHost();
-  if (bufferTextureHost) {
+  if (externalTexture) {
+    externalTexture->GetSnapshot(aDestShmem, aSize);
+  } else if (auto* bufferTextureHost = textureHostRef->AsBufferTextureHost()) {
     uint32_t stride = ImageDataSerializer::ComputeRGBStride(
         bufferTextureHost->GetFormat(), aSize.width);
     uint32_t bufferSize = stride * aSize.height;

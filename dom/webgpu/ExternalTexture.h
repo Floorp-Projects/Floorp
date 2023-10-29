@@ -12,6 +12,10 @@
 
 namespace mozilla {
 
+namespace ipc {
+class Shmem;
+}
+
 namespace webgpu {
 
 // A texture that can be used by the WebGPU implementation but is created and
@@ -29,6 +33,9 @@ class ExternalTexture {
   virtual void* GetExternalTextureHandle() { return nullptr; }
 
   virtual Maybe<layers::SurfaceDescriptor> ToSurfaceDescriptor() = 0;
+
+  virtual void GetSnapshot(const ipc::Shmem& aDestShmem,
+                           const gfx::IntSize& aSize) {}
 
   gfx::IntSize GetSize() { return gfx::IntSize(mWidth, mHeight); }
 

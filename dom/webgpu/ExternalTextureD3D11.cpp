@@ -9,6 +9,7 @@
 
 #include "mozilla/gfx/DeviceManagerDx.h"
 #include "mozilla/gfx/Logging.h"
+#include "mozilla/layers/ImageDataSerializer.h"
 
 namespace mozilla::webgpu {
 
@@ -32,7 +33,7 @@ UniquePtr<ExternalTextureD3D11> ExternalTextureD3D11::Create(
       DXGI_FORMAT_B8G8R8A8_UNORM, aWidth, aHeight, 1, 1,
       D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET);
 
-  desc.MiscFlags = D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX;
+  desc.MiscFlags = D3D11_RESOURCE_MISC_SHARED;
 
   RefPtr<ID3D11Texture2D> texture;
   HRESULT hr =
@@ -77,7 +78,68 @@ Maybe<layers::SurfaceDescriptor> ExternalTextureD3D11::ToSurfaceDescriptor() {
       (WindowsHandle)GetExternalTextureHandle(),
       /* gpuProcessTextureId */ Nothing(),
       /* arrayIndex */ 0, format, gfx::IntSize(mWidth, mHeight),
-      gfx::ColorSpace2::SRGB, gfx::ColorRange::FULL, /* hasKeyedMutex */ true));
+      gfx::ColorSpace2::SRGB, gfx::ColorRange::FULL,
+      /* hasKeyedMutex */ false));
+}
+
+void ExternalTextureD3D11::GetSnapshot(const ipc::Shmem& aDestShmem,
+                                       const gfx::IntSize& aSize) {
+  RefPtr<ID3D11Device> device;
+  mTexture->GetDevice(getter_AddRefs(device));
+  if (!device) {
+    MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+    gfxCriticalNoteOnce << "Failed to get ID3D11Device";
+    return;
+  }
+
+  RefPtr<ID3D11DeviceContext> deviceContext;
+  device->GetImmediateContext(getter_AddRefs(deviceContext));
+  if (!deviceContext) {
+    MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+    gfxCriticalNoteOnce << "Failed to get ID3D11DeviceContext";
+    return;
+  }
+
+  D3D11_TEXTURE2D_DESC textureDesc = {0};
+  mTexture->GetDesc(&textureDesc);
+
+  textureDesc.CPUAccessFlags = D3D11_CPU_ACCESS_READ;
+  textureDesc.Usage = D3D11_USAGE_STAGING;
+  textureDesc.BindFlags = 0;
+  textureDesc.MiscFlags = 0;
+  textureDesc.MipLevels = 1;
+
+  RefPtr<ID3D11Texture2D> cpuTexture;
+  HRESULT hr = device->CreateTexture2D(&textureDesc, nullptr,
+                                       getter_AddRefs(cpuTexture));
+  if (FAILED(hr)) {
+    MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+    gfxCriticalNote << "Failed to create ID3D11Texture2D: " << gfx::hexa(hr);
+    return;
+  }
+
+  deviceContext->CopyResource(cpuTexture, mTexture);
+
+  D3D11_MAPPED_SUBRESOURCE map;
+  hr = deviceContext->Map(cpuTexture, 0, D3D11_MAP_READ, 0, &map);
+  if (FAILED(hr)) {
+    MOZ_ASSERT_UNREACHABLE("unexpected to be called");
+    gfxCriticalNote << "Failed to map ID3D11Texture2D: " << gfx::hexa(hr);
+    return;
+  }
+
+  const uint32_t stride = layers::ImageDataSerializer::ComputeRGBStride(
+      gfx::SurfaceFormat::B8G8R8A8, aSize.width);
+  uint8_t* src = static_cast<uint8_t*>(map.pData);
+  uint8_t* dst = aDestShmem.get<uint8_t>();
+
+  MOZ_ASSERT(stride * aSize.height <= aDestShmem.Size<uint8_t>());
+
+  for (int y = 0; y < aSize.height; y++) {
+    memcpy(dst, src, stride);
+    src += map.RowPitch;
+    dst += stride;
+  }
 }
 
 }  // namespace mozilla::webgpu
