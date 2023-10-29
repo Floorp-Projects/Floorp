@@ -881,11 +881,6 @@ input[type=number]::-moz-number-spin-down {
   -moz-default-appearance: spinner-downbutton;
 }
 
-input[type=number] > div > div > div:hover {
-  /* Give some indication of hover state for the up/down buttons */
-  background-color: lightblue;
-}
-
 input::-moz-search-clear-button,
 input::-moz-reveal {
   display: block;
