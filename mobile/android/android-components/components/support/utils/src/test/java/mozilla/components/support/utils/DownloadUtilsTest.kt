@@ -113,16 +113,16 @@ class DownloadUtilsTest {
 
     @Test
     fun guessFileName_mimeType() {
-        Shadows.shadowOf(MimeTypeMap.getSingleton()).addExtensionMimeTypMapping("jpg", "image/jpeg")
-        Shadows.shadowOf(MimeTypeMap.getSingleton()).addExtensionMimeTypMapping("zip", "application/zip")
-        Shadows.shadowOf(MimeTypeMap.getSingleton()).addExtensionMimeTypMapping("tar.gz", "application/gzip")
-        Shadows.shadowOf(MimeTypeMap.getSingleton()).addExtensionMimeTypMapping("bin", "application/octet-stream")
+        Shadows.shadowOf(MimeTypeMap.getSingleton()).addExtensionMimeTypeMapping("jpg", "image/jpeg")
+        Shadows.shadowOf(MimeTypeMap.getSingleton()).addExtensionMimeTypeMapping("zip", "application/zip")
+        Shadows.shadowOf(MimeTypeMap.getSingleton()).addExtensionMimeTypeMapping("tar.gz", "application/gzip")
+        Shadows.shadowOf(MimeTypeMap.getSingleton()).addExtensionMimeTypeMapping("bin", "application/octet-stream")
 
         // For one mimetype to multiple extensions mapping
-        Shadows.shadowOf(MimeTypeMap.getSingleton()).addExtensionMimeTypMapping("com", "application/x-msdos-program")
-        Shadows.shadowOf(MimeTypeMap.getSingleton()).addExtensionMimeTypMapping("exe", "application/x-msdos-program")
-        Shadows.shadowOf(MimeTypeMap.getSingleton()).addExtensionMimeTypMapping("bat", "application/x-msdos-program")
-        Shadows.shadowOf(MimeTypeMap.getSingleton()).addExtensionMimeTypMapping("dll", "application/x-msdos-program")
+        Shadows.shadowOf(MimeTypeMap.getSingleton()).addExtensionMimeTypeMapping("com", "application/x-msdos-program")
+        Shadows.shadowOf(MimeTypeMap.getSingleton()).addExtensionMimeTypeMapping("exe", "application/x-msdos-program")
+        Shadows.shadowOf(MimeTypeMap.getSingleton()).addExtensionMimeTypeMapping("bat", "application/x-msdos-program")
+        Shadows.shadowOf(MimeTypeMap.getSingleton()).addExtensionMimeTypeMapping("dll", "application/x-msdos-program")
         // Matches the last inserted extension
         assertEquals("dll", MimeTypeMap.getSingleton().getExtensionFromMimeType("application/x-msdos-program"))
         assertEquals("application/x-msdos-program", MimeTypeMap.getSingleton().getMimeTypeFromExtension("exe"))
@@ -158,7 +158,7 @@ class DownloadUtilsTest {
         assertEquals("file.exe", DownloadUtils.guessFileName(null, null, "http://example.com/file.exe", "application/vnd.microsoft.portable-executable"))
 
         Shadows.shadowOf(MimeTypeMap.getSingleton()).clearMappings()
-        Shadows.shadowOf(MimeTypeMap.getSingleton()).addExtensionMimeTypMapping("exe", "application/x-msdos-program")
+        Shadows.shadowOf(MimeTypeMap.getSingleton()).addExtensionMimeTypeMapping("exe", "application/x-msdos-program")
 
         assertEquals("file.exe", DownloadUtils.guessFileName(null, null, "http://example.com/file.bin", "application/x-msdos-program"))
     }

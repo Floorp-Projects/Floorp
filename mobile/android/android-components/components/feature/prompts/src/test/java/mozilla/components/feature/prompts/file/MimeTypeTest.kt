@@ -356,8 +356,8 @@ class MimeTypeTest {
     @Test
     fun `Wildcard buildIntent with file extensions`() {
         shadowOf(MimeTypeMap.getSingleton()).apply {
-            addExtensionMimeTypMapping(".gif", "image/gif")
-            addExtensionMimeTypMapping(
+            addExtensionMimeTypeMapping(".gif", "image/gif")
+            addExtensionMimeTypeMapping(
                 "docx",
                 "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
             )

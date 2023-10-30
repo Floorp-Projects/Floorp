@@ -23,7 +23,7 @@ class DynamicDownloadDialogTest {
         val download = DownloadState(url = "", fileName = "image.gif")
 
         shadowOf(MimeTypeMap.getSingleton()).apply {
-            addExtensionMimeTypMapping(".gif", "image/gif")
+            addExtensionMimeTypeMapping(".gif", "image/gif")
         }
 
         val expected = testContext.getString(

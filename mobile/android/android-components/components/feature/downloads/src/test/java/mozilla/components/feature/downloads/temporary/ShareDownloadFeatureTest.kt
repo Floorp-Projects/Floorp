@@ -278,7 +278,7 @@ class ShareDownloadFeatureTest {
         val shareFeature = ShareDownloadFeature(context, mock(), null, mock(), dispatcher)
         val gifStream = (GIF_HEADER + "testImage").byteInputStream(StandardCharsets.UTF_8)
         // Add the gif mapping to a by default empty shadow of MimeTypeMap.
-        shadowOf(MimeTypeMap.getSingleton()).addExtensionMimeTypMapping("gif", "image/gif")
+        shadowOf(MimeTypeMap.getSingleton()).addExtensionMimeTypeMapping("gif", "image/gif")
 
         val result = shareFeature.getFileExtension(mock(), gifStream)
 
@@ -292,7 +292,7 @@ class ShareDownloadFeatureTest {
             set(CONTENT_TYPE, "image/gif")
         }
         // Add the gif mapping to a by default empty shadow of MimeTypeMap.
-        shadowOf(MimeTypeMap.getSingleton()).addExtensionMimeTypMapping("gif", "image/gif")
+        shadowOf(MimeTypeMap.getSingleton()).addExtensionMimeTypeMapping("gif", "image/gif")
 
         val result = shareFeature.getFileExtension(gifHeaders, mock())
 

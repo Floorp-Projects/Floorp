@@ -140,7 +140,7 @@ class UriTest {
         val resolver = mock<ContentResolver>()
         val uri = "content://media/external/file/37162".toUri()
 
-        Shadows.shadowOf(MimeTypeMap.getSingleton()).addExtensionMimeTypMapping("txt", "text/plain")
+        Shadows.shadowOf(MimeTypeMap.getSingleton()).addExtensionMimeTypeMapping("txt", "text/plain")
 
         doReturn("text/plain").`when`(resolver).getType(any())
 
@@ -153,7 +153,7 @@ class UriTest {
         val uri = "content://media/external/file/37162".toUri()
         val cursor = mock<Cursor>()
 
-        Shadows.shadowOf(MimeTypeMap.getSingleton()).addExtensionMimeTypMapping("txt", "text/plain")
+        Shadows.shadowOf(MimeTypeMap.getSingleton()).addExtensionMimeTypeMapping("txt", "text/plain")
         doReturn("text/plain").`when`(resolver).getType(any())
 
         doReturn(cursor).`when`(resolver).query(any(), any(), any(), any(), any())
@@ -169,7 +169,7 @@ class UriTest {
         val uri = "content://media/external/file/37162".toUri()
         val cursor = mock<Cursor>()
 
-        Shadows.shadowOf(MimeTypeMap.getSingleton()).addExtensionMimeTypMapping("txt", "text/plain")
+        Shadows.shadowOf(MimeTypeMap.getSingleton()).addExtensionMimeTypeMapping("txt", "text/plain")
         doReturn("text/plain").`when`(resolver).getType(any())
 
         doReturn(cursor).`when`(resolver).query(any(), any(), any(), any(), any())
@@ -187,7 +187,7 @@ class UriTest {
         val uri = "content://media/external/file/37162".toUri()
         val cursor = mock<Cursor>()
 
-        Shadows.shadowOf(MimeTypeMap.getSingleton()).addExtensionMimeTypMapping("txt", "text/plain")
+        Shadows.shadowOf(MimeTypeMap.getSingleton()).addExtensionMimeTypeMapping("txt", "text/plain")
         doReturn("text/plain").`when`(resolver).getType(any())
 
         doReturn(cursor).`when`(resolver).query(any(), any(), any(), any(), any())
@@ -214,7 +214,7 @@ class UriTest {
         val uri = "content://media/external/file/37162".toUri()
         val cursor = mock<Cursor>()
 
-        Shadows.shadowOf(MimeTypeMap.getSingleton()).addExtensionMimeTypMapping("txt", "text/plain")
+        Shadows.shadowOf(MimeTypeMap.getSingleton()).addExtensionMimeTypeMapping("txt", "text/plain")
         doReturn("text/plain").`when`(resolver).getType(any())
 
         doReturn(cursor).`when`(resolver).query(any(), any(), any(), any(), any())
@@ -232,7 +232,7 @@ class UriTest {
         val resolver = mock<ContentResolver>()
         val uri = "UNKNOWN://media/external/file/37162".toUri()
 
-        Shadows.shadowOf(MimeTypeMap.getSingleton()).addExtensionMimeTypMapping("txt", "text/plain")
+        Shadows.shadowOf(MimeTypeMap.getSingleton()).addExtensionMimeTypeMapping("txt", "text/plain")
         doReturn("text/plain").`when`(resolver).getType(any())
 
         val fileName = uri.getFileName(resolver)

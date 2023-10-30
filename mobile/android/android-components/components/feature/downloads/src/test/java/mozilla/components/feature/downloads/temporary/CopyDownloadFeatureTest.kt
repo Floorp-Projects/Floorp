@@ -318,7 +318,7 @@ class CopyDownloadFeatureTest {
             CopyDownloadFeature(context, mock(), null, mock(), mock(), dispatcher)
         val gifStream = (GIF_HEADER + "testImage").byteInputStream(StandardCharsets.UTF_8)
         // Add the gif mapping to a by default empty shadow of MimeTypeMap.
-        shadowOf(MimeTypeMap.getSingleton()).addExtensionMimeTypMapping("gif", "image/gif")
+        shadowOf(MimeTypeMap.getSingleton()).addExtensionMimeTypeMapping("gif", "image/gif")
 
         val result = copyFeature.getFileExtension(mock(), gifStream)
 
@@ -331,7 +331,7 @@ class CopyDownloadFeatureTest {
             CopyDownloadFeature(context, mock(), null, mock(), mock(), dispatcher)
         val gifHeaders = MutableHeaders().apply { set(CONTENT_TYPE, "image/gif") }
         // Add the gif mapping to a by default empty shadow of MimeTypeMap.
-        shadowOf(MimeTypeMap.getSingleton()).addExtensionMimeTypMapping("gif", "image/gif")
+        shadowOf(MimeTypeMap.getSingleton()).addExtensionMimeTypeMapping("gif", "image/gif")
 
         val result = copyFeature.getFileExtension(gifHeaders, mock())
 
