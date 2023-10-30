@@ -2875,12 +2875,8 @@ bool wasm::GenerateEntryStubs(MacroAssembler& masm, size_t funcExportIndex,
                         &jitOffsets)) {
     return false;
   }
-  if (!codeRanges->emplaceBack(CodeRange::JitEntry, fe.funcIndex(),
-                               jitOffsets)) {
-    return false;
-  }
-
-  return true;
+  return codeRanges->emplaceBack(CodeRange::JitEntry, fe.funcIndex(),
+                                 jitOffsets);
 }
 
 bool wasm::GenerateProvisionalLazyJitEntryStub(MacroAssembler& masm,

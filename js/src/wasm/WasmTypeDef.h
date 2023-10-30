@@ -444,12 +444,9 @@ class ArrayType {
   // "Matching type definitions" in WasmValType.h for more background.
   static bool matches(const RecGroup* lhsRecGroup, const ArrayType& lhs,
                       const RecGroup* rhsRecGroup, const ArrayType& rhs) {
-    if (lhs.isMutable_ != rhs.isMutable_ ||
-        lhs.elementType_.forMatch(lhsRecGroup) !=
-            rhs.elementType_.forMatch(rhsRecGroup)) {
-      return false;
-    }
-    return true;
+    return lhs.isMutable_ == rhs.isMutable_ &&
+           lhs.elementType_.forMatch(lhsRecGroup) ==
+               rhs.elementType_.forMatch(rhsRecGroup);
   }
 
   // Checks if two arrays are compatible in a given subtyping relationship.

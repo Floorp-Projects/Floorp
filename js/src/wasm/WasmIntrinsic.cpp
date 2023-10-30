@@ -84,10 +84,7 @@ bool EncodeIntrinsicBody(const Intrinsic& intrinsic, IntrinsicId id,
   if (!encoder.writeVarU32(uint32_t(id))) {
     return false;
   }
-  if (!encoder.writeOp(Op::End)) {
-    return false;
-  }
-  return true;
+  return encoder.writeOp(Op::End);
 }
 
 bool wasm::CompileIntrinsicModule(JSContext* cx,

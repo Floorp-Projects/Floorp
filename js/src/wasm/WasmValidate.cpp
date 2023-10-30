@@ -1539,12 +1539,8 @@ bool wasm::ValidateFunctionBody(const ModuleEnvironment& env,
     return false;
   }
 
-  if (!DecodeFunctionBodyExprs(env, funcIndex, locals, bodyBegin + bodySize,
-                               &d)) {
-    return false;
-  }
-
-  return true;
+  return DecodeFunctionBodyExprs(env, funcIndex, locals, bodyBegin + bodySize,
+                                 &d);
 }
 
 // Section macros.

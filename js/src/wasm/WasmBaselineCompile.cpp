@@ -11389,11 +11389,7 @@ bool BaseCompiler::emitFunction() {
     return false;
   }
 
-  if (!endFunction()) {
-    return false;
-  }
-
-  return true;
+  return endFunction();
 }
 
 BaseCompiler::BaseCompiler(const ModuleEnvironment& moduleEnv,

@@ -1930,11 +1930,7 @@ inline bool OpIter<Policy>::readStore(ValType resultType, uint32_t byteSize,
     return false;
   }
 
-  if (!readLinearMemoryAddress(byteSize, addr)) {
-    return false;
-  }
-
-  return true;
+  return readLinearMemoryAddress(byteSize, addr);
 }
 
 template <typename Policy>
@@ -2765,11 +2761,7 @@ inline bool OpIter<Policy>::readAtomicStore(LinearMemoryAddress<Value>* addr,
     return false;
   }
 
-  if (!readLinearMemoryAddressAligned(byteSize, addr)) {
-    return false;
-  }
-
-  return true;
+  return readLinearMemoryAddressAligned(byteSize, addr);
 }
 
 template <typename Policy>
@@ -2871,11 +2863,7 @@ inline bool OpIter<Policy>::readMemOrTableCopy(bool isMem,
     return false;
   }
 
-  if (!popWithType(dstPtrType, dst)) {
-    return false;
-  }
-
-  return true;
+  return popWithType(dstPtrType, dst);
 }
 
 template <typename Policy>
@@ -2926,11 +2914,7 @@ inline bool OpIter<Policy>::readMemFill(uint32_t* memoryIndex, Value* start,
     return false;
   }
 
-  if (!popWithType(ptrType, start)) {
-    return false;
-  }
-
-  return true;
+  return popWithType(ptrType, start);
 }
 
 template <typename Policy>
@@ -3009,11 +2993,7 @@ inline bool OpIter<Policy>::readTableFill(uint32_t* tableIndex, Value* start,
   if (!popWithType(env_.tables[*tableIndex].elemType, val)) {
     return false;
   }
-  if (!popWithType(ValType::I32, start)) {
-    return false;
-  }
-
-  return true;
+  return popWithType(ValType::I32, start);
 }
 
 template <typename Policy>
@@ -3034,11 +3014,7 @@ inline bool OpIter<Policy>::readMemDiscard(uint32_t* memoryIndex, Value* start,
     return false;
   }
 
-  if (!popWithType(ptrType, start)) {
-    return false;
-  }
-
-  return true;
+  return popWithType(ptrType, start);
 }
 
 template <typename Policy>
@@ -3098,11 +3074,8 @@ inline bool OpIter<Policy>::readTableSet(uint32_t* tableIndex, Value* index,
   if (!popWithType(env_.tables[*tableIndex].elemType, value)) {
     return false;
   }
-  if (!popWithType(ValType::I32, index)) {
-    return false;
-  }
 
-  return true;
+  return popWithType(ValType::I32, index);
 }
 
 template <typename Policy>
@@ -3315,11 +3288,7 @@ inline bool OpIter<Policy>::readStructSet(uint32_t* typeIndex,
     return fail("field is not mutable");
   }
 
-  if (!popWithType(RefType::fromTypeDef(&typeDef, true), ptr)) {
-    return false;
-  }
-
-  return true;
+  return popWithType(RefType::fromTypeDef(&typeDef, true), ptr);
 }
 
 template <typename Policy>
@@ -3524,11 +3493,7 @@ inline bool OpIter<Policy>::readArrayInitData(uint32_t* typeIndex,
   if (!popWithType(ValType::I32, arrayIndex)) {
     return false;
   }
-  if (!popWithType(RefType::fromTypeDef(&typeDef, true), array)) {
-    return false;
-  }
-
-  return true;
+  return popWithType(RefType::fromTypeDef(&typeDef, true), array);
 }
 
 template <typename Policy>
@@ -3575,11 +3540,7 @@ inline bool OpIter<Policy>::readArrayInitElem(uint32_t* typeIndex,
   if (!popWithType(ValType::I32, arrayIndex)) {
     return false;
   }
-  if (!popWithType(RefType::fromTypeDef(&typeDef, true), array)) {
-    return false;
-  }
-
-  return true;
+  return popWithType(RefType::fromTypeDef(&typeDef, true), array);
 }
 
 template <typename Policy>
@@ -3640,11 +3601,7 @@ inline bool OpIter<Policy>::readArraySet(uint32_t* typeIndex, Value* val,
     return false;
   }
 
-  if (!popWithType(RefType::fromTypeDef(&typeDef, true), ptr)) {
-    return false;
-  }
-
-  return true;
+  return popWithType(RefType::fromTypeDef(&typeDef, true), ptr);
 }
 
 template <typename Policy>
@@ -3713,11 +3670,8 @@ inline bool OpIter<Policy>::readArrayCopy(int32_t* elemSize,
   if (!popWithType(ValType::I32, dstIndex)) {
     return false;
   }
-  if (!popWithType(RefType::fromTypeDef(&dstTypeDef, true), dstArray)) {
-    return false;
-  }
 
-  return true;
+  return popWithType(RefType::fromTypeDef(&dstTypeDef, true), dstArray);
 }
 
 template <typename Policy>
@@ -3745,11 +3699,8 @@ inline bool OpIter<Policy>::readArrayFill(uint32_t* typeIndex, Value* array,
   if (!popWithType(ValType::I32, index)) {
     return false;
   }
-  if (!popWithType(RefType::fromTypeDef(&typeDef, true), array)) {
-    return false;
-  }
 
-  return true;
+  return popWithType(RefType::fromTypeDef(&typeDef, true), array);
 }
 
 template <typename Policy>
