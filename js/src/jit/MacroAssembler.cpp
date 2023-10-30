@@ -5113,18 +5113,10 @@ static void CollapseWasmFrameFast(MacroAssembler& masm,
   uint32_t oldSlotsAndStackArgBytes =
       AlignBytes(retCallInfo.oldSlotsAndStackArgBytes, WasmStackAlignment);
 
-  static constexpr Register tempForCaller = ABINonArgReg1;
-  static constexpr Register tempForFP = ABINonArgReg3;
-
-#  ifdef JS_USE_LINK_REGISTER
-#    if defined(JS_CODEGEN_LOONG64) || defined(JS_CODEGEN_MIPS64) || \
-        defined(JS_CODEGEN_RISCV64)
-  static constexpr Register tempForRA = ra;
-#    else
-  static constexpr Register tempForRA = lr;
-#    endif
-#  else
-  static constexpr Register tempForRA = ABINonArgReg2;
+  static constexpr Register tempForCaller = WasmTailCallInstanceScratchReg;
+  static constexpr Register tempForFP = WasmTailCallFPScratchReg;
+  static constexpr Register tempForRA = WasmTailCallRAScratchReg;
+#  ifndef JS_USE_LINK_REGISTER
   masm.push(tempForRA);
 #  endif
 
@@ -5195,8 +5187,9 @@ static void CollapseWasmFrameSlow(MacroAssembler& masm,
                                   wasm::CallSiteDesc desc,
                                   ReturnCallTrampolineData data) {
   uint32_t framePushedAtStart = masm.framePushed();
-  static constexpr Register tempForCaller = ABINonArgReg1;
-  static constexpr Register tempForFP = ABINonArgReg3;
+  static constexpr Register tempForCaller = WasmTailCallInstanceScratchReg;
+  static constexpr Register tempForFP = WasmTailCallFPScratchReg;
+  static constexpr Register tempForRA = WasmTailCallRAScratchReg;
 
   static_assert(sizeof(wasm::Frame) == 2 * sizeof(void*));
 
@@ -5237,15 +5230,7 @@ static void CollapseWasmFrameSlow(MacroAssembler& masm,
                           : 0;
   masm.reserveStack(reserved);
 
-#  ifdef JS_USE_LINK_REGISTER
-#    if defined(JS_CODEGEN_LOONG64) || defined(JS_CODEGEN_MIPS64) || \
-        defined(JS_CODEGEN_RISCV64)
-  static constexpr Register tempForRA = ra;
-#    else
-  static constexpr Register tempForRA = lr;
-#    endif
-#  else
-  static constexpr Register tempForRA = ABINonArgReg2;
+#  ifndef JS_USE_LINK_REGISTER
   masm.push(tempForRA);
 #  endif
 
@@ -5704,9 +5689,6 @@ void MacroAssembler::wasmReturnCallIndirect(
     Label* boundsCheckFailedLabel, Label* nullCheckFailedLabel,
     mozilla::Maybe<uint32_t> tableSize,
     const ReturnCallAdjustmentInfo& retCallInfo) {
-  CodeOffset t;
-  CodeOffset* fastCallOffset = &t;
-  CodeOffset* slowCallOffset = &t;
   static_assert(sizeof(wasm::FunctionTableElem) == 2 * sizeof(void*),
                 "Exactly two pointers or index scaling won't work correctly");
   MOZ_ASSERT(callee.which() == wasm::CalleeDesc::WasmTable);
@@ -5803,7 +5785,6 @@ void MacroAssembler::wasmReturnCallIndirect(
                               wasm::CallSiteDesc::ReturnStub);
   wasmCollapseFrameSlow(retCallInfo, stubDesc);
   jump(calleeScratch);
-  *slowCallOffset = CodeOffset(currentOffset());
   append(wasm::CodeRangeUnwindInfo::Normal, currentOffset());
 
   // Fast path: just load the code pointer and go.
@@ -5815,7 +5796,6 @@ void MacroAssembler::wasmReturnCallIndirect(
 
   wasmCollapseFrameFast(retCallInfo);
   jump(calleeScratch);
-  *fastCallOffset = CodeOffset(currentOffset());
   append(wasm::CodeRangeUnwindInfo::Normal, currentOffset());
 }
 #endif  // ENABLE_WASM_TAIL_CALLS
