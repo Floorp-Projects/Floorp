@@ -253,6 +253,9 @@ class ScriptModule extends Module {
    *     a RealmTarget or for ContextTarget.
    * @param {RemoteValue=} options.this
    *     The value of the this keyword for the function call.
+   * @param {boolean=} options.userActivation
+   *     Determines whether execution should be treated as initiated by user.
+   *     Defaults to `false`.
    *
    * @returns {ScriptEvaluateResult}
    *
@@ -270,6 +273,7 @@ class ScriptModule extends Module {
       serializationOptions,
       target = {},
       this: thisParameter = null,
+      userActivation = false,
     } = options;
 
     lazy.assert.string(
@@ -280,6 +284,11 @@ class ScriptModule extends Module {
     lazy.assert.boolean(
       awaitPromise,
       `Expected "awaitPromise" to be a boolean, got ${awaitPromise}`
+    );
+
+    lazy.assert.boolean(
+      userActivation,
+      `Expected "userActivation" to be a boolean, got ${userActivation}`
     );
 
     this.#assertResultOwnership(resultOwnership);
@@ -316,6 +325,7 @@ class ScriptModule extends Module {
         sandbox,
         serializationOptions: serializationOptionsWithDefaults,
         thisParameter,
+        userActivation,
       },
     });
 
@@ -384,6 +394,9 @@ class ScriptModule extends Module {
    * @param {object} options.target
    *     The target for the evaluation, which either matches the definition for
    *     a RealmTarget or for ContextTarget.
+   * @param {boolean=} options.userActivation
+   *     Determines whether execution should be treated as initiated by user.
+   *     Defaults to `false`.
    *
    * @returns {ScriptEvaluateResult}
    *
@@ -399,6 +412,7 @@ class ScriptModule extends Module {
       resultOwnership = lazy.OwnershipModel.None,
       serializationOptions,
       target = {},
+      userActivation = false,
     } = options;
 
     lazy.assert.string(
@@ -409,6 +423,11 @@ class ScriptModule extends Module {
     lazy.assert.boolean(
       awaitPromise,
       `Expected "awaitPromise" to be a boolean, got ${awaitPromise}`
+    );
+
+    lazy.assert.boolean(
+      userActivation,
+      `Expected "userActivation" to be a boolean, got ${userActivation}`
     );
 
     this.#assertResultOwnership(resultOwnership);
@@ -431,6 +450,7 @@ class ScriptModule extends Module {
         resultOwnership,
         sandbox,
         serializationOptions: serializationOptionsWithDefaults,
+        userActivation,
       },
     });
 

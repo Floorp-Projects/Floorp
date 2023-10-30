@@ -150,6 +150,7 @@ export class WindowRealm extends Realm {
   #globalObjectReference;
   #isSandbox;
   #sandboxName;
+  #userActivationEnabled;
   #window;
 
   static type = RealmType.Window;
@@ -175,6 +176,7 @@ export class WindowRealm extends Realm {
       this.#globalObject
     );
     this.#realmAutomationFeaturesEnabled = false;
+    this.#userActivationEnabled = false;
   }
 
   destroy() {
@@ -205,6 +207,25 @@ export class WindowRealm extends Realm {
 
   get origin() {
     return this.#window.origin;
+  }
+
+  get userActivationEnabled() {
+    return this.#userActivationEnabled;
+  }
+
+  set userActivationEnabled(enable) {
+    if (enable === this.#userActivationEnabled) {
+      return;
+    }
+
+    const document = this.#window.document;
+    if (enable) {
+      document.notifyUserGestureActivation();
+    } else {
+      document.clearUserGestureActivation();
+    }
+
+    this.#userActivationEnabled = enable;
   }
 
   #createDebuggerObject(obj) {
