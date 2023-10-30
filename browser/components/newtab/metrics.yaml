@@ -429,6 +429,37 @@ topsites:
     send_in_pings:
       - newtab
 
+  pref_changed:
+    type: event
+    description: >
+      Recorded when specific topsites prefs have changed.
+
+      The list of possible prefs is presently:
+       * browser.newtabpage.activity-stream.feeds.topsites
+       * browser.newtabpage.activity-stream.showSponsoredTopSites
+    bugs:
+      - https://mozilla-hub.atlassian.net/browse/D0-1293
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1857324
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1857324
+    data_sensitivity: [interaction]
+    notification_emails:
+      - chutten@mozilla.com
+      - mmccorquodale@mozilla.com
+      - sbetancourt@mozilla.com
+      - kdemtchouk@mozilla.com
+      - mbowerman@mozilla.com
+    expires: never
+    extra_keys:
+      pref_name:
+        description: The full name of the pref whose value just changed.
+        type: string
+      new_value:
+        description: The new (current) value the pref just changed to.
+        type: boolean
+    send_in_pings:
+      - newtab
+
   rows:
     lifetime: application
     type: quantity

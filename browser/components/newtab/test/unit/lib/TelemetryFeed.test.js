@@ -318,6 +318,41 @@ describe("TelemetryFeed", () => {
           "mozilla",
         ]);
       });
+      it("should record pref_changed events for topsites pref changes", () => {
+        FAKE_GLOBAL_PREFS.set(
+          "browser.newtabpage.activity-stream.feeds.topsites",
+          false
+        );
+        FAKE_GLOBAL_PREFS.set(
+          "browser.newtabpage.activity-stream.showSponsoredTopSites",
+          true
+        );
+        sandbox.spy(Glean.topsites.enabled, "set");
+        sandbox.spy(Glean.topsites.sponsoredEnabled, "set");
+        sandbox.spy(Glean.topsites.prefChanged, "record");
+
+        instance = new TelemetryFeed();
+        instance.init();
+
+        Services.prefs.setBoolPref(
+          "browser.newtabpage.activity-stream.feeds.topsites",
+          true
+        );
+        Services.prefs.setBoolPref(
+          "browser.newtabpage.activity-stream.showSponsoredTopSites",
+          false
+        );
+
+        assert.calledTwice(Glean.topsites.prefChanged.record);
+        assert.deepEqual(Glean.topsites.prefChanged.record.firstCall.args[0], {
+          pref_name: "browser.newtabpage.activity-stream.feeds.topsites",
+          new_value: true,
+        });
+        assert.deepEqual(Glean.topsites.prefChanged.record.secondCall.args[0], {
+          pref_name: "browser.newtabpage.activity-stream.showSponsoredTopSites",
+          new_value: false,
+        });
+      });
       it("should ignore changes to other prefs", () => {
         FAKE_GLOBAL_PREFS.set("some.other.pref", 123);
         FAKE_GLOBAL_PREFS.set(
@@ -1607,6 +1642,7 @@ describe("TelemetryFeed", () => {
       const sendEvent = sandbox.stub(instance, "sendEvent");
       const utSendUserEvent = sandbox.stub(instance.utEvents, "sendUserEvent");
       const eventCreator = sandbox.stub(instance, "createUserEvent");
+
       const action = { type: at.TELEMETRY_USER_EVENT };
 
       instance.onAction(action);

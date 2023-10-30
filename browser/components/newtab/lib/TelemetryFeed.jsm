@@ -1366,7 +1366,7 @@ class TelemetryFeed {
       showSponsored: Glean.pocket.sponsoredStoriesEnabled,
       topSitesRows: Glean.topsites.rows,
     };
-    const setNewtabPrefMetrics = fullPrefName => {
+    const setNewtabPrefMetrics = (fullPrefName, isChanged) => {
       const pref = fullPrefName.slice(ACTIVITY_STREAM_PREF_BRANCH.length);
       if (!Object.hasOwn(NEWTAB_PING_PREFS, pref)) {
         return;
@@ -1381,14 +1381,25 @@ class TelemetryFeed {
           metric.set(Services.prefs.getIntPref(fullPrefName));
           break;
       }
+      if (isChanged) {
+        switch (fullPrefName) {
+          case `${ACTIVITY_STREAM_PREF_BRANCH}feeds.topsites`:
+          case `${ACTIVITY_STREAM_PREF_BRANCH}showSponsoredTopSites`:
+            Glean.topsites.prefChanged.record({
+              pref_name: fullPrefName,
+              new_value: Services.prefs.getBoolPref(fullPrefName),
+            });
+            break;
+        }
+      }
     };
     Services.prefs.addObserver(
       ACTIVITY_STREAM_PREF_BRANCH,
-      (subject, topic, data) => setNewtabPrefMetrics(data)
+      (subject, topic, data) => setNewtabPrefMetrics(data, true)
     );
     for (const pref of Object.keys(NEWTAB_PING_PREFS)) {
       const fullPrefName = ACTIVITY_STREAM_PREF_BRANCH + pref;
-      setNewtabPrefMetrics(fullPrefName);
+      setNewtabPrefMetrics(fullPrefName, false);
     }
     Glean.pocket.isSignedIn.set(lazy.pktApi.isUserLoggedIn());
 
