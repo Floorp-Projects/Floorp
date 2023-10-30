@@ -235,6 +235,15 @@ fun String.tryGetHostFromUrl(): String = try {
 }
 
 /**
+ * Returns `true` if this string is a valid URL that contains [searchParameters] in its query parameters.
+ */
+fun String.urlContainsQueryParameters(searchParameters: String): Boolean = try {
+    URL(this).query?.split("&")?.any { it == searchParameters } ?: false
+} catch (e: MalformedURLException) {
+    false
+}
+
+/**
  * Compares 2 URLs and returns true if they have the same origin,
  * which means: same protocol, same host, same port.
  * It will return false if either this or [other] is not a valid URL.

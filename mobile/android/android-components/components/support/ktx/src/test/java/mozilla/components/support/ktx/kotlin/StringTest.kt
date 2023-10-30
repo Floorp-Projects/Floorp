@@ -568,6 +568,25 @@ class StringTest {
         assertNull(invalidBase64String2.extractBase6RawString())
     }
 
+    @Test
+    fun `GIVEN a URL with matching parameters WHEN testing if a URL contains query parameters THEN the result is true`() {
+        assertTrue("http://example.com?a".urlContainsQueryParameters("a"))
+        assertTrue("http://example.com?a&b&c".urlContainsQueryParameters("b"))
+        assertTrue("http://example.com?a=b".urlContainsQueryParameters("a=b"))
+        assertTrue("http://example.com?a=b&c=d&e=f".urlContainsQueryParameters("c=d"))
+        assertTrue("http://example.com?a=b&c=d&e=f#g=h".urlContainsQueryParameters("e=f"))
+    }
+
+    @Test
+    fun `GIVEN a URL without matching parameters WHEN testing if a URL contains query parameters THEN the result is false`() {
+        assertFalse("".urlContainsQueryParameters("a"))
+        assertFalse("!@#$%^&*()-+".urlContainsQueryParameters("a"))
+        assertFalse("http://example.com".urlContainsQueryParameters("a"))
+        assertFalse("http://example.com?a&b".urlContainsQueryParameters("c"))
+        assertFalse("http://example.com?a=b".urlContainsQueryParameters("a"))
+        assertFalse("http://example.com?a=b&c=d&e=f#g=h".urlContainsQueryParameters("g=h"))
+    }
+
     private infix fun String.shortenedShouldBecome(expect: String) {
         assertEquals(expect, this.shortened())
     }

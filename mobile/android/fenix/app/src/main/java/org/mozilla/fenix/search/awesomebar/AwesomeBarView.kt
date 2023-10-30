@@ -6,6 +6,7 @@ package org.mozilla.fenix.search.awesomebar
 
 import android.content.Context
 import android.graphics.drawable.Drawable
+import android.net.Uri
 import androidx.annotation.VisibleForTesting
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.graphics.BlendModeColorFilterCompat.createBlendModeColorFilterCompat
@@ -34,6 +35,7 @@ import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.ktx.android.content.getColorFromAttr
 import mozilla.components.support.ktx.android.net.sameHostWithoutMobileSubdomainAs
 import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
+import mozilla.components.support.ktx.kotlin.urlContainsQueryParameters
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
 import org.mozilla.fenix.browser.browsingmode.BrowsingMode
@@ -41,6 +43,7 @@ import org.mozilla.fenix.components.Components
 import org.mozilla.fenix.components.Core.Companion.METADATA_HISTORY_SUGGESTION_LIMIT
 import org.mozilla.fenix.components.Core.Companion.METADATA_SHORTCUT_SUGGESTION_LIMIT
 import org.mozilla.fenix.ext.components
+import org.mozilla.fenix.ext.containsQueryParameters
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.search.SearchEngineSource
 import org.mozilla.fenix.search.SearchFragmentState
@@ -255,7 +258,7 @@ class AwesomeBarView(
         }
     }
 
-    @Suppress("ComplexMethod")
+    @Suppress("ComplexMethod", "LongMethod")
     @VisibleForTesting
     internal fun getProvidersToAdd(
         state: SearchProviderState,
@@ -280,25 +283,31 @@ class AwesomeBarView(
         }
 
         if (state.showAllHistorySuggestions) {
-            if (activity.settings().historyMetadataUIFeature) {
-                providersToAdd.add(defaultCombinedHistoryProvider)
-            } else {
-                providersToAdd.add(defaultHistoryStorageProvider)
-            }
+            providersToAdd.add(
+                getHistoryProvider(
+                    filter = getFilterToExcludeSponsoredResults(state),
+                ),
+            )
         }
 
         if (state.showHistorySuggestionsForCurrentEngine) {
-            getHistoryProvidersForSearchEngine(state.searchEngineSource)?.let {
-                providersToAdd.add(it)
+            getFilterForCurrentEngineResults(state)?.let {
+                providersToAdd.add(getHistoryProvider(it))
             }
         }
 
         if (state.showAllBookmarkSuggestions) {
-            providersToAdd.add(getBookmarksProvider(state.searchEngineSource))
+            providersToAdd.add(
+                getBookmarksProvider(
+                    filter = getFilterToExcludeSponsoredResults(state),
+                ),
+            )
         }
 
         if (state.showBookmarksSuggestionsForCurrentEngine) {
-            providersToAdd.add(getBookmarksProvider(state.searchEngineSource, true))
+            getFilterForCurrentEngineResults(state)?.let {
+                providersToAdd.add(getBookmarksProvider(it))
+            }
         }
 
         if (state.showSearchSuggestions) {
@@ -306,19 +315,28 @@ class AwesomeBarView(
         }
 
         if (state.showAllSyncedTabsSuggestions) {
-            providersToAdd.add(getSyncedTabsProvider(state.searchEngineSource))
+            providersToAdd.add(
+                getSyncedTabsProvider(
+                    filter = getFilterToExcludeSponsoredResults(state),
+                ),
+            )
         }
 
         if (state.showSyncedTabsSuggestionsForCurrentEngine) {
-            providersToAdd.add(getSyncedTabsProvider(state.searchEngineSource, true))
+            getFilterForCurrentEngineResults(state)?.let {
+                providersToAdd.add(getSyncedTabsProvider(it))
+            }
         }
 
         if (activity.browsingModeManager.mode == BrowsingMode.Normal && state.showAllSessionSuggestions) {
-            providersToAdd.add(getLocalTabsProvider(state.searchEngineSource))
+            // Unlike other providers, we don't exclude sponsored suggestions for open tabs.
+            providersToAdd.add(getLocalTabsProvider())
         }
 
         if (activity.browsingModeManager.mode == BrowsingMode.Normal && state.showSessionSuggestionsForCurrentEngine) {
-            providersToAdd.add(getLocalTabsProvider(state.searchEngineSource, true))
+            getFilterForCurrentEngineResults(state)?.let {
+                providersToAdd.add(getLocalTabsProvider(it))
+            }
         }
 
         if (state.showSponsoredSuggestions || state.showNonSponsoredSuggestions) {
@@ -340,44 +358,48 @@ class AwesomeBarView(
     }
 
     /**
-     * Get a new history suggestion provider that will return suggestions only from the current
-     * search engine's host.
-     * Used only for when unified search is active.
+     * Get a history suggestion provider configured for this [AwesomeBarView].
      *
-     * @param searchEngineSource Search engine wrapper also informing about the selection type.
+     * @param filter Optional filter to limit the returned history suggestions.
      *
      * @return A [CombinedHistorySuggestionProvider] or [HistoryStorageSuggestionProvider] depending
-     * on if the history metadata feature is enabled or `null` if the current engine's host is unknown.
+     * on if the history metadata feature is enabled.
      */
     @VisibleForTesting
-    internal fun getHistoryProvidersForSearchEngine(
-        searchEngineSource: SearchEngineSource,
-    ): AwesomeBar.SuggestionProvider? {
-        val searchEngineUriFilter = searchEngineSource.searchEngine?.resultsUrl ?: return null
-
+    internal fun getHistoryProvider(
+        filter: SearchResultFilter? = null,
+    ): AwesomeBar.SuggestionProvider {
         return if (activity.settings().historyMetadataUIFeature) {
-            CombinedHistorySuggestionProvider(
-                historyStorage = components.core.historyStorage,
-                historyMetadataStorage = components.core.historyStorage,
-                loadUrlUseCase = loadUrlUseCase,
-                icons = components.core.icons,
-                engine = engineForSpeculativeConnects,
-                maxNumberOfSuggestions = METADATA_SUGGESTION_LIMIT,
-                showEditSuggestion = false,
-                suggestionsHeader = activity.getString(R.string.firefox_suggest_header),
-                resultsUriFilter = { it.sameHostWithoutMobileSubdomainAs(searchEngineUriFilter) },
-            )
+            if (filter != null) {
+                CombinedHistorySuggestionProvider(
+                    historyStorage = components.core.historyStorage,
+                    historyMetadataStorage = components.core.historyStorage,
+                    loadUrlUseCase = loadUrlUseCase,
+                    icons = components.core.icons,
+                    engine = engineForSpeculativeConnects,
+                    maxNumberOfSuggestions = METADATA_SUGGESTION_LIMIT,
+                    showEditSuggestion = false,
+                    suggestionsHeader = activity.getString(R.string.firefox_suggest_header),
+                    resultsUriFilter = filter::shouldIncludeUri,
+                )
+            } else {
+                defaultCombinedHistoryProvider
+            }
         } else {
-            HistoryStorageSuggestionProvider(
-                historyStorage = components.core.historyStorage,
-                loadUrlUseCase = loadUrlUseCase,
-                icons = components.core.icons,
-                engine = engineForSpeculativeConnects,
-                maxNumberOfSuggestions = METADATA_SUGGESTION_LIMIT,
-                showEditSuggestion = false,
-                suggestionsHeader = activity.getString(R.string.firefox_suggest_header),
-                resultsUriFilter = { it.sameHostWithoutMobileSubdomainAs(searchEngineUriFilter) },
-            )
+            if (filter != null) {
+                HistoryStorageSuggestionProvider(
+                    historyStorage = components.core.historyStorage,
+                    loadUrlUseCase = loadUrlUseCase,
+                    icons = components.core.icons,
+                    engine = engineForSpeculativeConnects,
+                    maxNumberOfSuggestions = METADATA_SUGGESTION_LIMIT,
+                    showEditSuggestion = false,
+                    suggestionsHeader = activity.getString(R.string.firefox_suggest_header),
+                    resultsUriFilter = filter::shouldIncludeUri,
+                )
+            } else {
+                defaultHistoryStorageProvider
+            }
         }
     }
 
@@ -457,24 +479,16 @@ class AwesomeBarView(
     }
 
     /**
-     * Get a synced tabs provider automatically configured to filter or not results from just the current search engine.
+     * Get a synced tabs provider configured for this [AwesomeBarView].
      *
-     * @param searchEngineSource Search engine wrapper also informing about the selection type.
-     * @param filterByCurrentEngine Whether to apply a filter to the constructed provider such that
-     * it will return bookmarks only for the current search engine.
+     * @param filter Optional filter to limit the returned synced tab suggestions.
      *
      * @return [SyncedTabsStorageSuggestionProvider] providing suggestions for the [AwesomeBar].
      */
     @VisibleForTesting
     internal fun getSyncedTabsProvider(
-        searchEngineSource: SearchEngineSource,
-        filterByCurrentEngine: Boolean = false,
+        filter: SearchResultFilter? = null,
     ): SyncedTabsStorageSuggestionProvider {
-        val searchEngineHostFilter = when (filterByCurrentEngine) {
-            true -> searchEngineSource.searchEngine?.resultsUrl?.host
-            false -> null
-        }
-
         return SyncedTabsStorageSuggestionProvider(
             components.backgroundServices.syncedTabsStorage,
             loadUrlUseCase,
@@ -485,31 +499,21 @@ class AwesomeBarView(
                 getDrawable(activity, R.drawable.ic_search_results_device_tablet),
             ),
             suggestionsHeader = activity.getString(R.string.firefox_suggest_header),
-            resultsUrlFilter = searchEngineHostFilter?.let {
-                { url -> url.tryGetHostFromUrl() == searchEngineHostFilter }
-            },
+            resultsUrlFilter = filter?.let { it::shouldIncludeUrl },
         )
     }
 
     /**
-     * Get a local tabs provider automatically configured to filter or not results from just the current search engine.
+     * Get a local tabs provider configured for this [AwesomeBarView].
      *
-     * @param searchEngineSource Search engine wrapper also informing about the selection type.
-     * @param filterByCurrentEngine Whether to apply a filter to the constructed provider such that
-     * it will return bookmarks only for the current search engine.
+     * @param filter Optional filter to limit the returned local tab suggestions.
      *
      * @return [SessionSuggestionProvider] providing suggestions for the [AwesomeBar].
      */
     @VisibleForTesting
     internal fun getLocalTabsProvider(
-        searchEngineSource: SearchEngineSource,
-        filterByCurrentEngine: Boolean = false,
+        filter: SearchResultFilter? = null,
     ): SessionSuggestionProvider {
-        val searchEngineUriFilter = when (filterByCurrentEngine) {
-            true -> searchEngineSource.searchEngine?.resultsUrl
-            false -> null
-        }
-
         return SessionSuggestionProvider(
             activity.resources,
             components.core.store,
@@ -518,31 +522,21 @@ class AwesomeBarView(
             getDrawable(activity, R.drawable.ic_search_results_tab),
             excludeSelectedSession = !fromHomeFragment,
             suggestionsHeader = activity.getString(R.string.firefox_suggest_header),
-            resultsUriFilter = searchEngineUriFilter?.let {
-                { uri -> uri.sameHostWithoutMobileSubdomainAs(it) }
-            },
+            resultsUriFilter = filter?.let { it::shouldIncludeUri },
         )
     }
 
     /**
-     * Get a bookmarks provider automatically configured to filter or not results from just the current search engine.
+     * Get a bookmarks provider configured for this [AwesomeBarView].
      *
-     * @param searchEngineSource Search engine wrapper also informing about the selection type.
-     * @param filterByCurrentEngine Whether to apply a filter to the constructed provider such that
-     * it will return bookmarks only for the current search engine.
+     * @param filter Optional filter to limit the returned bookmark suggestions.
      *
      * @return [BookmarksStorageSuggestionProvider] providing suggestions for the [AwesomeBar].
      */
     @VisibleForTesting
     internal fun getBookmarksProvider(
-        searchEngineSource: SearchEngineSource,
-        filterByCurrentEngine: Boolean = false,
+        filter: SearchResultFilter? = null,
     ): BookmarksStorageSuggestionProvider {
-        val searchEngineHostFilter = when (filterByCurrentEngine) {
-            true -> searchEngineSource.searchEngine?.resultsUrl
-            false -> null
-        }
-
         return BookmarksStorageSuggestionProvider(
             bookmarksStorage = components.core.bookmarksStorage,
             loadUrlUseCase = loadUrlUseCase,
@@ -551,11 +545,27 @@ class AwesomeBarView(
             engine = engineForSpeculativeConnects,
             showEditSuggestion = false,
             suggestionsHeader = activity.getString(R.string.firefox_suggest_header),
-            resultsUriFilter = searchEngineHostFilter?.let {
-                { uri -> uri.sameHostWithoutMobileSubdomainAs(it) }
-            },
+            resultsUriFilter = filter?.let { it::shouldIncludeUri },
         )
     }
+
+    /**
+     * Returns a [SearchResultFilter] that only includes results for the current search engine.
+     */
+    internal fun getFilterForCurrentEngineResults(state: SearchProviderState): SearchResultFilter? =
+        state.searchEngineSource.searchEngine?.resultsUrl?.let {
+            SearchResultFilter.CurrentEngine(it)
+        }
+
+    /**
+     * Returns a [SearchResultFilter] that excludes sponsored results.
+     */
+    internal fun getFilterToExcludeSponsoredResults(state: SearchProviderState): SearchResultFilter? =
+        if (state.showSponsoredSuggestions) {
+            SearchResultFilter.ExcludeSponsored(activity.settings().frecencyFilterQuery)
+        } else {
+            null
+        }
 
     data class SearchProviderState(
         val showSearchShortcuts: Boolean,
@@ -573,6 +583,41 @@ class AwesomeBarView(
         val showNonSponsoredSuggestions: Boolean,
         val searchEngineSource: SearchEngineSource,
     )
+
+    /**
+     * Filters to limit the suggestions returned from a suggestion provider.
+     */
+    sealed interface SearchResultFilter {
+        /**
+         * A filter for the currently selected search engine. This filter only includes suggestions
+         * whose URLs have the same host as [resultsUri].
+         */
+        data class CurrentEngine(val resultsUri: Uri) : SearchResultFilter
+
+        /**
+         * A filter that excludes sponsored suggestions, whose URLs contain the given
+         * [queryParameter].
+         */
+        data class ExcludeSponsored(val queryParameter: String) : SearchResultFilter
+
+        /**
+         * Returns `true` if the suggestion with the given [uri] should be included in the
+         * suggestions returned from the provider.
+         */
+        fun shouldIncludeUri(uri: Uri): Boolean = when (this) {
+            is CurrentEngine -> this.resultsUri.sameHostWithoutMobileSubdomainAs(uri)
+            is ExcludeSponsored -> !uri.containsQueryParameters(queryParameter)
+        }
+
+        /**
+         * Returns `true` if the suggestion with the given [url] string should be included in the
+         * suggestions returned from the provider.
+         */
+        fun shouldIncludeUrl(url: String): Boolean = when (this) {
+            is CurrentEngine -> resultsUri.host == url.tryGetHostFromUrl()
+            is ExcludeSponsored -> !url.urlContainsQueryParameters(queryParameter)
+        }
+    }
 
     companion object {
         // Maximum number of suggestions returned.
