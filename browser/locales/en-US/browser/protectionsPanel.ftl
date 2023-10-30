@@ -51,8 +51,10 @@ protections-panel-site-not-working-view =
 ## a tooltip explaining why these items were not blocked in the page.
 
 protections-panel-not-blocking-why-label = Why?
-protections-panel-not-blocking-why-etp-on-tooltip = Blocking these could break elements of some websites. Without trackers, some buttons, forms, and login fields might not work.
-protections-panel-not-blocking-why-etp-off-tooltip = All trackers on this site have been loaded because protections are turned off.
+protections-panel-not-blocking-why-etp-on-tooltip-label =
+  .label = Blocking these could break elements of some websites. Without trackers, some buttons, forms, and login fields might not work.
+protections-panel-not-blocking-why-etp-off-tooltip-label =
+  .label = All trackers on this site have been loaded because protections are turned off.
 
 ##
 
@@ -142,5 +144,7 @@ protections-panel-cookie-banner-blocker-view-turn-on-for-site = Turn on Cookie B
 protections-panel-cookie-banner-view-cookie-clear-warning = { -brand-short-name } will clear this site’s cookies and refresh the page. Clearing all cookies may sign you out or empty shopping carts.
 protections-panel-cookie-banner-blocker-view-turn-on-description = Turn on and { -brand-short-name } will try to automatically refuse cookie banners on this site.
 protections-panel-cookie-banner-view-cancel = Cancel
-protections-panel-cookie-banner-view-turn-off = Turn Off
-protections-panel-cookie-banner-view-turn-on = Turn On
+protections-panel-cookie-banner-view-turn-off-label =
+  .label = Turn Off
+protections-panel-cookie-banner-view-turn-on-label =
+  .label = Turn On
