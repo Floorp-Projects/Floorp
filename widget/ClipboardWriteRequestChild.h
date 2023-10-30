@@ -20,7 +20,7 @@ class ClipboardWriteRequestChild : public PClipboardWriteRequestChild,
   NS_DECL_NSIASYNCSETCLIPBOARDDATA
 
   explicit ClipboardWriteRequestChild(
-      nsIAsyncSetClipboardDataCallback* aCallback)
+      nsIAsyncClipboardRequestCallback* aCallback)
       : mCallback(aCallback) {}
 
   ipc::IPCResult Recv__delete__(nsresult aResult);
@@ -32,7 +32,7 @@ class ClipboardWriteRequestChild : public PClipboardWriteRequestChild,
   void MaybeNotifyCallback(nsresult aResult);
 
   bool mIsValid = true;
-  nsCOMPtr<nsIAsyncSetClipboardDataCallback> mCallback;
+  nsCOMPtr<nsIAsyncClipboardRequestCallback> mCallback;
 };
 
 }  // namespace mozilla

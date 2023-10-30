@@ -20,7 +20,7 @@ NS_IMPL_ISUPPORTS(nsBaseClipboard::AsyncSetClipboardData,
 
 nsBaseClipboard::AsyncSetClipboardData::AsyncSetClipboardData(
     int32_t aClipboardType, nsBaseClipboard* aClipboard,
-    nsIAsyncSetClipboardDataCallback* aCallback)
+    nsIAsyncClipboardRequestCallback* aCallback)
     : mClipboardType(aClipboardType),
       mClipboard(aClipboard),
       mCallback(aCallback) {
@@ -81,7 +81,7 @@ void nsBaseClipboard::AsyncSetClipboardData::MaybeNotifyCallback(
   // take a reference to mClipboard.
 
   MOZ_ASSERT(IsValid());
-  if (nsCOMPtr<nsIAsyncSetClipboardDataCallback> callback =
+  if (nsCOMPtr<nsIAsyncClipboardRequestCallback> callback =
           mCallback.forget()) {
     callback->OnComplete(aResult);
   }
@@ -101,7 +101,7 @@ void nsBaseClipboard::RejectPendingAsyncSetDataRequestIfAny(
 }
 
 NS_IMETHODIMP nsBaseClipboard::AsyncSetData(
-    int32_t aWhichClipboard, nsIAsyncSetClipboardDataCallback* aCallback,
+    int32_t aWhichClipboard, nsIAsyncClipboardRequestCallback* aCallback,
     nsIAsyncSetClipboardData** _retval) {
   MOZ_CLIPBOARD_LOG("%s: clipboard=%d", __FUNCTION__, aWhichClipboard);
 

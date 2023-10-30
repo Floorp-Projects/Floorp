@@ -43,7 +43,7 @@ nsClipboardProxy::SetData(nsITransferable* aTransferable,
 }
 
 NS_IMETHODIMP nsClipboardProxy::AsyncSetData(
-    int32_t aWhichClipboard, nsIAsyncSetClipboardDataCallback* aCallback,
+    int32_t aWhichClipboard, nsIAsyncClipboardRequestCallback* aCallback,
     nsIAsyncSetClipboardData** _retval) {
   RefPtr<ClipboardWriteRequestChild> request =
       MakeRefPtr<ClipboardWriteRequestChild>(aCallback);

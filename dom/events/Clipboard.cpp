@@ -582,7 +582,7 @@ static RefPtr<NativeItemPromise> GetClipboardNativeItem(
   return NativeEntryPromise::All(GetCurrentSerialEventTarget(), promises);
 }
 
-class ClipboardWriteCallback final : public nsIAsyncSetClipboardDataCallback {
+class ClipboardWriteCallback final : public nsIAsyncClipboardRequestCallback {
  public:
   // This object will never be held by a cycle-collected object, so it doesn't
   // need to be cycle-collected despite holding alive cycle-collected objects.
@@ -592,7 +592,7 @@ class ClipboardWriteCallback final : public nsIAsyncSetClipboardDataCallback {
                                   ClipboardItem* aClipboardItem)
       : mPromise(aPromise), mClipboardItem(aClipboardItem) {}
 
-  // nsIAsyncSetClipboardDataCallback
+  // nsIAsyncClipboardRequestCallback
   NS_IMETHOD OnComplete(nsresult aResult) override {
     MOZ_ASSERT(mPromise);
 
@@ -625,7 +625,7 @@ class ClipboardWriteCallback final : public nsIAsyncSetClipboardDataCallback {
   RefPtr<ClipboardItem> mClipboardItem;
 };
 
-NS_IMPL_ISUPPORTS(ClipboardWriteCallback, nsIAsyncSetClipboardDataCallback)
+NS_IMPL_ISUPPORTS(ClipboardWriteCallback, nsIAsyncClipboardRequestCallback)
 
 }  // namespace
 

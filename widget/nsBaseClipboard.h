@@ -40,7 +40,7 @@ class nsBaseClipboard : public nsIClipboard {
   NS_IMETHOD SetData(nsITransferable* aTransferable, nsIClipboardOwner* aOwner,
                      int32_t aWhichClipboard) override final;
   NS_IMETHOD AsyncSetData(int32_t aWhichClipboard,
-                          nsIAsyncSetClipboardDataCallback* aCallback,
+                          nsIAsyncClipboardRequestCallback* aCallback,
                           nsIAsyncSetClipboardData** _retval) override final;
   NS_IMETHOD GetData(nsITransferable* aTransferable,
                      int32_t aWhichClipboard) override final;
@@ -91,7 +91,7 @@ class nsBaseClipboard : public nsIClipboard {
     NS_DECL_NSIASYNCSETCLIPBOARDDATA
 
     AsyncSetClipboardData(int32_t aClipboardType, nsBaseClipboard* aClipboard,
-                          nsIAsyncSetClipboardDataCallback* aCallback);
+                          nsIAsyncClipboardRequestCallback* aCallback);
 
    private:
     virtual ~AsyncSetClipboardData() = default;
@@ -110,7 +110,7 @@ class nsBaseClipboard : public nsIClipboard {
     nsBaseClipboard* mClipboard;
     // mCallback will be nullified once the callback is notified to ensure the
     // callback is only notified once.
-    nsCOMPtr<nsIAsyncSetClipboardDataCallback> mCallback;
+    nsCOMPtr<nsIAsyncClipboardRequestCallback> mCallback;
   };
 
   class ClipboardCache final {

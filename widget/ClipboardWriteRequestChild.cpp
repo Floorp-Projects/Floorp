@@ -64,7 +64,7 @@ void ClipboardWriteRequestChild::ActorDestroy(ActorDestroyReason aReason) {
 
 void ClipboardWriteRequestChild::MaybeNotifyCallback(nsresult aResult) {
   mIsValid = false;
-  if (nsCOMPtr<nsIAsyncSetClipboardDataCallback> callback =
+  if (nsCOMPtr<nsIAsyncClipboardRequestCallback> callback =
           mCallback.forget()) {
     callback->OnComplete(aResult);
   }
