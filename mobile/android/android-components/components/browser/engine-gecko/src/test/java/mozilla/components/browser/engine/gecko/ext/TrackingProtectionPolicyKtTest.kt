@@ -40,11 +40,15 @@ class TrackingProtectionPolicyKtTest {
                 cookieBannerHandlingMode = cookieBannerSetting,
                 cookieBannerHandlingModePrivateBrowsing = cookieBannerSettingPrivateBrowsing,
                 cookieBannerHandlingDetectOnlyMode = true,
+                cookieBannerGlobalRulesEnabled = true,
+                cookieBannerGlobalRulesSubFramesEnabled = true,
             )
         assertEquals(0, policyWithSafeBrowsing.safeBrowsingCategories)
         assertEquals(cookieBannerSetting.mode, policyWithSafeBrowsing.cookieBannerMode)
         assertEquals(cookieBannerSettingPrivateBrowsing.mode, policyWithSafeBrowsing.cookieBannerModePrivateBrowsing)
         assertTrue(policyWithSafeBrowsing.cookieBannerDetectOnlyMode)
+        assertTrue(policyWithSafeBrowsing.cookieBannerGlobalRulesEnabled)
+        assertTrue(policyWithSafeBrowsing.cookieBannerGlobalRulesSubFramesEnabled)
     }
 
     @Test

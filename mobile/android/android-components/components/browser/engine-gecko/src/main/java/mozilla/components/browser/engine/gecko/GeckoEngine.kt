@@ -879,6 +879,8 @@ class GeckoEngine(
             this.cookieBannerHandlingMode = it.cookieBannerHandlingMode
             this.cookieBannerHandlingModePrivateBrowsing = it.cookieBannerHandlingModePrivateBrowsing
             this.cookieBannerHandlingDetectOnlyMode = it.cookieBannerHandlingDetectOnlyMode
+            this.cookieBannerHandlingGlobalRules = it.cookieBannerHandlingGlobalRules
+            this.cookieBannerHandlingGlobalRulesSubFrames = it.cookieBannerHandlingGlobalRulesSubFrames
         }
     }
 

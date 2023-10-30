@@ -20,6 +20,8 @@ fun TrackingProtectionPolicy.toContentBlockingSetting(
     cookieBannerHandlingModePrivateBrowsing: EngineSession.CookieBannerHandlingMode =
         EngineSession.CookieBannerHandlingMode.REJECT_ALL,
     cookieBannerHandlingDetectOnlyMode: Boolean = false,
+    cookieBannerGlobalRulesEnabled: Boolean = false,
+    cookieBannerGlobalRulesSubFramesEnabled: Boolean = false,
 ) = ContentBlocking.Settings.Builder().apply {
     enhancedTrackingProtectionLevel(getEtpLevel())
     antiTracking(getAntiTrackingPolicy())
@@ -31,6 +33,8 @@ fun TrackingProtectionPolicy.toContentBlockingSetting(
     cookieBannerHandlingMode(cookieBannerHandlingMode.mode)
     cookieBannerHandlingModePrivateBrowsing(cookieBannerHandlingModePrivateBrowsing.mode)
     cookieBannerHandlingDetectOnlyMode(cookieBannerHandlingDetectOnlyMode)
+    cookieBannerGlobalRulesEnabled(cookieBannerGlobalRulesEnabled)
+    cookieBannerGlobalRulesSubFramesEnabled(cookieBannerGlobalRulesSubFramesEnabled)
 }.build()
 
 /**

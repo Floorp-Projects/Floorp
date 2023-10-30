@@ -110,7 +110,19 @@ object GeckoProvider {
             .crashHandler(CrashHandlerService::class.java)
             .telemetryDelegate(GeckoAdapter())
             .experimentDelegate(NimbusExperimentDelegate())
-            .contentBlocking(policy.toContentBlockingSetting())
+            .contentBlocking(
+                policy.toContentBlockingSetting(
+                    cookieBannerHandlingMode = context.settings().getCookieBannerHandling(),
+                    cookieBannerHandlingModePrivateBrowsing = context.settings()
+                        .getCookieBannerHandlingPrivateMode(),
+                    cookieBannerHandlingDetectOnlyMode =
+                    context.settings().shouldEnableCookieBannerDetectOnly,
+                    cookieBannerGlobalRulesEnabled =
+                    context.settings().shouldEnableCookieBannerGlobalRules,
+                    cookieBannerGlobalRulesSubFramesEnabled =
+                    context.settings().shouldEnableCookieBannerGlobalRulesSubFrame,
+                ),
+            )
             .consoleOutput(context.components.settings.enableGeckoLogs)
             .debugLogging(Config.channel.isDebug || context.components.settings.enableGeckoLogs)
             .aboutConfigEnabled(Config.channel.isBeta || Config.channel.isNightlyOrDebug)
