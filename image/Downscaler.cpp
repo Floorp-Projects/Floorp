@@ -11,7 +11,6 @@
 
 #include "mozilla/gfx/2D.h"
 
-using std::max;
 using std::swap;
 
 namespace mozilla {
