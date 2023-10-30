@@ -64,8 +64,6 @@
     <attr name="homeBackground" format="reference"/>
     <attr name="bottomBarBackground" format="reference"/>
     <attr name="bottomBarBackgroundTop" format="reference"/>
-    <attr name="privateBrowsingButtonBackground" format="reference" />
-    <attr name="privateBrowsingButtonAccent" format="reference" />
     <attr name="fenixLogo" format="reference" />
     <attr name="fenixWordmarkText" format="reference" />
     <attr name="fenixWordmarkLogo" format="reference" />

@@ -129,8 +129,8 @@
         <item name="homeBackground">@color/fx_mobile_layer_color_1</item>
         <item name="bottomBarBackground">@drawable/home_bottom_bar_background</item>
         <item name="bottomBarBackgroundTop">@drawable/home_bottom_bar_background_top</item>
-        <item name="privateBrowsingButtonBackground">@android:color/transparent</item>
-        <item name="privateBrowsingButtonAccent">@color/fx_mobile_text_color_primary</item>
+        <item name="mozac_ic_private_mode_circle_fill_background_color">@android:color/transparent</item>
+        <item name="mozac_ic_private_mode_circle_fill_icon_color">@color/fx_mobile_text_color_primary</item>
 
         <item name="tabCounterTintColor">?attr/textPrimary</item>
     </style>
@@ -320,8 +320,8 @@
         <item name="homeBackground">@drawable/private_home_background_gradient</item>
         <item name="bottomBarBackground">@drawable/private_home_bottom_bar_background_gradient</item>
         <item name="bottomBarBackgroundTop">@drawable/private_home_bottom_bar_background_gradient_top</item>
-        <item name="privateBrowsingButtonBackground">@color/fx_mobile_private_text_color_primary</item>
-        <item name="privateBrowsingButtonAccent">@color/fx_mobile_private_layer_color_1</item>
+        <item name="mozac_ic_private_mode_circle_fill_background_color">@color/photonWhite</item>
+        <item name="mozac_ic_private_mode_circle_fill_icon_color">@color/fx_mobile_private_layer_color_2</item>
 
         <item name="tabCounterTintColor">?attr/textPrimary</item>
     </style>
