@@ -1395,34 +1395,50 @@ nsresult nsHtml5StreamParser::OnStopRequest(
     const mozilla::ReentrantMonitorAutoEnter& aProofOfLock) {
   MOZ_ASSERT_IF(aRequest, mRequest == aRequest);
   if (mOnStopCalled) {
-    return NS_OK;
-  }
-
-  mOnStopCalled = true;
-
-  if (MOZ_UNLIKELY(NS_IsMainThread())) {
-    nsCOMPtr<nsIRunnable> stopper = new nsHtml5RequestStopper(this);
-    if (NS_FAILED(
-            mEventTarget->Dispatch(stopper, nsIThread::DISPATCH_NORMAL))) {
-      NS_WARNING("Dispatching StopRequest event failed.");
+    if (mOnDataFinishedTime) {
+      mOnStopRequestTime = TimeStamp::Now();
+    } else {
+      mOnDataFinishedTime = TimeStamp::Now();
     }
-    return NS_OK;
+  } else {
+    mOnStopCalled = true;
+
+    if (MOZ_UNLIKELY(NS_IsMainThread())) {
+      mOnStopRequestTime = TimeStamp::Now();
+      nsCOMPtr<nsIRunnable> stopper = new nsHtml5RequestStopper(this);
+      if (NS_FAILED(
+              mEventTarget->Dispatch(stopper, nsIThread::DISPATCH_NORMAL))) {
+        NS_WARNING("Dispatching StopRequest event failed.");
+      }
+    } else {
+      mOnDataFinishedTime = TimeStamp::Now();
+
+      if (StaticPrefs::network_send_OnDataFinished_html5parser()) {
+        MOZ_ASSERT(IsParserThread(), "Wrong thread!");
+
+        mozilla::MutexAutoLock autoLock(mTokenizerMutex);
+        DoStopRequest();
+        PostLoadFlusher();
+      } else {
+        // Let the MainThread event handle this, even though it will just
+        // send it back to this thread, so we can accurately judge the impact
+        // of this change.   This should eventually be removed
+      }
+    }
   }
-
-  if (!StaticPrefs::network_send_OnDataFinished_html5parser()) {
-    // Let the MainThread event handle this, even though it will just
-    // send it back to this thread, so we can accurately judge the impact
-    // of this change. This should eventually be removed once the PoC is
-    // complete
-    mOnStopCalled = false;
-    return NS_OK;
+  if (!mOnStopRequestTime.IsNull() && !mOnDataFinishedTime.IsNull()) {
+    TimeDuration delta = (mOnStopRequestTime - mOnDataFinishedTime);
+    if (delta.ToMilliseconds() < 0) {
+      // Because Telemetry can't handle negatives
+      delta = -delta;
+      glean::networking::
+          http_content_html5parser_ondatafinished_to_onstop_delay_negative
+              .AccumulateRawDuration(delta);
+    } else {
+      glean::networking::http_content_html5parser_ondatafinished_to_onstop_delay
+          .AccumulateRawDuration(delta);
+    }
   }
-
-  MOZ_ASSERT(IsParserThread(), "Wrong thread!");
-
-  mozilla::MutexAutoLock autoLock(mTokenizerMutex);
-  DoStopRequest();
-  PostLoadFlusher();
   return NS_OK;
 }
 
