@@ -1252,12 +1252,6 @@ toolbarpaletteitem:not([place="palette"]) > #stop-reload-button {
   animation-duration: 2s;
 }
 
-/* Combined context-menu items */
-#context-navigation > .menuitem-iconic > .menu-iconic-text,
-#context-navigation > .menuitem-iconic > .menu-accel-container {
-  display: none;
-}
-
 .popup-notification-invalid-input {
   box-shadow: 0 0 1.5px 1px red;
 }
