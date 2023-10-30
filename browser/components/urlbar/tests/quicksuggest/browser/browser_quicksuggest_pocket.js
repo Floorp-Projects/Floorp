@@ -4,6 +4,12 @@
 "use strict";
 
 // Browser tests for Pocket suggestions.
+//
+// TODO: Make this work with Rust enabled. Right now, running this test with
+// Rust hits the following error on ingest, which prevents ingest from finishing
+// successfully:
+//
+//  0:03.17 INFO Console message: [JavaScript Error: "1698289045697	urlbar	ERROR	QuickSuggest.SuggestBackendRust :: Ingest error: Error executing SQL: FOREIGN KEY constraint failed" {file: "resource://gre/modules/Log.sys.mjs" line: 722}]
 
 // The expected index of the Pocket suggestion.
 const EXPECTED_RESULT_INDEX = 1;
@@ -24,24 +30,20 @@ const REMOTE_SETTINGS_DATA = [
 ];
 
 add_setup(async function () {
-  // This must be done before enabling the feature (using the `featureGate`
-  // pref) so that the mock remote settings are set up first. Also, don't pass
-  // in the remote settings data yet; see below.
-  await QuickSuggestTestUtils.ensureQuickSuggestInit();
-
   await SpecialPowers.pushPrefEnv({
     set: [
-      ["browser.urlbar.quicksuggest.enabled", true],
-      ["browser.urlbar.suggest.quicksuggest.nonsponsored", true],
-      ["browser.urlbar.pocket.featureGate", true],
       // Disable search suggestions so we don't hit the network.
       ["browser.search.suggest.enabled", false],
     ],
   });
 
-  // Now that the feature is enabled, set the remote settings data to force the
-  // feature to sync so we can be sure syncing is done before starting the test.
-  await QuickSuggestTestUtils.setRemoteSettingsResults(REMOTE_SETTINGS_DATA);
+  await QuickSuggestTestUtils.ensureQuickSuggestInit({
+    remoteSettingsRecords: REMOTE_SETTINGS_DATA,
+    prefs: [
+      ["suggest.quicksuggest.nonsponsored", true],
+      ["pocket.featureGate", true],
+    ],
+  });
 });
 
 add_task(async function basic() {
@@ -236,11 +238,7 @@ add_task(async function resultMenu_notInterested() {
   // Re-enable suggestions and wait until PocketSuggestions syncs them from
   // remote settings again.
   UrlbarPrefs.set("suggest.pocket", true);
-  let feature = QuickSuggest.getFeature("PocketSuggestions");
-  await TestUtils.waitForCondition(async () => {
-    let suggestions = await feature.queryRemoteSettings("pocket suggestion");
-    return !!suggestions.length;
-  }, "Waiting for PocketSuggestions to serve remote settings suggestions");
+  await QuickSuggestTestUtils.forceSync();
 });
 
 // Tests the "Not relevant" result menu dismissal command.

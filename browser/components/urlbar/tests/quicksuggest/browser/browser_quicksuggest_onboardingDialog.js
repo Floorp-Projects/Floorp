@@ -35,6 +35,11 @@ if (AppConstants.platform === "macosx") {
 let gCanTabMoveFocus;
 add_setup(async function () {
   gCanTabMoveFocus = await canTabMoveFocus();
+
+  // Ensure the test remote settings server is set up. This test doesn't trigger
+  // any suggestions but it enables Suggest, which will attempt to sync from
+  // remote settings.
+  await QuickSuggestTestUtils.ensureQuickSuggestInit();
 });
 
 // When the user has already enabled the data-collection pref, the dialog should

@@ -234,9 +234,6 @@ async function doGeneralHistoryTest({ trigger, assert }) {
 
 async function doSuggestTest({ trigger, assert }) {
   const cleanupQuickSuggest = await ensureQuickSuggestInit();
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.bestMatch.enabled", false]],
-  });
 
   await doTest(async browser => {
     await openPopup("nonsponsored");
@@ -246,7 +243,6 @@ async function doSuggestTest({ trigger, assert }) {
     await assert();
   });
 
-  await SpecialPowers.popPrefEnv();
   await cleanupQuickSuggest();
 }
 

@@ -21,15 +21,19 @@ const REMOTE_SETTINGS_RESULT = {
   keywords: ["nonsponsored"],
   advertiser: "Wikipedia",
   iab_category: "5 - Education",
+  icon: "1234",
 };
 
 const suggestion_type = "nonsponsored";
 const index = 1;
 const position = index + 1;
 
+// Trying to avoid timeouts in TV mode.
+requestLongerTimeout(3);
+
 add_setup(async function () {
   await setUpTelemetryTest({
-    remoteSettingsResults: [
+    remoteSettingsRecords: [
       {
         type: "data",
         attachment: [REMOTE_SETTINGS_RESULT],

@@ -26,6 +26,7 @@ const REMOTE_SETTINGS_RESULTS = [
     impression_url: "https://example.com/impression",
     advertiser: "TestAdvertiser",
     iab_category: "22 - Shopping",
+    icon: "1234",
   },
   {
     id: 2,
@@ -36,6 +37,7 @@ const REMOTE_SETTINGS_RESULTS = [
     impression_url: "https://example.com/impression",
     advertiser: "Wikipedia",
     iab_category: "5 - Education",
+    icon: "1234",
   },
 ];
 
@@ -56,7 +58,7 @@ add_setup(async function () {
   Services.telemetry.clearEvents();
 
   await QuickSuggestTestUtils.ensureQuickSuggestInit({
-    remoteSettingsResults: [
+    remoteSettingsRecords: [
       {
         type: "data",
         attachment: REMOTE_SETTINGS_RESULTS,
