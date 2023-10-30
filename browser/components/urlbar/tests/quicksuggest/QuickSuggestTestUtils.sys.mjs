@@ -328,10 +328,15 @@ export class MockRustSuggest {
 
   #makeSuggestion(provider, suggestion, query) {
     switch (provider) {
-      case lazy.SuggestionProvider.AMP:
+      case lazy.SuggestionProvider.AMP: {
+        let templateProps = {
+          url: suggestion.url,
+          click_url: suggestion.click_url,
+        };
+        lazy.QuickSuggest.replaceSuggestionTemplates(templateProps);
         return new lazy.Suggestion.Amp(
           suggestion.title,
-          suggestion.url,
+          templateProps.url, // url
           suggestion.url, // rawUrl
           [], // icon
           query.keyword, // fullKeyword
@@ -339,9 +344,10 @@ export class MockRustSuggest {
           suggestion.advertiser,
           suggestion.iab_category,
           suggestion.impression_url,
-          suggestion.click_url,
+          templateProps.click_url, // clickUrl
           suggestion.click_url // rawClickUrl
         );
+      }
       case lazy.SuggestionProvider.AMO:
         return new lazy.Suggestion.Amo(
           suggestion.title,
