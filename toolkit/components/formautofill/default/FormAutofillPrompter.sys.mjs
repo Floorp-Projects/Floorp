@@ -815,7 +815,7 @@ CONTENT = {
         },
         {
           imgClass: "address-capture-img-email",
-          categories: ["tel", "email"],
+          categories: ["email", "tel"],
         },
       ],
     },
@@ -874,7 +874,7 @@ CONTENT = {
         },
         {
           imgClass: "address-capture-img-email",
-          categories: ["tel", "email"],
+          categories: ["email", "tel"],
         },
       ],
     },
