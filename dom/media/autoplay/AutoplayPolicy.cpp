@@ -155,9 +155,8 @@ static bool IsAudioContextAllowedToPlay(const AudioContext& aContext) {
 }
 
 static bool IsEnableBlockingWebAudioByUserGesturePolicy() {
-  return StaticPrefs::media_autoplay_block_webaudio() &&
-         StaticPrefs::media_autoplay_blocking_policy() ==
-             sPOLICY_STICKY_ACTIVATION;
+  return StaticPrefs::media_autoplay_blocking_policy() ==
+         sPOLICY_STICKY_ACTIVATION;
 }
 
 static bool IsAllowedToPlayByBlockingModel(const HTMLMediaElement& aElement) {

@@ -10,7 +10,6 @@ add_setup(async function setSharedPrefs() {
     set: [
       ["dom.media.autoplay-policy-detection.enabled", true],
       ["media.autoplay.blocking_policy", 0],
-      ["media.autoplay.block-webaudio", true],
     ],
   });
 });

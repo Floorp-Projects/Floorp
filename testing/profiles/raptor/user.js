@@ -45,6 +45,5 @@ user_pref('toolkit.telemetry.initDelay', 99999999);
 user_pref('media.autoplay.default', 5);
 user_pref('media.autoplay.ask-permission', true);
 user_pref('media.autoplay.blocking_policy', 1);
-user_pref('media.autoplay.block-webaudio', true);
 user_pref('media.allowed-to-play.enabled', false);
 user_pref('media.block-autoplay-until-in-foreground', true);

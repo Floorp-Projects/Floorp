@@ -127,7 +127,7 @@ load encrypted-track-without-tenc.mp4 # Bug 1533215
 asserts-if(Android,0-1) load encrypted-track-with-sample-missing-cenc-aux.mp4 # Bug 1533625, bug 1588967
 load 1538727.html
 load empty-samples.webm # Bug 1540580
-test-pref(media.autoplay.block-webaudio,false) load 1545133.html
+test-pref(media.autoplay.default,0) load 1545133.html
 load track-with-zero-dimensions.mp4 # Bug 1542539
 load 1560215.html
 skip-if(Android) load 1547784.html # Skip on Android as clearkey is not supported
