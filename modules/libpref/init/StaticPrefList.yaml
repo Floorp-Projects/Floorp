@@ -12345,7 +12345,7 @@
   mirror: always
 
 # Enable http3 network priority as described in
-# https://httpwg.org/http-extensions/draft-ietf-httpbis-priority.html
+# <https://www.rfc-editor.org/rfc/rfc9218.html>.
 - name: network.http.http3.priority
   type: RelaxedAtomicBool
   value: true
