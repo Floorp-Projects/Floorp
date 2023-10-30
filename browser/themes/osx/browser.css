@@ -10,6 +10,9 @@
 :root {
   appearance: none;
 
+  /* This allows vibrancy to work, see bug 1861669 */
+  background-color: transparent;
+
   --arrowpanel-field-background: light-dark(rgba(249, 249, 250, .3), rgba(12, 12, 13, .3));
 
   --sidebar-border-color: hsla(240, 5%, 5%, .1);
