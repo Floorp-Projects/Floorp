@@ -837,6 +837,10 @@ skip-if = ["os == 'android'"] # bug 1108558, android(bug 1232305)
 skip-if = ["os != 'android'"]
 tags = "hls"
 
+["test_hw_video_decoding.html"]
+skip-if = ["!mda_gpu"]
+scheme = "https"
+
 ["test_imagecapture.html"]
 scheme = "https"
 

@@ -1,0 +1,119 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<title>Test video hardware decoding</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+<script type="application/javascript">
+
+/**
+ * This test is used to check hardware video decoding on different platforms.
+ */
+const PLATFORMS = {
+  // TODO : add Linux and Android, media-gpu doesn't run on them yet
+  WINNT: {
+    process: "GPU",
+    tests: [
+      {
+        file: "gizmo.mp4",
+        decoder: "wmf H264 codec hardware video decoder",
+      },
+      // TODO : enable VP9 for Windows. The current machine on CI doesn't
+      // support VP9 HW. See bug 1861755.
+      // {
+      //   file: "gizmo.webm",
+      //   decoder: "wmf VP9 codec hardware video decoder",
+      // },
+      // TODO : add AV1, see bug 1861501.
+    ],
+  },
+  Darwin: {
+    process: "RDD",
+    tests: [
+      {
+        file: "gizmo.mp4",
+        decoder: "apple hardware VT decoder",
+      },
+      // TODO : enable VP9 for MacOS. The current machine on CI doesn't support
+      // VP9 HW. See bug 1861741.
+      // {
+      //   file: "gizmo.webm",
+      //   decoder: "apple hardware VT decoder",
+      // },
+    ],
+  },
+};
+
+add_task(async function testHardwareVideoDecoding() {
+  const platformName = SpecialPowers.Services.appinfo.OS;
+  const platformTest = PLATFORMS[platformName];
+  for (const test of platformTest.tests) {
+    info(
+      `Testing ${test.file} on ${platformName} : expect ${test.decoder} in ${platformTest.process}`
+    );
+    await createAndPlayVideo(test.file);
+    await assertRunningProcessAndDecoderName({
+      expectedProcess: platformTest.process,
+      expectedDecoder: test.decoder,
+    });
+    await waitVideoPlayToEnd();
+  }
+});
+
+// Following are helper functions
+async function createAndPlayVideo(fileUrl) {
+  const video = document.createElement("video");
+  document.body.appendChild(video);
+  video.src = fileUrl;
+  ok(
+    await video.play().then(
+      () => true,
+      () => false
+    ),
+    "video started playing"
+  );
+  // Waiting for timeupdate to ensure the video decoder has been created
+  // correctly.
+  await new Promise(r => (video.ontimeupdate = r));
+}
+
+async function assertRunningProcessAndDecoderName(
+  { expectedProcess, expectedDecoder } = {}
+) {
+  const video = document.querySelector("video");
+  ok(!video.paused, "checking a playing video that should be hw decoding");
+
+  const debugInfo = await SpecialPowers.wrap(video).mozRequestDebugInfo();
+  const videoDecoderName = debugInfo.decoder.reader.videoDecoderName;
+
+  const isExpectedDecoder =
+    videoDecoderName.indexOf(`${expectedDecoder}`) == 0;
+  ok(
+    isExpectedDecoder,
+    `Playback running by decoder '${videoDecoderName}', expected '${expectedDecoder}'`
+  );
+
+  const isExpectedProcess =
+    videoDecoderName.indexOf(`(${expectedProcess} remote)`) > 0;
+  ok(
+    isExpectedProcess,
+    `Playback running in process '${videoDecoderName}', expected '${expectedProcess}'`
+  );
+}
+
+async function waitVideoPlayToEnd() {
+  const video = document.querySelector("video");
+  if (video.ended) {
+    ok(true, "video reached to end!");
+  } else {
+    await new Promise(r => (video.onended = r));
+  }
+  // Remove current video so that we can check next video later.
+  document.body.removeChild(video);
+}
+
+</script>
+</head>
+<body>
+</body>
+</html>
