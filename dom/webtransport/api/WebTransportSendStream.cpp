@@ -40,7 +40,7 @@ JSObject* WebTransportSendStream::WrapObject(
 /* static */
 already_AddRefed<WebTransportSendStream> WebTransportSendStream::Create(
     WebTransport* aWebTransport, nsIGlobalObject* aGlobal, uint64_t aStreamId,
-    DataPipeSender* aSender, Maybe<int64_t> aSendOrder, ErrorResult& aRv) {
+    DataPipeSender* sender, ErrorResult& aRv) {
   // https://w3c.github.io/webtransport/#webtransportsendstream-create
   AutoJSAPI jsapi;
   if (!jsapi.Init(aGlobal)) {
@@ -50,15 +50,9 @@ already_AddRefed<WebTransportSendStream> WebTransportSendStream::Create(
 
   auto stream = MakeRefPtr<WebTransportSendStream>(aGlobal, aWebTransport);
 
-  nsCOMPtr<nsIAsyncOutputStream> outputStream = aSender;
+  nsCOMPtr<nsIAsyncOutputStream> outputStream = sender;
   auto algorithms = MakeRefPtr<WritableStreamToOutput>(
       stream->GetParentObject(), outputStream);
-
-  stream->mStreamId = aStreamId;
-
-  if (aSendOrder.isSome()) {
-    stream->mSendOrder.SetValue(aSendOrder.value());
-  }
 
   // Steps 2-5
   RefPtr<QueuingStrategySize> writableSizeAlgorithm;
@@ -78,12 +72,6 @@ already_AddRefed<WebTransportSendStream> WebTransportSendStream::Create(
   aWebTransport->mSendStreams.InsertOrUpdate(aStreamId, stream);
   // Step 8: return stream
   return stream.forget();
-}
-
-void WebTransportSendStream::SetSendOrder(Nullable<int64_t> aSendOrder) {
-  mSendOrder = aSendOrder;
-  mTransport->SendSetSendOrder(
-      mStreamId, aSendOrder.IsNull() ? Nothing() : Some(aSendOrder.Value()));
 }
 
 already_AddRefed<Promise> WebTransportSendStream::GetStats() {
