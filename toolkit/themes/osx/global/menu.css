@@ -12,7 +12,7 @@
 .menu-iconic-text,
 .menu-accel,
 .menu-iconic-accel {
-  margin: 0 !important;
+  margin: 0;
 }
 
 .menu-iconic-icon {
@@ -68,7 +68,7 @@ menubar > menu[_moz-menuactive="true"][open="true"] {
 }
 
 .menubar-text {
-  margin: 0 1px !important;
+  margin: 0 1px;
 }
 
 /* menu/menuitems in popups */

@@ -22,13 +22,13 @@ menubar > menu:-moz-window-inactive {
 .menu-iconic-accel,
 .menu-text,
 .menu-iconic-text {
-  margin: 0 !important;
+  margin: 0;
   padding: 1px 0;
 }
 
 .menu-accel,
 .menu-iconic-accel {
-  margin-inline: 0.74em 1.35em !important;
+  margin-inline: 0.74em 1.35em;
 }
 
 .menu-iconic-icon {
@@ -69,7 +69,7 @@ menubar > menu:-moz-lwtheme[_moz-menuactive="true"]:not([disabled="true"]) {
 /* ..... internal content .... */
 
 .menubar-text {
-  margin: 1px 6px 2px !important;
+  margin: 1px 6px 2px;
 }
 
 /* ::::: menu/menuitems in menulist popups ::::: */
@@ -102,7 +102,7 @@ menulist > menupopup > menuitem[_moz-menuactive="true"][disabled="true"] {
 }
 
 menulist > menupopup > :is(menuitem, menucaption):not(.menuitem-iconic) > .menu-iconic-text {
-  margin: 0 !important;
+  margin: 0;
 }
 
 /* ::::: checkbox and radio menuitems ::::: */
