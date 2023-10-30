@@ -463,11 +463,15 @@ menupopup::part(drop-indicator) {
   width: 400px;
 }
 
-#contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"] {
+#contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"]:not([hidden]) {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
   background: radial-gradient(circle farthest-side at top right, var(--short-notification-gradient), var(--short-notification-background));
   width: unset;
   max-width: 700px;
   overflow-wrap: break-word;
+  padding: 4px;
 }
 
 #contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"]:-moz-locale-dir(rtl) {
@@ -488,7 +492,6 @@ menupopup::part(drop-indicator) {
   font-weight: 400;
   margin: unset;
   margin-inline: 12px;
-  transform: translateY(50%);
 }
 
 #contextual-feature-recommendation-notification[data-notification-bucket="CFR_MILESTONE_MESSAGE"] .panel-footer,
