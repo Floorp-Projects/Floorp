@@ -223,7 +223,13 @@ NS_IMETHODIMP WebTransportStreamProxy::GetStreamId(uint64_t* aId) {
   return NS_OK;
 }
 
-NS_IMETHODIMP WebTransportStreamProxy::SetSendOrder(int64_t aSendOrder) {
+NS_IMETHODIMP WebTransportStreamProxy::SetSendOrder(Maybe<int64_t> aSendOrder) {
+  if (!OnSocketThread()) {
+    return gSocketTransportService->Dispatch(NS_NewRunnableFunction(
+        "SetSendOrder", [stream = mWebTransportStream, aSendOrder]() {
+          stream->SetSendOrder(aSendOrder);
+        }));
+  }
   mWebTransportStream->SetSendOrder(aSendOrder);
   return NS_OK;
 }
