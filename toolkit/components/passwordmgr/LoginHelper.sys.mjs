@@ -19,14 +19,14 @@ ChromeUtils.defineESModuleGetters(lazy, {
 });
 
 export class ParentAutocompleteOption {
-  image;
+  icon;
   title;
   subtitle;
   fillMessageName;
   fillMessageData;
 
-  constructor(image, title, subtitle, fillMessageName, fillMessageData) {
-    this.image = image;
+  constructor(icon, title, subtitle, fillMessageName, fillMessageData) {
+    this.icon = icon;
     this.title = title;
     this.subtitle = subtitle;
     this.fillMessageName = fillMessageName;

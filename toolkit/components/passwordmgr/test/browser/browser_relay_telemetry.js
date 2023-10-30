@@ -138,10 +138,11 @@ async function openRelayAC(browser) {
   await openACPopup(popup, browser, "#form-basic-username");
   const popupItem = document
     .querySelector("richlistitem")
-    .getAttribute("ac-value");
+    .getAttribute("ac-label");
+  const popupItemTitle = JSON.parse(popupItem).title;
 
   Assert.ok(
-    gRelayACOptionsTitles.some(title => title.value === popupItem),
+    gRelayACOptionsTitles.some(title => title.value === popupItemTitle),
     "AC Popup has an item Relay option shown in popup"
   );
 
