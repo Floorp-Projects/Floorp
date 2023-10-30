@@ -16,7 +16,7 @@ function isIdentifier(node, id) {
 module.exports = {
   meta: {
     docs: {
-      url: "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/lazy-getter-object-name.html",
+      url: "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/rules/lazy-getter-object-name.html",
     },
     messages: {
       mustUseLazy:

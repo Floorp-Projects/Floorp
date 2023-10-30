@@ -39,7 +39,7 @@ function fixT(context, node, argument, fixer) {
 module.exports = {
   meta: {
     docs: {
-      url: "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/no-throw-cr-literal.html",
+      url: "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/rules/no-throw-cr-literal.html",
     },
     fixable: "code",
     messages: {

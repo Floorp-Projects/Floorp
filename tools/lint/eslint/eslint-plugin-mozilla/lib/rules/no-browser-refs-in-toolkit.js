@@ -13,7 +13,7 @@
 module.exports = {
   meta: {
     docs: {
-      url: "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/no-browser-refs-in-toolkit.html",
+      url: "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/rules/no-browser-refs-in-toolkit.html",
     },
     messages: {
       noBrowserChrome:

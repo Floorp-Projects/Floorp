@@ -14,7 +14,7 @@ var testTypes = new Set(["browser", "xpcshell"]);
 module.exports = {
   meta: {
     docs: {
-      url: "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/no-arbitrary-setTimeout.html",
+      url: "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/rules/no-arbitrary-setTimeout.html",
     },
     messages: {
       listenForEvents:

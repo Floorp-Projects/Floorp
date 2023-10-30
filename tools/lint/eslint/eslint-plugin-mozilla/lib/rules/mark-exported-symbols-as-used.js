@@ -35,7 +35,7 @@ function isGlobalScope(context) {
 module.exports = {
   meta: {
     docs: {
-      url: "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/mark-exported-symbols-as-used.html",
+      url: "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/rules/mark-exported-symbols-as-used.html",
     },
     messages: {
       useLetForExported:

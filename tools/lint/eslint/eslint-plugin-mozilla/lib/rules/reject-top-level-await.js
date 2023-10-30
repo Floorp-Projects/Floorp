@@ -13,7 +13,7 @@ var helpers = require("../helpers");
 module.exports = {
   meta: {
     docs: {
-      url: "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/reject-top-level-await.html",
+      url: "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/rules/reject-top-level-await.html",
     },
     messages: {
       rejectTopLevelAwait:
