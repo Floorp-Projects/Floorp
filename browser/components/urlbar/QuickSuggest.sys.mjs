@@ -7,6 +7,7 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   BrowserWindowTracker: "resource:///modules/BrowserWindowTracker.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
+  rawSuggestionUrlMatches: "resource://gre/modules/RustSuggest.sys.mjs",
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
   UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
 });
@@ -327,6 +328,11 @@ class _QuickSuggest {
     let resultURL = result.payload.url;
     if (resultURL.length != url.length) {
       return false;
+    }
+
+    if (result.payload.source == "rust") {
+      // The Rust implementation has its own equivalence function.
+      return lazy.rawSuggestionUrlMatches(result.payload.originalUrl, url);
     }
 
     // If the result URL doesn't have a timestamp, then do a straight string
