@@ -13172,45 +13172,43 @@ if (IsCSSPropertyPrefEnabled("layout.css.contain-intrinsic-size.enabled")) {
   };
 }
 
-if (IsCSSPropertyPrefEnabled("layout.css.container-queries.enabled")) {
-  gCSSProperties["container-type"] = {
-    domProp: "containerType",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: ["normal"],
-    other_values: ["inline-size", "size"],
-    invalid_values: [
-      "none style",
-      "none inline-size",
-      "inline-size none",
-      "style none",
-      "style style",
-      "inline-size style inline-size",
-      "inline-size block-size",
-      "block-size",
-      "block-size style",
-      "size inline-size",
-      "size block-size",
-    ],
-  };
-  gCSSProperties["container-name"] = {
-    domProp: "containerName",
-    inherited: false,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: ["none"],
-    other_values: ["foo bar", "foo", "baz bazz", "foo foo"],
-    invalid_values: ["foo unset", "none bar", "foo initial", "initial foo"],
-  };
-  gCSSProperties["container"] = {
-    domProp: "container",
-    inherited: false,
-    type: CSS_TYPE_TRUE_SHORTHAND,
-    subproperties: ["container-type", "container-name"],
-    initial_values: ["none"],
-    other_values: ["foo / size", "foo bar / size", "foo / inline-size", "foo"],
-    invalid_values: ["size / foo", "size / foo bar"],
-  };
-}
+gCSSProperties["container-type"] = {
+  domProp: "containerType",
+  inherited: false,
+  type: CSS_TYPE_LONGHAND,
+  initial_values: ["normal"],
+  other_values: ["inline-size", "size"],
+  invalid_values: [
+    "none style",
+    "none inline-size",
+    "inline-size none",
+    "style none",
+    "style style",
+    "inline-size style inline-size",
+    "inline-size block-size",
+    "block-size",
+    "block-size style",
+    "size inline-size",
+    "size block-size",
+  ],
+};
+gCSSProperties["container-name"] = {
+  domProp: "containerName",
+  inherited: false,
+  type: CSS_TYPE_LONGHAND,
+  initial_values: ["none"],
+  other_values: ["foo bar", "foo", "baz bazz", "foo foo"],
+  invalid_values: ["foo unset", "none bar", "foo initial", "initial foo"],
+};
+gCSSProperties["container"] = {
+  domProp: "container",
+  inherited: false,
+  type: CSS_TYPE_TRUE_SHORTHAND,
+  subproperties: ["container-type", "container-name"],
+  initial_values: ["none"],
+  other_values: ["foo / size", "foo bar / size", "foo / inline-size", "foo"],
+  invalid_values: ["size / foo", "size / foo bar"],
+};
 
 if (false) {
   // TODO These properties are chrome-only, and are not exposed via CSSOM.

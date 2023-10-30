@@ -38,8 +38,6 @@ const NEW_RULE = `
 waitForExplicitFinish();
 
 add_task(async function () {
-  await pushPref("layout.css.container-queries.enabled", true);
-
   const { ui } = await openStyleEditorForURL(TESTCASE_URI);
 
   is(ui.editors.length, 4, "correct number of editors");
