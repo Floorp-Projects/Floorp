@@ -4756,11 +4756,7 @@ static bool EmitElse(FunctionCompiler& f) {
   }
 
   Control& control = f.iter().controlItem();
-  if (!f.switchToElse(control.block, &control.block)) {
-    return false;
-  }
-
-  return true;
+  return f.switchToElse(control.block, &control.block);
 }
 
 static bool EmitEnd(FunctionCompiler& f) {
@@ -5195,11 +5191,8 @@ static bool EmitReturnCallIndirect(FunctionCompiler& f) {
   }
 
   DefVector results;
-  if (!f.returnCallIndirect(funcTypeIndex, tableIndex, callee, lineOrBytecode,
-                            call, &results)) {
-    return false;
-  }
-  return true;
+  return f.returnCallIndirect(funcTypeIndex, tableIndex, callee, lineOrBytecode,
+                              call, &results);
 }
 #endif
 
