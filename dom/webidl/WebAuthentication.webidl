@@ -80,8 +80,9 @@ partial interface PublicKeyCredential {
 
 [SecureContext]
 partial interface PublicKeyCredential {
-    // isExternalCTAP2SecurityKeySupported is non-standard; see Bug 1526023
-    [NewObject] static Promise<boolean> isExternalCTAP2SecurityKeySupported();
+    // isExternalCTAP2SecurityKeySupported will be removed in Bug 1819713.
+    [NewObject, Deprecated="IsExternalCTAP2SecurityKeySupported"]
+    static Promise<boolean> isExternalCTAP2SecurityKeySupported();
 };
 
 [SecureContext]
