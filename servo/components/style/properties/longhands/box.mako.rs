@@ -506,6 +506,7 @@ ${helpers.predefined_type(
     engines="gecko",
     animation_value_type="none",
     enabled_in="ua",
+    gecko_pref="layout.css.container-queries.enabled",
     spec="https://drafts.csswg.org/css-contain-3/#container-type",
     affects="layout",
 )}
@@ -517,6 +518,7 @@ ${helpers.predefined_type(
     engines="gecko",
     animation_value_type="none",
     enabled_in="ua",
+    gecko_pref="layout.css.container-queries.enabled",
     spec="https://drafts.csswg.org/css-contain-3/#container-name",
     affects="",
 )}
