@@ -4142,7 +4142,6 @@ fn get_pseudo_style(
                             inputs,
                             pseudo,
                             &guards,
-                            Some(styles.primary()),
                             Some(inherited_styles),
                             Some(element),
                         )
@@ -5982,13 +5981,6 @@ pub extern "C" fn Servo_ReparentStyle(
     let pseudo = style_to_reparent.pseudo();
     let element = element.map(GeckoElement);
 
-    let is_pseudo_element = element.is_some() && pseudo.is_some();
-    let originating_element_style = if is_pseudo_element {
-        Some(parent_style)
-    } else {
-        None
-    };
-
     doc_data
         .stylist
         .cascade_style_and_visited(
@@ -5996,7 +5988,6 @@ pub extern "C" fn Servo_ReparentStyle(
             pseudo.as_ref(),
             inputs,
             &StylesheetGuards::same(&guard),
-            originating_element_style,
             Some(parent_style),
             Some(layout_parent_style),
             FirstLineReparenting::Yes { style_to_reparent },
@@ -6109,7 +6100,7 @@ pub extern "C" fn Servo_GetComputedKeyframeValues(
         .map(|x| &**x);
 
     let container_size_query =
-        ContainerSizeQuery::for_element(element, pseudo.as_ref().and(parent_style));
+        ContainerSizeQuery::for_element(element, parent_style, pseudo.is_some());
     let mut conditions = Default::default();
     let mut context = create_context_for_animation(
         &data,
@@ -6233,7 +6224,7 @@ pub extern "C" fn Servo_GetAnimationValues(
         .map(|d| d.styles.primary())
         .map(|x| &**x);
 
-    let container_size_query = ContainerSizeQuery::for_element(element, None);
+    let container_size_query = ContainerSizeQuery::for_element(element, None, /* is_pseudo = */ false);
     let mut conditions = Default::default();
     let mut context = create_context_for_animation(
         &data,
@@ -6279,7 +6270,7 @@ pub extern "C" fn Servo_AnimationValue_Compute(
         .map(|d| d.styles.primary())
         .map(|x| &**x);
 
-    let container_size_query = ContainerSizeQuery::for_element(element, None);
+    let container_size_query = ContainerSizeQuery::for_element(element, None, /* is_pseudo = */ false);
     let mut conditions = Default::default();
     let mut context = create_context_for_animation(
         &data,
