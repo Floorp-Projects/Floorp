@@ -18,6 +18,7 @@ from mozbuild.base import MachCommandConditions as conditions
 from mozbuild.base import MozbuildObject
 from mozfile import which
 from moztest.resolve import TestManifestLoader, TestResolver
+from redo import retriable
 
 REFERER = "https://wiki.developer.mozilla.org/en-US/docs/Mozilla/Test-Info"
 MAX_DAYS = 30
@@ -228,6 +229,19 @@ class TestInfoReport(TestInfo):
         TestInfo.__init__(self, verbose)
         self.threads = []
 
+    @retriable(attempts=3, sleeptime=5, sleepscale=2)
+    def get_url(self, target_url):
+        # if we fail to get valid json (i.e. end point has malformed data), return {}
+        retVal = {}
+        try:
+            r = requests.get(target_url, headers={"User-agent": "mach-test-info/1.0"})
+            r.raise_for_status()
+            retVal = r.json()
+        except json.decoder.JSONDecodeError:
+            self.log_verbose("Error retrieving data from %s" % target_url)
+
+        return retVal
+
     def update_report(self, by_component, result, path_mod):
         def update_item(item, label, value):
             # It is important to include any existing item value in case ActiveData
@@ -367,13 +381,17 @@ class TestInfoReport(TestInfo):
     def get_testinfoall_index_url(self):
         import taskcluster
 
-        queue = taskcluster.Queue()
         index = taskcluster.Index(
             {
                 "rootUrl": "https://firefox-ci-tc.services.mozilla.com",
             }
         )
         route = "gecko.v2.mozilla-central.latest.source.test-info-all"
+        queue = taskcluster.Queue(
+            {
+                "rootUrl": "https://firefox-ci-tc.services.mozilla.com",
+            }
+        )
 
         task_id = index.findTask(route)["taskId"]
         artifacts = queue.listLatestArtifacts(task_id)["artifacts"]
@@ -388,54 +406,41 @@ class TestInfoReport(TestInfo):
     def get_runcounts(self, days=MAX_DAYS):
         testrundata = {}
         # get historical data from test-info job artifact; if missing get fresh
-        try:
-            url = self.get_testinfoall_index_url()
-            print("INFO: requesting runcounts url: %s" % url)
-            r = requests.get(url, headers={"User-agent": "mach-test-info/1.0"})
-            r.raise_for_status()
-            testrundata = r.json()
-        except Exception:
-            pass
+        url = self.get_testinfoall_index_url()
+        print("INFO: requesting runcounts url: %s" % url)
+        testrundata = self.get_url(url)
 
         # fill in any holes we have
         endday = datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(
             days=1
         )
         startday = endday - datetime.timedelta(days=days)
+        urls_to_fetch = []
+        # build list of dates with missing data
         while startday < endday:
             nextday = startday + datetime.timedelta(days=1)
-            retries = 2
-            done = False
             if (
                 str(nextday) not in testrundata.keys()
                 or testrundata[str(nextday)] == {}
             ):
-                while not done:
-                    url = "https://treeherder.mozilla.org/api/groupsummary/"
-                    url += "?startdate=%s&enddate=%s" % (
-                        startday.date(),
-                        nextday.date(),
-                    )
-                    try:
-                        print("INFO: requesting groupsummary url: %s" % url)
-                        r = requests.get(
-                            url, headers={"User-agent": "mach-test-info/1.0"}
-                        )
-                        done = True
-                    except requests.exceptions.HTTPError:
-                        retries -= 1
-                        if retries <= 0:
-                            r.raise_for_status()
-                    try:
-                        testrundata[str(nextday.date())] = r.json()
-                    except json.decoder.JSONDecodeError:
-                        print(
-                            "Warning unable to retrieve (from treeherder's groupsummary api) testrun data for date: %s, skipping for now"
-                            % nextday.date()
-                        )
-                        testrundata[str(nextday.date())] = {}
-                        continue
+                url = "https://treeherder.mozilla.org/api/groupsummary/"
+                url += "?startdate=%s&enddate=%s" % (
+                    startday.date(),
+                    nextday.date(),
+                )
+                urls_to_fetch.append([str(nextday.date()), url])
+                testrundata[str(nextday.date())] = {}
+
             startday = nextday
+
+        # limit missing data collection to 5 most recent days days to reduce overall runtime
+        for date, url in urls_to_fetch[-5:]:
+            try:
+                testrundata[date] = self.get_url(url)
+            except requests.exceptions.HTTPError:
+                # We want to see other errors, but can accept HTTPError failures
+                print(f"Unable to retrieve results for url: {url}")
+                pass
 
         return testrundata
 
@@ -484,8 +489,7 @@ class TestInfoReport(TestInfo):
             "https://treeherder.mozilla.org/api/failures/?startday=%s&endday=%s&tree=trunk"
             % (start, end)
         )
-        r = requests.get(url, headers={"User-agent": "mach-test-info/1.0"})
-        if_data = r.json()
+        if_data = self.get_url(url)
         buglist = [x["bug_id"] for x in if_data]
 
         # get bug data for summary, 800 bugs at a time
@@ -503,8 +507,7 @@ class TestInfoReport(TestInfo):
                 ",".join(fields),
                 ",".join(bugs),
             )
-            r = requests.get(url, headers={"User-agent": "mach-test-info/1.0"})
-            data = r.json()
+            data = self.get_url(url)
             if data and "bugs" in data.keys():
                 bug_data.extend(data["bugs"])
 
