@@ -44,19 +44,18 @@ namespace mozilla::dom {
 using namespace streams_abstract;
 
 // https://streams.spec.whatwg.org/#readable-byte-stream-queue-entry
-// Important: These list elements need to be traced by the owning structure.
 struct ReadableByteStreamQueueEntry
     : LinkedListElement<RefPtr<ReadableByteStreamQueueEntry>> {
-  NS_INLINE_DECL_REFCOUNTING(mozilla::dom::ReadableByteStreamQueueEntry)
-
-  friend class ReadableByteStreamController::cycleCollection;
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(
+      ReadableByteStreamQueueEntry)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(
+      ReadableByteStreamQueueEntry)
 
   ReadableByteStreamQueueEntry(JS::Handle<JSObject*> aBuffer,
                                size_t aByteOffset, size_t aByteLength)
-      : LinkedListElement<RefPtr<ReadableByteStreamQueueEntry>>(),
-        mBuffer(aBuffer),
-        mByteOffset(aByteOffset),
-        mByteLength(aByteLength) {}
+      : mBuffer(aBuffer), mByteOffset(aByteOffset), mByteLength(aByteLength) {
+    mozilla::HoldJSObjects(this);
+  }
 
   JSObject* Buffer() const { return mBuffer; }
   void SetBuffer(JS::Handle<JSObject*> aBuffer) { mBuffer = aBuffer; }
@@ -72,9 +71,6 @@ struct ReadableByteStreamQueueEntry
  private:
   // An ArrayBuffer, which will be a transferred version of the one originally
   // supplied by the underlying byte source.
-  //
-  // This is traced by the list owner (see ReadableByteStreamController's
-  // tracing code).
   JS::Heap<JSObject*> mBuffer;
 
   // A nonnegative integer number giving the byte offset derived from the view
@@ -85,13 +81,16 @@ struct ReadableByteStreamQueueEntry
   // originally supplied by the underlying byte source
   size_t mByteLength = 0;
 
-  ~ReadableByteStreamQueueEntry() = default;
+  ~ReadableByteStreamQueueEntry() { mozilla::DropJSObjects(this); }
 };
 
-// Important: These list elments need to be traced by the owning structure.
+NS_IMPL_CYCLE_COLLECTION_WITH_JS_MEMBERS(ReadableByteStreamQueueEntry, (),
+                                         (mBuffer));
+
 struct PullIntoDescriptor final
     : LinkedListElement<RefPtr<PullIntoDescriptor>> {
-  NS_INLINE_DECL_REFCOUNTING(mozilla::dom::PullIntoDescriptor)
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(PullIntoDescriptor)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(PullIntoDescriptor)
 
   enum Constructor {
     DataView,
@@ -116,21 +115,20 @@ struct PullIntoDescriptor final
     MOZ_CRASH("Unexpected Scalar::Type");
   }
 
-  friend class ReadableByteStreamController::cycleCollection;
-
   PullIntoDescriptor(JS::Handle<JSObject*> aBuffer, uint64_t aBufferByteLength,
                      uint64_t aByteOffset, uint64_t aByteLength,
                      uint64_t aBytesFilled, uint64_t aElementSize,
                      Constructor aViewConstructor, ReaderType aReaderType)
-      : LinkedListElement<RefPtr<PullIntoDescriptor>>(),
-        mBuffer(aBuffer),
+      : mBuffer(aBuffer),
         mBufferByteLength(aBufferByteLength),
         mByteOffset(aByteOffset),
         mByteLength(aByteLength),
         mBytesFilled(aBytesFilled),
         mElementSize(aElementSize),
         mViewConstructor(aViewConstructor),
-        mReaderType(aReaderType) {}
+        mReaderType(aReaderType) {
+    mozilla::HoldJSObjects(this);
+  }
 
   JSObject* Buffer() const { return mBuffer; }
   void SetBuffer(JS::Handle<JSObject*> aBuffer) { mBuffer = aBuffer; }
@@ -167,8 +165,6 @@ struct PullIntoDescriptor final
   void ClearBuffer() { mBuffer = nullptr; }
 
  private:
-  // This is traced by the list owner (see ReadableByteStreamController's
-  // tracing code).
   JS::Heap<JSObject*> mBuffer;
   uint64_t mBufferByteLength = 0;
   uint64_t mByteOffset = 0;
@@ -178,33 +174,26 @@ struct PullIntoDescriptor final
   Constructor mViewConstructor;
   ReaderType mReaderType;
 
-  ~PullIntoDescriptor() = default;
+  ~PullIntoDescriptor() { mozilla::DropJSObjects(this); }
 };
+
+NS_IMPL_CYCLE_COLLECTION_WITH_JS_MEMBERS(PullIntoDescriptor, (), (mBuffer));
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(ReadableByteStreamController)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(ReadableByteStreamController,
                                                 ReadableStreamController)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mByobRequest)
-  tmp->ClearPendingPullIntos();
-  tmp->ClearQueue();
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mByobRequest, mQueue, mPendingPullIntos)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(ReadableByteStreamController,
                                                   ReadableStreamController)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mByobRequest)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mByobRequest, mQueue, mPendingPullIntos)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(ReadableByteStreamController,
                                                ReadableStreamController)
   NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
-  // Trace the associated queue + list
-  for (const auto& queueEntry : tmp->mQueue) {
-    aCallbacks.Trace(&queueEntry->mBuffer, "mQueue.mBuffer", aClosure);
-  }
-  for (const auto& pullInto : tmp->mPendingPullIntos) {
-    aCallbacks.Trace(&pullInto->mBuffer, "mPendingPullIntos.mBuffer", aClosure);
-  }
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_ADDREF_INHERITED(ReadableByteStreamController, ReadableStreamController)
@@ -216,14 +205,11 @@ NS_INTERFACE_MAP_END_INHERITING(ReadableStreamController)
 
 ReadableByteStreamController::ReadableByteStreamController(
     nsIGlobalObject* aGlobal)
-    : ReadableStreamController(aGlobal) {
-  mozilla::HoldJSObjects(this);
-}
+    : ReadableStreamController(aGlobal) {}
 
 ReadableByteStreamController::~ReadableByteStreamController() {
   ClearPendingPullIntos();
   ClearQueue();
-  mozilla::DropJSObjects(this);
 }
 
 void ReadableByteStreamController::ClearQueue() {
