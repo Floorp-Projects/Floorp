@@ -541,7 +541,7 @@ export class AddressEditDoorhanger extends AutofillDoorhanger {
     this.country = record.country || FormAutofill.DEFAULT_REGION;
   }
 
-  // Address edit doorhanger has different layout
+  // Address edit doorhanger changes layout according to the country
   #layout = null;
   get layout() {
     if (this.#layout?.country != this.country) {
@@ -1321,7 +1321,9 @@ export let FormAutofillPrompter = {
         flowId,
         isCapture
       );
-      showConfirmation(browser, confirmationHintId);
+      if (confirmationHintId) {
+        showConfirmation(browser, confirmationHintId);
+      }
       return state;
     });
   },
@@ -1402,6 +1404,7 @@ export let FormAutofillPrompter = {
 
     let recordToSave = newRecord;
     return new Promise(resolve => {
+      let doorhanger;
       const editAddressCb = async event => {
         const { state, editedRecord } = await this._showAddressEditDoorhanger(
           browser,
@@ -1416,13 +1419,14 @@ export let FormAutofillPrompter = {
           recordToSave = editedRecord;
           chromeWin.PopupNotifications.remove(this._addrSaveDoorhanger);
           resolve({
-            state: isSave ? "create" : "update",
-            confimationHintId: null,
+            state: doorhanger.ui.footer.mainAction.callbackState,
+            confirmationHintId:
+              doorhanger.ui.footer.mainAction.confirmationHintId,
           });
         }
       };
 
-      const doorhanger = isSave
+      doorhanger = isSave
         ? new AddressSaveDoorhanger(
             browser,
             oldRecord,
@@ -1448,7 +1452,9 @@ export let FormAutofillPrompter = {
         flowId,
         isSave
       );
-      showConfirmation(browser, confirmationHintId);
+      if (confirmationHintId) {
+        showConfirmation(browser, confirmationHintId);
+      }
       return { state, recordToSave };
     });
   },

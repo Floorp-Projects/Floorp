@@ -25,6 +25,8 @@ skip-if = [
 
 ["browser_check_installed.js"]
 
+["browser_confirmation_popup.js"]
+
 ["browser_dropdown_layout.js"]
 
 ["browser_editAddressDialog.js"]

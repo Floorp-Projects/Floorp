@@ -1185,6 +1185,39 @@ function normalizeAddressFields(record) {
   return normalized;
 }
 
+async function verifyConfirmationHint(
+  browser,
+  forceClose,
+  anchorID = "identity-icon"
+) {
+  let hintElem = browser.ownerGlobal.ConfirmationHint._panel;
+  await BrowserTestUtils.waitForPopupEvent(hintElem, "shown");
+  try {
+    Assert.equal(hintElem.state, "open", "hint popup is open");
+    Assert.ok(
+      BrowserTestUtils.is_visible(hintElem.anchorNode),
+      "hint anchorNode is visible"
+    );
+    Assert.equal(
+      hintElem.anchorNode.id,
+      anchorID,
+      "Hint should be anchored on the expected notification icon"
+    );
+    info("verifyConfirmationHint, hint is shown and has its anchorNode");
+    if (forceClose) {
+      await closePopup(hintElem);
+    } else {
+      info("verifyConfirmationHint, assertion ok, wait for poopuphidden");
+      await BrowserTestUtils.waitForPopupEvent(hintElem, "hidden");
+      info("verifyConfirmationHint, hintElem popup is hidden");
+    }
+  } catch (ex) {
+    Assert.ok(false, "Confirmation hint not shown: " + ex.message);
+  } finally {
+    info("verifyConfirmationHint promise finalized");
+  }
+}
+
 add_setup(function () {
   OSKeyStoreTestUtils.setup();
 });
