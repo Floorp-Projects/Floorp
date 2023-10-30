@@ -7235,7 +7235,8 @@ class ImpressionStats_ImpressionStats extends (external_React_default()).PureCom
           type: this.props.flightId ? "spoc" : "organic",
           ...(link.shim ? {
             shim: link.shim
-          } : {})
+          } : {}),
+          recommendation_id: link.recommendation_id
         }))
       }));
       this.impressionCardGuids = cards.map(link => link.id);
@@ -7813,7 +7814,8 @@ class _DSCard extends (external_React_default()).PureComponent {
         source: this.props.type.toUpperCase(),
         action_position: this.props.pos,
         value: {
-          card_type: this.props.flightId ? "spoc" : "organic"
+          card_type: this.props.flightId ? "spoc" : "organic",
+          recommendation_id: this.props.recommendation_id
         }
       }));
       this.props.dispatch(actionCreators.ImpressionStats({
@@ -7827,7 +7829,8 @@ class _DSCard extends (external_React_default()).PureComponent {
           ...(this.props.shim && this.props.shim.click ? {
             shim: this.props.shim.click
           } : {}),
-          type: this.props.flightId ? "spoc" : "organic"
+          type: this.props.flightId ? "spoc" : "organic",
+          recommendation_id: this.props.recommendation_id
         }]
       }));
     }
@@ -7849,7 +7852,8 @@ class _DSCard extends (external_React_default()).PureComponent {
         source: "CARDGRID_HOVER",
         action_position: this.props.pos,
         value: {
-          card_type: this.props.flightId ? "spoc" : "organic"
+          card_type: this.props.flightId ? "spoc" : "organic",
+          recommendation_id: this.props.recommendation_id
         }
       }));
       this.props.dispatch(actionCreators.ImpressionStats({
@@ -7860,7 +7864,8 @@ class _DSCard extends (external_React_default()).PureComponent {
           pos: this.props.pos,
           ...(this.props.shim && this.props.shim.save ? {
             shim: this.props.shim.save
-          } : {})
+          } : {}),
+          recommendation_id: this.props.recommendation_id
         }]
       }));
     }
@@ -8034,7 +8039,8 @@ class _DSCard extends (external_React_default()).PureComponent {
         pos: this.props.pos,
         ...(this.props.shim && this.props.shim.impression ? {
           shim: this.props.shim.impression
-        } : {})
+        } : {}),
+        recommendation_id: this.props.recommendation_id
       }],
       dispatch: this.props.dispatch,
       source: this.props.type
@@ -8704,7 +8710,8 @@ class _CardGrid extends (external_React_default()).PureComponent {
         context_type: rec.context_type,
         bookmarkGuid: rec.bookmarkGuid,
         is_collection: this.props.is_collection,
-        saveToPocketCard: saveToPocketCard
+        saveToPocketCard: saveToPocketCard,
+        recommendation_id: rec.recommendation_id
       }));
     }
 

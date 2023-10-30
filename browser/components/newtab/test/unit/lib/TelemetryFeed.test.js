@@ -2091,8 +2091,13 @@ describe("TelemetryFeed", () => {
       instance.handleDiscoveryStreamImpressionStats("_", {
         source: "foo",
         tiles: [
-          { id: 1, pos: pos1, type: "organic" },
-          { id: 2, pos: pos2, type: "spoc" },
+          {
+            id: 1,
+            pos: pos1,
+            type: "organic",
+            recommendation_id: "decaf-c0ff33",
+          },
+          { id: 2, pos: pos2, type: "spoc", recommendation_id: undefined },
         ],
         window_inner_width: 1000,
         window_inner_height: 900,
@@ -2103,11 +2108,13 @@ describe("TelemetryFeed", () => {
         newtab_visit_id: session_id,
         is_sponsored: false,
         position: pos1,
+        recommendation_id: "decaf-c0ff33",
       });
       assert.deepEqual(Glean.pocket.impression.record.secondCall.args[0], {
         newtab_visit_id: session_id,
         is_sponsored: true,
         position: pos2,
+        recommendation_id: undefined,
       });
     });
   });
@@ -2551,6 +2558,7 @@ describe("TelemetryFeed", () => {
         action_position,
         value: {
           card_type: "organic",
+          recommendation_id: "decaf-c0ff33",
         },
       });
       instance = new TelemetryFeed();
@@ -2565,6 +2573,7 @@ describe("TelemetryFeed", () => {
         newtab_visit_id: session_id,
         is_sponsored: false,
         position: action_position,
+        recommendation_id: "decaf-c0ff33",
       });
     });
     it("instruments a sponsored top stories click", () => {
@@ -2574,6 +2583,7 @@ describe("TelemetryFeed", () => {
         action_position,
         value: {
           card_type: "spoc",
+          recommendation_id: undefined,
         },
       });
       instance = new TelemetryFeed();
@@ -2588,6 +2598,7 @@ describe("TelemetryFeed", () => {
         newtab_visit_id: session_id,
         is_sponsored: true,
         position: action_position,
+        recommendation_id: undefined,
       });
     });
     it("instruments a save of an organic top story", () => {
@@ -2597,6 +2608,7 @@ describe("TelemetryFeed", () => {
         action_position,
         value: {
           card_type: "organic",
+          recommendation_id: "decaf-c0ff33",
         },
       });
       instance = new TelemetryFeed();
@@ -2611,6 +2623,7 @@ describe("TelemetryFeed", () => {
         newtab_visit_id: session_id,
         is_sponsored: false,
         position: action_position,
+        recommendation_id: "decaf-c0ff33",
       });
     });
     it("instruments a save of a sponsored top story", () => {
@@ -2620,6 +2633,7 @@ describe("TelemetryFeed", () => {
         action_position,
         value: {
           card_type: "spoc",
+          recommendation_id: undefined,
         },
       });
       instance = new TelemetryFeed();
@@ -2634,6 +2648,7 @@ describe("TelemetryFeed", () => {
         newtab_visit_id: session_id,
         is_sponsored: true,
         position: action_position,
+        recommendation_id: undefined,
       });
     });
     it("instruments a save of a sponsored top story, without `value`", () => {
@@ -2654,6 +2669,7 @@ describe("TelemetryFeed", () => {
         newtab_visit_id: session_id,
         is_sponsored: false,
         position: action_position,
+        recommendation_id: undefined,
       });
     });
   });
