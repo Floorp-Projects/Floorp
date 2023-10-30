@@ -24,7 +24,19 @@ var prefs = [
 
 var smoothScrollDisabled = [
   ...basePrefs,
+  ["general.smoothScroll", false],
+];
+
+var smoothMsdScrollEnabled = [
+  ...basePrefs,
   ["general.smoothScroll", true],
+  ["general.smoothScroll.msdPhysics.enabled", true],
+];
+
+var smoothScrollEnabled = [
+  ...basePrefs,
+  ["general.smoothScroll", true],
+  ["general.smoothScroll.msdPhysics.enabled", false],
 ];
 
 var subtests = [
@@ -41,6 +53,23 @@ var subtests = [
         "prefs": smoothScrollDisabled},
   {"file": "helper_main_thread_smooth_scroll_scrollend.html",
         "prefs": smoothScrollDisabled},
+  {"file": "helper_keyboard_scrollend.html?direction=up",
+        "prefs": smoothMsdScrollEnabled},
+  {"file": "helper_keyboard_scrollend.html?direction=up",
+        "prefs": smoothScrollEnabled},
+  {"file": "helper_keyboard_scrollend.html?direction=up&flush-before-key",
+        "prefs": smoothScrollEnabled},
+  {"file": "helper_keyboard_scrollend.html?direction=up",
+        "prefs": smoothScrollDisabled},
+  {"file": "helper_keyboard_scrollend.html?direction=up&flush-before-key",
+        "prefs": smoothScrollDisabled},
+  {"file": "helper_keyboard_scrollend.html?direction=down&flush-before-key",
+        "prefs": smoothScrollEnabled},
+  {"file": "helper_keyboard_scrollend.html?direction=down&flush-before-key",
+        "prefs": smoothScrollDisabled},
+  // FIXME(dlrobertson): When bug 1831580 is fixed, add additional tests
+  // for scrollend events following keyboard scrolls that do change the
+  // scroll position without being handled by a APZC on-keyboard scroll.
 ];
 
 if (isApzEnabled()) {
