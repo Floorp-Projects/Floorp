@@ -25,7 +25,6 @@ const TEST_URI = `
 `;
 
 add_task(async function () {
-  await pushPref("layout.css.container-queries.enabled", true);
   await addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   const { inspector } = await openLayoutView();
 

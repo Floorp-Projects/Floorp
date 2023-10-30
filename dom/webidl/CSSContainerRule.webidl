@@ -8,7 +8,7 @@
  */
 
 // https://drafts.csswg.org/css-contain-3/#the-csscontainerrule-interface
-[Exposed=Window, Pref="layout.css.container-queries.enabled"]
+[Exposed=Window]
 interface CSSContainerRule : CSSConditionRule {
   readonly attribute UTF8String containerName;
   readonly attribute UTF8String containerQuery;
