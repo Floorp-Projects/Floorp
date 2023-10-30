@@ -662,7 +662,7 @@ already_AddRefed<Promise> WebTransport::CreateBidirectionalStream(
   // pair
   mChild->SendCreateBidirectionalStream(
       sendOrder,
-      [self = RefPtr{this}, sendOrder, promise](
+      [self = RefPtr{this}, promise](
           BidirectionalStreamResponse&& aPipes) MOZ_CAN_RUN_SCRIPT_BOUNDARY {
         LOG(("CreateBidirectionalStream response"));
         if (BidirectionalStreamResponse::Tnsresult == aPipes.type()) {
@@ -688,7 +688,7 @@ already_AddRefed<Promise> WebTransport::CreateBidirectionalStream(
             WebTransportBidirectionalStream::Create(
                 self, self->mGlobal, id,
                 aPipes.get_BidirectionalStream().inStream(),
-                aPipes.get_BidirectionalStream().outStream(), sendOrder, error);
+                aPipes.get_BidirectionalStream().outStream(), error);
         LOG(("Returning a bidirectionalStream"));
         promise->MaybeResolve(newStream);
       },
@@ -733,8 +733,7 @@ already_AddRefed<Promise> WebTransport::CreateUnidirectionalStream(
   // Ask the parent to create the stream and send us the DataPipeSender
   mChild->SendCreateUnidirectionalStream(
       sendOrder,
-      [self = RefPtr{this}, sendOrder,
-       promise](UnidirectionalStreamResponse&& aResponse)
+      [self = RefPtr{this}, promise](UnidirectionalStreamResponse&& aResponse)
           MOZ_CAN_RUN_SCRIPT_BOUNDARY {
             LOG(("CreateUnidirectionalStream response"));
             if (UnidirectionalStreamResponse::Tnsresult == aResponse.type()) {
@@ -765,8 +764,7 @@ already_AddRefed<Promise> WebTransport::CreateUnidirectionalStream(
             RefPtr<WebTransportSendStream> writableStream =
                 WebTransportSendStream::Create(
                     self, self->mGlobal, id,
-                    aResponse.get_UnidirectionalStream().outStream(), sendOrder,
-                    error);
+                    aResponse.get_UnidirectionalStream().outStream(), error);
             if (!writableStream) {
               promise->MaybeReject(std::move(error));
               return;
@@ -870,11 +868,6 @@ void WebTransport::Cleanup(WebTransportError* aError,
 
   // We no longer block BFCache
   NotifyToWindow(false);
-}
-
-void WebTransport::SendSetSendOrder(uint64_t aStreamId,
-                                    Maybe<int64_t> aSendOrder) {
-  mChild->SendSetSendOrder(aStreamId, aSendOrder);
 }
 
 void WebTransport::NotifyBFCacheOnMainThread(nsPIDOMWindowInner* aInner,

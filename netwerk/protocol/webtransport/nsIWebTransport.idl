@@ -47,7 +47,7 @@ interface nsIWebTransport : nsISupports {
                     in WebTransportSessionEventListener aListener,
                     in const_MaybeClientInfoRef aClientInfo);
 
-  // Asynchronously get stats.
+  // Asynchronously get states.
   void getStats();
 
   // Close the session.
