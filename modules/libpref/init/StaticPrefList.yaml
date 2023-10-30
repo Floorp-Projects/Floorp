@@ -1127,6 +1127,25 @@
 #endif
   mirror: always
 
+# Content analysis by external applications, e.g. data-loss prevention apps
+- name: browser.contentanalysis.enabled
+  type: bool
+  value: false
+  mirror: never
+
+# Is the IPC pipe to the DLP tool specific to the user or to the system?
+- name: browser.contentanalysis.is_per_user
+  type: bool
+  value: true
+  mirror: never
+
+# Path name of pipe used to connect to a configured DLP agent.
+- name: browser.contentanalysis.pipe_path_name
+  type: String
+  value: "path_user"
+  mirror: never
+
+# Content blocking for Enhanced Tracking Protection
 - name: browser.contentblocking.database.enabled
   type: bool
   value: false
