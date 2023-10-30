@@ -454,15 +454,10 @@ export class CreditCard {
   }
 
   static formatMaskedNumber(maskedNumber) {
-    return "*".repeat(4) + maskedNumber.substr(-4);
-  }
-
-  static getMaskedNumber(number) {
-    return "*".repeat(4) + " " + number.substr(-4);
-  }
-
-  static getLongMaskedNumber(number) {
-    return "*".repeat(number.length - 4) + number.substr(-4);
+    return {
+      affix: "****",
+      label: maskedNumber.replace(/^\**/, ""),
+    };
   }
 
   static getCreditCardLogo(network) {
@@ -490,6 +485,14 @@ export class CreditCard {
       default:
         return PATH + "icon-credit-card-generic.svg";
     }
+  }
+
+  static getMaskedNumber(number) {
+    return "*".repeat(4) + " " + number.substr(-4);
+  }
+
+  static getLongMaskedNumber(number) {
+    return "*".repeat(number.length - 4) + number.substr(-4);
   }
 
   /*
