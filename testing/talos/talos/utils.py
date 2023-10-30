@@ -159,7 +159,6 @@ def GenerateBrowserCommandLine(
                 url += "&" + urllib.parse.urlencode(profiling_info)
             else:
                 url += "?" + urllib.parse.urlencode(profiling_info)
-            command_args.extend(url.split(" "))
 
     # if there's a url i.e. startup test / non-manifest test, add it to the cmd line args
     if url is not None:
