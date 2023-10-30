@@ -48,7 +48,7 @@ const callExpressionMultiDefinitions = [
 module.exports = {
   meta: {
     docs: {
-      url: "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/valid-lazy.html",
+      url: "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/rules/valid-lazy.html",
     },
     messages: {
       duplicateSymbol: "Duplicate symbol {{name}} being added to lazy.",

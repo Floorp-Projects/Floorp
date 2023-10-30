@@ -12,7 +12,7 @@
 module.exports = {
   meta: {
     docs: {
-      url: "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/no-useless-removeEventListener.html",
+      url: "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/rules/no-useless-removeEventListener.html",
     },
     messages: {
       useOnce:

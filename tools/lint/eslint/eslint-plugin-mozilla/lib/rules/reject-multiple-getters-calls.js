@@ -23,7 +23,7 @@ function isIdentifier(node, id) {
 module.exports = {
   meta: {
     docs: {
-      url: "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/reject-multiple-getters-calls.html",
+      url: "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/rules/reject-multiple-getters-calls.html",
     },
     messages: {
       rejectMultipleCalls:

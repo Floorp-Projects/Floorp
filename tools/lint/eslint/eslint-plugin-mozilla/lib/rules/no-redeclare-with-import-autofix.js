@@ -114,7 +114,7 @@ function trapReport(context) {
 module.exports = {
   meta: {
     docs: {
-      url: "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/no-redeclare-with-import-autofix.html",
+      url: "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/rules/no-redeclare-with-import-autofix.html",
     },
     messages: {
       ...baseRule.meta.messages,

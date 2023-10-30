@@ -11,7 +11,7 @@
 module.exports = {
   meta: {
     docs: {
-      url: "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/no-compare-against-boolean-literals.html",
+      url: "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/rules/no-compare-against-boolean-literals.html",
     },
     messages: {
       noCompareBoolean:

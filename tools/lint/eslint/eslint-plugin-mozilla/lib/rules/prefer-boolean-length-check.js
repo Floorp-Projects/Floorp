@@ -59,7 +59,7 @@ function funcForBooleanLength(context, node, conditionCheck) {
 module.exports = {
   meta: {
     docs: {
-      url: "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/prefer-boolean-length-check.html",
+      url: "https://firefox-source-docs.mozilla.org/code-quality/lint/linters/eslint-plugin-mozilla/rules/prefer-boolean-length-check.html",
     },
     fixable: "code",
     messages: {
