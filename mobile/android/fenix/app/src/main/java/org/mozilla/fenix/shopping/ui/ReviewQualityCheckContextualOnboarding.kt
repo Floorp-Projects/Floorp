@@ -103,7 +103,7 @@ fun ReviewQualityCheckContextualOnboarding(
 
         LinkText(
             text = stringResource(
-                id = R.string.review_quality_check_contextual_onboarding_caption,
+                id = R.string.review_quality_check_contextual_onboarding_caption_2,
                 stringResource(id = R.string.shopping_product_name),
                 privacyPolicyText,
                 termsOfUseText,

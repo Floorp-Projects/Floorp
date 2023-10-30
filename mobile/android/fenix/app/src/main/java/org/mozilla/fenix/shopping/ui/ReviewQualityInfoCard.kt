@@ -128,7 +128,7 @@ private fun ReviewQualityInfo(
         )
 
         val link = stringResource(
-            id = R.string.review_quality_check_info_learn_more_link,
+            id = R.string.review_quality_check_info_learn_more_link_2,
             stringResource(R.string.shopping_product_name),
         )
         val text = stringResource(R.string.review_quality_check_info_learn_more, link)
