@@ -141,6 +141,7 @@ FOG supports messaging between the following types of child process and the pare
 * gpu children (via `PGPU`)
 * rdd children (via `PRDD`)
 * socket children (via `PSocketProcess`)
+* utility children (via `PUtilityProcess`)
 
 See
 [the process model docs](/dom/ipc/process_model.rst)
