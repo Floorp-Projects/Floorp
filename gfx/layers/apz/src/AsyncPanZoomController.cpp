@@ -2108,6 +2108,13 @@ nsEventStatus AsyncPanZoomController::OnKeyboard(const KeyboardInput& aEvent) {
   // exists
   if (mState != KEYBOARD_SCROLL) {
     CancelAnimation();
+
+    // Keyboard input that does not change the scroll position should not
+    // cause a TransformBegin state change, in order to avoid firing a
+    // scrollend event when no scrolling occurred.
+    if (!CanScroll(ConvertDestinationToDelta(destination))) {
+      return nsEventStatus_eConsumeDoDefault;
+    }
     SetState(KEYBOARD_SCROLL);
 
     nsPoint initialPosition =
@@ -3944,6 +3951,20 @@ void AsyncPanZoomController::HandleSmoothScrollOverscroll(
                         BuildOverscrollHandoffChain(), nullptr);
 }
 
+ParentLayerPoint AsyncPanZoomController::ConvertDestinationToDelta(
+    CSSPoint& aDestination) const {
+  ParentLayerPoint startPoint, endPoint;
+
+  {
+    RecursiveMutexAutoLock lock(mRecursiveMutex);
+
+    startPoint = aDestination * Metrics().GetZoom();
+    endPoint = Metrics().GetVisualScrollOffset() * Metrics().GetZoom();
+  }
+
+  return startPoint - endPoint;
+}
+
 void AsyncPanZoomController::SmoothScrollTo(
     CSSSnapDestination&& aDestination,
     ScrollTriggeredByScript aTriggeredByScript, const ScrollOrigin& aOrigin) {
@@ -3970,6 +3991,13 @@ void AsyncPanZoomController::SmoothScrollTo(
   }
 
   CancelAnimation();
+
+  // If no scroll is required, we should exit early to avoid triggering
+  // a scrollend event when no scrolling occurred.
+  if (ConvertDestinationToDelta(aDestination.mPosition) == ParentLayerPoint()) {
+    return;
+  }
+
   SetState(SMOOTH_SCROLL);
   nsPoint initialPosition =
       CSSPoint::ToAppUnits(Metrics().GetVisualScrollOffset());
@@ -3991,24 +4019,30 @@ void AsyncPanZoomController::SmoothMsdScrollTo(
     animation->SetDestination(aDestination.mPosition,
                               std::move(aDestination.mTargetIds),
                               aTriggeredByScript);
-  } else {
-    CancelAnimation();
-    SetState(SMOOTHMSD_SCROLL);
-    // Convert velocity from ParentLayerPoints/ms to ParentLayerPoints/s.
-    CSSPoint initialVelocity;
-    if (Metrics().GetZoom() != CSSToParentLayerScale(0)) {
-      initialVelocity = ParentLayerPoint(mX.GetVelocity() * 1000.0f,
-                                         mY.GetVelocity() * 1000.0f) /
-                        Metrics().GetZoom();
-    }
-
-    StartAnimation(do_AddRef(new SmoothMsdScrollAnimation(
-        *this, Metrics().GetVisualScrollOffset(), initialVelocity,
-        aDestination.mPosition,
-        StaticPrefs::layout_css_scroll_behavior_spring_constant(),
-        StaticPrefs::layout_css_scroll_behavior_damping_ratio(),
-        std::move(aDestination.mTargetIds), aTriggeredByScript)));
+    return;
   }
+
+  // If no scroll is required, we should exit early to avoid triggering
+  // a scrollend event when no scrolling occurred.
+  if (ConvertDestinationToDelta(aDestination.mPosition) == ParentLayerPoint()) {
+    return;
+  }
+  CancelAnimation();
+  SetState(SMOOTHMSD_SCROLL);
+  // Convert velocity from ParentLayerPoints/ms to ParentLayerPoints/s.
+  CSSPoint initialVelocity;
+  if (Metrics().GetZoom() != CSSToParentLayerScale(0)) {
+    initialVelocity = ParentLayerPoint(mX.GetVelocity() * 1000.0f,
+                                       mY.GetVelocity() * 1000.0f) /
+                      Metrics().GetZoom();
+  }
+
+  StartAnimation(do_AddRef(new SmoothMsdScrollAnimation(
+      *this, Metrics().GetVisualScrollOffset(), initialVelocity,
+      aDestination.mPosition,
+      StaticPrefs::layout_css_scroll_behavior_spring_constant(),
+      StaticPrefs::layout_css_scroll_behavior_damping_ratio(),
+      std::move(aDestination.mTargetIds), aTriggeredByScript)));
 }
 
 void AsyncPanZoomController::StartOverscrollAnimation(
