@@ -31,7 +31,6 @@ xul|richlistitem[originaltype="autofill-insecureWarning"] {
   --warning-background-color: rgba(248, 232, 28, .2);
 
   --default-font-size: 12;
-  --label-affix-font-size: 10;
   --label-font-size: 12;
   --comment-font-size: 10;
   --warning-font-size: 10;
@@ -104,11 +103,6 @@ xul|richlistitem[originaltype="autofill-insecureWarning"] {
 .autofill-item-box > .profile-label-col > .profile-label {
   font-size: calc(var(--label-font-size) / var(--default-font-size) * 1em);
   unicode-bidi: plaintext;
-}
-
-.autofill-item-box > .profile-label-col > .profile-label-affix {
-  font-weight: lighter;
-  font-size: calc(var(--label-affix-font-size) / var(--default-font-size) * 1em);
 }
 
 .autofill-item-box > .profile-comment-col {
