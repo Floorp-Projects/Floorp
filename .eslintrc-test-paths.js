@@ -135,7 +135,6 @@ const extraBrowserTestPaths = [
   "browser/components/sessionstore/test/",
   "browser/components/shell/test/",
   "browser/components/touchbar/tests/",
-  "browser/components/translation/test/",
   "browser/components/uitour/test/",
   "browser/extensions/report-site-issue/test/browser/",
   "browser/tools/mozscreenshots/",

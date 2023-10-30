@@ -6050,12 +6050,6 @@ static const PrefListEntry sDynamicPrefOverrideList[]{
     PREF_LIST_ENTRY("browser.search.region"),
     PREF_LIST_ENTRY(
         "browser.tabs.remote.testOnly.failPBrowserCreation.browsingContext"),
-    PREF_LIST_ENTRY("browser.translation.bing.authURL"),
-    PREF_LIST_ENTRY("browser.translation.bing.clientIdOverride"),
-    PREF_LIST_ENTRY("browser.translation.bing.translateArrayURL"),
-    PREF_LIST_ENTRY("browser.translation.bing.apiKeyOverride"),
-    PREF_LIST_ENTRY("browser.translation.yandex.apiKeyOverride"),
-    PREF_LIST_ENTRY("browser.translation.yandex.translateURLOverride"),
     PREF_LIST_ENTRY("browser.uitour.testingOrigins"),
     PREF_LIST_ENTRY("browser.urlbar.loglevel"),
     PREF_LIST_ENTRY("browser.urlbar.opencompanionsearch.enabled"),
