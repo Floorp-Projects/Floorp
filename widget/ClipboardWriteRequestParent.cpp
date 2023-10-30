@@ -19,7 +19,7 @@ using mozilla::ipc::IPCResult;
 
 namespace mozilla {
 
-NS_IMPL_ISUPPORTS(ClipboardWriteRequestParent, nsIAsyncSetClipboardDataCallback)
+NS_IMPL_ISUPPORTS(ClipboardWriteRequestParent, nsIAsyncClipboardRequestCallback)
 
 ClipboardWriteRequestParent::ClipboardWriteRequestParent(
     ContentParent* aManager)

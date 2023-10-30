@@ -42,11 +42,11 @@ interface nsIAsyncSetClipboardData : nsISupports {
 };
 
 [scriptable, uuid(78f7c18e-c8fa-11ed-afa1-0242ac120002)]
-interface nsIAsyncSetClipboardDataCallback : nsISupports
+interface nsIAsyncClipboardRequestCallback : nsISupports
 {
   /**
-   * Indicates that the clipboard asyncSetData request has either succeeded or
-   * been canceled.
+   * Indicates that the clipboard request has either succeeded, been canceled or
+   * rejected.
    *
    * @param  aResult
    *         The result of the request. NS_OK if successful, or another value
@@ -95,7 +95,7 @@ interface nsIClipboard : nsISupports
      *         data is provided by calling nsIAsyncSetClipboardData::setData().
      */
     nsIAsyncSetClipboardData asyncSetData(in long aWhichClipboard,
-                                          [optional] in nsIAsyncSetClipboardDataCallback aCallback);
+                                          [optional] in nsIAsyncClipboardRequestCallback aCallback);
 
    /**
     * Filters the flavors aTransferable can import (see

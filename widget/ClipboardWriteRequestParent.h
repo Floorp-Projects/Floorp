@@ -17,13 +17,13 @@ class ContentParent;
 
 class ClipboardWriteRequestParent final
     : public PClipboardWriteRequestParent,
-      public nsIAsyncSetClipboardDataCallback {
+      public nsIAsyncClipboardRequestCallback {
   using IPCResult = mozilla::ipc::IPCResult;
   using ContentParent = mozilla::dom::ContentParent;
 
  public:
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIASYNCSETCLIPBOARDDATACALLBACK
+  NS_DECL_NSIASYNCCLIPBOARDREQUESTCALLBACK
 
   explicit ClipboardWriteRequestParent(ContentParent* aManager);
 
