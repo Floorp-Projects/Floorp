@@ -1041,6 +1041,7 @@ CoderResult CodeMetadataTier(Coder<mode>& coder,
   MOZ_TRY(CodePodVector(coder, &item->funcExports));
   MOZ_TRY(CodeStackMaps(coder, &item->stackMaps, codeStart));
   MOZ_TRY(CodePodVector(coder, &item->tryNotes));
+  MOZ_TRY(CodePodVector(coder, &item->codeRangeUnwindInfos));
   return Ok();
 }
 
