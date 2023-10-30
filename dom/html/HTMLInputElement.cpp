@@ -3148,19 +3148,6 @@ void HTMLInputElement::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
 
   if (CheckActivationBehaviorPreconditions(aVisitor)) {
     aVisitor.mWantsActivationBehavior = true;
-
-    if ((mType == FormControlType::InputSubmit ||
-         mType == FormControlType::InputImage) &&
-        mForm) {
-      // Make sure other submit elements don't try to trigger submission.
-      aVisitor.mItemFlags |= NS_IN_SUBMIT_CLICK;
-      aVisitor.mItemData = static_cast<Element*>(mForm);
-      // tell the form that we are about to enter a click handler.
-      // that means that if there are scripted submissions, the
-      // latest one will be deferred until after the exit point of the
-      // handler.
-      mForm->OnSubmitClickBegin(this);
-    }
   }
 
   // We must cache type because mType may change during JS event (bug 2369)
@@ -3282,6 +3269,9 @@ void HTMLInputElement::LegacyPreActivationBehavior(
   // and legacy-canceled-activation behavior in HTML.
   //
 
+  // Assert mType didn't change after GetEventTargetParent
+  MOZ_ASSERT(NS_CONTROL_TYPE(aVisitor.mItemFlags) == uint8_t(mType));
+
   bool originalCheckedValue = false;
   mCheckedIsToggled = false;
 
@@ -3316,6 +3306,19 @@ void HTMLInputElement::LegacyPreActivationBehavior(
 
   if (originalCheckedValue) {
     aVisitor.mItemFlags |= NS_ORIGINAL_CHECKED_VALUE;
+  }
+
+  // out-of-spec legacy pre-activation behavior needed because of bug 1803805
+  if ((mType == FormControlType::InputSubmit ||
+       mType == FormControlType::InputImage) &&
+      mForm) {
+    aVisitor.mItemFlags |= NS_IN_SUBMIT_CLICK;
+    aVisitor.mItemData = static_cast<Element*>(mForm);
+    // tell the form that we are about to enter a click handler.
+    // that means that if there are scripted submissions, the
+    // latest one will be deferred until after the exit point of the
+    // handler.
+    mForm->OnSubmitClickBegin(this);
   }
 }
 
@@ -3650,7 +3653,6 @@ nsresult HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
   }
 
   nsresult rv = NS_OK;
-  bool outerActivateEvent = !!(aVisitor.mItemFlags & NS_OUTER_ACTIVATE_EVENT);
   auto oldType = FormControlType(NS_CONTROL_TYPE(aVisitor.mItemFlags));
 
   // Ideally we would make the default action for click and space just dispatch
@@ -3990,50 +3992,17 @@ nsresult HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
           break;
       }
 
-      // Bug 1459231: should be in ActivationBehavior(). blocked by 1803805
-      if (outerActivateEvent) {
-        switch (mType) {
-          case FormControlType::InputReset:
-          case FormControlType::InputSubmit:
-          case FormControlType::InputImage:
-            if (mForm) {
-              // Hold a strong ref while dispatching
-              RefPtr<HTMLFormElement> form(mForm);
-              if (mType == FormControlType::InputReset) {
-                form->MaybeReset(this);
-              } else {
-                form->MaybeSubmit(this);
-              }
-              aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
-            }
-            break;
-
-          default:
-            break;
-        }  // switch
-        if (IsButtonControl()) {
-          HandlePopoverTargetAction();
-        }
-      }  // click or outer activate event
+      // Bug 1459231: Temporarily needed till links respect activation target
+      // Then also remove NS_OUTER_ACTIVATE_EVENT
+      if ((aVisitor.mItemFlags & NS_OUTER_ACTIVATE_EVENT) &&
+          (mType == FormControlType::InputReset ||
+           mType == FormControlType::InputSubmit ||
+           mType == FormControlType::InputImage) &&
+          mForm) {
+        aVisitor.mEvent->mFlags.mMultipleActionsPrevented = true;
+      }
     }
   }  // if
-  if ((aVisitor.mItemFlags & NS_IN_SUBMIT_CLICK) &&
-      (oldType == FormControlType::InputSubmit ||
-       oldType == FormControlType::InputImage)) {
-    nsCOMPtr<nsIContent> content(do_QueryInterface(aVisitor.mItemData));
-    RefPtr<HTMLFormElement> form = HTMLFormElement::FromNodeOrNull(content);
-    MOZ_ASSERT(form);
-    // Tell the form that we are about to exit a click handler,
-    // so the form knows not to defer subsequent submissions.
-    // The pending ones that were created during the handler
-    // will be flushed or forgotten.
-    form->OnSubmitClickEnd();
-    // tell the form to flush a possible pending submission.
-    // the reason is that the script returned false (the event was
-    // not ignored) so if there is a stored submission, it needs to
-    // be submitted immediately.
-    form->FlushPendingSubmission();
-  }
 
   if (NS_SUCCEEDED(rv) && mType == FormControlType::InputRange) {
     PostHandleEventForRangeThumb(aVisitor);
@@ -4045,6 +4014,26 @@ nsresult HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
   return NS_OK;
 }
 
+void EndSubmitClick(EventChainPostVisitor& aVisitor) {
+  auto oldType = FormControlType(NS_CONTROL_TYPE(aVisitor.mItemFlags));
+  if ((aVisitor.mItemFlags & NS_IN_SUBMIT_CLICK) &&
+      (oldType == FormControlType::InputSubmit ||
+       oldType == FormControlType::InputImage)) {
+    nsCOMPtr<nsIContent> content(do_QueryInterface(aVisitor.mItemData));
+    RefPtr<HTMLFormElement> form = HTMLFormElement::FromNodeOrNull(content);
+    // Tell the form that we are about to exit a click handler,
+    // so the form knows not to defer subsequent submissions.
+    // The pending ones that were created during the handler
+    // will be flushed or forgotten.
+    form->OnSubmitClickEnd();
+    // tell the form to flush a possible pending submission.
+    // the reason is that the script returned false (the event was
+    // not ignored) so if there is a stored submission, it needs to
+    // be submitted immediately.
+    form->FlushPendingSubmission();
+  }
+}
+
 void HTMLInputElement::ActivationBehavior(EventChainPostVisitor& aVisitor) {
   auto oldType = FormControlType(NS_CONTROL_TYPE(aVisitor.mItemFlags));
 
@@ -4054,6 +4043,7 @@ void HTMLInputElement::ActivationBehavior(EventChainPostVisitor& aVisitor) {
     // listeners. Checkboxes and radio buttons should still process clicks for
     // web compat. See:
     // https://html.spec.whatwg.org/multipage/input.html#the-input-element:activation-behaviour
+    EndSubmitClick(aVisitor);
     return;
   }
 
@@ -4083,6 +4073,31 @@ void HTMLInputElement::ActivationBehavior(EventChainPostVisitor& aVisitor) {
     }
 #endif
   }
+
+  switch (mType) {
+    case FormControlType::InputReset:
+    case FormControlType::InputSubmit:
+    case FormControlType::InputImage:
+      if (mForm) {
+        // Hold a strong ref while dispatching
+        RefPtr<HTMLFormElement> form(mForm);
+        if (mType == FormControlType::InputReset) {
+          form->MaybeReset(this);
+        } else {
+          form->MaybeSubmit(this);
+        }
+        aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
+      }
+      break;
+
+    default:
+      break;
+  }  // switch
+  if (IsButtonControl()) {
+    HandlePopoverTargetAction();
+  }
+
+  EndSubmitClick(aVisitor);
 }
 
 void HTMLInputElement::LegacyCanceledActivationBehavior(
@@ -4115,6 +4130,9 @@ void HTMLInputElement::LegacyCanceledActivationBehavior(
       DoSetChecked(originalCheckedValue, true, true);
     }
   }
+
+  // Relevant for bug 242494: submit button with "submit(); return false;"
+  EndSubmitClick(aVisitor);
 }
 
 enum class RadioButtonMove { Back, Forward, None };
