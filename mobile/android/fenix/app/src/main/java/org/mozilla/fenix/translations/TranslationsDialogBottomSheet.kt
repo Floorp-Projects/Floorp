@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.translations
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -14,7 +13,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Divider
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
@@ -41,10 +39,6 @@ import org.mozilla.fenix.theme.FirefoxTheme
 fun TranslationsDialogBottomSheet(onSettingClicked: () -> Unit) {
     Column(
         modifier = Modifier
-            .background(
-                color = FirefoxTheme.colors.layer2,
-                shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp),
-            )
             .padding(16.dp),
     ) {
         TranslationsDialogHeader(onSettingClicked)

@@ -4,8 +4,6 @@
 
 package org.mozilla.fenix.translations
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.defaultMinSize
@@ -15,15 +13,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.rememberNestedScrollInteropConnection
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
@@ -46,60 +41,56 @@ import java.util.Locale
  * @param aboutTranslationClicked Invoked when the user clicks on the "About Translation" button.
  */
 @Composable
-fun TranslationOptionsDialogBottomSheet(
+fun TranslationOptionsDialog(
     translationOptionsList: List<TranslationSwitchItem>,
     onBackClicked: () -> Unit,
     onTranslationSettingsClicked: () -> Unit,
     aboutTranslationClicked: () -> Unit,
 ) {
-    Column(
-        modifier = Modifier
-            .background(
-                color = FirefoxTheme.colors.layer2,
-                shape = RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp),
-            )
-            .nestedScroll(rememberNestedScrollInteropConnection()),
-    ) {
-        TranslationOptionsDialogHeader(onBackClicked)
+    TranslationOptionsDialogHeader(onBackClicked)
 
-        LazyColumn {
-            items(translationOptionsList) { item: TranslationSwitchItem ->
-                SwitchWithLabel(
-                    checked = item.isChecked,
-                    onCheckedChange = item.onStateChange,
-                    label = item.textLabel,
-                    modifier = Modifier
-                        .padding(start = 72.dp, end = 16.dp),
-                )
-
-                if (item.hasDivider) {
-                    Divider(Modifier.padding(top = 4.dp, bottom = 4.dp))
-                }
-            }
-
-            item {
-                TextListItem(
-                    label = stringResource(id = R.string.translation_option_bottom_sheet_translation_settings),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 56.dp),
-                    onClick = { onTranslationSettingsClicked() },
-                )
-            }
-
-            item {
-                TextListItem(
-                    label = stringResource(
-                        id = R.string.translation_option_bottom_sheet_about_translations,
-                        formatArgs = arrayOf(stringResource(R.string.app_name)),
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 56.dp),
-                    onClick = { aboutTranslationClicked() },
-                )
-            }
+    LazyColumn {
+        items(translationOptionsList) { item: TranslationSwitchItem ->
+            TranslationOptions(translationSwitchItem = item)
         }
+
+        item {
+            TextListItem(
+                label = stringResource(id = R.string.translation_option_bottom_sheet_translation_settings),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 56.dp),
+                onClick = { onTranslationSettingsClicked() },
+            )
+        }
+
+        item {
+            TextListItem(
+                label = stringResource(
+                    id = R.string.translation_option_bottom_sheet_about_translations,
+                    formatArgs = arrayOf(stringResource(R.string.app_name)),
+                ),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 56.dp),
+                onClick = { aboutTranslationClicked() },
+            )
+        }
+    }
+}
+
+@Composable
+private fun TranslationOptions(translationSwitchItem: TranslationSwitchItem) {
+    SwitchWithLabel(
+        checked = translationSwitchItem.isChecked,
+        onCheckedChange = translationSwitchItem.onStateChange,
+        label = translationSwitchItem.textLabel,
+        modifier = Modifier
+            .padding(start = 72.dp, end = 16.dp),
+    )
+
+    if (translationSwitchItem.hasDivider) {
+        Divider(Modifier.padding(top = 4.dp, bottom = 4.dp))
     }
 }
 
@@ -189,7 +180,7 @@ fun getTranslationOptionsList(): List<TranslationSwitchItem> {
 @LightDarkPreview
 private fun TranslationSettingsPreview() {
     FirefoxTheme {
-        TranslationOptionsDialogBottomSheet(
+        TranslationOptionsDialog(
             translationOptionsList = getTranslationOptionsList(),
             onBackClicked = {},
             onTranslationSettingsClicked = {},

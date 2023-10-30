@@ -43,9 +43,10 @@ class TranslationSettingsFragment : Fragment(), UserInteractionHandler {
     }
 
     override fun onBackPressed(): Boolean {
-        findNavController().popBackStack()
         findNavController().navigate(
-            TranslationsDialogFragmentDirections.actionGlobalToTranslationOptionsDialogFragment(),
+            TranslationSettingsFragmentDirections.actionTranslationSettingsFragmentToTranslationsDialogFragment(
+                TranslationsDialogAccessPoint.TranslationsOptions,
+            ),
         )
         return true
     }
