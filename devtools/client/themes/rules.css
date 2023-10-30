@@ -11,6 +11,17 @@
   --rule-unused-value-text-color: var(--grey-45);
   --rule-overridden-name-text-color: var(--grey-50);
   --rule-overridden-value-text-color: var(--grey-45);
+  --rule-computed-margin-inline-start: 35px;
+  --rule-enableproperty-size: 12px;
+  --rule-enableproperty-margin-inline-start: 3px;
+  --rule-enableproperty-margin-inline-end: 9px;
+
+  &:is([platform="win"], [platform="linux"]) {
+    --rule-enableproperty-size: 14px;
+    /* it's important to keep the px unit here as this is used in a `calc()` */
+    --rule-enableproperty-margin-inline-start: 0px;
+    --rule-enableproperty-margin-inline-end: 10px;
+  }
 }
 
 :root.theme-dark {
@@ -169,7 +180,12 @@
 
 .ruleview-namecontainer {
   cursor: text;
-  margin-left: -35px;
+}
+
+.ruleview-computed {
+  margin-inline-start: var(--rule-computed-margin-inline-start);
+  /* Add a small indent for wrapping lines */
+  text-indent: 1em hanging;
 }
 
 .ruleview-computed > .ruleview-namecontainer {
@@ -401,35 +417,33 @@
   margin-bottom: 0;
 }
 
-:root[platform="mac"] .ruleview-enableproperty {
-  left: -29px;
+.ruleview-enableproperty {
   box-sizing: border-box;
-  margin-inline-start: 3px;
-  margin-inline-end: 9px;
-  width: 12px;
-  height: 12px;
-}
+  margin-inline-start: var(--rule-enableproperty-margin-inline-start);
+  margin-inline-end: var(--rule-enableproperty-margin-inline-end);
+  width: var(--rule-enableproperty-size);
+  height: var(--rule-enableproperty-size);
 
-/* The SVG checkbox on Windows and Linux */
-:root[platform="win"] .ruleview-enableproperty,
-:root[platform="linux"] .ruleview-enableproperty {
-  appearance: none;
-  float: left;
-  left: -27px;
-  box-sizing: content-box;
-  margin-inline-start: 0;
-  margin-inline-end: 10px;
-  display: inline-block;
-  width: 14px;
-  height: 14px;
-  border: 0;
-  padding: 0;
-  outline: none;
-  background: url("chrome://devtools/skin/images/checkbox.svg") center no-repeat content-box;
-  /* Using fill to paint the border, and stroke for the tick */
-  -moz-context-properties: fill, stroke;
-  fill: rgba(0,0,0,.3);
-  stroke: transparent;
+  /* The SVG checkbox on Windows and Linux */
+  :root:is([platform="win"], [platform="linux"]) & {
+    appearance: none;
+    float: left;
+    box-sizing: content-box;
+    display: inline-block;
+    border: 0;
+    padding: 0;
+    outline: none;
+    background: url("chrome://devtools/skin/images/checkbox.svg") center no-repeat content-box;
+    /* Using fill to paint the border, and stroke for the tick */
+    -moz-context-properties: fill, stroke;
+    fill: rgba(0,0,0,.3);
+    stroke: transparent;
+  }
+
+  :root[platform="mac"] & {
+    appearance: auto;
+    -moz-default-appearance: checkbox;
+  }
 }
 
 :root[platform="win"].theme-dark .ruleview-enableproperty,
@@ -445,11 +459,6 @@
 :root[platform="win"].theme-dark .ruleview-enableproperty:checked,
 :root[platform="linux"].theme-dark .ruleview-enableproperty:checked {
   stroke: rgba(255,255,255,.8);
-}
-
-:root[platform="mac"] .ruleview-enableproperty {
-  appearance: auto;
-  -moz-default-appearance: checkbox;
 }
 
 .ruleview-warning,
@@ -506,7 +515,13 @@
 }
 
 .ruleview-newproperty {
-  margin-inline-start: -10px;
+  /* As we don't have the checkbox displayed before the input, we need to align it
+     with the property name above it. */
+  margin-inline-start: calc(
+    var(--rule-enableproperty-size) +
+    var(--rule-enableproperty-margin-inline-start) +
+    var(--rule-enableproperty-margin-inline-end)
+  );
 }
 
 .ruleview-namecontainer,
@@ -522,7 +537,6 @@
 }
 
 .ruleview-overridden-items {
-  margin-inline-start: -25px;
   margin-block: 0;
   list-style: none;
   line-height: 1.5em;
@@ -706,8 +720,10 @@
 .ruleview-property {
   border-left: 3px solid transparent;
   clear: both;
-  padding-left: 28px;
   overflow-wrap: break-word;
+  /* When the text of the property wraps, we want the wrapping lines to have an indent so
+     they don't go under the checkbox */
+  text-indent: var(--rule-computed-margin-inline-start) hanging;
 }
 
 .ruleview-propertycontainer  > * {
@@ -719,13 +735,18 @@
   border-left-color: var(--theme-highlight-green);
 }
 
-.ruleview-highlight > .ruleview-expander,
-.ruleview-highlight > .ruleview-namecontainer,
-.ruleview-highlight > .ruleview-propertyvaluecontainer,
-.ruleview-highlight > .ruleview-rule-source-label,
-.ruleview-highlight > .ruleview-selector,
-.ruleview-rule-ancestor-data .ruleview-highlight {
+.ruleview-highlight {
+  /*
+   * If we'd rely solely on background color change for highlighted element, we would need
+   * to pick a color that would bring at least 3:1 ratio (see 1.4.11 Non-text Contrast).
+   * As this would be too disturbing for the user, we need to indicate impacted element
+   * with another graphical mean.
+   * So here we'll use a bottom box-shadow (not a border to avoid impacting the layout)
+   * which will match the style we have in Debugger for search results.
+   */
   background-color: var(--rule-highlight-background-color);
+  /* Put the box-shadow inside the element so it's still visible when sibling elements are highlighted  */
+  box-shadow: inset 0px -1px 0px 0px var(--theme-contrast-border);
 }
 
 .ruleview-namecontainer > .ruleview-propertyname,

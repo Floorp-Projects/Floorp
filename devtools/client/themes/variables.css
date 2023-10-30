@@ -236,7 +236,8 @@
   --theme-contrast-background: #fff699; /* = Yellow 50-a40 on white */
   --theme-contrast-background-alpha: rgba(255, 233, 0, 0.4); /* Yellow 50-a40 */
   --theme-contrast-color: black;
-  --theme-contrast-border: var(--yellow-60);
+  /* This is used for search/filter results underline and need to have a 3:1 contrast against the background */
+  --theme-contrast-border: var(--yellow-70);
 }
 
 :root.theme-dark {
