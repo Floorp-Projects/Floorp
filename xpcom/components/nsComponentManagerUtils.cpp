@@ -12,6 +12,10 @@
 #  include "nsCOMPtr.h"
 #endif
 
+#ifdef MOZILLA_INTERNAL_API
+#  include "nsComponentManager.h"
+#endif
+
 #include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"
 
@@ -39,8 +43,6 @@ nsresult CallGetService(const char* aContractID, const nsIID& aIID,
 }
 
 #else
-
-#  include "nsComponentManager.h"
 
 nsresult CallGetService(const nsCID& aCID, const nsIID& aIID, void** aResult) {
   nsComponentManagerImpl* compMgr = nsComponentManagerImpl::gComponentManager;
@@ -105,8 +107,6 @@ nsresult CallGetClassObject(const char* aContractID, const nsIID& aIID,
 }
 
 #else
-
-#  include "nsComponentManager.h"
 
 nsresult CallCreateInstance(const nsCID& aCID, const nsIID& aIID,
                             void** aResult) {
