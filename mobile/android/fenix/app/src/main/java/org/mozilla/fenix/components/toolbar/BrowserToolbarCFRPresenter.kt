@@ -40,7 +40,6 @@ import org.mozilla.fenix.GleanMetrics.Shopping
 import org.mozilla.fenix.GleanMetrics.TrackingProtection
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.components
-import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.settings.SupportUtils.SumoTopic.TOTAL_COOKIE_PROTECTION
 import org.mozilla.fenix.shopping.DefaultShoppingExperienceFeature
@@ -83,9 +82,7 @@ class BrowserToolbarCFRPresenter(
     private val sessionId: String? = null,
     private val onShoppingCfrActionClicked: () -> Unit,
     private val onShoppingCfrDismiss: () -> Unit,
-    private val shoppingExperienceFeature: ShoppingExperienceFeature = DefaultShoppingExperienceFeature(
-        context.settings(),
-    ),
+    private val shoppingExperienceFeature: ShoppingExperienceFeature = DefaultShoppingExperienceFeature(),
 ) {
     @VisibleForTesting
     internal var scope: CoroutineScope? = null

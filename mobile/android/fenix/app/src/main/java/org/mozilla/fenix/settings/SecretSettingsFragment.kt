@@ -60,12 +60,6 @@ class SecretSettingsFragment : PreferenceFragmentCompat() {
             onPreferenceChangeListener = SharedPreferenceUpdater()
         }
 
-        requirePreference<SwitchPreference>(R.string.pref_key_enable_shopping_experience).apply {
-            isVisible = Config.channel.isNightlyOrDebug
-            isChecked = context.settings().enableShoppingExperience
-            onPreferenceChangeListener = SharedPreferenceUpdater()
-        }
-
         requirePreference<SwitchPreference>(R.string.pref_key_enable_translations).apply {
             isVisible = FeatureFlags.translations
             isChecked = context.settings().enableTranslations

@@ -66,8 +66,6 @@
     <string name="preferences_debug_settings_tabs_tray_to_compose" translatable="false">Enable Tabs Tray to Compose rewrite</string>
     <!-- Label for enabling the Compose Top Sites -->
     <string name="preferences_debug_settings_compose_top_sites" translatable="false">Enable Compose Top Sites</string>
-    <!-- Label for enabling the shopping experience -->
-    <string name="preferences_debug_settings_shopping_experience" translatable="false">Enable Shopping Experience</string>
     <!-- Label for enabling translations -->
     <string name="preferences_debug_settings_translations" translatable="false">Enable Firefox Translations</string>
     <!-- Label for enabling Firefox Suggest -->

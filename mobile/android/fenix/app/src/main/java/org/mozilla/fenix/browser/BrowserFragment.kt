@@ -275,9 +275,7 @@ class BrowserFragment : BaseBrowserFragment(), UserInteractionHandler {
             feature = ReviewQualityCheckFeature(
                 appStore = requireComponents.appStore,
                 browserStore = context.components.core.store,
-                shoppingExperienceFeature = DefaultShoppingExperienceFeature(
-                    settings = requireContext().settings(),
-                ),
+                shoppingExperienceFeature = DefaultShoppingExperienceFeature(),
                 onIconVisibilityChange = {
                     if (!reviewQualityCheckAvailable && it) {
                         Shopping.addressBarIconDisplayed.record()
