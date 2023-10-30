@@ -1869,10 +1869,10 @@ function RegisterMessageListenersAndLoadContentScript(aReload) {
 
   ChromeUtils.registerWindowActor("ReftestFission", {
     parent: {
-      moduleURI: "resource://reftest/ReftestFissionParent.jsm",
+      esModuleURI: "resource://reftest/ReftestFissionParent.sys.mjs",
     },
     child: {
-      moduleURI: "resource://reftest/ReftestFissionChild.jsm",
+      esModuleURI: "resource://reftest/ReftestFissionChild.sys.mjs",
       events: {
         MozAfterPaint: {},
       },
