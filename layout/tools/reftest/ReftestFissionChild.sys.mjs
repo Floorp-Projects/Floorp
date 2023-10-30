@@ -1,6 +1,4 @@
-var EXPORTED_SYMBOLS = ["ReftestFissionChild"];
-
-class ReftestFissionChild extends JSWindowActorChild {
+export class ReftestFissionChild extends JSWindowActorChild {
   forwardAfterPaintEventToParent(
     rects,
     originalTargetUri,

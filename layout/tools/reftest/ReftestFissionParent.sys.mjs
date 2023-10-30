@@ -1,6 +1,4 @@
-var EXPORTED_SYMBOLS = ["ReftestFissionParent"];
-
-class ReftestFissionParent extends JSWindowActorParent {
+export class ReftestFissionParent extends JSWindowActorParent {
   tellChildrenToFlushRendering(
     browsingContext,
     ignoreThrottledAnimations,
