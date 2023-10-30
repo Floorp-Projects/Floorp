@@ -8,6 +8,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -62,6 +63,7 @@ private val horizontalArrangementSpacing = 32.dp
 private val contentPadding = 16.dp
 private val imageSize = 24.dp
 private val imageSpacer = 16.dp
+private val textSpacer = 2.dp
 
 /**
  * The [Dp] width of UI elements to deduct from the screen width for a single column.
@@ -231,32 +233,34 @@ private fun RecentlyVisitedHistoryGroup(
 
         Spacer(modifier = Modifier.width(imageSpacer))
 
-        Column(
-            modifier = Modifier.fillMaxSize(),
-        ) {
-            RecentlyVisitedTitle(
-                text = recentVisit.title,
-                modifier = Modifier
-                    .padding(top = 7.dp, bottom = 2.dp)
-                    .weight(1f)
-                    .semantics {
-                        testTagsAsResourceId = true
-                        testTag = "recent.visits.group.title"
-                    },
-            )
+        Box(modifier = Modifier.fillMaxSize()) {
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.Center,
+            ) {
+                RecentlyVisitedTitle(
+                    text = recentVisit.title,
+                    modifier = Modifier
+                        .semantics {
+                            testTagsAsResourceId = true
+                            testTag = "recent.visits.group.title"
+                        },
+                )
 
-            RecentlyVisitedCaption(
-                count = recentVisit.historyMetadata.size,
-                modifier = Modifier
-                    .weight(1f)
-                    .semantics {
-                        testTagsAsResourceId = true
-                        testTag = "recent.visits.group.caption"
-                    },
-            )
+                Spacer(modifier = Modifier.height(textSpacer))
+
+                RecentlyVisitedCaption(
+                    count = recentVisit.historyMetadata.size,
+                    modifier = Modifier
+                        .semantics {
+                            testTagsAsResourceId = true
+                            testTag = "recent.visits.group.caption"
+                        },
+                )
+            }
 
             if (showDividerLine) {
-                Divider()
+                Divider(modifier = Modifier.align(Alignment.BottomCenter))
             }
         }
 
