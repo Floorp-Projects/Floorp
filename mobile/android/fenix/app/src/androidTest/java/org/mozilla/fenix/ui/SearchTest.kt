@@ -21,6 +21,12 @@ import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
+import org.mozilla.fenix.helpers.AppAndSystemHelper.assertNativeAppOpens
+import org.mozilla.fenix.helpers.AppAndSystemHelper.denyPermission
+import org.mozilla.fenix.helpers.AppAndSystemHelper.grantSystemPermission
+import org.mozilla.fenix.helpers.AppAndSystemHelper.runWithCondition
+import org.mozilla.fenix.helpers.AppAndSystemHelper.runWithSystemLocaleChanged
+import org.mozilla.fenix.helpers.AppAndSystemHelper.verifyKeyboardVisibility
 import org.mozilla.fenix.helpers.Constants.PackageName.ANDROID_SETTINGS
 import org.mozilla.fenix.helpers.Constants.searchEngineCodes
 import org.mozilla.fenix.helpers.HomeActivityTestRule
@@ -32,17 +38,11 @@ import org.mozilla.fenix.helpers.MockBrowserDataHelper.createTabItem
 import org.mozilla.fenix.helpers.MockBrowserDataHelper.setCustomSearchEngine
 import org.mozilla.fenix.helpers.SearchDispatcher
 import org.mozilla.fenix.helpers.TestAssetHelper.getGenericAsset
-import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.helpers.TestHelper.appContext
-import org.mozilla.fenix.helpers.TestHelper.assertNativeAppOpens
 import org.mozilla.fenix.helpers.TestHelper.clickSnackbarButton
-import org.mozilla.fenix.helpers.TestHelper.denyPermission
 import org.mozilla.fenix.helpers.TestHelper.exitMenu
-import org.mozilla.fenix.helpers.TestHelper.grantSystemPermission
 import org.mozilla.fenix.helpers.TestHelper.longTapSelectItem
 import org.mozilla.fenix.helpers.TestHelper.mDevice
-import org.mozilla.fenix.helpers.TestHelper.runWithCondition
-import org.mozilla.fenix.helpers.TestHelper.verifyKeyboardVisibility
 import org.mozilla.fenix.ui.robots.clickContextMenuItem
 import org.mozilla.fenix.ui.robots.clickPageObject
 import org.mozilla.fenix.ui.robots.homeScreen
@@ -791,7 +791,7 @@ class SearchTest {
     fun verifySearchEnginesFunctionalityUsingRTLLocaleTest() {
         val arabicLocale = Locale("ar", "AR")
 
-        TestHelper.runWithSystemLocaleChanged(arabicLocale, activityTestRule.activityRule) {
+        runWithSystemLocaleChanged(arabicLocale, activityTestRule.activityRule) {
             homeScreen {
             }.openSearch {
                 verifyTranslatedFocusedNavigationToolbar("ابحث أو أدخِل عنوانا")

@@ -17,6 +17,10 @@ import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
+import org.mozilla.fenix.helpers.AppAndSystemHelper.assertNativeAppOpens
+import org.mozilla.fenix.helpers.AppAndSystemHelper.denyPermission
+import org.mozilla.fenix.helpers.AppAndSystemHelper.grantSystemPermission
+import org.mozilla.fenix.helpers.AppAndSystemHelper.verifyKeyboardVisibility
 import org.mozilla.fenix.helpers.Constants
 import org.mozilla.fenix.helpers.HomeActivityTestRule
 import org.mozilla.fenix.helpers.MatcherHelper
@@ -27,7 +31,6 @@ import org.mozilla.fenix.helpers.SearchDispatcher
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.helpers.TestHelper.exitMenu
-import org.mozilla.fenix.helpers.TestHelper.verifyKeyboardVisibility
 import org.mozilla.fenix.ui.robots.clickContextMenuItem
 import org.mozilla.fenix.ui.robots.clickPageObject
 import org.mozilla.fenix.ui.robots.homeScreen
@@ -85,7 +88,7 @@ class ComposeSearchTest {
             verifyDefaultSearchEngine("Google")
             verifySearchBarPlaceholder("Search or enter address")
         }.clickUrlbar {
-            TestHelper.verifyKeyboardVisibility(isExpectedToBeVisible = true)
+            verifyKeyboardVisibility(isExpectedToBeVisible = true)
             verifyScanButtonVisibility(visible = true)
             verifyVoiceSearchButtonVisibility(enabled = true)
             verifySearchBarPlaceholder("Search or enter address")
@@ -168,7 +171,7 @@ class ComposeSearchTest {
         homeScreen {
         }.openSearch {
             clickScanButton()
-            TestHelper.denyPermission()
+            denyPermission()
             clickScanButton()
             clickDismissPermissionRequiredDialog()
         }
@@ -176,7 +179,7 @@ class ComposeSearchTest {
         }.openSearch {
             clickScanButton()
             clickGoToPermissionsSettings()
-            TestHelper.assertNativeAppOpens(Constants.PackageName.ANDROID_SETTINGS)
+            assertNativeAppOpens(Constants.PackageName.ANDROID_SETTINGS)
         }
     }
 
@@ -190,7 +193,7 @@ class ComposeSearchTest {
         homeScreen {
         }.openSearch {
             clickScanButton()
-            TestHelper.grantSystemPermission()
+            grantSystemPermission()
             verifyScannerOpen()
         }
     }

@@ -4,7 +4,7 @@
 
 package org.mozilla.fenix.helpers
 
-import org.mozilla.fenix.helpers.TestHelper.getSponsoredShortcutTitle
+import org.mozilla.fenix.helpers.DataGenerationHelper.getSponsoredShortcutTitle
 
 object Constants {
 

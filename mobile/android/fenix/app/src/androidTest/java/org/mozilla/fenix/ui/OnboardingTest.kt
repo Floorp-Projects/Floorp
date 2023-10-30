@@ -4,8 +4,8 @@ import androidx.compose.ui.test.junit4.AndroidComposeTestRule
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
+import org.mozilla.fenix.helpers.AppAndSystemHelper.runWithLauncherIntent
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
-import org.mozilla.fenix.helpers.TestHelper.runWithLauncherIntent
 import org.mozilla.fenix.ui.robots.homeScreen
 
 class OnboardingTest {

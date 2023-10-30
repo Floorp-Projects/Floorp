@@ -26,16 +26,16 @@ import org.hamcrest.CoreMatchers
 import org.hamcrest.CoreMatchers.allOf
 import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
+import org.mozilla.fenix.helpers.AppAndSystemHelper.assertExternalAppOpens
+import org.mozilla.fenix.helpers.AppAndSystemHelper.getPermissionAllowID
 import org.mozilla.fenix.helpers.Constants.PackageName.GOOGLE_APPS_PHOTOS
+import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithDescription
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdAndText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdContainingText
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeLong
-import org.mozilla.fenix.helpers.TestHelper
-import org.mozilla.fenix.helpers.TestHelper.assertExternalAppOpens
-import org.mozilla.fenix.helpers.TestHelper.getStringResource
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.click
@@ -203,11 +203,11 @@ class DownloadRobot {
 
         fun clickAllowPermission(interact: DownloadRobot.() -> Unit): Transition {
             mDevice.waitNotNull(
-                Until.findObject(By.res(TestHelper.getPermissionAllowID() + ":id/permission_allow_button")),
+                Until.findObject(By.res(getPermissionAllowID() + ":id/permission_allow_button")),
                 waitingTime,
             )
 
-            val allowPermissionButton = mDevice.findObject(By.res(TestHelper.getPermissionAllowID() + ":id/permission_allow_button"))
+            val allowPermissionButton = mDevice.findObject(By.res(getPermissionAllowID() + ":id/permission_allow_button"))
             allowPermissionButton.click()
 
             DownloadRobot().interact()

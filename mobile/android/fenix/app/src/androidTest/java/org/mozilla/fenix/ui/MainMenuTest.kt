@@ -16,14 +16,15 @@ import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
+import org.mozilla.fenix.helpers.AppAndSystemHelper.assertNativeAppOpens
+import org.mozilla.fenix.helpers.AppAndSystemHelper.assertYoutubeAppOpens
+import org.mozilla.fenix.helpers.AppAndSystemHelper.runWithCondition
 import org.mozilla.fenix.helpers.Constants.PackageName.PRINT_SPOOLER
+import org.mozilla.fenix.helpers.DataGenerationHelper.generateRandomString
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.MatcherHelper
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestHelper
-import org.mozilla.fenix.helpers.TestHelper.assertNativeAppOpens
-import org.mozilla.fenix.helpers.TestHelper.assertYoutubeAppOpens
-import org.mozilla.fenix.helpers.TestHelper.runWithCondition
 import org.mozilla.fenix.ui.robots.browserScreen
 import org.mozilla.fenix.ui.robots.clickContextMenuItem
 import org.mozilla.fenix.ui.robots.clickPageObject
@@ -262,7 +263,7 @@ class MainMenuTest {
     @Test
     fun addPageShortcutToHomeScreenTest() {
         val website = TestAssetHelper.getGenericAsset(mockWebServer, 1)
-        val shortcutTitle = TestHelper.generateRandomString(5)
+        val shortcutTitle = generateRandomString(5)
 
         homeScreen {
         }.openNavigationToolbar {

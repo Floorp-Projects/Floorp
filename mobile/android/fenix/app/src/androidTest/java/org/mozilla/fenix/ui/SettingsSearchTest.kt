@@ -14,6 +14,9 @@ import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
+import org.mozilla.fenix.helpers.AppAndSystemHelper.runWithSystemLocaleChanged
+import org.mozilla.fenix.helpers.AppAndSystemHelper.setSystemLocale
+import org.mozilla.fenix.helpers.DataGenerationHelper.setTextToClipBoard
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.MockBrowserDataHelper.addCustomSearchEngine
 import org.mozilla.fenix.helpers.MockBrowserDataHelper.createBookmarkItem
@@ -23,9 +26,6 @@ import org.mozilla.fenix.helpers.TestAssetHelper.getGenericAsset
 import org.mozilla.fenix.helpers.TestHelper.appContext
 import org.mozilla.fenix.helpers.TestHelper.exitMenu
 import org.mozilla.fenix.helpers.TestHelper.restartApp
-import org.mozilla.fenix.helpers.TestHelper.runWithSystemLocaleChanged
-import org.mozilla.fenix.helpers.TestHelper.setSystemLocale
-import org.mozilla.fenix.helpers.TestHelper.setTextToClipBoard
 import org.mozilla.fenix.helpers.TestHelper.verifySnackBarText
 import org.mozilla.fenix.ui.robots.EngineShortcut
 import org.mozilla.fenix.ui.robots.homeScreen

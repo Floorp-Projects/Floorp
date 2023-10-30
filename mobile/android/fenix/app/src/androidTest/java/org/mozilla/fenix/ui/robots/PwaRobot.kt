@@ -7,7 +7,7 @@ package org.mozilla.fenix.ui.robots
 import androidx.test.uiautomator.UiSelector
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
-import org.mozilla.fenix.helpers.TestHelper.isExternalAppBrowserActivityInCurrentTask
+import org.mozilla.fenix.helpers.AppAndSystemHelper.isExternalAppBrowserActivityInCurrentTask
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
 

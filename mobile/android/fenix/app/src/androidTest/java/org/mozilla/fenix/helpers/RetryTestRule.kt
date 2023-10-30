@@ -13,9 +13,9 @@ import org.junit.rules.TestRule
 import org.junit.runner.Description
 import org.junit.runners.model.Statement
 import org.mozilla.fenix.components.PermissionStorage
+import org.mozilla.fenix.helpers.AppAndSystemHelper.setNetworkEnabled
 import org.mozilla.fenix.helpers.IdlingResourceHelper.unregisterAllIdlingResources
 import org.mozilla.fenix.helpers.TestHelper.appContext
-import org.mozilla.fenix.helpers.TestHelper.setNetworkEnabled
 
 /**
  *  Rule to retry flaky tests for a given number of times, catching some of the more common exceptions.

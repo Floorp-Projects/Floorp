@@ -15,9 +15,9 @@ import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.Constants.defaultTopSitesList
+import org.mozilla.fenix.helpers.DataGenerationHelper.getSponsoredShortcutTitle
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper
-import org.mozilla.fenix.helpers.TestHelper.getSponsoredShortcutTitle
 import org.mozilla.fenix.ui.robots.homeScreen
 
 /**
