@@ -354,8 +354,11 @@ var gDevToolsBrowser = (exports.gDevToolsBrowser = {
     if (gDevToolsBrowser._trackedBrowserWindows.has(win)) {
       return;
     }
+    if (!win.document.getElementById("menuWebDeveloperPopup")) {
+      // Menus etc. set up here are browser specific.
+      return;
+    }
     gDevToolsBrowser._trackedBrowserWindows.add(win);
-
     BrowserMenus.addMenus(win.document);
 
     this.updateCommandAvailability(win);
