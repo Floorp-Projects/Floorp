@@ -1724,6 +1724,15 @@ describe("TelemetryFeed", () => {
         data
       );
     });
+    it("should call .handleAboutSponsoredTopSites on a ABOUT_SPONSORED_TOP_SITES action", () => {
+      const data = { position: 0, advertiser_name: "moo", tile_id: 42 };
+      const action = { type: at.ABOUT_SPONSORED_TOP_SITES, data };
+      sandbox.spy(instance, "handleAboutSponsoredTopSites");
+
+      instance.onAction(ac.AlsoToMain(action));
+
+      assert.calledOnce(instance.handleAboutSponsoredTopSites);
+    });
   });
   it("should call .handleTopSitesOrganicImpressionStats on a TOP_SITES_ORGANIC_IMPRESSION_STATS action", () => {
     const session = {};
@@ -2601,6 +2610,43 @@ describe("TelemetryFeed", () => {
         is_sponsored: false,
         position: action_position,
       });
+    });
+  });
+  describe("#handleAboutSponsoredTopSites", () => {
+    it("should record a Glean topsites.showPrivacyClick event on action", async () => {
+      const data = {
+        position: 42,
+        advertiser_name: "mozilla",
+        tile_id: 4567,
+      };
+      instance = new TelemetryFeed();
+      const session_id = "decafc0ffee";
+      sandbox.stub(instance.sessions, "get").returns({ session_id });
+      sandbox.spy(Glean.topsites.showPrivacyClick, "record");
+
+      await instance.handleAboutSponsoredTopSites({ data });
+
+      assert.calledOnce(Glean.topsites.showPrivacyClick.record);
+      assert.calledWith(Glean.topsites.showPrivacyClick.record, {
+        advertiser_name: data.advertiser_name,
+        tile_id: data.tile_id.toString(),
+        newtab_visit_id: session_id,
+        position: data.position,
+      });
+    });
+    it("should not record a Glean topsites.showPrivacyClick event if there's no session", async () => {
+      const data = {
+        position: 42,
+        advertiser_name: "mozilla",
+        tile_id: 4567,
+      };
+      instance = new TelemetryFeed();
+      sandbox.stub(instance.sessions, "get").returns(null);
+      sandbox.spy(Glean.topsites.showPrivacyClick, "record");
+
+      await instance.handleAboutSponsoredTopSites({ data });
+
+      assert.notCalled(Glean.topsites.showPrivacyClick.record);
     });
   });
 });

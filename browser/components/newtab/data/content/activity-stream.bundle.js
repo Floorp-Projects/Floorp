@@ -6617,7 +6617,12 @@ const LinkMenuOptions = {
     id: "newtab-menu-show-privacy-info",
     icon: "info",
     action: actionCreators.AlsoToMain({
-      type: actionTypes.ABOUT_SPONSORED_TOP_SITES
+      type: actionTypes.ABOUT_SPONSORED_TOP_SITES,
+      data: {
+        advertiser_name: (site.label || site.hostname).toLocaleLowerCase(),
+        position: site.sponsored_position,
+        tile_id: site.sponsored_tile_id
+      }
     }),
     userEvent: "TOPSITE_SPONSOR_INFO"
   }),
