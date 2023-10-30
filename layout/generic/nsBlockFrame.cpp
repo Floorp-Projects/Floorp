@@ -3082,7 +3082,7 @@ void nsBlockFrame::ReflowDirtyLines(BlockReflowState& aState) {
     if (canBreakForPageNames && (!aState.mReflowInput.mFlags.mIsTopOfPage ||
                                  !aState.IsAdjacentWithBStart())) {
       const nsIFrame* const frame = line->mFirstChild;
-      if (!frame->IsPlaceholderFrame()) {
+      if (!frame->IsPlaceholderFrame() && !frame->IsPageBreakFrame()) {
         nextPageName = frame->GetStartPageValue();
         // Walk back to the last frame that isn't a placeholder.
         const nsIFrame* prevFrame = frame->GetPrevSibling();
