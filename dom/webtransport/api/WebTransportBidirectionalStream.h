@@ -35,7 +35,8 @@ class WebTransportBidirectionalStream final : public nsISupports,
   static already_AddRefed<WebTransportBidirectionalStream> Create(
       WebTransport* aWebTransport, nsIGlobalObject* aGlobal, uint64_t aStreamId,
       ::mozilla::ipc::DataPipeReceiver* receiver,
-      ::mozilla::ipc::DataPipeSender* sender, ErrorResult& aRv);
+      ::mozilla::ipc::DataPipeSender* aSender, Maybe<int64_t> aSendOrder,
+      ErrorResult& aRv);
 
   // WebIDL Boilerplate
   nsIGlobalObject* GetParentObject() const;
