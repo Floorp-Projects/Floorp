@@ -181,6 +181,11 @@ void ProcessPendingGetURLAppleEvents() {
   return NO;
 }
 
+// The method that NSApplication calls for using secure state restoration.
+- (BOOL)applicationSupportsSecureRestorableState:(NSApplication*)app {
+  return YES;
+}
+
 // Create the menu that shows up in the Dock.
 - (NSMenu*)applicationDockMenu:(NSApplication*)sender {
   NS_OBJC_BEGIN_TRY_BLOCK_RETURN;
