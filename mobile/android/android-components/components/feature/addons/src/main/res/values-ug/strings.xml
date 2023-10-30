@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://schemas.android.com/apk/res-auto">
     <!-- Description for privacy add-on permission. -->
     <string name="mozac_feature_addons_permissions_privacy_description">شەخسىيەت قۇرۇلمىسىنى ئوقۇش ۋە ئۆزگەرتىش </string>
+    <!-- Description for all_urls add-on permission. -->
+    <string name="mozac_feature_addons_permissions_all_urls_description">ھەممە تور بېكەتلەردىكى سانلىق مەلۇماتلىرىڭىزغا ئېرىشىدۇ</string>
     <!-- Description for tabs add-on permission. -->
     <string name="mozac_feature_addons_permissions_tabs_description">توركۆرگۈ بەتكۈچلىرىنى زىيارەت قىلىش</string>
     <!-- Description for bookmarks permission. -->
@@ -29,7 +31,7 @@
     <!-- The version on of add-on. -->
     <string name="mozac_feature_addons_version">نەشرى</string>
     <!-- The authors of an add-on. -->
-    <string name="mozac_feature_addons_authors">ئاپتورلار</string>
+    <string name="mozac_feature_addons_authors" moz:removedIn="120" tools:ignore="UnusedResources">ئاپتورلار</string>
     <!-- The last date that the add-on was updated. -->
     <string name="mozac_feature_addons_last_updated">ئاخىرقى قېتىم يېڭىلانغان</string>
     <!-- The developer website (Homepage) of the add-on. -->
@@ -130,4 +132,4 @@
     <string name="mozac_feature_addons_installed_dialog_description">تىزىملىكتىن ئېچىش</string>
     <!-- Confirmation button text for the dialog when add-on installation is completed. -->
     <string name="mozac_feature_addons_installed_dialog_okay_button">ماقۇل</string>
-</resources>
+    </resources>

@@ -94,7 +94,7 @@
       </ul>]]></string>
 
     <!-- The document title and heading of the error page shown when a website responds in an unexpected way and the browser cannot continue. -->
-    <string name="mozac_browser_errorpages_unknown_socket_type_title">Mbohovái eha’arõ’ỹva mohendahavusúgui</string>
+    <string name="mozac_browser_errorpages_unknown_socket_type_title">Mbohovái eha’ãrõ’ỹva mohendahavusúgui</string>
 
     <!-- The error message shown when a website responds in an unexpected way and the browser cannot continue. -->
     <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[<p>Pe tenda ombohovái ñanduti mba’ejerure oñeha’ãrõ’ỹre ha pe kundahára ndaikatuvéima oku’ejey.</p>]]></string>
