@@ -8,6 +8,7 @@
 
 #include <utility>
 
+#include "Attr.h"
 #include "jsapi.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/BasePrincipal.h"
@@ -29,9 +30,11 @@
 #include "nsCOMArray.h"
 #include "nsContentList.h"
 #include "nsContentUtils.h"
+#include "nsDOMAttributeMap.h"
 #include "nsDocShell.h"
 #include "nsDocShellLoadState.h"
 #include "nsError.h"
+#include "nsFocusManager.h"
 #include "nsGkAtoms.h"
 #include "nsHTMLDocument.h"
 #include "nsIFormControlFrame.h"
@@ -206,6 +209,41 @@ void HTMLFormElement::GetMethod(nsAString& aValue) {
   GetEnumAttr(nsGkAtoms::method, kFormDefaultMethod->tag, aValue);
 }
 
+void HTMLFormElement::ReportInvalidUnfocusableElements() {
+  RefPtr<nsFocusManager> focusManager = nsFocusManager::GetFocusManager();
+  MOZ_ASSERT(focusManager);
+
+  // This shouldn't be called recursively, so use a rather large value
+  // for the preallocated buffer.
+  AutoTArray<RefPtr<nsGenericHTMLFormElement>, 100> sortedControls;
+  if (NS_FAILED(mControls->GetSortedControls(sortedControls))) {
+    return;
+  }
+
+  for (auto& _e : sortedControls) {
+    // MOZ_CAN_RUN_SCRIPT requires explicit copy, Bug 1620312
+    RefPtr<nsGenericHTMLFormElement> element = _e;
+    bool isFocusable = false;
+    focusManager->ElementIsFocusable(element, 0, &isFocusable);
+    if (!isFocusable) {
+      nsTArray<nsString> params;
+      nsAutoCString messageName("InvalidFormControlUnfocusable");
+
+      if (Attr* nameAttr = element->GetAttributes()->GetNamedItem(u"name"_ns)) {
+        nsAutoString name;
+        nameAttr->GetValue(name);
+        params.AppendElement(name);
+        messageName = "InvalidNamedFormControlUnfocusable";
+      }
+
+      nsContentUtils::ReportToConsole(
+          nsIScriptError::errorFlag, "DOM"_ns, element->GetOwnerDocument(),
+          nsContentUtils::eDOM_PROPERTIES, messageName.get(), params,
+          element->GetBaseURI());
+    }
+  }
+}
+
 // https://html.spec.whatwg.org/multipage/forms.html#concept-form-submit
 void HTMLFormElement::MaybeSubmit(Element* aSubmitter) {
 #ifdef DEBUG
@@ -241,6 +279,7 @@ void HTMLFormElement::MaybeSubmit(Element* aSubmitter) {
       HasAttr(nsGkAtoms::novalidate) ||
       (aSubmitter && aSubmitter->HasAttr(nsGkAtoms::formnovalidate));
   if (!noValidateState && !CheckValidFormSubmission()) {
+    ReportInvalidUnfocusableElements();
     return;
   }
 
