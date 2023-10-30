@@ -140,7 +140,7 @@ class AMOAddonsProviderTest {
 
         // Ratings
         assertEquals(4.7003F, addon.rating!!.average, 0.7003F)
-        assertEquals(13324, addon.rating!!.reviews)
+        assertEquals(4433, addon.rating!!.reviews)
 
         verify(client).fetch(
             Request(
@@ -645,7 +645,7 @@ class AMOAddonsProviderTest {
         )
         // Ratings
         assertEquals(4.7825F, addon.rating!!.average, 0.7825F)
-        assertEquals(15799, addon.rating!!.reviews)
+        assertEquals(4101, addon.rating!!.reviews)
         assertEquals(
             "https://addons.mozilla.org/en-US/firefox/addon/ublock-origin/reviews/",
             addon.ratingUrl,

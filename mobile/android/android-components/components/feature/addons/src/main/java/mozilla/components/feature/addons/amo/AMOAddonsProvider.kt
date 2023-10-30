@@ -395,7 +395,7 @@ internal fun JSONObject.getRating(): Addon.Rating? {
     val jsonRating = optJSONObject("ratings")
     return if (jsonRating != null) {
         Addon.Rating(
-            reviews = jsonRating.optInt("count"),
+            reviews = jsonRating.optInt("text_count"),
             average = jsonRating.optDouble("average").toFloat(),
         )
     } else {
