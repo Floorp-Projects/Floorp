@@ -122,20 +122,15 @@ add_task(function isValidNumber() {
 });
 
 add_task(function test_formatMaskedNumber() {
-  function testFormat(number) {
-    let format = CreditCard.formatMaskedNumber(number);
-    Assert.equal(format.affix, "****", "Affix should always be four asterisks");
-    Assert.equal(
-      format.label,
-      number.substr(-4),
-      "The label should always be the last four digits of the card number"
-    );
+  function assertMaskedNumber(input, expected) {
+    const actual = CreditCard.formatMaskedNumber(input);
+    Assert.equal(actual, expected);
   }
-  testFormat("************0000");
-  testFormat("************1045");
-  testFormat("***********6806");
-  testFormat("**********0495");
-  testFormat("**********8250");
+  assertMaskedNumber("************0000", "****0000");
+  assertMaskedNumber("************1045", "****1045");
+  assertMaskedNumber("***********6806", "****6806");
+  assertMaskedNumber("**********0495", "****0495");
+  assertMaskedNumber("**********8250", "****8250");
 });
 
 add_task(function test_maskNumber() {
