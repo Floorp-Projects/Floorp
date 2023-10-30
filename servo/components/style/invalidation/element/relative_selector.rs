@@ -270,11 +270,9 @@ struct RelativeSelectorInvalidation<'a> {
     dependency: &'a Dependency,
 }
 
-#[derive(Clone, Copy, Hash, Eq, PartialEq)]
-struct InvalidationKey(SelectorKey, DependencyInvalidationKind);
-
 type ElementDependencies<'a> = SmallVec<[(Option<OpaqueElement>, &'a Dependency); 1]>;
 type Dependencies<'a, E> = SmallVec<[(E, ElementDependencies<'a>); 1]>;
+type AlreadyInvalidated<'a, E> = SmallVec<[(E, Option<OpaqueElement>, &'a Dependency); 2]>;
 
 /// Interface for collecting relative selector dependencies.
 pub struct RelativeSelectorDependencyCollector<'a, E>
@@ -285,8 +283,7 @@ where
     /// a relative selector invalidation.
     dependencies: FxHashMap<E, ElementDependencies<'a>>,
     /// Dependencies that created an invalidation right away.
-    /// Maps an invalidation into the affected element, and its scope & dependency.
-    invalidations: FxHashMap<InvalidationKey, (E, Option<OpaqueElement>, &'a Dependency)>,
+    invalidations: AlreadyInvalidated<'a, E>,
     /// The top element in the subtree being invalidated.
     top: E,
     /// Optional context that will be used to try and skip invalidations
@@ -313,6 +310,25 @@ impl<'a, E: TElement + 'a> Default for ToInvalidate<'a, E> {
     }
 }
 
+fn dependency_selectors_match(a: &Dependency, b: &Dependency) -> bool {
+    if a.invalidation_kind() != b.invalidation_kind() {
+        return false;
+    }
+    if SelectorKey::new(&a.selector) != SelectorKey::new(&b.selector) {
+        return false;
+    }
+    let mut a_parent = a.parent.as_ref();
+    let mut b_parent = b.parent.as_ref();
+    while let (Some(a_p), Some(b_p)) = (a_parent, b_parent) {
+        if SelectorKey::new(&a_p.selector) != SelectorKey::new(&b_p.selector) {
+            return false;
+        }
+        a_parent = a_p.parent.as_ref();
+        b_parent = b_p.parent.as_ref();
+    }
+    a_parent.is_none() && b_parent.is_none()
+}
+
 impl<'a, E> RelativeSelectorDependencyCollector<'a, E>
 where
     E: TElement,
@@ -320,7 +336,7 @@ where
     fn new(top: E, optimization_context: Option<OptimizationContext<'a, E>>) -> Self {
         Self {
             dependencies: FxHashMap::default(),
-            invalidations: FxHashMap::default(),
+            invalidations: AlreadyInvalidated::default(),
             top,
             optimization_context,
         }
@@ -328,21 +344,21 @@ where
 
     fn insert_invalidation(
         &mut self,
-        key: InvalidationKey,
         element: E,
         dependency: &'a Dependency,
         host: Option<OpaqueElement>,
     ) {
-        self.invalidations
-            .entry(key)
-            .and_modify(|(e, h, d)| {
+        match self.invalidations.iter_mut().find(|(_, _, d)| dependency_selectors_match(dependency, d)) {
+            Some((e, h, d)) => {
                 // Just keep one.
-                if d.selector_offset <= dependency.selector_offset {
-                    return;
+                if d.selector_offset > dependency.selector_offset {
+                    (*e, *h, *d) = (element, host, dependency);
                 }
-                (*e, *h, *d) = (element, host, dependency);
-            })
-            .or_insert_with(|| (element, host, dependency));
+            },
+            None => {
+                self.invalidations.push((element, host, dependency));
+            }
+        }
     }
 
     /// Add this dependency, if it is unique (i.e. Different outer dependency or same outer dependency
@@ -377,10 +393,6 @@ where
                     return;
                 }
                 self.insert_invalidation(
-                    InvalidationKey(
-                        SelectorKey::new(&dependency.selector),
-                        dependency.invalidation_kind(),
-                    ),
                     element,
                     dependency,
                     host,
@@ -392,8 +404,8 @@ where
     /// Get the dependencies in a list format.
     fn get(self) -> ToInvalidate<'a, E> {
         let mut result = ToInvalidate::default();
-        for (key, (element, host, relative_dependency)) in self.invalidations {
-            match key.1 {
+        for (element, host, dependency) in self.invalidations {
+            match dependency.invalidation_kind() {
                 DependencyInvalidationKind::Normal(_) => {
                     unreachable!("Inner selector in invalidation?")
                 },
@@ -403,12 +415,12 @@ where
                             element != self.top,
                             element,
                             host,
-                            relative_dependency,
+                            dependency,
                         ) {
                             continue;
                         }
                     }
-                    let dependency = relative_dependency.parent.as_ref().unwrap();
+                    let dependency = dependency.parent.as_ref().unwrap();
                     result.invalidations.push(RelativeSelectorInvalidation {
                         kind,
                         host,
