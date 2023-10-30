@@ -44,23 +44,21 @@ menulist > menupopup > :is(menuitem, menucaption, menu) {
 
 .menu-text,
 .menu-iconic-left,
-.menu-iconic-text {
-  margin-top: 0 !important;
-  margin-bottom: 0 !important;
-  margin-inline-start: 0 !important;
-  margin-inline-end: 2px !important;
+.menu-iconic-text,
+.menubar-left {
+  margin-block: 0;
+  margin-inline: 0 2px;
 }
 
 .menu-text {
   /* This is (18 + the size of end-padding on .menu-iconic-left)px */
-  margin-inline-start: 21px !important;
+  margin-inline-start: 21px;
 }
 
 .menu-accel,
 .menu-iconic-accel {
-  margin-top: 0 !important;
-  margin-bottom: 0 !important;
-  margin-inline-start: 7px !important;
+  margin-block: 0;
+  margin-inline-start: 7px;
 }
 
 .menu-accel-container {
@@ -70,7 +68,7 @@ menulist > menupopup > :is(menuitem, menucaption, menu) {
 .menu-iconic-left {
   min-width: 16px;
   /* We can only hardcode this, to make the default GTK icon<->label spacing */
-  padding-inline-end: 3px !important;
+  padding-inline-end: 3px;
 }
 
 .menu-iconic-icon {
@@ -78,15 +76,8 @@ menulist > menupopup > :is(menuitem, menucaption, menu) {
   height: 16px;
 }
 
-.menubar-left {
-  margin-top: 0;
-  margin-bottom: 0;
-  margin-inline-start: 0;
-  margin-inline-end: 2px;
-}
-
 .menubar-text {
-  margin: 0 1px !important;
+  margin: 0 1px;
 }
 
 menulist > menupopup > :is(menuitem, menucaption, menu) > .menu-iconic-left {
