@@ -1733,6 +1733,15 @@ describe("TelemetryFeed", () => {
 
       assert.calledOnce(instance.handleAboutSponsoredTopSites);
     });
+    it("should call #handleBlockUrl on a BLOCK_URL action", () => {
+      const data = { position: 0, advertiser_name: "moo", tile_id: 42 };
+      const action = { type: at.BLOCK_URL, data };
+      sandbox.spy(instance, "handleBlockUrl");
+
+      instance.onAction(ac.AlsoToMain(action));
+
+      assert.calledOnce(instance.handleBlockUrl);
+    });
   });
   it("should call .handleTopSitesOrganicImpressionStats on a TOP_SITES_ORGANIC_IMPRESSION_STATS action", () => {
     const session = {};
@@ -2647,6 +2656,86 @@ describe("TelemetryFeed", () => {
       await instance.handleAboutSponsoredTopSites({ data });
 
       assert.notCalled(Glean.topsites.showPrivacyClick.record);
+    });
+  });
+  describe("#handleBlockUrl", () => {
+    it("shouldn't record events for pocket cards' dismisses", async () => {
+      const data = [
+        {
+          // Shouldn't record anything for this one
+          is_pocket_card: true,
+          position: 43,
+          tile_id: undefined,
+        },
+      ];
+      instance = new TelemetryFeed();
+      const session_id = "decafc0ffee";
+      sandbox.stub(instance.sessions, "get").returns({ session_id });
+      sandbox.spy(Glean.topsites.dismiss, "record");
+
+      await instance.handleBlockUrl({ data });
+
+      assert.notCalled(Glean.topsites.dismiss.record);
+    });
+    it("should record a Glean topsites.dismiss event on action", async () => {
+      const data = [
+        {
+          is_pocket_card: false,
+          position: 42,
+          advertiser_name: "mozilla",
+          tile_id: 4567,
+          isSponsoredTopSite: 1, // for some reason this is an int.
+        },
+      ];
+      instance = new TelemetryFeed();
+      const session_id = "decafc0ffee";
+      sandbox.stub(instance.sessions, "get").returns({ session_id });
+      sandbox.spy(Glean.topsites.dismiss, "record");
+
+      await instance.handleBlockUrl({ data });
+
+      assert.calledOnce(Glean.topsites.dismiss.record);
+      assert.calledWith(Glean.topsites.dismiss.record, {
+        advertiser_name: data[0].advertiser_name,
+        tile_id: data[0].tile_id.toString(),
+        newtab_visit_id: session_id,
+        is_sponsored: !!data[0].isSponsoredTopSite,
+        position: data[0].position,
+      });
+    });
+    it("should record a Glean topsites.dismiss event on action on non-sponsored topsite", async () => {
+      const data = [
+        {
+          is_pocket_card: false,
+          position: 42,
+          tile_id: undefined,
+        },
+      ];
+      instance = new TelemetryFeed();
+      const session_id = "decafc0ffee";
+      sandbox.stub(instance.sessions, "get").returns({ session_id });
+      sandbox.spy(Glean.topsites.dismiss, "record");
+
+      await instance.handleBlockUrl({ data });
+
+      assert.calledOnce(Glean.topsites.dismiss.record);
+      assert.calledWith(Glean.topsites.dismiss.record, {
+        advertiser_name: undefined,
+        tile_id: undefined,
+        newtab_visit_id: session_id,
+        is_sponsored: false,
+        position: data[0].position,
+      });
+    });
+    it("should not record a Glean topsites.dismiss event if there's no session", async () => {
+      const data = {};
+      instance = new TelemetryFeed();
+      sandbox.stub(instance.sessions, "get").returns(null);
+      sandbox.spy(Glean.topsites.dismiss, "record");
+
+      await instance.handleBlockUrl({ data });
+
+      assert.notCalled(Glean.topsites.dismiss.record);
     });
   });
 });

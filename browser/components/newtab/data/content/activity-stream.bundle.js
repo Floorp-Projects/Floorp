@@ -6675,16 +6675,30 @@ const LinkMenuOptions = {
     icon: "dismiss",
     action: actionCreators.AlsoToMain({
       type: actionTypes.BLOCK_URL,
-      data: tiles.map(site => ({
-        url: site.original_url || site.open_url || site.url,
-        // pocket_id is only for pocket stories being in highlights, and then dismissed.
-        pocket_id: site.pocket_id,
-        // used by PlacesFeed and TopSitesFeed for sponsored top sites blocking.
-        isSponsoredTopSite: site.sponsored_position,
-        ...(site.flight_id ? {
-          flight_id: site.flight_id
-        } : {})
-      }))
+      data: tiles.map(site => {
+        var _ref;
+
+        return {
+          url: site.original_url || site.open_url || site.url,
+          // pocket_id is only for pocket stories being in highlights, and then dismissed.
+          pocket_id: site.pocket_id,
+          // used by PlacesFeed and TopSitesFeed for sponsored top sites blocking.
+          isSponsoredTopSite: site.sponsored_position,
+          ...(site.flight_id ? {
+            flight_id: site.flight_id
+          } : {}),
+          // If not sponsored, hostname could be anything (Cat3 Data!).
+          // So only put in advertiser_name for sponsored topsites.
+          ...(site.sponsored_position ? {
+            advertiser_name: (_ref = site.label || site.hostname) === null || _ref === void 0 ? void 0 : _ref.toLocaleLowerCase()
+          } : {}),
+          position: pos,
+          ...(site.sponsored_tile_id ? {
+            tile_id: site.sponsored_tile_id
+          } : {}),
+          is_pocket_card: site.type === "CardGrid"
+        };
+      })
     }),
     impression: actionCreators.ImpressionStats({
       source: eventSource,
