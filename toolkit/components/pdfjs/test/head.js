@@ -239,11 +239,16 @@ async function clickAt(browser, x, y) {
  * @param {string} selector
  */
 async function clickOn(browser, selector) {
+  await waitForSelector(browser, selector);
   const [x, y] = await SpecialPowers.spawn(
     browser,
     [selector],
     async selector => {
       const element = content.document.querySelector(selector);
+      Assert.ok(
+        !!element,
+        `Element "${selector}" must be available in order to be clicked`
+      );
       const { x, y, width, height } = element.getBoundingClientRect();
       return [x + width / 2, y + height / 2];
     }
