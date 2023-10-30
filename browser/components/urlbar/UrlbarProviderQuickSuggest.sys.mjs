@@ -948,8 +948,15 @@ class ProviderQuickSuggest extends UrlbarProvider {
       }
     }
 
-    // Return false if the suggestion is blocked.
-    if (await lazy.QuickSuggest.blockedSuggestions.has(suggestion.url)) {
+    // Return false if the suggestion is blocked based on its URL. Suggestions
+    // from the JS backend define a single `url` property. Suggestions from the
+    // Rust backend are more complicated: Sponsored suggestions define `rawUrl`,
+    // which may contain timestamp templates, while non-sponsored suggestions
+    // define only `url`. Blocking should always be based on URLs with timestamp
+    // templates, where applicable, so check `rawUrl` and then `url`, in that
+    // order.
+    let { blockedSuggestions } = lazy.QuickSuggest;
+    if (await blockedSuggestions.has(suggestion.rawUrl ?? suggestion.url)) {
       this.logger.info("Suggestion blocked, not adding suggestion");
       return false;
     }
