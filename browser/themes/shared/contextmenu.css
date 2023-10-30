@@ -4,22 +4,32 @@
 
 @namespace html url("http://www.w3.org/1999/xhtml");
 
+/* Combined context-menu items */
+
 #context-navigation > .menuitem-iconic {
   flex: 1;
   justify-content: center;
   align-items: center;
-}
 
-#context-navigation > .menuitem-iconic > .menu-iconic-left {
-  appearance: none;
-}
+  > .menu-iconic-text,
+  > .menu-accel-container {
+    display: none;
+  }
 
-#context-navigation > .menuitem-iconic > .menu-iconic-left > .menu-iconic-icon {
-  width: 1.25em;
-  height: auto;
-  margin: 7px;
-  -moz-context-properties: fill;
-  fill: currentColor;
+  > .menu-iconic-left {
+    appearance: none;
+    margin: 0;
+    padding: 0;
+
+    > .menu-iconic-icon {
+      width: auto;
+      height: auto;
+      padding: 7px;
+      margin: 0;
+      -moz-context-properties: fill;
+      fill: currentColor;
+    }
+  }
 }
 
 #context-back {
