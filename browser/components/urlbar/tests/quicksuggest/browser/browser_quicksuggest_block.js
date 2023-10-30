@@ -34,7 +34,7 @@ const REMOTE_SETTINGS_RESULTS = [
     keywords: ["nonsponsored"],
     click_url: "https://example.com/click",
     impression_url: "https://example.com/impression",
-    advertiser: "TestAdvertiser",
+    advertiser: "Wikipedia",
     iab_category: "5 - Education",
   },
 ];
@@ -65,53 +65,20 @@ add_setup(async function () {
   });
 });
 
-/**
- * Adds a test task that runs the given callback for each result in
- * `REMOTE_SETTINGS_RESULTS`.
- *
- * @param {Function} fn
- *   The callback function. It's passed: `{ suggestion }`
- */
-function add_combo_task(fn) {
-  let taskFn = async () => {
-    for (let result of REMOTE_SETTINGS_RESULTS) {
-      info(`Running ${fn.name}: ${JSON.stringify({ result })}`);
-      await fn({ result });
-    }
-  };
-  Object.defineProperty(taskFn, "name", { value: fn.name });
-  add_task(taskFn);
-}
-
-// Picks the block button with the keyboard.
-add_combo_task(async function basic_keyboard({ result }) {
+// Picks the dismiss command in the result menu.
+add_tasks_with_rust(async function basic() {
   await doBasicBlockTest({
-    result,
     block: async () => {
       await UrlbarTestUtils.openResultMenuAndPressAccesskey(window, "D", {
         resultIndex: 1,
-      });
-    },
-  });
-});
-
-// Picks the block button with the mouse.
-add_combo_task(async function basic_mouse({ result }) {
-  await doBasicBlockTest({
-    result,
-    block: async () => {
-      await UrlbarTestUtils.openResultMenuAndPressAccesskey(window, "D", {
-        resultIndex: 1,
-        openByMouse: true,
       });
     },
   });
 });
 
 // Uses the key shortcut to block a suggestion.
-add_combo_task(async function basic_keyShortcut({ result }) {
+add_tasks_with_rust(async function basic_keyShortcut() {
   await doBasicBlockTest({
-    result,
     block: () => {
       // Arrow down once to select the row.
       EventUtils.synthesizeKey("KEY_ArrowDown");
@@ -120,12 +87,24 @@ add_combo_task(async function basic_keyShortcut({ result }) {
   });
 });
 
-async function doBasicBlockTest({ result, block }) {
+async function doBasicBlockTest({ block }) {
+  for (let result of REMOTE_SETTINGS_RESULTS) {
+    info("Doing basic block test with result: " + JSON.stringify({ result }));
+    await doOneBasicBlockTest({ result, block });
+  }
+}
+
+async function doOneBasicBlockTest({ result, block }) {
   spy.resetHistory();
   let index = 2;
   let suggested_index = -1;
   let suggested_index_relative_to_group = true;
   let match_type = "firefox-suggest";
+  let isSponsored = result.iab_category != "5 - Education";
+  let expectedBlockId =
+    UrlbarPrefs.get("quicksuggest.rustEnabled") && !isSponsored
+      ? null
+      : result.id;
 
   let pingsSubmitted = 0;
   GleanPings.quickSuggest.testBeforeNextSubmit(() => {
@@ -136,7 +115,7 @@ async function doBasicBlockTest({ result, block }) {
       CONTEXTUAL_SERVICES_PING_TYPES.QS_IMPRESSION
     );
     Assert.equal(Glean.quickSuggest.matchType.testGetValue(), match_type);
-    Assert.equal(Glean.quickSuggest.blockId.testGetValue(), result.id);
+    Assert.equal(Glean.quickSuggest.blockId.testGetValue(), expectedBlockId);
     Assert.equal(Glean.quickSuggest.isClicked.testGetValue(), false);
     Assert.equal(Glean.quickSuggest.position.testGetValue(), index);
     Assert.equal(
@@ -156,7 +135,7 @@ async function doBasicBlockTest({ result, block }) {
         CONTEXTUAL_SERVICES_PING_TYPES.QS_BLOCK
       );
       Assert.equal(Glean.quickSuggest.matchType.testGetValue(), match_type);
-      Assert.equal(Glean.quickSuggest.blockId.testGetValue(), result.id);
+      Assert.equal(Glean.quickSuggest.blockId.testGetValue(), expectedBlockId);
       Assert.equal(
         Glean.quickSuggest.iabCategory.testGetValue(),
         result.iab_category
@@ -176,7 +155,6 @@ async function doBasicBlockTest({ result, block }) {
     "Two rows are present after searching (heuristic + suggestion)"
   );
 
-  let isSponsored = result.keywords[0] == "sponsored";
   await QuickSuggestTestUtils.assertIsQuickSuggest({
     window,
     isSponsored,
@@ -233,25 +211,36 @@ async function doBasicBlockTest({ result, block }) {
   ]);
 
   // Check the custom telemetry pings.
+  let source = UrlbarPrefs.get("quicksuggest.rustEnabled")
+    ? "rust"
+    : "remote-settings";
   QuickSuggestTestUtils.assertPings(spy, [
     {
       type: CONTEXTUAL_SERVICES_PING_TYPES.QS_IMPRESSION,
       payload: {
+        source,
         match_type,
         suggested_index,
         suggested_index_relative_to_group,
-        block_id: result.id,
+        advertiser: result.advertiser.toLowerCase(),
+        block_id: expectedBlockId,
         is_clicked: false,
         position: index,
+        reporting_url:
+          UrlbarPrefs.get("quicksuggest.rustEnabled") && !isSponsored
+            ? undefined
+            : result.impression_url,
       },
     },
     {
       type: CONTEXTUAL_SERVICES_PING_TYPES.QS_BLOCK,
       payload: {
+        source,
         match_type,
         suggested_index,
         suggested_index_relative_to_group,
-        block_id: result.id,
+        advertiser: result.advertiser.toLowerCase(),
+        block_id: expectedBlockId,
         iab_category: result.iab_category,
         position: index,
       },
@@ -263,7 +252,7 @@ async function doBasicBlockTest({ result, block }) {
 }
 
 // Blocks multiple suggestions one after the other.
-add_task(async function blockMultiple() {
+add_tasks_with_rust(async function blockMultiple() {
   for (let i = 0; i < REMOTE_SETTINGS_RESULTS.length; i++) {
     // Do a search that triggers the i'th suggestion.
     let { keywords, url } = REMOTE_SETTINGS_RESULTS[i];
