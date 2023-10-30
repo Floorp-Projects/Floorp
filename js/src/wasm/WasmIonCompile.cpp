@@ -2180,9 +2180,7 @@ class FunctionCompiler {
                                 uint32_t lineOrBytecode,
                                 const CallCompileState& call,
                                 DefVector* results) {
-    if (inDeadCode()) {
-      return true;
-    }
+    MOZ_ASSERT(!inDeadCode());
 
     CallSiteDesc desc(lineOrBytecode, CallSiteDesc::Func);
     ResultType resultType = ResultType::Vector(funcType.results());
@@ -2200,9 +2198,7 @@ class FunctionCompiler {
                                       uint32_t lineOrBytecode,
                                       const CallCompileState& call,
                                       DefVector* results) {
-    if (inDeadCode()) {
-      return true;
-    }
+    MOZ_ASSERT(!inDeadCode());
 
     CallSiteDesc desc(lineOrBytecode, CallSiteDesc::ReturnFunc);
     auto callee = CalleeDesc::function(funcIndex);
@@ -2223,9 +2219,7 @@ class FunctionCompiler {
                                       const CallCompileState& call,
                                       const FuncType& funcType,
                                       DefVector* results) {
-    if (inDeadCode()) {
-      return true;
-    }
+    MOZ_ASSERT(!inDeadCode());
 
     CallSiteDesc desc(lineOrBytecode, CallSiteDesc::Import);
     auto callee = CalleeDesc::import(globalDataOffset);
@@ -2246,9 +2240,7 @@ class FunctionCompiler {
                                         uint32_t lineOrBytecode,
                                         const CallCompileState& call,
                                         DefVector* results) {
-    if (inDeadCode()) {
-      return true;
-    }
+    MOZ_ASSERT(!inDeadCode());
 
     const FuncType& funcType = (*moduleEnv_.types)[funcTypeIndex].funcType();
     CallIndirectId callIndirectId =
@@ -2277,9 +2269,7 @@ class FunctionCompiler {
                                   MDefinition* index, uint32_t lineOrBytecode,
                                   const CallCompileState& call,
                                   DefVector* results) {
-    if (inDeadCode()) {
-      return true;
-    }
+    MOZ_ASSERT(!inDeadCode());
 
     const FuncType& funcType = (*moduleEnv_.types)[funcTypeIndex].funcType();
     CallIndirectId callIndirectId =
@@ -2320,9 +2310,7 @@ class FunctionCompiler {
                                 uint32_t lineOrBytecode,
                                 const CallCompileState& call,
                                 const FuncType& funcType, DefVector* results) {
-    if (inDeadCode()) {
-      return true;
-    }
+    MOZ_ASSERT(!inDeadCode());
 
     CallSiteDesc desc(lineOrBytecode, CallSiteDesc::Import);
     auto callee = CalleeDesc::import(instanceDataOffset);
@@ -2387,9 +2375,7 @@ class FunctionCompiler {
   [[nodiscard]] bool callRef(const FuncType& funcType, MDefinition* ref,
                              uint32_t lineOrBytecode,
                              const CallCompileState& call, DefVector* results) {
-    if (inDeadCode()) {
-      return true;
-    }
+    MOZ_ASSERT(!inDeadCode());
 
     CalleeDesc callee = CalleeDesc::wasmFuncRef();
 
@@ -2408,6 +2394,8 @@ class FunctionCompiler {
                                    uint32_t lineOrBytecode,
                                    const CallCompileState& call,
                                    DefVector* results) {
+    MOZ_ASSERT(!inDeadCode());
+
     CalleeDesc callee = CalleeDesc::wasmFuncRef();
 
     CallSiteDesc desc(lineOrBytecode, CallSiteDesc::FuncRef);
