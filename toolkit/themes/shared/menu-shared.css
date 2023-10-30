@@ -94,17 +94,14 @@ menucaption {
   flex-shrink: 0;
   list-style-image: none;
   max-width: 42em;
+  -moz-font-smoothing-background-color: -moz-mac-menuitem;
 
   @media (-moz-platform: linux) {
     padding: 4px 6px;
   }
 
   @media (-moz-platform: macos) {
-    appearance: auto;
-    -moz-default-appearance: menuitem;
-    -moz-font-smoothing-background-color: -moz-mac-menuitem;
     padding: 2px 21px;
-    border-radius: 0;
   }
 }
 

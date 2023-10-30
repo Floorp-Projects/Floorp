@@ -15,9 +15,9 @@ panel {
   min-width: 1px;
   --panel-background: Menu;
   --panel-color: MenuText;
-  --panel-padding-block: 0;
+  --panel-padding-block: 4px;
   --panel-padding: var(--panel-padding-block) 0;
-  --panel-border-radius: 0;
+  --panel-border-radius: 4px;
   --panel-border-color: ThreeDShadow;
   --panel-width: initial;
 
@@ -34,11 +34,6 @@ panel {
     @media (prefers-contrast) {
       --panel-border-color: color-mix(in srgb, currentColor 60%, transparent);
     }
-  }
-
-  @media (-moz-platform: windows) {
-    --panel-border-radius: 4px;
-    --panel-padding-block: 4px;
   }
 
   @media (-moz-platform: linux) or (-moz-platform: windows) {
@@ -107,14 +102,8 @@ panel {
 }
 
 menupopup {
-  @media (-moz-platform: linux) or (-moz-platform: windows) {
-    /* Also apply the padding in the inline axis for menus */
-    --panel-padding: var(--panel-padding-block);
-  }
-
-  @media (-moz-platform: macos) {
-    --panel-padding-block: 4px;
-  }
+  /* Also apply the padding in the inline axis for menus */
+  --panel-padding: var(--panel-padding-block);
 
   @media (-moz-platform: windows) {
     > menu,
