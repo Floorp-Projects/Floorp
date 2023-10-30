@@ -3,6 +3,22 @@
     {
       "stash": {
         "blocked": [
+          "{84239464-dbc0-48f4-a88c-8e0045e85fde}:0.0.0.1",
+          "{2f536ac3-2f1e-40ab-849d-431d9f7cf5ce}:4.65.1945",
+          "{84239464-dbc0-48f4-a88c-8e0045e85fde}:0.0.0.2",
+          "{2f536ac3-2f1e-40ab-849d-431d9f7cf5ce}:4.65.1946"
+        ],
+        "unblocked": []
+      },
+      "schema": 1698333341043,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1698410111146,
+      "id": "32190872-b782-4a10-8616-6f31f32e2987",
+      "last_modified": 1698410186530
+    },
+    {
+      "stash": {
+        "blocked": [
           "assinador@quicksoft.com.br:0.4.3",
           "assinador@quicksoft.com.br:0.4.0",
           "addonY143@manualslibrary.co:1.23.918",
@@ -2586,5 +2602,5 @@
       "last_modified": 1690223886167
     }
   ],
-  "timestamp": 1698150973785
+  "timestamp": 1698410186530
 }
