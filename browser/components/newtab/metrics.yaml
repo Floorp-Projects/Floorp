@@ -372,6 +372,32 @@ topsites:
     send_in_pings:
       - newtab
 
+  show_privacy_click:
+    type: event
+    description: >
+      Recorded when the "Our Sponsors and Your Privacy" menu item in the three-
+      dots menu of a sponsored topsite is clicked.
+      Corresponds to the receipt of a dispatched `ABOUT_SPONSORED_TOP_SITES`
+      action by `TelemetryFeed`.
+    bugs:
+      - https://mozilla-hub.atlassian.net/browse/DENG-1364
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1857324
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1857324
+    data_sensitivity: [interaction]
+    notification_emails:
+      - chutten@mozilla.com
+      - mmccorquodale@mozilla.com
+      - sbetancourt@mozilla.com
+    expires: never
+    extra_keys:
+      advertiser_name: *advertiser_name
+      tile_id: *tile_id
+      newtab_visit_id: *newtab_visit_id
+      position: *topsite_position
+    send_in_pings:
+      - newtab
+
   rows:
     lifetime: application
     type: quantity

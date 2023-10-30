@@ -666,6 +666,9 @@ const TEST_GLOBAL = {
       rows: {
         set() {},
       },
+      showPrivacyClick: {
+        record() {},
+      },
     },
     topSites: {
       pingType: {

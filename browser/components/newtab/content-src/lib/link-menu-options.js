@@ -38,6 +38,11 @@ export const LinkMenuOptions = {
     icon: "info",
     action: ac.AlsoToMain({
       type: at.ABOUT_SPONSORED_TOP_SITES,
+      data: {
+        advertiser_name: (site.label || site.hostname).toLocaleLowerCase(),
+        position: site.sponsored_position,
+        tile_id: site.sponsored_tile_id,
+      },
     }),
     userEvent: "TOPSITE_SPONSOR_INFO",
   }),
