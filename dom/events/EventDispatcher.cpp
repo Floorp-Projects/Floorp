@@ -995,7 +995,6 @@ nsresult EventDispatcher::Dispatch(EventTarget* aTarget,
   if (preVisitor.mWantsActivationBehavior) {
     MOZ_ASSERT(&chain[0] == targetEtci);
     activationTargetItemIndex.emplace(0);
-    preVisitor.mEvent->mFlags.mMultiplePreActionsPrevented = true;
   }
 
   if (!preVisitor.mCanHandle) {
@@ -1065,7 +1064,6 @@ nsresult EventDispatcher::Dispatch(EventTarget* aTarget,
           activationTargetItemIndex.isNothing() && aEvent->mFlags.mBubbles) {
         MOZ_ASSERT(&chain.LastElement() == parentEtci);
         activationTargetItemIndex.emplace(chain.Length() - 1);
-        preVisitor.mEvent->mFlags.mMultiplePreActionsPrevented = true;
       }
 
       if (preVisitor.mCanHandle) {
