@@ -23,36 +23,6 @@ function test_runner(test) {
   add_task(testTask);
 }
 
-test_runner(async function test_createPingPayload({ sandbox }) {
-  const impressionId = "{7fd5a1ac-6089-4212-91a7-fcdec1d2f533}";
-  const creationDate = "18578";
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.newtabpage.activity-stream.impressionId", impressionId]],
-  });
-  sandbox.stub(pktTelemetry, "_profileCreationDate").returns(creationDate);
-  const result = pktTelemetry.createPingPayload({ test: "test" });
-
-  Assert.deepEqual(result, {
-    test: "test",
-    pocket_logged_in_status: false,
-    profile_creation_date: creationDate,
-    impression_id: impressionId,
-  });
-});
-
-test_runner(async function test_generateStructuredIngestionEndpoint({
-  sandbox,
-}) {
-  sandbox
-    .stub(pktTelemetry, "_generateUUID")
-    .returns("{7fd5a1ac-6089-4212-91a7-fcdec1d2f533}");
-  const endpoint = pktTelemetry._generateStructuredIngestionEndpoint();
-  Assert.equal(
-    endpoint,
-    "https://incoming.telemetry.mozilla.org/submit/activity-stream/pocket-button/1/7fd5a1ac-6089-4212-91a7-fcdec1d2f533"
-  );
-});
-
 test_runner(async function test_submitPocketButtonPing({ sandbox }) {
   const creationDate = "19640";
   const impressionId = "{422e3da9-c694-4fd2-b676-8ae070156128}";
