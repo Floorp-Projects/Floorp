@@ -3594,7 +3594,7 @@ var gMainPane = {
         // so if those are in use just display them. On other platforms
         // only do so if the folder matches the localized name.
         if (
-          AppConstants.platform == "mac" ||
+          AppConstants.platform == "macosx" ||
           leafName == firefoxLocalizedName
         ) {
           return { file, folderDisplayName: firefoxLocalizedName };
