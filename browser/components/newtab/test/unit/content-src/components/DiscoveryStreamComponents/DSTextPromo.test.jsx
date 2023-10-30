@@ -74,6 +74,8 @@ describe("<DSTextPromo>", () => {
         url: undefined,
         pocket_id: undefined,
         isSponsoredTopSite: undefined,
+        position: 0,
+        is_pocket_card: false,
       },
     ]);
 
