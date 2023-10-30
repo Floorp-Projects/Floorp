@@ -362,6 +362,28 @@ bool IPCFuzzController::ObserveIPCMessage(mozilla::ipc::NodeChannel* channel,
   return true;
 }
 
+void IPCFuzzController::OnMessageError(
+    mozilla::ipc::HasResultCodes::Result code, const IPC::Message& aMsg) {
+  if (!mozilla::fuzzing::Nyx::instance().is_enabled("IPC_Generic")) {
+    // Fuzzer is not enabled.
+    return;
+  }
+
+  if (!XRE_IsParentProcess()) {
+    // For now we only care about things in the parent process.
+    return;
+  }
+
+  if (!aMsg.IsFuzzMsg()) {
+    // We should only act upon fuzzing messages.
+    return;
+  }
+
+#if 0
+  Nyx::instance().release(IPCFuzzController::instance().getMessageStopCount());
+#endif
+}
+
 bool IPCFuzzController::MakeTargetDecision(
     uint8_t portIndex, uint8_t portInstanceIndex, uint8_t actorIndex,
     uint16_t typeOffset, PortName* name, int32_t* seqno, uint64_t* fseqno,

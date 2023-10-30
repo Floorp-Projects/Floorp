@@ -347,7 +347,7 @@ class Message : public mojo::core::ports::UserMessage, public Pickle {
   }
 
 #ifdef FUZZING_SNAPSHOT
-  bool IsFuzzMsg() { return isFuzzMsg; }
+  bool IsFuzzMsg() const { return isFuzzMsg; }
   void SetFuzzMsg() { isFuzzMsg = true; }
 #endif
 
