@@ -12,6 +12,7 @@
 #include "mozilla/HashTable.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/fuzzing/Nyx.h"
+#include "mozilla/ipc/MessageLink.h"
 
 #include "nsIRunnable.h"
 #include "nsThreadUtils.h"
@@ -90,6 +91,8 @@ class IPCFuzzController {
 
   void OnActorConnected(mozilla::ipc::IProtocol* protocol);
   void OnActorDestroyed(mozilla::ipc::IProtocol* protocol);
+  void OnMessageError(mozilla::ipc::HasResultCodes::Result code,
+                      const IPC::Message& aMsg);
   void OnDropPeer(const char* reason, const char* file, int line);
   void OnMessageTaskStart();
   void OnMessageTaskStop();
