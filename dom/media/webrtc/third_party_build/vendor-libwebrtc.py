@@ -121,6 +121,7 @@ def get_included_path_overrides():
         "sdk/android/api/org/webrtc/VideoSource.java",
         "sdk/android/api/org/webrtc/AudioTrack.java",
         "sdk/android/api/org/webrtc/EglRenderer.java",
+        "sdk/android/api/org/webrtc/EglThread.java",
         "sdk/android/api/org/webrtc/VideoEncoder.java",
         "sdk/android/api/org/webrtc/VideoCapturer.java",
         "sdk/android/api/org/webrtc/SoftwareVideoDecoderFactory.java",
