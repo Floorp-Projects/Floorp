@@ -2347,7 +2347,7 @@ describe("TelemetryFeed", () => {
       assert.calledOnce(Glean.topsites.impression.record);
       assert.calledWith(Glean.topsites.impression.record, {
         advertiser_name: "adnoid ads",
-        tile_id: "42",
+        tile_id: data.tile_id,
         newtab_visit_id: session_id,
         is_sponsored: true,
         position: 1,
@@ -2373,7 +2373,7 @@ describe("TelemetryFeed", () => {
       assert.calledOnce(Glean.topsites.click.record);
       assert.calledWith(Glean.topsites.click.record, {
         advertiser_name: "test advertiser",
-        tile_id: "42",
+        tile_id: data.tile_id,
         newtab_visit_id: session_id,
         is_sponsored: true,
         position: 0,
@@ -2690,7 +2690,7 @@ describe("TelemetryFeed", () => {
       assert.calledOnce(Glean.topsites.showPrivacyClick.record);
       assert.calledWith(Glean.topsites.showPrivacyClick.record, {
         advertiser_name: data.advertiser_name,
-        tile_id: data.tile_id.toString(),
+        tile_id: data.tile_id,
         newtab_visit_id: session_id,
         position: data.position,
       });
@@ -2749,7 +2749,7 @@ describe("TelemetryFeed", () => {
       assert.calledOnce(Glean.topsites.dismiss.record);
       assert.calledWith(Glean.topsites.dismiss.record, {
         advertiser_name: data[0].advertiser_name,
-        tile_id: data[0].tile_id.toString(),
+        tile_id: data[0].tile_id,
         newtab_visit_id: session_id,
         is_sponsored: !!data[0].isSponsoredTopSite,
         position: data[0].position,

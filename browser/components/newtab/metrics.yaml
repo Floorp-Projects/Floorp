@@ -324,8 +324,8 @@ topsites:
         type: string
       tile_id: &tile_id
         description: >
-          The tile id of the advertiser provided by Contile
-        type: string
+          The tile id of the advertiser provided by Contile. Like `74357`.
+        type: quantity
       newtab_visit_id: *newtab_visit_id
       is_sponsored: &is_sponsored
         description: Whether the topsite tile was sponsored.
