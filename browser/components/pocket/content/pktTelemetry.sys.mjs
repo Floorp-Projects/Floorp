@@ -108,4 +108,38 @@ export var pktTelemetry = {
       STRUCTURED_INGESTION_NAMESPACE_AS
     );
   },
+
+  /**
+   * Records the provided data and common pocket-button data to Glean,
+   * then submits it all in a pocket-button ping.
+   *
+   * @param eventAction - A string like "click"
+   * @param eventSource - A string like "save_button"
+   * @param eventPosition - (optional) A 0-based index.
+   *                        If falsey and not 0, is coalesced to undefined.
+   * @param model - (optional) An identifier for the machine learning model
+   *                used to generate the recommendations like "vec-bestarticle"
+   */
+  submitPocketButtonPing(
+    eventAction,
+    eventSource,
+    eventPosition = undefined,
+    model = undefined
+  ) {
+    eventPosition = eventPosition || eventPosition === 0 ? 0 : undefined;
+    Glean.pocketButton.impressionId.set(this.impressionId);
+    Glean.pocketButton.pocketLoggedInStatus.set(lazy.pktApi.isUserLoggedIn());
+    Glean.pocketButton.profileCreationDate.set(this._profileCreationDate());
+
+    Glean.pocketButton.eventAction.set(eventAction);
+    Glean.pocketButton.eventSource.set(eventSource);
+    if (eventPosition !== undefined) {
+      Glean.pocketButton.eventPosition.set(eventPosition);
+    }
+    if (model !== undefined) {
+      Glean.pocketButton.model.set(model);
+    }
+
+    GleanPings.pocketButton.submit();
+  },
 };

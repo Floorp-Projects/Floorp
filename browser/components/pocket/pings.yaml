@@ -1,0 +1,22 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+---
+$schema: moz://mozilla.org/schemas/glean/pings/2-0-0
+
+pocket-button:
+  description: |
+    Reinstrumentation of the Activity Stream "pocket-button" ping.
+    Submitted when actions are taken around the pocket button.
+    Does not contain any `client_id`.
+    Instead uses an `impression_id`.
+  include_client_id: false
+  bugs:
+    - https://bugzilla.mozilla.org/show_bug.cgi?id=1857324
+  data_reviews:
+    - https://bugzilla.mozilla.org/show_bug.cgi?id=1857324
+  notification_emails:
+    - chutten@mozilla.com
+    - kdemtchouk@mozilla.com
+    - sdowne@mozilla.com
