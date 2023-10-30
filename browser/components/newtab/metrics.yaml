@@ -572,9 +572,11 @@ pocket:
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1786612
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1817105
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1854245
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1786612
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1817105#c11
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1854245
     data_sensitivity:
       - interaction
     notification_emails:
@@ -592,6 +594,11 @@ pocket:
       position: &pocket_position
         description: The position (0-index) of the pocket tile.
         type: quantity
+      recommendation_id: &recommendation_id
+        description: >
+          The id from the Pocket API response that returned the recommendation.
+          Like "{61934fe5-fbb0-4f4e-b9dd-7eab5f6ee9cd}".
+        type: string
     send_in_pings:
       - newtab
 
@@ -604,9 +611,11 @@ pocket:
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1786612
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1817105
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1854245
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1786612
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1817105#c11
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1854245
     data_sensitivity:
       - interaction
     notification_emails:
@@ -620,6 +629,7 @@ pocket:
       newtab_visit_id: *newtab_visit_id
       is_sponsored: *is_sponsored_pocket
       position: *pocket_position
+      recommendation_id: *recommendation_id
     send_in_pings:
       - newtab
 
@@ -633,9 +643,11 @@ pocket:
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1786612
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1817105
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1854245
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1786612
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1817105#c11
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1854245
     data_sensitivity:
       - interaction
     notification_emails:
@@ -649,6 +661,7 @@ pocket:
       newtab_visit_id: *newtab_visit_id
       is_sponsored: *is_sponsored_pocket
       position: *pocket_position
+      recommendation_id: *recommendation_id
     send_in_pings:
       - newtab
 
@@ -661,9 +674,11 @@ pocket:
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1786612
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1817105
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1854245
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1786612
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1817105#c11
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1854245
     data_sensitivity:
       - interaction
     notification_emails:

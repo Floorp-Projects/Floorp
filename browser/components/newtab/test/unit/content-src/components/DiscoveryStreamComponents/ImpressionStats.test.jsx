@@ -131,9 +131,9 @@ describe("<ImpressionStats>", () => {
     assert.equal(action.type, at.DISCOVERY_STREAM_IMPRESSION_STATS);
     assert.equal(action.data.source, SOURCE);
     assert.deepEqual(action.data.tiles, [
-      { id: 1, pos: 0, type: "organic" },
-      { id: 2, pos: 1, type: "organic" },
-      { id: 3, pos: 2, type: "organic" },
+      { id: 1, pos: 0, type: "organic", recommendation_id: undefined },
+      { id: 2, pos: 1, type: "organic", recommendation_id: undefined },
+      { id: 3, pos: 2, type: "organic", recommendation_id: undefined },
     ]);
   });
   it("should send a DISCOVERY_STREAM_SPOC_IMPRESSION when the wrapped item has a flightId", () => {
@@ -209,9 +209,9 @@ describe("<ImpressionStats>", () => {
     [action] = dispatch.firstCall.args;
     assert.equal(action.type, at.DISCOVERY_STREAM_IMPRESSION_STATS);
     assert.deepEqual(action.data.tiles, [
-      { id: 1, pos: 0, type: "organic" },
-      { id: 2, pos: 1, type: "organic" },
-      { id: 3, pos: 2, type: "organic" },
+      { id: 1, pos: 0, type: "organic", recommendation_id: undefined },
+      { id: 2, pos: 1, type: "organic", recommendation_id: undefined },
+      { id: 3, pos: 2, type: "organic", recommendation_id: undefined },
     ]);
   });
   it("should remove visibility change listener when the wrapper is removed", () => {
