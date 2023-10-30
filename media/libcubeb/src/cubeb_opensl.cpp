@@ -1056,6 +1056,11 @@ opensl_configure_capture(cubeb_stream * stm, cubeb_stream_params * params)
             LOG("Failed to create recorder. Error code: %lu", res);
             return CUBEB_ERROR;
           }
+        } else {
+          LOG("Failed to create recorder, not trying other input"
+              " rate. Error code: %lu",
+              res);
+          return CUBEB_ERROR;
         }
         // It's always possible to use int16 regardless of the Android version.
         // However if compiling for older Android version, it's possible to
