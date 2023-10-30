@@ -172,19 +172,23 @@ void HTMLButtonElement::GetEventTargetParent(EventChainPreVisitor& aVisitor) {
 
   if (outerActivateEvent) {
     aVisitor.mItemFlags |= NS_OUTER_ACTIVATE_EVENT;
-    if (mType == FormControlType::ButtonSubmit && mForm &&
-        !aVisitor.mEvent->mFlags.mMultiplePreActionsPrevented) {
-      aVisitor.mEvent->mFlags.mMultiplePreActionsPrevented = true;
-      aVisitor.mItemFlags |= NS_IN_SUBMIT_CLICK;
-      aVisitor.mItemData = static_cast<Element*>(mForm);
-      // tell the form that we are about to enter a click handler.
-      // that means that if there are scripted submissions, the
-      // latest one will be deferred until after the exit point of the handler.
-      mForm->OnSubmitClickBegin(this);
-    }
+    aVisitor.mWantsActivationBehavior = true;
   }
 
   nsGenericHTMLElement::GetEventTargetParent(aVisitor);
+}
+
+void HTMLButtonElement::LegacyPreActivationBehavior(
+    EventChainVisitor& aVisitor) {
+  // out-of-spec legacy pre-activation behavior needed because of bug 1803805
+  if (mType == FormControlType::ButtonSubmit && mForm) {
+    aVisitor.mItemFlags |= NS_IN_SUBMIT_CLICK;
+    aVisitor.mItemData = static_cast<Element*>(mForm);
+    // tell the form that we are about to enter a click handler.
+    // that means that if there are scripted submissions, the
+    // latest one will be deferred until after the exit point of the handler.
+    mForm->OnSubmitClickBegin(this);
+  }
 }
 
 nsresult HTMLButtonElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
@@ -223,24 +227,19 @@ nsresult HTMLButtonElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
       HandleKeyboardActivation(aVisitor);
     }
 
-    if (aVisitor.mItemFlags & NS_OUTER_ACTIVATE_EVENT) {
-      if (mForm) {
-        // Hold a strong ref while dispatching
-        RefPtr<mozilla::dom::HTMLFormElement> form(mForm);
-        if (mType == FormControlType::ButtonReset) {
-          form->MaybeReset(this);
-          aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
-        } else if (mType == FormControlType::ButtonSubmit) {
-          form->MaybeSubmit(this);
-          aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
-        }
-        // https://html.spec.whatwg.org/multipage/form-elements.html#attr-button-type-button-state
-        // NS_FORM_BUTTON_BUTTON do nothing.
-      }
-      HandlePopoverTargetAction();
+    // Bug 1459231: Temporarily needed till links respect activation target
+    // Then also remove NS_OUTER_ACTIVATE_EVENT
+    if ((aVisitor.mItemFlags & NS_OUTER_ACTIVATE_EVENT) && mForm &&
+        (mType == FormControlType::ButtonReset ||
+         mType == FormControlType::ButtonSubmit)) {
+      aVisitor.mEvent->mFlags.mMultipleActionsPrevented = true;
     }
   }
 
+  return rv;
+}
+
+void EndSubmitClick(EventChainVisitor& aVisitor) {
   if ((aVisitor.mItemFlags & NS_IN_SUBMIT_CLICK)) {
     nsCOMPtr<nsIContent> content(do_QueryInterface(aVisitor.mItemData));
     RefPtr<HTMLFormElement> form = HTMLFormElement::FromNodeOrNull(content);
@@ -257,8 +256,40 @@ nsresult HTMLButtonElement::PostHandleEvent(EventChainPostVisitor& aVisitor) {
     // Note, NS_IN_SUBMIT_CLICK is set only when we're in outer activate event.
     form->FlushPendingSubmission();
   }
+}
 
-  return rv;
+void HTMLButtonElement::ActivationBehavior(EventChainPostVisitor& aVisitor) {
+  if (!aVisitor.mPresContext) {
+    // Should check whether EndSubmitClick is needed here.
+    return;
+  }
+
+  if (!IsDisabled()) {
+    if (mForm) {
+      // Hold a strong ref while dispatching
+      RefPtr<mozilla::dom::HTMLFormElement> form(mForm);
+      if (mType == FormControlType::ButtonReset) {
+        form->MaybeReset(this);
+        aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
+      } else if (mType == FormControlType::ButtonSubmit) {
+        form->MaybeSubmit(this);
+        aVisitor.mEventStatus = nsEventStatus_eConsumeNoDefault;
+      }
+      // https://html.spec.whatwg.org/multipage/form-elements.html#attr-button-type-button-state
+      // NS_FORM_BUTTON_BUTTON do nothing.
+    }
+    HandlePopoverTargetAction();
+  }
+
+  EndSubmitClick(aVisitor);
+}
+
+void HTMLButtonElement::LegacyCanceledActivationBehavior(
+    EventChainPostVisitor& aVisitor) {
+  // still need to end submission, see bug 1803805
+  // e.g. when parent element of button has event handler preventing default
+  // legacy canceled instead of activation behavior will be run
+  EndSubmitClick(aVisitor);
 }
 
 nsresult HTMLButtonElement::BindToTree(BindContext& aContext,

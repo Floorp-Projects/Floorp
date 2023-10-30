@@ -53,6 +53,11 @@ class HTMLButtonElement final : public nsGenericHTMLFormControlElementWithState,
   void GetEventTargetParent(EventChainPreVisitor& aVisitor) override;
   MOZ_CAN_RUN_SCRIPT_BOUNDARY
   nsresult PostHandleEvent(EventChainPostVisitor& aVisitor) override;
+  void LegacyPreActivationBehavior(EventChainVisitor& aVisitor) override;
+  MOZ_CAN_RUN_SCRIPT
+  void ActivationBehavior(EventChainPostVisitor& aVisitor) override;
+  void LegacyCanceledActivationBehavior(
+      EventChainPostVisitor& aVisitor) override;
 
   // nsINode
   nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;

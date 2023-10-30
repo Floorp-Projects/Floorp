@@ -3125,8 +3125,7 @@ bool HTMLInputElement::CheckActivationBehaviorPreconditions(
       if (outerActivateEvent) {
         aVisitor.mItemFlags |= NS_OUTER_ACTIVATE_EVENT;
       }
-      return outerActivateEvent &&
-             !aVisitor.mEvent->mFlags.mMultiplePreActionsPrevented;
+      return outerActivateEvent;
     }
     default:
       return false;
