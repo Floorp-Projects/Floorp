@@ -41,7 +41,7 @@ interface nsIAsyncSetClipboardData : nsISupports {
   void abort(in nsresult aReason);
 };
 
-[scriptable, uuid(78f7c18e-c8fa-11ed-afa1-0242ac120002)]
+[scriptable, function, uuid(78f7c18e-c8fa-11ed-afa1-0242ac120002)]
 interface nsIAsyncClipboardRequestCallback : nsISupports
 {
   /**
