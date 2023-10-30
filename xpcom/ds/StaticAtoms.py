@@ -2490,6 +2490,9 @@ STATIC_ATOMS = [
     PseudoElementAtom("PseudoElement_mozTextControlPreview", ":-moz-text-control-preview"),
     PseudoElementAtom("PseudoElement_mozReveal", ":-moz-reveal"),
     PseudoElementAtom("PseudoElement_fileSelectorButton", ":file-selector-button"),
+    PseudoElementAtom("PseudoElement_sliderTrack", ":slider-track"),
+    PseudoElementAtom("PseudoElement_sliderThumb", ":slider-thumb"),
+    PseudoElementAtom("PseudoElement_sliderFill", ":slider-fill"),
     # CSS anonymous boxes -- these must appear in the same order as
     # in nsCSSAnonBoxList.h
     NonInheritingAnonBoxAtom("AnonBox_oofPlaceholder", ":-moz-oof-placeholder"),

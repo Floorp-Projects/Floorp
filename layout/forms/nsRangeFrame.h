@@ -178,9 +178,6 @@ class nsRangeFrame final : public nsContainerFrame,
   // to the direction of movement of the thumb).
   nscoord AutoCrossSize(mozilla::Length aEm);
 
-  nsresult MakeAnonymousDiv(Element** aResult, PseudoStyleType aPseudoType,
-                            nsTArray<ContentInfo>& aElements);
-
   // Helper function which reflows the anonymous div frames.
   void ReflowAnonymousContent(nsPresContext* aPresContext,
                               ReflowOutput& aDesiredSize,

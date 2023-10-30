@@ -11,9 +11,9 @@
 
 #include "nsGkAtoms.h"
 #include "mozilla/CSSEnabledState.h"
-#include "mozilla/Compiler.h"
 #include "mozilla/PseudoStyleType.h"
 #include "mozilla/StaticPrefs_dom.h"
+#include "mozilla/StaticPrefs_layout.h"
 
 // Is this pseudo-element a CSS2 pseudo-element that can be specified
 // with the single colon syntax (in addition to the double-colon syntax,
@@ -127,12 +127,17 @@ class nsCSSPseudoElements {
   }
 
   static bool EnabledInContent(Type aType) {
-    if (aType == Type::highlight &&
-        !mozilla::StaticPrefs::dom_customHighlightAPI_enabled()) {
-      return false;
+    switch (aType) {
+      case Type::highlight:
+        return mozilla::StaticPrefs::dom_customHighlightAPI_enabled();
+      case Type::sliderTrack:
+      case Type::sliderThumb:
+      case Type::sliderFill:
+        return mozilla::StaticPrefs::layout_css_modern_range_pseudos_enabled();
+      default:
+        return !PseudoElementHasAnyFlag(
+            aType, CSS_PSEUDO_ELEMENT_ENABLED_IN_UA_SHEETS_AND_CHROME);
     }
-    return !PseudoElementHasAnyFlag(
-        aType, CSS_PSEUDO_ELEMENT_ENABLED_IN_UA_SHEETS_AND_CHROME);
   }
 
   static bool IsEnabled(Type aType, EnabledState aEnabledState) {

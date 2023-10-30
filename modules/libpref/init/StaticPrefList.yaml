@@ -9142,6 +9142,13 @@
   mirror: always
   rust: true
 
+# Whether the modern ::slider-* pseudos are enabled.
+- name: layout.css.modern-range-pseudos.enabled
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+  rust: true
+
 # Whether frame visibility tracking is enabled globally.
 - name: layout.framevisibility.enabled
   type: bool
