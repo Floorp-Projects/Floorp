@@ -53,7 +53,7 @@ function openFileDialog() {
     // window hook for the file dialog being shown and `await`ing on that.
     //
     // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
-    await new Promise(res => setTimeout(res, 500));
+    await new Promise(res => setTimeout(res, 1000));
     return pid;
   })();
 
