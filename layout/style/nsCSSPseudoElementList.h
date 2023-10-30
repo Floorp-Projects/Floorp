@@ -93,5 +93,17 @@ CSS_PSEUDO_ELEMENT(mozTextControlPreview, ":-moz-text-control-preview",
 CSS_PSEUDO_ELEMENT(mozReveal, ":-moz-reveal",
                    CSS_PSEUDO_ELEMENT_ENABLED_IN_UA_SHEETS)
 
+// The button in an <input type=file>
 CSS_PSEUDO_ELEMENT(fileSelectorButton, ":file-selector-button",
                    CSS_PSEUDO_ELEMENT_SUPPORTS_USER_ACTION_STATE)
+
+// Standard progress/meter/range pseudo-elements.
+CSS_PSEUDO_ELEMENT(sliderTrack, ":slider-track",
+                   CSS_PSEUDO_ELEMENT_SUPPORTS_USER_ACTION_STATE |
+                   CSS_PSEUDO_ELEMENT_ENABLED_IN_UA_SHEETS_AND_CHROME)
+CSS_PSEUDO_ELEMENT(sliderThumb, ":slider-thumb",
+                   CSS_PSEUDO_ELEMENT_SUPPORTS_USER_ACTION_STATE |
+                   CSS_PSEUDO_ELEMENT_ENABLED_IN_UA_SHEETS_AND_CHROME)
+CSS_PSEUDO_ELEMENT(sliderFill, ":slider-fill",
+                   CSS_PSEUDO_ELEMENT_SUPPORTS_USER_ACTION_STATE |
+                   CSS_PSEUDO_ELEMENT_ENABLED_IN_UA_SHEETS_AND_CHROME)

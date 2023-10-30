@@ -243,6 +243,12 @@ module.exports = {
         ignorePseudoClasses: ["popover-open"],
       },
     ],
+    "selector-pseudo-element-no-unknown": [
+      true,
+      {
+        ignorePseudoElements: ["slider-track", "slider-fill", "slider-thumb"],
+      },
+    ],
   },
 
   overrides: [

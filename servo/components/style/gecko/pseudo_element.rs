@@ -35,11 +35,11 @@ impl ::selectors::parser::PseudoElement for PseudoElement {
     fn valid_after_slotted(&self) -> bool {
         matches!(
             *self,
-            PseudoElement::Before |
-                PseudoElement::After |
-                PseudoElement::Marker |
-                PseudoElement::Placeholder |
-                PseudoElement::FileSelectorButton
+            Self::Before |
+                Self::After |
+                Self::Marker |
+                Self::Placeholder |
+                Self::FileSelectorButton
         )
     }
 
@@ -95,7 +95,7 @@ impl PseudoElement {
     /// Whether the current pseudo element is ::before or ::after.
     #[inline]
     pub fn is_before_or_after(&self) -> bool {
-        self.is_before() || self.is_after()
+        matches!(*self, Self::Before | Self::After)
     }
 
     /// Whether this pseudo-element is the ::before pseudo.
@@ -148,15 +148,15 @@ impl PseudoElement {
 
     /// The identifier of the highlight this pseudo-element represents.
     pub fn highlight_name(&self) -> Option<&AtomIdent> {
-        match &*self {
-            PseudoElement::Highlight(name) => Some(&name),
+        match *self {
+            Self::Highlight(ref name) => Some(name),
             _ => None,
         }
     }
 
     /// Whether this pseudo-element is the ::highlight pseudo.
     pub fn is_highlight(&self) -> bool {
-        matches!(*self, PseudoElement::Highlight(_))
+        matches!(*self, Self::Highlight(_))
     }
 
     /// Whether this pseudo-element supports user action selectors.
@@ -166,10 +166,13 @@ impl PseudoElement {
 
     /// Whether this pseudo-element is enabled for all content.
     pub fn enabled_in_content(&self) -> bool {
-        if self.is_highlight() && !pref!("dom.customHighlightAPI.enabled") {
-            return false;
+        match *self {
+            Self::Highlight(..) => pref!("dom.customHighlightAPI.enabled"),
+            Self::SliderFill | Self::SliderTrack | Self::SliderThumb => pref!("layout.css.modern-range-pseudos.enabled"),
+            // If it's not explicitly enabled in UA sheets or chrome, then we're enabled for
+            // content.
+            _ => (self.flags() & structs::CSS_PSEUDO_ELEMENT_ENABLED_IN_UA_SHEETS_AND_CHROME) == 0
         }
-        return self.flags() & structs::CSS_PSEUDO_ELEMENT_ENABLED_IN_UA_SHEETS_AND_CHROME == 0;
     }
 
     /// Whether this pseudo is enabled explicitly in UA sheets.

@@ -707,7 +707,8 @@ progress {
   overflow: clip;
 }
 
-::-moz-progress-bar {
+progress::-moz-progress-bar,
+progress::slider-fill {
   /* Prevent styling that would change the type of frame we construct. */
   display: inline-block !important;
   float: none !important;
@@ -733,7 +734,8 @@ meter {
   overflow: clip;
 }
 
-::-moz-meter-bar {
+meter::-moz-meter-bar,
+meter::slider-fill {
   /* Block styles that would change the type of frame we construct. */
   display: inline-block !important;
   float: none !important;
@@ -746,15 +748,18 @@ meter {
   width: 100%;
 }
 
-:-moz-meter-optimum::-moz-meter-bar {
+meter:-moz-meter-optimum::-moz-meter-bar,
+meter:-moz-meter-optimum::slider-fill {
   /* green. */
   background: linear-gradient(#ad7, #ad7, #cea 20%, #7a3 45%, #7a3 55%);
 }
-:-moz-meter-sub-optimum::-moz-meter-bar {
+meter:-moz-meter-sub-optimum::-moz-meter-bar,
+meter:-moz-meter-sub-optimum::slider-fill {
   /* orange. */
   background: linear-gradient(#fe7, #fe7, #ffc 20%, #db3 45%, #db3 55%);
 }
-:-moz-meter-sub-sub-optimum::-moz-meter-bar {
+meter:-moz-meter-sub-sub-optimum::-moz-meter-bar,
+meter:-moz-meter-sub-sub-optimum::slider-fill {
   /* red. */
   background: linear-gradient(#f77, #f77, #fcc 20%, #d44 45%, #d44 55%);
 }
@@ -779,8 +784,12 @@ input[type=range] {
  *
  * If content authors want to have a vertical range, they will also need to
  * set the width/height of this pseudo-element.
+ *
+ * TODO(emilio, bug 1663819): Losen these restrictions once these
+ * pseudo-elements are better spec'd out.
  */
-input[type=range]::-moz-range-track {
+input[type=range]::-moz-range-track,
+input[type=range]::slider-track {
   /* Prevent styling that would change the type of frame we construct. */
   display: block !important;
   float: none !important;
@@ -792,7 +801,8 @@ input[type=range]::-moz-range-track {
   user-select: none !important;
 }
 
-input[type=range][orient=vertical]::-moz-range-track {
+input[type=range][orient=vertical]::-moz-range-track,
+input[type=range][orient=vertical]::slider-track {
   inline-size: 0.2em; /* same as block-size above */
   block-size: 100%;
 }
@@ -805,7 +815,8 @@ input[type=range][orient=vertical]::-moz-range-track {
  * property is ignored, and if the range range is vertical, the height property
  * is ignored.
  */
-input[type=range]::-moz-range-progress {
+input[type=range]::-moz-range-progress,
+input[type=range]::slider-fill {
   /* Prevent styling that would change the type of frame we construct. */
   display: block !important;
   float: none !important;
@@ -813,8 +824,7 @@ input[type=range]::-moz-range-progress {
   writing-mode: unset !important;
   direction: unset !important;
   /* Since one of width/height will be ignored, this just sets the "other"
-     dimension.
-   */
+     dimension. */
   width: 0.2em;
   height: 0.2em;
   /* Prevent nsIFrame::HandlePress setting mouse capture to this element. */
@@ -827,7 +837,8 @@ input[type=range]::-moz-range-progress {
  * logic to position it). Specifically the 'margin', 'top' and 'left'
  * properties are ignored.
  */
-input[type=range]::-moz-range-thumb {
+input[type=range]::-moz-range-thumb,
+input[type=range]::slider-thumb {
   /* Native theming is atomic for range. Set appearance on the range
    * to get rid of it. The thumb's appearance is fixed.
    */
