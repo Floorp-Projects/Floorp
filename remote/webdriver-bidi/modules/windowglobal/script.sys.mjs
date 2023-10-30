@@ -324,6 +324,8 @@ class ScriptModule extends WindowGlobalBiDiModule {
    *     in case of ECMAScript objects should be serialized.
    * @param {RemoteValue=} options.thisParameter
    *     The value of the this keyword for the function call.
+   * @param {boolean=} options.userActivation
+   *     Determines whether execution should be treated as initiated by user.
    *
    * @returns {object}
    *     - evaluationStatus {EvaluationStatus} One of "normal", "throw".
@@ -342,6 +344,7 @@ class ScriptModule extends WindowGlobalBiDiModule {
       sandbox: sandboxName = null,
       serializationOptions,
       thisParameter = null,
+      userActivation,
     } = options;
 
     const realm = this.messageHandler.getRealm({ realmId, sandboxName });
@@ -361,6 +364,8 @@ class ScriptModule extends WindowGlobalBiDiModule {
             emitScriptMessage: this.#emitScriptMessage,
           })
         : null;
+
+    realm.userActivationEnabled = userActivation;
 
     const rv = realm.executeInGlobalWithBindings(
       functionDeclaration,
@@ -412,6 +417,8 @@ class ScriptModule extends WindowGlobalBiDiModule {
    *     The ownership model to use for the results of this evaluation.
    * @param {string=} options.sandbox
    *     The name of the sandbox.
+   * @param {boolean=} options.userActivation
+   *     Determines whether execution should be treated as initiated by user.
    *
    * @returns {object}
    *     - evaluationStatus {EvaluationStatus} One of "normal", "throw".
@@ -428,9 +435,12 @@ class ScriptModule extends WindowGlobalBiDiModule {
       resultOwnership,
       sandbox: sandboxName = null,
       serializationOptions,
+      userActivation,
     } = options;
 
     const realm = this.messageHandler.getRealm({ realmId, sandboxName });
+
+    realm.userActivationEnabled = userActivation;
 
     const rv = realm.executeInGlobal(expression);
 
