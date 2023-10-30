@@ -25,7 +25,6 @@ tasks:
                     - focus-release
                     - klar-release
                     - focus-beta
-                    - fenix-nightly
                     - fenix-release
                     - fenix-beta
             group-by:

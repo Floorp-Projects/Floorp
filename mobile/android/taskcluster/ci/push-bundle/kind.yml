@@ -39,7 +39,7 @@ tasks:
             commit: true
             channel:
                 by-build-type:
-                    fenix-nightly: fenix-aab-nightly
+                    fenix-nightly: fenix-nightly
                     fenix-beta: fenix-beta
                     fenix-release: fenix-release
             dep:
