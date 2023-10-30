@@ -991,8 +991,10 @@ export default class LoginItem extends HTMLElement {
 
     if (this.dataset.editing) {
       this._passwordDisplayInput.removeAttribute("tabindex");
+      this._revealCheckbox.hidden = true;
     } else {
       this._passwordDisplayInput.setAttribute("tabindex", -1);
+      this._revealCheckbox.hidden = false;
     }
 
     // Swap which <input> is in the document depending on whether we need the

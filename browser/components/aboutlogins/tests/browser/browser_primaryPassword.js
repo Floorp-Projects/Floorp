@@ -174,15 +174,16 @@ add_task(async function test() {
     let revealCheckbox = loginItem.shadowRoot.querySelector(
       ".reveal-password-checkbox"
     );
-    Assert.ok(ContentTaskUtils.is_visible(revealCheckbox), "Toggle visible");
-    Assert.ok(!revealCheckbox.checked, "Not revealed initially");
+    Assert.ok(
+      !ContentTaskUtils.is_visible(revealCheckbox),
+      "Toggle should not be visible"
+    );
     Assert.equal(passwordField.type, "password", "type is password");
-    revealCheckbox.click();
+    passwordField.focus();
 
     await ContentTaskUtils.waitForCondition(() => {
       return passwordField.type == "text";
     }, "Waiting for type='text'");
-    Assert.ok(revealCheckbox.checked, "Not revealed after click");
 
     let cancelButton = loginItem.shadowRoot.querySelector(".cancel-button");
     cancelButton.click();
