@@ -1028,52 +1028,49 @@ nsresult nsTextControlFrame::OffsetToDOMPoint(uint32_t aOffset,
 nsresult nsTextControlFrame::AttributeChanged(int32_t aNameSpaceID,
                                               nsAtom* aAttribute,
                                               int32_t aModType) {
-  auto* textControlElement = TextControlElement::FromNode(GetContent());
-  MOZ_ASSERT(textControlElement);
-  nsISelectionController* selCon = textControlElement->GetSelectionController();
-  const bool needEditor =
-      nsGkAtoms::maxlength == aAttribute || nsGkAtoms::readonly == aAttribute ||
-      nsGkAtoms::disabled == aAttribute || nsGkAtoms::spellcheck == aAttribute;
-  RefPtr<TextEditor> textEditor = needEditor ? GetTextEditor() : nullptr;
-  if ((needEditor && !textEditor) || !selCon) {
-    return nsContainerFrame::AttributeChanged(aNameSpaceID, aAttribute,
-                                              aModType);
-  }
-
-  if (nsGkAtoms::maxlength == aAttribute) {
-    if (textEditor) {
-      textEditor->SetMaxTextLength(textControlElement->UsedMaxLength());
-    }
-    return NS_OK;
-  }
-
-  if (nsGkAtoms::readonly == aAttribute || nsGkAtoms::disabled == aAttribute) {
-    if (AttributeExists(aAttribute)) {
-      if (nsContentUtils::IsFocusedContent(mContent)) {
-        selCon->SetCaretEnabled(false);
-      }
-      textEditor->AddFlags(nsIEditor::eEditorReadonlyMask);
-    } else {
-      if (!AttributeExists(aAttribute == nsGkAtoms::readonly
-                               ? nsGkAtoms::disabled
-                               : nsGkAtoms::readonly)) {
-        if (nsContentUtils::IsFocusedContent(mContent)) {
-          selCon->SetCaretEnabled(true);
-        }
-        textEditor->RemoveFlags(nsIEditor::eEditorReadonlyMask);
-      }
-    }
-    return NS_OK;
-  }
-
-  if (!mEditorHasBeenInitialized && nsGkAtoms::value == aAttribute) {
+  if (aAttribute == nsGkAtoms::value && !mEditorHasBeenInitialized) {
     UpdateValueDisplay(true);
     return NS_OK;
   }
 
-  // Allow the base class to handle common attributes supported by all form
-  // elements...
+  if (aAttribute == nsGkAtoms::maxlength) {
+    if (RefPtr<TextEditor> textEditor = GetTextEditor()) {
+      textEditor->SetMaxTextLength(ControlElement()->UsedMaxLength());
+      return NS_OK;
+    }
+  }
   return nsContainerFrame::AttributeChanged(aNameSpaceID, aAttribute, aModType);
+}
+
+void nsTextControlFrame::HandleReadonlyOrDisabledChange() {
+  RefPtr<TextControlElement> el = ControlElement();
+  RefPtr<TextEditor> editor = el->GetTextEditorWithoutCreation();
+  if (!editor) {
+    return;
+  }
+  nsISelectionController* selCon = el->GetSelectionController();
+  if (!selCon) {
+    return;
+  }
+  if (el->IsDisabledOrReadOnly()) {
+    if (nsContentUtils::IsFocusedContent(el)) {
+      selCon->SetCaretEnabled(false);
+    }
+    editor->AddFlags(nsIEditor::eEditorReadonlyMask);
+  } else {
+    if (nsContentUtils::IsFocusedContent(el)) {
+      selCon->SetCaretEnabled(true);
+    }
+    editor->RemoveFlags(nsIEditor::eEditorReadonlyMask);
+  }
+}
+
+void nsTextControlFrame::ElementStateChanged(dom::ElementState aStates) {
+  if (aStates.HasAtLeastOneOfStates(dom::ElementState::READONLY |
+                                    dom::ElementState::DISABLED)) {
+    HandleReadonlyOrDisabledChange();
+  }
+  return nsContainerFrame::ElementStateChanged(aStates);
 }
 
 /// END NSIFRAME OVERLOADS
