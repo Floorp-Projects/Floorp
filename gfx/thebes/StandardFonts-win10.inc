@@ -161,6 +161,7 @@ static const char* kLangPackFonts[] = {
   "MingLiU",  // Chinese (Traditional) Supplemental Fonts
   "MingLiU_HKSCS",  // Chinese (Traditional) Supplemental Fonts
   "Miriam",  // Hebrew Supplemental Fonts
+  "Miriam Fixed",  // Hebrew Supplemental Fonts
   "MoolBoran",  // Khmer Supplemental Fonts
   "MS Mincho",  // Japanese Supplemental Fonts
   "MS PMincho",  // Japanese Supplemental Fonts
