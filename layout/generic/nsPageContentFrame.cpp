@@ -414,10 +414,7 @@ void nsPageContentFrame::EnsurePageName() {
   mPageName = ComputePageValue();
 
   MOZ_ASSERT(mPageName, "Page name should never be null");
-  // We don't need to resolve any further styling if the page name is empty.
-  if (mPageName == nsGkAtoms::_empty) {
-    return;
-  }
+  // Resolve the computed style given this page-name and the :first pseudo.
   RefPtr<ComputedStyle> pageContentPseudoStyle =
       PresShell()->StyleSet()->ResolvePageContentStyle(
           mPageName, StylePagePseudoClassFlags::FIRST);
