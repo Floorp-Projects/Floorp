@@ -24,23 +24,6 @@
   width: 100%;
 }
 
-#PopupAutoComplete > richlistbox > richlistitem > .ac-login-item > .ac-settings-button {
-  visibility: hidden;
-  height: 16px;
-  width: 16px;
-  border: 0;
-  color: inherit;
-  -moz-context-properties: fill;
-  fill: currentColor;
-  margin-inline: 8px;
-  cursor: pointer;
-  background: url("chrome://global/skin/icons/settings.svg") center no-repeat;
-}
-
-#PopupAutoComplete > richlistbox > richlistitem:is(:hover, [selected]) > .ac-login-item > .ac-settings-button {
-  visibility: visible;
-}
-
 #PopupAutoComplete > richlistbox > richlistitem > .ac-title {
   font: icon;
   margin-inline-start: 4px;
@@ -75,6 +58,22 @@
   gap: 8px;
   margin: 0;
   min-width: 0;
+}
+
+#PopupAutoComplete > richlistbox > richlistitem > .two-line-wrapper > .ac-secondary-action {
+  height: 16px;
+  width: 16px;
+  border: 0;
+  color: inherit;
+  -moz-context-properties: fill;
+  fill: currentColor;
+  margin-inline: 8px;
+  cursor: pointer;
+  background: url("chrome://global/skin/icons/settings.svg") center no-repeat;
+}
+
+#PopupAutoComplete > richlistbox > richlistitem:not(:hover, [selected]) > .two-line-wrapper > .ac-secondary-action {
+  visibility: collapse;
 }
 
 #PopupAutoComplete > richlistbox > richlistitem[originaltype="login"] > .ac-site-icon,
