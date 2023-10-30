@@ -576,7 +576,6 @@ impl<'a> ContainerSizeQuery<'a> {
     where
         E: TElement + 'a,
     {
-        debug_assert!(!is_pseudo || known_parent_style.is_some());
         let parent;
         let data;
         let parent_style = match known_parent_style {
