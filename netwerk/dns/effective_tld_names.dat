@@ -6710,7 +6710,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2023-10-20T15:11:50Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2023-10-28T15:12:17Z
 // This list is auto-generated, don't edit it manually.
 // aaa : American Automobile Association, Inc.
 // https://www.iana.org/domains/root/db/aaa.html
@@ -7400,10 +7400,6 @@ cbn
 // https://www.iana.org/domains/root/db/cbre.html
 cbre
 
-// cbs : CBS Domains Inc.
-// https://www.iana.org/domains/root/db/cbs.html
-cbs
-
 // center : Binky Moon, LLC
 // https://www.iana.org/domains/root/db/center.html
 center
@@ -7755,10 +7751,6 @@ dental
 // dentist : Dog Beach, LLC
 // https://www.iana.org/domains/root/db/dentist.html
 dentist
-
-// desi : Desi Networks LLC
-// https://www.iana.org/domains/root/db/desi.html
-desi
 
 // design : Registry Services, LLC
 // https://www.iana.org/domains/root/db/design.html
@@ -10079,10 +10071,6 @@ shouji
 // show : Binky Moon, LLC
 // https://www.iana.org/domains/root/db/show.html
 show
-
-// showtime : CBS Domains Inc.
-// https://www.iana.org/domains/root/db/showtime.html
-showtime
 
 // silk : Amazon Registry Services, Inc.
 // https://www.iana.org/domains/root/db/silk.html
