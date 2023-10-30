@@ -29,8 +29,7 @@ add_setup(async function () {
   });
 
   await setUpTelemetryTest({
-    suggestions: [],
-    remoteSettingsResults: [
+    remoteSettingsRecords: [
       {
         type: "weather",
         weather: WEATHER_RS_DATA,

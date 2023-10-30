@@ -21,25 +21,13 @@ const REMOTE_SETTINGS_DATA = [
 ];
 
 add_setup(async function () {
-  await SpecialPowers.pushPrefEnv({
-    set: [
-      ["browser.urlbar.quicksuggest.enabled", true],
-      ["browser.urlbar.quicksuggest.nonsponsored", true],
-      ["browser.urlbar.suggest.mdn", true],
-    ],
-  });
-
   await QuickSuggestTestUtils.ensureQuickSuggestInit({
-    remoteSettingsResults: REMOTE_SETTINGS_DATA,
+    remoteSettingsRecords: REMOTE_SETTINGS_DATA,
+    prefs: [["mdn.featureGate", true]],
   });
 });
 
 add_task(async function basic() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.mdn.featureGate", true]],
-  });
-  await waitForSuggestions();
-
   const suggestion = REMOTE_SETTINGS_DATA[0].attachment[0];
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
@@ -68,15 +56,10 @@ add_task(async function basic() {
   Assert.ok(true, "Expected page is loaded");
 
   await PlacesUtils.history.clear();
-  await SpecialPowers.popPrefEnv();
 });
 
 // Tests the row/group label.
 add_task(async function rowLabel() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.mdn.featureGate", true]],
-  });
-
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
     window,
     value: REMOTE_SETTINGS_DATA[0].attachment[0].keywords[0],
@@ -88,7 +71,6 @@ add_task(async function rowLabel() {
   Assert.equal(row.getAttribute("label"), "Recommended resource");
 
   await UrlbarTestUtils.promisePopupClose(window);
-  await SpecialPowers.popPrefEnv();
 });
 
 add_task(async function disable() {
@@ -121,7 +103,7 @@ add_task(async function resultMenu_notInterested() {
   // Re-enable suggestions and wait until MDNSuggestions syncs them from
   // remote settings again.
   UrlbarPrefs.set("suggest.mdn", true);
-  await waitForSuggestions();
+  await QuickSuggestTestUtils.forceSync();
 });
 
 // Tests the "Not relevant" result menu dismissal command.
@@ -138,11 +120,6 @@ add_task(async function notRelevant() {
 });
 
 async function doDismissTest(command) {
-  await SpecialPowers.pushPrefEnv({
-    set: [["browser.urlbar.mdn.featureGate", true]],
-  });
-  await waitForSuggestions();
-
   const keyword = REMOTE_SETTINGS_DATA[0].attachment[0].keywords[0];
   // Do a search.
   await UrlbarTestUtils.promiseAutocompleteResultPopup({
@@ -246,14 +223,4 @@ async function doDismissTest(command) {
   }
 
   await UrlbarTestUtils.promisePopupClose(window);
-  await SpecialPowers.popPrefEnv();
-}
-
-async function waitForSuggestions() {
-  const keyword = REMOTE_SETTINGS_DATA[0].attachment[0].keywords[0];
-  const feature = QuickSuggest.getFeature("MDNSuggestions");
-  await TestUtils.waitForCondition(async () => {
-    const suggestions = await feature.queryRemoteSettings(keyword);
-    return !!suggestions.length;
-  }, "Waiting for MDNSuggestions to serve remote settings suggestions");
 }

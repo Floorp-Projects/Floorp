@@ -45,7 +45,7 @@ const REMOTE_SETTINGS_RESULTS = [
         keywords: ["first", "1st", "two words", "a b c"],
         description: "Description for the First Addon",
         number_of_ratings: 1256,
-        is_top_pick: true,
+        score: 0.25,
       },
       {
         url: "https://example.com/second-addon",
@@ -56,7 +56,7 @@ const REMOTE_SETTINGS_RESULTS = [
         keywords: ["second", "2nd"],
         description: "Description for the Second Addon",
         number_of_ratings: 256,
-        is_top_pick: false,
+        score: 0.25,
       },
       {
         url: "https://example.com/third-addon",
@@ -67,6 +67,7 @@ const REMOTE_SETTINGS_RESULTS = [
         keywords: ["third", "3rd"],
         description: "Description for the Third Addon",
         number_of_ratings: 3,
+        score: 0.25,
       },
       {
         url: "https://example.com/fourth-addon?utm_medium=aaa&utm_source=bbb",
@@ -77,23 +78,21 @@ const REMOTE_SETTINGS_RESULTS = [
         keywords: ["fourth", "4th"],
         description: "Description for the Fourth Addon",
         number_of_ratings: 4,
+        score: 0.25,
       },
     ],
   },
 ];
 
 add_setup(async function init() {
-  UrlbarPrefs.set("quicksuggest.enabled", true);
-  UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
-
   // Disable search suggestions so we don't hit the network.
   Services.prefs.setBoolPref("browser.search.suggest.enabled", false);
 
   await QuickSuggestTestUtils.ensureQuickSuggestInit({
-    remoteSettingsResults: REMOTE_SETTINGS_RESULTS,
+    remoteSettingsRecords: REMOTE_SETTINGS_RESULTS,
     merinoSuggestions: MERINO_SUGGESTIONS,
+    prefs: [["suggest.quicksuggest.nonsponsored", true]],
   });
-  await waitForRemoteSettingsSuggestions();
 });
 
 add_task(async function telemetryType() {
@@ -133,7 +132,7 @@ add_tasks_with_rust(async function quickSuggestPrefsDisabled() {
     });
 
     UrlbarPrefs.set(pref, true);
-    await waitForRemoteSettingsSuggestions();
+    await QuickSuggestTestUtils.forceSync();
   }
 });
 
@@ -168,7 +167,7 @@ add_tasks_with_rust(async function addonSuggestionsSpecificPrefDisabled() {
 
     // Revert.
     UrlbarPrefs.clear(pref);
-    await waitForRemoteSettingsSuggestions();
+    await QuickSuggestTestUtils.forceSync();
   }
 });
 
@@ -189,7 +188,7 @@ add_tasks_with_rust(async function nimbus() {
   const cleanUpNimbusEnable = await UrlbarTestUtils.initNimbusFeature({
     addonsFeatureGate: true,
   });
-  await waitForRemoteSettingsSuggestions();
+  await QuickSuggestTestUtils.forceSync();
   await check_results({
     context: createContext("test", {
       providers: [UrlbarProviderQuickSuggest.name],
@@ -206,7 +205,7 @@ add_tasks_with_rust(async function nimbus() {
 
   // Enable locally.
   UrlbarPrefs.set("addons.featureGate", true);
-  await waitForRemoteSettingsSuggestions();
+  await QuickSuggestTestUtils.forceSync();
 
   // Disable by Nimbus.
   const cleanUpNimbusDisable = await UrlbarTestUtils.initNimbusFeature({
@@ -223,7 +222,7 @@ add_tasks_with_rust(async function nimbus() {
 
   // Revert.
   UrlbarPrefs.clear("addons.featureGate");
-  await waitForRemoteSettingsSuggestions();
+  await QuickSuggestTestUtils.forceSync();
 });
 
 add_tasks_with_rust(async function hideIfAlreadyInstalled() {
@@ -310,7 +309,6 @@ add_tasks_with_rust(async function remoteSettings() {
         suggestion: REMOTE_SETTINGS_RESULTS[0].attachment[0],
         source: "remote-settings",
       }),
-      expectedRust: null,
     },
     {
       input: "two ",
@@ -318,7 +316,6 @@ add_tasks_with_rust(async function remoteSettings() {
         suggestion: REMOTE_SETTINGS_RESULTS[0].attachment[0],
         source: "remote-settings",
       }),
-      expectedRust: null,
     },
     {
       input: "two w",
@@ -326,7 +323,6 @@ add_tasks_with_rust(async function remoteSettings() {
         suggestion: REMOTE_SETTINGS_RESULTS[0].attachment[0],
         source: "remote-settings",
       }),
-      expectedRust: null,
     },
     {
       input: "two wo",
@@ -334,7 +330,6 @@ add_tasks_with_rust(async function remoteSettings() {
         suggestion: REMOTE_SETTINGS_RESULTS[0].attachment[0],
         source: "remote-settings",
       }),
-      expectedRust: null,
     },
     {
       input: "two wor",
@@ -342,7 +337,6 @@ add_tasks_with_rust(async function remoteSettings() {
         suggestion: REMOTE_SETTINGS_RESULTS[0].attachment[0],
         source: "remote-settings",
       }),
-      expectedRust: null,
     },
     {
       input: "two word",
@@ -350,7 +344,6 @@ add_tasks_with_rust(async function remoteSettings() {
         suggestion: REMOTE_SETTINGS_RESULTS[0].attachment[0],
         source: "remote-settings",
       }),
-      expectedRust: null,
     },
     {
       input: "two words",
@@ -365,7 +358,6 @@ add_tasks_with_rust(async function remoteSettings() {
         suggestion: REMOTE_SETTINGS_RESULTS[0].attachment[0],
         source: "remote-settings",
       }),
-      expectedRust: null,
     },
     {
       input: "a ",
@@ -373,7 +365,6 @@ add_tasks_with_rust(async function remoteSettings() {
         suggestion: REMOTE_SETTINGS_RESULTS[0].attachment[0],
         source: "remote-settings",
       }),
-      expectedRust: null,
     },
     {
       input: "a b",
@@ -381,7 +372,6 @@ add_tasks_with_rust(async function remoteSettings() {
         suggestion: REMOTE_SETTINGS_RESULTS[0].attachment[0],
         source: "remote-settings",
       }),
-      expectedRust: null,
     },
     {
       input: "a b ",
@@ -389,7 +379,6 @@ add_tasks_with_rust(async function remoteSettings() {
         suggestion: REMOTE_SETTINGS_RESULTS[0].attachment[0],
         source: "remote-settings",
       }),
-      expectedRust: null,
     },
     {
       input: "a b c",
@@ -439,13 +428,7 @@ add_tasks_with_rust(async function remoteSettings() {
   // Disable Merino so we trigger only remote settings suggestions.
   UrlbarPrefs.set("quicksuggest.dataCollection.enabled", false);
 
-  for (let { input, expected, expectedRust } of testCases) {
-    // TODO: The Rust implementation of addon suggestions is currently different
-    // from desktop: For Rust, the full keyword must be typed. `expectedRust`
-    // should be removed when the Rust implementation is fixed.
-    if (UrlbarPrefs.get("quicksuggest.rustEnabled")) {
-      expected = expectedRust === undefined ? expected : expectedRust;
-    }
+  for (let { input, expected } of testCases) {
     await check_results({
       context: createContext(input, {
         providers: [UrlbarProviderQuickSuggest.name],
@@ -495,7 +478,7 @@ add_task(async function merinoIsTopPick() {
 });
 
 // Tests the "show less frequently" behavior.
-add_task(async function showLessFrequently() {
+add_tasks_with_rust(async function showLessFrequently() {
   await doShowLessFrequentlyTests({
     feature: QuickSuggest.getFeature("AddonSuggestions"),
     showLessFrequentlyCountPref: "addons.showLessFrequentlyCount",
@@ -560,12 +543,4 @@ function makeExpectedResult({ suggestion, source, setUtmParams = true }) {
       provider,
     },
   };
-}
-
-async function waitForRemoteSettingsSuggestions(keyword = "first") {
-  let feature = QuickSuggest.getFeature("AddonSuggestions");
-  await TestUtils.waitForCondition(async () => {
-    let suggestions = await feature.queryRemoteSettings(keyword);
-    return !!suggestions.length;
-  }, "Waiting for AddonSuggestions to serve remote settings suggestions");
 }

@@ -992,7 +992,7 @@ add_task(async function selected_result_addons() {
 
 add_task(async function selected_result_rust_adm_sponsored() {
   const cleanupQuickSuggest = await ensureQuickSuggestInit({
-    rustEnabled: true,
+    prefs: [["quicksuggest.rustEnabled", true]],
   });
 
   await doTest(async browser => {
@@ -1016,7 +1016,7 @@ add_task(async function selected_result_rust_adm_sponsored() {
 
 add_task(async function selected_result_rust_adm_nonsponsored() {
   const cleanupQuickSuggest = await ensureQuickSuggestInit({
-    rustEnabled: true,
+    prefs: [["quicksuggest.rustEnabled", true]],
   });
 
   await doTest(async browser => {

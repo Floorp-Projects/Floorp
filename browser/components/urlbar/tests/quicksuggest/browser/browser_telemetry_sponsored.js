@@ -23,15 +23,19 @@ const REMOTE_SETTINGS_RESULT = {
   impression_url: "https://example.com/impression",
   advertiser: "testadvertiser",
   iab_category: "22 - Shopping",
+  icon: "1234",
 };
 
 const suggestion_type = "sponsored";
 const index = 1;
 const position = index + 1;
 
+// Trying to avoid timeouts in TV mode.
+requestLongerTimeout(3);
+
 add_setup(async function () {
   await setUpTelemetryTest({
-    remoteSettingsResults: [
+    remoteSettingsRecords: [
       {
         type: "data",
         attachment: [REMOTE_SETTINGS_RESULT],
