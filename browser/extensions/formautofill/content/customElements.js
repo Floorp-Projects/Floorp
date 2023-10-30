@@ -141,8 +141,8 @@
         this.getAttribute("ac-value")
       );
 
-      this._label.textContent = primary;
-      this._comment.textContent = secondary;
+      this._label.textContent = primary.toString().replaceAll("*", "•");
+      this._comment.textContent = secondary.toString().replaceAll("*", "•");
       if (ariaLabel) {
         this.setAttribute("aria-label", ariaLabel);
       }
