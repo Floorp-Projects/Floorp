@@ -56,6 +56,7 @@ extern bool gIsGtest;
 
 extern bool gKioskMode;
 extern int gKioskMonitor;
+extern bool gAllowContentAnalysis;
 
 namespace mozilla {
 nsresult AppInfoConstructor(const nsID& aIID, void** aResult);

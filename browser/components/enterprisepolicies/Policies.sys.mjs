@@ -486,6 +486,15 @@ export var Policies = {
     // Queried directly by ContextualIdentityService.sys.mjs
   },
 
+  ContentAnalysis: {
+    onBeforeUIStartup(manager, param) {
+      if ("Enabled" in param) {
+        let enabled = !!param.Enabled;
+        setAndLockPref("browser.contentanalysis.enabled", enabled);
+      }
+    },
+  },
+
   Cookies: {
     onBeforeUIStartup(manager, param) {
       addAllowDenyPermissions("cookie", param.Allow, param.Block);
