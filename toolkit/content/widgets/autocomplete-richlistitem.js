@@ -634,7 +634,21 @@
       this.textContent = "";
       this.appendChild(this.constructor.fragment);
       this.initializeAttributeInheritance();
+      this.initializeSecondaryAction();
       this._adjustAcItem();
+    }
+
+    initializeSecondaryAction() {
+      const button = this.querySelector(".ac-secondary-action");
+
+      if (this.onSecondaryAction) {
+        button.addEventListener("mousedown", event => {
+          event.stopPropagation();
+          this.onSecondaryAction();
+        });
+      } else {
+        button?.remove();
+      }
     }
 
     static get inheritedAttributes() {
@@ -656,6 +670,7 @@
           <div class="label-row line1-label"></div>
           <div class="label-row line2-label"></div>
         </div>
+        <button class="ac-secondary-action"></button>
       </div>
     `;
     }
@@ -692,16 +707,14 @@
     connectedCallback() {
       super.connectedCallback();
 
-      this.querySelector(".ac-settings-button").addEventListener(
-        "mousedown",
-        event => {
-          event.stopPropagation();
-          const details = JSON.parse(this.getAttribute("ac-label"));
-          LoginHelper.openPasswordManager(window, {
-            loginGuid: details?.guid,
-          });
-        }
-      );
+      this.firstChild.classList.add("ac-login-item");
+    }
+
+    onSecondaryAction() {
+      const details = JSON.parse(this.getAttribute("ac-label"));
+      LoginHelper.openPasswordManager(window, {
+        loginGuid: details?.guid,
+      });
     }
 
     static get inheritedAttributes() {
@@ -710,21 +723,6 @@
         ".line1-label": "text=ac-value",
         // Don't inherit ac-label with getCommentAt since the label is JSON.
       };
-    }
-
-    static get markup() {
-      return `
-        <div xmlns="http://www.w3.org/1999/xhtml"
-             xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-             class="two-line-wrapper ac-login-item">
-          <xul:image class="ac-site-icon"></xul:image>
-          <div class="labels-wrapper">
-            <div class="label-row line1-label"></div>
-            <div class="label-row line2-label"></div>
-          </div>
-          <button class="ac-settings-button"></button>
-        </div>
-      `;
     }
 
     _adjustAcItem() {
