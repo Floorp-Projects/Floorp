@@ -23,6 +23,7 @@ use crate::Atom;
 use cssparser::{serialize_identifier, CssStringWriter, Parser};
 #[cfg(feature = "gecko")]
 use malloc_size_of::{MallocSizeOf, MallocSizeOfOps};
+use num_traits::abs;
 use num_traits::cast::AsPrimitive;
 use std::fmt::{self, Write};
 use style_traits::{CssWriter, ParseError, ToCss};
@@ -817,7 +818,11 @@ impl ToComputedValue for specified::FontSizeAdjust {
                         } else {
                             metrics.ascent / font_size
                         };
-                        FontSizeAdjust::$basis(NonNegative(ratio))
+                        if ratio.is_nan() {
+                            FontSizeAdjust::$basis(NonNegative(abs($fallback)))
+                        } else {
+                            FontSizeAdjust::$basis(NonNegative(ratio))
+                        }
                     },
                 }
             }};
