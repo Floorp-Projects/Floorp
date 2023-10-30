@@ -9346,12 +9346,6 @@
   value: 1
   mirror: always
 
-# Wether to block autoplay for webaudio
-- name: media.autoplay.block-webaudio
-  type: bool
-  value: true
-  mirror: always
-
 # File-backed MediaCache size.
 - name: media.cache_size
   type: RelaxedAtomicUint32

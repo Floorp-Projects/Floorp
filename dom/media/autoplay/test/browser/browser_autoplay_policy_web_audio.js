@@ -19,7 +19,6 @@ function setup_test_preference() {
     set: [
       ["media.autoplay.default", SpecialPowers.Ci.nsIAutoplay.BLOCKED],
       ["media.autoplay.blocking_policy", 0],
-      ["media.autoplay.block-webaudio", true],
       ["media.autoplay.block-event.enabled", true],
     ],
   });
