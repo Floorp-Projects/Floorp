@@ -290,7 +290,11 @@
         this._itemBox.setAttribute("no-warning", "true");
       }
 
-      const buttonTextBundleKey = value.categories
+      // After focusing a field that was previously filled with cc information,
+      // the "ac-image" is falsely set for the listitem-footer. For now it helps us
+      // to distinguish between address and cc footer. In the future this false attribute
+      // setting should be fixed and the "ac-image" check replaced by a different method.
+      const buttonTextBundleKey = !this.getAttribute("ac-image")
         ? "autocompleteManageAddresses"
         : "autocompleteManageCreditCards";
       const buttonText =
