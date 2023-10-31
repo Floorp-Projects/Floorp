@@ -561,10 +561,6 @@ class ContentChild final : public PContentChild,
       nsIURI* aUri, Span<const IPCURLClassifierFeature> aFeatures);
   bool DeallocPURLClassifierLocalChild(PURLClassifierLocalChild* aActor);
 
-  PLoginReputationChild* AllocPLoginReputationChild(nsIURI* aUri);
-
-  bool DeallocPLoginReputationChild(PLoginReputationChild* aActor);
-
   PSessionStorageObserverChild* AllocPSessionStorageObserverChild();
 
   bool DeallocPSessionStorageObserverChild(

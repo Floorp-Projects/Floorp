@@ -181,7 +181,6 @@ IPDL_SOURCES += [
     "PInProcess.ipdl",
     "PJSOracle.ipdl",
     "PJSValidator.ipdl",
-    "PLoginReputation.ipdl",
     "PProcessHangMonitor.ipdl",
     "PrefsTypes.ipdlh",
     "PTabContext.ipdlh",

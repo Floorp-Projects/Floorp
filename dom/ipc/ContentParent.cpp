@@ -59,7 +59,6 @@
 #include "mozilla/GlobalStyleSheetCache.h"
 #include "mozilla/GeckoArgs.h"
 #include "mozilla/HangDetails.h"
-#include "mozilla/LoginReputationIPC.h"
 #include "mozilla/LookAndFeel.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/NullPrincipal.h"
@@ -6690,37 +6689,6 @@ bool ContentParent::DeallocPURLClassifierLocalParent(
 
   RefPtr<URLClassifierLocalParent> actor =
       dont_AddRef(static_cast<URLClassifierLocalParent*>(aActor));
-  return true;
-}
-
-PLoginReputationParent* ContentParent::AllocPLoginReputationParent(
-    nsIURI* aURI) {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  RefPtr<LoginReputationParent> actor = new LoginReputationParent();
-  return actor.forget().take();
-}
-
-mozilla::ipc::IPCResult ContentParent::RecvPLoginReputationConstructor(
-    PLoginReputationParent* aActor, nsIURI* aURI) {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aActor);
-
-  if (!aURI) {
-    return IPC_FAIL(this, "aURI should not be null");
-  }
-
-  auto* actor = static_cast<LoginReputationParent*>(aActor);
-  return actor->QueryReputation(aURI);
-}
-
-bool ContentParent::DeallocPLoginReputationParent(
-    PLoginReputationParent* aActor) {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aActor);
-
-  RefPtr<LoginReputationParent> actor =
-      dont_AddRef(static_cast<LoginReputationParent*>(aActor));
   return true;
 }
 
