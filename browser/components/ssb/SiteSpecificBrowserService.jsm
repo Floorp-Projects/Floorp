@@ -682,34 +682,18 @@ class SiteSpecificBrowser extends SiteSpecificBrowserBase {
 
   /**
    * Launches a SSB by opening the necessary UI.
-   *
-   * @param {nsIURI?} uri that initial to load. If not provided uses the default.
+   * Open URL is getting from the current browser.
    */
-  launch(uri = null) {
-    let sa = Cc["@mozilla.org/array;1"].createInstance(Ci.nsIMutableArray);
+  launch() {
+    let browserWindowFeatures = "chrome,location=yes,centerscreen,dialog=no,resizable=yes,scrollbars=yes";
+    //"chrome,location=yes,centerscreen,dialog=no,resizable=yes,scrollbars=yes";
 
-    let idstr = Cc["@mozilla.org/supports-string;1"].createInstance(
+    let args = Cc["@mozilla.org/supports-string;1"].createInstance(
       Ci.nsISupportsString
     );
-    idstr.data = this.id;
-    sa.appendElement(idstr);
 
-    if (uri) {
-      let uristr = Cc["@mozilla.org/supports-string;1"].createInstance(
-        Ci.nsISupportsString
-      );
-      uristr.data = uri.spec;
-      sa.appendElement(uristr);
-    }
-
-    let browserWindowFeatures = "chrome,centerscreen,titlebar,dialog=yes,dependent";
-    //"chrome,centerscreen,titlebar,dialog=yes,dependent";
-
-    let args = null;
-    args = Cc["@mozilla.org/supports-string;1"].createInstance(
-      Ci.nsISupportsString
-    );
-    args.data = SiteSpecificBrowser.get(this.id)._manifest.start_url;
+    // URL
+    args.data = this.startURI.spec;
 
     let win = Services.ww.openWindow(
       null,

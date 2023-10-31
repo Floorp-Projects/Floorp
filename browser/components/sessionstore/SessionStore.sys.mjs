@@ -5526,6 +5526,8 @@ var SessionStoreInternal = {
       }
     }
 
+    console.log(aWindow.arguments);
+
     return !hasFirstArgument;
   },
 

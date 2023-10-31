@@ -2355,6 +2355,7 @@ var gBrowserInit = {
       //                      window (for this case, all other arguments are
       //                      ignored).
       let uri = window.arguments?.[0];
+      console.log("uri", uri);
       if (!uri || window.XULElement.isInstance(uri)) {
         return null;
       }
