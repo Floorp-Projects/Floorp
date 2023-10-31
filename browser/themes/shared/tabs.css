@@ -23,6 +23,10 @@
     --tab-attention-icon-color: light-dark(rgb(42, 195, 162), rgb(84, 255, 189));
   }
 
+  --tab-selected-textcolor: var(--toolbar-color);
+  --tab-selected-bgcolor: var(--toolbar-bgcolor);
+  --tab-selected-color-scheme: var(--toolbar-color-scheme);
+
   &[lwt-tab-selected="light"] {
     --tab-selected-color-scheme: light;
   }
@@ -447,15 +451,15 @@
 
 #TabsToolbar #firefox-view-button[open] > .toolbarbutton-icon,
 .tab-background:is([selected], [multiselected]) {
-  background-color: var(--tab-selected-bgcolor, var(--toolbar-bgcolor));
+  background-color: var(--tab-selected-bgcolor);
   background-origin: border-box;
   background-repeat: repeat-x;
 }
 
 #TabsToolbar #firefox-view-button[open] > .toolbarbutton-icon,
 .tabbrowser-tab:is([selected], [multiselected]) {
-  color: var(--tab-selected-textcolor, var(--toolbar-color));
-  color-scheme: var(--tab-selected-color-scheme, var(--toolbar-color-scheme));
+  color: var(--tab-selected-textcolor);
+  color-scheme: var(--tab-selected-color-scheme);
 }
 
 @media (prefers-contrast) {
