@@ -388,16 +388,21 @@ export class AddressSaveDoorhanger extends AutofillDoorhanger {
     };
 
     let spans = [];
-    for (const [oldData, newData] of datalist) {
+    let previousField;
+    for (const [field, oldData, newData] of datalist) {
       if (!oldData && !newData) {
         continue;
       }
 
-      // Always add a whitespace betwwen different data but we format them
-      // in the same line. Ex. first-name: John, family-name: Doe becomes
+      // Always add a whitespace between field data that we put in the same line.
+      // Ex. first-name: John, family-name: Doe becomes
       // "John Doe"
       if (spans.length) {
-        spans.push(createSpan(" "));
+        if (previousField == "address-level2" && field == "address-level1") {
+          spans.push(createSpan(", "));
+        } else {
+          spans.push(createSpan(" "));
+        }
       }
 
       if (!oldData) {
@@ -420,16 +425,19 @@ export class AddressSaveDoorhanger extends AutofillDoorhanger {
         spans.push(createSpan(" "));
         spans.push(createSpan(newData, "add"));
       }
+
+      previousField = field;
     }
 
     return spans;
   }
 
-  #formatTextByAddressCategory(field) {
+  #formatTextByAddressCategory(fieldName) {
     let data = [];
-    switch (field) {
+    switch (fieldName) {
       case "name":
         data = ["given-name", "additional-name", "family-name"].map(field => [
+          field,
           this.oldRecord[field],
           this.newRecord[field],
         ]);
@@ -437,6 +445,7 @@ export class AddressSaveDoorhanger extends AutofillDoorhanger {
       case "street-address":
         data = [
           [
+            fieldName,
             FormAutofillUtils.toOneLineAddress(
               this.oldRecord["street-address"]
             ),
@@ -448,14 +457,16 @@ export class AddressSaveDoorhanger extends AutofillDoorhanger {
         break;
       case "address":
         data = ["address-level2", "address-level1", "postal-code"].map(
-          field => [this.oldRecord[field], this.newRecord[field]]
+          field => [field, this.oldRecord[field], this.newRecord[field]]
         );
         break;
       case "country":
       case "tel":
       case "email":
       case "organization":
-        data = [[this.oldRecord[field], this.newRecord[field]]];
+        data = [
+          [fieldName, this.oldRecord[fieldName], this.newRecord[fieldName]],
+        ];
         break;
     }
 
