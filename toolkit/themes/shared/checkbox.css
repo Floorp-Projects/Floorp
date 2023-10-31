@@ -10,8 +10,12 @@ checkbox {
   margin: 4px 2px;
 }
 
-.checkbox-icon[src] {
+.checkbox-icon {
   margin-inline-end: 2px;
+
+  &:not([src]) {
+    display: none;
+  }
 }
 
 .checkbox-label {

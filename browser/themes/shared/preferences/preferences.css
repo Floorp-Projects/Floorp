@@ -820,6 +820,7 @@ dialog > .sync-engines-list + hbox {
 
 .sync-engines-list checkbox .checkbox-icon,
 .sync-engine-image {
+  display: flex;
   margin-inline: 2px 8px;
   width: 16px;
   height: 16px;
