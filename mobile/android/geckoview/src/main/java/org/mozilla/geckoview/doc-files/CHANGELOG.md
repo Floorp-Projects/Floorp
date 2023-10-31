@@ -16,10 +16,14 @@ exclude: true
 ## v121
 - Added runtime controller functions. [`RuntimeTranslation`][121.1] has options for retrieving translation languages and managing language models.
 - Added support for controlling `cookiebanners.service.enableGlobalRules` and `cookiebanners.service.enableGlobalRules.subFrames` via [`GeckoSession.ContentDelegate.cookieBannerGlobalRulesEnabled`][121.2] and [`GeckoSession.ContentDelegate.cookieBannerGlobalRulesSubFramesEnabled`][121.3].
+- Added [`GeckoSession.sendClickAttributionEvent`][121.4] for sending click attribution event for a given product recommendation.
+- Added [`GeckoSession.sendImpressionAttributionEvent`][121.5] for sending impression attribution event for a given product recommendation.
 
 [121.1]: {{javadoc_uri}}/TranslationsController.RuntimeTranslation.html
 [121.2]: {{javadoc_uri}}/ContentBlocking.Settings.Builder.html#cookieBannerGlobalRulesEnabled(boolean)
 [121.3]: {{javadoc_uri}}/ContentBlocking.Settings.Builder.html#cookieBannerGlobalRulesSubFramesEnabled(boolean)
+[121.4]: {{javadoc_uri}}/GeckoSession.html#sendClickAttributionEvent(String)
+[121.5: {{javadoc_uri}}/GeckoSession.html#sendImpressionAttributionEvent(String)
 
 ## v120
 - Added [`disableExtensionProcessSpawning`][120.1] for disabling the extension process spawning. ([bug 1855405]({{bugzilla}}1855405))
@@ -1457,4 +1461,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: d303487577022d159dbb7a4b18c339b555a48a45
+[api-version]: c7dae91b8e81ae247eeec1bcf419f3cab0b76e40

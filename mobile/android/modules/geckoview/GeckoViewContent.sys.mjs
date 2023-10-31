@@ -3,7 +3,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { GeckoViewModule } from "resource://gre/modules/GeckoViewModule.sys.mjs";
-import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
@@ -24,6 +23,8 @@ export class GeckoViewContent extends GeckoViewModule {
       "GeckoView:RequestCreateAnalysis",
       "GeckoView:RequestAnalysisCreationStatus",
       "GeckoView:PollForAnalysisCompleted",
+      "GeckoView:SendClickAttributionEvent",
+      "GeckoView:SendImpressionAttributionEvent",
       "GeckoView:RequestAnalysis",
       "GeckoView:RequestRecommendations",
       "GeckoView:ScrollBy",
@@ -213,6 +214,12 @@ export class GeckoViewContent extends GeckoViewModule {
       case "GeckoView:PollForAnalysisCompleted":
         this._pollForAnalysisCompleted(aData, aCallback);
         break;
+      case "GeckoView:SendClickAttributionEvent":
+        this._sendAttributionEvent("click", aData, aCallback);
+        break;
+      case "GeckoView:SendImpressionAttributionEvent":
+        this._sendAttributionEvent("impression", aData, aCallback);
+        break;
       case "GeckoView:RequestRecommendations":
         this._requestRecommendations(aData, aCallback);
         break;
@@ -333,8 +340,8 @@ export class GeckoViewContent extends GeckoViewModule {
   }
 
   async _requestAnalysis(aData, aCallback) {
-    if (!AppConstants.NIGHTLY_BUILD) {
-      aCallback.onError(`This API enabled for Nightly builds only.`);
+    if (!Services.prefs.getBoolPref("geckoview.shopping.enabled", false)) {
+      aCallback.onError(`This API enabled for Shopping only.`);
       return;
     }
     const url = Services.io.newURI(aData.url);
@@ -352,8 +359,8 @@ export class GeckoViewContent extends GeckoViewModule {
   }
 
   async _requestCreateAnalysis(aData, aCallback) {
-    if (!AppConstants.NIGHTLY_BUILD) {
-      aCallback.onError(`This API enabled for Nightly builds only.`);
+    if (!Services.prefs.getBoolPref("geckoview.shopping.enabled", false)) {
+      aCallback.onError(`This API enabled for Shopping only.`);
       return;
     }
     const url = Services.io.newURI(aData.url);
@@ -371,8 +378,8 @@ export class GeckoViewContent extends GeckoViewModule {
   }
 
   async _requestAnalysisCreationStatus(aData, aCallback) {
-    if (!AppConstants.NIGHTLY_BUILD) {
-      aCallback.onError(`This API enabled for Nightly builds only.`);
+    if (!Services.prefs.getBoolPref("geckoview.shopping.enabled", false)) {
+      aCallback.onError(`This API enabled for Shopping only.`);
       return;
     }
     const url = Services.io.newURI(aData.url);
@@ -394,8 +401,8 @@ export class GeckoViewContent extends GeckoViewModule {
   }
 
   async _pollForAnalysisCompleted(aData, aCallback) {
-    if (!AppConstants.NIGHTLY_BUILD) {
-      aCallback.onError(`This API enabled for Nightly builds only.`);
+    if (!Services.prefs.getBoolPref("geckoview.shopping.enabled", false)) {
+      aCallback.onError(`This API enabled for Shopping only.`);
       return;
     }
     const url = Services.io.newURI(aData.url);
@@ -416,9 +423,36 @@ export class GeckoViewContent extends GeckoViewModule {
     }
   }
 
+  async _sendAttributionEvent(aEvent, aData, aCallback) {
+    if (!Services.prefs.getBoolPref("geckoview.shopping.enabled", false)) {
+      aCallback.onError(`This API enabled for Shopping only.`);
+      return;
+    }
+    // TODO (bug1859055): remove product object once sendAttributionEvent() is static
+    const product = new lazy.ShoppingProduct(
+      "http://example.com/dp/ABCDEFG123"
+    );
+    let result;
+    if (Services.prefs.getBoolPref("geckoview.shopping.test_response", true)) {
+      result = { TEST_AID: "TEST_AID_RESPONSE" };
+    } else {
+      // TODO (bug 1860897): source will be changed to geckoview_android
+      result = await product.sendAttributionEvent(
+        aEvent,
+        aData.aid,
+        "firefox_android"
+      );
+    }
+    if (!result || !(aData.aid in result) || !result[aData.aid]) {
+      aCallback.onSuccess(false);
+      return;
+    }
+    aCallback.onSuccess(true);
+  }
+
   async _requestRecommendations(aData, aCallback) {
-    if (!AppConstants.NIGHTLY_BUILD) {
-      aCallback.onError(`This API enabled for Nightly builds only.`);
+    if (!Services.prefs.getBoolPref("geckoview.shopping.enabled", false)) {
+      aCallback.onError(`This API enabled for Shopping only.`);
       return;
     }
     const url = Services.io.newURI(aData.url);
