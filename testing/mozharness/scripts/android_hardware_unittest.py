@@ -247,6 +247,7 @@ class AndroidHardwareTest(
         }
 
         user_paths = json.loads(os.environ.get("MOZHARNESS_TEST_PATHS", '""'))
+        confirm_paths = json.loads(os.environ.get("MOZHARNESS_CONFIRM_PATHS", '""'))
 
         for option in self.config["suite_definitions"][self.test_suite]["options"]:
             opt = option.split("=")[0]
@@ -266,10 +267,7 @@ class AndroidHardwareTest(
                 if option:
                     cmd.extend([option])
 
-        if user_paths:
-            if self.test_suite in user_paths:
-                cmd.extend(user_paths[self.test_suite])
-        elif not self.verify_enabled:
+        if not self.verify_enabled and not user_paths:
             if self.this_chunk is not None:
                 cmd.extend(["--this-chunk", self.this_chunk])
             if self.total_chunks is not None:
@@ -299,8 +297,25 @@ class AndroidHardwareTest(
         cmd.extend(["--setpref={}".format(p) for p in self.extra_prefs])
 
         try_options, try_tests = self.try_args(self.test_suite)
-        cmd.extend(try_options)
-        if not self.verify_enabled and not self.per_test_coverage:
+        if try_options:
+            cmd.extend(try_options)
+
+        if user_paths:
+            # reftest on android-hw uses a subset (reftest-qr) of tests,
+            # but scheduling only knows about 'reftest'
+            suite = self.test_suite
+            if suite == "reftest-qr":
+                suite = "reftest"
+
+            if user_paths.get(suite, []):
+                suite_test_paths = user_paths.get(suite, [])
+                # NOTE: we do not want to prepend 'tests' if a single path
+                if confirm_paths and confirm_paths.get(suite, []):
+                    suite_test_paths = confirm_paths.get(suite, [])
+                suite_test_paths = [os.path.join("tests", p) for p in suite_test_paths]
+                cmd.extend(suite_test_paths)
+
+        elif not self.verify_enabled and not self.per_test_coverage:
             cmd.extend(
                 self.query_tests_args(
                     self.config["suite_definitions"][self.test_suite].get("tests"),
