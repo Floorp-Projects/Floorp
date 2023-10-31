@@ -7828,13 +7828,16 @@ nsresult nsHttpChannel::ContinueOnStopRequestAfterAuthRetry(
     if (mListener) {
       MOZ_ASSERT(!LoadOnStartRequestCalled(),
                  "We should not call OnStartRequest twice.");
-      nsCOMPtr<nsIStreamListener> listener(mListener);
-      StoreOnStartRequestCalled(true);
-      listener->OnStartRequest(this);
+      if (!LoadOnStartRequestCalled()) {
+        nsCOMPtr<nsIStreamListener> listener(mListener);
+        StoreOnStartRequestCalled(true);
+        listener->OnStartRequest(this);
+      }
     } else {
       StoreOnStartRequestCalled(true);
       NS_WARNING("OnStartRequest skipped because of null listener");
     }
+    mAuthRetryPending = false;
   }
 
   // if this transaction has been replaced, then bail.
@@ -8120,17 +8123,18 @@ nsresult nsHttpChannel::ContinueOnStopRequest(nsresult aStatus, bool aIsFromNet,
       if (mListener) {
         MOZ_ASSERT(!LoadOnStartRequestCalled(),
                    "We should not call OnStartRequest twice.");
-        nsCOMPtr<nsIStreamListener> listener(mListener);
-        StoreOnStartRequestCalled(true);
-        listener->OnStartRequest(this);
+        if (!LoadOnStartRequestCalled()) {
+          nsCOMPtr<nsIStreamListener> listener(mListener);
+          StoreOnStartRequestCalled(true);
+          listener->OnStartRequest(this);
+        }
       } else {
         StoreOnStartRequestCalled(true);
         NS_WARNING("OnStartRequest skipped because of null listener");
       }
     }
-    mRedirectChannel = nullptr;
+    mAuthRetryPending = false;
   }
-
   if (mListener) {
     LOG(("nsHttpChannel %p calling OnStopRequest\n", this));
     MOZ_ASSERT(LoadOnStartRequestCalled(),
@@ -8146,6 +8150,8 @@ nsresult nsHttpChannel::ContinueOnStopRequest(nsresult aStatus, bool aIsFromNet,
   mDNSPrefetch = nullptr;
 
   mTransactionSticky = nullptr;
+
+  mRedirectChannel = nullptr;
 
   // notify "http-on-stop-connect" observers
   gHttpHandler->OnStopRequest(this);
