@@ -57,7 +57,6 @@ parts:
     source: source
     stage-packages:
       - libxt6
-      - libdbus-glib-1-2
       - libasound2
       - libpci3
       - libpulse0

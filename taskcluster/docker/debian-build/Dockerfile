@@ -13,7 +13,7 @@ RUN /usr/local/sbin/setup_packages.sh $TASKCLUSTER_ROOT_URL $DOCKER_IMAGE_PACKAG
 
 # binutils is needed for base toolchain builds. Ideally, it wouldn't be needed.
 # libc6-i386 and lib32gcc1 are needed for wine.
-# libdbus-glib-1-2 and libgtk-3-0 are needed to run xpcshell during the build.
+# libgtk-3-0 are needed to run xpcshell during the build.
 # lib32atomic1, lib32stdc++6 and lib32z1 are needed to run some 32-bits
 # cpio is needed by xar (mac repackaging on linux)
 # spidermonkey tests. libasound2 is needed to run xpcshell after we introduced
@@ -35,7 +35,6 @@ RUN apt-get update && \
       lib32z1 \
       libasound2 \
       libc6-i386 \
-      libdbus-glib-1-2 \
       libgtk-3-0 \
       libucl1 \
       p7zip-full \
