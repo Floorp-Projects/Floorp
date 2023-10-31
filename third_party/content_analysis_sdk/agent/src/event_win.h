@@ -28,6 +28,12 @@ class ContentAnalysisEventWin : public ContentAnalysisEventBase {
   ResultCode Close() override;
   ResultCode Send() override;
   std::string DebugString() const override;
+  std::string SerializeStringToSendToBrowser() {
+    return agent_to_chrome()->SerializeAsString();
+  }
+  void SetResponseSent() { response_sent_ = true; }
+  
+  HANDLE Pipe() const { return hPipe_; }
 
  private:
   void Shutdown();
