@@ -6924,10 +6924,10 @@ bool nsIFrame::IsHiddenByContentVisibilityOfInFlowParentForLayout() const {
            Style()->IsAnonBox());
 }
 
-bool nsIFrame::IsHiddenByContentVisibilityOnAnyAncestor(
+nsIFrame* nsIFrame::GetClosestContentVisibilityAncestor(
     const EnumSet<IncludeContentVisibility>& aInclude) const {
   if (!StaticPrefs::layout_css_content_visibility_enabled()) {
-    return false;
+    return nullptr;
   }
 
   auto* parent = GetInFlowParent();
@@ -6935,7 +6935,7 @@ bool nsIFrame::IsHiddenByContentVisibilityOnAnyAncestor(
                           parent->HasAnyStateBits(NS_FRAME_OWNS_ANON_BOXES);
   for (nsIFrame* cur = parent; cur; cur = cur->GetInFlowParent()) {
     if (!isAnonymousBlock && cur->HidesContent(aInclude)) {
-      return true;
+      return cur;
     }
 
     // Anonymous boxes are not hidden by the content-visibility of their first
@@ -6944,7 +6944,12 @@ bool nsIFrame::IsHiddenByContentVisibilityOnAnyAncestor(
     isAnonymousBlock = false;
   }
 
-  return false;
+  return nullptr;
+}
+
+bool nsIFrame::IsHiddenByContentVisibilityOnAnyAncestor(
+    const EnumSet<IncludeContentVisibility>& aInclude) const {
+  return !!GetClosestContentVisibilityAncestor(aInclude);
 }
 
 bool nsIFrame::HasSelectionInSubtree() {
