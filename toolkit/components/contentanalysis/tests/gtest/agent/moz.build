@@ -1,0 +1,40 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+Program("content_analysis_sdk_agent")
+
+DEFINES["UNICODE"] = True
+DEFINES["GOOGLE_PROTOBUF_NO_RTTI"] = True
+DEFINES["GOOGLE_PROTOBUF_NO_STATIC_INITIALIZER"] = True
+
+SOURCES += [
+    "../../../../../../third_party/content_analysis_sdk/agent/src/agent_base.cc",
+    "../../../../../../third_party/content_analysis_sdk/agent/src/agent_utils_win.cc",
+    "../../../../../../third_party/content_analysis_sdk/agent/src/agent_win.cc",
+    "../../../../../../third_party/content_analysis_sdk/agent/src/event_base.cc",
+    "../../../../../../third_party/content_analysis_sdk/agent/src/event_win.cc",
+    "../../../../../../third_party/content_analysis_sdk/agent/src/scoped_print_handle_base.cc",
+    "../../../../../../third_party/content_analysis_sdk/agent/src/scoped_print_handle_win.cc",
+    "../../../../../../third_party/content_analysis_sdk/common/utils_win.cc",
+    "../../../../../../third_party/content_analysis_sdk/demo/agent.cc",
+    "../../../content_analysis/sdk/analysis.pb.cc",
+]
+
+LOCAL_INCLUDES += [
+    "../../../",
+    "../../../../../../third_party/content_analysis_sdk",
+    "../../../../../../third_party/content_analysis_sdk/agent/include/",
+]
+
+USE_LIBS += [
+    "mozglue",
+    "protobuf",
+    "zlib",
+]
+
+OS_LIBS += [
+    "advapi32",
+]
