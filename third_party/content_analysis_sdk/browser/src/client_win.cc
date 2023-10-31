@@ -418,7 +418,11 @@ DWORD ClientWin::ConnectToPipe(const std::string& pipename, HANDLE* handle) {
 
 void ClientWin::Shutdown() {
   if (hPipe_ != INVALID_HANDLE_VALUE) {
-    FlushFileBuffers(hPipe_);
+    // TODO: This trips the LateWriteObserver.  We could move this earlier
+    // (before the LateWriteObserver is created) or just remove it, although
+    // the later could mean an ACK message is not processed by the agent
+    // in time.
+    // FlushFileBuffers(hPipe_);
     CloseHandle(hPipe_);
     hPipe_ = INVALID_HANDLE_VALUE;
   }
