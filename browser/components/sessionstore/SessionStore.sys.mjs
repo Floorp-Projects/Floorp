@@ -2730,6 +2730,15 @@ var SessionStoreInternal = {
     if (windowData._closedTabs.length) {
       // Remove all of the closed tabs from the _lastClosedActions list
       for (let closedTab of windowData._closedTabs) {
+        // If the closed tab's state still has a .permanentKey property then we
+        // haven't seen its final update message yet. Remove it from the map of
+        // closed tabs so that we will simply discard its last messages and will
+        // not add it back to the list of closed tabs again.
+        if (closedTab.permanentKey) {
+          this._closingTabMap.delete(closedTab.permanentKey);
+          this._tabClosingByWindowMap.delete(closedTab.permanentKey);
+          delete closedTab.permanentKey;
+        }
         this._removeClosedAction(
           this._LAST_ACTION_CLOSED_TAB,
           closedTab.closedId
