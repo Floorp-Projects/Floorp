@@ -122,6 +122,7 @@ support-files = [
   "test_mcb_redirect.js",
   "test_mcb_redirect.sjs",
 ]
+skip-if = ["a11y_checks"] # Bugs 1858041 and 1824058 for causing intermittent crashes
 
 ["browser_mixedContentFramesOnHttp.js"]
 https_first_disabled = true

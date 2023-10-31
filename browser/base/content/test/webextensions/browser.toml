@@ -39,7 +39,10 @@ skip-if = ["a11y_checks"] # Bug 1858037 to investigate intermittent a11y_checks 
 ["browser_permissions_pointerevent.js"]
 
 ["browser_permissions_unsigned.js"]
-skip-if = ["require_signing"]
+skip-if = [
+  "require_signing",
+  "a11y_checks", # Bugs 1858041 and 1854461 to investigate intermittent a11y_checks results (fails on Autoland, passes on Try)
+]
 
 ["browser_update_checkForUpdates.js"]
 

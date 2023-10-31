@@ -143,6 +143,7 @@ support-files = [
 ["browser_doorhanger_replace_dismissed_with_visible_while_opening.js"]
 
 ["browser_doorhanger_save_password.js"]
+skip-if = ["a11y_checks"] # Bugs 1858041, 1854454 and 1824058 for causing intermittent crashes
 
 ["browser_doorhanger_submit_telemetry.js"]
 fail-if = ["a11y_checks"] # Bug 1854452 clicked image may not be focusable; clicked autocomplete-richlistitem may not be labeled

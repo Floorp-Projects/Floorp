@@ -660,6 +660,7 @@ skip-if = [
   "win10_2004", # Bug 1723573
   "http3", # Bug 1829298
   "http2",
+  "a11y_checks", # Bugs 1858041, 1849028 and 1849179 for causing crashes
 ]
 
 ["browser_webconsole_responsive_design_mode.js"]

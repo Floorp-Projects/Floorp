@@ -63,9 +63,10 @@ skip-if = [
 ["browser_rules_css-compatibility-check-add-fix.js"]
 
 ["browser_rules_css-compatibility-learn-more-link.js"]
+skip-if = ["a11y_checks"] # Bugs 1858041 and 1849028 for intermittent a11y_checks results
 
 ["browser_rules_css-compatibility-toggle-rules.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
+skip-if = ["a11y_checks"] # Bugs 1858041, 1849028 and 1849230 for causing intermittent crashes
 
 ["browser_rules_css-compatibility-tooltip-telemetry.js"]
 
@@ -357,7 +358,7 @@ fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and
 ["browser_rules_shadowdom_slot_rules.js"]
 
 ["browser_rules_shapes-toggle_01.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
+skip-if = ["a11y_checks"] # Bugs 1849028 and 1858041 for causing intermittent a11y_checks results
 
 ["browser_rules_shapes-toggle_02.js"]
 

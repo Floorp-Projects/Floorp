@@ -206,6 +206,7 @@ fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and
 ["browser_styleeditor_sv_resize.js"]
 
 ["browser_styleeditor_sync.js"]
+skip-if = ["a11y_checks && debug"] # Bugs 1849028 and 1858041 for causing intermittent test results
 
 ["browser_styleeditor_syncAddProperty.js"]
 
