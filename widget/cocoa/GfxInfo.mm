@@ -145,12 +145,12 @@ void GfxInfo::GetDeviceInfo() {
   }
   IOObjectRelease(io_iter);
 
-#if defined(__aarch64__)
-  // If we found IOPCI VGA devices, don't look for AGXAccelerator devices
+  // If we found IOPCI VGA devices, don't look for other devices
   if (mNumGPUsDetected > 0) {
     return;
   }
 
+#if defined(__aarch64__)
   CFMutableDictionaryRef agx_dev_dict = IOServiceMatching("AGXAccelerator");
   if (IOServiceGetMatchingServices(kIOMasterPortDefault, agx_dev_dict,
                                    &io_iter) == kIOReturnSuccess) {
@@ -169,7 +169,39 @@ void GfxInfo::GetDeviceInfo() {
 
     IOObjectRelease(io_iter);
   }
+
+  // If we found an AGXAccelerator, don't look for an AppleParavirtGPU
+  if (mNumGPUsDetected > 0) {
+    return;
+  }
 #endif
+
+  CFMutableDictionaryRef apv_dev_dict = IOServiceMatching("AppleParavirtGPU");
+  if (IOServiceGetMatchingServices(kIOMasterPortDefault, apv_dev_dict,
+                                   &io_iter) == kIOReturnSuccess) {
+    io_registry_entry_t entry = IO_OBJECT_NULL;
+    while ((entry = IOIteratorNext(io_iter)) != IO_OBJECT_NULL) {
+      CFTypeRef vendor_id_ref =
+          SearchPortForProperty(entry, CFSTR("vendor-id"));
+      if (vendor_id_ref) {
+        mAdapterVendorID[mNumGPUsDetected].AppendPrintf(
+            "0x%04x", IntValueOfCFData((CFDataRef)vendor_id_ref));
+        CFRelease(vendor_id_ref);
+      }
+
+      CFTypeRef device_id_ref =
+          SearchPortForProperty(entry, CFSTR("device-id"));
+      if (device_id_ref) {
+        mAdapterDeviceID[mNumGPUsDetected].AppendPrintf(
+            "0x%04x", IntValueOfCFData((CFDataRef)device_id_ref));
+        CFRelease(device_id_ref);
+      }
+      ++mNumGPUsDetected;
+      IOObjectRelease(entry);
+    }
+
+    IOObjectRelease(io_iter);
+  }
 
   MOZ_DIAGNOSTIC_ASSERT(mNumGPUsDetected > 0, "Failed to detect any GPUs");
 }
