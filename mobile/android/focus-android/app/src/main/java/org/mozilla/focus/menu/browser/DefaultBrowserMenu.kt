@@ -154,7 +154,7 @@ class DefaultBrowserMenu(
 
         val addToHomescreen = BrowserMenuImageText(
             label = context.getString(R.string.menu_add_to_home_screen),
-            imageResource = R.drawable.mozac_ic_add_to_home_screen_24,
+            imageResource = R.drawable.mozac_ic_add_to_homescreen_24,
         ) {
             onItemTapped.invoke(ToolbarMenu.Item.AddToHomeScreen)
         }

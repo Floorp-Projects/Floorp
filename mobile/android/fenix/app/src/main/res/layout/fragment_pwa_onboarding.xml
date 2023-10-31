@@ -47,7 +47,7 @@
             app:layout_constraintEnd_toStartOf="@id/description"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@id/dialog_title"
-            app:srcCompat="@drawable/mozac_ic_add_to_home_screen_24" />
+            app:srcCompat="@drawable/mozac_ic_add_to_homescreen_24" />
 
         <TextView
             android:id="@+id/description"
