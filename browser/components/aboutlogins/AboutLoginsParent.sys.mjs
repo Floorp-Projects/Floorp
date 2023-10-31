@@ -201,14 +201,6 @@ export class AboutLoginsParent extends JSWindowActorParent {
     }
   }
 
-  get preselectedLogin() {
-    const preselectedLogin =
-      this.#ownerGlobal.gBrowser.selectedTab.getAttribute("preselect-login") ||
-      this.browsingContext.currentURI?.ref;
-    this.#ownerGlobal.gBrowser.selectedTab.removeAttribute("preselect-login");
-    return preselectedLogin || null;
-  }
-
   #deleteLogin(loginObject) {
     let login = lazy.LoginHelper.vanillaObjectToLogin(loginObject);
     Services.logins.removeLogin(login);
@@ -324,7 +316,6 @@ export class AboutLoginsParent extends JSWindowActorParent {
         importVisible:
           Services.policies.isAllowed("profileImport") &&
           AppConstants.platform != "linux",
-        preselectedLogin: this.preselectedLogin,
       });
 
       await AboutLogins.sendAllLoginRelatedObjects(

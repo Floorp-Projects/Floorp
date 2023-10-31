@@ -1254,6 +1254,7 @@ export const LoginHelper = {
     // Get currently active tab's origin
     const openedFrom =
       window.gBrowser?.selectedTab.linkedBrowser.currentURI.spec;
+
     // If no loginGuid is set, get sanitized origin, this will return null for about:* uris
     const preselectedLogin = loginGuid ?? this.getLoginOrigin(openedFrom);
 
@@ -1263,14 +1264,13 @@ export const LoginHelper = {
     });
 
     const paramsPart = params.toString() ? `?${params}` : "";
+    const fragmentsPart = preselectedLogin
+      ? `#${window.encodeURIComponent(preselectedLogin)}`
+      : "";
+    const destination = `about:logins${paramsPart}${fragmentsPart}`;
 
-    const browser = window.gBrowser ?? window.opener?.gBrowser;
-
-    const tab = browser.addTrustedTab(`about:logins${paramsPart}`, {
-      inBackground: false,
-    });
-
-    tab.setAttribute("preselect-login", preselectedLogin);
+    // We assume that managementURL has a '?' already
+    window.openTrustedLinkIn(destination, "tab");
   },
 
   /**
