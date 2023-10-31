@@ -1305,6 +1305,9 @@ public class GeckoViewActivity extends AppCompatActivity
       case R.id.request_shopping_analysis:
         requestAnalysis(session, mCurrentUri);
         break;
+      case R.id.request_shopping_recommendations:
+        requestRecommendations(session, mCurrentUri);
+        break;
       case R.id.create_shopping_analysis:
         requestCreateAnalysis(session, mCurrentUri);
         break;
@@ -2450,7 +2453,41 @@ public class GeckoViewActivity extends AppCompatActivity
 
   public void requestRecommendations(
       @NonNull final GeckoSession session, @NonNull final String url) {
-    session.requestRecommendations(url);
+    GeckoResult<List<GeckoSession.Recommendation>> result = session.requestRecommendations(url);
+    result.map(
+        recs -> {
+          List<String> aids = new ArrayList<>();
+          for (int i = 0; i < recs.size(); ++i) {
+            aids.add(recs.get(i).aid);
+          }
+          if (aids.size() >= 1) {
+            Log.d(LOGTAG, "Sending attribution events to first AID: " + aids.get(0));
+            session
+                .sendClickAttributionEvent(aids.get(0))
+                .then(
+                    new GeckoResult.OnValueListener<Boolean, Void>() {
+                      @Override
+                      public GeckoResult<Void> onValue(final Boolean isSuccessful) {
+                        Log.d(LOGTAG, "Success of click attribution event: " + isSuccessful);
+                        return null;
+                      }
+                    });
+
+            session
+                .sendImpressionAttributionEvent(aids.get(0))
+                .then(
+                    new GeckoResult.OnValueListener<Boolean, Void>() {
+                      @Override
+                      public GeckoResult<Void> onValue(final Boolean isSuccessful) {
+                        Log.d(LOGTAG, "Success of impression attribution event: " + isSuccessful);
+                        return null;
+                      }
+                    });
+          } else {
+            Log.d(LOGTAG, "No shopping recommendations. No attribution events were sent.");
+          }
+          return recs;
+        });
   }
 
   private class ExampleNavigationDelegate implements GeckoSession.NavigationDelegate {
@@ -2465,7 +2502,6 @@ public class GeckoViewActivity extends AppCompatActivity
       mTrackingProtectionPermission = getTrackingProtectionPermission(perms);
       mCurrentUri = url;
       requestAnalysis(session, url);
-      requestRecommendations(session, url);
     }
 
     @Override
