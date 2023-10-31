@@ -11827,19 +11827,6 @@ void Document::OnPageHide(bool aPersisted, EventTarget* aDispatchStartTarget,
       inFrameLoaderSwap ==
       (mDocumentContainer && mDocumentContainer->InFrameSwap()));
 
-  // Send out notifications that our <link> elements are detached,
-  // but only if this is not a full unload.
-  Element* root = GetRootElement();
-  if (aPersisted && root) {
-    RefPtr<nsContentList> links =
-        NS_GetContentList(root, kNameSpaceID_XHTML, u"link"_ns);
-
-    uint32_t linkCount = links->Length(true);
-    for (uint32_t i = 0; i < linkCount; ++i) {
-      static_cast<HTMLLinkElement*>(links->Item(i, false))->LinkRemoved();
-    }
-  }
-
   if (mAnimationController) {
     mAnimationController->OnPageHide();
   }
