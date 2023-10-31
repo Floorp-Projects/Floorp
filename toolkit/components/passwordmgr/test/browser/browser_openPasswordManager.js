@@ -59,7 +59,7 @@ add_task(async function test_management_filter() {
 
 add_task(
   async function test_url_when_opening_password_manager_without_a_filterString() {
-    sinon.spy(window, "openTrustedLinkIn");
+    sinon.spy(window.gBrowser, "addTrustedTab");
     const openingFunc = () =>
       LoginHelper.openPasswordManager(window, {
         filterString: "",
@@ -67,7 +67,7 @@ add_task(
       });
     const passwordManager = await openPasswordManager(openingFunc);
 
-    const url = window.openTrustedLinkIn.lastCall.args[0];
+    const url = window.gBrowser.addTrustedTab.lastCall.args[0];
 
     Assert.ok(
       !url.includes("filter"),
@@ -86,13 +86,13 @@ add_task(
 
     Assert.ok(passwordManager, "Login dialog was opened");
     await passwordManager.close();
-    window.openTrustedLinkIn.restore();
+    window.gBrowser.addTrustedTab.restore();
   }
 );
 
 add_task(
   async function test_url_when_opening_password_manager_with_a_filterString() {
-    sinon.spy(window, "openTrustedLinkIn");
+    sinon.spy(window.gBrowser, "addTrustedTab");
     const openingFunc = () =>
       LoginHelper.openPasswordManager(window, {
         filterString: "testFilter",
@@ -100,7 +100,7 @@ add_task(
       });
     const passwordManager = await openPasswordManager(openingFunc);
 
-    const url = window.openTrustedLinkIn.lastCall.args[0];
+    const url = window.gBrowser.addTrustedTab.lastCall.args[0];
 
     Assert.ok(
       url.includes("filter"),
@@ -119,13 +119,13 @@ add_task(
 
     Assert.ok(passwordManager, "Login dialog was opened");
     await passwordManager.close();
-    window.openTrustedLinkIn.restore();
+    window.gBrowser.addTrustedTab.restore();
   }
 );
 
 add_task(
   async function test_url_when_opening_password_manager_without_filterString_or_entryPoint() {
-    sinon.spy(window, "openTrustedLinkIn");
+    sinon.spy(window.gBrowser, "addTrustedTab");
     const openingFunc = () =>
       LoginHelper.openPasswordManager(window, {
         filterString: "",
@@ -133,7 +133,7 @@ add_task(
       });
     const passwordManager = await openPasswordManager(openingFunc);
 
-    const url = window.openTrustedLinkIn.lastCall.args[0];
+    const url = window.gBrowser.addTrustedTab.lastCall.args[0];
 
     Assert.ok(
       !url.includes("filter"),
@@ -156,6 +156,6 @@ add_task(
 
     Assert.ok(passwordManager, "Login dialog was opened");
     await passwordManager.close();
-    window.openTrustedLinkIn.restore();
+    window.gBrowser.addTrustedTab.restore();
   }
 );
