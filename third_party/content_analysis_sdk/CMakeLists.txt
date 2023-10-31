@@ -203,6 +203,7 @@ add_executable(agent
   ./demo/agent.cc
   ./demo/handler.h
 )
+target_compile_features(agent PRIVATE cxx_std_17)
 target_include_directories(agent PRIVATE ${AGENT_INCLUDES})
 target_link_libraries(agent PRIVATE cac_agent)
 

@@ -7,15 +7,21 @@
 
 #include <time.h>
 
+#include <algorithm>
 #include <chrono>
 #include <fstream>
 #include <iostream>
+#include <optional>
 #include <thread>
 #include <utility>
+#include <regex>
+#include <vector>
 
 #include "content_analysis/sdk/analysis_agent.h"
 #include "demo/atomic_output.h"
 #include "demo/request_queue.h"
+
+using RegexArray = std::vector<std::pair<std::string, std::regex>>;
 
 // An AgentEventHandler that dumps requests information to stdout and blocks
 // any requests that have the keyword "block" in their data
@@ -23,9 +29,12 @@ class Handler : public content_analysis::sdk::AgentEventHandler {
  public:
   using Event = content_analysis::sdk::ContentAnalysisEvent;
 
-  Handler(unsigned long delay, const std::string& print_data_file_path) :
-      delay_(delay), print_data_file_path_(print_data_file_path) {
-  }
+  Handler(unsigned long delay, const std::string& print_data_file_path,
+          RegexArray&& toBlock = RegexArray(),
+          RegexArray&& toWarn = RegexArray(),
+          RegexArray&& toReport = RegexArray()) :
+      toBlock_(std::move(toBlock)), toWarn_(std::move(toWarn)), toReport_(std::move(toReport)),
+      delay_(delay), print_data_file_path_(print_data_file_path) {}
 
   unsigned long delay() { return delay_; }
 
@@ -41,25 +50,23 @@ class Handler : public content_analysis::sdk::AgentEventHandler {
 
     DumpEvent(stream, event.get());
 
-    bool block = false;
     bool success = true;
+    std::optional<ContentAnalysisResponse_Result_TriggeredRule_Action> caResponse =
+        ContentAnalysisResponse_Result_TriggeredRule_Action_BLOCK;
 
     if (event->GetRequest().has_text_content()) {
-      block = ShouldBlockRequest(
-          event->GetRequest().text_content());
+      caResponse = DecideCAResponse(
+          event->GetRequest().text_content(), stream);
     } else if (event->GetRequest().has_file_path()) {
-      std::string content;
-      success =
-          ReadContentFromFile(event->GetRequest().file_path(),
-                              &content);
-      if (success) {
-        block = ShouldBlockRequest(content);
-      }
+      // TODO: Fix downloads to store file *first* so we can check contents.
+      // Until then, just check the file name:
+      caResponse = DecideCAResponse(
+          event->GetRequest().file_path(), stream);
     } else if (event->GetRequest().has_print_data()) {
       // In the case of print request, normally the PDF bytes would be parsed
       // for sensitive data violations. To keep this class simple, only the
       // URL is checked for the word "block".
-      block = ShouldBlockRequest(event->GetRequest().request_data().url());
+      caResponse = DecideCAResponse(event->GetRequest().request_data().url(), stream);
     }
 
     if (!success) {
@@ -69,19 +76,39 @@ class Handler : public content_analysis::sdk::AgentEventHandler {
           content_analysis::sdk::ContentAnalysisResponse::Result::FAILURE);
       stream << "  Verdict: failed to reach verdict: ";
       stream << event->DebugString() << std::endl;
-    } else if (block) {
-      auto rc = content_analysis::sdk::SetEventVerdictToBlock(event.get());
-      stream << "  Verdict: block";
-      if (rc != content_analysis::sdk::ResultCode::OK) {
-        stream << " error: "
-               << content_analysis::sdk::ResultCodeToString(rc) << std::endl;
-        stream << "  " << event->DebugString() << std::endl;
+    } else {
+      stream << "  Verdict: ";
+      if (caResponse) {
+        switch (caResponse.value()) {
+          case ContentAnalysisResponse_Result_TriggeredRule_Action_BLOCK:
+            stream << "BLOCK";
+            break;
+          case ContentAnalysisResponse_Result_TriggeredRule_Action_WARN:
+            stream << "WARN";
+            break;
+          case ContentAnalysisResponse_Result_TriggeredRule_Action_REPORT_ONLY:
+            stream << "REPORT_ONLY";
+            break;
+          case ContentAnalysisResponse_Result_TriggeredRule_Action_ACTION_UNSPECIFIED:
+            stream << "ACTION_UNSPECIFIED";
+            break;
+          default:
+            stream << "<error>";
+            break;
+        }
+        auto rc =
+          content_analysis::sdk::SetEventVerdictTo(event.get(), caResponse.value());
+        if (rc != content_analysis::sdk::ResultCode::OK) {
+          stream << " error: "
+                 << content_analysis::sdk::ResultCodeToString(rc) << std::endl;
+          stream << "  " << event->DebugString() << std::endl;
+        }
+        stream << std::endl;
+      } else {
+        stream << "  Verdict: allow" << std::endl;
       }
       stream << std::endl;
-    } else {
-      stream << "  Verdict: allow" << std::endl;
     }
-
     stream << std::endl;
 
     // If a delay is specified, wait that much.
@@ -221,7 +248,11 @@ class Handler : public content_analysis::sdk::AgentEventHandler {
 
     std::string file_path =
         request.has_file_path()
-        ? request.file_path() : "None, bulk text entry or print";
+        ? request.file_path() : "<none>";
+
+    std::string text_content =
+        request.has_text_content()
+        ? request.text_content() : "<none>";
 
     std::string machine_user =
         request.has_client_metadata() &&
@@ -252,6 +283,7 @@ class Handler : public content_analysis::sdk::AgentEventHandler {
     stream << "  Filename: " << filename << std::endl;
     stream << "  Digest: " << digest << std::endl;
     stream << "  Filepath: " << file_path << std::endl;
+    stream << "  Text content: '" << text_content << "'" << std::endl;
     stream << "  Machine user: " << machine_user << std::endl;
     stream << "  Email: " << email << std::endl;
     if (request.has_print_data() && !print_data_file_path_.empty()) {
@@ -300,12 +332,37 @@ class Handler : public content_analysis::sdk::AgentEventHandler {
     return true;
   }
 
-  bool ShouldBlockRequest(const std::string& content) {
-    // Determines if the request should be blocked.  For this simple example
-    // the content is blocked if the string "block" is found.  Otherwise the
-    // content is allowed.
-    return content.find("block") != std::string::npos;
+  std::optional<ContentAnalysisResponse_Result_TriggeredRule_Action>
+  DecideCAResponse(const std::string& content, std::stringstream& stream) {
+    for (auto& r : toBlock_) {
+      if (std::regex_search(content, r.second)) {
+        stream << "'" << content << "' matches BLOCK regex '"
+                  << r.first << "'" << std::endl;
+        return ContentAnalysisResponse_Result_TriggeredRule_Action_BLOCK;
+      }
+    }
+    for (auto& r : toWarn_) {
+      if (std::regex_search(content, r.second)) {
+        stream << "'" << content << "' matches WARN regex '"
+                  << r.first << "'" << std::endl;
+        return ContentAnalysisResponse_Result_TriggeredRule_Action_WARN;
+      }
+    }
+    for (auto& r : toReport_) {
+      if (std::regex_search(content, r.second)) {
+        stream << "'" << content << "' matches REPORT_ONLY regex '"
+                  << r.first << "'" << std::endl;
+        return ContentAnalysisResponse_Result_TriggeredRule_Action_REPORT_ONLY;
+      }
+    }
+    stream << "'" << content << "' was ALLOWed\n";
+    return {};
   }
+
+  // For the demo, block any content that matches these wildcards.
+  RegexArray toBlock_;
+  RegexArray toWarn_;
+  RegexArray toReport_;
 
   unsigned long delay_;
   std::string print_data_file_path_;
