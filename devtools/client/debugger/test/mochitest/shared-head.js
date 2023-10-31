@@ -1689,7 +1689,7 @@ function assertBreakpointSnippet(dbg, index, expectedSnippet) {
 }
 
 const selectors = {
-  callStackHeader: ".call-stack-pane ._header",
+  callStackHeader: ".call-stack-pane ._header .header-label",
   callStackBody: ".call-stack-pane .pane",
   domMutationItem: ".dom-mutation-list li",
   expressionNode: i =>
@@ -1703,7 +1703,7 @@ const selectors = {
   expressionNodes: ".expressions-list .tree-node",
   expressionPlus: ".watch-expressions-pane button.plus",
   expressionRefresh: ".watch-expressions-pane button.refresh",
-  scopesHeader: ".scopes-pane ._header",
+  scopesHeader: ".scopes-pane ._header .header-label",
   breakpointItem: i => `.breakpoints-list div:nth-of-type(${i})`,
   breakpointLabel: i => `${selectors.breakpointItem(i)} .breakpoint-label`,
   breakpointHeadings: ".breakpoints-list .breakpoint-heading",
@@ -1817,6 +1817,8 @@ const selectors = {
   sourceTreeFolderNode: ".sources-panel .node .folder",
   excludePatternsInput: ".project-text-search .exclude-patterns-field input",
   fileSearchInput: ".search-bar input",
+  watchExpressionsHeader: ".watch-expressions-pane ._header .header-label",
+  watchExpressionsAddButton: ".watch-expressions-pane ._header .plus",
 };
 
 function getSelector(elementName, ...args) {

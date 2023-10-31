@@ -41,7 +41,7 @@ describe("Accordion", () => {
     })
   );
   it("basic render", () => expect(wrapper).toMatchSnapshot());
-  wrapper.find(".accordion-item-1 ._header").simulate("click");
+  wrapper.find(".accordion-item-1 button").simulate("click");
   it("handleClick and onToggle", () =>
     expect(testItems[0].onToggle).toHaveBeenCalledWith(true));
 });

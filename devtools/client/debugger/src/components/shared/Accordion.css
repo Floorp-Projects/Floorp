@@ -14,6 +14,7 @@
   background-color: var(--theme-accordion-header-background);
   border-bottom: 1px solid var(--theme-splitter-color);
   display: flex;
+  column-gap: 8px;
   font-size: 12px;
   line-height: calc(16 / 12);
   padding: 4px 6px;
@@ -29,15 +30,48 @@
   background-color: var(--theme-accordion-header-hover);
 }
 
-.accordion ._header .arrow {
-  margin-inline-end: 4px;
-}
 
 .accordion ._header .header-label {
+  flex-grow: 1;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   color: var(--theme-toolbar-color);
+  background: transparent;
+  padding: 0;
+
+  /* align expand arrow and button text */
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  &:hover {
+    background: transparent;
+  }
+
+  /* The expand arrow needs to be displayed inside the button to be accessible */
+  &::before {
+    content: "";
+    display: inline-block;
+    width: 10px;
+    height: 10px;
+    background-image: url(chrome://devtools/content/debugger/images/arrow.svg);
+    background-size: contain;
+    -moz-context-properties: fill;
+    fill: var(--theme-icon-dimmed-color);
+    rotate: -90deg;
+    transition: rotate 180ms var(--animation-curve);
+
+    &:dir(rtl) {
+      rotate: 90deg;
+    }
+  }
+
+  &[aria-expanded="true"]::before {
+    /* icon should always point to the bottom (default) when expanded,
+    regardless of the text direction */
+    rotate: 0deg !important;
+  }
 }
 
 .accordion ._header .header-buttons {

@@ -234,10 +234,10 @@ async function getEventBreakpointCheckbox(
   eventBreakpointName
 ) {
   if (!getEventListenersPanel(dbg)) {
-    // Event listeners panel is collapse, expand it
+    // Event listeners panel is collapsed, expand it
     findElementWithSelector(
       dbg,
-      `.event-listeners-pane ._header .arrow`
+      `.event-listeners-pane ._header .header-label`
     ).click();
     await waitFor(() => getEventListenersPanel(dbg));
   }
