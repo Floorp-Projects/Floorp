@@ -17,8 +17,8 @@ const { UpdateUtils } = ChromeUtils.importESModule(
 
 ChromeUtils.defineLazyGetter(
   this,
-  "pluginsBundle",
-  () => new Localization(["toolkit/about/aboutPlugins.ftl"])
+  "addonsBundle",
+  () => new Localization(["toolkit/about/aboutAddons.ftl"])
 );
 
 var gMockAddons = new Map();
@@ -104,9 +104,9 @@ add_task(async function test_notInstalled() {
     let mockAddon = gMockAddons.get(addon.id);
 
     Assert.notEqual(mockAddon, null);
-    let name = await pluginsBundle.formatValue(mockAddon.nameId);
+    let name = await addonsBundle.formatValue(mockAddon.nameId);
     Assert.equal(addon.name, name);
-    let description = await pluginsBundle.formatValue(mockAddon.descriptionId);
+    let description = await addonsBundle.formatValue(mockAddon.descriptionId);
     Assert.equal(addon.description, description);
 
     Assert.ok(!addon.isActive);
@@ -174,7 +174,7 @@ add_task(async function test_installed() {
     Assert.ok(!addon.appDisabled);
     Assert.ok(addon.userDisabled);
 
-    let name = await pluginsBundle.formatValue(mockAddon.nameId);
+    let name = await addonsBundle.formatValue(mockAddon.nameId);
     Assert.equal(addon.name, name);
     Assert.equal(addon.version, TEST_VERSION);
 

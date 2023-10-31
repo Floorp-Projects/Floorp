@@ -58,7 +58,6 @@ app-basics-profile-dir =
         [linux] Profile Directory
        *[other] Profile Folder
     }
-app-basics-enabled-plugins = Enabled Plugins
 app-basics-build-config = Build Configuration
 app-basics-user-agent = User Agent
 app-basics-os = OS

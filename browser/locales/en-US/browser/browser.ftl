@@ -89,8 +89,6 @@ urlbar-indexed-db-notification-anchor =
     .tooltiptext = Open offline storage message panel
 urlbar-password-notification-anchor =
     .tooltiptext = Open save password message panel
-urlbar-plugins-notification-anchor =
-    .tooltiptext = Manage plug-in use
 urlbar-web-rtc-share-devices-notification-anchor =
     .tooltiptext = Manage sharing your camera and/or microphone with the site
 # "Speakers" is used in a general sense that might include headphones or

@@ -123,9 +123,6 @@ export let RemotePageAccessManager = {
       RPMSendAsyncMessage: ["ActivityStream:ContentToMain"],
       RPMAddMessageListener: ["ActivityStream:MainToContent"],
     },
-    "about:plugins": {
-      RPMSendQuery: ["RequestPlugins"],
-    },
     "about:pocket-saved": {
       RPMSendAsyncMessage: ["*"],
       RPMAddMessageListener: ["*"],

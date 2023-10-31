@@ -292,20 +292,6 @@ let JSWINDOWACTORS = {
     remoteTypes: ["privilegedabout"],
   },
 
-  AboutPlugins: {
-    parent: {
-      esModuleURI: "resource:///actors/AboutPluginsParent.sys.mjs",
-    },
-    child: {
-      esModuleURI: "resource:///actors/AboutPluginsChild.sys.mjs",
-
-      events: {
-        DOMDocElementInserted: { capture: true },
-      },
-    },
-
-    matches: ["about:plugins"],
-  },
   AboutPocket: {
     parent: {
       esModuleURI: "resource:///actors/AboutPocketParent.sys.mjs",

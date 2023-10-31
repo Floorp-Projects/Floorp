@@ -71,7 +71,6 @@ add_task(async function chromeUITest() {
     "logins",
     "loginsimportreport",
     "performance",
-    "plugins",
     "policies",
     "preferences",
     "processes",

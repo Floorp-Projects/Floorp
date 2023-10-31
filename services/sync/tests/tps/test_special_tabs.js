@@ -18,7 +18,7 @@ var tabs1 = [
     title: "Firefox",
     profile: "profile1",
   },
-  { uri: "about:plugins", title: "About", profile: "profile1" },
+  { uri: "about:robots", title: "About", profile: "profile1" },
   { uri: "about:credits", title: "Credits", profile: "profile1" },
   {
     uri: "data:text/html,<html><head><title>Mozilla</title></head><body>Mozilla</body></html>",
@@ -51,7 +51,7 @@ var tabs3 = [
     title: "Firstrun",
     profile: "profile1",
   },
-  { uri: "about:plugins", title: "About", profile: "profile1" },
+  { uri: "about:robots", title: "About", profile: "profile1" },
   { uri: "about:credits", title: "Credits", profile: "profile1" },
 ];
 

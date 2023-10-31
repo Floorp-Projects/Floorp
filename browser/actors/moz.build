@@ -34,8 +34,6 @@ with Files("WebRTCChild.sys.mjs"):
 FINAL_TARGET_FILES.actors += [
     "AboutNewTabChild.sys.mjs",
     "AboutNewTabParent.sys.mjs",
-    "AboutPluginsChild.sys.mjs",
-    "AboutPluginsParent.sys.mjs",
     "AboutPocketChild.sys.mjs",
     "AboutPocketParent.sys.mjs",
     "AboutPrivateBrowsingChild.sys.mjs",
