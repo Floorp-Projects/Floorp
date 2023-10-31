@@ -51,8 +51,8 @@ class Handler : public content_analysis::sdk::AgentEventHandler {
     DumpEvent(stream, event.get());
 
     bool success = true;
-    std::optional<content_analysis::sdk::ContentAnalysisResponse_Result_TriggeredRule_Action> caResponse =
-        content_analysis::sdk::ContentAnalysisResponse_Result_TriggeredRule_Action_BLOCK;
+    std::optional<ContentAnalysisResponse_Result_TriggeredRule_Action> caResponse =
+        ContentAnalysisResponse_Result_TriggeredRule_Action_BLOCK;
 
     if (event->GetRequest().has_text_content()) {
       caResponse = DecideCAResponse(
@@ -80,16 +80,16 @@ class Handler : public content_analysis::sdk::AgentEventHandler {
       stream << "  Verdict: ";
       if (caResponse) {
         switch (caResponse.value()) {
-          case content_analysis::sdk::ContentAnalysisResponse_Result_TriggeredRule_Action_BLOCK:
+          case ContentAnalysisResponse_Result_TriggeredRule_Action_BLOCK:
             stream << "BLOCK";
             break;
-          case content_analysis::sdk::ContentAnalysisResponse_Result_TriggeredRule_Action_WARN:
+          case ContentAnalysisResponse_Result_TriggeredRule_Action_WARN:
             stream << "WARN";
             break;
-          case content_analysis::sdk::ContentAnalysisResponse_Result_TriggeredRule_Action_REPORT_ONLY:
+          case ContentAnalysisResponse_Result_TriggeredRule_Action_REPORT_ONLY:
             stream << "REPORT_ONLY";
             break;
-          case content_analysis::sdk::ContentAnalysisResponse_Result_TriggeredRule_Action_ACTION_UNSPECIFIED:
+          case ContentAnalysisResponse_Result_TriggeredRule_Action_ACTION_UNSPECIFIED:
             stream << "ACTION_UNSPECIFIED";
             break;
           default:
@@ -332,27 +332,27 @@ class Handler : public content_analysis::sdk::AgentEventHandler {
     return true;
   }
 
-  std::optional<content_analysis::sdk::ContentAnalysisResponse_Result_TriggeredRule_Action>
+  std::optional<ContentAnalysisResponse_Result_TriggeredRule_Action>
   DecideCAResponse(const std::string& content, std::stringstream& stream) {
     for (auto& r : toBlock_) {
       if (std::regex_search(content, r.second)) {
         stream << "'" << content << "' matches BLOCK regex '"
                   << r.first << "'" << std::endl;
-        return content_analysis::sdk::ContentAnalysisResponse_Result_TriggeredRule_Action_BLOCK;
+        return ContentAnalysisResponse_Result_TriggeredRule_Action_BLOCK;
       }
     }
     for (auto& r : toWarn_) {
       if (std::regex_search(content, r.second)) {
         stream << "'" << content << "' matches WARN regex '"
                   << r.first << "'" << std::endl;
-        return content_analysis::sdk::ContentAnalysisResponse_Result_TriggeredRule_Action_WARN;
+        return ContentAnalysisResponse_Result_TriggeredRule_Action_WARN;
       }
     }
     for (auto& r : toReport_) {
       if (std::regex_search(content, r.second)) {
         stream << "'" << content << "' matches REPORT_ONLY regex '"
                   << r.first << "'" << std::endl;
-        return content_analysis::sdk::ContentAnalysisResponse_Result_TriggeredRule_Action_REPORT_ONLY;
+        return ContentAnalysisResponse_Result_TriggeredRule_Action_REPORT_ONLY;
       }
     }
     stream << "'" << content << "' was ALLOWed\n";
