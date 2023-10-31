@@ -1686,7 +1686,7 @@ class DiscoveryStreamFeed {
   }
 
   enableStories() {
-    if (this.config.enabled && this.loaded) {
+    if (this.config.enabled) {
       // If stories are being re enabled, ensure we have stories.
       this.refreshAll({ updateOpenTabs: true });
     }
