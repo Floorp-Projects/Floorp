@@ -55,6 +55,7 @@ DIRS += [
     "search",
     "sessionstore",
     "shell",
+    "ssb",
     "syncedtabs",
     "tabunloader",
     "textrecognition",

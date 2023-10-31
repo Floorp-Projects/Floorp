@@ -275,3 +275,6 @@
   skin/classic/browser/weather/night-partly-cloudy-with-showers.svg (../shared/weather/night-partly-cloudy-with-showers.svg)
   skin/classic/browser/weather/night-partly-cloudy-with-thunderstorms.svg (../shared/weather/night-partly-cloudy-with-thunderstorms.svg)
   skin/classic/browser/weather/night-mostly-cloudy-with-flurries.svg (../shared/weather/night-mostly-cloudy-with-flurries.svg)
+
+## SSB  
+  skin/classic/browser/install-ssb.svg                         (../shared/install-ssb.svg)
