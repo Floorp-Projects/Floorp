@@ -152,6 +152,7 @@ add_setup(async function () {
   gMainView.appendChild(gLink);
   await window.ensureCustomElements("moz-toggle");
   gToggle = document.createElement("moz-toggle");
+  gToggle.label = "Test label";
   gMainView.appendChild(gToggle);
 
   gMainTabOrder = [

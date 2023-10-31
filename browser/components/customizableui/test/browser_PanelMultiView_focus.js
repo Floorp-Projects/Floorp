@@ -36,6 +36,7 @@ add_setup(async function () {
     });
   gAnchor.addEventListener("keypress", onPress);
   gAnchor.addEventListener("click", onPress);
+  gAnchor.setAttribute("aria-label", "test label");
   gPanel = document.createXULElement("panel");
   navBar.appendChild(gPanel);
   gPanelMultiView = document.createXULElement("panelmultiview");
