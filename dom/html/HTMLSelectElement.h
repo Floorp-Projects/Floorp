@@ -185,6 +185,8 @@ class HTMLSelectElement final : public nsGenericHTMLFormControlElementWithState,
   // via bindings.
   void SetCustomValidity(const nsAString& aError);
 
+  void ShowPicker(ErrorResult& aRv);
+
   using nsINode::Remove;
 
   // nsINode

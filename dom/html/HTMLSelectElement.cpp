@@ -16,6 +16,7 @@
 #include "mozilla/dom/HTMLOptionElement.h"
 #include "mozilla/dom/HTMLSelectElementBinding.h"
 #include "mozilla/dom/UnionTypes.h"
+#include "mozilla/dom/WindowGlobalChild.h"
 #include "mozilla/MappedDeclarationsBuilder.h"
 #include "mozilla/Maybe.h"
 #include "nsContentCreatorFunctions.h"
@@ -162,6 +163,41 @@ NS_IMPL_ELEMENT_CLONE(HTMLSelectElement)
 void HTMLSelectElement::SetCustomValidity(const nsAString& aError) {
   ConstraintValidation::SetCustomValidity(aError);
   UpdateValidityElementStates(true);
+}
+
+void HTMLSelectElement::ShowPicker(ErrorResult& aRv) {
+  // Step 1. If this is not mutable, then throw an "InvalidStateError"
+  // DOMException.
+  if (IsDisabled()) {
+    return aRv.ThrowInvalidStateError("This select is disabled.");
+  }
+
+  // Step 2. If this's relevant settings object's origin is not same origin with
+  // this's relevant settings object's top-level origin, [...], then throw a
+  // "SecurityError" DOMException.
+  nsPIDOMWindowInner* window = OwnerDoc()->GetInnerWindow();
+  WindowGlobalChild* windowGlobalChild =
+      window ? window->GetWindowGlobalChild() : nullptr;
+  if (!windowGlobalChild || !windowGlobalChild->SameOriginWithTop()) {
+    return aRv.ThrowSecurityError(
+        "Call was blocked because the current origin isn't same-origin with "
+        "top.");
+  }
+
+  // Step 3. If this's relevant global object does not have transient
+  // activation, then throw a "NotAllowedError" DOMException.
+  if (!OwnerDoc()->HasValidTransientUserGestureActivation()) {
+    return aRv.ThrowNotAllowedError(
+        "Call was blocked due to lack of user activation.");
+  }
+
+  // Step 4. Show the picker, if applicable, for this.
+  if (IsCombobox() && !OpenInParentProcess()) {
+    RefPtr<Document> doc = OwnerDoc();
+    RefPtr<Element> select = this;
+    nsContentUtils::DispatchChromeEvent(doc, select, u"mozshowdropdown"_ns,
+                                        CanBubble::eYes, Cancelable::eNo);
+  }
 }
 
 void HTMLSelectElement::GetAutocomplete(DOMString& aValue) {
