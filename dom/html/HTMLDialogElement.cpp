@@ -96,7 +96,7 @@ void HTMLDialogElement::StorePreviouslyFocusedElement() {
     // Looks like there's a discrepancy sometimes when focus is moved
     // to a different in-process window.
     if (nsIContent* unretargetedFocus = doc->GetUnretargetedFocusedContent()) {
-      mPreviouslyFocusedElement = do_GetWeakReference(element);
+      mPreviouslyFocusedElement = do_GetWeakReference(unretargetedFocus);
     }
   }
 }
