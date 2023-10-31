@@ -175,6 +175,7 @@ skip-if = ["debug"] # timing-senstive tests should only run on optimized builds
 https_first_disabled = true
 
 ["browser_viewport_changed_meta.js"]
+skip-if = ["a11y_checks"] # Bug 1849028 and 1824058 for causing intermittent crashes
 
 ["browser_viewport_fallback_width.js"]
 

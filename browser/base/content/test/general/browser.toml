@@ -368,6 +368,7 @@ https_first_disabled = true
 # DO NOT ADD MORE TESTS HERE. USE A TOPICAL DIRECTORY INSTEAD.
 
 ["browser_plainTextLinks.js"]
+skip-if = ["a11y_checks"] # Bugs 1858041 and 1835079 for causing intermittent crashes
 # DO NOT ADD MORE TESTS HERE. USE A TOPICAL DIRECTORY INSTEAD.
 
 ["browser_printpreview.js"]

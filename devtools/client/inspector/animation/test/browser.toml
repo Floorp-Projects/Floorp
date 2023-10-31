@@ -66,6 +66,7 @@ skip-if = [
   "os == 'linux' && !debug && !asan && !swgl && !ccov", # Bug 1665011
   "win10_2004", # Bug 1723573
   "win11_2009", # Bug 1798331
+  "a11y_checks && debug", # Bugs 1849028 and 1858041 for causing intermittent test results
 ]
 
 ["browser_animation_animation-target_select.js"]
@@ -96,7 +97,7 @@ fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and
 ["browser_animation_fission_switch-target.js"]
 
 ["browser_animation_indication-bar.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
+skip-if = ["a11y_checks"] # Bugs 1858041 and 1849028 for causing intermittent a11y_checks results
 
 ["browser_animation_infinity-duration_current-time-scrubber.js"]
 fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled

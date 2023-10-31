@@ -228,6 +228,7 @@ disabled = "Bug 962258"
 ["browser_toolbox_remoteness_change.js"]
 
 ["browser_toolbox_screenshot_tool.js"]
+skip-if = ["a11y_checks"] # Bugs 1858041 and 1849028 for causing intermittent crashes
 
 ["browser_toolbox_select_event.js"]
 

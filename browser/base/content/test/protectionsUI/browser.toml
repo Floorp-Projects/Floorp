@@ -49,6 +49,7 @@ support-files = [
 
 ["browser_protectionsUI_fingerprinters.js"]
 https_first_disabled = true
+skip-if = ["a11y_checks"] # Bugs 1858041 and 1849179 for causing intermittent crashes
 
 ["browser_protectionsUI_icon_state.js"]
 https_first_disabled = true

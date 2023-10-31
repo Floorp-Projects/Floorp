@@ -192,6 +192,7 @@ skip-if = ["verify"]
 ["browser_982656_restore_defaults_builtin_widgets.js"]
 
 ["browser_984455_bookmarks_items_reparenting.js"]
+skip-if = ["a11y_checks"] # Bugs 1858041, 1857056, and 1854537 for causing intermittent crashes on Autoland
 
 ["browser_985815_propagate_setToolbarVisibility.js"]
 
@@ -314,7 +315,6 @@ tags = "fullscreen"
 ["browser_panelUINotifications_modals.js"]
 
 ["browser_panelUINotifications_multiWindow.js"]
-fail-if = ["a11y_checks"] # Bug 1854536 clicked popup-notification-primary-button may not be focusable
 
 ["browser_panel_keyboard_navigation.js"]
 

@@ -141,6 +141,7 @@ fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and
 skip-if = [
   "apple_catalina", # Bug 1713158
   "os == 'linux' && !asan && !debug && !swgl && !ccov", # Bug 1721159
+  "a11y_checks && debug", # Bugs 1849028 and 1858041 for causing intermittent test results
 ]
 
 ["browser_html_tooltip-03.js"]

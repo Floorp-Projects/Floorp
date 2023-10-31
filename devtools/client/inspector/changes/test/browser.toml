@@ -29,7 +29,7 @@ fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and
 ["browser_changes_declaration_edit_value.js"]
 
 ["browser_changes_declaration_identical_rules.js"]
-fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
+skip-if = ["a11y_checks"] # Bugs 1858041 and 1849028 to investigate intermittent a11y_checks results (fails on Autoland, passes on Try)
 
 ["browser_changes_declaration_remove.js"]
 
