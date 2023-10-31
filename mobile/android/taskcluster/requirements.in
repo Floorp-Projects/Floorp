@@ -3,4 +3,4 @@
 
 mozilla-version
 redo
-taskcluster-taskgraph >= 5.3.0
+taskcluster-taskgraph >= 6.3.1
