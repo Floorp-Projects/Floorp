@@ -193,6 +193,9 @@ class nsSliderFrame final : public nsContainerFrame {
   }
   void PageScroll(bool aClickAndHold);
 
+  void SetupDrag(mozilla::WidgetGUIEvent* aEvent, nsIFrame* aThumbFrame,
+                 nscoord aPos, bool aIsHorizontal);
+
   nsPoint mDestinationPoint;
   // If we are in a scrollbar track click-and-hold, this is populated with
   // the destination of the scroll started at the most recent tick of the

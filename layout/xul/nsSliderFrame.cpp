@@ -774,21 +774,11 @@ nsresult nsSliderFrame::HandleEvent(nsPresContext* aPresContext,
 
     DragThumb(true);
 
-#ifdef MOZ_WIDGET_GTK
-    RefPtr<dom::Element> thumb = thumbFrame->GetContent()->AsElement();
-    thumb->SetAttr(kNameSpaceID_None, nsGkAtoms::active, u"true"_ns, true);
-#endif
-
     if (aEvent->mClass == eTouchEventClass) {
       *aEventStatus = nsEventStatus_eConsumeNoDefault;
     }
 
-    if (isHorizontal)
-      mThumbStart = thumbFrame->GetPosition().x;
-    else
-      mThumbStart = thumbFrame->GetPosition().y;
-
-    mDragStart = pos - mThumbStart;
+    SetupDrag(aEvent, thumbFrame, pos, isHorizontal);
   }
 #ifdef MOZ_WIDGET_GTK
   else if (ShouldScrollForEvent(aEvent) && aEvent->mClass == eMouseEventClass &&
@@ -1200,28 +1190,7 @@ nsresult nsSliderFrame::StartDrag(Event* aEvent) {
     return NS_OK;
   }
 
-#ifdef MOZ_WIDGET_GTK
-  RefPtr<dom::Element> thumb = thumbFrame->GetContent()->AsElement();
-  thumb->SetAttr(kNameSpaceID_None, nsGkAtoms::active, u"true"_ns, true);
-#endif
-
-  if (isHorizontal)
-    mThumbStart = thumbFrame->GetPosition().x;
-  else
-    mThumbStart = thumbFrame->GetPosition().y;
-
-  mDragStart = pos - mThumbStart;
-
-  mScrollingWithAPZ = false;
-  StartAPZDrag(event);  // sets mScrollingWithAPZ=true if appropriate
-
-#ifdef DEBUG_SLIDER
-  printf("Pressed mDragStart=%d\n", mDragStart);
-#endif
-
-  if (!mScrollingWithAPZ) {
-    SuppressDisplayport();
-  }
+  SetupDrag(event, thumbFrame, pos, isHorizontal);
 
   return NS_OK;
 }
@@ -1577,6 +1546,33 @@ void nsSliderFrame::PageScroll(bool aClickAndHold) {
     return;
   }
   PageUpDown(changeDirection);
+}
+
+void nsSliderFrame::SetupDrag(WidgetGUIEvent* aEvent, nsIFrame* aThumbFrame,
+                              nscoord aPos, bool aIsHorizontal) {
+#ifdef MOZ_WIDGET_GTK
+  RefPtr<dom::Element> thumb = aThumbFrame->GetContent()->AsElement();
+  thumb->SetAttr(kNameSpaceID_None, nsGkAtoms::active, u"true"_ns, true);
+#endif
+
+  if (aIsHorizontal) {
+    mThumbStart = aThumbFrame->GetPosition().x;
+  } else {
+    mThumbStart = aThumbFrame->GetPosition().y;
+  }
+
+  mDragStart = aPos - mThumbStart;
+
+  mScrollingWithAPZ = false;
+  StartAPZDrag(aEvent);  // sets mScrollingWithAPZ=true if appropriate
+
+#ifdef DEBUG_SLIDER
+  printf("Pressed mDragStart=%d\n", mDragStart);
+#endif
+
+  if (!mScrollingWithAPZ) {
+    SuppressDisplayport();
+  }
 }
 
 float nsSliderFrame::GetThumbRatio() const {
