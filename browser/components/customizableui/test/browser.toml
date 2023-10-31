@@ -224,10 +224,8 @@ skip-if = ["verify"]
 # CustomizableUI, but are located here together with the module they're testing.
 
 ["browser_PanelMultiView_focus.js"]
-fail-if = ["a11y_checks"] # Bug 1854536 clicked toolbarbutton may not be labeled
 
 ["browser_PanelMultiView_keyboard.js"]
-fail-if = ["a11y_checks"] # Bug 1854536 clicked #moz-toggle-button may not be labeled
 
 ["browser_addons_area.js"]
 
