@@ -527,12 +527,25 @@ nsDragService::IsDataFlavorSupported(const char* aDataFlavor, bool* _retval) {
           *_retval = true;  // found it!
         }
       } else if (format == CF_HDROP) {
-        // if the client wants a file, maybe we find a virtual file
+        // Dragging a link from browsers creates both a URL and a FILE which is
+        // a *.url shortcut in the data object. The file is useful when dropping
+        // in Windows Explorer to create a internet shortcut. But when dropping
+        // in the browser, users do not expect to have this file. So do not try
+        // to look up virtal file if there is a URL in the data object.
+        format = nsClipboard::GetFormat(kURLMime);
+        SET_FORMATETC(fe, format, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL);
+        if (mDataObject->QueryGetData(&fe) == S_OK) {
+          return NS_OK;
+        }
+
+        // If the client wants a file, maybe we find a virtual file.
         format = nsClipboard::GetClipboardFileDescriptorFormatW();
         SET_FORMATETC(fe, format, 0, DVASPECT_CONTENT, -1, TYMED_HGLOBAL);
         if (mDataObject->QueryGetData(&fe) == S_OK) {
           *_retval = true;  // found it!
         }
+
+        // XXX should we fall back to CFSTR_FILEDESCRIPTORA?
       }
     }  // else try again
   }
