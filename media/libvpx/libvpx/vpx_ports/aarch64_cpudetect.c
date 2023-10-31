@@ -77,7 +77,7 @@ static int arm_get_cpu_caps(void) {
   }
 #endif  // defined(PF_ARM_V82_DP_INSTRUCTIONS_AVAILABLE)
 #endif  // HAVE_NEON_DOTPROD
-  // No I8MM feature detection available on Windows at time of writing.
+  // No I8MM or SVE feature detection available on Windows at time of writing.
   return flags;
 }
 
@@ -98,6 +98,7 @@ static int arm_get_cpu_caps(void) {
 // Define hwcap values ourselves: building with an old auxv header where these
 // hwcap values are not defined should not prevent features from being enabled.
 #define VPX_AARCH64_HWCAP_ASIMDDP (1 << 20)
+#define VPX_AARCH64_HWCAP_SVE (1 << 22)
 #define VPX_AARCH64_HWCAP2_I8MM (1 << 13)
 
 static int arm_get_cpu_caps(void) {
@@ -117,6 +118,11 @@ static int arm_get_cpu_caps(void) {
     flags |= HAS_NEON_I8MM;
   }
 #endif  // HAVE_NEON_I8MM
+#if HAVE_SVE
+  if (hwcap & VPX_AARCH64_HWCAP_SVE) {
+    flags |= HAS_SVE;
+  }
+#endif  // HAVE_SVE
   return flags;
 }
 
@@ -128,6 +134,10 @@ static int arm_get_cpu_caps(void) {
 // Added in https://fuchsia-review.googlesource.com/c/fuchsia/+/894282.
 #ifndef ZX_ARM64_FEATURE_ISA_I8MM
 #define ZX_ARM64_FEATURE_ISA_I8MM ((uint32_t)(1u << 19))
+#endif
+// Added in https://fuchsia-review.googlesource.com/c/fuchsia/+/895083.
+#ifndef ZX_ARM64_FEATURE_ISA_SVE
+#define ZX_ARM64_FEATURE_ISA_SVE ((uint32_t)(1u << 20))
 #endif
 
 static int arm_get_cpu_caps(void) {
@@ -150,6 +160,11 @@ static int arm_get_cpu_caps(void) {
     flags |= HAS_NEON_I8MM;
   }
 #endif  // HAVE_NEON_I8MM
+#if HAVE_SVE
+  if (features & ZX_ARM64_FEATURE_ISA_SVE) {
+    flags |= HAS_SVE;
+  }
+#endif  // HAVE_SVE
   return flags;
 }
 
@@ -168,6 +183,14 @@ int arm_cpu_caps(void) {
   // Restrict flags: FEAT_I8MM assumes that FEAT_DotProd is available.
   if (!(flags & HAS_NEON_DOTPROD)) {
     flags &= ~HAS_NEON_I8MM;
+  }
+
+  // Restrict flags: FEAT_SVE assumes that FEAT_{DotProd,I8MM} are available.
+  if (!(flags & HAS_NEON_DOTPROD)) {
+    flags &= ~HAS_SVE;
+  }
+  if (!(flags & HAS_NEON_I8MM)) {
+    flags &= ~HAS_SVE;
   }
 
   return flags;

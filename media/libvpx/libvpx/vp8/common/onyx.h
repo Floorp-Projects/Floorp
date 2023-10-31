@@ -240,7 +240,7 @@ struct VP8_COMP *vp8_create_compressor(VP8_CONFIG *oxcf);
 void vp8_remove_compressor(struct VP8_COMP **comp);
 
 void vp8_init_config(struct VP8_COMP *onyx, VP8_CONFIG *oxcf);
-void vp8_change_config(struct VP8_COMP *cpi, VP8_CONFIG *oxcf);
+void vp8_change_config(struct VP8_COMP *cpi, const VP8_CONFIG *oxcf);
 
 int vp8_receive_raw_frame(struct VP8_COMP *cpi, unsigned int frame_flags,
                           YV12_BUFFER_CONFIG *sd, int64_t time_stamp,

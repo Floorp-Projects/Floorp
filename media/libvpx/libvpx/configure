@@ -257,6 +257,7 @@ ARCH_EXT_LIST_AARCH64="
     neon
     neon_dotprod
     neon_i8mm
+    sve
 "
 
 ARCH_EXT_LIST_X86="

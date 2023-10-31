@@ -10,9 +10,14 @@
 
 #include "test/init_vpx_test.h"
 
+#include "./vpx_config.h"
+
+#if !CONFIG_SHARED
 #include <string>
 #include "third_party/googletest/src/include/gtest/gtest.h"
-#include "./vpx_config.h"
+#if VPX_ARCH_ARM
+#include "vpx_ports/arm.h"
+#endif
 #if VPX_ARCH_X86 || VPX_ARCH_X86_64
 #include "vpx_ports/x86.h"
 #endif
@@ -27,7 +32,7 @@ extern void vpx_dsp_rtcd();
 extern void vpx_scale_rtcd();
 }
 
-#if VPX_ARCH_X86 || VPX_ARCH_X86_64
+#if VPX_ARCH_ARM || VPX_ARCH_X86 || VPX_ARCH_X86_64
 static void append_negative_gtest_filter(const char *str) {
   std::string filter = GTEST_FLAG_GET(filter);
   // Negative patterns begin with one '-' followed by a ':' separated list.
@@ -35,10 +40,28 @@ static void append_negative_gtest_filter(const char *str) {
   filter += str;
   GTEST_FLAG_SET(filter, filter);
 }
-#endif  // VPX_ARCH_X86 || VPX_ARCH_X86_64
+#endif  // VPX_ARCH_ARM || VPX_ARCH_X86 || VPX_ARCH_X86_64
+#endif  // !CONFIG_SHARED
 
 namespace libvpx_test {
 void init_vpx_test() {
+#if !CONFIG_SHARED
+#if VPX_ARCH_AARCH64
+  const int caps = arm_cpu_caps();
+  if (!(caps & HAS_NEON_DOTPROD)) {
+    append_negative_gtest_filter(":NEON_DOTPROD.*:NEON_DOTPROD/*");
+  }
+  if (!(caps & HAS_NEON_I8MM)) {
+    append_negative_gtest_filter(":NEON_I8MM.*:NEON_I8MM/*");
+  }
+  if (!(caps & HAS_SVE)) {
+    append_negative_gtest_filter(":SVE.*:SVE/*");
+  }
+#elif VPX_ARCH_ARM
+  const int caps = arm_cpu_caps();
+  if (!(caps & HAS_NEON)) append_negative_gtest_filter(":NEON.*:NEON/*");
+#endif  // VPX_ARCH_ARM
+
 #if VPX_ARCH_X86 || VPX_ARCH_X86_64
   const int simd_caps = x86_simd_caps();
   if (!(simd_caps & HAS_MMX)) append_negative_gtest_filter(":MMX.*:MMX/*");
@@ -58,9 +81,8 @@ void init_vpx_test() {
   }
 #endif  // VPX_ARCH_X86 || VPX_ARCH_X86_64
 
-#if !CONFIG_SHARED
-// Shared library builds don't support whitebox tests
-// that exercise internal symbols.
+  // Shared library builds don't support whitebox tests that exercise internal
+  // symbols.
 #if CONFIG_VP8
   vp8_rtcd();
 #endif  // CONFIG_VP8
