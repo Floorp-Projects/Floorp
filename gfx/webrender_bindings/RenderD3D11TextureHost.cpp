@@ -531,7 +531,9 @@ bool RenderDXGIYCbCrTextureHost::EnsureLockable() {
     return false;
   }
 
-  EnsureD3D11Texture2D(device);
+  if (!EnsureD3D11Texture2D(device)) {
+    return false;
+  }
 
   mGL->fGenTextures(3, mTextureHandles);
   bool ok = true;
