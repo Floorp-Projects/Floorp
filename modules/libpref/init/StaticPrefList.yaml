@@ -9366,7 +9366,11 @@
 #if defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID) || defined(XP_WIN) || defined(XP_MACOSX)
   value: true
 #else
+#if defined(MOZ_WIDGET_ANDROID)
+  value: @IS_NIGHTLY_BUILD@
+#else
   value: false
+#endif
 #endif
 
 # Whether or not to pass AUDCLNT_STREAMOPTIONS_RAW when initializing audio
