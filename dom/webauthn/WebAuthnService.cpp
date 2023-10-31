@@ -160,20 +160,4 @@ WebAuthnService::SetUserVerified(uint64_t authenticatorId,
   return mPlatformService->SetUserVerified(authenticatorId, isUserVerified);
 }
 
-NS_IMETHODIMP
-WebAuthnService::Listen() {
-  if (StaticPrefs::security_webauth_webauthn_enable_softtoken()) {
-    return mTestService->Listen();
-  }
-  return mPlatformService->Listen();
-}
-
-NS_IMETHODIMP
-WebAuthnService::RunCommand(const nsACString& cmd) {
-  if (StaticPrefs::security_webauth_webauthn_enable_softtoken()) {
-    return mTestService->RunCommand(cmd);
-  }
-  return mPlatformService->RunCommand(cmd);
-}
-
 }  // namespace mozilla::dom
