@@ -561,6 +561,8 @@ support-files = ["slow-page.sjs"]
 
 ["browser_strip_on_share.js"]
 
+["browser_strip_on_share_telemetry.js"]
+
 ["browser_suggestedIndex.js"]
 
 ["browser_suppressFocusBorder.js"]
