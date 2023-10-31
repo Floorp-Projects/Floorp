@@ -260,10 +260,13 @@ RealmTestRequestor.prototype = {
 var listener = {
   expectedCode: -1, // Uninitialized
   nextTest: undefined,
-
+  expectRequestFail: false,
   onStartRequest: function test_onStartR(request) {
     try {
-      if (!Components.isSuccessCode(request.status)) {
+      if (
+        !this.expectRequestFail &&
+        !Components.isSuccessCode(request.status)
+      ) {
         do_throw("Channel should have a success code!");
       }
 
@@ -303,6 +306,54 @@ var listener = {
     Assert.equal(status, Cr.NS_ERROR_ABORT);
     initialChannelId = -1;
     this.nextTest();
+  },
+};
+
+let ChannelEventSink1 = {
+  _classDescription: "WebRequest channel event sink",
+  _classID: Components.ID("115062f8-92f1-11e5-8b7f-08001110f7ec"),
+  _contractID: "@mozilla.org/webrequest/channel-event-sink;1",
+
+  QueryInterface: ChromeUtils.generateQI(["nsIChannelEventSink", "nsIFactory"]),
+
+  init() {
+    Components.manager
+      .QueryInterface(Ci.nsIComponentRegistrar)
+      .registerFactory(
+        this._classID,
+        this._classDescription,
+        this._contractID,
+        this
+      );
+  },
+
+  register() {
+    Services.catMan.addCategoryEntry(
+      "net-channel-event-sinks",
+      this._contractID,
+      this._contractID,
+      false,
+      true
+    );
+  },
+
+  unregister() {
+    Services.catMan.deleteCategoryEntry(
+      "net-channel-event-sinks",
+      this._contractID,
+      false
+    );
+  },
+
+  // nsIChannelEventSink implementation
+  asyncOnChannelRedirect(oldChannel, newChannel, flags, redirectCallback) {
+    // Abort the redirection
+    redirectCallback.onRedirectVerifyCallback(Cr.NS_ERROR_ABORT);
+  },
+
+  // nsIFactory implementation
+  createInstance(iid) {
+    return this.QueryInterface(iid);
   },
 };
 
@@ -507,6 +558,22 @@ async function test_digest_md5() {
   listener.expectedCode = 200; // OK
   await openAndListen(chan);
 }
+
+add_task(
+  { pref_set: [["network.auth.use_redirect_for_retries", true]] },
+  async function test_digest_md5_redirect_veto() {
+    ChannelEventSink1.init();
+    ChannelEventSink1.register();
+    var chan = makeChan(URL + "/auth/digest_md5", URL);
+
+    chan.notificationCallbacks = new Requestor(0, 1);
+    listener.expectedCode = 401; // Unauthorized
+    listener.expectRequestFail = true;
+    await openAndListen(chan);
+    ChannelEventSink1.unregister();
+    listener.expectRequestFail = false;
+  }
+);
 
 async function test_digest_md5sess() {
   var chan = makeChan(URL + "/auth/digest_md5sess", URL);
