@@ -3774,6 +3774,11 @@
   value: false
   mirror: always
 
+- name: dom.select.showPicker.enabled
+  type: bool
+  value: true
+  mirror: always
+
 - name: dom.separate_event_queue_for_post_message.enabled
   type: bool
   value: true

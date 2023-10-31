@@ -59,6 +59,9 @@ interface HTMLSelectElement : HTMLElement {
   boolean reportValidity();
   undefined setCustomValidity(DOMString error);
 
+  [Throws, Pref="dom.select.showPicker.enabled"]
+  undefined showPicker();
+
   readonly attribute NodeList labels;
 
   // https://www.w3.org/Bugs/Public/show_bug.cgi?id=20720
