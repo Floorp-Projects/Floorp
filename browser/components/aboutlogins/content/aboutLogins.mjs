@@ -121,6 +121,9 @@ window.addEventListener("AboutLoginsChromeToContent", event => {
       break;
     }
     case "Setup": {
+      gElements.loginList.selectLoginByDomainOrGuid(
+        event.detail.value.preselectedLogin
+      );
       handleAllLogins(event.detail.value.logins);
       handleSyncState(event.detail.value.syncState);
       gElements.loginList.setSortDirection(event.detail.value.selectedSort);
@@ -277,12 +280,6 @@ if (searchParamsChanged) {
 }
 
 if (!searchParamsChanged) {
-  if (document.location.hash) {
-    const loginDomainOrGuid = decodeURIComponent(
-      document.location.hash.slice(1)
-    );
-    gElements.loginList.selectLoginByDomainOrGuid(loginDomainOrGuid);
-  }
   gElements.loginFilter.focus();
   document.dispatchEvent(new CustomEvent("AboutLoginsInit", { bubbles: true }));
 }

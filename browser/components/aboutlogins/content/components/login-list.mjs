@@ -874,11 +874,12 @@ export default class LoginList extends HTMLElement {
       ...this._loginGuidsSortedOrder,
     ].find(guid => visibleLoginsGuids.has(guid));
 
-    if (selectedLoginGuid && this._logins[selectedLoginGuid]) {
-      let { login } = this._logins[selectedLoginGuid];
+    const selectedLogin = this._logins[selectedLoginGuid]?.login;
+
+    if (selectedLogin) {
       window.dispatchEvent(
         new CustomEvent("AboutLoginsInitialLoginSelected", {
-          detail: login,
+          detail: selectedLogin,
         })
       );
       this.updateSelectedLocationHash(selectedLoginGuid);
