@@ -1769,8 +1769,6 @@ static Maybe<VibrancyType> ThemeGeometryTypeToVibrancyType(
       return Some(VibrancyType::TOOLTIP);
     case eThemeGeometryTypeMenu:
       return Some(VibrancyType::MENU);
-    case eThemeGeometryTypeHighlightedMenuItem:
-      return Some(VibrancyType::HIGHLIGHTED_MENUITEM);
     case eThemeGeometryTypeSourceList:
       return Some(VibrancyType::SOURCE_LIST);
     case eThemeGeometryTypeSourceListSelection:
@@ -1822,8 +1820,6 @@ void nsChildView::UpdateVibrancy(
       GatherVibrantRegion(aThemeGeometries, VibrancyType::MENU);
   LayoutDeviceIntRegion tooltipRegion =
       GatherVibrantRegion(aThemeGeometries, VibrancyType::TOOLTIP);
-  LayoutDeviceIntRegion highlightedMenuItemRegion =
-      GatherVibrantRegion(aThemeGeometries, VibrancyType::HIGHLIGHTED_MENUITEM);
   LayoutDeviceIntRegion sourceListRegion =
       GatherVibrantRegion(aThemeGeometries, VibrancyType::SOURCE_LIST);
   LayoutDeviceIntRegion sourceListSelectionRegion = GatherVibrantRegion(
@@ -1831,16 +1827,14 @@ void nsChildView::UpdateVibrancy(
   LayoutDeviceIntRegion activeSourceListSelectionRegion = GatherVibrantRegion(
       aThemeGeometries, VibrancyType::ACTIVE_SOURCE_LIST_SELECTION);
 
-  MakeRegionsNonOverlapping(
-      menuRegion, tooltipRegion, highlightedMenuItemRegion, sourceListRegion,
-      sourceListSelectionRegion, activeSourceListSelectionRegion);
+  MakeRegionsNonOverlapping(menuRegion, tooltipRegion, sourceListRegion,
+                            sourceListSelectionRegion,
+                            activeSourceListSelectionRegion);
 
   auto& vm = EnsureVibrancyManager();
   bool changed = false;
   changed |= vm.UpdateVibrantRegion(VibrancyType::MENU, menuRegion);
   changed |= vm.UpdateVibrantRegion(VibrancyType::TOOLTIP, tooltipRegion);
-  changed |= vm.UpdateVibrantRegion(VibrancyType::HIGHLIGHTED_MENUITEM,
-                                    highlightedMenuItemRegion);
   changed |=
       vm.UpdateVibrantRegion(VibrancyType::SOURCE_LIST, sourceListRegion);
   changed |= vm.UpdateVibrantRegion(VibrancyType::SOURCE_LIST_SELECTION,
