@@ -9,7 +9,7 @@ with Files("*"):
 
 XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.ini"]
 
-EXPORTS.mozilla += ["ApplicationReputation.h", "LoginReputationIPC.h"]
+EXPORTS.mozilla += ["ApplicationReputation.h"]
 
 XPIDL_SOURCES += [
     "nsIApplicationReputation.idl",
@@ -23,7 +23,6 @@ UNIFIED_SOURCES += [
     "ApplicationReputationTelemetryUtils.cpp",
     "chromium/chrome/common/safe_browsing/csd.pb.cc",
     "LoginReputation.cpp",
-    "LoginReputationIPC.cpp",
 ]
 
 FINAL_LIBRARY = "xul"

@@ -34,32 +34,6 @@ LazyLogModule gLoginReputationLogModule("LoginReputation");
 static Atomic<bool> gShuttingDown(false);
 
 // -------------------------------------------------------------------------
-// ReputationQueryParam
-//
-// Concrete class for nsILoginReputationQuery to hold query parameters
-//
-class ReputationQueryParam final : public nsILoginReputationQuery {
- public:
-  NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_NSILOGINREPUTATIONQUERY
-
-  explicit ReputationQueryParam(nsIURI* aURI) : mURI(aURI){};
-
- private:
-  ~ReputationQueryParam() = default;
-
-  nsCOMPtr<nsIURI> mURI;
-};
-
-NS_IMPL_ISUPPORTS(ReputationQueryParam, nsILoginReputationQuery)
-
-NS_IMETHODIMP
-ReputationQueryParam::GetFormURI(nsIURI** aURI) {
-  NS_IF_ADDREF(*aURI = mURI);
-  return NS_OK;
-}
-
-// -------------------------------------------------------------------------
 // LoginWhitelist
 //
 // This class is a wrapper that encapsulate asynchronous callback API provided
@@ -266,49 +240,6 @@ nsresult LoginReputationService::Shutdown() {
   // Disable will only destroy worker thread, it won't null out these classes.
   // So we will null these classes in shutdown.
   mLoginWhitelist = nullptr;
-
-  return NS_OK;
-}
-
-// static
-already_AddRefed<nsILoginReputationQuery>
-LoginReputationService::ConstructQueryParam(nsIURI* aURI) {
-  RefPtr<ReputationQueryParam> param = new ReputationQueryParam(aURI);
-  return param.forget();
-}
-
-NS_IMETHODIMP
-LoginReputationService::QueryReputationAsync(
-    HTMLInputElement* aInput, nsILoginReputationQueryCallback* aCallback) {
-  NS_ENSURE_ARG_POINTER(aInput);
-
-  LR_LOG(("QueryReputationAsync() [this=%p]", this));
-
-  if (!StaticPrefs::browser_safebrowsing_passwords_enabled()) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsIURI* documentURI = aInput->OwnerDoc()->GetDocumentURI();
-  NS_ENSURE_STATE(documentURI);
-
-  if (XRE_IsContentProcess()) {
-    using namespace mozilla::ipc;
-
-    ContentChild* content = ContentChild::GetSingleton();
-    if (content->IsShuttingDown()) {
-      return NS_ERROR_FAILURE;
-    }
-
-    if (!content->SendPLoginReputationConstructor(documentURI)) {
-      return NS_ERROR_FAILURE;
-    }
-  } else {
-    nsCOMPtr<nsILoginReputationQuery> query =
-        LoginReputationService::ConstructQueryParam(documentURI);
-
-    nsresult rv = QueryReputation(query, aCallback);
-    return rv;
-  }
 
   return NS_OK;
 }

@@ -36,11 +36,6 @@ interface nsILoginReputationQueryCallback : nsISupports {
 interface nsILoginReputationService : nsISupports {
   void init();
 
-  // If QueryReputationAsync is called from child, it will make a IPC call
-  // to parent.
-  void queryReputationAsync(in HTMLInputElement aInput,
-                            in nsILoginReputationQueryCallback aCallback);
-
   // QueryReputation can only be called from parent
   void queryReputation(in nsILoginReputationQuery aQuery,
                        in nsILoginReputationQueryCallback aCallback);

@@ -29,9 +29,6 @@ class LoginReputationService final : public nsILoginReputationService,
  public:
   static already_AddRefed<LoginReputationService> GetSingleton();
 
-  static already_AddRefed<nsILoginReputationQuery> ConstructQueryParam(
-      nsIURI* aURI);
-
   static nsCString VerdictTypeToString(VerdictType aVerdict);
 
  private:

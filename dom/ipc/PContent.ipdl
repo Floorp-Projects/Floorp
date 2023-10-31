@@ -19,7 +19,6 @@ include protocol PHeapSnapshotTempFileHelper;
 include protocol PProcessHangMonitor;
 include protocol PImageBridge;
 include protocol PRemotePrintJob;
-include protocol PLoginReputation;
 include protocol PMedia;
 include protocol PNecko;
 include protocol PStreamFilter;
@@ -499,7 +498,6 @@ sync protocol PContent
     manages PURLClassifier;
     manages PURLClassifierLocal;
     manages PScriptCache;
-    manages PLoginReputation;
     manages PSessionStorageObserver;
     manages PBenchmarkStorage;
 
@@ -1113,8 +1111,6 @@ parent:
         returns (bool success);
 
     async PURLClassifierLocal(nullable nsIURI uri, IPCURLClassifierFeature[] features);
-
-    async PLoginReputation(nullable nsIURI formURI);
 
     async PSessionStorageObserver();
 
