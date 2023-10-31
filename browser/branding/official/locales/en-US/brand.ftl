@@ -24,4 +24,4 @@
 # remain unchanged across different versions (Nightly, Beta, etc.).
 -brand-product-name = Floorp
 -vendor-short-name = Ablaze
-trademarkInfo = Floorp and the Floorp logos are trademarks of the Ablaze.
+trademarkInfo = Floorp and the Floorp logos are trademarks of Ablaze.
