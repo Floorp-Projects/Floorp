@@ -32,12 +32,6 @@ class nsNativeThemeCocoa : public mozilla::widget::ThemeCocoa {
   using ThemeCocoa = mozilla::widget::ThemeCocoa;
 
  public:
-  enum class MenuIcon : uint8_t {
-    eCheckmark,
-    eMenuDownScrollArrow,
-    eMenuUpScrollArrow
-  };
-
   enum class CheckboxOrRadioState : uint8_t { eOff, eOn, eIndeterminate };
 
   enum class ButtonType : uint8_t {
@@ -71,21 +65,6 @@ class nsNativeThemeCocoa : public mozilla::widget::ThemeCocoa {
     bool pressed : 1;
     bool focused : 1;
     bool rtl : 1;
-  };
-
-  struct MenuIconParams {
-    MenuIcon icon = MenuIcon::eCheckmark;
-    bool disabled = false;
-    bool insideActiveMenuItem = false;
-    bool centerHorizontally = false;
-    bool rtl = false;
-  };
-
-  struct MenuItemParams {
-    bool checked = false;
-    bool disabled = false;
-    bool selected = false;
-    bool rtl = false;
   };
 
   struct CheckboxOrRadioParams {
@@ -171,8 +150,6 @@ class nsNativeThemeCocoa : public mozilla::widget::ThemeCocoa {
 
   enum Widget : uint8_t {
     eColorFill,       // mozilla::gfx::sRGBColor
-    eMenuIcon,        // MenuIconParams
-    eMenuItem,        // MenuItemParams
     eCheckbox,        // CheckboxOrRadioParams
     eRadio,           // CheckboxOrRadioParams
     eButton,          // ButtonParams
@@ -201,12 +178,6 @@ class nsNativeThemeCocoa : public mozilla::widget::ThemeCocoa {
   struct WidgetInfo {
     static WidgetInfo ColorFill(const mozilla::gfx::sRGBColor& aParams) {
       return WidgetInfo(Widget::eColorFill, aParams);
-    }
-    static WidgetInfo MenuIcon(const MenuIconParams& aParams) {
-      return WidgetInfo(Widget::eMenuIcon, aParams);
-    }
-    static WidgetInfo MenuItem(const MenuItemParams& aParams) {
-      return WidgetInfo(Widget::eMenuItem, aParams);
     }
     static WidgetInfo Checkbox(const CheckboxOrRadioParams& aParams) {
       return WidgetInfo(Widget::eCheckbox, aParams);
@@ -289,11 +260,10 @@ class nsNativeThemeCocoa : public mozilla::widget::ThemeCocoa {
     WidgetInfo(enum Widget aWidget, const T& aParams)
         : mVariant(aParams), mWidget(aWidget) {}
 
-    mozilla::Variant<mozilla::gfx::sRGBColor, MenuIconParams, MenuItemParams,
-                     CheckboxOrRadioParams, ButtonParams, DropdownParams,
-                     SpinButtonParams, SegmentParams, TextFieldParams,
-                     ProgressParams, MeterParams, TreeHeaderCellParams,
-                     ScaleParams, bool>
+    mozilla::Variant<mozilla::gfx::sRGBColor, CheckboxOrRadioParams,
+                     ButtonParams, DropdownParams, SpinButtonParams,
+                     SegmentParams, TextFieldParams, ProgressParams,
+                     MeterParams, TreeHeaderCellParams, ScaleParams, bool>
         mVariant;
 
     enum Widget mWidget;
@@ -357,12 +327,6 @@ class nsNativeThemeCocoa : public mozilla::widget::ThemeCocoa {
   nsIFrame* SeparatorResponsibility(nsIFrame* aBefore, nsIFrame* aAfter);
   ControlParams ComputeControlParams(nsIFrame* aFrame,
                                      mozilla::dom::ElementState aEventState);
-  MenuIconParams ComputeMenuIconParams(nsIFrame* aParams,
-                                       mozilla::dom::ElementState aEventState,
-                                       MenuIcon aIcon);
-  MenuItemParams ComputeMenuItemParams(nsIFrame* aFrame,
-                                       mozilla::dom::ElementState aEventState,
-                                       bool aIsChecked);
   SegmentParams ComputeSegmentParams(nsIFrame* aFrame,
                                      mozilla::dom::ElementState aEventState,
                                      SegmentType aSegmentType);
@@ -405,12 +369,6 @@ class nsNativeThemeCocoa : public mozilla::widget::ThemeCocoa {
   void DrawDisclosureButton(CGContextRef cgContext, const HIRect& inBoxRect,
                             ControlParams aControlParams,
                             NSControlStateValue aState);
-  NSString* GetMenuIconName(const MenuIconParams& aParams);
-  NSSize GetMenuIconSize(MenuIcon aIcon);
-  void DrawMenuIcon(CGContextRef cgContext, const CGRect& aRect,
-                    const MenuIconParams& aParams);
-  void DrawMenuItem(CGContextRef cgContext, const CGRect& inBoxRect,
-                    const MenuItemParams& aParams);
   void DrawHIThemeButton(CGContextRef cgContext, const HIRect& aRect,
                          ThemeButtonKind aKind, ThemeButtonValue aValue,
                          ThemeDrawState aState, ThemeButtonAdornment aAdornment,
