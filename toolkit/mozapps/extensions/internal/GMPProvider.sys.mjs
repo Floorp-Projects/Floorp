@@ -62,8 +62,8 @@ const GMP_PLUGINS = [
 
 ChromeUtils.defineLazyGetter(
   lazy,
-  "pluginsBundle",
-  () => new Localization(["toolkit/about/aboutPlugins.ftl"], true)
+  "addonsBundle",
+  () => new Localization(["toolkit/about/aboutAddons.ftl"], true)
 );
 ChromeUtils.defineLazyGetter(lazy, "gmpService", () =>
   Cc["@mozilla.org/gecko-media-plugin-service;1"].getService(
@@ -199,7 +199,7 @@ GMPWrapper.prototype = {
         let a = doc.createElementNS(XHTML, "a");
         a.href = plugin[urlProp];
         a.target = "_blank";
-        a.textContent = lazy.pluginsBundle.formatValueSync(labelId);
+        a.textContent = lazy.addonsBundle.formatValueSync(labelId);
 
         if (frag.childElementCount) {
           frag.append(
@@ -848,8 +848,8 @@ var GMPProvider = {
     for (let aPlugin of GMP_PLUGINS) {
       let plugin = {
         id: aPlugin.id,
-        name: lazy.pluginsBundle.formatValueSync(aPlugin.name),
-        description: lazy.pluginsBundle.formatValueSync(aPlugin.description),
+        name: lazy.addonsBundle.formatValueSync(aPlugin.name),
+        description: lazy.addonsBundle.formatValueSync(aPlugin.description),
         homepageURL: aPlugin.homepageURL,
         optionsURL: aPlugin.optionsURL,
         wrapper: null,

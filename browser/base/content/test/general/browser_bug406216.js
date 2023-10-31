@@ -11,7 +11,7 @@
 var count = 0;
 const URIS = [
   "about:config",
-  "about:plugins",
+  "about:robots",
   "about:buildconfig",
   "data:text/html,<title>OK</title>",
 ];

@@ -140,11 +140,6 @@ static const RedirEntry kRedirMap[] = {
     {"performance", "about:processes",
      nsIAboutModule::ALLOW_SCRIPT | nsIAboutModule::IS_SECURE_CHROME_UI |
          nsIAboutModule::HIDE_FROM_ABOUTABOUT},
-#ifndef ANDROID
-    {"plugins", "chrome://global/content/plugins.html",
-     nsIAboutModule::URI_MUST_LOAD_IN_CHILD |
-         nsIAboutModule::IS_SECURE_CHROME_UI},
-#endif
     {"processes", "chrome://global/content/aboutProcesses.html",
      nsIAboutModule::ALLOW_SCRIPT | nsIAboutModule::IS_SECURE_CHROME_UI},
     // about:serviceworkers always wants to load in the parent process because

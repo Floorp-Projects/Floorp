@@ -23,8 +23,6 @@
   "resource:///actors/AboutLoginsParent.jsm": "browser/components/aboutlogins/AboutLoginsParent.jsm",
   "resource:///actors/AboutNewTabChild.jsm": "browser/actors/AboutNewTabChild.jsm",
   "resource:///actors/AboutNewTabParent.jsm": "browser/actors/AboutNewTabParent.jsm",
-  "resource:///actors/AboutPluginsChild.jsm": "browser/actors/AboutPluginsChild.jsm",
-  "resource:///actors/AboutPluginsParent.jsm": "browser/actors/AboutPluginsParent.jsm",
   "resource:///actors/AboutPocketChild.jsm": "browser/actors/AboutPocketChild.jsm",
   "resource:///actors/AboutPocketParent.jsm": "browser/actors/AboutPocketParent.jsm",
   "resource:///actors/AboutPrivateBrowsingChild.jsm": "browser/actors/AboutPrivateBrowsingChild.jsm",

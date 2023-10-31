@@ -311,7 +311,7 @@ pref("media.geckoview.autoplay.request", true);
 // Disable future downloads of OpenH264 on Android (bug 1548679)
 pref("media.gmp-gmpopenh264.autoupdate", false);
 
-// Make OpenH264 visible by default on mobile (bug 1532578)
+// Keep OpenH264 if already installed before. (bug 1532578)
 pref("media.gmp-gmpopenh264.enabled", true);
 pref("media.gmp-gmpopenh264.visible", true);
 

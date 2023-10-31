@@ -106,9 +106,6 @@ ID02:
         - find
         - new-tab
         - share
-        # toolkit/locales/en-US/toolkit/about/aboutPlugins.ftl
-        - file-dd
-        - path-dd
         # toolkit/locales/en-US/toolkit/about/aboutServiceWorkers.ftl
         - scope
         - waiting
@@ -166,10 +163,9 @@ CO01:
         # toolkit/locales/en-US/toolkit/about/aboutAddons.ftl
         - addon-badge-line3
         - recommended-theme-1
+        - plugins-openh264-description
         # toolkit/locales/en-US/toolkit/about/aboutGlean.ftl
         - about-glean-description
-        # toolkit/locales/en-US/toolkit/about/aboutPlugins.ftl
-        - plugins-openh264-description
         # toolkit/locales/en-US/toolkit/about/aboutRights.ftl
         - rights-intro-point-1
         - rights-intro-point-2
