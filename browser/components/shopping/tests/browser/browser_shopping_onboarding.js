@@ -136,7 +136,7 @@ add_task(async function test_showOnboarding_notOptedIn() {
     }
   );
 
-  if (!AppConstants.TSAN) {
+  if (!AppConstants.platform != "linux") {
     await Services.fog.testFlushAllChildren();
 
     var events = Glean.shopping.surfaceOnboardingDisplayed.testGetValue();
