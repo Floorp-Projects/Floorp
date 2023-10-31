@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://schemas.android.com/apk/res-auto">
     <!-- Description for privacy add-on permission. -->
     <string name="mozac_feature_addons_permissions_privacy_description">Tisik\'ïx chuqa\' tijal ri runuk\'ulem ichinanem</string>
     <!-- Description for all_urls add-on permission. -->
@@ -72,8 +72,10 @@
     <string name="mozac_feature_addons_permissions_devtools_description">Kenimirisäx ri kisamajib\'al b\'anonela\' richin ke\'ok pa taq kitzij pa jaqon taq ruwi\'</string>
     <!-- The version on of add-on. -->
     <string name="mozac_feature_addons_version">Ruwäch</string>
+    <!-- The author of an add-on. -->
+    <string name="mozac_feature_addons_author">B\'anel</string>
     <!-- The authors of an add-on. -->
-    <string name="mozac_feature_addons_authors">Taq b\'anel</string>
+    <string name="mozac_feature_addons_authors" moz:removedIn="120" tools:ignore="UnusedResources">Taq b\'anel</string>
     <!-- The last date that the add-on was updated. -->
     <string name="mozac_feature_addons_last_updated">Ruk\'isib\'äl k\'exoj</string>
     <!-- The developer website (Homepage) of the add-on. -->
@@ -212,4 +214,4 @@
     <string name="mozac_feature_addons_installed_dialog_description">Tijaq pa k\'utsamaj</string>
     <!-- Confirmation button text for the dialog when add-on installation is completed. -->
     <string name="mozac_feature_addons_installed_dialog_okay_button">Ütz, Xq\'ax pa nuwi\'</string>
-</resources>
+    </resources>
