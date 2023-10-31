@@ -10,9 +10,6 @@
 
 #include "content_analysis/sdk/analysis_agent.h"
 #include "demo/handler.h"
-#include "demo/handler_misbehaving.h"
-
-using namespace content_analysis::sdk;
 
 // Different paths are used depending on whether this agent should run as a
 // use specific agent or not.  These values are chosen to match the test
@@ -28,8 +25,6 @@ unsigned long delay = 0;  // In seconds.
 unsigned long num_threads = 8u;
 std::string save_print_data_path = "";
 RegexArray toBlock, toWarn, toReport;
-static bool useMisbehavingHandler = false;
-static std::string modeStr;
 
 // Command line parameters.
 constexpr const char* kArgDelaySpecific = "--delay=";
@@ -40,21 +35,8 @@ constexpr const char* kArgUserSpecific = "--user";
 constexpr const char* kArgToBlock = "--toblock=";
 constexpr const char* kArgToWarn = "--towarn=";
 constexpr const char* kArgToReport = "--toreport=";
-constexpr const char* kArgMisbehave = "--misbehave=";
 constexpr const char* kArgHelp = "--help";
 constexpr const char* kArgSavePrintRequestDataTo = "--save-print-request-data-to=";
-
-std::map<std::string, Mode> sStringToMode = {
-#define AGENT_MODE(name) {#name, Mode::Mode_##name},
-#include "modes.h"
-#undef AGENT_MODE
-};
-
-std::map<Mode, std::string> sModeToString = {
-#define AGENT_MODE(name) {Mode::Mode_##name, #name},
-#include "modes.h"
-#undef AGENT_MODE
-};
 
 std::vector<std::pair<std::string, std::regex>>
 ParseRegex(const std::string str) {
@@ -96,9 +78,6 @@ bool ParseCommandLine(int argc, char* argv[]) {
       toWarn = ParseRegex(arg.substr(strlen(kArgToWarn)));
     } else if (arg.find(kArgToReport) == 0) {
       toReport = ParseRegex(arg.substr(strlen(kArgToReport)));
-    } else if (arg.find(kArgMisbehave) == 0) {
-      modeStr = arg.substr(strlen(kArgMisbehave));
-      useMisbehavingHandler = true;
     } else if (arg.find(kArgHelp) == 0) {
       return false;
     } else if (arg.find(kArgSavePrintRequestDataTo) == 0) {
@@ -126,7 +105,6 @@ void PrintHelp() {
     << kArgToBlock << "<regex> : Regular expression matching file and text content to block." << std::endl
     << kArgToWarn << "<regex> : Regular expression matching file and text content to warn about." << std::endl
     << kArgToReport << "<regex> : Regular expression matching file and text content to report." << std::endl
-    << kArgMisbehave << "<mode> : Use 'misbehaving' agent in given mode for testing purposes." << std::endl
     << kArgHelp << " : prints this help message" << std::endl;
 }
 
@@ -137,17 +115,9 @@ int main(int argc, char* argv[]) {
   }
 
   // TODO: Add toBlock, toWarn, toReport to QueueingHandler
-  auto handler =
-    useMisbehavingHandler
-      ? MisbehavingHandler::Create(delay, modeStr)
-      : use_queue
-        ? std::make_unique<QueuingHandler>(num_threads, delay, save_print_data_path)
-        : std::make_unique<Handler>(delay, save_print_data_path, std::move(toBlock), std::move(toWarn), std::move(toReport));
-
-  if (!handler) {
-    std::cout << "[Demo] Failed to construct handler." << std::endl;
-    return 1;
-  }
+  auto handler = use_queue
+      ? std::make_unique<QueuingHandler>(num_threads, delay, save_print_data_path)
+      : std::make_unique<Handler>(delay, save_print_data_path, std::move(toBlock), std::move(toWarn), std::move(toReport));
 
   // Each agent uses a unique name to identify itself with Google Chrome.
   content_analysis::sdk::ResultCode rc;
