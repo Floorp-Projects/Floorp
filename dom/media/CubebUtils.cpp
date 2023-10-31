@@ -57,8 +57,7 @@
 #define PREF_AUDIOIPC_STACK_SIZE "media.audioipc.stack_size"
 #define PREF_AUDIOIPC_SHM_AREA_SIZE "media.audioipc.shm_area_size"
 
-#if (defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID)) || \
-    defined(XP_MACOSX) || defined(XP_WIN)
+#if defined(XP_LINUX) || defined(XP_MACOSX) || defined(XP_WIN)
 #  define MOZ_CUBEB_REMOTING
 #endif
 
@@ -653,7 +652,7 @@ void InitLibrary() {
 #endif
 #ifdef MOZ_CUBEB_REMOTING
   if (sCubebSandbox && XRE_IsContentProcess()) {
-#  ifdef XP_LINUX
+#  if defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID)
     if (atp_set_real_time_limit(0, 48000)) {
       NS_WARNING("could not set real-time limit in CubebUtils::InitLibrary");
     }
@@ -841,12 +840,20 @@ bool EstimatedRoundTripLatencyDefaultDevices(double* aMean, double* aStdDev) {
 
 #ifdef MOZ_WIDGET_ANDROID
 int32_t AndroidGetAudioOutputSampleRate() {
+#  if defined(MOZ_ANDROID_CONTENT_SERVICE_ISOLATED_PROCESS)
+  return 44100;  // TODO: Remote value; will be handled in following patch.
+#  else
   int32_t sample_rate = java::GeckoAppShell::GetAudioOutputSampleRate();
   return sample_rate;
+#  endif
 }
 int32_t AndroidGetAudioOutputFramesPerBuffer() {
+#  if defined(MOZ_ANDROID_CONTENT_SERVICE_ISOLATED_PROCESS)
+  return 512;  // TODO: Remote value; will be handled in following patch.
+#  else
   int32_t frames = java::GeckoAppShell::GetAudioOutputFramesPerBuffer();
   return frames;
+#  endif
 }
 #endif
 
