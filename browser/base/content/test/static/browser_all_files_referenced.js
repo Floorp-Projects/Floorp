@@ -263,6 +263,11 @@ var allowlist = [
     file: "resource://gre/localization/en-US/toolkit/about/aboutThirdParty.ftl",
     platforms: ["linux", "macosx"],
   },
+  // Bug 1854618 - referenced by aboutWebauthn.html which is only for Linux and Mac
+  {
+    file: "resource://gre/localization/en-US/toolkit/about/aboutWebauthn.ftl",
+    platforms: ["win", "android"],
+  },
   // Bug 1973834 - referenced by aboutWindowsMessages.html which is only for Windows
   {
     file: "resource://gre/localization/en-US/toolkit/about/aboutWindowsMessages.ftl",
