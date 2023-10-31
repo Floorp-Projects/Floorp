@@ -409,6 +409,34 @@ TEST(EncodeAPI, ConfigResizeChangeThreadCount) {
 }
 
 #if CONFIG_VP9_ENCODER
+// Frame size needed to trigger the overflow exceeds the max buffer allowed on
+// 32-bit systems defined by VPX_MAX_ALLOCABLE_MEMORY
+#if VPX_ARCH_X86_64 || VPX_ARCH_AARCH64
+TEST(EncodeAPI, ConfigLargeTargetBitrateVp9) {
+  constexpr int kWidth = 12383;
+  constexpr int kHeight = 8192;
+  constexpr auto *iface = &vpx_codec_vp9_cx_algo;
+  SCOPED_TRACE(vpx_codec_iface_name(iface));
+  vpx_codec_enc_cfg_t cfg = {};
+  struct Encoder {
+    ~Encoder() { EXPECT_EQ(vpx_codec_destroy(&ctx), VPX_CODEC_OK); }
+    vpx_codec_ctx_t ctx = {};
+  } enc;
+
+  ASSERT_EQ(vpx_codec_enc_config_default(iface, &cfg, 0), VPX_CODEC_OK);
+  // The following setting will cause avg_frame_bandwidth in rate control to be
+  // larger than INT_MAX
+  cfg.rc_target_bitrate = INT_MAX;
+  // Framerate 0.1 (equivalent to timebase 10) is the smallest framerate allowed
+  // by libvpx
+  cfg.g_timebase.den = 1;
+  cfg.g_timebase.num = 10;
+  EXPECT_NO_FATAL_FAILURE(InitCodec(*iface, kWidth, kHeight, &enc.ctx, &cfg))
+      << "target bitrate: " << cfg.rc_target_bitrate << " framerate: "
+      << static_cast<double>(cfg.g_timebase.den) / cfg.g_timebase.num;
+}
+#endif  // VPX_ARCH_X86_64 || VPX_ARCH_AARCH64
+
 class EncodeApiGetTplStatsTest
     : public ::libvpx_test::EncoderTest,
       public ::testing::TestWithParam<const libvpx_test::CodecFactory *> {

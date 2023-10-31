@@ -4419,6 +4419,19 @@ static int rd_pick_partition(VP9_COMP *cpi, ThreadData *td,
     restore_context(x, mi_row, mi_col, a, l, sa, sl, bsize);
   }
 
+  if (bsize == BLOCK_64X64 && best_rdc.rdcost == INT64_MAX) {
+    vp9_rd_cost_reset(&this_rdc);
+    rd_pick_sb_modes(cpi, tile_data, x, mi_row, mi_col, &this_rdc, BLOCK_64X64,
+                     ctx, INT_MAX, INT64_MAX);
+    ctx->rdcost = this_rdc.rdcost;
+    vp9_rd_cost_update(partition_mul, x->rddiv, &this_rdc);
+    if (this_rdc.rdcost < best_rdc.rdcost) {
+      best_rdc = this_rdc;
+      should_encode_sb = 1;
+      pc_tree->partitioning = PARTITION_NONE;
+    }
+  }
+
   *rd_cost = best_rdc;
 
   if (should_encode_sb && pc_tree->index != 3) {

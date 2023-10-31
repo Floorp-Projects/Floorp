@@ -1123,8 +1123,8 @@ int vp8_diamond_search_sad_c(MACROBLOCK *x, BLOCK *b, BLOCKD *d, int_mv *ref_mv,
     }
   }
 
-  this_mv.as_mv.row = best_mv->as_mv.row << 3;
-  this_mv.as_mv.col = best_mv->as_mv.col << 3;
+  this_mv.as_mv.row = best_mv->as_mv.row * 8;
+  this_mv.as_mv.col = best_mv->as_mv.col * 8;
 
   return fn_ptr->vf(what, what_stride, best_address, in_what_stride, &thissad) +
          mv_err_cost(&this_mv, center_mv, mvcost, x->errorperbit);
@@ -1441,8 +1441,8 @@ int vp8_refining_search_sad_c(MACROBLOCK *x, BLOCK *b, BLOCKD *d,
     }
   }
 
-  this_mv.as_mv.row = ref_mv->as_mv.row << 3;
-  this_mv.as_mv.col = ref_mv->as_mv.col << 3;
+  this_mv.as_mv.row = ref_mv->as_mv.row * 8;
+  this_mv.as_mv.col = ref_mv->as_mv.col * 8;
 
   return fn_ptr->vf(what, what_stride, best_address, in_what_stride, &thissad) +
          mv_err_cost(&this_mv, center_mv, mvcost, x->errorperbit);

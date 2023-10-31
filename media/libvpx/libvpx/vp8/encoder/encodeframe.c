@@ -7,6 +7,8 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
+#include <stdio.h>
+#include <limits.h>
 
 #include "vpx_config.h"
 #include "vp8_rtcd.h"
@@ -29,9 +31,9 @@
 #include "rdopt.h"
 #include "pickinter.h"
 #include "vp8/common/findnearmv.h"
-#include <stdio.h>
-#include <limits.h>
 #include "vp8/common/invtrans.h"
+#include "vpx/internal/vpx_codec_internal.h"
+#include "vpx_mem/vpx_mem.h"
 #include "vpx_ports/vpx_timer.h"
 #if CONFIG_REALTIME_ONLY & CONFIG_ONTHEFLY_BITPACKING
 #include "bitstream.h"
@@ -750,6 +752,15 @@ void vp8_encode_frame(VP8_COMP *cpi) {
       vp8cx_init_mbrthread_data(cpi, x, cpi->mb_row_ei,
                                 cpi->encoding_thread_count);
 
+      if (cpi->mt_current_mb_col_size != cm->mb_rows) {
+        vpx_free(cpi->mt_current_mb_col);
+        cpi->mt_current_mb_col = NULL;
+        cpi->mt_current_mb_col_size = 0;
+        CHECK_MEM_ERROR(
+            &cpi->common.error, cpi->mt_current_mb_col,
+            vpx_malloc(sizeof(*cpi->mt_current_mb_col) * cm->mb_rows));
+        cpi->mt_current_mb_col_size = cm->mb_rows;
+      }
       for (i = 0; i < cm->mb_rows; ++i)
         vpx_atomic_store_release(&cpi->mt_current_mb_col[i], -1);
 

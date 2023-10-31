@@ -7,6 +7,7 @@
  *  in the file PATENTS.  All contributing project authors may
  *  be found in the AUTHORS file in the root of the source tree.
  */
+#include <stddef.h>
 
 #include "onyx_int.h"
 #include "vp8/common/threading.h"
@@ -487,15 +488,10 @@ void vp8cx_init_mbrthread_data(VP8_COMP *cpi, MACROBLOCK *x,
 
 int vp8cx_create_encoder_threads(VP8_COMP *cpi) {
   const VP8_COMMON *cm = &cpi->common;
-
-  vpx_atomic_init(&cpi->b_multi_threaded, 0);
-  cpi->encoding_thread_count = 0;
-  cpi->b_lpf_running = 0;
+  int th_count = 0;
 
   if (cm->processor_core_count > 1 && cpi->oxcf.multi_threaded > 1) {
-    int ithread;
-    int th_count = cpi->oxcf.multi_threaded - 1;
-    int rc = 0;
+    th_count = cpi->oxcf.multi_threaded - 1;
 
     /* don't allocate more threads than cores available */
     if (cpi->oxcf.multi_threaded > cm->processor_core_count) {
@@ -507,8 +503,13 @@ int vp8cx_create_encoder_threads(VP8_COMP *cpi) {
     if (th_count > ((cm->mb_cols / cpi->mt_sync_range) - 1)) {
       th_count = (cm->mb_cols / cpi->mt_sync_range) - 1;
     }
+  }
+  if (th_count == cpi->encoding_thread_count) return 0;
 
-    if (th_count == 0) return 0;
+  vp8cx_remove_encoder_threads(cpi);
+  if (th_count != 0) {
+    int ithread;
+    int rc = 0;
 
     CHECK_MEM_ERROR(&cpi->common.error, cpi->h_encoding_thread,
                     vpx_malloc(sizeof(pthread_t) * th_count));
@@ -553,6 +554,8 @@ int vp8cx_create_encoder_threads(VP8_COMP *cpi) {
       /* shutdown other threads */
       vpx_atomic_store_release(&cpi->b_multi_threaded, 0);
       for (--ithread; ithread >= 0; ithread--) {
+        sem_post(&cpi->h_event_start_encoding[ithread]);
+        sem_post(&cpi->h_event_end_encoding[ithread]);
         pthread_join(cpi->h_encoding_thread[ithread], 0);
         sem_destroy(&cpi->h_event_start_encoding[ithread]);
         sem_destroy(&cpi->h_event_end_encoding[ithread]);
@@ -560,10 +563,16 @@ int vp8cx_create_encoder_threads(VP8_COMP *cpi) {
 
       /* free thread related resources */
       vpx_free(cpi->h_event_start_encoding);
+      cpi->h_event_start_encoding = NULL;
       vpx_free(cpi->h_event_end_encoding);
+      cpi->h_event_end_encoding = NULL;
       vpx_free(cpi->h_encoding_thread);
+      cpi->h_encoding_thread = NULL;
       vpx_free(cpi->mb_row_ei);
+      cpi->mb_row_ei = NULL;
       vpx_free(cpi->en_thread_data);
+      cpi->en_thread_data = NULL;
+      cpi->encoding_thread_count = 0;
 
       return -1;
     }
@@ -592,10 +601,16 @@ int vp8cx_create_encoder_threads(VP8_COMP *cpi) {
 
         /* free thread related resources */
         vpx_free(cpi->h_event_start_encoding);
+        cpi->h_event_start_encoding = NULL;
         vpx_free(cpi->h_event_end_encoding);
+        cpi->h_event_end_encoding = NULL;
         vpx_free(cpi->h_encoding_thread);
+        cpi->h_encoding_thread = NULL;
         vpx_free(cpi->mb_row_ei);
+        cpi->mb_row_ei = NULL;
         vpx_free(cpi->en_thread_data);
+        cpi->en_thread_data = NULL;
+        cpi->encoding_thread_count = 0;
 
         return -2;
       }
@@ -627,13 +642,23 @@ void vp8cx_remove_encoder_threads(VP8_COMP *cpi) {
 
     sem_destroy(&cpi->h_event_end_lpf);
     sem_destroy(&cpi->h_event_start_lpf);
+    cpi->b_lpf_running = 0;
 
     /* free thread related resources */
+    vpx_free(cpi->mt_current_mb_col);
+    cpi->mt_current_mb_col = NULL;
+    cpi->mt_current_mb_col_size = 0;
     vpx_free(cpi->h_event_start_encoding);
+    cpi->h_event_start_encoding = NULL;
     vpx_free(cpi->h_event_end_encoding);
+    cpi->h_event_end_encoding = NULL;
     vpx_free(cpi->h_encoding_thread);
+    cpi->h_encoding_thread = NULL;
     vpx_free(cpi->mb_row_ei);
+    cpi->mb_row_ei = NULL;
     vpx_free(cpi->en_thread_data);
+    cpi->en_thread_data = NULL;
+    cpi->encoding_thread_count = 0;
   }
 }
 #endif
