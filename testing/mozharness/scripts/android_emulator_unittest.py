@@ -241,11 +241,24 @@ class AndroidEmulatorTest(
         return os.path.join(dirs["abs_test_install_dir"], test_dir)
 
     def _get_mozharness_test_paths(self, suite):
-        test_paths = os.environ.get("MOZHARNESS_TEST_PATHS")
-        if not test_paths:
-            return
+        test_paths = json.loads(os.environ.get("MOZHARNESS_TEST_PATHS", '""'))
+        confirm_paths = json.loads(os.environ.get("MOZHARNESS_CONFIRM_PATHS", '""'))
 
-        return json.loads(test_paths).get(suite)
+        if not test_paths or not test_paths.get(suite, []):
+            return None
+
+        suite_test_paths = test_paths.get(suite, [])
+        if confirm_paths and confirm_paths.get(suite, []):
+            suite_test_paths = confirm_paths.get(suite, [])
+
+        if suite in ("reftest", "crashtest"):
+            dirs = self.query_abs_dirs()
+            suite_test_paths = [
+                os.path.join(dirs["abs_reftest_dir"], "tests", p)
+                for p in suite_test_paths
+            ]
+
+        return suite_test_paths
 
     def _build_command(self):
         c = self.config
@@ -335,7 +348,7 @@ class AndroidEmulatorTest(
         if not (self.verify_enabled or self.per_test_coverage):
             if user_paths:
                 cmd.extend(user_paths)
-            elif not (self.verify_enabled or self.per_test_coverage):
+            else:
                 if self.this_chunk is not None:
                     cmd.extend(["--this-chunk", self.this_chunk])
                 if self.total_chunks is not None:
@@ -352,7 +365,7 @@ class AndroidEmulatorTest(
 
         try_options, try_tests = self.try_args(self.test_suite)
         cmd.extend(try_options)
-        if not self.verify_enabled and not self.per_test_coverage:
+        if not self.verify_enabled and not self.per_test_coverage and not user_paths:
             cmd.extend(
                 self.query_tests_args(
                     self.config["suite_definitions"][self.test_suite].get("tests"),

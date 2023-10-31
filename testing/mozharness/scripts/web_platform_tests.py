@@ -446,10 +446,17 @@ class WebPlatformTest(TestingMixin, MercurialScript, CodeCoverageMixin, AndroidM
 
         test_paths = set()
         if not (self.verify_enabled or self.per_test_coverage):
+            # mozharness_test_paths is a set of test groups (directories) to run
+            # if we have confirm_paths, this is a specific path we want to run and ignore the group
             mozharness_test_paths = json.loads(
                 os.environ.get("MOZHARNESS_TEST_PATHS", '""')
             )
+            confirm_paths = json.loads(os.environ.get("MOZHARNESS_CONFIRM_PATHS", '""'))
+
             if mozharness_test_paths:
+                if confirm_paths:
+                    mozharness_test_paths = confirm_paths
+
                 path = os.path.join(dirs["abs_fetches_dir"], "wpt_tests_by_group.json")
 
                 if not os.path.exists(path):

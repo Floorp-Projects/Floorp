@@ -234,6 +234,8 @@ def confirm_failures(parameters, graph_config, input, task_group_id, task_id):
     suite = task_definition["extra"]["suite"]
     if "-coverage" in suite:
         suite = suite[: suite.index("-coverage")]
+    if "-qr" in suite:
+        suite = suite[: suite.index("-qr")]
     failures = get_failures(task_id, task_definition)
 
     if failures["dirs"] == [] and failures["tests"] == []:

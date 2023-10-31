@@ -355,11 +355,17 @@ class MarionetteTest(TestingMixin, MercurialScript, TransferMixin, CodeCoverageM
             self.fatal("Could not create blobber upload directory")
 
         test_paths = json.loads(os.environ.get("MOZHARNESS_TEST_PATHS", '""'))
+        confirm_paths = json.loads(os.environ.get("MOZHARNESS_CONFIRM_PATHS", '""'))
 
-        if test_paths and "marionette" in test_paths:
+        suite = "marionette"
+        if test_paths and suite in test_paths:
+            suite_test_paths = test_paths[suite]
+            if confirm_paths and suite in confirm_paths and confirm_paths[suite]:
+                suite_test_paths = confirm_paths[suite]
+
             paths = [
                 os.path.join(dirs["abs_test_install_dir"], "marionette", "tests", p)
-                for p in test_paths["marionette"]
+                for p in suite_test_paths
             ]
             cmd.extend(paths)
         else:
