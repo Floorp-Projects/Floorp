@@ -36,7 +36,6 @@ internal val GENERAL_SEARCH_ENGINE_IDS = setOf(
     "qwant",
     "yahoo-jp",
     "seznam-cz",
-    "leit-is",
     "coccoc",
     "baidu",
 )

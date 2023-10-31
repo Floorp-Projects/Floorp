@@ -105,7 +105,7 @@
     "bn-IN": {
       "default": {
         "visibleDefaultEngines": [
-          "google-b-m", "bing", "amazondotcom", "ddg", "rediff", "wikipedia-bn"
+          "google-b-m", "bing", "amazondotcom", "ddg", "wikipedia-bn"
         ]
       }
     },
@@ -182,7 +182,7 @@
     "el": {
       "default": {
         "visibleDefaultEngines": [
-          "google-b-m", "bing", "ddg", "skroutz", "wikipedia-el"
+          "google-b-m", "bing", "ddg", "wikipedia-el"
         ]
       }
     },
@@ -271,7 +271,7 @@
     "eo": {
       "default": {
         "visibleDefaultEngines": [
-          "google-b-m", "bing", "ddg", "reta-vortaro", "wikipedia-eo"
+          "google-b-m", "bing", "ddg", "wikipedia-eo"
         ]
       }
     },
@@ -313,7 +313,7 @@
     "eu": {
       "default": {
         "visibleDefaultEngines": [
-          "google-b-m", "bing", "ddg", "elebila", "wikipedia-eu"
+          "google-b-m", "bing", "ddg", "wikipedia-eu"
         ]
       }
     },
@@ -439,7 +439,7 @@
     "hu": {
       "default": {
         "visibleDefaultEngines": [
-          "google-b-m", "ddg", "sztaki-en-hu", "vatera", "wikipedia-hu"
+          "google-b-m", "ddg", "vatera", "wikipedia-hu"
         ]
       }
     },
@@ -467,7 +467,7 @@
     "is": {
       "default": {
         "visibleDefaultEngines": [
-          "google-b-m", "bing", "amazondotcom", "ddg", "leit-is", "wikipedia-is"
+          "google-b-m", "bing", "amazondotcom", "ddg", "wikipedia-is"
         ]
       }
     },
@@ -543,7 +543,7 @@
     "ko": {
       "default": {
         "visibleDefaultEngines": [
-          "google-b-m", "ddg", "danawa-kr", "daum-kr"
+          "google-b-m", "ddg", "daum-kr"
         ]
       }
     },
@@ -613,7 +613,7 @@
     "mr": {
       "default": {
         "visibleDefaultEngines": [
-          "google-b-m", "bing", "amazon-in", "ddg", "rediff", "wikipedia-mr"
+          "google-b-m", "bing", "amazon-in", "ddg", "wikipedia-mr"
         ]
       }
     },
@@ -711,7 +711,7 @@
     "rm": {
       "default": {
         "visibleDefaultEngines": [
-          "google-b-m", "bing", "ddg", "leo_ende_de", "pledarigrond", "wikipedia-rm"
+          "google-b-m", "bing", "ddg", "leo_ende_de", "wikipedia-rm"
         ]
       }
     },
@@ -752,7 +752,7 @@
     "sk": {
       "default": {
         "visibleDefaultEngines": [
-          "google-b-m", "ddg", "slovnik-sk", "wikipedia-sk"
+          "google-b-m", "ddg", "wikipedia-sk"
         ]
       }
     },
