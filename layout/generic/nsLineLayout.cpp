@@ -207,26 +207,28 @@ void nsLineLayout::BeginLineReflow(nscoord aICoord, nscoord aBCoord,
   // Determine if this is the first line of the block (or first after a hard
   // line-break, if `each-line` is in effect).
   nsIFrame* containerFrame = LineContainerFrame();
-  bool isFirstLineOrAfterHardBreak = [&] {
-    if (mLineNumber > 0) {
-      return mStyleText->mTextIndent.each_line && GetLine() &&
-             !GetLine()->prev()->IsLineWrapped();
-    }
-    if (nsBlockFrame* prevBlock =
-            do_QueryFrame(containerFrame->GetPrevInFlow())) {
-      return mStyleText->mTextIndent.each_line &&
-             (prevBlock->Lines().empty() ||
-              !prevBlock->LinesEnd().prev()->IsLineWrapped());
-    }
-    return true;
-  }();
+  if (!containerFrame->IsRubyTextContainerFrame()) {
+    bool isFirstLineOrAfterHardBreak = [&] {
+      if (mLineNumber > 0) {
+        return mStyleText->mTextIndent.each_line && GetLine() &&
+               !GetLine()->prev()->IsLineWrapped();
+      }
+      if (nsBlockFrame* prevBlock =
+              do_QueryFrame(containerFrame->GetPrevInFlow())) {
+        return mStyleText->mTextIndent.each_line &&
+               (prevBlock->Lines().empty() ||
+                !prevBlock->LinesEnd().prev()->IsLineWrapped());
+      }
+      return true;
+    }();
 
-  // Resolve and apply the text-indent value if this line requires it.
-  // The `hanging` option inverts which lines are to be indented.
-  if (isFirstLineOrAfterHardBreak != mStyleText->mTextIndent.hanging) {
-    nscoord pctBasis = mLineContainerRI.ComputedISize();
-    mTextIndent = mStyleText->mTextIndent.length.Resolve(pctBasis);
-    psd->mICoord += mTextIndent;
+    // Resolve and apply the text-indent value if this line requires it.
+    // The `hanging` option inverts which lines are to be indented.
+    if (isFirstLineOrAfterHardBreak != mStyleText->mTextIndent.hanging) {
+      nscoord pctBasis = mLineContainerRI.ComputedISize();
+      mTextIndent = mStyleText->mTextIndent.length.Resolve(pctBasis);
+      psd->mICoord += mTextIndent;
+    }
   }
 
   PerFrameData* pfd = NewPerFrameData(containerFrame);
