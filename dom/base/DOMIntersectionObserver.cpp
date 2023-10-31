@@ -803,16 +803,8 @@ void DOMIntersectionObserver::Update(Document& aDocument,
       }
     }
 
-    // If descendantScrolledIntoView, it means the target is with c-v: auto, and
-    // the content relevancy value has been set to visible before
-    // scrollIntoView. Here, we need to generate entries for them, so that the
-    // content relevancy value could be checked in the callback.
-    const bool temporarilyVisibleForScrolledIntoView =
-        isContentVisibilityObserver == IsContentVisibilityObserver::Yes &&
-        target->TemporarilyVisibleForScrolledIntoViewDescendant();
     // Steps 2.10 - 2.15.
-    if (target->UpdateIntersectionObservation(this, thresholdIndex) ||
-        temporarilyVisibleForScrolledIntoView) {
+    if (target->UpdateIntersectionObservation(this, thresholdIndex)) {
       // See https://github.com/w3c/IntersectionObserver/issues/432 about
       // why we use thresholdIndex > 0 rather than isIntersecting for the
       // entry's isIntersecting value.
@@ -821,10 +813,6 @@ void DOMIntersectionObserver::Update(Document& aDocument,
           output.mIsSimilarOrigin ? Some(output.mRootBounds) : Nothing(),
           output.mTargetRect, output.mIntersectionRect, thresholdIndex > 0,
           intersectionRatio);
-
-      if (temporarilyVisibleForScrolledIntoView) {
-        target->SetTemporarilyVisibleForScrolledIntoViewDescendant(false);
-      }
     }
   }
 }

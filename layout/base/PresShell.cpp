@@ -3533,49 +3533,23 @@ nsresult PresShell::ScrollContentIntoView(nsIContent* aContent,
     mContentToScrollTo = nullptr;
   }
 
-  // If the target frame has an ancestor of a `content-visibility: auto`
+  // If the target frame is an ancestor of a `content-visibility: auto`
   // element ensure that it is laid out, so that the boundary rectangle is
   // correct.
-  // Additionally, ensure that all ancestor elements with 'content-visibility:
-  // auto' are set to 'visible'. so that they are laid out as visible before
-  // scrolling, improving the accuracy of the scroll position, especially when
-  // the scroll target is within the overflow area. And here invoking
-  // 'SetTemporarilyVisibleForScrolledIntoViewDescendant' would make the
-  // intersection observer knows that it should generate entries for these
-  // c-v:auto ancestors, so that the content relevancy could be checked again
-  // after scrolling. https://drafts.csswg.org/css-contain-2/#cv-notes
-  bool reflowedForHiddenContent = false;
   if (mContentToScrollTo) {
     if (nsIFrame* frame = mContentToScrollTo->GetPrimaryFrame()) {
-      bool hasContentVisibilityAutoAncestor = false;
-      auto* ancestor = frame->GetClosestContentVisibilityAncestor(
-          nsIFrame::IncludeContentVisibility::Auto);
-      while (ancestor) {
-        if (auto* element = Element::FromNodeOrNull(ancestor->GetContent())) {
-          hasContentVisibilityAutoAncestor = true;
-          element->SetTemporarilyVisibleForScrolledIntoViewDescendant(true);
-          element->SetVisibleForContentVisibility(true);
-        }
-        ancestor = ancestor->GetClosestContentVisibilityAncestor(
-            nsIFrame::IncludeContentVisibility::Auto);
-      }
-      if (hasContentVisibilityAutoAncestor) {
-        UpdateHiddenContentInForcedLayout(frame);
-        // TODO: There might be the other already scheduled relevancy updates,
-        // other than caused be scrollIntoView.
-        UpdateContentRelevancyImmediately(ContentRelevancyReason::Visible);
-        reflowedForHiddenContent = ReflowForHiddenContentIfNeeded();
+      if (frame->IsHiddenByContentVisibilityOnAnyAncestor(
+              nsIFrame::IncludeContentVisibility::Auto)) {
+        frame->PresShell()->EnsureReflowIfFrameHasHiddenContent(frame);
       }
     }
   }
 
-  if (!reflowedForHiddenContent) {
-    // Flush layout and attempt to scroll in the process.
-    if (PresShell* presShell = composedDoc->GetPresShell()) {
-      presShell->SetNeedLayoutFlush();
-    }
-    composedDoc->FlushPendingNotifications(FlushType::InterruptibleLayout);
+  // Flush layout and attempt to scroll in the process.
+  if (PresShell* presShell = composedDoc->GetPresShell()) {
+    presShell->SetNeedLayoutFlush();
   }
+  composedDoc->FlushPendingNotifications(FlushType::InterruptibleLayout);
 
   // If mContentToScrollTo is non-null, that means we interrupted the reflow
   // (or suppressed it altogether because we're suppressing interruptible
@@ -11876,21 +11850,18 @@ bool PresShell::GetZoomableByAPZ() const {
   return mZoomConstraintsClient && mZoomConstraintsClient->GetAllowZoom();
 }
 
-bool PresShell::ReflowForHiddenContentIfNeeded() {
-  if (mHiddenContentInForcedLayout.IsEmpty()) {
-    return false;
-  }
-  mDocument->FlushPendingNotifications(FlushType::Layout);
-  mHiddenContentInForcedLayout.Clear();
-  return true;
-}
-
-void PresShell::UpdateHiddenContentInForcedLayout(nsIFrame* aFrame) {
+void PresShell::EnsureReflowIfFrameHasHiddenContent(nsIFrame* aFrame) {
   if (!aFrame || !aFrame->IsSubtreeDirty() ||
       !StaticPrefs::layout_css_content_visibility_enabled()) {
     return;
   }
 
+  // Flushing notifications below might trigger more layouts, which might,
+  // in turn, trigger layout of other hidden content. We keep a local set
+  // of hidden content we are laying out to handle recursive calls.
+  nsTHashSet<nsIContent*> hiddenContentInForcedLayout;
+
+  MOZ_ASSERT(mHiddenContentInForcedLayout.IsEmpty());
   nsIFrame* topmostFrameWithContentHidden = nullptr;
   for (nsIFrame* cur = aFrame->GetInFlowParent(); cur;
        cur = cur->GetInFlowParent()) {
@@ -11908,13 +11879,9 @@ void PresShell::UpdateHiddenContentInForcedLayout(nsIFrame* aFrame) {
   MOZ_ASSERT(topmostFrameWithContentHidden);
   FrameNeedsReflow(topmostFrameWithContentHidden, IntrinsicDirty::None,
                    NS_FRAME_IS_DIRTY);
-}
+  mDocument->FlushPendingNotifications(FlushType::Layout);
 
-void PresShell::EnsureReflowIfFrameHasHiddenContent(nsIFrame* aFrame) {
-  MOZ_ASSERT(mHiddenContentInForcedLayout.IsEmpty());
-
-  UpdateHiddenContentInForcedLayout(aFrame);
-  ReflowForHiddenContentIfNeeded();
+  mHiddenContentInForcedLayout.Clear();
 }
 
 bool PresShell::IsForcingLayoutForHiddenContent(const nsIFrame* aFrame) const {
@@ -11944,16 +11911,4 @@ void PresShell::ScheduleContentRelevancyUpdate(ContentRelevancyReason aReason) {
   if (nsPresContext* presContext = GetPresContext()) {
     presContext->RefreshDriver()->EnsureContentRelevancyUpdateHappens();
   }
-}
-
-void PresShell::UpdateContentRelevancyImmediately(
-    ContentRelevancyReason aReason) {
-  if (MOZ_UNLIKELY(mIsDestroying)) {
-    return;
-  }
-
-  mContentVisibilityRelevancyToUpdate += aReason;
-
-  SetNeedLayoutFlush();
-  UpdateRelevancyOfContentVisibilityAutoFrames();
 }
