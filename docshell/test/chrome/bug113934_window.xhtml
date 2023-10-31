@@ -85,7 +85,6 @@
       // which are a result of swapping the docshells.
       var DOMLinkListener = {
         _afterFirst: false,
-        _removedDispatched: false,
         _addedDispatched: false,
         async handleEvent(aEvent) {
           if (!this._afterFirst) {
@@ -134,16 +133,10 @@
             is(this._addedDispatched, false);
             this._addedDispatched = true;
           }
-          else {
-            is(this._removedDispatched, false);
-            this._removedDispatched = true;
-          }
 
-          if (this._addedDispatched && this._removedDispatched) {
+          if (this._addedDispatched) {
             $("f1").removeEventListener("DOMLinkAdded", this);
-            $("f1").removeEventListener("DOMLinkRemoved", this);
             $("f3").removeEventListener("DOMLinkAdded", this);
-            $("f3").removeEventListener("DOMLinkRemoved", this);
             window.close();
             SimpleTest.finish();
           }
@@ -151,9 +144,7 @@
       };
 
       $("f1").addEventListener("DOMLinkAdded", DOMLinkListener);
-      $("f1").addEventListener("DOMLinkRemoved", DOMLinkListener);
       $("f3").addEventListener("DOMLinkAdded", DOMLinkListener);
-      $("f3").addEventListener("DOMLinkRemoved", DOMLinkListener);
 
       var linkElement = $("f1").contentDocument.createElement("link");
       linkElement.setAttribute("rel", "alternate");

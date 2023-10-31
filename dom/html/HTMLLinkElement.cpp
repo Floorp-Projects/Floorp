@@ -108,10 +108,6 @@ void HTMLLinkElement::LinkAdded() {
   CreateAndDispatchEvent(u"DOMLinkAdded"_ns);
 }
 
-void HTMLLinkElement::LinkRemoved() {
-  CreateAndDispatchEvent(u"DOMLinkRemoved"_ns);
-}
-
 void HTMLLinkElement::UnbindFromTree(bool aNullParent) {
   CancelDNSPrefetch(*this);
   CancelPrefetchOrPreload();
@@ -130,8 +126,6 @@ void HTMLLinkElement::UnbindFromTree(bool aNullParent) {
                     eIgnoreCase)) {
       oldDoc->LocalizationLinkRemoved(this);
     }
-
-    CreateAndDispatchEvent(u"DOMLinkRemoved"_ns);
   }
 
   nsGenericHTMLElement::UnbindFromTree(aNullParent);

@@ -40,7 +40,6 @@ class HTMLLinkElement final : public nsGenericHTMLElement,
   NS_DECL_ADDSIZEOFEXCLUDINGTHIS
 
   void LinkAdded();
-  void LinkRemoved();
 
   // nsINode
   nsresult Clone(dom::NodeInfo*, nsINode** aResult) const override;
