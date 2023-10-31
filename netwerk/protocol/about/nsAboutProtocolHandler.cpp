@@ -29,14 +29,6 @@ namespace net {
 
 static NS_DEFINE_CID(kNestedAboutURICID, NS_NESTEDABOUTURI_CID);
 
-static bool IsSafeForUntrustedContent(nsIAboutModule* aModule, nsIURI* aURI) {
-  uint32_t flags;
-  nsresult rv = aModule->GetURIFlags(aURI, &flags);
-  NS_ENSURE_SUCCESS(rv, false);
-
-  return (flags & nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT) != 0;
-}
-
 static bool IsSafeToLinkForUntrustedContent(nsIURI* aURI) {
   nsAutoCString path;
   aURI->GetPathQueryRef(path);
@@ -168,6 +160,23 @@ nsAboutProtocolHandler::NewChannel(nsIURI* uri, nsILoadInfo* aLoadInfo,
   }
 
   if (NS_SUCCEEDED(rv)) {
+    uint32_t flags = 0;
+    rv2 = aboutMod->GetURIFlags(uri, &flags);
+    if (NS_FAILED(rv2)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    bool safeForUntrustedContent =
+        (flags & nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT) != 0;
+
+    MOZ_DIAGNOSTIC_ASSERT(
+        safeForUntrustedContent ||
+            (flags & (nsIAboutModule::URI_CAN_LOAD_IN_CHILD |
+                      nsIAboutModule::URI_MUST_LOAD_IN_CHILD)) == 0,
+        "Only unprivileged content should be loaded in child processes. (Did "
+        "you forget to add URI_SAFE_FOR_UNTRUSTED_CONTENT to your about: "
+        "page?)");
+
     // The standard return case:
     rv = aboutMod->NewChannel(uri, aLoadInfo, result);
     if (NS_SUCCEEDED(rv)) {
@@ -195,7 +204,7 @@ nsAboutProtocolHandler::NewChannel(nsIURI* uri, nsILoadInfo* aLoadInfo,
       // owner to null.
       // Note: this relies on aboutMod's newChannel implementation
       // having set the proper originalURI, which probably isn't ideal.
-      if (IsSafeForUntrustedContent(aboutMod, uri)) {
+      if (safeForUntrustedContent) {
         (*result)->SetOwner(nullptr);
       }
 
