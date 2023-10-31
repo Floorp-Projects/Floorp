@@ -89,6 +89,7 @@ URLQueryStringStripper::StripForCopyOrShare(nsIURI* aURI,
   NS_ENSURE_SUCCESS(rv, rv);
   // We don't need to do anything if there is no query string.
   if (query.IsEmpty()) {
+    Telemetry::Accumulate(Telemetry::STRIP_ON_SHARE_PARAMS_REMOVED, 0);
     return NS_OK;
   }
   nsAutoCString host;
@@ -128,6 +129,8 @@ URLQueryStringStripper::StripForCopyOrShare(nsIURI* aURI,
     return true;
   });
 
+  Telemetry::Accumulate(Telemetry::STRIP_ON_SHARE_PARAMS_REMOVED, aStripCount);
+
   if (!aStripCount) {
     return NS_OK;
   }
@@ -138,6 +141,22 @@ URLQueryStringStripper::StripForCopyOrShare(nsIURI* aURI,
   Unused << NS_MutateURI(aURI)
                 .SetQuery(NS_ConvertUTF16toUTF8(newQuery))
                 .Finalize(strippedURI);
+
+  // To calculate difference in length of the URL
+  // after stripping occurs for Telemetry
+  nsAutoCString specOriginalURI;
+  nsAutoCString specStrippedURI;
+
+  rv = aURI->GetDisplaySpec(specOriginalURI);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  MOZ_ASSERT(*strippedURI);
+
+  rv = (*strippedURI)->GetDisplaySpec(specStrippedURI);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  uint32_t lengthDiff = specOriginalURI.Length() - specStrippedURI.Length();
+  Telemetry::Accumulate(Telemetry::STRIP_ON_SHARE_LENGTH_DECREASE, lengthDiff);
 
   return NS_OK;
 }
