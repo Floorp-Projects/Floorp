@@ -7,24 +7,44 @@
 "use strict";
 
 add_task(async function () {
+  // Start with the watch expression panel open
+  await pushPref("devtools.debugger.expressions-visible", true);
   const dbg = await initDebugger("doc-script-switching.html");
 
-  info(">> Close the panel");
-  clickElementWithSelector(dbg, ".watch-expressions-pane ._header");
-
-  info(">> Click + to add the new expression");
-  await waitForElementWithSelector(
-    dbg,
-    ".watch-expressions-pane ._header .plus"
+  const watchExpressionHeaderEl = findElement(dbg, "watchExpressionsHeader");
+  is(
+    watchExpressionHeaderEl.tagName,
+    "BUTTON",
+    "The accordion toggle is a proper button"
   );
-  clickElementWithSelector(dbg, ".watch-expressions-pane ._header .plus");
+  is(
+    watchExpressionHeaderEl.getAttribute("aria-expanded"),
+    "true",
+    "The accordion toggle is properly marked as expanded"
+  );
 
-  info(">> Ensure element gets focused");
+  info("Close the panel");
+  clickDOMElement(dbg, watchExpressionHeaderEl);
+  await waitFor(() =>
+    watchExpressionHeaderEl.getAttribute("aria-expanded", "false")
+  );
+  ok(true, "The accordion toggle is properly marked as collapsed");
+
+  info("Click + to add the new expression");
+  await waitForElement(dbg, "watchExpressionsAddButton");
+  clickElement(dbg, "watchExpressionsAddButton");
+
+  await waitFor(() =>
+    watchExpressionHeaderEl.getAttribute("aria-expanded", "true")
+  );
+  ok(true, "The accordion toggle is properly marked as expanded again");
+
+  info("Check that the input element gets focused");
   await waitForElementWithSelector(dbg, ".expression-input-container.focused");
-
-  info(">> Ensure the element is focused");
+  ok(true, "Found the expression input container, with the focused class");
   is(
     dbg.win.document.activeElement.classList.contains("input-expression"),
-    true
+    true,
+    "The active element is the watch expression input"
   );
 });

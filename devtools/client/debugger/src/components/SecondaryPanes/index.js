@@ -117,8 +117,7 @@ class SecondaryPanes extends Component {
     if (expressions.length) {
       buttons.push(
         debugBtn(
-          evt => {
-            evt.stopPropagation();
+          () => {
             this.props.evaluateExpressionsForCurrentContext();
           },
           "refresh",
@@ -129,9 +128,9 @@ class SecondaryPanes extends Component {
     }
     buttons.push(
       debugBtn(
-        evt => {
-          if (prefs.expressionsVisible) {
-            evt.stopPropagation();
+        () => {
+          if (!prefs.expressionsVisible) {
+            this.onWatchExpressionPaneToggle(true);
           }
           this.setState({ showExpressionsInput: true });
         },
@@ -146,9 +145,9 @@ class SecondaryPanes extends Component {
   xhrBreakpointsHeaderButtons() {
     return [
       debugBtn(
-        evt => {
-          if (prefs.xhrBreakpointsVisible) {
-            evt.stopPropagation();
+        () => {
+          if (!prefs.xhrBreakpointsVisible) {
+            this.onXHRPaneToggle(true);
           }
           this.setState({ showXHRInput: true });
         },
@@ -158,8 +157,7 @@ class SecondaryPanes extends Component {
       ),
 
       debugBtn(
-        evt => {
-          evt.stopPropagation();
+        () => {
           this.props.removeAllXHRBreakpoints();
         },
         "removeAll",
@@ -172,8 +170,7 @@ class SecondaryPanes extends Component {
   breakpointsHeaderButtons() {
     return [
       debugBtn(
-        evt => {
-          evt.stopPropagation();
+        () => {
           this.props.removeAllBreakpoints();
         },
         "removeAll",
@@ -216,7 +213,6 @@ class SecondaryPanes extends Component {
           {
             className: "map-scopes-header",
             title: L10N.getStr("scopes.mapping.label"),
-            onClick: e => e.stopPropagation(),
           },
           input({
             type: "checkbox",
@@ -230,7 +226,6 @@ class SecondaryPanes extends Component {
             className: "mdn",
             target: "_blank",
             href: mdnLink,
-            onClick: e => e.stopPropagation(),
             title: L10N.getStr("scopes.helpTooltip.label"),
           },
           React.createElement(AccessibleImage, {
@@ -252,18 +247,20 @@ class SecondaryPanes extends Component {
           {
             className: "events-header",
             title: L10N.getStr("eventlisteners.log.label"),
-            onClick: e => e.stopPropagation(),
           },
           input({
             type: "checkbox",
             checked: logEventBreakpoints ? "checked" : "",
             onChange: e => this.props.toggleEventLogging(),
-            onKeyDown: e => e.stopPropagation(),
           }),
           L10N.getStr("eventlisteners.log")
         )
       ),
     ];
+  }
+
+  onWatchExpressionPaneToggle(opened) {
+    prefs.expressionsVisible = opened;
   }
 
   getWatchItem() {
@@ -277,10 +274,12 @@ class SecondaryPanes extends Component {
         onExpressionAdded: this.onExpressionAdded,
       }),
       opened: prefs.expressionsVisible,
-      onToggle: opened => {
-        prefs.expressionsVisible = opened;
-      },
+      onToggle: this.onWatchExpressionPaneToggle,
     };
+  }
+
+  onXHRPaneToggle(opened) {
+    prefs.xhrBreakpointsVisible = opened;
   }
 
   getXHRItem() {
@@ -296,9 +295,7 @@ class SecondaryPanes extends Component {
         onXHRAdded: this.onXHRAdded,
       }),
       opened: prefs.xhrBreakpointsVisible || pauseReason === "XHR",
-      onToggle: opened => {
-        prefs.xhrBreakpointsVisible = opened;
-      },
+      onToggle: this.onXHRPaneToggle,
     };
   }
 

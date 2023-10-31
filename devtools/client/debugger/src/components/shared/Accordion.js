@@ -2,10 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
-import React, { cloneElement, Component } from "react";
-import { aside, h2, div, span } from "react-dom-factories";
+import { cloneElement, Component } from "react";
+import { aside, button, div, h2 } from "react-dom-factories";
 import PropTypes from "prop-types";
-import AccessibleImage from "./AccessibleImage";
 
 import "./Accordion.css";
 
@@ -30,14 +29,10 @@ class Accordion extends Component {
     this.forceUpdate();
   }
 
-  onHandleHeaderKeyDown(e, i) {
-    if (e && (e.key === " " || e.key === "Enter")) {
-      this.handleHeaderClick(i);
-    }
-  }
-
   renderContainer = (item, i) => {
     const { opened } = item;
+    const contentElementId = `${item.id}-content`;
+
     return aside(
       {
         className: item.className,
@@ -48,17 +43,14 @@ class Accordion extends Component {
       h2(
         {
           className: "_header",
-          tabIndex: "0",
-          onKeyDown: e => this.onHandleHeaderKeyDown(e, i),
-          onClick: () => this.handleHeaderClick(i),
         },
-        React.createElement(AccessibleImage, {
-          className: `arrow ${opened ? "expanded" : ""}`,
-        }),
-        span(
+        button(
           {
             id: item.id,
             className: "header-label",
+            "aria-expanded": `${opened ? "true" : "false"}`,
+            "aria-controls": opened ? contentElementId : undefined,
+            onClick: () => this.handleHeaderClick(i),
           },
           item.header
         ),
@@ -66,7 +58,6 @@ class Accordion extends Component {
           ? div(
               {
                 className: "header-buttons",
-                tabIndex: "-1",
               },
               item.buttons
             )
@@ -76,6 +67,7 @@ class Accordion extends Component {
         div(
           {
             className: "_content",
+            id: contentElementId,
           },
           cloneElement(item.component, item.componentProps || {})
         )
