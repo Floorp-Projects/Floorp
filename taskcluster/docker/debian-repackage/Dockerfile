@@ -25,7 +25,7 @@ RUN /usr/local/sbin/setup_packages.sh $TASKCLUSTER_ROOT_URL $DOCKER_IMAGE_PACKAG
         debootstrap \
         --arch=$arch \
         --variant=buildd \
-        --include=debhelper,libasound2,libdbus-glib-1-2,libgtk-3-0,libx11-xcb1,libxtst6 \
+        --include=debhelper,libasound2,libgtk-3-0,libx11-xcb1,libxtst6 \
         --keyring=/usr/share/keyrings/debian-archive-removed-keys.gpg \
         --verbose \
         jessie \

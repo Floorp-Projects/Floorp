@@ -17,7 +17,6 @@ class OpenBSDBootstrapper(BaseBootstrapper):
             "nasm",
             "node",
             "gtk+3",
-            "dbus-glib",
             "pulseaudio",
         ]
 

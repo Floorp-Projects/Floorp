@@ -21,7 +21,6 @@ RUN apt-get update && apt-get install \
     libatk-bridge2.0-0-dbgsym \
     libatk1.0-0-dbgsym \
     libcairo2-dbgsym \
-    libdbus-glib-1-2-dbgsym \
     libdrm2-dbgsym \
     libffi8-dbgsym \
     libfontconfig1-dbgsym \

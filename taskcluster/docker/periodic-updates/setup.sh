@@ -11,7 +11,6 @@ apt-get install \
     curl \
     jq \
     libasound2 \
-    libdbus-glib-1-2 \
     libgtk-3-0 \
     libx11-xcb1 \
     libxml2-utils \

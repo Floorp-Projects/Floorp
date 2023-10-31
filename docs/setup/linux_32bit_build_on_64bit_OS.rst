@@ -23,7 +23,7 @@ These steps were verified to work as of June 2020.
 
   .. code::
 
-     sudo apt install gcc-multilib g++-multilib libdbus-glib-1-dev:i386 \
+     sudo apt install gcc-multilib g++-multilib \
        libgtk2.0-dev:i386 libgtk-3-dev:i386 libpango1.0-dev:i386 libxt-dev:i386 \
        libx11-xcb-dev:i386 libpulse-dev:i386 libdrm-dev:i386
 

@@ -237,7 +237,7 @@ This can be done manually using:
 .. code:: bash
 
     $ yum install GConf2-debuginfo ORBit2-debuginfo atk-debuginfo \
-    cairo-debuginfo dbus-debuginfo dbus-glib-debuginfo expat-debuginfo \
+    cairo-debuginfo dbus-debuginfo expat-debuginfo \
     fontconfig-debuginfo freetype-debuginfo gcc-debuginfo glib2-debuginfo \
     glibc-debuginfo gnome-vfs2-debuginfo gtk2-debuginfo gtk2-engines-debuginfo \
     hal-debuginfo libX11-debuginfo libXcursor-debuginfo libXext-debuginfo \

@@ -27,7 +27,6 @@ class FreeBSDBootstrapper(BaseBootstrapper):
         ]
 
         self.browser_packages = [
-            "dbus-glib",
             "libXt",
             "nasm",
             "pulseaudio",

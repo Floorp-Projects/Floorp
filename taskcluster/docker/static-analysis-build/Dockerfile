@@ -47,7 +47,6 @@ RUN apt-get update && \
       x11-utils \
       xvfb \
       linux-libc-dev \
-      libdbus-glib-1-dev \
       libfontconfig1-dev \
       libfreetype6-dev \
       libgconf2-dev \
