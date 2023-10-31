@@ -216,3 +216,32 @@ add_task(async function test_new_login_url_has_correct_hash() {
     }
   );
 });
+
+add_task(async function test_no_logins_empty_url_hash() {
+  Services.logins.removeAllUserFacingLogins();
+  await BrowserTestUtils.withNewTab(
+    {
+      gBrowser,
+      url: TEST_URL_PATH,
+    },
+    async function () {
+      await waitForAppMenu();
+
+      const appMenuPasswordsButton = document.getElementById(
+        "appMenu-passwords-button"
+      );
+
+      const aboutLoginsTabPromise = BrowserTestUtils.waitForNewTab(
+        gBrowser,
+        url => new URL(url).hash === "",
+        true
+      );
+
+      EventUtils.synthesizeMouseAtCenter(appMenuPasswordsButton, {});
+
+      const aboutLoginsTab = await aboutLoginsTabPromise;
+
+      gBrowser.removeTab(aboutLoginsTab);
+    }
+  );
+});

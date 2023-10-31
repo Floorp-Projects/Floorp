@@ -163,7 +163,7 @@ export class AboutLoginsParent extends JSWindowActorParent {
   }
 
   get #ownerGlobal() {
-    return this.browsingContext.embedderElement.ownerGlobal;
+    return this.browsingContext.embedderElement?.ownerGlobal;
   }
 
   async #createLogin(newLogin) {
@@ -203,9 +203,9 @@ export class AboutLoginsParent extends JSWindowActorParent {
 
   get preselectedLogin() {
     const preselectedLogin =
-      this.#ownerGlobal.gBrowser.selectedTab.getAttribute("preselect-login") ||
+      this.#ownerGlobal?.gBrowser.selectedTab.getAttribute("preselect-login") ||
       this.browsingContext.currentURI?.ref;
-    this.#ownerGlobal.gBrowser.selectedTab.removeAttribute("preselect-login");
+    this.#ownerGlobal?.gBrowser.selectedTab.removeAttribute("preselect-login");
     return preselectedLogin || null;
   }
 
