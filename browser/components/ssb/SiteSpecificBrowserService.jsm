@@ -693,7 +693,7 @@ class SiteSpecificBrowser extends SiteSpecificBrowserBase {
     );
 
     // URL
-    args.data = this.startURI.spec;
+    args.data = this.startURI.spec + "?FloorpEnableSSBWindow=true";
 
     let win = Services.ww.openWindow(
       null,

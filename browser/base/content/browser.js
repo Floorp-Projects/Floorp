@@ -2355,7 +2355,14 @@ var gBrowserInit = {
       //                      window (for this case, all other arguments are
       //                      ignored).
       let uri = window.arguments?.[0];
-      console.log("uri", uri);
+
+      // Floorp Injections
+      // If the URI has "?FloorpEnableSSBWindow=true" at the end, The window will be opened as a SSB window.
+      if(uri.endsWith("?FloorpEnableSSBWindow=true")){
+        uri = uri.replace("?FloorpEnableSSBWindow=true", "");
+        document.documentElement.setAttribute("FloorpEnableSSBWindow", "true");
+      }
+
       if (!uri || window.XULElement.isInstance(uri)) {
         return null;
       }

@@ -74,16 +74,6 @@ const WindowsSupport = {
       iconFile = null;
     }
 
-    console.log(
-      Services.dirsvc.get("XREExeF", Ci.nsIFile),
-      ssb.name,
-      iconFile,
-      buildGroupId(ssb.id),
-      "Programs",
-      `${ssb.name}.lnk`,
-      Services.dirsvc.get("GreD", Ci.nsIFile),
-    );
-
     shellService.createShortcut(
       Services.dirsvc.get("XREExeF", Ci.nsIFile),
       ["-profile", PathUtils.profileDir, "-start-ssb", ssb.id],

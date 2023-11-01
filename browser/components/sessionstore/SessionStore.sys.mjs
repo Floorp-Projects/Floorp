@@ -1908,6 +1908,11 @@ var SessionStoreInternal = {
    */
   onClose: function ssi_onClose(aWindow) {
     let completionPromise = Promise.resolve();
+
+    // Floorp Injections
+    if(aWindow.document.documentElement.getAttribute("FloorpEnableSSBWindow") == "true"){
+      return completionPromise;
+    }
     // this window was about to be restored - conserve its original data, if any
     let isFullyLoaded = this._isWindowLoaded(aWindow);
     if (!isFullyLoaded) {
@@ -5525,8 +5530,6 @@ var SessionStoreInternal = {
         hasFirstArgument = false;
       }
     }
-
-    console.log(aWindow.arguments);
 
     return !hasFirstArgument;
   },
