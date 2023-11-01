@@ -878,10 +878,6 @@ renaming_overrides_prefixing = true
   // size of the image.
   ImageResolution GetResolution() const;
 
-  // Returns the intrinsic size of the image, if there's one, accounting for
-  // resolution as needed.
-  Maybe<CSSIntSize> GetIntrinsicSize() const;
-
   // If this is an image-set(), the final image we've selected, otherwise it
   // returns *this.
   const StyleGenericImage& FinalImage() const;
