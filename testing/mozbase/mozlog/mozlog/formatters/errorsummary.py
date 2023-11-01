@@ -65,6 +65,13 @@ class ErrorSummaryFormatter(BaseFormatter):
         else:
             ginfo["status"] = "ERROR"
 
+    def _clean_test_name(self, test):
+        retVal = test
+        # remove extra stuff like "(finished)"
+        if "(finished)" in test:
+            retVal = test.split(" ")[0]
+        return retVal
+
     def suite_start(self, item):
         self.test_to_group = {v: k for k in item["tests"] for v in item["tests"][k]}
         return self._output("test_groups", {"groups": list(item["tests"].keys())})
@@ -91,12 +98,12 @@ class ErrorSummaryFormatter(BaseFormatter):
         return "".join(output)
 
     def test_start(self, item):
-        group = self.test_to_group.get(item["test"], None)
+        group = self.test_to_group.get(self._clean_test_name(item["test"]), None)
         if group and self.groups[group]["start"] is None:
             self.groups[group]["start"] = item["time"]
 
     def test_status(self, item):
-        group = self.test_to_group.get(item["test"], None)
+        group = self.test_to_group.get(self._clean_test_name(item["test"]), None)
         if group:
             self._update_group_result(group, item)
 
@@ -106,10 +113,12 @@ class ErrorSummaryFormatter(BaseFormatter):
         if item.get("expected", "") == "":
             item["expected"] = item["status"]
 
-        return self._output_test(item["test"], item["subtest"], item)
+        return self._output_test(
+            self._clean_test_name(item["test"]), item["subtest"], item
+        )
 
     def test_end(self, item):
-        group = self.test_to_group.get(item["test"], None)
+        group = self.test_to_group.get(self._clean_test_name(item["test"]), None)
         if group:
             self._update_group_result(group, item)
             self.groups[group]["end"] = item["time"]
@@ -120,7 +129,7 @@ class ErrorSummaryFormatter(BaseFormatter):
         if item.get("expected", "") == "":
             item["expected"] = item["status"]
 
-        return self._output_test(item["test"], None, item)
+        return self._output_test(self._clean_test_name(item["test"]), None, item)
 
     def log(self, item):
         if item["level"] not in ("ERROR", "CRITICAL"):
@@ -144,11 +153,13 @@ class ErrorSummaryFormatter(BaseFormatter):
         }
 
         if item.get("test"):
-            data["group"] = self.test_to_group.get(item["test"], "")
+            data["group"] = self.test_to_group.get(
+                self._clean_test_name(item["test"]), ""
+            )
             if data["group"] == "":
                 # item['test'] could be the group name, not a test name
-                if item["test"] in self.groups:
-                    data["group"] = item["test"]
+                if self._clean_test_name(item["test"]) in self.groups:
+                    data["group"] = self._clean_test_name(item["test"])
 
             # unlike test group summary, if we crash expect error unless expected
             if (
