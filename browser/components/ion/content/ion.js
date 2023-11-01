@@ -750,7 +750,7 @@ async function sendDeletionPing(studyAddonId) {
  * The `creationDate` provided by the telemetry APIs will be used as the timestamp for
  * considering the user enrolled in pioneer and/or the study.
  *
- * @param [studyAddonid=undefined] - optional study id. It's sent in the ping, if present,
+ * @param {string} [studyAddonId] - optional study id. It's sent in the ping, if present,
  * to signal that user enroled in the study.
  */
 async function sendEnrollmentPing(studyAddonId) {

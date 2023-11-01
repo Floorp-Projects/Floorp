@@ -235,7 +235,6 @@ module.exports = {
         "browser/components/attribution/**",
         "browser/components/customizableui/**",
         "browser/components/downloads/**",
-        "browser/components/ion/content/ion.js",
         "browser/components/newtab/**",
         "browser/components/originattributes/test/browser/**",
         "browser/components/pocket/content/pkt*",
