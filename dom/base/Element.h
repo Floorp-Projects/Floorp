@@ -1373,7 +1373,18 @@ class Element : public FragmentOrElement {
     if (auto* slots = GetExistingExtendedDOMSlots()) {
       slots->mContentRelevancy.reset();
       slots->mVisibleForContentVisibility.reset();
+      slots->mTemporarilyVisibleForScrolledIntoViewDescendant = false;
     }
+  }
+
+  bool TemporarilyVisibleForScrolledIntoViewDescendant() const {
+    const auto* slots = GetExistingExtendedDOMSlots();
+    return slots && slots->mTemporarilyVisibleForScrolledIntoViewDescendant;
+  }
+
+  void SetTemporarilyVisibleForScrolledIntoViewDescendant(bool aVisible) {
+    ExtendedDOMSlots()->mTemporarilyVisibleForScrolledIntoViewDescendant =
+        aVisible;
   }
 
   // https://drafts.csswg.org/cssom-view-1/#dom-element-checkvisibility
