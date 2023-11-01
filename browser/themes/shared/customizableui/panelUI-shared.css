@@ -249,6 +249,11 @@ toolbarseparator + .panel-subview-body {
     margin-top: calc(-1 * (var(--panel-subview-body-padding-block) + var(--panel-shadow-margin) + 1px));
   }
 
+  menuitem::before,
+  menuitem::after {
+    content: none; /* Reset's macOS' checkmark spacing */
+  }
+
   :is(menu, menuitem)[disabled] {
     color: var(--panel-disabled-color);
   }
