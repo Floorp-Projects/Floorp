@@ -1,7 +1,7 @@
 from ..wptrunner import get_pause_after_test
 from .test_testloader import Subsuite, TestFilter, TestLoader, WPTManifest
 
-def test_get_pause_after_test():
+def test_get_pause_after_test():  # type: ignore
     manifest_json = {
         "items": {
             "testharness": {
