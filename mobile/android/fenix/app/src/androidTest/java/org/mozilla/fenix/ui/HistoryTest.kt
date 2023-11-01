@@ -466,4 +466,18 @@ class HistoryTest {
             verifyEmptyHistoryView()
         }
     }
+
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/243287
+    @Test
+    fun openHistoryItemTest() {
+        val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+        }.openThreeDotMenu {
+        }.openHistory {
+        }.openWebsite(defaultWebPage.url) {
+            verifyUrl(defaultWebPage.url.toString())
+        }
+    }
 }
