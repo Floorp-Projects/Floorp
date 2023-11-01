@@ -407,6 +407,8 @@
     <string name="preferences_search">Αναζήτηση</string>
     <!-- Preference for settings related to Search engines -->
     <string name="preferences_search_engines">Μηχανές αναζήτησης</string>
+    <!-- Preference for settings related to Search engines suggestions-->
+    <string name="preferences_search_engines_suggestions">Προτάσεις από μηχανές αναζήτησης</string>
     <!-- Preference for settings related to Search address bar -->
     <string name="preferences_search_address_bar" moz:removedIn="120" tools:ignore="UnusedResources">Γραμμή διευθύνσεων</string>
     <!-- Preference Category for settings related to Search address bar -->
@@ -677,6 +679,9 @@
     <!-- Wallpaper onboarding dialog learn more button text. The button navigates to the wallpaper settings screen. -->
     <string name="wallpapers_onboarding_dialog_explore_more_button_text">Εξερευνήστε περισσότερες ταπετσαρίες</string>
 
+    <!-- Add-ons general availability nimbus message-->
+    <!-- Title of the Nimbus message for add-ons general availability-->
+    <string name="addon_ga_message_title" tools:ignore="UnusedResources">Διατίθενται τώρα νέα πρόσθετα</string>
     <!-- Body of the Nimbus message for add-ons general availability. 'Firefox' intentionally hardcoded here-->
     <string name="addon_ga_message_body" tools:ignore="UnusedResources">Δείτε 100+ νέες επεκτάσεις που σας επιτρέπουν να κάνετε το Firefox δικό σας.</string>
     <!-- Button text of the Nimbus message for add-ons general availability. -->

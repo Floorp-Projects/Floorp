@@ -169,7 +169,7 @@
     <!-- The tile of the notification, this will be shown to the user when one newly supported add-on is available.-->
     <string name="mozac_feature_addons_supported_checker_notification_title">Νέο διαθέσιμο πρόσθετο</string>
     <!-- The tile of the notification, this will be shown to the user when more than one newly supported add-ons are available.-->
-    <string name="mozac_feature_addons_supported_checker_notification_title_plural">Νέο διαθέσιμα πρόσθετα</string>
+    <string name="mozac_feature_addons_supported_checker_notification_title_plural">Νέα διαθέσιμα πρόσθετα</string>
     <!-- The content of the notification, this will be shown to the user when one newly supported add-on is available. %1$s is the add-on name and %2$s is the app name (in most cases Firefox). -->
     <string name="mozac_feature_addons_supported_checker_notification_content_one">Προσθήκη του %1$s στο %2$s</string>
     <!-- The content of the notification, this will be shown to the user when two newly supported add-ons are available. %1$s is the first add-on name. %2$s is the second add-on name. %3$s is the app name (in most cases Firefox). -->
