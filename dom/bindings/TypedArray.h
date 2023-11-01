@@ -339,26 +339,8 @@ struct TypedArray_base : public SpiderMonkeyInterfaceObjectStorage,
                          AllTypedArraysBase {
   using element_type = typename ArrayT::DataType;
 
-  TypedArray_base()
-      : mData(nullptr), mLength(0), mShared(false), mComputed(false) {}
-
-  TypedArray_base(TypedArray_base&& aOther)
-      : SpiderMonkeyInterfaceObjectStorage(std::move(aOther)),
-        mData(aOther.mData),
-        mLength(aOther.mLength),
-        mShared(aOther.mShared),
-        mComputed(aOther.mComputed) {
-    aOther.mData = nullptr;
-    aOther.mLength = 0;
-    aOther.mShared = false;
-    aOther.mComputed = false;
-  }
-
- private:
-  mutable element_type* mData;
-  mutable uint32_t mLength;
-  mutable bool mShared;
-  mutable bool mComputed;
+  TypedArray_base() = default;
+  TypedArray_base(TypedArray_base&& aOther) = default;
 
  public:
   inline bool Init(JSObject* obj) {
@@ -667,17 +649,17 @@ struct TypedArray_base : public SpiderMonkeyInterfaceObjectStorage,
  private:
   Span<element_type> GetCurrentData() const {
     MOZ_ASSERT(inited());
-    if (!mComputed) {
-      size_t length;
-      JS::AutoCheckCannotGC nogc;
-      mData = ArrayT::fromObject(mImplObj).getLengthAndData(&length, &mShared,
-                                                            nogc);
-      MOZ_RELEASE_ASSERT(length <= INT32_MAX,
-                         "Bindings must have checked ArrayBuffer{View} length");
-      mLength = length;
-      mComputed = true;
-    }
-    return Span(mData, mLength);
+
+    // Intentionally return a pointer and length that escape from a nogc region.
+    // Private so it can only be used in very limited situations.
+    JS::AutoCheckCannotGC nogc;
+    size_t length;
+    bool shared;
+    element_type* data =
+        ArrayT::fromObject(mImplObj).getLengthAndData(&length, &shared, nogc);
+    MOZ_RELEASE_ASSERT(length <= INT32_MAX,
+                       "Bindings must have checked ArrayBuffer{View} length");
+    return Span(data, length);
   }
 
   template <typename T, typename F, typename... Calculator>
