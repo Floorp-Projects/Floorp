@@ -42,13 +42,6 @@ static NSVisualEffectMaterial VisualEffectMaterialForVibrancyType(
       return (NSVisualEffectMaterial)NSVisualEffectMaterialToolTip;
     case VibrancyType::MENU:
       return NSVisualEffectMaterialMenu;
-    case VibrancyType::SOURCE_LIST:
-      return NSVisualEffectMaterialSidebar;
-    case VibrancyType::SOURCE_LIST_SELECTION:
-      return NSVisualEffectMaterialSelection;
-    case VibrancyType::ACTIVE_SOURCE_LIST_SELECTION:
-      *aOutIsEmphasized = YES;
-      return NSVisualEffectMaterialSelection;
   }
 }
 

@@ -5,8 +5,6 @@
 /* Places Organizer Sidebars */
 
 #placesList {
-  appearance: auto;
-  -moz-default-appearance: -moz-mac-source-list;
   width: 160px;
   min-width: 100px;
   max-width: 400px;
@@ -14,18 +12,6 @@
 
 #placesList > treechildren::-moz-tree-cell-text {
   margin-inline-end: 6px;
-}
-
-#placesList > treechildren::-moz-tree-row(selected) {
-  appearance: auto;
-  -moz-default-appearance: -moz-mac-source-list-selection;
-  -moz-font-smoothing-background-color: -moz-mac-source-list-selection;
-}
-
-#placesList > treechildren::-moz-tree-row(selected,focus) {
-  appearance: auto;
-  -moz-default-appearance: -moz-mac-active-source-list-selection;
-  -moz-font-smoothing-background-color: -moz-mac-active-source-list-selection;
 }
 
 #placesList > treechildren::-moz-tree-cell(separator) {

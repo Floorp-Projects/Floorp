@@ -170,8 +170,6 @@ class nsNativeThemeCocoa : public mozilla::widget::ThemeCocoa {
     eScale,               // ScaleParams
     eMultilineTextField,  // bool
     eListBox,
-    eActiveSourceListSelection,    // bool
-    eInactiveSourceListSelection,  // bool
     eTabPanel,
   };
 
@@ -237,12 +235,6 @@ class nsNativeThemeCocoa : public mozilla::widget::ThemeCocoa {
       return WidgetInfo(Widget::eMultilineTextField, aParams);
     }
     static WidgetInfo ListBox() { return WidgetInfo(Widget::eListBox, false); }
-    static WidgetInfo ActiveSourceListSelection(bool aParams) {
-      return WidgetInfo(Widget::eActiveSourceListSelection, aParams);
-    }
-    static WidgetInfo InactiveSourceListSelection(bool aParams) {
-      return WidgetInfo(Widget::eInactiveSourceListSelection, aParams);
-    }
     static WidgetInfo TabPanel(bool aParams) {
       return WidgetInfo(Widget::eTabPanel, aParams);
     }
@@ -391,9 +383,6 @@ class nsNativeThemeCocoa : public mozilla::widget::ThemeCocoa {
                      bool aIsMain);
   void DrawMultilineTextField(CGContextRef cgContext, const CGRect& inBoxRect,
                               bool aIsFocused);
-  void DrawSourceListSelection(CGContextRef aContext, const CGRect& aRect,
-                               bool aWindowIsActive, bool aSelectionIsActive);
-
   void RenderWidget(const WidgetInfo& aWidgetInfo, mozilla::ColorScheme,
                     mozilla::gfx::DrawTarget& aDrawTarget,
                     const mozilla::gfx::Rect& aWidgetRect,
