@@ -1186,7 +1186,6 @@ testing/mozbase/mozprofile/tests/files/prefs_with_comments.js
 testing/mozharness/configs/test/test_malformed.json
 testing/talos/talos/startup_test/sessionrestore/profile/sessionstore.js
 testing/talos/talos/startup_test/sessionrestore/profile-manywindows/sessionstore.js
-testing/talos/talos/tests/devtools/addon/content/pages/
 # Python json.
 testing/talos/talos/unittests/test_talosconfig_browser_config.json
 testing/talos/talos/unittests/test_talosconfig_test_config.json
@@ -1406,6 +1405,7 @@ testing/mochitest/pywebsocket3/
 testing/mochitest/tests/MochiKit-1.4.2/
 testing/modules/sinon-7.2.7.js
 testing/mozbase/mozproxy/mozproxy/backends/mitm/scripts/catapult/
+testing/talos/talos/tests/devtools/addon/content/pages/
 testing/talos/talos/tests/dromaeo/
 testing/talos/talos/tests/kraken/
 testing/talos/talos/tests/v8_7/
@@ -1468,7 +1468,6 @@ node_modules/
 security/manager/tools/KnownRootHashes.json
 security/manager/tools/PreloadedHPKPins.json
 services/settings/dumps/
-testing/talos/talos/tests/devtools/addon/content/pages/custom/debugger/app-build/static/js/minified.js
 toolkit/components/nimbus/schemas/NimbusExperiment.schema.json
 toolkit/components/pdfjs/content/PdfJsDefaultPreferences.sys.mjs
 toolkit/components/uniffi-js/UniFFIGeneratedScaffolding.cpp
