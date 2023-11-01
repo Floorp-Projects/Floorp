@@ -1131,6 +1131,20 @@ inline bool StyleDisplay::IsInlineOutside() const {
   return Outside() == StyleDisplayOutside::Inline || IsInternalRuby();
 }
 
+inline float StyleZoom::Zoom(float aValue) const {
+  if (*this == ONE) {
+    return aValue;
+  }
+  return ToFloat() * aValue;
+}
+
+inline float StyleZoom::Unzoom(float aValue) const {
+  if (*this == ONE) {
+    return aValue;
+  }
+  return aValue / ToFloat();
+}
+
 }  // namespace mozilla
 
 #endif
