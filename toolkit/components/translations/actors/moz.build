@@ -6,7 +6,5 @@ FINAL_TARGET_FILES.actors += [
     "AboutTranslationsChild.sys.mjs",
     "AboutTranslationsParent.sys.mjs",
     "TranslationsChild.sys.mjs",
-    "TranslationsEngineChild.sys.mjs",
-    "TranslationsEngineParent.sys.mjs",
     "TranslationsParent.sys.mjs",
 ]
