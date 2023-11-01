@@ -10,7 +10,7 @@ var testScope;
 /**
  * Module consumers can optionally initialize the module
  *
- * @param {Object} scope
+ * @param {object} scope
  *   object with SimpleTest and info properties.
  */
 function init(scope) {
@@ -95,7 +95,7 @@ function closeFirefoxViewTab(win) {
 /**
  * Run a task with Firefox View open.
  *
- * @param {Object} options
+ * @param {object} options
  *   Options object.
  * @param {boolean} [options.openNewWindow]
  *   Whether to run the task in a new window. If false, the current window will
@@ -103,6 +103,8 @@ function closeFirefoxViewTab(win) {
  * @param {boolean} [options.resetFlowManager]
  *   Whether to reset the internal state of TabsSetupFlowManager before running
  *   the task.
+ * @param {Window} [options.win]
+ *   The window in which to run the task.
  * @param {function(MozBrowser)} taskFn
  *   The task to run. It can be asynchronous.
  * @returns {any}

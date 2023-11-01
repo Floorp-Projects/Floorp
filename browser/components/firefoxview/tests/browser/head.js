@@ -393,7 +393,7 @@ const launchFeatureTourIn = win => {
  * @see FeatureCalloutMessages.sys.mjs for valid values of "screen"
  *
  * @param {number} screen The full ID of the feature callout screen
- * @return {string} JSON string used to set
+ * @returns {string} JSON string used to set
  * `browser.firefox-view.feature-tour`
  */
 const getPrefValueByScreen = screen => {
@@ -405,8 +405,9 @@ const getPrefValueByScreen = screen => {
 
 /**
  * Wait for a feature callout screen of given parameters to be shown
+ *
  * @param {Document} doc the document where the callout appears.
- * @param {String} screenPostfix The full ID of the feature callout screen.
+ * @param {string} screenPostfix The full ID of the feature callout screen.
  */
 const waitForCalloutScreen = async (doc, screenPostfix) => {
   await BrowserTestUtils.waitForCondition(() =>
@@ -457,7 +458,8 @@ const closeCallout = async doc => {
 /**
  * Get a Feature Callout message by id.
  *
- * @param {string} Message id
+ * @param {string} id
+ *   The message id.
  */
 const getCalloutMessageById = id => {
   return {
@@ -511,7 +513,8 @@ class TelemetrySpy {
   }
   /**
    * Assert that AWSendEventTelemetry sent the expected telemetry object.
-   * @param {Object} expectedData
+   *
+   * @param {object} expectedData
    */
   assertCalledWith(expectedData) {
     let match = this.spy.calledWith("AWPage:TELEMETRY_EVENT", expectedData);
@@ -539,7 +542,7 @@ class TelemetrySpy {
  * closed tabs list can have data.
  *
  * @param {string} url
- * @return {Promise} Promise that resolves when the session store
+ * @returns {Promise} Promise that resolves when the session store
  * has been updated after closing the tab.
  */
 async function open_then_close(url, win = window) {
@@ -599,7 +602,7 @@ function navigateToCategory(document, category) {
  *
  * @param {Window} [win]
  *   The window to use, if specified. Defaults to the global window instance.
- * @return {Promise<MozTabbrowserTab>}
+ * @returns {Promise<MozTabbrowserTab>}
  *   The tab switched to.
  */
 async function switchToFxViewTab(win = window) {
@@ -631,7 +634,8 @@ async function clickFirefoxViewButton(win) {
 /**
  * Wait for and assert telemetry events.
  *
- * @param {Array} Nested array of event details
+ * @param {Array} eventDetails
+ *   Nested array of event details
  */
 async function telemetryEvent(eventDetails) {
   await TestUtils.waitForCondition(
