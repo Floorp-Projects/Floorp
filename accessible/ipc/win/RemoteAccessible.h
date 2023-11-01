@@ -19,10 +19,10 @@ namespace a11y {
  */
 class RemoteAccessible : public RemoteAccessibleBase<RemoteAccessible> {
  public:
-  RemoteAccessible(uint64_t aID, RemoteAccessible* aParent,
+  RemoteAccessible(uint64_t aID,
                    DocAccessibleParent* aDoc, role aRole, AccType aType,
                    AccGenericType aGenericTypes, uint8_t aRoleMapEntryIndex)
-      : RemoteAccessibleBase(aID, aParent, aDoc, aRole, aType, aGenericTypes,
+      : RemoteAccessibleBase(aID, aDoc, aRole, aType, aGenericTypes,
                              aRoleMapEntryIndex) {
     MOZ_COUNT_CTOR(RemoteAccessible);
   }

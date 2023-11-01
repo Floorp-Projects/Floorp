@@ -421,11 +421,11 @@ class RemoteAccessibleBase : public Accessible, public HyperTextAccessibleBase {
   virtual size_t SizeOfExcludingThis(MallocSizeOf aMallocSizeOf);
 
  protected:
-  RemoteAccessibleBase(uint64_t aID, Derived* aParent,
+  RemoteAccessibleBase(uint64_t aID,
                        DocAccessibleParent* aDoc, role aRole, AccType aType,
                        AccGenericType aGenericTypes, uint8_t aRoleMapEntryIndex)
       : Accessible(aType, aGenericTypes, aRoleMapEntryIndex),
-        mParent(aParent->ID()),
+        mParent(kNoParent),
         mDoc(aDoc),
         mWrapper(0),
         mID(aID),
