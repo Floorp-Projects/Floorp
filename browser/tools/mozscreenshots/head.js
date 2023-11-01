@@ -41,8 +41,10 @@ async function setup() {
 
 /**
  * Used by pre-defined sets of configurations to decide whether to run for a build.
- * @note This is not used by browser_screenshots.js which handles when MOZSCREENSHOTS_SETS is set.
- * @return {bool} whether to capture screenshots.
+ *
+ * This is not used by browser_screenshots.js which handles when MOZSCREENSHOTS_SETS is set.
+ *
+ * @returns {bool} whether to capture screenshots.
  */
 function shouldCapture() {
   if (Services.env.get("MOZSCREENSHOTS_SETS")) {

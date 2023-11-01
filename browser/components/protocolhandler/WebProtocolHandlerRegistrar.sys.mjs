@@ -52,11 +52,11 @@ WebProtocolHandlerRegistrar.prototype = {
   /**
    * Determines if a web handler is already registered.
    *
-   * @param aProtocol
+   * @param {string} aProtocol
    *        The scheme of the web handler we are checking for.
-   * @param aURITemplate
+   * @param {string} aURITemplate
    *        The URI template that the handler uses to handle the protocol.
-   * @return true if it is already registered, false otherwise.
+   * @returns {boolean} true if it is already registered, false otherwise.
    */
   _protocolHandlerRegistered(aProtocol, aURITemplate) {
     let eps = Cc[

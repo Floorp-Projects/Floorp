@@ -116,14 +116,15 @@ class _BuiltInThemes {
   }
 
   /**
+   * This looks up the id in a Map rather than accessing a property on
+   * the addon itself. That makes calls to this function O(m) where m is the
+   * total number of built-in themes offered now or in the past. Since we
+   * are using a Map, calls are O(1) in the average case.
+   *
    * @param {string} id
    *   A theme's ID.
    * @returns {boolean}
    *   Returns true if the theme is expired. False otherwise.
-   * @note This looks up the id in a Map rather than accessing a property on
-   *   the addon itself. That makes calls to this function O(m) where m is the
-   *   total number of built-in themes offered now or in the past. Since we
-   *   are using a Map, calls are O(1) in the average case.
    */
   themeIsExpired(id) {
     let themeInfo = this.builtInThemeMap.get(id);
@@ -133,7 +134,7 @@ class _BuiltInThemes {
   /**
    * @param {string} id
    *   The theme's id.
-   * @return {boolean}
+   * @returns {boolean}
    *   True if the theme with id `id` is both expired and retained. That is,
    *   the user has the ability to use it after its expiry date.
    */
@@ -144,7 +145,7 @@ class _BuiltInThemes {
   /**
    * @param {string} id
    *   The theme's id.
-   * @return {boolean}
+   * @returns {boolean}
    *   True if the theme with id `id` is from the currently active theme.
    */
   isActiveTheme(id) {
@@ -216,6 +217,7 @@ class _BuiltInThemes {
   /**
    * Set a pref to ensure that the user can continue to use a specified theme
    * past its expiry date.
+   *
    * @param {string} id
    *   The ID of the theme to retain.
    */
@@ -233,6 +235,7 @@ class _BuiltInThemes {
    * Removes from the retained expired theme list colorways themes that have been
    * migrated from the one installed in the built-in XPIProvider location
    * to an AMO hosted xpi installed in the user profile XPIProvider location.
+   *
    * @param {string} id
    *   The ID of the theme to remove from the retained themes list.
    */
@@ -255,9 +258,10 @@ class _BuiltInThemes {
    * same base color but with different intensities (soft, balanced, and bold),
    * or if the current collection doesn't have intensities, each colorway is
    * their own group. Group name localization is optional.
-   * @param {string} id
+   *
+   * @param {string} colorwayId
    *   The ID of the colorway add-on.
-   * @return {string}
+   * @returns {string}
    *   Localized colorway group name. null if there's no such name, in which
    *   case the caller should fall back on getting a name from the add-on API.
    */
@@ -266,9 +270,9 @@ class _BuiltInThemes {
   }
 
   /**
-   * @param {string} id
+   * @param {string} colorwayId
    *   The ID of the colorway add-on.
-   * @return {string}
+   * @returns {string}
    *   L10nId for intensity value of the colorway with the provided id, null if
    *   there's none.
    */
@@ -280,9 +284,9 @@ class _BuiltInThemes {
   }
 
   /**
-   * @param {string} id
+   * @param {string} colorwayId
    *   The ID of the colorway add-on.
-   * @return {string}
+   * @returns {string}
    *   Localized description of the colorway with the provided id, null if
    *   there's none.
    */
