@@ -517,8 +517,7 @@ class FileID {
 
     if (cls == ELFCLASS32) {
       return FindElfClassSegment<ElfClass32>(elf_base, segment_type, segments);
-    }
-    if (cls == ELFCLASS64) {
+    } else if (cls == ELFCLASS64) {
       return FindElfClassSegment<ElfClass64>(elf_base, segment_type, segments);
     }
 
