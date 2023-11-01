@@ -1121,63 +1121,6 @@ DXGIYCbCrTextureHostD3D11::DXGIYCbCrTextureHostD3D11(
   mHandles[2] = aDescriptor.handleCr();
 }
 
-bool DXGIYCbCrTextureHostD3D11::EnsureTexture() {
-  RefPtr<ID3D11Device> device;
-  if (mTextures[0]) {
-    mTextures[0]->GetDevice(getter_AddRefs(device));
-    if (device == DeviceManagerDx::Get()->GetCompositorDevice()) {
-      NS_WARNING("Incompatible texture.");
-      return true;
-    }
-    mTextures[0] = nullptr;
-    mTextures[1] = nullptr;
-    mTextures[2] = nullptr;
-  }
-
-  if (!GetDevice() ||
-      GetDevice() != DeviceManagerDx::Get()->GetCompositorDevice()) {
-    NS_WARNING("No device or incompatible device.");
-    return false;
-  }
-
-  device = GetDevice();
-  RefPtr<ID3D11Texture2D> textures[3];
-
-  HRESULT hr = device->OpenSharedResource(
-      (HANDLE)mHandles[0], __uuidof(ID3D11Texture2D),
-      (void**)(ID3D11Texture2D**)getter_AddRefs(textures[0]));
-  if (FAILED(hr)) {
-    NS_WARNING("Failed to open shared texture for Y Plane");
-    return false;
-  }
-
-  hr = device->OpenSharedResource(
-      (HANDLE)mHandles[1], __uuidof(ID3D11Texture2D),
-      (void**)(ID3D11Texture2D**)getter_AddRefs(textures[1]));
-  if (FAILED(hr)) {
-    NS_WARNING("Failed to open shared texture for Cb Plane");
-    return false;
-  }
-
-  hr = device->OpenSharedResource(
-      (HANDLE)mHandles[2], __uuidof(ID3D11Texture2D),
-      (void**)(ID3D11Texture2D**)getter_AddRefs(textures[2]));
-  if (FAILED(hr)) {
-    NS_WARNING("Failed to open shared texture for Cr Plane");
-    return false;
-  }
-
-  mTextures[0] = textures[0].forget();
-  mTextures[1] = textures[1].forget();
-  mTextures[2] = textures[2].forget();
-
-  return true;
-}
-
-RefPtr<ID3D11Device> DXGIYCbCrTextureHostD3D11::GetDevice() { return nullptr; }
-
-bool DXGIYCbCrTextureHostD3D11::EnsureTextureSource() { return false; }
-
 void DXGIYCbCrTextureHostD3D11::CreateRenderTexture(
     const wr::ExternalImageId& aExternalImageId) {
   MOZ_ASSERT(mExternalImageId.isSome());
