@@ -109,6 +109,9 @@ async function doBasicDisableAndEnableTest(pref) {
     client: QuickSuggest.weather._test_merino,
   });
 
+  // Wait for keywords to be re-synced from remote settings.
+  await QuickSuggestTestUtils.forceSync();
+
   // The suggestion should be returned for a search.
   context = createContext(MerinoTestUtils.WEATHER_KEYWORD, {
     providers: [UrlbarProviderWeather.name],
@@ -245,6 +248,10 @@ add_task(async function disableAndEnable_immediate1() {
   fetchPromise = QuickSuggest.weather.waitForFetches();
   UrlbarPrefs.set("weather.featureGate", true);
   await fetchPromise;
+
+  // Wait for keywords to be re-synced from remote settings.
+  await QuickSuggestTestUtils.forceSync();
+
   assertEnabled({
     message: "On cleanup",
     hasSuggestion: true,
@@ -311,6 +318,9 @@ add_task(async function disableAndEnable_immediate2() {
     hasSuggestion: true,
     pendingFetchCount: 0,
   });
+
+  // Wait for keywords to be re-synced from remote settings.
+  await QuickSuggestTestUtils.forceSync();
 });
 
 // A fetch that doesn't return a suggestion should cause the last-fetched
@@ -751,6 +761,10 @@ add_task(async function block() {
   let fetchPromise = QuickSuggest.weather.waitForFetches();
   UrlbarPrefs.set("suggest.weather", true);
   await fetchPromise;
+
+  // Wait for keywords to be re-synced from remote settings.
+  await QuickSuggestTestUtils.forceSync();
+
   assertEnabled({
     message: "On cleanup",
     hasSuggestion: true,

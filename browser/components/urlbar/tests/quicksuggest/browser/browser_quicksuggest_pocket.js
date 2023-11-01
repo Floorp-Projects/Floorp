@@ -102,6 +102,7 @@ add_task(async function resultMenu_showLessFrequently() {
       ["browser.urlbar.pocket.showLessFrequentlyCount", 0],
     ],
   });
+  await QuickSuggestTestUtils.forceSync();
 
   await QuickSuggestTestUtils.setConfig({
     show_less_frequently_cap: 3,
@@ -165,6 +166,7 @@ add_task(async function resultMenu_showLessFrequently() {
 
   await QuickSuggestTestUtils.setConfig(QuickSuggestTestUtils.DEFAULT_CONFIG);
   await SpecialPowers.popPrefEnv();
+  await QuickSuggestTestUtils.forceSync();
 });
 
 async function doShowLessFrequently({ input, expected, keepViewOpen = false }) {
