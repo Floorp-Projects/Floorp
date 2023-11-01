@@ -6,12 +6,18 @@
     "message": "Ricerca Amazon.it"
   },
   "searchUrl": {
-    "message": "https://www.amazon.it/s"
+    "message": "https://www.amazon.it/exec/obidos/external-search/"
   },
   "searchForm": {
     "message": "https://www.amazon.it/"
   },
   "searchUrlGetParams": {
-    "message": "k={searchTerms}"
+    "message": "field-keywords={searchTerms}&ie={inputEncoding}&mode=blended&tag=firefoxit-21&sourceid=Mozilla-search"
+  },
+  "suggestUrl": {
+    "message": "https://completion.amazon.it/search/complete"
+  },
+  "suggestUrlGetParams": {
+    "message": "q={searchTerms}&search-alias=aps&mkt=35691"
   }
 }
