@@ -11715,7 +11715,7 @@
 # all the progress events on the main thread
 - name: network.send_OnDataFinished_after_progress_updates
   type: RelaxedAtomicBool
-  value: true
+  value: false
   mirror: always
 
 # Perform all network access on the socket process.
