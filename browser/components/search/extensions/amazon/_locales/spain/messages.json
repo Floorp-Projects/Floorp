@@ -6,12 +6,18 @@
     "message": "Amazon.es"
   },
   "searchUrl": {
-    "message": "https://www.amazon.es/s"
+    "message": "https://www.amazon.es/exec/obidos/external-search/"
   },
   "searchForm": {
     "message": "https://www.amazon.es/"
   },
   "searchUrlGetParams": {
-    "message": "k={searchTerms}"
+    "message": "field-keywords={searchTerms}&ie={inputEncoding}&mode=blended&tag=mozillaspain-21&sourceid=Mozilla-search"
+  },
+  "suggestUrl": {
+    "message": "https://completion.amazon.es/search/complete"
+  },
+  "suggestUrlGetParams": {
+    "message": "q={searchTerms}&search-alias=aps&mkt=44551"
   }
 }

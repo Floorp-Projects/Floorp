@@ -116,7 +116,8 @@ const test = new SearchConfigTest({
           regions: ["au"],
         },
       ],
-      noSuggestionsURL: true,
+      suggestionUrlBase: "https://completion.amazon.com.au/search/complete",
+      suggestUrlCode: "mkt=111172",
     },
     {
       domain: "amazon.ca",
@@ -127,7 +128,9 @@ const test = new SearchConfigTest({
           regions: ["ca"],
         },
       ],
-      noSuggestionsURL: true,
+      searchUrlCode: "tag=mozillacanada-20",
+      suggestionUrlBase: "https://completion.amazon.ca/search/complete",
+      suggestUrlCode: "mkt=7",
     },
     {
       domain: "amazon.cn",
@@ -137,6 +140,7 @@ const test = new SearchConfigTest({
           regions: ["cn"],
         },
       ],
+      searchUrlCode: "ix=sunray",
       noSuggestionsURL: true,
     },
     {
@@ -149,7 +153,8 @@ const test = new SearchConfigTest({
         },
       ],
       searchUrlCode: "tag=mozillajapan-fx-22",
-      noSuggestionsURL: true,
+      suggestionUrlBase: "https://completion.amazon.co.jp/search/complete",
+      suggestUrlCode: "mkt=6",
     },
     {
       domain: "amazon.co.uk",
@@ -160,7 +165,9 @@ const test = new SearchConfigTest({
           regions: ["gb", "ie"],
         },
       ],
-      noSuggestionsURL: true,
+      searchUrlCode: "tag=firefox-uk-21",
+      suggestionUrlBase: "https://completion.amazon.co.uk/search/complete",
+      suggestUrlCode: "mkt=3",
     },
     {
       domain: "amazon.com",
@@ -171,7 +178,7 @@ const test = new SearchConfigTest({
           regions: ["us"],
         },
       ],
-      noSuggestionsURL: true,
+      searchUrlCode: "tag=moz-us-20",
     },
     {
       domain: "amazon.com",
@@ -185,7 +192,7 @@ const test = new SearchConfigTest({
         },
       ],
       excluded: [{ regions: mainShippedRegions }],
-      noSuggestionsURL: true,
+      searchUrlCode: "tag=mozilla-20",
     },
     {
       domain: "amazon.de",
@@ -196,7 +203,9 @@ const test = new SearchConfigTest({
           regions: ["at", "ch", "de"],
         },
       ],
-      noSuggestionsURL: true,
+      searchUrlCode: "tag=firefox-de-21",
+      suggestionUrlBase: "https://completion.amazon.de/search/complete",
+      suggestUrlCode: "mkt=4",
     },
     {
       domain: "amazon.es",
@@ -207,7 +216,9 @@ const test = new SearchConfigTest({
           regions: ["es", "pt"],
         },
       ],
-      noSuggestionsURL: true,
+      searchUrlCode: "tag=mozillaspain-21",
+      suggestionUrlBase: "https://completion.amazon.es/search/complete",
+      suggestUrlCode: "mkt=44551",
     },
     {
       domain: "amazon.fr",
@@ -224,7 +235,9 @@ const test = new SearchConfigTest({
           },
         },
       ],
-      noSuggestionsURL: true,
+      searchUrlCode: "tag=firefox-fr-21",
+      suggestionUrlBase: "https://completion.amazon.fr/search/complete",
+      suggestUrlCode: "mkt=5",
     },
     {
       domain: "amazon.in",
@@ -238,7 +251,8 @@ const test = new SearchConfigTest({
           regions: ["in"],
         },
       ],
-      noSuggestionsURL: true,
+      suggestionUrlBase: "https://completion.amazon.in/search/complete",
+      suggestUrlCode: "mkt=44571",
     },
     {
       domain: "amazon.it",
@@ -249,7 +263,9 @@ const test = new SearchConfigTest({
           regions: ["it", "sm", "va"],
         },
       ],
-      noSuggestionsURL: true,
+      searchUrlCode: "tag=firefoxit-21",
+      suggestionUrlBase: "https://completion.amazon.it/search/complete",
+      suggestUrlCode: "mkt=35691",
     },
     {
       domain: "amazon.nl",
@@ -260,7 +276,9 @@ const test = new SearchConfigTest({
           regions: ["nl"],
         },
       ],
-      noSuggestionsURL: true,
+      searchUrlCode: "tag=mozillanether-21",
+      suggestionUrlBase: "https://completion.amazon.nl/search/complete",
+      suggestUrlCode: "mkt=328451",
     },
     {
       domain: "amazon.nl",
@@ -278,7 +296,9 @@ const test = new SearchConfigTest({
           },
         },
       ],
-      noSuggestionsURL: true,
+      searchUrlCode: "tag=mozillanether-21",
+      suggestionUrlBase: "https://completion.amazon.nl/search/complete",
+      suggestUrlCode: "mkt=328451",
     },
     {
       domain: "amazon.se",
@@ -289,7 +309,9 @@ const test = new SearchConfigTest({
           regions: ["se"],
         },
       ],
-      noSuggestionsURL: true,
+      searchUrlCode: "tag=mozillasweede-21",
+      suggestionUrlBase: "https://completion.amazon.se/search/complete",
+      suggestUrlCode: "mkt=704403121",
     },
   ],
 });
@@ -315,6 +337,7 @@ add_task(async function test_searchConfig_amazon_pre89() {
     d => d.telemetryId == "amazondotcom-us"
   );
   details.telemetryId = "amazondotcom";
+  details.searchUrlCode = "tag=mozilla-20";
 
   // nl not present due to urls that don't work.
   let availableIn = test._config.available.included;
