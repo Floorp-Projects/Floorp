@@ -986,7 +986,7 @@ export var UITour = {
    *
    * @param {ChromeWindow} aWindow the chrome window
    * @param {bool} aShouldOpen true means we should open the menu, otherwise false
-   * @param {Object} aOptions Extra config arguments, example `autohide: true`.
+   * @param {object} aOptions Extra config arguments, example `autohide: true`.
    */
   _setMenuStateForAnnotation(aWindow, aShouldOpen, aOptions = {}) {
     lazy.log.debug(
@@ -1028,8 +1028,8 @@ export var UITour = {
    * Ensure the target's visibility and the open/close states of menus for the target.
    *
    * @param {ChromeWindow} aChromeWindow The chrome window
-   * @param {Object} aTarget The target on which we show highlight or show info.
-   * @param {Object} options Extra config arguments, example `autohide: true`.
+   * @param {object} aTarget The target on which we show highlight or show info.
+   * @param {object} aOptions Extra config arguments, example `autohide: true`.
    */
   async _ensureTarget(aChromeWindow, aTarget, aOptions = {}) {
     let shouldOpenAppMenu = false;
@@ -1071,7 +1071,7 @@ export var UITour = {
    * that out and offer the overflow chevron as an alternative.
    *
    * @param {ChromeWindow} aChromeWindow The chrome window
-   * @param {Object} aTarget The target object whose node is supposed to be the anchor
+   * @param {object} aTarget The target object whose node is supposed to be the anchor
    * @type {Node}
    */
   async _correctAnchor(aChromeWindow, aTarget) {
@@ -1093,13 +1093,17 @@ export var UITour = {
   },
 
   /**
-   * @param aChromeWindow The chrome window that the highlight is in. Necessary since some targets
-   *                      are in a sub-frame so the defaultView is not the same as the chrome
-   *                      window.
-   * @param aTarget    The element to highlight.
-   * @param aEffect    (optional) The effect to use from UITour.highlightEffects or "none".
-   * @param aOptions   (optional) Extra config arguments, example `autohide: true`.
-   * @see UITour.highlightEffects
+   * @param {ChromeWindow} aChromeWindow
+   *   The chrome window that the highlight is in. Necessary since some targets
+   *   are in a sub-frame so the defaultView is not the same as the chrome
+   *   window.
+   * @param {DOMElement} aTarget
+   *   The element to highlight.
+   * @param {string} [aEffect]
+   *   The effect to use from UITour.highlightEffects or "none".
+   * @param {object} [aOptions]
+   *   Extra config arguments, example `autohide: true`.
+   *   @see UITour.highlightEffects
    */
   async showHighlight(aChromeWindow, aTarget, aEffect = "none", aOptions = {}) {
     let showHighlightElement = aAnchorEl => {
@@ -1203,13 +1207,13 @@ export var UITour = {
    *
    * @param {ChromeWindow} aChromeWindow
    * @param {Node}     aAnchor
-   * @param {String}   [aTitle=""]
-   * @param {String}   [aDescription=""]
-   * @param {String}   [aIconURL=""]
-   * @param {Object[]} [aButtons=[]]
-   * @param {Object}   [aOptions={}]
-   * @param {String}   [aOptions.closeButtonCallback]
-   * @param {String}   [aOptions.targetCallback]
+   * @param {string}   [aTitle=""]
+   * @param {string}   [aDescription=""]
+   * @param {string}   [aIconURL=""]
+   * @param {object[]} [aButtons=[]]
+   * @param {object}   [aOptions={}]
+   * @param {string}   [aOptions.closeButtonCallback]
+   * @param {string}   [aOptions.targetCallback]
    */
   async showInfo(
     aChromeWindow,
