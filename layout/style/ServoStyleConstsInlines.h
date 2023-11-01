@@ -972,9 +972,6 @@ inline const StyleImage& StyleImage::FinalImage() const {
 }
 
 template <>
-Maybe<CSSIntSize> StyleImage::GetIntrinsicSize() const;
-
-template <>
 inline bool StyleImage::IsImageRequestType() const {
   const auto& finalImage = FinalImage();
   return finalImage.IsUrl();

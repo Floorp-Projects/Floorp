@@ -1560,27 +1560,6 @@ ImageResolution StyleImage::GetResolution() const {
   return resolution;
 }
 
-template <>
-Maybe<CSSIntSize> StyleImage::GetIntrinsicSize() const {
-  imgRequestProxy* request = GetImageRequest();
-  if (!request) {
-    return Nothing();
-  }
-  RefPtr<imgIContainer> image;
-  request->GetImage(getter_AddRefs(image));
-  if (!image) {
-    return Nothing();
-  }
-  // FIXME(emilio): Seems like this should be smarter about unspecified width /
-  // height, aspect ratio, etc, but this preserves the current behavior of our
-  // only caller for now...
-  int32_t w = 0, h = 0;
-  image->GetWidth(&w);
-  image->GetHeight(&h);
-  GetResolution().ApplyTo(w, h);
-  return Some(CSSIntSize{w, h});
-}
-
 // --------------------
 // nsStyleImageLayers
 //
