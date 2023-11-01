@@ -16,7 +16,7 @@ from tools.wpt.utils import load_source
 from . import wptrunner
 
 here = os.path.dirname(__file__)
-localpaths = load_source("localpaths", os.path.abspath(os.path.join(here, os.pardir, os.pardir, "localpaths.py")))
+localpaths = load_source("localpaths", os.path.abspath(os.path.join(here, os.pardir, os.pardir, "localpaths.py")))  # type: ignore
 from ci.tc.github_checks_output import get_gh_checks_outputter  # type: ignore
 from wpt.markdown import markdown_adjust, table  # type: ignore
 
