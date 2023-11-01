@@ -162,6 +162,10 @@ export class AddonSearchEngine extends SearchEngine {
    * @returns {boolean}
    */
   get isAppProvided() {
+    if (lazy.SearchUtils.newSearchConfigEnabled) {
+      return false;
+    }
+
     return this.#isAppProvided;
   }
 

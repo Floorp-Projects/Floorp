@@ -11,6 +11,8 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
+  AppProvidedSearchEngine:
+    "resource://gre/modules/AppProvidedSearchEngine.sys.mjs",
   AddonSearchEngine: "resource://gre/modules/AddonSearchEngine.sys.mjs",
   IgnoreLists: "resource://gre/modules/IgnoreLists.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
@@ -1623,33 +1625,37 @@ export class SearchService {
 
     // We've done what we can without the add-on manager, now ensure that
     // it has finished starting before we continue.
-    await lazy.AddonManager.readyPromise;
+    if (!lazy.SearchUtils.newSearchConfigEnabled) {
+      await lazy.AddonManager.readyPromise;
+    }
 
     let newEngines = await this.#loadEnginesFromConfig(engines);
     for (let engine of newEngines) {
       this.#addEngineToStore(engine);
     }
 
-    lazy.logConsole.debug(
-      "#loadEngines: loading",
-      this.#startupExtensions.size,
-      "engines reported by AddonManager startup"
-    );
-    for (let extension of this.#startupExtensions) {
-      try {
-        await this.#installExtensionEngine(
-          extension,
-          [lazy.SearchUtils.DEFAULT_TAG],
-          true
-        );
-      } catch (ex) {
-        lazy.logConsole.error(
-          `#installExtensionEngine failed for ${extension.id}`,
-          ex
-        );
+    if (!lazy.SearchUtils.newSearchConfigEnabled) {
+      lazy.logConsole.debug(
+        "#loadEngines: loading",
+        this.#startupExtensions.size,
+        "engines reported by AddonManager startup"
+      );
+      for (let extension of this.#startupExtensions) {
+        try {
+          await this.#installExtensionEngine(
+            extension,
+            [lazy.SearchUtils.DEFAULT_TAG],
+            true
+          );
+        } catch (ex) {
+          lazy.logConsole.error(
+            `#installExtensionEngine failed for ${extension.id}`,
+            ex
+          );
+        }
       }
+      this.#startupExtensions.clear();
     }
-    this.#startupExtensions.clear();
 
     this.#loadEnginesFromPolicies();
 
@@ -3559,18 +3565,27 @@ export class SearchService {
         ? config.webExtension.locale
         : lazy.SearchUtils.DEFAULT_TAG;
 
-    let engine = new lazy.AddonSearchEngine({
-      isAppProvided: true,
-      details: {
-        extensionID: config.webExtension.id,
+    if (!lazy.SearchUtils.newSearchConfigEnabled) {
+      let engine = new lazy.AddonSearchEngine({
+        isAppProvided: true,
+        details: {
+          extensionID: config.webExtension.id,
+          locale,
+        },
+      });
+      await engine.init({
         locale,
+        config,
+      });
+      return engine;
+    }
+
+    return new lazy.AppProvidedSearchEngine({
+      details: {
+        locale,
+        config,
       },
     });
-    await engine.init({
-      locale,
-      config,
-    });
-    return engine;
   }
 
   /**

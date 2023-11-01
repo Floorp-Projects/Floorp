@@ -3,14 +3,8 @@
     {
       "params": {
         "searchUrlGetParams": [
-          {
-            "name": "pc",
-            "value": "MOZI"
-          },
-          {
-            "name": "q",
-            "value": "{searchTerms}"
-          }
+          { "name": "pc", "value": "MOZI" },
+          { "name": "q", "value": "{searchTerms}" }
         ]
       },
       "schema": 1695600005178,
@@ -99,24 +93,15 @@
                 "xh",
                 "zh-CN"
               ],
-              "startsWith": [
-                "bn",
-                "en"
-              ]
+              "startsWith": ["bn", "en"]
             }
           }
         },
         {
           "params": {
             "searchUrlGetParams": [
-              {
-                "name": "pc",
-                "value": "MOZR"
-              },
-              {
-                "name": "q",
-                "value": "{searchTerms}"
-              }
+              { "name": "pc", "value": "MOZR" },
+              { "name": "q", "value": "{searchTerms}" }
             ]
           },
           "included": {
@@ -202,142 +187,116 @@
                 "xh",
                 "zh-CN"
               ],
-              "startsWith": [
-                "bn",
-                "en"
-              ]
+              "startsWith": ["bn", "en"]
             }
           },
-          "application": {
-            "channel": [
-              "esr"
-            ]
-          },
+          "application": { "channel": ["esr"] },
           "telemetryId": "bing-esr"
         },
         {
           "params": {
             "searchUrlGetParams": [
-              {
-                "name": "ptag",
-                "value": "MOZZ0000000020"
-              },
-              {
-                "name": "pc",
-                "value": "MZSL01"
-              },
-              {
-                "name": "q",
-                "value": "{searchTerms}"
-              }
+              { "name": "ptag", "value": "MOZZ0000000020" },
+              { "name": "pc", "value": "MZSL01" },
+              { "name": "q", "value": "{searchTerms}" }
             ]
           },
           "default": "yes",
           "override": true,
           "application": {
-            "distributions": [
-              "sweetlabs-b-oem1",
-              "sweetlabs-b-r-oem1"
-            ]
+            "distributions": ["sweetlabs-b-oem1", "sweetlabs-b-r-oem1"]
           }
         },
         {
           "params": {
             "searchUrlGetParams": [
-              {
-                "name": "ptag",
-                "value": "MOZZ0000000020"
-              },
-              {
-                "name": "pc",
-                "value": "MZSL02"
-              },
-              {
-                "name": "q",
-                "value": "{searchTerms}"
-              }
+              { "name": "ptag", "value": "MOZZ0000000020" },
+              { "name": "pc", "value": "MZSL02" },
+              { "name": "q", "value": "{searchTerms}" }
             ]
           },
           "default": "yes",
           "override": true,
           "application": {
-            "distributions": [
-              "sweetlabs-b-oem2",
-              "sweetlabs-b-r-oem2"
-            ]
+            "distributions": ["sweetlabs-b-oem2", "sweetlabs-b-r-oem2"]
           }
         },
         {
           "params": {
             "searchUrlGetParams": [
-              {
-                "name": "ptag",
-                "value": "MOZZ0000000020"
-              },
-              {
-                "name": "pc",
-                "value": "MZSL03"
-              },
-              {
-                "name": "q",
-                "value": "{searchTerms}"
-              }
+              { "name": "ptag", "value": "MOZZ0000000020" },
+              { "name": "pc", "value": "MZSL03" },
+              { "name": "q", "value": "{searchTerms}" }
             ]
           },
           "default": "yes",
           "override": true,
           "application": {
-            "distributions": [
-              "sweetlabs-b-oem3",
-              "sweetlabs-b-r-oem3"
-            ]
+            "distributions": ["sweetlabs-b-oem3", "sweetlabs-b-r-oem3"]
           }
         },
         {
           "default": "yes",
-          "included": {
-            "everywhere": true
-          },
-          "application": {
-            "distributions": [
-              "acer-003",
-              "acer-004"
-            ]
-          }
+          "included": { "everywhere": true },
+          "application": { "distributions": ["acer-003", "acer-004"] }
         },
         {
           "params": {
             "searchUrlGetParams": [
-              {
-                "name": "pc",
-                "value": "MOZX"
-              },
-              {
-                "name": "q",
-                "value": "{searchTerms}"
-              }
+              { "name": "pc", "value": "MOZX" },
+              { "name": "q", "value": "{searchTerms}" }
             ]
           },
           "override": true,
-          "application": {
-            "distributions": [
-              "acer-003",
-              "acer-004"
-            ]
-          }
+          "application": { "distributions": ["acer-003", "acer-004"] }
         },
         {
           "override": true,
           "orderHint": 2500,
-          "application": {
-            "distributions": [
-              "MozillaOnline"
-            ]
-          }
+          "application": { "distributions": ["MozillaOnline"] }
         }
       ],
       "webExtension": {
-        "id": "bing@search.mozilla.org"
+        "id": "bing@search.mozilla.org",
+        "keyword": "@bing",
+        "name": "Bing",
+        "search_url": "https://www.bing.com/search",
+        "search_form": "https://www.bing.com/search",
+        "search_url_get_params": "pc=MOZI&q={searchTerms}",
+        "params": [
+          {
+            "name": "form",
+            "condition": "purpose",
+            "purpose": "contextmenu",
+            "value": "MOZCON"
+          },
+          {
+            "name": "form",
+            "condition": "purpose",
+            "purpose": "searchbar",
+            "value": "MOZSBR"
+          },
+          {
+            "name": "form",
+            "condition": "purpose",
+            "purpose": "homepage",
+            "value": "MOZSPG"
+          },
+          {
+            "name": "form",
+            "condition": "purpose",
+            "purpose": "keyword",
+            "value": "MOZLBR"
+          },
+          {
+            "name": "form",
+            "condition": "purpose",
+            "purpose": "newtab",
+            "value": "MOZTSB"
+          }
+        ],
+        "suggest_url": "https://www.bing.com/osjson.aspx",
+        "suggest_url_get_params": "query={searchTerms}&form=OSDJAS"
       },
       "id": "7ec766f6-639a-4618-91bc-33eb3d4378c6",
       "last_modified": 1695659360044
@@ -351,145 +310,67 @@
       },
       "params": {
         "searchUrlGetParams": [
-          {
-            "name": "client",
-            "value": "firefox-b-d"
-          },
-          {
-            "name": "q",
-            "value": "{searchTerms}"
-          }
+          { "name": "client", "value": "firefox-b-d" },
+          { "name": "q", "value": "{searchTerms}" }
         ]
       },
       "schema": 1687361570970,
       "appliesTo": [
         {
           "default": "yes-if-no-other",
-          "excluded": {
-            "regions": [
-              "ru",
-              "tr",
-              "by",
-              "kz"
-            ]
-          },
-          "included": {
-            "everywhere": true
-          }
+          "excluded": { "regions": ["ru", "tr", "by", "kz"] },
+          "included": { "everywhere": true }
         },
         {
           "override": true,
           "orderHint": 2000,
-          "application": {
-            "distributions": [
-              "MozillaOnline"
-            ]
-          }
+          "application": { "distributions": ["MozillaOnline"] }
         },
         {
           "params": {
             "searchUrlGetParams": [
-              {
-                "name": "client",
-                "value": "firefox-b-e"
-              },
-              {
-                "name": "q",
-                "value": "{searchTerms}"
-              }
+              { "name": "client", "value": "firefox-b-e" },
+              { "name": "q", "value": "{searchTerms}" }
             ]
           },
-          "included": {
-            "everywhere": true
-          },
-          "application": {
-            "channel": [
-              "esr"
-            ]
-          },
+          "included": { "everywhere": true },
+          "application": { "channel": ["esr"] },
           "telemetryId": "google-b-e"
         },
         {
           "params": {
-            "searchUrlGetParams": [
-              {
-                "name": "q",
-                "value": "{searchTerms}"
-              }
-            ]
+            "searchUrlGetParams": [{ "name": "q", "value": "{searchTerms}" }]
           },
           "default": "yes",
-          "included": {
-            "regions": [
-              "ru",
-              "tr",
-              "by",
-              "kz"
-            ]
-          },
+          "included": { "regions": ["ru", "tr", "by", "kz"] },
           "telemetryId": "google-com-nocodes"
         },
         {
           "default": "no",
-          "included": {
-            "locales": {
-              "matches": [
-                "zh-CN"
-              ]
-            },
-            "regions": [
-              "cn"
-            ]
-          }
+          "included": { "locales": { "matches": ["zh-CN"] }, "regions": ["cn"] }
         },
         {
           "params": {
             "searchUrlGetParams": [
-              {
-                "name": "client",
-                "value": "firefox-b-e"
-              },
-              {
-                "name": "q",
-                "value": "{searchTerms}"
-              }
+              { "name": "client", "value": "firefox-b-e" },
+              { "name": "q", "value": "{searchTerms}" }
             ]
           },
           "default": "no",
           "included": {
-            "locales": {
-              "matches": [
-                "zh-CN"
-              ]
-            },
-            "regions": [
-              "cn"
-            ]
+            "locales": { "matches": ["zh-CN"] },
+            "regions": ["cn"]
           },
-          "application": {
-            "channel": [
-              "esr"
-            ]
-          }
+          "application": { "channel": ["esr"] }
         },
         {
           "params": {
             "searchUrlGetParams": [
-              {
-                "name": "client",
-                "value": "firefox-b-1-d"
-              },
-              {
-                "name": "q",
-                "value": "{searchTerms}"
-              }
+              { "name": "client", "value": "firefox-b-1-d" },
+              { "name": "q", "value": "{searchTerms}" }
             ]
           },
-          "included": {
-            "regions": [
-              "us"
-            ]
-          },
+          "included": { "regions": ["us"] },
           "extraParams": [
             {
               "name": "channel",
@@ -509,26 +390,12 @@
         {
           "params": {
             "searchUrlGetParams": [
-              {
-                "name": "client",
-                "value": "firefox-b-1-e"
-              },
-              {
-                "name": "q",
-                "value": "{searchTerms}"
-              }
+              { "name": "client", "value": "firefox-b-1-e" },
+              { "name": "q", "value": "{searchTerms}" }
             ]
           },
-          "included": {
-            "regions": [
-              "us"
-            ]
-          },
-          "application": {
-            "channel": [
-              "esr"
-            ]
-          },
+          "included": { "regions": ["us"] },
+          "application": { "channel": ["esr"] },
           "extraParams": [
             {
               "name": "channel",
@@ -541,116 +408,111 @@
         {
           "params": {
             "searchUrlGetParams": [
-              {
-                "name": "client",
-                "value": "ubuntu"
-              },
-              {
-                "name": "q",
-                "value": "{searchTerms}"
-              }
+              { "name": "client", "value": "ubuntu" },
+              { "name": "q", "value": "{searchTerms}" }
             ]
           },
           "override": true,
-          "application": {
-            "distributions": [
-              "canonical",
-              "canonical-001"
-            ]
-          },
-          "extraParams": [
-            {
-              "name": "channel",
-              "value": "fs"
-            }
-          ],
+          "application": { "distributions": ["canonical", "canonical-001"] },
+          "extraParams": [{ "name": "channel", "value": "fs" }],
           "telemetryId": "google-canonical"
         },
         {
           "params": {
             "searchUrlGetParams": [
-              {
-                "name": "client",
-                "value": "ubuntu-sn"
-              },
-              {
-                "name": "q",
-                "value": "{searchTerms}"
-              }
+              { "name": "client", "value": "ubuntu-sn" },
+              { "name": "q", "value": "{searchTerms}" }
             ]
           },
           "override": true,
-          "application": {
-            "distributions": [
-              "canonical-002"
-            ]
-          },
-          "extraParams": [
-            {
-              "name": "channel",
-              "value": "fs"
-            }
-          ],
+          "application": { "distributions": ["canonical-002"] },
+          "extraParams": [{ "name": "channel", "value": "fs" }],
           "telemetryId": "google-ubuntu-sn"
         },
         {
           "params": {
             "searchUrlGetParams": [
-              {
-                "name": "client",
-                "value": "firefox-b-lm"
-              },
-              {
-                "name": "q",
-                "value": "{searchTerms}"
-              }
+              { "name": "client", "value": "firefox-b-lm" },
+              { "name": "q", "value": "{searchTerms}" }
             ]
           },
           "override": true,
-          "application": {
-            "distributions": [
-              "mint-001"
-            ]
-          },
+          "application": { "distributions": ["mint-001"] },
           "telemetryId": "google-b-lm"
         },
         {
           "params": {
             "searchUrlGetParams": [
-              {
-                "name": "client",
-                "value": "firefox-b-1-lm"
-              },
-              {
-                "name": "q",
-                "value": "{searchTerms}"
-              }
+              { "name": "client", "value": "firefox-b-1-lm" },
+              { "name": "q", "value": "{searchTerms}" }
             ]
           },
-          "included": {
-            "regions": [
-              "us"
-            ]
-          },
+          "included": { "regions": ["us"] },
           "override": true,
-          "application": {
-            "distributions": [
-              "mint-001"
-            ]
-          },
+          "application": { "distributions": ["mint-001"] },
           "telemetryId": "google-b-1-lm"
         }
       ],
       "extraParams": [
-        {
-          "name": "channel",
-          "pref": "google_channel_row",
-          "condition": "pref"
-        }
+        { "name": "channel", "pref": "google_channel_row", "condition": "pref" }
       ],
       "telemetryId": "google-b-d",
       "webExtension": {
-        "id": "google@search.mozilla.org"
+        "id": "google@search.mozilla.org",
+        "default_locale": "en",
+        "searchProvider": {
+          "region-by": {
+            "keyword": "@google",
+            "name": "Google",
+            "search_url": "https://www.google.by/search",
+            "search_form": "https://www.google.by/search",
+            "suggest_url": "https://www.google.by/complete/search?client=firefox&q={searchTerms}",
+            "params": [{ "name": "channel", "condition": "pref", "pref": "" }],
+            "search_url_get_params": "q={searchTerms}"
+          },
+          "region-ru": {
+            "keyword": "@google",
+            "name": "Google",
+            "search_url": "https://www.google.ru/search",
+            "search_form": "https://www.google.ru/search",
+            "suggest_url": "https://www.google.ru/complete/search?client=firefox&q={searchTerms}",
+            "params": [{ "name": "channel", "condition": "pref", "pref": "" }],
+            "search_url_get_params": "q={searchTerms}"
+          },
+          "region-kz": {
+            "keyword": "@google",
+            "name": "Google",
+            "search_url": "https://www.google.kz/search",
+            "search_form": "https://www.google.kz/search",
+            "suggest_url": "https://www.google.kz/complete/search?client=firefox&q={searchTerms}",
+            "params": [{ "name": "channel", "condition": "pref", "pref": "" }],
+            "search_url_get_params": "q={searchTerms}"
+          },
+          "en": {
+            "keyword": "@google",
+            "name": "Google",
+            "search_url": "https://www.google.com/search",
+            "search_form": "https://www.google.com/search",
+            "suggest_url": "https://www.google.com/complete/search?client=firefox&q={searchTerms}",
+            "params": [
+              {
+                "name": "channel",
+                "condition": "pref",
+                "pref": "google_channel_row"
+              }
+            ],
+            "search_url_get_params": "client=firefox-b-d&q={searchTerms}"
+          },
+          "region-tr": {
+            "keyword": "@google",
+            "name": "Google",
+            "search_url": "https://www.google.com.tr/search",
+            "search_form": "https://www.google.com.tr/search",
+            "suggest_url": "https://www.google.com.tr/complete/search?client=firefox&q={searchTerms}",
+            "params": [{ "name": "channel", "condition": "pref", "pref": "" }],
+            "search_url_get_params": "q={searchTerms}"
+          }
+        }
       },
       "suggestExtraParams": [
         {
@@ -664,29 +526,14 @@
     },
     {
       "params": {
-        "searchUrlGetParams": [
-          {
-            "name": "q",
-            "value": "{searchTerms}"
-          }
-        ]
+        "searchUrlGetParams": [{ "name": "q", "value": "{searchTerms}" }]
       },
       "schema": 1685563823313,
       "appliesTo": [
+        { "included": { "everywhere": true } },
         {
-          "included": {
-            "everywhere": true
-          }
-        },
-        {
-          "included": {
-            "everywhere": true
-          },
-          "application": {
-            "channel": [
-              "esr"
-            ]
-          },
+          "included": { "everywhere": true },
+          "application": { "channel": ["esr"] },
           "extraParams": [
             {
               "name": "t",
@@ -699,11 +546,7 @@
         },
         {
           "override": true,
-          "application": {
-            "distributions": [
-              "mint-001"
-            ]
-          },
+          "application": { "distributions": ["mint-001"] },
           "extraParams": [
             {
               "name": "t",
@@ -724,7 +567,14 @@
       ],
       "telemetryId": "ddg",
       "webExtension": {
-        "id": "ddg@search.mozilla.org"
+        "id": "ddg@search.mozilla.org",
+        "keyword": ["@duckduckgo", "@ddg"],
+        "name": "DuckDuckGo",
+        "search_url": "https://duckduckgo.com/",
+        "search_form": "https://duckduckgo.com/",
+        "search_url_get_params": "t=ffab&q={searchTerms}",
+        "suggest_url": "https://ac.duckduckgo.com/ac/",
+        "suggest_url_get_params": "q={searchTerms}&type=list"
       },
       "id": "c0b26c0e-63e6-4235-b2ce-5f16b6a8bf87",
       "last_modified": 1685625615515
@@ -732,28 +582,13 @@
     {
       "params": {
         "searchUrlGetParams": [
-          {
-            "name": "ie",
-            "value": "utf-8"
-          },
-          {
-            "name": "wd",
-            "value": "{searchTerms}"
-          }
+          { "name": "ie", "value": "utf-8" },
+          { "name": "wd", "value": "{searchTerms}" }
         ],
         "suggestUrlGetParams": [
-          {
-            "name": "ie",
-            "value": "utf-8"
-          },
-          {
-            "name": "action",
-            "value": "opensearch"
-          },
-          {
-            "name": "wd",
-            "value": "{searchTerms}"
-          }
+          { "name": "ie", "value": "utf-8" },
+          { "name": "action", "value": "opensearch" },
+          { "name": "wd", "value": "{searchTerms}" }
         ]
       },
       "schema": 1685384563001,
@@ -761,75 +596,41 @@
         {
           "params": {
             "searchUrlGetParams": [
-              {
-                "name": "ie",
-                "value": "utf-8"
-              },
-              {
-                "name": "wd",
-                "value": "{searchTerms}"
-              }
+              { "name": "ie", "value": "utf-8" },
+              { "name": "wd", "value": "{searchTerms}" }
             ],
             "suggestUrlGetParams": [
-              {
-                "name": "ie",
-                "value": "utf-8"
-              },
-              {
-                "name": "action",
-                "value": "opensearch"
-              },
-              {
-                "name": "wd",
-                "value": "{searchTerms}"
-              }
+              { "name": "ie", "value": "utf-8" },
+              { "name": "action", "value": "opensearch" },
+              { "name": "wd", "value": "{searchTerms}" }
             ]
           },
           "default": "yes",
           "override": true,
           "orderHint": 3000,
-          "application": {
-            "distributions": [
-              "MozillaOnline"
-            ]
-          }
+          "application": { "distributions": ["MozillaOnline"] }
         },
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "zh-CN"
-              ]
-            }
-          }
-        },
+        { "included": { "locales": { "matches": ["zh-CN"] } } },
         {
           "default": "yes",
-          "included": {
-            "locales": {
-              "matches": [
-                "zh-CN"
-              ]
-            },
-            "regions": [
-              "cn"
-            ]
-          }
+          "included": { "locales": { "matches": ["zh-CN"] }, "regions": ["cn"] }
         },
         {
           "default": "no",
           "override": true,
-          "application": {
-            "distributions": [
-              "acer-003",
-              "acer-004"
-            ]
-          }
+          "application": { "distributions": ["acer-003", "acer-004"] }
         }
       ],
       "telemetryId": "baidu",
       "webExtension": {
-        "id": "baidu@search.mozilla.org"
+        "id": "baidu@search.mozilla.org",
+        "keyword": ["@百度", "@baidu"],
+        "name": "百度",
+        "search_url": "https://www.baidu.com/baidu",
+        "search_form": "https://www.baidu.com/",
+        "search_url_get_params": "tn=monline_7_dg&ie=utf-8&wd={searchTerms}",
+        "suggest_url": "https://www.baidu.com/su",
+        "suggest_url_get_params": "tn=monline_7_dg&ie=utf-8&action=opensearch&wd={searchTerms}"
       },
       "id": "52dd490a-89e8-45f2-96b0-f2c72e157526",
       "last_modified": 1685453218069
@@ -837,11 +638,7 @@
     {
       "schema": 1674842123977,
       "appliesTo": [
-        {
-          "included": {
-            "everywhere": true
-          }
-        },
+        { "included": { "everywhere": true } },
         {
           "included": {
             "locales": {
@@ -918,290 +715,791 @@
               ]
             }
           },
-          "webExtension": {
-            "locales": [
-              "$USER_LOCALE"
-            ]
-          }
+          "webExtension": { "locales": ["$USER_LOCALE"] }
+        },
+        {
+          "included": { "locales": { "matches": ["be"] } },
+          "webExtension": { "locales": ["be", "be-tarask"] }
+        },
+        {
+          "included": { "locales": { "matches": ["bn", "bn-BD", "bn-IN"] } },
+          "webExtension": { "locales": ["bn"] }
+        },
+        {
+          "included": { "locales": { "matches": ["ca", "ca-valencia"] } },
+          "webExtension": { "locales": ["ca"] }
         },
         {
           "included": {
             "locales": {
-              "matches": [
-                "be"
-              ]
+              "matches": ["cak", "es-AR", "es-CL", "es-ES", "es-MX", "trs"]
             }
           },
-          "webExtension": {
-            "locales": [
-              "be",
-              "be-tarask"
-            ]
-          }
+          "webExtension": { "locales": ["es"] }
         },
         {
-          "included": {
-            "locales": {
-              "matches": [
-                "bn",
-                "bn-BD",
-                "bn-IN"
-              ]
-            }
-          },
-          "webExtension": {
-            "locales": [
-              "bn"
-            ]
-          }
+          "included": { "locales": { "matches": ["cs"] } },
+          "webExtension": { "locales": ["cz"] }
         },
         {
-          "included": {
-            "locales": {
-              "matches": [
-                "ca",
-                "ca-valencia"
-              ]
-            }
-          },
-          "webExtension": {
-            "locales": [
-              "ca"
-            ]
-          }
+          "included": { "locales": { "matches": ["ff", "fr", "son"] } },
+          "webExtension": { "locales": ["fr"] }
         },
         {
-          "included": {
-            "locales": {
-              "matches": [
-                "cak",
-                "es-AR",
-                "es-CL",
-                "es-ES",
-                "es-MX",
-                "trs"
-              ]
-            }
-          },
-          "webExtension": {
-            "locales": [
-              "es"
-            ]
-          }
+          "included": { "locales": { "matches": ["gu-IN"] } },
+          "webExtension": { "locales": ["gu"] }
         },
         {
-          "included": {
-            "locales": {
-              "matches": [
-                "cs"
-              ]
-            }
-          },
-          "webExtension": {
-            "locales": [
-              "cz"
-            ]
-          }
+          "included": { "locales": { "matches": ["hi-IN"] } },
+          "webExtension": { "locales": ["hi"] }
         },
         {
-          "included": {
-            "locales": {
-              "matches": [
-                "ff",
-                "fr",
-                "son"
-              ]
-            }
-          },
-          "webExtension": {
-            "locales": [
-              "fr"
-            ]
-          }
+          "included": { "locales": { "matches": ["hy-AM"] } },
+          "webExtension": { "locales": ["hy"] }
         },
         {
-          "included": {
-            "locales": {
-              "matches": [
-                "gu-IN"
-              ]
-            }
-          },
-          "webExtension": {
-            "locales": [
-              "gu"
-            ]
-          }
+          "included": { "locales": { "matches": ["fur", "sc"] } },
+          "webExtension": { "locales": ["it"] }
         },
         {
-          "included": {
-            "locales": {
-              "matches": [
-                "hi-IN"
-              ]
-            }
-          },
-          "webExtension": {
-            "locales": [
-              "hi"
-            ]
-          }
+          "included": { "locales": { "matches": ["ja-JP-macos", "ja"] } },
+          "webExtension": { "locales": ["ja"] }
         },
         {
-          "included": {
-            "locales": {
-              "matches": [
-                "hy-AM"
-              ]
-            }
-          },
-          "webExtension": {
-            "locales": [
-              "hy"
-            ]
-          }
+          "included": { "locales": { "matches": ["ko"] } },
+          "webExtension": { "locales": ["kr"] }
         },
         {
-          "included": {
-            "locales": {
-              "matches": [
-                "fur",
-                "sc"
-              ]
-            }
-          },
-          "webExtension": {
-            "locales": [
-              "it"
-            ]
-          }
+          "included": { "locales": { "matches": ["nb-NO"] } },
+          "webExtension": { "locales": ["NO"] }
         },
         {
-          "included": {
-            "locales": {
-              "matches": [
-                "ja-JP-macos",
-                "ja"
-              ]
-            }
-          },
-          "webExtension": {
-            "locales": [
-              "ja"
-            ]
-          }
+          "included": { "locales": { "matches": ["ne-NP"] } },
+          "webExtension": { "locales": ["ne"] }
         },
         {
-          "included": {
-            "locales": {
-              "matches": [
-                "ko"
-              ]
-            }
-          },
-          "webExtension": {
-            "locales": [
-              "kr"
-            ]
-          }
+          "included": { "locales": { "matches": ["nn-NO"] } },
+          "webExtension": { "locales": ["NN"] }
         },
         {
-          "included": {
-            "locales": {
-              "matches": [
-                "nb-NO"
-              ]
-            }
-          },
-          "webExtension": {
-            "locales": [
-              "NO"
-            ]
-          }
+          "included": { "locales": { "matches": ["pa-IN"] } },
+          "webExtension": { "locales": ["pa"] }
         },
         {
-          "included": {
-            "locales": {
-              "matches": [
-                "ne-NP"
-              ]
-            }
-          },
-          "webExtension": {
-            "locales": [
-              "ne"
-            ]
-          }
+          "included": { "locales": { "matches": ["pt-BR", "pt-PT"] } },
+          "webExtension": { "locales": ["pt"] }
         },
         {
-          "included": {
-            "locales": {
-              "matches": [
-                "nn-NO"
-              ]
-            }
-          },
-          "webExtension": {
-            "locales": [
-              "NN"
-            ]
-          }
-        },
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "pa-IN"
-              ]
-            }
-          },
-          "webExtension": {
-            "locales": [
-              "pa"
-            ]
-          }
-        },
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "pt-BR",
-                "pt-PT"
-              ]
-            }
-          },
-          "webExtension": {
-            "locales": [
-              "pt"
-            ]
-          }
-        },
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "szl"
-              ]
-            }
-          },
-          "webExtension": {
-            "locales": [
-              "pl"
-            ]
-          }
+          "included": { "locales": { "matches": ["szl"] } },
+          "webExtension": { "locales": ["pl"] }
         },
         {
           "override": true,
           "orderHint": 1000,
-          "application": {
-            "distributions": [
-              "MozillaOnline"
-            ]
-          }
+          "application": { "distributions": ["MozillaOnline"] }
         }
       ],
       "webExtension": {
-        "id": "wikipedia@search.mozilla.org"
+        "id": "wikipedia@search.mozilla.org",
+        "default_locale": "en",
+        "searchProvider": {
+          "sl": {
+            "keyword": "@wikipedia",
+            "name": "Wikipedija (sl)",
+            "search_url": "https://sl.wikipedia.org/wiki/Posebno:Iskanje",
+            "search_form": "https://sl.wikipedia.org/wiki/Posebno:Iskanje",
+            "suggest_url": "https://sl.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "sk": {
+            "keyword": "@wikipedia",
+            "name": "Wikipédia (sk)",
+            "search_url": "https://sk.wikipedia.org/wiki/Špeciálne:Hľadanie",
+            "search_form": "https://sk.wikipedia.org/wiki/Špeciálne:Hľadanie",
+            "suggest_url": "https://sk.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "ur": {
+            "keyword": "@wikipedia",
+            "name": "ویکیپیڈیا (ur)",
+            "search_url": "https://ur.wikipedia.org/wiki/خاص:تلاش",
+            "search_form": "https://ur.wikipedia.org/wiki/خاص:تلاش",
+            "suggest_url": "https://ur.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "fy-NL": {
+            "keyword": "@wikipedia",
+            "name": "Wikipedy (fy)",
+            "search_url": "https://fy.wikipedia.org/wiki/Wiki:Sykje",
+            "search_form": "https://fy.wikipedia.org/wiki/Wiki:Sykje",
+            "suggest_url": "https://fy.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "kab": {
+            "keyword": "@wikipedia",
+            "name": "Wikipedia (kab)",
+            "search_url": "https://kab.wikipedia.org/wiki/Uslig:Search",
+            "search_form": "https://kab.wikipedia.org/wiki/Uslig:Search",
+            "suggest_url": "https://kab.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "uz": {
+            "keyword": "@wikipedia",
+            "name": "Vikipediya (uz)",
+            "search_url": "https://uz.wikipedia.org/wiki/Maxsus:Search",
+            "search_form": "https://uz.wikipedia.org/wiki/Maxsus:Search",
+            "suggest_url": "https://uz.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "pl": {
+            "keyword": "@wikipedia",
+            "name": "Wikipedia (pl)",
+            "search_url": "https://pl.wikipedia.org/wiki/Specjalna:Szukaj",
+            "search_form": "https://pl.wikipedia.org/wiki/Specjalna:Szukaj",
+            "suggest_url": "https://pl.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "vi": {
+            "keyword": "@wikipedia",
+            "name": "Wikipedia (vi)",
+            "search_url": "https://vi.wikipedia.org/wiki/Đặc_biệt:Tìm_kiếm",
+            "search_form": "https://vi.wikipedia.org/wiki/Đặc_biệt:Tìm_kiếm",
+            "suggest_url": "https://vi.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "sq": {
+            "keyword": "@wikipedia",
+            "name": "Wikipedia (sq)",
+            "search_url": "https://sq.wikipedia.org/wiki/Speciale:Kërkim",
+            "search_form": "https://sq.wikipedia.org/wiki/Speciale:Kërkim",
+            "suggest_url": "https://sq.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "he": {
+            "keyword": "@wikipedia",
+            "name": "ויקיפדיה",
+            "search_url": "https://he.wikipedia.org/wiki/מיוחד:חיפוש",
+            "search_form": "https://he.wikipedia.org/wiki/מיוחד:חיפוש",
+            "suggest_url": "https://he.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "ms": {
+            "keyword": "@wikipedia",
+            "name": "Wikipedia (ms)",
+            "search_url": "https://ms.wikipedia.org/wiki/Khas:Gelintar",
+            "search_form": "https://ms.wikipedia.org/wiki/Khas:Gelintar",
+            "suggest_url": "https://ms.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "km": {
+            "keyword": "@wikipedia",
+            "name": "វីគីភីឌា (km)",
+            "search_url": "https://km.wikipedia.org/wiki/ពិសេស:ស្វែងរក",
+            "search_form": "https://km.wikipedia.org/wiki/ពិសេស:ស្វែងរក",
+            "suggest_url": "https://km.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "hy": {
+            "keyword": "@wikipedia",
+            "name": "Wikipedia (hy)",
+            "search_url": "https://hy.wikipedia.org/wiki/Սպասարկող:Որոնել",
+            "search_form": "https://hy.wikipedia.org/wiki/Սպասարկող:Որոնել",
+            "suggest_url": "https://hy.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "NN": {
+            "keyword": "@wikipedia",
+            "name": "Wikipedia (nn)",
+            "search_url": "https://nn.wikipedia.org/wiki/Spesial:Søk",
+            "search_form": "https://nn.wikipedia.org/wiki/Spesial:Søk",
+            "suggest_url": "https://nn.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "be": {
+            "keyword": "@wikipedia",
+            "name": "Вікіпедыя (be)",
+            "search_url": "https://be.wikipedia.org/wiki/Адмысловае:Search",
+            "search_form": "https://be.wikipedia.org/wiki/Адмысловае:Search",
+            "suggest_url": "https://be.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "da": {
+            "keyword": "@wikipedia",
+            "name": "Wikipedia (da)",
+            "search_url": "https://da.wikipedia.org/wiki/Speciel:Søgning",
+            "search_form": "https://da.wikipedia.org/wiki/Speciel:Søgning",
+            "suggest_url": "https://da.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "gn": {
+            "keyword": "@wikipedia",
+            "name": "Vikipetã (gn)",
+            "search_url": "https://gn.wikipedia.org/wiki/Mba'echĩchĩ:Buscar",
+            "search_form": "https://gn.wikipedia.org/wiki/Mba'echĩchĩ:Buscar",
+            "suggest_url": "https://gn.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "mr": {
+            "keyword": "@wikipedia",
+            "name": "विकिपीडिया (mr)",
+            "search_url": "https://mr.wikipedia.org/wiki/विशेष:शोधा",
+            "search_form": "https://mr.wikipedia.org/wiki/विशेष:शोधा",
+            "suggest_url": "https://mr.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "kk": {
+            "keyword": "@wikipedia",
+            "name": "Уикипедия (kk)",
+            "search_url": "https://kk.wikipedia.org/wiki/Арнайы:Іздеу",
+            "search_form": "https://kk.wikipedia.org/wiki/Арнайы:Іздеу",
+            "suggest_url": "https://kk.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "NO": {
+            "keyword": "@wikipedia",
+            "name": "Wikipedia (no)",
+            "search_url": "https://no.wikipedia.org/wiki/Spesial:Søk",
+            "search_form": "https://no.wikipedia.org/wiki/Spesial:Søk",
+            "suggest_url": "https://no.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "gu": {
+            "keyword": "@wikipedia",
+            "name": "વિકિપીડિયા (gu)",
+            "search_url": "https://gu.wikipedia.org/wiki/વિશેષ:શોધ",
+            "search_form": "https://gu.wikipedia.org/wiki/વિશેષ:શોધ",
+            "suggest_url": "https://gu.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "ja": {
+            "keyword": "@wikipedia",
+            "name": "Wikipedia (ja)",
+            "search_url": "https://ja.wikipedia.org/wiki/特別:検索",
+            "search_form": "https://ja.wikipedia.org/wiki/特別:検索",
+            "suggest_url": "https://ja.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "el": {
+            "keyword": "@wikipedia",
+            "name": "Wikipedia (el)",
+            "search_url": "https://el.wikipedia.org/wiki/Ειδικό:Αναζήτηση",
+            "search_form": "https://el.wikipedia.org/wiki/Ειδικό:Αναζήτηση",
+            "suggest_url": "https://el.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "lv": {
+            "keyword": "@wikipedia",
+            "name": "Vikipēdija",
+            "search_url": "https://lv.wikipedia.org/wiki/Special:Search",
+            "search_form": "https://lv.wikipedia.org/wiki/Special:Search",
+            "suggest_url": "https://lv.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "oc": {
+            "keyword": "@wikipedia",
+            "name": "Wikipèdia (oc)",
+            "search_url": "https://oc.wikipedia.org/wiki/Especial:Recèrca",
+            "search_form": "https://oc.wikipedia.org/wiki/Especial:Recèrca",
+            "suggest_url": "https://oc.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "it": {
+            "keyword": "@wikipedia",
+            "name": "Wikipedia (it)",
+            "search_url": "https://it.wikipedia.org/wiki/Speciale:Ricerca",
+            "search_form": "https://it.wikipedia.org/wiki/Speciale:Ricerca",
+            "suggest_url": "https://it.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "ca": {
+            "keyword": "@wikipedia",
+            "name": "Viquipèdia (ca)",
+            "search_url": "https://ca.wikipedia.org/wiki/Especial:Cerca",
+            "search_form": "https://ca.wikipedia.org/wiki/Especial:Cerca",
+            "suggest_url": "https://ca.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "is": {
+            "keyword": "@wikipedia",
+            "name": "Wikipedia (is)",
+            "search_url": "https://is.wikipedia.org/wiki/Kerfissíða:Leit",
+            "search_form": "https://is.wikipedia.org/wiki/Kerfissíða:Leit",
+            "suggest_url": "https://is.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "ia": {
+            "keyword": "@wikipedia",
+            "name": "Wikipedia (ia)",
+            "search_url": "https://ia.wikipedia.org/wiki/Special:Recerca",
+            "search_form": "https://ia.wikipedia.org/wiki/Special:Recerca",
+            "suggest_url": "https://ia.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "cz": {
+            "keyword": "@wikipedia",
+            "name": "Wikipedie (cs)",
+            "search_url": "https://cs.wikipedia.org/wiki/Speciální:Hledání",
+            "search_form": "https://cs.wikipedia.org/wiki/Speciální:Hledání",
+            "suggest_url": "https://cs.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "te": {
+            "keyword": "@wikipedia",
+            "name": "వికీపీడియా (te)",
+            "search_url": "https://te.wikipedia.org/wiki/ప్రత్యేక:అన్వేషణ",
+            "search_form": "https://te.wikipedia.org/wiki/ప్రత్యేక:అన్వేషణ",
+            "suggest_url": "https://te.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "ga-IE": {
+            "keyword": "@wikipedia",
+            "name": "Vicipéid (ga)",
+            "search_url": "https://ga.wikipedia.org/wiki/Speisialta:Search",
+            "search_form": "https://ga.wikipedia.org/wiki/Speisialta:Search",
+            "suggest_url": "https://ga.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "ru": {
+            "keyword": "@wikipedia",
+            "name": "Википедия (ru)",
+            "search_url": "https://ru.wikipedia.org/wiki/Служебная:Поиск",
+            "search_form": "https://ru.wikipedia.org/wiki/Служебная:Поиск",
+            "suggest_url": "https://ru.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "tl": {
+            "keyword": "@wikipedia",
+            "name": "Wikipedia (tl)",
+            "search_url": "https://tl.wikipedia.org/wiki/Natatangi:Maghanap",
+            "search_form": "https://tl.wikipedia.org/wiki/Natatangi:Maghanap",
+            "suggest_url": "https://tl.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "ro": {
+            "keyword": "@wikipedia",
+            "name": "Wikipedia (ro)",
+            "search_url": "https://ro.wikipedia.org/wiki/Special:Căutare",
+            "search_form": "https://ro.wikipedia.org/wiki/Special:Căutare",
+            "suggest_url": "https://ro.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "be-tarask": {
+            "keyword": "@wikipedia",
+            "name": "Вікіпэдыя (be-tarask)",
+            "search_url": "https://be-tarask.wikipedia.org/wiki/Спэцыяльныя:Пошук",
+            "search_form": "https://be-tarask.wikipedia.org/wiki/Спэцыяльныя:Пошук",
+            "suggest_url": "https://be-tarask.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "hsb": {
+            "keyword": "@wikipedia",
+            "name": "Wikipedija (hsb)",
+            "search_url": "https://hsb.wikipedia.org/wiki/Specialnje:Pytać",
+            "search_form": "https://hsb.wikipedia.org/wiki/Specialnje:Pytać",
+            "suggest_url": "https://hsb.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "zh-CN": {
+            "keyword": "@wikipedia",
+            "name": "维基百科",
+            "search_url": "https://zh.wikipedia.org/wiki/Special:搜索",
+            "search_form": "https://zh.wikipedia.org/wiki/Special:搜索",
+            "suggest_url": "https://zh.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "pt": {
+            "keyword": "@wikipedia",
+            "name": "Wikipedia (pt)",
+            "search_url": "https://pt.wikipedia.org/wiki/Especial:Pesquisar",
+            "search_form": "https://pt.wikipedia.org/wiki/Especial:Pesquisar",
+            "suggest_url": "https://pt.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "uk": {
+            "keyword": "@wikipedia",
+            "name": "Вікіпедія (uk)",
+            "search_url": "https://uk.wikipedia.org/wiki/Спеціальна:Пошук",
+            "search_form": "https://uk.wikipedia.org/wiki/Спеціальна:Пошук",
+            "suggest_url": "https://uk.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "sr": {
+            "keyword": "@wikipedia",
+            "name": "Википедија (sr)",
+            "search_url": "https://sr.wikipedia.org/wiki/Посебно:Претражи",
+            "search_form": "https://sr.wikipedia.org/wiki/Посебно:Претражи",
+            "suggest_url": "https://sr.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "ltg": {
+            "keyword": "@wikipedia",
+            "name": "Vikipedeja (ltg)",
+            "search_url": "https://ltg.wikipedia.org/wiki/Seviškuo:Search",
+            "search_form": "https://ltg.wikipedia.org/wiki/Seviškuo:Search",
+            "suggest_url": "https://ltg.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "pa": {
+            "keyword": "@wikipedia",
+            "name": "Wikipedia (pa)",
+            "search_url": "https://pa.wikipedia.org/wiki/ਖ਼ਾਸ:ਖੋਜੋ",
+            "search_form": "https://pa.wikipedia.org/wiki/ਖ਼ਾਸ:ਖੋਜੋ",
+            "suggest_url": "https://pa.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "si": {
+            "keyword": "@wikipedia",
+            "name": "Wikipedia (si)",
+            "search_url": "https://si.wikipedia.org/wiki/විශේෂ:ගවේෂණය",
+            "search_form": "https://si.wikipedia.org/wiki/විශේෂ:ගවේෂණය",
+            "suggest_url": "https://si.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "kr": {
+            "keyword": "@wikipedia",
+            "name": "위키백과 (ko)",
+            "search_url": "https://ko.wikipedia.org/wiki/특수기능:찾기",
+            "search_form": "https://ko.wikipedia.org/wiki/특수기능:찾기",
+            "suggest_url": "https://ko.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "mk": {
+            "keyword": "@wikipedia",
+            "name": "Википедија (mk)",
+            "search_url": "https://mk.wikipedia.org/wiki/Специјална:Барај",
+            "search_form": "https://mk.wikipedia.org/wiki/Специјална:Барај",
+            "suggest_url": "https://mk.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "an": {
+            "keyword": "@wikipedia",
+            "name": "Biquipedia (an)",
+            "search_url": "https://an.wikipedia.org/wiki/Especial:Mirar",
+            "search_form": "https://an.wikipedia.org/wiki/Especial:Mirar",
+            "suggest_url": "https://an.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "lij": {
+            "keyword": "@wikipedia",
+            "name": "Wikipedia (lij)",
+            "search_url": "https://lij.wikipedia.org/wiki/Speçiale:Riçerca",
+            "search_form": "https://lij.wikipedia.org/wiki/Speçiale:Riçerca",
+            "suggest_url": "https://lij.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "kn": {
+            "keyword": "@wikipedia",
+            "name": "Wikipedia (kn)",
+            "search_url": "https://kn.wikipedia.org/wiki/ವಿಶೇಷ:Search",
+            "search_form": "https://kn.wikipedia.org/wiki/ವಿಶೇಷ:Search",
+            "suggest_url": "https://kn.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "bs": {
+            "keyword": "@wikipedia",
+            "name": "Wikipedia (bs)",
+            "search_url": "https://bs.wikipedia.org/wiki/Posebno:Pretraga",
+            "search_form": "https://bs.wikipedia.org/wiki/Posebno:Pretraga",
+            "suggest_url": "https://bs.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "zh-TW": {
+            "keyword": "@wikipedia",
+            "name": "Wikipedia (zh)",
+            "search_url": "https://zh.wikipedia.org/wiki/Special:搜索",
+            "search_form": "https://zh.wikipedia.org/wiki/Special:搜索?variant=zh-tw",
+            "suggest_url": "https://zh.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search&variant=zh-tw"
+          },
+          "my": {
+            "keyword": "@wikipedia",
+            "name": "Wikipedia (my)",
+            "search_url": "https://my.wikipedia.org/wiki/Special:Search",
+            "search_form": "https://my.wikipedia.org/wiki/Special:Search",
+            "suggest_url": "https://my.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "ar": {
+            "keyword": "@wikipedia",
+            "name": "ويكيبيديا (ar)",
+            "search_url": "https://ar.wikipedia.org/wiki/خاص:بحث",
+            "search_form": "https://ar.wikipedia.org/wiki/خاص:بحث",
+            "suggest_url": "https://ar.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "gl": {
+            "keyword": "@wikipedia",
+            "name": "Wikipedia (gl)",
+            "search_url": "https://gl.wikipedia.org/wiki/Especial:Procurar",
+            "search_form": "https://gl.wikipedia.org/wiki/Especial:Procurar",
+            "suggest_url": "https://gl.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "hr": {
+            "keyword": "@wikipedia",
+            "name": "Wikipedija (hr)",
+            "search_url": "https://hr.wikipedia.org/wiki/Posebno:Traži",
+            "search_form": "https://hr.wikipedia.org/wiki/Posebno:Traži",
+            "suggest_url": "https://hr.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "hu": {
+            "keyword": "@wikipedia",
+            "name": "Wikipédia (hu)",
+            "search_url": "https://hu.wikipedia.org/wiki/Speciális:Keresés",
+            "search_form": "https://hu.wikipedia.org/wiki/Speciális:Keresés",
+            "suggest_url": "https://hu.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "nl": {
+            "keyword": "@wikipedia",
+            "name": "Wikipedia (nl)",
+            "search_url": "https://nl.wikipedia.org/wiki/Speciaal:Zoeken",
+            "search_form": "https://nl.wikipedia.org/wiki/Speciaal:Zoeken",
+            "suggest_url": "https://nl.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "bg": {
+            "keyword": "@wikipedia",
+            "name": "Уикипедия (bg)",
+            "search_url": "https://bg.wikipedia.org/wiki/Специални:Търсене",
+            "search_form": "https://bg.wikipedia.org/wiki/Специални:Търсене",
+            "suggest_url": "https://bg.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "bn": {
+            "keyword": "@wikipedia",
+            "name": "উইকিপিডিয়া (bn)",
+            "search_url": "https://bn.wikipedia.org/wiki/বিশেষ:Search",
+            "search_form": "https://bn.wikipedia.org/wiki/বিশেষ:Search",
+            "suggest_url": "https://bn.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "ne": {
+            "keyword": "@wikipedia",
+            "name": "विकिपीडिया (ne)",
+            "search_url": "https://ne.wikipedia.org/wiki/विशेष:Search",
+            "search_form": "https://ne.wikipedia.org/wiki/विशेष:Search",
+            "suggest_url": "https://ne.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "ast": {
+            "keyword": "@wikipedia",
+            "name": "Wikipedia (ast)",
+            "search_url": "https://ast.wikipedia.org/wiki/Especial:Gueta",
+            "search_form": "https://ast.wikipedia.org/wiki/Especial:Gueta",
+            "suggest_url": "https://ast.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "af": {
+            "keyword": "@wikipedia",
+            "name": "Wikipedia (af)",
+            "search_url": "https://af.wikipedia.org/wiki/Spesiaal:Soek",
+            "search_form": "https://af.wikipedia.org/wiki/Spesiaal:Soek",
+            "suggest_url": "https://af.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "hi": {
+            "keyword": "@wikipedia",
+            "name": "विकिपीडिया (hi)",
+            "search_url": "https://hi.wikipedia.org/wiki/विशेष:खोज",
+            "search_form": "https://hi.wikipedia.org/wiki/विशेष:खोज",
+            "suggest_url": "https://hi.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "ka": {
+            "keyword": "@wikipedia",
+            "name": "ვიკიპედია (ka)",
+            "search_url": "https://ka.wikipedia.org/wiki/სპეციალური:ძიება",
+            "search_form": "https://ka.wikipedia.org/wiki/სპეციალური:ძიება",
+            "suggest_url": "https://ka.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "de": {
+            "keyword": "@wikipedia",
+            "name": "Wikipedia (de)",
+            "search_url": "https://de.wikipedia.org/wiki/Spezial:Suche",
+            "search_form": "https://de.wikipedia.org/wiki/Spezial:Suche",
+            "suggest_url": "https://de.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "az": {
+            "keyword": "@wikipedia",
+            "name": "Vikipediya (az)",
+            "search_url": "https://az.wikipedia.org/wiki/Xüsusi:Axtar",
+            "search_form": "https://az.wikipedia.org/wiki/Xüsusi:Axtar",
+            "suggest_url": "https://az.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "gd": {
+            "keyword": "@wikipedia",
+            "name": "Uicipeid (gd)",
+            "search_url": "https://gd.wikipedia.org/wiki/Sònraichte:Search",
+            "search_form": "https://gd.wikipedia.org/wiki/Sònraichte:Search",
+            "suggest_url": "https://gd.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "br": {
+            "keyword": "@wikipedia",
+            "name": "Wikipedia (br)",
+            "search_url": "https://br.wikipedia.org/wiki/Dibar:Klask",
+            "search_form": "https://br.wikipedia.org/wiki/Dibar:Klask",
+            "suggest_url": "https://br.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "fi": {
+            "keyword": "@wikipedia",
+            "name": "Wikipedia (fi)",
+            "search_url": "https://fi.wikipedia.org/wiki/Toiminnot:Haku",
+            "search_form": "https://fi.wikipedia.org/wiki/Toiminnot:Haku",
+            "suggest_url": "https://fi.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "eo": {
+            "keyword": "@wikipedia",
+            "name": "Vikipedio (eo)",
+            "search_url": "https://eo.wikipedia.org/wiki/Specialaĵo:Serĉi",
+            "search_form": "https://eo.wikipedia.org/wiki/Specialaĵo:Serĉi",
+            "suggest_url": "https://eo.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "id": {
+            "keyword": "@wikipedia",
+            "name": "Wikipedia (id)",
+            "search_url": "https://id.wikipedia.org/wiki/Istimewa:Pencarian",
+            "search_form": "https://id.wikipedia.org/wiki/Istimewa:Pencarian",
+            "suggest_url": "https://id.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "fr": {
+            "keyword": "@wikipedia",
+            "name": "Wikipédia (fr)",
+            "search_url": "https://fr.wikipedia.org/wiki/Spécial:Recherche",
+            "search_form": "https://fr.wikipedia.org/wiki/Spécial:Recherche",
+            "suggest_url": "https://fr.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "sv-SE": {
+            "keyword": "@wikipedia",
+            "name": "Wikipedia (sv)",
+            "search_url": "https://sv.wikipedia.org/wiki/Special:Sök",
+            "search_form": "https://sv.wikipedia.org/wiki/Special:Sök",
+            "suggest_url": "https://sv.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "es": {
+            "keyword": "@wikipedia",
+            "name": "Wikipedia (es)",
+            "search_url": "https://es.wikipedia.org/wiki/Especial:Buscar",
+            "search_form": "https://es.wikipedia.org/wiki/Especial:Buscar",
+            "suggest_url": "https://es.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "et": {
+            "keyword": "@wikipedia",
+            "name": "Vikipeedia (et)",
+            "search_url": "https://et.wikipedia.org/wiki/Eri:Otsimine",
+            "search_form": "https://et.wikipedia.org/wiki/Eri:Otsimine",
+            "suggest_url": "https://et.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "en": {
+            "keyword": "@wikipedia",
+            "name": "Wikipedia (en)",
+            "search_url": "https://en.wikipedia.org/wiki/Special:Search",
+            "search_form": "https://en.wikipedia.org/wiki/Special:Search",
+            "suggest_url": "https://en.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "fa": {
+            "keyword": "@wikipedia",
+            "name": "ویکی‌پدیا (fa)",
+            "search_url": "https://fa.wikipedia.org/wiki/ویژه:جستجو",
+            "search_form": "https://fa.wikipedia.org/wiki/ویژه:جستجو",
+            "suggest_url": "https://fa.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "lt": {
+            "keyword": "@wikipedia",
+            "name": "Wikipedia (lt)",
+            "search_url": "https://lt.wikipedia.org/wiki/Specialus:Paieška",
+            "search_form": "https://lt.wikipedia.org/wiki/Specialus:Paieška",
+            "suggest_url": "https://lt.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "cy": {
+            "keyword": "@wikipedia",
+            "name": "Wicipedia (cy)",
+            "search_url": "https://cy.wikipedia.org/wiki/Arbennig:Search",
+            "search_form": "https://cy.wikipedia.org/wiki/Arbennig:Search",
+            "suggest_url": "https://cy.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "eu": {
+            "keyword": "@wikipedia",
+            "name": "Wikipedia (eu)",
+            "search_url": "https://eu.wikipedia.org/wiki/Berezi:Bilatu",
+            "search_form": "https://eu.wikipedia.org/wiki/Berezi:Bilatu",
+            "suggest_url": "https://eu.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "lo": {
+            "keyword": "@wikipedia",
+            "name": "ວິກິພີເດຍ (lo)",
+            "search_url": "https://lo.wikipedia.org/wiki/ພິເສດ:ຊອກຫາ",
+            "search_form": "https://lo.wikipedia.org/wiki/ພິເສດ:ຊອກຫາ",
+            "suggest_url": "https://lo.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "rm": {
+            "keyword": "@wikipedia",
+            "name": "Wikipedia (rm)",
+            "search_url": "https://rm.wikipedia.org/wiki/Spezial:Search",
+            "search_form": "https://rm.wikipedia.org/wiki/Spezial:Search",
+            "suggest_url": "https://rm.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "dsb": {
+            "keyword": "@wikipedia",
+            "name": "Wikipedija (dsb)",
+            "search_url": "https://dsb.wikipedia.org/wiki/Specialne:Pytaś",
+            "search_form": "https://dsb.wikipedia.org/wiki/Specialne:Pytaś",
+            "suggest_url": "https://dsb.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "ta": {
+            "keyword": "@wikipedia",
+            "name": "விக்கிப்பீடியா (ta)",
+            "search_url": "https://ta.wikipedia.org/wiki/சிறப்பு:Search",
+            "search_form": "https://ta.wikipedia.org/wiki/சிறப்பு:Search",
+            "suggest_url": "https://ta.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "th": {
+            "keyword": "@wikipedia",
+            "name": "วิกิพีเดีย",
+            "search_url": "https://th.wikipedia.org/wiki/พิเศษ:ค้นหา",
+            "search_form": "https://th.wikipedia.org/wiki/พิเศษ:ค้นหา",
+            "suggest_url": "https://th.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "tr": {
+            "keyword": "@wikipedia",
+            "name": "Wikipedia (tr)",
+            "search_url": "https://tr.wikipedia.org/wiki/Özel:Ara",
+            "search_form": "https://tr.wikipedia.org/wiki/Özel:Ara",
+            "suggest_url": "https://tr.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          },
+          "wo": {
+            "keyword": "@wikipedia",
+            "name": "Wikipedia (wo)",
+            "search_url": "https://wo.wikipedia.org/wiki/Jagleel:Ceet",
+            "search_form": "https://wo.wikipedia.org/wiki/Jagleel:Ceet",
+            "suggest_url": "https://wo.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}",
+            "search_url_get_params": "search={searchTerms}&sourceid=Mozilla-search"
+          }
+        }
       },
       "id": "3f3beb1d-e32e-40a4-b6ed-56741803e1d8",
       "last_modified": 1675353179510
@@ -1210,389 +1508,265 @@
       "schema": 1674842117992,
       "appliesTo": [
         {
-          "included": {
-            "locales": {
-              "matches": [
-                "en-US"
-              ]
-            },
-            "regions": [
-              "us"
-            ]
-          }
+          "included": { "locales": { "matches": ["en-US"] }, "regions": ["us"] }
         },
         {
           "included": {
             "locales": {
-              "matches": [
-                "an",
-                "ast",
-                "ca",
-                "ca-valencia",
-                "es-ES",
-                "eu",
-                "gl"
-              ]
+              "matches": ["an", "ast", "ca", "ca-valencia", "es-ES", "eu", "gl"]
             }
           },
           "telemetryId": "ebay-es",
-          "webExtension": {
-            "locales": [
-              "es"
-            ]
-          }
+          "webExtension": { "locales": ["es"] }
         },
         {
-          "included": {
-            "locales": {
-              "matches": [
-                "br",
-                "fr",
-                "wo"
-              ]
-            }
-          },
+          "included": { "locales": { "matches": ["br", "fr", "wo"] } },
           "telemetryId": "ebay-fr",
-          "webExtension": {
-            "locales": [
-              "fr"
-            ]
-          }
+          "webExtension": { "locales": ["fr"] }
         },
         {
           "included": {
-            "locales": {
-              "matches": [
-                "br",
-                "en-US",
-                "fr",
-                "wo"
-              ]
-            },
-            "regions": [
-              "be"
-            ]
+            "locales": { "matches": ["br", "en-US", "fr", "wo"] },
+            "regions": ["be"]
           },
           "telemetryId": "ebay-be",
-          "webExtension": {
-            "locales": [
-              "be"
-            ]
-          }
+          "webExtension": { "locales": ["be"] }
         },
         {
           "included": {
-            "locales": {
-              "matches": [
-                "br",
-                "en-US",
-                "fr",
-                "wo"
-              ]
-            },
-            "regions": [
-              "ca"
-            ]
+            "locales": { "matches": ["br", "en-US", "fr", "wo"] },
+            "regions": ["ca"]
           },
           "telemetryId": "ebay-ca",
-          "webExtension": {
-            "locales": [
-              "ca"
-            ]
-          }
+          "webExtension": { "locales": ["ca"] }
         },
         {
           "included": {
-            "locales": {
-              "matches": [
-                "br",
-                "en-US",
-                "fr",
-                "wo"
-              ]
-            },
-            "regions": [
-              "ch"
-            ]
+            "locales": { "matches": ["br", "en-US", "fr", "wo"] },
+            "regions": ["ch"]
           },
           "telemetryId": "ebay-ch",
-          "webExtension": {
-            "locales": [
-              "ch"
-            ]
-          }
+          "webExtension": { "locales": ["ch"] }
+        },
+        {
+          "included": { "locales": { "matches": ["cy", "en-GB", "gd"] } },
+          "telemetryId": "ebay-uk",
+          "webExtension": { "locales": ["uk"] }
+        },
+        {
+          "included": { "locales": { "matches": ["sco"] }, "regions": ["gb"] },
+          "telemetryId": "ebay-uk",
+          "webExtension": { "locales": ["uk"] }
         },
         {
           "included": {
-            "locales": {
-              "matches": [
-                "cy",
-                "en-GB",
-                "gd"
-              ]
-            }
+            "locales": { "matches": ["en-US"] },
+            "regions": ["gb"]
           },
           "telemetryId": "ebay-uk",
-          "webExtension": {
-            "locales": [
-              "uk"
-            ]
-          }
+          "webExtension": { "locales": ["uk"] }
         },
         {
           "included": {
-            "locales": {
-              "matches": [
-                "sco"
-              ]
-            },
-            "regions": [
-              "gb"
-            ]
-          },
-          "telemetryId": "ebay-uk",
-          "webExtension": {
-            "locales": [
-              "uk"
-            ]
-          }
-        },
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "en-US"
-              ]
-            },
-            "regions": [
-              "gb"
-            ]
-          },
-          "telemetryId": "ebay-uk",
-          "webExtension": {
-            "locales": [
-              "uk"
-            ]
-          }
-        },
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "cy",
-                "en-GB",
-                "en-US",
-                "gd"
-              ]
-            },
-            "regions": [
-              "au"
-            ]
+            "locales": { "matches": ["cy", "en-GB", "en-US", "gd"] },
+            "regions": ["au"]
           },
           "telemetryId": "ebay-au",
-          "webExtension": {
-            "locales": [
-              "au"
-            ]
-          }
+          "webExtension": { "locales": ["au"] }
         },
         {
           "included": {
-            "locales": {
-              "matches": [
-                "cy",
-                "en-GB",
-                "en-US",
-                "gd"
-              ]
-            },
-            "regions": [
-              "ie"
-            ]
+            "locales": { "matches": ["cy", "en-GB", "en-US", "gd"] },
+            "regions": ["ie"]
           },
           "telemetryId": "ebay-ie",
-          "webExtension": {
-            "locales": [
-              "ie"
-            ]
-          }
+          "webExtension": { "locales": ["ie"] }
         },
         {
-          "included": {
-            "locales": {
-              "matches": [
-                "de",
-                "dsb",
-                "hsb"
-              ]
-            }
-          },
+          "included": { "locales": { "matches": ["de", "dsb", "hsb"] } },
           "telemetryId": "ebay-de",
-          "webExtension": {
-            "locales": [
-              "de"
-            ]
-          }
+          "webExtension": { "locales": ["de"] }
         },
         {
           "included": {
-            "locales": {
-              "matches": [
-                "de",
-                "dsb",
-                "hsb"
-              ]
-            },
-            "regions": [
-              "at"
-            ]
+            "locales": { "matches": ["de", "dsb", "hsb"] },
+            "regions": ["at"]
           },
           "telemetryId": "ebay-at",
-          "webExtension": {
-            "locales": [
-              "at"
-            ]
-          }
+          "webExtension": { "locales": ["at"] }
         },
         {
           "included": {
-            "locales": {
-              "matches": [
-                "de",
-                "dsb",
-                "hsb"
-              ]
-            },
-            "regions": [
-              "ch"
-            ]
+            "locales": { "matches": ["de", "dsb", "hsb"] },
+            "regions": ["ch"]
           },
           "telemetryId": "ebay-ch",
-          "webExtension": {
-            "locales": [
-              "ch"
-            ]
-          }
+          "webExtension": { "locales": ["ch"] }
         },
         {
-          "included": {
-            "locales": {
-              "matches": [
-                "en-CA"
-              ]
-            }
-          },
+          "included": { "locales": { "matches": ["en-CA"] } },
           "telemetryId": "ebay-ca",
-          "webExtension": {
-            "locales": [
-              "ca"
-            ]
-          }
+          "webExtension": { "locales": ["ca"] }
+        },
+        {
+          "included": { "locales": { "matches": ["fy-NL", "nl"] } },
+          "telemetryId": "ebay-nl",
+          "webExtension": { "locales": ["nl"] }
         },
         {
           "included": {
-            "locales": {
-              "matches": [
-                "fy-NL",
-                "nl"
-              ]
-            }
+            "locales": { "matches": ["en-US"] },
+            "regions": ["nl"]
           },
           "telemetryId": "ebay-nl",
-          "webExtension": {
-            "locales": [
-              "nl"
-            ]
-          }
+          "webExtension": { "locales": ["nl"] }
         },
         {
           "included": {
-            "locales": {
-              "matches": [
-                "en-US"
-              ]
-            },
-            "regions": [
-              "nl"
-            ]
-          },
-          "telemetryId": "ebay-nl",
-          "webExtension": {
-            "locales": [
-              "nl"
-            ]
-          }
-        },
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "fy-NL",
-                "nl"
-              ]
-            },
-            "regions": [
-              "be"
-            ]
+            "locales": { "matches": ["fy-NL", "nl"] },
+            "regions": ["be"]
           },
           "telemetryId": "ebay-be",
-          "webExtension": {
-            "locales": [
-              "be"
-            ]
-          }
+          "webExtension": { "locales": ["be"] }
         },
         {
-          "included": {
-            "locales": {
-              "matches": [
-                "ga-IE"
-              ]
-            }
-          },
+          "included": { "locales": { "matches": ["ga-IE"] } },
           "telemetryId": "ebay-ie",
-          "webExtension": {
-            "locales": [
-              "ie"
-            ]
-          }
+          "webExtension": { "locales": ["ie"] }
         },
         {
-          "included": {
-            "locales": {
-              "matches": [
-                "fur",
-                "it",
-                "lij",
-                "sc"
-              ]
-            }
-          },
+          "included": { "locales": { "matches": ["fur", "it", "lij", "sc"] } },
           "telemetryId": "ebay-it",
-          "webExtension": {
-            "locales": [
-              "it"
-            ]
-          }
+          "webExtension": { "locales": ["it"] }
         },
         {
-          "included": {
-            "locales": {
-              "matches": [
-                "rm"
-              ]
-            }
-          },
+          "included": { "locales": { "matches": ["rm"] } },
           "telemetryId": "ebay-ch",
-          "webExtension": {
-            "locales": [
-              "ch"
-            ]
-          }
+          "webExtension": { "locales": ["ch"] }
         }
       ],
       "webExtension": {
-        "id": "ebay@search.mozilla.org"
+        "id": "ebay@search.mozilla.org",
+        "default_locale": "en",
+        "searchProvider": {
+          "be": {
+            "keyword": "@ebay",
+            "name": "eBay",
+            "search_url": "https://www.befr.ebay.be/sch/",
+            "search_form": "https://www.befr.ebay.be/",
+            "search_url_get_params": "toolid=20004&campid=5338192028&mkevt=1&mkcid=1&mkrid=1553-53471-19255-0&kw={searchTerms}",
+            "suggest_url": "https://autosug.ebay.com/autosug",
+            "suggest_url_get_params": "sId=23&fmt=osr&kwd={searchTerms}"
+          },
+          "ch": {
+            "keyword": "@ebay",
+            "name": "eBay",
+            "search_url": "https://www.ebay.ch/sch/",
+            "search_form": "https://www.ebay.ch/",
+            "search_url_get_params": "toolid=20004&campid=5338192028&mkevt=1&mkcid=1&mkrid=5222-53480-19255-0&kw={searchTerms}",
+            "suggest_url": "https://autosug.ebay.com/autosug",
+            "suggest_url_get_params": "sId=193&fmt=osr&kwd={searchTerms}"
+          },
+          "it": {
+            "keyword": "@ebay",
+            "name": "eBay",
+            "search_url": "https://www.ebay.it/sch/",
+            "search_form": "https://www.ebay.it/",
+            "search_url_get_params": "toolid=20004&campid=5338192028&mkevt=1&mkcid=1&mkrid=724-53478-19255-0&kw={searchTerms}",
+            "suggest_url": "https://autosug.ebay.com/autosug",
+            "suggest_url_get_params": "sId=101&fmt=osr&kwd={searchTerms}"
+          },
+          "ca": {
+            "keyword": "@ebay",
+            "name": "eBay",
+            "search_url": "https://www.ebay.ca/sch/",
+            "search_form": "https://www.ebay.ca/",
+            "search_url_get_params": "toolid=20004&campid=5338192028&mkevt=1&mkcid=1&mkrid=706-53473-19255-0&kw={searchTerms}",
+            "suggest_url": "https://autosug.ebay.com/autosug",
+            "suggest_url_get_params": "sId=2&fmt=osr&kwd={searchTerms}"
+          },
+          "uk": {
+            "keyword": "@ebay",
+            "name": "eBay",
+            "search_url": "https://www.ebay.co.uk/sch/",
+            "search_form": "https://www.ebay.co.uk/",
+            "search_url_get_params": "toolid=20004&campid=5338192028&mkevt=1&mkcid=1&mkrid=710-53481-19255-0&kw={searchTerms}",
+            "suggest_url": "https://autosug.ebay.com/autosug",
+            "suggest_url_get_params": "sId=3&fmt=osr&kwd={searchTerms}"
+          },
+          "au": {
+            "keyword": "@ebay",
+            "name": "eBay",
+            "search_url": "https://www.ebay.com.au/sch/",
+            "search_form": "https://www.ebay.com.au/",
+            "search_url_get_params": "toolid=20004&campid=5338192028&mkevt=1&mkcid=1&mkrid=705-53470-19255-0&kw={searchTerms}",
+            "suggest_url": "https://autosug.ebay.com/autosug",
+            "suggest_url_get_params": "sId=15&fmt=osr&kwd={searchTerms}"
+          },
+          "nl": {
+            "keyword": "@ebay",
+            "name": "eBay",
+            "search_url": "https://www.ebay.nl/sch/",
+            "search_form": "https://www.ebay.nl/",
+            "search_url_get_params": "toolid=20004&campid=5338192028&mkevt=1&mkcid=1&mkrid=1346-53482-19255-0&kw={searchTerms}",
+            "suggest_url": "https://autosug.ebay.com/autosug",
+            "suggest_url_get_params": "sId=146&fmt=osr&kwd={searchTerms}"
+          },
+          "at": {
+            "keyword": "@ebay",
+            "name": "eBay",
+            "search_url": "https://www.ebay.at/sch/",
+            "search_form": "https://www.ebay.at/",
+            "search_url_get_params": "toolid=20004&campid=5338192028&mkevt=1&mkcid=1&mkrid=5221-53469-19255-0&kw={searchTerms}",
+            "suggest_url": "https://autosug.ebay.com/autosug",
+            "suggest_url_get_params": "sId=16&fmt=osr&kwd={searchTerms}"
+          },
+          "de": {
+            "keyword": "@ebay",
+            "name": "eBay",
+            "search_url": "https://www.ebay.de/sch/",
+            "search_form": "https://www.ebay.de/",
+            "search_url_get_params": "toolid=20004&campid=5338192028&mkevt=1&mkcid=1&mkrid=707-53477-19255-0&kw={searchTerms}",
+            "suggest_url": "https://autosug.ebay.com/autosug",
+            "suggest_url_get_params": "sId=77&fmt=osr&kwd={searchTerms}"
+          },
+          "fr": {
+            "keyword": "@ebay",
+            "name": "eBay",
+            "search_url": "https://www.ebay.fr/sch/",
+            "search_form": "https://www.ebay.fr/",
+            "search_url_get_params": "toolid=20004&campid=5338192028&mkevt=1&mkcid=1&mkrid=709-53476-19255-0&kw={searchTerms}",
+            "suggest_url": "https://autosug.ebay.com/autosug",
+            "suggest_url_get_params": "sId=71&fmt=osr&kwd={searchTerms}"
+          },
+          "es": {
+            "keyword": "@ebay",
+            "name": "eBay",
+            "search_url": "https://www.ebay.es/sch/",
+            "search_form": "https://www.ebay.es/",
+            "search_url_get_params": "toolid=20004&campid=5338192028&mkevt=1&mkcid=1&mkrid=1185-53479-19255-0&kw={searchTerms}",
+            "suggest_url": "https://autosug.ebay.com/autosug",
+            "suggest_url_get_params": "sId=186&fmt=osr&kwd={searchTerms}"
+          },
+          "en": {
+            "keyword": "@ebay",
+            "name": "eBay",
+            "search_url": "https://www.ebay.com/sch/",
+            "search_form": "https://www.ebay.com/",
+            "search_url_get_params": "toolid=20004&campid=5338192028&mkevt=1&mkcid=1&mkrid=711-53200-19255-0&kw={searchTerms}",
+            "suggest_url": "https://autosug.ebay.com/autosug",
+            "suggest_url_get_params": "sId=0&fmt=osr&kwd={searchTerms}"
+          },
+          "ie": {
+            "keyword": "@ebay",
+            "name": "eBay",
+            "search_url": "https://www.ebay.ie/sch/",
+            "search_form": "https://www.ebay.ie/",
+            "search_url_get_params": "toolid=20004&campid=5338192028&mkevt=1&mkcid=1&mkrid=5282-53468-19255-0&kw={searchTerms}",
+            "suggest_url": "https://autosug.ebay.com/autosug",
+            "suggest_url_get_params": "sId=205&fmt=osr&kwd={searchTerms}"
+          }
+        }
       },
       "id": "cbe309e0-f638-4996-9dfc-ea5c19ef16e9",
       "last_modified": 1675353179507
@@ -1601,30 +1775,14 @@
       "schema": 1673982699337,
       "appliesTo": [
         {
-          "included": {
-            "regions": [
-              "us"
-            ]
-          },
-          "application": {
-            "minVersion": "89.0a1"
-          },
+          "included": { "regions": ["us"] },
+          "application": { "minVersion": "89.0a1" },
           "telemetryId": "amazondotcom-us",
-          "webExtension": {
-            "locales": [
-              "us"
-            ]
-          }
+          "webExtension": { "locales": ["us"] }
         },
         {
-          "included": {
-            "regions": [
-              "us"
-            ]
-          },
-          "application": {
-            "maxVersion": "89.0a1"
-          }
+          "included": { "regions": ["us"] },
+          "application": { "maxVersion": "89.0a1" }
         },
         {
           "excluded": {
@@ -1702,7 +1860,26 @@
       ],
       "telemetryId": "amazondotcom",
       "webExtension": {
-        "id": "amazondotcom@search.mozilla.org"
+        "id": "amazondotcom@search.mozilla.org",
+        "default_locale": "en",
+        "searchProvider": {
+          "us": {
+            "keyword": "@amazon",
+            "name": "Amazon.com",
+            "search_url": "https://www.amazon.com/exec/obidos/external-search/",
+            "search_form": "https://www.amazon.com/exec/obidos/external-search/",
+            "suggest_url": "https://completion.amazon.com/search/complete?q={searchTerms}&search-alias=aps&mkt=1",
+            "search_url_get_params": "field-keywords={searchTerms}&ie={inputEncoding}&mode=blended&tag=moz-us-20&sourceid=Mozilla-search"
+          },
+          "en": {
+            "keyword": "@amazon",
+            "name": "Amazon.com",
+            "search_url": "https://www.amazon.com/exec/obidos/external-search/",
+            "search_form": "https://www.amazon.com/exec/obidos/external-search/",
+            "suggest_url": "https://completion.amazon.com/search/complete?q={searchTerms}&search-alias=aps&mkt=1",
+            "search_url_get_params": "field-keywords={searchTerms}&ie={inputEncoding}&mode=blended&tag=mozilla-20&sourceid=Mozilla-search"
+          }
+        }
       },
       "id": "071c671c-7c1b-469d-a771-ab16ff6e8beb",
       "last_modified": 1674147734519
@@ -1725,201 +1902,179 @@
                 "ur"
               ]
             },
-            "regions": [
-              "in"
-            ]
+            "regions": ["in"]
           },
           "telemetryId": "amazon-in",
-          "webExtension": {
-            "locales": [
-              "in"
-            ]
-          }
+          "webExtension": { "locales": ["in"] }
         },
         {
-          "included": {
-            "regions": [
-              "fr",
-              "mc"
-            ]
-          },
+          "included": { "regions": ["fr", "mc"] },
           "telemetryId": "amazon-france",
-          "webExtension": {
-            "locales": [
-              "france"
-            ]
-          }
+          "webExtension": { "locales": ["france"] }
         },
         {
-          "included": {
-            "locales": {
-              "matches": [
-                "fr"
-              ]
-            },
-            "regions": [
-              "be"
-            ]
-          },
+          "included": { "locales": { "matches": ["fr"] }, "regions": ["be"] },
           "telemetryId": "amazon-france",
-          "webExtension": {
-            "locales": [
-              "france"
-            ]
-          }
+          "webExtension": { "locales": ["france"] }
         },
         {
-          "included": {
-            "regions": [
-              "jp"
-            ]
-          },
+          "included": { "regions": ["jp"] },
           "telemetryId": "amazon-jp",
-          "webExtension": {
-            "locales": [
-              "jp"
-            ]
-          }
+          "webExtension": { "locales": ["jp"] }
         },
         {
-          "included": {
-            "regions": [
-              "it",
-              "sm",
-              "va"
-            ]
-          },
+          "included": { "regions": ["it", "sm", "va"] },
           "telemetryId": "amazon-it",
-          "webExtension": {
-            "locales": [
-              "it"
-            ]
-          }
+          "webExtension": { "locales": ["it"] }
         },
         {
-          "included": {
-            "regions": [
-              "at",
-              "ch",
-              "de"
-            ]
-          },
+          "included": { "regions": ["at", "ch", "de"] },
           "telemetryId": "amazon-de",
-          "webExtension": {
-            "locales": [
-              "de"
-            ]
-          }
+          "webExtension": { "locales": ["de"] }
         },
         {
-          "included": {
-            "regions": [
-              "gb",
-              "ie"
-            ]
-          },
+          "included": { "regions": ["gb", "ie"] },
           "telemetryId": "amazon-en-GB",
-          "webExtension": {
-            "locales": [
-              "en-GB"
-            ]
-          }
+          "webExtension": { "locales": ["en-GB"] }
         },
         {
-          "included": {
-            "regions": [
-              "au"
-            ]
-          },
+          "included": { "regions": ["au"] },
           "telemetryId": "amazon-au",
-          "webExtension": {
-            "locales": [
-              "au"
-            ]
-          }
+          "webExtension": { "locales": ["au"] }
         },
         {
-          "included": {
-            "regions": [
-              "ca"
-            ]
-          },
+          "included": { "regions": ["ca"] },
           "telemetryId": "amazon-ca",
-          "webExtension": {
-            "locales": [
-              "ca"
-            ]
-          }
+          "webExtension": { "locales": ["ca"] }
         },
         {
-          "included": {
-            "regions": [
-              "nl"
-            ]
-          },
-          "application": {
-            "minVersion": "89.0a1"
-          },
+          "included": { "regions": ["nl"] },
+          "application": { "minVersion": "89.0a1" },
           "telemetryId": "amazon-nl",
-          "webExtension": {
-            "locales": [
-              "nl"
-            ]
-          }
+          "webExtension": { "locales": ["nl"] }
         },
         {
-          "excluded": {
-            "locales": {
-              "matches": [
-                "fr"
-              ]
-            }
-          },
-          "included": {
-            "regions": [
-              "be"
-            ]
-          },
-          "application": {
-            "minVersion": "89.0a1"
-          },
+          "excluded": { "locales": { "matches": ["fr"] } },
+          "included": { "regions": ["be"] },
+          "application": { "minVersion": "89.0a1" },
           "telemetryId": "amazon-nl",
-          "webExtension": {
-            "locales": [
-              "nl"
-            ]
-          }
+          "webExtension": { "locales": ["nl"] }
         },
         {
-          "included": {
-            "regions": [
-              "es",
-              "pt"
-            ]
-          },
+          "included": { "regions": ["es", "pt"] },
           "telemetryId": "amazon-es",
-          "webExtension": {
-            "locales": [
-              "spain"
-            ]
-          }
+          "webExtension": { "locales": ["spain"] }
         },
         {
-          "included": {
-            "regions": [
-              "se"
-            ]
-          },
+          "included": { "regions": ["se"] },
           "telemetryId": "amazon-se",
-          "webExtension": {
-            "locales": [
-              "sweden"
-            ]
-          }
+          "webExtension": { "locales": ["sweden"] }
         }
       ],
       "webExtension": {
-        "id": "amazon@search.mozilla.org"
+        "id": "amazon@search.mozilla.org",
+        "default_locale": "au",
+        "searchProvider": {
+          "sweden": {
+            "keyword": "@amazon",
+            "name": "Amazon.se",
+            "search_url": "https://www.amazon.se/exec/obidos/external-search/",
+            "search_form": "https://www.amazon.se/",
+            "search_url_get_params": "field-keywords={searchTerms}&ie={inputEncoding}&mode=blended&tag=mozillasweede-21&sourceid=Mozilla-search",
+            "suggest_url": "https://completion.amazon.se/search/complete",
+            "suggest_url_get_params": "q={searchTerms}&search-alias=aps&mkt=704403121"
+          },
+          "france": {
+            "keyword": "@amazon",
+            "name": "Amazon.fr",
+            "search_url": "https://www.amazon.fr/exec/obidos/external-search/",
+            "search_form": "https://www.amazon.fr/",
+            "search_url_get_params": "field-keywords={searchTerms}&ie={inputEncoding}&mode=blended&tag=firefox-fr-21&sourceid=Mozilla-search",
+            "suggest_url": "https://completion.amazon.fr/search/complete",
+            "suggest_url_get_params": "q={searchTerms}&search-alias=aps&mkt=5"
+          },
+          "in": {
+            "keyword": "@amazon",
+            "name": "Amazon.in",
+            "search_url": "https://www.amazon.in/exec/obidos/external-search/",
+            "search_form": "https://www.amazon.in/",
+            "search_url_get_params": "field-keywords={searchTerms}&ie={inputEncoding}&mode=blended&sourceid=Mozilla-search",
+            "suggest_url": "https://completion.amazon.in/search/complete",
+            "suggest_url_get_params": "q={searchTerms}&search-alias=aps&mkt=44571"
+          },
+          "spain": {
+            "keyword": "@amazon",
+            "name": "Amazon.es",
+            "search_url": "https://www.amazon.es/exec/obidos/external-search/",
+            "search_form": "https://www.amazon.es/",
+            "search_url_get_params": "field-keywords={searchTerms}&ie={inputEncoding}&mode=blended&tag=mozillaspain-21&sourceid=Mozilla-search",
+            "suggest_url": "https://completion.amazon.es/search/complete",
+            "suggest_url_get_params": "q={searchTerms}&search-alias=aps&mkt=44551"
+          },
+          "it": {
+            "keyword": "@amazon",
+            "name": "Amazon.it",
+            "search_url": "https://www.amazon.it/exec/obidos/external-search/",
+            "search_form": "https://www.amazon.it/",
+            "search_url_get_params": "field-keywords={searchTerms}&ie={inputEncoding}&mode=blended&tag=firefoxit-21&sourceid=Mozilla-search",
+            "suggest_url": "https://completion.amazon.it/search/complete",
+            "suggest_url_get_params": "q={searchTerms}&search-alias=aps&mkt=35691"
+          },
+          "ca": {
+            "keyword": "@amazon",
+            "name": "Amazon.ca",
+            "search_url": "https://www.amazon.ca/exec/obidos/external-search/",
+            "search_form": "https://www.amazon.ca/exec/obidos/external-search/",
+            "search_url_get_params": "field-keywords={searchTerms}&ie={inputEncoding}&mode=blended&tag=mozillacanada-20&sourceid=Mozilla-search",
+            "suggest_url": "https://completion.amazon.ca/search/complete",
+            "suggest_url_get_params": "q={searchTerms}&search-alias=aps&mkt=7"
+          },
+          "en-GB": {
+            "keyword": "@amazon",
+            "name": "Amazon.co.uk",
+            "search_url": "https://www.amazon.co.uk/exec/obidos/external-search/",
+            "search_form": "https://www.amazon.co.uk/",
+            "search_url_get_params": "field-keywords={searchTerms}&ie={inputEncoding}&mode=blended&tag=firefox-uk-21&sourceid=Mozilla-search",
+            "suggest_url": "https://completion.amazon.co.uk/search/complete",
+            "suggest_url_get_params": "q={searchTerms}&search-alias=aps&mkt=3"
+          },
+          "au": {
+            "keyword": "@amazon",
+            "name": "Amazon.com.au",
+            "search_url": "https://www.amazon.com.au/exec/obidos/external-search/",
+            "search_form": "https://www.amazon.com.au/exec/obidos/external-search/",
+            "search_url_get_params": "field-keywords={searchTerms}&ie={inputEncoding}&mode=blended",
+            "suggest_url": "https://completion.amazon.com.au/search/complete",
+            "suggest_url_get_params": "q={searchTerms}&search-alias=aps&mkt=111172"
+          },
+          "nl": {
+            "keyword": "@amazon",
+            "name": "Amazon.nl",
+            "search_url": "https://www.amazon.nl/gp/search",
+            "search_form": "https://www.amazon.nl/",
+            "search_url_get_params": "ie={inputEncoding}&tag=mozillanether-21&index=aps&keywords={searchTerms}",
+            "suggest_url": "https://completion.amazon.nl/search/complete",
+            "suggest_url_get_params": "q={searchTerms}&search-alias=aps&mkt=328451"
+          },
+          "de": {
+            "keyword": "@amazon",
+            "name": "Amazon.de",
+            "search_url": "https://www.amazon.de/exec/obidos/external-search/",
+            "search_form": "https://www.amazon.de/",
+            "search_url_get_params": "field-keywords={searchTerms}&ie={inputEncoding}&mode=blended&tag=firefox-de-21&sourceid=Mozilla-search",
+            "suggest_url": "https://completion.amazon.de/search/complete",
+            "suggest_url_get_params": "q={searchTerms}&search-alias=aps&mkt=4"
+          },
+          "jp": {
+            "keyword": "@amazon",
+            "name": "Amazon.co.jp",
+            "search_url": "https://www.amazon.co.jp/exec/obidos/external-search/",
+            "search_form": "https://www.amazon.co.jp/",
+            "search_url_get_params": "field-keywords={searchTerms}&mode=blended&tag=mozillajapan-fx-22&sourceid=Mozilla-search",
+            "suggest_url": "https://completion.amazon.co.jp/search/complete",
+            "suggest_url_get_params": "q={searchTerms}&search-alias=aps&mkt=6"
+          }
+        }
       },
       "id": "a620b506-c3ae-4332-97bb-190a73868580",
       "last_modified": 1674147734517
@@ -1927,31 +2082,34 @@
     {
       "schema": 1623235246279,
       "appliesTo": [
-        {
-          "included": {
-            "regions": [
-              "cn"
-            ]
-          }
-        },
+        { "included": { "regions": ["cn"] } },
         {
           "override": true,
           "orderHint": 1500,
-          "application": {
-            "distributions": [
-              "MozillaOnline"
-            ]
-          },
-          "webExtension": {
-            "locales": [
-              "mozillaonline"
-            ]
-          }
+          "application": { "distributions": ["MozillaOnline"] },
+          "webExtension": { "locales": ["mozillaonline"] }
         }
       ],
       "telemetryId": "amazondotcn",
       "webExtension": {
-        "id": "amazondotcn@search.mozilla.org"
+        "id": "amazondotcn@search.mozilla.org",
+        "default_locale": "default",
+        "searchProvider": {
+          "default": {
+            "keyword": "@amazon",
+            "name": "亚马逊",
+            "search_url": "https://www.amazon.cn/mn/searchApp",
+            "search_form": "https://www.amazon.cn/",
+            "search_url_get_params": "ix=sunray&pageletid=headsearch&searchType=&Go.x=0&Go.y=0&bestSaleNum=0&keywords={searchTerms}"
+          },
+          "mozillaonline": {
+            "keyword": "@amazon",
+            "name": "亚马逊",
+            "search_url": "https://www.amazon.cn/gp/search",
+            "search_form": "https://www.amazon.cn/",
+            "search_url_get_params": "ie=UTF8&camp=536&creative=3200&index=aps&linkCode=ur2&tag=mozilla&keywords={searchTerms}"
+          }
+        }
       },
       "id": "ccb137f1-7733-464c-bb70-037be4ba2529",
       "last_modified": 1623330482152
@@ -1959,19 +2117,14 @@
     {
       "schema": 1613395976252,
       "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "pl",
-                "szl"
-              ]
-            }
-          }
-        }
+        { "included": { "locales": { "matches": ["pl", "szl"] } } }
       ],
       "webExtension": {
-        "id": "wolnelektury-pl@search.mozilla.org"
+        "id": "wolnelektury-pl@search.mozilla.org",
+        "name": "Wolne Lektury",
+        "search_url": "https://wolnelektury.pl/szukaj/?q={searchTerms}",
+        "search_form": "https://wolnelektury.pl",
+        "suggest_url": "https://wolnelektury.pl/katalog/jtags/?mozhint=1&q={searchTerms}"
       },
       "id": "1960ccff-4aab-48cd-9bf5-0eb2adde76f9",
       "last_modified": 1613587855073
@@ -1979,19 +2132,14 @@
     {
       "schema": 1613395970632,
       "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "pl",
-                "szl"
-              ]
-            }
-          }
-        }
+        { "included": { "locales": { "matches": ["pl", "szl"] } } }
       ],
       "webExtension": {
-        "id": "allegro-pl@search.mozilla.org"
+        "id": "allegro-pl@search.mozilla.org",
+        "name": "Allegro",
+        "search_url": "https://allegro.pl/listing",
+        "search_form": "https://allegro.pl",
+        "search_url_get_params": "string={searchTerms}&sourceid=Mozilla-search"
       },
       "id": "d915b6bc-bbae-47a6-8323-1b2990ad0e57",
       "last_modified": 1613587855067
@@ -2001,72 +2149,69 @@
       "appliesTo": [
         {
           "default": "yes",
-          "included": {
-            "everywhere": true
-          },
-          "application": {
-            "distributions": [
-              "gmx"
-            ]
-          },
-          "webExtension": {
-            "locales": [
-              "de",
-              "shopping"
-            ]
-          }
+          "included": { "everywhere": true },
+          "application": { "distributions": ["gmx"] },
+          "webExtension": { "locales": ["de", "shopping"] }
         },
         {
           "default": "yes",
-          "included": {
-            "everywhere": true
-          },
-          "application": {
-            "distributions": [
-              "gmxcouk"
-            ]
-          },
-          "webExtension": {
-            "locales": [
-              "en-GB"
-            ]
-          }
+          "included": { "everywhere": true },
+          "application": { "distributions": ["gmxcouk"] },
+          "webExtension": { "locales": ["en-GB"] }
         },
         {
           "default": "yes",
-          "included": {
-            "everywhere": true
-          },
-          "application": {
-            "distributions": [
-              "gmxes"
-            ]
-          },
-          "webExtension": {
-            "locales": [
-              "es"
-            ]
-          }
+          "included": { "everywhere": true },
+          "application": { "distributions": ["gmxes"] },
+          "webExtension": { "locales": ["es"] }
         },
         {
           "default": "yes",
-          "included": {
-            "everywhere": true
-          },
-          "application": {
-            "distributions": [
-              "gmxfr"
-            ]
-          },
-          "webExtension": {
-            "locales": [
-              "fr"
-            ]
-          }
+          "included": { "everywhere": true },
+          "application": { "distributions": ["gmxfr"] },
+          "webExtension": { "locales": ["fr"] }
         }
       ],
       "webExtension": {
-        "id": "gmx@search.mozilla.org"
+        "id": "gmx@search.mozilla.org",
+        "default_locale": "de",
+        "searchProvider": {
+          "shopping": {
+            "name": "GMX Shopping",
+            "search_url": "https://shopping.gmx.net/",
+            "suggest_url": "https://shopping.gmx.net/suggest/ca/",
+            "search_url_get_params": "q={searchTerms}&origin=br_osd",
+            "suggest_url_get_params": "q={searchTerms}"
+          },
+          "en-GB": {
+            "name": "GMX Search",
+            "search_url": "https://go.gmx.co.uk/br/moz_search_web/",
+            "suggest_url": "https://suggestplugin.gmx.co.uk/s",
+            "search_url_get_params": "enc=UTF-8&q={searchTerms}",
+            "suggest_url_get_params": "q={searchTerms}&brand=gmxcouk&origin=moz_splugin_ff&enc=UTF-8"
+          },
+          "de": {
+            "name": "GMX Suche",
+            "search_url": "https://go.gmx.net/br/moz_search_web/",
+            "suggest_url": "https://suggestplugin.ui-portal.de/s",
+            "search_url_get_params": "q={searchTerms}&enc=UTF-8",
+            "suggest_url_get_params": "q={searchTerms}&brand=gmx&origin=br_splugin_ff_sg"
+          },
+          "fr": {
+            "name": "GMX - Recherche web",
+            "search_url": "https://go.gmx.fr/br/moz_search_web/",
+            "suggest_url": "https://suggestplugin.gmx.fr/s",
+            "search_url_get_params": "enc=UTF-8&q={searchTerms}",
+            "suggest_url_get_params": "q={searchTerms}&brand=gmxfr&origin=moz_splugin_ff&enc=UTF-8"
+          },
+          "es": {
+            "name": "GMX - Búsqueda web",
+            "search_url": "https://go.gmx.es/br/moz_search_web/",
+            "suggest_url": "https://suggestplugin.gmx.es/s",
+            "search_url_get_params": "enc=UTF-8&q={searchTerms}",
+            "suggest_url_get_params": "q={searchTerms}&brand=gmxes&origin=moz_splugin_ff&enc=UTF-8"
+          }
+        }
       },
       "id": "1571e5fc-17e4-492b-b6d2-106d8669b6c8",
       "last_modified": 1597327602800
@@ -2075,24 +2220,19 @@
       "schema": 1588177655532,
       "appliesTo": [
         {
-          "included": {
-            "locales": {
-              "matches": [
-                "fr"
-              ]
-            }
-          },
+          "included": { "locales": { "matches": ["fr"] } },
           "orderHint": 1500,
-          "application": {
-            "distributions": [
-              "qwant-001",
-              "qwant-002"
-            ]
-          }
+          "application": { "distributions": ["qwant-001", "qwant-002"] }
         }
       ],
       "webExtension": {
-        "id": "qwantjr@search.mozilla.org"
+        "id": "qwantjr@search.mozilla.org",
+        "name": "Qwant Junior",
+        "search_url": "https://www.qwantjunior.com/",
+        "search_url_get_params": "q={searchTerms}&client=firefoxqwant",
+        "suggest_url": "https://api.qwant.com/egp/suggest/",
+        "suggest_url_get_params": "q={searchTerms}&client=opensearch",
+        "search_form": "https://www.qwantjunior.com/"
       },
       "id": "f59fddbc-580b-4672-9cda-32941ceec730",
       "last_modified": 1589299342073
@@ -2100,41 +2240,29 @@
     {
       "schema": 1588177653636,
       "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "fr"
-              ]
-            }
-          }
-        },
+        { "included": { "locales": { "matches": ["fr"] } } },
         {
           "params": {
             "searchUrlGetParams": [
-              {
-                "name": "client",
-                "value": "firefoxqwant"
-              },
-              {
-                "name": "q",
-                "value": "{searchTerms}"
-              }
+              { "name": "client", "value": "firefoxqwant" },
+              { "name": "q", "value": "{searchTerms}" }
             ]
           },
           "default": "yes",
           "override": true,
           "orderHint": 2000,
-          "application": {
-            "distributions": [
-              "qwant-001",
-              "qwant-002"
-            ]
-          }
+          "application": { "distributions": ["qwant-001", "qwant-002"] }
         }
       ],
       "webExtension": {
-        "id": "qwant@search.mozilla.org"
+        "id": "qwant@search.mozilla.org",
+        "keyword": "@qwant",
+        "name": "Qwant",
+        "search_url": "https://www.qwant.com/",
+        "search_url_get_params": "client=brz-moz&q={searchTerms}",
+        "suggest_url": "https://api.qwant.com/api/suggest/",
+        "suggest_url_get_params": "client=opensearch&q={searchTerms}",
+        "search_form": "https://www.qwant.com/"
       },
       "id": "f59fddbc-580b-4672-9cda-32941ceec729",
       "last_modified": 1589299342030
@@ -2142,45 +2270,27 @@
     {
       "schema": 1588177651820,
       "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "cs"
-              ]
-            }
-          }
-        },
+        { "included": { "locales": { "matches": ["cs"] } } },
         {
           "params": {
             "searchUrlGetParams": [
-              {
-                "name": "sourceid",
-                "value": "FF_3"
-              },
-              {
-                "name": "q",
-                "value": "{searchTerms}"
-              }
+              { "name": "sourceid", "value": "FF_3" },
+              { "name": "q", "value": "{searchTerms}" }
             ]
           },
           "default": "yes",
-          "included": {
-            "locales": {
-              "matches": [
-                "cs"
-              ]
-            }
-          },
-          "application": {
-            "distributions": [
-              "seznam"
-            ]
-          }
+          "included": { "locales": { "matches": ["cs"] } },
+          "application": { "distributions": ["seznam"] }
         }
       ],
       "webExtension": {
-        "id": "seznam-cz@search.mozilla.org"
+        "id": "seznam-cz@search.mozilla.org",
+        "name": "Seznam",
+        "search_url": "https://search.seznam.cz/",
+        "search_form": "https://search.seznam.cz/",
+        "search_url_get_params": "q={searchTerms}&sourceid=firefox",
+        "suggest_url": "https://suggest.seznam.cz/fulltext_ff",
+        "suggest_url_get_params": "phrase={searchTerms}"
       },
       "id": "c50dcc87-0192-4461-bb88-17a55ba181c7",
       "last_modified": 1589299342027
@@ -2190,18 +2300,17 @@
       "appliesTo": [
         {
           "default": "yes",
-          "included": {
-            "everywhere": true
-          },
-          "application": {
-            "distributions": [
-              "1und1"
-            ]
-          }
+          "included": { "everywhere": true },
+          "application": { "distributions": ["1und1"] }
         }
       ],
       "webExtension": {
-        "id": "1und1@search.mozilla.org"
+        "id": "1und1@search.mozilla.org",
+        "name": "1&1 Suche",
+        "search_url": "https://go.1und1.de/br/moz_search_web/",
+        "search_url_get_params": "q={searchTerms}&enc=UTF-8",
+        "suggest_url": "https://suggestplugin.ui-portal.de/s",
+        "suggest_url_get_params": "q={searchTerms}&brand=1und1&origin=br_splugin_ff_sg"
       },
       "id": "e98c663d-408d-4901-9666-66e67a3084b4",
       "last_modified": 1589299342018
@@ -2211,18 +2320,17 @@
       "appliesTo": [
         {
           "default": "yes",
-          "included": {
-            "everywhere": true
-          },
-          "application": {
-            "distributions": [
-              "webde"
-            ]
-          }
+          "included": { "everywhere": true },
+          "application": { "distributions": ["webde"] }
         }
       ],
       "webExtension": {
-        "id": "webde@search.mozilla.org"
+        "id": "webde@search.mozilla.org",
+        "name": "WEB.DE Suche",
+        "search_url": "https://go.web.de/br/moz_search_web/",
+        "search_url_get_params": "q={searchTerms}&enc=UTF-8",
+        "suggest_url": "https://suggestplugin.ui-portal.de/s",
+        "suggest_url_get_params": "q={searchTerms}&brand=webde&origin=br_splugin_ff_sg"
       },
       "id": "613d1391-4be5-4296-80e2-cfb740de6607",
       "last_modified": 1589299342015
@@ -2232,18 +2340,17 @@
       "appliesTo": [
         {
           "default": "yes",
-          "included": {
-            "everywhere": true
-          },
-          "application": {
-            "distributions": [
-              "mail.com"
-            ]
-          }
+          "included": { "everywhere": true },
+          "application": { "distributions": ["mail.com"] }
         }
       ],
       "webExtension": {
-        "id": "mailcom@search.mozilla.org"
+        "id": "mailcom@search.mozilla.org",
+        "name": "mail.com search",
+        "search_url": "https://go.mail.com/br/moz_search_web/",
+        "search_url_get_params": "q={searchTerms}&enc=UTF-8",
+        "suggest_url": "https://search.mail.com/SuggestSearch/s",
+        "suggest_url_get_params": "q={searchTerms}&brand=mailcom&origin=br_splugin_ff_sg"
       },
       "id": "62d232d5-304e-4c35-a4da-46626a9b54c2",
       "last_modified": 1589299342012
@@ -2251,38 +2358,28 @@
     {
       "schema": 1586273556552,
       "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "ja-JP-macos",
-                "ja"
-              ]
-            }
-          }
-        }
+        { "included": { "locales": { "matches": ["ja-JP-macos", "ja"] } } }
       ],
       "webExtension": {
-        "id": "rakuten@search.mozilla.org"
+        "id": "rakuten@search.mozilla.org",
+        "name": "楽天市場",
+        "encoding": "EUC-JP",
+        "search_url": "https://pt.afl.rakuten.co.jp/c/013ca98b.cd7c5f0c/",
+        "search_form": "https://www.rakuten.co.jp/",
+        "search_url_get_params": "sitem={searchTerms}&sv=2&p=0"
       },
       "id": "8551c432-c68d-4934-836e-98513ae4b4a5",
       "last_modified": 1586375636481
     },
     {
       "schema": 1582890773480,
-      "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "az"
-              ]
-            }
-          }
-        }
-      ],
+      "appliesTo": [{ "included": { "locales": { "matches": ["az"] } } }],
       "webExtension": {
-        "id": "azerdict@search.mozilla.org"
+        "id": "azerdict@search.mozilla.org",
+        "name": "Azerdict",
+        "search_url": "https://azerdict.com/english/",
+        "search_form": "https://azerdict.com/",
+        "search_url_get_params": "word={searchTerms}"
       },
       "id": "c1a6845f-015e-4e67-bc64-6e39a843643f",
       "last_modified": 1583937832363
@@ -2290,133 +2387,96 @@
     {
       "schema": 1582890776067,
       "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "nb-NO",
-                "nn-NO"
-              ]
-            }
-          }
-        }
+        { "included": { "locales": { "matches": ["nb-NO", "nn-NO"] } } }
       ],
       "webExtension": {
-        "id": "bok-NO@search.mozilla.org"
+        "id": "bok-NO@search.mozilla.org",
+        "name": "Ordbok",
+        "search_url": "https://ordbok.uib.no/perl/ordbok.cgi",
+        "search_form": "https://ordbok.uib.no/",
+        "search_url_get_params": "OPP={searchTerms}&sourceid=Mozilla-search"
       },
       "id": "64ce88a6-fd55-48d1-85a9-724c753f5721",
       "last_modified": 1583937832356
     },
     {
       "schema": 1582890777775,
-      "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "sl"
-              ]
-            }
-          }
-        }
-      ],
+      "appliesTo": [{ "included": { "locales": { "matches": ["sl"] } } }],
       "webExtension": {
-        "id": "ceneji@search.mozilla.org"
+        "id": "ceneji@search.mozilla.org",
+        "name": "Ceneje.si",
+        "search_url": "https://www.ceneje.si/search_new.aspx",
+        "search_form": "https://www.ceneje.si",
+        "search_url_get_params": "q={searchTerms}&FF-SearchBox=1"
       },
       "id": "d908d622-0387-4d36-8098-1a9e32c0c697",
       "last_modified": 1583937832352
     },
     {
       "schema": 1582890779439,
-      "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "vi"
-              ]
-            }
-          }
-        }
-      ],
+      "appliesTo": [{ "included": { "locales": { "matches": ["vi"] } } }],
       "webExtension": {
-        "id": "coccoc@search.mozilla.org"
+        "id": "coccoc@search.mozilla.org",
+        "name": "Cốc Cốc",
+        "search_url": "https://coccoc.com/search",
+        "search_url_get_params": "query={searchTerms}&s=ff&utm_source=firefox",
+        "suggest_url": "https://coccoc.com/composer/autocomplete",
+        "suggest_url_get_params": "of=b&q={searchTerms}&s=ff"
       },
       "id": "4e447f5a-9eb1-436e-8de1-9e4b4b709efb",
       "last_modified": 1583937832348
     },
     {
       "schema": 1582890780276,
-      "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "ko"
-              ]
-            }
-          }
-        }
-      ],
+      "appliesTo": [{ "included": { "locales": { "matches": ["ko"] } } }],
       "webExtension": {
-        "id": "daum-kr@search.mozilla.org"
+        "id": "daum-kr@search.mozilla.org",
+        "name": "다음",
+        "search_url": "https://search.daum.net/search",
+        "search_form": "https://search.daum.net",
+        "search_url_get_params": "q={searchTerms}&w=tot&nil_ch=ffsr",
+        "suggest_url": "https://suggest.search.daum.net/sushi/opensearch/pc",
+        "suggest_url_get_params": "q={searchTerms}&DA=JU2"
       },
       "id": "0cdc44be-173a-4ca8-96e3-43e3000da75d",
       "last_modified": 1583937832346
     },
     {
       "schema": 1582890782823,
-      "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "de"
-              ]
-            }
-          }
-        }
-      ],
+      "appliesTo": [{ "included": { "locales": { "matches": ["de"] } } }],
       "webExtension": {
-        "id": "ecosia@search.mozilla.org"
+        "id": "ecosia@search.mozilla.org",
+        "name": "Ecosia",
+        "search_url": "https://www.ecosia.org/search",
+        "search_form": "https://www.ecosia.org/",
+        "search_url_get_params": "tt=mzl&q={searchTerms}",
+        "suggest_url": "https://ac.ecosia.org/autocomplete",
+        "suggest_url_get_params": "type=list&q={searchTerms}"
       },
       "id": "1fc1b257-3e6b-4cfb-a323-64c1429bcf51",
       "last_modified": 1583937832339
     },
     {
       "schema": 1582890784534,
-      "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "hr"
-              ]
-            }
-          }
-        }
-      ],
+      "appliesTo": [{ "included": { "locales": { "matches": ["hr"] } } }],
       "webExtension": {
-        "id": "eudict@search.mozilla.org"
+        "id": "eudict@search.mozilla.org",
+        "name": "EUdict Eng->Cro",
+        "search_url": "https://eudict.com",
+        "search_form": "https://eudict.com?lang=engcro",
+        "search_url_get_params": "lang=engcro&word={searchTerms}"
       },
       "id": "5cd4781c-2906-4fe7-9d4b-ea9ddbdc2c3b",
       "last_modified": 1583937832334
     },
     {
       "schema": 1582890785390,
-      "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "gd"
-              ]
-            }
-          }
-        }
-      ],
+      "appliesTo": [{ "included": { "locales": { "matches": ["gd"] } } }],
       "webExtension": {
-        "id": "faclair-beag@search.mozilla.org"
+        "id": "faclair-beag@search.mozilla.org",
+        "name": "Am Faclair Beag",
+        "search_url": "https://www.faclair.com/",
+        "search_url_get_params": "txtSearch={searchTerms}"
       },
       "id": "6491a2b8-c487-4798-a817-a0fd08b40ee2",
       "last_modified": 1583937832332
@@ -2424,19 +2484,14 @@
     {
       "schema": 1582890787961,
       "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "nn-NO",
-                "nb-NO"
-              ]
-            }
-          }
-        }
+        { "included": { "locales": { "matches": ["nn-NO", "nb-NO"] } } }
       ],
       "webExtension": {
-        "id": "gulesider-NO@search.mozilla.org"
+        "id": "gulesider-NO@search.mozilla.org",
+        "name": "Gule sider",
+        "search_url": "https://www.gulesider.no/search",
+        "search_form": "https://www.gulesider.no/",
+        "search_url_get_params": "what=all&cmpid=fre_partner_fire_gssbtop&q={searchTerms}"
       },
       "id": "f458e78b-9128-4027-b344-538f5661c148",
       "last_modified": 1583937832325
@@ -2444,59 +2499,43 @@
     {
       "schema": 1582890791315,
       "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "de",
-                "dsb",
-                "hsb",
-                "rm"
-              ]
-            }
-          }
-        }
+        { "included": { "locales": { "matches": ["de", "dsb", "hsb", "rm"] } } }
       ],
       "webExtension": {
-        "id": "leo_ende_de@search.mozilla.org"
+        "id": "leo_ende_de@search.mozilla.org",
+        "name": "LEO Eng-Deu",
+        "search_url": "https://dict.leo.org/englisch-deutsch/{searchTerms}",
+        "search_form": "https://dict.leo.org",
+        "suggest_url": "https://dict.leo.org/dictQuery/m-query/conf/ende/query.conf/strlist.json",
+        "suggest_url_get_params": "q={searchTerms}&sort=PLa&shortQuery=undefined&noDescription=undefined&noQueryURLs=undefined"
       },
       "id": "03d60939-2c92-45b0-874f-11c8e6d0c2b9",
       "last_modified": 1583937832316
     },
     {
       "schema": 1582890793008,
-      "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "th"
-              ]
-            }
-          }
-        }
-      ],
+      "appliesTo": [{ "included": { "locales": { "matches": ["th"] } } }],
       "webExtension": {
-        "id": "longdo@search.mozilla.org"
+        "id": "longdo@search.mozilla.org",
+        "name": "พจนานุกรม ลองดู",
+        "search_url": "https://dict.longdo.org/",
+        "search_form": "https://dict.longdo.org/",
+        "search_url_get_params": "search={searchTerms}&src=moz",
+        "suggest_url": "https://search.longdo.com/Suggest/HeadSearch",
+        "suggest_url_get_params": "ds=head&fxjson=1&key={searchTerms}"
       },
       "id": "8b4f2887-0c24-49ce-b467-2ba8cc9a4945",
       "last_modified": 1583937832311
     },
     {
       "schema": 1582890794722,
-      "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "cs"
-              ]
-            }
-          }
-        }
-      ],
+      "appliesTo": [{ "included": { "locales": { "matches": ["cs"] } } }],
       "webExtension": {
-        "id": "mapy-cz@search.mozilla.org"
+        "id": "mapy-cz@search.mozilla.org",
+        "name": "Mapy.cz",
+        "search_url": "https://www.mapy.cz/",
+        "search_form": "https://www.mapy.cz/",
+        "search_url_get_params": "q={searchTerms}&sourceid=Searchmodule_3"
       },
       "id": "9a404348-0998-42c4-9d87-45ef47672c95",
       "last_modified": 1583937832306
@@ -2505,183 +2544,136 @@
       "schema": 1582890796393,
       "appliesTo": [
         {
-          "included": {
-            "locales": {
-              "matches": [
-                "es-AR"
-              ]
-            }
-          },
-          "webExtension": {
-            "locales": [
-              "ar"
-            ]
-          }
+          "included": { "locales": { "matches": ["es-AR"] } },
+          "webExtension": { "locales": ["ar"] }
         },
         {
-          "included": {
-            "locales": {
-              "matches": [
-                "es-CL"
-              ]
-            }
-          },
-          "webExtension": {
-            "locales": [
-              "cl"
-            ]
-          }
+          "included": { "locales": { "matches": ["es-CL"] } },
+          "webExtension": { "locales": ["cl"] }
         },
         {
-          "included": {
-            "locales": {
-              "matches": [
-                "es-MX"
-              ]
-            }
-          },
-          "webExtension": {
-            "locales": [
-              "mx"
-            ]
-          }
+          "included": { "locales": { "matches": ["es-MX"] } },
+          "webExtension": { "locales": ["mx"] }
         }
       ],
       "webExtension": {
-        "id": "mercadolibre@search.mozilla.org"
+        "id": "mercadolibre@search.mozilla.org",
+        "default_locale": "ar",
+        "searchProvider": {
+          "ar": {
+            "name": "MercadoLibre Argentina",
+            "search_url": "https://www.mercadolibre.com.ar/jm/search",
+            "search_form": "https://www.mercadolibre.com.ar/",
+            "search_url_get_params": "as_word={searchTerms}"
+          },
+          "mx": {
+            "name": "MercadoLibre Mexico",
+            "search_url": "https://www.mercadolibre.com.mx/jm/search",
+            "search_form": "https://www.mercadolibre.com.mx/",
+            "search_url_get_params": "as_word={searchTerms}"
+          },
+          "cl": {
+            "name": "MercadoLibre Chile",
+            "search_url": "https://www.mercadolibre.cl/jm/search",
+            "search_form": "https://www.mercadolibre.cl/",
+            "search_url_get_params": "as_word={searchTerms}"
+          }
+        }
       },
       "id": "df070348-e771-4bd5-964e-d19d82c1384e",
       "last_modified": 1583937832302
     },
     {
       "schema": 1582890797236,
-      "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "pt-BR"
-              ]
-            }
-          }
-        }
-      ],
+      "appliesTo": [{ "included": { "locales": { "matches": ["pt-BR"] } } }],
       "webExtension": {
-        "id": "mercadolivre@search.mozilla.org"
+        "id": "mercadolivre@search.mozilla.org",
+        "name": "MercadoLivre",
+        "search_url": "https://www.mercadolivre.com.br/jm/search",
+        "search_form": "https://www.mercadolivre.com.br/",
+        "search_url_get_params": "as_word={searchTerms}"
       },
       "id": "53bf6974-0e60-4551-994f-2d5176a5d1c6",
       "last_modified": 1583937832300
     },
     {
       "schema": 1582890799757,
-      "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "ko"
-              ]
-            }
-          }
-        }
-      ],
+      "appliesTo": [{ "included": { "locales": { "matches": ["ko"] } } }],
       "webExtension": {
-        "id": "naver-kr@search.mozilla.org"
+        "id": "naver-kr@search.mozilla.org",
+        "name": "네이버",
+        "search_url": "https://search.naver.com/search.naver",
+        "search_form": "https://search.naver.com",
+        "search_url_get_params": "where=nexearch&frm=ff&sm=oss&ie=utf8&query={searchTerms}",
+        "suggest_url": "https://ac.search.naver.com/nx/ac",
+        "suggest_url_get_params": "of=os&ie=utf-8&q={searchTerms}"
       },
       "id": "4135dc8f-f0bf-475b-b39f-74c4256572af",
       "last_modified": 1583937832292
     },
     {
       "schema": 1582890801444,
-      "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "sl"
-              ]
-            }
-          }
-        }
-      ],
+      "appliesTo": [{ "included": { "locales": { "matches": ["sl"] } } }],
       "webExtension": {
-        "id": "odpiralni@search.mozilla.org"
+        "id": "odpiralni@search.mozilla.org",
+        "name": "Odpiralni Časi",
+        "search_url": "https://www.odpiralnicasi.com/spots",
+        "search_url_get_params": "q={searchTerms}&source=1"
       },
       "id": "fa42b23a-30c5-46f3-8997-4a84029b5349",
       "last_modified": 1583937832287
     },
     {
       "schema": 1582890806533,
-      "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "bg"
-              ]
-            }
-          }
-        }
-      ],
+      "appliesTo": [{ "included": { "locales": { "matches": ["bg"] } } }],
       "webExtension": {
-        "id": "pazaruvaj@search.mozilla.org"
+        "id": "pazaruvaj@search.mozilla.org",
+        "name": "Pazaruvaj",
+        "search_url": "https://www.pazaruvaj.com/CategorySearch.php",
+        "search_form": "https://www.pazaruvaj.com/",
+        "search_url_get_params": "st={searchTerms}"
       },
       "id": "acc27094-9f0a-49af-868b-8b6ecbbda976",
       "last_modified": 1583937832267
     },
     {
       "schema": 1582890808245,
-      "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "pt-PT"
-              ]
-            }
-          }
-        }
-      ],
+      "appliesTo": [{ "included": { "locales": { "matches": ["pt-PT"] } } }],
       "webExtension": {
-        "id": "priberam@search.mozilla.org"
+        "id": "priberam@search.mozilla.org",
+        "name": "Priberam",
+        "encoding": "ISO-8859-15",
+        "search_url": "https://www.priberam.pt/dlpo/firefox.aspx",
+        "search_form": "https://www.priberam.pt/dlpo/",
+        "search_url_get_params": "pal={searchTerms}"
       },
       "id": "a3f1a5b6-cd8d-41b3-bb2b-de6bb1943a3d",
       "last_modified": 1583937832261
     },
     {
       "schema": 1582890809928,
-      "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "sv-SE"
-              ]
-            }
-          }
-        }
-      ],
+      "appliesTo": [{ "included": { "locales": { "matches": ["sv-SE"] } } }],
       "webExtension": {
-        "id": "prisjakt-sv-SE@search.mozilla.org"
+        "id": "prisjakt-sv-SE@search.mozilla.org",
+        "name": "Prisjakt",
+        "search_url": "https://www.prisjakt.nu/search",
+        "search_url_get_params": "search={searchTerms}",
+        "search_form": "https://www.prisjakt.nu/search",
+        "suggest_url": "https://www.prisjakt.nu/plugins/opensearch/suggestions.php",
+        "suggest_url_get_params": "search={searchTerms}"
       },
       "id": "8a7de784-efa5-428f-9193-a0d3368b80d4",
       "last_modified": 1583937832257
     },
     {
       "schema": 1582890814195,
-      "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "zh-TW"
-              ]
-            }
-          }
-        }
-      ],
+      "appliesTo": [{ "included": { "locales": { "matches": ["zh-TW"] } } }],
       "webExtension": {
-        "id": "readmoo@search.mozilla.org"
+        "id": "readmoo@search.mozilla.org",
+        "name": "Readmoo 讀墨電子書",
+        "search_url": "https://readmoo.com/search/keyword",
+        "search_form": "https://readmoo.com/search/keyword?pi=0&st=true",
+        "search_url_get_params": "pi=0&q={searchTerms}&st=true"
       },
       "id": "2d24515e-3e35-42ed-bf17-1388acfe80fa",
       "last_modified": 1583937832245
@@ -2689,57 +2681,43 @@
     {
       "schema": 1582890815048,
       "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "ltg",
-                "lv"
-              ]
-            }
-          }
-        }
+        { "included": { "locales": { "matches": ["ltg", "lv"] } } }
       ],
       "webExtension": {
-        "id": "salidzinilv@search.mozilla.org"
+        "id": "salidzinilv@search.mozilla.org",
+        "name": "Salidzini.lv",
+        "search_url": "https://www.salidzini.lv/search.php",
+        "search_form": "https://salidzini.lv",
+        "search_url_get_params": "q={searchTerms}&utm_source=firefox-plugin",
+        "suggest_url": "https://www.salidzini.lv/search_suggest_opensearch.php",
+        "suggest_url_get_params": "q={searchTerms}"
       },
       "id": "e7dcde21-5b5e-4406-b602-0611130fd3a6",
       "last_modified": 1583937832242
     },
     {
       "schema": 1582890819290,
-      "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "sv-SE"
-              ]
-            }
-          }
-        }
-      ],
+      "appliesTo": [{ "included": { "locales": { "matches": ["sv-SE"] } } }],
       "webExtension": {
-        "id": "tyda-sv-SE@search.mozilla.org"
+        "id": "tyda-sv-SE@search.mozilla.org",
+        "name": "Tyda.se",
+        "search_url": "https://tyda.se",
+        "search_form": "https://tyda.se",
+        "search_url_get_params": "w={searchTerms}"
       },
       "id": "32eec495-ce07-4ce5-8d07-4cb32050459d",
       "last_modified": 1583937832229
     },
     {
       "schema": 1582890820131,
-      "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "hu"
-              ]
-            }
-          }
-        }
-      ],
+      "appliesTo": [{ "included": { "locales": { "matches": ["hu"] } } }],
       "webExtension": {
-        "id": "vatera@search.mozilla.org"
+        "id": "vatera@search.mozilla.org",
+        "name": "Vatera.hu",
+        "encoding": "ISO-8859-2",
+        "search_url": "https://www.vatera.hu/listings/index.php",
+        "search_form": "https://www.vatera.hu/",
+        "search_url_get_params": "q={searchTerms}&c=0&td=on"
       },
       "id": "d0eab7e7-9084-4a43-b845-568dbe9f07dc",
       "last_modified": 1583937832225
@@ -2748,36 +2726,33 @@
       "schema": 1582890820983,
       "appliesTo": [
         {
-          "included": {
-            "locales": {
-              "matches": [
-                "te"
-              ]
-            }
-          },
-          "webExtension": {
-            "locales": [
-              "te"
-            ]
-          }
+          "included": { "locales": { "matches": ["te"] } },
+          "webExtension": { "locales": ["te"] }
         },
         {
-          "included": {
-            "locales": {
-              "matches": [
-                "oc"
-              ]
-            }
-          },
-          "webExtension": {
-            "locales": [
-              "oc"
-            ]
-          }
+          "included": { "locales": { "matches": ["oc"] } },
+          "webExtension": { "locales": ["oc"] }
         }
       ],
       "webExtension": {
-        "id": "wiktionary@search.mozilla.org"
+        "id": "wiktionary@search.mozilla.org",
+        "default_locale": "oc",
+        "searchProvider": {
+          "oc": {
+            "name": "Wikiccionari (oc)",
+            "search_url": "https://oc.wiktionary.org/wiki/Especial:Recèrca",
+            "search_form": "https://oc.wiktionary.org/wiki/Especial:Recèrca",
+            "suggest_url": "https://oc.wiktionary.org/w/api.php?action=opensearch&search={searchTerms}&namespace=0",
+            "search_url_get_params": "search={searchTerms}"
+          },
+          "te": {
+            "name": "విక్షనరీ (te)",
+            "search_url": "https://te.wiktionary.org/wiki/ప్రత్యేక:అన్వేషణ",
+            "search_form": "https://te.wiktionary.org/wiki/ప్రత్యేక:అన్వేషణ",
+            "suggest_url": "https://te.wiktionary.org/w/api.php?action=opensearch&search={searchTerms}&namespace=0",
+            "search_url_get_params": "search={searchTerms}"
+          }
+        }
       },
       "id": "781f42f0-3a5c-4d14-8be2-665eefa65653",
       "last_modified": 1583937832222
@@ -2785,19 +2760,14 @@
     {
       "schema": 1582890822671,
       "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "ja-JP-macos",
-                "ja"
-              ]
-            }
-          }
-        }
+        { "included": { "locales": { "matches": ["ja-JP-macos", "ja"] } } }
       ],
       "webExtension": {
-        "id": "yahoo-jp@search.mozilla.org"
+        "id": "yahoo-jp@search.mozilla.org",
+        "name": "Yahoo! JAPAN",
+        "search_url": "https://search.yahoo.co.jp/search",
+        "search_form": "https://search.yahoo.co.jp/",
+        "search_url_get_params": "p={searchTerms}&ei=UTF-8&fr=mozff"
       },
       "id": "9e73a342-4e27-4e9f-8a29-be193d59236a",
       "last_modified": 1583937832213
@@ -2805,23 +2775,19 @@
     {
       "schema": 1582890823520,
       "appliesTo": [
-        {
-          "included": {
-            "locales": {
-              "matches": [
-                "ja-JP-macos",
-                "ja"
-              ]
-            }
-          }
-        }
+        { "included": { "locales": { "matches": ["ja-JP-macos", "ja"] } } }
       ],
       "webExtension": {
-        "id": "yahoo-jp-auctions@search.mozilla.org"
+        "id": "yahoo-jp-auctions@search.mozilla.org",
+        "name": "ヤフオク!",
+        "encoding": "EUC-JP",
+        "search_url": "https://auctions.yahoo.co.jp/search/search",
+        "search_form": "https://auctions.yahoo.co.jp/",
+        "search_url_get_params": "p={searchTerms}&ei=EUC-JP&fr=mozff"
       },
       "id": "43559b11-05dc-4750-b131-afdbd9d25905",
       "last_modified": 1583937832210
     }
   ],
-  "timestamp": 1695659360045
+  "timestamp": 1661199949574
 }
