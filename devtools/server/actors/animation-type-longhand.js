@@ -280,7 +280,6 @@ exports.ANIMATION_TYPE_FOR_LONGHANDS = [
       "color",
       "column-rule-color",
       "flood-color",
-      "-moz-font-smoothing-background-color",
       "lighting-color",
       "outline-color",
       "scrollbar-color",

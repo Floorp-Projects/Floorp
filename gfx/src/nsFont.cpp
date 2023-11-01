@@ -58,8 +58,7 @@ nsFont::MaxDifference nsFont::CalcDifference(const nsFont& aOther) const {
     return MaxDifference::eLayoutAffecting;
   }
 
-  if ((smoothing != aOther.smoothing) ||
-      (fontSmoothingBackgroundColor != aOther.fontSmoothingBackgroundColor)) {
+  if (smoothing != aOther.smoothing) {
     return MaxDifference::eVisual;
   }
 
@@ -267,8 +266,6 @@ void nsFont::AddFontFeaturesToStyle(gfxFontStyle* aStyle,
   if (smoothing == NS_FONT_SMOOTHING_GRAYSCALE) {
     aStyle->useGrayscaleAntialiasing = true;
   }
-
-  aStyle->fontSmoothingBackgroundColor = fontSmoothingBackgroundColor.ToColor();
 }
 
 void nsFont::AddFontVariationsToStyle(gfxFontStyle* aStyle) const {

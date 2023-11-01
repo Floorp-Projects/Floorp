@@ -347,21 +347,6 @@ impl AlphaBatchList {
             let mut selected_batch_index = None;
 
             match key.blend_mode {
-                BlendMode::SubpixelWithBgColor => {
-                    for (batch_index, batch) in self.batches.iter().enumerate().rev() {
-                        // Some subpixel batches are drawn in two passes. Because of this, we need
-                        // to check for overlaps with every batch (which is a bit different
-                        // than the normal batching below).
-                        if self.batch_rects[batch_index].intersects(z_bounding_rect) {
-                            break;
-                        }
-
-                        if batch.key.is_compatible_with(&key) {
-                            selected_batch_index = Some(batch_index);
-                            break;
-                        }
-                    }
-                }
                 BlendMode::Advanced(_) if self.break_advanced_blend_batches => {
                     // don't try to find a batch
                 }
@@ -711,7 +696,6 @@ impl AlphaBatchBuilder {
             BlendMode::Alpha |
             BlendMode::PremultipliedAlpha |
             BlendMode::PremultipliedDestOut |
-            BlendMode::SubpixelWithBgColor |
             BlendMode::SubpixelDualSource |
             BlendMode::Advanced(_) |
             BlendMode::MultiplyDualSource |
@@ -1194,18 +1178,11 @@ impl BatchBuilder {
                         let (blend_mode, color_mode) = match glyph_format {
                             GlyphFormat::Subpixel |
                             GlyphFormat::TransformedSubpixel => {
-                                if run.used_font.bg_color.a != 0 {
-                                    (
-                                        BlendMode::SubpixelWithBgColor,
-                                        ShaderColorMode::FromRenderPassMode,
-                                    )
-                                } else {
-                                    debug_assert!(ctx.use_dual_source_blending);
-                                    (
-                                        BlendMode::SubpixelDualSource,
-                                        ShaderColorMode::SubpixelDualSource,
-                                    )
-                                }
+                                debug_assert!(ctx.use_dual_source_blending);
+                                (
+                                    BlendMode::SubpixelDualSource,
+                                    ShaderColorMode::SubpixelDualSource,
+                                )
                             }
                             GlyphFormat::Alpha |
                             GlyphFormat::TransformedAlpha |

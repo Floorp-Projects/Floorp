@@ -19,9 +19,6 @@ pub use crate::values::specified::color::{ColorScheme, ForcedColorAdjust, PrintC
 /// The computed value of the `color` property.
 pub type ColorPropertyValue = AbsoluteColor;
 
-/// The computed value of `-moz-font-smoothing-background-color`.
-pub type MozFontSmoothingBackgroundColor = AbsoluteColor;
-
 /// A computed value for `<color>`.
 pub type Color = GenericColor<Percentage>;
 

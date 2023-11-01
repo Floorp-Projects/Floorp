@@ -438,7 +438,6 @@ impl BrushShader {
             BlendMode::Alpha |
             BlendMode::PremultipliedAlpha |
             BlendMode::PremultipliedDestOut |
-            BlendMode::SubpixelWithBgColor |
             BlendMode::Screen |
             BlendMode::PlusLighter |
             BlendMode::Exclusion => {

@@ -57,7 +57,6 @@ menubar > menu[_moz-menuactive="true"] {
 menubar > menu[_moz-menuactive="true"][open="true"] {
   color: -moz-menuhovertext;
   background-color: -moz-menuhover;
-  -moz-font-smoothing-background-color: -moz-mac-active-menuitem;
 }
 
 /* Internal content  */

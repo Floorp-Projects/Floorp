@@ -25,16 +25,12 @@ varying highp vec2 vClipMaskUv;
 
 #ifdef WR_VERTEX_SHADER
 
-#define COLOR_MODE_FROM_PASS            0
-#define COLOR_MODE_ALPHA                1
-#define COLOR_MODE_SUBPX_BG_PASS0       2
-#define COLOR_MODE_SUBPX_BG_PASS1       3
-#define COLOR_MODE_SUBPX_BG_PASS2       4
-#define COLOR_MODE_SUBPX_DUAL_SOURCE    5
-#define COLOR_MODE_BITMAP_SHADOW        6
-#define COLOR_MODE_COLOR_BITMAP         7
-#define COLOR_MODE_IMAGE                8
-#define COLOR_MODE_MULTIPLY_DUAL_SOURCE 9
+#define COLOR_MODE_ALPHA                0
+#define COLOR_MODE_SUBPX_DUAL_SOURCE    1
+#define COLOR_MODE_BITMAP_SHADOW        2
+#define COLOR_MODE_COLOR_BITMAP         3
+#define COLOR_MODE_IMAGE                4
+#define COLOR_MODE_MULTIPLY_DUAL_SOURCE 5
 
 uniform HIGHP_SAMPLER_FLOAT sampler2D sPrimitiveHeadersF;
 uniform HIGHP_SAMPLER_FLOAT isampler2D sPrimitiveHeadersI;

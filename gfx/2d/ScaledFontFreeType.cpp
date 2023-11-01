@@ -93,7 +93,6 @@ bool ScaledFontFreeType::GetWRFontInstanceOptions(
     options.flags |= wr::FontInstanceFlags::SUBPIXEL_POSITION;
   }
   options.flags |= wr::FontInstanceFlags::EMBEDDED_BITMAPS;
-  options.bg_color = wr::ToColorU(DeviceColor());
   options.synthetic_italics =
       wr::DegreesToSyntheticItalics(GetSyntheticObliqueAngle());
 

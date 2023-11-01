@@ -549,7 +549,6 @@ impl Drop for Texture {
 pub struct Program {
     id: gl::GLuint,
     u_transform: gl::GLint,
-    u_mode: gl::GLint,
     u_texture_size: gl::GLint,
     source_info: ProgramSourceInfo,
     is_initialized: bool,
@@ -1074,7 +1073,6 @@ pub struct Device {
     bound_vao: gl::GLuint,
     bound_read_fbo: (FBOId, DeviceIntPoint),
     bound_draw_fbo: FBOId,
-    program_mode_id: UniformLocation,
     default_read_fbo: FBOId,
     default_draw_fbo: FBOId,
 
@@ -1915,7 +1913,6 @@ impl Device {
             bound_vao: 0,
             bound_read_fbo: (FBOId(0), DeviceIntPoint::zero()),
             bound_draw_fbo: FBOId(0),
-            program_mode_id: UniformLocation::INVALID,
             default_read_fbo: FBOId(0),
             default_draw_fbo: FBOId(0),
 
@@ -2175,7 +2172,6 @@ impl Device {
 
         // Shader state
         self.bound_program = 0;
-        self.program_mode_id = UniformLocation::INVALID;
         self.gl.use_program(0);
 
         // Reset common state
@@ -2532,7 +2528,6 @@ impl Device {
         // If we get here, the link succeeded, so get the uniforms.
         program.is_initialized = true;
         program.u_transform = self.gl.get_uniform_location(program.id, "uTransform");
-        program.u_mode = self.gl.get_uniform_location(program.id, "uMode");
         program.u_texture_size = self.gl.get_uniform_location(program.id, "uTextureSize");
 
         Ok(())
@@ -2553,7 +2548,6 @@ impl Device {
             self.gl.use_program(program.id);
             self.bound_program = program.id;
             self.bound_program_name = program.source_info.full_name_cstr.clone();
-            self.program_mode_id = UniformLocation(program.u_mode);
         }
         true
     }
@@ -3044,7 +3038,6 @@ impl Device {
         let program = Program {
             id: pid,
             u_transform: 0,
-            u_mode: 0,
             u_texture_size: 0,
             source_info,
             is_initialized: false,
@@ -3102,14 +3095,6 @@ impl Device {
 
         self.gl
             .uniform_matrix_4fv(program.u_transform, false, &transform.to_array());
-    }
-
-    pub fn switch_mode(&self, mode: i32) {
-        debug_assert!(self.inside_frame);
-        #[cfg(debug_assertions)]
-        debug_assert!(self.shader_is_ready);
-
-        self.gl.uniform_1i(self.program_mode_id.0, mode);
     }
 
     /// Sets the uTextureSize uniform. Most shaders do not require this to be called
@@ -3931,24 +3916,6 @@ impl Device {
         self.set_blend_factors(
             (gl::ONE, gl::ONE),
             (gl::ONE, gl::ONE),
-        );
-    }
-    pub fn set_blend_mode_subpixel_with_bg_color_pass0(&mut self) {
-        self.set_blend_factors(
-            (gl::ZERO, gl::ONE_MINUS_SRC_COLOR),
-            (gl::ZERO, gl::ONE),
-        );
-    }
-    pub fn set_blend_mode_subpixel_with_bg_color_pass1(&mut self) {
-        self.set_blend_factors(
-            (gl::ONE_MINUS_DST_ALPHA, gl::ONE),
-            (gl::ZERO, gl::ONE),
-        );
-    }
-    pub fn set_blend_mode_subpixel_with_bg_color_pass2(&mut self) {
-        self.set_blend_factors(
-            (gl::ONE, gl::ONE),
-            (gl::ONE, gl::ONE_MINUS_SRC_ALPHA),
         );
     }
     pub fn set_blend_mode_subpixel_dual_source(&mut self) {

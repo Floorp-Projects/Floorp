@@ -302,16 +302,12 @@ fn flag_changed(before: DebugFlags, after: DebugFlags, select: DebugFlags) -> Op
 #[repr(C)]
 #[derive(Copy, Clone, Debug)]
 pub enum ShaderColorMode {
-    FromRenderPassMode = 0,
-    Alpha = 1,
-    SubpixelWithBgColorPass0 = 2,
-    SubpixelWithBgColorPass1 = 3,
-    SubpixelWithBgColorPass2 = 4,
-    SubpixelDualSource = 5,
-    BitmapShadow = 6,
-    ColorBitmap = 7,
-    Image = 8,
-    MultiplyDualSource = 9,
+    Alpha = 0,
+    SubpixelDualSource = 1,
+    BitmapShadow = 2,
+    ColorBitmap = 3,
+    Image = 4,
+    MultiplyDualSource = 5,
 }
 
 impl From<GlyphFormat> for ShaderColorMode {
@@ -645,7 +641,6 @@ pub enum BlendMode {
     PremultipliedAlpha,
     PremultipliedDestOut,
     SubpixelDualSource,
-    SubpixelWithBgColor,
     Advanced(MixBlendMode),
     MultiplyDualSource,
     Screen,
@@ -2837,23 +2832,6 @@ impl Renderer {
                         BlendMode::SubpixelDualSource => {
                             self.device.set_blend_mode_subpixel_dual_source();
                         }
-                        BlendMode::SubpixelWithBgColor => {
-                            // Using the three pass "component alpha with font smoothing
-                            // background color" rendering technique:
-                            //
-                            // /webrender/doc/text-rendering.md
-                            //
-                            self.device.set_blend_mode_subpixel_with_bg_color_pass0();
-                            // need to make sure the shader is bound
-                            shader.bind(
-                                &mut self.device,
-                                projection,
-                                None,
-                                &mut self.renderer_errors,
-                                &mut self.profile,
-                            );
-                            self.device.switch_mode(ShaderColorMode::SubpixelWithBgColorPass0 as _);
-                        }
                         BlendMode::Advanced(mode) => {
                             if self.enable_advanced_blend_barriers {
                                 self.device.gl().blend_barrier_khr();
@@ -2904,44 +2882,6 @@ impl Renderer {
                     &batch.key.textures,
                     stats
                 );
-
-                if batch.key.blend_mode == BlendMode::SubpixelWithBgColor {
-                    self.set_blend_mode_subpixel_with_bg_color_pass1(framebuffer_kind);
-                    // re-binding the shader after the blend mode change
-                    shader.bind(
-                        &mut self.device,
-                        projection,
-                        None,
-                        &mut self.renderer_errors,
-                        &mut self.profile,
-                    );
-                    self.device.switch_mode(ShaderColorMode::SubpixelWithBgColorPass1 as _);
-
-                    // When drawing the 2nd and 3rd passes, we know that the VAO, textures etc
-                    // are all set up from the previous draw_instanced_batch call,
-                    // so just issue a draw call here to avoid re-uploading the
-                    // instances and re-binding textures etc.
-                    self.device
-                        .draw_indexed_triangles_instanced_u16(6, batch.instances.len() as i32);
-
-                    self.set_blend_mode_subpixel_with_bg_color_pass2(framebuffer_kind);
-                    // re-binding the shader after the blend mode change
-                    shader.bind(
-                        &mut self.device,
-                        projection,
-                        None,
-                        &mut self.renderer_errors,
-                        &mut self.profile,
-                    );
-                    self.device.switch_mode(ShaderColorMode::SubpixelWithBgColorPass2 as _);
-
-                    self.device
-                        .draw_indexed_triangles_instanced_u16(6, batch.instances.len() as i32);
-                }
-
-                if batch.key.blend_mode == BlendMode::SubpixelWithBgColor {
-                    prev_blend_mode = BlendMode::None;
-                }
             }
 
             self.set_blend(false, framebuffer_kind);
@@ -5451,24 +5391,6 @@ impl Renderer {
             self.device.set_blend_mode_show_overdraw();
         } else {
             self.device.set_blend_mode_premultiplied_alpha();
-        }
-    }
-
-    fn set_blend_mode_subpixel_with_bg_color_pass1(&mut self, framebuffer_kind: FramebufferKind) {
-        if framebuffer_kind == FramebufferKind::Main &&
-                self.debug_flags.contains(DebugFlags::SHOW_OVERDRAW) {
-            self.device.set_blend_mode_show_overdraw();
-        } else {
-            self.device.set_blend_mode_subpixel_with_bg_color_pass1();
-        }
-    }
-
-    fn set_blend_mode_subpixel_with_bg_color_pass2(&mut self, framebuffer_kind: FramebufferKind) {
-        if framebuffer_kind == FramebufferKind::Main &&
-                self.debug_flags.contains(DebugFlags::SHOW_OVERDRAW) {
-            self.device.set_blend_mode_show_overdraw();
-        } else {
-            self.device.set_blend_mode_subpixel_with_bg_color_pass2();
         }
     }
 

@@ -402,7 +402,6 @@ bool ScaledFontFontconfig::GetWRFontInstanceOptions(
   if (UseSubpixelPosition()) {
     options.flags |= wr::FontInstanceFlags::SUBPIXEL_POSITION;
   }
-  options.bg_color = wr::ToColorU(DeviceColor());
   options.synthetic_italics =
       wr::DegreesToSyntheticItalics(GetSyntheticObliqueAngle());
 

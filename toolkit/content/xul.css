@@ -379,7 +379,6 @@ tooltip {
 tooltip {
   appearance: auto;
   -moz-default-appearance: tooltip;
-  -moz-font-smoothing-background-color: -moz-mac-tooltip;
 
   white-space: pre-wrap;
 

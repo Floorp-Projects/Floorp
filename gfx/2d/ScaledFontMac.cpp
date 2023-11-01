@@ -125,12 +125,10 @@ CTFontRef CreateCTFontFromCGFontWithVariations(CGFontRef aCGFont, CGFloat aSize,
 ScaledFontMac::ScaledFontMac(CGFontRef aFont,
                              const RefPtr<UnscaledFont>& aUnscaledFont,
                              Float aSize, bool aOwnsFont,
-                             const DeviceColor& aFontSmoothingBackgroundColor,
                              bool aUseFontSmoothing, bool aApplySyntheticBold,
                              bool aHasColorGlyphs)
     : ScaledFontBase(aUnscaledFont, aSize),
       mFont(aFont),
-      mFontSmoothingBackgroundColor(aFontSmoothingBackgroundColor),
       mUseFontSmoothing(aUseFontSmoothing),
       mApplySyntheticBold(aApplySyntheticBold),
       mHasColorGlyphs(aHasColorGlyphs) {
@@ -146,12 +144,10 @@ ScaledFontMac::ScaledFontMac(CGFontRef aFont,
 
 ScaledFontMac::ScaledFontMac(CTFontRef aFont,
                              const RefPtr<UnscaledFont>& aUnscaledFont,
-                             const DeviceColor& aFontSmoothingBackgroundColor,
                              bool aUseFontSmoothing, bool aApplySyntheticBold,
                              bool aHasColorGlyphs)
     : ScaledFontBase(aUnscaledFont, CTFontGetSize(aFont)),
       mCTFont(aFont),
-      mFontSmoothingBackgroundColor(aFontSmoothingBackgroundColor),
       mUseFontSmoothing(aUseFontSmoothing),
       mApplySyntheticBold(aApplySyntheticBold),
       mHasColorGlyphs(aHasColorGlyphs) {
@@ -457,7 +453,6 @@ bool ScaledFontMac::GetWRFontInstanceOptions(
   if (mHasColorGlyphs) {
     options.flags |= wr::FontInstanceFlags::EMBEDDED_BITMAPS;
   }
-  options.bg_color = wr::ToColorU(mFontSmoothingBackgroundColor);
   options.synthetic_italics =
       wr::DegreesToSyntheticItalics(GetSyntheticObliqueAngle());
   *aOutOptions = Some(options);
@@ -479,11 +474,6 @@ ScaledFontMac::InstanceData::InstanceData(
     }
     if (aOptions->flags & wr::FontInstanceFlags::EMBEDDED_BITMAPS) {
       mHasColorGlyphs = true;
-    }
-    if (aOptions->bg_color.a != 0) {
-      mFontSmoothingBackgroundColor =
-          DeviceColor::FromU8(aOptions->bg_color.r, aOptions->bg_color.g,
-                              aOptions->bg_color.b, aOptions->bg_color.a);
     }
   }
 }
@@ -731,10 +721,9 @@ already_AddRefed<ScaledFont> UnscaledFontMac::CreateScaledFont(
         font = CTFontCreateWithFontDescriptor(fontDesc, aGlyphSize, nullptr);
       }
     }
-    scaledFont = new ScaledFontMac(
-        font, this, instanceData.mFontSmoothingBackgroundColor,
-        instanceData.mUseFontSmoothing, instanceData.mApplySyntheticBold,
-        instanceData.mHasColorGlyphs);
+    scaledFont = new ScaledFontMac(font, this, instanceData.mUseFontSmoothing,
+                                   instanceData.mApplySyntheticBold,
+                                   instanceData.mHasColorGlyphs);
   } else {
     CGFontRef fontRef = mFont;
     if (aNumVariations > 0) {
@@ -746,7 +735,6 @@ already_AddRefed<ScaledFont> UnscaledFontMac::CreateScaledFont(
     }
 
     scaledFont = new ScaledFontMac(fontRef, this, aGlyphSize, fontRef != mFont,
-                                   instanceData.mFontSmoothingBackgroundColor,
                                    instanceData.mUseFontSmoothing,
                                    instanceData.mApplySyntheticBold,
                                    instanceData.mHasColorGlyphs);
