@@ -94,9 +94,9 @@ export default class LockwiseCard {
   /**
    * Displays strings indicating stored logins for a user.
    *
-   * @param {Number}  storedLogins
+   * @param {number}  storedLogins
    *        The number of browser-stored logins.
-   * @param {Number}  potentiallyBreachedLogins
+   * @param {number}  potentiallyBreachedLogins
    *        The number of potentially breached logins.
    */
   renderContentForLoggedInUser(storedLogins, potentiallyBreachedLogins) {
