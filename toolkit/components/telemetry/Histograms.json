@@ -1260,6 +1260,18 @@
     "bug_numbers": [1580227],
     "description": "GC 'effectiveness', the amount of memory freed divided by main-thread collection time (MB/s)"
   },
+  "GC_PARALLEL_MARK": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox"],
+    "alert_emails": [
+      "dev-telemetry-gc-alerts@mozilla.org",
+      "jcoppeard@mozilla.com"
+    ],
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "bug_numbers": [1861942],
+    "description": "Whether parallel marking was used for this collection"
+  },
   "GC_PARALLEL_MARK_SPEEDUP": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox"],
