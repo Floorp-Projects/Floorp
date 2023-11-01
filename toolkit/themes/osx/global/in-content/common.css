@@ -12,9 +12,9 @@ xul|tabs {
   position: static;
 }
 
-xul|menulist > xul|menupopup > xul|menuitem::after,
-xul|menulist > xul|menupopup > xul|menuitem::before {
-  display: none;
+xul|menupopup > xul|menuitem::after,
+xul|menupopup > xul|menuitem::before {
+  content: none;
 }
 
 xul|menulist > xul|menupopup xul|menu,
