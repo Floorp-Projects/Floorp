@@ -78,6 +78,53 @@ const BASE_MESSAGES = () => [
     trigger: { id: "protectionsPanelOpen" },
   },
   {
+    id: "MILESTONE_MESSAGE_87",
+    groups: ["cfr"],
+    content: {
+      text: "",
+      layout: "short_message",
+      buttons: {
+        primary: {
+          event: "PROTECTION",
+          label: {
+            string_id: "cfr-doorhanger-milestone-ok-button",
+          },
+          action: {
+            type: "OPEN_PROTECTION_REPORT",
+          },
+        },
+        secondary: [
+          {
+            event: "DISMISS",
+            label: {
+              string_id: "cfr-doorhanger-milestone-close-button",
+            },
+            action: {
+              type: "CANCEL",
+            },
+          },
+        ],
+      },
+      category: "cfrFeatures",
+      anchor_id: "tracking-protection-icon-container",
+      bucket_id: "CFR_MILESTONE_MESSAGE",
+      heading_text: {
+        string_id: "cfr-doorhanger-milestone-heading2",
+      },
+      notification_text: "",
+      skip_address_bar_notifier: true,
+    },
+    trigger: {
+      id: "contentBlocking",
+      params: ["ContentBlockingMilestone"],
+    },
+    template: "milestone_message",
+    frequency: {
+      lifetime: 7,
+    },
+    targeting: "pageLoad >= 4 && userPrefs.cfrFeatures",
+  },
+  {
     id: "CFR_FIREFOX_VIEW",
     groups: ["cfr"],
     template: "cfr_doorhanger",
