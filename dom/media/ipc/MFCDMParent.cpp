@@ -13,6 +13,7 @@
 #include "mozilla/EMEUtils.h"
 #include "mozilla/StaticPrefs_media.h"
 #include "mozilla/KeySystemConfig.h"
+#include "mozilla/WindowsVersion.h"
 #include "MFCDMProxy.h"
 #include "MFMediaEngineUtils.h"
 #include "RemoteDecodeUtils.h"       // For GetCurrentSandboxingKind()
@@ -605,6 +606,14 @@ mozilla::ipc::IPCResult MFCDMParent::RecvGetCapabilities(
   // It will be used when collecting audio codec and encryption scheme
   // support.
   nsTArray<KeySystemConfig::EMECodecString> supportedVideoCodecs;
+
+  // Return empty capabilites for SWDRM on Windows 10 because it has the process
+  // leaking problem.
+  if (!IsWin11OrLater() && !aIsHWSecure) {
+    aResolver(std::move(capabilities));
+    return IPC_OK();
+  }
+
   for (auto& codec : kVideoCodecs) {
     if (codec == KeySystemConfig::EME_CODEC_HEVC &&
         !StaticPrefs::media_wmf_hevc_enabled()) {

@@ -127,7 +127,8 @@ class WMFCDMProxy : public CDMProxy {
   void RejectPromiseWithStateError(PromiseId aId, const nsCString& aReason);
 
   CopyableTArray<MFCDMMediaCapability> GenerateMFCDMMediaCapabilities(
-      const dom::Sequence<dom::MediaKeySystemMediaCapability>& aCapabilities);
+      const dom::Sequence<dom::MediaKeySystemMediaCapability>& aCapabilities,
+      const Maybe<nsString>& forcedRobustness = Nothing());
 
   RefPtr<WMFCDMImpl> mCDM;
 
