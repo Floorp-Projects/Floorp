@@ -340,18 +340,6 @@ body {
   .item-title {
     margin: 0;
   }
-
-  :root:not([lwt-sidebar]) .item.selected:not(:focus) > .item-title-container {
-    appearance: auto;
-    -moz-default-appearance: -moz-mac-source-list-selection;
-    -moz-font-smoothing-background-color: -moz-mac-source-list-selection;
-  }
-
-  :root:not([lwt-sidebar-highlight]) .item.selected:focus > .item-title-container {
-    appearance: auto;
-    -moz-default-appearance: -moz-mac-active-source-list-selection;
-    -moz-font-smoothing-background-color: -moz-mac-active-source-list-selection;
-  }
 }
 
 @media (-moz-platform: windows) {

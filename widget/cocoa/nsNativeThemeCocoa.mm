@@ -404,17 +404,6 @@ static BOOL IsActive(nsIFrame* aFrame, BOOL aIsToolbarControl) {
   return FrameIsInActiveWindow(aFrame);
 }
 
-static bool IsInSourceList(nsIFrame* aFrame) {
-  for (nsIFrame* frame = aFrame->GetParent(); frame;
-       frame = nsLayoutUtils::GetCrossDocParentFrameInProcess(frame)) {
-    if (frame->StyleDisplay()->EffectiveAppearance() ==
-        StyleAppearance::MozMacSourceList) {
-      return true;
-    }
-  }
-  return false;
-}
-
 NS_IMPL_ISUPPORTS_INHERITED(nsNativeThemeCocoa, nsNativeTheme, nsITheme)
 
 nsNativeThemeCocoa::nsNativeThemeCocoa() : ThemeCocoa(ScrollbarStyle()) {
@@ -2170,26 +2159,6 @@ void nsNativeThemeCocoa::DrawMultilineTextField(CGContextRef cgContext,
   NSGraphicsContext.currentContext = savedContext;
 }
 
-void nsNativeThemeCocoa::DrawSourceListSelection(CGContextRef aContext,
-                                                 const CGRect& aRect,
-                                                 bool aWindowIsActive,
-                                                 bool aSelectionIsActive) {
-  NSColor* fillColor;
-  if (aSelectionIsActive) {
-    // Active selection, blue or graphite.
-    fillColor = [NSColor controlAccentColor];
-  } else {
-    // Inactive selection, gray.
-    if (aWindowIsActive) {
-      fillColor = [NSColor colorWithWhite:0.871 alpha:1.0];
-    } else {
-      fillColor = [NSColor colorWithWhite:0.808 alpha:1.0];
-    }
-  }
-  CGContextSetFillColorWithColor(aContext, [fillColor CGColor]);
-  CGContextFillRect(aContext, aRect);
-}
-
 static bool IsHiDPIContext(nsDeviceContext* aContext) {
   return AppUnitsPerCSSPixel() >=
          2 * aContext->AppUnitsPerDevPixelAtUnitFullZoom();
@@ -2464,24 +2433,6 @@ Maybe<nsNativeThemeCocoa::WidgetInfo> nsNativeThemeCocoa::ComputeWidgetInfo(
     case StyleAppearance::Listbox:
       return Some(WidgetInfo::ListBox());
 
-    case StyleAppearance::MozMacSourceList: {
-      return Nothing();
-    }
-
-    case StyleAppearance::MozMacSourceListSelection:
-    case StyleAppearance::MozMacActiveSourceListSelection: {
-      // We only support vibrancy for source list selections if we're inside
-      // a source list, because we need the background to be transparent.
-      if (IsInSourceList(aFrame)) {
-        return Nothing();
-      }
-      bool isInActiveWindow = FrameIsInActiveWindow(aFrame);
-      if (aAppearance == StyleAppearance::MozMacActiveSourceListSelection) {
-        return Some(WidgetInfo::ActiveSourceListSelection(isInActiveWindow));
-      }
-      return Some(WidgetInfo::InactiveSourceListSelection(isInActiveWindow));
-    }
-
     case StyleAppearance::Tab: {
       SegmentParams params =
           ComputeSegmentParams(aFrame, elementState, SegmentType::eTab);
@@ -2712,15 +2663,6 @@ void nsNativeThemeCocoa::RenderWidget(const WidgetInfo& aWidgetInfo,
                 @"kCUIIsFlippedKey" : @YES,
                 @"kCUIVariantMetal" : @NO,
               });
-          break;
-        }
-        case Widget::eActiveSourceListSelection:
-        case Widget::eInactiveSourceListSelection: {
-          bool isInActiveWindow = aWidgetInfo.Params<bool>();
-          bool isActiveSelection =
-              aWidgetInfo.Widget() == Widget::eActiveSourceListSelection;
-          DrawSourceListSelection(cgContext, macRect, isInActiveWindow,
-                                  isActiveSelection);
           break;
         }
         case Widget::eTabPanel: {
@@ -3263,9 +3205,6 @@ bool nsNativeThemeCocoa::ThemeSupportsWidget(nsPresContext* aPresContext,
     case StyleAppearance::Treeheadersortarrow:
     case StyleAppearance::Treeitem:
     case StyleAppearance::Treeline:
-    case StyleAppearance::MozMacSourceList:
-    case StyleAppearance::MozMacSourceListSelection:
-    case StyleAppearance::MozMacActiveSourceListSelection:
 
     case StyleAppearance::Range:
       return !IsWidgetStyled(aPresContext, aFrame, aAppearance);
@@ -3359,15 +3298,6 @@ nsITheme::ThemeGeometryType nsNativeThemeCocoa::ThemeGeometryTypeForWidget(
       return eThemeGeometryTypeTooltip;
     case StyleAppearance::Menupopup:
       return eThemeGeometryTypeMenu;
-    case StyleAppearance::MozMacSourceList:
-      return eThemeGeometryTypeSourceList;
-    case StyleAppearance::MozMacSourceListSelection:
-      return IsInSourceList(aFrame) ? eThemeGeometryTypeSourceListSelection
-                                    : eThemeGeometryTypeUnknown;
-    case StyleAppearance::MozMacActiveSourceListSelection:
-      return IsInSourceList(aFrame)
-                 ? eThemeGeometryTypeActiveSourceListSelection
-                 : eThemeGeometryTypeUnknown;
     default:
       return eThemeGeometryTypeUnknown;
   }

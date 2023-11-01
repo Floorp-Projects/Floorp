@@ -191,18 +191,6 @@
     margin: 0 10px;
   }
 
-  .sidebar-panel:not([lwt-sidebar]) .sidebar-placesTreechildren::-moz-tree-row(selected,blur) {
-    appearance: auto;
-    -moz-default-appearance: -moz-mac-source-list-selection;
-    -moz-font-smoothing-background-color: -moz-mac-source-list-selection;
-  }
-
-  .sidebar-panel:not([lwt-sidebar-highlight]) .sidebar-placesTreechildren::-moz-tree-row(selected,focus) {
-    appearance: auto;
-    -moz-default-appearance: -moz-mac-active-source-list-selection;
-    -moz-font-smoothing-background-color: -moz-mac-active-source-list-selection;
-  }
-
   .sidebar-placesTreechildren::-moz-tree-cell-text {
     margin-inline-end: 6px;
   }

@@ -12,9 +12,6 @@ enum MacThemeGeometryType {
   eThemeGeometryTypeWindowButtons,
   eThemeGeometryTypeMenu,
   eThemeGeometryTypeTooltip,
-  eThemeGeometryTypeSourceList,
-  eThemeGeometryTypeSourceListSelection,
-  eThemeGeometryTypeActiveSourceListSelection
 };
 
 #endif
