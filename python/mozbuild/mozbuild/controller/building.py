@@ -128,57 +128,6 @@ class TierStatus(object):
         t["finish_time"] = time.monotonic()
         t["duration"] = self.resources.finish_phase(tier)
 
-    def tiered_resource_usage(self):
-        """Obtains an object containing resource usage for tiers.
-
-        The returned object is suitable for serialization.
-        """
-        o = []
-
-        for tier, state in self.tiers.items():
-            t_entry = dict(
-                name=tier,
-                start=state["begin_time"],
-                end=state["finish_time"],
-                duration=state["duration"],
-            )
-
-            self.add_resources_to_dict(t_entry, phase=tier)
-
-            o.append(t_entry)
-
-        return o
-
-    def add_resources_to_dict(self, entry, start=None, end=None, phase=None):
-        """Helper function to append resource information to a dict."""
-        cpu_percent = self.resources.aggregate_cpu_percent(
-            start=start, end=end, phase=phase, per_cpu=False
-        )
-        cpu_times = self.resources.aggregate_cpu_times(
-            start=start, end=end, phase=phase, per_cpu=False
-        )
-        io = self.resources.aggregate_io(start=start, end=end, phase=phase)
-
-        if cpu_percent is None:
-            return entry
-
-        entry["cpu_percent"] = cpu_percent
-        entry["cpu_times"] = list(cpu_times)
-        entry["io"] = list(io)
-
-        return entry
-
-    def add_resource_fields_to_dict(self, d):
-        for usage in self.resources.range_usage():
-            cpu_times = self.resources.aggregate_cpu_times(per_cpu=False)
-
-            d["cpu_times_fields"] = list(cpu_times._fields)
-            d["io_fields"] = list(usage.io._fields)
-            d["virt_fields"] = list(usage.virt._fields)
-            d["swap_fields"] = list(usage.swap._fields)
-
-            return d
-
 
 def record_cargo_timings(resource_monitor, timings_path):
     cargo_start = 0
@@ -513,64 +462,12 @@ class BuildMonitor(MozbuildObject):
             return None
 
         cpu_percent = self.resources.aggregate_cpu_percent(phase=None, per_cpu=False)
-        cpu_times = self.resources.aggregate_cpu_times(phase=None, per_cpu=False)
         io = self.resources.aggregate_io(phase=None)
 
-        o = dict(
-            version=3,
-            argv=sys.argv,
-            start=self.start_time,
-            end=self.end_time,
-            duration=self.end_time - self.start_time,
-            resources=[],
+        return dict(
             cpu_percent=cpu_percent,
-            cpu_times=cpu_times,
             io=io,
-            objects=self.build_objects,
         )
-
-        o["tiers"] = self.tiers.tiered_resource_usage()
-
-        self.tiers.add_resource_fields_to_dict(o)
-
-        for usage in self.resources.range_usage():
-            cpu_percent = self.resources.aggregate_cpu_percent(
-                usage.start, usage.end, per_cpu=False
-            )
-            cpu_times = self.resources.aggregate_cpu_times(
-                usage.start, usage.end, per_cpu=False
-            )
-
-            entry = dict(
-                start=usage.start,
-                end=usage.end,
-                virt=list(usage.virt),
-                swap=list(usage.swap),
-            )
-
-            self.tiers.add_resources_to_dict(entry, start=usage.start, end=usage.end)
-
-            o["resources"].append(entry)
-
-        # If the imports for this file ran before the in-tree virtualenv
-        # was bootstrapped (for instance, for a clobber build in automation),
-        # psutil might not be available.
-        #
-        # Treat psutil as optional to avoid an outright failure to log resources
-        # TODO: it would be nice to collect data on the storage device as well
-        # in this case.
-        o["system"] = {}
-        if psutil:
-            o["system"].update(
-                dict(
-                    logical_cpu_count=psutil.cpu_count(),
-                    physical_cpu_count=psutil.cpu_count(logical=False),
-                    swap_total=psutil.swap_memory()[0],
-                    vmem_total=psutil.virtual_memory()[0],
-                )
-            )
-
-        return o
 
     def log_resource_usage(self, usage):
         """Summarize the resource usage of this build in a log message."""
