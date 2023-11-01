@@ -56,6 +56,8 @@ support-files = [
   "head.js",
   "video.ogg",
 ]
-skip-if = ["toolkit == 'android'"]
-
+skip-if = [
+  "toolkit == 'android'"
+  "os == 'linux' && debug", # Bug 1765783
+]
 ["test_videocontrols_onclickplay.html"]
