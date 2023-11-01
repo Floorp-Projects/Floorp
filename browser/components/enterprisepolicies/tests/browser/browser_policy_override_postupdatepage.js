@@ -72,7 +72,8 @@ function getPostUpdatePage() {
  * Removes the updates.xml file and returns the nsIFile for the
  * active-update.xml file.
  *
- * @return  The nsIFile for the active-update.xml file.
+ * @returns {nsIFile}
+ *   The nsIFile for the active-update.xml file.
  */
 function getActiveUpdateFile() {
   let updateRootDir = Services.dirsvc.get("UpdRootD", Ci.nsIFile);
@@ -92,10 +93,10 @@ function getActiveUpdateFile() {
 /**
  * Reloads the update xml files.
  *
- * @param  skipFiles (optional)
- *         If true, the update xml files will not be read and the metadata will
- *         be reset. If false (the default), the update xml files will be read
- *         to populate the update metadata.
+ * @param {boolean} [skipFiles]
+ *   If true, the update xml files will not be read and the metadata will
+ *   be reset. If false (the default), the update xml files will be read
+ *   to populate the update metadata.
  */
 function reloadUpdateManagerData(skipFiles = false) {
   Cc["@mozilla.org/updates/update-manager;1"]
@@ -107,9 +108,8 @@ function reloadUpdateManagerData(skipFiles = false) {
 /**
  * Writes the updates specified to the active-update.xml file.
  *
- * @param  aText
- *         The updates represented as a string to write to the active-update.xml
- *         file.
+ * @param {string} aText
+ *   The updates represented as a string to write to the active-update.xml file.
  */
 function writeUpdatesToXMLFile(aText) {
   const PERMS_FILE = 0o644;

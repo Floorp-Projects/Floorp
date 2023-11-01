@@ -2394,7 +2394,7 @@ export var Policies = {
  *
  * @param {string} prefName
  *        The pref to be changed
- * @param {boolean,number,string} prefValue
+ * @param {boolean|number|string} prefValue
  *        The value to set and lock
  */
 export function setAndLockPref(prefName, prefValue) {
@@ -2409,7 +2409,7 @@ export function setAndLockPref(prefName, prefValue) {
  *
  * @param {string} prefName
  *        The pref to be changed
- * @param {boolean,number,string} prefValue
+ * @param {boolean|number|string} prefValue
  *        The value to set
  * @param {boolean} locked
  *        Optionally lock the pref
@@ -2493,9 +2493,9 @@ function setDefaultPermission(policyName, policyParam) {
  *
  * @param {string} permissionName
  *        The name of the permission to change
- * @param {array} allowList
+ * @param {Array} allowList
  *        The list of URLs to be set as ALLOW_ACTION for the chosen permission.
- * @param {array} blockList
+ * @param {Array} blockList
  *        The list of URLs to be set as DENY_ACTION for the chosen permission.
  */
 function addAllowDenyPermissions(permissionName, allowList, blockList) {
@@ -2573,7 +2573,7 @@ export function runOnce(actionName, callback) {
  *        string.
  * @param {Function} callback
  *        The callback to be run when the pref value changes
- * @returns Promise
+ * @returns {Promise}
  *        A promise that will resolve once the callback finishes running.
  *
  */
