@@ -21,21 +21,6 @@ These are instructions for preparing a release branch for Firefox Android and st
         -109.0a1
         +109.0b1
         ```
-    - In [Gecko.kt](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/plugins/dependencies/src/main/java/Gecko.kt), set the `channel` to `GeckoChannel.BETA`. Create a commit named `Switch to GeckoView Beta` for this change. This change can either be directly committed to the `releases_v[beta_version]` branch or a pull request can be created against it and then merged. Once landed, it is expected that this change will temporarily break builds on the branch. Step #4 will fix them.
-        ```diff
-        diff --git a/android-components/plugins/dependencies/src/main/java/Gecko.kt b/android-components/plugins/dependencies/src/main/java/Gecko.kt
-        --- a/android-components/plugins/dependencies/src/main/java/Gecko.kt
-        +++ b/android-components/plugins/dependencies/src/main/java/Gecko.kt
-        @@ -14,7 +14,7 @@ object Gecko {
-            /**
-              * GeckoView channel
-              */
-        -    val channel = GeckoChannel.NIGHTLY
-        +    val channel = GeckoChannel.BETA
-        }
-
-        /**
-        ```
     - In [ApplicationServices.kt](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/plugins/dependencies/src/main/java/ApplicationServices.kt):
       - Set `CHANNEL` to `ApplicationServicesChannel.RELEASE`
       - Set `VERSION` to `[major-version].0`
@@ -55,6 +40,21 @@ These are instructions for preparing a release branch for Firefox Android and st
       +val CHANNEL = ApplicationServicesChannel.RELEASE
       ```
       - Create a commit named `Switch to Application Services Release`. (Note: application-services releases directly after the nightly cycle, there's no beta cycle).
+    - In [Gecko.kt](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/plugins/dependencies/src/main/java/Gecko.kt), set the `channel` to `GeckoChannel.BETA`. Create a commit named `Switch to GeckoView Beta` for this change. This change can either be directly committed to the `releases_v[beta_version]` branch or a pull request can be created against it and then merged. Once landed, it is expected that this change will temporarily break builds on the branch. Step #4 will fix them.
+        ```diff
+        diff --git a/android-components/plugins/dependencies/src/main/java/Gecko.kt b/android-components/plugins/dependencies/src/main/java/Gecko.kt
+        --- a/android-components/plugins/dependencies/src/main/java/Gecko.kt
+        +++ b/android-components/plugins/dependencies/src/main/java/Gecko.kt
+        @@ -14,7 +14,7 @@ object Gecko {
+            /**
+              * GeckoView channel
+              */
+        -    val channel = GeckoChannel.NIGHTLY
+        +    val channel = GeckoChannel.BETA
+        }
+
+        /**
+        ```
 2. In `main` [version.txt](https://github.com/mozilla-mobile/firefox-android/blob/main/version.txt), update the version from `[previous_nightly_version].0a1` to `[nightly_version].0a1`. Create a commit named `Set version to [nightly_version].0a1` for this change. This change can either be directly committed to the `main` branch or a pull request can be created against it and then merged.
     ```diff
     diff --git a/version.txt b/version.txt
