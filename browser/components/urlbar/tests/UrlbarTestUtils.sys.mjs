@@ -1328,16 +1328,20 @@ export var UrlbarTestUtils = {
    *      and ">" chars.
    * @param {string} [options.additionalMsg]
    *   Additional message to use for Assert.equal.
+   * @param {int} [options.selectionType]
+   *   The selectionType for which the input should be checked.
    */
   checkFormatting(
     win,
     urlFormatString,
-    { clobberedURLString = null, additionalMsg = null } = {}
+    {
+      clobberedURLString = null,
+      additionalMsg = null,
+      selectionType = Ci.nsISelectionController.SELECTION_URLSECONDARY,
+    } = {}
   ) {
     let selectionController = win.gURLBar.editor.selectionController;
-    let selection = selectionController.getSelection(
-      selectionController.SELECTION_URLSECONDARY
-    );
+    let selection = selectionController.getSelection(selectionType);
     let value = win.gURLBar.editor.rootElement.textContent;
     let result = "";
     for (let i = 0; i < selection.rangeCount; i++) {
