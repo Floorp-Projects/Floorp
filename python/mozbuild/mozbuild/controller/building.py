@@ -1203,6 +1203,8 @@ class BuildDriver(MozbuildObject):
         if record_usage:
             monitor.record_usage()
 
+        return status
+
     def _build(
         self,
         monitor,
