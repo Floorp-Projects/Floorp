@@ -50,10 +50,6 @@ uniform bool u_mali_workaround_dummy;
 // Vertex shader attributes and uniforms
 //======================================================================================
 #ifdef WR_VERTEX_SHADER
-    // A generic uniform that shaders can optionally use to configure
-    // an operation mode for this batch.
-    uniform int uMode;
-
     // Uniform inputs
     uniform mat4 uTransform;       // Orthographic projection
 

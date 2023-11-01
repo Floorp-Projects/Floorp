@@ -582,7 +582,6 @@ class gfxContext final {
     mozilla::gfx::AntialiasMode aaMode;
     bool patternTransformChanged;
     Matrix patternTransform;
-    DeviceColor fontSmoothingBackgroundColor;
     // This is used solely for using minimal intermediate surface size.
     Point deviceOffset;
 #ifdef DEBUG

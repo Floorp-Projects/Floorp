@@ -94,7 +94,6 @@ menucaption {
   flex-shrink: 0;
   list-style-image: none;
   max-width: 42em;
-  -moz-font-smoothing-background-color: -moz-mac-menuitem;
 
   @media (-moz-platform: linux) {
     padding: 4px 6px;
@@ -110,13 +109,11 @@ menuitem {
   &:where([disabled="true"]) {
     color: var(--panel-disabled-color);
     text-shadow: none;
-    -moz-font-smoothing-background-color: -moz-mac-menuitem;
   }
 
   &:where([_moz-menuactive]:not([disabled="true"])) {
     color: -moz-menuhovertext;
     background-color: -moz-menuhover;
-    -moz-font-smoothing-background-color: -moz-mac-active-menuitem;
   }
 
   &:where([_moz-menuactive="true"][disabled="true"]) {

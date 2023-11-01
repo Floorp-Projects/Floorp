@@ -19,7 +19,7 @@ varying highp vec4 v_uv_clip;
 
 #ifdef WR_VERTEX_SHADER
 
-#define VECS_PER_TEXT_RUN           2
+#define VECS_PER_TEXT_RUN           1
 #define GLYPHS_PER_GPU_BLOCK        2U
 
 #ifdef WR_FEATURE_GLYPH_TRANSFORM
@@ -66,12 +66,11 @@ GlyphResource fetch_glyph_resource(int address) {
 
 struct TextRun {
     vec4 color;
-    vec4 bg_color;
 };
 
 TextRun fetch_text_run(int address) {
-    vec4 data[2] = fetch_from_gpu_cache_2(address);
-    return TextRun(data[0], data[1]);
+    vec4 data = fetch_from_gpu_cache_1(address);
+    return TextRun(data);
 }
 
 vec2 get_snap_bias(int subpx_dir) {
@@ -111,10 +110,6 @@ void main() {
     // rect size during batching, instead of the actual size of the primitive.
     TextRun text = fetch_text_run(ph.specific_prim_address);
     vec2 text_offset = ph.local_rect.p1;
-
-    if (color_mode == COLOR_MODE_FROM_PASS) {
-        color_mode = uMode;
-    }
 
     // Note that the unsnapped reference frame relative offset has already
     // been subtracted from the prim local rect origin during batching.
@@ -249,18 +244,9 @@ void main() {
                 v_color = text.color;
             #endif
             break;
-        case COLOR_MODE_SUBPX_BG_PASS2:
-            v_mask_swizzle = vec3(1.0, 0.0, 0.0);
-            v_color = text.color;
-            break;
-        case COLOR_MODE_SUBPX_BG_PASS0:
         case COLOR_MODE_COLOR_BITMAP:
             v_mask_swizzle = vec3(1.0, 0.0, 0.0);
             v_color = vec4(text.color.a);
-            break;
-        case COLOR_MODE_SUBPX_BG_PASS1:
-            v_mask_swizzle = vec3(-1.0, 1.0, 0.0);
-            v_color = vec4(text.color.a) * text.bg_color;
             break;
         case COLOR_MODE_SUBPX_DUAL_SOURCE:
             #ifdef SWGL_BLEND

@@ -83,7 +83,6 @@ class gfxMacFont final : public gfxFont {
   mozilla::UniquePtr<gfxFontShaper> mCoreTextShaper;
 
   Metrics mMetrics;
-  nscolor mFontSmoothingBackgroundColor;
 
   bool mVariationFont;  // true if font has OpenType variations
 };

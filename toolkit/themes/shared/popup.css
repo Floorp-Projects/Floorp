@@ -58,7 +58,6 @@ panel {
     display: flex;
     box-sizing: border-box;
 
-    -moz-font-smoothing-background-color: var(--panel-background, -moz-mac-menupopup);
     padding: var(--panel-padding);
     color: var(--panel-color);
     background: var(--panel-background);

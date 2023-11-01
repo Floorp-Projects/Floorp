@@ -186,10 +186,6 @@ void brush_vs(
     int color_mode = prim_user_data.x & 0xffff;
     int blend_mode = prim_user_data.x >> 16;
 
-    if (color_mode == COLOR_MODE_FROM_PASS) {
-        color_mode = uMode;
-    }
-
 #endif
 
     // Derive the texture coordinates for this image, based on
@@ -289,19 +285,13 @@ void brush_vs(
                 v_color = image_data.color;
             #endif
             break;
-        case COLOR_MODE_SUBPX_BG_PASS2:
         case COLOR_MODE_IMAGE:
             v_mask_swizzle = vec2(1.0, 0.0);
             v_color = image_data.color;
             break;
-        case COLOR_MODE_SUBPX_BG_PASS0:
         case COLOR_MODE_COLOR_BITMAP:
             v_mask_swizzle = vec2(1.0, 0.0);
             v_color = vec4(image_data.color.a);
-            break;
-        case COLOR_MODE_SUBPX_BG_PASS1:
-            v_mask_swizzle = vec2(-1.0, 1.0);
-            v_color = vec4(image_data.color.a) * image_data.background_color;
             break;
         case COLOR_MODE_SUBPX_DUAL_SOURCE:
             v_mask_swizzle = vec2(image_data.color.a, 0.0);

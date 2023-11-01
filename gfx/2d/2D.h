@@ -2078,7 +2078,6 @@ class GFX2D_API Factory {
 #ifdef XP_DARWIN
   static already_AddRefed<ScaledFont> CreateScaledFontForMacFont(
       CGFontRef aCGFont, const RefPtr<UnscaledFont>& aUnscaledFont, Float aSize,
-      const DeviceColor& aFontSmoothingBackgroundColor,
       bool aUseFontSmoothing = true, bool aApplySyntheticBold = false,
       bool aHasColorGlyphs = false);
 #endif

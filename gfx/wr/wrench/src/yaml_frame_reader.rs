@@ -745,7 +745,6 @@ impl YamlFrameReader {
         &mut self,
         font_key: FontKey,
         size: f32,
-        bg_color: Option<ColorU>,
         flags: FontInstanceFlags,
         synthetic_italics: SyntheticItalics,
         wrench: &mut Wrench,
@@ -753,14 +752,13 @@ impl YamlFrameReader {
         let font_render_mode = self.font_render_mode;
 
         *self.font_instances
-            .entry((font_key, size.into(), flags, bg_color, synthetic_italics))
+            .entry((font_key, size.into(), flags, synthetic_italics))
             .or_insert_with(|| {
                 wrench.add_font_instance(
                     font_key,
                     size,
                     flags,
                     font_render_mode,
-                    bg_color,
                     synthetic_italics,
                 )
             })
@@ -1350,7 +1348,6 @@ impl YamlFrameReader {
     ) {
         let size = item["size"].as_pt_to_f32().unwrap_or(16.0);
         let color = item["color"].as_colorf().unwrap_or(ColorF::BLACK);
-        let bg_color = item["bg-color"].as_colorf().map(|c| c.into());
         let synthetic_italics = if let Some(angle) = item["synthetic-italics"].as_f32() {
             SyntheticItalics::from_degrees(angle)
         } else if item["synthetic-italics"].as_bool().unwrap_or(false) {
@@ -1385,7 +1382,6 @@ impl YamlFrameReader {
         let font_key = self.get_or_create_font(desc, wrench);
         let font_instance_key = self.get_or_create_font_instance(font_key,
                                                                  size,
-                                                                 bg_color,
                                                                  flags,
                                                                  synthetic_italics,
                                                                  wrench);
