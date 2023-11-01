@@ -236,8 +236,6 @@ module.exports = {
         "browser/components/customizableui/**",
         "browser/components/downloads/**",
         "browser/components/enterprisepolicies/**",
-        "browser/components/firefoxview/tests/browser/head.js",
-        "browser/components/firefoxview/tests/browser/FirefoxViewTestUtils.sys.mjs",
         "browser/components/ion/content/ion.js",
         "browser/components/newtab/**",
         "browser/components/originattributes/test/browser/**",
