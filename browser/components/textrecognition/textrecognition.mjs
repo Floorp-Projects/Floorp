@@ -10,7 +10,7 @@ window.addEventListener("DOMContentLoaded", () => {
 });
 
 /**
- * @typedef {Object} TextRecognitionResult
+ * @typedef {object} TextRecognitionResult
  * @property {number} confidence
  * @property {string} string
  * @property {DOMQuad} quad
@@ -19,8 +19,11 @@ window.addEventListener("DOMContentLoaded", () => {
 class TextRecognitionModal {
   /**
    * @param {Promise<TextRecognitionResult[]>} resultsPromise
-   * @param {() => {}} resizeVertically
-   * @param {(url: string, where: string, params: Object) => {}} openLinkIn
+   * @param {Function} resizeVertically
+   * @param {object} [openLinkIn]
+   * @param {string} openLinkIn.url
+   * @param {string} openLinkIn.where
+   * @param {object} openLinkIn.params
    */
   constructor(resultsPromise, resizeVertically, openLinkIn) {
     /** @type {HTMLElement} */
@@ -114,6 +117,7 @@ class TextRecognitionModal {
 
   /**
    * After the results are shown, measure how long a user interacts with the modal.
+   *
    * @param {number} textLength
    */
   static recordTextLengthTelemetry(textLength) {
@@ -241,7 +245,7 @@ class TextRecognitionModal {
 /**
  * A two dimensional vector.
  *
- * @typedef {[number, number]} Vec2
+ * @typedef {number[]} Vec2
  */
 
 /**
@@ -357,7 +361,7 @@ function densityCluster(points, distance, minPoints) {
 /**
  * @param {Vec2[]} points
  * @param {number} distance
- * @param {number} index,
+ * @param {number} index
  * @returns {Index[]}
  */
 function getNeighborsWithinDistance(points, distance, index) {

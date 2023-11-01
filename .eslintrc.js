@@ -247,7 +247,6 @@ module.exports = {
         "browser/components/sessionstore/**",
         "browser/components/storybook/.storybook/**",
         "browser/components/tests/browser/**",
-        "browser/components/textrecognition/textrecognition.mjs",
         "browser/components/touchbar/tests/browser/browser_touchbar_searchrestrictions.js",
         "browser/components/uitour/UITour*",
         "browser/extensions/pictureinpicture/**",
