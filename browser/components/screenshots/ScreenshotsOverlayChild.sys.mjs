@@ -213,7 +213,6 @@ export class ScreenshotsOverlay {
    * Removes all event listeners and removes the overlay from the Anonymous Content
    */
   tearDown() {
-    this.windowDimensions.reset();
     if (this._content) {
       this.removeEventListeners();
       try {
@@ -1039,20 +1038,31 @@ export class ScreenshotsOverlay {
    * @param {String} eventType will be "scroll" or "resize"
    */
   updateScreenshotsOverlayDimensions(eventType) {
+    if (this.#state === "crosshairs" && eventType === "resize") {
+      this.hideHoverElementContainer();
+    }
+
     this.updateWindowDimensions();
 
-    if (this.state === "crosshairs") {
-      if (eventType === "resize") {
-        this.hideHoverElementContainer();
-      } else if (eventType === "scroll") {
+    if (this.#state === "selected" && eventType === "resize") {
+      this.updateSelectionSizeText();
+      let didShift = this.selectionRegion.shift();
+      if (didShift) {
+        this.drawSelectionContainer();
+      }
+      this.drawButtonsContainer();
+    } else if (
+      this.#state !== "resizing" &&
+      this.#state !== "dragging" &&
+      eventType === "scroll"
+    ) {
+      this.drawButtonsContainer();
+      if (this.#state === "crosshairs") {
         if (this.#lastClientX && this.#lastClientY) {
           this.#cachedEle = null;
           this.handleElementHover(this.#lastClientX, this.#lastClientY);
         }
       }
-    } else if (this.state === "selected") {
-      this.drawButtonsContainer();
-      this.updateSelectionSizeText();
     }
   }
 
@@ -1145,13 +1155,6 @@ export class ScreenshotsOverlay {
         scrollHeight: scrollHeight - heightDiff,
       };
 
-      if (this.state === "selected") {
-        let didShift = this.selectionRegion.shift();
-        if (didShift) {
-          this.drawSelectionContainer();
-          this.drawButtonsContainer();
-        }
-      }
       this.updateScreenshotsOverlayContainer();
       // We just updated the screenshots container so we check if the window
       // dimensions are still accurate
