@@ -229,23 +229,31 @@ uint8_t IrishCasing::GetClass(uint32_t aCh) {
   using mozilla::unicode::GetGenCategory;
   if (aCh >= 'a' && aCh <= 'z') {
     return sLcClasses[aCh - 'a'];
-  } else if (aCh >= 'A' && aCh <= 'Z') {
+  }
+
+  if (aCh >= 'A' && aCh <= 'Z') {
     return sUcClasses[aCh - 'A'];
-  } else if (GetGenCategory(aCh) == nsUGenCategory::kLetter) {
+  }
+
+  if (GetGenCategory(aCh) == nsUGenCategory::kLetter) {
     if (aCh == a_ACUTE || aCh == e_ACUTE || aCh == i_ACUTE || aCh == o_ACUTE ||
         aCh == u_ACUTE) {
       return kClass_vowel;
-    } else if (aCh == A_ACUTE || aCh == E_ACUTE || aCh == I_ACUTE ||
-               aCh == O_ACUTE || aCh == U_ACUTE) {
-      return kClass_Vowel;
-    } else {
-      return kClass_letter;
     }
-  } else if (aCh == '-' || aCh == HYPHEN || aCh == NO_BREAK_HYPHEN) {
-    return kClass_hyph;
-  } else {
-    return kClass_other;
+
+    if (aCh == A_ACUTE || aCh == E_ACUTE || aCh == I_ACUTE || aCh == O_ACUTE ||
+        aCh == U_ACUTE) {
+      return kClass_Vowel;
+    }
+
+    return kClass_letter;
   }
+
+  if (aCh == '-' || aCh == HYPHEN || aCh == NO_BREAK_HYPHEN) {
+    return kClass_hyph;
+  }
+
+  return kClass_other;
 }
 
 uint32_t IrishCasing::UpperCase(uint32_t aCh, State& aState, bool& aMarkPos,
