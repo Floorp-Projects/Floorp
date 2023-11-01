@@ -351,6 +351,7 @@ class SystemResourceMonitor(object):
             self._stopped = True
             return
 
+        self.stop_time = time.monotonic()
         assert not self._stopped
 
         try:
@@ -426,8 +427,8 @@ class SystemResourceMonitor(object):
                 self._process.join(10)
 
         self._running = False
-        self.end_time = time.monotonic()
         SystemResourceUsage.instance = None
+        self.end_time = time.monotonic()
 
     # Methods to record events alongside the monitored data.
 
@@ -807,6 +808,7 @@ class SystemResourceMonitor(object):
         return o
 
     def as_profile(self):
+        profile_time = time.monotonic()
         start_time = self.start_time
         profile = {
             "meta": {
@@ -819,9 +821,6 @@ class SystemResourceMonitor(object):
                 "interval": self.poll_interval * 1000,
                 "startTime": self.start_timestamp * 1000,
                 "profilingStartTime": 0,
-                "profilingEndTime": round(
-                    (self.end_time - self.start_time) * 1000 + 0.0005, 3
-                ),
                 "logicalCPUs": psutil.cpu_count(logical=True),
                 "physicalCPUs": psutil.cpu_count(logical=False),
                 "mainMemory": psutil.virtual_memory()[0],
@@ -1163,4 +1162,35 @@ class SystemResourceMonitor(object):
                         3,
                     )
 
+        # We may have spent some time generating this profile, and there might
+        # also have been some time elapsed between stopping the resource
+        # monitor, and the profile being created. These are hidden costs that
+        # we should account for as best as possible, and the best we can do
+        # is to make the profile contain information about this cost somehow.
+        # We extend the profile end time up to now rather than self.end_time,
+        # and add a phase covering that period of time.
+        now = time.monotonic()
+        profile["meta"]["profilingEndTime"] = round(
+            (now - self.start_time) * 1000 + 0.0005, 3
+        )
+        markerData = {
+            "type": "Phase",
+            "phase": "teardown",
+        }
+        add_marker(phase_string_index, self.stop_time, now, markerData, 3)
+        teardown_string_index = get_string_index("resourcemonitor")
+        markerData = {
+            "type": "Text",
+            "text": "stop",
+        }
+        add_marker(teardown_string_index, self.stop_time, self.end_time, markerData, 3)
+        markerData = {
+            "type": "Text",
+            "text": "as_profile",
+        }
+        add_marker(teardown_string_index, profile_time, now, markerData, 3)
+
+        # Unfortunately, whatever the caller does with the profile (e.g. json)
+        # or after that (hopefully, exit) is not going to be counted, but we
+        # assume it's fast enough.
         return profile
