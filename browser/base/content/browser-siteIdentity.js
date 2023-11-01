@@ -812,6 +812,11 @@ var gIdentityHandler = {
     let icon_label = "";
     let tooltip = "";
 
+    let warnTextOnInsecure =
+      this._insecureConnectionTextEnabled ||
+      (this._insecureConnectionTextPBModeEnabled &&
+        PrivateBrowsingUtils.isWindowPrivate(window));
+
     if (this._isSecureInternalUI) {
       // This is a secure internal Firefox page.
       this._identityBox.className = "chromeUI";
@@ -844,6 +849,10 @@ var gIdentityHandler = {
 
       if (this._isMixedActiveContentLoaded) {
         this._identityBox.classList.add("mixedActiveContent");
+        if (UrlbarPrefs.get("trimHttps") && warnTextOnInsecure) {
+          icon_label = gNavigatorBundle.getString("identity.notSecure.label");
+          this._identityBox.classList.add("notSecureText");
+        }
       } else if (this._isMixedActiveContentBlocked) {
         this._identityBox.classList.add(
           "mixedDisplayContentLoadedActiveBlocked"
@@ -873,11 +882,6 @@ var gIdentityHandler = {
       let className = "notSecure";
       this._identityBox.className = className;
       tooltip = gNavigatorBundle.getString("identity.notSecure.tooltip");
-
-      let warnTextOnInsecure =
-        this._insecureConnectionTextEnabled ||
-        (this._insecureConnectionTextPBModeEnabled &&
-          PrivateBrowsingUtils.isWindowPrivate(window));
       if (warnTextOnInsecure) {
         icon_label = gNavigatorBundle.getString("identity.notSecure.label");
         this._identityBox.classList.add("notSecureText");

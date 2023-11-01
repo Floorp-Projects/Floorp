@@ -270,11 +270,14 @@ export class UrlbarValueFormatter {
     let { domain, origin, preDomain, schemeWSlashes, trimmedLength, url } =
       urlMetaData;
 
-    // When the scheme has been stripped, don't show the box for it.
-    if (
-      !lazy.UrlbarPrefs.get("trimURLs") ||
-      schemeWSlashes != lazy.BrowserUIUtils.trimURLProtocol
-    ) {
+    let schemeStripped =
+      lazy.UrlbarPrefs.get("trimURLs") &&
+      schemeWSlashes == lazy.BrowserUIUtils.trimURLProtocol;
+
+    // When the scheme is not stripped, add the scheme size as a property.
+    // The scheme-size is used to prevent the scheme from being hidden, when
+    // RTL domains overflow to the left.
+    if (!schemeStripped) {
       this.scheme.value = schemeWSlashes;
       this.inputField.style.setProperty(
         "--urlbar-scheme-size",
@@ -295,8 +298,10 @@ export class UrlbarValueFormatter {
 
     let textNode = editor.rootElement.firstChild;
 
-    // Strike out the "https" part if mixed active content is loaded.
+    // Strike out the "https" part if mixed active content is loaded and https
+    // is not trimmed.
     if (
+      !schemeStripped &&
       this.urlbarInput.getAttribute("pageproxystate") == "valid" &&
       url.startsWith("https:") &&
       this.window.gBrowser.securityUI.state &

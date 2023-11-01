@@ -14,6 +14,11 @@ prefs = [
 
 ["browser_UrlbarInput_formatValue.js"]
 
+["browser_UrlbarInput_formatValue_strikeout.js"]
+support-files = [
+  "mixed_active.html",
+]
+
 ["browser_UrlbarInput_formatValue_detachedTab.js"]
 skip-if = [
   "apple_catalina", # Bug 1756585
