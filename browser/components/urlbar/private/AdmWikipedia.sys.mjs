@@ -57,7 +57,6 @@ export class AdmWikipedia extends BaseFeature {
       lazy.QuickSuggest.jsBackend.register(this);
     } else {
       lazy.QuickSuggest.jsBackend.unregister(this);
-      this.#suggestionsMap.clear();
     }
   }
 
