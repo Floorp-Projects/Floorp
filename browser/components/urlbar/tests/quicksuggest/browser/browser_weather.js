@@ -354,6 +354,9 @@ async function doDismissTest(command) {
   info("Waiting for weather fetch after re-enabling the suggestion");
   await fetchPromise;
   info("Got weather fetch");
+
+  // Wait for keywords to be re-synced from remote settings.
+  await QuickSuggestTestUtils.forceSync();
 }
 
 // Tests the "Report inaccurate location" result menu command immediately

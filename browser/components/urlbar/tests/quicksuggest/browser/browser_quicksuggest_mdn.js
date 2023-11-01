@@ -88,6 +88,7 @@ add_task(async function disable() {
   Assert.equal(result.providerName, "HeuristicFallback");
 
   await SpecialPowers.popPrefEnv();
+  await QuickSuggestTestUtils.forceSync();
 });
 
 // Tests the "Not interested" result menu dismissal command.

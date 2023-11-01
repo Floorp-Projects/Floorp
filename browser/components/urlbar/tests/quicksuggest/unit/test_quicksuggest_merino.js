@@ -554,6 +554,7 @@ add_task(async function suggestedDisabled_dataCollectionEnabled() {
 
   UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
   UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
+  await QuickSuggestTestUtils.forceSync();
   gClient.resetSession();
 });
 
