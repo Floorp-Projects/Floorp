@@ -1,8 +1,8 @@
 {
   "searchUrl": {
-    "message": "https://www.amazon.cn/mn/searchApp"
+    "message": "https://www.amazon.cn/s"
   },
   "searchUrlGetParams": {
-    "message": "ix=sunray&pageletid=headsearch&searchType=&Go.x=0&Go.y=0&bestSaleNum=0&keywords={searchTerms}"
+    "message": "k={searchTerms}"
   }
 }
