@@ -255,7 +255,6 @@ add_task(async function () {
 
         UrlbarPrefs.set("suggest.quicksuggest.sponsored", sponsored);
         UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", nonsponsored);
-        await QuickSuggestTestUtils.forceSync();
 
         // Set up the search and do it.
         let context = createContext(keyword, {
@@ -280,6 +279,5 @@ add_task(async function () {
 
     UrlbarPrefs.set("suggest.quicksuggest.sponsored", true);
     UrlbarPrefs.set("suggest.quicksuggest.nonsponsored", true);
-    await QuickSuggestTestUtils.forceSync();
   }
 });
