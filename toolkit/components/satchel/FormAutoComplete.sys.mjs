@@ -537,7 +537,6 @@ export class FormAutoComplete {
       return;
     }
 
-    this.log(`autoCompleteSearch(${aUntrimmedSearchString})`);
     const searchString = aUntrimmedSearchString.trim().toLowerCase();
     const prevResult = aPreviousResult?.wrappedJSObject;
     if (prevResult?.canSearchIncrementally(searchString)) {
