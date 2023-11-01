@@ -1122,13 +1122,15 @@ void Statistics::sendGCTelemetry() {
   }
 
   // Parallel marking stats.
+  bool usedParallelMarking = false;
   if (gc->isParallelMarkingEnabled()) {
     TimeDuration wallTime = SumPhase(PhaseKind::PARALLEL_MARK, phaseTimes);
     TimeDuration parallelMarkTime =
         sumTotalParallelTime(PhaseKind::PARALLEL_MARK_MARK);
     TimeDuration parallelRunTime =
         parallelMarkTime + sumTotalParallelTime(PhaseKind::PARALLEL_MARK_OTHER);
-    if (wallTime && parallelMarkTime) {
+    usedParallelMarking = wallTime && parallelMarkTime;
+    if (usedParallelMarking) {
       uint32_t threadCount = gc->markers.length();
       double speedup = parallelMarkTime / wallTime;
       double utilization = parallelRunTime / (wallTime * threadCount);
@@ -1140,6 +1142,7 @@ void Statistics::sendGCTelemetry() {
           getCount(COUNT_PARALLEL_MARK_INTERRUPTIONS));
     }
   }
+  runtime->metrics().GC_PARALLEL_MARK(usedParallelMarking);
 }
 
 void Statistics::beginNurseryCollection() {
