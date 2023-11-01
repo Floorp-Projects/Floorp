@@ -1427,7 +1427,10 @@ var browserTests = [
     {"defaultparagraphseparator":[false,false,"p",false,false,"div"],"formatblock":[false,false,"p",false,false,"pre"]}],
 ["<p>[foo<p>bar]",
     [["defaultparagraphseparator","p"],["formatblock","<pre>"]],
-    "<pre>[foo<br>bar]</pre>",
+    [
+      "<pre>[foo<br>bar]</pre>",
+      "<pre>[foo</pre><pre>bar]</pre>",
+    ],
     [true,true],
     {"defaultparagraphseparator":[false,false,"div",false,false,"p"],"formatblock":[false,false,"p",false,false,"pre"]}],
 ["<p>[foo<p>bar]",
