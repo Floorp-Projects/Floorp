@@ -57,9 +57,9 @@ fun ReviewQualityCheckContextualOnboarding(
     val learnMoreText =
         stringResource(id = R.string.review_quality_check_contextual_onboarding_learn_more_link)
     val privacyPolicyText =
-        stringResource(id = R.string.review_quality_check_contextual_onboarding_privacy_policy)
+        stringResource(id = R.string.review_quality_check_contextual_onboarding_privacy_policy_2)
     val termsOfUseText =
-        stringResource(id = R.string.review_quality_check_contextual_onboarding_terms_use)
+        stringResource(id = R.string.review_quality_check_contextual_onboarding_terms_use_2)
 
     ReviewQualityCheckCard(modifier = Modifier.fillMaxWidth()) {
         Text(
@@ -76,7 +76,7 @@ fun ReviewQualityCheckContextualOnboarding(
             style = FirefoxTheme.typography.body2,
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         LinkText(
             text = stringResource(
@@ -99,15 +99,21 @@ fun ReviewQualityCheckContextualOnboarding(
             linkTextDecoration = TextDecoration.Underline,
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(16.dp))
+
+        Text(
+            text = stringResource(
+                id = R.string.review_quality_check_contextual_onboarding_caption_3,
+                stringResource(id = R.string.shopping_product_name),
+            ),
+            color = FirefoxTheme.colors.textPrimary,
+            style = FirefoxTheme.typography.caption,
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
 
         LinkText(
-            text = stringResource(
-                id = R.string.review_quality_check_contextual_onboarding_caption_2,
-                stringResource(id = R.string.shopping_product_name),
-                privacyPolicyText,
-                termsOfUseText,
-            ),
+            text = privacyPolicyText,
             linkTextStates = listOf(
                 LinkTextState(
                     text = privacyPolicyText,
@@ -116,6 +122,16 @@ fun ReviewQualityCheckContextualOnboarding(
                         onPrivacyPolicyClick()
                     },
                 ),
+            ),
+            style = FirefoxTheme.typography.body2,
+            linkTextDecoration = TextDecoration.Underline,
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        LinkText(
+            text = termsOfUseText,
+            linkTextStates = listOf(
                 LinkTextState(
                     text = termsOfUseText,
                     url = PLACEHOLDER_URL,
@@ -124,14 +140,11 @@ fun ReviewQualityCheckContextualOnboarding(
                     },
                 ),
             ),
-            style = FirefoxTheme.typography.caption
-                .copy(
-                    color = FirefoxTheme.colors.textSecondary,
-                ),
+            style = FirefoxTheme.typography.body2,
             linkTextDecoration = TextDecoration.Underline,
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         Image(
             painter = painterResource(id = R.drawable.shopping_onboarding),
@@ -142,7 +155,7 @@ fun ReviewQualityCheckContextualOnboarding(
                 .padding(all = 16.dp),
         )
 
-        Spacer(modifier = Modifier.height(12.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         PrimaryButton(
             text = stringResource(R.string.review_quality_check_contextual_onboarding_primary_button_text),
