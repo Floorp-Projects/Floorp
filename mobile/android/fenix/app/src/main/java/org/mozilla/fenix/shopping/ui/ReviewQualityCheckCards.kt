@@ -44,23 +44,23 @@ private val defaultCardContentPadding = 16.dp
  * A card container for review quality check UI that can be expanded and collapsed.
  *
  * @param title The title of the card.
+ * @param isExpanded Whether or not the card is expanded.
  * @param modifier Modifier to be applied to the card.
- * @param onExpandToggleClick Callback invoked when card is collapsed or expanded.
+ * @param onExpandToggleClick Invoked when the card is expanded or collapsed.
  * @param content The content of the card.
  */
 @Composable
 fun ReviewQualityCheckExpandableCard(
     title: String,
+    isExpanded: Boolean,
     modifier: Modifier = Modifier,
-    onExpandToggleClick: (isExpanded: Boolean) -> Unit = {},
+    onExpandToggleClick: () -> Unit,
     content: @Composable () -> Unit,
 ) {
     ReviewQualityCheckCard(
         modifier = modifier,
         contentPadding = PaddingValues(0.dp),
     ) {
-        var isExpanded by remember { mutableStateOf(false) }
-
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
             modifier = Modifier
@@ -71,10 +71,7 @@ fun ReviewQualityCheckExpandableCard(
                     } else {
                         stringResource(R.string.a11y_action_label_expand)
                     },
-                    onClick = {
-                        isExpanded = isExpanded.not()
-                        onExpandToggleClick(isExpanded)
-                    },
+                    onClick = onExpandToggleClick,
                 )
                 .padding(defaultCardContentPadding),
             verticalAlignment = Alignment.CenterVertically,
@@ -152,6 +149,8 @@ fun ReviewQualityCheckCard(
 private fun ReviewQualityCheckCardPreview() {
     FirefoxTheme {
         Column(modifier = Modifier.padding(16.dp)) {
+            var isExpanded by remember { mutableStateOf(true) }
+
             ReviewQualityCheckCard(
                 modifier = Modifier.fillMaxWidth(),
             ) {
@@ -167,6 +166,8 @@ private fun ReviewQualityCheckCardPreview() {
             ReviewQualityCheckExpandableCard(
                 title = "Review Quality Check Expandable Card",
                 modifier = Modifier.fillMaxWidth(),
+                isExpanded = isExpanded,
+                onExpandToggleClick = { isExpanded = !isExpanded },
             ) {
                 Text(
                     text = "content",

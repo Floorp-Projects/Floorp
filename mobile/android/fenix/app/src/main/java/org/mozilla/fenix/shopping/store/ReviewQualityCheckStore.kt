@@ -11,12 +11,14 @@ import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.OptedIn.ProductR
 /**
  * Store for review quality check feature.
  *
+ * @param initialState The initial state of the store.
  * @param middleware The list of middlewares to use.
  */
 class ReviewQualityCheckStore(
+    initialState: ReviewQualityCheckState = ReviewQualityCheckState.Initial,
     middleware: List<ReviewQualityCheckMiddleware>,
 ) : Store<ReviewQualityCheckState, ReviewQualityCheckAction>(
-    initialState = ReviewQualityCheckState.Initial,
+    initialState = initialState,
     middleware = middleware,
     reducer = ::reducer,
 ) {
@@ -59,6 +61,18 @@ private fun mapStateForUpdateAction(
 
         ReviewQualityCheckAction.OptOut -> {
             ReviewQualityCheckState.NotOptedIn()
+        }
+
+        ReviewQualityCheckAction.ExpandCollapseSettings -> {
+            state.mapIfOptedIn {
+                it.copy(isSettingsExpanded = !it.isSettingsExpanded)
+            }
+        }
+
+        ReviewQualityCheckAction.ExpandCollapseInfo -> {
+            state.mapIfOptedIn {
+                it.copy(isInfoExpanded = !it.isInfoExpanded)
+            }
         }
 
         ReviewQualityCheckAction.ToggleProductRecommendation -> {

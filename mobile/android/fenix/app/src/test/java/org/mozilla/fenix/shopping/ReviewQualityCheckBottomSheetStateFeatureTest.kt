@@ -21,7 +21,7 @@ class ReviewQualityCheckBottomSheetStateFeatureTest {
 
     @Test
     fun `WHEN store state changes to not opted in from any other state THEN callback is invoked with half state`() {
-        val store = ReviewQualityCheckStore(emptyList())
+        val store = ReviewQualityCheckStore(middleware = emptyList())
         var updatedState: BottomSheetViewState? = null
         val tested = ReviewQualityCheckBottomSheetStateFeature(
             store = store,
@@ -44,7 +44,7 @@ class ReviewQualityCheckBottomSheetStateFeatureTest {
 
     @Test
     fun `WHEN store state changes to not opted in from initial state THEN callback is invoked with full state`() {
-        val store = ReviewQualityCheckStore(emptyList())
+        val store = ReviewQualityCheckStore(middleware = emptyList())
         var updatedState: BottomSheetViewState? = null
         val tested = ReviewQualityCheckBottomSheetStateFeature(
             store = store,

@@ -15,7 +15,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -35,18 +38,24 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * Info card UI containing an explanation of the review quality.
  *
  * @param productVendor The vendor of the product.
+ * @param isExpanded Whether or not the card is expanded.
  * @param modifier Modifier to apply to the layout.
+ * @param onExpandToggleClick Invoked when the user expands or collapses the card.
  * @param onLearnMoreClick Invoked when the user clicks to learn more about review grades.
  */
 @Composable
 fun ReviewQualityInfoCard(
     productVendor: ReviewQualityCheckState.ProductVendor,
+    isExpanded: Boolean,
     modifier: Modifier = Modifier,
+    onExpandToggleClick: () -> Unit,
     onLearnMoreClick: () -> Unit,
 ) {
     ReviewQualityCheckExpandableCard(
         title = stringResource(id = R.string.review_quality_check_explanation_title),
         modifier = modifier,
+        isExpanded = isExpanded,
+        onExpandToggleClick = onExpandToggleClick,
     ) {
         ReviewQualityInfo(
             productVendor = productVendor,
@@ -189,29 +198,14 @@ private fun ReviewQualityInfoCardPreview() {
                 .background(color = FirefoxTheme.colors.layer1)
                 .padding(all = 16.dp),
         ) {
+            var isInfoExpanded by remember { mutableStateOf(true) }
+
             ReviewQualityInfoCard(
                 productVendor = ReviewQualityCheckState.ProductVendor.AMAZON,
+                isExpanded = isInfoExpanded,
                 modifier = Modifier.fillMaxWidth(),
                 onLearnMoreClick = {},
-            )
-        }
-    }
-}
-
-@Composable
-@LightDarkPreview
-private fun ReviewQualityInfoPreview() {
-    FirefoxTheme {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(color = FirefoxTheme.colors.layer1)
-                .padding(all = 16.dp),
-        ) {
-            ReviewQualityInfo(
-                productVendor = ReviewQualityCheckState.ProductVendor.AMAZON,
-                modifier = Modifier.fillMaxWidth(),
-                onLearnMoreClick = {},
+                onExpandToggleClick = { isInfoExpanded = !isInfoExpanded },
             )
         }
     }

@@ -10,6 +10,7 @@ import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.robolectric.testContext
 import org.junit.Assert
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -19,6 +20,7 @@ import org.mozilla.fenix.helpers.FenixRobolectricTestRunner
 import org.mozilla.fenix.shopping.store.BottomSheetDismissSource
 import org.mozilla.fenix.shopping.store.BottomSheetViewState
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckAction
+import org.mozilla.fenix.shopping.store.ReviewQualityCheckState
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckStore
 
 @RunWith(FenixRobolectricTestRunner::class)
@@ -119,10 +121,40 @@ class ReviewQualityCheckTelemetryMiddlewareTest {
 
     @Test
     fun `WHEN the expand button from the settings card is clicked THEN the settings expand event is recorded`() {
-        store.dispatch(ReviewQualityCheckAction.ExpandSettingsClicked).joinBlocking()
-        store.waitUntilIdle()
+        val tested = ReviewQualityCheckStore(
+            initialState = ReviewQualityCheckState.OptedIn(
+                productRecommendationsPreference = true,
+                productVendor = ReviewQualityCheckState.ProductVendor.AMAZON,
+                isSettingsExpanded = false,
+            ),
+            middleware = listOf(
+                ReviewQualityCheckTelemetryMiddleware(),
+            ),
+        )
+        tested.waitUntilIdle()
+        tested.dispatch(ReviewQualityCheckAction.ExpandCollapseSettings).joinBlocking()
+        tested.waitUntilIdle()
 
         assertNotNull(Shopping.surfaceExpandSettings.testGetValue())
+    }
+
+    @Test
+    fun `WHEN the collapse button from the settings card is clicked THEN the settings expand event is not recorded`() {
+        val tested = ReviewQualityCheckStore(
+            initialState = ReviewQualityCheckState.OptedIn(
+                productRecommendationsPreference = true,
+                productVendor = ReviewQualityCheckState.ProductVendor.AMAZON,
+                isSettingsExpanded = true,
+            ),
+            middleware = listOf(
+                ReviewQualityCheckTelemetryMiddleware(),
+            ),
+        )
+        tested.waitUntilIdle()
+        tested.dispatch(ReviewQualityCheckAction.ExpandCollapseSettings).joinBlocking()
+        tested.waitUntilIdle()
+
+        assertNull(Shopping.surfaceExpandSettings.testGetValue())
     }
 
     @Test

@@ -12,6 +12,10 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -27,12 +31,15 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * @param error The error state to display.
  * @param productRecommendationsEnabled The current state of the product recommendations toggle.
  * @param productVendor The vendor of the product.
+ * @param isSettingsExpanded Whether or not the settings card is expanded.
+ * @param isInfoExpanded Whether or not the info card is expanded.
  * @param onReviewGradeLearnMoreClick Invoked when the user clicks to learn more about review grades.
  * @param onOptOutClick Invoked when the user opts out of the review quality check feature.
  * @param onProductRecommendationsEnabledStateChange Invoked when the user changes the product
  * recommendations toggle state.
  * @param onFooterLinkClick Invoked when the user clicks on the footer link.
- * @param onExpandSettings Invoked when the user expands the settings card.
+ * @param onSettingsExpandToggleClick Invoked when the user expands or collapses the settings card.
+ * @param onInfoExpandToggleClick Invoked when the user expands or collapses the info card.
  * @param modifier Modifier to apply to the layout.
  */
 @Composable
@@ -41,11 +48,14 @@ fun ProductAnalysisError(
     error: ProductReviewState.Error,
     productRecommendationsEnabled: Boolean?,
     productVendor: ReviewQualityCheckState.ProductVendor,
+    isSettingsExpanded: Boolean,
+    isInfoExpanded: Boolean,
     onReviewGradeLearnMoreClick: () -> Unit,
     onOptOutClick: () -> Unit,
     onProductRecommendationsEnabledStateChange: (Boolean) -> Unit,
     onFooterLinkClick: () -> Unit,
-    onExpandSettings: () -> Unit,
+    onSettingsExpandToggleClick: () -> Unit,
+    onInfoExpandToggleClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -99,14 +109,17 @@ fun ProductAnalysisError(
 
         ReviewQualityInfoCard(
             productVendor = productVendor,
+            isExpanded = isInfoExpanded,
             onLearnMoreClick = onReviewGradeLearnMoreClick,
+            onExpandToggleClick = onInfoExpandToggleClick,
         )
 
         ReviewQualityCheckSettingsCard(
             productRecommendationsEnabled = productRecommendationsEnabled,
+            isExpanded = isSettingsExpanded,
             onProductRecommendationsEnabledStateChange = onProductRecommendationsEnabledStateChange,
             onTurnOffReviewQualityCheckClick = onOptOutClick,
-            onExpandSettings = onExpandSettings,
+            onExpandToggleClick = onSettingsExpandToggleClick,
             modifier = Modifier.fillMaxWidth(),
         )
 
@@ -126,15 +139,22 @@ private fun ProductAnalysisErrorPreview() {
                 .background(color = FirefoxTheme.colors.layer1)
                 .padding(all = 16.dp),
         ) {
+            var productRecommendationsEnabled by remember { mutableStateOf(false) }
+            var isSettingsExpanded by remember { mutableStateOf(false) }
+            var isInfoExpanded by remember { mutableStateOf(false) }
+
             ProductAnalysisError(
                 error = ProductReviewState.Error.NetworkError,
-                productRecommendationsEnabled = true,
+                productRecommendationsEnabled = productRecommendationsEnabled,
                 productVendor = ReviewQualityCheckState.ProductVendor.AMAZON,
+                isSettingsExpanded = isSettingsExpanded,
+                isInfoExpanded = isInfoExpanded,
                 onReviewGradeLearnMoreClick = {},
                 onOptOutClick = {},
-                onProductRecommendationsEnabledStateChange = {},
+                onProductRecommendationsEnabledStateChange = { productRecommendationsEnabled = it },
                 onFooterLinkClick = {},
-                onExpandSettings = {},
+                onSettingsExpandToggleClick = { isSettingsExpanded = !isSettingsExpanded },
+                onInfoExpandToggleClick = { isInfoExpanded = !isInfoExpanded },
                 modifier = Modifier.fillMaxWidth(),
             )
         }

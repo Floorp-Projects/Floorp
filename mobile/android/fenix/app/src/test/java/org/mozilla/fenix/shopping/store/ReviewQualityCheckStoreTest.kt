@@ -208,6 +208,106 @@ class ReviewQualityCheckStoreTest {
         }
 
     @Test
+    fun `GIVEN the user has opted in the feature WHEN the user expands settings THEN state should reflect that`() =
+        runTest {
+            val tested = ReviewQualityCheckStore(
+                initialState = ReviewQualityCheckState.OptedIn(
+                    productRecommendationsPreference = null,
+                    productVendor = ProductVendor.BEST_BUY,
+                    isSettingsExpanded = false,
+                ),
+                middleware = emptyList(),
+            )
+            tested.waitUntilIdle()
+            dispatcher.scheduler.advanceUntilIdle()
+            tested.dispatch(ReviewQualityCheckAction.ExpandCollapseSettings).joinBlocking()
+            tested.waitUntilIdle()
+            dispatcher.scheduler.advanceUntilIdle()
+
+            val expected = ReviewQualityCheckState.OptedIn(
+                productRecommendationsPreference = null,
+                productVendor = ProductVendor.BEST_BUY,
+                isSettingsExpanded = true,
+            )
+            assertEquals(expected, tested.state)
+        }
+
+    @Test
+    fun `GIVEN the user has opted in the feature WHEN the user collapses settings THEN state should reflect that`() =
+        runTest {
+            val tested = ReviewQualityCheckStore(
+                initialState = ReviewQualityCheckState.OptedIn(
+                    productRecommendationsPreference = null,
+                    productVendor = ProductVendor.BEST_BUY,
+                    isSettingsExpanded = true,
+                ),
+                middleware = emptyList(),
+            )
+            tested.waitUntilIdle()
+            dispatcher.scheduler.advanceUntilIdle()
+            tested.dispatch(ReviewQualityCheckAction.ExpandCollapseSettings).joinBlocking()
+            tested.waitUntilIdle()
+            dispatcher.scheduler.advanceUntilIdle()
+
+            val expected = ReviewQualityCheckState.OptedIn(
+                productRecommendationsPreference = null,
+                productVendor = ProductVendor.BEST_BUY,
+                isSettingsExpanded = false,
+            )
+            assertEquals(expected, tested.state)
+        }
+
+    @Test
+    fun `GIVEN the user has opted in the feature WHEN the user expands info card THEN state should reflect that`() =
+        runTest {
+            val tested = ReviewQualityCheckStore(
+                initialState = ReviewQualityCheckState.OptedIn(
+                    productRecommendationsPreference = null,
+                    productVendor = ProductVendor.BEST_BUY,
+                    isInfoExpanded = false,
+                ),
+                middleware = emptyList(),
+            )
+            tested.waitUntilIdle()
+            dispatcher.scheduler.advanceUntilIdle()
+            tested.dispatch(ReviewQualityCheckAction.ExpandCollapseInfo).joinBlocking()
+            tested.waitUntilIdle()
+            dispatcher.scheduler.advanceUntilIdle()
+
+            val expected = ReviewQualityCheckState.OptedIn(
+                productRecommendationsPreference = null,
+                productVendor = ProductVendor.BEST_BUY,
+                isInfoExpanded = true,
+            )
+            assertEquals(expected, tested.state)
+        }
+
+    @Test
+    fun `GIVEN the user has opted in the feature WHEN the user collapses info card THEN state should reflect that`() =
+        runTest {
+            val tested = ReviewQualityCheckStore(
+                initialState = ReviewQualityCheckState.OptedIn(
+                    productRecommendationsPreference = null,
+                    productVendor = ProductVendor.BEST_BUY,
+                    isInfoExpanded = true,
+                ),
+                middleware = emptyList(),
+            )
+            tested.waitUntilIdle()
+            dispatcher.scheduler.advanceUntilIdle()
+            tested.dispatch(ReviewQualityCheckAction.ExpandCollapseInfo).joinBlocking()
+            tested.waitUntilIdle()
+            dispatcher.scheduler.advanceUntilIdle()
+
+            val expected = ReviewQualityCheckState.OptedIn(
+                productRecommendationsPreference = null,
+                productVendor = ProductVendor.BEST_BUY,
+                isInfoExpanded = false,
+            )
+            assertEquals(expected, tested.state)
+        }
+
+    @Test
     fun `GIVEN the user has opted in the feature WHEN a product analysis is fetched successfully THEN state should reflect that`() =
         runTest {
             val tested = ReviewQualityCheckStore(

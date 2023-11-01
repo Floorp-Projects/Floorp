@@ -62,6 +62,8 @@ private val productRecommendationImageSize = 60.dp
  * @param productRecommendationsEnabled The current state of the product recommendations toggle.
  * @param productAnalysis The product analysis to display.
  * @param productVendor The vendor of the product.
+ * @param isSettingsExpanded Whether or not the settings card is expanded.
+ * @param isInfoExpanded Whether or not the info card is expanded.
  * @param onOptOutClick Invoked when the user opts out of the review quality check feature.
  * @param onReanalyzeClick Invoked when the user clicks to re-analyze a product.
  * @param onProductRecommendationsEnabledStateChange Invoked when the user changes the product
@@ -69,7 +71,8 @@ private val productRecommendationImageSize = 60.dp
  * @param onReviewGradeLearnMoreClick Invoked when the user clicks to learn more about review grades.
  * @param onFooterLinkClick Invoked when the user clicks on the footer link.
  * @param onShowMoreRecentReviewsClicked Invoked when the user clicks to show more recent reviews.
- * @param onExpandSettings Invoked when the user expands the settings card.
+ * @param onSettingsExpandToggleClick Invoked when the user expands or collapses the settings card.
+ * @param onInfoExpandToggleClick Invoked when the user expands or collapses the info card.
  * @param onRecommendedProductClick Invoked when the user clicks on the product recommendation.
  * @param modifier The modifier to be applied to the Composable.
  */
@@ -79,13 +82,16 @@ fun ProductAnalysis(
     productRecommendationsEnabled: Boolean?,
     productAnalysis: AnalysisPresent,
     productVendor: ReviewQualityCheckState.ProductVendor,
+    isSettingsExpanded: Boolean,
+    isInfoExpanded: Boolean,
     onOptOutClick: () -> Unit,
     onReanalyzeClick: () -> Unit,
     onProductRecommendationsEnabledStateChange: (Boolean) -> Unit,
     onReviewGradeLearnMoreClick: () -> Unit,
     onFooterLinkClick: () -> Unit,
     onShowMoreRecentReviewsClicked: () -> Unit,
-    onExpandSettings: () -> Unit,
+    onSettingsExpandToggleClick: () -> Unit,
+    onInfoExpandToggleClick: () -> Unit,
     onRecommendedProductClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -133,7 +139,9 @@ fun ProductAnalysis(
 
         ReviewQualityInfoCard(
             productVendor = productVendor,
+            isExpanded = isInfoExpanded,
             modifier = Modifier.fillMaxWidth(),
+            onExpandToggleClick = onInfoExpandToggleClick,
             onLearnMoreClick = onReviewGradeLearnMoreClick,
         )
 
@@ -148,9 +156,10 @@ fun ProductAnalysis(
 
         ReviewQualityCheckSettingsCard(
             productRecommendationsEnabled = productRecommendationsEnabled,
+            isExpanded = isSettingsExpanded,
             onProductRecommendationsEnabledStateChange = onProductRecommendationsEnabledStateChange,
             onTurnOffReviewQualityCheckClick = onOptOutClick,
-            onExpandSettings = onExpandSettings,
+            onExpandToggleClick = onSettingsExpandToggleClick,
             modifier = Modifier.fillMaxWidth(),
         )
 
@@ -589,11 +598,15 @@ private fun ProductAnalysisPreview(
             onRequestDismiss = {},
         ) {
             var productRecommendationsEnabled by remember { mutableStateOf(model.productRecommendationsEnabled) }
+            var isSettingsExpanded by remember { mutableStateOf(false) }
+            var isInfoExpanded by remember { mutableStateOf(false) }
 
             ProductAnalysis(
                 productRecommendationsEnabled = productRecommendationsEnabled,
                 productAnalysis = model.productAnalysis,
                 productVendor = model.productVendor,
+                isSettingsExpanded = isSettingsExpanded,
+                isInfoExpanded = isInfoExpanded,
                 onOptOutClick = {},
                 onReanalyzeClick = {},
                 onProductRecommendationsEnabledStateChange = {
@@ -602,7 +615,8 @@ private fun ProductAnalysisPreview(
                 onReviewGradeLearnMoreClick = {},
                 onFooterLinkClick = {},
                 onShowMoreRecentReviewsClicked = {},
-                onExpandSettings = {},
+                onSettingsExpandToggleClick = { isSettingsExpanded = !isSettingsExpanded },
+                onInfoExpandToggleClick = { isInfoExpanded = !isInfoExpanded },
                 onRecommendedProductClick = {},
             )
         }

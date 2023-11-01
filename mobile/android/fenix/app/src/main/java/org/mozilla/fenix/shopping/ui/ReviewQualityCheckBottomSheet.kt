@@ -93,8 +93,11 @@ fun ReviewQualityCheckBottomSheet(
                         onRequestDismiss(BottomSheetDismissSource.LINK_OPENED)
                         store.dispatch(ReviewQualityCheckAction.OpenPoweredByLink)
                     },
-                    onExpandSettings = {
-                        store.dispatch(ReviewQualityCheckAction.ExpandSettingsClicked)
+                    onSettingsExpandToggleClick = {
+                        store.dispatch(ReviewQualityCheckAction.ExpandCollapseSettings)
+                    },
+                    onInfoExpandToggleClick = {
+                        store.dispatch(ReviewQualityCheckAction.ExpandCollapseInfo)
                     },
                     onNoAnalysisPresent = {
                         store.dispatch(ReviewQualityCheckAction.NoAnalysisDisplayed)
@@ -130,7 +133,8 @@ private fun ProductReview(
     onProductRecommendationsEnabledStateChange: (Boolean) -> Unit,
     onShowMoreRecentReviewsClicked: () -> Unit,
     onNoAnalysisPresent: () -> Unit,
-    onExpandSettings: () -> Unit,
+    onSettingsExpandToggleClick: () -> Unit,
+    onInfoExpandToggleClick: () -> Unit,
     onReviewGradeLearnMoreClick: () -> Unit,
     onFooterLinkClick: () -> Unit,
     onRecommendedProductClick: (String) -> Unit,
@@ -145,11 +149,14 @@ private fun ProductReview(
                     productRecommendationsEnabled = state.productRecommendationsPreference,
                     productAnalysis = productReviewState,
                     productVendor = state.productVendor,
+                    isSettingsExpanded = state.isSettingsExpanded,
+                    isInfoExpanded = state.isInfoExpanded,
                     onOptOutClick = onOptOutClick,
                     onReanalyzeClick = onReanalyzeClick,
                     onProductRecommendationsEnabledStateChange = onProductRecommendationsEnabledStateChange,
                     onShowMoreRecentReviewsClicked = onShowMoreRecentReviewsClicked,
-                    onExpandSettings = onExpandSettings,
+                    onSettingsExpandToggleClick = onSettingsExpandToggleClick,
+                    onInfoExpandToggleClick = onInfoExpandToggleClick,
                     onReviewGradeLearnMoreClick = onReviewGradeLearnMoreClick,
                     onFooterLinkClick = onFooterLinkClick,
                     onRecommendedProductClick = onRecommendedProductClick,
@@ -161,11 +168,14 @@ private fun ProductReview(
                     error = productReviewState,
                     productRecommendationsEnabled = state.productRecommendationsPreference,
                     productVendor = state.productVendor,
+                    isSettingsExpanded = state.isSettingsExpanded,
+                    isInfoExpanded = state.isInfoExpanded,
                     onReviewGradeLearnMoreClick = onReviewGradeLearnMoreClick,
                     onOptOutClick = onOptOutClick,
                     onProductRecommendationsEnabledStateChange = onProductRecommendationsEnabledStateChange,
                     onFooterLinkClick = onFooterLinkClick,
-                    onExpandSettings = onExpandSettings,
+                    onSettingsExpandToggleClick = onSettingsExpandToggleClick,
+                    onInfoExpandToggleClick = onInfoExpandToggleClick,
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
@@ -181,13 +191,16 @@ private fun ProductReview(
 
                 NoAnalysis(
                     isAnalyzing = productReviewState.isReanalyzing,
+                    onAnalyzeClick = onAnalyzeClick,
                     productRecommendationsEnabled = state.productRecommendationsPreference,
                     productVendor = state.productVendor,
-                    onAnalyzeClick = onAnalyzeClick,
+                    isSettingsExpanded = state.isSettingsExpanded,
+                    isInfoExpanded = state.isInfoExpanded,
                     onReviewGradeLearnMoreClick = onReviewGradeLearnMoreClick,
                     onOptOutClick = onOptOutClick,
                     onProductRecommendationsEnabledStateChange = onProductRecommendationsEnabledStateChange,
-                    onExpandSettings = onExpandSettings,
+                    onSettingsExpandToggleClick = onSettingsExpandToggleClick,
+                    onInfoExpandToggleClick = onInfoExpandToggleClick,
                     modifier = Modifier.fillMaxWidth(),
                 )
             }

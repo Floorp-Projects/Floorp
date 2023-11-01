@@ -161,9 +161,14 @@ sealed interface ReviewQualityCheckAction : Action {
     object ShowMoreRecentReviewsClicked : TelemetryAction
 
     /**
-     * Triggered when the user expands the settings card.
+     * Triggered when the user expands or collapses the settings card.
      */
-    object ExpandSettingsClicked : TelemetryAction
+    object ExpandCollapseSettings : TelemetryAction, UpdateAction
+
+    /**
+     * Triggered when the user expands or collapses the info card.
+     */
+    object ExpandCollapseInfo : UpdateAction
 
     /**
      * Triggered when the No analysis card is displayed to the user.

@@ -12,6 +12,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -26,28 +30,27 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * the entire review quality check feature.
  *
  * @param productRecommendationsEnabled The current state of the product recommendations toggle.
+ * @param isExpanded Whether or not the settings card is expanded.
  * @param onProductRecommendationsEnabledStateChange Invoked when the user changes the product
  * recommendations toggle state.
  * @param onTurnOffReviewQualityCheckClick Invoked when the user opts out of the review quality check feature.
- * @param onExpandSettings Invoked when the user expands the settings card.
+ * @param onExpandToggleClick Invoked when the user expands or collapses the settings card.
  * @param modifier Modifier to apply to the layout.
  */
 @Composable
 fun ReviewQualityCheckSettingsCard(
     productRecommendationsEnabled: Boolean?,
+    isExpanded: Boolean,
     onProductRecommendationsEnabledStateChange: (Boolean) -> Unit,
     onTurnOffReviewQualityCheckClick: () -> Unit,
-    onExpandSettings: () -> Unit,
+    onExpandToggleClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     ReviewQualityCheckExpandableCard(
         modifier = modifier,
         title = stringResource(R.string.review_quality_check_settings_title),
-        onExpandToggleClick = { isExpanded ->
-            if (isExpanded) {
-                onExpandSettings()
-            }
-        },
+        isExpanded = isExpanded,
+        onExpandToggleClick = onExpandToggleClick,
     ) {
         SettingsContent(
             productRecommendationsEnabled = productRecommendationsEnabled,
@@ -95,31 +98,15 @@ private fun ReviewQualityCheckSettingsCardPreview() {
                 .background(color = FirefoxTheme.colors.layer1)
                 .padding(all = 16.dp),
         ) {
-            ReviewQualityCheckSettingsCard(
-                productRecommendationsEnabled = true,
-                onProductRecommendationsEnabledStateChange = {},
-                onTurnOffReviewQualityCheckClick = {},
-                onExpandSettings = {},
-                modifier = Modifier.fillMaxWidth(),
-            )
-        }
-    }
-}
+            var isSettingsExpanded by remember { mutableStateOf(true) }
+            var productRecommendationsEnabled by remember { mutableStateOf(true) }
 
-@LightDarkPreview
-@Composable
-private fun SettingsContentPreview() {
-    FirefoxTheme {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(color = FirefoxTheme.colors.layer1)
-                .padding(all = 16.dp),
-        ) {
-            SettingsContent(
-                productRecommendationsEnabled = true,
-                onProductRecommendationsEnabledStateChange = {},
+            ReviewQualityCheckSettingsCard(
+                productRecommendationsEnabled = productRecommendationsEnabled,
+                onProductRecommendationsEnabledStateChange = { productRecommendationsEnabled = it },
                 onTurnOffReviewQualityCheckClick = {},
+                isExpanded = isSettingsExpanded,
+                onExpandToggleClick = { isSettingsExpanded = !isSettingsExpanded },
                 modifier = Modifier.fillMaxWidth(),
             )
         }

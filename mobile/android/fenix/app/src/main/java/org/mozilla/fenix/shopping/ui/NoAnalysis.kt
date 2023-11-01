@@ -41,12 +41,15 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * @param isAnalyzing Whether or not the displayed product is being analyzed.
  * @param productRecommendationsEnabled The current state of the product recommendations toggle.
  * @param productVendor The vendor of the product.
+ * @param isSettingsExpanded Whether or not the settings card is expanded.
+ * @param isInfoExpanded Whether or not the info card is expanded.
  * @param onAnalyzeClick Invoked when the user clicks on the check review button.
  * @param onReviewGradeLearnMoreClick Invoked when the user clicks to learn more about review grades.
  * @param onOptOutClick Invoked when the user opts out of the review quality check feature.
  * @param onProductRecommendationsEnabledStateChange Invoked when the user changes the product
  * recommendations toggle state.
- * @param onExpandSettings Invoked when the user expands the settings card.
+ * @param onSettingsExpandToggleClick Invoked when the user expands or collapses the settings card.
+ * @param onInfoExpandToggleClick Invoked when the user expands or collapses the info card.
  * @param modifier Modifier to be applied to the composable.
  */
 @Suppress("LongParameterList")
@@ -55,11 +58,14 @@ fun NoAnalysis(
     isAnalyzing: Boolean,
     productRecommendationsEnabled: Boolean?,
     productVendor: ReviewQualityCheckState.ProductVendor,
+    isSettingsExpanded: Boolean,
+    isInfoExpanded: Boolean,
     onAnalyzeClick: () -> Unit,
     onReviewGradeLearnMoreClick: () -> Unit,
     onOptOutClick: () -> Unit,
     onProductRecommendationsEnabledStateChange: (Boolean) -> Unit,
-    onExpandSettings: () -> Unit,
+    onSettingsExpandToggleClick: () -> Unit,
+    onInfoExpandToggleClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -70,14 +76,17 @@ fun NoAnalysis(
 
         ReviewQualityInfoCard(
             productVendor = productVendor,
+            isExpanded = isInfoExpanded,
             onLearnMoreClick = onReviewGradeLearnMoreClick,
+            onExpandToggleClick = onInfoExpandToggleClick,
         )
 
         ReviewQualityCheckSettingsCard(
             productRecommendationsEnabled = productRecommendationsEnabled,
+            isExpanded = isSettingsExpanded,
             onProductRecommendationsEnabledStateChange = onProductRecommendationsEnabledStateChange,
             onTurnOffReviewQualityCheckClick = onOptOutClick,
-            onExpandSettings = onExpandSettings,
+            onExpandToggleClick = onSettingsExpandToggleClick,
             modifier = Modifier.fillMaxWidth(),
         )
     }
@@ -169,8 +178,6 @@ private fun ReviewQualityNoAnalysisCard(
 @Composable
 @LightDarkPreview
 private fun NoAnalysisPreview() {
-    var isAnalyzing by remember { mutableStateOf(false) }
-
     FirefoxTheme {
         Box(
             modifier = Modifier
@@ -178,15 +185,23 @@ private fun NoAnalysisPreview() {
                 .background(color = FirefoxTheme.colors.layer1)
                 .padding(all = 16.dp),
         ) {
+            var isAnalyzing by remember { mutableStateOf(false) }
+            var productRecommendationsEnabled by remember { mutableStateOf(false) }
+            var isSettingsExpanded by remember { mutableStateOf(false) }
+            var isInfoExpanded by remember { mutableStateOf(false) }
+
             NoAnalysis(
                 isAnalyzing = isAnalyzing,
-                productVendor = ReviewQualityCheckState.ProductVendor.AMAZON,
                 onAnalyzeClick = { isAnalyzing = !isAnalyzing },
-                productRecommendationsEnabled = false,
+                productVendor = ReviewQualityCheckState.ProductVendor.AMAZON,
+                productRecommendationsEnabled = productRecommendationsEnabled,
+                isSettingsExpanded = isSettingsExpanded,
+                isInfoExpanded = isInfoExpanded,
                 onReviewGradeLearnMoreClick = {},
                 onOptOutClick = {},
-                onProductRecommendationsEnabledStateChange = {},
-                onExpandSettings = {},
+                onProductRecommendationsEnabledStateChange = { productRecommendationsEnabled = it },
+                onSettingsExpandToggleClick = { isSettingsExpanded = !isSettingsExpanded },
+                onInfoExpandToggleClick = { isInfoExpanded = !isInfoExpanded },
                 modifier = Modifier.fillMaxWidth(),
             )
         }
