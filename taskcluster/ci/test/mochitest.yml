@@ -142,6 +142,7 @@ mochitest-plain:
             linux.*64-tsan-qr/opt: 20
             .*(asan|ccov).*: 10
             linux.*/opt: 8
+            windows.*/debug: 8
             default: 5
     instance-size:
         by-test-platform:
