@@ -286,34 +286,20 @@ class ChromeActions {
     return this.domWindow.windowGlobalChild.browsingContext.parent === null;
   }
 
-  supportsDocumentFonts() {
-    const prefBrowser = Services.prefs.getIntPref(
-      "browser.display.use_document_fonts"
-    );
-    const prefGfx = Services.prefs.getBoolPref(
-      "gfx.downloadable_fonts.enabled"
-    );
-    return !!prefBrowser && prefGfx;
-  }
-
-  supportsPinchToZoom() {
-    return Services.prefs.getBoolPref("apz.allow_zooming");
-  }
-
-  supportedMouseWheelZoomModifierKeys() {
+  getBrowserPrefs() {
     return {
-      ctrlKey:
+      canvasMaxAreaInBytes: Services.prefs.getIntPref("gfx.max-alloc-size"),
+      isInAutomation: Cu.isInAutomation,
+      supportsDocumentFonts:
+        !!Services.prefs.getIntPref("browser.display.use_document_fonts") &&
+        Services.prefs.getBoolPref("gfx.downloadable_fonts.enabled"),
+      supportsIntegratedFind: this.supportsIntegratedFind(),
+      supportsMouseWheelZoomCtrlKey:
         Services.prefs.getIntPref("mousewheel.with_control.action") === 3,
-      metaKey: Services.prefs.getIntPref("mousewheel.with_meta.action") === 3,
+      supportsMouseWheelZoomMetaKey:
+        Services.prefs.getIntPref("mousewheel.with_meta.action") === 3,
+      supportsPinchToZoom: Services.prefs.getBoolPref("apz.allow_zooming"),
     };
-  }
-
-  getCanvasMaxArea() {
-    return Services.prefs.getIntPref("gfx.max-alloc-size");
-  }
-
-  isInAutomation() {
-    return Cu.isInAutomation;
   }
 
   isMobile() {
@@ -451,8 +437,13 @@ class ChromeActions {
           break;
       }
     }
-    sendResponse?.(currentPrefs);
-    return currentPrefs;
+
+    const res = {
+      browserPrefs: this.getBrowserPrefs(),
+      prefs: currentPrefs,
+    };
+    sendResponse?.(res);
+    return res;
   }
 
   /**
