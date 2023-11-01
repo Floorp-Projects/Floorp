@@ -370,7 +370,7 @@ class BuildMonitor(MozbuildObject):
 
         self._resources_started = False
 
-    def finish(self, record_usage=True):
+    def finish(self):
         """Record the end of the build."""
         self.stop_resource_recording()
         self.end_time = time.monotonic()
@@ -380,10 +380,7 @@ class BuildMonitor(MozbuildObject):
         self.warnings_database.prune()
         self.warnings_database.save_to_file(self._warnings_path)
 
-        # Record usage.
-        if not record_usage:
-            return
-
+    def record_usage(self):
         build_resources_profile_path = None
         try:
             usage = self.get_resource_usage()
@@ -1181,6 +1178,44 @@ class BuildDriver(MozbuildObject):
         mach_context=None,
         append_env=None,
     ):
+        warnings_path = self._get_state_filename("warnings.json")
+        monitor = self._spawn(BuildMonitor)
+        monitor.init(warnings_path, self.log_manager.terminal)
+        status = self._build(
+            monitor,
+            metrics,
+            what,
+            jobs,
+            job_size,
+            directory,
+            verbose,
+            keep_going,
+            mach_context,
+            append_env,
+        )
+
+        record_usage = status == 0
+
+        # On automation, only record usage for plain `mach build`
+        if "MOZ_AUTOMATION" in os.environ and what:
+            record_usage = False
+
+        if record_usage:
+            monitor.record_usage()
+
+    def _build(
+        self,
+        monitor,
+        metrics,
+        what=None,
+        jobs=0,
+        job_size=0,
+        directory=None,
+        verbose=False,
+        keep_going=False,
+        mach_context=None,
+        append_env=None,
+    ):
         """Invoke the build backend.
 
         ``what`` defines the thing to build. If not defined, the default
@@ -1188,9 +1223,6 @@ class BuildDriver(MozbuildObject):
         """
         self.metrics = metrics
         self.mach_context = mach_context
-        warnings_path = self._get_state_filename("warnings.json")
-        monitor = self._spawn(BuildMonitor)
-        monitor.init(warnings_path, self.log_manager.terminal)
         footer = BuildProgressFooter(self.log_manager.terminal, monitor)
 
         # Disable indexing in objdir because it is not necessary and can slow
@@ -1445,13 +1477,7 @@ class BuildDriver(MozbuildObject):
                     # it through; otherwise, fail.
                     status = 1
 
-            record_usage = status == 0
-
-            # On automation, only record usage for plain `mach build`
-            if "MOZ_AUTOMATION" in os.environ and what:
-                record_usage = False
-
-            monitor.finish(record_usage=record_usage)
+            monitor.finish()
 
         if status == 0:
             usage = monitor.get_resource_usage()
