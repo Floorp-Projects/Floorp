@@ -8,10 +8,6 @@
   -moz-context-properties: fill, stroke;
   fill: var(--in-content-box-background);
   stroke: var(--in-content-box-border-color);
-}
-
-.searchBarImage,
-#searchShowSearchTermCheckbox {
   margin-inline-start: 33px;
 }
 
