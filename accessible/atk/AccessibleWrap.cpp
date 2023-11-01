@@ -927,6 +927,8 @@ static uint16_t GetInterfacesForProxy(RemoteAccessible* aProxy) {
 }
 
 void a11y::ProxyCreated(RemoteAccessible* aProxy) {
+  MOZ_ASSERT(aProxy->RemoteParent() || aProxy->IsDoc(),
+             "Need parent to check for HyperLink interface");
   GType type = GetMaiAtkType(GetInterfacesForProxy(aProxy));
   NS_ASSERTION(type, "why don't we have a type!");
 
