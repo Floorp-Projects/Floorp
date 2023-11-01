@@ -12,7 +12,8 @@
 class PictureInPictureOverrides {
   /**
    * Class constructor
-   * @param {Object} availableOverrides Contains all overrides provided in data/picture_in_picture_overrides.js
+   *
+   * @param {object} availableOverrides Contains all overrides provided in data/picture_in_picture_overrides.js
    */
   constructor(availableOverrides) {
     this.pref = "enable_picture_in_picture_overrides";
@@ -39,8 +40,9 @@ class PictureInPictureOverrides {
 
   /**
    * Checks the status of a specified override, and updates the set, `this._prefEnabledOverrides`, accordingly
-   * @param {String} id the id of the specific override contained in `this._availableOverrides`
-   * @param {String} pref the specific preference to check, in the form `disabled_picture_in_picture_overrides.${id}`
+   *
+   * @param {string} id the id of the specific override contained in `this._availableOverrides`
+   * @param {string} pref the specific preference to check, in the form `disabled_picture_in_picture_overrides.${id}`
    */
   async _checkSpecificOverridePref(id, pref) {
     const isDisabled = await browser.aboutConfigPipPrefs.getPref(pref);

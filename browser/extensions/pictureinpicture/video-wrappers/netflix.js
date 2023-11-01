@@ -21,8 +21,9 @@ class PictureInPictureVideoWrapper {
   /**
    * The Netflix player returns the current time in milliseconds so we convert
    * to seconds before returning.
+   *
    * @param {HTMLVideoElement} video The original video element
-   * @returns {Number} The current time in seconds
+   * @returns {number} The current time in seconds
    */
   getCurrentTime(video) {
     return this.player.getCurrentTime() / 1000;
@@ -30,8 +31,9 @@ class PictureInPictureVideoWrapper {
   /**
    * The Netflix player returns the duration in milliseconds so we convert to
    * seconds before returning.
+   *
    * @param {HTMLVideoElement} video The original video element
-   * @returns {Number} The duration in seconds
+   * @returns {number} The duration in seconds
    */
   getDuration(video) {
     return this.player.getDuration() / 1000;
@@ -68,8 +70,9 @@ class PictureInPictureVideoWrapper {
 
   /**
    * Set the current time of the video in milliseconds.
+   *
    * @param {HTMLVideoElement} video The original video element
-   * @param {Number} position The new time in seconds
+   * @param {number} position The new time in seconds
    */
   setCurrentTime(video, position) {
     this.player.seek(position * 1000);

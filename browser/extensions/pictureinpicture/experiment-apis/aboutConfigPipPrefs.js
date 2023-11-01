@@ -12,8 +12,9 @@
 this.aboutConfigPipPrefs = class extends ExtensionAPI {
   /**
    * Override ExtensionAPI with PiP override's specific preference API, prefixed by `disabled_picture_in_picture_overrides`
+   *
    * @param {ExtensionContext} context the context of an extension
-   * @returns {Object} returns the necessary API structure required to manage prefs within this extension
+   * @returns {object} returns the necessary API structure required to manage prefs within this extension
    */
   getAPI(context) {
     const EventManager = ExtensionCommon.EventManager;
@@ -38,8 +39,9 @@ this.aboutConfigPipPrefs = class extends ExtensionAPI {
         }).api(),
         /**
          * Calls `Services.prefs.getBoolPref` to get a preference
-         * @param {String} name The name of the preference to get; will be prefixed with this extension's branch
-         * @returns the preference, or undefined
+         *
+         * @param {string} name The name of the preference to get; will be prefixed with this extension's branch
+         * @returns {boolean|undefined} the preference, or undefined
          */
         async getPref(name) {
           try {
@@ -53,8 +55,9 @@ this.aboutConfigPipPrefs = class extends ExtensionAPI {
 
         /**
          * Calls `Services.prefs.setBoolPref` to set a preference
-         * @param {String} name the name of the preference to set; will be prefixed with this extension's branch
-         * @param {String} value the bool value to save in the pref
+         *
+         * @param {string} name the name of the preference to set; will be prefixed with this extension's branch
+         * @param {boolean} value the bool value to save in the pref
          */
         async setPref(name, value) {
           Services.prefs.setBoolPref(`${extensionPrefNameBase}${name}`, value);
