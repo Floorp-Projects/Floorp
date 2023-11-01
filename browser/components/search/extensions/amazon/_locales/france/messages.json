@@ -6,18 +6,12 @@
     "message": "Recherche Amazon.fr"
   },
   "searchUrl": {
-    "message": "https://www.amazon.fr/exec/obidos/external-search/"
+    "message": "https://www.amazon.fr/s"
   },
   "searchForm": {
     "message": "https://www.amazon.fr/"
   },
   "searchUrlGetParams": {
-    "message": "field-keywords={searchTerms}&ie={inputEncoding}&mode=blended&tag=firefox-fr-21&sourceid=Mozilla-search"
-  },
-  "suggestUrl": {
-    "message": "https://completion.amazon.fr/search/complete"
-  },
-  "suggestUrlGetParams": {
-    "message": "q={searchTerms}&search-alias=aps&mkt=5"
+    "message": "k={searchTerms}"
   }
 }
