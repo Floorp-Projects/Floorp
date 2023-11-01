@@ -63,7 +63,8 @@
  * └───────────────────────────┘                     └───────────────────────────────────┘
  */
 
-// How long the cache remains alive between uses, in milliseconds.
+// How long the cache remains alive between uses, in milliseconds. In automation the
+// engine is manually created and destroyed to avoid timing issues.
 const CACHE_TIMEOUT_MS = 15_000;
 
 /**
@@ -222,7 +223,10 @@ export class TranslationsEngine {
       // Clear any previous timeout.
       clearTimeout(this.#keepAliveTimeout);
     }
-    this.#keepAliveTimeout = setTimeout(this.terminate, CACHE_TIMEOUT_MS);
+    // In automated tests, the engine is manually destroyed.
+    if (!Cu.isInAutomation) {
+      this.#keepAliveTimeout = setTimeout(this.terminate, CACHE_TIMEOUT_MS);
+    }
   }
 
   /**
