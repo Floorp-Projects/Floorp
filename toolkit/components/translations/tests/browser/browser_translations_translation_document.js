@@ -9,11 +9,10 @@
 const { TranslationsDocument } = ChromeUtils.importESModule(
   "chrome://global/content/translations/translations-document.sys.mjs"
 );
-
 /**
  * @param {string} html
  * @param {{
- *  fakeTranslator?: (message: string) => Promise<string>
+ *  mockedTranslatorPort?: (message: string) => Promise<string>
  * }} [options]
  */
 async function createDoc(html, options) {
@@ -27,33 +26,18 @@ async function createDoc(html, options) {
   const parser = new DOMParser();
   const document = parser.parseFromString(html, "text/html");
 
-  /**
-   * Fake translations by converting them to uppercase.
-   * @param {string} message
-   */
-  async function fakeTranslator(message) {
-    /**
-     * @param {Node} node
-     */
-    function upperCaseNode(node) {
-      if (typeof node.nodeValue === "string") {
-        node.nodeValue = node.nodeValue.toUpperCase();
-      }
-      for (const childNode of node.childNodes) {
-        upperCaseNode(childNode);
-      }
-    }
-    const translatedDoc = parser.parseFromString(message, "text/html");
-    upperCaseNode(translatedDoc.body);
-    return [translatedDoc.body.innerHTML];
-  }
+  let translationsDocument;
 
-  const translationsDocument = new TranslationsDocument(
+  translationsDocument = new TranslationsDocument(
     document,
     "en",
     0, // This is a fake innerWindowID
-    options?.fakeTranslator ?? fakeTranslator,
-    options?.fakeTranslator ?? fakeTranslator
+    options?.mockedTranslatorPort ?? createMockedTranslatorPort(),
+    () => {
+      throw new Error("Cannot request a new port");
+    },
+    performance.now(),
+    () => performance.now()
   );
 
   /**
@@ -84,6 +68,8 @@ async function createDoc(html, options) {
   function translate() {
     info("Running translation.");
     translationsDocument.addRootElement(document.body);
+    // The document visibility is hidden, so the translator needs to be started manually.
+    translationsDocument.translator.pause(false);
   }
 
   function cleanup() {
@@ -187,6 +173,8 @@ add_task(async function test_translated_title() {
   translationsDocument.addRootElement(
     document.getElementsByTagName("title")[0]
   );
+  // The document isn't visible so the translations needs to be manually started.
+  translationsDocument.translator.pause(false);
 
   const translatedTitle = "THIS IS AN ACTUAL FULL PAGE.";
   try {
@@ -440,7 +428,7 @@ add_task(async function test_translation_batching() {
         <span>This entire</span> section continues in a <b>batch</b>.
       </div>
     `,
-    { fakeTranslator: createBatchFakeTranslator() }
+    { mockedTranslatorPort: createBatchedMockedTranslatorPort() }
   );
 
   translate();
@@ -494,7 +482,7 @@ add_task(async function test_many_inlines() {
         </span>
       </div>
     `,
-    { fakeTranslator: createBatchFakeTranslator() }
+    { mockedTranslatorPort: createBatchedMockedTranslatorPort() }
   );
 
   translate();
@@ -555,7 +543,7 @@ add_task(async function test_many_inlines() {
         </div>
       </div>
     `,
-    { fakeTranslator: createBatchFakeTranslator() }
+    { mockedTranslatorPort: createBatchedMockedTranslatorPort() }
   );
 
   translate();
@@ -600,7 +588,7 @@ add_task(async function test_presumed_inlines1() {
         <div>Block element</div>
       </div>
     `,
-    { fakeTranslator: createBatchFakeTranslator() }
+    { mockedTranslatorPort: createBatchedMockedTranslatorPort() }
   );
 
   translate();
@@ -632,7 +620,7 @@ add_task(async function test_presumed_inlines2() {
         <div>Block Element</div>
       </div>
     `,
-    { fakeTranslator: createBatchFakeTranslator() }
+    { mockedTranslatorPort: createBatchedMockedTranslatorPort() }
   );
 
   translate();
@@ -666,7 +654,7 @@ add_task(async function test_presumed_inlines3() {
         <div>Block Element</div>
       </span>
     `,
-    { fakeTranslator: createBatchFakeTranslator() }
+    { mockedTranslatorPort: createBatchedMockedTranslatorPort() }
   );
 
   translate();
@@ -710,7 +698,7 @@ add_task(async function test_chunking_large_text() {
         In hac habitasse platea dictumst. Duis vulputate tellus arcu, at posuere ligula viverra luctus. Fusce ultrices malesuada neque vitae vehicula. Aliquam blandit nisi sed nibh facilisis, non varius turpis venenatis. Vestibulum ut velit laoreet, sagittis leo ac, pharetra ex. Aenean mollis risus sed nibh auctor, et feugiat neque iaculis. Fusce fermentum libero metus, at consectetur massa euismod sed. Mauris ut metus sit amet leo porttitor mollis. Vivamus tincidunt lorem non purus suscipit sollicitudin. Maecenas ut tristique elit. Ut eu volutpat turpis. Suspendisse nec tristique augue. Nullam faucibus egestas volutpat. Sed tempor eros et mi ultrices, nec feugiat eros egestas.
       </pre>
     `,
-    { fakeTranslator: createBatchFakeTranslator() }
+    { mockedTranslatorPort: createBatchedMockedTranslatorPort() }
   );
 
   translate();
@@ -749,7 +737,7 @@ add_task(async function test_reordering() {
         C - This was third.
       </span>
     `,
-    { fakeTranslator: reorderingTranslator }
+    { mockedTranslatorPort: createdReorderingMockedTranslatorPort() }
   );
 
   translate();
@@ -781,7 +769,7 @@ add_task(async function test_reordering2() {
       </span>
       C - This was third.
     `,
-    { fakeTranslator: reorderingTranslator }
+    { mockedTranslatorPort: createdReorderingMockedTranslatorPort() }
   );
 
   translate();
