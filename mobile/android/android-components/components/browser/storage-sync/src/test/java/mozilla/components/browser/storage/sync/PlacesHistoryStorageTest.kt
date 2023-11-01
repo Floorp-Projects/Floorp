@@ -644,15 +644,6 @@ class PlacesHistoryStorageTest {
         assertThat(workInfo.state, `is`(WorkInfo.State.ENQUEUED))
     }
 
-    @Test
-    fun `can run prune on the store`() = runTestOnMain {
-        // Empty.
-        history.prune()
-        history.recordVisit("http://www.mozilla.org/1", PageVisit(VisitType.TYPED))
-        // Non-empty.
-        history.prune()
-    }
-
     @Test(expected = IllegalArgumentException::class)
     fun `storage validates calls to getSuggestion`() {
         history.getSuggestions("Hello!", -1)

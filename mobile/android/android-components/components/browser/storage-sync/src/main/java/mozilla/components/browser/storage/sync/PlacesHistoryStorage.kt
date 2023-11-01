@@ -242,19 +242,6 @@ open class PlacesHistoryStorage(
     }
 
     /**
-     * Should only be called in response to severe disk storage pressure. May delete all of the data,
-     * or some subset of it.
-     * Sync behaviour: will not remove history from remote clients.
-     */
-    override suspend fun prune() {
-        withContext(writeScope.coroutineContext) {
-            handlePlacesExceptions("prune") {
-                places.writer().pruneDestructively()
-            }
-        }
-    }
-
-    /**
      * Enqueues a periodic storage maintenance worker to WorkManager that prunes database entries
      * when it exceeds [PlacesHistoryStorageWorker.DB_SIZE_LIMIT_IN_BYTES].
      */

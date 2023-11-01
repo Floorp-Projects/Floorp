@@ -123,11 +123,6 @@ interface HistoryStorage : Storage {
      * @param timestamp A unix timestamp, milliseconds, of a visit to be removed.
      */
     suspend fun deleteVisit(url: String, timestamp: Long)
-
-    /**
-     * Prune history storage, removing stale history.
-     */
-    suspend fun prune()
 }
 
 /**
