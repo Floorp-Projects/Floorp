@@ -28,7 +28,8 @@ Object.assign(SyncedTabsDeckStore.prototype, EventEmitter.prototype, {
 
   /**
    * Sets the selected panelId and triggers a change event.
-   * @param {String} panelId - ID of the panel to select.
+   *
+   * @param {string} panelId - ID of the panel to select.
    */
   selectPanel(panelId) {
     if (!this._panels.includes(panelId) || this._selectedPanel === panelId) {
@@ -40,6 +41,7 @@ Object.assign(SyncedTabsDeckStore.prototype, EventEmitter.prototype, {
 
   /**
    * Update the set of panels in the deck and trigger a change event.
+   *
    * @param {Array} panels - an array of IDs for each panel in the deck.
    */
   setPanels(panels) {
