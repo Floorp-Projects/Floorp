@@ -383,11 +383,6 @@ class BuildMonitor(MozbuildObject):
     def record_usage(self):
         build_resources_profile_path = None
         try:
-            usage = self.get_resource_usage()
-            if not usage:
-                return
-
-            self.log_resource_usage(usage)
             # When running on automation, we store the resource usage data in
             # the upload path, alongside, for convenience, a copy of the HTML
             # viewer.
@@ -1485,6 +1480,7 @@ class BuildDriver(MozbuildObject):
             usage = monitor.get_resource_usage()
             if usage:
                 self.mach_context.command_attrs["usage"] = usage
+                monitor.log_resource_usage(usage)
 
         # Print the collected compiler warnings. This is redundant with
         # inline output from the compiler itself. However, unlike inline
