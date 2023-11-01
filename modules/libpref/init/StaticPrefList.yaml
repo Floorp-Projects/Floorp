@@ -6221,6 +6221,12 @@
   value: false
   mirror: always
 
+# whether to do font fallback for codepoints with General Category = Unassigned
+- name: gfx.font_rendering.fallback.unassigned_chars
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 #ifdef MOZ_WIDGET_GTK
 -   name: gfx.font_rendering.fontconfig.max_generic_substitutions
     type: RelaxedAtomicUint32
