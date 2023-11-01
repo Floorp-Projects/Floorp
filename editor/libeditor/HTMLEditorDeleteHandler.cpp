@@ -5399,6 +5399,8 @@ Result<MoveNodeResult, nsresult> HTMLEditor::AutoMoveOneLineHandler::Run(
   for (const OwningNonNull<nsIContent>& content : arrayOfContents) {
     {
       AutoEditorDOMRangeChildrenInvalidator lockOffsets(movedContentRange);
+      AutoTrackDOMRange trackMovedContentRange(aHTMLEditor.RangeUpdaterRef(),
+                                               &movedContentRange);
       // If the content is a block element, move all children of it to the
       // new container, and then, remove the (probably) empty block element.
       if (HTMLEditUtils::IsBlockElement(
@@ -5413,7 +5415,6 @@ Result<MoveNodeResult, nsresult> HTMLEditor::AutoMoveOneLineHandler::Run(
           return moveChildrenResult;
         }
         moveContentsInLineResult |= moveChildrenResult.inspect();
-        moveContentsInLineResult.MarkAsHandled();
         // MOZ_KnownLive due to bug 1620312
         nsresult rv =
             aHTMLEditor.DeleteNodeWithTransaction(MOZ_KnownLive(content));
@@ -5428,6 +5429,7 @@ Result<MoveNodeResult, nsresult> HTMLEditor::AutoMoveOneLineHandler::Run(
       // If the moving content is a comment node or an empty inline node, we
       // don't want it to appear in the dist paragraph.
       else if (content->IsComment() ||
+               (content->IsText() && !content->AsText()->TextDataLength()) ||
                HTMLEditUtils::IsEmptyInlineContainer(
                    content,
                    {EmptyCheckOption::TreatSingleBRElementAsVisible,
@@ -5461,10 +5463,16 @@ Result<MoveNodeResult, nsresult> HTMLEditor::AutoMoveOneLineHandler::Run(
         moveContentsInLineResult |= moveNodeOrChildrenResult.inspect();
       }
     }
+    moveContentsInLineResult.MarkAsHandled();
+    if (NS_WARN_IF(!movedContentRange.IsPositioned())) {
+      return Err(NS_ERROR_EDITOR_UNEXPECTED_DOM_TREE);
+    }
     // For backward compatibility, we should move contents to end of the
     // container if the instance is created without specific insertion point.
     if (ForceMoveToEndOfContainer()) {
       pointToInsert = NextInsertionPointRef();
+      MOZ_ASSERT(pointToInsert.IsSet());
+      MOZ_ASSERT(movedContentRange.StartRef().EqualsOrIsBefore(pointToInsert));
       movedContentRange.SetEnd(pointToInsert);
     }
     // And also if pointToInsert has been made invalid with removing preceding
@@ -5482,6 +5490,9 @@ Result<MoveNodeResult, nsresult> HTMLEditor::AutoMoveOneLineHandler::Run(
       pointToInsert = NextInsertionPointRef();
       if (!aHTMLEditor.MayHaveMutationEventListeners() ||
           movedContentRange.EndRef().IsBefore(pointToInsert)) {
+        MOZ_ASSERT(pointToInsert.IsSet());
+        MOZ_ASSERT(
+            movedContentRange.StartRef().EqualsOrIsBefore(pointToInsert));
         movedContentRange.SetEnd(pointToInsert);
       }
     }
