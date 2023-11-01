@@ -10,6 +10,28 @@ const CONFIG = [
   {
     webExtension: {
       id: "engine@search.mozilla.org",
+      name: "Test search engine",
+      search_url: "https://www.google.com/search",
+      params: [
+        {
+          name: "q",
+          value: "{searchTerms}",
+        },
+        {
+          name: "channel",
+          condition: "purpose",
+          purpose: "contextmenu",
+          value: "rcs",
+        },
+        {
+          name: "channel",
+          condition: "purpose",
+          purpose: "keyword",
+          value: "fflb",
+        },
+      ],
+      suggest_url:
+        "https://suggestqueries.google.com/complete/search?output=firefox&client=firefox&hl={moz:locale}&q={searchTerms}",
     },
     orderHint: 30,
     appliesTo: [
@@ -51,7 +73,11 @@ add_task(async function test_initialization_delayed_addon_manager() {
     normal: {
       engineId: "engine",
       displayName: "Test search engine",
-      loadPath: "[addon]engine@search.mozilla.org",
+      loadPath: [
+        SearchUtils.newSearchConfigEnabled
+          ? "[app]engine@search.mozilla.org"
+          : "[addon]engine@search.mozilla.org",
+      ],
       submissionUrl: "https://www.google.com/search?q=",
       verified: "default",
     },
