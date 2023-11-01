@@ -46,16 +46,14 @@ fuzzy(0-1,0-580) == anim-css-fill-3-from-by-ident-ident.svg anim-css-fill-3-ref.
 fuzzy(0-1,0-580) == anim-css-fill-3-from-by-rgb-ident.svg anim-css-fill-3-ref.svg
 
 # check handling of overflowing color values
-# NOTE: Some of the tests below fail in Gecko because we compute
-# "from + by" as the animation end-point, and we clamp that final color value
-# (due to bug 515919) and use the clamped value for interpolation.
-# That's earlier than the SVG spec wants us to clamp -- we're only supposed to
-# clamp *final presentation values*.
+# Gamut mapping is now available and presentation colors are not clipped
+# any more. Because the result is dependent on hardware, we use a fairly high
+# fuzzy for now.
 # (Reference: SVG 1.1 Appendix F.4)
-== anim-css-fill-overflow-1-by.svg       anim-css-fill-overflow-1-ref.svg
-== anim-css-fill-overflow-1-from-by.svg anim-css-fill-overflow-1-ref.svg # bug 515919
-== anim-css-stopcolor-overflow-1-from-by.svg anim-css-stopcolor-overflow-1-ref.svg # bug 515919
-== anim-css-floodcolor-overflow-1-from-by.svg anim-css-floodcolor-overflow-1-ref.svg # bug 515919
+fuzzy(0-19,0-900) == anim-css-fill-overflow-1-by.svg       anim-css-fill-overflow-1-ref.svg
+fuzzy(0-19,0-900) == anim-css-fill-overflow-1-from-by.svg anim-css-fill-overflow-1-ref.svg
+fuzzy(0-19,0-900) == anim-css-stopcolor-overflow-1-from-by.svg anim-css-stopcolor-overflow-1-ref.svg
+fuzzy(0-19,0-1444) == anim-css-floodcolor-overflow-1-from-by.svg anim-css-floodcolor-overflow-1-ref.svg
 
 # 'fill-opacity' property
 fuzzy(0-1,0-885) == anim-css-fillopacity-1-by.svg anim-css-fillopacity-1-ref.svg
