@@ -242,6 +242,16 @@ class nsLineBreaker {
                              const char16_t* aTextStart,
                              const char16_t* aTextLimit, uint8_t* aBreakState);
 
+  inline constexpr bool IsSegmentSpace(char16_t u) const {
+    if (mLegacyBehavior) {
+      return nsLineBreaker::IsSpace(u);
+    }
+
+    return u == 0x0020 ||  // SPACE u
+           u == 0x0009 ||  // CHARACTER TABULATION
+           u == 0x000D;    // CARRIAGE RETURN
+  }
+
   AutoTArray<char16_t, 100> mCurrentWord;
   // All the items that contribute to mCurrentWord
   AutoTArray<TextItem, 2> mTextItems;

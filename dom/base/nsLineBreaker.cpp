@@ -252,7 +252,7 @@ nsresult nsLineBreaker::AppendText(nsAtom* aHyphenationLanguage,
     NS_ASSERTION(!mAfterBreakableSpace && !mBreakHere,
                  "These should not be set");
 
-    while (offset < aLength && !IsSpace(aText[offset])) {
+    while (offset < aLength && !IsSegmentSpace(aText[offset])) {
       mCurrentWord.AppendElement(aText[offset]);
       if (!mCurrentWordMightBeBreakable &&
           !IsNonBreakableChar<char16_t>(aText[offset], mLegacyBehavior)) {
@@ -306,7 +306,7 @@ nsresult nsLineBreaker::AppendText(nsAtom* aHyphenationLanguage,
     offset = aLength;
     while (offset > start) {
       --offset;
-      if (IsSpace(aText[offset])) {
+      if (IsSegmentSpace(aText[offset])) {
         break;
       }
     }
@@ -323,7 +323,7 @@ nsresult nsLineBreaker::AppendText(nsAtom* aHyphenationLanguage,
 
   for (;;) {
     char16_t ch = aText[offset];
-    bool isSpace = IsSpace(ch);
+    bool isSpace = IsSegmentSpace(ch);
     bool isBreakableSpace = isSpace && !(aFlags & BREAK_SUPPRESS_INSIDE);
 
     if (aSink && !noBreaksNeeded) {
@@ -442,7 +442,7 @@ nsresult nsLineBreaker::AppendText(nsAtom* aHyphenationLanguage,
     NS_ASSERTION(!mAfterBreakableSpace && !mBreakHere,
                  "These should not be set");
 
-    while (offset < aLength && !IsSpace(aText[offset])) {
+    while (offset < aLength && !IsSegmentSpace(aText[offset])) {
       mCurrentWord.AppendElement(aText[offset]);
       if (!mCurrentWordMightBeBreakable &&
           !IsNonBreakableChar<uint8_t>(aText[offset], mLegacyBehavior)) {
@@ -486,7 +486,7 @@ nsresult nsLineBreaker::AppendText(nsAtom* aHyphenationLanguage,
     offset = aLength;
     while (offset > start) {
       --offset;
-      if (IsSpace(aText[offset])) {
+      if (IsSegmentSpace(aText[offset])) {
         break;
       }
     }
@@ -496,7 +496,7 @@ nsresult nsLineBreaker::AppendText(nsAtom* aHyphenationLanguage,
 
   for (;;) {
     uint8_t ch = aText[offset];
-    bool isSpace = IsSpace(ch);
+    bool isSpace = IsSegmentSpace(ch);
     bool isBreakableSpace = isSpace && !(aFlags & BREAK_SUPPRESS_INSIDE);
 
     if (aSink) {
