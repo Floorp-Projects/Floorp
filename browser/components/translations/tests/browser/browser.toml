@@ -37,10 +37,6 @@ support-files = [
 
 ["browser_translations_panel_cancel.js"]
 
-["browser_translations_panel_engine_destroy.js"]
-
-["browser_translations_panel_engine_destroy_pending.js"]
-
 ["browser_translations_panel_engine_unsupported.js"]
 
 ["browser_translations_panel_engine_unsupported_lang.js"]
@@ -48,9 +44,6 @@ support-files = [
 ["browser_translations_panel_firstrun.js"]
 
 ["browser_translations_panel_firstrun_revisit.js"]
-
-["browser_translations_panel_fuzzing.js"]
-skip-if = true
 
 ["browser_translations_panel_gear.js"]
 

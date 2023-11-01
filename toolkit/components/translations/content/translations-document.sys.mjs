@@ -209,8 +209,6 @@ export class TranslationsDocument {
    */
   viewportTranslated = null;
 
-  isDestroyed = false;
-
   /**
    * Construct a new TranslationsDocument. It is tied to a specific Document and cannot
    * be re-used. The translation functions are injected since this class shouldn't
@@ -219,20 +217,15 @@ export class TranslationsDocument {
    * @param {Document} document
    * @param {string} documentLanguage - The BCP 47 language tag.
    * @param {number} innerWindowId - This is used for better profiler marker reporting.
-   * @param {MessagePort} port - The port to the translations engine.
-   * @param {() => void} requestNewPort - Used when an engine times out and a new
-   *                                      translation request comes in.
-   * @param {number} translationsStart
-   * @param {() => number} now
+   * @param {TranslationFunction} translateHTML
+   * @param {TranslationFunction} translateText
    */
   constructor(
     document,
     documentLanguage,
     innerWindowId,
-    port,
-    requestNewPort,
-    translationsStart,
-    now
+    translateHTML,
+    translateText
   ) {
     /**
      * The language of the document. If elements are found that do not match this language,
@@ -248,8 +241,11 @@ export class TranslationsDocument {
       );
     }
 
-    /** @type {QueuedTranslator} */
-    this.translator = new QueuedTranslator(port, requestNewPort);
+    /** @type {TranslationFunction} */
+    this.translateHTML = translateHTML;
+
+    /** @type {TranslationFunction} */
+    this.translateText = translateText;
 
     /** @type {number} */
     this.innerWindowId = innerWindowId;
@@ -297,37 +293,6 @@ export class TranslationsDocument {
         }
       }
     });
-
-    this.addRootElement(document.querySelector("title"));
-    this.addRootElement(document.body, true /* reportWordsInViewport */);
-
-    this.viewportTranslated?.then(() => {
-      ChromeUtils.addProfilerMarker(
-        "TranslationsChild",
-        { innerWindowId, startTime: now() },
-        "Viewport translations"
-      );
-      ChromeUtils.addProfilerMarker(
-        "TranslationsChild",
-        { innerWindowId, startTime: translationsStart },
-        "Time to first translation"
-      );
-    });
-
-    lazy.console.log(
-      "Beginning to translate.",
-      // The defaultView may not be there on tests.
-      document.defaultView?.location.href
-    );
-  }
-
-  /**
-   * Remove any dangling event handlers.
-   */
-  destroy() {
-    this.isDestroyed = true;
-    this.translator.destroy();
-    this.stopMutationObserver();
   }
 
   /**
@@ -730,17 +695,13 @@ export class TranslationsDocument {
       });
     }
 
-    /** @type {string} */
-    let text;
-    /** @type {boolean} */
-    let isHTML;
-
+    let text, translate;
     if (node.nodeType === Node.ELEMENT_NODE) {
       text = node.innerHTML;
-      isHTML = true;
+      translate = this.translateHTML;
     } else {
       text = node.textContent;
-      isHTML = false;
+      translate = this.translateText;
     }
 
     if (text.trim().length === 0) {
@@ -753,17 +714,9 @@ export class TranslationsDocument {
 
     this.#pendingTranslationsCount++;
     try {
-      const translatedHTML = await this.translator.translate(
-        node,
-        text,
-        isHTML
-      );
+      const [translatedHTML] = await translate(text);
       this.#pendingTranslationsCount--;
-      // The translatedHTML is null when the request is stale, for instance when multiple
-      // translations have been queued for the same node.
-      if (translatedHTML != null) {
-        this.scheduleNodeUpdateWithTranslation(node, translatedHTML);
-      }
+      this.scheduleNodeUpdateWithTranslation(node, translatedHTML);
     } catch (error) {
       this.#pendingTranslationsCount--;
       lazy.console.error("Translation failed", error);
@@ -1433,352 +1386,5 @@ function* getAncestorsIterator(node) {
     parent = parent.parentNode
   ) {
     yield parent;
-  }
-}
-
-/**
- * This contains all of the information needed to perform a translation request.
- *
- * @typedef {Object} TranslationRequest
- * @prop {Node} node
- * @prop {string} sourceText
- * @prop {boolean} isHTML
- * @prop {Function} resolve
- * @prop {Function} reject
- */
-
-/**
- * When a page is hidden, mutations may occur in the DOM. It doesn't make sense to
- * translate those elements while the page is hidden, especially as it may bring
- * a translations engine back to life, which can be quite expensive. Queue those
- * messages here.
- */
-class QueuedTranslator {
-  /**
-   * @type {MessagePort | null}
-   */
-  #port = null;
-
-  /**
-   * @type {() => void}
-   */
-  #actorRequestNewPort;
-
-  /**
-   * An id for each message sent. This is used to match up the request and response.
-   */
-  #nextMessageId = 0;
-
-  /**
-   * Tie together a message id to a resolved response.
-   * @type {Map<number, TranslationRequest}
-   */
-  #requests = new Map();
-
-  /**
-   * If the translations are paused, they are queued here. This Map is ordered by
-   * from oldest to newest requests with stale requests being removed.
-   * @type {Map<Node, TranslationRequest>}
-   */
-  #queue = new Map();
-
-  /**
-   * @type {"uninitialized" | "ready" | "error" | "closed"}
-   */
-  engineStatus = "uninitialized";
-
-  /**
-   * @param {MessagePort} port
-   * @param {Document} document
-   * @param {() => void} actorRequestNewPort
-   */
-  constructor(port, actorRequestNewPort) {
-    this.#actorRequestNewPort = actorRequestNewPort;
-
-    this.acquirePort(port);
-  }
-
-  /**
-   * When an engine gets closed while still in use, a new one will need to be requested.
-   *
-   * @type {{ promise: Promise<void>, resolve: Function, reject: Function } | null}
-   */
-  #portRequest = null;
-
-  /**
-   * Keep track if the page is shown or hidden. When the page is hidden, no translations
-   * will be posted to the translations engine.
-   */
-  #isPageShown = true;
-
-  /**
-   * Note when a new port is being requested so we don't re-request it.
-   */
-  showPage() {
-    this.#isPageShown = true;
-    if (this.#port) {
-      throw new Error(
-        "Attempting to show the page when there is already port available"
-      );
-    }
-    if (this.#queue.size) {
-      // There are queued translations, request a new port. After the port is retrieved
-      // the pending queue will be processed.
-      this.#requestNewPort();
-    }
-  }
-
-  /**
-   * Hide the page, and move any outstanding translation requests to a queue.
-   */
-  hidePage() {
-    this.#isPageShown = false;
-    this.discardPort();
-
-    if (this.#requests.size) {
-      lazy.console.log(
-        "Pausing translations with pending translation requests."
-      );
-    }
-    this.#moveRequestsToQueue();
-  }
-
-  /**
-   * Request a new port. The port will come in via `acquirePort`, and then resolved
-   * through the `this.#portRequest.resolve`.
-   * @returns {Promise<void>}
-   */
-  #requestNewPort() {
-    if (this.#portRequest) {
-      // A port was already requested.
-      return this.#portRequest.promise;
-    }
-
-    const portRequest = { promise: null, resolve: null, reject: null };
-    portRequest.promise = new Promise((resolve, reject) => {
-      portRequest.resolve = resolve;
-      portRequest.reject = reject;
-    });
-
-    this.#portRequest = portRequest;
-
-    // Send a request through the actor for a new port. The request response will
-    // trigger the method `QueuedTranslator.prototype.acquirePort`
-    this.#actorRequestNewPort();
-
-    this.#portRequest.promise
-      .then(
-        () => {
-          this.#portRequest = null;
-
-          // Resume the queued translations.
-          if (this.#queue.size) {
-            lazy.console.log(
-              `Resuming ${
-                this.#queue.size
-              } translations from the pending translation queue.`
-            );
-
-            const oldQueue = this.#queue;
-            this.#queue = new Map();
-            this.#repostTranslations(oldQueue);
-          }
-        },
-        error => {
-          lazy.console.error(error);
-        }
-      )
-      .finally(() => {
-        this.#portRequest = null;
-      });
-
-    return portRequest.promise;
-  }
-
-  /**
-   * Send a request to translate text to the Translations Engine. If it returns `null`
-   * then the request is stale. A rejection means there was an error in the translation.
-   * This request may be queued.
-   *
-   * @param {node} Node
-   * @param {string} sourceText
-   * @param {boolean} isHTML
-   */
-  async translate(node, sourceText, isHTML) {
-    if (this.#isPageShown && !this.#port) {
-      try {
-        await this.#requestNewPort();
-      } catch {}
-    }
-
-    // At this point we don't know if the page is still shown, or if the attempt
-    // to get a port was successful so check again.
-
-    if (!this.#isPageShown || !this.#port) {
-      // Queue the request while the page isn't shown.
-      return new Promise((resolve, reject) => {
-        const previousRequest = this.#queue.get(node);
-        if (previousRequest) {
-          // Previous requests get resolved as null, as this new one will replace it.
-          previousRequest.resolve(null);
-          // Delete the entry so that the order of the queue is maintained. The
-          // new request will be put on the end.
-          this.#queue.delete(node);
-        }
-
-        // This Promises's resolve and reject will be chained after the translation
-        // request. For now add it to the queue along with the other arguments.
-        this.#queue.set(node, { node, sourceText, isHTML, resolve, reject });
-      });
-    }
-
-    return this.#postTranslationRequest(node, sourceText, isHTML);
-  }
-
-  /**
-   * Posts the translation to the translations engine through the MessagePort.
-   *
-   * @param {Node} node
-   * @param {string} sourceText
-   * @param {boolean} isHTML
-   * @return {{ translateText: TranslationFunction, translateHTML: TranslationFunction}}
-   */
-  #postTranslationRequest(node, sourceText, isHTML) {
-    return new Promise((resolve, reject) => {
-      const messageId = this.#nextMessageId++;
-      // Store the "resolve" for the promise. It will be matched back up with the
-      // `messageId` in #handlePortMessage.
-      this.#requests.set(messageId, {
-        node,
-        sourceText,
-        isHTML,
-        resolve,
-        reject,
-      });
-      this.#port.postMessage({
-        type: "TranslationsPort:TranslationRequest",
-        messageId,
-        sourceText,
-        isHTML,
-      });
-    });
-  }
-
-  /**
-   * Close the port and move any pending translations onto a queue.
-   */
-  discardPort() {
-    if (this.#port) {
-      this.#port.postMessage({ type: "TranslationsPort:DiscardTranslations" });
-      this.#port.close();
-      this.#port = null;
-    }
-    this.#moveRequestsToQueue();
-    this.engineStatus = "uninitialized";
-  }
-
-  /**
-   * Move any unfulfilled requests to the queue so they can be sent again when
-   * the page is active again.
-   */
-  #moveRequestsToQueue() {
-    if (this.#requests.size) {
-      for (const request of this.#requests.values()) {
-        this.#queue.set(request.node, request);
-      }
-      this.#requests = new Map();
-    }
-  }
-
-  /**
-   * Acquires a port, checks on the engine status, and then starts or resumes
-   * translations.
-   * @param {MessagePort} port
-   */
-  acquirePort(port) {
-    if (this.#port) {
-      if (this.engineStatus === "ready") {
-        lazy.console.error(
-          "Received a new translation port while one already existed."
-        );
-      }
-      this.discardPort();
-    }
-
-    this.#port = port;
-
-    const portRequest = this.#portRequest;
-
-    // Match up a response on the port to message that was sent.
-    port.onmessage = ({ data }) => {
-      switch (data.type) {
-        case "TranslationsPort:TranslationResponse": {
-          const { targetText, messageId } = data;
-          // A request may not match match a messageId if there is a race during the pausing
-          // and discarding of the queue.
-          this.#requests.get(messageId)?.resolve(targetText);
-          this.#requests.delete(messageId);
-          break;
-        }
-        case "TranslationsPort:GetEngineStatusResponse": {
-          if (portRequest) {
-            const { resolve, reject } = portRequest;
-            if (data.status === "ready") {
-              resolve();
-            } else {
-              reject(new Error("The engine failed to load."));
-            }
-          }
-          this.engineStatus = data.status;
-          break;
-        }
-        case "TranslationsPort:EngineTerminated": {
-          // The engine was terminated, and if a translation is needed a new port
-          // will need to be requested.
-          this.engineStatus = "closed";
-          this.discardPort();
-          if (this.#queue.size && this.#isPageShown) {
-            this.#requestNewPort();
-          }
-          break;
-        }
-        default:
-          lazy.console.error("Unknown translations port message: " + data.type);
-          break;
-      }
-    };
-
-    port.postMessage({ type: "TranslationsPort:GetEngineStatusRequest" });
-  }
-
-  /**
-   * Re-send a list of translation requests.
-   *
-   * @param {Map<any, TranslationRequest>} mappedRequests
-   *  This is either the this.#queue or this.#requests.
-   */
-  #repostTranslations(mappedRequests) {
-    for (const value of mappedRequests.values()) {
-      const { node, sourceText, isHTML, resolve, reject } = value;
-      if (Cu.isDeadWrapper(node)) {
-        // If the node is dead, resolve without any text. Do not reject as that
-        // will be treated as an error.
-        resolve(null);
-      } else {
-        this.#postTranslationRequest(node, sourceText, isHTML).then(
-          resolve,
-          reject
-        );
-      }
-    }
-  }
-
-  /**
-   * Close the port and remove any pending or queued requests.
-   */
-  destroy() {
-    this.#port.close();
-    this.#requests = new Map();
-    this.#queue = new Map();
   }
 }
