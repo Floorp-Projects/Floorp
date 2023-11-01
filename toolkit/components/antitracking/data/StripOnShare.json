@@ -55,7 +55,7 @@
   },
   "twitter": {
     "queryParams": ["ref_src", "ref_url"],
-    "topLevelSites": ["www.twitter.com"]
+    "topLevelSites": ["www.twitter.com", "twitter.com"]
   },
   "instagram": {
     "queryParams": ["igshid", "ig_rid"],
@@ -87,7 +87,8 @@
       "www.amazon.co.uk",
       "www.amazon.it",
       "www.amazon.pl",
-      "www.amazon.sg"
+      "www.amazon.sg",
+      "www.amazon.ca"
     ]
   }
 }
