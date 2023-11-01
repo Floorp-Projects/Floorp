@@ -145,7 +145,7 @@ export default class MonitorClass {
 
   /**
    * Retrieves the monitor data and displays this data in the card.
-   **/
+   */
   getMonitorData() {
     RPMSendQuery("FetchMonitorData", {}).then(monitorData => {
       // Once data for the user is retrieved, display the monitor card.
@@ -190,11 +190,11 @@ export default class MonitorClass {
    * Builds the appropriate URL that takes the user to the Monitor website's
    * sign-up/sign-in page.
    *
-   * @param {String|null} email
+   * @param {string | null} email
    *        Optional. The email used to direct the user to the Monitor website's OAuth
    *        sign-in flow. If null, then direct user to just the Monitor website.
    *
-   * @return URL to Monitor website.
+   * @returns {string} URL to Monitor website.
    */
   buildMonitorUrl(email = null) {
     return email

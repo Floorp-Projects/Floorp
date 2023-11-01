@@ -241,7 +241,6 @@ module.exports = {
         "browser/components/preferences/**",
         "browser/components/privatebrowsing/**",
         "browser/components/prompts/PromptCollection.sys.mjs",
-        "browser/components/protections/content/*-card.mjs",
         "browser/components/protocolhandler/WebProtocolHandlerRegistrar.sys.mjs",
         "browser/components/safebrowsing/content/test/**",
         "browser/components/screenshots/**",
