@@ -710,7 +710,7 @@ var browserTests = [
     [
       "<blockquote>[foo<br>bar]</blockquote><p>baz</p>",
       "<blockquote>[foo</blockquote><blockquote>bar]</blockquote><p>baz</p>",
-    ]
+    ],
     [true],
     {"formatblock":[false,false,"",false,false,"blockquote"]}],
 ["<section>[foo]</section>",
