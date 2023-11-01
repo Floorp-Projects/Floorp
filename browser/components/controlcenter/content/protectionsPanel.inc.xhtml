@@ -63,21 +63,6 @@
           </hbox>
         </vbox>
 
-        <toolbarseparator id="protections-popup-cookie-banner-section-separator"></toolbarseparator>
-        <hbox id="protections-popup-cookie-banner-section" class="protections-popup-section" uiDisabled="true" enabled="true" flex="1">
-          <toolbarbutton id="protections-popup-cookie-banner-switch"
-                         class="subviewbutton subviewbutton-nav"
-                         onclick="gProtectionsHandler.onCookieBannerClick()"
-                         flex="1">
-            <vbox flex="1">
-              <label role="heading" class="protections-popup-switch-header" aria-level="2" data-l10n-id="protections-panel-cookie-banner-blocker-header"></label>
-              <description id="protections-popup-cookie-banner-undetected" data-l10n-id="protections-panel-cookie-banner-handling-undetected"></description>
-              <description id="protections-popup-cookie-banner-site-disabled" data-l10n-id="protections-panel-cookie-banner-handling-disabled"></description>
-              <description id="protections-popup-cookie-banner-detected" data-l10n-id="protections-panel-cookie-banner-handling-enabled"></description>
-            </vbox>
-          </toolbarbutton>
-        </hbox>
-
         <!-- Tracking Protection Section -->
         <toolbarseparator></toolbarseparator>
         <vbox id="tracking-protection-container" class="protections-popup-section">
@@ -171,6 +156,21 @@
             <description id="protections-popup-milestones-text" flex="1"
                          role="heading" aria-level="2"/>
             <image id="protections-popup-milestones-illustration"/>
+          </toolbarbutton>
+        </hbox>
+
+        <toolbarseparator id="protections-popup-cookie-banner-section-separator"></toolbarseparator>
+        <hbox id="protections-popup-cookie-banner-section" class="protections-popup-section" uiDisabled="true" enabled="true" flex="1">
+          <toolbarbutton id="protections-popup-cookie-banner-switch"
+                         class="subviewbutton subviewbutton-nav"
+                         onclick="gProtectionsHandler.onCookieBannerClick()"
+                         flex="1">
+            <vbox flex="1">
+              <label role="heading" class="protections-popup-switch-header" aria-level="2" data-l10n-id="protections-panel-cookie-banner-blocker-header"></label>
+              <description id="protections-popup-cookie-banner-undetected" data-l10n-id="protections-panel-cookie-banner-handling-undetected"></description>
+              <description id="protections-popup-cookie-banner-site-disabled" data-l10n-id="protections-panel-cookie-banner-handling-disabled"></description>
+              <description id="protections-popup-cookie-banner-detected" data-l10n-id="protections-panel-cookie-banner-handling-enabled"></description>
+            </vbox>
           </toolbarbutton>
         </hbox>
       </vbox>
