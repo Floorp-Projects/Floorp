@@ -20,7 +20,6 @@ node_modules/
 security/manager/tools/KnownRootHashes.json
 security/manager/tools/PreloadedHPKPins.json
 services/settings/dumps/
-testing/talos/talos/tests/devtools/addon/content/pages/custom/debugger/app-build/static/js/minified.js
 toolkit/components/nimbus/schemas/NimbusExperiment.schema.json
 toolkit/components/pdfjs/content/PdfJsDefaultPreferences.sys.mjs
 toolkit/components/uniffi-js/UniFFIGeneratedScaffolding.cpp
