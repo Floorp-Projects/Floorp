@@ -84,7 +84,7 @@ if (typeof Mozilla == "undefined") {
   Mozilla.UITour.CONFIGNAME_AVAILABLETARGETS = "availableTargets";
 
   /**
-   * @typedef {String} Mozilla.UITour.Target
+   * @typedef {string} Mozilla.UITour.Target
    *
    * @summary Not all targets are available at all times because they may not be visible
    * or UITour doesn't not how to automatically make them visible. Use the
@@ -183,7 +183,7 @@ if (typeof Mozilla == "undefined") {
   };
 
   /**
-   * @typedef {String} Mozilla.UITour.HighlightEffect
+   * @typedef {string} Mozilla.UITour.HighlightEffect
    *
    * Specifies the effect/animation to use when highlighting UI elements.
    * @description Valid values:
@@ -220,6 +220,7 @@ if (typeof Mozilla == "undefined") {
 
   /**
    * Hide any visible UI highlight.
+   *
    * @see Mozilla.UITour.showHighlight
    */
   Mozilla.UITour.hideHighlight = function () {
@@ -232,16 +233,16 @@ if (typeof Mozilla == "undefined") {
    * @see Mozilla.UITour.hideInfo
    *
    * @param {Mozilla.UITour.Target} target - Identifier of the UI widget to anchor the panel at.
-   * @param {String} title - Title text to be shown as the heading of the panel.
-   * @param {String} text - Body text of the panel.
-   * @param {String} [icon=null] - URL of a 48x48px (96px @ 2dppx) image (which will be resolved
+   * @param {string} title - Title text to be shown as the heading of the panel.
+   * @param {string} text - Body text of the panel.
+   * @param {string} [icon=null] - URL of a 48x48px (96px @ 2dppx) image (which will be resolved
    *                               relative to the tab's URI) to display in the panel.
-   * @param {Object[]} [buttons=[]] - Array of objects describing buttons.
-   * @param {String} buttons[].label - Button label
-   * @param {String} buttons[].icon - Button icon URL
-   * @param {String} buttons[].style - Button style ("primary" or "link")
+   * @param {object[]} [buttons=[]] - Array of objects describing buttons.
+   * @param {string} buttons[].label - Button label
+   * @param {string} buttons[].icon - Button icon URL
+   * @param {string} buttons[].style - Button style ("primary" or "link")
    * @param {Function} buttons[].callback - Called when the button is clicked
-   * @param {Object} [options={}] - Advanced options
+   * @param {object} [options={}] - Advanced options
    * @param {Function} options.closeButtonCallback - Called when the panel's close button is clicked.
    *
    * @example
@@ -307,6 +308,7 @@ if (typeof Mozilla == "undefined") {
 
   /**
    * Hide any visible info panels.
+   *
    * @see Mozilla.UITour.showInfo
    */
   Mozilla.UITour.hideInfo = function () {
@@ -314,7 +316,7 @@ if (typeof Mozilla == "undefined") {
   };
 
   /**
-   * @typedef {String} Mozilla.UITour.MenuName
+   * @typedef {string} Mozilla.UITour.MenuName
    * Valid values:
    *
    * - appMenu
@@ -367,6 +369,7 @@ if (typeof Mozilla == "undefined") {
 
   /**
    * Loads about:newtab in the tour tab.
+   *
    * @since 51
    */
   Mozilla.UITour.showNewTab = function () {
@@ -375,6 +378,7 @@ if (typeof Mozilla == "undefined") {
 
   /**
    * Loads about:protections in the tour tab.
+   *
    * @since 70
    */
   Mozilla.UITour.showProtectionReport = function () {
@@ -415,24 +419,24 @@ if (typeof Mozilla == "undefined") {
 
   /**
    * @typedef {object} Mozilla.UITour.Configuration.AppInfo
-   * @property {Boolean} canSetDefaultBrowserInBackground - Whether the application can be set as
+   * @property {boolean} canSetDefaultBrowserInBackground - Whether the application can be set as
    *                                                        the default browser in the background
    *                                                        without user interaction.
-   * @property {Boolean} defaultBrowser - Whether the application is the default browser. Since Fx40.
-   * @property {String} defaultUpdateChannel - Update channel e.g. 'release', 'beta', 'aurora',
+   * @property {boolean} defaultBrowser - Whether the application is the default browser. Since Fx40.
+   * @property {string} defaultUpdateChannel - Update channel e.g. 'release', 'beta', 'aurora',
    *                                           'nightly', 'default'
    *                                           (self-built or automated testing builds)
-   * @property {String} distribution - Contains the distributionId property. This value will be
+   * @property {string} distribution - Contains the distributionId property. This value will be
    *                                   "default" in most cases but can differ for repack or
    *                                   funnelcake builds. Since Fx48
-   * @property {Number} profileCreatedWeeksAgo - The number of weeks since the profile was created,
+   * @property {number} profileCreatedWeeksAgo - The number of weeks since the profile was created,
    *                                             starting from 0 for profiles dating less than
    *                                             seven days old. Since Fx56.
-   * @property {Number} profileResetWeeksAgo - The number of weeks since the profile was last reset,
+   * @property {number} profileResetWeeksAgo - The number of weeks since the profile was last reset,
    *                                           starting from 0 for profiles reset less than seven
    *                                           days ago. If the profile has never been reset it
    *                                           returns null. Since Fx56.
-   * @property {String} version - Version string e.g. "48.0a2"
+   * @property {string} version - Version string e.g. "48.0a2"
    * @since 35
    */
 
@@ -442,29 +446,31 @@ if (typeof Mozilla == "undefined") {
    * @description From version 34 through 42 inclusive, a string was returned for the 'selectedSearchEngine'
    * configuration instead of the object like 'search'.
    *
-   * @typedef {String|Object} Mozilla.UITour.Configuration.Search
-   * @property {String} searchEngineIdentifier - The default engine's identifier
-   * @property {String[]} engines - Identifiers of visible engines
+   * @typedef {string | object} Mozilla.UITour.Configuration.Search
+   * @property {string} searchEngineIdentifier - The default engine's identifier
+   * @property {string[]} engines - Identifiers of visible engines
    * @since 43
    */
 
   /**
    * Sync status and device counts.
-   * @typedef {Object} Mozilla.UITour.Configuration.Sync
-   * @property {Boolean} setup - Whether sync is setup
-   * @property {Number} desktopDevices - Number of desktop devices
-   * @property {Number} mobileDevices - Number of mobile devices
-   * @property {Number} totalDevices - Total number of connected devices
+   *
+   * @typedef {object} Mozilla.UITour.Configuration.Sync
+   * @property {boolean} setup - Whether sync is setup
+   * @property {number} desktopDevices - Number of desktop devices
+   * @property {number} mobileDevices - Number of mobile devices
+   * @property {number} totalDevices - Total number of connected devices
    * @since 50
    */
 
   /**
    * FxA local status, including whether FxA is connected and the general
    * account state.
-   * @typedef {Object} Mozilla.UITour.Configuration.FxA
-   * @property {Boolean} setup - Whether FxA is setup on this device. If false,
+   *
+   * @typedef {object} Mozilla.UITour.Configuration.FxA
+   * @property {boolean} setup - Whether FxA is setup on this device. If false,
    *    no other properties will exist.
-   * @property {Boolean} accountStateOK - Whether the FxA account state is OK.
+   * @property {boolean} accountStateOK - Whether the FxA account state is OK.
    *    If false, it probably means the account is unverified or the user has
    *    changed their password on another device and needs to update it here.
    *    In that case many other properties will not exist.
@@ -482,12 +488,13 @@ if (typeof Mozilla == "undefined") {
    * isn't stored locally, so needs to be obtained from the FxA servers. As such,
    * requesting this information is likely to be high-latency and may return
    * incomplete data if there is a network or server error.
-   * @typedef {Object} Mozilla.UITour.Configuration.FxAConnections
-   * @property {Boolean} setup - Whether FxA is setup on this device. If false,
+   *
+   * @typedef {object} Mozilla.UITour.Configuration.FxAConnections
+   * @property {boolean} setup - Whether FxA is setup on this device. If false,
    *    no other properties will exist.
-   * @property {Number} [numOtherDevices] - Number of devices connected to this
+   * @property {number} [numOtherDevices] - Number of devices connected to this
    *    account, not counting this device.
-   * @property {Object.<String, Number>} [numDevicesByType] - A count of devices
+   * @property {Object<string, number>} [numDevicesByType] - A count of devices
    *    connected to the account by device 'type'. Valid values for type are
    *    defined by the FxA server but roughly correspond to form-factor with
    *    values like 'desktop', 'mobile', 'vr', etc.
@@ -506,17 +513,19 @@ if (typeof Mozilla == "undefined") {
    * service IDs can be found
    * `on our telemetry documentation site <https://docs.telemetry.mozilla.org/datasets/fxa_metrics/attribution.html#service-attribution>`_.
    * The value is a :js:func:`Mozilla.UITour.Configuration.AccountService`
-   * @typedef {Object.<string, Mozilla.UITour.Configuration.AccountService>} Mozilla.UITour.Configuration.AccountServices
+   *
+   * @typedef {Object<string, Mozilla.UITour.Configuration.AccountService>} Mozilla.UITour.Configuration.AccountServices
    * @since 71
    */
 
   /**
    * Information about an account service
-   * @typedef {Object} Mozilla.UITour.Configuration.AccountService
-   * @property {String} id - The service ID. A list of attached
+   *
+   * @typedef {object} Mozilla.UITour.Configuration.AccountService
+   * @property {string} id - The service ID. A list of attached
    * service IDs can be found
    * `on our telemetry documentation site <https://docs.telemetry.mozilla.org/datasets/fxa_metrics/attribution.html#service-attribution>`_.
-   * @property {Number} lastAccessedWeeksAgo - How many weeks ago the service
+   * @property {number} lastAccessedWeeksAgo - How many weeks ago the service
    *    was accessed by this account.
    * @since 71
    */
@@ -525,13 +534,14 @@ if (typeof Mozilla == "undefined") {
    * Information about a services attached to the browser. All properties are
    * optional and only exist if the service is enabled.
    *
-   * @typedef {Object} Mozilla.UITour.Configuration.BrowserServices
+   * @typedef {object} Mozilla.UITour.Configuration.BrowserServices
    * @property {Mozilla.UITour.Configuration.Sync} sync - If sync is configured
    * @since 71
    */
 
   /**
    * Array of UI :js:func:`Targets <Mozilla.UITour.Target>` currently available to be annotated.
+   *
    * @typedef {Mozilla.UITour.Target[]} Mozilla.UITour.Configuration.AvailableTargets
    */
 
@@ -556,8 +566,8 @@ if (typeof Mozilla == "undefined") {
    * defaultBrowser
    *   Try to set the application as the default web browser. Since Fx40
    *
-   * @param {String} configName - Configuration name to set (e.g. "defaultBrowser")
-   * @param {String|Number|Boolean} [configValue] - Not currently used
+   * @param {string} configName - Configuration name to set (e.g. "defaultBrowser")
+   * @param {string | number | boolean} [configValue] - Not currently used
    *
    * @since 40
    * @example
@@ -573,15 +583,15 @@ if (typeof Mozilla == "undefined") {
   /**
    * Request the browser open the Firefox Accounts page.
    *
-   * @param {Object} extraURLParams - An object containing additional
+   * @param {object} extraURLParams - An object containing additional
    * parameters for the URL opened by the browser for reasons of promotional
    * campaign tracking. Each attribute of the object must have a name that
    * is a string, is "flow_id", "flow_begin_time", "device_id" or begins
    * with `utm_` and contains only only alphanumeric characters, dashes or
    * underscores. The values may be any string and will automatically be encoded.
    * For Flow metrics, see details at https://mozilla.github.io/ecosystem-platform/docs/fxa-engineering/fxa-metrics#content-server
-   * @param {String} entrypoint - A string containing the entrypoint name.
-   * @param {String} email - A string containing the default email account
+   * @param {string} entrypoint - A string containing the entrypoint name.
+   * @param {string} email - A string containing the default email account
    * for the URL opened by the browser.
    * @since 31, 47 for `extraURLParams`
    * @since 79 for "flow_id", "flow_begin_time", "device_id", "entrypoint_experiment",
@@ -628,7 +638,7 @@ if (typeof Mozilla == "undefined") {
   /**
    * Request the browser open the "Connect Another Device" Firefox Accounts page.
    *
-   * @param {Object} extraURLParams - An object containing additional
+   * @param {object} extraURLParams - An object containing additional
    * parameters for the URL opened by the browser for reasons of promotional
    * campaign tracking. Each attribute of the object must have a name that
    * is a string, is "flow_id", "flow_begin_time", "device_id" or begins
@@ -658,6 +668,7 @@ if (typeof Mozilla == "undefined") {
    * add-ons and customizations as well as restore browser defaults, if possible.
    * `getConfiguration('canReset')` should first be used to determine whether
    * Refresh/Reset is possible for the user's build/profile.
+   *
    * @since 48
    * @see Mozilla.UITour.Configuration.CanReset
    */
@@ -689,7 +700,7 @@ if (typeof Mozilla == "undefined") {
    *
    * See https://searchfox.org/mozilla-release/source/browser/locales/search/list.json
    *
-   * @param {String} identifier - Identifier of the engine (e.g. 'yahoo').
+   * @param {string} identifier - Identifier of the engine (e.g. 'yahoo').
    * @see Mozilla.UITour.Configuration.Search
    * @since 34
    */
@@ -701,8 +712,9 @@ if (typeof Mozilla == "undefined") {
 
   /**
    * Sets a key+value pair as a treatment tag for recording in FHR.
-   * @param {String} name - tag name for the treatment
-   * @param {String} value - tag value for the treatment
+   *
+   * @param {string} name - tag name for the treatment
+   * @param {string} value - tag value for the treatment
    * @since 34
    * @see Mozilla.UITour.getTreatmentTag
    * @example
@@ -718,7 +730,7 @@ if (typeof Mozilla == "undefined") {
   /**
    * Retrieved the value for a set FHR treatment tag.
    *
-   * @param {String} name - Tag name to be retrieved
+   * @param {string} name - Tag name to be retrieved
    * @param {Function} callback - Called once the data has been retrieved
    * @since 34
    * @see Mozilla.UITour.setTreatmentTag
@@ -739,7 +751,7 @@ if (typeof Mozilla == "undefined") {
    *
    * This should have been implemented via `setConfiguration("searchTerm", …)`.
    *
-   * @param {String} term - Search string e.g. 'Firefox'
+   * @param {string} term - Search string e.g. 'Firefox'
    * @since 34
    */
   Mozilla.UITour.setSearchTerm = function (term) {
@@ -783,7 +795,7 @@ if (typeof Mozilla == "undefined") {
   };
 
   /**
-   * @param {String} pane - Pane to open/switch the preferences to.
+   * @param {string} pane - Pane to open/switch the preferences to.
    * Valid values match fragments on about:preferences and are subject to change e.g.:
    *
    * For the Preferences:

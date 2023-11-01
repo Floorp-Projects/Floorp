@@ -248,7 +248,6 @@ module.exports = {
         "browser/components/storybook/.storybook/**",
         "browser/components/tests/browser/**",
         "browser/components/touchbar/tests/browser/browser_touchbar_searchrestrictions.js",
-        "browser/components/uitour/UITour*",
         "browser/extensions/pictureinpicture/**",
         "browser/extensions/screenshots/**",
         "browser/modules/**",
