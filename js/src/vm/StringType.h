@@ -925,6 +925,10 @@ class JSLinearString : public JSString {
   // be a string equal to this string.)
   inline bool isIndex(uint32_t* indexp) const;
 
+  // Return whether the characters of this string can be moved by minor or
+  // compacting GC.
+  inline bool hasMovableChars() const;
+
   void maybeInitializeIndexValue(uint32_t index, bool allowAtom = false) {
     MOZ_ASSERT(JSString::isLinear());
     MOZ_ASSERT_IF(hasIndexValue(), getIndexValue() == index);
