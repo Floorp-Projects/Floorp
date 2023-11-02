@@ -76,11 +76,11 @@
     <string name="mozac_browser_errorpages_net_timeout_title">Pe jeike ndoikovéima</string>
 
     <!-- The error message shown when a website took long to load. -->
-    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>Pe tenda ejeruréva nombohovái pe jerure jeike rehegua ha pe kundahára noha’ãrõvéima ñembohovái.</p>
+    <string name="mozac_browser_errorpages_net_timeout_message"><![CDATA[<p>Tenda ejeruréva nombohovái pe jerure jeike rehegua ha kundahára noha’ãrõvéima ñembohovái.</p>
       <ul>
-        <li>¿Ikatu pe mohendahavusu ojeporueterei térã peteĩ ñekytĩ ndahi’aréitava? Eha’ãjey ag̃amieve.</li>
+        <li>¿Ikatu mohendahavusu ojeporueterei térã peteĩ ñekytĩ ndahi’aréitava? Eha’ãjey ag̃amieve.</li>
         <li>Ndaikatúi eikundaha ambue tenda rupi? Ehechajey ne mohendaha oĩpa ñandutípe.</li>
-        <li>Ne ñanduti térã ne mohendaha omo’ã chupe peteĩ firewall térã proxy? Peteĩ ñemboheko oiko’ỹva ikatu omboykese ne ñekundaha ñandutípe.</li>
+        <li>Ne ñanduti térã ne mohendaha omo’ã chupe firewall térã proxy? Peteĩ ñemboheko oiko’ỹva ikatu omboykese ne ñeikundaha ñandutípe.</li>
         <li>Oĩ gueteri apañuãi? Eporandu ne ñanduti ñangarekohára térã ne ñanduti me’ẽhárape nepytyvõ hag̃ua.</li>
       </ul>]]></string>
 

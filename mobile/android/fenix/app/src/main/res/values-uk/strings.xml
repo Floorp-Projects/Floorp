@@ -833,7 +833,7 @@
     <!-- Preferences for using pull to refresh in a webpage -->
     <string name="preference_gestures_website_pull_to_refresh">Потягнути для оновлення</string>
     <!-- Preference for using the dynamic toolbar -->
-    <string name="preference_gestures_dynamic_toolbar">Прокрутити для приховання панелі інструментів</string>
+    <string name="preference_gestures_dynamic_toolbar">Прокрутити, щоб сховати панель інструментів</string>
     <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
     <string name="preference_gestures_swipe_toolbar_switch_tabs">Провести вбік на панелі інструментів для перемикання вкладок</string>
     <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
@@ -1709,11 +1709,11 @@
     <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
     <string name="preferences_passwords_autofill2">Автозаповнення у %1$s</string>
     <!-- Description for the preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
-    <string name="preferences_passwords_autofill_description">Заповнення та збереження імен користувачів та паролів вебсайтів під час використання %1$s.</string>
+    <string name="preferences_passwords_autofill_description">Заповнювати та зберігати імена користувачів і паролі вебсайтів під час користування %1$s.</string>
     <!-- Preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
     <string name="preferences_android_autofill">Автозаповнення в інших програмах</string>
     <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
-    <string name="preferences_android_autofill_description">Заповнення імен користувачів та паролів у інших програмах на цьому пристрої.</string>
+    <string name="preferences_android_autofill_description">Заповнювати імена користувачів і паролі в інших програмах на цьому пристрої.</string>
 
     <!-- Preference option for adding a login -->
     <string name="preferences_logins_add_login">Додати пароль</string>

@@ -86,9 +86,9 @@
     <!-- Option in expanded select login prompt that links to login settings -->
     <string name="mozac_feature_prompts_manage_logins">Hantera inloggningar</string>
     <!-- Content description for expanding the saved logins options in the select login prompt -->
-    <string name="mozac_feature_prompts_expand_logins_content_description">Visa föreslagna inloggningar</string>
+    <string name="mozac_feature_prompts_expand_logins_content_description">Expandera föreslagna inloggningar</string>
     <!-- Content description for collapsing the saved logins options in the select login prompt -->
-    <string name="mozac_feature_prompts_collapse_logins_content_description">Dölj föreslagna inloggningar</string>
+    <string name="mozac_feature_prompts_collapse_logins_content_description">Komprimera föreslagna inloggningar</string>
     <!-- Header for the select login prompt to allow users to fill a form with a saved login -->
     <string name="mozac_feature_prompts_saved_logins">Föreslagna inloggningar</string>
 
@@ -106,7 +106,7 @@
     <!-- Content description for expanding the select credit card options in the select credit card prompt. -->
     <string name="mozac_feature_prompts_expand_credit_cards_content_description">Expandera föreslagna kreditkort</string>
     <!-- Content description for collapsing the select credit card options in the select credit prompt. -->
-    <string name="mozac_feature_prompts_collapse_credit_cards_content_description">Dölj föreslagna kreditkort</string>
+    <string name="mozac_feature_prompts_collapse_credit_cards_content_description">Komprimera föreslagna kreditkort</string>
     <!-- Option in the expanded select credit card prompt that links to credit cards settings. -->
     <string name="mozac_feature_prompts_manage_credit_cards">Hantera kreditkort</string>
     <!-- Text for the title of a save credit card dialog. -->
