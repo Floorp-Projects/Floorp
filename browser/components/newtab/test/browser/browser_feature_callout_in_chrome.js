@@ -1,7 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-"use strict";
+const { CustomizableUITestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/CustomizableUITestUtils.sys.mjs"
+);
 
 const PDF_TEST_URL =
   "https://example.com/browser/browser/components/newtab/test/browser/file_pdf.PDF";
@@ -455,6 +457,42 @@ add_task(async function triggered_feature_tour_with_custom_pref() {
   await ASRouter.loadMessagesFromAllProviders(
     ASRouter.state.providers.filter(p => p.id === "onboarding")
   );
+});
+
+add_task(async function callout_not_shown_if_dialog_open() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["prompts.windowPromptSubDialog", true]],
+  });
+
+  const win = await BrowserTestUtils.openNewBrowserWindow();
+  let dialogPromise = BrowserTestUtils.promiseAlertDialogOpen();
+  // Avoid blocking the test on the (sync) alert by sticking it in a timeout:
+  setTimeout(() => Services.prompt.alert(win, "Some title", "some message"), 0);
+  await dialogPromise;
+
+  let rv = await FeatureCalloutBroker.showFeatureCallout(
+    win.gBrowser.selectedBrowser,
+    testMessage.message
+  );
+  ok(!rv, "Feature callout not shown when a dialog is open in the same window");
+
+  await BrowserTestUtils.closeWindow(win);
+  await SpecialPowers.popPrefEnv();
+});
+
+add_task(async function callout_not_shown_if_panel_open() {
+  const win = await BrowserTestUtils.openNewBrowserWindow();
+  const gCUITestUtils = new CustomizableUITestUtils(win);
+  await gCUITestUtils.openMainMenu();
+
+  let rv = await FeatureCalloutBroker.showFeatureCallout(
+    win.gBrowser.selectedBrowser,
+    testMessage.message
+  );
+  ok(!rv, "Feature callout not shown when a panel is open in the same window");
+
+  await gCUITestUtils.hideMainMenu();
+  await BrowserTestUtils.closeWindow(win);
 });
 
 add_task(async function feature_callout_renders_in_browser_chrome_for_pdf() {
