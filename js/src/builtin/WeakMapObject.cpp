@@ -30,7 +30,7 @@ using namespace js;
     JSContext* cx, const CallArgs& args) {
   MOZ_ASSERT(is(args.thisv()));
 
-  if (!args.get(0).isObject()) {
+  if (!CanBeHeldWeakly(cx, args.get(0))) {
     args.rval().setBoolean(false);
     return true;
   }
@@ -59,7 +59,7 @@ bool WeakMapObject::has(JSContext* cx, unsigned argc, Value* vp) {
     JSContext* cx, const CallArgs& args) {
   MOZ_ASSERT(WeakMapObject::is(args.thisv()));
 
-  if (!args.get(0).isObject()) {
+  if (!CanBeHeldWeakly(cx, args.get(0))) {
     args.rval().setUndefined();
     return true;
   }
@@ -88,7 +88,7 @@ bool WeakMapObject::get(JSContext* cx, unsigned argc, Value* vp) {
     JSContext* cx, const CallArgs& args) {
   MOZ_ASSERT(WeakMapObject::is(args.thisv()));
 
-  if (!args.get(0).isObject()) {
+  if (!CanBeHeldWeakly(cx, args.get(0))) {
     args.rval().setBoolean(false);
     return true;
   }
@@ -121,8 +121,9 @@ bool WeakMapObject::delete_(JSContext* cx, unsigned argc, Value* vp) {
     JSContext* cx, const CallArgs& args) {
   MOZ_ASSERT(WeakMapObject::is(args.thisv()));
 
-  if (!args.get(0).isObject()) {
-    ReportNotObject(cx, JSMSG_OBJECT_REQUIRED_WEAKMAP_KEY, args.get(0));
+  if (!CanBeHeldWeakly(cx, args.get(0))) {
+    ReportValueError(cx, JSMSG_WEAKMAP_KEY_CANT_BE_HELD_WEAKLY,
+                     JSDVG_IGNORE_STACK, args.get(0), nullptr);
     return false;
   }
 
