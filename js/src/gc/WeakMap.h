@@ -10,7 +10,9 @@
 #include "mozilla/LinkedList.h"
 
 #include "gc/Barrier.h"
+#include "gc/Marking.h"
 #include "gc/Tracer.h"
+#include "gc/Zone.h"
 #include "gc/ZoneAllocator.h"
 #include "js/HashTable.h"
 #include "js/HeapAPI.h"
@@ -228,32 +230,32 @@ class WeakMap
 
   template <typename KeyInput, typename ValueInput>
   [[nodiscard]] bool add(AddPtr& p, KeyInput&& k, ValueInput&& v) {
-    MOZ_ASSERT(k);
+    MOZ_ASSERT(gc::ToMarkable(k));
     return Base::add(p, std::forward<KeyInput>(k), std::forward<ValueInput>(v));
   }
 
   template <typename KeyInput, typename ValueInput>
   [[nodiscard]] bool relookupOrAdd(AddPtr& p, KeyInput&& k, ValueInput&& v) {
-    MOZ_ASSERT(k);
+    MOZ_ASSERT(gc::ToMarkable(k));
     return Base::relookupOrAdd(p, std::forward<KeyInput>(k),
                                std::forward<ValueInput>(v));
   }
 
   template <typename KeyInput, typename ValueInput>
   [[nodiscard]] bool put(KeyInput&& k, ValueInput&& v) {
-    MOZ_ASSERT(k);
+    MOZ_ASSERT(gc::ToMarkable(k));
     return Base::put(std::forward<KeyInput>(k), std::forward<ValueInput>(v));
   }
 
   template <typename KeyInput, typename ValueInput>
   [[nodiscard]] bool putNew(KeyInput&& k, ValueInput&& v) {
-    MOZ_ASSERT(k);
+    MOZ_ASSERT(gc::ToMarkable(k));
     return Base::putNew(std::forward<KeyInput>(k), std::forward<ValueInput>(v));
   }
 
   template <typename KeyInput, typename ValueInput>
   void putNewInfallible(KeyInput&& k, ValueInput&& v) {
-    MOZ_ASSERT(k);
+    MOZ_ASSERT(gc::ToMarkable(k));
     Base::putNewInfallible(std::forward(k), std::forward<KeyInput>(k));
   }
 
@@ -321,6 +323,7 @@ class WeakMap
 };
 
 using ObjectValueWeakMap = WeakMap<HeapPtr<JSObject*>, HeapPtr<Value>>;
+using ValueValueWeakMap = WeakMap<HeapPtr<Value>, HeapPtr<Value>>;
 
 // Generic weak map for mapping objects to other objects.
 class ObjectWeakMap {

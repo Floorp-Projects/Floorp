@@ -93,11 +93,16 @@ struct MightBeForwarded {
 
 template <typename T>
 inline bool IsForwarded(const T* t) {
-  if (!MightBeForwarded<T>::value) {
+  if constexpr (!MightBeForwarded<T>::value) {
     MOZ_ASSERT(!t->isForwarded());
     return false;
   }
 
+  return t->isForwarded();
+}
+
+template <>
+inline bool IsForwarded<Cell>(const Cell* t) {
   return t->isForwarded();
 }
 

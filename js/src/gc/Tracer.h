@@ -350,6 +350,10 @@ void TraceWeakMapKeyEdgeInternal(JSTracer* trc, Zone* weakMapZone, T** thingp,
                                  const char* name);
 
 template <typename T>
+void TraceWeakMapKeyEdgeInternal(JSTracer* trc, Zone* weakMapZone, T* thingp,
+                                 const char* name);
+
+template <typename T>
 inline void TraceWeakMapKeyEdge(JSTracer* trc, Zone* weakMapZone,
                                 const WriteBarriered<T>* thingp,
                                 const char* name) {
