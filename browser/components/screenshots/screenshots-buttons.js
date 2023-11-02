@@ -13,8 +13,8 @@
       return `
       <html:link rel="stylesheet" href="chrome://global/skin/global.css"/>
       <html:link rel="stylesheet" href="chrome://browser/content/screenshots/screenshots-buttons.css"/>
-      <html:button class="visible-page panel-footer-button" data-l10n-id="screenshots-save-visible-button"></html:button>
-      <html:button class="full-page panel-footer-button" data-l10n-id="screenshots-save-page-button"></html:button>
+      <html:button class="visible-page footer-button" data-l10n-id="screenshots-save-visible-button"></html:button>
+      <html:button class="full-page footer-button" data-l10n-id="screenshots-save-page-button"></html:button>
       `;
     }
 
