@@ -332,7 +332,7 @@ EdgeReadingListMigrator.prototype = {
   async _ensureReadingListFolder(parentGuid) {
     if (!this.__readingListFolderGuid) {
       let folderTitle = await MigrationUtils.getLocalizedString(
-        "imported-edge-reading-list"
+        "migration-imported-edge-reading-list"
       );
       let folderSpec = {
         type: lazy.PlacesUtils.bookmarks.TYPE_FOLDER,
