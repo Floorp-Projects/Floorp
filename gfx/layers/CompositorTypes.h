@@ -215,22 +215,6 @@ struct TextureFactoryIdentifier {
         mSupportsComponentAlpha(aSupportsComponentAlpha),
         mSupportsD3D11NV12(aSupportsD3D11NV12),
         mSyncHandle(aSyncHandle) {}
-
-  bool operator==(const TextureFactoryIdentifier& aOther) const {
-    return mParentBackend == aOther.mParentBackend &&
-           mWebRenderBackend == aOther.mWebRenderBackend &&
-           mWebRenderCompositor == aOther.mWebRenderCompositor &&
-           mParentProcessType == aOther.mParentProcessType &&
-           mMaxTextureSize == aOther.mMaxTextureSize &&
-           mCompositorUseANGLE == aOther.mCompositorUseANGLE &&
-           mCompositorUseDComp == aOther.mCompositorUseDComp &&
-           mUseCompositorWnd == aOther.mUseCompositorWnd &&
-           mSupportsTextureBlitting == aOther.mSupportsTextureBlitting &&
-           mSupportsPartialUploads == aOther.mSupportsPartialUploads &&
-           mSupportsComponentAlpha == aOther.mSupportsComponentAlpha &&
-           mSupportsD3D11NV12 == aOther.mSupportsD3D11NV12 &&
-           mSyncHandle == aOther.mSyncHandle;
-  }
 };
 
 /**
