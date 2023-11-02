@@ -38,12 +38,15 @@ let dialog = {
     }
 
     let changeAppLink = document.getElementById("change-app");
-    if (this._preferredHandlerName) {
+
+    // allow the user to choose another application if they wish,
+    // but don't offer this if the protocol was opened via
+    // system principal (URLbar) and there's a preferred handler
+    if (this._preferredHandlerName && !this._principal?.isSystemPrincipal) {
       changeAppLink.hidden = false;
 
       changeAppLink.addEventListener("click", () => this.onChangeApp());
     }
-
     document.addEventListener("dialogaccept", () => this.onAccept());
     this.initL10n();
 
@@ -94,6 +97,14 @@ let dialog = {
         return "permission-dialog-description-file-app";
       }
       return "permission-dialog-description-file";
+    }
+
+    if (this._principal?.isSystemPrincipal && this._preferredHandlerName) {
+      return "permission-dialog-description-system-app";
+    }
+
+    if (this._principal?.isSystemPrincipal && !this._preferredHandlerName) {
+      return "permission-dialog-description-system-noapp";
     }
 
     // We only show the website address if the request didn't come from the top
@@ -158,6 +169,8 @@ let dialog = {
 
     // Fluent id for dialog accept button
     let idAcceptButton;
+    let acceptButton = this._dialog.getButton("accept");
+
     if (this._preferredHandlerName) {
       idAcceptButton = "permission-dialog-btn-open-link";
     } else {
@@ -165,8 +178,8 @@ let dialog = {
 
       let descriptionExtra = document.getElementById("description-extra");
       descriptionExtra.hidden = false;
+      acceptButton.addEventListener("click", () => this.onChangeApp());
     }
-    let acceptButton = this._dialog.getButton("accept");
     document.l10n.setAttributes(acceptButton, idAcceptButton);
 
     let description = document.getElementById("description");
