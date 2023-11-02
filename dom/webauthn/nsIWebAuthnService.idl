@@ -90,4 +90,7 @@ interface nsIWebAuthnService : nsISupports
     // Sets the "isUserVerified" bit on a virtual authenticator. See
     // https://w3c.github.io/webauthn/#sctn-automation-set-user-verified
     void setUserVerified(in uint64_t authenticatorId, in bool isUserVerified);
+
+    // about:webauthn-specific functions
+    void listen();
 };
