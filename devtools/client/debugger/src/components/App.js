@@ -33,7 +33,6 @@ import "./variables.css";
 import "./App.css";
 import "./shared/menu.css";
 
-import A11yIntention from "./A11yIntention";
 import { ShortcutsModal } from "./ShortcutsModal";
 import PrimaryPanes from "./PrimaryPanes";
 import Editor from "./Editor";
@@ -307,20 +306,16 @@ class App extends Component {
           componentName: "Debugger",
           panel: L10N.getStr("ToolboxDebugger.label"),
         },
-        React.createElement(
-          A11yIntention,
-          {},
-          this.renderLayout(),
-          quickOpenEnabled === true &&
-            React.createElement(QuickOpenModal, {
-              shortcutsModalEnabled: this.state.shortcutsModalEnabled,
-              toggleShortcutsModal: () => this.toggleShortcutsModal(),
-            }),
-          React.createElement(ShortcutsModal, {
-            enabled: this.state.shortcutsModalEnabled,
-            handleClose: () => this.toggleShortcutsModal(),
-          })
-        )
+        this.renderLayout(),
+        quickOpenEnabled === true &&
+          React.createElement(QuickOpenModal, {
+            shortcutsModalEnabled: this.state.shortcutsModalEnabled,
+            toggleShortcutsModal: () => this.toggleShortcutsModal(),
+          }),
+        React.createElement(ShortcutsModal, {
+          enabled: this.state.shortcutsModalEnabled,
+          handleClose: () => this.toggleShortcutsModal(),
+        })
       )
     );
   }

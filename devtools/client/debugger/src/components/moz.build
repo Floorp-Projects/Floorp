@@ -11,7 +11,6 @@ DIRS += [
 ]
 
 CompiledModules(
-    "A11yIntention.js",
     "App.js",
     "QuickOpenModal.js",
     "ShortcutsModal.js",

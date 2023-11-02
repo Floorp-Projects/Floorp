@@ -8,7 +8,6 @@
 
 /* Devtools imports */
 @import url("chrome://devtools/content/debugger/src/components/variables.css");
-@import url("chrome://devtools/content/debugger/src/components/A11yIntention.css");
 @import url("chrome://devtools/content/debugger/src/components/App.css");
 @import url("chrome://devtools/content/debugger/src/components/shared/AccessibleImage.css");
 @import url("chrome://devtools/content/debugger/src/components/shared/Accordion.css");
