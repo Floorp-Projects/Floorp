@@ -29,7 +29,8 @@ BEGIN_TEST(testIsInsideNursery) {
   /* And their contents. */
   {
     JS::AutoCheckCannotGC nogc;
-    const JS::Latin1Char* strdata = string->asLinear().nonInlineLatin1Chars(nogc);
+    const JS::Latin1Char* strdata =
+        string->asLinear().nonInlineLatin1Chars(nogc);
     CHECK(cx->nursery().isInside(strdata));
   }
 
@@ -40,7 +41,8 @@ BEGIN_TEST(testIsInsideNursery) {
   CHECK(!js::gc::IsInsideNursery(string));
   {
     JS::AutoCheckCannotGC nogc;
-    const JS::Latin1Char* strdata = string->asLinear().nonInlineLatin1Chars(nogc);
+    const JS::Latin1Char* strdata =
+        string->asLinear().nonInlineLatin1Chars(nogc);
     CHECK(!cx->nursery().isInside(strdata));
   }
 
