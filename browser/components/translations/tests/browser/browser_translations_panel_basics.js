@@ -30,11 +30,6 @@ add_task(async function test_translations_panel_basics() {
 
   await clickTranslateButton();
 
-  await assertTranslationsButton(
-    { button: true, circleArrows: true, locale: false, icon: true },
-    "The icon presents the loading indicator."
-  );
-
   await openTranslationsPanel({ onOpenPanel: assertPanelLoadingView });
 
   await clickCancelButton();
