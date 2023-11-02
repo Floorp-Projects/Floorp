@@ -641,10 +641,11 @@ class AudioCallbackDriver : public GraphDriver, public MixerCallbackReceiver {
     return mAudioThreadIdInCb.load() == std::this_thread::get_id();
   }
 
-  /* Returns true if this audio callback driver has successfully started and not
-   * yet stopped. If the fallback driver is active, this returns false. */
+  /* Returns true if this driver has started (perhaps with a fallback driver)
+   * and not yet stopped. */
   bool ThreadRunning() const override {
-    return mAudioStreamState == AudioStreamState::Running;
+    return mAudioStreamState == AudioStreamState::Running ||
+           mFallbackDriverState == FallbackDriverState::Running;
   }
 
   /* Whether the underlying cubeb stream has been started and has not stopped
