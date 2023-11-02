@@ -89,7 +89,6 @@
 #include "mozilla/Telemetry.h"
 #include "mozilla/TimelineManager.h"
 #include "mozilla/dom/Performance.h"
-#include "mozilla/dom/PerformanceMainThread.h"
 #include "mozilla/dom/PerformanceTiming.h"
 #include "mozilla/dom/PerformancePaintTiming.h"
 #include "mozilla/layers/APZThreadUtils.h"
@@ -2782,16 +2781,8 @@ void nsPresContext::NotifyNonBlankPaint() {
   }
 }
 
-bool nsPresContext::HasStoppedGeneratingLCP() const {
-  if (auto* perf = GetPerformanceMainThread()) {
-    return perf->HasDispatchedInputEvent() || perf->HasDispatchedScrollEvent();
-  }
-
-  return true;
-}
-
 void nsPresContext::NotifyContentfulPaint() {
-  if (mHadFirstContentfulPaint && HasStoppedGeneratingLCP()) {
+  if (mHadFirstContentfulPaint) {
     return;
   }
   nsRootPresContext* rootPresContext = GetRootPresContext();
@@ -2813,24 +2804,19 @@ void nsPresContext::NotifyContentfulPaint() {
     }
     return;
   }
-
-  if (!mHadFirstContentfulPaint) {
-    mHadFirstContentfulPaint = true;
-    mFirstContentfulPaintTransactionId =
-        Some(rootPresContext->mRefreshDriver->LastTransactionId().Next());
-  }
-
-  if (auto* perf = GetPerformanceMainThread()) {
-    mMarkPaintTimingStart = TimeStamp::Now();
-    MOZ_ASSERT(rootPresContext->RefreshDriver()->IsInRefresh(),
-               "We should only notify contentful paint during refresh "
-               "driver ticks");
-    if (!perf->HadFCPTimingEntry()) {
+  mHadFirstContentfulPaint = true;
+  mFirstContentfulPaintTransactionId =
+      Some(rootPresContext->mRefreshDriver->LastTransactionId().Next());
+  if (nsPIDOMWindowInner* innerWindow = mDocument->GetInnerWindow()) {
+    if (Performance* perf = innerWindow->GetPerformance()) {
       TimeStamp nowTime = rootPresContext->RefreshDriver()->MostRecentRefresh(
           /* aEnsureTimerStarted */ false);
       MOZ_ASSERT(!nowTime.IsNull(),
                  "Most recent refresh timestamp should exist since we are in "
                  "a refresh driver tick");
+      MOZ_ASSERT(rootPresContext->RefreshDriver()->IsInRefresh(),
+                 "We should only notify contentful paint during refresh "
+                 "driver ticks");
       RefPtr<PerformancePaintTiming> paintTiming = new PerformancePaintTiming(
           perf, u"first-contentful-paint"_ns, nowTime);
       perf->SetFCPTimingEntry(paintTiming);
@@ -2847,15 +2833,12 @@ void nsPresContext::NotifyContentfulPaint() {
               nsContentUtils::TruncatedURLForDisplay(docURI).get());
           PROFILER_MARKER_TEXT(
               "FirstContentfulPaint", DOM,
-              MarkerOptions(
-                  MarkerTiming::Interval(navigationStart, nowTime),
-                  MarkerInnerWindowId(mDocument->GetInnerWindow()->WindowID())),
+              MarkerOptions(MarkerTiming::Interval(navigationStart, nowTime),
+                            MarkerInnerWindowId(innerWindow->WindowID())),
               marker);
         }
       }
     }
-
-    perf->ProcessElementTiming();
   }
 }
 
@@ -3065,16 +3048,6 @@ void nsPresContext::SetSafeAreaInsets(const ScreenIntMargin& aSafeAreaInsets) {
 
   PostRebuildAllStyleDataEvent(nsChangeHint(0),
                                RestyleHint::RecascadeSubtree());
-}
-
-PerformanceMainThread* nsPresContext::GetPerformanceMainThread() const {
-  if (nsPIDOMWindowInner* innerWindow = mDocument->GetInnerWindow()) {
-    if (auto* perf = static_cast<PerformanceMainThread*>(
-            innerWindow->GetPerformance())) {
-      return perf;
-    }
-  }
-  return nullptr;
 }
 
 #ifdef DEBUG

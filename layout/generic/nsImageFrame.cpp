@@ -27,7 +27,6 @@
 #include "mozilla/dom/HTMLImageElement.h"
 #include "mozilla/dom/ReferrerInfo.h"
 #include "mozilla/dom/ResponsiveImageSelector.h"
-#include "mozilla/dom/LargestContentfulPaint.h"
 #include "mozilla/image/WebRenderImageProvider.h"
 #include "mozilla/layers/RenderRootStateManager.h"
 #include "mozilla/layers/WebRenderLayerManager.h"
@@ -1116,8 +1115,6 @@ void nsImageFrame::Notify(imgIRequest* aRequest, int32_t aType,
   }
 
   if (aType == imgINotificationObserver::LOAD_COMPLETE) {
-    LargestContentfulPaint::MaybeProcessImageForElementTiming(
-        static_cast<imgRequestProxy*>(aRequest), GetContent()->AsElement());
     uint32_t imgStatus;
     aRequest->GetImageStatus(&imgStatus);
     nsresult status =
@@ -2367,13 +2364,6 @@ bool nsDisplayImage::CreateWebRenderCommands(
   ImgDrawResult drawResult =
       mImage->GetImageProvider(aManager->LayerManager(), decodeSize, svgContext,
                                region, flags, getter_AddRefs(provider));
-
-  if (nsCOMPtr<imgIRequest> currentRequest = frame->GetCurrentRequest()) {
-    LCPHelpers::FinalizeLCPEntryForImage(
-        frame->GetContent()->AsElement(),
-        static_cast<imgRequestProxy*>(currentRequest.get()),
-        GetDestRect() - ToReferenceFrame());
-  }
 
   // While we got a container, it may not contain a fully decoded surface. If
   // that is the case, and we have an image we were previously displaying which

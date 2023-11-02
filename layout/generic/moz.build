@@ -143,7 +143,6 @@ EXPORTS.mozilla += [
     "CSSAlignUtils.h",
     "CSSOrderAwareFrameIterator.h",
     "LayoutMessageUtils.h",
-    "nsVideoFrame.h",
     "PrintedSheetFrame.h",
     "ReflowInput.h",
     "ReflowOutput.h",

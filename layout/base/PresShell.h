@@ -85,7 +85,6 @@ struct RangePaintInfo;
 class ReflowCountMgr;
 #endif
 class WeakFrame;
-class nsTextFrame;
 class ZoomConstraintsClient;
 
 struct nsCallbackEventRequest;
@@ -114,7 +113,6 @@ class Element;
 class Event;
 class HTMLSlotElement;
 class Selection;
-class PerformanceMainThread;
 }  // namespace dom
 
 namespace gfx {

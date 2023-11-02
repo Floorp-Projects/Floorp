@@ -17,7 +17,6 @@
 #include "nsQueryObject.h"
 #include "nsString.h"
 #include "PerformanceEntry.h"
-#include "LargestContentfulPaint.h"
 #include "PerformanceObserverEntryList.h"
 
 using namespace mozilla;
@@ -216,12 +215,6 @@ void PerformanceObserver::Observe(const PerformanceObserverInit& aOptions,
         }
       }
     }
-    if (StaticPrefs::dom_enable_largest_contentful_paint()) {
-      if (entryTypes.Contains(kLargestContentfulPaintName) &&
-          !validEntryTypes.Contains(kLargestContentfulPaintName)) {
-        validEntryTypes.AppendElement(kLargestContentfulPaintName);
-      }
-    }
     for (const nsLiteralString& name : kValidTypeNames) {
       if (entryTypes.Contains(name) && !validEntryTypes.Contains(name)) {
         validEntryTypes.AppendElement(name);
@@ -282,12 +275,6 @@ void PerformanceObserver::Observe(const PerformanceObserverInit& aOptions,
       }
     }
 
-    if (StaticPrefs::dom_enable_largest_contentful_paint()) {
-      if (type == kLargestContentfulPaintName) {
-        typeValid = true;
-      }
-    }
-
     if (!typeValid) {
       ReportUnsupportedTypesErrorToConsole(
           NS_IsMainThread(), UnsupportedEntryTypesIgnoredMsgId, type);
@@ -340,10 +327,6 @@ void PerformanceObserver::GetSupportedEntryTypes(
     for (const nsLiteralString& name : kValidEventTimingNames) {
       validTypes.AppendElement(name);
     }
-  }
-
-  if (StaticPrefs::dom_enable_largest_contentful_paint()) {
-    validTypes.AppendElement(u"largest-contentful-paint"_ns);
   }
   for (const nsLiteralString& name : kValidTypeNames) {
     validTypes.AppendElement(name);

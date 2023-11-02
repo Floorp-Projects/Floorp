@@ -12,7 +12,6 @@
 #include "js/PropertyAndElement.h"  // JS_DefineProperty
 #include "mozilla/HoldDropJSObjects.h"
 #include "PerformanceEventTiming.h"
-#include "LargestContentfulPaint.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/EventCounts.h"
@@ -26,12 +25,8 @@
 #include "nsIChannel.h"
 #include "nsIHttpChannel.h"
 #include "nsIDocShell.h"
-#include "nsTextFrame.h"
-#include "nsContainerFrame.h"
 
 namespace mozilla::dom {
-
-extern mozilla::LazyLogModule gLCPLogging;
 
 namespace {
 
@@ -64,24 +59,19 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(PerformanceMainThread)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(PerformanceMainThread,
                                                 Performance)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(
-      mTiming, mNavigation, mDocEntry, mFCPTiming, mEventTimingEntries,
-      mLargestContentfulPaintEntries, mFirstInputEvent, mPendingPointerDown,
-      mPendingEventTimingEntries, mEventCounts)
-  tmp->mImageLCPEntryMap.Clear();
-  tmp->mTextFrameUnions.Clear();
-  tmp->mImagesPendingRendering.Clear();
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mTiming, mNavigation, mDocEntry, mFCPTiming,
+                                  mEventTimingEntries, mFirstInputEvent,
+                                  mPendingPointerDown,
+                                  mPendingEventTimingEntries, mEventCounts)
   mozilla::DropJSObjects(tmp);
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(PerformanceMainThread,
                                                   Performance)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(
-      mTiming, mNavigation, mDocEntry, mFCPTiming, mEventTimingEntries,
-      mLargestContentfulPaintEntries, mFirstInputEvent, mPendingPointerDown,
-      mPendingEventTimingEntries, mEventCounts, mImagesPendingRendering,
-      mImageLCPEntryMap, mTextFrameUnions)
-
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTiming, mNavigation, mDocEntry, mFCPTiming,
+                                    mEventTimingEntries, mFirstInputEvent,
+                                    mPendingPointerDown,
+                                    mPendingEventTimingEntries, mEventCounts)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(PerformanceMainThread,
@@ -251,15 +241,6 @@ void PerformanceMainThread::BufferEventTimingEntryIfNeeded(
   }
 }
 
-void PerformanceMainThread::BufferLargestContentfulPaintEntryIfNeeded(
-    LargestContentfulPaint* aEntry) {
-  MOZ_ASSERT(StaticPrefs::dom_enable_largest_contentful_paint());
-  if (mLargestContentfulPaintEntries.Length() <
-      kMaxLargestContentfulPaintBufferSize) {
-    mLargestContentfulPaintEntries.AppendElement(aEntry);
-  }
-}
-
 void PerformanceMainThread::DispatchPendingEventTimingEntries() {
   DOMHighResTimeStamp renderingTime = NowUnclamped();
 
@@ -286,7 +267,7 @@ void PerformanceMainThread::DispatchPendingEventTimingEntries() {
             MOZ_ASSERT(!mFirstInputEvent);
             mFirstInputEvent = mPendingPointerDown.forget();
             QueueEntry(mFirstInputEvent);
-            SetHasDispatchedInputEvent();
+            mHasDispatchedInputEvent = true;
           }
           break;
         }
@@ -296,7 +277,7 @@ void PerformanceMainThread::DispatchPendingEventTimingEntries() {
           mFirstInputEvent = entry->Clone();
           mFirstInputEvent->SetEntryType(u"first-input"_ns);
           QueueEntry(mFirstInputEvent);
-          SetHasDispatchedInputEvent();
+          mHasDispatchedInputEvent = true;
           break;
         }
         default:
@@ -468,12 +449,6 @@ void PerformanceMainThread::QueueNavigationTimingEntry() {
   QueueEntry(mDocEntry);
 }
 
-void PerformanceMainThread::QueueLargestContentfulPaintEntry(
-    LargestContentfulPaint* aEntry) {
-  MOZ_ASSERT(StaticPrefs::dom_enable_largest_contentful_paint());
-  QueueEntry(aEntry);
-}
-
 EventCounts* PerformanceMainThread::EventCounts() {
   MOZ_ASSERT(StaticPrefs::dom_enable_event_timing());
   return mEventCounts;
@@ -526,14 +501,6 @@ void PerformanceMainThread::GetEntriesByTypeForObserver(
     aRetval.AppendElements(mEventTimingEntries);
     return;
   }
-
-  if (StaticPrefs::dom_enable_largest_contentful_paint()) {
-    if (aEntryType.EqualsLiteral("largest-contentful-paint")) {
-      aRetval.AppendElements(mLargestContentfulPaintEntries);
-      return;
-    }
-  }
-
   return GetEntriesByType(aEntryType, aRetval);
 }
 
@@ -594,130 +561,5 @@ size_t PerformanceMainThread::SizeOfEventEntries(
     eventEntries += entry->SizeOfIncludingThis(aMallocSizeOf);
   }
   return eventEntries;
-}
-
-void PerformanceMainThread::ProcessElementTiming() {
-  if (!StaticPrefs::dom_enable_largest_contentful_paint()) {
-    return;
-  }
-  const bool shouldLCPDataEmpty =
-      HasDispatchedInputEvent() || HasDispatchedScrollEvent();
-  MOZ_ASSERT_IF(shouldLCPDataEmpty,
-                mTextFrameUnions.IsEmpty() && mImageLCPEntryMap.IsEmpty());
-
-  if (shouldLCPDataEmpty) {
-    return;
-  }
-
-  nsPresContext* presContext = GetPresShell()->GetPresContext();
-  MOZ_ASSERT(presContext);
-
-  // After https://github.com/w3c/largest-contentful-paint/issues/104 is
-  // resolved, LargestContentfulPaint and FirstContentfulPaint should
-  // be using the same timestamp, which should be the same timestamp
-  // as to what https://w3c.github.io/paint-timing/#mark-paint-timing step 2
-  // defines.
-  // TODO(sefeng): Check the timestamp after this issue is resolved.
-  DOMHighResTimeStamp rawNowTime =
-      TimeStampToDOMHighResForRendering(presContext->GetMarkPaintTimingStart());
-
-  MOZ_ASSERT(GetOwnerGlobal());
-  Document* document = GetOwnerGlobal()->GetAsInnerWindow()->GetExtantDoc();
-  if (!document ||
-      !nsContentUtils::GetInProcessSubtreeRootDocument(document)->IsActive()) {
-    return;
-  }
-
-  nsTArray<ImagePendingRendering> imagesPendingRendering =
-      std::move(mImagesPendingRendering);
-  for (const auto& imagePendingRendering : imagesPendingRendering) {
-    RefPtr<Element> element = imagePendingRendering.GetElement();
-    if (!element) {
-      continue;
-    }
-
-    MOZ_ASSERT(imagePendingRendering.mLoadTime < rawNowTime);
-    if (imgRequestProxy* requestProxy =
-            imagePendingRendering.GetImgRequestProxy()) {
-      LCPHelpers::CreateLCPEntryForImage(
-          this, element, requestProxy, imagePendingRendering.mLoadTime,
-          rawNowTime, imagePendingRendering.mLCPImageEntryKey);
-    }
-  }
-
-  MOZ_ASSERT(mImagesPendingRendering.IsEmpty());
-}
-
-void PerformanceMainThread::FinalizeLCPEntriesForText() {
-  nsPresContext* presContext = GetPresShell()->GetPresContext();
-  MOZ_ASSERT(presContext);
-
-  DOMHighResTimeStamp renderTime =
-      TimeStampToDOMHighResForRendering(presContext->GetMarkPaintTimingStart());
-
-  bool canFinalize = StaticPrefs::dom_enable_largest_contentful_paint() &&
-                     !presContext->HasStoppedGeneratingLCP();
-  if (canFinalize) {
-    for (const auto& textFrameUnion : GetTextFrameUnions()) {
-      LCPHelpers::FinalizeLCPEntryForText(
-          this, renderTime, textFrameUnion.GetKey(), textFrameUnion.GetData(),
-          presContext);
-    }
-  }
-
-  ClearTextFrameUnions();
-}
-
-void PerformanceMainThread::StoreImageLCPEntry(
-    Element* aElement, imgRequestProxy* aImgRequestProxy,
-    LargestContentfulPaint* aEntry) {
-  mImageLCPEntryMap.InsertOrUpdate({aElement, aImgRequestProxy}, aEntry);
-}
-
-already_AddRefed<LargestContentfulPaint>
-PerformanceMainThread::GetImageLCPEntry(Element* aElement,
-                                        imgRequestProxy* aImgRequestProxy) {
-  Maybe<RefPtr<LargestContentfulPaint>> entry =
-      mImageLCPEntryMap.Extract({aElement, aImgRequestProxy});
-  if (entry.isNothing()) {
-    return nullptr;
-  }
-
-  Document* doc = aElement->GetComposedDoc();
-  MOZ_ASSERT(doc, "Element should be connected when it's painted");
-
-  const Maybe<const LCPImageEntryKey>& contentIdentifier =
-      entry.value()->GetLCPImageEntryKey();
-  if (contentIdentifier.isSome()) {
-    doc->ContentIdentifiersForLCP().EnsureRemoved(contentIdentifier.value());
-  }
-
-  return entry.value().forget();
-}
-
-bool PerformanceMainThread::UpdateLargestContentfulPaintSize(double aSize) {
-  if (aSize > mLargestContentfulPaintSize) {
-    mLargestContentfulPaintSize = aSize;
-    return true;
-  }
-  return false;
-}
-
-void PerformanceMainThread::SetHasDispatchedScrollEvent() {
-  mHasDispatchedScrollEvent = true;
-  ClearGeneratedTempDataForLCP();
-}
-
-void PerformanceMainThread::SetHasDispatchedInputEvent() {
-  mHasDispatchedInputEvent = true;
-  mImageLCPEntryMap.Clear();
-  ClearGeneratedTempDataForLCP();
-}
-
-void PerformanceMainThread::ClearTextFrameUnions() { mTextFrameUnions.Clear(); }
-
-void PerformanceMainThread::ClearGeneratedTempDataForLCP() {
-  ClearTextFrameUnions();
-  mImageLCPEntryMap.Clear();
 }
 }  // namespace mozilla::dom

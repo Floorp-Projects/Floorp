@@ -55,7 +55,6 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/intl/LocaleService.h"
 #include "mozilla/intl/Locale.h"
-#include "mozilla/dom/LargestContentfulPaint.h"
 #include "mozilla/net/UrlClassifierFeatureFactory.h"
 #include "mozilla/widget/TextRecognition.h"
 
@@ -255,11 +254,9 @@ void nsImageLoadingContent::OnLoadComplete(imgIRequest* aRequest,
     FireEvent(u"error"_ns);
   }
 
-  Element* element = AsContent()->AsElement();
-  SVGObserverUtils::InvalidateDirectRenderingObservers(element);
+  SVGObserverUtils::InvalidateDirectRenderingObservers(
+      AsContent()->AsElement());
   MaybeResolveDecodePromises();
-  LargestContentfulPaint::MaybeProcessImageForElementTiming(mCurrentRequest,
-                                                            element);
 }
 
 void nsImageLoadingContent::OnUnlockedDraw() {

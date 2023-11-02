@@ -53,7 +53,6 @@
 #include "mozilla/dom/RadioGroupContainer.h"
 #include "mozilla/dom/TreeOrderedArray.h"
 #include "mozilla/dom/ViewportMetaData.h"
-#include "mozilla/dom/LargestContentfulPaint.h"
 #include "mozilla/glean/GleanMetrics.h"
 #include "nsAtom.h"
 #include "nsCOMArray.h"
@@ -2428,10 +2427,6 @@ class Document : public nsINode,
                                               CallerType aCallerType);
 
   LinkedList<MediaQueryList>& MediaQueryLists() { return mDOMMediaQueryLists; }
-
-  nsTHashtable<LCPEntryHashEntry>& ContentIdentifiersForLCP() {
-    return mContentIdentifiersForLCP;
-  }
 
   /**
    * Get the compatibility mode for this document
@@ -5047,11 +5042,6 @@ class Document : public nsINode,
 
   // Our live MediaQueryLists
   LinkedList<MediaQueryList> mDOMMediaQueryLists;
-
-  // A hashset to keep track of which {element, imgRequestProxy}
-  // combination has been processed to avoid considering the same
-  // element twice for LargestContentfulPaint.
-  nsTHashtable<LCPEntryHashEntry> mContentIdentifiersForLCP;
 
   // Array of observers
   nsTObserverArray<nsIDocumentObserver*> mObservers;
