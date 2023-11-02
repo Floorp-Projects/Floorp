@@ -1487,8 +1487,8 @@ BigInt* BigInt::destructivelyTrimHighZeroDigits(JSContext* cx, BigInt* x) {
     MOZ_ASSERT(x->hasHeapDigits());
 
     size_t oldLength = x->digitLength();
-    Digit* newdigits = js::ReallocateCellBuffer<Digit>(cx, x, x->heapDigits_,
-                                                       oldLength, newLength);
+    Digit* newdigits = js::ReallocateCellBuffer<Digit>(
+        cx, x, x->heapDigits_, oldLength, newLength, js::MallocArena);
     if (!newdigits) {
       return nullptr;
     }

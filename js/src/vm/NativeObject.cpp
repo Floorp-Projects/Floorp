@@ -276,7 +276,7 @@ bool NativeObject::growSlots(JSContext* cx, uint32_t oldCapacity,
 
   HeapSlot* allocation = ReallocateCellBuffer<HeapSlot>(
       cx, this, reinterpret_cast<HeapSlot*>(oldHeaderSlots), oldAllocated,
-      newAllocated);
+      newAllocated, js::MallocArena);
   if (!allocation) {
     return false; /* Leave slots at its old size. */
   }
@@ -444,7 +444,7 @@ void NativeObject::shrinkSlots(JSContext* cx, uint32_t oldCapacity,
 
   HeapSlot* allocation = ReallocateCellBuffer<HeapSlot>(
       cx, this, reinterpret_cast<HeapSlot*>(oldHeaderSlots), oldAllocated,
-      newAllocated);
+      newAllocated, js::MallocArena);
   if (!allocation) {
     // It's possible for realloc to fail when shrinking an allocation. In this
     // case we continue using the original allocation but still update the
@@ -903,8 +903,8 @@ bool NativeObject::growElements(JSContext* cx, uint32_t reqCapacity) {
     oldAllocated = oldCapacity + ObjectElements::VALUES_PER_HEADER + numShifted;
 
     // Finally, try to resize the buffer.
-    newHeaderSlots = ReallocateCellBuffer<HeapSlot>(cx, this, oldHeaderSlots,
-                                                    oldAllocated, newAllocated);
+    newHeaderSlots = ReallocateCellBuffer<HeapSlot>(
+        cx, this, oldHeaderSlots, oldAllocated, newAllocated, js::MallocArena);
     if (!newHeaderSlots) {
       return false;  // If the resizing failed, then we leave elements at its
                      // old size.
@@ -986,7 +986,7 @@ void NativeObject::shrinkElements(JSContext* cx, uint32_t reqCapacity) {
   HeapSlot* oldHeaderSlots =
       reinterpret_cast<HeapSlot*>(getUnshiftedElementsHeader());
   HeapSlot* newHeaderSlots = ReallocateCellBuffer<HeapSlot>(
-      cx, this, oldHeaderSlots, oldAllocated, newAllocated);
+      cx, this, oldHeaderSlots, oldAllocated, newAllocated, js::MallocArena);
   if (!newHeaderSlots) {
     cx->recoverFromOutOfMemory();
     return;  // Leave elements at its old size.
