@@ -365,3 +365,28 @@ search.service:
       - technical
     expires: never
     telemetry_mirror: SEARCH_SERVICE_INIT2_MS
+
+  initialization_status:
+    type: labeled_counter
+    description: |
+      Counts the type of initialization statuses on start up.
+      failedSettings - failed loading and migrating the search settings file.
+      failedFetchEngines - failed to load or parse the configuration from remote
+                           settings.
+      failedLoadEngines - failed to create all the search engines from the
+                          configuration or user installed engines.
+      success - search service successfully initialized.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1849013
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1849013
+    notification_emails:
+      - fx-search-telemetry@mozilla.com
+    data_sensitivity:
+      - technical
+    expires: never
+    labels:
+      - failedSettings
+      - failedFetchEngines
+      - failedLoadEngines
+      - success

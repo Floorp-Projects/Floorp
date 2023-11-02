@@ -13,17 +13,16 @@ const { PromiseTestUtils } = ChromeUtils.importESModule(
 const searchService = Services.search.wrappedJSObject;
 
 add_setup(async function setup() {
-  searchService.willThrowErrorDuringInitInTest = true;
+  searchService.errorToThrowInTest = "Settings";
 
   // When search service fails, we want the promise rejection to be uncaught
-  // so we can continue running the test. 2147500037 is the exception message
-  // for Cr.NS_ERROR_FAILURE.
+  // so we can continue running the test.
   PromiseTestUtils.expectUncaughtRejection(
-    /Fake error during search service initialization./
+    /Fake Settings error during search service initialization./
   );
 
   registerCleanupFunction(async () => {
-    searchService.willThrowErrorDuringInitInTest = false;
+    searchService.errorToThrowInTest = null;
     await cleanupPlaces();
   });
 });
