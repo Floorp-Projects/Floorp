@@ -278,12 +278,6 @@ export class NetErrorParent extends JSWindowActorParent {
       case "Browser:SSLErrorGoBack":
         this.goBackFromErrorPage(this.browser);
         break;
-      case "Browser:SSLErrorReportTelemetry":
-        let reportStatus = message.data.reportStatus;
-        Services.telemetry
-          .getHistogramById("TLS_ERROR_REPORT_UI")
-          .add(reportStatus);
-        break;
       case "GetChangedCertPrefs":
         let hasChangedCertPrefs = this.hasChangedCertPrefs();
         this.sendAsyncMessage("HasChangedCertPrefs", {
