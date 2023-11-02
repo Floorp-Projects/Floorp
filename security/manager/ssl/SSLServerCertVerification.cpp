@@ -503,27 +503,6 @@ void GatherCertificateTransparencyTelemetry(
   // but it failed to parse (e.g. due to unsupported CT protocol version).
   Telemetry::Accumulate(Telemetry::SSL_SCTS_PER_CONNECTION, sctsCount);
 
-  // Report CT Policy compliance of EV certificates.
-  if (isEV) {
-    uint32_t evCompliance = 0;
-    switch (info.policyCompliance) {
-      case ct::CTPolicyCompliance::Compliant:
-        evCompliance = 1;
-        break;
-      case ct::CTPolicyCompliance::NotEnoughScts:
-        evCompliance = 2;
-        break;
-      case ct::CTPolicyCompliance::NotDiverseScts:
-        evCompliance = 3;
-        break;
-      case ct::CTPolicyCompliance::Unknown:
-      default:
-        MOZ_ASSERT_UNREACHABLE("Unexpected CTPolicyCompliance type");
-    }
-    Telemetry::Accumulate(Telemetry::SSL_CT_POLICY_COMPLIANCE_OF_EV_CERTS,
-                          evCompliance);
-  }
-
   // Report CT Policy compliance by CA.
   switch (info.policyCompliance) {
     case ct::CTPolicyCompliance::Compliant:
