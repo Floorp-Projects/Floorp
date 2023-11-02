@@ -366,7 +366,7 @@ class AudioCallbackDriver::FallbackWrapper : public GraphInterface {
   }
 #ifdef DEBUG
   bool InDriverIteration(const GraphDriver* aDriver) const override {
-    return !mOwner->ThreadRunning() && mOwner->InIteration();
+    return mGraph->InDriverIteration(mOwner) && mOwner->OnFallback();
   }
 #endif
   IterationResult OneIteration(GraphTime aStateComputedEnd,
