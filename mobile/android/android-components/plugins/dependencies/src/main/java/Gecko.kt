@@ -8,13 +8,19 @@
 object Gecko {
     /**
      * GeckoView Version.
+     * This field is changed from 'const val' to a function in order to fix the bug sometimes happening
+     * in the gradle sync process probably due to Gradle's incremental compilation feature. This change
+     * ensures re-evaluation of this file when Gradle is re-parsing gradle files while syncing.
      */
-    const val version = "121.0.20231116093942"
+    fun version() = "121.0.20231116093942"
 
     /**
      * GeckoView channel
+     * This field is changed from 'const val' to a function in order to fix the bug sometimes happening
+     * in the gradle sync process probably due to Gradle's incremental compilation feature. This change
+     * ensures re-evaluation of this file when Gradle is re-parsing gradle files while syncing.
      */
-    val channel = GeckoChannel.NIGHTLY
+    fun channel() = GeckoChannel.NIGHTLY
 }
 
 /**
