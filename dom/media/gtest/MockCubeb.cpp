@@ -710,7 +710,9 @@ void MockCubeb::ThreadFunction() {
       streams->RemoveElementsBy([](const auto& stream) { return !stream; });
       MOZ_ASSERT(mFakeAudioThread);
       if (streams->IsEmpty() && !mForcedAudioThread) {
-        NS_DispatchBackgroundTask(NS_NewRunnableFunction(
+        // This leaks the std::thread if Gecko's main thread has already been
+        // shut down.
+        NS_DispatchToMainThread(NS_NewRunnableFunction(
             __func__, [audioThread = std::move(mFakeAudioThread)] {
               audioThread->join();
             }));
