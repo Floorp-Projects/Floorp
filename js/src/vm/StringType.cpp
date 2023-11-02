@@ -399,11 +399,16 @@ void JSString::dumpRepresentationHeader(js::GenericPrinter& out,
 
 void JSLinearString::dumpRepresentationChars(js::GenericPrinter& out,
                                              int indent) const {
+  js::gc::StoreBuffer* sb = storeBuffer();
+  const char* where =
+      !sb || !sb->nursery().isInside(nonInlineCharsRaw()) ? "" : "(NURSERY) ";
   if (hasLatin1Chars()) {
-    out.printf("%*schars: ((Latin1Char*) %p) ", indent, "", rawLatin1Chars());
+    out.printf("%*schars: %s((Latin1Char*) %p) ", indent, "", where,
+               rawLatin1Chars());
     dumpChars(rawLatin1Chars(), length(), out);
   } else {
-    out.printf("%*schars: ((char16_t*) %p) ", indent, "", rawTwoByteChars());
+    out.printf("%*schars: %s((char16_t*) %p) ", indent, "", where,
+               rawTwoByteChars());
     dumpChars(rawTwoByteChars(), length(), out);
   }
   out.putChar('\n');
