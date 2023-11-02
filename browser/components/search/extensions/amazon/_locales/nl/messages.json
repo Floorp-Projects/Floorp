@@ -6,18 +6,12 @@
     "message": "Amazon.nl Search"
   },
   "searchUrl": {
-    "message": "https://www.amazon.nl/gp/search"
+    "message": "https://www.amazon.nl/s"
   },
   "searchForm": {
     "message": "https://www.amazon.nl/"
   },
   "searchUrlGetParams": {
-    "message": "ie={inputEncoding}&tag=mozillanether-21&index=aps&keywords={searchTerms}"
-  },
-  "suggestUrl": {
-    "message": "https://completion.amazon.nl/search/complete"
-  },
-  "suggestUrlGetParams": {
-    "message": "q={searchTerms}&search-alias=aps&mkt=328451"
+    "message": "k={searchTerms}"
   }
 }

@@ -6,18 +6,12 @@
     "message": "Amazon.com.au Search"
   },
   "searchUrl": {
-    "message": "https://www.amazon.com.au/exec/obidos/external-search/"
+    "message": "https://www.amazon.com.au/s"
   },
   "searchForm": {
-    "message": "https://www.amazon.com.au/exec/obidos/external-search/"
+    "message": "https://www.amazon.com.au/"
   },
   "searchUrlGetParams": {
-    "message": "field-keywords={searchTerms}&ie={inputEncoding}&mode=blended"
-  },
-  "suggestUrl": {
-    "message": "https://completion.amazon.com.au/search/complete"
-  },
-  "suggestUrlGetParams": {
-    "message": "q={searchTerms}&search-alias=aps&mkt=111172"
+    "message": "k={searchTerms}"
   }
 }
