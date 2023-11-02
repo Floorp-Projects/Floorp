@@ -611,7 +611,7 @@ std::tuple<void*, bool> js::Nursery::allocateBuffer(Zone* zone, size_t nbytes,
   }
 
   void* buffer = zone->pod_arena_malloc<uint8_t>(arenaId, nbytes);
-  return {buffer, !!buffer};
+  return {buffer, bool(buffer)};
 }
 
 void* js::Nursery::allocateBuffer(Zone* zone, Cell* owner, size_t nbytes,
