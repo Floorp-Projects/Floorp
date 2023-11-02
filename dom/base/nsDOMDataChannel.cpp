@@ -245,24 +245,23 @@ void nsDOMDataChannel::Send(const ArrayBufferView& aData, ErrorResult& aRv) {
 
 bool nsDOMDataChannel::CheckReadyState(ErrorResult& aRv) {
   MOZ_ASSERT(NS_IsMainThread());
-  uint16_t state = mozilla::DataChannel::CLOSED;
+  DataChannelState state = DataChannelState::Closed;
   if (!mSentClose) {
     state = mDataChannel->GetReadyState();
   }
 
   // In reality, the DataChannel protocol allows this, but we want it to
   // look like WebSockets
-  if (state == mozilla::DataChannel::CONNECTING) {
+  if (state == DataChannelState::Connecting) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return false;
   }
 
-  if (state == mozilla::DataChannel::CLOSING ||
-      state == mozilla::DataChannel::CLOSED) {
+  if (state == DataChannelState::Closing || state == DataChannelState::Closed) {
     return false;
   }
 
-  MOZ_ASSERT(state == mozilla::DataChannel::OPEN,
+  MOZ_ASSERT(state == DataChannelState::Open,
              "Unknown state in nsDOMDataChannel::Send");
 
   return true;
@@ -424,10 +423,10 @@ void nsDOMDataChannel::UpdateMustKeepAlive() {
   }
 
   bool shouldKeepAlive = false;
-  uint16_t readyState = mDataChannel->GetReadyState();
+  DataChannelState readyState = mDataChannel->GetReadyState();
 
   switch (readyState) {
-    case DataChannel::CONNECTING: {
+    case DataChannelState::Connecting: {
       if (mListenerManager &&
           (mListenerManager->HasListenersFor(nsGkAtoms::onopen) ||
            mListenerManager->HasListenersFor(nsGkAtoms::onmessage) ||
@@ -438,8 +437,8 @@ void nsDOMDataChannel::UpdateMustKeepAlive() {
       }
     } break;
 
-    case DataChannel::OPEN:
-    case DataChannel::CLOSING: {
+    case DataChannelState::Open:
+    case DataChannelState::Closing: {
       if (mDataChannel->GetBufferedAmount() != 0 ||
           (mListenerManager &&
            (mListenerManager->HasListenersFor(nsGkAtoms::onmessage) ||
@@ -450,7 +449,7 @@ void nsDOMDataChannel::UpdateMustKeepAlive() {
       }
     } break;
 
-    case DataChannel::CLOSED: {
+    case DataChannelState::Closed: {
       shouldKeepAlive = false;
     }
   }
