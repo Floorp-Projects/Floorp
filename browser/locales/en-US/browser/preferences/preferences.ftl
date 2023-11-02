@@ -594,6 +594,10 @@ browsing-gtk-use-non-overlay-scrollbars =
     .label = Always show scrollbars
     .accesskey = o
 
+browsing-always-underline-links=
+    .label = Always underline links
+    .accesskey = u
+
 browsing-use-onscreen-keyboard =
     .label = Show a touch keyboard when necessary
     .accesskey = c
