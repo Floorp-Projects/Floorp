@@ -4,7 +4,8 @@
 
 /* eslint-env browser */
 /* globals TE_addProfilerMarker, TE_getLogLevel, TE_log, TE_logError, TE_getLogLevel,
-           TE_destroyEngineProcess, TE_requestEnginePayload, TE_reportEngineStatus */
+           TE_destroyEngineProcess, TE_requestEnginePayload, TE_reportEngineStatus,
+           TE_resolveForceShutdown */
 
 /**
  * This file lives in the translation engine's process and is in charge of managing the
@@ -186,6 +187,21 @@ export class TranslationsEngine {
     });
 
     return engine;
+  }
+
+  /**
+   * Signal to the engines that they are being forced to shutdown.
+   */
+  static forceShutdown() {
+    return Promise.allSettled(
+      [...TranslationsEngine.#cachedEngines].map(
+        async ([langPair, enginePromise]) => {
+          TE_log(`Force shutdown of the engine "${langPair}"`);
+          const engine = await enginePromise;
+          engine.terminate();
+        }
+      )
+    );
   }
 
   /**
@@ -527,6 +543,12 @@ window.addEventListener("message", ({ data }) => {
     case "DiscardTranslations": {
       const { innerWindowId } = data;
       discardTranslations(innerWindowId);
+      break;
+    }
+    case "ForceShutdown": {
+      TranslationsEngine.forceShutdown().then(() => {
+        TE_resolveForceShutdown();
+      });
       break;
     }
     default:
