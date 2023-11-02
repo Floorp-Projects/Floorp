@@ -87,4 +87,8 @@ RefPtr<DBusCallPromise> DBusProxyCallWithUnixFDList(
   return promise.forget();
 }
 
+bool IsCancelledGError(GError* aGError) {
+  return g_error_matches(aGError, G_IO_ERROR, G_IO_ERROR_CANCELLED);
+}
+
 }  // namespace mozilla::widget
