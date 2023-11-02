@@ -33,12 +33,12 @@ export class TranslationsChild extends JSWindowActorChild {
       case "visibilitychange":
         if (this.#translatedDoc) {
           if (this.document.visibilityState === "visible") {
-            this.sendAsyncMessage("Translations:RequestPort");
+            this.#translatedDoc.translator.showPage();
           } else {
             this.addProfilerMarker(
               "Pausing translations and discarding the port"
             );
-            this.#translatedDoc.translator.discardPort();
+            this.#translatedDoc.translator.hidePage();
           }
         }
         break;
