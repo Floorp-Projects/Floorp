@@ -1779,6 +1779,9 @@ static bool DisassembleNative(JSContext* cx, unsigned argc, Value* vp) {
       jit_end = baseline->method()->rawEnd();
     }
   } else {
+    JS_ReportErrorASCII(cx,
+                        "The function hasn't been warmed up, hence no JIT code "
+                        "to disassemble.");
     return false;
   }
 
