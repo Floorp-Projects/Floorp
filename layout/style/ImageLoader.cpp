@@ -12,6 +12,7 @@
 
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/DocumentInlines.h"
+#include "mozilla/dom/LargestContentfulPaint.h"
 #include "mozilla/dom/ImageTracker.h"
 #include "nsContentUtils.h"
 #include "nsIReflowCallback.h"
@@ -818,10 +819,16 @@ void ImageLoader::OnLoadComplete(imgIRequest* aRequest) {
       // may happen during other network events.
       UnblockOnloadIfNeeded(fwf);
     }
-    if (fwf.mFrame->StyleVisibility()->IsVisible()) {
-      fwf.mFrame->SchedulePaint();
+    nsIFrame* frame = fwf.mFrame;
+    if (frame->StyleVisibility()->IsVisible()) {
+      frame->SchedulePaint();
+    }
+
+    if (StaticPrefs::dom_enable_largest_contentful_paint()) {
+      LargestContentfulPaint::MaybeProcessImageForElementTiming(
+          static_cast<imgRequestProxy*>(aRequest),
+          frame->GetContent()->AsElement());
     }
   }
 }
-
 }  // namespace mozilla::css

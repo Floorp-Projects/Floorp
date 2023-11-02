@@ -647,7 +647,7 @@ IntersectionInput DOMIntersectionObserver::ComputeInput(
 // https://w3c.github.io/IntersectionObserver/#update-intersection-observations-algo
 // (steps 2.1 - 2.5)
 IntersectionOutput DOMIntersectionObserver::Intersect(
-    const IntersectionInput& aInput, Element& aTarget,
+    const IntersectionInput& aInput, const Element& aTarget,
     IsContentVisibilityObserver aIsContentVisibilityObserver) {
   const bool isSimilarOrigin = SimilarOrigin(aTarget, aInput.mRootNode) ==
                                BrowsingContextOrigin::Similar;
