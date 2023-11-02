@@ -709,7 +709,6 @@ class SiteSpecificBrowser extends SiteSpecificBrowserBase {
    * Open URL is getting from the current browser.
    */
   launch() {
-    let ssb = SiteSpecificBrowser.get(this.id);
     let browserWindowFeatures = "chrome,location=yes,centerscreen,dialog=no,resizable=yes,scrollbars=yes";
     //"chrome,location=yes,centerscreen,dialog=no,resizable=yes,scrollbars=yes";
 
@@ -879,47 +878,19 @@ class SSBCommandLineHandler {
       return;
     }
 
-    let site = cmdLine.handleFlagWithParam("ssb", false);
-    if (site) {
-      cmdLine.preventDefault = true;
-
-      try {
-        let fixupInfo = Services.uriFixup.getFixupURIInfo(
-          site,
-          Services.uriFixup.FIXUP_FLAG_FIX_SCHEME_TYPOS
-        );
-
-        let uri = fixupInfo.preferredURI;
-        if (!uri) {
-          dump(`Unable to parse '${site}' as a URI.\n`);
-          return;
-        }
-
-        if (fixupInfo.fixupChangedProtocol && uri.schemeIs("http")) {
-          uri = uri
-            .mutate()
-            .setScheme("https")
-            .finalize();
-        }
-        let ssb = SiteSpecificBrowser.createFromURI(uri);
-        ssb.launch();
-      } catch (e) {
-        dump(`Unable to parse '${site}' as a URI: ${e}\n`);
-      }
-
-      return;
-    }
-
     let id = cmdLine.handleFlagWithParam("start-ssb", false);
     if (id) {
-      cmdLine.preventDefault = true;
-
-      startSSB(id);
+      if (cmdLine.state == Ci.nsICommandLine.STATE_INITIAL_LAUNCH) {
+        Services.prefs.setCharPref("browser.ssb.startup", id);
+      } else {
+        startSSB(id);
+        cmdLine.preventDefault = true;
+      }
     }
   }
 
   get helpInfo() {
-    return "  --ssb <uri>        Open a site specific browser for <uri>.\n";
+    return "  --start-ssb <id>  Start the SSB with the given id.\n";
   }
 }
 

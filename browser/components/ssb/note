@@ -1,12 +1,6 @@
 /* eslint-disable no-undef */
 
 BrowserPageActions.launchSSB = {
-  updateState() {
-    let action = PageActions.actionForID("launchSSB");
-    let browser = gBrowser.selectedBrowser;
-    action.setDisabled(!browser.currentURI.schemeIs("https"), window);
-  },
-
   async onCommand(event, buttonNode) {
     if (!gBrowser.currentURI.schemeIs("https")) {
       return;
