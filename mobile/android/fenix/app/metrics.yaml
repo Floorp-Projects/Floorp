@@ -7489,6 +7489,25 @@ first_session:
         - Performance
         - Attribution
 play_store_attribution:
+  install_referrer_response:
+    type: text
+    send_in_pings:
+      - first-session
+    description: |
+      The full install referrer response.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1862737
+    data_reviews:
+      - https://github.com/mozilla-mobile/firefox-android/pull/4343
+    data_sensitivity:
+      # - technical
+      - web_activity # This is a workaround so we can use Text type for technical data.
+    notification_emails:
+      - android-probes@mozilla.com
+    expires: never
+    metadata:
+      tags:
+        - Attribution
   source:
     type: string
     send_in_pings:

@@ -57,6 +57,8 @@ class InstallReferrerMetricsService(private val context: Context) : MetricsServi
                                 return
                             }
 
+                            PlayStoreAttribution.installReferrerResponse.set(installReferrerResponse)
+
                             val utmParams = UTMParams.parseUTMParameters(installReferrerResponse)
                             if (FeatureFlags.metaAttributionEnabled) {
                                 MetaParams.extractMetaAttribution(utmParams.content)
@@ -135,11 +137,11 @@ data class UTMParams(
         const val UTM_TERM = "utm_term"
 
         /**
-         * Try and unpack the referrer URL by successively URLDecoding the URL.
+         * Try and unpack the install referrer response.
          */
-        fun parseUTMParameters(referrerUrl: String): UTMParams {
+        fun parseUTMParameters(installReferrerResponse: String): UTMParams {
             val utmParams = mutableMapOf<String, String>()
-            val params = referrerUrl.split("&")
+            val params = installReferrerResponse.split("&")
 
             for (param in params) {
                 val keyValue = param.split("=")
