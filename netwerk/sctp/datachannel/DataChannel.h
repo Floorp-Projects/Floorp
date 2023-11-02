@@ -57,6 +57,11 @@ struct RTCStatsCollection;
 
 enum class DataChannelState { Connecting, Open, Closing, Closed };
 enum class DataChannelConnectionState { Connecting, Open, Closed };
+enum class DataChannelReliabilityPolicy {
+  Reliable,
+  LimitedRetransmissions,
+  LimitedLifetime
+};
 
 // For sending outgoing messages.
 // This class only holds a reference to the data and the info structure but does
@@ -187,16 +192,11 @@ class DataChannelConnection final : public net::NeckoTargetHolder
   void SetSignals(const std::string& aTransportId);
 #endif
 
-  typedef enum {
-    RELIABLE = 0,
-    PARTIAL_RELIABLE_REXMIT = 1,
-    PARTIAL_RELIABLE_TIMED = 2
-  } Type;
-
   [[nodiscard]] already_AddRefed<DataChannel> Open(
-      const nsACString& label, const nsACString& protocol, Type type,
-      bool inOrder, uint32_t prValue, DataChannelListener* aListener,
-      nsISupports* aContext, bool aExternalNegotiated, uint16_t aStream);
+      const nsACString& label, const nsACString& protocol,
+      DataChannelReliabilityPolicy prPolicy, bool inOrder, uint32_t prValue,
+      DataChannelListener* aListener, nsISupports* aContext,
+      bool aExternalNegotiated, uint16_t aStream);
 
   void Stop();
   void Close(DataChannel* aChannel);
@@ -279,7 +279,8 @@ class DataChannelConnection final : public net::NeckoTargetHolder
   int SendOpenAckMessage(uint16_t stream) MOZ_REQUIRES(mLock);
   int SendOpenRequestMessage(const nsACString& label,
                              const nsACString& protocol, uint16_t stream,
-                             bool unordered, uint16_t prPolicy,
+                             bool unordered,
+                             DataChannelReliabilityPolicy prPolicy,
                              uint32_t prValue) MOZ_REQUIRES(mLock);
   bool SendBufferedMessages(nsTArray<UniquePtr<BufferedOutgoingMsg>>& buffer,
                             size_t* aWritten);
@@ -446,9 +447,9 @@ class DataChannel {
  public:
   DataChannel(DataChannelConnection* connection, uint16_t stream,
               DataChannelState state, const nsACString& label,
-              const nsACString& protocol, uint16_t policy, uint32_t value,
-              bool ordered, bool negotiated, DataChannelListener* aListener,
-              nsISupports* aContext)
+              const nsACString& protocol, DataChannelReliabilityPolicy policy,
+              uint32_t value, bool ordered, bool negotiated,
+              DataChannelListener* aListener, nsISupports* aContext)
       : mListener(aListener),
         mContext(aContext),
         mConnection(connection),
@@ -503,7 +504,7 @@ class DataChannel {
   // Send a binary blob
   void SendBinaryBlob(dom::Blob& aBlob, ErrorResult& aRv);
 
-  uint16_t GetType() const { return mPrPolicy; }
+  DataChannelReliabilityPolicy GetType() const { return mPrPolicy; }
 
   dom::Nullable<uint16_t> GetMaxPacketLifeTime() const;
 
@@ -574,7 +575,7 @@ class DataChannel {
   // This is mainthread only
   DataChannelState mReadyState;
   uint16_t mStream;
-  uint16_t mPrPolicy;
+  DataChannelReliabilityPolicy mPrPolicy;
   uint32_t mPrValue;
   // Accessed on main and STS
   const bool mNegotiated;

@@ -149,6 +149,30 @@ static constexpr const char* ToString(DataChannelConnection::PendingType type) {
   return "";
 };
 
+static constexpr const char* ToString(DataChannelReliabilityPolicy type) {
+  switch (type) {
+    case DataChannelReliabilityPolicy::Reliable:
+      return "RELIABLE";
+    case DataChannelReliabilityPolicy::LimitedRetransmissions:
+      return "LIMITED_RETRANSMISSIONS";
+    case DataChannelReliabilityPolicy::LimitedLifetime:
+      return "LIMITED_LIFETIME";
+  }
+  return "";
+};
+
+static constexpr uint16_t ToUsrsctpValue(DataChannelReliabilityPolicy type) {
+  switch (type) {
+    case DataChannelReliabilityPolicy::Reliable:
+      return SCTP_PR_SCTP_NONE;
+    case DataChannelReliabilityPolicy::LimitedRetransmissions:
+      return SCTP_PR_SCTP_RTX;
+    case DataChannelReliabilityPolicy::LimitedLifetime:
+      return SCTP_PR_SCTP_TTL;
+  }
+  return SCTP_PR_SCTP_NONE;
+};
+
 class DataChannelRegistry {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DataChannelRegistry)
@@ -1356,7 +1380,7 @@ int DataChannelConnection::SendOpenAckMessage(uint16_t stream) {
 // Returns a POSIX error code.
 int DataChannelConnection::SendOpenRequestMessage(
     const nsACString& label, const nsACString& protocol, uint16_t stream,
-    bool unordered, uint16_t prPolicy, uint32_t prValue) {
+    bool unordered, DataChannelReliabilityPolicy prPolicy, uint32_t prValue) {
   const int label_len = label.Length();     // not including nul
   const int proto_len = protocol.Length();  // not including nul
   // careful - request struct include one char for the label
@@ -1368,13 +1392,13 @@ int DataChannelConnection::SendOpenRequestMessage(
   memset(req.get(), 0, req_size);
   req->msg_type = DATA_CHANNEL_OPEN_REQUEST;
   switch (prPolicy) {
-    case SCTP_PR_SCTP_NONE:
+    case DataChannelReliabilityPolicy::Reliable:
       req->channel_type = DATA_CHANNEL_RELIABLE;
       break;
-    case SCTP_PR_SCTP_TTL:
+    case DataChannelReliabilityPolicy::LimitedLifetime:
       req->channel_type = DATA_CHANNEL_PARTIAL_RELIABLE_TIMED;
       break;
-    case SCTP_PR_SCTP_RTX:
+    case DataChannelReliabilityPolicy::LimitedRetransmissions:
       req->channel_type = DATA_CHANNEL_PARTIAL_RELIABLE_REXMIT;
       break;
     default:
@@ -1516,7 +1540,7 @@ void DataChannelConnection::HandleOpenRequestMessage(
     uint16_t stream) {
   RefPtr<DataChannel> channel;
   uint32_t prValue;
-  uint16_t prPolicy;
+  DataChannelReliabilityPolicy prPolicy;
 
   ASSERT_WEBRTC(!NS_IsMainThread());
   mLock.AssertCurrentThreadOwns();
@@ -1540,15 +1564,15 @@ void DataChannelConnection::HandleOpenRequestMessage(
   switch (req->channel_type) {
     case DATA_CHANNEL_RELIABLE:
     case DATA_CHANNEL_RELIABLE_UNORDERED:
-      prPolicy = SCTP_PR_SCTP_NONE;
+      prPolicy = DataChannelReliabilityPolicy::Reliable;
       break;
     case DATA_CHANNEL_PARTIAL_RELIABLE_REXMIT:
     case DATA_CHANNEL_PARTIAL_RELIABLE_REXMIT_UNORDERED:
-      prPolicy = SCTP_PR_SCTP_RTX;
+      prPolicy = DataChannelReliabilityPolicy::LimitedRetransmissions;
       break;
     case DATA_CHANNEL_PARTIAL_RELIABLE_TIMED:
     case DATA_CHANNEL_PARTIAL_RELIABLE_TIMED_UNORDERED:
-      prPolicy = SCTP_PR_SCTP_TTL;
+      prPolicy = DataChannelReliabilityPolicy::LimitedLifetime;
       break;
     default:
       DC_ERROR(("Unknown channel type %d", req->channel_type));
@@ -1573,9 +1597,10 @@ void DataChannelConnection::HandleOpenRequestMessage(
           ordered != channel->mOrdered) {
         DC_WARN(
             ("external negotiation mismatch with OpenRequest:"
-             "channel %u, policy %u/%u, value %u/%u, ordered %d/%d",
-             stream, prPolicy, channel->mPrPolicy, prValue, channel->mPrValue,
-             static_cast<int>(ordered), static_cast<int>(channel->mOrdered)));
+             "channel %u, policy %s/%s, value %u/%u, ordered %d/%d",
+             stream, ToString(prPolicy), ToString(channel->mPrPolicy), prValue,
+             channel->mPrValue, static_cast<int>(ordered),
+             static_cast<int>(channel->mOrdered)));
       }
     }
     return;
@@ -2516,9 +2541,10 @@ int DataChannelConnection::ReceiveCallback(
 }
 
 already_AddRefed<DataChannel> DataChannelConnection::Open(
-    const nsACString& label, const nsACString& protocol, Type type,
-    bool inOrder, uint32_t prValue, DataChannelListener* aListener,
-    nsISupports* aContext, bool aExternalNegotiated, uint16_t aStream) {
+    const nsACString& label, const nsACString& protocol,
+    DataChannelReliabilityPolicy prPolicy, bool inOrder, uint32_t prValue,
+    DataChannelListener* aListener, nsISupports* aContext,
+    bool aExternalNegotiated, uint16_t aStream) {
   ASSERT_WEBRTC(NS_IsMainThread());
   MutexAutoLock lock(mLock);  // OpenFinish assumes this
   if (!aExternalNegotiated) {
@@ -2533,30 +2559,15 @@ already_AddRefed<DataChannel> DataChannelConnection::Open(
       aStream = INVALID_STREAM;
     }
   }
-  uint16_t prPolicy = SCTP_PR_SCTP_NONE;
 
   DC_DEBUG(
-      ("DC Open: label %s/%s, type %u, inorder %d, prValue %u, listener %p, "
+      ("DC Open: label %s/%s, type %s, inorder %d, prValue %u, listener %p, "
        "context %p, external: %s, stream %u",
        PromiseFlatCString(label).get(), PromiseFlatCString(protocol).get(),
-       type, inOrder, prValue, aListener, aContext,
+       ToString(prPolicy), inOrder, prValue, aListener, aContext,
        aExternalNegotiated ? "true" : "false", aStream));
-  switch (type) {
-    case DATA_CHANNEL_RELIABLE:
-      prPolicy = SCTP_PR_SCTP_NONE;
-      break;
-    case DATA_CHANNEL_PARTIAL_RELIABLE_REXMIT:
-      prPolicy = SCTP_PR_SCTP_RTX;
-      break;
-    case DATA_CHANNEL_PARTIAL_RELIABLE_TIMED:
-      prPolicy = SCTP_PR_SCTP_TTL;
-      break;
-    default:
-      DC_ERROR(("unsupported channel type: %u", type));
-      MOZ_ASSERT(false);
-      return nullptr;
-  }
-  if ((prPolicy == SCTP_PR_SCTP_NONE) && (prValue != 0)) {
+
+  if ((prPolicy == DataChannelReliabilityPolicy::Reliable) && (prValue != 0)) {
     return nullptr;
   }
 
@@ -2856,8 +2867,8 @@ int DataChannelConnection::SendDataMsgInternalOrBuffer(DataChannel& channel,
   }
 
   // Partial reliability policy
-  if (channel.mPrPolicy != SCTP_PR_SCTP_NONE) {
-    info.sendv_prinfo.pr_policy = channel.mPrPolicy;
+  if (channel.mPrPolicy != DataChannelReliabilityPolicy::Reliable) {
+    info.sendv_prinfo.pr_policy = ToUsrsctpValue(channel.mPrPolicy);
     info.sendv_prinfo.pr_value = channel.mPrValue;
     info.sendv_flags |= SCTP_SEND_PRINFO_VALID;
   }
@@ -3436,14 +3447,14 @@ void DataChannel::SendBinaryBlob(dom::Blob& aBlob, ErrorResult& aRv) {
 }
 
 dom::Nullable<uint16_t> DataChannel::GetMaxPacketLifeTime() const {
-  if (mPrPolicy == SCTP_PR_SCTP_TTL) {
+  if (mPrPolicy == DataChannelReliabilityPolicy::LimitedLifetime) {
     return dom::Nullable<uint16_t>(mPrValue);
   }
   return dom::Nullable<uint16_t>();
 }
 
 dom::Nullable<uint16_t> DataChannel::GetMaxRetransmits() const {
-  if (mPrPolicy == SCTP_PR_SCTP_RTX) {
+  if (mPrPolicy == DataChannelReliabilityPolicy::LimitedRetransmissions) {
     return dom::Nullable<uint16_t>(mPrValue);
   }
   return dom::Nullable<uint16_t>();
