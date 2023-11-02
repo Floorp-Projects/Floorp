@@ -123,10 +123,10 @@ class DataChannelConnection final : public net::NeckoTargetHolder
   virtual ~DataChannelConnection();
 
  public:
-  enum {
-    PENDING_NONE = 0U,  // No outgoing messages are pending
-    PENDING_DCEP = 1U,  // Outgoing DCEP messages are pending
-    PENDING_DATA = 2U,  // Outgoing data channel messages are pending
+  enum class PendingType {
+    None,  // No outgoing messages are pending.
+    Dcep,  // Outgoing DCEP messages are pending.
+    Data,  // Outgoing data channel messages are pending.
   };
 
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DataChannelConnection)
@@ -392,7 +392,7 @@ class DataChannelConnection final : public net::NeckoTargetHolder
   nsRefPtrDeque<DataChannel> mPending;
   // STS and main
   size_t mNegotiatedIdLimit MOZ_GUARDED_BY(mLock) = 0;
-  uint8_t mPendingType MOZ_GUARDED_BY(mLock) = PENDING_NONE;
+  PendingType mPendingType MOZ_GUARDED_BY(mLock) = PendingType::None;
   // holds data that's come in before a channel is open
   nsTArray<UniquePtr<QueuedDataMessage>> mQueuedData MOZ_GUARDED_BY(mLock);
   // holds outgoing control messages

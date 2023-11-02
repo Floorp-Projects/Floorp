@@ -137,6 +137,18 @@ static constexpr const char* ToString(
   return "";
 };
 
+static constexpr const char* ToString(DataChannelConnection::PendingType type) {
+  switch (type) {
+    case DataChannelConnection::PendingType::None:
+      return "NONE";
+    case DataChannelConnection::PendingType::Dcep:
+      return "DCEP";
+    case DataChannelConnection::PendingType::Data:
+      return "DATA";
+  }
+  return "";
+};
+
 class DataChannelRegistry {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DataChannelRegistry)
@@ -1325,8 +1337,8 @@ int DataChannelConnection::SendControlMessage(const uint8_t* data, uint32_t len,
   int error = SendMsgInternalOrBuffer(mBufferedControl, msg, buffered, nullptr);
 
   // Set pending type (if buffered)
-  if (!error && buffered && !mPendingType) {
-    mPendingType = PENDING_DCEP;
+  if (!error && buffered && mPendingType == PendingType::None) {
+    mPendingType = PendingType::Dcep;
   }
   return error;
 }
@@ -1404,8 +1416,9 @@ bool DataChannelConnection::SendDeferredMessages() {
   ASSERT_WEBRTC(!NS_IsMainThread());
   mLock.AssertCurrentThreadOwns();
 
-  DC_DEBUG(("SendDeferredMessages called, pending type: %d", mPendingType));
-  if (!mPendingType) {
+  DC_DEBUG(("SendDeferredMessages called, pending type: %s",
+            ToString(mPendingType)));
+  if (mPendingType == PendingType::None) {
     return false;
   }
 
@@ -1414,13 +1427,13 @@ bool DataChannelConnection::SendDeferredMessages() {
   // outstanding. These need to
   //       be sent first before other streams can be used for sending.
   if (!mBufferedControl.IsEmpty() &&
-      (mSendInterleaved || mPendingType == PENDING_DCEP)) {
+      (mSendInterleaved || mPendingType == PendingType::Dcep)) {
     if (SendBufferedMessages(mBufferedControl, nullptr)) {
       return true;
     }
 
     // Note: There may or may not be pending data messages
-    mPendingType = PENDING_DATA;
+    mPendingType = PendingType::Data;
   }
 
   bool blocked = false;
@@ -1464,7 +1477,8 @@ bool DataChannelConnection::SendDeferredMessages() {
   } while (!blocked && i != end);
 
   if (!blocked) {
-    mPendingType = mBufferedControl.IsEmpty() ? PENDING_NONE : PENDING_DCEP;
+    mPendingType =
+        mBufferedControl.IsEmpty() ? PendingType::None : PendingType::Dcep;
   }
   return blocked;
 }
@@ -2778,7 +2792,8 @@ int DataChannelConnection::SendMsgInternalOrBuffer(
 
   // Must lock before empty check for similar reasons!
   mLock.AssertCurrentThreadOwns();
-  if (buffer.IsEmpty() && (mSendInterleaved || !mPendingType)) {
+  if (buffer.IsEmpty() &&
+      (mSendInterleaved || mPendingType == PendingType::None)) {
     error = SendMsgInternal(msg, aWritten);
     switch (error) {
       case 0:
@@ -2867,8 +2882,8 @@ int DataChannelConnection::SendDataMsgInternalOrBuffer(DataChannel& channel,
   mDeferredSend.clear();
 
   // Set pending type and stream index (if buffered)
-  if (!error && buffered && !mPendingType) {
-    mPendingType = PENDING_DATA;
+  if (!error && buffered && mPendingType == PendingType::None) {
+    mPendingType = PendingType::Data;
     mCurrentStream = channel.mStream;
   }
   return error;
