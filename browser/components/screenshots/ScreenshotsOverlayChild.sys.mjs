@@ -169,6 +169,8 @@ export class ScreenshotsOverlay {
       return;
     }
 
+    this.windowDimensions.reset();
+
     this._content = this.document.insertAnonymousContent();
     this._content.root.appendChild(this.fragment);
 
@@ -809,6 +811,12 @@ export class ScreenshotsOverlay {
     this.previewContainer.hidden = true;
   }
 
+  updatePreviewContainer() {
+    let { clientWidth, clientHeight } = this.windowDimensions.dimensions;
+    this.previewContainer.style.width = `${clientWidth}px`;
+    this.previewContainer.style.height = `${clientHeight}px`;
+  }
+
   /**
    * Update the screenshots overlay container based on the window dimensions.
    */
@@ -1038,31 +1046,21 @@ export class ScreenshotsOverlay {
    * @param {String} eventType will be "scroll" or "resize"
    */
   updateScreenshotsOverlayDimensions(eventType) {
-    if (this.#state === "crosshairs" && eventType === "resize") {
-      this.hideHoverElementContainer();
-    }
-
     this.updateWindowDimensions();
 
-    if (this.#state === "selected" && eventType === "resize") {
-      this.updateSelectionSizeText();
-      let didShift = this.selectionRegion.shift();
-      if (didShift) {
-        this.drawSelectionContainer();
-      }
-      this.drawButtonsContainer();
-    } else if (
-      this.#state !== "resizing" &&
-      this.#state !== "dragging" &&
-      eventType === "scroll"
-    ) {
-      this.drawButtonsContainer();
-      if (this.#state === "crosshairs") {
+    if (this.state === "crosshairs") {
+      if (eventType === "resize") {
+        this.hideHoverElementContainer();
+        this.updatePreviewContainer();
+      } else if (eventType === "scroll") {
         if (this.#lastClientX && this.#lastClientY) {
           this.#cachedEle = null;
           this.handleElementHover(this.#lastClientX, this.#lastClientY);
         }
       }
+    } else if (this.state === "selected") {
+      this.drawButtonsContainer();
+      this.updateSelectionSizeText();
     }
   }
 
@@ -1151,10 +1149,21 @@ export class ScreenshotsOverlay {
       let heightDiff = this.windowDimensions.clientHeight - clientHeight;
 
       this.windowDimensions.dimensions = {
-        scrollWidth: scrollWidth - widthDiff,
-        scrollHeight: scrollHeight - heightDiff,
+        scrollWidth: scrollWidth - Math.max(widthDiff, 0),
+        scrollHeight: scrollHeight - Math.max(heightDiff, 0),
+        clientWidth,
+        clientHeight,
       };
 
+      if (this.state === "selected") {
+        let didShift = this.selectionRegion.shift();
+        if (didShift) {
+          this.drawSelectionContainer();
+          this.drawButtonsContainer();
+        }
+      } else if (this.state === "crosshairs") {
+        this.updatePreviewContainer();
+      }
       this.updateScreenshotsOverlayContainer();
       // We just updated the screenshots container so we check if the window
       // dimensions are still accurate
@@ -1186,6 +1195,7 @@ export class ScreenshotsOverlay {
     };
 
     if (shouldUpdate) {
+      this.updatePreviewContainer();
       this.updateScreenshotsOverlayContainer();
     }
   }
