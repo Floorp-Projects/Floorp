@@ -420,4 +420,15 @@ export class WindowDimensions {
   get devicePixelRatio() {
     return this.#devicePixelRatio;
   }
+
+  reset() {
+    this.#clientHeight = 0;
+    this.#clientWidth = 0;
+    this.#scrollHeight = 0;
+    this.#scrollWidth = 0;
+    this.#scrollX = 0;
+    this.#scrollY = 0;
+    this.#scrollMinX = 0;
+    this.#scrollMinY = 0;
+  }
 }

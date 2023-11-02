@@ -34,12 +34,11 @@
 }
 
 #preview-container {
+  overflow: clip;
   display: flex;
-  align-items: center;
   flex-direction: column;
+  align-items: center;
   justify-content: center;
-  margin: 0;
-  padding: 0;
   position: sticky;
   top: 0;
   left: 0;
