@@ -55,6 +55,9 @@ using namespace mozilla::psm;
 
 extern LazyLogModule gPIPNSSLog;
 
+static void AccumulateCipherSuite(Telemetry::HistogramID probe,
+                                  const SSLChannelInfo& channelInfo);
+
 namespace {
 
 // Bits in bit mask for SSL_REASONS_FOR_NOT_FALSE_STARTING telemetry probe
@@ -900,94 +903,159 @@ static void AccumulateECCCurve(Telemetry::HistogramID probe, uint32_t bits) {
   Telemetry::Accumulate(probe, value);
 }
 
-static void AccumulateCipherSuite(const SSLChannelInfo& channelInfo) {
+static void AccumulateCipherSuite(Telemetry::HistogramID probe,
+                                  const SSLChannelInfo& channelInfo) {
   uint32_t value;
-  // Note: this list must include every cipher suite it is possible to enable
-  // in nsNSSComponent.cpp (see sCipherPrefs and sDeprecatedTLS1CipherPrefs).
   switch (channelInfo.cipherSuite) {
-    case TLS_RSA_WITH_3DES_EDE_CBC_SHA:  // 0x000A
+    // ECDHE key exchange
+    case TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256:
       value = 1;
       break;
-    case TLS_RSA_WITH_AES_128_CBC_SHA:  // 0x002F
+    case TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256:
       value = 2;
       break;
-    case TLS_DHE_RSA_WITH_AES_128_CBC_SHA:  // 0x0033
+    case TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA:
       value = 3;
       break;
-    case TLS_RSA_WITH_AES_256_CBC_SHA:  // 0x0035
+    case TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA:
       value = 4;
       break;
-    case TLS_DHE_RSA_WITH_AES_256_CBC_SHA:  // 0x0039
+    case TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA:
       value = 5;
       break;
-    case TLS_RSA_WITH_AES_128_GCM_SHA256:  // 0x009C
+    case TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA:
       value = 6;
       break;
-    case TLS_RSA_WITH_AES_256_GCM_SHA384:  // 0x009D
+    case TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA:
       value = 7;
       break;
-    case TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA:  // 0xC009
-      value = 8;
-      break;
-    case TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA:  // 0xC00A
-      value = 9;
-      break;
-    case TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA:  // 0xC013
+    case TLS_ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA:
       value = 10;
       break;
-    case TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA:  // 0xC014
+    case TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256:
       value = 11;
       break;
-    case TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256:  // 0xC02B
+    case TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256:
       value = 12;
       break;
-    case TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384:  // 0xC02C
+    case TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384:
       value = 13;
       break;
-    case TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256:  // 0xC02F
+    case TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384:
       value = 14;
       break;
-    case TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384:  // 0xC030
-      value = 15;
+    // DHE key exchange
+    case TLS_DHE_RSA_WITH_AES_128_CBC_SHA:
+      value = 21;
       break;
-    case TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256:  // 0xCCA8
-      value = 16;
+    case TLS_DHE_RSA_WITH_CAMELLIA_128_CBC_SHA:
+      value = 22;
       break;
-    case TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256:  // 0xCCA9
-      value = 17;
+    case TLS_DHE_RSA_WITH_AES_256_CBC_SHA:
+      value = 23;
       break;
-
-    // TLS 1.3 cipher suites
-    case TLS_AES_128_GCM_SHA256:  // 0x1301
-      value = 18;
+    case TLS_DHE_RSA_WITH_CAMELLIA_256_CBC_SHA:
+      value = 24;
       break;
-    case TLS_AES_256_GCM_SHA384:  // 0x1302
-      value = 19;
+    case TLS_DHE_RSA_WITH_3DES_EDE_CBC_SHA:
+      value = 25;
       break;
-    case TLS_CHACHA20_POLY1305_SHA256:  // 0x1303
-      value = 20;
+    case TLS_DHE_DSS_WITH_AES_128_CBC_SHA:
+      value = 26;
       break;
-
+    case TLS_DHE_DSS_WITH_CAMELLIA_128_CBC_SHA:
+      value = 27;
+      break;
+    case TLS_DHE_DSS_WITH_AES_256_CBC_SHA:
+      value = 28;
+      break;
+    case TLS_DHE_DSS_WITH_CAMELLIA_256_CBC_SHA:
+      value = 29;
+      break;
+    case TLS_DHE_DSS_WITH_3DES_EDE_CBC_SHA:
+      value = 30;
+      break;
+    // ECDH key exchange
+    case TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA:
+      value = 41;
+      break;
+    case TLS_ECDH_RSA_WITH_AES_128_CBC_SHA:
+      value = 42;
+      break;
+    case TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA:
+      value = 43;
+      break;
+    case TLS_ECDH_RSA_WITH_AES_256_CBC_SHA:
+      value = 44;
+      break;
+    case TLS_ECDH_ECDSA_WITH_3DES_EDE_CBC_SHA:
+      value = 45;
+      break;
+    case TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA:
+      value = 46;
+      break;
+    // RSA key exchange
+    case TLS_RSA_WITH_AES_128_CBC_SHA:
+      value = 61;
+      break;
+    case TLS_RSA_WITH_CAMELLIA_128_CBC_SHA:
+      value = 62;
+      break;
+    case TLS_RSA_WITH_AES_256_CBC_SHA:
+      value = 63;
+      break;
+    case TLS_RSA_WITH_CAMELLIA_256_CBC_SHA:
+      value = 64;
+      break;
+    case SSL_RSA_FIPS_WITH_3DES_EDE_CBC_SHA:
+      value = 65;
+      break;
+    case TLS_RSA_WITH_3DES_EDE_CBC_SHA:
+      value = 66;
+      break;
+    case TLS_RSA_WITH_SEED_CBC_SHA:
+      value = 67;
+      break;
+    case TLS_RSA_WITH_AES_128_GCM_SHA256:
+      value = 68;
+      break;
+    case TLS_RSA_WITH_AES_256_GCM_SHA384:
+      value = 69;
+      break;
+    // TLS 1.3 PSK resumption
+    case TLS_AES_128_GCM_SHA256:
+      value = 70;
+      break;
+    case TLS_CHACHA20_POLY1305_SHA256:
+      value = 71;
+      break;
+    case TLS_AES_256_GCM_SHA384:
+      value = 72;
+      break;
     // unknown
     default:
       value = 0;
       break;
   }
   MOZ_ASSERT(value != 0);
-  Telemetry::Accumulate(Telemetry::TLS_CIPHER_SUITE, value);
+  Telemetry::Accumulate(probe, value);
 }
 
 void HandshakeCallback(PRFileDesc* fd, void* client_data) {
+  SECStatus rv;
+
+  NSSSocketControl* infoObject = (NSSSocketControl*)fd->higher->secret;
+
   // Do the bookkeeping that needs to be done after the
   // server's ServerHello...ServerHelloDone have been processed, but that
   // doesn't need the handshake to be completed.
   PreliminaryHandshakeDone(fd);
 
-  NSSSocketControl* infoObject = (NSSSocketControl*)fd->higher->secret;
   nsSSLIOLayerHelpers& ioLayerHelpers =
       infoObject->SharedState().IOLayerHelpers();
 
   SSLVersionRange versions(infoObject->GetTLSVersionRange());
+
   MOZ_LOG(gPIPNSSLog, LogLevel::Debug,
           ("[%p] HandshakeCallback: succeeded using TLS version range "
            "(0x%04x,0x%04x)\n",
@@ -999,70 +1067,75 @@ void HandshakeCallback(PRFileDesc* fd, void* client_data) {
                                            infoObject->GetPort(), versions.max);
 
   SSLChannelInfo channelInfo;
-  SECStatus rv = SSL_GetChannelInfo(fd, &channelInfo, sizeof(channelInfo));
+  rv = SSL_GetChannelInfo(fd, &channelInfo, sizeof(channelInfo));
   MOZ_ASSERT(rv == SECSuccess);
-  if (rv != SECSuccess) {
-    return;
-  }
-  AccumulateCipherSuite(channelInfo);
+  if (rv == SECSuccess) {
+    // Get the protocol version for telemetry
+    // 1=tls1, 2=tls1.1, 3=tls1.2
+    unsigned int versionEnum = channelInfo.protocolVersion & 0xFF;
+    MOZ_ASSERT(versionEnum > 0);
+    Telemetry::Accumulate(Telemetry::SSL_HANDSHAKE_VERSION, versionEnum);
+    AccumulateCipherSuite(infoObject->IsFullHandshake()
+                              ? Telemetry::SSL_CIPHER_SUITE_FULL
+                              : Telemetry::SSL_CIPHER_SUITE_RESUMED,
+                          channelInfo);
 
-  // Get the protocol version for telemetry
-  // 1=tls1, 2=tls1.1, 3=tls1.2, 4=tls1.3
-  unsigned int versionEnum = channelInfo.protocolVersion & 0xFF;
-  MOZ_ASSERT(versionEnum > 0);
-  Telemetry::Accumulate(Telemetry::SSL_HANDSHAKE_VERSION, versionEnum);
+    SSLCipherSuiteInfo cipherInfo;
+    rv = SSL_GetCipherSuiteInfo(channelInfo.cipherSuite, &cipherInfo,
+                                sizeof cipherInfo);
+    MOZ_ASSERT(rv == SECSuccess);
+    if (rv == SECSuccess) {
+      // keyExchange null=0, rsa=1, dh=2, fortezza=3, ecdh=4
+      Telemetry::Accumulate(infoObject->IsFullHandshake()
+                                ? Telemetry::SSL_KEY_EXCHANGE_ALGORITHM_FULL
+                                : Telemetry::SSL_KEY_EXCHANGE_ALGORITHM_RESUMED,
+                            channelInfo.keaType);
 
-  SSLCipherSuiteInfo cipherInfo;
-  rv = SSL_GetCipherSuiteInfo(channelInfo.cipherSuite, &cipherInfo,
-                              sizeof cipherInfo);
-  MOZ_ASSERT(rv == SECSuccess);
-  if (rv != SECSuccess) {
-    return;
-  }
-  // keyExchange null=0, rsa=1, dh=2, fortezza=3, ecdh=4
-  Telemetry::Accumulate(infoObject->IsFullHandshake()
-                            ? Telemetry::SSL_KEY_EXCHANGE_ALGORITHM_FULL
-                            : Telemetry::SSL_KEY_EXCHANGE_ALGORITHM_RESUMED,
-                        channelInfo.keaType);
+      if (infoObject->IsFullHandshake()) {
+        switch (channelInfo.keaType) {
+          case ssl_kea_rsa:
+            AccumulateNonECCKeySize(Telemetry::SSL_KEA_RSA_KEY_SIZE_FULL,
+                                    channelInfo.keaKeyBits);
+            break;
+          case ssl_kea_dh:
+            AccumulateNonECCKeySize(Telemetry::SSL_KEA_DHE_KEY_SIZE_FULL,
+                                    channelInfo.keaKeyBits);
+            break;
+          case ssl_kea_ecdh:
+            AccumulateECCCurve(Telemetry::SSL_KEA_ECDHE_CURVE_FULL,
+                               channelInfo.keaKeyBits);
+            break;
+          default:
+            MOZ_CRASH("impossible KEA");
+            break;
+        }
 
-  if (infoObject->IsFullHandshake()) {
-    switch (channelInfo.keaType) {
-      case ssl_kea_rsa:
-        AccumulateNonECCKeySize(Telemetry::SSL_KEA_RSA_KEY_SIZE_FULL,
-                                channelInfo.keaKeyBits);
-        break;
-      case ssl_kea_dh:
-        AccumulateNonECCKeySize(Telemetry::SSL_KEA_DHE_KEY_SIZE_FULL,
-                                channelInfo.keaKeyBits);
-        break;
-      case ssl_kea_ecdh:
-        AccumulateECCCurve(Telemetry::SSL_KEA_ECDHE_CURVE_FULL,
-                           channelInfo.keaKeyBits);
-        break;
-      default:
-        MOZ_CRASH("impossible KEA");
-        break;
-    }
+        Telemetry::Accumulate(Telemetry::SSL_AUTH_ALGORITHM_FULL,
+                              channelInfo.authType);
 
-    Telemetry::Accumulate(Telemetry::SSL_AUTH_ALGORITHM_FULL,
-                          channelInfo.authType);
-
-    // RSA key exchange doesn't use a signature for auth.
-    if (channelInfo.keaType != ssl_kea_rsa) {
-      switch (channelInfo.authType) {
-        case ssl_auth_rsa:
-        case ssl_auth_rsa_sign:
-          AccumulateNonECCKeySize(Telemetry::SSL_AUTH_RSA_KEY_SIZE_FULL,
-                                  channelInfo.authKeyBits);
-          break;
-        case ssl_auth_ecdsa:
-          AccumulateECCCurve(Telemetry::SSL_AUTH_ECDSA_CURVE_FULL,
-                             channelInfo.authKeyBits);
-          break;
-        default:
-          MOZ_CRASH("impossible auth algorithm");
-          break;
+        // RSA key exchange doesn't use a signature for auth.
+        if (channelInfo.keaType != ssl_kea_rsa) {
+          switch (channelInfo.authType) {
+            case ssl_auth_rsa:
+            case ssl_auth_rsa_sign:
+              AccumulateNonECCKeySize(Telemetry::SSL_AUTH_RSA_KEY_SIZE_FULL,
+                                      channelInfo.authKeyBits);
+              break;
+            case ssl_auth_ecdsa:
+              AccumulateECCCurve(Telemetry::SSL_AUTH_ECDSA_CURVE_FULL,
+                                 channelInfo.authKeyBits);
+              break;
+            default:
+              MOZ_CRASH("impossible auth algorithm");
+              break;
+          }
+        }
       }
+
+      Telemetry::Accumulate(infoObject->IsFullHandshake()
+                                ? Telemetry::SSL_SYMMETRIC_CIPHER_FULL
+                                : Telemetry::SSL_SYMMETRIC_CIPHER_RESUMED,
+                            cipherInfo.symCipher);
     }
   }
 
