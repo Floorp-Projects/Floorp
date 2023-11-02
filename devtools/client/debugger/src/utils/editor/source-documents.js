@@ -7,26 +7,32 @@ import { isMinified } from "../isMinified";
 import { resizeBreakpointGutter, resizeToggleButton } from "../ui";
 import { javascriptLikeExtensions } from "../source";
 
-let sourceDocs = {};
+const sourceDocs = new Map();
 
 export function getDocument(key) {
-  return sourceDocs[key];
+  return sourceDocs.get(key);
 }
 
 export function hasDocument(key) {
-  return !!getDocument(key);
+  return sourceDocs.has(key);
 }
 
 export function setDocument(key, doc) {
-  sourceDocs[key] = doc;
+  sourceDocs.set(key, doc);
 }
 
 export function removeDocument(key) {
-  delete sourceDocs[key];
+  sourceDocs.delete(key);
 }
 
 export function clearDocuments() {
-  sourceDocs = {};
+  sourceDocs.clear();
+}
+
+export function clearDocumentsForSources(sources) {
+  for (const source of sources) {
+    sourceDocs.delete(source.id);
+  }
 }
 
 function resetLineNumberFormat(editor) {
@@ -62,11 +68,11 @@ export function updateDocument(editor, source) {
 
 /* used to apply the context menu wrap line option change to all the docs */
 export function updateDocuments(updater) {
-  for (const key in sourceDocs) {
-    if (sourceDocs[key].cm == null) {
+  for (const doc of sourceDocs.values()) {
+    if (doc.cm == null) {
       continue;
     } else {
-      updater(sourceDocs[key]);
+      updater(doc);
     }
   }
 }

@@ -4,6 +4,7 @@
 
 import { createThread } from "../client/firefox/create";
 import { getSourcesToRemoveForThread } from "../selectors";
+import { clearDocumentsForSources } from "../utils/editor/source-documents";
 
 export function addTarget(targetFront) {
   return { type: "INSERT_THREAD", newThread: createThread(targetFront) };
@@ -24,6 +25,17 @@ export function removeTarget(targetFront) {
       threadActorID
     );
 
+    // CodeMirror documents aren't stored in redux reducer,
+    // so we need this manual function call in order to ensure clearing them.
+    clearDocumentsForSources(sources);
+
+    // Notify the reducers that a target/thread is being removed
+    // and that all related resources should be cleared.
+    // This action receives the list of related source actors and source objects
+    // related to that to-be-removed target.
+    // This will be fired on navigation for all existing targets.
+    // That except the top target, when pausing on unload, where the top target may still hold longer.
+    // Also except for service worker targets, which may be kept alive.
     dispatch({
       type: "REMOVE_THREAD",
       threadActorID,
