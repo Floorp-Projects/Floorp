@@ -553,6 +553,9 @@ let JSWINDOWACTORS = {
     },
     child: {
       esModuleURI: "resource://gre/actors/TranslationsEngineChild.sys.mjs",
+      events: {
+        DOMContentLoaded: { createActor: true },
+      },
     },
     includeChrome: true,
     matches: ["chrome://global/content/translations/translations-engine.html"],
