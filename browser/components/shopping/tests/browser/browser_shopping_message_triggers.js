@@ -3,10 +3,6 @@
 
 "use strict";
 
-ChromeUtils.defineESModuleGetters(this, {
-  ShoppingUtils: "resource:///modules/ShoppingUtils.sys.mjs",
-});
-
 const { ASRouter } = ChromeUtils.import(
   "resource://activity-stream/lib/ASRouter.jsm"
 );

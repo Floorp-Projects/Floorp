@@ -72,7 +72,7 @@ ChromeUtils.defineESModuleGetters(this, {
   SessionStartup: "resource:///modules/sessionstore/SessionStartup.sys.mjs",
   SessionStore: "resource:///modules/sessionstore/SessionStore.sys.mjs",
   ShoppingSidebarParent: "resource:///actors/ShoppingSidebarParent.sys.mjs",
-  ShoppingSidebarManager: "resource:///actors/ShoppingSidebarParent.sys.mjs",
+  ShoppingUtils: "resource:///modules/ShoppingUtils.sys.mjs",
   ShortcutUtils: "resource://gre/modules/ShortcutUtils.sys.mjs",
   SiteDataManager: "resource:///modules/SiteDataManager.sys.mjs",
   SitePermissions: "resource:///modules/SitePermissions.sys.mjs",
@@ -2079,7 +2079,7 @@ var gBrowserInit = {
 
     CaptivePortalWatcher.delayedStartup();
 
-    ShoppingSidebarManager.ensureInitialized();
+    ShoppingSidebarManager.init();
 
     SessionStore.promiseAllWindowsRestored.then(() => {
       this._schedulePerWindowIdleTasks();
@@ -2505,6 +2505,8 @@ var gBrowserInit = {
     NewTabPagePreloading.removePreloadedBrowser(window);
 
     FirefoxViewHandler.uninit();
+
+    ShoppingSidebarManager.uninit();
 
     // Now either cancel delayedStartup, or clean up the services initialized from
     // it.
@@ -10078,5 +10080,210 @@ var FirefoxViewHandler = {
   },
   _toggleNotificationDot(shouldShow) {
     this.button?.toggleAttribute("attention", shouldShow);
+  },
+};
+
+var ShoppingSidebarManager = {
+  init() {
+    this._updateVisibility = this._updateVisibility.bind(this);
+    NimbusFeatures.shopping2023.onUpdate(this._updateVisibility);
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "optedInPref",
+      "browser.shopping.experience2023.optedIn",
+      null,
+      this._updateVisibility
+    );
+    XPCOMUtils.defineLazyPreferenceGetter(
+      this,
+      "isActive",
+      ShoppingSidebarParent.SHOPPING_ACTIVE_PREF,
+      true,
+      this._updateVisibility
+    );
+    this._updateVisibility();
+
+    gBrowser.tabContainer.addEventListener("TabSelect", this);
+    window.addEventListener("visibilitychange", this);
+  },
+
+  uninit() {
+    NimbusFeatures.shopping2023.offUpdate(this._updateVisibility);
+  },
+
+  _updateVisibility() {
+    if (window.closed) {
+      return;
+    }
+    let isPBM = PrivateBrowsingUtils.isWindowPrivate(window);
+
+    // We are forced to cache this value because otherwise we access the pref
+    // too many times.
+    this.inEnabledBranch = NimbusFeatures.shopping2023.getVariable("enabled");
+    this._enabled = this.inEnabledBranch && !isPBM;
+
+    if (!this.isActive) {
+      document.querySelectorAll("shopping-sidebar").forEach(sidebar => {
+        sidebar.hidden = true;
+      });
+    }
+
+    this._maybeToggleButton();
+
+    if (!this._enabled) {
+      document.querySelectorAll("shopping-sidebar").forEach(sidebar => {
+        sidebar.remove();
+      });
+      return;
+    }
+
+    let { selectedBrowser, currentURI } = gBrowser;
+    this._maybeToggleSidebar(selectedBrowser, currentURI, 0);
+  },
+
+  /**
+   * Called by TabsProgressListener whenever any browser navigates from one
+   * URL to another.
+   * Note that this includes hash changes / pushState navigations, because
+   * those can be significant for us.
+   */
+  onLocationChange(aBrowser, aLocationURI, aFlags) {
+    ShoppingUtils.maybeRecordExposure(aLocationURI, aFlags);
+
+    this._maybeToggleButton();
+    this._maybeToggleSidebar(aBrowser, aLocationURI, aFlags);
+  },
+
+  // The strange signature is because this function was formerly the
+  // onLocationChange function, but we needed to differentiate between
+  // calls triggered by actual location changes and calls triggered by
+  // TabSelect. We will refactor this code in bug 1845842.
+  _maybeToggleSidebar(aBrowser, aLocationURI, aFlags) {
+    if (!this._enabled) {
+      return;
+    }
+
+    let browserPanel = gBrowser.getPanel(aBrowser);
+    let sidebar = browserPanel.querySelector("shopping-sidebar");
+    let actor;
+    if (sidebar) {
+      let { browsingContext } = sidebar.querySelector("browser");
+      let global = browsingContext.currentWindowGlobal;
+      actor = global.getExistingActor("ShoppingSidebar");
+    }
+    let isProduct = isProductURL(aLocationURI);
+    if (isProduct && this.isActive) {
+      if (!sidebar) {
+        sidebar = document.createXULElement("shopping-sidebar");
+        sidebar.setAttribute("style", "width: 320px");
+        sidebar.hidden = false;
+        browserPanel.appendChild(sidebar);
+      } else {
+        actor?.updateProductURL(aLocationURI, aFlags);
+        sidebar.hidden = false;
+      }
+    } else if (sidebar && !sidebar.hidden) {
+      actor?.updateProductURL(null);
+      sidebar.hidden = true;
+    }
+
+    this._updateBCActiveness(aBrowser);
+    this._setShoppingButtonState(aBrowser);
+
+    if (
+      sidebar &&
+      !sidebar.hidden &&
+      ShoppingUtils.isProductPageNavigation(aLocationURI, aFlags)
+    ) {
+      Glean.shopping.surfaceDisplayed.record();
+    }
+
+    if (isProduct) {
+      // This is the auto-enable behavior that toggles the `active` pref. It
+      // must be at the end of this function, or 2 sidebars could be created.
+      ShoppingUtils.handleAutoActivateOnProduct();
+
+      if (!this.isActive) {
+        ShoppingUtils.sendTrigger({
+          browser: aBrowser,
+          id: "shoppingProductPageWithSidebarClosed",
+          context: { isSidebarClosing: !!sidebar },
+        });
+      }
+    }
+  },
+
+  _maybeToggleButton() {
+    let optedOut = this.optedInPref === 2;
+    let isPBM = PrivateBrowsingUtils.isWindowPrivate(window);
+    if (this.inEnabledBranch && !isPBM && optedOut) {
+      this._setShoppingButtonState(gBrowser.selectedBrowser);
+    }
+  },
+
+  _updateBCActiveness(aBrowser) {
+    let browserPanel = gBrowser.getPanel(aBrowser);
+    let sidebar = browserPanel.querySelector("shopping-sidebar");
+    if (!sidebar) {
+      return;
+    }
+    let { browsingContext } = sidebar.querySelector("browser");
+    try {
+      // Tell Gecko when the sidebar visibility changes to avoid background
+      // sidebars taking more CPU / energy than needed.
+      browsingContext.isActive =
+        !document.hidden &&
+        aBrowser == gBrowser.selectedBrowser &&
+        !sidebar.hidden;
+    } catch (ex) {
+      // The setter can throw and we do need to run the rest of this
+      // code in that case.
+      console.error(ex);
+    }
+  },
+
+  _setShoppingButtonState(aBrowser) {
+    if (aBrowser !== gBrowser.selectedBrowser) {
+      return;
+    }
+
+    let button = document.getElementById("shopping-sidebar-button");
+
+    let isCurrentBrowserProduct = isProductURL(
+      gBrowser.selectedBrowser.currentURI
+    );
+
+    // Only record if the state of the icon will change from hidden to visible.
+    if (button.hidden && isCurrentBrowserProduct) {
+      Glean.shopping.addressBarIconDisplayed.record();
+    }
+
+    button.hidden = !isCurrentBrowserProduct;
+    button.setAttribute("shoppingsidebaropen", !!this.isActive);
+    let l10nId = this.isActive
+      ? "shopping-sidebar-close-button2"
+      : "shopping-sidebar-open-button2";
+    document.l10n.setAttributes(button, l10nId);
+  },
+
+  handleEvent(event) {
+    switch (event.type) {
+      case "TabSelect": {
+        if (!this._enabled) {
+          return;
+        }
+        this._updateVisibility();
+        if (event.detail?.previousTab.linkedBrowser) {
+          this._updateBCActiveness(event.detail.previousTab.linkedBrowser);
+        }
+        break;
+      }
+      case "visibilitychange": {
+        if (!this._enabled) {
+          return;
+        }
+        this._updateBCActiveness(gBrowser.selectedBrowser);
+      }
+    }
   },
 };
