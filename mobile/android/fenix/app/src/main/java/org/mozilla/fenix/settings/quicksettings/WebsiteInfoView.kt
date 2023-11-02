@@ -20,8 +20,8 @@ import org.mozilla.fenix.ext.loadIntoView
  * Currently it does not support any user interaction.
  *
  * @param container [ViewGroup] in which this View will inflate itself.
- * @property icons Icons component for loading, caching and processing website icons.
- * @property interactor [WebSiteInfoInteractor] which will have delegated to all user interactions.
+ * @param icons Icons component for loading, caching and processing website icons.
+ * @param interactor [WebSiteInfoInteractor] which will have delegated to all user interactions.
  */
 class WebsiteInfoView(
     container: ViewGroup,

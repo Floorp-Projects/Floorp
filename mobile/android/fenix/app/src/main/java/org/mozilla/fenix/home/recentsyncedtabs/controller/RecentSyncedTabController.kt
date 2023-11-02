@@ -42,10 +42,10 @@ interface RecentSyncedTabController {
 /**
  * The default implementation of [RecentSyncedTabController].
  *
- * @property tabsUseCase Use cases to open the synced tab when clicked.
- * @property navController [NavController] to navigate to synced tabs tray.
- * @property accessPoint The action or screen that was used to navigate to the tabs tray.
- * @property appStore The [AppStore] that holds the state of the [HomeFragment].
+ * @param tabsUseCase Use cases to open the synced tab when clicked.
+ * @param navController [NavController] to navigate to synced tabs tray.
+ * @param accessPoint The action or screen that was used to navigate to the tabs tray.
+ * @param appStore The [AppStore] that holds the state of the [HomeFragment].
  */
 class DefaultRecentSyncedTabController(
     private val tabsUseCase: TabsUseCases,

@@ -37,7 +37,7 @@ interface ClearSiteDataViewInteractor {
  * MVI View to access the dialog to clear site cookies and data.
  *
  * @property context An Android [Context].
- * @property ioScope [CoroutineScope] with an IO dispatcher used for structured concurrency.
+ * @param ioScope [CoroutineScope] with an IO dispatcher used for structured concurrency.
  * @property containerView [ViewGroup] in which this View will inflate itself.
  * @property containerDivider Divider [View] to manipulate.
  * @property interactor [ClearSiteDataViewInteractor] which will have delegated to all user

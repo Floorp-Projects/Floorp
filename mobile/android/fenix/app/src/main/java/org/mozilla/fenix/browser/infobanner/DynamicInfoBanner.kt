@@ -12,7 +12,7 @@ import androidx.coordinatorlayout.widget.CoordinatorLayout
  * [InfoBanner] that will automatically scroll with the top [BrowserToolbar].
  * Only to be used with [BrowserToolbar]s placed at the top of the screen.
  *
- * @property context A [Context] for accessing system resources.
+ * @param context A [Context] for accessing system resources.
  * @param container The layout where the banner will be shown.
  * @property shouldScrollWithTopToolbar whether to follow the Y translation of the top toolbar or not.
  * @param message The message displayed in the banner.

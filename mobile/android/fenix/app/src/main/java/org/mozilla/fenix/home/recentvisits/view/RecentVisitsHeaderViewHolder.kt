@@ -24,7 +24,7 @@ import org.mozilla.fenix.home.recentvisits.interactor.RecentVisitsInteractor
  *
  * @param composeView [ComposeView] which will be populated with Jetpack Compose UI content.
  * @param viewLifecycleOwner [LifecycleOwner] to which this Composable will be tied to.
- * @property interactor [RecentVisitsInteractor] which will have delegated to all user
+ * @param interactor [RecentVisitsInteractor] which will have delegated to all user
  * interactions.
  */
 class RecentVisitsHeaderViewHolder(

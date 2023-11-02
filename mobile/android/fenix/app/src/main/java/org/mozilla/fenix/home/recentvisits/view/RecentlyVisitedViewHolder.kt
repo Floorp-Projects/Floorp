@@ -27,7 +27,7 @@ import org.mozilla.fenix.wallpapers.WallpaperState
  *
  * @param composeView [ComposeView] which will be populated with Jetpack Compose UI content.
  * @param viewLifecycleOwner [LifecycleOwner] to which this Composable will be tied to.
- * @property interactor [RecentVisitsInteractor] which will have delegated to all user interactions.
+ * @param interactor [RecentVisitsInteractor] which will have delegated to all user interactions.
  */
 class RecentlyVisitedViewHolder(
     composeView: ComposeView,

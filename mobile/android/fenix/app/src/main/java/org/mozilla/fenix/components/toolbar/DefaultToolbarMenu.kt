@@ -44,13 +44,13 @@ import org.mozilla.fenix.theme.ThemeManager
 
 /**
  * Builds the toolbar object used with the 3-dot menu in the browser fragment.
- * @property context a [Context] for accessing system resources.
- * @property store reference to the application's [BrowserStore].
+ * @param context a [Context] for accessing system resources.
+ * @param store reference to the application's [BrowserStore].
  * @param hasAccountProblem If true, there was a problem signing into the Firefox account.
- * @property onItemTapped Called when a menu item is tapped.
- * @property lifecycleOwner View lifecycle owner used to determine when to cancel UI jobs.
- * @property bookmarksStorage Used to check if a page is bookmarked.
- * @property pinnedSiteStorage Used to check if the current url is a pinned site.
+ * @param onItemTapped Called when a menu item is tapped.
+ * @param lifecycleOwner View lifecycle owner used to determine when to cancel UI jobs.
+ * @param bookmarksStorage Used to check if a page is bookmarked.
+ * @param pinnedSiteStorage Used to check if the current url is a pinned site.
  * @property isPinningSupported true if the launcher supports adding shortcuts.
  */
 @Suppress("LargeClass", "LongParameterList", "TooManyFunctions")

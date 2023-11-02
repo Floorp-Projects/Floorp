@@ -15,11 +15,11 @@ import org.mozilla.fenix.shopping.store.ReviewQualityCheckState
 /**
  * Middleware for getting and setting review quality check user preferences.
  *
- * @property reviewQualityCheckPreferences The [ReviewQualityCheckPreferences] instance to get and
+ * @param reviewQualityCheckPreferences The [ReviewQualityCheckPreferences] instance to get and
  * set preferences for the review quality check feature.
- * @property reviewQualityCheckVendorsService The [ReviewQualityCheckVendorsService] instance for
+ * @param reviewQualityCheckVendorsService The [ReviewQualityCheckVendorsService] instance for
  * getting the list of product vendors.
- * @property scope The [CoroutineScope] to use for launching coroutines.
+ * @param scope The [CoroutineScope] to use for launching coroutines.
  */
 class ReviewQualityCheckPreferencesMiddleware(
     private val reviewQualityCheckPreferences: ReviewQualityCheckPreferences,

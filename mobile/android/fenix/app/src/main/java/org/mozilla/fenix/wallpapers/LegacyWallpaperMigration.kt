@@ -19,9 +19,9 @@ import java.io.IOException
 /**
  * Manages the migration of legacy wallpapers to the new paths
  *
- * @property storageRootDirectory The top level app-local storage directory.
- * @property settings Used to update the color of the text shown above wallpapers.
- * @property downloadWallpaper Function used to download assets for legacy drawable wallpapers.
+ * @param storageRootDirectory The top level app-local storage directory.
+ * @param settings Used to update the color of the text shown above wallpapers.
+ * @param downloadWallpaper Function used to download assets for legacy drawable wallpapers.
  */
 class LegacyWallpaperMigration(
     private val storageRootDirectory: File,

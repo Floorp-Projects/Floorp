@@ -25,7 +25,7 @@ import org.mozilla.fenix.home.sessioncontrol.CollectionInteractor
  *
  * @param composeView [ComposeView] which will be populated with Jetpack Compose UI content.
  * @param viewLifecycleOwner [LifecycleOwner] to which this Composable will be tied to.
- * @property interactor [CollectionInteractor] callback for user interactions.
+ * @param interactor [CollectionInteractor] callback for user interactions.
  */
 class TabInCollectionViewHolder(
     composeView: ComposeView,

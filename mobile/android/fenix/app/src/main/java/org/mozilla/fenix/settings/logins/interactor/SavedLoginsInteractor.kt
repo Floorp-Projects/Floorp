@@ -12,9 +12,9 @@ import org.mozilla.fenix.settings.logins.controller.SavedLoginsStorageController
 /**
  * Interactor for the saved logins screen
  *
- * @property loginsListController [LoginsListController] which will be delegated for all
+ * @param loginsListController [LoginsListController] which will be delegated for all
  * user interactions.
- * @property savedLoginsStorageController [SavedLoginsStorageController] which will be delegated
+ * @param savedLoginsStorageController [SavedLoginsStorageController] which will be delegated
  * for all calls to the password storage component
  */
 class SavedLoginsInteractor(

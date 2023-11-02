@@ -18,9 +18,9 @@ import org.mozilla.fenix.library.history.HistoryFragmentState
  * A [Middleware] for handling Sync side-effects based on [HistoryFragmentAction]s that are dispatched
  * to the [HistoryFragmentStore].
  *
- * @property accountManager The [FxaAccountManager] for handling Sync operations.
- * @property refreshView Callback to refresh the view once a Sync is completed.
- * @property scope Coroutine scope to launch Sync operations into.
+ * @param accountManager The [FxaAccountManager] for handling Sync operations.
+ * @param refreshView Callback to refresh the view once a Sync is completed.
+ * @param scope Coroutine scope to launch Sync operations into.
  */
 class HistorySyncMiddleware(
     private val accountManager: FxaAccountManager,

@@ -56,7 +56,7 @@ interface ReviewQualityCheckService {
 /**
  * Service that handles the network requests for the review quality check feature.
  *
- * @property browserStore Reference to the application's [BrowserStore] to access state.
+ * @param browserStore Reference to the application's [BrowserStore] to access state.
  */
 class DefaultReviewQualityCheckService(
     private val browserStore: BrowserStore,

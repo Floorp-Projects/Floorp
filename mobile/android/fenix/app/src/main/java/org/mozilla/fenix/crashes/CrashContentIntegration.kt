@@ -24,17 +24,17 @@ import org.mozilla.fenix.utils.Settings
 /**
  * Helper for observing [BrowserStore] and show an in-app crash reporter for tabs with content crashes.
  *
- * @property browserStore [BrowserStore] observed for any changes related to [EngineState.crashed].
- * @property appStore [AppStore] that tracks all content crashes in the current app session until the user
+ * @param browserStore [BrowserStore] observed for any changes related to [EngineState.crashed].
+ * @param appStore [AppStore] that tracks all content crashes in the current app session until the user
  * decides to either send or dismiss all crash reports.
- * @property toolbar [BrowserToolbar] that will be expanded when showing the in-app crash reporter.
- * @property isToolbarPlacedAtTop [Boolean] based allowing the in-app crash reporter to be shown as
+ * @param toolbar [BrowserToolbar] that will be expanded when showing the in-app crash reporter.
+ * @param isToolbarPlacedAtTop [Boolean] based allowing the in-app crash reporter to be shown as
  * immediately below or above the toolbar.
- * @property crashReporterView [CrashContentView] which will be shown if the current tab is marked as crashed.
- * @property components [Components] allowing interactions with other app features.
- * @property settings [Settings] allowing to check whether crash reporting is enabled or not.
- * @property navController [NavController] used to navigate to other parts of the app.
- * @property sessionId [String] Id of the tab or custom tab which should be observed for [EngineState.crashed]
+ * @param crashReporterView [CrashContentView] which will be shown if the current tab is marked as crashed.
+ * @param components [Components] allowing interactions with other app features.
+ * @param settings [Settings] allowing to check whether crash reporting is enabled or not.
+ * @param navController [NavController] used to navigate to other parts of the app.
+ * @param sessionId [String] Id of the tab or custom tab which should be observed for [EngineState.crashed]
  * depending on which [crashReporterView] will be shown or hidden.
  */
 

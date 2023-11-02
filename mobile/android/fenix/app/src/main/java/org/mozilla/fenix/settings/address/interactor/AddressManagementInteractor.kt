@@ -30,7 +30,7 @@ interface AddressManagementInteractor {
 /**
  * The default implementation of [AddressManagementInteractor].
  *
- * @property controller An instance of [AddressManagementController] which will be delegated for
+ * @param controller An instance of [AddressManagementController] which will be delegated for
  * all user interactions.
  */
 class DefaultAddressManagementInteractor(

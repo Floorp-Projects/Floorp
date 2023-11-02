@@ -19,8 +19,8 @@ private const val TERMS_OF_USE_URL = "https://www.fakespot.com/terms"
 /**
  * Middleware that handles navigation events for the review quality check feature.
  *
- * @property selectOrAddUseCase UseCase instance used to open new tabs.
- * @property getReviewQualityCheckSumoUrl Instance used to retrieve the learn more SUMO link.
+ * @param selectOrAddUseCase UseCase instance used to open new tabs.
+ * @param getReviewQualityCheckSumoUrl Instance used to retrieve the learn more SUMO link.
  */
 class ReviewQualityCheckNavigationMiddleware(
     private val selectOrAddUseCase: TabsUseCases.SelectOrAddUseCase,

@@ -32,7 +32,7 @@ import org.mozilla.fenix.theme.FirefoxTheme
  *
  * @param composeView [ComposeView] which will be populated with Jetpack Compose UI content.
  * @param viewLifecycleOwner [LifecycleOwner] to which this Composable will be tied to.
- * @property interactor [PocketStoriesInteractor] callback for user interaction.
+ * @param interactor [PocketStoriesInteractor] callback for user interaction.
  */
 class PocketRecommendationsHeaderViewHolder(
     composeView: ComposeView,

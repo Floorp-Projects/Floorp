@@ -24,10 +24,10 @@ import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.RecommendedProdu
 /**
  * Middleware that handles network requests for the review quality check feature.
  *
- * @property reviewQualityCheckService The service that handles the network requests.
- * @property networkChecker The [NetworkChecker] instance to check the network status.
- * @property appStore The [AppStore] instance to access state and dispatch [ShoppingAction]s.
- * @property scope The [CoroutineScope] that will be used to launch coroutines.
+ * @param reviewQualityCheckService The service that handles the network requests.
+ * @param networkChecker The [NetworkChecker] instance to check the network status.
+ * @param appStore The [AppStore] instance to access state and dispatch [ShoppingAction]s.
+ * @param scope The [CoroutineScope] that will be used to launch coroutines.
  */
 class ReviewQualityCheckNetworkMiddleware(
     private val reviewQualityCheckService: ReviewQualityCheckService,

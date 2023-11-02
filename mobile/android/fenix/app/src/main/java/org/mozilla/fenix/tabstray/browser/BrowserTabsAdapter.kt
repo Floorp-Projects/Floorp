@@ -29,9 +29,9 @@ import org.mozilla.fenix.tabstray.browser.compose.ComposeListViewHolder
 /**
  * A [RecyclerView.Adapter] for browser tabs.
  *
- * @property context [Context] used for various platform interactions or accessing [Components]
+ * @param context [Context] used for various platform interactions or accessing [Components]
  * @property interactor [TabsTrayInteractor] handling tabs interactions in a tab tray.
- * @property store [TabsTrayStore] containing the complete state of tabs tray and methods to update that.
+ * @param store [TabsTrayStore] containing the complete state of tabs tray and methods to update that.
  * @property featureName [String] representing the name of the feature displaying tabs. Used in telemetry reporting.
  * @property viewLifecycleOwner [LifecycleOwner] life cycle owner for the view.
  */

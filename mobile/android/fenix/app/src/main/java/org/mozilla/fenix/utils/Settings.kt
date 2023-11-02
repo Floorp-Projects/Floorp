@@ -62,7 +62,7 @@ private const val AUTOPLAY_USER_SETTING = "AUTOPLAY_USER_SETTING"
 /**
  * A simple wrapper for SharedPreferences that makes reading preference a little bit easier.
  *
- * @property appContext Reference to application context.
+ * @param appContext Reference to application context.
  */
 @Suppress("LargeClass", "TooManyFunctions")
 class Settings(private val appContext: Context) : PreferencesHolder {

@@ -24,16 +24,16 @@ private const val DEBOUNCE_TIMEOUT_MILLIS = 200L
  * Feature implementation that provides review quality check information for supported product
  * pages.
  *
- * @property appStore Reference to the application's [AppStore].
- * @property browserStore Reference to the application's [BrowserStore].
- * @property shoppingExperienceFeature Reference to the [ShoppingExperienceFeature].
- * @property onIconVisibilityChange Invoked when shopping icon visibility changes based on feature
+ * @param appStore Reference to the application's [AppStore].
+ * @param browserStore Reference to the application's [BrowserStore].
+ * @param shoppingExperienceFeature Reference to the [ShoppingExperienceFeature].
+ * @param onIconVisibilityChange Invoked when shopping icon visibility changes based on feature
  * flag and when the loaded page is a supported product page.
- * @property onBottomSheetStateChange Invoked when the bottom sheet is collapsed or expanded.
- * @property debounceTimeoutMillis Function that returns the debounce timeout in milliseconds. This
+ * @param onBottomSheetStateChange Invoked when the bottom sheet is collapsed or expanded.
+ * @param debounceTimeoutMillis Function that returns the debounce timeout in milliseconds. This
  * make it possible to wait till [ContentState.isProductUrl] is stable before invoking
  * [onIconVisibilityChange].
- * @property onProductPageDetected Invoked when a product page is detected and loaded. Used to
+ * @param onProductPageDetected Invoked when a product page is detected and loaded. Used to
  * detect when to send telemetry for shopping.product_page_visits.
  */
 @OptIn(FlowPreview::class)

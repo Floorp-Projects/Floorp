@@ -158,7 +158,7 @@ private fun collectionTabItems(collection: TabCollection) =
  *
  * @param containerView The [View] that is used to initialize the Home recycler view.
  * @param viewLifecycleOwner [LifecycleOwner] for the view.
- * @property interactor [SessionControlInteractor] which will have delegated to all user
+ * @param interactor [SessionControlInteractor] which will have delegated to all user
  * interactions.
  */
 class SessionControlView(

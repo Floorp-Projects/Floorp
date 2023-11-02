@@ -16,7 +16,7 @@ private const val PARAM_UTM_TERM_VALUE = "core-sheet"
 /**
  * Class used to retrieve the SUMO review quality check link.
  *
- * @property context Context used to localize the SUMO url.
+ * @param context Context used to localize the SUMO url.
  */
 class GetReviewQualityCheckSumoUrl(
     private val context: Context,

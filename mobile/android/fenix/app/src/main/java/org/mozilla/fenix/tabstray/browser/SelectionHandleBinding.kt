@@ -27,8 +27,8 @@ private const val NORMAL_HANDLE_PERCENT_WIDTH = 0.1F
  * between [Mode].
  *
  * @param store The TabsTrayStore instance.
- * @property handle The "handle" of the Tabs Tray that is used to drag the tray open/close.
- * @property containerLayout The [ConstraintLayout] that contains the "handle".
+ * @param handle The "handle" of the Tabs Tray that is used to drag the tray open/close.
+ * @param containerLayout The [ConstraintLayout] that contains the "handle".
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class SelectionHandleBinding(

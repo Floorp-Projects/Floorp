@@ -44,7 +44,7 @@ interface ReviewQualityCheckPreferences {
  * Implementation of [ReviewQualityCheckPreferences] that uses [Settings] to store/fetch
  * preferences.
  *
- * @property settings The [Settings] instance to use.
+ * @param settings The [Settings] instance to use.
  */
 class DefaultReviewQualityCheckPreferences(
     private val settings: Settings,

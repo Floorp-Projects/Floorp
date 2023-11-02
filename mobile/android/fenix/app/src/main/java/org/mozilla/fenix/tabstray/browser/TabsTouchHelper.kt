@@ -51,8 +51,8 @@ class TabsTouchHelper(
  * An [ItemTouchHelper.Callback] for drawing custom layouts on [RecyclerView.ViewHolder] interactions.
  *
  * @param delegate [TabsTray.Delegate] for handling all user interactions.
- * @property onViewHolderTouched Invoked when a tab is about to be swiped. See [OnViewHolderTouched].
- * @property onViewHolderDraw Invoked when a tab is drawn. See [OnViewHolderToDraw].
+ * @param onViewHolderTouched Invoked when a tab is about to be swiped. See [OnViewHolderTouched].
+ * @param onViewHolderDraw Invoked when a tab is drawn. See [OnViewHolderToDraw].
  * @param featureNameHolder Contains the identifying name of the feature.
  * @param onRemove A callback invoked when a tab is removed.
  */

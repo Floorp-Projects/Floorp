@@ -62,7 +62,7 @@ interface WebsitePermissionInteractor {
  * - camera
  *
  * @param containerView [ViewGroup] in which this View will inflate itself.
- * @property interactor [WebsitePermissionInteractor] which will have delegated to all user interactions.
+ * @param interactor [WebsitePermissionInteractor] which will have delegated to all user interactions.
  */
 class WebsitePermissionsView(
     containerView: ViewGroup,

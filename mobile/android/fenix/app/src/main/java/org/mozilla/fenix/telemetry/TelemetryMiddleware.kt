@@ -39,13 +39,13 @@ private const val PROGRESS_COMPLETE = 100
 /**
  * [Middleware] to record telemetry in response to [BrowserAction]s.
  *
- * @property context An Android [Context].
- * @property settings reference to the application [Settings].
- * @property metrics [MetricController] to pass events that have been mapped from actions.
- * @property crashReporting An instance of [CrashReporting] to report caught exceptions.
- * @property nimbusSearchEngine The Nimbus search engine.
- * @property searchState Map that stores the [TabSessionState.id] & [TimerId].
- * @property timerId The [TimerId] for the [Metrics.searchPageLoadTime].
+ * @param context An Android [Context].
+ * @param settings reference to the application [Settings].
+ * @param metrics [MetricController] to pass events that have been mapped from actions.
+ * @param crashReporting An instance of [CrashReporting] to report caught exceptions.
+ * @param nimbusSearchEngine The Nimbus search engine.
+ * @param searchState Map that stores the [TabSessionState.id] & [TimerId].
+ * @param timerId The [TimerId] for the [Metrics.searchPageLoadTime].
  */
 class TelemetryMiddleware(
     private val context: Context,

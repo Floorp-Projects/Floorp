@@ -110,7 +110,7 @@ interface TabsTrayInteractor :
 /**
  * Default implementation of [TabsTrayInteractor].
  *
- * @property controller [TabsTrayController] to which user actions can be delegated for app updates.
+ * @param controller [TabsTrayController] to which user actions can be delegated for app updates.
  */
 @Suppress("TooManyFunctions")
 class DefaultTabsTrayInteractor(

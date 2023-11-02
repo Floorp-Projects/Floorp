@@ -19,7 +19,7 @@ import java.util.Locale
 /**
  * Utility class for downloading wallpaper metadata from the remote server.
  *
- * @property client The client that will be used to fetch metadata.
+ * @param client The client that will be used to fetch metadata.
  */
 class WallpaperMetadataFetcher(
     private val client: Client,

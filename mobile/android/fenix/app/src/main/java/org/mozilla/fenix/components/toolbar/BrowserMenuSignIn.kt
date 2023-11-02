@@ -20,7 +20,7 @@ import org.mozilla.fenix.ext.components
  * A menu item for displaying account information. The item computes the label on every bind call,
  * to provide each menu with the latest account manager state.
  *
- * @property textColorResource ID of color resource to tint the text.
+ * @param textColorResource ID of color resource to tint the text.
  * @param imageResource ID of a drawable resource to be shown as icon.
  * @param listener Callback to be invoked when this menu item is clicked.
  */

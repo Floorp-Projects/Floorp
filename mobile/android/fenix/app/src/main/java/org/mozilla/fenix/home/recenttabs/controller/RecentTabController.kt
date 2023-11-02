@@ -40,9 +40,9 @@ interface RecentTabController {
 /**
  * The default implementation of [RecentTabController].
  *
- * @property selectTabUseCase [SelectTabUseCase] used selecting a tab.
- * @property navController [NavController] used for navigation.
- * @property appStore The [AppStore] that holds the state of the [HomeFragment].
+ * @param selectTabUseCase [SelectTabUseCase] used selecting a tab.
+ * @param navController [NavController] used for navigation.
+ * @param appStore The [AppStore] that holds the state of the [HomeFragment].
  */
 class DefaultRecentTabsController(
     private val selectTabUseCase: SelectTabUseCase,

@@ -18,7 +18,7 @@ import org.mozilla.fenix.GleanMetrics.History as GleanHistory
  * A [Middleware] for recording telemetry based on [HistoryFragmentAction]s that are dispatched to
  * the [HistoryFragmentStore].
  *
- * @property isInPrivateMode Whether the app is currently in private browsing mode.
+ * @param isInPrivateMode Whether the app is currently in private browsing mode.
  */
 class HistoryTelemetryMiddleware(
     private val isInPrivateMode: Boolean,

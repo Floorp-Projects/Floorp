@@ -12,7 +12,7 @@ import org.mozilla.focus.state.AppStore
 /**
  * The default implementation of [TopSitesView] for displaying the top site UI.
  *
- * @property store [AppStore] instance for dispatching the top sites changes.
+ * @param store [AppStore] instance for dispatching the top sites changes.
  */
 class DefaultTopSitesView(private val store: AppStore) : TopSitesView {
 

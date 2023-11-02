@@ -48,12 +48,12 @@ interface CreditCardEditorController {
 /**
  * The default implementation of [CreditCardEditorController].
  *
- * @property storage An instance of the [AutofillCreditCardsAddressesStorage] for adding and retrieving
+ * @param storage An instance of the [AutofillCreditCardsAddressesStorage] for adding and retrieving
  * credit cards.
- * @property lifecycleScope [CoroutineScope] scope to launch coroutines.
- * @property navController [NavController] used for navigation.
- * @property ioDispatcher [CoroutineDispatcher] used for executing async tasks. Defaults to [Dispatchers.IO].
- * @property showDeleteDialog [DialogInterface.OnClickListener] used to display a confirmation dialog
+ * @param lifecycleScope [CoroutineScope] scope to launch coroutines.
+ * @param navController [NavController] used for navigation.
+ * @param ioDispatcher [CoroutineDispatcher] used for executing async tasks. Defaults to [Dispatchers.IO].
+ * @param showDeleteDialog [DialogInterface.OnClickListener] used to display a confirmation dialog
  * before removing credit card.
  */
 class DefaultCreditCardEditorController(

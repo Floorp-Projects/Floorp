@@ -49,7 +49,7 @@ internal abstract class AbnormalFxaEvent : Exception() {
  * See [AbnormalFxaEvent] for types of abnormal events this class detects.
  *
  * @param context An Android [Context].
- * @property crashReporter An instance of [CrashReporter] used for reporting detected abnormalities.
+ * @param crashReporter An instance of [CrashReporter] used for reporting detected abnormalities.
  * @param strictMode An instance of [StrictModeManager] used to manage strict mode settings for the
  * application.
  */

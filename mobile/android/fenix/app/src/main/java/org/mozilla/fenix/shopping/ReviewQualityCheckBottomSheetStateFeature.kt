@@ -18,7 +18,7 @@ import org.mozilla.fenix.shopping.store.ReviewQualityCheckStore
  * the store state changes from [ReviewQualityCheckState.Initial] to [ReviewQualityCheckState.NotOptedIn].
  *
  * @param store The store to observe.
- * @property onRequestStateUpdate Callback to request the bottom sheet to be updated.
+ * @param onRequestStateUpdate Callback to request the bottom sheet to be updated.
  */
 class ReviewQualityCheckBottomSheetStateFeature(
     store: ReviewQualityCheckStore,

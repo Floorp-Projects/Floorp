@@ -33,13 +33,13 @@ import java.util.concurrent.TimeUnit
 /**
  * Delegate to handle layout updates and dispatch actions related to the recent synced tab.
  *
- * @property context An Android [Context].
- * @property appStore Store to dispatch actions to when synced tabs are updated or errors encountered.
- * @property syncStore Store to observe for changes to Sync and account status.
- * @property storage Storage layer for synced tabs.
- * @property accountManager Account manager to initiate Syncs and refresh devices.
- * @property historyStorage Storage for searching history for preview image URLs matching synced tab.
- * @property coroutineScope The scope to collect Sync state Flow updates in.
+ * @param context An Android [Context].
+ * @param appStore Store to dispatch actions to when synced tabs are updated or errors encountered.
+ * @param syncStore Store to observe for changes to Sync and account status.
+ * @param storage Storage layer for synced tabs.
+ * @param accountManager Account manager to initiate Syncs and refresh devices.
+ * @param historyStorage Storage for searching history for preview image URLs matching synced tab.
+ * @param coroutineScope The scope to collect Sync state Flow updates in.
  */
 @Suppress("LongParameterList")
 class RecentSyncedTabFeature(

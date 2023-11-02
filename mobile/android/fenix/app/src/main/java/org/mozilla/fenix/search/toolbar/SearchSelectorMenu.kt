@@ -23,8 +23,8 @@ typealias MozSearchEngine = SearchEngine
 /**
  * A popup menu composed of [SearchSelectorMenu.Item] objects.
  *
- * @property context [Context] used for various Android interactions.
- * @property interactor [ToolbarInteractor] for handling menu item interactions.
+ * @param context [Context] used for various Android interactions.
+ * @param interactor [ToolbarInteractor] for handling menu item interactions.
  */
 class SearchSelectorMenu(
     private val context: Context,

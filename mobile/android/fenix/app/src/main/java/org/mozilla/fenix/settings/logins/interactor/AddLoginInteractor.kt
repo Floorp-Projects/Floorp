@@ -9,7 +9,7 @@ import org.mozilla.fenix.settings.logins.controller.SavedLoginsStorageController
 /**
  * Interactor for the add login screen
  *
- * @property savedLoginsController controller for the saved logins storage
+ * @param savedLoginsController controller for the saved logins storage
  */
 class AddLoginInteractor(
     private val savedLoginsController: SavedLoginsStorageController,

@@ -48,11 +48,11 @@ import org.mozilla.fenix.tabstray.ext.toDisplayTitle
  * A RecyclerView ViewHolder implementation for "tab" items.
  *
  * @param itemView [View] that displays a "tab".
- * @property imageLoader [ImageLoader] used to load tab thumbnails.
- * @property trayStore [TabsTrayStore] containing the complete state of tabs tray and methods to update that.
- * @property selectionHolder [SelectionHolder] instance containing the selected tabs in the tabs tray.
+ * @param imageLoader [ImageLoader] used to load tab thumbnails.
+ * @param trayStore [TabsTrayStore] containing the complete state of tabs tray and methods to update that.
+ * @param selectionHolder [SelectionHolder] instance containing the selected tabs in the tabs tray.
  * @property featureName [String] representing the name of the feature displaying tabs. Used in telemetry reporting.
- * @property store [BrowserStore] containing the complete state of the browser and methods to update that.
+ * @param store [BrowserStore] containing the complete state of the browser and methods to update that.
  */
 @Suppress("LongParameterList")
 abstract class AbstractBrowserTabViewHolder(

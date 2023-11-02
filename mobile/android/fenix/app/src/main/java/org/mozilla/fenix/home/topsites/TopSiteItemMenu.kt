@@ -13,9 +13,9 @@ import org.mozilla.fenix.R
 /**
  * Helper class for building a context menu for a top site item.
  *
- * @property context An Android context.
- * @property topSite The [TopSite] to show the context menu for.
- * @property onItemTapped Callback invoked when the user taps on a menu item.
+ * @param context An Android context.
+ * @param topSite The [TopSite] to show the context menu for.
+ * @param onItemTapped Callback invoked when the user taps on a menu item.
  */
 class TopSiteItemMenu(
     private val context: Context,

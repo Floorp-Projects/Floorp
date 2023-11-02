@@ -29,10 +29,10 @@ import org.mozilla.fenix.home.pocket.PocketRecommendedStoriesSelectedCategory
 /**
  * [AppStore] middleware reacting in response to Pocket related [Action]s.
  *
- * @property pocketStoriesService [PocketStoriesService] used for updating details about the Pocket recommended stories.
- * @property selectedPocketCategoriesDataStore [DataStore] used for reading or persisting details about the
+ * @param pocketStoriesService [PocketStoriesService] used for updating details about the Pocket recommended stories.
+ * @param selectedPocketCategoriesDataStore [DataStore] used for reading or persisting details about the
  * currently selected Pocket recommended stories categories.
- * @property coroutineScope [CoroutineScope] used for long running operations like disk IO.
+ * @param coroutineScope [CoroutineScope] used for long running operations like disk IO.
  */
 class PocketUpdatesMiddleware(
     private val pocketStoriesService: PocketStoriesService,

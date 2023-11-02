@@ -31,7 +31,7 @@ interface ReviewQualityCheckVendorsService {
  * Default implementation of [ReviewQualityCheckVendorsService] that uses the [BrowserStore] to
  * identify the selected tab.
  *
- * @property browserStore The [BrowserStore] instance to use.
+ * @param browserStore The [BrowserStore] instance to use.
  */
 class DefaultReviewQualityCheckVendorsService(
     private val browserStore: BrowserStore,

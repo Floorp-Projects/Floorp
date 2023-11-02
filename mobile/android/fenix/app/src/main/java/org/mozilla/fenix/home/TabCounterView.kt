@@ -26,10 +26,10 @@ import org.mozilla.fenix.tabstray.Page
 /**
  * Helper class for building the [FenixTabCounterMenu].
  *
- * @property context An Android [Context].
- * @property browsingModeManager [BrowsingModeManager] used for fetching the current browsing mode.
- * @property navController [NavController] used for navigation.
- * @property tabCounter The [TabCounter] that will be setup with event handlers.
+ * @param context An Android [Context].
+ * @param browsingModeManager [BrowsingModeManager] used for fetching the current browsing mode.
+ * @param navController [NavController] used for navigation.
+ * @param tabCounter The [TabCounter] that will be setup with event handlers.
  */
 class TabCounterView(
     private val context: Context,

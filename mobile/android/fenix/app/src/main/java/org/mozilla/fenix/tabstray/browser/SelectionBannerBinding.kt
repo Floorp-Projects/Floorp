@@ -28,13 +28,13 @@ import org.mozilla.fenix.tabstray.ext.showWithTheme
 /**
  * A binding that shows/hides the multi-select banner of the selected count of tabs.
  *
- * @property context An Android context.
- * @property binding The binding used to display the view.
- * @property store [TabsTrayStore] used to listen for changes to [TabsTrayState] and dispatch actions.
- * @property interactor [TabsTrayInteractor] for responding to user actions.
- * @property backgroundView The background view that we want to alter when changing [Mode].
- * @property showOnSelectViews A variable list of views that will be made visible when in select mode.
- * @property showOnNormalViews A variable list of views that will be made visible when in normal mode.
+ * @param context An Android context.
+ * @param binding The binding used to display the view.
+ * @param store [TabsTrayStore] used to listen for changes to [TabsTrayState] and dispatch actions.
+ * @param interactor [TabsTrayInteractor] for responding to user actions.
+ * @param backgroundView The background view that we want to alter when changing [Mode].
+ * @param showOnSelectViews A variable list of views that will be made visible when in select mode.
+ * @param showOnNormalViews A variable list of views that will be made visible when in normal mode.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 @Suppress("LongParameterList")

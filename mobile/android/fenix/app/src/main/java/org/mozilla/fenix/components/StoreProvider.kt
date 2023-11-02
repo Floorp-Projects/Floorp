@@ -33,7 +33,7 @@ class StoreProvider<T : Store<*, *>>(
 /**
  * ViewModel factory to create [StoreProvider] instances.
  *
- * @property createStore Callback to create a new [Store], used when the [ViewModel] is first created.
+ * @param createStore Callback to create a new [Store], used when the [ViewModel] is first created.
  */
 @VisibleForTesting
 class StoreProviderFactory<T : Store<*, *>>(

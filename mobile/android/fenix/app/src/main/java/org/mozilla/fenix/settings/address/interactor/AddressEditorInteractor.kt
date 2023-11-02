@@ -48,7 +48,7 @@ interface AddressEditorInteractor {
 /**
  * The default implementation of [AddressEditorInteractor].
  *
- * @property controller An instance of [AddressEditorController] which will be delegated for all
+ * @param controller An instance of [AddressEditorController] which will be delegated for all
  * user interactions.
  */
 class DefaultAddressEditorInteractor(

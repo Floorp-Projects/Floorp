@@ -38,12 +38,12 @@ import kotlin.math.max
  * which will be mapped to [RecentlyVisitedItem]s and then dispatched to [AppStore]
  * to be displayed on the home screen.
  *
- * @property appStore The [AppStore] that holds the state of the [HomeFragment].
- * @property historyMetadataStorage The storage that manages [HistoryMetadata].
- * @property historyHighlightsStorage The storage that manages [PlacesHistoryStorage].
- * @property scope The [CoroutineScope] used for IO operations related to querying history
+ * @param appStore The [AppStore] that holds the state of the [HomeFragment].
+ * @param historyMetadataStorage The storage that manages [HistoryMetadata].
+ * @param historyHighlightsStorage The storage that manages [PlacesHistoryStorage].
+ * @param scope The [CoroutineScope] used for IO operations related to querying history
  * and then for dispatching updates.
- * @property ioDispatcher The [CoroutineDispatcher] for performing read/write operations.
+ * @param ioDispatcher The [CoroutineDispatcher] for performing read/write operations.
  */
 class RecentVisitsFeature(
     private val appStore: AppStore,

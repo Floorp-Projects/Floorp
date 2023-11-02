@@ -22,12 +22,12 @@ import org.mozilla.fenix.components.FindInPageIntegration.ToolbarInfo
 /**
  * BrowserFragment delegate to handle all layout updates needed to show or hide the find in page bar.
  *
- * @property store The [BrowserStore] used to look up the current selected tab.
- * @property sessionId ID of the [store] session in which the query will be performed.
- * @property view The [FindInPageBar] view to display.
- * @property engineView the browser in which the queries will be made and which needs to be better positioned
+ * @param store The [BrowserStore] used to look up the current selected tab.
+ * @param sessionId ID of the [store] session in which the query will be performed.
+ * @param view The [FindInPageBar] view to display.
+ * @param engineView the browser in which the queries will be made and which needs to be better positioned
  * to suit the find in page bar.
- * @property toolbarInfo [ToolbarInfo] used to configure the [BrowserToolbar] while the find in page bar is shown.
+ * @param toolbarInfo [ToolbarInfo] used to configure the [BrowserToolbar] while the find in page bar is shown.
  */
 class FindInPageIntegration(
     private val store: BrowserStore,

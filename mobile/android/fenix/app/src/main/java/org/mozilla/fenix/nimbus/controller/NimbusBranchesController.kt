@@ -24,12 +24,12 @@ import org.mozilla.fenix.nimbus.NimbusBranchesStore
  * [NimbusBranchesFragment] controller. This implements [NimbusBranchesAdapterDelegate] to handle
  * interactions with a Nimbus branch.
  *
- * @property context An Android [Context].
- * @property navController [NavController] used for navigation.
- * @property nimbusBranchesStore An instance of [NimbusBranchesStore] for dispatching
+ * @param context An Android [Context].
+ * @param navController [NavController] used for navigation.
+ * @param nimbusBranchesStore An instance of [NimbusBranchesStore] for dispatching
  * [NimbusBranchesAction]s.
- * @property experiments An instance of [NimbusApi] for interacting with the Nimbus experiments.
- * @property experimentId The string experiment-id or "slug" for a Nimbus experiment.
+ * @param experiments An instance of [NimbusApi] for interacting with the Nimbus experiments.
+ * @param experimentId The string experiment-id or "slug" for a Nimbus experiment.
  */
 class NimbusBranchesController(
     private val context: Context,

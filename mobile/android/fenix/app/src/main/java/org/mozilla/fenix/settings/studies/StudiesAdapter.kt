@@ -32,12 +32,12 @@ private const val VIEW_HOLDER_TYPE_STUDY = 1
  * An adapter for displaying studies items. This will display information related to the state of
  * a study such as active. In addition, it will perform actions such as removing a study.
  *
- * @property studiesDelegate Delegate that will provides method for handling
+ * @param studiesDelegate Delegate that will provides method for handling
  * the studies actions items.
  * @param studies The list of studies.
  *  * @property studiesDelegate Delegate that will provides method for handling
  * the studies actions items.
- * @property shouldSubmitOnInit The sole purpose of this property is to prevent the submitList function
+ * @param shouldSubmitOnInit The sole purpose of this property is to prevent the submitList function
  * to run on init, it should only be used from tests.
  */
 @Suppress("LargeClass")

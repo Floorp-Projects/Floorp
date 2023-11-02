@@ -34,7 +34,7 @@ import org.mozilla.fenix.ext.settings
 /**
  * Parent of all download views that can mimic a modal [Dialog].
  *
- * @property activity The [Activity] in which the dialog will be shown.
+ * @param activity The [Activity] in which the dialog will be shown.
  * Used to update the activity [Window] to best mimic a modal dialog.
  */
 abstract class StartDownloadDialog(
@@ -153,13 +153,13 @@ abstract class StartDownloadDialog(
 /**
  * A download view mimicking a modal dialog that allows the user to download a file with the current application.
  *
- * @property activity The [Activity] in which the dialog will be shown.
+ * @param activity The [Activity] in which the dialog will be shown.
  * Used to update the activity [Window] to best mimic a modal dialog.
- * @property filename Name of the file to be downloaded. It wil be shown without any modification.
- * @property contentSize Size of the file to be downloaded expressed as a number of bytes.
+ * @param filename Name of the file to be downloaded. It wil be shown without any modification.
+ * @param contentSize Size of the file to be downloaded expressed as a number of bytes.
  * It will automatically be parsed to the appropriate kilobyte or megabyte value before being shown.
- * @property positiveButtonAction Callback for when the user interacts with the dialog to start the download.
- * @property negativeButtonAction Callback for when the user interacts with the dialog to dismiss it.
+ * @param positiveButtonAction Callback for when the user interacts with the dialog to start the download.
+ * @param negativeButtonAction Callback for when the user interacts with the dialog to dismiss it.
  */
 class FirstPartyDownloadDialog(
     private val activity: Activity,
@@ -212,11 +212,11 @@ class FirstPartyDownloadDialog(
  * A download view mimicking a modal dialog that presents the user with a list of all apps
  * that can handle the download request.
  *
- * @property activity The [Activity] in which the dialog will be shown.
+ * @param activity The [Activity] in which the dialog will be shown.
  * Used to update the activity [Window] to best mimic a modal dialog.
- * @property downloaderApps List of all applications that can handle the download request.
- * @property onAppSelected Callback for when the user chooses a specific application to handle the download request.
- * @property negativeButtonAction Callback for when the user interacts with the dialog to dismiss it.
+ * @param downloaderApps List of all applications that can handle the download request.
+ * @param onAppSelected Callback for when the user chooses a specific application to handle the download request.
+ * @param negativeButtonAction Callback for when the user interacts with the dialog to dismiss it.
  */
 class ThirdPartyDownloadDialog(
     private val activity: Activity,

@@ -34,8 +34,8 @@ private const val CFR_TO_ANCHOR_VERTICAL_PADDING = -16
 /**
  * Delegate for handling the Home Onboarding CFR.
  *
- * @property context [Context] used for various Android interactions.
- * @property recyclerView [RecyclerView] will serve as anchor for the CFR.
+ * @param context [Context] used for various Android interactions.
+ * @param recyclerView [RecyclerView] will serve as anchor for the CFR.
  */
 class HomeCFRPresenter(
     private val context: Context,

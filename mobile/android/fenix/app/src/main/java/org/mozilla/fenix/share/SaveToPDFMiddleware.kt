@@ -33,8 +33,8 @@ import java.io.IOException
 /**
  * [BrowserAction] middleware reacting in response to Save to PDF related [Action]s.
  *
- * @property context An Application context.
- * @property mainScope Coroutine scope to launch coroutines.
+ * @param context An Application context.
+ * @param mainScope Coroutine scope to launch coroutines.
  */
 class SaveToPDFMiddleware(
     private val context: Context,

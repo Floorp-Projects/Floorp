@@ -20,11 +20,11 @@ import org.mozilla.fenix.home.HomeFragment
  * View-bound feature that retrieves a list of recently added [BookmarkNode]s and dispatches
  * updates to the [AppStore].
  *
- * @property appStore the [AppStore] that holds the state of the [HomeFragment].
- * @property bookmarksUseCase the [BookmarksUseCase] for retrieving the list of recently saved
+ * @param appStore the [AppStore] that holds the state of the [HomeFragment].
+ * @param bookmarksUseCase the [BookmarksUseCase] for retrieving the list of recently saved
  * bookmarks from storage.
- * @property scope the [CoroutineScope] used to fetch the bookmarks list
- * @property ioDispatcher the [CoroutineDispatcher] for performing read/write operations.
+ * @param scope the [CoroutineScope] used to fetch the bookmarks list
+ * @param ioDispatcher the [CoroutineDispatcher] for performing read/write operations.
  */
 class RecentBookmarksFeature(
     private val appStore: AppStore,

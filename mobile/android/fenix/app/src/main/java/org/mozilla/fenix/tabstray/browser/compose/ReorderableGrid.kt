@@ -77,14 +77,14 @@ fun createGridReorderState(
 /**
  * Class containing details about the current state of dragging in grid.
  *
- * @property gridState State of the grid.
- * @property scope [CoroutineScope] used for scrolling to the target item.
- * @property hapticFeedback [HapticFeedback] used for performing haptic feedback on item long press.
- * @property touchSlop Distance in pixels the user can wander until we consider they started dragging.
- * @property onMove Callback to be invoked when switching between two items.
- * @property onLongPress Optional callback to be invoked when long pressing an item.
- * @property onExitLongPress Optional callback to be invoked when the item is dragged after long press.
- * @property ignoredItems List of keys for non-draggable items.
+ * @param gridState State of the grid.
+ * @param scope [CoroutineScope] used for scrolling to the target item.
+ * @param hapticFeedback [HapticFeedback] used for performing haptic feedback on item long press.
+ * @param touchSlop Distance in pixels the user can wander until we consider they started dragging.
+ * @param onMove Callback to be invoked when switching between two items.
+ * @param onLongPress Optional callback to be invoked when long pressing an item.
+ * @param onExitLongPress Optional callback to be invoked when the item is dragged after long press.
+ * @param ignoredItems List of keys for non-draggable items.
  */
 class GridReorderState internal constructor(
     private val gridState: LazyGridState,

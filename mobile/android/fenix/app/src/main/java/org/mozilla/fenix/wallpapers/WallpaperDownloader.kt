@@ -18,9 +18,9 @@ import java.lang.IllegalStateException
 /**
  * Can download wallpapers from a remote host.
  *
- * @property storageRootDirectory The top level app-local storage directory.
- * @property client Required for fetching files from network.
- * @property dispatcher Dispatcher used to execute suspending functions. Default parameter
+ * @param storageRootDirectory The top level app-local storage directory.
+ * @param client Required for fetching files from network.
+ * @param dispatcher Dispatcher used to execute suspending functions. Default parameter
  * should be likely be used except for when under test.
  */
 class WallpaperDownloader(

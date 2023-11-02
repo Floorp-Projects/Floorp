@@ -30,7 +30,7 @@ interface CookieBannerDetailsInteractor {
  * Implements callbacks for each of [CookieBannerPanelDialogFragment]'s Views declared possible user interactions,
  * delegates all such user events to the [CookieBannerDetailsController].
  *
- * @property controller [CookieBannerDetailsController] which will be delegated for all users interactions,
+ * @param controller [CookieBannerDetailsController] which will be delegated for all users interactions,
  * it expected to contain all business logic for how to act in response.
  */
 class DefaultCookieBannerDetailsInteractor(

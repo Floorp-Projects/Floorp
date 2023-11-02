@@ -28,14 +28,14 @@ import org.mozilla.fenix.library.history.toPendingDeletionHistory
  * A [Middleware] for initiating storage side-effects based on [HistoryFragmentAction]s that are
  * dispatched to the [HistoryFragmentStore].
  *
- * @property appStore To dispatch Actions to update global state.
- * @property browserStore To dispatch Actions to update global state.
- * @property historyProvider To update storage as a result of some Actions.
- * @property historyStorage To update storage as a result of some Actions.
- * @property undoDeleteSnackbar Called when items are deleted to offer opportunity of undoing before
+ * @param appStore To dispatch Actions to update global state.
+ * @param browserStore To dispatch Actions to update global state.
+ * @param historyProvider To update storage as a result of some Actions.
+ * @param historyStorage To update storage as a result of some Actions.
+ * @param undoDeleteSnackbar Called when items are deleted to offer opportunity of undoing before
  *  deletion is fully completed.
- * @property onTimeFrameDeleted Called when a time range of items is successfully deleted.
- * @property scope CoroutineScope to launch storage operations into.
+ * @param onTimeFrameDeleted Called when a time range of items is successfully deleted.
+ * @param scope CoroutineScope to launch storage operations into.
  */
 class HistoryStorageMiddleware(
     private val appStore: AppStore,

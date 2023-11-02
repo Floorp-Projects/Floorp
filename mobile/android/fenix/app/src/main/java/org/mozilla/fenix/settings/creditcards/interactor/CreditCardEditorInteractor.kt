@@ -48,7 +48,7 @@ interface CreditCardEditorInteractor {
 /**
  * The default implementation of [CreditCardEditorInteractor].
  *
- * @property controller An instance of [CreditCardEditorController] which will be delegated for all
+ * @param controller An instance of [CreditCardEditorController] which will be delegated for all
  * user interactions.
  */
 class DefaultCreditCardEditorInteractor(

@@ -24,9 +24,9 @@ import org.mozilla.fenix.tabstray.ext.toSyncedTabsListItem
 /**
  * TabsTrayFragment delegate to handle all layout updates needed to display synced tabs and any errors.
  *
- * @property store An instance of [TabsTrayStore] used to manage the tabs tray state.
- * @property context Fragment context.
- * @property navController The controller used to handle any navigation necessary for error scenarios.
+ * @param store An instance of [TabsTrayStore] used to manage the tabs tray state.
+ * @param context Fragment context.
+ * @param navController The controller used to handle any navigation necessary for error scenarios.
  * @param storage An instance of [SyncedTabsStorage] used for retrieving synced tabs.
  * @param accountManager An instance of [FxaAccountManager] used for synced tabs authentication.
  * @param lifecycleOwner View lifecycle owner used to determine when to cancel UI jobs.

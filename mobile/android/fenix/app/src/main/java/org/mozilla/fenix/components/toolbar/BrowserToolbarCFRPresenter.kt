@@ -62,15 +62,15 @@ internal var CFR_MINIMUM_NUMBER_OPENED_TABS = 5
 /**
  * Delegate for handling all the business logic for showing CFRs in the toolbar.
  *
- * @property context used for various Android interactions.
- * @property browserStore will be observed for tabs updates
- * @property settings used to read and write persistent user settings
- * @property toolbar will serve as anchor for the CFRs
- * @property isPrivate Whether or not the session is private.
- * @property sessionId optional custom tab id used to identify the custom tab in which to show a CFR.
- * @property onShoppingCfrActionClicked Triggered when the user taps on the shopping CFR action.
- * @property onShoppingCfrDismiss Triggered when the user closes the shopping CFR using the "X" button.
- * @property shoppingExperienceFeature Used to determine if [ShoppingExperienceFeature] is enabled.
+ * @param context used for various Android interactions.
+ * @param browserStore will be observed for tabs updates
+ * @param settings used to read and write persistent user settings
+ * @param toolbar will serve as anchor for the CFRs
+ * @param isPrivate Whether or not the session is private.
+ * @param sessionId optional custom tab id used to identify the custom tab in which to show a CFR.
+ * @param onShoppingCfrActionClicked Triggered when the user taps on the shopping CFR action.
+ * @param onShoppingCfrDismiss Triggered when the user closes the shopping CFR using the "X" button.
+ * @param shoppingExperienceFeature Used to determine if [ShoppingExperienceFeature] is enabled.
  */
 @Suppress("LongParameterList")
 class BrowserToolbarCFRPresenter(

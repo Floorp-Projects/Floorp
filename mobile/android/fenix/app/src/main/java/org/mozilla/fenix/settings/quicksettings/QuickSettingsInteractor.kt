@@ -12,7 +12,7 @@ import org.mozilla.fenix.settings.quicksettings.protections.ProtectionsInteracto
  * Implements callbacks for each of [QuickSettingsSheetDialogFragment]'s Views declared possible user interactions,
  * delegates all such user events to the [QuickSettingsController].
  *
- * @property controller [QuickSettingsController] which will be delegated for all users interactions,
+ * @param controller [QuickSettingsController] which will be delegated for all users interactions,
  * it expected to contain all business logic for how to act in response.
  */
 class QuickSettingsInteractor(

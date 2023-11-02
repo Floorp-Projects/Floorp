@@ -172,26 +172,26 @@ interface TabsTrayController : SyncedTabsController, InactiveTabsController, Tab
 /**
  * Default implementation of [TabsTrayController].
  *
- * @property activity [HomeActivity] used to perform top-level app actions.
- * @property appStore [AppStore] used to dispatch any [AppAction].
- * @property tabsTrayStore [TabsTrayStore] used to read/update the [TabsTrayState].
- * @property browserStore [BrowserStore] used to read/update the current [BrowserState].
- * @property settings [Settings] used to update any user preferences.
- * @property browsingModeManager [BrowsingModeManager] used to read/update the current [BrowsingMode].
- * @property navController [NavController] used to navigate away from the tabs tray.
- * @property navigateToHomeAndDeleteSession Lambda used to return to the Homescreen and delete the current session.
- * @property profiler [Profiler] used to add profiler markers.
- * @property navigationInteractor [NavigationInteractor] used to perform navigation actions with side effects.
- * @property tabsUseCases Use case wrapper for interacting with tabs.
- * @property bookmarksUseCase Use case wrapper for interacting with bookmarks.
- * @property ioDispatcher [CoroutineContext] used to handle saving tabs as bookmarks.
- * @property collectionStorage Storage layer for interacting with collections.
- * @property selectTabPosition Lambda used to scroll the tabs tray to the desired position.
- * @property dismissTray Lambda used to dismiss/minimize the tabs tray.
- * @property showUndoSnackbarForTab Lambda used to display an UNDO Snackbar.
+ * @param activity [HomeActivity] used to perform top-level app actions.
+ * @param appStore [AppStore] used to dispatch any [AppAction].
+ * @param tabsTrayStore [TabsTrayStore] used to read/update the [TabsTrayState].
+ * @param browserStore [BrowserStore] used to read/update the current [BrowserState].
+ * @param settings [Settings] used to update any user preferences.
+ * @param browsingModeManager [BrowsingModeManager] used to read/update the current [BrowsingMode].
+ * @param navController [NavController] used to navigate away from the tabs tray.
+ * @param navigateToHomeAndDeleteSession Lambda used to return to the Homescreen and delete the current session.
+ * @param profiler [Profiler] used to add profiler markers.
+ * @param navigationInteractor [NavigationInteractor] used to perform navigation actions with side effects.
+ * @param tabsUseCases Use case wrapper for interacting with tabs.
+ * @param bookmarksUseCase Use case wrapper for interacting with bookmarks.
+ * @param ioDispatcher [CoroutineContext] used to handle saving tabs as bookmarks.
+ * @param collectionStorage Storage layer for interacting with collections.
+ * @param selectTabPosition Lambda used to scroll the tabs tray to the desired position.
+ * @param dismissTray Lambda used to dismiss/minimize the tabs tray.
+ * @param showUndoSnackbarForTab Lambda used to display an UNDO Snackbar.
  * @property showCancelledDownloadWarning Lambda used to display a cancelled download warning.
- * @property showBookmarkSnackbar Lambda used to display a snackbar upon saving tabs as bookmarks.
- * @property showCollectionSnackbar Lambda used to display a snackbar upon successfully saving tabs
+ * @param showBookmarkSnackbar Lambda used to display a snackbar upon saving tabs as bookmarks.
+ * @param showCollectionSnackbar Lambda used to display a snackbar upon successfully saving tabs
  * to a collection.
  */
 @Suppress("TooManyFunctions", "LongParameterList")
