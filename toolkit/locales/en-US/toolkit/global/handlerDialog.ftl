@@ -33,6 +33,12 @@ permission-dialog-description-file-app =
 permission-dialog-description-extension-app =
   Allow the extension { $extension } to open the { $scheme } link with { $appName }?
 
+permission-dialog-description-system-app =
+  Open the { $scheme } link with { $appName }?
+
+permission-dialog-description-system-noapp =
+  Open the { $scheme } link?
+
 ## Please keep the emphasis around the hostname and scheme (ie the
 ## `<strong>` HTML tags). Please also keep the hostname as close to the start
 ## of the sentence as your language's grammar allows.
