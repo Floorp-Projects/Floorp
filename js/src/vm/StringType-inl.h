@@ -385,6 +385,21 @@ inline js::PropertyName* JSLinearString::toPropertyName(JSContext* cx) {
   return atom->asPropertyName();
 }
 
+bool JSLinearString::hasMovableChars() const {
+  const JSLinearString* topBase = this;
+  while (topBase->hasBase()) {
+    topBase = topBase->base();
+  }
+  if (topBase->isInline()) {
+    return true;
+  }
+  if (topBase->isTenured()) {
+    return false;
+  }
+  return topBase->storeBuffer()->nursery().isInside(
+      topBase->nonInlineCharsRaw());
+}
+
 template <js::AllowGC allowGC>
 MOZ_ALWAYS_INLINE JSThinInlineString* JSThinInlineString::new_(
     JSContext* cx, js::gc::Heap heap) {
