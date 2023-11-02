@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<html>
+  <head>
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src chrome:; style-src chrome:; object-src 'none'"
+    />
+    <meta charset="utf-8" />
+    <title data-l10n-id="about-webauthn-page-title"></title>
+    <link rel="stylesheet" href="chrome://global/content/aboutWebauthn.css" />
+    <script src="chrome://global/content/aboutWebauthn.js"></script>
+    <link rel="localization" href="toolkit/about/aboutWebauthn.ftl" />
+  </head>
+
+  <body id="body">
+    <div id="info-text-div">
+      <label
+        id="info-text-field"
+        data-l10n-id="about-webauthn-text-connect-device"
+      ></label>
+    </div>
+
+    <div hidden id="categories">
+      <div id="info-tab-button" class="category" selected="true">
+        <span
+          class="tablinks"
+          data-l10n-id="about-webauthn-info-section-title"
+        ></span>
+      </div>
+    </div>
+
+    <div hidden id="main-content">
+      <div hidden class="tabcontent token-info-section" id="token-info-section">
+        <h2
+          class="categoryTitle"
+          data-l10n-id="about-webauthn-info-section-title"
+        ></h2>
+        <div id="ctap2-token-info" class="token-info-flex-box" display="flex">
+          <div id="ctap2-token-info-options" class="token-info-flex-child">
+            <h3 data-l10n-id="about-webauthn-options-subsection-title"></h3>
+            <table id="authenticator-options"></table>
+          </div>
+          <div id="ctap2-token-info-info" class="token-info-flex-child">
+            <h3 data-l10n-id="about-webauthn-info-subsection-title"></h3>
+            <table id="authenticator-info"></table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
