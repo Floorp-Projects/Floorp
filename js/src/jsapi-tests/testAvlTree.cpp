@@ -71,7 +71,7 @@ class AvlTreeTestIF : public AvlTreeImpl<T, C> {
   // Count number of elements
   size_t testSize_worker(ImplNode* n) const {
     if (n) {
-      return 1 + testSize_worker(n->left) + testSize_worker(n->right);
+      return 1 + testSize_worker(n->left) + testSize_worker(n->getRight());
     }
     return 0;
   }
@@ -80,7 +80,7 @@ class AvlTreeTestIF : public AvlTreeImpl<T, C> {
   size_t testDepth_worker(ImplNode* n) const {
     if (n) {
       size_t depthL = testDepth_worker(n->left);
-      size_t depthR = testDepth_worker(n->right);
+      size_t depthR = testDepth_worker(n->getRight());
       return 1 + (depthL > depthR ? depthL : depthR);
     }
     return 0;
@@ -103,7 +103,7 @@ class AvlTreeTestIF : public AvlTreeImpl<T, C> {
       if (numElems > maxElems) {
         return false;
       }
-      if (node->tag != ImplTag::Free || node->right != nullptr) {
+      if (node->getTag() != ImplTag::Free || node->getRight() != nullptr) {
         return false;
       }
       node = node->left;
@@ -115,7 +115,7 @@ class AvlTreeTestIF : public AvlTreeImpl<T, C> {
  private:
   void testShow_worker(int depth, const ImplNode* node) const {
     if (node) {
-      testShow_worker(depth + 1, node->right);
+      testShow_worker(depth + 1, node->getRight());
       for (int i = 0; i < depth; i++) {
         printf("   ");
       }
