@@ -184,8 +184,8 @@ template <typename T>
 static inline T* AllocateCellBuffer(JSContext* cx, gc::Cell* cell,
                                     uint32_t count) {
   size_t nbytes = RoundUp(count * sizeof(T), sizeof(Value));
-  auto* buffer = static_cast<T*>(cx->nursery().allocateBuffer(
-      cell->zone(), cell, nbytes, js::MallocArena));
+  auto* buffer =
+      static_cast<T*>(cx->nursery().allocateBuffer(cell->zone(), cell, nbytes));
   if (!buffer) {
     ReportOutOfMemory(cx);
   }
@@ -197,12 +197,12 @@ static inline T* AllocateCellBuffer(JSContext* cx, gc::Cell* cell,
 template <typename T>
 static inline T* ReallocateCellBuffer(JSContext* cx, gc::Cell* cell,
                                       T* oldBuffer, uint32_t oldCount,
-                                      uint32_t newCount, arena_id_t arenaId) {
+                                      uint32_t newCount) {
   size_t oldBytes = RoundUp(oldCount * sizeof(T), sizeof(Value));
   size_t newBytes = RoundUp(newCount * sizeof(T), sizeof(Value));
 
   T* buffer = static_cast<T*>(cx->nursery().reallocateBuffer(
-      cell->zone(), cell, oldBuffer, oldBytes, newBytes, arenaId));
+      cell->zone(), cell, oldBuffer, oldBytes, newBytes));
   if (!buffer) {
     ReportOutOfMemory(cx);
   }
