@@ -3046,17 +3046,22 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
 
 void nsTableFrame::ReflowColGroups(gfxContext* aRenderingContext) {
   if (!GetPrevInFlow() && !HaveReflowedColGroups()) {
-    ReflowOutput kidMet(GetWritingMode());
+    const WritingMode wm = GetWritingMode();
     nsPresContext* presContext = PresContext();
     for (nsIFrame* kidFrame : mColGroups) {
       if (kidFrame->IsSubtreeDirty()) {
         // The column groups don't care about dimensions or reflow inputs.
+        ReflowOutput kidSize(wm);
         ReflowInput kidReflowInput(presContext, kidFrame, aRenderingContext,
                                    LogicalSize(kidFrame->GetWritingMode()));
         nsReflowStatus cgStatus;
-        ReflowChild(kidFrame, presContext, kidMet, kidReflowInput, 0, 0,
-                    ReflowChildFlags::Default, cgStatus);
-        FinishReflowChild(kidFrame, presContext, kidMet, &kidReflowInput, 0, 0,
+        const LogicalPoint dummyPos(wm);
+        const nsSize dummyContainerSize;
+        ReflowChild(kidFrame, presContext, kidSize, kidReflowInput, wm,
+                    dummyPos, dummyContainerSize, ReflowChildFlags::Default,
+                    cgStatus);
+        FinishReflowChild(kidFrame, presContext, kidSize, &kidReflowInput, wm,
+                          dummyPos, dummyContainerSize,
                           ReflowChildFlags::Default);
       }
     }
