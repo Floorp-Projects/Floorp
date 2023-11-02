@@ -120,6 +120,23 @@ static constexpr const char* ToString(DataChannelConnectionState state) {
   return "";
 };
 
+static constexpr const char* ToString(
+    DataChannelOnMessageAvailable::EventType type) {
+  switch (type) {
+    case DataChannelOnMessageAvailable::EventType::OnConnection:
+      return "ON_CONNECTION";
+    case DataChannelOnMessageAvailable::EventType::OnDisconnected:
+      return "ON_DISCONNECTED";
+    case DataChannelOnMessageAvailable::EventType::OnChannelCreated:
+      return "ON_CHANNEL_CREATED";
+    case DataChannelOnMessageAvailable::EventType::OnDataString:
+      return "ON_DATA_STRING";
+    case DataChannelOnMessageAvailable::EventType::OnDataBinary:
+      return "ON_DATA_BINARY";
+  }
+  return "";
+};
+
 class DataChannelRegistry {
  public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DataChannelRegistry)
@@ -933,7 +950,7 @@ void DataChannelConnection::CompleteConnect() {
   }
   // Note: currently this doesn't actually notify the application
   Dispatch(do_AddRef(new DataChannelOnMessageAvailable(
-      DataChannelOnMessageAvailable::ON_CONNECTION, this)));
+      DataChannelOnMessageAvailable::EventType::OnConnection, this)));
 }
 
 // Process any pending Opens
@@ -1093,7 +1110,7 @@ bool DataChannelConnection::Listen(unsigned short port) {
   // delivered
   DC_DEBUG(("%s: sending ON_CONNECTION for %p", __FUNCTION__, this));
   Dispatch(do_AddRef(new DataChannelOnMessageAvailable(
-      DataChannelOnMessageAvailable::ON_CONNECTION, this,
+      DataChannelOnMessageAvailable::EventType::OnConnection, this,
       (DataChannel*)nullptr)));
   return true;
 }
@@ -1184,7 +1201,7 @@ bool DataChannelConnection::Connect(const char* addr, unsigned short port) {
   // delivered
   DC_DEBUG(("%s: sending ON_CONNECTION for %p", __FUNCTION__, this));
   Dispatch(do_AddRef(new DataChannelOnMessageAvailable(
-      DataChannelOnMessageAvailable::ON_CONNECTION, this,
+      DataChannelOnMessageAvailable::EventType::OnConnection, this,
       (DataChannel*)nullptr)));
   return true;
 }
@@ -1568,7 +1585,8 @@ void DataChannelConnection::HandleOpenRequestMessage(
   DC_DEBUG(("%s: sending ON_CHANNEL_CREATED for %s/%s: %u", __FUNCTION__,
             channel->mLabel.get(), channel->mProtocol.get(), stream));
   Dispatch(do_AddRef(new DataChannelOnMessageAvailable(
-      DataChannelOnMessageAvailable::ON_CHANNEL_CREATED, this, channel)));
+      DataChannelOnMessageAvailable::EventType::OnChannelCreated, this,
+      channel)));
 
   DC_DEBUG(("%s: deferring sending ON_CHANNEL_OPEN for %p", __FUNCTION__,
             channel.get()));
@@ -1721,7 +1739,7 @@ void DataChannelConnection::HandleDataMessage(const void* data, size_t length,
 
   bool is_binary = true;
   uint8_t bufferFlags;
-  int32_t type;
+  DataChannelOnMessageAvailable::EventType type;
   const char* info = "";
 
   if (ppid == DATA_CHANNEL_PPID_DOMSTRING_PARTIAL ||
@@ -1789,7 +1807,7 @@ void DataChannelConnection::HandleDataMessage(const void* data, size_t length,
       DC_DEBUG(
           ("DataChannel: Received string message of length %u on channel %u",
            data_length, channel->mStream));
-      type = DataChannelOnMessageAvailable::ON_DATA_STRING;
+      type = DataChannelOnMessageAvailable::EventType::OnDataString;
       if (bufferFlags & DATA_CHANNEL_BUFFER_MESSAGE_FLAGS_BUFFERED) {
         info = " (string fragmented)";
       }
@@ -1803,7 +1821,7 @@ void DataChannelConnection::HandleDataMessage(const void* data, size_t length,
           ("DataChannel: Received empty string message of length %u on channel "
            "%u",
            data_length, channel->mStream));
-      type = DataChannelOnMessageAvailable::ON_DATA_STRING;
+      type = DataChannelOnMessageAvailable::EventType::OnDataString;
       if (bufferFlags & DATA_CHANNEL_BUFFER_MESSAGE_FLAGS_BUFFERED) {
         info = " (string fragmented)";
       }
@@ -1814,7 +1832,7 @@ void DataChannelConnection::HandleDataMessage(const void* data, size_t length,
       DC_DEBUG(
           ("DataChannel: Received binary message of length %u on channel id %u",
            data_length, channel->mStream));
-      type = DataChannelOnMessageAvailable::ON_DATA_BINARY;
+      type = DataChannelOnMessageAvailable::EventType::OnDataBinary;
       if (bufferFlags & DATA_CHANNEL_BUFFER_MESSAGE_FLAGS_BUFFERED) {
         info = " (binary fragmented)";
       }
@@ -1827,7 +1845,7 @@ void DataChannelConnection::HandleDataMessage(const void* data, size_t length,
           ("DataChannel: Received empty binary message of length %u on channel "
            "id %u",
            data_length, channel->mStream));
-      type = DataChannelOnMessageAvailable::ON_DATA_BINARY;
+      type = DataChannelOnMessageAvailable::EventType::OnDataBinary;
       if (bufferFlags & DATA_CHANNEL_BUFFER_MESSAGE_FLAGS_BUFFERED) {
         info = " (binary fragmented)";
       }
@@ -1847,10 +1865,8 @@ void DataChannelConnection::HandleDataMessage(const void* data, size_t length,
       });
 
   // Notify onmessage
-  DC_DEBUG(("%s: sending ON_DATA_%s%s for %p", __FUNCTION__,
-            (type == DataChannelOnMessageAvailable::ON_DATA_STRING) ? "STRING"
-                                                                    : "BINARY",
-            info, channel));
+  DC_DEBUG(
+      ("%s: sending %s%s for %p", __FUNCTION__, ToString(type), info, channel));
   if (bufferFlags & DATA_CHANNEL_BUFFER_MESSAGE_FLAGS_BUFFERED) {
     channel->SendOrQueue(new DataChannelOnMessageAvailable(
         type, this, channel, channel->mRecvBuffer));
@@ -1985,7 +2001,7 @@ void DataChannelConnection::HandleAssociationChangeEvent(
                                                   sac->sac_inbound_streams)));
 
         Dispatch(do_AddRef(new DataChannelOnMessageAvailable(
-            DataChannelOnMessageAvailable::ON_CONNECTION, this)));
+            DataChannelOnMessageAvailable::EventType::OnConnection, this)));
         DC_DEBUG(("DTLS connect() succeeded!  Entering connected mode"));
 
         // Open any streams pending...
@@ -3061,7 +3077,7 @@ int DataChannelConnection::SendDataMsgCommon(uint16_t stream,
 void DataChannelConnection::Stop() {
   // Note: This will call 'CloseAll' from the main thread
   Dispatch(do_AddRef(new DataChannelOnMessageAvailable(
-      DataChannelOnMessageAvailable::ON_DISCONNECTED, this)));
+      DataChannelOnMessageAvailable::EventType::OnDisconnected, this)));
 }
 
 void DataChannelConnection::Close(DataChannel* aChannel) {
@@ -3451,6 +3467,62 @@ void DataChannel::WithTrafficCounters(
     const std::function<void(TrafficCounters&)>& aFn) {
   MutexAutoLock lock(mStatsLock);
   aFn(mTrafficCounters);
+}
+
+nsresult DataChannelOnMessageAvailable::Run() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  // Note: calling the listeners can indirectly cause the listeners to be
+  // made available for GC (by removing event listeners), especially for
+  // OnChannelClosed().  We hold a ref to the Channel and the listener
+  // while calling this.
+  switch (mType) {
+    case EventType::OnDataString:
+    case EventType::OnDataBinary:
+      if (!mChannel->mListener) {
+        DC_ERROR(("DataChannelOnMessageAvailable (%s) with null Listener!",
+                  ToString(mType)));
+        return NS_OK;
+      }
+
+      if (mChannel->GetReadyState() == DataChannelState::Closed ||
+          mChannel->GetReadyState() == DataChannelState::Closing) {
+        // Closed by JS, probably
+        return NS_OK;
+      }
+
+      if (mType == EventType::OnDataString) {
+        mChannel->mListener->OnMessageAvailable(mChannel->mContext, mData);
+      } else {
+        mChannel->mListener->OnBinaryMessageAvailable(mChannel->mContext,
+                                                      mData);
+      }
+      break;
+    case EventType::OnDisconnected:
+      // If we've disconnected, make sure we close all the streams - from
+      // mainthread!
+      if (mConnection->mListener) {
+        mConnection->mListener->NotifySctpClosed();
+      }
+      mConnection->CloseAll();
+      break;
+    case EventType::OnChannelCreated:
+      if (!mConnection->mListener) {
+        DC_ERROR(("DataChannelOnMessageAvailable (%s) with null Listener!",
+                  ToString(mType)));
+        return NS_OK;
+      }
+
+      // important to give it an already_AddRefed pointer!
+      mConnection->mListener->NotifyDataChannel(mChannel.forget());
+      break;
+    case EventType::OnConnection:
+      if (mConnection->mListener) {
+        mConnection->mListener->NotifySctpConnected();
+      }
+      break;
+  }
+  return NS_OK;
 }
 
 }  // namespace mozilla
