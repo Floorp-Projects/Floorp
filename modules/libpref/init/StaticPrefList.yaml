@@ -7446,6 +7446,12 @@
     type: bool
     value: false
     mirror: always
+
+  # Experimental support for Symbols as WeakMap keys in JavaScript.
+-   name: javascript.options.experimental.symbols_as_weakmap_keys
+    type: bool
+    value: false
+    mirror: always
 #endif  // NIGHTLY_BUILD
 
 #ifdef NIGHTLY_BUILD
