@@ -285,7 +285,6 @@ devtools.jar:
     content/debugger/images/sources/webpack.svg (debugger/images/sources/webpack.svg)
     content/debugger/src/debugger.css (debugger/src/debugger.css)
     content/debugger/src/components/variables.css (debugger/src/components/variables.css)
-    content/debugger/src/components/A11yIntention.css (debugger/src/components/A11yIntention.css)
     content/debugger/src/components/App.css (debugger/src/components/App.css)
     content/debugger/src/components/QuickOpenModal.css (debugger/src/components/QuickOpenModal.css)
     content/debugger/src/components/ShortcutsModal.css (debugger/src/components/ShortcutsModal.css)
