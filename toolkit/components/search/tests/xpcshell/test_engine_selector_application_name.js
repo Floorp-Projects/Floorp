@@ -4,7 +4,8 @@
 "use strict";
 
 ChromeUtils.defineESModuleGetters(this, {
-  SearchEngineSelector: "resource://gre/modules/SearchEngineSelector.sys.mjs",
+  SearchEngineSelectorOld:
+    "resource://gre/modules/SearchEngineSelectorOld.sys.mjs",
 });
 
 const CONFIG = [
@@ -64,7 +65,7 @@ const CONFIG = [
   },
 ];
 
-const engineSelector = new SearchEngineSelector();
+const engineSelector = new SearchEngineSelectorOld();
 
 const tests = [
   {
