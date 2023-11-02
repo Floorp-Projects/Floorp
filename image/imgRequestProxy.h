@@ -225,6 +225,10 @@ class imgRequestProxy : public mozilla::PreloaderBase,
   bool mHadListener : 1;
 };
 
+inline nsISupports* ToSupports(imgRequestProxy* p) {
+  return NS_ISUPPORTS_CAST(imgIRequest*, p);
+}
+
 NS_DEFINE_STATIC_IID_ACCESSOR(imgRequestProxy, NS_IMGREQUESTPROXY_CID)
 
 // Used for static image proxies for which no requests are available, so
