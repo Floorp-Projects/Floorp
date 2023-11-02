@@ -455,8 +455,10 @@ bool Pickle::WriteBytesZeroCopy(void* data, uint32_t data_len,
     data = realloc(data, new_capacity);
   }
 #endif
-  buffers_.WriteBytesZeroCopy(reinterpret_cast<char*>(data), data_len,
-                              new_capacity);
+
+  // Shouldn't fail, because we're using InfallibleAllocPolicy.
+  MOZ_ALWAYS_TRUE(buffers_.WriteBytesZeroCopy(reinterpret_cast<char*>(data),
+                                              data_len, new_capacity));
 
   EndWrite(data_len);
   return true;
