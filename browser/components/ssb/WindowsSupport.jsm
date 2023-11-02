@@ -12,6 +12,10 @@ const { SiteSpecificBrowserService } = ChromeUtils.import(
   "resource:///modules/SiteSpecificBrowserService.jsm"
 );
 
+const { SiteSpecificBrowserIdUtils } = ChromeUtils.import(
+  "resource:///modules/SiteSpecificBrowserIdUtils.jsm"
+);
+
 XPCOMUtils.defineLazyModuleGetters(this, {
   ImageTools: "resource:///modules/ssb/ImageTools.jsm",
 });
@@ -63,7 +67,7 @@ const WindowsSupport = {
 
     // We should be embedding multiple icon sizes, but the current icon encoder
     // does not support this. For now just embed a sensible size.
-    let icon = ssb.getIcon(128);
+    let icon = await SiteSpecificBrowserIdUtils.getIconBySSBId(ssb.id, 128);
     if (icon) {
       let { container } = await ImageTools.loadImage(
         Services.io.newURI(icon.src)
@@ -130,7 +134,7 @@ const WindowsSupport = {
    */
   async applyOSIntegration(ssb, window) {
     const getIcon = async size => {
-      let icon = ssb.getIcon(size);
+      let icon = await SiteSpecificBrowserIdUtils.getIconBySSBId(ssb._id, size);
       if (!icon) {
         return null;
       }

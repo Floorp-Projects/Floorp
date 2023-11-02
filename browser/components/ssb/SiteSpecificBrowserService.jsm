@@ -52,6 +52,12 @@ if (AppConstants.platform == "win") {
     "WindowsSupport",
     "resource:///modules/ssb/WindowsSupport.jsm"
   );
+
+  ChromeUtils.defineModuleGetter(
+    this,
+    "SiteSpecificBrowserIdUtils",
+    "resource:///modules/SiteSpecificBrowserIdUtils.jsm"
+  );
 }
 
 /**
@@ -262,7 +268,19 @@ async function buildManifestForBrowser(browser) {
  * numbers of different SSBs used will be low and the memory use will also
  * be low.
  */
-const SSBMap = new Map();
+let SSBMap = new Map();
+
+if (Services.prefs.prefHasUserValue("browser.ssb.SSBMap")) {
+  function loadMapFromLocalStorage() {
+    const mapJson = Services.prefs.getStringPref("browser.ssb.SSBMap");
+    const serializedMap = JSON.parse(mapJson);
+    const map = new Map(serializedMap);
+    return map;
+  }
+  
+  SSBMap = loadMapFromLocalStorage();
+}
+
 
 /**
  * The base contains the data about an SSB instance needed in content processes.
@@ -369,8 +387,14 @@ class SiteSpecificBrowser extends SiteSpecificBrowserBase {
       config
     );
 
-    // Cache the SSB for retrieval.
     SSBMap.set(id, this);
+    
+    function saveMapToLocalStorage(map) {
+      let mapJson = JSON.stringify([...map]);
+      Services.prefs.setStringPref("browser.ssb.SSBMap", mapJson);
+    }
+    
+    saveMapToLocalStorage(SSBMap);
 
     this._updateSharedData();
   }
@@ -685,6 +709,7 @@ class SiteSpecificBrowser extends SiteSpecificBrowserBase {
    * Open URL is getting from the current browser.
    */
   launch() {
+    let ssb = SiteSpecificBrowser.get(this.id);
     let browserWindowFeatures = "chrome,location=yes,centerscreen,dialog=no,resizable=yes,scrollbars=yes";
     //"chrome,location=yes,centerscreen,dialog=no,resizable=yes,scrollbars=yes";
 
@@ -841,12 +866,7 @@ async function startSSB(id) {
 
   // Whatever happens we must exitLastWindowClosingSurvivalArea when done.
   try {
-    let ssb = await SiteSpecificBrowser.load(id);
-    if (ssb) {
-      ssb.launch();
-    } else {
-      dump(`No SSB installed as ID ${id}\n`);
-    }
+    await SiteSpecificBrowserIdUtils.runSSBWithId(id);
   } finally {
     Services.startup.exitLastWindowClosingSurvivalArea();
   }
