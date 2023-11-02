@@ -1232,10 +1232,8 @@ export class SearchSERPTelemetryChild extends JSWindowActorChild {
       // To check this, we look for the presence of the query parameter
       // that contains a search term.
       let queries = new URLSearchParams(url.split("#")[0].split("?")[1]);
-      for (let queryParamName of provider.queryParamNames) {
-        if (queries.get(queryParamName)) {
-          return true;
-        }
+      if (queries.has(provider.queryParamName)) {
+        return true;
       }
     }
     return false;
