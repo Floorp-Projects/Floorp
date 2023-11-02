@@ -15629,7 +15629,7 @@
 #  * -1: locally, no fallback
 - name: widget.windows.utility_process_file_picker
   type: RelaxedAtomicInt32
-  value: -1
+  value: 0
   mirror: always
 
 # The number of messages of each type to keep for display in
