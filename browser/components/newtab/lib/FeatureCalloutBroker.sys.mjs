@@ -84,6 +84,13 @@ export class _FeatureCalloutBroker {
       return false;
     }
     const win = browser.ownerGlobal;
+    // Avoid showing feature callouts if a dialog or panel is showing.
+    if (
+      win.gDialogBox?.dialog ||
+      [...win.document.querySelectorAll("panel")].some(p => p.state === "open")
+    ) {
+      return false;
+    }
     const currentCallout = this.#calloutMap.get(win);
     // If a custom callout was previously showing, but is no longer showing,
     // tear down the FeatureCallout instance. We avoid tearing them down when
