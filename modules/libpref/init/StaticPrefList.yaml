@@ -1621,13 +1621,6 @@
 # from parent-process BrowsingContexts
 - name: browser.tabs.documentchannel.parent-controlled
   type: bool
-  value: true
-  mirror: always
-
-# If set, use DocumentChannel to attempt a speculative load from the
-# parent whenever it's not possible to directly load from the parent.
-- name: browser.tabs.documentchannel.speculative-load
-  type: bool
   value: false
   mirror: always
 
