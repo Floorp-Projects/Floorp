@@ -1,6 +1,24 @@
 {
   "data": [
     {
+      "name": "Opera",
+      "schema": 1698451506980,
+      "status": "beta",
+      "version": "105",
+      "browserid": "opera",
+      "id": "2d0a87f2-bc88-43d1-9b46-9ebd16e3fb66",
+      "last_modified": 1698661473899
+    },
+    {
+      "name": "Opera",
+      "schema": 1698451506782,
+      "status": "current",
+      "version": "104",
+      "browserid": "opera",
+      "id": "513fd25f-3df1-4785-875b-766683e3445b",
+      "last_modified": 1698661473890
+    },
+    {
       "name": "Edge",
       "schema": 1698192307176,
       "status": "nightly",
@@ -46,15 +64,6 @@
       "last_modified": 1696863920657
     },
     {
-      "name": "Opera",
-      "schema": 1696637108907,
-      "status": "beta",
-      "version": "104",
-      "browserid": "opera",
-      "id": "513fd25f-3df1-4785-875b-766683e3445b",
-      "last_modified": 1696863920654
-    },
-    {
       "name": "Safari",
       "schema": 1696637108964,
       "status": "beta",
@@ -89,15 +98,6 @@
       "browserid": "chrome",
       "id": "d8e663e0-6298-4339-9234-343ecfb2f40d",
       "last_modified": 1696863920636
-    },
-    {
-      "name": "Opera",
-      "schema": 1696637108846,
-      "status": "current",
-      "version": "103",
-      "browserid": "opera",
-      "id": "aa7dd3da-4f83-4dce-84de-784409ffeed7",
-      "last_modified": 1696863920633
     },
     {
       "name": "Firefox for Android",
@@ -334,5 +334,5 @@
       "last_modified": 1645448267500
     }
   ],
-  "timestamp": 1698223476280
+  "timestamp": 1698661473899
 }
