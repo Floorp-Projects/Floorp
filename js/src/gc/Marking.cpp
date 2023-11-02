@@ -1566,7 +1566,7 @@ scan_value_range:
 
   return true;
 
-scan_obj : {
+scan_obj: {
   AssertShouldMarkInZone(this, obj);
 
   if constexpr (bool(opts & MarkingOptions::MarkImplicitEdges)) {
