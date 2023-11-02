@@ -1705,9 +1705,11 @@ export class UrlbarView {
     let favicon = item._elements.get("favicon");
     favicon.src = this.#iconForResult(result);
 
+    let userContextBox = item._elements.get("user-context");
     if (result.type == lazy.UrlbarUtils.RESULT_TYPE.TAB_SWITCH) {
-      let userContextBox = item._elements.get("user-context");
       this.#setResultUserContextBox(result, userContextBox);
+    } else if (userContextBox) {
+      this.#removeElementL10n(userContextBox);
     }
 
     let title = item._elements.get("title");
