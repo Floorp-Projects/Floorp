@@ -5,6 +5,8 @@
 
 ChromeUtils.defineESModuleGetters(this, {
   JsonSchema: "resource://gre/modules/JsonSchema.sys.mjs",
+  SearchEngineSelectorOld:
+    "resource://gre/modules/SearchEngineSelectorOld.sys.mjs",
 });
 
 /**
@@ -51,7 +53,7 @@ add_setup(async function () {
 add_task(async function test_search_config_validates_to_schema() {
   disallowAdditionalProperties(searchConfigSchema);
 
-  let selector = new SearchEngineSelector(() => {});
+  let selector = new SearchEngineSelectorOld(() => {});
   let searchConfig = await selector.getEngineConfiguration();
   let validator = new JsonSchema.Validator(searchConfigSchema);
 

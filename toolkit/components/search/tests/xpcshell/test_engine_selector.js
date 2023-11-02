@@ -4,7 +4,8 @@
 "use strict";
 
 ChromeUtils.defineESModuleGetters(this, {
-  SearchEngineSelector: "resource://gre/modules/SearchEngineSelector.sys.mjs",
+  SearchEngineSelectorOld:
+    "resource://gre/modules/SearchEngineSelectorOld.sys.mjs",
 });
 
 const TEST_CONFIG = [
@@ -91,7 +92,7 @@ const TEST_CONFIG = [
   },
 ];
 
-const engineSelector = new SearchEngineSelector();
+const engineSelector = new SearchEngineSelectorOld();
 
 add_setup(async function () {
   const settings = await RemoteSettings(SearchUtils.SETTINGS_KEY);

@@ -5,7 +5,8 @@
 
 ChromeUtils.defineESModuleGetters(this, {
   PromiseUtils: "resource://gre/modules/PromiseUtils.sys.mjs",
-  SearchEngineSelector: "resource://gre/modules/SearchEngineSelector.sys.mjs",
+  SearchEngineSelectorOld:
+    "resource://gre/modules/SearchEngineSelectorOld.sys.mjs",
 });
 
 const TEST_CONFIG = [
@@ -85,7 +86,7 @@ add_setup(async function () {
 
 add_task(async function test_selector_basic_get() {
   const listenerSpy = sinon.spy();
-  const engineSelector = new SearchEngineSelector(listenerSpy);
+  const engineSelector = new SearchEngineSelectorOld(listenerSpy);
   getStub.onFirstCall().returns(TEST_CONFIG);
 
   const { engines } = await engineSelector.fetchEngineConfiguration({
@@ -103,7 +104,7 @@ add_task(async function test_selector_basic_get() {
 
 add_task(async function test_selector_get_reentry() {
   const listenerSpy = sinon.spy();
-  const engineSelector = new SearchEngineSelector(listenerSpy);
+  const engineSelector = new SearchEngineSelectorOld(listenerSpy);
   let promise = PromiseUtils.defer();
   getStub.resetHistory();
   getStub.onFirstCall().returns(promise.promise);
@@ -157,7 +158,7 @@ add_task(async function test_selector_get_reentry() {
 
 add_task(async function test_selector_config_update() {
   const listenerSpy = sinon.spy();
-  const engineSelector = new SearchEngineSelector(listenerSpy);
+  const engineSelector = new SearchEngineSelectorOld(listenerSpy);
   getStub.resetHistory();
   getStub.onFirstCall().returns(TEST_CONFIG);
 
@@ -207,7 +208,7 @@ add_task(async function test_selector_config_update() {
 });
 
 add_task(async function test_selector_db_modification() {
-  const engineSelector = new SearchEngineSelector();
+  const engineSelector = new SearchEngineSelectorOld();
   // Fill the database with some values that we can use to test that it is cleared.
   const db = RemoteSettings(SearchUtils.SETTINGS_KEY).db;
   await db.importChanges(
@@ -253,7 +254,7 @@ add_task(async function test_selector_db_modification() {
 });
 
 add_task(async function test_selector_db_modification_never_succeeds() {
-  const engineSelector = new SearchEngineSelector();
+  const engineSelector = new SearchEngineSelectorOld();
   // Fill the database with some values that we can use to test that it is cleared.
   const db = RemoteSettings(SearchUtils.SETTINGS_KEY).db;
   await db.importChanges(
@@ -297,7 +298,7 @@ add_task(async function test_selector_db_modification_never_succeeds() {
 
 add_task(async function test_empty_results() {
   // Check that returning an empty result re-tries.
-  const engineSelector = new SearchEngineSelector();
+  const engineSelector = new SearchEngineSelectorOld();
   // Fill the database with some values that we can use to test that it is cleared.
   const db = RemoteSettings(SearchUtils.SETTINGS_KEY).db;
   await db.importChanges(

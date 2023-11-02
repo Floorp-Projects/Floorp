@@ -72,7 +72,7 @@ export class SearchEngineSelector {
    */
   constructor(listener) {
     this.QueryInterface = ChromeUtils.generateQI(["nsIObserver"]);
-    this._remoteConfig = lazy.RemoteSettings(lazy.SearchUtils.SETTINGS_KEY);
+    this._remoteConfig = lazy.RemoteSettings(lazy.SearchUtils.NEW_SETTINGS_KEY);
     this._listenerAdded = false;
     this._onConfigurationUpdated = this._onConfigurationUpdated.bind(this);
     this._changeListener = listener;
