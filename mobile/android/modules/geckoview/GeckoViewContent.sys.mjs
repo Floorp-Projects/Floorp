@@ -340,10 +340,6 @@ export class GeckoViewContent extends GeckoViewModule {
   }
 
   async _requestAnalysis(aData, aCallback) {
-    if (!Services.prefs.getBoolPref("geckoview.shopping.enabled", false)) {
-      aCallback.onError(`This API enabled for Shopping only.`);
-      return;
-    }
     const url = Services.io.newURI(aData.url);
     if (!lazy.isProductURL(url)) {
       aCallback.onError(`Cannot requestAnalysis on a non-product url.`);
@@ -359,10 +355,6 @@ export class GeckoViewContent extends GeckoViewModule {
   }
 
   async _requestCreateAnalysis(aData, aCallback) {
-    if (!Services.prefs.getBoolPref("geckoview.shopping.enabled", false)) {
-      aCallback.onError(`This API enabled for Shopping only.`);
-      return;
-    }
     const url = Services.io.newURI(aData.url);
     if (!lazy.isProductURL(url)) {
       aCallback.onError(`Cannot requestCreateAnalysis on a non-product url.`);
@@ -378,10 +370,6 @@ export class GeckoViewContent extends GeckoViewModule {
   }
 
   async _requestAnalysisCreationStatus(aData, aCallback) {
-    if (!Services.prefs.getBoolPref("geckoview.shopping.enabled", false)) {
-      aCallback.onError(`This API enabled for Shopping only.`);
-      return;
-    }
     const url = Services.io.newURI(aData.url);
     if (!lazy.isProductURL(url)) {
       aCallback.onError(
@@ -401,10 +389,6 @@ export class GeckoViewContent extends GeckoViewModule {
   }
 
   async _pollForAnalysisCompleted(aData, aCallback) {
-    if (!Services.prefs.getBoolPref("geckoview.shopping.enabled", false)) {
-      aCallback.onError(`This API enabled for Shopping only.`);
-      return;
-    }
     const url = Services.io.newURI(aData.url);
     if (!lazy.isProductURL(url)) {
       aCallback.onError(
@@ -424,10 +408,6 @@ export class GeckoViewContent extends GeckoViewModule {
   }
 
   async _sendAttributionEvent(aEvent, aData, aCallback) {
-    if (!Services.prefs.getBoolPref("geckoview.shopping.enabled", false)) {
-      aCallback.onError(`This API enabled for Shopping only.`);
-      return;
-    }
     // TODO (bug1859055): remove product object once sendAttributionEvent() is static
     const product = new lazy.ShoppingProduct(
       "http://example.com/dp/ABCDEFG123"
@@ -451,10 +431,6 @@ export class GeckoViewContent extends GeckoViewModule {
   }
 
   async _requestRecommendations(aData, aCallback) {
-    if (!Services.prefs.getBoolPref("geckoview.shopping.enabled", false)) {
-      aCallback.onError(`This API enabled for Shopping only.`);
-      return;
-    }
     const url = Services.io.newURI(aData.url);
     if (!lazy.isProductURL(url)) {
       aCallback.onError(`Cannot requestRecommendations on a non-product url.`);

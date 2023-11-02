@@ -269,7 +269,6 @@ pref("formhelper.autozoom", true);
 pref("geckoview.console.enabled", false);
 
 #ifdef NIGHTLY_BUILD
-  pref("geckoview.shopping.enabled", true);
   // Testing flag for geckoview shopping product. When true, sendAttributionEvent
   // will return "TEST_AID_RESPONSE" for products with "TEST_AID" id.
   pref("geckoview.shopping.test_response", false);
