@@ -739,13 +739,16 @@ static bool IsCSSWordSpacingSpace(const nsTextFragment* aFrag, uint32_t aPos,
 }
 
 constexpr char16_t kOghamSpaceMark = 0x1680;
+constexpr char16_t kIdeographicSpace = 0x3000;
 
 // Check whether the string aChars/aLength starts with space that's
 // trimmable according to CSS 'white-space:normal/nowrap'.
-static bool IsTrimmableSpace(const char16_t* aChars, uint32_t aLength) {
+static bool IsTrimmableSpaceAtStart(const char16_t* aChars, uint32_t aLength) {
   NS_ASSERTION(aLength > 0, "No text for IsSpace!");
 
   char16_t ch = *aChars;
+  // Note that Ideographic Space is NOT treated as trimmable here, because
+  // (unlike ASCII space) it does not collapse at start-of-line.
   if (ch == ' ' || ch == kOghamSpaceMark) {
     return !nsTextFrameUtils::IsSpaceCombiningSequenceTail(aChars + 1,
                                                            aLength - 1);
@@ -767,6 +770,7 @@ static bool IsTrimmableSpace(const nsTextFragment* aFrag, uint32_t aPos,
   switch (aFrag->CharAt(aPos)) {
     case ' ':
     case kOghamSpaceMark:
+    case kIdeographicSpace:
       return (!aStyleText->WhiteSpaceIsSignificant() || aAllowHangingWS) &&
              !IsSpaceCombiningSequenceTail(aFrag, aPos + 1);
     case '\n':
@@ -815,7 +819,7 @@ static uint32_t GetTrimmableWhitespaceCount(const nsTextFragment* aFrag,
     const char16_t* str = aFrag->Get2b() + aStartOffset;
     int32_t fragLen = aFrag->GetLength() - aStartOffset;
     for (; count < aLength; ++count) {
-      if (!IsTrimmableSpace(str, fragLen)) {
+      if (!IsTrimmableSpaceAtStart(str, fragLen)) {
         break;
       }
       str += aDirection;
