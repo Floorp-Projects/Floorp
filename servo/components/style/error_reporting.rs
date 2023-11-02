@@ -9,6 +9,8 @@
 use crate::selector_parser::SelectorImpl;
 use crate::stylesheets::UrlExtraData;
 use cssparser::{BasicParseErrorKind, ParseErrorKind, SourceLocation, Token};
+use selectors::parser::{Component, RelativeSelector, Selector};
+use selectors::visitor::{SelectorListKind, SelectorVisitor};
 use selectors::SelectorList;
 use std::fmt;
 use style_traits::ParseError;
@@ -279,5 +281,178 @@ impl ParseErrorReporter for RustLogReporter {
                 error
             )
         }
+    }
+}
+
+/// Any warning a selector may generate.
+/// TODO(dshin): Bug 1860634 - Merge with never matching host selector warning, which is part of the rule parser.
+#[repr(u8)]
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+pub enum SelectorWarningKind {
+    /// Relative Selector with not enough constraint, either outside or inside the selector. e.g. `*:has(.a)`, `.a:has(*)`.
+    /// May cause expensive invalidations for every element inserted and/or removed.
+    UnconstraintedRelativeSelector,
+}
+
+impl SelectorWarningKind {
+    /// Get all warnings for this selector.
+    pub fn from_selector(selector: &Selector<SelectorImpl>) -> Vec<Self> {
+        let mut result = vec![];
+        if UnconstrainedRelativeSelectorVisitor::has_warning(selector, 0, false) {
+            result.push(SelectorWarningKind::UnconstraintedRelativeSelector);
+        }
+        result
+    }
+}
+
+/// Per-compound state for finding unconstrained relative selectors.
+struct PerCompoundState {
+    /// Is there a relative selector in this compound?
+    relative_selector_found: bool,
+    /// Is this compound constrained in any way?
+    constrained: bool,
+    /// Nested below, or inside relative selector?
+    in_relative_selector: bool,
+}
+
+impl PerCompoundState {
+    fn new(in_relative_selector: bool) -> Self {
+        Self {
+            relative_selector_found: false,
+            constrained: false,
+            in_relative_selector,
+        }
+    }
+}
+
+/// Visitor to check if there's any unconstrained relative selector.
+struct UnconstrainedRelativeSelectorVisitor {
+    compound_state: PerCompoundState,
+}
+
+impl UnconstrainedRelativeSelectorVisitor {
+    fn new(in_relative_selector: bool) -> Self {
+        Self {
+            compound_state: PerCompoundState::new(in_relative_selector),
+        }
+    }
+
+    fn has_warning(
+        selector: &Selector<SelectorImpl>,
+        offset: usize,
+        in_relative_selector: bool,
+    ) -> bool {
+        let relative_selector = matches!(
+            selector.iter_raw_parse_order_from(0).next().unwrap(),
+            Component::RelativeSelectorAnchor
+        );
+        debug_assert!(
+            !relative_selector || offset == 0,
+            "Checking relative selector from non-rightmost?"
+        );
+        let mut visitor = Self::new(in_relative_selector);
+        let mut iter = if relative_selector {
+            selector.iter_skip_relative_selector_anchor()
+        } else {
+            selector.iter_from(offset)
+        };
+        loop {
+            visitor.compound_state = PerCompoundState::new(in_relative_selector);
+
+            for s in &mut iter {
+                s.visit(&mut visitor);
+            }
+
+            if (visitor.compound_state.relative_selector_found ||
+                visitor.compound_state.in_relative_selector) &&
+                !visitor.compound_state.constrained
+            {
+                return true;
+            }
+
+            if iter.next_sequence().is_none() {
+                break;
+            }
+        }
+        false
+    }
+}
+
+impl SelectorVisitor for UnconstrainedRelativeSelectorVisitor {
+    type Impl = SelectorImpl;
+
+    fn visit_simple_selector(&mut self, c: &Component<Self::Impl>) -> bool {
+        match c {
+            // Deferred to visit_selector_list
+            Component::Is(..) |
+            Component::Where(..) |
+            Component::Negation(..) |
+            Component::Has(..) => (),
+            Component::ExplicitUniversalType => (),
+            _ => self.compound_state.constrained |= true,
+        };
+        true
+    }
+
+    fn visit_selector_list(
+        &mut self,
+        _list_kind: SelectorListKind,
+        list: &[Selector<Self::Impl>],
+    ) -> bool {
+        let mut all_constrained = true;
+        for s in list {
+            let mut offset = 0;
+            // First, check the rightmost compound for constraint at this level.
+            if !self.compound_state.in_relative_selector {
+                let mut nested = Self::new(false);
+                let mut iter = s.iter();
+                loop {
+                    for c in &mut iter {
+                        c.visit(&mut nested);
+                        offset += 1;
+                    }
+
+                    let c = iter.next_sequence();
+                    offset += 1;
+                    if c.map_or(true, |c| !c.is_pseudo_element()) {
+                        break;
+                    }
+                }
+                // Every single selector in the list must be constrained.
+                all_constrained &= nested.compound_state.constrained;
+            }
+
+            if offset >= s.len() {
+                continue;
+            }
+
+            // Then, recurse in to check at the deeper level.
+            if Self::has_warning(s, offset, self.compound_state.in_relative_selector) {
+                self.compound_state.constrained = false;
+                if !self.compound_state.in_relative_selector {
+                    self.compound_state.relative_selector_found = true;
+                }
+                return false;
+            }
+        }
+        self.compound_state.constrained |= all_constrained;
+        true
+    }
+
+    fn visit_relative_selector_list(&mut self, list: &[RelativeSelector<Self::Impl>]) -> bool {
+        debug_assert!(
+            !self.compound_state.in_relative_selector,
+            "Nested relative selector"
+        );
+        self.compound_state.relative_selector_found = true;
+
+        for rs in list {
+            // If the inside is unconstrained, we are unconstrained no matter what.
+            if Self::has_warning(&rs.selector, 0, true) {
+                self.compound_state.constrained = false;
+                return false;
+            }
+        }
+        true
     }
 }

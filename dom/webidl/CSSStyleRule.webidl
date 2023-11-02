@@ -21,4 +21,14 @@ interface CSSStyleRule : CSSGroupingRule {
     Element element,
     optional [LegacyNullToEmptyString] DOMString pseudo = "",
     optional boolean includeVisitedStyle = false);
+  [ChromeOnly] sequence<SelectorWarning> getSelectorWarnings();
+};
+
+enum SelectorWarningKind {
+  "UnconstrainedHas",
+};
+
+dictionary SelectorWarning {
+  required unsigned long index;
+  required SelectorWarningKind kind;
 };
