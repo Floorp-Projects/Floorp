@@ -86,7 +86,7 @@ class PerfSpewer {
 
   virtual void saveJitCodeSourceInfo(JSScript* script, JitCode* code,
                                      JS::JitCodeRecord* record,
-                                     AutoLockPerfSpewer& lock) = 0;
+                                     AutoLockPerfSpewer& lock);
 
   void saveDebugInfo(JSScript* script, JitCode* code,
                      JS::JitCodeRecord* profilerRecord,
@@ -126,10 +126,6 @@ class IonPerfSpewer : public PerfSpewer {
   JS::JitTier GetTier() override { return JS::JitTier::Ion; }
   const char* CodeName(unsigned op) override;
 
-  void saveJitCodeSourceInfo(JSScript* script, JitCode* code,
-                             JS::JitCodeRecord* record,
-                             AutoLockPerfSpewer& lock) override;
-
  public:
   void recordInstruction(MacroAssembler& masm, LInstruction* ins);
   void saveProfile(JSContext* cx, JSScript* script, JitCode* code);
@@ -153,10 +149,6 @@ class BaselineInterpreterPerfSpewer : public PerfSpewer {
 class BaselinePerfSpewer : public PerfSpewer {
   JS::JitTier GetTier() override { return JS::JitTier::Baseline; }
   const char* CodeName(unsigned op) override;
-
-  void saveJitCodeSourceInfo(JSScript* script, JitCode* code,
-                             JS::JitCodeRecord* record,
-                             AutoLockPerfSpewer& lock) override;
 
  public:
   void recordInstruction(JSContext* cx, MacroAssembler& masm, jsbytecode* pc,

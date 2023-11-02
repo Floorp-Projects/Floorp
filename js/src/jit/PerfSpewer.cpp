@@ -573,7 +573,7 @@ static void PrintStackValue(JSContext* cx, StackValue* stackVal,
 void BaselinePerfSpewer::recordInstruction(JSContext* cx, MacroAssembler& masm,
                                            jsbytecode* pc,
                                            CompilerFrameInfo& frame) {
-  if (!PerfIREnabled()) {
+  if (!PerfIREnabled() && !PerfSrcEnabled()) {
     return;
   }
 
@@ -622,7 +622,7 @@ void BaselinePerfSpewer::recordInstruction(JSContext* cx, MacroAssembler& masm,
 #endif
 
   if (!opcodes_.emplaceBack(masm.currentOffset(), static_cast<unsigned>(op),
-                            opcodeStr)) {
+                            opcodeStr, pc)) {
     opcodes_.clear();
     AutoLockPerfSpewer lock;
     DisablePerfSpewer(lock);
@@ -820,111 +820,9 @@ void PerfSpewer::saveJitCodeIRInfo(JitCode* code,
 #endif
 }
 
-void BaselinePerfSpewer::saveJitCodeSourceInfo(
-    JSScript* script, JitCode* code, JS::JitCodeRecord* profilerRecord,
-    AutoLockPerfSpewer& lock) {
-  const char* filename = script->filename();
-  if (!filename) {
-    return;
-  }
-
-#ifdef JS_ION_PERF
-  bool perfProfiling = IsPerfProfiling() && FileExists(filename);
-
-  // If we are using perf, we need to know the number of debug entries ahead of
-  // time for the header.
-  if (perfProfiling) {
-    JitDumpDebugRecord debug_record = {};
-    uint64_t n_records = 0;
-
-    for (SrcNoteIterator iter(script->notes(), script->notesEnd());
-         !iter.atEnd(); ++iter) {
-      const auto* const sn = *iter;
-      switch (sn->type()) {
-        case SrcNoteType::SetLine:
-        case SrcNoteType::SetLineColumn:
-        case SrcNoteType::NewLine:
-        case SrcNoteType::NewLineColumn:
-        case SrcNoteType::ColSpan:
-          if (sn->delta() > 0) {
-            n_records++;
-          }
-          break;
-        default:
-          break;
-      }
-    }
-
-    // Nothing to do
-    if (n_records == 0) {
-      return;
-    }
-
-    debug_record.header.id = JIT_CODE_DEBUG_INFO;
-    debug_record.header.total_size =
-        sizeof(debug_record) +
-        n_records * (sizeof(JitDumpDebugEntry) + strlen(filename) + 1);
-
-    debug_record.header.timestamp = GetMonotonicTimestamp();
-    debug_record.code_addr = uint64_t(code->raw());
-    debug_record.nr_entry = n_records;
-
-    WriteToJitDumpFile(&debug_record, sizeof(debug_record), lock);
-  }
-#endif
-
-  uint32_t lineno = script->lineno();
-  JS::LimitedColumnNumberZeroOrigin colno = script->column();
-  uint64_t offset = 0;
-  for (SrcNoteIterator iter(script->notes(), script->notesEnd()); !iter.atEnd();
-       ++iter) {
-    const auto* sn = *iter;
-    offset += sn->delta();
-
-    SrcNoteType type = sn->type();
-    if (type == SrcNoteType::SetLine) {
-      lineno = SrcNote::SetLine::getLine(sn, script->lineno());
-      colno = JS::LimitedColumnNumberZeroOrigin::zero();
-    } else if (type == SrcNoteType::SetLineColumn) {
-      lineno = SrcNote::SetLineColumn::getLine(sn, script->lineno());
-      colno = SrcNote::SetLineColumn::getColumn(sn);
-    } else if (type == SrcNoteType::NewLine) {
-      lineno++;
-      colno = JS::LimitedColumnNumberZeroOrigin::zero();
-    } else if (type == SrcNoteType::NewLineColumn) {
-      lineno++;
-      colno = SrcNote::NewLineColumn::getColumn(sn);
-    } else if (type == SrcNoteType::ColSpan) {
-      colno += SrcNote::ColSpan::getSpan(sn);
-    } else {
-      continue;
-    }
-
-    // Don't add entries that won't change the offset
-    if (sn->delta() <= 0) {
-      continue;
-    }
-
-    if (JS::JitCodeSourceInfo* srcInfo =
-            CreateProfilerSourceEntry(profilerRecord, lock)) {
-      srcInfo->offset = offset;
-      srcInfo->lineno = lineno;
-      srcInfo->colno = colno;
-      srcInfo->filename = JS_smprintf("%s", filename);
-    }
-
-#ifdef JS_ION_PERF
-    if (perfProfiling) {
-      WriteJitDumpDebugEntry(uint64_t(code->raw()) + offset, filename, lineno,
-                             colno, lock);
-    }
-#endif
-  }
-}
-
-void IonPerfSpewer::saveJitCodeSourceInfo(JSScript* script, JitCode* code,
-                                          JS::JitCodeRecord* profilerRecord,
-                                          AutoLockPerfSpewer& lock) {
+void PerfSpewer::saveJitCodeSourceInfo(JSScript* script, JitCode* code,
+                                       JS::JitCodeRecord* profilerRecord,
+                                       AutoLockPerfSpewer& lock) {
   const char* filename = script->filename();
   if (!filename) {
     return;
