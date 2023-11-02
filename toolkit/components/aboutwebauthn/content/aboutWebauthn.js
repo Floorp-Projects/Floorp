@@ -46,6 +46,16 @@ var AboutWebauthnManagerJS = {
         JSON.stringify({ retriesLeft: retries })
       );
       open_pin_required_tab();
+    } else if (data.type == "credential-management-update") {
+      credential_management_in_progress(false);
+      if (data.result.CredentialList) {
+        show_results_banner("success", "about-webauthn-results-success");
+        this.show_credential_list(data.result.CredentialList.credential_list);
+      } else {
+        // DeleteSuccess or UpdateSuccess
+        show_results_banner("success", "about-webauthn-results-success");
+        list_credentials();
+      }
     } else if (data.type == "listen-success") {
       reset_page();
       // Show results
@@ -165,11 +175,67 @@ var AboutWebauthnManagerJS = {
       } else {
         document.getElementById("pin-tab-button").style.display = "none";
       }
+
+      if (
+        data.auth_info.options.credMgmt ||
+        data.auth_info.options.credentialMgmtPreview
+      ) {
+        document.getElementById("credentials-tab-button").style.display =
+          "flex";
+      } else {
+        document.getElementById("credentials-tab-button").style.display =
+          "none";
+      }
     } else {
       // Currently auth-rs doesn't send this, because it filters out ctap2-devices.
       // U2F / CTAP1 tokens can't be managed
       set_info_text("about-webauthn-text-non-ctap2-device");
     }
+  },
+
+  show_credential_list(credential_list) {
+    // We may have temporarily hidden the tab when asking the user for a PIN
+    // so we have to show it again.
+    fake_click_event_for_id("credentials-tab-button");
+    document.getElementById("credential-list-subsection").hidden = false;
+    let table = document.getElementById("credential-list");
+    var empty_table = document.createElement("table");
+    empty_table.id = "credential-list";
+    table.parentNode.replaceChild(empty_table, table);
+    if (!credential_list.length) {
+      document.getElementById("credential-list-empty-label").hidden = false;
+      return;
+    }
+    document.getElementById("credential-list-empty-label").hidden = true;
+    table = document.getElementById("credential-list");
+    credential_list.forEach(rp => {
+      // Add some text to the new cells:
+      let key_text = rp.rp.id;
+      rp.credentials.forEach(cred => {
+        let value_text = cred.user.name;
+        // Create an empty <tr> element and add it to the 1st position of the table:
+        var row = table.insertRow(0);
+        var key_node = document.createTextNode(key_text);
+        var value_node = document.createTextNode(value_text);
+        row.insertCell(0).appendChild(key_node);
+        row.insertCell(1).appendChild(value_node);
+        var delete_button = document.createElement("button");
+        delete_button.classList.add("credentials-button");
+        // TODO: Garbage-can symbol instead? See https://bugzilla.mozilla.org/show_bug.cgi?id=1859727
+        delete_button.setAttribute(
+          "data-l10n-id",
+          "about-webauthn-delete-button"
+        );
+        delete_button.addEventListener("click", function () {
+          credential_management_in_progress(true);
+          let cmd = {
+            CredentialManagement: { DeleteCredential: cred.credential_id },
+          };
+          AboutWebauthnService.runCommand(JSON.stringify(cmd));
+        });
+        row.insertCell(2).appendChild(delete_button);
+      });
+    });
   },
 };
 
@@ -196,6 +262,15 @@ function hide_results_banner() {
   document.getElementById("ctap-listen-div").hidden = true;
 }
 
+function credential_management_in_progress(in_progress) {
+  let buttons = Array.from(
+    document.getElementsByClassName("credentials-button")
+  );
+  buttons.forEach(button => {
+    button.disabled = in_progress;
+  });
+}
+
 function fake_click_event_for_id(id) {
   // Not using document.getElementById(id).click();
   // here, because we have to add additional data, so we don't
@@ -220,6 +295,10 @@ function reset_page() {
   });
 
   sidebar_set_disabled(false);
+
+  // ListCredentials
+  credential_management_in_progress(false);
+  document.getElementById("credential-list-subsection").hidden = true;
 
   // Only display the "please connect a device" - text
   set_info_text("about-webauthn-text-connect-device");
@@ -282,7 +361,14 @@ function change_pin() {
   AboutWebauthnService.runCommand(JSON.stringify(cmd));
 }
 
+function list_credentials() {
+  credential_management_in_progress(true);
+  let cmd = { CredentialManagement: "GetCredentials" };
+  AboutWebauthnService.runCommand(JSON.stringify(cmd));
+}
+
 function cancel_transaction() {
+  credential_management_in_progress(false);
   AboutWebauthnService.cancel(0);
 }
 
@@ -300,6 +386,9 @@ async function onLoad() {
     .getElementById("change-pin-button")
     .addEventListener("click", change_pin);
   document
+    .getElementById("list-credentials-button")
+    .addEventListener("click", list_credentials);
+  document
     .getElementById("new-pin")
     .addEventListener("input", check_pin_repeat_is_correct);
   document
@@ -314,6 +403,9 @@ async function onLoad() {
   document
     .getElementById("pin-tab-button")
     .addEventListener("click", open_pin_tab);
+  document
+    .getElementById("credentials-tab-button")
+    .addEventListener("click", open_credentials_tab);
   document
     .getElementById("send-pin-button")
     .addEventListener("click", send_pin);
@@ -356,6 +448,9 @@ function open_info_tab(evt) {
 }
 function open_pin_tab(evt) {
   open_tab(evt, "set-change-pin-section");
+}
+function open_credentials_tab(evt) {
+  open_tab(evt, "credential-management-section");
 }
 function open_pin_required_tab() {
   // Remove any old value we might have had
