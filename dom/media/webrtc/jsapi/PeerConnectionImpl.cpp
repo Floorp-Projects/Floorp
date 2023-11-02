@@ -1117,8 +1117,21 @@ PeerConnectionImpl::CreateDataChannel(
   MOZ_ASSERT(aRetval);
 
   RefPtr<DataChannel> dataChannel;
-  DataChannelConnection::Type theType =
-      static_cast<DataChannelConnection::Type>(aType);
+  DataChannelReliabilityPolicy prPolicy;
+  switch (aType) {
+    case IPeerConnection::kDataChannelReliable:
+      prPolicy = DataChannelReliabilityPolicy::Reliable;
+      break;
+    case IPeerConnection::kDataChannelPartialReliableRexmit:
+      prPolicy = DataChannelReliabilityPolicy::LimitedRetransmissions;
+      break;
+    case IPeerConnection::kDataChannelPartialReliableTimed:
+      prPolicy = DataChannelReliabilityPolicy::LimitedLifetime;
+      break;
+    default:
+      MOZ_ASSERT(false);
+      return NS_ERROR_FAILURE;
+  }
 
   nsresult rv = EnsureDataConnection(
       WEBRTC_DATACHANNEL_PORT_DEFAULT, WEBRTC_DATACHANNEL_STREAMS_DEFAULT,
@@ -1127,12 +1140,13 @@ PeerConnectionImpl::CreateDataChannel(
     return rv;
   }
   dataChannel = mDataConnection->Open(
-      NS_ConvertUTF16toUTF8(aLabel), NS_ConvertUTF16toUTF8(aProtocol), theType,
+      NS_ConvertUTF16toUTF8(aLabel), NS_ConvertUTF16toUTF8(aProtocol), prPolicy,
       ordered,
-      aType == DataChannelConnection::PARTIAL_RELIABLE_REXMIT
+      prPolicy == DataChannelReliabilityPolicy::LimitedRetransmissions
           ? aMaxNum
-          : (aType == DataChannelConnection::PARTIAL_RELIABLE_TIMED ? aMaxTime
-                                                                    : 0),
+          : (prPolicy == DataChannelReliabilityPolicy::LimitedLifetime
+                 ? aMaxTime
+                 : 0),
       nullptr, nullptr, aExternalNegotiated, aStream);
   NS_ENSURE_TRUE(dataChannel, NS_ERROR_NOT_AVAILABLE);
 
