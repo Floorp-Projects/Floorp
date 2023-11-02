@@ -802,13 +802,6 @@ export class TranslationsParent extends JSWindowActorParent {
 
   async receiveMessage({ name, data }) {
     switch (name) {
-      case "Translations:GetTranslationsEnginePayload": {
-        const { fromLanguage, toLanguage } = data;
-        return TranslationsParent.getTranslationsEnginePayload(
-          fromLanguage,
-          toLanguage
-        );
-      }
       case "Translations:GetLanguageIdEnginePayload": {
         const [modelBuffer, wasmBuffer] = await Promise.all([
           TranslationsParent.#getLanguageIdModelArrayBuffer(),
@@ -820,9 +813,6 @@ export class TranslationsParent extends JSWindowActorParent {
           mockedConfidence: TranslationsParent.#mockedLanguageIdConfidence,
           mockedLangTag: TranslationsParent.#mockedLangTag,
         };
-      }
-      case "Translations:GetSupportedLanguages": {
-        return TranslationsParent.getSupportedLanguages();
       }
       case "Translations:ReportLangTags": {
         const { documentElementLang, href } = data;
@@ -855,9 +845,6 @@ export class TranslationsParent extends JSWindowActorParent {
           this.maybeOfferTranslations(detectedLanguages);
         }
         return undefined;
-      }
-      case "Translations:IsTranslationsEngineSupported": {
-        return TranslationsParent.getIsTranslationsEngineSupported();
       }
       case "Translations:RequestPort": {
         const { requestedTranslationPair } = this.languageState;
