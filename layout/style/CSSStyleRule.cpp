@@ -10,7 +10,6 @@
 #include "mozilla/DeclarationBlock.h"
 #include "mozilla/PseudoStyleType.h"
 #include "mozilla/ServoBindings.h"
-#include "mozilla/dom/CSSStyleRuleBinding.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "nsCSSPseudoElements.h"
 
@@ -291,6 +290,26 @@ bool CSSStyleRule::SelectorMatchesElement(uint32_t aSelectorIndex,
 
 NotNull<DeclarationBlock*> CSSStyleRule::GetDeclarationBlock() const {
   return WrapNotNull(mDecls.mDecls);
+}
+
+SelectorWarningKind ToWebIDLSelectorWarningKind(
+    StyleSelectorWarningKind aKind) {
+  switch (aKind) {
+    case StyleSelectorWarningKind::UnconstraintedRelativeSelector:
+      return SelectorWarningKind::UnconstrainedHas;
+  }
+  MOZ_ASSERT_UNREACHABLE("Unhandled selector warning kind");
+}
+
+void CSSStyleRule::GetSelectorWarnings(
+    nsTArray<SelectorWarning>& aResult) const {
+  nsTArray<StyleSelectorWarningData> result;
+  Servo_GetSelectorWarnings(mRawRule, &result);
+  for (const auto& warning : result) {
+    auto& entry = *aResult.AppendElement();
+    entry.mIndex = warning.index;
+    entry.mKind = ToWebIDLSelectorWarningKind(warning.kind);
+  }
 }
 
 /* virtual */

@@ -30,7 +30,7 @@ use style::custom_properties::ComputedCustomProperties;
 use style::data::{self, ElementStyles};
 use style::dom::{ShowSubtreeData, TDocument, TElement, TNode};
 use style::driver;
-use style::error_reporting::ParseErrorReporter;
+use style::error_reporting::{ParseErrorReporter, SelectorWarningKind};
 use style::font_face::{self, FontFaceSourceFormat, FontFaceSourceListComponent, Source};
 use style::gecko::arc_types::{
     LockedCounterStyleRule, LockedCssRules, LockedDeclarationBlock, LockedFontFaceRule,
@@ -8753,4 +8753,29 @@ pub extern "C" fn Servo_GetRegisteredCustomProperties(
                 })
         )
     }
+}
+
+#[repr(C)]
+pub struct SelectorWarningData {
+    /// Index to the selector generating the warning.
+    pub index: usize,
+    /// Kind of the warning.
+    pub kind: SelectorWarningKind,
+}
+
+#[no_mangle]
+pub extern "C" fn Servo_GetSelectorWarnings(
+    rule: &LockedStyleRule,
+    warnings: &mut ThinVec<SelectorWarningData>,
+) {
+    read_locked_arc(rule, |r|
+        for (i, selector) in r.selectors.slice().iter().enumerate() {
+            for k in SelectorWarningKind::from_selector(selector) {
+                warnings.push(SelectorWarningData {
+                    index: i,
+                    kind: k,
+                });
+            }
+        }
+    );
 }

@@ -40,3 +40,5 @@ support-files = ["test_fontVariationsAPI.css"]
 ["test_visited_style.html"]
 
 ["test_getBlockLineCounts.html"]
+
+["test_getSelectorWarnings.html"]

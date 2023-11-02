@@ -11,6 +11,7 @@
 #include "mozilla/ServoBindingTypes.h"
 #include "mozilla/NotNull.h"
 #include "mozilla/WeakPtr.h"
+#include "mozilla/dom/CSSStyleRuleBinding.h"
 
 #include "nsDOMCSSDeclaration.h"
 
@@ -74,6 +75,7 @@ class CSSStyleRule final : public css::GroupRule, public SupportsWeakPtr {
                               const nsAString& aPseudo,
                               bool aRelevantLinkVisited);
   NotNull<DeclarationBlock*> GetDeclarationBlock() const;
+  void GetSelectorWarnings(nsTArray<SelectorWarning>& aResult) const;
 
   // WebIDL interface
   StyleCssRuleType Type() const final;

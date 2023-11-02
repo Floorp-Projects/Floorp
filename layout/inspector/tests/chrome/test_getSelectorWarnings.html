@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css"/>
+<style id="test"></style>
+<script>
+const sheet = test.sheet;
+
+function unconstrainedHas(index) {
+  return { index: index, kind: "UnconstrainedHas" };
+}
+
+function testRule(rule, expected) {
+  const index = sheet.insertRule(rule);
+  const warnings = sheet.rules[index].getSelectorWarnings();
+  is(warnings.length, expected.length, "Got expected number of warnings");
+  for (let i = 0; i < expected.length; i++) {
+    is(warnings[i].index, expected[i].index, "Warning is generated for expected index");
+    is(warnings[i].kind, expected[i].kind, "Warning kind is as expected");
+  }
+  sheet.deleteRule(index);
+}
+
+// No selector to check.
+testRule(".foo {}", []);
+// Fully constrained `:has`
+testRule(".bar:has(.foo), :is(#bar):has(.foo) {}", []);
+// Unconstrained `:has`: Selector around it is unconstrained
+testRule(":has(.foo) {}", [unconstrainedHas(0)]);
+testRule(":has(.foo) .bar {}", [unconstrainedHas(0)]);
+testRule(".bar:has(.foo), :has(.foo) {}", [unconstrainedHas(1)]);
+testRule("*:has(.foo), *|*:has(.foo) {}", [unconstrainedHas(0), unconstrainedHas(1)]);
+testRule(":is(.bar *):has(.foo), :is(.bar):has(.foo), :is(:where(.bar ~ *)):has(.foo) {}", [unconstrainedHas(0), unconstrainedHas(2)]);
+testRule(":is(.bar *):has(.foo), :is(.bar):has(.foo), :is(:where(.bar ~ *)):has(.foo) {}", [unconstrainedHas(0), unconstrainedHas(2)]);
+testRule(":is(.bar, *):has(.foo) {}", [unconstrainedHas(0)]);
+testRule(":is(:has(bar) *):has(.foo) {}", [unconstrainedHas(0)]);
+// Unconstrained `:has`: Selector inside it is unconstrained
+testRule(".bar:has(*) {}", [unconstrainedHas(0)]);
+testRule(".bar:has(* .foo), .bar:has(:is(*) .foo) {}", [unconstrainedHas(0), unconstrainedHas(1)]);
+testRule(".bar:has(:is(* .bar) .foo), .bar:has(:is(:where(* .baz) .bar) .foo) {}", [unconstrainedHas(0), unconstrainedHas(1)]);
+testRule(".bar:has(:is(*, .bar) .foo) {}", [unconstrainedHas(0)]);
+testRule(":is(:has(*) .bar):has(.foo) {}", [unconstrainedHas(0)]);
+testRule(":is(:has(*)):has(.foo) {}", [unconstrainedHas(0)]);
+</script>
