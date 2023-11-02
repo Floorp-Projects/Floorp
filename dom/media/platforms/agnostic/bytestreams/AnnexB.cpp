@@ -364,40 +364,6 @@ static Result<mozilla::Ok, nsresult> ParseNALUnits(ByteWriter<BigEndian>& aBw,
   return Ok();
 }
 
-static Result<already_AddRefed<MediaByteBuffer>, nsresult> RetrieveExtraData(
-    const nsTArray<uint8_t>& aAvccBytes) {
-  MOZ_ASSERT(!aAvccBytes.IsEmpty());
-
-  BufferReader reader(aAvccBytes);
-
-  // The first part is sps.
-  uint32_t spsSize;
-  MOZ_TRY_VAR(spsSize, reader.ReadU32());
-  Span<const uint8_t> spsData;
-  MOZ_TRY_VAR(spsData,
-              reader.ReadSpan<const uint8_t>(static_cast<size_t>(spsSize)));
-
-  // The second part is pps.
-  uint32_t ppsSize;
-  MOZ_TRY_VAR(ppsSize, reader.ReadU32());
-  Span<const uint8_t> ppsData;
-  MOZ_TRY_VAR(ppsData,
-              reader.ReadSpan<const uint8_t>(static_cast<size_t>(ppsSize)));
-
-  // Ensure we have profile, constraints and level needed to create the extra
-  // data.
-  if (spsData.Length() < 4) {
-    return Err(NS_ERROR_NOT_AVAILABLE);
-  }
-
-  // Create an extra data
-  auto extraData = MakeRefPtr<MediaByteBuffer>();
-  H264::WriteExtraData(extraData, spsData[1], spsData[2], spsData[3], spsData,
-                       ppsData);
-  MOZ_ASSERT(extraData);
-  return extraData.forget();
-}
-
 bool AnnexB::ConvertSampleToAVCC(mozilla::MediaRawData* aSample,
                                  const RefPtr<MediaByteBuffer>& aAVCCHeader) {
   if (IsAVCC(aSample)) {
@@ -415,14 +381,6 @@ bool AnnexB::ConvertSampleToAVCC(mozilla::MediaRawData* aSample,
   if (ParseNALUnits(writer, reader).isErr()) {
     return false;
   }
-
-  RefPtr<MediaByteBuffer> parsedExtraData;
-  if (!nalu.IsEmpty()) {
-    if (auto r = RetrieveExtraData(nalu); r.isOk()) {
-      parsedExtraData = r.unwrap();
-    }
-  }
-
   UniquePtr<MediaRawDataWriter> samplewriter(aSample->CreateWriter());
   if (!samplewriter->Replace(nalu.Elements(), nalu.Length())) {
     return false;
@@ -430,11 +388,6 @@ bool AnnexB::ConvertSampleToAVCC(mozilla::MediaRawData* aSample,
 
   if (aAVCCHeader) {
     aSample->mExtraData = aAVCCHeader;
-    return true;
-  }
-
-  if (parsedExtraData) {
-    aSample->mExtraData = parsedExtraData;
     return true;
   }
 
