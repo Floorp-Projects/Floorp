@@ -27,7 +27,6 @@
 #include "mozilla/IntegerRange.h"
 #include "mozilla/Unused.h"
 #include "mozilla/PodOperations.h"
-#include "mozilla/dom/PerformanceMainThread.h"
 
 #include "nsCOMPtr.h"
 #include "nsBlockFrame.h"

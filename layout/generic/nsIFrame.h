@@ -5582,8 +5582,6 @@ class MOZ_HEAP_CLASS WeakFrame {
   nsIFrame* operator->() { return mFrame; }
   operator nsIFrame*() { return mFrame; }
 
-  bool operator==(nsIFrame* const aOther) const { return mFrame == aOther; }
-
   void Clear(mozilla::PresShell* aPresShell);
 
   bool IsAlive() const { return !!mFrame; }

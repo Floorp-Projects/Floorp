@@ -11,8 +11,6 @@
 #include "Units.h"
 #include "mozilla/dom/FontFaceSet.h"
 #include "mozilla/dom/ElementBinding.h"
-#include "mozilla/dom/LargestContentfulPaint.h"
-#include "mozilla/dom/PerformanceMainThread.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/AutoRestore.h"
@@ -11841,13 +11839,6 @@ void PresShell::EndPaint() {
       }
       return CallState::Continue;
     });
-
-    if (nsPresContext* presContext = GetPresContext()) {
-      if (PerformanceMainThread* perf =
-              presContext->GetPerformanceMainThread()) {
-        perf->FinalizeLCPEntriesForText();
-      }
-    }
   }
 }
 

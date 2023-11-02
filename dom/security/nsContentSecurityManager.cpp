@@ -1758,7 +1758,6 @@ void nsContentSecurityManager::GetSerializedOrigin(
     entry->GetPrincipal(getter_AddRefs(currentOrigin));
 
     if (!currentOrigin->Equals(lastOrigin) && !lastOrigin->Equals(aOrigin)) {
-      aSerializedOrigin.AssignLiteral("null");
       return;
     }
     lastOrigin = currentOrigin;
@@ -1775,8 +1774,7 @@ void nsContentSecurityManager::GetSerializedOrigin(
 
   // Same as above, redirectChain doesn't contain the current redirect,
   // so we have to do the check one last time here.
-  if (!lastOrigin->Equals(aResourceOrigin) && !lastOrigin->Equals(aOrigin)) {
-    aSerializedOrigin.AssignLiteral("null");
+  if (lastOrigin->Equals(aResourceOrigin) && !lastOrigin->Equals(aOrigin)) {
     return;
   }
 

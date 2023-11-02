@@ -40,7 +40,6 @@
 #include "mozilla/dom/NotifyPaintEvent.h"
 #include "mozilla/dom/PageTransitionEvent.h"
 #include "mozilla/dom/PerformanceEventTiming.h"
-#include "mozilla/dom/PerformanceMainThread.h"
 #include "mozilla/dom/PointerEvent.h"
 #include "mozilla/dom/RootedDictionary.h"
 #include "mozilla/dom/ScrollAreaEvent.h"
@@ -839,14 +838,6 @@ nsresult EventDispatcher::Dispatch(EventTarget* aTarget,
   if (aPresContext && !aPresContext->IsPrintingOrPrintPreview()) {
     eventTimingEntry =
         PerformanceEventTiming::TryGenerateEventTiming(target, aEvent);
-
-    if (aEvent->IsTrusted() && aEvent->mMessage == eScroll) {
-      if (auto* perf = aPresContext->GetPerformanceMainThread()) {
-        if (!perf->HasDispatchedScrollEvent()) {
-          perf->SetHasDispatchedScrollEvent();
-        }
-      }
-    }
   }
 
   bool retargeted = false;

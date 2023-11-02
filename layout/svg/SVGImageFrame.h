@@ -118,8 +118,6 @@ class SVGImageFrame final : public nsIFrame,
  private:
   bool IgnoreHitTest() const;
 
-  already_AddRefed<imgIRequest> GetCurrentRequest() const;
-
   gfx::Matrix GetRasterImageTransform(int32_t aNativeWidth,
                                       int32_t aNativeHeight);
   gfx::Matrix GetVectorImageTransform();

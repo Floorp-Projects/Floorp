@@ -5375,8 +5375,7 @@ HttpBaseChannel::TimingAllowCheck(nsIPrincipal* aOrigin, bool* _retval) {
                                                 serializedOrigin, mLoadInfo);
 
   // All redirects are same origin
-  if (sameOrigin && (!serializedOrigin.IsEmpty() &&
-                     !serializedOrigin.EqualsLiteral("null"))) {
+  if (sameOrigin && !serializedOrigin.IsEmpty()) {
     *_retval = true;
     return NS_OK;
   }

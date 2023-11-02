@@ -28,7 +28,6 @@
 #include "mozilla/dom/ServiceWorkerRegistration.h"
 #include "mozilla/dom/SVGElement.h"
 #include "mozilla/dom/TouchEvent.h"
-#include "mozilla/dom/PerformanceMainThread.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/ShapeUtils.h"
@@ -1221,7 +1220,7 @@ void nsDisplayListBuilder::LeavePresShell(const nsIFrame* aReferenceFrame,
       }
     }
     nsRootPresContext* rootPresContext = pc->GetRootPresContext();
-    if (!pc->HasStoppedGeneratingLCP() && rootPresContext) {
+    if (!pc->HadFirstContentfulPaint() && rootPresContext) {
       if (!CurrentPresShellState()->mIsBackgroundOnly) {
         if (pc->HasEverBuiltInvisibleText() ||
             DisplayListIsContentful(this, aPaintedContents)) {
@@ -3430,17 +3429,6 @@ bool nsDisplayBackgroundImage::CreateWebRenderCommands(
   if (result == ImgDrawResult::NOT_SUPPORTED) {
     return false;
   }
-
-  if (nsIContent* content = StyleFrame()->GetContent()) {
-    if (imgRequestProxy* requestProxy = mBackgroundStyle->StyleBackground()
-                                            ->mImage.mLayers[mLayer]
-                                            .mImage.GetImageRequest()) {
-      // LCP don't consider gradient backgrounds.
-      LCPHelpers::FinalizeLCPEntryForImage(content->AsElement(), requestProxy,
-                                           mBounds - ToReferenceFrame());
-    }
-  }
-
   return true;
 }
 
@@ -7495,10 +7483,6 @@ void nsDisplayText::Paint(nsDisplayListBuilder* aBuilder, gfxContext* aCtx) {
   // the WebRender fallback painting path, and we don't want to issue
   // recorded commands that are dependent on the visible/building rect.
   RenderToContext(aCtx, aBuilder, GetPaintRect(aBuilder, aCtx));
-
-  auto* textFrame = static_cast<nsTextFrame*>(mFrame);
-  LCPTextFrameHelper::MaybeUnionTextFrame(textFrame,
-                                          mBounds - ToReferenceFrame());
 }
 
 bool nsDisplayText::CreateWebRenderCommands(
@@ -7583,8 +7567,6 @@ bool nsDisplayText::CreateWebRenderCommands(
 
   gfxContext* textDrawer = aBuilder.GetTextContext(aResources, aSc, aManager,
                                                    this, bounds, deviceOffset);
-
-  LCPTextFrameHelper::MaybeUnionTextFrame(f, bounds - ToReferenceFrame());
 
   aBuilder.StartGroup(this);
 
