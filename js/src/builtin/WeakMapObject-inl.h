@@ -68,6 +68,24 @@ static MOZ_ALWAYS_INLINE bool WeakCollectionPutEntryInternal(
   return true;
 }
 
+// https://tc39.es/ecma262/#sec-canbeheldweakly
+static MOZ_ALWAYS_INLINE bool CanBeHeldWeakly(JSContext* cx,
+                                              HandleValue value) {
+  // 1. If v is an Object, return true.
+  if (value.isObject()) {
+    return true;
+  }
+
+  // 2. If v is a Symbol and KeyForSymbol(v) is undefined, return true.
+  if (value.isSymbol() &&
+      value.toSymbol()->code() != JS::SymbolCode::InSymbolRegistry) {
+    return true;
+  }
+
+  // 3. Return false.
+  return false;
+}
+
 }  // namespace js
 
 #endif /* builtin_WeakMapObject_inl_h */
