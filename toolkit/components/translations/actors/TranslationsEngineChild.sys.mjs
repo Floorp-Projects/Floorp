@@ -27,6 +27,14 @@ export class TranslationsEngineChild extends JSWindowActorChild {
     this.#exportFunctions();
   }
 
+  handleEvent(event) {
+    switch (event.type) {
+      case "DOMContentLoaded":
+        this.sendAsyncMessage("TranslationsEngine:Ready");
+        break;
+    }
+  }
+
   // eslint-disable-next-line consistent-return
   async receiveMessage({ name, data }) {
     switch (name) {
