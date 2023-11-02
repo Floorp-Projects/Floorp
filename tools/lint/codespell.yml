@@ -7,6 +7,8 @@ codespell:
         - browser/components/newtab/docs/
         - browser/components/newtab/content-src/asrouter/docs/
         - browser/components/places/docs/
+        - browser/components/search/docs/
+        - browser/components/search/schema/
         - browser/components/touchbar/docs/
         - browser/components/urlbar/docs/
         - browser/extensions/formautofill/locales/en-US/
@@ -47,6 +49,7 @@ codespell:
         - toolkit/components/extensions/docs/
         - toolkit/components/normandy/docs/
         - toolkit/components/search/docs/
+        - toolkit/components/search/schema/
         - toolkit/components/telemetry/docs/
         - toolkit/crashreporter/docs/
         - toolkit/docs/

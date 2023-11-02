@@ -98,7 +98,7 @@
         },
         "maxVersion": {
           "type": "string",
-          "title": "Maxium Version",
+          "title": "Maximum Version",
           "pattern": "^[0-9a-z.]{0,20}$",
           "description": "The maximum version this applies to (less-than comparison)"
         }
@@ -169,7 +169,7 @@
     "orderHint": {
       "type": "number",
       "title": "Order Hint",
-      "description": "A hint to the display order (higher is a higer rank)"
+      "description": "A hint to the display order (higher is a higher rank)"
     },
     "searchUrlCodes": {
       "type": "array",
