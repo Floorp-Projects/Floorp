@@ -80,7 +80,6 @@
 .tabbrowser-tab {
   appearance: none;
   background-color: transparent;
-  color: inherit;
   color-scheme: unset;
   border-radius: 0;
   border-width: 0;
@@ -428,6 +427,10 @@
   margin: 0;
 }
 
+.tabbrowser-tab:is(:not([visuallyselected], [multiselected]), :-moz-lwtheme) {
+  color: inherit;
+}
+
 .tab-background {
   border-radius: var(--tab-border-radius);
   margin-block: var(--tab-block-margin);
@@ -454,7 +457,7 @@
 }
 
 #TabsToolbar #firefox-view-button[open] > .toolbarbutton-icon,
-.tabbrowser-tab:is([visuallyselected], [multiselected]) {
+.tabbrowser-tab:is([selected], [multiselected]) {
   color: var(--tab-selected-textcolor);
   color-scheme: var(--tab-selected-color-scheme);
 }
