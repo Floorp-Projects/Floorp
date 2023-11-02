@@ -271,8 +271,7 @@ MapIteratorObject* MapIteratorObject::create(JSContext* cx, HandleObject obj,
       RoundUp(sizeof(ValueMap::Range), gc::CellAlignBytes);
 
   Nursery& nursery = cx->nursery();
-  void* buffer =
-      nursery.allocateBufferSameLocation(iterobj, BufferSize, js::MallocArena);
+  void* buffer = nursery.allocateBufferSameLocation(iterobj, BufferSize);
   if (!buffer) {
     // Retry with |iterobj| and |buffer| forcibly tenured.
     iterobj = NewTenuredObjectWithGivenProto<MapIteratorObject>(cx, proto);
@@ -282,8 +281,7 @@ MapIteratorObject* MapIteratorObject::create(JSContext* cx, HandleObject obj,
 
     iterobj->init(mapobj, kind);
 
-    buffer = nursery.allocateBufferSameLocation(iterobj, BufferSize,
-                                                js::MallocArena);
+    buffer = nursery.allocateBufferSameLocation(iterobj, BufferSize);
     if (!buffer) {
       ReportOutOfMemory(cx);
       return nullptr;
@@ -1137,8 +1135,7 @@ SetIteratorObject* SetIteratorObject::create(JSContext* cx, HandleObject obj,
       RoundUp(sizeof(ValueSet::Range), gc::CellAlignBytes);
 
   Nursery& nursery = cx->nursery();
-  void* buffer =
-      nursery.allocateBufferSameLocation(iterobj, BufferSize, js::MallocArena);
+  void* buffer = nursery.allocateBufferSameLocation(iterobj, BufferSize);
   if (!buffer) {
     // Retry with |iterobj| and |buffer| forcibly tenured.
     iterobj = NewTenuredObjectWithGivenProto<SetIteratorObject>(cx, proto);
@@ -1148,8 +1145,7 @@ SetIteratorObject* SetIteratorObject::create(JSContext* cx, HandleObject obj,
 
     iterobj->init(setobj, kind);
 
-    buffer = nursery.allocateBufferSameLocation(iterobj, BufferSize,
-                                                js::MallocArena);
+    buffer = nursery.allocateBufferSameLocation(iterobj, BufferSize);
     if (!buffer) {
       ReportOutOfMemory(cx);
       return nullptr;

@@ -123,79 +123,6 @@ static MOZ_ALWAYS_INLINE JSLinearString* TryEmptyOrStaticString(
 
 } /* namespace js */
 
-template <typename CharT>
-JSString::OwnedChars<CharT>::OwnedChars(CharT* chars, size_t length,
-                                        bool isMalloced, bool needsFree)
-    : needsFree_(chars && needsFree), isMalloced_(chars && isMalloced) {
-  // Set needsFree_ and isMalloced_ to false if chars is nullptr because Span
-  // silently turns nullptrs into small bogus integer values for Rust
-  // compatibility. This prevents passing bogus pointers into free() or
-  // registerMallocedBuffer().
-  MOZ_ASSERT_IF(length == 0,
-                chars == nullptr);  // Disallow zero-length strings.
-  MOZ_ASSERT_IF(needsFree_, isMalloced_);
-  if (chars) {
-    MOZ_ASSERT(isMalloced_ == !js::TlsContext.get()->nursery().isInside(chars));
-  } else {
-    MOZ_ASSERT(!isMalloced_);
-    MOZ_ASSERT(!needsFree_);
-  }
-
-  chars_ = mozilla::Span<CharT>(chars, chars ? length : 0);
-}
-
-template <typename CharT>
-JSString::OwnedChars<CharT>::OwnedChars(JSString::OwnedChars<CharT>&& other)
-    : OwnedChars(other.chars_.Length() ? other.chars_.data() : nullptr,
-                 other.chars_.Length(), other.needsFree_, other.isMalloced_) {
-  // Span returns an invalid but nonzero pointer when constructed with
-  // nullptr, so test the length and normalize to nullptr, above. That means
-  // this class cannot store a zero-length non-null pointer. Assert in the
-  // CharT* constructor if anything tries to.
-
-  // Do not release until now so that other.needsFree_ is valid during
-  // construction.
-  other.release();
-}
-
-template <typename CharT>
-CharT* JSString::OwnedChars<CharT>::release() {
-  needsFree_ = false;
-  return chars_.data();
-}
-
-template <typename CharT>
-void JSString::OwnedChars<CharT>::reset() {
-  if (needsFree_) {
-    js_free(chars_.data());
-    needsFree_ = false;
-  }
-}
-
-template <typename CharT>
-void JSString::OwnedChars<CharT>::ensureNonNursery() {
-  if (isMalloced() || !data()) {
-    return;
-  }
-
-  js::AutoEnterOOMUnsafeRegion oomUnsafe;
-  CharT* oldPtr = data();
-  size_t length = chars_.Length();
-  CharT* ptr = js_pod_arena_malloc<CharT>(js::StringBufferArena, length);
-  if (!ptr) {
-    oomUnsafe.crash(chars_.size(), "moving nursery buffer to heap");
-  }
-  mozilla::PodCopy(ptr, oldPtr, length);
-  chars_ = mozilla::Span<CharT>(ptr, length);
-  isMalloced_ = needsFree_ = true;
-}
-
-template <typename CharT>
-JSString::OwnedChars<CharT>::OwnedChars(
-    js::UniquePtr<CharT[], JS::FreePolicy>&& chars, size_t length,
-    bool isMalloced)
-    : OwnedChars(chars.release(), length, isMalloced, true) {}
-
 MOZ_ALWAYS_INLINE bool JSString::validateLength(JSContext* maybecx,
                                                 size_t length) {
   return validateLengthInternal<js::CanGC>(maybecx, length);
@@ -222,57 +149,6 @@ MOZ_ALWAYS_INLINE const char16_t* JSString::nonInlineCharsRaw() const {
 template <>
 MOZ_ALWAYS_INLINE const JS::Latin1Char* JSString::nonInlineCharsRaw() const {
   return d.s.u2.nonInlineCharsLatin1;
-}
-
-bool JSString::ownsMallocedChars() const {
-  if (!hasOutOfLineChars()) {
-    return false;
-  }
-
-  js::gc::StoreBuffer* sb = storeBuffer();
-  if (!sb) {
-    // Tenured strings always own out-of-line chars.
-    return true;
-  }
-
-  // Return whether the chars are malloced. Note: this allows the data to be in
-  // a different nursery chunk than the Cell itself, at the performance cost of
-  // iterating over all chunks.
-  return !sb->nursery().isInside(asLinear().nonInlineCharsRaw());
-}
-
-template <typename CharT>
-inline size_t JSLinearString::maybeMallocCharsOnPromotion(
-    js::Nursery* nursery) {
-  const void** chars;
-  if constexpr (std::is_same_v<CharT, char16_t>) {
-    chars = reinterpret_cast<const void**>(&d.s.u2.nonInlineCharsTwoByte);
-  } else {
-    chars = reinterpret_cast<const void**>(&d.s.u2.nonInlineCharsLatin1);
-  }
-
-  size_t nbytes = length() * sizeof(CharT);
-  if (nursery->maybeMoveBufferOnPromotion(const_cast<void**>(chars), this,
-                                          nbytes, js::MemoryUse::StringContents,
-                                          js::StringBufferArena) ==
-      js::Nursery::BufferMoved) {
-    return nbytes;
-  }
-
-  return 0;
-}
-
-inline size_t JSLinearString::allocSize() const {
-  MOZ_ASSERT(ownsMallocedChars());
-
-  size_t charSize =
-      hasLatin1Chars() ? sizeof(JS::Latin1Char) : sizeof(char16_t);
-  size_t count = isExtensible() ? asExtensible().capacity() : length();
-  return count * charSize;
-}
-
-inline size_t JSString::allocSize() const {
-  return ownsMallocedChars() ? asLinear().allocSize() : 0;
 }
 
 inline JSRope::JSRope(JSString* left, JSString* right, size_t length) {
@@ -374,26 +250,6 @@ inline JSLinearString::JSLinearString(const JS::Latin1Char* chars,
   d.s.u2.nonInlineCharsLatin1 = chars;
 }
 
-template <typename CharT>
-inline JSLinearString::JSLinearString(
-    JS::MutableHandle<JSString::OwnedChars<CharT>> chars) {
-  // Note that it is possible that the chars may have been moved from the
-  // nursery to the malloc heap when allocating the Cell that this constructor
-  // is initializing.
-  MOZ_ASSERT(chars.data());
-  checkStringCharsArena(chars.data());
-  if (isTenured()) {
-    chars.ensureNonNursery();
-  }
-  if constexpr (std::is_same_v<CharT, char16_t>) {
-    setLengthAndFlags(chars.length(), INIT_LINEAR_FLAGS);
-    d.s.u2.nonInlineCharsTwoByte = chars.data();
-  } else {
-    setLengthAndFlags(chars.length(), INIT_LINEAR_FLAGS | LATIN1_CHARS_BIT);
-    d.s.u2.nonInlineCharsLatin1 = chars.data();
-  }
-}
-
 void JSLinearString::disownCharsBecauseError() {
   setLengthAndFlags(0, INIT_LINEAR_FLAGS | LATIN1_CHARS_BIT);
   d.s.u2.nonInlineCharsLatin1 = nullptr;
@@ -401,22 +257,22 @@ void JSLinearString::disownCharsBecauseError() {
 
 template <js::AllowGC allowGC, typename CharT>
 MOZ_ALWAYS_INLINE JSLinearString* JSLinearString::new_(
-    JSContext* cx, JS::MutableHandle<JSString::OwnedChars<CharT>> chars,
+    JSContext* cx, js::UniquePtr<CharT[], JS::FreePolicy> chars, size_t length,
     js::gc::Heap heap) {
-  if (MOZ_UNLIKELY(!validateLengthInternal<allowGC>(cx, chars.length()))) {
+  if (MOZ_UNLIKELY(!validateLengthInternal<allowGC>(cx, length))) {
     return nullptr;
   }
 
-  return newValidLength<allowGC>(cx, chars, heap);
+  return newValidLength<allowGC>(cx, std::move(chars), length, heap);
 }
 
 template <js::AllowGC allowGC, typename CharT>
 MOZ_ALWAYS_INLINE JSLinearString* JSLinearString::newValidLength(
-    JSContext* cx, JS::MutableHandle<JSString::OwnedChars<CharT>> chars,
+    JSContext* cx, js::UniquePtr<CharT[], JS::FreePolicy> chars, size_t length,
     js::gc::Heap heap) {
   MOZ_ASSERT(!cx->zone()->isAtomsZone());
-  size_t length = chars.length();
-  JSLinearString* str = cx->newCell<JSLinearString, allowGC>(heap, chars);
+  JSLinearString* str =
+      cx->newCell<JSLinearString, allowGC>(heap, chars.get(), length);
   if (!str) {
     return nullptr;
   }
@@ -425,8 +281,8 @@ MOZ_ALWAYS_INLINE JSLinearString* JSLinearString::newValidLength(
     // If the following registration fails, the string is partially initialized
     // and must be made valid, or its finalizer may attempt to free
     // uninitialized memory.
-    if (chars.isMalloced() && !cx->nursery().registerMallocedBuffer(
-                                  chars.data(), length * sizeof(CharT))) {
+    if (!cx->runtime()->gc.nursery().registerMallocedBuffer(
+            chars.get(), length * sizeof(CharT))) {
       str->disownCharsBecauseError();
       if (allowGC) {
         ReportOutOfMemory(cx);
@@ -434,12 +290,12 @@ MOZ_ALWAYS_INLINE JSLinearString* JSLinearString::newValidLength(
       return nullptr;
     }
   } else {
-    cx->zone()->addCellMemory(str, chars.size(), js::MemoryUse::StringContents);
+    // This can happen off the main thread for the atoms zone.
+    cx->zone()->addCellMemory(str, length * sizeof(CharT),
+                              js::MemoryUse::StringContents);
   }
 
-  // Either the tenured Cell or the nursery's registry owns the chars now.
-  chars.release();
-
+  (void)chars.release();
   return str;
 }
 
@@ -476,21 +332,6 @@ inline js::PropertyName* JSLinearString::toPropertyName(JSContext* cx) {
     return nullptr;
   }
   return atom->asPropertyName();
-}
-
-bool JSLinearString::hasMovableChars() const {
-  const JSLinearString* topBase = this;
-  while (topBase->hasBase()) {
-    topBase = topBase->base();
-  }
-  if (topBase->isInline()) {
-    return true;
-  }
-  if (topBase->isTenured()) {
-    return false;
-  }
-  return topBase->storeBuffer()->nursery().isInside(
-      topBase->nonInlineCharsRaw());
 }
 
 template <js::AllowGC allowGC>
