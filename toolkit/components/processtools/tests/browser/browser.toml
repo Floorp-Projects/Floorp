@@ -4,7 +4,7 @@ prefs = ["media.rdd-process.enabled=true"]
 support-files = ["dummy.html"]
 
 ["browser_test_powerMetrics.js"]
-skip-if = ["win11_2009 && !debug"] # bug 1819845
+skip-if = ["win11_2009"] # bug 1819845
 
 ["browser_test_procinfo.js"]
 skip-if = [
