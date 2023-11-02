@@ -38,7 +38,7 @@ class txXPathResultComparator {
 };
 
 /*
- * Compare results as strings (data-type="text")
+ * Compare results as stings (data-type="text")
  */
 class txResultStringComparator : public txXPathResultComparator {
  public:
@@ -59,7 +59,13 @@ class txResultStringComparator : public txXPathResultComparator {
     StringValue();
     ~StringValue();
 
-    mozilla::UniquePtr<nsString> mString;
+    nsresult initCaseKey(const mozilla::intl::Collator& aCollator);
+
+    nsTArray<uint8_t> mKey;
+    // Either mCaseKeyString is non-null, or we have a usable key in mCaseKey
+    // already.
+    mozilla::UniquePtr<nsString> mCaseKeyString;
+    nsTArray<uint8_t> mCaseKey;
   };
 };
 
