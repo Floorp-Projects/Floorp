@@ -40,10 +40,6 @@ const gConfig = (function () {
   };
 })();
 
-ChromeUtils.defineESModuleGetters(lazy, {
-  NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
-});
-
 ChromeUtils.defineLazyGetter(lazy, "log", () =>
   LoginHelper.createLogger("FirefoxRelay")
 );
@@ -398,35 +394,30 @@ class RelayOffered {
     if (
       !hasInput &&
       isSignup(scenarioName) &&
+      (await hasFirefoxAccountAsync()) &&
       !Services.prefs.prefIsLocked("signon.firefoxRelay.feature")
     ) {
-      const isUserEligible = lazy.NimbusFeatures[
-        "password-autocomplete"
-      ].getVariable("firefoxRelayIntegration");
-
-      if (isUserEligible) {
-        const [title, subtitle] = await formatMessages(
-          "firefox-relay-opt-in-title-1",
-          "firefox-relay-opt-in-subtitle-1"
-        );
-        yield new ParentAutocompleteOption(
-          "chrome://browser/content/logos/relay.svg",
-          title,
-          subtitle,
-          "PasswordManager:offerRelayIntegration",
-          {
-            telemetry: {
-              flowId: gFlowId,
-              scenarioName,
-            },
-          }
-        );
-        FirefoxRelayTelemetry.recordRelayOfferedEvent(
-          "shown",
-          gFlowId,
-          scenarioName
-        );
-      }
+      const [title, subtitle] = await formatMessages(
+        "firefox-relay-opt-in-title-1",
+        "firefox-relay-opt-in-subtitle-1"
+      );
+      yield new ParentAutocompleteOption(
+        "chrome://browser/content/logos/relay.svg",
+        title,
+        subtitle,
+        "PasswordManager:offerRelayIntegration",
+        {
+          telemetry: {
+            flowId: gFlowId,
+            scenarioName,
+          },
+        }
+      );
+      FirefoxRelayTelemetry.recordRelayOfferedEvent(
+        "shown",
+        gFlowId,
+        scenarioName
+      );
     }
   }
 

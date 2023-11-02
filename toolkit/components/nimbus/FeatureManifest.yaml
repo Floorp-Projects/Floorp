@@ -815,9 +815,6 @@ password-autocomplete:
     directMigrateSingleProfile:
       type: boolean
       description: Enable direct migration?
-    firefoxRelayIntegration:
-      type: boolean
-      description: Can show Firefox Relay integration offer?
 
 cm-csv-import:
   description: Importing logins from CSV files
