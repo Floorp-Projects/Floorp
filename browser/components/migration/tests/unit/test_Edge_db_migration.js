@@ -805,7 +805,7 @@ add_task(async function () {
     "Telemetry should have items"
   );
   let readingListContainerLabel = await MigrationUtils.getLocalizedString(
-    "imported-edge-reading-list"
+    "migration-imported-edge-reading-list"
   );
 
   for (let bookmark of seenBookmarks) {

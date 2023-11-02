@@ -788,10 +788,10 @@ let gSourceL10n = null;
 const allowedUAs = ["chrome", "edge", "ie"];
 function getLocalizedUA(ua) {
   if (!gSourceL10n) {
-    gSourceL10n = new Localization(["browser/migration.ftl"]);
+    gSourceL10n = new Localization(["browser/migrationWizard.ftl"]);
   }
   if (allowedUAs.includes(ua)) {
-    return gSourceL10n.formatValue(`source-name-${ua.toLowerCase()}`);
+    return gSourceL10n.formatValue(`migration-source-name-${ua.toLowerCase()}`);
   }
   return null;
 }

@@ -207,7 +207,7 @@ Bookmarks.prototype = {
         // They are imported under their own folder, created either under the
         // bookmarks menu (in the case of startup migration).
         let readingListTitle = await MigrationUtils.getLocalizedString(
-          "imported-safari-reading-list"
+          "migration-imported-safari-reading-list"
         );
         folderGuid = (
           await MigrationUtils.insertBookmarkWrapper({

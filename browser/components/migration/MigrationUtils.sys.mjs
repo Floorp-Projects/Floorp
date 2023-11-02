@@ -38,7 +38,7 @@ let gUndoData = null;
 
 function getL10n() {
   if (!gL10n) {
-    gL10n = new Localization(["browser/migration.ftl"]);
+    gL10n = new Localization(["browser/migrationWizard.ftl"]);
   }
   return gL10n;
 }
