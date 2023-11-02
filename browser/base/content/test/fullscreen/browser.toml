@@ -11,6 +11,10 @@ support-files = [
   "fullscreen.html",
   "fullscreen_frame.html",
 ]
+skip-if = [
+  "os == 'linux'", # Bug 1794449
+  "win11_2009 && !debug", # Bug 1794449
+]
 
 ["browser_fullscreen_api_fission.js"]
 https_first_disabled = true
