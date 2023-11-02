@@ -126,6 +126,32 @@ export var SearchUtils = {
   SETTINGS_ALLOWLIST_KEY: "search-default-override-allowlist",
 
   /**
+   * This is the Remote Settings key for getting the older search engine
+   * configuration. Tests may use `SETTINGS_KEY` if they want to get the key
+   * for the current configuration according to the preference.
+   */
+  OLD_SETTINGS_KEY: "search-config",
+
+  /**
+   * This is the Remote Settings key for getting the newer search engine
+   * configuration. Tests may use `SETTINGS_KEY` if they want to get the key
+   * for the current configuration according to the preference.
+   */
+  NEW_SETTINGS_KEY: "search-config-v2",
+
+  /**
+   * This is the Remote Settings key that we use to get the search engine
+   * configurations.
+   *
+   * @returns {string}
+   */
+  get SETTINGS_KEY() {
+    return SearchUtils.newSearchConfigEnabled
+      ? SearchUtils.NEW_SETTINGS_KEY
+      : SearchUtils.OLD_SETTINGS_KEY;
+  },
+
+  /**
    * Topic used for events involving the service itself.
    */
   TOPIC_SEARCH_SERVICE: "browser-search-service",
@@ -389,10 +415,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "newSearchConfigEnabled",
   "browser.search.newSearchConfig.enabled",
   false
-);
-
-ChromeUtils.defineLazyGetter(SearchUtils, "SETTINGS_KEY", () =>
-  SearchUtils.newSearchConfigEnabled ? "search-config-v2" : "search-config"
 );
 
 // Can't use defineLazyPreferenceGetter because we want the value
