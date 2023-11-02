@@ -1,11 +1,6 @@
 {
   "type": "object",
-  "required": [
-    "telemetryId",
-    "searchPageRegexp",
-    "queryParamName",
-    "queryParamNames"
-  ],
+  "required": ["telemetryId", "searchPageRegexp", "queryParamName"],
   "properties": {
     "telemetryId": {
       "type": "string",
