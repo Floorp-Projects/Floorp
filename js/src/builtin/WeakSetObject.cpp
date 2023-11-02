@@ -36,7 +36,7 @@ using namespace js;
   }
 
   // Steps 5-7.
-  RootedObject value(cx, &args[0].toObject());
+  RootedValue value(cx, args[0]);
   Rooted<WeakSetObject*> map(cx, &args.thisv().toObject().as<WeakSetObject>());
   if (!WeakCollectionPutEntryInternal(cx, map, value, TrueHandleValue)) {
     return false;
@@ -68,10 +68,10 @@ bool WeakSetObject::add(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   // Steps 5-6.
-  if (ObjectValueWeakMap* map =
+  if (ValueValueWeakMap* map =
           args.thisv().toObject().as<WeakSetObject>().getMap()) {
-    JSObject* value = &args[0].toObject();
-    if (ObjectValueWeakMap::Ptr ptr = map->lookup(value)) {
+    Value value = args[0];
+    if (ValueValueWeakMap::Ptr ptr = map->lookup(value)) {
       map->remove(ptr);
       args.rval().setBoolean(true);
       return true;
@@ -104,9 +104,9 @@ bool WeakSetObject::delete_(JSContext* cx, unsigned argc, Value* vp) {
   }
 
   // Steps 4, 6.
-  if (ObjectValueWeakMap* map =
+  if (ValueValueWeakMap* map =
           args.thisv().toObject().as<WeakSetObject>().getMap()) {
-    JSObject* value = &args[0].toObject();
+    Value value = args[0];
     if (map->has(value)) {
       args.rval().setBoolean(true);
       return true;
@@ -190,7 +190,6 @@ bool WeakSetObject::construct(JSContext* cx, unsigned argc, Value* vp) {
 
     if (optimized) {
       RootedValue keyVal(cx);
-      RootedObject keyObject(cx);
       Rooted<ArrayObject*> array(cx, &iterable.toObject().as<ArrayObject>());
       for (uint32_t index = 0; index < array->getDenseInitializedLength();
            ++index) {
@@ -202,9 +201,7 @@ bool WeakSetObject::construct(JSContext* cx, unsigned argc, Value* vp) {
           return false;
         }
 
-        keyObject = &keyVal.toObject();
-        if (!WeakCollectionPutEntryInternal(cx, obj, keyObject,
-                                            TrueHandleValue)) {
+        if (!WeakCollectionPutEntryInternal(cx, obj, keyVal, TrueHandleValue)) {
           return false;
         }
       }

@@ -924,6 +924,11 @@ static inline bool TenuredThingIsMarkedAny(T* thing) {
   }
 }
 
+template <>
+inline bool TenuredThingIsMarkedAny<Cell>(Cell* thing) {
+  return thing->asTenured().isMarkedAny();
+}
+
 } /* namespace gc */
 } /* namespace js */
 

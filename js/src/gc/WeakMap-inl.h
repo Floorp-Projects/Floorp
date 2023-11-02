@@ -53,6 +53,12 @@ static MOZ_MAYBE_UNUSED JSObject* GetDelegateInternal(JSObject* key) {
   JSObject* delegate = UncheckedUnwrapWithoutExpose(key);
   return (key == delegate) ? nullptr : delegate;
 }
+static MOZ_MAYBE_UNUSED JSObject* GetDelegateInternal(const Value& key) {
+  if (key.isObject()) {
+    return GetDelegateInternal(&key.toObject());
+  }
+  return nullptr;
+}
 
 // Use a helper function to do overload resolution to handle cases like
 // Heap<ObjectSubclass*>: find everything that is convertible to JSObject* (and
@@ -91,14 +97,16 @@ template <class K, class V>
 WeakMap<K, V>::WeakMap(JS::Zone* zone, JSObject* memOf)
     : Base(zone), WeakMapBase(memOf, zone) {
   using ElemType = typename K::ElementType;
-  using NonPtrType = std::remove_pointer_t<ElemType>;
 
   // The object's TraceKind needs to be added to CC graph if this object is
   // used as a WeakMap key, otherwise the key is considered to be pointed from
   // somewhere unknown, and results in leaking the subgraph which contains the
   // key. See the comments in NoteWeakMapsTracer::trace for more details.
-  static_assert(JS::IsCCTraceKind(NonPtrType::TraceKind),
-                "Object's TraceKind should be added to CC graph.");
+  if constexpr (std::is_pointer_v<ElemType>) {
+    using NonPtrType = std::remove_pointer_t<ElemType>;
+    static_assert(JS::IsCCTraceKind(NonPtrType::TraceKind),
+                  "Object's TraceKind should be added to CC graph.");
+  }
 
   zone->gcWeakMapList().insertFront(this);
   if (zone->gcState() > Zone::Prepare) {
@@ -129,6 +137,9 @@ bool WeakMap<K, V>::markEntry(GCMarker* marker, K& key, V& value,
   JSObject* delegate = gc::detail::GetDelegate(key);
   JSTracer* trc = marker->tracer();
 
+  gc::Cell* keyCell = gc::ToMarkable(key);
+  MOZ_ASSERT(keyCell);
+
   if (delegate) {
     CellColor delegateColor = gc::detail::GetEffectiveColor(marker, delegate);
     // The key needs to stay alive while both the delegate and map are live.
@@ -138,7 +149,7 @@ bool WeakMap<K, V>::markEntry(GCMarker* marker, K& key, V& value,
       if (markColor == proxyPreserveColor) {
         TraceWeakMapKeyEdge(trc, zone(), &key,
                             "proxy-preserved WeakMap entry key");
-        MOZ_ASSERT(key->color() >= proxyPreserveColor);
+        MOZ_ASSERT(keyCell->color() >= proxyPreserveColor);
         marked = true;
         keyColor = proxyPreserveColor;
       }
@@ -177,7 +188,7 @@ bool WeakMap<K, V>::markEntry(GCMarker* marker, K& key, V& value,
         tenuredValue = &cellValue->asTenured();
       }
 
-      if (!this->addImplicitEdges(key, delegate, tenuredValue)) {
+      if (!this->addImplicitEdges(keyCell, delegate, tenuredValue)) {
         marker->abortLinearWeakMarking();
       }
     }
@@ -357,7 +368,9 @@ bool WeakMap<K, V>::findSweepGroupEdges() {
     // Marking a WeakMap key's delegate will mark the key, so process the
     // delegate zone no later than the key zone.
     Zone* delegateZone = delegate->zone();
-    Zone* keyZone = key->zone();
+    gc::Cell* keyCell = gc::ToMarkable(key);
+    MOZ_ASSERT(keyCell);
+    Zone* keyZone = keyCell->zone();
     if (delegateZone != keyZone && delegateZone->isGCMarking() &&
         keyZone->isGCMarking()) {
       if (!delegateZone->addSweepGroupEdgeTo(keyZone)) {
