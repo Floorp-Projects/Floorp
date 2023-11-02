@@ -130,6 +130,7 @@ extern bool enableShadowRealms;
 extern bool enableArrayGrouping;
 extern bool enableWellFormedUnicodeStrings;
 extern bool enableArrayBufferTransfer;
+extern bool enableSymbolsAsWeakMapKeys;
 extern bool enableNewSetMethods;
 extern bool enableImportAssertions;
 #ifdef JS_GC_ZEAL

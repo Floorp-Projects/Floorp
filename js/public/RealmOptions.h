@@ -240,6 +240,12 @@ class JS_PUBLIC_API RealmCreationOptions {
     arrayBufferTransfer_ = flag;
     return *this;
   }
+
+  bool getSymbolsAsWeakMapKeysEnabled() const { return symbolsAsWeakMapKeys_; }
+  RealmCreationOptions& setSymbolsAsWeakMapKeysEnabled(bool flag) {
+    symbolsAsWeakMapKeys_ = flag;
+    return *this;
+  }
 #endif
 
   // This flag doesn't affect JS engine behavior.  It is used by Gecko to
@@ -314,6 +320,7 @@ class JS_PUBLIC_API RealmCreationOptions {
   bool newSetMethods_ = false;
   // Pref for ArrayBuffer.prototype.transfer{,ToFixedLength}() methods.
   bool arrayBufferTransfer_ = false;
+  bool symbolsAsWeakMapKeys_ = false;
 #endif
   bool secureContext_ = false;
   bool freezeBuiltins_ = false;
