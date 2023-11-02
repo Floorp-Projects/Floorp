@@ -349,4 +349,144 @@ class ContentBlockingControllerTest : BaseSessionTest() {
             equalTo(contentBlocking.cookieBannerDetectOnlyMode),
         )
     }
+
+    @Test
+    fun queryParameterStrippingSettings() {
+        // Check default value
+        val contentBlocking = sessionRule.runtime.settings.contentBlocking
+
+        assertThat(
+            "Expect correct default value which is off",
+            contentBlocking.queryParameterStrippingEnabled,
+            equalTo(false),
+        )
+
+        // Checks that the pref value is also consistent with the runtime settings
+        val originalPrefs = sessionRule.getPrefs(
+            "privacy.query_stripping.enabled",
+        )
+
+        assertThat(
+            "Initial value is correct",
+            originalPrefs[0] as Boolean,
+            equalTo(contentBlocking.queryParameterStrippingEnabled),
+        )
+
+        contentBlocking.queryParameterStrippingEnabled = true
+
+        val actualPrefs = sessionRule.getPrefs(
+            "privacy.query_stripping.enabled",
+        )
+
+        assertThat(
+            "The value is updated",
+            actualPrefs[0] as Boolean,
+            equalTo(contentBlocking.queryParameterStrippingEnabled),
+        )
+    }
+
+    @Test
+    fun queryParameterStrippingPrivateBrowsingSettings() {
+        // Check default value
+        val contentBlocking = sessionRule.runtime.settings.contentBlocking
+
+        assertThat(
+            "Expect correct default value which is off",
+            contentBlocking.queryParameterStrippingPrivateBrowsingEnabled,
+            equalTo(false),
+        )
+
+        // Checks that the pref value is also consistent with the runtime settings
+        val originalPrefs = sessionRule.getPrefs(
+            "privacy.query_stripping.enabled.pbmode",
+        )
+
+        assertThat(
+            "Initial value is correct",
+            originalPrefs[0] as Boolean,
+            equalTo(contentBlocking.queryParameterStrippingPrivateBrowsingEnabled),
+        )
+
+        contentBlocking.queryParameterStrippingPrivateBrowsingEnabled = true
+
+        val actualPrefs = sessionRule.getPrefs(
+            "privacy.query_stripping.enabled.pbmode",
+        )
+
+        assertThat(
+            "The value is updated",
+            actualPrefs[0] as Boolean,
+            equalTo(contentBlocking.queryParameterStrippingPrivateBrowsingEnabled),
+        )
+    }
+
+    @Test
+    fun queryParameterStrippingAllowListSettings() {
+        // Check default value
+        val contentBlocking = sessionRule.runtime.settings.contentBlocking
+
+        assertThat(
+            "Expect correct default value which is empty string",
+            contentBlocking.queryParameterStrippingAllowList.joinToString(","),
+            equalTo(""),
+        )
+
+        // Checks that the pref value is also consistent with the runtime settings
+        val originalPrefs = sessionRule.getPrefs(
+            "privacy.query_stripping.allow_list",
+        )
+
+        assertThat(
+            "Initial value is correct",
+            originalPrefs[0] as String,
+            equalTo(contentBlocking.queryParameterStrippingAllowList.joinToString(",")),
+        )
+
+        contentBlocking.setQueryParameterStrippingAllowList("item_one", "item_two")
+
+        val actualPrefs = sessionRule.getPrefs(
+            "privacy.query_stripping.allow_list",
+        )
+
+        assertThat(
+            "The value is updated",
+            actualPrefs[0] as String,
+            equalTo(contentBlocking.queryParameterStrippingAllowList.joinToString(",")),
+        )
+    }
+
+    @Test
+    fun queryParameterStrippingStripListSettings() {
+        // Check default value
+        val contentBlocking = sessionRule.runtime.settings.contentBlocking
+
+        assertThat(
+            "Expect correct default value which is empty string",
+            contentBlocking.queryParameterStrippingStripList.joinToString(","),
+            equalTo(""),
+        )
+
+        // Checks that the pref value is also consistent with the runtime settings
+        val originalPrefs = sessionRule.getPrefs(
+            "privacy.query_stripping.strip_list",
+        )
+
+        assertThat(
+            "Initial value is correct",
+            originalPrefs[0] as String,
+            equalTo(contentBlocking.queryParameterStrippingStripList.joinToString(",")),
+        )
+
+        contentBlocking.setQueryParameterStrippingAllowList("item_one", "item_two")
+
+        val actualPrefs = sessionRule.getPrefs(
+            "privacy.query_stripping.strip_list",
+        )
+
+        assertThat(
+            "The value is updated",
+            actualPrefs[0] as String,
+            equalTo(contentBlocking.queryParameterStrippingStripList.joinToString(",")),
+        )
+    }
 }

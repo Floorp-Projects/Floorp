@@ -257,6 +257,53 @@ public class ContentBlocking {
       }
 
       /**
+       * When set to true, query parameter stripping is enabled in normal mode.
+       *
+       * @param enabled A boolean indicating whether to query parameter stripping enabled in normal
+       *     mode.
+       * @return The Builder instance.
+       */
+      public @NonNull Builder queryParameterStrippingEnabled(final boolean enabled) {
+        getSettings().setQueryParameterStrippingEnabled(enabled);
+        return this;
+      }
+
+      /**
+       * When set to true, query parameter stripping is enabled in private mode.
+       *
+       * @param enabled A boolean indicating whether to query parameter stripping enabled in private
+       *     mode.
+       * @return The Builder instance.
+       */
+      public @NonNull Builder queryParameterStrippingPrivateBrowsingEnabled(final boolean enabled) {
+        getSettings().setQueryParameterStrippingPrivateBrowsingEnabled(enabled);
+        return this;
+      }
+
+      /**
+       * The allowed list for the query parameter stripping feature.
+       *
+       * @param list an array of identifiers for query parameter's stripping feature.
+       * @return The Builder instance.
+       */
+      public @NonNull Builder queryParameterStrippingAllowList(final @NonNull String... list) {
+        getSettings().setQueryParameterStrippingAllowList(list);
+        return this;
+      }
+
+      /**
+       * The strip list for the query parameter stripping feature.
+       *
+       * @param list an array of identifiers for the strip list of the query parameter's stripping
+       *     feature.
+       * @return The Builder instance.
+       */
+      public @NonNull Builder queryParameterStrippingStripList(final @NonNull String... list) {
+        getSettings().setQueryParameterStrippingStripList(list);
+        return this;
+      }
+
+      /**
        * Set the Cookie Banner Handling Mode for private browsing.
        *
        * @param mode The mode of the Cookie Banner Handling one of the {@link CBCookieBannerMode}.
@@ -338,6 +385,19 @@ public class ContentBlocking {
 
     final Pref<Boolean> mCbhGlobalRulesSubFramesEnabled =
         new Pref<Boolean>("cookiebanners.service.enableGlobalRules.subFrames", false);
+
+    /* package */ final Pref<Boolean> mQueryParameterStrippingEnabled =
+        new Pref<Boolean>("privacy.query_stripping.enabled", false);
+
+    /* package */ final Pref<Boolean> mQueryParameterStrippingPrivateBrowsingEnabled =
+        new Pref<Boolean>("privacy.query_stripping.enabled.pbmode", false);
+
+    /* package */ final Pref<String> mQueryParameterStrippingAllowList =
+        new Pref<>("privacy.query_stripping.allow_list", "");
+
+    /* package */ final Pref<String> mQueryParameterStrippingStripList =
+        new Pref<>("privacy.query_stripping.strip_list", "");
+
     /* package */ final Pref<String> mSafeBrowsingMalwareTable =
         new Pref<>(
             "urlclassifier.malwareTable",
@@ -462,6 +522,50 @@ public class ContentBlocking {
      */
     public @NonNull String[] getSafeBrowsingMalwareTable() {
       return ContentBlocking.prefToLists(mSafeBrowsingMalwareTable.get());
+    }
+
+    /**
+     * Sets the allowed list for the query parameter stripping feature.
+     *
+     * @param list an array of identifiers for the allowed list of the query parameter's stripping
+     *     feature.
+     * @return this {@link Settings} instance.
+     */
+    public @NonNull Settings setQueryParameterStrippingAllowList(final @NonNull String... list) {
+      mQueryParameterStrippingAllowList.commit(ContentBlocking.listsToPref(list));
+      return this;
+    }
+
+    /**
+     * Get the allowed list for the query parameter stripping feature.
+     *
+     * @return an array of identifiers for the allowed list for the query parameter stripping
+     *     feature.
+     */
+    public @NonNull String[] getQueryParameterStrippingAllowList() {
+      return ContentBlocking.prefToLists(mQueryParameterStrippingAllowList.get());
+    }
+
+    /**
+     * Sets the strip list for the query parameter stripping feature.
+     *
+     * @param list an array of identifiers for the strip list of the query parameter's stripping
+     *     feature.
+     * @return this {@link Settings} instance.
+     */
+    public @NonNull Settings setQueryParameterStrippingStripList(final @NonNull String... list) {
+      mQueryParameterStrippingStripList.commit(ContentBlocking.listsToPref(list));
+      return this;
+    }
+
+    /**
+     * Get the strip list for the query parameter stripping feature
+     *
+     * @return an array of identifiers for the allowed list for the query parameter stripping
+     *     feature.
+     */
+    public @NonNull String[] getQueryParameterStrippingStripList() {
+      return ContentBlocking.prefToLists(mQueryParameterStrippingStripList.get());
     }
 
     /**
@@ -707,6 +811,47 @@ public class ContentBlocking {
     public @NonNull Settings setCookieBannerGlobalRulesSubFramesEnabled(final boolean enabled) {
       mCbhGlobalRulesSubFramesEnabled.commit(enabled);
       return this;
+    }
+
+    /**
+     * Sets whether query parameter stripping is enabled in normal mode.
+     *
+     * @param enabled A boolean indicating whether or not to enable.
+     * @return This Settings instance.
+     */
+    public @NonNull Settings setQueryParameterStrippingEnabled(final boolean enabled) {
+      mQueryParameterStrippingEnabled.commit(enabled);
+      return this;
+    }
+
+    /**
+     * Indicates if query parameter stripping is enabled in normal mode.
+     *
+     * @return Indicates if query parameter stripping is enabled or disabled in normal mode.
+     */
+    public boolean getQueryParameterStrippingEnabled() {
+      return mQueryParameterStrippingEnabled.get();
+    }
+
+    /**
+     * Sets Whether query parameter stripping is enabled in private mode.
+     *
+     * @param enabled A boolean indicating whether or not to enable in private mode.
+     * @return This Settings instance.
+     */
+    public @NonNull Settings setQueryParameterStrippingPrivateBrowsingEnabled(
+        final boolean enabled) {
+      mQueryParameterStrippingPrivateBrowsingEnabled.commit(enabled);
+      return this;
+    }
+
+    /**
+     * Indicates if query parameter stripping is enabled in private mode.
+     *
+     * @return Indicates if global CookieBannerRules is enabled or disabled in sub-frames.
+     */
+    public boolean getQueryParameterStrippingPrivateBrowsingEnabled() {
+      return mQueryParameterStrippingPrivateBrowsingEnabled.get();
     }
 
     /**
