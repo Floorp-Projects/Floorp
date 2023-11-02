@@ -185,15 +185,15 @@ add_task(async function test_about_preferences_download_reject() {
     "No error messages are present."
   );
 
-  const errors = await captureTranslationsError(() =>
+  const failureErrors = await captureTranslationsError(() =>
     remoteClients.translationModels.rejectPendingDownloads(frenchModels.length)
   );
 
   ok(
-    !!errors.length,
-    `The errors for download should have been reported, found ${errors.length} errors`
+    !!failureErrors.length,
+    `The errors for download should have been reported, found ${failureErrors.length} errors`
   );
-  for (const { error } of errors) {
+  for (const { error } of failureErrors) {
     is(
       error?.message,
       "Failed to download file.",
@@ -211,6 +211,16 @@ add_task(async function test_about_preferences_download_reject() {
     maybeGetByL10nId("translations-manage-error-install", document),
     null,
     "The error message is hidden again."
+  );
+
+  const successErrors = await captureTranslationsError(() =>
+    remoteClients.translationModels.resolvePendingDownloads(frenchModels.length)
+  );
+
+  is(
+    successErrors.length,
+    0,
+    "Expected no errors downloading French the second time"
   );
 
   await cleanup();
