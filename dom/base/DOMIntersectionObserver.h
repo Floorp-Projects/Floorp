@@ -154,7 +154,7 @@ class DOMIntersectionObserver final : public nsISupports,
 
   enum class IsContentVisibilityObserver : bool { No, Yes };
   static IntersectionOutput Intersect(
-      const IntersectionInput&, Element&,
+      const IntersectionInput&, const Element&,
       IsContentVisibilityObserver = IsContentVisibilityObserver::No);
   // Intersects with a given rect, already relative to the root frame.
   static IntersectionOutput Intersect(const IntersectionInput&, const nsRect&);
@@ -167,6 +167,9 @@ class DOMIntersectionObserver final : public nsISupports,
 
   static already_AddRefed<DOMIntersectionObserver>
   CreateContentVisibilityObserver(Document&);
+
+  static Maybe<nsRect> EdgeInclusiveIntersection(const nsRect& aRect,
+                                                 const nsRect& aOtherRect);
 
  protected:
   void Connect();
