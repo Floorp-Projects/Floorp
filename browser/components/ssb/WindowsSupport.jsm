@@ -161,6 +161,6 @@ const WindowsSupport = {
       uiUtils.setWindowIcon(window, icons[0], icons[1]);
     }
 
-    taskbar.setGroupIdForWindow(window, buildGroupId(ssb.id));
+    taskbar.setGroupIdForWindow(window, buildGroupId(ssb._id));
   },
 };
