@@ -599,34 +599,6 @@ TextureFlags D3D11TextureData::GetTextureFlags() const {
 }
 
 DXGIYCbCrTextureData* DXGIYCbCrTextureData::Create(
-    IDirect3DTexture9* aTextureY, IDirect3DTexture9* aTextureCb,
-    IDirect3DTexture9* aTextureCr, HANDLE aHandleY, HANDLE aHandleCb,
-    HANDLE aHandleCr, const gfx::IntSize& aSize, const gfx::IntSize& aSizeY,
-    const gfx::IntSize& aSizeCbCr, gfx::ColorDepth aColorDepth,
-    YUVColorSpace aYUVColorSpace, gfx::ColorRange aColorRange) {
-  if (!aHandleY || !aHandleCb || !aHandleCr || !aTextureY || !aTextureCb ||
-      !aTextureCr) {
-    return nullptr;
-  }
-
-  DXGIYCbCrTextureData* texture = new DXGIYCbCrTextureData();
-  texture->mHandles[0] = aHandleY;
-  texture->mHandles[1] = aHandleCb;
-  texture->mHandles[2] = aHandleCr;
-  texture->mD3D9Textures[0] = aTextureY;
-  texture->mD3D9Textures[1] = aTextureCb;
-  texture->mD3D9Textures[2] = aTextureCr;
-  texture->mSize = aSize;
-  texture->mSizeY = aSizeY;
-  texture->mSizeCbCr = aSizeCbCr;
-  texture->mColorDepth = aColorDepth;
-  texture->mYUVColorSpace = aYUVColorSpace;
-  texture->mColorRange = aColorRange;
-
-  return texture;
-}
-
-DXGIYCbCrTextureData* DXGIYCbCrTextureData::Create(
     ID3D11Texture2D* aTextureY, ID3D11Texture2D* aTextureCb,
     ID3D11Texture2D* aTextureCr, const gfx::IntSize& aSize,
     const gfx::IntSize& aSizeY, const gfx::IntSize& aSizeCbCr,
