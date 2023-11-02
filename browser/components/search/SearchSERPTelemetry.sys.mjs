@@ -720,7 +720,14 @@ class TelemetryHandler {
     // To check this, we look for the presence of the query parameter
     // that contains a search term.
     let queries = new URLSearchParams(url.split("#")[0].split("?")[1]);
-    if (!queries.get(searchProviderInfo.queryParamName)) {
+    let hasQuery = false;
+    for (let queryParamName of searchProviderInfo.queryParamNames) {
+      if (queries.get(queryParamName)) {
+        hasQuery = true;
+        break;
+      }
+    }
+    if (!hasQuery) {
       return null;
     }
     // Default to organic to simplify things.

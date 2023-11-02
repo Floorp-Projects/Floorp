@@ -16,7 +16,7 @@ const TEST_PROVIDER_INFO = [
   {
     telemetryId: "example",
     searchPageRegexp: /^https:\/\/www\.example\.com\/search/,
-    queryParamName: "q",
+    queryParamNames: ["q"],
     codeParamName: "abc",
     taggedCodes: ["ff", "tb"],
     expectedOrganicCodes: ["baz"],
@@ -36,7 +36,7 @@ const TEST_PROVIDER_INFO = [
   {
     telemetryId: "example2",
     searchPageRegexp: /^https:\/\/www\.example2\.com\/search/,
-    queryParamName: "q",
+    queryParamNames: ["a", "q"],
     codeParamName: "abc",
     taggedCodes: ["ff", "tb"],
     expectedOrganicCodes: ["baz"],

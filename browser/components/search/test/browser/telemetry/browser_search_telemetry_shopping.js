@@ -15,7 +15,7 @@ const BASE_TEST_PROVIDER = {
   telemetryId: "example",
   searchPageRegexp:
     /^https:\/\/example.org\/browser\/browser\/components\/search\/test\/browser\/telemetry\/searchTelemetryAd/,
-  queryParamName: "s",
+  queryParamNames: ["s"],
   codeParamName: "abc",
   taggedCodes: ["ff"],
   extraAdServersRegexps: [/^https:\/\/example\.org\/ad/],

@@ -14,7 +14,7 @@ const TEST_PROVIDER_INFO = [
     telemetryId: "slow-page-load",
     searchPageRegexp:
       /^https:\/\/example.org\/browser\/browser\/components\/search\/test\/browser\/telemetry\/slow_loading_page_with_ads(_on_load_event)?.html/,
-    queryParamName: "s",
+    queryParamNames: ["s"],
     codeParamName: "abc",
     taggedCodes: ["ff"],
     followOnParamNames: ["a"],
