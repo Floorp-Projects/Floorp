@@ -57,4 +57,7 @@ skip-if = ["os == 'mac'"] # Bug 1848423
 skip-if = ["os == 'mac' && debug"] # Bug 1568570
 
 ["browser_fullscreen_window_open.js"]
-skip-if = ["os == 'linux' && swgl"] # Bug 1795491
+skip-if = [
+  "os == 'linux' && swgl", # Bug 1795491
+  "os == 'mac' && !debug", # Bug 1861827
+]
