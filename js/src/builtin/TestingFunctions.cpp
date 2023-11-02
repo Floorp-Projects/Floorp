@@ -3541,8 +3541,10 @@ static bool NewString(JSContext* cx, unsigned argc, Value* vp) {
           return false;
         }
         mozilla::PodCopy(news.get(), stable.latin1Chars(), len);
-        dest = JSLinearString::newValidLength<CanGC>(cx, std::move(news), len,
-                                                     heap);
+        Rooted<JSString::OwnedChars<JS::Latin1Char>> chars(cx, std::move(news),
+                                                           len, true);
+        dest =
+            JSLinearString::newValidLength<CanGC, Latin1Char>(cx, &chars, heap);
       } else {
         auto news =
             cx->make_pod_arena_array<char16_t>(js::StringBufferArena, capacity);
@@ -3550,8 +3552,10 @@ static bool NewString(JSContext* cx, unsigned argc, Value* vp) {
           return false;
         }
         mozilla::PodCopy(news.get(), stable.twoByteChars(), len);
-        dest = JSLinearString::newValidLength<CanGC>(cx, std::move(news), len,
-                                                     heap);
+        Rooted<JSString::OwnedChars<char16_t>> chars(cx, std::move(news), len,
+                                                     true);
+        dest =
+            JSLinearString::newValidLength<CanGC, char16_t>(cx, &chars, heap);
       }
       if (dest) {
         dest->asLinear().makeExtensible(capacity);
