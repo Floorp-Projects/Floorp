@@ -22,9 +22,8 @@ tasks:
             with-attributes:
                 build-type:
                     - fenix-nightly
-                    # coming soon!
-                    # - fenix-beta
-                    # - fenix-release
+                    - fenix-beta
+                    - fenix-release
             group-by:
                 attribute: build-type
             copy-attributes: true
