@@ -11,8 +11,6 @@
 #include "mozilla/EnumeratedArray.h"
 #include "mozilla/TimeStamp.h"
 
-#include <tuple>
-
 #include "gc/GCEnum.h"
 #include "gc/GCProbes.h"
 #include "gc/Heap.h"
@@ -140,37 +138,30 @@ class Nursery {
     return sizeof(gc::NurseryCellHeader);
   }
 
-  // Allocate a buffer for a given zone, using the nursery if possible. Returns
-  // <buffer, isMalloced> so the caller can register the buffer if needed. (Use
-  // the following API if the owning Cell is already known.)
-  std::tuple<void*, bool> allocateBuffer(JS::Zone* zone, size_t nbytes,
-                                         arena_id_t arenaId);
+  // Allocate a buffer for a given GC thing, using the nursery if possible and
+  // |cell| is in the nursery.
+  void* allocateBuffer(JS::Zone* zone, gc::Cell* cell, size_t nbytes);
 
-  // Allocate a buffer for a given Cell, using the nursery if possible and
-  // owner is in the nursery.
-  void* allocateBuffer(JS::Zone* zone, gc::Cell* owner, size_t nbytes,
-                       arena_id_t arenaId);
-
-  // Allocate a buffer for a given Cell, always using the nursery if |owner| is
+  // Allocate a buffer for a given object, always using the nursery if obj is
   // in the nursery. The requested size must be less than or equal to
   // MaxNurseryBufferSize.
-  void* allocateBufferSameLocation(gc::Cell* owner, size_t nbytes,
-                                   arena_id_t arenaId);
+  void* allocateBufferSameLocation(gc::Cell* cell, size_t nbytes);
 
   // Allocate a zero-initialized buffer for a given zone, using the nursery if
   // possible. If the buffer isn't allocated in the nursery, the given arena is
-  // used. Returns <buffer, isMalloced>.
-  std::tuple<void*, bool> allocateZeroedBuffer(JS::Zone* zone, size_t nbytes,
-                                               arena_id_t arena);
+  // used.
+  void* allocateZeroedBuffer(JS::Zone* zone, size_t nbytes,
+                             arena_id_t arena = js::MallocArena);
 
-  // Allocate a zero-initialized buffer for a given Cell, using the nursery if
-  // possible and |owner| is in the nursery. If the buffer isn't allocated in
-  // the nursery, the given arena is used.
-  void* allocateZeroedBuffer(gc::Cell* owner, size_t nbytes, arena_id_t arena);
+  // Allocate a zero-initialized buffer for a given object, using the nursery if
+  // possible and obj is in the nursery. If the buffer isn't allocated in the
+  // nursery, the given arena is used.
+  void* allocateZeroedBuffer(gc::Cell* cell, size_t nbytes,
+                             arena_id_t arena = js::MallocArena);
 
   // Resize an existing buffer.
   void* reallocateBuffer(JS::Zone* zone, gc::Cell* cell, void* oldBuffer,
-                         size_t oldBytes, size_t newBytes, arena_id_t arena);
+                         size_t oldBytes, size_t newBytes);
 
   // Free an object buffer.
   void freeBuffer(void* buffer, size_t nbytes);
