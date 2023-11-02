@@ -2038,3 +2038,24 @@ media.audio:
     notification_emails:
       - media-alerts@mozilla.com
     expires: never
+
+fog.validation:
+  gvsv_audio_stream_init_gvst:
+    type: labeled_counter
+    labels:
+      - inits
+    description: |
+      Incremented when an audio stream is initialized, recorded alongside the
+      Glean API for the purposes of Validation (hence GVSV).
+      Uses a single label due to only labeled counters being supported
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1862765
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1858954#c1
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - pmcmanis@mozilla.com
+      - glean-team@mozilla.com
+    expires: never 
+    gecko_datapoint: GVSV_AUDIO_STREAM_INITS

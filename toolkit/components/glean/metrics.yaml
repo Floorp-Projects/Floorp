@@ -236,26 +236,6 @@ fog.validation:
       - glean-team@mozilla.com
     expires: 122
 
-  gvsv_audio_stream_init_gecko:
-    type: labeled_counter
-    labels:
-      - inits
-    description: |
-      Incremented when an audio stream is initialized, recorded alongside the
-      Glean API for the purposes of Validation (hence GVSV).
-      Uses a single label due to only labeled counters being supported
-    bugs:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1858954
-    data_reviews:
-      - https://bugzilla.mozilla.org/show_bug.cgi?id=1858954#c1
-    data_sensitivity:
-      - technical
-    notification_emails:
-      - pmcmanis@mozilla.com
-      - glean-team@mozilla.com
-    expires: 122
-    gecko_datapoint: GVSV_AUDIO_STREAM_INITS
-
   gvsv_number_of_unique_site_origins_all_tabs:
     type: custom_distribution
     range_min: 0
