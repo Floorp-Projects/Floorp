@@ -11,6 +11,7 @@
     static get inheritedAttributes() {
       return {
         ".popup-notification-icon": "popupid,src=icon,class=iconclass,hasicon",
+        ".popup-notification-body": "popupid",
         ".popup-notification-origin": "value=origin,tooltiptext=origin",
         ".popup-notification-description": "popupid,id=descriptionid",
         ".popup-notification-description > span:first-of-type":

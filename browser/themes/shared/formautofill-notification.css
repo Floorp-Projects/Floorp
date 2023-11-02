@@ -12,6 +12,14 @@
  * "address-save-update" prefix is used for "save address doorhanger" and "update address doorhanger"
  */
 
+.popup-notification-body[popupid="address-save-update"] {
+  width: 25.8em;
+}
+
+.popup-notification-body[popupid="address-edit"] {
+  width: auto;
+}
+
 .address-capture-notification {
   /* Overwrite margin that we don't need */
   :is(popupnotificationcontent, .panel-footer) {
@@ -24,10 +32,6 @@
 
   .popup-notification-body-container {
     padding-block: 0;
-  }
-
-  .popup-notification-body {
-    width: 25.8em;
   }
 
   /* define the default text format for the address capture doorhanger */
@@ -91,7 +95,6 @@
     font-weight: var(--font-weight-bold);
   }
 }
-
 
 .address-save-update-notification-content > .address-capture-content {
   padding-inline: 4px 0;
