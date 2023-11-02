@@ -151,44 +151,58 @@ class UserIdleServiceX11 : public UserIdleServiceImpl {
 class UserIdleServiceMutter : public UserIdleServiceImpl {
  public:
   bool PollIdleTime(uint32_t* aIdleTime) override {
-    MOZ_LOG(sIdleLog, LogLevel::Info,
-            ("UserIdleServiceMutter::PollIdleTime()\n"));
+    MOZ_LOG(sIdleLog, LogLevel::Info, ("PollIdleTime() request\n"));
 
-    MOZ_ASSERT(mProxy);
-    GUniquePtr<GError> error;
+    // We're not ready yet
+    if (!mProxy) {
+      return false;
+    }
 
-    RefPtr<GVariant> result = dont_AddRef(g_dbus_proxy_call_sync(
-        mProxy, "GetIdletime", nullptr, G_DBUS_CALL_FLAGS_NONE, -1,
-        mCancellable, getter_Transfers(error)));
-    if (!result) {
-      MOZ_LOG(sIdleLog, LogLevel::Info,
-              ("UserIdleServiceMutter::PollIdleTime() failed, message: %s\n",
-               error->message));
-      return false;
+    if (!mPollInProgress) {
+      mPollInProgress = true;
+      DBusProxyCall(mProxy, "GetIdletime", nullptr, G_DBUS_CALL_FLAGS_NONE, -1,
+                    mCancellable)
+          ->Then(
+              GetCurrentSerialEventTarget(), __func__,
+              // It's safe to capture this as we use mCancellable to stop
+              // listening.
+              [self = RefPtr{this}, this](RefPtr<GVariant>&& aResult) {
+                if (!g_variant_is_of_type(aResult, G_VARIANT_TYPE_TUPLE) ||
+                    g_variant_n_children(aResult) != 1) {
+                  MOZ_LOG(sIdleLog, LogLevel::Info,
+                          ("PollIdleTime() Unexpected params type: %s\n",
+                           g_variant_get_type_string(aResult)));
+                  mLastIdleTime = 0;
+                  return;
+                }
+                RefPtr<GVariant> iTime =
+                    dont_AddRef(g_variant_get_child_value(aResult, 0));
+                if (!g_variant_is_of_type(iTime, G_VARIANT_TYPE_UINT64)) {
+                  MOZ_LOG(sIdleLog, LogLevel::Info,
+                          ("PollIdleTime() Unexpected params type: %s\n",
+                           g_variant_get_type_string(aResult)));
+                  mLastIdleTime = 0;
+                  return;
+                }
+                uint64_t idleTime = g_variant_get_uint64(iTime);
+                if (idleTime > std::numeric_limits<uint32_t>::max()) {
+                  idleTime = std::numeric_limits<uint32_t>::max();
+                }
+                mLastIdleTime = idleTime;
+                mPollInProgress = false;
+                MOZ_LOG(sIdleLog, LogLevel::Info,
+                        ("Async handler got %d\n", mLastIdleTime));
+              },
+              [self = RefPtr{this}, this](GUniquePtr<GError>&& aError) {
+                mPollInProgress = false;
+                g_warning("Failed to call GetIdletime(): %s\n",
+                          aError->message);
+              });
     }
-    if (!g_variant_is_of_type(result, G_VARIANT_TYPE_TUPLE) ||
-        g_variant_n_children(result) != 1) {
-      MOZ_LOG(
-          sIdleLog, LogLevel::Info,
-          ("UserIdleServiceMutter::PollIdleTime() Unexpected params type: %s\n",
-           g_variant_get_type_string(result)));
-      return false;
-    }
-    RefPtr<GVariant> iTime = dont_AddRef(g_variant_get_child_value(result, 0));
-    if (!g_variant_is_of_type(iTime, G_VARIANT_TYPE_UINT64)) {
-      MOZ_LOG(
-          sIdleLog, LogLevel::Info,
-          ("UserIdleServiceMutter::PollIdleTime() Unexpected params type: %s\n",
-           g_variant_get_type_string(result)));
-      return false;
-    }
-    uint64_t idleTime = g_variant_get_uint64(iTime);
-    if (idleTime > std::numeric_limits<uint32_t>::max()) {
-      idleTime = std::numeric_limits<uint32_t>::max();
-    }
-    *aIdleTime = idleTime;
+
+    *aIdleTime = mLastIdleTime;
     MOZ_LOG(sIdleLog, LogLevel::Info,
-            ("UserIdleServiceMutter::PollIdleTime() %d\n", *aIdleTime));
+            ("PollIdleTime() returns %d\n", *aIdleTime));
     return true;
   }
 
@@ -231,6 +245,8 @@ class UserIdleServiceMutter : public UserIdleServiceImpl {
  private:
   RefPtr<GDBusProxy> mProxy;
   RefPtr<GCancellable> mCancellable;
+  uint32_t mLastIdleTime = 0;
+  bool mPollInProgress = false;
 };
 #endif
 
