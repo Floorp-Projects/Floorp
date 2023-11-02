@@ -435,8 +435,9 @@ JSExtensibleString& JSLinearString::makeExtensible(size_t capacity) {
 }
 
 template <typename CharT>
-static MOZ_ALWAYS_INLINE bool AllocChars(JSString* str, size_t length,
-                                         CharT** chars, size_t* capacity) {
+static MOZ_ALWAYS_INLINE bool AllocCharsForFlatten(JSString* str, size_t length,
+                                                   CharT** chars,
+                                                   size_t* capacity) {
   /*
    * Grow by 12.5% if the buffer is very large. Otherwise, round up to the
    * next power of 2. This is similar to what we do with arrays; see
@@ -450,6 +451,25 @@ static MOZ_ALWAYS_INLINE bool AllocChars(JSString* str, size_t length,
   *chars =
       str->zone()->pod_arena_malloc<CharT>(js::StringBufferArena, *capacity);
   return *chars != nullptr;
+}
+
+// Allocate chars for a string. If parameters and conditions allow, this will
+// try to allocate in the nursery, but this may always fall back to a malloc
+// allocation. The return value will record where the allocation happened.
+template <typename CharT>
+static MOZ_ALWAYS_INLINE JSString::OwnedChars<CharT> AllocChars(JSContext* cx,
+                                                                size_t length,
+                                                                gc::Heap heap) {
+  if (heap == gc::Heap::Default && cx->zone()->allocNurseryStrings() &&
+      cx->nursery().isEnabled()) {
+    auto [buffer, isMalloced] = cx->nursery().allocateBuffer(
+        cx->zone(), length * sizeof(CharT), js::StringBufferArena);
+
+    return {static_cast<CharT*>(buffer), length, isMalloced, isMalloced};
+  }
+
+  auto buffer = cx->make_pod_arena_array<CharT>(js::StringBufferArena, length);
+  return {std::move(buffer), length, true};
 }
 
 UniqueLatin1Chars JSRope::copyLatin1Chars(JSContext* maybecx,
@@ -763,7 +783,7 @@ JSLinearString* JSRope::flattenInternal(JSRope* root) {
     }
   } else {
     // If we can't reuse the leftmost child's buffer, allocate a new one.
-    if (!AllocChars(root, wholeLength, &wholeChars, &wholeCapacity)) {
+    if (!AllocCharsForFlatten(root, wholeLength, &wholeChars, &wholeCapacity)) {
       return nullptr;
     }
 
@@ -1573,7 +1593,8 @@ static JSLinearString* NewStringDeflated(JSContext* cx, const char16_t* s,
         cx, mozilla::Range<const char16_t>(s, n), heap);
   }
 
-  auto news = cx->make_pod_arena_array<Latin1Char>(js::StringBufferArena, n);
+  JS::Rooted<JSString::OwnedChars<Latin1Char>> news(
+      cx, AllocChars<Latin1Char>(cx, n, heap));
   if (!news) {
     if (!allowGC) {
       cx->recoverFromOutOfMemory();
@@ -1582,9 +1603,9 @@ static JSLinearString* NewStringDeflated(JSContext* cx, const char16_t* s,
   }
 
   MOZ_ASSERT(CanStoreCharsAsLatin1(s, n));
-  FillFromCompatible(news.get(), s, n);
+  FillFromCompatible(news.data(), s, n);
 
-  return JSLinearString::new_<allowGC>(cx, std::move(news), n, heap);
+  return JSLinearString::new_<allowGC, Latin1Char>(cx, &news, heap);
 }
 
 static MOZ_ALWAYS_INLINE JSAtom* NewInlineAtomDeflated(JSContext* cx,
@@ -1635,7 +1656,9 @@ JSLinearString* js::NewStringDontDeflate(
         cx, mozilla::Range<const CharT>(chars.get(), length), heap);
   }
 
-  return JSLinearString::new_<allowGC>(cx, std::move(chars), length, heap);
+  JS::Rooted<JSString::OwnedChars<CharT>> ownedChars(cx, std::move(chars),
+                                                     length, true);
+  return JSLinearString::new_<allowGC, CharT>(cx, &ownedChars, heap);
 }
 
 template JSLinearString* js::NewStringDontDeflate<CanGC>(
@@ -1695,7 +1718,8 @@ JSLinearString* NewStringCopyNDontDeflateNonStaticValidLength(JSContext* cx,
                                     heap);
   }
 
-  auto news = cx->make_pod_arena_array<CharT>(js::StringBufferArena, n);
+  Rooted<JSString::OwnedChars<CharT>> news(cx,
+                                           ::AllocChars<CharT>(cx, n, heap));
   if (!news) {
     if (!allowGC) {
       cx->recoverFromOutOfMemory();
@@ -1703,9 +1727,9 @@ JSLinearString* NewStringCopyNDontDeflateNonStaticValidLength(JSContext* cx,
     return nullptr;
   }
 
-  FillChars(news.get(), s, n);
+  FillChars(news.data(), s, n);
 
-  return JSLinearString::newValidLength<allowGC>(cx, std::move(news), n, heap);
+  return JSLinearString::newValidLength<allowGC, CharT>(cx, &news, heap);
 }
 
 template JSLinearString* NewStringCopyNDontDeflateNonStaticValidLength<CanGC>(
