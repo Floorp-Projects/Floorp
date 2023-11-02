@@ -59,8 +59,13 @@ already_AddRefed<Buffer> Buffer::Create(Device* aDevice, RawId aDeviceId,
                                         const dom::GPUBufferDescriptor& aDesc,
                                         ErrorResult& aRv) {
   if (aDevice->IsLost()) {
+    // Create and return an invalid Buffer. This Buffer will have id 0 and
+    // won't be sent in any messages to the parent.
     RefPtr<Buffer> buffer = new Buffer(aDevice, 0, aDesc.mSize, 0,
                                        ipc::WritableSharedMemoryMapping());
+
+    // Track the invalid Buffer to ensure that ::Drop can untrack it later.
+    aDevice->TrackBuffer(buffer.get());
     return buffer.forget();
   }
 
