@@ -105,8 +105,8 @@ class nsHttpHeaderArray {
   [[nodiscard]] nsresult VisitHeaders(nsIHttpHeaderVisitor* visitor,
                                       VisitorFilter filter = eFilterAll);
 
-  // parse a header line, return the header atom and a pointer to the
-  // header value (the substring of the header line -- do not free).
+  // parse a header line, return the header atom, the header name, and the
+  // header value
   [[nodiscard]] static nsresult ParseHeaderLine(
       const nsACString& line, nsHttpAtom* hdr = nullptr,
       nsACString* headerNameOriginal = nullptr, nsACString* value = nullptr);
