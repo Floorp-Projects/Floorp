@@ -181,7 +181,12 @@ class ProcessHandlerMixin(object):
                     _maxint = sys.maxsize
                 handle = getattr(self, "_handle", None)
                 if handle:
+                    # _internal_poll is a Python3 built-in call and requires _handle to be an int on Windows
+                    # It's only an AutoHANDLE for legacy Python2 reasons that are non-trivial to remove
+                    self._handle = int(self._handle)
                     self._internal_poll(_deadstate=_maxint)
+                    # Revert it back to the saved 'handle' (AutoHANDLE) for self._cleanup()
+                    self._handle = handle
                 if handle or self._job or self._io_port:
                     self._cleanup()
             else:
