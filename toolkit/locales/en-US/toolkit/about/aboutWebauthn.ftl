@@ -13,6 +13,8 @@ about-webauthn-page-title = About WebAuthn
 about-webauthn-info-section-title = Device info
 about-webauthn-info-subsection-title = Authenticator info
 about-webauthn-options-subsection-title = Authenticator options
+about-webauthn-pin-section-title = PIN Management
+about-webauthn-pin-required-section-title = PIN required
 
 ## Info field texts
 
@@ -22,6 +24,38 @@ about-webauthn-text-select-device = Please select your desired security token by
 # CTAP2 refers to Client to Authenticator Protocol version 2
 about-webauthn-text-non-ctap2-device = Unable to manage options because your security token does not support CTAP2.
 about-webauthn-text-not-available = Not available on this platform.
+
+## Results label
+
+about-webauthn-results-success = Success!
+about-webauthn-results-general-error = Error!
+# Variables:
+#  $retriesLeft (Number): number of tries left
+about-webauthn-results-pin-invalid-error =
+    { $retriesLeft ->
+        [0] Error: Incorrect PIN. Try again.
+        [one] Error: Incorrect PIN. Try again. You have one attempt left.
+       *[other] Error: Incorrect PIN. Try again. You have { $retriesLeft } attempts left.
+    }
+about-webauthn-results-pin-blocked-error = Error: There are no attempts left and your device has been locked, because the wrong PIN was provided too many times. The device needs a reset.
+about-webauthn-results-pin-too-short-error = Error: The given PIN is too short.
+about-webauthn-results-pin-too-long-error = Error: The given PIN is too long.
+about-webauthn-results-pin-auth-blocked-error = Error: There were too many failed attempts in a row and PIN authentication has been temporarily blocked. Your device needs a power cycle (unplug and re-insert).
+about-webauthn-results-cancelled-by-user-error = Error: Operation has been canceled by the user.
+
+## Labels
+
+about-webauthn-new-pin-label = New PIN:
+about-webauthn-repeat-pin-label = Repeat new PIN:
+about-webauthn-current-pin-label = Current PIN:
+about-webauthn-pin-required-label = Please enter your PIN:
+
+## Buttons
+
+about-webauthn-current-set-pin-button = Set PIN
+about-webauthn-current-change-pin-button = Change PIN
+about-webauthn-cancel-button = Cancel
+about-webauthn-send-pin-button = OK
 
 ## Authenticator options fields
 ## Option fields correspond to the CTAP2 option IDs and definitions found in https://fidoalliance.org/specs/fido-v2.1-ps-20210615/fido-client-to-authenticator-protocol-v2.1-ps-20210615.html#option-id

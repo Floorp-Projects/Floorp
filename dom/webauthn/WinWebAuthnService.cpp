@@ -815,4 +815,9 @@ WinWebAuthnService::SetUserVerified(uint64_t authenticatorId,
 NS_IMETHODIMP
 WinWebAuthnService::Listen() { return NS_ERROR_NOT_IMPLEMENTED; }
 
+NS_IMETHODIMP
+WinWebAuthnService::RunCommand(const nsACString& cmd) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 }  // namespace mozilla::dom
