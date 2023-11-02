@@ -197,6 +197,7 @@ static const RedirEntry kRedirMap[] = {
     {"crashparent", "about:blank", nsIAboutModule::HIDE_FROM_ABOUTABOUT},
     {"crashcontent", "about:blank",
      nsIAboutModule::HIDE_FROM_ABOUTABOUT |
+         nsIAboutModule::URI_SAFE_FOR_UNTRUSTED_CONTENT |
          nsIAboutModule::URI_CAN_LOAD_IN_CHILD |
          nsIAboutModule::URI_MUST_LOAD_IN_CHILD},
     {"crashgpu", "about:blank", nsIAboutModule::HIDE_FROM_ABOUTABOUT},
@@ -221,7 +222,8 @@ nsAboutRedirector::NewChannel(nsIURI* aURI, nsILoadInfo* aLoadInfo,
       path.EqualsASCII("crashgpu") || path.EqualsASCII("crashextensions")) {
     bool isExternal;
     aLoadInfo->GetLoadTriggeredFromExternal(&isExternal);
-    if (isExternal) {
+    if (isExternal || !aLoadInfo->TriggeringPrincipal() ||
+        !aLoadInfo->TriggeringPrincipal()->IsSystemPrincipal()) {
       return NS_ERROR_NOT_AVAILABLE;
     }
 
