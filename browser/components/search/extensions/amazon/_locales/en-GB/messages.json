@@ -6,18 +6,12 @@
     "message": "Amazon.co.uk Search"
   },
   "searchUrl": {
-    "message": "https://www.amazon.co.uk/exec/obidos/external-search/"
+    "message": "https://www.amazon.co.uk/s"
   },
   "searchForm": {
     "message": "https://www.amazon.co.uk/"
   },
   "searchUrlGetParams": {
-    "message": "field-keywords={searchTerms}&ie={inputEncoding}&mode=blended&tag=firefox-uk-21&sourceid=Mozilla-search"
-  },
-  "suggestUrl": {
-    "message": "https://completion.amazon.co.uk/search/complete"
-  },
-  "suggestUrlGetParams": {
-    "message": "q={searchTerms}&search-alias=aps&mkt=3"
+    "message": "k={searchTerms}"
   }
 }
