@@ -14,7 +14,7 @@ const TEST_PROVIDER_INFO = [
     telemetryId: "example-data-attributes",
     searchPageRegexp:
       /^https:\/\/example.org\/browser\/browser\/components\/search\/test\/browser\/telemetry\/searchTelemetryAd_dataAttributes(?:_none|_href)?.html/,
-    queryParamName: "s",
+    queryParamNames: ["s"],
     codeParamName: "abc",
     taggedCodes: ["ff"],
     adServerAttributes: ["xyz"],
