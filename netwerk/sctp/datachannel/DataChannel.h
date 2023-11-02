@@ -55,6 +55,9 @@ namespace dom {
 struct RTCStatsCollection;
 };
 
+enum class DataChannelState { Connecting, Open, Closing, Closed };
+enum class DataChannelConnectionState { Connecting, Open, Closed };
+
 // For sending outgoing messages.
 // This class only holds a reference to the data and the info structure but does
 // not copy it.
@@ -219,9 +222,6 @@ class DataChannelConnection final : public net::NeckoTargetHolder
   int ReceiveCallback(struct socket* sock, void* data, size_t datalen,
                       struct sctp_rcvinfo rcv, int flags);
 
-  // Find out state
-  enum { CONNECTING = 0U, OPEN = 1U, CLOSING = 2U, CLOSED = 3U };
-
   Mutex mLock;
 
   void ReadBlob(already_AddRefed<DataChannelConnection> aThis, uint16_t aStream,
@@ -255,15 +255,13 @@ class DataChannelConnection final : public net::NeckoTargetHolder
   bool Init(const uint16_t aLocalPort, const uint16_t aNumStreams,
             const Maybe<uint64_t>& aMaxMessageSize);
 
-  // Caller must hold mLock
-  uint16_t GetReadyState() const MOZ_REQUIRES(mLock) {
+  DataChannelConnectionState GetState() const MOZ_REQUIRES(mLock) {
     mLock.AssertCurrentThreadOwns();
 
     return mState;
   }
 
-  // Caller must hold mLock
-  void SetReadyState(const uint16_t aState) MOZ_REQUIRES(mLock);
+  void SetState(DataChannelConnectionState aState) MOZ_REQUIRES(mLock);
 
 #ifdef SCTP_DTLS_SUPPORTED
   static void DTLSConnectThread(void* data);
@@ -407,7 +405,8 @@ class DataChannelConnection final : public net::NeckoTargetHolder
   struct socket* mMasterSocket = nullptr;
   // cloned from mMasterSocket on successful Connect on STS thread
   struct socket* mSocket = nullptr;
-  uint16_t mState MOZ_GUARDED_BY(mLock) = CLOSED;  // Protected with mLock
+  DataChannelConnectionState mState MOZ_GUARDED_BY(mLock) =
+      DataChannelConnectionState::Closed;
 
 #ifdef SCTP_DTLS_SUPPORTED
   std::string mTransportId;
@@ -445,10 +444,8 @@ class DataChannel {
   friend class DataChannelConnection;
 
  public:
-  enum { CONNECTING = 0U, OPEN = 1U, CLOSING = 2U, CLOSED = 3U };
-
   DataChannel(DataChannelConnection* connection, uint16_t stream,
-              uint16_t state, const nsACString& label,
+              DataChannelState state, const nsACString& label,
               const nsACString& protocol, uint16_t policy, uint32_t value,
               bool ordered, bool negotiated, DataChannelListener* aListener,
               nsISupports* aContext)
@@ -534,13 +531,13 @@ class DataChannel {
   void AnnounceClosed();
 
   // Find out state
-  uint16_t GetReadyState() const {
+  DataChannelState GetReadyState() const {
     MOZ_ASSERT(NS_IsMainThread());
     return mReadyState;
   }
 
   // Set ready state
-  void SetReadyState(const uint16_t aState);
+  void SetReadyState(DataChannelState aState);
 
   void GetLabel(nsAString& aLabel) { CopyUTF8toUTF16(mLabel, aLabel); }
   void GetProtocol(nsAString& aProtocol) {
@@ -575,7 +572,7 @@ class DataChannel {
   nsCString mLabel;
   nsCString mProtocol;
   // This is mainthread only
-  uint16_t mReadyState;
+  DataChannelState mReadyState;
   uint16_t mStream;
   uint16_t mPrPolicy;
   uint32_t mPrValue;
@@ -657,8 +654,8 @@ class DataChannelOnMessageAvailable : public Runnable {
           return NS_OK;
         }
 
-        if (mChannel->GetReadyState() == DataChannel::CLOSED ||
-            mChannel->GetReadyState() == DataChannel::CLOSING) {
+        if (mChannel->GetReadyState() == DataChannelState::Closed ||
+            mChannel->GetReadyState() == DataChannelState::Closing) {
           // Closed by JS, probably
           return NS_OK;
         }
