@@ -10,12 +10,6 @@ const { getFxAccountsSingleton } = ChromeUtils.importESModule(
 const { FirefoxRelayTelemetry } = ChromeUtils.importESModule(
   "resource://gre/modules/FirefoxRelayTelemetry.mjs"
 );
-const { ExperimentAPI } = ChromeUtils.importESModule(
-  "resource://nimbus/ExperimentAPI.sys.mjs"
-);
-const { ExperimentFakes } = ChromeUtils.importESModule(
-  "resource://testing-common/NimbusTestUtils.sys.mjs"
-);
 
 const gFxAccounts = getFxAccountsSingleton();
 let gRelayACOptionsTitles;
@@ -155,15 +149,6 @@ async function openRelayAC(browser) {
 requestLongerTimeout(2);
 
 add_setup(async function () {
-  await ExperimentAPI.ready();
-  const cleanupExperiment = await ExperimentFakes.enrollWithFeatureConfig(
-    {
-      featureId: "password-autocomplete",
-      value: { firefoxRelayIntegration: true },
-    },
-    { isRollout: true }
-  );
-
   gHttpServer = new HttpServer();
   setupServerScenario();
 
@@ -200,7 +185,6 @@ add_setup(async function () {
   ]);
 
   registerCleanupFunction(async () => {
-    await cleanupExperiment();
     await new Promise(resolve => {
       gHttpServer.stop(function () {
         resolve();
