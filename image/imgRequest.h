@@ -202,12 +202,18 @@ class imgRequest final : public nsIThreadRetargetableStreamListener,
 
   bool IsCrossSiteNoCORSRequest() const { return mIsCrossSiteNoCORSRequest; }
 
+  bool ShouldReportRenderTimeForLCP() const {
+    return mShouldReportRenderTimeForLCP;
+  }
+
  private:
   friend class FinishPreparingForNewPartRunnable;
 
   virtual ~imgRequest();
 
   void FinishPreparingForNewPart(const NewPartResult& aResult);
+
+  void UpdateShouldReportRenderTimeForLCP();
 
   void Cancel(nsresult aStatus);
 
@@ -275,6 +281,8 @@ class imgRequest final : public nsIThreadRetargetableStreamListener,
   bool mImageAvailable;
   bool mIsDeniedCrossSiteCORSRequest;
   bool mIsCrossSiteNoCORSRequest;
+
+  bool mShouldReportRenderTimeForLCP;
 
   mutable mozilla::Mutex mMutex;
 
