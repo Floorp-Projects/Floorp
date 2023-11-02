@@ -13,6 +13,7 @@
 
 treecol {
   flex: 1 auto;
+  width: 0; /* Don't let intrinsic sizes affect our minimum size. */
 }
 
 #certmanager {
