@@ -4,6 +4,9 @@
 const { CustomizableUITestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/CustomizableUITestUtils.sys.mjs"
 );
+const { DefaultBrowserCheck } = ChromeUtils.importESModule(
+  "resource:///modules/BrowserGlue.sys.mjs"
+);
 
 const PDF_TEST_URL =
   "https://example.com/browser/browser/components/newtab/test/browser/file_pdf.PDF";
@@ -460,21 +463,23 @@ add_task(async function triggered_feature_tour_with_custom_pref() {
 });
 
 add_task(async function callout_not_shown_if_dialog_open() {
-  await SpecialPowers.pushPrefEnv({
-    set: [["prompts.windowPromptSubDialog", true]],
-  });
-
   const win = await BrowserTestUtils.openNewBrowserWindow();
-  let dialogPromise = BrowserTestUtils.promiseAlertDialogOpen();
-  // Avoid blocking the test on the (sync) alert by sticking it in a timeout:
-  setTimeout(() => Services.prompt.alert(win, "Some title", "some message"), 0);
+  let dialogPromise = BrowserTestUtils.promiseAlertDialog(null, undefined, {
+    callback: async dialogWin => {
+      let rv = await FeatureCalloutBroker.showFeatureCallout(
+        win.gBrowser.selectedBrowser,
+        testMessage.message
+      );
+      ok(
+        !rv,
+        "Feature callout not shown when a dialog is open in the same window"
+      );
+      dialogWin.document.querySelector("dialog").getButton("cancel").click();
+    },
+    isSubDialog: true,
+  });
+  DefaultBrowserCheck.prompt(win);
   await dialogPromise;
-
-  let rv = await FeatureCalloutBroker.showFeatureCallout(
-    win.gBrowser.selectedBrowser,
-    testMessage.message
-  );
-  ok(!rv, "Feature callout not shown when a dialog is open in the same window");
 
   await BrowserTestUtils.closeWindow(win);
   await SpecialPowers.popPrefEnv();
