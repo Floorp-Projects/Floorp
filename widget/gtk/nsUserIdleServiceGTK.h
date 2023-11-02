@@ -16,14 +16,16 @@ class nsUserIdleServiceGTK;
 
 class UserIdleServiceImpl {
  public:
-  NS_INLINE_DECL_REFCOUNTING(UserIdleServiceImpl);
+  explicit UserIdleServiceImpl(nsUserIdleServiceGTK* aUserIdleService)
+      : mUserIdleServiceGTK(aUserIdleService){};
 
   virtual bool PollIdleTime(uint32_t* aIdleTime) = 0;
-  virtual bool ProbeImplementation(
-      RefPtr<nsUserIdleServiceGTK> aUserIdleServiceGTK) = 0;
+  virtual bool ProbeImplementation() = 0;
+
+  virtual ~UserIdleServiceImpl() = default;
 
  protected:
-  virtual ~UserIdleServiceImpl() = default;
+  nsUserIdleServiceGTK* mUserIdleServiceGTK;
 };
 
 #define IDLE_SERVICE_MUTTER 0
@@ -63,7 +65,7 @@ class nsUserIdleServiceGTK : public nsUserIdleService {
  private:
   ~nsUserIdleServiceGTK() = default;
 
-  RefPtr<UserIdleServiceImpl> mIdleService;
+  mozilla::UniquePtr<UserIdleServiceImpl> mIdleService;
 #ifdef MOZ_ENABLE_DBUS
   int mIdleServiceType = IDLE_SERVICE_MUTTER;
 #else
