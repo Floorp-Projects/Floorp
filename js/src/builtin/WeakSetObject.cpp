@@ -30,8 +30,9 @@ using namespace js;
   MOZ_ASSERT(is(args.thisv()));
 
   // Step 4.
-  if (!args.get(0).isObject()) {
-    ReportNotObject(cx, JSMSG_OBJECT_REQUIRED_WEAKSET_VAL, args.get(0));
+  if (!CanBeHeldWeakly(cx, args.get(0))) {
+    ReportValueError(cx, JSMSG_WEAKSET_VAL_CANT_BE_HELD_WEAKLY,
+                     JSDVG_IGNORE_STACK, args.get(0), nullptr);
     return false;
   }
 
@@ -62,7 +63,7 @@ bool WeakSetObject::add(JSContext* cx, unsigned argc, Value* vp) {
   MOZ_ASSERT(is(args.thisv()));
 
   // Step 4.
-  if (!args.get(0).isObject()) {
+  if (!CanBeHeldWeakly(cx, args.get(0))) {
     args.rval().setBoolean(false);
     return true;
   }
@@ -98,7 +99,7 @@ bool WeakSetObject::delete_(JSContext* cx, unsigned argc, Value* vp) {
   MOZ_ASSERT(is(args.thisv()));
 
   // Step 5.
-  if (!args.get(0).isObject()) {
+  if (!CanBeHeldWeakly(cx, args.get(0))) {
     args.rval().setBoolean(false);
     return true;
   }
@@ -196,8 +197,9 @@ bool WeakSetObject::construct(JSContext* cx, unsigned argc, Value* vp) {
         keyVal.set(array->getDenseElement(index));
         MOZ_ASSERT(!keyVal.isMagic(JS_ELEMENTS_HOLE));
 
-        if (keyVal.isPrimitive()) {
-          ReportNotObject(cx, JSMSG_OBJECT_REQUIRED_WEAKSET_VAL, keyVal);
+        if (!CanBeHeldWeakly(cx, keyVal)) {
+          ReportValueError(cx, JSMSG_WEAKSET_VAL_CANT_BE_HELD_WEAKLY,
+                           JSDVG_IGNORE_STACK, keyVal, nullptr);
           return false;
         }
 
