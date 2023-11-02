@@ -10,6 +10,8 @@ var AboutWebauthnManagerJS = {
   _topic: "about-webauthn-prompt",
   _initialized: false,
   _l10n: null,
+  _current_tab: "",
+  _previous_tab: "",
 
   init() {
     if (this._initialized) {
@@ -30,13 +32,68 @@ var AboutWebauthnManagerJS = {
 
     // We have token
     if (data.type == "selected-device") {
-      this._curr_data = data.auth_info;
-      document.getElementById("token-info-section").style.display = "block";
+      fake_click_event_for_id("info-tab-button");
       this.show_ui_based_on_authenticator_info(data);
     } else if (data.type == "select-device") {
       set_info_text("about-webauthn-text-select-device");
-    } else if (data.type == "listen-success" || data.type == "listen-error") {
+    } else if (data.type == "pin-required") {
+      open_pin_required_tab();
+    } else if (data.type == "pin-invalid") {
+      let retries = data.retries ? data.retries : 0;
+      show_results_banner(
+        "error",
+        "about-webauthn-results-pin-invalid-error",
+        JSON.stringify({ retriesLeft: retries })
+      );
+      open_pin_required_tab();
+    } else if (data.type == "listen-success") {
       reset_page();
+      // Show results
+      show_results_banner("success", "about-webauthn-results-success");
+      this._reset_in_progress = "";
+      AboutWebauthnService.listen();
+    } else if (data.type == "listen-error") {
+      reset_page();
+
+      if (!data.error) {
+        show_results_banner("error", "about-webauthn-results-general-error");
+      } else if (data.error.type == "pin-auth-blocked") {
+        show_results_banner(
+          "error",
+          "about-webauthn-results-pin-auth-blocked-error"
+        );
+      } else if (data.error.type == "device-blocked") {
+        show_results_banner(
+          "error",
+          "about-webauthn-results-pin-blocked-error"
+        );
+      } else if (data.error.type == "pin-is-too-short") {
+        show_results_banner(
+          "error",
+          "about-webauthn-results-pin-too-short-error"
+        );
+      } else if (data.error.type == "pin-is-too-long") {
+        show_results_banner(
+          "error",
+          "about-webauthn-results-pin-too-long-error"
+        );
+      } else if (data.error.type == "pin-invalid") {
+        let retries = data.error.retries
+          ? JSON.stringify({ retriesLeft: data.error.retries })
+          : null;
+        show_results_banner(
+          "error",
+          "about-webauthn-results-pin-invalid-error",
+          retries
+        );
+      } else if (data.error.type == "cancel") {
+        show_results_banner(
+          "error",
+          "about-webauthn-results-cancelled-by-user-error"
+        );
+      } else {
+        show_results_banner("error", "about-webauthn-results-general-error");
+      }
       AboutWebauthnService.listen();
     }
   },
@@ -91,6 +148,23 @@ var AboutWebauthnManagerJS = {
         "authenticator-info",
         "about-webauthn-auth-info"
       );
+      // Check if token supports PINs
+      if (data.auth_info.options.clientPin != null) {
+        document.getElementById("pin-tab-button").style.display = "flex";
+        if (data.auth_info.options.clientPin === true) {
+          // It has a Pin set
+          document.getElementById("change-pin-button").style.display = "block";
+          document.getElementById("set-pin-button").style.display = "none";
+          document.getElementById("current-pin-div").hidden = false;
+        } else {
+          // It does not have a Pin set yet
+          document.getElementById("change-pin-button").style.display = "none";
+          document.getElementById("set-pin-button").style.display = "block";
+          document.getElementById("current-pin-div").hidden = true;
+        }
+      } else {
+        document.getElementById("pin-tab-button").style.display = "none";
+      }
     } else {
       // Currently auth-rs doesn't send this, because it filters out ctap2-devices.
       // U2F / CTAP1 tokens can't be managed
@@ -105,13 +179,111 @@ function set_info_text(l10nId) {
   field.setAttribute("data-l10n-id", l10nId);
 }
 
+function show_results_banner(result, l10n, l10n_args) {
+  document.getElementById("ctap-listen-div").hidden = false;
+  let ctap_result = document.getElementById("ctap-listen-result");
+  ctap_result.setAttribute("data-l10n-id", l10n);
+  ctap_result.classList.add(result);
+  if (l10n_args) {
+    ctap_result.setAttribute("data-l10n-args", l10n_args);
+  }
+}
+
+function hide_results_banner() {
+  document
+    .getElementById("ctap-listen-result")
+    .classList.remove("success", "error");
+  document.getElementById("ctap-listen-div").hidden = true;
+}
+
+function fake_click_event_for_id(id) {
+  // Not using document.getElementById(id).click();
+  // here, because we have to add additional data, so we don't
+  // hide the results-div here, if there is any. 'Normal' clicking
+  // by the user will hide it.
+  const evt = new CustomEvent("click", {
+    detail: { skip_results_clearing: true },
+  });
+  document.getElementById(id).dispatchEvent(evt);
+}
+
 function reset_page() {
   // Hide all main sections
   document.getElementById("main-content").hidden = true;
   document.getElementById("categories").hidden = true;
 
+  // Clear results and input fields
+  hide_results_banner();
+  var divs = Array.from(document.getElementsByTagName("input"));
+  divs.forEach(div => {
+    div.value = "";
+  });
+
+  sidebar_set_disabled(false);
+
   // Only display the "please connect a device" - text
   set_info_text("about-webauthn-text-connect-device");
+
+  AboutWebauthnManagerJS._previous_tab = "";
+  AboutWebauthnManagerJS._current_tab = "";
+}
+
+function sidebar_set_disabled(disabled) {
+  var cats = Array.from(document.getElementsByClassName("category"));
+  cats.forEach(cat => {
+    if (disabled) {
+      cat.classList.add("disabled-category");
+    } else {
+      cat.classList.remove("disabled-category");
+    }
+  });
+}
+
+function check_pin_repeat_is_correct(button) {
+  let pin = document.getElementById("new-pin");
+  let pin_repeat = document.getElementById("new-pin-repeat");
+  let has_current_pin = !document.getElementById("current-pin-div").hidden;
+  let current_pin = document.getElementById("current-pin");
+  let can_enable_button =
+    pin.value != null && pin.value != "" && pin.value == pin_repeat.value;
+  if (has_current_pin && !current_pin.value) {
+    can_enable_button = false;
+  }
+  if (!can_enable_button) {
+    pin.classList.add("different");
+    pin_repeat.classList.add("different");
+    document.getElementById("set-pin-button").disabled = true;
+    document.getElementById("change-pin-button").disabled = true;
+    return false;
+  }
+  pin.classList.remove("different");
+  pin_repeat.classList.remove("different");
+  document.getElementById("set-pin-button").disabled = false;
+  document.getElementById("change-pin-button").disabled = false;
+  return true;
+}
+
+function send_pin() {
+  close_pin_required_tab();
+  let pin = document.getElementById("pin-required").value;
+  AboutWebauthnService.pinCallback(0, pin);
+}
+
+function set_pin() {
+  let pin = document.getElementById("new-pin").value;
+  let cmd = { SetPIN: pin };
+  AboutWebauthnService.runCommand(JSON.stringify(cmd));
+}
+
+function change_pin() {
+  let curr_pin = document.getElementById("current-pin").value;
+  let new_pin = document.getElementById("new-pin").value;
+  let cmd = { ChangePIN: [curr_pin, new_pin] };
+  AboutWebauthnService.runCommand(JSON.stringify(cmd));
+}
+
+function cancel_transaction() {
+  AboutWebauthnService.cancel(0);
 }
 
 async function onLoad() {
@@ -121,7 +293,91 @@ async function onLoad() {
   } catch (ex) {
     set_info_text("about-webauthn-text-not-available");
     AboutWebauthnManagerJS.uninit();
+    return;
   }
+  document.getElementById("set-pin-button").addEventListener("click", set_pin);
+  document
+    .getElementById("change-pin-button")
+    .addEventListener("click", change_pin);
+  document
+    .getElementById("new-pin")
+    .addEventListener("input", check_pin_repeat_is_correct);
+  document
+    .getElementById("new-pin-repeat")
+    .addEventListener("input", check_pin_repeat_is_correct);
+  document
+    .getElementById("current-pin")
+    .addEventListener("input", check_pin_repeat_is_correct);
+  document
+    .getElementById("info-tab-button")
+    .addEventListener("click", open_info_tab);
+  document
+    .getElementById("pin-tab-button")
+    .addEventListener("click", open_pin_tab);
+  document
+    .getElementById("send-pin-button")
+    .addEventListener("click", send_pin);
+  document
+    .getElementById("cancel-send-pin-button")
+    .addEventListener("click", cancel_transaction);
+}
+
+function open_tab(evt, tabName) {
+  var tabcontent, tablinks;
+  // Hide all others
+  tabcontent = Array.from(document.getElementsByClassName("tabcontent"));
+  tabcontent.forEach(tab => {
+    tab.style.display = "none";
+  });
+  // Display the one we selected
+  document.getElementById(tabName).style.display = "block";
+
+  // If this is a temporary overlay, like pin-required, we don't
+  // touch the sidebar and which button is selected.
+  if (!evt.detail.temporary_overlay) {
+    tablinks = Array.from(document.getElementsByClassName("category"));
+    tablinks.forEach(tablink => {
+      tablink.removeAttribute("selected");
+      tablink.disabled = false;
+    });
+    evt.currentTarget.setAttribute("selected", "true");
+  }
+
+  if (!evt.detail.skip_results_clearing) {
+    hide_results_banner();
+  }
+  sidebar_set_disabled(false);
+  AboutWebauthnManagerJS._previous_tab = AboutWebauthnManagerJS._current_tab;
+  AboutWebauthnManagerJS._current_tab = tabName;
+}
+
+function open_info_tab(evt) {
+  open_tab(evt, "token-info-section");
+}
+function open_pin_tab(evt) {
+  open_tab(evt, "set-change-pin-section");
+}
+function open_pin_required_tab() {
+  // Remove any old value we might have had
+  document.getElementById("pin-required").value = "";
+  const evt = new CustomEvent("click", {
+    detail: {
+      temporary_overlay: true,
+      skip_results_clearing: true, // We might be called multiple times, if PIN was invalid
+    },
+  });
+  open_tab(evt, "pin-required-section");
+  document.getElementById("pin-required").focus();
+  // This is a temporary overlay, so we don't want the
+  // user to click away from it, unless via the Cancel-button.
+  sidebar_set_disabled(true);
+}
+function close_pin_required_tab() {
+  const evt = new CustomEvent("click", {
+    detail: { temporary_overlay: true },
+  });
+  open_tab(evt, AboutWebauthnManagerJS._previous_tab);
+  sidebar_set_disabled(false);
 }
 
 try {
