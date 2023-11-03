@@ -194,6 +194,12 @@ const historyCommands = {
   HISTORY_FORWARD: 1,
 };
 
+const urls = {
+  // URL opened when executing `:help` command in the input
+  HELP_URL:
+    "https://firefox-source-docs.mozilla.org/devtools-user/web_console/helpers/",
+};
+
 // Combine into a single constants object
 module.exports = Object.assign(
   {
@@ -209,5 +215,6 @@ module.exports = Object.assign(
   chromeRDPEnums,
   jstermCommands,
   prefs,
-  historyCommands
+  historyCommands,
+  urls
 );

@@ -66,9 +66,13 @@ const testcases = [
 ];
 
 const edgecases = [
-  { input: ":", expectedError: /'' is not a valid command/ },
+  { input: ":", expectedError: /Missing a command name after ':'/ },
   { input: ":invalid", expectedError: /'invalid' is not a valid command/ },
-  { input: ":screenshot :help", expectedError: /Invalid command/ },
+  {
+    input: ":screenshot :help",
+    expectedError:
+      /Executing multiple commands in one evaluation is not supported/,
+  },
   { input: ":screenshot --", expectedError: /invalid flag/ },
   {
     input: ':screenshot "fo"o bar',
@@ -81,7 +85,7 @@ const edgecases = [
       // eslint-disable-next-line max-len
       /String has unescaped `"` in \["foo b"ar\.\.\.\], may miss a space between arguments/,
   },
-  { input: ": screenshot", expectedError: /'' is not a valid command/ },
+  { input: ": screenshot", expectedError: /Missing a command name after ':'/ },
   {
     input: ':screenshot "file name',
     expectedError: /String does not terminate/,

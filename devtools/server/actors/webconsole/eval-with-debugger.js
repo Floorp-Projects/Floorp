@@ -126,28 +126,31 @@ function evalWithDebugger(string, options = {}, webConsole) {
   const { dbgGlobal, bindSelf } = getDbgGlobal(options, dbg, webConsole);
 
   if (isCmd) {
-    const { command, args } = getCommandAndArgs(string);
-
-    const helpers = WebConsoleCommandsManager.getColonCommandFunction(
-      webConsole,
-      dbgGlobal,
-      string,
-      options.selectedNodeActor,
-      command
-    );
-
-    let result;
     try {
-      result = helpers.commandFunc(args);
-    } catch (e) {
-      console.log(e);
-      return `throw "${e}"`;
-    }
+      const { command, args } = getCommandAndArgs(string);
 
-    return {
-      result,
-      helperResult: helpers.getHelperResult(),
-    };
+      const helpers = WebConsoleCommandsManager.getColonCommandFunction(
+        webConsole,
+        dbgGlobal,
+        string,
+        options.selectedNodeActor,
+        command
+      );
+
+      const result = helpers.commandFunc(args);
+
+      return {
+        result,
+        helperResult: helpers.getHelperResult(),
+      };
+    } catch (e) {
+      return {
+        helperResult: {
+          type: "exception",
+          message: e.message,
+        },
+      };
+    }
   }
 
   const helpers = WebConsoleCommandsManager.getWebConsoleCommands(
