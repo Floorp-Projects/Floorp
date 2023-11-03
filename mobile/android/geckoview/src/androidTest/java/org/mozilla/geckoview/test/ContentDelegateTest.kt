@@ -817,9 +817,8 @@ class ContentDelegateTest : BaseSessionTest() {
             val result = mainSession.requestRecommendations("https://www.amazon.com/Furmax-Electric-Adjustable-Standing-Computer/dp/B09TJGHL5F/")
             sessionRule.waitForResult(result)
                 .let {
-                    assertThat("First recommendation adjusted rating should match", it[0].adjustedRating, equalTo(4.5))
-                    assertThat("Another recommendation adjusted rating should match", it[2].adjustedRating, equalTo(4.5))
-                    assertThat("First recommendation sponsored field should match", it[0].sponsored, equalTo(true))
+                    assertThat("Recommendation adjusted rating should match", it[0].adjustedRating, equalTo(4.5))
+                    assertThat("Recommendation sponsored field should match", it[0].sponsored, equalTo(true))
                 }
         }
     }

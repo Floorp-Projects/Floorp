@@ -268,6 +268,12 @@ pref("formhelper.autozoom", true);
 // Optionally send web console output to logcat (bug 1415318)
 pref("geckoview.console.enabled", false);
 
+#ifdef NIGHTLY_BUILD
+  // Testing flag for geckoview shopping product. When true, sendAttributionEvent
+  // will return "TEST_AID_RESPONSE" for products with "TEST_AID" id.
+  pref("geckoview.shopping.test_response", false);
+#endif
+
 pref("image.cache.size", 1048576); // bytes
 
 // Inherit locale from the OS, used for multi-locale builds
