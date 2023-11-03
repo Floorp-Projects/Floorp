@@ -1232,23 +1232,39 @@ void LIRGenerator::visitCompare(MCompare* comp) {
   // LCompareSAndBranch. Doing this now wouldn't be wrong, but doesn't
   // make sense and avoids confusion.
   if (comp->compareType() == MCompare::Compare_String) {
-    if (IsEqualityOp(comp->jsop())) {
-      MConstant* constant = nullptr;
-      if (left->isConstant()) {
-        constant = left->toConstant();
-      } else if (right->isConstant()) {
-        constant = right->toConstant();
-      }
+    MConstant* constant = nullptr;
+    MDefinition* input = nullptr;
+    if (left->isConstant()) {
+      constant = left->toConstant();
+      input = right;
+    } else if (right->isConstant()) {
+      constant = right->toConstant();
+      input = left;
+    }
 
-      if (constant) {
-        JSLinearString* linear = &constant->toString()->asLinear();
+    if (constant) {
+      JSLinearString* linear = &constant->toString()->asLinear();
 
+      if (IsEqualityOp(comp->jsop())) {
         if (MacroAssembler::canCompareStringCharsInline(linear)) {
-          MDefinition* input = left->isConstant() ? right : left;
-
           auto* lir = new (alloc()) LCompareSInline(useRegister(input), linear);
           define(lir, comp);
           assignSafepoint(lir, comp);
+          return;
+        }
+      } else {
+        MOZ_ASSERT(IsRelationalOp(comp->jsop()));
+
+        if (linear->length() == 1) {
+          // Move the constant value into the right-hand side operand.
+          JSOp op = comp->jsop();
+          if (left == constant) {
+            op = ReverseCompareOp(op);
+          }
+
+          auto* lir = new (alloc())
+              LCompareSSingle(useRegister(input), temp(), op, linear);
+          define(lir, comp);
           return;
         }
       }
