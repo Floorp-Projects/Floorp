@@ -11833,9 +11833,6 @@ JitCode* JitZone::generateStringConcatStub(JSContext* cx) {
   masm.pop(FramePointer);
   masm.ret();
 
-  masm.pop(temp2);
-  masm.pop(temp1);
-
   masm.bind(&failure);
   masm.movePtr(ImmPtr(nullptr), output);
   masm.pop(FramePointer);
