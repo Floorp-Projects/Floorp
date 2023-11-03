@@ -20,8 +20,7 @@ import {
   GMPPrefs,
   GMPUtils,
   OPEN_H264_ID,
-  WIDEVINE_L1_ID,
-  WIDEVINE_L3_ID,
+  WIDEVINE_ID,
 } from "resource://gre/modules/GMPUtils.sys.mjs";
 
 const SEC_IN_A_DAY = 24 * 60 * 60;
@@ -45,8 +44,6 @@ const GMP_PLUGINS = [
     id: OPEN_H264_ID,
     name: "plugins-openh264-name",
     description: "plugins-openh264-description",
-    level: "",
-    libName: "gmpopenh264",
     // The following licenseURL is part of an awful hack to include the OpenH264
     // license without having bug 624602 fixed yet, and intentionally ignores
     // localisation.
@@ -54,21 +51,9 @@ const GMP_PLUGINS = [
     homepageURL: "https://www.openh264.org/",
   },
   {
-    id: WIDEVINE_L1_ID,
+    id: WIDEVINE_ID,
     name: "plugins-widevine-name",
     description: "plugins-widevine-description",
-    level: "L1",
-    libName: "Google.Widevine.CDM",
-    licenseURL: "https://www.google.com/policies/privacy/",
-    homepageURL: "https://www.widevine.com/",
-    isEME: true,
-  },
-  {
-    id: WIDEVINE_L3_ID,
-    name: "plugins-widevine-name",
-    description: "plugins-widevine-description",
-    level: "L3",
-    libName: "widevinecdm",
     licenseURL: "https://www.google.com/policies/privacy/",
     homepageURL: "https://www.widevine.com/",
     isEME: true,
@@ -176,9 +161,6 @@ GMPWrapper.prototype = {
   get id() {
     return this._plugin.id;
   },
-  get libName() {
-    return this._plugin.libName;
-  },
   get type() {
     return "plugin";
   },
@@ -210,9 +192,7 @@ GMPWrapper.prototype = {
       ["learnMoreURL", GMP_LEARN_MORE],
       [
         "licenseURL",
-        this.id == WIDEVINE_L1_ID || this.id == WIDEVINE_L3_ID
-          ? GMP_PRIVACY_INFO
-          : GMP_LICENSE_INFO,
+        this.id == WIDEVINE_ID ? GMP_PRIVACY_INFO : GMP_LICENSE_INFO,
       ],
     ]) {
       if (plugin[urlProp]) {
@@ -677,16 +657,13 @@ GMPWrapper.prototype = {
       return f.exists();
     };
 
-    let libName =
-      AppConstants.DLL_PREFIX + this._plugin.libName + AppConstants.DLL_SUFFIX;
+    let id = this._plugin.id.substring(4);
+    let libName = AppConstants.DLL_PREFIX + id + AppConstants.DLL_SUFFIX;
     let infoName;
-    if (
-      this._plugin.id == WIDEVINE_L1_ID ||
-      this._plugin.id == WIDEVINE_L3_ID
-    ) {
+    if (this._plugin.id == WIDEVINE_ID) {
       infoName = "manifest.json";
     } else {
-      infoName = this._plugin.id.substring(4) + ".info";
+      infoName = id + ".info";
     }
 
     return (
@@ -873,7 +850,6 @@ var GMPProvider = {
         id: aPlugin.id,
         name: lazy.addonsBundle.formatValueSync(aPlugin.name),
         description: lazy.addonsBundle.formatValueSync(aPlugin.description),
-        libName: aPlugin.libName,
         homepageURL: aPlugin.homepageURL,
         optionsURL: aPlugin.optionsURL,
         wrapper: null,

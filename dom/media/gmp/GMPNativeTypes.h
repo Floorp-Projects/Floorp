@@ -12,7 +12,6 @@ enum class GMPPluginType {
   Clearkey,
   OpenH264,
   Widevine,
-  WidevineL1,
 };
 
 #endif
