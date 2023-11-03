@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.shopping.store
 
+import androidx.compose.runtime.Immutable
 import mozilla.components.lib.state.State
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.HighlightType
 import java.util.SortedMap
@@ -106,6 +107,7 @@ sealed interface ReviewQualityCheckState : State {
              * @property highlights Optional highlights based on recent reviews of the product.
              * @property recommendedProductState The state of the recommended product.
              */
+            @Immutable
             data class AnalysisPresent(
                 val productId: String,
                 val reviewGrade: Grade?,
