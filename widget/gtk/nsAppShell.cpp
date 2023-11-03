@@ -220,7 +220,7 @@ void nsAppShell::DBusConnectClientResponse(GObject* aObject,
   RefPtr<GDBusProxy> proxyClient =
       dont_AddRef(g_dbus_proxy_new_finish(aResult, getter_Transfers(error)));
   if (!proxyClient) {
-    if (!g_error_matches(error.get(), G_IO_ERROR, G_IO_ERROR_CANCELLED)) {
+    if (!IsCancelledGError(error.get())) {
       NS_WARNING(
           nsPrintfCString("Failed to connect to client: %s\n", error->message)
               .get());
