@@ -296,8 +296,8 @@ For histograms measuring time, TelemetryStopwatch can be used to avoid working w
 
 .. code-block:: js
 
-  TelemetryStopwatch.start("SEARCH_SERVICE_INIT_MS");
-  TelemetryStopwatch.finish("SEARCH_SERVICE_INIT_MS");
+  TelemetryStopwatch.start("SEARCH_SERVICE_INIT2_MS");
+  TelemetryStopwatch.finish("SEARCH_SERVICE_INIT2_MS");
 
   TelemetryStopwatch.start("FX_TAB_SWITCH_TOTAL_MS");
   TelemetryStopwatch.cancel("FX_TAB_SWITCH_TOTAL_MS");

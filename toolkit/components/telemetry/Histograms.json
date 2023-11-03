@@ -10801,18 +10801,6 @@
     "description": "Records search counts for search access points. The format is: <engine-name>.<search-access-point>. For the urlbar when in search mode, the format is <engine name>.urlbar-searchmode. For the urlbar when an internal @engine shortcut is used, the format is: <engine-name>.alias.",
     "record_into_store": ["main", "account-ecosystem"]
   },
-  "SEARCH_SERVICE_INIT_MS": {
-    "record_in_processes": ["main"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": ["fx-search-telemetry@mozilla.com"],
-    "expires_in_version": "122",
-    "releaseChannelCollection": "opt-out",
-    "kind": "exponential",
-    "high": 1000,
-    "n_buckets": 15,
-    "bug_numbers": [1489524, 1832509],
-    "description": "Time (ms) it takes to initialize the search service"
-  },
   "SEARCH_SERVICE_INIT2_MS": {
     "record_in_processes": ["main"],
     "products": ["firefox", "fennec"],
