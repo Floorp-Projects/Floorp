@@ -476,6 +476,7 @@ android-hw-browsertime:
     - browsertime-benchmark-speedometer3-mobile
     - browsertime-youtube-playback-mobile
     - browsertime-benchmark-unity-webgl-mobile
+    - browsertime-benchmark-motionmark
 
 android-hw-browsertime-profiling:
     - browsertime-tp6m-profiling
