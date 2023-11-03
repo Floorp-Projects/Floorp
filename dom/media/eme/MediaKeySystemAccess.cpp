@@ -729,9 +729,11 @@ static bool GetSupportedConfig(
     MediaKeySystemConfiguration& aOutConfig,
     DecoderDoctorDiagnostics* aDiagnostics, bool aInPrivateBrowsing,
     const std::function<void(const char*)>& aDeprecationLogFn) {
+#ifdef DEBUG
   EME_LOG("Compare implementation '%s'\n with request '%s'",
           NS_ConvertUTF16toUTF8(aKeySystem.GetDebugInfo()).get(),
           ToCString(aCandidate).get());
+#endif
   // Let accumulated configuration be a new MediaKeySystemConfiguration
   // dictionary.
   MediaKeySystemConfiguration config;
