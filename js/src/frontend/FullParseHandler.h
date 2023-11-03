@@ -64,8 +64,7 @@ class FullParseHandler {
   // FIXME: Use ListNode instead of ListNodeType as an alias (bug 1489008).
   using Node = ParseNode*;
 
-#define DECLARE_TYPE(typeName, longTypeName, asMethodName) \
-  using longTypeName = typeName*;
+#define DECLARE_TYPE(typeName, _) using typeName##Type = typeName*;
   FOR_EACH_PARSENODE_SUBCLASS(DECLARE_TYPE)
 #undef DECLARE_TYPE
 
@@ -111,8 +110,10 @@ class FullParseHandler {
 
   static NullNode null() { return NullNode(); }
 
-#define DECLARE_AS(typeName, longTypeName, asMethodName) \
-  static longTypeName asMethodName(Node node) { return &node->as<typeName>(); }
+#define DECLARE_AS(typeName, asMethodName)        \
+  static typeName##Type asMethodName(Node node) { \
+    return &node->as<typeName>();                 \
+  }
   FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
 #undef DECLARE_AS
 
