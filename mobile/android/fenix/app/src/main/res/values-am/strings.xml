@@ -341,8 +341,13 @@
     <!-- Title for sign in to sync screen. -->
     <string name="juno_onboarding_sign_in_title" moz:removedIn="120" tools:ignore="UnusedResources">ከስልክ ወደ ላፕቶፕ ይዝለሉ እና ይመለሱ</string>
 
+    <!-- Title for sign in to sync screen. -->
+    <string name="juno_onboarding_sign_in_title_2">በመሳሪያዎች መካከል ሲዘጉ እንደተመሰጠሩ ይቆዩ</string>
     <!-- Description for sign in to sync screen. -->
     <string name="juno_onboarding_sign_in_description" moz:removedIn="120" tools:ignore="UnusedResources">ካቆሙበት ለመቀጠል ከሌሎች መሳሪያዎችዎ ትሮችን እና የይለፍ ቃሎችን ይያዙ።</string>
+    <!-- Description for sign in to sync screen. Nimbus experiments do not support string placeholders.
+     Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_sign_in_description_2">በመለያ ሲገቡ እና ስያመሳስሉ የበለጠ ደህንነት ይኖርዎታል። Firefox የእርስዎን የይለፍ ቃላት፣ ዕልባቶች እና ሌሎችንም ያመሰጥራል።</string>
     <!-- Text for the button to sign in to sync on the device -->
     <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">ይግቡ</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -350,9 +355,15 @@
     <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_enable_notifications_title_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">ማሳወቂያዎች በፋየርፎክስ የበለጠ እንዲሰሩ ያግዝዎታል</string>
+    <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_enable_notifications_title_nimbus_2">ማሳወቂያዎች በFirefox ደህንነትዎ እንደተጠበቀ እንዲቆዩ ያግዝዎታል</string>
     <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
        Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_enable_notifications_description_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">በመሳሪያዎች መካከል ትሮችን ይላኩ፣ ውርዶችን ያስተዳድሩ እና ከፋየርፎክስ የበለጠ ለመጠቀም ምክሮችን ያግኙ።</string>
+    <!-- Description for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+       Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_enable_notifications_description_nimbus_2">በመሳሪያዎችዎ መካከል ደህንነቱ በተጠበቀ ሁኔታ ትሮችን ይላኩ እና በFirefox ውስጥ ሌሎች የግላዊነት ባህሪያትን ያግኙ።</string>
     <!-- Text for the button to request notification permission on the device -->
     <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">ማሳወቂያዎችን ያብሩ</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -391,6 +402,8 @@
     <string name="preferences_category_select_default_search_engine">አንዱን ይምረጡ</string>
     <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
     <string name="preferences_manage_search_shortcuts" moz:removedIn="120" tools:ignore="UnusedResources">የፍለጋ አቋራጮችን ያስተዳድሩ</string>
+    <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_manage_search_shortcuts_2">አማራጭ የፍለጋ ፍርግሞችን ያቀናብሩ</string>
     <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
     <string name="preferences_manage_search_shortcuts_summary">በፍለጋ ምናሌው ውስጥ የሚታዩ ፍርግሞችን ያርትዑ</string>
     <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
@@ -401,12 +414,16 @@
     <string name="preferences_search">ፈልግ</string>
     <!-- Preference for settings related to Search engines -->
     <string name="preferences_search_engines">የፍለጋ ፍርግሞች</string>
+    <!-- Preference for settings related to Search engines suggestions-->
+    <string name="preferences_search_engines_suggestions">ከፍለጋ ፍርግሞች የቀረቡ ጥቆማዎች</string>
     <!-- Preference for settings related to Search address bar -->
     <string name="preferences_search_address_bar" moz:removedIn="120" tools:ignore="UnusedResources">የአድራሻ አሞሌ</string>
     <!-- Preference Category for settings related to Search address bar -->
     <string name="preferences_settings_address_bar">የአድራሻ አሞሌ ምርጫዎች</string>
     <!-- Preference Category for settings to Firefox Suggest -->
     <string name="preference_search_address_bar_fx_suggest">የአድራሻ አሞሌ - Firefox Suggest</string>
+    <!-- Preference link to Learn more about Firefox Suggest -->
+    <string name="preference_search_learn_about_fx_suggest">ስለFirefox Suggest የበለጠ ይወቁ</string>
     <!-- Preference link to rating Fenix on the Play Store -->
     <string name="preferences_rate">Google Play ላይ ደረጃ ይስጡ</string>
     <!-- Preference linking to about page for Fenix
@@ -567,6 +584,9 @@
     <string name="preferences_enable_autocomplete_urls">ራስ-አጠናቅቅ</string>
     <!-- Preference title for switch preference to show sponsored Firefox Suggest search suggestions -->
     <string name="preferences_show_sponsored_suggestions">ከስፖንሰሮች የተሰጡ አስተያየቶች</string>
+    <!-- Summary for preference to show sponsored Firefox Suggest search suggestions.
+         The first parameter is the name of the application. -->
+    <string name="preferences_show_sponsored_suggestions_summary">አልፎ አልፎ በሚደገፉ የአስተያየት ጥቆማዎች %1$sን ይደግፉ</string>
     <!-- Preference title for switch preference to show Firefox Suggest search suggestions for web content.
          The first parameter is the name of the application. -->
     <string name="preferences_show_nonsponsored_suggestions">ጥቆማዎች ከ%1$s</string>
@@ -665,6 +685,11 @@
     <!-- Wallpaper onboarding dialog learn more button text. The button navigates to the wallpaper settings screen. -->
     <string name="wallpapers_onboarding_dialog_explore_more_button_text">ተጨማሪ ልጣፎችን ያስሱ</string>
 
+    <!-- Add-ons general availability nimbus message-->
+    <!-- Title of the Nimbus message for add-ons general availability-->
+    <string name="addon_ga_message_title" tools:ignore="UnusedResources">አዲስ ተጨማሪዎች አሁን ይገኛሉ</string>
+    <!-- Body of the Nimbus message for add-ons general availability. 'Firefox' intentionally hardcoded here-->
+    <string name="addon_ga_message_body" tools:ignore="UnusedResources">Firefoxን የራስዎ ለማድረግ የሚያስችሉዎትን 100+ አዲስ ቅጥያዎችን ይመልከቱ።</string>
     <!-- Button text of the Nimbus message for add-ons general availability. -->
     <string name="addon_ga_message_button" tools:ignore="UnusedResources">ተጨማሪዎችን ያስሱ</string>
 
@@ -2156,6 +2181,10 @@
     <string name="review_quality_check_settings_title">ቅንብሮች</string>
     <!-- Text for label for switch preference to show recommended products from review quality check settings section. -->
     <string name="review_quality_check_settings_recommended_products">በግምገማ አረጋጋጭ ውስጥ ማስታወቂያዎችን አሳይ</string>
+    <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
+    <string name="review_quality_check_settings_recommended_products_description" moz:RemovedIn="120" tools:ignore="UnusedResources">ለሚመለከታቸው ምርቶች አልፎ አልፎ ማስታወቂያዎችን ያያሉ። ሁሉም ማስታወቂያዎች የግምገማ የጥራት መስፈርቶቻችንን ማሟላት አለባቸው። %s</string>
+    <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
+    <string name="review_quality_check_settings_recommended_products_description_2" tools:ignore="UnusedResources">ለሚመለከታቸው ምርቶች አልፎ አልፎ ማስታወቂያዎችን ያያሉ። ምርቶችን የምናስተዋውቀው በታማኝ ግምገማዎች ብቻ ነው። %s</string>
     <!-- Clickable text that links to review quality check recommended products support article. -->
     <string name="review_quality_check_settings_recommended_products_learn_more" tools:ignore="UnusedResources">የበለጠ ለማወቅ</string>
     <!-- Text for turning sidebar off button from review quality check settings section. -->
@@ -2170,6 +2199,8 @@
     <string name="review_quality_check_powered_by_2">የግምገማ አረጋጋጭ የተጎላበተው በ%s ነው</string>
     <!-- Clickable text that links to Fakespot.com. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
     <string name="review_quality_check_powered_by_link" tools:ignore="UnusedResources">%s በሞዚላ</string>
+    <!-- Text for title of warning card informing the user that the current analysis is outdated. -->
+    <string name="review_quality_check_outdated_analysis_warning_title" tools:ignore="UnusedResources">ለመፈተሽ አዲስ መረጃ</string>
     <!-- Text for button from warning card informing the user that the current analysis is outdated. Clicking this should trigger the product's re-analysis. -->
     <string name="review_quality_check_outdated_analysis_warning_action" tools:ignore="UnusedResources">አሁን ያረጋግጡ</string>
     <!-- Title for warning card informing the user that the current product does not have enough reviews for a review analysis. -->
@@ -2183,6 +2214,8 @@
     <string name="review_quality_check_product_availability_warning_body" tools:ignore="UnusedResources">ይህ ምርት ወደ ክምችት እንደተመለሰ ካዩ፣ ሪፖርት ያድርጉት እና ግምገማዎቹን ለማየት እንሰራለን።</string>
     <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
     <string name="review_quality_check_product_availability_warning_action" moz:RemovedIn="120" tools:ignore="UnusedResources">ይህ ምርት ወደ ክምችት መመለሱን ሪፖርት ያድርጉ</string>
+    <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
+    <string name="review_quality_check_product_availability_warning_action_2" tools:ignore="UnusedResources">ምርት በክምችት መኖሩን አመልክት</string>
     <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
     <string name="review_quality_check_reanalysis_in_progress_warning_title">የግምገማ ጥራት በመፈተሽ ላይ</string>
     <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
@@ -2191,8 +2224,12 @@
     <string name="review_quality_check_analysis_in_progress_warning_body">ይህ ወደ 60 ሰከንድ ሊወስድ ይችላል።</string>
     <!-- Title for info card displayed after the user reports a product is back in stock. -->
     <string name="review_quality_check_analysis_requested_info_title" tools:ignore="UnusedResources">ሪፖርት ስላደረጉ እናመሰግናለን!</string>
+    <!-- Text for body of info card displayed after the user reports a product is back in stock. -->
+    <string name="review_quality_check_analysis_requested_info_body" tools:ignore="UnusedResources">በ24 ሰዓታት ውስጥ ስለዚህ ምርት ግምገማዎች መረጃ ሊኖረን ይገባል። እባክዎን ተመልሰው ያረጋግጡ።</string>
     <!-- Title for info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
     <string name="review_quality_check_not_analyzable_info_title">እነዚህን ግምገማዎች ማረጋገጥ አንችልም</string>
+    <!-- Text for body of info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
+    <string name="review_quality_check_not_analyzable_info_body">እንደ አለመታደል ሆኖ ለተወሰኑ የምርት ዓይነቶች የግምገማውን ጥራት ማረጋገጥ አንችልም። ለምሳሌ፣ የስጦታ ካርዶች እና የቪዲዮ፣ ሙዚቃ እና ጨዋታዎች ሥርጭት።</string>
     <!-- Title for info card displayed when another user reported the displayed product is back in stock. -->
     <string name="review_quality_check_analysis_requested_other_user_info_title" tools:ignore="UnusedResources">መረጃ በቅርቡ ይመጣል</string>
     <!-- Text for body of info card displayed when another user reported the displayed product is back in stock. -->
@@ -2215,8 +2252,12 @@
     <string name="review_quality_check_no_analysis_body">የዚህ ምርት ግምገማዎች አስተማማኝ መሆናቸውን ለማወቅ የግምገማውን ጥራት ያረጋግጡ። ወደ 60 ሰከንድ ብቻ ነው የሚወስደው።</string>
     <!-- Text for button from body of card displayed to the user for products whose reviews were not analyzed yet. Clicking this should trigger a product analysis. -->
     <string name="review_quality_check_no_analysis_link">የግምገማውን ጥራት ያረጋግጡ</string>
+    <!-- Headline for review quality check contextual onboarding card. -->
+    <string name="review_quality_check_contextual_onboarding_title">የእኛን የታመነ የምርት ግምገማዎች መመሪያን ይሞክሩ</string>
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
     <string name="review_quality_check_contextual_onboarding_learn_more_link">የበለጠ ለማወቅ</string>
+    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is the Fakespot product name. Following parameters are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy and review_quality_check_contextual_onboarding_terms_use. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
+    <string name="review_quality_check_contextual_onboarding_caption">“አዎ ይሞክሩት” ን በመምረጥ በ%1$s በMozillaው %2$s እና %3$s ተስማምተዋል።</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
     <string name="review_quality_check_contextual_onboarding_privacy_policy">የግላዊነት ፖሊሲ</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
@@ -2234,6 +2275,8 @@
     <string name="review_quality_check_second_cfr_message">እነዚህ ግምገማዎች አስተማማኝ ናቸው? የተስተካከለ ደረጃን ለማየት አሁን ያረጋግጡ።</string>
     <!-- Text displayed in the second CFR presenting the review quality check feature that opens the review checker when clicked. -->
     <string name="review_quality_check_second_cfr_action" tools:ignore="UnusedResources">የግምገማ አረጋጋጭን ይክፈቱ</string>
+    <!-- Flag showing that the review quality check feature is work in progress. -->
+    <string name="review_quality_check_beta_flag"> ያልተጠናቀቀ ወይም Beta</string>
     <!-- Content description (not visible, for screen readers etc.) for opening browser menu button to open review quality check bottom sheet. -->
     <string name="review_quality_check_open_handle_content_description">የግምገማ አረጋጋጭን ይክፈቱ</string>
     <!-- Content description (not visible, for screen readers etc.) for closing browser menu button to open review quality check bottom sheet. -->
@@ -2258,8 +2301,12 @@
     <!-- Accessibility services actions labels. These will be appended to accessibility actions like "Double tap to.." but not by or applications but by services like Talkback. -->
     <!-- Action label for elements that can be collapsed if interacting with them. Talkback will append this to say "Double tap to collapse". -->
     <string name="a11y_action_label_collapse">ሰብስብ</string>
+    <!-- Current state for elements that can be collapsed if interacting with them. Talkback will dictate this after a state change. -->
+    <string name="a11y_state_label_collapsed">ተሰብስቧል</string>
     <!-- Action label for elements that can be expanded if interacting with them. Talkback will append this to say "Double tap to expand". -->
     <string name="a11y_action_label_expand">ዘርጋ</string>
+    <!-- Current state for elements that can be expanded if interacting with them. Talkback will dictate this after a state change. -->
+    <string name="a11y_state_label_expanded">ተዘርግቷል</string>
     <!-- Action label for links to a website containing documentation about a wallpaper collection. Talkback will append this to say "Double tap to open link to learn more about this collection". -->
     <string name="a11y_action_label_wallpaper_collection_learn_more">ስለዚህ ስብስብ የበለጠ ለማወቅ አገናኝ ይክፈቱ</string>
     <!-- Action label for links that point to an article. Talkback will append this to say "Double tap to read the article". -->
