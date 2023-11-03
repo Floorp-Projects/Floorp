@@ -108,6 +108,10 @@ class ReviewQualityCheckTelemetryMiddleware : ReviewQualityCheckMiddleware {
             is ReviewQualityCheckAction.OptOutCompleted -> {
                 Shopping.surfaceOnboardingDisplayed.record()
             }
+
+            is ReviewQualityCheckAction.OpenPoweredByLink -> {
+                Shopping.surfacePoweredByFakespotLinkClicked.record()
+            }
         }
     }
 }

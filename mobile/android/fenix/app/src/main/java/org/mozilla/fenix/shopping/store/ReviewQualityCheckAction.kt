@@ -119,7 +119,7 @@ sealed interface ReviewQualityCheckAction : Action {
     /**
      * Triggered when the user clicks on the "Powered by" link in the footer.
      */
-    object OpenPoweredByLink : NavigationMiddlewareAction
+    object OpenPoweredByLink : NavigationMiddlewareAction, TelemetryAction
 
     /**
      * Triggered when the user clicks on learn more link on the opt in card.

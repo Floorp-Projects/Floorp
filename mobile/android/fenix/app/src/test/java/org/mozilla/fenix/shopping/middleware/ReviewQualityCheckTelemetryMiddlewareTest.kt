@@ -196,4 +196,12 @@ class ReviewQualityCheckTelemetryMiddlewareTest {
 
         assertNotNull(Shopping.surfaceOnboardingDisplayed.testGetValue())
     }
+
+    @Test
+    fun `WHEN the user is tapped the 'Powered by Fakespot by Mozilla' link THEN the link clicked telemetry is recorded`() {
+        store.dispatch(ReviewQualityCheckAction.OpenPoweredByLink).joinBlocking()
+        store.waitUntilIdle()
+
+        assertNotNull(Shopping.surfacePoweredByFakespotLinkClicked.testGetValue())
+    }
 }
