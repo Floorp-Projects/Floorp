@@ -6,7 +6,7 @@ exports[`Modal renders 1`] = `
   onClick={[Function]}
 >
   <div
-    className="modal entering"
+    className="modal"
     onClick={[Function]}
   />
 </div>

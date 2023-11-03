@@ -448,7 +448,6 @@ export class QuickOpenModal extends Component {
     return React.createElement(
       Modal,
       {
-        in: true,
         handleClose: this.closeModal,
       },
       React.createElement(SearchInput, {
