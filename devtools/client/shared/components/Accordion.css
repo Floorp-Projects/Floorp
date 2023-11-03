@@ -30,6 +30,8 @@
   user-select: none;
   cursor: default;
   background-color: var(--theme-accordion-header-background);
+  /* Adjust outline to make it visible */
+  outline-offset: -2px;
 }
 
 .accordion-header:hover {

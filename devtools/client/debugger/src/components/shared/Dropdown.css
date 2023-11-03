@@ -43,6 +43,7 @@
   font-size: 14px;
   height: 100%;
   width: 28px;
+  outline-offset: -2px;
 }
 
 .dropdown-button .img {

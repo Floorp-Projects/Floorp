@@ -76,6 +76,8 @@
   list-style: none;
   margin: 0;
   padding: 0;
+  /* Ajust outline to make it visible, otherwise it could be clipped, as the container takes the whole window size */
+  outline-offset: -2px;
 }
 
 #computed-property-container > :nth-child(2n of .computed-property-view) {
@@ -91,6 +93,8 @@
   padding-inline-start: 5px;
   display: flex;
   flex-wrap: wrap;
+  /* Ajust outline to make it visible as the list items take the the whole window width */
+  outline-offset: -2px;
 }
 
 .computed-property-name-container {

@@ -37,6 +37,8 @@ div[hidetabs=true] .tabs .tabs-navigation {
   margin: 0;
   margin-inline-end: 15px;
   flex-grow: 1;
+  /* Adjust outline so it's not clipped */
+  outline-offset: -2px;
 }
 
 /* The tab takes entire horizontal space and individual tabs

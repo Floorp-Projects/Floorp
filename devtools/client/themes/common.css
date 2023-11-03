@@ -239,32 +239,21 @@ button::selection {
 
 /* Keyboard focus highlight styles */
 
-:-moz-focusring {
+:focus-visible {
   outline: var(--theme-focus-outline);
-  outline-offset: -1px;
+  outline-offset: var(--theme-outline-offset);
+  box-shadow: var(--theme-outline-box-shadow);
+
+  /* override properties set in global-shared.css for links  */
+  a& {
+    outline-color: var(--theme-focus-outline-color) !important;
+    outline-width: var(--theme-focus-outline-size) !important;
+  }
 
   /* offset the outline for checkbox and radio buttons so it doesn't conflict with existing border */
   :is(input[type="radio"], input[type="checkbox"], checkbox)& {
     outline-offset: 2px;
   }
-}
-
-textbox[focused="true"] {
-  border-color: var(--theme-focus-border-color-textbox);
-  box-shadow: var(--theme-focus-box-shadow-textbox);
-  transition: all 0.2s ease-in-out
-}
-
-textbox :-moz-focusring {
-  box-shadow: none;
-  outline: none;
-}
-
-/* Tab and button of toolbox does not need to display outline */
-
-.devtools-button:-moz-focusring,
-.devtools-tab:-moz-focusring {
-  outline:none;
 }
 
 /* Toolbar buttons */
@@ -287,6 +276,8 @@ textbox :-moz-focusring {
 
 .devtools-togglebutton {
   padding: 1px 6px;
+  /* Separate the outline from the button as it might have a similar background color (after Bug 1590432) */
+  outline-offset: 2px;
 }
 
 /* Remove system form border from devtools-button. */
@@ -336,10 +327,6 @@ textbox :-moz-focusring {
 .devtools-button:disabled {
   pointer-events: none;
   opacity: 0.5 !important;
-}
-
-.devtools-button:focus {
-  background-color: var(--theme-toolbar-hover);
 }
 
 .devtools-button:empty:not([aria-expanded="true"]):hover {
@@ -491,25 +478,28 @@ textbox :-moz-focusring {
 
 .devtools-searchbox > .devtools-searchinput,
 .devtools-searchbox > .devtools-filterinput {
-  /* Let .devtools-searchbox handle the background and border */
+  /* Those classes can be applied on <input>, which have a default styling.
+     We want .devtools-searchbox to handle the background, border and outline, so we
+     need to reset them here */
   background-color: transparent;
   border: none;
+  outline: none;
   flex-grow: 1;
   min-width: 0;
   width: 100%;
 }
 
-.devtools-searchbox:focus-within,
-.devtools-textinput:focus,
-.devtools-searchinput:focus,
-.devtools-filterinput:focus {
-  border-color: var(--blue-50);
-  outline: none;
+.devtools-searchbox:focus-within {
+  outline: var(--theme-focus-outline);
+  outline-offset: -2px;
 }
 
 .devtools-searchbox-no-match {
   background-color: var(--searchbox-no-match-background-color);
   border-color: var(--searchbox-no-match-stroke-color);
+  &:focus-within {
+    outline-color: var(--searchbox-no-match-stroke-color);
+  }
 }
 
 /* Clear icon within the searchbox */
@@ -645,6 +635,8 @@ textbox :-moz-focusring {
   background-position: center;
   -moz-context-properties: fill;
   fill: var(--theme-icon-color);
+  /* The button is often displayed next to the window edge, so adjust the layout to make the offset visible */
+  outline-offset: -2px;
 }
 
 .all-tabs-menu:hover {
@@ -729,14 +721,6 @@ textbox :-moz-focusring {
 /* For right-to-left layout, the toggle thumb goes in the opposite direction. */
 html[dir="rtl"] .devtools-checkbox-toggle {
   --x-pos: -.15em;
-}
-
-.devtools-checkbox-toggle:not(:checked):focus {
-  border-color: var(--blue-55);
-}
-
-.devtools-checkbox-toggle:checked:focus {
-  background-color: var(--blue-40);
 }
 
 .devtools-checkbox-toggle:checked {

@@ -508,7 +508,7 @@ InplaceEditor.prototype = {
     this._measurement.textContent = content;
 
     // Do not use offsetWidth: it will round floating width values.
-    let width = this._measurement.getBoundingClientRect().width + 2;
+    let width = this._measurement.getBoundingClientRect().width;
     if (this.multiline) {
       if (this.maxWidth) {
         width = Math.min(this.maxWidth, width);

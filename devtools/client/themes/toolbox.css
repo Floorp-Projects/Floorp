@@ -276,6 +276,8 @@
   text-overflow: ellipsis;
   color: var(--theme-toolbar-color);
   background-color: transparent;
+    /* adjust outline offset so it's not clipped */
+  --theme-outline-offset: -2px;
 }
 
 .devtools-tab-label {
@@ -301,8 +303,7 @@
   min-width: 26px;
 }
 
-.devtools-tab:hover,
-.devtools-tab:focus {
+.devtools-tab:hover {
   background-color: var(--theme-toolbar-hover);
 }
 
@@ -357,6 +358,8 @@
   line-height: 16px;
   color: var(--theme-icon-color);
   background-color: transparent;
+  /* adjust outline offset so it's not clipped */
+  --theme-outline-offset: -2px;
 }
 
 /* Button icon style */
@@ -375,11 +378,6 @@
 
 .devtools-tabbar-button::-moz-focus-inner {
   border: none;
-}
-
-.devtools-tabbar-button:focus {
-  outline: none;
-  background-color: var(--theme-toolbar-hover);
 }
 
 .devtools-tabbar-button:hover,

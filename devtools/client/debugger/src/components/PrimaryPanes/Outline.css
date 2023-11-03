@@ -197,9 +197,19 @@
 
 .outline-footer button {
   color: var(--theme-body-color);
-}
 
-.outline-footer button.active {
-  background: var(--theme-selection-background);
-  color: var(--theme-selection-color);
+  /* Since the buttons are on the bottom left edge, we need to adjust the outline so
+     it's not off-screen */
+  outline-offset: -2px;
+
+  &.active {
+    background: var(--theme-selection-background);
+    color: var(--theme-selection-color);
+
+    &:focus-visible {
+      /* When the button is active, it has a similar background color than the outline color
+         so we put the focus box-shadow inside the element to make the focus indicator visible */
+      box-shadow: inset var(--theme-outline-box-shadow);
+    }
+  }
 }

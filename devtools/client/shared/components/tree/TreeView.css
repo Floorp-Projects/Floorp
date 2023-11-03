@@ -57,7 +57,6 @@
 }
 
 .treeTable .treeValueCell.inputEnabled input:focus {
-  border-color: var(--theme-textbox-box-shadow);
   transition: all 150ms ease-in-out;
 }
 

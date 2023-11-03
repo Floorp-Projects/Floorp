@@ -30,6 +30,7 @@
   background: none;
   padding: 4px 5px;
   line-height: 12px;
+  outline-offset: -2px;
 }
 
 .event-listener-expand:hover {
@@ -109,7 +110,6 @@
   font-size: inherit;
   background-color: var(--theme-sidebar-background);
   border: 0;
-  outline: 0;
   height: 24px;
   color: var(--theme-body-color);
   background-image: url("chrome://devtools/skin/images/filter-small.svg");
@@ -120,6 +120,7 @@
   -moz-context-properties: fill;
   fill: var(--theme-icon-dimmed-color);
   text-align: match-parent;
+  outline-offset: -1px;
 }
 
 :root:dir(ltr) .event-search-input {

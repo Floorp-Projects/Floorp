@@ -96,6 +96,11 @@
   color: #fff;
 }
 
+.perf-photon-button-primary:focus-visible {
+  /* Avoid the outline to conflict with the blue background */
+  outline-offset: 2px;
+}
+
 .perf-photon-button-primary:hover:not([disabled]) {
   background-color: var(--blue-70);
 }
@@ -110,18 +115,6 @@
 
 .perf-photon-button.perf-button {
   margin: 10px;
-}
-
-button.perf-photon-button:focus,
-.perf-presets-select:focus {
-  box-shadow: 0 0 0 1px var(--blue-50) inset, 0 0 0 1px var(--blue-50),
-    0 0 0 4px var(--blue-50-a30);
-  outline: 0;
-}
-
-a.perf-photon-button:focus {
-  box-shadow: 0 0 0 2px var(--blue-50), 0 0 0 6px var(--blue-50-a30);
-  outline: 0;
 }
 
 .perf-photon-button-ghost {
@@ -197,13 +190,6 @@ a.perf-photon-button:focus {
 
 .perf-presets-select:hover {
   border: 1px solid var(--theme-select-hover-border-color);
-}
-
-.perf-presets-select:focus {
-  box-shadow:
-    0 0 0 2px var(--blue-50),
-    0 0 0 6px var(--blue-50-a30);
-  outline: 0;
 }
 
 .perf-presets-custom {

@@ -49,10 +49,6 @@ body,
   color: var(--theme-body-color);
 }
 
-input:-moz-focusring {
-  outline: none;
-}
-
 .text-input {
   border: 1px solid var(--theme-splitter-color);
   margin: 0 1px;
@@ -61,14 +57,8 @@ input:-moz-focusring {
   line-height: 16px;
 }
 
-.text-input:focus {
-  outline: none;
-  border-color: var(--theme-selection-background);
-  transition: all 0.2s ease-in-out;
-}
-
 .text-input.invalid {
-  border-color: var(--input-invalid-border-color);
+  outline-color: var(--input-invalid-border-color);
 }
 
 #app {
@@ -98,6 +88,11 @@ input:-moz-focusring {
   grid-template-columns: auto min-content;
   width: 100%;
   user-select: none;
+}
+
+#toolbar :is(select, button):focus-visible {
+  /* Adjust the outline otherwise it's clipped at the top */
+  outline-offset: -1px
 }
 
 #toolbar-center-controls,
@@ -652,12 +647,6 @@ input:-moz-focusring {
 
 #device-form input:focus {
   color: var(--viewport-active-color);
-  border-color: var(--blue-55);
-}
-
-#device-form label > input:focus,
-#device-form label > .viewport-dimension:focus  {
-  outline: none;
 }
 
 #device-form-pixel-ratio {
@@ -694,6 +683,11 @@ input:-moz-focusring {
   color: #fff;
   border: 1px solid #0060DF;
   width: 60px;
+
+  &:focus-visible {
+    /* Adjust outline so it's separated from the background color */
+    outline-offset: 2px;
+  }
 }
 
 #device-form-size {

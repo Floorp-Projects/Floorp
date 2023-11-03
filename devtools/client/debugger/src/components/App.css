@@ -25,13 +25,11 @@ button {
   font-size: inherit;
 }
 
-button:hover,
-button:focus {
+button:hover {
   background-color: var(--theme-toolbar-background-hover);
 }
 
-.theme-dark button:hover,
-.theme-dark button:focus {
+.theme-dark button:hover {
   background-color: var(--theme-toolbar-hover);
 }
 

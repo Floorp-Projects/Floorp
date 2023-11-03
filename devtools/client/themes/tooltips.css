@@ -497,12 +497,15 @@ strong {
   align-items: baseline;
   margin: 0;
   padding: 4px 12px;
-  outline: none;
   /*
    * It doesn't really make sense, since if this is just about making the items
    * easier to click we should be using min-width instead.
    */
   margin-inline-end: 15px;
+
+  &:focus-visible {
+    --theme-outline-offset: -2px;
+  }
 }
 
 .tooltip-container[type="doorhanger"] .menuitem > button.command:is([role="menuitem"],[role="menuitemcheckbox"],[role="link"]) {
@@ -514,7 +517,7 @@ strong {
   width: 100%;
 }
 
-.tooltip-container[type="doorhanger"] .menuitem > .command:not([disabled],[open],:active):is(:hover,:focus) {
+.tooltip-container[type="doorhanger"] .menuitem > .command:not([disabled],[open],:active):hover {
   background-color: var(--theme-arrowpanel-dimmed);
 }
 

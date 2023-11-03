@@ -11,8 +11,7 @@
   color: var(--theme-icon-color);
 }
 
-.close-btn:hover,
-.close-btn:focus {
+.close-btn:hover {
   color: var(--theme-selection-color);
   background-color: var(--theme-selection-background);
 }
