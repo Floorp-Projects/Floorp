@@ -5,6 +5,7 @@ prefs = [
   "dom.webgpu.enabled=true",
   "dom.webgpu.workers.enabled=true",
   "gfx.offscreencanvas.enabled=true",
+  "gfx.webgpu.ignore-blocklist=true",
 ]
 support-files = [
   "worker_wrapper.js",
@@ -27,6 +28,11 @@ fail-if = [
 fail-if = [
   "os == 'linux' && os_version == '18.04'",
   "os == 'mac'",
+]
+
+["test_buffer_mapping_invalid_device.html"]
+fail-if = [
+  "os == 'linux' && os_version == '18.04'",
 ]
 
 ["test_command_buffer_creation.html"]
@@ -65,6 +71,11 @@ fail-if = [
 fail-if = [
   "os == 'linux' && os_version == '18.04'",
   "os == 'mac'",
+]
+
+["test_queue_write_invalid_device.html"]
+fail-if = [
+  "os == 'linux' && os_version == '18.04'",
 ]
 
 ["test_submit_compute_empty.html"]

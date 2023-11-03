@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" href="/tests/SimpleTest/test.css" />
+  </head>
+  <body>
+    <script>
+      ok(
+        SpecialPowers.getBoolPref("dom.webgpu.enabled"),
+        "Pref should be enabled."
+      );
+
+      async function testBody() {
+        const adapter = await navigator.gpu.requestAdapter({});
+        const device = await adapter.requestDevice({});
+        const bindGroupLayout = device.createBindGroupLayout({
+          entries: [
+            {
+              binding: 256,
+              storageTexture: { format: "bc1-rgba-unorm-srgb" },
+              visibility: GPUShaderStage.FRAGMENT,
+            },
+          ],
+        });
+        const buffer1 = device.createBuffer({
+          size: 32,
+          usage: GPUBufferUsage.MAP_READ,
+        });
+
+        // Call device.destroy, which makes the device invalid. Further object creation
+        // on device will create objects that are also invalid.
+        device.destroy();
+
+        // Create an invalid buffer2.
+        const buffer2 = device.createBuffer({
+          size: 32,
+          usage: GPUBufferUsage.MAP_WRITE,
+        });
+
+        // Create an invalid bind group, referencing invalid buffer2.
+        const bindGroup = device.createBindGroup({
+          layout: bindGroupLayout,
+          entries: [
+            { binding: 1, resource: { buffer: buffer1 } },
+            { binding: 2, resource: { buffer: buffer2 } },
+          ],
+        });
+
+        ok(bindGroup, "Created a bind group referencing an invalid buffer.");
+      }
+
+      SimpleTest.waitForExplicitFinish();
+      testBody()
+        .catch(e => ok(false, "Unhandled exception " + e))
+        .finally(() => SimpleTest.finish());
+    </script>
+  </body>
+</html>
