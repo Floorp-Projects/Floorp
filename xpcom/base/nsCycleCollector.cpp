@@ -3390,8 +3390,8 @@ void nsCycleCollector::CleanupAfterCollection() {
 
   if (mCCJSRuntime) {
     mCCJSRuntime->FinalizeDeferredThings(
-        mResults.mAnyManual ? CycleCollectedJSContext::FinalizeNow
-                            : CycleCollectedJSContext::FinalizeIncrementally);
+        mResults.mAnyManual ? CycleCollectedJSRuntime::FinalizeNow
+                            : CycleCollectedJSRuntime::FinalizeIncrementally);
     mCCJSRuntime->EndCycleCollectionCallback(mResults);
     timeLog.Checkpoint("CleanupAfterCollection::EndCycleCollectionCallback()");
   }
