@@ -538,9 +538,60 @@ bool js::str_toString(JSContext* cx, unsigned argc, Value* vp) {
   return CallNonGenericMethod<IsString, str_toString_impl>(cx, args);
 }
 
-/*
- * Java-like string native methods.
- */
+template <typename DestChar, typename SrcChar>
+static inline void CopyChars(DestChar* destChars, const SrcChar* srcChars,
+                             size_t length) {
+  if constexpr (std::is_same_v<DestChar, SrcChar>) {
+    PodCopy(destChars, srcChars, length);
+  } else {
+    for (size_t i = 0; i < length; i++) {
+      destChars[i] = srcChars[i];
+    }
+  }
+}
+
+template <typename CharT>
+static inline void CopyChars(CharT* to, const JSLinearString* from,
+                             size_t begin, size_t length) {
+  MOZ_ASSERT(begin + length <= from->length());
+
+  JS::AutoCheckCannotGC nogc;
+  if constexpr (std::is_same_v<CharT, Latin1Char>) {
+    MOZ_ASSERT(from->hasLatin1Chars());
+    CopyChars(to, from->latin1Chars(nogc) + begin, length);
+  } else {
+    if (from->hasLatin1Chars()) {
+      CopyChars(to, from->latin1Chars(nogc) + begin, length);
+    } else {
+      CopyChars(to, from->twoByteChars(nogc) + begin, length);
+    }
+  }
+}
+
+template <typename CharT>
+static JSLinearString* SubstringInlineString(JSContext* cx,
+                                             Handle<JSLinearString*> left,
+                                             Handle<JSLinearString*> right,
+                                             size_t begin, size_t lhsLength,
+                                             size_t rhsLength) {
+  constexpr size_t MaxLength = std::is_same_v<CharT, Latin1Char>
+                                   ? JSFatInlineString::MAX_LENGTH_LATIN1
+                                   : JSFatInlineString::MAX_LENGTH_TWO_BYTE;
+
+  size_t length = lhsLength + rhsLength;
+  MOZ_ASSERT(length <= MaxLength, "total length fits in stack chars");
+  MOZ_ASSERT(JSInlineString::lengthFits<CharT>(length));
+
+  CharT chars[MaxLength] = {};
+
+  CopyChars(chars, left, begin, lhsLength);
+  CopyChars(chars + lhsLength, right, 0, rhsLength);
+
+  if (auto* str = cx->staticStrings().lookup(chars, length)) {
+    return str;
+  }
+  return NewInlineString<CanGC>(cx, chars, length);
+}
 
 JSString* js::SubstringKernel(JSContext* cx, HandleString str, int32_t beginInt,
                               int32_t lengthInt) {
@@ -558,7 +609,7 @@ JSString* js::SubstringKernel(JSContext* cx, HandleString str, int32_t beginInt,
    *
    * while() {
    *   text = text.substr(0, x) + "bla" + text.substr(x)
-   *   test.charCodeAt(x + 1)
+   *   text.charCodeAt(x + 1)
    * }
    */
   if (str->isRope()) {
@@ -586,19 +637,40 @@ JSString* js::SubstringKernel(JSContext* cx, HandleString str, int32_t beginInt,
     size_t rhsLength = begin + len - rope->leftChild()->length();
 
     Rooted<JSRope*> ropeRoot(cx, rope);
-    RootedString lhs(
-        cx, NewDependentString(cx, ropeRoot->leftChild(), begin, lhsLength));
-    if (!lhs) {
+
+    Rooted<JSLinearString*> left(cx, ropeRoot->leftChild()->ensureLinear(cx));
+    if (!left) {
       return nullptr;
     }
 
-    RootedString rhs(
-        cx, NewDependentString(cx, ropeRoot->rightChild(), 0, rhsLength));
-    if (!rhs) {
+    Rooted<JSLinearString*> right(cx, ropeRoot->rightChild()->ensureLinear(cx));
+    if (!right) {
       return nullptr;
     }
 
-    return JSRope::new_<CanGC>(cx, lhs, rhs, len);
+    if (rope->hasLatin1Chars()) {
+      if (JSInlineString::lengthFits<Latin1Char>(len)) {
+        return SubstringInlineString<Latin1Char>(cx, left, right, begin,
+                                                 lhsLength, rhsLength);
+      }
+    } else {
+      if (JSInlineString::lengthFits<char16_t>(len)) {
+        return SubstringInlineString<char16_t>(cx, left, right, begin,
+                                               lhsLength, rhsLength);
+      }
+    }
+
+    left = NewDependentString(cx, left, begin, lhsLength);
+    if (!left) {
+      return nullptr;
+    }
+
+    right = NewDependentString(cx, right, 0, rhsLength);
+    if (!right) {
+      return nullptr;
+    }
+
+    return JSRope::new_<CanGC>(cx, left, right, len);
   }
 
   return NewDependentString(cx, str, begin, len);
@@ -1116,22 +1188,6 @@ static size_t ToUpperCaseLength(const CharT* chars, size_t startIndex,
     }
   }
   return upperLength;
-}
-
-template <typename DestChar, typename SrcChar>
-static inline void CopyChars(DestChar* destChars, const SrcChar* srcChars,
-                             size_t length) {
-  static_assert(!std::is_same_v<DestChar, SrcChar>,
-                "PodCopy is used for the same type case");
-  for (size_t i = 0; i < length; i++) {
-    destChars[i] = srcChars[i];
-  }
-}
-
-template <typename CharT>
-static inline void CopyChars(CharT* destChars, const CharT* srcChars,
-                             size_t length) {
-  PodCopy(destChars, srcChars, length);
 }
 
 template <typename DestChar, typename SrcChar>
