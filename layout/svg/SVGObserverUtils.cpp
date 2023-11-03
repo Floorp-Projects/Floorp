@@ -1095,10 +1095,7 @@ class SVGRenderingObserverSet {
     MOZ_COUNT_CTOR(SVGRenderingObserverSet);
   }
 
-  ~SVGRenderingObserverSet() {
-    InvalidateAll();
-    MOZ_COUNT_DTOR(SVGRenderingObserverSet);
-  }
+  ~SVGRenderingObserverSet() { MOZ_COUNT_DTOR(SVGRenderingObserverSet); }
 
   void Add(SVGRenderingObserver* aObserver) { mObservers.Insert(aObserver); }
   void Remove(SVGRenderingObserver* aObserver) { mObservers.Remove(aObserver); }
