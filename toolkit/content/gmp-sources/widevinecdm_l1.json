@@ -1,0 +1,23 @@
+{
+  "hashFunction": "sha512",
+  "name": "Widevine-L1-1.0.2512.1",
+  "schema_version": 1000,
+  "vendors": {
+    "gmp-widevinecdm-l1": {
+      "platforms": {
+        "WINNT_x86_64-msvc": {
+          "fileUrl": "https://dl.google.com/release2/chrome_component/acaa5khuklrahrby256zitbxd5wq_1.0.2512.1/neifaoindggfcjicffkgpmnlppeffabd_1.0.2512.1_win64_cobsb2ojiixoq4iznzfyxzov4i.crx3",
+          "filesize": 2409080,
+          "hashValue": "a7d385f667190961b707bee8fb881e6a6cfb123038cd571fb6d9372590c169d2340add9cec624d52c6b81edc947b70ae63385cbed5a9eecd720af728b5ae479c"
+        },
+        "WINNT_x86_64-msvc-x64": {
+          "alias": "WINNT_x86_64-msvc"
+        },
+        "WINNT_x86_64-msvc-x64-asan": {
+          "alias": "WINNT_x86_64-msvc"
+        }
+      },
+      "version": "1.0.2512.1"
+    }
+  }
+}

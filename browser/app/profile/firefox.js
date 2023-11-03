@@ -1859,6 +1859,11 @@ pref("identity.fxaccounts.commands.missed.fetch_interval", 86400);
 #ifdef MOZ_WIDEVINE_EME
   pref("media.gmp-widevinecdm.visible", true);
   pref("media.gmp-widevinecdm.enabled", true);
+#ifdef MOZ_WMF_CDM
+  pref("media.gmp-widevinecdm-l1.visible", false);
+  pref("media.gmp-widevinecdm-l1.enabled", false);
+  pref("media.gmp-widevinecdm-l1.forceInstall", false);
+#endif
 #endif
 
 pref("media.gmp-gmpopenh264.visible", true);

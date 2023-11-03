@@ -132,6 +132,7 @@ toolkit.jar:
 #endif
    content/global/gmp-sources/openh264.json    (gmp-sources/openh264.json)
    content/global/gmp-sources/widevinecdm.json (gmp-sources/widevinecdm.json)
+   content/global/gmp-sources/widevinecdm_l1.json (gmp-sources/widevinecdm_l1.json)
 
 # Third party files
    content/global/third_party/d3/d3.js                (/third_party/js/d3/d3.js)
