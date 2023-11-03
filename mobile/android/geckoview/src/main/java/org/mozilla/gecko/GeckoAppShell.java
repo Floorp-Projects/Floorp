@@ -116,6 +116,7 @@ public class GeckoAppShell {
       return getApplicationContext();
     }
 
+    @SuppressLint("ApplySharedPref")
     @Override
     public boolean reportException(final Thread thread, final Throwable exc) {
       try {
