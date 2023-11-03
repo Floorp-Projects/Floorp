@@ -81,6 +81,7 @@ class ModuleLoader final : public JS::loader::ModuleLoaderBase {
   }
 
   void AsyncExecuteInlineModule(ModuleLoadRequest* aRequest);
+  void ExecuteInlineModule(ModuleLoadRequest* aRequest);
 
  private:
   const Kind mKind;
