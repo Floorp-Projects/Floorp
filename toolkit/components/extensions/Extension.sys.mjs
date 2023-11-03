@@ -1365,7 +1365,8 @@ export class ExtensionData {
     let { manifest } = this;
     if (
       !manifest.background ||
-      manifest.background.service_worker ||
+      (manifest.background.service_worker &&
+        WebExtensionPolicy.backgroundServiceWorkerEnabled) ||
       this.manifestVersion > 2
     ) {
       return false;

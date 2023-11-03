@@ -675,7 +675,9 @@ class BackgroundBuilder {
     let { manifest } = extension;
     extension.backgroundState = BACKGROUND_STATE.STARTING;
 
-    this.isWorker = Boolean(manifest.background.service_worker);
+    this.isWorker =
+      !!manifest.background.service_worker &&
+      WebExtensionPolicy.backgroundServiceWorkerEnabled;
 
     let BackgroundClass = this.isWorker ? BackgroundWorker : BackgroundPage;
 
