@@ -1444,6 +1444,9 @@
                 app:popUpTo="@id/translationSettingsFragment"
                 app:popUpToInclusive="true" />
             <action
+                android:id="@+id/action_translationSettingsFragment_to_neverTranslateSitePreferenceFragment"
+                app:destination="@id/neverTranslateSitePreferenceFragment" />
+            <action
                 android:id="@+id/action_translationSettingsFragment_to_automaticTranslationPreferenceFragment"
                 app:destination="@id/automaticTranslationPreferenceFragment" />
         </fragment>
@@ -1461,5 +1464,19 @@
                 android:name="selectedTranslationOptionPreference"
                 app:argType="org.mozilla.fenix.translations.preferences.automatic.AutomaticTranslationItemPreference" />
         </fragment>
+        <fragment
+            android:id="@+id/neverTranslateSitePreferenceFragment"
+            android:name="org.mozilla.fenix.translations.preferences.nevertranslatesite.NeverTranslateSitePreferenceFragment">
+            <action
+                android:id="@+id/action_neverTranslateSitePreferenceFragment_to_neverTranslateSiteDialogPreferenceFragment"
+                app:destination="@id/neverTranslateSiteDialogPreferenceFragment" />
+        </fragment>
+        <dialog
+            android:id="@+id/neverTranslateSiteDialogPreferenceFragment"
+            android:name="org.mozilla.fenix.translations.preferences.nevertranslatesite.NeverTranslateSiteDialogPreferenceFragment">
+            <argument
+                android:name="websiteUrl"
+                app:argType="string" />
+        </dialog>
     </navigation>
 </navigation>

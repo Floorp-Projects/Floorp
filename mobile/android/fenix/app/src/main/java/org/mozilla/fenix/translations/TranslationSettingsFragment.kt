@@ -41,7 +41,12 @@ class TranslationSettingsFragment : Fragment(), UserInteractionHandler {
                         )
                     },
                     onDownloadLanguageClicked = {},
-                    onNeverTranslationClicked = {},
+                    onNeverTranslationClicked = {
+                        findNavController().navigate(
+                            TranslationSettingsFragmentDirections
+                                .actionTranslationSettingsFragmentToNeverTranslateSitePreferenceFragment(),
+                        )
+                    },
                 )
             }
         }

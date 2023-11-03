@@ -23,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import org.mozilla.fenix.R
@@ -72,7 +73,8 @@ fun TextListItem(
                 onClick = onIconClick,
                 modifier = Modifier
                     .padding(end = 16.dp)
-                    .size(ICON_SIZE),
+                    .size(ICON_SIZE)
+                    .clearAndSetSemantics {},
             ) {
                 Icon(
                     painter = iconPainter,
