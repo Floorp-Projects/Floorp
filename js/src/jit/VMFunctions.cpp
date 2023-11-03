@@ -726,7 +726,7 @@ JSLinearString* StringFromCharCode(JSContext* cx, int32_t code) {
     return cx->staticStrings().getUnit(c);
   }
 
-  return NewStringCopyNDontDeflate<CanGC>(cx, &c, 1);
+  return NewInlineString<CanGC>(cx, {c}, 1);
 }
 
 JSLinearString* StringFromCharCodeNoGC(JSContext* cx, int32_t code) {
@@ -738,7 +738,7 @@ JSLinearString* StringFromCharCodeNoGC(JSContext* cx, int32_t code) {
     return cx->staticStrings().getUnit(c);
   }
 
-  return NewStringCopyNDontDeflate<NoGC>(cx, &c, 1);
+  return NewInlineString<NoGC>(cx, {c}, 1);
 }
 
 JSString* StringFromCodePoint(JSContext* cx, int32_t codePoint) {

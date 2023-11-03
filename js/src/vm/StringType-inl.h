@@ -69,6 +69,44 @@ static MOZ_ALWAYS_INLINE JSInlineString* NewInlineString(
   return str;
 }
 
+// Create a thin inline string if possible, and a fat inline string if not.
+template <AllowGC allowGC, typename CharT, size_t N>
+static MOZ_ALWAYS_INLINE JSInlineString* NewInlineString(
+    JSContext* cx, const CharT (&chars)[N], size_t len,
+    js::gc::Heap heap = js::gc::Heap::Default) {
+  MOZ_ASSERT(len <= N);
+
+  /*
+   * Don't bother trying to find a static atom; measurement shows that not
+   * many get here (for one, Atomize is catching them).
+   */
+
+  CharT* storage;
+  JSInlineString* str = AllocateInlineString<allowGC>(cx, len, &storage, heap);
+  if (!str) {
+    return nullptr;
+  }
+
+  if (JSThinInlineString::lengthFits<CharT>(len)) {
+    constexpr size_t MaxLength = std::is_same_v<CharT, Latin1Char>
+                                     ? JSThinInlineString::MAX_LENGTH_LATIN1
+                                     : JSThinInlineString::MAX_LENGTH_TWO_BYTE;
+
+    // memcpy with a constant length can be optimized more easily by compilers.
+    constexpr size_t toCopy = std::min(N, MaxLength) * sizeof(CharT);
+    std::memcpy(storage, chars, toCopy);
+  } else {
+    constexpr size_t MaxLength = std::is_same_v<CharT, Latin1Char>
+                                     ? JSFatInlineString::MAX_LENGTH_LATIN1
+                                     : JSFatInlineString::MAX_LENGTH_TWO_BYTE;
+
+    // memcpy with a constant length can be optimized more easily by compilers.
+    constexpr size_t toCopy = std::min(N, MaxLength) * sizeof(CharT);
+    std::memcpy(storage, chars, toCopy);
+  }
+  return str;
+}
+
 template <typename CharT>
 static MOZ_ALWAYS_INLINE JSAtom* NewInlineAtom(JSContext* cx,
                                                const CharT* chars,
@@ -453,6 +491,14 @@ inline js::FatInlineAtom::FatInlineAtom(size_t length, char16_t** chars,
   *chars = d.inlineStorageTwoByte;
 }
 
+inline JSLinearString* js::StaticStrings::getUnitString(JSContext* cx,
+                                                        char16_t c) {
+  if (c < UNIT_STATIC_LIMIT) {
+    return getUnit(c);
+  }
+  return js::NewInlineString<CanGC>(cx, {c}, 1);
+}
+
 inline JSLinearString* js::StaticStrings::getUnitStringForElement(
     JSContext* cx, JSString* str, size_t index) {
   MOZ_ASSERT(index < str->length());
@@ -461,11 +507,7 @@ inline JSLinearString* js::StaticStrings::getUnitStringForElement(
   if (!str->getChar(cx, index, &c)) {
     return nullptr;
   }
-  if (c < UNIT_STATIC_LIMIT) {
-    return getUnit(c);
-  }
-  return js::NewInlineString<CanGC>(cx, mozilla::Range<const char16_t>(&c, 1),
-                                    js::gc::Heap::Default);
+  return getUnitString(cx, c);
 }
 
 MOZ_ALWAYS_INLINE void JSString::finalize(JS::GCContext* gcx) {
