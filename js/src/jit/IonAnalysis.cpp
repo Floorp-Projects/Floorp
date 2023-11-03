@@ -1862,6 +1862,7 @@ class TypeAnalyzer {
   bool markPhiProducers();
   bool specializeValidFloatOps();
   bool tryEmitFloatOperations();
+  bool propagateUnbox();
 
   bool shouldSpecializeOsrPhis() const;
   MIRType guessPhiType(MPhi* phi) const;
@@ -2670,11 +2671,235 @@ bool TypeAnalyzer::checkFloatCoherency() {
   return true;
 }
 
+static bool HappensBefore(const MDefinition* earlier,
+                          const MDefinition* later) {
+  MOZ_ASSERT(earlier->block() == later->block());
+
+  for (auto* ins : *earlier->block()) {
+    if (ins == earlier) {
+      return true;
+    }
+    if (ins == later) {
+      return false;
+    }
+  }
+  MOZ_CRASH("earlier and later are instructions in the block");
+}
+
+// Propagate type information from dominating unbox instructions.
+//
+// This optimization applies for example for self-hosted String.prototype
+// functions.
+//
+// Example:
+// ```
+// String.prototype.id = function() {
+//   // Strict mode to avoid ToObject on primitive this-values.
+//   "use strict";
+//
+//   // Template string to apply ToString on the this-value.
+//   return `${this}`;
+// };
+//
+// function f(s) {
+//   // Assume |s| is a string value.
+//   return s.id();
+// }
+// ```
+//
+// Compiles into: (Graph after Scalar Replacement)
+//
+// ┌───────────────────────────────────────────────────────────────────────────┐
+// │                             Block 0                                       │
+// │ resumepoint 1 0 2 2                                                       │
+// │ 0 parameter THIS_SLOT                                           Value     │
+// │ 1 parameter 0                                                   Value     │
+// │ 2 constant undefined                                            Undefined │
+// │ 3 start                                                                   │
+// │ 4 checkoverrecursed                                                       │
+// │ 5 unbox parameter1 to String (fallible)                         String    │
+// │ 6 constant object 1d908053e088 (String)                         Object    │
+// │ 7 guardshape constant6:Object                                   Object    │
+// │ 8 slots guardshape7:Object                                      Slots     │
+// │ 9 loaddynamicslot slots8:Slots (slot 53)                        Value     │
+// │ 10 constant 0x0                                                 Int32     │
+// │ 11 unbox loaddynamicslot9 to Object (fallible)                  Object    │
+// │ 12 nurseryobject                                                Object    │
+// │ 13 guardspecificfunction unbox11:Object nurseryobject12:Object  Object    │
+// │ 14 goto block1                                                            │
+// └──────────────────────────────────┬────────────────────────────────────────┘
+//                                    │
+// ┌──────────────────────────────────▼────────────────────────────────────────┐
+// │                               Block 1                                     │
+// │ ((0)) resumepoint 15 1 15 15 | 1 13 1 0 2 2                               │
+// │ 15 constant undefined                                           Undefined │
+// │ 16 tostring parameter1:Value                                    String    │
+// │ 18 goto block2                                                            │
+// └──────────────────────────────────┬────────────────────────────────────────┘
+//                                    │
+//                     ┌──────────────▼──────────────┐
+//                     │           Block 2           │
+//                     │ resumepoint 16 1 0 2 2      │
+//                     │ 19 return tostring16:String │
+//                     └─────────────────────────────┘
+//
+// The Unbox instruction is used as a type guard. The ToString instruction
+// doesn't use the type information from the preceding Unbox instruction and
+// therefore has to assume its operand can be any value.
+//
+// When instead propagating the type information from the preceding Unbox
+// instruction, this graph is constructed after the "Apply types" phase:
+//
+// ┌───────────────────────────────────────────────────────────────────────────┐
+// │                             Block 0                                       │
+// │ resumepoint 1 0 2 2                                                       │
+// │ 0 parameter THIS_SLOT                                           Value     │
+// │ 1 parameter 0                                                   Value     │
+// │ 2 constant undefined                                            Undefined │
+// │ 3 start                                                                   │
+// │ 4 checkoverrecursed                                                       │
+// │ 5 unbox parameter1 to String (fallible)                         String    │
+// │ 6 constant object 1d908053e088 (String)                         Object    │
+// │ 7 guardshape constant6:Object                                   Object    │
+// │ 8 slots guardshape7:Object                                      Slots     │
+// │ 9 loaddynamicslot slots8:Slots (slot 53)                        Value     │
+// │ 10 constant 0x0                                                 Int32     │
+// │ 11 unbox loaddynamicslot9 to Object (fallible)                  Object    │
+// │ 12 nurseryobject                                                Object    │
+// │ 13 guardspecificfunction unbox11:Object nurseryobject12:Object  Object    │
+// │ 14 goto block1                                                            │
+// └──────────────────────────────────┬────────────────────────────────────────┘
+//                                    │
+// ┌──────────────────────────────────▼────────────────────────────────────────┐
+// │                               Block 1                                     │
+// │ ((0)) resumepoint 15 1 15 15 | 1 13 1 0 2 2                               │
+// │ 15 constant undefined                                           Undefined │
+// │ 20 unbox parameter1 to String (fallible)                        String    │
+// │ 16 tostring parameter1:Value                                    String    │
+// │ 18 goto block2                                                            │
+// └──────────────────────────────────┬────────────────────────────────────────┘
+//                                    │
+//                     ┌──────────────▼─────────────────────┐
+//                     │           Block 2                  │
+//                     │ resumepoint 16 1 0 2 2             │
+//                     │ 21 box tostring16:String     Value │
+//                     │ 19 return box21:Value              │
+//                     └────────────────────────────────────┘
+//
+// GVN will later merge both Unbox instructions and fold away the ToString
+// instruction, so we get this final graph:
+//
+// ┌───────────────────────────────────────────────────────────────────────────┐
+// │                             Block 0                                       │
+// │ resumepoint 1 0 2 2                                                       │
+// │ 0 parameter THIS_SLOT                                           Value     │
+// │ 1 parameter 0                                                   Value     │
+// │ 2 constant undefined                                            Undefined │
+// │ 3 start                                                                   │
+// │ 4 checkoverrecursed                                                       │
+// │ 5 unbox parameter1 to String (fallible)                         String    │
+// │ 6 constant object 1d908053e088 (String)                         Object    │
+// │ 7 guardshape constant6:Object                                   Object    │
+// │ 8 slots guardshape7:Object                                      Slots     │
+// │ 22 loaddynamicslotandunbox slots8:Slots (slot 53)               Object    │
+// │ 11 nurseryobject                                                Object    │
+// │ 12 guardspecificfunction load22:Object nurseryobject11:Object   Object    │
+// │ 13 goto block1                                                            │
+// └──────────────────────────────────┬────────────────────────────────────────┘
+//                                    │
+// ┌──────────────────────────────────▼────────────────────────────────────────┐
+// │                               Block 1                                     │
+// │ ((0)) resumepoint 2 1 2 2 | 1 12 1 0 2 2                                  │
+// │ 14 goto block2                                                            │
+// └──────────────────────────────────┬────────────────────────────────────────┘
+//                                    │
+//                     ┌──────────────▼─────────────────────┐
+//                     │           Block 2                  │
+//                     │ resumepoint 5 1 0 2 2              │
+//                     │ 15 box unbox5:String         Value │
+//                     │ 16 return box15:Value              │
+//                     └────────────────────────────────────┘
+//
+bool TypeAnalyzer::propagateUnbox() {
+  // Visit the blocks in post-order, so that the type information of the closest
+  // unbox operation is used.
+  for (PostorderIterator block(graph.poBegin()); block != graph.poEnd();
+       block++) {
+    if (mir->shouldCancel("Propagate Unbox")) {
+      return false;
+    }
+
+    // Iterate over all instructions to look for unbox instructions.
+    for (MInstructionIterator iter(block->begin()); iter != block->end();
+         iter++) {
+      if (!iter->isUnbox()) {
+        continue;
+      }
+
+      auto* unbox = iter->toUnbox();
+      auto* input = unbox->input();
+
+      // Ignore unbox operations on typed values.
+      if (input->type() != MIRType::Value) {
+        continue;
+      }
+
+      // Inspect other uses of |input| to propagate the unboxed type information
+      // from |unbox|.
+      for (auto uses = input->usesBegin(); uses != input->usesEnd();) {
+        auto* use = *uses++;
+
+        // Ignore resume points.
+        if (!use->consumer()->isDefinition()) {
+          continue;
+        }
+        auto* def = use->consumer()->toDefinition();
+
+        // Ignore any unbox operations, including the current |unbox|.
+        if (def->isUnbox()) {
+          continue;
+        }
+
+        // Ignore phi nodes, because we don't yet support them.
+        if (def->isPhi()) {
+          continue;
+        }
+
+        // The unbox operation needs to happen before the other use, otherwise
+        // we can't propagate the type information.
+        if (unbox->block() == def->block()) {
+          if (!HappensBefore(unbox, def)) {
+            continue;
+          }
+        } else {
+          if (!unbox->block()->dominates(def->block())) {
+            continue;
+          }
+        }
+
+        // Replace the use with |unbox|, so that GVN knows about the actual
+        // value type and can more easily fold unnecessary operations. If the
+        // instruction actually needs a boxed input, the BoxPolicy type policy
+        // will simply unwrap the unbox instruction.
+        use->replaceProducer(unbox);
+
+        // The uses in the MIR graph no longer reflect the uses in the bytecode,
+        // so we have to mark |input| as implicitly used.
+        input->setImplicitlyUsedUnchecked();
+      }
+    }
+  }
+  return true;
+}
+
 bool TypeAnalyzer::analyze() {
   if (!tryEmitFloatOperations()) {
     return false;
   }
   if (!specializePhis()) {
+    return false;
+  }
+  if (!propagateUnbox()) {
     return false;
   }
   if (!insertConversions()) {
