@@ -4615,6 +4615,10 @@ class MMinMax : public MBinaryInstruction, public ArithPolicy::Data {
   bool isFloat32Commutative() const override { return true; }
   void trySpecializeFloat32(TempAllocator& alloc) override;
 
+#ifdef JS_JITSPEW
+  void printOpcode(GenericPrinter& out) const override;
+#endif
+
   ALLOW_CLONE(MMinMax)
 };
 
@@ -4649,6 +4653,10 @@ class MMinMaxArray : public MUnaryInstruction, public SingleObjectPolicy::Data {
   AliasSet getAliasSet() const override {
     return AliasSet::Load(AliasSet::ObjectFields | AliasSet::Element);
   }
+
+#ifdef JS_JITSPEW
+  void printOpcode(GenericPrinter& out) const override;
+#endif
 };
 
 class MAbs : public MUnaryInstruction, public ArithPolicy::Data {
