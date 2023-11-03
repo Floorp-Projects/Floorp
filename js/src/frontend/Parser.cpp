@@ -417,7 +417,7 @@ typename ParseHandler::ListNodeType GeneralParser<ParseHandler, Unit>::parse() {
         return null();
       }
     }
-    stmtList = handler_.asList(node);
+    stmtList = handler_.asListNode(node);
   }
 
   return stmtList;
@@ -1798,7 +1798,7 @@ LexicalScopeNode* Parser<FullParseHandler, Unit>::evalBody(
       return null();
     }
   }
-  body = handler_.asLexicalScope(node);
+  body = handler_.asLexicalScopeNode(node);
 
   if (!this->setSourceMapInfo()) {
     return nullptr;
@@ -2492,7 +2492,7 @@ GeneralParser<ParseHandler, Unit>::functionBody(InHandling inHandling,
       if (!generator) {
         return null();
       }
-      if (!handler_.prependInitialYield(handler_.asList(body), generator)) {
+      if (!handler_.prependInitialYield(handler_.asListNode(body), generator)) {
         return null();
       }
     }
@@ -4431,7 +4431,7 @@ GeneralParser<ParseHandler, Unit>::objectBindingPattern(
           return null();
         }
 
-        if (!handler_.addShorthand(literal, handler_.asName(propName),
+        if (!handler_.addShorthand(literal, handler_.asNameNode(propName),
                                    binding)) {
           return null();
         }
@@ -6035,7 +6035,7 @@ GeneralParser<ParseHandler, Unit>::exportFunctionDeclaration(
     return null();
   }
 
-  if (!checkExportedNameForFunction(handler_.asFunction(kid))) {
+  if (!checkExportedNameForFunction(handler_.asFunctionNode(kid))) {
     return null();
   }
 
@@ -11728,7 +11728,7 @@ bool GeneralParser<ParseHandler, Unit>::checkDestructuringAssignmentTarget(
   }
 
   if (handler_.isName(expr)) {
-    checkDestructuringAssignmentName(handler_.asName(expr), exprPos,
+    checkDestructuringAssignmentName(handler_.asNameNode(expr), exprPos,
                                      possibleError);
     return true;
   }
@@ -12398,7 +12398,7 @@ GeneralParser<ParseHandler, Unit>::objectLiteral(YieldHandling yieldHandling,
           checkDestructuringAssignmentName(nameExpr, namePos, possibleError);
         }
 
-        if (!handler_.addShorthand(literal, handler_.asName(propName),
+        if (!handler_.addShorthand(literal, handler_.asNameNode(propName),
                                    nameExpr)) {
           return null();
         }
@@ -12615,7 +12615,7 @@ GeneralParser<ParseHandler, Unit>::recordLiteral(YieldHandling yieldHandling) {
           return null();
         }
 
-        if (!handler_.addShorthand(literal, handler_.asName(propName),
+        if (!handler_.addShorthand(literal, handler_.asNameNode(propName),
                                    nameExpr)) {
           return null();
         }
