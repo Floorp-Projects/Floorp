@@ -2308,6 +2308,7 @@
   folds_to: custom
   congruent_to: if_operands_equal
   alias_set: none
+  type_policy: none
 
 - name: HasClass
   gen_boilerplate: false
