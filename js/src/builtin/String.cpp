@@ -1295,18 +1295,14 @@ static JSString* ToUpperCase(JSContext* cx, JSLinearString* str) {
     // so rarely Latin-1 that we don't even consider creating a new
     // Latin-1 string.
     if constexpr (std::is_same_v<CharT, Latin1Char>) {
-      bool resultIsLatin1 = true;
-      for (size_t j = i; j < length; j++) {
-        Latin1Char c = chars[j];
-        if (c == unicode::MICRO_SIGN ||
-            c == unicode::LATIN_SMALL_LETTER_Y_WITH_DIAERESIS) {
-          MOZ_ASSERT(unicode::ToUpperCase(c) > JSString::MAX_LATIN1_CHAR);
-          resultIsLatin1 = false;
-          break;
-        } else {
-          MOZ_ASSERT(unicode::ToUpperCase(c) <= JSString::MAX_LATIN1_CHAR);
-        }
-      }
+      bool resultIsLatin1 = std::none_of(chars + i, chars + length, [](auto c) {
+        bool upperCaseIsTwoByte =
+            c == unicode::MICRO_SIGN ||
+            c == unicode::LATIN_SMALL_LETTER_Y_WITH_DIAERESIS;
+        MOZ_ASSERT(upperCaseIsTwoByte ==
+                   (unicode::ToUpperCase(c) > JSString::MAX_LATIN1_CHAR));
+        return upperCaseIsTwoByte;
+      });
 
       if (resultIsLatin1) {
         newChars.construct<Latin1Buffer>();
