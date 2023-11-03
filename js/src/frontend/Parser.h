@@ -441,7 +441,7 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
  private:
   using Node = typename ParseHandler::Node;
 
-#define DECLARE_TYPE(typeName, _) \
+#define DECLARE_TYPE(typeName) \
   using typeName##Type = typename ParseHandler::typeName##Type;
   FOR_EACH_PARSENODE_SUBCLASS(DECLARE_TYPE)
 #undef DECLARE_TYPE
@@ -688,7 +688,7 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   using FinalParser = Parser<ParseHandler, Unit>;
   using Node = typename ParseHandler::Node;
 
-#define DECLARE_TYPE(typeName, _) \
+#define DECLARE_TYPE(typeName) \
   using typeName##Type = typename ParseHandler::typeName##Type;
   FOR_EACH_PARSENODE_SUBCLASS(DECLARE_TYPE)
 #undef DECLARE_TYPE
@@ -1526,7 +1526,7 @@ class MOZ_STACK_CLASS Parser<SyntaxParseHandler, Unit> final
   using Base = GeneralParser<SyntaxParseHandler, Unit>;
   using Node = SyntaxParseHandler::Node;
 
-#define DECLARE_TYPE(typeName, _) \
+#define DECLARE_TYPE(typeName) \
   using typeName##Type = SyntaxParseHandler::typeName##Type;
   FOR_EACH_PARSENODE_SUBCLASS(DECLARE_TYPE)
 #undef DECLARE_TYPE
@@ -1660,7 +1660,7 @@ class MOZ_STACK_CLASS Parser<FullParseHandler, Unit> final
   using Base = GeneralParser<FullParseHandler, Unit>;
   using Node = FullParseHandler::Node;
 
-#define DECLARE_TYPE(typeName, _) \
+#define DECLARE_TYPE(typeName) \
   using typeName##Type = FullParseHandler::typeName##Type;
   FOR_EACH_PARSENODE_SUBCLASS(DECLARE_TYPE)
 #undef DECLARE_TYPE
