@@ -997,36 +997,6 @@ template JSString* js::ConcatStrings<NoGC>(JSContext* cx, JSString* const& left,
                                            JSString* const& right,
                                            gc::Heap heap);
 
-/**
- * Copy |src[0..length]| to |dest[0..length]| when copying doesn't narrow and
- * therefore can't lose information.
- */
-static inline void FillChars(char16_t* dest, const unsigned char* src,
-                             size_t length) {
-  ConvertLatin1toUtf16(AsChars(Span(src, length)), Span(dest, length));
-}
-
-static inline void FillChars(char16_t* dest, const char16_t* src,
-                             size_t length) {
-  PodCopy(dest, src, length);
-}
-
-static inline void FillChars(unsigned char* dest, const unsigned char* src,
-                             size_t length) {
-  PodCopy(dest, src, length);
-}
-
-/**
- * Copy |src[0..length]| to |dest[0..length]| when copying *does* narrow, but
- * the user guarantees every runtime |src[i]| value can be stored without change
- * of value in |dest[i]|.
- */
-static inline void FillFromCompatible(unsigned char* dest, const char16_t* src,
-                                      size_t length) {
-  LossyConvertUtf16toLatin1(Span(src, length),
-                            AsWritableChars(Span(dest, length)));
-}
-
 #if defined(DEBUG) || defined(JS_JITSPEW) || defined(JS_CACHEIR_SPEW)
 void JSDependentString::dumpRepresentation(js::GenericPrinter& out,
                                            int indent) const {
@@ -1405,12 +1375,17 @@ T* AutoStableStringChars::allocOwnChars(JSContext* cx, size_t count) {
 
 bool AutoStableStringChars::copyAndInflateLatin1Chars(
     JSContext* cx, Handle<JSLinearString*> linearString) {
-  char16_t* chars = allocOwnChars<char16_t>(cx, linearString->length());
+  size_t length = linearString->length();
+  char16_t* chars = allocOwnChars<char16_t>(cx, length);
   if (!chars) {
     return false;
   }
 
-  FillChars(chars, linearString->rawLatin1Chars(), linearString->length());
+  // Copy |src[0..length]| to |dest[0..length]| when copying doesn't narrow and
+  // therefore can't lose information.
+  auto src = AsChars(Span(linearString->rawLatin1Chars(), length));
+  auto dest = Span(chars, length);
+  ConvertLatin1toUtf16(src, dest);
 
   state_ = TwoByte;
   twoByteChars_ = chars;
@@ -1426,7 +1401,7 @@ bool AutoStableStringChars::copyLatin1Chars(
     return false;
   }
 
-  FillChars(chars, linearString->rawLatin1Chars(), length);
+  PodCopy(chars, linearString->rawLatin1Chars(), length);
 
   state_ = Latin1;
   latin1Chars_ = chars;
@@ -1442,7 +1417,7 @@ bool AutoStableStringChars::copyTwoByteChars(
     return false;
   }
 
-  FillChars(chars, linearString->rawTwoByteChars(), length);
+  PodCopy(chars, linearString->rawTwoByteChars(), length);
 
   state_ = TwoByte;
   twoByteChars_ = chars;
@@ -1551,6 +1526,17 @@ JSLinearString* js::NewDependentString(JSContext* cx, JSString* baseArg,
 
 static inline bool CanStoreCharsAsLatin1(const char16_t* s, size_t length) {
   return IsUtf16Latin1(Span(s, length));
+}
+
+/**
+ * Copy |src[0..length]| to |dest[0..length]| when copying *does* narrow, but
+ * the user guarantees every runtime |src[i]| value can be stored without change
+ * of value in |dest[i]|.
+ */
+static inline void FillFromCompatible(unsigned char* dest, const char16_t* src,
+                                      size_t length) {
+  LossyConvertUtf16toLatin1(Span(src, length),
+                            AsWritableChars(Span(dest, length)));
 }
 
 template <AllowGC allowGC>
@@ -1711,7 +1697,7 @@ JSLinearString* NewStringCopyNDontDeflateNonStaticValidLength(JSContext* cx,
     return nullptr;
   }
 
-  FillChars(news.get(), s, n);
+  PodCopy(news.get(), s, n);
 
   return JSLinearString::newValidLength<allowGC>(cx, std::move(news), n, heap);
 }
@@ -1806,7 +1792,7 @@ JSAtom* NewAtomCopyNDontDeflateValidLength(JSContext* cx, const CharT* s,
     return nullptr;
   }
 
-  FillChars(news.get(), s, n);
+  PodCopy(news.get(), s, n);
 
   return JSAtom::newValidLength(cx, std::move(news), n, hash);
 }
@@ -2225,7 +2211,7 @@ UniqueChars js::EncodeLatin1(JSContext* cx, JSString* str) {
     return nullptr;
   }
 
-  FillChars(buf, linear->latin1Chars(nogc), len);
+  PodCopy(buf, linear->latin1Chars(nogc), len);
   buf[len] = '\0';
 
   return UniqueChars(reinterpret_cast<char*>(buf));
