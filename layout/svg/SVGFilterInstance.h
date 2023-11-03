@@ -131,11 +131,6 @@ class SVGFilterInstance {
 
  private:
   /**
-   * Finds the filter frame associated with this SVG filter.
-   */
-  SVGFilterFrame* GetFilterFrame(nsIFrame* aTargetFrame);
-
-  /**
    * Computes the filter primitive subregion for the given primitive.
    */
   IntRect ComputeFilterPrimitiveSubregion(

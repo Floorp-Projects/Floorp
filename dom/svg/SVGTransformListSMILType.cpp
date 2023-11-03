@@ -331,11 +331,10 @@ bool SVGTransformListSMILType::GetTransforms(
   aTransforms.Clear();
   if (!aTransforms.SetCapacity(smilTransforms.Length(), fallible)) return false;
 
-  for (uint32_t i = 0; i < smilTransforms.Length(); ++i) {
+  for (const auto& smilTransform : smilTransforms) {
     // No need to check the return value below since we have already allocated
     // the necessary space
-    (void)aTransforms.AppendElement(smilTransforms[i].ToSVGTransform(),
-                                    fallible);
+    (void)aTransforms.AppendElement(smilTransform.ToSVGTransform(), fallible);
   }
   return true;
 }

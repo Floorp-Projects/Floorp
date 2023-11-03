@@ -67,7 +67,7 @@ void SVGPolyElement::GetMarkPoints(nsTArray<SVGMark>* aMarks) {
     if (i == 1) {
       aMarks->ElementAt(0).angle = angle;
     } else {
-      aMarks->ElementAt(aMarks->Length() - 1).angle =
+      aMarks->LastElement().angle =
           SVGContentUtils::AngleBisect(prevAngle, angle);
     }
 

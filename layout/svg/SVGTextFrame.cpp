@@ -1481,16 +1481,14 @@ class MOZ_STACK_CLASS TextFrameIterator {
    * are inside one.
    */
   nsIFrame* TextPathFrame() const {
-    return mTextPathFrames.IsEmpty()
-               ? nullptr
-               : mTextPathFrames.ElementAt(mTextPathFrames.Length() - 1);
+    return mTextPathFrames.IsEmpty() ? nullptr : mTextPathFrames.LastElement();
   }
 
   /**
    * Returns the current frame's computed dominant-baseline value.
    */
   StyleDominantBaseline DominantBaseline() const {
-    return mBaselines.ElementAt(mBaselines.Length() - 1);
+    return mBaselines.LastElement();
   }
 
   /**
