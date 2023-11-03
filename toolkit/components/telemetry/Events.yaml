@@ -4201,7 +4201,8 @@ cookie_banner:
       - tihuang@mozilla.com
     bug_numbers:
       - 1797079
-    expiry_version: "115"
+      - 1861317
+    expiry_version: "128"
     extra_keys:
       no_rule: There is no cookie banner rule for the reloading domain.
       has_cookie_rule: There is a matching cookie rule for the reloading domain.

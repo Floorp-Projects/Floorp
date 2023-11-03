@@ -1355,12 +1355,13 @@ cookie.banners:
       - 1804259
       - 1827765
       - 1850874
+      - 1861317
     description: >
       Counts the number of hit/miss of cookie banner rule lookups for every
       load. We collect three types of counters, including counters for overall
       rule lookup, counters for cookie rule lookup and counters for click rule
       lookup. We also divide the counter by top-level loads and iframe loads.
-    expires: '122'
+    expires: '128'
     kind: uint
     keyed: true
     notification_emails:
@@ -1377,13 +1378,14 @@ cookie.banners:
       - 1804259
       - 1827765
       - 1850874
+      - 1861317
     description: >
       Counts the number of hit/miss of cookie banner rule lookups for domain.
       We collect three types of counters, including counters for overall
       rule lookup, counters for cookie rule lookup and counters for click rule
       lookup. We also divide the counter by top-level loads and iframe loads.
       For each domain, we will only collect once.
-    expires: '122'
+    expires: '128'
     kind: uint
     keyed: true
     notification_emails:
@@ -1402,12 +1404,13 @@ cookie.banners.click:
       - 1804259
       - 1827765
       - 1850874
+      - 1861317
     description: >
       Given a matching cookie banner click rule, how often do we handle or fail
       to handle cookie banners, labelled by reason. The 'success' and 'fail'
       counters count the total numbers independently of the reason counters.
       Counters are incremented after the content window has been destroyed.
-    expires: '122'
+    expires: '128'
     keyed: true
     kind: uint
     notification_emails:
