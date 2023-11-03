@@ -47,8 +47,7 @@ export class nsContentDispatchChooser {
   ) {
     let callerHasPermission = this._hasProtocolHandlerPermission(
       aHandler.type,
-      aPrincipal,
-      aTriggeredExternally
+      aPrincipal
     );
 
     // Force showing the dialog for links passed from outside the application.
@@ -270,7 +269,7 @@ export class nsContentDispatchChooser {
    * @param {nsIPrincipal} aPrincipal - Principal to test for permission.
    * @returns {boolean} - true if permission is set, false otherwise.
    */
-  _hasProtocolHandlerPermission(scheme, aPrincipal, aTriggeredExternally) {
+  _hasProtocolHandlerPermission(scheme, aPrincipal) {
     // Permission disabled by pref
     if (!nsContentDispatchChooser.isPermissionEnabled) {
       return true;
@@ -286,10 +285,7 @@ export class nsContentDispatchChooser {
       return true;
     }
 
-    if (
-      !aPrincipal ||
-      (aPrincipal.isSystemPrincipal && !aTriggeredExternally)
-    ) {
+    if (!aPrincipal) {
       return false;
     }
 
