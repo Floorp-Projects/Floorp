@@ -416,7 +416,7 @@ nsClipboard::HasNativeClipboardDataMatchingFlavors(
   if (kSelectionCache == aWhichClipboard) {
     nsTArray<nsCString> transferableFlavors;
     if (sSelectionCache &&
-        NS_SUCCEEDED(sSelectionCache->FlavorsTransferableCanImport(
+        NS_SUCCEEDED(sSelectionCache->FlavorsTransferableCanExport(
             transferableFlavors))) {
       if (MOZ_CLIPBOARD_LOG_ENABLED()) {
         MOZ_CLIPBOARD_LOG("    SelectionCache types (nums %zu)\n",
