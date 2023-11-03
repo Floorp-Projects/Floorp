@@ -27,6 +27,16 @@ li:hover > hgroup > .stylesheet-more > h3 > .stylesheet-saveButton {
   list-style-image: url(images/import.svg);
 }
 
+/* Filter input */
+#style-editor-chrome toolbar .devtools-searchbox {
+  /* Adjust default focused styling as it looks a bit off */
+  outline-offset: -2px;
+
+  & > .devtools-filterinput {
+    box-shadow: none;
+  }
+}
+
 .stylesheet-details-container {
   flex: 1;
   min-width: 0;
@@ -89,6 +99,10 @@ li.error > .stylesheet-info > .stylesheet-more  > .stylesheet-error-message {
 
 .stylesheet-info > h1 {
   flex: 1;
+}
+
+.stylesheet-info a.stylesheet-name:focus-visible {
+  outline-offset: -2px;
 }
 
 .splitview-nav > li > hgroup.stylesheet-info {

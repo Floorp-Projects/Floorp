@@ -12,6 +12,8 @@
   padding: 0px 5px;
   fill: currentColor;
   min-width: 30px;
+  /* Adjust outline so it's not clipped */
+  outline-offset: -3px;
 }
 
 .command-bar-button:disabled {

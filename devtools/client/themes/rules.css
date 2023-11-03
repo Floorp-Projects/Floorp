@@ -148,6 +148,8 @@
   overflow: auto;
   flex: auto;
   height: 100%;
+  /* Adjust outline so it's visible */
+  outline-offset: -2px;
 }
 
 /* This extra wrapper only serves as a way to get the content of the view focusable.
@@ -665,6 +667,9 @@
 .ruleview-swatch.ruleview-colorswatch {
   border: none;
   padding: 0;
+  /* Adjust outline so it doesn't conflate with the color swatch, which could have a similar background
+     color as the outline */
+  outline-offset: 2px;
 }
 
 .ruleview-bezierswatch {
@@ -712,9 +717,15 @@
 }
 
 .styleinspector-propertyeditor {
-  border: 1px solid #CCC;
   padding: 0;
-  margin: -1px -3px -1px -1px;
+  margin-block: -1px;
+  border: none;
+  outline-offset: 1px;
+  &:focus-visible {
+    /* Unset the outline box shadow to prevent overlapping previous/next properties.
+       This is safe since those input won't be this part of the UI won't get */
+    --theme-outline-box-shadow: initial;
+  }
 }
 
 .ruleview-property {

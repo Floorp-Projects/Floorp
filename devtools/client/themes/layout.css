@@ -215,6 +215,7 @@ html[dir="rtl"] .flex-header-button-prev::before {
   margin: 0;
   padding-inline: 28px 16px;
   position: relative;
+  outline-offset: -2px;
 }
 
 .flex-item-list .devtools-button::after {

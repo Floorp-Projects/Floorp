@@ -30,7 +30,8 @@
 }
 
 .reverse-search:focus-within {
-  border-color: var(--blue-50);
+  outline-offset: -2px;
+  outline: var(--theme-focus-outline);
 }
 
 .reverse-search {

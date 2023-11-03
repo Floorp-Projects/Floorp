@@ -122,6 +122,8 @@ body {
 }
 
 .devtools-button.webconsole-console-settings-menu-button {
+  /* adjust outline offset so it's not clipped */
+  --theme-outline-offset: -2px;
   height: 100%;
   margin: 0;
 }
@@ -179,6 +181,8 @@ body {
 }
 
 .webconsole-input-openEditorButton {
+    /* adjust outline offset so it's not clipped */
+  --theme-outline-offset: -2px;
   height: var(--console-row-height);
   margin: 0;
   padding-block: 0;

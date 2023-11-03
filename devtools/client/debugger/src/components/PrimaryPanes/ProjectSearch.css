@@ -64,6 +64,7 @@
   padding-inline-end: 4px;
   text-overflow: ellipsis;
   overflow-x: hidden;
+  outline-offset: -2px;
 }
 
 .project-text-search .result .query-match {

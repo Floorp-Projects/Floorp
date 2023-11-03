@@ -120,8 +120,7 @@
   background-color: currentColor;
 }
 
-.source-tab .close-btn:hover,
-.source-tab .close-btn:focus {
+.source-tab .close-btn:hover {
   color: var(--theme-selection-color);
   background-color: var(--theme-selection-background);
 }

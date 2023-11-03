@@ -14,17 +14,10 @@
   color: var(--theme-body-color);
   font-size: inherit;
   user-select: text;
-}
-
-.outline-filter-input.focused {
-  border: 1px solid var(--theme-highlight-blue);
+  outline-offset: -2px;
 }
 
 .outline-filter-input::placeholder {
   color: var(--theme-text-color-alt);
   opacity: 1;
-}
-
-.theme-dark .outline-filter-input.focused {
-  border: 1px solid var(--blue-50);
 }

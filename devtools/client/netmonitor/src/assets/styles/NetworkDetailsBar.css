@@ -98,11 +98,6 @@
   width: 100%;
 }
 
-.network-monitor .textbox-input:focus {
-  outline: 0;
-  box-shadow: var(--theme-focus-box-shadow-textbox);
-}
-
 /* Tree table in tab panels */
 
 .network-monitor .tree-container, .tree-container .treeTable {

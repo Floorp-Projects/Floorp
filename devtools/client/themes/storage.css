@@ -41,9 +41,10 @@ a {
   outline: 0;
 }
 
-/* The minimum column width needs to be determined by the header width */
 .table-widget-cell {
+  /* The minimum column width needs to be determined by the header width */
   min-width: unset;
+  outline-offset: -2px;
 }
 
 .table-widget-column {
@@ -129,6 +130,7 @@ a {
   flex: 1;
   margin-inline-start: -3px;
   margin-inline-end: 1px;
+  outline-offset: -2px;
 }
 
 #storage-toolbar .add-button::before {

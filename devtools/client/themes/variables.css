@@ -9,9 +9,6 @@
  */
 
 :root {
-  --theme-focus-border-color-textbox: #0675d3;
-  --theme-textbox-box-shadow: rgba(97, 181, 255, 0.75);
-
   /* Text sizes */
   --theme-body-font-size: 11px;
   --theme-code-font-size: 11px;
@@ -23,8 +20,17 @@
 
   /* For accessibility purposes we want to enhance the focus styling. This
    * should improve keyboard navigation usability. */
-  --theme-focus-outline: 1px dotted var(--theme-focus-outline-color);
-  --theme-focus-box-shadow-textbox: 0 0 0 1px var(--theme-textbox-box-shadow);
+  --theme-focus-outline-color: var(--blue-50);
+  --theme-focus-outline-size: 2px;
+  --theme-focus-outline: var(--theme-focus-outline-size) solid var(--theme-focus-outline-color);
+  --theme-outline-offset: 0px;
+    /**
+   * we want the box shadow to be 2px bigger than the offset so we have a "double border"
+   * (without it impacting the element layout), which should work whatever
+   * the background-color is (e.g. a clickable element in a "selected" blue-background container)
+   **/
+  --theme-outline-box-shadow-size: calc(2px + var(--theme-focus-outline-size) + var(--theme-outline-offset));
+  --theme-outline-box-shadow: 0 0 0 var(--theme-outline-box-shadow-size) var(--theme-body-background);
 
   /* Standardizes the height of items in the Watch Expressions and XHR Breakpoints panes */
   --expression-item-height: 20.5px;
@@ -188,10 +194,6 @@
   --theme-highlight-pink: #b82ee5;
   --theme-highlight-gray: #dde1e4;
 
-  /* For accessibility purposes we want to enhance the focus styling. This
-   * should improve keyboard navigation usability. */
-  --theme-focus-outline-color: #000000;
-
   /* Colors that were used in Graphs in the old performance tools, which was removed.
    * They're also used on other panels and should be renamed (See Bug 1767617) */
   --theme-graphs-purple: #b693eb;
@@ -317,10 +319,6 @@
   --theme-highlight-orange: #d96629;
   --theme-highlight-pink: #df80ff;
   --theme-highlight-gray: #e9f4fe;
-
-  /* For accessibility purposes we want to enhance the focus styling. This
-   * should improve keyboard navigation usability. */
-  --theme-focus-outline-color: #ced3d9;
 
     /* Colors that were used in Graphs in the old performance tools, which was removed.
    * They're also used on other panels and should be renamed (See Bug 1767617) */
