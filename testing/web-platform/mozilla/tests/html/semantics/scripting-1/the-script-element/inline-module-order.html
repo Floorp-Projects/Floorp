@@ -1,0 +1,46 @@
+<!doctype html>
+<meta charset=utf-8>
+<title>Execution order of non-parser created inline module scripts</title>
+<script src=/resources/testharness.js></script>
+<script src=/resources/testharnessreport.js></script>
+
+<!-- Ensure imported module is already in the module map -->
+<script type="module" src="./support/empty_module.js"></script>
+
+<div id="parent"></div>
+
+<script>
+  let test;
+  let result = [];
+
+  window.onload = startTest;
+
+  function createInlineModuleScript(source) {
+    let parent = document.getElementById("parent");
+    let script = document.createElement("script");
+    script.type = "module";
+    script.textContent = source;
+    parent.appendChild(script);
+  }
+
+  function startTest() {
+    test = async_test("Execution order of non-parser created inline module scripts");
+
+    createInlineModuleScript(`
+      import {} from "./support/empty_module.js";
+      result.push(1);
+    `);
+
+    createInlineModuleScript(`
+      result.push(2);
+    `);
+
+    setTimeout(checkResult, 1);
+  }
+
+  function checkResult() {
+    test.step(() => assert_array_equals(result, [2, 1],
+                                        "Check expected execution order"));
+    test.done();
+  }
+</script>
