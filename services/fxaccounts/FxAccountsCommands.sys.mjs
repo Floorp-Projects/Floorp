@@ -187,10 +187,12 @@ export class FxAccountsCommands {
               reason
             );
             log.info(
-              `Tab received with FxA commands: ${title} from ${
-                sender ? sender.name : "Unknown device"
-              }.`
+              `Tab received with FxA commands: "${
+                title || "<no title>"
+              }" from ${sender ? sender.name : "Unknown device"}.`
             );
+            // URLs are PII, so only logged at trace.
+            log.trace(`Tab received URL: ${uri}`);
             // This should eventually be rare to hit as all platforms will be using the same
             // scheme filter list, but we have this here in the case other platforms
             // haven't caught up and/or trying to send invalid uris using older versions
