@@ -28,6 +28,7 @@
 #include "nsContentSecurityManager.h"
 #include "nsIContent.h"
 #include "nsJSUtils.h"
+#include "mozilla/CycleCollectedJSContext.h"
 #include "mozilla/dom/AutoEntryScript.h"
 #include "mozilla/dom/Document.h"
 #include "mozilla/dom/Element.h"
@@ -130,11 +131,24 @@ nsresult ModuleLoader::StartFetch(ModuleLoadRequest* aRequest) {
 }
 
 void ModuleLoader::AsyncExecuteInlineModule(ModuleLoadRequest* aRequest) {
+  MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(
+      mozilla::NewRunnableMethod<RefPtr<ModuleLoadRequest>>(
+          "ModuleLoader::ExecuteInlineModule", this,
+          &ModuleLoader::ExecuteInlineModule, aRequest)));
+}
+
+void ModuleLoader::ExecuteInlineModule(ModuleLoadRequest* aRequest) {
   MOZ_ASSERT(aRequest->IsFinished());
   MOZ_ASSERT(aRequest->IsTopLevel());
   MOZ_ASSERT(aRequest->GetScriptLoadContext()->mIsInline);
-  GetScriptLoader()->MaybeMoveToLoadedList(aRequest);
-  GetScriptLoader()->ProcessPendingRequests();
+
+  if (aRequest->GetScriptLoadContext()->GetParserCreated() == NOT_FROM_PARSER) {
+    GetScriptLoader()->RunScriptWhenSafe(aRequest);
+  } else {
+    GetScriptLoader()->MaybeMoveToLoadedList(aRequest);
+    GetScriptLoader()->ProcessPendingRequests();
+  }
+
   aRequest->GetScriptLoadContext()->MaybeUnblockOnload();
 }
 
@@ -145,7 +159,12 @@ void ModuleLoader::OnModuleLoadComplete(ModuleLoadRequest* aRequest) {
     if (aRequest->GetScriptLoadContext()->mIsInline &&
         aRequest->GetScriptLoadContext()->GetParserCreated() ==
             NOT_FROM_PARSER) {
-      GetScriptLoader()->RunScriptWhenSafe(aRequest);
+      if (aRequest->mImports.Length() == 0) {
+        GetScriptLoader()->RunScriptWhenSafe(aRequest);
+      } else {
+        AsyncExecuteInlineModule(aRequest);
+        return;
+      }
     } else if (aRequest->GetScriptLoadContext()->mIsInline &&
                aRequest->GetScriptLoadContext()->GetParserCreated() !=
                    NOT_FROM_PARSER &&
@@ -160,10 +179,7 @@ void ModuleLoader::OnModuleLoadComplete(ModuleLoadRequest* aRequest) {
       // `false` we come here from an external dependency completing
       // its fetch, in which case we already are at an unspecific
       // point relative to the parse.)
-      MOZ_ALWAYS_SUCCEEDS(NS_DispatchToMainThread(
-          mozilla::NewRunnableMethod<RefPtr<ModuleLoadRequest>>(
-              "ModuleLoader::AsyncExecuteInlineModule", this,
-              &ModuleLoader::AsyncExecuteInlineModule, aRequest)));
+      AsyncExecuteInlineModule(aRequest);
       return;
     } else {
       GetScriptLoader()->MaybeMoveToLoadedList(aRequest);
