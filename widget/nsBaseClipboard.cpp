@@ -355,7 +355,7 @@ nsBaseClipboard::GetFlavorsFromClipboardCache(int32_t aClipboardType) {
   MOZ_ASSERT(cachedTransferable);
 
   nsTArray<nsCString> flavors;
-  nsresult rv = cachedTransferable->FlavorsTransferableCanImport(flavors);
+  nsresult rv = cachedTransferable->FlavorsTransferableCanExport(flavors);
   if (NS_FAILED(rv)) {
     return mozilla::Err(rv);
   }
