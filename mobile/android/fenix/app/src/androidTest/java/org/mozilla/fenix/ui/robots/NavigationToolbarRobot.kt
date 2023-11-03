@@ -8,6 +8,7 @@ package org.mozilla.fenix.ui.robots
 
 import android.net.Uri
 import android.os.Build
+import android.util.Log
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
@@ -154,9 +155,12 @@ class NavigationToolbarRobot {
             sessionLoadedIdlingResource = SessionLoadedIdlingResource()
 
             openEditURLView()
+            Log.i("MozTestLog", "enterURLAndEnterToBrowser: Opened edit mode URL view")
 
             awesomeBar().setText(url.toString())
+            Log.i("MozTestLog", "enterURLAndEnterToBrowser: Set toolbar text to: $url")
             mDevice.pressEnter()
+            Log.i("MozTestLog", "enterURLAndEnterToBrowser: Clicked enter on keyboard, submitted query")
 
             runWithIdleRes(sessionLoadedIdlingResource) {
                 assertTrue(

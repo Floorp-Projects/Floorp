@@ -16,7 +16,7 @@ import org.junit.Test
 import org.mozilla.fenix.R
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
-import org.mozilla.fenix.helpers.AppAndSystemHelper.deleteDownloadedFileOnStorage
+import org.mozilla.fenix.helpers.AppAndSystemHelper
 import org.mozilla.fenix.helpers.AppAndSystemHelper.setNetworkEnabled
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
@@ -27,6 +27,7 @@ import org.mozilla.fenix.helpers.TestHelper.exitMenu
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.restartApp
 import org.mozilla.fenix.ui.robots.clickPageObject
+import org.mozilla.fenix.ui.robots.downloadRobot
 import org.mozilla.fenix.ui.robots.homeScreen
 import org.mozilla.fenix.ui.robots.navigationToolbar
 
@@ -58,6 +59,9 @@ class SettingsDeleteBrowsingDataOnQuitTest {
     @After
     fun tearDown() {
         mockWebServer.shutdown()
+
+        // Check and clear the downloads folder
+        AppAndSystemHelper.clearDownloadsFolder()
     }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/416048
@@ -191,11 +195,8 @@ class SettingsDeleteBrowsingDataOnQuitTest {
             clickDeleteBrowsingOnQuitButtonSwitch()
             exitMenu()
         }
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(downloadTestPage.toUri()) {
-        }.clickDownloadLink("smallZip.zip") {
-            verifyDownloadPrompt("smallZip.zip")
-        }.clickDownload {
+        downloadRobot {
+            openPageAndDownloadFile(url = downloadTestPage.toUri(), downloadFile = "smallZip.zip")
             verifyDownloadCompleteNotificationPopup()
         }.closeCompletedDownloadPrompt {
         }.goToHomescreen {
@@ -209,7 +210,6 @@ class SettingsDeleteBrowsingDataOnQuitTest {
         }.openDownloadsManager {
             verifyEmptyDownloadsList()
         }
-        deleteDownloadedFileOnStorage("smallZip.zip")
     }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/416053

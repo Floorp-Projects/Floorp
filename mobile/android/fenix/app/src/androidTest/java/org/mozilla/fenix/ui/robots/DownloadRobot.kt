@@ -7,6 +7,7 @@
 package org.mozilla.fenix.ui.robots
 
 import android.content.Intent
+import android.net.Uri
 import android.util.Log
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
@@ -47,7 +48,36 @@ import org.mozilla.fenix.helpers.ext.waitNotNull
 
 class DownloadRobot {
 
-    fun verifyDownloadPrompt(fileName: String) = assertDownloadPrompt(fileName)
+    fun verifyDownloadPrompt(fileName: String) {
+        var currentTries = 0
+        while (currentTries++ < 3) {
+            Log.i("MozTestLog", "verifyDownloadPrompt: While loop currentTries = $currentTries")
+            try {
+                Log.i("MozTestLog", "verifyDownloadPrompt: Try block")
+                assertTrue(
+                    "Download prompt button not visible",
+                    mDevice.findObject(UiSelector().resourceId("$packageName:id/download_button"))
+                        .waitForExists(waitingTimeLong),
+                )
+                Log.i("MozTestLog", "verifyDownloadPrompt: Verified that the \"DOWNLOAD\" prompt button exists")
+                assertTrue(
+                    "$fileName title doesn't match",
+                    mDevice.findObject(UiSelector().text(fileName))
+                        .waitForExists(waitingTimeLong),
+                )
+                Log.i("MozTestLog", "verifyDownloadPrompt: Verified that the download prompt for $fileName exists")
+
+                break
+            } catch (e: AssertionError) {
+                Log.i("MozTestLog", "verifyDownloadPrompt: Catch block")
+                Log.e("DOWNLOAD_ROBOT", "Failed to find locator: ${e.localizedMessage}")
+
+                browserScreen {
+                }.clickDownloadLink(fileName) {
+                }
+            }
+        }
+    }
 
     fun verifyDownloadCompleteNotificationPopup() {
         assertTrue(
@@ -163,9 +193,20 @@ class DownloadRobot {
     fun clickMultiSelectRemoveButton() =
         itemWithResIdContainingText("$packageName:id/title", "Remove").click()
 
+    fun openPageAndDownloadFile(url: Uri, downloadFile: String) {
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(url) {
+            waitForPageToLoad()
+        }.clickDownloadLink(downloadFile) {
+            verifyDownloadPrompt(downloadFile)
+        }.clickDownload {
+        }
+    }
+
     class Transition {
         fun clickDownload(interact: DownloadRobot.() -> Unit): Transition {
             downloadButton().click()
+            Log.i("MozTestLog", "clickDownload: Clicked \"DOWNLOAD\" button from prompt")
 
             DownloadRobot().interact()
             return Transition()
@@ -233,32 +274,6 @@ class DownloadRobot {
 fun downloadRobot(interact: DownloadRobot.() -> Unit): DownloadRobot.Transition {
     DownloadRobot().interact()
     return DownloadRobot.Transition()
-}
-
-private fun assertDownloadPrompt(fileName: String) {
-    var currentTries = 0
-    while (currentTries++ < 3) {
-        try {
-            assertTrue(
-                "Download prompt button not visible",
-                mDevice.findObject(UiSelector().resourceId("$packageName:id/download_button"))
-                    .waitForExists(waitingTimeLong),
-            )
-            assertTrue(
-                "$fileName title doesn't match",
-                mDevice.findObject(UiSelector().text(fileName))
-                    .waitForExists(waitingTimeLong),
-            )
-
-            break
-        } catch (e: AssertionError) {
-            Log.e("DOWNLOAD_ROBOT", "Failed to find locator: ${e.localizedMessage}")
-
-            browserScreen {
-            }.clickDownloadLink(fileName) {
-            }
-        }
-    }
 }
 
 private fun closeCompletedDownloadButton() =

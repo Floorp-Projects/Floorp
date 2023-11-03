@@ -5,13 +5,15 @@
 package org.mozilla.fenix.ui
 
 import androidx.core.net.toUri
+import org.junit.After
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.junit.runners.Parameterized
 import org.mozilla.fenix.customannotations.SmokeTest
+import org.mozilla.fenix.helpers.AppAndSystemHelper.clearDownloadsFolder
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
-import org.mozilla.fenix.ui.robots.navigationToolbar
+import org.mozilla.fenix.ui.robots.downloadRobot
 
 /**
  *  Test for verifying downloading a list of different file types:
@@ -27,6 +29,12 @@ class DownloadFileTypesTest(fileName: String) {
 
     @get:Rule
     val activityTestRule = HomeActivityIntentTestRule.withDefaultSettingsOverrides()
+
+    @After
+    fun tearDown() {
+        // Check and clear the downloads folder
+        clearDownloadsFolder()
+    }
 
     companion object {
         // Creating test data. The test will take each file name as a parameter and run it individually.
@@ -49,11 +57,8 @@ class DownloadFileTypesTest(fileName: String) {
     @SmokeTest
     @Test
     fun allFilesAppearInDownloadsMenuTest() {
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(downloadTestPage.toUri()) {
-        }.clickDownloadLink(downloadFile) {
-            verifyDownloadPrompt(downloadFile)
-        }.clickDownload {
+        downloadRobot {
+            openPageAndDownloadFile(url = downloadTestPage.toUri(), downloadFile = downloadFile)
             verifyDownloadCompleteNotificationPopup()
         }.closeCompletedDownloadPrompt {
         }.openThreeDotMenu {

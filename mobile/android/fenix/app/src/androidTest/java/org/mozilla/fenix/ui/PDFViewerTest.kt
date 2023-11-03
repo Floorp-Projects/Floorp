@@ -15,7 +15,7 @@ import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.AppAndSystemHelper.assertExternalAppOpens
-import org.mozilla.fenix.helpers.AppAndSystemHelper.deleteDownloadedFileOnStorage
+import org.mozilla.fenix.helpers.AppAndSystemHelper.clearDownloadsFolder
 import org.mozilla.fenix.helpers.Constants.PackageName.GOOGLE_DOCS
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.MatcherHelper
@@ -50,6 +50,9 @@ class PDFViewerTest {
     @After
     fun tearDown() {
         mockWebServer.shutdown()
+
+        // Check and clear the downloads folder
+        clearDownloadsFolder()
     }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2048140
@@ -96,7 +99,6 @@ class PDFViewerTest {
         }.clickOpen("application/pdf") {
             assertExternalAppOpens(GOOGLE_DOCS)
         }
-        deleteDownloadedFileOnStorage(downloadFile)
     }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2283305

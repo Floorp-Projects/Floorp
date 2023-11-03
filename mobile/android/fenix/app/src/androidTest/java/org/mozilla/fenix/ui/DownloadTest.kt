@@ -14,6 +14,7 @@ import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.AppAndSystemHelper.assertExternalAppOpens
+import org.mozilla.fenix.helpers.AppAndSystemHelper.clearDownloadsFolder
 import org.mozilla.fenix.helpers.AppAndSystemHelper.deleteDownloadedFileOnStorage
 import org.mozilla.fenix.helpers.AppAndSystemHelper.setNetworkEnabled
 import org.mozilla.fenix.helpers.Constants.PackageName.GOOGLE_APPS_PHOTOS
@@ -72,63 +73,45 @@ class DownloadTest {
         mockWebServer.shutdown()
 
         setNetworkEnabled(enabled = true)
+
+        // Check and clear the downloads folder
+        clearDownloadsFolder()
     }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/243844
     @Test
     fun verifyTheDownloadPromptsTest() {
-        downloadFile = "web_icon.png"
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(downloadTestPage.toUri()) {
-            waitForPageToLoad()
-        }.clickDownloadLink(downloadFile) {
-            verifyDownloadPrompt(downloadFile)
-        }.clickDownload {
+        downloadRobot {
+            openPageAndDownloadFile(url = downloadTestPage.toUri(), downloadFile = "web_icon.png")
             verifyDownloadCompleteNotificationPopup()
         }.clickOpen("image/png") {}
         downloadRobot {
             verifyPhotosAppOpens()
         }
-        mDevice.pressBack()
-        deleteDownloadedFileOnStorage(downloadFile)
     }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2299405
     @Test
     fun verifyTheDownloadFailedNotificationsTest() {
-        downloadFile = "1GB.zip"
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(downloadTestPage.toUri()) {
-            waitForPageToLoad()
-        }.clickDownloadLink(downloadFile) {
-            verifyDownloadPrompt(downloadFile)
-        }.clickDownload {
+        downloadRobot {
+            openPageAndDownloadFile(url = downloadTestPage.toUri(), downloadFile = "1GB.zip")
             setNetworkEnabled(enabled = false)
-            verifyDownloadFailedPrompt(downloadFile)
+            verifyDownloadFailedPrompt("1GB.zip")
             setNetworkEnabled(enabled = true)
             clickTryAgainButton()
         }
         mDevice.openNotification()
         notificationShade {
             verifySystemNotificationDoesNotExist("Download failed")
-            verifySystemNotificationExists(downloadFile)
+            verifySystemNotificationExists("1GB.zip")
         }.closeNotificationTray {}
-        deleteDownloadedFileOnStorage(downloadFile)
     }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2298616
     @Test
     fun verifyDownloadCompleteNotificationTest() {
-        downloadFile = "web_icon.png"
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(downloadTestPage.toUri()) {
-            waitForPageToLoad()
-        }.clickDownloadLink(downloadFile) {
-            verifyDownloadPrompt(downloadFile)
-        }.clickDownload {
+        downloadRobot {
+            openPageAndDownloadFile(url = downloadTestPage.toUri(), downloadFile = "web_icon.png")
             verifyDownloadCompleteNotificationPopup()
         }
         mDevice.openNotification()
@@ -146,7 +129,6 @@ class DownloadTest {
             )
             verifySystemNotificationDoesNotExist("Firefox Fenix")
         }.closeNotificationTray {}
-        deleteDownloadedFileOnStorage(downloadFile)
     }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/451563
@@ -154,19 +136,9 @@ class DownloadTest {
     @SmokeTest
     @Test
     fun pauseResumeCancelDownloadTest() {
-        // Clear the "Firefox Fenix default browser notification"
-        notificationShade {
-            cancelAllShownNotifications()
+        downloadRobot {
+            openPageAndDownloadFile(url = downloadTestPage.toUri(), downloadFile = "1GB.zip")
         }
-
-        downloadFile = "1GB.zip"
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(downloadTestPage.toUri()) {
-            waitForPageToLoad()
-        }.clickDownloadLink(downloadFile) {
-            verifyDownloadPrompt(downloadFile)
-        }.clickDownload {}
         mDevice.openNotification()
         notificationShade {
             verifySystemNotificationExists("Firefox Fenix")
@@ -175,7 +147,7 @@ class DownloadTest {
             verifySystemNotificationExists("Download paused")
             clickDownloadNotificationControlButton("RESUME")
             clickDownloadNotificationControlButton("CANCEL")
-            verifySystemNotificationDoesNotExist(downloadFile)
+            verifySystemNotificationDoesNotExist("1GB.zip")
             mDevice.pressBack()
         }
         browserScreen {
@@ -183,57 +155,41 @@ class DownloadTest {
         }.openDownloadsManager {
             verifyEmptyDownloadsList()
         }
-        deleteDownloadedFileOnStorage(downloadFile)
     }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2301474
     @Test
     fun openDownloadedFileFromDownloadsMenuTest() {
-        downloadFile = "web_icon.png"
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(downloadTestPage.toUri()) {
-            waitForPageToLoad()
-        }.clickDownloadLink(downloadFile) {
-            verifyDownloadPrompt(downloadFile)
-        }.clickDownload {
+        downloadRobot {
+            openPageAndDownloadFile(url = downloadTestPage.toUri(), downloadFile = "web_icon.png")
             verifyDownloadCompleteNotificationPopup()
         }
         browserScreen {
         }.openThreeDotMenu {
         }.openDownloadsManager {
-            verifyDownloadedFileName(downloadFile)
-            openDownloadedFile(downloadFile)
+            verifyDownloadedFileName("web_icon.png")
+            openDownloadedFile("web_icon.png")
             verifyPhotosAppOpens()
             mDevice.pressBack()
         }
-        deleteDownloadedFileOnStorage(downloadFile)
     }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/1114970
     @Test
     fun deleteDownloadedFileTest() {
-        downloadFile = "smallZip.zip"
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(downloadTestPage.toUri()) {
-            waitForPageToLoad()
-        }.clickDownloadLink(downloadFile) {
-            verifyDownloadPrompt(downloadFile)
-        }.clickDownload {
-            verifyDownloadedFileName(downloadFile)
+        downloadRobot {
+            openPageAndDownloadFile(url = downloadTestPage.toUri(), downloadFile = "smallZip.zip")
         }
         browserScreen {
         }.openThreeDotMenu {
         }.openDownloadsManager {
-            verifyDownloadedFileName(downloadFile)
-            deleteDownloadedItem(downloadFile)
+            verifyDownloadedFileName("smallZip.zip")
+            deleteDownloadedItem("smallZip.zip")
             clickSnackbarButton("UNDO")
-            verifyDownloadedFileName(downloadFile)
-            deleteDownloadedItem(downloadFile)
+            verifyDownloadedFileName("smallZip.zip")
+            deleteDownloadedItem("smallZip.zip")
             verifyEmptyDownloadsList()
         }
-        deleteDownloadedFileOnStorage(downloadFile)
     }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2302662
@@ -242,12 +198,8 @@ class DownloadTest {
         val firstDownloadedFile = "smallZip.zip"
         val secondDownloadedFile = "textfile.txt"
 
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(downloadTestPage.toUri()) {
-            waitForPageToLoad()
-        }.clickDownloadLink(firstDownloadedFile) {
-            verifyDownloadPrompt(firstDownloadedFile)
-        }.clickDownload {
+        downloadRobot {
+            openPageAndDownloadFile(url = downloadTestPage.toUri(), downloadFile = firstDownloadedFile)
             verifyDownloadedFileName(firstDownloadedFile)
         }.closeCompletedDownloadPrompt {
         }.clickDownloadLink(secondDownloadedFile) {
@@ -273,29 +225,21 @@ class DownloadTest {
             clickMultiSelectRemoveButton()
             verifyEmptyDownloadsList()
         }
-        deleteDownloadedFileOnStorage(firstDownloadedFile)
-        deleteDownloadedFileOnStorage(secondDownloadedFile)
     }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2301537
     @Test
     fun fileDeletedFromStorageIsDeletedEverywhereTest() {
-        val downloadFile = "smallZip.zip"
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(downloadTestPage.toUri()) {
-            waitForPageToLoad()
-        }.clickDownloadLink(downloadFile) {
-            verifyDownloadPrompt(downloadFile)
-        }.clickDownload {
+        downloadRobot {
+            openPageAndDownloadFile(url = downloadTestPage.toUri(), downloadFile = "smallZip.zip")
             verifyDownloadCompleteNotificationPopup()
         }
         browserScreen {
         }.openThreeDotMenu {
         }.openDownloadsManager {
             waitForDownloadsListToExist()
-            verifyDownloadedFileName(downloadFile)
-            deleteDownloadedFileOnStorage(downloadFile)
+            verifyDownloadedFileName("smallZip.zip")
+            deleteDownloadedFileOnStorage("smallZip.zip")
         }.exitDownloadsManagerToBrowser {
         }.openThreeDotMenu {
         }.openDownloadsManager {
@@ -303,40 +247,24 @@ class DownloadTest {
             exitMenu()
         }
 
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(downloadTestPage.toUri()) {
-            waitForPageToLoad()
-        }.clickDownloadLink(downloadFile) {
-            verifyDownloadPrompt(downloadFile)
-        }.clickDownload {
+        downloadRobot {
+            openPageAndDownloadFile(url = downloadTestPage.toUri(), downloadFile = "smallZip.zip")
             verifyDownloadCompleteNotificationPopup()
         }
         browserScreen {
         }.openThreeDotMenu {
         }.openDownloadsManager {
             waitForDownloadsListToExist()
-            verifyDownloadedFileName(downloadFile)
+            verifyDownloadedFileName("smallZip.zip")
         }
-        deleteDownloadedFileOnStorage(downloadFile)
     }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/457112
     @Ignore("Failing: https://bugzilla.mozilla.org/show_bug.cgi?id=1840994")
     @Test
     fun systemNotificationCantBeDismissedWhileInProgressTest() {
-        // Clear the "Firefox Fenix default browser notification"
-        notificationShade {
-            cancelAllShownNotifications()
-        }
-
-        downloadFile = "1GB.zip"
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(downloadTestPage.toUri()) {
-            waitForPageToLoad()
-        }.clickDownloadLink(downloadFile) {
-            verifyDownloadPrompt(downloadFile)
-        }.clickDownload {
+        downloadRobot {
+            openPageAndDownloadFile(url = downloadTestPage.toUri(), downloadFile = "1GB.zip")
         }
         browserScreen {
         }.openNotificationShade {
@@ -347,25 +275,14 @@ class DownloadTest {
             swipeDownloadNotification(direction = "Right", shouldDismissNotification = false)
             clickDownloadNotificationControlButton("CANCEL")
         }
-        deleteDownloadedFileOnStorage(downloadFile)
     }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2299297
     @Test
     fun notificationCanBeDismissedIfDownloadIsInterruptedTest() {
-        // Clear the "Firefox Fenix default browser notification"
-        notificationShade {
-            cancelAllShownNotifications()
+        downloadRobot {
+            openPageAndDownloadFile(url = downloadTestPage.toUri(), downloadFile = "1GB.zip")
         }
-
-        downloadFile = "1GB.zip"
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(downloadTestPage.toUri()) {
-            waitForPageToLoad()
-        }.clickDownloadLink(downloadFile) {
-            verifyDownloadPrompt(downloadFile)
-        }.clickDownload {}
 
         setNetworkEnabled(enabled = false)
 
@@ -381,27 +298,16 @@ class DownloadTest {
         }.closeDownloadPrompt {
             verifyDownloadPromptIsDismissed()
         }
-        deleteDownloadedFileOnStorage(downloadFile)
     }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/1632384
     @Test
     fun warningWhenClosingPrivateTabsWhileDownloadingTest() {
-        downloadFile = "1GB.zip"
-
-        // Clear the "Firefox Fenix default browser notification"
-        notificationShade {
-            cancelAllShownNotifications()
-        }
-
         homeScreen {
         }.togglePrivateBrowsingMode()
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(downloadTestPage.toUri()) {
-            waitForPageToLoad()
-        }.clickDownloadLink(downloadFile) {
-            verifyDownloadPrompt(downloadFile)
-        }.clickDownload {}
+        downloadRobot {
+            openPageAndDownloadFile(url = downloadTestPage.toUri(), downloadFile = "1GB.zip")
+        }
         browserScreen {
         }.openTabDrawer {
             closeTab()
@@ -412,28 +318,16 @@ class DownloadTest {
         }.openNotificationShade {
             verifySystemNotificationExists("Firefox Fenix")
         }
-        deleteDownloadedFileOnStorage(downloadFile)
     }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2302663
     @Test
     fun cancelActivePrivateBrowsingDownloadsTest() {
-        downloadFile = "1GB.zip"
-
-        // Clear the "Firefox Fenix default browser notification"
-        notificationShade {
-            cancelAllShownNotifications()
-        }
-
         homeScreen {
         }.togglePrivateBrowsingMode()
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(downloadTestPage.toUri()) {
-            waitForPageToLoad()
-        }.clickDownloadLink(downloadFile) {
-            verifyDownloadPrompt(downloadFile)
-        }.clickDownload {}
+        downloadRobot {
+            openPageAndDownloadFile(url = downloadTestPage.toUri(), downloadFile = "1GB.zip")
+        }
         browserScreen {
         }.openTabDrawer {
             closeTab()
@@ -444,7 +338,6 @@ class DownloadTest {
         }.openNotificationShade {
             verifySystemNotificationDoesNotExist("Firefox Fenix")
         }
-        deleteDownloadedFileOnStorage(downloadFile)
     }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2048448
@@ -469,7 +362,6 @@ class DownloadTest {
         }.clickOpen("application/pdf") {
             assertExternalAppOpens(GOOGLE_DOCS)
         }
-        deleteDownloadedFileOnStorage(downloadFile)
     }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/244125
@@ -494,6 +386,5 @@ class DownloadTest {
             expandNotificationMessage()
             clickDownloadNotificationControlButton("CANCEL")
         }
-        deleteDownloadedFileOnStorage(downloadFile)
     }
 }

@@ -6,6 +6,7 @@
 
 package org.mozilla.fenix.ui.robots
 
+import android.util.Log
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.swipeDown
@@ -321,8 +322,10 @@ class ThreeDotMenuMainRobot {
 
         fun refreshPage(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
             refreshButton.also {
+                Log.i("MozTestLog", "refreshPage: Looking for refresh button")
                 it.waitForExists(waitingTime)
                 it.click()
+                Log.i("MozTestLog", "refreshPage: Clicked the refresh button")
             }
 
             BrowserRobot().interact()

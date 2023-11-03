@@ -68,7 +68,10 @@ import java.time.LocalDate
 class BrowserRobot {
     private lateinit var sessionLoadedIdlingResource: SessionLoadedIdlingResource
 
-    fun waitForPageToLoad() = progressBar.waitUntilGone(waitingTime)
+    fun waitForPageToLoad() {
+        progressBar.waitUntilGone(waitingTime)
+        Log.i("MozTestLog", "waitForPageToLoad: The page was loaded, the progress bar is gone")
+    }
 
     fun verifyCurrentPrivateSession(context: Context) {
         val selectedTab = context.components.core.store.state.selectedTab
@@ -1031,7 +1034,9 @@ class BrowserRobot {
     class Transition {
         fun openThreeDotMenu(interact: ThreeDotMenuMainRobot.() -> Unit): ThreeDotMenuMainRobot.Transition {
             mDevice.waitForIdle(waitingTime)
+            Log.i("MozTestLog", "openThreeDotMenu: Device was idle for $waitingTime")
             threeDotButton().perform(click())
+            Log.i("MozTestLog", "openThreeDotMenu: Clicked the main menu button")
 
             ThreeDotMenuMainRobot().interact()
             return ThreeDotMenuMainRobot.Transition()
@@ -1347,19 +1352,26 @@ private fun siteSecurityToolbarButton() =
 
 fun clickPageObject(item: UiObject) {
     for (i in 1..RETRY_COUNT) {
+        Log.i("MozTestLog", "clickPageObject: For loop i = $i")
         try {
+            Log.i("MozTestLog", "clickPageObject: Try block")
             item.waitForExists(waitingTime)
             item.click()
+            Log.i("MozTestLog", "clickPageObject: Clicked ${item.selector}")
 
             break
         } catch (e: UiObjectNotFoundException) {
+            Log.i("MozTestLog", "clickPageObject: Catch block")
             if (i == RETRY_COUNT) {
                 throw e
             } else {
                 browserScreen {
+                    Log.i("MozTestLog", "clickPageObject: Browser screen")
                 }.openThreeDotMenu {
+                    Log.i("MozTestLog", "clickPageObject: Opened main menu")
                 }.refreshPage {
                     progressBar.waitUntilGone(waitingTime)
+                    Log.i("MozTestLog", "clickPageObject: Page refreshed, progress bar is gone")
                 }
             }
         }

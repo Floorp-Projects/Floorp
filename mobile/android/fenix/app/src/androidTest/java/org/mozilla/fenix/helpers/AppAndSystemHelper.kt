@@ -78,6 +78,27 @@ object AppAndSystemHelper {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.R)
+    fun clearDownloadsFolder() {
+        val storageManager: StorageManager? = TestHelper.appContext.getSystemService(Context.STORAGE_SERVICE) as StorageManager?
+        val storageVolumes = storageManager!!.storageVolumes
+        val storageVolume: StorageVolume = storageVolumes[0]
+        val downloadsFolder = File(storageVolume.directory!!.path + "/Download/")
+
+        // Check if the downloads folder exists
+        if (downloadsFolder.exists() && downloadsFolder.isDirectory) {
+            val files = downloadsFolder.listFiles()
+
+            // Check if the folder is not empty
+            if (files != null && files.isNotEmpty()) {
+                // Delete all files in the folder
+                for (file in files) {
+                    file.delete()
+                }
+            }
+        }
+    }
+
     fun setNetworkEnabled(enabled: Boolean) {
         val networkDisconnectedIdlingResource = NetworkConnectionIdlingResource(false)
         val networkConnectedIdlingResource = NetworkConnectionIdlingResource(true)
