@@ -40,14 +40,12 @@ for (let lower of [ascii_lower, latin1_lower]) {
 }
 
 function toRope(s) {
-  // Ropes have at least two characters.
-  if (s.length < 2) {
-    return s;
-  }
-  if (s.length === 2) {
-    return newRope(s[0], s[1]);
-  }
-  return newRope(s[0], s.substring(1));
+  try {
+    return newRope(s[0], s.substring(1));
+  } catch {}
+  // newRope can fail when |s| fits into an inline string. In that case simply
+  // return the input.
+  return s;
 }
 
 for (let i = 0; i <= 32; ++i) {

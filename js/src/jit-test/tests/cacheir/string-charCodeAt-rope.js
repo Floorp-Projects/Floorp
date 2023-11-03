@@ -1,13 +1,18 @@
+function makeRope() {
+  var left = newRope("@ABCDEFGHIJKLMNO", "PQRSTUVWXYZ[\\]^_");
+  var right = newRope("`abcdefghijklmno", "pqrstuvwxyz{|}~");
+  var rope = newRope(left, right);
+  return {left, right, rope};
+}
+
 // Load a character from the left rope child using a constant index. The input
 // to String.prototype.charCodeAt is always rope.
 function testLeftChildConstant() {
   for (var i = 0; i < 200; ++i) {
-    var left = newRope("abc", "def");
-    var right = newRope("ghi", "jkl");
-    var s = newRope(left, right);
+    var {rope} = makeRope();
 
-    var ch = s.charCodeAt(0);
-    assertEq(ch, 0x61);
+    var ch = rope.charCodeAt(0);
+    assertEq(ch, 0x40);
   }
 }
 for (var i = 0; i < 2; ++i) {
@@ -18,12 +23,10 @@ for (var i = 0; i < 2; ++i) {
 // to String.prototype.charCodeAt is always rope.
 function testRightChildConstant() {
   for (var i = 0; i < 200; ++i) {
-    var left = newRope("abc", "def");
-    var right = newRope("ghi", "jkl");
-    var s = newRope(left, right);
+    var {rope} = makeRope();
 
-    var ch = s.charCodeAt(6);
-    assertEq(ch, 0x61 + 6);
+    var ch = rope.charCodeAt(32);
+    assertEq(ch, 0x60);
   }
 }
 for (var i = 0; i < 2; ++i) {
@@ -34,13 +37,11 @@ for (var i = 0; i < 2; ++i) {
 // to String.prototype.charCodeAt is always rope.
 function testLeftChildVariable() {
   for (var i = 0; i < 200; ++i) {
-    var left = newRope("abc", "def");
-    var right = newRope("ghi", "jkl");
-    var s = newRope(left, right);
+    var {left, rope} = makeRope();
 
     var idx = i % left.length;
-    var ch = s.charCodeAt(idx);
-    assertEq(ch, 0x61 + idx);
+    var ch = rope.charCodeAt(idx);
+    assertEq(ch, 0x40 + idx);
   }
 }
 for (var i = 0; i < 2; ++i) {
@@ -51,13 +52,11 @@ for (var i = 0; i < 2; ++i) {
 // to String.prototype.charCodeAt is always rope.
 function testRightChildVariable() {
   for (var i = 0; i < 200; ++i) {
-    var left = newRope("abc", "def");
-    var right = newRope("ghi", "jkl");
-    var s = newRope(left, right);
+    var {left, right, rope} = makeRope();
 
     var idx = i % right.length;
-    var ch = s.charCodeAt(left.length + idx);
-    assertEq(ch, 0x61 + 6 + idx);
+    var ch = rope.charCodeAt(left.length + idx);
+    assertEq(ch, 0x60 + idx);
   }
 }
 for (var i = 0; i < 2; ++i) {
@@ -68,13 +67,11 @@ for (var i = 0; i < 2; ++i) {
 // call to String.prototype.charCodeAt linearizes the rope. 
 function testBothChildren() {
   for (var i = 0; i < 200; ++i) {
-    var left = newRope("abc", "def");
-    var right = newRope("ghi", "jkl");
-    var s = newRope(left, right);
+    var {rope} = makeRope();
 
-    for (var j = 0; j < s.length; ++j) {
-      var ch = s.charCodeAt(j);
-      assertEq(ch, 0x61 + j);
+    for (var j = 0; j < rope.length; ++j) {
+      var ch = rope.charCodeAt(j);
+      assertEq(ch, 0x40 + j);
     }
   }
 }

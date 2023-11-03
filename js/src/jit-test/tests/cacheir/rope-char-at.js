@@ -9,12 +9,12 @@ function test(a, b, firstCharCode) {
   assertEq(isRope(a), false);
   assertEq(isRope(b), false);
 }
-test("abcdef", "ghijk", 97);
-test("a", "bcdefg", 97);
-test("abcde", "f", 97);
-test("0123456", "7", 48);
-test("\u00fe\u00ff", "\u0100\u0101", 0xfe);
-test("\u1000\u1001\u1002", "\u1003\u1004", 4096);
+test("abcdefghijkl", "mnopqrstuvwxyz", 97);
+test("a", "bcdefghijklmnopqrstuvwxyz", 97);
+test("abcdefghijklmnopqrstuvwxy", "z", 97);
+test("0123456789:;<=>?@ABCDEFGHIJ", "K", 48);
+test("\u00fe\u00ff", "\u0100\u0101\u0102\u0103\u0104\u0105\u0106\u0107\u0108\u0109\u010A", 0xfe);
+test("\u1000\u1001\u1002", "\u1003\u1004\u1005\u1006\u1007\u1008\u1009\u100A\u100B\u100C", 4096);
 
 // charAt/charCodeAt stubs currently fail for nested ropes.
-test("abcdef", newRope("ghij", "klmn"), 97);
+test("ab", newRope("cdefghijklmnop", "qrstuvwxyz{|}~"), 97);

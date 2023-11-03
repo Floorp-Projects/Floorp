@@ -3539,6 +3539,11 @@ static bool NewString(JSContext* cx, unsigned argc, Value* vp) {
         using CharT =
             std::remove_const_t<std::remove_pointer_t<decltype(chars)>>;
 
+        if (JSInlineString::lengthFits<CharT>(len)) {
+          JS_ReportErrorASCII(cx, "Cannot create small non-inline strings");
+          return nullptr;
+        }
+
         auto news =
             cx->make_pod_arena_array<CharT>(js::StringBufferArena, capacity);
         if (!news) {
@@ -3614,6 +3619,19 @@ static bool NewRope(JSContext* cx, unsigned argc, Value* vp) {
   if (left->empty() || right->empty()) {
     JS_ReportErrorASCII(cx, "rope child mustn't be the empty string");
     return false;
+  }
+
+  // Disallow creating ropes which fit into inline strings.
+  if (left->hasLatin1Chars() && right->hasLatin1Chars()) {
+    if (JSInlineString::lengthFits<JS::Latin1Char>(length)) {
+      JS_ReportErrorASCII(cx, "Cannot create small non-inline ropes");
+      return false;
+    }
+  } else {
+    if (JSInlineString::lengthFits<char16_t>(length)) {
+      JS_ReportErrorASCII(cx, "Cannot create small non-inline ropes");
+      return false;
+    }
   }
 
   auto* str = JSRope::new_<CanGC>(cx, left, right, length, heap);

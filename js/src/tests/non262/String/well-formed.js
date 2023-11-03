@@ -70,15 +70,28 @@ const strings = [
   ...representativeStringArray(),
 ];
 
+function toRope(string) {
+  try {
+    let rope = newRope(string[0], string.slice(1));
+    return {rope, filler: ""};
+  } catch {}
+
+  // |newRope| fails if the input is too short. Add some characters to make
+  // the input large enough.
+  let filler = "012345678901234567890123456789";
+  let rope = newRope(string, filler);
+  return {rope, filler};
+}
+
 for (let string of strings) {
   assertEq(string.isWellFormed(), true);
   assertEq(string.toWellFormed(), string);
 
   // Need at least two characters to make a rope.
   if (string.length >= 2) {
-    let rope = newRope(string[0], string.slice(1));
+    let {rope, filler} = toRope(string);
     assertEq(rope.isWellFormed(), true);
-    assertEq(rope.toWellFormed(), string);
+    assertEq(rope.toWellFormed(), string + filler);
   }
 
   // Copy the string to create a non-atom string. (Unless |string| is a static string.)
@@ -129,9 +142,9 @@ for (let unpaired of unpairedSurrogates.flatMap(unpaired => {
 
     // Need at least two characters to make a rope.
     if (string.length >= 2) {
-      let rope = newRope(string[0], string.slice(1));
+      let {rope, filler} = toRope(string);
       assertEq(rope.isWellFormed(), false);
-      assertEq(rope.toWellFormed() === string, false);
+      assertEq(rope.toWellFormed() === string + filler, false);
     }
 
     // Copy the string to create a non-atom string. (Unless |string| is a static string.)
