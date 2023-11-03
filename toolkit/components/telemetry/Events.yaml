@@ -2633,7 +2633,7 @@ intl.ui.browserLanguage:
       installId: The id for an install.
     products:
       - firefox
-    expiry_version: "122"
+    expiry_version: "135"
     notification_emails:
       - flod@mozilla.com
       - mstriemer@mozilla.com
@@ -2646,6 +2646,7 @@ intl.ui.browserLanguage:
       - 1672571
       - 1739288
       - 1796396
+      - 1861299
 
 network.dns:
   trrConfirmation:
