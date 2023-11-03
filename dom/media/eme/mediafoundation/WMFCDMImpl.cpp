@@ -60,8 +60,10 @@ static void MFCDMCapabilitiesIPDLToKeySystemConfig(
   }
   aKeySystemConfig.mPersistentState = aCDMConfig.persistentState();
   aKeySystemConfig.mDistinctiveIdentifier = aCDMConfig.distinctiveID();
+#ifdef DEBUG
   EME_LOG("New Capabilities=%s",
           NS_ConvertUTF16toUTF8(aKeySystemConfig.GetDebugInfo()).get());
+#endif
 }
 
 static const char* EncryptionSchemeStr(const CryptoScheme aScheme) {
@@ -88,8 +90,10 @@ bool WMFCDMImpl::GetCapabilities(nsTArray<KeySystemConfig>& aOutConfigs) {
     EME_LOG("Return cached capabilities for %s", keySystem.c_str());
     for (const auto& config : rv->second) {
       aOutConfigs.AppendElement(config);
+#ifdef DEBUG
       EME_LOG("-- capabilities (%s)",
               NS_ConvertUTF16toUTF8(config.GetDebugInfo()).get());
+#endif
     }
     return true;
   }

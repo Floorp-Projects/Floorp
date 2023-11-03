@@ -211,6 +211,7 @@ bool KeySystemConfig::IsSameKeySystem(const nsAString& aKeySystem) const {
   return mKeySystem.Equals(aKeySystem);
 }
 
+#ifdef DEBUG
 nsString KeySystemConfig::GetDebugInfo() const {
   nsString debugInfo;
   debugInfo.Append(mKeySystem);
@@ -248,6 +249,7 @@ nsString KeySystemConfig::GetDebugInfo() const {
   debugInfo.Append(NS_ConvertUTF8toUTF16(mWebM.GetDebugInfo()));
   return debugInfo;
 }
+#endif
 
 KeySystemConfig::SessionType ConvertToKeySystemConfigSessionType(
     dom::MediaKeySessionType aType) {
