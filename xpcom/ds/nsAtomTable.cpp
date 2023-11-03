@@ -180,7 +180,8 @@ struct AtomCache : public MruCache<AtomTableKey, nsAtom*, AtomCache> {
   }
 };
 
-static AtomCache sRecentlyUsedMainThreadAtoms;
+static AtomCache sRecentlyUsedSmallMainThreadAtoms;
+static AtomCache sRecentlyUsedLargeMainThreadAtoms;
 
 // In order to reduce locking contention for concurrent atomization, we segment
 // the atom table into N subtables, each with a separate lock. If the hash
@@ -358,7 +359,8 @@ void nsAtomTable::AddSizeOfIncludingThis(MallocSizeOf aMallocSizeOf,
 
 void nsAtomTable::GC(GCKind aKind) {
   MOZ_ASSERT(NS_IsMainThread());
-  sRecentlyUsedMainThreadAtoms.Clear();
+  sRecentlyUsedSmallMainThreadAtoms.Clear();
+  sRecentlyUsedLargeMainThreadAtoms.Clear();
 
   // Note that this is effectively an incremental GC, since only one subtable
   // is locked at a time.
@@ -631,8 +633,11 @@ already_AddRefed<nsAtom> nsAtomTable::AtomizeMainThread(
     const nsAString& aUTF16String) {
   MOZ_ASSERT(NS_IsMainThread());
   RefPtr<nsAtom> retVal;
-  AtomTableKey key(aUTF16String.Data(), aUTF16String.Length());
-  auto p = sRecentlyUsedMainThreadAtoms.Lookup(key);
+  size_t length = aUTF16String.Length();
+  AtomTableKey key(aUTF16String.Data(), length);
+
+  auto p = (length < 5) ? sRecentlyUsedSmallMainThreadAtoms.Lookup(key)
+                        : sRecentlyUsedLargeMainThreadAtoms.Lookup(key);
   if (p) {
     retVal = p.Data();
     return retVal.forget();
