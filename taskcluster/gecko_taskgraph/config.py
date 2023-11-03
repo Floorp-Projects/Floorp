@@ -113,7 +113,7 @@ graph_config_schema = Schema(
         },
         Required("mac-signing"): {
             Required("hardened-sign-config"): optionally_keyed_by(
-                "release-level",
+                "hardened-signing-type",
                 [
                     {
                         Optional("deep"): bool,
