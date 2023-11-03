@@ -243,6 +243,12 @@ class FragmentOrElement : public nsIContent {
     Maybe<bool> mVisibleForContentVisibility;
 
     /**
+     * Whether content-visibility: auto is temporarily visible for
+     * the purposes of the descendant of scrollIntoView.
+     */
+    bool mTemporarilyVisibleForScrolledIntoViewDescendant = false;
+
+    /**
      * Explicitly set attr-elements, see
      * https://html.spec.whatwg.org/multipage/common-dom-interfaces.html#explicitly-set-attr-element
      */

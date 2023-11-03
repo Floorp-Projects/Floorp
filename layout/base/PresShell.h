@@ -1731,6 +1731,8 @@ class PresShell final : public nsStubDocumentObserver,
 
   bool GetZoomableByAPZ() const;
 
+  bool ReflowForHiddenContentIfNeeded();
+  void UpdateHiddenContentInForcedLayout(nsIFrame*);
   /**
    * If this frame has content hidden via `content-visibilty` that has a pending
    * reflow, force the content to reflow immediately.
@@ -1749,6 +1751,7 @@ class PresShell final : public nsStubDocumentObserver,
 
   void UpdateRelevancyOfContentVisibilityAutoFrames();
   void ScheduleContentRelevancyUpdate(ContentRelevancyReason aReason);
+  void UpdateContentRelevancyImmediately(ContentRelevancyReason aReason);
 
  private:
   ~PresShell();

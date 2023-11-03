@@ -3221,6 +3221,14 @@ class nsIFrame : public nsQueryFrame {
   bool HidesContentForLayout() const;
 
   /**
+   * returns the closest ancestor with `content-visibility` property.
+   * @param aInclude specifies what kind of `content-visibility` to include.
+   */
+  nsIFrame* GetClosestContentVisibilityAncestor(
+      const mozilla::EnumSet<IncludeContentVisibility>& =
+          IncludeAllContentVisibility()) const;
+
+  /**
    * Returns true if this frame is entirely hidden due the `content-visibility`
    * property on an ancestor.
    * @param aInclude specifies what kind of `content-visibility` to include.
