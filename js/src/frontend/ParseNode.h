@@ -605,64 +605,70 @@ inline bool IsTypeofKind(ParseNodeKind kind) {
  *   kid: expr or null
  */
 
-#define FOR_EACH_PARSENODE_SUBCLASS(MACRO) \
-  MACRO(BinaryNode)                        \
-  MACRO(AssignmentNode)                    \
-  MACRO(CaseClause)                        \
-  MACRO(ClassMethod)                       \
-  MACRO(ClassField)                        \
-  MACRO(StaticClassBlock)                  \
-  MACRO(PropertyDefinition)                \
-  MACRO(ClassNames)                        \
-  MACRO(ForNode)                           \
-  MACRO(PropertyAccess)                    \
-  MACRO(OptionalPropertyAccess)            \
-  MACRO(PropertyByValue)                   \
-  MACRO(OptionalPropertyByValue)           \
-  MACRO(PrivateMemberAccess)               \
-  MACRO(OptionalPrivateMemberAccess)       \
-  MACRO(NewTargetNode)                     \
-  MACRO(SwitchStatement)                   \
-  MACRO(DeclarationListNode)               \
-                                           \
-  MACRO(ParamsBodyNode)                    \
-  MACRO(FunctionNode)                      \
-  MACRO(ModuleNode)                        \
-                                           \
-  MACRO(LexicalScopeNode)                  \
-  MACRO(ClassBodyScopeNode)                \
-                                           \
-  MACRO(ListNode)                          \
-  MACRO(CallSiteNode)                      \
-  MACRO(CallNode)                          \
-                                           \
-  MACRO(LoopControlStatement)              \
-  MACRO(BreakStatement)                    \
-  MACRO(ContinueStatement)                 \
-                                           \
-  MACRO(NameNode)                          \
-  MACRO(LabeledStatement)                  \
-                                           \
-  MACRO(NullaryNode)                       \
-  MACRO(BooleanLiteral)                    \
-  MACRO(DebuggerStatement)                 \
-  MACRO(NullLiteral)                       \
-  MACRO(RawUndefinedLiteral)               \
-                                           \
-  MACRO(NumericLiteral)                    \
-  MACRO(BigIntLiteral)                     \
-                                           \
-  MACRO(RegExpLiteral)                     \
-                                           \
-  MACRO(TernaryNode)                       \
-  MACRO(ClassNode)                         \
-  MACRO(ConditionalExpression)             \
-  MACRO(TryNode)                           \
-                                           \
-  MACRO(UnaryNode)                         \
-  MACRO(ThisLiteral)
+// FIXME: Remove `*Type` (bug 1489008)
+#define FOR_EACH_PARSENODE_SUBCLASS(MACRO)                                   \
+  MACRO(BinaryNode, BinaryNodeType, asBinary)                                \
+  MACRO(AssignmentNode, AssignmentNodeType, asAssignment)                    \
+  MACRO(CaseClause, CaseClauseType, asCaseClause)                            \
+  MACRO(ClassMethod, ClassMethodType, asClassMethod)                         \
+  MACRO(ClassField, ClassFieldType, asClassField)                            \
+  MACRO(StaticClassBlock, StaticClassBlockType, asStaticClassBlock)          \
+  MACRO(PropertyDefinition, PropertyDefinitionType, asPropertyDefinition)    \
+  MACRO(ClassNames, ClassNamesType, asClassNames)                            \
+  MACRO(ForNode, ForNodeType, asFor)                                         \
+  MACRO(PropertyAccess, PropertyAccessType, asPropertyAccess)                \
+  MACRO(OptionalPropertyAccess, OptionalPropertyAccessType,                  \
+        asOptionalPropertyAccess)                                            \
+  MACRO(PropertyByValue, PropertyByValueType, asPropertyByValue)             \
+  MACRO(OptionalPropertyByValue, OptionalPropertyByValueType,                \
+        asOptionalPropertyByValue)                                           \
+  MACRO(PrivateMemberAccess, PrivateMemberAccessType, asPrivateMemberAccess) \
+  MACRO(OptionalPrivateMemberAccess, OptionalPrivateMemberAccessType,        \
+        asOptionalPrivateMemberAccess)                                       \
+  MACRO(NewTargetNode, NewTargetNodeType, asNewTargetNode)                   \
+  MACRO(SwitchStatement, SwitchStatementType, asSwitchStatement)             \
+  MACRO(DeclarationListNode, DeclarationListNodeType, asDeclarationList)     \
+                                                                             \
+  MACRO(ParamsBodyNode, ParamsBodyNodeType, asParamsBody)                    \
+  MACRO(FunctionNode, FunctionNodeType, asFunction)                          \
+  MACRO(ModuleNode, ModuleNodeType, asModule)                                \
+                                                                             \
+  MACRO(LexicalScopeNode, LexicalScopeNodeType, asLexicalScope)              \
+  MACRO(ClassBodyScopeNode, ClassBodyScopeNodeType, asClassBodyScope)        \
+                                                                             \
+  MACRO(ListNode, ListNodeType, asList)                                      \
+  MACRO(CallSiteNode, CallSiteNodeType, asCallSite)                          \
+  MACRO(CallNode, CallNodeType, asCallNode)                                  \
+                                                                             \
+  MACRO(LoopControlStatement, LoopControlStatementType,                      \
+        asLoopControlStatement)                                              \
+  MACRO(BreakStatement, BreakStatementType, asBreakStatement)                \
+  MACRO(ContinueStatement, ContinueStatementType, asContinueStatement)       \
+                                                                             \
+  MACRO(NameNode, NameNodeType, asName)                                      \
+  MACRO(LabeledStatement, LabeledStatementType, asLabeledStatement)          \
+                                                                             \
+  MACRO(NullaryNode, NullaryNodeType, asNullary)                             \
+  MACRO(BooleanLiteral, BooleanLiteralType, asBooleanLiteral)                \
+  MACRO(DebuggerStatement, DebuggerStatementType, asDebuggerStatement)       \
+  MACRO(NullLiteral, NullLiteralType, asNullLiteral)                         \
+  MACRO(RawUndefinedLiteral, RawUndefinedLiteralType, asRawUndefinedLiteral) \
+                                                                             \
+  MACRO(NumericLiteral, NumericLiteralType, asNumericLiteral)                \
+  MACRO(BigIntLiteral, BigIntLiteralType, asBigIntLiteral)                   \
+                                                                             \
+  MACRO(RegExpLiteral, RegExpLiteralType, asRegExpLiteral)                   \
+                                                                             \
+  MACRO(TernaryNode, TernaryNodeType, asTernary)                             \
+  MACRO(ClassNode, ClassNodeType, asClass)                                   \
+  MACRO(ConditionalExpression, ConditionalExpressionType,                    \
+        asConditionalExpression)                                             \
+  MACRO(TryNode, TryNodeType, asTry)                                         \
+                                                                             \
+  MACRO(UnaryNode, UnaryNodeType, asUnary)                                   \
+  MACRO(ThisLiteral, ThisLiteralType, asThisLiteral)
 
-#define DECLARE_CLASS(typeName) class typeName;
+#define DECLARE_CLASS(typeName, longTypeName, asMethodName) class typeName;
 FOR_EACH_PARSENODE_SUBCLASS(DECLARE_CLASS)
 #undef DECLARE_CLASS
 

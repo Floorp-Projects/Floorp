@@ -61,9 +61,11 @@ class FullParseHandler {
   /* new_ methods for creating parse nodes. These report OOM on context. */
   JS_DECLARE_NEW_METHODS(new_, allocParseNode, inline)
 
+  // FIXME: Use ListNode instead of ListNodeType as an alias (bug 1489008).
   using Node = ParseNode*;
 
-#define DECLARE_TYPE(typeName) using typeName##Type = typeName*;
+#define DECLARE_TYPE(typeName, longTypeName, asMethodName) \
+  using longTypeName = typeName*;
   FOR_EACH_PARSENODE_SUBCLASS(DECLARE_TYPE)
 #undef DECLARE_TYPE
 
@@ -109,10 +111,8 @@ class FullParseHandler {
 
   static NullNode null() { return NullNode(); }
 
-#define DECLARE_AS(typeName)                      \
-  static typeName##Type as##typeName(Node node) { \
-    return &node->as<typeName>();                 \
-  }
+#define DECLARE_AS(typeName, longTypeName, asMethodName) \
+  static longTypeName asMethodName(Node node) { return &node->as<typeName>(); }
   FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
 #undef DECLARE_AS
 

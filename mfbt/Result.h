@@ -48,7 +48,6 @@ enum class PackingStrategy {
   NullIsOk,
   LowBitTagIsError,
   PackedVariant,
-  ZeroIsEmptyError,
 };
 
 template <typename T>
@@ -183,42 +182,6 @@ class ResultImplementationNullIsOk<V, E, false>
     if (this->isOk()) {
       this->mValue.first().addr()->~V();
     }
-  }
-};
-
-/**
- * Specialization for when the success type is one of integral, pointer, or
- * enum, where 0 is unused, and the error type is an empty struct.
- */
-template <typename V, typename E>
-class ResultImplementation<V, E, PackingStrategy::ZeroIsEmptyError> {
-  static_assert(std::is_integral_v<V> || std::is_pointer_v<V> ||
-                std::is_enum_v<V>);
-  static_assert(std::is_empty_v<E>);
-
-  V mValue;
-
- public:
-  static constexpr PackingStrategy Strategy = PackingStrategy::ZeroIsEmptyError;
-
-  explicit constexpr ResultImplementation(V aValue) : mValue(aValue) {}
-  explicit constexpr ResultImplementation(E aErrorValue) : mValue(V(0)) {}
-
-  constexpr bool isOk() const { return mValue != V(0); }
-
-  constexpr V inspect() const { return mValue; }
-  constexpr V unwrap() { return inspect(); }
-
-  constexpr E inspectErr() const { return E(); }
-  constexpr E unwrapErr() { return inspectErr(); }
-
-  constexpr void updateAfterTracing(V&& aValue) {
-    this->~ResultImplementation();
-    new (this) ResultImplementation(std::move(aValue));
-  }
-  constexpr void updateErrorAfterTracing(E&& aErrorValue) {
-    this->~ResultImplementation();
-    new (this) ResultImplementation(std::move(aErrorValue));
   }
 };
 
@@ -444,9 +407,7 @@ struct HasFreeLSB<T*> {
 template <typename V, typename E>
 struct SelectResultImpl {
   static const PackingStrategy value =
-      (UnusedZero<V>::value && std::is_empty_v<E>)
-          ? PackingStrategy::ZeroIsEmptyError
-      : (HasFreeLSB<V>::value && HasFreeLSB<E>::value)
+      (HasFreeLSB<V>::value && HasFreeLSB<E>::value)
           ? PackingStrategy::LowBitTagIsError
       : (UnusedZero<E>::value && sizeof(E) <= sizeof(uintptr_t))
           ? PackingStrategy::NullIsOk
@@ -561,13 +522,11 @@ class [[nodiscard]] Result final {
   }
 
   /**
-   * Create a (success/error) result from another (success/error) result with
-   * different but convertible value and error types.
-   */
-  template <typename V2, typename E2,
-            typename = std::enable_if_t<std::is_convertible_v<V2, V> &&
-                                        std::is_convertible_v<E2, E>>>
-  MOZ_IMPLICIT constexpr Result(Result<V2, E2>&& aOther)
+   * Create a (success/error) result from another (success/error) result with a
+   * different but convertible error type. */
+  template <typename E2,
+            typename = std::enable_if_t<std::is_convertible_v<E2, E>>>
+  MOZ_IMPLICIT constexpr Result(Result<V, E2>&& aOther)
       : mImpl(aOther.isOk() ? Impl{aOther.unwrap()}
                             : Impl{aOther.unwrapErr()}) {}
 
