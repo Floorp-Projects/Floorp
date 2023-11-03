@@ -3798,7 +3798,7 @@ static inline bool CodeUnitToString(JSContext* cx, uint16_t ucode,
   }
 
   char16_t c = char16_t(ucode);
-  JSString* str = NewStringCopyNDontDeflate<CanGC>(cx, &c, 1);
+  JSString* str = NewInlineString<CanGC>(cx, {c}, 1);
   if (!str) {
     return false;
   }
@@ -3868,7 +3868,7 @@ bool js::str_fromCodePoint_one_arg(JSContext* cx, HandleValue code,
 
   char16_t chars[] = {unicode::LeadSurrogate(codePoint),
                       unicode::TrailSurrogate(codePoint)};
-  JSString* str = NewStringCopyNDontDeflate<CanGC>(cx, chars, 2);
+  JSString* str = NewInlineString<CanGC>(cx, chars, 2);
   if (!str) {
     return false;
   }
