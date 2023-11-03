@@ -12,7 +12,7 @@ const TEST_PROVIDER_INFO = [
     telemetryId: "example",
     searchPageRegexp:
       /^https:\/\/example.com\/browser\/browser\/components\/search\/test\/browser\/searchTelemetry(?:Ad)?.html/,
-    queryParamName: "s",
+    queryParamNames: ["s"],
     codeParamName: "abc",
     taggedCodes: ["ff"],
     followOnParamNames: ["a"],
