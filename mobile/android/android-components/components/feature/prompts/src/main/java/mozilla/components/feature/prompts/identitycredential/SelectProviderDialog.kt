@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -55,6 +56,7 @@ fun SelectProviderDialog(
                 lineHeight = 24.sp,
                 color = colors.title,
                 letterSpacing = 0.15.sp,
+                fontWeight = FontWeight.Bold,
             ),
             modifier = Modifier.padding(16.dp),
         )

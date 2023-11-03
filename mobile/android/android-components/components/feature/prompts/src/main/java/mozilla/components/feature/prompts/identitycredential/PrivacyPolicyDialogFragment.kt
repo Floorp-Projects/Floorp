@@ -9,7 +9,6 @@ import android.content.DialogInterface
 import android.os.Bundle
 import android.text.SpannableStringBuilder
 import android.text.method.LinkMovementMethod
-import android.text.method.ScrollingMovementMethod
 import android.text.style.ClickableSpan
 import android.text.style.URLSpan
 import android.view.LayoutInflater
@@ -37,10 +36,10 @@ internal class PrivacyPolicyDialogFragment : AbstractPromptTextDialogFragment() 
         val builder = AlertDialog.Builder(requireContext())
             .setTitle(title)
             .setCancelable(true)
-            .setPositiveButton(android.R.string.ok) { _, _ ->
+            .setPositiveButton(R.string.mozac_feature_prompts_identity_credentials_continue) { _, _ ->
                 onConfirmAction(true)
             }
-            .setNegativeButton(android.R.string.cancel) { _, _ ->
+            .setNegativeButton(R.string.mozac_feature_prompts_identity_credentials_cancel) { _, _ ->
                 onConfirmAction(false)
             }
 
@@ -50,14 +49,12 @@ internal class PrivacyPolicyDialogFragment : AbstractPromptTextDialogFragment() 
 
     internal fun setMessage(builder: AlertDialog.Builder): AlertDialog.Builder {
         val inflater = LayoutInflater.from(requireContext())
-        val view = inflater.inflate(R.layout.mozac_feature_prompt_with_check_box, null)
-        val textView = view.findViewById<TextView>(R.id.message)
+        val view = inflater.inflate(R.layout.mozac_feature_prompt_simple_text, null)
+        val textView = view.findViewById<TextView>(R.id.labelView)
         val text = HtmlCompat.fromHtml(message, HtmlCompat.FROM_HTML_MODE_COMPACT)
-        textView.movementMethod = ScrollingMovementMethod()
 
         val spannableStringBuilder = SpannableStringBuilder(text)
-        val links = spannableStringBuilder.getSpans<URLSpan>()
-        for (link in links) {
+        spannableStringBuilder.getSpans<URLSpan>().forEach { link ->
             addActionToLinks(spannableStringBuilder, link)
         }
         textView.text = spannableStringBuilder
