@@ -333,10 +333,6 @@ export class GeckoViewContent extends GeckoViewModule {
   }
 
   async _requestAnalysis(aData, aCallback) {
-    if (!AppConstants.NIGHTLY_BUILD) {
-      aCallback.onError(`This API enabled for Nightly builds only.`);
-      return;
-    }
     const url = Services.io.newURI(aData.url);
     if (!lazy.isProductURL(url)) {
       aCallback.onError(`Cannot requestAnalysis on a non-product url.`);
@@ -352,10 +348,6 @@ export class GeckoViewContent extends GeckoViewModule {
   }
 
   async _requestCreateAnalysis(aData, aCallback) {
-    if (!AppConstants.NIGHTLY_BUILD) {
-      aCallback.onError(`This API enabled for Nightly builds only.`);
-      return;
-    }
     const url = Services.io.newURI(aData.url);
     if (!lazy.isProductURL(url)) {
       aCallback.onError(`Cannot requestCreateAnalysis on a non-product url.`);
@@ -371,10 +363,6 @@ export class GeckoViewContent extends GeckoViewModule {
   }
 
   async _requestAnalysisCreationStatus(aData, aCallback) {
-    if (!AppConstants.NIGHTLY_BUILD) {
-      aCallback.onError(`This API enabled for Nightly builds only.`);
-      return;
-    }
     const url = Services.io.newURI(aData.url);
     if (!lazy.isProductURL(url)) {
       aCallback.onError(
@@ -394,10 +382,6 @@ export class GeckoViewContent extends GeckoViewModule {
   }
 
   async _pollForAnalysisCompleted(aData, aCallback) {
-    if (!AppConstants.NIGHTLY_BUILD) {
-      aCallback.onError(`This API enabled for Nightly builds only.`);
-      return;
-    }
     const url = Services.io.newURI(aData.url);
     if (!lazy.isProductURL(url)) {
       aCallback.onError(
