@@ -318,11 +318,9 @@ void g_bus_get_callback(GObject* aSourceObject, GAsyncResult* aRes,
 
   GDBusConnection* conn = g_bus_get_finish(aRes, getter_Transfers(error));
   if (!conn) {
-    if (!IsCancelledGError(error.get())) {
-      NS_WARNING(nsPrintfCString("Failure at g_bus_get_finish: %s",
-                                 error ? error->message : "Unknown Error")
-                     .get());
-    }
+    NS_WARNING(nsPrintfCString("Failure at g_bus_get_finish: %s",
+                               error ? error->message : "Unknown Error")
+                   .get());
     return;
   }
 
