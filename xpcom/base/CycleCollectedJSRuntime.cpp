@@ -1721,7 +1721,7 @@ IncrementalFinalizeRunnable::Run() {
 }
 
 void CycleCollectedJSRuntime::FinalizeDeferredThings(
-    CycleCollectedJSContext::DeferredFinalizeType aType) {
+    DeferredFinalizeType aType) {
   /*
    * If the previous GC created a runnable to finalize objects
    * incrementally, and if it hasn't finished yet, finish it now. We
@@ -1748,7 +1748,7 @@ void CycleCollectedJSRuntime::FinalizeDeferredThings(
   // Everything should be gone now.
   MOZ_ASSERT(mDeferredFinalizerTable.Count() == 0);
 
-  if (aType == CycleCollectedJSContext::FinalizeIncrementally) {
+  if (aType == FinalizeIncrementally) {
     NS_DispatchToCurrentThreadQueue(do_AddRef(mFinalizeRunnable), 2500,
                                     EventQueuePriority::Idle);
   } else {
@@ -1828,9 +1828,8 @@ void CycleCollectedJSRuntime::OnGC(JSContext* aContext, JSGCStatus aStatus,
                                    (JS::InternalGCReason(aReason) &&
                                     aReason != JS::GCReason::DESTROY_RUNTIME);
 
-      FinalizeDeferredThings(
-          finalizeIncrementally ? CycleCollectedJSContext::FinalizeIncrementally
-                                : CycleCollectedJSContext::FinalizeNow);
+      FinalizeDeferredThings(finalizeIncrementally ? FinalizeIncrementally
+                                                   : FinalizeNow);
 
       break;
     }
