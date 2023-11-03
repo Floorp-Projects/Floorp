@@ -1026,7 +1026,7 @@ add_task(async function test_privateWindow() {
     {
       telemetryId: "example",
       searchPageRegexp: "^https://example\\.com/",
-      queryParamName: "q",
+      queryParamNames: ["q"],
     },
   ]);
 
