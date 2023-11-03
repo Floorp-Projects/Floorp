@@ -402,6 +402,7 @@ class DefaultBrowserToolbarControllerTest {
             every { reviewQualityCheckCfrDisplayTimeInMillis } returns System.currentTimeMillis()
             every { reviewQualityCheckCfrDisplayTimeInMillis = any() } just Runs
             every { reviewQualityCheckCFRClosedCounter } returns 1
+            every { reviewQualityCheckCFRClosedCounter = 2 } just Runs
             every { shouldShowReviewQualityCheckCFR } returns true
         }
         every { activity.settings() } returns mockSettings
@@ -419,6 +420,7 @@ class DefaultBrowserToolbarControllerTest {
             every { reviewQualityCheckCfrDisplayTimeInMillis } returns System.currentTimeMillis()
             every { reviewQualityCheckCfrDisplayTimeInMillis = any() } just Runs
             every { reviewQualityCheckCFRClosedCounter } returns 2
+            every { reviewQualityCheckCFRClosedCounter = 3 } just Runs
             every { shouldShowReviewQualityCheckCFR } returns true
         }
         every { activity.settings() } returns mockSettings
@@ -435,6 +437,7 @@ class DefaultBrowserToolbarControllerTest {
         val mockSettings = mockk<Settings> {
             every { reviewQualityCheckCfrDisplayTimeInMillis } returns System.currentTimeMillis()
             every { reviewQualityCheckCFRClosedCounter } returns 3
+            every { reviewQualityCheckCFRClosedCounter = 4 } just Runs
             every { shouldShowReviewQualityCheckCFR } returns true
             every { shouldShowReviewQualityCheckCFR = any() } just Runs
         }
