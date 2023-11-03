@@ -1357,7 +1357,6 @@ export class SearchService {
   async #init() {
     lazy.logConsole.debug("init");
 
-    TelemetryStopwatch.start("SEARCH_SERVICE_INIT_MS");
     const timerId = Glean.searchService.startupTime.start();
 
     this.#doPreInitWork();
@@ -1378,7 +1377,6 @@ export class SearchService {
       await this.#loadEngines(settings, engines, privateDefault);
     } catch (ex) {
       Glean.searchService.initializationStatus[`failed${initSection}`].add();
-      TelemetryStopwatch.cancel("SEARCH_SERVICE_INIT_MS");
       Glean.searchService.startupTime.cancel(timerId);
 
       lazy.logConsole.error("#init: failure initializing search:", ex);
@@ -1398,7 +1396,6 @@ export class SearchService {
     // We will however, rebuild the settings on next start up if we detect
     // it is necessary.
     if (Services.startup.shuttingDown) {
-      TelemetryStopwatch.cancel("SEARCH_SERVICE_INIT_MS");
       Glean.searchService.startupTime.cancel(timerId);
 
       let ex = Components.Exception(
@@ -1416,7 +1413,6 @@ export class SearchService {
     this.#initDeferredPromise.resolve();
     this.#addObservers();
 
-    TelemetryStopwatch.finish("SEARCH_SERVICE_INIT_MS");
     Glean.searchService.startupTime.stopAndAccumulate(timerId);
 
     this.#recordTelemetryData();
