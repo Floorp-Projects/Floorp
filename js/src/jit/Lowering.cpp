@@ -1133,11 +1133,15 @@ void LIRGenerator::visitTest(MTest* test) {
   if (opd->isIsNullOrUndefined() && opd->isEmittedAtUses()) {
     MIsNullOrUndefined* isNullOrUndefined = opd->toIsNullOrUndefined();
     MDefinition* input = isNullOrUndefined->value();
-    MOZ_ASSERT(input->type() == MIRType::Value);
 
-    auto* lir = new (alloc()) LIsNullOrUndefinedAndBranch(
-        isNullOrUndefined, ifTrue, ifFalse, useBoxAtStart(input));
-    add(lir, test);
+    if (input->type() == MIRType::Value) {
+      auto* lir = new (alloc()) LIsNullOrUndefinedAndBranch(
+          isNullOrUndefined, ifTrue, ifFalse, useBoxAtStart(input));
+      add(lir, test);
+    } else {
+      auto* target = IsNullOrUndefined(input->type()) ? ifTrue : ifFalse;
+      add(new (alloc()) LGoto(target));
+    }
     return;
   }
 
@@ -5426,10 +5430,12 @@ void LIRGenerator::visitIsNullOrUndefined(MIsNullOrUndefined* ins) {
   }
 
   MDefinition* opd = ins->input();
-  MOZ_ASSERT(opd->type() == MIRType::Value);
-  LIsNullOrUndefined* lir =
-      new (alloc()) LIsNullOrUndefined(useBoxAtStart(opd));
-  define(lir, ins);
+  if (opd->type() == MIRType::Value) {
+    auto* lir = new (alloc()) LIsNullOrUndefined(useBoxAtStart(opd));
+    define(lir, ins);
+  } else {
+    define(new (alloc()) LInteger(IsNullOrUndefined(opd->type())), ins);
+  }
 }
 
 void LIRGenerator::visitHasClass(MHasClass* ins) {
