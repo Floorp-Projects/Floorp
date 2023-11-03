@@ -1080,9 +1080,6 @@ class BuildTextRunsScanner {
     }
 
     void Finish(gfxMissingFontRecorder* aMFR) {
-      MOZ_ASSERT(
-          !(mTextRun->GetFlags2() & nsTextFrameUtils::Flags::UnusedFlags),
-          "Flag set that should never be set! (memory safety error?)");
       if (mTextRun->GetFlags2() & nsTextFrameUtils::Flags::IsTransformed) {
         nsTransformedTextRun* transformedTextRun =
             static_cast<nsTransformedTextRun*>(mTextRun.get());
@@ -3114,7 +3111,7 @@ static bool IsJustifiableCharacter(const nsStyleText* aTextStyle,
 
   const char16_t ch = aFrag->CharAt(AssertedCast<uint32_t>(aPos));
   if (ch == '\n' || ch == '\t' || ch == '\r') {
-    return true;
+    return !aTextStyle->WhiteSpaceIsSignificant();
   }
   if (ch == ' ' || ch == CH_NBSP) {
     // Don't justify spaces that are combined with diacriticals
@@ -3345,6 +3342,152 @@ static void FindClusterEnd(const gfxTextRun* aTextRun, int32_t aOriginalEnd,
   aPos->AdvanceOriginal(-1);
 }
 
+// Get the line number of aFrame in the lines referenced by aLineIter, if
+// known (returning -1 if we don't find it).
+static int32_t GetFrameLineNum(nsIFrame* aFrame, nsILineIterator* aLineIter) {
+  if (!aLineIter) {
+    return -1;
+  }
+  int32_t n = aLineIter->FindLineContaining(aFrame);
+  if (n >= 0) {
+    return n;
+  }
+  // If we didn't find the frame directly, but its parent is an inline,
+  // we want the line that the inline ancestor is on.
+  nsIFrame* ancestor = aFrame->GetParent();
+  while (ancestor && ancestor->IsInlineFrame()) {
+    n = aLineIter->FindLineContaining(ancestor);
+    if (n >= 0) {
+      return n;
+    }
+    ancestor = ancestor->GetParent();
+  }
+  return -1;
+}
+
+// Get the position of the first preserved newline in aFrame, if any,
+// returning -1 if none.
+static int32_t FindFirstNewlinePosition(const nsTextFrame* aFrame) {
+  MOZ_ASSERT(aFrame->StyleText()->NewlineIsSignificantStyle(),
+             "how did the HasNewline flag get set?");
+  const auto* textFragment = aFrame->TextFragment();
+  for (auto i = aFrame->GetContentOffset(); i < aFrame->GetContentEnd(); ++i) {
+    if (textFragment->CharAt(i) == '\n') {
+      return i;
+    }
+  }
+  return -1;
+}
+
+// Get the position of the last preserved tab in aFrame that is before the
+// preserved newline at aNewlinePos.
+// Passing -1 for aNewlinePos means there is no preserved newline, so we look
+// for the last preserved tab in the whole content.
+// Returns -1 if no such preserved tab is present.
+static int32_t FindLastTabPositionBeforeNewline(const nsTextFrame* aFrame,
+                                                int32_t aNewlinePos) {
+  // We only call this if white-space is not being collapsed.
+  MOZ_ASSERT(aFrame->StyleText()->WhiteSpaceIsSignificant(),
+             "how did the HasTab flag get set?");
+  const auto* textFragment = aFrame->TextFragment();
+  // If a non-negative newline position was given, we only need to search the
+  // text before that offset.
+  for (auto i = aNewlinePos < 0 ? aFrame->GetContentEnd() : aNewlinePos;
+       i > aFrame->GetContentOffset(); --i) {
+    if (textFragment->CharAt(i - 1) == '\t') {
+      return i;
+    }
+  }
+  return -1;
+}
+
+// Look for preserved tab or newline in the given frame or its following
+// siblings on the same line, to determine whether justification should be
+// suppressed in order to avoid disrupting tab-stop positions.
+// Returns the first such preserved whitespace char, or 0 if none found.
+static char NextPreservedWhiteSpaceOnLine(nsIFrame* aSibling,
+                                          nsILineIterator* aLineIter,
+                                          int32_t aLineNum) {
+  while (aSibling) {
+    // If we find a <br>, treat it like a newline.
+    if (aSibling->IsBrFrame()) {
+      return '\n';
+    }
+    // If we've moved on to a later line, stop searching.
+    if (GetFrameLineNum(aSibling, aLineIter) > aLineNum) {
+      return 0;
+    }
+    // If we encounter an inline frame, recurse into it.
+    if (aSibling->IsInlineFrame()) {
+      auto* child = aSibling->PrincipalChildList().FirstChild();
+      char result = NextPreservedWhiteSpaceOnLine(child, aLineIter, aLineNum);
+      if (result) {
+        return result;
+      }
+    }
+    // If we have a text frame, and whitespace is not collapsed, we need to
+    // check its contents.
+    if (aSibling->IsTextFrame()) {
+      const auto* textStyle = aSibling->StyleText();
+      if (textStyle->WhiteSpaceOrNewlineIsSignificant()) {
+        const auto* textFrame = static_cast<nsTextFrame*>(aSibling);
+        const auto* textFragment = textFrame->TextFragment();
+        for (auto i = textFrame->GetContentOffset();
+             i < textFrame->GetContentEnd(); ++i) {
+          const char16_t ch = textFragment->CharAt(i);
+          if (ch == '\n' && textStyle->NewlineIsSignificantStyle()) {
+            return '\n';
+          }
+          if (ch == '\t' && textStyle->WhiteSpaceIsSignificant()) {
+            return '\t';
+          }
+        }
+      }
+    }
+    aSibling = aSibling->GetNextSibling();
+  }
+  return 0;
+}
+
+static bool HasPreservedTabInFollowingSiblingOnLine(nsTextFrame* aFrame) {
+  bool foundTab = false;
+
+  nsIFrame* lineContainer = FindLineContainer(aFrame);
+  nsILineIterator* iter = lineContainer->GetLineIterator();
+  int32_t line = GetFrameLineNum(aFrame, iter);
+  char ws = NextPreservedWhiteSpaceOnLine(aFrame->GetNextSibling(), iter, line);
+  if (ws == '\t') {
+    foundTab = true;
+  } else if (!ws) {
+    // Didn't find a preserved tab or newline in our siblings; if our parent
+    // (and its parent, etc) is an inline, we need to look at their following
+    // siblings, too, as long as they're on the same line.
+    const nsIFrame* maybeInline = aFrame->GetParent();
+    while (maybeInline && maybeInline->IsInlineFrame()) {
+      ws = NextPreservedWhiteSpaceOnLine(maybeInline->GetNextSibling(), iter,
+                                         line);
+      if (ws == '\t') {
+        foundTab = true;
+        break;
+      }
+      if (ws == '\n') {
+        break;
+      }
+      maybeInline = maybeInline->GetParent();
+    }
+  }
+
+  // We called lineContainer->GetLineIterator() above, but we mustn't
+  // allow a block frame to retain this iterator if we're currently in
+  // reflow, as it will become invalid as the line list is reflowed.
+  if (lineContainer->HasAnyStateBits(NS_FRAME_IN_REFLOW) &&
+      lineContainer->IsBlockFrameOrSubclass()) {
+    static_cast<nsBlockFrame*>(lineContainer)->ClearLineIterator();
+  }
+
+  return foundTab;
+}
+
 JustificationInfo nsTextFrame::PropertyProvider::ComputeJustification(
     Range aRange, nsTArray<JustificationAssignment>* aAssignments) {
   JustificationInfo info;
@@ -3356,6 +3499,34 @@ JustificationInfo nsTextFrame::PropertyProvider::ComputeJustification(
   // character, the sides of this frame are not justifiable either.
   if (mFrame->Style()->IsTextCombined()) {
     return info;
+  }
+
+  int32_t lastTab = -1;
+  if (StaticPrefs::layout_css_text_align_justify_only_after_last_tab()) {
+    // If there is a preserved tab on the line, we don't apply justification
+    // until we're past its position.
+    if (mTextStyle->WhiteSpaceIsSignificant()) {
+      // If there is a preserved newline within the text, we don't need to look
+      // beyond this frame, as following frames will not be on the same line.
+      int32_t newlinePos =
+          (mTextRun->GetFlags2() & nsTextFrameUtils::Flags::HasNewline)
+              ? FindFirstNewlinePosition(mFrame)
+              : -1;
+      if (newlinePos < 0) {
+        // There's no preserved newline within this frame; if there's a tab
+        // in a later sibling frame on the same line, we won't apply any
+        // justification to this one.
+        if (HasPreservedTabInFollowingSiblingOnLine(mFrame)) {
+          return info;
+        }
+      }
+
+      if (mTextRun->GetFlags2() & nsTextFrameUtils::Flags::HasTab) {
+        // Find last tab character in the content; we won't justify anything
+        // before that position, so that tab alignment remains correct.
+        lastTab = FindLastTabPositionBeforeNewline(mFrame, newlinePos);
+      }
+    }
   }
 
   bool isCJ = IsChineseOrJapanese(mFrame);
@@ -3375,7 +3546,8 @@ JustificationInfo nsTextFrame::PropertyProvider::ComputeJustification(
     gfxSkipCharsIterator iter = run.GetPos();
     for (uint32_t i = 0; i < length; ++i) {
       uint32_t offset = originalOffset + i;
-      if (!IsJustifiableCharacter(mTextStyle, mFrag, offset, isCJ)) {
+      if (!IsJustifiableCharacter(mTextStyle, mFrag, offset, isCJ) ||
+          (lastTab >= 0 && offset <= uint32_t(lastTab))) {
         continue;
       }
 

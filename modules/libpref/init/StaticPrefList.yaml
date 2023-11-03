@@ -8815,6 +8815,11 @@
   value: true
   mirror: always
 
+- name: layout.css.text-align.justify-only-after-last-tab
+  type: bool
+  value: true
+  mirror: always
+
 # Support for the css Zoom property.
 - name: layout.css.zoom.enabled
   type: RelaxedAtomicBool
