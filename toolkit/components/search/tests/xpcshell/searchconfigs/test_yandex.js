@@ -10,31 +10,24 @@ const test = new SearchConfigTest({
     included: [
       {
         regions: ["ru", "tr", "by", "kz"],
-        locales: {
-          matches: ["ru", "tr", "be", "kk"],
-          startsWith: ["en"],
-        },
+        locales: ["ru", "tr", "be", "kk", "en-CA", "en-GB", "en-US"],
       },
     ],
   },
   available: {
     included: [
       {
-        locales: {
-          matches: ["az", "ru", "be", "kk", "tr"],
-        },
+        locales: ["az", "ru", "be", "kk", "tr"],
       },
       {
         regions: ["ru", "tr", "by", "kz"],
-        locales: {
-          startsWith: ["en"],
-        },
+        locales: ["en-CA", "en-GB", "en-US"],
       },
     ],
   },
   details: [
     {
-      included: [{ locales: { matches: ["az"] } }],
+      included: [{ locales: ["az"] }],
       domain: "yandex.az",
       telemetryId: "yandex-az",
       codes: {
@@ -58,7 +51,7 @@ const test = new SearchConfigTest({
       },
     },
     {
-      included: [{ locales: { matches: ["ru"] } }],
+      included: [{ locales: ["ru"] }],
       domain: "yandex.ru",
       telemetryId: "yandex-ru",
       codes: {
@@ -70,7 +63,7 @@ const test = new SearchConfigTest({
       },
     },
     {
-      included: [{ locales: { matches: ["be"] } }],
+      included: [{ locales: ["be"] }],
       domain: "yandex.by",
       telemetryId: "yandex-by",
       codes: {
@@ -82,7 +75,7 @@ const test = new SearchConfigTest({
       },
     },
     {
-      included: [{ locales: { matches: ["kk"] } }],
+      included: [{ locales: ["kk"] }],
       domain: "yandex.kz",
       telemetryId: "yandex-kk",
       codes: {
@@ -94,7 +87,7 @@ const test = new SearchConfigTest({
       },
     },
     {
-      included: [{ locales: { matches: ["tr"] } }],
+      included: [{ locales: ["tr"] }],
       domain: "yandex.com.tr",
       telemetryId: "yandex-tr",
       codes: {

@@ -227,31 +227,6 @@ class SearchConfigTest {
   }
 
   /**
-   * Determines if a locale matches with a locales section in the configuration.
-   *
-   * @param {object} locales
-   *   The config locales config, containing the locals to match against.
-   * @param {Array} [locales.matches]
-   *   Array of locale names to match exactly.
-   * @param {Array} [locales.startsWith]
-   *   Array of locale names to match the start.
-   * @param {string} locale
-   *   The two-letter locale code.
-   * @returns {boolean}
-   *   True if the locale matches.
-   */
-  _localeIncludes(locales, locale) {
-    if ("matches" in locales && locales.matches.includes(locale)) {
-      return true;
-    }
-    if ("startsWith" in locales) {
-      return !!locales.startsWith.find(element => locale.startsWith(element));
-    }
-
-    return false;
-  }
-
-  /**
    * Determines if a locale/region pair match a section of the configuration.
    *
    * @param {object} section
@@ -268,7 +243,7 @@ class SearchConfigTest {
       // If we only specify a regions or locales section then
       // it is always considered included in the other section.
       const inRegions = !regions || regions.includes(region);
-      const inLocales = !locales || this._localeIncludes(locales, locale);
+      const inLocales = !locales || locales.includes(locale);
       if (inRegions && inLocales) {
         return true;
       }
