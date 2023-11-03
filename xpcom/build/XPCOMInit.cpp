@@ -63,6 +63,7 @@
 
 #include "nsAtomTable.h"
 #include "nsISupportsImpl.h"
+#include "nsLanguageAtomService.h"
 
 #include "nsSystemInfo.h"
 #include "nsMemoryReporterManager.h"
@@ -769,6 +770,8 @@ nsresult ShutdownXPCOM(nsIServiceManager* aServMgr) {
   }
   nsComponentManagerImpl::gComponentManager = nullptr;
   nsCategoryManager::Destroy();
+
+  nsLanguageAtomService::Shutdown();
 
   GkRust_Shutdown();
 
