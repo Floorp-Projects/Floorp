@@ -12,9 +12,7 @@ const test = new SearchConfigTest({
   available: {
     included: [
       {
-        locales: {
-          matches: ["de"],
-        },
+        locales: ["de"],
       },
     ],
   },

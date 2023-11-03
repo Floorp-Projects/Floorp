@@ -27,47 +27,41 @@ const test = new SearchConfigTest({
         // regions: [
         //   "us", "gb", "ca", "ie", "fr", "it", "de", "at", "es", "nl", "ch", "au"
         // ],
-        locales: {
-          matches: [
-            "an",
-            "ast",
-            "br",
-            "ca",
-            "ca-valencia",
-            "cy",
-            "de",
-            "dsb",
-            "en-CA",
-            "en-GB",
-            "es-ES",
-            "eu",
-            "fur",
-            "fr",
-            "fy-NL",
-            "ga-IE",
-            "gd",
-            "gl",
-            "hsb",
-            "it",
-            "lij",
-            "nl",
-            "rm",
-            "sc",
-            "wo",
-          ],
-        },
+        locales: [
+          "an",
+          "ast",
+          "br",
+          "ca",
+          "ca-valencia",
+          "cy",
+          "de",
+          "dsb",
+          "en-CA",
+          "en-GB",
+          "es-ES",
+          "eu",
+          "fur",
+          "fr",
+          "fy-NL",
+          "ga-IE",
+          "gd",
+          "gl",
+          "hsb",
+          "it",
+          "lij",
+          "nl",
+          "rm",
+          "sc",
+          "wo",
+        ],
       },
       {
         regions: ["au", "be", "ca", "ch", "gb", "ie", "nl", "us"],
-        locales: {
-          matches: ["en-US"],
-        },
+        locales: ["en-US"],
       },
       {
         regions: ["gb"],
-        locales: {
-          matches: ["sco"],
-        },
+        locales: ["sco"],
       },
     ],
   },
@@ -82,9 +76,7 @@ const test = new SearchConfigTest({
       included: [
         {
           regions: ["be"],
-          locales: {
-            matches: ["br", "unknown", "en-US", "fr", "fy-NL", "nl", "wo"],
-          },
+          locales: ["br", "unknown", "en-US", "fr", "fy-NL", "nl", "wo"],
         },
       ],
       searchUrlCode: "mkrid=1553-53471-19255-0",
@@ -96,7 +88,7 @@ const test = new SearchConfigTest({
       included: [
         {
           regions: ["at"],
-          locales: { matches: ["de", "dsb", "hsb"] },
+          locales: ["de", "dsb", "hsb"],
         },
       ],
       searchUrlCode: "mkrid=5221-53469-19255-0",
@@ -107,7 +99,7 @@ const test = new SearchConfigTest({
       telemetryId: "ebay-ca",
       included: [
         {
-          locales: { matches: DOMAIN_LOCALES["ebay-ca"] },
+          locales: DOMAIN_LOCALES["ebay-ca"],
         },
         {
           regions: ["ca"],
@@ -115,17 +107,15 @@ const test = new SearchConfigTest({
       ],
       excluded: [
         {
-          locales: {
-            matches: [
-              ...DOMAIN_LOCALES["ebay-ch"],
-              ...DOMAIN_LOCALES["ebay-de"],
-              ...DOMAIN_LOCALES["ebay-es"],
-              ...DOMAIN_LOCALES["ebay-ie"],
-              ...DOMAIN_LOCALES["ebay-it"],
-              ...DOMAIN_LOCALES["ebay-nl"],
-              ...DOMAIN_LOCALES["ebay-uk"],
-            ],
-          },
+          locales: [
+            ...DOMAIN_LOCALES["ebay-ch"],
+            ...DOMAIN_LOCALES["ebay-de"],
+            ...DOMAIN_LOCALES["ebay-es"],
+            ...DOMAIN_LOCALES["ebay-ie"],
+            ...DOMAIN_LOCALES["ebay-it"],
+            ...DOMAIN_LOCALES["ebay-nl"],
+            ...DOMAIN_LOCALES["ebay-uk"],
+          ],
         },
       ],
       searchUrlCode: "mkrid=706-53473-19255-0",
@@ -136,7 +126,7 @@ const test = new SearchConfigTest({
       telemetryId: "ebay-ch",
       included: [
         {
-          locales: { matches: DOMAIN_LOCALES["ebay-ch"] },
+          locales: DOMAIN_LOCALES["ebay-ch"],
         },
         {
           regions: ["ch"],
@@ -144,16 +134,14 @@ const test = new SearchConfigTest({
       ],
       excluded: [
         {
-          locales: {
-            matches: [
-              ...DOMAIN_LOCALES["ebay-ca"],
-              ...DOMAIN_LOCALES["ebay-es"],
-              ...DOMAIN_LOCALES["ebay-ie"],
-              ...DOMAIN_LOCALES["ebay-it"],
-              ...DOMAIN_LOCALES["ebay-nl"],
-              ...DOMAIN_LOCALES["ebay-uk"],
-            ],
-          },
+          locales: [
+            ...DOMAIN_LOCALES["ebay-ca"],
+            ...DOMAIN_LOCALES["ebay-es"],
+            ...DOMAIN_LOCALES["ebay-ie"],
+            ...DOMAIN_LOCALES["ebay-it"],
+            ...DOMAIN_LOCALES["ebay-nl"],
+            ...DOMAIN_LOCALES["ebay-uk"],
+          ],
         },
       ],
       searchUrlCode: "mkrid=5222-53480-19255-0",
@@ -164,7 +152,7 @@ const test = new SearchConfigTest({
       telemetryId: "ebay",
       included: [
         {
-          locales: { matches: ["unknown", "en-US"] },
+          locales: ["unknown", "en-US"],
         },
       ],
       excluded: [{ regions: ["au", "be", "ca", "ch", "gb", "ie", "nl"] }],
@@ -177,7 +165,7 @@ const test = new SearchConfigTest({
       included: [
         {
           regions: ["au"],
-          locales: { matches: ["cy", "unknown", "en-GB", "en-US", "gd"] },
+          locales: ["cy", "unknown", "en-GB", "en-US", "gd"],
         },
       ],
       searchUrlCode: "mkrid=705-53470-19255-0",
@@ -188,11 +176,11 @@ const test = new SearchConfigTest({
       telemetryId: "ebay-ie",
       included: [
         {
-          locales: { matches: DOMAIN_LOCALES["ebay-ie"] },
+          locales: DOMAIN_LOCALES["ebay-ie"],
         },
         {
           regions: ["ie"],
-          locales: { matches: ["cy", "unknown", "en-GB", "en-US", "gd"] },
+          locales: ["cy", "unknown", "en-GB", "en-US", "gd"],
         },
       ],
       searchUrlCode: "mkrid=5282-53468-19255-0",
@@ -203,10 +191,10 @@ const test = new SearchConfigTest({
       telemetryId: "ebay-uk",
       included: [
         {
-          locales: { matches: DOMAIN_LOCALES["ebay-uk"] },
+          locales: DOMAIN_LOCALES["ebay-uk"],
         },
         {
-          locales: { matches: ["unknown", "en-US", "sco"] },
+          locales: ["unknown", "en-US", "sco"],
           regions: ["gb"],
         },
       ],
@@ -219,7 +207,7 @@ const test = new SearchConfigTest({
       telemetryId: "ebay-de",
       included: [
         {
-          locales: { matches: DOMAIN_LOCALES["ebay-de"] },
+          locales: DOMAIN_LOCALES["ebay-de"],
         },
       ],
       excluded: [{ regions: ["at", "ch"] }],
@@ -231,9 +219,7 @@ const test = new SearchConfigTest({
       telemetryId: "ebay-es",
       included: [
         {
-          locales: {
-            matches: DOMAIN_LOCALES["ebay-es"],
-          },
+          locales: DOMAIN_LOCALES["ebay-es"],
         },
       ],
       searchUrlCode: "mkrid=1185-53479-19255-0",
@@ -244,7 +230,7 @@ const test = new SearchConfigTest({
       telemetryId: "ebay-fr",
       included: [
         {
-          locales: { matches: ["br", "fr", "wo"] },
+          locales: ["br", "fr", "wo"],
         },
       ],
       excluded: [{ regions: ["be", "ca", "ch"] }],
@@ -256,7 +242,7 @@ const test = new SearchConfigTest({
       telemetryId: "ebay-it",
       included: [
         {
-          locales: { matches: DOMAIN_LOCALES["ebay-it"] },
+          locales: DOMAIN_LOCALES["ebay-it"],
         },
       ],
       searchUrlCode: "mkrid=724-53478-19255-0",
@@ -267,10 +253,10 @@ const test = new SearchConfigTest({
       telemetryId: "ebay-nl",
       included: [
         {
-          locales: { matches: DOMAIN_LOCALES["ebay-nl"] },
+          locales: DOMAIN_LOCALES["ebay-nl"],
         },
         {
-          locales: { matches: ["unknown", "en-US"] },
+          locales: ["unknown", "en-US"],
           regions: ["nl"],
         },
       ],

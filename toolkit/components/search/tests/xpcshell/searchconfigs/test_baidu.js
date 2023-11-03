@@ -10,18 +10,14 @@ const test = new SearchConfigTest({
     included: [
       {
         regions: ["cn"],
-        locales: {
-          matches: ["zh-CN"],
-        },
+        locales: ["zh-CN"],
       },
     ],
   },
   available: {
     included: [
       {
-        locales: {
-          matches: ["zh-CN"],
-        },
+        locales: ["zh-CN"],
       },
     ],
   },

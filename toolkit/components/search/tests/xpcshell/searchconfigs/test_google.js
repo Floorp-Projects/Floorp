@@ -16,9 +16,7 @@ const test = new SearchConfigTest({
     excluded: [
       {
         regions: ["cn"],
-        locales: {
-          matches: ["zh-CN"],
-        },
+        locales: ["zh-CN"],
       },
     ],
   },

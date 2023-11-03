@@ -12,9 +12,7 @@ const test = new SearchConfigTest({
   available: {
     included: [
       {
-        locales: {
-          matches: ["ja", "ja-JP-macos"],
-        },
+        locales: ["ja", "ja-JP-macos"],
       },
     ],
   },
