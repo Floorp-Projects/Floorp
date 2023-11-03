@@ -115,6 +115,7 @@ static struct sigaction SIGQUIT_oldact;
 static struct sigaction SIGILL_oldact;
 static struct sigaction SIGABRT_oldact;
 static struct sigaction SIGSEGV_oldact;
+static struct sigaction SIGTERM_oldact;
 
 void nsProfileLock::FatalSignalHandler(int signo
 #  ifdef SA_SIGINFO
@@ -146,6 +147,9 @@ void nsProfileLock::FatalSignalHandler(int signo
       break;
     case SIGSEGV:
       oldact = &SIGSEGV_oldact;
+      break;
+    case SIGTERM:
+      oldact = &SIGTERM_oldact;
       break;
     default:
       MOZ_ASSERT_UNREACHABLE("bad signo");
@@ -383,6 +387,7 @@ nsresult nsProfileLock::LockWithSymlink(nsIFile* aLockFile,
           CATCH_SIGNAL(SIGILL);
           CATCH_SIGNAL(SIGABRT);
           CATCH_SIGNAL(SIGSEGV);
+          CATCH_SIGNAL(SIGTERM);
 
 #  undef CATCH_SIGNAL
         }
