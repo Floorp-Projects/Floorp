@@ -1,5 +1,5 @@
 [DEFAULT]
-prefs = ["gfx.font_loader.delay=0"]
+prefs = ["gfx.font_loader.delay=0", "dom.select.showPicker.enabled=true"]
 support-files = ["head.js"]
 
 ["browser_selectpopup.js"]

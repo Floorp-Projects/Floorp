@@ -3776,7 +3776,7 @@
 
 - name: dom.select.showPicker.enabled
   type: bool
-  value: true
+  value: @IS_NIGHTLY_BUILD@
   mirror: always
 
 - name: dom.separate_event_queue_for_post_message.enabled
