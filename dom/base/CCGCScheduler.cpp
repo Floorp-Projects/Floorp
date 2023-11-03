@@ -8,6 +8,7 @@
 #include "mozilla/StaticPrefs_javascript.h"
 #include "mozilla/CycleCollectedJSRuntime.h"
 #include "mozilla/ProfilerMarkers.h"
+#include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/PerfStats.h"
 #include "nsRefreshDriver.h"
@@ -466,14 +467,17 @@ RefPtr<CCGCScheduler::MayGCPromise> CCGCScheduler::MayGCNow(
     case JS::GCReason::USER_INACTIVE:
     case JS::GCReason::FULL_GC_TIMER:
     case JS::GCReason::CC_FINISHED: {
-      if (XRE_IsContentProcess()) {
+      if (dom::ContentChild::GetSingleton() &&
+          dom::ContentChild::GetSingleton()->GetProcessPriority() <
+              hal::ProcessPriority::PROCESS_PRIORITY_FOREGROUND) {
         IdleSchedulerChild* child =
             IdleSchedulerChild::GetMainThreadIdleScheduler();
         if (child) {
           return child->MayGCNow();
         }
       }
-      // The parent process doesn't ask IdleSchedulerParent if it can GC.
+      // Foreground content processes and the parent process don't ask
+      // IdleSchedulerParent whether GC can be run.
       break;
     }
     default:
