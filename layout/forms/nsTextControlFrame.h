@@ -168,6 +168,7 @@ class nsTextControlFrame : public nsContainerFrame,
   /** handler for attribute changes to mContent */
   MOZ_CAN_RUN_SCRIPT_BOUNDARY nsresult AttributeChanged(
       int32_t aNameSpaceID, nsAtom* aAttribute, int32_t aModType) override;
+  void ElementStateChanged(mozilla::dom::ElementState aStates) override;
 
   nsresult PeekOffset(mozilla::PeekOffsetStruct* aPos) override;
 
@@ -179,6 +180,8 @@ class nsTextControlFrame : public nsContainerFrame,
   void ScrollSelectionIntoViewAsync(ScrollAncestors = ScrollAncestors::No);
 
  protected:
+  MOZ_CAN_RUN_SCRIPT_BOUNDARY void HandleReadonlyOrDisabledChange();
+
   /**
    * Launch the reflow on the child frames - see nsTextControlFrame::Reflow()
    */
