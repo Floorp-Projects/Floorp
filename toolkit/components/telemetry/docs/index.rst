@@ -7,20 +7,15 @@ This is being used to collect performance metrics and other information about ho
 
 There are two main ways of gathering data, Desktop Telemetry - documented here - which is used in Firefox Desktop
 and `Glean <https://docs.telemetry.mozilla.org/concepts/glean/glean.html>`__ which is
-Mozilla’s newer telemetry framework and used for example in Firefox on Android.
+Mozilla’s newer telemetry framework and used in all Mozilla projects needing data collection.
 Information which is gathered is called a probe in Desktop Telemetry or a metric in Glean.
 The data is being sent in so-called pings. When pings cannot be sent immediately, caching is implemented as well.
 
-This means, client-side the main building blocks are:
-
-* :doc:`data collection <collection/index>`, e.g. in histograms and scalars
-* assembling :doc:`concepts/pings` with the general information and the data payload
-* sending them to the server and local ping retention
-
-There are also some notable special cases:
-
-1. `Firefox on Glean (FOG) <../glean/index.html>`__ a wrapper around Glean for Firefox Desktop.
-2. `GeckoView Streaming Telemetry <../internals/geckoview-streaming.html>`__ - gecko uses Desktop Telemetry for recording data, but on Android (Fenix) Glean is used for sending the data. GeckoView provides the necessary adapter to get the data from Desktop Telemetry to Glean.
+In many cases, `Firefox on Glean (FOG) <../glean/index.html>`__
+(the Firefox Desktop integration of Glean) is to be preferred over Telemetry.
+If your data would benefit from being in Telemetry as well as Glean,
+please consult the documentation for the
+`Glean Interface For Firefox Telemetry (GIFFT) <../glean/user/gifft.html>`__.
 
 *Note:* Mozilla's `data collection policy <https://wiki.mozilla.org/Firefox/Data_Collection>`_ documents the process and requirements that are applied here.
 
