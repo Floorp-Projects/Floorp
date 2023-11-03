@@ -2983,6 +2983,9 @@ class MBox : public MUnaryInstruction, public NoTypePolicy::Data {
   bool congruentTo(const MDefinition* ins) const override {
     return congruentIfOperandsEqual(ins);
   }
+
+  MDefinition* foldsTo(TempAllocator& alloc) override;
+
   AliasSet getAliasSet() const override { return AliasSet::None(); }
 
   ALLOW_CLONE(MBox)
