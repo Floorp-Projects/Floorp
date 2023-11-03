@@ -1700,6 +1700,10 @@ shopping2023:
       description: True if showing recommended products is enabled
       type: boolean
       setPref: browser.shopping.experience2023.ads.enabled
+    adsExposure:
+      description: True if we want to record ad inventory for opted-in users, even if ads are disabled
+      type: boolean
+      setPref: browser.shopping.experience2023.ads.exposure
     surveyEnabled:
       description: True if showing survey is enabled
       type: boolean

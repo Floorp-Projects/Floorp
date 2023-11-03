@@ -39,6 +39,12 @@ XPCOMUtils.defineLazyPreferenceGetter(
     }
   }
 );
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "adsExposure",
+  "browser.shopping.experience2023.ads.exposure",
+  false
+);
 
 export class ShoppingSidebarChild extends RemotePageChild {
   constructor() {
@@ -132,6 +138,22 @@ export class ShoppingSidebarChild extends RemotePageChild {
         Glean.shopping.surfaceAdsImpression.record();
         break;
     }
+  }
+
+  // Exposed for testing. Assumes uri is a nsURI.
+  set productURI(uri) {
+    if (!(uri instanceof Ci.nsIURI)) {
+      throw new Error("productURI setter expects an nsIURI");
+    }
+    this.#productURI = uri;
+  }
+
+  // Exposed for testing. Assumes product is a ShoppingProduct.
+  set product(product) {
+    if (!(product instanceof ShoppingProduct)) {
+      throw new Error("product setter expects an instance of ShoppingProduct");
+    }
+    this.#product = product;
   }
 
   get canFetchAndShowData() {
@@ -321,29 +343,53 @@ export class ShoppingSidebarChild extends RemotePageChild {
   }
 
   /**
+   * Utility function to determine if we should request ads.
+   */
+  canFetchAds(uri) {
+    return (
+      uri.equalsExceptRef(this.#productURI) &&
+      this.canFetchAndShowData &&
+      (lazy.adsExposure || (this.canFetchAndShowAd && this.userHasAdsEnabled))
+    );
+  }
+
+  /**
+   * Utility function to determine if we should display ads. This is different
+   * from fetching ads, because of ads exposure telemetry (bug 1858470).
+   */
+  canShowAds(uri) {
+    return (
+      uri.equalsExceptRef(this.#productURI) &&
+      this.canFetchAndShowData &&
+      this.canFetchAndShowAd &&
+      this.userHasAdsEnabled
+    );
+  }
+
+  /**
    * Request recommended products for a given uri and send the recommendations
    * to the content if recommendations are enabled.
    *
    * @param {nsIURI} uri The uri of the current product page
    */
   async requestRecommendations(uri) {
-    if (
-      !uri.equalsExceptRef(this.#productURI) ||
-      !this.canFetchAndShowData ||
-      !this.canFetchAndShowAd ||
-      !this.userHasAdsEnabled
-    ) {
+    if (!this.canFetchAds(uri)) {
       return;
     }
 
     let recommendationData = await this.#product.requestRecommendations();
+
+    // Note: this needs to be separate from the inverse conditional check below
+    // because here we want to know if an ad exists for the product, regardless
+    // of whether ads are enabled, while for the surfaceNoAdsAvailable Glean
+    // probe, we want to know if ads would have been shown, but one wasn't
+    // available.
+    if (recommendationData.length) {
+      Glean.shopping.adsExposure.record();
+    }
+
     // Check if the product URI or opt in changed while we waited.
-    if (
-      !uri.equalsExceptRef(this.#productURI) ||
-      !this.canFetchAndShowData ||
-      !this.canFetchAndShowAd ||
-      !this.userHasAdsEnabled
-    ) {
+    if (!this.canShowAds(uri)) {
       return;
     }
 
