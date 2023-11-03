@@ -566,10 +566,23 @@ impl<L: CalcNodeLeaf> CalcNode<L> {
                 }
             },
             CalcNode::Round {
+                ref mut strategy,
                 ref mut value,
                 ref mut step,
-                ..
             } => {
+                match *strategy {
+                    RoundingStrategy::Nearest => {
+                        // Nearest is tricky because we'd have to swap the
+                        // behavior at the half-way point from using the upper
+                        // to lower bound.
+                        // Simpler to just wrap self in a negate node.
+                        wrap_self_in_negate(self);
+                        return;
+                    },
+                    RoundingStrategy::Up => *strategy = RoundingStrategy::Down,
+                    RoundingStrategy::Down => *strategy = RoundingStrategy::Up,
+                    RoundingStrategy::ToZero => (),
+                }
                 value.negate();
                 step.negate();
             },
