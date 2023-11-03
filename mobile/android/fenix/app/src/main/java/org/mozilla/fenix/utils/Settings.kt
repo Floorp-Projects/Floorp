@@ -46,6 +46,11 @@ import org.mozilla.fenix.nimbus.CookieBannersSection
 import org.mozilla.fenix.nimbus.FxNimbus
 import org.mozilla.fenix.nimbus.HomeScreenSection
 import org.mozilla.fenix.nimbus.Mr2022Section
+import org.mozilla.fenix.nimbus.QueryParameterStrippingSection
+import org.mozilla.fenix.nimbus.QueryParameterStrippingSection.QUERY_PARAMETER_STRIPPING
+import org.mozilla.fenix.nimbus.QueryParameterStrippingSection.QUERY_PARAMETER_STRIPPING_ALLOW_LIST
+import org.mozilla.fenix.nimbus.QueryParameterStrippingSection.QUERY_PARAMETER_STRIPPING_PMB
+import org.mozilla.fenix.nimbus.QueryParameterStrippingSection.QUERY_PARAMETER_STRIPPING_STRIP_LIST
 import org.mozilla.fenix.settings.PhoneFeature
 import org.mozilla.fenix.settings.deletebrowsingdata.DeleteBrowsingDataOnQuitType
 import org.mozilla.fenix.settings.logins.SavedLoginsSortingStrategyMenu
@@ -634,6 +639,18 @@ class Settings(private val appContext: Context) : PreferencesHolder {
 
     val shouldEnableCookieBannerGlobalRulesSubFrame: Boolean
         get() = cookieBannersSection[CookieBannersSection.FEATURE_SETTING_GLOBAL_RULES_SUB_FRAMES] == 1
+
+    val shouldEnableQueryParameterStripping: Boolean
+        get() = queryParameterStrippingSection[QUERY_PARAMETER_STRIPPING] == "1"
+
+    val shouldEnableQueryParameterStrippingPrivateBrowsing: Boolean
+        get() = queryParameterStrippingSection[QUERY_PARAMETER_STRIPPING_PMB] == "1"
+
+    val queryParameterStrippingAllowList: String
+        get() = queryParameterStrippingSection[QUERY_PARAMETER_STRIPPING_ALLOW_LIST].orEmpty()
+
+    val queryParameterStrippingStripList: String
+        get() = queryParameterStrippingSection[QUERY_PARAMETER_STRIPPING_STRIP_LIST].orEmpty()
 
     /**
      * Declared as a function for performance purposes. This could be declared as a variable using
@@ -1472,6 +1489,10 @@ class Settings(private val appContext: Context) : PreferencesHolder {
     private val cookieBannersSection: Map<CookieBannersSection, Int>
         get() =
             FxNimbus.features.cookieBanners.value().sectionsEnabled
+
+    private val queryParameterStrippingSection: Map<QueryParameterStrippingSection, String>
+        get() =
+            FxNimbus.features.queryParameterStripping.value().sectionsEnabled
 
     private val homescreenSections: Map<HomeScreenSection, Boolean>
         get() =

@@ -776,6 +776,53 @@ class GeckoEngine(
                 field = value
             }
 
+        override var queryParameterStripping: Boolean = false
+            set(value) {
+                with(runtime.settings.contentBlocking) {
+                    if (this.queryParameterStrippingEnabled != value) {
+                        this.queryParameterStrippingEnabled = value
+                    }
+                }
+                field = value
+            }
+
+        override var queryParameterStrippingPrivateBrowsing: Boolean = false
+            set(value) {
+                with(runtime.settings.contentBlocking) {
+                    if (this.queryParameterStrippingPrivateBrowsingEnabled != value) {
+                        this.queryParameterStrippingPrivateBrowsingEnabled = value
+                    }
+                }
+                field = value
+            }
+
+        @Suppress("SpreadOperator")
+        override var queryParameterStrippingAllowList: String = ""
+            set(value) {
+                with(runtime.settings.contentBlocking) {
+                    if (this.queryParameterStrippingAllowList.joinToString() != value) {
+                        this.setQueryParameterStrippingAllowList(
+                            *value.split(",")
+                                .toTypedArray(),
+                        )
+                    }
+                }
+                field = value
+            }
+
+        @Suppress("SpreadOperator")
+        override var queryParameterStrippingStripList: String = ""
+            set(value) {
+                with(runtime.settings.contentBlocking) {
+                    if (this.queryParameterStrippingStripList.joinToString() != value) {
+                        this.setQueryParameterStrippingStripList(
+                            *value.split(",").toTypedArray(),
+                        )
+                    }
+                }
+                field = value
+            }
+
         override var remoteDebuggingEnabled: Boolean
             get() = runtime.settings.remoteDebuggingEnabled
             set(value) { runtime.settings.remoteDebuggingEnabled = value }

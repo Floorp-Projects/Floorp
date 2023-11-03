@@ -81,6 +81,32 @@ abstract class Settings {
     open var cookieBannerHandlingGlobalRulesSubFrames: Boolean by UnsupportedSetting()
 
     /**
+     * Setting to control the cookie banner enables / disables the URL query string
+     * stripping in normal browsing mode which strips query parameters from loading
+     * URIs to prevent bounce (redirect) tracking.
+     */
+    open var queryParameterStripping: Boolean by UnsupportedSetting()
+
+    /**
+     * Setting to control the cookie banner enables / disables the URL query string
+     * stripping in private browsing mode which strips query parameters from loading
+     * URIs to prevent bounce (redirect) tracking.
+     */
+    open var queryParameterStrippingPrivateBrowsing: Boolean by UnsupportedSetting()
+
+    /**
+     * Setting to control the list that contains sites where should
+     * exempt from query stripping.
+     */
+    open var queryParameterStrippingAllowList: String by UnsupportedSetting()
+
+    /**
+     * Setting to control the list which contains query parameters that are needed to be stripped
+     * from  URIs. The query parameters are separated by a space.
+     */
+    open var queryParameterStrippingStripList: String by UnsupportedSetting()
+
+    /**
      * Setting to intercept and override requests.
      */
     open var requestInterceptor: RequestInterceptor? by UnsupportedSetting()
@@ -259,6 +285,10 @@ data class DefaultSettings(
     override var cookieBannerHandlingDetectOnlyMode: Boolean = false,
     override var cookieBannerHandlingGlobalRules: Boolean = false,
     override var cookieBannerHandlingGlobalRulesSubFrames: Boolean = false,
+    override var queryParameterStripping: Boolean = false,
+    override var queryParameterStrippingPrivateBrowsing: Boolean = false,
+    override var queryParameterStrippingAllowList: String = "",
+    override var queryParameterStrippingStripList: String = "",
 ) : Settings()
 
 class UnsupportedSetting<T> {

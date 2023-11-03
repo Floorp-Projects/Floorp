@@ -317,6 +317,10 @@ class GeckoEngineTest {
         assertEquals(contentBlockingSettings.cookieBannerDetectOnlyMode, engine.settings.cookieBannerHandlingDetectOnlyMode)
         assertEquals(contentBlockingSettings.cookieBannerGlobalRulesEnabled, engine.settings.cookieBannerHandlingGlobalRules)
         assertEquals(contentBlockingSettings.cookieBannerGlobalRulesSubFramesEnabled, engine.settings.cookieBannerHandlingGlobalRulesSubFrames)
+        assertEquals(contentBlockingSettings.queryParameterStrippingEnabled, engine.settings.queryParameterStripping)
+        assertEquals(contentBlockingSettings.queryParameterStrippingPrivateBrowsingEnabled, engine.settings.queryParameterStrippingPrivateBrowsing)
+        assertEquals(contentBlockingSettings.queryParameterStrippingAllowList[0], engine.settings.queryParameterStrippingAllowList)
+        assertEquals(contentBlockingSettings.queryParameterStrippingStripList[0], engine.settings.queryParameterStrippingStripList)
 
         try {
             engine.settings.domStorageEnabled
@@ -603,6 +607,46 @@ class GeckoEngineTest {
         engine.settings.cookieBannerHandlingGlobalRulesSubFrames = true
 
         verify(mockRuntime.settings.contentBlocking, never()).setCookieBannerGlobalRulesSubFramesEnabled(true)
+    }
+
+    @Test
+    fun `setQueryParameterStripping is only invoked when the value is changed`() {
+        val mockRuntime = mock<GeckoRuntime>()
+        val settings = spy(ContentBlocking.Settings.Builder().build())
+        whenever(mockRuntime.settings).thenReturn(mock())
+        whenever(mockRuntime.settings.contentBlocking).thenReturn(settings)
+
+        val engine = GeckoEngine(testContext, runtime = mockRuntime)
+
+        engine.settings.queryParameterStripping = true
+
+        verify(mockRuntime.settings.contentBlocking).setQueryParameterStrippingEnabled(true)
+
+        reset(settings)
+
+        engine.settings.queryParameterStripping = true
+
+        verify(mockRuntime.settings.contentBlocking, never()).setQueryParameterStrippingEnabled(true)
+    }
+
+    @Test
+    fun `setQueryParameterStrippingPrivateBrowsingEnabled is only invoked when the value is changed`() {
+        val mockRuntime = mock<GeckoRuntime>()
+        val settings = spy(ContentBlocking.Settings.Builder().build())
+        whenever(mockRuntime.settings).thenReturn(mock())
+        whenever(mockRuntime.settings.contentBlocking).thenReturn(settings)
+
+        val engine = GeckoEngine(testContext, runtime = mockRuntime)
+
+        engine.settings.queryParameterStrippingPrivateBrowsing = true
+
+        verify(mockRuntime.settings.contentBlocking).setQueryParameterStrippingPrivateBrowsingEnabled(true)
+
+        reset(settings)
+
+        engine.settings.queryParameterStrippingPrivateBrowsing = true
+
+        verify(mockRuntime.settings.contentBlocking, never()).setQueryParameterStrippingPrivateBrowsingEnabled(true)
     }
 
     @Test

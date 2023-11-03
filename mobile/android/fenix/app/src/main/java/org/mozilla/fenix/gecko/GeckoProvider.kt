@@ -121,6 +121,14 @@ object GeckoProvider {
                     context.settings().shouldEnableCookieBannerGlobalRules,
                     cookieBannerGlobalRulesSubFramesEnabled =
                     context.settings().shouldEnableCookieBannerGlobalRulesSubFrame,
+                    queryParameterStripping =
+                    context.settings().shouldEnableQueryParameterStripping,
+                    queryParameterStrippingPrivateBrowsing =
+                    context.settings().shouldEnableQueryParameterStrippingPrivateBrowsing,
+                    queryParameterStrippingAllowList =
+                    context.settings().queryParameterStrippingAllowList,
+                    queryParameterStrippingStripList =
+                    context.settings().queryParameterStrippingStripList,
                 ),
             )
             .consoleOutput(context.components.settings.enableGeckoLogs)
