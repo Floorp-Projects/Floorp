@@ -8,24 +8,15 @@
 
 .xhr-input-container {
   display: flex;
-  border: 1px solid transparent;
-}
-
-.xhr-input-container.focused {
-  border: 1px solid var(--theme-highlight-blue);
-}
-
-:root.theme-dark .xhr-input-container.focused {
-  border: 1px solid var(--blue-50);
-}
-
-.xhr-input-container.error {
-  border: 1px solid red;
 }
 
 .xhr-input-form {
-  display: inline-flex;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
   width: 100%;
+  /* helps to display a nice outline on focused elements */
+  padding-block: 2px;
   padding-inline-start: 20px;
   padding-inline-end: 12px;
   /* Stop select height from increasing as input height increases */
@@ -39,10 +30,11 @@
 
 .xhr-input-url {
   border: 1px;
-  flex-grow: 1;
+  flex: 1 1 100px;
+  min-width: min(100%, 100px);
+  height: 24px;
   background-color: var(--theme-sidebar-background);
   font-size: inherit;
-  height: 24px;
   color: var(--theme-body-color);
 }
 
@@ -51,18 +43,14 @@
   opacity: 1;
 }
 
-.xhr-input-url:focus {
-  cursor: text;
-  outline: none;
-}
-
-.expressions-list .xhr-input-container {
-  height: var(--expression-item-height);
-}
-
 .expressions-list .xhr-input-url {
   /* Prevent vertical bounce when editing an existing XHR Breakpoint */
   height: 100%;
+}
+
+.xhr-input-method {
+  flex: 0 1 100px;
+  min-width: min(100%, 100px);
 }
 
 .xhr-container {
@@ -70,7 +58,7 @@
   width: 100%;
   color: var(--theme-body-color);
   padding-inline-start: 16px;
-  padding-inline-end: 12px;
+  padding-inline-end: 6px;
   display: flex;
   align-items: center;
   position: relative;
@@ -91,18 +79,8 @@
   margin-inline-end: 2px;
 }
 
-.xhr-input-method {
+.xhr-input-container:not(.focused) .xhr-input-method {
   display: none;
-  /* Vertically center select in form */
-  margin-top: 2px;
-}
-
-.expressions-list .xhr-input-method {
-  margin-top: 0px;
-}
-
-.xhr-input-container.focused .xhr-input-method {
-  display: block;
 }
 
 .xhr-label-url {
@@ -121,11 +99,10 @@
   flex-grow: 1;
   display: flex;
   align-items: center;
-  overflow-x: hidden;
+  max-width: 100%;
 }
 
 .xhr-container__close-btn {
   display: flex;
-  padding-top: 2px;
-  padding-bottom: 2px;
+  padding: 2px;
 }
