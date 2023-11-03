@@ -7,10 +7,14 @@
 [GenerateInitFromJSON]
 dictionary WidevineCDMManifest {
   required DOMString name;
-  required DOMString description;
   required DOMString version;
-  required DOMString x-cdm-module-versions;
-  required DOMString x-cdm-interface-versions;
-  required DOMString x-cdm-host-versions;
-  required DOMString x-cdm-codecs;
+
+  DOMString description;
+  DOMString x-cdm-module-versions;
+  DOMString x-cdm-interface-versions;
+  DOMString x-cdm-host-versions;
+  DOMString x-cdm-codecs;
+
+  unsigned long manifest_version;
+  sequence<DOMString> accept_arch;
 };

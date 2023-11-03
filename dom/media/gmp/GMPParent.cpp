@@ -192,7 +192,14 @@ RefPtr<GenericPromise> GMPParent::Init(GeckoMediaPluginServiceParent* aService,
 
 #if defined(XP_WIN) || defined(XP_MACOSX)
   uint32_t pluginArch = base::PROCESS_ARCH_INVALID;
-  rv = GetPluginFileArch(aPluginDir, mName, pluginArch);
+  rv = GetPluginFileArch(
+      aPluginDir,
+#  ifdef MOZ_WMF_CDM
+      mName.Equals(u"widevinecdm-l1"_ns) ? u"Google.Widevine.CDM"_ns : mName,
+#  else
+      mName,
+#  endif
+      pluginArch);
   if (NS_FAILED(rv)) {
     GMP_PARENT_LOG_DEBUG("%s: Plugin arch error: %d", __FUNCTION__,
                          uint32_t(rv));
@@ -336,6 +343,12 @@ nsresult GMPParent::LoadProcess() {
   MOZ_ASSERT(mDirectory, "Plugin directory cannot be NULL!");
   MOZ_ASSERT(GMPEventTarget()->IsOnCurrentThread());
   MOZ_ASSERT(mState == GMPState::NotLoaded);
+
+  if (NS_WARN_IF(mPluginType == GMPPluginType::WidevineL1)) {
+    GMP_PARENT_LOG_DEBUG("%s: cannot load process for WidevineL1",
+                         __FUNCTION__);
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
 
   nsAutoString path;
   if (NS_WARN_IF(NS_FAILED(mDirectory->GetPath(path)))) {
@@ -1035,11 +1048,19 @@ RefPtr<GenericPromise> GMPParent::ReadChromiumManifestFile(nsIFile* aFile) {
 
 static bool IsCDMAPISupported(
     const mozilla::dom::WidevineCDMManifest& aManifest) {
+  if (!aManifest.mX_cdm_module_versions.WasPassed() ||
+      !aManifest.mX_cdm_interface_versions.WasPassed() ||
+      !aManifest.mX_cdm_host_versions.WasPassed()) {
+    return false;
+  }
+
   nsresult ignored;  // Note: ToInteger returns 0 on failure.
-  int32_t moduleVersion = aManifest.mX_cdm_module_versions.ToInteger(&ignored);
+  int32_t moduleVersion =
+      aManifest.mX_cdm_module_versions.Value().ToInteger(&ignored);
   int32_t interfaceVersion =
-      aManifest.mX_cdm_interface_versions.ToInteger(&ignored);
-  int32_t hostVersion = aManifest.mX_cdm_host_versions.ToInteger(&ignored);
+      aManifest.mX_cdm_interface_versions.Value().ToInteger(&ignored);
+  int32_t hostVersion =
+      aManifest.mX_cdm_host_versions.Value().ToInteger(&ignored);
   return ChromiumCDMAdapter::Supports(moduleVersion, interfaceVersion,
                                       hostVersion);
 }
@@ -1057,14 +1078,12 @@ RefPtr<GenericPromise> GMPParent::ParseChromiumManifest(
     return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
   }
 
-  if (!IsCDMAPISupported(m)) {
-    GMP_PARENT_LOG_DEBUG("%s: CDM API not supported, failing.", __FUNCTION__);
-    return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
-  }
-
   CopyUTF16toUTF8(m.mName, mDisplayName);
-  CopyUTF16toUTF8(m.mDescription, mDescription);
   CopyUTF16toUTF8(m.mVersion, mVersion);
+
+  if (m.mDescription.WasPassed()) {
+    CopyUTF16toUTF8(m.mDescription.Value(), mDescription);
+  }
 
 #if defined(XP_LINUX) && defined(MOZ_SANDBOX)
   if (!mozilla::SandboxInfo::Get().CanSandboxMedia()) {
@@ -1081,6 +1100,19 @@ RefPtr<GenericPromise> GMPParent::ParseChromiumManifest(
   UpdatePluginType();
 
   GMPCapability video;
+
+  if (IsCDMAPISupported(m)) {
+    video.mAPIName = nsLiteralCString(CHROMIUM_CDM_API);
+    mAdapter = u"chromium"_ns;
+#ifdef MOZ_WMF_CDM
+  } else if (mPluginType == GMPPluginType::WidevineL1) {
+    video.mAPIName = "windows-mf-cdm"_ns;
+    mAdapter = u"windows-mf-cdm"_ns;
+#endif
+  } else {
+    GMP_PARENT_LOG_DEBUG("%s: CDM API not supported, failing.", __FUNCTION__);
+    return GenericPromise::CreateAndReject(NS_ERROR_FAILURE, __func__);
+  }
 
   // We hard code a few of the settings because they can't be stored in the
   // widevine manifest without making our API different to widevine's.
@@ -1105,6 +1137,13 @@ RefPtr<GenericPromise> GMPParent::ParseChromiumManifest(
       mLibs = "dxva2.dll, ole32.dll, psapi.dll, winmm.dll"_ns;
 #endif
       break;
+#ifdef MOZ_WMF_CDM
+    case GMPPluginType::WidevineL1:
+      video.mAPITags.AppendElement(nsCString{kWidevineExperimentKeySystemName});
+      video.mAPITags.AppendElement(
+          nsCString{kWidevineExperiment2KeySystemName});
+      break;
+#endif
     case GMPPluginType::Fake:
       // The fake CDM just exposes a key system with id "fake".
       video.mAPITags.AppendElement(nsCString{"fake"});
@@ -1126,9 +1165,13 @@ RefPtr<GenericPromise> GMPParent::ParseChromiumManifest(
   ApplyOleaut32(mLibs);
 #endif
 
-  nsCString codecsString = NS_ConvertUTF16toUTF8(m.mX_cdm_codecs);
   nsTArray<nsCString> codecs;
-  SplitAt(",", codecsString, codecs);
+
+  if (m.mX_cdm_codecs.WasPassed()) {
+    nsCString codecsString;
+    codecsString = NS_ConvertUTF16toUTF8(m.mX_cdm_codecs.Value());
+    SplitAt(",", codecsString, codecs);
+  }
 
   // Parse the codec strings in the manifest and map them to strings used
   // internally by Gecko for capability recognition.
@@ -1161,9 +1204,6 @@ RefPtr<GenericPromise> GMPParent::ParseChromiumManifest(
     video.mAPITags.AppendElement(codec);
   }
 
-  video.mAPIName = nsLiteralCString(CHROMIUM_CDM_API);
-  mAdapter = u"chromium"_ns;
-
   mCapabilities.AppendElement(std::move(video));
 
   GMP_PARENT_LOG_DEBUG("%s: Successfully parsed manifest.", __FUNCTION__);
@@ -1191,6 +1231,10 @@ void GMPParent::SetNodeId(const nsACString& aNodeId) {
 void GMPParent::UpdatePluginType() {
   if (mDisplayName.EqualsLiteral("WidevineCdm")) {
     mPluginType = GMPPluginType::Widevine;
+#ifdef MOZ_WMF_CDM
+  } else if (mDisplayName.EqualsLiteral("windows-mf-cdm")) {
+    mPluginType = GMPPluginType::WidevineL1;
+#endif
   } else if (mDisplayName.EqualsLiteral("gmpopenh264")) {
     mPluginType = GMPPluginType::OpenH264;
   } else if (mDisplayName.EqualsLiteral("clearkey")) {
