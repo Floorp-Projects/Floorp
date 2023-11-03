@@ -650,7 +650,7 @@ impl<L: CalcNodeLeaf> CalcNode<L> {
         false
     }
 
-    /// Tries to apply a generic arithmentic operator
+    /// Tries to apply a generic arithmetic operator
     fn try_op<O>(&self, other: &Self, op: O) -> Result<Self, ()>
     where
         O: Fn(f32, f32) -> f32,
@@ -1287,6 +1287,10 @@ impl<L: CalcNodeLeaf> CalcNode<L> {
                 }
 
                 let remainder = value_or_stop!(value.try_op(step, Rem::rem));
+                if remainder.is_zero_leaf() {
+                    replace_self_with!(&mut **value);
+                    return;
+                }
 
                 let (mut lower_bound, mut upper_bound) = if value.is_negative_leaf() {
                     let upper_bound = value_or_stop!(value.try_op(&remainder, Sub::sub));
