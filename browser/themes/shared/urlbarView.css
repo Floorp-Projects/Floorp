@@ -55,10 +55,13 @@
 
 /* Align the favicons and titles of rows with standard 16px icons with those
    of rich suggestions. */
-#urlbar[richSuggestionsEnabled] .urlbarView-row:not([rich-suggestion]),
-#urlbar[richSuggestionsEnabled] .urlbarView-row[rich-suggestion][icon-size="16"] {
-  --urlbarView-icon-margin-start: calc((var(--urlbarView-rich-suggestion-default-icon-size) - 16px) / 2);
-  --urlbarView-icon-margin-end: calc(var(--urlbar-icon-padding) + var(--identity-box-margin-inline) + ((var(--urlbarView-rich-suggestion-default-icon-size) - 16px) / 2));
+ /* stylelint-disable-next-line media-query-no-invalid */
+@media (-moz-bool-pref: "browser.urlbar.richSuggestions.featureGate") {
+  .urlbarView-row:not([rich-suggestion]),
+  .urlbarView-row[rich-suggestion][icon-size="16"] {
+    --urlbarView-icon-margin-start: calc((var(--urlbarView-rich-suggestion-default-icon-size) - 16px) / 2);
+    --urlbarView-icon-margin-end: calc(var(--urlbar-icon-padding) + var(--identity-box-margin-inline) + ((var(--urlbarView-rich-suggestion-default-icon-size) - 16px) / 2));
+  }
 }
 
 .urlbarView {

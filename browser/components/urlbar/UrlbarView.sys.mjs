@@ -44,9 +44,6 @@ const ZERO_PREFIX_SCALAR_ABANDONMENT = "urlbar.zeroprefix.abandonment";
 const ZERO_PREFIX_SCALAR_ENGAGEMENT = "urlbar.zeroprefix.engagement";
 const ZERO_PREFIX_SCALAR_EXPOSURE = "urlbar.zeroprefix.exposure";
 
-// The name of the pref enabling rich suggestions relative to `browser.urlbar`.
-const RICH_SUGGESTIONS_PREF = "richSuggestions.featureGate";
-
 const RESULT_MENU_COMMANDS = {
   DISMISS: "dismiss",
   HELP: "help",
@@ -113,9 +110,6 @@ export class UrlbarView {
         addDynamicStylesheet(this.window, viewTemplate.stylesheet);
       }
     }
-
-    lazy.UrlbarPrefs.addObserver(this);
-    this.window.setTimeout(() => this.#updateRichSuggestionAttribute());
   }
 
   get oneOffSearchButtons() {
@@ -3362,27 +3356,6 @@ export class UrlbarView {
     if (event.target == this.resultMenu) {
       this.#populateResultMenu();
     }
-  }
-
-  /**
-   * Called when a urlbar pref changes.
-   *
-   * @param {string} pref
-   *   The name of the pref relative to `browser.urlbar`.
-   */
-  onPrefChanged(pref) {
-    switch (pref) {
-      case RICH_SUGGESTIONS_PREF:
-        this.#updateRichSuggestionAttribute();
-        break;
-    }
-  }
-
-  #updateRichSuggestionAttribute() {
-    this.input.toggleAttribute(
-      "richSuggestionsEnabled",
-      lazy.UrlbarPrefs.get(RICH_SUGGESTIONS_PREF)
-    );
   }
 
   /**
