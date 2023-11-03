@@ -163,24 +163,36 @@ function checkUtf8Equal(first, second) {
 }
 
 concat.forEach(function(t) {
-  var rope = newRope(t.head, t.tail);
-  checkUtf8Equal(rope, t.expected);
+  var filler = "012345678901234567890123456789";
+  var rope = newRope(t.head, newRope(t.tail, filler));
+  checkUtf8Equal(rope, t.expected + filler);
 });
 
 {
-  var ab = newRope("a", "b");
+  var filler = "012345678901234567890123456789";
+
+  var a = newRope(filler, "a");
+  var ab = newRope(a, "b");
   var abc = newRope(ab, "c");
-  var ef = newRope("e", "f");
+
+  var e = newRope(filler, "e");
+  var ef = newRope(e, "f");
   var def = newRope("d", ef);
+
   var abcdef = newRope(abc, def);
   var abcdefab = newRope(abcdef, ab);
-  checkUtf8Equal(abcdefab, "abcdefab");
+  checkUtf8Equal(
+    abcdefab,
+    "012345678901234567890123456789abcd012345678901234567890123456789ef012345678901234567890123456789ab"
+  );
 }
 
 {
-  var right = newRope("\ude0a", ".");
+  var filler = "012345678901234567890123456789";
+
+  var right = newRope("\ude0a", filler);
   var rope = newRope("\ud83d", right);
-  checkUtf8Equal(rope, "\ud83d\ude0a.");
+  checkUtf8Equal(rope, "\ud83d\ude0a012345678901234567890123456789");
 }
 
 if (typeof reportCompare === "function")

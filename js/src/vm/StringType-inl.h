@@ -193,7 +193,16 @@ inline JSRope::JSRope(JSString* left, JSString* right, size_t length) {
   // JITs expect rope children aren't empty.
   MOZ_ASSERT(!left->empty() && !right->empty());
 
-  if (left->hasLatin1Chars() && right->hasLatin1Chars()) {
+  // |length| must be the sum of the length of both child nodes.
+  MOZ_ASSERT(left->length() + right->length() == length);
+
+  bool isLatin1 = left->hasLatin1Chars() && right->hasLatin1Chars();
+
+  // Do not try to make a rope that could fit inline.
+  MOZ_ASSERT_IF(!isLatin1, !JSInlineString::lengthFits<char16_t>(length));
+  MOZ_ASSERT_IF(isLatin1, !JSInlineString::lengthFits<JS::Latin1Char>(length));
+
+  if (isLatin1) {
     setLengthAndFlags(length, INIT_ROPE_FLAGS | LATIN1_CHARS_BIT);
   } else {
     setLengthAndFlags(length, INIT_ROPE_FLAGS);
@@ -309,6 +318,8 @@ MOZ_ALWAYS_INLINE JSLinearString* JSLinearString::newValidLength(
     JSContext* cx, js::UniquePtr<CharT[], JS::FreePolicy> chars, size_t length,
     js::gc::Heap heap) {
   MOZ_ASSERT(!cx->zone()->isAtomsZone());
+  MOZ_ASSERT(!JSInlineString::lengthFits<CharT>(length));
+
   JSLinearString* str =
       cx->newCell<JSLinearString, allowGC>(heap, chars.get(), length);
   if (!str) {
@@ -328,7 +339,6 @@ MOZ_ALWAYS_INLINE JSLinearString* JSLinearString::newValidLength(
       return nullptr;
     }
   } else {
-    // This can happen off the main thread for the atoms zone.
     cx->zone()->addCellMemory(str, length * sizeof(CharT),
                               js::MemoryUse::StringContents);
   }
