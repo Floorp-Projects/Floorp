@@ -108,3 +108,9 @@ browser/chrome/browser/skin/classic/browser/customize.svg
 # Bug 1718144 - De-duplicate lightbulb icon
 browser/features/webcompat-reporter@mozilla.org/icons/lightbulb.svg
 chrome/toolkit/skin/classic/global/icons/lightbulb.svg
+
+# Bug 1861662 - These will be removed with new search config changes
+browser/chrome/browser/search-extensions/amazondotcn/_locales/default/messages.json
+browser/chrome/browser/search-extensions/amazondotcn/_locales/mozillaonline/messages.json
+browser/chrome/browser/search-extensions/amazondotcom/_locales/en/messages.json
+browser/chrome/browser/search-extensions/amazondotcom/_locales/us/messages.json
