@@ -12,9 +12,11 @@ features: [generators]
 
 var method = { *method() {} }.method;
 
-assert.sameValue(method.name, 'method');
-verifyNotEnumerable(method, 'name');
-verifyNotWritable(method, 'name');
-verifyConfigurable(method, 'name');
+verifyProperty(method, 'name', {
+  value: 'method',
+  writable: false,
+  enumerable: false,
+  configurable: true,
+});
 
 reportCompare(0, 0);

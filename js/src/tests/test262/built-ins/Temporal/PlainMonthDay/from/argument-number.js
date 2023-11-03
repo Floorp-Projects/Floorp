@@ -8,8 +8,6 @@ description: A number is invalid in place of an ISO string for Temporal.PlainMon
 features: [Temporal]
 ---*/
 
-const arg = 1118;
-
 const numbers = [
   1,
   1118,
@@ -21,7 +19,7 @@ for (const arg of numbers) {
   assert.throws(
     TypeError,
     () => Temporal.PlainMonthDay.from(arg),
-    "A number is not a valid ISO string for PlainMonthDay"
+    `A number (${arg}) is not a valid ISO string for PlainMonthDay`
   );
 }
 

@@ -13,9 +13,8 @@ description: >
 flags: [noStrict]
 ---*/
 
-       
 assert.throws(SyntaxError, function() {
-            eval("var _13_0_13_fun = new Function(\" \", \"'use strict'; eval = 42;\"); _13_0_13_fun();");
+    eval("var _13_0_13_fun = new Function(\" \", \"'use strict'; eval = 42;\"); _13_0_13_fun();");
 });
 
 reportCompare(0, 0);

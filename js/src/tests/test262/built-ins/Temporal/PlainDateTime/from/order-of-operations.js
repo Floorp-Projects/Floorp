@@ -10,6 +10,12 @@ features: [Temporal]
 ---*/
 
 const expected = [
+  // CopyDataProperties
+  "ownKeys options",
+  "getOwnPropertyDescriptor options.overflow",
+  "get options.overflow",
+  "getOwnPropertyDescriptor options.extra",
+  "get options.extra",
   // GetTemporalCalendarSlotValueWithISODefault
   "get fields.calendar",
   "has fields.calendar.dateAdd",
@@ -68,15 +74,10 @@ const expected = [
   "get fields.year.valueOf",
   "call fields.year.valueOf",
   // InterpretTemporalDateTimeFields
-  "get options.overflow",
   "get options.overflow.toString",
   "call options.overflow.toString",
   "get fields.calendar.dateFromFields",
   "call fields.calendar.dateFromFields",
-  // inside Calendar.p.dateFromFields
-  "get options.overflow",
-  "get options.overflow.toString",
-  "call options.overflow.toString",
 ];
 const actual = [];
 
@@ -94,7 +95,10 @@ const fields = TemporalHelpers.propertyBagObserver(actual, {
   calendar: TemporalHelpers.calendarObserver(actual, "fields.calendar"),
 }, "fields");
 
-const options = TemporalHelpers.propertyBagObserver(actual, { overflow: "constrain" }, "options");
+const options = TemporalHelpers.propertyBagObserver(actual, {
+  overflow: "constrain",
+  extra: "property",
+}, "options");
 
 Temporal.PlainDateTime.from(fields, options);
 assert.compareArray(actual, expected, "order of operations");

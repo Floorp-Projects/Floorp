@@ -4,15 +4,16 @@
 /*---
 es5id: 10.6-6-2
 description: "'length' property of arguments object has correct attributes"
+includes: [propertyHelper.js]
 ---*/
 
 function testcase() {
-  var desc = Object.getOwnPropertyDescriptor(arguments,"length");
-
-  assert.sameValue(desc.configurable, true, 'desc.configurable');
-  assert.sameValue(desc.enumerable, false, 'desc.enumerable');
-  assert.sameValue(desc.writable, true, 'desc.writable');
- }
+  verifyProperty(arguments, "length", {
+    writable: true,
+    enumerable: false,
+    configurable: true,
+  });
+}
 testcase();
 
 reportCompare(0, 0);

@@ -9,7 +9,7 @@ flags: [noStrict]
 
 function testcase() {
     arguments.callee;
- }
+}
 testcase();
 
 reportCompare(0, 0);

@@ -61,7 +61,8 @@ assert.throws(RangeError, () =>
   // Adding day to day sets largestUnit to 'day', avoids having any week/month/year components in differences
   dayDuration.add(dayDuration, {
     relativeTo: zdt,
-  })
+  }),
+  "days < 0 and sign = 1"
 );
 
 // NanosecondsToDays.20: days > 0 and sign = -1
@@ -88,7 +89,8 @@ assert.throws(RangeError, () =>
   // Adding day to day sets largestUnit to 'day', avoids having any week/month/year components in differences
   dayDuration.add(dayDuration, {
     relativeTo: zdt,
-  })
+  }),
+  "days > 0 and sign = -1"
 );
 
 // NanosecondsToDays.22: nanoseconds > 0 and sign = -1
@@ -116,7 +118,8 @@ assert.throws(RangeError, () =>
   // Adding day to day sets largestUnit to 'day', avoids having any week/month/year components in differences
   dayDuration.add(dayDuration, {
     relativeTo: zdt,
-  })
+  }),
+  "nanoseconds > 0 and sign = -1"
 );
 
 reportCompare(0, 0);

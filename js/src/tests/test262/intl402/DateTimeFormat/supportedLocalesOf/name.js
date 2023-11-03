@@ -19,10 +19,11 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-assert.sameValue(Intl.DateTimeFormat.supportedLocalesOf.name, "supportedLocalesOf");
-
-verifyNotEnumerable(Intl.DateTimeFormat.supportedLocalesOf, "name");
-verifyNotWritable(Intl.DateTimeFormat.supportedLocalesOf, "name");
-verifyConfigurable(Intl.DateTimeFormat.supportedLocalesOf, "name");
+verifyProperty(Intl.DateTimeFormat.supportedLocalesOf, "name", {
+  value: "supportedLocalesOf",
+  writable: false,
+  enumerable: false,
+  configurable: true,
+});
 
 reportCompare(0, 0);

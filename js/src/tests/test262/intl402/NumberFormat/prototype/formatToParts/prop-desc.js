@@ -32,8 +32,10 @@ assert.sameValue(
   '`typeof Intl.NumberFormat.prototype.formatToParts` is `function`'
 );
 
-verifyNotEnumerable(Intl.NumberFormat.prototype, 'formatToParts');
-verifyWritable(Intl.NumberFormat.prototype, 'formatToParts');
-verifyConfigurable(Intl.NumberFormat.prototype, 'formatToParts');
+verifyProperty(Intl.NumberFormat.prototype, "formatToParts", {
+  writable: true,
+  enumerable: false,
+  configurable: true,
+});
 
 reportCompare(0, 0);

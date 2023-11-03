@@ -24,8 +24,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyNotEnumerable(Intl.DateTimeFormat.prototype, "resolvedOptions");
-verifyWritable(Intl.DateTimeFormat.prototype, "resolvedOptions");
-verifyConfigurable(Intl.DateTimeFormat.prototype, "resolvedOptions");
+verifyProperty(Intl.DateTimeFormat.prototype, "resolvedOptions", {
+  writable: true,
+  enumerable: false,
+  configurable: true,
+});
 
 reportCompare(0, 0);

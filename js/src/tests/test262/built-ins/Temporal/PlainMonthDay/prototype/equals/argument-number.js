@@ -21,7 +21,7 @@ for (const arg of numbers) {
   assert.throws(
     TypeError,
     () => instance.equals(arg),
-    "A number is not a valid ISO string for PlainMonthDay"
+    `A number (${arg}) is not a valid ISO string for PlainMonthDay`
   );
 }
 

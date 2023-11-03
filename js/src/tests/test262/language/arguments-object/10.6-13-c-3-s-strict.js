@@ -17,7 +17,7 @@ function testcase() {
   assert.sameValue(desc.hasOwnProperty('writable'), false, 'desc.hasOwnProperty("writable")');
   assert.sameValue(desc.hasOwnProperty('get'), true, 'desc.hasOwnProperty("get")');
   assert.sameValue(desc.hasOwnProperty('set'), true, 'desc.hasOwnProperty("set")');
- }
+}
 testcase();
 
 reportCompare(0, 0);

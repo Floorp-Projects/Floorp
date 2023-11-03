@@ -24,10 +24,11 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-assert.sameValue(Intl.PluralRules.prototype.resolvedOptions.length, 0);
-
-verifyNotEnumerable(Intl.PluralRules.prototype.resolvedOptions, "length");
-verifyNotWritable(Intl.PluralRules.prototype.resolvedOptions, "length");
-verifyConfigurable(Intl.PluralRules.prototype.resolvedOptions, "length");
+verifyProperty(Intl.PluralRules.prototype.resolvedOptions, "length", {
+  value: 0,
+  writable: false,
+  enumerable: false,
+  configurable: true,
+});
 
 reportCompare(0, 0);

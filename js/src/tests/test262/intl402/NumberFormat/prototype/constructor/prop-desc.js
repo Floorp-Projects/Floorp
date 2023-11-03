@@ -24,8 +24,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyNotEnumerable(Intl.NumberFormat.prototype, "constructor");
-verifyWritable(Intl.NumberFormat.prototype, "constructor");
-verifyConfigurable(Intl.NumberFormat.prototype, "constructor");
+verifyProperty(Intl.NumberFormat.prototype, "constructor", {
+  writable: true,
+  enumerable: false,
+  configurable: true,
+});
 
 reportCompare(0, 0);

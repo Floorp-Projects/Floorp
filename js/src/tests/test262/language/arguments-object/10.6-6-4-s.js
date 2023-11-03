@@ -9,8 +9,8 @@ description: >
 ---*/
 
 function testcase(a,b,c) {
-	assert.sameValue(arguments.length, 0);
- }
+    assert.sameValue(arguments.length, 0);
+}
 testcase();
 
 reportCompare(0, 0);

@@ -8,11 +8,10 @@ description: Strict Mode - arguments object is immutable
 flags: [onlyStrict]
 ---*/
 
-
 assert.throws(SyntaxError, function() {
-            (function fun() {
-                eval("arguments = 10");
-            })(30);
+    (function fun() {
+        eval("arguments = 10");
+    })(30);
 });
 
 reportCompare(0, 0);
