@@ -239,7 +239,7 @@ where
         let wrapper = ElementWrapper::new(element, &*self.shared_context.snapshot_map);
 
         let state_changes = wrapper.state_changes();
-        let snapshot = wrapper.snapshot().expect("has_snapshot lied");
+        let Some(snapshot) = wrapper.snapshot() else { return false };
 
         if !snapshot.has_attrs() && state_changes.is_empty() {
             return false;
