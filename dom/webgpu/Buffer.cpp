@@ -159,7 +159,7 @@ void Buffer::Drop() {
 
   GetDevice().UntrackBuffer(this);
 
-  if (GetDevice().IsBridgeAlive()) {
+  if (GetDevice().IsBridgeAlive() && mId) {
     GetDevice().GetBridge()->SendBufferDrop(mId);
   }
 }
