@@ -2816,8 +2816,7 @@ static bool HappensBefore(const MDefinition* earlier,
 //                     ┌──────────────▼─────────────────────┐
 //                     │           Block 2                  │
 //                     │ resumepoint 5 1 0 2 2              │
-//                     │ 15 box unbox5:String         Value │
-//                     │ 16 return box15:Value              │
+//                     │ 15 return parameter1:Value         │
 //                     └────────────────────────────────────┘
 //
 bool TypeAnalyzer::propagateUnbox() {

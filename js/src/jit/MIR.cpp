@@ -1869,6 +1869,13 @@ MGoto* MGoto::New(TempAllocator::Fallible alloc, MBasicBlock* target) {
 
 MGoto* MGoto::New(TempAllocator& alloc) { return new (alloc) MGoto(nullptr); }
 
+MDefinition* MBox::foldsTo(TempAllocator& alloc) {
+  if (input()->isUnbox()) {
+    return input()->toUnbox()->input();
+  }
+  return this;
+}
+
 #ifdef JS_JITSPEW
 void MUnbox::printOpcode(GenericPrinter& out) const {
   PrintOpcodeName(out, op());
