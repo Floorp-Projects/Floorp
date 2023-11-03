@@ -1722,12 +1722,14 @@ class WindowsDllDetourPatcher final
       PrimitiveT::ApplyDefaultPatch(target, aDest);
     } while (false);
 
-    if (!target.Commit()) {
-      return;
-    }
-
-    // Output the trampoline, thus signalling that this call was a success
+    // Output the trampoline, thus signalling that this call was a success. This
+    // must happen before our patched function can be reached from another
+    // thread, so before we commit the target code (bug 1838286).
     *aOutTramp = trampPtr;
+
+    if (!target.Commit()) {
+      *aOutTramp = nullptr;
+    }
   }
 };
 
