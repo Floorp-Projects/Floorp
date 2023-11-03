@@ -1728,10 +1728,10 @@ void gfxTextRun::Dump(FILE* out) {
   nsCString flags2String;
   APPEND_FLAGS(
       flags2String, nsTextFrameUtils::Flags, mFlags2,
-      (HasTab, HasShy, DontSkipDrawingForPendingUserFonts, IsSimpleFlow,
-       IncomingWhitespace, TrailingWhitespace, CompressedLeadingWhitespace,
-       NoBreaks, IsTransformed, HasTrailingBreak, IsSingleCharMi,
-       MightHaveGlyphChanges, RunSizeAccounted))
+      (HasTab, HasShy, HasNewline, DontSkipDrawingForPendingUserFonts,
+       IsSimpleFlow, IncomingWhitespace, TrailingWhitespace,
+       CompressedLeadingWhitespace, NoBreaks, IsTransformed, HasTrailingBreak,
+       IsSingleCharMi, MightHaveGlyphChanges, RunSizeAccounted))
 
 #  undef APPEND_FLAGS
 #  undef APPEND_FLAG

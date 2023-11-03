@@ -198,12 +198,17 @@ class nsBlockFrame : public nsContainerFrame {
       ClearLineCursorForQuery();
       RemoveStateBits(NS_BLOCK_HAS_LINE_CURSOR);
     }
-    RemoveProperty(LineIteratorProperty());
+    ClearLineIterator();
   }
   void ClearLineCursorForDisplay() {
     RemoveProperty(LineCursorPropertyDisplay());
   }
   void ClearLineCursorForQuery() { RemoveProperty(LineCursorPropertyQuery()); }
+
+  // Clear just the line-iterator property; this is used if we need to get a
+  // LineIterator temporarily during reflow, when using a persisted iterator
+  // would be invalid. So we clear the stored property immediately after use.
+  void ClearLineIterator() { RemoveProperty(LineIteratorProperty()); }
 
   // Get the first line that might contain y-coord 'y', or nullptr if you must
   // search all lines. If nonnull is returned then we guarantee that the lines'
