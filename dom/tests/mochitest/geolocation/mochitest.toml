@@ -94,7 +94,10 @@ skip-if = ["xorigin"] # Hangs
 ["test_manyWindows.html"]
 
 ["test_native_provider.html"]
-skip-if = ["os != 'android'"]
+skip-if = [
+  "os != 'android'",
+  "xorigin", # bug 1855518
+]
 
 ["test_not_fully_active.html"]
 skip-if = ["xorigin"] # Hangs

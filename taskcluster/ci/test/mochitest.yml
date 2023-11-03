@@ -80,6 +80,7 @@ mochitest-plain:
                     (linux.*64|macosx.*64|windows11.*)(-shippable)?-qr/(opt|debug): ['trunk']
                     windows.*64-ccov-qr/opt: ['mozilla-central']
                     linux.*64-ccov-qr/opt: ['mozilla-central']
+                    android.*: ['trunk']
                     default: []
             socketprocess_networking:
                 by-test-platform:

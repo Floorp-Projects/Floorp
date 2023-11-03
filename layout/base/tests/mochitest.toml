@@ -109,6 +109,7 @@ support-files = [
 
 ["test_bug603550.html"]
 fail-if = ["xorigin"]
+skip-if = ["xorigin && os == 'android'"] # Bug 1855869
 
 ["test_bug607529.html"]
 support-files = [
@@ -590,5 +591,4 @@ support-files = [
 ]
 
 ["test_zoom_restore_bfcache.html"]
-skip-if = ["fission && os == 'android'"] # Bug 1827329
 support-files = ["file_zoom_restore_bfcache.html"]

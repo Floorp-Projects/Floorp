@@ -1391,13 +1391,17 @@ skip-if = [
 support-files = ["file_location_href_unknown_protocol.html"]
 
 ["test_lock_orientation_after_fullscreen.html"]
-skip-if = ["os != 'android'"] # Only run on Android.
+skip-if = [
+  "os != 'android'", # Only run on Android.
+  "xorigin", # bug 1855865
+]
 
 ["test_lock_orientation_with_pending_fullscreen.html"]
 skip-if = [
   "os == 'mac'",
   "os == 'linux'",
   "headless",
+  "os == 'android' && xorigin", # bug 1855530
 ]
 
 ["test_meta_refresh_referrer.html"]
