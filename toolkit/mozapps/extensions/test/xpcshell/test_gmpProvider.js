@@ -9,13 +9,8 @@ const { GMPTestUtils } = ChromeUtils.importESModule(
 const { GMPInstallManager } = ChromeUtils.importESModule(
   "resource://gre/modules/GMPInstallManager.sys.mjs"
 );
-const {
-  GMPPrefs,
-  GMP_PLUGIN_IDS,
-  OPEN_H264_ID,
-  WIDEVINE_L1_ID,
-  WIDEVINE_L3_ID,
-} = ChromeUtils.importESModule("resource://gre/modules/GMPUtils.sys.mjs");
+const { GMPPrefs, GMP_PLUGIN_IDS, OPEN_H264_ID, WIDEVINE_ID } =
+  ChromeUtils.importESModule("resource://gre/modules/GMPUtils.sys.mjs");
 const { UpdateUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/UpdateUtils.sys.mjs"
 );
@@ -35,31 +30,15 @@ const mockH264Addon = Object.freeze({
   isInstalled: false,
   nameId: "plugins-openh264-name",
   descriptionId: "plugins-openh264-description",
-  libName: "gmpopenh264",
-  usedFallback: true,
 });
 gMockAddons.set(mockH264Addon.id, mockH264Addon);
 
-const mockWidevineL1Addon = Object.freeze({
-  id: WIDEVINE_L1_ID,
-  isValid: true,
-  isInstalled: false,
-  nameId: "plugins-widevine-name",
-  descriptionId: "plugins-widevine-description",
-  libName: "Google.Widevine.CDM",
-  usedFallback: true,
-});
-gMockAddons.set(mockWidevineL1Addon.id, mockWidevineL1Addon);
-gMockEmeAddons.set(mockWidevineL1Addon.id, mockWidevineL1Addon);
-
 const mockWidevineAddon = Object.freeze({
-  id: WIDEVINE_L3_ID,
+  id: WIDEVINE_ID,
   isValid: true,
   isInstalled: false,
   nameId: "plugins-widevine-name",
   descriptionId: "plugins-widevine-description",
-  libName: "widevinecdm",
-  usedFallback: true,
 });
 gMockAddons.set(mockWidevineAddon.id, mockWidevineAddon);
 gMockEmeAddons.set(mockWidevineAddon.id, mockWidevineAddon);
@@ -71,6 +50,7 @@ var gGetKey = GMPPrefs.getPrefKey;
 const MockGMPInstallManagerPrototype = {
   checkForAddons: () =>
     Promise.resolve({
+      usedFallback: true,
       addons: [...gMockAddons.values()],
     }),
 
@@ -268,7 +248,7 @@ add_task(async function test_autoUpdatePrefPersistance() {
   }
 });
 
-function createMockPluginFilesIfNeeded(aFile, aPlugin) {
+function createMockPluginFilesIfNeeded(aFile, aPluginId) {
   function createFile(aFileName) {
     let f = aFile.clone();
     f.append(aFileName);
@@ -277,14 +257,14 @@ function createMockPluginFilesIfNeeded(aFile, aPlugin) {
     }
   }
 
-  let libName =
-    AppConstants.DLL_PREFIX + aPlugin.libName + AppConstants.DLL_SUFFIX;
+  let id = aPluginId.substring(4);
+  let libName = AppConstants.DLL_PREFIX + id + AppConstants.DLL_SUFFIX;
 
   createFile(libName);
-  if (aPlugin.id == WIDEVINE_L1_ID || aPlugin.id == WIDEVINE_L3_ID) {
+  if (aPluginId == WIDEVINE_ID) {
     createFile("manifest.json");
   } else {
-    createFile(aPlugin.id.substring(4) + ".info");
+    createFile(id + ".info");
   }
 }
 
@@ -343,7 +323,7 @@ add_task(async function test_pluginRegistration() {
 
     // Create dummy GMP library/info files, and test that plugin registration
     // succeeds during startup, now that we've added GMP info/lib files.
-    createMockPluginFilesIfNeeded(file, addon);
+    createMockPluginFilesIfNeeded(file, addon.id);
 
     gPrefs.setCharPref(
       gGetKey(GMPPrefs.KEY_PLUGIN_VERSION, addon.id),

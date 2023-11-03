@@ -28,8 +28,7 @@ onmessage = async function (msg) {
       // We don't need these types of files.
       if (
         fileName == "verified_contents.json" ||
-        fileName == "icon-128x128.png" ||
-        fileName.startsWith("_")
+        fileName == "icon-128x128.png"
       ) {
         continue;
       }
