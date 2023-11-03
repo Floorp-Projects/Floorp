@@ -155,9 +155,7 @@ struct KeySystemConfig {
   KeySystemConfig(KeySystemConfig&&) = default;
   KeySystemConfig& operator=(KeySystemConfig&&) = default;
 
-#ifdef DEBUG
   nsString GetDebugInfo() const;
-#endif
 
   // Return true if the given key system is equal to `mKeySystem`, or it can be
   // mapped to the same key system
