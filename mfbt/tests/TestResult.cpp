@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include <stdint.h>
 #include <string.h>
 #include "mozilla/ResultVariant.h"
 #include "mozilla/Try.h"
@@ -656,6 +657,155 @@ static void UniquePtrTest() {
   }
 }
 
+struct ZeroIsUnusedStructForPointer {
+  int x = 1;
+};
+enum class ZeroIsUnusedEnum1 : uint8_t {
+  V1 = 1,
+  V2 = 2,
+};
+enum class ZeroIsUnusedEnum2 : uint16_t {
+  V1 = 1,
+  V2 = 2,
+};
+enum class ZeroIsUnusedEnum4 : uint32_t {
+  V1 = 1,
+  V2 = 2,
+};
+enum class ZeroIsUnusedEnum8 : uint64_t {
+  V1 = 1,
+  V2 = 2,
+};
+struct EmptyErrorStruct {};
+
+template <>
+struct mozilla::detail::UnusedZero<ZeroIsUnusedStructForPointer*> {
+  static const bool value = true;
+};
+template <>
+struct mozilla::detail::UnusedZero<ZeroIsUnusedEnum1> {
+  static const bool value = true;
+};
+template <>
+struct mozilla::detail::UnusedZero<ZeroIsUnusedEnum2> {
+  static const bool value = true;
+};
+template <>
+struct mozilla::detail::UnusedZero<ZeroIsUnusedEnum4> {
+  static const bool value = true;
+};
+template <>
+struct mozilla::detail::UnusedZero<ZeroIsUnusedEnum8> {
+  static const bool value = true;
+};
+
+static void ZeroIsEmptyErrorTest() {
+  {
+    ZeroIsUnusedStructForPointer s;
+
+    using V = ZeroIsUnusedStructForPointer*;
+
+    mozilla::Result<V, EmptyErrorStruct> result(&s);
+    MOZ_RELEASE_ASSERT(sizeof(result) == sizeof(V));
+
+    MOZ_RELEASE_ASSERT(result.isOk());
+    MOZ_RELEASE_ASSERT(result.inspect() == &s);
+  }
+
+  {
+    using V = ZeroIsUnusedStructForPointer*;
+
+    mozilla::Result<V, EmptyErrorStruct> result(Err(EmptyErrorStruct{}));
+
+    MOZ_RELEASE_ASSERT(result.isErr());
+    MOZ_RELEASE_ASSERT(*reinterpret_cast<V*>(&result) == nullptr);
+  }
+
+  {
+    ZeroIsUnusedEnum1 e = ZeroIsUnusedEnum1::V1;
+
+    using V = ZeroIsUnusedEnum1;
+
+    mozilla::Result<V, EmptyErrorStruct> result(e);
+    MOZ_RELEASE_ASSERT(sizeof(result) == sizeof(V));
+
+    MOZ_RELEASE_ASSERT(result.isOk());
+    MOZ_RELEASE_ASSERT(result.inspect() == e);
+  }
+
+  {
+    using V = ZeroIsUnusedEnum1;
+
+    mozilla::Result<V, EmptyErrorStruct> result(Err(EmptyErrorStruct()));
+
+    MOZ_RELEASE_ASSERT(result.isErr());
+    MOZ_RELEASE_ASSERT(*reinterpret_cast<uint8_t*>(&result) == 0);
+  }
+
+  {
+    ZeroIsUnusedEnum2 e = ZeroIsUnusedEnum2::V1;
+
+    using V = ZeroIsUnusedEnum2;
+
+    mozilla::Result<V, EmptyErrorStruct> result(e);
+    MOZ_RELEASE_ASSERT(sizeof(result) == sizeof(V));
+
+    MOZ_RELEASE_ASSERT(result.isOk());
+    MOZ_RELEASE_ASSERT(result.inspect() == e);
+  }
+
+  {
+    using V = ZeroIsUnusedEnum2;
+
+    mozilla::Result<V, EmptyErrorStruct> result(Err(EmptyErrorStruct()));
+
+    MOZ_RELEASE_ASSERT(result.isErr());
+    MOZ_RELEASE_ASSERT(*reinterpret_cast<uint16_t*>(&result) == 0);
+  }
+
+  {
+    ZeroIsUnusedEnum4 e = ZeroIsUnusedEnum4::V1;
+
+    using V = ZeroIsUnusedEnum4;
+
+    mozilla::Result<V, EmptyErrorStruct> result(e);
+    MOZ_RELEASE_ASSERT(sizeof(result) == sizeof(V));
+
+    MOZ_RELEASE_ASSERT(result.isOk());
+    MOZ_RELEASE_ASSERT(result.inspect() == e);
+  }
+
+  {
+    using V = ZeroIsUnusedEnum4;
+
+    mozilla::Result<V, EmptyErrorStruct> result(Err(EmptyErrorStruct()));
+
+    MOZ_RELEASE_ASSERT(result.isErr());
+    MOZ_RELEASE_ASSERT(*reinterpret_cast<uint32_t*>(&result) == 0);
+  }
+
+  {
+    ZeroIsUnusedEnum8 e = ZeroIsUnusedEnum8::V1;
+
+    using V = ZeroIsUnusedEnum8;
+
+    mozilla::Result<V, EmptyErrorStruct> result(e);
+    MOZ_RELEASE_ASSERT(sizeof(result) == sizeof(V));
+
+    MOZ_RELEASE_ASSERT(result.isOk());
+    MOZ_RELEASE_ASSERT(result.inspect() == e);
+  }
+
+  {
+    using V = ZeroIsUnusedEnum8;
+
+    mozilla::Result<V, EmptyErrorStruct> result(Err(EmptyErrorStruct()));
+
+    MOZ_RELEASE_ASSERT(result.isErr());
+    MOZ_RELEASE_ASSERT(*reinterpret_cast<uint64_t*>(&result) == 0);
+  }
+}
+
 /* * */
 
 int main() {
@@ -668,5 +818,6 @@ int main() {
   OrElseTest();
   AndThenTest();
   UniquePtrTest();
+  ZeroIsEmptyErrorTest();
   return 0;
 }
