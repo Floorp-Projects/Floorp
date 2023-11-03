@@ -53,14 +53,6 @@ static void GetColor(const char* aPrefName, ColorScheme aColorScheme,
 }
 
 auto PreferenceSheet::PrefsKindFor(const Document& aDoc) -> PrefsKind {
-  // DevTools documents run in a content frame but should temporarily use
-  // chrome preferences, in particular to avoid applying High Contrast mode
-  // colors. See Bug 1575766.
-  if (aDoc.IsDevToolsDocument() &&
-      StaticPrefs::devtools_toolbox_force_chrome_prefs()) {
-    return PrefsKind::Chrome;
-  }
-
   if (aDoc.IsInChromeDocShell()) {
     return PrefsKind::Chrome;
   }
@@ -283,7 +275,6 @@ void PreferenceSheet::Initialize() {
 
 bool PreferenceSheet::AffectedByPref(const nsACString& aPref) {
   const char* prefNames[] = {
-      StaticPrefs::GetPrefName_devtools_toolbox_force_chrome_prefs(),
       StaticPrefs::GetPrefName_privacy_resistFingerprinting(),
       StaticPrefs::GetPrefName_ui_use_standins_for_native_colors(),
       "browser.anchor_color",

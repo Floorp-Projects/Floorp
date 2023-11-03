@@ -2100,11 +2100,6 @@
   value: false
   mirror: always
 
-- name: devtools.toolbox.force-chrome-prefs
-  type: RelaxedAtomicBool
-  value: true
-  mirror: always
-
 #---------------------------------------------------------------------------
 # Prefs starting with "docshell."
 #---------------------------------------------------------------------------

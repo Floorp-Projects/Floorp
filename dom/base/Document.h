@@ -1170,9 +1170,6 @@ class Document : public nsINode,
     if (aParent) {
       RecomputeResistFingerprinting();
       mIgnoreDocGroupMismatches = aParent->mIgnoreDocGroupMismatches;
-      if (!mIsDevToolsDocument) {
-        mIsDevToolsDocument = mParentDocument->IsDevToolsDocument();
-      }
     }
   }
 
@@ -2529,8 +2526,6 @@ class Document : public nsINode,
     }
     return root->mInChromeDocShell;
   }
-
-  bool IsDevToolsDocument() const { return mIsDevToolsDocument; }
 
   bool IsBeingUsedAsImage() const { return mIsBeingUsedAsImage; }
 
@@ -4625,13 +4620,6 @@ class Document : public nsINode,
 
   // True if we're loaded in a chrome docshell.
   bool mInChromeDocShell : 1;
-
-  // True if our current document is a DevTools document. Either the url is
-  // about:devtools-toolbox or the parent document already has
-  // mIsDevToolsDocument set to true.
-  // This is used to avoid applying High Contrast mode to DevTools documents.
-  // See Bug 1575766.
-  bool mIsDevToolsDocument : 1;
 
   // True is this document is synthetic : stand alone image, video, audio
   // file, etc.
