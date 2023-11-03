@@ -58,19 +58,10 @@ nsresult txResultStringComparator::createSortableValue(Expr* aExpr,
     return NS_ERROR_FAILURE;
   }
 
-  val->mCaseKeyString = MakeUnique<nsString>();
-  nsString& nsCaseKey = *val->mCaseKeyString;
-  nsresult rv = aExpr->evaluateToString(aContext, nsCaseKey);
+  val->mString = MakeUnique<nsString>();
+  nsString& string = *val->mString;
+  nsresult rv = aExpr->evaluateToString(aContext, string);
   NS_ENSURE_SUCCESS(rv, rv);
-
-  if (nsCaseKey.IsEmpty()) {
-    aResult = val.release();
-
-    return NS_OK;
-  }
-
-  auto result = mCollator->GetSortKey(nsCaseKey, val->mKey);
-  NS_ENSURE_TRUE(result.isOk(), NS_ERROR_FAILURE);
 
   aResult = val.release();
 
@@ -78,66 +69,22 @@ nsresult txResultStringComparator::createSortableValue(Expr* aExpr,
 }
 
 int txResultStringComparator::compareValues(txObject* aVal1, txObject* aVal2) {
-  StringValue* strval1 = (StringValue*)aVal1;
-  StringValue* strval2 = (StringValue*)aVal2;
+  nsString& dval1 = *((StringValue*)aVal1)->mString;
+  nsString& dval2 = *((StringValue*)aVal2)->mString;
 
   if (!mCollator) {
+    MOZ_ASSERT_UNREACHABLE("No mCollator");
     return -1;
   }
 
-  if (strval1->mKey.Length() == 0) {
-    if (strval2->mKey.Length() == 0) {
-      return 0;
-    }
-    return ((mSorting & kAscending) ? -1 : 1);
-  }
+  int32_t result = mCollator->CompareStrings(dval1, dval2);
 
-  if (strval2->mKey.Length() == 0) {
-    return ((mSorting & kAscending) ? 1 : -1);
-  }
-
-  nsresult rv;
-  int32_t result = mCollator->CompareSortKeys(strval1->mKey, strval2->mKey);
-
-  if (result != 0) {
-    return ((mSorting & kAscending) ? 1 : -1) * result;
-  }
-
-  if (strval1->mCaseKeyString && strval1->mKey.Length() != 0) {
-    rv = strval1->initCaseKey(*mCollator);
-    if (NS_FAILED(rv)) {
-      // XXX ErrorReport
-      return -1;
-    }
-  }
-  if (strval2->mCaseKeyString && strval2->mKey.Length() != 0) {
-    rv = strval2->initCaseKey(*mCollator);
-    if (NS_FAILED(rv)) {
-      // XXX ErrorReport
-      return -1;
-    }
-  }
-  result = mCollator->CompareSortKeys(strval1->mCaseKey, strval2->mCaseKey);
-
-  return ((mSorting & kAscending) ? 1 : -1) *
-         ((mSorting & kUpperFirst) ? -1 : 1) * result;
+  return (mSorting & kAscending) ? result : -result;
 }
 
 txResultStringComparator::StringValue::StringValue() = default;
 
 txResultStringComparator::StringValue::~StringValue() = default;
-
-nsresult txResultStringComparator::StringValue::initCaseKey(
-    const mozilla::intl::Collator& aCollator) {
-  auto result = aCollator.GetSortKey(*mCaseKeyString, mCaseKey);
-  if (result.isErr()) {
-    mCaseKey.SetLength(0);
-    return NS_ERROR_FAILURE;
-  }
-
-  mCaseKeyString = nullptr;
-  return NS_OK;
-}
 
 txResultNumberComparator::txResultNumberComparator(bool aAscending) {
   mAscending = aAscending ? 1 : -1;
