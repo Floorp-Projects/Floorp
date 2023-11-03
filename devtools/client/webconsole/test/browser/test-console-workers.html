@@ -17,11 +17,13 @@
         onmessage = function (e) {
           console.log("log-from-worker", e.data.msg, globalThis);
           console.log(Symbol("logged-symbol-from-worker"));
+          console.log("sab-from-worker", e.data.sab);
         };
       `);
 
       function logFromWorker(msg) {
-        worker.postMessage({type: "log", msg});
+        const sab = new SharedArrayBuffer(1024);
+        worker.postMessage({type: "log", msg, sab});
       }
     </script>
   </body>
