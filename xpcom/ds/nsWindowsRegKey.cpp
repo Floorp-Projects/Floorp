@@ -24,15 +24,12 @@ class nsWindowsRegKey final : public nsIWindowsRegKey {
   NS_DECL_ISUPPORTS
   NS_DECL_NSIWINDOWSREGKEY
 
-  nsWindowsRegKey()
-      : mKey(nullptr), mWatchEvent(nullptr), mWatchRecursive(FALSE) {}
+  nsWindowsRegKey() : mKey(nullptr) {}
 
  private:
   ~nsWindowsRegKey() { Close(); }
 
   HKEY mKey;
-  HANDLE mWatchEvent;
-  BOOL mWatchRecursive;
 };
 
 NS_IMPL_ISUPPORTS(nsWindowsRegKey, nsIWindowsRegKey)
@@ -45,17 +42,12 @@ nsWindowsRegKey::GetKey(HKEY* aKey) {
 
 NS_IMETHODIMP
 nsWindowsRegKey::SetKey(HKEY aKey) {
-  // We do not close the older aKey!
-  StopWatching();
-
   mKey = aKey;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsWindowsRegKey::Close() {
-  StopWatching();
-
   if (mKey) {
     RegCloseKey(mKey);
     mKey = nullptr;
@@ -304,7 +296,7 @@ nsWindowsRegKey::ReadStringValue(const nsAString& aName, nsAString& aResult) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  auto begin = aResult.BeginWriting();
+  auto* begin = aResult.BeginWriting();
 
   rv = RegQueryValueExW(mKey, flatName.get(), 0, &type, (LPBYTE)begin, &size);
 
@@ -390,7 +382,7 @@ nsWindowsRegKey::ReadBinaryValue(const nsAString& aName, nsACString& aResult) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-  auto begin = aResult.BeginWriting();
+  auto* begin = aResult.BeginWriting();
 
   rv = RegQueryValueExW(mKey, PromiseFlatString(aName).get(), 0, nullptr,
                         (LPBYTE)begin, &size);
@@ -446,65 +438,6 @@ nsWindowsRegKey::WriteBinaryValue(const nsAString& aName,
   LONG rv = RegSetValueExW(mKey, PromiseFlatString(aName).get(), 0, REG_BINARY,
                            (const BYTE*)flatValue.get(), flatValue.Length());
   return (rv == ERROR_SUCCESS) ? NS_OK : NS_ERROR_FAILURE;
-}
-
-NS_IMETHODIMP
-nsWindowsRegKey::StartWatching(bool aRecurse) {
-  if (NS_WARN_IF(!mKey)) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
-  if (mWatchEvent) {
-    return NS_OK;
-  }
-
-  mWatchEvent = CreateEventW(nullptr, TRUE, FALSE, nullptr);
-  if (!mWatchEvent) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  DWORD filter = REG_NOTIFY_CHANGE_NAME | REG_NOTIFY_CHANGE_ATTRIBUTES |
-                 REG_NOTIFY_CHANGE_LAST_SET | REG_NOTIFY_CHANGE_SECURITY;
-
-  LONG rv = RegNotifyChangeKeyValue(mKey, aRecurse, filter, mWatchEvent, TRUE);
-  if (rv != ERROR_SUCCESS) {
-    StopWatching();
-    // On older versions of Windows, this call is not implemented, so simply
-    // return NS_OK in those cases and pretend that the watching is happening.
-    return (rv == ERROR_CALL_NOT_IMPLEMENTED) ? NS_OK : NS_ERROR_FAILURE;
-  }
-
-  mWatchRecursive = aRecurse;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWindowsRegKey::StopWatching() {
-  if (mWatchEvent) {
-    CloseHandle(mWatchEvent);
-    mWatchEvent = nullptr;
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWindowsRegKey::HasChanged(bool* aResult) {
-  if (mWatchEvent && WaitForSingleObject(mWatchEvent, 0) == WAIT_OBJECT_0) {
-    // An event only gets signaled once, then it's done, so we have to set up
-    // another event to watch.
-    StopWatching();
-    StartWatching(mWatchRecursive);
-    *aResult = true;
-  } else {
-    *aResult = false;
-  }
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWindowsRegKey::IsWatching(bool* aResult) {
-  *aResult = (mWatchEvent != nullptr);
-  return NS_OK;
 }
 
 //-----------------------------------------------------------------------------
