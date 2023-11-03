@@ -683,6 +683,16 @@
     constant: JSLinearString*
   mir_op: Compare
 
+- name: CompareSSingle
+  result_type: WordSized
+  operands:
+    input: WordSized
+  arguments:
+    jsop: JSOp
+    constant: JSLinearString*
+  num_temps: 1
+  mir_op: Compare
+
 - name: CompareBigInt
   result_type: WordSized
   operands:

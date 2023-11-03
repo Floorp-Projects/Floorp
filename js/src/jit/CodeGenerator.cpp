@@ -10843,6 +10843,95 @@ void CodeGenerator::visitCompareSInline(LCompareSInline* lir) {
   masm.bind(ool->rejoin());
 }
 
+void CodeGenerator::visitCompareSSingle(LCompareSSingle* lir) {
+  JSOp op = lir->jsop();
+  MOZ_ASSERT(IsRelationalOp(op));
+
+  Register input = ToRegister(lir->input());
+  Register output = ToRegister(lir->output());
+  Register temp = ToRegister(lir->temp0());
+
+  const JSLinearString* str = lir->constant();
+  MOZ_ASSERT(str->length() == 1);
+
+  char16_t ch = str->latin1OrTwoByteChar(0);
+
+  masm.movePtr(input, temp);
+
+  // Check if the string is empty.
+  Label compareLength;
+  masm.branch32(Assembler::Equal, Address(temp, JSString::offsetOfLength()),
+                Imm32(0), &compareLength);
+
+  // The first character is in the left-most rope child.
+  Label notRope;
+  masm.branchIfNotRope(temp, &notRope);
+  {
+    // Unwind ropes at the start if possible.
+    Label unwindRope;
+    masm.bind(&unwindRope);
+    masm.loadRopeLeftChild(temp, output);
+    masm.movePtr(output, temp);
+
+#ifdef DEBUG
+    Label notEmpty;
+    masm.branch32(Assembler::NotEqual,
+                  Address(temp, JSString::offsetOfLength()), Imm32(0),
+                  &notEmpty);
+    masm.assumeUnreachable("rope children are non-empty");
+    masm.bind(&notEmpty);
+#endif
+
+    // Otherwise keep unwinding ropes.
+    masm.branchIfRope(temp, &unwindRope);
+  }
+  masm.bind(&notRope);
+
+  // Load the first character into |output|.
+  auto loadFirstChar = [&](auto encoding) {
+    masm.loadStringChars(temp, output, encoding);
+    masm.loadChar(Address(output, 0), output, encoding);
+  };
+
+  Label done;
+  if (ch <= JSString::MAX_LATIN1_CHAR) {
+    // Handle both encodings when the search character is Latin-1.
+    Label twoByte, compare;
+    masm.branchTwoByteString(temp, &twoByte);
+
+    loadFirstChar(CharEncoding::Latin1);
+    masm.jump(&compare);
+
+    masm.bind(&twoByte);
+    loadFirstChar(CharEncoding::TwoByte);
+
+    masm.bind(&compare);
+  } else {
+    // The search character is a two-byte character, so it can't be equal to any
+    // character of a Latin-1 string.
+    masm.move32(Imm32(int32_t(op == JSOp::Lt || op == JSOp::Le)), output);
+    masm.branchLatin1String(temp, &done);
+
+    loadFirstChar(CharEncoding::TwoByte);
+  }
+
+  // Compare the string length when the search character is equal to the
+  // input's first character.
+  masm.branch32(Assembler::Equal, output, Imm32(ch), &compareLength);
+
+  // Otherwise compute the result and jump to the end.
+  masm.cmp32Set(JSOpToCondition(op, /* isSigned = */ false), output, Imm32(ch),
+                output);
+  masm.jump(&done);
+
+  // Compare the string length to compute the overall result.
+  masm.bind(&compareLength);
+  masm.cmp32Set(JSOpToCondition(op, /* isSigned = */ false),
+                Address(temp, JSString::offsetOfLength()), Imm32(1), output);
+
+  masm.bind(&done);
+}
+
 void CodeGenerator::visitCompareBigInt(LCompareBigInt* lir) {
   JSOp op = lir->mir()->jsop();
   Register left = ToRegister(lir->left());
