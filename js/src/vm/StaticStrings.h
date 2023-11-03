@@ -103,6 +103,11 @@ class StaticStrings {
   inline JSLinearString* getUnitStringForElement(JSContext* cx, JSString* str,
                                                  size_t index);
 
+  /* May not return atom, returns null on (reported) failure. */
+  inline JSLinearString* getUnitStringForElement(JSContext* cx,
+                                                 JSLinearString* str,
+                                                 size_t index);
+
   template <typename CharT>
   static bool isStatic(const CharT* chars, size_t len);
 

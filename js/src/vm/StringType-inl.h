@@ -510,6 +510,14 @@ inline JSLinearString* js::StaticStrings::getUnitStringForElement(
   return getUnitString(cx, c);
 }
 
+inline JSLinearString* js::StaticStrings::getUnitStringForElement(
+    JSContext* cx, JSLinearString* str, size_t index) {
+  MOZ_ASSERT(index < str->length());
+
+  char16_t c = str->latin1OrTwoByteChar(index);
+  return getUnitString(cx, c);
+}
+
 MOZ_ALWAYS_INLINE void JSString::finalize(JS::GCContext* gcx) {
   /* FatInline strings are in a different arena. */
   MOZ_ASSERT(getAllocKind() != js::gc::AllocKind::FAT_INLINE_STRING);
