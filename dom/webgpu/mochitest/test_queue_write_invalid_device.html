@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" href="/tests/SimpleTest/test.css" />
+  </head>
+  <body>
+    <script>
+      ok(
+        SpecialPowers.getBoolPref("dom.webgpu.enabled"),
+        "Pref should be enabled."
+      );
+
+      const func = async function () {
+        const adapter = await navigator.gpu.requestAdapter();
+        const device = await adapter.requestDevice();
+
+        // Destroy the device, making it invalid.
+        device.destroy();
+
+        // Creating a buffer on an invalid device will create an invalid
+        // buffer.
+        const buffer = device.createBuffer({
+          size: 16,
+          usage:
+            GPUBufferUsage.COPY_DST |
+            GPUBufferUsage.COPY_SRC |
+            GPUBufferUsage.VERTEX,
+        });
+        const arrayBuf = new ArrayBuffer(16);
+        new Int32Array(arrayBuf).fill(5);
+
+        // Writing to an invalid buffer should not throw an error.
+        device.queue.writeBuffer(buffer, 0, arrayBuf, 0);
+      };
+
+      SimpleTest.waitForExplicitFinish();
+      func()
+        .catch(e => ok(false, "Unhandled exception " + e))
+        .finally(() => SimpleTest.finish());
+    </script>
+  </body>
+</html>
