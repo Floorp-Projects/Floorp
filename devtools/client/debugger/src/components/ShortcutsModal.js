@@ -142,7 +142,6 @@ export class ShortcutsModal extends Component {
     return React.createElement(
       Modal,
       {
-        in: enabled,
         additionalClass: "shortcuts-modal",
         handleClose: this.props.handleClose,
       },

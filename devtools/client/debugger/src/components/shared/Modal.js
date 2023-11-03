@@ -5,19 +5,15 @@
 import PropTypes from "prop-types";
 import React from "react";
 import { div } from "react-dom-factories";
-import Transition from "react-transition-group/Transition";
 const classnames = require("devtools/client/shared/classnames.js");
 import "./Modal.css";
 
-export const transitionTimeout = 50;
-
-export class Modal extends React.Component {
+class Modal extends React.Component {
   static get propTypes() {
     return {
       additionalClass: PropTypes.string,
       children: PropTypes.node.isRequired,
       handleClose: PropTypes.func.isRequired,
-      status: PropTypes.string.isRequired,
     };
   }
 
@@ -26,7 +22,7 @@ export class Modal extends React.Component {
   };
 
   render() {
-    const { additionalClass, children, handleClose, status } = this.props;
+    const { additionalClass, children, handleClose } = this.props;
     return div(
       {
         className: "modal-wrapper",
@@ -34,7 +30,7 @@ export class Modal extends React.Component {
       },
       div(
         {
-          className: classnames("modal", additionalClass, status),
+          className: classnames("modal", additionalClass),
           onClick: this.onClick,
         },
         children
@@ -47,35 +43,4 @@ Modal.contextTypes = {
   shortcuts: PropTypes.object,
 };
 
-export default function Slide({
-  in: inProp,
-  children,
-  additionalClass,
-  handleClose,
-}) {
-  return React.createElement(
-    Transition,
-    {
-      in: inProp,
-      timeout: transitionTimeout,
-      appear: true,
-    },
-    status =>
-      React.createElement(
-        Modal,
-        {
-          status,
-          additionalClass,
-          handleClose,
-        },
-        children
-      )
-  );
-}
-
-Slide.propTypes = {
-  additionalClass: PropTypes.string,
-  children: PropTypes.node.isRequired,
-  handleClose: PropTypes.func.isRequired,
-  in: PropTypes.bool.isRequired,
-};
+export default Modal;

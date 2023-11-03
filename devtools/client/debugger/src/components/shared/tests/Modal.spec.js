@@ -5,14 +5,13 @@
 import React from "react";
 import { shallow } from "enzyme";
 
-import { Modal } from "../Modal";
+import Modal from "../Modal";
 
 describe("Modal", () => {
   it("renders", () => {
     const wrapper = shallow(
       React.createElement(Modal, {
         handleClose: () => {},
-        status: "entering",
       })
     );
     expect(wrapper).toMatchSnapshot();
@@ -23,7 +22,6 @@ describe("Modal", () => {
     const wrapper = shallow(
       React.createElement(Modal, {
         handleClose: handleCloseSpy,
-        status: "entering",
       })
     );
     wrapper.find(".modal-wrapper").simulate("click");
@@ -31,15 +29,16 @@ describe("Modal", () => {
   });
 
   it("renders children", () => {
-    const children = React.createElement("div", {
-      className: "aChild",
-    });
     const wrapper = shallow(
-      React.createElement(Modal, {
-        children: children,
-        handleClose: () => {},
-        status: "entering",
-      })
+      React.createElement(
+        Modal,
+        {
+          handleClose: () => {},
+        },
+        React.createElement("div", {
+          className: "aChild",
+        })
+      )
     );
     expect(wrapper.find(".aChild")).toHaveLength(1);
   });
@@ -48,22 +47,10 @@ describe("Modal", () => {
     const additionalClass = "testAddon";
     const wrapper = shallow(
       React.createElement(Modal, {
-        additionalClass: additionalClass,
+        additionalClass,
         handleClose: () => {},
-        status: "entering",
       })
     );
     expect(wrapper.find(`.modal-wrapper .${additionalClass}`)).toHaveLength(1);
-  });
-
-  it("passes status to child div class", () => {
-    const status = "testStatus";
-    const wrapper = shallow(
-      React.createElement(Modal, {
-        status: status,
-        handleClose: () => {},
-      })
-    );
-    expect(wrapper.find(`.modal-wrapper .${status}`)).toHaveLength(1);
   });
 });

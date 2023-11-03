@@ -11,41 +11,37 @@
   height: 100%;
   top: 0;
   left: 0;
-  transition: z-index 200ms;
   z-index: 100;
 }
 
 .modal {
   display: flex;
+  flex-direction: column;
+  /* Place the modal below the sources tab strip */
+  margin-block-start: var(--editor-header-height);
   width: 80%;
   max-height: 80vh;
   overflow-y: auto;
   background-color: var(--theme-toolbar-background);
-  transition: transform 150ms cubic-bezier(0.07, 0.95, 0, 1);
   box-shadow: 1px 1px 6px 1px var(--popup-shadow-color);
+
+  @media not (prefers-reduced-motion) {
+    animation: 150ms cubic-bezier(0.07, 0.95, 0, 1) slidein forwards;
+  }
 }
 
-.modal.entering,
-.modal.exited {
-  transform: translateY(-101%);
-}
-
-.modal.entered,
-.modal.exiting {
-  transform: translateY(5px);
-  flex-direction: column;
+@keyframes slidein {
+  from {
+    transform: translateY(-101%);
+  }
+  to {
+    transform: translateY(0);
+  }
 }
 
 /* This rule is active when the screen is not narrow */
 @media (min-width: 580px) {
   .modal {
     width: 50%;
-  }
-}
-
-@media (min-height: 340px) {
-  .modal.entered,
-  .modal.exiting {
-    transform: translateY(30px);
   }
 }
