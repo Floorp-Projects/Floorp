@@ -2875,6 +2875,18 @@ MDefinition* MMinMax::foldsTo(TempAllocator& alloc) {
   return this;
 }
 
+#ifdef JS_JITSPEW
+void MMinMax::printOpcode(GenericPrinter& out) const {
+  MDefinition::printOpcode(out);
+  out.printf(" (%s)", isMax() ? "max" : "min");
+}
+
+void MMinMaxArray::printOpcode(GenericPrinter& out) const {
+  MDefinition::printOpcode(out);
+  out.printf(" (%s)", isMax() ? "max" : "min");
+}
+#endif
+
 MDefinition* MPow::foldsConstant(TempAllocator& alloc) {
   // Both `x` and `p` in `x^p` must be constants in order to precompute.
   if (!input()->isConstant() || !power()->isConstant()) {
