@@ -561,11 +561,13 @@ class [[nodiscard]] Result final {
   }
 
   /**
-   * Create a (success/error) result from another (success/error) result with a
-   * different but convertible error type. */
-  template <typename E2,
-            typename = std::enable_if_t<std::is_convertible_v<E2, E>>>
-  MOZ_IMPLICIT constexpr Result(Result<V, E2>&& aOther)
+   * Create a (success/error) result from another (success/error) result with
+   * different but convertible value and error types.
+   */
+  template <typename V2, typename E2,
+            typename = std::enable_if_t<std::is_convertible_v<V2, V> &&
+                                        std::is_convertible_v<E2, E>>>
+  MOZ_IMPLICIT constexpr Result(Result<V2, E2>&& aOther)
       : mImpl(aOther.isOk() ? Impl{aOther.unwrap()}
                             : Impl{aOther.unwrapErr()}) {}
 

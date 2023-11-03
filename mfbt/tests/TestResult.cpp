@@ -806,6 +806,52 @@ static void ZeroIsEmptyErrorTest() {
   }
 }
 
+class Foo {};
+
+class C1 {};
+class C2 : public C1 {};
+
+class E1 {};
+class E2 : public E1 {};
+
+void UpcastTest() {
+  {
+    C2 c2;
+
+    mozilla::Result<C2*, Failed> result(&c2);
+    mozilla::Result<C1*, Failed> copied(std::move(result));
+
+    MOZ_RELEASE_ASSERT(copied.inspect() == &c2);
+  }
+
+  {
+    E2 e2;
+
+    mozilla::Result<Foo, E2*> result(Err(&e2));
+    mozilla::Result<Foo, E1*> copied(std::move(result));
+
+    MOZ_RELEASE_ASSERT(copied.inspectErr() == &e2);
+  }
+
+  {
+    C2 c2;
+
+    mozilla::Result<C2*, E2*> result(&c2);
+    mozilla::Result<C1*, E1*> copied(std::move(result));
+
+    MOZ_RELEASE_ASSERT(copied.inspect() == &c2);
+  }
+
+  {
+    E2 e2;
+
+    mozilla::Result<C2*, E2*> result(Err(&e2));
+    mozilla::Result<C1*, E1*> copied(std::move(result));
+
+    MOZ_RELEASE_ASSERT(copied.inspectErr() == &e2);
+  }
+}
+
 /* * */
 
 int main() {
@@ -819,5 +865,6 @@ int main() {
   AndThenTest();
   UniquePtrTest();
   ZeroIsEmptyErrorTest();
+  UpcastTest();
   return 0;
 }
