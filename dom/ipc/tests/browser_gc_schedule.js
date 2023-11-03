@@ -119,7 +119,8 @@ function checkAllCompleted(events, expectTabsCompleted) {
   }
 }
 
-async function setupTabs(num_tabs) {
+async function setupTabsAndOneForForeground(num_tabs) {
+  ++num_tabs;
   var pids = [];
 
   const parent_pid = getProcessID();
@@ -151,6 +152,12 @@ async function setupTabs(num_tabs) {
     pids.push(tab_pid);
   }
 
+  // Since calling openNewForegroundTab several times in a row doesn't update
+  // process priorities correctly, we need to explicitly switch tabs.
+  for (let tab of tabs) {
+    await BrowserTestUtils.switchTab(gBrowser, tab);
+  }
+
   return tabs;
 }
 
@@ -172,6 +179,11 @@ function startNextCollection(
     SpecialPowers.Cu.getJSTestingFunctions().finishgc();
   });
 
+  if (tab.selected) {
+    // One isn't expected to use the return value with foreground tab!
+    return {};
+  }
+
   var waitBegin = SpecialPowers.spawn(browser, [], waitForGCBegin);
   var waitEnd = SpecialPowers.spawn(browser, [], waitForGCEnd);
   waits.push({ promise: waitBegin, tab: tab_num, state: "begin" });
@@ -189,7 +201,7 @@ add_task(async function gcOneAtATime() {
   });
 
   const num_tabs = 12;
-  var tabs = await setupTabs(num_tabs);
+  var tabs = await setupTabsAndOneForForeground(num_tabs);
 
   info("Tabs ready, Asking for GCs");
   var waits = [];
@@ -220,7 +232,7 @@ add_task(async function gcAbort() {
   });
 
   const num_tabs = 2;
-  var tabs = await setupTabs(num_tabs);
+  var tabs = await setupTabsAndOneForForeground(num_tabs);
 
   info("Tabs ready, Asking for GCs");
   var waits = [];
@@ -263,7 +275,7 @@ add_task(async function gcJSInitiatedDuring() {
   });
 
   const num_tabs = 3;
-  var tabs = await setupTabs(num_tabs);
+  var tabs = await setupTabsAndOneForForeground(num_tabs);
 
   info("Tabs ready, Asking for GCs");
   var waits = [];
@@ -320,7 +332,7 @@ add_task(async function gcJSInitiatedBefore() {
   });
 
   const num_tabs = 8;
-  var tabs = await setupTabs(num_tabs);
+  var tabs = await setupTabsAndOneForForeground(num_tabs);
 
   info("Tabs ready");
   var waits = [];
