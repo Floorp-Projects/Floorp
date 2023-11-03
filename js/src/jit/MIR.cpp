@@ -2710,36 +2710,6 @@ MDefinition* MMinMax::foldsTo(TempAllocator& alloc) {
     return lhs();
   }
 
-  // Fold min/max operations with same inputs.
-  if (lhs()->isMinMax() || rhs()->isMinMax()) {
-    auto* other = lhs()->isMinMax() ? lhs()->toMinMax() : rhs()->toMinMax();
-    auto* operand = lhs()->isMinMax() ? rhs() : lhs();
-
-    if (operand == other->lhs() || operand == other->rhs()) {
-      if (isMax() == other->isMax()) {
-        // min(x, min(x, y)) = min(x, y)
-        // max(x, max(x, y)) = max(x, y)
-        return other;
-      }
-      if (!IsFloatingPointType(type())) {
-        // When neither value is NaN:
-        // max(x, min(x, y)) = x
-        // min(x, max(x, y)) = x
-
-        // Ensure that any bailouts that we depend on to guarantee that |y| is
-        // Int32 are not removed.
-        auto* otherOp = operand == other->lhs() ? other->rhs() : other->lhs();
-        otherOp->setGuardRangeBailoutsUnchecked();
-
-        return operand;
-      }
-    }
-  }
-
-  if (!lhs()->isConstant() && !rhs()->isConstant()) {
-    return this;
-  }
-
   auto foldConstants = [&alloc](MDefinition* lhs, MDefinition* rhs,
                                 bool isMax) -> MConstant* {
     MOZ_ASSERT(lhs->type() == rhs->type());
@@ -2771,6 +2741,77 @@ MDefinition* MMinMax::foldsTo(TempAllocator& alloc) {
     MOZ_ASSERT(lhs->type() == MIRType::Double);
     return MConstant::New(alloc, DoubleValue(result));
   };
+
+  // Try to fold the following patterns when |x| and |y| are constants.
+  //
+  // min(min(x, z), min(y, z)) = min(min(x, y), z)
+  // max(max(x, z), max(y, z)) = max(max(x, y), z)
+  // max(min(x, z), min(y, z)) = min(max(x, y), z)
+  // min(max(x, z), max(y, z)) = max(min(x, y), z)
+  if (lhs()->isMinMax() && rhs()->isMinMax()) {
+    do {
+      auto* left = lhs()->toMinMax();
+      auto* right = rhs()->toMinMax();
+      if (left->isMax() != right->isMax()) {
+        break;
+      }
+
+      MDefinition* x;
+      MDefinition* y;
+      MDefinition* z;
+      if (left->lhs() == right->lhs()) {
+        std::tie(x, y, z) = std::tuple{left->rhs(), right->rhs(), left->lhs()};
+      } else if (left->lhs() == right->rhs()) {
+        std::tie(x, y, z) = std::tuple{left->rhs(), right->lhs(), left->lhs()};
+      } else if (left->rhs() == right->lhs()) {
+        std::tie(x, y, z) = std::tuple{left->lhs(), right->rhs(), left->rhs()};
+      } else if (left->rhs() == right->rhs()) {
+        std::tie(x, y, z) = std::tuple{left->lhs(), right->lhs(), left->rhs()};
+      } else {
+        break;
+      }
+
+      if (!x->isConstant() || !x->toConstant()->isTypeRepresentableAsDouble() ||
+          !y->isConstant() || !y->toConstant()->isTypeRepresentableAsDouble()) {
+        break;
+      }
+
+      if (auto* folded = foldConstants(x, y, isMax())) {
+        block()->insertBefore(this, folded);
+        return MMinMax::New(alloc, folded, z, type(), left->isMax());
+      }
+    } while (false);
+  }
+
+  // Fold min/max operations with same inputs.
+  if (lhs()->isMinMax() || rhs()->isMinMax()) {
+    auto* other = lhs()->isMinMax() ? lhs()->toMinMax() : rhs()->toMinMax();
+    auto* operand = lhs()->isMinMax() ? rhs() : lhs();
+
+    if (operand == other->lhs() || operand == other->rhs()) {
+      if (isMax() == other->isMax()) {
+        // min(x, min(x, y)) = min(x, y)
+        // max(x, max(x, y)) = max(x, y)
+        return other;
+      }
+      if (!IsFloatingPointType(type())) {
+        // When neither value is NaN:
+        // max(x, min(x, y)) = x
+        // min(x, max(x, y)) = x
+
+        // Ensure that any bailouts that we depend on to guarantee that |y| is
+        // Int32 are not removed.
+        auto* otherOp = operand == other->lhs() ? other->rhs() : other->lhs();
+        otherOp->setGuardRangeBailoutsUnchecked();
+
+        return operand;
+      }
+    }
+  }
+
+  if (!lhs()->isConstant() && !rhs()->isConstant()) {
+    return this;
+  }
 
   // Directly apply math utility to compare the rhs() and lhs() when
   // they are both constants.
