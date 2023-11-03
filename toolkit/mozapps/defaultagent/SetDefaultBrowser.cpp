@@ -4,9 +4,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include <windows.h>
+#include <appmodel.h>
 #include <shlobj.h>  // for SHChangeNotify and IApplicationAssociationRegistration
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/CmdLineAndEnvUtils.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/WindowsVersion.h"
@@ -86,50 +88,8 @@ static bool CheckEqualMinutes(SYSTEMTIME aSystemTime1,
          (fileTime1.dwHighDateTime == fileTime2.dwHighDateTime);
 }
 
-/*
- * Set an association with a UserChoice key
- *
- * Removes the old key, creates a new one with ProgID and Hash set to
- * enable a new asociation.
- *
- * @param aExt      File type or protocol to associate
- * @param aSid      Current user's string SID
- * @param aProgID   ProgID to use for the asociation
- *
- * @return true if successful, false on error.
- */
-static bool SetUserChoice(const wchar_t* aExt, const wchar_t* aSid,
-                          const wchar_t* aProgID) {
-  SYSTEMTIME hashTimestamp;
-  ::GetSystemTime(&hashTimestamp);
-  auto hash = GenerateUserChoiceHash(aExt, aSid, aProgID, hashTimestamp);
-  if (!hash) {
-    return false;
-  }
-
-  // The hash changes at the end of each minute, so check that the hash should
-  // be the same by the time we're done writing.
-  const ULONGLONG kWriteTimingThresholdMilliseconds = 100;
-  // Generating the hash could have taken some time, so start from now.
-  SYSTEMTIME writeEndTimestamp;
-  ::GetSystemTime(&writeEndTimestamp);
-  if (!AddMillisecondsToSystemTime(writeEndTimestamp,
-                                   kWriteTimingThresholdMilliseconds)) {
-    return false;
-  }
-  if (!CheckEqualMinutes(hashTimestamp, writeEndTimestamp)) {
-    LOG_ERROR_MESSAGE(
-        L"Hash is too close to expiration, sleeping until next hash.");
-    ::Sleep(kWriteTimingThresholdMilliseconds * 2);
-
-    // For consistency, use the current time.
-    ::GetSystemTime(&hashTimestamp);
-    hash = GenerateUserChoiceHash(aExt, aSid, aProgID, hashTimestamp);
-    if (!hash) {
-      return false;
-    }
-  }
-
+static bool SetUserChoiceRegistry(const wchar_t* aExt, const wchar_t* aProgID,
+                                  mozilla::UniquePtr<wchar_t[]> aHash) {
   auto assocKeyPath = GetAssociationKeyPath(aExt);
   if (!assocKeyPath) {
     return false;
@@ -174,9 +134,9 @@ static bool SetUserChoice(const wchar_t* aExt, const wchar_t* aSid,
     return false;
   }
 
-  DWORD hashByteCount = (::lstrlenW(hash.get()) + 1) * sizeof(wchar_t);
+  DWORD hashByteCount = (::lstrlenW(aHash.get()) + 1) * sizeof(wchar_t);
   ls = ::RegSetValueExW(userChoiceKey.get(), L"Hash", 0, REG_SZ,
-                        reinterpret_cast<const unsigned char*>(hash.get()),
+                        reinterpret_cast<const unsigned char*>(aHash.get()),
                         hashByteCount);
   if (ls != ERROR_SUCCESS) {
     LOG_ERROR(HRESULT_FROM_WIN32(ls));
@@ -184,6 +144,162 @@ static bool SetUserChoice(const wchar_t* aExt, const wchar_t* aSid,
   }
 
   return true;
+}
+
+static bool LaunchReg(int aArgsLength, const wchar_t* const* aArgs) {
+  mozilla::UniquePtr<wchar_t[]> regPath =
+      mozilla::MakeUnique<wchar_t[]>(MAX_PATH + 1);
+  if (!ConstructSystem32Path(L"reg.exe", regPath.get(), MAX_PATH + 1)) {
+    LOG_ERROR_MESSAGE(L"Failed to construct path to reg.exe");
+    return false;
+  }
+
+  const wchar_t* regArgs[] = {regPath.get()};
+  mozilla::UniquePtr<wchar_t[]> regCmdLine(mozilla::MakeCommandLine(
+      mozilla::ArrayLength(regArgs), const_cast<wchar_t**>(regArgs),
+      aArgsLength, const_cast<wchar_t**>(aArgs)));
+
+  PROCESS_INFORMATION pi;
+  STARTUPINFOW si = {sizeof(si)};
+  si.dwFlags = STARTF_USESHOWWINDOW;
+  si.wShowWindow = SW_HIDE;
+  if (!::CreateProcessW(regPath.get(), regCmdLine.get(), nullptr, nullptr,
+                        FALSE, 0, nullptr, nullptr, &si, &pi)) {
+    HRESULT hr = HRESULT_FROM_WIN32(GetLastError());
+    LOG_ERROR(hr);
+    return false;
+  }
+
+  nsAutoHandle process(pi.hProcess);
+  nsAutoHandle mainThread(pi.hThread);
+
+  DWORD exitCode;
+  if (::WaitForSingleObject(process.get(), INFINITE) == WAIT_OBJECT_0 &&
+      ::GetExitCodeProcess(process.get(), &exitCode)) {
+    // N.b.: `reg.exe` returns 0 (unchanged) or 2 (changed) on success.
+    bool success = (exitCode == 0 || exitCode == 2);
+    if (!success) {
+      LOG_ERROR_MESSAGE(L"%s returned failure exitCode %d", regCmdLine.get(),
+                        exitCode);
+    }
+    return success;
+  }
+
+  return false;
+}
+
+static bool SetUserChoiceCommand(const wchar_t* aExt, const wchar_t* aProgID,
+                                 const wchar_t* aHash) {
+  auto assocKeyPath = GetAssociationKeyPath(aExt);
+  if (!assocKeyPath) {
+    return false;
+  }
+
+  const wchar_t* formatString = L"HKCU\\%s\\UserChoice";
+  int bufferSize = _scwprintf(formatString, assocKeyPath.get());
+  ++bufferSize;  // Extra character for terminating null
+  mozilla::UniquePtr<wchar_t[]> userChoiceKeyPath =
+      mozilla::MakeUnique<wchar_t[]>(bufferSize);
+  _snwprintf_s(userChoiceKeyPath.get(), bufferSize, _TRUNCATE, formatString,
+               assocKeyPath.get());
+
+  const wchar_t* deleteArgs[] = {
+      L"DELETE",
+      userChoiceKeyPath.get(),
+      L"/F",
+  };
+  if (!LaunchReg(mozilla::ArrayLength(deleteArgs), deleteArgs)) {
+    LOG_ERROR_MESSAGE(L"Failed to reg.exe DELETE; ignoring and continuing.");
+  }
+
+  // Like REG ADD [ROOT\]RegKey /V ValueName [/T DataType] [/S Separator] [/D
+  // Data] [/F] [/reg:32] [/reg:64]
+
+  const wchar_t* progIDArgs[] = {
+      L"ADD",    userChoiceKeyPath.get(),
+      L"/F",     L"/V",
+      L"ProgID", L"/T",
+      L"REG_SZ", L"/D",
+      aProgID,
+  };
+
+  if (!LaunchReg(mozilla::ArrayLength(progIDArgs), progIDArgs)) {
+    // LaunchReg will have logged an error message already.
+    return false;
+  }
+
+  const wchar_t* hashArgs[] = {
+      L"ADD",    userChoiceKeyPath.get(),
+      L"/F",     L"/V",
+      L"Hash",   L"/T",
+      L"REG_SZ", L"/D",
+      aHash,
+  };
+  if (!LaunchReg(mozilla::ArrayLength(hashArgs), hashArgs)) {
+    // LaunchReg will have logged an error message already.
+    return false;
+  }
+
+  return true;
+}
+
+/*
+ * Set an association with a UserChoice key
+ *
+ * Removes the old key, creates a new one with ProgID and Hash set to
+ * enable a new asociation.
+ *
+ * @param aExt      File type or protocol to associate
+ * @param aSid      Current user's string SID
+ * @param aProgID   ProgID to use for the asociation
+ *
+ * @return true if successful, false on error.
+ */
+static bool SetUserChoice(const wchar_t* aExt, const wchar_t* aSid,
+                          const wchar_t* aProgID) {
+  // This might be slow to query, so do it before generating timestamps and
+  // hashes.
+  UINT32 pfnLen = 0;
+  bool inMsix =
+      GetCurrentPackageFullName(&pfnLen, nullptr) != APPMODEL_ERROR_NO_PACKAGE;
+
+  SYSTEMTIME hashTimestamp;
+  ::GetSystemTime(&hashTimestamp);
+  auto hash = GenerateUserChoiceHash(aExt, aSid, aProgID, hashTimestamp);
+  if (!hash) {
+    return false;
+  }
+
+  // The hash changes at the end of each minute, so check that the hash should
+  // be the same by the time we're done writing.
+  const ULONGLONG kWriteTimingThresholdMilliseconds = 1000;
+  // Generating the hash could have taken some time, so start from now.
+  SYSTEMTIME writeEndTimestamp;
+  ::GetSystemTime(&writeEndTimestamp);
+  if (!AddMillisecondsToSystemTime(writeEndTimestamp,
+                                   kWriteTimingThresholdMilliseconds)) {
+    return false;
+  }
+  if (!CheckEqualMinutes(hashTimestamp, writeEndTimestamp)) {
+    LOG_ERROR_MESSAGE(
+        L"Hash is too close to expiration, sleeping until next hash.");
+    ::Sleep(kWriteTimingThresholdMilliseconds * 2);
+
+    // For consistency, use the current time.
+    ::GetSystemTime(&hashTimestamp);
+    hash = GenerateUserChoiceHash(aExt, aSid, aProgID, hashTimestamp);
+    if (!hash) {
+      return false;
+    }
+  }
+
+  if (inMsix) {
+    // We're in an MSIX package, thus need to use reg.exe.
+    return SetUserChoiceCommand(aExt, aProgID, hash.get());
+  } else {
+    // We're outside of an MSIX package and can use the Win32 Registry API.
+    return SetUserChoiceRegistry(aExt, aProgID, std::move(hash));
+  }
 }
 
 static bool VerifyUserDefault(const wchar_t* aExt, const wchar_t* aProgID) {
@@ -227,28 +343,18 @@ static bool VerifyUserDefault(const wchar_t* aExt, const wchar_t* aProgID) {
 
 nsresult SetDefaultBrowserUserChoice(
     const wchar_t* aAumi, const nsTArray<nsString>& aExtraFileExtensions) {
-  auto urlProgID = FormatProgID(L"FirefoxURL", aAumi);
-  if (!CheckProgIDExists(urlProgID.get())) {
-    LOG_ERROR_MESSAGE(L"ProgID %s not found", urlProgID.get());
-    return NS_ERROR_WDBA_NO_PROGID;
-  }
-
-  auto htmlProgID = FormatProgID(L"FirefoxHTML", aAumi);
-  if (!CheckProgIDExists(htmlProgID.get())) {
-    LOG_ERROR_MESSAGE(L"ProgID %s not found", htmlProgID.get());
-    return NS_ERROR_WDBA_NO_PROGID;
-  }
-
-  auto pdfProgID = FormatProgID(L"FirefoxPDF", aAumi);
-  if (!CheckProgIDExists(pdfProgID.get())) {
-    LOG_ERROR_MESSAGE(L"ProgID %s not found", pdfProgID.get());
-    return NS_ERROR_WDBA_NO_PROGID;
-  }
-
+  // Verify that the implementation of UserChoice hashing has not changed by
+  // computing the current default hash and comparing with the existing value.
   if (!CheckBrowserUserChoiceHashes()) {
     LOG_ERROR_MESSAGE(L"UserChoice Hash mismatch");
     return NS_ERROR_WDBA_HASH_CHECK;
   }
+
+  nsTArray<nsString> browserDefaults = {
+      u"https"_ns, u"FirefoxURL"_ns,  u"http"_ns, u"FirefoxURL"_ns,
+      u".html"_ns, u"FirefoxHTML"_ns, u".htm"_ns, u"FirefoxHTML"_ns};
+
+  browserDefaults.AppendElements(aExtraFileExtensions);
 
   if (!mozilla::IsWin10CreatorsUpdateOrLater()) {
     LOG_ERROR_MESSAGE(L"UserChoice hash matched, but Windows build is too old");
@@ -260,52 +366,16 @@ nsresult SetDefaultBrowserUserChoice(
     return NS_ERROR_FAILURE;
   }
 
-  bool ok = true;
-  bool defaultRejected = false;
-
-  struct {
-    const wchar_t* ext;
-    const wchar_t* progID;
-  } associations[] = {{L"https", urlProgID.get()},
-                      {L"http", urlProgID.get()},
-                      {L".html", htmlProgID.get()},
-                      {L".htm", htmlProgID.get()}};
-  for (size_t i = 0; i < mozilla::ArrayLength(associations); ++i) {
-    if (!SetUserChoice(associations[i].ext, sid.get(),
-                       associations[i].progID)) {
-      ok = false;
-      break;
-    } else if (!VerifyUserDefault(associations[i].ext,
-                                  associations[i].progID)) {
-      defaultRejected = true;
-      ok = false;
-      break;
-    }
-  }
-
-  if (ok) {
-    nsresult rv = SetDefaultExtensionHandlersUserChoiceImpl(
-        aAumi, sid.get(), aExtraFileExtensions);
-    if (rv == NS_ERROR_WDBA_REJECTED) {
-      ok = false;
-      defaultRejected = true;
-    } else if (rv == NS_ERROR_FAILURE) {
-      ok = false;
-    }
+  nsresult rv = SetDefaultExtensionHandlersUserChoiceImpl(aAumi, sid.get(),
+                                                          browserDefaults);
+  if (!NS_SUCCEEDED(rv)) {
+    LOG_ERROR_MESSAGE(L"Failed setting default with %s", aAumi);
   }
 
   // Notify shell to refresh icons
   ::SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, nullptr, nullptr);
 
-  if (!ok) {
-    LOG_ERROR_MESSAGE(L"Failed setting default with %s", aAumi);
-    if (defaultRejected) {
-      return NS_ERROR_WDBA_REJECTED;
-    }
-    return NS_ERROR_FAILURE;
-  }
-
-  return NS_OK;
+  return rv;
 }
 
 nsresult SetDefaultExtensionHandlersUserChoice(
@@ -315,35 +385,25 @@ nsresult SetDefaultExtensionHandlersUserChoice(
     return NS_ERROR_FAILURE;
   }
 
-  bool ok = true;
-  bool defaultRejected = false;
-
   nsresult rv = SetDefaultExtensionHandlersUserChoiceImpl(aAumi, sid.get(),
                                                           aFileExtensions);
-  if (rv == NS_ERROR_WDBA_REJECTED) {
-    ok = false;
-    defaultRejected = true;
-  } else if (rv == NS_ERROR_FAILURE) {
-    ok = false;
+  if (!NS_SUCCEEDED(rv)) {
+    LOG_ERROR_MESSAGE(L"Failed setting default with %s", aAumi);
   }
 
   // Notify shell to refresh icons
   ::SHChangeNotify(SHCNE_ASSOCCHANGED, SHCNF_IDLIST, nullptr, nullptr);
 
-  if (!ok) {
-    LOG_ERROR_MESSAGE(L"Failed setting default with %s", aAumi);
-    if (defaultRejected) {
-      return NS_ERROR_WDBA_REJECTED;
-    }
-    return NS_ERROR_FAILURE;
-  }
-
-  return NS_OK;
+  return rv;
 }
 
 nsresult SetDefaultExtensionHandlersUserChoiceImpl(
     const wchar_t* aAumi, const wchar_t* const aSid,
     const nsTArray<nsString>& aFileExtensions) {
+  UINT32 pfnLen = 0;
+  bool inMsix =
+      GetCurrentPackageFullName(&pfnLen, nullptr) != APPMODEL_ERROR_NO_PACKAGE;
+
   for (size_t i = 0; i + 1 < aFileExtensions.Length(); i += 2) {
     const wchar_t* extraFileExtension =
         PromiseFlatString(aFileExtensions[i]).get();
@@ -351,7 +411,21 @@ nsresult SetDefaultExtensionHandlersUserChoiceImpl(
         PromiseFlatString(aFileExtensions[i + 1]).get();
     // Formatting the ProgID here prevents using this helper to target arbitrary
     // ProgIDs.
-    auto extraProgID = FormatProgID(extraProgIDRoot, aAumi);
+    UniquePtr<wchar_t[]> extraProgID;
+    if (inMsix) {
+      nsresult rv = GetMsixProgId(extraFileExtension, extraProgID);
+      if (NS_FAILED(rv)) {
+        LOG_ERROR_MESSAGE(L"Failed to retrieve MSIX progID for %s",
+                          extraFileExtension);
+        return rv;
+      }
+    } else {
+      extraProgID = FormatProgID(extraProgIDRoot, aAumi);
+      if (!CheckProgIDExists(extraProgID.get())) {
+        LOG_ERROR_MESSAGE(L"ProgID %s not found", extraProgID.get());
+        return NS_ERROR_WDBA_NO_PROGID;
+      }
+    }
 
     if (!SetUserChoice(extraFileExtension, aSid, extraProgID.get())) {
       return NS_ERROR_FAILURE;
