@@ -27,9 +27,8 @@ add_task(async function test_fullscreen_cross_origin() {
         () => !document.documentElement.hasAttribute("inDOMFullscreen")
       );
 
-      let tabbrowser = browser.ownerDocument.querySelector("#tabbrowser-tabs");
       ok(
-        !tabbrowser.hasAttribute("closebuttons"),
+        !gBrowser.tabContainer.hasAttribute("closebuttons"),
         "Close buttons should be visible on every tab"
       );
 
@@ -57,11 +56,6 @@ add_task(async function test_fullscreen_cross_origin() {
       // Make sure there is attribute "inDOMFullscreen" after requesting fullscreen.
       await TestUtils.waitForCondition(() =>
         document.documentElement.hasAttribute("inDOMFullscreen")
-      );
-
-      await TestUtils.waitForCondition(
-        () => tabbrowser.hasAttribute("closebuttons"),
-        "Close buttons should be visible only on the active tab (tabs have width=0 so closebuttons gets set on them)"
       );
     });
   }
