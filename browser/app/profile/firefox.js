@@ -2343,9 +2343,6 @@ pref("app.normandy.onsync_skew_sec", 600);
 //      to allow a user to change their language when there is a language mismatch between
 //      the app and browser.
 
-// Web apps support
-pref("browser.ssb.enabled", true);
-
 // Multi-lingual preferences
 #if defined(RELEASE_OR_BETA) && !defined(MOZ_DEV_EDITION)
   pref("intl.multilingual.enabled", true);
