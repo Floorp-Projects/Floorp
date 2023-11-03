@@ -24,8 +24,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyNotEnumerable(Intl.PluralRules, "supportedLocalesOf");
-verifyWritable(Intl.PluralRules, "supportedLocalesOf");
-verifyConfigurable(Intl.PluralRules, "supportedLocalesOf");
+verifyProperty(Intl.PluralRules, "supportedLocalesOf", {
+  writable: true,
+  enumerable: false,
+  configurable: true,
+});
 
 reportCompare(0, 0);

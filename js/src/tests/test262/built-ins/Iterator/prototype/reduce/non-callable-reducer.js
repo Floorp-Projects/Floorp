@@ -20,4 +20,6 @@ assert.throws(TypeError, function () {
   iterator.reduce(nonCallable);
 });
 
+iterator.reduce(() => {});
+
 reportCompare(0, 0);

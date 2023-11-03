@@ -6,12 +6,11 @@ description: Intl.NumberFormat.prototype.formatToParts.name value and descriptor
 includes: [propertyHelper.js]
 ---*/
 
-assert.sameValue(Intl.NumberFormat.prototype.formatToParts.name, 'formatToParts',
-  'The value of `Intl.NumberFormat.prototype.formatToParts.name` is `"formatToParts"`'
-);
-
-verifyNotEnumerable(Intl.NumberFormat.prototype.formatToParts, 'name');
-verifyNotWritable(Intl.NumberFormat.prototype.formatToParts, 'name');
-verifyConfigurable(Intl.NumberFormat.prototype.formatToParts, 'name');
+verifyProperty(Intl.NumberFormat.prototype.formatToParts, "name", {
+  value: "formatToParts",
+  writable: false,
+  enumerable: false,
+  configurable: true,
+});
 
 reportCompare(0, 0);

@@ -22,7 +22,7 @@ for (const calendar of numbers) {
   assert.throws(
     TypeError,
     () => instance.round({ largestUnit: "years", relativeTo }),
-    "A number is not a valid ISO string for relativeTo.calendar"
+    `A number (${calendar}) is not a valid ISO string for relativeTo.calendar`
   );
 }
 

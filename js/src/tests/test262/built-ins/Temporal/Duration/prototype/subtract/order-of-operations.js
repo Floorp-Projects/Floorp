@@ -250,8 +250,6 @@ const expectedOpsForZonedRelativeTo = expected.concat([
   "get options.relativeTo.calendar.dateUntil",
   "call options.relativeTo.calendar.dateUntil",
   // AddDuration → DifferenceZonedDateTime → AddZonedDateTime
-  "get options.relativeTo.timeZone.getOffsetNanosecondsFor",
-  "call options.relativeTo.timeZone.getOffsetNanosecondsFor",
   "get options.relativeTo.calendar.dateAdd",
   "call options.relativeTo.calendar.dateAdd",
   "get options.relativeTo.timeZone.getPossibleInstantsFor",
@@ -265,8 +263,6 @@ const expectedOpsForZonedRelativeTo = expected.concat([
   "get options.relativeTo.calendar.dateUntil",
   "call options.relativeTo.calendar.dateUntil",
   // AddDuration → DifferenceZonedDateTime → NanosecondsToDays → AddZonedDateTime 1
-  "get options.relativeTo.timeZone.getOffsetNanosecondsFor",
-  "call options.relativeTo.timeZone.getOffsetNanosecondsFor",
   "get options.relativeTo.calendar.dateAdd",
   "call options.relativeTo.calendar.dateAdd",
   "get options.relativeTo.timeZone.getPossibleInstantsFor",

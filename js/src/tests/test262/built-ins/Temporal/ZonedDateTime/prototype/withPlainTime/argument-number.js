@@ -21,7 +21,7 @@ for (const arg of numbers) {
   assert.throws(
     TypeError,
     () => instance.withPlainTime(arg),
-    "A number is not a valid ISO string for PlainTime"
+    `A number (${arg}) is not a valid ISO string for PlainTime`
   );
 }
 

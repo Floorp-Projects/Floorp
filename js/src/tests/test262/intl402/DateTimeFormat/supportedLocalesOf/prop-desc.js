@@ -24,8 +24,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyNotEnumerable(Intl.DateTimeFormat, "supportedLocalesOf");
-verifyWritable(Intl.DateTimeFormat, "supportedLocalesOf");
-verifyConfigurable(Intl.DateTimeFormat, "supportedLocalesOf");
+verifyProperty(Intl.DateTimeFormat, "supportedLocalesOf", {
+  writable: true,
+  enumerable: false,
+  configurable: true,
+});
 
 reportCompare(0, 0);

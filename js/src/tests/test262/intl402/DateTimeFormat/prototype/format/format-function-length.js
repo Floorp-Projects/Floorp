@@ -21,10 +21,11 @@ includes: [propertyHelper.js]
 
 var formatFn = new Intl.DateTimeFormat().format;
 
-assert.sameValue(formatFn.length, 1);
-
-verifyNotEnumerable(formatFn, "length");
-verifyNotWritable(formatFn, "length");
-verifyConfigurable(formatFn, "length");
+verifyProperty(formatFn, "length", {
+  value: 1,
+  writable: false,
+  enumerable: false,
+  configurable: true,
+});
 
 reportCompare(0, 0);

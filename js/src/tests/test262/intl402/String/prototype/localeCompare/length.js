@@ -24,10 +24,11 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-assert.sameValue(String.prototype.localeCompare.length, 1);
-
-verifyNotEnumerable(String.prototype.localeCompare, "length");
-verifyNotWritable(String.prototype.localeCompare, "length");
-verifyConfigurable(String.prototype.localeCompare, "length");
+verifyProperty(String.prototype.localeCompare, "length", {
+  value: 1,
+  writable: false,
+  enumerable: false,
+  configurable: true,
+});
 
 reportCompare(0, 0);

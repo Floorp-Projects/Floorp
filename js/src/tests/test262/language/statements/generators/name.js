@@ -16,9 +16,11 @@ features: [generators]
 
 function* g() {}
 
-assert.sameValue(g.name, 'g');
-verifyNotEnumerable(g, 'name');
-verifyNotWritable(g, 'name');
-verifyConfigurable(g, 'name');
+verifyProperty(g, "name", {
+  value: "g",
+  writable: false,
+  enumerable: false,
+  configurable: true,
+});
 
 reportCompare(0, 0);

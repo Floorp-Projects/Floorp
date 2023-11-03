@@ -3,8 +3,8 @@
 // This code is governed by the BSD license found in the LICENSE file.
 
 /*---
-esid: sec-temporal.zoneddatetime.prototype.equals
-description: Properties on objects passed to equals() are accessed in the correct order
+esid: sec-temporal.zoneddatetime.prototype.round
+description: Properties on objects passed to round() are accessed in the correct order
 includes: [compareArray.js, temporalHelpers.js]
 features: [Temporal]
 ---*/
@@ -26,15 +26,10 @@ const expected = [
   "get this.timeZone.getPossibleInstantsFor",
   "call this.timeZone.getPossibleInstantsFor",
   // AddZonedDateTime
-  "get this.timeZone.getOffsetNanosecondsFor",
-  "call this.timeZone.getOffsetNanosecondsFor",
   "get this.calendar.dateAdd",
   "call this.calendar.dateAdd",
   "get this.timeZone.getPossibleInstantsFor",
   "call this.timeZone.getPossibleInstantsFor",
-  // GetOffsetNanosecondsFor
-  "get this.timeZone.getOffsetNanosecondsFor",
-  "call this.timeZone.getOffsetNanosecondsFor",
   // InterpretISODateTimeOffset
   "get this.timeZone.getPossibleInstantsFor",
   "call this.timeZone.getPossibleInstantsFor",
@@ -46,7 +41,7 @@ const actual = [];
 const options = TemporalHelpers.propertyBagObserver(actual, {
   smallestUnit: "nanoseconds",
   roundingMode: "halfExpand",
-  roundingIncrement: 1,
+  roundingIncrement: 2,
 }, "options");
 
 const instance = new Temporal.ZonedDateTime(

@@ -7,10 +7,9 @@ description: "'length property of arguments object exists"
 ---*/
 
 function testcase() {
-  
   var desc = Object.getOwnPropertyDescriptor(arguments,"length");
   assert.notSameValue(desc, undefined);
- }
+}
 testcase();
 
 reportCompare(0, 0);

@@ -11,10 +11,11 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-assert.sameValue(Intl.getCanonicalLocales.length, 1);
-
-verifyNotEnumerable(Intl.getCanonicalLocales, "length");
-verifyNotWritable(Intl.getCanonicalLocales, "length");
-verifyConfigurable(Intl.getCanonicalLocales, "length");
+verifyProperty(Intl.getCanonicalLocales, "length", {
+  value: 1,
+  writable: false,
+  enumerable: false,
+  configurable: true,
+});
 
 reportCompare(0, 0);

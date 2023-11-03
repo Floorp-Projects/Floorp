@@ -22,7 +22,7 @@ const primitiveTests = [
 for (const [timeZone, description] of primitiveTests) {
   assert.throws(
     typeof timeZone === 'string' ? RangeError : TypeError,
-    () => Temporal.Duration.compare(new Temporal.Duration(), new Temporal.Duration(), { relativeTo: { year: 2000, month: 5, day: 2, timeZone } }),
+    () => Temporal.Duration.compare(new Temporal.Duration(1), new Temporal.Duration(), { relativeTo: { year: 2000, month: 5, day: 2, timeZone } }),
     `${description} does not convert to a valid ISO string`
   );
 }
@@ -34,7 +34,7 @@ const typeErrorTests = [
 ];
 
 for (const [timeZone, description] of typeErrorTests) {
-  assert.throws(TypeError, () => Temporal.Duration.compare(new Temporal.Duration(), new Temporal.Duration(), { relativeTo: { year: 2000, month: 5, day: 2, timeZone } }), `${description} is not a valid object and does not convert to a string`);
+  assert.throws(TypeError, () => Temporal.Duration.compare(new Temporal.Duration(1), new Temporal.Duration(), { relativeTo: { year: 2000, month: 5, day: 2, timeZone } }), `${description} is not a valid object and does not convert to a string`);
 }
 
 reportCompare(0, 0);

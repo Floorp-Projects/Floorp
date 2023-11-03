@@ -4,7 +4,7 @@
 
 /*---
 esid: sec-temporal.duration.prototype.add
-description: A number as calendar in relativeTo property bag is converted to a string, then to a calendar
+description: A number as calendar in relativeTo property bag is invalid
 features: [Temporal]
 ---*/
 
@@ -22,7 +22,7 @@ for (const calendar of numbers) {
   assert.throws(
     TypeError,
     () => instance.add(new Temporal.Duration(0, 0, 0, 0, -24), { relativeTo }),
-    "A number is not a valid ISO string for relativeTo.calendar"
+    `A number (${calendar}) is not a valid ISO string for relativeTo.calendar`
   );
 }
 

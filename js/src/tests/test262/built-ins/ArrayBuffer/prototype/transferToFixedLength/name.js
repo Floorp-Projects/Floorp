@@ -23,7 +23,7 @@ includes: [propertyHelper.js]
 verifyProperty(ArrayBuffer.prototype.transferToFixedLength, 'name', {
   value: 'transferToFixedLength',
   enumerable: false,
-  wrtiable: false,
+  writable: false,
   configurable: true
 });
 

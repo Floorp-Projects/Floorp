@@ -24,8 +24,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyNotEnumerable(Intl.PluralRules.prototype, "constructor");
-verifyWritable(Intl.PluralRules.prototype, "constructor");
-verifyConfigurable(Intl.PluralRules.prototype, "constructor");
+verifyProperty(Intl.PluralRules.prototype, "constructor", {
+  writable: true,
+  enumerable: false,
+  configurable: true,
+});
 
 reportCompare(0, 0);

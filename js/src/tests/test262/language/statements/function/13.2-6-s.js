@@ -9,9 +9,10 @@ description: >
 flags: [noStrict]
 ---*/
 
-        var foo = new Function("'use strict';");
+var foo = new Function("'use strict';");
+
 assert.throws(TypeError, function() {
-            foo.caller = 41;
+    foo.caller = 41;
 });
 
 reportCompare(0, 0);

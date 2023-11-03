@@ -24,10 +24,11 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-assert.sameValue(Intl.DateTimeFormat.prototype.resolvedOptions.length, 0);
-
-verifyNotEnumerable(Intl.DateTimeFormat.prototype.resolvedOptions, "length");
-verifyNotWritable(Intl.DateTimeFormat.prototype.resolvedOptions, "length");
-verifyConfigurable(Intl.DateTimeFormat.prototype.resolvedOptions, "length");
+verifyProperty(Intl.DateTimeFormat.prototype.resolvedOptions, "length", {
+  value: 0,
+  writable: false,
+  enumerable: false,
+  configurable: true,
+});
 
 reportCompare(0, 0);

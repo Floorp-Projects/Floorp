@@ -21,4 +21,6 @@ assert.throws(TypeError, function() {
   iterator.reduce(() => {});
 });
 
+iterator.reduce(() => {}, 0);
+
 reportCompare(0, 0);

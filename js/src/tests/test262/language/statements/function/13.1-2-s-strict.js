@@ -15,9 +15,8 @@ description: >
 flags: [onlyStrict]
 ---*/
 
-
 assert.throws(SyntaxError, function() {
-            eval("var _13_1_2_fun = function (eval) { }");
+    eval("var _13_1_2_fun = function (eval) { }");
 });
 
 reportCompare(0, 0);

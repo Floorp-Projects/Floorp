@@ -16,7 +16,7 @@ function f() {
     return "a";
 }
 if (("ab".replace("b", f)!=="aa") || (x!==undefined)) {
-        throw "'this' had incorrect value!";
+    throw "'this' had incorrect value!";
 }
 
 reportCompare(0, 0);

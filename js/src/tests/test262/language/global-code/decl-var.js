@@ -32,12 +32,12 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-assert.sameValue(
-  this.brandNew, undefined, 'new binding on an extensible global object'
-);
-verifyEnumerable(this, 'brandNew');
-verifyWritable(this, 'brandNew');
-verifyNotConfigurable(this, 'brandNew');
+verifyProperty(this, "brandNew", {
+  value: undefined,
+  writable: true,
+  enumerable: true,
+  configurable: false,
+});
 
 var brandNew;
 

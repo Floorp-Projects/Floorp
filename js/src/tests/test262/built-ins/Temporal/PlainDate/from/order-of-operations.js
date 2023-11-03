@@ -10,6 +10,11 @@ features: [Temporal]
 ---*/
 
 const expected = [
+  "ownKeys options",
+  "getOwnPropertyDescriptor options.overflow",
+  "get options.overflow",
+  "getOwnPropertyDescriptor options.extra",
+  "get options.extra",
   "get fields.calendar",
   "has fields.calendar.dateAdd",
   "has fields.calendar.dateFromFields",
@@ -49,7 +54,6 @@ const expected = [
   "get fields.calendar.dateFromFields",
   "call fields.calendar.dateFromFields",
   // inside Calendar.p.dateFromFields
-  "get options.overflow",
   "get options.overflow.toString",
   "call options.overflow.toString",
 ];
@@ -64,7 +68,10 @@ const fields = TemporalHelpers.propertyBagObserver(actual, {
   calendar,
 }, "fields");
 
-const options = TemporalHelpers.propertyBagObserver(actual, { overflow: "constrain" }, "options");
+const options = TemporalHelpers.propertyBagObserver(actual, {
+  overflow: "constrain",
+  extra: "property",
+}, "options");
 
 const result = Temporal.PlainDate.from(fields, options);
 assert.compareArray(actual, expected, "order of operations");

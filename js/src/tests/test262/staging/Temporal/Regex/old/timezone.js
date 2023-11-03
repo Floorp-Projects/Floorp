@@ -44,7 +44,6 @@ function generateTest(dateTimeString, zoneString, expectedName) {
 });
 generateTest("1976-11-18T15:23", "z", "UTC");
 test("1976-11-18T15:23:30,1234Z", "UTC");
-test("1976-11-18T15:23-04:00:00,000000000", "-04:00");
 test("1976-11-18T15:23+000000,0[UTC]", "UTC");
 [
   "\u221204:00",

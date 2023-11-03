@@ -16,7 +16,7 @@ flags: [noStrict]
 
 
 assert.throws(SyntaxError, function() {
-            eval("'use strict'; var _13_1_21_fun = function (arguments) { }");
+    eval("'use strict'; var _13_1_21_fun = function (arguments) { }");
 });
 
 reportCompare(0, 0);

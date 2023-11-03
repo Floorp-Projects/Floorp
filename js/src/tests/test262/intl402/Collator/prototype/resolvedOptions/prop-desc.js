@@ -24,8 +24,10 @@ info: |
 includes: [propertyHelper.js]
 ---*/
 
-verifyNotEnumerable(Intl.Collator.prototype, "resolvedOptions");
-verifyWritable(Intl.Collator.prototype, "resolvedOptions");
-verifyConfigurable(Intl.Collator.prototype, "resolvedOptions");
+verifyProperty(Intl.Collator.prototype, "resolvedOptions", {
+  writable: true,
+  enumerable: false,
+  configurable: true,
+});
 
 reportCompare(0, 0);

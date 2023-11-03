@@ -10,11 +10,12 @@ description: >
 flags: [onlyStrict]
 ---*/
 
-        var argObj = function () {
-            return arguments;
-        } ();
+var argObj = function () {
+    return arguments;
+} ();
+
 assert.throws(TypeError, function() {
-            argObj.callee = {};
+    argObj.callee = {};
 });
 
 reportCompare(0, 0);
