@@ -162,8 +162,7 @@ IntRect SVGFilterInstance::ComputeFilterPrimitiveSubregion(
 
   IntRect defaultFilterSubregion(0, 0, 0, 0);
   if (fE->SubregionIsUnionOfRegions()) {
-    for (uint32_t i = 0; i < aInputIndices.Length(); ++i) {
-      int32_t inputIndex = aInputIndices[i];
+    for (const auto& inputIndex : aInputIndices) {
       bool isStandardInput =
           inputIndex < 0 || inputIndex == mSourceGraphicIndex;
       IntRect inputSubregion =
@@ -206,8 +205,7 @@ void SVGFilterInstance::GetInputsAreTainted(
     const nsTArray<FilterPrimitiveDescription>& aPrimitiveDescrs,
     const nsTArray<int32_t>& aInputIndices, bool aFilterInputIsTainted,
     nsTArray<bool>& aOutInputsAreTainted) {
-  for (uint32_t i = 0; i < aInputIndices.Length(); i++) {
-    int32_t inputIndex = aInputIndices[i];
+  for (const auto& inputIndex : aInputIndices) {
     if (inputIndex < 0) {
       aOutInputsAreTainted.AppendElement(aFilterInputIsTainted);
     } else {
@@ -270,9 +268,9 @@ nsresult SVGFilterInstance::GetSourceIndices(
   AutoTArray<SVGStringInfo, 2> sources;
   aPrimitiveElement->GetSourceImageNames(sources);
 
-  for (uint32_t j = 0; j < sources.Length(); j++) {
+  for (const auto& source : sources) {
     nsAutoString str;
-    sources[j].mString->GetAnimValue(str, sources[j].mElement);
+    source.mString->GetAnimValue(str, source.mElement);
 
     int32_t sourceIndex = 0;
     if (str.EqualsLiteral("SourceGraphic")) {

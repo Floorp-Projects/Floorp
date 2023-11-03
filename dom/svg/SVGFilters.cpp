@@ -65,8 +65,8 @@ bool SVGFilterPrimitiveElement::OutputIsTainted(
     nsIPrincipal* aReferencePrincipal) {
   // This is the default implementation for OutputIsTainted.
   // Our output is tainted if we have at least one tainted input.
-  for (uint32_t i = 0; i < aInputsAreTainted.Length(); i++) {
-    if (aInputsAreTainted[i]) {
+  for (const auto& inputIsTainted : aInputsAreTainted) {
+    if (inputIsTainted) {
       return true;
     }
   }
