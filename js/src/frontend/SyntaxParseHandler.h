@@ -133,8 +133,7 @@ class SyntaxParseHandler {
     NodeSuperBase
   };
 
-#define DECLARE_TYPE(typeName, longTypeName, asMethodName) \
-  using longTypeName = Node;
+#define DECLARE_TYPE(typeName, _) using typeName##Type = Node;
   FOR_EACH_PARSENODE_SUBCLASS(DECLARE_TYPE)
 #undef DECLARE_TYPE
 
@@ -179,8 +178,8 @@ class SyntaxParseHandler {
 
   static NullNode null() { return NodeFailure; }
 
-#define DECLARE_AS(typeName, longTypeName, asMethodName) \
-  static longTypeName asMethodName(Node node) { return node; }
+#define DECLARE_AS(typeName, asMethodName) \
+  static typeName##Type asMethodName(Node node) { return node; }
   FOR_EACH_PARSENODE_SUBCLASS(DECLARE_AS)
 #undef DECLARE_AS
 
