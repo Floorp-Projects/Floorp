@@ -27,7 +27,6 @@ import org.mozilla.fenix.components.appstate.AppState
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.privatebrowsing.controller.DefaultPrivateBrowsingController
-import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.utils.Settings
 
 class DefaultPrivateBrowsingControllerTest {
@@ -60,12 +59,13 @@ class DefaultPrivateBrowsingControllerTest {
 
     @Test
     fun `WHEN private browsing learn more link is clicked THEN open support page in browser`() {
+        val learnMoreURL = "https://support.mozilla.org/en-US/kb/common-myths-about-private-browsing?as=u&utm_source=inproduct"
+
         controller.handleLearnMoreClicked()
 
         verify {
             activity.openToBrowserAndLoad(
-                searchTermOrURL = SupportUtils.getGenericSumoURLForTopic
-                    (SupportUtils.SumoTopic.PRIVATE_BROWSING_MYTHS),
+                searchTermOrURL = learnMoreURL,
                 newTab = true,
                 from = BrowserDirection.FromHome,
             )
