@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2023-10-23T15:07:38.933970'
+updated_at: '2023-10-31T23:48:55.507564'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -335,6 +335,10 @@ people:
   - bmo_id: 6102
     name: Neil Deakin
     nick: enndeakin
+  - &epavlov
+    bmo_id: 675384
+    name: Evgeny Pavlov
+    nick: epavlov
   - &erahm
     bmo_id: 496127
     name: Eric Rahm
@@ -393,7 +397,8 @@ people:
   - bmo_id: 420446
     name: Gregory Szorc
     nick: gps
-  - bmo_id: 561658
+  - &gregtatum
+    bmo_id: 561658
     name: Greg Tatum
     nick: gregtatum
   - &groovecoder
@@ -787,6 +792,10 @@ people:
     bmo_id: 499343
     name: ''
     nick: nohlmeier
+  - &nordzilla
+    bmo_id: 651777
+    name: Erik Nordin
+    nick: nordzilla
   - &nrishel
     bmo_id: 697005
     name: Nick Rishel
@@ -4189,6 +4198,28 @@ modules:
           - *willdurand
         machine_name: webextensions
     machine_name: toolkit
+  - machine_name: translation
+    name: Translation
+    description: Support for translation in Firefox, and the infrastructure to train
+      new translation language models.
+    includes:
+      - toolkit/components/translations/**/*
+      - toolkit/components/translation/**/*
+      - browser/components/translations/**/*
+    excludes: []
+    owners:
+      - *gregtatum
+    peers:
+      - *nordzilla
+      - *epavlov
+      - *marco
+    meta:
+      group: dev-platform
+      url: https://github.com/mozilla/firefox-translations-training https://github.com/mozilla/firefox-translations-models
+        https://github.com/mozilla/firefox-translations-evaluations https://github.com/mozilla/firefox-translations
+      components:
+        - Firefox::Translation
+      review_group: translations-reviewers
   - machine_name: url_classifier
     name: URL Classifier
     description: Database and list-based classification of URL resources, such as
@@ -4213,5 +4244,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: 2626b4a313053f6674f58b2b3e39ab8b2ede6043
-  export: f7f14b7f2ff1c838567e6aaeae37e250da73e1c6
+  config: 446f87fc6c8a780b734b0ce717cf08e788002bb4
+  export: cb8fafd9fd8165ea6662e59d64053db91a8c32b2
