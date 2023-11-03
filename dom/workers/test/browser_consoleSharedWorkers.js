@@ -3,6 +3,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 add_task(async function test() {
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [
+        "dom.postMessage.sharedArrayBuffer.bypassCOOP_COEP.insecure.enabled",
+        true,
+      ],
+    ],
+  });
+
   const testURL = getRootDirectory(gTestPath) + "empty.html";
   let tab = BrowserTestUtils.addTab(gBrowser, testURL);
   gBrowser.selectedTab = tab;
@@ -27,17 +36,33 @@ add_task(async function test() {
     consoleListener.prototype = {
       onConsoleLogEvent(aSubject) {
         var obj = aSubject.wrappedJSObject;
-        is(
-          obj.arguments[0],
-          "Hello world from a SharedWorker!",
-          "A message from a SharedWorker \\o/"
-        );
-        is(obj.ID, "sharedWorker_console.js", "The ID is SharedWorker");
-        is(obj.innerID, "SharedWorker", "The ID is SharedWorker");
-        is(order++, 1, "Then a log message.");
+        if (order == 1) {
+          is(
+            obj.arguments[0],
+            "Hello world from a SharedWorker!",
+            "A message from a SharedWorker \\o/"
+          );
+          is(obj.ID, "sharedWorker_console.js", "The ID is SharedWorker");
+          is(obj.innerID, "SharedWorker", "The ID is SharedWorker");
+          is(order++, 1, "Then a first log message.");
+        } else {
+          is(
+            obj.arguments[0],
+            "Here is a SAB",
+            "A message from a SharedWorker \\o/"
+          );
+          is(
+            obj.arguments[1].constructor.name,
+            "SharedArrayBuffer",
+            "We got a direct reference to the SharedArrayBuffer coming from the worker thread"
+          );
+          is(obj.ID, "sharedWorker_console.js", "The ID is SharedWorker");
+          is(obj.innerID, "SharedWorker", "The ID is SharedWorker");
+          is(order++, 2, "Then a second log message.");
 
-        ConsoleAPIStorage.removeLogEventListener(this.onConsoleLogEvent);
-        resolve();
+          ConsoleAPIStorage.removeLogEventListener(this.onConsoleLogEvent);
+          resolve();
+        }
       },
 
       observe: (aSubject, aTopic) => {

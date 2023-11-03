@@ -10,6 +10,12 @@ const TEST_URI =
   "test/browser/test-console-workers.html";
 
 add_task(async function () {
+  // Allow using SharedArrayBuffer in the test without special HTTP Headers
+  await pushPref(
+    "dom.postMessage.sharedArrayBuffer.bypassCOOP_COEP.insecure.enabled",
+    true
+  );
+
   info("Run the test with worker events dispatched to main thread");
   await pushPref("dom.worker.console.dispatch_events_to_main_thread", true);
   await testWorkerMessage();
@@ -90,6 +96,11 @@ async function testWorkerMessage(directConnectionToWorkerThread = false) {
     );
     ok(symbolMessage, "Symbol logged from worker is visible in the console");
   }
+
+  const sabMessage = await waitFor(() =>
+    findConsoleAPIMessage(hud, "sab-from-worker")
+  );
+  ok(sabMessage.textContent.includes("SharedArrayBuffer"));
 
   info("Click on the clear button and wait for messages to be removed");
   const onMessagesCacheCleared = hud.ui.once("messages-cache-cleared");
