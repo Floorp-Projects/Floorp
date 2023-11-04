@@ -5392,13 +5392,11 @@ var XULBrowserWindow = {
       this._menuItemForTranslations.removeAttribute("disabled");
     }
     if (gTranslationsEnabled) {
-      TranslationsParent.onIsTranslationsEngineSupported(isSupported => {
-        if (isSupported) {
-          this._menuItemForTranslations.removeAttribute("hidden");
-        } else {
-          this._menuItemForTranslations.setAttribute("hidden", "true");
-        }
-      });
+      if (TranslationsParent.getIsTranslationsEngineSupported()) {
+        this._menuItemForTranslations.removeAttribute("hidden");
+      } else {
+        this._menuItemForTranslations.setAttribute("hidden", "true");
+      }
     } else {
       this._menuItemForTranslations.setAttribute("hidden", "true");
     }
