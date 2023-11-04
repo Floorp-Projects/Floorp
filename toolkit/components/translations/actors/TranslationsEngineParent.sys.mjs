@@ -118,6 +118,13 @@ export class TranslationsEngineParent extends JSWindowActorParent {
     });
   }
 
+  /**
+   * Manually shut down the engines, typically for testing purposes.
+   */
+  forceShutdown() {
+    return this.sendQuery("TranslationsEngine:ForceShutdown");
+  }
+
   #isDestroyed = false;
 
   didDestroy() {

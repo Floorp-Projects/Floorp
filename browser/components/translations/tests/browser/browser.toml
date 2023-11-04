@@ -37,6 +37,8 @@ support-files = [
 
 ["browser_translations_panel_cancel.js"]
 
+["browser_translations_panel_engine_destroy.js"]
+
 ["browser_translations_panel_engine_unsupported.js"]
 
 ["browser_translations_panel_engine_unsupported_lang.js"]
