@@ -20,11 +20,13 @@
  */
 
 #include <windows.h>
+#include <appmodel.h>  // for GetPackageFamilyName
 #include <sddl.h>      // for ConvertSidToStringSidW
 #include <wincrypt.h>  // for CryptoAPI base64
 #include <bcrypt.h>    // for CNG MD5
 #include <winternl.h>  // for NT_SUCCESS()
 
+#include "nsDebug.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/UniquePtr.h"
 #include "nsWindowsHelpers.h"
@@ -419,4 +421,54 @@ bool CheckProgIDExists(const wchar_t* aProgID) {
   }
   ::RegCloseKey(key);
   return true;
+}
+
+nsresult GetMsixProgId(const wchar_t* assoc, UniquePtr<wchar_t[]>& aProgId) {
+  // Retrieve the registry path to the package from registry path:
+  // clang-format off
+  // HKEY_CLASSES_ROOT\Local Settings\Software\Microsoft\Windows\CurrentVersion\AppModel\Repository\Packages\[Package Full Name]\App\Capabilities\[FileAssociations | URLAssociations]\[File | URL]
+  // clang-format on
+
+  UINT32 pfnLen = 0;
+  LONG rv = GetCurrentPackageFullName(&pfnLen, nullptr);
+  NS_ENSURE_TRUE(rv != APPMODEL_ERROR_NO_PACKAGE, NS_ERROR_FAILURE);
+
+  auto pfn = mozilla::MakeUnique<wchar_t[]>(pfnLen);
+  rv = GetCurrentPackageFullName(&pfnLen, pfn.get());
+  NS_ENSURE_TRUE(rv == ERROR_SUCCESS, NS_ERROR_FAILURE);
+
+  const wchar_t* assocSuffix;
+  if (assoc[0] == L'.') {
+    // File association.
+    assocSuffix = LR"(App\Capabilities\FileAssociations)";
+  } else {
+    // URL association.
+    assocSuffix = LR"(App\Capabilities\URLAssociations)";
+  }
+
+  const wchar_t* assocPathFmt =
+      LR"(Local Settings\Software\Microsoft\Windows\CurrentVersion\AppModel\Repository\Packages\%s\%s)";
+  int assocPathLen = _scwprintf(assocPathFmt, pfn.get(), assocSuffix);
+  assocPathLen += 1;  // _scwprintf does not include the terminator
+
+  auto assocPath = MakeUnique<wchar_t[]>(assocPathLen);
+  _snwprintf_s(assocPath.get(), assocPathLen, _TRUNCATE, assocPathFmt,
+               pfn.get(), assocSuffix);
+
+  LSTATUS ls;
+
+  // Retrieve the package association's ProgID, always in the form `AppX[32 hash
+  // characters]`.
+  const size_t appxProgIdLen = 37;
+  auto progId = MakeUnique<wchar_t[]>(appxProgIdLen);
+  DWORD progIdLen = appxProgIdLen * sizeof(wchar_t);
+  ls = ::RegGetValueW(HKEY_CLASSES_ROOT, assocPath.get(), assoc, RRF_RT_REG_SZ,
+                      nullptr, (LPBYTE)progId.get(), &progIdLen);
+  if (ls != ERROR_SUCCESS) {
+    return NS_ERROR_WDBA_NO_PROGID;
+  }
+
+  aProgId.swap(progId);
+
+  return NS_OK;
 }
