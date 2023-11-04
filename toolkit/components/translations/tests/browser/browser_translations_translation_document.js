@@ -9,10 +9,11 @@
 const { TranslationsDocument } = ChromeUtils.importESModule(
   "chrome://global/content/translations/translations-document.sys.mjs"
 );
+
 /**
  * @param {string} html
  * @param {{
- *  mockedTranslatorPort?: (message: string) => Promise<string>
+ *  fakeTranslator?: (message: string) => Promise<string>
  * }} [options]
  */
 async function createDoc(html, options) {
@@ -26,18 +27,33 @@ async function createDoc(html, options) {
   const parser = new DOMParser();
   const document = parser.parseFromString(html, "text/html");
 
-  let translationsDocument;
+  /**
+   * Fake translations by converting them to uppercase.
+   * @param {string} message
+   */
+  async function fakeTranslator(message) {
+    /**
+     * @param {Node} node
+     */
+    function upperCaseNode(node) {
+      if (typeof node.nodeValue === "string") {
+        node.nodeValue = node.nodeValue.toUpperCase();
+      }
+      for (const childNode of node.childNodes) {
+        upperCaseNode(childNode);
+      }
+    }
+    const translatedDoc = parser.parseFromString(message, "text/html");
+    upperCaseNode(translatedDoc.body);
+    return [translatedDoc.body.innerHTML];
+  }
 
-  translationsDocument = new TranslationsDocument(
+  const translationsDocument = new TranslationsDocument(
     document,
     "en",
     0, // This is a fake innerWindowID
-    options?.mockedTranslatorPort ?? createMockedTranslatorPort(),
-    () => {
-      throw new Error("Cannot request a new port");
-    },
-    performance.now(),
-    () => performance.now()
+    options?.fakeTranslator ?? fakeTranslator,
+    options?.fakeTranslator ?? fakeTranslator
   );
 
   /**
@@ -83,6 +99,15 @@ add_task(async function test_translated_div_element() {
       This is a simple translation.
     </div>
   `);
+
+  await htmlMatches(
+    "The document starts out as expected.",
+    /* html */ `
+      <div>
+        This is a simple translation.
+      </div>
+    `
+  );
 
   translate();
 
@@ -415,7 +440,7 @@ add_task(async function test_translation_batching() {
         <span>This entire</span> section continues in a <b>batch</b>.
       </div>
     `,
-    { mockedTranslatorPort: createBatchedMockedTranslatorPort() }
+    { fakeTranslator: createBatchFakeTranslator() }
   );
 
   translate();
@@ -469,7 +494,7 @@ add_task(async function test_many_inlines() {
         </span>
       </div>
     `,
-    { mockedTranslatorPort: createBatchedMockedTranslatorPort() }
+    { fakeTranslator: createBatchFakeTranslator() }
   );
 
   translate();
@@ -530,7 +555,7 @@ add_task(async function test_many_inlines() {
         </div>
       </div>
     `,
-    { mockedTranslatorPort: createBatchedMockedTranslatorPort() }
+    { fakeTranslator: createBatchFakeTranslator() }
   );
 
   translate();
@@ -575,7 +600,7 @@ add_task(async function test_presumed_inlines1() {
         <div>Block element</div>
       </div>
     `,
-    { mockedTranslatorPort: createBatchedMockedTranslatorPort() }
+    { fakeTranslator: createBatchFakeTranslator() }
   );
 
   translate();
@@ -607,7 +632,7 @@ add_task(async function test_presumed_inlines2() {
         <div>Block Element</div>
       </div>
     `,
-    { mockedTranslatorPort: createBatchedMockedTranslatorPort() }
+    { fakeTranslator: createBatchFakeTranslator() }
   );
 
   translate();
@@ -641,7 +666,7 @@ add_task(async function test_presumed_inlines3() {
         <div>Block Element</div>
       </span>
     `,
-    { mockedTranslatorPort: createBatchedMockedTranslatorPort() }
+    { fakeTranslator: createBatchFakeTranslator() }
   );
 
   translate();
@@ -685,7 +710,7 @@ add_task(async function test_chunking_large_text() {
         In hac habitasse platea dictumst. Duis vulputate tellus arcu, at posuere ligula viverra luctus. Fusce ultrices malesuada neque vitae vehicula. Aliquam blandit nisi sed nibh facilisis, non varius turpis venenatis. Vestibulum ut velit laoreet, sagittis leo ac, pharetra ex. Aenean mollis risus sed nibh auctor, et feugiat neque iaculis. Fusce fermentum libero metus, at consectetur massa euismod sed. Mauris ut metus sit amet leo porttitor mollis. Vivamus tincidunt lorem non purus suscipit sollicitudin. Maecenas ut tristique elit. Ut eu volutpat turpis. Suspendisse nec tristique augue. Nullam faucibus egestas volutpat. Sed tempor eros et mi ultrices, nec feugiat eros egestas.
       </pre>
     `,
-    { mockedTranslatorPort: createBatchedMockedTranslatorPort() }
+    { fakeTranslator: createBatchFakeTranslator() }
   );
 
   translate();
@@ -724,7 +749,7 @@ add_task(async function test_reordering() {
         C - This was third.
       </span>
     `,
-    { mockedTranslatorPort: createdReorderingMockedTranslatorPort() }
+    { fakeTranslator: reorderingTranslator }
   );
 
   translate();
@@ -756,7 +781,7 @@ add_task(async function test_reordering2() {
       </span>
       C - This was third.
     `,
-    { mockedTranslatorPort: createdReorderingMockedTranslatorPort() }
+    { fakeTranslator: reorderingTranslator }
   );
 
   translate();

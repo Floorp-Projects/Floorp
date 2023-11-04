@@ -109,9 +109,10 @@ class TranslationsTest : BaseSessionTest() {
         val translate = mainSession.sessionTranslation!!.translate("es", "en", null)
         try {
             sessionRule.waitForResult(translate)
-            assertTrue("Should be able to translate.", true)
+            // ToDo: bug 1853469 models not available in automation
+            assertTrue("Should not be able to translate.", false)
         } catch (e: Exception) {
-            assertTrue("Should not have an exception.", false)
+            assertTrue("Should have an exception.", true)
         }
     }
 

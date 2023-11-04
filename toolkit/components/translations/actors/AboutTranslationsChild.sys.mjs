@@ -38,6 +38,9 @@ export class AboutTranslationsChild extends JSWindowActorChild {
   /** @type {LanguageIdEngine | null} */
   languageIdEngine = null;
 
+  /** @type {TranslationsEngine | null} */
+  translationsEngine = null;
+
   /**
    * The translations engine uses text translations by default in about:translations,
    * but it can be changed to translate HTML by setting this pref to true. This is
@@ -60,27 +63,6 @@ export class AboutTranslationsChild extends JSWindowActorChild {
       Services.prefs.getBoolPref("browser.translations.enable")
     ) {
       this.#sendEventToContent({ type: "enable" });
-    }
-  }
-
-  receiveMessage({ name, data }) {
-    switch (name) {
-      case "AboutTranslations:SendTranslationsPort":
-        const { fromLanguage, toLanguage, port } = data;
-        const transferables = [port];
-        this.contentWindow.postMessage(
-          {
-            type: "GetTranslationsPort",
-            fromLanguage,
-            toLanguage,
-            port,
-          },
-          "*",
-          transferables
-        );
-        break;
-      default:
-        throw new Error("Unknown AboutTranslations message: " + name);
     }
   }
 
@@ -154,10 +136,11 @@ export class AboutTranslationsChild extends JSWindowActorChild {
       "AT_getAppLocale",
       "AT_getSupportedLanguages",
       "AT_isTranslationEngineSupported",
-      "AT_isHtmlTranslation",
       "AT_createLanguageIdEngine",
-      "AT_createTranslationsPort",
+      "AT_createTranslationsEngine",
       "AT_identifyLanguage",
+      "AT_translate",
+      "AT_destroyTranslationsEngine",
       "AT_getScriptDirection",
     ];
     for (const name of fns) {
@@ -199,9 +182,9 @@ export class AboutTranslationsChild extends JSWindowActorChild {
    */
   AT_getSupportedLanguages() {
     return this.#convertToContentPromise(
-      this.sendQuery("AboutTranslations:GetSupportedLanguages").then(data =>
-        Cu.cloneInto(data, this.contentWindow)
-      )
+      this.#getTranslationsChild()
+        .getSupportedLanguages()
+        .then(data => Cu.cloneInto(data, this.contentWindow))
     );
   }
 
@@ -211,17 +194,8 @@ export class AboutTranslationsChild extends JSWindowActorChild {
    */
   AT_isTranslationEngineSupported() {
     return this.#convertToContentPromise(
-      this.sendQuery("AboutTranslations:IsTranslationsEngineSupported")
+      this.#getTranslationsChild().isTranslationsEngineSupported()
     );
-  }
-
-  /**
-   * Expose the #isHtmlTranslation property.
-   *
-   * @returns {bool}
-   */
-  AT_isHtmlTranslation() {
-    return this.#isHtmlTranslation;
   }
 
   /**
@@ -251,21 +225,32 @@ export class AboutTranslationsChild extends JSWindowActorChild {
   }
 
   /**
-   * Requests a port to the TranslationsEngine process. An engine will be created on
-   * the fly for translation requests through this port. This port is unique to its
-   * language pair. In order to translate a different language pair, a new port must be
-   * created for that pair. The lifecycle of the engine is managed by the
-   * TranslationsEngine.
+   * Creates the TranslationsEngine which is responsible for translating
+   * from one language to the other.
+   *
+   * The instantiated TranslationsEngine is unique to its language pair.
+   * In order to translate a different language pair, a new engine must be
+   * created for that pair.
+   *
+   * Subsequent calls to this function will destroy the existing engine and
+   * rebuild a new engine for the new language pair.
    *
    * @param {string} fromLanguage
    * @param {string} toLanguage
-   * @returns {void}
+   * @returns {Promise<void>}
    */
-  AT_createTranslationsPort(fromLanguage, toLanguage) {
-    this.sendAsyncMessage("AboutTranslations:GetTranslationsPort", {
-      fromLanguage,
-      toLanguage,
-    });
+  AT_createTranslationsEngine(fromLanguage, toLanguage) {
+    if (this.translationsEngine) {
+      this.translationsEngine.terminate();
+      this.translationsEngine = null;
+    }
+    return this.#convertToContentPromise(
+      this.#getTranslationsChild()
+        .createTranslationsEngine(fromLanguage, toLanguage)
+        .then(engine => {
+          this.translationsEngine = engine;
+        })
+    );
   }
 
   /**
@@ -300,6 +285,38 @@ export class AboutTranslationsChild extends JSWindowActorChild {
         )
       )
     );
+  }
+
+  /**
+   * @param {string[]} messageBatch
+   * @param {number} innerWindowId
+   * @returns {Promise<string[]>}
+   */
+  AT_translate(messageBatch, innerWindowId) {
+    if (!this.translationsEngine) {
+      throw new this.contentWindow.Error(
+        "The translations engine was not created."
+      );
+    }
+    const promise = this.#isHtmlTranslation
+      ? this.translationsEngine.translateHTML(messageBatch, innerWindowId)
+      : this.translationsEngine.translateText(messageBatch, innerWindowId);
+
+    return this.#convertToContentPromise(
+      promise.then(translations =>
+        Cu.cloneInto(translations, this.contentWindow)
+      )
+    );
+  }
+
+  /**
+   * This is not strictly necessary, but could free up resources quicker.
+   */
+  AT_destroyTranslationsEngine() {
+    if (this.translationsEngine) {
+      this.translationsEngine.terminate();
+      this.translationsEngine = null;
+    }
   }
 
   /**

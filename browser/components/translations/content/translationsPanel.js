@@ -613,10 +613,9 @@ var TranslationsPanel = new (class {
   /**
    * Show the default view of choosing a source and target language.
    *
-   * @param {TranslationsParent} actor
    * @param {boolean} force - Force the page to show translation options.
    */
-  async #showDefaultView(actor, force = false) {
+  async #showDefaultView(force = false) {
     const {
       fromMenuList,
       multiview,
@@ -643,7 +642,7 @@ var TranslationsPanel = new (class {
         message: "translations-panel-error-load-languages",
         hint: "translations-panel-error-load-languages-hint",
         actionText: "translations-panel-error-load-languages-hint-button",
-        actionCommand: () => this.#reloadLangList(actor),
+        actionCommand: () => this.#reloadLangList(),
       });
 
       translateButton.disabled = true;
@@ -677,6 +676,7 @@ var TranslationsPanel = new (class {
       this.updateUIForReTranslation(false /* isReTranslation */);
       cancelButton.hidden = false;
       multiview.setAttribute("mainViewId", "translations-panel-view-default");
+      let actor = this.#getTranslationsActor();
 
       if (!this._hasShownPanel) {
         actor.firstShowUriSpec = gBrowser.currentURI.spec;
@@ -879,7 +879,7 @@ var TranslationsPanel = new (class {
   async #showRevisitView({ fromLanguage, toLanguage }) {
     const { fromMenuList, toMenuList, intro } = this.elements;
     if (!this.#isShowingDefaultView()) {
-      await this.#showDefaultView(this.#getTranslationsActor());
+      await this.#showDefaultView();
     }
     intro.hidden = true;
     fromMenuList.value = fromLanguage;
@@ -974,10 +974,7 @@ var TranslationsPanel = new (class {
     const { panel } = this.elements;
     PanelMultiView.hidePopup(panel);
 
-    await this.#showDefaultView(
-      this.#getTranslationsActor(),
-      true /* force this view to be shown */
-    );
+    await this.#showDefaultView(true /* force this view to be shown */);
 
     await this.#openPanelPopup(this.elements.appMenuButton, {
       event,
@@ -986,13 +983,10 @@ var TranslationsPanel = new (class {
     });
   }
 
-  /**
-   * @param {TranslationsActor} actor
-   */
-  async #reloadLangList(actor) {
+  async #reloadLangList() {
     try {
       await this.#ensureLangListsBuilt();
-      await this.#showDefaultView(actor);
+      await this.#showDefaultView();
     } catch (error) {
       this.elements.errorHintAction.disabled = false;
     }
@@ -1210,7 +1204,7 @@ var TranslationsPanel = new (class {
         this.console?.error(error);
       });
     } else {
-      await this.#showDefaultView(this.#getTranslationsActor()).catch(error => {
+      await this.#showDefaultView().catch(error => {
         this.console?.error(error);
       });
     }
@@ -1437,6 +1431,8 @@ var TranslationsPanel = new (class {
     this.#getTranslationsActor().restorePage(docLangTag);
   }
 
+  handleEventId = 0;
+
   /**
    * An event handler that allows the TranslationsPanel object
    * to be compatible with the addTabsProgressListener function.
@@ -1451,51 +1447,11 @@ var TranslationsPanel = new (class {
   }
 
   /**
-   * Chain together the handleEvent calls so that they always run sequentially to guard
-   * against race conditions.
-   *
-   * @type {Promise<void>}
-   */
-  handleEventChain = Promise.resolve();
-
-  /**
-   * Handle the chaining
-   *
-   * @param {CustomEvent} event
-   */
-  handleEvent = event => {
-    // The events are handled asynchronously, and chained together. Because of this,
-    // the handleEventImpl code may not be firing for an actor that is part of the
-    // current gBrowser. Get a reference to the translations actor associated with this
-    // event, and then any methods called from here need to reference this actor.
-    // This will prevent race conditions in the handler.
-    let actor;
-    try {
-      actor =
-        event.target.browsingContext.currentWindowGlobal.getActor(
-          "Translations"
-        );
-    } catch {}
-
-    if (actor) {
-      this.handleEventChain = this.handleEventChain
-        .catch(() => {})
-        .then(() => this.handleEventImpl(event, actor));
-    } else {
-      this.console.error(
-        `Unable to get Translations actor for event "${event.type}"`,
-        event
-      );
-    }
-    return this.handleEventChain;
-  };
-
-  /**
    * Set the state of the translations button in the URL bar.
    *
    * @param {CustomEvent} event
    */
-  async handleEventImpl(event, actor) {
+  handleEvent = async event => {
     switch (event.type) {
       case "TranslationsParent:OfferTranslation": {
         if (Services.wm.getMostRecentBrowserWindow()?.gBrowser === gBrowser) {
@@ -1503,7 +1459,9 @@ var TranslationsPanel = new (class {
         }
         break;
       }
-      case "TranslationsParent:LanguageState": {
+      case "TranslationsParent:LanguageState":
+        // Check this value after every `await` to guard against race conditions.
+        const handleEventId = ++this.handleEventId;
         const {
           detectedLanguages,
           requestedTranslationPair,
@@ -1543,6 +1501,10 @@ var TranslationsPanel = new (class {
           (hasSupportedLanguage &&
             (await TranslationsParent.getIsTranslationsEngineSupported()))
         ) {
+          if (handleEventId !== this.handleEventId) {
+            // A new handleEvent was received, this one is stale.
+            return;
+          }
           button.hidden = false;
           if (requestedTranslationPair) {
             // The translation is active, update the urlbar button.
@@ -1588,7 +1550,8 @@ var TranslationsPanel = new (class {
             // button's accessible tooltip label.
             if (
               this._hasShownPanel &&
-              gBrowser.currentURI.spec !== actor.firstShowUriSpec
+              gBrowser.currentURI.spec !==
+                this.#getTranslationsActor().firstShowUriSpec
             ) {
               document.l10n.setAttributes(
                 button,
@@ -1606,6 +1569,10 @@ var TranslationsPanel = new (class {
             PageActions.sendPlacedInUrlbarTrigger(button);
           }
         } else {
+          if (handleEventId !== this.handleEventId) {
+            // A new handleEvent was received, this one is stale.
+            return;
+          }
           this.#hideTranslationsButton();
         }
 
@@ -1615,7 +1582,7 @@ var TranslationsPanel = new (class {
           case "engine-load-failure":
             await this.#ensureLangListsBuilt();
             if (!this.#isShowingDefaultView()) {
-              await this.#showDefaultView(actor).catch(e => {
+              await this.#showDefaultView().catch(e => {
                 this.console?.error(e);
               });
             }
@@ -1638,9 +1605,8 @@ var TranslationsPanel = new (class {
             console.error("Unknown translation error", error);
         }
         break;
-      }
     }
-  }
+  };
 })();
 
 XPCOMUtils.defineLazyPreferenceGetter(
