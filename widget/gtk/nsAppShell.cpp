@@ -25,7 +25,6 @@
 #ifdef MOZ_ENABLE_DBUS
 #  include <gio/gio.h>
 #  include "nsIObserverService.h"
-#  include "AsyncDBus.h"
 #endif
 #include "WakeLockListener.h"
 #include "gfxPlatform.h"
@@ -221,7 +220,7 @@ void nsAppShell::DBusConnectClientResponse(GObject* aObject,
   RefPtr<GDBusProxy> proxyClient =
       dont_AddRef(g_dbus_proxy_new_finish(aResult, getter_Transfers(error)));
   if (!proxyClient) {
-    if (!IsCancelledGError(error.get())) {
+    if (!g_error_matches(error.get(), G_IO_ERROR, G_IO_ERROR_CANCELLED)) {
       NS_WARNING(
           nsPrintfCString("Failed to connect to client: %s\n", error->message)
               .get());
