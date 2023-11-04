@@ -49,16 +49,6 @@ const TEST_DEFAULT_CONTENT = [
   },
 ];
 
-const sandbox = sinon.createSandbox();
-
-add_setup(function initSandbox() {
-  requestLongerTimeout(2);
-
-  registerCleanupFunction(() => {
-    sandbox.restore();
-  });
-});
-
 const TEST_DEFAULT_JSON = JSON.stringify(TEST_DEFAULT_CONTENT);
 async function openAboutWelcome() {
   await setAboutWelcomePref(true);
@@ -76,6 +66,7 @@ async function openAboutWelcome() {
 }
 
 add_task(async function second_screen_filtered_by_targeting() {
+  const sandbox = sinon.createSandbox();
   let browser = await openAboutWelcome();
   let aboutWelcomeActor = await getAboutWelcomeParent(browser);
   // Stub AboutWelcomeParent Content Message Handler
@@ -110,7 +101,11 @@ add_task(async function second_screen_filtered_by_targeting() {
  * and not set as default
  */
 add_task(async function test_aboutwelcome_mr_template_easy_setup_default() {
-  await pushPrefs(["browser.shell.checkDefaultBrowser", true]);
+  const sandbox = sinon.createSandbox();
+  await pushPrefs(
+    ["browser.shell.checkDefaultBrowser", true],
+    ["messaging-system-action.showEmbeddedImport", false]
+  );
   sandbox.stub(ShellService, "doesAppNeedPin").returns(true);
   sandbox.stub(ShellService, "isDefaultBrowser").returns(false);
 
@@ -118,7 +113,7 @@ add_task(async function test_aboutwelcome_mr_template_easy_setup_default() {
 
   const { browser, cleanup } = await openMRAboutWelcome();
 
-  //should render easy setup default experience
+  //should render easy setup with all checkboxes (default, pin, import)
   await test_screen_content(
     browser,
     "doesn't render only pin, default, or import easy setup",
@@ -132,6 +127,17 @@ add_task(async function test_aboutwelcome_mr_template_easy_setup_default() {
     ]
   );
 
+  await onButtonClick(browser, ".action-buttons button.secondary");
+
+  await test_screen_content(
+    browser,
+    "renders mobile download screen",
+    //Expected selectors:
+    ["main.AW_MOBILE_DOWNLOAD"],
+    //Unexpected selectors:
+    ["main.AW_IMPORT_SETTINGS_EMBEDDED"]
+  );
+
   await cleanup();
   await popPrefs();
   sandbox.restore();
@@ -142,7 +148,11 @@ add_task(async function test_aboutwelcome_mr_template_easy_setup_default() {
  * and set as default
  */
 add_task(async function test_aboutwelcome_mr_template_easy_setup_needs_pin() {
-  await pushPrefs(["browser.shell.checkDefaultBrowser", true]);
+  const sandbox = sinon.createSandbox();
+  await pushPrefs(
+    ["browser.shell.checkDefaultBrowser", true],
+    ["messaging-system-action.showEmbeddedImport", false]
+  );
   sandbox.stub(ShellService, "doesAppNeedPin").returns(true);
   sandbox.stub(ShellService, "isDefaultBrowser").returns(true);
 
@@ -175,7 +185,11 @@ add_task(async function test_aboutwelcome_mr_template_easy_setup_needs_pin() {
  */
 add_task(
   async function test_aboutwelcome_mr_template_easy_setup_needs_default() {
-    await pushPrefs(["browser.shell.checkDefaultBrowser", true]);
+    const sandbox = sinon.createSandbox();
+    await pushPrefs(
+      ["browser.shell.checkDefaultBrowser", true],
+      ["messaging-system-action.showEmbeddedImport", false]
+    );
     sandbox.stub(ShellService, "doesAppNeedPin").returns(false);
     sandbox.stub(ShellService, "isDefaultBrowser").returns(false);
 
@@ -197,6 +211,16 @@ add_task(
       ]
     );
 
+    await onButtonClick(browser, ".action-buttons button.secondary");
+    await test_screen_content(
+      browser,
+      "renders mobile download screen",
+      //Expected selectors:
+      ["main.AW_MOBILE_DOWNLOAD"],
+      //Unexpected selectors:
+      ["main.AW_IMPORT_SETTINGS_EMBEDDED"]
+    );
+
     await cleanup();
     await popPrefs();
     sandbox.restore();
@@ -208,7 +232,11 @@ add_task(
  * set as default
  */
 add_task(async function test_aboutwelcome_mr_template_easy_setup_only_import() {
-  await pushPrefs(["browser.shell.checkDefaultBrowser", true]);
+  const sandbox = sinon.createSandbox();
+  await pushPrefs(
+    ["browser.shell.checkDefaultBrowser", true],
+    ["messaging-system-action.showEmbeddedImport", false]
+  );
   sandbox.stub(ShellService, "doesAppNeedPin").returns(false);
   sandbox.stub(ShellService, "isDefaultBrowser").returns(true);
 
@@ -228,6 +256,16 @@ add_task(async function test_aboutwelcome_mr_template_easy_setup_only_import() {
       "main.AW_EASY_SETUP_NEEDS_DEFAULT_AND_PIN",
       "main.AW_EASY_SETUP_NEEDS_DEFAULT",
     ]
+  );
+
+  await onButtonClick(browser, ".action-buttons button.secondary");
+  await test_screen_content(
+    browser,
+    "renders mobile download screen",
+    //Expected selectors:
+    ["main.AW_MOBILE_DOWNLOAD"],
+    //Unexpected selectors:
+    ["main.AW_IMPORT_SETTINGS_EMBEDDED"]
   );
 
   await cleanup();
