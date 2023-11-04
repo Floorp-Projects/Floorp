@@ -21,6 +21,14 @@ export class TranslationsEngineParent extends JSWindowActorParent {
 
   async receiveMessage({ name, data }) {
     switch (name) {
+      case "TranslationsEngine:Ready":
+        if (!lazy.TranslationsParent.resolveEngine) {
+          throw new Error(
+            "Unable to find the resolve function for when the translations engine is ready."
+          );
+        }
+        lazy.TranslationsParent.resolveEngine(this);
+        return undefined;
       case "TranslationsEngine:RequestEnginePayload": {
         const { fromLanguage, toLanguage } = data;
         const payloadPromise =
