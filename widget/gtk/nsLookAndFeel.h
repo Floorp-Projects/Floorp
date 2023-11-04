@@ -53,6 +53,9 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   static bool ShouldHonorThemeScrollbarColors();
   mozilla::Maybe<ColorScheme> ComputeColorSchemeSetting();
 
+  void WatchDBus();
+  void UnwatchDBus();
+
   enum class ThemeFamily : uint8_t {
     // Adwaita, the default GTK theme.
     Adwaita,
@@ -160,6 +163,7 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
     return mSystemThemeOverridden ? mAltTheme : mSystemTheme;
   }
 
+  uint32_t mDBusID = 0;
   RefPtr<GDBusProxy> mDBusSettingsProxy;
   mozilla::Maybe<ColorScheme> mColorSchemePreference;
   int32_t mCaretBlinkTime = 0;
