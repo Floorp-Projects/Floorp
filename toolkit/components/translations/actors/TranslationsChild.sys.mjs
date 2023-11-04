@@ -117,21 +117,6 @@ export class TranslationsChild extends JSWindowActorChild {
     }
   }
 
-  getSupportedLanguages() {
-    return this.sendQuery("Translations:GetSupportedLanguages");
-  }
-
-  isTranslationsEngineSupported() {
-    return this.sendQuery("Translations:IsTranslationsEngineSupported");
-  }
-
-  getTranslationsEnginePayload(fromLanguage, toLanguage) {
-    return this.sendQuery("Translations:GetTranslationsEnginePayload", {
-      fromLanguage,
-      toLanguage,
-    });
-  }
-
   getOrCreateLanguageIdEngine() {
     return lazy.LanguageIdEngine.getOrCreate(() => {
       if (!this.manager || !this.manager.isCurrentGlobal) {
@@ -139,10 +124,5 @@ export class TranslationsChild extends JSWindowActorChild {
       }
       return this.sendQuery("Translations:GetLanguageIdEnginePayload");
     });
-  }
-
-  createTranslationsEngine(fromLanguage, toLanguage) {
-    // Bypass the engine cache and always create a new one.
-    return lazy.TranslationsEngine.create(this, fromLanguage, toLanguage);
   }
 }
