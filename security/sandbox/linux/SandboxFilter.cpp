@@ -1682,7 +1682,7 @@ class GMPSandboxPolicy : public SandboxPolicyCommon {
     strcpy(buf->sysname, "Linux");
     strcpy(buf->version, "3");
     return 0;
-  };
+  }
 
   static intptr_t FcntlTrap(const sandbox::arch_seccomp_data& aArgs,
                             void* aux) {
