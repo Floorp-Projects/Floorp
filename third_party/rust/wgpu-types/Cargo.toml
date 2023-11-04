@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.65"
 name = "wgpu-types"
-version = "0.17.0"
+version = "0.18.0"
 authors = ["wgpu developers"]
 description = "WebGPU types"
 homepage = "https://wgpu.rs/"
