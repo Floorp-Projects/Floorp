@@ -466,9 +466,7 @@ add_task(function () {
     for (const { queryString, timezone, expected, assertResult } of cases) {
       info(`Test "${queryString}" in ${category}`);
 
-      let originalTimezone;
       if (timezone) {
-        originalTimezone = Cu.getJSTestingFunctions().getTimeZone();
         info(`Set timezone ${timezone}`);
         Cu.getJSTestingFunctions().setTimeZone(timezone);
       }
@@ -492,8 +490,9 @@ add_task(function () {
         });
       }
 
-      if (originalTimezone) {
-        Cu.getJSTestingFunctions().setTimeZone(originalTimezone);
+      if (timezone) {
+        // Reset timezone to default
+        Cu.getJSTestingFunctions().setTimeZone(undefined);
       }
     }
   }
