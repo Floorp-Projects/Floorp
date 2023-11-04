@@ -374,13 +374,14 @@ export class TranslationsParent extends JSWindowActorParent {
 
     if (needsRebuilding) {
       // The engine was destroyed, attempt to re-create the engine process.
-      TranslationsParent.#engine = (async () => {
-        await TranslationsParent.destroyEngineProcess();
-        return TranslationsParent.#getEngineProcessImpl();
-      })();
+      const rebuild = TranslationsParent.destroyEngineProcess().then(() =>
+        TranslationsParent.#getEngineProcessImpl()
+      );
+      TranslationsParent.#engine = rebuild;
+      return rebuild;
     }
 
-    return TranslationsParent.#engine;
+    return enginePromise;
   }
 
   static destroyEngineProcess() {
