@@ -128,7 +128,10 @@ add_test(function test_checkForAddons_uninitWithoutInstall() {
     () => installManager.checkForAddons()
   );
   promise.then(res => {
-    Assert.ok(res.usedFallback);
+    Assert.equal(res.addons.length, 2);
+    for (let addon of res.addons) {
+      Assert.ok(addon.usedFallback);
+    }
     installManager.uninit();
     run_next_test();
   });
@@ -145,7 +148,10 @@ add_test(function test_checkForAddons_noResponse() {
     () => installManager.checkForAddons()
   );
   promise.then(res => {
-    Assert.ok(res.usedFallback);
+    Assert.equal(res.addons.length, 2);
+    for (let addon of res.addons) {
+      Assert.ok(addon.usedFallback);
+    }
     installManager.uninit();
     run_next_test();
   });
@@ -193,7 +199,10 @@ add_test(function test_checkForAddons_wrongResponseXML() {
     () => installManager.checkForAddons()
   );
   promise.then(res => {
-    Assert.ok(res.usedFallback);
+    Assert.equal(res.addons.length, 2);
+    for (let addon of res.addons) {
+      Assert.ok(addon.usedFallback);
+    }
     installManager.uninit();
     run_next_test();
   });
@@ -210,7 +219,10 @@ add_test(function test_checkForAddons_404Error() {
     () => installManager.checkForAddons()
   );
   promise.then(res => {
-    Assert.ok(res.usedFallback);
+    Assert.equal(res.addons.length, 2);
+    for (let addon of res.addons) {
+      Assert.ok(addon.usedFallback);
+    }
     installManager.uninit();
     run_next_test();
   });
@@ -239,7 +251,10 @@ add_test(function test_checkForAddons_abort() {
   }, 100);
 
   promise.then(res => {
-    Assert.ok(res.usedFallback);
+    Assert.equal(res.addons.length, 2);
+    for (let addon of res.addons) {
+      Assert.ok(addon.usedFallback);
+    }
     installManager.uninit();
     run_next_test();
   });
@@ -259,7 +274,10 @@ add_test(function test_checkForAddons_timeout() {
     () => installManager.checkForAddons()
   );
   promise.then(res => {
-    Assert.ok(res.usedFallback);
+    Assert.equal(res.addons.length, 2);
+    for (let addon of res.addons) {
+      Assert.ok(addon.usedFallback);
+    }
     installManager.uninit();
     run_next_test();
   });
@@ -292,7 +310,10 @@ add_test(function test_checkForAddons_bad_ssl() {
     () => installManager.checkForAddons()
   );
   promise.then(res => {
-    Assert.ok(res.usedFallback);
+    Assert.equal(res.addons.length, 2);
+    for (let addon of res.addons) {
+      Assert.ok(addon.usedFallback);
+    }
     installManager.uninit();
     if (PREF_KEY_URL_OVERRIDE_BACKUP) {
       Preferences.set(GMPPrefs.KEY_URL_OVERRIDE, PREF_KEY_URL_OVERRIDE_BACKUP);
@@ -316,7 +337,10 @@ add_test(function test_checkForAddons_notXML() {
   );
 
   promise.then(res => {
-    Assert.ok(res.usedFallback);
+    Assert.equal(res.addons.length, 2);
+    for (let addon of res.addons) {
+      Assert.ok(addon.usedFallback);
+    }
     installManager.uninit();
     run_next_test();
   });
@@ -553,12 +577,15 @@ add_task(async function test_checkForAddons_contentSignatureSuccess() {
     // Smoke test the results are as expected.
     // If the checkForAddons fails we'll get a fallback config,
     // so we'll get incorrect addons and these asserts will fail.
-    Assert.equal(res.usedFallback, false);
     Assert.equal(res.addons.length, 5);
     Assert.equal(res.addons[0].id, "test1");
+    Assert.equal(res.addons[0].usedFallback, false);
     Assert.equal(res.addons[1].id, "test2");
+    Assert.equal(res.addons[1].usedFallback, false);
     Assert.equal(res.addons[2].id, "test3");
+    Assert.equal(res.addons[2].usedFallback, false);
     Assert.equal(res.addons[3].id, "test4");
+    Assert.equal(res.addons[3].usedFallback, false);
     Assert.equal(res.addons[4].id, undefined);
   } catch (e) {
     Assert.ok(false, "checkForAddons should succeed");
@@ -613,15 +640,21 @@ add_task(async function test_checkForAddons_contentSignatureFailure() {
     // Smoke test the results are as expected.
     // Check addons will succeed above, but it will have fallen back to local
     // config. So the results will not be those from the HTTP server.
-    Assert.equal(res.usedFallback, true);
     // Some platforms don't have fallback config for all GMPs, but we should
     // always get at least 1.
     Assert.greaterOrEqual(res.addons.length, 1);
     if (res.addons.length == 1) {
       Assert.equal(res.addons[0].id, "gmp-widevinecdm");
+      Assert.equal(res.addons[0].usedFallback, true);
     } else {
       Assert.equal(res.addons[0].id, "gmp-gmpopenh264");
+      Assert.equal(res.addons[0].usedFallback, true);
       Assert.equal(res.addons[1].id, "gmp-widevinecdm");
+      Assert.equal(res.addons[1].usedFallback, true);
+      if (res.addons.length >= 3) {
+        Assert.equal(res.addons[2].id, "gmp-widevinecdm-l1");
+        Assert.equal(res.addons[2].usedFallback, true);
+      }
     }
   } catch (e) {
     Assert.ok(false, "checkForAddons should succeed");

@@ -11,9 +11,10 @@ ChromeUtils.defineESModuleGetters(lazy, {
 
 // GMP IDs
 export const OPEN_H264_ID = "gmp-gmpopenh264";
+export const WIDEVINE_L1_ID = "gmp-widevinecdm-l1";
+export const WIDEVINE_L3_ID = "gmp-widevinecdm";
 
-export const WIDEVINE_ID = "gmp-widevinecdm";
-export const GMP_PLUGIN_IDS = [OPEN_H264_ID, WIDEVINE_ID];
+export const GMP_PLUGIN_IDS = [OPEN_H264_ID, WIDEVINE_L1_ID, WIDEVINE_L3_ID];
 
 export var GMPUtils = {
   /**
@@ -47,7 +48,15 @@ export var GMPUtils = {
     if (this._isPluginForceSupported(aPlugin)) {
       return true;
     }
-    if (aPlugin.id == WIDEVINE_ID) {
+    if (aPlugin.id == WIDEVINE_L1_ID) {
+      // The Widevine L1 plugin is currently only available for Windows x64.
+      return (
+        AppConstants.MOZ_WMF_CDM &&
+        AppConstants.platform == "win" &&
+        lazy.UpdateUtils.ABI.match(/x64/)
+      );
+    }
+    if (aPlugin.id == WIDEVINE_L1_ID || aPlugin.id == WIDEVINE_L3_ID) {
       // The Widevine plugin is available for Windows versions Vista and later,
       // Mac OSX, and Linux.
       return (
@@ -95,7 +104,7 @@ export var GMPUtils = {
   _expectedABI(aPlugin) {
     let defaultABI = lazy.UpdateUtils.ABI;
     let expectedABIs = [defaultABI];
-    if (aPlugin.id == WIDEVINE_ID && this._isWindowsOnARM64()) {
+    if (aPlugin.id == WIDEVINE_L3_ID && this._isWindowsOnARM64()) {
       // On Windows on aarch64, we may use either the x86 or the ARM64 plugin
       // as we are still shipping the former to release.
       expectedABIs.push(defaultABI.replace(/aarch64/g, "x86"));
@@ -123,6 +132,7 @@ export var GMPPrefs = {
   KEY_PLUGIN_VISIBLE: "media.{0}.visible",
   KEY_PLUGIN_ABI: "media.{0}.abi",
   KEY_PLUGIN_FORCE_SUPPORTED: "media.{0}.forceSupported",
+  KEY_PLUGIN_FORCE_INSTALL: "media.{0}.forceInstall",
   KEY_PLUGIN_ALLOW_X64_ON_ARM64: "media.{0}.allow-x64-plugin-on-arm64",
   KEY_URL: "media.gmp-manager.url",
   KEY_URL_OVERRIDE: "media.gmp-manager.url.override",

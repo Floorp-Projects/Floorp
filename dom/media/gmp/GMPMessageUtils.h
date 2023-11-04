@@ -18,7 +18,7 @@ namespace IPC {
 template <>
 struct ParamTraits<GMPPluginType>
     : public ContiguousEnumSerializerInclusive<
-          GMPPluginType, GMPPluginType::Unknown, GMPPluginType::Widevine> {};
+          GMPPluginType, GMPPluginType::Unknown, GMPPluginType::WidevineL1> {};
 
 template <>
 struct ParamTraits<GMPErr>

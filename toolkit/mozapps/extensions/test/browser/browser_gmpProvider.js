@@ -7,9 +7,8 @@
 const { GMPInstallManager } = ChromeUtils.importESModule(
   "resource://gre/modules/GMPInstallManager.sys.mjs"
 );
-const { GMPPrefs, GMP_PLUGIN_IDS, WIDEVINE_ID } = ChromeUtils.importESModule(
-  "resource://gre/modules/GMPUtils.sys.mjs"
-);
+const { GMPPrefs, GMP_PLUGIN_IDS, WIDEVINE_L1_ID, WIDEVINE_L3_ID } =
+  ChromeUtils.importESModule("resource://gre/modules/GMPUtils.sys.mjs");
 
 const TEST_DATE = new Date(2013, 0, 1, 12);
 
@@ -20,7 +19,8 @@ for (let pluginId of GMP_PLUGIN_IDS) {
     id: pluginId,
     isValid: true,
     isInstalled: false,
-    isEME: pluginId == WIDEVINE_ID,
+    isEME: pluginId == WIDEVINE_L1_ID || pluginId == WIDEVINE_L3_ID,
+    usedFallback: true,
   });
   gMockAddons.push(mockAddon);
 }
@@ -33,7 +33,6 @@ var getKey = GMPPrefs.getPrefKey;
 const MockGMPInstallManagerPrototype = {
   checkForAddons: () =>
     Promise.resolve({
-      usedFallback: true,
       addons: gMockAddons,
     }),
 
@@ -360,17 +359,30 @@ add_task(async function testEmeSupport() {
 
   for (let addon of gMockAddons) {
     let item = getAddonCard(win, addon.id);
-    if (addon.id == WIDEVINE_ID) {
+    if (addon.id == WIDEVINE_L1_ID) {
+      if (
+        AppConstants.MOZ_WMF_CDM &&
+        AppConstants.platform == "win" &&
+        UpdateUtils.ABI.match(/x64/)
+      ) {
+        Assert.ok(item, "Widevine L1 supported, found add-on element.");
+      } else {
+        Assert.ok(
+          !item,
+          "Widevine L1 not supported, couldn't find add-on element."
+        );
+      }
+    } else if (addon.id == WIDEVINE_L3_ID) {
       if (
         AppConstants.platform == "win" ||
         AppConstants.platform == "macosx" ||
         AppConstants.platform == "linux"
       ) {
-        Assert.ok(item, "Widevine supported, found add-on element.");
+        Assert.ok(item, "Widevine L3 supported, found add-on element.");
       } else {
         Assert.ok(
           !item,
-          "Widevine not supported, couldn't find add-on element."
+          "Widevine L3 not supported, couldn't find add-on element."
         );
       }
     } else {
