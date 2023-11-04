@@ -34,13 +34,13 @@ label.website-status {
 
 #statusCol,
 .website-status {
-  width: 25%;
+  width: 35%;
 }
 
 menulist.website-status {
   margin-block: 1px;
   margin-inline: 0 5px;
-  width: calc(25% - 5px);
+  width: calc(35% - 5px);
 }
 
 #browserNotificationsPermissionExtensionContent,
