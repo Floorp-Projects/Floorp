@@ -60,9 +60,6 @@ add_task(
       onOpenPanel: assertPanelUnsupportedLanguageView,
     });
 
-    info("Destroy the engine process so that an error will happen.");
-    await TranslationsParent.destroyEngineProcess();
-
     await navigate("Navigate back to a Spanish page.", {
       url: SPANISH_PAGE_URL_DOT_ORG,
       downloadHandler: rejectDownloads,
