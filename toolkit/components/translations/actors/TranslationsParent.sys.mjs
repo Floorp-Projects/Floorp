@@ -176,6 +176,13 @@ export class TranslationsParent extends JSWindowActorParent {
   languageState;
 
   /**
+   * Allows the TranslationsEngineParent to resolve an engine once it is ready.
+   *
+   * @type {null | () => TranslationsEngineParent}
+   */
+  resolveEngine = null;
+
+  /**
    * The cached URI spec where the panel was first ever shown, as determined by the
    * browser.translations.panelShown pref.
    *
@@ -425,6 +432,10 @@ export class TranslationsParent extends JSWindowActorParent {
     const chromeWindow = await hiddenFrame.get();
     const doc = chromeWindow.document;
 
+    const actorPromise = new Promise(resolve => {
+      this.resolveEngine = resolve;
+    });
+
     const browser = doc.createXULElement("browser");
     browser.setAttribute("remote", "true");
     browser.setAttribute("remoteType", "web");
@@ -436,42 +447,8 @@ export class TranslationsParent extends JSWindowActorParent {
     );
     doc.documentElement.appendChild(browser);
 
-    // Wait for the translations engine to be loaded.
-    await new Promise(resolve => {
-      const listener = {
-        QueryInterface: ChromeUtils.generateQI([
-          "nsIWebProgressListener",
-          "nsIWebProgressListener2",
-          "nsISupportsWeakReference",
-        ]),
-
-        /**
-         * @param {nsIWebProgress} _webProgress
-         * @param {nsIRequest} request
-         * @param {number} stateFlags
-         * @param {nsresult} _status
-         */
-        onStateChange(_webProgress, request, stateFlags, _status) {
-          if (!request) {
-            return;
-          }
-          if (
-            stateFlags & Ci.nsIWebProgressListener.STATE_STOP &&
-            stateFlags & Ci.nsIWebProgressListener.STATE_IS_NETWORK
-          ) {
-            browser.removeProgressListener(listener);
-            resolve();
-          }
-        },
-      };
-      browser.addProgressListener(listener, Ci.nsIWebProgress.NOTIFY_STATE_ALL);
-    });
-
-    const actor =
-      browser.browsingContext.currentWindowGlobal.getActor(
-        "TranslationsEngine"
-      );
-
+    const actor = await actorPromise;
+    this.resolveEngine = null;
     return { hiddenFrame, browser, actor };
   }
 
