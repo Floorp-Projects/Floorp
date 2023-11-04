@@ -7,6 +7,7 @@
 UNIFIED_SOURCES += [
     "TestBreak.cpp",
     "TestSegmenter.cpp",
+    "TestSegmenterPerf.cpp",
 ]
 
 FINAL_LIBRARY = "xul-gtest"
