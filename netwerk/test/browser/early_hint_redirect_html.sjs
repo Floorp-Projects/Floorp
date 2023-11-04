@@ -5,7 +5,6 @@
 //  - location: sets destination of 301 response
 
 function handleRequest(request, response) {
-  Cu.importGlobalProperties(["URLSearchParams"]);
   let qs = new URLSearchParams(request.queryString);
   let link = qs.get("link");
   let location = qs.get("location");

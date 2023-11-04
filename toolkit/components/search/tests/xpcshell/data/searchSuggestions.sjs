@@ -8,8 +8,6 @@ let { NetUtil } = ChromeUtils.importESModule(
   "resource://gre/modules/NetUtil.sys.mjs"
 );
 
-Cu.importGlobalProperties(["TextEncoder"]);
-
 /**
  * Provide search suggestions in the OpenSearch JSON format.
  */

@@ -9,8 +9,6 @@ const BinaryInputStream = Components.Constructor(
   "setInputStream"
 );
 
-Cu.importGlobalProperties(["TextDecoder"]);
-
 function getPostBody(stream) {
   let binaryStream = new BinaryInputStream(stream);
   let count = binaryStream.available();

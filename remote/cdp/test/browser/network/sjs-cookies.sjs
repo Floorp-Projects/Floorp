@@ -1,8 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-Cu.importGlobalProperties(["URLSearchParams"]);
-
 function handleRequest(request, response) {
   const queryString = new URLSearchParams(request.queryString);
 

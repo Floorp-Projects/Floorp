@@ -1,5 +1,3 @@
-Cu.importGlobalProperties(["URLSearchParams"]);
-
 function handleRequest(request, response) {
   response.write(
     `<!DOCTYPE html>

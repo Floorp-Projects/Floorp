@@ -5,8 +5,6 @@ let { NetUtil } = ChromeUtils.importESModule(
   "resource://gre/modules/NetUtil.sys.mjs"
 );
 
-Cu.importGlobalProperties(["IOUtils", "PathUtils"]);
-
 const RELATIVE_PATH = "browser/toolkit/mozapps/extensions/test/xpinstall";
 const NOTIFICATION_TOPIC = "slowinstall-complete";
 

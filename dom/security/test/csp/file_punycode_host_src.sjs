@@ -26,7 +26,6 @@ function handleRequest(request, response) {
   response.setHeader("Cache-Control", "no-cache", false);
   response.setHeader("Content-Type", "text/html", false);
 
-  Cu.importGlobalProperties(["URLSearchParams"]);
   const query = new URLSearchParams(request.queryString);
 
   if (query.get("csp")) {

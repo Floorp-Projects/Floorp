@@ -1,7 +1,6 @@
 "use strict";
 
 function handleRequest(request, response) {
-  Cu.importGlobalProperties(["URLSearchParams"]);
   let qs = new URLSearchParams(request.queryString);
   let asset = qs.get("as");
   var action = qs.get("action");

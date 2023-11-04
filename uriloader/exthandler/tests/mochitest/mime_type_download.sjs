@@ -1,6 +1,6 @@
 function handleRequest(request, response) {
   "use strict";
-  Cu.importGlobalProperties(["URLSearchParams"]);
+
   let content = "";
   let params = new URLSearchParams(request.queryString);
   let extension = params.get("extension");

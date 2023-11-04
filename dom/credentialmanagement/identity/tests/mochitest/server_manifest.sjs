@@ -2,8 +2,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/
  */
 
-Cu.importGlobalProperties(["URLSearchParams"]);
-
 function handleRequest(request, response) {
   let params = new URLSearchParams(request.queryString);
   let test = params.get("set_test");

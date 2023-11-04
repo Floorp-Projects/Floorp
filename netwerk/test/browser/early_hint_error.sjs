@@ -1,7 +1,5 @@
 "use strict";
 
-Cu.importGlobalProperties(["URLSearchParams"]);
-
 function handleRequest(request, response) {
   response.setStatusLine(
     request.httpVersion,

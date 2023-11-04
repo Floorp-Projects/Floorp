@@ -2,8 +2,6 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 function handleRequest(request, response) {
-  Cu.importGlobalProperties(["URLSearchParams"]);
-
   let query = new URLSearchParams(request.queryString);
 
   // Set CSP sandbox attributes if caller requests any.

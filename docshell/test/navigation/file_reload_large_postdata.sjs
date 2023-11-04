@@ -8,8 +8,6 @@ const BinaryInputStream = Components.Constructor(
   "setInputStream"
 );
 
-Cu.importGlobalProperties(["URLSearchParams"]);
-
 function readStream(inputStream) {
   let available = 0;
   let result = [];

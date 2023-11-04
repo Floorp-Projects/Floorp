@@ -30,7 +30,6 @@ function getSniffableContent(type) {
 }
 
 function handleRequest(request, response) {
-  Cu.importGlobalProperties(["URLSearchParams"]);
   let query = new URLSearchParams(request.queryString);
 
   // avoid confusing cache behaviors (XXXX no sure what this means?)

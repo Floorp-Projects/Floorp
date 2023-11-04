@@ -3,8 +3,6 @@ const HTTPS_ORIGIN = "https://example.com";
 const URI_PATH =
   "/browser/browser/components/contextualidentity/test/browser/saveLink.sjs";
 
-Cu.importGlobalProperties(["URLSearchParams"]);
-
 function handleRequest(aRequest, aResponse) {
   var params = new URLSearchParams(aRequest.queryString);
 

@@ -2,7 +2,6 @@
 // https://bugzilla.mozilla.org/show_bug.cgi?id=1271173
 
 "use strict";
-Cu.importGlobalProperties(["URLSearchParams"]);
 
 const TEST_NAVIGATIONAL_UPGRADE = `
   <!DOCTYPE html>

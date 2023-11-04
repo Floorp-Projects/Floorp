@@ -20,7 +20,6 @@ async function handleRequest(request, response) {
   response.setHeader("Cache-Control", "max-age=604800", false);
 
   let content = "";
-  Cu.importGlobalProperties(["URLSearchParams"]);
   let qs = new URLSearchParams(request.queryString);
   let asset = qs.get("as");
 
