@@ -2358,16 +2358,21 @@ var gBrowserInit = {
 
       // Floorp Injections
       // If the URI has "?FloorpEnableSSBWindow=true" at the end, The window will be opened as a SSB window.
-      if(uri.endsWith("?FloorpEnableSSBWindow=true")){
-        uri = uri.replace("?FloorpEnableSSBWindow=true", "");
-        document.documentElement.setAttribute("FloorpEnableSSBWindow", "true");
 
-        // Add SSB Window or Tab Attribute
-        // This attribute is used to make do not restore the window or tab when the browser is restarted.
-        window.gBrowser.floorpSsbWindow = true;
-        gBrowser.tabs.forEach(tab => {
-          tab.setAttribute("floorpSSB", "true");
-        });    
+      try {
+         if(uri.endsWith("?FloorpEnableSSBWindow=true")){
+         uri = uri.replace("?FloorpEnableSSBWindow=true", "");
+         document.documentElement.setAttribute("FloorpEnableSSBWindow", "true");
+
+         // Add SSB Window or Tab Attribute
+         // This attribute is used to make do not restore the window or tab when the browser is restarted.
+         window.gBrowser.floorpSsbWindow = true;
+         gBrowser.tabs.forEach(tab => {
+           tab.setAttribute("floorpSSB", "true");
+         });    
+        }
+      } catch(e) {
+        console.log(e);
       }
 
       if (!uri || window.XULElement.isInstance(uri)) {
