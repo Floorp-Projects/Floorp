@@ -143,9 +143,11 @@ async function openAboutTranslations({
     runInPage
   );
 
-  await removeMocks();
-
   BrowserTestUtils.removeTab(tab);
+
+  await removeMocks();
+  await TranslationsParent.destroyEngineProcess();
+
   await SpecialPowers.popPrefEnv();
 }
 
@@ -221,7 +223,61 @@ function naivelyPrettify(html) {
 }
 
 /**
- * This fake translator reports on the batching of calls by replacing the text
+ * Recursively transforms all child nodes to have uppercased text.
+ *
+ * @param {Node} node
+ */
+function upperCaseNode(node) {
+  if (typeof node.nodeValue === "string") {
+    node.nodeValue = node.nodeValue.toUpperCase();
+  }
+  for (const childNode of node.childNodes) {
+    upperCaseNode(childNode);
+  }
+}
+
+/**
+ * Creates a mocked message port for translations.
+ *
+ * @returns {MessagePort} This is mocked
+ */
+function createMockedTranslatorPort(transformNode = upperCaseNode) {
+  const parser = new DOMParser();
+  const mockedPort = {
+    async postMessage(message) {
+      // Make this response async.
+      await TestUtils.waitForTick();
+
+      switch (message.type) {
+        case "TranslationsPort:GetEngineStatusRequest":
+          mockedPort.onmessage({
+            data: {
+              type: "TranslationsPort:GetEngineStatusResponse",
+              status: "ready",
+            },
+          });
+          break;
+        case "TranslationsPort:TranslationRequest": {
+          const { messageId, sourceText } = message;
+
+          const translatedDoc = parser.parseFromString(sourceText, "text/html");
+          transformNode(translatedDoc.body);
+          mockedPort.onmessage({
+            data: {
+              type: "TranslationsPort:TranslationResponse",
+              targetText: translatedDoc.body.innerHTML,
+              messageId,
+            },
+          });
+        }
+      }
+    },
+  };
+  return mockedPort;
+}
+
+/**
+ * This mocked translator reports on the batching of calls by replacing the text
  * with a letter. Each call of the function moves the letter forward alphabetically.
  *
  * So consecutive calls would transform things like:
@@ -230,44 +286,38 @@ function naivelyPrettify(html) {
  *   "Third translation" -> "cccc ccccccccc"
  *
  * This can visually show what the translation batching behavior looks like.
+ *
+ * @returns {MessagePort} A mocked port.
  */
-function createBatchFakeTranslator() {
+function createBatchedMockedTranslatorPort() {
   let letter = "a";
+
   /**
-   * @param {string} message
+   * @param {Node} node
    */
-  return async function fakeTranslator(message) {
-    /**
-     * @param {Node} node
-     */
-    function transformNode(node) {
-      if (typeof node.nodeValue === "string") {
-        node.nodeValue = node.nodeValue.replace(/\w/g, letter);
-      }
-      for (const childNode of node.childNodes) {
-        transformNode(childNode);
-      }
+  function transformNode(node) {
+    if (typeof node.nodeValue === "string") {
+      node.nodeValue = node.nodeValue.replace(/\w/g, letter);
     }
+    for (const childNode of node.childNodes) {
+      transformNode(childNode);
+    }
+  }
 
-    const parser = new DOMParser();
-    const translatedDoc = parser.parseFromString(message, "text/html");
-    transformNode(translatedDoc.body);
-
-    // "Increment" the letter.
+  return createMockedTranslatorPort(node => {
+    transformNode(node);
     letter = String.fromCodePoint(letter.codePointAt(0) + 1);
-
-    return [translatedDoc.body.innerHTML];
-  };
+  });
 }
 
 /**
- * This fake translator reorders Nodes to be in alphabetical order, and then
+ * This mocked translator reorders Nodes to be in alphabetical order, and then
  * uppercases the text. This allows for testing the reordering behavior of the
  * translation engine.
  *
- * @param {string} message
+ * @returns {MessagePort} A mocked port.
  */
-async function reorderingTranslator(message) {
+function createdReorderingMockedTranslatorPort() {
   /**
    * @param {Node} node
    */
@@ -289,11 +339,7 @@ async function reorderingTranslator(message) {
     }
   }
 
-  const parser = new DOMParser();
-  const translatedDoc = parser.parseFromString(message, "text/html");
-  transformNode(translatedDoc.body);
-
-  return [translatedDoc.body.innerHTML];
+  return createMockedTranslatorPort(transformNode);
 }
 
 /**
@@ -385,10 +431,12 @@ async function setupActorTest({
     true // waitForLoad
   );
 
+  const actor = getTranslationsParent();
   return {
-    actor: getTranslationsParent(),
+    actor,
     remoteClients,
     async cleanup() {
+      await TranslationsParent.destroyEngineProcess();
       await closeTranslationsPanelIfOpen();
       BrowserTestUtils.removeTab(tab);
       await removeMocks();
@@ -541,6 +589,7 @@ async function loadTestPage({
      * @returns {Promise<void>}
      */
     async cleanup() {
+      await TranslationsParent.destroyEngineProcess();
       await closeTranslationsPanelIfOpen();
       await removeMocks();
       Services.fog.testResetFOG();
@@ -1023,6 +1072,7 @@ async function setupAboutPreferences(
   const elements = await selectAboutPreferencesElements();
 
   async function cleanup() {
+    await TranslationsParent.destroyEngineProcess();
     await closeTranslationsPanelIfOpen();
     BrowserTestUtils.removeTab(tab);
     await removeMocks();
