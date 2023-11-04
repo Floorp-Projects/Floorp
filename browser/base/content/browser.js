@@ -2358,11 +2358,9 @@ var gBrowserInit = {
 
       /*** Floorp Injections *********************************************************************************************/
 
-      let needSsbOpenWindow = Services.prefs.prefHasUserValue("browser.ssb.startup");
-
       try {
          // If the URI has "?FloorpEnableSSBWindow=true" at the end, The window will be opened as a SSB window.
-         if (uri.endsWith("?FloorpEnableSSBWindow=true") || needSsbOpenWindow) {
+         if (uri.endsWith("?FloorpEnableSSBWindow=true")) {
          uri = uri.replace("?FloorpEnableSSBWindow=true", "");
          document.documentElement.setAttribute("FloorpEnableSSBWindow", "true");
 
@@ -2378,6 +2376,22 @@ var gBrowserInit = {
         }
       } catch(e) {
         console.log(e);
+      }
+
+      const SsbPrefName = "browser.ssb.startup"
+      let needSsbOpenWindow = Services.prefs.prefHasUserValue(SsbPrefName);
+      if (needSsbOpenWindow) {
+        let id = Services.prefs.getStringPref(SsbPrefName);
+        var { SiteSpecificBrowserIdUtils } = ChromeUtils.import(
+          "resource:///modules/SiteSpecificBrowserIdUtils.jsm"
+        );
+        
+        try {
+          SiteSpecificBrowserIdUtils.runSSBWithId(id);
+          Services.prefs.clearUserPref(SsbPrefName)
+        } catch(e) {
+          console.error(e);
+        }
       }
 
       /******************************************************************************************************************/
