@@ -56,7 +56,6 @@ const WORKER = `
   `;
 
 function handleRequest(request, response) {
-  Cu.importGlobalProperties(["URLSearchParams"]);
   let query = new URLSearchParams(request.queryString);
 
   if (query.get("crossOriginIsolated") === "true") {

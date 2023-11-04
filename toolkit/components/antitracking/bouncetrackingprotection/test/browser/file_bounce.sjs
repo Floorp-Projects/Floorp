@@ -1,7 +1,6 @@
 function handleRequest(request, response) {
   response.setHeader("Cache-Control", "no-cache", false);
 
-  Cu.importGlobalProperties(["URLSearchParams"]);
   let query = new URLSearchParams(request.queryString);
 
   let setState = query.get("setState");

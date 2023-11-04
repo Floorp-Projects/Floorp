@@ -33,7 +33,6 @@ function now() {
 
 async function handleRequest(request, response) {
   log("Get query parameters");
-  Cu.importGlobalProperties(["URLSearchParams"]);
   let params = new URLSearchParams(request.queryString);
 
   let start = now();

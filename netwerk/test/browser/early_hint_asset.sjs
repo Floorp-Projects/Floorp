@@ -12,7 +12,6 @@ function handleRequest(request, response) {
   setSharedState("earlyHintCount", JSON.stringify(count));
 
   let content = "";
-  Cu.importGlobalProperties(["URLSearchParams"]);
   let qs = new URLSearchParams(request.queryString);
   let asset = qs.get("as");
 

@@ -1,7 +1,5 @@
 "use strict";
 
-Cu.importGlobalProperties(["URLSearchParams"]);
-
 const HTML_DATA = `
   <!DOCTYPE HTML>
   <html>

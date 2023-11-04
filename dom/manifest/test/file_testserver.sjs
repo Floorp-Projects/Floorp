@@ -2,7 +2,6 @@
 let { NetUtil } = ChromeUtils.importESModule(
   "resource://gre/modules/NetUtil.sys.mjs"
 );
-Cu.importGlobalProperties(["URLSearchParams"]);
 
 function loadHTMLFromFile(path) {
   // Load the HTML to return in the response from file.

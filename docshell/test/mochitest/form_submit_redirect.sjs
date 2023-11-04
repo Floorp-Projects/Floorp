@@ -1,7 +1,5 @@
 "use strict";
 
-Cu.importGlobalProperties(["URLSearchParams"]);
-
 async function handleRequest(request, response) {
   if (request.method !== "POST") {
     throw new Error("Expected a post request");

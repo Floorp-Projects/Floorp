@@ -3,8 +3,6 @@
 
 "use strict";
 
-Cu.importGlobalProperties(["URLSearchParams"]);
-
 function handleRequest(request, response) {
   let params = new URLSearchParams(request.queryString);
   let uri = params.get("uri");

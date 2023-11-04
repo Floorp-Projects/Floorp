@@ -20,7 +20,7 @@
  */
 //global handleRequest
 "use strict";
-Cu.importGlobalProperties(["URLSearchParams"]);
+
 const HTTPStatus = new Map([
   [100, "Continue"],
   [101, "Switching Protocol"],

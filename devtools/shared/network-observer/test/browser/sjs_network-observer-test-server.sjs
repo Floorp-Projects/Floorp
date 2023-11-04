@@ -3,8 +3,6 @@
 
 "use strict";
 
-Cu.importGlobalProperties(["TextEncoder"]);
-
 // Simple server which can handle several response types and states.
 // Trimmed down from devtools/client/netmonitor/test/sjs_content-type-test-server.sjs
 // Additional features can be ported if needed.

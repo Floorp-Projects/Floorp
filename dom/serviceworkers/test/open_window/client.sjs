@@ -51,7 +51,6 @@ const RESPONSE = `
 `;
 
 function handleRequest(request, response) {
-  Cu.importGlobalProperties(["URLSearchParams"]);
   let query = new URLSearchParams(request.queryString);
 
   // If the request has been marked to be isolated with COOP+COEP, set the appropriate headers.

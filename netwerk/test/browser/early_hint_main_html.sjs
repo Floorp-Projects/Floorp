@@ -1,8 +1,6 @@
 "use strict";
 
 function handleRequest(request, response) {
-  Cu.importGlobalProperties(["URLSearchParams"]);
-
   // write to raw socket
   response.seizePower();
 

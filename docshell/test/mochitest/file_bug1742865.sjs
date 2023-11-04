@@ -1,5 +1,3 @@
-Cu.importGlobalProperties(["URLSearchParams"]);
-
 function handleRequest(request, response) {
   if (request.queryString == "reset") {
     setState("index", "0");

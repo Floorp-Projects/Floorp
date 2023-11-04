@@ -4,7 +4,6 @@
  */
 
 function handleRequest(request, response) {
-  Cu.importGlobalProperties(["URLSearchParams"]);
   let query = new URLSearchParams(request.queryString);
 
   let scheme = query.get("scheme");

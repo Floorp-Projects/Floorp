@@ -3,8 +3,6 @@
 
 "use strict";
 
-Cu.importGlobalProperties(["TextEncoder"]);
-
 function gzipCompressString(string, obs) {
   const scs = Cc["@mozilla.org/streamConverters;1"].getService(
     Ci.nsIStreamConverterService

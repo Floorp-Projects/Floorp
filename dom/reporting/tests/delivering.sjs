@@ -5,8 +5,6 @@ const BinaryInputStream = CC(
   "setInputStream"
 );
 
-Cu.importGlobalProperties(["URLSearchParams"]);
-
 function handleRequest(aRequest, aResponse) {
   var params = new URLSearchParams(aRequest.queryString);
 

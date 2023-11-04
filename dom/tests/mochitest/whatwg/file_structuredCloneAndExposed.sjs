@@ -1,7 +1,6 @@
 "use strict";
 
 function handleRequest(request, response) {
-  Cu.importGlobalProperties(["URLSearchParams"]);
   let query = new URLSearchParams(request.queryString);
 
   response.setHeader("Content-Type", "application/javascript");

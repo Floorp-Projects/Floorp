@@ -5,7 +5,6 @@
  * bug 1174913, bug 1175736, bug 1184781
  */
 
-Cu.importGlobalProperties(["URLSearchParams"]);
 const SJS = "referrer_testserver.sjs?";
 const SJS_PATH = "/tests/dom/security/test/referrer-policy/";
 const BASE_ORIGIN = "example.com";

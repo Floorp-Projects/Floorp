@@ -4,7 +4,6 @@ function handleRequest(request, response) {
   response.setHeader("Content-Type", "html", false);
 
   // Check the params and set the cross-origin-opener policy headers if needed
-  Cu.importGlobalProperties(["URLSearchParams"]);
   const query = new URLSearchParams(request.queryString);
   if (query.get("crossOriginIsolated") === "true") {
     response.setHeader("Cross-Origin-Opener-Policy", "same-origin", false);

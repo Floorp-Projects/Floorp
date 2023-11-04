@@ -1,4 +1,3 @@
-Cu.importGlobalProperties(["URLSearchParams"]);
 const SJS = "referrer_test_server.sjs?";
 const SHARED_KEY = SJS;
 
