@@ -3813,6 +3813,37 @@ bool gfxFont::InitFakeSmallCapsRun(
               /* aCaseTransformsOnly = */ false, aLanguage, charsToMergeArray,
               deletedCharsArray);
 
+          // Check whether the font supports the uppercased characters needed;
+          // if not, we're not going to be able to simulate small-caps.
+          bool failed = false;
+          char16_t highSurrogate = 0;
+          for (const char16_t* cp = convertedString.BeginReading();
+               cp != convertedString.EndReading(); ++cp) {
+            if (NS_IS_HIGH_SURROGATE(*cp)) {
+              highSurrogate = *cp;
+              continue;
+            }
+            uint32_t ch = *cp;
+            if (NS_IS_LOW_SURROGATE(*cp) && highSurrogate) {
+              ch = SURROGATE_TO_UCS4(highSurrogate, *cp);
+            }
+            highSurrogate = 0;
+            if (!f->HasCharacter(ch)) {
+              if (IsDefaultIgnorable(ch)) {
+                continue;
+              }
+              failed = true;
+              break;
+            }
+          }
+          // Required uppercase letter(s) missing from the font. Just use the
+          // original text with the original font, no fake small caps!
+          if (failed) {
+            convertedString = origString;
+            mergeNeeded = false;
+            f = this;
+          }
+
           if (mergeNeeded) {
             // This is the hard case: the transformation caused chars
             // to be inserted or deleted, so we can't shape directly

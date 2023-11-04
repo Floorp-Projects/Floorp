@@ -108,6 +108,8 @@ random-if(!winWidget&&!cocoaWidget) fails-if(winWidget||cocoaWidget) == kerning-
 == caps-fallback-allsmallcaps.html caps-fallback-smcpc2sc.html
 == caps-fallback-allpetitecaps.html caps-fallback-smcpc2sc.html
 
+== small-caps-missing-capital.html small-caps-missing-capital-ref.html
+
 # font-variant-position fallback
 random-if(cocoaWidget||Android) == subsuper-fallback.html subsuper-fallback-ref.html # bug 1139269
 != subsuper-fallback.html subsuper-fallback-notref1.html
