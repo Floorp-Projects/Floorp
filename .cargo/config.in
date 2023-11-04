@@ -25,19 +25,14 @@ git = "https://github.com/franziskuskiefer/cose-rust"
 rev = "43c22248d136c8b38fe42ea709d08da6355cf04b"
 replace-with = "vendored-sources"
 
-[source."git+https://github.com/gfx-rs/metal-rs/?rev=d24f1a4"]
-git = "https://github.com/gfx-rs/metal-rs/"
-rev = "d24f1a4"
-replace-with = "vendored-sources"
-
-[source."git+https://github.com/gfx-rs/naga?rev=e25280df9316434ef7752970016d01a3aede3f17"]
+[source."git+https://github.com/gfx-rs/naga?rev=92e41b43e437146b5d946eb238de963be1168016"]
 git = "https://github.com/gfx-rs/naga"
-rev = "e25280df9316434ef7752970016d01a3aede3f17"
+rev = "92e41b43e437146b5d946eb238de963be1168016"
 replace-with = "vendored-sources"
 
-[source."git+https://github.com/gfx-rs/wgpu?rev=75989192a9c8f70893882ce0f4373ac217d380c3"]
+[source."git+https://github.com/gfx-rs/wgpu?rev=49b7ec97c164bac9ee877f45cdd806fbefecc5a4"]
 git = "https://github.com/gfx-rs/wgpu"
-rev = "75989192a9c8f70893882ce0f4373ac217d380c3"
+rev = "49b7ec97c164bac9ee877f45cdd806fbefecc5a4"
 replace-with = "vendored-sources"
 
 [source."git+https://github.com/glandium/warp?rev=4af45fae95bc98b0eba1ef0db17e1dac471bb23d"]

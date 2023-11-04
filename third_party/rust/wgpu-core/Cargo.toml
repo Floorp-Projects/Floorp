@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.65"
 name = "wgpu-core"
-version = "0.17.0"
+version = "0.18.0"
 authors = ["wgpu developers"]
 description = "WebGPU core logic on wgpu-hal"
 homepage = "https://wgpu.rs/"
@@ -48,15 +48,15 @@ smallvec = "1"
 thiserror = "1"
 
 [dependencies.hal]
-version = "0.17"
+version = "0.18.0"
 path = "../wgpu-hal"
 default_features = false
 package = "wgpu-hal"
 
 [dependencies.naga]
-version = "0.13.0"
+version = "0.14.0"
 git = "https://github.com/gfx-rs/naga"
-rev = "e25280df9316434ef7752970016d01a3aede3f17"
+rev = "92e41b43e437146b5d946eb238de963be1168016"
 features = [
     "clone",
     "span",
@@ -81,7 +81,7 @@ features = ["serde_derive"]
 optional = true
 
 [dependencies.wgt]
-version = "0.17"
+version = "0.18.0"
 path = "../wgpu-types"
 package = "wgpu-types"
 
