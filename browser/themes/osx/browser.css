@@ -9,6 +9,7 @@
 
 :root {
   appearance: none;
+  background-color: transparent;
 
   --toolbar-non-lwt-bgcolor: -moz-dialog;
   --toolbar-non-lwt-textcolor: -moz-dialogtext;
