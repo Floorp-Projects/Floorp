@@ -821,9 +821,6 @@ export class TranslationsParent extends JSWindowActorParent {
           mockedLangTag: TranslationsParent.#mockedLangTag,
         };
       }
-      case "Translations:GetIsTranslationsEngineMocked": {
-        return TranslationsParent.#isTranslationsEngineMocked;
-      }
       case "Translations:GetSupportedLanguages": {
         return TranslationsParent.getSupportedLanguages();
       }
