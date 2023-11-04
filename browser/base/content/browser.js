@@ -2356,11 +2356,13 @@ var gBrowserInit = {
       //                      ignored).
       let uri = window.arguments?.[0];
 
-      // Floorp Injections
-      // If the URI has "?FloorpEnableSSBWindow=true" at the end, The window will be opened as a SSB window.
+      /*** Floorp Injections *********************************************************************************************/
+
+      let needSsbOpenWindow = Services.prefs.prefHasUserValue("browser.ssb.startup");
 
       try {
-         if(uri.endsWith("?FloorpEnableSSBWindow=true")){
+         // If the URI has "?FloorpEnableSSBWindow=true" at the end, The window will be opened as a SSB window.
+         if (uri.endsWith("?FloorpEnableSSBWindow=true") || needSsbOpenWindow) {
          uri = uri.replace("?FloorpEnableSSBWindow=true", "");
          document.documentElement.setAttribute("FloorpEnableSSBWindow", "true");
 
@@ -2369,11 +2371,16 @@ var gBrowserInit = {
          window.gBrowser.floorpSsbWindow = true;
          gBrowser.tabs.forEach(tab => {
            tab.setAttribute("floorpSSB", "true");
-         });    
+         });
+
+         // Load SSB Support Script & CSS
+         Services.scriptloader.loadSubScript("chrome://browser/content/browser-ssb-support.js", this);
         }
       } catch(e) {
         console.log(e);
       }
+
+      /******************************************************************************************************************/
 
       if (!uri || window.XULElement.isInstance(uri)) {
         return null;
