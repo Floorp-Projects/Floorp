@@ -1459,9 +1459,15 @@ var TranslationsPanel = new (class {
         }
         break;
       }
-      case "TranslationsParent:LanguageState":
-        // Check this value after every `await` to guard against race conditions.
+      case "TranslationsParent:LanguageState": {
+        // Check these values after every `await` to guard against race conditions.
         const handleEventId = ++this.handleEventId;
+        const win =
+          gBrowser.selectedBrowser.browsingContext.currentWindowGlobal;
+        const isRequestStale = () =>
+          handleEventId !== this.handleEventId ||
+          win !== gBrowser.selectedBrowser.browsingContext.currentWindowGlobal;
+
         const {
           detectedLanguages,
           requestedTranslationPair,
@@ -1501,8 +1507,7 @@ var TranslationsPanel = new (class {
           (hasSupportedLanguage &&
             (await TranslationsParent.getIsTranslationsEngineSupported()))
         ) {
-          if (handleEventId !== this.handleEventId) {
-            // A new handleEvent was received, this one is stale.
+          if (isRequestStale()) {
             return;
           }
           button.hidden = false;
@@ -1569,8 +1574,7 @@ var TranslationsPanel = new (class {
             PageActions.sendPlacedInUrlbarTrigger(button);
           }
         } else {
-          if (handleEventId !== this.handleEventId) {
-            // A new handleEvent was received, this one is stale.
+          if (isRequestStale()) {
             return;
           }
           this.#hideTranslationsButton();
@@ -1605,6 +1609,7 @@ var TranslationsPanel = new (class {
             console.error("Unknown translation error", error);
         }
         break;
+      }
     }
   };
 })();
