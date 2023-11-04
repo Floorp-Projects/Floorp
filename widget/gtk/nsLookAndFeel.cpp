@@ -134,35 +134,6 @@ static void settings_changed_signal_cb(GDBusProxy* proxy, gchar* sender_name,
   }
 }
 
-void nsLookAndFeel::WatchDBus() {
-  GUniquePtr<GError> error;
-  mDBusSettingsProxy = dont_AddRef(g_dbus_proxy_new_for_bus_sync(
-      G_BUS_TYPE_SESSION, G_DBUS_PROXY_FLAGS_NONE, nullptr,
-      "org.freedesktop.portal.Desktop", "/org/freedesktop/portal/desktop",
-      "org.freedesktop.portal.Settings", nullptr, getter_Transfers(error)));
-  if (mDBusSettingsProxy) {
-    g_signal_connect(mDBusSettingsProxy, "g-signal",
-                     G_CALLBACK(settings_changed_signal_cb), this);
-  } else {
-    LOGLNF("Can't create DBus proxy for settings: %s\n", error->message);
-    return;
-  }
-
-  // DBus interface was started after L&F init so we need to load
-  // our settings from DBus explicitly.
-  if (!sIgnoreChangedSettings) {
-    OnColorSchemeSettingChanged();
-  }
-}
-
-void nsLookAndFeel::UnwatchDBus() {
-  if (mDBusSettingsProxy) {
-    g_signal_handlers_disconnect_by_func(
-        mDBusSettingsProxy, FuncToGpointer(settings_changed_signal_cb), this);
-    mDBusSettingsProxy = nullptr;
-  }
-}
-
 nsLookAndFeel::nsLookAndFeel() {
   static constexpr nsLiteralCString kObservedSettings[] = {
       // Affects system font sizes.
@@ -201,29 +172,27 @@ nsLookAndFeel::nsLookAndFeel() {
       nsWindow::GetSystemGtkWindowDecoration() != nsWindow::GTK_DECORATION_NONE;
 
   if (ShouldUsePortal(PortalKind::Settings)) {
-    mDBusID = g_bus_watch_name(
-        G_BUS_TYPE_SESSION, "org.freedesktop.portal.Desktop",
-        G_BUS_NAME_WATCHER_FLAGS_AUTO_START,
-        [](GDBusConnection*, const gchar*, const gchar*,
-           gpointer data) -> void {
-          auto* lnf = static_cast<nsLookAndFeel*>(data);
-          lnf->WatchDBus();
-        },
-        [](GDBusConnection*, const gchar*, gpointer data) -> void {
-          auto* lnf = static_cast<nsLookAndFeel*>(data);
-          lnf->UnwatchDBus();
-        },
-        this, nullptr);
+    GUniquePtr<GError> error;
+    mDBusSettingsProxy = dont_AddRef(g_dbus_proxy_new_for_bus_sync(
+        G_BUS_TYPE_SESSION, G_DBUS_PROXY_FLAGS_NONE, nullptr,
+        "org.freedesktop.portal.Desktop", "/org/freedesktop/portal/desktop",
+        "org.freedesktop.portal.Settings", nullptr, getter_Transfers(error)));
+    if (mDBusSettingsProxy) {
+      g_signal_connect(mDBusSettingsProxy, "g-signal",
+                       G_CALLBACK(settings_changed_signal_cb), this);
+    } else {
+      LOGLNF("Can't create DBus proxy for settings: %s\n", error->message);
+    }
   }
 }
 
 nsLookAndFeel::~nsLookAndFeel() {
   ClearRoundedCornerProvider();
-  if (mDBusID) {
-    g_bus_unwatch_name(mDBusID);
-    mDBusID = 0;
+  if (mDBusSettingsProxy) {
+    g_signal_handlers_disconnect_by_func(
+        mDBusSettingsProxy, FuncToGpointer(settings_changed_signal_cb), this);
+    mDBusSettingsProxy = nullptr;
   }
-  UnwatchDBus();
   g_signal_handlers_disconnect_by_func(
       gtk_settings_get_default(), FuncToGpointer(settings_changed_cb), nullptr);
 }
@@ -1456,6 +1425,8 @@ void nsLookAndFeel::Initialize() {
   MOZ_DIAGNOSTIC_ASSERT(!mInitialized);
   MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread(),
                         "LookAndFeel init should be done on the main thread");
+
+  mInitialized = true;
 
   GtkSettings* settings = gtk_settings_get_default();
   if (MOZ_UNLIKELY(!settings)) {
