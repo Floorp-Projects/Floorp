@@ -51,10 +51,6 @@ export class NetworkManager {
     return this.request(args);
   }
 
-  requestFull(listeners) {
-    return this.request(listeners);
-  }
-
   request(args) {
     var xhr = this.getXhr();
     var xhrId = this.currXhrId++;
@@ -181,13 +177,6 @@ export class NetworkManager {
     } else if (pendingRequest.onError) {
       pendingRequest.onError(xhr.status);
     }
-  }
-
-  hasPendingRequests() {
-    for (var xhrId in this.pendingRequests) {
-      return true;
-    }
-    return false;
   }
 
   abortAllRequests() {
