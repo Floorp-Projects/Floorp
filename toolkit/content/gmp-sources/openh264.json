@@ -37,6 +37,9 @@
           "filesize": 511815,
           "hashValue": "94531e267314de661b2205c606283fb066d781e5c11027578f2a3c3aa353437c2289544074a28101b6b6f0179f0fe6bd890a0ae2bb6e1cf9053650472576366c"
         },
+        "Linux_x86_64-gcc3-asan": {
+          "alias": "Linux_x86_64-gcc3"
+        },
         "WINNT_aarch64-msvc-aarch64": {
           "fileUrl": "http://ciscobinary.openh264.org/openh264-win64-aarch64-2e1774ab6dc6c43debb0b5b628bdf122a391d521.zip",
           "filesize": 558607,
@@ -59,6 +62,9 @@
           "hashValue": "06511f1f6c6d44d076b3c593528c26a602348d9c41689dbf5ff716b671c3ca5756b12cb2e5869f836dedce27b1a5cfe79b93c707fd01f8e84b620923bb61b5f1"
         },
         "WINNT_x86_64-msvc-x64": {
+          "alias": "WINNT_x86_64-msvc"
+        },
+        "WINNT_x86_64-msvc-x64-asan": {
           "alias": "WINNT_x86_64-msvc"
         },
         "android-x86_64": {

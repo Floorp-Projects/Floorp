@@ -12,7 +12,8 @@ import {
   GMPPrefs,
   GMPUtils,
   GMP_PLUGIN_IDS,
-  WIDEVINE_ID,
+  WIDEVINE_L1_ID,
+  WIDEVINE_L3_ID,
 } from "resource://gre/modules/GMPUtils.sys.mjs";
 
 import { ProductAddonChecker } from "resource://gre/modules/addons/ProductAddonChecker.sys.mjs";
@@ -36,10 +37,17 @@ const LOCAL_GMP_SOURCES = [
   {
     id: "gmp-gmpopenh264",
     src: "chrome://global/content/gmp-sources/openh264.json",
+    installByDefault: true,
   },
   {
     id: "gmp-widevinecdm",
     src: "chrome://global/content/gmp-sources/widevinecdm.json",
+    installByDefault: true,
+  },
+  {
+    id: "gmp-widevinecdm-l1",
+    src: "chrome://global/content/gmp-sources/widevinecdm_l1.json",
+    installByDefault: false,
   },
 ];
 
@@ -67,10 +75,14 @@ function downloadJSON(uri) {
  * If downloading from the network fails (AUS server is down),
  * load the sources from local build configuration.
  */
-function downloadLocalConfig() {
+function downloadLocalConfig(sources) {
+  if (!sources.length) {
+    return Promise.resolve({ addons: [] });
+  }
+
   let log = getScopedLogger("GMPInstallManager.downloadLocalConfig");
   return Promise.all(
-    LOCAL_GMP_SOURCES.map(conf => {
+    sources.map(conf => {
       return downloadJSON(conf.src).then(addons => {
         let platforms = addons.vendors[conf.id].platforms;
         let target = Services.appinfo.OS + "_" + lazy.UpdateUtils.ABI;
@@ -100,18 +112,14 @@ function downloadLocalConfig() {
           hashValue: details.hashValue,
           version: addons.vendors[conf.id].version,
           size: details.filesize,
+          usedFallback: true,
         };
       });
     })
   ).then(addons => {
     // Some filters may not match this platform so
     // filter those out
-    addons = addons.filter(x => x !== false);
-
-    return {
-      usedFallback: true,
-      addons,
-    };
+    return { addons: addons.filter(x => x !== false) };
   });
 }
 
@@ -292,6 +300,7 @@ GMPInstallManager.prototype = {
     }
 
     this._deferred = PromiseUtils.defer();
+    let deferredPromise = this._deferred.promise;
 
     // Should content signature checking of Balrog replies be used? If so this
     // will be done instead of the older cert pinning method.
@@ -322,45 +331,83 @@ GMPInstallManager.prototype = {
     log.info(
       `Fetching product addon list url=${url}, allowNonBuiltIn=${allowNonBuiltIn}, certs=${certs}, checkContentSignature=${checkContentSignature}`
     );
-    let addonPromise = ProductAddonChecker.getProductAddonList(
-      url,
-      allowNonBuiltIn,
-      certs,
-      checkContentSignature
-    )
-      .then(res => {
-        if (checkContentSignature) {
-          this.recordUpdateXmlTelemetryForContentSignature(true);
-        } else {
-          this.recordUpdateXmlTelemetryForCertPinning(true);
-        }
-        return res;
-      })
-      .catch(err => {
-        if (checkContentSignature) {
-          this.recordUpdateXmlTelemetryForContentSignature(false, err);
-        } else {
-          this.recordUpdateXmlTelemetryForCertPinning(false, err);
-        }
-        return downloadLocalConfig();
+
+    let success = true;
+    let res;
+    try {
+      res = await ProductAddonChecker.getProductAddonList(
+        url,
+        allowNonBuiltIn,
+        certs,
+        checkContentSignature
+      );
+
+      if (checkContentSignature) {
+        this.recordUpdateXmlTelemetryForContentSignature(true);
+      } else {
+        this.recordUpdateXmlTelemetryForCertPinning(true);
+      }
+    } catch (err) {
+      success = false;
+      if (checkContentSignature) {
+        this.recordUpdateXmlTelemetryForContentSignature(false, err);
+      } else {
+        this.recordUpdateXmlTelemetryForCertPinning(false, err);
+      }
+    }
+
+    try {
+      if (!success) {
+        log.info("Falling back to local config");
+        let fallbackSources = LOCAL_GMP_SOURCES.filter(function (gmpSource) {
+          return gmpSource.installByDefault;
+        });
+        res = await downloadLocalConfig(fallbackSources);
+      }
+    } catch (err) {
+      this._deferred.reject(err);
+      delete this._deferred;
+      return deferredPromise;
+    }
+
+    let addons;
+    if (res && res.addons) {
+      addons = res.addons.map(a => new GMPAddon(a));
+    } else {
+      addons = [];
+    }
+
+    // We need to merge in the addons that are only available via fallback that
+    // the user has requested be forced installed regardless of our update
+    // server configuration.
+    try {
+      let forcedSources = LOCAL_GMP_SOURCES.filter(function (gmpSource) {
+        return GMPPrefs.getBool(
+          GMPPrefs.KEY_PLUGIN_FORCE_INSTALL,
+          false,
+          gmpSource.id
+        );
       });
 
-    addonPromise.then(
-      res => {
-        if (!res || !res.addons) {
-          this._deferred.resolve({ addons: [] });
-        } else {
-          res.addons = res.addons.map(a => new GMPAddon(a));
-          this._deferred.resolve(res);
-        }
-        delete this._deferred;
-      },
-      ex => {
-        this._deferred.reject(ex);
-        delete this._deferred;
-      }
-    );
-    return this._deferred.promise;
+      let forcedConfigs = await downloadLocalConfig(
+        forcedSources.filter(function (gmpSource) {
+          return !addons.find(gmpAddon => gmpAddon.id == gmpSource.id);
+        })
+      );
+
+      let forcedAddons = forcedConfigs.addons.map(
+        config => new GMPAddon(config)
+      );
+
+      log.info("Forced " + forcedAddons.length + " addons.");
+      addons = addons.concat(forcedAddons);
+    } catch (err) {
+      log.info("Failed to force addons: " + err);
+    }
+
+    this._deferred.resolve({ addons });
+    delete this._deferred;
+    return deferredPromise;
   },
   /**
    * Installs the specified addon and calls a callback when done.
@@ -454,7 +501,7 @@ GMPInstallManager.prototype = {
     }
 
     try {
-      let { usedFallback, addons } = await this.checkForAddons();
+      let { addons } = await this.checkForAddons();
       this._updateLastCheck();
       log.info("Found " + addons.length + " addons advertised.");
       let addonsToInstall = addons.filter(function (gmpAddon) {
@@ -477,7 +524,7 @@ GMPInstallManager.prototype = {
 
         // Do not install from fallback if already installed as it
         // may be a downgrade
-        if (usedFallback && gmpAddon.isUpdate) {
+        if (gmpAddon.usedFallback && gmpAddon.isUpdate) {
           log.info(
             "Addon |" +
               gmpAddon.id +
@@ -579,6 +626,7 @@ GMPInstallManager.prototype = {
  */
 export function GMPAddon(addon) {
   let log = getScopedLogger("GMPAddon.constructor");
+  this.usedFallback = false;
   for (let name of Object.keys(addon)) {
     this[name] = addon[name];
   }
@@ -629,7 +677,7 @@ GMPAddon.prototype = {
     );
   },
   get isEME() {
-    return this.id == WIDEVINE_ID;
+    return this.id == WIDEVINE_L1_ID || this.id == WIDEVINE_L3_ID;
   },
   get isOpenH264() {
     return this.id == "gmp-gmpopenh264";
@@ -681,6 +729,7 @@ GMPExtractor.prototype = {
       worker.terminate();
       if (msg.data.result != "success") {
         log.error("Failed to extract zip file: " + zipURI);
+        log.error("Exception: " + msg.data.exception);
         return deferredPromise.reject({
           target: this,
           status: msg.data.exception,

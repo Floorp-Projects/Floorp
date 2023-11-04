@@ -34,6 +34,9 @@ with Files("IOUtils.webidl"):
 with Files("PathUtils.webidl"):
     BUG_COMPONENT = ("Toolkit", "IOUtils and PathUtils")
 
+with Files("WidevineCDMManifest.webidl"):
+    BUG_COMPONENT = ("Core", "Audio/Video: Playback")
+
 PREPROCESSED_WEBIDL_FILES = [
     "ChromeUtils.webidl",
     "IOUtils.webidl",
@@ -85,6 +88,7 @@ WEBIDL_FILES = [
     "UserInteraction.webidl",
     "WebExtensionContentScript.webidl",
     "WebExtensionPolicy.webidl",
+    "WidevineCDMManifest.webidl",
     "WindowGlobalActors.webidl",
     "XULFrameElement.webidl",
     "XULMenuElement.webidl",
