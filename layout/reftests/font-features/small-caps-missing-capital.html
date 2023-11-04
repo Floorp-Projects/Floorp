@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<meta charset=utf-8>
+<style>
+@font-face {
+  font-family: test;
+  /* A font that supports the π symbol, but does not have a capital PI;
+     and supports the µ sign, but does not have a capital MU. */
+  src: url(../fonts/Prototype.ttf);
+}
+.test {
+  font-family: test;
+  font-size: 24px;
+  font-variant: small-caps;
+}
+</style>
+
+<p>The pi symbol must not be missing:</p>
+
+<p class=test>π-Test</p>
+
+<p>The micro sign µ must not be missing:</p>
+
+<!-- Because we cannot do a fake-small-cap for µ, the complete run
+     "10µs" will be rendered without a small-caps effect. -->
+<p class=test>Is 10µs the same as 10ms?</p>
