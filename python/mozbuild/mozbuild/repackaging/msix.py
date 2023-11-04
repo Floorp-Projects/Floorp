@@ -198,8 +198,9 @@ def get_branding(use_official, topsrcdir, build_app, finder, log=None):
     conf_vars = mozpath.join(topsrcdir, build_app, "confvars.sh")
 
     def conf_vars_value(key):
-        lines = [line.strip() for line in open(conf_vars).readlines()]
+        lines = open(conf_vars).readlines()
         for line in lines:
+            line = line.strip()
             if line and line[0] == "#":
                 continue
             if key not in line:
@@ -832,7 +833,7 @@ def _sign_msix_win(output, force, log, verbose):
         else:
             thumbprint = None
 
-        if force or not thumbprint:
+        if not thumbprint:
             thumbprint = (
                 powershell(
                     (
