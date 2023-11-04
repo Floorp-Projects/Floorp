@@ -196,9 +196,11 @@ class UserIdleServiceMutter : public UserIdleServiceImpl {
               },
               [this](GUniquePtr<GError>&& aError) {
                 mPollInProgress = false;
-                g_warning("Failed to call GetIdletime(): %s\n",
-                          aError->message);
-                mUserIdleServiceGTK->RejectAndTryNextServiceCallback();
+                if (!IsCancelledGError(aError.get())) {
+                  g_warning("Failed to call GetIdletime(): %s\n",
+                            aError->message);
+                  mUserIdleServiceGTK->RejectAndTryNextServiceCallback();
+                }
               });
     }
 
@@ -227,7 +229,9 @@ class UserIdleServiceMutter : public UserIdleServiceImpl {
               mUserIdleServiceGTK->AcceptServiceCallback();
             },
             [this](GUniquePtr<GError>&& aError) {
-              mUserIdleServiceGTK->RejectAndTryNextServiceCallback();
+              if (!IsCancelledGError(aError.get())) {
+                mUserIdleServiceGTK->RejectAndTryNextServiceCallback();
+              }
             });
     return true;
   }
