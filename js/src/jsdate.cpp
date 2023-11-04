@@ -929,8 +929,8 @@ static int DaysInMonth(int year, int month) {
  * where:
  *
  *   YYYY = four-digit year or six digit year as +YYYYYY or -YYYYYY
- *   MM   = one or two-digit month (01=January, etc.)
- *   DD   = one or two-digit day of month (01 through 31)
+ *   MM   = two-digit month (01=January, etc.)
+ *   DD   = two-digit day of month (01 through 31)
  *   hh   = one or two digits of hour (00 through 23) (am/pm NOT allowed)
  *   mm   = one or two digits of minute (00 through 59)
  *   ss   = one or two digits of second (00 through 59)
@@ -1014,9 +1014,9 @@ static bool ParseISOStyleDate(DateTimeInfo::ForceUTC forceUTC, const CharT* s,
     NEED_NDIGITS(4, year);
   }
   DONE_DATE_UNLESS('-');
-  NEED_NDIGITS_OR_LESS(2, month);
+  NEED_NDIGITS(2, month);
   DONE_DATE_UNLESS('-');
-  NEED_NDIGITS_OR_LESS(2, day);
+  NEED_NDIGITS(2, day);
 
 done_date:
   if (PEEK('T')) {
