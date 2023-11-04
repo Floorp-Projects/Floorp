@@ -100,17 +100,4 @@ mozilla::UniquePtr<wchar_t[]> FormatProgID(const wchar_t* aProgIDBase,
  */
 bool CheckProgIDExists(const wchar_t* aProgID);
 
-/*
- * Get the ProgID registered by Windows for the given association.
- *
- * The MSIX `AppManifest.xml` declares supported protocols and file
- * type associations.  Upon installation, Windows generates
- * corresponding ProgIDs for them, of the form `AppX*`.  This function
- * retrieves those generated ProgIDs (from the Windows registry).
- *
- * @return ProgID.
- */
-nsresult GetMsixProgId(const wchar_t* assoc,
-                       mozilla::UniquePtr<wchar_t[]>& aProgId);
-
 #endif  // SHELL_WINDOWSUSERCHOICE_H__
