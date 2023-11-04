@@ -98,15 +98,26 @@ var TabStateInternal = {
       tabData.muteReason = tab.muteReason;
     }
 
+
+    /*****Floorp Injections*****/
+
+    // Workspaces
     tabData.floorpWorkspace = tab.getAttribute("floorpWorkspace");
     if (!tabData.floorpWorkspace) {
       tabData.floorpWorkspace = Services.prefs.getStringPref("floorp.browser.workspace.all").split(",")[0];
     }
 
+
+    // Private Container
     tabData.floorpDisableHistory = tab.getAttribute("floorp-disablehistory");
     if (tabData.floorpDisableHistory) {
       return undefined;
     }
+
+    // Site Specific Browser
+    tabData.floorpSSB = tab.getAttribute("floorpSSB");
+
+    /*****Floorp Injections*****/
 
     tabData.searchMode = tab.ownerGlobal.gURLBar.getSearchMode(browser, true);
 

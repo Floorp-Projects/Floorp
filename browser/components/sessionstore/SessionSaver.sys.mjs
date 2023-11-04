@@ -251,6 +251,22 @@ var SessionSaverInternal = {
 
     stopWatchStart("COLLECT_DATA_MS");
     let state = lazy.SessionStore.getCurrentState(forceUpdateAllWindows);
+    let windows = state.windows;
+
+    for (let window of windows) {
+      for (let tab of window.tabs) {
+        let ssbEnabled = tab.floorpSSB == "true";
+
+        if (ssbEnabled && windows.length == 1){
+          this.updateLastSaveTime();
+          return Promise.resolve();
+        } else if (ssbEnabled) {
+          // Remove Window
+          delete state.windows[window];
+        }
+      }
+    }
+
     lazy.PrivacyFilter.filterPrivateWindowsAndTabs(state);
 
     // Make sure we only write worth saving tabs to disk.

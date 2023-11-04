@@ -2361,6 +2361,13 @@ var gBrowserInit = {
       if(uri.endsWith("?FloorpEnableSSBWindow=true")){
         uri = uri.replace("?FloorpEnableSSBWindow=true", "");
         document.documentElement.setAttribute("FloorpEnableSSBWindow", "true");
+
+        // Add SSB Window or Tab Attribute
+        // This attribute is used to make do not restore the window or tab when the browser is restarted.
+        window.gBrowser.floorpSsbWindow = true;
+        gBrowser.tabs.forEach(tab => {
+          tab.setAttribute("floorpSSB", "true");
+        });    
       }
 
       if (!uri || window.XULElement.isInstance(uri)) {
