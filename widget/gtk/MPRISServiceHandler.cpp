@@ -24,6 +24,7 @@
 #include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
 #include "WidgetUtilsGtk.h"
+#include "AsyncDBus.h"
 #include "prio.h"
 
 #define LOGMPRIS(msg, ...)                   \
@@ -318,9 +319,11 @@ void g_bus_get_callback(GObject* aSourceObject, GAsyncResult* aRes,
 
   GDBusConnection* conn = g_bus_get_finish(aRes, getter_Transfers(error));
   if (!conn) {
-    NS_WARNING(nsPrintfCString("Failure at g_bus_get_finish: %s",
-                               error ? error->message : "Unknown Error")
-                   .get());
+    if (!IsCancelledGError(error.get())) {
+      NS_WARNING(nsPrintfCString("Failure at g_bus_get_finish: %s",
+                                 error ? error->message : "Unknown Error")
+                     .get());
+    }
     return;
   }
 
