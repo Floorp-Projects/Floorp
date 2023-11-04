@@ -84,6 +84,8 @@
     <string name="mozac_feature_addons_learn_more">Ɣer ugar ɣef tsurag</string>
     <!-- The rating of the add-on. -->
     <string name="mozac_feature_addons_rating">Tizmilin</string>
+    <!-- A link that points to the detail page of the add-on. -->
+    <string name="mozac_feature_addons_more_info_link">Ugar γef uzegrir-agi</string>
     <!-- The settings of the add-on. -->
     <string name="mozac_feature_addons_settings">Iɣewwaṛen</string>
     <!-- Indicates the add-on is enabled. -->
@@ -142,6 +144,10 @@
     <string name="mozac_feature_addons_addons">Izegrar</string>
     <!-- Label for add-ons sub menu item for add-ons manager-->
     <string name="mozac_feature_addons_addons_manager">Amsefrak n yizegrar</string>
+    <!-- The title of the "crash" notification in the add-ons manager -->
+    <string name="mozac_feature_addons_manager_notification_title_text">Azegrir yensa i kra n wakud</string>
+    <!-- Button to re-enable the add-ons in the "crash" notification -->
+    <string name="mozac_feature_addons_manager_notification_restart_button">Ales asenker n yizegrar</string>
     <!-- Button in the add-ons manager that opens AMO in a tab -->
     <string name="mozac_feature_addons_find_more_addons_button_text">Aff-d ugar n izegrar</string>
     <!-- The label of the allow button, this will be shown to the user when an add-on needs new permissions, with the button the user will indicate that they want to accept the new permissions and update the add-on-->

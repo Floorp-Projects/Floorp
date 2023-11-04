@@ -2340,11 +2340,11 @@
     <!-- Text for button from body of card displayed to the user for products whose reviews were not analyzed yet. Clicking this should trigger a product analysis. -->
     <string name="review_quality_check_no_analysis_link">检查评价质量</string>
     <!-- Headline for review quality check contextual onboarding card. -->
-    <string name="review_quality_check_contextual_onboarding_title">试试我们可信赖的商品评价指南</string>
+    <string name="review_quality_check_contextual_onboarding_title">试试我们可信赖的商品评价向导</string>
     <!-- Description for review quality check contextual onboarding card. The first and last two parameters are for retailer names (e.g. Amazon, Walmart). The second parameter is for the name of the application (e.g. Firefox). -->
     <string name="review_quality_check_contextual_onboarding_description">决定购买前，先看看 %1$s 上的商品评价是否可信。核查评价是 %2$s 的一项实验功能，内置于浏览器中。%3$s、%4$s 上也能用。</string>
     <!-- Paragraph presenting review quality check feature. First parameter is the Fakespot product name. Second parameter is for clickable text defined in review_quality_check_contextual_onboarding_learn_more_link. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
-    <string name="review_quality_check_contextual_onboarding_learn_more">由 Mozilla 支持的 %1$s 可帮助您规避不实、不公允的评价。在您购物时，我们的人工智能模型也会不断改进，以更好地保护您的权益。%2$s</string>
+    <string name="review_quality_check_contextual_onboarding_learn_more">由 Mozilla 支持的 %1$s 可帮助您规避不真实、不公允的评价。在您购物时，我们的人工智能模型也会不断改进，以更好地保护您的权益。%2$s</string>
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
     <string name="review_quality_check_contextual_onboarding_learn_more_link">详细了解</string>
 
