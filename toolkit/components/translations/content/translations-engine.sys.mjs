@@ -152,10 +152,12 @@ export class TranslationsEngine {
   /**
    * Removes the engine, and if it's the last, call the process to destroy itself.
    * @param {string} languagePairKey
+   * @param {boolean} force - On forced shutdowns, it's not necessary to notify the
+   *                          parent process.
    */
-  static #removeEngineFromCache(languagePairKey) {
+  static #removeEngineFromCache(languagePairKey, force) {
     TranslationsEngine.#cachedEngines.delete(languagePairKey);
-    if (TranslationsEngine.#cachedEngines.size === 0) {
+    if (TranslationsEngine.#cachedEngines.size === 0 && !force) {
       TE_log("The last engine was removed, destroying this process.");
       TE_destroyEngineProcess();
     }
@@ -198,7 +200,7 @@ export class TranslationsEngine {
         async ([langPair, enginePromise]) => {
           TE_log(`Force shutdown of the engine "${langPair}"`);
           const engine = await enginePromise;
-          engine.terminate();
+          engine.terminate(true /* force */);
         }
       )
     );
@@ -206,8 +208,9 @@ export class TranslationsEngine {
 
   /**
    * Terminates the engine and its worker after a timeout.
+   * @param {boolean} force
    */
-  terminate = () => {
+  terminate = (force = false) => {
     const message = `Terminating translations engine "${this.languagePairKey}".`;
     TE_addProfilerMarker({ message });
     TE_log(message);
@@ -228,7 +231,7 @@ export class TranslationsEngine {
         port.close();
       }
     }
-    TranslationsEngine.#removeEngineFromCache(this.languagePairKey);
+    TranslationsEngine.#removeEngineFromCache(this.languagePairKey, force);
   };
 
   /**
