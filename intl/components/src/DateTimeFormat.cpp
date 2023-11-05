@@ -880,6 +880,12 @@ DateTimeFormat::ResolveComponents() {
           numeric = Numeric::Numeric;
         }
         break;
+      // "numeric" cases
+      case u'r':
+      case u'U':
+        // Both are mapped to numeric years.
+        numeric = Numeric::Numeric;
+        break;
       // "text & number" cases
       case u'M':
       case u'L':
@@ -915,6 +921,8 @@ DateTimeFormat::ResolveComponents() {
         bag.era = Some(text);
         break;
       case u'y':
+      case u'r':
+      case u'U':
         bag.year = Some(numeric);
         break;
       case u'M':
