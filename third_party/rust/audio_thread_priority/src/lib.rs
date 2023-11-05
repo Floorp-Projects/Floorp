@@ -258,12 +258,16 @@ pub extern "C" fn atp_get_current_thread_info() -> *mut atp_thread_info {
 /// # Return value
 ///
 /// 0 in case of success, 1 otherwise (if `thread_info` is NULL).
+///
+/// # Safety
+///
+/// This function is safe only and only if the pointer comes from this library, of if is null.
 #[no_mangle]
 pub unsafe extern "C" fn atp_free_thread_info(thread_info: *mut atp_thread_info) -> i32 {
     if thread_info.is_null() {
         return 1;
     }
-    Box::from_raw(thread_info);
+    drop(Box::from_raw(thread_info));
     0
 }
 
@@ -276,6 +280,11 @@ pub unsafe extern "C" fn atp_free_thread_info(thread_info: *mut atp_thread_info)
 ///
 /// This call is useful on Linux desktop only, when the process is sandboxed, cannot promote itself
 /// directly, and the `atp_thread_info` struct must be passed via IPC.
+///
+/// # Safety
+///
+/// This function is safe only and only if the first pointer comes from this library, and the
+/// second pointer is at least ATP_THREAD_INFO_SIZE bytes long.
 #[no_mangle]
 pub unsafe extern "C" fn atp_serialize_thread_info(
     thread_info: *mut atp_thread_info,
@@ -294,6 +303,10 @@ pub unsafe extern "C" fn atp_serialize_thread_info(
 /// # Arguments
 ///
 /// A byte buffer containing a serializezd `RtPriorityThreadInfo`.
+///
+/// # Safety
+///
+/// This function is safe only and only if pointer is at least ATP_THREAD_INFO_SIZE bytes long.
 #[no_mangle]
 pub unsafe extern "C" fn atp_deserialize_thread_info(
     in_bytes: *mut u8,
@@ -369,6 +382,10 @@ pub struct atp_thread_info(RtPriorityThreadInfo);
 /// # Return value
 ///
 /// A pointer to an `atp_handle` in case of success, NULL otherwise.
+///
+/// # Safety
+///
+/// This function is safe as long as the first pointer comes from this library.
 #[no_mangle]
 pub unsafe extern "C" fn atp_promote_thread_to_real_time(
     thread_info: *mut atp_thread_info,
@@ -391,6 +408,10 @@ pub unsafe extern "C" fn atp_promote_thread_to_real_time(
 /// # Return value
 ///
 /// 0 in case of success, non-zero otherwise.
+///
+/// # Safety
+///
+/// This function is safe as long as the first pointer comes from this library, or is null.
 #[no_mangle]
 pub unsafe extern "C" fn atp_demote_thread_from_real_time(thread_info: *mut atp_thread_info) -> i32 {
     if thread_info.is_null() {
@@ -636,12 +657,12 @@ mod tests {
             fn test_remote_promotion() {
                 let (rd, wr) = pipe().unwrap();
 
-                match fork().expect("fork failed") {
+                match unsafe { fork().expect("fork failed") } {
                     ForkResult::Parent{ child } => {
                         eprintln!("Parent PID: {}", getpid());
                         let mut bytes = [0_u8; std::mem::size_of::<RtPriorityThreadInfo>()];
                         match read(rd, &mut bytes) {
-                            Ok(_) => {
+                             Ok(_) => {
                                 let info = RtPriorityThreadInfo::deserialize(bytes);
                                 match promote_thread_to_real_time(info, 0, 44100) {
                                     Ok(_) => {

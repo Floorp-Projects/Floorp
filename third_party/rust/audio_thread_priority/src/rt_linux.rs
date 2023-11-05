@@ -112,7 +112,7 @@ fn rtkit_set_realtime(thread: u64, pid: u64, prio: u32) -> Result<(), Box<dyn Er
 
 /// Returns the maximum priority, maximum real-time time slice, and the current real-time time
 /// slice for this process.
-fn get_limits() -> Result<(i64, u64, libc::rlimit64), AudioThreadPriorityError> {
+fn get_limits() -> Result<(i64, u64, libc::rlimit), AudioThreadPriorityError> {
     let c = Connection::get_private(BusType::System)?;
 
     let p = Props::new(
@@ -122,7 +122,7 @@ fn get_limits() -> Result<(i64, u64, libc::rlimit64), AudioThreadPriorityError> 
         "org.freedesktop.RealtimeKit1",
         DBUS_SOCKET_TIMEOUT,
     );
-    let mut current_limit = libc::rlimit64 {
+    let mut current_limit = libc::rlimit {
         rlim_cur: 0,
         rlim_max: 0,
     };
@@ -141,9 +141,9 @@ fn get_limits() -> Result<(i64, u64, libc::rlimit64), AudioThreadPriorityError> 
         ));
     }
 
-    if unsafe { libc::getrlimit64(libc::RLIMIT_RTTIME, &mut current_limit) } < 0 {
+    if unsafe { libc::getrlimit(libc::RLIMIT_RTTIME, &mut current_limit) } < 0 {
         return Err(AudioThreadPriorityError::new_with_inner(
-            "getrlimit64",
+            "getrlimit",
             Box::new(OSError::last_os_error()),
         ));
     }
@@ -154,13 +154,13 @@ fn get_limits() -> Result<(i64, u64, libc::rlimit64), AudioThreadPriorityError> 
 fn set_limits(request: u64, max: u64) -> Result<(), AudioThreadPriorityError> {
     // Set a soft limit to the limit requested, to be able to handle going over the limit using
     // SIGXCPU. Set the hard limit to the maxium slice to prevent getting SIGKILL.
-    let new_limit = libc::rlimit64 {
+    let new_limit = libc::rlimit {
         rlim_cur: request,
         rlim_max: max,
     };
-    if unsafe { libc::setrlimit64(libc::RLIMIT_RTTIME, &new_limit) } < 0 {
+    if unsafe { libc::setrlimit(libc::RLIMIT_RTTIME, &new_limit) } < 0 {
         return Err(AudioThreadPriorityError::new_with_inner(
-            "setrlimit64",
+            "setrlimit",
             Box::new(OSError::last_os_error()),
         ));
     }
@@ -272,7 +272,7 @@ pub fn set_real_time_hard_limit_internal(
     let (_, max_rttime, _) = get_limits()?;
 
     // Only take what we need, or cap at the system limit, no further.
-    let rttime_request = cmp::min(budget_us, max_rttime as u64);
+    let rttime_request = cmp::min(budget_us, max_rttime);
     set_limits(rttime_request, max_rttime)?;
 
     Ok(())
@@ -288,7 +288,6 @@ pub fn promote_thread_to_real_time_internal(
 
     let handle = RtPriorityHandleInternal { thread_info };
 
-    let (_, _, limits) = get_limits()?;
     set_real_time_hard_limit_internal(audio_buffer_frames, audio_samplerate_hz)?;
 
     let r = rtkit_set_realtime(thread_id as u64, pid as u64, RT_PRIO_DEFAULT);
@@ -296,9 +295,12 @@ pub fn promote_thread_to_real_time_internal(
     match r {
         Ok(_) => Ok(handle),
         Err(e) => {
-            if unsafe { libc::setrlimit64(libc::RLIMIT_RTTIME, &limits) } < 0 {
+            let (_, _, limits) = get_limits()?;
+            if limits.rlim_cur != libc::RLIM_INFINITY
+                && unsafe { libc::setrlimit(libc::RLIMIT_RTTIME, &limits) } < 0
+            {
                 return Err(AudioThreadPriorityError::new_with_inner(
-                    "setrlimit64",
+                    "setrlimit",
                     Box::new(OSError::last_os_error()),
                 ));
             }

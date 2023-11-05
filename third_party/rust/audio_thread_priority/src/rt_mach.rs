@@ -70,7 +70,7 @@ pub fn demote_current_thread_from_real_time_internal(
             (&mut h.previous_time_constraint_policy) as *mut _ as thread_policy_t,
             THREAD_TIME_CONSTRAINT_POLICY_COUNT!(),
         );
-        if rv != KERN_SUCCESS as i32 {
+        if rv != KERN_SUCCESS {
             return Err(AudioThreadPriorityError::new(
                 "thread demotion error: thread_policy_get: RT",
             ));
@@ -119,7 +119,7 @@ pub fn promote_current_thread_to_real_time_internal(
             &mut get_default,
         );
 
-        if rv != KERN_SUCCESS as i32 {
+        if rv != KERN_SUCCESS {
             return Err(AudioThreadPriorityError::new(
                 "thread promotion error: thread_policy_get: time_constraint",
             ));
@@ -149,7 +149,7 @@ pub fn promote_current_thread_to_real_time_internal(
             (&mut time_constraints) as *mut _ as thread_policy_t,
             THREAD_TIME_CONSTRAINT_POLICY_COUNT!(),
         );
-        if rv != KERN_SUCCESS as i32 {
+        if rv != KERN_SUCCESS {
             return Err(AudioThreadPriorityError::new(
                 "thread promotion error: thread_policy_set: time_constraint",
             ));
