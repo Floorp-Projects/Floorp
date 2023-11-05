@@ -609,13 +609,6 @@ skip script test262/built-ins/AsyncGeneratorPrototype/return/return-state-comple
 skip script test262/built-ins/AsyncGeneratorPrototype/return/return-suspendedStart-broken-promise.js
 skip script test262/built-ins/AsyncGeneratorPrototype/return/return-suspendedYield-broken-promise-try-catch.js
 
-# https://github.com/tc39/proposal-intl-numberformat-v3/pull/107
-skip script test262/intl402/NumberFormat/test-option-useGrouping.js
-
-# https://github.com/tc39/test262/pull/3875
-skip script test262/intl402/NumberFormat/throws-for-maximumFractionDigits-over-limit.js
-skip script test262/intl402/NumberFormat/throws-for-minimumFractionDigits-over-limit.js
-
 # Requires Unicode 15.1
 skip script test262/built-ins/RegExp/unicodeSets/generated/rgi-emoji-15.1.js
 

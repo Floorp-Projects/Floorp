@@ -343,10 +343,10 @@ function SetNumberFormatDigitOptions(
     // Step 25.a.
     if (hasFractionDigits) {
       // Step 25.a.i.
-      mnfd = DefaultNumberOption(mnfd, 0, 20, undefined);
+      mnfd = DefaultNumberOption(mnfd, 0, 100, undefined);
 
       // Step 25.a.ii.
-      mxfd = DefaultNumberOption(mxfd, 0, 20, undefined);
+      mxfd = DefaultNumberOption(mxfd, 0, 100, undefined);
 
       // Step 25.a.iii.
       if (mnfd === undefined) {
@@ -626,8 +626,8 @@ function InitializeNumberFormat(numberFormat, thisValue, locales, options) {
   //     minimumIntegerDigits: integer ∈ [1, 21],
   //
   //     // optional, mutually exclusive with the significant-digits option
-  //     minimumFractionDigits: integer ∈ [0, 20],
-  //     maximumFractionDigits: integer ∈ [0, 20],
+  //     minimumFractionDigits: integer ∈ [0, 100],
+  //     maximumFractionDigits: integer ∈ [0, 100],
   //
   //     // optional, mutually exclusive with the fraction-digits option
   //     minimumSignificantDigits: integer ∈ [1, 21],

@@ -159,8 +159,8 @@ function InitializePluralRules(pluralRules, locales, options) {
   //     minimumIntegerDigits: integer ∈ [1, 21],
   //
   //     // optional, mutually exclusive with the significant-digits option
-  //     minimumFractionDigits: integer ∈ [0, 20],
-  //     maximumFractionDigits: integer ∈ [0, 20],
+  //     minimumFractionDigits: integer ∈ [0, 100],
+  //     maximumFractionDigits: integer ∈ [0, 100],
   //
   //     // optional, mutually exclusive with the fraction-digits option
   //     minimumSignificantDigits: integer ∈ [1, 21],
