@@ -2358,38 +2358,46 @@ var gBrowserInit = {
 
       /*** Floorp Injections *********************************************************************************************/
 
-      try {
-         // If the URI has "?FloorpEnableSSBWindow=true" at the end, The window will be opened as a SSB window.
-         if (uri.endsWith("?FloorpEnableSSBWindow=true")) {
-         uri = uri.replace("?FloorpEnableSSBWindow=true", "");
-         document.documentElement.setAttribute("FloorpEnableSSBWindow", "true");
+      if (uri) {
+        try {
+          // If the URI has "?FloorpEnableSSBWindow=true" at the end, The window will be opened as a SSB window.
+          if (uri.endsWith("?FloorpEnableSSBWindow=true")) {
+            uri = uri.replace("?FloorpEnableSSBWindow=true", "");
+            document.documentElement.setAttribute(
+              "FloorpEnableSSBWindow",
+              "true"
+            );
 
-         // Add SSB Window or Tab Attribute
-         // This attribute is used to make do not restore the window or tab when the browser is restarted.
-         window.gBrowser.floorpSsbWindow = true;
-         gBrowser.tabs.forEach(tab => {
-           tab.setAttribute("floorpSSB", "true");
-         });
+            // Add SSB Window or Tab Attribute
+            // This attribute is used to make do not restore the window or tab when the browser is restarted.
+            window.gBrowser.floorpSsbWindow = true;
+            gBrowser.tabs.forEach(tab => {
+              tab.setAttribute("floorpSSB", "true");
+            });
 
-         // Load SSB Support Script & CSS
-         Services.scriptloader.loadSubScript("chrome://browser/content/browser-ssb-support.js", this);
+            // Load SSB Support Script & CSS
+            Services.scriptloader.loadSubScript(
+              "chrome://browser/content/browser-ssb-support.js",
+              this
+            );
+          }
+        } catch (e) {
+          console.log(e);
         }
-      } catch(e) {
-        console.log(e);
       }
 
-      const SsbPrefName = "browser.ssb.startup"
+      const SsbPrefName = "browser.ssb.startup";
       let needSsbOpenWindow = Services.prefs.prefHasUserValue(SsbPrefName);
       if (needSsbOpenWindow) {
         let id = Services.prefs.getStringPref(SsbPrefName);
         var { SiteSpecificBrowserIdUtils } = ChromeUtils.import(
           "resource:///modules/SiteSpecificBrowserIdUtils.jsm"
         );
-        
+
         try {
           SiteSpecificBrowserIdUtils.runSSBWithId(id);
-          Services.prefs.clearUserPref(SsbPrefName)
-        } catch(e) {
+          Services.prefs.clearUserPref(SsbPrefName);
+        } catch (e) {
           console.error(e);
         }
       }

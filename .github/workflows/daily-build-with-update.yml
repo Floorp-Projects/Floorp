@@ -267,6 +267,13 @@ jobs:
           name: floorp-mac-${{ env.ARCH_TYPE }}-build-with-profgen 
           path: ~/downloads/artifacts
 
+      - name: replace python if aarch x86
+        if: ${{ env.ARCH_TYPE == 'x86_64' }}
+        run: |
+          brew unlink python@3.12
+          brew install python@3.11
+          brew link python@3.11 
+
       - name: setup environment 🌲
         run: |
           echo -e "ac_add_options --enable-bootstrap" >> mozconfig
