@@ -195,7 +195,7 @@ ICUResult Collator::SetOptions(const Options& aOptions,
   // less.
   result = this->SetAlternateHandling(
       aOptions.ignorePunctuation ? Collator::AlternateHandling::Shifted
-                                 : Collator::AlternateHandling::Default);
+                                 : Collator::AlternateHandling::NonIgnorable);
   if (result.isErr()) {
     return result;
   }

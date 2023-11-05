@@ -612,9 +612,6 @@ skip script test262/built-ins/AsyncGeneratorPrototype/return/return-suspendedYie
 # Requires Unicode 15.1
 skip script test262/built-ins/RegExp/unicodeSets/generated/rgi-emoji-15.1.js
 
-# Default value for ignorePunctuation incorrectly computed.
-skip script test262/intl402/Collator/prototype/compare/ignorePunctuation.js
-
 # Time zone canonicalization proposal.
 skip script test262/intl402/DateTimeFormat/timezone-not-canonicalized.js
 skip script test262/intl402/DateTimeFormat/timezone-case-insensitive.js
