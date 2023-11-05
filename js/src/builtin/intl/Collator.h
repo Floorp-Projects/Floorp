@@ -97,6 +97,14 @@ class CollatorObject : public NativeObject {
 [[nodiscard]] extern bool intl_isUpperCaseFirst(JSContext* cx, unsigned argc,
                                                 JS::Value* vp);
 
+/**
+ * Returns true if the given locale ignores punctuation by default.
+ *
+ * Usage: result = intl_isIgnorePunctuation(locale)
+ */
+[[nodiscard]] extern bool intl_isIgnorePunctuation(JSContext* cx, unsigned argc,
+                                                   JS::Value* vp);
+
 }  // namespace js
 
 #endif /* builtin_intl_Collator_h */
