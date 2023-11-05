@@ -131,18 +131,18 @@ function handleMessages(engine) {
 
       switch (data.type) {
         case "translation-request": {
-          const { messageBatch, messageId, isHTML, innerWindowId } = data;
+          const { sourceText, messageId, isHTML, innerWindowId } = data;
           if (discardPromise) {
             // Wait for messages to be discarded if there are any.
             await discardPromise;
           }
           try {
-            // Add translations to the work queue, and when they return, post the message
+            // Add a translation to the work queue, and when it returns, post the message
             // back. The translation may never return if the translations are discarded
-            // before they have time to be run. In this case this await is just never
+            // before it have time to be run. In this case this await is just never
             // resolved, and the postMessage is never run.
-            const translations = await engine.translate(
-              messageBatch,
+            const targetText = await engine.translate(
+              sourceText,
               isHTML,
               innerWindowId
             );
@@ -151,15 +151,15 @@ function handleMessages(engine) {
             // "Trace" level, which is the most verbose. Set the logging level to "Info" to avoid
             // these, and get all of the other logs.
             trace("Translation complete", {
-              messageBatch,
-              translations,
+              sourceText,
+              targetText,
               isHTML,
               innerWindowId,
             });
 
             postMessage({
               type: "translation-response",
-              translations,
+              targetText,
               messageId,
             });
           } catch (error) {
@@ -188,7 +188,7 @@ function handleMessages(engine) {
             "Translations discard requested"
           );
 
-          discardPromise = engine.discardTranslations();
+          discardPromise = engine.discardTranslations(data.innerWindowId);
           await discardPromise;
           discardPromise = null;
 
@@ -261,26 +261,15 @@ class Engine {
    * mechanism. This allows other microtasks such as message handling to still work
    * even though the translations are CPU-intensive.
    *
-   * @param {string[]} messageBatch
+   * @param {string} sourceText
    * @param {boolean} isHTML
    * @param {number} innerWindowId - This is required
    *
-   * @param {boolean} withQualityEstimation
-   * @returns {Promise<string[]>}
+   * @returns {Promise<string>}sourceText
    */
-  translate(
-    messageBatch,
-    isHTML,
-    innerWindowId,
-    withQualityEstimation = false
-  ) {
+  translate(sourceText, isHTML, innerWindowId) {
     return this.#getWorkQueue(innerWindowId).runTask(() =>
-      this.#syncTranslate(
-        messageBatch,
-        isHTML,
-        innerWindowId,
-        withQualityEstimation
-      )
+      this.#syncTranslate(sourceText, isHTML, innerWindowId)
     );
   }
 
@@ -322,28 +311,22 @@ class Engine {
   }
 
   /**
-   * Run the translation models to perform a batch of message translations. This
+   * Run the translation models to perform a translation. This
    * blocks the worker thread until it is completed.
    *
-   * @param {string[]} messageBatch
+   * @param {string} sourceText
    * @param {boolean} isHTML
    * @param {number} innerWindowId
-   * @param {boolean} withQualityEstimation
-   * @returns {string[]}
+   * @returns {string}
    */
-  #syncTranslate(
-    messageBatch,
-    isHTML,
-    innerWindowId,
-    withQualityEstimation = false
-  ) {
+  #syncTranslate(sourceText, isHTML, innerWindowId) {
     const startTime = performance.now();
     let response;
+    sourceText = sourceText.trim();
     const { messages, options } = BergamotUtils.getTranslationArgs(
       this.bergamot,
-      messageBatch,
-      isHTML,
-      withQualityEstimation
+      sourceText,
+      isHTML
     );
     try {
       if (messages.size() === 0) {
@@ -372,23 +355,15 @@ class Engine {
         );
       }
 
-      // Extract JavaScript values out of the vector.
-      const translations = BergamotUtils.mapVector(responses, response =>
-        response.getTranslatedText()
-      );
-
-      // Report on the time it took to do these translations.
-      let length = 0;
-      for (const message of messageBatch) {
-        length += message.length;
-      }
+      // Report on the time it took to do this translation.
       ChromeUtils.addProfilerMarker(
         "TranslationsWorker",
         { startTime, innerWindowId },
-        `Translated ${length} code units.`
+        `Translated ${sourceText.length} code units.`
       );
 
-      return translations;
+      const targetText = responses.get(0).getTranslatedText();
+      return targetText;
     } finally {
       // Free up any memory that was allocated. This will always run.
       messages?.delete();
@@ -587,41 +562,24 @@ class BergamotUtils {
    * JS objects need to be translated into wasm objects to configure the translation engine.
    *
    * @param {Bergamot} bergamot
-   * @param {string[]} messageBatch
-   * @param {boolean} withQualityEstimation
+   * @param {string[]} sourceText
    * @returns {{ messages: Bergamot["VectorString"], options: Bergamot["VectorResponseOptions"] }}
    */
-  static getTranslationArgs(
-    bergamot,
-    messageBatch,
-    isHTML,
-    withQualityEstimation
-  ) {
+  static getTranslationArgs(bergamot, sourceText, isHTML) {
     const messages = new bergamot.VectorString();
     const options = new bergamot.VectorResponseOptions();
-    for (let message of messageBatch) {
-      message = message.trim();
-      // Empty paragraphs break the translation.
-      if (message === "") {
-        continue;
-      }
 
-      if (withQualityEstimation && !isHTML) {
-        // Bergamot only supports quality estimates with HTML. Purely text content can
-        // be translated by escaping it as HTML. See:
-        // https://github.com/mozilla/firefox-translations/blob/431e0d21f22694c1cbc0ff965820d9780cdaeea8/extension/controller/translation/translationWorker.js#L146-L158
-        throw new Error(
-          "Quality estimates on non-hTML is not curently supported."
-        );
-      }
-
-      messages.push_back(message);
+    sourceText = sourceText.trim();
+    // Empty paragraphs break the translation.
+    if (sourceText) {
+      messages.push_back(sourceText);
       options.push_back({
-        qualityScores: withQualityEstimation,
+        qualityScores: false,
         alignment: true,
         html: isHTML,
       });
     }
+
     return { messages, options };
   }
 }
@@ -646,18 +604,15 @@ class MockedEngine {
   /**
    * Create a fake translation of the text.
    *
-   * @param {string[]} messageBatch
+   * @param {string} sourceText
    * @param {bool} isHTML
    * @returns {string}
    */
-  translate(messageBatch, isHTML) {
-    return messageBatch.map(message => {
-      // Note when an HTML translations is requested.
-      let html = isHTML ? ", html" : "";
-      message = message.toUpperCase();
-
-      return `${message} [${this.fromLanguage} to ${this.toLanguage}${html}]`;
-    });
+  translate(sourceText, isHTML) {
+    // Note when an HTML translations is requested.
+    let html = isHTML ? ", html" : "";
+    const targetText = sourceText.toUpperCase();
+    return `${targetText} [${this.fromLanguage} to ${this.toLanguage}${html}]`;
   }
 
   discardTranslations() {}
@@ -748,7 +703,7 @@ class WorkQueue {
       }
 
       // Check this between every `await`.
-      if (this.#isWorkCancelled) {
+      if (this.#isWorkCancelled || !this.#tasks.length) {
         break;
       }
 
