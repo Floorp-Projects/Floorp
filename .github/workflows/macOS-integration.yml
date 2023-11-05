@@ -115,6 +115,10 @@ jobs:
             tar -xf ./floorp-aarch64-apple-darwin-with-pgo.tar.gz
             tar -xf ./floorp-x86_64-apple-darwin-with-pgo.tar.gz
 
+        - uses: actions/setup-python@v4
+          with:
+            python-version: '3.10' 
+
         - name: Create environment 🌲
           shell: bash
           run: |

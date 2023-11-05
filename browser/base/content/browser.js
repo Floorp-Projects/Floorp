@@ -2357,15 +2357,32 @@ var gBrowserInit = {
       let uri = window.arguments?.[0];
 
       /*** Floorp Injections *********************************************************************************************/
+      let firstTab = gBrowser.tabs[0];
+      let pwaIsTrue = firstTab.getAttribute("floorpSSB");
+
+      if (pwaIsTrue) {
+        window.close();
+        return
+      }
 
       if (uri) {
         try {
           // If the URI has "?FloorpEnableSSBWindow=true" at the end, The window will be opened as a SSB window.
           if (uri.endsWith("?FloorpEnableSSBWindow=true")) {
-            uri = uri.replace("?FloorpEnableSSBWindow=true", "");
+            let parseSsbArgs = uri.split(",");
+            let id = parseSsbArgs[1];
+
+            // Replace start uri
+            uri = parseSsbArgs[0];
+
             document.documentElement.setAttribute(
               "FloorpEnableSSBWindow",
               "true"
+            );
+
+            document.documentElement.setAttribute(
+              "FloorpSSBId",
+              id
             );
 
             // Add SSB Window or Tab Attribute
