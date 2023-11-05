@@ -586,7 +586,8 @@ async function clickDismissErrorButton() {
  * @param {object} config
  * @param {Function} config.downloadHandler
  *  - The function handle expected downloads, resolveDownloads() or rejectDownloads()
- *    Leave as null to test more granularly, such as testing opening the loading view.
+ *    Leave as null to test more granularly, such as testing opening the loading view,
+ *    or allowing for the automatic downloading of files.
  * @param {boolean} config.pivotTranslation
  *  - True if the expected translation is a pivot translation, otherwise false.
  *    Affects the number of expected downloads.
@@ -601,11 +602,12 @@ async function clickTranslateButton({
   await waitForTranslationsPopupEvent("popuphidden", () => {
     click(translateButton, "Click the translate button");
   });
-  await assertTranslationsButton(
-    { button: true, circleArrows: true, locale: false, icon: true },
-    "The icon presents the loading indicator."
-  );
+
   if (downloadHandler) {
+    await assertTranslationsButton(
+      { button: true, circleArrows: true, locale: false, icon: true },
+      "The icon presents the loading indicator."
+    );
     await downloadHandler(pivotTranslation ? 2 : 1);
   }
 }
