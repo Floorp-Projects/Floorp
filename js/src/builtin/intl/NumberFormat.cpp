@@ -148,9 +148,8 @@ static bool NumberFormat(JSContext* cx, const CallArgs& args, bool construct) {
   HandleValue options = args.get(1);
 
   // Step 3.
-  return intl::LegacyInitializeObject(
-      cx, numberFormat, cx->names().InitializeNumberFormat, thisValue, locales,
-      options, DateTimeFormatOptions::Standard, args.rval());
+  return intl::InitializeNumberFormatObject(cx, numberFormat, thisValue,
+                                            locales, options, args.rval());
 }
 
 static bool NumberFormat(JSContext* cx, unsigned argc, Value* vp) {
