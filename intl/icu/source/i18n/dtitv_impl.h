@@ -89,6 +89,9 @@
 
 #define MAX_E_COUNT      5
 #define MAX_M_COUNT      5
+#define MAX_z_COUNT      4
+#define MAX_v_COUNT      4
+#define MAX_O_COUNT      4
 //#define MAX_INTERVAL_INDEX 4
 #define MAX_POSITIVE_INT  56632
 
