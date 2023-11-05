@@ -73,10 +73,12 @@ class DateTimeFormatObject : public NativeObject {
 /**
  * Returns a new instance of the standard built-in DateTimeFormat constructor.
  *
- * Usage: dateTimeFormat = intl_DateTimeFormat(locales, options)
+ * Usage: dateTimeFormat = intl_CreateDateTimeFormat(locales, options, required,
+ * defaults)
  */
-[[nodiscard]] extern bool intl_DateTimeFormat(JSContext* cx, unsigned argc,
-                                              JS::Value* vp);
+[[nodiscard]] extern bool intl_CreateDateTimeFormat(JSContext* cx,
+                                                    unsigned argc,
+                                                    JS::Value* vp);
 
 /**
  * Returns an array with the calendar type identifiers per Unicode

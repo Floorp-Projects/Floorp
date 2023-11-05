@@ -51,16 +51,19 @@ bool js::intl::InitializeObject(JSContext* cx, JS::Handle<JSObject*> obj,
 bool js::intl::InitializeDateTimeFormatObject(
     JSContext* cx, JS::Handle<JSObject*> obj, JS::Handle<JS::Value> thisValue,
     JS::Handle<JS::Value> locales, JS::Handle<JS::Value> options,
+    JS::Handle<JSString*> required, JS::Handle<JSString*> defaults,
     DateTimeFormatOptions dtfOptions, JS::MutableHandle<JS::Value> result) {
   Handle<PropertyName*> initializer = cx->names().InitializeDateTimeFormat;
 
-  FixedInvokeArgs<5> args(cx);
+  FixedInvokeArgs<7> args(cx);
 
   args[0].setObject(*obj);
   args[1].set(thisValue);
   args[2].set(locales);
   args[3].set(options);
-  args[4].setBoolean(dtfOptions == DateTimeFormatOptions::EnableMozExtensions);
+  args[4].setString(required);
+  args[5].setString(defaults);
+  args[6].setBoolean(dtfOptions == DateTimeFormatOptions::EnableMozExtensions);
 
   if (!CallSelfHostedFunction(cx, initializer, NullHandleValue, args, result)) {
     return false;
