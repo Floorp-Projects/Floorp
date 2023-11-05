@@ -2179,6 +2179,8 @@
     <string name="review_quality_check_grade_d_f_description">Güvenilmez değerlendirmeler</string>
     <!-- Text for title presenting the reliability of a product's reviews. -->
     <string name="review_quality_check_grade_title">Bu değerlendirmeler ne kadar güvenilir?</string>
+    <!-- Title for when the rating has been updated by the review checker -->
+    <string name="review_quality_check_adjusted_rating_title">Düzeltilmiş puan</string>
     <!-- Description for a product's adjusted star rating. The text presents that the product's reviews which were evaluated as unreliable were removed from the adjusted rating. -->
     <string name="review_quality_check_adjusted_rating_description">Güvenilmez değerlendirmeler kaldırıldı</string>
     <!-- Title for list of highlights from a product's review emphasizing a product's important traits. -->
@@ -2200,7 +2202,7 @@
     <!-- Paragraph explaining how a product's adjusted grading is calculated. -->
     <string name="review_quality_check_explanation_body_adjusted_grading"><![CDATA[<b>Düzeltilmiş puan</b> yalnızca güvenilir olduğunu düşündüğümüz değerlendirmelere dayanır.]]></string>
     <!-- Paragraph explaining product review highlights. First parameter is the name of the retailer (e.g. Amazon). -->
-    <string name="review_quality_check_explanation_body_highlights"><![CDATA[<b>Öne çıkanlar</b> son 80 gün içindeki güvenilir olduğunu düşündüğümüz %s değerlendirmelerden alınmıştır.]]></string>
+    <string name="review_quality_check_explanation_body_highlights"><![CDATA[<b>Öne çıkanlar</b> son 80 gün içindeki güvenilir olduğunu düşündüğümüz %s değerlendirmelerinden alınmıştır.]]></string>
     <!-- Text for learn more caption presenting a link with information about review quality. First parameter is for clickable text defined in review_quality_check_info_learn_more_link. -->
     <string name="review_quality_check_info_learn_more">%s hakkında daha fazla bilgi alın.</string>
     <!-- Clickable text that links to review quality check SuMo page. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->

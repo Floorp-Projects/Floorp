@@ -689,6 +689,9 @@
     <!-- Title of the Nimbus message for add-ons general availability-->
     <string name="addon_ga_message_title" tools:ignore="UnusedResources">ส่วนเสริมใหม่ที่ใช้งานได้ในขณะนี้</string>
 
+    <!-- Button text of the Nimbus message for add-ons general availability. -->
+    <string name="addon_ga_message_button" tools:ignore="UnusedResources">สำรวจส่วนเสริม</string>
+
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
     <string name="addon_not_supported_error" moz:removedIn="120" tools:ignore="UnusedResources">ไม่รองรับส่วนเสริม</string>
@@ -2220,10 +2223,16 @@
     <string name="review_quality_check_product_availability_warning_title" tools:ignore="UnusedResources">สินค้าไม่พร้อมจำหน่าย</string>
     <!-- Clickable text for warning card informing the user that the current product is currently not available. Clicking this should inform the server that the product is available. -->
     <string name="review_quality_check_product_availability_warning_action_2" tools:ignore="UnusedResources">รายงานสินค้ามีในสต็อก</string>
+    <!-- Title for warning card informing the user that the current product's re-analysis is still processing. -->
+    <string name="review_quality_check_reanalysis_in_progress_warning_title">กำลังตรวจสอบคุณภาพบทวิจารณ์</string>
+    <!-- Title for warning card informing the user that the current product's analysis is still processing. -->
+    <string name="review_quality_check_analysis_in_progress_warning_title">กำลังตรวจสอบคุณภาพบทวิจารณ์</string>
     <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
     <string name="review_quality_check_analysis_in_progress_warning_body">การดำเนินการนี้อาจใช้เวลาประมาณ 60 วินาที</string>
     <!-- Title for info card displayed after the user reports a product is back in stock. -->
     <string name="review_quality_check_analysis_requested_info_title" tools:ignore="UnusedResources">ขอบคุณสำหรับการรายงาน!</string>
+    <!-- Title for info card displayed when the user review checker while on a product that Fakespot does not analyze (e.g. gift cards, music). -->
+    <string name="review_quality_check_not_analyzable_info_title">เราไม่สามารถตรวจสอบบทวิจารณ์เหล่านี้ได้</string>
     <!-- Title for info card displayed when another user reported the displayed product is back in stock. -->
     <string name="review_quality_check_analysis_requested_other_user_info_title" tools:ignore="UnusedResources">ข้อมูลจะมาเร็ว ๆ นี้</string>
     <!-- Title for info card displayed to the user when analysis finished updating. -->
@@ -2234,6 +2243,10 @@
     <string name="review_quality_check_generic_error_title">ไม่มีข้อมูลในขณะนี้</string>
     <!-- Title for error card displayed to the user when the device is disconnected from the network. -->
     <string name="review_quality_check_no_connection_title">ไม่มีการเชื่อมต่อเครือข่าย</string>
+    <!-- Title for card displayed to the user for products whose reviews were not analyzed yet. -->
+    <string name="review_quality_check_no_analysis_title">ยังไม่มีข้อมูลเกี่ยวกับบทวิจารณ์เหล่านี้</string>
+    <!-- Text for button from body of card displayed to the user for products whose reviews were not analyzed yet. Clicking this should trigger a product analysis. -->
+    <string name="review_quality_check_no_analysis_link">ตรวจสอบคุณภาพบทวิจารณ์</string>
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
     <string name="review_quality_check_contextual_onboarding_learn_more_link">เรียนรู้เพิ่มเติม</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
@@ -2244,8 +2257,18 @@
     <string name="review_quality_check_contextual_onboarding_primary_button_text">ใช่ลองดู</string>
     <!-- Text for opt-out button from the review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_secondary_button_text">ไม่ใช่ตอนนี้</string>
+    <!-- Text displayed in the first CFR presenting the review quality check feature that opens the review checker when clicked. -->
+    <string name="review_quality_check_first_cfr_action" tools:ignore="UnusedResources">ลองตัวตรวจสอบบทวิจารณ์</string>
+    <!-- Text for the second CFR presenting the review quality check feature. -->
+    <string name="review_quality_check_second_cfr_message">บทวิจารณ์เหล่านี้เชื่อถือได้หรือไม่? ตรวจสอบตอนนี้เพื่อดูคะแนนที่ปรับแล้ว</string>
+    <!-- Text displayed in the second CFR presenting the review quality check feature that opens the review checker when clicked. -->
+    <string name="review_quality_check_second_cfr_action" tools:ignore="UnusedResources">เปิดตัวตรวจสอบบทวิจารณ์</string>
     <!-- Flag showing that the review quality check feature is work in progress. -->
     <string name="review_quality_check_beta_flag">Beta</string>
+    <!-- Content description (not visible, for screen readers etc.) for opening browser menu button to open review quality check bottom sheet. -->
+    <string name="review_quality_check_open_handle_content_description">เปิดตัวตรวจสอบบทวิจารณ์</string>
+    <!-- Content description (not visible, for screen readers etc.) for closing browser menu button to open review quality check bottom sheet. -->
+    <string name="review_quality_check_close_handle_content_description">ปิดตัวตรวจสอบบทวิจารณ์</string>
     <!-- Content description (not visible, for screen readers etc.) for review quality check star rating. First parameter is the number of stars (1-5) representing the rating. -->
     <string name="review_quality_check_star_rating_content_description">%1$s จาก 5 ดาว</string>
     <!-- Text for minimize button from highlights card. When clicked the highlights card should reduce its size. -->
@@ -2266,8 +2289,12 @@
     <!-- Accessibility services actions labels. These will be appended to accessibility actions like "Double tap to.." but not by or applications but by services like Talkback. -->
     <!-- Action label for elements that can be collapsed if interacting with them. Talkback will append this to say "Double tap to collapse". -->
     <string name="a11y_action_label_collapse">ยุบ</string>
+    <!-- Current state for elements that can be collapsed if interacting with them. Talkback will dictate this after a state change. -->
+    <string name="a11y_state_label_collapsed">ยุบแล้ว</string>
     <!-- Action label for elements that can be expanded if interacting with them. Talkback will append this to say "Double tap to expand". -->
     <string name="a11y_action_label_expand">ขยาย</string>
+    <!-- Current state for elements that can be expanded if interacting with them. Talkback will dictate this after a state change. -->
+    <string name="a11y_state_label_expanded">ขยายอยู่</string>
     <!-- Action label for links to a website containing documentation about a wallpaper collection. Talkback will append this to say "Double tap to open link to learn more about this collection". -->
     <string name="a11y_action_label_wallpaper_collection_learn_more">เปิดลิงก์เพื่อเรียนรู้เพิ่มเติมเกี่ยวกับคอลเลกชันนี้</string>
     <!-- Action label for links that point to an article. Talkback will append this to say "Double tap to read the article". -->

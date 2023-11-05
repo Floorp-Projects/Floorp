@@ -2234,7 +2234,7 @@
     <!-- Title for list of highlights from a product's review emphasizing a product's important traits. -->
     <string name="review_quality_check_highlights_title">最有帮助的近期评价</string>
     <!-- Title for section explaining how we analyze the reliability of a product's reviews. -->
-    <string name="review_quality_check_explanation_title">我们判断评价质量的流程</string>
+    <string name="review_quality_check_explanation_title">我们判断评价质量的方式</string>
     <!-- Paragraph explaining how we analyze the reliability of a product's reviews. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
     <string name="review_quality_check_explanation_body_reliability">我们使用由 Mozilla 支持的 %s 的人工智能技术来分析商品评价的可信度。分析结果只能辅助您评估评价的质量，不能反映商品质量。</string>
     <!-- Paragraph explaining the grading system we use to classify the reliability of a product's reviews. -->

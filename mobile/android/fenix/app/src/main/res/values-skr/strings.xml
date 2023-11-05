@@ -331,6 +331,9 @@
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">ہݨ کائناں</string>
 
+    <!-- Text for the button to dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_add_search_widget_negative_button" tools:ignore="UnusedResources">ہݨ کائناں</string>
+
     <!-- Search Widget -->
     <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
     <string name="search_widget_content_description_2">نویں %1$s ٹیب کھولو</string>
@@ -423,16 +426,16 @@
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site_2">%1$s آپݨے آپ سہارا تھیاں سائٹاں تے ساریاں کوکی ارداساں کوں مسترد کرݨ دی کوشش کریندا ہے۔</string>
     <!-- Title text for the cookie banner re-engagement dialog. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_dialog_title">بھلا %1$s کوں کوکی بینراں مسترد کرݨ دی اجازت ݙیوں؟</string>
+    <string name="reduce_cookie_banner_dialog_title" moz:RemovedIn="120" tools:ignore="UnusedResources">بھلا %1$s کوں کوکی بینراں مسترد کرݨ دی اجازت ݙیوں؟</string>
     <!-- Body text for the cookie banner re-engagement dialog use. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_dialog_body">%1$s آپݨے آپ ٻہوں ساریاں کوکی بینر ارداساں مسترد کر سڳدے۔</string>
+    <string name="reduce_cookie_banner_dialog_body" moz:RemovedIn="120" tools:ignore="UnusedResources">%1$s آپݨے آپ ٻہوں ساریاں کوکی بینر ارداساں مسترد کر سڳدے۔</string>
     <!-- Remind me later text button for the onboarding dialog -->
-    <string name="reduce_cookie_banner_dialog_not_now_button">ہݨ نہ</string>
+    <string name="reduce_cookie_banner_dialog_not_now_button" moz:RemovedIn="120" tools:ignore="UnusedResources">ہݨ نہ</string>
     <!-- Snack text for the cookie banner dialog, after user hit the dismiss banner button -->
-    <string name="reduce_cookie_banner_dialog_snackbar_text">تساں ٻہوں تھوڑیاں کوکی ارداساں ݙیکھسو</string>
+    <string name="reduce_cookie_banner_dialog_snackbar_text" moz:RemovedIn="120" tools:ignore="UnusedResources">تساں ٻہوں تھوڑیاں کوکی ارداساں ݙیکھسو</string>
 
     <!-- Change setting text button, for the cookie banner re-engagement dialog -->
-    <string name="reduce_cookie_banner_dialog_change_setting_button">اجازت ݙیوو</string>
+    <string name="reduce_cookie_banner_dialog_change_setting_button" moz:RemovedIn="120" tools:ignore="UnusedResources">اجازت ݙیوو</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">خودکار طور تے ودھدی ہوئی حفاظت کیتے ایچ ٹی ٹی پی ایس خفیہ کاری پروٹوکول ورتندے ہوئے سائٹاں کوں کنکٹ کرݨ دی کوشش کریندے۔</string>
@@ -592,13 +595,6 @@
 
     <!-- Text for classic wallpapers title. The first parameter is the Firefox name. -->
     <string name="wallpaper_classic_title">کلاسیکل %s</string>
-    <!-- Text for limited edition wallpapers title. -->
-    <string name="wallpaper_limited_edition_title" moz:RemovedIn="118" tools:ignore="UnusedResources">محدود ایڈیشن</string>
-
-    <!-- Description text for the limited edition wallpapers with learn more link. The first parameter is the learn more string defined in wallpaper_learn_more-->
-    <string name="wallpaper_limited_edition_description_with_learn_more" moz:RemovedIn="118" tools:ignore="UnusedResources">آزاد آوازاں دا  نواں مجموعہ۔ %s</string>
-    <!-- Description text for the limited edition wallpapers. -->
-    <string name="wallpaper_limited_edition_description" moz:RemovedIn="118" tools:ignore="UnusedResources">آزاد آوازاں دا نواں مجموعہ۔</string>
 
     <!-- Wallpaper onboarding dialog header text. -->
     <string name="wallpapers_onboarding_dialog_title_text">رنگ دا تُرکا ازماؤ</string>
@@ -1342,12 +1338,13 @@
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d ٹیب</string>
 
     <!-- Title for the data and history items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_data_title" moz:removedIn="118" tools:ignore="UnusedResources">براؤزنگ تاریخ تے سائٹ ڈیٹا</string>
+    <!-- Title for the history item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_history_title">براؤزنگ تاریخ</string>
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d پتے</string>
-    <!-- Title for the cookies item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_cookies" moz:removedIn="118" tools:ignore="UnusedResources">کوکیاں</string>
+    <!-- Title for the cookies and site data items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies_and_site_data">کوکیاں تے سائٹ ڈیٹا</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies_subtitle">تساں ٻہوں ساریاں سائٹاں توں لاگ آؤٹ تھی ویسو</string>
     <!-- Title for the cached images and files item in Delete browsing data -->
@@ -1402,65 +1399,10 @@
     <string name="delete_history_group_snackbar">گروپ مٹ ڳیا</string>
 
     <!-- Onboarding -->
-    <!-- Text for onboarding welcome header. -->
-    <string name="onboarding_header_2" moz:RemovedIn="118" tools:ignore="UnusedResources">بہترین انٹرنیٹ وچ ست بسم اللہ</string>
-    <!-- Text for the onboarding welcome message. -->
-    <string name="onboarding_message" moz:RemovedIn="118" tools:ignore="UnusedResources">لوکاں کیتے بݨا ہویا براؤزر، نہ کہ منافع کیتے۔</string>
-    <!-- Text for the Firefox account onboarding sign in card header. -->
-    <string name="onboarding_account_sign_in_header" moz:RemovedIn="118" tools:ignore="UnusedResources">جتھوں تساں چھوڑیا ہائی، اُتھوں شروع کرو</string>
-    <!-- Text for the button to learn more about signing in to your Firefox account. -->
-    <string name="onboarding_manual_sign_in_description" moz:RemovedIn="118" tools:ignore="UnusedResources">ہموار سکرین سوئچنگ کیتے سارے ڈیوائساں تے ٹیباں تے پاس ورڈاں کوں ہم وقت کرو۔</string>
-
-    <!-- Text for the button to manually sign into Firefox account. -->
-    <string name="onboarding_firefox_account_sign_in" moz:RemovedIn="118" tools:ignore="UnusedResources">سائن ان</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">ہم وقت کرݨ چالو ہے</string>
-    <!-- Text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header" moz:RemovedIn="118" tools:ignore="UnusedResources">ڈیفالٹ نال رازدای حفاظت</string>
-    <!-- Text for the tracking protection card description. The first parameter is the name of the application.-->
-    <string name="onboarding_tracking_protection_description_old" moz:RemovedIn="118" tools:ignore="UnusedResources">%1$s خودکار طور تے کمپنیاں کوں ویب تے  تہاکوں خفیہ فالو کرݨ کنوں روکیندے۔</string>
-    <!-- Text for the tracking protection card description. -->
-    <string name="onboarding_tracking_protection_description" moz:RemovedIn="118" tools:ignore="UnusedResources"> ٹریکراں کوں تہاکوں ساریاں سائٹاں وچ پیچھا کرݨ آلیاں کوکیاں ورتݨ کنوں روکݨ کیتے مکمل کوکی حفاظت دی خصوصیت</string>
-    <!-- text for tracking protection radio button option for standard level of blocking -->
-    <string name="onboarding_tracking_protection_standard_button_2" moz:RemovedIn="118" tools:ignore="UnusedResources">معیاری (پہلے کنوں مقرر)</string>
-    <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_3" moz:RemovedIn="118" tools:ignore="UnusedResources">کارکردگی تے رازداری کیتے متوازن تھیا، ورقے معمول دے مطابق لوڈ تھیندن۔</string>
-    <!-- text for tracking protection radio button option for strict level of blocking -->
-    <string name="onboarding_tracking_protection_strict_option" moz:RemovedIn="118" tools:ignore="UnusedResources">سخت</string>
-    <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_3" moz:RemovedIn="118" tools:ignore="UnusedResources">ورقیاں کوں تکھیرا لوڈ کرݨ سانگے ٻئے ٹریکراں کوں بلاک کریندے، پر ورقے تے کجھ فعالت ترٹ سڳدی ہے۔</string>
-    <!-- text for the toolbar position card header  -->
-    <string name="onboarding_toolbar_placement_header_1" moz:RemovedIn="118" tools:ignore="UnusedResources">آپݨے ٹول بار دی جاء چُݨو</string>
-    <!-- Text for the toolbar position card description -->
-    <string name="onboarding_toolbar_placement_description" moz:RemovedIn="118" tools:ignore="UnusedResources">ایں کوں تل وچ رکھو، یا اُتے گھن ون٘ڄو۔</string>
-
-    <!-- Text for the privacy notice onboarding card header -->
-    <string name="onboarding_privacy_notice_header_1" moz:RemovedIn="118" tools:ignore="UnusedResources">تساں آپݨے ڈیٹا کوں کنٹرول کریندے ہو</string>
-    <!-- Text for the privacy notice onboarding card description. -->
-    <string name="onboarding_privacy_notice_description" moz:RemovedIn="118" tools:ignore="UnusedResources">تساں جہڑی شئے تساں ساکوں شیئر کرو یا آن لائن شیئر کریندے ہو فائرفوکس اوں کوں تہاݙے قاٻو وچ ݙیندی ہے۔</string>
-    <!-- Text for the button to read the privacy notice -->
-    <string name="onboarding_privacy_notice_read_button" moz:RemovedIn="118" tools:ignore="UnusedResources">ساݙا رازداری نوٹس پڑھو</string>
-
-    <!-- Text for the conclusion onboarding message -->
-    <string name="onboarding_conclusion_header" moz:RemovedIn="118" tools:ignore="UnusedResources">بھلا تساں ہک حیران کن انٹرنیٹ کھولݨ کیتے تیار ہو؟</string>
-    <!-- text for the button to finish onboarding -->
-    <string name="onboarding_finish" moz:RemovedIn="118" tools:ignore="UnusedResources">براؤزنگ شروع کرو</string>
 
     <!-- Onboarding theme -->
-    <!-- text for the theme picker onboarding card header -->
-    <string name="onboarding_theme_picker_header" moz:RemovedIn="118" tools:ignore="UnusedResources">آپݨاں تھیم چݨو</string>
-
-    <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description_2" moz:RemovedIn="118" tools:ignore="UnusedResources">ڈارک موڈ نال کجھ بیٹری تے آپݨی دید بچاؤ۔</string>
-    <!-- Automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_title" moz:RemovedIn="118" tools:ignore="UnusedResources">خود بخود</string>
-    <!-- Summary of automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_summary" moz:RemovedIn="118" tools:ignore="UnusedResources">تہاݙی ڈیوائس ترتیباں اختیار کریندے</string>
-    <!-- Theme setting for dark mode -->
-    <string name="onboarding_theme_dark_title" moz:RemovedIn="118" tools:ignore="UnusedResources">شوخ تھیم</string>
-    <!-- Theme setting for light mode -->
-    <string name="onboarding_theme_light_title" moz:RemovedIn="118" tools:ignore="UnusedResources">پھِکا تھیم</string>
-
     <!-- Text shown in snackbar when multiple tabs have been sent to device -->
     <string name="sync_sent_tabs_snackbar">ٹیباں بھیڄ ݙٹیاں ڳیاں!</string>
     <!-- Text shown in snackbar when one tab has been sent to device  -->
@@ -2121,6 +2063,8 @@
     <string name="review_quality_check_contextual_onboarding_privacy_policy">رازداری پالیسی</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
     <string name="review_quality_check_contextual_onboarding_terms_use">ورتݨ شرطاں</string>
+    <!-- Text for opt-in button from the review quality check contextual onboarding card. -->
+    <string name="review_quality_check_contextual_onboarding_primary_button_text">جیا، ایں کوں ازماؤ</string>
     <!-- Text for opt-out button from the review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_secondary_button_text">ہݨ کائناں</string>
     <!-- Flag showing that the review quality check feature is work in progress. -->
@@ -2129,12 +2073,19 @@
     <string name="review_quality_check_highlights_show_less">گھٹ ݙکھاؤ</string>
     <!-- Text for maximize button from highlights card. When clicked the highlights card should expand to its full size. -->
     <string name="review_quality_check_highlights_show_more">ودھیک ݙکھاؤ</string>
+    <!-- Text for highlights card quality category header. Reviews shown under this header should refer the product's quality. -->
+    <string name="review_quality_check_highlights_type_quality">معیار</string>
     <!-- Text for highlights card price category header. Reviews shown under this header should refer the product's price. -->
     <string name="review_quality_check_highlights_type_price">قیمت</string>
+
+    <!-- Text for highlights card shipping category header. Reviews shown under this header should refer the product's shipping. -->
+    <string name="review_quality_check_highlights_type_shipping">شِپنگ</string>
 
     <!-- Accessibility services actions labels. These will be appended to accessibility actions like "Double tap to.." but not by or applications but by services like Talkback. -->
     <!-- Action label for elements that can be collapsed if interacting with them. Talkback will append this to say "Double tap to collapse". -->
     <string name="a11y_action_label_collapse">کٹھا کرو</string>
+    <!-- Current state for elements that can be collapsed if interacting with them. Talkback will dictate this after a state change. -->
+    <string name="a11y_state_label_collapsed">کٹھا تھی ڳئے</string>
     <!-- Action label for elements that can be expanded if interacting with them. Talkback will append this to say "Double tap to expand". -->
     <string name="a11y_action_label_expand">کھنڈاؤ</string>
     <!-- Action label for links to a website containing documentation about a wallpaper collection. Talkback will append this to say "Double tap to open link to learn more about this collection". -->
