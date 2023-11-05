@@ -16,10 +16,18 @@ ChromeUtils.defineLazyGetter(lazy, "console", () => {
  * space the engine runs in.
  */
 export class TranslationsEngineChild extends JSWindowActorChild {
+  /**
+   * The resolve function for the Promise returned by the
+   * "TranslationsEngine:ForceShutdown" message.
+   * @type {null | () => {}}
+   */
+  #resolveForceShutdown = null;
+
   actorCreated() {
     this.#exportFunctions();
   }
 
+  // eslint-disable-next-line consistent-return
   async receiveMessage({ name, data }) {
     switch (name) {
       case "TranslationsEngine:StartTranslation": {
@@ -43,6 +51,14 @@ export class TranslationsEngineChild extends JSWindowActorChild {
         });
         break;
       }
+      case "TranslationsEngine:ForceShutdown": {
+        this.contentWindow.postMessage({
+          type: "ForceShutdown",
+        });
+        return new Promise(resolve => {
+          this.#resolveForceShutdown = resolve;
+        });
+      }
       default:
         console.error("Unknown message received", name);
     }
@@ -60,6 +76,7 @@ export class TranslationsEngineChild extends JSWindowActorChild {
       "TE_logError",
       "TE_requestEnginePayload",
       "TE_reportEngineStatus",
+      "TE_resolveForceShutdown",
       "TE_destroyEngineProcess",
     ];
     for (const defineAs of fns) {
@@ -115,6 +132,13 @@ export class TranslationsEngineChild extends JSWindowActorChild {
       { startTime, innerWindowId },
       message
     );
+  }
+
+  /**
+   * Pass the message from content that the engines were shut down.
+   */
+  TE_resolveForceShutdown() {
+    this.#resolveForceShutdown();
   }
 
   /**

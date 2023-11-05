@@ -508,6 +508,8 @@ async function loadTestPage({
   permissionsUrls = [],
 }) {
   info(`Loading test page starting at url: ${page}`);
+  // Ensure no engine is being carried over from a previous test.
+  await TranslationsParent.destroyEngineProcess();
   Services.fog.testResetFOG();
   await SpecialPowers.pushPrefEnv({
     set: [
