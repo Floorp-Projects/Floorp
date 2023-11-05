@@ -654,7 +654,7 @@ static const int32_t kCalendarLimits[UCAL_FIELD_COUNT][4] = {
     {           0,            0,            59,            59  }, // MINUTE
     {           0,            0,            59,            59  }, // SECOND
     {           0,            0,           999,           999  }, // MILLISECOND
-    {-16*kOneHour, -16*kOneHour,   12*kOneHour,   30*kOneHour  }, // ZONE_OFFSET
+    {-24*kOneHour, -16*kOneHour,   12*kOneHour,   30*kOneHour  }, // ZONE_OFFSET
     { -1*kOneHour,  -1*kOneHour,    2*kOneHour,    2*kOneHour  }, // DST_OFFSET
     {/*N/A*/-1,       /*N/A*/-1,     /*N/A*/-1,       /*N/A*/-1}, // YEAR_WOY
     {           1,            1,             7,             7  }, // DOW_LOCAL
