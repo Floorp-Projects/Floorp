@@ -623,13 +623,6 @@ skip script test262/intl402/NumberFormat/prototype/resolvedOptions/return-keys-o
 skip script test262/intl402/PluralRules/constructor-option-read-order.js
 skip script test262/intl402/PluralRules/prototype/resolvedOptions/return-keys-order-default.js
 
-# Required support for UTC offset time zones.
-# https://github.com/tc39/ecma402/pull/788
-skip script test262/intl402/DateTimeFormat/prototype/formatToParts/offset-timezone-correct.js
-skip script test262/intl402/DateTimeFormat/prototype/format/offset-timezone-gmt-same.js
-skip script test262/intl402/DateTimeFormat/prototype/resolvedOptions/offset-timezone-basic.js
-skip script test262/intl402/DateTimeFormat/prototype/resolvedOptions/offset-timezone-change.js
-
 
 ###########################################################
 # Tests disabled due to issues in test262 importer script #
