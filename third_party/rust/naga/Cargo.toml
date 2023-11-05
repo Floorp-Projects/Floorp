@@ -37,12 +37,6 @@ resolver = "2"
 [package.metadata.docs.rs]
 all-features = true
 
-[profile.dev]
-panic = "abort"
-
-[profile.release]
-panic = "abort"
-
 [[bench]]
 name = "criterion"
 harness = false
@@ -103,10 +97,6 @@ diff = "0.1"
 env_logger = "0.10"
 ron = "0.8.0"
 
-[dev-dependencies.criterion]
-version = "0.5"
-features = []
-
 [dev-dependencies.hlsl-snapshots]
 path = "./hlsl-snapshots"
 
@@ -165,12 +155,6 @@ wgsl-in = [
 ]
 wgsl-out = []
 
-[workspace]
-members = [
-    ".",
-    "cli",
-]
-default-members = [
-    ".",
-    "cli",
-]
+[target."cfg(not(target_arch = \"wasm32\"))".dev-dependencies.criterion]
+version = "0.5"
+features = []
