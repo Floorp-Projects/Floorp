@@ -10,6 +10,7 @@
 
 #include "unicode/ucol.h"
 
+#include "mozilla/Compiler.h"
 #include "mozilla/intl/ICU4CGlue.h"
 #include "mozilla/intl/ICUError.h"
 #include "mozilla/Result.h"
@@ -144,6 +145,11 @@ class Collator final {
   Result<CaseFirst, ICUError> GetCaseFirst() const;
 
   /**
+   * Return the "ignores punctuation" option of this collator.
+   */
+  Result<bool, ICUError> GetIgnorePunctuation() const;
+
+  /**
    * Map keywords to their BCP 47 equivalents.
    */
   static SpanResult<char> KeywordValueToBcp47Extension(const char* aKeyword,
@@ -213,6 +219,26 @@ class Collator final {
     // Use the default setting for the feature.
     Default,
   };
+
+  static constexpr auto ToUColAttributeValue(Feature aFeature) {
+    switch (aFeature) {
+      case Collator::Feature::On:
+        return UCOL_ON;
+      case Collator::Feature::Off:
+        return UCOL_OFF;
+      case Collator::Feature::Default:
+        return UCOL_DEFAULT;
+    }
+#if MOZ_IS_GCC
+#  if !MOZ_GCC_VERSION_AT_LEAST(9, 1, 0)
+    return UCOL_DEFAULT;
+#  else
+    MOZ_CRASH("invalid collator feature");
+#  endif
+#else
+    MOZ_CRASH("invalid collator feature");
+#endif
+  }
 
   /**
    * Attribute for handling variable elements.

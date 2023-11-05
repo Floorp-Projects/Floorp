@@ -80,21 +80,6 @@ static UColAttributeValue CaseFirstToICU(Collator::CaseFirst caseFirst) {
   return UCOL_DEFAULT;
 }
 
-// Define this as a macro to work around exposing the UColAttributeValue type to
-// the header file. Collation::Feature is private to the class.
-#define FEATURE_TO_ICU(featureICU, feature) \
-  switch (feature) {                        \
-    case Collator::Feature::On:             \
-      (featureICU) = UCOL_ON;               \
-      break;                                \
-    case Collator::Feature::Off:            \
-      (featureICU) = UCOL_OFF;              \
-      break;                                \
-    case Collator::Feature::Default:        \
-      (featureICU) = UCOL_DEFAULT;          \
-      break;                                \
-  }
-
 void Collator::SetStrength(Collator::Strength aStrength) {
   UColAttributeValue strength;
   switch (aStrength) {
@@ -123,9 +108,8 @@ void Collator::SetStrength(Collator::Strength aStrength) {
 
 ICUResult Collator::SetCaseLevel(Collator::Feature aFeature) {
   UErrorCode status = U_ZERO_ERROR;
-  UColAttributeValue featureICU;
-  FEATURE_TO_ICU(featureICU, aFeature);
-  ucol_setAttribute(mCollator.GetMut(), UCOL_CASE_LEVEL, featureICU, &status);
+  ucol_setAttribute(mCollator.GetMut(), UCOL_CASE_LEVEL,
+                    ToUColAttributeValue(aFeature), &status);
   return ToICUResult(status);
 }
 
@@ -152,20 +136,15 @@ ICUResult Collator::SetAlternateHandling(
 
 ICUResult Collator::SetNumericCollation(Collator::Feature aFeature) {
   UErrorCode status = U_ZERO_ERROR;
-  UColAttributeValue featureICU;
-  FEATURE_TO_ICU(featureICU, aFeature);
-
-  ucol_setAttribute(mCollator.GetMut(), UCOL_NUMERIC_COLLATION, featureICU,
-                    &status);
+  ucol_setAttribute(mCollator.GetMut(), UCOL_NUMERIC_COLLATION,
+                    ToUColAttributeValue(aFeature), &status);
   return ToICUResult(status);
 }
 
 ICUResult Collator::SetNormalizationMode(Collator::Feature aFeature) {
   UErrorCode status = U_ZERO_ERROR;
-  UColAttributeValue featureICU;
-  FEATURE_TO_ICU(featureICU, aFeature);
-  ucol_setAttribute(mCollator.GetMut(), UCOL_NORMALIZATION_MODE, featureICU,
-                    &status);
+  ucol_setAttribute(mCollator.GetMut(), UCOL_NORMALIZATION_MODE,
+                    ToUColAttributeValue(aFeature), &status);
   return ToICUResult(status);
 }
 
@@ -245,8 +224,6 @@ ICUResult Collator::SetOptions(const Options& aOptions,
   return Ok();
 }
 
-#undef FEATURE_TO_ICU
-
 Result<Collator::CaseFirst, ICUError> Collator::GetCaseFirst() const {
   UErrorCode status = U_ZERO_ERROR;
   UColAttributeValue caseFirst =
@@ -263,6 +240,19 @@ Result<Collator::CaseFirst, ICUError> Collator::GetCaseFirst() const {
   }
   MOZ_ASSERT(caseFirst == UCOL_LOWER_FIRST);
   return CaseFirst::Lower;
+}
+
+Result<bool, ICUError> Collator::GetIgnorePunctuation() const {
+  UErrorCode status = U_ZERO_ERROR;
+  UColAttributeValue alternateHandling =
+      ucol_getAttribute(mCollator.GetConst(), UCOL_ALTERNATE_HANDLING, &status);
+  if (U_FAILURE(status)) {
+    return Err(ToICUError(status));
+  }
+
+  MOZ_ASSERT(alternateHandling == UCOL_SHIFTED ||
+             alternateHandling == UCOL_NON_IGNORABLE);
+  return alternateHandling == UCOL_SHIFTED;
 }
 
 /* static */
