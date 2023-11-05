@@ -392,9 +392,19 @@ export class TranslationsParent extends JSWindowActorParent {
         {},
         "Destroying the translations engine process"
       );
-      return enginePromise.then(({ hiddenFrame }) => {
-        hiddenFrame.destroy();
-      });
+      return enginePromise.then(({ actor, hiddenFrame }) =>
+        actor
+          .forceShutdown()
+          .catch(error => {
+            lazy.console.error(
+              "There was an error shutting down the engine.",
+              error
+            );
+          })
+          .then(() => {
+            hiddenFrame.destroy();
+          })
+      );
     }
     return Promise.resolve();
   }

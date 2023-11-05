@@ -1665,6 +1665,39 @@ class QueuedTranslator {
           this.#port.close();
           this.#port = null;
           this.engineStatus = "closed";
+
+          // If there are outstanding requests that haven't received a response,
+          // request a new engine. There can be a race condition where an engine
+          // is actively being terminated while we are still wanting to request
+          // translations.
+          if (this.#requests.size && !this.#pendingEngineReconstruction) {
+            lazy.console.log(
+              `Reposting ${this.#requests.size} requests after an ` +
+                `engine terminated before the requests could be processed.`
+            );
+
+            this.#pendingEngineReconstruction = new Promise(resolve => {
+              this.#resolvePendingEngineReconstruction = resolve;
+              // Send a request through the actor for a new port. The request response will
+              // trigger the method `QueuedTranslator.prototype.acquirePort`
+              this.#requestNewPort();
+            });
+
+            const unfulfilledRequests = this.#requests;
+            this.#requests = new Map();
+            this.#pendingEngineReconstruction.then(
+              () => {
+                this.#repostTranslations(unfulfilledRequests);
+              },
+              () => {
+                lazy.console.error(
+                  `Failed to re-send ${this.#requests.size} because an ` +
+                    `engine could not be loaded.`
+                );
+              }
+            );
+          }
+
           break;
         }
         default:
@@ -1714,18 +1747,30 @@ class QueuedTranslator {
         );
       }
       // Resume translations. Send the queued translations.
-      for (const value of this.#queue.values()) {
-        const { node, sourceText, isHTML, resolve, reject } = value;
-        if (Cu.isDeadWrapper(node)) {
-          // If the node is dead, resolve without any text. Do not reject as that
-          // will be treated as an error.
-          resolve(null);
-        } else {
-          this.#postTranslationRequest(node, sourceText, isHTML).then(
-            resolve,
-            reject
-          );
-        }
+      const oldQueue = this.#queue;
+      this.#queue = new Map();
+      this.#repostTranslations(oldQueue);
+    }
+  }
+
+  /**
+   * Re-send a list of translation requests.
+   *
+   * @param {Map<any, TranslationRequest>} mappedRequests
+   *  This is either the this.#queue or this.#requests.
+   */
+  #repostTranslations(mappedRequests) {
+    for (const value of mappedRequests.values()) {
+      const { node, sourceText, isHTML, resolve, reject } = value;
+      if (Cu.isDeadWrapper(node)) {
+        // If the node is dead, resolve without any text. Do not reject as that
+        // will be treated as an error.
+        resolve(null);
+      } else {
+        this.#postTranslationRequest(node, sourceText, isHTML).then(
+          resolve,
+          reject
+        );
       }
     }
   }
