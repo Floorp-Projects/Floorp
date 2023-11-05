@@ -1,4 +1,3 @@
-// |reftest| skip -- promise-with-resolvers is not supported
 // Copyright (C) 2023 Peter Klecha. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
