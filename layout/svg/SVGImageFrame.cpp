@@ -132,8 +132,7 @@ void SVGImageFrame::Destroy(DestroyContext& aContext) {
     mReflowCallbackPosted = false;
   }
 
-  nsCOMPtr<nsIImageLoadingContent> imageLoader =
-      do_QueryInterface(nsIFrame::mContent);
+  nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mContent);
 
   if (imageLoader) {
     imageLoader->FrameDestroyed(this);
