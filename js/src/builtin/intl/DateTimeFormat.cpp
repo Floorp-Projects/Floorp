@@ -119,6 +119,7 @@ const ClassSpec DateTimeFormatObject::classSpec_ = {
  * ES2017 Intl draft rev 94045d234762ad107a3d09bb6f7381a65f1a2f9b
  */
 static bool DateTimeFormat(JSContext* cx, const CallArgs& args, bool construct,
+                           HandleString required, HandleString defaults,
                            DateTimeFormatOptions dtfOptions) {
   AutoJSConstructorProfilerEntry pseudoFrame(cx, "Intl.DateTimeFormat");
 
@@ -146,12 +147,16 @@ static bool DateTimeFormat(JSContext* cx, const CallArgs& args, bool construct,
 
   // Step 3.
   return intl::InitializeDateTimeFormatObject(
-      cx, dateTimeFormat, thisValue, locales, options, dtfOptions, args.rval());
+      cx, dateTimeFormat, thisValue, locales, options, required, defaults,
+      dtfOptions, args.rval());
 }
 
 static bool DateTimeFormat(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  return DateTimeFormat(cx, args, args.isConstructing(),
+
+  Handle<PropertyName*> required = cx->names().any;
+  Handle<PropertyName*> defaults = cx->names().date;
+  return DateTimeFormat(cx, args, args.isConstructing(), required, defaults,
                         DateTimeFormatOptions::Standard);
 }
 
@@ -165,18 +170,24 @@ static bool MozDateTimeFormat(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  return DateTimeFormat(cx, args, true,
+  Handle<PropertyName*> required = cx->names().any;
+  Handle<PropertyName*> defaults = cx->names().date;
+  return DateTimeFormat(cx, args, true, required, defaults,
                         DateTimeFormatOptions::EnableMozExtensions);
 }
 
-bool js::intl_DateTimeFormat(JSContext* cx, unsigned argc, Value* vp) {
+bool js::intl_CreateDateTimeFormat(JSContext* cx, unsigned argc, Value* vp) {
   CallArgs args = CallArgsFromVp(argc, vp);
-  MOZ_ASSERT(args.length() == 2);
+  MOZ_ASSERT(args.length() == 4);
   MOZ_ASSERT(!args.isConstructing());
-  // intl_DateTimeFormat is an intrinsic for self-hosted JavaScript, so it
-  // cannot be used with "new", but it still has to be treated as a
-  // constructor.
-  return DateTimeFormat(cx, args, true, DateTimeFormatOptions::Standard);
+
+  RootedString required(cx, args[2].toString());
+  RootedString defaults(cx, args[3].toString());
+
+  // intl_CreateDateTimeFormat is an intrinsic for self-hosted JavaScript, so it
+  // cannot be used with "new", but it still has to be treated as a constructor.
+  return DateTimeFormat(cx, args, true, required, defaults,
+                        DateTimeFormatOptions::Standard);
 }
 
 void js::DateTimeFormatObject::finalize(JS::GCContext* gcx, JSObject* obj) {

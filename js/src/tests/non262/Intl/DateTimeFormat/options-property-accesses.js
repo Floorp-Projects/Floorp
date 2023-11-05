@@ -17,11 +17,6 @@ var proxy = new Proxy({
 }));
 
 var constructorAccesses = [
-    // ToDateTimeOptions(options, "any", "date").
-    "weekday", "year", "month", "day",
-    "dayPeriod", "hour", "minute", "second", "fractionalSecondDigits",
-    "dateStyle", "timeStyle",
-
     // InitializeDateTimeFormat
     "localeMatcher", "calendar", "numberingSystem", "hour12", "hourCycle", "timeZone",
 
@@ -42,36 +37,17 @@ assertEqArray(log, constructorAccesses);
 log = [];
 new Date().toLocaleString(undefined, proxy);
 
-assertEqArray(log, [
-    // ToDateTimeOptions(options, "any", "all").
-    "weekday", "year", "month", "day",
-    "dayPeriod", "hour", "minute", "second", "fractionalSecondDigits",
-    "dateStyle", "timeStyle",
-
-    ...constructorAccesses
-]);
+assertEqArray(log, constructorAccesses);
 
 log = [];
 new Date().toLocaleDateString(undefined, proxy);
 
-assertEqArray(log, [
-    // ToDateTimeOptions(options, "date", "date").
-    "weekday", "year", "month", "day",
-    "dateStyle", "timeStyle",
-
-    ...constructorAccesses
-]);
+assertEqArray(log, constructorAccesses);
 
 log = [];
 new Date().toLocaleTimeString(undefined, proxy);
 
-assertEqArray(log, [
-    // ToDateTimeOptions(options, "time", "time").
-    "dayPeriod", "hour", "minute", "second", "fractionalSecondDigits",
-    "dateStyle", "timeStyle",
-
-    ...constructorAccesses
-]);
+assertEqArray(log, constructorAccesses);
 
 if (typeof reportCompare === "function")
     reportCompare(0, 0);

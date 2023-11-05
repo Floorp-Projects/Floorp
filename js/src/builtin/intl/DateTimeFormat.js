@@ -258,6 +258,7 @@ function DefaultTimeZone() {
   return defaultTimeZone;
 }
 
+/* eslint-disable complexity */
 /**
  * Initializes an object as a DateTimeFormat.
  *
@@ -274,6 +275,8 @@ function InitializeDateTimeFormat(
   thisValue,
   locales,
   options,
+  required,
+  defaults,
   mozExtensions
 ) {
   assert(
@@ -283,6 +286,14 @@ function InitializeDateTimeFormat(
   assert(
     intl_GuardToDateTimeFormat(dateTimeFormat) !== null,
     "InitializeDateTimeFormat called with non-DateTimeFormat"
+  );
+  assert(
+    required === "date" || required === "time" || required === "any",
+    `InitializeDateTimeFormat called with invalid required value: ${required}`
+  );
+  assert(
+    defaults === "date" || defaults === "time" || defaults === "all",
+    `InitializeDateTimeFormat called with invalid defaults value: ${defaults}`
   );
 
   // Lazy DateTimeFormat data has the following structure:
@@ -324,7 +335,11 @@ function InitializeDateTimeFormat(
   lazyDateTimeFormatData.requestedLocales = requestedLocales;
 
   // Step 2.
-  options = ToDateTimeOptions(options, "any", "date");
+  if (options === undefined) {
+    options = std_Object_create(null);
+  } else {
+    options = ToObject(options);
+  }
 
   // Compute options that impact interpretation of locale.
   // Step 3.
@@ -548,29 +563,86 @@ function InitializeDateTimeFormat(
   lazyDateTimeFormatData.timeStyle = timeStyle;
 
   if (dateStyle !== undefined || timeStyle !== undefined) {
-    var optionsList = [
-      "weekday",
-      "era",
-      "year",
-      "month",
-      "day",
-      "dayPeriod",
-      "hour",
-      "minute",
-      "second",
-      "fractionalSecondDigits",
-      "timeZoneName",
-    ];
+    /* eslint-disable no-nested-ternary */
+    var explicitFormatComponent =
+      formatOpt.weekday !== undefined
+        ? "weekday"
+        : formatOpt.era !== undefined
+        ? "era"
+        : formatOpt.year !== undefined
+        ? "year"
+        : formatOpt.month !== undefined
+        ? "month"
+        : formatOpt.day !== undefined
+        ? "day"
+        : formatOpt.dayPeriod !== undefined
+        ? "dayPeriod"
+        : formatOpt.hour !== undefined
+        ? "hour"
+        : formatOpt.minute !== undefined
+        ? "minute"
+        : formatOpt.second !== undefined
+        ? "second"
+        : formatOpt.fractionalSecondDigits !== undefined
+        ? "fractionalSecondDigits"
+        : formatOpt.timeZoneName !== undefined
+        ? "timeZoneName"
+        : undefined;
+    /* eslint-enable no-nested-ternary */
 
-    for (var i = 0; i < optionsList.length; i++) {
-      var option = optionsList[i];
-      if (formatOpt[option] !== undefined) {
-        ThrowTypeError(
-          JSMSG_INVALID_DATETIME_OPTION,
-          option,
-          dateStyle !== undefined ? "dateStyle" : "timeStyle"
-        );
-      }
+    if (explicitFormatComponent !== undefined) {
+      ThrowTypeError(
+        JSMSG_INVALID_DATETIME_OPTION,
+        explicitFormatComponent,
+        dateStyle !== undefined ? "dateStyle" : "timeStyle"
+      );
+    }
+
+    if (required === "date" && timeStyle !== undefined) {
+      ThrowTypeError(
+        JSMSG_INVALID_DATETIME_STYLE,
+        "timeStyle",
+        "toLocaleDateString"
+      );
+    }
+    if (required === "time" && dateStyle !== undefined) {
+      ThrowTypeError(
+        JSMSG_INVALID_DATETIME_STYLE,
+        "dateStyle",
+        "toLocaleTimeString"
+      );
+    }
+  } else {
+    var needDefaults = true;
+
+    if (required === "date" || required === "any") {
+      needDefaults =
+        formatOpt.weekday === undefined &&
+        formatOpt.year === undefined &&
+        formatOpt.month === undefined &&
+        formatOpt.day === undefined;
+    }
+
+    if (required === "time" || required === "any") {
+      needDefaults =
+        needDefaults &&
+        formatOpt.dayPeriod === undefined &&
+        formatOpt.hour === undefined &&
+        formatOpt.minute === undefined &&
+        formatOpt.second === undefined &&
+        formatOpt.fractionalSecondDigits === undefined;
+    }
+
+    if (needDefaults && (defaults === "date" || defaults === "all")) {
+      formatOpt.year = "numeric";
+      formatOpt.month = "numeric";
+      formatOpt.day = "numeric";
+    }
+
+    if (needDefaults && (defaults === "time" || defaults === "all")) {
+      formatOpt.hour = "numeric";
+      formatOpt.minute = "numeric";
+      formatOpt.second = "numeric";
     }
   }
 
@@ -614,112 +686,7 @@ function InitializeDateTimeFormat(
   // 12.2.1, step 6.
   return dateTimeFormat;
 }
-
-/**
- * Returns a new options object that includes the provided options (if any)
- * and fills in default components if required components are not defined.
- * Required can be "date", "time", or "any".
- * Defaults can be "date", "time", or "all".
- *
- * Spec: ECMAScript Internationalization API Specification, 12.1.1.
- */
-function ToDateTimeOptions(options, required, defaults) {
-  assert(typeof required === "string", "ToDateTimeOptions");
-  assert(typeof defaults === "string", "ToDateTimeOptions");
-
-  // Steps 1-2.
-  if (options === undefined) {
-    options = null;
-  } else {
-    options = ToObject(options);
-  }
-  options = std_Object_create(options);
-
-  // Step 3.
-  var needDefaults = true;
-
-  // Step 4.
-  if (required === "date" || required === "any") {
-    if (options.weekday !== undefined) {
-      needDefaults = false;
-    }
-    if (options.year !== undefined) {
-      needDefaults = false;
-    }
-    if (options.month !== undefined) {
-      needDefaults = false;
-    }
-    if (options.day !== undefined) {
-      needDefaults = false;
-    }
-  }
-
-  // Step 5.
-  if (required === "time" || required === "any") {
-    if (options.dayPeriod !== undefined) {
-      needDefaults = false;
-    }
-    if (options.hour !== undefined) {
-      needDefaults = false;
-    }
-    if (options.minute !== undefined) {
-      needDefaults = false;
-    }
-    if (options.second !== undefined) {
-      needDefaults = false;
-    }
-    if (options.fractionalSecondDigits !== undefined) {
-      needDefaults = false;
-    }
-  }
-
-  // "DateTimeFormat dateStyle & timeStyle" propsal
-  // https://github.com/tc39/proposal-intl-datetime-style
-  var dateStyle = options.dateStyle;
-  var timeStyle = options.timeStyle;
-
-  if (dateStyle !== undefined || timeStyle !== undefined) {
-    needDefaults = false;
-  }
-
-  if (required === "date" && timeStyle !== undefined) {
-    ThrowTypeError(
-      JSMSG_INVALID_DATETIME_STYLE,
-      "timeStyle",
-      "toLocaleDateString"
-    );
-  }
-
-  if (required === "time" && dateStyle !== undefined) {
-    ThrowTypeError(
-      JSMSG_INVALID_DATETIME_STYLE,
-      "dateStyle",
-      "toLocaleTimeString"
-    );
-  }
-
-  // Step 6.
-  if (needDefaults && (defaults === "date" || defaults === "all")) {
-    // The specification says to call [[DefineOwnProperty]] with false for
-    // the Throw parameter, while Object.defineProperty uses true. For the
-    // calls here, the difference doesn't matter because we're adding
-    // properties to a new object.
-    DefineDataProperty(options, "year", "numeric");
-    DefineDataProperty(options, "month", "numeric");
-    DefineDataProperty(options, "day", "numeric");
-  }
-
-  // Step 7.
-  if (needDefaults && (defaults === "time" || defaults === "all")) {
-    // See comment for step 7.
-    DefineDataProperty(options, "hour", "numeric");
-    DefineDataProperty(options, "minute", "numeric");
-    DefineDataProperty(options, "second", "numeric");
-  }
-
-  // Step 8.
-  return options;
-}
+/* eslint-enable complexity */
 
 /**
  * Returns the subset of the given locale list for which this locale list has a

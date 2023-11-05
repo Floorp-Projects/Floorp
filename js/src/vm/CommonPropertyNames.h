@@ -32,6 +32,7 @@
   MACRO_(ambiguous, "ambiguous")                                               \
   MACRO_(anonymous, "anonymous")                                               \
   MACRO_(Any, "Any")                                                           \
+  MACRO_(any, "any")                                                           \
   MACRO_(apply, "apply")                                                       \
   MACRO_(approximatelySign, "approximatelySign")                               \
   MACRO_(arguments, "arguments")                                               \
@@ -109,6 +110,7 @@
   MACRO_(currency, "currency")                                                 \
   MACRO_(currencyDisplay, "currencyDisplay")                                   \
   MACRO_(currencySign, "currencySign")                                         \
+  MACRO_(date, "date")                                                         \
   MACRO_(dateAdd, "dateAdd")                                                   \
   MACRO_(dateFromFields, "dateFromFields")                                     \
   MACRO_(dateStyle, "dateStyle")                                               \
