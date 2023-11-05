@@ -469,3 +469,20 @@ bool js::intl_isUpperCaseFirst(JSContext* cx, unsigned argc, Value* vp) {
   args.rval().setBoolean(isUpperFirst);
   return true;
 }
+
+bool js::intl_isIgnorePunctuation(JSContext* cx, unsigned argc, Value* vp) {
+  CallArgs args = CallArgsFromVp(argc, vp);
+  MOZ_ASSERT(args.length() == 1);
+  MOZ_ASSERT(args[0].isString());
+
+  SharedIntlData& sharedIntlData = cx->runtime()->sharedIntlData.ref();
+
+  RootedString locale(cx, args[0].toString());
+  bool isIgnorePunctuation;
+  if (!sharedIntlData.isIgnorePunctuation(cx, locale, &isIgnorePunctuation)) {
+    return false;
+  }
+
+  args.rval().setBoolean(isIgnorePunctuation);
+  return true;
+}

@@ -2232,6 +2232,7 @@ static const JSFunctionSpec intrinsic_functions[] = {
     JS_FN("intl_defaultTimeZone", intl_defaultTimeZone, 0, 0),
     JS_FN("intl_defaultTimeZoneOffset", intl_defaultTimeZoneOffset, 0, 0),
     JS_FN("intl_isDefaultTimeZone", intl_isDefaultTimeZone, 1, 0),
+    JS_FN("intl_isIgnorePunctuation", intl_isIgnorePunctuation, 1, 0),
     JS_FN("intl_isUpperCaseFirst", intl_isUpperCaseFirst, 1, 0),
     JS_FN("intl_numberingSystem", intl_numberingSystem, 1, 0),
     JS_FN("intl_resolveDateTimeFormatComponents",
