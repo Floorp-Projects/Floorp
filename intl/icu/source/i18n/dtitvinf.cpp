@@ -587,9 +587,10 @@ DateIntervalInfo::getBestSkeleton(const UnicodeString& skeleton,
     UBool replacedAlternateChars = false;
     const UnicodeString* inputSkeleton = &skeleton;
     UnicodeString copySkeleton;
-    if ( skeleton.indexOf(LOW_Z) != -1 || skeleton.indexOf(LOW_K) != -1 || skeleton.indexOf(CAP_K) != -1 || skeleton.indexOf(LOW_A) != -1 || skeleton.indexOf(LOW_B) != -1 ) {
+    if ( skeleton.indexOf(LOW_Z) != -1 || skeleton.indexOf(CAP_O) != -1 || skeleton.indexOf(LOW_K) != -1 || skeleton.indexOf(CAP_K) != -1 || skeleton.indexOf(LOW_A) != -1 || skeleton.indexOf(LOW_B) != -1 ) {
         copySkeleton = skeleton;
         copySkeleton.findAndReplace(UnicodeString(LOW_Z), UnicodeString(LOW_V));
+        copySkeleton.findAndReplace(UnicodeString(CAP_O), UnicodeString(LOW_V));
         copySkeleton.findAndReplace(UnicodeString(LOW_K), UnicodeString(CAP_H));
         copySkeleton.findAndReplace(UnicodeString(CAP_K), UnicodeString(LOW_H));
         copySkeleton.findAndReplace(UnicodeString(LOW_A), UnicodeString());

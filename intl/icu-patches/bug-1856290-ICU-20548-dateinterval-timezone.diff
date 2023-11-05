@@ -1,0 +1,163 @@
+# Handle 'O' time zone skeleton in DateIntervalFormat.
+# Keep time zone skeleton field widths in DateIntervalFormat.
+#
+# ICU bug: https://unicode-org.atlassian.net/browse/ICU-20548
+
+diff --git a/intl/icu/source/i18n/dtitv_impl.h b/intl/icu/source/i18n/dtitv_impl.h
+--- a/intl/icu/source/i18n/dtitv_impl.h
++++ b/intl/icu/source/i18n/dtitv_impl.h
+@@ -84,16 +84,19 @@
+ #define CAP_W             ((char16_t)0x0057)
+ #define CAP_Y             ((char16_t)0x0059)
+ #define CAP_Z             ((char16_t)0x005A)
+ 
+ //#define MINIMUM_SUPPORTED_CALENDAR_FIELD    UCAL_MINUTE
+ 
+ #define MAX_E_COUNT      5
+ #define MAX_M_COUNT      5
++#define MAX_z_COUNT      4
++#define MAX_v_COUNT      4
++#define MAX_O_COUNT      4
+ //#define MAX_INTERVAL_INDEX 4
+ #define MAX_POSITIVE_INT  56632
+ 
+ 
+ #endif /* #if !UCONFIG_NO_FORMATTING */
+ 
+ #endif 
+ //eof
+diff --git a/intl/icu/source/i18n/dtitvfmt.cpp b/intl/icu/source/i18n/dtitvfmt.cpp
+--- a/intl/icu/source/i18n/dtitvfmt.cpp
++++ b/intl/icu/source/i18n/dtitvfmt.cpp
+@@ -1061,16 +1061,17 @@ DateIntervalFormat::getDateTimeSkeleton(
+     // timeSkeleton follows the sequence of hm*[v|z]?
+     int32_t ECount = 0;
+     int32_t dCount = 0;
+     int32_t MCount = 0;
+     int32_t yCount = 0;
+     int32_t mCount = 0;
+     int32_t vCount = 0;
+     int32_t zCount = 0;
++    int32_t OCount = 0;
+     char16_t hourChar = u'\0';
+     int32_t i;
+ 
+     for (i = 0; i < skeleton.length(); ++i) {
+         char16_t ch = skeleton[i];
+         switch ( ch ) {
+           case CAP_E:
+             dateSkeleton.append(ch);
+@@ -1123,16 +1124,20 @@ DateIntervalFormat::getDateTimeSkeleton(
+           case LOW_Z:
+             ++zCount;
+             timeSkeleton.append(ch);
+             break;
+           case LOW_V:
+             ++vCount;
+             timeSkeleton.append(ch);
+             break;
++          case CAP_O:
++            ++OCount;
++            timeSkeleton.append(ch);
++            break;
+           case LOW_A:
+           case CAP_V:
+           case CAP_Z:
+           case LOW_J:
+           case LOW_S:
+           case CAP_S:
+           case CAP_A:
+           case LOW_B:
+@@ -1174,20 +1179,41 @@ DateIntervalFormat::getDateTimeSkeleton(
+     /* generate normalized form for time */
+     if ( hourChar != u'\0' ) {
+         normalizedTimeSkeleton.append(hourChar);
+     }
+     if ( mCount != 0 ) {
+         normalizedTimeSkeleton.append(LOW_M);
+     }
+     if ( zCount != 0 ) {
+-        normalizedTimeSkeleton.append(LOW_Z);
++        if ( zCount <= 3 ) {
++            normalizedTimeSkeleton.append(LOW_Z);
++        } else {
++            for ( int32_t j = 0; j < zCount && j < MAX_z_COUNT; ++j ) {
++                 normalizedTimeSkeleton.append(LOW_Z);
++            }
++        }
+     }
+     if ( vCount != 0 ) {
+-        normalizedTimeSkeleton.append(LOW_V);
++        if ( vCount <= 3 ) {
++            normalizedTimeSkeleton.append(LOW_V);
++        } else {
++            for ( int32_t j = 0; j < vCount && j < MAX_v_COUNT; ++j ) {
++                 normalizedTimeSkeleton.append(LOW_V);
++            }
++        }
++    }
++    if ( OCount != 0 ) {
++        if ( OCount <= 3 ) {
++            normalizedTimeSkeleton.append(CAP_O);
++        } else {
++            for ( int32_t j = 0; j < OCount && j < MAX_O_COUNT; ++j ) {
++                 normalizedTimeSkeleton.append(CAP_O);
++            }
++        }
+     }
+ }
+ 
+ 
+ /**
+  * Generate date or time interval pattern from resource,
+  * and set them into the interval pattern locale to this formatter.
+  *
+@@ -1732,18 +1758,23 @@ DateIntervalFormat::adjustFieldWidth(con
+         findReplaceInPattern(adjustedPtn, UnicodeString(u"a\u202F",-1), UnicodeString());
+         findReplaceInPattern(adjustedPtn, UnicodeString(LOW_A), UnicodeString());
+         // adjust interior double spaces, remove exterior whitespace
+         findReplaceInPattern(adjustedPtn, UnicodeString("  "), UnicodeString(" "));
+         adjustedPtn.trim();
+     }
+     if ( differenceInfo == 2 ) {
+         if (inputSkeleton.indexOf(LOW_Z) != -1) {
++             bestMatchSkeletonFieldWidth[(int)(LOW_Z - PATTERN_CHAR_BASE)] = bestMatchSkeletonFieldWidth[(int)(LOW_V - PATTERN_CHAR_BASE)];
+              findReplaceInPattern(adjustedPtn, UnicodeString(LOW_V), UnicodeString(LOW_Z));
+          }
++         if (inputSkeleton.indexOf(CAP_O) != -1) {
++             bestMatchSkeletonFieldWidth[(int)(CAP_O - PATTERN_CHAR_BASE)] = bestMatchSkeletonFieldWidth[(int)(LOW_V - PATTERN_CHAR_BASE)];
++             findReplaceInPattern(adjustedPtn, UnicodeString(LOW_V), UnicodeString(CAP_O));
++         }
+          if (inputSkeleton.indexOf(CAP_K) != -1) {
+              findReplaceInPattern(adjustedPtn, UnicodeString(LOW_H), UnicodeString(CAP_K));
+          }
+          if (inputSkeleton.indexOf(LOW_K) != -1) {
+              findReplaceInPattern(adjustedPtn, UnicodeString(CAP_H), UnicodeString(LOW_K));
+          }
+          if (inputSkeleton.indexOf(LOW_B) != -1) {
+              findReplaceInPattern(adjustedPtn, UnicodeString(LOW_A), UnicodeString(LOW_B));
+diff --git a/intl/icu/source/i18n/dtitvinf.cpp b/intl/icu/source/i18n/dtitvinf.cpp
+--- a/intl/icu/source/i18n/dtitvinf.cpp
++++ b/intl/icu/source/i18n/dtitvinf.cpp
+@@ -582,19 +582,20 @@ DateIntervalInfo::getBestSkeleton(const 
+ 
+     // hack for certain alternate characters
+     // resource bundles only have time skeletons containing 'v', 'h', and 'H'
+     // but not time skeletons containing 'z', 'K', or 'k'
+     // the skeleton may also include 'a' or 'b', which never occur in the resource bundles, so strip them out too
+     UBool replacedAlternateChars = false;
+     const UnicodeString* inputSkeleton = &skeleton;
+     UnicodeString copySkeleton;
+-    if ( skeleton.indexOf(LOW_Z) != -1 || skeleton.indexOf(LOW_K) != -1 || skeleton.indexOf(CAP_K) != -1 || skeleton.indexOf(LOW_A) != -1 || skeleton.indexOf(LOW_B) != -1 ) {
++    if ( skeleton.indexOf(LOW_Z) != -1 || skeleton.indexOf(CAP_O) != -1 || skeleton.indexOf(LOW_K) != -1 || skeleton.indexOf(CAP_K) != -1 || skeleton.indexOf(LOW_A) != -1 || skeleton.indexOf(LOW_B) != -1 ) {
+         copySkeleton = skeleton;
+         copySkeleton.findAndReplace(UnicodeString(LOW_Z), UnicodeString(LOW_V));
++        copySkeleton.findAndReplace(UnicodeString(CAP_O), UnicodeString(LOW_V));
+         copySkeleton.findAndReplace(UnicodeString(LOW_K), UnicodeString(CAP_H));
+         copySkeleton.findAndReplace(UnicodeString(CAP_K), UnicodeString(LOW_H));
+         copySkeleton.findAndReplace(UnicodeString(LOW_A), UnicodeString());
+         copySkeleton.findAndReplace(UnicodeString(LOW_B), UnicodeString());
+         inputSkeleton = &copySkeleton;
+         replacedAlternateChars = true;
+     }
+ 

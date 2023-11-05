@@ -121,3 +121,16 @@ function assertParts(df, x, expected) {
       }
     }
 }
+
+function assertRangeParts(df, start, end, expected) {
+    var parts = df.formatRangeToParts(start, end);
+    assertEq(parts.map(part => part.value).join(""), df.formatRange(start, end),
+             "formatRangeToParts and formatRange must agree");
+
+    var len = parts.length;
+    assertEq(len, expected.length, "parts count mismatch");
+    for (var i = 0; i < len; i++) {
+        assertEq(parts[i].type, expected[i].type, "type mismatch at " + i);
+        assertEq(parts[i].value, expected[i].value, "value mismatch at " + i);
+    }
+}
