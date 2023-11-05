@@ -58,14 +58,14 @@ add_task(async function test_button_visible() {
     "The button should be invisible since the tab is in English."
   );
 
-  await switchTab(spanishTab);
+  await switchTab(spanishTab, "spanish tab");
 
   await assertTranslationsButton(
     { button: true },
     "The button should be visible again since the page is in Spanish."
   );
 
-  await switchTab(englishTab);
+  await switchTab(englishTab, "english tab");
 
   await assertTranslationsButton(
     { button: false },
