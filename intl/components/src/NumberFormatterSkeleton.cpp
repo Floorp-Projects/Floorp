@@ -315,8 +315,7 @@ bool NumberFormatterSkeleton::roundingIncrement(uint32_t increment,
   MOZ_ASSERT(mnfd <= mxfd);
   MOZ_ASSERT(increment > 1);
 
-  // Limit |mxfd| to 100. (20 is the current limit for ECMA-402, but there are
-  // plans to change it to 100.)
+  // Limit |mxfd| to 100.
   constexpr size_t maxFracDigits = 100;
   MOZ_RELEASE_ASSERT(mxfd <= maxFracDigits);
 
