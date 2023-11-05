@@ -68,8 +68,6 @@ async function createDoc(html, options) {
   function translate() {
     info("Running translation.");
     translationsDocument.addRootElement(document.body);
-    // The document visibility is hidden, so the translator needs to be started manually.
-    translationsDocument.translator.pause(false);
   }
 
   function cleanup() {
@@ -85,15 +83,6 @@ add_task(async function test_translated_div_element() {
       This is a simple translation.
     </div>
   `);
-
-  await htmlMatches(
-    "The document starts out as expected.",
-    /* html */ `
-      <div>
-        This is a simple translation.
-      </div>
-    `
-  );
 
   translate();
 
@@ -173,8 +162,6 @@ add_task(async function test_translated_title() {
   translationsDocument.addRootElement(
     document.getElementsByTagName("title")[0]
   );
-  // The document isn't visible so the translations needs to be manually started.
-  translationsDocument.translator.pause(false);
 
   const translatedTitle = "THIS IS AN ACTUAL FULL PAGE.";
   try {
