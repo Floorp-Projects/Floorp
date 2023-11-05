@@ -290,7 +290,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
   gPrototypeProperties.Promise =
     ["constructor", "catch", "then", "finally", Symbol.toStringTag];
   gConstructorProperties.Promise =
-    constructorProps(["resolve", "reject", "all", "allSettled", "any", "race", Symbol.species]);
+    constructorProps(["resolve", "reject", "all", "allSettled", "any", "race",
+                      "withResolvers", Symbol.species]);
 
   gPrototypeProperties.ArrayBuffer =
     ["constructor", "byteLength", "slice", Symbol.toStringTag];
