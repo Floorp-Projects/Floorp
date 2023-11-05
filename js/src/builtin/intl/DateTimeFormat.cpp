@@ -794,6 +794,83 @@ static bool AssignDateTimeLength(
   return true;
 }
 
+class TimeZoneOffsetString {
+  static constexpr std::u16string_view GMT = u"GMT";
+
+  // Time zone offset string format is "±hh:mm".
+  static constexpr size_t offsetLength = 6;
+
+  // ICU custom time zones are in the format "GMT±hh:mm".
+  char16_t timeZone_[GMT.size() + offsetLength] = {};
+
+  TimeZoneOffsetString() = default;
+
+ public:
+  TimeZoneOffsetString(const TimeZoneOffsetString& other) { *this = other; }
+
+  TimeZoneOffsetString& operator=(const TimeZoneOffsetString& other) {
+    std::copy_n(other.timeZone_, std::size(timeZone_), timeZone_);
+    return *this;
+  }
+
+  operator mozilla::Span<const char16_t>() const {
+    return mozilla::Span(timeZone_);
+  }
+
+  /**
+   * |timeZone| is either a canonical IANA time zone identifier or a normalized
+   * time zone offset string.
+   */
+  static mozilla::Maybe<TimeZoneOffsetString> from(
+      const JSLinearString* timeZone) {
+    MOZ_RELEASE_ASSERT(!timeZone->empty(), "time zone is a non-empty string");
+
+    // If the time zone string starts with either "+" or "-", it is a normalized
+    // time zone offset string, because (canonical) IANA time zone identifiers
+    // can't start with "+" or "-".
+    char16_t timeZoneSign = timeZone->latin1OrTwoByteChar(0);
+    MOZ_ASSERT(timeZoneSign != 0x2212,
+               "Minus sign is normalized to Ascii minus");
+    if (timeZoneSign != '+' && timeZoneSign != '-') {
+      return mozilla::Nothing();
+    }
+
+    // Release assert because we don't want CopyChars to write out-of-bounds.
+    MOZ_RELEASE_ASSERT(timeZone->length() == offsetLength);
+
+    // Self-hosted code has normalized offset strings to the format "±hh:mm".
+    MOZ_ASSERT(mozilla::IsAsciiDigit(timeZone->latin1OrTwoByteChar(1)));
+    MOZ_ASSERT(mozilla::IsAsciiDigit(timeZone->latin1OrTwoByteChar(2)));
+    MOZ_ASSERT(timeZone->latin1OrTwoByteChar(3) == ':');
+    MOZ_ASSERT(mozilla::IsAsciiDigit(timeZone->latin1OrTwoByteChar(4)));
+    MOZ_ASSERT(mozilla::IsAsciiDigit(timeZone->latin1OrTwoByteChar(5)));
+
+    // Self-hosted code has verified the offset is at most ±23:59.
+#ifdef DEBUG
+    auto twoDigit = [&](size_t offset) {
+      auto c1 = timeZone->latin1OrTwoByteChar(offset);
+      auto c2 = timeZone->latin1OrTwoByteChar(offset + 1);
+      return mozilla::AsciiAlphanumericToNumber(c1) * 10 +
+             mozilla::AsciiAlphanumericToNumber(c2);
+    };
+
+    int32_t hours = twoDigit(1);
+    MOZ_ASSERT(0 <= hours && hours <= 23);
+
+    int32_t minutes = twoDigit(4);
+    MOZ_ASSERT(0 <= minutes && minutes <= 59);
+#endif
+
+    TimeZoneOffsetString result{};
+
+    // Copy the string "GMT" followed by the offset string.
+    size_t copied = GMT.copy(result.timeZone_, GMT.size());
+    CopyChars(result.timeZone_ + copied, *timeZone);
+
+    return mozilla::Some(result);
+  }
+};
+
 /**
  * Returns a new mozilla::intl::DateTimeFormat with the locale and date-time
  * formatting options of the given DateTimeFormat.
@@ -816,12 +893,24 @@ static mozilla::intl::DateTimeFormat* NewDateTimeFormat(
     return nullptr;
   }
 
-  AutoStableStringChars timeZone(cx);
-  if (!timeZone.initTwoByte(cx, value.toString())) {
+  Rooted<JSLinearString*> timeZoneString(cx,
+                                         value.toString()->ensureLinear(cx));
+  if (!timeZoneString) {
     return nullptr;
   }
 
-  mozilla::Range<const char16_t> timeZoneChars = timeZone.twoByteRange();
+  AutoStableStringChars timeZone(cx);
+  mozilla::Span<const char16_t> timeZoneChars{};
+
+  auto timeZoneOffset = TimeZoneOffsetString::from(timeZoneString);
+  if (timeZoneOffset) {
+    timeZoneChars = *timeZoneOffset;
+  } else {
+    if (!timeZone.initTwoByte(cx, timeZoneString)) {
+      return nullptr;
+    }
+    timeZoneChars = timeZone.twoByteRange();
+  }
 
   if (!GetProperty(cx, internals, internals, cx->names().pattern, &value)) {
     return nullptr;
@@ -1343,11 +1432,24 @@ static mozilla::intl::DateIntervalFormat* NewDateIntervalFormat(
     return nullptr;
   }
 
-  AutoStableStringChars timeZone(cx);
-  if (!timeZone.initTwoByte(cx, value.toString())) {
+  Rooted<JSLinearString*> timeZoneString(cx,
+                                         value.toString()->ensureLinear(cx));
+  if (!timeZoneString) {
     return nullptr;
   }
-  mozilla::Span<const char16_t> timeZoneChars = timeZone.twoByteRange();
+
+  AutoStableStringChars timeZone(cx);
+  mozilla::Span<const char16_t> timeZoneChars{};
+
+  auto timeZoneOffset = TimeZoneOffsetString::from(timeZoneString);
+  if (timeZoneOffset) {
+    timeZoneChars = *timeZoneOffset;
+  } else {
+    if (!timeZone.initTwoByte(cx, timeZoneString)) {
+      return nullptr;
+    }
+    timeZoneChars = timeZone.twoByteRange();
+  }
 
   FormatBuffer<char16_t, intl::INITIAL_CHAR_BUFFER_SIZE> skeleton(cx);
   auto skelResult = mozDtf.GetOriginalSkeleton(skeleton);

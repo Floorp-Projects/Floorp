@@ -28,7 +28,7 @@ function resolveDateTimeFormatInternals(lazyDateTimeFormatData) {
   //         hc: "h11" / "h12" / "h23" / "h24", // optional
   //       }
   //
-  //     timeZone: IANA time zone name,
+  //     timeZone: IANA time zone name or a normalized time zone offset string,
   //
   //     formatOptions: // *second* opt computed in InitializeDateTimeFormat
   //       {
@@ -261,6 +261,165 @@ function DefaultTimeZone() {
   return defaultTimeZone;
 }
 
+/**
+ * 21.4.1.33.1 IsTimeZoneOffsetString ( offsetString )
+ * 21.4.1.33.2 ParseTimeZoneOffsetString ( offsetString )
+ * 11.1.3 FormatOffsetTimeZoneIdentifier ( offsetMinutes )
+ *
+ * Function to parse, validate, and normalize time zone offset strings.
+ *
+ * ES2024 draft rev 10d44bfce4640894a0ed366bb769f2700cc8839a
+ * ES2024 Intl draft rev 2f002b2000bf8b908efb793767bcfd23620e06db
+ */
+function TimeZoneOffsetString(offsetString) {
+  assert(typeof(offsetString) === "string", "offsetString is a string");
+
+  // UTCOffset :::
+  //   TemporalSign Hour
+  //   TemporalSign Hour HourSubcomponents[+Extended]
+  //   TemporalSign Hour HourSubcomponents[~Extended]
+  //
+  // TemporalSign :::
+  //   ASCIISign
+  //   <MINUS>
+  //
+  // With <MINUS> = U+2212
+  //
+  // ASCIISign ::: one of
+  //   + -
+  //
+  // Hour :::
+  //   0 DecimalDigit
+  //   1 DecimalDigit
+  //   20
+  //   21
+  //   22
+  //   23
+  //
+  // HourSubcomponents[Extended] :::
+  //   TimeSeparator[?Extended] MinuteSecond
+  //
+  // TimeSeparator[Extended] :::
+  //   [+Extended] :
+  //   [~Extended] [empty]
+  //
+  // MinuteSecond :::
+  //   0 DecimalDigit
+  //   1 DecimalDigit
+  //   2 DecimalDigit
+  //   3 DecimalDigit
+  //   4 DecimalDigit
+  //   5 DecimalDigit
+
+  // Return if there are too few or too many characters for an offset string.
+  if (offsetString.length < 3 || offsetString.length > 6) {
+    return null;
+  }
+
+  // Self-hosted code only supports Latin-1 permanent atoms, so the Unicode <MINUS>
+  // can't be used in a string literal "\u2212". That means the first character has
+  // to be checked using the character code instead of performing a normal string
+  // comparison. Alternatively <MINUS> could be generated at runtime through
+  // |std_String_fromCharCode(0x2212)|, but that means allocating a string just for
+  // the comparison. And for consistency also check the remaining characters through
+  // their character code.
+
+  #define PLUS_SIGN 0x2b
+  #define HYPHEN_MINUS 0x2d
+  #define MINUS 0x2212
+  #define COLON 0x3a
+  #define DIGIT_ZERO 0x30
+  #define DIGIT_TWO 0x32
+  #define DIGIT_THREE 0x33
+  #define DIGIT_FIVE 0x35
+  #define DIGIT_NINE 0x39
+
+  /* global PLUS_SIGN, HYPHEN_MINUS, MINUS, COLON */
+  /* global DIGIT_ZERO, DIGIT_TWO, DIGIT_THREE, DIGIT_FIVE, DIGIT_NINE */
+
+  // The first character must match |TemporalSign|.
+  var sign = callFunction(std_String_charCodeAt, offsetString, 0);
+  if (sign !== PLUS_SIGN && sign !== HYPHEN_MINUS && sign !== MINUS) {
+    return null;
+  }
+
+  // Read the next two characters for the |Hour| grammar production.
+  var hourTens = callFunction(std_String_charCodeAt, offsetString, 1);
+  var hourOnes = callFunction(std_String_charCodeAt, offsetString, 2);
+
+  // Read the remaining characters for the optional |MinuteSecond| grammar production.
+  var minutesTens = DIGIT_ZERO;
+  var minutesOnes = DIGIT_ZERO;
+  if (offsetString.length > 3) {
+    // |TimeSeparator| is optional.
+    var separatorLength = offsetString[3] === ":" ? 1 : 0;
+
+    // Return if there are too many characters for an offset string.
+    if (offsetString.length !== (5 + separatorLength)) {
+      return null;
+    }
+
+    minutesTens = callFunction(
+      std_String_charCodeAt,
+      offsetString,
+      3 + separatorLength,
+    );
+    minutesOnes = callFunction(
+      std_String_charCodeAt,
+      offsetString,
+      4 + separatorLength,
+    );
+  }
+
+  // Validate the characters match the |Hour| and |MinuteSecond| productions:
+  // - hours must be in the range 0..23
+  // - minutes must in the range 0..59
+  if (
+    hourTens < DIGIT_ZERO ||
+    hourOnes < DIGIT_ZERO ||
+    minutesTens < DIGIT_ZERO ||
+    minutesOnes < DIGIT_ZERO ||
+    hourTens > DIGIT_TWO ||
+    hourOnes > DIGIT_NINE ||
+    minutesTens > DIGIT_FIVE ||
+    minutesOnes > DIGIT_NINE ||
+    (hourTens === DIGIT_TWO && hourOnes > DIGIT_THREE)
+  ) {
+    return null;
+  }
+
+  // FormatOffsetTimeZoneIdentifier, steps 1-5.
+  if (
+    hourTens === DIGIT_ZERO &&
+    hourOnes === DIGIT_ZERO &&
+    minutesTens === DIGIT_ZERO &&
+    minutesOnes === DIGIT_ZERO
+  ) {
+    sign = PLUS_SIGN;
+  } else if (sign === MINUS) {
+    sign = HYPHEN_MINUS;
+  }
+
+  return std_String_fromCharCode(
+    sign,
+    hourTens,
+    hourOnes,
+    COLON,
+    minutesTens,
+    minutesOnes,
+  );
+
+  #undef PLUS_SIGN
+  #undef HYPHEN_MINUS
+  #undef MINUS
+  #undef COLON
+  #undef DIGIT_ZERO
+  #undef DIGIT_TWO
+  #undef DIGIT_THREE
+  #undef DIGIT_FIVE
+  #undef DIGIT_NINE
+}
+
 /* eslint-disable complexity */
 /**
  * 11.1.2 CreateDateTimeFormat ( newTarget, locales, options, required, defaults )
@@ -315,7 +474,7 @@ function InitializeDateTimeFormat(
   //         hc: "h11" / "h12" / "h23" / "h24", // optional
   //       }
   //
-  //     timeZone: IANA time zone name,
+  //     timeZone: IANA time zone name or a normalized time zone offset string,
   //
   //     formatOptions: // *second* opt computed in InitializeDateTimeFormat
   //       {
@@ -420,25 +579,35 @@ function InitializeDateTimeFormat(
 
   // Steps 17-29 (see resolveDateTimeFormatInternals).
 
-  // Step 30.
+  // Step 29.
   var timeZone = options.timeZone;
 
-  // Steps 31-32
+  // Steps 30-34.
   if (timeZone === undefined) {
-    // Step 31.
+    // Step 30.a.
     timeZone = DefaultTimeZone();
+
+    // Steps 32-34. (Not applicable in our implementation.)
   } else {
-    // Step 32.a.
+    // Step 31.a.
     timeZone = ToString(timeZone);
 
-    // Step 32.b.
-    var validTimeZone = intl_IsValidTimeZoneName(timeZone);
-    if (validTimeZone === null) {
-      ThrowRangeError(JSMSG_INVALID_TIME_ZONE, timeZone);
+    // Steps 32-34.
+    var offsetString = TimeZoneOffsetString(timeZone);
+    if (offsetString !== null) {
+      // Steps 32.a-g. (Performed in TimeZoneOffsetString in our implementation.)
+      timeZone = offsetString;
+    } else {
+      // Steps 33-34.
+      var validTimeZone = intl_IsValidTimeZoneName(timeZone);
+      if (validTimeZone !== null) {
+        // Step 33.a.
+        timeZone = CanonicalizeTimeZoneName(validTimeZone);
+      } else {
+        // Step 34.a.
+        ThrowRangeError(JSMSG_INVALID_TIME_ZONE, timeZone);
+      }
     }
-
-    // Step 32.c.
-    timeZone = CanonicalizeTimeZoneName(validTimeZone);
   }
 
   // Step 33.
