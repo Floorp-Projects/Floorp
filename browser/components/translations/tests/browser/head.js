@@ -923,7 +923,8 @@ async function addTab(url) {
  */
 async function switchTab(tab, name) {
   info("Switching tabs to " + name);
-  await BrowserTestUtils.switchTab(gBrowser, tab);
+  gBrowser.selectedTab = tab;
+  await new Promise(resolve => setTimeout(resolve, 0));
 }
 
 /**
