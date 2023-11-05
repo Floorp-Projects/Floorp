@@ -145,9 +145,8 @@ static bool DateTimeFormat(JSContext* cx, const CallArgs& args, bool construct,
   HandleValue options = args.get(1);
 
   // Step 3.
-  return intl::LegacyInitializeObject(
-      cx, dateTimeFormat, cx->names().InitializeDateTimeFormat, thisValue,
-      locales, options, dtfOptions, args.rval());
+  return intl::InitializeDateTimeFormatObject(
+      cx, dateTimeFormat, thisValue, locales, options, dtfOptions, args.rval());
 }
 
 static bool DateTimeFormat(JSContext* cx, unsigned argc, Value* vp) {

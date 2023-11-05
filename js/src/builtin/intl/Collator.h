@@ -58,8 +58,6 @@ class CollatorObject : public NativeObject {
 
 /**
  * Returns a new instance of the standard built-in Collator constructor.
- * Self-hosted code cannot cache this constructor (as it does for others in
- * Utilities.js) because it is initialized after self-hosted code is compiled.
  *
  * Usage: collator = intl_Collator(locales, options)
  */
