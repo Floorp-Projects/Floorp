@@ -45,7 +45,7 @@ class SVGPatternElement final : public SVGPatternElementBase {
   // SVGSVGElement methods:
   bool HasValidDimensions() const override;
 
-  virtual mozilla::SVGAnimatedTransformList* GetAnimatedTransformList(
+  SVGAnimatedTransformList* GetAnimatedTransformList(
       uint32_t aFlags = 0) override;
   nsStaticAtom* GetTransformListAttrName() const override {
     return nsGkAtoms::patternTransform;
@@ -67,8 +67,7 @@ class SVGPatternElement final : public SVGPatternElementBase {
   LengthAttributesInfo GetLengthInfo() override;
   EnumAttributesInfo GetEnumInfo() override;
   StringAttributesInfo GetStringInfo() override;
-  virtual SVGAnimatedPreserveAspectRatio* GetAnimatedPreserveAspectRatio()
-      override;
+  SVGAnimatedPreserveAspectRatio* GetAnimatedPreserveAspectRatio() override;
   SVGAnimatedViewBox* GetAnimatedViewBox() override;
 
   enum { ATTR_X, ATTR_Y, ATTR_WIDTH, ATTR_HEIGHT };
@@ -79,7 +78,7 @@ class SVGPatternElement final : public SVGPatternElementBase {
   SVGAnimatedEnumeration mEnumAttributes[2];
   static EnumInfo sEnumInfo[2];
 
-  UniquePtr<mozilla::SVGAnimatedTransformList> mPatternTransform;
+  UniquePtr<SVGAnimatedTransformList> mPatternTransform;
 
   enum { HREF, XLINK_HREF };
   SVGAnimatedString mStringAttributes[2];

@@ -59,8 +59,7 @@ class SVGViewElement final : public SVGViewElementBase {
   static EnumInfo sEnumInfo[1];
 
   SVGAnimatedViewBox* GetAnimatedViewBox() override;
-  virtual SVGAnimatedPreserveAspectRatio* GetAnimatedPreserveAspectRatio()
-      override;
+  SVGAnimatedPreserveAspectRatio* GetAnimatedPreserveAspectRatio() override;
 
   SVGAnimatedViewBox mViewBox;
   SVGAnimatedPreserveAspectRatio mPreserveAspectRatio;

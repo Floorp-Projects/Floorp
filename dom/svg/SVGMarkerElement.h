@@ -73,8 +73,7 @@ class SVGMarkerElement final : public SVGMarkerElementBase {
   LengthAttributesInfo GetLengthInfo() override;
   EnumAttributesInfo GetEnumInfo() override;
   SVGAnimatedOrient* GetAnimatedOrient() override;
-  virtual SVGAnimatedPreserveAspectRatio* GetAnimatedPreserveAspectRatio()
-      override;
+  SVGAnimatedPreserveAspectRatio* GetAnimatedPreserveAspectRatio() override;
   SVGAnimatedViewBox* GetAnimatedViewBox() override;
 
   enum { REFX, REFY, MARKERWIDTH, MARKERHEIGHT };
