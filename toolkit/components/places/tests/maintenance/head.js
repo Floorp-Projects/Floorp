@@ -99,7 +99,21 @@ async function test_database_replacement(src, filename, shouldClone, dbStatus) {
       !(await IOUtils.exists(corrupt)),
       "The corrupt db should not exist"
     );
+    Assert.ok(
+      !(await IOUtils.exists(corrupt + "-wal")),
+      "The corrupt db wal should not exist"
+    );
+    Assert.ok(
+      !(await IOUtils.exists(corrupt + "-shm")),
+      "The corrupt db shm should not exist"
+    );
   } else {
     Assert.ok(await IOUtils.exists(corrupt), "The corrupt db should exist");
   }
+
+  Assert.equal(
+    Services.prefs.getCharPref("places.database.replaceDatabaseOnStartup", ""),
+    "",
+    "The replaceDatabaseOnStartup pref should have been unset"
+  );
 }
