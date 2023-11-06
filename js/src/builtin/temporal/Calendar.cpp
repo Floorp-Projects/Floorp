@@ -930,51 +930,6 @@ static bool BuiltinCalendarFields(
 
 static bool Calendar_fields(JSContext* cx, unsigned argc, Value* vp);
 
-// Slow path for calling the built-in `Temporal.Calendar.prototype.fields` when
-// array iteration is no longer in its initial state.
-static bool BuiltinCalendarFieldsSlow(
-    JSContext* cx, Handle<CalendarValue> calendar,
-    std::initializer_list<CalendarField> fieldNames,
-    MutableHandle<JS::StackGCVector<PropertyKey>> result) {
-  MOZ_ASSERT(calendar.isString());
-
-  Rooted<JSLinearString*> calendarId(cx, calendar.toString());
-  Rooted<JSObject*> calendarObj(cx, CreateTemporalCalendar(cx, calendarId));
-  if (!calendarObj) {
-    return false;
-  }
-
-  auto* array = NewDenseFullyAllocatedArray(cx, fieldNames.size());
-  if (!array) {
-    return false;
-  }
-  array->setDenseInitializedLength(fieldNames.size());
-
-  for (size_t i = 0; i < fieldNames.size(); i++) {
-    auto* name = ToPropertyName(cx, fieldNames.begin()[i]);
-    array->initDenseElement(i, StringValue(name));
-  }
-
-  JS::RootedValueArray<3> argv(cx);
-  argv[0].setUndefined();           // callee
-  argv[1].setObject(*calendarObj);  // this-value
-  argv[2].setObject(*array);        // first argument
-  if (!Calendar_fields(cx, 1, argv.begin())) {
-    return false;
-  }
-
-  // FIXME: spec issue - GetPossibleInstantsFor directly calls
-  // CreateListFromArrayLike, whereas this operation has user-visible for-of
-  // iteration.
-  // https://github.com/tc39/proposal-temporal/pull/2519
-
-  if (!IterableToListOfStrings(cx, argv[0], result)) {
-    return false;
-  }
-
-  return SortTemporalFieldNames(cx, result.get());
-}
-
 #ifdef DEBUG
 static bool IsSorted(std::initializer_list<CalendarField> fieldNames) {
   return std::is_sorted(fieldNames.begin(), fieldNames.end(),
@@ -1003,20 +958,13 @@ bool js::temporal::CalendarFields(
 
   // Step 1.
   if (calendar.isString()) {
-    ForOfPIC::Chain* stubChain = ForOfPIC::getOrCreate(cx);
-    if (!stubChain) {
-      return false;
-    }
+    // Step 1.a. (Not applicable in our implementation.)
 
-    bool arrayIterationSane;
-    if (!stubChain->tryOptimizeArray(cx, &arrayIterationSane)) {
-      return false;
-    }
+    // Step 1.b.
+    MOZ_ASSERT(IsISO8601Calendar(calendar.toString()));
+    return BuiltinCalendarFields(cx, fieldNames, result.get());
 
-    if (arrayIterationSane) {
-      return BuiltinCalendarFields(cx, fieldNames, result.get());
-    }
-    return BuiltinCalendarFieldsSlow(cx, calendar, fieldNames, result);
+    // Steps 1.c-d. (Not applicable in our implementation.)
   }
 
   // Step 2.
