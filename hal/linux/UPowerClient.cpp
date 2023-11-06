@@ -167,9 +167,13 @@ void UPowerClient::BeginListening() {
             UpdateTrackedDevices();
           },
           [](GUniquePtr<GError>&& aError) {
-            g_warning(
-                "Failed to create DBus proxy for org.freedesktop.UPower: %s\n",
-                aError->message);
+            if (!g_error_matches(aError.get(), G_IO_ERROR,
+                                 G_IO_ERROR_CANCELLED)) {
+              g_warning(
+                  "Failed to create DBus proxy for org.freedesktop.UPower: "
+                  "%s\n",
+                  aError->message);
+            }
           });
 }
 
@@ -275,9 +279,12 @@ void UPowerClient::UpdateTrackedDevices() {
                              G_CALLBACK(DeviceChanged), this);
           },
           [this](GUniquePtr<GError>&& aError) {
-            g_warning(
-                "Failed to enumerate devices of org.freedesktop.UPower: %s\n",
-                aError->message);
+            if (!g_error_matches(aError.get(), G_IO_ERROR,
+                                 G_IO_ERROR_CANCELLED)) {
+              g_warning(
+                  "Failed to enumerate devices of org.freedesktop.UPower: %s\n",
+                  aError->message);
+            }
             g_signal_connect(mUPowerProxy, "g-signal",
                              G_CALLBACK(DeviceChanged), this);
           });
