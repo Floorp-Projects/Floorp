@@ -1,0 +1,128 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test DOMLocalization's data-l10n-args handling</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+  <script type="application/javascript">
+  "use strict";
+  const l10nReg = new L10nRegistry();
+  const fs = [
+    { path: "/localization/en-US/mock.ftl", source: `
+test-simple = Hello { $prop }
+test-selector = { $prop ->
+    [true] YES
+   *[other] NO
+  }
+test-error = Hey
+` },
+  ];
+  const source = L10nFileSource.createMock("test", "app", ["en-US"], "/localization/{locale}", fs);
+  l10nReg.registerSources([source]);
+
+  const tests = [
+    // [data-l10n-id, data-l10n-args, expected text content],
+
+    [`test-simple`, `{ "prop": "str" }`, `Hello str`],
+    [`test-simple`, `{ "prop": 10 }`, `Hello 10`],
+    [`test-simple`, `{ "prop": 10.1 }`, `Hello 10.1`],
+    [`test-simple`, `{ "prop": -2 }`, `Hello -2`],
+    [`test-simple`, `{ "prop": true }`, `Hello true`],
+    [`test-simple`, `{ "prop": false }`, `Hello false`],
+
+    [`test-selector`, `{ "prop": "true" }`, `YES`],
+    [`test-selector`, `{ "prop": "false" }`, `NO`],
+    [`test-selector`, `{ "prop": 10 }`, `NO`],
+    [`test-selector`, `{ "prop": true }`, `YES`],
+    [`test-selector`, `{ "prop": false }`, `NO`],
+
+    // Passing null is also valid as long as the property is not referred.
+    [`test-simple`, `{ "prop": "str", "prop2": null }`, `Hello str`],
+  ];
+
+  const errorTests = [
+    // Unexpected top-level value.
+    `10`,
+    `"foo"`,
+    `true`,
+    `false`,
+    `[]`,
+
+    // Unsupported property value types.
+    `{ "prop": [] }`,
+    `{ "prop": {} }`,
+
+    // Syntax Error.
+    `a`,
+    `"`,
+    `'foo'`,
+    `{ prop: 10 }`,
+    `{ "prop" }`,
+    `{ "prop": }`,
+    `{ "prop": "a }`,
+    `[`,
+    `}`,
+    `{`,
+    `}`,
+    `{ "prop": [ }`,
+    `{ "prop": { }`,
+    `{ "prop": 10, }`,
+  ];
+
+  window.onload = async function() {
+    SimpleTest.waitForExplicitFinish();
+
+    const domLoc = new DOMLocalization(
+      [],
+      false,
+      l10nReg,
+      ["en-US"],
+    );
+
+    const container = document.querySelector("#test-container");
+
+    domLoc.addResourceIds(["/mock.ftl"]);
+    domLoc.connectRoot(document.body);
+
+    for (const [id, args, expected] of tests) {
+      const span = document.createElement("span");
+      span.setAttribute("data-l10n-id", id);
+      span.setAttribute("data-l10n-args", args);
+      container.append(span);
+
+      await domLoc.translateRoots();
+
+      is(span.textContent, expected, `translation for "${id}" with ${args} should become "${expected}"`);
+
+      span.remove();
+    }
+
+    for (const args of errorTests) {
+      const span = document.createElement("span");
+      span.setAttribute("data-l10n-id", "test-error");
+      span.setAttribute("data-l10n-args", args);
+      container.append(span);
+
+      let thrown = false;
+
+      try {
+        await domLoc.translateRoots();
+      } catch (e) {
+        thrown = true;
+      }
+
+      ok(thrown, `${args} should throw error`);
+
+      span.remove();
+    }
+
+    SimpleTest.finish();
+  };
+  </script>
+</head>
+<body>
+  <div id="test-container">
+  </div>
+</body>
+</html>
