@@ -13686,7 +13686,7 @@
 #if defined(MOZ_WMF_MEDIA_ENGINE)
 -   name: security.sandbox.utility-wmf-cdm.lpac.enabled
     type: RelaxedAtomicBool
-    value: false
+    value: true
     mirror: always
 #endif
 
