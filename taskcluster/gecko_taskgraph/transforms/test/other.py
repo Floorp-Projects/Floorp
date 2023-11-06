@@ -754,7 +754,7 @@ test_setting_description_schema = Schema(
             },
             Optional("device"): str,
             Optional("display"): "wayland",
-            Optional("machine"): Any("ref-hw-2017"),
+            Optional("machine"): Any("ref-hw-2017", "hw-ref"),
         },
         "build": {
             Required("type"): Any("opt", "debug", "debug-isolated-process"),
@@ -816,6 +816,7 @@ def set_test_setting(config, tasks):
     dash_attrs = [
         "clang-trunk",
         "ref-hw-2017",
+        "hw-ref",
     ]
     dash_token = "%D%"
     platform_re = re.compile(r"(\D+)(\d*)")
@@ -870,10 +871,13 @@ def set_test_setting(config, tasks):
             if parts[0].isdigit():
                 os_build = parts.pop(0)
 
-            if parts[0] == "ref-hw-2017":
+            if parts and parts[0] == "ref-hw-2017":
                 machine = parts.pop(0)
 
-            if parts[0] == "wayland":
+            if parts and parts[0] == "hw-ref":
+                machine = parts.pop(0)
+
+            if parts and parts[0] == "wayland":
                 display = parts.pop(0)
 
             if parts and parts[0] == "aarch64":
