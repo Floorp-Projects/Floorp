@@ -141,6 +141,15 @@ struct MemoryUsage {
 
 MOZ_JEMALLOC_API void PHCMemoryUsage(MemoryUsage& aMemoryUsage);
 
+struct PHCStats {
+  size_t mSlotsAllocated = 0;
+  size_t mSlotsFreed = 0;
+  size_t mSlotsUnused = 0;
+};
+
+// Return PHC memory usage information by filling in the supplied structure.
+MOZ_JEMALLOC_API void GetPHCStats(PHCStats& aStats);
+
 }  // namespace phc
 }  // namespace mozilla
 
