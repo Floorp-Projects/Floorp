@@ -270,7 +270,7 @@ add_task(async function test_devtools_network_on_request_finished() {
   ]);
 
   ok(
-    callbackRes[0].startsWith("<html>"),
+    callbackRes[0].startsWith("<!DOCTYPE html>"),
     "The expected content has been retrieved."
   );
   is(
