@@ -1926,9 +1926,28 @@ class AnnotationEditorUIManager {
     const arrowChecker = self => {
       return self.#container.contains(document.activeElement) && self.hasSomethingToControl();
     };
+    const textInputChecker = (_self, {
+      target: el
+    }) => {
+      if (el instanceof HTMLInputElement) {
+        const {
+          type
+        } = el;
+        return type !== "text" && type !== "number";
+      }
+      return true;
+    };
     const small = this.TRANSLATE_SMALL;
     const big = this.TRANSLATE_BIG;
-    return shadow(this, "_keyboardManager", new KeyboardManager([[["ctrl+a", "mac+meta+a"], proto.selectAll], [["ctrl+z", "mac+meta+z"], proto.undo], [["ctrl+y", "ctrl+shift+z", "mac+meta+shift+z", "ctrl+shift+Z", "mac+meta+shift+Z"], proto.redo], [["Backspace", "alt+Backspace", "ctrl+Backspace", "shift+Backspace", "mac+Backspace", "mac+alt+Backspace", "mac+ctrl+Backspace", "Delete", "ctrl+Delete", "shift+Delete", "mac+Delete"], proto.delete], [["Enter", "mac+Enter"], proto.addNewEditorFromKeyboard, {
+    return shadow(this, "_keyboardManager", new KeyboardManager([[["ctrl+a", "mac+meta+a"], proto.selectAll, {
+      checker: textInputChecker
+    }], [["ctrl+z", "mac+meta+z"], proto.undo, {
+      checker: textInputChecker
+    }], [["ctrl+y", "ctrl+shift+z", "mac+meta+shift+z", "ctrl+shift+Z", "mac+meta+shift+Z"], proto.redo, {
+      checker: textInputChecker
+    }], [["Backspace", "alt+Backspace", "ctrl+Backspace", "shift+Backspace", "mac+Backspace", "mac+alt+Backspace", "mac+ctrl+Backspace", "Delete", "ctrl+Delete", "shift+Delete", "mac+Delete"], proto.delete, {
+      checker: textInputChecker
+    }], [["Enter", "mac+Enter"], proto.addNewEditorFromKeyboard, {
       checker: self => self.#container.contains(document.activeElement) && !self.isEnterHandled
     }], [[" ", "mac+ "], proto.addNewEditorFromKeyboard, {
       checker: self => self.#container.contains(document.activeElement)
@@ -2098,14 +2117,10 @@ class AnnotationEditorUIManager {
     lastActiveElement.focus();
   }
   #addKeyboardManager() {
-    window.addEventListener("keydown", this.#boundKeydown, {
-      capture: true
-    });
+    window.addEventListener("keydown", this.#boundKeydown);
   }
   #removeKeyboardManager() {
-    window.removeEventListener("keydown", this.#boundKeydown, {
-      capture: true
-    });
+    window.removeEventListener("keydown", this.#boundKeydown);
   }
   #addCopyPasteListeners() {
     document.addEventListener("copy", this.#boundCopy);
@@ -8045,7 +8060,7 @@ function getDocument(src) {
   }
   const fetchDocParams = {
     docId,
-    apiVersion: '4.0.158',
+    apiVersion: '4.0.189',
     data,
     password,
     disableAutoFetch,
@@ -9669,8 +9684,8 @@ class InternalRenderTask {
     }
   }
 }
-const version = '4.0.158';
-const build = '0329b5e13';
+const version = '4.0.189';
+const build = '50f52b43a';
 
 ;// CONCATENATED MODULE: ./src/display/text_layer.js
 
@@ -10217,17 +10232,30 @@ class XfaLayer {
         linkService
       });
     }
-    const stack = [[root, -1, rootHtml]];
+    const isNotForRichText = intent !== "richText";
     const rootDiv = parameters.div;
     rootDiv.append(rootHtml);
     if (parameters.viewport) {
       const transform = `matrix(${parameters.viewport.transform.join(",")})`;
       rootDiv.style.transform = transform;
     }
-    if (intent !== "richText") {
+    if (isNotForRichText) {
       rootDiv.setAttribute("class", "xfaLayer xfaFont");
     }
     const textDivs = [];
+    if (root.children.length === 0) {
+      if (root.value) {
+        const node = document.createTextNode(root.value);
+        rootHtml.append(node);
+        if (isNotForRichText && XfaText.shouldBuildText(root.name)) {
+          textDivs.push(node);
+        }
+      }
+      return {
+        textDivs
+      };
+    }
+    const stack = [[root, -1, rootHtml]];
     while (stack.length > 0) {
       const [parent, i, html] = stack.at(-1);
       if (i + 1 === parent.children.length) {
@@ -10258,11 +10286,11 @@ class XfaLayer {
           linkService
         });
       }
-      if (child.children && child.children.length > 0) {
+      if (child.children?.length > 0) {
         stack.push([child, -1, childHtml]);
       } else if (child.value) {
         const node = document.createTextNode(child.value);
-        if (XfaText.shouldBuildText(name)) {
+        if (isNotForRichText && XfaText.shouldBuildText(name)) {
           textDivs.push(node);
         }
         childHtml.append(node);
@@ -14838,8 +14866,8 @@ class AnnotationEditorLayer {
 
 
 
-const pdfjsVersion = '4.0.158';
-const pdfjsBuild = '0329b5e13';
+const pdfjsVersion = '4.0.189';
+const pdfjsBuild = '50f52b43a';
 
 var __webpack_exports__AbortException = __webpack_exports__.AbortException;
 var __webpack_exports__AnnotationEditorLayer = __webpack_exports__.AnnotationEditorLayer;
