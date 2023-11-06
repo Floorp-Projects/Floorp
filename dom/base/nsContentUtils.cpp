@@ -2133,8 +2133,9 @@ bool nsContentUtils::IsCallerChromeOrElementTransformGettersEnabled(
 // Older Should RFP Functions ----------------------------------
 
 /* static */
-bool nsContentUtils::ShouldResistFingerprinting(RFPTarget aTarget) {
-  return nsRFPService::IsRFPEnabledFor(aTarget, Nothing());
+bool nsContentUtils::ShouldResistFingerprinting(bool aIsPrivateMode,
+                                                RFPTarget aTarget) {
+  return nsRFPService::IsRFPEnabledFor(aIsPrivateMode, aTarget, Nothing());
 }
 
 /* static */
@@ -2187,6 +2188,7 @@ bool ETPSaysShouldNotResistFingerprinting(nsIChannel* aChannel,
   // A positive return from this function should always be obeyed.
   // A negative return means we should keep checking things.
 
+  bool isPBM = NS_UsePrivateBrowsing(aChannel);
   // We do not want this check to apply to RFP, only to FPP
   // There is one problematic combination of prefs; however:
   // If RFP is enabled in PBMode only and FPP is enabled globally
@@ -2196,13 +2198,14 @@ bool ETPSaysShouldNotResistFingerprinting(nsIChannel* aChannel,
   if (StaticPrefs::privacy_fingerprintingProtection_DoNotUseDirectly() &&
       !StaticPrefs::privacy_resistFingerprinting_DoNotUseDirectly() &&
       StaticPrefs::privacy_resistFingerprinting_pbmode_DoNotUseDirectly()) {
-    if (NS_UsePrivateBrowsing(aChannel)) {
+    if (isPBM) {
       // In PBM (where RFP is enabled) do not exempt based on the ETP toggle
       return false;
     }
   } else if (StaticPrefs::privacy_resistFingerprinting_DoNotUseDirectly() ||
-             StaticPrefs::
-                 privacy_resistFingerprinting_pbmode_DoNotUseDirectly()) {
+             (isPBM &&
+              StaticPrefs::
+                  privacy_resistFingerprinting_pbmode_DoNotUseDirectly())) {
     // In RFP, never use the ETP toggle to exempt.
     // We can safely return false here even if we are not in PBM mode
     // and RFP_pbmode is enabled because we will later see that and
@@ -2300,8 +2303,20 @@ inline bool PartionKeyIsAlsoExempted(
 bool nsContentUtils::ShouldResistFingerprinting(const char* aJustification,
                                                 RFPTarget aTarget) {
   // See comment in header file for information about usage
-  return ShouldResistFingerprinting(aTarget);
+  // We hardcode PBM to true to be the more restrictive option.
+  return nsContentUtils::ShouldResistFingerprinting(true, aTarget);
 }
+
+namespace {
+
+// This function is only called within this file for Positive Return Checks
+bool ShouldResistFingerprinting_(const char* aJustification,
+                                 bool aIsPrivateMode, RFPTarget aTarget) {
+  // See comment in header file for information about usage
+  return nsContentUtils::ShouldResistFingerprinting(aIsPrivateMode, aTarget);
+}
+
+}  // namespace
 
 /* static */
 bool nsContentUtils::ShouldResistFingerprinting(CallerType aCallerType,
@@ -2326,7 +2341,7 @@ bool nsContentUtils::ShouldResistFingerprinting(nsIDocShell* aDocShell,
     MOZ_LOG(nsContentUtils::ResistFingerprintingLog(), LogLevel::Info,
             ("Called nsContentUtils::ShouldResistFingerprinting(nsIDocShell*) "
              "with NULL doc"));
-    return ShouldResistFingerprinting(aTarget);
+    return ShouldResistFingerprinting("Null Object", aTarget);
   }
   return doc->ShouldResistFingerprinting(aTarget);
 }
@@ -2351,7 +2366,8 @@ bool nsContentUtils::ShouldResistFingerprinting(nsIChannel* aChannel,
 
   // With this check, we can ensure that the prefs and target say yes, so only
   // an exemption would cause us to return false.
-  if (!ShouldResistFingerprinting("Positive return check", aTarget)) {
+  bool isPBM = NS_UsePrivateBrowsing(aChannel);
+  if (!ShouldResistFingerprinting_("Positive return check", isPBM, aTarget)) {
     return false;
   }
 
@@ -2434,7 +2450,11 @@ bool nsContentUtils::ShouldResistFingerprinting_dangerous(
     const char* aJustification, RFPTarget aTarget) {
   // With this check, we can ensure that the prefs and target say yes, so only
   // an exemption would cause us to return false.
-  if (!ShouldResistFingerprinting("Positive return check", aTarget)) {
+  if (!ShouldResistFingerprinting_(
+          "Positive return check",
+          aOriginAttributes.mPrivateBrowsingId ==
+              nsIScriptSecurityManager::DEFAULT_PRIVATE_BROWSING_ID,
+          aTarget)) {
     return false;
   }
 
@@ -2491,26 +2511,20 @@ bool nsContentUtils::ShouldResistFingerprinting_dangerous(
     return ShouldResistFingerprinting("Null object", aTarget);
   }
 
+  auto originAttributes =
+      BasePrincipal::Cast(aPrincipal)->OriginAttributesRef();
   // With this check, we can ensure that the prefs and target say yes, so only
   // an exemption would cause us to return false.
-  if (!ShouldResistFingerprinting("Positive return check", aTarget)) {
+  if (!ShouldResistFingerprinting_(
+          "Positive return check",
+          originAttributes.mPrivateBrowsingId ==
+              nsIScriptSecurityManager::DEFAULT_PRIVATE_BROWSING_ID,
+          aTarget)) {
     return false;
   }
 
   if (aPrincipal->IsSystemPrincipal()) {
     return false;
-  }
-
-  auto originAttributes =
-      BasePrincipal::Cast(aPrincipal)->OriginAttributesRef();
-  if (!StaticPrefs::privacy_resistFingerprinting_DoNotUseDirectly() &&
-      !StaticPrefs::privacy_fingerprintingProtection_DoNotUseDirectly()) {
-    // If neither of the 'regular' RFP prefs are set, then one (or both)
-    // of the PBM-Only prefs are set (or we would have failed the
-    // Positive return check.)  Therefore, if we are not in PBM, return false
-    if (originAttributes.mPrivateBrowsingId == 0) {
-      return false;
-    }
   }
 
   // Exclude internal schemes and web extensions
@@ -3788,12 +3802,14 @@ bool nsContentUtils::CanLoadImage(nsIURI* aURI, nsINode* aNode,
 }
 
 // static
-bool nsContentUtils::IsInPrivateBrowsing(Document* aDoc) {
+bool nsContentUtils::IsInPrivateBrowsing(const Document* aDoc) {
   if (!aDoc) {
     return false;
   }
 
   nsCOMPtr<nsILoadGroup> loadGroup = aDoc->GetDocumentLoadGroup();
+  // See duplicated code below in IsInPrivateBrowsing(nsILoadGroup*)
+  // and Document::Reset/ResetToURI
   if (loadGroup) {
     nsCOMPtr<nsIInterfaceRequestor> callbacks;
     loadGroup->GetNotificationCallbacks(getter_AddRefs(callbacks));
