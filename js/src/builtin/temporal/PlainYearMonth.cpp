@@ -516,23 +516,9 @@ static bool AddDurationToOrSubtractDurationFromPlainYearMonth(
   }
 
   // Step 4.
-  Rooted<JSObject*> options(cx);
-  if (args.hasDefined(1)) {
-    const char* name =
-        operation == PlainYearMonthDuration::Add ? "add" : "subtract";
-    options = RequireObjectArg(cx, "options", name, args[1]);
-  } else {
-    // TODO: Avoid creating an options object if not necessary.
-    options = NewPlainObjectWithProto(cx, nullptr);
-  }
-  if (!options) {
-    return false;
-  }
-
-  // Step 5.
   Rooted<CalendarValue> calendar(cx, yearMonth->calendar());
 
-  // Step 6.
+  // Step 5.
   JS::RootedVector<PropertyKey> fieldNames(cx);
   if (!CalendarFields(cx, calendar,
                       {CalendarField::MonthCode, CalendarField::Year},
@@ -540,41 +526,41 @@ static bool AddDurationToOrSubtractDurationFromPlainYearMonth(
     return false;
   }
 
-  // Step 7.
+  // Step 6.
   Rooted<PlainObject*> fields(cx,
                               PrepareTemporalFields(cx, yearMonth, fieldNames));
   if (!fields) {
     return false;
   }
 
-  // Step 8.
+  // Step 7.
   Rooted<PlainObject*> fieldsCopy(cx, SnapshotOwnProperties(cx, fields));
   if (!fieldsCopy) {
     return false;
   }
 
-  // Step 9.
+  // Step 8.
   Value one = Int32Value(1);
   auto handleOne = Handle<Value>::fromMarkedLocation(&one);
   if (!DefineDataProperty(cx, fields, cx->names().day, handleOne)) {
     return false;
   }
 
-  // Step 10.
+  // Step 9.
   Rooted<Wrapped<PlainDateObject*>> intermediateDate(
       cx, CalendarDateFromFields(cx, calendar, fields));
   if (!intermediateDate) {
     return false;
   }
 
-  // Step 11.
+  // Step 10.
   int32_t sign = DurationSign(
       {duration.years, duration.months, duration.weeks, balanceResult.days});
 
   // FIXME: spec bug - calendar can be a string.
   // https://github.com/tc39/proposal-temporal/issues/2619
 
-  // Step 12.
+  // Step 11.
   Rooted<Value> dateAdd(cx);
   if (calendar.isObject()) {
     Rooted<JSObject*> calendarObj(cx, calendar.toObject());
@@ -584,7 +570,7 @@ static bool AddDurationToOrSubtractDurationFromPlainYearMonth(
     }
   }
 
-  // Steps 13-14.
+  // Steps 12-13.
   Rooted<Wrapped<PlainDateObject*>> date(cx);
   if (sign < 0) {
     // |intermediateDate| is initialized to the first day of |yearMonth|'s
@@ -601,10 +587,10 @@ static bool AddDurationToOrSubtractDurationFromPlainYearMonth(
     // some days are skipped, for example consider the Julian-to-Gregorian
     // calendar transition.
 
-    // Step 13.a.
+    // Step 12.a.
     Duration oneMonthDuration = {0, 1};
 
-    // Step 13.b.
+    // Step 12.b.
     Rooted<Wrapped<PlainDateObject*>> nextMonth(
         cx, CalendarDateAdd(cx, calendar, intermediateDate, oneMonthDuration,
                             dateAdd));
@@ -612,10 +598,10 @@ static bool AddDurationToOrSubtractDurationFromPlainYearMonth(
       return false;
     }
 
-    // Step 13.c.
+    // Step 12.c.
     Duration minusDayDuration = {0, 0, 0, -1};
 
-    // Step 13.d.
+    // Step 12.d.
     Rooted<Wrapped<PlainDateObject*>> endOfMonth(
         cx,
         CalendarDateAdd(cx, calendar, nextMonth, minusDayDuration, dateAdd));
@@ -623,34 +609,50 @@ static bool AddDurationToOrSubtractDurationFromPlainYearMonth(
       return false;
     }
 
-    // Step 13.e.
+    // Step 12.e.
     Rooted<Value> endOfMonthValue(cx, ObjectValue(*endOfMonth));
     Rooted<Value> day(cx);
     if (!CalendarDay(cx, calendar, endOfMonthValue, &day)) {
       return false;
     }
 
-    // Step 13.f.
+    // Step 12.f.
     if (!DefineDataProperty(cx, fieldsCopy, cx->names().day, day)) {
       return false;
     }
 
-    // Step 13.g.
+    // Step 12.g.
     date = CalendarDateFromFields(cx, calendar, fieldsCopy);
     if (!date) {
       return false;
     }
   } else {
-    // Step 14.a.
+    // Step 13.a.
     date = intermediateDate;
   }
 
-  // Step 15.
+  // Step 14.
   Duration durationToAdd = {duration.years, duration.months, duration.weeks,
                             balanceResult.days};
 
-  // FIXME: spec issue - unnecessary call to GetOptionsObject
-  // https://github.com/tc39/proposal-temporal/issues/2620
+  // FIXME: spec issue - GetOptionsObject should be called after
+  // ToTemporalDurationRecord to validate the input type before performing any
+  // other user-visible operations.
+  // https://github.com/tc39/proposal-temporal/issues/2721
+
+  // Step 15.
+  Rooted<JSObject*> options(cx);
+  if (args.hasDefined(1)) {
+    const char* name =
+        operation == PlainYearMonthDuration::Add ? "add" : "subtract";
+    options = RequireObjectArg(cx, "options", name, args[1]);
+  } else {
+    // TODO: Avoid creating an options object if not necessary.
+    options = NewPlainObjectWithProto(cx, nullptr);
+  }
+  if (!options) {
+    return false;
+  }
 
   // Step 16.
   Rooted<PlainObject*> optionsCopy(cx, SnapshotOwnProperties(cx, options));
