@@ -495,7 +495,7 @@ ${helpers.predefined_type(
     engines="gecko",
     spec="https://drafts.csswg.org/css-contain/#content-visibility",
     gecko_pref="layout.css.content-visibility.enabled",
-    animation_value_type="ComputedValue",
+    animation_value_type="discrete",
     affects="layout",
 )}
 
