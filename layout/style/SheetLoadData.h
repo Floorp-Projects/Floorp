@@ -13,8 +13,6 @@
 #include "mozilla/PreloaderBase.h"
 #include "mozilla/SharedSubResourceCache.h"
 #include "mozilla/NotNull.h"
-#include "mozilla/UniquePtr.h"
-#include "nsIThreadInternal.h"
 #include "nsProxyRelease.h"
 
 namespace mozilla {
@@ -153,13 +151,18 @@ class SheetLoadData final
   // sheets that have been cancelled and such.
   bool mIsCancelled : 1;
 
-  // mMustNotify is true if the load data is being loaded async and
-  // the original function call that started the load has returned.
-  // This applies only to observer notifications; load/error events
-  // are fired for any SheetLoadData that has a non-null
-  // mOwningNodeBeforeLoadEvent (though mMustNotify is used to avoid an event
-  // loop round-trip in that case).
+  // mMustNotify is true if the load data is being loaded async and the original
+  // function call that started the load has returned.
+  //
+  // This applies only to observer notifications; load/error events are fired
+  // for any SheetLoadData that has a non-null owner node (though mMustNotify is
+  // used to avoid an event loop round-trip in that case).
   bool mMustNotify : 1;
+
+  // Whether we had an owner node at the point of creation. This allows
+  // differentiating between "Link" header stylesheets and LinkStyle-owned
+  // stylesheets.
+  const bool mHadOwnerNode : 1;
 
   // mWasAlternate is true if the sheet was an alternate
   // (https://html.spec.whatwg.org/#rel-alternate) when the load data was
@@ -202,14 +205,6 @@ class SheetLoadData final
   // which causes a false positive warning here.
   const StylePreloadKind mPreloadKind;
 
-  // This is the node that imported the sheet. Cleared after the load/error
-  // event fires, as we don't need it anymore. Needed to get the charset on it,
-  // and to fire load/error events. Must implement LinkStyle.
-  //
-  // This is only set for top-level sheets (e.g., for an @import-ed sheet it'll
-  // be null).
-  nsCOMPtr<nsINode> mOwningNodeBeforeLoadEvent;
-
   nsINode* GetRequestingNode() const;
 
   // The observer that wishes to be notified of load completion
@@ -232,6 +227,7 @@ class SheetLoadData final
 
   // Whether SheetComplete was called.
   bool mSheetCompleteCalled = false;
+
   // Whether we intentionally are not calling SheetComplete because nobody is
   // listening for the load.
   bool mIntentionallyDropped = false;
