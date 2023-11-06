@@ -220,7 +220,10 @@ support-files = ["captureStream_common.js"]
 
 ["test_capture_throttled.html"]
 support-files = ["captureStream_common.js"]
-skip-if = ["os == 'android'"] # bug 1752351
+skip-if = [
+  "os == 'android'", # Bug 1752351
+  "os == 'win'", # Bug 1777094
+]
 
 ["test_drawImageIncomplete.html"]
 
