@@ -153,7 +153,7 @@ bool ToTemporalDateTime(JSContext* cx, JS::Handle<JS::Value> item,
 bool InterpretTemporalDateTimeFields(JSContext* cx,
                                      JS::Handle<CalendarValue> calendar,
                                      JS::Handle<PlainObject*> fields,
-                                     JS::Handle<JSObject*> options,
+                                     JS::Handle<PlainObject*> options,
                                      PlainDateTime* result);
 
 /**

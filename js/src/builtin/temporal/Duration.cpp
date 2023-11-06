@@ -4039,7 +4039,7 @@ static bool ToRelativeTemporalObject(JSContext* cx, Handle<JSObject*> options,
     }
 
     // Step 5.g.
-    Rooted<JSObject*> dateOptions(cx, NewPlainObjectWithProto(cx, nullptr));
+    Rooted<PlainObject*> dateOptions(cx, NewPlainObjectWithProto(cx, nullptr));
     if (!dateOptions) {
       return false;
     }

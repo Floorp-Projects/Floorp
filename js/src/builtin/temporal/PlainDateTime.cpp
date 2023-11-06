@@ -409,20 +409,34 @@ PlainDateTimeObject* js::temporal::CreateTemporalDateTime(
  */
 bool js::temporal::InterpretTemporalDateTimeFields(
     JSContext* cx, Handle<CalendarValue> calendar, Handle<PlainObject*> fields,
-    Handle<JSObject*> options, PlainDateTime* result) {
-  // Step 1.
+    Handle<PlainObject*> options, PlainDateTime* result) {
+  // Step 1. (Not applicable in our implementation.)
+
+  // Step 2.
   TimeRecord timeResult;
   if (!ToTemporalTimeRecord(cx, fields, &timeResult)) {
     return false;
   }
 
-  // Step 2.
+  // Step 3.
   auto overflow = TemporalOverflow::Constrain;
   if (!ToTemporalOverflow(cx, options, &overflow)) {
     return false;
   }
 
-  // Step 3.
+  // Steps 4-5.
+  Rooted<Value> overflowValue(cx);
+  if (overflow == TemporalOverflow::Constrain) {
+    overflowValue.setString(cx->names().constrain);
+  } else {
+    MOZ_ASSERT(overflow == TemporalOverflow::Reject);
+    overflowValue.setString(cx->names().reject);
+  }
+  if (!DefineDataProperty(cx, options, cx->names().overflow, overflowValue)) {
+    return false;
+  }
+
+  // Step 6.
   auto temporalDate =
       js::temporal::CalendarDateFromFields(cx, calendar, fields, options);
   if (!temporalDate) {
@@ -430,13 +444,13 @@ bool js::temporal::InterpretTemporalDateTimeFields(
   }
   auto date = ToPlainDate(&temporalDate.unwrap());
 
-  // Step 4.
+  // Step 7.
   PlainTime time;
   if (!RegulateTime(cx, timeResult, overflow, &time)) {
     return false;
   }
 
-  // Step 5.
+  // Step 8.
   *result = {date, time};
   return true;
 }
@@ -447,31 +461,14 @@ bool js::temporal::InterpretTemporalDateTimeFields(
 bool js::temporal::InterpretTemporalDateTimeFields(
     JSContext* cx, Handle<CalendarValue> calendar, Handle<PlainObject*> fields,
     PlainDateTime* result) {
-  // Step 1.
-  TimeRecord timeResult;
-  if (!ToTemporalTimeRecord(cx, fields, &timeResult)) {
+  // TODO: Avoid creating the options object when CalendarDateFromFields calls
+  // the built-in Calendar.prototype.dateFromFields method.
+  Rooted<PlainObject*> options(cx, NewPlainObjectWithProto(cx, nullptr));
+  if (!options) {
     return false;
   }
 
-  // Step 2.
-  auto overflow = TemporalOverflow::Constrain;
-
-  // Step 3.
-  auto temporalDate = CalendarDateFromFields(cx, calendar, fields);
-  if (!temporalDate) {
-    return false;
-  }
-  auto date = ToPlainDate(&temporalDate.unwrap());
-
-  // Step 4.
-  PlainTime time;
-  if (!RegulateTime(cx, timeResult, overflow, &time)) {
-    return false;
-  }
-
-  // Step 5.
-  *result = {date, time};
-  return true;
+  return InterpretTemporalDateTimeFields(cx, calendar, fields, options, result);
 }
 
 /**
@@ -481,18 +478,29 @@ static Wrapped<PlainDateTimeObject*> ToTemporalDateTime(
     JSContext* cx, Handle<Value> item, Handle<JSObject*> maybeOptions) {
   // Steps 1-2. (Not applicable)
 
-  // Steps 3-4.
+  // FIXME: spec issue - GetOptionsObject is infallible.
+
+  // Step 3.
+  Rooted<PlainObject*> maybeResolvedOptions(cx);
+  if (maybeOptions) {
+    maybeResolvedOptions = SnapshotOwnProperties(cx, maybeOptions);
+    if (!maybeResolvedOptions) {
+      return nullptr;
+    }
+  }
+
+  // Steps 4-5.
   Rooted<CalendarValue> calendar(cx);
   PlainDateTime result;
   if (item.isObject()) {
     Rooted<JSObject*> itemObj(cx, &item.toObject());
 
-    // Step 3.a.
+    // Step 4.a.
     if (itemObj->canUnwrapAs<PlainDateTimeObject>()) {
       return itemObj;
     }
 
-    // Step 3.b.
+    // Step 4.b.
     if (auto* zonedDateTime = itemObj->maybeUnwrapIf<ZonedDateTimeObject>()) {
       auto epochInstant = ToInstant(zonedDateTime);
       Rooted<TimeZoneValue> timeZone(cx, zonedDateTime->timeZone());
@@ -505,19 +513,19 @@ static Wrapped<PlainDateTimeObject*> ToTemporalDateTime(
         return nullptr;
       }
 
-      // Step 3.b.i.
-      if (maybeOptions) {
+      // Step 4.b.i.
+      if (maybeResolvedOptions) {
         TemporalOverflow ignored;
-        if (!ToTemporalOverflow(cx, maybeOptions, &ignored)) {
+        if (!ToTemporalOverflow(cx, maybeResolvedOptions, &ignored)) {
           return nullptr;
         }
       }
 
-      // Steps 3.b.ii-iii.
+      // Steps 4.b.ii-iii.
       return GetPlainDateTimeFor(cx, timeZone, epochInstant, calendar);
     }
 
-    // Step 3.c.
+    // Step 4.c.
     if (auto* date = itemObj->maybeUnwrapIf<PlainDateObject>()) {
       PlainDateTime dateTime = {ToPlainDate(date), {}};
       Rooted<CalendarValue> calendar(cx, date->calendar());
@@ -525,24 +533,24 @@ static Wrapped<PlainDateTimeObject*> ToTemporalDateTime(
         return nullptr;
       }
 
-      // Step 3.c.i.
-      if (maybeOptions) {
+      // Step 4.c.i.
+      if (maybeResolvedOptions) {
         TemporalOverflow ignored;
-        if (!ToTemporalOverflow(cx, maybeOptions, &ignored)) {
+        if (!ToTemporalOverflow(cx, maybeResolvedOptions, &ignored)) {
           return nullptr;
         }
       }
 
-      // Step 3.c.ii.
+      // Step 4.c.ii.
       return CreateTemporalDateTime(cx, dateTime, calendar);
     }
 
-    // Step 3.d.
+    // Step 4.d.
     if (!GetTemporalCalendarWithISODefault(cx, itemObj, &calendar)) {
       return nullptr;
     }
 
-    // Step 3.e.
+    // Step 4.e.
     JS::RootedVector<PropertyKey> fieldNames(cx);
     if (!CalendarFields(cx, calendar,
                         {CalendarField::Day, CalendarField::Month,
@@ -551,7 +559,7 @@ static Wrapped<PlainDateTimeObject*> ToTemporalDateTime(
       return nullptr;
     }
 
-    // Step 3.f.
+    // Step 4.f.
     if (!AppendSorted(cx, fieldNames.get(),
                       {
                           TemporalField::Hour,
@@ -564,17 +572,17 @@ static Wrapped<PlainDateTimeObject*> ToTemporalDateTime(
       return nullptr;
     }
 
-    // Step 3.g.
+    // Step 4.g.
     Rooted<PlainObject*> fields(cx,
                                 PrepareTemporalFields(cx, itemObj, fieldNames));
     if (!fields) {
       return nullptr;
     }
 
-    // Step 3.h.
-    if (maybeOptions) {
-      if (!InterpretTemporalDateTimeFields(cx, calendar, fields, maybeOptions,
-                                           &result)) {
+    // Step 4.h.
+    if (maybeResolvedOptions) {
+      if (!InterpretTemporalDateTimeFields(cx, calendar, fields,
+                                           maybeResolvedOptions, &result)) {
         return nullptr;
       }
     } else {
@@ -583,15 +591,7 @@ static Wrapped<PlainDateTimeObject*> ToTemporalDateTime(
       }
     }
   } else {
-    // Step 4.a.
-    if (maybeOptions) {
-      TemporalOverflow ignored;
-      if (!ToTemporalOverflow(cx, maybeOptions, &ignored)) {
-        return nullptr;
-      }
-    }
-
-    // Step 4.b.
+    // Step 5.a.
     if (!item.isString()) {
       ReportValueError(cx, JSMSG_UNEXPECTED_TYPE, JSDVG_IGNORE_STACK, item,
                        nullptr, "not a string");
@@ -599,19 +599,19 @@ static Wrapped<PlainDateTimeObject*> ToTemporalDateTime(
     }
     Rooted<JSString*> string(cx, item.toString());
 
-    // Step 4.c.
+    // Step 5.b.
     Rooted<JSString*> calendarString(cx);
     if (!ParseTemporalDateTimeString(cx, string, &result, &calendarString)) {
       return nullptr;
     }
 
-    // Step 4.d.
+    // Step 5.c.
     MOZ_ASSERT(IsValidISODate(result.date));
 
-    // Step 4.e.
+    // Step 5.d.
     MOZ_ASSERT(IsValidTime(result.time));
 
-    // Steps 4.f-i.
+    // Steps 5.e-h.
     if (calendarString) {
       if (!ToBuiltinCalendar(cx, calendarString, &calendar)) {
         return nullptr;
@@ -619,9 +619,17 @@ static Wrapped<PlainDateTimeObject*> ToTemporalDateTime(
     } else {
       calendar.set(CalendarValue(cx->names().iso8601));
     }
+
+    // Step 5.i.
+    if (maybeResolvedOptions) {
+      TemporalOverflow ignored;
+      if (!ToTemporalOverflow(cx, maybeResolvedOptions, &ignored)) {
+        return nullptr;
+      }
+    }
   }
 
-  // Step 5.
+  // Step 6.
   return CreateTemporalDateTime(cx, result, calendar);
 }
 
@@ -1700,13 +1708,18 @@ static bool PlainDateTime_with(JSContext* cx, const CallArgs& args) {
   }
 
   // Step 5.
-  Rooted<JSObject*> options(cx);
+  Rooted<PlainObject*> resolvedOptions(cx);
   if (args.hasDefined(1)) {
-    options = RequireObjectArg(cx, "options", "with", args[1]);
+    Rooted<JSObject*> options(cx,
+                              RequireObjectArg(cx, "options", "with", args[1]));
+    if (!options) {
+      return false;
+    }
+    resolvedOptions = SnapshotOwnProperties(cx, options);
   } else {
-    options = NewPlainObjectWithProto(cx, nullptr);
+    resolvedOptions = NewPlainObjectWithProto(cx, nullptr);
   }
-  if (!options) {
+  if (!resolvedOptions) {
     return false;
   }
 
@@ -1789,7 +1802,7 @@ static bool PlainDateTime_with(JSContext* cx, const CallArgs& args) {
 
   // Step 19.
   PlainDateTime result;
-  if (!InterpretTemporalDateTimeFields(cx, calendar, fields, options,
+  if (!InterpretTemporalDateTimeFields(cx, calendar, fields, resolvedOptions,
                                        &result)) {
     return false;
   }

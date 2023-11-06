@@ -226,16 +226,27 @@ static Wrapped<ZonedDateTimeObject*> ToTemporalZonedDateTime(
     Handle<JSObject*> maybeOptions = nullptr) {
   // Steps 1-2. (Not applicable in our implementation)
 
+  // FIXME: spec issue - GetOptionsObject is infallible.
+
   // Step 3.
-  auto offsetBehaviour = OffsetBehaviour::Option;
+  Rooted<PlainObject*> maybeResolvedOptions(cx);
+  if (maybeOptions) {
+    maybeResolvedOptions = SnapshotOwnProperties(cx, maybeOptions);
+    if (!maybeResolvedOptions) {
+      return nullptr;
+    }
+  }
 
   // Step 4.
-  auto matchBehaviour = MatchBehaviour::MatchExactly;
-
-  // Step 7. (Reordered)
-  int64_t offsetNanoseconds = 0;
+  auto offsetBehaviour = OffsetBehaviour::Option;
 
   // Step 5.
+  auto matchBehaviour = MatchBehaviour::MatchExactly;
+
+  // Step 8. (Reordered)
+  int64_t offsetNanoseconds = 0;
+
+  // Step 6.
   Rooted<CalendarValue> calendar(cx);
   Rooted<TimeZoneValue> timeZone(cx);
   PlainDateTime dateTime;
@@ -244,17 +255,17 @@ static Wrapped<ZonedDateTimeObject*> ToTemporalZonedDateTime(
   if (item.isObject()) {
     Rooted<JSObject*> itemObj(cx, &item.toObject());
 
-    // Step 5.a.
+    // Step 6.a.
     if (itemObj->canUnwrapAs<ZonedDateTimeObject>()) {
       return itemObj;
     }
 
-    // Step 5.b.
+    // Step 6.b.
     if (!GetTemporalCalendarWithISODefault(cx, itemObj, &calendar)) {
       return nullptr;
     }
 
-    // Step 5.c.
+    // Step 6.c.
     JS::RootedVector<PropertyKey> fieldNames(cx);
     if (!CalendarFields(cx, calendar,
                         {CalendarField::Day, CalendarField::Month,
@@ -263,7 +274,7 @@ static Wrapped<ZonedDateTimeObject*> ToTemporalZonedDateTime(
       return nullptr;
     }
 
-    // Step 5.d.
+    // Step 6.d.
     if (!AppendSorted(cx, fieldNames.get(),
                       {
                           TemporalField::Hour,
@@ -278,7 +289,7 @@ static Wrapped<ZonedDateTimeObject*> ToTemporalZonedDateTime(
       return nullptr;
     }
 
-    // Step 5.e.
+    // Step 6.e.
     Rooted<PlainObject*> fields(
         cx, PrepareTemporalFields(cx, itemObj, fieldNames,
                                   {TemporalField::TimeZone}));
@@ -286,28 +297,28 @@ static Wrapped<ZonedDateTimeObject*> ToTemporalZonedDateTime(
       return nullptr;
     }
 
-    // Step 5.f.
+    // Step 6.f.
     Rooted<Value> timeZoneValue(cx);
     if (!GetProperty(cx, fields, fields, cx->names().timeZone,
                      &timeZoneValue)) {
       return nullptr;
     }
 
-    // Step 5.g.
+    // Step 6.g.
     if (!ToTemporalTimeZone(cx, timeZoneValue, &timeZone)) {
       return nullptr;
     }
 
-    // Step 5.h.
+    // Step 6.h.
     Rooted<Value> offsetValue(cx);
     if (!GetProperty(cx, fields, fields, cx->names().offset, &offsetValue)) {
       return nullptr;
     }
 
-    // Step 5.i.
+    // Step 6.i.
     MOZ_ASSERT(offsetValue.isString() || offsetValue.isUndefined());
 
-    // Step 5.j.
+    // Step 6.j.
     Rooted<JSString*> offsetString(cx);
     if (offsetValue.isString()) {
       offsetString = offsetValue.toString();
@@ -315,39 +326,40 @@ static Wrapped<ZonedDateTimeObject*> ToTemporalZonedDateTime(
       offsetBehaviour = OffsetBehaviour::Wall;
     }
 
-    if (maybeOptions) {
-      // Steps 5.k-l.
-      if (!ToTemporalDisambiguation(cx, maybeOptions, &disambiguation)) {
+    if (maybeResolvedOptions) {
+      // Steps 6.k-l.
+      if (!ToTemporalDisambiguation(cx, maybeResolvedOptions,
+                                    &disambiguation)) {
         return nullptr;
       }
 
-      // Step 5.m.
-      if (!ToTemporalOffset(cx, maybeOptions, &offsetOption)) {
+      // Step 6.m.
+      if (!ToTemporalOffset(cx, maybeResolvedOptions, &offsetOption)) {
         return nullptr;
       }
 
-      // Step 5.n.
-      if (!InterpretTemporalDateTimeFields(cx, calendar, fields, maybeOptions,
-                                           &dateTime)) {
+      // Step 6.n.
+      if (!InterpretTemporalDateTimeFields(cx, calendar, fields,
+                                           maybeResolvedOptions, &dateTime)) {
         return nullptr;
       }
     } else {
-      // Steps 5.k-m. (Not applicable)
+      // Steps 6.k-m. (Not applicable)
 
-      // Step 5.n.
+      // Step 6.n.
       if (!InterpretTemporalDateTimeFields(cx, calendar, fields, &dateTime)) {
         return nullptr;
       }
     }
 
-    // Step 8.
+    // Step 9.
     if (offsetBehaviour == OffsetBehaviour::Option) {
       if (!ParseDateTimeUTCOffset(cx, offsetString, &offsetNanoseconds)) {
         return nullptr;
       }
     }
   } else {
-    // Step 6.a.
+    // Step 7.a.
     if (!item.isString()) {
       ReportValueError(cx, JSMSG_UNEXPECTED_TYPE, JSDVG_IGNORE_STACK, item,
                        nullptr, "not a string");
@@ -373,7 +385,7 @@ static Wrapped<ZonedDateTimeObject*> ToTemporalZonedDateTime(
     // Case 6: 19700101[Europe/Berlin]
     // { [[Z]]: false, [[OffsetString]]: undefined, [[Name]]: "Europe/Berlin" }
 
-    // Steps 6.b-c.
+    // Steps 7.b-c.
     bool isUTC;
     bool hasOffset;
     int64_t timeZoneOffset;
@@ -385,27 +397,27 @@ static Wrapped<ZonedDateTimeObject*> ToTemporalZonedDateTime(
       return nullptr;
     }
 
-    // Step 6.d.
+    // Step 7.d.
     MOZ_ASSERT(timeZoneString);
 
-    // Step 6.e.
+    // Step 7.e.
     if (!ToTemporalTimeZone(cx, timeZoneString, &timeZone)) {
       return nullptr;
     }
 
-    // Step 6.f. (Not applicable in our implementation.)
+    // Step 7.f. (Not applicable in our implementation.)
 
-    // Step 6.g.
+    // Step 7.g.
     if (isUTC) {
       offsetBehaviour = OffsetBehaviour::Exact;
     }
 
-    // Step 6.h.
+    // Step 7.h.
     else if (!hasOffset) {
       offsetBehaviour = OffsetBehaviour::Wall;
     }
 
-    // Steps 6.i-l.
+    // Steps 7.i-l.
     if (calendarString) {
       if (!ToBuiltinCalendar(cx, calendarString, &calendar)) {
         return nullptr;
@@ -414,35 +426,36 @@ static Wrapped<ZonedDateTimeObject*> ToTemporalZonedDateTime(
       calendar.set(CalendarValue(cx->names().iso8601));
     }
 
-    // Step 6.m.
+    // Step 7.m.
     matchBehaviour = MatchBehaviour::MatchMinutes;
 
-    if (maybeOptions) {
-      // Step 6.n.
-      if (!ToTemporalDisambiguation(cx, maybeOptions, &disambiguation)) {
+    if (maybeResolvedOptions) {
+      // Step 7.n.
+      if (!ToTemporalDisambiguation(cx, maybeResolvedOptions,
+                                    &disambiguation)) {
         return nullptr;
       }
 
-      // Step 6.o.
-      if (!ToTemporalOffset(cx, maybeOptions, &offsetOption)) {
+      // Step 7.o.
+      if (!ToTemporalOffset(cx, maybeResolvedOptions, &offsetOption)) {
         return nullptr;
       }
 
-      // Step 6.p.
+      // Step 7.p.
       TemporalOverflow ignored;
-      if (!ToTemporalOverflow(cx, maybeOptions, &ignored)) {
+      if (!ToTemporalOverflow(cx, maybeResolvedOptions, &ignored)) {
         return nullptr;
       }
     }
 
-    // Step 8.
+    // Step 9.
     if (offsetBehaviour == OffsetBehaviour::Option) {
       MOZ_ASSERT(hasOffset);
       offsetNanoseconds = timeZoneOffset;
     }
   }
 
-  // Step 9.
+  // Step 10.
   Instant epochNanoseconds;
   if (!InterpretISODateTimeOffset(
           cx, dateTime, offsetBehaviour, offsetNanoseconds, timeZone,
@@ -450,7 +463,7 @@ static Wrapped<ZonedDateTimeObject*> ToTemporalZonedDateTime(
     return nullptr;
   }
 
-  // Step 10.
+  // Step 11.
   return CreateTemporalZonedDateTime(cx, epochNanoseconds, timeZone, calendar);
 }
 
@@ -2385,13 +2398,18 @@ static bool ZonedDateTime_with(JSContext* cx, const CallArgs& args) {
   }
 
   // Step 5.
-  Rooted<JSObject*> options(cx);
+  Rooted<PlainObject*> resolvedOptions(cx);
   if (args.hasDefined(1)) {
-    options = RequireObjectArg(cx, "options", "with", args[1]);
+    Rooted<JSObject*> options(cx,
+                              RequireObjectArg(cx, "options", "with", args[1]));
+    if (!options) {
+      return false;
+    }
+    resolvedOptions = SnapshotOwnProperties(cx, options);
   } else {
-    options = NewPlainObjectWithProto(cx, nullptr);
+    resolvedOptions = NewPlainObjectWithProto(cx, nullptr);
   }
-  if (!options) {
+  if (!resolvedOptions) {
     return false;
   }
 
@@ -2428,8 +2446,8 @@ static bool ZonedDateTime_with(JSContext* cx, const CallArgs& args) {
   }
 
   // Step 12.
-  Rooted<PlainObject*> fields(
-      cx, PrepareTemporalFields(cx, dateTime, fieldNames));
+  Rooted<PlainObject*> fields(cx,
+                              PrepareTemporalFields(cx, dateTime, fieldNames));
   if (!fields) {
     return false;
   }
@@ -2508,19 +2526,19 @@ static bool ZonedDateTime_with(JSContext* cx, const CallArgs& args) {
 
   // Step 24-25.
   auto disambiguation = TemporalDisambiguation::Compatible;
-  if (!ToTemporalDisambiguation(cx, options, &disambiguation)) {
+  if (!ToTemporalDisambiguation(cx, resolvedOptions, &disambiguation)) {
     return false;
   }
 
   // Step 26.
   auto offset = TemporalOffset::Prefer;
-  if (!ToTemporalOffset(cx, options, &offset)) {
+  if (!ToTemporalOffset(cx, resolvedOptions, &offset)) {
     return false;
   }
 
   // Step 27.
   PlainDateTime dateTimeResult;
-  if (!InterpretTemporalDateTimeFields(cx, calendar, fields, options,
+  if (!InterpretTemporalDateTimeFields(cx, calendar, fields, resolvedOptions,
                                        &dateTimeResult)) {
     return false;
   }
