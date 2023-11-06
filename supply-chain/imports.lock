@@ -43,6 +43,13 @@ user-id = 1258
 user-login = "padenot"
 user-name = "Paul Adenot"
 
+[[publisher.audio_thread_priority]]
+version = "0.30.0"
+when = "2023-11-06"
+user-id = 1258
+user-login = "padenot"
+user-name = "Paul Adenot"
+
 [[publisher.authenticator]]
 version = "0.4.0-alpha.20"
 when = "2023-08-24"

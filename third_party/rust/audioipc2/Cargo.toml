@@ -63,7 +63,7 @@ cc = "1.0"
 ashmem = "0.1.2"
 
 [target."cfg(target_os = \"linux\")".dependencies.audio_thread_priority]
-version = "0.26.1"
+version = "0.30"
 default-features = false
 
 [target."cfg(unix)".dependencies]
