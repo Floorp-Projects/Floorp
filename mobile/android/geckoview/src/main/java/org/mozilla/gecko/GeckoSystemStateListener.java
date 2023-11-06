@@ -80,7 +80,7 @@ public class GeckoSystemStateListener implements InputManager.InputDeviceListene
       return;
     }
 
-    if (mInputManager != null) {
+    if (mInputManager == null) {
       Log.e(LOGTAG, "mInputManager should be valid!");
       return;
     }
