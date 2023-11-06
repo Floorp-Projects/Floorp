@@ -26,8 +26,10 @@ blocklist:
             - https://bugzilla.mozilla.org/show_bug.cgi?id=1763529
             - https://bugzilla.mozilla.org/show_bug.cgi?id=1811159
             - https://bugzilla.mozilla.org/show_bug.cgi?id=1820155
+            - https://bugzilla.mozilla.org/show_bug.cgi?id=1861296
         data_reviews:
             - https://bugzilla.mozilla.org/show_bug.cgi?id=1607744#c11
+            - https://bugzilla.mozilla.org/show_bug.cgi?id=1861296#c5
         data_sensitivity:
             - technical
         metadata:
@@ -36,7 +38,7 @@ blocklist:
         notification_emails:
             - addons-dev-internal@mozilla.com
             - rwu@mozilla.com
-        expires: 122
+        expires: 132
     mlbf_source:
         type: string
         description: >
@@ -66,9 +68,10 @@ blocklist:
             - https://bugzilla.mozilla.org/show_bug.cgi?id=1763529
             - https://bugzilla.mozilla.org/show_bug.cgi?id=1811159
             - https://bugzilla.mozilla.org/show_bug.cgi?id=1820155
+            - https://bugzilla.mozilla.org/show_bug.cgi?id=1861296
         data_reviews:
-            - https://bugzilla.mozilla.org/show_bug.cgi?id=1820155#c?
-            - https://bugzilla.mozilla.org/show_bug.cgi?id=1820155#?
+            - https://bugzilla.mozilla.org/show_bug.cgi?id=1662857#c11
+            - https://bugzilla.mozilla.org/show_bug.cgi?id=1861296#c5
         data_sensitivity:
             - technical
         metadata:
@@ -77,7 +80,7 @@ blocklist:
         notification_emails:
             - addons-dev-internal@mozilla.com
             - rwu@mozilla.com
-        expires: 122
+        expires: 132
         telemetry_mirror: BLOCKLIST_MLBF_SOURCE
     mlbf_generation_time:
         type: datetime
@@ -96,8 +99,10 @@ blocklist:
             - https://bugzilla.mozilla.org/show_bug.cgi?id=1763529
             - https://bugzilla.mozilla.org/show_bug.cgi?id=1811159
             - https://bugzilla.mozilla.org/show_bug.cgi?id=1820155
+            - https://bugzilla.mozilla.org/show_bug.cgi?id=1861296
         data_reviews:
             - https://bugzilla.mozilla.org/show_bug.cgi?id=1633466#c3
+            - https://bugzilla.mozilla.org/show_bug.cgi?id=1861296#c5
         data_sensitivity:
             - technical
         metadata:
@@ -106,13 +111,12 @@ blocklist:
         notification_emails:
             - addons-dev-internal@mozilla.com
             - rwu@mozilla.com
-        expires: 122
+        expires: 132
     mlbf_stash_time_oldest:
         type: datetime
         description: >
             Keep track of the timestamp of the oldest stash
-            of the addons blocklist. Only meaningful when
-            mlbf_enabled is true.
+            of the addons blocklist.
         lifetime: application
         bugs:
             - https://bugzilla.mozilla.org/show_bug.cgi?id=1633466
@@ -122,20 +126,21 @@ blocklist:
             - https://bugzilla.mozilla.org/show_bug.cgi?id=1763529
             - https://bugzilla.mozilla.org/show_bug.cgi?id=1811159
             - https://bugzilla.mozilla.org/show_bug.cgi?id=1820155
+            - https://bugzilla.mozilla.org/show_bug.cgi?id=1861296
         data_reviews:
-            - https://bugzilla.mozilla.org/show_bug.cgi?id=1633466#a1487451_575816
+            - https://bugzilla.mozilla.org/show_bug.cgi?id=1633466#c9
+            - https://bugzilla.mozilla.org/show_bug.cgi?id=1861296#c5
         data_sensitivity:
             - technical
         notification_emails:
             - addons-dev-internal@mozilla.com
             - rwu@mozilla.com
-        expires: 122
+        expires: 132
     mlbf_stash_time_newest:
         type: datetime
         description: >
             Keep track of the timestamp of the most recent
-            stash of the addons blocklist. Only meaningful
-            when mlbf_enabled is true.
+            stash of the addons blocklist.
         lifetime: application
         bugs:
             - https://bugzilla.mozilla.org/show_bug.cgi?id=1633466
@@ -145,8 +150,10 @@ blocklist:
             - https://bugzilla.mozilla.org/show_bug.cgi?id=1763529
             - https://bugzilla.mozilla.org/show_bug.cgi?id=1811159
             - https://bugzilla.mozilla.org/show_bug.cgi?id=1820155
+            - https://bugzilla.mozilla.org/show_bug.cgi?id=1861296
         data_reviews:
-            - https://bugzilla.mozilla.org/show_bug.cgi?id=1633466#a1487451_575816
+            - https://bugzilla.mozilla.org/show_bug.cgi?id=1633466#c9
+            - https://bugzilla.mozilla.org/show_bug.cgi?id=1861296#c5
         data_sensitivity:
             - technical
         metadata:
@@ -155,7 +162,7 @@ blocklist:
         notification_emails:
             - addons-dev-internal@mozilla.com
             - rwu@mozilla.com
-        expires: 122
+        expires: 132
     addon_block_change:
         type: event
         description: >
@@ -191,8 +198,8 @@ blocklist:
                 type: string
                 description: >
                     The blocklistState of the add-on. 0 is unblocked,
-                    2 is blocked. 1 is soft blocked (only if blocklist
-                    v3 was disabled in favor of v2).
+                    2 is blocked. 1 is soft blocked (this state does not
+                    exist in blocklist v3).
             addon_version:
                 type: string
                 description: >
@@ -244,8 +251,10 @@ blocklist:
             - https://bugzilla.mozilla.org/show_bug.cgi?id=1763529
             - https://bugzilla.mozilla.org/show_bug.cgi?id=1811159
             - https://bugzilla.mozilla.org/show_bug.cgi?id=1820155
+            - https://bugzilla.mozilla.org/show_bug.cgi?id=1861296
         data_reviews:
             - https://bugzilla.mozilla.org/show_bug.cgi?id=1662857#c11
+            - https://bugzilla.mozilla.org/show_bug.cgi?id=1861296#c5
         data_sensitivity:
             - technical
         metadata:
@@ -254,4 +263,4 @@ blocklist:
         notification_emails:
             - addons-dev-internal@mozilla.com
             - rwu@mozilla.com
-        expires: 122
+        expires: 132
