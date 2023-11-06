@@ -1723,6 +1723,22 @@
     "description": "Hard page faults (since last telemetry ping)",
     "operating_systems": ["unix"]
   },
+  "MEMORY_PHC_SLOP": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox"],
+    "alert_emails": [
+      "memshrink-telemetry-alerts@mozilla.com",
+      "pbone@mozilla.com"
+    ],
+    "bug_numbers": [1829127],
+    "expires_in_version": "128",
+    "kind": "exponential",
+    "low": 4096,
+    "high": 8388608,
+    "n_buckets": 48,
+    "description": "Over-allocation due to PHC's rounding (aka internal fragmentation).  Measured in bytes.",
+    "releaseChannelCollection": "opt-out"
+  },
   "FONTLIST_INITOTHERFAMILYNAMES": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
