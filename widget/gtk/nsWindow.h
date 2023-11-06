@@ -559,6 +559,8 @@ class nsWindow final : public nsBaseWidget {
 
   float mAspectRatio = 0.0f;
   float mAspectRatioSaved = 0.0f;
+  mozilla::Maybe<GtkOrientation> mAspectResizer;
+  LayoutDeviceIntPoint mLastResizePoint;
 
   // The size requested, which might not be reflected in mBounds.  Used in
   // WaylandPopupSetDirectPosition() to remember intended size for popup
@@ -982,6 +984,8 @@ class nsWindow final : public nsBaseWidget {
   void SetUserTimeAndStartupTokenForActivatedWindow();
 
   void KioskLockOnMonitor();
+
+  void EmulateResizeDrag(GdkEventMotion* aEvent);
 
 #ifdef MOZ_X11
   typedef enum {GTK_WIDGET_COMPOSIDED_DEFAULT = 0,
