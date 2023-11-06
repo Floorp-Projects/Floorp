@@ -44,7 +44,7 @@ public class GeckoScreenOrientation {
 
     public final short value;
 
-    private ScreenOrientation(final int value) {
+    ScreenOrientation(final int value) {
       this.value = (short) value;
     }
 

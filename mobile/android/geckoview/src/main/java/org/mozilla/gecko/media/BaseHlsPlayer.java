@@ -8,14 +8,14 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 public interface BaseHlsPlayer {
 
-  public enum TrackType {
+  enum TrackType {
     UNDEFINED,
     AUDIO,
     VIDEO,
     TEXT,
   }
 
-  public enum ResourceError {
+  enum ResourceError {
     BASE(-100),
     UNKNOWN(-101),
     PLAYER(-102),
@@ -23,7 +23,7 @@ public interface BaseHlsPlayer {
 
     private int mNumVal;
 
-    private ResourceError(final int numVal) {
+    ResourceError(final int numVal) {
       mNumVal = numVal;
     }
 
@@ -32,7 +32,7 @@ public interface BaseHlsPlayer {
     }
   }
 
-  public enum DemuxerError {
+  enum DemuxerError {
     BASE(-200),
     UNKNOWN(-201),
     PLAYER(-202),
@@ -40,7 +40,7 @@ public interface BaseHlsPlayer {
 
     private int mNumVal;
 
-    private DemuxerError(final int numVal) {
+    DemuxerError(final int numVal) {
       mNumVal = numVal;
     }
 
@@ -49,13 +49,13 @@ public interface BaseHlsPlayer {
     }
   }
 
-  public interface DemuxerCallbacks {
+  interface DemuxerCallbacks {
     void onInitialized(boolean hasAudio, boolean hasVideo);
 
     void onError(int errorCode);
   }
 
-  public interface ResourceCallbacks {
+  interface ResourceCallbacks {
     void onLoad(String mediaUrl);
 
     void onDataArrived();
@@ -64,41 +64,41 @@ public interface BaseHlsPlayer {
   }
 
   // Used to identify player instance.
-  public int getId();
+  int getId();
 
   // =======================================================================
   // API for GeckoHLSResourceWrapper
   // =======================================================================
-  public void init(String url, ResourceCallbacks callback);
+  void init(String url, ResourceCallbacks callback);
 
-  public boolean isLiveStream();
+  boolean isLiveStream();
 
   // =======================================================================
   // API for GeckoHLSDemuxerWrapper
   // =======================================================================
-  public void addDemuxerWrapperCallbackListener(DemuxerCallbacks callback);
+  void addDemuxerWrapperCallbackListener(DemuxerCallbacks callback);
 
-  public ConcurrentLinkedQueue<GeckoHLSSample> getSamples(TrackType trackType, int number);
+  ConcurrentLinkedQueue<GeckoHLSSample> getSamples(TrackType trackType, int number);
 
-  public long getBufferedPosition();
+  long getBufferedPosition();
 
-  public int getNumberOfTracks(TrackType trackType);
+  int getNumberOfTracks(TrackType trackType);
 
-  public GeckoVideoInfo getVideoInfo(int index);
+  GeckoVideoInfo getVideoInfo(int index);
 
-  public GeckoAudioInfo getAudioInfo(int index);
+  GeckoAudioInfo getAudioInfo(int index);
 
-  public boolean seek(long positionUs);
+  boolean seek(long positionUs);
 
-  public long getNextKeyFrameTime();
+  long getNextKeyFrameTime();
 
-  public void suspend();
+  void suspend();
 
-  public void resume();
+  void resume();
 
-  public void play();
+  void play();
 
-  public void pause();
+  void pause();
 
-  public void release();
+  void release();
 }

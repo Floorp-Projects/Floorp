@@ -8,5 +8,5 @@ package org.mozilla.gecko.util;
 import java.util.concurrent.Executor;
 
 public interface IXPCOMEventTarget extends Executor {
-  public boolean isOnCurrentThread();
+  boolean isOnCurrentThread();
 }

@@ -65,12 +65,12 @@ public final class SessionTextInput {
     @IntDef({ONE_SHOT, START_MONITOR, END_MONITOR})
     /* package */ @interface CursorMonitorMode {}
 
-    @WrapForJNI static final int ONE_SHOT = 1;
+    @WrapForJNI int ONE_SHOT = 1;
     // START_MONITOR start the monitor for composing character rects.  If is is
     // updaed,  call updateCompositionRects()
-    @WrapForJNI static final int START_MONITOR = 2;
+    @WrapForJNI int START_MONITOR = 2;
     // ENDT_MONITOR stops the monitor for composing character rects.
-    @WrapForJNI static final int END_MONITOR = 3;
+    @WrapForJNI int END_MONITOR = 3;
 
     void sendKeyEvent(@Nullable View view, int action, @NonNull KeyEvent event);
 
@@ -102,23 +102,23 @@ public final class SessionTextInput {
     })
     /* package */ @interface IMENotificationType {}
 
-    @WrapForJNI static final int NOTIFY_IME_OF_TOKEN = -3;
-    @WrapForJNI static final int NOTIFY_IME_OPEN_VKB = -2;
-    @WrapForJNI static final int NOTIFY_IME_REPLY_EVENT = -1;
-    @WrapForJNI static final int NOTIFY_IME_OF_FOCUS = 1;
-    @WrapForJNI static final int NOTIFY_IME_OF_BLUR = 2;
-    @WrapForJNI static final int NOTIFY_IME_TO_COMMIT_COMPOSITION = 8;
-    @WrapForJNI static final int NOTIFY_IME_TO_CANCEL_COMPOSITION = 9;
+    @WrapForJNI int NOTIFY_IME_OF_TOKEN = -3;
+    @WrapForJNI int NOTIFY_IME_OPEN_VKB = -2;
+    @WrapForJNI int NOTIFY_IME_REPLY_EVENT = -1;
+    @WrapForJNI int NOTIFY_IME_OF_FOCUS = 1;
+    @WrapForJNI int NOTIFY_IME_OF_BLUR = 2;
+    @WrapForJNI int NOTIFY_IME_TO_COMMIT_COMPOSITION = 8;
+    @WrapForJNI int NOTIFY_IME_TO_CANCEL_COMPOSITION = 9;
 
     // IME enabled state for notifyIMEContext().
     @Retention(RetentionPolicy.SOURCE)
     @IntDef({IME_STATE_UNKNOWN, IME_STATE_DISABLED, IME_STATE_ENABLED, IME_STATE_PASSWORD})
     /* package */ @interface IMEState {}
 
-    static final int IME_STATE_UNKNOWN = -1;
-    static final int IME_STATE_DISABLED = 0;
-    static final int IME_STATE_ENABLED = 1;
-    static final int IME_STATE_PASSWORD = 2;
+    int IME_STATE_UNKNOWN = -1;
+    int IME_STATE_DISABLED = 0;
+    int IME_STATE_ENABLED = 1;
+    int IME_STATE_PASSWORD = 2;
 
     // Flags for notifyIMEContext().
     @Retention(RetentionPolicy.SOURCE)
@@ -127,9 +127,9 @@ public final class SessionTextInput {
         value = {IME_FLAG_PRIVATE_BROWSING, IME_FLAG_USER_ACTION, IME_FOCUS_NOT_CHANGED})
     /* package */ @interface IMEContextFlags {}
 
-    @WrapForJNI static final int IME_FLAG_PRIVATE_BROWSING = 1 << 0;
-    @WrapForJNI static final int IME_FLAG_USER_ACTION = 1 << 1;
-    @WrapForJNI static final int IME_FOCUS_NOT_CHANGED = 1 << 2;
+    @WrapForJNI int IME_FLAG_PRIVATE_BROWSING = 1 << 0;
+    @WrapForJNI int IME_FLAG_USER_ACTION = 1 << 1;
+    @WrapForJNI int IME_FOCUS_NOT_CHANGED = 1 << 2;
 
     void notifyIME(@IMENotificationType int type);
 

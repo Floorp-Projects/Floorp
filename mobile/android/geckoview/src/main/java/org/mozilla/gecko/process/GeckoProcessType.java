@@ -24,7 +24,7 @@ public enum GeckoProcessType {
 
   private final String mGeckoName;
 
-  private GeckoProcessType(final String geckoName) {
+  GeckoProcessType(final String geckoName) {
     mGeckoName = geckoName;
   }
 

@@ -39,14 +39,14 @@ import org.mozilla.gecko.util.XPCOMEventTarget;
    * passed into Context.bindService().
    */
   @WrapForJNI
-  public static enum PriorityLevel {
+  public enum PriorityLevel {
     FOREGROUND(Context.BIND_IMPORTANT),
     BACKGROUND(0),
     IDLE(Context.BIND_WAIVE_PRIORITY);
 
     private final int mAndroidFlag;
 
-    private PriorityLevel(final int androidFlag) {
+    PriorityLevel(final int androidFlag) {
       mAndroidFlag = androidFlag;
     }
 

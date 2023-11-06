@@ -22,7 +22,7 @@ public final class GeckoHLSDemuxerWrapper {
     TEXT(3);
     private int mType;
 
-    private TrackType(final int type) {
+    TrackType(final int type) {
       mType = type;
     }
 
