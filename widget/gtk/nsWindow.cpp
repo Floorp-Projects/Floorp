@@ -4363,50 +4363,68 @@ Maybe<GdkWindowEdge> nsWindow::CheckResizerEdge(
   }();
 
   if (!canResize) {
-    return {};
+    return Nothing();
   }
 
   // If we're not in a PiP window, allow 1px resizer edge from the top edge,
   // and nothing else.
   // This is to allow resizes of tiled windows on KDE, see bug 1813554.
-  const int resizerSize = (mIsPIPWindow ? 15 : 1) * GdkCeiledScaleFactor();
+  const int resizerHeight = (mIsPIPWindow ? 15 : 1) * GdkCeiledScaleFactor();
+  const int resizerWidth = resizerHeight * 4;
 
   const int topDist = aPoint.y;
   const int leftDist = aPoint.x;
   const int rightDist = mBounds.width - aPoint.x;
   const int bottomDist = mBounds.height - aPoint.y;
 
-  if (topDist <= resizerSize) {
-    if (rightDist <= resizerSize) {
+  // We can't emulate resize of North/West edges on Wayland as we can't shift
+  // toplevel window.
+  bool waylandLimitedResize = mAspectRatio != 0.0f && GdkIsWaylandDisplay();
+
+  if (topDist <= resizerHeight) {
+    if (rightDist <= resizerWidth) {
       return Some(GDK_WINDOW_EDGE_NORTH_EAST);
     }
-    if (leftDist <= resizerSize) {
+    if (leftDist <= resizerWidth) {
       return Some(GDK_WINDOW_EDGE_NORTH_WEST);
     }
-    return Some(GDK_WINDOW_EDGE_NORTH);
+    return waylandLimitedResize ? Nothing() : Some(GDK_WINDOW_EDGE_NORTH);
   }
 
   if (!mIsPIPWindow) {
-    return {};
+    return Nothing();
   }
 
-  if (bottomDist <= resizerSize) {
-    if (leftDist <= resizerSize) {
+  if (bottomDist <= resizerHeight) {
+    if (leftDist <= resizerWidth) {
       return Some(GDK_WINDOW_EDGE_SOUTH_WEST);
     }
-    if (rightDist <= resizerSize) {
+    if (rightDist <= resizerWidth) {
       return Some(GDK_WINDOW_EDGE_SOUTH_EAST);
     }
     return Some(GDK_WINDOW_EDGE_SOUTH);
   }
 
-  if (leftDist <= resizerSize) {
-    return Some(GDK_WINDOW_EDGE_WEST);
+  if (leftDist <= resizerHeight) {
+    if (topDist <= resizerWidth) {
+      return Some(GDK_WINDOW_EDGE_NORTH_WEST);
+    }
+    if (bottomDist <= resizerWidth) {
+      return Some(GDK_WINDOW_EDGE_SOUTH_WEST);
+    }
+    return waylandLimitedResize ? Nothing() : Some(GDK_WINDOW_EDGE_WEST);
   }
-  if (rightDist <= resizerSize) {
+
+  if (rightDist <= resizerHeight) {
+    if (topDist <= resizerWidth) {
+      return Some(GDK_WINDOW_EDGE_NORTH_EAST);
+    }
+    if (bottomDist <= resizerWidth) {
+      return Some(GDK_WINDOW_EDGE_SOUTH_EAST);
+    }
     return Some(GDK_WINDOW_EDGE_EAST);
   }
-  return {};
+  return Nothing();
 }
 
 template <typename Event>
