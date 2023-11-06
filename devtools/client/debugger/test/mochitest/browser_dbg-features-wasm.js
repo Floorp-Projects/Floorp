@@ -75,8 +75,7 @@ add_task(async function () {
   await addBreakpoint(dbg, "fib.c", breakpointLine);
   invokeInTab("runWasm");
 
-  await waitForPausedInOriginalFileAndToggleMapScopes(dbg);
-
+  await waitForPaused(dbg);
   assertPausedAtSourceAndLine(dbg, findSource(dbg, "fib.c").id, breakpointLine);
   await assertBreakpoint(dbg, breakpointLine);
   // Capture the generated location line, so that we can better report
@@ -132,8 +131,7 @@ add_task(async function () {
 
   // But once we switch to original source, we should have the original text content and be able
   // to do all classic assertions for paused state.
-  await waitForPausedInOriginalFileAndToggleMapScopes(dbg);
-
+  await waitForPaused(dbg);
   assertPausedAtSourceAndLine(dbg, findSource(dbg, "fib.c").id, breakpointLine);
 
   info("Reselect the binary source");

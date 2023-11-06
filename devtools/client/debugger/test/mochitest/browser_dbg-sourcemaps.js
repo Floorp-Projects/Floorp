@@ -77,7 +77,7 @@ add_task(async function () {
   assertBreakpointExists(dbg, entrySrc, 15);
 
   invokeInTab("keepMeAlive");
-  await waitForPausedInOriginalFileAndToggleMapScopes(dbg);
+  await waitForPaused(dbg);
   assertPausedAtSourceAndLine(dbg, entrySrc.id, 15);
 
   await stepIn(dbg);

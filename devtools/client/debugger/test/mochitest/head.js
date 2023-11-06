@@ -35,12 +35,6 @@ Services.scriptloader.loadSubScript(
   this
 );
 
-// Clear preferences that may be set during the course of tests.
-registerCleanupFunction(() => {
-  info("finish() was called, cleaning up and clearing debugger preferences...");
-  Services.prefs.clearUserPref("devtools.debugger.map-scopes-enabled");
-});
-
 /**
  * Helper function for `_loadAllIntegrationTests`.
  *

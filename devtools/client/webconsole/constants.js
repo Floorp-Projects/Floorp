@@ -44,7 +44,6 @@ const actionTypes = {
   SHOW_OBJECT_IN_SIDEBAR: "SHOW_OBJECT_IN_SIDEBAR",
   SIDEBAR_CLOSE: "SIDEBAR_CLOSE",
   SPLIT_CONSOLE_CLOSE_BUTTON_TOGGLE: "SPLIT_CONSOLE_CLOSE_BUTTON_TOGGLE",
-  SHOW_EVALUATION_NOTIFICATION: "SHOW_EVALUATION_NOTIFICATION",
   TARGET_MESSAGES_REMOVE: "TARGET_MESSAGES_REMOVE",
   TIMESTAMPS_TOGGLE: "TIMESTAMPS_TOGGLE",
   UPDATE_HISTORY_POSITION: "UPDATE_HISTORY_POSITION",
@@ -201,10 +200,6 @@ const urls = {
     "https://firefox-source-docs.mozilla.org/devtools-user/web_console/helpers/",
 };
 
-const evaluationNotifications = {
-  ORIGINAL_VARIABLE_MAPPING: "originalVariableMapping",
-};
-
 // Combine into a single constants object
 module.exports = Object.assign(
   {
@@ -221,7 +216,5 @@ module.exports = Object.assign(
   jstermCommands,
   prefs,
   historyCommands,
-  urls,
-  historyCommands,
-  evaluationNotifications
+  urls
 );

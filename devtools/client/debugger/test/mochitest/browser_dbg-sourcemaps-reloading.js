@@ -31,7 +31,8 @@ add_task(async function () {
   const onReloaded = reload(dbg, "opts.js");
   await waitForDispatch(dbg.store, "LOAD_ORIGINAL_SOURCE_TEXT");
 
-  await waitForPausedInOriginalFileAndToggleMapScopes(dbg, "entry.js");
+  await waitForPaused(dbg);
+  await waitForDispatch(dbg.store, "ADD_INLINE_PREVIEW");
   assertPausedAtSourceAndLine(dbg, findSource(dbg, "entry.js").id, 5);
 
   await waitForBreakpointCount(dbg, 2);
