@@ -545,23 +545,33 @@ static Wrapped<PlainDateTimeObject*> ToTemporalDateTime(
     // Step 3.e.
     JS::RootedVector<PropertyKey> fieldNames(cx);
     if (!CalendarFields(cx, calendar,
-                        {CalendarField::Day, CalendarField::Hour,
-                         CalendarField::Microsecond, CalendarField::Millisecond,
-                         CalendarField::Minute, CalendarField::Month,
-                         CalendarField::MonthCode, CalendarField::Nanosecond,
-                         CalendarField::Second, CalendarField::Year},
+                        {CalendarField::Day, CalendarField::Month,
+                         CalendarField::MonthCode, CalendarField::Year},
                         &fieldNames)) {
       return nullptr;
     }
 
     // Step 3.f.
+    if (!AppendSorted(cx, fieldNames.get(),
+                      {
+                          TemporalField::Hour,
+                          TemporalField::Microsecond,
+                          TemporalField::Millisecond,
+                          TemporalField::Minute,
+                          TemporalField::Nanosecond,
+                          TemporalField::Second,
+                      })) {
+      return nullptr;
+    }
+
+    // Step 3.g.
     Rooted<PlainObject*> fields(cx,
                                 PrepareTemporalFields(cx, itemObj, fieldNames));
     if (!fields) {
       return nullptr;
     }
 
-    // Step 3.g.
+    // Step 3.h.
     if (maybeOptions) {
       if (!InterpretTemporalDateTimeFields(cx, calendar, fields, maybeOptions,
                                            &result)) {
@@ -1706,53 +1716,63 @@ static bool PlainDateTime_with(JSContext* cx, const CallArgs& args) {
   // Step 7.
   JS::RootedVector<PropertyKey> fieldNames(cx);
   if (!CalendarFields(cx, calendar,
-                      {CalendarField::Day, CalendarField::Hour,
-                       CalendarField::Microsecond, CalendarField::Millisecond,
-                       CalendarField::Minute, CalendarField::Month,
-                       CalendarField::MonthCode, CalendarField::Nanosecond,
-                       CalendarField::Second, CalendarField::Year},
+                      {CalendarField::Day, CalendarField::Month,
+                       CalendarField::MonthCode, CalendarField::Year},
                       &fieldNames)) {
     return false;
   }
 
   // Step 8.
+  if (!AppendSorted(cx, fieldNames.get(),
+                    {
+                        TemporalField::Hour,
+                        TemporalField::Microsecond,
+                        TemporalField::Millisecond,
+                        TemporalField::Minute,
+                        TemporalField::Nanosecond,
+                        TemporalField::Second,
+                    })) {
+    return false;
+  }
+
+  // Step 9.
   Rooted<PlainObject*> fields(cx,
                               PrepareTemporalFields(cx, dateTime, fieldNames));
   if (!fields) {
     return false;
   }
 
-  // Step 9.
+  // Step 10.
   Rooted<PlainObject*> partialDateTime(
       cx, PreparePartialTemporalFields(cx, temporalDateTimeLike, fieldNames));
   if (!partialDateTime) {
     return false;
   }
 
-  // Step 10.
+  // Step 11.
   Rooted<JSObject*> mergedFields(
       cx, CalendarMergeFields(cx, calendar, fields, partialDateTime));
   if (!mergedFields) {
     return false;
   }
 
-  // Step 11.
+  // Step 12.
   fields = PrepareTemporalFields(cx, mergedFields, fieldNames);
   if (!fields) {
     return false;
   }
 
-  // Step 12.
+  // Step 13.
   PlainDateTime result;
   if (!InterpretTemporalDateTimeFields(cx, calendar, fields, options,
                                        &result)) {
     return false;
   }
 
-  // Steps 13-14.
+  // Steps 14-15.
   MOZ_ASSERT(IsValidISODateTime(result));
 
-  // Step 15.
+  // Step 16.
   auto* obj = CreateTemporalDateTime(cx, result, calendar);
   if (!obj) {
     return false;

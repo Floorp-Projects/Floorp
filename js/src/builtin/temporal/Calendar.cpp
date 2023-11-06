@@ -861,30 +861,6 @@ static bool ToCalendarField(JSContext* cx, JSLinearString* linear,
     *result = CalendarField::Day;
     return true;
   }
-  if (StringEqualsLiteral(linear, "hour")) {
-    *result = CalendarField::Hour;
-    return true;
-  }
-  if (StringEqualsLiteral(linear, "minute")) {
-    *result = CalendarField::Minute;
-    return true;
-  }
-  if (StringEqualsLiteral(linear, "second")) {
-    *result = CalendarField::Second;
-    return true;
-  }
-  if (StringEqualsLiteral(linear, "millisecond")) {
-    *result = CalendarField::Millisecond;
-    return true;
-  }
-  if (StringEqualsLiteral(linear, "microsecond")) {
-    *result = CalendarField::Microsecond;
-    return true;
-  }
-  if (StringEqualsLiteral(linear, "nanosecond")) {
-    *result = CalendarField::Nanosecond;
-    return true;
-  }
   if (auto chars = QuoteString(cx, linear, '"')) {
     JS_ReportErrorNumberUTF8(cx, GetErrorMessage, nullptr,
                              JSMSG_TEMPORAL_CALENDAR_INVALID_FIELD,
@@ -903,18 +879,6 @@ static PropertyName* ToPropertyName(JSContext* cx, CalendarField field) {
       return cx->names().monthCode;
     case CalendarField::Day:
       return cx->names().day;
-    case CalendarField::Hour:
-      return cx->names().hour;
-    case CalendarField::Minute:
-      return cx->names().minute;
-    case CalendarField::Second:
-      return cx->names().second;
-    case CalendarField::Millisecond:
-      return cx->names().millisecond;
-    case CalendarField::Microsecond:
-      return cx->names().microsecond;
-    case CalendarField::Nanosecond:
-      return cx->names().nanosecond;
   }
   MOZ_CRASH("invalid calendar field name");
 }
@@ -930,18 +894,6 @@ static const char* ToCString(CalendarField field) {
       return "monthCode";
     case CalendarField::Day:
       return "day";
-    case CalendarField::Hour:
-      return "hour";
-    case CalendarField::Minute:
-      return "minute";
-    case CalendarField::Second:
-      return "second";
-    case CalendarField::Millisecond:
-      return "millisecond";
-    case CalendarField::Microsecond:
-      return "microsecond";
-    case CalendarField::Nanosecond:
-      return "nanosecond";
   }
   MOZ_CRASH("invalid calendar field name");
 }
@@ -4520,13 +4472,6 @@ static CalendarNameAndNative GetCalendarNameAndNative(JSContext* cx,
       return {cx->names().monthCode, Calendar_monthCode};
     case CalendarField::Day:
       return {cx->names().day, Calendar_day};
-    case CalendarField::Hour:
-    case CalendarField::Minute:
-    case CalendarField::Second:
-    case CalendarField::Millisecond:
-    case CalendarField::Microsecond:
-    case CalendarField::Nanosecond:
-      break;
   }
   MOZ_CRASH("invalid temporal field name");
 }
