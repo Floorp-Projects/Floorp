@@ -1446,9 +1446,9 @@ async function selectFrame(dbg, frame) {
   await onScopes;
 }
 
-async function pauseDebugger(dbg) {
+async function pauseDebugger(dbg, options = { shouldWaitForLoadScopes: true }) {
   info("Waiting for debugger to pause");
-  const onPaused = waitForPaused(dbg);
+  const onPaused = waitForPaused(dbg, null, options);
   SpecialPowers.spawn(gBrowser.selectedBrowser, [], function () {
     content.wrappedJSObject.firstCall();
   }).catch(() => {});
