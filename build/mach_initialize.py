@@ -167,37 +167,12 @@ def initialize(topsrcdir, args=()):
     _maybe_activate_mozillabuild_environment()
 
     import mach.main
-    import mach.settings  # noqa need @SettingsProvider hook to execute
     from mach.command_util import (
         MACH_COMMANDS,
         DetermineCommandVenvAction,
         load_commands_from_spec,
     )
     from mach.main import get_argument_parser
-
-    parser = get_argument_parser(
-        action=DetermineCommandVenvAction,
-        topsrcdir=topsrcdir,
-    )
-    namespace = parser.parse_args()
-
-    command_name = getattr(namespace, "command_name", None)
-    site_name = getattr(namespace, "site_name", "common")
-    command_site_manager = None
-
-    # the 'clobber' command needs to run in the 'mach' venv, so we
-    # don't want to activate any other virtualenv for it.
-    if command_name != "clobber":
-        from mach.site import CommandSiteManager
-
-        command_site_manager = CommandSiteManager.from_environment(
-            topsrcdir,
-            lambda: os.path.normpath(get_state_dir(True, topsrcdir=topsrcdir)),
-            site_name,
-            get_virtualenv_base_dir(topsrcdir),
-        )
-
-        command_site_manager.activate()
 
     # Set a reasonable limit to the number of open files.
     #
@@ -322,7 +297,7 @@ def initialize(topsrcdir, args=()):
     if "MACH_MAIN_PID" not in os.environ:
         setenv("MACH_MAIN_PID", str(os.getpid()))
 
-    driver = mach.main.Mach(os.getcwd(), command_site_manager)
+    driver = mach.main.Mach(os.getcwd())
     driver.populate_context_handler = populate_context
 
     if not driver.settings_paths:
@@ -330,6 +305,42 @@ def initialize(topsrcdir, args=()):
         driver.settings_paths.append(state_dir)
     # always load local repository configuration
     driver.settings_paths.append(topsrcdir)
+    driver.load_settings()
+
+    aliases = driver.settings.alias
+
+    command = args[0]
+
+    if command in aliases:
+        import shlex
+
+        alias = aliases[command]
+        defaults = shlex.split(alias)
+        args = defaults + args[1:]
+
+    parser = get_argument_parser(
+        action=DetermineCommandVenvAction,
+        topsrcdir=topsrcdir,
+    )
+    namespace = parser.parse_args(args)
+
+    command_name = getattr(namespace, "command_name", None)
+    site_name = getattr(namespace, "site_name", "common")
+    command_site_manager = None
+
+    # the 'clobber' command needs to run in the 'mach' venv, so we
+    # don't want to activate any other virtualenv for it.
+    if command_name != "clobber":
+        from mach.site import CommandSiteManager
+
+        command_site_manager = CommandSiteManager.from_environment(
+            topsrcdir,
+            lambda: os.path.normpath(get_state_dir(True, topsrcdir=topsrcdir)),
+            site_name,
+            get_virtualenv_base_dir(topsrcdir),
+        )
+
+        command_site_manager.activate()
 
     for category, meta in CATEGORIES.items():
         driver.define_category(category, meta["short"], meta["long"], meta["priority"])
@@ -383,6 +394,7 @@ def initialize(topsrcdir, args=()):
             for command_name in command_names_to_load
         }
 
+    driver.command_site_manager = command_site_manager
     load_commands_from_spec(command_modules_to_load, topsrcdir, missing_ok=missing_ok)
 
     return driver
