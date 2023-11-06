@@ -9,6 +9,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/FloatingPoint.h"
+#include "mozilla/Maybe.h"
 
 #include <cstdlib>
 #include <utility>
@@ -570,12 +571,13 @@ ZonedDateTimeObject* js::temporal::CreateTemporalZonedDateTime(
 /**
  * AddZonedDateTime ( epochNanoseconds, timeZone, calendar, years, months,
  * weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds
- * [ , options ] )
+ * [ , precalculatedPlainDateTime [ , options ] ] )
  */
 static bool AddZonedDateTime(JSContext* cx, const Instant& epochNanoseconds,
                              Handle<TimeZoneValue> timeZone,
                              Handle<CalendarValue> calendar,
                              const Duration& duration,
+                             mozilla::Maybe<const PlainDateTime&> dateTime,
                              Handle<JSObject*> maybeOptions, Instant* result) {
   MOZ_ASSERT(IsValidEpochInstant(epochNanoseconds));
   MOZ_ASSERT(IsValidDuration(duration.date()));
@@ -592,8 +594,15 @@ static bool AddZonedDateTime(JSContext* cx, const Instant& epochNanoseconds,
 
   // Steps 4-5.
   PlainDateTime temporalDateTime;
-  if (!GetPlainDateTimeFor(cx, timeZone, epochNanoseconds, &temporalDateTime)) {
-    return false;
+  if (dateTime) {
+    // Step 4.a.
+    temporalDateTime = *dateTime;
+  } else {
+    // Steps 5.a-b.
+    if (!GetPlainDateTimeFor(cx, timeZone, epochNanoseconds,
+                             &temporalDateTime)) {
+      return false;
+    }
   }
   auto& [date, time] = temporalDateTime;
 
@@ -638,14 +647,41 @@ static bool AddZonedDateTime(JSContext* cx, const Instant& epochNanoseconds,
 /**
  * AddZonedDateTime ( epochNanoseconds, timeZone, calendar, years, months,
  * weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds
- * [ , options ] )
+ * [ , precalculatedPlainDateTime [ , options ] ] )
+ */
+static bool AddZonedDateTime(JSContext* cx, const Instant& epochNanoseconds,
+                             Handle<TimeZoneValue> timeZone,
+                             Handle<CalendarValue> calendar,
+                             const Duration& duration,
+                             Handle<JSObject*> maybeOptions, Instant* result) {
+  return ::AddZonedDateTime(cx, epochNanoseconds, timeZone, calendar, duration,
+                            mozilla::Nothing(), maybeOptions, result);
+}
+
+/**
+ * AddZonedDateTime ( epochNanoseconds, timeZone, calendar, years, months,
+ * weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds
+ * [ , precalculatedPlainDateTime [ , options ] ] )
  */
 bool js::temporal::AddZonedDateTime(JSContext* cx, const Instant& epochInstant,
                                     Handle<TimeZoneValue> timeZone,
                                     Handle<CalendarValue> calendar,
                                     const Duration& duration, Instant* result) {
   return ::AddZonedDateTime(cx, epochInstant, timeZone, calendar, duration,
-                            nullptr, result);
+                            mozilla::Nothing(), nullptr, result);
+}
+
+/**
+ * AddZonedDateTime ( epochNanoseconds, timeZone, calendar, years, months,
+ * weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds
+ * [ , precalculatedPlainDateTime [ , options ] ] )
+ */
+bool js::temporal::AddZonedDateTime(
+    JSContext* cx, const Instant& epochNanoseconds,
+    Handle<TimeZoneValue> timeZone, Handle<CalendarValue> calendar,
+    const Duration& duration, const PlainDateTime& dateTime, Instant* result) {
+  return ::AddZonedDateTime(cx, epochNanoseconds, timeZone, calendar, duration,
+                            mozilla::SomeRef(dateTime), nullptr, result);
 }
 
 double js::temporal::NanosecondsAndDays::daysNumber() const {
@@ -735,7 +771,7 @@ bool js::temporal::NanosecondsToDays(
   // Step 12.
   Instant intermediateNs;
   if (!AddZonedDateTime(cx, startNs, timeZone, calendar, {0, 0, 0, days},
-                        &intermediateNs)) {
+                        startDateTime, &intermediateNs)) {
     return false;
   }
   MOZ_ASSERT(IsValidEpochInstant(intermediateNs));
@@ -760,7 +796,8 @@ bool js::temporal::NanosecondsToDays(
       // Step 13.a.ii.
       double durationDays = days - double(daysToSubtract);
       if (!AddZonedDateTime(cx, startNs, timeZone, calendar,
-                            {0, 0, 0, durationDays}, &intermediateNs)) {
+                            {0, 0, 0, durationDays}, startDateTime,
+                            &intermediateNs)) {
         return false;
       }
       MOZ_ASSERT(IsValidEpochInstant(intermediateNs));
@@ -1011,7 +1048,7 @@ static bool DifferenceZonedDateTime(JSContext* cx, const Instant& ns1,
                             dateDifference.months,
                             dateDifference.weeks,
                         },
-                        &intermediateNs)) {
+                        startDateTime, &intermediateNs)) {
     return false;
   }
   MOZ_ASSERT(IsValidEpochInstant(intermediateNs));
@@ -2995,7 +3032,7 @@ static bool ZonedDateTime_round(JSContext* cx, const CallArgs& args) {
   // Step 22.
   Instant endNs;
   if (!AddZonedDateTime(cx, startNs, timeZone, calendar, {0, 0, 0, 1},
-                        &endNs)) {
+                        ToPlainDateTime(dtStart), &endNs)) {
     return false;
   }
   MOZ_ASSERT(IsValidEpochInstant(endNs));

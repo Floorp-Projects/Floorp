@@ -83,12 +83,23 @@ ZonedDateTimeObject* CreateTemporalZonedDateTime(
 /**
  * AddZonedDateTime ( epochNanoseconds, timeZone, calendar, years, months,
  * weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds
- * [ , options ] )
+ * [ , precalculatedPlainDateTime [ , options ] ] )
  */
 bool AddZonedDateTime(JSContext* cx, const Instant& epochInstant,
                       JS::Handle<TimeZoneValue> timeZone,
                       JS::Handle<CalendarValue> calendar,
                       const Duration& duration, Instant* result);
+
+/**
+ * AddZonedDateTime ( epochNanoseconds, timeZone, calendar, years, months,
+ * weeks, days, hours, minutes, seconds, milliseconds, microseconds, nanoseconds
+ * [ , precalculatedPlainDateTime [ , options ] ] )
+ */
+bool AddZonedDateTime(JSContext* cx, const Instant& epochInstant,
+                      JS::Handle<TimeZoneValue> timeZone,
+                      JS::Handle<CalendarValue> calendar,
+                      const Duration& duration, const PlainDateTime& dateTime,
+                      Instant* result);
 
 /**
  * DifferenceZonedDateTime ( ns1, ns2, timeZone, calendar, largestUnit, options
