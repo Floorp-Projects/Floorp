@@ -139,7 +139,7 @@ bool BalanceTimeDuration(JSContext* cx, const InstantSpan& nanoseconds,
 /**
  * AdjustRoundedDurationDays ( years, months, weeks, days, hours, minutes,
  * seconds, milliseconds, microseconds, nanoseconds, increment, unit,
- * roundingMode [ , relativeTo ] )
+ * roundingMode, zonedRelativeTo )
  */
 bool AdjustRoundedDurationDays(
     JSContext* cx, const Duration& duration, Increment increment,
@@ -149,7 +149,7 @@ bool AdjustRoundedDurationDays(
 /**
  * RoundDuration ( years, months, weeks, days, hours, minutes, seconds,
  * milliseconds, microseconds, nanoseconds, increment, unit, roundingMode [ ,
- * relativeTo ] )
+ * plainRelativeTo [ , zonedRelativeTo ] ] )
  */
 bool RoundDuration(JSContext* cx, const Duration& duration, Increment increment,
                    TemporalUnit unit, TemporalRoundingMode roundingMode,
@@ -158,21 +158,21 @@ bool RoundDuration(JSContext* cx, const Duration& duration, Increment increment,
 /**
  * RoundDuration ( years, months, weeks, days, hours, minutes, seconds,
  * milliseconds, microseconds, nanoseconds, increment, unit, roundingMode [ ,
- * relativeTo ] )
+ * plainRelativeTo [ , zonedRelativeTo ] ] )
  */
 bool RoundDuration(JSContext* cx, const Duration& duration, Increment increment,
                    TemporalUnit unit, TemporalRoundingMode roundingMode,
-                   JS::Handle<Wrapped<PlainDateObject*>> relativeTo,
+                   JS::Handle<Wrapped<PlainDateObject*>> plainRelativeTo,
                    Duration* result);
 
 /**
  * RoundDuration ( years, months, weeks, days, hours, minutes, seconds,
  * milliseconds, microseconds, nanoseconds, increment, unit, roundingMode [ ,
- * relativeTo ] )
+ * plainRelativeTo [ , zonedRelativeTo ] ] )
  */
 bool RoundDuration(JSContext* cx, const Duration& duration, Increment increment,
                    TemporalUnit unit, TemporalRoundingMode roundingMode,
-                   JS::Handle<ZonedDateTimeObject*> relativeTo,
+                   JS::Handle<ZonedDateTimeObject*> zonedRelativeTo,
                    Duration* result);
 
 } /* namespace js::temporal */
