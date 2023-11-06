@@ -82,7 +82,7 @@ assertEq(dec1Called, true);
 assertEq(c.f1("value"), "called with: value");
 assertEq(c.f2("value"), "replaced: value");
 assertEq(c.f3("value"), "replaced: value");
-assertEq(c.f4("value"), "decorated: replaced: value");
+assertEq(c.f4("value"), "replaced: value");
 assertEq(c.f5("value"), "decorated: value");
 assertEq(c.f6("value"), "decorated: value");
 assertEq(c.f7("value"), "called with: value");
@@ -96,3 +96,23 @@ assertThrowsInstanceOf(() => {
     @(() => { return "hello!"; }) f(x) { return x; }
   }
 }, TypeError), "Returning a value other than undefined or a callable throws.";
+
+const decoratorOrder = [];
+function makeOrderedDecorator(order) {
+  return function (value, context) {
+    decoratorOrder.push(order);
+    return value;
+  }
+}
+
+class E {
+  @makeOrderedDecorator(1) @makeOrderedDecorator(2) @makeOrderedDecorator(3)
+  f(x) { return x; }
+}
+
+let e = new E();
+assertEq(e.f("value"), "value");
+assertEq(decoratorOrder.length, 3);
+assertEq(decoratorOrder[0], 3);
+assertEq(decoratorOrder[1], 2);
+assertEq(decoratorOrder[2], 1);

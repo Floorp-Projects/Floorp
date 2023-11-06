@@ -10,6 +10,9 @@
 
 #include "frontend/ParseNode.h"
 
+#include "js/AllocPolicy.h"
+#include "js/Vector.h"
+
 namespace js::frontend {
 
 struct BytecodeEmitter;
@@ -63,6 +66,11 @@ class MOZ_STACK_CLASS DecoratorEmitter {
 
   [[nodiscard]] bool emitHandleNewValueField(TaggedParserAtomIndex atom,
                                              int8_t offset);
+
+  using DecoratorsVector = js::Vector<ParseNode*, 2, js::SystemAllocPolicy>;
+
+  [[nodiscard]] bool reverseDecoratorsToApplicationOrder(
+      const ListNode* decorators, DecoratorsVector& vec);
 };
 
 } /* namespace js::frontend */

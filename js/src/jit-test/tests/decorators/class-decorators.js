@@ -84,3 +84,18 @@ assertThrowsInstanceOf(() => {
     }
   }
 }, ReferenceError), "can't access lexical declaration 'G' before initialization";
+
+const decoratorOrder = [];
+function makeOrderedDecorator(order) {
+  return function (value, context) {
+    decoratorOrder.push(order);
+    return value;
+  }
+}
+
+@makeOrderedDecorator(1) @makeOrderedDecorator(2) @makeOrderedDecorator(3)
+class H {}
+assertEq(decoratorOrder.length, 3);
+assertEq(decoratorOrder[0], 3);
+assertEq(decoratorOrder[1], 2);
+assertEq(decoratorOrder[2], 1);

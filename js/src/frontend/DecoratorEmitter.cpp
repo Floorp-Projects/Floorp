@@ -21,6 +21,21 @@ using namespace js::frontend;
 
 DecoratorEmitter::DecoratorEmitter(BytecodeEmitter* bce) : bce_(bce) {}
 
+// A helper function to read the decorators in reverse order to how they were
+// parsed.
+bool DecoratorEmitter::reverseDecoratorsToApplicationOrder(
+    const ListNode* decorators, DecoratorsVector& vec) {
+  if (!vec.resize(decorators->count())) {
+    ReportOutOfMemory(bce_->fc);
+    return false;
+  }
+  int end = decorators->count() - 1;
+  for (ParseNode* decorator : decorators->contents()) {
+    vec[end--] = decorator;
+  }
+  return true;
+}
+
 bool DecoratorEmitter::emitApplyDecoratorsToElementDefinition(
     DecoratorEmitter::Kind kind, ParseNode* key, ListNode* decorators,
     bool isStatic) {
@@ -38,10 +53,16 @@ bool DecoratorEmitter::emitApplyDecoratorsToElementDefinition(
   // This is checked by the caller.
   MOZ_ASSERT(!decorators->empty());
 
+  DecoratorsVector dec_vecs;
+  if (!reverseDecoratorsToApplicationOrder(decorators, dec_vecs)) {
+    return false;
+  }
+
   // Step 3. Let key be elementRecord.[[Key]].
   // Step 4. Let kind be elementRecord.[[Kind]].
   // Step 5. For each element decorator of decorators, do
-  for (ParseNode* decorator : decorators->contents()) {
+  for (auto it = dec_vecs.begin(); it != dec_vecs.end(); it++) {
+    ParseNode* decorator = *it;
     // Step 5.a. Let decorationState be the Record { [[Finished]]: false }.
     if (!emitDecorationState()) {
       return false;
@@ -166,10 +187,16 @@ bool DecoratorEmitter::emitApplyDecoratorsToFieldDefinition(
     return false;
   }
 
+  DecoratorsVector dec_vecs;
+  if (!reverseDecoratorsToApplicationOrder(decorators, dec_vecs)) {
+    return false;
+  }
+
   // Step 3. Let key be elementRecord.[[Key]].
   // Step 4. Let kind be elementRecord.[[Kind]].
   // Step 5. For each element decorator of decorators, do
-  for (ParseNode* decorator : decorators->contents()) {
+  for (auto it = dec_vecs.begin(); it != dec_vecs.end(); it++) {
+    ParseNode* decorator = *it;
     // Step 5.a. Let decorationState be the Record { [[Finished]]: false }.
     if (!emitDecorationState()) {
       return false;
@@ -295,10 +322,16 @@ bool DecoratorEmitter::emitApplyDecoratorsToAccessorDefinition(
     return false;
   }
 
+  DecoratorsVector dec_vecs;
+  if (!reverseDecoratorsToApplicationOrder(decorators, dec_vecs)) {
+    return false;
+  }
+
   // Step 3. Let key be elementRecord.[[Key]].
   // Step 4. Let kind be elementRecord.[[Kind]].
   // Step 5. For each element decorator of decorators, do
-  for (ParseNode* decorator : decorators->contents()) {
+  for (auto it = dec_vecs.begin(); it != dec_vecs.end(); it++) {
+    ParseNode* decorator = *it;
     // 5.a. Let decorationState be the Record { [[Finished]]: false }.
     if (!emitDecorationState()) {
       return false;
@@ -449,9 +482,15 @@ bool DecoratorEmitter::emitApplyDecoratorsToClassDefinition(
   // the return value of the decorator.
   //          [stack] CTOR
 
+  DecoratorsVector dec_vecs;
+  if (!reverseDecoratorsToApplicationOrder(decorators, dec_vecs)) {
+    return false;
+  }
+
   // https://arai-a.github.io/ecma262-compare/?pr=2417&id=sec-applydecoratorstoclassdefinition
   // Step 1. For each element decoratorRecord of decorators, do
-  for (ParseNode* decorator : decorators->contents()) {
+  for (auto it = dec_vecs.begin(); it != dec_vecs.end(); it++) {
+    ParseNode* decorator = *it;
     // Step 1.a. Let decorator be decoratorRecord.[[Decorator]].
     // Step 1.b. Let decoratorReceiver be decoratorRecord.[[Receiver]].
     // Step 1.c. Let decorationState be the Record { [[Finished]]: false }.
