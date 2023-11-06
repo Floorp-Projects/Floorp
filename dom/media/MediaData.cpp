@@ -310,57 +310,6 @@ bool VideoData::SetVideoDataToImage(PlanarYCbCrImage* aVideoImage,
   return aVideoImage->AdoptData(data);
 }
 
-#if XP_WIN
-bool ConvertToNV12AtImageHost(const VideoData::YCbCrBuffer& aBuffer,
-                              const IntRect& aPicture,
-                              layers::KnowsCompositor* aAllocator) {
-  if (!aAllocator) {
-    return false;
-  }
-
-  auto ident = aAllocator->GetTextureFactoryIdentifier();
-
-  if (!StaticPrefs::gfx_video_convert_yuv_to_nv12_image_host_win() ||
-      ident.mParentProcessType != GeckoProcessType_GPU ||
-      !aAllocator->GetCompositorUseDComp() ||
-      !gfx::DeviceManagerDx::Get()->CanUseNV12()) {
-    return false;
-  }
-
-  // XXX support gfx::ColorRange::FULL
-  if (aPicture.Size().width % 2 != 0 || aPicture.Size().height % 2 != 0 ||
-      aBuffer.mColorDepth != gfx::ColorDepth::COLOR_8 ||
-      aBuffer.mColorRange != gfx::ColorRange::LIMITED ||
-      aBuffer.mChromaSubsampling !=
-          gfx::ChromaSubsampling::HALF_WIDTH_AND_HEIGHT) {
-    return false;
-  }
-  return true;
-}
-#endif
-
-/* static */
-bool VideoData::UseUseNV12ForSoftwareDecodedVideoIfPossible(
-    layers::KnowsCompositor* aAllocator) {
-#if XP_WIN
-  if (!aAllocator) {
-    return false;
-  }
-
-  if (StaticPrefs::gfx_video_convert_yuv_to_nv12_image_host_win()) {
-    return false;
-  }
-
-  if (StaticPrefs::gfx_video_convert_i420_to_nv12_force_enabled_AtStartup() ||
-      (gfx::DeviceManagerDx::Get()->CanUseNV12() &&
-       gfx::gfxVars::UseWebRenderDCompVideoSwOverlayWin() &&
-       aAllocator->GetCompositorUseDComp())) {
-    return true;
-  }
-#endif
-  return false;
-}
-
 /* static */
 already_AddRefed<VideoData> VideoData::CreateAndCopyData(
     const VideoInfo& aInfo, ImageContainer* aContainer, int64_t aOffset,
@@ -386,39 +335,7 @@ already_AddRefed<VideoData> VideoData::CreateAndCopyData(
 
   // Currently our decoder only knows how to output to ImageFormat::PLANAR_YCBCR
   // format.
-#if XP_WIN
-  // Copy to NV12 format D3D11ShareHandleImage when video overlay could be used
-  // with the video frame
-  if (UseUseNV12ForSoftwareDecodedVideoIfPossible(aAllocator)) {
-    PlanarYCbCrData data = ConstructPlanarYCbCrData(aInfo, aBuffer, aPicture);
-    RefPtr<layers::D3D11ShareHandleImage> d3d11Image =
-        layers::D3D11ShareHandleImage::MaybeCreateNV12ImageAndSetData(
-            aAllocator, aContainer, data);
-    if (d3d11Image) {
-      v->mImage = d3d11Image;
-      perfRecorder.Record();
-      return v.forget();
-    }
-  }
-
-  // D3D11YCbCrImage can only handle YCbCr images using 3 non-interleaved planes
-  // non-zero mSkip value indicates that one of the plane would be interleaved.
-  if (!XRE_IsParentProcess() && aAllocator && aAllocator->SupportsD3D11() &&
-      !ConvertToNV12AtImageHost(aBuffer, aPicture, aAllocator) &&
-      aBuffer.mPlanes[0].mSkip == 0 && aBuffer.mPlanes[1].mSkip == 0 &&
-      aBuffer.mPlanes[2].mSkip == 0) {
-    RefPtr<layers::D3D11YCbCrImage> d3d11Image = new layers::D3D11YCbCrImage();
-    PlanarYCbCrData data = ConstructPlanarYCbCrData(aInfo, aBuffer, aPicture);
-    if (d3d11Image->SetData(layers::ImageBridgeChild::GetSingleton()
-                                ? layers::ImageBridgeChild::GetSingleton().get()
-                                : aAllocator,
-                            aContainer, data)) {
-      v->mImage = d3d11Image;
-      perfRecorder.Record();
-      return v.forget();
-    }
-  }
-#elif XP_MACOSX
+#if XP_MACOSX
   if (aAllocator && aAllocator->GetWebRenderCompositorType() !=
                         layers::WebRenderCompositor::SOFTWARE) {
     RefPtr<layers::MacIOSurfaceImage> ioImage =
