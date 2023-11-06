@@ -45,7 +45,7 @@ perf:
         unit: ms
       fcp_time:
         description:
-          "Time between firstContentfulPaint and naviationStart, in ms."
+          "Time between firstContentfulPaint and navigationStart, in ms."
         type: quantity
         unit: ms
       js_exec_time:
