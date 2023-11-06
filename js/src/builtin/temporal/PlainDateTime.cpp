@@ -1308,11 +1308,12 @@ static bool PlainDateTime_calendarId(JSContext* cx, unsigned argc, Value* vp) {
  */
 static bool PlainDateTime_year(JSContext* cx, const CallArgs& args) {
   // Step 3.
-  auto* dateTime = &args.thisv().toObject().as<PlainDateTimeObject>();
+  Rooted<PlainDateTimeObject*> dateTime(
+      cx, &args.thisv().toObject().as<PlainDateTimeObject>());
   Rooted<CalendarValue> calendar(cx, dateTime->calendar());
 
   // Step 4.
-  return CalendarYear(cx, calendar, args.thisv(), args.rval());
+  return CalendarYear(cx, calendar, dateTime, args.rval());
 }
 
 /**
@@ -1329,11 +1330,12 @@ static bool PlainDateTime_year(JSContext* cx, unsigned argc, Value* vp) {
  */
 static bool PlainDateTime_month(JSContext* cx, const CallArgs& args) {
   // Step 3.
-  auto* dateTime = &args.thisv().toObject().as<PlainDateTimeObject>();
+  Rooted<PlainDateTimeObject*> dateTime(
+      cx, &args.thisv().toObject().as<PlainDateTimeObject>());
   Rooted<CalendarValue> calendar(cx, dateTime->calendar());
 
   // Step 4.
-  return CalendarMonth(cx, calendar, args.thisv(), args.rval());
+  return CalendarMonth(cx, calendar, dateTime, args.rval());
 }
 
 /**
@@ -1350,11 +1352,12 @@ static bool PlainDateTime_month(JSContext* cx, unsigned argc, Value* vp) {
  */
 static bool PlainDateTime_monthCode(JSContext* cx, const CallArgs& args) {
   // Step 3.
-  auto* dateTime = &args.thisv().toObject().as<PlainDateTimeObject>();
+  Rooted<PlainDateTimeObject*> dateTime(
+      cx, &args.thisv().toObject().as<PlainDateTimeObject>());
   Rooted<CalendarValue> calendar(cx, dateTime->calendar());
 
   // Step 4.
-  return CalendarMonthCode(cx, calendar, args.thisv(), args.rval());
+  return CalendarMonthCode(cx, calendar, dateTime, args.rval());
 }
 
 /**
@@ -1372,11 +1375,12 @@ static bool PlainDateTime_monthCode(JSContext* cx, unsigned argc, Value* vp) {
  */
 static bool PlainDateTime_day(JSContext* cx, const CallArgs& args) {
   // Step 3.
-  auto* dateTime = &args.thisv().toObject().as<PlainDateTimeObject>();
+  Rooted<PlainDateTimeObject*> dateTime(
+      cx, &args.thisv().toObject().as<PlainDateTimeObject>());
   Rooted<CalendarValue> calendar(cx, dateTime->calendar());
 
   // Step 4.
-  return CalendarDay(cx, calendar, args.thisv(), args.rval());
+  return CalendarDay(cx, calendar, dateTime, args.rval());
 }
 
 /**
@@ -1510,11 +1514,12 @@ static bool PlainDateTime_nanosecond(JSContext* cx, unsigned argc, Value* vp) {
  */
 static bool PlainDateTime_dayOfWeek(JSContext* cx, const CallArgs& args) {
   // Step 3.
-  auto* dateTime = &args.thisv().toObject().as<PlainDateTimeObject>();
+  Rooted<PlainDateTimeObject*> dateTime(
+      cx, &args.thisv().toObject().as<PlainDateTimeObject>());
   Rooted<CalendarValue> calendar(cx, dateTime->calendar());
 
   // Step 4.
-  return CalendarDayOfWeek(cx, calendar, args.thisv(), args.rval());
+  return CalendarDayOfWeek(cx, calendar, dateTime, args.rval());
 }
 
 /**
@@ -1532,11 +1537,12 @@ static bool PlainDateTime_dayOfWeek(JSContext* cx, unsigned argc, Value* vp) {
  */
 static bool PlainDateTime_dayOfYear(JSContext* cx, const CallArgs& args) {
   // Step 3.
-  auto* dateTime = &args.thisv().toObject().as<PlainDateTimeObject>();
+  Rooted<PlainDateTimeObject*> dateTime(
+      cx, &args.thisv().toObject().as<PlainDateTimeObject>());
   Rooted<CalendarValue> calendar(cx, dateTime->calendar());
 
   // Step 4.
-  return CalendarDayOfYear(cx, calendar, args.thisv(), args.rval());
+  return CalendarDayOfYear(cx, calendar, dateTime, args.rval());
 }
 
 /**
@@ -1554,11 +1560,12 @@ static bool PlainDateTime_dayOfYear(JSContext* cx, unsigned argc, Value* vp) {
  */
 static bool PlainDateTime_weekOfYear(JSContext* cx, const CallArgs& args) {
   // Step 3.
-  auto* dateTime = &args.thisv().toObject().as<PlainDateTimeObject>();
+  Rooted<PlainDateTimeObject*> dateTime(
+      cx, &args.thisv().toObject().as<PlainDateTimeObject>());
   Rooted<CalendarValue> calendar(cx, dateTime->calendar());
 
   // Step 4.
-  return CalendarWeekOfYear(cx, calendar, args.thisv(), args.rval());
+  return CalendarWeekOfYear(cx, calendar, dateTime, args.rval());
 }
 
 /**
@@ -1576,11 +1583,12 @@ static bool PlainDateTime_weekOfYear(JSContext* cx, unsigned argc, Value* vp) {
  */
 static bool PlainDateTime_yearOfWeek(JSContext* cx, const CallArgs& args) {
   // Step 3.
-  auto* dateTime = &args.thisv().toObject().as<PlainDateTimeObject>();
+  Rooted<PlainDateTimeObject*> dateTime(
+      cx, &args.thisv().toObject().as<PlainDateTimeObject>());
   Rooted<CalendarValue> calendar(cx, dateTime->calendar());
 
   // Step 4.
-  return CalendarYearOfWeek(cx, calendar, args.thisv(), args.rval());
+  return CalendarYearOfWeek(cx, calendar, dateTime, args.rval());
 }
 
 /**
@@ -1598,11 +1606,12 @@ static bool PlainDateTime_yearOfWeek(JSContext* cx, unsigned argc, Value* vp) {
  */
 static bool PlainDateTime_daysInWeek(JSContext* cx, const CallArgs& args) {
   // Step 3.
-  auto* dateTime = &args.thisv().toObject().as<PlainDateTimeObject>();
+  Rooted<PlainDateTimeObject*> dateTime(
+      cx, &args.thisv().toObject().as<PlainDateTimeObject>());
   Rooted<CalendarValue> calendar(cx, dateTime->calendar());
 
   // Step 4.
-  return CalendarDaysInWeek(cx, calendar, args.thisv(), args.rval());
+  return CalendarDaysInWeek(cx, calendar, dateTime, args.rval());
 }
 
 /**
@@ -1620,11 +1629,12 @@ static bool PlainDateTime_daysInWeek(JSContext* cx, unsigned argc, Value* vp) {
  */
 static bool PlainDateTime_daysInMonth(JSContext* cx, const CallArgs& args) {
   // Step 3.
-  auto* dateTime = &args.thisv().toObject().as<PlainDateTimeObject>();
+  Rooted<PlainDateTimeObject*> dateTime(
+      cx, &args.thisv().toObject().as<PlainDateTimeObject>());
   Rooted<CalendarValue> calendar(cx, dateTime->calendar());
 
   // Step 4.
-  return CalendarDaysInMonth(cx, calendar, args.thisv(), args.rval());
+  return CalendarDaysInMonth(cx, calendar, dateTime, args.rval());
 }
 
 /**
@@ -1642,11 +1652,12 @@ static bool PlainDateTime_daysInMonth(JSContext* cx, unsigned argc, Value* vp) {
  */
 static bool PlainDateTime_daysInYear(JSContext* cx, const CallArgs& args) {
   // Step 3.
-  auto* dateTime = &args.thisv().toObject().as<PlainDateTimeObject>();
+  Rooted<PlainDateTimeObject*> dateTime(
+      cx, &args.thisv().toObject().as<PlainDateTimeObject>());
   Rooted<CalendarValue> calendar(cx, dateTime->calendar());
 
   // Step 4.
-  return CalendarDaysInYear(cx, calendar, args.thisv(), args.rval());
+  return CalendarDaysInYear(cx, calendar, dateTime, args.rval());
 }
 
 /**
@@ -1664,11 +1675,12 @@ static bool PlainDateTime_daysInYear(JSContext* cx, unsigned argc, Value* vp) {
  */
 static bool PlainDateTime_monthsInYear(JSContext* cx, const CallArgs& args) {
   // Step 3.
-  auto* dateTime = &args.thisv().toObject().as<PlainDateTimeObject>();
+  Rooted<PlainDateTimeObject*> dateTime(
+      cx, &args.thisv().toObject().as<PlainDateTimeObject>());
   Rooted<CalendarValue> calendar(cx, dateTime->calendar());
 
   // Step 4.
-  return CalendarMonthsInYear(cx, calendar, args.thisv(), args.rval());
+  return CalendarMonthsInYear(cx, calendar, dateTime, args.rval());
 }
 
 /**
@@ -1687,11 +1699,12 @@ static bool PlainDateTime_monthsInYear(JSContext* cx, unsigned argc,
  */
 static bool PlainDateTime_inLeapYear(JSContext* cx, const CallArgs& args) {
   // Step 3.
-  auto* dateTime = &args.thisv().toObject().as<PlainDateTimeObject>();
+  Rooted<PlainDateTimeObject*> dateTime(
+      cx, &args.thisv().toObject().as<PlainDateTimeObject>());
   Rooted<CalendarValue> calendar(cx, dateTime->calendar());
 
   // Step 4.
-  return CalendarInLeapYear(cx, calendar, args.thisv(), args.rval());
+  return CalendarInLeapYear(cx, calendar, dateTime, args.rval());
 }
 
 /**

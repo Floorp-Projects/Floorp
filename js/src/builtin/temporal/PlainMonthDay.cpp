@@ -483,11 +483,12 @@ static bool PlainMonthDay_calendarId(JSContext* cx, unsigned argc, Value* vp) {
  */
 static bool PlainMonthDay_monthCode(JSContext* cx, const CallArgs& args) {
   // Step 3.
-  auto* monthDay = &args.thisv().toObject().as<PlainMonthDayObject>();
+  Rooted<PlainMonthDayObject*> monthDay(
+      cx, &args.thisv().toObject().as<PlainMonthDayObject>());
   Rooted<CalendarValue> calendar(cx, monthDay->calendar());
 
   // Step 4.
-  return CalendarMonthCode(cx, calendar, args.thisv(), args.rval());
+  return CalendarMonthCode(cx, calendar, monthDay, args.rval());
 }
 
 /**
@@ -505,11 +506,12 @@ static bool PlainMonthDay_monthCode(JSContext* cx, unsigned argc, Value* vp) {
  */
 static bool PlainMonthDay_day(JSContext* cx, const CallArgs& args) {
   // Step 3.
-  auto* monthDay = &args.thisv().toObject().as<PlainMonthDayObject>();
+  Rooted<PlainMonthDayObject*> monthDay(
+      cx, &args.thisv().toObject().as<PlainMonthDayObject>());
   Rooted<CalendarValue> calendar(cx, monthDay->calendar());
 
   // Step 4.
-  return CalendarDay(cx, calendar, args.thisv(), args.rval());
+  return CalendarDay(cx, calendar, monthDay, args.rval());
 }
 
 /**

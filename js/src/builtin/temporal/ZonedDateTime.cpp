@@ -1621,14 +1621,14 @@ static bool ZonedDateTime_year(JSContext* cx, const CallArgs& args) {
   Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
   // Steps 3-6.
-  auto* dateTime = GetPlainDateTimeFor(cx, timeZone, instant, calendar);
+  Rooted<PlainDateTimeObject*> dateTime(
+      cx, GetPlainDateTimeFor(cx, timeZone, instant, calendar));
   if (!dateTime) {
     return false;
   }
-  Rooted<Value> temporalDateTime(cx, ObjectValue(*dateTime));
 
   // Step 7.
-  return CalendarYear(cx, calendar, temporalDateTime, args.rval());
+  return CalendarYear(cx, calendar, dateTime, args.rval());
 }
 
 /**
@@ -1650,14 +1650,14 @@ static bool ZonedDateTime_month(JSContext* cx, const CallArgs& args) {
   Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
   // Steps 3-6.
-  auto* dateTime = GetPlainDateTimeFor(cx, timeZone, instant, calendar);
+  Rooted<PlainDateTimeObject*> dateTime(
+      cx, GetPlainDateTimeFor(cx, timeZone, instant, calendar));
   if (!dateTime) {
     return false;
   }
-  Rooted<Value> temporalDateTime(cx, ObjectValue(*dateTime));
 
   // Step 7.
-  return CalendarMonth(cx, calendar, temporalDateTime, args.rval());
+  return CalendarMonth(cx, calendar, dateTime, args.rval());
 }
 
 /**
@@ -1679,14 +1679,14 @@ static bool ZonedDateTime_monthCode(JSContext* cx, const CallArgs& args) {
   Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
   // Steps 3-6.
-  auto* dateTime = GetPlainDateTimeFor(cx, timeZone, instant, calendar);
+  Rooted<PlainDateTimeObject*> dateTime(
+      cx, GetPlainDateTimeFor(cx, timeZone, instant, calendar));
   if (!dateTime) {
     return false;
   }
-  Rooted<Value> temporalDateTime(cx, ObjectValue(*dateTime));
 
   // Step 7.
-  return CalendarMonthCode(cx, calendar, temporalDateTime, args.rval());
+  return CalendarMonthCode(cx, calendar, dateTime, args.rval());
 }
 
 /**
@@ -1709,14 +1709,14 @@ static bool ZonedDateTime_day(JSContext* cx, const CallArgs& args) {
   Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
   // Steps 3-6.
-  auto* dateTime = GetPlainDateTimeFor(cx, timeZone, instant, calendar);
+  Rooted<PlainDateTimeObject*> dateTime(
+      cx, GetPlainDateTimeFor(cx, timeZone, instant, calendar));
   if (!dateTime) {
     return false;
   }
-  Rooted<Value> temporalDateTime(cx, ObjectValue(*dateTime));
 
   // Step 7.
-  return CalendarDay(cx, calendar, temporalDateTime, args.rval());
+  return CalendarDay(cx, calendar, dateTime, args.rval());
 }
 
 /**
@@ -2021,14 +2021,14 @@ static bool ZonedDateTime_dayOfWeek(JSContext* cx, const CallArgs& args) {
   Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
   // Steps 3-6.
-  auto* dateTime = GetPlainDateTimeFor(cx, timeZone, instant, calendar);
+  Rooted<PlainDateTimeObject*> dateTime(
+      cx, GetPlainDateTimeFor(cx, timeZone, instant, calendar));
   if (!dateTime) {
     return false;
   }
-  Rooted<Value> temporalDateTime(cx, ObjectValue(*dateTime));
 
   // Step 7.
-  return CalendarDayOfWeek(cx, calendar, temporalDateTime, args.rval());
+  return CalendarDayOfWeek(cx, calendar, dateTime, args.rval());
 }
 
 /**
@@ -2051,14 +2051,14 @@ static bool ZonedDateTime_dayOfYear(JSContext* cx, const CallArgs& args) {
   Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
   // Steps 3-6.
-  auto* dateTime = GetPlainDateTimeFor(cx, timeZone, instant, calendar);
+  Rooted<PlainDateTimeObject*> dateTime(
+      cx, GetPlainDateTimeFor(cx, timeZone, instant, calendar));
   if (!dateTime) {
     return false;
   }
-  Rooted<Value> temporalDateTime(cx, ObjectValue(*dateTime));
 
   // Step 7.
-  return CalendarDayOfYear(cx, calendar, temporalDateTime, args.rval());
+  return CalendarDayOfYear(cx, calendar, dateTime, args.rval());
 }
 
 /**
@@ -2081,14 +2081,14 @@ static bool ZonedDateTime_weekOfYear(JSContext* cx, const CallArgs& args) {
   Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
   // Steps 3-6.
-  auto* dateTime = GetPlainDateTimeFor(cx, timeZone, instant, calendar);
+  Rooted<PlainDateTimeObject*> dateTime(
+      cx, GetPlainDateTimeFor(cx, timeZone, instant, calendar));
   if (!dateTime) {
     return false;
   }
-  Rooted<Value> temporalDateTime(cx, ObjectValue(*dateTime));
 
   // Step 7.
-  return CalendarWeekOfYear(cx, calendar, temporalDateTime, args.rval());
+  return CalendarWeekOfYear(cx, calendar, dateTime, args.rval());
 }
 
 /**
@@ -2111,14 +2111,14 @@ static bool ZonedDateTime_yearOfWeek(JSContext* cx, const CallArgs& args) {
   Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
   // Steps 3-6.
-  auto* dateTime = GetPlainDateTimeFor(cx, timeZone, instant, calendar);
+  Rooted<PlainDateTimeObject*> dateTime(
+      cx, GetPlainDateTimeFor(cx, timeZone, instant, calendar));
   if (!dateTime) {
     return false;
   }
-  Rooted<Value> temporalDateTime(cx, ObjectValue(*dateTime));
 
   // Step 7.
-  return CalendarYearOfWeek(cx, calendar, temporalDateTime, args.rval());
+  return CalendarYearOfWeek(cx, calendar, dateTime, args.rval());
 }
 
 /**
@@ -2221,14 +2221,14 @@ static bool ZonedDateTime_daysInWeek(JSContext* cx, const CallArgs& args) {
   Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
   // Steps 3-6.
-  auto* dateTime = GetPlainDateTimeFor(cx, timeZone, instant, calendar);
+  Rooted<PlainDateTimeObject*> dateTime(
+      cx, GetPlainDateTimeFor(cx, timeZone, instant, calendar));
   if (!dateTime) {
     return false;
   }
-  Rooted<Value> temporalDateTime(cx, ObjectValue(*dateTime));
 
   // Step 7.
-  return CalendarDaysInWeek(cx, calendar, temporalDateTime, args.rval());
+  return CalendarDaysInWeek(cx, calendar, dateTime, args.rval());
 }
 
 /**
@@ -2251,14 +2251,14 @@ static bool ZonedDateTime_daysInMonth(JSContext* cx, const CallArgs& args) {
   Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
   // Steps 3-6.
-  auto* dateTime = GetPlainDateTimeFor(cx, timeZone, instant, calendar);
+  Rooted<PlainDateTimeObject*> dateTime(
+      cx, GetPlainDateTimeFor(cx, timeZone, instant, calendar));
   if (!dateTime) {
     return false;
   }
-  Rooted<Value> temporalDateTime(cx, ObjectValue(*dateTime));
 
   // Step 7.
-  return CalendarDaysInMonth(cx, calendar, temporalDateTime, args.rval());
+  return CalendarDaysInMonth(cx, calendar, dateTime, args.rval());
 }
 
 /**
@@ -2281,14 +2281,14 @@ static bool ZonedDateTime_daysInYear(JSContext* cx, const CallArgs& args) {
   Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
   // Steps 3-6.
-  auto* dateTime = GetPlainDateTimeFor(cx, timeZone, instant, calendar);
+  Rooted<PlainDateTimeObject*> dateTime(
+      cx, GetPlainDateTimeFor(cx, timeZone, instant, calendar));
   if (!dateTime) {
     return false;
   }
-  Rooted<Value> temporalDateTime(cx, ObjectValue(*dateTime));
 
   // Step 7.
-  return CalendarDaysInYear(cx, calendar, temporalDateTime, args.rval());
+  return CalendarDaysInYear(cx, calendar, dateTime, args.rval());
 }
 
 /**
@@ -2311,14 +2311,14 @@ static bool ZonedDateTime_monthsInYear(JSContext* cx, const CallArgs& args) {
   Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
   // Steps 3-6.
-  auto* dateTime = GetPlainDateTimeFor(cx, timeZone, instant, calendar);
+  Rooted<PlainDateTimeObject*> dateTime(
+      cx, GetPlainDateTimeFor(cx, timeZone, instant, calendar));
   if (!dateTime) {
     return false;
   }
-  Rooted<Value> temporalDateTime(cx, ObjectValue(*dateTime));
 
   // Step 7.
-  return CalendarMonthsInYear(cx, calendar, temporalDateTime, args.rval());
+  return CalendarMonthsInYear(cx, calendar, dateTime, args.rval());
 }
 
 /**
@@ -2342,14 +2342,14 @@ static bool ZonedDateTime_inLeapYear(JSContext* cx, const CallArgs& args) {
   Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
   // Steps 3-6.
-  auto* dateTime = GetPlainDateTimeFor(cx, timeZone, instant, calendar);
+  Rooted<PlainDateTimeObject*> dateTime(
+      cx, GetPlainDateTimeFor(cx, timeZone, instant, calendar));
   if (!dateTime) {
     return false;
   }
-  Rooted<Value> temporalDateTime(cx, ObjectValue(*dateTime));
 
   // Step 7.
-  return CalendarInLeapYear(cx, calendar, temporalDateTime, args.rval());
+  return CalendarInLeapYear(cx, calendar, dateTime, args.rval());
 }
 
 /**
