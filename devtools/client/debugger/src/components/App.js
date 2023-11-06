@@ -3,12 +3,13 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 import React, { Component } from "react";
-import { div, main } from "react-dom-factories";
+import { div, main, span } from "react-dom-factories";
 import PropTypes from "prop-types";
 import { connect } from "../utils/connect";
 import { prefs } from "../utils/prefs";
 import { primaryPaneTabs } from "../constants";
 import actions from "../actions";
+import AccessibleImage from "./shared/AccessibleImage";
 
 import {
   getSelectedSource,
@@ -16,6 +17,8 @@ import {
   getActiveSearch,
   getQuickOpenEnabled,
   getOrientation,
+  getIsCurrentThreadPaused,
+  isMapScopesEnabled,
 } from "../selectors";
 const KeyShortcuts = require("devtools/client/shared/key-shortcuts");
 
@@ -68,6 +71,7 @@ class App extends Component {
       setPrimaryPaneTab: PropTypes.func.isRequired,
       startPanelCollapsed: PropTypes.bool.isRequired,
       toolboxDoc: PropTypes.object.isRequired,
+      showOriginalVariableMappingWarning: PropTypes.bool,
     };
   }
 
@@ -203,6 +207,23 @@ class App extends Component {
     }
   }
 
+  renderEditorNotificationBar() {
+    if (this.props.showOriginalVariableMappingWarning) {
+      return div(
+        { className: "editor-notification-footer", "aria-role": "status" },
+        span(
+          { className: "info icon" },
+          React.createElement(AccessibleImage, { className: "sourcemap" })
+        ),
+        L10N.getFormatStr(
+          "editorNotificationFooter.noOriginalScopes",
+          L10N.getStr("scopes.showOriginalScopes")
+        )
+      );
+    }
+    return null;
+  }
+
   renderEditorPane = () => {
     const { startPanelCollapsed, endPanelCollapsed } = this.props;
     const { endPanelSize, startPanelSize } = this.state;
@@ -230,6 +251,7 @@ class App extends Component {
               toggleShortcutsModal: () => this.toggleShortcutsModal(),
             })
           : null,
+        this.renderEditorNotificationBar(),
         React.createElement(EditorFooter, {
           horizontal,
         })
@@ -328,14 +350,27 @@ App.childContextTypes = {
   fluentBundles: PropTypes.array,
 };
 
-const mapStateToProps = state => ({
-  selectedSource: getSelectedSource(state),
-  startPanelCollapsed: getPaneCollapse(state, "start"),
-  endPanelCollapsed: getPaneCollapse(state, "end"),
-  activeSearch: getActiveSearch(state),
-  quickOpenEnabled: getQuickOpenEnabled(state),
-  orientation: getOrientation(state),
-});
+const mapStateToProps = state => {
+  const selectedSource = getSelectedSource(state);
+  const mapScopeEnabled = isMapScopesEnabled(state);
+  const isPaused = getIsCurrentThreadPaused(state);
+
+  const showOriginalVariableMappingWarning =
+    isPaused &&
+    selectedSource?.isOriginal &&
+    !selectedSource.isPrettyPrinted &&
+    !mapScopeEnabled;
+
+  return {
+    showOriginalVariableMappingWarning,
+    selectedSource,
+    startPanelCollapsed: getPaneCollapse(state, "start"),
+    endPanelCollapsed: getPaneCollapse(state, "end"),
+    activeSearch: getActiveSearch(state),
+    quickOpenEnabled: getQuickOpenEnabled(state),
+    orientation: getOrientation(state),
+  };
+};
 
 export default connect(mapStateToProps, {
   setActiveSearch: actions.setActiveSearch,
