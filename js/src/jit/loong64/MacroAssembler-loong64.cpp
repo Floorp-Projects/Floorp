@@ -262,183 +262,245 @@ void MacroAssemblerLOONG64::ma_liPatchable(Register dest, ImmWord imm,
 
 // Memory access ops.
 
-void MacroAssemblerLOONG64::ma_ld_b(Register dest, Address address) {
+FaultingCodeOffset MacroAssemblerLOONG64::ma_ld_b(Register dest,
+                                                  Address address) {
   int32_t offset = address.offset;
   Register base = address.base;
+  FaultingCodeOffset fco;
 
   if (is_intN(offset, 12)) {
+    fco = FaultingCodeOffset(currentOffset());
     as_ld_b(dest, base, offset);
   } else if (base != dest) {
     ma_li(dest, Imm32(offset));
+    fco = FaultingCodeOffset(currentOffset());
     as_ldx_b(dest, base, dest);
   } else {
     ScratchRegisterScope scratch(asMasm());
     MOZ_ASSERT(base != scratch);
     ma_li(scratch, Imm32(offset));
+    fco = FaultingCodeOffset(currentOffset());
     as_ldx_b(dest, base, scratch);
   }
+  return fco;
 }
 
-void MacroAssemblerLOONG64::ma_ld_bu(Register dest, Address address) {
+FaultingCodeOffset MacroAssemblerLOONG64::ma_ld_bu(Register dest,
+                                                   Address address) {
   int32_t offset = address.offset;
   Register base = address.base;
+  FaultingCodeOffset fco;
 
   if (is_intN(offset, 12)) {
+    fco = FaultingCodeOffset(currentOffset());
     as_ld_bu(dest, base, offset);
   } else if (base != dest) {
     ma_li(dest, Imm32(offset));
+    fco = FaultingCodeOffset(currentOffset());
     as_ldx_bu(dest, base, dest);
   } else {
     ScratchRegisterScope scratch(asMasm());
     MOZ_ASSERT(base != scratch);
     ma_li(scratch, Imm32(offset));
+    fco = FaultingCodeOffset(currentOffset());
     as_ldx_bu(dest, base, scratch);
   }
+  return fco;
 }
 
-void MacroAssemblerLOONG64::ma_ld_h(Register dest, Address address) {
+FaultingCodeOffset MacroAssemblerLOONG64::ma_ld_h(Register dest,
+                                                  Address address) {
   int32_t offset = address.offset;
   Register base = address.base;
+  FaultingCodeOffset fco;
 
   if (is_intN(offset, 12)) {
+    fco = FaultingCodeOffset(currentOffset());
     as_ld_h(dest, base, offset);
   } else if (base != dest) {
     ma_li(dest, Imm32(offset));
+    fco = FaultingCodeOffset(currentOffset());
     as_ldx_h(dest, base, dest);
   } else {
     ScratchRegisterScope scratch(asMasm());
     MOZ_ASSERT(base != scratch);
     ma_li(scratch, Imm32(offset));
+    fco = FaultingCodeOffset(currentOffset());
     as_ldx_h(dest, base, scratch);
   }
+  return fco;
 }
 
-void MacroAssemblerLOONG64::ma_ld_hu(Register dest, Address address) {
+FaultingCodeOffset MacroAssemblerLOONG64::ma_ld_hu(Register dest,
+                                                   Address address) {
   int32_t offset = address.offset;
   Register base = address.base;
+  FaultingCodeOffset fco;
 
   if (is_intN(offset, 12)) {
+    fco = FaultingCodeOffset(currentOffset());
     as_ld_hu(dest, base, offset);
   } else if (base != dest) {
     ma_li(dest, Imm32(offset));
+    fco = FaultingCodeOffset(currentOffset());
     as_ldx_hu(dest, base, dest);
   } else {
     ScratchRegisterScope scratch(asMasm());
     MOZ_ASSERT(base != scratch);
     ma_li(scratch, Imm32(offset));
+    fco = FaultingCodeOffset(currentOffset());
     as_ldx_hu(dest, base, scratch);
   }
+  return fco;
 }
 
-void MacroAssemblerLOONG64::ma_ld_w(Register dest, Address address) {
+FaultingCodeOffset MacroAssemblerLOONG64::ma_ld_w(Register dest,
+                                                  Address address) {
   int32_t offset = address.offset;
   Register base = address.base;
+  FaultingCodeOffset fco;
 
   if (is_intN(offset, 12)) {
+    fco = FaultingCodeOffset(currentOffset());
     as_ld_w(dest, base, offset);
   } else if (base != dest) {
     ma_li(dest, Imm32(offset));
+    fco = FaultingCodeOffset(currentOffset());
     as_ldx_w(dest, base, dest);
   } else {
     ScratchRegisterScope scratch(asMasm());
     MOZ_ASSERT(base != scratch);
     ma_li(scratch, Imm32(offset));
+    fco = FaultingCodeOffset(currentOffset());
     as_ldx_w(dest, base, scratch);
   }
+  return fco;
 }
 
-void MacroAssemblerLOONG64::ma_ld_wu(Register dest, Address address) {
+FaultingCodeOffset MacroAssemblerLOONG64::ma_ld_wu(Register dest,
+                                                   Address address) {
   int32_t offset = address.offset;
   Register base = address.base;
+  FaultingCodeOffset fco;
 
   if (is_intN(offset, 12)) {
+    fco = FaultingCodeOffset(currentOffset());
     as_ld_wu(dest, base, offset);
   } else if (base != dest) {
     ma_li(dest, Imm32(offset));
+    fco = FaultingCodeOffset(currentOffset());
     as_ldx_wu(dest, base, dest);
   } else {
     ScratchRegisterScope scratch(asMasm());
     MOZ_ASSERT(base != scratch);
     ma_li(scratch, Imm32(offset));
+    fco = FaultingCodeOffset(currentOffset());
     as_ldx_wu(dest, base, scratch);
   }
+  return fco;
 }
 
-void MacroAssemblerLOONG64::ma_ld_d(Register dest, Address address) {
+FaultingCodeOffset MacroAssemblerLOONG64::ma_ld_d(Register dest,
+                                                  Address address) {
   int32_t offset = address.offset;
   Register base = address.base;
+  FaultingCodeOffset fco;
 
   if (is_intN(offset, 12)) {
+    fco = FaultingCodeOffset(currentOffset());
     as_ld_d(dest, base, offset);
   } else if (base != dest) {
     ma_li(dest, Imm32(offset));
+    fco = FaultingCodeOffset(currentOffset());
     as_ldx_d(dest, base, dest);
   } else {
     ScratchRegisterScope scratch(asMasm());
     MOZ_ASSERT(base != scratch);
     ma_li(scratch, Imm32(offset));
+    fco = FaultingCodeOffset(currentOffset());
     as_ldx_d(dest, base, scratch);
   }
+  return fco;
 }
 
-void MacroAssemblerLOONG64::ma_st_b(Register src, Address address) {
+FaultingCodeOffset MacroAssemblerLOONG64::ma_st_b(Register src,
+                                                  Address address) {
   int32_t offset = address.offset;
   Register base = address.base;
+  FaultingCodeOffset fco;
 
   if (is_intN(offset, 12)) {
+    fco = FaultingCodeOffset(currentOffset());
     as_st_b(src, base, offset);
   } else {
     ScratchRegisterScope scratch(asMasm());
     MOZ_ASSERT(src != scratch);
     MOZ_ASSERT(base != scratch);
     ma_li(scratch, Imm32(offset));
+    fco = FaultingCodeOffset(currentOffset());
     as_stx_b(src, base, scratch);
   }
+  return fco;
 }
 
-void MacroAssemblerLOONG64::ma_st_h(Register src, Address address) {
+FaultingCodeOffset MacroAssemblerLOONG64::ma_st_h(Register src,
+                                                  Address address) {
   int32_t offset = address.offset;
   Register base = address.base;
+  FaultingCodeOffset fco;
 
   if (is_intN(offset, 12)) {
+    fco = FaultingCodeOffset(currentOffset());
     as_st_h(src, base, offset);
   } else {
     ScratchRegisterScope scratch(asMasm());
     MOZ_ASSERT(src != scratch);
     MOZ_ASSERT(base != scratch);
     ma_li(scratch, Imm32(offset));
+    fco = FaultingCodeOffset(currentOffset());
     as_stx_h(src, base, scratch);
   }
+  return fco;
 }
 
-void MacroAssemblerLOONG64::ma_st_w(Register src, Address address) {
+FaultingCodeOffset MacroAssemblerLOONG64::ma_st_w(Register src,
+                                                  Address address) {
   int32_t offset = address.offset;
   Register base = address.base;
+  FaultingCodeOffset fco;
 
   if (is_intN(offset, 12)) {
+    fco = FaultingCodeOffset(currentOffset());
     as_st_w(src, base, offset);
   } else {
     ScratchRegisterScope scratch(asMasm());
     MOZ_ASSERT(src != scratch);
     MOZ_ASSERT(base != scratch);
     ma_li(scratch, Imm32(offset));
+    fco = FaultingCodeOffset(currentOffset());
     as_stx_w(src, base, scratch);
   }
+  return fco;
 }
 
-void MacroAssemblerLOONG64::ma_st_d(Register src, Address address) {
+FaultingCodeOffset MacroAssemblerLOONG64::ma_st_d(Register src,
+                                                  Address address) {
   int32_t offset = address.offset;
   Register base = address.base;
+  FaultingCodeOffset fco;
 
   if (is_intN(offset, 12)) {
+    fco = FaultingCodeOffset(currentOffset());
     as_st_d(src, base, offset);
   } else {
     ScratchRegisterScope scratch(asMasm());
     MOZ_ASSERT(src != scratch);
     MOZ_ASSERT(base != scratch);
     ma_li(scratch, Imm32(offset));
+    fco = FaultingCodeOffset(currentOffset());
     as_stx_d(src, base, scratch);
   }
+  return fco;
 }
 
 // Arithmetic-based ops.
@@ -707,11 +769,12 @@ void MacroAssemblerLOONG64::ma_mulPtrTestOverflow(Register rd, Register rj,
 
 // Memory.
 
-void MacroAssemblerLOONG64::ma_load(Register dest, Address address,
-                                    LoadStoreSize size,
-                                    LoadStoreExtension extension) {
+FaultingCodeOffset MacroAssemblerLOONG64::ma_load(
+    Register dest, Address address, LoadStoreSize size,
+    LoadStoreExtension extension) {
   int32_t encodedOffset;
   Register base;
+  FaultingCodeOffset fco;
 
   // TODO: use as_ldx_b/h/w/d, could decrease as_add_d instr.
   switch (size) {
@@ -727,6 +790,7 @@ void MacroAssemblerLOONG64::ma_load(Register dest, Address address,
         base = address.base;
       }
 
+      fco = FaultingCodeOffset(currentOffset());
       if (size == SizeByte) {
         if (ZeroExtend == extension) {
           as_ld_bu(dest, base, encodedOffset);
@@ -756,6 +820,7 @@ void MacroAssemblerLOONG64::ma_load(Register dest, Address address,
           base = address.base;
         }
 
+        fco = FaultingCodeOffset(currentOffset());
         if (size == SizeWord) {
           as_ldptr_w(dest, base, encodedOffset);
         } else {
@@ -772,6 +837,7 @@ void MacroAssemblerLOONG64::ma_load(Register dest, Address address,
           base = address.base;
         }
 
+        fco = FaultingCodeOffset(currentOffset());
         if (size == SizeWord) {
           if (ZeroExtend == extension) {
             as_ld_wu(dest, base, encodedOffset);
@@ -786,13 +852,15 @@ void MacroAssemblerLOONG64::ma_load(Register dest, Address address,
     default:
       MOZ_CRASH("Invalid argument for ma_load");
   }
+  return fco;
 }
 
-void MacroAssemblerLOONG64::ma_store(Register data, Address address,
-                                     LoadStoreSize size,
-                                     LoadStoreExtension extension) {
+FaultingCodeOffset MacroAssemblerLOONG64::ma_store(
+    Register data, Address address, LoadStoreSize size,
+    LoadStoreExtension extension) {
   int32_t encodedOffset;
   Register base;
+  FaultingCodeOffset fco;
 
   // TODO: use as_stx_b/h/w/d, could decrease as_add_d instr.
   switch (size) {
@@ -808,6 +876,7 @@ void MacroAssemblerLOONG64::ma_store(Register data, Address address,
         base = address.base;
       }
 
+      fco = FaultingCodeOffset(currentOffset());
       if (size == SizeByte) {
         as_st_b(data, base, encodedOffset);
       } else {
@@ -827,6 +896,7 @@ void MacroAssemblerLOONG64::ma_store(Register data, Address address,
           base = address.base;
         }
 
+        fco = FaultingCodeOffset(currentOffset());
         if (size == SizeWord) {
           as_stptr_w(data, base, encodedOffset);
         } else {
@@ -843,6 +913,7 @@ void MacroAssemblerLOONG64::ma_store(Register data, Address address,
           base = address.base;
         }
 
+        fco = FaultingCodeOffset(currentOffset());
         if (size == SizeWord) {
           as_st_w(data, base, encodedOffset);
         } else {
@@ -853,6 +924,7 @@ void MacroAssemblerLOONG64::ma_store(Register data, Address address,
     default:
       MOZ_CRASH("Invalid argument for ma_store");
   }
+  return fco;
 }
 
 void MacroAssemblerLOONG64Compat::computeScaledAddress(const BaseIndex& address,
@@ -1122,60 +1194,80 @@ void MacroAssemblerLOONG64::ma_mv(ValueOperand src, FloatRegister dest) {
   as_movgr2fr_d(dest, src.valueReg());
 }
 
-void MacroAssemblerLOONG64::ma_fld_s(FloatRegister dest, Address address) {
+FaultingCodeOffset MacroAssemblerLOONG64::ma_fld_s(FloatRegister dest,
+                                                   Address address) {
   int32_t offset = address.offset;
   Register base = address.base;
+  js::wasm::FaultingCodeOffset fco;
 
   if (is_intN(offset, 12)) {
+    fco = js::wasm::FaultingCodeOffset(currentOffset());
     as_fld_s(dest, base, offset);
   } else {
     ScratchRegisterScope scratch(asMasm());
     MOZ_ASSERT(base != scratch);
     ma_li(scratch, Imm32(offset));
+    fco = js::wasm::FaultingCodeOffset(currentOffset());
     as_fldx_s(dest, base, scratch);
   }
+  return fco;
 }
 
-void MacroAssemblerLOONG64::ma_fld_d(FloatRegister dest, Address address) {
+FaultingCodeOffset MacroAssemblerLOONG64::ma_fld_d(FloatRegister dest,
+                                                   Address address) {
   int32_t offset = address.offset;
   Register base = address.base;
+  js::wasm::FaultingCodeOffset fco;
 
   if (is_intN(offset, 12)) {
+    fco = js::wasm::FaultingCodeOffset(currentOffset());
     as_fld_d(dest, base, offset);
   } else {
     ScratchRegisterScope scratch(asMasm());
     MOZ_ASSERT(base != scratch);
     ma_li(scratch, Imm32(offset));
+    fco = js::wasm::FaultingCodeOffset(currentOffset());
     as_fldx_d(dest, base, scratch);
   }
+  return fco;
 }
 
-void MacroAssemblerLOONG64::ma_fst_s(FloatRegister src, Address address) {
+FaultingCodeOffset MacroAssemblerLOONG64::ma_fst_s(FloatRegister src,
+                                                   Address address) {
   int32_t offset = address.offset;
   Register base = address.base;
+  js::wasm::FaultingCodeOffset fco;
 
   if (is_intN(offset, 12)) {
+    fco = js::wasm::FaultingCodeOffset(currentOffset());
     as_fst_s(src, base, offset);
   } else {
     ScratchRegisterScope scratch(asMasm());
     MOZ_ASSERT(base != scratch);
     ma_li(scratch, Imm32(offset));
+    fco = js::wasm::FaultingCodeOffset(currentOffset());
     as_fstx_s(src, base, scratch);
   }
+  return fco;
 }
 
-void MacroAssemblerLOONG64::ma_fst_d(FloatRegister src, Address address) {
+FaultingCodeOffset MacroAssemblerLOONG64::ma_fst_d(FloatRegister src,
+                                                   Address address) {
   int32_t offset = address.offset;
   Register base = address.base;
+  js::wasm::FaultingCodeOffset fco;
 
   if (is_intN(offset, 12)) {
+    fco = js::wasm::FaultingCodeOffset(currentOffset());
     as_fst_d(src, base, offset);
   } else {
     ScratchRegisterScope scratch(asMasm());
     MOZ_ASSERT(base != scratch);
     ma_li(scratch, Imm32(offset));
+    fco = js::wasm::FaultingCodeOffset(currentOffset());
     as_fstx_d(src, base, scratch);
   }
+  return fco;
 }
 
 void MacroAssemblerLOONG64::ma_pop(FloatRegister f) {
@@ -1461,20 +1553,21 @@ void MacroAssemblerLOONG64::ma_mod_mask(Register src, Register dest,
 
 // Memory.
 
-void MacroAssemblerLOONG64::ma_load(Register dest, const BaseIndex& src,
-                                    LoadStoreSize size,
-                                    LoadStoreExtension extension) {
+FaultingCodeOffset MacroAssemblerLOONG64::ma_load(
+    Register dest, const BaseIndex& src, LoadStoreSize size,
+    LoadStoreExtension extension) {
   SecondScratchRegisterScope scratch2(asMasm());
   asMasm().computeScaledAddress(src, scratch2);
-  asMasm().ma_load(dest, Address(scratch2, src.offset), size, extension);
+  return asMasm().ma_load(dest, Address(scratch2, src.offset), size, extension);
 }
 
-void MacroAssemblerLOONG64::ma_store(Register data, const BaseIndex& dest,
-                                     LoadStoreSize size,
-                                     LoadStoreExtension extension) {
+FaultingCodeOffset MacroAssemblerLOONG64::ma_store(
+    Register data, const BaseIndex& dest, LoadStoreSize size,
+    LoadStoreExtension extension) {
   SecondScratchRegisterScope scratch2(asMasm());
   asMasm().computeScaledAddress(dest, scratch2);
-  asMasm().ma_store(data, Address(scratch2, dest.offset), size, extension);
+  return asMasm().ma_store(data, Address(scratch2, dest.offset), size,
+                           extension);
 }
 
 void MacroAssemblerLOONG64::ma_store(Imm32 imm, const BaseIndex& dest,
@@ -1683,28 +1776,32 @@ void MacroAssemblerLOONG64::ma_lis(FloatRegister dest, float value) {
   }
 }
 
-void MacroAssemblerLOONG64::ma_fst_d(FloatRegister ft, BaseIndex address) {
+FaultingCodeOffset MacroAssemblerLOONG64::ma_fst_d(FloatRegister ft,
+                                                   BaseIndex address) {
   SecondScratchRegisterScope scratch2(asMasm());
   asMasm().computeScaledAddress(address, scratch2);
-  asMasm().ma_fst_d(ft, Address(scratch2, address.offset));
+  return asMasm().ma_fst_d(ft, Address(scratch2, address.offset));
 }
 
-void MacroAssemblerLOONG64::ma_fst_s(FloatRegister ft, BaseIndex address) {
+FaultingCodeOffset MacroAssemblerLOONG64::ma_fst_s(FloatRegister ft,
+                                                   BaseIndex address) {
   SecondScratchRegisterScope scratch2(asMasm());
   asMasm().computeScaledAddress(address, scratch2);
-  asMasm().ma_fst_s(ft, Address(scratch2, address.offset));
+  return asMasm().ma_fst_s(ft, Address(scratch2, address.offset));
 }
 
-void MacroAssemblerLOONG64::ma_fld_d(FloatRegister ft, const BaseIndex& src) {
+FaultingCodeOffset MacroAssemblerLOONG64::ma_fld_d(FloatRegister ft,
+                                                   const BaseIndex& src) {
   SecondScratchRegisterScope scratch2(asMasm());
   asMasm().computeScaledAddress(src, scratch2);
-  asMasm().ma_fld_d(ft, Address(scratch2, src.offset));
+  return asMasm().ma_fld_d(ft, Address(scratch2, src.offset));
 }
 
-void MacroAssemblerLOONG64::ma_fld_s(FloatRegister ft, const BaseIndex& src) {
+FaultingCodeOffset MacroAssemblerLOONG64::ma_fld_s(FloatRegister ft,
+                                                   const BaseIndex& src) {
   SecondScratchRegisterScope scratch2(asMasm());
   asMasm().computeScaledAddress(src, scratch2);
-  asMasm().ma_fld_s(ft, Address(scratch2, src.offset));
+  return asMasm().ma_fld_s(ft, Address(scratch2, src.offset));
 }
 
 void MacroAssemblerLOONG64::ma_bc_s(FloatRegister lhs, FloatRegister rhs,
@@ -2007,14 +2104,14 @@ void MacroAssemblerLOONG64::minMaxFloat32(FloatRegister srcDest,
   bind(&done);
 }
 
-void MacroAssemblerLOONG64::loadDouble(const Address& address,
-                                       FloatRegister dest) {
-  asMasm().ma_fld_d(dest, address);
+FaultingCodeOffset MacroAssemblerLOONG64::loadDouble(const Address& address,
+                                                     FloatRegister dest) {
+  return asMasm().ma_fld_d(dest, address);
 }
 
-void MacroAssemblerLOONG64::loadDouble(const BaseIndex& src,
-                                       FloatRegister dest) {
-  asMasm().ma_fld_d(dest, src);
+FaultingCodeOffset MacroAssemblerLOONG64::loadDouble(const BaseIndex& src,
+                                                     FloatRegister dest) {
+  return asMasm().ma_fld_d(dest, src);
 }
 
 void MacroAssemblerLOONG64::loadFloatAsDouble(const Address& address,
@@ -2029,14 +2126,14 @@ void MacroAssemblerLOONG64::loadFloatAsDouble(const BaseIndex& src,
   as_fcvt_d_s(dest, dest);
 }
 
-void MacroAssemblerLOONG64::loadFloat32(const Address& address,
-                                        FloatRegister dest) {
-  asMasm().ma_fld_s(dest, address);
+FaultingCodeOffset MacroAssemblerLOONG64::loadFloat32(const Address& address,
+                                                      FloatRegister dest) {
+  return asMasm().ma_fld_s(dest, address);
 }
 
-void MacroAssemblerLOONG64::loadFloat32(const BaseIndex& src,
-                                        FloatRegister dest) {
-  asMasm().ma_fld_s(dest, src);
+FaultingCodeOffset MacroAssemblerLOONG64::loadFloat32(const BaseIndex& src,
+                                                      FloatRegister dest) {
+  return asMasm().ma_fld_s(dest, src);
 }
 
 void MacroAssemblerLOONG64::wasmLoadImpl(const wasm::MemoryAccessDesc& access,
@@ -2054,6 +2151,8 @@ void MacroAssemblerLOONG64::wasmLoadImpl(const wasm::MemoryAccessDesc& access,
   }
 
   asMasm().memoryBarrierBefore(access.sync());
+  append(access, wasm::TrapMachineInsnForLoad(byteSize(access.type())),
+         FaultingCodeOffset(currentOffset()));
 
   switch (access.type()) {
     case Scalar::Int8:
@@ -2082,7 +2181,6 @@ void MacroAssemblerLOONG64::wasmLoadImpl(const wasm::MemoryAccessDesc& access,
       MOZ_CRASH("unexpected array type");
   }
 
-  asMasm().append(access, asMasm().size() - 4);
   asMasm().memoryBarrierAfter(access.sync());
 }
 
@@ -2101,6 +2199,9 @@ void MacroAssemblerLOONG64::wasmStoreImpl(const wasm::MemoryAccessDesc& access,
   }
 
   asMasm().memoryBarrierBefore(access.sync());
+  // The next emitted instruction is a memory access.
+  append(access, wasm::TrapMachineInsnForStore(byteSize(access.type())),
+         FaultingCodeOffset(currentOffset()));
 
   switch (access.type()) {
     case Scalar::Int8:
@@ -2128,8 +2229,6 @@ void MacroAssemblerLOONG64::wasmStoreImpl(const wasm::MemoryAccessDesc& access,
       MOZ_CRASH("unexpected array type");
   }
 
-  // Only the last emitted instruction is a memory access.
-  asMasm().append(access, asMasm().size() - 4);
   asMasm().memoryBarrierAfter(access.sync());
 }
 
@@ -2146,6 +2245,8 @@ void MacroAssemblerLOONG64Compat::wasmLoadI64Impl(
   }
 
   asMasm().memoryBarrierBefore(access.sync());
+  append(access, wasm::TrapMachineInsnForLoad(byteSize(access.type())),
+         FaultingCodeOffset(currentOffset()));
 
   switch (access.type()) {
     case Scalar::Int8:
@@ -2174,7 +2275,6 @@ void MacroAssemblerLOONG64Compat::wasmLoadI64Impl(
       MOZ_CRASH("unexpected array type");
   }
 
-  asMasm().append(access, asMasm().size() - 4);
   asMasm().memoryBarrierAfter(access.sync());
 }
 
@@ -2191,6 +2291,8 @@ void MacroAssemblerLOONG64Compat::wasmStoreI64Impl(
   }
 
   asMasm().memoryBarrierBefore(access.sync());
+  append(access, wasm::TrapMachineInsnForStore(byteSize(access.type())),
+         FaultingCodeOffset(currentOffset()));
 
   switch (access.type()) {
     case Scalar::Int8:
@@ -2212,7 +2314,6 @@ void MacroAssemblerLOONG64Compat::wasmStoreI64Impl(
       MOZ_CRASH("unexpected array type");
   }
 
-  asMasm().append(access, asMasm().size() - 4);
   asMasm().memoryBarrierAfter(access.sync());
 }
 
@@ -3288,7 +3389,8 @@ static void CompareExchange(MacroAssembler& masm,
     masm.bind(&again);
 
     if (access) {
-      masm.append(*access, masm.size());
+      masm.append(*access, wasm::TrapMachineInsn::Load32,
+                  FaultingCodeOffset(masm.currentOffset()));
     }
 
     masm.as_ll_w(output, scratch, 0);
@@ -3315,7 +3417,8 @@ static void CompareExchange(MacroAssembler& masm,
   masm.bind(&again);
 
   if (access) {
-    masm.append(*access, masm.size());
+    masm.append(*access, wasm::TrapMachineInsn::Load32,
+                FaultingCodeOffset(masm.currentOffset()));
   }
 
   masm.as_ll_w(scratch2, scratch, 0);
@@ -3377,7 +3480,8 @@ static void CompareExchange64(MacroAssembler& masm,
   masm.bind(&tryAgain);
 
   if (access) {
-    masm.append(*access, masm.size());
+    masm.append(*access, wasm::TrapMachineInsn::Load64,
+                FaultingCodeOffset(masm.currentOffset()));
   }
 
   masm.as_ll_d(output.reg, scratch, 0);
@@ -3427,7 +3531,8 @@ static void AtomicExchange(MacroAssembler& masm,
     masm.bind(&again);
 
     if (access) {
-      masm.append(*access, masm.size());
+      masm.append(*access, wasm::TrapMachineInsn::Load32,
+                  FaultingCodeOffset(masm.currentOffset()));
     }
 
     masm.as_ll_w(output, scratch, 0);
@@ -3461,7 +3566,8 @@ static void AtomicExchange(MacroAssembler& masm,
   masm.bind(&again);
 
   if (access) {
-    masm.append(*access, masm.size());
+    masm.append(*access, wasm::TrapMachineInsn::Load32,
+                FaultingCodeOffset(masm.currentOffset()));
   }
 
   masm.as_ll_w(output, scratch, 0);
@@ -3511,7 +3617,8 @@ static void AtomicExchange64(MacroAssembler& masm,
   masm.bind(&tryAgain);
 
   if (access) {
-    masm.append(*access, masm.size());
+    masm.append(*access, wasm::TrapMachineInsn::Load64,
+                FaultingCodeOffset(masm.currentOffset()));
   }
 
   masm.as_ll_d(output.reg, scratch, 0);
@@ -3558,7 +3665,8 @@ static void AtomicFetchOp(MacroAssembler& masm,
     masm.bind(&again);
 
     if (access) {
-      masm.append(*access, masm.size());
+      masm.append(*access, wasm::TrapMachineInsn::Load32,
+                  FaultingCodeOffset(masm.currentOffset()));
     }
 
     masm.as_ll_w(output, scratch, 0);
@@ -3603,7 +3711,8 @@ static void AtomicFetchOp(MacroAssembler& masm,
   masm.bind(&again);
 
   if (access) {
-    masm.append(*access, masm.size());
+    masm.append(*access, wasm::TrapMachineInsn::Load32,
+                FaultingCodeOffset(masm.currentOffset()));
   }
 
   masm.as_ll_w(scratch2, scratch, 0);
@@ -3686,7 +3795,8 @@ static void AtomicFetchOp64(MacroAssembler& masm,
   masm.bind(&tryAgain);
 
   if (access) {
-    masm.append(*access, masm.size());
+    masm.append(*access, wasm::TrapMachineInsn::Load64,
+                FaultingCodeOffset(masm.currentOffset()));
   }
 
   masm.as_ll_d(output.reg, scratch, 0);
@@ -3924,7 +4034,8 @@ static void AtomicEffectOp(MacroAssembler& masm,
     masm.bind(&again);
 
     if (access) {
-      masm.append(*access, masm.size());
+      masm.append(*access, wasm::TrapMachineInsn::Load32,
+                  FaultingCodeOffset(masm.currentOffset()));
     }
 
     masm.as_ll_w(scratch2, scratch, 0);
@@ -3969,7 +4080,8 @@ static void AtomicEffectOp(MacroAssembler& masm,
   masm.bind(&again);
 
   if (access) {
-    masm.append(*access, masm.size());
+    masm.append(*access, wasm::TrapMachineInsn::Load32,
+                FaultingCodeOffset(masm.currentOffset()));
   }
 
   masm.as_ll_w(scratch2, scratch, 0);
@@ -4588,57 +4700,58 @@ void MacroAssemblerLOONG64Compat::movePtr(wasm::SymbolicAddress imm,
   ma_liPatchable(dest, ImmWord(-1));
 }
 
-void MacroAssemblerLOONG64Compat::load8ZeroExtend(const Address& address,
-                                                  Register dest) {
-  ma_load(dest, address, SizeByte, ZeroExtend);
+FaultingCodeOffset MacroAssemblerLOONG64Compat::load8ZeroExtend(
+    const Address& address, Register dest) {
+  return ma_load(dest, address, SizeByte, ZeroExtend);
 }
 
-void MacroAssemblerLOONG64Compat::load8ZeroExtend(const BaseIndex& src,
-                                                  Register dest) {
-  ma_load(dest, src, SizeByte, ZeroExtend);
+FaultingCodeOffset MacroAssemblerLOONG64Compat::load8ZeroExtend(
+    const BaseIndex& src, Register dest) {
+  return ma_load(dest, src, SizeByte, ZeroExtend);
 }
 
-void MacroAssemblerLOONG64Compat::load8SignExtend(const Address& address,
-                                                  Register dest) {
-  ma_load(dest, address, SizeByte, SignExtend);
+FaultingCodeOffset MacroAssemblerLOONG64Compat::load8SignExtend(
+    const Address& address, Register dest) {
+  return ma_load(dest, address, SizeByte, SignExtend);
 }
 
-void MacroAssemblerLOONG64Compat::load8SignExtend(const BaseIndex& src,
-                                                  Register dest) {
-  ma_load(dest, src, SizeByte, SignExtend);
+FaultingCodeOffset MacroAssemblerLOONG64Compat::load8SignExtend(
+    const BaseIndex& src, Register dest) {
+  return ma_load(dest, src, SizeByte, SignExtend);
 }
 
-void MacroAssemblerLOONG64Compat::load16ZeroExtend(const Address& address,
-                                                   Register dest) {
-  ma_load(dest, address, SizeHalfWord, ZeroExtend);
+FaultingCodeOffset MacroAssemblerLOONG64Compat::load16ZeroExtend(
+    const Address& address, Register dest) {
+  return ma_load(dest, address, SizeHalfWord, ZeroExtend);
 }
 
-void MacroAssemblerLOONG64Compat::load16ZeroExtend(const BaseIndex& src,
-                                                   Register dest) {
-  ma_load(dest, src, SizeHalfWord, ZeroExtend);
+FaultingCodeOffset MacroAssemblerLOONG64Compat::load16ZeroExtend(
+    const BaseIndex& src, Register dest) {
+  return ma_load(dest, src, SizeHalfWord, ZeroExtend);
 }
 
-void MacroAssemblerLOONG64Compat::load16SignExtend(const Address& address,
-                                                   Register dest) {
-  ma_load(dest, address, SizeHalfWord, SignExtend);
+FaultingCodeOffset MacroAssemblerLOONG64Compat::load16SignExtend(
+    const Address& address, Register dest) {
+  return ma_load(dest, address, SizeHalfWord, SignExtend);
 }
 
-void MacroAssemblerLOONG64Compat::load16SignExtend(const BaseIndex& src,
-                                                   Register dest) {
-  ma_load(dest, src, SizeHalfWord, SignExtend);
+FaultingCodeOffset MacroAssemblerLOONG64Compat::load16SignExtend(
+    const BaseIndex& src, Register dest) {
+  return ma_load(dest, src, SizeHalfWord, SignExtend);
 }
 
-void MacroAssemblerLOONG64Compat::load32(const Address& address,
-                                         Register dest) {
-  ma_ld_w(dest, address);
+FaultingCodeOffset MacroAssemblerLOONG64Compat::load32(const Address& address,
+                                                       Register dest) {
+  return ma_ld_w(dest, address);
 }
 
-void MacroAssemblerLOONG64Compat::load32(const BaseIndex& address,
-                                         Register dest) {
+FaultingCodeOffset MacroAssemblerLOONG64Compat::load32(const BaseIndex& address,
+                                                       Register dest) {
   Register base = address.base;
   Register index = address.index;
   int32_t offset = address.offset;
   uint32_t shift = Imm32::ShiftOf(address.scale).value;
+  js::wasm::FaultingCodeOffset fco;
 
   if (offset != 0) {
     ScratchRegisterScope scratch(asMasm());
@@ -4649,14 +4762,18 @@ void MacroAssemblerLOONG64Compat::load32(const BaseIndex& address,
     } else {
       as_add_d(scratch, index, scratch);
     }
+    fco = js::wasm::FaultingCodeOffset(currentOffset());
     as_ldx_w(dest, base, scratch);
   } else if (shift != 0) {
     ScratchRegisterScope scratch(asMasm());
     as_slli_d(scratch, index, shift);
+    fco = js::wasm::FaultingCodeOffset(currentOffset());
     as_ldx_w(dest, base, scratch);
   } else {
+    fco = js::wasm::FaultingCodeOffset(currentOffset());
     as_ldx_w(dest, base, index);
   }
+  return fco;
 }
 
 void MacroAssemblerLOONG64Compat::load32(AbsoluteAddress address,
@@ -4673,16 +4790,18 @@ void MacroAssemblerLOONG64Compat::load32(wasm::SymbolicAddress address,
   load32(Address(scratch, 0), dest);
 }
 
-void MacroAssemblerLOONG64Compat::loadPtr(const Address& address,
-                                          Register dest) {
-  ma_ld_d(dest, address);
+FaultingCodeOffset MacroAssemblerLOONG64Compat::loadPtr(const Address& address,
+                                                        Register dest) {
+  return ma_ld_d(dest, address);
 }
 
-void MacroAssemblerLOONG64Compat::loadPtr(const BaseIndex& src, Register dest) {
+FaultingCodeOffset MacroAssemblerLOONG64Compat::loadPtr(const BaseIndex& src,
+                                                        Register dest) {
   Register base = src.base;
   Register index = src.index;
   int32_t offset = src.offset;
   uint32_t shift = Imm32::ShiftOf(src.scale).value;
+  js::wasm::FaultingCodeOffset fco;
 
   if (offset != 0) {
     ScratchRegisterScope scratch(asMasm());
@@ -4693,14 +4812,18 @@ void MacroAssemblerLOONG64Compat::loadPtr(const BaseIndex& src, Register dest) {
     } else {
       as_add_d(scratch, index, scratch);
     }
+    fco = js::wasm::FaultingCodeOffset(currentOffset());
     as_ldx_d(dest, base, scratch);
   } else if (shift != 0) {
     ScratchRegisterScope scratch(asMasm());
     as_slli_d(scratch, index, shift);
+    fco = js::wasm::FaultingCodeOffset(currentOffset());
     as_ldx_d(dest, base, scratch);
   } else {
+    fco = js::wasm::FaultingCodeOffset(currentOffset());
     as_ldx_d(dest, base, index);
   }
+  return fco;
 }
 
 void MacroAssemblerLOONG64Compat::loadPtr(AbsoluteAddress address,
@@ -4728,16 +4851,18 @@ void MacroAssemblerLOONG64Compat::store8(Imm32 imm, const Address& address) {
   ma_store(scratch2, address, SizeByte);
 }
 
-void MacroAssemblerLOONG64Compat::store8(Register src, const Address& address) {
-  ma_store(src, address, SizeByte);
+FaultingCodeOffset MacroAssemblerLOONG64Compat::store8(Register src,
+                                                       const Address& address) {
+  return ma_store(src, address, SizeByte);
 }
 
 void MacroAssemblerLOONG64Compat::store8(Imm32 imm, const BaseIndex& dest) {
   ma_store(imm, dest, SizeByte);
 }
 
-void MacroAssemblerLOONG64Compat::store8(Register src, const BaseIndex& dest) {
-  ma_store(src, dest, SizeByte);
+FaultingCodeOffset MacroAssemblerLOONG64Compat::store8(Register src,
+                                                       const BaseIndex& dest) {
+  return ma_store(src, dest, SizeByte);
 }
 
 void MacroAssemblerLOONG64Compat::store16(Imm32 imm, const Address& address) {
@@ -4746,18 +4871,18 @@ void MacroAssemblerLOONG64Compat::store16(Imm32 imm, const Address& address) {
   ma_store(scratch2, address, SizeHalfWord);
 }
 
-void MacroAssemblerLOONG64Compat::store16(Register src,
-                                          const Address& address) {
-  ma_store(src, address, SizeHalfWord);
+FaultingCodeOffset MacroAssemblerLOONG64Compat::store16(
+    Register src, const Address& address) {
+  return ma_store(src, address, SizeHalfWord);
 }
 
 void MacroAssemblerLOONG64Compat::store16(Imm32 imm, const BaseIndex& dest) {
   ma_store(imm, dest, SizeHalfWord);
 }
 
-void MacroAssemblerLOONG64Compat::store16(Register src,
-                                          const BaseIndex& address) {
-  ma_store(src, address, SizeHalfWord);
+FaultingCodeOffset MacroAssemblerLOONG64Compat::store16(
+    Register src, const BaseIndex& address) {
+  return ma_store(src, address, SizeHalfWord);
 }
 
 void MacroAssemblerLOONG64Compat::store32(Register src,
@@ -4767,9 +4892,9 @@ void MacroAssemblerLOONG64Compat::store32(Register src,
   store32(src, Address(scratch, 0));
 }
 
-void MacroAssemblerLOONG64Compat::store32(Register src,
-                                          const Address& address) {
-  ma_store(src, address, SizeWord);
+FaultingCodeOffset MacroAssemblerLOONG64Compat::store32(
+    Register src, const Address& address) {
+  return ma_store(src, address, SizeWord);
 }
 
 void MacroAssemblerLOONG64Compat::store32(Imm32 src, const Address& address) {
@@ -4782,8 +4907,9 @@ void MacroAssemblerLOONG64Compat::store32(Imm32 imm, const BaseIndex& dest) {
   ma_store(imm, dest, SizeWord);
 }
 
-void MacroAssemblerLOONG64Compat::store32(Register src, const BaseIndex& dest) {
-  ma_store(src, dest, SizeWord);
+FaultingCodeOffset MacroAssemblerLOONG64Compat::store32(Register src,
+                                                        const BaseIndex& dest) {
+  return ma_store(src, dest, SizeWord);
 }
 
 template <typename T>
@@ -4820,19 +4946,21 @@ template void MacroAssemblerLOONG64Compat::storePtr<Address>(ImmGCPtr imm,
 template void MacroAssemblerLOONG64Compat::storePtr<BaseIndex>(
     ImmGCPtr imm, BaseIndex address);
 
-void MacroAssemblerLOONG64Compat::storePtr(Register src,
-                                           const Address& address) {
-  ma_st_d(src, address);
+FaultingCodeOffset MacroAssemblerLOONG64Compat::storePtr(
+    Register src, const Address& address) {
+  return ma_st_d(src, address);
 }
 
-void MacroAssemblerLOONG64Compat::storePtr(Register src,
-                                           const BaseIndex& address) {
+FaultingCodeOffset MacroAssemblerLOONG64Compat::storePtr(
+    Register src, const BaseIndex& address) {
   Register base = address.base;
   Register index = address.index;
   int32_t offset = address.offset;
   int32_t shift = Imm32::ShiftOf(address.scale).value;
+  FaultingCodeOffset fco;
 
   if ((offset == 0) && (shift == 0)) {
+    fco = FaultingCodeOffset(currentOffset());
     as_stx_d(src, base, index);
   } else if (is_intN(offset, 12)) {
     ScratchRegisterScope scratch(asMasm());
@@ -4841,6 +4969,7 @@ void MacroAssemblerLOONG64Compat::storePtr(Register src,
     } else {
       as_alsl_d(scratch, index, base, shift - 1);
     }
+    fco = FaultingCodeOffset(currentOffset());
     as_st_d(src, scratch, offset);
   } else {
     ScratchRegisterScope scratch(asMasm());
@@ -4850,8 +4979,10 @@ void MacroAssemblerLOONG64Compat::storePtr(Register src,
     } else {
       as_alsl_d(scratch, index, scratch, shift - 1);
     }
+    fco = FaultingCodeOffset(currentOffset());
     as_stx_d(src, base, scratch);
   }
+  return fco;
 }
 
 void MacroAssemblerLOONG64Compat::storePtr(Register src, AbsoluteAddress dest) {
