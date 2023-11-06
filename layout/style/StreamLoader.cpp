@@ -16,8 +16,6 @@
 #include "nsNetCID.h"
 #include "nsServiceManagerUtils.h"
 
-#include <limits>
-
 namespace mozilla::css {
 
 StreamLoader::StreamLoader(SheetLoadData& aSheetLoadData)

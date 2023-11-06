@@ -145,7 +145,7 @@ void SharedStyleSheetCache::LoadCompletedInternal(
           // insert them into the tree.
           return false;
         }
-        if (data->mOwningNodeBeforeLoadEvent != data->mSheet->GetOwnerNode()) {
+        if (data->mHadOwnerNode != !!data->mSheet->GetOwnerNode()) {
           // The sheet was already removed from the tree and is no longer the
           // current sheet of the owning node, we can bail.
           return false;

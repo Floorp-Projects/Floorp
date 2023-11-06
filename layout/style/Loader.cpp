@@ -291,6 +291,7 @@ SheetLoadData::SheetLoadData(
       mIsLoading(false),
       mIsCancelled(false),
       mMustNotify(false),
+      mHadOwnerNode(!!aOwningNode),
       mWasAlternate(aIsAlternate == IsAlternate::Yes),
       mMediaMatched(aMediaMatches == MediaMatched::Yes),
       mUseSystemPrincipal(false),
@@ -299,15 +300,13 @@ SheetLoadData::SheetLoadData(
       mBlockResourceTiming(false),
       mLoadFailed(false),
       mPreloadKind(aPreloadKind),
-      mOwningNodeBeforeLoadEvent(aOwningNode),
       mObserver(aObserver),
       mTriggeringPrincipal(aTriggeringPrincipal),
       mReferrerInfo(aReferrerInfo),
       mNonce(aNonce),
       mGuessedEncoding(GetFallbackEncoding(*aLoader, aOwningNode, nullptr)),
       mCompatMode(aLoader->CompatMode(aPreloadKind)) {
-  MOZ_ASSERT(!mOwningNodeBeforeLoadEvent ||
-                 dom::LinkStyle::FromNode(*mOwningNodeBeforeLoadEvent),
+  MOZ_ASSERT(!aOwningNode || dom::LinkStyle::FromNode(*aOwningNode),
              "Must implement LinkStyle");
   MOZ_ASSERT(mTriggeringPrincipal);
   MOZ_ASSERT(mLoader, "Must have a loader!");
@@ -331,6 +330,7 @@ SheetLoadData::SheetLoadData(css::Loader* aLoader, nsIURI* aURI,
       mIsLoading(false),
       mIsCancelled(false),
       mMustNotify(false),
+      mHadOwnerNode(false),
       mWasAlternate(false),
       mMediaMatched(true),
       mUseSystemPrincipal(aParentData && aParentData->mUseSystemPrincipal),
@@ -371,6 +371,7 @@ SheetLoadData::SheetLoadData(
       mIsLoading(false),
       mIsCancelled(false),
       mMustNotify(false),
+      mHadOwnerNode(false),
       mWasAlternate(false),
       mMediaMatched(true),
       mUseSystemPrincipal(aUseSystemPrincipal == UseSystemPrincipal::Yes),
@@ -422,7 +423,7 @@ void SheetLoadData::StartPendingLoad() {
 
 already_AddRefed<AsyncEventDispatcher>
 SheetLoadData::PrepareLoadEventIfNeeded() {
-  nsCOMPtr<nsINode> node = std::move(mOwningNodeBeforeLoadEvent);
+  nsCOMPtr<nsINode> node = mSheet->GetOwnerNode();
   if (!node) {
     return nullptr;
   }
@@ -660,9 +661,8 @@ nsresult SheetLoadData::VerifySheetReadyToParse(nsresult aStatus,
             aStatus)) {
       if (Document* doc = mLoader->GetDocument()) {
         for (SheetLoadData* data = this; data; data = data->mNext) {
-          // mOwningNode may be null but AddBlockTrackingNode can cope
-          doc->AddBlockedNodeByClassifier(
-              nsIContent::FromNodeOrNull(data->mOwningNodeBeforeLoadEvent));
+          // owner node may be null but AddBlockTrackingNode can cope
+          doc->AddBlockedNodeByClassifier(data->mSheet->GetOwnerNode());
         }
       }
     }
