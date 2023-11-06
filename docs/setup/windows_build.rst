@@ -1,5 +1,5 @@
 ﻿Building Firefox On Windows
-===========================
+======================================
 
 This document will help you get set up to build Firefox on your own
 computer. Getting set up can take a while - we need to download a
@@ -104,10 +104,12 @@ Microsoft Defender Antivirus manually
 
 .. note::
 
-    If you're already missing files (you'll see them listed in ``hg status``, you can have them
-    brought back by reverting your source tree: ``hg update -C``).
+    If you are using Mercurial and you're already missing files (you'll see them listed in ``hg status``), you can have them
+    brought back by reverting your source tree: ``hg update -C``.
 
-3. Build
+    If you are using Git and you're already missing files (you'll see them listed in ``git status``), you can have them brought back by discarding changes in your source tree: ``git restore .``.
+
+1. Build
 --------
 
 Now that your system is bootstrapped, you should be able to build!
@@ -117,9 +119,19 @@ Now that your system is bootstrapped, you should be able to build!
     cd c:/mozilla-source/mozilla-unified
     hg up -C central
     ./mach build
-    ./mach run
 
 🎉 Congratulations! You've built your own home-grown Firefox!
+You should see the following message in your terminal after a successful build:
+
+.. code-block:: console
+
+    Your build was successful!
+    To take your build for a test drive, run: |mach run|
+    For more information on what to do now, see https://firefox-source-docs.mozilla.org/setup/contributing_code.html
+
+You can now use the ``./mach run`` command to run your locally built Firefox!
+
+If your build fails, please reference the steps in the `Troubleshooting section <#troubleshooting>`_.
 
 Now the fun starts
 ------------------
@@ -139,6 +151,14 @@ send patches to Mozilla, update your source code locally, and more.
 
 Troubleshooting
 ---------------
+
+Build errors
+~~~~~~~~~~~~
+
+If you encounter a build error when trying to setup your development environment, please follow these steps:
+   1. Copy the entire build error to your clipboard
+   2. Paste this error on `paste.mozilla.org <https://paste.mozilla.org>`_ in the text area and change the "Expire in one hour" option to "Expire in one week". Note: it won't take a week to get help but it's better to have the snippet be around for a bit longer than expected.
+   3. Go to the `introduction channel <https://chat.mozilla.org/#/room/#introduction:mozilla.org>`__ and ask for help with your build error. Make sure to post the link to the paste.mozilla.org snippet you created!
 
 MozillaBuild out-of-date
 ~~~~~~~~~~~~~~~~~~~~~~~~

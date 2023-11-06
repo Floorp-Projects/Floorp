@@ -34,7 +34,7 @@ Windows dependencies
 
     All the commands of this tutorial must be run in the shell provided with the MozillaBuild Package (start-shell.bat)
 
-:ref:`More information <Building Firefox On Windows>`
+:ref:`More information on building Firefox on Windows <Building Firefox On Windows>`
 
 Bootstrap a copy of the Firefox source code
 -------------------------------------------
@@ -58,7 +58,7 @@ To Setup Firefox On Windows
     $ wget https://hg.mozilla.org/mozilla-central/raw-file/default/python/mozboot/bin/bootstrap.py
     $ python3 bootstrap.py
 
-More information :ref:`for Windows <Building Firefox On Windows>`
+More information on :ref:`building Firefox for Windows <Building Firefox On Windows>`.
 
 To Setup Firefox On macOS and Linux
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -68,7 +68,7 @@ To Setup Firefox On macOS and Linux
     $ curl https://hg.mozilla.org/mozilla-central/raw-file/default/python/mozboot/bin/bootstrap.py -O
     $ python3 bootstrap.py
 
-More information :ref:`for Linux <Building Firefox On Linux>` and :ref:`for MacOS <Building Firefox On MacOS>`
+More information on :ref:`building Firefox for Linux <Building Firefox On Linux>` and :ref:`building Firefox for MacOS <Building Firefox On MacOS>`.
 
 To set up your editor
 ---------------------
@@ -111,7 +111,11 @@ To run it:
 
      $ ./mach run
 
-:ref:`More information about Linux <Building Firefox On Linux>` / :ref:`More information about MacOS <Building Firefox On MacOS>`
+This command will open your locally built Firefox in a new window.
+
+:ref:`More information about building Firefox on Linux <Building Firefox On Linux>` / :ref:`More information about building Firefox on MacOS <Building Firefox On MacOS>`
+
+If you encounter build errors, please reference the more detailed "Building Firefox" on your specific operating system document and specifically the "Troubleshooting" section.
 
 .. _write_a_patch:
 
