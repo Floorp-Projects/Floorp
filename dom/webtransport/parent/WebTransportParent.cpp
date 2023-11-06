@@ -165,78 +165,61 @@ IPCResult WebTransportParent::RecvClose(const uint32_t& aCode,
   return IPC_OK();
 }
 
-class BidiReceiveStream : public nsIWebTransportStreamCallback {
+class ReceiveStream final : public nsIWebTransportStreamCallback {
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
   NS_DECL_NSIWEBTRANSPORTSTREAMCALLBACK
 
-  BidiReceiveStream(
-      WebTransportParent::CreateBidirectionalStreamResolver&& aResolver,
-      std::function<
-          void(uint64_t, WebTransportParent::OnResetOrStopSendingCallback&&,
-               nsIWebTransportBidirectionalStream* aStream)>&& aStreamCallback,
-      Maybe<int64_t> aSendOrder, nsCOMPtr<nsISerialEventTarget>& aSocketThread)
-      : mResolver(aResolver),
-        mStreamCallback(std::move(aStreamCallback)),
-        mSendOrder(aSendOrder),
-        mSocketThread(aSocketThread) {}
-
- private:
-  virtual ~BidiReceiveStream() = default;
-  WebTransportParent::CreateBidirectionalStreamResolver mResolver;
-  std::function<void(uint64_t,
-                     WebTransportParent::OnResetOrStopSendingCallback&&,
-                     nsIWebTransportBidirectionalStream* aStream)>
-      mStreamCallback;
-  Maybe<int64_t> mSendOrder;
-  nsCOMPtr<nsISerialEventTarget> mSocketThread;
-};
-
-class UniReceiveStream : public nsIWebTransportStreamCallback {
- public:
-  NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_NSIWEBTRANSPORTSTREAMCALLBACK
-
-  UniReceiveStream(
+  ReceiveStream(
       WebTransportParent::CreateUnidirectionalStreamResolver&& aResolver,
       std::function<void(uint64_t,
-                         WebTransportParent::OnResetOrStopSendingCallback&&,
-                         nsIWebTransportSendStream* aStream)>&& aStreamCallback,
+                         WebTransportParent::OnResetOrStopSendingCallback&&)>&&
+          aStreamCallback,
       Maybe<int64_t> aSendOrder, nsCOMPtr<nsISerialEventTarget>& aSocketThread)
-      : mResolver(aResolver),
+      : mUniResolver(aResolver),
+        mStreamCallback(std::move(aStreamCallback)),
+        mSendOrder(aSendOrder),
+        mSocketThread(aSocketThread) {}
+  ReceiveStream(
+      WebTransportParent::CreateBidirectionalStreamResolver&& aResolver,
+      std::function<void(uint64_t,
+                         WebTransportParent::OnResetOrStopSendingCallback&&)>&&
+          aStreamCallback,
+      Maybe<int64_t> aSendOrder, nsCOMPtr<nsISerialEventTarget>& aSocketThread)
+      : mBiResolver(aResolver),
         mStreamCallback(std::move(aStreamCallback)),
         mSendOrder(aSendOrder),
         mSocketThread(aSocketThread) {}
 
  private:
-  virtual ~UniReceiveStream() = default;
-  WebTransportParent::CreateUnidirectionalStreamResolver mResolver;
+  ~ReceiveStream() = default;
+  WebTransportParent::CreateUnidirectionalStreamResolver mUniResolver;
+  WebTransportParent::CreateBidirectionalStreamResolver mBiResolver;
   std::function<void(uint64_t,
-                     WebTransportParent::OnResetOrStopSendingCallback&&,
-                     nsIWebTransportSendStream* aStream)>
+                     WebTransportParent::OnResetOrStopSendingCallback&&)>
       mStreamCallback;
   Maybe<int64_t> mSendOrder;
   nsCOMPtr<nsISerialEventTarget> mSocketThread;
 };
 
-NS_IMPL_ISUPPORTS(BidiReceiveStream, nsIWebTransportStreamCallback)
-NS_IMPL_ISUPPORTS(UniReceiveStream, nsIWebTransportStreamCallback)
+NS_IMPL_ISUPPORTS(ReceiveStream, nsIWebTransportStreamCallback)
 
 // nsIWebTransportStreamCallback:
-NS_IMETHODIMP BidiReceiveStream::OnBidirectionalStreamReady(
+NS_IMETHODIMP ReceiveStream::OnBidirectionalStreamReady(
     nsIWebTransportBidirectionalStream* aStream) {
   LOG(("Bidirectional stream ready!"));
   MOZ_ASSERT(mSocketThread->IsOnCurrentThread());
 
-  aStream->SetSendOrder(mSendOrder);
-
+  if (mSendOrder.isSome()) {
+    aStream->SetSendOrder(mSendOrder.value());
+  }
   RefPtr<mozilla::ipc::DataPipeSender> inputsender;
   RefPtr<mozilla::ipc::DataPipeReceiver> inputreceiver;
   nsresult rv =
       NewDataPipe(mozilla::ipc::kDefaultDataPipeCapacity,
                   getter_AddRefs(inputsender), getter_AddRefs(inputreceiver));
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    mResolver(rv);
+    mBiResolver(rv);
     return rv;
   }
 
@@ -251,7 +234,7 @@ NS_IMETHODIMP BidiReceiveStream::OnBidirectionalStreamReady(
                     mozilla::ipc::kDefaultDataPipeCapacity, nullptr, nullptr,
                     true, true, getter_AddRefs(inputCopyContext));
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    mResolver(rv);
+    mBiResolver(rv);
     return rv;
   }
 
@@ -261,7 +244,7 @@ NS_IMETHODIMP BidiReceiveStream::OnBidirectionalStreamReady(
       NewDataPipe(mozilla::ipc::kDefaultDataPipeCapacity,
                   getter_AddRefs(outputsender), getter_AddRefs(outputreceiver));
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    mResolver(rv);
+    mBiResolver(rv);
     return rv;
   }
 
@@ -274,12 +257,12 @@ NS_IMETHODIMP BidiReceiveStream::OnBidirectionalStreamReady(
                     mozilla::ipc::kDefaultDataPipeCapacity, nullptr, nullptr,
                     true, true, getter_AddRefs(outputCopyContext));
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    mResolver(rv);
+    mBiResolver(rv);
     return rv;
   }
 
   LOG(("Returning BidirectionalStream pipe to content"));
-  mResolver(BidirectionalStream(id, inputreceiver, outputsender));
+  mBiResolver(BidirectionalStream(id, inputreceiver, outputsender));
 
   auto onResetOrStopSending =
       [inputCopyContext(inputCopyContext), outputCopyContext(outputCopyContext),
@@ -292,36 +275,29 @@ NS_IMETHODIMP BidiReceiveStream::OnBidirectionalStreamReady(
         outputreceiver->CloseWithStatus(aError);
       };
 
-  // Store onResetOrStopSending in WebTransportParent::mBidiStreamCallbackMap
-  // and onResetOrStopSending will be called when a stream receives STOP_SENDING
-  // or RESET.
-  mStreamCallback(id,
-                  WebTransportParent::OnResetOrStopSendingCallback(
-                      std::move(onResetOrStopSending)),
-                  aStream);
+  // Store onResetOrStopSending in WebTransportParent::mStreamCallbackMap and
+  // onResetOrStopSending will be called when a stream receives STOP_SENDING or
+  // RESET.
+  mStreamCallback(id, WebTransportParent::OnResetOrStopSendingCallback(
+                          std::move(onResetOrStopSending)));
   return NS_OK;
 }
 
-NS_IMETHODIMP UniReceiveStream::OnBidirectionalStreamReady(
-    nsIWebTransportBidirectionalStream* aStream) {
-  return NS_ERROR_FAILURE;
-}
-
 NS_IMETHODIMP
-UniReceiveStream::OnUnidirectionalStreamReady(
-    nsIWebTransportSendStream* aStream) {
+ReceiveStream::OnUnidirectionalStreamReady(nsIWebTransportSendStream* aStream) {
   LOG(("Unidirectional stream ready!"));
   // We should be on the Socket Thread
   MOZ_ASSERT(mSocketThread->IsOnCurrentThread());
 
-  aStream->SetSendOrder(mSendOrder);
-
+  if (mSendOrder.isSome()) {
+    aStream->SetSendOrder(mSendOrder.value());
+  }
   RefPtr<::mozilla::ipc::DataPipeSender> sender;
   RefPtr<::mozilla::ipc::DataPipeReceiver> receiver;
   nsresult rv = NewDataPipe(mozilla::ipc::kDefaultDataPipeCapacity,
                             getter_AddRefs(sender), getter_AddRefs(receiver));
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    mResolver(rv);
+    mUniResolver(rv);
     return rv;
   }
 
@@ -336,13 +312,13 @@ UniReceiveStream::OnUnidirectionalStreamReady(
                     mozilla::ipc::kDefaultDataPipeCapacity, nullptr, nullptr,
                     true, true, getter_AddRefs(copyContext));
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    mResolver(rv);
+    mUniResolver(rv);
     return rv;
   }
 
   LOG(("Returning UnidirectionalStream pipe to content"));
   // pass the DataPipeSender to the content process
-  mResolver(UnidirectionalStream(id, sender));
+  mUniResolver(UnidirectionalStream(id, sender));
 
   auto onResetOrStopSending = [copyContext(copyContext),
                                receiver(receiver)](nsresult aError) {
@@ -353,52 +329,22 @@ UniReceiveStream::OnUnidirectionalStreamReady(
 
   // Store onResetOrStopSending in WebTransportParent::mStreamCallbackMap and
   // onResetOrStopSending will be called when a stream receives STOP_SENDING.
-  mStreamCallback(id,
-                  WebTransportParent::OnResetOrStopSendingCallback(
-                      std::move(onResetOrStopSending)),
-                  aStream);
-
+  mStreamCallback(id, WebTransportParent::OnResetOrStopSendingCallback(
+                          std::move(onResetOrStopSending)));
   return NS_OK;
 }
 
-NS_IMETHODIMP
-BidiReceiveStream::OnUnidirectionalStreamReady(
-    nsIWebTransportSendStream* aStream) {
-  return NS_ERROR_FAILURE;
-}
-
-JS_HAZ_CAN_RUN_SCRIPT NS_IMETHODIMP UniReceiveStream::OnError(uint8_t aError) {
+JS_HAZ_CAN_RUN_SCRIPT NS_IMETHODIMP ReceiveStream::OnError(uint8_t aError) {
   nsresult rv = aError == nsIWebTransport::INVALID_STATE_ERROR
                     ? NS_ERROR_DOM_INVALID_STATE_ERR
                     : NS_ERROR_FAILURE;
   LOG(("CreateStream OnError: %u", aError));
-  mResolver(rv);
-  return NS_OK;
-}
-
-JS_HAZ_CAN_RUN_SCRIPT NS_IMETHODIMP BidiReceiveStream::OnError(uint8_t aError) {
-  nsresult rv = aError == nsIWebTransport::INVALID_STATE_ERROR
-                    ? NS_ERROR_DOM_INVALID_STATE_ERR
-                    : NS_ERROR_FAILURE;
-  LOG(("CreateStream OnError: %u", aError));
-  mResolver(rv);
-  return NS_OK;
-}
-
-IPCResult WebTransportParent::RecvSetSendOrder(uint64_t aStreamId,
-                                               Maybe<int64_t> aSendOrder) {
-  if (aSendOrder) {
-    LOG(("Set sendOrder=%" PRIi64 " for streamId %" PRIu64, aSendOrder.value(),
-         aStreamId));
-  } else {
-    LOG(("Set sendOrder=null for streamId %" PRIu64, aStreamId));
+  if (mUniResolver) {
+    mUniResolver(rv);
+  } else if (mBiResolver) {
+    mBiResolver(rv);
   }
-  if (auto entry = mUniStreamCallbackMap.Lookup(aStreamId)) {
-    entry->mStream->SetSendOrder(aSendOrder);
-  } else if (auto entry = mBidiStreamCallbackMap.Lookup(aStreamId)) {
-    entry->mStream->SetSendOrder(aSendOrder);
-  }
-  return IPC_OK();
+  return NS_OK;
 }
 
 IPCResult WebTransportParent::RecvCreateUnidirectionalStream(
@@ -410,13 +356,11 @@ IPCResult WebTransportParent::RecvCreateUnidirectionalStream(
   auto streamCb =
       [self = RefPtr{this}](
           uint64_t aStreamId,
-          WebTransportParent::OnResetOrStopSendingCallback&& aCallback,
-          nsIWebTransportSendStream* aStream) {
-        self->mUniStreamCallbackMap.InsertOrUpdate(
-            aStreamId, StreamHash<nsIWebTransportSendStream>{
-                           std::move(aCallback), aStream});
+          WebTransportParent::OnResetOrStopSendingCallback&& aCallback) {
+        self->mStreamCallbackMap.InsertOrUpdate(aStreamId,
+                                                std::move(aCallback));
       };
-  RefPtr<UniReceiveStream> callback = new UniReceiveStream(
+  RefPtr<ReceiveStream> callback = new ReceiveStream(
       std::move(aResolver), std::move(streamCb), aSendOrder, mSocketThread);
   nsresult rv;
   rv = mWebTransport->CreateOutgoingUnidirectionalStream(callback);
@@ -435,13 +379,11 @@ IPCResult WebTransportParent::RecvCreateBidirectionalStream(
   auto streamCb =
       [self = RefPtr{this}](
           uint64_t aStreamId,
-          WebTransportParent::OnResetOrStopSendingCallback&& aCallback,
-          nsIWebTransportBidirectionalStream* aStream) {
-        self->mBidiStreamCallbackMap.InsertOrUpdate(
-            aStreamId, StreamHash<nsIWebTransportBidirectionalStream>{
-                           std::move(aCallback), aStream});
+          WebTransportParent::OnResetOrStopSendingCallback&& aCallback) {
+        self->mStreamCallbackMap.InsertOrUpdate(aStreamId,
+                                                std::move(aCallback));
       };
-  RefPtr<BidiReceiveStream> callback = new BidiReceiveStream(
+  RefPtr<ReceiveStream> callback = new ReceiveStream(
       std::move(aResolver), std::move(streamCb), aSendOrder, mSocketThread);
   nsresult rv;
   rv = mWebTransport->CreateOutgoingBidirectionalStream(callback);
@@ -569,12 +511,9 @@ NS_IMETHODIMP WebTransportParent::OnStopSending(uint64_t aStreamId,
   MOZ_ASSERT(mSocketThread->IsOnCurrentThread());
   LOG(("WebTransportParent::OnStopSending %p stream id=%" PRIx64, this,
        aStreamId));
-  if (auto entry = mUniStreamCallbackMap.Lookup(aStreamId)) {
-    entry->mCallback.OnResetOrStopSending(aError);
-    mUniStreamCallbackMap.Remove(aStreamId);
-  } else if (auto entry = mBidiStreamCallbackMap.Lookup(aStreamId)) {
-    entry->mCallback.OnResetOrStopSending(aError);
-    mBidiStreamCallbackMap.Remove(aStreamId);
+  if (auto entry = mStreamCallbackMap.Lookup(aStreamId)) {
+    entry->OnResetOrStopSending(aError);
+    mStreamCallbackMap.Remove(aStreamId);
   }
   if (CanSend()) {
     Unused << SendOnStreamResetOrStopSending(aStreamId,
@@ -588,12 +527,9 @@ NS_IMETHODIMP WebTransportParent::OnResetReceived(uint64_t aStreamId,
   MOZ_ASSERT(mSocketThread->IsOnCurrentThread());
   LOG(("WebTransportParent::OnResetReceived %p stream id=%" PRIx64, this,
        aStreamId));
-  if (auto entry = mUniStreamCallbackMap.Lookup(aStreamId)) {
-    entry->mCallback.OnResetOrStopSending(aError);
-    mUniStreamCallbackMap.Remove(aStreamId);
-  } else if (auto entry = mBidiStreamCallbackMap.Lookup(aStreamId)) {
-    entry->mCallback.OnResetOrStopSending(aError);
-    mBidiStreamCallbackMap.Remove(aStreamId);
+  if (auto entry = mStreamCallbackMap.Lookup(aStreamId)) {
+    entry->OnResetOrStopSending(aError);
+    mStreamCallbackMap.Remove(aStreamId);
   }
   if (CanSend()) {
     Unused << SendOnStreamResetOrStopSending(aStreamId, ResetError(aError));

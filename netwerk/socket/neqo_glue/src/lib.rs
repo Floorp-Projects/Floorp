@@ -1346,15 +1346,13 @@ pub extern "C" fn neqo_http3conn_webtransport_max_datagram_size(
 pub extern "C" fn neqo_http3conn_webtransport_set_sendorder(
     conn: &mut NeqoHttp3Conn,
     stream_id: u64,
-    sendorder: *const i64,
+    _sendorder: i64,
 ) -> nsresult {
-    unsafe {
-        match conn
-            .conn
-            .webtransport_set_sendorder(StreamId::from(stream_id), sendorder.as_ref().copied())
-        {
-            Ok(()) => NS_OK,
-            Err(_) => NS_ERROR_UNEXPECTED,
-        }
+    match conn
+        .conn
+        .webtransport_set_sendorder(StreamId::from(stream_id), None)
+    {
+        Ok(()) => NS_OK,
+        Err(_) => NS_ERROR_UNEXPECTED,
     }
 }
