@@ -2480,8 +2480,7 @@ static bool ZonedDateTime_with(JSContext* cx, const CallArgs& args) {
 
   // Step 10.
   Rooted<PlainDateTimeObject*> dateTime(
-      cx,
-      temporal::GetPlainDateTimeFor(cx, instant, calendar, offsetNanoseconds));
+      cx, GetPlainDateTimeFor(cx, instant, calendar, offsetNanoseconds));
   if (!dateTime) {
     return false;
   }
@@ -3009,8 +3008,7 @@ static bool ZonedDateTime_round(JSContext* cx, const CallArgs& args) {
   // FIXME: spec issue - GetPlainDateTimeFor is infallible
 
   // Step 18.
-  auto temporalDateTime =
-      temporal::GetPlainDateTimeFor(epochInstant, offsetNanoseconds);
+  auto temporalDateTime = GetPlainDateTimeFor(epochInstant, offsetNanoseconds);
 
   // FIXME: spec issue - CreateTemporalDateTime is infallible
 
@@ -3601,8 +3599,7 @@ static bool ZonedDateTime_getISOFields(JSContext* cx, const CallArgs& args) {
   // FIXME: spec issue - GetPlainDateTimeFor is infallible
 
   // Step 8.
-  auto temporalDateTime =
-      temporal::GetPlainDateTimeFor(epochInstant, offsetNanoseconds);
+  auto temporalDateTime = GetPlainDateTimeFor(epochInstant, offsetNanoseconds);
 
   // Step 9.
   Rooted<JSString*> offset(cx,

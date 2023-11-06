@@ -1320,8 +1320,38 @@ static PlainDateTime BalanceISODateTime(const PlainDateTime& dateTime,
  * GetPlainDateTimeFor ( timeZone, instant, calendar [ ,
  * precalculatedOffsetNanoseconds ] )
  */
-static PlainDateTime GetPlainDateTimeFor(const Instant& instant,
-                                         int64_t offsetNanoseconds) {
+static PlainDateTimeObject* GetPlainDateTimeFor(
+    JSContext* cx, Handle<TimeZoneValue> timeZone,
+    Handle<Wrapped<InstantObject*>> instant, Handle<CalendarValue> calendar) {
+  // Steps 1-2.
+  int64_t offsetNanoseconds;
+  if (!GetOffsetNanosecondsFor(cx, timeZone, instant, &offsetNanoseconds)) {
+    return nullptr;
+  }
+  MOZ_ASSERT(std::abs(offsetNanoseconds) < ToNanoseconds(TemporalUnit::Day));
+
+  auto* unwrappedInstant = instant.unwrap(cx);
+  if (!unwrappedInstant) {
+    return nullptr;
+  }
+
+  // Steps 3-5.
+  auto dateTime =
+      GetPlainDateTimeFor(ToInstant(unwrappedInstant), offsetNanoseconds);
+
+  // FIXME: spec issue - CreateTemporalDateTime is infallible
+  // https://github.com/tc39/proposal-temporal/issues/2523
+  MOZ_ASSERT(ISODateTimeWithinLimits(dateTime));
+
+  return CreateTemporalDateTime(cx, dateTime, calendar);
+}
+
+/**
+ * GetPlainDateTimeFor ( timeZone, instant, calendar [ ,
+ * precalculatedOffsetNanoseconds ] )
+ */
+PlainDateTime js::temporal::GetPlainDateTimeFor(const Instant& instant,
+                                                int64_t offsetNanoseconds) {
   MOZ_ASSERT(std::abs(offsetNanoseconds) < ToNanoseconds(TemporalUnit::Day));
 
   // Steps 1-2. (Not applicable)
@@ -1346,9 +1376,12 @@ static PlainDateTime GetPlainDateTimeFor(const Instant& instant,
  * GetPlainDateTimeFor ( timeZone, instant, calendar [ ,
  * precalculatedOffsetNanoseconds ] )
  */
-static bool GetPlainDateTimeFor(JSContext* cx, Handle<TimeZoneValue> timeZone,
-                                Handle<Wrapped<InstantObject*>> instant,
-                                PlainDateTime* result) {
+bool js::temporal::GetPlainDateTimeFor(JSContext* cx,
+                                       Handle<TimeZoneValue> timeZone,
+                                       const Instant& instant,
+                                       PlainDateTime* result) {
+  MOZ_ASSERT(IsValidEpochInstant(instant));
+
   // Steps 1-2.
   int64_t offsetNanoseconds;
   if (!GetOffsetNanosecondsFor(cx, timeZone, instant, &offsetNanoseconds)) {
@@ -1356,14 +1389,8 @@ static bool GetPlainDateTimeFor(JSContext* cx, Handle<TimeZoneValue> timeZone,
   }
   MOZ_ASSERT(std::abs(offsetNanoseconds) < ToNanoseconds(TemporalUnit::Day));
 
-  auto* unwrappedInstant = instant.unwrap(cx);
-  if (!unwrappedInstant) {
-    return false;
-  }
-
   // Steps 3-5.
-  *result =
-      ::GetPlainDateTimeFor(ToInstant(unwrappedInstant), offsetNanoseconds);
+  *result = GetPlainDateTimeFor(instant, offsetNanoseconds);
   return true;
 }
 
@@ -1371,9 +1398,9 @@ static bool GetPlainDateTimeFor(JSContext* cx, Handle<TimeZoneValue> timeZone,
  * GetPlainDateTimeFor ( timeZone, instant, calendar [ ,
  * precalculatedOffsetNanoseconds ] )
  */
-static PlainDateTimeObject* GetPlainDateTimeFor(
-    JSContext* cx, Handle<TimeZoneValue> timeZone,
-    Handle<Wrapped<InstantObject*>> instant, Handle<CalendarValue> calendar) {
+PlainDateTimeObject* js::temporal::GetPlainDateTimeFor(
+    JSContext* cx, Handle<TimeZoneValue> timeZone, const Instant& instant,
+    Handle<CalendarValue> calendar) {
   PlainDateTime dateTime;
   if (!GetPlainDateTimeFor(cx, timeZone, instant, &dateTime)) {
     return nullptr;
@@ -1391,70 +1418,17 @@ static PlainDateTimeObject* GetPlainDateTimeFor(
  * precalculatedOffsetNanoseconds ] )
  */
 PlainDateTimeObject* js::temporal::GetPlainDateTimeFor(
-    JSContext* cx, Handle<TimeZoneValue> timeZone, const Instant& instant,
-    Handle<CalendarValue> calendar) {
-  MOZ_ASSERT(IsValidEpochInstant(instant));
-
-  Rooted<InstantObject*> obj(cx, CreateTemporalInstant(cx, instant));
-  if (!obj) {
-    return nullptr;
-  }
-  return ::GetPlainDateTimeFor(cx, timeZone, obj, calendar);
-}
-
-/**
- * GetPlainDateTimeFor ( timeZone, instant, calendar [ ,
- * precalculatedOffsetNanoseconds ] )
- */
-PlainDateTimeObject* js::temporal::GetPlainDateTimeFor(
     JSContext* cx, const Instant& instant, Handle<CalendarValue> calendar,
     int64_t offsetNanoseconds) {
   MOZ_ASSERT(IsValidEpochInstant(instant));
 
-  auto dateTime = ::GetPlainDateTimeFor(instant, offsetNanoseconds);
+  auto dateTime = GetPlainDateTimeFor(instant, offsetNanoseconds);
 
   // FIXME: spec issue - CreateTemporalDateTime is infallible
   // https://github.com/tc39/proposal-temporal/issues/2523
   MOZ_ASSERT(ISODateTimeWithinLimits(dateTime));
 
   return CreateTemporalDateTime(cx, dateTime, calendar);
-}
-
-/**
- * GetPlainDateTimeFor ( timeZone, instant, calendar [ ,
- * precalculatedOffsetNanoseconds ] )
- */
-bool js::temporal::GetPlainDateTimeFor(JSContext* cx,
-                                       Handle<TimeZoneValue> timeZone,
-                                       Handle<InstantObject*> instant,
-                                       PlainDateTime* result) {
-  return ::GetPlainDateTimeFor(cx, timeZone, instant, result);
-}
-
-/**
- * GetPlainDateTimeFor ( timeZone, instant, calendar [ ,
- * precalculatedOffsetNanoseconds ] )
- */
-PlainDateTime js::temporal::GetPlainDateTimeFor(const Instant& instant,
-                                                int64_t offsetNanoseconds) {
-  return ::GetPlainDateTimeFor(instant, offsetNanoseconds);
-}
-
-/**
- * GetPlainDateTimeFor ( timeZone, instant, calendar [ ,
- * precalculatedOffsetNanoseconds ] )
- */
-bool js::temporal::GetPlainDateTimeFor(JSContext* cx,
-                                       Handle<TimeZoneValue> timeZone,
-                                       const Instant& instant,
-                                       PlainDateTime* result) {
-  MOZ_ASSERT(IsValidEpochInstant(instant));
-
-  Rooted<InstantObject*> obj(cx, CreateTemporalInstant(cx, instant));
-  if (!obj) {
-    return false;
-  }
-  return ::GetPlainDateTimeFor(cx, timeZone, obj, result);
 }
 
 /**
