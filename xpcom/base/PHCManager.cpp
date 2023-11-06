@@ -38,6 +38,14 @@ void ReportPHCTelemetry() {
   PHCMemoryUsage(usage);
 
   Accumulate(Telemetry::MEMORY_PHC_SLOP, usage.mFragmentationBytes);
+
+  PHCStats stats;
+  GetPHCStats(stats);
+
+  Accumulate(Telemetry::MEMORY_PHC_SLOTS_ALLOCATED, stats.mSlotsAllocated);
+  Accumulate(Telemetry::MEMORY_PHC_SLOTS_FREED, stats.mSlotsFreed);
+  // There are also slots that are unused (neither free nor allocated) they
+  // can be calculated by knowing the total number of slots.
 }
 
 };  // namespace mozilla
