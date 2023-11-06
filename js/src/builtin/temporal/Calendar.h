@@ -333,6 +333,13 @@ bool CalendarYear(JSContext* cx, JS::Handle<CalendarValue> calendar,
                   JS::MutableHandle<JS::Value> result);
 
 /**
+ * CalendarYear ( calendar, dateLike )
+ */
+bool CalendarYear(JSContext* cx, JS::Handle<CalendarValue> calendar,
+                  const PlainDateTime& dateTime,
+                  JS::MutableHandle<JS::Value> result);
+
+/**
  * CalendarMonth ( calendar, dateLike )
  */
 bool CalendarMonth(JSContext* cx, JS::Handle<CalendarValue> calendar,
@@ -351,6 +358,13 @@ bool CalendarMonth(JSContext* cx, JS::Handle<CalendarValue> calendar,
  */
 bool CalendarMonth(JSContext* cx, JS::Handle<CalendarValue> calendar,
                    JS::Handle<PlainYearMonthObject*> dateLike,
+                   JS::MutableHandle<JS::Value> result);
+
+/**
+ * CalendarMonth ( calendar, dateLike )
+ */
+bool CalendarMonth(JSContext* cx, JS::Handle<CalendarValue> calendar,
+                   const PlainDateTime& dateTime,
                    JS::MutableHandle<JS::Value> result);
 
 /**
@@ -382,6 +396,13 @@ bool CalendarMonthCode(JSContext* cx, JS::Handle<CalendarValue> calendar,
                        JS::MutableHandle<JS::Value> result);
 
 /**
+ * CalendarMonthCode ( calendar, dateLike )
+ */
+bool CalendarMonthCode(JSContext* cx, JS::Handle<CalendarValue> calendar,
+                       const PlainDateTime& dateTime,
+                       JS::MutableHandle<JS::Value> result);
+
+/**
  * CalendarDay ( calendar, dateLike )
  */
 bool CalendarDay(JSContext* cx, JS::Handle<CalendarValue> calendar,
@@ -400,6 +421,13 @@ bool CalendarDay(JSContext* cx, JS::Handle<CalendarValue> calendar,
  */
 bool CalendarDay(JSContext* cx, JS::Handle<CalendarValue> calendar,
                  JS::Handle<PlainMonthDayObject*> dateLike,
+                 JS::MutableHandle<JS::Value> result);
+
+/**
+ * CalendarDay ( calendar, dateLike )
+ */
+bool CalendarDay(JSContext* cx, JS::Handle<CalendarValue> calendar,
+                 const PlainDateTime& dateTime,
                  JS::MutableHandle<JS::Value> result);
 
 /**
@@ -424,6 +452,13 @@ bool CalendarDayOfWeek(JSContext* cx, JS::Handle<CalendarValue> calendar,
                        JS::MutableHandle<JS::Value> result);
 
 /**
+ * CalendarDayOfWeek ( calendar, dateLike )
+ */
+bool CalendarDayOfWeek(JSContext* cx, JS::Handle<CalendarValue> calendar,
+                       const PlainDateTime& dateTime,
+                       JS::MutableHandle<JS::Value> result);
+
+/**
  * CalendarDayOfYear ( calendar, dateLike )
  */
 bool CalendarDayOfYear(JSContext* cx, JS::Handle<CalendarValue> calendar,
@@ -438,6 +473,13 @@ bool CalendarDayOfYear(JSContext* cx, JS::Handle<CalendarValue> calendar,
                        JS::MutableHandle<JS::Value> result);
 
 /**
+ * CalendarDayOfYear ( calendar, dateLike )
+ */
+bool CalendarDayOfYear(JSContext* cx, JS::Handle<CalendarValue> calendar,
+                       const PlainDateTime& dateTime,
+                       JS::MutableHandle<JS::Value> result);
+
+/**
  * CalendarWeekOfYear ( calendar, dateLike )
  */
 bool CalendarWeekOfYear(JSContext* cx, JS::Handle<CalendarValue> calendar,
@@ -449,6 +491,13 @@ bool CalendarWeekOfYear(JSContext* cx, JS::Handle<CalendarValue> calendar,
  */
 bool CalendarWeekOfYear(JSContext* cx, JS::Handle<CalendarValue> calendar,
                         JS::Handle<PlainDateTimeObject*> dateLike,
+                        JS::MutableHandle<JS::Value> result);
+
+/**
+ * CalendarWeekOfYear ( calendar, dateLike )
+ */
+bool CalendarWeekOfYear(JSContext* cx, JS::Handle<CalendarValue> calendar,
+                        const PlainDateTime& dateTime,
                         JS::MutableHandle<JS::Value> result);
 
 /**
@@ -466,6 +515,13 @@ bool CalendarYearOfWeek(JSContext* cx, JS::Handle<CalendarValue> calendar,
                         JS::MutableHandle<JS::Value> result);
 
 /**
+ * CalendarYearOfWeek ( calendar, dateLike )
+ */
+bool CalendarYearOfWeek(JSContext* cx, JS::Handle<CalendarValue> calendar,
+                        const PlainDateTime& dateTime,
+                        JS::MutableHandle<JS::Value> result);
+
+/**
  * CalendarDaysInWeek ( calendar, dateLike )
  */
 bool CalendarDaysInWeek(JSContext* cx, JS::Handle<CalendarValue> calendar,
@@ -477,6 +533,13 @@ bool CalendarDaysInWeek(JSContext* cx, JS::Handle<CalendarValue> calendar,
  */
 bool CalendarDaysInWeek(JSContext* cx, JS::Handle<CalendarValue> calendar,
                         JS::Handle<PlainDateTimeObject*> dateLike,
+                        JS::MutableHandle<JS::Value> result);
+
+/**
+ * CalendarDaysInWeek ( calendar, dateLike )
+ */
+bool CalendarDaysInWeek(JSContext* cx, JS::Handle<CalendarValue> calendar,
+                        const PlainDateTime& dateTime,
                         JS::MutableHandle<JS::Value> result);
 
 /**
@@ -501,6 +564,13 @@ bool CalendarDaysInMonth(JSContext* cx, JS::Handle<CalendarValue> calendar,
                          JS::MutableHandle<JS::Value> result);
 
 /**
+ * CalendarDaysInMonth ( calendar, dateLike )
+ */
+bool CalendarDaysInMonth(JSContext* cx, JS::Handle<CalendarValue> calendar,
+                         const PlainDateTime& dateTime,
+                         JS::MutableHandle<JS::Value> result);
+
+/**
  * CalendarDaysInYear ( calendar, dateLike )
  */
 bool CalendarDaysInYear(JSContext* cx, JS::Handle<CalendarValue> calendar,
@@ -519,6 +589,13 @@ bool CalendarDaysInYear(JSContext* cx, JS::Handle<CalendarValue> calendar,
  */
 bool CalendarDaysInYear(JSContext* cx, JS::Handle<CalendarValue> calendar,
                         JS::Handle<PlainYearMonthObject*> dateLike,
+                        JS::MutableHandle<JS::Value> result);
+
+/**
+ * CalendarDaysInYear ( calendar, dateLike )
+ */
+bool CalendarDaysInYear(JSContext* cx, JS::Handle<CalendarValue> calendar,
+                        const PlainDateTime& dateTime,
                         JS::MutableHandle<JS::Value> result);
 
 /**
@@ -543,6 +620,13 @@ bool CalendarMonthsInYear(JSContext* cx, JS::Handle<CalendarValue> calendar,
                           JS::MutableHandle<JS::Value> result);
 
 /**
+ * CalendarMonthsInYear ( calendar, dateLike )
+ */
+bool CalendarMonthsInYear(JSContext* cx, JS::Handle<CalendarValue> calendar,
+                          const PlainDateTime& dateTime,
+                          JS::MutableHandle<JS::Value> result);
+
+/**
  * CalendarInLeapYear ( calendar, dateLike )
  */
 bool CalendarInLeapYear(JSContext* cx, JS::Handle<CalendarValue> calendar,
@@ -561,6 +645,13 @@ bool CalendarInLeapYear(JSContext* cx, JS::Handle<CalendarValue> calendar,
  */
 bool CalendarInLeapYear(JSContext* cx, JS::Handle<CalendarValue> calendar,
                         JS::Handle<PlainYearMonthObject*> dateLike,
+                        JS::MutableHandle<JS::Value> result);
+
+/**
+ * CalendarInLeapYear ( calendar, dateLike )
+ */
+bool CalendarInLeapYear(JSContext* cx, JS::Handle<CalendarValue> calendar,
+                        const PlainDateTime& dateTime,
                         JS::MutableHandle<JS::Value> result);
 
 /**
