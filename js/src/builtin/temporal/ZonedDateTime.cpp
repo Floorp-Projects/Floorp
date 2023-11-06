@@ -1107,13 +1107,13 @@ static bool RoundISODateTime(JSContext* cx, const PlainDateTime& dateTime,
 
   const auto& [date, time] = dateTime;
 
-  // Steps 1-2.
+  // Step 1.
   MOZ_ASSERT(IsValidISODateTime(dateTime));
   MOZ_ASSERT(ISODateTimeWithinLimits(dateTime));
 
-  // Step 3. (Not applicable in our implementation.)
+  // Step 2. (Not applicable in our implementation.)
 
-  // Step 4.
+  // Step 3.
   auto roundedTime = RoundTime(time, increment, unit, roundingMode, dayLength);
 
   // |dayLength| can be as small as 1, so the number of rounded days can be as
@@ -1121,14 +1121,14 @@ static bool RoundISODateTime(JSContext* cx, const PlainDateTime& dateTime,
   MOZ_ASSERT(0 <= roundedTime.days &&
              roundedTime.days < ToNanoseconds(TemporalUnit::Day));
 
-  // Step 5.
+  // Step 4.
   PlainDate balanceResult;
   if (!BalanceISODate(cx, date.year, date.month,
                       int64_t(date.day) + roundedTime.days, &balanceResult)) {
     return false;
   }
 
-  // Step 6.
+  // Step 5.
   *result = {balanceResult, roundedTime.time};
   return true;
 }
@@ -3474,81 +3474,88 @@ static bool ZonedDateTime_getISOFields(JSContext* cx, const CallArgs& args) {
   }
 
   // Step 8.
-  Rooted<JSString*> offset(cx, GetOffsetStringFor(cx, timeZone, instant));
-  if (!offset) {
+  int64_t offsetNanoseconds;
+  if (!GetOffsetNanosecondsFor(cx, timeZone, instant, &offsetNanoseconds)) {
     return false;
   }
 
   // Step 9.
-  if (!fields.emplaceBack(NameToId(cx->names().calendar), calendar.toValue())) {
+  Rooted<JSString*> offset(cx,
+                           FormatUTCOffsetNanoseconds(cx, offsetNanoseconds));
+  if (!offset) {
     return false;
   }
 
   // Step 10.
+  if (!fields.emplaceBack(NameToId(cx->names().calendar), calendar.toValue())) {
+    return false;
+  }
+
+  // Step 11.
   if (!fields.emplaceBack(NameToId(cx->names().isoDay),
                           Int32Value(temporalDateTime.date.day))) {
     return false;
   }
 
-  // Step 11.
+  // Step 12.
   if (!fields.emplaceBack(NameToId(cx->names().isoHour),
                           Int32Value(temporalDateTime.time.hour))) {
     return false;
   }
 
-  // Step 12.
+  // Step 13.
   if (!fields.emplaceBack(NameToId(cx->names().isoMicrosecond),
                           Int32Value(temporalDateTime.time.microsecond))) {
     return false;
   }
 
-  // Step 13.
+  // Step 14.
   if (!fields.emplaceBack(NameToId(cx->names().isoMillisecond),
                           Int32Value(temporalDateTime.time.millisecond))) {
     return false;
   }
 
-  // Step 14.
+  // Step 15.
   if (!fields.emplaceBack(NameToId(cx->names().isoMinute),
                           Int32Value(temporalDateTime.time.minute))) {
     return false;
   }
 
-  // Step 15.
+  // Step 16.
   if (!fields.emplaceBack(NameToId(cx->names().isoMonth),
                           Int32Value(temporalDateTime.date.month))) {
     return false;
   }
 
-  // Step 16.
+  // Step 17.
   if (!fields.emplaceBack(NameToId(cx->names().isoNanosecond),
                           Int32Value(temporalDateTime.time.nanosecond))) {
     return false;
   }
 
-  // Step 17.
+  // Step 18.
   if (!fields.emplaceBack(NameToId(cx->names().isoSecond),
                           Int32Value(temporalDateTime.time.second))) {
     return false;
   }
 
-  // Step 18.
+  // Step 19.
   if (!fields.emplaceBack(NameToId(cx->names().isoYear),
                           Int32Value(temporalDateTime.date.year))) {
     return false;
   }
 
-  // Step 19.
+  // Step 20.
   if (!fields.emplaceBack(NameToId(cx->names().offset), StringValue(offset))) {
     return false;
   }
 
-  // Step 20.
+  // Step 21.
   if (!fields.emplaceBack(NameToId(cx->names().timeZone), timeZone.toValue())) {
     return false;
   }
 
-  // Step 21.
+  // Step 22.
   auto* obj =
       NewPlainObjectWithUniqueNames(cx, fields.begin(), fields.length());
   if (!obj) {

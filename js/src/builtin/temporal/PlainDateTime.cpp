@@ -882,21 +882,21 @@ static PlainDateTime RoundISODateTime(const PlainDateTime& dateTime,
                                       TemporalRoundingMode roundingMode) {
   const auto& [date, time] = dateTime;
 
-  // Steps 1-2.
+  // Step 1.
   MOZ_ASSERT(IsValidISODateTime(dateTime));
   MOZ_ASSERT(ISODateTimeWithinLimits(dateTime));
 
-  // Step 3. (Not applicable in our implementation.)
+  // Step 2. (Not applicable in our implementation.)
 
-  // Step 4.
+  // Step 3.
   auto roundedTime = RoundTime(time, increment, unit, roundingMode);
   MOZ_ASSERT(0 <= roundedTime.days && roundedTime.days <= 1);
 
-  // Step 5.
+  // Step 4.
   auto balanceResult =
       BalanceISODate(date.year, date.month, date.day + roundedTime.days);
 
-  // Step 6.
+  // Step 5.
   return {balanceResult, roundedTime.time};
 }
 

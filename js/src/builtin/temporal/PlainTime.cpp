@@ -468,8 +468,6 @@ template <typename IntT>
 static BalancedTime BalanceTime(IntT hour, IntT minute, IntT second,
                                 IntT millisecond, IntT microsecond,
                                 IntT nanosecond) {
-  // Step 1. (Not applicable in our implementation.)
-
   // Combined floor'ed division and modulo operation.
   auto divmod = [](IntT dividend, int32_t divisor, int32_t* remainder) {
     MOZ_ASSERT(divisor > 0);
@@ -489,25 +487,25 @@ static BalancedTime BalanceTime(IntT hour, IntT minute, IntT second,
 
   PlainTime time = {};
 
-  // Steps 2-3.
+  // Steps 1-2.
   microsecond += divmod(nanosecond, 1000, &time.nanosecond);
 
-  // Steps 4-5.
+  // Steps 3-4.
   millisecond += divmod(microsecond, 1000, &time.microsecond);
 
-  // Steps 6-7.
+  // Steps 5-6.
   second += divmod(millisecond, 1000, &time.millisecond);
 
-  // Steps 8-9.
+  // Steps 7-8.
   minute += divmod(second, 60, &time.second);
 
-  // Steps 10-11.
+  // Steps 9-10.
   hour += divmod(minute, 60, &time.minute);
 
-  // Steps 12-13.
+  // Steps 11-12.
   int32_t days = divmod(hour, 24, &time.hour);
 
-  // Step 14.
+  // Step 13.
   MOZ_ASSERT(IsValidTime(time));
   return {days, time};
 }
@@ -1105,15 +1103,10 @@ RoundedTime js::temporal::RoundTime(const PlainTime& time, Increment increment,
   int32_t days = 0;
   auto [hour, minute, second, millisecond, microsecond, nanosecond] = time;
 
-  // Step 1. (Not applicable in our implementation.)
-
-  // Step 2.
-  MOZ_ASSERT(IsValidTime(time));
-
   // Take the same approach as used in RoundDuration() to perform exact
   // mathematical operations without possible loss of precision.
 
-  // Steps 3-10.
+  // Steps 1-8.
   PlainTime quantity;
   int32_t* result;
   switch (unit) {
@@ -1168,19 +1161,19 @@ RoundedTime js::temporal::RoundTime(const PlainTime& time, Increment increment,
       MOZ_CRASH("unexpected temporal unit");
   }
 
-  // Step 11.
+  // Step 9.
   int64_t r = ::RoundNumberToIncrement(TimeToNanos(quantity), unit, increment,
                                        roundingMode);
   MOZ_ASSERT(r == int64_t(int32_t(r)),
              "no overflow possible due to limited range of arguments");
   *result = r;
 
-  // Step 12.
+  // Step 10.
   if (unit == TemporalUnit::Day) {
     return {int64_t(days), {0, 0, 0, 0, 0, 0}};
   }
 
-  // Steps 13-19.
+  // Steps 11-17.
   auto balanced =
       ::BalanceTime(hour, minute, second, millisecond, microsecond, nanosecond);
   return {int64_t(balanced.days), balanced.time};
@@ -1202,20 +1195,15 @@ RoundedTime js::temporal::RoundTime(const PlainTime& time, Increment increment,
     return RoundTime(time, increment, unit, roundingMode);
   }
 
-  // Step 1. (Not applicable in our implementation.)
+  // Step 1. (Not applicable)
 
   // Step 2.
-  MOZ_ASSERT(IsValidTime(time));
-
-  // Step 3. (Not applicable)
-
-  // Step 4.
   int64_t quantity = TimeToNanos(time);
   MOZ_ASSERT(quantity < ToNanoseconds(TemporalUnit::Day));
 
-  // Steps 5-10. (Not applicable)
+  // Steps 3-8. (Not applicable)
 
-  // Step 11.
+  // Step 9.
   int64_t divisor;
   if (auto checkedDiv = dayLengthNs.toNanoseconds(); checkedDiv.isValid()) {
     divisor = checkedDiv.value();
@@ -1231,7 +1219,7 @@ RoundedTime js::temporal::RoundTime(const PlainTime& time, Increment increment,
   int64_t result =
       ::RoundNumberToIncrement(quantity, divisor, increment, roundingMode);
 
-  // Step 12.
+  // Step 10.
   return {result, {0, 0, 0, 0, 0, 0}};
 }
 
@@ -1240,11 +1228,8 @@ RoundedTime js::temporal::RoundTime(const PlainTime& time, Increment increment,
  * minutes, seconds, milliseconds, microseconds, nanoseconds )
  */
 static PlainTime AddTime(const PlainTime& time, const Duration& duration) {
-  // Step 1.
-  MOZ_ASSERT(IsValidDuration(duration));
-
-  // Step 2.
   MOZ_ASSERT(IsValidTime(time));
+  MOZ_ASSERT(IsValidDuration(duration));
 
   // Balance the duration so we don't have to worry about imprecise Number
   // computations below.
@@ -1316,25 +1301,25 @@ static PlainTime AddTime(const PlainTime& time, const Duration& duration) {
   MOZ_ASSERT(std::abs(microseconds) <= 999);
   MOZ_ASSERT(std::abs(nanoseconds) <= 999);
 
-  // Step 3.
+  // Step 1.
   int32_t hour = time.hour + hours;
 
-  // Step 4.
+  // Step 2.
   int32_t minute = time.minute + minutes;
 
-  // Step 5.
+  // Step 3.
   int32_t second = time.second + seconds;
 
-  // Step 6.
+  // Step 4.
   int32_t millisecond = time.millisecond + milliseconds;
 
-  // Step 7.
+  // Step 5.
   int32_t microsecond = time.microsecond + int32_t(microseconds);
 
-  // Step 8.
+  // Step 6.
   int32_t nanosecond = time.nanosecond + int32_t(nanoseconds);
 
-  // Step 9.
+  // Step 7.
   auto balanced =
       ::BalanceTime(hour, minute, second, millisecond, microsecond, nanosecond);
   return balanced.time;
@@ -1362,11 +1347,8 @@ static BigInt* FloorDiv(JSContext* cx, Handle<BigInt*> dividend,
 
 static bool AddTimeDaysSlow(JSContext* cx, const PlainTime& time,
                             const Duration& duration, double* result) {
-  // Step 1.
-  MOZ_ASSERT(IsValidDuration(duration));
-
-  // Step 2.
   MOZ_ASSERT(IsValidTime(time));
+  MOZ_ASSERT(IsValidDuration(duration));
 
   Rooted<BigInt*> days(cx, BigInt::createFromDouble(cx, duration.days));
   if (!days) {
@@ -1414,43 +1396,43 @@ static bool AddTimeDaysSlow(JSContext* cx, const PlainTime& time,
     return BigInt::add(cx, left, rightBigInt);
   };
 
-  // Step 3.
+  // Step 1.
   Rooted<BigInt*> hour(cx, addWithInt32(hours, time.hour));
   if (!hour) {
     return false;
   }
 
-  // Step 4.
+  // Step 2.
   Rooted<BigInt*> minute(cx, addWithInt32(minutes, time.minute));
   if (!minute) {
     return false;
   }
 
-  // Step 5.
+  // Step 3.
   Rooted<BigInt*> second(cx, addWithInt32(seconds, time.second));
   if (!second) {
     return false;
   }
 
-  // Step 6.
+  // Step 4.
   Rooted<BigInt*> millisecond(cx, addWithInt32(milliseconds, time.millisecond));
   if (!millisecond) {
     return false;
   }
 
-  // Step 7.
+  // Step 5.
   Rooted<BigInt*> microsecond(cx, addWithInt32(microseconds, time.microsecond));
   if (!microsecond) {
     return false;
   }
 
-  // Step 8.
+  // Step 6.
   Rooted<BigInt*> nanosecond(cx, addWithInt32(nanoseconds, time.nanosecond));
   if (!nanosecond) {
     return false;
   }
 
-  // Step 9. (Inlined BalanceTime)
+  // Step 7. (Inlined BalanceTime)
 
   auto addFloorDiv = [cx](Handle<BigInt*> left, Handle<BigInt*> right,
                           int32_t divisor) -> BigInt* {
@@ -1461,39 +1443,37 @@ static bool AddTimeDaysSlow(JSContext* cx, const PlainTime& time,
     return BigInt::add(cx, left, quotient);
   };
 
-  // BalanceTime, step 1. (Not applicable)
-
-  // BalanceTime, steps 2-3.
+  // BalanceTime, steps 1-2.
   microsecond = addFloorDiv(microsecond, nanosecond, 1000);
   if (!microsecond) {
     return false;
   }
 
-  // BalanceTime, steps 4-5.
+  // BalanceTime, steps 3-4.
   millisecond = addFloorDiv(millisecond, microsecond, 1000);
   if (!millisecond) {
     return false;
   }
 
-  // BalanceTime, steps 6-7.
+  // BalanceTime, steps 5-6.
   second = addFloorDiv(second, millisecond, 1000);
   if (!second) {
     return false;
   }
 
-  // BalanceTime, steps 8-9.
+  // BalanceTime, steps 7-8.
   minute = addFloorDiv(minute, second, 60);
   if (!minute) {
     return false;
   }
 
-  // BalanceTime, steps 10-11.
+  // BalanceTime, steps 9-10.
   hour = addFloorDiv(hour, minute, 60);
   if (!hour) {
     return false;
   }
 
-  // BalanceTime, steps 12-14.
+  // BalanceTime, steps 11-13.
   days = addFloorDiv(days, hour, 24);
   if (!days) {
     return false;
@@ -1505,11 +1485,8 @@ static bool AddTimeDaysSlow(JSContext* cx, const PlainTime& time,
 
 static mozilla::Maybe<int64_t> AddTimeDays(const PlainTime& time,
                                            const Duration& duration) {
-  // Step 1.
-  MOZ_ASSERT(IsValidDuration(duration));
-
-  // Step 2.
   MOZ_ASSERT(IsValidTime(time));
+  MOZ_ASSERT(IsValidDuration(duration));
 
   int64_t days;
   if (!mozilla::NumberEqualsInt64(duration.days, &days)) {
@@ -1546,77 +1523,75 @@ static mozilla::Maybe<int64_t> AddTimeDays(const PlainTime& time,
     return mozilla::Nothing();
   }
 
-  // Step 3.
+  // Step 1.
   auto hour = mozilla::CheckedInt64(time.hour) + hours;
   if (!hour.isValid()) {
     return mozilla::Nothing();
   }
 
-  // Step 4.
+  // Step 2.
   auto minute = mozilla::CheckedInt64(time.minute) + minutes;
   if (!minute.isValid()) {
     return mozilla::Nothing();
   }
 
-  // Step 5.
+  // Step 3.
   auto second = mozilla::CheckedInt64(time.second) + seconds;
   if (!second.isValid()) {
     return mozilla::Nothing();
   }
 
-  // Step 6.
+  // Step 4.
   auto millisecond = mozilla::CheckedInt64(time.millisecond) + milliseconds;
   if (!millisecond.isValid()) {
     return mozilla::Nothing();
   }
 
-  // Step 7.
+  // Step 5.
   auto microsecond = mozilla::CheckedInt64(time.microsecond) + microseconds;
   if (!microsecond.isValid()) {
     return mozilla::Nothing();
   }
 
-  // Step 8.
+  // Step 6.
   auto nanosecond = mozilla::CheckedInt64(time.nanosecond) + nanoseconds;
   if (!nanosecond.isValid()) {
     return mozilla::Nothing();
   }
 
-  // Step 9. (Inlined BalanceTime)
+  // Step 7. (Inlined BalanceTime)
 
-  // BalanceTime, step 1. (Not applicable)
-
-  // BalanceTime, steps 2-3.
+  // BalanceTime, steps 1-2.
   microsecond += FloorDiv(nanosecond.value(), 1000);
   if (!microsecond.isValid()) {
     return mozilla::Nothing();
   }
 
-  // BalanceTime, steps 4-5.
+  // BalanceTime, steps 3-4.
   millisecond += FloorDiv(microsecond.value(), 1000);
   if (!millisecond.isValid()) {
     return mozilla::Nothing();
   }
 
-  // BalanceTime, steps 6-7.
+  // BalanceTime, steps 5-6.
   second += FloorDiv(millisecond.value(), 1000);
   if (!second.isValid()) {
     return mozilla::Nothing();
   }
 
-  // BalanceTime, steps 8-9.
+  // BalanceTime, steps 7-8.
   minute += FloorDiv(second.value(), 60);
   if (!minute.isValid()) {
     return mozilla::Nothing();
   }
 
-  // BalanceTime, steps 10-11.
+  // BalanceTime, steps 9-10.
   hour += FloorDiv(minute.value(), 60);
   if (!hour.isValid()) {
     return mozilla::Nothing();
   }
 
-  // BalanceTime, steps 12-14.
+  // BalanceTime, steps 11-13.
   auto result = mozilla::CheckedInt64(days) + FloorDiv(hour.value(), 24);
   if (!result.isValid()) {
     return mozilla::Nothing();
@@ -1641,13 +1616,10 @@ static bool AddTimeDays(JSContext* cx, const PlainTime& time,
 bool js::temporal::AddTime(JSContext* cx, const PlainTime& time,
                            const Duration& duration, PlainTime* result,
                            double* daysResult) {
-  // Step 1.
+  MOZ_ASSERT(IsValidTime(time));
   MOZ_ASSERT(IsValidDuration(duration));
 
-  // Step 2.
-  MOZ_ASSERT(IsValidTime(time));
-
-  // Steps 3-9.
+  // Steps 1-7.
   auto balanced = ::AddTime(time, duration);
 
   // Compute |days| separately to ensure no loss of precision occurs.
