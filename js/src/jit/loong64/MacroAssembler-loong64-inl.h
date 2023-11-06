@@ -1974,25 +1974,20 @@ void MacroAssembler::spectreBoundsCheckPtr(Register index,
 
 FaultingCodeOffset MacroAssembler::storeUncanonicalizedFloat32(
     FloatRegister src, const Address& addr) {
-  // FIXME -- see https://bugzilla.mozilla.org/show_bug.cgi?id=1855959
-  return FaultingCodeOffset();
-  ma_fst_s(src, addr);
+  return ma_fst_s(src, addr);
 }
 FaultingCodeOffset MacroAssembler::storeUncanonicalizedFloat32(
     FloatRegister src, const BaseIndex& addr) {
-  return FaultingCodeOffset();  // FIXME
-  ma_fst_s(src, addr);
+  return ma_fst_s(src, addr);
 }
 
 FaultingCodeOffset MacroAssembler::storeUncanonicalizedDouble(
     FloatRegister src, const Address& addr) {
-  return FaultingCodeOffset();  // FIXME
-  ma_fst_d(src, addr);
+  return ma_fst_d(src, addr);
 }
 FaultingCodeOffset MacroAssembler::storeUncanonicalizedDouble(
     FloatRegister src, const BaseIndex& addr) {
-  return FaultingCodeOffset();  // FIXME
-  ma_fst_d(src, addr);
+  return ma_fst_d(src, addr);
 }
 
 void MacroAssembler::memoryBarrier(MemoryBarrierBits barrier) {
