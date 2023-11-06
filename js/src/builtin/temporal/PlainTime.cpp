@@ -677,8 +677,8 @@ bool js::temporal::ToTemporalTime(JSContext* cx, Handle<Value> item,
 }
 
 /**
- * TotalDurationNanoseconds ( days, hours, minutes, seconds, milliseconds,
- * microseconds, nanoseconds, offsetShift )
+ * TotalDurationNanoseconds ( hours, minutes, seconds, milliseconds,
+ * microseconds, nanoseconds )
  */
 static int64_t TotalDurationNanoseconds(const Duration& duration) {
   // This function is only called from BalanceTime. The difference between two
@@ -691,25 +691,19 @@ static int64_t TotalDurationNanoseconds(const Duration& duration) {
   MOZ_ASSERT(std::abs(duration.microseconds) <= 1000);
   MOZ_ASSERT(std::abs(duration.nanoseconds) <= 1000);
 
+  // Step 1.
+  auto minutes = int64_t(duration.minutes) + int64_t(duration.hours) * 60;
+
   // Step 2.
-  MOZ_ASSERT(duration.days == 0);
-
-  // Step 3.
-  auto hours = int64_t(duration.hours);
-
-  // Step 4.
-  auto minutes = int64_t(duration.minutes) + hours * 60;
-
-  // Step 5.
   auto seconds = int64_t(duration.seconds) + minutes * 60;
 
-  // Step 6.
+  // Step 3.
   auto milliseconds = int64_t(duration.milliseconds) + seconds * 1000;
 
-  // Step 7.
+  // Step 4.
   auto microseconds = int64_t(duration.microseconds) + milliseconds * 1000;
 
-  // Steps 1 and 8.
+  // Steps 5.
   return int64_t(duration.nanoseconds) + microseconds * 1000;
 }
 

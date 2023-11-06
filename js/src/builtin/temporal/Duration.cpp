@@ -614,62 +614,6 @@ bool js::temporal::ToTemporalDuration(JSContext* cx, Handle<Value> item,
 }
 
 /**
- * CalculateOffsetShift ( relativeTo, y, mon, d )
- */
-static bool CalculateOffsetShift(
-    JSContext* cx, Handle<Wrapped<ZonedDateTimeObject*>> relativeTo,
-    const Duration& duration, int64_t* result) {
-  // Step 1.
-  if (!relativeTo) {
-    *result = 0;
-    return true;
-  }
-
-  auto* zonedRelativeTo = relativeTo.unwrap(cx);
-  if (!zonedRelativeTo) {
-    return false;
-  }
-
-  auto epochInstant = ToInstant(zonedRelativeTo);
-  Rooted<TimeZoneValue> timeZone(cx, zonedRelativeTo->timeZone());
-  Rooted<CalendarValue> calendar(cx, zonedRelativeTo->calendar());
-
-  // Wrap into the current compartment.
-  if (!timeZone.wrap(cx)) {
-    return false;
-  }
-  if (!calendar.wrap(cx)) {
-    return false;
-  }
-
-  // Steps 2-3.
-  int64_t offsetBefore;
-  if (!GetOffsetNanosecondsFor(cx, timeZone, epochInstant, &offsetBefore)) {
-    return false;
-  }
-  MOZ_ASSERT(std::abs(offsetBefore) < ToNanoseconds(TemporalUnit::Day));
-
-  // Step 4.
-  Instant after;
-  if (!AddZonedDateTime(cx, epochInstant, timeZone, calendar, duration,
-                        &after)) {
-    return false;
-  }
-  MOZ_ASSERT(IsValidEpochInstant(after));
-
-  // Steps 5-6.
-  int64_t offsetAfter;
-  if (!GetOffsetNanosecondsFor(cx, timeZone, after, &offsetAfter)) {
-    return false;
-  }
-  MOZ_ASSERT(std::abs(offsetAfter) < ToNanoseconds(TemporalUnit::Day));
-
-  // Step 7.
-  *result = offsetAfter - offsetBefore;
-  return true;
-}
-
-/**
  * DaysUntil ( earlier, later )
  */
 static int32_t DaysUntil(const PlainDate& earlier, const PlainDate& later) {
@@ -755,14 +699,13 @@ static ZonedDateTimeObject* MoveRelativeZonedDateTime(
 }
 
 /**
- * TotalDurationNanoseconds ( days, hours, minutes, seconds, milliseconds,
- * microseconds, nanoseconds, offsetShift )
+ * TotalDurationNanoseconds ( hours, minutes, seconds, milliseconds,
+ * microseconds, nanoseconds )
  */
 static mozilla::Maybe<int64_t> TotalDurationNanoseconds(
-    const Duration& duration, int64_t offsetShift) {
-  MOZ_ASSERT(std::abs(offsetShift) <= 2 * ToNanoseconds(TemporalUnit::Day));
-
-  // Step 2.
+    const Duration& duration) {
+  // Our implementation supports |duration.days| to avoid computing |days * 24|
+  // in the caller, which may not be representable as a double value.
   int64_t days;
   if (!mozilla::NumberEqualsInt64(duration.days, &days)) {
     return mozilla::Nothing();
@@ -775,7 +718,7 @@ static mozilla::Maybe<int64_t> TotalDurationNanoseconds(
   result *= 24;
   result += hours;
 
-  // Step 3.
+  // Step 1.
   int64_t minutes;
   if (!mozilla::NumberEqualsInt64(duration.minutes, &minutes)) {
     return mozilla::Nothing();
@@ -783,7 +726,7 @@ static mozilla::Maybe<int64_t> TotalDurationNanoseconds(
   result *= 60;
   result += minutes;
 
-  // Step 4.
+  // Step 2.
   int64_t seconds;
   if (!mozilla::NumberEqualsInt64(duration.seconds, &seconds)) {
     return mozilla::Nothing();
@@ -791,7 +734,7 @@ static mozilla::Maybe<int64_t> TotalDurationNanoseconds(
   result *= 60;
   result += seconds;
 
-  // Step 5.
+  // Step 3.
   int64_t milliseconds;
   if (!mozilla::NumberEqualsInt64(duration.milliseconds, &milliseconds)) {
     return mozilla::Nothing();
@@ -799,7 +742,7 @@ static mozilla::Maybe<int64_t> TotalDurationNanoseconds(
   result *= 1000;
   result += milliseconds;
 
-  // Step 6.
+  // Step 4.
   int64_t microseconds;
   if (!mozilla::NumberEqualsInt64(duration.microseconds, &microseconds)) {
     return mozilla::Nothing();
@@ -807,7 +750,7 @@ static mozilla::Maybe<int64_t> TotalDurationNanoseconds(
   result *= 1000;
   result += microseconds;
 
-  // Step 7.
+  // Step 5.
   int64_t nanoseconds;
   if (!mozilla::NumberEqualsInt64(duration.nanoseconds, &nanoseconds)) {
     return mozilla::Nothing();
@@ -815,12 +758,7 @@ static mozilla::Maybe<int64_t> TotalDurationNanoseconds(
   result *= 1000;
   result += nanoseconds;
 
-  // Step 1.
-  if (days != 0) {
-    result -= offsetShift;
-  }
-
-  // Step 7 (Return).
+  // Step 5 (Return).
   if (!result.isValid()) {
     return mozilla::Nothing();
   }
@@ -828,14 +766,13 @@ static mozilla::Maybe<int64_t> TotalDurationNanoseconds(
 }
 
 /**
- * TotalDurationNanoseconds ( days, hours, minutes, seconds, milliseconds,
- * microseconds, nanoseconds, offsetShift )
+ * TotalDurationNanoseconds ( hours, minutes, seconds, milliseconds,
+ * microseconds, nanoseconds )
  */
 static BigInt* TotalDurationNanosecondsSlow(JSContext* cx,
-                                            const Duration& duration,
-                                            int64_t offsetShift) {
-  MOZ_ASSERT(std::abs(offsetShift) <= 2 * ToNanoseconds(TemporalUnit::Day));
-
+                                            const Duration& duration) {
+  // Our implementation supports |duration.days| to avoid computing |days * 24|
+  // in the caller, which may not be representable as a double value.
   Rooted<BigInt*> result(cx, BigInt::createFromDouble(cx, duration.days));
   if (!result) {
     return nullptr;
@@ -862,50 +799,36 @@ static BigInt* TotalDurationNanosecondsSlow(JSContext* cx,
     return !!result;
   };
 
-  // Step 2.
   if (!multiplyAdd(24, duration.hours)) {
     return nullptr;
   }
 
-  // Step 3.
+  // Step 1.
   if (!multiplyAdd(60, duration.minutes)) {
     return nullptr;
   }
 
-  // Step 4.
+  // Step 2.
   if (!multiplyAdd(60, duration.seconds)) {
     return nullptr;
   }
 
-  // Step 5.
+  // Step 3.
   if (!multiplyAdd(1000, duration.milliseconds)) {
     return nullptr;
   }
 
-  // Step 6.
+  // Step 4.
   if (!multiplyAdd(1000, duration.microseconds)) {
     return nullptr;
   }
 
-  // Step 7.
+  // Step 5.
   if (!multiplyAdd(1000, duration.nanoseconds)) {
     return nullptr;
   }
 
-  // Step 1.
-  if (duration.days != 0 && offsetShift != 0) {
-    temp = BigInt::createFromInt64(cx, offsetShift);
-    if (!temp) {
-      return nullptr;
-    }
-
-    result = BigInt::sub(cx, result, temp);
-    if (!result) {
-      return nullptr;
-    }
-  }
-
-  // Step 7 (Return).
+  // Step 5 (Return).
   return result;
 }
 
@@ -956,7 +879,7 @@ static bool NanosecondsToDaysSlow(
 static bool NanosecondsToDays(
     JSContext* cx, const Duration& duration,
     MutableHandle<temporal::NanosecondsAndDays> result) {
-  if (auto total = TotalDurationNanoseconds(duration.time(), 0)) {
+  if (auto total = TotalDurationNanoseconds(duration.time())) {
     auto nanosAndDays = ::NanosecondsToDays(*total);
 
     result.set(temporal::NanosecondsAndDays::from(
@@ -967,7 +890,7 @@ static bool NanosecondsToDays(
   }
 
   Rooted<BigInt*> nanoseconds(
-      cx, TotalDurationNanosecondsSlow(cx, duration.time(), 0));
+      cx, TotalDurationNanosecondsSlow(cx, duration.time()));
   if (!nanoseconds) {
     return false;
   }
@@ -982,14 +905,14 @@ static bool NanosecondsToDays(
     JSContext* cx, const Duration& duration,
     Handle<ZonedDateTimeObject*> zonedRelativeTo,
     MutableHandle<temporal::NanosecondsAndDays> result) {
-  if (auto total = TotalDurationNanoseconds(duration.time(), 0)) {
+  if (auto total = TotalDurationNanoseconds(duration.time())) {
     auto nanoseconds = InstantSpan::fromNanoseconds(*total);
     MOZ_ASSERT(IsValidInstantSpan(nanoseconds));
 
     return NanosecondsToDays(cx, nanoseconds, zonedRelativeTo, result);
   }
 
-  auto* nanoseconds = TotalDurationNanosecondsSlow(cx, duration.time(), 0);
+  auto* nanoseconds = TotalDurationNanosecondsSlow(cx, duration.time());
   if (!nanoseconds) {
     return false;
   }
@@ -1258,14 +1181,14 @@ static bool BalancePossiblyInfiniteTimeDurationSlow(JSContext* cx,
                                                     Handle<BigInt*> nanos,
                                                     TemporalUnit largestUnit,
                                                     TimeDuration* result) {
-  // Step 1. (Handled in caller.)
+  // Steps 1-2. (Handled in caller.)
 
   BigInt* zero = BigInt::zero(cx);
   if (!zero) {
     return false;
   }
 
-  // Step 2.
+  // Step 3.
   Rooted<BigInt*> days(cx, zero);
   Rooted<BigInt*> hours(cx, zero);
   Rooted<BigInt*> minutes(cx, zero);
@@ -1274,12 +1197,12 @@ static bool BalancePossiblyInfiniteTimeDurationSlow(JSContext* cx,
   Rooted<BigInt*> microseconds(cx, zero);
   Rooted<BigInt*> nanoseconds(cx, nanos);
 
-  // Steps 3-4.
+  // Steps 4-5.
   //
   // We don't need to convert to positive numbers, because BigInt division
   // truncates and BigInt modulo has modulo semantics.
 
-  // Steps 5-11.
+  // Steps 6-12.
   Rooted<BigInt*> thousand(cx, BigInt::createFromInt64(cx, 1000));
   if (!thousand) {
     return false;
@@ -1296,49 +1219,11 @@ static bool BalancePossiblyInfiniteTimeDurationSlow(JSContext* cx,
   }
 
   switch (largestUnit) {
-    // Step 5.
+    // Step 6.
     case TemporalUnit::Year:
     case TemporalUnit::Month:
     case TemporalUnit::Week:
     case TemporalUnit::Day: {
-      // Steps 5.a-b.
-      if (!BigInt::divmod(cx, nanoseconds, thousand, &microseconds,
-                          &nanoseconds)) {
-        return false;
-      }
-
-      // Steps 5.c-d.
-      if (!BigInt::divmod(cx, microseconds, thousand, &milliseconds,
-                          &microseconds)) {
-        return false;
-      }
-
-      // Steps 5.e-f.
-      if (!BigInt::divmod(cx, milliseconds, thousand, &seconds,
-                          &milliseconds)) {
-        return false;
-      }
-
-      // Steps 5.g-h.
-      if (!BigInt::divmod(cx, seconds, sixty, &minutes, &seconds)) {
-        return false;
-      }
-
-      // Steps 5.i-j.
-      if (!BigInt::divmod(cx, minutes, sixty, &hours, &minutes)) {
-        return false;
-      }
-
-      // Steps 5.k-l.
-      if (!BigInt::divmod(cx, hours, twentyfour, &days, &hours)) {
-        return false;
-      }
-
-      break;
-    }
-
-    // Step 6.
-    case TemporalUnit::Hour: {
       // Steps 6.a-b.
       if (!BigInt::divmod(cx, nanoseconds, thousand, &microseconds,
                           &nanoseconds)) {
@@ -1367,11 +1252,16 @@ static bool BalancePossiblyInfiniteTimeDurationSlow(JSContext* cx,
         return false;
       }
 
+      // Steps 6.k-l.
+      if (!BigInt::divmod(cx, hours, twentyfour, &days, &hours)) {
+        return false;
+      }
+
       break;
     }
 
     // Step 7.
-    case TemporalUnit::Minute: {
+    case TemporalUnit::Hour: {
       // Steps 7.a-b.
       if (!BigInt::divmod(cx, nanoseconds, thousand, &microseconds,
                           &nanoseconds)) {
@@ -1395,11 +1285,16 @@ static bool BalancePossiblyInfiniteTimeDurationSlow(JSContext* cx,
         return false;
       }
 
+      // Steps 7.i-j.
+      if (!BigInt::divmod(cx, minutes, sixty, &hours, &minutes)) {
+        return false;
+      }
+
       break;
     }
 
     // Step 8.
-    case TemporalUnit::Second: {
+    case TemporalUnit::Minute: {
       // Steps 8.a-b.
       if (!BigInt::divmod(cx, nanoseconds, thousand, &microseconds,
                           &nanoseconds)) {
@@ -1418,11 +1313,16 @@ static bool BalancePossiblyInfiniteTimeDurationSlow(JSContext* cx,
         return false;
       }
 
+      // Steps 8.g-h.
+      if (!BigInt::divmod(cx, seconds, sixty, &minutes, &seconds)) {
+        return false;
+      }
+
       break;
     }
 
     // Step 9.
-    case TemporalUnit::Millisecond: {
+    case TemporalUnit::Second: {
       // Steps 9.a-b.
       if (!BigInt::divmod(cx, nanoseconds, thousand, &microseconds,
                           &nanoseconds)) {
@@ -1435,12 +1335,35 @@ static bool BalancePossiblyInfiniteTimeDurationSlow(JSContext* cx,
         return false;
       }
 
+      // Steps 9.e-f.
+      if (!BigInt::divmod(cx, milliseconds, thousand, &seconds,
+                          &milliseconds)) {
+        return false;
+      }
+
       break;
     }
 
     // Step 10.
-    case TemporalUnit::Microsecond: {
+    case TemporalUnit::Millisecond: {
       // Steps 10.a-b.
+      if (!BigInt::divmod(cx, nanoseconds, thousand, &microseconds,
+                          &nanoseconds)) {
+        return false;
+      }
+
+      // Steps 10.c-d.
+      if (!BigInt::divmod(cx, microseconds, thousand, &milliseconds,
+                          &microseconds)) {
+        return false;
+      }
+
+      break;
+    }
+
+    // Step 11.
+    case TemporalUnit::Microsecond: {
+      // Steps 11.a-b.
       if (!BigInt::divmod(cx, nanoseconds, thousand, &microseconds,
                           &nanoseconds)) {
         return false;
@@ -1449,7 +1372,7 @@ static bool BalancePossiblyInfiniteTimeDurationSlow(JSContext* cx,
       break;
     }
 
-    // Step 11.
+    // Step 12.
     case TemporalUnit::Nanosecond: {
       // Nothing to do.
       break;
@@ -1467,7 +1390,7 @@ static bool BalancePossiblyInfiniteTimeDurationSlow(JSContext* cx,
   double microsecondsNumber = BigInt::numberValue(microseconds);
   double nanosecondsNumber = BigInt::numberValue(nanoseconds);
 
-  // Step 12.
+  // Step 13.
   for (double v : {daysNumber, hoursNumber, minutesNumber, secondsNumber,
                    millisecondsNumber, microsecondsNumber, nanosecondsNumber}) {
     if (std::isinf(v)) {
@@ -1480,7 +1403,7 @@ static bool BalancePossiblyInfiniteTimeDurationSlow(JSContext* cx,
     }
   }
 
-  // Step 13.
+  // Step 14.
   *result = CreateTimeDurationRecord(daysNumber, hoursNumber, minutesNumber,
                                      secondsNumber, millisecondsNumber,
                                      microsecondsNumber, nanosecondsNumber);
@@ -1516,8 +1439,8 @@ static bool BalanceTimeDuration(JSContext* cx, const Duration& one,
   MOZ_ASSERT(largestUnit >= TemporalUnit::Day);
 
   // Fast-path when we can perform the whole computation with int64 values.
-  if (auto oneNanoseconds = TotalDurationNanoseconds(one, 0)) {
-    if (auto twoNanoseconds = TotalDurationNanoseconds(two, 0)) {
+  if (auto oneNanoseconds = TotalDurationNanoseconds(one)) {
+    if (auto twoNanoseconds = TotalDurationNanoseconds(two)) {
       mozilla::CheckedInt64 nanoseconds = *oneNanoseconds;
       nanoseconds += *twoNanoseconds;
       if (nanoseconds.isValid()) {
@@ -1527,12 +1450,12 @@ static bool BalanceTimeDuration(JSContext* cx, const Duration& one,
     }
   }
 
-  Rooted<BigInt*> oneNanoseconds(cx, TotalDurationNanosecondsSlow(cx, one, 0));
+  Rooted<BigInt*> oneNanoseconds(cx, TotalDurationNanosecondsSlow(cx, one));
   if (!oneNanoseconds) {
     return false;
   }
 
-  Rooted<BigInt*> twoNanoseconds(cx, TotalDurationNanosecondsSlow(cx, two, 0));
+  Rooted<BigInt*> twoNanoseconds(cx, TotalDurationNanosecondsSlow(cx, two));
   if (!twoNanoseconds) {
     return false;
   }
@@ -1558,8 +1481,8 @@ static bool BalanceTimeDuration(JSContext* cx, double days, const Duration& one,
   MOZ_ASSERT(IsValidDuration(two));
 
   // Fast-path when we can perform the whole computation with int64 values.
-  if (auto oneNanoseconds = TotalDurationNanoseconds(one, 0)) {
-    if (auto twoNanoseconds = TotalDurationNanoseconds(two, 0)) {
+  if (auto oneNanoseconds = TotalDurationNanoseconds(one)) {
+    if (auto twoNanoseconds = TotalDurationNanoseconds(two)) {
       int64_t intDays;
       if (mozilla::NumberEqualsInt64(days, &intDays)) {
         mozilla::CheckedInt64 daysNanoseconds = intDays;
@@ -1577,12 +1500,12 @@ static bool BalanceTimeDuration(JSContext* cx, double days, const Duration& one,
     }
   }
 
-  Rooted<BigInt*> oneNanoseconds(cx, TotalDurationNanosecondsSlow(cx, one, 0));
+  Rooted<BigInt*> oneNanoseconds(cx, TotalDurationNanosecondsSlow(cx, one));
   if (!oneNanoseconds) {
     return false;
   }
 
-  Rooted<BigInt*> twoNanoseconds(cx, TotalDurationNanosecondsSlow(cx, two, 0));
+  Rooted<BigInt*> twoNanoseconds(cx, TotalDurationNanosecondsSlow(cx, two));
   if (!twoNanoseconds) {
     return false;
   }
@@ -1595,7 +1518,7 @@ static bool BalanceTimeDuration(JSContext* cx, double days, const Duration& one,
 
   if (days) {
     Rooted<BigInt*> daysNanoseconds(
-        cx, TotalDurationNanosecondsSlow(cx, {0, 0, 0, days}, 0));
+        cx, TotalDurationNanosecondsSlow(cx, {0, 0, 0, days}));
     if (!daysNanoseconds) {
       return false;
     }
@@ -1620,22 +1543,19 @@ static bool BalancePossiblyInfiniteTimeDuration(JSContext* cx,
   // NB: |duration.days| can have a different sign than the time components.
   MOZ_ASSERT(IsValidDuration(duration.time()));
 
-  // Steps 1-2. (Not applicable)
-
   // Fast-path when we can perform the whole computation with int64 values.
-  if (auto nanoseconds = TotalDurationNanoseconds(duration, 0)) {
+  if (auto nanoseconds = TotalDurationNanoseconds(duration)) {
     *result = ::BalanceTimeDuration(*nanoseconds, largestUnit);
     return true;
   }
 
-  // Step 3.
-  Rooted<BigInt*> nanoseconds(cx,
-                              TotalDurationNanosecondsSlow(cx, duration, 0));
+  // Steps 1-2.
+  Rooted<BigInt*> nanoseconds(cx, TotalDurationNanosecondsSlow(cx, duration));
   if (!nanoseconds) {
     return false;
   }
 
-  // Steps 4-16.
+  // Steps 3-14.
   return ::BalancePossiblyInfiniteTimeDurationSlow(cx, nanoseconds, largestUnit,
                                                    result);
 }
@@ -3303,7 +3223,7 @@ static bool AdjustRoundedDurationDaysSlow(
 
   // Step 2.
   Rooted<BigInt*> timeRemainderNs(
-      cx, TotalDurationNanosecondsSlow(cx, duration.time(), 0));
+      cx, TotalDurationNanosecondsSlow(cx, duration.time()));
   if (!timeRemainderNs) {
     return false;
   }
@@ -3435,7 +3355,7 @@ bool js::temporal::AdjustRoundedDurationDays(
   MOZ_ASSERT(IsValidInstantSpan(dayLength));
 
   // Step 2. (Reordered)
-  auto timeRemainderNs = TotalDurationNanoseconds(duration.time(), 0);
+  auto timeRemainderNs = TotalDurationNanoseconds(duration.time());
   if (!timeRemainderNs) {
     return AdjustRoundedDurationDaysSlow(cx, duration, increment, unit,
                                          roundingMode, zonedRelativeTo,
@@ -4299,12 +4219,12 @@ static bool TruncateNumber(JSContext* cx, const Duration& toRound,
   MOZ_ASSERT(denominator <= 86'400'000'000'000);
 
   // Fast-path when we can perform the whole computation with int64 values.
-  if (auto numerator = TotalDurationNanoseconds(toRound, 0)) {
+  if (auto numerator = TotalDurationNanoseconds(toRound)) {
     TruncateNumber(*numerator, denominator, quotient, total);
     return true;
   }
 
-  Rooted<BigInt*> numerator(cx, TotalDurationNanosecondsSlow(cx, toRound, 0));
+  Rooted<BigInt*> numerator(cx, TotalDurationNanosecondsSlow(cx, toRound));
   if (!numerator) {
     return false;
   }
@@ -4345,12 +4265,12 @@ static bool RoundNumberToIncrement(JSContext* cx, const Duration& toRound,
   MOZ_ASSERT(unit >= TemporalUnit::Day);
 
   // Fast-path when we can perform the whole computation with int64 values.
-  if (auto total = TotalDurationNanoseconds(toRound, 0)) {
+  if (auto total = TotalDurationNanoseconds(toRound)) {
     return RoundNumberToIncrement(cx, *total, unit, increment, roundingMode,
                                   result);
   }
 
-  Rooted<BigInt*> totalNs(cx, TotalDurationNanosecondsSlow(cx, toRound, 0));
+  Rooted<BigInt*> totalNs(cx, TotalDurationNanosecondsSlow(cx, toRound));
   if (!totalNs) {
     return false;
   }
@@ -6990,31 +6910,64 @@ static bool Duration_compare(JSContext* cx, unsigned argc, Value* vp) {
     // Steps 5-7. (Not applicable in our implementation.)
   }
 
-  // Step 8.
-  int64_t shift1;
-  if (!CalculateOffsetShift(cx, zonedRelativeTo, one.date(), &shift1)) {
-    return false;
-  }
+  // Steps 8-9.
+  auto hasCalendarUnit = [](const auto& d) {
+    return d.years != 0 || d.months != 0 || d.weeks != 0;
+  };
+  bool calendarUnitsPresent = hasCalendarUnit(one) || hasCalendarUnit(two);
 
-  // Step 9.
-  int64_t shift2;
-  if (!CalculateOffsetShift(cx, zonedRelativeTo, two.date(), &shift2)) {
-    return false;
-  }
-
-  // Steps 10-11.
-  double days1, days2;
-  if (one.years != 0 || one.months != 0 || one.weeks != 0 || two.years != 0 ||
-      two.months != 0 || two.weeks != 0) {
-    // Step 10.a.
-    if (zonedRelativeTo) {
-      plainRelativeTo = ToTemporalDate(cx, zonedRelativeTo);
-      if (!plainRelativeTo) {
-        return false;
-      }
+  // Step 10.
+  if (zonedRelativeTo &&
+      (calendarUnitsPresent || one.days != 0 || two.days != 0)) {
+    // Steps 10.a-b.
+    auto* unwrappedRelativeTo = zonedRelativeTo.unwrap(cx);
+    if (!unwrappedRelativeTo) {
+      return false;
     }
 
-    // Step 10.b.
+    auto instant = ToInstant(unwrappedRelativeTo);
+    Rooted<TimeZoneValue> timeZone(cx, unwrappedRelativeTo->timeZone());
+    Rooted<CalendarValue> calendar(cx, unwrappedRelativeTo->calendar());
+
+    // Wrap into the current compartment.
+    if (!timeZone.wrap(cx)) {
+      return false;
+    }
+    if (!calendar.wrap(cx)) {
+      return false;
+    }
+
+    // Steps 10.c-d.
+    PlainDateTime dateTime;
+    if (!GetPlainDateTimeFor(cx, timeZone, instant, &dateTime)) {
+      return false;
+    }
+
+    // Step 10.e.
+    Instant after1;
+    if (!AddZonedDateTime(cx, instant, timeZone, calendar, one, dateTime,
+                          &after1)) {
+      return false;
+    }
+
+    // Step 10.f.
+    Instant after2;
+    if (!AddZonedDateTime(cx, instant, timeZone, calendar, two, dateTime,
+                          &after2)) {
+      return false;
+    }
+
+    // Steps 10.g-i.
+    args.rval().setInt32(after1 < after2 ? -1 : after1 > after2 ? 1 : 0);
+    return true;
+  }
+
+  // Steps 11-12.
+  double days1, days2;
+  if (calendarUnitsPresent) {
+    // FIXME: spec issue - directly throw an error if plainRelativeTo is undef.
+
+    // Step 11.a.
     DateDuration unbalanceResult1;
     if (plainRelativeTo) {
       if (!UnbalanceDateDurationRelative(cx, one, TemporalUnit::Day,
@@ -7029,7 +6982,7 @@ static bool Duration_compare(JSContext* cx, unsigned argc, Value* vp) {
       MOZ_ASSERT(one.date() == unbalanceResult1.toDuration());
     }
 
-    // Step 10.c.
+    // Step 11.b.
     DateDuration unbalanceResult2;
     if (plainRelativeTo) {
       if (!UnbalanceDateDurationRelative(cx, two, TemporalUnit::Day,
@@ -7044,16 +6997,16 @@ static bool Duration_compare(JSContext* cx, unsigned argc, Value* vp) {
       MOZ_ASSERT(two.date() == unbalanceResult2.toDuration());
     }
 
-    // Step 10.d.
+    // Step 11.c.
     days1 = unbalanceResult1.days;
 
-    // Step 10.e.
+    // Step 11.d.
     days2 = unbalanceResult2.days;
   } else {
-    // Step 11.a.
+    // Step 12.a.
     days1 = one.days;
 
-    // Step 11.b.
+    // Step 12.b.
     days2 = two.days;
   }
 
@@ -7095,29 +7048,29 @@ static bool Duration_compare(JSContext* cx, unsigned argc, Value* vp) {
       two.nanoseconds,
   };
 
-  // Steps 12-16.
+  // Steps 13-19.
   //
   // Fast path when the total duration amount fits into an int64.
-  if (auto ns1 = TotalDurationNanoseconds(oneTotal, shift1)) {
-    if (auto ns2 = TotalDurationNanoseconds(twoTotal, shift2)) {
+  if (auto ns1 = TotalDurationNanoseconds(oneTotal)) {
+    if (auto ns2 = TotalDurationNanoseconds(twoTotal)) {
       args.rval().setInt32(*ns1 < *ns2 ? -1 : *ns1 > *ns2 ? 1 : 0);
       return true;
     }
   }
 
-  // Step 12.
-  Rooted<BigInt*> ns1(cx, TotalDurationNanosecondsSlow(cx, oneTotal, shift1));
+  // Steps 13 and 15.
+  Rooted<BigInt*> ns1(cx, TotalDurationNanosecondsSlow(cx, oneTotal));
   if (!ns1) {
     return false;
   }
 
-  // Step 13.
-  auto* ns2 = TotalDurationNanosecondsSlow(cx, twoTotal, shift2);
+  // Steps 14 and 16.
+  auto* ns2 = TotalDurationNanosecondsSlow(cx, twoTotal);
   if (!ns2) {
     return false;
   }
 
-  // Step 14-16.
+  // Step 17-19.
   args.rval().setInt32(BigInt::compare(ns1, ns2));
   return true;
 }
