@@ -1482,7 +1482,15 @@ static bool AddTimeDaysSlow(JSContext* cx, const PlainTime& time,
     return false;
   }
 
-  *result = BigInt::numberValue(days);
+  // The days number is used as the input for a duration. Throw if the BigInt
+  // when converted to a Number can't be represented in a duration.
+  double daysNumber = BigInt::numberValue(days);
+  if (!ThrowIfInvalidDuration(cx, {0, 0, 0, daysNumber})) {
+    return false;
+  }
+  MOZ_ASSERT(IsInteger(daysNumber));
+
+  *result = daysNumber;
   return true;
 }
 
@@ -1635,6 +1643,7 @@ bool js::temporal::AddTime(JSContext* cx, const PlainTime& time,
   if (!AddTimeDays(cx, time, duration, &days)) {
     return false;
   }
+  MOZ_ASSERT(IsInteger(days));
 
   *result = balanced;
   *daysResult = days;
