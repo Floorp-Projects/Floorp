@@ -18,6 +18,7 @@ struct ParamTraits<mozilla::glean::perf::PageLoadExtra> {
 
   static void Write(MessageWriter* aWriter, const paramType& aParam) {
     WriteParam(aWriter, aParam.fcpTime);
+    WriteParam(aWriter, aParam.lcpTime);
     WriteParam(aWriter, aParam.jsExecTime);
     WriteParam(aWriter, aParam.loadTime);
     WriteParam(aWriter, aParam.loadType);
@@ -32,6 +33,7 @@ struct ParamTraits<mozilla::glean::perf::PageLoadExtra> {
 
   static bool Read(MessageReader* aReader, paramType* aResult) {
     return ReadParam(aReader, &aResult->fcpTime) &&
+           ReadParam(aReader, &aResult->lcpTime) &&
            ReadParam(aReader, &aResult->jsExecTime) &&
            ReadParam(aReader, &aResult->loadTime) &&
            ReadParam(aReader, &aResult->loadType) &&

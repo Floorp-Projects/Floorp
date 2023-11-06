@@ -2174,6 +2174,14 @@ void Document::AccumulatePageLoadTelemetry(
     }
   }
 
+  // Report the most up to date LCP time. For our histogram we actually report
+  // this on page unload.
+  if (TimeStamp lcpTime =
+          GetNavigationTiming()->GetLargestContentfulRenderTimeStamp()) {
+    aEventTelemetryDataOut.lcpTime = mozilla::Some(
+        static_cast<uint32_t>((lcpTime - navigationStart).ToMilliseconds()));
+  }
+
   // DOM Content Loaded event
   if (TimeStamp dclEventStart =
           GetNavigationTiming()->GetDOMContentLoadedEventStartTimeStamp()) {

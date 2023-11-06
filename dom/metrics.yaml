@@ -19,10 +19,12 @@ perf:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1759744
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1799727
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1834774
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1862939
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1759744#c5
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1799727#c4
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1834774#c3
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1862939#c5
     notification_emails:
       - perf-telemetry-alerts@mozilla.com
       - dpalmeiro@mozilla.com
@@ -46,6 +48,11 @@ perf:
       fcp_time:
         description:
           "Time between firstContentfulPaint and navigationStart, in ms."
+        type: quantity
+        unit: ms
+      lcp_time:
+        description:
+          "Time between largestContentfulPaint and navigationStart, at the point of onLoad firing, in ms. This may differ from the final LCP value as reported through the LCP histogram."
         type: quantity
         unit: ms
       js_exec_time:
