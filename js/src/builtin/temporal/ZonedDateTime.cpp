@@ -2399,6 +2399,26 @@ static bool ZonedDateTime_with(JSContext* cx, const CallArgs& args) {
   Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
   // Step 7.
+  Rooted<TimeZoneValue> timeZone(cx, zonedDateTime->timeZone());
+
+  // Step 8.
+  auto instant = ToInstant(zonedDateTime);
+
+  // Step 9.
+  int64_t offsetNanoseconds;
+  if (!GetOffsetNanosecondsFor(cx, timeZone, instant, &offsetNanoseconds)) {
+    return false;
+  }
+
+  // Step 10.
+  Rooted<PlainDateTimeObject*> dateTime(
+      cx,
+      temporal::GetPlainDateTimeFor(cx, instant, calendar, offsetNanoseconds));
+  if (!dateTime) {
+    return false;
+  }
+
+  // Step 11.
   JS::RootedVector<PropertyKey> fieldNames(cx);
   if (!CalendarFields(cx, calendar,
                       {CalendarField::Day, CalendarField::Month,
@@ -2407,27 +2427,12 @@ static bool ZonedDateTime_with(JSContext* cx, const CallArgs& args) {
     return false;
   }
 
-  // Step 8.
+  // Step 12.
   Rooted<PlainObject*> fields(
-      cx, PrepareTemporalFields(cx, zonedDateTime, fieldNames));
+      cx, PrepareTemporalFields(cx, dateTime, fieldNames));
   if (!fields) {
     return false;
   }
-
-  // Step 9.
-  Rooted<TimeZoneValue> timeZone(cx, zonedDateTime->timeZone());
-
-  // Step 10.
-  auto instant = ToInstant(zonedDateTime);
-
-  // Step 11.
-  int64_t offsetNanoseconds;
-  if (!GetOffsetNanosecondsFor(cx, timeZone, instant, &offsetNanoseconds)) {
-    return false;
-  }
-
-  // Step 12.
-  auto dateTime = temporal::GetPlainDateTimeFor(instant, offsetNanoseconds);
 
   // Steps 13-18.
   struct TimeField {
@@ -2436,12 +2441,12 @@ static bool ZonedDateTime_with(JSContext* cx, const CallArgs& args) {
     FieldName name;
     int32_t value;
   } timeFields[] = {
-      {&JSAtomState::hour, dateTime.time.hour},
-      {&JSAtomState::minute, dateTime.time.minute},
-      {&JSAtomState::second, dateTime.time.second},
-      {&JSAtomState::millisecond, dateTime.time.millisecond},
-      {&JSAtomState::microsecond, dateTime.time.microsecond},
-      {&JSAtomState::nanosecond, dateTime.time.nanosecond},
+      {&JSAtomState::hour, dateTime->isoHour()},
+      {&JSAtomState::minute, dateTime->isoMinute()},
+      {&JSAtomState::second, dateTime->isoSecond()},
+      {&JSAtomState::millisecond, dateTime->isoMillisecond()},
+      {&JSAtomState::microsecond, dateTime->isoMicrosecond()},
+      {&JSAtomState::nanosecond, dateTime->isoNanosecond()},
   };
 
   Rooted<Value> timeFieldValue(cx);
