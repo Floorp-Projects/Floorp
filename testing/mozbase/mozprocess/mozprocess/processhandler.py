@@ -12,7 +12,6 @@
 
 import codecs
 import errno
-import io
 import os
 import signal
 import subprocess
@@ -21,14 +20,9 @@ import threading
 import time
 import traceback
 from datetime import datetime
+from queue import Empty, Queue
 
 import six
-
-if six.PY2:
-    from Queue import Empty, Queue  # Python 2
-else:
-    from queue import Empty, Queue  # Python 3
-
 
 # Set the MOZPROCESS_DEBUG environment variable to 1 to see some debugging output
 MOZPROCESS_DEBUG = os.getenv("MOZPROCESS_DEBUG")
@@ -145,9 +139,7 @@ class ProcessHandlerMixin(object):
                 "startupinfo": startupinfo,
                 "creationflags": creationflags,
             }
-            if six.PY2:
-                kwargs["universal_newlines"] = universal_newlines
-            if six.PY3 and sys.version_info.minor >= 6 and universal_newlines:
+            if sys.version_info.minor >= 6 and universal_newlines:
                 kwargs["universal_newlines"] = universal_newlines
                 kwargs["encoding"] = encoding
             try:
@@ -155,17 +147,6 @@ class ProcessHandlerMixin(object):
             except OSError:
                 print(args, file=sys.stderr)
                 raise
-            # We need to support Python 3.5 for now, which doesn't support the
-            # "encoding" argument to the Popen constructor. For now, emulate it
-            # by patching the streams so that they return consistent values.
-            # This can be removed once we remove support for Python 3.5.
-            if six.PY3 and sys.version_info.minor == 5 and universal_newlines:
-                if self.stdin is not None:
-                    self.stdin = io.TextIOWrapper(self.stdin, encoding=encoding)
-                if self.stdout is not None:
-                    self.stdout = io.TextIOWrapper(self.stdout, encoding=encoding)
-                if self.stderr is not None:
-                    self.stderr = io.TextIOWrapper(self.stderr, encoding=encoding)
 
         def debug(self, msg):
             if not MOZPROCESS_DEBUG:
@@ -175,10 +156,7 @@ class ProcessHandlerMixin(object):
 
         def __del__(self):
             if isWin:
-                if six.PY2:
-                    _maxint = sys.maxint
-                else:
-                    _maxint = sys.maxsize
+                _maxint = sys.maxsize
                 handle = getattr(self, "_handle", None)
                 if handle:
                     # _internal_poll is a Python3 built-in call and requires _handle to be an int on Windows
@@ -746,11 +724,7 @@ falling back to not using job objects for managing child processes""",
                 """
                 # For non-group wait, call base class
                 try:
-                    if six.PY2:
-                        subprocess.Popen.wait(self)
-                    else:
-                        # timeout was introduced in Python 3.3
-                        subprocess.Popen.wait(self, timeout=timeout)
+                    subprocess.Popen.wait(self, timeout=timeout)
                 except subprocess.TimeoutExpired:
                     # We want to return None in this case
                     pass
@@ -1280,14 +1254,10 @@ class ProcessHandler(ProcessHandlerMixin):
         text = kwargs.get("universal_newlines", False) or kwargs.get("text", False)
 
         if stream is True:
-            # Print to standard output only if no outputline provided
-            stdout = sys.stdout
-            if six.PY2 and text:
-                stdout = codecs.getwriter("utf-8")(sys.stdout)
-            elif six.PY3 and text:
+            if text:
                 # The encoding of stdout isn't guaranteed to be utf-8. Fix that.
                 stdout = codecs.getwriter("utf-8")(sys.stdout.buffer)
-            elif six.PY3 and not text:
+            else:
                 stdout = sys.stdout.buffer
 
             if not kwargs["processOutputLine"]:
