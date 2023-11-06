@@ -46,7 +46,7 @@ object ReviewQualityCheckMiddlewareProvider {
             providePreferencesMiddleware(settings, browserStore, appStore, scope),
             provideNetworkMiddleware(browserStore, appStore, context, scope),
             provideNavigationMiddleware(TabsUseCases.SelectOrAddUseCase(browserStore), context),
-            provideTelemetryMiddleware(),
+            provideTelemetryMiddleware(browserStore, appStore),
         )
 
     private fun providePreferencesMiddleware(
@@ -81,5 +81,11 @@ object ReviewQualityCheckMiddlewareProvider {
         GetReviewQualityCheckSumoUrl(context),
     )
 
-    private fun provideTelemetryMiddleware() = ReviewQualityCheckTelemetryMiddleware()
+    private fun provideTelemetryMiddleware(
+        browserStore: BrowserStore,
+        appStore: AppStore,
+    ) = ReviewQualityCheckTelemetryMiddleware(
+        browserStore = browserStore,
+        appStore = appStore,
+    )
 }

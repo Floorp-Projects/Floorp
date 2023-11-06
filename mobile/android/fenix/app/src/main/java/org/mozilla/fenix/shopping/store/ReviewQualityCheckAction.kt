@@ -88,7 +88,7 @@ sealed interface ReviewQualityCheckAction : Action {
     /**
      * Triggered as a result of a [NetworkAction] to update the [ProductReviewState].
      */
-    data class UpdateProductReview(val productReviewState: ProductReviewState) : UpdateAction
+    data class UpdateProductReview(val productReviewState: ProductReviewState) : UpdateAction, TelemetryAction
 
     /**
      * Triggered as a result of a [NetworkAction] to update the [RecommendedProductState].
