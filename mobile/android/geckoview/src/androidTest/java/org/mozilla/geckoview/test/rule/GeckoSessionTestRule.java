@@ -2499,6 +2499,20 @@ public class GeckoSessionTestRule implements TestRule {
     webExtensionApiCall(session, "TriggerCookieBannerHandled", null);
   }
 
+  public void triggerTranslationsOffer(final @NonNull GeckoSession session) {
+    webExtensionApiCall(session, "TriggerTranslationsOffer", null);
+  }
+
+  public void triggerLanguageStateChange(
+      final @NonNull GeckoSession session, final @NonNull JSONObject languageState) {
+    webExtensionApiCall(
+        session,
+        "TriggerLanguageStateChange",
+        args -> {
+          args.put("languageState", languageState);
+        });
+  }
+
   private Object waitForMessage(final WebExtension.Port port, final String id) {
     mPendingResponses.add(port, id);
     UiThreadUtils.waitForCondition(() -> mPendingMessages.containsKey(id), mTimeoutMillis);

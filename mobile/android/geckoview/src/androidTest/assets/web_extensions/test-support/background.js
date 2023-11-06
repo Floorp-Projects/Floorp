@@ -77,6 +77,12 @@ const APIS = {
   TriggerCookieBannerHandled({ tab }) {
     return browser.test.triggerCookieBannerHandled(tab.id);
   },
+  TriggerTranslationsOffer({ tab }) {
+    return browser.test.triggerTranslationsOffer(tab.id);
+  },
+  TriggerLanguageStateChange({ tab, languageState }) {
+    return browser.test.triggerLanguageStateChange(tab.id, languageState);
+  },
 };
 
 port.onMessage.addListener(async message => {

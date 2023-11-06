@@ -150,6 +150,8 @@ pref("browser.tabs.remote.autostart", true);
 // Bug 1809922 to enable translations
 #ifdef NIGHTLY_BUILD
   pref("browser.translations.enable", true);
+  // Used for mocking data for GeckoView Translations tests, should use in addition with an automation check.
+  pref("browser.translations.geckoview.enableAllTestMocks", false);
 #endif
 
 // SSL error page behaviour (bug 437372)

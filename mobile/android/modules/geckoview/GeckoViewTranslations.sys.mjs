@@ -180,6 +180,31 @@ export const GeckoViewTranslationsSettings = {
         break;
       }
       case "GeckoView:Translations:TranslationInformation": {
+        if (
+          Cu.isInAutomation &&
+          Services.prefs.getBoolPref(
+            "browser.translations.geckoview.enableAllTestMocks",
+            false
+          )
+        ) {
+          const mockResult = {
+            languagePairs: [
+              { fromLang: "en", toLang: "es" },
+              { fromLang: "es", toLang: "en" },
+            ],
+            fromLanguages: [
+              { langTag: "en", displayName: "English" },
+              { langTag: "es", displayName: "Spanish" },
+            ],
+            toLanguages: [
+              { langTag: "en", displayName: "English" },
+              { langTag: "es", displayName: "Spanish" },
+            ],
+          };
+          aCallback.onSuccess(mockResult);
+          return;
+        }
+
         lazy.TranslationsParent.getSupportedLanguages().then(
           function (value) {
             aCallback.onSuccess(value);
@@ -194,6 +219,33 @@ export const GeckoViewTranslationsSettings = {
         break;
       }
       case "GeckoView:Translations:ModelInformation": {
+        if (
+          Cu.isInAutomation &&
+          Services.prefs.getBoolPref(
+            "browser.translations.geckoview.enableAllTestMocks",
+            false
+          )
+        ) {
+          const mockResult = {
+            models: [
+              {
+                langTag: "es",
+                displayName: "Spanish",
+                isDownloaded: false,
+                size: 12345,
+              },
+              {
+                langTag: "de",
+                displayName: "German",
+                isDownloaded: false,
+                size: 12345,
+              },
+            ],
+          };
+          aCallback.onSuccess(mockResult);
+          return;
+        }
+
         // Helper function to process remote server records size and download state for GV use
         async function _processLanguageModelData(language, remoteRecords) {
           // Aggregate size of downloads, e.g., one language has many model binary files

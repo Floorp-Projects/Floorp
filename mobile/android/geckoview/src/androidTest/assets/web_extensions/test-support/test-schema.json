@@ -258,6 +258,38 @@
             "name": "tabId"
           }
         ]
+      },
+
+      {
+        "name": "triggerTranslationsOffer",
+        "type": "function",
+        "async": true,
+        "description": "Simulates offering a translation.",
+        "parameters": [
+          {
+            "type": "number",
+            "name": "tabId"
+          }
+        ]
+      },
+
+      {
+        "name": "triggerLanguageStateChange",
+        "type": "function",
+        "async": true,
+        "description": "Simulates expecting a translation.",
+        "parameters": [
+          {
+            "type": "number",
+            "name": "tabId"
+          },
+          {
+            "name": "languageState",
+            "type": "object",
+            "properties": {},
+            "additionalProperties": { "type": "any" }
+          }
+        ]
       }
     ]
   }
