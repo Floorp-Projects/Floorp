@@ -94,12 +94,12 @@ add_task(async function test_product_requestImageBlob() {
 
   Assert.ok(product.isProduct(), "Should recognize a valid product.");
 
-  let img = await product.requestImageBlob(IMAGE_URL);
+  let img = await ShoppingProduct.requestImageBlob(IMAGE_URL);
 
   Assert.ok(Blob.isInstance(img), "Image is loaded and returned as a blob");
 
   enableOHTTP();
-  img = await product.requestImageBlob(IMAGE_URL);
+  img = await ShoppingProduct.requestImageBlob(IMAGE_URL);
   disableOHTTP();
 
   Assert.ok(Blob.isInstance(img), "Image is loaded and returned as a blob");
