@@ -197,25 +197,34 @@ bool js::temporal::ThrowIfInvalidISODate(JSContext* cx, double year,
 
 /**
  * RegulateISODate ( year, month, day, overflow )
+ *
+ * With |overflow = "constrain"|.
+ */
+static PlainDate ConstrainISODate(const PlainDate& date) {
+  auto& [year, month, day] = date;
+
+  // Step 1.a.
+  int32_t m = std::clamp(month, 1, 12);
+
+  // Step 1.b.
+  int32_t daysInMonth = temporal::ISODaysInMonth(year, m);
+
+  // Step 1.c.
+  int32_t d = std::clamp(day, 1, daysInMonth);
+
+  // Step 1.d.
+  return {year, m, d};
+}
+
+/**
+ * RegulateISODate ( year, month, day, overflow )
  */
 bool js::temporal::RegulateISODate(JSContext* cx, const PlainDate& date,
                                    TemporalOverflow overflow,
                                    PlainDate* result) {
-  auto& [year, month, day] = date;
-
   // Step 1.
   if (overflow == TemporalOverflow::Constrain) {
-    // Step 1.a.
-    int32_t m = std::clamp(month, 1, 12);
-
-    // Step 1.b.
-    int32_t daysInMonth = ISODaysInMonth(year, m);
-
-    // Step 1.c.
-    int32_t d = std::clamp(day, 1, daysInMonth);
-
-    // Step 1.d.
-    *result = {year, m, d};
+    *result = ::ConstrainISODate(date);
     return true;
   }
 
@@ -223,12 +232,12 @@ bool js::temporal::RegulateISODate(JSContext* cx, const PlainDate& date,
   MOZ_ASSERT(overflow == TemporalOverflow::Reject);
 
   // Step 2.b.
-  if (!ThrowIfInvalidISODate(cx, year, month, day)) {
+  if (!ThrowIfInvalidISODate(cx, date)) {
     return false;
   }
 
   // Step 2.b. (Inlined call to CreateISODateRecord.)
-  *result = {year, month, day};
+  *result = date;
   return true;
 }
 
@@ -859,6 +868,55 @@ bool js::temporal::AddISODate(JSContext* cx, const PlainDate& date,
   return true;
 }
 
+struct YearMonthDuration {
+  int32_t years = 0;
+  int32_t months = 0;
+};
+
+/**
+ * AddISODate ( year, month, day, years, months, weeks, days, overflow )
+ *
+ * With |overflow = "constrain"|.
+ */
+static PlainDate AddISODate(const PlainDate& date,
+                            const YearMonthDuration& duration) {
+  MOZ_ASSERT(IsValidISODate(date));
+  MOZ_ASSERT(ISODateTimeWithinLimits(date));
+
+  MOZ_ASSERT_IF(duration.years < 0, duration.months <= 0);
+  MOZ_ASSERT_IF(duration.years > 0, duration.months >= 0);
+
+  // TODO: Export these values somewhere.
+  [[maybe_unused]] constexpr int32_t minYear = -271821;
+  [[maybe_unused]] constexpr int32_t maxYear = 275760;
+
+  MOZ_ASSERT(std::abs(duration.years) <= (maxYear - minYear),
+             "years doesn't exceed the maximum duration between valid years");
+  MOZ_ASSERT(std::abs(duration.months) <= 12,
+             "months duration is at most one year");
+
+  // Steps 1-2. (Not applicable)
+
+  // Step 3. (Inlined BalanceISOYearMonth)
+  int32_t year = date.year + duration.years;
+  int32_t month = date.month + duration.months;
+  MOZ_ASSERT(-11 <= month && month <= 24);
+
+  if (month > 12) {
+    month -= 12;
+    year += 1;
+  } else if (month <= 0) {
+    month += 12;
+    year -= 1;
+  }
+
+  MOZ_ASSERT(1 <= month && month <= 12);
+  MOZ_ASSERT(CanBalanceISOYear(year));
+
+  // Steps 4-7.
+  return ::ConstrainISODate({year, month, date.day});
+}
+
 /**
  * CompareISODate ( y1, m1, d1, y2, m2, d2 )
  */
@@ -896,15 +954,14 @@ static DateDuration CreateDateDurationRecord(int32_t years, int32_t months,
 /**
  * DifferenceISODate ( y1, m1, d1, y2, m2, d2, largestUnit )
  */
-bool js::temporal::DifferenceISODate(JSContext* cx, const PlainDate& start,
-                                     const PlainDate& end,
-                                     TemporalUnit largestUnit,
-                                     DateDuration* result) {
-  // Both inputs are valid dates.
+DateDuration js::temporal::DifferenceISODate(const PlainDate& start,
+                                             const PlainDate& end,
+                                             TemporalUnit largestUnit) {
+  // Steps 1-2.
   MOZ_ASSERT(IsValidISODate(start));
   MOZ_ASSERT(IsValidISODate(end));
 
-  // And both inputs are also within the date-time limits.
+  // Both inputs are also within the date-time limits.
   MOZ_ASSERT(ISODateTimeWithinLimits(start));
   MOZ_ASSERT(ISODateTimeWithinLimits(end));
 
@@ -914,15 +971,14 @@ bool js::temporal::DifferenceISODate(JSContext* cx, const PlainDate& start,
   MOZ_ASSERT(TemporalUnit::Year <= largestUnit &&
              largestUnit <= TemporalUnit::Day);
 
-  // Step 1.
+  // Step 3.
   if (largestUnit == TemporalUnit::Year || largestUnit == TemporalUnit::Month) {
-    // Step 1.a.
+    // Step 3.a.
     int32_t sign = -CompareISODate(start, end);
 
-    // Step 1.b.
+    // Step 3.b.
     if (sign == 0) {
-      *result = CreateDateDurationRecord(0, 0, 0, 0);
-      return true;
+      return CreateDateDurationRecord(0, 0, 0, 0);
     }
 
     // FIXME: spec issue - results can be ambiguous, is this intentional?
@@ -980,11 +1036,11 @@ bool js::temporal::DifferenceISODate(JSContext* cx, const PlainDate& start,
     //
     // clang-format on
 
-    // Steps 1.c-d. (Not applicable in our implementation.)
+    // Steps 3.c-d. (Not applicable in our implementation.)
 
     // FIXME: spec issue - consistently use either |end.[[Year]]| or |y2|.
 
-    // Step 1.e.
+    // Step 3.e.
     int32_t years = end.year - start.year;
 
     // TODO: We could inline this, because the AddISODate call is just a more
@@ -993,78 +1049,62 @@ bool js::temporal::DifferenceISODate(JSContext* cx, const PlainDate& start,
     //
     // The remaining computations can probably simplified similarily.
 
-    // Step 1.f.
-    PlainDate mid;
-    if (!AddISODate(cx, start, {double(years), 0, 0, 0},
-                    TemporalOverflow::Constrain, &mid)) {
-      return false;
-    }
+    // Step 3.f.
+    auto mid = ::AddISODate(start, {years, 0});
 
-    // Step 1.g.
+    // Step 3.g.
     int32_t midSign = -CompareISODate(mid, end);
 
-    // Step 1.h.
+    // Step 3.h.
     if (midSign == 0) {
-      // Steps 1.h.i-ii.
+      // Step 3.h.i.
       if (largestUnit == TemporalUnit::Year) {
-        *result = CreateDateDurationRecord(years, 0, 0, 0);
-      } else {
-        *result = CreateDateDurationRecord(0, years * 12, 0, 0);
+        return CreateDateDurationRecord(years, 0, 0, 0);
       }
-      return true;
+
+      // Step 3.h.ii.
+      return CreateDateDurationRecord(0, years * 12, 0, 0);
     }
 
-    // Step 1.i.
+    // Step 3.i.
     int32_t months = end.month - start.month;
 
-    // Step 1.j.
+    // Step 3.j.
     if (midSign != sign) {
-      // Step 1.j.i.
+      // Step 3.j.i.
       years -= sign;
 
-      // Step 1.j.ii.
+      // Step 3.j.ii.
       months += sign * 12;
     }
 
-    // Step 1.k.
-    if (!AddISODate(cx, start, {double(years), double(months), 0},
-                    TemporalOverflow::Constrain, &mid)) {
-      return false;
-    }
+    // Step 3.k.
+    mid = ::AddISODate(start, {years, months});
 
-    // Step 1.l.
+    // Step 3.l.
     midSign = -CompareISODate(mid, end);
 
-    // Step 1.m.
+    // Step 3.m.
     if (midSign == 0) {
-      // Steps 1.m.i-ii.
+      // Step 3.m.i.
       if (largestUnit == TemporalUnit::Year) {
-        *result = CreateDateDurationRecord(years, months, 0, 0);
-      } else {
-        *result = CreateDateDurationRecord(0, months + years * 12, 0, 0);
+        return CreateDateDurationRecord(years, months, 0, 0);
       }
-      return true;
+
+      // Step 3.m.ii.
+      return CreateDateDurationRecord(0, months + years * 12, 0, 0);
     }
 
-    // Step 1.n.
+    // Step 3.n.
     if (midSign != sign) {
-      // Step 1.n.i.
+      // Step 3.n.i.
       months -= sign;
 
-      // Step 1.n.ii.
-      if (months == -sign) {
-        years -= sign;
-        months = 11 * sign;
-      }
-
-      // Step 1.n.iii.
-      if (!AddISODate(cx, start, {double(years), double(months), 0},
-                      TemporalOverflow::Constrain, &mid)) {
-        return false;
-      }
+      // Step 3.n.ii.
+      mid = ::AddISODate(start, {years, months});
     }
 
-    // Steps 1.o-q.
+    // Steps 3.o-q.
     int32_t days;
     if (mid.month == end.month) {
       MOZ_ASSERT(mid.year == end.year);
@@ -1076,48 +1116,46 @@ bool js::temporal::DifferenceISODate(JSContext* cx, const PlainDate& start,
       days = end.day + (ISODaysInMonth(mid.year, mid.month) - mid.day);
     }
 
-    // Step 1.r.
+    // Step 3.r.
     if (largestUnit == TemporalUnit::Month) {
-      // Step 1.r.i.
+      // Step 3.r.i.
       months += years * 12;
 
-      // Step 1.r.ii.
+      // Step 3.r.ii.
       years = 0;
     }
 
-    // Step 1.s.
-    *result = CreateDateDurationRecord(years, months, 0, days);
-    return true;
+    // Step 3.s.
+    return CreateDateDurationRecord(years, months, 0, days);
   }
 
-  // Step 2.
+  // Step 4.a.
   MOZ_ASSERT(largestUnit == TemporalUnit::Week ||
              largestUnit == TemporalUnit::Day);
 
-  // Steps 2.a-b.
+  // Step 4.b.
   int32_t epochDaysStart = MakeDay(start);
 
-  // Steps 2.c-d.
+  // Step 4.c.
   int32_t epochDaysEnd = MakeDay(end);
 
-  // Step 2.e.
+  // Step 4.d.
   int32_t days = epochDaysEnd - epochDaysStart;
 
-  // Step 2.f.
+  // Step 4.e.
   int32_t weeks = 0;
 
-  // Step 2.g.
+  // Step 4.f.
   if (largestUnit == TemporalUnit::Week) {
-    // Step 2.g.i
+    // Step 4.f.i
     weeks = days / 7;
 
-    // Step 2.g.ii.
+    // Step 4.f.ii.
     days = days % 7;
   }
 
-  // Step 2.h.
-  *result = CreateDateDurationRecord(0, 0, weeks, days);
-  return true;
+  // Step 4.g.
+  return CreateDateDurationRecord(0, 0, weeks, days);
 }
 
 /**
