@@ -1058,39 +1058,22 @@ static TimeDuration CreateTimeDurationRecord(int64_t days, int64_t hours,
  * CreateTimeDurationRecord ( days, hours, minutes, seconds, milliseconds,
  * microseconds, nanoseconds )
  */
-static bool CreateTimeDurationRecordPossiblyInfinite(
-    JSContext* cx, double days, double hours, double minutes, double seconds,
-    double milliseconds, double microseconds, double nanoseconds,
-    TimeDuration* result) {
-  MOZ_ASSERT(!std::isnan(days) && !std::isnan(hours) && !std::isnan(minutes) &&
-             !std::isnan(seconds) && !std::isnan(milliseconds) &&
-             !std::isnan(microseconds) && !std::isnan(nanoseconds));
-
-  for (double v : {days, hours, minutes, seconds, milliseconds, microseconds,
-                   nanoseconds}) {
-    if (std::isinf(v)) {
-      *result = {
-          days,         hours,        minutes,     seconds,
-          milliseconds, microseconds, nanoseconds,
-      };
-      return true;
-    }
-  }
-
+static TimeDuration CreateTimeDurationRecord(double days, double hours,
+                                             double minutes, double seconds,
+                                             double milliseconds,
+                                             double microseconds,
+                                             double nanoseconds) {
   // Step 1.
-  if (!ThrowIfInvalidDuration(cx, {0, 0, 0, days, hours, minutes, seconds,
-                                   milliseconds, microseconds, nanoseconds})) {
-    return false;
-  }
+  MOZ_ASSERT(IsValidDuration({0, 0, 0, days, hours, minutes, seconds,
+                              milliseconds, microseconds, nanoseconds}));
 
   // Step 2.
   // NB: Adds +0.0 to correctly handle negative zero.
-  *result = {
+  return {
       days + (+0.0),        hours + (+0.0),        minutes + (+0.0),
       seconds + (+0.0),     milliseconds + (+0.0), microseconds + (+0.0),
       nanoseconds + (+0.0),
   };
-  return true;
 }
 
 /**
@@ -1503,12 +1486,32 @@ static bool BalancePossiblyInfiniteTimeDurationSlow(JSContext* cx,
       MOZ_CRASH("Unexpected temporal unit");
   }
 
-  // Steps 12-13.
-  return CreateTimeDurationRecordPossiblyInfinite(
-      cx, BigInt::numberValue(days), BigInt::numberValue(hours),
-      BigInt::numberValue(minutes), BigInt::numberValue(seconds),
-      BigInt::numberValue(milliseconds), BigInt::numberValue(microseconds),
-      BigInt::numberValue(nanoseconds), result);
+  double daysNumber = BigInt::numberValue(days);
+  double hoursNumber = BigInt::numberValue(hours);
+  double minutesNumber = BigInt::numberValue(minutes);
+  double secondsNumber = BigInt::numberValue(seconds);
+  double millisecondsNumber = BigInt::numberValue(milliseconds);
+  double microsecondsNumber = BigInt::numberValue(microseconds);
+  double nanosecondsNumber = BigInt::numberValue(nanoseconds);
+
+  // Step 12.
+  for (double v : {daysNumber, hoursNumber, minutesNumber, secondsNumber,
+                   millisecondsNumber, microsecondsNumber, nanosecondsNumber}) {
+    if (std::isinf(v)) {
+      *result = {
+          daysNumber,        hoursNumber,        minutesNumber,
+          secondsNumber,     millisecondsNumber, microsecondsNumber,
+          nanosecondsNumber,
+      };
+      return true;
+    }
+  }
+
+  // Step 13.
+  *result = CreateTimeDurationRecord(daysNumber, hoursNumber, minutesNumber,
+                                     secondsNumber, millisecondsNumber,
+                                     microsecondsNumber, nanosecondsNumber);
+  return true;
 }
 
 /**
@@ -1751,13 +1754,15 @@ static bool BalancePossiblyInfiniteTimeDurationRelative(
     largestUnit = TemporalUnit::Hour;
   }
 
-  // Steps 5-6.
+  // Step 5. (Not applicable in our implementation.)
+
+  // Steps 6-7.
   TimeDuration balanceResult;
   if (auto nanos = nanoseconds.toNanoseconds(); nanos.isValid()) {
-    // Step 5.
+    // Step 6.
     balanceResult = ::BalanceTimeDuration(nanos.value(), largestUnit);
 
-    // Step 6.
+    // Step 7.
     MOZ_ASSERT(IsValidDuration(balanceResult.toDuration()));
   } else {
     Rooted<BigInt*> ns(cx, ToEpochNanoseconds(cx, nanoseconds));
@@ -1771,14 +1776,14 @@ static bool BalancePossiblyInfiniteTimeDurationRelative(
       return false;
     }
 
-    // Step 6.
+    // Step 7.
     if (!IsValidDuration(balanceResult.toDuration())) {
       *result = balanceResult;
       return true;
     }
   }
 
-  // Step 7.
+  // Step 8.
   *result = {
       days,
       balanceResult.hours,
