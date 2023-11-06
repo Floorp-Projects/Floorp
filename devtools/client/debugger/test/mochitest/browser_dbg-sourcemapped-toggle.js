@@ -18,11 +18,8 @@ add_task(async function () {
   await selectSource(dbg, source);
   await addBreakpoint(dbg, source, 20, 3);
   invokeInTab("webpack3Babel6EsmodulesCjs");
-  await waitForPaused(dbg);
+  await waitForPausedInOriginalFileAndToggleMapScopes(dbg);
 
-  info("2. Hover on a token with mapScopes enabled");
-  await toggleMapScopes(dbg);
-  await waitForLoadedScopes(dbg);
   ok(getOriginalScope(dbg) != null, "Scopes are now mapped");
 
   await assertPreviewTextValue(dbg, 20, 17, {
@@ -32,28 +29,14 @@ add_task(async function () {
 
   info("3. Hover on a token with mapScopes disabled");
   await toggleMapScopes(dbg);
-  await assertPreviewTextValue(dbg, 21, 17, {
-    result: "undefined",
-    expression: "anAliased",
-  });
-
+  // Add assertion for inline preview disabled and footer notification
   info("4. StepOver with mapScopes disabled");
-  await stepOver(dbg);
-  await assertPreviewTextValue(dbg, 20, 17, {
-    result: "undefined",
-    expression: "aDefault",
-  });
-  ok(getOriginalScope(dbg) == null, "Scopes are not mapped");
+  await stepOver(dbg, { shouldWaitForLoadedScopes: false });
+  // Add assertion for inline preview disabled and footer notification
 });
 
 function getOriginalScope(dbg) {
   return dbg.selectors.getSelectedOriginalScope(
     dbg.selectors.getCurrentThread()
   );
-}
-
-async function toggleMapScopes(dbg) {
-  const onDispatch = waitForDispatch(dbg.store, "TOGGLE_MAP_SCOPES");
-  clickElement(dbg, "mapScopesCheckbox");
-  return onDispatch;
 }

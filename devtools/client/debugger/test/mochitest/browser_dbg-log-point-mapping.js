@@ -10,9 +10,9 @@
 
 add_task(async function () {
   Services.prefs.setBoolPref("devtools.toolbox.splitconsoleEnabled", true);
+  await pushPref("devtools.debugger.map-scopes-enabled", true);
 
   const dbg = await initDebugger("doc-sourcemaps3.html", "test.js");
-  dbg.actions.toggleMapScopes();
 
   const source = findSource(dbg, "test.js");
   await selectSource(dbg, "test.js");
