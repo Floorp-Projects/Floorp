@@ -2502,7 +2502,8 @@ uint64_t Http3Session::MaxDatagramSize(uint64_t aSessionId) {
   return size;
 }
 
-void Http3Session::SetSendOrder(Http3StreamBase* aStream, int64_t aSendOrder) {
+void Http3Session::SetSendOrder(Http3StreamBase* aStream,
+                                Maybe<int64_t> aSendOrder) {
   if (!IsClosing()) {
     nsresult rv = mHttp3Connection->WebTransportSetSendOrder(
         aStream->StreamId(), aSendOrder);

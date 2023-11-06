@@ -27,13 +27,18 @@ class WebTransportSendStream final : public WritableStream {
 
   static already_AddRefed<WebTransportSendStream> Create(
       WebTransport* aWebTransport, nsIGlobalObject* aGlobal, uint64_t aStreamId,
-      mozilla::ipc::DataPipeSender* sender, ErrorResult& aRv);
+      mozilla::ipc::DataPipeSender* aSender, Maybe<int64_t> aSendOrder,
+      ErrorResult& aRv);
 
   // WebIDL Boilerplate
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
 
   // WebIDL Interface
+  Nullable<int64_t> GetSendOrder() { return mSendOrder; }
+
+  void SetSendOrder(Nullable<int64_t> aSendOrder);
+
   already_AddRefed<Promise> GetStats();
 
  private:
@@ -44,6 +49,8 @@ class WebTransportSendStream final : public WritableStream {
   // CC runs.   WebTransport::CleanUp() will destroy all the send and receive
   // streams, breaking the cycle.
   RefPtr<WebTransport> mTransport;
+  uint64_t mStreamId;
+  Nullable<int64_t> mSendOrder;
 };
 }  // namespace mozilla::dom
 

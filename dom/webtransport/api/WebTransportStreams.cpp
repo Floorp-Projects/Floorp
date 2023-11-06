@@ -140,7 +140,7 @@ void WebTransportIncomingStreamsAlgorithms::BuildStream(JSContext* aCx,
     RefPtr<WebTransportBidirectionalStream> stream =
         WebTransportBidirectionalStream::Create(mTransport, mTransport->mGlobal,
                                                 std::get<0>(tuple), input,
-                                                output, aRv);
+                                                output, Nothing(), aRv);
 
     // Step 7.2 Enqueue stream to transport.[[IncomingBidirectionalStreams]].
     JS::Rooted<JS::Value> jsStream(aCx);
