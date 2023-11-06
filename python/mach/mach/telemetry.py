@@ -12,12 +12,12 @@ from textwrap import dedent
 import requests
 import six.moves.urllib.parse as urllib_parse
 from mozbuild.base import BuildEnvironmentNotFoundException, MozbuildObject
+from mozbuild.settings import TelemetrySettings
 from mozbuild.telemetry import filter_args
 from mozversioncontrol import InvalidRepoPath, get_repository_object
 from six.moves import configparser, input
 
 from mach.config import ConfigSettings
-from mach.settings import MachSettings
 from mach.site import MozSiteMetadata
 from mach.telemetry_interface import GleanTelemetry, NoopTelemetry
 from mach.util import get_state_dir
@@ -213,7 +213,7 @@ def record_telemetry_settings(
     # settings, update it, then write to it.
     settings_path = state_dir / "machrc"
     file_settings = ConfigSettings()
-    file_settings.register_provider(MachSettings)
+    file_settings.register_provider(TelemetrySettings)
     try:
         file_settings.load_file(settings_path)
     except configparser.Error as error:
