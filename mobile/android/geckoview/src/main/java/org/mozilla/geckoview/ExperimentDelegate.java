@@ -123,7 +123,7 @@ public interface ExperimentDelegate {
    * An exception to be used when there is an issue retrieving or sending information to the
    * experiment framework.
    */
-  public class ExperimentException extends Exception {
+  class ExperimentException extends Exception {
 
     /**
      * Construct an [ExperimentException]

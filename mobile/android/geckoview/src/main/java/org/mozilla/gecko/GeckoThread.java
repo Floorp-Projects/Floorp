@@ -85,7 +85,7 @@ public class GeckoThread extends Thread {
      */
     private final int mRank;
 
-    private State(final int rank) {
+    State(final int rank) {
       mRank = rank;
     }
 

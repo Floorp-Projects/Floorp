@@ -15,7 +15,7 @@ import java.nio.ByteBuffer;
 // A wrapper interface that mimics the new {@link android.media.MediaCodec}
 // asynchronous mode API in Lollipop.
 public interface AsyncCodec {
-  public interface Callbacks {
+  interface Callbacks {
     void onInputBufferAvailable(AsyncCodec codec, int index);
 
     void onOutputBufferAvailable(AsyncCodec codec, int index, BufferInfo info);
@@ -25,39 +25,37 @@ public interface AsyncCodec {
     void onOutputFormatChanged(AsyncCodec codec, MediaFormat format);
   }
 
-  public abstract void setCallbacks(Callbacks callbacks, Handler handler);
+  void setCallbacks(Callbacks callbacks, Handler handler);
 
-  public abstract void configure(
-      MediaFormat format, Surface surface, MediaCrypto crypto, int flags);
+  void configure(MediaFormat format, Surface surface, MediaCrypto crypto, int flags);
 
-  public abstract boolean isAdaptivePlaybackSupported(String mimeType);
+  boolean isAdaptivePlaybackSupported(String mimeType);
 
-  public abstract boolean isTunneledPlaybackSupported(final String mimeType);
+  boolean isTunneledPlaybackSupported(final String mimeType);
 
-  public abstract void start();
+  void start();
 
-  public abstract void stop();
+  void stop();
 
-  public abstract void flush();
+  void flush();
 
   // Must be called after flush().
-  public abstract void resumeReceivingInputs();
+  void resumeReceivingInputs();
 
-  public abstract void release();
+  void release();
 
-  public abstract ByteBuffer getInputBuffer(int index);
+  ByteBuffer getInputBuffer(int index);
 
-  public abstract MediaFormat getInputFormat();
+  MediaFormat getInputFormat();
 
-  public abstract ByteBuffer getOutputBuffer(int index);
+  ByteBuffer getOutputBuffer(int index);
 
-  public abstract void queueInputBuffer(
-      int index, int offset, int size, long presentationTimeUs, int flags);
+  void queueInputBuffer(int index, int offset, int size, long presentationTimeUs, int flags);
 
-  public abstract void setBitrate(int bps);
+  void setBitrate(int bps);
 
-  public abstract void queueSecureInputBuffer(
+  void queueSecureInputBuffer(
       int index, int offset, CryptoInfo info, long presentationTimeUs, int flags);
 
-  public abstract void releaseOutputBuffer(int index, boolean render);
+  void releaseOutputBuffer(int index, boolean render);
 }

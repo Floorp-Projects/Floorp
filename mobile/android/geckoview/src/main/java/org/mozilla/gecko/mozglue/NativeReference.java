@@ -6,7 +6,7 @@
 package org.mozilla.gecko.mozglue;
 
 public interface NativeReference {
-  public void release();
+  void release();
 
-  public boolean isReleased();
+  boolean isReleased();
 }
