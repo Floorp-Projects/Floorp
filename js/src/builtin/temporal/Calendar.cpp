@@ -115,9 +115,8 @@ bool js::temporal::WrapCalendarValue(JSContext* cx,
  *
  * This implementation accepts an iterable instead of an iterator record.
  */
-static bool IterableToListOfStrings(
-    JSContext* cx, Handle<Value> items,
-    MutableHandle<JS::StackGCVector<PropertyKey>> list) {
+static bool IterableToListOfStrings(JSContext* cx, Handle<Value> items,
+                                    MutableHandle<CalendarFieldNames> list) {
   JS::ForOfIterator iterator(cx);
   if (!iterator.init(items)) {
     return false;
@@ -904,7 +903,7 @@ static const char* ToCString(CalendarField field) {
  */
 static bool BuiltinCalendarFields(
     JSContext* cx, std::initializer_list<CalendarField> fieldNames,
-    JS::StackGCVector<PropertyKey>& result) {
+    CalendarFieldNames& result) {
   MOZ_ASSERT(result.empty());
 
   // Steps 1-5. (Not applicable.)
@@ -947,7 +946,7 @@ static bool IsSorted(std::initializer_list<CalendarField> fieldNames) {
 bool js::temporal::CalendarFields(
     JSContext* cx, Handle<CalendarValue> calendar,
     std::initializer_list<CalendarField> fieldNames,
-    MutableHandle<JS::StackGCVector<PropertyKey>> result) {
+    MutableHandle<CalendarFieldNames> result) {
   // FIXME: spec issue - the input is already sorted, let's assert this, too.
   MOZ_ASSERT(IsSorted(fieldNames));
 
