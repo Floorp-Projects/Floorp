@@ -884,6 +884,8 @@ class TemporalParser final {
 
   mozilla::Result<TimeZoneUTCOffset, ParserError> timeZoneUTCOffsetName();
 
+  mozilla::Result<TimeZoneAnnotation, ParserError> timeZoneIdentifier();
+
   mozilla::Result<TimeZoneAnnotation, ParserError> timeZoneAnnotation();
 
   bool timeZoneIANANameComponent();
@@ -913,6 +915,8 @@ class TemporalParser final {
 
   mozilla::Result<ZonedDateTimeString, ParserError>
   parseTemporalTimeZoneString();
+
+  mozilla::Result<TimeZoneAnnotation, ParserError> parseTimeZoneIdentifier();
 
   mozilla::Result<TimeZoneUTCOffset, ParserError> parseTimeZoneOffsetString();
 
@@ -1297,20 +1301,10 @@ TemporalParser<CharT>::utcOffsetSubMinutePrecision() {
 
 template <typename CharT>
 mozilla::Result<TimeZoneAnnotation, ParserError>
-TemporalParser<CharT>::timeZoneAnnotation() {
-  // TimeZoneAnnotation :
-  //   [ AnnotationCriticalFlag? TimeZoneIdentifier ]
-  //
+TemporalParser<CharT>::timeZoneIdentifier() {
   // TimeZoneIdentifier :
   //   TimeZoneIANAName
   //   TimeZoneUTCOffsetName
-
-  if (!character('[')) {
-    return mozilla::Err(JSMSG_TEMPORAL_PARSER_BRACKET_BEFORE_TIMEZONE);
-  }
-
-  // Skip over the optional critical flag.
-  annotationCriticalFlag();
 
   TimeZoneAnnotation result = {};
   if (hasSign()) {
@@ -1325,6 +1319,27 @@ TemporalParser<CharT>::timeZoneAnnotation() {
       return name.propagateErr();
     }
     result.name = name.unwrap();
+  }
+
+  return result;
+}
+
+template <typename CharT>
+mozilla::Result<TimeZoneAnnotation, ParserError>
+TemporalParser<CharT>::timeZoneAnnotation() {
+  // TimeZoneAnnotation :
+  //   [ AnnotationCriticalFlag? TimeZoneIdentifier ]
+
+  if (!character('[')) {
+    return mozilla::Err(JSMSG_TEMPORAL_PARSER_BRACKET_BEFORE_TIMEZONE);
+  }
+
+  // Skip over the optional critical flag.
+  annotationCriticalFlag();
+
+  auto result = timeZoneIdentifier();
+  if (result.isErr()) {
+    return result.propagateErr();
   }
 
   if (!character(']')) {
@@ -1679,6 +1694,63 @@ bool js::temporal::ParseTemporalTimeZoneString(
 
   // Step 6.
   return true;
+}
+
+template <typename CharT>
+mozilla::Result<TimeZoneAnnotation, ParserError>
+TemporalParser<CharT>::parseTimeZoneIdentifier() {
+  auto result = timeZoneIdentifier();
+  if (result.isErr()) {
+    return result.propagateErr();
+  }
+  if (!reader_.atEnd()) {
+    return mozilla::Err(JSMSG_TEMPORAL_PARSER_GARBAGE_AFTER_INPUT);
+  }
+  return result;
+}
+
+/**
+ * ParseTimeZoneIdentifier ( identifier )
+ */
+template <typename CharT>
+static auto ParseTimeZoneIdentifier(mozilla::Span<const CharT> str) {
+  TemporalParser<CharT> parser(str);
+  return parser.parseTimeZoneIdentifier();
+}
+
+/**
+ * ParseTimeZoneIdentifier ( identifier )
+ */
+static auto ParseTimeZoneIdentifier(Handle<JSLinearString*> str) {
+  JS::AutoCheckCannotGC nogc;
+  if (str->hasLatin1Chars()) {
+    return ParseTimeZoneIdentifier<Latin1Char>(str->latin1Range(nogc));
+  }
+  return ParseTimeZoneIdentifier<char16_t>(str->twoByteRange(nogc));
+}
+
+/**
+ * ParseTimeZoneIdentifier ( identifier )
+ */
+bool js::temporal::ParseTimeZoneIdentifier(
+    JSContext* cx, Handle<JSString*> str,
+    MutableHandle<ParsedTimeZone> result) {
+  Rooted<JSLinearString*> linear(cx, str->ensureLinear(cx));
+  if (!linear) {
+    return false;
+  }
+
+  // Steps 1-2.
+  auto parseResult = ::ParseTimeZoneIdentifier(linear);
+  if (parseResult.isErr()) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              parseResult.unwrapErr());
+    return false;
+  }
+  auto timeZone = parseResult.unwrap();
+
+  // Steps 3-4.
+  return ParseTimeZoneAnnotation(cx, timeZone, linear, result);
 }
 
 template <typename CharT>

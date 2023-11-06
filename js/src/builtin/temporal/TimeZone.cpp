@@ -1079,6 +1079,108 @@ JSString* js::temporal::GetOffsetStringFor(
   return NewStringCopyN<CanGC>(cx, result, n);
 }
 
+/**
+ * TimeZoneEquals ( one, two )
+ */
+bool js::temporal::TimeZoneEquals(JSContext* cx, Handle<JSString*> one,
+                                  Handle<JSString*> two, bool* equals) {
+  // Steps 1-3. (Not applicable)
+
+  // Step 4.
+  if (!EqualStrings(cx, one, two, equals)) {
+    return false;
+  }
+  if (*equals) {
+    return true;
+  }
+
+  // Step 5.
+  Rooted<ParsedTimeZone> timeZoneOne(cx);
+  if (!ParseTimeZoneIdentifier(cx, one, &timeZoneOne)) {
+    return false;
+  }
+
+  // Step 6.
+  Rooted<ParsedTimeZone> timeZoneTwo(cx);
+  if (!ParseTimeZoneIdentifier(cx, two, &timeZoneTwo)) {
+    return false;
+  }
+
+  // Step 7.
+  if (timeZoneOne.name() && timeZoneTwo.name()) {
+    // Step 7.a.
+    Rooted<JSAtom*> validTimeZoneOne(cx);
+    if (!IsValidTimeZoneName(cx, timeZoneOne.name(), &validTimeZoneOne)) {
+      return false;
+    }
+    if (!validTimeZoneOne) {
+      *equals = false;
+      return true;
+    }
+
+    // Step 7.b.
+    Rooted<JSAtom*> validTimeZoneTwo(cx);
+    if (!IsValidTimeZoneName(cx, timeZoneTwo.name(), &validTimeZoneTwo)) {
+      return false;
+    }
+    if (!validTimeZoneTwo) {
+      *equals = false;
+      return true;
+    }
+
+    // Step 7.c and 9.
+    Rooted<JSString*> canonicalOne(
+        cx, CanonicalizeTimeZoneName(cx, validTimeZoneOne));
+    if (!canonicalOne) {
+      return false;
+    }
+
+    JSString* canonicalTwo = CanonicalizeTimeZoneName(cx, validTimeZoneTwo);
+    if (!canonicalTwo) {
+      return false;
+    }
+
+    return EqualStrings(cx, canonicalOne, canonicalTwo, equals);
+  }
+
+  // Step 8.a.
+  if (!timeZoneOne.name() && !timeZoneTwo.name()) {
+    *equals = (timeZoneOne.offset() == timeZoneTwo.offset());
+    return true;
+  }
+
+  // Step 9.
+  *equals = false;
+  return true;
+}
+
+/**
+ * TimeZoneEquals ( one, two )
+ */
+bool js::temporal::TimeZoneEquals(JSContext* cx, Handle<TimeZoneValue> one,
+                                  Handle<TimeZoneValue> two, bool* equals) {
+  // Step 1.
+  if (one.isObject() && two.isObject() && one.toObject() == two.toObject()) {
+    *equals = true;
+    return true;
+  }
+
+  // Step 2.
+  Rooted<JSString*> timeZoneOne(cx, ToTemporalTimeZoneIdentifier(cx, one));
+  if (!timeZoneOne) {
+    return false;
+  }
+
+  // Step 3.
+  Rooted<JSString*> timeZoneTwo(cx, ToTemporalTimeZoneIdentifier(cx, two));
+  if (!timeZoneTwo) {
+    return false;
+  }
+
+  // Steps 4-9.
+  return TimeZoneEquals(cx, timeZoneOne, timeZoneTwo, equals);
+}
+
 // ES2019 draft rev 0ceb728a1adbffe42b26972a6541fd7f398b1557
 // 5.2.5 Mathematical Operations
 static inline double PositiveModulo(double dividend, double divisor) {
@@ -1804,6 +1906,37 @@ static bool TimeZone_from(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 /**
+ * Temporal.TimeZone.prototype.equals ( other )
+ */
+static bool TimeZone_equals(JSContext* cx, const CallArgs& args) {
+  Rooted<TimeZoneValue> timeZone(cx, &args.thisv().toObject());
+
+  // FIXME: spec bug - argument needs to be converted to time zone.
+  Rooted<TimeZoneValue> other(cx);
+  if (!ToTemporalTimeZone(cx, args.get(0), &other)) {
+    return false;
+  }
+
+  // Step 3.
+  bool equals;
+  if (!TimeZoneEquals(cx, timeZone, other, &equals)) {
+    return false;
+  }
+
+  args.rval().setBoolean(equals);
+  return true;
+}
+
+/**
+ * Temporal.TimeZone.prototype.equals ( other )
+ */
+static bool TimeZone_equals(JSContext* cx, unsigned argc, Value* vp) {
+  // Steps 1-2.
+  CallArgs args = CallArgsFromVp(argc, vp);
+  return CallNonGenericMethod<IsTimeZone, TimeZone_equals>(cx, args);
+}
+
+/**
  * Temporal.TimeZone.prototype.getOffsetNanosecondsFor ( instant )
  */
 static bool TimeZone_getOffsetNanosecondsFor(JSContext* cx,
@@ -2224,6 +2357,7 @@ static const JSFunctionSpec TimeZone_methods[] = {
 };
 
 static const JSFunctionSpec TimeZone_prototype_methods[] = {
+    JS_FN("equals", TimeZone_equals, 1, 0),
     JS_FN("getOffsetNanosecondsFor", TimeZone_getOffsetNanosecondsFor, 1, 0),
     JS_FN("getOffsetStringFor", TimeZone_getOffsetStringFor, 1, 0),
     JS_FN("getPlainDateTimeFor", TimeZone_getPlainDateTimeFor, 1, 0),
