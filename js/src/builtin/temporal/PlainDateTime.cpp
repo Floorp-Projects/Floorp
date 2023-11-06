@@ -476,11 +476,9 @@ bool js::temporal::InterpretTemporalDateTimeFields(
  */
 static Wrapped<PlainDateTimeObject*> ToTemporalDateTime(
     JSContext* cx, Handle<Value> item, Handle<JSObject*> maybeOptions) {
-  // Steps 1-2. (Not applicable)
+  // Step 1. (Not applicable)
 
-  // FIXME: spec issue - GetOptionsObject is infallible.
-
-  // Step 3.
+  // Step 2.
   Rooted<PlainObject*> maybeResolvedOptions(cx);
   if (maybeOptions) {
     maybeResolvedOptions = SnapshotOwnProperties(cx, maybeOptions);
@@ -489,18 +487,18 @@ static Wrapped<PlainDateTimeObject*> ToTemporalDateTime(
     }
   }
 
-  // Steps 4-5.
+  // Steps 3-4.
   Rooted<CalendarValue> calendar(cx);
   PlainDateTime result;
   if (item.isObject()) {
     Rooted<JSObject*> itemObj(cx, &item.toObject());
 
-    // Step 4.a.
+    // Step 3.a.
     if (itemObj->canUnwrapAs<PlainDateTimeObject>()) {
       return itemObj;
     }
 
-    // Step 4.b.
+    // Step 3.b.
     if (auto* zonedDateTime = itemObj->maybeUnwrapIf<ZonedDateTimeObject>()) {
       auto epochInstant = ToInstant(zonedDateTime);
       Rooted<TimeZoneValue> timeZone(cx, zonedDateTime->timeZone());
@@ -513,7 +511,7 @@ static Wrapped<PlainDateTimeObject*> ToTemporalDateTime(
         return nullptr;
       }
 
-      // Step 4.b.i.
+      // Step 3.b.i.
       if (maybeResolvedOptions) {
         TemporalOverflow ignored;
         if (!ToTemporalOverflow(cx, maybeResolvedOptions, &ignored)) {
@@ -521,11 +519,11 @@ static Wrapped<PlainDateTimeObject*> ToTemporalDateTime(
         }
       }
 
-      // Steps 4.b.ii-iii.
+      // Steps 3.b.ii-iii.
       return GetPlainDateTimeFor(cx, timeZone, epochInstant, calendar);
     }
 
-    // Step 4.c.
+    // Step 3.c.
     if (auto* date = itemObj->maybeUnwrapIf<PlainDateObject>()) {
       PlainDateTime dateTime = {ToPlainDate(date), {}};
       Rooted<CalendarValue> calendar(cx, date->calendar());
@@ -533,7 +531,7 @@ static Wrapped<PlainDateTimeObject*> ToTemporalDateTime(
         return nullptr;
       }
 
-      // Step 4.c.i.
+      // Step 3.c.i.
       if (maybeResolvedOptions) {
         TemporalOverflow ignored;
         if (!ToTemporalOverflow(cx, maybeResolvedOptions, &ignored)) {
@@ -541,16 +539,16 @@ static Wrapped<PlainDateTimeObject*> ToTemporalDateTime(
         }
       }
 
-      // Step 4.c.ii.
+      // Step 3.c.ii.
       return CreateTemporalDateTime(cx, dateTime, calendar);
     }
 
-    // Step 4.d.
+    // Step 3.d.
     if (!GetTemporalCalendarWithISODefault(cx, itemObj, &calendar)) {
       return nullptr;
     }
 
-    // Step 4.e.
+    // Step 3.e.
     JS::RootedVector<PropertyKey> fieldNames(cx);
     if (!CalendarFields(cx, calendar,
                         {CalendarField::Day, CalendarField::Month,
@@ -559,7 +557,7 @@ static Wrapped<PlainDateTimeObject*> ToTemporalDateTime(
       return nullptr;
     }
 
-    // Step 4.f.
+    // Step 3.f.
     if (!AppendSorted(cx, fieldNames.get(),
                       {
                           TemporalField::Hour,
@@ -572,14 +570,14 @@ static Wrapped<PlainDateTimeObject*> ToTemporalDateTime(
       return nullptr;
     }
 
-    // Step 4.g.
+    // Step 3.g.
     Rooted<PlainObject*> fields(cx,
                                 PrepareTemporalFields(cx, itemObj, fieldNames));
     if (!fields) {
       return nullptr;
     }
 
-    // Step 4.h.
+    // Step 3.h.
     if (maybeResolvedOptions) {
       if (!InterpretTemporalDateTimeFields(cx, calendar, fields,
                                            maybeResolvedOptions, &result)) {
@@ -591,7 +589,7 @@ static Wrapped<PlainDateTimeObject*> ToTemporalDateTime(
       }
     }
   } else {
-    // Step 5.a.
+    // Step 4.a.
     if (!item.isString()) {
       ReportValueError(cx, JSMSG_UNEXPECTED_TYPE, JSDVG_IGNORE_STACK, item,
                        nullptr, "not a string");
@@ -599,19 +597,19 @@ static Wrapped<PlainDateTimeObject*> ToTemporalDateTime(
     }
     Rooted<JSString*> string(cx, item.toString());
 
-    // Step 5.b.
+    // Step 4.b.
     Rooted<JSString*> calendarString(cx);
     if (!ParseTemporalDateTimeString(cx, string, &result, &calendarString)) {
       return nullptr;
     }
 
-    // Step 5.c.
+    // Step 4.c.
     MOZ_ASSERT(IsValidISODate(result.date));
 
-    // Step 5.d.
+    // Step 4.d.
     MOZ_ASSERT(IsValidTime(result.time));
 
-    // Steps 5.e-h.
+    // Steps 4.e-h.
     if (calendarString) {
       if (!ToBuiltinCalendar(cx, calendarString, &calendar)) {
         return nullptr;
@@ -620,7 +618,7 @@ static Wrapped<PlainDateTimeObject*> ToTemporalDateTime(
       calendar.set(CalendarValue(cx->names().iso8601));
     }
 
-    // Step 5.i.
+    // Step 4.i.
     if (maybeResolvedOptions) {
       TemporalOverflow ignored;
       if (!ToTemporalOverflow(cx, maybeResolvedOptions, &ignored)) {
@@ -629,7 +627,7 @@ static Wrapped<PlainDateTimeObject*> ToTemporalDateTime(
     }
   }
 
-  // Step 6.
+  // Step 5.
   return CreateTemporalDateTime(cx, result, calendar);
 }
 

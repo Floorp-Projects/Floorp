@@ -1908,16 +1908,14 @@ static bool UnbalanceDateDurationRelativeMonthSlow(
       return false;
     }
 
-    // Step 11.d.viii.
+    // Step 11.e.viii.
     months = BigInt::add(cx, months, oneYearMonths);
     if (!months) {
       return false;
     }
   }
 
-  // Steps 12-13. (Not applicable)
-
-  // Step 14.
+  // Step 11.f.
   return CreateDateDurationRecord(cx, 0, BigInt::numberValue(months),
                                   duration.weeks, duration.days, result);
 }
@@ -1926,7 +1924,7 @@ static bool UnbalanceDateDurationRelativeHasEffect(const Duration& duration,
                                                    TemporalUnit largestUnit) {
   MOZ_ASSERT(largestUnit != TemporalUnit::Auto);
 
-  // Steps 1-3, 11.b, 12.b, and 13.a.i.
+  // Steps 1-3, 11.a, 12.a, and 14.
   return (largestUnit > TemporalUnit::Year && duration.years != 0) ||
          (largestUnit > TemporalUnit::Month && duration.months != 0) ||
          (largestUnit > TemporalUnit::Week && duration.weeks != 0);
@@ -1949,10 +1947,8 @@ static bool UnbalanceDateDurationRelative(
   // FIXME: spec issue - any |days| value is actually okay and doesn't require
   // a calendar to be present.
 
-  // Steps 1-3, 11.b, 12.b, and 13.a.i.
+  // Steps 1-3, 11.a, 12.a, and 14.
   if (!UnbalanceDateDurationRelativeHasEffect(duration, largestUnit)) {
-    // FIXME: spec issue - CreateDateDurationRecord is infallible in 11 and 12
-
     // Steps 3.a, 11.a, 12.a, and 14.
     *result = CreateDateDurationRecord(years, months, weeks, days);
     return true;
@@ -1999,7 +1995,7 @@ static bool UnbalanceDateDurationRelative(
 
   // Step 10. (Not applicable)
 
-  // Steps 11-13.
+  // Step 11.
   if (largestUnit == TemporalUnit::Month) {
     // Step 11.a. (Handled above)
     MOZ_ASSERT(years != 0);
@@ -2070,9 +2066,12 @@ static bool UnbalanceDateDurationRelative(
       months += oneYearMonths;
     }
 
-    // Convert values back to double.
-    years = 0;
-  } else if (largestUnit == TemporalUnit::Week) {
+    // Step 11.f.
+    return CreateDateDurationRecord(cx, 0, months, weeks, days, result);
+  }
+
+  // Step 12.
+  if (largestUnit == TemporalUnit::Week) {
     // Step 12.a. (Handled above)
     MOZ_ASSERT(years != 0 || months != 0);
 
@@ -2130,107 +2129,107 @@ static bool UnbalanceDateDurationRelative(
       intMonths -= sign;
     }
 
-    // Convert values back to double. The addition |days + daysToAdd| can be
-    // imprecise, but this is safe to ignore, because all values are passed to
-    // CreateDateDurationRecord, which converts the values to Numbers.
-    years = 0;
-    months = 0;
-    days += double(daysToAdd);
-  } else {
-    // FIXME: spec issue - use this step for consistency.
-    // `If years = 0 and months = 0 and weeks = 0, return !
-    // CreateDateDurationRecord(0, 0, 0, days).`
-
-    // Step 13.a.
-    MOZ_ASSERT(years != 0 || months != 0 || weeks != 0);
-
-    // FIXME: why don't we unconditionally throw an error for missing calendars?
-
-    // Step 13.a.i. (Not applicable in our implementation.)
-
-    // Steps 13.a.ii-iii.
-    Rooted<Value> dateAdd(cx);
-    if (calendar.isObject()) {
-      Rooted<JSObject*> calendarObj(cx, calendar.toObject());
-      if (!GetMethod(cx, calendarObj, cx->names().dateAdd, &dateAdd)) {
-        return false;
-      }
-    }
-
-    // Sum up all days to add to avoid imprecise floating-point arithmetic.
-    int32_t daysToAdd = 0;
-
-    // Step 13.a.iv.
+    // Step 12.g.
     //
-    // Clamp to int64 because too large values will trigger timeouts anyway.
-    int64_t intYears = ClampToInt64(years);
-    while (intYears != 0) {
-      // Steps 13.a.iv.1-2.
-      int32_t oneYearDays;
-      if (!MoveRelativeDate(cx, calendar, dateRelativeTo, oneYear, dateAdd,
-                            &dateRelativeTo, &oneYearDays)) {
-        return false;
-      }
-
-      // Step 13.a.iv.3.
-      daysToAdd += oneYearDays;
-      MOZ_ASSERT(std::abs(daysToAdd) <= 200'000'000);
-
-      // Step 13.a.iv.4.
-      intYears -= sign;
-    }
-
-    // Step 13.a.v.
-    //
-    // Clamp to int64 because too large values will trigger timeouts anyway.
-    int64_t intMonths = ClampToInt64(months);
-    while (intMonths != 0) {
-      // Steps 13.a.v.1-2.
-      int32_t oneMonthDays;
-      if (!MoveRelativeDate(cx, calendar, dateRelativeTo, oneMonth, dateAdd,
-                            &dateRelativeTo, &oneMonthDays)) {
-        return false;
-      }
-
-      // Step 13.a.v.3.
-      daysToAdd += oneMonthDays;
-      MOZ_ASSERT(std::abs(daysToAdd) <= 200'000'000);
-
-      // Step 13.a.v.4.
-      intMonths -= sign;
-    }
-
-    // Step 13.a.vi.
-    //
-    // Clamp to int64 because too large values will trigger timeouts anyway.
-    int64_t intWeeks = ClampToInt64(weeks);
-    while (intWeeks != 0) {
-      // Steps 13.a.vi.1-2.
-      int32_t oneWeekDays;
-      if (!MoveRelativeDate(cx, calendar, dateRelativeTo, oneWeek, dateAdd,
-                            &dateRelativeTo, &oneWeekDays)) {
-        return false;
-      }
-
-      // Step 13.a.vi.3.
-      daysToAdd += oneWeekDays;
-      MOZ_ASSERT(std::abs(daysToAdd) <= 200'000'000);
-
-      // Step 13.a.vi.4.
-      intWeeks -= sign;
-    }
-
-    // Convert values back to double. The addition |days + daysToAdd| can be
-    // imprecise, but this is safe to ignore, because all values are passed to
-    // CreateDateDurationRecord, which converts the values to Numbers.
-    years = 0;
-    months = 0;
-    weeks = 0;
-    days += double(daysToAdd);
+    // The addition |days + daysToAdd| can be imprecise, but this is safe to
+    // ignore, because all values are passed to CreateDateDurationRecord, which
+    // converts the values to Numbers.
+    return CreateDateDurationRecord(cx, 0, 0, weeks, days + double(daysToAdd),
+                                    result);
   }
 
-  // Step 14.
-  return CreateDateDurationRecord(cx, years, months, weeks, days, result);
+  // FIXME: spec bug - incorrect assertion
+  // https://github.com/tc39/proposal-temporal/issues/2695
+
+  // Step 13.
+  // MOZ_ASSERT(largestUnit == TemporalUnit::Day);
+
+  // Step 14. (Handled above)
+  MOZ_ASSERT(years != 0 || months != 0 || weeks != 0);
+
+  // FIXME: why don't we unconditionally throw an error for missing calendars?
+
+  // Step 15. (Not applicable in our implementation.)
+
+  // Steps 16-17.
+  Rooted<Value> dateAdd(cx);
+  if (calendar.isObject()) {
+    Rooted<JSObject*> calendarObj(cx, calendar.toObject());
+    if (!GetMethod(cx, calendarObj, cx->names().dateAdd, &dateAdd)) {
+      return false;
+    }
+  }
+
+  // Sum up all days to add to avoid imprecise floating-point arithmetic.
+  int32_t daysToAdd = 0;
+
+  // Step 18.
+  //
+  // Clamp to int64 because too large values will trigger timeouts anyway.
+  int64_t intYears = ClampToInt64(years);
+  while (intYears != 0) {
+    // Steps 18.a-b.
+    int32_t oneYearDays;
+    if (!MoveRelativeDate(cx, calendar, dateRelativeTo, oneYear, dateAdd,
+                          &dateRelativeTo, &oneYearDays)) {
+      return false;
+    }
+
+    // Step 18.c.
+    daysToAdd += oneYearDays;
+    MOZ_ASSERT(std::abs(daysToAdd) <= 200'000'000);
+
+    // Step 18.d.
+    intYears -= sign;
+  }
+
+  // Step 19.
+  //
+  // Clamp to int64 because too large values will trigger timeouts anyway.
+  int64_t intMonths = ClampToInt64(months);
+  while (intMonths != 0) {
+    // Steps 19.a-b.
+    int32_t oneMonthDays;
+    if (!MoveRelativeDate(cx, calendar, dateRelativeTo, oneMonth, dateAdd,
+                          &dateRelativeTo, &oneMonthDays)) {
+      return false;
+    }
+
+    // Step 19.c.
+    daysToAdd += oneMonthDays;
+    MOZ_ASSERT(std::abs(daysToAdd) <= 200'000'000);
+
+    // Step 19.d.
+    intMonths -= sign;
+  }
+
+  // Step 20.
+  //
+  // Clamp to int64 because too large values will trigger timeouts anyway.
+  int64_t intWeeks = ClampToInt64(weeks);
+  while (intWeeks != 0) {
+    // Steps 20.a-b.
+    int32_t oneWeekDays;
+    if (!MoveRelativeDate(cx, calendar, dateRelativeTo, oneWeek, dateAdd,
+                          &dateRelativeTo, &oneWeekDays)) {
+      return false;
+    }
+
+    // Step 20.c.
+    daysToAdd += oneWeekDays;
+    MOZ_ASSERT(std::abs(daysToAdd) <= 200'000'000);
+
+    // Step 20.d.
+    intWeeks -= sign;
+  }
+
+  // Step 21.
+  //
+  // The addition |days + daysToAdd| can be imprecise, but this is safe to
+  // ignore, because all values are passed to CreateDateDurationRecord, which
+  // converts the values to Numbers.
+  return CreateDateDurationRecord(cx, 0, 0, 0, days + double(daysToAdd),
+                                  result);
 }
 
 /**
@@ -2248,7 +2247,7 @@ static bool UnbalanceDateDurationRelative(JSContext* cx,
   double weeks = duration.weeks;
   double days = duration.days;
 
-  // Steps 1-3, 11.b, 12.b, and 13.a.i.
+  // Steps 1-3, 11.a, 12.a, and 14.
   if (!UnbalanceDateDurationRelativeHasEffect(duration, largestUnit)) {
     // Steps 3.a, 11.a, 12.a, and 14.
     *result = CreateDateDurationRecord(years, months, weeks, days);
@@ -2257,7 +2256,7 @@ static bool UnbalanceDateDurationRelative(JSContext* cx,
 
   // Steps 4-10. (Not applicable in our implementation.)
 
-  // Steps 11.b, 12.b, and 13.a.i.
+  // Steps 11.b, 12.b, and 15.
   JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                             JSMSG_TEMPORAL_DURATION_UNCOMPARABLE, "calendar");
   return false;
@@ -3908,8 +3907,6 @@ static bool ToRelativeTemporalObject(
     if (!plainDate) {
       return false;
     }
-
-    // FIXME: spec issue - bad markup for `_plainDate`.
 
     plainRelativeTo.set(plainDate);
     zonedRelativeTo.set(nullptr);
