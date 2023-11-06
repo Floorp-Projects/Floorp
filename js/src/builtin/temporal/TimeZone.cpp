@@ -326,9 +326,9 @@ static bool GetNamedTimeZoneEpochNanoseconds(
   }
 
   if (formerOffset == latterOffset) {
-    auto epochInstant = GetUTCEpochNanoseconds(dateTime) -
-                        InstantSpan::fromMilliseconds(formerOffset);
-    instants.append(epochInstant);
+    auto instant = GetUTCEpochNanoseconds(
+        dateTime, InstantSpan::fromMilliseconds(formerOffset));
+    instants.append(instant);
     return true;
   }
 
@@ -344,9 +344,9 @@ static bool GetNamedTimeZoneEpochNanoseconds(
 
   // Repeated time.
   for (auto offset : {formerOffset, latterOffset}) {
-    auto epochInstant = GetUTCEpochNanoseconds(dateTime) -
-                        InstantSpan::fromMilliseconds(offset);
-    instants.append(epochInstant);
+    auto instant =
+        GetUTCEpochNanoseconds(dateTime, InstantSpan::fromMilliseconds(offset));
+    instants.append(instant);
   }
 
   MOZ_ASSERT(instants.length() == 2);
@@ -1473,10 +1473,11 @@ static bool BuiltinGetPossibleInstantsFor(
     MOZ_ASSERT(std::abs(offsetMin) < UnitsPerDay(TemporalUnit::Minute));
 
     // Step 4.a.
-    auto epochInstant = GetUTCEpochNanoseconds(dateTime);
+    auto epochInstant =
+        GetUTCEpochNanoseconds(dateTime, InstantSpan::fromMinutes(offsetMin));
 
     // Step 4.b.
-    possibleInstants.append(epochInstant - InstantSpan::fromMinutes(offsetMin));
+    possibleInstants.append(epochInstant);
   } else {
     // Step 5.
     if (!GetNamedTimeZoneEpochNanoseconds(cx, timeZone, dateTime,
@@ -2020,7 +2021,7 @@ static bool TimeZone_getOffsetNanosecondsFor(JSContext* cx,
 
   // Step 3.
   Instant instant;
-  if (!ToTemporalInstantEpochInstant(cx, args.get(0), &instant)) {
+  if (!ToTemporalInstant(cx, args.get(0), &instant)) {
     return false;
   }
 
@@ -2234,7 +2235,7 @@ static bool TimeZone_getNextTransition(JSContext* cx, const CallArgs& args) {
 
   // Step 3.
   Instant startingPoint;
-  if (!ToTemporalInstantEpochInstant(cx, args.get(0), &startingPoint)) {
+  if (!ToTemporalInstant(cx, args.get(0), &startingPoint)) {
     return false;
   }
 
@@ -2287,7 +2288,7 @@ static bool TimeZone_getPreviousTransition(JSContext* cx,
 
   // Step 3.
   Instant startingPoint;
-  if (!ToTemporalInstantEpochInstant(cx, args.get(0), &startingPoint)) {
+  if (!ToTemporalInstant(cx, args.get(0), &startingPoint)) {
     return false;
   }
 
