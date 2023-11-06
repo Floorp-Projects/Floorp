@@ -21,9 +21,12 @@ description = "Cubeb Backend for talking to remote cubeb server."
 license = "ISC"
 
 [dependencies]
-audio_thread_priority = "0.26"
 cubeb-backend = "0.10"
 log = "0.4"
+
+[dependencies.audio_thread_priority]
+version = "0.30"
+default-features = false
 
 [dependencies.audioipc]
 path = "../audioipc"
