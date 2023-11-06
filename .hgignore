@@ -297,3 +297,6 @@ gfx/wr/target/
 
 # Ignore automatically generated mots documentation
 ^docs/mots/index.rst
+
+# Ignore generated directory with .class files for GeckoView annotation processor
+^mobile/android/annotations/bin/
