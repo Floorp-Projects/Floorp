@@ -13,6 +13,8 @@ namespace mozilla {
 // callback for the pref to update PHC as the pref changes.
 void InitPHCState();
 
+void ReportPHCTelemetry();
+
 };  // namespace mozilla
 
 #endif  // mozilla_PHCManager_h
