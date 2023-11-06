@@ -1053,33 +1053,6 @@ bool js::temporal::DifferenceZonedDateTime(JSContext* cx, const Instant& ns1,
 /**
  * TimeZoneEquals ( one, two )
  */
-static bool TimeZoneEquals(JSContext* cx, Handle<TimeZoneValue> one,
-                           Handle<TimeZoneValue> two, bool* equals) {
-  // Step 1.
-  if (one.isObject() && two.isObject() && one.toObject() == two.toObject()) {
-    *equals = true;
-    return true;
-  }
-
-  // Step 2.
-  Rooted<JSString*> timeZoneOne(cx, ToTemporalTimeZoneIdentifier(cx, one));
-  if (!timeZoneOne) {
-    return false;
-  }
-
-  // Step 3.
-  JSString* timeZoneTwo = ToTemporalTimeZoneIdentifier(cx, two);
-  if (!timeZoneTwo) {
-    return false;
-  }
-
-  // Steps 4-5.
-  return EqualStrings(cx, timeZoneOne, timeZoneTwo, equals);
-}
-
-/**
- * TimeZoneEquals ( one, two )
- */
 static bool TimeZoneEqualsOrThrow(JSContext* cx, Handle<TimeZoneValue> one,
                                   Handle<TimeZoneValue> two) {
   // Step 1.
@@ -1094,14 +1067,14 @@ static bool TimeZoneEqualsOrThrow(JSContext* cx, Handle<TimeZoneValue> one,
   }
 
   // Step 3.
-  JSString* timeZoneTwo = ToTemporalTimeZoneIdentifier(cx, two);
+  Rooted<JSString*> timeZoneTwo(cx, ToTemporalTimeZoneIdentifier(cx, two));
   if (!timeZoneTwo) {
     return false;
   }
 
-  // Steps 4-5.
+  // Steps 4-9.
   bool equals;
-  if (!EqualStrings(cx, timeZoneOne, timeZoneTwo, &equals)) {
+  if (!TimeZoneEquals(cx, timeZoneOne, timeZoneTwo, &equals)) {
     return false;
   }
   if (equals) {
