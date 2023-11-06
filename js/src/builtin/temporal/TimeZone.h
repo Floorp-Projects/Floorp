@@ -380,11 +380,12 @@ bool GetPossibleInstantsFor(JSContext* cx, JS::Handle<TimeZoneValue> timeZone,
  * DisambiguatePossibleInstants ( possibleInstants, timeZone, dateTime,
  * disambiguation )
  */
-Wrapped<InstantObject*> DisambiguatePossibleInstants(
+bool DisambiguatePossibleInstants(
     JSContext* cx, JS::Handle<InstantVector> possibleInstants,
     JS::Handle<TimeZoneValue> timeZone,
     JS::Handle<Wrapped<PlainDateTimeObject*>> dateTimeObj,
-    TemporalDisambiguation disambiguation);
+    TemporalDisambiguation disambiguation,
+    JS::MutableHandle<Wrapped<InstantObject*>> result);
 
 // Helper for MutableWrappedPtrOperations.
 bool WrapTimeZoneValueObject(JSContext* cx,

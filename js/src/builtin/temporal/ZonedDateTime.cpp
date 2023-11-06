@@ -205,14 +205,20 @@ bool js::temporal::InterpretISODateTimeOffset(
   }
 
   // Step 10.
-  auto instant = DisambiguatePossibleInstants(cx, possibleInstants, timeZone,
-                                              temporalDateTime, disambiguation);
-  if (!instant) {
+  Rooted<Wrapped<InstantObject*>> instant(cx);
+  if (!DisambiguatePossibleInstants(cx, possibleInstants, timeZone,
+                                    temporalDateTime, disambiguation,
+                                    &instant)) {
+    return false;
+  }
+
+  auto* unwrappedInstant = instant.unwrap(cx);
+  if (!unwrappedInstant) {
     return false;
   }
 
   // Step 11.
-  *result = ToInstant(&instant.unwrap());
+  *result = ToInstant(unwrappedInstant);
   return true;
 }
 
