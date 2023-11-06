@@ -16,6 +16,7 @@ import {
   getPauseCommand,
   isMapScopesEnabled,
   getSelectedFrame,
+  getSelectedSource,
   getShouldPauseOnExceptions,
   getShouldPauseOnCaughtExceptions,
   getThreads,
@@ -196,11 +197,7 @@ class SecondaryPanes extends Component {
   getScopesButtons() {
     const { selectedFrame, mapScopesEnabled, source } = this.props;
 
-    if (
-      !selectedFrame ||
-      !selectedFrame.location.source.isOriginal ||
-      source?.isPrettyPrinted
-    ) {
+    if (!selectedFrame || !source?.isOriginal || source?.isPrettyPrinted) {
       return null;
     }
 
@@ -212,21 +209,23 @@ class SecondaryPanes extends Component {
         label(
           {
             className: "map-scopes-header",
-            title: L10N.getStr("scopes.mapping.label"),
+            title: L10N.getStr("scopes.showOriginalScopesTooltip"),
+            onClick: e => e.stopPropagation(),
           },
           input({
             type: "checkbox",
             checked: mapScopesEnabled ? "checked" : "",
             onChange: e => this.props.toggleMapScopes(),
           }),
-          L10N.getStr("scopes.map.label")
+          L10N.getStr("scopes.showOriginalScopes")
         ),
         a(
           {
             className: "mdn",
             target: "_blank",
             href: mdnLink,
-            title: L10N.getStr("scopes.helpTooltip.label"),
+            onClick: e => e.stopPropagation(),
+            title: L10N.getStr("scopes.showOriginalScopesHelpTooltip"),
           },
           React.createElement(AccessibleImage, {
             className: "shortcuts",
@@ -543,7 +542,7 @@ const mapStateToProps = state => {
     threads: getThreads(state),
     skipPausing: getSkipPausing(state),
     logEventBreakpoints: shouldLogEventBreakpoints(state),
-    source: selectedFrame && selectedFrame.location.source,
+    source: getSelectedSource(state),
     pauseReason: pauseReason?.type ?? "",
     shouldBreakpointsPaneOpenOnPause,
     thread,

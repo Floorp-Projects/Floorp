@@ -117,6 +117,13 @@ html[dir="rtl"] .img.more-tabs {
   transform: scaleX(-1);
 }
 
+.img.sourcemap {
+  background-image: url(chrome://devtools/content/debugger/images/sourcemap.svg);
+  -moz-context-properties: fill;
+  fill: var(--theme-icon-warning-color);
+  background-color: unset;
+}
+
 .img.next {
   mask-image: url(chrome://devtools/content/debugger/images/next.svg);
 }

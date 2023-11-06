@@ -31,11 +31,11 @@ add_task(async function testGutterBreakpoints() {
 });
 
 add_task(async function testGutterBreakpointsInIgnoredSource() {
+  await pushPref("devtools.debugger.map-scopes-enabled", true);
   info(
     "Ensure clicking on gutter to add breakpoint should not un-ignore source"
   );
   const dbg = await initDebugger("doc-sourcemaps3.html");
-  dbg.actions.toggleMapScopes();
   await waitForSources(dbg, "bundle.js", "sorted.js", "test.js");
 
   info("Ignore the source");
