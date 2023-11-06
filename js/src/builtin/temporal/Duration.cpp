@@ -2263,79 +2263,86 @@ static bool UnbalanceDateDurationRelative(JSContext* cx,
   return false;
 }
 
-static bool BalanceDateDurationRelativeSlow(
-    JSContext* cx, TemporalUnit largestUnit,
-    MutableHandle<Wrapped<PlainDateObject*>> dateRelativeTo,
-    MutableHandle<Wrapped<PlainDateObject*>> newRelativeTo,
+static bool BalanceDateDurationRelativeYearSlow(
+    JSContext* cx, const Duration& duration, int32_t sign,
+    Handle<Wrapped<PlainDateObject*>> relativeTo,
     Handle<CalendarValue> calendar, Handle<DurationObject*> oneYear,
-    Handle<Value> dateAdd, Handle<Value> dateUntil, double months,
-    int32_t addedMonths, double oneYearMonths, uint32_t* resultAddedYears,
-    double* resultMonth) {
-  MOZ_ASSERT(largestUnit == TemporalUnit::Year);
+    Handle<Value> dateAdd, Handle<Value> dateUntil, uint32_t yearsToAdd,
+    uint32_t monthsToAdd, double oneYearMonthsNumber, DateDuration* result) {
+  MOZ_ASSERT(sign == -1 || sign == 1);
 
-  Rooted<BigInt*> bigIntMonths(cx, BigInt::createFromDouble(cx, months));
-  if (!bigIntMonths) {
+  Rooted<BigInt*> months(cx, BigInt::createFromDouble(cx, duration.months));
+  if (!months) {
     return false;
   }
 
-  if (addedMonths) {
-    Rooted<BigInt*> bigIntAdded(cx, BigInt::createFromInt64(cx, addedMonths));
-    if (!bigIntAdded) {
+  if (monthsToAdd) {
+    Rooted<BigInt*> toAdd(cx, BigInt::createFromInt64(cx, monthsToAdd));
+    if (!toAdd) {
       return false;
     }
 
-    bigIntMonths = BigInt::add(cx, bigIntMonths, bigIntAdded);
-    if (!bigIntMonths) {
+    if (sign < 0) {
+      toAdd = BigInt::neg(cx, toAdd);
+      if (!toAdd) {
+        return false;
+      }
+    }
+
+    months = BigInt::add(cx, months, toAdd);
+    if (!months) {
       return false;
     }
   }
 
-  Rooted<BigInt*> bigIntOneYearMonths(
-      cx, BigInt::createFromDouble(cx, oneYearMonths));
-  if (!bigIntOneYearMonths) {
+  Rooted<BigInt*> oneYearMonths(
+      cx, BigInt::createFromDouble(cx, oneYearMonthsNumber));
+  if (!oneYearMonths) {
     return false;
   }
 
-  MOZ_ASSERT(BigInt::absoluteCompare(bigIntMonths, bigIntOneYearMonths) >= 0);
-
-  uint32_t addedYears = 0;
-
-  while (BigInt::absoluteCompare(bigIntMonths, bigIntOneYearMonths) >= 0) {
-    // Step 10.p.i.
-    bigIntMonths = BigInt::sub(cx, bigIntMonths, bigIntOneYearMonths);
-    if (!bigIntMonths) {
+  Rooted<Wrapped<PlainDateObject*>> dateRelativeTo(cx);
+  Rooted<Wrapped<PlainDateObject*>> newRelativeTo(cx, relativeTo.get());
+  while (BigInt::absoluteCompare(months, oneYearMonths) >= 0) {
+    // Step 11.r.i.
+    months = BigInt::sub(cx, months, oneYearMonths);
+    if (!months) {
       return false;
     }
 
-    // Step 10.p.ii. (Partial)
-    addedYears += 1;
+    // Step 11.r.ii. (Partial)
+    yearsToAdd += 1;
 
-    // Step 10.p.iii.
-    dateRelativeTo.set(newRelativeTo);
+    // Step 11.r.iii.
+    dateRelativeTo = newRelativeTo;
 
-    // Step 10.p.iv.
-    newRelativeTo.set(
-        CalendarDateAdd(cx, calendar, dateRelativeTo, oneYear, dateAdd));
+    // Step 11.r.iv.
+    newRelativeTo =
+        CalendarDateAdd(cx, calendar, dateRelativeTo, oneYear, dateAdd);
     if (!newRelativeTo) {
       return false;
     }
 
-    // Steps 10.p.v-vii.
+    // Steps 11.r.v-vii.
     Duration untilResult;
     if (!CalendarDateUntil(cx, calendar, dateRelativeTo, newRelativeTo,
                            TemporalUnit::Month, dateUntil, &untilResult)) {
       return false;
     }
 
-    // Step 10.p.viii.
-    bigIntOneYearMonths = BigInt::createFromDouble(cx, untilResult.months);
-    if (!bigIntOneYearMonths) {
+    // Step 11.r.viii.
+    oneYearMonths = BigInt::createFromDouble(cx, untilResult.months);
+    if (!oneYearMonths) {
       return false;
     }
   }
 
-  *resultAddedYears = addedYears;
-  *resultMonth = BigInt::numberValue(bigIntMonths);
+  // Step 11.f.ii and 11.r.ii.
+  double years = duration.years + double(yearsToAdd) * sign;
+
+  // Step 14.
+  *result = CreateDateDurationRecord(years, BigInt::numberValue(months),
+                                     duration.weeks, duration.days);
   return true;
 }
 
@@ -2347,6 +2354,9 @@ static bool BalanceDateDurationRelative(
     JSContext* cx, const Duration& duration, TemporalUnit largestUnit,
     Handle<Wrapped<PlainDateObject*>> plainRelativeTo, DateDuration* result) {
   MOZ_ASSERT(IsValidDuration(duration));
+
+  // Numbers of days between nsMinInstant and nsMaxInstant.
+  static constexpr int32_t epochDays = 200'000'000;
 
   double years = duration.years;
   double months = duration.months;
@@ -2427,6 +2437,16 @@ static bool BalanceDateDurationRelative(
       }
     }
 
+    // The loop condition is always true for too large |days| values.
+    if (MOZ_UNLIKELY(std::abs(days) >= epochDays * 2)) {
+      // Steps 11.c-e and 11.f.iv-vi.
+      return MoveRelativeDateLoop(cx, calendar, dateRelativeTo, oneYear,
+                                  dateAdd);
+    }
+
+    // Otherwise |days| is representable as an int32 value.
+    int32_t intDays = int32_t(days);
+
     // Steps 11.c-e.
     Rooted<Wrapped<PlainDateObject*>> newRelativeTo(cx);
     int32_t oneYearDays;
@@ -2435,22 +2455,22 @@ static bool BalanceDateDurationRelative(
       return false;
     }
 
-    // Sum up all added weeks to avoid imprecise floating-point arithmetic.
+    // Sum up all days to subtract.
+    int32_t daysToSubtract = 0;
+
+    // Sum up all years to add to avoid imprecise floating-point arithmetic.
     // Uint32 overflows can be safely ignored, because they take too long to
     // happen in practice.
-    uint32_t addedYears = 0;
+    uint32_t yearsToAdd = 0;
 
     // Step 11.f.
-    while (std::abs(days) >= std::abs(oneYearDays)) {
+    while (std::abs(intDays - daysToSubtract) >= std::abs(oneYearDays)) {
       // Step 11.f.i.
-      //
-      // This computation can be imprecise, but the result isn't observerable,
-      // because MoveRelativeDate ensures that overly large number will be
-      // rejected eventually.
-      days -= oneYearDays;
+      daysToSubtract += oneYearDays;
+      MOZ_ASSERT(std::abs(daysToSubtract) <= epochDays);
 
       // Step 11.f.ii. (Partial)
-      addedYears += 1;
+      yearsToAdd += 1;
 
       // Step 11.f.iii.
       dateRelativeTo = newRelativeTo;
@@ -2469,22 +2489,19 @@ static bool BalanceDateDurationRelative(
       return false;
     }
 
-    // Sum up all added weeks to avoid imprecise floating-point arithmetic.
+    // Sum up all months to add to avoid imprecise floating-point arithmetic.
     // Uint32 overflows can be safely ignored, because they take too long to
     // happen in practice.
-    uint32_t addedMonths = 0;
+    uint32_t monthsToAdd = 0;
 
     // Step 11.j.
-    while (std::abs(days) >= std::abs(oneMonthDays)) {
+    while (std::abs(intDays - daysToSubtract) >= std::abs(oneMonthDays)) {
       // Step 11.j.i.
-      //
-      // This computation can be imprecise, but the result isn't observerable,
-      // because MoveRelativeDate ensures that overly large number will be
-      // rejected eventually.
-      days -= oneMonthDays;
+      daysToSubtract += oneMonthDays;
+      MOZ_ASSERT(std::abs(daysToSubtract) <= epochDays);
 
       // Step 11.j.ii.
-      addedMonths += 1;
+      monthsToAdd += 1;
 
       // Step 11.j.iii.
       dateRelativeTo = newRelativeTo;
@@ -2495,6 +2512,9 @@ static bool BalanceDateDurationRelative(
         return false;
       }
     }
+
+    // Adjust |days| by |daysToSubtract|.
+    days = double(intDays - daysToSubtract);
 
     // Step 11.k.
     newRelativeTo =
@@ -2523,71 +2543,56 @@ static bool BalanceDateDurationRelative(
     // Step 11.q.
     double oneYearMonths = untilResult.months;
 
-    if (MOZ_LIKELY(IsSafeInteger(months + double(addedMonths) * sign))) {
-      months += double(addedMonths) * sign;
+    if (MOZ_UNLIKELY(!IsSafeInteger(months + double(monthsToAdd) * sign))) {
+      return BalanceDateDurationRelativeYearSlow(
+          cx, {years, months, weeks, days}, sign, newRelativeTo, calendar,
+          oneYear, dateAdd, dateUntil, yearsToAdd, monthsToAdd, oneYearMonths,
+          result);
+    }
 
-      // Step 11.r.
-      while (std::abs(months) >= std::abs(oneYearMonths)) {
-        if (MOZ_UNLIKELY(!IsSafeInteger(months - oneYearMonths))) {
-          // |addedMonths| was already handled above, so pass zero here.
-          constexpr int32_t zeroAddedMonths = 0;
+    months += double(monthsToAdd) * sign;
 
-          uint32_t slowYears;
-          double slowMonths;
-          if (!BalanceDateDurationRelativeSlow(
-                  cx, largestUnit, &dateRelativeTo, &newRelativeTo, calendar,
-                  oneYear, dateAdd, dateUntil, months, zeroAddedMonths,
-                  oneYearMonths, &slowYears, &slowMonths)) {
-            return false;
-          }
+    // Step 11.r.
+    while (std::abs(months) >= std::abs(oneYearMonths)) {
+      if (MOZ_UNLIKELY(!IsSafeInteger(months - oneYearMonths))) {
+        // |monthsToAdd| was already handled above, so pass zero here.
+        constexpr uint32_t zeroMonthsToAdd = 0;
 
-          addedYears += slowYears;
-          months = slowMonths;
-          break;
-        }
-
-        // Step 11.r.i.
-        months -= oneYearMonths;
-
-        // Step 11.r.ii. (Partial)
-        addedYears += 1;
-
-        // Step 11.r.iii.
-        dateRelativeTo = newRelativeTo;
-
-        // Step 11.r.iv.
-        newRelativeTo =
-            CalendarDateAdd(cx, calendar, dateRelativeTo, oneYear, dateAdd);
-        if (!newRelativeTo) {
-          return false;
-        }
-
-        // Steps 11.r.v-vii.
-        Duration untilResult;
-        if (!CalendarDateUntil(cx, calendar, dateRelativeTo, newRelativeTo,
-                               TemporalUnit::Month, dateUntil, &untilResult)) {
-          return false;
-        }
-
-        // Step 11.r.viii.
-        oneYearMonths = untilResult.months;
+        return BalanceDateDurationRelativeYearSlow(
+            cx, {years, months, weeks, days}, sign, newRelativeTo, calendar,
+            oneYear, dateAdd, dateUntil, yearsToAdd, zeroMonthsToAdd,
+            oneYearMonths, result);
       }
-    } else {
-      uint32_t slowYears;
-      double slowMonths;
-      if (!BalanceDateDurationRelativeSlow(
-              cx, largestUnit, &dateRelativeTo, &newRelativeTo, calendar,
-              oneYear, dateAdd, dateUntil, months, int32_t(addedMonths) * sign,
-              oneYearMonths, &slowYears, &slowMonths)) {
+
+      // Step 11.r.i.
+      months -= oneYearMonths;
+
+      // Step 11.r.ii. (Partial)
+      yearsToAdd += 1;
+
+      // Step 11.r.iii.
+      dateRelativeTo = newRelativeTo;
+
+      // Step 11.r.iv.
+      newRelativeTo =
+          CalendarDateAdd(cx, calendar, dateRelativeTo, oneYear, dateAdd);
+      if (!newRelativeTo) {
         return false;
       }
 
-      addedYears += slowYears;
-      months = slowMonths;
+      // Steps 11.r.v-vii.
+      Duration untilResult;
+      if (!CalendarDateUntil(cx, calendar, dateRelativeTo, newRelativeTo,
+                             TemporalUnit::Month, dateUntil, &untilResult)) {
+        return false;
+      }
+
+      // Step 11.r.viii.
+      oneYearMonths = untilResult.months;
     }
 
     // Step 11.f.ii and 11.r.ii.
-    years += double(addedYears) * sign;
+    years += double(yearsToAdd) * sign;
   } else if (largestUnit == TemporalUnit::Month) {
     // Steps 12.a-b.
     Rooted<Value> dateAdd(cx);
@@ -2598,6 +2603,16 @@ static bool BalanceDateDurationRelative(
       }
     }
 
+    // The loop condition is always true for too large |days| values.
+    if (MOZ_UNLIKELY(std::abs(days) >= epochDays * 2)) {
+      // Steps 12.c-e and 12.f.iv-vi.
+      return MoveRelativeDateLoop(cx, calendar, dateRelativeTo, oneMonth,
+                                  dateAdd);
+    }
+
+    // Otherwise |days| is representable as an int32 value.
+    int32_t intDays = int32_t(days);
+
     // Steps 12.c-e.
     Rooted<Wrapped<PlainDateObject*>> newRelativeTo(cx);
     int32_t oneMonthDays;
@@ -2606,22 +2621,22 @@ static bool BalanceDateDurationRelative(
       return false;
     }
 
-    // Sum up all added weeks to avoid imprecise floating-point arithmetic.
+    // Sum up all days to subtract.
+    int32_t daysToSubtract = 0;
+
+    // Sum up all months to add to avoid imprecise floating-point arithmetic.
     // Uint32 overflows can be safely ignored, because they take too long to
     // happen in practice.
-    uint32_t addedMonths = 0;
+    uint32_t monthsToAdd = 0;
 
     // Step 12.f.
-    while (std::abs(days) >= std::abs(oneMonthDays)) {
+    while (std::abs(intDays - daysToSubtract) >= std::abs(oneMonthDays)) {
       // Step 12.f.i.
-      //
-      // This computation can be imprecise, but the result isn't observerable,
-      // because MoveRelativeDate ensures that overly large number will be
-      // rejected eventually.
-      days -= oneMonthDays;
+      daysToSubtract += oneMonthDays;
+      MOZ_ASSERT(std::abs(daysToSubtract) <= epochDays);
 
       // Step 12.f.ii. (Partial)
-      addedMonths += 1;
+      monthsToAdd += 1;
 
       // Step 12.f.iii.
       dateRelativeTo = newRelativeTo;
@@ -2633,8 +2648,11 @@ static bool BalanceDateDurationRelative(
       }
     }
 
+    // Adjust |days| by |daysToSubtract|.
+    days = double(intDays - daysToSubtract);
+
     // Step 12.f.ii.
-    months += double(addedMonths) * sign;
+    months += double(monthsToAdd) * sign;
   } else {
     // Step 13.a.
     MOZ_ASSERT(largestUnit == TemporalUnit::Week);
@@ -2648,6 +2666,16 @@ static bool BalanceDateDurationRelative(
       }
     }
 
+    // The loop condition is always true for too large |days| values.
+    if (MOZ_UNLIKELY(std::abs(days) >= epochDays * 2)) {
+      // Steps 13.d-f and 13.g.iv-vi.
+      return MoveRelativeDateLoop(cx, calendar, dateRelativeTo, oneWeek,
+                                  dateAdd);
+    }
+
+    // Otherwise |days| is representable as an int32 value.
+    int32_t intDays = int32_t(days);
+
     // Steps 13.d-f.
     Rooted<Wrapped<PlainDateObject*>> newRelativeTo(cx);
     int32_t oneWeekDays;
@@ -2656,22 +2684,22 @@ static bool BalanceDateDurationRelative(
       return false;
     }
 
-    // Sum up all added weeks to avoid imprecise floating-point arithmetic.
+    // Sum up all days to subtract.
+    int32_t daysToSubtract = 0;
+
+    // Sum up all weeks to add to avoid imprecise floating-point arithmetic.
     // Uint32 overflows can be safely ignored, because they take too long to
     // happen in practice.
-    uint32_t addedWeeks = 0;
+    uint32_t weeksToAdd = 0;
 
     // Step 13.g.
-    while (std::abs(days) >= std::abs(oneWeekDays)) {
+    while (std::abs(intDays - daysToSubtract) >= std::abs(oneWeekDays)) {
       // Step 13.g.i.
-      //
-      // This computation can be imprecise, but the result isn't observerable,
-      // because MoveRelativeDate ensures that overly large number will be
-      // rejected eventually.
-      days -= oneWeekDays;
+      daysToSubtract += oneWeekDays;
+      MOZ_ASSERT(std::abs(daysToSubtract) <= epochDays);
 
       // Step 13.g.ii. (Partial)
-      addedWeeks += 1;
+      weeksToAdd += 1;
 
       // Step 13.g.iii.
       dateRelativeTo = newRelativeTo;
@@ -2683,8 +2711,11 @@ static bool BalanceDateDurationRelative(
       }
     }
 
+    // Adjust |days| by |daysToSubtract|.
+    days = double(intDays - daysToSubtract);
+
     // Step 13.g.ii.
-    weeks += double(addedWeeks) * sign;
+    weeks += double(weeksToAdd) * sign;
   }
 
   // Step 14.
