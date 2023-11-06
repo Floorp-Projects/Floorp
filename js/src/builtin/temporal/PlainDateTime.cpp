@@ -989,13 +989,29 @@ static bool DifferenceTemporalPlainDateTime(JSContext* cx,
   }
 
   // Step 7.
+  if (settings.smallestUnit == TemporalUnit::Nanosecond &&
+      settings.roundingIncrement == Increment{1}) {
+    if (operation == TemporalDifference::Since) {
+      diff = diff.negate();
+    }
+
+    auto* obj = CreateTemporalDuration(cx, diff);
+    if (!obj) {
+      return false;
+    }
+
+    args.rval().setObject(*obj);
+    return true;
+  }
+
+  // Step 8.
   Rooted<PlainDateObject*> relativeTo(
       cx, CreateTemporalDate(cx, ToPlainDate(dateTime), calendar));
   if (!relativeTo) {
     return false;
   }
 
-  // Steps 8-9.
+  // Steps 9-10.
   Duration roundResult;
   if (!temporal::RoundDuration(cx, diff, settings.roundingIncrement,
                                settings.smallestUnit, settings.roundingMode,
@@ -1003,13 +1019,13 @@ static bool DifferenceTemporalPlainDateTime(JSContext* cx,
     return false;
   }
 
-  // Step 10.
+  // Step 11.
   TimeDuration result;
   if (!BalanceTimeDuration(cx, roundResult, settings.largestUnit, &result)) {
     return false;
   }
 
-  // Step 11.
+  // Step 12.
   Duration duration = {
       roundResult.years,  roundResult.months,  roundResult.weeks,
       result.days,        result.hours,        result.minutes,
@@ -2089,10 +2105,22 @@ static bool PlainDateTime_round(JSContext* cx, const CallArgs& args) {
   }
 
   // Step 13.
+  if (smallestUnit == TemporalUnit::Nanosecond &&
+      roundingIncrement == Increment{1}) {
+    auto* obj = CreateTemporalDateTime(cx, dateTime, calendar);
+    if (!obj) {
+      return false;
+    }
+
+    args.rval().setObject(*obj);
+    return true;
+  }
+
+  // Step 14.
   auto result =
       RoundISODateTime(dateTime, roundingIncrement, smallestUnit, roundingMode);
 
-  // Step 14.
+  // Step 15.
   auto* obj = CreateTemporalDateTime(cx, result, calendar);
   if (!obj) {
     return false;
