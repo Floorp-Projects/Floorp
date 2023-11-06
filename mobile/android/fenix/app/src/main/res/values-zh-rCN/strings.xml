@@ -708,9 +708,9 @@
 
     <!-- Add-ons general availability nimbus message-->
     <!-- Title of the Nimbus message for add-ons general availability-->
-    <string name="addon_ga_message_title" tools:ignore="UnusedResources">有新的附加组件可用</string>
+    <string name="addon_ga_message_title" tools:ignore="UnusedResources">附加组件上新</string>
     <!-- Body of the Nimbus message for add-ons general availability. 'Firefox' intentionally hardcoded here-->
-    <string name="addon_ga_message_body" tools:ignore="UnusedResources">看看超过 100 个新的扩展，让您的 Firefox 彰显个性。</string>
+    <string name="addon_ga_message_body" tools:ignore="UnusedResources">探索百余件新鲜扩展，让 Firefox 用起来更得心应手。</string>
     <!-- Button text of the Nimbus message for add-ons general availability. -->
     <string name="addon_ga_message_button" tools:ignore="UnusedResources">探索附加组件</string>
 
@@ -2257,7 +2257,7 @@
     <!-- Text for learn more caption presenting a link with information about review quality. First parameter is for clickable text defined in review_quality_check_info_learn_more_link. -->
     <string name="review_quality_check_info_learn_more">详细了解%s</string>
     <!-- Clickable text that links to review quality check SuMo page. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
-    <string name="review_quality_check_info_learn_more_link">由 Mozilla 支持的 %s 判断评价质量的流程</string>
+    <string name="review_quality_check_info_learn_more_link">由 Mozilla 支持的 %s 判断评价质量的方式</string>
     <!-- Text for title of settings section. -->
     <string name="review_quality_check_settings_title">设置</string>
     <!-- Text for label for switch preference to show recommended products from review quality check settings section. -->
@@ -2281,7 +2281,7 @@
     <!-- Caption for review quality check panel. First parameter is for clickable text defined in review_quality_check_powered_by_link. -->
     <string name="review_quality_check_powered_by_2">核查评价由 %s 提供支持</string>
     <!-- Clickable text that links to Fakespot.com. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
-    <string name="review_quality_check_powered_by_link" tools:ignore="UnusedResources">%s 由 Mozilla 提供支持</string>
+    <string name="review_quality_check_powered_by_link" tools:ignore="UnusedResources">Mozilla 支持的 %s</string>
     <!-- Text for title of warning card informing the user that the current analysis is outdated. -->
     <string name="review_quality_check_outdated_analysis_warning_title" tools:ignore="UnusedResources">了解新信息</string>
     <!-- Text for button from warning card informing the user that the current analysis is outdated. Clicking this should trigger the product's re-analysis. -->

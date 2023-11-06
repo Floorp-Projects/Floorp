@@ -2170,39 +2170,39 @@
     <!-- Name for the review quality check feature used as title for the panel. -->
     <string name="review_quality_check_feature_name_2">მიმოხილვის შემმოწმებელი</string>
     <!-- Summary for grades A and B for review quality check adjusted grading. -->
-    <string name="review_quality_check_grade_a_b_description">სანდო მიმოხილვები</string>
+    <string name="review_quality_check_grade_a_b_description">სანდოა მიმოხილვები</string>
     <!-- Summary for grade C for review quality check adjusted grading. -->
-    <string name="review_quality_check_grade_c_description">შერეულად სანდო და არასანდო მიმოხილვები</string>
+    <string name="review_quality_check_grade_c_description">შერეულადაა სანდო და არასანდო მიმოხილვები</string>
     <!-- Summary for grades D and F for review quality check adjusted grading. -->
-    <string name="review_quality_check_grade_d_f_description">არასანდო მიმოხილვები</string>
+    <string name="review_quality_check_grade_d_f_description">არასანდოა მიმოხილვები</string>
     <!-- Text for title presenting the reliability of a product's reviews. -->
     <string name="review_quality_check_grade_title">რამდენად სანდოა ეს მიმოხილვები?</string>
     <!-- Title for when the rating has been updated by the review checker -->
     <string name="review_quality_check_adjusted_rating_title">შესწორებული შეფასება</string>
     <!-- Description for a product's adjusted star rating. The text presents that the product's reviews which were evaluated as unreliable were removed from the adjusted rating. -->
-    <string name="review_quality_check_adjusted_rating_description">არასანდო მიმოხილვები მოცილებულია</string>
+    <string name="review_quality_check_adjusted_rating_description">არასანდო მიმოხილვების გამოკლებით</string>
     <!-- Title for list of highlights from a product's review emphasizing a product's important traits. -->
     <string name="review_quality_check_highlights_title">გამოსარჩევი ბოლო მიმოხილვებიდან</string>
     <!-- Title for section explaining how we analyze the reliability of a product's reviews. -->
     <string name="review_quality_check_explanation_title">როგორ განისაზღვრება მიმოხილვის ხარისხი</string>
     <!-- Paragraph explaining how we analyze the reliability of a product's reviews. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
-    <string name="review_quality_check_explanation_body_reliability">ჩვენ ვიყენებთ ხელოვნური ინტელექტის შესაძლებლობებს Mozilla-ს საიტიდან %s მიმოხილვების სანდოობის გადასამოწმებლად. ეს მხოლოდ მიმოხილვის ხარისხის შეფასებაში დაგეხმარებათ და არა – ნაწარმის ხარისხისა.</string>
+    <string name="review_quality_check_explanation_body_reliability">%s Mozilla-სგან ხელოვნური ინტელექტის შესაძლებლობებით ამოწმებს მიმოხილვების სანდოობას. ამით მხოლოდ მიმოხილვის ხარისხი დგინდება და არა – ნაწარმის ხარისხი.</string>
     <!-- Paragraph explaining the grading system we use to classify the reliability of a product's reviews. -->
     <string name="review_quality_check_info_review_grade_header"><![CDATA[გასაყიდ ნაწარმზე თითოეულ მიმოხილვას ეწერება <b>ნიშნები</b> A-დან F-მდე.]]></string>
     <!-- Description explaining grades A and B for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_AB">სანდო მიმოხილვები. მიგვაჩნია, რომ ეს მიმოხილვები, სავარაუდოდ, ნამდვილი მომხმარებლებისგანაა დატოვებული პატიოსნად და მიუკერძოებლად.</string>
+    <string name="review_quality_check_info_grade_info_AB">სანდოა მიმოხილვები. მიგვაჩნია, რომ ეს მიმოხილვები მეტწილად ნამდვილი მომხმარებლების დატოვებულია პატიოსნად და მიუკერძოებლად.</string>
     <!-- Description explaining grades A and B for review quality check adjusted grading. -->
     <string name="review_quality_check_info_grade_info_AB_2" moz:RemovedIn="120" tools:ignore="UnusedResources">მიგვაჩნია, რომ მიმოხილვები სანდო უნდა იყოს.</string>
     <!-- Description explaining grade C for review quality check adjusted grading. -->
     <string name="review_quality_check_info_grade_info_C">მიგვაჩნია, რომ შერეულადაა სანდო და არასანდო მიმოხილვები.</string>
     <!-- Description explaining grades D and F for review quality check adjusted grading. -->
-    <string name="review_quality_check_info_grade_info_DF">არასანდო მიმოხილვები. მიგვაჩნია, რომ ეს მიმოხილვები, სავარაუდოდ, ყალბი ან მიკერძოებული მიმომხილველებისგანაა.</string>
+    <string name="review_quality_check_info_grade_info_DF">არასანდოა მიმოხილვები. მიგვაჩნია, რომ ეს მიმოხილვები მეტწილად ყალბი ან მიკერძოებული მიმომხილველებისგანაა.</string>
     <!-- Description explaining grades D and F for review quality check adjusted grading. -->
     <string name="review_quality_check_info_grade_info_DF_2" moz:RemovedIn="120" tools:ignore="UnusedResources">მიგვაჩნია, რომ მიმოხილვები არაა სანდო.</string>
     <!-- Paragraph explaining how a product's adjusted grading is calculated. -->
-    <string name="review_quality_check_explanation_body_adjusted_grading"><![CDATA[<b>შესწორებული შეფასება</b> ეყრდნობა მხოლოდ იმ მიმოხილვებს, რომლებიც სანდოდ მიგვაჩნია.]]></string>
+    <string name="review_quality_check_explanation_body_adjusted_grading"><![CDATA[<b>შესწორებული შეფასება</b> ეყრდნობა მხოლოდ სანდოდ მიჩნეულ მიმოხილვებს.]]></string>
     <!-- Paragraph explaining product review highlights. First parameter is the name of the retailer (e.g. Amazon). -->
-    <string name="review_quality_check_explanation_body_highlights"><![CDATA[<b>გამოსარჩევი</b> ბოლო 80 დღეში %s-ის მიმოხილვებიდან, რომლებიც სანდოდ მიგვაჩნია.]]></string>
+    <string name="review_quality_check_explanation_body_highlights"><![CDATA[<b>გამოსარჩევი</b> ბოლო 80 დღეში %s-ის სანდოდ მიჩნეული მიმოხილვებიდან.]]></string>
     <!-- Text for learn more caption presenting a link with information about review quality. First parameter is for clickable text defined in review_quality_check_info_learn_more_link. -->
     <string name="review_quality_check_info_learn_more">უკეთ გაიცანით %s.</string>
     <!-- Clickable text that links to review quality check SuMo page. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
@@ -2225,13 +2225,13 @@
     <!-- Caption for recommended product section indicating this is an ad by Fakespot. First parameter is the Fakespot product name. -->
     <string name="review_quality_check_ad_caption" tools:ignore="UnusedResources">რეკლამა – %s</string>
     <!-- Caption for review quality check panel. First parameter is for clickable text defined in review_quality_check_powered_by_link. -->
-    <string name="review_quality_check_powered_by" tools:ignore="UnusedResources" moz:RemovedIn="119">მიმოხილვის შემმოწმებელს უზრუნველყოფს %s.</string>
+    <string name="review_quality_check_powered_by" tools:ignore="UnusedResources" moz:RemovedIn="119">მიმოხილვის შემმოწმებლის უზრუნველმყოფია %s.</string>
     <!-- Caption for review quality check panel. First parameter is for clickable text defined in review_quality_check_powered_by_link. -->
-    <string name="review_quality_check_powered_by_2">მიმოხილვის შემმოწმებელს უზრუნველყოფს %s</string>
+    <string name="review_quality_check_powered_by_2">მიმოხილვის შემმოწმებლის უზრუნველმყოფია %s</string>
     <!-- Clickable text that links to Fakespot.com. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
     <string name="review_quality_check_powered_by_link" tools:ignore="UnusedResources">%s Mozilla-სგან</string>
     <!-- Text for title of warning card informing the user that the current analysis is outdated. -->
-    <string name="review_quality_check_outdated_analysis_warning_title" tools:ignore="UnusedResources">ახალი მონაცემები შესამოწმებლად</string>
+    <string name="review_quality_check_outdated_analysis_warning_title" tools:ignore="UnusedResources">ახალი მონაცემებია შესამოწმებელი</string>
     <!-- Text for button from warning card informing the user that the current analysis is outdated. Clicking this should trigger the product's re-analysis. -->
     <string name="review_quality_check_outdated_analysis_warning_action" tools:ignore="UnusedResources">შემოწმება ახლავე</string>
     <!-- Title for warning card informing the user that the current product does not have enough reviews for a review analysis. -->
@@ -2284,9 +2284,9 @@
     <!-- Text for button from body of card displayed to the user for products whose reviews were not analyzed yet. Clicking this should trigger a product analysis. -->
     <string name="review_quality_check_no_analysis_link">მიმოხილვის ხარისხის შემოწმება</string>
     <!-- Headline for review quality check contextual onboarding card. -->
-    <string name="review_quality_check_contextual_onboarding_title">გამოცადეთ ჩვენი სანდო მეგზური საყიდლების მიმოხილვებისთვის</string>
+    <string name="review_quality_check_contextual_onboarding_title">გამოცადეთ ჩვენი საიმედო მეგზური საყიდლების მიმოხილვებისთვის</string>
     <!-- Description for review quality check contextual onboarding card. The first and last two parameters are for retailer names (e.g. Amazon, Walmart). The second parameter is for the name of the application (e.g. Firefox). -->
-    <string name="review_quality_check_contextual_onboarding_description">იხილეთ, რამდენად სანდოა გასაყიდი ნაწარმის მიმოხილვები %1$s საიტზე მის შეძენამდე. მიმოხილვის შემმოწმებელი, საცდელი შესაძლებლობა, რომელსაც გთავაზობთ %2$s და პირდაპირ ბრაუზერშივეა ჩაშენებული. მხარდაჭერილია %3$s და აგრეთვე %4$s.</string>
+    <string name="review_quality_check_contextual_onboarding_description">გადაამოწმეთ შეძენამდე, თუ რამდენად სანდოა გასაყიდი ნაწარმის მიმოხილვები საიტზე %1$s. მიმოხილვის შემმოწმებელი საცდელი შესაძლებლობაა %2$s-სგან და პირდაპირ ბრაუზერშივეა ჩაშენებული. მხარდაჭერილია %3$s და აგრეთვე %4$s.</string>
     <!-- Paragraph presenting review quality check feature. First parameter is the Fakespot product name. Second parameter is for clickable text defined in review_quality_check_contextual_onboarding_learn_more_link. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
     <string name="review_quality_check_contextual_onboarding_learn_more">Mozilla-ს %1$s-ის ძლევამოსილებით ჩვენ დაგეხმარებით მიკერძოებული და ყალბი მიმოხილვების თავიდან აცილებაში. ჩვენი AI-მოდელი მუდმივად იხვეწება საყიდლების შეძენისას თქვენს დასაცავად. %2$s</string>
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
@@ -2303,11 +2303,11 @@
     <!-- Text for opt-out button from the review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_secondary_button_text">ახლა არა</string>
     <!-- Text for the first CFR presenting the review quality check feature. -->
-    <string name="review_quality_check_first_cfr_message">გაარკვიეთ, სანდოა თუ არა გასაყიდი ნაწარმის მიმოხილვები — მის შეძენამდე.</string>
+    <string name="review_quality_check_first_cfr_message">გაარკვიეთ, სანდოა თუ არა გასაყიდი ნაწარმის მიმოხილვები — შეძენამდე.</string>
     <!-- Text displayed in the first CFR presenting the review quality check feature that opens the review checker when clicked. -->
     <string name="review_quality_check_first_cfr_action" tools:ignore="UnusedResources">სცადეთ მიმოხილვის შემმოწმებელი</string>
     <!-- Text for the second CFR presenting the review quality check feature. -->
-    <string name="review_quality_check_second_cfr_message">სანდოა ეს მიმოხილვები? შეამოწმეთ ახლავე შესწორებული შეფასების სანახავად.</string>
+    <string name="review_quality_check_second_cfr_message">სანდოა ეს მიმოხილვები? გადაამოწმეთ ახლავე შესწორებული შეფასების სანახავად.</string>
     <!-- Text displayed in the second CFR presenting the review quality check feature that opens the review checker when clicked. -->
     <string name="review_quality_check_second_cfr_action" tools:ignore="UnusedResources">მიმოხილვის შემმოწმებლის გახსნა</string>
     <!-- Flag showing that the review quality check feature is work in progress. -->
