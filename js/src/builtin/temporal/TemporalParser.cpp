@@ -1513,12 +1513,11 @@ TemporalParser<CharT>::parseTemporalTimeZoneString() {
     }
   }
 
-  // Try all six parse goals from ParseISODateTime in order.
+  // Try all five parse goals from ParseISODateTime in order.
   //
   // TemporalDateTimeString
   // TemporalInstantString
   // TemporalTimeString
-  // TemporalZonedDateTimeString
   // TemporalMonthDayString
   // TemporalYearMonthString
 
@@ -1540,13 +1539,6 @@ TemporalParser<CharT>::parseTemporalTimeZoneString() {
   reader_.reset();
 
   if (auto dt = parseTemporalTimeString(); dt.isOk()) {
-    return dt.unwrap();
-  }
-
-  // Restart parsing from the start of the string.
-  reader_.reset();
-
-  if (auto dt = parseTemporalZonedDateTimeString(); dt.isOk()) {
     return dt.unwrap();
   }
 
@@ -2417,8 +2409,9 @@ TemporalParser<CharT>::annotatedTime() {
 template <typename CharT>
 mozilla::Result<ZonedDateTimeString, ParserError>
 TemporalParser<CharT>::annotatedDateTime() {
-  // AnnotatedDateTime :
-  //   DateTime TimeZoneAnnotation? Annotations?
+  // AnnotatedDateTime[Zoned] :
+  //   [~Zoned] DateTime TimeZoneAnnotation? Annotations?
+  //   [+Zoned] DateTime TimeZoneAnnotation Annotations?
 
   auto dt = dateTime();
   if (dt.isErr()) {
@@ -2743,7 +2736,7 @@ TemporalParser<CharT>::parseTemporalCalendarString() {
     return result;
   }
 
-  // Try all six parse goals from ParseISODateTime in order.
+  // Try all five parse goals from ParseISODateTime in order.
   //
   // TemporalDateTimeString
   // TemporalInstantString
@@ -2767,13 +2760,6 @@ TemporalParser<CharT>::parseTemporalCalendarString() {
   reader_.reset();
 
   if (auto dt = parseTemporalTimeString(); dt.isOk()) {
-    return dt.unwrap();
-  }
-
-  // Restart parsing from the start of the string.
-  reader_.reset();
-
-  if (auto dt = parseTemporalZonedDateTimeString(); dt.isOk()) {
     return dt.unwrap();
   }
 
@@ -2933,7 +2919,7 @@ mozilla::Result<ZonedDateTimeString, ParserError>
 TemporalParser<CharT>::parseTemporalMonthDayString() {
   // TemporalMonthDayString :
   //   AnnotatedMonthDay
-  //   AnnotatedDateTime
+  //   AnnotatedDateTime[~Zoned]
 
   if (auto monthDay = annotatedMonthDay(); monthDay.isOk() && reader_.atEnd()) {
     auto result = monthDay.unwrap();
@@ -3032,7 +3018,7 @@ mozilla::Result<ZonedDateTimeString, ParserError>
 TemporalParser<CharT>::parseTemporalYearMonthString() {
   // TemporalYearMonthString :
   //   AnnotatedYearMonth
-  //   AnnotatedDateTime
+  //   AnnotatedDateTime[~Zoned]
 
   if (auto yearMonth = annotatedYearMonth();
       yearMonth.isOk() && reader_.atEnd()) {
@@ -3128,8 +3114,8 @@ bool js::temporal::ParseTemporalYearMonthString(
 template <typename CharT>
 mozilla::Result<ZonedDateTimeString, ParserError>
 TemporalParser<CharT>::parseTemporalDateTimeString() {
-  // TemporalDateTimeString :
-  //   AnnotatedDateTime
+  // TemporalDateTimeString[Zoned] :
+  //   AnnotatedDateTime[?Zoned]
 
   auto dateTime = annotatedDateTime();
   if (dateTime.isErr()) {
@@ -3223,8 +3209,14 @@ bool js::temporal::ParseTemporalDateString(JSContext* cx, Handle<JSString*> str,
 template <typename CharT>
 mozilla::Result<ZonedDateTimeString, ParserError>
 TemporalParser<CharT>::parseTemporalZonedDateTimeString() {
-  // TemporalZonedDateTimeString :
-  //   DateTime TimeZoneAnnotation Annotations?
+  // Parse goal: TemporalDateTimeString[+Zoned]
+  //
+  // TemporalDateTimeString[Zoned] :
+  //   AnnotatedDateTime[?Zoned]
+  //
+  // AnnotatedDateTime[Zoned] :
+  //   [~Zoned] DateTime TimeZoneAnnotation? Annotations?
+  //   [+Zoned] DateTime TimeZoneAnnotation Annotations?
 
   auto dt = dateTime();
   if (dt.isErr()) {
