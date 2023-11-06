@@ -849,8 +849,9 @@ static IntrinsicSize ComputeIntrinsicSize(imgIContainer* aImage,
          aFrame.GetContent()->AsElement()->HasNonEmptyAttr(nsGkAtoms::src))) {
       ScaleIntrinsicSizeForDensity(aImage, *aFrame.GetContent(), intrinsicSize);
     } else {
-      ScaleIntrinsicSizeForDensity(intrinsicSize,
-                                   aFrame.GetImageFromStyle()->GetResolution());
+      ScaleIntrinsicSizeForDensity(
+          intrinsicSize,
+          aFrame.GetImageFromStyle()->GetResolution(*aFrame.Style()));
     }
     return containAxes.ContainIntrinsicSize(intrinsicSize, aFrame);
   }
