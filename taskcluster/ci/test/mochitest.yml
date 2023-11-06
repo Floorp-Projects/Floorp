@@ -651,6 +651,7 @@ mochitest-media:
                 by-test-platform:
                     android.*: []
                     windows.*ccov.*: []
+                    .*hw-ref.*: []
                     linux.*64(-shippable|-asan|-tsan)?-qr/opt: ['autoland', 'mozilla-central']
                     macosx.*-64(-shippable)?-qr/(opt|debug): ['autoland', 'mozilla-central']
                     windows1.*(-shippable)?-qr/(opt|debug): ['autoland', 'mozilla-central']
@@ -658,6 +659,7 @@ mochitest-media:
                     default: []
             socketprocess+no-fission:
                 by-test-platform:
+                    .*hw-ref.*: []
                     android-em-7.0-x86_64-qr/debug: ['autoland', 'mozilla-central']
                     android-hw-.*-aarch64-qr/debug: built-projects
                     linux1804-64-qr/debug: ['trunk']
@@ -667,6 +669,7 @@ mochitest-media:
                 by-test-platform:
                     android.*: []
                     windows.*ccov.*: []
+                    .*hw-ref.*: []
                     linux.*64(-asan|-devedition|-shippable)?-qr/(opt|debug): built-projects
                     linux.*64-tsan-qr/opt: ['autoland', 'mozilla-central']
                     macosx.*-64(-devedition|-shippable)?-qr/(opt|debug): built-projects
@@ -675,6 +678,7 @@ mochitest-media:
                     default: []
             webrender-sw+no-fission:
                 by-test-platform:
+                    .*hw-ref.*: []
                     android-em-7.0-x86_64-qr/debug: ['autoland', 'mozilla-central']
                     linux1804-64-qr/debug: ['trunk']
                     linux1804-64(-shippable|-asan)?-qr/opt: ['trunk']
@@ -682,11 +686,13 @@ mochitest-media:
             webrender-sw:
                 by-test-platform:
                     android.*: []
+                    .*hw-ref.*: []
                     linux1804-64-qr/debug: ['autoland', 'mozilla-central']
                     default: []
             no-fission:
                 by-test-platform:
                     android-hw-.*/opt: []
+                    .*hw-ref.*: []
                     android-hw-.*-arm7.*/(?:debug)?: ['trunk', 'mozilla-beta', 'mozilla-release']
                     android-em-7.0-x86_64-qr/debug-isolated-process: []
                     android.*: built-projects
@@ -695,22 +701,26 @@ mochitest-media:
                     default: []
             wmf-media-engine:
                 by-test-platform:
+                    .*hw-ref.*: []
                     windows1.*-64.*: ['autoland', 'mozilla-central']
                     default: []
             msix:
                 by-test-platform:
+                    .*hw-ref.*: []
                     windows11-64-2009-shippable-qr/opt: built-projects
                     windows11-64-2009-qr/opt: ['autoland']
                     windows11-64-2009-qr/debug: ['autoland']
                     default: []
             media-gpu:
                 by-test-platform:
+                    .*hw-ref.*: []
                     (macosx.*64|windows11.*)(-shippable)?-qr/(opt|debug): ['autoland', 'mozilla-central', 'mozilla-beta']
                     default: []
                     # TODO : add Android, it hasn't supported 'tags'
                     # TODO : add Linux, it would crash on gfxFeature.cpp:180
             default:
                 by-test-platform:
+                    .*hw-ref.*: []
                     android-hw.*/opt: []
                     android-em-7.0-x86_64-qr/debug-isolated-process: []
                     android.*: built-projects

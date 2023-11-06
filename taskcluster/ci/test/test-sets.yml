@@ -342,6 +342,9 @@ windows-talos:
     - talos-webgl
     # - talos-h1 Bug 1487031 - Disabled for not finding actionable regressions
 
+windows-ref-hw-tests:
+    - mochitest-media
+
 talos-xperf:
     - talos-xperf
 

@@ -195,6 +195,24 @@ windows10-64-ref-hw-2017-qr/opt:
     test-sets:
         - talos-ref-hw
 
+windows11-64-2009-hw-ref-shippable/opt:
+    build-platform: win64-shippable/opt
+    build-signing-label:
+        by-variant:
+            msix: repackage-signing-msix-win64/opt
+            default: build-signing-win64/opt
+    test-sets:
+        - windows-ref-hw-tests
+
+windows11-64-2009-hw-ref/opt:
+    build-platform: win64/opt
+    build-signing-label:
+        by-variant:
+            msix: repackage-signing-msix-win64/opt
+            default: build-signing-win64/opt
+    test-sets:
+        - windows-ref-hw-tests
+
 windows10-64-shippable-qr/opt:
     build-platform: win64-shippable/opt
     test-sets:

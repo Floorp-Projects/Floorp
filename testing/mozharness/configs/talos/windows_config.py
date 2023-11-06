@@ -3,6 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import os
+import platform
 import socket
 import sys
 
@@ -50,8 +51,11 @@ config = {
                     "external_tools",
                     "machine-configuration.json",
                 ),
-                "--platform",
-                "win10-hw",
+                "--platform=win10-hw"
+                if (platform.uname().version == "10.0.19045")
+                else "--platform=win11-hw"
+                if (platform.uname().version == "10.0.22621")
+                else "--platform=win7",
             ],
             "architectures": ["32bit", "64bit"],
             "halt_on_failure": True,
