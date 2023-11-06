@@ -17,7 +17,6 @@ import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
-import org.mozilla.fenix.helpers.AppAndSystemHelper.verifyKeyboardVisibility
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.MatcherHelper
 import org.mozilla.fenix.helpers.RetryTestRule
@@ -110,9 +109,9 @@ class TabbedBrowsingTest {
         }
     }
 
-    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/903604
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2349580
     @Test
-    fun closingTabsMethodsTest() {
+    fun closingTabsTest() {
         val genericURL = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
         navigationToolbar {
@@ -125,13 +124,17 @@ class TabbedBrowsingTest {
         }
         browserScreen {
             verifyTabCounter("1")
-        }.openTabDrawer {
-            closeTab()
         }
-        homeScreen {
-            verifyTabCounter("0")
-        }.openNavigationToolbar {
+    }
+
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/903604
+    @Test
+    fun swipeToCloseTabsTest() {
+        val genericURL = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        navigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
+            waitForPageToLoad()
         }.openTabDrawer {
             verifyExistingOpenTabs("Test_Page_1")
             swipeTabRight("Test_Page_1")
@@ -141,6 +144,7 @@ class TabbedBrowsingTest {
             verifyTabCounter("0")
         }.openNavigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
+            waitForPageToLoad()
         }.openTabDrawer {
             verifyExistingOpenTabs("Test_Page_1")
             swipeTabLeft("Test_Page_1")
@@ -153,10 +157,10 @@ class TabbedBrowsingTest {
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/903591
     @Test
-    fun closingPrivateTabsMethodsTest() {
+    fun closingPrivateTabsTest() {
         val genericURL = TestAssetHelper.getGenericAsset(mockWebServer, 1)
 
-        homeScreen { }.togglePrivateBrowsingMode()
+        homeScreen { }.togglePrivateBrowsingMode(switchPBModeOn = true)
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
         }.openTabDrawer {
@@ -168,29 +172,6 @@ class TabbedBrowsingTest {
         }
         browserScreen {
             verifyTabCounter("1")
-        }.openTabDrawer {
-            closeTab()
-        }
-        homeScreen {
-            verifyTabCounter("0")
-        }.openNavigationToolbar {
-        }.enterURLAndEnterToBrowser(genericURL.url) {
-        }.openTabDrawer {
-            verifyExistingOpenTabs("Test_Page_1")
-            swipeTabRight("Test_Page_1")
-            verifySnackBarText("Private tab closed")
-        }
-        homeScreen {
-            verifyTabCounter("0")
-        }.openNavigationToolbar {
-        }.enterURLAndEnterToBrowser(genericURL.url) {
-        }.openTabDrawer {
-            verifyExistingOpenTabs("Test_Page_1")
-            swipeTabLeft("Test_Page_1")
-            verifySnackBarText("Private tab closed")
-        }
-        homeScreen {
-            verifyTabCounter("0")
         }
     }
 
@@ -375,76 +356,129 @@ class TabbedBrowsingTest {
         }
     }
 
-    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/927315
-    @Test
-    fun tabsCounterShortcutMenuTest() {
-        val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
-
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(defaultWebPage.url) {}
-        navigationToolbar {
-        }.openTabButtonShortcutsMenu {
-            verifyTabButtonShortcutMenuItems()
-        }.closeTabFromShortcutsMenu {
-        }.enterURLAndEnterToBrowser(defaultWebPage.url) {}
-        navigationToolbar {
-        }.openTabButtonShortcutsMenu {
-        }.openNewPrivateTabFromShortcutsMenu {
-            verifyKeyboardVisibility()
-            verifySearchBarPlaceholder("Search or enter address")
-            // dismiss search dialog
-        }.dismissSearchBar {
-            verifyPrivateBrowsingHomeScreenItems()
-        }
-        navigationToolbar {
-        }.enterURLAndEnterToBrowser(defaultWebPage.url) {}
-        navigationToolbar {
-        }.openTabButtonShortcutsMenu {
-        }.openNewTabFromShortcutsMenu {
-            verifyKeyboardVisibility()
-            verifySearchBarPlaceholder("Search or enter address")
-            // dismiss search dialog
-        }.dismissSearchBar {
-            verifyHomeWordmark()
-            verifyNavigationToolbar()
-        }
-    }
-
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/927314
     @Test
-    fun privateTabsCounterShortcutMenuTest() {
-        val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+    fun tabsCounterShortcutMenuCloseTabTest() {
+        val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+        val secondWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 2)
 
-        homeScreen {}.togglePrivateBrowsingMode()
         navigationToolbar {
-        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+        }.enterURLAndEnterToBrowser(firstWebPage.url) {
+            waitForPageToLoad()
+        }.goToHomescreen {
+        }.openNavigationToolbar {
+        }.enterURLAndEnterToBrowser(secondWebPage.url) {
             waitForPageToLoad()
         }
         navigationToolbar {
         }.openTabButtonShortcutsMenu {
             verifyTabButtonShortcutMenuItems()
         }.closeTabFromShortcutsMenu {
+            browserScreen {
+                verifyTabCounter("1")
+                verifyPageContent(firstWebPage.content)
+            }
+        }
+    }
+
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2343663
+    @Test
+    fun tabsCounterShortcutMenuNewPrivateTabTest() {
+        val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        navigationToolbar {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {}
         navigationToolbar {
         }.openTabButtonShortcutsMenu {
         }.openNewPrivateTabFromShortcutsMenu {
-            verifyKeyboardVisibility()
             verifySearchBarPlaceholder("Search or enter address")
-            // dismiss search dialog
         }.dismissSearchBar {
-            verifyCommonMythsLink()
+            verifyIfInPrivateOrNormalMode(privateBrowsingEnabled = true)
         }
+    }
+
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2343662
+    @Test
+    fun tabsCounterShortcutMenuNewTabTest() {
+        val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
         navigationToolbar {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {}
         navigationToolbar {
         }.openTabButtonShortcutsMenu {
         }.openNewTabFromShortcutsMenu {
-            verifyKeyboardVisibility()
             verifySearchBarPlaceholder("Search or enter address")
-            // dismiss search dialog
         }.dismissSearchBar {
-            // Verify normal browsing homescreen
-            verifyExistingTopSitesList()
+            verifyIfInPrivateOrNormalMode(privateBrowsingEnabled = false)
+        }
+    }
+
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/927315
+    @Test
+    fun privateTabsCounterShortcutMenuCloseTabTest() {
+        val firstWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+        val secondWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 2)
+
+        homeScreen {}.togglePrivateBrowsingMode(switchPBModeOn = true)
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(firstWebPage.url) {
+            waitForPageToLoad()
+        }.goToHomescreen {
+        }.openNavigationToolbar {
+        }.enterURLAndEnterToBrowser(secondWebPage.url) {
+            waitForPageToLoad()
+        }
+        navigationToolbar {
+        }.openTabButtonShortcutsMenu {
+            verifyTabButtonShortcutMenuItems()
+        }.closeTabFromShortcutsMenu {
+            browserScreen {
+                verifyTabCounter("1")
+                verifyPageContent(firstWebPage.content)
+            }
+        }.openTabButtonShortcutsMenu {
+        }.closeTabFromShortcutsMenu {
+            homeScreen {
+                verifyIfInPrivateOrNormalMode(privateBrowsingEnabled = true)
+            }
+        }
+    }
+
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2344199
+    @Test
+    fun privateTabsCounterShortcutMenuNewPrivateTabTest() {
+        val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        homeScreen {}.togglePrivateBrowsingMode(switchPBModeOn = true)
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+            waitForPageToLoad()
+        }
+        navigationToolbar {
+        }.openTabButtonShortcutsMenu {
+        }.openNewPrivateTabFromShortcutsMenu {
+            verifySearchBarPlaceholder("Search or enter address")
+        }.dismissSearchBar {
+            verifyIfInPrivateOrNormalMode(privateBrowsingEnabled = true)
+        }
+    }
+
+    // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/2344198
+    @Test
+    fun privateTabsCounterShortcutMenuNewTabTest() {
+        val defaultWebPage = TestAssetHelper.getGenericAsset(mockWebServer, 1)
+
+        homeScreen {}.togglePrivateBrowsingMode(switchPBModeOn = true)
+        navigationToolbar {
+        }.enterURLAndEnterToBrowser(defaultWebPage.url) {
+            verifyPageContent(defaultWebPage.content)
+        }
+        navigationToolbar {
+        }.openTabButtonShortcutsMenu {
+        }.openNewTabFromShortcutsMenu {
+            verifySearchToolbar(isDisplayed = true)
+        }.dismissSearchBar {
+            verifyIfInPrivateOrNormalMode(privateBrowsingEnabled = false)
         }
     }
 
@@ -496,12 +530,9 @@ class TabbedBrowsingTest {
         }.enterURLAndEnterToBrowser(firstWebPage.url) {
         }.openTabDrawer {
         }.openNewTab {
-        }.submitQuery(secondWebPage.url.toString()) {
-        }
-
+        }.submitQuery(secondWebPage.url.toString()) {}
         closeApp(activityTestRule)
         restartApp(activityTestRule)
-
         homeScreen {
             verifyPrivateBrowsingHomeScreenItems()
         }.openTabDrawer {

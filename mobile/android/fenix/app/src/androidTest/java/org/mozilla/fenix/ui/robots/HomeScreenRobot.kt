@@ -498,6 +498,10 @@ class HomeScreenRobot {
         )
     }
 
+    fun verifyIfInPrivateOrNormalMode(privateBrowsingEnabled: Boolean) {
+        assert(isPrivateModeEnabled() == privateBrowsingEnabled)
+    }
+
     class Transition {
 
         fun openTabDrawer(interact: TabDrawerRobot.() -> Unit): TabDrawerRobot.Transition {
@@ -563,17 +567,16 @@ class HomeScreenRobot {
             return SyncSignInRobot.Transition()
         }
 
-        fun togglePrivateBrowsingMode() {
-            if (
-                !itemWithResIdAndDescription(
-                    "$packageName:id/privateBrowsingButton",
-                    "Disable private browsing",
-                ).exists()
-            ) {
-                mDevice.findObject(UiSelector().resourceId("$packageName:id/privateBrowsingButton"))
-                    .waitForExists(
-                        waitingTime,
-                    )
+        fun togglePrivateBrowsingMode(switchPBModeOn: Boolean = true) {
+            // Switch to private browsing homescreen
+            if (switchPBModeOn && !isPrivateModeEnabled()) {
+                privateBrowsingButton.waitForExists(waitingTime)
+                privateBrowsingButton.click()
+            }
+
+            // Switch to normal browsing homescreen
+            if (!switchPBModeOn && isPrivateModeEnabled()) {
+                privateBrowsingButton.waitForExists(waitingTime)
                 privateBrowsingButton.click()
             }
         }
@@ -1053,6 +1056,13 @@ private val homeScreen =
     itemWithResId("$packageName:id/homeLayout")
 private val privateBrowsingButton =
     itemWithResId("$packageName:id/privateBrowsingButton")
+
+private fun isPrivateModeEnabled(): Boolean =
+    itemWithResIdAndDescription(
+        "$packageName:id/privateBrowsingButton",
+        "Disable private browsing",
+    ).exists()
+
 private val homepageWordmark =
     itemWithResId("$packageName:id/wordmark")
 

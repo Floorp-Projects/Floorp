@@ -41,6 +41,7 @@ import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
 import org.mozilla.fenix.helpers.HomeActivityComposeTestRule
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdContainingText
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
 import org.mozilla.fenix.helpers.SessionLoadedIdlingResource
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
@@ -165,13 +166,9 @@ class NavigationToolbarRobot {
 
             runWithIdleRes(sessionLoadedIdlingResource) {
                 assertTrue(
-                    mDevice.findObject(
-                        UiSelector().resourceId("$packageName:id/browserLayout"),
-                    ).waitForExists(waitingTime) || mDevice.findObject(
-                        UiSelector().resourceId("$packageName:id/download_button"),
-                    ).waitForExists(waitingTime) || mDevice.findObject(
-                        UiSelector().text(getStringResource(R.string.tcp_cfr_message)),
-                    ).waitForExists(waitingTime),
+                    itemWithResId("$packageName:id/browserLayout").waitForExists(waitingTime) ||
+                        itemWithResId("$packageName:id/download_button").waitForExists(waitingTime) ||
+                        itemWithText(getStringResource(R.string.tcp_cfr_message)).waitForExists(waitingTime),
                 )
             }
 
@@ -295,8 +292,9 @@ class NavigationToolbarRobot {
         }
 
         fun openTabButtonShortcutsMenu(interact: NavigationToolbarRobot.() -> Unit): Transition {
-            mDevice.waitNotNull(Until.findObject(By.desc("Tabs")))
+            mDevice.waitNotNull(Until.findObject(By.res("$packageName:id/counter_root")))
             tabsCounter().click(LONG_CLICK_DURATION)
+            Log.i(TAG, "Tabs counter long-click successful.")
 
             NavigationToolbarRobot().interact()
             return Transition()
@@ -314,6 +312,7 @@ class NavigationToolbarRobot {
                         ViewActions.click(),
                     ),
                 )
+            Log.i(TAG, "Clicked the tab shortcut Close tab button.")
 
             NavigationToolbarRobot().interact()
             return Transition()
@@ -321,7 +320,7 @@ class NavigationToolbarRobot {
 
         fun openNewTabFromShortcutsMenu(interact: SearchRobot.() -> Unit): SearchRobot.Transition {
             mDevice.waitForIdle(waitingTime)
-
+            Log.i(TAG, "Looking for tab shortcut New tab button.")
             onView(withId(R.id.mozac_browser_menu_recyclerView))
                 .perform(
                     RecyclerViewActions.actionOnItem<RecyclerView.ViewHolder>(
@@ -331,6 +330,7 @@ class NavigationToolbarRobot {
                         ViewActions.click(),
                     ),
                 )
+            Log.i(TAG, "Clicked the tab shortcut New tab button.")
 
             SearchRobot().interact()
             return SearchRobot.Transition()
@@ -338,7 +338,7 @@ class NavigationToolbarRobot {
 
         fun openNewPrivateTabFromShortcutsMenu(interact: SearchRobot.() -> Unit): SearchRobot.Transition {
             mDevice.waitForIdle(waitingTime)
-
+            Log.i(TAG, "Looking for tab shortcut New private tab button.")
             onView(withId(R.id.mozac_browser_menu_recyclerView))
                 .perform(
                     RecyclerViewActions.actionOnItem<RecyclerView.ViewHolder>(
@@ -348,6 +348,7 @@ class NavigationToolbarRobot {
                         ViewActions.click(),
                     ),
                 )
+            Log.i(TAG, "Clicked the tab shortcut New private tab button.")
 
             SearchRobot().interact()
             return SearchRobot.Transition()
@@ -380,15 +381,11 @@ fun navigationToolbar(interact: NavigationToolbarRobot.() -> Unit): NavigationTo
 }
 
 fun openEditURLView() {
-    mDevice.waitNotNull(
-        Until.findObject(By.res("$packageName:id/toolbar")),
-        waitingTime,
-    )
+    urlBar().waitForExists(waitingTime)
     urlBar().click()
-    mDevice.waitNotNull(
-        Until.findObject(By.res("$packageName:id/mozac_browser_toolbar_edit_url_view")),
-        waitingTime,
-    )
+    Log.i(TAG, "openEditURLView: URL bar clicked.")
+    itemWithResId("$packageName:id/mozac_browser_toolbar_edit_url_view").waitForExists(waitingTime)
+    Log.i(TAG, "openEditURLView: Edit URL bar displayed.")
 }
 
 private fun assertNoHistoryBookmarks() {

@@ -4,9 +4,11 @@
 
 package org.mozilla.fenix.helpers.ext
 
+import android.util.Log
 import androidx.test.uiautomator.SearchCondition
 import androidx.test.uiautomator.UiDevice
 import org.junit.Assert.assertNotNull
+import org.mozilla.fenix.helpers.Constants.TAG
 import org.mozilla.fenix.helpers.TestAssetHelper
 
 /**
@@ -17,4 +19,8 @@ import org.mozilla.fenix.helpers.TestAssetHelper
 fun UiDevice.waitNotNull(
     searchCondition: SearchCondition<*>,
     waitTime: Long = TestAssetHelper.waitingTime,
-) = assertNotNull(wait(searchCondition, waitTime))
+) {
+    Log.i(TAG, "Wait not null: $searchCondition")
+    assertNotNull(wait(searchCondition, waitTime))
+    Log.i(TAG, "Found $searchCondition not null")
+}

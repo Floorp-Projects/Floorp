@@ -334,10 +334,9 @@ class SearchRobot {
         private lateinit var sessionLoadedIdlingResource: SessionLoadedIdlingResource
 
         fun dismissSearchBar(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
-            mDevice.waitForIdle()
-            closeSoftKeyboard()
-            mDevice.pressBack()
             try {
+                searchWrapper().waitForExists(waitingTime)
+                mDevice.pressBack()
                 assertTrue(searchWrapper().waitUntilGone(waitingTimeShort))
             } catch (e: AssertionError) {
                 mDevice.pressBack()

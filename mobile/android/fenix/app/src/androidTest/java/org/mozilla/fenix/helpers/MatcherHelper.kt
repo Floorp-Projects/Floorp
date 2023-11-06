@@ -19,17 +19,25 @@ import org.mozilla.fenix.helpers.TestHelper.mDevice
  */
 object MatcherHelper {
 
-    fun itemWithResId(resourceId: String) =
-        mDevice.findObject(UiSelector().resourceId(resourceId))
+    fun itemWithResId(resourceId: String): UiObject {
+        Log.i(TAG, "Looking for item with resource id: $resourceId")
+        return mDevice.findObject(UiSelector().resourceId(resourceId))
+    }
 
-    fun itemContainingText(itemText: String) =
-        mDevice.findObject(UiSelector().textContains(itemText))
+    fun itemContainingText(itemText: String): UiObject {
+        Log.i(TAG, "Looking for item with text: $itemText")
+        return mDevice.findObject(UiSelector().textContains(itemText))
+    }
 
-    fun itemWithText(itemText: String) =
-        mDevice.findObject(UiSelector().text(itemText))
+    fun itemWithText(itemText: String): UiObject {
+        Log.i(TAG, "Looking for item with text: $itemText")
+        return mDevice.findObject(UiSelector().text(itemText))
+    }
 
-    fun itemWithDescription(description: String) =
-        mDevice.findObject(UiSelector().descriptionContains(description))
+    fun itemWithDescription(description: String): UiObject {
+        Log.i(TAG, "Looking for item with description: $description")
+        return mDevice.findObject(UiSelector().descriptionContains(description))
+    }
 
     fun checkedItemWithResId(resourceId: String, isChecked: Boolean) =
         mDevice.findObject(UiSelector().resourceId(resourceId).checked(isChecked))

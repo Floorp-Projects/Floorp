@@ -6,6 +6,7 @@
 
 package org.mozilla.fenix.ui.robots
 
+import android.util.Log
 import android.view.View
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.UiController
@@ -131,6 +132,7 @@ class TabDrawerRobot {
         var retries = 0 // number of retries before failing, will stop at 2
         do {
             closeTabButton().click()
+            Log.i("MozTestLog", "Clicked the close tab button in tabs tray. Retry #$retries")
             retries++
         } while (closeTabButton().exists() && retries < 3)
     }
@@ -158,7 +160,9 @@ class TabDrawerRobot {
                         ),
                     ),
                 ).perform(swipeRight())
+                Log.i("MozTestLog", "Tab $title swiped right from tabs tray. Retry # $i")
                 assertTrue(
+                    "Tab $title swipe right was unsuccessful.",
                     itemWithResIdContainingText(
                         "$packageName:id/mozac_browser_tabstray_title",
                         title,
@@ -188,7 +192,9 @@ class TabDrawerRobot {
                         ),
                     ),
                 ).perform(swipeLeft())
+                Log.i("MozTestLog", "Tab $title swiped left from tabs tray. Retry # $i")
                 assertTrue(
+                    "Tab $title swipe left was unsuccessful.",
                     itemWithResIdContainingText(
                         "$packageName:id/mozac_browser_tabstray_title",
                         title,
@@ -206,8 +212,9 @@ class TabDrawerRobot {
 
     fun verifySnackBarText(expectedText: String) {
         assertTrue(
+            "SnackBar message: $expectedText - not found",
             mDevice.findObject(
-                UiSelector().text(expectedText),
+                UiSelector().textContains(expectedText),
             ).waitForExists(waitingTime),
         )
     }
@@ -513,8 +520,10 @@ private fun assertExistingOpenTabs(vararg tabTitles: String) {
             tabsList
                 .getChildByText(UiSelector().text(title), title, true)
             assertTrue(
+                "Tab $title not found",
                 tabItem(title).waitForExists(waitingTimeLong),
             )
+            Log.i("MozTestLog", "Tab $title found in tabs tray.")
         }
     }
 }
