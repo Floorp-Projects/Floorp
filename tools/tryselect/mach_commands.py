@@ -8,7 +8,7 @@ import importlib
 import os
 import sys
 
-from mach.decorators import Command, SettingsProvider, SubCommand
+from mach.decorators import Command, SubCommand
 from mach.util import get_state_dir
 from mozbuild.base import BuildEnvironmentNotFoundException
 from mozbuild.util import memoize
@@ -38,38 +38,6 @@ def generic_parser():
     parser = BaseTryParser()
     parser.add_argument("argv", nargs=argparse.REMAINDER)
     return parser
-
-
-@SettingsProvider
-class TryConfig:
-    @classmethod
-    def config_settings(cls):
-        desc = (
-            "The default selector to use when running `mach try` without a subcommand."
-        )
-        choices = [
-            "fuzzy",
-            "chooser",
-            "auto",
-            "again",
-            "empty",
-            "syntax",
-            "coverage",
-            "release",
-            "scriptworker",
-            "compare",
-            "perf",
-        ]
-
-        return [
-            ("try.default", "string", desc, "auto", {"choices": choices}),
-            (
-                "try.maxhistory",
-                "int",
-                "Maximum number of pushes to save in history.",
-                10,
-            ),
-        ]
 
 
 def init(command_context):

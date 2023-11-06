@@ -167,6 +167,7 @@ def initialize(topsrcdir, args=()):
     _maybe_activate_mozillabuild_environment()
 
     import mach.main
+    import mach.settings  # noqa need @SettingsProvider hook to execute
     from mach.command_util import (
         MACH_COMMANDS,
         DetermineCommandVenvAction,

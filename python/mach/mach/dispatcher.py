@@ -9,22 +9,6 @@ import sys
 from operator import itemgetter
 
 from .base import NoCommandError, UnknownCommandError, UnrecognizedArgumentError
-from .decorators import SettingsProvider
-
-
-@SettingsProvider
-class DispatchSettings:
-    config_settings = [
-        (
-            "alias.*",
-            "string",
-            """
-Create a command alias of the form `<alias>=<command> <args>`.
-Aliases can also be used to set default arguments:
-<command>=<command> <args>
-""".strip(),
-        ),
-    ]
 
 
 class CommandFormatter(argparse.HelpFormatter):

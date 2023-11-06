@@ -11,13 +11,12 @@ import pytest
 import requests
 from mach.config import ConfigSettings
 from mach.decorators import SettingsProvider
+from mach.settings import MachSettings
 from mach.telemetry import (
     initialize_telemetry_setting,
     record_telemetry_settings,
     resolve_is_employee,
 )
-
-from mozbuild.settings import TelemetrySettings
 
 
 @SettingsProvider
@@ -32,7 +31,7 @@ def record_enabled_telemetry(mozbuild_path, settings):
 @pytest.fixture
 def settings():
     s = ConfigSettings()
-    s.register_provider(TelemetrySettings)
+    s.register_provider(MachSettings)
     s.register_provider(OtherSettings)
     return s
 

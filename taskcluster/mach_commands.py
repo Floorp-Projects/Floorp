@@ -16,25 +16,9 @@ from functools import partial
 
 import gecko_taskgraph.main
 from gecko_taskgraph.main import commands as taskgraph_commands
-from mach.decorators import Command, CommandArgument, SettingsProvider, SubCommand
+from mach.decorators import Command, CommandArgument, SubCommand
 
 logger = logging.getLogger("taskcluster")
-
-
-@SettingsProvider
-class TaskgraphConfig(object):
-    @classmethod
-    def config_settings(cls):
-        return [
-            (
-                "taskgraph.diffcmd",
-                "string",
-                "The command to run with `./mach taskgraph --diff`",
-                "diff --report-identical-files "
-                "--label={attr}@{base} --label={attr}@{cur} -U20",
-                {},
-            )
-        ]
 
 
 def strtobool(value):
