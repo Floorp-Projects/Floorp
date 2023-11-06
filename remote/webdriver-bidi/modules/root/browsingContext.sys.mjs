@@ -228,7 +228,6 @@ class BrowsingContextModule extends Module {
    *
    * @property {ClipRectangleType} [type=ClipRectangleType.Element]
    * @property {SharedReference} element
-   * @property {boolean=} scrollIntoView
    */
 
   /**
@@ -276,19 +275,12 @@ class BrowsingContextModule extends Module {
         }
 
         case ClipRectangleType.Element: {
-          const { element, scrollIntoView = null } = clip;
+          const { element } = clip;
 
           lazy.assert.object(
             element,
             `Expected "element" to be an object, got ${element}`
           );
-
-          if (scrollIntoView !== null) {
-            lazy.assert.boolean(
-              scrollIntoView,
-              `Expected "scrollIntoView" to be a boolean, got ${scrollIntoView}`
-            );
-          }
 
           break;
         }
