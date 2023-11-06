@@ -14,7 +14,7 @@ const fluentStrings = [
 ];
 
 export default {
-  title: "UI Widgets/Moz Message Bar",
+  title: "UI Widgets/Message Bar",
   component: "moz-message-bar",
   argTypes: {
     type: {
@@ -37,7 +37,7 @@ export default {
     },
   },
   parameters: {
-    status: "unstable",
+    status: "stable",
     fluent: `
 moz-message-bar-message =
   .message = For your information message
