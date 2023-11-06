@@ -6143,10 +6143,6 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
   GtkWidget* container = moz_container_new();
   mContainer = MOZ_CONTAINER(container);
 
-  // "csd" style is set when widget is realized so we need to call
-  // it explicitly now.
-  gtk_widget_realize(mShell);
-
   /* There are several cases here:
    *
    * 1) We're running on Gtk+ without client side decorations.
@@ -6158,10 +6154,8 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
    * 3) We're running on Wayland. All gecko content is rendered
    *    to mContainer and we listen to the Gtk+ events on mContainer.
    */
-  GtkStyleContext* style = gtk_widget_get_style_context(mShell);
-  mDrawToContainer = GdkIsWaylandDisplay() ||
-                     mGtkWindowDecoration == GTK_DECORATION_CLIENT ||
-                     gtk_style_context_has_class(style, "csd");
+  mDrawToContainer =
+      GdkIsWaylandDisplay() || mGtkWindowDecoration == GTK_DECORATION_CLIENT;
   eventWidget = mDrawToContainer ? container : mShell;
 
   // Prevent GtkWindow from painting a background to avoid flickering.
@@ -8900,6 +8894,13 @@ void nsWindow::SetDrawsInTitlebar(bool aState) {
     SetWindowDecoration(aState ? BorderStyle::Border : mBorderStyle);
   } else if (mGtkWindowDecoration == GTK_DECORATION_CLIENT) {
     LOG("    Using CSD mode\n");
+
+    if (!gtk_widget_get_realized(GTK_WIDGET(mShell))) {
+      LOG("    Using CSD mode fast path\n");
+      gtk_window_set_titlebar(GTK_WINDOW(mShell),
+                              aState ? gtk_fixed_new() : nullptr);
+      return;
+    }
 
     /* Window manager does not support GDK_DECOR_BORDER,
      * emulate it by CSD.
