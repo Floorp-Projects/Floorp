@@ -1739,6 +1739,37 @@
     "description": "Over-allocation due to PHC's rounding (aka internal fragmentation).  Measured in bytes.",
     "releaseChannelCollection": "opt-out"
   },
+  "MEMORY_PHC_SLOTS_ALLOCATED": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox"],
+    "alert_emails": [
+      "memshrink-telemetry-alerts@mozilla.com",
+      "pbone@mozilla.com"
+    ],
+    "bug_numbers": [1829127],
+    "expires_in_version": "128",
+    "kind": "exponential",
+    "high": 16384,
+    "n_buckets": 64,
+    "description": "Number of PHC slots currently allocated",
+    "releaseChannelCollection": "opt-out"
+  },
+  "MEMORY_PHC_SLOTS_FREED": {
+    "record_in_processes": ["main", "content"],
+    "products": ["firefox"],
+    "alert_emails": [
+      "memshrink-telemetry-alerts@mozilla.com",
+      "pbone@mozilla.com"
+    ],
+    "bug_numbers": [1829127],
+    "expires_in_version": "128",
+    "kind": "exponential",
+    "high": 16384,
+    "n_buckets": 64,
+    "description": "Number of PHC slots allocated-then-freed",
+    "releaseChannelCollection": "opt-out"
+  },
+
   "FONTLIST_INITOTHERFAMILYNAMES": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
