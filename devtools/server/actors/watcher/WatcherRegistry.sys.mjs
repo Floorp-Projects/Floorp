@@ -150,7 +150,7 @@ export const WatcherRegistry = {
   },
 
   /**
-   * Notify that a given watcher added an entry in a given data type.
+   * Notify that a given watcher added or set some entries for given data type.
    *
    * @param WatcherActor watcher
    *               The WatcherActor which starts observing.
@@ -158,8 +158,11 @@ export const WatcherRegistry = {
    *               The type of data to be added
    * @param Array<Object> entries
    *               The values to be added to this type of data
+   * @param String updateType
+   *               "add" will only add the new entries in the existing data set.
+   *               "set" will update the data set with the new entries.
    */
-  addSessionDataEntry(watcher, type, entries) {
+  addOrSetSessionDataEntry(watcher, type, entries, updateType) {
     const sessionData = this.getSessionData(watcher, {
       createData: true,
     });
@@ -168,7 +171,12 @@ export const WatcherRegistry = {
       throw new Error(`Unsupported session data type: ${type}`);
     }
 
-    SessionDataHelpers.addSessionDataEntry(sessionData, type, entries);
+    SessionDataHelpers.addOrSetSessionDataEntry(
+      sessionData,
+      type,
+      entries,
+      updateType
+    );
 
     // Register the JS Window Actor the first time we start watching for something (e.g. resource, target, …).
     registerJSWindowActor();
@@ -249,7 +257,12 @@ export const WatcherRegistry = {
    *               The new target type to start listening to.
    */
   watchTargets(watcher, targetType) {
-    this.addSessionDataEntry(watcher, SUPPORTED_DATA.TARGETS, [targetType]);
+    this.addOrSetSessionDataEntry(
+      watcher,
+      SUPPORTED_DATA.TARGETS,
+      [targetType],
+      "add"
+    );
   },
 
   /**
@@ -283,7 +296,12 @@ export const WatcherRegistry = {
    *               The new resource types to start listening to.
    */
   watchResources(watcher, resourceTypes) {
-    this.addSessionDataEntry(watcher, SUPPORTED_DATA.RESOURCES, resourceTypes);
+    this.addOrSetSessionDataEntry(
+      watcher,
+      SUPPORTED_DATA.RESOURCES,
+      resourceTypes,
+      "add"
+    );
   },
 
   /**

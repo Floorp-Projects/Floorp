@@ -66,7 +66,11 @@ class ThreadConfigurationActor extends Actor {
       })
       .map(key => ({ key, value: configuration[key] }));
 
-    await this.watcherActor.addDataEntry(THREAD_CONFIGURATION, configArray);
+    await this.watcherActor.addOrSetDataEntry(
+      THREAD_CONFIGURATION,
+      configArray,
+      "add"
+    );
   }
 }
 

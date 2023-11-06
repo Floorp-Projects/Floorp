@@ -47,18 +47,21 @@ class BlackboxingActor extends Actor {
    */
   blackbox(url, ranges) {
     if (!ranges.length) {
-      return this.watcherActor.addDataEntry(BLACKBOXING, [
-        { url, range: null },
-      ]);
+      return this.watcherActor.addOrSetDataEntry(
+        BLACKBOXING,
+        [{ url, range: null }],
+        "add"
+      );
     }
-    return this.watcherActor.addDataEntry(
+    return this.watcherActor.addOrSetDataEntry(
       BLACKBOXING,
       ranges.map(range => {
         return {
           url,
           range,
         };
-      })
+      }),
+      "add"
     );
   }
 

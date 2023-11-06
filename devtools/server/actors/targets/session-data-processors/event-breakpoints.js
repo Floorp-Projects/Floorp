@@ -9,15 +9,25 @@ const {
 } = require("resource://devtools/server/actors/thread.js");
 
 module.exports = {
-  async addSessionDataEntry(targetActor, entries, isDocumentCreation) {
+  async addOrSetSessionDataEntry(
+    targetActor,
+    entries,
+    isDocumentCreation,
+    updateType
+  ) {
+    const { threadActor } = targetActor;
     // Same as comments for XHR breakpoints. See lines 117-118
     if (
-      targetActor.threadActor.state == THREAD_STATES.DETACHED &&
+      threadActor.state == THREAD_STATES.DETACHED &&
       !targetActor.targetType.endsWith("worker")
     ) {
-      targetActor.threadActor.attach();
+      threadActor.attach();
     }
-    targetActor.threadActor.addEventBreakpoints(entries);
+    if (updateType == "set") {
+      threadActor.setActiveEventBreakpoints(entries);
+    } else {
+      threadActor.addEventBreakpoints(entries);
+    }
   },
 
   removeSessionDataEntry(targetActor, entries, isDocumentCreation) {

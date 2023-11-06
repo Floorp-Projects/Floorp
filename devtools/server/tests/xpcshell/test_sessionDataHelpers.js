@@ -18,30 +18,45 @@ function run_test() {
     [TARGETS]: [],
   };
 
-  SessionDataHelpers.addSessionDataEntry(sessionData, TARGETS, [
-    "frame",
-    "worker",
-  ]);
+  info("Test adding a new entry");
+  SessionDataHelpers.addOrSetSessionDataEntry(
+    sessionData,
+    TARGETS,
+    ["frame", "worker"],
+    "add"
+  );
   deepEqual(
     sessionData[TARGETS],
     ["frame", "worker"],
     "the two elements were added"
   );
 
-  SessionDataHelpers.addSessionDataEntry(sessionData, TARGETS, ["frame"]);
+  info("Test adding a duplicated entry");
+  SessionDataHelpers.addOrSetSessionDataEntry(
+    sessionData,
+    TARGETS,
+    ["frame"],
+    "add"
+  );
   deepEqual(
     sessionData[TARGETS],
     ["frame", "worker"],
-    "addSessionDataEntry ignore duplicates"
+    "addOrSetSessionDataEntry ignore duplicates"
   );
 
-  SessionDataHelpers.addSessionDataEntry(sessionData, TARGETS, ["process"]);
+  SessionDataHelpers.addOrSetSessionDataEntry(
+    sessionData,
+    TARGETS,
+    ["process"],
+    "add"
+  );
   deepEqual(
     sessionData[TARGETS],
     ["frame", "worker", "process"],
     "the third element is added"
   );
 
+  info("Test removing an existing entry");
   let removed = SessionDataHelpers.removeSessionDataEntry(
     sessionData,
     TARGETS,
@@ -54,6 +69,7 @@ function run_test() {
     "the element has been remove"
   );
 
+  info("Test removing non-existing entry");
   removed = SessionDataHelpers.removeSessionDataEntry(sessionData, TARGETS, [
     "not-existing",
   ]);
@@ -76,4 +92,33 @@ function run_test() {
     "removedSessionDataEntry returned true as elements have been removed"
   );
   deepEqual(sessionData[TARGETS], [], "all elements were removed");
+
+  info("Test settting instead of adding data entries");
+  SessionDataHelpers.addOrSetSessionDataEntry(
+    sessionData,
+    TARGETS,
+    ["frame"],
+    "add"
+  );
+  deepEqual(sessionData[TARGETS], ["frame"], "frame was re-added");
+
+  SessionDataHelpers.addOrSetSessionDataEntry(
+    sessionData,
+    TARGETS,
+    ["process", "worker"],
+    "set"
+  );
+  deepEqual(
+    sessionData[TARGETS],
+    ["process", "worker"],
+    "frame was replaced by process and worker"
+  );
+
+  info("Test setting an empty array");
+  SessionDataHelpers.addOrSetSessionDataEntry(sessionData, TARGETS, [], "set");
+  deepEqual(
+    sessionData[TARGETS],
+    [],
+    "Setting an empty array of entries clears the data entry"
+  );
 }

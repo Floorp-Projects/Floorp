@@ -211,8 +211,16 @@ function destroyTargets(watcher, options) {
  *        The type of data to be added
  * @param Array<Object> entries
  *        The values to be added to this type of data
+ * @param String updateType
+ *        "add" will only add the new entries in the existing data set.
+ *        "set" will update the data set with the new entries.
  */
-async function addSessionDataEntry({ watcher, type, entries }) {
+async function addOrSetSessionDataEntry({
+  watcher,
+  type,
+  entries,
+  updateType,
+}) {
   const browsingContexts = getWatchingBrowsingContexts(watcher);
   const promises = [];
   for (const browsingContext of browsingContexts) {
@@ -223,11 +231,12 @@ async function addSessionDataEntry({ watcher, type, entries }) {
 
     const promise = browsingContext.currentWindowGlobal
       .getActor("DevToolsFrame")
-      .addSessionDataEntry({
+      .addOrSetSessionDataEntry({
         watcherActorID: watcher.actorID,
         sessionContext: watcher.sessionContext,
         type,
         entries,
+        updateType,
       });
     promises.push(promise);
   }
@@ -238,7 +247,7 @@ async function addSessionDataEntry({ watcher, type, entries }) {
 /**
  * Notify all existing frame targets that some data entries have been removed
  *
- * See addSessionDataEntry for argument documentation.
+ * See addOrSetSessionDataEntry for argument documentation.
  */
 function removeSessionDataEntry({ watcher, type, entries }) {
   const browsingContexts = getWatchingBrowsingContexts(watcher);
@@ -262,7 +271,7 @@ function removeSessionDataEntry({ watcher, type, entries }) {
 module.exports = {
   createTargets,
   destroyTargets,
-  addSessionDataEntry,
+  addOrSetSessionDataEntry,
   removeSessionDataEntry,
 };
 

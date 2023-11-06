@@ -5,9 +5,18 @@
 "use strict";
 
 module.exports = {
-  async addSessionDataEntry(targetActor, entries, isDocumentCreation) {
+  async addOrSetSessionDataEntry(
+    targetActor,
+    entries,
+    isDocumentCreation,
+    updateType
+  ) {
+    const { sourcesManager } = targetActor;
+    if (updateType == "set") {
+      sourcesManager.clearAllBlackBoxing();
+    }
     for (const { url, range } of entries) {
-      targetActor.sourcesManager.blackBox(url, range);
+      sourcesManager.blackBox(url, range);
     }
   },
 
