@@ -85,7 +85,7 @@ class WorkletImpl {
   bool IsSystemPrincipal() const { return mPrincipal->IsSystemPrincipal(); }
   bool ShouldResistFingerprinting(RFPTarget aTarget) const {
     return mShouldResistFingerprinting &&
-           nsRFPService::IsRFPEnabledFor(mIsPrivateBrowsing, aTarget,
+           nsRFPService::IsRFPEnabledFor(aTarget,
                                          mOverriddenFingerprintingSettings);
   }
 
@@ -113,17 +113,16 @@ class WorkletImpl {
 
   // Parent thread only.
   RefPtr<dom::WorkletThread> mWorkletThread;
-  bool mTerminated : 1;
+  bool mTerminated;
 
   // Execution thread only.
   RefPtr<dom::WorkletGlobalScope> mGlobalScope;
-  bool mFinishedOnExecutionThread : 1;
+  bool mFinishedOnExecutionThread;
 
   Maybe<nsID> mAgentClusterId;
 
-  bool mSharedMemoryAllowed : 1;
-  bool mShouldResistFingerprinting : 1;
-  bool mIsPrivateBrowsing : 1;
+  bool mSharedMemoryAllowed;
+  bool mShouldResistFingerprinting;
   // The granular fingerprinting protection overrides applied to the worklet.
   // This will only get populated if these is one that comes from the local
   // granular override pref or WebCompat. Otherwise, a value of Nothing()

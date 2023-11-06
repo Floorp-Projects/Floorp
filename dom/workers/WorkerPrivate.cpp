@@ -5763,8 +5763,6 @@ PerformanceStorage* WorkerPrivate::GetPerformanceStorage() {
 bool WorkerPrivate::ShouldResistFingerprinting(RFPTarget aTarget) const {
   return mLoadInfo.mShouldResistFingerprinting &&
          nsRFPService::IsRFPEnabledFor(
-             mLoadInfo.mOriginAttributes.mPrivateBrowsingId >
-                 nsIScriptSecurityManager::DEFAULT_PRIVATE_BROWSING_ID,
              aTarget, mLoadInfo.mOverriddenFingerprintingSettings);
 }
 

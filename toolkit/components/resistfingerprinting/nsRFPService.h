@@ -189,9 +189,8 @@ class nsRFPService final : public nsIObserver, public nsIRFPService {
   // 98% of the time you should use nsContentUtils::ShouldResistFingerprinting
   // as the difference will not matter to you.
   static bool IsRFPPrefEnabled(bool aIsPrivateMode);
-
   static bool IsRFPEnabledFor(
-      bool aIsPrivateMode, RFPTarget aTarget,
+      RFPTarget aTarget,
       const Maybe<RFPTarget>& aOverriddenFingerprintingSettings);
 
   // --------------------------------------------------------------------------

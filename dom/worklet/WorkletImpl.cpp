@@ -46,7 +46,6 @@ WorkletImpl::WorkletImpl(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal)
       mWorkletLoadInfo(aWindow),
       mTerminated(false),
       mFinishedOnExecutionThread(false),
-      mIsPrivateBrowsing(false),
       mTrials(OriginTrials::FromWindow(nsGlobalWindowInner::Cast(aWindow))) {
   Unused << NS_WARN_IF(
       NS_FAILED(ipc::PrincipalToPrincipalInfo(mPrincipal, &mPrincipalInfo)));
@@ -63,7 +62,6 @@ WorkletImpl::WorkletImpl(nsPIDOMWindowInner* aWindow, nsIPrincipal* aPrincipal)
 
   RefPtr<dom::Document> doc = nsGlobalWindowInner::Cast(aWindow)->GetDocument();
   if (doc) {
-    mIsPrivateBrowsing = doc->IsInPrivateBrowsing();
     mOverriddenFingerprintingSettings =
         doc->GetOverriddenFingerprintingSettings();
   }
