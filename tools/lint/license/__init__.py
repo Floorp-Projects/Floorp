@@ -133,6 +133,8 @@ def fix_me(log, filename):
         ".jsm",
         ".jsx",
         ".css",
+        ".idl",
+        ".webidl",
     ]:
         for i, l in enumerate(license_template):
             start = " "

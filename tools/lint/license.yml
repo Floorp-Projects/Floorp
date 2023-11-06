@@ -77,6 +77,7 @@ license:
         - .ftl
         - .h
         - .html
+        - .idl
         - .java
         - .js
         - .jsm
@@ -88,6 +89,7 @@ license:
         - .py
         - .rs
         - .svg
+        - .webidl
         - .xhtml
         - .xml
         - .xul
