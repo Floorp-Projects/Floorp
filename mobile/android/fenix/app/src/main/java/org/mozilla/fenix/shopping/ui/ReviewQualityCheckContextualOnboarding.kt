@@ -103,7 +103,7 @@ fun ReviewQualityCheckContextualOnboarding(
 
         Text(
             text = stringResource(
-                id = R.string.review_quality_check_contextual_onboarding_caption_3,
+                id = R.string.review_quality_check_contextual_onboarding_caption_2,
                 stringResource(id = R.string.shopping_product_name),
             ),
             color = FirefoxTheme.colors.textPrimary,
