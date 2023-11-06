@@ -190,13 +190,12 @@ bool nsRFPService::IsRFPPrefEnabled(bool aIsPrivateMode) {
 
 /* static */
 bool nsRFPService::IsRFPEnabledFor(
-    bool aIsPrivateMode, RFPTarget aTarget,
+    RFPTarget aTarget,
     const Maybe<RFPTarget>& aOverriddenFingerprintingSettings) {
   MOZ_ASSERT(aTarget != RFPTarget::AllTargets);
 
   if (StaticPrefs::privacy_resistFingerprinting_DoNotUseDirectly() ||
-      (aIsPrivateMode &&
-       StaticPrefs::privacy_resistFingerprinting_pbmode_DoNotUseDirectly())) {
+      StaticPrefs::privacy_resistFingerprinting_pbmode_DoNotUseDirectly()) {
     if (aTarget == RFPTarget::JSLocale) {
       return StaticPrefs::privacy_spoof_english() == 2;
     }
@@ -204,9 +203,7 @@ bool nsRFPService::IsRFPEnabledFor(
   }
 
   if (StaticPrefs::privacy_fingerprintingProtection_DoNotUseDirectly() ||
-      (aIsPrivateMode &&
-       StaticPrefs::
-           privacy_fingerprintingProtection_pbmode_DoNotUseDirectly())) {
+      StaticPrefs::privacy_fingerprintingProtection_pbmode_DoNotUseDirectly()) {
     if (aTarget == RFPTarget::IsAlwaysEnabledForPrecompute) {
       return true;
     }
