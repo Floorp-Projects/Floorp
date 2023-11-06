@@ -18647,13 +18647,7 @@ ColorScheme Document::PreferredColorScheme(IgnoreRFP aIgnoreRFP) const {
     }
   }
 
-  // NOTE(emilio): We use IsInChromeDocShell rather than IsChromeDoc
-  // intentionally, to make chrome documents in content docshells (like about
-  // pages) use the content color scheme.
-  if (IsInChromeDocShell()) {
-    return LookAndFeel::ColorSchemeForChrome();
-  }
-  return LookAndFeel::PreferredColorSchemeForContent();
+  return PreferenceSheet::PrefsFor(*this).mColorScheme;
 }
 
 bool Document::HasRecentlyStartedForegroundLoads() {

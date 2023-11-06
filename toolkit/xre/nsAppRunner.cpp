@@ -21,6 +21,7 @@
 #include "mozilla/MemoryChecking.h"
 #include "mozilla/Poison.h"
 #include "mozilla/Preferences.h"
+#include "mozilla/PreferenceSheet.h"
 #include "mozilla/Printf.h"
 #include "mozilla/ProcessType.h"
 #include "mozilla/ResultExtensions.h"
@@ -1590,15 +1591,15 @@ nsXULAppInfo::GetRestartedByOS(bool* aResult) {
 
 NS_IMETHODIMP
 nsXULAppInfo::GetChromeColorSchemeIsDark(bool* aResult) {
-  LookAndFeel::EnsureColorSchemesInitialized();
-  *aResult = LookAndFeel::ColorSchemeForChrome() == ColorScheme::Dark;
+  PreferenceSheet::EnsureInitialized();
+  *aResult = PreferenceSheet::ColorSchemeForChrome() == ColorScheme::Dark;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsXULAppInfo::GetContentThemeDerivedColorSchemeIsDark(bool* aResult) {
   *aResult =
-      LookAndFeel::ThemeDerivedColorSchemeForContent() == ColorScheme::Dark;
+      PreferenceSheet::ThemeDerivedColorSchemeForContent() == ColorScheme::Dark;
   return NS_OK;
 }
 

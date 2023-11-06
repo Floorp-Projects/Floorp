@@ -98,6 +98,8 @@ pref(browser.display.use_system_colors,true) pref(browser.display.document_color
 pref(layout.css.color-mix.enabled,true) != color-mix.html color-mix-notref.html
 
 test-pref(browser.display.background_color,"black") test-pref(browser.display.foreground_color,"white") test-pref(ui.-moz-fieldtext,"black") test-pref(ui.-moz-fieldtext.dark,"white") pref(ui.use_standins_for_native_colors,false) pref(browser.display.use_system_colors,false) == no-system-colors-color-scheme.html no-system-colors-color-scheme-ref.html
+pref(ui.use_standins_for_native_colors,false) pref(browser.display.use_system_colors,false) pref(browser.display.background_color,"black") pref(browser.display.foreground_color,"white") == prefers-color-scheme.html prefers-color-scheme-dark.html
+pref(ui.use_standins_for_native_colors,false) pref(browser.display.use_system_colors,false) pref(browser.display.background_color,"white") pref(browser.display.foreground_color,"black") == prefers-color-scheme.html prefers-color-scheme-light.html
 
 # Forced color adjust
 pref(layout.css.forced-color-adjust.enabled,true) == backplate-force-color-adjust.html backplate-force-color-adjust-ref.html

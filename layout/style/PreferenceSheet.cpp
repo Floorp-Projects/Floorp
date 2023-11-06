@@ -161,6 +161,29 @@ bool PreferenceSheet::Prefs::NonNativeThemeShouldBeHighContrast() const {
          !mUseDocumentColors;
 }
 
+auto PreferenceSheet::ColorSchemeSettingForChrome()
+    -> ChromeColorSchemeSetting {
+  switch (StaticPrefs::browser_theme_toolbar_theme()) {
+    case 0:  // Dark
+      return ChromeColorSchemeSetting::Dark;
+    case 1:  // Light
+      return ChromeColorSchemeSetting::Light;
+    default:
+      return ChromeColorSchemeSetting::System;
+  }
+}
+
+ColorScheme PreferenceSheet::ThemeDerivedColorSchemeForContent() {
+  switch (StaticPrefs::browser_theme_content_theme()) {
+    case 0:  // Dark
+      return ColorScheme::Dark;
+    case 1:  // Light
+      return ColorScheme::Light;
+    default:
+      return LookAndFeel::SystemColorScheme();
+  }
+}
+
 void PreferenceSheet::Prefs::Load(bool aIsChrome) {
   *this = {};
 
@@ -177,35 +200,47 @@ void PreferenceSheet::Prefs::Load(bool aIsChrome) {
   LoadColors(true);
   LoadColors(false);
 
-  mColorSchemeChoice = [&] {
+  // When forcing the pref colors, we need to forcibly use the light color-set,
+  // as those are the colors exposed to the user in the colors dialog.
+  mMustUseLightColorSet = mUsePrefColors && !mUseDocumentColors;
 #ifdef XP_WIN
+  if (mUseAccessibilityTheme) {
     // Windows overrides the light colors with the HCM colors when HCM is
-    // active, so make sure to always use the light system colors in that case.
-    // For the same reason, we need to force the light color set to be used.
-    if (mUseAccessibilityTheme) {
-      mMustUseLightColorSet = true;
-      return ColorSchemeChoice::Light;
-    }
+    // active, so make sure to always use the light system colors in that case,
+    // and also make sure that we always use the light color set for the same
+    // reason.
+    mMustUseLightSystemColors = mMustUseLightColorSet = true;
+  }
 #endif
-    // When not forcing colors, we use the standard mechanism, the document is
-    // in control taking into account user preferences if it wishes to.
-    if (mUseDocumentColors) {
-      return ColorSchemeChoice::Standard;
+
+  mColorScheme = [&] {
+    if (aIsChrome) {
+      switch (ColorSchemeSettingForChrome()) {
+        case ChromeColorSchemeSetting::Light:
+          return ColorScheme::Light;
+        case ChromeColorSchemeSetting::Dark:
+          return ColorScheme::Dark;
+        case ChromeColorSchemeSetting::System:
+          break;
+      }
+      return LookAndFeel::SystemColorScheme();
     }
-    // When forcing preference colors, we derive a color-scheme from those. That
-    // way we can use the system colors more appropriately suited for the user,
-    // avoiding contrast issues like bug 1762018.
-    if (mUsePrefColors) {
-      // We need to forcibly use the light color-set for this case too, as those
-      // are the colors exposed to the user in the preferences page.
-      mMustUseLightColorSet = true;
+    if (mMustUseLightColorSet) {
+      // When forcing colors in a way such as color-scheme isn't respected, we
+      // compute a preference based on the darkness of
+      // our background.
       return LookAndFeel::IsDarkColor(mLightColors.mDefaultBackground)
-                 ? ColorSchemeChoice::Dark
-                 : ColorSchemeChoice::Light;
+                 ? ColorScheme::Dark
+                 : ColorScheme::Light;
     }
-    // When using system colors, we can generally just use the preferred color
-    // scheme of the document unconditionally (modulo the HCM case above).
-    return ColorSchemeChoice::UserPreferred;
+    switch (StaticPrefs::layout_css_prefers_color_scheme_content_override()) {
+      case 0:
+        return ColorScheme::Dark;
+      case 1:
+        return ColorScheme::Light;
+      default:
+        return ThemeDerivedColorSchemeForContent();
+    }
   }();
 }
 
@@ -218,18 +253,21 @@ void PreferenceSheet::Initialize() {
   sContentPrefs.Load(false);
   sChromePrefs.Load(true);
   sPrintPrefs = sContentPrefs;
-  if (!sPrintPrefs.mUseDocumentColors) {
+  {
     // For printing, we always use a preferred-light color scheme.
-    //
-    // When overriding document colors, we ignore the `color-scheme` property,
-    // but we still don't want to use the system colors (which might be dark,
-    // despite having made it into mLightColors), because it both wastes ink and
-    // it might interact poorly with the color adjustments we do while printing.
-    //
-    // So we override the light colors with our hardcoded default colors, and
-    // force the use of stand-ins.
-    sPrintPrefs.mLightColors = Prefs().mLightColors;
-    sPrintPrefs.mUseStandins = true;
+    sPrintPrefs.mColorScheme = ColorScheme::Light;
+    if (!sPrintPrefs.mUseDocumentColors) {
+      // When overriding document colors, we ignore the `color-scheme` property,
+      // but we still don't want to use the system colors (which might be dark,
+      // despite having made it into mLightColors), because it both wastes ink
+      // and it might interact poorly with the color adjustments we do while
+      // printing.
+      //
+      // So we override the light colors with our hardcoded default colors, and
+      // force the use of stand-ins.
+      sPrintPrefs.mLightColors = Prefs().mLightColors;
+      sPrintPrefs.mUseStandins = true;
+    }
   }
 
   nsAutoString useDocumentColorPref;

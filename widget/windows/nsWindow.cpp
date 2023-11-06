@@ -2565,8 +2565,8 @@ void nsWindow::UpdateGetWindowInfoCaptionStatus(bool aActiveCaption) {
 #define DWMWA_USE_IMMERSIVE_DARK_MODE 20
 
 void nsWindow::UpdateDarkModeToolbar() {
-  LookAndFeel::EnsureColorSchemesInitialized();
-  BOOL dark = LookAndFeel::ColorSchemeForChrome() == ColorScheme::Dark;
+  PreferenceSheet::EnsureInitialized();
+  BOOL dark = PreferenceSheet::ColorSchemeForChrome() == ColorScheme::Dark;
   DwmSetWindowAttribute(mWnd, DWMWA_USE_IMMERSIVE_DARK_MODE_BEFORE_20H1, &dark,
                         sizeof dark);
   DwmSetWindowAttribute(mWnd, DWMWA_USE_IMMERSIVE_DARK_MODE, &dark,
