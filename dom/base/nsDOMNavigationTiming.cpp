@@ -57,6 +57,7 @@ void nsDOMNavigationTiming::Clear() {
   mDOMContentLoadedEventEnd = TimeStamp();
   mDOMComplete = TimeStamp();
   mContentfulComposite = TimeStamp();
+  mLargestContentfulRender = TimeStamp();
   mNonBlankPaint = TimeStamp();
 
   mDocShellHasBeenActiveSinceNavigationStart = false;
@@ -476,6 +477,16 @@ void nsDOMNavigationTiming::NotifyContentfulCompositeForRootContentDocument(
     Telemetry::AccumulateTimeDelta(Telemetry::TIME_TO_FIRST_CONTENTFUL_PAINT_MS,
                                    mNavigationStart, mContentfulComposite);
   }
+}
+
+void nsDOMNavigationTiming::NotifyLargestContentfulRenderForRootContentDocument(
+    const DOMHighResTimeStamp& aRenderTime) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!mNavigationStart.IsNull());
+
+  // This can get called multiple times and updates over time.
+  mLargestContentfulRender =
+      mNavigationStart + TimeDuration::FromMilliseconds(aRenderTime);
 }
 
 void nsDOMNavigationTiming::NotifyDOMContentFlushedForRootContentDocument() {
