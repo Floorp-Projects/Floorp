@@ -353,7 +353,7 @@ blocklist:
     extra_keys:
       blocklistState: >
         The blocklistState of the add-on. 0 is unblocked, 2 is blocked.
-        1 is soft blocked (only if blocklist v3 was disabled in favor of v2).
+        1 is soft blocked (this state does not exist in blocklist v3).
       addon_version: >
         Version of the add-on. Used together with an add-on's ID (value) to identify
         add-ons to block.
@@ -379,11 +379,11 @@ blocklist:
         This field is documented in more detail in the definition of the blocklist.mlbf_source scalar.
         Possible values are "dump_match", "cache_match", "remote_match", "dump_fallback", "cache_fallback", "unknown".
     notification_emails: ["addons-dev-internal@mozilla.com", "rwu@mozilla.com"]
-    expiry_version: "122"
+    expiry_version: "132"
     products:
       - "firefox"
     record_in_processes: ["main"]
-    bug_numbers: [1662857, 1730037, 1763529, 1811159]
+    bug_numbers: [1662857, 1730037, 1763529, 1811159, 1861296]
     release_channel_collection: opt-out
 
 downloads:
