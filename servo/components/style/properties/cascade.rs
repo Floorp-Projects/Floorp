@@ -1098,11 +1098,16 @@ impl<'a, 'b: 'a> Cascade<'a, 'b> {
     fn prioritize_user_fonts_if_needed(&mut self) {
         use crate::gecko_bindings::bindings;
 
-        if static_prefs::pref!("browser.display.use_document_fonts") != 0 {
+        let builder = &mut self.context.builder;
+
+        // Check the use_document_fonts setting for content, but for chrome
+        // documents they're treated as always enabled.
+        if static_prefs::pref!("browser.display.use_document_fonts") != 0 ||
+            builder.device.chrome_rules_enabled_for_document()
+        {
             return;
         }
 
-        let builder = &mut self.context.builder;
         let default_font_type = {
             let font = builder.get_font();
 
