@@ -615,6 +615,12 @@ static void HexEncode(const Span<const uint8_t>& aBytes, nsACString& aEncoded) {
 // reason and yet the LPAC permission is already granted. So returning success
 // or failure isn't really that useful.
 static void EnsureLpacPermsissionsOnBinDir() {
+  // For MSIX packages we get access through the packageContents capability and
+  // we probably won't have access to add the permission either way.
+  if (widget::WinUtils::HasPackageIdentity()) {
+    return;
+  }
+
   BYTE sidBytes[SECURITY_MAX_SID_SIZE];
   PSID lpacFirefoxInstallFilesSid = static_cast<PSID>(sidBytes);
   if (!sBrokerService->DeriveCapabilitySidFromName(kLpacFirefoxInstallFiles,
@@ -1484,6 +1490,11 @@ struct UtilityMfMediaEngineCdmSandboxProps : public UtilitySandboxProps {
           kLpacFirefoxInstallFiles,
           L"lpacDeviceAccess",
       };
+
+      // For MSIX packages we need access to the package contents.
+      if (widget::WinUtils::HasPackageIdentity()) {
+        mNamedCapabilites.AppendElement(L"packageContents");
+      }
     }
     mUseWin32kLockdown = false;
     mDelayedMitigations = sandbox::MITIGATION_DLL_SEARCH_ORDER;
