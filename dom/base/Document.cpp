@@ -11469,6 +11469,7 @@ void Document::Destroy() {
   }
 
   ReportDocumentUseCounters();
+  ReportLCP();
   SetDevToolsWatchingDOMMutations(false);
 
   mIsGoingAway = true;
@@ -16182,6 +16183,42 @@ void Document::ReportDocumentUseCounters() {
     }
     Telemetry::Accumulate(id, 1);
   }
+}
+
+void Document::ReportLCP() {
+  const nsDOMNavigationTiming* timing = GetNavigationTiming();
+
+  if (!timing) {
+    return;
+  }
+
+  TimeStamp lcpTime = timing->GetLargestContentfulRenderTimeStamp();
+
+  if (!lcpTime) {
+    return;
+  }
+
+  mozilla::glean::perf::largest_contentful_paint.AccumulateRawDuration(
+      lcpTime - timing->GetNavigationStartTimeStamp());
+
+  if (!GetChannel()) {
+    return;
+  }
+
+  nsCOMPtr<nsITimedChannel> timedChannel(do_QueryInterface(GetChannel()));
+  if (!timedChannel) {
+    return;
+  }
+
+  TimeStamp responseStart;
+  timedChannel->GetResponseStart(&responseStart);
+
+  if (!responseStart) {
+    return;
+  }
+
+  mozilla::glean::perf::largest_contentful_paint_from_response_start
+      .AccumulateRawDuration(lcpTime - responseStart);
 }
 
 void Document::SendPageUseCounters() {

@@ -16250,6 +16250,30 @@
     "bug_numbers": [1671729],
     "description": "The time between responseStart and the first contentful paint of a foreground http or https root content document, in milliseconds. The contentful paint timestamp is taken during display list building and does not include rasterization or compositing of that paint."
   },
+  "PERF_LARGEST_CONTENTFUL_PAINT_MS": {
+    "record_in_processes": ["content"],
+    "products": ["firefox"],
+    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
+    "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
+    "kind": "exponential",
+    "high": 50000,
+    "n_buckets": 100,
+    "bug_numbers": [1862939],
+    "description": "The time between navigationStart and the largest contentful paint of a foreground http or https root content document, in milliseconds. The contentful paint timestamp is taken during display list building and does not include rasterization or compositing of that paint."
+  },
+  "PERF_LARGEST_CONTENTFUL_PAINT_FROM_RESPONSE_START_MS": {
+    "record_in_processes": ["content"],
+    "products": ["firefox"],
+    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
+    "expires_in_version": "never",
+    "releaseChannelCollection": "opt-out",
+    "kind": "exponential",
+    "high": 50000,
+    "n_buckets": 100,
+    "bug_numbers": [1862939],
+    "description": "The time between responseStart and the largest contentful paint of a foreground http or https root content document, in milliseconds. The contentful paint timestamp is taken during display list building and does not include rasterization or compositing of that paint."
+  },
   "PERF_REQUEST_ANIMATION_CALLBACK_NON_PAGELOAD_MS": {
     "record_in_processes": ["content"],
     "products": ["firefox", "geckoview_streaming"],
