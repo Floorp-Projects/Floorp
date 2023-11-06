@@ -26,7 +26,7 @@ if [ ! -f nsIApplicationReputation.idl ]; then
 fi
 
 # Get the protocol buffer and compile it
-CSD_PROTO_URL="https://chromium.googlesource.com/chromium/src/+/master/components/safe_browsing/proto/csd.proto?format=TEXT"
+CSD_PROTO_URL="https://chromium.googlesource.com/chromium/src/+/main/components/safe_browsing/core/common/proto/csd.proto?format=TEXT"
 CSD_PATH="chromium/chrome/common/safe_browsing"
 
 # Switch to directory with csd.proto before compiling it

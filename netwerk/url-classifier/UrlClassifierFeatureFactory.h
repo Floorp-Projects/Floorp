@@ -27,8 +27,6 @@ class UrlClassifierFeatureFactory final {
   static void GetPhishingProtectionFeatures(
       nsTArray<RefPtr<nsIUrlClassifierFeature>>& aFeatures);
 
-  static nsIUrlClassifierFeature* GetFeatureLoginReputation();
-
   static already_AddRefed<nsIUrlClassifierFeature> GetFeatureByName(
       const nsACString& aName);
 

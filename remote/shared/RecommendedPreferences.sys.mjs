@@ -125,7 +125,6 @@ const COMMON_PREFERENCES = new Map([
   ["browser.safebrowsing.blockedURIs.enabled", false],
   ["browser.safebrowsing.downloads.enabled", false],
   ["browser.safebrowsing.malware.enabled", false],
-  ["browser.safebrowsing.passwords.enabled", false],
   ["browser.safebrowsing.phishing.enabled", false],
 
   // Disable updates to search engines.

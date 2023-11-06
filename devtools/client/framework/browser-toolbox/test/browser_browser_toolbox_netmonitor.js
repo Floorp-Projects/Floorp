@@ -10,7 +10,6 @@ add_task(async function () {
   await pushPref("browser.safebrowsing.blockedURIs.enabled", false);
   await pushPref("browser.safebrowsing.downloads.enabled", false);
   await pushPref("browser.safebrowsing.malware.enabled", false);
-  await pushPref("browser.safebrowsing.passwords.enabled", false);
   await pushPref("browser.safebrowsing.phishing.enabled", false);
   await pushPref("privacy.query_stripping.enabled", false);
   await pushPref("extensions.systemAddon.update.enabled", false);

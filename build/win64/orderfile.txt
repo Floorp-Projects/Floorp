@@ -658,7 +658,6 @@ ZN4uuid6parser28_$LT$impl$u20$uuid..Uuid$GT$9parse_str17hd6e937141c32aa4eE
 ?DetermineOffsetFromReference@?$RangeBoundaryBase@V?$nsCOMPtr@VnsINode@@@@V?$nsCOMPtr@VnsIContent@@@@@mozilla@@AEBAXXZ
 ?s_HashKey@?$nsTHashtable@V?$nsBaseHashtableET@VnsStringHashKey@@PEAUMiscContainer@@@@@@KAIPEBX@Z
 ?GetOrCreate@nsRFPService@mozilla@@SAPEAV12@XZ
-?OnComplete@LoginReputationParent@dom@mozilla@@UEAA?AW4nsresult@@W44@I@Z
 ?GetSpoofedPresentedFrames@nsRFPService@mozilla@@SAINII@Z
 ?Release@nsUUIDGenerator@@UEAAKXZ
 ??0AutoSuppressEventHandlingAndSuspend@dom@mozilla@@QEAA@PEAVBrowsingContextGroup@12@@Z
