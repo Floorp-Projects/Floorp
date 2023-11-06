@@ -383,6 +383,7 @@ var gIdentityHandler = {
   },
   _isSchemelessHttpsFirstModeActive(isWindowPrivate) {
     return (
+      !this._isHttpsOnlyModeActive(isWindowPrivate) &&
       !this._isHttpsFirstModeActive(isWindowPrivate) &&
       this._schemelessHttpsFirstModeEnabled
     );
