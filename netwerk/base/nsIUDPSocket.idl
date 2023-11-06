@@ -194,7 +194,8 @@ interface nsIUDPSocket : nsISupports
      * @return number of bytes written. (0 or length of data)
      */
     [noscript] unsigned long sendWithAddress([const] in NetAddrPtr addr,
-                                             in Array<uint8_t> data);
+                                             [array, size_is(length), const] in uint8_t data,
+                                             in unsigned long length);
 
     /**
      * sendBinaryStream
