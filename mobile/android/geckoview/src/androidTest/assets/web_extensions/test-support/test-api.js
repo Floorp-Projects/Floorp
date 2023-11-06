@@ -223,6 +223,27 @@ this.test = class extends ExtensionAPI {
             name: "CookieBanner::HandledBanner",
           });
         },
+
+        async triggerTranslationsOffer(tabId) {
+          const browser = context.extension.tabManager.get(tabId).browser;
+          const { CustomEvent } = browser.ownerGlobal;
+          return browser.dispatchEvent(
+            new CustomEvent("TranslationsParent:OfferTranslation", {
+              bubbles: true,
+            })
+          );
+        },
+
+        async triggerLanguageStateChange(tabId, languageState) {
+          const browser = context.extension.tabManager.get(tabId).browser;
+          const { CustomEvent } = browser.ownerGlobal;
+          return browser.dispatchEvent(
+            new CustomEvent("TranslationsParent:LanguageState", {
+              bubbles: true,
+              detail: languageState,
+            })
+          );
+        },
       },
     };
   }

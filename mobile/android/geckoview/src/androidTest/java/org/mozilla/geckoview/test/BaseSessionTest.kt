@@ -278,6 +278,11 @@ open class BaseSessionTest(
     fun GeckoSession.triggerCookieBannerHandled() =
         sessionRule.triggerCookieBannerHandled(this)
 
+    fun GeckoSession.triggerTranslationsOffer() =
+        sessionRule.triggerTranslationsOffer(this)
+
+    fun GeckoSession.triggerLanguageStateChange(languageState: JSONObject) =
+        sessionRule.triggerLanguageStateChange(this, languageState)
     var GeckoSession.active: Boolean
         get() = sessionRule.getActive(this)
         set(value) = setActive(value)
