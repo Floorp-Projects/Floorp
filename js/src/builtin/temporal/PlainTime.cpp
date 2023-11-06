@@ -1689,20 +1689,25 @@ static bool DifferenceTemporalPlainTime(JSContext* cx,
 
   // Step 5.
   auto diff = DifferenceTime(temporalTime, other);
+  MOZ_ASSERT(diff.days == 0);
 
-  // Steps 6-7.
-  Duration roundedDuration;
-  if (!RoundDuration(cx, diff.toDuration().time(), settings.roundingIncrement,
-                     settings.smallestUnit, settings.roundingMode,
-                     &roundedDuration)) {
-    return false;
+  // Step 6.
+  auto roundedDuration = diff.toDuration();
+  if (settings.smallestUnit != TemporalUnit::Nanosecond ||
+      settings.roundingIncrement != Increment{1}) {
+    // Steps 6.a-b.
+    if (!RoundDuration(cx, roundedDuration.time(), settings.roundingIncrement,
+                       settings.smallestUnit, settings.roundingMode,
+                       &roundedDuration)) {
+      return false;
+    }
   }
 
-  // Step 8.
+  // Step 7.
   auto balancedDuration =
       BalanceTimeDuration(roundedDuration, settings.largestUnit);
 
-  // Step 9.
+  // Step 8.
   if (operation == TemporalDifference::Since) {
     balancedDuration = balancedDuration.negate();
   }

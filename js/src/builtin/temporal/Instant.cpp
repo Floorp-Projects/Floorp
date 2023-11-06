@@ -870,17 +870,30 @@ bool js::temporal::DifferenceInstant(JSContext* cx, const Instant& ns1,
   };
   MOZ_ASSERT(IsValidDuration(duration));
 
-  // Steps 6-7.
+  // Step 6.
+  if (smallestUnit == TemporalUnit::Nanosecond &&
+      roundingIncrement == Increment{1}) {
+    TimeDuration balanced;
+    if (!BalanceTimeDuration(cx, duration, largestUnit, &balanced)) {
+      return false;
+    }
+    MOZ_ASSERT(balanced.days == 0);
+
+    *result = balanced.toDuration().time();
+    return true;
+  }
+
+  // Steps 7-8.
   Duration roundResult;
   if (!temporal::RoundDuration(cx, duration, roundingIncrement, smallestUnit,
                                roundingMode, &roundResult)) {
     return false;
   }
 
-  // Step 8.
+  // Step 9.
   MOZ_ASSERT(roundResult.days == 0);
 
-  // Step 9.
+  // Step 10.
   TimeDuration balanced;
   if (!BalanceTimeDuration(cx, roundResult, largestUnit, &balanced)) {
     return false;

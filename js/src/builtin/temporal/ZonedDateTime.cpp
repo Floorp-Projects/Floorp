@@ -1270,7 +1270,23 @@ static bool DifferenceTemporalZonedDateTime(JSContext* cx,
     }
   }
 
-  // Steps 10-11.
+  // Step 10.
+  if (settings.smallestUnit == TemporalUnit::Nanosecond &&
+      settings.roundingIncrement == Increment{1}) {
+    if (operation == TemporalDifference::Since) {
+      difference = difference.negate();
+    }
+
+    auto* obj = CreateTemporalDuration(cx, difference);
+    if (!obj) {
+      return false;
+    }
+
+    args.rval().setObject(*obj);
+    return true;
+  }
+
+  // Steps 11-12.
   Duration roundResult;
   if (!RoundDuration(cx, difference, settings.roundingIncrement,
                      settings.smallestUnit, settings.roundingMode,
@@ -1279,7 +1295,7 @@ static bool DifferenceTemporalZonedDateTime(JSContext* cx,
     return false;
   }
 
-  // Step 12.
+  // Step 13.
   Duration result;
   if (!AdjustRoundedDurationDays(cx, roundResult, settings.roundingIncrement,
                                  settings.smallestUnit, settings.roundingMode,
@@ -1287,7 +1303,7 @@ static bool DifferenceTemporalZonedDateTime(JSContext* cx,
     return false;
   }
 
-  // Step 13.
+  // Step 14.
   if (operation == TemporalDifference::Since) {
     result = result.negate();
   }
@@ -2929,6 +2945,20 @@ static bool ZonedDateTime_round(JSContext* cx, const CallArgs& args) {
                                            inclusive)) {
       return false;
     }
+  }
+
+  // Step 13.
+  if (smallestUnit == TemporalUnit::Nanosecond &&
+      roundingIncrement == Increment{1}) {
+    // Step 13.a.
+    auto* result =
+        CreateTemporalZonedDateTime(cx, epochInstant, timeZone, calendar);
+    if (!result) {
+      return false;
+    }
+
+    args.rval().setObject(*result);
+    return true;
   }
 
   // Steps 15 and 17.

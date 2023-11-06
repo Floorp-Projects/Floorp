@@ -7465,6 +7465,9 @@ static bool Duration_round(JSContext* cx, const CallArgs& args) {
   auto* durationObj = &args.thisv().toObject().as<DurationObject>();
   auto duration = ToDuration(durationObj);
 
+  // Step 15. (Reordered)
+  auto existingLargestUnit = DefaultTemporalLargestUnit(duration);
+
   // Steps 3-20.
   auto smallestUnit = TemporalUnit::Auto;
   TemporalUnit largestUnit;
@@ -7485,11 +7488,10 @@ static bool Duration_round(JSContext* cx, const CallArgs& args) {
 
     // Step 14. (Not applicable)
 
-    // Step 15.
-    auto defaultLargestUnit = DefaultTemporalLargestUnit(duration);
+    // Step 15. (Moved above)
 
     // Step 16.
-    defaultLargestUnit = std::min(defaultLargestUnit, smallestUnit);
+    auto defaultLargestUnit = std::min(existingLargestUnit, smallestUnit);
 
     // Step 17. (Not applicable)
 
@@ -7566,11 +7568,10 @@ static bool Duration_round(JSContext* cx, const CallArgs& args) {
       smallestUnit = TemporalUnit::Nanosecond;
     }
 
-    // Step 15.
-    auto defaultLargestUnit = DefaultTemporalLargestUnit(duration);
+    // Step 15. (Moved above)
 
     // Step 16.
-    defaultLargestUnit = std::min(defaultLargestUnit, smallestUnit);
+    auto defaultLargestUnit = std::min(existingLargestUnit, smallestUnit);
 
     // Steps 17-18.
     if (largestUnitValue.isUndefined()) {
@@ -7625,7 +7626,40 @@ static bool Duration_round(JSContext* cx, const CallArgs& args) {
     }
   }
 
+  // FIXME: spec bug - negative durations shouldn't unconditionally take the
+  // fast path, i.e. comparisons need to happen against the absolute values.
+
   // Step 23.
+  bool hoursToDaysConversionMayOccur = false;
+
+  // Step 24.
+  if (duration.days != 0 && zonedRelativeTo) {
+    hoursToDaysConversionMayOccur = true;
+  }
+
+  // Step 25.
+  else if (duration.hours >= 24) {
+    hoursToDaysConversionMayOccur = true;
+  }
+
+  // Step 26.
+  if (smallestUnit == TemporalUnit::Nanosecond &&
+      roundingIncrement == Increment{1} && largestUnit == existingLargestUnit &&
+      duration.years == 0 && duration.months == 0 && duration.weeks == 0 &&
+      !hoursToDaysConversionMayOccur && duration.minutes < 60 &&
+      duration.seconds < 60 && duration.milliseconds < 1000 &&
+      duration.microseconds < 1000 && duration.nanoseconds < 1000) {
+    // Steps 26.a-b.
+    auto* obj = CreateTemporalDuration(cx, duration);
+    if (!obj) {
+      return false;
+    }
+
+    args.rval().setObject(*obj);
+    return true;
+  }
+
+  // Step 27.
   DateDuration unbalanceResult;
   if (relativeTo) {
     if (!UnbalanceDateDurationRelative(cx, duration, largestUnit, relativeTo,
@@ -7640,7 +7674,7 @@ static bool Duration_round(JSContext* cx, const CallArgs& args) {
     MOZ_ASSERT(duration.date() == unbalanceResult.toDuration());
   }
 
-  // Steps 24-25.
+  // Steps 28-29.
   Duration roundInput = {
       unbalanceResult.years, unbalanceResult.months, unbalanceResult.weeks,
       unbalanceResult.days,  duration.hours,         duration.minutes,
@@ -7665,10 +7699,10 @@ static bool Duration_round(JSContext* cx, const CallArgs& args) {
     }
   }
 
-  // Steps 26-27.
+  // Steps 30-31.
   TimeDuration balanceResult;
   if (zonedRelativeTo) {
-    // Step 26.a.
+    // Step 30.a.
     Duration adjustResult;
     if (!AdjustRoundedDurationDays(cx, roundResult, roundingIncrement,
                                    smallestUnit, roundingMode, zonedRelativeTo,
@@ -7677,19 +7711,19 @@ static bool Duration_round(JSContext* cx, const CallArgs& args) {
     }
     roundResult = adjustResult;
 
-    // Step 26.b.
+    // Step 30.b.
     if (!BalanceTimeDurationRelative(cx, roundResult, largestUnit,
                                      zonedRelativeTo, &balanceResult)) {
       return false;
     }
   } else {
-    // Step 27.a.
+    // Step 31.a.
     if (!BalanceTimeDuration(cx, roundResult, largestUnit, &balanceResult)) {
       return false;
     }
   }
 
-  // Step 28.
+  // Step 32.
   Duration balanceInput = {
       roundResult.years,
       roundResult.months,
@@ -7702,7 +7736,7 @@ static bool Duration_round(JSContext* cx, const CallArgs& args) {
     return false;
   }
 
-  // Step 29.
+  // Step 33.
   auto* obj = CreateTemporalDuration(cx, {
                                              result.years,
                                              result.months,
