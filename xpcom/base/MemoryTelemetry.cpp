@@ -8,6 +8,9 @@
 #include "nsMemoryReporterManager.h"
 
 #include "mozilla/ClearOnShutdown.h"
+#ifdef MOZ_PHC
+#  include "mozilla/PHCManager.h"
+#endif
 #include "mozilla/Result.h"
 #include "mozilla/ResultExtensions.h"
 #include "mozilla/Services.h"
@@ -269,6 +272,10 @@ nsresult MemoryTelemetry::GatherReports(
   HandleMemoryReport(Telemetry::MEMORY_HEAP_OVERHEAD_FRACTION,
                      nsIMemoryReporter::UNITS_PERCENTAGE,
                      mgr->HeapOverheadFraction(stats));
+#endif
+
+#ifdef MOZ_PHC
+  ReportPHCTelemetry();
 #endif
 
   RefPtr<Runnable> completionRunnable;

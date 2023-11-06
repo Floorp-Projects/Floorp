@@ -9,6 +9,7 @@
 #include "PHC.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_memory.h"
+#include "mozilla/Telemetry.h"
 
 namespace mozilla {
 
@@ -30,6 +31,13 @@ void InitPHCState() {
   SetPHCState(GetPHCStateFromPref());
 
   Preferences::RegisterCallback(PrefChangeCallback, kPHCPref);
+}
+
+void ReportPHCTelemetry() {
+  MemoryUsage usage;
+  PHCMemoryUsage(usage);
+
+  Accumulate(Telemetry::MEMORY_PHC_SLOP, usage.mFragmentationBytes);
 }
 
 };  // namespace mozilla
