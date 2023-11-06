@@ -36,9 +36,3 @@ add_task(async function () {
   await hoverAtPos(dbg, { line: 2, column: 17 });
   await assertNoTooltip(dbg);
 });
-
-async function assertNoTooltip(dbg) {
-  await wait(200);
-  const el = findElement(dbg, "previewPopup");
-  is(el, null, "Tooltip should not exist");
-}
