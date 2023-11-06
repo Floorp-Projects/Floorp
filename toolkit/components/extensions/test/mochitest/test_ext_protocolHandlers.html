@@ -198,6 +198,11 @@ add_task(async function test_protocolHandler() {
   // Test that handling a URL from the commandline works.
   chromeScript = SpecialPowers.loadChromeScript(() => {
     /* eslint-env mozilla/chrome-script */
+    const CONTENT_HANDLING_URL =
+      "chrome://mozapps/content/handling/permissionDialog.xhtml";
+    const { BrowserTestUtils } = ChromeUtils.importESModule(
+      "resource://testing-common/BrowserTestUtils.sys.mjs"
+    );
     let cmdLineHandler = Cc["@mozilla.org/browser/final-clh;1"].getService(
       Ci.nsICommandLineHandler
     );
@@ -207,6 +212,33 @@ add_task(async function test_protocolHandler() {
       Ci.nsICommandLine.STATE_REMOTE_EXPLICIT
     );
     cmdLineHandler.handle(fakeCmdLine);
+
+    // We aren't awaiting for this promise to resolve since it returns undefined
+    // (because it returns the reference to the dialog window that we close, below)
+    // once the callback promise below finishes, and because its not needed for anything
+    // outside of this loadChromeScript block.
+    BrowserTestUtils.promiseAlertDialogOpen(
+      null,
+      CONTENT_HANDLING_URL,
+      {
+        isSubDialog: true,
+        async callback(dialogWin) {
+          is(dialogWin.document.documentURI, CONTENT_HANDLING_URL, "Open dialog is the permission dialog")
+
+          let closePromise = BrowserTestUtils.waitForEvent(
+            dialogWin.browsingContext.topChromeWindow,
+            "dialogclose",
+            true,
+          );
+          let dialog = dialogWin.document.querySelector("dialog");
+          let btn = dialog.getButton("accept");
+          // The security delay disables this button, just bypass it.
+          btn.disabled = false;
+          btn.click();
+          return closePromise;
+        }
+      }
+    );
   });
   query = await extension.awaitMessage("test-query");
   is(query, "?val=ext%2Bfoo%3Acmdline", "cmdline query ok");
@@ -220,7 +252,7 @@ add_task(async function test_protocolHandler() {
   consoleMonitor.start([{ message: /NS_ERROR_FILE_NOT_FOUND/ }]);
 
   // Expect the chooser window to be open, close it.
-  chromeScript = SpecialPowers.loadChromeScript(async () => {
+  chromeScript = SpecialPowers.loadChromeScript(() => {
     /* eslint-env mozilla/chrome-script */
     const CONTENT_HANDLING_URL =
       "chrome://mozapps/content/handling/appChooser.xhtml";
@@ -228,39 +260,39 @@ add_task(async function test_protocolHandler() {
       "resource://testing-common/BrowserTestUtils.sys.mjs"
     );
 
-    let windowOpen = BrowserTestUtils.domWindowOpenedAndLoaded();
-
     sendAsyncMessage("listenWindow");
 
-    let window = await windowOpen;
-    let gBrowser = window.gBrowser;
-    let tabDialogBox = gBrowser.getTabDialogBox(gBrowser.selectedBrowser);
-    let dialogStack = tabDialogBox.getTabDialogManager()._dialogStack;
+    // We aren't awaiting for this promise to resolve since it returns undefined
+    // (because it returns the reference to the dialog window that we close, below)
+    // once the callback promise below finishes, and because its not needed for anything
+    // outside of this loadChromeScript block.
+    BrowserTestUtils.promiseAlertDialogOpen(
+      null,
+      CONTENT_HANDLING_URL,
+      {
+        isSubDialog: true,
+        async callback(dialogWin) {
+          is(dialogWin.document.documentURI, CONTENT_HANDLING_URL, "Open dialog is the app chooser dialog")
 
-    let checkFn = dialogEvent =>
-      dialogEvent.detail.dialog?._openedURL == CONTENT_HANDLING_URL;
+          let entry = dialogWin.document.getElementById("items")
+            .firstChild;
+          sendAsyncMessage("handling", {
+            name: entry.getAttribute("name"),
+            disabled: entry.disabled,
+          });
 
-    let eventPromise = BrowserTestUtils.waitForEvent(
-      dialogStack,
-      "dialogopen",
-      true,
-      checkFn
+          let closePromise = BrowserTestUtils.waitForEvent(
+            dialogWin.browsingContext.topChromeWindow,
+            "dialogclose",
+            true,
+          );
+          dialogWin.close();
+          return closePromise;
+        }
+      }
     );
 
     sendAsyncMessage("listenDialog");
-
-    let event = await eventPromise;
-
-    let { dialog } = event.detail;
-
-    let entry = dialog._frame.contentDocument.getElementById("items")
-      .firstChild;
-    sendAsyncMessage("handling", {
-      name: entry.getAttribute("name"),
-      disabled: entry.disabled,
-    });
-
-    dialog.close();
   });
 
   // Wait for the chrome script to attach window listener
