@@ -291,15 +291,6 @@ bool CalendarDateAdd(JSContext* cx, JS::Handle<CalendarValue> calendar,
 bool CalendarDateUntil(JSContext* cx, JS::Handle<CalendarValue> calendar,
                        JS::Handle<Wrapped<PlainDateObject*>> one,
                        JS::Handle<Wrapped<PlainDateObject*>> two,
-                       JS::Handle<JSObject*> options,
-                       JS::Handle<JS::Value> dateUntil, Duration* result);
-
-/**
- * CalendarDateUntil ( calendar, one, two, options [ , dateUntil ] )
- */
-bool CalendarDateUntil(JSContext* cx, JS::Handle<CalendarValue> calendar,
-                       JS::Handle<Wrapped<PlainDateObject*>> one,
-                       JS::Handle<Wrapped<PlainDateObject*>> two,
                        TemporalUnit largestUnit,
                        JS::Handle<JS::Value> dateUntil, Duration* result);
 

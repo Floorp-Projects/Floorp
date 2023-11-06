@@ -3245,13 +3245,11 @@ static bool Calendar_dateUntil(JSContext* cx, unsigned argc, Value* vp);
 /**
  * CalendarDateUntil ( calendar, one, two, options [ , dateUntil ] )
  */
-bool js::temporal::CalendarDateUntil(JSContext* cx,
-                                     Handle<CalendarValue> calendar,
-                                     Handle<Wrapped<PlainDateObject*>> one,
-                                     Handle<Wrapped<PlainDateObject*>> two,
-                                     Handle<JSObject*> options,
-                                     Handle<Value> dateUntil,
-                                     Duration* result) {
+static bool CalendarDateUntil(JSContext* cx, Handle<CalendarValue> calendar,
+                              Handle<Wrapped<PlainDateObject*>> one,
+                              Handle<Wrapped<PlainDateObject*>> two,
+                              Handle<JSObject*> options,
+                              Handle<Value> dateUntil, Duration* result) {
   // Step 1.
   if (calendar.isString()) {
     return BuiltinCalendarDateUntil(cx, one, two, options, result);
