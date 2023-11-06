@@ -360,8 +360,7 @@ void UDPSocketParent::Send(const nsTArray<uint8_t>& aData,
     }
     case UDPSocketAddr::TNetAddr: {
       const NetAddr& addr(aAddr.get_NetAddr());
-      rv = mSocket->SendWithAddress(&addr, aData.Elements(), aData.Length(),
-                                    &count);
+      rv = mSocket->SendWithAddress(&addr, aData, &count);
       break;
     }
     default:

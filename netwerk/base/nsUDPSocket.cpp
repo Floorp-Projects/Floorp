@@ -1004,8 +1004,7 @@ PendingSend::OnLookupComplete(nsICancelable* request, nsIDNSRecord* aRecord,
   NetAddr addr;
   if (NS_SUCCEEDED(rec->GetNextAddr(mPort, &addr))) {
     uint32_t count;
-    nsresult rv = mSocket->SendWithAddress(&addr, mData.Elements(),
-                                           mData.Length(), &count);
+    nsresult rv = mSocket->SendWithAddress(&addr, mData, &count);
     NS_ENSURE_SUCCESS(rv, rv);
   }
 
@@ -1070,7 +1069,7 @@ class SendRequestRunnable : public Runnable {
 NS_IMETHODIMP
 SendRequestRunnable::Run() {
   uint32_t count;
-  mSocket->SendWithAddress(&mAddr, mData.Elements(), mData.Length(), &count);
+  mSocket->SendWithAddress(&mAddr, mData, &count);
   return NS_OK;
 }
 
@@ -1138,12 +1137,13 @@ nsUDPSocket::SendWithAddr(nsINetAddr* aAddr, const nsTArray<uint8_t>& aData,
 
   NetAddr netAddr;
   aAddr->GetNetAddr(&netAddr);
-  return SendWithAddress(&netAddr, aData.Elements(), aData.Length(), _retval);
+  return SendWithAddress(&netAddr, aData, _retval);
 }
 
 NS_IMETHODIMP
-nsUDPSocket::SendWithAddress(const NetAddr* aAddr, const uint8_t* aData,
-                             uint32_t aLength, uint32_t* _retval) {
+nsUDPSocket::SendWithAddress(const NetAddr* aAddr,
+                             const nsTArray<uint8_t>& aData,
+                             uint32_t* _retval) {
   NS_ENSURE_ARG(aAddr);
   NS_ENSURE_ARG_POINTER(_retval);
 
@@ -1167,7 +1167,8 @@ nsUDPSocket::SendWithAddress(const NetAddr* aAddr, const uint8_t* aData,
       return NS_ERROR_FAILURE;
     }
     int32_t count =
-        PR_SendTo(mFD, aData, aLength, 0, &prAddr, PR_INTERVAL_NO_WAIT);
+        PR_SendTo(mFD, aData.Elements(), sizeof(uint8_t) * aData.Length(), 0,
+                  &prAddr, PR_INTERVAL_NO_WAIT);
     if (count < 0) {
       PRErrorCode code = PR_GetError();
       return ErrorAccordingToNSPR(code);
@@ -1176,7 +1177,7 @@ nsUDPSocket::SendWithAddress(const NetAddr* aAddr, const uint8_t* aData,
     *_retval = count;
   } else {
     FallibleTArray<uint8_t> fallibleArray;
-    if (!fallibleArray.AppendElements(aData, aLength, fallible)) {
+    if (!fallibleArray.InsertElementsAt(0, aData, fallible)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
@@ -1184,7 +1185,7 @@ nsUDPSocket::SendWithAddress(const NetAddr* aAddr, const uint8_t* aData,
         new SendRequestRunnable(this, *aAddr, std::move(fallibleArray)),
         NS_DISPATCH_NORMAL);
     NS_ENSURE_SUCCESS(rv, rv);
-    *_retval = aLength;
+    *_retval = aData.Length();
   }
   return NS_OK;
 }
