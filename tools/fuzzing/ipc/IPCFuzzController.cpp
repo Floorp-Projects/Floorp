@@ -22,6 +22,10 @@
 #include "mozilla/ipc/PBackground.h"
 #include "mozilla/dom/PContent.h"
 
+#include <fstream>
+#include <sstream>
+#include <algorithm>
+
 using namespace mojo::core::ports;
 using namespace mozilla::ipc;
 
@@ -67,6 +71,21 @@ IPCFuzzController::IPCFuzzController()
   portNameToIndex["PProfiler"] = 6;
   portNameToIndex["PVRManager"] = 7;
   portNameToIndex["PCanvasManager"] = 8;
+
+  // Used to select the n-th trigger message as a starting point for fuzzing
+  // in single message mode. A value of 1 will skip the first matching message
+  // and start fuzzing on the second message, and so on.
+  if (!!getenv("MOZ_FUZZ_IPC_TRIGGER_SINGLEMSG_WAIT")) {
+    mIPCTriggerSingleMsgWait =
+        atoi(getenv("MOZ_FUZZ_IPC_TRIGGER_SINGLEMSG_WAIT"));
+  }
+
+  // When set, dump all IPC message at or above the specified size to files.
+  // Useful to collect samples of different types in one run.
+  if (!!getenv("MOZ_FUZZ_IPC_DUMP_ALL_MSGS_SIZE")) {
+    mIPCDumpAllMsgsSize.emplace(
+        atoi(getenv("MOZ_FUZZ_IPC_DUMP_ALL_MSGS_SIZE")));
+  }
 }
 
 // static
@@ -79,7 +98,8 @@ void IPCFuzzController::InitializeIPCTypes() {
   const char* cons = "Constructor";
   size_t cons_len = strlen(cons);
 
-  const char* targetName = getenv("MOZ_FUZZ_IPC_TRIGGER");
+  const char* targetNameTrigger = getenv("MOZ_FUZZ_IPC_TRIGGER");
+  const char* targetNameDump = getenv("MOZ_FUZZ_IPC_DUMPMSG");
 
   for (uint32_t start = 0; start < LastMsgIndex; ++start) {
     uint32_t i;
@@ -88,11 +108,18 @@ void IPCFuzzController::InitializeIPCTypes() {
 
       if (name[0] == '<') break;
 
-      if (targetName && !strcmp(name, targetName)) {
+      if (targetNameTrigger && !strcmp(name, targetNameTrigger)) {
         MOZ_FUZZING_NYX_PRINTF(
             "INFO: [InitializeIPCTypes] Located trigger message (%s, %d)\n",
-            targetName, i);
+            targetNameTrigger, i);
         mIPCTriggerMsg = i;
+      }
+
+      if (targetNameDump && !strcmp(name, targetNameDump)) {
+        MOZ_FUZZING_NYX_PRINTF(
+            "INFO: [InitializeIPCTypes] Located dump message (%s, %d)\n",
+            targetNameDump, i);
+        mIPCDumpMsg.emplace(i);
       }
 
       size_t len = strlen(name);
@@ -889,6 +916,183 @@ void IPCFuzzController::SynchronizeOnMessageExecution(
           IPCFuzzController::instance().getMessageStopCount());
     }
   }
+}
+
+static void dumpIPCMessageToFile(const UniquePtr<IPC::Message>& aMsg,
+                                 uint32_t aDumpCount, bool aUseNyx = false) {
+  std::stringstream dumpFilename;
+  std::string msgName(IPC::StringFromIPCMessageType(aMsg->type()));
+  std::replace(msgName.begin(), msgName.end(), ':', '_');
+
+  if (aUseNyx) {
+    dumpFilename << "seeds/";
+  }
+
+  dumpFilename << msgName << aDumpCount << ".bin";
+
+  Pickle::BufferList::IterImpl iter(aMsg->Buffers());
+  Vector<char, 256, InfallibleAllocPolicy> dumpBuffer;
+  if (!dumpBuffer.initLengthUninitialized(sizeof(IPC::Message::Header) +
+                                          aMsg->Buffers().Size())) {
+    MOZ_FUZZING_NYX_ABORT("dumpBuffer.initLengthUninitialized failed\n");
+  }
+  if (!aMsg->Buffers().ReadBytes(
+          iter,
+          reinterpret_cast<char*>(dumpBuffer.begin() +
+                                  sizeof(IPC::Message::Header)),
+          dumpBuffer.length() - sizeof(IPC::Message::Header))) {
+    MOZ_FUZZING_NYX_ABORT("ReadBytes failed\n");
+  }
+  memcpy(dumpBuffer.begin(), aMsg->header(), sizeof(IPC::Message::Header));
+
+  if (aUseNyx) {
+    MOZ_FUZZING_NYX_PRINTF("INFO: Calling dump_file: %s Size: %zu\n",
+                           dumpFilename.str().c_str(), dumpBuffer.length());
+    Nyx::instance().dump_file(reinterpret_cast<char*>(dumpBuffer.begin()),
+                              dumpBuffer.length(), dumpFilename.str().c_str());
+  } else {
+    std::fstream file;
+    file.open(dumpFilename.str(), std::ios::out | std::ios::binary);
+    file.write(reinterpret_cast<char*>(dumpBuffer.begin()),
+               dumpBuffer.length());
+    file.close();
+  }
+}
+
+UniquePtr<IPC::Message> IPCFuzzController::replaceIPCMessage(
+    UniquePtr<IPC::Message> aMsg) {
+  if (!mozilla::fuzzing::Nyx::instance().is_enabled("IPC_SingleMessage")) {
+    // Fuzzer is not enabled.
+    return aMsg;
+  }
+
+  if (!XRE_IsParentProcess()) {
+    // For now we only care about things in the parent process.
+    return aMsg;
+  }
+
+  if (aMsg->type() != mIPCTriggerMsg) {
+    if ((mIPCDumpMsg && aMsg->type() == mIPCDumpMsg.value()) ||
+        (mIPCDumpAllMsgsSize.isSome() &&
+         aMsg->Buffers().Size() >= mIPCDumpAllMsgsSize.value())) {
+      dumpIPCMessageToFile(aMsg, mIPCDumpCount);
+      mIPCDumpCount++;
+    }
+
+    // Not the trigger message. Output additional information here for
+    // automation purposes. This shouldn't be an issue as we will only
+    // output these messages until we take a snapshot.
+    MOZ_FUZZING_NYX_PRINTF("INFO: [OnIPCMessage] Message: %s Size: %u\n",
+                           IPC::StringFromIPCMessageType(aMsg->type()),
+                           aMsg->header()->payload_size);
+    return aMsg;
+  } else {
+    // Dump the trigger message through Nyx in case we want to use it
+    // as a seed to AFL++ outside of the VM.
+    dumpIPCMessageToFile(aMsg, mIPCDumpCount, true /* aUseNyx */);
+    mIPCDumpCount++;
+    if (mIPCTriggerSingleMsgWait > 0) {
+      mIPCTriggerSingleMsgWait--;
+      return aMsg;
+    }
+  }
+
+  const size_t maxMsgSize = 4096;
+
+  Vector<char, 256, InfallibleAllocPolicy> buffer;
+  if (!buffer.initLengthUninitialized(maxMsgSize)) {
+    MOZ_FUZZING_NYX_ABORT("ERROR: Failed to initialize buffer!\n");
+  }
+
+  char* ipcMsgData = buffer.begin();
+
+  // Copy the header of the original message
+  memcpy(ipcMsgData, aMsg->header(), sizeof(IPC::Message::Header));
+  IPC::Message::Header* ipchdr = (IPC::Message::Header*)ipcMsgData;
+
+  //                        //
+  // *** Snapshot Point *** //
+  //                        //
+  MOZ_FUZZING_NYX_PRINT("INFO: Performing snapshot...\n");
+  Nyx::instance().start();
+
+  IPCFuzzController::instance().useLastActor = 0;
+  IPCFuzzController::instance().useLastPortName = false;
+
+  MOZ_FUZZING_NYX_DEBUG("DEBUG: Requesting data...\n");
+
+  // Grab enough data to send at most `maxMsgSize` bytes
+  uint32_t bufsize =
+      Nyx::instance().get_raw_data((uint8_t*)buffer.begin(), buffer.length());
+
+  if (bufsize == 0xFFFFFFFF) {
+    MOZ_FUZZING_NYX_DEBUG("Nyx: Out of data.\n");
+    Nyx::instance().release(0);
+  }
+
+#ifdef FUZZ_DEBUG
+  MOZ_FUZZING_NYX_PRINTF("DEBUG: Got buffer of size %u...\n", bufsize);
+#endif
+
+  // Payload must be int aligned
+  bufsize -= bufsize % 4;
+
+  // Need at least a header and the control bytes.
+  if (bufsize < sizeof(IPC::Message::Header)) {
+    MOZ_FUZZING_NYX_DEBUG("INFO: Not enough data to craft IPC message.\n");
+    Nyx::instance().release(0);
+  }
+
+  buffer.shrinkTo(bufsize);
+
+  size_t ipcMsgLen = buffer.length();
+  ipchdr->payload_size = ipcMsgLen - sizeof(IPC::Message::Header);
+
+  if (Nyx::instance().is_replay()) {
+    MOZ_FUZZING_NYX_PRINT("INFO: Replaying IPC packet with payload:\n");
+    for (uint32_t i = 0; i < ipcMsgLen - sizeof(IPC::Message::Header); ++i) {
+      if (i % 16 == 0) {
+        MOZ_FUZZING_NYX_PRINT("\n  ");
+      }
+
+      MOZ_FUZZING_NYX_PRINTF(
+          "0x%02X ",
+          (unsigned char)(ipcMsgData[sizeof(IPC::Message::Header) + i]));
+    }
+    MOZ_FUZZING_NYX_PRINT("\n");
+  }
+
+  UniquePtr<IPC::Message> msg(new IPC::Message(ipcMsgData, ipcMsgLen));
+
+  // This marks the message as a fuzzing message. Without this, it will
+  // be ignored by MessageTask and also not even scheduled by NodeChannel
+  // in asynchronous mode. We use this to ignore any IPC activity that
+  // happens just while we are fuzzing.
+  msg->SetFuzzMsg();
+
+  return msg;
+}
+
+void IPCFuzzController::syncAfterReplace() {
+  if (!mozilla::fuzzing::Nyx::instance().is_enabled("IPC_SingleMessage")) {
+    // Fuzzer is not enabled.
+    return;
+  }
+
+  if (!XRE_IsParentProcess()) {
+    // For now we only care about things in the parent process.
+    return;
+  }
+
+  if (!Nyx::instance().started()) {
+    // Not started yet
+    return;
+  }
+
+  MOZ_FUZZING_NYX_DEBUG(
+      "DEBUG: ======== END OF ITERATION (RELEASE) ========\n");
+
+  Nyx::instance().release(1);
 }
 
 }  // namespace fuzzing
