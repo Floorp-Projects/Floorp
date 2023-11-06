@@ -218,7 +218,6 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIServiceWorkerManager.h"
 #include "nsISiteSecurityService.h"
-#include "nsISound.h"
 #include "nsIStringBundle.h"
 #include "nsITimer.h"
 #include "nsIURL.h"
@@ -3629,47 +3628,6 @@ ContentParent::AllocPClipboardWriteRequestParent(
       MakeAndAddRef<ClipboardWriteRequestParent>(this);
   request->Init(aClipboardType);
   return request.forget();
-}
-
-mozilla::ipc::IPCResult ContentParent::RecvPlaySound(nsIURI* aURI) {
-  // If the check here fails, it can only mean that this message was spoofed.
-  if (!aURI || !aURI->SchemeIs("chrome")) {
-    // PlaySound only accepts a valid chrome URI.
-    return IPC_FAIL(this, "Invalid aURI passed.");
-  }
-  nsCOMPtr<nsIURL> soundURL(do_QueryInterface(aURI));
-  if (!soundURL) {
-    return IPC_OK();
-  }
-
-  nsresult rv;
-  nsCOMPtr<nsISound> sound(do_GetService(NS_SOUND_CID, &rv));
-  NS_ENSURE_SUCCESS(rv, IPC_OK());
-
-  sound->Play(soundURL);
-
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult ContentParent::RecvBeep() {
-  nsresult rv;
-  nsCOMPtr<nsISound> sound(do_GetService(NS_SOUND_CID, &rv));
-  NS_ENSURE_SUCCESS(rv, IPC_OK());
-
-  sound->Beep();
-
-  return IPC_OK();
-}
-
-mozilla::ipc::IPCResult ContentParent::RecvPlayEventSound(
-    const uint32_t& aEventId) {
-  nsresult rv;
-  nsCOMPtr<nsISound> sound(do_GetService(NS_SOUND_CID, &rv));
-  NS_ENSURE_SUCCESS(rv, IPC_OK());
-
-  sound->PlayEventSound(aEventId);
-
-  return IPC_OK();
 }
 
 mozilla::ipc::IPCResult ContentParent::RecvGetIconForExtension(
