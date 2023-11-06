@@ -38,12 +38,18 @@ static int32_t GetSystemParam(long flag, int32_t def) {
   return ::SystemParametersInfo(flag, 0, &value, 0) ? value : def;
 }
 
-static nsresult SystemWantsDarkTheme(int32_t& darkThemeEnabled) {
+static bool SystemWantsDarkTheme() {
+  if (nsUXThemeData::IsHighContrastOn()) {
+    return LookAndFeel::IsDarkColor(
+        LookAndFeel::Color(StyleSystemColor::Window, ColorScheme::Light,
+                           LookAndFeel::UseStandins::No));
+  }
+
   nsresult rv = NS_OK;
   nsCOMPtr<nsIWindowsRegKey> personalizeKey =
       do_CreateInstance("@mozilla.org/windows-registry-key;1", &rv);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    return false;
   }
 
   rv = personalizeKey->Open(
@@ -52,17 +58,16 @@ static nsresult SystemWantsDarkTheme(int32_t& darkThemeEnabled) {
           u"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize"),
       nsIWindowsRegKey::ACCESS_QUERY_VALUE);
   if (NS_FAILED(rv)) {
-    return rv;
+    return false;
   }
 
   uint32_t lightThemeEnabled;
   rv =
       personalizeKey->ReadIntValue(u"AppsUseLightTheme"_ns, &lightThemeEnabled);
-  if (NS_SUCCEEDED(rv)) {
-    darkThemeEnabled = !lightThemeEnabled;
+  if (NS_FAILED(rv)) {
+    return false;
   }
-
-  return rv;
+  return !lightThemeEnabled;
 }
 
 static int32_t SystemColorFilter() {
@@ -555,7 +560,7 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       aResult = 2;
       break;
     case IntID::SystemUsesDarkTheme:
-      res = SystemWantsDarkTheme(aResult);
+      aResult = SystemWantsDarkTheme();
       break;
     case IntID::SystemScrollbarSize:
       aResult = std::max(WinUtils::GetSystemMetricsForDpi(SM_CXVSCROLL, 96),
