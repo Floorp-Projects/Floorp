@@ -765,9 +765,11 @@ class nsNavHistoryFolderResultNode final
       public nsINavHistoryQueryResultNode,
       public mozilla::places::WeakAsyncStatementCallback {
  public:
-  nsNavHistoryFolderResultNode(const nsACString& aTitle,
-                               nsNavHistoryQueryOptions* options,
-                               int64_t aFolderId);
+  nsNavHistoryFolderResultNode(int64_t aItemId, const nsACString& aBookmarkGuid,
+                               int64_t aTargetFolderItemId,
+                               const nsACString& aTargetFolderGuid,
+                               const nsACString& aTitle,
+                               nsNavHistoryQueryOptions* aOptions);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_FORWARD_COMMON_RESULTNODE_TO_BASE
@@ -794,7 +796,10 @@ class nsNavHistoryFolderResultNode final
                        const nsACString& aGUID, const nsACString& aParentGUID,
                        uint16_t aSource, const nsACString& aTitle,
                        const nsAString& aTags, int64_t aFrecency, bool aHidden,
-                       uint32_t aVisitCount, PRTime aLastVisitDate);
+                       uint32_t aVisitCount, PRTime aLastVisitDate,
+                       int64_t aTargetFolderItemId,
+                       const nsACString& aTargetFolderGuid,
+                       const nsACString& aTargetFolderTitle);
   nsresult OnItemRemoved(int64_t aItemId, int64_t aParentFolder, int32_t aIndex,
                          uint16_t aItemType, nsIURI* aURI,
                          const nsACString& aGUID, const nsACString& aParentGUID,

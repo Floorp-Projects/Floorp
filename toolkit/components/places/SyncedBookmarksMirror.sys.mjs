@@ -2246,11 +2246,13 @@ class BookmarkObserverRecorder {
                     SELECT id FROM moz_bookmarks
                     WHERE guid = '${lazy.PlacesUtils.bookmarks.tagsGuid}'
                   )
-              ) AS tags
+              ) AS tags,
+              t.guid AS tGuid, t.id AS tId, t.title AS tTitle
        FROM itemsAdded n
        JOIN moz_bookmarks b ON b.guid = n.guid
        JOIN moz_bookmarks p ON p.id = b.parent
        LEFT JOIN moz_places h ON h.id = b.fk
+       LEFT JOIN moz_bookmarks t ON t.guid = target_folder_guid(url)
        ${this.orderBy("n.level", "b.parent", "b.position")}`,
       null,
       (row, cancel) => {
@@ -2279,6 +2281,9 @@ class BookmarkObserverRecorder {
             ? lazy.PlacesUtils.toDate(lastVisitDate).getTime()
             : null,
           tags: row.getResultByName("tags"),
+          targetFolderGuid: row.getResultByName("tGuid"),
+          targetFolderItemId: row.getResultByName("tId"),
+          targetFolderTitle: row.getResultByName("tTitle"),
         };
 
         this.noteItemAdded(info);
@@ -2425,6 +2430,9 @@ class BookmarkObserverRecorder {
         hidden: info.hidden,
         visitCount: info.visitCount,
         lastVisitDate: info.lastVisitDate,
+        targetFolderGuid: info.targetFolderGuid,
+        targetFolderItemId: info.targetFolderItemId,
+        targetFolderTitle: info.targetFolderTitle,
       })
     );
   }

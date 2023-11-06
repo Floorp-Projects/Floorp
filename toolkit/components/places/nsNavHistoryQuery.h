@@ -55,6 +55,10 @@ class nsNavHistoryQuery final : public nsINavHistoryQuery {
 
   nsresult Clone(nsNavHistoryQuery** _clone);
 
+  static nsresult QueryStringToQuery(const nsACString& aQueryString,
+                                     nsINavHistoryQuery** _query,
+                                     nsINavHistoryQueryOptions** _options);
+
  private:
   ~nsNavHistoryQuery() = default;
 

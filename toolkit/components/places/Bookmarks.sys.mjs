@@ -305,6 +305,9 @@ export var Bookmarks = Object.freeze({
           hidden: itemDetail.hidden,
           visitCount: itemDetail.visitCount,
           lastVisitDate: itemDetail.lastVisitDate,
+          targetFolderGuid: itemDetail.targetFolderGuid,
+          targetFolderItemId: itemDetail.targetFolderItemId,
+          targetFolderTitle: itemDetail.targetFolderTitle,
         }),
       ];
 
@@ -624,6 +627,9 @@ export var Bookmarks = Object.freeze({
             hidden: itemDetail.hidden,
             visitCount: itemDetail.visitCount,
             lastVisitDate: itemDetail.lastVisitDate,
+            targetFolderGuid: itemDetail.targetFolderGuid,
+            targetFolderItemId: itemDetail.targetFolderItemId,
+            targetFolderTitle: itemDetail.targetFolderTitle,
           })
         );
 
@@ -3340,9 +3346,11 @@ async function getBookmarkDetailMap(aGuids) {
                   SELECT id FROM moz_bookmarks
                   WHERE guid = '${Bookmarks.tagsGuid}'
                 )
-            )
+            ),
+            t.guid, t.id, t.title
           FROM moz_bookmarks b
           LEFT JOIN moz_places h ON h.id = b.fk
+          LEFT JOIN moz_bookmarks t ON t.guid = target_folder_guid(h.url)
           WHERE b.guid IN (${lazy.PlacesUtils.sqlBindPlaceholders(aGuids)})
           `,
         aGuids
@@ -3364,6 +3372,9 @@ async function getBookmarkDetailMap(aGuids) {
                 ? lazy.PlacesUtils.toDate(lastVisitDate).getTime()
                 : null,
               tags: row.getResultByIndex(7) ?? "",
+              targetFolderGuid: row.getResultByIndex(8),
+              targetFolderItemId: row.getResultByIndex(9),
+              targetFolderTitle: row.getResultByIndex(10),
             },
           ];
         })

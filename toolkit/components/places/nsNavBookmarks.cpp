@@ -445,9 +445,11 @@ nsNavBookmarks::InsertBookmark(int64_t aFolder, nsIURI* aURI, int32_t aIndex,
       "        SELECT id FROM moz_bookmarks "
       "        WHERE guid = '" TAGS_ROOT_GUID
       "'"
-      "  ) "
-      ") "
+      "      ) "
+      "  ), "
+      "  t.guid, t.id, t.title "
       "FROM moz_places h "
+      "LEFT JOIN moz_bookmarks t ON t.guid = target_folder_guid(h.url) "
       "WHERE h.id = :id");
   NS_ENSURE_STATE(stmt);
   mozStorageStatementScoper scoper(stmt);
@@ -485,6 +487,30 @@ nsNavBookmarks::InsertBookmark(int64_t aFolder, nsIURI* aURI, int32_t aIndex,
     rv = stmt->GetString(4, tags);
     NS_ENSURE_SUCCESS(rv, rv);
     bookmark->mTags.Assign(tags);
+
+    bool isTargetFolderNull;
+    rv = stmt->GetIsNull(5, &isTargetFolderNull);
+    NS_ENSURE_SUCCESS(rv, rv);
+    if (!isTargetFolderNull) {
+      nsCString targetFolderGuid;
+      rv = stmt->GetUTF8String(5, targetFolderGuid);
+      NS_ENSURE_SUCCESS(rv, rv);
+      bookmark->mTargetFolderGuid.Assign(targetFolderGuid);
+
+      int64_t targetFolderItemId = -1;
+      rv = stmt->GetInt64(6, &targetFolderItemId);
+      NS_ENSURE_SUCCESS(rv, rv);
+      bookmark->mTargetFolderItemId = targetFolderItemId;
+
+      nsString targetFolderTitle;
+      rv = stmt->GetString(7, targetFolderTitle);
+      NS_ENSURE_SUCCESS(rv, rv);
+      bookmark->mTargetFolderTitle.Assign(targetFolderTitle);
+    } else {
+      bookmark->mTargetFolderGuid.SetIsVoid(true);
+      bookmark->mTargetFolderItemId = -1;
+      bookmark->mTargetFolderTitle.SetIsVoid(true);
+    }
   } else {
     MOZ_ASSERT(false);
     bookmark->mTags.SetIsVoid(true);
@@ -492,6 +518,9 @@ nsNavBookmarks::InsertBookmark(int64_t aFolder, nsIURI* aURI, int32_t aIndex,
     bookmark->mHidden = false;
     bookmark->mVisitCount = 0;
     bookmark->mLastVisitDate.SetNull();
+    bookmark->mTargetFolderGuid.SetIsVoid(true);
+    bookmark->mTargetFolderItemId = -1;
+    bookmark->mTargetFolderTitle.SetIsVoid(true);
   }
 
   bool success = !!notifications.AppendElement(bookmark.forget(), fallible);
@@ -731,6 +760,9 @@ nsNavBookmarks::CreateFolder(int64_t aParent, const nsACString& aTitle,
     folder->mHidden = false;
     folder->mVisitCount = 0;
     folder->mLastVisitDate.SetNull();
+    folder->mTargetFolderGuid.SetIsVoid(true);
+    folder->mTargetFolderItemId = -1;
+    folder->mTargetFolderTitle.SetIsVoid(true);
     bool success = !!events.AppendElement(folder.forget(), fallible);
     MOZ_RELEASE_ASSERT(success);
 
@@ -1476,29 +1508,6 @@ nsNavBookmarks::GetItemTitle(int64_t aItemId, nsACString& _title) {
   return NS_OK;
 }
 
-nsresult nsNavBookmarks::ResultNodeForContainer(
-    const nsCString& aGUID, nsNavHistoryQueryOptions* aOptions,
-    nsNavHistoryResultNode** aNode) {
-  BookmarkData bookmark;
-  nsresult rv = FetchItemInfo(aGUID, bookmark);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  if (bookmark.type == TYPE_FOLDER) {  // TYPE_FOLDER
-    *aNode =
-        new nsNavHistoryFolderResultNode(bookmark.title, aOptions, bookmark.id);
-  } else {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  (*aNode)->mDateAdded = bookmark.dateAdded;
-  (*aNode)->mLastModified = bookmark.lastModified;
-  (*aNode)->mBookmarkGuid = bookmark.guid;
-  (*aNode)->GetAsFolder()->mTargetFolderGuid = bookmark.guid;
-
-  NS_ADDREF(*aNode);
-  return NS_OK;
-}
-
 nsresult nsNavBookmarks::QueryFolderChildren(
     int64_t aFolderId, nsNavHistoryQueryOptions* aOptions,
     nsCOMArray<nsNavHistoryResultNode>* aChildren) {
@@ -1522,9 +1531,10 @@ nsresult nsNavBookmarks::QueryFolderChildren(
       "'"
       " WHERE bb.fk = h.id), "
       "h.frecency, h.hidden, h.guid, null, null, null, "
-      "b.guid, b.position, b.type, b.fk "
+      "b.guid, b.position, b.type, b.fk, t.guid, t.id, t.title "
       "FROM moz_bookmarks b "
       "LEFT JOIN moz_places h ON b.fk = h.id "
+      "LEFT JOIN moz_bookmarks t ON t.guid = target_folder_guid(h.url) "
       "WHERE b.parent = :parent "
       "AND (NOT :excludeItems OR "
       "b.type = :folder OR "
@@ -1596,14 +1606,14 @@ nsresult nsNavBookmarks::ProcessFolderNodeRow(
       NS_ENSURE_SUCCESS(rv, rv);
     }
 
+    nsAutoCString guid;
+    rv = aRow->GetUTF8String(kGetChildrenIndex_Guid, guid);
+    NS_ENSURE_SUCCESS(rv, rv);
+
     // Don't use options from the parent to build the new folder node, it will
     // inherit those later when it's inserted in the result.
-    node = new nsNavHistoryFolderResultNode(title,
-                                            new nsNavHistoryQueryOptions(), id);
-
-    rv = aRow->GetUTF8String(kGetChildrenIndex_Guid, node->mBookmarkGuid);
-    NS_ENSURE_SUCCESS(rv, rv);
-    node->GetAsFolder()->mTargetFolderGuid = node->mBookmarkGuid;
+    node = new nsNavHistoryFolderResultNode(id, guid, id, guid, title,
+                                            new nsNavHistoryQueryOptions());
 
     rv = aRow->GetInt64(nsNavHistory::kGetInfoIndex_ItemDateAdded,
                         reinterpret_cast<int64_t*>(&node->mDateAdded));
@@ -1649,9 +1659,10 @@ nsresult nsNavBookmarks::QueryFolderChildrenAsync(
       "SELECT h.id, h.url, b.title, h.rev_host, h.visit_count, "
       "h.last_visit_date, null, b.id, b.dateAdded, b.lastModified, "
       "b.parent, null, h.frecency, h.hidden, h.guid, null, null, null, "
-      "b.guid, b.position, b.type, b.fk "
+      "b.guid, b.position, b.type, b.fk, t.guid, t.id, t.title "
       "FROM moz_bookmarks b "
       "LEFT JOIN moz_places h ON b.fk = h.id "
+      "LEFT JOIN moz_bookmarks t ON t.guid = target_folder_guid(h.url) "
       "WHERE b.parent = :parent "
       "AND (NOT :excludeItems OR "
       "b.type = :folder OR "

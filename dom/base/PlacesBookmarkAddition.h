@@ -43,6 +43,10 @@ class PlacesBookmarkAddition final : public PlacesBookmark {
       event->mLastVisitDate.SetNull();
     }
 
+    event->mTargetFolderItemId = aInitDict.mTargetFolderItemId;
+    event->mTargetFolderGuid = aInitDict.mTargetFolderGuid;
+    event->mTargetFolderTitle = aInitDict.mTargetFolderTitle;
+
     return event.forget();
   }
 
@@ -63,6 +67,9 @@ class PlacesBookmarkAddition final : public PlacesBookmark {
   bool Hidden() { return mHidden; }
   uint32_t VisitCount() { return mVisitCount; }
   Nullable<uint64_t> GetLastVisitDate() { return mLastVisitDate; }
+  uint64_t TargetFolderItemId() { return mTargetFolderItemId; }
+  void GetTargetFolderGuid(nsCString& aGuid) { aGuid = mTargetFolderGuid; }
+  void GetTargetFolderTitle(nsString& aTitle) { aTitle = mTargetFolderTitle; }
 
   int32_t mIndex;
   nsString mTitle;
@@ -72,6 +79,9 @@ class PlacesBookmarkAddition final : public PlacesBookmark {
   bool mHidden;
   uint32_t mVisitCount;
   Nullable<uint64_t> mLastVisitDate;
+  int64_t mTargetFolderItemId;
+  nsCString mTargetFolderGuid;
+  nsString mTargetFolderTitle;
 
  private:
   ~PlacesBookmarkAddition() = default;
