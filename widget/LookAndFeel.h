@@ -525,7 +525,6 @@ class LookAndFeel {
   }
 
  protected:
-
   static void DoHandleGlobalThemeChange();
   // Set to true when ThemeChanged needs to be called on mTheme (and other
   // global LookAndFeel.  This is used because mTheme is a service, so there's
