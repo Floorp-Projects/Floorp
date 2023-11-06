@@ -680,6 +680,12 @@ skip script test262/harness/verifyProperty-desc-is-not-object.js
 skip script test262/language/statements/class/decorator/syntax/class-valid/decorator-member-expr-private-identifier.js
 skip script test262/language/expressions/class/decorator/syntax/class-valid/decorator-member-expr-private-identifier.js
 
+# https://github.com/tc39/test262/pull/3899
+skip script test262/built-ins/Temporal/PlainMonthDay/from/fields-missing-properties.js
+skip script test262/built-ins/Temporal/PlainMonthDay/prototype/with/basic.js
+skip script test262/built-ins/Temporal/Calendar/prototype/monthDayFromFields/missing-properties.js
+skip script test262/built-ins/Temporal/Calendar/prototype/monthDayFromFields/fields-missing-properties.js
+
 
 ##############################################
 # Enable Iterator Helpers tests in the shell #
@@ -1045,159 +1051,6 @@ shell-option(--enable-iterator-helpers) script non262/Iterator/prototype/take/ta
 
 
 ##############################################
-# Temporal tests                             #
-##############################################
-
-skip script test262/built-ins/Temporal/PlainMonthDay/from/order-of-operations.js
-skip script test262/built-ins/Temporal/PlainMonthDay/from/observable-get-overflow-argument-string-invalid.js
-skip script test262/built-ins/Temporal/PlainMonthDay/from/argument-builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/PlainMonthDay/from/observable-get-overflow-argument-primitive.js
-skip script test262/built-ins/Temporal/PlainMonthDay/prototype/toPlainDate/builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/PlainMonthDay/prototype/equals/argument-builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/PlainMonthDay/prototype/with/order-of-operations.js
-skip script test262/built-ins/Temporal/PlainMonthDay/prototype/with/calendar-arguments.js
-skip script test262/built-ins/Temporal/PlainMonthDay/prototype/with/builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/ZonedDateTime/from/order-of-operations.js
-skip script test262/built-ins/Temporal/ZonedDateTime/from/observable-get-overflow-argument-string-invalid.js
-skip script test262/built-ins/Temporal/ZonedDateTime/from/overflow-wrong-type.js
-skip script test262/built-ins/Temporal/ZonedDateTime/from/calendar-fields-iterable.js
-skip script test262/built-ins/Temporal/ZonedDateTime/from/argument-builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/ZonedDateTime/from/observable-get-overflow-argument-primitive.js
-skip script test262/built-ins/Temporal/ZonedDateTime/compare/calendar-fields-iterable.js
-skip script test262/built-ins/Temporal/ZonedDateTime/compare/argument-builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/ZonedDateTime/prototype/round/order-of-operations.js
-skip script test262/built-ins/Temporal/ZonedDateTime/prototype/round/rounding-is-noop.js
-skip script test262/built-ins/Temporal/ZonedDateTime/prototype/getISOFields/order-of-operations.js
-skip script test262/built-ins/Temporal/ZonedDateTime/prototype/equals/argument-propertybag-timezone-normalize-offset-strings.js
-skip script test262/built-ins/Temporal/ZonedDateTime/prototype/equals/calendar-fields-iterable.js
-skip script test262/built-ins/Temporal/ZonedDateTime/prototype/equals/argument-builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/ZonedDateTime/prototype/toPlainYearMonth/builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/ZonedDateTime/prototype/withPlainDate/argument-builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/ZonedDateTime/prototype/since/order-of-operations.js
-skip script test262/built-ins/Temporal/ZonedDateTime/prototype/since/calendar-fields-iterable.js
-skip script test262/built-ins/Temporal/ZonedDateTime/prototype/since/argument-builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/ZonedDateTime/prototype/with/order-of-operations.js
-skip script test262/built-ins/Temporal/ZonedDateTime/prototype/with/overflow-wrong-type.js
-skip script test262/built-ins/Temporal/ZonedDateTime/prototype/with/calendar-fields-iterable.js
-skip script test262/built-ins/Temporal/ZonedDateTime/prototype/with/calendar-options.js
-skip script test262/built-ins/Temporal/ZonedDateTime/prototype/with/builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/ZonedDateTime/prototype/toPlainMonthDay/builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/ZonedDateTime/prototype/toJSON/order-of-operations.js
-skip script test262/built-ins/Temporal/ZonedDateTime/prototype/until/order-of-operations.js
-skip script test262/built-ins/Temporal/ZonedDateTime/prototype/until/calendar-fields-iterable.js
-skip script test262/built-ins/Temporal/ZonedDateTime/prototype/until/argument-builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/ZonedDateTime/prototype/toString/order-of-operations.js
-skip script test262/built-ins/Temporal/PlainDate/from/observable-get-overflow-argument-string-invalid.js
-skip script test262/built-ins/Temporal/PlainDate/from/order-of-operations.js
-skip script test262/built-ins/Temporal/PlainDate/from/argument-builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/PlainDate/from/observable-get-overflow-argument-primitive.js
-skip script test262/built-ins/Temporal/PlainDate/compare/argument-builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/PlainDate/prototype/equals/argument-builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/PlainDate/prototype/toPlainYearMonth/builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/PlainDate/prototype/since/argument-builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/PlainDate/prototype/with/order-of-operations.js
-skip script test262/built-ins/Temporal/PlainDate/prototype/with/custom.js
-skip script test262/built-ins/Temporal/PlainDate/prototype/with/builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/PlainDate/prototype/toPlainMonthDay/builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/PlainDate/prototype/until/argument-builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/TimeZone/prototype/equals/timezone-string-multiple-offsets.js
-skip script test262/built-ins/Temporal/TimeZone/prototype/equals/timezone-wrong-type.js
-skip script test262/built-ins/Temporal/TimeZone/prototype/equals/length.js
-skip script test262/built-ins/Temporal/TimeZone/prototype/equals/argument-primitive.js
-skip script test262/built-ins/Temporal/TimeZone/prototype/equals/timezone-string-datetime.js
-skip script test262/built-ins/Temporal/TimeZone/prototype/equals/not-a-constructor.js
-skip script test262/built-ins/Temporal/TimeZone/prototype/equals/prop-desc.js
-skip script test262/built-ins/Temporal/TimeZone/prototype/equals/timezone-case-insensitive.js
-skip script test262/built-ins/Temporal/TimeZone/prototype/equals/branding.js
-skip script test262/built-ins/Temporal/TimeZone/prototype/equals/builtin.js
-skip script test262/built-ins/Temporal/TimeZone/prototype/equals/argument-valid.js
-skip script test262/built-ins/Temporal/TimeZone/prototype/equals/name.js
-skip script test262/built-ins/Temporal/TimeZone/prototype/equals/argument-object.js
-skip script test262/built-ins/Temporal/TimeZone/prototype/getPossibleInstantsFor/calendar-fields-iterable.js
-skip script test262/built-ins/Temporal/TimeZone/prototype/getPossibleInstantsFor/argument-builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/TimeZone/prototype/getInstantFor/calendar-fields-iterable.js
-skip script test262/built-ins/Temporal/TimeZone/prototype/getInstantFor/argument-builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/Duration/compare/order-of-operations.js
-skip script test262/built-ins/Temporal/Duration/compare/calendar-dateadd-called-with-options-undefined.js
-skip script test262/built-ins/Temporal/Duration/compare/relativeto-propertybag-builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/Duration/compare/calendar-fields-iterable.js
-skip script test262/built-ins/Temporal/Duration/compare/instances-identical.js
-skip script test262/built-ins/Temporal/Duration/prototype/round/order-of-operations.js
-skip script test262/built-ins/Temporal/Duration/prototype/round/relativeto-zoneddatetime-nanoseconds-to-days-range-errors.js
-skip script test262/built-ins/Temporal/Duration/prototype/round/relativeto-propertybag-builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/Duration/prototype/round/calendar-fields-iterable.js
-skip script test262/built-ins/Temporal/Duration/prototype/round/rounding-is-noop.js
-skip script test262/built-ins/Temporal/Duration/prototype/add/order-of-operations.js
-skip script test262/built-ins/Temporal/Duration/prototype/add/relativeto-propertybag-builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/Duration/prototype/add/calendar-fields-iterable.js
-skip script test262/built-ins/Temporal/Duration/prototype/subtract/order-of-operations.js
-skip script test262/built-ins/Temporal/Duration/prototype/subtract/relativeto-propertybag-builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/Duration/prototype/subtract/calendar-fields-iterable.js
-skip script test262/built-ins/Temporal/Duration/prototype/total/order-of-operations.js
-skip script test262/built-ins/Temporal/Duration/prototype/total/relativeto-propertybag-builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/Duration/prototype/total/calendar-fields-iterable.js
-skip script test262/built-ins/Temporal/PlainTime/prototype/toPlainDateTime/argument-builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/PlainTime/prototype/toZonedDateTime/argument-builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/PlainDateTime/from/order-of-operations.js
-skip script test262/built-ins/Temporal/PlainDateTime/from/observable-get-overflow-argument-string-invalid.js
-skip script test262/built-ins/Temporal/PlainDateTime/from/overflow-wrong-type.js
-skip script test262/built-ins/Temporal/PlainDateTime/from/calendar-fields-iterable.js
-skip script test262/built-ins/Temporal/PlainDateTime/from/argument-builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/PlainDateTime/from/observable-get-overflow-argument-primitive.js
-skip script test262/built-ins/Temporal/PlainDateTime/compare/calendar-fields-iterable.js
-skip script test262/built-ins/Temporal/PlainDateTime/compare/argument-builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/PlainDateTime/prototype/equals/calendar-fields-iterable.js
-skip script test262/built-ins/Temporal/PlainDateTime/prototype/equals/argument-builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/PlainDateTime/prototype/toPlainYearMonth/builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/PlainDateTime/prototype/withPlainDate/argument-builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/PlainDateTime/prototype/since/calendar-fields-iterable.js
-skip script test262/built-ins/Temporal/PlainDateTime/prototype/since/argument-builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/PlainDateTime/prototype/with/order-of-operations.js
-skip script test262/built-ins/Temporal/PlainDateTime/prototype/with/overflow-wrong-type.js
-skip script test262/built-ins/Temporal/PlainDateTime/prototype/with/calendar-fields-iterable.js
-skip script test262/built-ins/Temporal/PlainDateTime/prototype/with/calendar-options.js
-skip script test262/built-ins/Temporal/PlainDateTime/prototype/with/builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/PlainDateTime/prototype/toPlainMonthDay/builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/PlainDateTime/prototype/until/calendar-fields-iterable.js
-skip script test262/built-ins/Temporal/PlainDateTime/prototype/until/argument-builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/Instant/prototype/toString/order-of-operations.js
-skip script test262/built-ins/Temporal/Instant/prototype/toString/timezone.js
-skip script test262/built-ins/Temporal/PlainYearMonth/from/order-of-operations.js
-skip script test262/built-ins/Temporal/PlainYearMonth/from/observable-get-overflow-argument-string-invalid.js
-skip script test262/built-ins/Temporal/PlainYearMonth/from/argument-builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/PlainYearMonth/from/observable-get-overflow-argument-primitive.js
-skip script test262/built-ins/Temporal/PlainYearMonth/compare/argument-builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/PlainYearMonth/prototype/toPlainDate/builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/PlainYearMonth/prototype/equals/argument-builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/PlainYearMonth/prototype/add/builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/PlainYearMonth/prototype/since/argument-builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/PlainYearMonth/prototype/since/builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/PlainYearMonth/prototype/with/order-of-operations.js
-skip script test262/built-ins/Temporal/PlainYearMonth/prototype/with/calendar-arguments.js
-skip script test262/built-ins/Temporal/PlainYearMonth/prototype/with/builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/PlainYearMonth/prototype/subtract/builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/PlainYearMonth/prototype/until/argument-builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/PlainYearMonth/prototype/until/builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/Calendar/prototype/daysInMonth/argument-builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/Calendar/prototype/daysInWeek/argument-builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/Calendar/prototype/day/argument-builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/Calendar/prototype/year/argument-builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/Calendar/prototype/monthsInYear/argument-builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/Calendar/prototype/daysInYear/argument-builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/Calendar/prototype/monthCode/argument-builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/Calendar/prototype/month/argument-builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/Calendar/prototype/dateAdd/argument-builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/Calendar/prototype/monthDayFromFields/reference-year-1972.js
-skip script test262/built-ins/Temporal/Calendar/prototype/weekOfYear/argument-builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/Calendar/prototype/dayOfWeek/argument-builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/Calendar/prototype/inLeapYear/argument-builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/Calendar/prototype/fields/argument-throws-invalid-keys.js
-skip script test262/built-ins/Temporal/Calendar/prototype/dateUntil/argument-builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/Calendar/prototype/yearOfWeek/argument-builtin-calendar-no-array-iteration.js
-skip script test262/built-ins/Temporal/Calendar/prototype/dayOfYear/argument-builtin-calendar-no-array-iteration.js
-
-
-##############################################
 # Temporal Intl tests                        #
 ##############################################
 
@@ -1486,11 +1339,3 @@ skip script test262/intl402/Temporal/TimeZone/from/iana-legacy-names.js
 skip script test262/intl402/Temporal/TimeZone/from/etc-timezone.js
 skip script test262/intl402/Temporal/TimeZone/from/argument-valid.js
 skip script test262/intl402/Temporal/TimeZone/from/timezone-case-insensitive.js
-
-# Temporal.TImeZone.prototype.equals tests
-skip script test262/intl402/Temporal/TimeZone/prototype/equals/canonical-iana-names.js
-skip script test262/intl402/Temporal/TimeZone/prototype/equals/offset-and-iana.js
-skip script test262/intl402/Temporal/TimeZone/prototype/equals/argument-valid.js
-skip script test262/intl402/Temporal/TimeZone/prototype/equals/timezone-case-insensitive.js
-skip script test262/intl402/Temporal/TimeZone/prototype/equals/canonical-not-equal.js
-skip script test262/intl402/Temporal/TimeZone/prototype/equals/argument-object.js
