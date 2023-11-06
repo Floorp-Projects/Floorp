@@ -10,7 +10,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   AnimationFramePromise: "chrome://remote/content/shared/Sync.sys.mjs",
   ClipRectangleType:
     "chrome://remote/content/webdriver-bidi/modules/root/browsingContext.sys.mjs",
-  dom: "chrome://remote/content/shared/DOM.sys.mjs",
   LoadListener: "chrome://remote/content/shared/listeners/LoadListener.sys.mjs",
 });
 
@@ -263,10 +262,6 @@ class BrowsingContextModule extends WindowGlobalBiDiModule {
         case lazy.ClipRectangleType.Element: {
           const realm = this.messageHandler.getRealm();
           const element = this.deserialize(realm, clip.element);
-
-          if (clip.scrollIntoView && !lazy.dom.isInView(element)) {
-            lazy.dom.scrollIntoView(element);
-          }
 
           clipRect = element.getBoundingClientRect();
           break;
