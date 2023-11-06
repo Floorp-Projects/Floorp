@@ -1621,9 +1621,8 @@ static bool ZonedDateTime_year(JSContext* cx, const CallArgs& args) {
   Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
   // Steps 3-6.
-  Rooted<PlainDateTimeObject*> dateTime(
-      cx, GetPlainDateTimeFor(cx, timeZone, instant, calendar));
-  if (!dateTime) {
+  PlainDateTime dateTime;
+  if (!GetPlainDateTimeFor(cx, timeZone, instant, &dateTime)) {
     return false;
   }
 
@@ -1650,9 +1649,8 @@ static bool ZonedDateTime_month(JSContext* cx, const CallArgs& args) {
   Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
   // Steps 3-6.
-  Rooted<PlainDateTimeObject*> dateTime(
-      cx, GetPlainDateTimeFor(cx, timeZone, instant, calendar));
-  if (!dateTime) {
+  PlainDateTime dateTime;
+  if (!GetPlainDateTimeFor(cx, timeZone, instant, &dateTime)) {
     return false;
   }
 
@@ -1679,9 +1677,8 @@ static bool ZonedDateTime_monthCode(JSContext* cx, const CallArgs& args) {
   Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
   // Steps 3-6.
-  Rooted<PlainDateTimeObject*> dateTime(
-      cx, GetPlainDateTimeFor(cx, timeZone, instant, calendar));
-  if (!dateTime) {
+  PlainDateTime dateTime;
+  if (!GetPlainDateTimeFor(cx, timeZone, instant, &dateTime)) {
     return false;
   }
 
@@ -1709,9 +1706,8 @@ static bool ZonedDateTime_day(JSContext* cx, const CallArgs& args) {
   Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
   // Steps 3-6.
-  Rooted<PlainDateTimeObject*> dateTime(
-      cx, GetPlainDateTimeFor(cx, timeZone, instant, calendar));
-  if (!dateTime) {
+  PlainDateTime dateTime;
+  if (!GetPlainDateTimeFor(cx, timeZone, instant, &dateTime)) {
     return false;
   }
 
@@ -2021,9 +2017,8 @@ static bool ZonedDateTime_dayOfWeek(JSContext* cx, const CallArgs& args) {
   Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
   // Steps 3-6.
-  Rooted<PlainDateTimeObject*> dateTime(
-      cx, GetPlainDateTimeFor(cx, timeZone, instant, calendar));
-  if (!dateTime) {
+  PlainDateTime dateTime;
+  if (!GetPlainDateTimeFor(cx, timeZone, instant, &dateTime)) {
     return false;
   }
 
@@ -2051,9 +2046,8 @@ static bool ZonedDateTime_dayOfYear(JSContext* cx, const CallArgs& args) {
   Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
   // Steps 3-6.
-  Rooted<PlainDateTimeObject*> dateTime(
-      cx, GetPlainDateTimeFor(cx, timeZone, instant, calendar));
-  if (!dateTime) {
+  PlainDateTime dateTime;
+  if (!GetPlainDateTimeFor(cx, timeZone, instant, &dateTime)) {
     return false;
   }
 
@@ -2081,9 +2075,8 @@ static bool ZonedDateTime_weekOfYear(JSContext* cx, const CallArgs& args) {
   Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
   // Steps 3-6.
-  Rooted<PlainDateTimeObject*> dateTime(
-      cx, GetPlainDateTimeFor(cx, timeZone, instant, calendar));
-  if (!dateTime) {
+  PlainDateTime dateTime;
+  if (!GetPlainDateTimeFor(cx, timeZone, instant, &dateTime)) {
     return false;
   }
 
@@ -2111,9 +2104,8 @@ static bool ZonedDateTime_yearOfWeek(JSContext* cx, const CallArgs& args) {
   Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
   // Steps 3-6.
-  Rooted<PlainDateTimeObject*> dateTime(
-      cx, GetPlainDateTimeFor(cx, timeZone, instant, calendar));
-  if (!dateTime) {
+  PlainDateTime dateTime;
+  if (!GetPlainDateTimeFor(cx, timeZone, instant, &dateTime)) {
     return false;
   }
 
@@ -2159,8 +2151,7 @@ static bool ZonedDateTime_hoursInDay(JSContext* cx, const CallArgs& args) {
   }
 
   // Step 10.
-  PlainDate tomorrowFields =
-      BalanceISODate(date.year, date.month, date.day + 1);
+  auto tomorrowFields = BalanceISODate(date.year, date.month, date.day + 1);
 
   // Step 11.
   Rooted<PlainDateTimeObject*> tomorrow(
@@ -2221,9 +2212,8 @@ static bool ZonedDateTime_daysInWeek(JSContext* cx, const CallArgs& args) {
   Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
   // Steps 3-6.
-  Rooted<PlainDateTimeObject*> dateTime(
-      cx, GetPlainDateTimeFor(cx, timeZone, instant, calendar));
-  if (!dateTime) {
+  PlainDateTime dateTime;
+  if (!GetPlainDateTimeFor(cx, timeZone, instant, &dateTime)) {
     return false;
   }
 
@@ -2251,9 +2241,8 @@ static bool ZonedDateTime_daysInMonth(JSContext* cx, const CallArgs& args) {
   Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
   // Steps 3-6.
-  Rooted<PlainDateTimeObject*> dateTime(
-      cx, GetPlainDateTimeFor(cx, timeZone, instant, calendar));
-  if (!dateTime) {
+  PlainDateTime dateTime;
+  if (!GetPlainDateTimeFor(cx, timeZone, instant, &dateTime)) {
     return false;
   }
 
@@ -2281,9 +2270,8 @@ static bool ZonedDateTime_daysInYear(JSContext* cx, const CallArgs& args) {
   Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
   // Steps 3-6.
-  Rooted<PlainDateTimeObject*> dateTime(
-      cx, GetPlainDateTimeFor(cx, timeZone, instant, calendar));
-  if (!dateTime) {
+  PlainDateTime dateTime;
+  if (!GetPlainDateTimeFor(cx, timeZone, instant, &dateTime)) {
     return false;
   }
 
@@ -2311,9 +2299,8 @@ static bool ZonedDateTime_monthsInYear(JSContext* cx, const CallArgs& args) {
   Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
   // Steps 3-6.
-  Rooted<PlainDateTimeObject*> dateTime(
-      cx, GetPlainDateTimeFor(cx, timeZone, instant, calendar));
-  if (!dateTime) {
+  PlainDateTime dateTime;
+  if (!GetPlainDateTimeFor(cx, timeZone, instant, &dateTime)) {
     return false;
   }
 
@@ -2342,9 +2329,8 @@ static bool ZonedDateTime_inLeapYear(JSContext* cx, const CallArgs& args) {
   Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
 
   // Steps 3-6.
-  Rooted<PlainDateTimeObject*> dateTime(
-      cx, GetPlainDateTimeFor(cx, timeZone, instant, calendar));
-  if (!dateTime) {
+  PlainDateTime dateTime;
+  if (!GetPlainDateTimeFor(cx, timeZone, instant, &dateTime)) {
     return false;
   }
 
