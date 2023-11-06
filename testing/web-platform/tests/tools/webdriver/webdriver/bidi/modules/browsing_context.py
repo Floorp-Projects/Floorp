@@ -6,13 +6,10 @@ from ._module import BidiModule, command
 
 class ElementOptions(Dict[str, Any]):
     def __init__(
-        self, element: Mapping[str, Any], scroll_into_view: Optional[bool] = None
+        self, element: Mapping[str, Any]
     ):
         self["type"] = "element"
         self["element"] = element
-
-        if scroll_into_view is not None:
-            self["scrollIntoView"] = scroll_into_view
 
 
 class BoxOptions(Dict[str, Any]):
