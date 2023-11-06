@@ -5,7 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "js/ForOfIterator.h"  // JS::ForOfIterator
-#include "js/JSON.h"           // JS_ParseJSON
+#include "json/json.h"
 #include "nsContentUtils.h"
 #include "nsIScriptError.h"
 #include "DOMLocalization.h"
@@ -646,13 +646,11 @@ void DOMLocalization::ConvertStringToL10nArgs(const nsString& aInput,
     // There are no properties.
     return;
   }
-  // This method uses a temporary dictionary to automate
-  // converting a JSON string into an IDL Record via a dictionary.
-  //
-  // Once we get Record::Init(const nsAString& aJSON), we'll switch to
-  // that.
-  L10nArgsHelperDict helperDict;
-  if (!helperDict.Init(u"{\"args\": "_ns + aInput + u"}"_ns)) {
+
+  Json::Value args;
+  Json::Reader jsonReader;
+
+  if (!jsonReader.parse(NS_ConvertUTF16toUTF8(aInput).get(), args, false)) {
     nsTArray<nsCString> errors{
         "[dom/l10n] Failed to parse l10n-args JSON: "_ns +
             NS_ConvertUTF16toUTF8(aInput),
@@ -660,13 +658,43 @@ void DOMLocalization::ConvertStringToL10nArgs(const nsString& aInput,
     MaybeReportErrorsToGecko(errors, aRv, GetParentObject());
     return;
   }
-  for (auto& entry : helperDict.mArgs.Entries()) {
+
+  if (!args.isObject()) {
+    nsTArray<nsCString> errors{
+        "[dom/l10n] Failed to parse l10n-args JSON: "_ns +
+            NS_ConvertUTF16toUTF8(aInput),
+    };
+    MaybeReportErrorsToGecko(errors, aRv, GetParentObject());
+    return;
+  }
+
+  for (Json::ValueConstIterator iter = args.begin(); iter != args.end();
+       ++iter) {
     L10nArgs::EntryType* newEntry = aRetVal.Entries().AppendElement(fallible);
     if (!newEntry) {
       aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
       return;
     }
-    newEntry->mKey = entry.mKey;
-    newEntry->mValue = entry.mValue;
+    newEntry->mKey = iter.name().c_str();
+    if (iter->isString()) {
+      newEntry->mValue.SetValue().RawSetAsUTF8String().Assign(
+          iter->asString().c_str(), iter->asString().length());
+    } else if (iter->isDouble()) {
+      newEntry->mValue.SetValue().RawSetAsDouble() = iter->asDouble();
+    } else if (iter->isBool()) {
+      if (iter->asBool()) {
+        newEntry->mValue.SetValue().RawSetAsUTF8String().Assign("true");
+      } else {
+        newEntry->mValue.SetValue().RawSetAsUTF8String().Assign("false");
+      }
+    } else if (iter->isNull()) {
+      newEntry->mValue.SetNull();
+    } else {
+      nsTArray<nsCString> errors{
+          "[dom/l10n] Failed to convert l10n-args JSON: "_ns +
+              NS_ConvertUTF16toUTF8(aInput),
+      };
+      MaybeReportErrorsToGecko(errors, aRv, GetParentObject());
+    }
   }
 }
