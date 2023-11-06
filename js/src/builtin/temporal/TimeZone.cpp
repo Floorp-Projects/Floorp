@@ -1009,36 +1009,30 @@ bool js::temporal::GetOffsetNanosecondsFor(JSContext* cx,
 }
 
 /**
- * GetOffsetStringFor ( timeZone, instant )
+ * FormatUTCOffsetNanoseconds ( offsetNanoseconds )
  */
-JSString* js::temporal::GetOffsetStringFor(
-    JSContext* cx, Handle<TimeZoneValue> timeZone,
-    Handle<Wrapped<InstantObject*>> instant) {
-  // Step 1.
-  int64_t offsetNanoseconds;
-  if (!GetOffsetNanosecondsFor(cx, timeZone, instant, &offsetNanoseconds)) {
-    return nullptr;
-  }
+JSString* js::temporal::FormatUTCOffsetNanoseconds(JSContext* cx,
+                                                   int64_t offsetNanoseconds) {
   MOZ_ASSERT(std::abs(offsetNanoseconds) < ToNanoseconds(TemporalUnit::Day));
 
-  // Step 2.
+  // Step 1.
   char sign = offsetNanoseconds >= 0 ? '+' : '-';
 
-  // Step 3.
+  // Step 2.
   int64_t absoluteNanoseconds = std::abs(offsetNanoseconds);
 
-  // Step 7. (Reordered)
+  // Step 6. (Reordered)
   int32_t subSecondNanoseconds = int32_t(absoluteNanoseconds % 1'000'000'000);
 
-  // Step 6. (Reordered)
+  // Step 5. (Reordered)
   int32_t quotient = int32_t(absoluteNanoseconds / 1'000'000'000);
   int32_t second = quotient % 60;
 
-  // Step 5. (Reordered)
+  // Step 4. (Reordered)
   quotient /= 60;
   int32_t minute = quotient % 60;
 
-  // Step 4.
+  // Step 3.
   int32_t hour = quotient / 60;
   MOZ_ASSERT(hour < 24, "time zone offset mustn't exceed 24-hours");
 
@@ -1048,7 +1042,7 @@ JSString* js::temporal::GetOffsetStringFor(
 
   size_t n = 0;
 
-  // Steps 8-9. (Inlined FormatTimeString).
+  // Steps 7-8. (Inlined FormatTimeString).
   result[n++] = sign;
   result[n++] = '0' + (hour / 10);
   result[n++] = '0' + (hour % 10);
@@ -1075,8 +1069,25 @@ JSString* js::temporal::GetOffsetStringFor(
 
   MOZ_ASSERT(n <= maxLength);
 
-  // Step 10.
+  // Step 9.
   return NewStringCopyN<CanGC>(cx, result, n);
+}
+
+/**
+ * GetOffsetStringFor ( timeZone, instant )
+ */
+JSString* js::temporal::GetOffsetStringFor(
+    JSContext* cx, Handle<TimeZoneValue> timeZone,
+    Handle<Wrapped<InstantObject*>> instant) {
+  // Step 1.
+  int64_t offsetNanoseconds;
+  if (!GetOffsetNanosecondsFor(cx, timeZone, instant, &offsetNanoseconds)) {
+    return nullptr;
+  }
+  MOZ_ASSERT(std::abs(offsetNanoseconds) < ToNanoseconds(TemporalUnit::Day));
+
+  // Step 2.
+  return FormatUTCOffsetNanoseconds(cx, offsetNanoseconds);
 }
 
 /**
@@ -1276,17 +1287,15 @@ static PlainDateTime BalanceISODateTime(const PlainDateTime& dateTime,
 
   auto& [date, time] = dateTime;
 
-  // Step 1. (Not applicable in our implementation.)
-
-  // Step 2.
+  // Step 1.
   auto balancedTime = BalanceTime(time, nanoseconds);
   MOZ_ASSERT(-1 <= balancedTime.days && balancedTime.days <= 1);
 
-  // Step 3.
+  // Step 2.
   auto balancedDate =
       BalanceISODate(date.year, date.month, date.day + balancedTime.days);
 
-  // Step 4.
+  // Step 3.
   return {balancedDate, balancedTime.time};
 }
 

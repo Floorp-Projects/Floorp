@@ -327,6 +327,11 @@ bool GetInstantFor(JSContext* cx, JS::Handle<TimeZoneValue> timeZone,
                    TemporalDisambiguation disambiguation, Instant* result);
 
 /**
+ * FormatUTCOffsetNanoseconds ( offsetNanoseconds )
+ */
+JSString* FormatUTCOffsetNanoseconds(JSContext* cx, int64_t offsetNanoseconds);
+
+/**
  * GetOffsetStringFor ( timeZone, instant )
  */
 JSString* GetOffsetStringFor(JSContext* cx, JS::Handle<TimeZoneValue> timeZone,
