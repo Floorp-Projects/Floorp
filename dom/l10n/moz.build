@@ -23,6 +23,7 @@ UNIFIED_SOURCES += [
 
 LOCAL_INCLUDES += [
     "/dom/base",
+    "/toolkit/components/jsoncpp/include",
 ]
 
 FINAL_LIBRARY = "xul"
