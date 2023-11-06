@@ -134,7 +134,7 @@ struct TimeRecord final {
 };
 
 /**
- * ToTemporalTimeRecord ( temporalTimeLike )
+ * ToTemporalTimeRecord ( temporalTimeLike [ , completeness ] )
  */
 bool ToTemporalTimeRecord(JSContext* cx, JS::Handle<JSObject*> temporalTimeLike,
                           TimeRecord* result);
