@@ -13,5 +13,3 @@ skip-if = ["toolkit == 'android'"] # no https-only errorpage support in android
 
 ["browser_exception.js"]
 support-files = ["file_upgrade_insecure_server.sjs"]
-
-["browser_fpi_nested_uri.js"]
