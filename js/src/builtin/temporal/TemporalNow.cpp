@@ -7,7 +7,6 @@
 #include "builtin/temporal/TemporalNow.h"
 
 #include "mozilla/Assertions.h"
-#include "mozilla/intl/TimeZone.h"
 #include "mozilla/Result.h"
 
 #include <cstdlib>
@@ -55,13 +54,8 @@ using namespace js;
 using namespace js::temporal;
 
 static bool SystemTimeZoneOffset(JSContext* cx, int32_t* offset) {
-  auto timeZone = mozilla::intl::TimeZone::TryCreate();
-  if (timeZone.isErr()) {
-    intl::ReportInternalError(cx, timeZone.unwrapErr());
-    return false;
-  }
-
-  auto rawOffset = timeZone.unwrap()->GetRawOffsetMs();
+  auto rawOffset =
+      DateTimeInfo::getRawOffsetMs(DateTimeInfo::forceUTC(cx->realm()));
   if (rawOffset.isErr()) {
     intl::ReportInternalError(cx);
     return false;
@@ -80,7 +74,8 @@ static bool SystemTimeZoneOffset(JSContext* cx, int32_t* offset) {
  */
 static JSString* SystemTimeZoneIdentifier(JSContext* cx) {
   intl::FormatBuffer<char16_t, intl::INITIAL_CHAR_BUFFER_SIZE> formatBuffer(cx);
-  auto result = mozilla::intl::TimeZone::GetDefaultTimeZone(formatBuffer);
+  auto result = DateTimeInfo::timeZoneId(DateTimeInfo::forceUTC(cx->realm()),
+                                         formatBuffer);
   if (result.isErr()) {
     intl::ReportInternalError(cx, result.unwrapErr());
     return nullptr;
