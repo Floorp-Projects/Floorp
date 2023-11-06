@@ -2290,6 +2290,7 @@ nsresult nsHttpChannel::ContinueProcessResponse1() {
     if (!mAuthRetryPending) {
       rv = mAuthProvider->CheckForSuperfluousAuth();
       if (NS_FAILED(rv)) {
+        mStatus = rv;
         LOG(("  CheckForSuperfluousAuth failed (%08x)",
              static_cast<uint32_t>(rv)));
       }
@@ -2502,6 +2503,7 @@ nsresult nsHttpChannel::ContinueProcessResponse3(nsresult rv) {
         if (!mAuthRetryPending) {
           rv = mAuthProvider->CheckForSuperfluousAuth();
           if (NS_FAILED(rv)) {
+            mStatus = rv;
             LOG(("CheckForSuperfluousAuth failed [rv=%x]\n",
                  static_cast<uint32_t>(rv)));
           }
@@ -7430,6 +7432,7 @@ nsresult nsHttpChannel::ContinueOnStartRequest4(nsresult result) {
     if (httpStatus != 401 && httpStatus != 407) {
       nsresult rv = mAuthProvider->CheckForSuperfluousAuth();
       if (NS_FAILED(rv)) {
+        mStatus = rv;
         LOG(("  CheckForSuperfluousAuth failed (%08x)",
              static_cast<uint32_t>(rv)));
       }

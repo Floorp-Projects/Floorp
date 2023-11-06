@@ -347,6 +347,9 @@ with modules["NETWORK"]:
     errors["NS_ERROR_BAD_HSTS_CERT"] = FAILURE(89)
     # Error parsing the status line of an HTTP response
     errors["NS_ERROR_PARSING_HTTP_STATUS_LINE"] = FAILURE(90)
+    # The user refused to navigate to a potentially unsafe URL with
+    # embedded credentials/superfluos authentication.
+    errors["NS_ERROR_SUPERFLUOS_AUTH"] = FAILURE(91)
 
     # XXX really need to better rationalize these error codes.  are consumers of
     # necko really expected to know how to discern the meaning of these??

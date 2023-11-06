@@ -271,8 +271,8 @@ nsHttpChannelAuthProvider::CheckForSuperfluousAuth() {
   if (!ConfirmAuth("SuperfluousAuth", true)) {
     // calling cancel here sets our mStatus and aborts the HTTP
     // transaction, which prevents OnDataAvailable events.
-    Unused << mAuthChannel->Cancel(NS_ERROR_ABORT);
-    return NS_ERROR_ABORT;
+    Unused << mAuthChannel->Cancel(NS_ERROR_SUPERFLUOS_AUTH);
+    return NS_ERROR_SUPERFLUOS_AUTH;
   }
   return NS_OK;
 }

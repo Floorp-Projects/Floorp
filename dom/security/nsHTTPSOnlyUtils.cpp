@@ -701,7 +701,7 @@ bool nsHTTPSOnlyUtils::HttpsUpgradeUnrelatedErrorCode(nsresult aError) {
          NS_ERROR_UNKNOWN_HOST == aError || NS_ERROR_PHISHING_URI == aError ||
          NS_ERROR_MALWARE_URI == aError || NS_ERROR_UNWANTED_URI == aError ||
          NS_ERROR_HARMFUL_URI == aError || NS_ERROR_CONTENT_CRASHED == aError ||
-         NS_ERROR_FRAME_CRASHED == aError;
+         NS_ERROR_FRAME_CRASHED == aError || NS_ERROR_SUPERFLUOS_AUTH == aError;
 }
 
 /* ------ Logging ------ */

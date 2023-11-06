@@ -96,6 +96,6 @@ function firstTimeThrough(request, buffer) {
 }
 
 function secondTimeThrough(request, buffer) {
-  Assert.equal(request.status, Cr.NS_ERROR_ABORT);
+  Assert.equal(request.status, Cr.NS_ERROR_SUPERFLUOS_AUTH);
   httpServer.stop(do_test_finished);
 }
