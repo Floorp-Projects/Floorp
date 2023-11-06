@@ -12,9 +12,7 @@ import os
 import sys
 import traceback
 from pathlib import Path
-from typing import List, Optional
-
-from mach.site import CommandSiteManager
+from typing import List
 
 from .base import (
     CommandContext,
@@ -200,9 +198,7 @@ To see more help for a specific command, run:
   %(prog)s help <command>
 """
 
-    def __init__(
-        self, cwd: str, command_site_manager: Optional[CommandSiteManager] = None
-    ):
+    def __init__(self, cwd: str):
         assert Path(cwd).is_dir()
 
         self.cwd = cwd
@@ -210,7 +206,8 @@ To see more help for a specific command, run:
         self.logger = logging.getLogger(__name__)
         self.settings = ConfigSettings()
         self.settings_paths = []
-        self.command_site_manager = command_site_manager
+        self.settings_loaded = False
+        self.command_site_manager = None
 
         if "MACHRC" in os.environ:
             self.settings_paths.append(os.environ["MACHRC"])
@@ -259,13 +256,7 @@ To see more help for a specific command, run:
         orig_env = dict(os.environ)
 
         try:
-            # Load settings as early as possible so things in dispatcher.py
-            # can use them.
-            for provider in Registrar.settings_providers:
-                self.settings.register_provider(provider)
-
-            setting_paths_to_pass = [Path(path) for path in self.settings_paths]
-            self.load_settings(setting_paths_to_pass)
+            self.load_settings()
 
             if sys.version_info < (3, 0):
                 if stdin.encoding is None:
@@ -403,7 +394,7 @@ To see more help for a specific command, run:
         if args.settings_file:
             # Argument parsing has already happened, so settings that apply
             # to command line handling (e.g alias, defaults) will be ignored.
-            self.load_settings([Path(args.settings_file)])
+            self.load_settings_by_file([Path(args.settings_file)])
 
         try:
             return Registrar._run_command_handler(
@@ -508,7 +499,18 @@ To see more help for a specific command, run:
 
         fh.write("\nSentry event ID: {}\n".format(sentry_event_id))
 
-    def load_settings(self, paths: List[Path]):
+    def load_settings(self):
+        if not self.settings_loaded:
+            import mach.settings  # noqa need @SettingsProvider hook to execute
+
+            for provider in Registrar.settings_providers:
+                self.settings.register_provider(provider)
+
+            setting_paths_to_pass = [Path(path) for path in self.settings_paths]
+            self.load_settings_by_file(setting_paths_to_pass)
+            self.settings_loaded = True
+
+    def load_settings_by_file(self, paths: List[Path]):
         """Load the specified settings files.
 
         If a directory is specified, the following basenames will be
