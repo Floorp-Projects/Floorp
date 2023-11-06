@@ -366,7 +366,8 @@ add_task(async function test_product_requestAnalysis_retry_failure() {
   const RETRIES = 3;
   let uri = new URL("https://www.walmart.com/ip/926485654");
   let product = new ShoppingProduct(uri, { allowValidationFailure: false });
-  let spy = sinon.spy(product, "request");
+  let sandbox = sinon.createSandbox();
+  let spy = sandbox.spy(ShoppingProduct, "request");
   let startTime = Cu.now();
   let totalTime = TEST_TIMEOUT * Math.pow(2, RETRIES - 1);
 
@@ -387,12 +388,14 @@ add_task(async function test_product_requestAnalysis_retry_failure() {
       `Waited for at least ${totalTime}ms`
     );
   }
+  sandbox.restore();
 });
 
 add_task(async function test_product_requestAnalysis_retry_success() {
   let uri = new URL("https://www.walmart.com/ip/926485654");
   let product = new ShoppingProduct(uri, { allowValidationFailure: false });
-  let spy = sinon.spy(product, "request");
+  let sandbox = sinon.createSandbox();
+  let spy = sandbox.spy(ShoppingProduct, "request");
   // Make sure API error count is reset
   apiErrors = 0;
   if (product.isProduct()) {
@@ -407,6 +410,7 @@ add_task(async function test_product_requestAnalysis_retry_success() {
       "Analysis object is loaded from JSON and validated"
     );
   }
+  sandbox.restore();
 });
 
 add_task(async function test_product_bad_request() {
@@ -465,9 +469,9 @@ add_task(async function test_ohttp_headers() {
   enableOHTTP();
 
   let configURL = Services.prefs.getCharPref("toolkit.shopping.ohttpConfigURL");
-  let config = await product.getOHTTPConfig(configURL);
+  let config = await ShoppingProduct.getOHTTPConfig(configURL);
   Assert.ok(config, "Should have gotten a config.");
-  let ohttpDetails = await product.ohttpRequest(
+  let ohttpDetails = await ShoppingProduct.ohttpRequest(
     API_OHTTP_RELAY,
     config,
     ANALYSIS_API_MOCK,
@@ -514,7 +518,7 @@ add_task(async function test_product_sendAttributionEvent_impression() {
   let uri = new URL("https://www.walmart.com/ip/926485654");
   let product = new ShoppingProduct(uri, { allowValidationFailure: false });
   if (product.isProduct()) {
-    let event = await product.sendAttributionEvent(
+    let event = await ShoppingProduct.sendAttributionEvent(
       "impression",
       TEST_AID,
       "firefox_toolkit_tests",
@@ -536,7 +540,7 @@ add_task(async function test_product_sendAttributionEvent_click() {
   let uri = new URL("https://www.walmart.com/ip/926485654");
   let product = new ShoppingProduct(uri, { allowValidationFailure: false });
   if (product.isProduct()) {
-    let event = await product.sendAttributionEvent(
+    let event = await ShoppingProduct.sendAttributionEvent(
       "click",
       TEST_AID,
       "firefox_toolkit_tests",
@@ -568,7 +572,7 @@ add_task(async function test_product_sendAttributionEvent_impression_OHTTP() {
 
   enableOHTTP();
 
-  let event = await product.sendAttributionEvent(
+  let event = await ShoppingProduct.sendAttributionEvent(
     "impression",
     TEST_AID,
     "firefox_toolkit_tests",
@@ -602,7 +606,7 @@ add_task(async function test_product_sendAttributionEvent_click_OHTTP() {
 
   enableOHTTP();
 
-  let event = await product.sendAttributionEvent(
+  let event = await ShoppingProduct.sendAttributionEvent(
     "click",
     TEST_AID,
     "firefox_toolkit_tests",
@@ -625,7 +629,8 @@ add_task(async function test_product_sendAttributionEvent_click_OHTTP() {
 add_task(async function test_product_requestAnalysis_poll() {
   let uri = new URL("https://www.walmart.com/ip/926485654");
   let product = new ShoppingProduct(uri, { allowValidationFailure: false });
-  let spy = sinon.spy(product, "request");
+  let sandbox = sinon.createSandbox();
+  let spy = sandbox.spy(ShoppingProduct, "request");
   let startTime = Cu.now();
   const INITIAL_TIMEOUT = 100;
   const TIMEOUT = 50;
@@ -656,12 +661,15 @@ add_task(async function test_product_requestAnalysis_poll() {
     Cu.now() - startTime >= totalTime,
     `Waited for at least ${totalTime}ms`
   );
+
+  sandbox.restore();
 });
 
 add_task(async function test_product_requestAnalysis_poll_max() {
   let uri = new URL("https://www.walmart.com/ip/926485654");
   let product = new ShoppingProduct(uri, { allowValidationFailure: false });
-  let spy = sinon.spy(product, "request");
+  let sandbox = sinon.createSandbox();
+  let spy = sandbox.spy(ShoppingProduct, "request");
   let startTime = Cu.now();
 
   const INITIAL_TIMEOUT = 100;
@@ -692,6 +700,7 @@ add_task(async function test_product_requestAnalysis_poll_max() {
     Cu.now() - startTime >= totalTime,
     `Waited for at least ${totalTime}ms`
   );
+  sandbox.restore();
 });
 
 add_task(async function test_product_requestAnalysisCreationStatus() {
