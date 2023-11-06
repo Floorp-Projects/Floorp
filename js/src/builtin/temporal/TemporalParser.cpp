@@ -660,6 +660,25 @@ class TemporalParser final {
     return true;
   }
 
+  /**
+   * Consumes the current character if it matches the predicate and then returns
+   * `true`. Otherwise returns `false`.
+   */
+  template <typename Predicate>
+  bool matches(Predicate&& predicate) {
+    if (!reader_.hasMore(1)) {
+      return false;
+    }
+
+    CharT ch = reader_.current();
+    if (!predicate(ch)) {
+      return false;
+    }
+
+    reader_.advance(1);
+    return true;
+  }
+
   // Sign :
   //   ASCIISign
   //   U+2212
@@ -737,41 +756,22 @@ class TemporalParser final {
   //   Alpha
   //   .
   //   _
-  bool hasTzLeadingChar() const {
-    if (!reader_.hasMore(1)) {
-      return false;
-    }
-
-    CharT ch = reader_.current();
-    return mozilla::IsAsciiAlpha(ch) || ch == '.' || ch == '_';
-  }
-
   bool tzLeadingChar() {
-    if (!hasTzLeadingChar()) {
-      return false;
-    }
-    reader_.advance(1);
-    return true;
+    return matches([](auto ch) {
+      return mozilla::IsAsciiAlpha(ch) || ch == '.' || ch == '_';
+    });
   }
 
   // TZChar :
   //   TZLeadingChar
+  //   DecimalDigit
   //   -
-  //   [+Legacy] +
-  //   [+Legacy] DecimalDigit
-  bool tzCharLegacy() {
-    if (!reader_.hasMore(1)) {
-      return false;
-    }
-
-    CharT ch = reader_.current();
-    if (!(mozilla::IsAsciiAlphanumeric(ch) || ch == '.' || ch == '-' ||
-          ch == '_' || ch == '+')) {
-      return false;
-    }
-
-    reader_.advance(1);
-    return true;
+  //   +
+  bool tzChar() {
+    return matches([](auto ch) {
+      return mozilla::IsAsciiAlphanumeric(ch) || ch == '.' || ch == '_' ||
+             ch == '-' || ch == '+';
+    });
   }
 
   // AnnotationCriticalFlag :
@@ -782,17 +782,9 @@ class TemporalParser final {
   //   LowercaseAlpha
   //   _
   bool aKeyLeadingChar() {
-    if (!reader_.hasMore(1)) {
-      return false;
-    }
-
-    CharT ch = reader_.current();
-    if (!(mozilla::IsAsciiLowercaseAlpha(ch) || ch == '_')) {
-      return false;
-    }
-
-    reader_.advance(1);
-    return true;
+    return matches([](auto ch) {
+      return mozilla::IsAsciiLowercaseAlpha(ch) || ch == '_';
+    });
   }
 
   // AKeyChar :
@@ -800,18 +792,10 @@ class TemporalParser final {
   //   DecimalDigit
   //   -
   bool aKeyChar() {
-    if (!reader_.hasMore(1)) {
-      return false;
-    }
-
-    CharT ch = reader_.current();
-    if (!(mozilla::IsAsciiLowercaseAlpha(ch) || mozilla::IsAsciiDigit(ch) ||
-          ch == '-' || ch == '_')) {
-      return false;
-    }
-
-    reader_.advance(1);
-    return true;
+    return matches([](auto ch) {
+      return mozilla::IsAsciiLowercaseAlpha(ch) || mozilla::IsAsciiDigit(ch) ||
+             ch == '-' || ch == '_';
+    });
   }
 
   // AnnotationValueComponent :
@@ -888,7 +872,6 @@ class TemporalParser final {
 
   mozilla::Result<TimeZoneAnnotation, ParserError> timeZoneAnnotation();
 
-  bool timeZoneIANANameComponent();
   mozilla::Result<TimeZoneName, ParserError> timeZoneIANAName();
 
   mozilla::Result<AnnotationKey, ParserError> annotationKey();
@@ -1303,8 +1286,8 @@ template <typename CharT>
 mozilla::Result<TimeZoneAnnotation, ParserError>
 TemporalParser<CharT>::timeZoneIdentifier() {
   // TimeZoneIdentifier :
-  //   TimeZoneIANAName
   //   TimeZoneUTCOffsetName
+  //   TimeZoneIANAName
 
   TimeZoneAnnotation result = {};
   if (hasSign()) {
@@ -1353,54 +1336,26 @@ template <typename CharT>
 mozilla::Result<TimeZoneName, ParserError>
 TemporalParser<CharT>::timeZoneIANAName() {
   // TimeZoneIANAName :
-  //   TimeZoneIANANameTail[~Legacy]
-  //   TimeZoneIANANameTail[+Legacy] but only if IsLegacyIANATimeZoneName of
-  //                                 TimeZoneIANANameTail is true
+  //   TimeZoneIANANameComponent
+  //   TimeZoneIANAName / TimeZoneIANANameComponent
   //
-  // TimeZoneIANANameTail[Legacy] :
-  //   TimeZoneIANANameComponent[?Legacy]
-  //   TimeZoneIANANameComponent[?Legacy] / TimeZoneIANANameTail[?Legacy]
+  // TimeZoneIANANameComponent :
+  //   TZLeadingChar
+  //   TimeZoneIANANameComponent TZChar
 
   size_t start = reader_.index();
 
-  // NOTE: Time zone names are parsed with legacy mode always enabled. If the
-  // name contains legacy name components, but doesn't pass the
-  // |IsLegacyIANATimeZoneName| test, it'll be rejected during the time zone
-  // name validation step which happens after parsing.
-
   do {
-    if (!timeZoneIANANameComponent()) {
+    if (!tzLeadingChar()) {
       return mozilla::Err(JSMSG_TEMPORAL_PARSER_MISSING_TIMEZONE_NAME);
+    }
+
+    // Optionally followed by a sequence of |TZChar|.
+    while (tzChar()) {
     }
   } while (character('/'));
 
   return TimeZoneName{start, reader_.index() - start};
-}
-
-template <typename CharT>
-bool TemporalParser<CharT>::timeZoneIANANameComponent() {
-  // TimeZoneIANANameComponent[Legacy] :
-  //   TZLeadingChar TZChar[?Legacy]{0, 13} but not one of . or ..
-
-  size_t index = reader_.index();
-
-  // Parse TZLeadingChar followed by up to thirteen TZChar[Legacy] characters.
-  if (!tzLeadingChar()) {
-    return false;
-  }
-  for (size_t i = 0; i < 13 && tzCharLegacy(); i++) {
-  }
-
-  // Reject if the name component matches either "." or "..".
-  size_t charactersRead = reader_.index() - index;
-  if (charactersRead == 1 && reader_.at(index) == '.') {
-    return false;
-  }
-  if (charactersRead == 2 && reader_.at(index) == '.' &&
-      reader_.at(index + 1) == '.') {
-    return false;
-  }
-  return true;
 }
 
 template <typename CharT>
@@ -1540,20 +1495,20 @@ template <typename CharT>
 mozilla::Result<ZonedDateTimeString, ParserError>
 TemporalParser<CharT>::parseTemporalTimeZoneString() {
   // TimeZoneIdentifier :
-  //   TimeZoneIANAName
   //   TimeZoneUTCOffsetName
+  //   TimeZoneIANAName
 
-  if (hasTzLeadingChar()) {
-    if (auto name = timeZoneIANAName(); name.isOk() && reader_.atEnd()) {
-      ZonedDateTimeString result = {};
-      result.timeZone = TimeZoneString::from(name.unwrap());
-      return result;
-    }
-  } else {
+  if (hasSign()) {
     if (auto offset = timeZoneUTCOffsetName();
         offset.isOk() && reader_.atEnd()) {
       ZonedDateTimeString result = {};
       result.timeZone = TimeZoneString::from(offset.unwrap());
+      return result;
+    }
+  } else {
+    if (auto name = timeZoneIANAName(); name.isOk() && reader_.atEnd()) {
+      ZonedDateTimeString result = {};
+      result.timeZone = TimeZoneString::from(name.unwrap());
       return result;
     }
   }
