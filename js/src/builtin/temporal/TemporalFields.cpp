@@ -295,7 +295,7 @@ static bool IsSorted(std::initializer_list<TemporalField> fieldNames) {
                         });
 }
 
-static bool IsSorted(const JS::StackGCVector<PropertyKey>& fieldNames) {
+static bool IsSorted(const TemporalFieldNames& fieldNames) {
   return std::is_sorted(
       fieldNames.begin(), fieldNames.end(),
       [](auto x, auto y) { return ComparePropertyKey(x, y) < 0; });
@@ -542,7 +542,7 @@ bool js::temporal::PrepareTemporalFields(
  */
 PlainObject* js::temporal::PrepareTemporalFields(
     JSContext* cx, Handle<JSObject*> fields,
-    Handle<JS::StackGCVector<PropertyKey>> fieldNames) {
+    Handle<TemporalFieldNames> fieldNames) {
   // Step 1. (Not applicable in our implementation.)
 
   // Step 2.
@@ -611,7 +611,7 @@ PlainObject* js::temporal::PrepareTemporalFields(
  */
 PlainObject* js::temporal::PrepareTemporalFields(
     JSContext* cx, Handle<JSObject*> fields,
-    Handle<JS::StackGCVector<PropertyKey>> fieldNames,
+    Handle<TemporalFieldNames> fieldNames,
     std::initializer_list<TemporalField> requiredFields) {
   // Step 1. (Not applicable in our implementation.)
 
@@ -695,7 +695,7 @@ PlainObject* js::temporal::PrepareTemporalFields(
  */
 PlainObject* js::temporal::PreparePartialTemporalFields(
     JSContext* cx, Handle<JSObject*> fields,
-    Handle<JS::StackGCVector<PropertyKey>> fieldNames) {
+    Handle<TemporalFieldNames> fieldNames) {
   // Step 1. (Not applicable in our implementation.)
 
   // Step 2.
@@ -766,9 +766,9 @@ PlainObject* js::temporal::PreparePartialTemporalFields(
  * Performs list-concatenation, removes any duplicates, and sorts the result.
  */
 bool js::temporal::ConcatTemporalFieldNames(
-    const JS::StackGCVector<PropertyKey>& receiverFieldNames,
-    const JS::StackGCVector<PropertyKey>& inputFieldNames,
-    JS::StackGCVector<PropertyKey>& concatenatedFieldNames) {
+    const TemporalFieldNames& receiverFieldNames,
+    const TemporalFieldNames& inputFieldNames,
+    TemporalFieldNames& concatenatedFieldNames) {
   MOZ_ASSERT(IsSorted(receiverFieldNames));
   MOZ_ASSERT(IsSorted(inputFieldNames));
   MOZ_ASSERT(concatenatedFieldNames.empty());
@@ -820,7 +820,7 @@ bool js::temporal::ConcatTemporalFieldNames(
 }
 
 bool js::temporal::AppendSorted(
-    JSContext* cx, JS::StackGCVector<PropertyKey>& fieldNames,
+    JSContext* cx, TemporalFieldNames& fieldNames,
     std::initializer_list<TemporalField> additionalNames) {
   // |fieldNames| is sorted and doesn't include any duplicates
   MOZ_ASSERT(IsSorted(fieldNames));
@@ -897,10 +897,10 @@ bool js::temporal::AppendSorted(
   return true;
 }
 
-bool js::temporal::SortTemporalFieldNames(
-    JSContext* cx, JS::StackGCVector<PropertyKey>& fieldNames) {
+bool js::temporal::SortTemporalFieldNames(JSContext* cx,
+                                          TemporalFieldNames& fieldNames) {
   // Create scratch space for MergeSort().
-  JS::StackGCVector<PropertyKey> scratch(cx);
+  TemporalFieldNames scratch(cx);
   if (!scratch.resize(fieldNames.length())) {
     return false;
   }
