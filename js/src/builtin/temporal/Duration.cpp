@@ -7665,9 +7665,6 @@ static bool Duration_round(JSContext* cx, const CallArgs& args) {
     }
   }
 
-  // FIXME: spec issue - `relativeTo` can be undefined, in which case it's not
-  // valid to test for the presence of internal slots.
-
   // Steps 26-27.
   TimeDuration balanceResult;
   if (zonedRelativeTo) {
