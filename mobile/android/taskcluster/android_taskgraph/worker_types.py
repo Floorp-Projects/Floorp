@@ -216,8 +216,9 @@ def build_version_bump_payload(config, task, task_def):
     worker = task["worker"]
     task_def["tags"]["worker-implementation"] = "scriptworker"
 
-    task_def["payload"] = {"actions": []}
-    actions = task_def["payload"]["actions"]
+    scopes = task_def.setdefault("scopes", [])
+    scope_prefix = f"project:mobile:{config.params['project']}:treescript:action"
+    task_def["payload"] = {}
 
     if worker["bump"]:
         if not worker["bump-files"]:
@@ -227,7 +228,7 @@ def build_version_bump_payload(config, task, task_def):
         bump_info["next_version"] = config.params["next_version"]
         bump_info["files"] = worker["bump-files"]
         task_def["payload"]["version_bump_info"] = bump_info
-        actions.append("version_bump")
+        scopes.append(f"{scope_prefix}:version_bump")
 
     if worker["push"]:
         task_def["payload"]["push"] = True
