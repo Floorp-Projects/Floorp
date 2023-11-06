@@ -3597,6 +3597,10 @@ class Document : public nsINode,
   // effect once per document, and so is called during document destruction.
   void ReportDocumentUseCounters();
 
+  // Reports largest contentful paint via telemetry. We want the most up to
+  // date value for LCP and so this is called during document destruction.
+  void ReportLCP();
+
   // Report how lazyload performs for this document.
   void ReportDocumentLazyLoadCounters();
 

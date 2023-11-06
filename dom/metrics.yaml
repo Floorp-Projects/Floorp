@@ -11,6 +11,32 @@ $tags:
   - 'Core :: DOM: Core & HTML'
 
 perf:
+  largest_contentful_paint:
+    type: timing_distribution
+    time_unit: millisecond
+    description: >
+        Time from navigation start to largest contentful paint.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1862939
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1862939#c5
+    notification_emails:
+      - perf-telemetry-alerts@mozilla.com
+    expires: never
+    telemetry_mirror: PERF_LARGEST_CONTENTFUL_PAINT_MS
+  largest_contentful_paint_from_response_start:
+    type: timing_distribution
+    time_unit: millisecond
+    description: >
+        Time from response start to largest contentful paint.
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1862939
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1862939#c5
+    notification_emails:
+      - perf-telemetry-alerts@mozilla.com
+    expires: never
+    telemetry_mirror: PERF_LARGEST_CONTENTFUL_PAINT_FROM_RESPONSE_START_MS
   page_load:
     type: event
     description: >
