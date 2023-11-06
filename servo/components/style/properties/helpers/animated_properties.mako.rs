@@ -13,6 +13,7 @@
 use crate::properties::{CSSWideKeyword, PropertyDeclaration, NonCustomPropertyIterator};
 use crate::properties::longhands;
 use crate::properties::longhands::visibility::computed_value::T as Visibility;
+use crate::properties::longhands::content_visibility::computed_value::T as ContentVisibility;
 use crate::properties::LonghandId;
 use std::ptr;
 use std::mem;
@@ -580,6 +581,42 @@ impl ComputeSquaredDistance for Visibility {
 }
 
 impl ToAnimatedZero for Visibility {
+    #[inline]
+    fn to_animated_zero(&self) -> Result<Self, ()> {
+        Err(())
+    }
+}
+
+/// <https://drafts.csswg.org/css-contain-3/#content-visibility-animation>
+impl Animate for ContentVisibility {
+    #[inline]
+    fn animate(&self, other: &Self, procedure: Procedure) -> Result<Self, ()> {
+        match procedure {
+            Procedure::Interpolate { .. } => {
+                let (this_weight, other_weight) = procedure.weights();
+                match (*self, *other) {
+                    (ContentVisibility::Hidden, _) => {
+                        Ok(if other_weight > 0.0 { *other } else { *self })
+                    },
+                    (_, ContentVisibility::Hidden) => {
+                        Ok(if this_weight > 0.0 { *self } else { *other })
+                    },
+                    _ => Err(()),
+                }
+            },
+            _ => Err(()),
+        }
+    }
+}
+
+impl ComputeSquaredDistance for ContentVisibility {
+    #[inline]
+    fn compute_squared_distance(&self, other: &Self) -> Result<SquaredDistance, ()> {
+        Ok(SquaredDistance::from_sqrt(if *self == *other { 0. } else { 1. }))
+    }
+}
+
+impl ToAnimatedZero for ContentVisibility {
     #[inline]
     fn to_animated_zero(&self) -> Result<Self, ()> {
         Err(())
