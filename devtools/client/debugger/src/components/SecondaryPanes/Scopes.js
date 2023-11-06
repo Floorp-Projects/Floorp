@@ -237,7 +237,10 @@ class Scopes extends PureComponent {
         return div(
           { className: "pane scopes-list" },
           div(
-            { className: "pane-info no-original-scopes-info", "aria-role": "status"},
+            {
+              className: "pane-info no-original-scopes-info",
+              "aria-role": "status",
+            },
             span(
               { className: "info icon" },
               React.createElement(AccessibleImage, { className: "sourcemap" })

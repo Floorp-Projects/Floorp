@@ -1714,6 +1714,7 @@ const selectors = {
   expressionNodes: ".expressions-list .tree-node",
   expressionPlus: ".watch-expressions-pane button.plus",
   expressionRefresh: ".watch-expressions-pane button.refresh",
+  expressionsHeader: ".watch-expressions-pane ._header .header-label",
   scopesHeader: ".scopes-pane ._header .header-label",
   breakpointItem: i => `.breakpoints-list div:nth-of-type(${i})`,
   breakpointLabel: i => `${selectors.breakpointItem(i)} .breakpoint-label`,
@@ -2058,6 +2059,10 @@ async function waitForPausedInOriginalFileAndToggleMapScopes(
     shouldWaitForLoadedScopes: false,
   });
   await toggleMapScopes(dbg);
+}
+
+function toggleExpressions(dbg) {
+  return findElement(dbg, "expressionsHeader").click();
 }
 
 function toggleScopes(dbg) {
