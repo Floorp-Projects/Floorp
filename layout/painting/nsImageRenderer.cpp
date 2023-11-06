@@ -53,7 +53,7 @@ nsImageRenderer::nsImageRenderer(nsIFrame* aForFrame, const StyleImage* aImage,
                                  uint32_t aFlags)
     : mForFrame(aForFrame),
       mImage(&aImage->FinalImage()),
-      mImageResolution(aImage->GetResolution()),
+      mImageResolution(aImage->GetResolution(*aForFrame->Style())),
       mType(mImage->tag),
       mImageContainer(nullptr),
       mGradientData(nullptr),
@@ -219,11 +219,11 @@ CSSSizeOrRatio nsImageRenderer::ComputeIntrinsicSize() {
       // If we know the aspect ratio and one of the dimensions,
       // we can compute the other missing width or height.
       if (!haveHeight && haveWidth && result.mRatio) {
-        nscoord intrinsicHeight =
+        CSSIntCoord intrinsicHeight =
             result.mRatio.Inverted().ApplyTo(imageIntSize.width);
         result.SetHeight(nsPresContext::CSSPixelsToAppUnits(intrinsicHeight));
       } else if (haveHeight && !haveWidth && result.mRatio) {
-        nscoord intrinsicWidth = result.mRatio.ApplyTo(imageIntSize.height);
+        CSSIntCoord intrinsicWidth = result.mRatio.ApplyTo(imageIntSize.height);
         result.SetWidth(nsPresContext::CSSPixelsToAppUnits(intrinsicWidth));
       }
 

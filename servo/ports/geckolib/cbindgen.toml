@@ -876,7 +876,7 @@ renaming_overrides_prefixing = true
   //
   // The resolution is in dppx, and should be used to impact the intrinsic
   // size of the image.
-  ImageResolution GetResolution() const;
+  ImageResolution GetResolution(const ComputedStyle&) const;
 
   // If this is an image-set(), the final image we've selected, otherwise it
   // returns *this.
