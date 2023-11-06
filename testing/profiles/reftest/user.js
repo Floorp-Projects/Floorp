@@ -7,7 +7,6 @@ user_pref("browser.safebrowsing.blockedURIs.enabled", false);
 user_pref("browser.safebrowsing.downloads.enabled", false);
 user_pref("browser.safebrowsing.downloads.remote.url", "http://127.0.0.1/safebrowsing-dummy/gethash");
 user_pref("browser.safebrowsing.malware.enabled", false);
-user_pref("browser.safebrowsing.passwords.enabled", false);
 // Likewise for safebrowsing.
 user_pref("browser.safebrowsing.phishing.enabled", false);
 user_pref("browser.safebrowsing.provider.google.gethashURL", "http://127.0.0.1/safebrowsing-dummyg/gethash");

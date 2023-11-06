@@ -11,7 +11,6 @@ function run_test() {
   equal(urlUtils.convertListNameToThreatType("goog-harmful-proto"), 4);
   equal(urlUtils.convertListNameToThreatType("goog-phish-proto"), 5);
   equal(urlUtils.convertListNameToThreatType("goog-badbinurl-proto"), 7);
-  equal(urlUtils.convertListNameToThreatType("goog-passwordwhite-proto"), 8);
   equal(urlUtils.convertListNameToThreatType("goog-downloadwhite-proto"), 9);
 
   try {
@@ -37,10 +36,6 @@ function run_test() {
   equal(urlUtils.convertThreatTypeToListNames(4), "goog-harmful-proto");
   equal(urlUtils.convertThreatTypeToListNames(5), "goog-phish-proto");
   equal(urlUtils.convertThreatTypeToListNames(7), "goog-badbinurl-proto");
-  equal(
-    urlUtils.convertThreatTypeToListNames(8),
-    "goog-passwordwhite-proto,moztest-passwordwhite-proto,test-passwordwhite-proto"
-  );
   equal(urlUtils.convertThreatTypeToListNames(9), "goog-downloadwhite-proto");
 
   try {

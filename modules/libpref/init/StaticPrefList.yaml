@@ -1536,12 +1536,6 @@
   value: true
   mirror: always
 
-# Password protection
-- name: browser.safebrowsing.passwords.enabled
-  type: bool
-  value: false
-  mirror: always
-
 # Phishing protection
 - name: browser.safebrowsing.phishing.enabled
   type: bool

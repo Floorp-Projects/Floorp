@@ -653,7 +653,6 @@ _ZN4uuid6parser28_$LT$impl$u20$uuid..Uuid$GT$9parse_str17hef8066f10442e30fE
 ?s_HashKey@?$nsTHashtable@V?$nsBaseHashtableET@VnsStringHashKey@@PAUMiscContainer@@@@@@KAIPBX@Z
 ?s_MatchEntry@?$nsTHashtable@V?$nsBaseHashtableET@VnsStringHashKey@@V?$UniquePtr@URawServoSelectorList@@V?$DefaultDelete@URawServoSelectorList@@@mozilla@@@mozilla@@@@@@KA_NPBUPLDHashEntryHdr@@PBX@Z
 ?GetOrCreate@nsRFPService@mozilla@@SAPAV12@XZ
-?OnComplete@LoginReputationParent@dom@mozilla@@UAG?AW4nsresult@@W44@I@Z
 ?GetSpoofedPresentedFrames@nsRFPService@mozilla@@SAINII@Z
 ?Release@nsUUIDGenerator@@UAGKXZ
 ??0AutoSuppressEventHandlingAndSuspend@dom@mozilla@@QAE@PAVBrowsingContextGroup@12@@Z

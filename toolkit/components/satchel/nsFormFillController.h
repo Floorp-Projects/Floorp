@@ -23,7 +23,6 @@
 #include "nsIMutationObserver.h"
 #include "nsIObserver.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsILoginReputation.h"
 
 class nsFormHistory;
 class nsINode;
@@ -99,8 +98,6 @@ class nsFormFillController final : public nsIFormFillController,
 
   bool IsTextControl(nsINode* aNode);
 
-  nsresult StartQueryLoginReputation(mozilla::dom::HTMLInputElement* aInput);
-
   MOZ_CAN_RUN_SCRIPT NS_IMETHODIMP isLoginManagerField(
       mozilla::dom::HTMLInputElement* aInput, bool* isLoginManagerField);
 
@@ -108,7 +105,6 @@ class nsFormFillController final : public nsIFormFillController,
 
   nsCOMPtr<nsIAutoCompleteController> mController;
   nsCOMPtr<nsILoginAutoCompleteSearch> mLoginManagerAC;
-  nsCOMPtr<nsILoginReputationService> mLoginReputationService;
   mozilla::dom::HTMLInputElement* mFocusedInput;
 
   // mListNode is a <datalist> element which, is set, has the form fill

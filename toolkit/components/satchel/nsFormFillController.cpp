@@ -63,8 +63,8 @@ static nsIFormAutoComplete* GetFormAutoComplete() {
 }
 
 NS_IMPL_CYCLE_COLLECTION(nsFormFillController, mController, mLoginManagerAC,
-                         mLoginReputationService, mFocusedPopup, mPopups,
-                         mLastListener, mLastFormAutoComplete)
+                         mFocusedPopup, mPopups, mLastListener,
+                         mLastFormAutoComplete)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsFormFillController)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIFormFillController)
@@ -802,11 +802,6 @@ nsFormFillController::StopSearch() {
   return NS_OK;
 }
 
-nsresult nsFormFillController::StartQueryLoginReputation(
-    HTMLInputElement* aInput) {
-  return NS_OK;
-}
-
 ////////////////////////////////////////////////////////////////////////
 //// nsIFormAutoCompleteObserver
 
@@ -1024,14 +1019,6 @@ void nsFormFillController::MaybeStartControllingInput(
   if (isAutofillInput || isPwmgrInput || hasList || autocomplete) {
     StartControllingInput(aInput);
   }
-
-#ifdef NIGHTLY_BUILD
-  // Trigger an asynchronous login reputation query when user focuses on the
-  // password field.
-  if (aInput->HasBeenTypePassword()) {
-    StartQueryLoginReputation(aInput);
-  }
-#endif
 }
 
 nsresult nsFormFillController::HandleFocus(HTMLInputElement* aInput) {

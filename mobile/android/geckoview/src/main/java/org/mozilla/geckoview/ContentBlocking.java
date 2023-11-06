@@ -59,8 +59,7 @@ public class ContentBlocking {
               "googpub-phish-proto",
               "goog-malware-proto",
               "goog-unwanted-proto",
-              "goog-harmful-proto",
-              "goog-passwordwhite-proto")
+              "goog-harmful-proto")
           .updateUrl(
               "https://safebrowsing.googleapis.com/v4/threatListUpdates:fetch?$ct=application/x-protobuf&key=%GOOGLE_SAFEBROWSING_API_KEY%&$httpMethod=POST")
           .getHashUrl(

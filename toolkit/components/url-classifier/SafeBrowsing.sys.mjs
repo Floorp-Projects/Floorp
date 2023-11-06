@@ -73,21 +73,6 @@ const FEATURES = [
     },
   },
   {
-    name: "passwords",
-    list: ["urlclassifier.passwordAllowTable"],
-    enabled() {
-      return Services.prefs.getBoolPref(
-        "browser.safebrowsing.passwords.enabled"
-      );
-    },
-    update() {
-      return Services.prefs.getBoolPref(
-        "browser.safebrowsing.features.passwords.update",
-        this.enabled()
-      );
-    },
-  },
-  {
     name: "downloads",
     list: [
       "urlclassifier.downloadBlockTable",
