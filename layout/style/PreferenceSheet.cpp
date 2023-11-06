@@ -178,11 +178,6 @@ void PreferenceSheet::Prefs::Load(bool aIsChrome) {
   LoadColors(false);
 
   mColorSchemeChoice = [&] {
-    // When not forcing colors, we use the standard mechanism, the document is
-    // in control taking into account user preferences if it wishes to.
-    if (mUseDocumentColors) {
-      return ColorSchemeChoice::Standard;
-    }
 #ifdef XP_WIN
     // Windows overrides the light colors with the HCM colors when HCM is
     // active, so make sure to always use the light system colors in that case.
@@ -192,6 +187,11 @@ void PreferenceSheet::Prefs::Load(bool aIsChrome) {
       return ColorSchemeChoice::Light;
     }
 #endif
+    // When not forcing colors, we use the standard mechanism, the document is
+    // in control taking into account user preferences if it wishes to.
+    if (mUseDocumentColors) {
+      return ColorSchemeChoice::Standard;
+    }
     // When forcing preference colors, we derive a color-scheme from those. That
     // way we can use the system colors more appropriately suited for the user,
     // avoiding contrast issues like bug 1762018.
