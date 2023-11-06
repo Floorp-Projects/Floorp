@@ -675,20 +675,18 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
           // If pages aren't loading and there aren't other tasks to run,
           // trigger the pending vsync notification.
           static bool sHasPendingLowPrioTask = false;
-          static VsyncEvent sMostRecentSkippedVsync;
-          sMostRecentSkippedVsync = aVsyncEvent;
           if (!sHasPendingLowPrioTask) {
             sHasPendingLowPrioTask = true;
             NS_DispatchToMainThreadQueue(
                 NS_NewRunnableFunction(
                     "NotifyVsyncOnMainThread[low priority]",
-                    [self = RefPtr{this}]() {
+                    [self = RefPtr{this}, event = aVsyncEvent]() {
                       sHasPendingLowPrioTask = false;
-                      if (self->mRecentVsync == sMostRecentSkippedVsync.mTime &&
-                          self->mRecentVsyncId == sMostRecentSkippedVsync.mId &&
+                      if (self->mRecentVsync == event.mTime &&
+                          self->mRecentVsyncId == event.mId &&
                           !self->ShouldGiveNonVsyncTasksMoreTime()) {
                         self->mSuspendVsyncPriorityTicksUntil = TimeStamp();
-                        self->NotifyVsyncOnMainThread(sMostRecentSkippedVsync);
+                        self->NotifyVsyncOnMainThread(event);
                       }
                     }),
                 EventQueuePriority::Low);
@@ -832,6 +830,8 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
     MOZ_ASSERT(aVsyncTimestamp <= tickStart);
 #endif
 
+    bool shouldGiveNonVSyncTasksMoreTime = ShouldGiveNonVsyncTasksMoreTime();
+
     // Set these variables before calling RunRefreshDrivers so that they are
     // visible to any nested ticks.
     mLastTickStart = tickStart;
@@ -861,24 +861,28 @@ class VsyncRefreshDriverTimer : public RefreshDriverTimer {
     // period).
     TimeDuration gracePeriod = rate / int64_t(100);
 
-    if (!mLastTickEnd.IsNull() && XRE_IsContentProcess() &&
-        // For RefreshDriver scheduling during page load there is currently
-        // idle priority based setup.
-        // XXX Consider to remove the page load specific code paths.
-        !IsAnyToplevelContentPageLoading()) {
-      // In case normal tasks are doing lots of work, we still want to paint
-      // every now and then, so only at maximum 4 * rate of work is counted
-      // here.
-      // If we're giving extra time for tasks outside a tick, try to
-      // ensure the next vsync after that period is handled, so subtract
-      // a grace period.
-      TimeDuration timeForOutsideTick = clamped(
-          tickStart - mLastTickEnd - gracePeriod, TimeDuration(), rate * 4);
-      mSuspendVsyncPriorityTicksUntil = aVsyncTimestamp + timeForOutsideTick +
-                                        (tickEnd - mostRecentTickStart);
+    if (shouldGiveNonVSyncTasksMoreTime) {
+      if (!mLastTickEnd.IsNull() && XRE_IsContentProcess() &&
+          // For RefreshDriver scheduling during page load there is currently
+          // idle priority based setup.
+          // XXX Consider to remove the page load specific code paths.
+          !IsAnyToplevelContentPageLoading()) {
+        // In case normal tasks are doing lots of work, we still want to paint
+        // every now and then, so only at maximum 4 * rate of work is counted
+        // here.
+        // If we're giving extra time for tasks outside a tick, try to
+        // ensure the next vsync after that period is handled, so subtract
+        // a grace period.
+        TimeDuration timeForOutsideTick = clamped(
+            tickStart - mLastTickEnd - gracePeriod, TimeDuration(), rate * 4);
+        mSuspendVsyncPriorityTicksUntil = aVsyncTimestamp + timeForOutsideTick +
+                                          (tickEnd - mostRecentTickStart);
+      } else {
+        mSuspendVsyncPriorityTicksUntil =
+            aVsyncTimestamp + gracePeriod + (tickEnd - mostRecentTickStart);
+      }
     } else {
-      mSuspendVsyncPriorityTicksUntil =
-          aVsyncTimestamp + gracePeriod + (tickEnd - mostRecentTickStart);
+      mSuspendVsyncPriorityTicksUntil = aVsyncTimestamp + gracePeriod;
     }
 
     mLastIdleTaskCount =
@@ -2953,6 +2957,19 @@ void nsRefreshDriver::Thaw() {
 }
 
 void nsRefreshDriver::FinishedWaitingForTransaction() {
+  if (mSkippedPaints && !IsInRefresh() &&
+      (HasObservers() || HasImageRequests()) && CanDoCatchUpTick()) {
+    NS_DispatchToCurrentThreadQueue(
+        NS_NewRunnableFunction(
+            "nsRefreshDriver::FinishedWaitingForTransaction",
+            [self = RefPtr{this}]() {
+              if (self->CanDoCatchUpTick()) {
+                self->Tick(self->mActiveTimer->MostRecentRefreshVsyncId(),
+                           self->mActiveTimer->MostRecentRefresh());
+              }
+            }),
+        EventQueuePriority::Vsync);
+  }
   mWaitingForTransaction = false;
   mSkippedPaints = false;
 }
