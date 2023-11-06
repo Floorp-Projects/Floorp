@@ -553,16 +553,8 @@ function assertPaused(dbg, msg = "client is paused") {
  * @param {Object} dbg
  * @param {String} url
  *        Optional URL of the script we should be pausing on.
- * @param {Object} options
- *         {Boolean} shouldWaitForLoadScopes
- *        When paused in original files with original variable mapping disabled, scopes are
- *        not going to exist, lets not wait for it. defaults to true
  */
-async function waitForPaused(
-  dbg,
-  url,
-  options = { shouldWaitForLoadedScopes: true }
-) {
+async function waitForPaused(dbg, url) {
   info("Waiting for the debugger to pause");
   const { getSelectedScope, getCurrentThread, getCurrentThreadFrames } =
     dbg.selectors;
@@ -574,10 +566,7 @@ async function waitForPaused(
   );
 
   await waitForState(dbg, getCurrentThreadFrames, "fetched frames");
-
-  if (options.shouldWaitForLoadedScopes) {
-    await waitForLoadedScopes(dbg);
-  }
+  await waitForLoadedScopes(dbg);
   await waitForSelectedSource(dbg, url);
 }
 
@@ -653,7 +642,7 @@ function isFrameSelected(dbg, index, title) {
 }
 
 /**
- *  Clear all the debugger related preferences.
+ * Clear all the debugger related preferences.
  */
 async function clearDebuggerPreferences(prefs = []) {
   resetSchemaVersion();
@@ -668,6 +657,7 @@ async function clearDebuggerPreferences(prefs = []) {
   Services.prefs.clearUserPref("devtools.debugger.call-stack-visible");
   Services.prefs.clearUserPref("devtools.debugger.scopes-visible");
   Services.prefs.clearUserPref("devtools.debugger.skip-pausing");
+  Services.prefs.clearUserPref("devtools.debugger.map-scopes-enabled");
 
   for (const pref of prefs) {
     await pushPref(...pref);
@@ -879,15 +869,14 @@ function countTabs(dbg) {
  *
  * @memberof mochitest/actions
  * @param {Object} dbg
- * @param {Object} pauseOptions
  * @return {Promise}
  * @static
  */
-async function stepOver(dbg, pauseOptions) {
+async function stepOver(dbg) {
   const pauseLine = getVisibleSelectedFrameLine(dbg);
   info(`Stepping over from ${pauseLine}`);
   await dbg.actions.stepOver();
-  return waitForPaused(dbg, null, pauseOptions);
+  return waitForPaused(dbg);
 }
 
 /**
@@ -1152,15 +1141,14 @@ async function invokeWithBreakpoint(
   fnName,
   filename,
   { line, column },
-  handler,
-  pauseOptions
+  handler
 ) {
   const source = await loadAndAddBreakpoint(dbg, filename, line, column);
 
   const invokeResult = invokeInTab(fnName);
 
   const invokeFailed = await Promise.race([
-    waitForPaused(dbg, null, pauseOptions),
+    waitForPaused(dbg),
     invokeResult.then(
       () => new Promise(() => {}),
       () => true
@@ -1715,7 +1703,6 @@ const selectors = {
   expressionNodes: ".expressions-list .tree-node",
   expressionPlus: ".watch-expressions-pane button.plus",
   expressionRefresh: ".watch-expressions-pane button.refresh",
-  expressionsHeader: ".watch-expressions-pane ._header .header-label",
   scopesHeader: ".scopes-pane ._header .header-label",
   breakpointItem: i => `.breakpoints-list div:nth-of-type(${i})`,
   breakpointLabel: i => `${selectors.breakpointItem(i)} .breakpoint-label`,
@@ -2041,29 +2028,6 @@ async function typeInPanel(dbg, text) {
   pressKey(dbg, "End");
   type(dbg, text);
   pressKey(dbg, "Enter");
-}
-
-async function toggleMapScopes(dbg) {
-  info("Turn on original variable mapping");
-  const scopesLoaded = waitForLoadedScopes(dbg);
-  const onDispatch = waitForDispatch(dbg.store, "TOGGLE_MAP_SCOPES");
-  clickElement(dbg, "mapScopesCheckbox");
-  return Promise.all([onDispatch, scopesLoaded]);
-}
-
-async function waitForPausedInOriginalFileAndToggleMapScopes(
-  dbg,
-  expectedSelectedSource = null
-) {
-  // Original variable mapping is not switched on, so do not wait for any loaded scopes
-  await waitForPaused(dbg, expectedSelectedSource, {
-    shouldWaitForLoadedScopes: false,
-  });
-  await toggleMapScopes(dbg);
-}
-
-function toggleExpressions(dbg) {
-  return findElement(dbg, "expressionsHeader").click();
 }
 
 function toggleScopes(dbg) {
@@ -2430,16 +2394,6 @@ function getTokenElAtLine(dbg, expression, line, column = 0) {
     }
     return childText === expression;
   });
-}
-
-/**
- * Wait for a few ms and assert that a tooltip preview was not displayed.
- * @param {*} dbg
- */
-async function assertNoTooltip(dbg) {
-  await wait(200);
-  const el = findElement(dbg, "previewPopup");
-  is(el, null, "Tooltip should not exist");
 }
 
 /**

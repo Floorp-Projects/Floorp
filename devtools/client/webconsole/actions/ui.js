@@ -23,7 +23,6 @@ const {
   SHOW_OBJECT_IN_SIDEBAR,
   SIDEBAR_CLOSE,
   SPLIT_CONSOLE_CLOSE_BUTTON_TOGGLE,
-  SHOW_EVALUATION_NOTIFICATION,
   TIMESTAMPS_TOGGLE,
   WARNING_GROUPS_TOGGLE,
   FILTERBAR_DISPLAY_MODE_SET,
@@ -225,13 +224,6 @@ function openSidebar(messageId, rootActorId) {
   };
 }
 
-function showEvaluationNotification(notification) {
-  return {
-    type: SHOW_EVALUATION_NOTIFICATION,
-    notification,
-  };
-}
-
 module.exports = {
   eagerEvaluationToggle,
   editorOnboardingDismiss,
@@ -252,5 +244,4 @@ module.exports = {
   openLink,
   openSidebar,
   autocompleteToggle,
-  showEvaluationNotification,
 };

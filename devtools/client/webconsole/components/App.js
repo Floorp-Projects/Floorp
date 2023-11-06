@@ -41,9 +41,6 @@ const ConfirmDialog = createFactory(
 const EagerEvaluation = createFactory(
   require("resource://devtools/client/webconsole/components/Input/EagerEvaluation.js")
 );
-const EvaluationNotification = createFactory(
-  require("resource://devtools/client/webconsole/components/Input/EvaluationNotification.js")
-);
 
 // And lazy load the ones that may not be used.
 loader.lazyGetter(this, "SideBar", () =>
@@ -459,7 +456,6 @@ class App extends Component {
     const notificationBox = this.renderNotificationBox();
     const jsterm = this.renderJsTerm();
     const eager = this.renderEagerEvaluation();
-    const evaluationNotification = EvaluationNotification();
     const reverseSearch = this.renderReverseSearch();
     const sidebar = this.renderSideBar();
     const confirmDialog = this.renderConfirmDialog();
@@ -473,8 +469,7 @@ class App extends Component {
         consoleOutput,
         notificationBox,
         jsterm,
-        eager,
-        evaluationNotification
+        eager
       ),
       editorMode && inputEnabled
         ? GridElementWidthResizer({
