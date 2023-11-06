@@ -737,11 +737,14 @@ void nsHTTPSOnlyUtils::LogMessage(const nsAString& aMessage, uint32_t aFlags,
   // Allow for easy distinction in devtools code.
   auto category = aUseHttpsFirst ? "HTTPSFirst"_ns : "HTTPSOnly"_ns;
 
-  uint64_t innerWindowId = aLoadInfo->GetInnerWindowID();
-  if (innerWindowId > 0) {
+  uint64_t windowId = aLoadInfo->GetInnerWindowID();
+  if (!windowId) {
+    windowId = aLoadInfo->GetTriggeringWindowId();
+  }
+  if (windowId) {
     // Send to content console
     nsContentUtils::ReportToConsoleByWindowID(message, aFlags, category,
-                                              innerWindowId, aURI);
+                                              windowId, aURI);
   } else {
     // Send to browser console
     bool isPrivateWin = aLoadInfo->GetOriginAttributes().mPrivateBrowsingId > 0;
