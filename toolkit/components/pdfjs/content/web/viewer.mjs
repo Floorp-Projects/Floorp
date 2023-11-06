@@ -589,7 +589,7 @@ const OptionKind = {
 const defaultOptions = {
   canvasMaxAreaInBytes: {
     value: -1,
-    kind: OptionKind.BROWSER
+    kind: OptionKind.BROWSER + OptionKind.API
   },
   isInAutomation: {
     value: false,
@@ -715,10 +715,6 @@ const defaultOptions = {
     value: 1,
     kind: OptionKind.VIEWER + OptionKind.PREFERENCE
   },
-  viewerCssTheme: {
-    value: 0,
-    kind: OptionKind.VIEWER + OptionKind.PREFERENCE
-  },
   viewOnLoad: {
     value: 0,
     kind: OptionKind.VIEWER + OptionKind.PREFERENCE
@@ -814,20 +810,8 @@ class AppOptions {
     for (const name in defaultOptions) {
       const defaultOption = defaultOptions[name];
       if (kind) {
-        if ((kind & defaultOption.kind) === 0) {
+        if (!(kind & defaultOption.kind)) {
           continue;
-        }
-        if (kind === OptionKind.PREFERENCE) {
-          if (kind & OptionKind.BROWSER) {
-            throw new Error(`Invalid kind for preference: ${name}`);
-          }
-          const value = defaultOption.value,
-            valueType = typeof value;
-          if (valueType === "boolean" || valueType === "string" || valueType === "number" && Number.isInteger(value)) {
-            options[name] = value;
-            continue;
-          }
-          throw new Error(`Invalid type for preference: ${name}`);
         }
       }
       const userOption = userOptions[name];
@@ -1929,6 +1913,7 @@ class BaseTreeViewer {
     if (!treeItem) {
       return;
     }
+    this._l10n.pause();
     let currentNode = treeItem.parentNode;
     while (currentNode && currentNode !== this.container) {
       if (currentNode.classList.contains("treeItem")) {
@@ -1937,6 +1922,7 @@ class BaseTreeViewer {
       }
       currentNode = currentNode.parentNode;
     }
+    this._l10n.resume();
     this._updateCurrentTreeItem(treeItem);
     this.container.scrollTo(treeItem.offsetLeft, treeItem.offsetTop + TREEITEM_OFFSET_TOP);
   }
@@ -7576,7 +7562,7 @@ class PDFViewer {
   #scaleTimeoutId = null;
   #textLayerMode = TextLayerMode.ENABLE;
   constructor(options) {
-    const viewerVersion = '4.0.158';
+    const viewerVersion = '4.0.189';
     if (version !== viewerVersion) {
       throw new Error(`The API version "${version}" does not match the Viewer version "${viewerVersion}".`);
     }
@@ -9584,11 +9570,6 @@ const ViewOnLoad = {
   PREVIOUS: 0,
   INITIAL: 1
 };
-const ViewerCssTheme = {
-  AUTOMATIC: 0,
-  LIGHT: 1,
-  DARK: 2
-};
 class DefaultExternalServices {
   constructor() {
     throw new Error("Cannot initialize DefaultExternalServices.");
@@ -9681,7 +9662,6 @@ const PDFViewerApplication = {
     if (AppOptions.get("pdfBugEnabled")) {
       await this._parseHashParams();
     }
-    this._forceCssTheme();
     this.l10n = await l10nPromise;
     document.getElementsByTagName("html")[0].dir = this.l10n.getDirection();
     if (this.isViewerEmbedded && AppOptions.get("externalLinkTarget") === LinkTarget.NONE) {
@@ -9755,33 +9735,6 @@ const PDFViewerApplication = {
       } catch (ex) {
         console.error(`_parseHashParams: "${ex.message}".`);
       }
-    }
-  },
-  _forceCssTheme() {
-    const cssTheme = AppOptions.get("viewerCssTheme");
-    if (cssTheme === ViewerCssTheme.AUTOMATIC || !Object.values(ViewerCssTheme).includes(cssTheme)) {
-      return;
-    }
-    try {
-      const styleSheet = document.styleSheets[0];
-      const cssRules = styleSheet?.cssRules || [];
-      for (let i = 0, ii = cssRules.length; i < ii; i++) {
-        const rule = cssRules[i];
-        if (rule instanceof CSSMediaRule && rule.media?.[0] === "(prefers-color-scheme: dark)") {
-          if (cssTheme === ViewerCssTheme.LIGHT) {
-            styleSheet.deleteRule(i);
-            return;
-          }
-          const darkRules = /^@media \(prefers-color-scheme: dark\) {\n\s*([\w\s-.,:;/\\{}()]+)\n}$/.exec(rule.cssText);
-          if (darkRules?.[1]) {
-            styleSheet.deleteRule(i);
-            styleSheet.insertRule(darkRules[1], i);
-          }
-          return;
-        }
-      }
-    } catch (reason) {
-      console.error(`_forceCssTheme: "${reason?.message}".`);
     }
   },
   async _initializeViewerComponents() {
@@ -10084,9 +10037,9 @@ const PDFViewerApplication = {
   },
   setTitleUsingUrl(url = "", downloadUrl = null) {
     this.url = url;
-    this.baseUrl = url.split("#")[0];
+    this.baseUrl = url.split("#", 1)[0];
     if (downloadUrl) {
-      this._downloadUrl = downloadUrl === url ? this.baseUrl : downloadUrl.split("#")[0];
+      this._downloadUrl = downloadUrl === url ? this.baseUrl : downloadUrl.split("#", 1)[0];
     }
     if (isDataScheme(url)) {
       this._hideViewBookmark();
@@ -10169,14 +10122,12 @@ const PDFViewerApplication = {
     }
     const workerParams = AppOptions.getAll(OptionKind.WORKER);
     Object.assign(GlobalWorkerOptions, workerParams);
+    AppOptions.set("docBaseUrl", this.baseUrl);
     const apiParams = AppOptions.getAll(OptionKind.API);
-    const params = {
-      canvasMaxAreaInBytes: AppOptions.get("canvasMaxAreaInBytes"),
+    const loadingTask = getDocument({
       ...apiParams,
       ...args
-    };
-    params.docBaseUrl ||= this.baseUrl;
-    const loadingTask = getDocument(params);
+    });
     this.pdfLoadingTask = loadingTask;
     loadingTask.onPassword = (updateCallback, reason) => {
       if (this.isViewerEmbedded) {
@@ -11712,7 +11663,6 @@ class BasePreferences {
     "scrollModeOnLoad": -1,
     "spreadModeOnLoad": -1,
     "textLayerMode": 1,
-    "viewerCssTheme": 0,
     "viewOnLoad": 0,
     "disableAutoFetch": false,
     "disableFontFace": false,
@@ -12305,8 +12255,8 @@ PDFPrintServiceFactory.instance = {
 
 
 
-const pdfjsVersion = '4.0.158';
-const pdfjsBuild = '0329b5e13';
+const pdfjsVersion = '4.0.189';
+const pdfjsBuild = '50f52b43a';
 const AppConstants = null;
 window.PDFViewerApplication = PDFViewerApplication;
 window.PDFViewerApplicationConstants = AppConstants;
