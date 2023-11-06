@@ -3801,7 +3801,7 @@ gboolean nsWindow::OnExposeEvent(cairo_t* cr) {
   if (knowsCompositor && layerManager && mCompositorSession) {
     if (!mConfiguredClearColor && !IsPopup()) {
       layerManager->WrBridge()->SendSetDefaultClearColor(LookAndFeel::Color(
-          LookAndFeel::ColorID::Window, LookAndFeel::ColorSchemeForChrome(),
+          LookAndFeel::ColorID::Window, PreferenceSheet::ColorSchemeForChrome(),
           LookAndFeel::UseStandins::No));
       mConfiguredClearColor = true;
     }

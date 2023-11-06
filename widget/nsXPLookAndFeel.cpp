@@ -516,8 +516,6 @@ void nsXPLookAndFeel::Init() {
   // protects against some other process writing to our static variables.
   sInitialized = true;
 
-  RecomputeColorSchemes();
-
   if (XRE_IsParentProcess()) {
     nsLayoutUtils::RecomputeSmoothScrollDefault();
   }
@@ -1146,7 +1144,6 @@ void nsXPLookAndFeel::RefreshImpl() {
   sFontCache.Clear();
   sFloatCache.Clear();
   sIntCache.Clear();
-  RecomputeColorSchemes();
 
   if (XRE_IsParentProcess()) {
     nsLayoutUtils::RecomputeSmoothScrollDefault();
@@ -1178,6 +1175,7 @@ void nsXPLookAndFeel::RecordTelemetry() {
 
 namespace mozilla {
 
+bool LookAndFeel::sGlobalThemeChanged;
 static widget::ThemeChangeKind sGlobalThemeChangeKind{0};
 
 void LookAndFeel::NotifyChangedAllWindows(widget::ThemeChangeKind aKind) {
@@ -1214,7 +1212,7 @@ void LookAndFeel::DoHandleGlobalThemeChange() {
   LookAndFeel::Refresh();
 
   // Reset default background and foreground colors for the document since they
-  // may be using system colors.
+  // may be using system colors, color scheme, etc.
   PreferenceSheet::Refresh();
 
   // Vector images (SVG) may be using theme colors so we discard all cached
@@ -1280,11 +1278,6 @@ static bool ShouldUseStandinsForNativeColorForNonNativeTheme(
          !aPrefs.NonNativeThemeShouldBeHighContrast();
 }
 
-ColorScheme LookAndFeel::sChromeColorScheme;
-ColorScheme LookAndFeel::sContentColorScheme;
-bool LookAndFeel::sColorSchemeInitialized;
-bool LookAndFeel::sGlobalThemeChanged;
-
 bool LookAndFeel::IsDarkColor(nscolor aColor) {
   // Given https://www.w3.org/TR/WCAG20/#contrast-ratiodef, this is the
   // threshold that tells us whether contrast is better against white or black.
@@ -1307,72 +1300,10 @@ bool LookAndFeel::IsDarkColor(nscolor aColor) {
          RelativeLuminanceUtils::Compute(aColor) < kThreshold;
 }
 
-auto LookAndFeel::ColorSchemeSettingForChrome() -> ChromeColorSchemeSetting {
-  switch (StaticPrefs::browser_theme_toolbar_theme()) {
-    case 0:  // Dark
-      return ChromeColorSchemeSetting::Dark;
-    case 1:  // Light
-      return ChromeColorSchemeSetting::Light;
-    default:
-      return ChromeColorSchemeSetting::System;
-  }
-}
-
-ColorScheme LookAndFeel::ThemeDerivedColorSchemeForContent() {
-  switch (StaticPrefs::browser_theme_content_theme()) {
-    case 0:  // Dark
-      return ColorScheme::Dark;
-    case 1:  // Light
-      return ColorScheme::Light;
-    default:
-      return SystemColorScheme();
-  }
-}
-
-void LookAndFeel::RecomputeColorSchemes() {
-  sColorSchemeInitialized = true;
-
-  sChromeColorScheme = [] {
-    switch (ColorSchemeSettingForChrome()) {
-      case ChromeColorSchemeSetting::Light:
-        return ColorScheme::Light;
-      case ChromeColorSchemeSetting::Dark:
-        return ColorScheme::Dark;
-      case ChromeColorSchemeSetting::System:
-        break;
-    }
-    return SystemColorScheme();
-  }();
-
-  sContentColorScheme = [] {
-    switch (StaticPrefs::layout_css_prefers_color_scheme_content_override()) {
-      case 0:
-        return ColorScheme::Dark;
-      case 1:
-        return ColorScheme::Light;
-      default:
-        return ThemeDerivedColorSchemeForContent();
-    }
-  }();
-}
-
 ColorScheme LookAndFeel::ColorSchemeForStyle(
     const dom::Document& aDoc, const StyleColorSchemeFlags& aFlags,
     ColorSchemeMode aMode) {
-  using Choice = PreferenceSheet::Prefs::ColorSchemeChoice;
-
   const auto& prefs = PreferenceSheet::PrefsFor(aDoc);
-  switch (prefs.mColorSchemeChoice) {
-    case Choice::Standard:
-      break;
-    case Choice::UserPreferred:
-      return aDoc.PreferredColorScheme();
-    case Choice::Light:
-      return ColorScheme::Light;
-    case Choice::Dark:
-      return ColorScheme::Dark;
-  }
-
   StyleColorSchemeFlags style(aFlags);
   if (!style) {
     style._0 = aDoc.GetColorSchemeBits();
@@ -1388,12 +1319,13 @@ ColorScheme LookAndFeel::ColorSchemeForStyle(
     // the content supports.
     return supportsDark ? ColorScheme::Dark : ColorScheme::Light;
   }
-  // No value specified. Chrome docs always supports both, so use the preferred
-  // color-scheme.
-  if (aMode == ColorSchemeMode::Preferred || aDoc.ChromeRulesEnabled()) {
+  // No value specified. Chrome docs, and forced-colors mode always supports
+  // both, so use the preferred color-scheme.
+  if (aMode == ColorSchemeMode::Preferred || aDoc.ChromeRulesEnabled() ||
+      !prefs.mUseDocumentColors) {
     return aDoc.PreferredColorScheme();
   }
-  // Default content to light.
+  // Otherwise default content to light.
   return ColorScheme::Light;
 }
 

@@ -279,7 +279,7 @@ bool Gecko_MediaFeatures_PrefersReducedTransparency(const Document* aDocument) {
 
 StylePrefersColorScheme Gecko_MediaFeatures_PrefersColorScheme(
     const Document* aDocument, bool aUseContent) {
-  auto scheme = aUseContent ? LookAndFeel::PreferredColorSchemeForContent()
+  auto scheme = aUseContent ? PreferenceSheet::ContentPrefs().mColorScheme
                             : aDocument->PreferredColorScheme();
   return scheme == ColorScheme::Dark ? StylePrefersColorScheme::Dark
                                      : StylePrefersColorScheme::Light;

@@ -1031,7 +1031,7 @@ auto nsNativeThemeGTK::IsWidgetNonNative(nsIFrame* aFrame,
   // If the current GTK theme color scheme matches our color-scheme, then we
   // can draw a native widget.
   if (LookAndFeel::ColorSchemeForFrame(aFrame) ==
-      LookAndFeel::ColorSchemeForChrome()) {
+      PreferenceSheet::ColorSchemeForChrome()) {
     return NonNative::No;
   }
 

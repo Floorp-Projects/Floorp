@@ -706,8 +706,11 @@ bool Gecko_IsDarkColorScheme(const Document* aDoc,
 nscolor Gecko_ComputeSystemColor(StyleSystemColor aColor, const Document* aDoc,
                                  const StyleColorScheme* aStyle) {
   auto colorScheme = LookAndFeel::ColorSchemeForStyle(*aDoc, aStyle->bits);
-
-  const auto& colors = PreferenceSheet::PrefsFor(*aDoc).ColorsFor(colorScheme);
+  const auto& prefs = PreferenceSheet::PrefsFor(*aDoc);
+  if (prefs.mMustUseLightSystemColors) {
+    colorScheme = ColorScheme::Light;
+  }
+  const auto& colors = prefs.ColorsFor(colorScheme);
   switch (aColor) {
     case StyleSystemColor::Canvastext:
       return colors.mDefault;

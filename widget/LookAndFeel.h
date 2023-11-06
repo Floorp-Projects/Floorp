@@ -378,19 +378,6 @@ class LookAndFeel {
 
   static bool IsDarkColor(nscolor);
 
-  enum class ChromeColorSchemeSetting { Light, Dark, System };
-  static ChromeColorSchemeSetting ColorSchemeSettingForChrome();
-  static ColorScheme ThemeDerivedColorSchemeForContent();
-
-  static ColorScheme ColorSchemeForChrome() {
-    MOZ_ASSERT(sColorSchemeInitialized);
-    return sChromeColorScheme;
-  }
-  static ColorScheme PreferredColorSchemeForContent() {
-    MOZ_ASSERT(sColorSchemeInitialized);
-    return sContentColorScheme;
-  }
-
   static ColorScheme ColorSchemeForStyle(
       const dom::Document&, const StyleColorSchemeFlags&,
       ColorSchemeMode = ColorSchemeMode::Used);
@@ -536,19 +523,8 @@ class LookAndFeel {
       DoHandleGlobalThemeChange();
     }
   }
-  static void EnsureColorSchemesInitialized() {
-    if (!sColorSchemeInitialized) {
-      RecomputeColorSchemes();
-    }
-    MOZ_ASSERT(sColorSchemeInitialized);
-  }
-
-  static ColorScheme sChromeColorScheme;
-  static ColorScheme sContentColorScheme;
 
  protected:
-  static void RecomputeColorSchemes();
-  static bool sColorSchemeInitialized;
 
   static void DoHandleGlobalThemeChange();
   // Set to true when ThemeChanged needs to be called on mTheme (and other

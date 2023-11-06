@@ -1580,22 +1580,22 @@ void nsLookAndFeel::InitializeGlobalSettings() {
 void nsLookAndFeel::ConfigureFinalEffectiveTheme() {
   MOZ_ASSERT(mSystemThemeOverridden,
              "By this point, the alt theme should be configured");
-
   const bool shouldUseSystemTheme = [&] {
+    using ChromeSetting = PreferenceSheet::ChromeColorSchemeSetting;
     // NOTE: We can't call ColorSchemeForChrome directly because this might run
     // while we're computing it.
-    switch (ColorSchemeSettingForChrome()) {
-      case ChromeColorSchemeSetting::Light:
+    switch (PreferenceSheet::ColorSchemeSettingForChrome()) {
+      case ChromeSetting::Light:
         return !mSystemTheme.mIsDark;
-      case ChromeColorSchemeSetting::Dark:
+      case ChromeSetting::Dark:
         return mSystemTheme.mIsDark;
-      case ChromeColorSchemeSetting::System:
+      case ChromeSetting::System:
         break;
     };
     if (!mColorSchemePreference) {
       return true;
     }
-    bool preferenceIsDark = *mColorSchemePreference == ColorScheme::Dark;
+    const bool preferenceIsDark = *mColorSchemePreference == ColorScheme::Dark;
     return preferenceIsDark == mSystemTheme.mIsDark;
   }();
 
