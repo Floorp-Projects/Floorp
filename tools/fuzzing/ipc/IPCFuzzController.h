@@ -111,6 +111,10 @@ class IPCFuzzController {
   void AddToplevelActor(mojo::core::ports::PortName name,
                         mozilla::ipc::ProtocolId protocolId);
 
+  // Used for the IPC_SingleMessage fuzzer
+  UniquePtr<IPC::Message> replaceIPCMessage(UniquePtr<IPC::Message> aMsg);
+  void syncAfterReplace();
+
  private:
   // This is a mapping from port name to a pair of last seen sequence numbers.
   std::unordered_map<mojo::core::ports::PortName, SeqNoPair> portSeqNos;
@@ -189,6 +193,14 @@ class IPCFuzzController {
   // Can be used to specify a non-standard trigger message, e.h. to target
   // a specific actor.
   uint32_t mIPCTriggerMsg;
+
+  // Used to dump IPC messages in single message mode
+  Maybe<uint32_t> mIPCDumpMsg;
+  Maybe<uint32_t> mIPCDumpAllMsgsSize;
+  uint32_t mIPCDumpCount = 0;
+
+  // Used to select a particular packet instance in single message mode
+  uint32_t mIPCTriggerSingleMsgWait = 0;
 
   IPCFuzzController();
   NYX_DISALLOW_COPY_AND_ASSIGN(IPCFuzzController);
