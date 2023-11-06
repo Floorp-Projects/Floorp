@@ -1192,7 +1192,12 @@ void Gecko_GetComputedImageURLSpec(const StyleComputedUrl* aURL,
     }
   }
 
-  aOut->AssignLiteral("about:invalid");
+  // Empty URL computes to empty, per spec:
+  if (aURL->SpecifiedSerialization().IsEmpty()) {
+    aOut->Truncate();
+  } else {
+    aOut->AssignLiteral("about:invalid");
+  }
 }
 
 bool Gecko_IsSupportedImageMimeType(const uint8_t* aMimeType,
