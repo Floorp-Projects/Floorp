@@ -180,7 +180,7 @@ class NetlinkNeighbor {
   uint32_t GetIndex() const { return mNeigh.ndm_ifindex; }
   const in_common_addr* GetAddrPtr() const { return &mAddr; }
   const uint8_t* GetMACPtr() const { return mMAC; }
-  bool HasMAC() const { return mHasMAC; };
+  bool HasMAC() const { return mHasMAC; }
 
   void GetAsString(nsACString& _retval) const {
     nsAutoCString addrStr;
