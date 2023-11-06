@@ -7624,10 +7624,27 @@ static bool Duration_round(JSContext* cx, const CallArgs& args) {
     return true;
   }
 
+  // FIXME: spec bug - condition incorrect:
+  // - needs to take largestUnit into account for BalanceDateDurationRelative
+  // - duration.[[Days]] can be non-zero and still no calendar is required
+  // https://github.com/tc39/proposal-temporal/issues/2680
+
   // Step 29.
-  if (zonedRelativeTo && smallestUnit <= TemporalUnit::Week &&
-      (duration.years != 0 || duration.months != 0 || duration.weeks != 0 ||
-       duration.days != 0)) {
+  bool createPlainRelativeTo = false;
+  if (zonedRelativeTo) {
+    if (largestUnit <= TemporalUnit::Week) {
+      // Required for BalanceDateDurationRelative
+      createPlainRelativeTo = true;
+    } else if (smallestUnit <= TemporalUnit::Week) {
+      // Required for RoundDuration
+      createPlainRelativeTo = true;
+    } else if (duration.years != 0 || duration.months != 0 ||
+               duration.weeks != 0 || duration.days != 0) {
+      // Required for UnbalanceDateDurationRelative
+      createPlainRelativeTo = true;
+    }
+  }
+  if (createPlainRelativeTo) {
     // Steps 29.a-b.
     plainRelativeTo = ToTemporalDate(cx, zonedRelativeTo);
     if (!plainRelativeTo) {
@@ -7790,9 +7807,13 @@ static bool Duration_total(JSContext* cx, const CallArgs& args) {
     }
   }
 
+  // FIXME: spec bug - wrong condition |plainRelativeTo| needs to be created
+  // when |unit <= TemporalUnit::Week| OR when the calendar units are non-zero.
+  // https://github.com/tc39/proposal-temporal/issues/2681
+
   // Step 11.
-  if (zonedRelativeTo && unit <= TemporalUnit::Week &&
-      (duration.years != 0 || duration.months != 0 || duration.weeks != 0)) {
+  if (zonedRelativeTo && (unit <= TemporalUnit::Week || duration.years != 0 ||
+                          duration.months != 0 || duration.weeks != 0)) {
     // Steps 11.a-b.
     plainRelativeTo = ToTemporalDate(cx, zonedRelativeTo);
     if (!plainRelativeTo) {
