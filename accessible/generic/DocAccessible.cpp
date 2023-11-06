@@ -2644,6 +2644,7 @@ void DocAccessible::UncacheChildrenInSubtree(LocalAccessible* aRoot) {
 }
 
 void DocAccessible::ShutdownChildrenInSubtree(LocalAccessible* aAccessible) {
+  MOZ_ASSERT(!nsAccessibilityService::IsShutdown());
   // Traverse through children and shutdown them before this accessible. When
   // child gets shutdown then it removes itself from children array of its
   // parent. Use jdx index to process the cases if child is not attached to the
@@ -2658,7 +2659,16 @@ void DocAccessible::ShutdownChildrenInSubtree(LocalAccessible* aAccessible) {
 
     // Don't cross document boundaries. The outerdoc shutdown takes care about
     // its subdocument.
-    if (!child->IsDoc()) ShutdownChildrenInSubtree(child);
+    if (!child->IsDoc()) {
+      ShutdownChildrenInSubtree(child);
+      if (nsAccessibilityService::IsShutdown()) {
+        // If XPCOM is the only consumer (devtools & mochitests), shutting down
+        // the child's subtree can cause a11y to shut down because the last
+        // xpcom accessibles will be removed. In that case, return early, our
+        // work is done.
+        return;
+      }
+    }
   }
 
   UnbindFromDocument(aAccessible);
