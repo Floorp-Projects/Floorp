@@ -64,6 +64,7 @@ support-files = [
   "test-console-stacktrace-mapped.html",
   "test-console-table.html",
   "test-console-workers.html",
+  "test-console-worklet.html",
   "test-console.html",
   "test-data.json",
   "test-data.json^headers^",
@@ -826,5 +827,7 @@ skip-if = ["true"] # Bug 1765369
 ["browser_webconsole_worker_evaluate.js"]
 
 ["browser_webconsole_worker_promise_error.js"]
+
+["browser_webconsole_worklet_console.js"]
 
 ["browser_webconsole_worklet_error.js"]
