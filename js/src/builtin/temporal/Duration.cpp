@@ -6971,28 +6971,44 @@ static bool Duration_compare(JSContext* cx, unsigned argc, Value* vp) {
     }
 
     // Step 4.
+    if (one == two) {
+      args.rval().setInt32(0);
+      return true;
+    }
+
+    // Step 5.
     if (!ToRelativeTemporalObject(cx, options, &relativeTo)) {
       return false;
     }
+  } else {
+    // Step 3. (Not applicable in our implementation.)
+
+    // Step 4.
+    if (one == two) {
+      args.rval().setInt32(0);
+      return true;
+    }
+
+    // Step 5. (Not applicable in our implementation.)
   }
 
-  // Step 5.
+  // Step 6.
   int64_t shift1;
   if (!CalculateOffsetShift(cx, relativeTo, one.date(), &shift1)) {
     return false;
   }
 
-  // Step 6.
+  // Step 7.
   int64_t shift2;
   if (!CalculateOffsetShift(cx, relativeTo, two.date(), &shift2)) {
     return false;
   }
 
-  // Steps 7-8.
+  // Steps 8-9.
   double days1, days2;
   if (one.years != 0 || one.months != 0 || one.weeks != 0 || two.years != 0 ||
       two.months != 0 || two.weeks != 0) {
-    // Step 7.a.
+    // Step 8.a.
     Rooted<Wrapped<PlainDateObject*>> dateRelativeTo(cx);
     if (relativeTo) {
       dateRelativeTo = ToTemporalDate(cx, relativeTo);
@@ -7001,7 +7017,7 @@ static bool Duration_compare(JSContext* cx, unsigned argc, Value* vp) {
       }
     }
 
-    // Step 7.b.
+    // Step 8.b.
     DateDuration unbalanceResult1;
     if (dateRelativeTo) {
       if (!UnbalanceDateDurationRelative(cx, one, TemporalUnit::Day,
@@ -7016,7 +7032,7 @@ static bool Duration_compare(JSContext* cx, unsigned argc, Value* vp) {
       MOZ_ASSERT(one.date() == unbalanceResult1.toDuration());
     }
 
-    // Step 7.c.
+    // Step 8.c.
     DateDuration unbalanceResult2;
     if (dateRelativeTo) {
       if (!UnbalanceDateDurationRelative(cx, two, TemporalUnit::Day,
@@ -7031,16 +7047,16 @@ static bool Duration_compare(JSContext* cx, unsigned argc, Value* vp) {
       MOZ_ASSERT(two.date() == unbalanceResult2.toDuration());
     }
 
-    // Step 7.d.
+    // Step 8.d.
     days1 = unbalanceResult1.days;
 
-    // Step 7.e.
+    // Step 8.e.
     days2 = unbalanceResult2.days;
   } else {
-    // Step 8.a.
+    // Step 9.a.
     days1 = one.days;
 
-    // Step 8.b.
+    // Step 9.b.
     days2 = two.days;
   }
 
@@ -7082,7 +7098,7 @@ static bool Duration_compare(JSContext* cx, unsigned argc, Value* vp) {
       two.nanoseconds,
   };
 
-  // Steps 9-13.
+  // Steps 10-14.
   //
   // Fast path when the total duration amount fits into an int64.
   if (auto ns1 = TotalDurationNanoseconds(oneTotal, shift1)) {
@@ -7092,19 +7108,19 @@ static bool Duration_compare(JSContext* cx, unsigned argc, Value* vp) {
     }
   }
 
-  // Step 9.
+  // Step 10.
   Rooted<BigInt*> ns1(cx, TotalDurationNanosecondsSlow(cx, oneTotal, shift1));
   if (!ns1) {
     return false;
   }
 
-  // Step 10.
+  // Step 11.
   auto* ns2 = TotalDurationNanosecondsSlow(cx, twoTotal, shift2);
   if (!ns2) {
     return false;
   }
 
-  // Step 11-13.
+  // Step 12-14.
   args.rval().setInt32(BigInt::compare(ns1, ns2));
   return true;
 }
