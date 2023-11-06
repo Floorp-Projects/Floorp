@@ -299,7 +299,8 @@ bool TimeZoneEquals(JSContext* cx, JS::Handle<TimeZoneValue> one,
                     JS::Handle<TimeZoneValue> two, bool* equals);
 
 /**
- * GetPlainDateTimeFor ( timeZone, instant, calendar )
+ * GetPlainDateTimeFor ( timeZone, instant, calendar [ ,
+ * precalculatedOffsetNanoseconds ] )
  */
 PlainDateTimeObject* GetPlainDateTimeFor(JSContext* cx,
                                          JS::Handle<TimeZoneValue> timeZone,
@@ -307,14 +308,23 @@ PlainDateTimeObject* GetPlainDateTimeFor(JSContext* cx,
                                          JS::Handle<CalendarValue> calendar);
 
 /**
- * GetPlainDateTimeFor ( timeZone, instant, calendar )
+ * GetPlainDateTimeFor ( timeZone, instant, calendar [ ,
+ * precalculatedOffsetNanoseconds ] )
  */
 bool GetPlainDateTimeFor(JSContext* cx, JS::Handle<TimeZoneValue> timeZone,
                          JS::Handle<InstantObject*> instant,
                          PlainDateTime* result);
 
 /**
- * GetPlainDateTimeFor ( timeZone, instant, calendar )
+ * GetPlainDateTimeFor ( timeZone, instant, calendar [ ,
+ * precalculatedOffsetNanoseconds ] )
+ */
+PlainDateTime GetPlainDateTimeFor(const Instant& instant,
+                                  int64_t offsetNanoseconds);
+
+/**
+ * GetPlainDateTimeFor ( timeZone, instant, calendar [ ,
+ * precalculatedOffsetNanoseconds ] )
  */
 bool GetPlainDateTimeFor(JSContext* cx, JS::Handle<TimeZoneValue> timeZone,
                          const Instant& instant, PlainDateTime* result);
@@ -330,6 +340,12 @@ bool GetInstantFor(JSContext* cx, JS::Handle<TimeZoneValue> timeZone,
  * FormatUTCOffsetNanoseconds ( offsetNanoseconds )
  */
 JSString* FormatUTCOffsetNanoseconds(JSContext* cx, int64_t offsetNanoseconds);
+
+/**
+ * GetOffsetStringFor ( timeZone, instant )
+ */
+JSString* GetOffsetStringFor(JSContext* cx, JS::Handle<TimeZoneValue> timeZone,
+                             const Instant& instant);
 
 /**
  * GetOffsetStringFor ( timeZone, instant )
