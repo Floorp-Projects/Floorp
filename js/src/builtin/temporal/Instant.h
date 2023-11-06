@@ -110,8 +110,8 @@ Wrapped<InstantObject*> ToTemporalInstant(JSContext* cx,
 /**
  * ToTemporalInstant ( item )
  */
-bool ToTemporalInstantEpochInstant(JSContext* cx, JS::Handle<JS::Value> item,
-                                   Instant* result);
+bool ToTemporalInstant(JSContext* cx, JS::Handle<JS::Value> item,
+                       Instant* result);
 
 /**
  * CreateTemporalInstant ( epochNanoseconds [ , newTarget ] )
@@ -120,9 +120,16 @@ InstantObject* CreateTemporalInstant(JSContext* cx, const Instant& instant);
 
 /**
  * GetUTCEpochNanoseconds ( year, month, day, hour, minute, second, millisecond,
- * microsecond, nanosecond )
+ * microsecond, nanosecond [ , offsetNanoseconds ] )
  */
 Instant GetUTCEpochNanoseconds(const PlainDateTime& dateTime);
+
+/**
+ * GetUTCEpochNanoseconds ( year, month, day, hour, minute, second, millisecond,
+ * microsecond, nanosecond [ , offsetNanoseconds ] )
+ */
+Instant GetUTCEpochNanoseconds(const PlainDateTime& dateTime,
+                               const InstantSpan& offsetNanoseconds);
 
 /**
  * RoundTemporalInstant ( ns, increment, unit, roundingMode )

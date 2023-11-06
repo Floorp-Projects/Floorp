@@ -123,20 +123,17 @@ bool js::temporal::InterpretISODateTimeOffset(
   if (offsetBehaviour == OffsetBehaviour::Exact ||
       offsetOption == TemporalOffset::Use) {
     // Step 4.a.
-    auto epochNanoseconds = GetUTCEpochNanoseconds(dateTime);
-    auto offsetNs = InstantSpan::fromNanoseconds(offsetNanoseconds);
+    auto epochNanoseconds = GetUTCEpochNanoseconds(
+        dateTime, InstantSpan::fromNanoseconds(offsetNanoseconds));
 
     // Step 4.b.
-    epochNanoseconds = epochNanoseconds - offsetNs;
-
-    // Step 4.c.
     if (!IsValidEpochInstant(epochNanoseconds)) {
       JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                                 JSMSG_TEMPORAL_INSTANT_INVALID);
       return false;
     }
 
-    // Step 4.d.
+    // Step 4.c.
     *result = epochNanoseconds;
     return true;
   }

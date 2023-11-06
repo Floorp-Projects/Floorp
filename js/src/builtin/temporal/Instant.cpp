@@ -538,7 +538,7 @@ static mozilla::Maybe<InstantSpan> MicrosecondsToInstantSpan(
 
 /**
  * GetUTCEpochNanoseconds ( year, month, day, hour, minute, second, millisecond,
- * microsecond, nanosecond )
+ * microsecond, nanosecond [ , offsetNanoseconds ] )
  */
 Instant js::temporal::GetUTCEpochNanoseconds(const PlainDateTime& dateTime) {
   auto& [date, time] = dateTime;
@@ -556,56 +556,24 @@ Instant js::temporal::GetUTCEpochNanoseconds(const PlainDateTime& dateTime) {
   int32_t nanos =
       std::clamp(time.microsecond * 1'000 + time.nanosecond, 0, 999'999);
 
-  // Step 6.
+  // Steps 6-8.
   return Instant::fromMilliseconds(ms) + InstantSpan{0, nanos};
 }
 
 /**
- * ParseTemporalInstant ( isoString )
+ * GetUTCEpochNanoseconds ( year, month, day, hour, minute, second, millisecond,
+ * microsecond, nanosecond [ , offsetNanoseconds ] )
  */
-static bool ParseTemporalInstant(JSContext* cx, Handle<JSString*> isoString,
-                                 Instant* result) {
-  // Step 1. (Not applicable in our implementation)
+Instant js::temporal::GetUTCEpochNanoseconds(
+    const PlainDateTime& dateTime, const InstantSpan& offsetNanoseconds) {
+  MOZ_ASSERT(offsetNanoseconds.abs() <
+             InstantSpan::fromNanoseconds(ToNanoseconds(TemporalUnit::Day)));
 
-  // Steps 2-3.
-  PlainDateTime dateTime;
-  int64_t offset;
-  if (!ParseTemporalInstantString(cx, isoString, &dateTime, &offset)) {
-    return false;
-  }
-  MOZ_ASSERT(std::abs(offset) < ToNanoseconds(TemporalUnit::Day));
+  // Steps 1-6.
+  auto epochNanoseconds = GetUTCEpochNanoseconds(dateTime);
 
-  // Step 4. (Not applicable in our implementation.)
-
-  // Step 8. (Reordered)
-  if (!ISODateTimeWithinLimits(dateTime)) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_TEMPORAL_INSTANT_INVALID);
-    return false;
-  }
-
-  // Step 5.
-  auto utc = GetUTCEpochNanoseconds(dateTime);
-
-  // FIXME: spec bug - ParseDateTimeUTCOffset is infallible
-  // https://github.com/tc39/proposal-temporal/issues/2637
-
-  // Step 6.
-  auto offsetNanoseconds = InstantSpan::fromNanoseconds(offset);
-
-  // Step 7.
-  auto epochNanoseconds = utc - offsetNanoseconds;
-
-  // Step 8.
-  if (!IsValidEpochInstant(epochNanoseconds)) {
-    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                              JSMSG_TEMPORAL_INSTANT_INVALID);
-    return false;
-  }
-
-  // Step 9.
-  *result = epochNanoseconds;
-  return true;
+  // Steps 7-9.
+  return epochNanoseconds - offsetNanoseconds;
 }
 
 /**
@@ -687,7 +655,6 @@ static InstantObject* CreateTemporalInstant(JSContext* cx, const CallArgs& args,
 Wrapped<InstantObject*> js::temporal::ToTemporalInstant(JSContext* cx,
                                                         Handle<Value> item) {
   // Step 1.
-  Rooted<Value> primitiveValue(cx, item);
   if (item.isObject()) {
     JSObject* itemObj = &item.toObject();
 
@@ -695,43 +662,23 @@ Wrapped<InstantObject*> js::temporal::ToTemporalInstant(JSContext* cx,
     if (itemObj->canUnwrapAs<InstantObject>()) {
       return itemObj;
     }
-
-    // Step 1.b.
-    if (auto* zonedDateTime = itemObj->maybeUnwrapIf<ZonedDateTimeObject>()) {
-      auto epochInstant = ToInstant(zonedDateTime);
-      return CreateTemporalInstant(cx, epochInstant);
-    }
-
-    // Steps 1.c-d.
-    if (!ToPrimitive(cx, JSTYPE_STRING, &primitiveValue)) {
-      return nullptr;
-    }
   }
 
-  // Step 2.
-  if (!primitiveValue.isString()) {
-    ReportValueError(cx, JSMSG_UNEXPECTED_TYPE, JSDVG_IGNORE_STACK,
-                     primitiveValue, nullptr, "not a string");
-    return nullptr;
-  }
-  Rooted<JSString*> string(cx, primitiveValue.toString());
-
-  // Step 3.
+  // Steps 1.b-d and 3-6
   Instant epochNanoseconds;
-  if (!ParseTemporalInstant(cx, string, &epochNanoseconds)) {
+  if (!ToTemporalInstant(cx, item, &epochNanoseconds)) {
     return nullptr;
   }
 
-  // Step 4.
+  // Step 7.
   return CreateTemporalInstant(cx, epochNanoseconds);
 }
 
 /**
  * ToTemporalInstant ( item )
  */
-bool js::temporal::ToTemporalInstantEpochInstant(JSContext* cx,
-                                                 Handle<Value> item,
-                                                 Instant* result) {
+bool js::temporal::ToTemporalInstant(JSContext* cx, Handle<Value> item,
+                                     Instant* result) {
   // Step 1.
   Rooted<Value> primitiveValue(cx, item);
   if (item.isObject()) {
@@ -766,14 +713,32 @@ bool js::temporal::ToTemporalInstantEpochInstant(JSContext* cx,
   Rooted<JSString*> string(cx, primitiveValue.toString());
 
   // Steps 3-4.
-  Instant epochNanoseconds;
-  if (!ParseTemporalInstant(cx, string, &epochNanoseconds)) {
+  PlainDateTime dateTime;
+  int64_t offset;
+  if (!ParseTemporalInstantString(cx, string, &dateTime, &offset)) {
+    return false;
+  }
+  MOZ_ASSERT(std::abs(offset) < ToNanoseconds(TemporalUnit::Day));
+
+  // Step 6. (Reordered)
+  if (!ISODateTimeWithinLimits(dateTime)) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_TEMPORAL_INSTANT_INVALID);
     return false;
   }
 
-  // CreateTemporalInstant, step 2.
-  MOZ_ASSERT(IsValidEpochInstant(epochNanoseconds));
+  // Step 5.
+  auto epochNanoseconds =
+      GetUTCEpochNanoseconds(dateTime, InstantSpan::fromNanoseconds(offset));
 
+  // Step 6.
+  if (!IsValidEpochInstant(epochNanoseconds)) {
+    JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
+                              JSMSG_TEMPORAL_INSTANT_INVALID);
+    return false;
+  }
+
+  // Step 7.
   *result = epochNanoseconds;
   return true;
 }
@@ -973,7 +938,7 @@ static bool DifferenceTemporalInstant(JSContext* cx,
 
   // Step 2.
   Instant other;
-  if (!ToTemporalInstantEpochInstant(cx, args.get(0), &other)) {
+  if (!ToTemporalInstant(cx, args.get(0), &other)) {
     return false;
   }
 
@@ -1124,7 +1089,7 @@ static bool Instant_from(JSContext* cx, unsigned argc, Value* vp) {
 
   // Steps 1-2.
   Instant epochInstant;
-  if (!ToTemporalInstantEpochInstant(cx, args.get(0), &epochInstant)) {
+  if (!ToTemporalInstant(cx, args.get(0), &epochInstant)) {
     return false;
   }
 
@@ -1293,13 +1258,13 @@ static bool Instant_compare(JSContext* cx, unsigned argc, Value* vp) {
 
   // Step 1.
   Instant one;
-  if (!ToTemporalInstantEpochInstant(cx, args.get(0), &one)) {
+  if (!ToTemporalInstant(cx, args.get(0), &one)) {
     return false;
   }
 
   // Step 2.
   Instant two;
-  if (!ToTemporalInstantEpochInstant(cx, args.get(1), &two)) {
+  if (!ToTemporalInstant(cx, args.get(1), &two)) {
     return false;
   }
 
@@ -1562,7 +1527,7 @@ static bool Instant_equals(JSContext* cx, const CallArgs& args) {
 
   // Step 3.
   Instant other;
-  if (!ToTemporalInstantEpochInstant(cx, args.get(0), &other)) {
+  if (!ToTemporalInstant(cx, args.get(0), &other)) {
     return false;
   }
 
