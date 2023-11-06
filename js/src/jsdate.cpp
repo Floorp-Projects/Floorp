@@ -1394,6 +1394,7 @@ static bool ParseDate(DateTimeInfo::ForceUTC forceUTC, const CharT* s,
   int hour = -1;
   int min = -1;
   int sec = -1;
+  double frac = 0;
   int tzOffset = -1;
 
   // One of '+', '-', ':', '/', or 0 (the default value).
@@ -1577,12 +1578,12 @@ static bool ParseDate(DateTimeInfo::ForceUTC forceUTC, const CharT* s,
         }
       } else if (index < length && c != ',' && c > ' ' && c != '-' &&
                  c != '(' &&
+                 // Allow '.' as a delimiter until seconds have been parsed
+                 // (this allows the decimal for milliseconds)
+                 (c != '.' || sec != -1) &&
                  // Allow zulu time e.g. "09/26/1995 16:00Z", or
                  // '+' directly after time e.g. 00:00+0500
                  !(hour != -1 && strchr("Zz+", c)) &&
-                 // Allow '.' after day of month i.e. DD.Mon.YYYY/Mon.DD.YYYY,
-                 // or after year/month in YYYY/MM/DD
-                 (c != '.' || mday != -1) &&
                  // Allow month or AM/PM directly after a number
                  (!IsAsciiAlpha(c) ||
                   (mon != -1 && !(strchr("AaPp", c) && index < length - 1 &&
@@ -1598,6 +1599,12 @@ static bool ParseDate(DateTimeInfo::ForceUTC forceUTC, const CharT* s,
         min = /*byte*/ n;
       } else if (prevc == ':' && min >= 0 && sec < 0) {
         sec = /*byte*/ n;
+        if (c == '.') {
+          index++;
+          if (!ParseFractional(&frac, s, &index, length)) {
+            return false;
+          }
+        }
       } else if (mon < 0) {
         mon = /*byte*/ n;
       } else if (mon >= 0 && mday < 0) {
@@ -1805,8 +1812,8 @@ static bool ParseDate(DateTimeInfo::ForceUTC forceUTC, const CharT* s,
     hour = 0;
   }
 
-  double msec = MakeDate(MakeDay(year, mon, mday), MakeTime(hour, min, sec, 0));
-
+  double msec = MakeDate(MakeDay(year, mon, mday),
+                         MakeTime(hour, min, sec, frac * 1000.0));
   if (tzOffset == -1) { /* no time zone specified, have to use local */
     msec = UTC(forceUTC, msec);
   } else {

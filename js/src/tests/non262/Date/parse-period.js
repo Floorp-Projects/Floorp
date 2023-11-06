@@ -12,15 +12,29 @@ const tests = [
   "Aug 15 2015 12:00 am.",
   "Sat. Aug 15 2015",
   "2015.08.15",
+  "2015.08.15.00:00:00",
+
   // These look weird but are accepted for Chrome parity
+  // (dots are valid delimiters and are essentially ignored)
   "2015./08/15 00:00:00",
   "2015/08./15 00:00:00",
+];
+const rejected = [
+  "2015/08/15 00:00:00.",
+  "2015/08/15 00:00:00.GMT",
 ];
 
 for (const test of tests) {
   assertEq(new Date(test).getTime(),
            new Date(2015, Month.August, 15).getTime(),
            `"${test}" should be accepted.`);
+}
+
+for (const reject of rejected) {
+  assertEq(
+    true, isNaN(new Date(reject)),
+    `"${reject}" should be rejected.`
+  );
 }
 
 inTimeZone("Etc/GMT-1", () => {
