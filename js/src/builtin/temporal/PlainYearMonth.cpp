@@ -198,22 +198,33 @@ static Wrapped<PlainYearMonthObject*> ToTemporalYearMonth(
     Handle<JSObject*> maybeOptions = nullptr) {
   // Steps 1-2. (Not applicable in our implementation.)
 
+  // FIXME: spec issue - GetOptionsObject is infallible.
+
   // Step 3.
+  Rooted<PlainObject*> maybeResolvedOptions(cx);
+  if (maybeOptions) {
+    maybeResolvedOptions = SnapshotOwnProperties(cx, maybeOptions);
+    if (!maybeResolvedOptions) {
+      return nullptr;
+    }
+  }
+
+  // Step 4.
   if (item.isObject()) {
     Rooted<JSObject*> itemObj(cx, &item.toObject());
 
-    // Step 3.a.
+    // Step 4.a.
     if (itemObj->canUnwrapAs<PlainYearMonthObject>()) {
       return itemObj;
     }
 
-    // Step 3.b.
+    // Step 4.b.
     Rooted<CalendarValue> calendar(cx);
     if (!GetTemporalCalendarWithISODefault(cx, itemObj, &calendar)) {
       return nullptr;
     }
 
-    // Step 3.c.
+    // Step 4.c.
     JS::RootedVector<PropertyKey> fieldNames(cx);
     if (!CalendarFields(cx, calendar,
                         {CalendarField::Month, CalendarField::MonthCode,
@@ -222,26 +233,19 @@ static Wrapped<PlainYearMonthObject*> ToTemporalYearMonth(
       return nullptr;
     }
 
-    // Step 3.d.
+    // Step 4.d.
     Rooted<PlainObject*> fields(cx,
                                 PrepareTemporalFields(cx, itemObj, fieldNames));
     if (!fields) {
       return nullptr;
     }
 
-    // Step 3.e.
-    if (maybeOptions) {
-      return CalendarYearMonthFromFields(cx, calendar, fields, maybeOptions);
+    // Step 4.e.
+    if (maybeResolvedOptions) {
+      return CalendarYearMonthFromFields(cx, calendar, fields,
+                                         maybeResolvedOptions);
     }
     return CalendarYearMonthFromFields(cx, calendar, fields);
-  }
-
-  // Step 4.
-  if (maybeOptions) {
-    TemporalOverflow ignored;
-    if (!ToTemporalOverflow(cx, maybeOptions, &ignored)) {
-      return nullptr;
-    }
   }
 
   // Step 5.
@@ -268,13 +272,21 @@ static Wrapped<PlainYearMonthObject*> ToTemporalYearMonth(
   }
 
   // Step 11.
+  if (maybeResolvedOptions) {
+    TemporalOverflow ignored;
+    if (!ToTemporalOverflow(cx, maybeResolvedOptions, &ignored)) {
+      return nullptr;
+    }
+  }
+
+  // Step 12.
   Rooted<PlainYearMonthObject*> obj(
       cx, CreateTemporalYearMonth(cx, result, calendar));
   if (!obj) {
     return nullptr;
   }
 
-  // Steps 12-13.
+  // Steps 13-14.
   return CalendarYearMonthFromFields(cx, calendar, obj);
 }
 
@@ -1001,13 +1013,18 @@ static bool PlainYearMonth_with(JSContext* cx, const CallArgs& args) {
   }
 
   // Step 5.
-  Rooted<JSObject*> options(cx);
+  Rooted<PlainObject*> resolvedOptions(cx);
   if (args.hasDefined(1)) {
-    options = RequireObjectArg(cx, "options", "with", args[1]);
+    Rooted<JSObject*> options(cx,
+                              RequireObjectArg(cx, "options", "with", args[1]));
+    if (!options) {
+      return false;
+    }
+    resolvedOptions = SnapshotOwnProperties(cx, options);
   } else {
-    options = NewPlainObjectWithProto(cx, nullptr);
+    resolvedOptions = NewPlainObjectWithProto(cx, nullptr);
   }
-  if (!options) {
+  if (!resolvedOptions) {
     return false;
   }
 
@@ -1051,7 +1068,7 @@ static bool PlainYearMonth_with(JSContext* cx, const CallArgs& args) {
   }
 
   // Step 12.
-  auto obj = CalendarYearMonthFromFields(cx, calendar, fields, options);
+  auto obj = CalendarYearMonthFromFields(cx, calendar, fields, resolvedOptions);
   if (!obj) {
     return false;
   }

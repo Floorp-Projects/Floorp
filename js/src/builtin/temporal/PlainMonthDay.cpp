@@ -179,19 +179,30 @@ static Wrapped<PlainMonthDayObject*> ToTemporalMonthDay(
     Handle<JSObject*> maybeOptions = nullptr) {
   // Steps 1-2. (Not applicable in our implementation.)
 
+  // FIXME: spec issue - GetOptionsObject is infallible.
+
   // Step 3.
-  constexpr int32_t referenceISOYear = 1972;
+  Rooted<PlainObject*> maybeResolvedOptions(cx);
+  if (maybeOptions) {
+    maybeResolvedOptions = SnapshotOwnProperties(cx, maybeOptions);
+    if (!maybeResolvedOptions) {
+      return nullptr;
+    }
+  }
 
   // Step 4.
+  constexpr int32_t referenceISOYear = 1972;
+
+  // Step 5.
   if (item.isObject()) {
     Rooted<JSObject*> itemObj(cx, &item.toObject());
 
-    // Step 4.a.
+    // Step 5.a.
     if (itemObj->canUnwrapAs<PlainMonthDayObject>()) {
       return itemObj;
     }
 
-    // Steps 4.b-c.
+    // Steps 5.b-c.
     Rooted<CalendarValue> calendar(cx);
     bool calendarAbsent = false;
     if (!::ToTemporalCalendarForMonthDay<PlainDateObject, PlainDateTimeObject,
@@ -201,23 +212,23 @@ static Wrapped<PlainMonthDayObject*> ToTemporalMonthDay(
       return nullptr;
     }
     if (!calendar) {
-      // Step 4.c.i.
+      // Step 5.c.i.
       Rooted<Value> calendarLike(cx);
       if (!GetProperty(cx, itemObj, itemObj, cx->names().calendar,
                        &calendarLike)) {
         return nullptr;
       }
 
-      // Steps 4.c.ii-iii.
+      // Steps 5.c.ii-iii.
       calendarAbsent = calendarLike.isUndefined();
 
-      // Step 4.c.iv.
+      // Step 5.c.iv.
       if (!ToTemporalCalendarWithISODefault(cx, calendarLike, &calendar)) {
         return nullptr;
       }
     }
 
-    // Step 4.d.
+    // Step 5.d.
     JS::RootedVector<PropertyKey> fieldNames(cx);
     if (!CalendarFields(cx, calendar,
                         {CalendarField::Day, CalendarField::Month,
@@ -226,32 +237,32 @@ static Wrapped<PlainMonthDayObject*> ToTemporalMonthDay(
       return nullptr;
     }
 
-    // Step 4.e.
+    // Step 5.e.
     Rooted<PlainObject*> fields(cx,
                                 PrepareTemporalFields(cx, itemObj, fieldNames));
     if (!fields) {
       return nullptr;
     }
 
-    // Step 4.f.
+    // Step 5.f.
     Rooted<Value> month(cx);
     if (!GetProperty(cx, fields, fields, cx->names().month, &month)) {
       return nullptr;
     }
 
-    // Step 4.g.
+    // Step 5.g.
     Rooted<Value> monthCode(cx);
     if (!GetProperty(cx, fields, fields, cx->names().monthCode, &monthCode)) {
       return nullptr;
     }
 
-    // Step 4.h.
+    // Step 5.h.
     Rooted<Value> year(cx);
     if (!GetProperty(cx, fields, fields, cx->names().year, &year)) {
       return nullptr;
     }
 
-    // Step 4.i.
+    // Step 5.i.
     if (calendarAbsent && !month.isUndefined() && monthCode.isUndefined() &&
         year.isUndefined()) {
       year.setInt32(referenceISOYear);
@@ -260,20 +271,12 @@ static Wrapped<PlainMonthDayObject*> ToTemporalMonthDay(
       }
     }
 
-    // Step 4.j.
-    if (maybeOptions) {
+    // Step 5.j.
+    if (maybeResolvedOptions) {
       return js::temporal::CalendarMonthDayFromFields(cx, calendar, fields,
-                                                      maybeOptions);
+                                                      maybeResolvedOptions);
     }
     return js::temporal::CalendarMonthDayFromFields(cx, calendar, fields);
-  }
-
-  // Step 5.
-  if (maybeOptions) {
-    TemporalOverflow ignored;
-    if (!ToTemporalOverflow(cx, maybeOptions, &ignored)) {
-      return nullptr;
-    }
   }
 
   // Step 6.
@@ -302,20 +305,28 @@ static Wrapped<PlainMonthDayObject*> ToTemporalMonthDay(
   }
 
   // Step 12.
+  if (maybeResolvedOptions) {
+    TemporalOverflow ignored;
+    if (!ToTemporalOverflow(cx, maybeResolvedOptions, &ignored)) {
+      return nullptr;
+    }
+  }
+
+  // Step 13.
   if (!hasYear) {
-    // Step 12.a.
+    // Step 13.a.
     return CreateTemporalMonthDay(
         cx, {referenceISOYear, result.month, result.day}, calendar);
   }
 
-  // Step 13.
+  // Step 14.
   Rooted<PlainMonthDayObject*> obj(
       cx, CreateTemporalMonthDay(cx, result, calendar));
   if (!obj) {
     return nullptr;
   }
 
-  // Steps 14-15.
+  // Steps 15-16.
   return CalendarMonthDayFromFields(cx, calendar, obj);
 }
 
@@ -530,13 +541,18 @@ static bool PlainMonthDay_with(JSContext* cx, const CallArgs& args) {
   }
 
   // Step 5.
-  Rooted<JSObject*> options(cx);
+  Rooted<PlainObject*> resolvedOptions(cx);
   if (args.hasDefined(1)) {
-    options = RequireObjectArg(cx, "options", "with", args[1]);
+    Rooted<JSObject*> options(cx,
+                              RequireObjectArg(cx, "options", "with", args[1]));
+    if (!options) {
+      return false;
+    }
+    resolvedOptions = SnapshotOwnProperties(cx, options);
   } else {
-    options = NewPlainObjectWithProto(cx, nullptr);
+    resolvedOptions = NewPlainObjectWithProto(cx, nullptr);
   }
-  if (!options) {
+  if (!resolvedOptions) {
     return false;
   }
 
@@ -580,8 +596,8 @@ static bool PlainMonthDay_with(JSContext* cx, const CallArgs& args) {
   }
 
   // Step 12.
-  auto obj =
-      js::temporal::CalendarMonthDayFromFields(cx, calendar, fields, options);
+  auto obj = js::temporal::CalendarMonthDayFromFields(cx, calendar, fields,
+                                                      resolvedOptions);
   if (!obj) {
     return false;
   }
