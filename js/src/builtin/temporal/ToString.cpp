@@ -403,42 +403,34 @@ JSString* js::temporal::TemporalInstantToString(JSContext* cx,
 
   // Steps 1-2. (Not applicable in our implementation.)
 
-  // Steps 3-4.
-  Rooted<TimeZoneValue> outputTimeZone(cx, timeZone);
-  if (!timeZone) {
-    auto* utcTimeZone = CreateTemporalTimeZoneUTC(cx);
-    if (!utcTimeZone) {
+  // Steps 3-5.
+  int64_t offsetNanoseconds = 0;
+  if (timeZone) {
+    if (!GetOffsetNanosecondsFor(cx, timeZone, instant, &offsetNanoseconds)) {
       return nullptr;
     }
-    outputTimeZone.set(TimeZoneValue(utcTimeZone));
+    MOZ_ASSERT(std::abs(offsetNanoseconds) < ToNanoseconds(TemporalUnit::Day));
   }
 
-  // Step 5.
-  PlainDateTime dateTime;
-  if (!GetPlainDateTimeFor(cx, outputTimeZone, instant, &dateTime)) {
-    return nullptr;
-  }
+  // FIXME: spec issue - GetPlainDateTimeFor is infallible
 
-  // Step 6. (Inlined TemporalDateTimeToString)
+  // Step 6.
+  auto dateTime = GetPlainDateTimeFor(ToInstant(instant), offsetNanoseconds);
+
+  // Step 7. (Inlined TemporalDateTimeToString)
   FormatDateTimeString(result, dateTime, precision);
 
-  // Steps 7-8.
+  // Steps 8-9.
   Rooted<JSString*> timeZoneString(cx);
   if (!timeZone) {
-    // Step 7.a.
+    // Step 8.a.
     result.append('Z');
   } else {
-    // Step 8.a.
-    int64_t offsetNs;
-    if (!GetOffsetNanosecondsFor(cx, timeZone, instant, &offsetNs)) {
-      return nullptr;
-    }
-
-    // Step 8.b.
-    FormatDateTimeUTCOffsetRounded(result, offsetNs);
+    // Step 9.a.
+    FormatDateTimeUTCOffsetRounded(result, offsetNanoseconds);
   }
 
-  // Step 9.
+  // Step 10.
   return result.finishString();
 }
 
@@ -652,46 +644,37 @@ JSString* js::temporal::TemporalZonedDateTimeToString(
   // Step 5.
   Rooted<TimeZoneValue> timeZone(cx, zonedDateTime->timeZone());
 
-  // Step 6.
-  Rooted<InstantObject*> instant(cx, CreateTemporalInstant(cx, ns));
-  if (!instant) {
+  // Steps 6-7.
+  int64_t offsetNanoseconds;
+  if (!GetOffsetNanosecondsFor(cx, timeZone, ns, &offsetNanoseconds)) {
     return nullptr;
   }
+  MOZ_ASSERT(std::abs(offsetNanoseconds) < ToNanoseconds(TemporalUnit::Day));
 
-  // Step 7.
-  PlainDateTime temporalDateTime;
-  if (!js::temporal::GetPlainDateTimeFor(cx, timeZone, instant,
-                                         &temporalDateTime)) {
-    return nullptr;
-  }
+  // FIXME: spec issue - GetPlainDateTimeFor is infallible
 
-  // Step 8. (Inlined TemporalDateTimeToString)
+  // Step 8.
+  auto temporalDateTime = GetPlainDateTimeFor(ns, offsetNanoseconds);
+
+  // Step 9. (Inlined TemporalDateTimeToString)
   FormatDateTimeString(result, temporalDateTime, precision);
 
-  // Steps 9-10.
+  // Steps 10-11.
   if (showOffset != ShowOffsetOption::Never) {
-    // Step 10.a.
-    int64_t offsetNs;
-    if (!GetOffsetNanosecondsFor(cx, timeZone, instant, &offsetNs)) {
-      return nullptr;
-    }
-    MOZ_ASSERT(std::abs(offsetNs) < ToNanoseconds(TemporalUnit::Day));
-
-    // Step 10.b.
-    FormatDateTimeUTCOffsetRounded(result, offsetNs);
+    FormatDateTimeUTCOffsetRounded(result, offsetNanoseconds);
   }
 
-  // Steps 11-12.
+  // Steps 12-13.
   if (!MaybeFormatTimeZoneAnnotation(cx, result, timeZone, showTimeZone)) {
     return nullptr;
   }
 
-  // Step 13.
+  // Step 14.
   Rooted<CalendarValue> calendar(cx, zonedDateTime->calendar());
   if (!MaybeFormatCalendarAnnotation(cx, result, calendar, showCalendar)) {
     return nullptr;
   }
 
-  // Step 14.
+  // Step 15.
   return result.finishString();
 }
