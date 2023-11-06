@@ -1764,18 +1764,22 @@ static double IsSafeInteger(double num) {
   return minSafeInteger <= num && num <= maxSafeInteger;
 }
 
+static int64_t ClampToInt64(double num) {
+  MOZ_ASSERT(js::IsInteger(num));
+
+  return int64_t(std::clamp(num, double(INT64_MIN), double(INT64_MAX)));
+}
+
 /**
  * UnbalanceDateDurationRelative ( years, months, weeks, days, largestUnit,
  * plainRelativeTo )
  */
-static bool UnbalanceDateDurationRelativeSlow(
-    JSContext* cx, const Duration& duration, double amountToAdd,
-    TemporalUnit largestUnit, int32_t sign,
-    Handle<Wrapped<PlainDateObject*>> plainRelativeTo,
+static bool UnbalanceDateDurationRelativeMonthSlow(
+    JSContext* cx, const Duration& duration, double oneYearMonthsToAdd,
+    int32_t sign, Handle<Wrapped<PlainDateObject*>> plainRelativeTo,
     Handle<CalendarValue> calendar, Handle<DurationObject*> oneYear,
-    Handle<DurationObject*> oneMonth, Handle<DurationObject*> oneWeek,
     Handle<Value> dateAdd, Handle<Value> dateUntil, DateDuration* result) {
-  MOZ_ASSERT(IsValidDuration(duration));
+  MOZ_ASSERT(sign == -1 || sign == 1);
   MOZ_ASSERT(plainRelativeTo);
   MOZ_ASSERT(calendar);
 
@@ -1791,339 +1795,78 @@ static bool UnbalanceDateDurationRelativeSlow(
     return false;
   }
 
-  Rooted<BigInt*> weeks(cx, BigInt::createFromDouble(cx, duration.weeks));
-  if (!weeks) {
-    return false;
-  }
+  // Steps 11.a-d. (Not applicable)
 
-  Rooted<BigInt*> days(cx, BigInt::createFromDouble(cx, duration.days));
-  if (!days) {
-    return false;
-  }
-
-  // Steps 1-3.
-  MOZ_ASSERT(largestUnit != TemporalUnit::Year);
-  MOZ_ASSERT(!years->isZero() || !months->isZero() || !weeks->isZero() ||
-             !days->isZero());
-
-  // Step 4. (Not applicable)
-
-  // Step 5.
-  MOZ_ASSERT(sign == -1 || sign == 1);
-
-  // Steps 6-10. (Not applicable)
-
-  // Steps 11-13.
-  if (largestUnit == TemporalUnit::Month) {
-    // Steps 11.a-c. (Not applicable)
-
-    if (amountToAdd) {
-      Rooted<BigInt*> toAdd(cx, BigInt::createFromDouble(cx, amountToAdd));
-      if (!toAdd) {
-        return false;
-      }
-
-      months = BigInt::add(cx, months, toAdd);
-      if (!months) {
-        return false;
-      }
-
-      if (sign < 0) {
-        years = BigInt::inc(cx, years);
-      } else {
-        years = BigInt::dec(cx, years);
-      }
-      if (!years) {
-        return false;
-      }
+  if (oneYearMonthsToAdd) {
+    Rooted<BigInt*> toAdd(cx, BigInt::createFromDouble(cx, oneYearMonthsToAdd));
+    if (!toAdd) {
+      return false;
     }
 
-    // Step 11.d.
-    Rooted<Wrapped<PlainDateObject*>> newRelativeTo(cx);
-    Rooted<BigInt*> oneYearMonths(cx);
-    while (!years->isZero()) {
-      // Step 11.d.i.
-      newRelativeTo =
-          CalendarDateAdd(cx, calendar, dateRelativeTo, oneYear, dateAdd);
-      if (!newRelativeTo) {
-        return false;
-      }
-
-      // Steps 11.d.ii-iv.
-      Duration untilResult;
-      if (!CalendarDateUntil(cx, calendar, dateRelativeTo, newRelativeTo,
-                             TemporalUnit::Month, dateUntil, &untilResult)) {
-        return false;
-      }
-
-      // Step 11.d.v.
-      oneYearMonths = BigInt::createFromDouble(cx, untilResult.months);
-      if (!oneYearMonths) {
-        return false;
-      }
-
-      // Step 11.d.vi.
-      dateRelativeTo = newRelativeTo;
-
-      // Step 11.d.vii.
-      if (sign < 0) {
-        years = BigInt::inc(cx, years);
-      } else {
-        years = BigInt::dec(cx, years);
-      }
-      if (!years) {
-        return false;
-      }
-
-      // Step 11.d.viii.
-      months = BigInt::add(cx, months, oneYearMonths);
-      if (!months) {
-        return false;
-      }
-    }
-  } else if (largestUnit == TemporalUnit::Week) {
-    // Steps 12.a-c. (Not applicable)
-
-    if (amountToAdd) {
-      Rooted<BigInt*> toAdd(cx, BigInt::createFromDouble(cx, amountToAdd));
-      if (!toAdd) {
-        return false;
-      }
-
-      days = BigInt::add(cx, days, toAdd);
-      if (!days) {
-        return false;
-      }
-
-      if (!years->isZero()) {
-        if (sign < 0) {
-          years = BigInt::inc(cx, years);
-        } else {
-          years = BigInt::dec(cx, years);
-        }
-        if (!years) {
-          return false;
-        }
-      } else {
-        MOZ_ASSERT(!months->isZero());
-        if (sign < 0) {
-          months = BigInt::inc(cx, months);
-        } else {
-          months = BigInt::dec(cx, months);
-        }
-        if (!months) {
-          return false;
-        }
-      }
+    months = BigInt::add(cx, months, toAdd);
+    if (!months) {
+      return false;
     }
 
-    // Step 12.d.
-    Rooted<BigInt*> oneYearDays(cx);
-    while (!years->isZero()) {
-      // Steps 12.d.i-ii.
-      int32_t oneYearDaysInt;
-      if (!MoveRelativeDate(cx, calendar, dateRelativeTo, oneYear, dateAdd,
-                            &dateRelativeTo, &oneYearDaysInt)) {
-        return false;
-      }
-      oneYearDays = BigInt::createFromInt64(cx, oneYearDaysInt);
-      if (!oneYearDays) {
-        return false;
-      }
-
-      // Step 12.d.iii.
-      days = BigInt::add(cx, days, oneYearDays);
-      if (!days) {
-        return false;
-      }
-
-      // Step 12.d.iv.
-      if (sign < 0) {
-        years = BigInt::inc(cx, years);
-      } else {
-        years = BigInt::dec(cx, years);
-      }
-      if (!years) {
-        return false;
-      }
+    if (sign < 0) {
+      years = BigInt::inc(cx, years);
+    } else {
+      years = BigInt::dec(cx, years);
     }
-
-    // Step 12.e.
-    Rooted<BigInt*> oneMonthDays(cx);
-    while (!months->isZero()) {
-      // Steps 12.e.i-ii.
-      int32_t oneMonthDaysInt;
-      if (!MoveRelativeDate(cx, calendar, dateRelativeTo, oneMonth, dateAdd,
-                            &dateRelativeTo, &oneMonthDaysInt)) {
-        return false;
-      }
-      oneMonthDays = BigInt::createFromInt64(cx, oneMonthDaysInt);
-      if (!oneMonthDays) {
-        return false;
-      }
-
-      // Step 12.e.iii.
-      days = BigInt::add(cx, days, oneMonthDays);
-      if (!days) {
-        return false;
-      }
-
-      // Step 12.e.iv.
-      if (sign < 0) {
-        months = BigInt::inc(cx, months);
-      } else {
-        months = BigInt::dec(cx, months);
-      }
-      if (!months) {
-        return false;
-      }
-    }
-  } else if (!years->isZero() || !months->isZero() || !weeks->isZero()) {
-    if (amountToAdd) {
-      Rooted<BigInt*> toAdd(cx, BigInt::createFromDouble(cx, amountToAdd));
-      if (!toAdd) {
-        return false;
-      }
-
-      days = BigInt::add(cx, days, toAdd);
-      if (!days) {
-        return false;
-      }
-
-      if (!years->isZero()) {
-        if (sign < 0) {
-          years = BigInt::inc(cx, years);
-        } else {
-          years = BigInt::dec(cx, years);
-        }
-        if (!years) {
-          return false;
-        }
-      } else if (!months->isZero()) {
-        if (sign < 0) {
-          months = BigInt::inc(cx, months);
-        } else {
-          months = BigInt::dec(cx, months);
-        }
-        if (!months) {
-          return false;
-        }
-      } else {
-        MOZ_ASSERT(!weeks->isZero());
-
-        if (sign < 0) {
-          weeks = BigInt::inc(cx, weeks);
-        } else {
-          weeks = BigInt::dec(cx, weeks);
-        }
-        if (!years) {
-          return false;
-        }
-      }
-    }
-
-    // Step 13.a.
-
-    // Steps 13.a.i-iii. (Not applicable)
-
-    // Step 13.a.iv.
-    Rooted<BigInt*> oneYearDays(cx);
-    while (!years->isZero()) {
-      // Steps 13.a.iv.1-2.
-      int32_t oneYearDaysInt;
-      if (!MoveRelativeDate(cx, calendar, dateRelativeTo, oneYear, dateAdd,
-                            &dateRelativeTo, &oneYearDaysInt)) {
-        return false;
-      }
-      oneYearDays = BigInt::createFromInt64(cx, oneYearDaysInt);
-      if (!oneYearDays) {
-        return false;
-      }
-
-      // Step 13.a.iv.3.
-      days = BigInt::add(cx, days, oneYearDays);
-      if (!days) {
-        return false;
-      }
-
-      // Step 13.a.iv.4.
-      if (sign < 0) {
-        years = BigInt::inc(cx, years);
-      } else {
-        years = BigInt::dec(cx, years);
-      }
-      if (!years) {
-        return false;
-      }
-    }
-
-    // Step 13.a.v.
-    Rooted<BigInt*> oneMonthDays(cx);
-    while (!months->isZero()) {
-      // Steps 13.a.v.1-2.
-      int32_t oneMonthDaysInt;
-      if (!MoveRelativeDate(cx, calendar, dateRelativeTo, oneMonth, dateAdd,
-                            &dateRelativeTo, &oneMonthDaysInt)) {
-        return false;
-      }
-      oneMonthDays = BigInt::createFromInt64(cx, oneMonthDaysInt);
-      if (!oneMonthDays) {
-        return false;
-      }
-
-      // Step 13.a.v.3.
-      days = BigInt::add(cx, days, oneMonthDays);
-      if (!days) {
-        return false;
-      }
-
-      // Step 13.a.v.4.
-      if (sign < 0) {
-        months = BigInt::inc(cx, months);
-      } else {
-        months = BigInt::dec(cx, months);
-      }
-      if (!months) {
-        return false;
-      }
-    }
-
-    // Step 13.a.vi.
-    Rooted<BigInt*> oneWeekDays(cx);
-    while (!weeks->isZero()) {
-      // Steps 13.a.vi.1-2.
-      int32_t oneWeekDaysInt;
-      if (!MoveRelativeDate(cx, calendar, dateRelativeTo, oneWeek, dateAdd,
-                            &dateRelativeTo, &oneWeekDaysInt)) {
-        return false;
-      }
-      oneWeekDays = BigInt::createFromInt64(cx, oneWeekDaysInt);
-      if (!oneWeekDays) {
-        return false;
-      }
-
-      // Step 13.a.vi.3.
-      days = BigInt::add(cx, days, oneWeekDays);
-      if (!days) {
-        return false;
-      }
-
-      // Step 13.a.vi.4.
-      if (sign < 0) {
-        weeks = BigInt::inc(cx, weeks);
-      } else {
-        weeks = BigInt::dec(cx, weeks);
-      }
-      if (!years) {
-        return false;
-      }
+    if (!years) {
+      return false;
     }
   }
+
+  // Step 11.e.
+  Rooted<Wrapped<PlainDateObject*>> newRelativeTo(cx);
+  Rooted<BigInt*> oneYearMonths(cx);
+  while (!years->isZero()) {
+    // Step 11.e.i.
+    newRelativeTo =
+        CalendarDateAdd(cx, calendar, dateRelativeTo, oneYear, dateAdd);
+    if (!newRelativeTo) {
+      return false;
+    }
+
+    // Steps 11.e.ii-iv.
+    Duration untilResult;
+    if (!CalendarDateUntil(cx, calendar, dateRelativeTo, newRelativeTo,
+                           TemporalUnit::Month, dateUntil, &untilResult)) {
+      return false;
+    }
+
+    // Step 11.e.v.
+    oneYearMonths = BigInt::createFromDouble(cx, untilResult.months);
+    if (!oneYearMonths) {
+      return false;
+    }
+
+    // Step 11.e.vi.
+    dateRelativeTo = newRelativeTo;
+
+    // Step 11.e.vii.
+    if (sign < 0) {
+      years = BigInt::inc(cx, years);
+    } else {
+      years = BigInt::dec(cx, years);
+    }
+    if (!years) {
+      return false;
+    }
+
+    // Step 11.d.viii.
+    months = BigInt::add(cx, months, oneYearMonths);
+    if (!months) {
+      return false;
+    }
+  }
+
+  // Steps 12-13. (Not applicable)
 
   // Step 14.
-  return CreateDateDurationRecord(
-      cx, BigInt::numberValue(years), BigInt::numberValue(months),
-      BigInt::numberValue(weeks), BigInt::numberValue(days), result);
+  return CreateDateDurationRecord(cx, 0, BigInt::numberValue(months),
+                                  duration.weeks, duration.days, result);
 }
 
 static bool UnbalanceDateDurationRelativeHasEffect(const Duration& duration,
@@ -2228,17 +1971,18 @@ static bool UnbalanceDateDurationRelative(
     }
 
     // Go to the slow path when the result is inexact.
-    // NB: |years -= sign| is equal to |years| for large number values.
-    if (MOZ_UNLIKELY(!IsSafeInteger(years) || !IsSafeInteger(months))) {
-      return UnbalanceDateDurationRelativeSlow(
-          cx, {years, months, weeks, days}, 0, largestUnit, sign,
-          dateRelativeTo, calendar, oneYear, oneMonth, oneWeek, dateAdd,
-          dateUntil, result);
+    if (MOZ_UNLIKELY(!IsSafeInteger(months))) {
+      return UnbalanceDateDurationRelativeMonthSlow(
+          cx, {years, months, weeks, days}, 0, sign, dateRelativeTo, calendar,
+          oneYear, dateAdd, dateUntil, result);
     }
 
     // Step 11.e.
+    //
+    // Clamp to int64 because too large values will trigger timeouts anyway.
+    int64_t intYears = ClampToInt64(years);
     Rooted<Wrapped<PlainDateObject*>> newRelativeTo(cx);
-    while (years != 0) {
+    while (intYears != 0) {
       // Step 11.e.i.
       newRelativeTo =
           CalendarDateAdd(cx, calendar, dateRelativeTo, oneYear, dateAdd);
@@ -2261,18 +2005,20 @@ static bool UnbalanceDateDurationRelative(
 
       // Go to the slow path when the result is inexact.
       if (MOZ_UNLIKELY(!IsSafeInteger(months + oneYearMonths))) {
-        return UnbalanceDateDurationRelativeSlow(
-            cx, {years, months, weeks, days}, oneYearMonths, largestUnit, sign,
-            dateRelativeTo, calendar, oneYear, oneMonth, oneWeek, dateAdd,
-            UndefinedHandleValue, result);
+        return UnbalanceDateDurationRelativeMonthSlow(
+            cx, {double(intYears), months, weeks, days}, oneYearMonths, sign,
+            dateRelativeTo, calendar, oneYear, dateAdd, dateUntil, result);
       }
 
       // Step 11.e.vii.
-      years -= sign;
+      intYears -= sign;
 
       // Step 11.e.viii.
       months += oneYearMonths;
     }
+
+    // Convert values back to double.
+    years = 0;
   } else if (largestUnit == TemporalUnit::Week) {
     // Step 12.a. (Handled above)
     MOZ_ASSERT(years != 0 || months != 0);
@@ -2288,17 +2034,14 @@ static bool UnbalanceDateDurationRelative(
       }
     }
 
-    // Go to the slow path when the result is inexact.
-    if (MOZ_UNLIKELY(!IsSafeInteger(years) || !IsSafeInteger(months) ||
-                     !IsSafeInteger(days))) {
-      return UnbalanceDateDurationRelativeSlow(
-          cx, {years, months, weeks, days}, 0, largestUnit, sign,
-          dateRelativeTo, calendar, oneYear, oneMonth, oneWeek, dateAdd,
-          UndefinedHandleValue, result);
-    }
+    // Sum up all days to add to avoid imprecise floating-point arithmetic.
+    int32_t daysToAdd = 0;
 
     // Step 12.e.
-    while (years != 0) {
+    //
+    // Clamp to int64 because too large values will trigger timeouts anyway.
+    int64_t intYears = ClampToInt64(years);
+    while (intYears != 0) {
       // Steps 12.e.i-ii.
       int32_t oneYearDays;
       if (!MoveRelativeDate(cx, calendar, dateRelativeTo, oneYear, dateAdd,
@@ -2306,23 +2049,19 @@ static bool UnbalanceDateDurationRelative(
         return false;
       }
 
-      // Go to the slow path when the result is inexact.
-      if (MOZ_UNLIKELY(!IsSafeInteger(days + oneYearDays))) {
-        return UnbalanceDateDurationRelativeSlow(
-            cx, {years, months, weeks, days}, oneYearDays, largestUnit, sign,
-            dateRelativeTo, calendar, oneYear, oneMonth, oneWeek, dateAdd,
-            UndefinedHandleValue, result);
-      }
-
       // Step 12.e.iii.
-      days += oneYearDays;
+      daysToAdd += oneYearDays;
+      MOZ_ASSERT(std::abs(daysToAdd) <= 200'000'000);
 
       // Step 12.e.iv.
-      years -= sign;
+      intYears -= sign;
     }
 
     // Step 12.f.
-    while (months != 0) {
+    //
+    // Clamp to int64 because too large values will trigger timeouts anyway.
+    int64_t intMonths = ClampToInt64(months);
+    while (intMonths != 0) {
       // Steps 12.f.i-ii.
       int32_t oneMonthDays;
       if (!MoveRelativeDate(cx, calendar, dateRelativeTo, oneMonth, dateAdd,
@@ -2330,20 +2069,20 @@ static bool UnbalanceDateDurationRelative(
         return false;
       }
 
-      // Go to the slow path when the result is inexact.
-      if (MOZ_UNLIKELY(!IsSafeInteger(days + oneMonthDays))) {
-        return UnbalanceDateDurationRelativeSlow(
-            cx, {years, months, weeks, days}, oneMonthDays, largestUnit, sign,
-            dateRelativeTo, calendar, oneYear, oneMonth, oneWeek, dateAdd,
-            UndefinedHandleValue, result);
-      }
-
       // Step 12.f.iii.
-      days += oneMonthDays;
+      daysToAdd += oneMonthDays;
+      MOZ_ASSERT(std::abs(daysToAdd) <= 200'000'000);
 
       // Step 12.f.iv.
-      months -= sign;
+      intMonths -= sign;
     }
+
+    // Convert values back to double. The addition |days + daysToAdd| can be
+    // imprecise, but this is safe to ignore, because all values are passed to
+    // CreateDateDurationRecord, which converts the values to Numbers.
+    years = 0;
+    months = 0;
+    days += double(daysToAdd);
   } else {
     // FIXME: spec issue - use this step for consistency.
     // `If years = 0 and months = 0 and weeks = 0, return !
@@ -2365,17 +2104,14 @@ static bool UnbalanceDateDurationRelative(
       }
     }
 
-    // Go to the slow path when the result is inexact.
-    if (MOZ_UNLIKELY(!IsSafeInteger(years) || !IsSafeInteger(months) ||
-                     !IsSafeInteger(weeks) || !IsSafeInteger(days))) {
-      return UnbalanceDateDurationRelativeSlow(
-          cx, {years, months, weeks, days}, 0, largestUnit, sign,
-          dateRelativeTo, calendar, oneYear, oneMonth, oneWeek, dateAdd,
-          UndefinedHandleValue, result);
-    }
+    // Sum up all days to add to avoid imprecise floating-point arithmetic.
+    int32_t daysToAdd = 0;
 
     // Step 13.a.iv.
-    while (years != 0) {
+    //
+    // Clamp to int64 because too large values will trigger timeouts anyway.
+    int64_t intYears = ClampToInt64(years);
+    while (intYears != 0) {
       // Steps 13.a.iv.1-2.
       int32_t oneYearDays;
       if (!MoveRelativeDate(cx, calendar, dateRelativeTo, oneYear, dateAdd,
@@ -2383,23 +2119,19 @@ static bool UnbalanceDateDurationRelative(
         return false;
       }
 
-      // Go to the slow path when the result is inexact.
-      if (MOZ_UNLIKELY(!IsSafeInteger(days + oneYearDays))) {
-        return UnbalanceDateDurationRelativeSlow(
-            cx, {years, months, weeks, days}, oneYearDays, largestUnit, sign,
-            dateRelativeTo, calendar, oneYear, oneMonth, oneWeek, dateAdd,
-            UndefinedHandleValue, result);
-      }
-
       // Step 13.a.iv.3.
-      days += oneYearDays;
+      daysToAdd += oneYearDays;
+      MOZ_ASSERT(std::abs(daysToAdd) <= 200'000'000);
 
       // Step 13.a.iv.4.
-      years -= sign;
+      intYears -= sign;
     }
 
     // Step 13.a.v.
-    while (months != 0) {
+    //
+    // Clamp to int64 because too large values will trigger timeouts anyway.
+    int64_t intMonths = ClampToInt64(months);
+    while (intMonths != 0) {
       // Steps 13.a.v.1-2.
       int32_t oneMonthDays;
       if (!MoveRelativeDate(cx, calendar, dateRelativeTo, oneMonth, dateAdd,
@@ -2407,23 +2139,19 @@ static bool UnbalanceDateDurationRelative(
         return false;
       }
 
-      // Go to the slow path when the result is inexact.
-      if (MOZ_UNLIKELY(!IsSafeInteger(days + oneMonthDays))) {
-        return UnbalanceDateDurationRelativeSlow(
-            cx, {years, months, weeks, days}, oneMonthDays, largestUnit, sign,
-            dateRelativeTo, calendar, oneYear, oneMonth, oneWeek, dateAdd,
-            UndefinedHandleValue, result);
-      }
-
       // Step 13.a.v.3.
-      days += oneMonthDays;
+      daysToAdd += oneMonthDays;
+      MOZ_ASSERT(std::abs(daysToAdd) <= 200'000'000);
 
       // Step 13.a.v.4.
-      months -= sign;
+      intMonths -= sign;
     }
 
     // Step 13.a.vi.
-    while (weeks != 0) {
+    //
+    // Clamp to int64 because too large values will trigger timeouts anyway.
+    int64_t intWeeks = ClampToInt64(weeks);
+    while (intWeeks != 0) {
       // Steps 13.a.vi.1-2.
       int32_t oneWeekDays;
       if (!MoveRelativeDate(cx, calendar, dateRelativeTo, oneWeek, dateAdd,
@@ -2431,20 +2159,21 @@ static bool UnbalanceDateDurationRelative(
         return false;
       }
 
-      // Go to the slow path when the result is inexact.
-      if (MOZ_UNLIKELY(!IsSafeInteger(days + oneWeekDays))) {
-        return UnbalanceDateDurationRelativeSlow(
-            cx, {years, months, weeks, days}, oneWeekDays, largestUnit, sign,
-            dateRelativeTo, calendar, oneYear, oneMonth, oneWeek, dateAdd,
-            UndefinedHandleValue, result);
-      }
-
       // Step 13.a.vi.3.
-      days += oneWeekDays;
+      daysToAdd += oneWeekDays;
+      MOZ_ASSERT(std::abs(daysToAdd) <= 200'000'000);
 
       // Step 13.a.vi.4.
-      weeks -= sign;
+      intWeeks -= sign;
     }
+
+    // Convert values back to double. The addition |days + daysToAdd| can be
+    // imprecise, but this is safe to ignore, because all values are passed to
+    // CreateDateDurationRecord, which converts the values to Numbers.
+    years = 0;
+    months = 0;
+    weeks = 0;
+    days += double(daysToAdd);
   }
 
   // Step 14.
