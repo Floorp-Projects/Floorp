@@ -1,0 +1,32 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.evaluation-notification.warning {
+  color: var(--console-warning-color);
+  border-color: var(--console-warning-border);
+  background-color: var(--console-warning-background)
+}
+
+.evaluation-notification.warning .evaluation-notification__icon {
+  color: var(--theme-icon-warning-color);
+  background-image: url(chrome://devtools/content/debugger/images/sourcemap.svg);
+}
+
+.evaluation-notification__icon {
+  flex: none;
+  align-self: flex-start;
+  width: 16px;
+  height: 16px;
+  margin: var(--console-output-vertical-padding) 5px var(--console-output-vertical-padding) 0;
+  background-image: none;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+  -moz-context-properties: fill;
+  fill: currentColor;
+}
+
+.evaluation-notification__text {
+  margin: var(--console-output-vertical-padding) 0;
+}
