@@ -47,8 +47,6 @@ MAKE_COMPONENT_CHOOSER(nsScreenManagerSelector,
                        "@mozilla.org/gfx/parent/screenmanager;1",
                        "@mozilla.org/gfx/content/screenmanager;1",
                        do_GetService)
-MAKE_COMPONENT_CHOOSER(nsSoundSelector, "@mozilla.org/parent/sound;1",
-                       "@mozilla.org/content/sound;1", do_GetService)
 MAKE_COMPONENT_CHOOSER(nsDragServiceSelector,
                        "@mozilla.org/widget/parent/dragservice;1",
                        "@mozilla.org/widget/content/dragservice;1",

@@ -1002,10 +1002,6 @@ class ContentParent final : public PContentParent,
   already_AddRefed<PClipboardWriteRequestParent>
   AllocPClipboardWriteRequestParent(const int32_t& aClipboardType);
 
-  mozilla::ipc::IPCResult RecvPlaySound(nsIURI* aURI);
-  mozilla::ipc::IPCResult RecvBeep();
-  mozilla::ipc::IPCResult RecvPlayEventSound(const uint32_t& aEventId);
-
   mozilla::ipc::IPCResult RecvGetIconForExtension(const nsACString& aFileExt,
                                                   const uint32_t& aIconSize,
                                                   nsTArray<uint8_t>* bits);

@@ -1240,12 +1240,6 @@ parent:
      */
     async PClipboardWriteRequest(int32_t aClipboardType);
 
-    // 'Play', 'Beep' and 'PlayEventSound' are the only nsISound methods used in
-    // the content process.
-    [Compress] async PlaySound(nullable nsIURI aURL);
-    [Compress] async Beep();
-    [Compress] async PlayEventSound(uint32_t aEventId);
-
     sync GetIconForExtension(nsCString aFileExt, uint32_t aIconSize)
         returns (uint8_t[] bits);
 
