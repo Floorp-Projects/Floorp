@@ -18,9 +18,9 @@ class ProductRecommendationMapperTest {
     val localeTestRule = LocaleTestRule(Locale.US)
 
     @Test
-    fun `WHEN ProductRecommendation is null THEN it is mapped to Error`() {
+    fun `WHEN ProductRecommendation is null THEN it is mapped to Initial`() {
         val actual = null.toRecommendedProductState()
-        val expected = ReviewQualityCheckState.RecommendedProductState.Error
+        val expected = ReviewQualityCheckState.RecommendedProductState.Initial
 
         assertEquals(expected, actual)
     }

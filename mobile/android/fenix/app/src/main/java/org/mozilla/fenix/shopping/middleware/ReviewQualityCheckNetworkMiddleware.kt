@@ -19,7 +19,6 @@ import org.mozilla.fenix.shopping.store.ReviewQualityCheckMiddleware
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.OptedIn.ProductReviewState
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.OptedIn.ProductReviewState.AnalysisPresent.AnalysisStatus
-import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.RecommendedProductState
 
 /**
  * Middleware that handles network requests for the review quality check feature.
@@ -162,7 +161,6 @@ class ReviewQualityCheckNetworkMiddleware(
         if (currentState is ReviewQualityCheckState.OptedIn &&
             currentState.productRecommendationsPreference == true
         ) {
-            dispatch(UpdateRecommendedProduct(RecommendedProductState.Loading))
             reviewQualityCheckService.productRecommendation().toRecommendedProductState().also {
                 dispatch(UpdateRecommendedProduct(it))
             }

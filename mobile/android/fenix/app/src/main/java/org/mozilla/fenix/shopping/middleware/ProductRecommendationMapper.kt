@@ -18,7 +18,7 @@ private const val MAXIMUM_FRACTION_DIGITS = 2
  * Maps [ProductRecommendation] to [RecommendedProductState].
  */
 fun ProductRecommendation?.toRecommendedProductState(): RecommendedProductState =
-    this?.toRecommendedProduct() ?: RecommendedProductState.Error
+    this?.toRecommendedProduct() ?: RecommendedProductState.Initial
 
 private fun ProductRecommendation.toRecommendedProduct(): RecommendedProductState.Product =
     RecommendedProductState.Product(

@@ -686,7 +686,7 @@ class ReviewQualityCheckStoreTest {
         }
 
     @Test
-    fun `GIVEN product recommendations are enabled WHEN a product analysis is fetched successfully and product recommendation fails THEN product recommendations state should be error`() =
+    fun `GIVEN product recommendations are enabled WHEN a product analysis is fetched successfully and product recommendation fails THEN product recommendations state should be initial`() =
         runTest {
             val tested = ReviewQualityCheckStore(
                 middleware = provideReviewQualityCheckMiddleware(
@@ -709,7 +709,7 @@ class ReviewQualityCheckStoreTest {
 
             val expected = ReviewQualityCheckState.OptedIn(
                 productReviewState = ProductAnalysisTestData.analysisPresent(
-                    recommendedProductState = ReviewQualityCheckState.RecommendedProductState.Error,
+                    recommendedProductState = ReviewQualityCheckState.RecommendedProductState.Initial,
                 ),
                 productRecommendationsPreference = true,
                 productVendor = ProductVendor.BEST_BUY,

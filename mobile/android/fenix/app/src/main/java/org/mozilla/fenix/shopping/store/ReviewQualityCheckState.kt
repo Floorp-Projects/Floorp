@@ -165,16 +165,6 @@ sealed interface ReviewQualityCheckState : State {
         object Initial : RecommendedProductState
 
         /**
-         * The state when the recommended product is loading.
-         */
-        object Loading : RecommendedProductState
-
-        /**
-         * The state when an error has occurred while fetching the recommended product.
-         */
-        object Error : RecommendedProductState
-
-        /**
          * The state when the recommended product is available.
          *
          * @property aid The unique identifier of the product.
