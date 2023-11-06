@@ -733,26 +733,26 @@ bool js::temporal::NanosecondsToDays(
     return false;
   }
 
-  // Steps 4-5.
-  PlainDateTime startDateTime;
-  if (!GetPlainDateTimeFor(cx, timeZone, startNs, &startDateTime)) {
-    return false;
-  }
-
-  // Step 6.
+  // Step 5.
   //
   // NB: This addition can't overflow, because we've checked that |nanoseconds|
   // can be represented as an InstantSpan value.
   auto endNs = startNs + nanoseconds;
 
-  // Step 7.
+  // Step 6.
   if (!IsValidEpochInstant(endNs)) {
     JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
                               JSMSG_TEMPORAL_INSTANT_INVALID);
     return false;
   }
 
-  // Steps 8-9.
+  // Steps 4 and 8.
+  PlainDateTime startDateTime;
+  if (!GetPlainDateTimeFor(cx, timeZone, startNs, &startDateTime)) {
+    return false;
+  }
+
+  // Steps 7 and 9.
   PlainDateTime endDateTime;
   if (!GetPlainDateTimeFor(cx, timeZone, endNs, &endDateTime)) {
     return false;
@@ -1323,7 +1323,7 @@ static bool DifferenceTemporalZonedDateTime(JSContext* cx,
     return true;
   }
 
-  // Steps 11-12.
+  // Steps 11-14.
   Duration roundResult;
   if (!RoundDuration(cx, difference, settings.roundingIncrement,
                      settings.smallestUnit, settings.roundingMode,
@@ -1332,7 +1332,7 @@ static bool DifferenceTemporalZonedDateTime(JSContext* cx,
     return false;
   }
 
-  // Step 13.
+  // Step 15.
   Duration result;
   if (!AdjustRoundedDurationDays(cx, roundResult, settings.roundingIncrement,
                                  settings.smallestUnit, settings.roundingMode,
@@ -1340,7 +1340,7 @@ static bool DifferenceTemporalZonedDateTime(JSContext* cx,
     return false;
   }
 
-  // Step 14.
+  // Step 16.
   if (operation == TemporalDifference::Since) {
     result = result.negate();
   }
