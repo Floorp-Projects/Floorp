@@ -31,6 +31,12 @@ const firstTabExpectedCalls = [
     message: {
       level: "log",
       filename: /helper_serviceworker/,
+      arguments: ['Here is a SAB'],
+    }
+  }, {
+    message: {
+      level: "log",
+      filename: /helper_serviceworker/,
       arguments: ['install event'],
     }
   }, {
@@ -58,7 +64,11 @@ const startTest = async function () {
   await new Promise(resolve => {
     SpecialPowers.pushPrefEnv({"set": [
       ["dom.serviceWorkers.enabled", true],
-      ["devtools.webconsole.filter.serviceworkers", true]
+      ["devtools.webconsole.filter.serviceworkers", true],
+      [
+        "dom.postMessage.sharedArrayBuffer.bypassCOOP_COEP.insecure.enabled",
+        true
+      ],
     ]}, resolve);
   });
 

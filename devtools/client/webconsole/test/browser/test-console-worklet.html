@@ -1,0 +1,41 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Worklet console generator</title>
+  <!--
+    Any copyright is dedicated to the Public Domain.
+    http://creativecommons.org/publicdomain/zero/1.0/
+  -->
+</head>
+
+<script type="worklet">
+registerProcessor('test-param', class param extends AudioWorkletProcessor {
+  constructor() {
+    super();
+    this.port.onmessage = e => {
+      console.log("worklet", "string");
+      console.log("worklet", 42);
+      console.log("worklet", { object: true });
+      console.log("worklet", e.data.data); // Log the SharedArrayBuffer
+    };
+  }
+  process(input, output, parameters) {
+    return true;
+  }
+});
+</script>
+
+<script>
+"use strict";
+const ac = new AudioContext();
+const e = document.querySelector("script[type=worklet]")
+const blob = new Blob([e.textContent], {type: "application/javascript"});
+const url = URL.createObjectURL(blob);
+ac.audioWorklet.addModule(url).then(() => {
+  const nodea = new AudioWorkletNode(ac, 'test-param');
+
+  // Instantiate and pass a SharedArrayBuffer to the Worklet
+  const normal_sab = new SharedArrayBuffer(1024);
+  nodea.port.postMessage({data: normal_sab });
+});
+</script>
