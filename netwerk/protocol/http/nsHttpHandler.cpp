@@ -854,14 +854,7 @@ void nsHttpHandler::InitUserAgentComponents() {
   rv = infoService->GetPropertyAsAString(u"release_version"_ns, androidVersion);
   if (NS_SUCCEEDED(rv)) {
     mPlatform += " ";
-    // If the 2nd character is a ".", we know the major version is a single
-    // digit. If we're running on a version below 4 we pretend to be on
-    // Android KitKat (4.4) to work around scripts sniffing for low versions.
-    if (androidVersion[1] == 46 && androidVersion[0] < 52) {
-      mPlatform += "4.4";
-    } else {
-      mPlatform += NS_LossyConvertUTF16toASCII(androidVersion);
-    }
+    mPlatform += NS_LossyConvertUTF16toASCII(androidVersion);
   }
 
   // Add the `Mobile` or `TV` token when running on device.
