@@ -1723,6 +1723,38 @@ static bool PlainDateTime_with(JSContext* cx, const CallArgs& args) {
   }
 
   // Step 8.
+  Rooted<PlainObject*> fields(cx,
+                              PrepareTemporalFields(cx, dateTime, fieldNames));
+  if (!fields) {
+    return false;
+  }
+
+  // Steps 9-14.
+  struct TimeField {
+    using FieldName = ImmutableTenuredPtr<PropertyName*> JSAtomState::*;
+
+    FieldName name;
+    int32_t value;
+  } timeFields[] = {
+      {&JSAtomState::hour, dateTime->isoHour()},
+      {&JSAtomState::minute, dateTime->isoMinute()},
+      {&JSAtomState::second, dateTime->isoSecond()},
+      {&JSAtomState::millisecond, dateTime->isoMillisecond()},
+      {&JSAtomState::microsecond, dateTime->isoMicrosecond()},
+      {&JSAtomState::nanosecond, dateTime->isoNanosecond()},
+  };
+
+  Rooted<Value> timeFieldValue(cx);
+  for (const auto& timeField : timeFields) {
+    Handle<PropertyName*> name = cx->names().*(timeField.name);
+    timeFieldValue.setInt32(timeField.value);
+
+    if (!DefineDataProperty(cx, fields, name, timeFieldValue)) {
+      return false;
+    }
+  }
+
+  // Step 15.
   if (!AppendSorted(cx, fieldNames.get(),
                     {
                         TemporalField::Hour,
@@ -1735,44 +1767,37 @@ static bool PlainDateTime_with(JSContext* cx, const CallArgs& args) {
     return false;
   }
 
-  // Step 9.
-  Rooted<PlainObject*> fields(cx,
-                              PrepareTemporalFields(cx, dateTime, fieldNames));
-  if (!fields) {
-    return false;
-  }
-
-  // Step 10.
+  // Step 16.
   Rooted<PlainObject*> partialDateTime(
       cx, PreparePartialTemporalFields(cx, temporalDateTimeLike, fieldNames));
   if (!partialDateTime) {
     return false;
   }
 
-  // Step 11.
+  // Step 17.
   Rooted<JSObject*> mergedFields(
       cx, CalendarMergeFields(cx, calendar, fields, partialDateTime));
   if (!mergedFields) {
     return false;
   }
 
-  // Step 12.
+  // Step 18.
   fields = PrepareTemporalFields(cx, mergedFields, fieldNames);
   if (!fields) {
     return false;
   }
 
-  // Step 13.
+  // Step 19.
   PlainDateTime result;
   if (!InterpretTemporalDateTimeFields(cx, calendar, fields, options,
                                        &result)) {
     return false;
   }
 
-  // Steps 14-15.
+  // Steps 20-21.
   MOZ_ASSERT(IsValidISODateTime(result));
 
-  // Step 16.
+  // Step 22.
   auto* obj = CreateTemporalDateTime(cx, result, calendar);
   if (!obj) {
     return false;

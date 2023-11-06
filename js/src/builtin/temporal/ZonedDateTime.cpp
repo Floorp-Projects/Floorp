@@ -2408,6 +2408,64 @@ static bool ZonedDateTime_with(JSContext* cx, const CallArgs& args) {
   }
 
   // Step 8.
+  Rooted<PlainObject*> fields(
+      cx, PrepareTemporalFields(cx, zonedDateTime, fieldNames));
+  if (!fields) {
+    return false;
+  }
+
+  // Step 9.
+  Rooted<TimeZoneValue> timeZone(cx, zonedDateTime->timeZone());
+
+  // Step 10.
+  auto instant = ToInstant(zonedDateTime);
+
+  // Step 11.
+  int64_t offsetNanoseconds;
+  if (!GetOffsetNanosecondsFor(cx, timeZone, instant, &offsetNanoseconds)) {
+    return false;
+  }
+
+  // Step 12.
+  auto dateTime = temporal::GetPlainDateTimeFor(instant, offsetNanoseconds);
+
+  // Steps 13-18.
+  struct TimeField {
+    using FieldName = ImmutableTenuredPtr<PropertyName*> JSAtomState::*;
+
+    FieldName name;
+    int32_t value;
+  } timeFields[] = {
+      {&JSAtomState::hour, dateTime.time.hour},
+      {&JSAtomState::minute, dateTime.time.minute},
+      {&JSAtomState::second, dateTime.time.second},
+      {&JSAtomState::millisecond, dateTime.time.millisecond},
+      {&JSAtomState::microsecond, dateTime.time.microsecond},
+      {&JSAtomState::nanosecond, dateTime.time.nanosecond},
+  };
+
+  Rooted<Value> timeFieldValue(cx);
+  for (const auto& timeField : timeFields) {
+    Handle<PropertyName*> name = cx->names().*(timeField.name);
+    timeFieldValue.setInt32(timeField.value);
+
+    if (!DefineDataProperty(cx, fields, name, timeFieldValue)) {
+      return false;
+    }
+  }
+
+  // Step 19.
+  JSString* fieldsOffset = FormatUTCOffsetNanoseconds(cx, offsetNanoseconds);
+  if (!fieldsOffset) {
+    return false;
+  }
+
+  timeFieldValue.setString(fieldsOffset);
+  if (!DefineDataProperty(cx, fields, cx->names().offset, timeFieldValue)) {
+    return false;
+  }
+
+  // Step 20.
   if (!AppendSorted(cx, fieldNames.get(),
                     {
                         TemporalField::Hour,
@@ -2421,15 +2479,7 @@ static bool ZonedDateTime_with(JSContext* cx, const CallArgs& args) {
     return false;
   }
 
-  // Step 9.
-  Rooted<PlainObject*> fields(
-      cx, PrepareTemporalFields(cx, zonedDateTime, fieldNames,
-                                {TemporalField::Offset}));
-  if (!fields) {
-    return false;
-  }
-
-  // Step 10.
+  // Step 21.
   Rooted<PlainObject*> partialZonedDateTime(
       cx,
       PreparePartialTemporalFields(cx, temporalZonedDateTimeLike, fieldNames));
@@ -2437,68 +2487,65 @@ static bool ZonedDateTime_with(JSContext* cx, const CallArgs& args) {
     return false;
   }
 
-  // Step 11.
+  // Step 22.
   Rooted<JSObject*> mergedFields(
       cx, CalendarMergeFields(cx, calendar, fields, partialZonedDateTime));
   if (!mergedFields) {
     return false;
   }
 
-  // Step 12.
+  // Step 23.
   fields = PrepareTemporalFields(cx, mergedFields, fieldNames,
                                  {TemporalField::Offset});
   if (!fields) {
     return false;
   }
 
-  // Step 13-14.
+  // Step 24-25.
   auto disambiguation = TemporalDisambiguation::Compatible;
   if (!ToTemporalDisambiguation(cx, options, &disambiguation)) {
     return false;
   }
 
-  // Step 15.
+  // Step 26.
   auto offset = TemporalOffset::Prefer;
   if (!ToTemporalOffset(cx, options, &offset)) {
     return false;
   }
 
-  // Step 16.
+  // Step 27.
   PlainDateTime dateTimeResult;
   if (!InterpretTemporalDateTimeFields(cx, calendar, fields, options,
                                        &dateTimeResult)) {
     return false;
   }
 
-  // Step 17.
+  // Step 28.
   Rooted<Value> offsetString(cx);
   if (!GetProperty(cx, fields, fields, cx->names().offset, &offsetString)) {
     return false;
   }
 
-  // Step 18.
+  // Step 29.
   MOZ_ASSERT(offsetString.isString());
 
-  // Steps 19-21.
+  // Step 30.
   Rooted<JSString*> offsetStr(cx, offsetString.toString());
-  int64_t offsetNanoseconds;
-  if (!ParseDateTimeUTCOffset(cx, offsetStr, &offsetNanoseconds)) {
+  int64_t newOffsetNanoseconds;
+  if (!ParseDateTimeUTCOffset(cx, offsetStr, &newOffsetNanoseconds)) {
     return false;
   }
 
-  // Step 21.
-  Rooted<TimeZoneValue> timeZone(cx, zonedDateTime->timeZone());
-
-  // Step 22.
+  // Step 31.
   Instant epochNanoseconds;
-  if (!InterpretISODateTimeOffset(cx, dateTimeResult, OffsetBehaviour::Option,
-                                  offsetNanoseconds, timeZone, disambiguation,
-                                  offset, MatchBehaviour::MatchExactly,
-                                  &epochNanoseconds)) {
+  if (!InterpretISODateTimeOffset(
+          cx, dateTimeResult, OffsetBehaviour::Option, newOffsetNanoseconds,
+          timeZone, disambiguation, offset, MatchBehaviour::MatchExactly,
+          &epochNanoseconds)) {
     return false;
   }
 
-  // Step 23.
+  // Step 32.
   auto* result =
       CreateTemporalZonedDateTime(cx, epochNanoseconds, timeZone, calendar);
   if (!result) {
