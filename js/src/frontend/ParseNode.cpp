@@ -409,8 +409,19 @@ void ClassField::dumpImpl(const ParserAtomsTable* parserAtoms,
                           GenericPrinter& out, int indent) {
   if (decorators_) {
     decorators_->dumpImpl(parserAtoms, out, indent);
+    out.putChar(' ');
   }
   Base::dumpImpl(parserAtoms, out, indent);
+  IndentNewLine(out, indent + 2);
+  if (accessorGetterNode_) {
+    out.printf("getter: ");
+    accessorGetterNode_->dumpImpl(parserAtoms, out, indent);
+  }
+  IndentNewLine(out, indent + 2);
+  if (accessorSetterNode_) {
+    out.printf("setter: ");
+    accessorSetterNode_->dumpImpl(parserAtoms, out, indent);
+  }
 }
 
 void ClassNode::dumpImpl(const ParserAtomsTable* parserAtoms,
