@@ -1478,4 +1478,43 @@ InvalidateDaysOfHistoryFunction::OnFunctionCall(mozIStorageValueArray* aArgs,
   return NS_OK;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+//// Target folder guid from places query Function
+
+/* static */
+nsresult TargetFolderGuidFunction::create(mozIStorageConnection* aDBConn) {
+  RefPtr<TargetFolderGuidFunction> function = new TargetFolderGuidFunction();
+  nsresult rv = aDBConn->CreateFunction("target_folder_guid"_ns, 1, function);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+NS_IMPL_ISUPPORTS(TargetFolderGuidFunction, mozIStorageFunction)
+
+NS_IMETHODIMP
+TargetFolderGuidFunction::OnFunctionCall(mozIStorageValueArray* aArguments,
+                                         nsIVariant** _result) {
+  // Must have non-null function arguments.
+  MOZ_ASSERT(aArguments);
+  // Must have one argument.
+  DebugOnly<uint32_t> numArgs = 0;
+  MOZ_ASSERT(NS_SUCCEEDED(aArguments->GetNumEntries(&numArgs)) && numArgs == 1,
+             "unexpected number of arguments");
+
+  nsDependentCString queryURI = getSharedUTF8String(aArguments, 0);
+  Maybe<nsCString> targetFolderGuid =
+      nsNavHistory::GetTargetFolderGuid(queryURI);
+
+  if (targetFolderGuid.isSome()) {
+    RefPtr<nsVariant> result = new nsVariant();
+    result->SetAsACString(*targetFolderGuid);
+    result.forget(_result);
+  } else {
+    *_result = MakeAndAddRef<NullVariant>().take();
+  }
+
+  return NS_OK;
+}
+
 }  // namespace mozilla::places

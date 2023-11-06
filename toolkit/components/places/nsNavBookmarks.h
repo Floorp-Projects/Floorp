@@ -101,10 +101,6 @@ class nsNavBookmarks final : public nsINavBookmarksService,
                    bool aHidden, uint32_t aVisitCount, uint32_t aTyped,
                    const nsAString& aLastKnownTitle);
 
-  nsresult ResultNodeForContainer(const nsCString& aGUID,
-                                  nsNavHistoryQueryOptions* aOptions,
-                                  nsNavHistoryResultNode** aNode);
-
   // Find all the children of a folder, using the given query and options.
   // For each child, a ResultNode is created and added to |children|.
   // The results are ordered by folder position.

@@ -657,6 +657,29 @@ class InvalidateDaysOfHistoryFunction final : public mozIStorageFunction {
   ~InvalidateDaysOfHistoryFunction() = default;
 };
 
+////////////////////////////////////////////////////////////////////////////////
+//// Target folder guid from places query Function
+
+/**
+ * Target folder guid from places query.
+ */
+class TargetFolderGuidFunction final : public mozIStorageFunction {
+ public:
+  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_MOZISTORAGEFUNCTION
+
+  /**
+   * Registers the function with the specified database connection.
+   *
+   * @param aDBConn
+   *        The database connection to register with.
+   */
+  static nsresult create(mozIStorageConnection* aDBConn);
+
+ private:
+  ~TargetFolderGuidFunction() = default;
+};
+
 }  // namespace places
 }  // namespace mozilla
 

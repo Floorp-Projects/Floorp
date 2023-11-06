@@ -1619,6 +1619,8 @@ nsresult Database::InitFunctions() {
   NS_ENSURE_SUCCESS(rv, rv);
   rv = SetShouldStartFrecencyRecalculationFunction::create(mMainConn);
   NS_ENSURE_SUCCESS(rv, rv);
+  rv = TargetFolderGuidFunction::create(mMainConn);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (StaticPrefs::places_frecency_pages_alternative_featureGate_AtStartup()) {
     rv = CalculateAltFrecencyFunction::create(mMainConn);

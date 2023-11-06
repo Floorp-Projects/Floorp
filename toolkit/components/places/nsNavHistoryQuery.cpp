@@ -126,25 +126,7 @@ NS_IMETHODIMP
 nsNavHistory::QueryStringToQuery(const nsACString& aQueryString,
                                  nsINavHistoryQuery** _query,
                                  nsINavHistoryQueryOptions** _options) {
-  NS_ENSURE_ARG_POINTER(_query);
-  NS_ENSURE_ARG_POINTER(_options);
-
-  nsTArray<QueryKeyValuePair> tokens;
-  nsresult rv = TokenizeQueryString(aQueryString, &tokens);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  RefPtr<nsNavHistoryQueryOptions> options = new nsNavHistoryQueryOptions();
-  RefPtr<nsNavHistoryQuery> query = new nsNavHistoryQuery();
-  rv = TokensToQuery(tokens, query, options);
-  MOZ_ASSERT(NS_SUCCEEDED(rv), "The query string should be valid");
-  if (NS_FAILED(rv)) {
-    NS_WARNING("Unable to parse the query string: ");
-    NS_WARNING(PromiseFlatCString(aQueryString).get());
-  }
-
-  options.forget(_options);
-  query.forget(_query);
-  return NS_OK;
+  return nsNavHistoryQuery::QueryStringToQuery(aQueryString, _query, _options);
 }
 
 NS_IMETHODIMP
@@ -339,6 +321,7 @@ nsNavHistory::QueryToQueryString(nsINavHistoryQuery* aQuery,
   return NS_OK;
 }
 
+/* static */
 nsresult nsNavHistory::TokensToQuery(const nsTArray<QueryKeyValuePair>& aTokens,
                                      nsNavHistoryQuery* aQuery,
                                      nsNavHistoryQueryOptions* aOptions) {
@@ -856,6 +839,31 @@ nsresult nsNavHistoryQuery::Clone(nsNavHistoryQuery** _clone) {
   *_clone = nullptr;
   RefPtr<nsNavHistoryQuery> clone = new nsNavHistoryQuery(*this);
   clone.forget(_clone);
+  return NS_OK;
+}
+
+/* static */
+nsresult nsNavHistoryQuery::QueryStringToQuery(
+    const nsACString& aQueryString, nsINavHistoryQuery** _query,
+    nsINavHistoryQueryOptions** _options) {
+  NS_ENSURE_ARG_POINTER(_query);
+  NS_ENSURE_ARG_POINTER(_options);
+
+  nsTArray<QueryKeyValuePair> tokens;
+  nsresult rv = TokenizeQueryString(aQueryString, &tokens);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  RefPtr<nsNavHistoryQueryOptions> options = new nsNavHistoryQueryOptions();
+  RefPtr<nsNavHistoryQuery> query = new nsNavHistoryQuery();
+  rv = nsNavHistory::TokensToQuery(tokens, query, options);
+  MOZ_ASSERT(NS_SUCCEEDED(rv), "The query string should be valid");
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Unable to parse the query string: ");
+    NS_WARNING(PromiseFlatCString(aQueryString).get());
+  }
+
+  options.forget(_options);
+  query.forget(_query);
   return NS_OK;
 }
 

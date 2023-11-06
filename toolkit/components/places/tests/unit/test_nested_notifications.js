@@ -121,6 +121,9 @@ function notifyPlacesEvent(guid) {
       hidden: false,
       visitCount: 0,
       lastVisitDate: 0,
+      targetFolderGuid: null,
+      targetFolderItemId: -1,
+      targetFolderTitle: null,
     }),
   ]);
 }
