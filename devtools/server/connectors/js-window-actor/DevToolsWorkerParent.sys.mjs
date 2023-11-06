@@ -91,13 +91,20 @@ export class DevToolsWorkerParent extends JSWindowActorParent {
   /**
    * Communicate to the content process that some data have been added.
    */
-  async addSessionDataEntry({ watcherActorID, sessionContext, type, entries }) {
+  async addOrSetSessionDataEntry({
+    watcherActorID,
+    sessionContext,
+    type,
+    entries,
+    updateType,
+  }) {
     try {
-      await this.sendQuery("DevToolsWorkerParent:addSessionDataEntry", {
+      await this.sendQuery("DevToolsWorkerParent:addOrSetSessionDataEntry", {
         watcherActorID,
         sessionContext,
         type,
         entries,
+        updateType,
       });
     } catch (e) {
       console.warn(

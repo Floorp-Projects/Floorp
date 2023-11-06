@@ -564,6 +564,11 @@ class ThreadActor extends Actor {
     actor.delete();
   }
 
+  removeAllXHRBreakpoints() {
+    this._xhrBreakpoints = [];
+    return this._updateNetworkObserver();
+  }
+
   removeXHRBreakpoint(path, method) {
     const index = this._findXHRBreakpointIndex(path, method);
 
@@ -1516,6 +1521,10 @@ class ThreadActor extends Actor {
     for (const bpActor of this.breakpointActorMap.findActors()) {
       bpActor.removeScripts();
     }
+  }
+
+  removeAllBreakpoints() {
+    this.breakpointActorMap.removeAllBreakpoints();
   }
 
   removeAllWatchpoints() {

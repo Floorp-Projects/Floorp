@@ -311,8 +311,16 @@ function destroyTargets(watcher, options) {
  *        The type of data to be added
  * @param {Array<Object>} options.entries
  *        The values to be added to this type of data
+ * @param String updateType
+ *        "add" will only add the new entries in the existing data set.
+ *        "set" will update the data set with the new entries.
  */
-async function addSessionDataEntry({ watcher, type, entries }) {
+async function addOrSetSessionDataEntry({
+  watcher,
+  type,
+  entries,
+  updateType,
+}) {
   let expectedCount = Services.ppmm.childCount - 1;
   if (expectedCount == 0) {
     return;
@@ -327,7 +335,7 @@ async function addSessionDataEntry({ watcher, type, entries }) {
       maybeResolve();
     };
     Services.ppmm.addMessageListener(
-      "debug:add-session-data-entry-done",
+      "debug:add-or-set-session-data-entry-done",
       listener
     );
     const onContentProcessClosed = (messageManager, topic, data) => {
@@ -337,7 +345,7 @@ async function addSessionDataEntry({ watcher, type, entries }) {
     const maybeResolve = () => {
       if (count == expectedCount) {
         Services.ppmm.removeMessageListener(
-          "debug:add-session-data-entry-done",
+          "debug:add-or-set-session-data-entry-done",
           listener
         );
         Services.obs.removeObserver(
@@ -350,10 +358,11 @@ async function addSessionDataEntry({ watcher, type, entries }) {
     Services.obs.addObserver(onContentProcessClosed, "message-manager-close");
   });
 
-  Services.ppmm.broadcastAsyncMessage("debug:add-session-data-entry", {
+  Services.ppmm.broadcastAsyncMessage("debug:add-or-set-session-data-entry", {
     watcherActorID: watcher.actorID,
     type,
     entries,
+    updateType,
   });
 
   await onAllReplied;
@@ -362,7 +371,7 @@ async function addSessionDataEntry({ watcher, type, entries }) {
 /**
  * Notify all existing content processes that some data entries have been removed
  *
- * See addSessionDataEntry for argument documentation.
+ * See addOrSetSessionDataEntry for argument documentation.
  */
 function removeSessionDataEntry({ watcher, type, entries }) {
   Services.ppmm.broadcastAsyncMessage("debug:remove-session-data-entry", {
@@ -375,6 +384,6 @@ function removeSessionDataEntry({ watcher, type, entries }) {
 module.exports = {
   createTargets,
   destroyTargets,
-  addSessionDataEntry,
+  addOrSetSessionDataEntry,
   removeSessionDataEntry,
 };

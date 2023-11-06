@@ -74,7 +74,7 @@ add_task(async function () {
   info("Dynamically add a breakpoint after the debugger statement");
   const breakpointsFront = await watcher.getBreakpointListActor();
   await breakpointsFront.setBreakpoint(
-    { sourceUrl: testFile.path, line: 11 },
+    { sourceUrl: testFile.path, line: 11, column: 0 },
     {}
   );
 

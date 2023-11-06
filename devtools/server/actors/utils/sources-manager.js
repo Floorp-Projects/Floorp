@@ -279,6 +279,10 @@ class SourcesManager extends EventEmitter {
     return this.isBlackBoxed(url, line, column);
   }
 
+  clearAllBlackBoxing() {
+    this.blackBoxedSources.clear();
+  }
+
   /**
    * Add the given source URL to the set of sources that are black boxed.
    *

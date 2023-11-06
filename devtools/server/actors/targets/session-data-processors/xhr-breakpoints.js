@@ -9,19 +9,29 @@ const {
 } = require("resource://devtools/server/actors/thread.js");
 
 module.exports = {
-  async addSessionDataEntry(targetActor, entries, isDocumentCreation) {
+  async addOrSetSessionDataEntry(
+    targetActor,
+    entries,
+    isDocumentCreation,
+    updateType
+  ) {
+    const { threadActor } = targetActor;
+    if (updateType == "set") {
+      threadActor.removeAllXHRBreakpoints();
+    }
+
     // The thread actor has to be initialized in order to correctly
     // retrieve the stack trace when hitting an XHR
     if (
-      targetActor.threadActor.state == THREAD_STATES.DETACHED &&
+      threadActor.state == THREAD_STATES.DETACHED &&
       !targetActor.targetType.endsWith("worker")
     ) {
-      await targetActor.threadActor.attach();
+      await threadActor.attach();
     }
 
     await Promise.all(
       entries.map(({ path, method }) =>
-        targetActor.threadActor.setXHRBreakpoint(path, method)
+        threadActor.setXHRBreakpoint(path, method)
       )
     );
   },

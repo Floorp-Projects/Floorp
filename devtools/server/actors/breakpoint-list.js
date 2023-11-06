@@ -32,7 +32,11 @@ class BreakpointListActor extends Actor {
   }
 
   setBreakpoint(location, options) {
-    return this.watcherActor.addDataEntry(BREAKPOINTS, [{ location, options }]);
+    return this.watcherActor.addOrSetDataEntry(
+      BREAKPOINTS,
+      [{ location, options }],
+      "add"
+    );
   }
 
   removeBreakpoint(location, options) {
@@ -53,7 +57,11 @@ class BreakpointListActor extends Actor {
    *                 Otherwise, should be set to any valid HTTP Method (GET, POST, ...)
    */
   setXHRBreakpoint(path, method) {
-    return this.watcherActor.addDataEntry(XHR_BREAKPOINTS, [{ path, method }]);
+    return this.watcherActor.addOrSetDataEntry(
+      XHR_BREAKPOINTS,
+      [{ path, method }],
+      "add"
+    );
   }
 
   /**
@@ -76,18 +84,8 @@ class BreakpointListActor extends Actor {
    *                        See devtools/server/actors/utils/event-breakpoints.js
    *                        for details.
    */
-  setActiveEventBreakpoints(ids) {
-    const existingIds =
-      this.watcherActor.getSessionDataForType(EVENT_BREAKPOINTS) || [];
-    const addIds = ids.filter(id => !existingIds.includes(id));
-    const removeIds = existingIds.filter(id => !ids.includes(id));
-
-    if (addIds.length) {
-      this.watcherActor.addDataEntry(EVENT_BREAKPOINTS, addIds);
-    }
-    if (removeIds.length) {
-      this.watcherActor.removeDataEntry(EVENT_BREAKPOINTS, removeIds);
-    }
+  async setActiveEventBreakpoints(ids) {
+    await this.watcherActor.addOrSetDataEntry(EVENT_BREAKPOINTS, ids, "set");
   }
 }
 

@@ -286,7 +286,12 @@ export class DevToolsFrameChild extends JSWindowActorChild {
       if (!Array.isArray(entries) || !entries.length) {
         continue;
       }
-      targetActor.addSessionDataEntry(type, entries, isDocumentCreation);
+      targetActor.addOrSetSessionDataEntry(
+        type,
+        entries,
+        isDocumentCreation,
+        "set"
+      );
     }
   }
 
@@ -431,13 +436,15 @@ export class DevToolsFrameChild extends JSWindowActorChild {
         const { watcherActorID, options } = message.data;
         return this._destroyTargetActor(watcherActorID, options);
       }
-      case "DevToolsFrameParent:addSessionDataEntry": {
-        const { watcherActorID, sessionContext, type, entries } = message.data;
-        return this._addSessionDataEntry(
+      case "DevToolsFrameParent:addOrSetSessionDataEntry": {
+        const { watcherActorID, sessionContext, type, entries, updateType } =
+          message.data;
+        return this._addOrSetSessionDataEntry(
           watcherActorID,
           sessionContext,
           type,
-          entries
+          entries,
+          updateType
         );
       }
       case "DevToolsFrameParent:removeSessionDataEntry": {
@@ -510,7 +517,13 @@ export class DevToolsFrameChild extends JSWindowActorChild {
     return null;
   }
 
-  _addSessionDataEntry(watcherActorID, sessionContext, type, entries) {
+  _addOrSetSessionDataEntry(
+    watcherActorID,
+    sessionContext,
+    type,
+    entries,
+    updateType
+  ) {
     // /!\ We may have an issue here as there could be multiple targets for a given
     // (watcherActorID,browserId) pair.
     // This should be clarified as part of Bug 1725623.
@@ -524,7 +537,12 @@ export class DevToolsFrameChild extends JSWindowActorChild {
         `No target actor for this Watcher Actor ID:"${watcherActorID}" / BrowserId:${sessionContext.browserId}`
       );
     }
-    return targetActor.addSessionDataEntry(type, entries);
+    return targetActor.addOrSetSessionDataEntry(
+      type,
+      entries,
+      false,
+      updateType
+    );
   }
 
   _removeSessionDataEntry(watcherActorID, sessionContext, type, entries) {

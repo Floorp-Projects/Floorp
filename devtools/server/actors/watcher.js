@@ -517,10 +517,11 @@ exports.WatcherActor = class WatcherActor extends Actor {
         continue;
       }
       const targetHelperModule = TARGET_HELPERS[targetType];
-      await targetHelperModule.addSessionDataEntry({
+      await targetHelperModule.addOrSetSessionDataEntry({
         watcher: this,
         type: "resources",
         entries: targetResourceTypes,
+        updateType: "add",
       });
     }
 
@@ -547,9 +548,11 @@ exports.WatcherActor = class WatcherActor extends Actor {
         resourceTypes,
         targetActor.targetType
       );
-      await targetActor.addSessionDataEntry(
+      await targetActor.addOrSetSessionDataEntry(
         "resources",
-        targetActorResourceTypes
+        targetActorResourceTypes,
+        false,
+        "add"
       );
     }
   }
@@ -711,10 +714,13 @@ exports.WatcherActor = class WatcherActor extends Actor {
    * @param {String} type
    *        Data type to contribute to.
    * @param {Array<*>} entries
-   *        List of values to add for this data type.
+   *        List of values to add or set for this data type.
+   * @param {String} updateType
+   *        "add" will only add the new entries in the existing data set.
+   *        "set" will update the data set with the new entries.
    */
-  async addDataEntry(type, entries) {
-    WatcherRegistry.addSessionDataEntry(this, type, entries);
+  async addOrSetDataEntry(type, entries, updateType) {
+    WatcherRegistry.addOrSetSessionDataEntry(this, type, entries, updateType);
 
     await Promise.all(
       Object.values(Targets.TYPES)
@@ -730,10 +736,11 @@ exports.WatcherActor = class WatcherActor extends Actor {
         )
         .map(async targetType => {
           const targetHelperModule = TARGET_HELPERS[targetType];
-          await targetHelperModule.addSessionDataEntry({
+          await targetHelperModule.addOrSetSessionDataEntry({
             watcher: this,
             type,
             entries,
+            updateType,
           });
         })
     );
@@ -741,7 +748,12 @@ exports.WatcherActor = class WatcherActor extends Actor {
     // See comment in watchResources
     const targetActor = this.getTargetActorInParentProcess();
     if (targetActor) {
-      await targetActor.addSessionDataEntry(type, entries);
+      await targetActor.addOrSetSessionDataEntry(
+        type,
+        entries,
+        false,
+        updateType
+      );
     }
   }
 
@@ -761,7 +773,7 @@ exports.WatcherActor = class WatcherActor extends Actor {
     Object.values(Targets.TYPES)
       .filter(
         targetType =>
-          // See comment in addDataEntry
+          // See comment in addOrSetDataEntry
           WatcherRegistry.isWatchingTargets(this, targetType) ||
           targetType === Targets.TYPES.FRAME
       )
@@ -774,7 +786,7 @@ exports.WatcherActor = class WatcherActor extends Actor {
         });
       });
 
-    // See comment in addDataEntry
+    // See comment in addOrSetDataEntry
     const targetActor = this.getTargetActorInParentProcess();
     if (targetActor) {
       targetActor.removeSessionDataEntry(type, entries);

@@ -115,21 +115,29 @@ this.addEventListener("message", async function (event) {
         for (const [type, entries] of Object.entries(
           packet.options.sessionData
         )) {
-          promises.push(workerTargetActor.addSessionDataEntry(type, entries));
+          promises.push(
+            workerTargetActor.addOrSetSessionDataEntry(
+              type,
+              entries,
+              false,
+              "set"
+            )
+          );
         }
         await Promise.all(promises);
       }
 
       break;
 
-    case "add-session-data-entry":
+    case "add-or-set-session-data-entry":
       await connections
         .get(packet.forwardingPrefix)
-        .workerTargetActor.addSessionDataEntry(
+        .workerTargetActor.addOrSetSessionDataEntry(
           packet.dataEntryType,
-          packet.entries
+          packet.entries,
+          packet.updateType
         );
-      postMessage(JSON.stringify({ type: "session-data-entry-added" }));
+      postMessage(JSON.stringify({ type: "session-data-entry-added-or-set" }));
       break;
 
     case "remove-session-data-entry":

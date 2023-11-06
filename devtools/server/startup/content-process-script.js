@@ -67,7 +67,7 @@ class ContentProcessStartup {
       this.receiveMessage
     );
     Services.cpmm.addMessageListener(
-      "debug:add-session-data-entry",
+      "debug:add-or-set-session-data-entry",
       this.receiveMessage
     );
     Services.cpmm.addMessageListener(
@@ -92,7 +92,7 @@ class ContentProcessStartup {
       this.receiveMessage
     );
     Services.cpmm.removeMessageListener(
-      "debug:add-session-data-entry",
+      "debug:add-or-set-session-data-entry",
       this.receiveMessage
     );
     Services.cpmm.removeMessageListener(
@@ -118,11 +118,12 @@ class ContentProcessStartup {
       case "debug:destroy-target":
         this.destroyTarget(msg.data.watcherActorID);
         break;
-      case "debug:add-session-data-entry":
-        this.addSessionDataEntry(
+      case "debug:add-or-set-session-data-entry":
+        this.addOrSetSessionDataEntry(
           msg.data.watcherActorID,
           msg.data.type,
-          msg.data.entries
+          msg.data.entries,
+          msg.data.updateType
         );
         break;
       case "debug:remove-session-data-entry":
@@ -234,7 +235,7 @@ class ContentProcessStartup {
 
     // Pass initialization data to the target actor
     for (const type in sessionData) {
-      actor.addSessionDataEntry(type, sessionData[type]);
+      actor.addOrSetSessionDataEntry(type, sessionData[type], false, "set");
     }
   }
 
@@ -250,7 +251,7 @@ class ContentProcessStartup {
     this._connections.delete(watcherActorID);
   }
 
-  async addSessionDataEntry(watcherActorID, type, entries) {
+  async addOrSetSessionDataEntry(watcherActorID, type, entries, updateType) {
     const connectionInfo = this._connections.get(watcherActorID);
     if (!connectionInfo) {
       throw new Error(
@@ -258,8 +259,8 @@ class ContentProcessStartup {
       );
     }
     const { actor } = connectionInfo;
-    await actor.addSessionDataEntry(type, entries);
-    Services.cpmm.sendAsyncMessage("debug:add-session-data-entry-done", {
+    await actor.addOrSetSessionDataEntry(type, entries, false, updateType);
+    Services.cpmm.sendAsyncMessage("debug:add-or-set-session-data-entry-done", {
       watcherActorID,
     });
   }

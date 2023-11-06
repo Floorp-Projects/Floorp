@@ -34,18 +34,31 @@ class BaseTargetActor extends Actor {
    * @param Boolean isDocumentCreation
    *        Set to true if this function is called just after a new document (and its
    *        associated target) is created.
+   * @param String updateType
+   *        "add" will only add the new entries in the existing data set.
+   *        "set" will update the data set with the new entries.
    */
-  async addSessionDataEntry(type, entries, isDocumentCreation = false) {
+  async addOrSetSessionDataEntry(
+    type,
+    entries,
+    isDocumentCreation = false,
+    updateType
+  ) {
     const processor = SessionDataProcessors[type];
     if (processor) {
-      await processor.addSessionDataEntry(this, entries, isDocumentCreation);
+      await processor.addOrSetSessionDataEntry(
+        this,
+        entries,
+        isDocumentCreation,
+        updateType
+      );
     }
   }
 
   /**
-   * Remove data entries that have been previously added via addSessionDataEntry
+   * Remove data entries that have been previously added via addOrSetSessionDataEntry
    *
-   * See addSessionDataEntry for argument description.
+   * See addOrSetSessionDataEntry for argument description.
    */
   removeSessionDataEntry(type, entries) {
     const processor = SessionDataProcessors[type];

@@ -215,7 +215,11 @@ class TargetConfigurationActor extends Actor {
       .map(key => ({ key, value: configuration[key] }));
 
     this._updateParentProcessConfiguration(configuration);
-    await this.watcherActor.addDataEntry(TARGET_CONFIGURATION, cfgArray);
+    await this.watcherActor.addOrSetDataEntry(
+      TARGET_CONFIGURATION,
+      cfgArray,
+      "add"
+    );
     return this._getConfiguration();
   }
 

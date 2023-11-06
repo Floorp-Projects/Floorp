@@ -5,7 +5,12 @@
 "use strict";
 
 module.exports = {
-  async addSessionDataEntry(targetActor, entries, isDocumentCreation) {
+  async addOrSetSessionDataEntry(
+    targetActor,
+    entries,
+    isDocumentCreation,
+    updateType
+  ) {
     // Only WindowGlobalTargetActor implements updateTargetConfiguration,
     // skip targetActor data entry update for other targets.
     if (typeof targetActor.updateTargetConfiguration == "function") {
@@ -13,6 +18,10 @@ module.exports = {
       for (const { key, value } of entries) {
         options[key] = value;
       }
+      // Regarding `updateType`, `entries` is always a partial set of configurations.
+      // We will acknowledge the passed attribute, but if we had set some other attributes
+      // before this call, they will stay as-is.
+      // So it is as if this session data was also using "add" updateType.
       targetActor.updateTargetConfiguration(options, isDocumentCreation);
     }
   },

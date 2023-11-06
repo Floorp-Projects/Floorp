@@ -69,6 +69,16 @@ class BreakpointActorMap {
     const key = this._locationKey(location);
     delete this._actors[key];
   }
+
+  /**
+   * Unregister all currently active breakpoints.
+   */
+  removeAllBreakpoints() {
+    for (const bpActor of Object.values(this._actors)) {
+      bpActor.removeScripts();
+    }
+    this._actors = {};
+  }
 }
 
 exports.BreakpointActorMap = BreakpointActorMap;
