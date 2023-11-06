@@ -4,6 +4,7 @@
 
 package org.mozilla.fenix.ui.robots
 
+import android.util.Log
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.RootMatchers
@@ -18,6 +19,7 @@ import org.hamcrest.CoreMatchers.endsWith
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
+import org.mozilla.fenix.helpers.Constants.TAG
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextExists
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithDescriptionExists
@@ -34,8 +36,14 @@ import org.mozilla.fenix.helpers.click
 
 class SettingsSubMenuAutofillRobot {
 
-    fun verifyAutofillToolbarTitle() = assertItemContainingTextExists(autofillToolbarTitle)
-    fun verifyManageAddressesToolbarTitle() = assertItemContainingTextExists(manageAddressesToolbarTitle)
+    fun verifyAutofillToolbarTitle() {
+        assertItemContainingTextExists(autofillToolbarTitle)
+        Log.i(TAG, "verifyAutofillToolbarTitle: Verified \"Autofill\" toolbar title exists")
+    }
+    fun verifyManageAddressesToolbarTitle() {
+        assertItemContainingTextExists(manageAddressesToolbarTitle)
+        Log.i(TAG, "verifyManageAddressesToolbarTitle: Verified \"Manage addresses\" toolbar title exists")
+    }
 
     fun verifyAddressAutofillSection(isAddressAutofillEnabled: Boolean, userHasSavedAddress: Boolean) {
         assertItemContainingTextExists(
@@ -85,6 +93,7 @@ class SettingsSubMenuAutofillRobot {
                     UiSelector().textContains(savedAddressDetail),
                 ).waitForExists(waitingTime),
             )
+            Log.i(TAG, "verifyManageAddressesSection: Verified saved address detail: $savedAddressDetail exists")
         }
     }
 
@@ -98,7 +107,7 @@ class SettingsSubMenuAutofillRobot {
         )
     }
 
-    fun verifyAddressesAutofillToggle(enabled: Boolean) =
+    fun verifyAddressesAutofillToggle(enabled: Boolean) {
         onView(withText(R.string.preferences_addresses_save_and_autofill_addresses))
             .check(
                 matches(
@@ -114,6 +123,8 @@ class SettingsSubMenuAutofillRobot {
                     ),
                 ),
             )
+        Log.i(TAG, "verifyAddressesAutofillToggle: Verified if address autofill toggle is enabled: $enabled")
+    }
 
     fun verifySaveAndAutofillCreditCardsToggle(enabled: Boolean) =
         onView(withText(R.string.preferences_credit_cards_save_and_autofill_cards))
@@ -141,17 +152,20 @@ class SettingsSubMenuAutofillRobot {
             middleNameTextInput,
         )
         scrollToElementByText(getStringResource(R.string.addresses_street_address))
+        Log.i(TAG, "verifyAddAddressView: Scrolled to \"Street Address\" text input")
         assertItemWithResIdExists(
             lastNameTextInput,
             streetAddressTextInput,
         )
         scrollToElementByText(getStringResource(R.string.addresses_country))
+        Log.i(TAG, "verifyAddAddressView: Scrolled to \"Country or region\" dropdown")
         assertItemWithResIdExists(
             cityTextInput,
             subRegionDropDown,
             zipCodeTextInput,
         )
         scrollToElementByText(getStringResource(R.string.addresses_save_button))
+        Log.i(TAG, "verifyAddAddressView: Scrolled to \"Save\" button")
         assertItemWithResIdExists(
             countryDropDown,
             phoneTextInput,
@@ -165,15 +179,19 @@ class SettingsSubMenuAutofillRobot {
 
     fun verifyCountryOption(country: String) {
         scrollToElementByText(getStringResource(R.string.addresses_country))
+        Log.i(TAG, "verifyCountryOption: Scrolled to \"Country or region\" dropdown")
         mDevice.pressBack()
+        Log.i(TAG, "fillAndSaveAddress: Dismissed \"Country or region\" dropdown using device back button")
         assertItemContainingTextExists(itemContainingText(country))
     }
 
-    fun verifyStateOption(state: String) =
+    fun verifyStateOption(state: String) {
         assertItemContainingTextExists(itemContainingText(state))
+    }
 
     fun verifyCountryOptions(vararg countries: String) {
         countryDropDown.click()
+        Log.i(TAG, "verifyCountryOptions: Clicked \"Country or region\" dropdown")
         for (country in countries) {
             assertItemContainingTextExists(itemContainingText(country))
         }
@@ -181,7 +199,9 @@ class SettingsSubMenuAutofillRobot {
 
     fun selectCountry(country: String) {
         countryDropDown.click()
+        Log.i(TAG, "selectCountry: Clicked \"Country or region\" dropdown")
         countryOption(country).click()
+        Log.i(TAG, "selectCountry: Selected $country dropdown option")
     }
 
     fun verifyEditAddressView() {
@@ -194,17 +214,20 @@ class SettingsSubMenuAutofillRobot {
             middleNameTextInput,
         )
         scrollToElementByText(getStringResource(R.string.addresses_street_address))
+        Log.i(TAG, "verifyEditAddressView: Scrolled to \"Street Address\" text input")
         assertItemWithResIdExists(
             lastNameTextInput,
             streetAddressTextInput,
         )
         scrollToElementByText(getStringResource(R.string.addresses_country))
+        Log.i(TAG, "verifyEditAddressView: Scrolled to \"Country or region\" dropdown")
         assertItemWithResIdExists(
             cityTextInput,
             subRegionDropDown,
             zipCodeTextInput,
         )
         scrollToElementByText(getStringResource(R.string.addresses_save_button))
+        Log.i(TAG, "verifyEditAddressView: Scrolled to \"Save\" button")
         assertItemWithResIdExists(
             countryDropDown,
             phoneTextInput,
@@ -217,32 +240,63 @@ class SettingsSubMenuAutofillRobot {
         assertItemContainingTextExists(deleteAddressButton)
     }
 
-    fun clickSaveAndAutofillAddressesOption() = saveAndAutofillAddressesOption.click()
-    fun clickAddAddressButton() = addAddressButton.click()
-    fun clickManageAddressesButton() = manageAddressesButton.click()
-    fun clickSavedAddress(firstName: String) = savedAddress(firstName).clickAndWaitForNewWindow(waitingTime)
+    fun clickSaveAndAutofillAddressesOption() {
+        saveAndAutofillAddressesOption.click()
+        Log.i(TAG, "clickSaveAndAutofillAddressesOption: Clicked \"Save and autofill addresses\" button")
+    }
+    fun clickAddAddressButton() {
+        addAddressButton.click()
+        Log.i(TAG, "clickAddAddressButton: Clicked \"Add address\" button")
+    }
+    fun clickManageAddressesButton() {
+        manageAddressesButton.click()
+        Log.i(TAG, "clickManageAddressesButton: Clicked \"Manage addresses\" button")
+    }
+    fun clickSavedAddress(firstName: String) {
+        savedAddress(firstName).clickAndWaitForNewWindow(waitingTime)
+        Log.i(TAG, "clickSavedAddress: Clicked $firstName saved address and waiting for a new window for $waitingTime")
+    }
     fun clickDeleteAddressButton() {
+        Log.i(TAG, "clickDeleteAddressButton: Looking for delete address toolbar button")
         toolbarDeleteAddressButton.waitForExists(waitingTime)
         toolbarDeleteAddressButton.click()
+        Log.i(TAG, "clickDeleteAddressButton: Clicked delete address toolbar button")
     }
-    fun clickCancelDeleteAddressButton() = cancelDeleteAddressButton.click()
+    fun clickCancelDeleteAddressButton() {
+        cancelDeleteAddressButton.click()
+        Log.i(TAG, "clickCancelDeleteAddressButton: Clicked \"CANCEL\" button from delete address dialog")
+    }
 
-    fun clickConfirmDeleteAddressButton() = confirmDeleteAddressButton.click()
+    fun clickConfirmDeleteAddressButton() {
+        confirmDeleteAddressButton.click()
+        Log.i(TAG, "clickConfirmDeleteAddressButton: Clicked \"DELETE\" button from delete address dialog")
+    }
 
     fun clickSubRegionOption(subRegion: String) {
         scrollToElementByText(subRegion)
+        Log.i(TAG, "clickSubRegionOption: Scrolled to \"State\" drop down")
         subRegionOption(subRegion).also {
+            Log.i(TAG, "clickSubRegionOption: Looking for \"State\" $subRegion dropdown option")
             it.waitForExists(waitingTime)
             it.click()
+            Log.i(TAG, "clickSubRegionOption: Clicked \"State\" $subRegion dropdown option")
         }
     }
     fun clickCountryOption(country: String) {
+        Log.i(TAG, "clickCountryOption: Looking for \"Country or region\" $country dropdown option")
         countryOption(country).waitForExists(waitingTime)
         countryOption(country).click()
+        Log.i(TAG, "clickCountryOption: Clicked \"Country or region\" $country dropdown option")
     }
-    fun verifyAddAddressButton() = assertTrue(addAddressButton.waitForExists(waitingTime))
+    fun verifyAddAddressButton() {
+        assertTrue(addAddressButton.waitForExists(waitingTime))
+        Log.i(TAG, "verifyAddAddressButton: Verified \"Add address\" button exists")
+    }
 
     fun fillAndSaveAddress(
+        navigateToAutofillSettings: Boolean,
+        isAddressAutofillEnabled: Boolean = true,
+        userHasSavedAddress: Boolean = false,
         firstName: String,
         middleName: String,
         lastName: String,
@@ -254,22 +308,48 @@ class SettingsSubMenuAutofillRobot {
         phoneNumber: String,
         emailAddress: String,
     ) {
+        if (navigateToAutofillSettings) {
+            homeScreen {
+            }.openThreeDotMenu {
+            }.openSettings {
+            }.openAutofillSubMenu {
+                verifyAddressAutofillSection(isAddressAutofillEnabled, userHasSavedAddress)
+                clickAddAddressButton()
+            }
+        }
+        Log.i(TAG, "fillAndSaveAddress: Looking for \"First Name\" text input")
         firstNameTextInput.waitForExists(waitingTime)
         mDevice.pressBack()
+        Log.i(TAG, "fillAndSaveAddress: Dismissed keyboard using device back button")
         firstNameTextInput.setText(firstName)
+        Log.i(TAG, "fillAndSaveAddress: \"First Name\" set to $firstName")
         middleNameTextInput.setText(middleName)
+        Log.i(TAG, "fillAndSaveAddress: \"Middle Name\" set to $middleName")
         lastNameTextInput.setText(lastName)
+        Log.i(TAG, "fillAndSaveAddress: \"Last Name\" set to $lastName")
         streetAddressTextInput.setText(streetAddress)
+        Log.i(TAG, "fillAndSaveAddress: \"Street Address\" set to $streetAddress")
         cityTextInput.setText(city)
+        Log.i(TAG, "fillAndSaveAddress: \"City\" set to $city")
         subRegionDropDown.click()
+        Log.i(TAG, "fillAndSaveAddress: Clicked \"State\" dropdown button")
         clickSubRegionOption(state)
+        Log.i(TAG, "fillAndSaveAddress: Selected $state as \"State\"")
         zipCodeTextInput.setText(zipCode)
+        Log.i(TAG, "fillAndSaveAddress: \"Zip\" set to $zipCode")
         countryDropDown.click()
+        Log.i(TAG, "fillAndSaveAddress: Clicked \"Country or region\" dropdown button")
         clickCountryOption(country)
+        Log.i(TAG, "fillAndSaveAddress: Selected $country as \"Country or region\"")
         scrollToElementByText(getStringResource(R.string.addresses_save_button))
+        Log.i(TAG, "fillAndSaveAddress: Scrolled to \"Save\" button")
         phoneTextInput.setText(phoneNumber)
+        Log.i(TAG, "fillAndSaveAddress: \"Phone\" set to $phoneNumber")
         emailTextInput.setText(emailAddress)
+        Log.i(TAG, "fillAndSaveAddress: \"Email\" set to $emailAddress")
         saveButton.click()
+        Log.i(TAG, "fillAndSaveAddress: Clicked \"Save\" button")
+        Log.i(TAG, "fillAndSaveAddress: Looking for \"Manage addressese\" button")
         manageAddressesButton.waitForExists(waitingTime)
     }
 
@@ -384,6 +464,7 @@ class SettingsSubMenuAutofillRobot {
 
         fun goBackToAutofillSettings(interact: SettingsSubMenuAutofillRobot.() -> Unit): SettingsSubMenuAutofillRobot.Transition {
             navigateBackButton.click()
+            Log.i(TAG, "goBackToAutofillSettings: Clicked \"Navigate back\" toolbar button")
 
             SettingsSubMenuAutofillRobot().interact()
             return SettingsSubMenuAutofillRobot.Transition()
@@ -398,11 +479,17 @@ class SettingsSubMenuAutofillRobot {
 
         fun goBackToBrowser(interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {
             mDevice.pressBack()
+            Log.i(TAG, "goBackToBrowser: Go back to browser view using device back button")
 
             BrowserRobot().interact()
             return BrowserRobot.Transition()
         }
     }
+}
+
+fun autofillScreen(interact: SettingsSubMenuAutofillRobot.() -> Unit): SettingsSubMenuAutofillRobot.Transition {
+    SettingsSubMenuAutofillRobot().interact()
+    return SettingsSubMenuAutofillRobot.Transition()
 }
 
 private val autofillToolbarTitle = itemContainingText(getStringResource(R.string.preferences_autofill))

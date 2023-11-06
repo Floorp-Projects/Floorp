@@ -4,10 +4,12 @@
 
 package org.mozilla.fenix.helpers
 
+import android.util.Log
 import androidx.test.uiautomator.UiObject
 import androidx.test.uiautomator.UiSelector
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.mozilla.fenix.helpers.Constants.TAG
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
 import org.mozilla.fenix.helpers.TestHelper.mDevice
@@ -53,10 +55,12 @@ object MatcherHelper {
         if (exists) {
             for (appItem in appItems) {
                 assertTrue(appItem.waitForExists(waitingTime))
+                Log.i(TAG, "assertItemWithResIdExists: Verified ${appItem.selector} exists")
             }
         } else {
             for (appItem in appItems) {
                 assertFalse(appItem.waitForExists(waitingTimeShort))
+                Log.i(TAG, "assertItemWithResIdExists: Verified ${appItem.selector} does not exist")
             }
         }
     }
@@ -65,8 +69,10 @@ object MatcherHelper {
         for (appItem in appItems) {
             if (exists) {
                 assertTrue(appItem.waitForExists(waitingTime))
+                Log.i(TAG, "assertItemContainingTextExists: Verified ${appItem.selector} exists")
             } else {
                 assertFalse(appItem.waitForExists(waitingTimeShort))
+                Log.i(TAG, "assertItemContainingTextExists: Verified ${appItem.selector} does not exist")
             }
         }
     }
@@ -75,8 +81,10 @@ object MatcherHelper {
         for (appItem in appItems) {
             if (exists) {
                 assertTrue(appItem.waitForExists(waitingTime))
+                Log.i(TAG, "assertItemContainingTextExists: Verified ${appItem.selector} exists")
             } else {
                 assertFalse(appItem.waitForExists(waitingTimeShort))
+                Log.i(TAG, "assertItemContainingTextExists: Verified ${appItem.selector} does not exist")
             }
         }
     }

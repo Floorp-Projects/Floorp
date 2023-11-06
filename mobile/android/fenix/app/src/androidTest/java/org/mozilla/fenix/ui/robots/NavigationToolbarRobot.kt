@@ -36,6 +36,7 @@ import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.Constants
 import org.mozilla.fenix.helpers.Constants.LONG_CLICK_DURATION
+import org.mozilla.fenix.helpers.Constants.TAG
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
 import org.mozilla.fenix.helpers.HomeActivityComposeTestRule
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
@@ -155,12 +156,12 @@ class NavigationToolbarRobot {
             sessionLoadedIdlingResource = SessionLoadedIdlingResource()
 
             openEditURLView()
-            Log.i("MozTestLog", "enterURLAndEnterToBrowser: Opened edit mode URL view")
+            Log.i(TAG, "enterURLAndEnterToBrowser: Opened edit mode URL view")
 
             awesomeBar().setText(url.toString())
-            Log.i("MozTestLog", "enterURLAndEnterToBrowser: Set toolbar text to: $url")
+            Log.i(TAG, "enterURLAndEnterToBrowser: Set toolbar text to: $url")
             mDevice.pressEnter()
-            Log.i("MozTestLog", "enterURLAndEnterToBrowser: Clicked enter on keyboard, submitted query")
+            Log.i(TAG, "enterURLAndEnterToBrowser: Clicked enter on keyboard, submitted query")
 
             runWithIdleRes(sessionLoadedIdlingResource) {
                 assertTrue(

@@ -30,6 +30,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.AppAndSystemHelper.assertExternalAppOpens
 import org.mozilla.fenix.helpers.AppAndSystemHelper.getPermissionAllowID
 import org.mozilla.fenix.helpers.Constants.PackageName.GOOGLE_APPS_PHOTOS
+import org.mozilla.fenix.helpers.Constants.TAG
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithDescription
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
@@ -51,25 +52,25 @@ class DownloadRobot {
     fun verifyDownloadPrompt(fileName: String) {
         var currentTries = 0
         while (currentTries++ < 3) {
-            Log.i("MozTestLog", "verifyDownloadPrompt: While loop currentTries = $currentTries")
+            Log.i(TAG, "verifyDownloadPrompt: While loop currentTries = $currentTries")
             try {
-                Log.i("MozTestLog", "verifyDownloadPrompt: Try block")
+                Log.i(TAG, "verifyDownloadPrompt: Try block")
                 assertTrue(
                     "Download prompt button not visible",
                     mDevice.findObject(UiSelector().resourceId("$packageName:id/download_button"))
                         .waitForExists(waitingTimeLong),
                 )
-                Log.i("MozTestLog", "verifyDownloadPrompt: Verified that the \"DOWNLOAD\" prompt button exists")
+                Log.i(TAG, "verifyDownloadPrompt: Verified that the \"DOWNLOAD\" prompt button exists")
                 assertTrue(
                     "$fileName title doesn't match",
                     mDevice.findObject(UiSelector().text(fileName))
                         .waitForExists(waitingTimeLong),
                 )
-                Log.i("MozTestLog", "verifyDownloadPrompt: Verified that the download prompt for $fileName exists")
+                Log.i(TAG, "verifyDownloadPrompt: Verified that the download prompt for $fileName exists")
 
                 break
             } catch (e: AssertionError) {
-                Log.i("MozTestLog", "verifyDownloadPrompt: Catch block")
+                Log.i(TAG, "verifyDownloadPrompt: Catch block")
                 Log.e("DOWNLOAD_ROBOT", "Failed to find locator: ${e.localizedMessage}")
 
                 browserScreen {
@@ -206,7 +207,7 @@ class DownloadRobot {
     class Transition {
         fun clickDownload(interact: DownloadRobot.() -> Unit): Transition {
             downloadButton().click()
-            Log.i("MozTestLog", "clickDownload: Clicked \"DOWNLOAD\" button from prompt")
+            Log.i(TAG, "clickDownload: Clicked \"DOWNLOAD\" button from prompt")
 
             DownloadRobot().interact()
             return Transition()

@@ -6,6 +6,7 @@
 
 package org.mozilla.fenix.ui.robots
 
+import android.util.Log
 import android.view.View
 import android.widget.EditText
 import android.widget.TextView
@@ -52,6 +53,7 @@ import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.Constants.LISTS_MAXSWIPES
 import org.mozilla.fenix.helpers.Constants.LONG_CLICK_DURATION
+import org.mozilla.fenix.helpers.Constants.TAG
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
 import org.mozilla.fenix.helpers.HomeActivityComposeTestRule
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextExists
@@ -522,14 +524,20 @@ class HomeScreenRobot {
         fun openThreeDotMenu(interact: ThreeDotMenuMainRobot.() -> Unit): ThreeDotMenuMainRobot.Transition {
             // Issue: https://github.com/mozilla-mobile/fenix/issues/21578
             try {
+                Log.i(TAG, "openThreeDotMenu: Try block")
+                Log.i(TAG, "openThreeDotMenu: Looking for main menu button")
                 mDevice.waitNotNull(
                     Until.findObject(By.res("$packageName:id/menuButton")),
                     waitingTime,
                 )
             } catch (e: AssertionError) {
+                Log.i(TAG, "openThreeDotMenu: Catch block")
                 mDevice.pressBack()
+                Log.i(TAG, "openThreeDotMenu: Pressed device back button")
             } finally {
+                Log.i(TAG, "openThreeDotMenu: Finally block")
                 threeDotButton().perform(click())
+                Log.i(TAG, "openThreeDotMenu: Clicked main menu button")
             }
 
             ThreeDotMenuMainRobot().interact()

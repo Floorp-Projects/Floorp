@@ -8,6 +8,9 @@ import org.mozilla.fenix.helpers.DataGenerationHelper.getSponsoredShortcutTitle
 
 object Constants {
 
+    // Tag used for logging
+    const val TAG = "MozUITestLog"
+
     // Device or AVD requires a Google Services Android OS installation
     object PackageName {
         const val GOOGLE_PLAY_SERVICES = "com.android.vending"

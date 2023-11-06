@@ -8,6 +8,7 @@ package org.mozilla.fenix.ui.robots
 
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import androidx.recyclerview.widget.RecyclerView
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.ViewInteraction
@@ -46,6 +47,7 @@ import org.mozilla.fenix.helpers.AppAndSystemHelper.isPackageInstalled
 import org.mozilla.fenix.helpers.Constants.LISTS_MAXSWIPES
 import org.mozilla.fenix.helpers.Constants.PackageName.GOOGLE_PLAY_SERVICES
 import org.mozilla.fenix.helpers.Constants.RETRY_COUNT
+import org.mozilla.fenix.helpers.Constants.TAG
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextExists
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
@@ -272,8 +274,10 @@ class SettingsRobot {
         fun openAutofillSubMenu(interact: SettingsSubMenuAutofillRobot.() -> Unit): SettingsSubMenuAutofillRobot.Transition {
             mDevice.findObject(UiSelector().textContains(getStringResource(R.string.preferences_autofill)))
                 .also {
+                    Log.i(TAG, "openAutofillSubMenu: Looking for \"Autofill\" settings button")
                     it.waitForExists(waitingTime)
                     it.click()
+                    Log.i(TAG, "openAutofillSubMenu: Clicked \"Autofill\" settings button")
                 }
 
             SettingsSubMenuAutofillRobot().interact()
