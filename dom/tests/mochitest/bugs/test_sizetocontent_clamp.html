@@ -35,6 +35,11 @@ var isWin8 = (navigator.userAgent.includes("Windows NT 6.2"));
 var innerWidthMin = (isWin8 ? 120 : 100);
 var innerWidthMax = (isWin8 ? 125 : 100);
 
+// Window size with CSD decorations is 180 pixels
+if (navigator.platform.includes("Linux")) {
+  innerWidthMax = 180;
+}
+
 var isExecuted = false;
 
 function test() {

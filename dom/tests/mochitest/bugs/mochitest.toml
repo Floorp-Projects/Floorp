@@ -318,7 +318,6 @@ support-files = [
 ["test_sizetocontent_clamp.html"]
 skip-if = [
   "os == 'android'", #Windows can't change size on Android
-  "display == 'wayland' && os_version == '22.04'"  # Bug 1857032
 ]
 
 ["test_toJSON.html"]
