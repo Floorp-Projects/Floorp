@@ -819,100 +819,6 @@ bool js::temporal::ConcatTemporalFieldNames(
   return true;
 }
 
-static auto* LowerBound(PropertyKey* begin, PropertyKey* end, PropertyKey key) {
-  // Tell the analysis the |std::lower_bound| function can't GC.
-  JS::AutoSuppressGCAnalysis nogc;
-
-  return std::lower_bound(begin, end, key, [](auto x, auto y) {
-    return ComparePropertyKey(x, y) < 0;
-  });
-}
-
-[[nodiscard]] static bool AppendSorted(
-    JSContext* cx, JS::StackGCVector<PropertyKey>& fieldNames,
-    PropertyKey additionalName) {
-  // Find the position where to add |additionalName|.
-  auto* p = LowerBound(fieldNames.begin(), fieldNames.end(), additionalName);
-
-  // Reject duplicates per PrepareTemporalFields, step 6.c.
-  if (p != fieldNames.end() && *p == additionalName) {
-    if (auto chars = QuoteString(cx, additionalName)) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_TEMPORAL_DUPLICATE_PROPERTY, chars.get());
-    }
-    return false;
-  }
-
-  // Store the index, because growBy() may reallocate, which invalidates |p|.
-  size_t index = std::distance(fieldNames.begin(), p);
-
-  // Allocate space for |additionalName|.
-  if (!fieldNames.growBy(1)) {
-    return false;
-  }
-
-  // Shift all entries starting at |index| to the right.
-  std::copy_backward(fieldNames.begin() + index, fieldNames.end() - 1,
-                     fieldNames.end());
-
-  // Insert |additionalName|.
-  fieldNames[index] = additionalName;
-  return true;
-}
-
-[[nodiscard]] static bool AppendSorted(
-    JSContext* cx, JS::StackGCVector<PropertyKey>& fieldNames,
-    PropertyKey additionalNameOne, PropertyKey additionalNameTwo) {
-  MOZ_ASSERT(ComparePropertyKey(additionalNameOne, additionalNameTwo) < 0);
-
-  // Find the position where to add |additionalNameOne|.
-  auto* p = LowerBound(fieldNames.begin(), fieldNames.end(), additionalNameOne);
-
-  // |additionalNameTwo| can't occur before |p|.
-  auto* q = LowerBound(p, fieldNames.end(), additionalNameTwo);
-
-  // Reject duplicates per PrepareTemporalFields, step 6.c.
-  if (p != fieldNames.end() && *p == additionalNameOne) {
-    if (auto chars = QuoteString(cx, additionalNameOne)) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_TEMPORAL_DUPLICATE_PROPERTY, chars.get());
-    }
-    return false;
-  }
-
-  // Reject duplicates per PrepareTemporalFields, step 6.c.
-  if (q != fieldNames.end() && *q == additionalNameTwo) {
-    if (auto chars = QuoteString(cx, additionalNameTwo)) {
-      JS_ReportErrorNumberASCII(cx, GetErrorMessage, nullptr,
-                                JSMSG_TEMPORAL_DUPLICATE_PROPERTY, chars.get());
-    }
-    return false;
-  }
-
-  // Store the indices, because growBy() may reallocate.
-  size_t indexOne = std::distance(fieldNames.begin(), p);
-  size_t indexTwo = std::distance(fieldNames.begin(), q);
-
-  // Allocate space for both names.
-  if (!fieldNames.growBy(2)) {
-    return false;
-  }
-
-  // Shift all entries starting at |indexTwo| to the right.
-  std::copy_backward(fieldNames.begin() + indexTwo, fieldNames.end() - 2,
-                     fieldNames.end());
-
-  // Shift all entries starting at |indexOne| to the right.
-  std::copy_backward(fieldNames.begin() + indexOne,
-                     fieldNames.begin() + indexTwo,
-                     fieldNames.begin() + indexTwo + 1);
-
-  // Insert both names.
-  fieldNames[indexOne] = additionalNameOne;
-  fieldNames[indexTwo + 1] = additionalNameTwo;
-  return true;
-}
-
 bool js::temporal::AppendSorted(
     JSContext* cx, JS::StackGCVector<PropertyKey>& fieldNames,
     std::initializer_list<TemporalField> additionalNames) {
@@ -927,22 +833,6 @@ bool js::temporal::AppendSorted(
   MOZ_ASSERT(
       std::adjacent_find(additionalNames.begin(), additionalNames.end()) ==
       additionalNames.end());
-
-  if (additionalNames.size() == 1) {
-    auto* it = additionalNames.begin();
-    auto name = NameToId(ToPropertyName(cx, *it));
-    return ::AppendSorted(cx, fieldNames, name);
-  }
-
-  if (additionalNames.size() == 2) {
-    auto* it = additionalNames.begin();
-    auto one = NameToId(ToPropertyName(cx, *it));
-    auto two = NameToId(ToPropertyName(cx, *std::next(it)));
-    return ::AppendSorted(cx, fieldNames, one, two);
-  }
-
-  // TODO: We can probably remove this general approach at a later time, because
-  // only exactly one or two items are ever appended.
 
   // Allocate space for entries from |additionalNames|.
   if (!fieldNames.growBy(additionalNames.size())) {

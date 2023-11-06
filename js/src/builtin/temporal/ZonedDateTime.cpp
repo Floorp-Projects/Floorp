@@ -257,22 +257,28 @@ static Wrapped<ZonedDateTimeObject*> ToTemporalZonedDateTime(
     // Step 5.c.
     JS::RootedVector<PropertyKey> fieldNames(cx);
     if (!CalendarFields(cx, calendar,
-                        {CalendarField::Day, CalendarField::Hour,
-                         CalendarField::Microsecond, CalendarField::Millisecond,
-                         CalendarField::Minute, CalendarField::Month,
-                         CalendarField::MonthCode, CalendarField::Nanosecond,
-                         CalendarField::Second, CalendarField::Year},
+                        {CalendarField::Day, CalendarField::Month,
+                         CalendarField::MonthCode, CalendarField::Year},
                         &fieldNames)) {
       return nullptr;
     }
 
-    // Steps 5.d-e.
+    // Step 5.d.
     if (!AppendSorted(cx, fieldNames.get(),
-                      {TemporalField::Offset, TemporalField::TimeZone})) {
+                      {
+                          TemporalField::Hour,
+                          TemporalField::Microsecond,
+                          TemporalField::Millisecond,
+                          TemporalField::Minute,
+                          TemporalField::Nanosecond,
+                          TemporalField::Offset,
+                          TemporalField::Second,
+                          TemporalField::TimeZone,
+                      })) {
       return nullptr;
     }
 
-    // Step 5.f.
+    // Step 5.e.
     Rooted<PlainObject*> fields(
         cx, PrepareTemporalFields(cx, itemObj, fieldNames,
                                   {TemporalField::TimeZone}));
@@ -280,28 +286,28 @@ static Wrapped<ZonedDateTimeObject*> ToTemporalZonedDateTime(
       return nullptr;
     }
 
-    // Step 5.g.
+    // Step 5.f.
     Rooted<Value> timeZoneValue(cx);
     if (!GetProperty(cx, fields, fields, cx->names().timeZone,
                      &timeZoneValue)) {
       return nullptr;
     }
 
-    // Step 5.h.
+    // Step 5.g.
     if (!ToTemporalTimeZone(cx, timeZoneValue, &timeZone)) {
       return nullptr;
     }
 
-    // Step 5.i.
+    // Step 5.h.
     Rooted<Value> offsetValue(cx);
     if (!GetProperty(cx, fields, fields, cx->names().offset, &offsetValue)) {
       return nullptr;
     }
 
-    // Step 5.j.
+    // Step 5.i.
     MOZ_ASSERT(offsetValue.isString() || offsetValue.isUndefined());
 
-    // Step 5.k.
+    // Step 5.j.
     Rooted<JSString*> offsetString(cx);
     if (offsetValue.isString()) {
       offsetString = offsetValue.toString();
@@ -310,25 +316,25 @@ static Wrapped<ZonedDateTimeObject*> ToTemporalZonedDateTime(
     }
 
     if (maybeOptions) {
-      // Steps 5.l-m.
+      // Steps 5.k-l.
       if (!ToTemporalDisambiguation(cx, maybeOptions, &disambiguation)) {
         return nullptr;
       }
 
-      // Step 5.n.
+      // Step 5.m.
       if (!ToTemporalOffset(cx, maybeOptions, &offsetOption)) {
         return nullptr;
       }
 
-      // Step 5.o.
+      // Step 5.n.
       if (!InterpretTemporalDateTimeFields(cx, calendar, fields, maybeOptions,
                                            &dateTime)) {
         return nullptr;
       }
     } else {
-      // Steps 5.l-n. (Not applicable)
+      // Steps 5.k-m. (Not applicable)
 
-      // Step 5.o.
+      // Step 5.n.
       if (!InterpretTemporalDateTimeFields(cx, calendar, fields, &dateTime)) {
         return nullptr;
       }
@@ -2395,17 +2401,23 @@ static bool ZonedDateTime_with(JSContext* cx, const CallArgs& args) {
   // Step 7.
   JS::RootedVector<PropertyKey> fieldNames(cx);
   if (!CalendarFields(cx, calendar,
-                      {CalendarField::Day, CalendarField::Hour,
-                       CalendarField::Microsecond, CalendarField::Millisecond,
-                       CalendarField::Minute, CalendarField::Month,
-                       CalendarField::MonthCode, CalendarField::Nanosecond,
-                       CalendarField::Second, CalendarField::Year},
+                      {CalendarField::Day, CalendarField::Month,
+                       CalendarField::MonthCode, CalendarField::Year},
                       &fieldNames)) {
     return false;
   }
 
   // Step 8.
-  if (!AppendSorted(cx, fieldNames.get(), {TemporalField::Offset})) {
+  if (!AppendSorted(cx, fieldNames.get(),
+                    {
+                        TemporalField::Hour,
+                        TemporalField::Microsecond,
+                        TemporalField::Millisecond,
+                        TemporalField::Minute,
+                        TemporalField::Nanosecond,
+                        TemporalField::Offset,
+                        TemporalField::Second,
+                    })) {
     return false;
   }
 

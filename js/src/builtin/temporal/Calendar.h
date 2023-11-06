@@ -204,12 +204,6 @@ enum class CalendarField {
   Month,
   MonthCode,
   Day,
-  Hour,
-  Minute,
-  Second,
-  Millisecond,
-  Microsecond,
-  Nanosecond,
 };
 
 /**

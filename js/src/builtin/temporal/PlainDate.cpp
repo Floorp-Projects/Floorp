@@ -2480,13 +2480,6 @@ static PlainDateNameAndNative GetPlainDateNameAndNative(
       return {cx->names().monthCode, PlainDate_monthCode};
     case CalendarField::Day:
       return {cx->names().day, PlainDate_day};
-    case CalendarField::Hour:
-    case CalendarField::Minute:
-    case CalendarField::Second:
-    case CalendarField::Millisecond:
-    case CalendarField::Microsecond:
-    case CalendarField::Nanosecond:
-      break;
   }
   MOZ_CRASH("invalid temporal field name");
 }

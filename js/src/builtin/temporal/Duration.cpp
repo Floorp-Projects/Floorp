@@ -4011,66 +4011,72 @@ static bool ToRelativeTemporalObject(JSContext* cx, Handle<JSObject*> options,
     // Step 5.d.
     JS::RootedVector<PropertyKey> fieldNames(cx);
     if (!CalendarFields(cx, calendar,
-                        {CalendarField::Day, CalendarField::Hour,
-                         CalendarField::Microsecond, CalendarField::Millisecond,
-                         CalendarField::Minute, CalendarField::Month,
-                         CalendarField::MonthCode, CalendarField::Nanosecond,
-                         CalendarField::Second, CalendarField::Year},
+                        {CalendarField::Day, CalendarField::Month,
+                         CalendarField::MonthCode, CalendarField::Year},
                         &fieldNames)) {
       return false;
     }
 
-    // Steps 5.e-f.
+    // Step 5.e.
     if (!AppendSorted(cx, fieldNames.get(),
-                      {TemporalField::Offset, TemporalField::TimeZone})) {
+                      {
+                          TemporalField::Hour,
+                          TemporalField::Microsecond,
+                          TemporalField::Millisecond,
+                          TemporalField::Minute,
+                          TemporalField::Nanosecond,
+                          TemporalField::Offset,
+                          TemporalField::Second,
+                          TemporalField::TimeZone,
+                      })) {
       return false;
     }
 
-    // Step 5.g.
+    // Step 5.f.
     Rooted<PlainObject*> fields(cx, PrepareTemporalFields(cx, obj, fieldNames));
     if (!fields) {
       return false;
     }
 
-    // Step 5.h.
+    // Step 5.g.
     Rooted<JSObject*> dateOptions(cx, NewPlainObjectWithProto(cx, nullptr));
     if (!dateOptions) {
       return false;
     }
 
-    // Step 5.i.
+    // Step 5.h.
     Rooted<Value> overflow(cx, StringValue(cx->names().constrain));
     if (!DefineDataProperty(cx, dateOptions, cx->names().overflow, overflow)) {
       return false;
     }
 
-    // Step 5.j.
+    // Step 5.i.
     if (!InterpretTemporalDateTimeFields(cx, calendar, fields, dateOptions,
                                          &dateTime)) {
       return false;
     }
 
-    // Step 5.k.
+    // Step 5.j.
     Rooted<Value> offset(cx);
     if (!GetProperty(cx, fields, fields, cx->names().offset, &offset)) {
       return false;
     }
 
-    // Step 5.l.
+    // Step 5.k.
     Rooted<Value> timeZoneValue(cx);
     if (!GetProperty(cx, fields, fields, cx->names().timeZone,
                      &timeZoneValue)) {
       return false;
     }
 
-    // Step 5.m.
+    // Step 5.l.
     if (!timeZoneValue.isUndefined()) {
       if (!ToTemporalTimeZone(cx, timeZoneValue, &timeZone)) {
         return false;
       }
     }
 
-    // Step 5.n.
+    // Step 5.m.
     if (offset.isUndefined()) {
       offsetBehaviour = OffsetBehaviour::Wall;
     }
