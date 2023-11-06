@@ -1967,18 +1967,18 @@ static bool TimeZone_from(JSContext* cx, unsigned argc, Value* vp) {
 }
 
 /**
- * Temporal.TimeZone.prototype.equals ( other )
+ * Temporal.TimeZone.prototype.equals ( timeZoneLike )
  */
 static bool TimeZone_equals(JSContext* cx, const CallArgs& args) {
   Rooted<TimeZoneValue> timeZone(cx, &args.thisv().toObject());
 
-  // FIXME: spec bug - argument needs to be converted to time zone.
+  // Step 3.
   Rooted<TimeZoneValue> other(cx);
   if (!ToTemporalTimeZone(cx, args.get(0), &other)) {
     return false;
   }
 
-  // Step 3.
+  // Step 4.
   bool equals;
   if (!TimeZoneEquals(cx, timeZone, other, &equals)) {
     return false;
@@ -1989,7 +1989,7 @@ static bool TimeZone_equals(JSContext* cx, const CallArgs& args) {
 }
 
 /**
- * Temporal.TimeZone.prototype.equals ( other )
+ * Temporal.TimeZone.prototype.equals ( timeZoneLike )
  */
 static bool TimeZone_equals(JSContext* cx, unsigned argc, Value* vp) {
   // Steps 1-2.

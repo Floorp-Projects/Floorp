@@ -2372,8 +2372,6 @@ static bool ISOResolveMonth(JSContext* cx,
     return false;
   }
 
-  // FIXME: spec issue - use CreateDataPropertyOrThrow() instead of Set().
-
   // Step 15.
   fields.month() = monthCodeInteger;
 
