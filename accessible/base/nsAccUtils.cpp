@@ -321,12 +321,17 @@ LayoutDeviceIntPoint nsAccUtils::GetScreenCoordsForParent(
 
 LayoutDeviceIntPoint nsAccUtils::GetScreenCoordsForWindow(
     Accessible* aAccessible) {
+  LayoutDeviceIntPoint coords(0, 0);
   a11y::LocalAccessible* localAcc = aAccessible->AsLocal();
   if (!localAcc) {
     localAcc = aAccessible->AsRemote()->OuterDocOfRemoteBrowser();
+    if (!localAcc) {
+      // This could be null if the tab is closing but the document is still
+      // being shut down.
+      return coords;
+    }
   }
 
-  LayoutDeviceIntPoint coords(0, 0);
   nsCOMPtr<nsIDocShellTreeItem> treeItem(
       nsCoreUtils::GetDocShellFor(localAcc->GetNode()));
   if (!treeItem) return coords;
