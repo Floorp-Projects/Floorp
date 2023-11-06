@@ -936,7 +936,7 @@ void nsWindow::ApplySizeConstraints() {
       hints |= GDK_HINT_MAX_SIZE;
     }
 
-    if (mAspectRatio != 0.0f) {
+    if (mAspectRatio != 0.0f && !mAspectResizer) {
       geometry.min_aspect = mAspectRatio;
       geometry.max_aspect = mAspectRatio;
       hints |= GDK_HINT_ASPECT;
@@ -4423,8 +4423,33 @@ static LayoutDeviceIntPoint GetRefPoint(nsWindow* aWindow, Event* aEvent) {
          aWindow->WidgetToScreenOffset();
 }
 
+void nsWindow::EmulateResizeDrag(GdkEventMotion* aEvent) {
+  auto newPoint = LayoutDeviceIntPoint::Floor(aEvent->x, aEvent->y);
+  LayoutDeviceIntPoint diff = newPoint - mLastResizePoint;
+  mLastResizePoint = newPoint;
+
+  GdkRectangle size = DevicePixelsToGdkSizeRoundUp(mBounds.Size());
+  LayoutDeviceIntSize newSize(size.width + diff.x, size.height + diff.y);
+
+  if (mAspectResizer.value() == GTK_ORIENTATION_VERTICAL) {
+    newSize.width = int(newSize.height * mAspectRatio);
+  } else {  // GTK_ORIENTATION_HORIZONTAL
+    newSize.height = int(newSize.width / mAspectRatio);
+  }
+  LOG("  aspect ratio correction %d x %d aspect %f\n", newSize.width,
+      newSize.height, mAspectRatio);
+  gtk_window_resize(GTK_WINDOW(mShell), newSize.width, newSize.height);
+}
+
 void nsWindow::OnMotionNotifyEvent(GdkEventMotion* aEvent) {
   if (!mGdkWindow) {
+    return;
+  }
+
+  // Emulate gdk_window_begin_resize_drag() for windows
+  // with fixed aspect ratio on Wayland.
+  if (mAspectResizer && mAspectRatio != 0.0f) {
+    EmulateResizeDrag(aEvent);
     return;
   }
 
@@ -4660,8 +4685,29 @@ void nsWindow::OnButtonPressEvent(GdkEventButton* aEvent) {
 
   // Check to see if the event is within our window's resize region
   if (auto edge = CheckResizerEdge(refPoint)) {
-    gdk_window_begin_resize_drag(GetToplevelGdkWindow(), *edge, aEvent->button,
-                                 aEvent->x_root, aEvent->y_root, aEvent->time);
+    // On Wayland Gtk fails to vertically/horizontally resize windows
+    // with fixed aspect ratio. We need to emulate
+    // gdk_window_begin_resize_drag() at OnMotionNotifyEvent().
+    if (mAspectRatio != 0.0f && GdkIsWaylandDisplay()) {
+      mLastResizePoint = LayoutDeviceIntPoint::Floor(aEvent->x, aEvent->y);
+      switch (*edge) {
+        case GDK_WINDOW_EDGE_SOUTH:
+          mAspectResizer = Some(GTK_ORIENTATION_VERTICAL);
+          break;
+        case GDK_WINDOW_EDGE_EAST:
+          mAspectResizer = Some(GTK_ORIENTATION_HORIZONTAL);
+          break;
+        default:
+          mAspectResizer.reset();
+          break;
+      }
+      ApplySizeConstraints();
+    }
+    if (!mAspectResizer) {
+      gdk_window_begin_resize_drag(GetToplevelGdkWindow(), *edge,
+                                   aEvent->button, aEvent->x_root,
+                                   aEvent->y_root, aEvent->time);
+    }
     return;
   }
 
@@ -4731,6 +4777,11 @@ void nsWindow::OnButtonReleaseEvent(GdkEventButton* aEvent) {
   SetLastMousePressEvent(nullptr);
 
   if (!mGdkWindow) {
+    return;
+  }
+
+  if (mAspectResizer) {
+    mAspectResizer = Nothing();
     return;
   }
 
