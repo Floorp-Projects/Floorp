@@ -60,14 +60,6 @@ const NEVER_TRANSLATE_LANGS_PREF =
  * @param {boolean} [options.disabled]
  * Disable the panel through a pref.
  *
- * @param {number} detectedLanguageConfidence
- * This is the value for the MockedLanguageIdEngine to give as a confidence score for
- * the mocked detected language.
- *
- * @param {string} detectedLangTag
- * This is the BCP 47 language tag for the MockedLanguageIdEngine to return as
- * the mocked detected language.
- *
  * @param {Array<{ fromLang: string, toLang: string }>} options.languagePairs
  * The translation languages pairs to mock for the test.
  *
@@ -78,8 +70,6 @@ async function openAboutTranslations({
   dataForContent,
   disabled,
   runInPage,
-  detectedLanguageConfidence,
-  detectedLangTag,
   languagePairs = LANGUAGE_PAIRS,
   prefs,
 }) {
@@ -118,8 +108,6 @@ async function openAboutTranslations({
     // TODO(Bug 1814168) - Do not test download behavior as this is not robustly
     // handled for about:translations yet.
     autoDownloadFromRemoteSettings: true,
-    detectedLangTag,
-    detectedLanguageConfidence,
   });
 
   // Now load the about:translations page, since the actor could be mocked.
@@ -129,10 +117,7 @@ async function openAboutTranslations({
   );
   await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
 
-  // Resolve the files.
-  await remoteClients.languageIdModels.resolvePendingDownloads(1);
-  // The language id and translation engine each have a wasm file, so expect 2 downloads.
-  await remoteClients.translationsWasm.resolvePendingDownloads(2);
+  await remoteClients.translationsWasm.resolvePendingDownloads(1);
   await remoteClients.translationModels.resolvePendingDownloads(
     languagePairs.length * FILES_PER_LANGUAGE_PAIR
   );
@@ -404,8 +389,6 @@ async function closeTranslationsPanelIfOpen() {
 async function setupActorTest({
   languagePairs,
   prefs,
-  detectedLanguageConfidence,
-  detectedLangTag,
   autoDownloadFromRemoteSettings = false,
 }) {
   await SpecialPowers.pushPrefEnv({
@@ -419,8 +402,6 @@ async function setupActorTest({
 
   const { remoteClients, removeMocks } = await createAndMockRemoteSettings({
     languagePairs,
-    detectedLangTag,
-    detectedLanguageConfidence,
     autoDownloadFromRemoteSettings,
   });
 
@@ -448,8 +429,6 @@ async function setupActorTest({
 
 async function createAndMockRemoteSettings({
   languagePairs = LANGUAGE_PAIRS,
-  detectedLanguageConfidence = 0.5,
-  detectedLangTag = "en",
   autoDownloadFromRemoteSettings = false,
 }) {
   const remoteClients = {
@@ -458,9 +437,6 @@ async function createAndMockRemoteSettings({
       languagePairs
     ),
     translationsWasm: await createTranslationsWasmRemoteClient(
-      autoDownloadFromRemoteSettings
-    ),
-    languageIdModels: await createLanguageIdModelsRemoteClient(
       autoDownloadFromRemoteSettings
     ),
   };
@@ -474,23 +450,13 @@ async function createAndMockRemoteSettings({
     remoteClients.translationsWasm.client
   );
 
-  TranslationsParent.mockLanguageIdentification(
-    detectedLangTag,
-    detectedLanguageConfidence,
-    remoteClients.languageIdModels.client
-  );
   return {
     async removeMocks() {
       await remoteClients.translationModels.client.attachments.deleteAll();
-      await remoteClients.translationsWasm.client.attachments.deleteAll();
-      await remoteClients.languageIdModels.client.attachments.deleteAll();
-
       await remoteClients.translationModels.client.db.clear();
       await remoteClients.translationsWasm.client.db.clear();
-      await remoteClients.languageIdModels.client.db.clear();
 
       TranslationsParent.unmockTranslationsEngine();
-      TranslationsParent.unmockLanguageIdentification();
       TranslationsParent.clearCache();
     },
     remoteClients,
@@ -500,8 +466,6 @@ async function createAndMockRemoteSettings({
 async function loadTestPage({
   languagePairs,
   autoDownloadFromRemoteSettings = false,
-  detectedLanguageConfidence,
-  detectedLangTag,
   page,
   prefs,
   autoOffer,
@@ -542,8 +506,6 @@ async function loadTestPage({
 
   const { remoteClients, removeMocks } = await createAndMockRemoteSettings({
     languagePairs,
-    detectedLanguageConfidence,
-    detectedLangTag,
     autoDownloadFromRemoteSettings,
   });
 
@@ -580,11 +542,6 @@ async function loadTestPage({
       await remoteClients.translationModels.rejectPendingDownloads(
         FILES_PER_LANGUAGE_PAIR * count
       );
-    },
-
-    async resolveLanguageIdDownloads() {
-      await remoteClients.translationsWasm.resolvePendingDownloads(1);
-      await remoteClients.languageIdModels.resolvePendingDownloads(1);
     },
 
     /**
@@ -856,7 +813,7 @@ async function createTranslationModelsRemoteClient(
 async function createTranslationsWasmRemoteClient(
   autoDownloadFromRemoteSettings
 ) {
-  const records = ["bergamot-translator", "fasttext-wasm"].map(name => ({
+  const records = ["bergamot-translator"].map(name => ({
     id: crypto.randomUUID(),
     name,
     version: "1.0",
@@ -871,43 +828,6 @@ async function createTranslationsWasmRemoteClient(
   const client = RemoteSettings(
     `${mockedCollectionName}-${_remoteSettingsMockId++}`
   );
-  const metadata = {};
-  await client.db.clear();
-  await client.db.importChanges(metadata, Date.now(), records);
-
-  return createAttachmentMock(
-    client,
-    mockedCollectionName,
-    autoDownloadFromRemoteSettings
-  );
-}
-
-/**
- * Creates a local RemoteSettingsClient for use within tests.
- *
- * @param {boolean} autoDownloadFromRemoteSettings
- * @returns {RemoteSettingsClient}
- */
-async function createLanguageIdModelsRemoteClient(
-  autoDownloadFromRemoteSettings
-) {
-  const records = [
-    {
-      id: crypto.randomUUID(),
-      name: "lid.176.ftz",
-      version: "1.0",
-      last_modified: Date.now(),
-      schema: Date.now(),
-    },
-  ];
-
-  const { RemoteSettings } = ChromeUtils.importESModule(
-    "resource://services-settings/remote-settings.sys.mjs"
-  );
-  const client = RemoteSettings(
-    "test-language-id-models" + _remoteSettingsMockId++
-  );
-  const mockedCollectionName = "test-language-id-models";
   const metadata = {};
   await client.db.clear();
   await client.db.importChanges(metadata, Date.now(), records);

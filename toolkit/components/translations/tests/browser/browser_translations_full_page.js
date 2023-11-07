@@ -98,9 +98,6 @@ add_task(async function test_about_translations_enabled() {
 add_task(async function test_language_identification_for_page_translation() {
   await autoTranslatePage({
     page: NO_LANGUAGE_URL,
-    detectedLangTag: "es",
-    detectedLanguageConfidence: 0.95,
-    resolveLanguageIdDownloads: true,
     languagePairs: [
       { fromLang: "es", toLang: "en" },
       { fromLang: "en", toLang: "es" },
