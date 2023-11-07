@@ -108,9 +108,6 @@ class SettingsRobot {
     fun verifyPrivacyHeading() = assertPrivacyHeading()
 
     fun verifyHTTPSOnlyModeButton() = assertHTTPSOnlyModeButton()
-    fun verifyCookieBannerReductionButton() =
-        onView(withText(R.string.preferences_cookie_banner_reduction)).check(matches(isDisplayed()))
-
     fun verifyEnhancedTrackingProtectionButton() = assertEnhancedTrackingProtectionButton()
     fun verifyLoginsAndPasswordsButton() = assertLoginsAndPasswordsButton()
     fun verifyPrivateBrowsingButton() = assertPrivateBrowsingButton()
@@ -321,14 +318,6 @@ class SettingsRobot {
 
             SettingsSubMenuSetDefaultBrowserRobot().interact()
             return SettingsSubMenuSetDefaultBrowserRobot.Transition()
-        }
-
-        fun openCookieBannerReductionSubMenu(interact: SettingsSubMenuCookieBannerReductionRobot.() -> Unit): SettingsSubMenuCookieBannerReductionRobot.Transition {
-            scrollToElementByText(getStringResource(R.string.preferences_cookie_banner_reduction))
-            itemContainingText(getStringResource(R.string.preferences_cookie_banner_reduction)).click()
-
-            SettingsSubMenuCookieBannerReductionRobot().interact()
-            return SettingsSubMenuCookieBannerReductionRobot.Transition()
         }
 
         fun openEnhancedTrackingProtectionSubMenu(interact: SettingsSubMenuEnhancedTrackingProtectionRobot.() -> Unit): SettingsSubMenuEnhancedTrackingProtectionRobot.Transition {

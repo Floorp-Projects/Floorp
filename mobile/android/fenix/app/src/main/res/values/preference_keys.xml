@@ -161,7 +161,6 @@
     <string name="pref_key_https_only_in_private_tabs" translatable="false">pref_key_https_only_in_private_tabs</string>
 
     <!-- Cookie Banner Reduction Settings-->
-    <string name="pref_key_cookie_banner_settings" translatable="false">pref_key_cookie_banner_settings</string>
     <string name="pref_key_cookie_banner_v1" translatable="false">pref_key_cookie_banner_v1</string>
     <string name="pref_key_cookie_banner_private_mode" translatable="false">pref_key_cookie_banner_private_mode</string>
 

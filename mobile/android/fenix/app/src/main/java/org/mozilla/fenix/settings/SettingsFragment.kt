@@ -284,11 +284,6 @@ class SettingsFragment : PreferenceFragmentCompat() {
             resources.getString(R.string.pref_key_https_only_settings) -> {
                 SettingsFragmentDirections.actionSettingsFragmentToHttpsOnlyFragment()
             }
-            resources.getString(R.string.pref_key_cookie_banner_settings) -> {
-                FxNimbus.features.cookieBanners.recordExposure()
-                CookieBanners.visitedSetting.record(mozilla.components.service.glean.private.NoExtras())
-                SettingsFragmentDirections.actionSettingsFragmentToCookieBannerFragment()
-            }
             resources.getString(R.string.pref_key_accessibility) -> {
                 SettingsFragmentDirections.actionSettingsFragmentToAccessibilityFragment()
             }
@@ -675,13 +670,30 @@ class SettingsFragment : PreferenceFragmentCompat() {
 
     @VisibleForTesting
     internal fun setupCookieBannerPreference() {
-        with(requirePreference<Preference>(R.string.pref_key_cookie_banner_settings)) {
+        FxNimbus.features.cookieBanners.recordExposure()
+        if (context?.settings()?.shouldShowCookieBannerUI == false) return
+        with(requirePreference<SwitchPreference>(R.string.pref_key_cookie_banner_private_mode)) {
             isVisible = context.settings().shouldShowCookieBannerUI
 
-            summary = if (context.settings().shouldUseCookieBanner) {
-                getString(R.string.reduce_cookie_banner_option_on)
-            } else {
-                getString(R.string.reduce_cookie_banner_option_off)
+            onPreferenceChangeListener = object : SharedPreferenceUpdater() {
+                override fun onPreferenceChange(
+                    preference: Preference,
+                    newValue: Any?,
+                ): Boolean {
+                    val metricTag = if (newValue == true) {
+                        "reject_all"
+                    } else {
+                        "disabled"
+                    }
+                    val engineSettings = requireContext().components.core.engine.settings
+                    val settings = requireContext().settings()
+                    settings.shouldUseCookieBannerPrivateMode = newValue as Boolean
+                    val mode = settings.getCookieBannerHandlingPrivateMode()
+                    engineSettings.cookieBannerHandlingModePrivateBrowsing = mode
+                    CookieBanners.settingChangedPmb.record(CookieBanners.SettingChangedPmbExtra(metricTag))
+                    requireContext().components.useCases.sessionUseCases.reload()
+                    return super.onPreferenceChange(preference, newValue)
+                }
             }
         }
     }

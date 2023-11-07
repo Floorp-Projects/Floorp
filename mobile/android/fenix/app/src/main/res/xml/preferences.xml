@@ -102,11 +102,12 @@
             app:iconSpaceReserved="false"
             android:title="@string/preferences_https_only_title" />
 
-        <androidx.preference.Preference
-            android:key="@string/pref_key_cookie_banner_settings"
+        <androidx.preference.SwitchPreference
+            android:defaultValue="false"
+            android:key="@string/pref_key_cookie_banner_private_mode"
             app:iconSpaceReserved="false"
-            android:title="@string/preferences_cookie_banner_reduction"
-            app:isPreferenceVisible="false" />
+            app:isPreferenceVisible="false"
+            android:title="@string/preferences_cookie_banner_reduction_private_mode" />
 
         <androidx.preference.Preference
             android:key="@string/pref_key_tracking_protection_settings"

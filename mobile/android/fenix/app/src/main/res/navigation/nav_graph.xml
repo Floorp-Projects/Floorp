@@ -598,13 +598,6 @@
             app:popEnterAnim="@anim/slide_in_left"
             app:popExitAnim="@anim/slide_out_right" />
         <action
-            android:id="@+id/action_settingsFragment_to_cookieBannerFragment"
-            app:destination="@id/cookieBannerFragment"
-            app:enterAnim="@anim/slide_in_right"
-            app:exitAnim="@anim/slide_out_left"
-            app:popEnterAnim="@anim/slide_in_left"
-            app:popExitAnim="@anim/slide_out_right" />
-        <action
             android:id="@+id/action_settingsFragment_to_trackingProtectionFragment"
             app:destination="@id/trackingProtectionFragment"
             app:enterAnim="@anim/slide_in_right"
@@ -840,10 +833,6 @@
         android:id="@+id/httpsOnlyFragment"
         android:name="org.mozilla.fenix.settings.HttpsOnlyFragment"
         android:label="@string/preferences_https_only_title" />
-    <fragment
-        android:id="@+id/cookieBannerFragment"
-        android:name="org.mozilla.fenix.settings.CookieBannersFragment"
-        android:label="@string/preferences_cookie_banner_reduction" />
     <fragment
         android:id="@+id/sponsoredStoriesSettings"
         android:name="org.mozilla.fenix.settings.SponsoredStoriesSettingsFragment"
