@@ -6,6 +6,7 @@ Transform the signing task into an actual task description.
 """
 
 from taskgraph.transforms.base import TransformSequence
+from taskgraph.util.dependencies import get_primary_dependency
 from taskgraph.util.keyed_by import evaluate_keyed_by
 
 from gecko_taskgraph.util.attributes import release_level
@@ -22,29 +23,33 @@ def add_hardened_sign_config(config, jobs):
         ):
             yield job
             continue
-        release_lvl = release_level(config.params["project"])
 
-        if isinstance(config.graph_config["mac-signing"]["hardened-sign-config"], dict):
-            evaluated = evaluate_keyed_by(
-                config.graph_config["mac-signing"]["hardened-sign-config"],
-                "hardened-sign-config",
-                {"release-level": release_lvl},
-            )
-            if type(evaluated) != list:
-                raise Exception("hardened-sign-config must be a list")
+        dep_job = get_primary_dependency(config, job)
+        project_level = release_level(config.params["project"])
+        is_shippable = dep_job.attributes.get("shippable", False)
+        hardened_signing_type = "developer"
 
-            for sign_cfg in evaluated:
-                if "entitlements" in sign_cfg and not sign_cfg.get(
-                    "entitlements", ""
-                ).startswith("http"):
-                    sign_cfg["entitlements"] = config.params.file_url(
-                        sign_cfg["entitlements"]
-                    )
+        # If project is production AND shippable build, then use production entitlements
+        #  Note: debug builds require developer entitlements
+        if project_level == "production" and is_shippable:
+            hardened_signing_type = "production"
 
-            config.graph_config["mac-signing"]["hardened-sign-config"] = evaluated
+        evaluated = evaluate_keyed_by(
+            config.graph_config["mac-signing"]["hardened-sign-config"],
+            "hardened-sign-config",
+            {"hardened-signing-type": hardened_signing_type},
+        )
+        if type(evaluated) != list:
+            raise Exception("hardened-sign-config must be a list")
 
-        job["worker"]["hardened-sign-config"] = config.graph_config["mac-signing"][
-            "hardened-sign-config"
-        ]
+        for sign_cfg in evaluated:
+            if "entitlements" in sign_cfg and not sign_cfg.get(
+                "entitlements", ""
+            ).startswith("http"):
+                sign_cfg["entitlements"] = config.params.file_url(
+                    sign_cfg["entitlements"]
+                )
+
+        job["worker"]["hardened-sign-config"] = evaluated
         job["worker"]["mac-behavior"] = "mac_sign_and_pkg_hardened"
         yield job

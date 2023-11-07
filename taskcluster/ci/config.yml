@@ -711,7 +711,7 @@ mac-notarization:
 
 mac-signing:
     hardened-sign-config:
-        by-release-level:
+        by-hardened-signing-type:
             production:
                 - deep: false
                   runtime: true
