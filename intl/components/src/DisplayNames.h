@@ -462,9 +462,10 @@ class DisplayNames final {
     // Normally this type of operation wouldn't be safe, but ASCII characters
     // all take 1 byte in UTF-8 encoding, and can be zero padded to be valid
     // UTF-16. Currency codes are all three ASCII letters.
-    char16_t currency[] = {static_cast<char16_t>(aCurrency[0]),
-                           static_cast<char16_t>(aCurrency[1]),
-                           static_cast<char16_t>(aCurrency[2]), u'\0'};
+    // Normalize to upper case so we can easily detect the fallback case.
+    char16_t currency[] = {AsciiAlphaToUpperCase(aCurrency[0]),
+                           AsciiAlphaToUpperCase(aCurrency[1]),
+                           AsciiAlphaToUpperCase(aCurrency[2]), u'\0'};
 
     UCurrNameStyle style;
     switch (mOptions.style) {
@@ -488,19 +489,15 @@ class DisplayNames final {
       return Err(DisplayNamesError::InternalError);
     }
 
-    if (status == U_USING_DEFAULT_WARNING) {
-      // A resource bundle lookup returned a result from the root locale.
-      if (aFallback == DisplayNames::Fallback::Code) {
-        // Return the canonicalized input when no localized currency name was
-        // found. Canonical case for currency is upper case.
-        if (!aBuffer.reserve(3)) {
-          return Err(DisplayNamesError::OutOfMemory);
-        }
-        aBuffer.data()[0] = AsciiAlphaToUpperCase(currency[0]);
-        aBuffer.data()[1] = AsciiAlphaToUpperCase(currency[1]);
-        aBuffer.data()[2] = AsciiAlphaToUpperCase(currency[2]);
-        aBuffer.written(3);
-      } else if (aBuffer.length() != 0) {
+    // No localized currency name was found when the error code is
+    // U_USING_DEFAULT_WARNING and the returned string is equal to the (upper
+    // case transformed) currency code. When `aFallback` is `Fallback::Code`,
+    // we don't have to perform any additional work, because ICU already
+    // returned the currency code in its normalized, upper case form.
+    if (aFallback == DisplayNames::Fallback::None &&
+        status == U_USING_DEFAULT_WARNING && length == 3 &&
+        std::u16string_view{name, 3} == std::u16string_view{currency, 3}) {
+      if (aBuffer.length() != 0) {
         // Ensure an empty string is in the buffer when there is no fallback.
         aBuffer.written(0);
       }
