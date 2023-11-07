@@ -16,12 +16,17 @@ class GradlewBuild(object):
     def __init__(self, log):
         self.log = log
 
-    def test(self, identifier):
+    def test(self, identifier, smoke=None):
         # self.adbrun.launch()
 
         # Change path accordingly to go to root folder to run gradlew
         os.chdir("../../../../../../../..")
-        cmd = f"adb shell am instrument -w -e class org.mozilla.fenix.experimentintegration.{identifier} org.mozilla.fenix.debug.test/androidx.test.runner.AndroidJUnitRunner"
+        test_type = "ui" if smoke else "experimentintegration"
+        cmd = f"adb shell am instrument -w -e class org.mozilla.fenix.{test_type}.{identifier} org.mozilla.fenix.debug.test/androidx.test.runner.AndroidJUnitRunner"
+        # if smoke:
+        #     cmd = f"adb shell am instrument -w -e class org.mozilla.fenix.ui.{identifier} org.mozilla.fenix.debug.test/androidx.test.runner.AndroidJUnitRunner"    
+        # else:
+        #     cmd = f"adb shell am instrument -w -e class org.mozilla.fenix.experimentintegration.{identifier} org.mozilla.fenix.debug.test/androidx.test.runner.AndroidJUnitRunner"
 
         self.logger.info("Running cmd: {}".format(cmd))
 
