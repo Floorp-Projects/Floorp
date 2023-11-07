@@ -128,6 +128,21 @@ internal class InstallReferrerMetricsServiceTest {
     }
 
     @Test
+    fun `WHEN receiving a Meta encrypted attribution in percent format THEN will decrypt correctly`() {
+        val metaParams = MetaParams.extractMetaAttribution("%7B%22app%22%3A12345%2C%22t%22%3A1234567890%2C%22source%22%3A%7B%22data%22%3A%22DATA%22%2C%22nonce%22%3A%22NONCE%22%7D%7D")
+        val expectedMetaParams = MetaParams("12345", "1234567890", "DATA", "NONCE")
+
+        assertEquals(metaParams, expectedMetaParams)
+    }
+
+    @Test
+    fun `WHEN receiving a Meta encrypted attribution in bad format THEN it should not crash`() {
+        val metaParams = MetaParams.extractMetaAttribution("%7B%22app%22%3A12345%2C%22t%22%3A1234567890%2C%22source%22%3A%7B%22data%22%3A%22DATA%22%2C%22nonce%22%3A%22NONCE%22%7B%7D")
+
+        assertNull(metaParams)
+    }
+
+    @Test
     fun `WHEN parsing referrer response with meta attribution THEN both UTM and Meta params should match expected`() {
         val utmParams = UTMParams.parseUTMParameters("""utm_content={"app":12345, "t":1234567890,"source":{"data":"DATA","nonce":"NONCE"}}""")
         val expectedUtmParams = UTMParams(source = "", medium = "", campaign = "", content = """{"app":12345, "t":1234567890,"source":{"data":"DATA","nonce":"NONCE"}}""", term = "")

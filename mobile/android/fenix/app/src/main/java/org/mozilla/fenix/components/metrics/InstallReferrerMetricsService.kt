@@ -16,6 +16,8 @@ import org.mozilla.fenix.GleanMetrics.MetaAttribution
 import org.mozilla.fenix.GleanMetrics.PlayStoreAttribution
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.utils.Settings
+import java.io.UnsupportedEncodingException
+import java.net.URLDecoder
 
 /**
  * A metrics service used to derive the UTM parameters with the Google Play Install Referrer library.
@@ -249,12 +251,20 @@ data class MetaParams(
             if (contentString == null) {
                 return null
             }
+            val decodedContentString = try {
+                // content string can be in percent format
+                URLDecoder.decode(contentString, "UTF-8")
+            } catch (e: UnsupportedEncodingException) {
+                logger.error("failed to decode content string", e)
+                // can't recover from this
+                return null
+            }
 
             val data: String
             val nonce: String
 
             val contentJson = try {
-                JSONObject(contentString)
+                JSONObject(decodedContentString)
             } catch (e: JSONException) {
                 logger.error("content is not JSON", e)
                 // can't recover from this
