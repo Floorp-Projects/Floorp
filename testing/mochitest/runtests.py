@@ -2012,6 +2012,9 @@ toolbar#nav-bar {
         if options.headless:
             browserEnv["MOZ_HEADLESS"] = "1"
 
+        if not options.e10s:
+            browserEnv["MOZ_FORCE_DISABLE_E10S"] = "1"
+
         if options.dmd:
             browserEnv["DMD"] = os.environ.get("DMD", "1")
 
@@ -2470,7 +2473,6 @@ toolbar#nav-bar {
 
         # Hardcoded prefs (TODO move these into a base profile)
         prefs = {
-            "browser.tabs.remote.autostart": options.e10s,
             # Enable tracing output for detailed failures in case of
             # failing connection attempts, and hangs (bug 1397201)
             "remote.log.level": "Trace",

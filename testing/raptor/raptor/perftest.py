@@ -721,9 +721,6 @@ class PerftestAndroid(Perftest):
             path = os.path.join(self.profile_data_dir, "raptor-android")
             LOG.info("Merging profile: {}".format(path))
             self.profile.merge(path)
-            self.profile.set_preferences(
-                {"browser.tabs.remote.autostart": self.config["e10s"]}
-            )
 
     def clear_app_data(self):
         LOG.info("clearing %s app data" % self.config["binary"])

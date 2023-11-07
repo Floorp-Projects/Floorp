@@ -537,7 +537,6 @@ bool gFxREmbedded = false;
 
 enum E10sStatus {
   kE10sEnabledByDefault,
-  kE10sDisabledByUser,
   kE10sForceDisabled,
 };
 
@@ -559,43 +558,18 @@ bool BrowserTabsRemoteAutostart() {
     return gBrowserTabsRemoteAutostart;
   }
 
-#if defined(MOZILLA_OFFICIAL) && MOZ_BUILD_APP_IS_BROWSER
-  bool allowSingleProcessOutsideAutomation = false;
-#else
-  bool allowSingleProcessOutsideAutomation = true;
-#endif
-
+  gBrowserTabsRemoteAutostart = true;
   E10sStatus status = kE10sEnabledByDefault;
+
   // We use "are non-local connections disabled" as a proxy for
   // "are we running some kind of automated test". It would be nicer to use
   // xpc::IsInAutomation(), but that depends on some prefs being set, which
   // they are not in (at least) gtests (where we can't) and xpcshell.
-  // Long-term, hopefully we can make tests switch to environment variables
-  // to disable e10s and then we can get rid of this.
-  if (allowSingleProcessOutsideAutomation ||
-      xpc::AreNonLocalConnectionsDisabled()) {
-    bool optInPref =
-        Preferences::GetBool("browser.tabs.remote.autostart", true);
-
-    if (optInPref) {
-      gBrowserTabsRemoteAutostart = true;
-    } else {
-      status = kE10sDisabledByUser;
-    }
-  } else {
-    gBrowserTabsRemoteAutostart = true;
-  }
-
-  // Uber override pref for emergency blocking
-  if (gBrowserTabsRemoteAutostart) {
+  // Long-term, hopefully we can make all tests e10s-friendly,
+  // then we could remove this automation-only env variable.
+  if (gBrowserTabsRemoteAutostart && xpc::AreNonLocalConnectionsDisabled()) {
     const char* forceDisable = PR_GetEnv("MOZ_FORCE_DISABLE_E10S");
-#if defined(MOZ_WIDGET_ANDROID)
-    // We need this for xpcshell on Android
-    if (forceDisable && *forceDisable) {
-#else
-    // The environment variable must match the application version to apply.
-    if (forceDisable && gAppData && !strcmp(forceDisable, gAppData->version)) {
-#endif
+    if (forceDisable && *forceDisable == '1') {
       gBrowserTabsRemoteAutostart = false;
       status = kE10sForceDisabled;
     }

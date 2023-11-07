@@ -112,12 +112,6 @@ if __name__ == "__main__":
                 v = v.format(**interpolation)
             prefs[k] = Preferences.cast(v)
 
-        # Enforce e10s. This isn't in one of the user.js files because those
-        # are shared with android, which doesn't want this on. We can't
-        # interpolate because the formatting code only works for strings,
-        # and this is a bool pref.
-        prefs["browser.tabs.remote.autostart"] = True
-
         profile = FirefoxProfile(
             profile=profilePath,
             preferences=prefs,
