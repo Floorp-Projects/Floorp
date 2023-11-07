@@ -28,7 +28,8 @@ add_task(
 
     info("Test pausing on an original source");
     invokeInTab("foo");
-    await waitForPaused(dbg, "original.js");
+    await waitForPausedInOriginalFileAndToggleMapScopes(dbg, "original.js");
+
     assertPausedAtSourceAndLine(dbg, findSource(dbg, "original.js").id, 8);
 
     info("Then stepping into a generated source");

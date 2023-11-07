@@ -17,10 +17,6 @@
   padding-inline-start: 7px;
 }
 
-.scopes-content .pane.scopes-list {
-  font-family: var(--monospace-font-family);
-}
-
 .scopes-content .toggle-map-scopes a.mdn {
   padding-inline-start: 3px;
 }
