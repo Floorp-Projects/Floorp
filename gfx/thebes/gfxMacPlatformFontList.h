@@ -34,7 +34,10 @@ class gfxMacPlatformFontList final : public CoreTextFontList {
   friend class gfxPlatformMac;
 
   gfxMacPlatformFontList();
-  virtual ~gfxMacPlatformFontList() = default;
+  virtual ~gfxMacPlatformFontList() {
+    // Don't leak the name that was cached during startup.
+    sSystemFontName.~nsCString();
+  }
 
   // Special-case font faces treated as font families (set via prefs)
   void InitSingleFaceList() MOZ_REQUIRES(mLock) override;
@@ -42,6 +45,11 @@ class gfxMacPlatformFontList final : public CoreTextFontList {
 
   // initialize system fonts
   void InitSystemFontNames() override MOZ_REQUIRES(mLock);
+
+  // Static, so that the startup RegisterFonts thread can call it before the
+  // platform font list is created, to initialize & cache the name.
+  static const nsCString& GetSystemFontName();
+  static nsCString sSystemFontName;
 
   nsTArray<nsCString> mSingleFaceFonts;
 };

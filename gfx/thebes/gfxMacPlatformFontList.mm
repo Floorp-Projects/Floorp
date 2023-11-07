@@ -433,18 +433,26 @@ static NSString* GetRealFamilyName(NSFont* aFont) {
   return [familyName autorelease];
 }
 
+/* static */
+const nsCString& gfxMacPlatformFontList::GetSystemFontName() {
+  if (sSystemFontName.IsEmpty()) {
+    NSString* name = GetRealFamilyName([NSFont systemFontOfSize:0.0]);
+    nsAutoString familyName;
+    nsCocoaUtils::GetStringForNSString(name, familyName);
+    CopyUTF16toUTF8(familyName, sSystemFontName);
+  }
+  return sSystemFontName;
+}
+nsCString gfxMacPlatformFontList::sSystemFontName;
+
 void gfxMacPlatformFontList::InitSystemFontNames() {
-  // text font family
-  NSFont* sys = [NSFont systemFontOfSize:0.0];
-  NSString* textFamilyName = GetRealFamilyName(sys);
-  nsAutoString familyName;
-  nsCocoaUtils::GetStringForNSString(textFamilyName, familyName);
-  CopyUTF16toUTF8(familyName, mSystemFontFamilyName);
+  mSystemFontFamilyName = GetSystemFontName();
 
   // We store an in-process gfxFontFamily for the system font even if using the
   // shared fontlist to manage "normal" fonts, because the hidden system fonts
   // may be excluded from the font list altogether. This family will be
   // populated based on the given NSFont.
+  NSFont* sys = [NSFont systemFontOfSize:0.0];
   RefPtr<gfxFontFamily> fam = new gfxMacFontFamily(mSystemFontFamilyName, sys);
   if (fam) {
     nsAutoCString key;
