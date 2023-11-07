@@ -1139,6 +1139,8 @@ static constexpr const char* const months_names[] = {
     "january", "february", "march",     "april",   "may",      "june",
     "july",    "august",   "september", "october", "november", "december",
 };
+// The shortest month is "may".
+static constexpr size_t ShortestMonthNameLength = 3;
 
 /*
  * Try to parse the following date formats:
@@ -1154,13 +1156,14 @@ template <typename CharT>
 static bool TryParseDashedDatePrefix(const CharT* s, size_t length,
                                      size_t* indexOut, int* yearOut,
                                      int* monOut, int* mdayOut) {
-  size_t i = 0;
+  size_t i = *indexOut;
 
+  size_t pre = i;
   size_t mday;
   if (!ParseDigitsNOrLess(6, &mday, s, &i, length)) {
     return false;
   }
-  size_t mdayDigits = i;
+  size_t mdayDigits = i - pre;
 
   if (i >= length || s[i] != '-') {
     return false;
@@ -1174,8 +1177,6 @@ static bool TryParseDashedDatePrefix(const CharT* s, size_t length,
     }
   }
 
-  // The shortest month is "may".
-  static constexpr size_t ShortestMonthNameLength = 3;
   if (i - start < ShortestMonthNameLength) {
     return false;
   }
@@ -1199,7 +1200,7 @@ static bool TryParseDashedDatePrefix(const CharT* s, size_t length,
   }
   ++i;
 
-  size_t pre = i;
+  pre = i;
   size_t year;
   if (!ParseDigitsNOrLess(6, &year, s, &i, length)) {
     return false;
@@ -1249,7 +1250,7 @@ template <typename CharT>
 static bool TryParseDashedNumericDatePrefix(const CharT* s, size_t length,
                                             size_t* indexOut, int* yearOut,
                                             int* monOut, int* mdayOut) {
-  size_t i = 0;
+  size_t i = *indexOut;
 
   size_t first;
   if (!ParseDigitsNOrLess(6, &first, s, &i, length)) {
@@ -1380,16 +1381,61 @@ constexpr size_t MinKeywordLength(const CharsAndAction (&keywords)[N]) {
 template <typename CharT>
 static bool ParseDate(DateTimeInfo::ForceUTC forceUTC, const CharT* s,
                       size_t length, ClippedTime* result) {
-  if (ParseISOStyleDate(forceUTC, s, length, result)) {
-    return true;
-  }
-
   if (length == 0) {
     return false;
   }
 
-  int year = -1;
+  if (ParseISOStyleDate(forceUTC, s, length, result)) {
+    return true;
+  }
+
+  size_t index = 0;
   int mon = -1;
+  bool seenMonthName = false;
+
+  // Before we begin, we need to scrub any words from the beginning of the
+  // string that are not a month name
+  for (; index < length; ++index) {
+    int c = s[index];
+
+    if (strchr(" ,.-/", c)) {
+      continue;
+    }
+    if (!IsAsciiAlpha(c)) {
+      break;
+    }
+
+    size_t start = index;
+    while (index < length) {
+      ++index;
+      if (!IsAsciiAlpha(s[index])) {
+        break;
+      }
+    }
+
+    if (index - start < ShortestMonthNameLength) {
+      // If it's too short, it's definitely not a month name, ignore it
+      continue;
+    }
+
+    for (size_t m = 0; m < std::size(months_names); ++m) {
+      // If the field isn't a prefix of the month (an exact match is *not*
+      // required), try the next one.
+      if (IsPrefixOfKeyword(s + start, index - start, months_names[m])) {
+        // Use numeric value.
+        mon = m + 1;
+        seenMonthName = true;
+        break;
+      }
+    }
+    if (seenMonthName) {
+      // If we've found the month name, we're done with this loop, otherwise we
+      // move on to the next word
+      break;
+    }
+  }
+
+  int year = -1;
   int mday = -1;
   int hour = -1;
   int min = -1;
@@ -1401,13 +1447,10 @@ static bool ParseDate(DateTimeInfo::ForceUTC forceUTC, const CharT* s,
   int prevc = 0;
 
   bool seenPlusMinus = false;
-  bool seenMonthName = false;
   bool seenFullYear = false;
   bool negativeYear = false;
   // Includes "GMT", "UTC", "UT", and "Z" timezone keywords
   bool seenGmtAbbr = false;
-
-  size_t index = 0;
 
   // Try parsing the leading dashed-date.
   //
@@ -1686,7 +1729,9 @@ static bool ParseDate(DateTimeInfo::ForceUTC forceUTC, const CharT* s,
         // date component and set the month here.
         if (action <= 12) {
           if (seenMonthName) {
-            return false;
+            // Overwrite the previous month name
+            mon = action;
+            break;
           }
 
           seenMonthName = true;
@@ -1721,7 +1766,7 @@ static bool ParseDate(DateTimeInfo::ForceUTC forceUTC, const CharT* s,
         break;
       }
 
-      if (k == size_t(-1)) {
+      if (k == size_t(-1) && (!seenMonthName || mday != -1)) {
         return false;
       }
 
