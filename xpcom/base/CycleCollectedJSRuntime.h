@@ -302,7 +302,11 @@ class CycleCollectedJSRuntime {
 
  public:
   enum DeferredFinalizeType {
+    // Never finalize immediately, because it would be unsafe.
+    FinalizeLater,
+    // Finalize later if we can, but it is okay to do it immediately.
     FinalizeIncrementally,
+    // Finalize immediately, for shutdown or testing purposes.
     FinalizeNow,
   };
 
