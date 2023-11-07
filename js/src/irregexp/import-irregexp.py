@@ -35,7 +35,6 @@ from pathlib import Path
 def copy_and_update_includes(src_path, dst_path):
     # List of header files that need to include the shim header
     need_shim = [
-        "property-sequences.h",
         "regexp-ast.h",
         "regexp-bytecode-peephole.h",
         "regexp-bytecodes.h",
