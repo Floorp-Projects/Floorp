@@ -157,6 +157,7 @@
   height: 100%;
   padding: 4px;
   background: transparent;
+  outline-offset: -2px;
 }
 
 .search-field .search-nav-buttons .nav-btn:hover {

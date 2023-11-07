@@ -487,22 +487,26 @@ button::selection {
   background-color: transparent;
   border: none;
   outline: none;
+  box-shadow: none;
   flex-grow: 1;
   min-width: 0;
   width: 100%;
 }
 
-.devtools-searchbox:focus-within {
+/* Display an outline on the container when the child input is focused. If another element
+   is focused (e.g. a button), we only want the outline on that element */
+.devtools-searchbox:focus-within:has(input:focus-visible) {
   outline: var(--theme-focus-outline);
   outline-offset: -2px;
+
+  &.devtools-searchbox-no-match {
+    outline-color: var(--searchbox-no-match-stroke-color);
+  }
 }
 
 .devtools-searchbox-no-match {
   background-color: var(--searchbox-no-match-background-color);
   border-color: var(--searchbox-no-match-stroke-color);
-  &:focus-within {
-    outline-color: var(--searchbox-no-match-stroke-color);
-  }
 }
 
 /* Clear icon within the searchbox */
