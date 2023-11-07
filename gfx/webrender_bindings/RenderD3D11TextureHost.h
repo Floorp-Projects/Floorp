@@ -22,8 +22,7 @@ namespace wr {
 class RenderDXGITextureHost final : public RenderTextureHostSWGL {
  public:
   RenderDXGITextureHost(
-      WindowsHandle aHandle,
-      Maybe<layers::GpuProcessTextureId>& aGpuProcessTextureId,
+      HANDLE aHandle, Maybe<layers::GpuProcessTextureId>& aGpuProcessTextureId,
       uint32_t aArrayIndex, gfx::SurfaceFormat aFormat, gfx::ColorSpace2,
       gfx::ColorRange aColorRange, gfx::IntSize aSize, bool aHasKeyedMutex);
 
@@ -94,7 +93,7 @@ class RenderDXGITextureHost final : public RenderTextureHostSWGL {
 
   RefPtr<gl::GLContext> mGL;
 
-  WindowsHandle mHandle;
+  HANDLE mHandle;
   Maybe<layers::GpuProcessTextureId> mGpuProcessTextureId;
   RefPtr<ID3D11Texture2D> mTexture;
   uint32_t mArrayIndex = 0;
@@ -127,7 +126,7 @@ class RenderDXGITextureHost final : public RenderTextureHostSWGL {
 
 class RenderDXGIYCbCrTextureHost final : public RenderTextureHostSWGL {
  public:
-  explicit RenderDXGIYCbCrTextureHost(WindowsHandle (&aHandles)[3],
+  explicit RenderDXGIYCbCrTextureHost(HANDLE (&aHandles)[3],
                                       gfx::YUVColorSpace aYUVColorSpace,
                                       gfx::ColorDepth aColorDepth,
                                       gfx::ColorRange aColorRange,
@@ -190,7 +189,7 @@ class RenderDXGIYCbCrTextureHost final : public RenderTextureHostSWGL {
 
   RefPtr<gl::GLContext> mGL;
 
-  WindowsHandle mHandles[3];
+  HANDLE mHandles[3];
   RefPtr<ID3D11Texture2D> mTextures[3];
   RefPtr<IDXGIKeyedMutex> mKeyedMutexs[3];
 
