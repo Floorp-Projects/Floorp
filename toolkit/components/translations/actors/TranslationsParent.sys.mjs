@@ -2277,8 +2277,7 @@ export class TranslationsParent extends JSWindowActorParent {
         }
       }
     } else {
-      // If the document's markup had no specified langTag, attempt
-      // to identify the page's language using the LanguageIdEngine.
+      // If the document's markup had no specified langTag, attempt to identify the page's language.
       langTags.docLangTag = await this.queryIdentifyLanguage();
       if (this.#isDestroyed) {
         return null;
