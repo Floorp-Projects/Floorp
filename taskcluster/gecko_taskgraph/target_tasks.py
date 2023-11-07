@@ -846,6 +846,9 @@ def target_tasks_general_perf_testing(full_task_graph, parameters, graph_config)
                     return "browsertime" in try_name
             # Select browsertime-specific tests
             if "browsertime" in try_name:
+                # Don't run android CaR sp tests as we already have a cron for this.
+                if "m-car" in try_name:
+                    return False
                 if "speedometer" in try_name:
                     return True
         return False
