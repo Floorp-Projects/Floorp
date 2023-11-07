@@ -567,7 +567,33 @@
 
   &::part(scrollbutton-up),
   &::part(scrollbutton-down) {
+    appearance: none;
+    background-clip: padding-box;
+    border: 4px solid transparent;
+    border-radius: calc(var(--tab-border-radius) + 4px);
     fill: var(--toolbarbutton-icon-fill);
+    margin: 0;
+    padding: 0 calc(var(--toolbarbutton-inner-padding) - 6px);
+  }
+
+  #navigator-toolbox:not(:hover) &:not([highlight])::part(scrollbutton-down) {
+    transition: 1s background-color ease-out;
+  }
+
+  &[highlight]::part(scrollbutton-down) {
+    background-color: SelectedItem;
+  }
+
+  &:not([scrolledtostart=true])::part(scrollbutton-up):hover,
+  &:not([scrolledtoend=true])::part(scrollbutton-down):hover {
+    background-color: var(--toolbarbutton-hover-background);
+    color: inherit;
+  }
+
+  &:not([scrolledtostart=true])::part(scrollbutton-up):hover:active,
+  &:not([scrolledtoend=true])::part(scrollbutton-down):hover:active {
+    background-color: var(--toolbarbutton-active-background);
+    color: inherit;
   }
 }
 
