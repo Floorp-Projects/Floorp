@@ -1841,9 +1841,9 @@ pref("services.settings.poll_interval", 86400); // 24H
 // other channels always report events.
 pref("services.common.uptake.sampleRate", 1);   // 1%
 
-pref("extensions.abuseReport.enabled", true);
-// Allow AMO to handoff reports to the Firefox integrated dialog.
-pref("extensions.abuseReport.amWebAPI.enabled", true);
+pref("extensions.abuseReport.enabled", false);
+// Whether abuse report originated from AMO should use the Firefox integrated dialog.
+pref("extensions.abuseReport.amWebAPI.enabled", false);
 pref("extensions.abuseReport.url", "https://services.addons.mozilla.org/api/v4/abuse/report/addon/");
 pref("extensions.abuseReport.amoDetailsURL", "https://services.addons.mozilla.org/api/v4/addons/addon/");
 // Whether Firefox integrated abuse reporting feature should be opening the new abuse report form hosted on AMO.
