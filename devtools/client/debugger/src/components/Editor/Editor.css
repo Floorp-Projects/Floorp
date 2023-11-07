@@ -42,11 +42,9 @@
  * BUG https://github.com/firefox-devtools/debugger/issues/63
  */
 .editor-wrapper {
-  position: absolute;
   width: calc(100% - 1px);
-  top: var(--editor-header-height);
-  bottom: var(--editor-footer-height);
-  left: 0px;
+  overflow-y: auto;
+  grid-area: editor;
 }
 
 html[dir="rtl"] .editor-mount {
