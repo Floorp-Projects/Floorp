@@ -56,6 +56,29 @@ button:hover {
 
 .editor-container {
   width: 100%;
+  display: grid;
+  grid-template-areas:
+    "editor-header"
+    "editor       "
+    "notification "
+    "editor-footer";
+  grid-template-rows:
+    var(--editor-header-height)
+    1fr
+    auto
+    var(--editor-footer-height);
+  max-height: 100%;
+  overflow-y: auto;
+}
+
+.editor-notification-footer {
+  background: var(--theme-warning-background);
+  border-top: 1px solid var(--theme-warning-border);
+  color: var(--theme-warning-color);
+  padding: 0.5em;
+  gap: 8px;
+  grid-area: notification;
+  display: flex;
 }
 
 /* Utils */
