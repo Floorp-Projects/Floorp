@@ -16,6 +16,7 @@ from mozperftest.layers import Layer
 POTENTIAL_DMGS = {
     "browsertime-binary": "Contents/MacOS/firefox",
     "xpcshell-xre-path": "Contents/MacOS",
+    "mochitest-binary": "Contents/MacOS/firefox",
 }
 
 
