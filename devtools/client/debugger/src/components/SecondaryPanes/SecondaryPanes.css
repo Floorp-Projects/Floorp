@@ -53,11 +53,16 @@
 }
 
 .pane .pane-info {
-  font-style: italic;
-  text-align: center;
+  text-align: start;
   padding: 0.5em;
-  user-select: none;
-  cursor: default;
+  gap: 8px;
+  display: flex;
+  white-space: normal;
+}
+
+.pane .pane-info.no-original-scopes-info {
+  background-color: var(--theme-warning-background);
+  color: var(--theme-warning-color);
 }
 
 .secondary-panes .breakpoints-buttons {
@@ -72,7 +77,7 @@
 .secondary-panes input[type="checkbox"] {
   margin: 0;
   margin-inline-end: 4px;
-  vertical-align: middle;
+  vertical-align: text-top;
 }
 
 .secondary-panes-wrapper .command-bar.bottom {

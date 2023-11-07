@@ -10,6 +10,7 @@ requestLongerTimeout(2);
 
 // This source map does not have source contents, so it's fetched separately
 add_task(async function () {
+  await pushPref("devtools.debugger.map-scopes-enabled", true);
   // NOTE: the CORS call makes the test run times inconsistent
   const dbg = await initDebugger(
     "doc-sourcemaps3.html",
@@ -17,7 +18,6 @@ add_task(async function () {
     "sorted.js",
     "test.js"
   );
-  dbg.actions.toggleMapScopes();
 
   ok(true, "Original sources exist");
   const sortedSrc = findSource(dbg, "sorted.js");

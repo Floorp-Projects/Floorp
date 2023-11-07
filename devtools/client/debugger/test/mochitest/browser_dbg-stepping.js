@@ -8,6 +8,7 @@
 requestLongerTimeout(5);
 
 add_task(async function test() {
+  await pushPref("devtools.debugger.map-scopes-enabled", true);
   const dbg = await initDebugger(
     "big-sourcemap.html",
     "bundle.js",
