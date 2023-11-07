@@ -1769,14 +1769,20 @@ IncrementalFinalizeRunnable::Run() {
 
 void CycleCollectedJSRuntime::FinalizeDeferredThings(
     DeferredFinalizeType aType) {
-  /*
-   * If the previous GC created a runnable to finalize objects
-   * incrementally, and if it hasn't finished yet, finish it now. We
-   * don't want these to build up. We also don't want to allow any
-   * existing incremental finalize runnables to run after a
-   * non-incremental GC, since they are often used to detect leaks.
-   */
+  // If mFinalizeRunnable isn't null, we didn't finalize everything from the
+  // previous GC.
   if (mFinalizeRunnable) {
+    if (aType == FinalizeLater) {
+      // We need to defer all finalization until we return to the event loop,
+      // so leave things alone. Any new objects to be finalized from the current
+      // GC will be handled by the existing mFinalizeRunnable.
+      return;
+    }
+    MOZ_ASSERT(aType == FinalizeIncrementally || aType == FinalizeNow);
+    // If we're finalizing incrementally, we don't want finalizers to build up,
+    // so try to finish them off now.
+    // If we're finalizing synchronously, also go ahead and clear them out,
+    // so we make sure as much as possible is freed.
     mFinalizeRunnable->ReleaseNow(false);
     if (mFinalizeRunnable) {
       // If we re-entered ReleaseNow, we couldn't delete mFinalizeRunnable and
@@ -1785,6 +1791,7 @@ void CycleCollectedJSRuntime::FinalizeDeferredThings(
     }
   }
 
+  // If there's nothing to finalize, don't create a new runnable.
   if (mDeferredFinalizerTable.Count() == 0) {
     return;
   }
@@ -1795,12 +1802,13 @@ void CycleCollectedJSRuntime::FinalizeDeferredThings(
   // Everything should be gone now.
   MOZ_ASSERT(mDeferredFinalizerTable.Count() == 0);
 
-  if (aType == FinalizeIncrementally) {
-    NS_DispatchToCurrentThreadQueue(do_AddRef(mFinalizeRunnable), 2500,
-                                    EventQueuePriority::Idle);
-  } else {
+  if (aType == FinalizeNow) {
     mFinalizeRunnable->ReleaseNow(false);
     MOZ_ASSERT(!mFinalizeRunnable);
+  } else {
+    MOZ_ASSERT(aType == FinalizeIncrementally || aType == FinalizeLater);
+    NS_DispatchToCurrentThreadQueue(do_AddRef(mFinalizeRunnable), 2500,
+                                    EventQueuePriority::Idle);
   }
 }
 
@@ -1855,28 +1863,34 @@ void CycleCollectedJSRuntime::OnGC(JSContext* aContext, JSGCStatus aStatus,
                                   OOMState::Recovered);
       }
 
-      // Do any deferred finalization of native objects. We will run the
-      // finalizer later after we've returned to the event loop if any of
-      // three conditions hold:
-      // a) The GC is incremental. In this case, we probably care about pauses.
-      // b) There is a pending exception. The finalizers are not set up to run
-      // in that state.
-      // c) The GC was triggered for internal JS engine reasons. If this is the
-      // case, then we may be in the middle of running some code that the JIT
-      // has assumed can't have certain kinds of side effects. Finalizers can do
-      // all sorts of things, such as run JS, so we want to run them later.
-      // However, if we're shutting down, we need to destroy things immediately.
-      //
-      // Why do we ever bother finalizing things immediately if that's so
-      // questionable? In some situations, such as while testing or in low
-      // memory situations, we really want to free things right away.
-      bool finalizeIncrementally = JS::WasIncrementalGC(mJSRuntime) ||
-                                   JS_IsExceptionPending(aContext) ||
-                                   (JS::InternalGCReason(aReason) &&
-                                    aReason != JS::GCReason::DESTROY_RUNTIME);
-
-      FinalizeDeferredThings(finalizeIncrementally ? FinalizeIncrementally
-                                                   : FinalizeNow);
+      DeferredFinalizeType finalizeType;
+      if (JS_IsExceptionPending(aContext)) {
+        // There is a pending exception. The finalizers are not set up to run
+        // in that state, so don't run the finalizer until we've returned to the
+        // event loop.
+        finalizeType = FinalizeLater;
+      } else if (JS::InternalGCReason(aReason)) {
+        if (aReason == JS::GCReason::DESTROY_RUNTIME) {
+          // We're shutting down, so we need to destroy things immediately.
+          finalizeType = FinalizeNow;
+        } else {
+          // We may be in the middle of running some code that the JIT has
+          // assumed can't have certain kinds of side effects. Finalizers can do
+          // all sorts of things, such as run JS, so we want to run them later,
+          // after we've returned to the event loop.
+          finalizeType = FinalizeLater;
+        }
+      } else if (JS::WasIncrementalGC(mJSRuntime)) {
+        // The GC was incremental, so we probably care about pauses. Try to
+        // break up finalization, but it is okay if we do some now.
+        finalizeType = FinalizeIncrementally;
+      } else {
+        // If we're running a synchronous GC, we probably want to free things as
+        // quickly as possible. This can happen during testing or if memory is
+        // low.
+        finalizeType = FinalizeNow;
+      }
+      FinalizeDeferredThings(finalizeType);
 
       break;
     }
