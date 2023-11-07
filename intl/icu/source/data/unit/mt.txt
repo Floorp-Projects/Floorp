@@ -3,28 +3,13 @@
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 mt{
     units{
-        angle{
-            arc-minute{
-                few{"{0}′"}
-                many{"{0}′"}
-                one{"{0}′"}
-                other{"{0}′"}
-                two{"{0}′"}
-            }
-        }
         concentr{
             karat{
                 dnam{"karati"}
-                few{"{0} kt"}
-                many{"{0} kt"}
-                one{"{0} kt"}
-                other{"{0} kt"}
-                two{"{0} kt"}
             }
         }
         consumption{
             liter-per-kilometer{
-                dnam{"L/km"}
                 few{"{0} litri kull kilometru"}
                 many{"{0}-il litru kull kilometru"}
                 one{"{0} litru kull kilometru"}
@@ -68,21 +53,10 @@ mt{
                 two{"{0} millisekondi"}
             }
         }
-        light{
-            lux{
-                dnam{"lx"}
-                few{"{0} lx"}
-                many{"{0} lx"}
-                one{"{0} lx"}
-                other{"{0} lx"}
-                two{"{0} lx"}
-            }
-        }
     }
     unitsNarrow{
         duration{
             millisecond{
-                dnam{"millisek"}
                 few{"{0}ms"}
                 many{"{0}ms"}
                 one{"{0}ms"}
@@ -92,77 +66,9 @@ mt{
         }
     }
     unitsShort{
-        concentr{
-            karat{
-                dnam{"kt"}
-                few{"{0} kt"}
-                many{"{0} kt"}
-                one{"{0} kt"}
-                other{"{0} kt"}
-                two{"{0} kt"}
-            }
-        }
-        consumption{
-            liter-per-kilometer{
-                dnam{"L/km"}
-                few{"{0} L/km"}
-                many{"{0} L/km"}
-                one{"{0} L/km"}
-                other{"{0} L/km"}
-                two{"{0} L/km"}
-            }
-        }
-        digital{
-            megabit{
-                few{"{0} Mb"}
-                many{"{0} Mb"}
-                one{"{0} Mb"}
-                other{"{0} Mb"}
-                two{"{0} Mb"}
-            }
-            megabyte{
-                dnam{"MB"}
-                few{"{0} MB"}
-                many{"{0} MB"}
-                one{"{0} MB"}
-                other{"{0} MB"}
-                two{"{0} MB"}
-            }
-            terabit{
-                dnam{"Tb"}
-                few{"{0} Tb"}
-                many{"{0} Tb"}
-                one{"{0} Tb"}
-                other{"{0} Tb"}
-                two{"{0} Tb"}
-            }
-            terabyte{
-                dnam{"TB"}
-                few{"{0} TB"}
-                many{"{0} TB"}
-                one{"{0} TB"}
-                other{"{0} TB"}
-                two{"{0} TB"}
-            }
-        }
         duration{
             millisecond{
                 dnam{"millisek"}
-                few{"{0} ms"}
-                many{"{0} ms"}
-                one{"{0} ms"}
-                other{"{0} ms"}
-                two{"{0} ms"}
-            }
-        }
-        light{
-            lux{
-                dnam{"lx"}
-                few{"{0} lx"}
-                many{"{0} lx"}
-                one{"{0} lx"}
-                other{"{0} lx"}
-                two{"{0} lx"}
             }
         }
     }

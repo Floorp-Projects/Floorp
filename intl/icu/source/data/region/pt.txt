@@ -298,6 +298,9 @@ pt{
         ZW{"Zimbábue"}
         ZZ{"Região desconhecida"}
     }
+    Countries%chagos{
+        IO{"Arquipélago de Chagos"}
+    }
     Countries%short{
         HK{"Hong Kong"}
         MO{"Macau"}

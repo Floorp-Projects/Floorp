@@ -539,7 +539,6 @@ dz{
         fallbackFormat{"{1}། ({0}་)"}
         gmtFormat{"ཇི་ཨེམ་ཏི་{0}"}
         gmtZeroFormat{"ཇི་ཨེམ་ཊི་"}
-        hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"{0}་ཆུ་ཚོད།"}
     }
 }

@@ -2,29 +2,14 @@
 // License & terms of use: http://www.unicode.org/copyright.html
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 fur{
-    AuxExemplarCharacters{"[å č é ë ğ ï ñ ó š ü]"}
-    ExemplarCharacters{"[a à â b c ç d e è ê f g h i ì î j k l m n o ò ô p q r s t u ù û v w x y z]"}
-    ExemplarCharactersIndex{"[A B C Ç D E F G H I J K L M N O P Q R S T U V W X Y Z]"}
-    ExemplarCharactersNumbers{"[\\- ‑ , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
+    AuxExemplarCharacters{"[å č éë ğ ï ñ ó š ü]"}
+    ExemplarCharacters{"[aàâ b cç d eèê f g h iìî j k l m n oòô p q r s t uùû v w x y z]"}
+    ExemplarCharactersIndex{"[A B CÇ D E F G H I J K L M N O P Q R S T U V W X Y Z]"}
     NumberElements{
         latn{
-            patterns{
-                currencyFormat{"¤ #,##0.00"}
-                decimalFormat{"#,##0.###"}
-                percentFormat{"#,##0%"}
-                scientificFormat{"#E0"}
-            }
             symbols{
                 decimal{","}
-                exponential{"E"}
                 group{"."}
-                infinity{"∞"}
-                list{";"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
             }
         }
     }
@@ -58,17 +43,13 @@ fur{
             availableFormats{
                 Ed{"d E"}
                 Hm{"H:mm"}
-                M{"L"}
                 MEd{"E d/M"}
-                MMM{"LLL"}
                 MMMEd{"E d MMM"}
                 MMMMEd{"E d MMMM"}
                 MMMMd{"d 'di' MMMM"}
                 MMMd{"d MMM"}
                 MMd{"d/MM"}
                 Md{"d/M"}
-                d{"d"}
-                ms{"mm:ss"}
                 y{"y"}
                 yM{"M/y"}
                 yMEd{"E, d/M/y"}
@@ -79,29 +60,12 @@ fur{
                 yQQQQ{"QQQQ y"}
             }
             intervalFormats{
-                H{
-                    H{"HH–HH"}
-                }
-                Hm{
-                    H{"HH:mm–HH:mm"}
-                    m{"HH:mm–HH:mm"}
-                }
-                Hmv{
-                    H{"HH:mm–HH:mm v"}
-                    m{"HH:mm–HH:mm v"}
-                }
-                Hv{
-                    H{"HH–HH v"}
-                }
                 M{
                     M{"M–M"}
                 }
                 MEd{
                     M{"E dd/MM – E dd/MM"}
                     d{"E dd/MM – E dd/MM"}
-                }
-                MMM{
-                    M{"LLL–LLL"}
                 }
                 MMMEd{
                     M{"E d 'di' MMM – E d 'di' MMM"}
@@ -115,10 +79,6 @@ fur{
                     M{"dd/MM – dd/MM"}
                     d{"dd/MM – dd/MM"}
                 }
-                d{
-                    d{"d–d"}
-                }
-                fallback{"{0} – {1}"}
                 h{
                     a{"h a – h a"}
                     h{"h–h a"}
@@ -175,10 +135,6 @@ fur{
             }
         }
         gregorian{
-            AmPmMarkers{
-                "a.",
-                "p.",
-            }
             AmPmMarkersAbbr{
                 "a.",
                 "p.",
@@ -211,18 +167,13 @@ fur{
             availableFormats{
                 Ed{"d E"}
                 Hm{"H:mm"}
-                M{"L"}
                 MEd{"E d/M"}
-                MMM{"LLL"}
                 MMMEd{"E d MMM"}
                 MMMMEd{"E d MMMM"}
                 MMMMd{"d 'di' MMMM"}
                 MMMd{"d MMM"}
                 MMd{"d/MM"}
                 Md{"d/M"}
-                d{"d"}
-                ms{"mm:ss"}
-                y{"y"}
                 yM{"M/y"}
                 yMEd{"E, d/M/y"}
                 yMMM{"MMM y"}
@@ -242,15 +193,6 @@ fur{
                         "vin",
                         "sab",
                     }
-                    narrow{
-                        "D",
-                        "L",
-                        "M",
-                        "M",
-                        "J",
-                        "V",
-                        "S",
-                    }
                     wide{
                         "domenie",
                         "lunis",
@@ -262,15 +204,6 @@ fur{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "dom",
-                        "lun",
-                        "mar",
-                        "mie",
-                        "joi",
-                        "vin",
-                        "sab",
-                    }
                     narrow{
                         "D",
                         "L",
@@ -279,15 +212,6 @@ fur{
                         "J",
                         "V",
                         "S",
-                    }
-                    wide{
-                        "domenie",
-                        "lunis",
-                        "martars",
-                        "miercus",
-                        "joibe",
-                        "vinars",
-                        "sabide",
                     }
                 }
             }
@@ -298,29 +222,12 @@ fur{
                 }
             }
             intervalFormats{
-                H{
-                    H{"HH–HH"}
-                }
-                Hm{
-                    H{"HH:mm–HH:mm"}
-                    m{"HH:mm–HH:mm"}
-                }
-                Hmv{
-                    H{"HH:mm–HH:mm v"}
-                    m{"HH:mm–HH:mm v"}
-                }
-                Hv{
-                    H{"HH–HH v"}
-                }
                 M{
                     M{"M–M"}
                 }
                 MEd{
                     M{"E dd/MM – E dd/MM"}
                     d{"E dd/MM – E dd/MM"}
-                }
-                MMM{
-                    M{"LLL–LLL"}
                 }
                 MMMEd{
                     M{"E d 'di' MMM – E d 'di' MMM"}
@@ -334,10 +241,6 @@ fur{
                     M{"dd/MM – dd/MM"}
                     d{"dd/MM – dd/MM"}
                 }
-                d{
-                    d{"d–d"}
-                }
-                fallback{"{0} – {1}"}
                 h{
                     a{"h a – h a"}
                     h{"h–h a"}
@@ -355,9 +258,6 @@ fur{
                 hv{
                     a{"h a – h a v"}
                     h{"h–h a v"}
-                }
-                y{
-                    y{"y–y"}
                 }
                 yM{
                     M{"MM/y – MM/y"}
@@ -408,20 +308,6 @@ fur{
                         "Nov",
                         "Dic",
                     }
-                    narrow{
-                        "Z",
-                        "F",
-                        "M",
-                        "A",
-                        "M",
-                        "J",
-                        "L",
-                        "A",
-                        "S",
-                        "O",
-                        "N",
-                        "D",
-                    }
                     wide{
                         "Zenâr",
                         "Fevrâr",
@@ -438,20 +324,6 @@ fur{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "Zen",
-                        "Fev",
-                        "Mar",
-                        "Avr",
-                        "Mai",
-                        "Jug",
-                        "Lui",
-                        "Avo",
-                        "Set",
-                        "Otu",
-                        "Nov",
-                        "Dic",
-                    }
                     narrow{
                         "Z",
                         "F",
@@ -465,45 +337,11 @@ fur{
                         "O",
                         "N",
                         "D",
-                    }
-                    wide{
-                        "Zenâr",
-                        "Fevrâr",
-                        "Març",
-                        "Avrîl",
-                        "Mai",
-                        "Jugn",
-                        "Lui",
-                        "Avost",
-                        "Setembar",
-                        "Otubar",
-                        "Novembar",
-                        "Dicembar",
                     }
                 }
             }
             quarters{
                 format{
-                    abbreviated{
-                        "T1",
-                        "T2",
-                        "T3",
-                        "T4",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                    }
-                    wide{
-                        "Prin trimestri",
-                        "Secont trimestri",
-                        "Tierç trimestri",
-                        "Cuart trimestri",
-                    }
-                }
-                stand-alone{
                     abbreviated{
                         "T1",
                         "T2",

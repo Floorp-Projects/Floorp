@@ -52,10 +52,8 @@ mni{
         "meta:GMT"{
             ls{"গ্রিনৱিচ মিন টাইম"}
         }
-        fallbackFormat{"{1} ({0})"}
         gmtFormat{"জি এম টি {0}"}
         gmtZeroFormat{"জি এম টি"}
-        hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"{0} টাইম"}
         regionFormatDaylight{"{0} (+1) দেলাইট টাইম"}
         regionFormatStandard{"{0} (+0) ষ্টেন্দর্দ টাইম"}

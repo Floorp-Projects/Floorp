@@ -69,6 +69,7 @@ te{
         bem{"బెంబా"}
         bez{"బెనా"}
         bg{"బల్గేరియన్"}
+        bgc{"హర్యాన్వి"}
         bgn{"పశ్చిమ బలూచీ"}
         bho{"భోజ్‌పురి"}
         bi{"బిస్లామా"}
@@ -216,7 +217,6 @@ te{
         hax{"దక్షిణ హైదా"}
         he{"హిబ్రూ"}
         hi{"హిందీ"}
-        hi_Latn{"హిందీ (లాటిన్)"}
         hil{"హిలిగెనాన్"}
         hit{"హిట్టిటే"}
         hmn{"మోంగ్"}
@@ -760,8 +760,6 @@ te{
             indian{"భారతీయ జాతీయ క్యాలెండర్"}
             islamic{"ఇస్లామిక్ క్యాలెండర్"}
             islamic-civil{"ఇస్లామిక్-సివిల్ క్యాలెండర్"}
-            islamic-rgsa{"ఇస్లామిక్ క్యాలెండర్ (సౌదీ అరేబియా)"}
-            islamic-tbla{"ఇస్లామిక్ క్యాలెండర్"}
             islamic-umalqura{"ఇస్లామిక్ క్యాలెండర్ (ఉమ్ అల్-ఖురా)"}
             iso8601{"ISO-8601 క్యాలెండర్"}
             japanese{"జపానీయుల క్యాలెండర్"}
@@ -903,10 +901,11 @@ te{
     }
     characterLabelPattern{
         all{"{0} — అన్ని"}
-        category-list{"{0}: {1}"}
         compatibility{"{0} — అనుకూలత"}
         enclosed{"{0} — ఆవృతం"}
         extended{"{0} — విస్తారితం"}
+        facing-left{"{0} ఎడమవైపు చూడటం"}
+        facing-right{"{0} కుడివైపు చూడటం"}
         historic{"{0} — చారిత్రకం"}
         miscellaneous{"{0} — ఇతరములు"}
         other{"{0} — ఇతరం"}
@@ -922,10 +921,5 @@ te{
         language{"భాష: {0}"}
         script{"లిపి: {0}"}
         territory{"ప్రాంతం: {0}"}
-    }
-    localeDisplayPattern{
-        keyTypePattern{"{0}: {1}"}
-        pattern{"{0} ({1})"}
-        separator{"{0}, {1}"}
     }
 }

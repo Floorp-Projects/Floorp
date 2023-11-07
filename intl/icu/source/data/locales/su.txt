@@ -2,24 +2,18 @@
 // License & terms of use: http://www.unicode.org/copyright.html
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 su{
-    AuxExemplarCharacters{"[á à ă â å ä ã ā æ ç è ĕ ê ë ē í ì ĭ î ï ī ñ ó ò ŏ ô ö ø ō œ ú ù ŭ û ü ū ÿ]"}
-    ExemplarCharacters{"[a b c d e é f g h i j k l m n o p q r s t u v w x y z]"}
-    ExemplarCharactersIndex{"[A B C D E É F G H I J K L M N O P Q R S T U V W X Y Z]"}
-    ExemplarCharactersNumbers{"[\\- ‑ , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
-    ExemplarCharactersPunctuation{
-        "[\\- ‐ ‑ – — , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” ( ) \\[ \\] § @ * / \\& # † ‡ "
-        "′ ″]"
-    }
+    AuxExemplarCharacters{"[áàăâåäãā æ ç èĕêëē íìĭîïī ñ óòŏôöøō œ úùŭûüū ÿ]"}
+    ExemplarCharacters{"[a b c d eé f g h i j k l m n o p q r s t u v w x y z]"}
+    ExemplarCharactersIndex{"[A B C D EÉ F G H I J K L M N O P Q R S T U V W X Y Z]"}
+    ExemplarCharactersPunctuation{"[\\- ‐‑ – — , ; \\: ! ? . … '‘’ \u0022“” ( ) \\[ \\] § @ * / \\& # † ‡ ′ ″]"}
     NumberElements{
         latn{
             patterns{
                 currencyFormat{"¤#,##0.00"}
-                decimalFormat{"#,##0.###"}
             }
             symbols{
                 decimal{","}
                 group{"."}
-                plusSign{"+"}
                 timeSeparator{"."}
             }
         }
@@ -57,15 +51,8 @@ su{
                 "GyMMMd",
                 "GGGGGyMd",
             }
-            intervalFormats{
-                fallback{"{0} – {1}"}
-            }
         }
         gregorian{
-            AmPmMarkers{
-                "AM",
-                "PM",
-            }
             DateTimePatterns{
                 "H.mm.ss zzzz",
                 "H.mm.ss z",
@@ -103,7 +90,6 @@ su{
                 EBhm{"E h.mm B"}
                 EBhms{"E h.mm.ss B"}
                 EHm{"E HH.mm"}
-                EHms{"E HH:mm:ss"}
                 Ed{"E d"}
                 Ehm{"E h.mm a"}
                 Ehms{"E h.mm.ss a"}
@@ -116,7 +102,6 @@ su{
                 Hms{"HH.mm.ss"}
                 Hmsv{"HH.mm.ss v"}
                 Hmv{"HH.mm v"}
-                M{"L"}
                 MEd{"E, d/M"}
                 MMMEd{"E, d MMM"}
                 MMMMd{"d MMMM"}
@@ -149,15 +134,6 @@ su{
                         "Jum",
                         "Sap",
                     }
-                    narrow{
-                        "M",
-                        "S",
-                        "S",
-                        "R",
-                        "K",
-                        "J",
-                        "S",
-                    }
                     wide{
                         "Minggu",
                         "Senén",
@@ -169,15 +145,6 @@ su{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "Mng",
-                        "Sen",
-                        "Sal",
-                        "Reb",
-                        "Kem",
-                        "Jum",
-                        "Sap",
-                    }
                     narrow{
                         "M",
                         "S",
@@ -187,15 +154,6 @@ su{
                         "J",
                         "S",
                     }
-                    wide{
-                        "Minggu",
-                        "Senén",
-                        "Salasa",
-                        "Rebo",
-                        "Kemis",
-                        "Jumaah",
-                        "Saptu",
-                    }
                 }
             }
             eras{
@@ -203,9 +161,6 @@ su{
                     "SM",
                     "M",
                 }
-            }
-            intervalFormats{
-                fallback{"{0} – {1}"}
             }
             monthNames{
                 format{
@@ -223,20 +178,6 @@ su{
                         "Nop",
                         "Dés",
                     }
-                    narrow{
-                        "J",
-                        "P",
-                        "M",
-                        "A",
-                        "M",
-                        "J",
-                        "J",
-                        "A",
-                        "S",
-                        "O",
-                        "N",
-                        "D",
-                    }
                     wide{
                         "Januari",
                         "Pébruari",
@@ -253,20 +194,6 @@ su{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "Jan",
-                        "Péb",
-                        "Mar",
-                        "Apr",
-                        "Méi",
-                        "Jun",
-                        "Jul",
-                        "Ags",
-                        "Sép",
-                        "Okt",
-                        "Nop",
-                        "Dés",
-                    }
                     narrow{
                         "J",
                         "P",
@@ -280,20 +207,6 @@ su{
                         "O",
                         "N",
                         "D",
-                    }
-                    wide{
-                        "Januari",
-                        "Pébruari",
-                        "Maret",
-                        "April",
-                        "Méi",
-                        "Juni",
-                        "Juli",
-                        "Agustus",
-                        "Séptémber",
-                        "Oktober",
-                        "Nopémber",
-                        "Désémber",
                     }
                 }
             }
@@ -305,12 +218,6 @@ su{
                         "K3",
                         "K4",
                     }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                    }
                     wide{
                         "kuartal ka-1",
                         "kuartal ka-2",
@@ -319,12 +226,6 @@ su{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "K1",
-                        "K2",
-                        "K3",
-                        "K4",
-                    }
                     wide{
                         "kuartal ka-1",
                         "kuartal ka-2",
@@ -344,39 +245,14 @@ su{
                 "1"{"énjing"}
             }
         }
-        day-narrow{
-            dn{"dinten"}
-            relative{
-                "-1"{"kamari"}
-                "0"{"dinten ieu"}
-                "1"{"énjing"}
-            }
-        }
-        day-short{
-            dn{"dinten"}
-            relative{
-                "-1"{"kamari"}
-                "0"{"dinten ieu"}
-                "1"{"énjing"}
-            }
-        }
         dayperiod{
             dn{"AM/PM"}
         }
         era{
             dn{"éra"}
         }
-        era-narrow{
-            dn{"éra"}
-        }
-        era-short{
-            dn{"éra"}
-        }
         hour{
             dn{"jam"}
-        }
-        hour-narrow{
-            dn{"j."}
         }
         hour-short{
             dn{"j."}
@@ -384,17 +260,11 @@ su{
         minute{
             dn{"menit"}
         }
-        minute-narrow{
-            dn{"mnt."}
-        }
         minute-short{
             dn{"mnt."}
         }
         month{
             dn{"sasih"}
-        }
-        month-narrow{
-            dn{"sa."}
         }
         month-short{
             dn{"sa."}
@@ -402,17 +272,11 @@ su{
         quarter{
             dn{"triwulan"}
         }
-        quarter-narrow{
-            dn{"tri."}
-        }
         quarter-short{
             dn{"tri."}
         }
         second{
             dn{"detik"}
-        }
-        second-narrow{
-            dn{"dtk."}
         }
         second-short{
             dn{"dtk."}
@@ -426,9 +290,6 @@ su{
         }
         week{
             dn{"minggu"}
-        }
-        week-narrow{
-            dn{"mgg."}
         }
         week-short{
             dn{"mgg."}
@@ -444,9 +305,6 @@ su{
                 "1"{"taun payun"}
             }
         }
-        year-narrow{
-            dn{"tn."}
-        }
         year-short{
             dn{"tn."}
         }
@@ -458,8 +316,6 @@ su{
         standard{
             2{"{0} sareng {1}"}
             end{"{0}, sareng {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
     }
     measurementSystemNames{

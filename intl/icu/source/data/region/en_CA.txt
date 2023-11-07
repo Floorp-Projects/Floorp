@@ -24,9 +24,6 @@ en_CA{
         VC{"Saint Vincent and the Grenadines"}
         VI{"US Virgin Islands"}
         WF{"Wallis and Futuna"}
-        XA{"pseudo-accents"}
-        XB{"pseudo-bidi"}
-        ZZ{"unknown region"}
     }
     Countries%short{
         MO{"Macau"}

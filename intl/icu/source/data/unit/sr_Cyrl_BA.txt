@@ -3,22 +3,30 @@
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 sr_Cyrl_BA{
     units{
+        acceleration{
+            g-force{
+                few{"{0} G"}
+                one{"{0} ге сила"}
+                other{"{0} ге сила"}
+            }
+        }
         compound{
             1024p8{"јоби{0}"}
+            10p-30{"q{0}"}
+            10p27{"R{0}"}
+            10p30{"Q{0}"}
         }
         duration{
             century{
                 case{
-                    accusative{
-                        few{"{0} вијека"}
-                        other{"{0} вијекова"}
-                    }
                     genitive{
                         few{"{0} вијека"}
+                        one{"{0} вијека"}
                         other{"{0} вијекова"}
                     }
                     instrumental{
                         few{"{0} вијека"}
+                        one{"{0} вијеком"}
                         other{"{0} вијекова"}
                     }
                 }
@@ -29,20 +37,17 @@ sr_Cyrl_BA{
             }
             month{
                 case{
-                    accusative{
-                        few{"{0} мјесеца"}
-                        other{"{0} мјесеци"}
-                    }
                     genitive{
                         few{"{0} мјесеца"}
+                        one{"{0} мјесеца"}
                         other{"{0} мјесеци"}
                     }
                     instrumental{
                         few{"{0} мјесеца"}
+                        one{"{0} мјесецом"}
                         other{"{0} мјесеци"}
                     }
                 }
-                dnam{"мјесеци"}
                 few{"{0} мјесеца"}
                 one{"{0} мјесец"}
                 other{"{0} мјесеци"}
@@ -52,14 +57,17 @@ sr_Cyrl_BA{
                 case{
                     accusative{
                         few{"{0} недјеље"}
+                        one{"{0} недјељу"}
                         other{"{0} недјеља"}
                     }
                     genitive{
                         few{"{0} недјеље"}
+                        one{"{0} недјеље"}
                         other{"{0} недјеља"}
                     }
                     instrumental{
                         few{"{0} недјеље"}
+                        one{"{0} недјељом"}
                         other{"{0} недјеља"}
                     }
                 }
@@ -68,6 +76,27 @@ sr_Cyrl_BA{
                 one{"{0} недјеља"}
                 other{"{0} недјеља"}
                 per{"{0} недјељно"}
+            }
+        }
+        electric{
+            milliampere{
+                few{"{0} mA"}
+                one{"{0} милиампер"}
+                other{"{0} милиампера"}
+            }
+        }
+        energy{
+            kilojoule{
+                few{"{0} kJ"}
+                one{"{0} килоџул"}
+                other{"{0} килоџула"}
+            }
+        }
+        frequency{
+            hertz{
+                few{"{0} Hz"}
+                one{"{0} херц"}
+                other{"{0} херца"}
             }
         }
         length{
@@ -80,25 +109,80 @@ sr_Cyrl_BA{
         }
         mass{
             grain{
-                dnam{"гран"}
                 few{"{0} грана"}
                 one{"{0} гран"}
                 other{"{0} гранова"}
+            }
+        }
+        pressure{
+            inch-ofhg{
+                few{"{0} inHg"}
+                one{"{0} инч живиног стуба"}
+                other{"{0} инча живиног стуба"}
+            }
+            millibar{
+                few{"{0} mbar"}
+                one{"{0} милибар"}
+                other{"{0} милибара"}
+            }
+        }
+        speed{
+            beaufort{
+                dnam{"Bft"}
+                few{"B {0}"}
+                one{"B {0}"}
+                other{"B {0}"}
+            }
+        }
+        volume{
+            acre-foot{
+                few{"{0} акер стопе"}
+                one{"{0} ac ft"}
+                other{"{0} акер стопа"}
+            }
+            gallon-imperial{
+                few{"{0} gal Imp."}
+                one{"{0} имп. галон"}
+                other{"{0} имп. галона"}
             }
         }
     }
     unitsNarrow{
-        length{
-            light-year{
-                dnam{"свјетлосне год."}
+        duration{
+            month{
+                few{"{0} мјес."}
+                one{"{0} м"}
+                other{"{0} м"}
+            }
+            second{
+                few{"{0} с"}
+                one{"{0} сек"}
+                other{"{0} с"}
+            }
+            week{
+                few{"{0} н"}
+                one{"{0} нед."}
+                other{"{0} н"}
+            }
+            year{
+                few{"{0} год."}
+                one{"{0} г"}
+                other{"{0} г"}
             }
         }
-        mass{
-            grain{
-                dnam{"гран"}
-                few{"{0} грана"}
-                one{"{0} гран"}
-                other{"{0} гранова"}
+        power{
+            horsepower{
+                few{"{0} hp"}
+                one{"{0} кс"}
+                other{"{0} кс"}
+            }
+        }
+        speed{
+            beaufort{
+                dnam{"Bft"}
+                few{"B {0}"}
+                one{"B {0}"}
+                other{"B {0}"}
             }
         }
         volume{
@@ -118,6 +202,11 @@ sr_Cyrl_BA{
                 few{"{0} и. д. к."}
                 one{"{0} и. д. к."}
                 other{"{0} и. д. к."}
+            }
+            gallon-imperial{
+                few{"{0} gal Imp."}
+                one{"{0}/gal Imp"}
+                other{"{0}/gal Imp"}
             }
         }
     }
@@ -143,12 +232,11 @@ sr_Cyrl_BA{
                 other{"{0} гранова"}
             }
         }
-        volume{
-            dessert-spoon{
-                dnam{"dstspn"}
-                few{"{0} dstspn"}
-                one{"{0} dstspn"}
-                other{"{0} dstspn"}
+        speed{
+            beaufort{
+                few{"B {0}"}
+                one{"B {0}"}
+                other{"Б {0}"}
             }
         }
     }

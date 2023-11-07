@@ -1914,10 +1914,8 @@ ar{
         "meta:Yukon"{
             ls{"توقيت يوكون"}
         }
-        fallbackFormat{"{1} ({0})"}
         gmtFormat{"غرينتش{0}"}
         gmtZeroFormat{"غرينتش"}
-        hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"توقيت {0}"}
         regionFormatDaylight{"توقيت {0} الصيفي"}
         regionFormatStandard{"توقيت {0} الرسمي"}

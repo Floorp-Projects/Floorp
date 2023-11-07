@@ -171,9 +171,13 @@ mas{
             "SHP",
             "Iropiyianí e Santahelena",
         }
+        SLE{
+            "SLE",
+            "Iropiyianí e leoni",
+        }
         SLL{
             "SLL",
-            "Iropiyianí e leoni",
+            "Iropiyianí e leoni (1964—2022)",
         }
         SOS{
             "SOS",

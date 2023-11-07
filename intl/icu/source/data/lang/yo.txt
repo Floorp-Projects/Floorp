@@ -46,6 +46,7 @@ yo{
         bem{"Èdè Béḿbà"}
         bez{"Èdè Bẹ́nà"}
         bg{"Èdè Bugaria"}
+        bgc{"Èdè Haryanvi"}
         bho{"Èdè Bojuri"}
         bi{"Èdè Bisilama"}
         bin{"Èdè Bini"}
@@ -602,10 +603,11 @@ yo{
     }
     characterLabelPattern{
         all{"{0} - gbogbo"}
-        category-list{"{0}: {1}"}
         compatibility{"{0}-ibaramu"}
         enclosed{"{0} ipade"}
         extended{"{0}-ifasiwaju"}
+        facing-left{"{0} ìdojúkọ òsì"}
+        facing-right{"{0} ìdojúkọ ọ̀tún"}
         historic{"{0}-àtijó̩"}
         miscellaneous{"{0} - míràn"}
         other{"{0} miran"}
@@ -620,9 +622,5 @@ yo{
         language{"Èdè: {0}"}
         script{"Ìṣọwọ́kọ̀wé: {0}"}
         territory{"Àgbègbè: {0}"}
-    }
-    localeDisplayPattern{
-        keyTypePattern{"{0}: {1}"}
-        separator{"{0}, {1}"}
     }
 }

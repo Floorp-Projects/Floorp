@@ -26,17 +26,17 @@ tk{
         alt{"günorta Altaý dili"}
         am{"amhar dili"}
         an{"aragon dili"}
-        ann{"Obolo dili"}
+        ann{"obolo dili"}
         anp{"angika dili"}
         ar{"arap dili"}
         ar_001{"häzirki zaman standart arap dili"}
         arn{"mapuçe dili"}
         arp{"arapaho dili"}
-        ars{"Nejdi arap dili"}
+        ars{"nejdi arap dili"}
         as{"assam dili"}
         asa{"asu dili"}
         ast{"asturiý dili"}
-        atj{"Atikamekw dili"}
+        atj{"atikamekw dili"}
         av{"awar dili"}
         awa{"awadhi dili"}
         ay{"aýmara dili"}
@@ -48,6 +48,7 @@ tk{
         bem{"bemba dili"}
         bez{"bena dili"}
         bg{"bolgar dili"}
+        bgc{"harýanwi dili"}
         bho{"bhojpuri dili"}
         bi{"bislama dili"}
         bin{"bini dili"}
@@ -61,7 +62,7 @@ tk{
         bug{"bugiý dili"}
         byn{"blin dili"}
         ca{"katalan dili"}
-        cay{"Kaýuga dili"}
+        cay{"kaýuga dili"}
         ccp{"çakma dili"}
         ce{"çeçen dili"}
         ceb{"sebuan dili"}
@@ -70,21 +71,21 @@ tk{
         chk{"çuuk dili"}
         chm{"mariý dili"}
         cho{"çokto"}
-        chp{"Çipewýan dili"}
+        chp{"çipewýan dili"}
         chr{"çeroki"}
         chy{"şaýenn dili"}
         ckb{"merkezi kürt dili"}
-        clc{"Çilkotin dili"}
+        clc{"çilkotin dili"}
         co{"korsikan dili"}
-        crg{"Miçif dili"}
-        crj{"Günorta-gündogar kri dili"}
-        crk{"Düzdeçi kri dili"}
-        crl{"Demirgazyk-gündogar kri dili"}
-        crm{"Los-kri dili"}
-        crr{"Karolina algonkin dili"}
+        crg{"miçif dili"}
+        crj{"günorta-gündogar kri dili"}
+        crk{"düzdeçi kri dili"}
+        crl{"demirgazyk-gündogar kri dili"}
+        crm{"los-kri dili"}
+        crr{"karolina algonkin dili"}
         crs{"seselwa kreole-fransuz dili"}
         cs{"çeh dili"}
-        csw{"Batgalyk kri dili"}
+        csw{"batgalyk kri dili"}
         cu{"buthana slaw dili"}
         cv{"çuwaş dili"}
         cy{"walliý dili"}
@@ -126,8 +127,8 @@ tk{
         fo{"farer dili"}
         fon{"fon dili"}
         fr{"fransuz dili"}
-        frc{"Fransuz diliniň kajun şiwesi"}
-        frr{"Demirgazyk friz dili"}
+        frc{"fransuz diliniň kajun şiwesi"}
+        frr{"demirgazyk friz dili"}
         fur{"friul dili"}
         fy{"günbatar friz dili"}
         ga{"irland dili"}
@@ -144,9 +145,9 @@ tk{
         gv{"men dili"}
         gwi{"gwiçin dili"}
         ha{"hausa dili"}
-        hai{"Haýda dili"}
+        hai{"haýda dili"}
         haw{"gawaý dili"}
-        hax{"Günorta haýda dili"}
+        hax{"günorta haýda dili"}
         he{"ýewreý dili"}
         hi{"hindi dili"}
         hil{"hiligaýnon dili"}
@@ -156,7 +157,7 @@ tk{
         ht{"gaiti kreol dili"}
         hu{"wenger dili"}
         hup{"hupa"}
-        hur{"Halkomelem dili"}
+        hur{"halkomelem dili"}
         hy{"ermeni dili"}
         hz{"gerero dili"}
         ia{"interlingwa dili"}
@@ -165,7 +166,7 @@ tk{
         id{"indonez dili"}
         ig{"igbo dili"}
         ii{"syçuan-i dili"}
-        ikt{"Günorta-kanada iniktitut dili"}
+        ikt{"Günorta Kanada iniktitut dili"}
         ilo{"iloko dili"}
         inh{"inguş dili"}
         io{"ido dili"}
@@ -187,7 +188,7 @@ tk{
         kde{"makonde dili"}
         kea{"kabuwerdianu dili"}
         kfo{"koro dili"}
-        kgp{"Kaýngang dili"}
+        kgp{"kaýngang dili"}
         kha{"khasi dili"}
         khq{"koýra-çini dili"}
         ki{"kikuýu dili"}
@@ -214,7 +215,7 @@ tk{
         kum{"kumyk dili"}
         kv{"komi dili"}
         kw{"korn dili"}
-        kwk{"Kwakwala dili"}
+        kwk{"kwakwala dili"}
         ky{"gyrgyz dili"}
         la{"latyn dili"}
         lad{"ladino dili"}
@@ -223,14 +224,14 @@ tk{
         lez{"lezgin dili"}
         lg{"ganda dili"}
         li{"limburg dili"}
-        lil{"Lilluet dili"}
+        lil{"lilluet dili"}
         lkt{"lakota dili"}
         ln{"lingala dili"}
         lo{"laos dili"}
         lou{"Luiziana kreol dili"}
         loz{"lozi dili"}
         lrc{"demirgazyk luri dili"}
-        lsm{"Samiýa dili"}
+        lsm{"samiýa dili"}
         lt{"litwa dili"}
         lu{"luba-katanga dili"}
         lua{"luba-Lulua dili"}
@@ -259,7 +260,7 @@ tk{
         ml{"malaýalam dili"}
         mn{"mongol dili"}
         mni{"manipuri dili"}
-        moe{"Innu-aýmun dili"}
+        moe{"innu-aýmun dili"}
         moh{"mogauk dili"}
         mos{"mossi dili"}
         mr{"marathi dili"}
@@ -298,11 +299,11 @@ tk{
         ny{"nýanja dili"}
         nyn{"nýankole dili"}
         oc{"oksitan dili"}
-        ojb{"Demirgazyk-günbatar ojibwa dili"}
-        ojc{"Merkezi ojibwa dili"}
-        ojs{"Oji-kri dili"}
-        ojw{"Günbatar ojibwa dili"}
-        oka{"Okanagan dili"}
+        ojb{"demirgazyk-günbatar ojibwa dili"}
+        ojc{"merkezi ojibwa dili"}
+        ojs{"oji-kri dili"}
+        ojw{"günbatar ojibwa dili"}
+        oka{"okanagan dili"}
         om{"oromo dili"}
         or{"oriýa dili"}
         os{"osetin dili"}
@@ -312,15 +313,16 @@ tk{
         pap{"papýamento dili"}
         pau{"palau dili"}
         pcm{"nigeriýa-pijin dili"}
-        pis{"Pijin dili"}
+        pis{"pijin dili"}
         pl{"polýak dili"}
-        pqm{"Malisit-Passamakwodi dili"}
+        pqm{"malisit-passamakwodi dili"}
         prg{"prussiýa dili"}
         ps{"peştun dili"}
         pt{"portugal dili"}
         pt_PT{"portugal dili (Ýewropa)"}
         qu{"keçua dili"}
         quc{"kiçe dili"}
+        raj{"rajastani dili"}
         rap{"rapanuý dili"}
         rar{"kuk dili"}
         rhg{"rohinýa dili"}
@@ -353,7 +355,7 @@ tk{
         si{"singal dili"}
         sk{"slowak dili"}
         sl{"slowen dili"}
-        slh{"Günorta Luşutsid dili"}
+        slh{"günorta Luşutsid dili"}
         sm{"samoa dili"}
         sma{"günorta saam dili"}
         smj{"lule-saam dili"}
@@ -368,7 +370,7 @@ tk{
         ss{"swati dili"}
         ssy{"saho dili"}
         st{"günorta soto dili"}
-        str{"Demirgazyk bogaz saliş dili"}
+        str{"demirgazyk bogaz saliş dili"}
         su{"sundan dili"}
         suk{"sukuma dili"}
         sv{"şwed dili"}
@@ -377,29 +379,29 @@ tk{
         swb{"komor dili"}
         syr{"siriýa dili"}
         ta{"tamil dili"}
-        tce{"Günorta Tutçone dili"}
+        tce{"günorta tutçone dili"}
         te{"telugu dili"}
         tem{"temne dili"}
         teo{"teso dili"}
         tet{"tetum dili"}
         tg{"täjik dili"}
-        tgx{"Tagiş dili"}
+        tgx{"tagiş dili"}
         th{"taý dili"}
-        tht{"Taltan dili"}
+        tht{"taltan dili"}
         ti{"tigrinýa dili"}
         tig{"tigre dili"}
         tk{"türkmen dili"}
         tlh{"klingon dili"}
-        tli{"Tlinkit dili"}
+        tli{"tlinkit dili"}
         tn{"tswana dili"}
         to{"tongan dili"}
-        tok{"Toki Pona dili"}
+        tok{"toki pona dili"}
         tpi{"tok-pisin dili"}
         tr{"türk dili"}
         trv{"taroko dili"}
         ts{"tsonga dili"}
         tt{"tatar dili"}
-        ttm{"Demirgazyk tutçone dili"}
+        ttm{"demirgazyk tutçone dili"}
         tum{"tumbuka dili"}
         tvl{"tuwalu dili"}
         twq{"tasawak dili"}
@@ -423,7 +425,7 @@ tk{
         wal{"wolaýta dili"}
         war{"waraý dili"}
         wo{"wolof dili"}
-        wuu{"U hytaý dili"}
+        wuu{"u hytaý dili"}
         xal{"galmyk dili"}
         xh{"kosa dili"}
         xog{"soga dili"}
@@ -431,7 +433,7 @@ tk{
         ybb{"ýemba dili"}
         yi{"idiş dili"}
         yo{"ýoruba dili"}
-        yrl{"Nhengatu dili"}
+        yrl{"nhengatu dili"}
         yue{"kanton dili"}
         zgh{"standart Marokko tamazight dili"}
         zh{"hytaý dili"}
@@ -455,16 +457,16 @@ tk{
         en_US{"iňlis dili (ABŞ)"}
     }
     Scripts{
-        Adlm{"Adlam"}
+        Adlm{"adlam"}
         Arab{"Arap elipbiýi"}
         Aran{"Nastalik ýazuwy"}
         Armn{"Ermeni elipbiýi"}
         Beng{"Bengal elipbiýi"}
         Bopo{"Bopomofo elipbiýi"}
         Brai{"Braýl elipbiýi"}
-        Cakm{"Çakma"}
+        Cakm{"çakma"}
         Cans{"Kanadanyň ýerlileriniň bogunlarynyň bitewileşdirilen ulgamy"}
-        Cher{"Çeroki"}
+        Cher{"çeroki"}
         Cyrl{"Kiril elipbiýi"}
         Deva{"Dewanagari elipbiýi"}
         Ethi{"Efiop elipbiýi"}
@@ -490,12 +492,12 @@ tk{
         Latn{"Latyn elipbiýi"}
         Mlym{"Malaýalam elipbiýi"}
         Mong{"Mongol elipbiýi"}
-        Mtei{"Meýteý Maýek"}
+        Mtei{"meýteý-maýek"}
         Mymr{"Mýanma elipbiýi"}
-        Nkoo{"N’Ko"}
-        Olck{"Ol Çiki"}
+        Nkoo{"nko"}
+        Olck{"ol-çiki"}
         Orya{"Oriýa elipbiýi"}
-        Rohg{"Hanifi"}
+        Rohg{"hanifi"}
         Sinh{"Singal elipbiýi"}
         Sund{"Sundanez ýazuwy"}
         Syrc{"Siriýa ýazuwy"}
@@ -530,7 +532,7 @@ tk{
             hebrew{"Ýewreý senenamasy"}
             islamic{"Hijri-kamary senenamasy"}
             islamic-civil{"Hijri-kamary senenamasy (tablisaly, raýat eýýamy)"}
-            islamic-tbla{"Hijri-kamary senenamasy (tablisaly, astronimiýa eýýamy)"}
+            islamic-tbla{"Hijri-kamary senenamasy (tablisaly, astronomik eýýam)"}
             islamic-umalqura{"Hijri-kamary senenamasy (Umm al-Kura)"}
             iso8601{"ISO-8601 senenamasy"}
             japanese{"Ýapon senenamasy"}
@@ -607,10 +609,11 @@ tk{
     }
     characterLabelPattern{
         all{"{0} — ähli"}
-        category-list{"{0}: {1}"}
         compatibility{"{0} — ylalaşyjylyk"}
         enclosed{"{0} — daşy ýapyk"}
         extended{"{0} — giňeldilen"}
+        facing-left{"{0} ýüzi çepe"}
+        facing-right{"{0} ýüzi saga"}
         historic{"{0} — taryhy"}
         miscellaneous{"{0} — dürli"}
         other{"{0} — başga"}
@@ -626,10 +629,5 @@ tk{
         language{"Dil: {0}"}
         script{"Elipbiý: {0}"}
         territory{"Sebit: {0}"}
-    }
-    localeDisplayPattern{
-        keyTypePattern{"{0}: {1}"}
-        pattern{"{0} ({1})"}
-        separator{"{0}, {1}"}
     }
 }

@@ -67,6 +67,7 @@ bg{
         bem{"бемба"}
         bez{"бена"}
         bg{"български"}
+        bgc{"харианви"}
         bgn{"западен балочи"}
         bho{"боджпури"}
         bi{"бислама"}
@@ -897,10 +898,11 @@ bg{
     }
     characterLabelPattern{
         all{"{0} – всички"}
-        category-list{"{0}: {1}"}
         compatibility{"{0} – съвместимост"}
         enclosed{"{0} – оградени"}
         extended{"{0} – разширени"}
+        facing-left{"{0} в посока наляво"}
+        facing-right{"{0} в посока надясно"}
         historic{"{0} – исторически"}
         miscellaneous{"{0} – разни"}
         other{"{0} – други"}
@@ -916,10 +918,5 @@ bg{
         language{"Език: {0}"}
         script{"Писменост: {0}"}
         territory{"Регион: {0}"}
-    }
-    localeDisplayPattern{
-        keyTypePattern{"{0}: {1}"}
-        pattern{"{0} ({1})"}
-        separator{"{0}, {1}"}
     }
 }

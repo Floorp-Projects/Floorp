@@ -264,8 +264,6 @@ fur{
             gregorian{"calendari gregorian"}
             hebrew{"calendari ebreu"}
             indian{"calendari nazionâl indian"}
-            islamic{"calendari islamic"}
-            islamic-civil{"calendari islamic civîl"}
             japanese{"calendari gjaponês"}
             roc{"calendari de Republiche di Cine"}
         }
@@ -304,9 +302,5 @@ fur{
         language{"Lenghe: {0}"}
         script{"Scriture: {0}"}
         territory{"Regjon: {0}"}
-    }
-    localeDisplayPattern{
-        pattern{"{0} ({1})"}
-        separator{"{0}, {1}"}
     }
 }

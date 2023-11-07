@@ -602,8 +602,6 @@ ks{
             gregorian{"گرگوریَن کیلنڑَر"}
             hebrew{"ہِبرِو کیلنڑَر"}
             indian{"انڈین نیشنل کیلنڈر"}
-            islamic{"اِسلٲمی کیلنڑَر"}
-            islamic-civil{"اِسلٲمی اِجتمٲیی کیلنڑَر"}
             iso8601{"ISO-8601 کیلنڈر"}
             japanese{"جاپٲنۍ کیلنڑَر"}
             roc{"جموٗریٲتی چیٖنی کیلَنڑَر"}
@@ -652,9 +650,5 @@ ks{
         language{"زَبان: {0}"}
         script{"رَسم الخط: {0}"}
         territory{"علاقہٕ: {0}"}
-    }
-    localeDisplayPattern{
-        pattern{"{0} ({1})"}
-        separator{"{0}, {1}"}
     }
 }

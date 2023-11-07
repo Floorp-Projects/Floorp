@@ -24,9 +24,6 @@ pcm{
         "Africa:Bangui"{
             ec{"Bangúi"}
         }
-        "Africa:Banjul"{
-            ec{"Banjul"}
-        }
         "Africa:Bissau"{
             ec{"Bisau"}
         }
@@ -186,9 +183,6 @@ pcm{
         "America:Argentina:San_Juan"{
             ec{"San Hwan"}
         }
-        "America:Argentina:San_Luis"{
-            ec{"San Luis"}
-        }
         "America:Argentina:Tucuman"{
             ec{"Túkúman"}
         }
@@ -221,9 +215,6 @@ pcm{
         }
         "America:Boa_Vista"{
             ec{"Bóa Vísta"}
-        }
-        "America:Bogota"{
-            ec{"Bogota"}
         }
         "America:Boise"{
             ec{"Bọísi"}
@@ -312,9 +303,6 @@ pcm{
         "America:Glace_Bay"{
             ec{"Glás Bè"}
         }
-        "America:Godthab"{
-            ec{"Nuuk"}
-        }
         "America:Goose_Bay"{
             ec{"Gúz Bè"}
         }
@@ -389,9 +377,6 @@ pcm{
         }
         "America:Kralendijk"{
             ec{"Králẹ́ndijk"}
-        }
-        "America:La_Paz"{
-            ec{"La Paz"}
         }
         "America:Lima"{
             ec{"Líma"}
@@ -543,9 +528,6 @@ pcm{
         "America:Scoresbysund"{
             ec{"Itókotúrmit"}
         }
-        "America:Sitka"{
-            ec{"Sitka"}
-        }
         "America:St_Barthelemy"{
             ec{"Sent Batẹlẹ́mi"}
         }
@@ -666,9 +648,6 @@ pcm{
         "Asia:Bahrain"{
             ec{"Bahrén"}
         }
-        "Asia:Baku"{
-            ec{"Baku"}
-        }
         "Asia:Bangkok"{
             ec{"Bánkọk"}
         }
@@ -705,9 +684,6 @@ pcm{
         "Asia:Dili"{
             ec{"Díli"}
         }
-        "Asia:Dubai"{
-            ec{"Dubai"}
-        }
         "Asia:Dushanbe"{
             ec{"Dushánbẹ"}
         }
@@ -723,9 +699,6 @@ pcm{
         "Asia:Hong_Kong"{
             ec{"Họng Kọng"}
         }
-        "Asia:Hovd"{
-            ec{"Hovd"}
-        }
         "Asia:Irkutsk"{
             ec{"Irkútsk"}
         }
@@ -737,9 +710,6 @@ pcm{
         }
         "Asia:Jerusalem"{
             ec{"Jẹrúsálẹm"}
-        }
-        "Asia:Kabul"{
-            ec{"Kabul"}
         }
         "Asia:Kamchatka"{
             ec{"Kamchátké"}
@@ -758,9 +728,6 @@ pcm{
         }
         "Asia:Kuala_Lumpur"{
             ec{"Kuála Lúmpọ"}
-        }
-        "Asia:Kuching"{
-            ec{"Kuching"}
         }
         "Asia:Kuwait"{
             ec{"Kuwet"}
@@ -857,9 +824,6 @@ pcm{
         }
         "Asia:Tokyo"{
             ec{"Tókyo"}
-        }
-        "Asia:Tomsk"{
-            ec{"Tomsk"}
         }
         "Asia:Ulaanbaatar"{
             ec{"Ulanbáta"}
@@ -1040,17 +1004,11 @@ pcm{
         "Europe:Luxembourg"{
             ec{"Lọ́ksẹ́mbọg"}
         }
-        "Europe:Madrid"{
-            ec{"Madrid"}
-        }
         "Europe:Malta"{
             ec{"Mọ́lta"}
         }
         "Europe:Mariehamn"{
             ec{"Maríahámn"}
-        }
-        "Europe:Minsk"{
-            ec{"Minsk"}
         }
         "Europe:Monaco"{
             ec{"Mọ́náko"}
@@ -1111,9 +1069,6 @@ pcm{
         }
         "Europe:Uzhgorod"{
             ec{"Ọ́zhọrọd"}
-        }
-        "Europe:Vaduz"{
-            ec{"Vaduz"}
         }
         "Europe:Vatican"{
             ec{"Vátíkan"}
@@ -1211,14 +1166,8 @@ pcm{
         "Pacific:Guadalcanal"{
             ec{"Guádálkanal"}
         }
-        "Pacific:Guam"{
-            ec{"Guam"}
-        }
         "Pacific:Johnston"{
             ec{"Jọ́nstun"}
-        }
-        "Pacific:Kanton"{
-            ec{"Kanton"}
         }
         "Pacific:Kiritimati"{
             ec{"Kritímáti"}
@@ -1267,9 +1216,6 @@ pcm{
         }
         "Pacific:Rarotonga"{
             ec{"Raratónga"}
-        }
-        "Pacific:Saipan"{
-            ec{"Saipan"}
         }
         "Pacific:Tahiti"{
             ec{"Tahíti"}
@@ -1883,10 +1829,6 @@ pcm{
         "meta:Yukon"{
             ls{"Yukón Taim"}
         }
-        fallbackFormat{"{1} ({0})"}
-        gmtFormat{"GMT{0}"}
-        gmtZeroFormat{"GMT"}
-        hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"{0} Taim"}
         regionFormatDaylight{"{0} Délaít Taim"}
         regionFormatStandard{"{0} Fíksd Taim"}

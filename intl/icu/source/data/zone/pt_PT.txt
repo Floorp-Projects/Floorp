@@ -87,9 +87,6 @@ pt_PT{
         "America:St_Thomas"{
             ec{"St. Thomas"}
         }
-        "Antarctica:DumontDUrville"{
-            ec{"Dumont d’Urville"}
-        }
         "Asia:Aden"{
             ec{"Adem"}
         }
@@ -213,14 +210,8 @@ pt_PT{
         "Pacific:Pitcairn"{
             ec{"Ilhas Pitcairn"}
         }
-        "Pacific:Ponape"{
-            ec{"Pohnpei"}
-        }
         "Pacific:Tarawa"{
             ec{"Tarawa"}
-        }
-        "Pacific:Truk"{
-            ec{"Chuuk"}
         }
         "meta:Acre"{
             ld{"Hora de verão do Acre"}

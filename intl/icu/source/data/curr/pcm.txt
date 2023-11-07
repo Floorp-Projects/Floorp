@@ -499,9 +499,13 @@ pcm{
             "SHP",
             "Sent Hẹlẹ́ná Paund",
         }
+        SLE{
+            "SLE",
+            "Siẹ́ra Líoniá Liọn",
+        }
         SLL{
             "SLL",
-            "Siẹ́ra Líoniá Liọn",
+            "Siẹ́ra Líoniá Liọn (1964—2022)",
         }
         SOS{
             "SOS",
@@ -633,102 +637,7 @@ pcm{
         }
     }
     Currencies%narrow{
-        AOA{"Kz"}
-        ARS{"$"}
-        AUD{"$"}
-        BAM{"KM"}
-        BBD{"$"}
-        BDT{"৳"}
-        BMD{"$"}
-        BND{"$"}
-        BOB{"Bs"}
-        BRL{"R$"}
-        BSD{"$"}
-        BWP{"P"}
         BYN{"p."}
-        BZD{"$"}
-        CAD{"$"}
-        CLP{"$"}
-        CNY{"¥"}
-        COP{"$"}
-        CRC{"₡"}
-        CUC{"$"}
-        CUP{"$"}
-        CZK{"Kč"}
-        DKK{"kr"}
-        DOP{"$"}
-        EGP{"E£"}
-        EUR{"€"}
-        FJD{"$"}
-        FKP{"£"}
-        GBP{"£"}
-        GEL{"₾"}
-        GIP{"£"}
-        GNF{"FG"}
-        GTQ{"Q"}
-        GYD{"$"}
-        HKD{"$"}
-        HNL{"L"}
-        HRK{"kn"}
-        HUF{"Ft"}
-        IDR{"Rp"}
-        ILS{"₪"}
-        INR{"₹"}
-        ISK{"kr"}
-        JMD{"$"}
-        JPY{"¥"}
-        KHR{"៛"}
-        KMF{"CF"}
-        KPW{"₩"}
-        KRW{"₩"}
-        KYD{"$"}
-        KZT{"₸"}
-        LAK{"₭"}
-        LBP{"L£"}
-        LKR{"Rs"}
-        LRD{"$"}
-        MGA{"Ar"}
-        MMK{"K"}
-        MNT{"₮"}
-        MUR{"Rs"}
-        MXN{"$"}
-        MYR{"RM"}
-        NAD{"$"}
-        NGN{"₦"}
-        NIO{"C$"}
-        NOK{"kr"}
-        NPR{"Rs"}
-        NZD{"$"}
-        PHP{"₱"}
-        PKR{"Rs"}
-        PLN{"zł"}
-        PYG{"₲"}
-        RON{"lei"}
-        RUB{"₽"}
-        RWF{"RF"}
-        SBD{"$"}
-        SEK{"kr"}
-        SGD{"$"}
-        SHP{"£"}
-        SRD{"$"}
-        SSP{"£"}
-        STN{"Db"}
-        SYP{"£"}
-        THB{"฿"}
-        TOP{"T$"}
-        TRY{"₺"}
-        TTD{"$"}
-        TWD{"$"}
-        UAH{"₴"}
-        USD{"$"}
-        UYU{"$"}
-        VND{"₫"}
-        XCD{"$"}
-        ZAR{"R"}
-        ZMW{"ZK"}
-    }
-    Currencies%variant{
-        TRY{"TL"}
     }
     CurrencyPlurals{
         AED{
@@ -739,53 +648,25 @@ pcm{
             one{"Afgán afgáni"}
             other{"Afgán afgánis"}
         }
-        ALL{
-            one{"Albéniá Lẹk"}
-            other{"Albéniá Lẹk"}
-        }
         AMD{
             one{"Armẹ́nia ́dram"}
             other{"Armẹ́niá drams"}
-        }
-        ANG{
-            one{"Nẹ́dalánds Antílián Gílda"}
-            other{"Nẹ́dalánds Antílián Gílda"}
         }
         AOA{
             one{"Angólá kwánza"}
             other{"Angólá kwánzas"}
         }
-        ARS{
-            one{"Ajẹntína Pẹ́so"}
-            other{"Ajẹntína Pẹ́so"}
-        }
         AUD{
             one{"Ọstréliá dọ́la"}
             other{"Ọstréliá dọ́las"}
-        }
-        AWG{
-            one{"Arúba Flọ́rin"}
-            other{"Arúba Flọ́rin"}
         }
         AZN{
             one{"Azẹrbaiján mánat"}
             other{"Azẹrbaiján mánats"}
         }
-        BAM{
-            one{"Bọ́sniá an Hẹzẹgovína Mak Wé Pẹ́sin Fít Chenj"}
-            other{"Bọ́sniá an Hẹzẹgovína Mak Wé Pẹ́sin Fít Chenj"}
-        }
-        BBD{
-            one{"Barbédọs Dọ́la"}
-            other{"Barbédọs Dọ́la"}
-        }
         BDT{
             one{"Bangladẹ́sh táka"}
             other{"Bangladẹ́sh táka"}
-        }
-        BGN{
-            one{"Bọlgériá Lẹv"}
-            other{"Bọlgériá Lẹv"}
         }
         BHD{
             one{"Baréin dínar"}
@@ -795,25 +676,9 @@ pcm{
             one{"Burúndí frank"}
             other{"Burúndí franks"}
         }
-        BMD{
-            one{"Bẹmiúda Dọ́la"}
-            other{"Bẹmiúda Dọ́la"}
-        }
         BND{
             one{"Brunẹí dọ́la"}
             other{"Brunẹí dọ́las"}
-        }
-        BOB{
-            one{"Bolíviá Boliviáno"}
-            other{"Bolíviá Boliviáno"}
-        }
-        BRL{
-            one{"Brazíl Rẹal"}
-            other{"Brazíl Rẹal"}
-        }
-        BSD{
-            one{"Bahámas Dọ́la"}
-            other{"Bahámas Dọ́la"}
         }
         BTN{
             one{"Bután ngúltrum"}
@@ -823,29 +688,9 @@ pcm{
             one{"Botswáná púla"}
             other{"Botswáná púlas"}
         }
-        BYN{
-            one{"Bẹlarús Rúbul"}
-            other{"Bẹlarús Rúbul"}
-        }
-        BZD{
-            one{"Bẹliz Dọ́la"}
-            other{"Bẹliz Dọ́la"}
-        }
-        CAD{
-            one{"Kánádá Dọ́la"}
-            other{"Kánádá Dọ́la"}
-        }
         CDF{
             one{"Kóngó frank"}
             other{"Kóngó franks"}
-        }
-        CHF{
-            one{"Swís Frank"}
-            other{"Swís Frank"}
-        }
-        CLP{
-            one{"Chílí Pẹ́so"}
-            other{"Chílí Pẹ́so"}
         }
         CNH{
             one{"Chaíná yuan (ples-dẹm aúsaíd chaína)"}
@@ -859,45 +704,13 @@ pcm{
             one{"Kolómbiá pẹ́so"}
             other{"Kolómbiá pẹ́sos"}
         }
-        CRC{
-            one{"Kósta Ríka Kólọn"}
-            other{"Kósta Ríka Kólọn"}
-        }
-        CUC{
-            one{"Kiúbá Pẹ́so Wé Pẹ́sin Fít Chenj"}
-            other{"Kiúbá Pẹ́so Wé Pẹ́sin Fít Chenj"}
-        }
-        CUP{
-            one{"Kiúbá Pẹ́so"}
-            other{"Kiúbá Pẹ́so"}
-        }
         CVE{
             one{"Kép Vẹ́d ẹskúdo"}
             other{"Kép Vẹ́d ẹskúdos"}
         }
-        CZK{
-            one{"Chẹ́k Kórúna"}
-            other{"Chẹ́k Kórúna"}
-        }
         DJF{
             one{"Jibútí frank"}
             other{"Jibútí franks"}
-        }
-        DKK{
-            one{"Dẹ́nmák Króna"}
-            other{"Dẹ́nmák Króna"}
-        }
-        DOP{
-            one{"Dọmíníkan Pẹ́so"}
-            other{"Dọmíníkan Pẹ́so"}
-        }
-        DZD{
-            one{"Aljíria Dínar"}
-            other{"Aljíria Dínar"}
-        }
-        EGP{
-            one{"Íjípt Paund"}
-            other{"Íjípt Paund"}
         }
         ERN{
             one{"Ẹritrẹá nákfa"}
@@ -919,10 +732,6 @@ pcm{
             one{"Fọlkland Aílands paund"}
             other{"Fọlkland Aílands paunds"}
         }
-        GBP{
-            one{"Brítísh Páund"}
-            other{"Brítísh Páund"}
-        }
         GEL{
             one{"Jọ́jiá lári"}
             other{"Jọ́jiá láris"}
@@ -930,10 +739,6 @@ pcm{
         GHS{
             one{"Ganá sídi"}
             other{"Ganá sídis"}
-        }
-        GIP{
-            one{"Jibrọ́lta Páund"}
-            other{"Jibrọ́lta Páund"}
         }
         GMD{
             one{"Gámbiá dalási"}
@@ -943,10 +748,6 @@ pcm{
             one{"Gíní frank"}
             other{"Gíní franks"}
         }
-        GTQ{
-            one{"Guátẹmála Kwuẹ́tzal"}
-            other{"Guátẹmála Kwuẹ́tzal"}
-        }
         GYD{
             one{"Giyána dọ́la"}
             other{"Giyána dọ́las"}
@@ -954,22 +755,6 @@ pcm{
         HKD{
             one{"Họng Kọ́ng dọ́la"}
             other{"Họng Kọ́ng dọ́las"}
-        }
-        HNL{
-            one{"Họndúrán Lẹmpíra"}
-            other{"Họndúrán Lẹmpíra"}
-        }
-        HRK{
-            one{"Kroéshia Kúna"}
-            other{"Kroéshia Kúna"}
-        }
-        HTG{
-            one{"Haíti Gourd"}
-            other{"Haíti Gourd"}
-        }
-        HUF{
-            one{"Họngériá Fọ́rint"}
-            other{"Họngériá Fọ́rint"}
         }
         IDR{
             one{"Indoníshiá rupia"}
@@ -990,14 +775,6 @@ pcm{
         IRR{
             one{"Irán rial"}
             other{"Irán rials"}
-        }
-        ISK{
-            one{"Aíslánd Króna"}
-            other{"Aíslánd Króna"}
-        }
-        JMD{
-            one{"Jamaíka Dọla"}
-            other{"Jamaíka Dọla"}
         }
         JOD{
             one{"Jọ́dán dínar"}
@@ -1035,10 +812,6 @@ pcm{
             one{"Kuwét dínar"}
             other{"Kuwét dínars"}
         }
-        KYD{
-            one{"Kéman Aílands Dọla"}
-            other{"Kéman Aílands Dọla"}
-        }
         KZT{
             one{"Kazakstan tẹ́nj"}
             other{"Kazakstan tẹ́njs"}
@@ -1063,25 +836,9 @@ pcm{
             one{"Lẹsóto Lọ́ti"}
             other{"Lẹsóto Lọ́tis"}
         }
-        LYD{
-            one{"Líbia Dínar"}
-            other{"Líbia Dínar"}
-        }
-        MAD{
-            one{"Morọko Dírham"}
-            other{"Morọko Dírham"}
-        }
-        MDL{
-            one{"Mọldóva Lu"}
-            other{"Mọldóva Lu"}
-        }
         MGA{
             one{"Malagásí ariári"}
             other{"Malagásí ariáris"}
-        }
-        MKD{
-            one{"Masẹdónia Dínar"}
-            other{"Masẹdónia Dínar"}
         }
         MMK{
             one{"Miánmá kiat"}
@@ -1111,10 +868,6 @@ pcm{
             one{"Maláwi ́kwácha"}
             other{"Maláwí kwáchas"}
         }
-        MXN{
-            one{"Mẹ́ksíko Pẹ́so"}
-            other{"Mẹ́ksíko Pẹ́so"}
-        }
         MYR{
             one{"Maléshiá ríngit"}
             other{"Maléshiá ríngits"}
@@ -1131,14 +884,6 @@ pcm{
             one{"Naijíriá naíra"}
             other{"Naijíriá naíras"}
         }
-        NIO{
-            one{"Nikarágwua Kordóba"}
-            other{"Nikarágwua Kordóba"}
-        }
-        NOK{
-            one{"Nọ́wé Króna"}
-            other{"Nọ́wé Króna"}
-        }
         NPR{
             one{"Nẹ́pál rúpi"}
             other{"Nẹ́pál rúpis"}
@@ -1150,14 +895,6 @@ pcm{
         OMR{
             one{"Omán rial"}
             other{"Omán rials"}
-        }
-        PAB{
-            one{"Pánáma Balbóa"}
-            other{"Pánáma Balbóa"}
-        }
-        PEN{
-            one{"Pẹrúvián Sol"}
-            other{"Pẹrúvián Sol"}
         }
         PGK{
             one{"Pápuá Niú Gíni kína"}
@@ -1171,29 +908,9 @@ pcm{
             one{"Pakístán rúpi"}
             other{"Pakístán rúpis"}
         }
-        PLN{
-            one{"Pólánd Zílọ́ti"}
-            other{"Pólánd Zílọ́ti"}
-        }
-        PYG{
-            one{"Páragwuá Guaráni"}
-            other{"Páragwuá Guaráni"}
-        }
         QAR{
             one{"Kata ríal"}
             other{"Kata ríals"}
-        }
-        RON{
-            one{"Roméniá Lu"}
-            other{"Roméniá Lu"}
-        }
-        RSD{
-            one{"Sẹrbia Dínar"}
-            other{"Sẹrbia Dínar"}
-        }
-        RUB{
-            one{"Rọ́shiá Rúbul"}
-            other{"Rọ́shiá Rúbul"}
         }
         RWF{
             one{"Ruwándá frank"}
@@ -1211,14 +928,6 @@ pcm{
             one{"Sẹ́chẹ́ls rúpi"}
             other{"Sẹ́chẹ́ls rúpis"}
         }
-        SDG{
-            one{"Sudan Paund"}
-            other{"Sudan Paund"}
-        }
-        SEK{
-            one{"Swídẹ́n Króna"}
-            other{"Swídẹ́n Króna"}
-        }
         SGD{
             one{"Singapọ́ dọ́la"}
             other{"Singapọ́ dọ́las"}
@@ -1227,17 +936,17 @@ pcm{
             one{"Sent Hẹlẹ́ná paund"}
             other{"Sent Hẹlẹ́ná paunds"}
         }
-        SLL{
+        SLE{
             one{"Siẹ́ra Líoniá liọn"}
             other{"Siẹ́ra Líoniá liọns"}
+        }
+        SLL{
+            one{"Siẹ́ra Líoniá liọn (1964—2022)"}
+            other{"Siẹ́ra Líoniá liọns (1964—2022)"}
         }
         SOS{
             one{"Sọmáliá shílin"}
             other{"Sọmáliá shílins"}
-        }
-        SRD{
-            one{"Súrínám Dọla"}
-            other{"Súrínám Dọla"}
         }
         SSP{
             one{"Saút Sudán paund"}
@@ -1267,10 +976,6 @@ pcm{
             one{"Tọkmẹ́nístán mánat"}
             other{"Tọkmẹ́nístán mánats"}
         }
-        TND{
-            one{"Tuníshia Dínar"}
-            other{"Tuníshia Dínar"}
-        }
         TOP{
             one{"Tónga pánga"}
             other{"Tónga pángas"}
@@ -1278,10 +983,6 @@ pcm{
         TRY{
             one{"Tọ́kí líra"}
             other{"Tọ́kí líras"}
-        }
-        TTD{
-            one{"Trínídad & Tobágo Dọ́la"}
-            other{"Trínídad & Tobágo Dọ́la"}
         }
         TWD{
             one{"Niú Taiwán dọ́la"}
@@ -1291,10 +992,6 @@ pcm{
             one{"Tanzániá shílin"}
             other{"Tanzániá shílins"}
         }
-        UAH{
-            one{"Yukrẹín Rívnia"}
-            other{"Yukrẹín Rívnia"}
-        }
         UGX{
             one{"Yugándá shílin"}
             other{"Yugándá shílins"}
@@ -1303,17 +1000,9 @@ pcm{
             one{"US Dọ́la"}
             other{"Amẹ́ríká Dọ́la"}
         }
-        UYU{
-            one{"Yurugwaí Pẹ́so"}
-            other{"Yurugwaí Pẹ́so"}
-        }
         UZS{
             one{"Uzbẹ́kistan som"}
             other{"Uzbẹ́kistan soms"}
-        }
-        VES{
-            one{"Vẹnẹzuẹlá Bolívar"}
-            other{"Vẹnẹzuẹlá Bolívar"}
         }
         VND{
             one{"Viẹ́tnám dọng"}
@@ -1330,10 +1019,6 @@ pcm{
         XAF{
             one{"Sẹ́ntrál Áfríká frank"}
             other{"Sẹ́ntrál Áfríká franks"}
-        }
-        XCD{
-            one{"Íst Karíbián Dọla"}
-            other{"Íst Karíbián Dọla"}
         }
         XOF{
             one{"Wẹ́st Afríká Sẹ́fa frank"}

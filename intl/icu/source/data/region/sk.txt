@@ -298,6 +298,9 @@ sk{
         ZW{"Zimbabwe"}
         ZZ{"neznámy región"}
     }
+    Countries%chagos{
+        IO{"Čagoské ostrovy"}
+    }
     Countries%short{
         GB{"UK"}
         HK{"Hongkong"}
@@ -311,6 +314,7 @@ sk{
         CG{"Kongo (republika)"}
         CZ{"Česká republika"}
         FK{"Falklandy (Malvíny)"}
+        NZ{"Aotearoa – Nový Zéland"}
         SZ{"Svazijsko"}
     }
 }

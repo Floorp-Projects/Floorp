@@ -12,9 +12,6 @@ smn{
             }
             microsecond{
                 dnam{"mikrosekunteh"}
-                one{"{0} μs"}
-                other{"{0} μs"}
-                two{"{0} μs"}
             }
             millisecond{
                 dnam{"millisekunteh"}

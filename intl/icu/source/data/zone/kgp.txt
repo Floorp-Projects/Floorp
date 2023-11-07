@@ -729,9 +729,6 @@ kgp{
         "Asia:Irkutsk"{
             ec{"Irkutinhki"}
         }
-        "Asia:Jakarta"{
-            ec{"Jakarta"}
-        }
         "Asia:Jayapura"{
             ec{"Jaiapura"}
         }
@@ -1058,9 +1055,6 @@ kgp{
         "Europe:Prague"{
             ec{"Praga"}
         }
-        "Europe:Riga"{
-            ec{"Riga"}
-        }
         "Europe:Rome"{
             ec{"Romỹ"}
         }
@@ -1184,9 +1178,6 @@ kgp{
         "Pacific:Fakaofo"{
             ec{"Fakaofu"}
         }
-        "Pacific:Fiji"{
-            ec{"Fiji"}
-        }
         "Pacific:Funafuti"{
             ec{"Funỹfuti"}
         }
@@ -1237,9 +1228,6 @@ kgp{
         }
         "Pacific:Noumea"{
             ec{"Nãumẽa"}
-        }
-        "Pacific:Pago_Pago"{
-            ec{"Pago Pago"}
         }
         "Pacific:Palau"{
             ec{"Parav"}
@@ -1925,10 +1913,6 @@ kgp{
             lg{"Óra Ekaterĩnmurgu tá"}
             ls{"Óra Pã Ekaterĩnmurgu tá"}
         }
-        fallbackFormat{"{1} ({0})"}
-        gmtFormat{"GMT{0}"}
-        gmtZeroFormat{"GMT"}
-        hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"Óra kar {0}"}
         regionFormatDaylight{"Prỹg kã óra kar {0}"}
         regionFormatStandard{"Óra pẽ {0}"}

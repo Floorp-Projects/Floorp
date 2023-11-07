@@ -933,10 +933,8 @@ yo{
         "meta:Yukon"{
             ls{"Àkókò Yúkọ́nì"}
         }
-        fallbackFormat{"{1} ({0})"}
         gmtFormat{"WAT{0}"}
         gmtZeroFormat{"WAT"}
-        hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"Ìgbà {0}"}
         regionFormatDaylight{"{0} Àkókò ojúmọmọ"}
         regionFormatStandard{"{0} Ìlànà Àkókò"}

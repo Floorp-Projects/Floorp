@@ -55,10 +55,7 @@ tg{
         "meta:GMT"{
             ls{"Вақти миёнаи Гринвич"}
         }
-        fallbackFormat{"{1} ({0})"}
-        gmtFormat{"Вақти GMT {0}"}
         gmtZeroFormat{"Вақти GMT"}
-        hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"Вақти {0}"}
         regionFormatDaylight{"Вақти рӯзонаи {0}"}
         regionFormatStandard{"Вақти стандартии {0}"}

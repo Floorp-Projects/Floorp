@@ -82,7 +82,6 @@ fo{
         dar{"dargwa"}
         dav{"taita"}
         de{"týskt"}
-        de_AT{"týskt (Eysturríki)"}
         de_CH{"høgt týskt (Sveis)"}
         dgr{"dogrib"}
         dje{"sarma"}
@@ -98,15 +97,8 @@ fo{
         eka{"ekajuk"}
         el{"grikskt"}
         en{"enskt"}
-        en_AU{"enskt (Avstralia)"}
-        en_CA{"enskt (Kanada)"}
-        en_GB{"enskt (Stórabretland)"}
-        en_US{"enskt (Sambandsríki Amerika)"}
         eo{"esperanto"}
         es{"spanskt"}
-        es_419{"spanskt (Latínamerika)"}
-        es_ES{"spanskt (Spania)"}
-        es_MX{"spanskt (Meksiko)"}
         et{"estiskt"}
         eu{"baskiskt"}
         ewo{"ewondo"}
@@ -119,8 +111,6 @@ fo{
         fo{"føroyskt"}
         fon{"fon"}
         fr{"franskt"}
-        fr_CA{"franskt (Kanada)"}
-        fr_CH{"franskt (Sveis)"}
         fur{"friuliskt"}
         fy{"vestur frísiskt"}
         ga{"írskt"}
@@ -434,11 +424,10 @@ fo{
     }
     Languages%short{
         az{"azeri"}
-        en_GB{"enskt (UK)"}
-        en_US{"enskt (USA)"}
     }
     Languages%variant{
         ckb{"kurdiskt, sorani"}
+        hi_Latn{"hinglish"}
     }
     Scripts{
         Arab{"arabisk"}
@@ -498,7 +487,6 @@ fo{
             ethiopic{"etiopiskur kalendari"}
             gregorian{"gregorianskur kalendari"}
             hebrew{"hebraiskur kalendari"}
-            islamic{"islamiskur kalendari"}
             iso8601{"ISO-8601 kalendari"}
             japanese{"japanskur kalendari"}
             persian{"persiskur kalendari"}
@@ -576,7 +564,6 @@ fo{
     }
     characterLabelPattern{
         all{"{0} — Alt"}
-        category-list{"{0}: {1}"}
         compatibility{"{0} — Sambæri"}
         enclosed{"{0} — Girða"}
         extended{"{0} — Víðkað"}
@@ -595,10 +582,5 @@ fo{
         language{"Mál: {0}"}
         script{"Skrift: {0}"}
         territory{"Øki: {0}"}
-    }
-    localeDisplayPattern{
-        keyTypePattern{"{0}: {1}"}
-        pattern{"{0} ({1})"}
-        separator{"{0}, {1}"}
     }
 }

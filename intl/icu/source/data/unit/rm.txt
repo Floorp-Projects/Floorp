@@ -2,18 +2,11 @@
 // License & terms of use: http://www.unicode.org/copyright.html
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 rm{
-    durationUnits{
-        hm{"h:mm"}
-        hms{"h:mm:ss"}
-        ms{"m:ss"}
-    }
     units{
         compound{
             per{"{0} per {1}"}
-            times{"{0}⋅{1}"}
         }
         coordinate{
-            dnam{"direcziun"}
             east{"{0} ost"}
             north{"{0} nord"}
             south{"{0} sid"}
@@ -77,52 +70,24 @@ rm{
             }
         }
         duration{
-            day{
-                dnam{"dis"}
-                one{"{0} di"}
-                other{"{0} dis"}
-            }
-            hour{
-                dnam{"uras"}
-                one{"{0} ura"}
-                other{"{0} uras"}
-            }
             millisecond{
                 dnam{"millisecundas"}
                 one{"{0} millisecunda"}
                 other{"{0} millisecundas"}
             }
             minute{
-                dnam{"minutas"}
                 one{"{0} minuta"}
                 other{"{0} minutas"}
                 per{"{0} per minuta"}
             }
-            month{
-                dnam{"mais"}
-                one{"{0} mais"}
-                other{"{0} mais"}
-            }
             second{
-                dnam{"secundas"}
                 one{"{0} secunda"}
                 other{"{0} secundas"}
                 per{"{0} per secunda"}
             }
-            week{
-                dnam{"emnas"}
-                one{"{0} emna"}
-                other{"{0} emnas"}
-            }
-            year{
-                dnam{"onns"}
-                one{"{0} onn"}
-                other{"{0} onns"}
-            }
         }
         graphics{
             pixel{
-                dnam{"pixels"}
                 one{"{0} pixel"}
                 other{"{0} pixels"}
             }
@@ -139,7 +104,6 @@ rm{
                 other{"{0} kilometers"}
             }
             meter{
-                dnam{"meters"}
                 one{"{0} meter"}
                 other{"{0} meters"}
             }
@@ -151,7 +115,6 @@ rm{
         }
         mass{
             gram{
-                dnam{"grams"}
                 one{"{0} gram"}
                 other{"{0} grams"}
             }
@@ -177,7 +140,6 @@ rm{
         }
         volume{
             liter{
-                dnam{"liters"}
                 one{"{0} liter"}
                 other{"{0} liters"}
                 per{"{0} per liter"}
@@ -185,14 +147,8 @@ rm{
         }
     }
     unitsNarrow{
-        compound{
-            per{"{0}/{1}"}
-            times{"{0}⋅{1}"}
-        }
         coordinate{
-            dnam{"direcziun"}
             east{"{0}O"}
-            north{"{0} N"}
             south{"{0}S"}
             west{"{0}V"}
         }
@@ -208,7 +164,6 @@ rm{
                 other{"{0} uras"}
             }
             millisecond{
-                dnam{"ms"}
                 one{"{0}ms"}
                 other{"{0}ms"}
             }
@@ -216,11 +171,6 @@ rm{
                 dnam{"min"}
                 one{"{0} mins."}
                 other{"{0} mins."}
-            }
-            month{
-                dnam{"mais"}
-                one{"{0} mais"}
-                other{"{0} mais"}
             }
             second{
                 dnam{"sec"}
@@ -246,12 +196,10 @@ rm{
         }
         length{
             centimeter{
-                dnam{"cm"}
                 one{"{0}cm"}
                 other{"{0}cm"}
             }
             kilometer{
-                dnam{"km"}
                 one{"{0}km"}
                 other{"{0}km"}
             }
@@ -261,7 +209,6 @@ rm{
                 other{"{0}m"}
             }
             millimeter{
-                dnam{"mm"}
                 one{"{0}mm"}
                 other{"{0}mm"}
             }
@@ -269,25 +216,15 @@ rm{
         mass{
             gram{
                 dnam{"gram"}
-                one{"{0} g"}
-                other{"{0} g"}
-            }
-            kilogram{
-                dnam{"kg"}
-                one{"{0} kg"}
-                other{"{0} kg"}
             }
         }
         speed{
             kilometer-per-hour{
                 dnam{"km/h"}
-                one{"{0} km/h"}
-                other{"{0} km/h"}
             }
         }
         temperature{
             celsius{
-                dnam{"°C"}
                 one{"{0}°C"}
                 other{"{0}°C"}
             }
@@ -307,8 +244,6 @@ rm{
             }
             liter{
                 dnam{"liter"}
-                one{"{0} l"}
-                other{"{0} l"}
             }
         }
     }
@@ -321,58 +256,32 @@ rm{
             west{"{0} V"}
         }
         digital{
-            bit{
-                one{"{0} bit"}
-                other{"{0} bit"}
-            }
-            byte{
-                one{"{0} byte"}
-                other{"{0} byte"}
-            }
             gigabit{
                 dnam{"Gbit"}
-                one{"{0} Gb"}
-                other{"{0} Gb"}
             }
             gigabyte{
                 dnam{"GByte"}
-                one{"{0} GB"}
-                other{"{0} GB"}
             }
             kilobit{
                 dnam{"kbit"}
-                one{"{0} kb"}
-                other{"{0} kb"}
             }
             kilobyte{
                 dnam{"kByte"}
-                one{"{0} kB"}
-                other{"{0} kB"}
             }
             megabit{
                 dnam{"Mbit"}
-                one{"{0} Mb"}
-                other{"{0} Mb"}
             }
             megabyte{
                 dnam{"MByte"}
-                one{"{0} MB"}
-                other{"{0} MB"}
             }
             petabyte{
                 dnam{"PByte"}
-                one{"{0} PB"}
-                other{"{0} PB"}
             }
             terabit{
                 dnam{"Tbit"}
-                one{"{0} Tb"}
-                other{"{0} Tb"}
             }
             terabyte{
                 dnam{"TByte"}
-                one{"{0} TB"}
-                other{"{0} TB"}
             }
         }
         duration{
@@ -385,11 +294,6 @@ rm{
                 dnam{"uras"}
                 one{"{0} ura"}
                 other{"{0} uras"}
-            }
-            millisecond{
-                dnam{"ms"}
-                one{"{0} ms"}
-                other{"{0} ms"}
             }
             minute{
                 dnam{"minutas"}
@@ -420,54 +324,25 @@ rm{
         graphics{
             pixel{
                 dnam{"pixels"}
-                one{"{0} px"}
-                other{"{0} px"}
             }
         }
         length{
-            centimeter{
-                dnam{"cm"}
-                one{"{0} cm"}
-                other{"{0} cm"}
-            }
-            kilometer{
-                dnam{"km"}
-                one{"{0} km"}
-                other{"{0} km"}
-            }
             meter{
                 dnam{"meters"}
-                one{"{0} m"}
-                other{"{0} m"}
-            }
-            millimeter{
-                dnam{"mm"}
-                one{"{0} mm"}
-                other{"{0} mm"}
             }
         }
         mass{
             gram{
                 dnam{"grams"}
-                one{"{0} g"}
-                other{"{0} g"}
-            }
-            kilogram{
-                dnam{"kg"}
-                one{"{0} kg"}
-                other{"{0} kg"}
             }
         }
         speed{
             kilometer-per-hour{
                 dnam{"km/ura"}
-                one{"{0} km/h"}
-                other{"{0} km/h"}
             }
         }
         temperature{
             celsius{
-                dnam{"°C"}
                 one{"{0} °C"}
                 other{"{0} °C"}
             }
@@ -475,8 +350,6 @@ rm{
         volume{
             liter{
                 dnam{"liters"}
-                one{"{0} l"}
-                other{"{0} l"}
             }
         }
     }

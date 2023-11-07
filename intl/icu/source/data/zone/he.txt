@@ -1938,9 +1938,7 @@ he{
         "meta:Yukon"{
             ls{"שעון יוקון"}
         }
-        fallbackFormat{"{1} ({0})"}
         gmtFormat{"GMT{0}‎"}
-        gmtZeroFormat{"GMT"}
         hourFormat{"‎+HH:mm;-HH:mm‎"}
         regionFormat{"שעון {0}"}
         regionFormatDaylight{"שעון {0} (קיץ)"}

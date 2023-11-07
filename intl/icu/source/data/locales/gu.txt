@@ -3,65 +3,29 @@
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 gu{
     AuxExemplarCharacters{"[\u200C\u200D ૰]"}
-    Ellipsis{
-        final{"{0}…"}
-        initial{"…{0}"}
-        medial{"{0}…{1}"}
-        word-final{"{0} …"}
-        word-initial{"… {0}"}
-        word-medial{"{0} … {1}"}
-    }
     ExemplarCharacters{
-        "[\u0ABC ૐ \u0A82 \u0A81 ઃ અ આ ઇ ઈ ઉ ઊ ઋ ૠ ઍ એ ઐ ઑ ઓ ઔ ક ખ ગ ઘ ઙ ચ છ જ ઝ ઞ ટ "
-        "ઠ ડ ઢ ણ ત થ દ ધ ન પ ફ બ ભ મ ય ર લ વ શ ષ સ હ ળ ઽ ા િ ી \u0AC1 \u0AC2 \u0AC3 "
-        "\u0AC4 \u0AC5 \u0AC7 \u0AC8 ૉ ો ૌ \u0ACD]"
+        "[઼ ૐ ં ઁ ઃ અ આ ઇ ઈ ઉ ઊ ઋ ૠ ઍ એ ઐ ઑ ઓ ઔ ક ખ ગ ઘ ઙ ચ છ જ ઝ ઞ ટ ઠ ડ ઢ ણ ત થ દ ધ"
+        " ન પ ફ બ ભ મ ય ર લ વ શ ષ સ હ ળ ઽ ા િ ી ુ ૂ ૃ ૄ ૅ ે ૈ ૉ ો ૌ ્]"
     }
     ExemplarCharactersIndex{
-        "[અ {અ\u0A82} {અઃ} આ ઇ ઈ ઉ ઊ ઋ ઍ એ ઐ ઑ ઓ ઔ ક {ક\u0ACDષ} ખ ગ ઘ ઙ ચ છ જ {જ"
-        "\u0ACDઞ} ઝ ઞ ટ ઠ ડ ઢ ણ ત {ત\u0ACDર} થ દ ધ ન પ ફ બ ભ મ ય ર લ વ શ ષ સ હ ળ]"
+        "[અ {અં} {અઃ} આ ઇ ઈ ઉ ઊ ઋ ઍ એ ઐ ઑ ઓ ઔ ક {ક્ષ} ખ ગ ઘ ઙ ચ છ જ {જ્ઞ} ઝ ઞ ટ ઠ ડ ઢ"
+        " ણ ત {ત્ર} થ દ ધ ન પ ફ બ ભ મ ય ર લ વ શ ષ સ હ ળ]"
     }
     ExemplarCharactersNumbers{"[\\- ‑ , . % ‰ + 0૦ 1૧ 2૨ 3૩ 4૪ 5૫ 6૬ 7૭ 8૮ 9૯]"}
-    ExemplarCharactersPunctuation{
-        "[\\- ‐ ‑ – — , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” ( ) \\[ \\] § @ * / \\& # † ‡ "
-        "′ ″]"
-    }
-    MoreInformation{"?"}
+    ExemplarCharactersPunctuation{"[\\- ‐‑ – — , ; \\: ! ? . … '‘’ \u0022“” ( ) \\[ \\] § @ * / \\& # † ‡ ′ ″]"}
     NumberElements{
-        arab{
-            symbols{
-                decimal{"٫"}
-            }
-        }
-        default{"latn"}
         gujr{
             patterns{
                 currencyFormat{"¤#,##0.00"}
                 currencyFormat%alphaNextToNumber{"¤ #,##0.00"}
                 currencyFormat%noCurrency{"#,##0.00"}
-                decimalFormat{"#,##,##0.###"}
                 percentFormat{"#,##0%"}
                 scientificFormat{"#E0"}
-            }
-            symbols{
-                approximatelySign{"~"}
-                decimal{"."}
-                exponential{"E"}
-                group{","}
-                infinity{"∞"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         latn{
             miscPatterns{
-                approximately{"~{0}"}
                 atLeast{"{0}+"}
-                atMost{"≤{0}"}
                 range{"{0}-{1}"}
             }
             patterns{
@@ -278,20 +242,6 @@ gu{
                     }
                 }
             }
-            symbols{
-                decimal{"."}
-                exponential{"E"}
-                group{","}
-                infinity{"∞"}
-                list{";"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
-            }
         }
         minimalPairs{
             case{
@@ -320,117 +270,18 @@ gu{
                 other{"{0} કિલોગ્રામ્સ"}
             }
         }
-        minimumGroupingDigits{"1"}
         native{"gujr"}
     }
     calendar{
-        buddhist{
-            eras{
-                abbreviated{
-                    "BE",
-                }
-                narrow{
-                    "BE",
-                }
-                wide{
-                    "BE",
-                }
-            }
-        }
         coptic{
             eras{
                 abbreviated{
                     "એરા0",
                     "એરા1",
                 }
-                narrow{
-                    "એરા0",
-                    "એરા1",
-                }
-                wide{
-                    "એરા0",
-                    "એરા1",
-                }
             }
             monthNames{
                 format{
-                    abbreviated{
-                        "ટૉટ",
-                        "બાબા",
-                        "હેટોર",
-                        "કિયાક",
-                        "ટોબા",
-                        "અમશિર",
-                        "બારમ્હાટ",
-                        "બારમુઉડા",
-                        "બાશાન્સ",
-                        "પાઓના",
-                        "ઈપેપ",
-                        "મેસ્રા",
-                        "નાસીઈ",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10",
-                        "11",
-                        "12",
-                        "13",
-                    }
-                    wide{
-                        "ટૉટ",
-                        "બાબા",
-                        "હેટોર",
-                        "કિયાક",
-                        "ટોબા",
-                        "અમશિર",
-                        "બારમ્હાટ",
-                        "બારમુઉડા",
-                        "બાશાન્સ",
-                        "પાઓના",
-                        "ઈપેપ",
-                        "મેસ્રા",
-                        "નાસીઈ",
-                    }
-                }
-                stand-alone{
-                    abbreviated{
-                        "ટૉટ",
-                        "બાબા",
-                        "હેટોર",
-                        "કિયાક",
-                        "ટોબા",
-                        "અમશિર",
-                        "બારમ્હાટ",
-                        "બારમુઉડા",
-                        "બાશાન્સ",
-                        "પાઓના",
-                        "ઈપેપ",
-                        "મેસ્રા",
-                        "નાસીઈ",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10",
-                        "11",
-                        "12",
-                        "13",
-                    }
                     wide{
                         "ટૉટ",
                         "બાબા",
@@ -455,94 +306,9 @@ gu{
                     "એરા0",
                     "એરા1",
                 }
-                narrow{
-                    "એરા0",
-                    "એરા1",
-                }
-                wide{
-                    "એરા0",
-                    "એરા1",
-                }
             }
             monthNames{
                 format{
-                    abbreviated{
-                        "મેસ્કેરેમ",
-                        "ટેકેમ્ટ",
-                        "હેડાર",
-                        "તાહસાસ",
-                        "તેર",
-                        "યેકાતીત",
-                        "મેગાબીટ",
-                        "મિયાઝિયા",
-                        "ગેનબોટ",
-                        "સેને",
-                        "હેમલે",
-                        "નેહાસ્સે",
-                        "પેગુમેન",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10",
-                        "11",
-                        "12",
-                        "13",
-                    }
-                    wide{
-                        "મેસ્કેરેમ",
-                        "ટેકેમ્ટ",
-                        "હેડાર",
-                        "તાહસાસ",
-                        "તેર",
-                        "યેકાતીત",
-                        "મેગાબીટ",
-                        "મિયાઝિયા",
-                        "ગેનબોટ",
-                        "સેને",
-                        "હેમલે",
-                        "નેહાસ્સે",
-                        "પેગુમેન",
-                    }
-                }
-                stand-alone{
-                    abbreviated{
-                        "મેસ્કેરેમ",
-                        "ટેકેમ્ટ",
-                        "હેડાર",
-                        "તાહસાસ",
-                        "તેર",
-                        "યેકાતીત",
-                        "મેગાબીટ",
-                        "મિયાઝિયા",
-                        "ગેનબોટ",
-                        "સેને",
-                        "હેમલે",
-                        "નેહાસ્સે",
-                        "પેગુમેન",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10",
-                        "11",
-                        "12",
-                        "13",
-                    }
                     wide{
                         "મેસ્કેરેમ",
                         "ટેકેમ્ટ",
@@ -594,39 +360,18 @@ gu{
                 "GGGGGyMMd",
             }
             availableFormats{
-                Bh{"h B"}
-                Bhm{"h:mm B"}
-                Bhms{"h:mm:ss B"}
-                E{"ccc"}
-                EBhm{"E h:mm B"}
-                EBhms{"E h:mm:ss B"}
-                EHm{"E HH:mm"}
-                EHms{"E HH:mm:ss"}
                 Ed{"E d"}
-                Ehm{"E h:mm a"}
-                Ehms{"E h:mm:ss a"}
-                Gy{"G y"}
                 GyMMM{"MMM G y"}
                 GyMMMEd{"E, d MMM, G y"}
                 GyMMMd{"d, MMM G y"}
-                H{"HH"}
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
-                M{"L"}
                 MEd{"E, d/M"}
-                MMM{"LLL"}
                 MMMEd{"E, d MMM"}
                 MMMMd{"d MMMM"}
                 MMMd{"d MMM"}
                 MMdd{"dd-MM"}
                 Md{"d/M"}
-                d{"d"}
-                h{"h a"}
                 hm{"hh:mm a"}
                 hms{"hh:mm:ss a"}
-                ms{"mm:ss"}
-                y{"G y"}
-                yyyy{"G y"}
                 yyyyM{"M/G y"}
                 yyyyMEd{"E, d/M/G y"}
                 yyyyMM{"MM-y G"}
@@ -666,20 +411,6 @@ gu{
                     d{"GGGGG y-dd-MM – y-dd-MM"}
                     y{"GGGGG y-dd-MM – y-dd-MM"}
                 }
-                H{
-                    H{"HH–HH"}
-                }
-                Hm{
-                    H{"HH:mm–HH:mm"}
-                    m{"HH:mm–HH:mm"}
-                }
-                Hmv{
-                    H{"HH:mm–HH:mm v"}
-                    m{"HH:mm–HH:mm v"}
-                }
-                Hv{
-                    H{"HH–HH v"}
-                }
                 M{
                     M{"M–M"}
                 }
@@ -702,31 +433,7 @@ gu{
                     M{"d/M – d/M"}
                     d{"d/M – d/M"}
                 }
-                d{
-                    d{"d–d"}
-                }
                 fallback{"{0} – {1}"}
-                h{
-                    a{"h a – h a"}
-                    h{"h–h a"}
-                }
-                hm{
-                    a{"h:mm a – h:mm a"}
-                    h{"h:mm–h:mm a"}
-                    m{"h:mm–h:mm a"}
-                }
-                hmv{
-                    a{"h:mm a – h:mm a v"}
-                    h{"h:mm–h:mm a v"}
-                    m{"h:mm–h:mm a v"}
-                }
-                hv{
-                    a{"h a – h a v"}
-                    h{"h–h a v"}
-                }
-                y{
-                    y{"G y–y"}
-                }
                 yM{
                     M{"GGGG M/y – M/y"}
                     y{"GGGG M/y – M/y"}
@@ -738,7 +445,6 @@ gu{
                 }
                 yMMM{
                     M{"G MMM–MMM y"}
-                    y{"G y MMM – y MMM"}
                 }
                 yMMMEd{
                     M{"E,d MMM–E,d MMM G y"}
@@ -762,18 +468,6 @@ gu{
             }
         }
         gregorian{
-            AmPmMarkers{
-                "AM",
-                "PM",
-            }
-            AmPmMarkersAbbr{
-                "AM",
-                "PM",
-            }
-            AmPmMarkersNarrow{
-                "AM",
-                "PM",
-            }
             DateTimePatterns{
                 "hh:mm:ss a zzzz",
                 "hh:mm:ss a z",
@@ -805,33 +499,12 @@ gu{
                 "yMMMd",
                 "yyMd",
             }
-            appendItems{
-                Timezone{"{0} {1}"}
-            }
             availableFormats{
-                Bh{"h B"}
-                Bhm{"h:mm B"}
-                Bhms{"h:mm:ss B"}
-                E{"ccc"}
-                EBhm{"E h:mm B"}
-                EBhms{"E h:mm:ss B"}
-                EHm{"E HH:mm"}
-                EHms{"E HH:mm:ss"}
                 Ed{"E d"}
-                Ehm{"E h:mm a"}
-                Ehms{"E h:mm:ss a"}
-                Gy{"G y"}
                 GyMMM{"MMM, G y"}
                 GyMMMEd{"E, d MMM, G y"}
                 GyMMMd{"d MMM, G y"}
-                H{"HH"}
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
-                Hmsv{"HH:mm:ss v"}
-                Hmv{"HH:mm v"}
-                M{"L"}
                 MEd{"E, d/M"}
-                MMM{"LLL"}
                 MMMEd{"E, d MMM"}
                 MMMMW{
                     one{"MMMMના W અઠવાડિયા"}
@@ -841,14 +514,6 @@ gu{
                 MMMd{"d MMM"}
                 MMdd{"dd-MM"}
                 Md{"d/M"}
-                d{"d"}
-                h{"h a"}
-                hm{"h:mm a"}
-                hms{"h:mm:ss a"}
-                hmsv{"h:mm:ss a v"}
-                hmv{"h:mm a v"}
-                ms{"mm:ss"}
-                y{"y"}
                 yM{"M/y"}
                 yMEd{"E, d/M/y"}
                 yMM{"MM-y"}
@@ -857,8 +522,6 @@ gu{
                 yMMMM{"MMMM y"}
                 yMMMd{"d MMM, y"}
                 yMd{"d/M/y"}
-                yQQQ{"y QQQ"}
-                yQQQQ{"y QQQQ"}
                 yw{
                     one{"Y ના w અઠવાડિયા"}
                     other{"Y ના w અઠવાડિયા"}
@@ -874,15 +537,6 @@ gu{
                         "ગુરુ",
                         "શુક્ર",
                         "શનિ",
-                    }
-                    narrow{
-                        "ર",
-                        "સો",
-                        "મં",
-                        "બુ",
-                        "ગુ",
-                        "શુ",
-                        "શ",
                     }
                     short{
                         "ર",
@@ -904,15 +558,6 @@ gu{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "રવિ",
-                        "સોમ",
-                        "મંગળ",
-                        "બુધ",
-                        "ગુરુ",
-                        "શુક્ર",
-                        "શનિ",
-                    }
                     narrow{
                         "ર",
                         "સો",
@@ -921,24 +566,6 @@ gu{
                         "ગુ",
                         "શુ",
                         "શ",
-                    }
-                    short{
-                        "ર",
-                        "સો",
-                        "મં",
-                        "બુ",
-                        "ગુ",
-                        "શુ",
-                        "શ",
-                    }
-                    wide{
-                        "રવિવાર",
-                        "સોમવાર",
-                        "મંગળવાર",
-                        "બુધવાર",
-                        "ગુરુવાર",
-                        "શુક્રવાર",
-                        "શનિવાર",
                     }
                 }
             }
@@ -958,41 +585,13 @@ gu{
                         morning1{"સવારે"}
                         night1{"રાત્રે"}
                     }
-                    wide{
-                        afternoon1{"બપોરે"}
-                        evening1{"સાંજે"}
-                        midnight{"મધ્યરાત્રિ"}
-                        morning1{"સવારે"}
-                        night1{"રાત્રે"}
-                    }
                 }
                 stand-alone{
-                    abbreviated{
-                        afternoon1{"બપોરે"}
-                        am{"AM"}
-                        evening1{"સાંજે"}
-                        midnight{"મધ્યરાત્રિ"}
-                        morning1{"સવારે"}
-                        night1{"રાત્રે"}
-                        pm{"PM"}
-                    }
-                    narrow{
-                        afternoon1{"બપોરે"}
-                        am{"AM"}
-                        evening1{"સાંજે"}
-                        midnight{"મધ્યરાત્રિ"}
-                        morning1{"સવારે"}
-                        night1{"રાત્રે"}
-                        pm{"PM"}
-                    }
                     wide{
                         afternoon1{"બપોર"}
-                        am{"AM"}
                         evening1{"સાંજ"}
-                        midnight{"મધ્યરાત્રિ"}
                         morning1{"સવાર"}
                         night1{"રાત્રિ"}
-                        pm{"PM"}
                     }
                 }
             }
@@ -1054,14 +653,6 @@ gu{
                 }
                 Hm{
                     H{"HH:mm – HH:mm"}
-                    m{"HH:mm–HH:mm"}
-                }
-                Hmv{
-                    H{"HH:mm–HH:mm v"}
-                    m{"HH:mm–HH:mm v"}
-                }
-                Hv{
-                    H{"HH–HH v"}
                 }
                 M{
                     M{"M – M"}
@@ -1089,23 +680,8 @@ gu{
                     d{"d – d"}
                 }
                 fallback{"{0} – {1}"}
-                h{
-                    a{"h a – h a"}
-                    h{"h–h a"}
-                }
                 hm{
-                    a{"h:mm a – h:mm a"}
                     h{"h:mm – h:mm a"}
-                    m{"h:mm–h:mm a"}
-                }
-                hmv{
-                    a{"h:mm a – h:mm a v"}
-                    h{"h:mm–h:mm a v"}
-                    m{"h:mm–h:mm a v"}
-                }
-                hv{
-                    a{"h a – h a v"}
-                    h{"h–h a v"}
                 }
                 y{
                     y{"y – y"}
@@ -1159,20 +735,6 @@ gu{
                         "નવે",
                         "ડિસે",
                     }
-                    narrow{
-                        "જા",
-                        "ફે",
-                        "મા",
-                        "એ",
-                        "મે",
-                        "જૂ",
-                        "જુ",
-                        "ઑ",
-                        "સ",
-                        "ઑ",
-                        "ન",
-                        "ડિ",
-                    }
                     wide{
                         "જાન્યુઆરી",
                         "ફેબ્રુઆરી",
@@ -1189,20 +751,6 @@ gu{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "જાન્યુ",
-                        "ફેબ્રુ",
-                        "માર્ચ",
-                        "એપ્રિલ",
-                        "મે",
-                        "જૂન",
-                        "જુલાઈ",
-                        "ઑગસ્ટ",
-                        "સપ્ટે",
-                        "ઑક્ટો",
-                        "નવે",
-                        "ડિસે",
-                    }
                     narrow{
                         "જા",
                         "ફે",
@@ -1216,20 +764,6 @@ gu{
                         "ઑ",
                         "ન",
                         "ડિ",
-                    }
-                    wide{
-                        "જાન્યુઆરી",
-                        "ફેબ્રુઆરી",
-                        "માર્ચ",
-                        "એપ્રિલ",
-                        "મે",
-                        "જૂન",
-                        "જુલાઈ",
-                        "ઑગસ્ટ",
-                        "સપ્ટેમ્બર",
-                        "ઑક્ટોબર",
-                        "નવેમ્બર",
-                        "ડિસેમ્બર",
                     }
                 }
             }
@@ -1241,32 +775,6 @@ gu{
                         "Q3",
                         "Q4",
                     }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                    }
-                    wide{
-                        "1લો ત્રિમાસ",
-                        "2જો ત્રિમાસ",
-                        "3જો ત્રિમાસ",
-                        "4થો ત્રિમાસ",
-                    }
-                }
-                stand-alone{
-                    abbreviated{
-                        "Q1",
-                        "Q2",
-                        "Q3",
-                        "Q4",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                    }
                     wide{
                         "1લો ત્રિમાસ",
                         "2જો ત્રિમાસ",
@@ -1277,101 +785,8 @@ gu{
             }
         }
         hebrew{
-            eras{
-                abbreviated{
-                    "AM",
-                }
-                narrow{
-                    "AM",
-                }
-                wide{
-                    "AM",
-                }
-            }
             monthNames{
                 format{
-                    abbreviated{
-                        "તીશ્રી",
-                        "હેશવાન",
-                        "કિસ્લેવ",
-                        "તેવેટ",
-                        "શેવાત",
-                        "અદાર I",
-                        "અદાર",
-                        "નિસાન",
-                        "ઈયાર",
-                        "સિવાન",
-                        "તામુઝ",
-                        "આવ",
-                        "ઈલુલ",
-                        "અદાર II",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10",
-                        "11",
-                        "12",
-                        "13",
-                        "7",
-                    }
-                    wide{
-                        "તીશ્રી",
-                        "હેશવાન",
-                        "કિસ્લેવ",
-                        "તેવેટ",
-                        "શેવાત",
-                        "અદાર I",
-                        "અદાર",
-                        "નિસાન",
-                        "ઈયાર",
-                        "સિવાન",
-                        "તામુઝ",
-                        "આવ",
-                        "ઈલુલ",
-                        "અદાર II",
-                    }
-                }
-                stand-alone{
-                    abbreviated{
-                        "તીશ્રી",
-                        "હેશવાન",
-                        "કિસ્લેવ",
-                        "તેવેટ",
-                        "શેવાત",
-                        "અદાર I",
-                        "અદાર",
-                        "નિસાન",
-                        "ઈયાર",
-                        "સિવાન",
-                        "તામુઝ",
-                        "આવ",
-                        "ઈલુલ",
-                        "અદાર II",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10",
-                        "11",
-                        "12",
-                        "13",
-                        "7",
-                    }
                     wide{
                         "તીશ્રી",
                         "હેશવાન",
@@ -1392,19 +807,8 @@ gu{
             }
         }
         indian{
-            availableFormats{
-                MEd{"E, d/M"}
-                MMMEd{"E, d MMM"}
-                MMMMd{"d MMMM"}
-                MMMd{"d MMM"}
-                MMdd{"dd-MM"}
-                Md{"d/M"}
-            }
             eras{
                 abbreviated{
-                    "શક",
-                }
-                narrow{
                     "શક",
                 }
                 wide{
@@ -1413,78 +817,6 @@ gu{
             }
             monthNames{
                 format{
-                    abbreviated{
-                        "ચૈત્ર",
-                        "વૈશાખ",
-                        "જ્યેષ્ઠ",
-                        "અષાઢ",
-                        "શ્રાવણ",
-                        "ભાદો",
-                        "અશ્વિન",
-                        "કાર્તિક",
-                        "અગ્રહાયણ",
-                        "પોષ",
-                        "મહા",
-                        "ફાલ્ગુન",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10",
-                        "11",
-                        "12",
-                    }
-                    wide{
-                        "ચૈત્ર",
-                        "વૈશાખ",
-                        "જ્યેષ્ઠ",
-                        "અષાઢ",
-                        "શ્રાવણ",
-                        "ભાદો",
-                        "અશ્વિન",
-                        "કાર્તિક",
-                        "અગ્રહાયણ",
-                        "પોષ",
-                        "મહા",
-                        "ફાલ્ગુન",
-                    }
-                }
-                stand-alone{
-                    abbreviated{
-                        "ચૈત્ર",
-                        "વૈશાખ",
-                        "જ્યેષ્ઠ",
-                        "અષાઢ",
-                        "શ્રાવણ",
-                        "ભાદો",
-                        "અશ્વિન",
-                        "કાર્તિક",
-                        "અગ્રહાયણ",
-                        "પોષ",
-                        "મહા",
-                        "ફાલ્ગુન",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10",
-                        "11",
-                        "12",
-                    }
                     wide{
                         "ચૈત્ર",
                         "વૈશાખ",
@@ -1503,17 +835,6 @@ gu{
             }
         }
         islamic{
-            eras{
-                abbreviated{
-                    "AH",
-                }
-                narrow{
-                    "AH",
-                }
-                wide{
-                    "AH",
-                }
-            }
             monthNames{
                 format{
                     abbreviated{
@@ -1529,64 +850,6 @@ gu{
                         "શાવ.",
                         "ધુʻલ-ક્યુ.",
                         "ધુʻલ-એચ.",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10",
-                        "11",
-                        "12",
-                    }
-                    wide{
-                        "મુહર્રમ",
-                        "સફર",
-                        "રાબીʻ I",
-                        "રાબીʻ II",
-                        "જુમાદા I",
-                        "જુમાદા II",
-                        "રજબ",
-                        "શાʻબાન",
-                        "રમદાન",
-                        "શાવ્વલ",
-                        "ધુʻલ-ક્વીʻડાહ",
-                        "ધુʻલ-હિજ્જાહ",
-                    }
-                }
-                stand-alone{
-                    abbreviated{
-                        "મુહ.",
-                        "સફ.",
-                        "રબ.I",
-                        "રબ. II",
-                        "જુમ. I",
-                        "જુમ. II",
-                        "રાજ.",
-                        "શા.",
-                        "રામ.",
-                        "શાવ.",
-                        "ધુʻલ-ક્યુ.",
-                        "ધુʻલ-એચ.",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10",
-                        "11",
-                        "12",
                     }
                     wide{
                         "મુહર્રમ",
@@ -1606,91 +869,8 @@ gu{
             }
         }
         persian{
-            eras{
-                abbreviated{
-                    "AP",
-                }
-                narrow{
-                    "AP",
-                }
-                wide{
-                    "AP",
-                }
-            }
             monthNames{
                 format{
-                    abbreviated{
-                        "ફાર્વાર્દિન",
-                        "ઓરડીબેહેશ્ટ",
-                        "ખોરદાદ",
-                        "તિર",
-                        "મોર્દાદ",
-                        "શાહરિવર",
-                        "મેહર",
-                        "અબાન",
-                        "અઝાર",
-                        "ડેય",
-                        "બાહમેન",
-                        "એસ્ફાન્ડ",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10",
-                        "11",
-                        "12",
-                    }
-                    wide{
-                        "ફાર્વાર્દિન",
-                        "ઓરડીબેહેશ્ટ",
-                        "ખોરદાદ",
-                        "તિર",
-                        "મોર્દાદ",
-                        "શાહરિવર",
-                        "મેહર",
-                        "અબાન",
-                        "અઝાર",
-                        "ડેય",
-                        "બાહમેન",
-                        "એસ્ફાન્ડ",
-                    }
-                }
-                stand-alone{
-                    abbreviated{
-                        "ફાર્વાર્દિન",
-                        "ઓરડીબેહેશ્ટ",
-                        "ખોરદાદ",
-                        "તિર",
-                        "મોર્દાદ",
-                        "શાહરિવર",
-                        "મેહર",
-                        "અબાન",
-                        "અઝાર",
-                        "ડેય",
-                        "બાહમેન",
-                        "એસ્ફાન્ડ",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10",
-                        "11",
-                        "12",
-                    }
                     wide{
                         "ફાર્વાર્દિન",
                         "ઓરડીબેહેશ્ટ",
@@ -1711,14 +891,6 @@ gu{
         roc{
             eras{
                 abbreviated{
-                    "આર.ઓ.સી. પહેલાં",
-                    "આર.ઓ.સી.",
-                }
-                narrow{
-                    "આર.ઓ.સી. પહેલાં",
-                    "આર.ઓ.સી.",
-                }
-                wide{
                     "આર.ઓ.સી. પહેલાં",
                     "આર.ઓ.સી.",
                 }
@@ -1813,54 +985,8 @@ gu{
         western_asian_scripts{"પશ્ચિમી એશિયન સ્ક્રિપ્ટ"}
         whitespace{"રિક્ત સ્થાન"}
     }
-    delimiters{
-        alternateQuotationEnd{"’"}
-        alternateQuotationStart{"‘"}
-        quotationEnd{"”"}
-        quotationStart{"“"}
-    }
     fields{
         day{
-            dn{"દિવસ"}
-            relative{
-                "-1"{"ગઈકાલે"}
-                "-2"{"ગયા પરમદિવસે"}
-                "0"{"આજે"}
-                "1"{"આવતીકાલે"}
-                "2"{"પરમદિવસે"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} દિવસમાં"}
-                    other{"{0} દિવસમાં"}
-                }
-                past{
-                    one{"{0} દિવસ પહેલાં"}
-                    other{"{0} દિવસ પહેલાં"}
-                }
-            }
-        }
-        day-narrow{
-            dn{"દિવસ"}
-            relative{
-                "-1"{"ગઈકાલે"}
-                "-2"{"ગયા પરમદિવસે"}
-                "0"{"આજે"}
-                "1"{"આવતીકાલે"}
-                "2"{"પરમદિવસે"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} દિવસમાં"}
-                    other{"{0} દિવસમાં"}
-                }
-                past{
-                    one{"{0} દિવસ પહેલાં"}
-                    other{"{0} દિવસ પહેલાં"}
-                }
-            }
-        }
-        day-short{
             dn{"દિવસ"}
             relative{
                 "-1"{"ગઈકાલે"}
@@ -1883,28 +1009,10 @@ gu{
         dayOfYear{
             dn{"વર્ષનો દિવસ"}
         }
-        dayOfYear-narrow{
-            dn{"વર્ષનો દિવસ"}
-        }
-        dayOfYear-short{
-            dn{"વર્ષનો દિવસ"}
-        }
         dayperiod{
             dn{"AM/PM"}
         }
-        dayperiod-narrow{
-            dn{"AM/PM"}
-        }
-        dayperiod-short{
-            dn{"AM/PM"}
-        }
         era{
-            dn{"યુગ"}
-        }
-        era-narrow{
-            dn{"યુગ"}
-        }
-        era-short{
             dn{"યુગ"}
         }
         fri{
@@ -1924,34 +1032,8 @@ gu{
                 }
             }
         }
-        fri-narrow{
-            relative{
-                "-1"{"ગયા શુક્રવારે"}
-                "0"{"આ શુક્રવારે"}
-                "1"{"આવતા શુક્રવારે"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} શુક્રવારમાં"}
-                    other{"{0} શુક્રવારમાં"}
-                }
-                past{
-                    one{"{0} શુક્ર. પહેલાં"}
-                    other{"{0} શુક્ર. પહેલાં"}
-                }
-            }
-        }
         fri-short{
-            relative{
-                "-1"{"ગયા શુક્રવારે"}
-                "0"{"આ શુક્રવારે"}
-                "1"{"આવતા શુક્રવારે"}
-            }
             relativeTime{
-                future{
-                    one{"{0} શુક્રવારમાં"}
-                    other{"{0} શુક્રવારમાં"}
-                }
                 past{
                     one{"{0} શુક્ર. પહેલાં"}
                     other{"{0} શુક્ર. પહેલાં"}
@@ -1974,31 +1056,8 @@ gu{
                 }
             }
         }
-        hour-narrow{
-            dn{"ક."}
-            relativeTime{
-                future{
-                    one{"{0} કલાકમાં"}
-                    other{"{0} કલાકમાં"}
-                }
-                past{
-                    one{"{0} કલાક પહેલાં"}
-                    other{"{0} કલાક પહેલાં"}
-                }
-            }
-        }
         hour-short{
             dn{"ક."}
-            relativeTime{
-                future{
-                    one{"{0} કલાકમાં"}
-                    other{"{0} કલાકમાં"}
-                }
-                past{
-                    one{"{0} કલાક પહેલાં"}
-                    other{"{0} કલાક પહેલાં"}
-                }
-            }
         }
         minute{
             dn{"મિનિટ"}
@@ -2016,31 +1075,8 @@ gu{
                 }
             }
         }
-        minute-narrow{
-            dn{"મિ."}
-            relativeTime{
-                future{
-                    one{"{0} મિનિટમાં"}
-                    other{"{0} મિનિટમાં"}
-                }
-                past{
-                    one{"{0} મિનિટ પહેલાં"}
-                    other{"{0} મિનિટ પહેલાં"}
-                }
-            }
-        }
         minute-short{
             dn{"મિ."}
-            relativeTime{
-                future{
-                    one{"{0} મિનિટમાં"}
-                    other{"{0} મિનિટમાં"}
-                }
-                past{
-                    one{"{0} મિનિટ પહેલાં"}
-                    other{"{0} મિનિટ પહેલાં"}
-                }
-            }
         }
         mon{
             relative{
@@ -2059,34 +1095,8 @@ gu{
                 }
             }
         }
-        mon-narrow{
-            relative{
-                "-1"{"ગયા સોમવારે"}
-                "0"{"આ સોમવારે"}
-                "1"{"આવતા સોમવારે"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} સોમવારમાં"}
-                    other{"{0} સોમવારમાં"}
-                }
-                past{
-                    one{"{0} સોમ. પહેલાં"}
-                    other{"{0} સોમ. પહેલાં"}
-                }
-            }
-        }
         mon-short{
-            relative{
-                "-1"{"ગયા સોમવારે"}
-                "0"{"આ સોમવારે"}
-                "1"{"આવતા સોમવારે"}
-            }
             relativeTime{
-                future{
-                    one{"{0} સોમવારમાં"}
-                    other{"{0} સોમવારમાં"}
-                }
                 past{
                     one{"{0} સોમ. પહેલાં"}
                     other{"{0} સોમ. પહેલાં"}
@@ -2111,41 +1121,8 @@ gu{
                 }
             }
         }
-        month-narrow{
-            dn{"મ."}
-            relative{
-                "-1"{"ગયા મહિને"}
-                "0"{"આ મહિને"}
-                "1"{"આવતા મહિને"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} મહિનામાં"}
-                    other{"{0} મહિનામાં"}
-                }
-                past{
-                    one{"{0} મહિના પહેલાં"}
-                    other{"{0} મહિના પહેલાં"}
-                }
-            }
-        }
         month-short{
             dn{"મ."}
-            relative{
-                "-1"{"ગયા મહિને"}
-                "0"{"આ મહિને"}
-                "1"{"આવતા મહિને"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} મહિનામાં"}
-                    other{"{0} મહિનામાં"}
-                }
-                past{
-                    one{"{0} મહિના પહેલાં"}
-                    other{"{0} મહિના પહેલાં"}
-                }
-            }
         }
         quarter{
             dn{"ત્રિમાસિક"}
@@ -2165,31 +1142,8 @@ gu{
                 }
             }
         }
-        quarter-narrow{
-            dn{"ત્રિમાસ."}
-            relativeTime{
-                future{
-                    one{"{0} ત્રિમાસિકમાં"}
-                    other{"{0} ત્રિમાસિકમાં"}
-                }
-                past{
-                    one{"{0} ત્રિમાસિક પહેલાં"}
-                    other{"{0} ત્રિમાસિક પહેલાં"}
-                }
-            }
-        }
         quarter-short{
             dn{"ત્રિમાસ."}
-            relativeTime{
-                future{
-                    one{"{0} ત્રિમાસિકમાં"}
-                    other{"{0} ત્રિમાસિકમાં"}
-                }
-                past{
-                    one{"{0} ત્રિમાસિક પહેલાં"}
-                    other{"{0} ત્રિમાસિક પહેલાં"}
-                }
-            }
         }
         sat{
             relative{
@@ -2208,34 +1162,8 @@ gu{
                 }
             }
         }
-        sat-narrow{
-            relative{
-                "-1"{"ગયા શનિવારે"}
-                "0"{"આ શનિવારે"}
-                "1"{"આવતા શનિવારે"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} શનિવારમાં"}
-                    other{"{0} શનિવારમાં"}
-                }
-                past{
-                    one{"{0} શનિ. પહેલાં"}
-                    other{"{0} શનિ. પહેલાં"}
-                }
-            }
-        }
         sat-short{
-            relative{
-                "-1"{"ગયા શનિવારે"}
-                "0"{"આ શનિવારે"}
-                "1"{"આવતા શનિવારે"}
-            }
             relativeTime{
-                future{
-                    one{"{0} શનિવારમાં"}
-                    other{"{0} શનિવારમાં"}
-                }
                 past{
                     one{"{0} શનિ. પહેલાં"}
                     other{"{0} શનિ. પહેલાં"}
@@ -2258,31 +1186,8 @@ gu{
                 }
             }
         }
-        second-narrow{
-            dn{"સે."}
-            relativeTime{
-                future{
-                    one{"{0} સેકંડમાં"}
-                    other{"{0} સેકંડમાં"}
-                }
-                past{
-                    one{"{0} સેકંડ પહેલાં"}
-                    other{"{0} સેકંડ પહેલાં"}
-                }
-            }
-        }
         second-short{
             dn{"સે."}
-            relativeTime{
-                future{
-                    one{"{0} સેકંડમાં"}
-                    other{"{0} સેકંડમાં"}
-                }
-                past{
-                    one{"{0} સેકંડ પહેલાં"}
-                    other{"{0} સેકંડ પહેલાં"}
-                }
-            }
         }
         sun{
             relative{
@@ -2307,28 +1212,9 @@ gu{
                 "0"{"આ રવિ"}
                 "1"{"આવતા રવિ"}
             }
-            relativeTime{
-                future{
-                    one{"{0} રવિવારમાં"}
-                    other{"{0} રવિવારમાં"}
-                }
-                past{
-                    one{"{0} રવિ. પહેલાં"}
-                    other{"{0} રવિ. પહેલાં"}
-                }
-            }
         }
         sun-short{
-            relative{
-                "-1"{"ગયા રવિવારે"}
-                "0"{"આ રવિવારે"}
-                "1"{"આવતા રવિવારે"}
-            }
             relativeTime{
-                future{
-                    one{"{0} રવિવારમાં"}
-                    other{"{0} રવિવારમાં"}
-                }
                 past{
                     one{"{0} રવિ. પહેલાં"}
                     other{"{0} રવિ. પહેલાં"}
@@ -2352,34 +1238,8 @@ gu{
                 }
             }
         }
-        thu-narrow{
-            relative{
-                "-1"{"ગયા ગુરુવારે"}
-                "0"{"આ ગુરુવારે"}
-                "1"{"આવતા ગુરુવારે"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} ગુરુવારમાં"}
-                    other{"{0} ગુરુવારમાં"}
-                }
-                past{
-                    one{"{0} ગુરુ. પહેલાં"}
-                    other{"{0} ગુરુ. પહેલાં"}
-                }
-            }
-        }
         thu-short{
-            relative{
-                "-1"{"ગયા ગુરુવારે"}
-                "0"{"આ ગુરુવારે"}
-                "1"{"આવતા ગુરુવારે"}
-            }
             relativeTime{
-                future{
-                    one{"{0} ગુરુવારમાં"}
-                    other{"{0} ગુરુવારમાં"}
-                }
                 past{
                     one{"{0} ગુરુ. પહેલાં"}
                     other{"{0} ગુરુ. પહેલાં"}
@@ -2403,34 +1263,8 @@ gu{
                 }
             }
         }
-        tue-narrow{
-            relative{
-                "-1"{"ગયા મંગળવારે"}
-                "0"{"આ મંગળવારે"}
-                "1"{"આવતા મંગળવારે"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} મંગળવારમાં"}
-                    other{"{0} મંગળવારમાં"}
-                }
-                past{
-                    one{"{0} મંગળ. પહેલાં"}
-                    other{"{0} મંગળ. પહેલાં"}
-                }
-            }
-        }
         tue-short{
-            relative{
-                "-1"{"ગયા મંગળવારે"}
-                "0"{"આ મંગળવારે"}
-                "1"{"આવતા મંગળવારે"}
-            }
             relativeTime{
-                future{
-                    one{"{0} મંગળવારમાં"}
-                    other{"{0} મંગળવારમાં"}
-                }
                 past{
                     one{"{0} મંગળ. પહેલાં"}
                     other{"{0} મંગળ. પહેલાં"}
@@ -2454,34 +1288,8 @@ gu{
                 }
             }
         }
-        wed-narrow{
-            relative{
-                "-1"{"ગયા બુધવારે"}
-                "0"{"આ બુધવારે"}
-                "1"{"આવતા બુધવારે"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} બુધવારમાં"}
-                    other{"{0} બુધવારમાં"}
-                }
-                past{
-                    one{"{0} બુધ. પહેલાં"}
-                    other{"{0} બુધ. પહેલાં"}
-                }
-            }
-        }
         wed-short{
-            relative{
-                "-1"{"ગયા બુધવારે"}
-                "0"{"આ બુધવારે"}
-                "1"{"આવતા બુધવારે"}
-            }
             relativeTime{
-                future{
-                    one{"{0} બુધવારમાં"}
-                    other{"{0} બુધવારમાં"}
-                }
                 past{
                     one{"{0} બુધ. પહેલાં"}
                     other{"{0} બુધ. પહેલાં"}
@@ -2507,33 +1315,8 @@ gu{
                 }
             }
         }
-        week-narrow{
-            dn{"અઠ."}
-            relative{
-                "-1"{"ગયા અઠવાડિયે"}
-                "0"{"આ અઠવાડિયે"}
-                "1"{"આવતા અઠવાડિયે"}
-            }
-            relativePeriod{"{0} નું અઠવાડિયું"}
-            relativeTime{
-                future{
-                    one{"{0} અઠ. માં"}
-                    other{"{0} અઠ. માં"}
-                }
-                past{
-                    one{"{0} અઠ. પહેલાં"}
-                    other{"{0} અઠ. પહેલાં"}
-                }
-            }
-        }
         week-short{
             dn{"અઠ."}
-            relative{
-                "-1"{"ગયા અઠવાડિયે"}
-                "0"{"આ અઠવાડિયે"}
-                "1"{"આવતા અઠવાડિયે"}
-            }
-            relativePeriod{"{0} નું અઠવાડિયું"}
             relativeTime{
                 future{
                     one{"{0} અઠ. માં"}
@@ -2548,28 +1331,10 @@ gu{
         weekOfMonth{
             dn{"મહિનાનું અઠવાડિયું"}
         }
-        weekOfMonth-narrow{
-            dn{"મહિનાનું અઠવાડિયું"}
-        }
-        weekOfMonth-short{
-            dn{"મહિનાનું અઠવાડિયું"}
-        }
         weekday{
             dn{"અઠવાડિયાનો દિવસ"}
         }
-        weekday-narrow{
-            dn{"અઠવાડિયાનો દિવસ"}
-        }
-        weekday-short{
-            dn{"અઠવાડિયાનો દિવસ"}
-        }
         weekdayOfMonth{
-            dn{"મહિનાના અઠવાડિયાનો દિવસ"}
-        }
-        weekdayOfMonth-narrow{
-            dn{"મહિનાના અઠવાડિયાનો દિવસ"}
-        }
-        weekdayOfMonth-short{
             dn{"મહિનાના અઠવાડિયાનો દિવસ"}
         }
         year{
@@ -2590,49 +1355,10 @@ gu{
                 }
             }
         }
-        year-narrow{
-            dn{"વ."}
-            relative{
-                "-1"{"ગયા વર્ષે"}
-                "0"{"આ વર્ષે"}
-                "1"{"આવતા વર્ષે"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} વર્ષમાં"}
-                    other{"{0} વર્ષમાં"}
-                }
-                past{
-                    one{"{0} વર્ષ પહેલાં"}
-                    other{"{0} વર્ષ પહેલાં"}
-                }
-            }
-        }
         year-short{
             dn{"વ."}
-            relative{
-                "-1"{"ગયા વર્ષે"}
-                "0"{"આ વર્ષે"}
-                "1"{"આવતા વર્ષે"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} વર્ષમાં"}
-                    other{"{0} વર્ષમાં"}
-                }
-                past{
-                    one{"{0} વર્ષ પહેલાં"}
-                    other{"{0} વર્ષ પહેલાં"}
-                }
-            }
         }
         zone{
-            dn{"સમય ઝોન"}
-        }
-        zone-narrow{
-            dn{"સમય ઝોન"}
-        }
-        zone-short{
             dn{"સમય ઝોન"}
         }
     }
@@ -2640,77 +1366,30 @@ gu{
         or{
             2{"{0} અથવા {1}"}
             end{"{0}, અથવા {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        or-narrow{
-            2{"{0} અથવા {1}"}
-            end{"{0} અથવા {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
         or-short{
-            2{"{0} અથવા {1}"}
             end{"{0} અથવા {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
         standard{
             2{"{0} અને {1}"}
             end{"{0} અને {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
         standard-narrow{
             2{"{0}, {1}"}
             end{"{0}, {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        standard-short{
-            2{"{0} અને {1}"}
-            end{"{0} અને {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
         unit{
             2{"{0} અને {1}"}
-            end{"{0}, {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        unit-narrow{
-            2{"{0}, {1}"}
-            end{"{0}, {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
         unit-short{
             2{"{0}, {1}"}
             end{"{0}, {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
     }
     measurementSystemNames{
         UK{"યુકે"}
         US{"અમેરિકા"}
         metric{"મેટ્રિક"}
-    }
-    parse{
-        general{
-            lenient{
-                "[.․。︒﹒．｡]",
-                "['ʼ՚᾽᾿’＇]",
-                "[%٪﹪％]",
-                "[؉‰]",
-                "[\$﹩＄$]",
-                "[£₤￡]",
-                "[¥￥]",
-                "[₩￦]",
-                "[₨₹{Rp}{Rs}]",
-            }
-        }
     }
     personNames{
         nameOrderLocales{
@@ -2731,18 +1410,14 @@ gu{
         namePattern{
             givenFirst-long-addressing-formal{"{title} {surname}"}
             givenFirst-long-addressing-informal{"{given-informal}"}
-            givenFirst-long-monogram-formal{
-                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
-                "llCaps}"
-            }
             givenFirst-long-monogram-informal{"{given-informal-monogram-allCaps}{surname-monogram-allCaps}"}
-            givenFirst-long-referring-formal{"{given} {given2} {surname} {credentials}"}
-            givenFirst-long-referring-informal{"{given} {given2} {surname}"}
+            givenFirst-long-referring-formal{"{title} {given} {given2} {surname} {generation}, {credentials}"}
+            givenFirst-long-referring-informal{"{given-informal} {surname}"}
             givenFirst-medium-addressing-formal{"{title} . {surname}"}
             givenFirst-medium-addressing-informal{"{given-informal}"}
             givenFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
             givenFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
-            givenFirst-medium-referring-formal{"{given} {given2-initial} {surname}"}
+            givenFirst-medium-referring-formal{"{given} {given2-initial} {surname} {generation}, {credentials}"}
             givenFirst-medium-referring-informal{"{given-informal} . {surname}"}
             givenFirst-short-addressing-formal{"{title} {surname}"}
             givenFirst-short-addressing-informal{"{given-informal}"}
@@ -2750,21 +1425,22 @@ gu{
             givenFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}
             givenFirst-short-referring-formal{"{given} {given2} {surname} {credentials}"}
             givenFirst-short-referring-informal{"{given-informal} {surname-initial}"}
-            sorting-long-referring-informal{"{surname} {surname2}, {title} {given} {given2} {credentials}"}
-            sorting-medium-referring-formal{"{surname} {surname2}, {title} {given} {given2} {credentials}"}
-            sorting-medium-referring-informal{"{surname} {surname2}, {title} {given} {given2} {credentials}"}
+            sorting-long-referring-formal{"{surname-core}, {given} {given2} {surname-prefix}"}
+            sorting-long-referring-informal{"{surname}, {given-informal}"}
+            sorting-medium-referring-formal{"{surname-core}, {given} {given2-initial} {surname-prefix}"}
+            sorting-medium-referring-informal{"{surname}, {given-informal}"}
             sorting-short-referring-formal{"{surname} {surname2}, {title} {given} {given2} {credentials}"}
-            sorting-short-referring-informal{"{surname} {surname2}, {title} {given} {given2} {credentials}"}
+            sorting-short-referring-informal{"{surname}, {given-informal}"}
             surnameFirst-long-addressing-formal{"{title} {surname}"}
             surnameFirst-long-addressing-informal{"{given-informal}"}
             surnameFirst-long-monogram-informal{"{surname-monogram-allCaps}{given-informal-monogram-allCaps}"}
-            surnameFirst-long-referring-formal{"{surname} {given} {given2} {credentials}"}
+            surnameFirst-long-referring-formal{"{surname} {title} {given} {given2} {generation}, {credentials}"}
             surnameFirst-long-referring-informal{"{surname} {given-informal}"}
             surnameFirst-medium-addressing-formal{"{title} {surname}"}
             surnameFirst-medium-addressing-informal{"{given-informal}"}
             surnameFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
             surnameFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
-            surnameFirst-medium-referring-formal{"{surname} {given} {given2-initial} {credentials}"}
+            surnameFirst-medium-referring-formal{"{surname} {given} {given2-initial} {generation}, {credentials}"}
             surnameFirst-medium-referring-informal{"{surname} {given-informal}"}
             surnameFirst-short-addressing-formal{"{title} {surname}"}
             surnameFirst-short-addressing-informal{"{given-informal}"}
@@ -2772,6 +1448,9 @@ gu{
             surnameFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}
             surnameFirst-short-referring-formal{"{surname} {given-initial} {given2-initial}"}
             surnameFirst-short-referring-informal{"{surname} {given-initial}"}
+        }
+        parameterDefault{
+            formality{"informal"}
         }
     }
 }

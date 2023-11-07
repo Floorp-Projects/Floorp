@@ -238,7 +238,6 @@ dz{
     codePatterns{
         language{"ཁ་སྐད་: {0}"}
         script{"ཡིག་གཟུགས་: {0}"}
-        territory{"{0}"}
     }
     localeDisplayPattern{
         keyTypePattern{"{0}།: {1}"}

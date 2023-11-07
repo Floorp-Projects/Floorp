@@ -16,30 +16,13 @@ es_VE{
     }
     calendar{
         gregorian{
-            DateTimePatterns{
-                "h:mm:ss a zzzz",
-                "h:mm:ss a z",
-                "h:mm:ss a",
-                "h:mm a",
-                "EEEE, d 'de' MMMM 'de' y",
-                "d 'de' MMMM 'de' y",
-                "d MMM y",
-                "d/M/yy",
-                "{1} {0}",
-                "{1}, {0}",
-                "{1}, {0}",
-                "{1} {0}",
-                "{1}, {0}",
+            AmPmMarkers{
+                "a. m.",
+                "p. m.",
             }
-            DateTimeSkeletons{
-                "ahmmsszzzz",
-                "ahmmssz",
-                "ahmmss",
-                "ahmm",
-                "yMMMMEEEEd",
-                "yMMMMd",
-                "yMMMd",
-                "yyMd",
+            AmPmMarkersAbbr{
+                "a. m.",
+                "p. m.",
             }
             dayNames{
                 format{
@@ -53,43 +36,26 @@ es_VE{
                         "Sa",
                     }
                 }
-                stand-alone{
-                    short{
-                        "Do",
-                        "Lu",
-                        "Ma",
-                        "Mi",
-                        "Ju",
-                        "Vi",
-                        "Sa",
-                    }
-                }
             }
             dayPeriod{
                 stand-alone{
+                    abbreviated{
+                        am{"a. m."}
+                        pm{"p. m."}
+                    }
                     narrow{
+                        am{"a. m."}
                         noon{"m."}
+                        pm{"p. m."}
+                    }
+                    wide{
+                        am{"a. m."}
+                        pm{"p. m."}
                     }
                 }
             }
             monthNames{
                 format{
-                    abbreviated{
-                        "ene.",
-                        "feb.",
-                        "mar.",
-                        "abr.",
-                        "may.",
-                        "jun.",
-                        "jul.",
-                        "ago.",
-                        "sept.",
-                        "oct.",
-                        "nov.",
-                        "dic.",
-                    }
-                }
-                stand-alone{
                     abbreviated{
                         "ene.",
                         "feb.",

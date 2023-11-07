@@ -1,4 +1,4 @@
-/* created from NormalizationTest-15.0.0.txt */
+/* created from NormalizationTest-15.1.0.txt */
 /* Part0 # Specific cases */
 var tests_part0 = [
 { source: [0x1E0A], NFC: [0x1E0A], NFD: [0x0044, 0x0307], NFKC: [0x1E0A], NFKD: [0x0044, 0x0307] },

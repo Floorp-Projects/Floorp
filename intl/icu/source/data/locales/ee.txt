@@ -2,30 +2,25 @@
 // License & terms of use: http://www.unicode.org/copyright.html
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ee{
-    AuxExemplarCharacters{"[ă â å ä ā æ c ç ĕ ê ë ĭ î ï j ñ ŏ ô ö ø œ q ŭ û ü ÿ]"}
+    AuxExemplarCharacters{"[ăâåäā æ cç ĕêë ĭîï j ñ ŏôöø œ q ŭûü ÿ]"}
     ExemplarCharacters{
-        "[a á à ã b d ɖ e é è ẽ ɛ {ɛ\u0301} {ɛ\u0300} {ɛ\u0303} f ƒ g ɣ h x i í ì ĩ k"
-        " l m n ŋ o ó ò õ ɔ {ɔ\u0301} {ɔ\u0300} {ɔ\u0303} p r s t u ú ù ũ v ʋ w y z]"
+        "[aáàã b d ɖ eéèẽ ɛ{ɛ́}{ɛ̀}{ɛ̃} f ƒ g ɣ h x iíìĩ k l m n ŋ oóòõ ɔ{ɔ́}{ɔ̀}{ɔ̃}"
+        " p r s t uúùũ v ʋ w y z]"
     }
     ExemplarCharactersIndex{"[A B D Ɖ E Ɛ F Ƒ G Ɣ H X I K L M N Ŋ O Ɔ P R S T U V Ʋ W Y Z]"}
-    ExemplarCharactersNumbers{"[\\- ‑ , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     ExemplarCharactersPunctuation{
-        "[\\- ‐ ‑ – — , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” ( ) \\[ \\] \\{ \\} § @ * / "
-        "\\& # † ‡ ′ ″]"
+        "[\\- ‐‑ – — , ; \\: ! ? . … '‘’ \u0022“” ( ) \\[ \\] \\{ \\} § @ * / \\& # †"
+        " ‡ ′ ″]"
     }
     MoreInformation{"..."}
     NumberElements{
         latn{
             miscPatterns{
                 atLeast{"{0}+"}
-                range{"{0}–{1}"}
             }
             patterns{
                 accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
                 currencyFormat{"¤#,##0.00"}
-                decimalFormat{"#,##0.###"}
-                percentFormat{"#,##0%"}
-                scientificFormat{"#E0"}
             }
             patternsLong{
                 decimalFormat{
@@ -131,30 +126,6 @@ ee{
                     }
                 }
                 decimalFormat{
-                    1000{
-                        one{"0K"}
-                        other{"0K"}
-                    }
-                    10000{
-                        one{"00K"}
-                        other{"00K"}
-                    }
-                    100000{
-                        one{"000K"}
-                        other{"000K"}
-                    }
-                    1000000{
-                        one{"0M"}
-                        other{"0M"}
-                    }
-                    10000000{
-                        one{"00M"}
-                        other{"00M"}
-                    }
-                    100000000{
-                        one{"000M"}
-                        other{"000M"}
-                    }
                     1000000000{
                         one{"0B"}
                         other{"0B"}
@@ -167,31 +138,10 @@ ee{
                         one{"000B"}
                         other{"000B"}
                     }
-                    1000000000000{
-                        one{"0T"}
-                        other{"0T"}
-                    }
-                    10000000000000{
-                        one{"00T"}
-                        other{"00T"}
-                    }
-                    100000000000000{
-                        one{"000T"}
-                        other{"000T"}
-                    }
                 }
             }
             symbols{
-                decimal{"."}
-                exponential{"E"}
-                group{","}
-                infinity{"∞"}
-                minusSign{"-"}
                 nan{"mnn"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
             }
         }
         minimalPairs{
@@ -229,24 +179,17 @@ ee{
                 "GGGGGyMd",
             }
             availableFormats{
-                E{"ccc"}
                 Ed{"E d"}
                 Gy{"y G"}
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E, MMM d 'lia' y G"}
                 GyMMMd{"MMM d 'lia', y G"}
-                H{"HH"}
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
-                M{"L"}
                 MEd{"E, M/d"}
-                MMM{"LLL"}
                 MMMEd{"E, MMM d 'lia'"}
                 MMMMEd{"E, MMMM d 'lia'"}
                 MMMMd{"MMMM d 'lia'"}
                 MMMd{"MMM d 'lia'"}
                 Md{"M/d"}
-                d{"d"}
                 h{"a 'ga' h"}
                 hm{"a 'ga' h:mm"}
                 hms{"a 'ga' h:mm:ss"}
@@ -264,20 +207,6 @@ ee{
                 yyyyQQQQ{"QQQQ y G"}
             }
             intervalFormats{
-                H{
-                    H{"HH–HH"}
-                }
-                Hm{
-                    H{"HH:mm–HH:mm"}
-                    m{"HH:mm–HH:mm"}
-                }
-                Hmv{
-                    H{"HH:mm–HH:mm v"}
-                    m{"HH:mm–HH:mm v"}
-                }
-                Hv{
-                    H{"HH–HH v"}
-                }
                 M{
                     M{"'ɣleti' M 'lia' – 'ɣleti' M 'lia'"}
                 }
@@ -300,10 +229,6 @@ ee{
                     M{"M/d – M/d"}
                     d{"M/d – M/d"}
                 }
-                d{
-                    d{"d–d"}
-                }
-                fallback{"{0} – {1}"}
                 h{
                     a{"a h – a h"}
                     h{"a h–h"}
@@ -321,9 +246,6 @@ ee{
                 hv{
                     a{"a h – a h v"}
                     h{"a 'ga' h–h v"}
-                }
-                y{
-                    y{"G y–y"}
                 }
                 yM{
                     M{"M/y – M/y G"}
@@ -360,10 +282,6 @@ ee{
             }
         }
         gregorian{
-            AmPmMarkers{
-                "ŋdi",
-                "ɣetrɔ",
-            }
             AmPmMarkersAbbr{
                 "ŋdi",
                 "ɣetrɔ",
@@ -397,14 +315,10 @@ ee{
                 "yMMMd",
                 "yyMd",
             }
-            appendItems{
-                Timezone{"{0} {1}"}
-            }
             availableFormats{
                 Bh{"'ga' h 'le' B 'me'"}
                 Bhm{"'ga' h 'aɖabaƒoƒo' mm 'le' B 'me'"}
                 Bhms{"h:mm:ss 'le' B 'me'"}
-                E{"ccc"}
                 EBhm{"'ga' h:mm 'le' E B 'me'"}
                 EBhms{"'ga' h:mm:ss 'le' E B 'me'"}
                 EHm{"E 'ga' HH:mm"}
@@ -416,14 +330,9 @@ ee{
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E, MMM d 'lia' y G"}
                 GyMMMd{"MMM d 'lia', y G"}
-                H{"HH"}
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
                 Hmsv{"'ga' HH:mm:ss 'le' v"}
                 Hmv{"'ga' HH:mm 'le' v"}
-                M{"L"}
                 MEd{"E, M/d"}
-                MMM{"LLL"}
                 MMMEd{"E, MMM d 'lia'"}
                 MMMMEd{"E, MMMM d 'lia'"}
                 MMMMW{
@@ -433,14 +342,12 @@ ee{
                 MMMMd{"MMMM d 'lia'"}
                 MMMd{"MMM d 'lia'"}
                 Md{"M/d"}
-                d{"d"}
                 h{"a 'ga' h"}
                 hm{"a 'ga' h:mm"}
                 hms{"a 'ga' h:mm:ss"}
                 hmsv{"a 'ga' h:mm:ss 'le' v"}
                 hmv{"a 'ga' h:mm 'le' v"}
                 ms{"'aɖabaƒoƒo' mm:ss"}
-                y{"y"}
                 yM{"M/y"}
                 yMEd{"E, M/d/y"}
                 yMMM{"MMM y"}
@@ -466,24 +373,6 @@ ee{
                         "fiɖ",
                         "mem",
                     }
-                    narrow{
-                        "k",
-                        "d",
-                        "b",
-                        "k",
-                        "y",
-                        "f",
-                        "m",
-                    }
-                    short{
-                        "kɔs",
-                        "dzo",
-                        "bla",
-                        "kuɖ",
-                        "yaw",
-                        "fiɖ",
-                        "mem",
-                    }
                     wide{
                         "kɔsiɖa",
                         "dzoɖa",
@@ -495,15 +384,6 @@ ee{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "kɔs",
-                        "dzo",
-                        "bla",
-                        "kuɖ",
-                        "yaw",
-                        "fiɖ",
-                        "mem",
-                    }
                     narrow{
                         "k",
                         "d",
@@ -512,24 +392,6 @@ ee{
                         "y",
                         "f",
                         "m",
-                    }
-                    short{
-                        "kɔs",
-                        "dzo",
-                        "bla",
-                        "kuɖ",
-                        "yaw",
-                        "fiɖ",
-                        "mem",
-                    }
-                    wide{
-                        "kɔsiɖa",
-                        "dzoɖa",
-                        "blaɖa",
-                        "kuɖa",
-                        "yawoɖa",
-                        "fiɖa",
-                        "memleɖa",
                     }
                 }
             }
@@ -543,53 +405,11 @@ ee{
                         morning2{"ŋdi"}
                         night1{"zã"}
                     }
-                    narrow{
-                        afternoon1{"ŋdɔ"}
-                        afternoon2{"ɣetrɔ"}
-                        evening1{"fiẽ"}
-                        morning1{"fɔŋli"}
-                        morning2{"ŋdi"}
-                        night1{"zã"}
-                    }
-                    wide{
-                        afternoon1{"ŋdɔ"}
-                        afternoon2{"ɣetrɔ"}
-                        evening1{"fiẽ"}
-                        morning1{"fɔŋli"}
-                        morning2{"ŋdi"}
-                        night1{"zã"}
-                    }
                 }
                 stand-alone{
-                    abbreviated{
-                        afternoon1{"ŋdɔ"}
-                        afternoon2{"ɣetrɔ"}
-                        am{"ŋdi"}
-                        evening1{"fiẽ"}
-                        morning1{"fɔŋli"}
-                        morning2{"ŋdi"}
-                        night1{"zã"}
-                        pm{"ɣetrɔ"}
-                    }
                     narrow{
-                        afternoon1{"ŋdɔ"}
-                        afternoon2{"ɣetrɔ"}
                         am{"ŋ"}
-                        evening1{"fiẽ"}
-                        morning1{"fɔŋli"}
-                        morning2{"ŋdi"}
-                        night1{"zã"}
                         pm{"ɣ"}
-                    }
-                    wide{
-                        afternoon1{"ŋdɔ"}
-                        afternoon2{"ɣetrɔ"}
-                        am{"ŋdi"}
-                        evening1{"fiẽ"}
-                        morning1{"fɔŋli"}
-                        morning2{"ŋdi"}
-                        night1{"zã"}
-                        pm{"ɣetrɔ"}
                     }
                 }
             }
@@ -606,26 +426,8 @@ ee{
                     "Hafi Yesu Va",
                     "Yesu ŋɔli",
                 }
-                wide%variant{
-                    "Bŋ",
-                    "Eŋ",
-                }
             }
             intervalFormats{
-                H{
-                    H{"HH–HH"}
-                }
-                Hm{
-                    H{"HH:mm–HH:mm"}
-                    m{"HH:mm–HH:mm"}
-                }
-                Hmv{
-                    H{"HH:mm–HH:mm v"}
-                    m{"HH:mm–HH:mm v"}
-                }
-                Hv{
-                    H{"HH–HH v"}
-                }
                 M{
                     M{"'ɣleti' M 'lia' – 'ɣleti' M 'lia'"}
                 }
@@ -648,10 +450,6 @@ ee{
                     M{"M/d – M/d"}
                     d{"M/d – M/d"}
                 }
-                d{
-                    d{"d–d"}
-                }
-                fallback{"{0} – {1}"}
                 h{
                     a{"a h – a h"}
                     h{"a h–h"}
@@ -669,9 +467,6 @@ ee{
                 hv{
                     a{"a h – a h v"}
                     h{"a 'ga' h–h v"}
-                }
-                y{
-                    y{"y–y"}
                 }
                 yM{
                     M{"M/y – M/y"}
@@ -722,20 +517,6 @@ ee{
                         "ade",
                         "dzm",
                     }
-                    narrow{
-                        "d",
-                        "d",
-                        "t",
-                        "a",
-                        "d",
-                        "m",
-                        "s",
-                        "d",
-                        "a",
-                        "k",
-                        "a",
-                        "d",
-                    }
                     wide{
                         "dzove",
                         "dzodze",
@@ -752,20 +533,6 @@ ee{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "dzv",
-                        "dzd",
-                        "ted",
-                        "afɔ",
-                        "dam",
-                        "mas",
-                        "sia",
-                        "dea",
-                        "any",
-                        "kel",
-                        "ade",
-                        "dzm",
-                    }
                     narrow{
                         "d",
                         "d",
@@ -779,45 +546,11 @@ ee{
                         "k",
                         "a",
                         "d",
-                    }
-                    wide{
-                        "dzove",
-                        "dzodze",
-                        "tedoxe",
-                        "afɔfĩe",
-                        "dama",
-                        "masa",
-                        "siamlɔm",
-                        "deasiamime",
-                        "anyɔnyɔ",
-                        "kele",
-                        "adeɛmekpɔxe",
-                        "dzome",
                     }
                 }
             }
             quarters{
                 format{
-                    abbreviated{
-                        "k1",
-                        "k2",
-                        "k3",
-                        "k4",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                    }
-                    wide{
-                        "kɔta gbãtɔ",
-                        "kɔta evelia",
-                        "kɔta etɔ̃lia",
-                        "kɔta enelia",
-                    }
-                }
-                stand-alone{
                     abbreviated{
                         "k1",
                         "k2",
@@ -833,12 +566,6 @@ ee{
                 }
             }
         }
-    }
-    delimiters{
-        alternateQuotationEnd{"’"}
-        alternateQuotationStart{"‘"}
-        quotationEnd{"”"}
-        quotationStart{"“"}
     }
     fields{
         day{
@@ -925,12 +652,6 @@ ee{
                 }
             }
         }
-        month-narrow{
-            dn{"ɣleti"}
-        }
-        month-short{
-            dn{"ɣleti"}
-        }
         quarter{
             dn{"kɔta"}
             relativeTime{
@@ -945,28 +666,10 @@ ee{
             }
         }
         quarter-narrow{
-            dn{"kɔta"}
             relativeTime{
                 future{
                     one{"le kɔta {0} si gbɔna me"}
                     other{"le kɔta {0} si gbɔ na me"}
-                }
-                past{
-                    one{"kɔta {0} si va yi me"}
-                    other{"kɔta {0} si va yi me"}
-                }
-            }
-        }
-        quarter-short{
-            dn{"kɔta"}
-            relativeTime{
-                future{
-                    one{"le kɔta {0} si gbɔ na me"}
-                    other{"le kɔta {0} si gbɔ na me"}
-                }
-                past{
-                    one{"kɔta {0} si va yi me"}
-                    other{"kɔta {0} si va yi me"}
                 }
             }
         }
@@ -1061,7 +764,6 @@ ee{
             }
         }
         year-narrow{
-            dn{"ƒe"}
             relativeTime{
                 future{
                     one{"le ƒe {0} si gbɔna me"}
@@ -1074,12 +776,7 @@ ee{
             }
         }
         year-short{
-            dn{"ƒe"}
             relativeTime{
-                future{
-                    one{"le ƒe {0} me"}
-                    other{"le ƒe {0} me"}
-                }
                 past{
                     one{"le ƒe {0} si va yi me"}
                     other{"le ƒe {0} si va yi me"}
@@ -1094,26 +791,6 @@ ee{
         standard{
             2{"{0} kple {1}"}
             end{"{0}, kple {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        unit{
-            2{"{0} kple {1}"}
-            end{"{0}, kple {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        unit-narrow{
-            2{"{0} kple {1}"}
-            end{"{0}, kple {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        unit-short{
-            2{"{0} kple {1}"}
-            end{"{0}, kple {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
     }
     measurementSystemNames{

@@ -413,9 +413,34 @@ en_001{
             }
         }
         islamic{
+            DateTimePatterns{
+                "h:mm:ss a zzzz",
+                "h:mm:ss a z",
+                "h:mm:ss a",
+                "h:mm a",
+                "EEEE, d MMMM y G",
+                "d MMMM y G",
+                "d MMM y G",
+                "dd/MM/y GGGGG",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+            }
             availableFormats{
+                GyMMMEd{"E, d MMM y G"}
+                GyMMMd{"d MMM y G"}
+                GyMd{"dd/MM/y GGGGG"}
                 MEd{"E dd/MM"}
                 MMMEd{"E d MMM"}
+                MMMMd{"d MMMM"}
+                MMMd{"d MMM"}
+                Md{"dd/MM"}
+                yyyyMEd{"E, dd/MM/y GGGGG"}
+                yyyyMMMEd{"E, d MMM y G"}
+                yyyyMMMd{"d MMM y G"}
+                yyyyMd{"dd/MM/y GGGGG"}
             }
         }
     }

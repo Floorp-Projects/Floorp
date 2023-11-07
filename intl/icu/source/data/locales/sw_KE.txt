@@ -7,7 +7,6 @@ sw_KE{
         latn{
             patterns{
                 accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
-                currencyPatternAppendISO{"{0} ¤¤"}
             }
             patternsLong{
                 decimalFormat{

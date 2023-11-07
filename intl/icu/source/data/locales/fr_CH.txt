@@ -138,14 +138,6 @@ fr_CH{
                         noon{"midi"}
                     }
                 }
-                stand-alone{
-                    abbreviated{
-                        midnight{"min."}
-                    }
-                    narrow{
-                        midnight{"min."}
-                    }
-                }
             }
             intervalFormats{
                 MEd{

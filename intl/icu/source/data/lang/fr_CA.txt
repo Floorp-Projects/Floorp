@@ -72,7 +72,7 @@ fr_CA{
         zh_Hant{"chinois, mandarin traditionnel"}
     }
     Languages%menu{
-        ckb{"sorani"}
+        ckb{"kurde central"}
         yue{"chinois, cantonais"}
         zh{"chinois, mandarin"}
     }
@@ -80,7 +80,7 @@ fr_CA{
         en_US{"anglais (É.-U.)"}
     }
     Languages%variant{
-        ckb{"kurde central"}
+        ckb{"sorani"}
         ug{"ouïghour"}
     }
     Scripts{
@@ -98,9 +98,6 @@ fr_CA{
         Hant{"caractères chinois traditionnels"}
     }
     Types{
-        calendar{
-            islamic-umalqura{"calendrier musulman (calculé, Umm al-Qura)"}
-        }
         collation{
             big5han{"ordre de tri chinois traditionnel - Big5"}
             dictionary{"ordre de tri du dictionnaire"}

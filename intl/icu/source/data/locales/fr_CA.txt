@@ -2,7 +2,7 @@
 // License & terms of use: http://www.unicode.org/copyright.html
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 fr_CA{
-    AuxExemplarCharacters{"[á å ä ã ā ē í ì ī ñ ó ò ö ø ú ǔ]"}
+    AuxExemplarCharacters{"[áåäãā ē íìī ñ óòöø úǔ]"}
     NumberElements{
         latn{
             patternsLong{
@@ -173,21 +173,6 @@ fr_CA{
             }
             monthNames{
                 format{
-                    narrow{
-                        "T",
-                        "B",
-                        "H",
-                        "K",
-                        "T",
-                        "A",
-                        "B",
-                        "B",
-                        "B",
-                        "B",
-                        "A",
-                        "M",
-                        "N",
-                    }
                     wide{
                         "tout",
                         "bâbâ",
@@ -220,21 +205,6 @@ fr_CA{
                         "M",
                         "N",
                     }
-                    wide{
-                        "tout",
-                        "bâbâ",
-                        "hâtour",
-                        "kyakh",
-                        "toubah",
-                        "amshîr",
-                        "barmahât",
-                        "barmoudah",
-                        "bashans",
-                        "ba’ounah",
-                        "abîb",
-                        "misra",
-                        "al-nasi",
-                    }
                 }
             }
         }
@@ -248,23 +218,6 @@ fr_CA{
                 }
             }
             monthNames{
-                format{
-                    narrow{
-                        "M",
-                        "T",
-                        "H",
-                        "T",
-                        "T",
-                        "Y",
-                        "M",
-                        "M",
-                        "G",
-                        "S",
-                        "H",
-                        "N",
-                        "P",
-                    }
-                }
                 stand-alone{
                     narrow{
                         "M",
@@ -411,10 +364,6 @@ fr_CA{
             }
         }
         gregorian{
-            AmPmMarkers{
-                "a.m.",
-                "p.m.",
-            }
             AmPmMarkersAbbr{
                 "a.m.",
                 "p.m.",
@@ -453,10 +402,10 @@ fr_CA{
                 Hms{"HH 'h' mm 'min' ss 's'"}
                 Hmsv{"HH 'h' mm 'min' ss 's' v"}
                 Hmv{"HH 'h' mm v"}
-                MEd{"E M-d"}
-                MMd{"MM-d"}
+                MEd{"E MM-dd"}
+                MMd{"MM-dd"}
                 MMdd{"MM-dd"}
-                Md{"M-d"}
+                Md{"MM-dd"}
                 h{"h 'h' a"}
                 hm{"h 'h' mm a"}
                 hms{"h 'h' mm 'min' ss 's' a"}
@@ -467,19 +416,6 @@ fr_CA{
                 yMEd{"E y-MM-dd"}
                 yMM{"y-MM"}
                 yMd{"y-MM-dd"}
-            }
-            dayNames{
-                stand-alone{
-                    narrow{
-                        "D",
-                        "L",
-                        "M",
-                        "M",
-                        "J",
-                        "V",
-                        "S",
-                    }
-                }
             }
             dayPeriod{
                 format{
@@ -493,7 +429,7 @@ fr_CA{
                     }
                     narrow{
                         afternoon1{"après-midi"}
-                        evening1{"soir"}
+                        evening1{"du soir"}
                         midnight{"minuit"}
                         morning1{"mat."}
                         night1{"mat."}
@@ -503,30 +439,16 @@ fr_CA{
                 stand-alone{
                     abbreviated{
                         afternoon1{"après-midi"}
-                        am{"a.m."}
-                        evening1{"soir"}
+                        evening1{"du soir"}
                         morning1{"mat."}
-                        night1{"nuit"}
-                        pm{"p.m."}
+                        night1{"du mat."}
                     }
                     narrow{
                         afternoon1{"après-midi"}
-                        am{"a.m."}
-                        evening1{"soir"}
+                        evening1{"du soir"}
                         morning1{"mat."}
                         night1{"mat."}
-                        pm{"p.m."}
                     }
-                    wide{
-                        am{"a.m."}
-                        pm{"p.m."}
-                    }
-                }
-            }
-            eras{
-                wide%variant{
-                    "avant l’ère chrétienne",
-                    "de l’ère chrétienne",
                 }
             }
             intervalFormats{
@@ -580,7 +502,7 @@ fr_CA{
                     H{"H 'h' – H 'h' v"}
                 }
                 M{
-                    M{"M – M"}
+                    M{"MM – MM"}
                 }
                 MEd{
                     M{"E MM-dd – E MM-dd"}
@@ -588,6 +510,9 @@ fr_CA{
                 }
                 MMM{
                     M{"MMM – MMM"}
+                }
+                MMMEd{
+                    d{"E d MMM – E d MMM"}
                 }
                 MMMd{
                     d{"d – d MMM"}
@@ -632,6 +557,9 @@ fr_CA{
                 yMMM{
                     M{"MMM – MMM y"}
                 }
+                yMMMEd{
+                    d{"E d MMM – E d MMM y"}
+                }
                 yMd{
                     M{"y-MM-dd – y-MM-dd"}
                     d{"y-MM-dd – y-MM-dd"}
@@ -655,30 +583,11 @@ fr_CA{
                         "déc.",
                     }
                 }
-                stand-alone{
-                    abbreviated{
-                        "janv.",
-                        "févr.",
-                        "mars",
-                        "avr.",
-                        "mai",
-                        "juin",
-                        "juill.",
-                        "août",
-                        "sept.",
-                        "oct.",
-                        "nov.",
-                        "déc.",
-                    }
-                }
             }
         }
         hebrew{
             eras{
                 abbreviated{
-                    "AM",
-                }
-                narrow{
                     "AM",
                 }
             }
@@ -708,40 +617,8 @@ fr_CA{
                         "ell.",
                         "ad.II",
                     }
-                    narrow{
-                        "T",
-                        "H",
-                        "K",
-                        "T",
-                        "S",
-                        "A",
-                        "A",
-                        "N",
-                        "I",
-                        "S",
-                        "T",
-                        "A",
-                        "E",
-                        "A",
-                    }
                 }
                 stand-alone{
-                    abbreviated{
-                        "tis.",
-                        "hes.",
-                        "kis.",
-                        "téb.",
-                        "sché.",
-                        "ad.I",
-                        "adar",
-                        "nis.",
-                        "iyar",
-                        "siv.",
-                        "tam.",
-                        "av",
-                        "ell.",
-                        "ad.II",
-                    }
                     narrow{
                         "T",
                         "H",
@@ -776,22 +653,6 @@ fr_CA{
                 }
             }
             monthNames{
-                format{
-                    narrow{
-                        "C",
-                        "V",
-                        "J",
-                        "Ā",
-                        "S",
-                        "B",
-                        "Ā",
-                        "K",
-                        "M",
-                        "P",
-                        "M",
-                        "P",
-                    }
-                }
                 stand-alone{
                     narrow{
                         "C",
@@ -827,7 +688,6 @@ fr_CA{
                 "{1} {0}",
             }
             availableFormats{
-                GyMd{"y-MM-dd GGGGG"}
                 MEd{"E d MMM"}
                 Md{"MM-dd"}
                 yyyyM{"y-MM GGGGG"}
@@ -866,9 +726,6 @@ fr_CA{
                 abbreviated{
                     "AP",
                 }
-                narrow{
-                    "AP",
-                }
                 wide{
                     "AP",
                 }
@@ -883,36 +740,6 @@ fr_CA{
             }
             monthNames{
                 format{
-                    abbreviated{
-                        "Far.",
-                        "Ord.",
-                        "Kho.",
-                        "Tir",
-                        "Mor.",
-                        "Šah.",
-                        "Mehr",
-                        "Âbâ.",
-                        "Âzar",
-                        "Dey",
-                        "Bah.",
-                        "Esf.",
-                    }
-                    wide{
-                        "Farvardin",
-                        "Ordibehešt",
-                        "Khordâd",
-                        "Tir",
-                        "Mordâd",
-                        "Šahrivar",
-                        "Mehr",
-                        "Âbân",
-                        "Âzar",
-                        "Dey",
-                        "Bahman",
-                        "Esfand",
-                    }
-                }
-                stand-alone{
                     abbreviated{
                         "Far.",
                         "Ord.",
@@ -1098,9 +925,6 @@ fr_CA{
         }
         weekOfMonth{
             dn{"semaine du mois"}
-        }
-        weekOfMonth-narrow{
-            dn{"sem. (mois)"}
         }
         weekOfMonth-short{
             dn{"sem. (mois)"}

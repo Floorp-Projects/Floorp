@@ -26,7 +26,10 @@
 !!quoted_literals_only;
 
 $AI = [:LineBreak =  Ambiguous:];
+$AK = [:LineBreak =  Aksara:];
 $AL = [:LineBreak =  Alphabetic:];
+$AP = [:LineBreak =  Aksara_Prebase:];
+$AS = [:LineBreak =  Aksara_Start:];
 $BA = [:LineBreak =  Break_After:];
 $HH = [\u2010];     # \u2010 is HYPHEN, default line break is BA.
 $BB = [:LineBreak =  Break_Before:];
@@ -66,6 +69,8 @@ $SA = [:LineBreak =  Complex_Context:];
 $SG = [:LineBreak =  Surrogate:];
 $SP = [:LineBreak =  Space:];
 $SY = [:LineBreak =  Break_Symbols:];
+$VF = [:LineBreak =  Virama_Final:];
+$VI = [:LineBreak =  Virama:];
 $WJ = [:LineBreak =  Word_Joiner:];
 $XX = [:LineBreak =  Unknown:];
 $ZW = [:LineBreak =  ZWSpace:];
@@ -228,7 +233,27 @@ $OP $CM* $SP+ $CM+ $AL_FOLLOW?;    # by rule 10, stand-alone CM behaves as AL
                                    # by rule 8, CM following a SP is stand-alone.
 
 
-# LB 14a Force a break before start of a number with a leading decimal pt, e.g. " .23"
+# LB 15a
+($OP $CM* $SP+ | [$OP $QU $GL] $CM*) ([\p{Pi} & $QU] $CM* $SP*)+ .;
+($OP $CM* $SP+ | [$OP $QU $GL] $CM*) ([\p{Pi} & $QU] $CM* $SP*)+ $SP $CM+ $AL_FOLLOW?;
+^([\p{Pi} & $QU] $CM* $SP*)+ .;
+^([\p{Pi} & $QU] $CM* $SP*)+ $SP $CM+ $AL_FOLLOW?;
+
+# LB 15b
+$LB8NonBreaks [\p{Pf} & $QU] $CM* [$SP $GL $WJ $CL $QU $CP $EX $IS $SY $BK $CR $LF $NL $ZW {eof}];
+$CAN_CM $CM*  [\p{Pf} & $QU] $CM* [$SP $GL $WJ $CL $QU $CP $EX $IS $SY $BK $CR $LF $NL $ZW {eof}];
+^$CM+  [\p{Pf} & $QU] $CM* [$SP $GL $WJ $CL $QU $CP $EX $IS $SY $BK $CR $LF $NL $ZW {eof}];
+
+# Messy interaction: manually chain between LB 15b and LB 15a on Pf Pi.
+$LB8NonBreaks [\p{Pf} & $QU] $CM* ([\p{Pi} & $QU] $CM* $SP*)+ .;
+$LB8NonBreaks [\p{Pf} & $QU] $CM* ([\p{Pi} & $QU] $CM* $SP*)+ $SP $CM+ $AL_FOLLOW?;
+$CAN_CM $CM*  [\p{Pf} & $QU] $CM* ([\p{Pi} & $QU] $CM* $SP*)+ .;
+$CAN_CM $CM*  [\p{Pf} & $QU] $CM* ([\p{Pi} & $QU] $CM* $SP*)+ $SP $CM+ $AL_FOLLOW?;
+^$CM+  [\p{Pf} & $QU] $CM* ([\p{Pi} & $QU] $CM* $SP*)+ .;
+^$CM+  [\p{Pf} & $QU] $CM* ([\p{Pi} & $QU] $CM* $SP*)+ $SP $CM+ $AL_FOLLOW?;
+
+
+# LB 15c Force a break before start of a number with a leading decimal pt, e.g. " .23"
 #        Note: would be simpler to express as "$SP / $IS $CM* $NU;", but ICU rules have limitations.
 #        See issue ICU-20303
 
@@ -238,7 +263,7 @@ $SP $IS           / [^ $CanFollowIS $NU $CM];
 $SP $IS $CM* $CMX / [^ $CanFollowIS $NU $CM];
 
 #
-# LB 14b Do not break before numeric separators (IS), even after spaces.
+# LB 15d Do not break before numeric separators (IS), even after spaces.
 
 [$LB8NonBreaks - $SP] $IS;
 $SP $IS $CM* [$CanFollowIS {eof}];
@@ -247,9 +272,6 @@ $SP $IS $CM* $ZWJ [^$CM $NU];
 $CAN_CM $CM*  $IS;
 ^$CM+         $IS;              # by rule 10, stand-alone CM behaves as AL
 
-
-# LB 15
-$QU $CM* $SP* $OP;
 
 # LB 16
 ($CL | $CP) $CM* $SP* $NS;
@@ -350,6 +372,9 @@ $PR $CM* ($JL | $JV | $JT | $H2 | $H3);
 #
 ($ALPlus | $HL) $CM* ($ALPlus | $HL);
 ^$CM+ ($ALPlus | $HL);      # The $CM+ is from rule 10, an unattached CM is treated as AL
+
+#LB 28a  Do not break Orthographic syllables
+($AP $CM*)? ($AS | $AK | [◌] ) ($CM* $VI $CM* ($AK | [◌] ))* ($CM* $VI | (($CM* ($AS | $AK | [◌] ) )? $CM* $VF))?;
 
 # LB 29
 $IS $CM* ($ALPlus | $HL);

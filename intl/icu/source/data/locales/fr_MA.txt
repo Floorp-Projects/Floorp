@@ -33,22 +33,6 @@ fr_MA{
                         "déc.",
                     }
                 }
-                stand-alone{
-                    abbreviated{
-                        "jan.",
-                        "fév.",
-                        "mar.",
-                        "avr.",
-                        "mai",
-                        "jui.",
-                        "juil.",
-                        "août",
-                        "sept.",
-                        "oct.",
-                        "nov.",
-                        "déc.",
-                    }
-                }
             }
         }
     }

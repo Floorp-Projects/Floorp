@@ -199,9 +199,4 @@ tt{
         script{"Язу: {0}"}
         territory{"Төбәк: {0}"}
     }
-    localeDisplayPattern{
-        keyTypePattern{"{0}: {1}"}
-        pattern{"{0} ({1})"}
-        separator{"{0}, {1}"}
-    }
 }

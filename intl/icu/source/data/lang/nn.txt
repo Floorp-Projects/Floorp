@@ -19,12 +19,9 @@ nn{
         ang{"gammalengelsk"}
         asa{"asu (Tanzania)"}
         bas{"basa"}
-        be{"kviterussisk"}
-        bez{"bena (Tanzania)"}
         bss{"bakossi"}
         car{"carib"}
         chg{"tsjagataisk"}
-        chr{"cherokee"}
         ckb{"sorani"}
         crj{"sørleg aust-cree"}
         crl{"nordleg aust-cree"}
@@ -40,25 +37,21 @@ nn{
         fro{"gammalfransk"}
         frs{"austfrisisk"}
         fur{"friulisk"}
-        gil{"gilbertese"}
         gmh{"mellomhøgtysk"}
         goh{"gammalhøgtysk"}
         grc{"gammalgresk"}
         gv{"manx"}
-        gwi{"gwichin"}
         hax{"sørleg haida"}
         hsb{"høgsorbisk"}
         ikt{"vestleg kanadisk inuktitut"}
         kl{"grønlandsk (kalaallisut)"}
-        krc{"karachay-balkar"}
+        krc{"karatsjaiisk-balkarsk"}
         kum{"kumyk"}
         lad{"ladino"}
         lez{"lezghian"}
-        li{"limburgisk"}
         lrc{"nord-lurisk"}
         lus{"lushai"}
         luy{"olulujia"}
-        mdf{"moksha"}
         mfe{"morisyen"}
         mg{"madagassisk"}
         mul{"fleire språk"}
@@ -80,7 +73,6 @@ nn{
         quc{"k’iche"}
         ro_MD{"moldavisk"}
         rup{"arumensk"}
-        rw{"kinjarwanda"}
         sc{"sardinsk"}
         sga{"gammalirsk"}
         slh{"sørleg lushootseed"}
@@ -105,13 +97,9 @@ nn{
         zgh{"standard marokkansk tamazight"}
         zh_Hans{"forenkla kinesisk"}
         zxx{"utan språkleg innhald"}
-        zza{"zaza"}
     }
     Languages%long{
         zh_Hans{"forenkla mandarinkinesisk"}
-    }
-    Languages%variant{
-        ckb{"kurdisk (sorani)"}
     }
     Scripts{
         Armi{"armisk"}
@@ -122,7 +110,7 @@ nn{
         Hanb{"hanb"}
         Hans{"forenkla"}
         Hmng{"pahawk hmong"}
-        Hrkt{"japansk stavingsskrifter"}
+        Hrkt{"japanske stavingsskrifter"}
         Hung{"gammalungarsk"}
         Ital{"gammalitalisk"}
         Latf{"latinsk (frakturvariant)"}
@@ -149,9 +137,6 @@ nn{
         Hans{"forenkla han"}
     }
     Types{
-        calendar{
-            islamic-civil{"islamsk sivil kalender"}
-        }
         cf{
             account{"valutaformat for rekneskapsføring"}
         }
@@ -167,10 +152,10 @@ nn{
             hwidth{"halv breidd"}
         }
         hc{
-            h11{"12-timesystem (0–11)"}
-            h12{"12-timesystem (1–12)"}
-            h23{"24-timesystem (0–23)"}
-            h24{"24-timesystem (1–24)"}
+            h11{"12-timarssystem (0–11)"}
+            h12{"12-timarssystem (1–12)"}
+            h23{"24-timarssystem (0–23)"}
+            h24{"24-timarssystem (1–24)"}
         }
         lb{
             loose{"laus lineskiftstil"}
@@ -205,6 +190,7 @@ nn{
             laoo{"laotiske siffer"}
             latn{"vestlege siffer"}
             mlym{"malayalam-siffer"}
+            mtei{"meetei mayek-siffer"}
             mymr{"burmesiske siffer"}
             native{"språkspesifikke siffer"}
             orya{"odia-siffer"}
@@ -225,7 +211,7 @@ nn{
         AREVMDA{"vestarmensk"}
         BAKU1926{"samla tyrkisk-latinsk alfabet"}
         FONIPA{"det internasjonale fonetiske alfabetet (IPA)"}
-        FONUPA{"det uralske fonetiske alfabetet UPA"}
+        FONUPA{"det uralske fonetiske alfabetet (UPA)"}
         LIPAW{"resian, lipovazdialekt"}
         REVISED{"revidert rettskriving"}
         SAAHO{"saaho-dialekt"}
@@ -235,6 +221,7 @@ nn{
     characterLabelPattern{
         enclosed{"{0} – omslutta"}
         extended{"{0} – utvida"}
+        facing-right{"{0} vendt mot høgre"}
         other{"{0} – anna"}
         scripts{"skriftsystem – {0}"}
         strokes{

@@ -64,10 +64,6 @@ tt{
         "meta:Samara"{
             lg{"Самара вакыты"}
         }
-        fallbackFormat{"{1} ({0})"}
-        gmtFormat{"GMT{0}"}
-        gmtZeroFormat{"GMT"}
-        hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"{0} вакыты"}
         regionFormatDaylight{"{0} җәйге вакыты"}
         regionFormatStandard{"{0} гадәти вакыты"}

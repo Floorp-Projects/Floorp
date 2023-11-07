@@ -2,39 +2,26 @@
 // License & terms of use: http://www.unicode.org/copyright.html
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 lb{
-    AuxExemplarCharacters{
-        "[á à ă â å ã ā æ ç è ĕ ê ē ğ í ì ĭ î ï İ ī ı ñ ó ò ŏ ô ö ø ō œ ş ß ú ù ŭ û ü"
-        " ū ÿ]"
-    }
+    AuxExemplarCharacters{"[áàăâåãā æ ç èĕêē ğ íìĭîïİī ı ñ óòŏôöøō œ ş ß úùŭûüū ÿ]"}
     Ellipsis{
         final{"{0} …"}
         initial{"… {0}"}
         medial{"{0} … {1}"}
-        word-final{"{0} …"}
-        word-initial{"… {0}"}
-        word-medial{"{0} … {1}"}
     }
-    ExemplarCharacters{"[a ä b c d e é ë f g h i j k l m n o p q r s t u v w x y z]"}
+    ExemplarCharacters{"[aä b c d eéë f g h i j k l m n o p q r s t u v w x y z]"}
     ExemplarCharactersIndex{"[A B C D E F G H I J K L M N O P Q R S T U V W X Y Z]"}
-    ExemplarCharactersNumbers{"[\\- ‑ , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     ExemplarCharactersPunctuation{
-        "[\\- ‐ ‑ – — , ; \\: ! ? . … ' ‘ ‚ \u0022 “ „ « » ( ) \\[ \\] \\{ \\} § @ * "
-        "/ \\& #]"
+        "[\\- ‐‑ – — , ; \\: ! ? . … '‘‚ \u0022“„ « » ( ) \\[ \\] \\{ \\} § @ * / \\&"
+        " #]"
     }
-    MoreInformation{"?"}
     NumberElements{
-        default{"latn"}
         latn{
             miscPatterns{
                 atLeast{"≥ {0}"}
-                range{"{0}–{1}"}
             }
             patterns{
-                accountingFormat{"#,##0.00 ¤"}
                 currencyFormat{"#,##0.00 ¤"}
-                decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0 %"}
-                scientificFormat{"#E0"}
             }
             patternsLong{
                 decimalFormat{
@@ -142,29 +129,11 @@ lb{
             }
             symbols{
                 decimal{","}
-                exponential{"E"}
                 group{"."}
-                infinity{"∞"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
-        minimumGroupingDigits{"1"}
-        native{"latn"}
     }
     calendar{
-        buddhist{
-            eras{
-                abbreviated{
-                    "BE",
-                }
-            }
-        }
         chinese{
             DateTimePatterns{
                 "HH:mm:ss zzzz",
@@ -191,28 +160,6 @@ lb{
                 "UMMdd",
                 "yyMMdd",
             }
-            cyclicNameSets{
-                zodiacs{
-                    format{
-                        abbreviated{
-                            "Rat",
-                            "Ochs",
-                            "Tiger",
-                            "Kannéngchen",
-                            "Draach",
-                            "Schlaang",
-                            "Päerd",
-                            "Geess",
-                            "Af",
-                            "Hong",
-                            "Hond",
-                            "Schwäin",
-                        }
-                    }
-                }
-            }
-        }
-        dangi{
             cyclicNameSets{
                 zodiacs{
                     format{
@@ -266,14 +213,11 @@ lb{
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E, d. MMM y G"}
                 GyMMMd{"d. MMM y G"}
-                M{"L"}
                 MEd{"E, d.M."}
-                MMM{"LLL"}
                 MMMEd{"E, d. MMM"}
                 MMMMd{"d. MMMM"}
                 MMMd{"d. MMM"}
                 Md{"d.M."}
-                d{"d"}
                 y{"y G"}
                 yyyy{"y G"}
                 yyyyM{"M.y GGGGG"}
@@ -312,7 +256,6 @@ lb{
                 d{
                     d{"d.–d."}
                 }
-                fallback{"{0} – {1}"}
                 y{
                     y{"y–y G"}
                 }
@@ -351,10 +294,6 @@ lb{
             }
         }
         gregorian{
-            AmPmMarkers{
-                "moies",
-                "nomëttes",
-            }
             AmPmMarkersAbbr{
                 "moies",
                 "nomëttes",
@@ -388,11 +327,7 @@ lb{
                 "yMMMd",
                 "yyMMdd",
             }
-            appendItems{
-                Timezone{"{0} {1}"}
-            }
             availableFormats{
-                E{"ccc"}
                 EHm{"E, HH:mm"}
                 EHms{"E, HH:mm:ss"}
                 Ed{"E, d."}
@@ -403,21 +338,14 @@ lb{
                 GyMMMEd{"E, d. MMM y G"}
                 GyMMMd{"d. MMM y G"}
                 H{"HH 'Auer'"}
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
-                M{"L"}
                 MEd{"E, d.M."}
-                MMM{"LLL"}
                 MMMEd{"E, d. MMM"}
                 MMMMd{"d. MMMM"}
                 MMMd{"d. MMM"}
                 Md{"d.M."}
-                d{"d"}
                 h{"h a"}
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
-                ms{"mm:ss"}
-                y{"y"}
                 yM{"M.y"}
                 yMEd{"E, d.M.y"}
                 yMMM{"MMM y"}
@@ -438,15 +366,6 @@ lb{
                         "Don.",
                         "Fre.",
                         "Sam.",
-                    }
-                    narrow{
-                        "S",
-                        "M",
-                        "D",
-                        "M",
-                        "D",
-                        "F",
-                        "S",
                     }
                     short{
                         "So.",
@@ -486,24 +405,6 @@ lb{
                         "F",
                         "S",
                     }
-                    short{
-                        "So.",
-                        "Mé.",
-                        "Dë.",
-                        "Më.",
-                        "Do.",
-                        "Fr.",
-                        "Sa.",
-                    }
-                    wide{
-                        "Sonndeg",
-                        "Méindeg",
-                        "Dënschdeg",
-                        "Mëttwoch",
-                        "Donneschdeg",
-                        "Freideg",
-                        "Samschdeg",
-                    }
                 }
             }
             eras{
@@ -515,22 +416,10 @@ lb{
                     "v. e. Z.",
                     "n. e. Z.",
                 }
-                wide{
-                    "v. Chr.",
-                    "n. Chr.",
-                }
             }
             intervalFormats{
                 H{
                     H{"HH–HH 'Auer'"}
-                }
-                Hm{
-                    H{"HH:mm–HH:mm"}
-                    m{"HH:mm–HH:mm"}
-                }
-                Hmv{
-                    H{"HH:mm–HH:mm v"}
-                    m{"HH:mm–HH:mm v"}
                 }
                 Hv{
                     H{"HH–HH 'Auer' v"}
@@ -560,7 +449,6 @@ lb{
                 d{
                     d{"d.–d."}
                 }
-                fallback{"{0} – {1}"}
                 h{
                     a{"h a – h a"}
                     h{"h–h a"}
@@ -578,9 +466,6 @@ lb{
                 hv{
                     a{"h a – h a v"}
                     h{"h–h a v"}
-                }
-                y{
-                    y{"y–y"}
                 }
                 yM{
                     M{"MM.y – MM.y"}
@@ -631,20 +516,6 @@ lb{
                         "Nov.",
                         "Dez.",
                     }
-                    narrow{
-                        "J",
-                        "F",
-                        "M",
-                        "A",
-                        "M",
-                        "J",
-                        "J",
-                        "A",
-                        "S",
-                        "O",
-                        "N",
-                        "D",
-                    }
                     wide{
                         "Januar",
                         "Februar",
@@ -689,20 +560,6 @@ lb{
                         "N",
                         "D",
                     }
-                    wide{
-                        "Januar",
-                        "Februar",
-                        "Mäerz",
-                        "Abrëll",
-                        "Mee",
-                        "Juni",
-                        "Juli",
-                        "August",
-                        "September",
-                        "Oktober",
-                        "November",
-                        "Dezember",
-                    }
                 }
             }
             quarters{
@@ -713,12 +570,6 @@ lb{
                         "Q3",
                         "Q4",
                     }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                    }
                     wide{
                         "1. Quartal",
                         "2. Quartal",
@@ -726,67 +577,6 @@ lb{
                         "4. Quartal",
                     }
                 }
-                stand-alone{
-                    abbreviated{
-                        "Q1",
-                        "Q2",
-                        "Q3",
-                        "Q4",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                    }
-                    wide{
-                        "1. Quartal",
-                        "2. Quartal",
-                        "3. Quartal",
-                        "4. Quartal",
-                    }
-                }
-            }
-        }
-        hebrew{
-            eras{
-                abbreviated{
-                    "AM",
-                }
-            }
-        }
-        islamic{
-            eras{
-                abbreviated{
-                    "AH",
-                }
-            }
-        }
-        japanese{
-            DateTimePatterns{
-                "HH:mm:ss zzzz",
-                "HH:mm:ss z",
-                "HH:mm:ss",
-                "HH:mm",
-                "EEEE, d. MMMM y G",
-                "d. MMMM y G",
-                "dd.MM.y G",
-                "dd.MM.yy GGGGG",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-            }
-            DateTimeSkeletons{
-                "HHmmsszzzz",
-                "HHmmssz",
-                "HHmmss",
-                "HHmm",
-                "GyMMMMEEEEd",
-                "GyMMMMd",
-                "GyMMdd",
-                "GGGGGyyMMdd",
             }
         }
         roc{
@@ -824,7 +614,6 @@ lb{
             }
         }
         day-narrow{
-            dn{"D."}
             relativeTime{
                 future{
                     one{"+{0} D."}
@@ -890,7 +679,6 @@ lb{
             }
         }
         hour-narrow{
-            dn{"St."}
             relativeTime{
                 future{
                     one{"+{0} St."}
@@ -929,7 +717,6 @@ lb{
             }
         }
         minute-narrow{
-            dn{"Min."}
             relativeTime{
                 future{
                     one{"+{0} Min."}
@@ -994,7 +781,6 @@ lb{
             }
         }
         month-narrow{
-            dn{"M."}
             relativeTime{
                 future{
                     one{"+{0} M."}
@@ -1033,7 +819,6 @@ lb{
             }
         }
         quarter-narrow{
-            dn{"Q."}
             relativeTime{
                 future{
                     one{"+{0} Q."}
@@ -1093,7 +878,6 @@ lb{
             }
         }
         second-narrow{
-            dn{"Sek."}
             relativeTime{
                 future{
                     one{"+{0} Sek."}
@@ -1167,13 +951,6 @@ lb{
                 "1"{"nächsten Dënschdeg"}
             }
         }
-        tue-narrow{
-            relative{
-                "-1"{"leschten Dë."}
-                "0"{"dësen Dë."}
-                "1"{"nächsten Dë."}
-            }
-        }
         tue-short{
             relative{
                 "-1"{"leschten Dë."}
@@ -1221,7 +998,6 @@ lb{
             }
         }
         week-narrow{
-            dn{"W."}
             relativeTime{
                 future{
                     one{"+{0} W."}
@@ -1268,7 +1044,6 @@ lb{
             }
         }
         year-narrow{
-            dn{"J."}
             relativeTime{
                 future{
                     one{"+{0} J."}
@@ -1297,22 +1072,10 @@ lb{
             dn{"Zäitzon"}
         }
     }
-    layout{
-        characters{"left-to-right"}
-        lines{"top-to-bottom"}
-    }
     listPattern{
         standard{
             2{"{0} a(n) {1}"}
             end{"{0} a(n) {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        unit{
-            2{"{0}, {1}"}
-            end{"{0}, {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
         unit-narrow{
             2{"{0} {1}"}
@@ -1323,8 +1086,6 @@ lb{
         unit-short{
             2{"{0}, {1}"}
             end{"{0}, {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
     }
     measurementSystemNames{

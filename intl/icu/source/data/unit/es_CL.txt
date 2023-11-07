@@ -25,18 +25,6 @@ es_CL{
             }
         }
     }
-    unitsNarrow{
-        electric{
-            volt{
-                dnam{"voltios"}
-            }
-        }
-        power{
-            watt{
-                dnam{"vatios"}
-            }
-        }
-    }
     unitsShort{
         electric{
             volt{

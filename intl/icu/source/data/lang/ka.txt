@@ -57,6 +57,7 @@ ka{
         bem{"ბემბა"}
         bez{"ბენა"}
         bg{"ბულგარული"}
+        bgc{"ჰარიანვი"}
         bgn{"დასავლეთ ბელუჯი"}
         bho{"ბოჯპური"}
         bi{"ბისლამა"}
@@ -716,9 +717,9 @@ ka{
             gregorian{"გრიგორიანული კალენდარი"}
             hebrew{"ებრაული კალენდარი"}
             indian{"ინდოეთის ეროვნული კალენდარი"}
-            islamic{"ისლამური კალენდარი"}
-            islamic-civil{"ისლამური სამოქალაქო კალენდარი"}
-            islamic-umalqura{"ისლამური კალენდარი (უმ-ალ-ქურა)"}
+            islamic{"ჰიჯრის კალენდარი"}
+            islamic-civil{"ჰიჯრის სამოქალაქო კალენდარი (ტაბულარული)"}
+            islamic-umalqura{"ჰიჯრის კალენდარი (უმ-ალ-ქურა)"}
             iso8601{"ISO-8601 კალენდარი"}
             japanese{"იაპონური კალენდარი"}
             persian{"სპარსული კალენდარი"}
@@ -802,10 +803,11 @@ ka{
     }
     characterLabelPattern{
         all{"{0} — ყველა"}
-        category-list{"{0}: {1}"}
         compatibility{"{0} — თავსებადობა"}
         enclosed{"{0} — ჩართული"}
         extended{"{0} — გაფართოებული"}
+        facing-left{"{0} მარცხნივ მიმართული"}
+        facing-right{"{0} მარჯვნივ მიმართული"}
         historic{"{0} — ისტორიული"}
         miscellaneous{"{0} — სხვადასხვა"}
         other{"{0} — სხვა"}
@@ -821,10 +823,5 @@ ka{
         language{"ენა: {0}"}
         script{"დამწერლობა: {0}"}
         territory{"რეგიონი: {0}"}
-    }
-    localeDisplayPattern{
-        keyTypePattern{"{0}: {1}"}
-        pattern{"{0} ({1})"}
-        separator{"{0}, {1}"}
     }
 }

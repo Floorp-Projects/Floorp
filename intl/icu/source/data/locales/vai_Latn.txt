@@ -4,22 +4,15 @@
 vai_Latn{
     %%Parent{"root"}
     ExemplarCharacters{
-        "[a á ã b ɓ c d ɗ e é ẽ ɛ {ɛ\u0301} {ɛ\u0303} f g h i í ĩ j k l m n ŋ o ó õ ɔ"
-        " {ɔ\u0301} {ɔ\u0303} p q r s t u ú ũ v w x y z]"
+        "[aáã b ɓ c d ɗ eéẽ ɛ{ɛ́}{ɛ̃} f g h iíĩ j k l m n ŋ oóõ ɔ{ɔ́}{ɔ̃} p q r s t u"
+        "úũ v w x y z]"
     }
     ExemplarCharactersIndex{"[A B Ɓ C D Ɗ E Ɛ F G H I J K L M N Ŋ O Ɔ P Q R S T U V W X Y Z]"}
-    ExemplarCharactersNumbers{"[\\- ‑ , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     NumberElements{
-        default{"latn"}
         latn{
             patterns{
                 accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
                 currencyFormat{"¤#,##0.00"}
-                decimalFormat{"#,##0.###"}
-            }
-            symbols{
-                decimal{"."}
-                group{","}
             }
         }
         native{"vaii"}
@@ -53,15 +46,9 @@ vai_Latn{
             }
             availableFormats{
                 Ed{"E d"}
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
-                M{"L"}
                 MEd{"E, M/d"}
-                MMM{"LLL"}
                 MMMEd{"E, MMM d"}
-                MMMd{"MMM d"}
                 Md{"M/d"}
-                d{"d"}
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
                 ms{"m:ss"}
@@ -104,19 +91,12 @@ vai_Latn{
             }
             availableFormats{
                 Ed{"E d"}
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
-                M{"L"}
                 MEd{"E, M/d"}
-                MMM{"LLL"}
                 MMMEd{"E, MMM d"}
-                MMMd{"MMM d"}
                 Md{"M/d"}
-                d{"d"}
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
                 ms{"m:ss"}
-                y{"y"}
                 yM{"M/y"}
                 yMEd{"E, M/d/y"}
                 yMMM{"MMM y"}
@@ -140,12 +120,6 @@ vai_Latn{
                 }
             }
         }
-    }
-    delimiters{
-        alternateQuotationEnd{"’"}
-        alternateQuotationStart{"‘"}
-        quotationEnd{"”"}
-        quotationStart{"“"}
     }
     fields{
         day{

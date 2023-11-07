@@ -27,7 +27,10 @@ type = line;
 locale = ja@lb=normal;
 
 AI = [:LineBreak =  Ambiguous:];
+AK = [:LineBreak =  Aksara:];
 AL = [:LineBreak =  Alphabetic:];
+AP = [:LineBreak =  Aksara_Prebase:];
+AS = [:LineBreak =  Aksara_Start:];
 BA = [:LineBreak =  Break_After:];
 HH = [\u2010];      # \u2010 is HYPHEN, default line break is BA.
 BB = [:LineBreak =  Break_Before:];
@@ -67,6 +70,8 @@ SA = [:LineBreak =  Complex_Context:];
 SG = [:LineBreak =  Surrogate:];
 SP = [:LineBreak =  Space:];
 SY = [:LineBreak =  Break_Symbols:];
+VF = [:LineBreak =  Virama_Final:];
+VI = [:LineBreak =  Virama:];
 WJ = [:LineBreak =  Word_Joiner:];
 XX = [:LineBreak =  Unknown:];
 ZW = [:LineBreak =  ZWSpace:];
@@ -78,6 +83,9 @@ ZWJ = [:LineBreak =  ZWJ:];
 
 OP30 = [OP - [\p{ea=F}\p{ea=W}\p{ea=H}]];
 CP30 = [CP - [\p{ea=F}\p{ea=W}\p{ea=H}]];
+
+PiQU = [\p{Pi}&QU];
+PfQU = [\p{Pf}&QU];
 
 # The redundant-looking inner brackets are required for the current parser in the test code.
 ExtPictUnassigned = [[\p{Extended_Pictographic}]&[\p{Cn}]];
@@ -110,19 +118,27 @@ LB8:        ZW SP* ÷ [^ZW SP BK CR LF NL];
 LB25:        ((PR | PO)CM*)? ((OP | HY)CM*)? (IS CM*)? NU (CM*(NU | SY | IS))* (CM*(CL | CP))? (CM*(PR | PO))?;
 
 # Rules LB14 - LB17.
+
+# Moved before LB14, because it matches a supersequence.
+LB15a.1:       ( OP CM* SP* | QU CM* | GL CM* ) (PiQU CM* SP*)+ .;
+
 # Moved up, before LB7, because they can match a longer sequence that would also match LB7.
 # For example, the sequence "OP CM SP AL" matches LB14
 # while the prefix of it, "OP CM SP" matches LB7.1
 LB14:        OP CM* SP* .;
 
-# LB 14a Break before an IS that begins a number and follows a space.
-LB14a:       SP ÷ IS CM* NU;
+LB15a.2:       ^ (PiQU CM* SP*)+ .;
+# LB15b/LB15a chaining.
+LB15b.1:       ([^SP] CM* | SP) PfQU CM* (PiQU CM* SP*)+ .;
+LB15b.2:       ([^SP] CM* | SP) PfQU CM* ( SP | GL | WJ | CL | QU | CP | EX | IS | SY | BK | CR | LF | NL | ZW | $ );
 
-# LB14b       × IS
-LB14b.1:     [^SP] CM* IS;
-LB14b.2:     SP IS;
+# LB 15c Break before an IS that begins a number and follows a space.
+LB15c:       SP ÷ IS CM* NU;
 
-LB15:        QU CM* SP* OP;
+# LB15d       × IS
+LB15d.1:     [^SP] CM* IS;
+LB15d.2:     SP IS;
+
 
 # Do not break between closing punctuation and $NS, even with intervening spaces
 # But DO allow a break between closing punctuation and $NSX, don't include it here
@@ -210,6 +226,8 @@ LB27.2:      PR CM* (JL | JV | JT | H2 | H3);
 # LB28 Do not break between Alphabetics.
 #      Unattached (leading) CM treated as AL.
 LB28:        (AL | HL | CM)CM* (AL | HL);
+
+LB28: (AP CM*)? (AS | AK | [◌] ) (CM* VI CM* (AK | [◌] ))* (CM* VI | ((CM* (AS | AK | [◌] ) )? CM* VF))?;
 
 LB29:        IS CM* (AL | HL);
 

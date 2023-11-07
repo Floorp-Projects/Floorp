@@ -75,6 +75,7 @@ fa{
         bem{"بمبایی"}
         bez{"بنایی"}
         bg{"بلغاری"}
+        bgc{"هارایاناوی"}
         bgn{"بلوچی غربی"}
         bho{"بوجپوری"}
         bi{"بیسلاما"}
@@ -922,10 +923,11 @@ fa{
     }
     characterLabelPattern{
         all{"{0} — همه"}
-        category-list{"{0}: {1}"}
         compatibility{"{0} — سازگاری"}
         enclosed{"{0} — محصور"}
         extended{"{0} — گسترش‌یافته"}
+        facing-left{"{0} به سمت چپ"}
+        facing-right{"{0} به سمت راست"}
         historic{"{0} — تاریخی"}
         miscellaneous{"{0} — متفرقه"}
         other{"{0} — دیگر"}
@@ -943,8 +945,6 @@ fa{
         territory{"ناحیه: {0}"}
     }
     localeDisplayPattern{
-        keyTypePattern{"{0}: {1}"}
-        pattern{"{0} ({1})"}
         separator{"{0}، {1}"}
     }
 }

@@ -298,6 +298,9 @@ qu{
         ZW{"Zimbabue"}
         ZZ{"Mana yachasqa Suyu"}
     }
+    Countries%chagos{
+        IO{"Chagos Archipielago"}
+    }
     Countries%short{
         HK{"Hong Kong"}
         MO{"Macao"}

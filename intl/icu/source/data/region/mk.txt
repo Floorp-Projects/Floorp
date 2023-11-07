@@ -298,6 +298,9 @@ mk{
         ZW{"Зимбабве"}
         ZZ{"Непознат регион"}
     }
+    Countries%chagos{
+        IO{"Архипелаг Чагос"}
+    }
     Countries%short{
         GB{"ОК"}
         HK{"Хонгконг"}

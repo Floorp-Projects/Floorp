@@ -44,16 +44,6 @@ tg{
             "Асъори номаълум",
         }
     }
-    Currencies%narrow{
-        BRL{"R$"}
-        CNY{"¥"}
-        EUR{"€"}
-        GBP{"£"}
-        INR{"₹"}
-        JPY{"¥"}
-        RUB{"₽"}
-        USD{"$"}
-    }
     CurrencyPlurals{
         BRL{
             other{"реали бразилиягӣ"}
@@ -75,9 +65,6 @@ tg{
         }
         RUB{
             other{"рубли русӣ"}
-        }
-        TJS{
-            other{"Сомонӣ"}
         }
         USD{
             other{"доллари ИМА"}

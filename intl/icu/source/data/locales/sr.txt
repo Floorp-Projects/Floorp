@@ -2,36 +2,16 @@
 // License & terms of use: http://www.unicode.org/copyright.html
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 sr{
-    AuxExemplarCharacters{"[{а\u0302} {е\u0302} {и\u0302} {о\u0302} {у\u0302}]"}
-    Ellipsis{
-        final{"{0}…"}
-        initial{"…{0}"}
-        medial{"{0}…{1}"}
-        word-final{"{0} …"}
-        word-initial{"… {0}"}
-        word-medial{"{0} … {1}"}
-    }
+    AuxExemplarCharacters{"[{а̂} {е̂} {и̂} {о̂} {у̂}]"}
     ExemplarCharacters{"[а б в г д ђ е ж з и ј к л љ м н њ о п р с т ћ у ф х ц ч џ ш]"}
     ExemplarCharactersIndex{"[А Б В Г Д Ђ Е Ж З И Ј К Л Љ М Н Њ О П Р С Т Ћ У Ф Х Ц Ч Џ Ш]"}
-    ExemplarCharactersNumbers{"[\\- ‑ , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
-    ExemplarCharactersPunctuation{"[\\- ‐ ‑ – , ; \\: ! ? . … ‘ ‚ “ „ ( ) \\[ \\] \\{ \\} * #]"}
-    MoreInformation{"?"}
+    ExemplarCharactersPunctuation{"[\\- ‐‑ – , ; \\: ! ? . … ‘‚ “„ ( ) \\[ \\] \\{ \\} * #]"}
     NumberElements{
-        default{"latn"}
         latn{
-            miscPatterns{
-                approximately{"~{0}"}
-                atLeast{"≥{0}"}
-                atMost{"≤{0}"}
-                range{"{0}–{1}"}
-            }
             patterns{
                 accountingFormat{"#,##0.00 ¤;(#,##0.00 ¤)"}
                 accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
                 currencyFormat{"#,##0.00 ¤"}
-                decimalFormat{"#,##0.###"}
-                percentFormat{"#,##0%"}
-                scientificFormat{"#E0"}
             }
             patternsLong{
                 decimalFormat{
@@ -162,62 +142,50 @@ sr{
                 }
                 decimalFormat{
                     1000{
-                        few{"0 хиљ'.'"}
                         one{"0 хиљ'.'"}
                         other{"0 хиљ'.'"}
                     }
                     10000{
-                        few{"00 хиљ'.'"}
                         one{"00 хиљ'.'"}
                         other{"00 хиљ'.'"}
                     }
                     100000{
-                        few{"000 хиљ'.'"}
                         one{"000 хиљ'.'"}
                         other{"000 хиљ'.'"}
                     }
                     1000000{
-                        few{"0 мил'.'"}
                         one{"0 мил'.'"}
                         other{"0 мил'.'"}
                     }
                     10000000{
-                        few{"00 мил'.'"}
                         one{"00 мил'.'"}
                         other{"00 мил'.'"}
                     }
                     100000000{
-                        few{"000 мил'.'"}
                         one{"000 мил'.'"}
                         other{"000 мил'.'"}
                     }
                     1000000000{
-                        few{"0 млрд'.'"}
                         one{"0 млрд'.'"}
                         other{"0 млрд'.'"}
                     }
                     10000000000{
-                        few{"00 млрд'.'"}
                         one{"00 млрд'.'"}
                         other{"00 млрд'.'"}
                     }
                     100000000000{
-                        few{"000 млрд'.'"}
                         one{"000 млрд'.'"}
                         other{"000 млрд'.'"}
                     }
                     1000000000000{
-                        few{"0 бил'.'"}
                         one{"0 бил'.'"}
                         other{"0 бил'.'"}
                     }
                     10000000000000{
-                        few{"00 бил'.'"}
                         one{"00 бил'.'"}
                         other{"00 бил'.'"}
                     }
                     100000000000000{
-                        few{"000 бил'.'"}
                         one{"000 бил'.'"}
                         other{"000 бил'.'"}
                     }
@@ -225,17 +193,7 @@ sr{
             }
             symbols{
                 decimal{","}
-                exponential{"E"}
                 group{"."}
-                infinity{"∞"}
-                list{";"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         minimalPairs{
@@ -259,8 +217,6 @@ sr{
                 other{"{0} сати"}
             }
         }
-        minimumGroupingDigits{"1"}
-        native{"latn"}
     }
     calendar{
         buddhist{
@@ -328,12 +284,6 @@ sr{
                 "{1} {0}",
                 "{1} {0}",
             }
-            DateTimePatterns%atTime{
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-            }
             DateTimeSkeletons{
                 "HHmmsszzzz",
                 "HHmmssz",
@@ -345,14 +295,10 @@ sr{
                 "GGGGGyMd",
             }
             availableFormats{
-                Bh{"h B"}
                 Bhm{"hh:mm B"}
                 Bhms{"hh:mm:ss B"}
-                E{"ccc"}
                 EBhm{"E hh:mm B"}
                 EBhms{"E hh:mm:ss B"}
-                EHm{"E HH:mm"}
-                EHms{"E HH:mm:ss"}
                 Ed{"E d."}
                 Ehm{"E hh:mm a"}
                 Ehms{"E hh:mm:ss a"}
@@ -361,12 +307,7 @@ sr{
                 GyMMMEd{"E, d. MMM y. G"}
                 GyMMMd{"d. MMM y. G"}
                 GyMd{"d.M.y. GGGGG"}
-                H{"HH"}
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
-                M{"L"}
                 MEd{"E, d.M."}
-                MMM{"LLL"}
                 MMMEd{"E, d. MMM"}
                 MMMMEd{"E, d. MMMM"}
                 MMMMd{"d. MMMM"}
@@ -374,11 +315,9 @@ sr{
                 MMMdd{"dd.MMM"}
                 MMdd{"MM-dd"}
                 Md{"d.M."}
-                d{"d"}
                 h{"h a"}
                 hm{"hh:mm a"}
                 hms{"hh:mm:ss a"}
-                ms{"mm:ss"}
                 y{"y. G"}
                 yyyy{"y. G"}
                 yyyyM{"M.y. GGGGG"}
@@ -394,20 +333,6 @@ sr{
                 yyyyQQQQ{"QQQQ y. G"}
             }
             intervalFormats{
-                H{
-                    H{"HH–HH"}
-                }
-                Hm{
-                    H{"HH:mm–HH:mm"}
-                    m{"HH:mm–HH:mm"}
-                }
-                Hmv{
-                    H{"HH:mm–HH:mm v"}
-                    m{"HH:mm–HH:mm v"}
-                }
-                Hv{
-                    H{"HH–HH v"}
-                }
                 M{
                     M{"M–M"}
                 }
@@ -429,9 +354,6 @@ sr{
                 Md{
                     M{"d.M – d.M"}
                     d{"d.M – d.M"}
-                }
-                d{
-                    d{"d–d"}
                 }
                 fallback{"{0} – {1}"}
                 h{
@@ -490,14 +412,6 @@ sr{
             }
         }
         gregorian{
-            AmPmMarkers{
-                "AM",
-                "PM",
-            }
-            AmPmMarkersNarrow{
-                "AM",
-                "PM",
-            }
             DateTimePatterns{
                 "HH:mm:ss zzzz",
                 "HH:mm:ss z",
@@ -513,12 +427,6 @@ sr{
                 "{1} {0}",
                 "{1} {0}",
             }
-            DateTimePatterns%atTime{
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-            }
             DateTimeSkeletons{
                 "HHmmsszzzz",
                 "HHmmssz",
@@ -529,18 +437,12 @@ sr{
                 "yMMdd",
                 "yyMd",
             }
-            appendItems{
-                Timezone{"{0} {1}"}
-            }
             availableFormats{
-                Bh{"h B"}
                 Bhm{"hh:mm B"}
                 Bhms{"hh:mm:ss B"}
                 E{"E"}
                 EBhm{"E hh:mm B"}
                 EBhms{"E hh:mm:ss B"}
-                EHm{"E HH:mm"}
-                EHms{"E HH:mm:ss"}
                 Ed{"E d."}
                 Ehm{"E h:mm a"}
                 Ehms{"E h:mm:ss a"}
@@ -549,14 +451,7 @@ sr{
                 GyMMMEd{"E, d. MMM y. G"}
                 GyMMMd{"d. MMM y. G"}
                 GyMd{"d.MM.y. GGGGG"}
-                H{"HH"}
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
-                Hmsv{"HH:mm:ss v"}
-                Hmv{"HH:mm v"}
-                M{"L"}
                 MEd{"E, d. M."}
-                MMM{"LLL"}
                 MMMEd{"E d. MMM"}
                 MMMMEd{"E, d. MMMM"}
                 MMMMW{
@@ -569,13 +464,11 @@ sr{
                 MMMdd{"dd.MMM"}
                 MMdd{"dd.MM."}
                 Md{"d. M."}
-                d{"d"}
                 h{"h a"}
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
                 hmsv{"h:mm:ss a v"}
                 hmv{"h:mm a v"}
-                ms{"mm:ss"}
                 y{"y."}
                 yM{"M. y."}
                 yMEd{"E, d. M. y."}
@@ -605,15 +498,6 @@ sr{
                         "пет",
                         "суб",
                     }
-                    narrow{
-                        "н",
-                        "п",
-                        "у",
-                        "с",
-                        "ч",
-                        "п",
-                        "с",
-                    }
                     short{
                         "не",
                         "по",
@@ -634,15 +518,6 @@ sr{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "нед",
-                        "пон",
-                        "уто",
-                        "сре",
-                        "чет",
-                        "пет",
-                        "суб",
-                    }
                     narrow{
                         "н",
                         "п",
@@ -651,24 +526,6 @@ sr{
                         "ч",
                         "п",
                         "с",
-                    }
-                    short{
-                        "не",
-                        "по",
-                        "ут",
-                        "ср",
-                        "че",
-                        "пе",
-                        "су",
-                    }
-                    wide{
-                        "недеља",
-                        "понедељак",
-                        "уторак",
-                        "среда",
-                        "четвртак",
-                        "петак",
-                        "субота",
                     }
                 }
             }
@@ -690,45 +547,17 @@ sr{
                         night1{"ноћу"}
                         noon{"подне"}
                     }
-                    wide{
-                        afternoon1{"по подне"}
-                        evening1{"увече"}
-                        midnight{"поноћ"}
-                        morning1{"ујутро"}
-                        night1{"ноћу"}
-                        noon{"подне"}
-                    }
                 }
                 stand-alone{
                     abbreviated{
                         afternoon1{"поподне"}
-                        am{"AM"}
                         evening1{"вече"}
-                        midnight{"поноћ"}
                         morning1{"јутро"}
                         night1{"ноћ"}
-                        noon{"подне"}
-                        pm{"PM"}
                     }
                     narrow{
-                        afternoon1{"поподне"}
                         am{"пре подне"}
-                        evening1{"вече"}
-                        midnight{"поноћ"}
-                        morning1{"јутро"}
-                        night1{"ноћ"}
-                        noon{"подне"}
                         pm{"по подне"}
-                    }
-                    wide{
-                        afternoon1{"поподне"}
-                        am{"AM"}
-                        evening1{"вече"}
-                        midnight{"поноћ"}
-                        morning1{"јутро"}
-                        night1{"ноћ"}
-                        noon{"подне"}
-                        pm{"PM"}
                     }
                 }
             }
@@ -751,20 +580,6 @@ sr{
                 }
             }
             intervalFormats{
-                H{
-                    H{"HH–HH"}
-                }
-                Hm{
-                    H{"HH:mm–HH:mm"}
-                    m{"HH:mm–HH:mm"}
-                }
-                Hmv{
-                    H{"HH:mm–HH:mm v"}
-                    m{"HH:mm–HH:mm v"}
-                }
-                Hv{
-                    H{"HH–HH v"}
-                }
                 M{
                     M{"M–M"}
                 }
@@ -787,9 +602,6 @@ sr{
                     M{"d. M. – d. M."}
                     d{"d. M. – d. M."}
                 }
-                d{
-                    d{"d–d"}
-                }
                 fallback{"{0} – {1}"}
                 h{
                     a{"h a – h a"}
@@ -808,9 +620,6 @@ sr{
                 hv{
                     a{"h a – h a v"}
                     h{"h–h a v"}
-                }
-                y{
-                    y{"y–y"}
                 }
                 yM{
                     M{"M – M. y."}
@@ -861,20 +670,6 @@ sr{
                         "нов",
                         "дец",
                     }
-                    narrow{
-                        "ј",
-                        "ф",
-                        "м",
-                        "а",
-                        "м",
-                        "ј",
-                        "ј",
-                        "а",
-                        "с",
-                        "о",
-                        "н",
-                        "д",
-                    }
                     wide{
                         "јануар",
                         "фебруар",
@@ -891,20 +686,6 @@ sr{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "јан",
-                        "феб",
-                        "мар",
-                        "апр",
-                        "мај",
-                        "јун",
-                        "јул",
-                        "авг",
-                        "сеп",
-                        "окт",
-                        "нов",
-                        "дец",
-                    }
                     narrow{
                         "ј",
                         "ф",
@@ -918,20 +699,6 @@ sr{
                         "о",
                         "н",
                         "д",
-                    }
-                    wide{
-                        "јануар",
-                        "фебруар",
-                        "март",
-                        "април",
-                        "мај",
-                        "јун",
-                        "јул",
-                        "август",
-                        "септембар",
-                        "октобар",
-                        "новембар",
-                        "децембар",
                     }
                 }
             }
@@ -943,12 +710,6 @@ sr{
                         "3. кв.",
                         "4. кв.",
                     }
-                    narrow{
-                        "1.",
-                        "2.",
-                        "3.",
-                        "4.",
-                    }
                     wide{
                         "први квартал",
                         "други квартал",
@@ -957,23 +718,11 @@ sr{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "1. кв.",
-                        "2. кв.",
-                        "3. кв.",
-                        "4. кв.",
-                    }
                     narrow{
                         "1.",
                         "2.",
                         "3.",
                         "4.",
-                    }
-                    wide{
-                        "први квартал",
-                        "други квартал",
-                        "трећи квартал",
-                        "четврти квартал",
                     }
                 }
             }
@@ -1026,50 +775,6 @@ sr{
             }
         }
         islamic{
-            DateTimePatterns{
-                "HH:mm:ss zzzz",
-                "HH:mm:ss z",
-                "HH:mm:ss",
-                "HH:mm",
-                "EEEE, d. MMMM y. G",
-                "d. MMMM y. G",
-                "d.MM.y. G",
-                "d.M.y. GGGGG",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-            }
-            availableFormats{
-                E{"ccc"}
-                Ed{"E d."}
-                Gy{"y. G"}
-                GyMMM{"MMM y. G"}
-                GyMMMEd{"E, d. MMM y. G"}
-                GyMMMd{"d. MMM y. G"}
-                GyMd{"d.M.y. GGGGG"}
-                M{"L"}
-                MEd{"E, d.M."}
-                MMM{"LLL"}
-                MMMEd{"E, d. MMM"}
-                MMMMEd{"E, d. MMMM"}
-                MMMMd{"d. MMMM"}
-                MMMd{"d. MMM"}
-                Md{"d.M."}
-                d{"d"}
-                y{"y. G"}
-                yyyy{"y. G"}
-                yyyyM{"M.y. GGGGG"}
-                yyyyMEd{"E, d.M.y. GGGGG"}
-                yyyyMMM{"MMM y. G"}
-                yyyyMMMEd{"E, d. MMM y. G"}
-                yyyyMMMM{"MMMM y. G"}
-                yyyyMMMd{"d. MMM y. G"}
-                yyyyMd{"d.M.y. GGGGG"}
-                yyyyQQQ{"QQQ, y. G"}
-                yyyyQQQQ{"QQQQ y. G"}
-            }
             eras{
                 abbreviated{
                     "АХ",
@@ -1091,20 +796,6 @@ sr{
                         "Зул-к.",
                         "Зул-х.",
                     }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10",
-                        "11",
-                        "12",
-                    }
                     wide{
                         "Мухарем",
                         "Сафар",
@@ -1121,20 +812,6 @@ sr{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "Мух.",
-                        "Саф.",
-                        "Реб. 1",
-                        "Реб. 2",
-                        "Џум. 1",
-                        "Џум. 2",
-                        "Реџ.",
-                        "Ша.",
-                        "Рам.",
-                        "Ше.",
-                        "Зул-к.",
-                        "Зул-х.",
-                    }
                     wide{
                         "Мухарем",
                         "Сафер",
@@ -1539,7 +1216,6 @@ sr{
     }
     delimiters{
         alternateQuotationEnd{"‘"}
-        alternateQuotationStart{"‘"}
         quotationEnd{"“"}
         quotationStart{"„"}
     }
@@ -1566,37 +1242,8 @@ sr{
                 }
             }
         }
-        day-narrow{
-            dn{"д."}
-            relative{
-                "-1"{"јуче"}
-                "-2"{"прекјуче"}
-                "0"{"данас"}
-                "1"{"сутра"}
-                "2"{"прекосутра"}
-            }
-            relativeTime{
-                future{
-                    few{"за {0} д."}
-                    one{"за {0} д."}
-                    other{"за {0} д."}
-                }
-                past{
-                    few{"пре {0} д."}
-                    one{"пре {0} д."}
-                    other{"пре {0} д."}
-                }
-            }
-        }
         day-short{
             dn{"д."}
-            relative{
-                "-1"{"јуче"}
-                "-2"{"прекјуче"}
-                "0"{"данас"}
-                "1"{"сутра"}
-                "2"{"прекосутра"}
-            }
             relativeTime{
                 future{
                     few{"за {0} д."}
@@ -1613,28 +1260,16 @@ sr{
         dayOfYear{
             dn{"дан у години"}
         }
-        dayOfYear-narrow{
-            dn{"дан у год."}
-        }
         dayOfYear-short{
             dn{"дан у год."}
         }
         dayperiod{
             dn{"AM/PM"}
         }
-        dayperiod-narrow{
-            dn{"пре подне/по подне"}
-        }
         dayperiod-short{
             dn{"пре подне/по подне"}
         }
         era{
-            dn{"ера"}
-        }
-        era-narrow{
-            dn{"ера"}
-        }
-        era-short{
             dn{"ера"}
         }
         fri{
@@ -1656,42 +1291,11 @@ sr{
                 }
             }
         }
-        fri-narrow{
-            relative{
-                "-1"{"прошлог пет"}
-                "0"{"у пет"}
-                "1"{"следећег пет"}
-            }
-            relativeTime{
-                future{
-                    few{"за {0} петка"}
-                    one{"за {0} петак"}
-                    other{"за {0} петака"}
-                }
-                past{
-                    few{"пре {0} петка"}
-                    one{"пре {0} петка"}
-                    other{"пре {0} петака"}
-                }
-            }
-        }
         fri-short{
             relative{
                 "-1"{"прошлог пет"}
                 "0"{"у пет"}
                 "1"{"следећег пет"}
-            }
-            relativeTime{
-                future{
-                    few{"за {0} петка"}
-                    one{"за {0} петак"}
-                    other{"за {0} петака"}
-                }
-                past{
-                    few{"пре {0} петка"}
-                    one{"пре {0} петка"}
-                    other{"пре {0} петака"}
-                }
             }
         }
         hour{
@@ -1709,21 +1313,6 @@ sr{
                     few{"пре {0} сата"}
                     one{"пре {0} сата"}
                     other{"пре {0} сати"}
-                }
-            }
-        }
-        hour-narrow{
-            dn{"ч."}
-            relativeTime{
-                future{
-                    few{"за {0} ч."}
-                    one{"за {0} ч."}
-                    other{"за {0} ч."}
-                }
-                past{
-                    few{"пре {0} ч."}
-                    one{"пре {0} ч."}
-                    other{"пре {0} ч."}
                 }
             }
         }
@@ -1757,21 +1346,6 @@ sr{
                     few{"пре {0} минута"}
                     one{"пре {0} минута"}
                     other{"пре {0} минута"}
-                }
-            }
-        }
-        minute-narrow{
-            dn{"мин."}
-            relativeTime{
-                future{
-                    few{"за {0} мин."}
-                    one{"за {0} мин."}
-                    other{"за {0} мин."}
-                }
-                past{
-                    few{"пре {0} мин."}
-                    one{"пре {0} мин."}
-                    other{"пре {0} мин."}
                 }
             }
         }
@@ -1810,21 +1384,11 @@ sr{
             }
         }
         mon-narrow{
-            relative{
-                "-1"{"прошлог пон"}
-                "0"{"у пон"}
-                "1"{"следећег пон"}
-            }
             relativeTime{
                 future{
                     few{"за {0} понедељкa"}
                     one{"за {0} понедељак"}
                     other{"за {0} понедељака"}
-                }
-                past{
-                    few{"пре {0} понедељка"}
-                    one{"пре {0} понедељка"}
-                    other{"пре {0} понедељака"}
                 }
             }
         }
@@ -1833,18 +1397,6 @@ sr{
                 "-1"{"прошлог пон"}
                 "0"{"у пон"}
                 "1"{"следећег пон"}
-            }
-            relativeTime{
-                future{
-                    few{"за {0} понедељка"}
-                    one{"за {0} понедељак"}
-                    other{"за {0} понедељака"}
-                }
-                past{
-                    few{"пре {0} понедељка"}
-                    one{"пре {0} понедељка"}
-                    other{"пре {0} понедељака"}
-                }
             }
         }
         month{
@@ -1868,12 +1420,6 @@ sr{
             }
         }
         month-narrow{
-            dn{"мес."}
-            relative{
-                "-1"{"прошлог мес."}
-                "0"{"овог мес."}
-                "1"{"следећег мес."}
-            }
             relativeTime{
                 future{
                     few{"за {0} м."}
@@ -1927,33 +1473,8 @@ sr{
                 }
             }
         }
-        quarter-narrow{
-            dn{"кв."}
-            relative{
-                "-1"{"прошлог квартала"}
-                "0"{"овог квартала"}
-                "1"{"следећег квартала"}
-            }
-            relativeTime{
-                future{
-                    few{"за {0} кв."}
-                    one{"за {0} кв."}
-                    other{"за {0} кв."}
-                }
-                past{
-                    few{"пре {0} кв."}
-                    one{"пре {0} кв."}
-                    other{"пре {0} кв."}
-                }
-            }
-        }
         quarter-short{
             dn{"кв."}
-            relative{
-                "-1"{"прошлог квартала"}
-                "0"{"овог квартала"}
-                "1"{"следећег квартала"}
-            }
             relativeTime{
                 future{
                     few{"за {0} кв."}
@@ -1986,42 +1507,11 @@ sr{
                 }
             }
         }
-        sat-narrow{
-            relative{
-                "-1"{"прошле суб"}
-                "0"{"у суб"}
-                "1"{"следеће суб"}
-            }
-            relativeTime{
-                future{
-                    few{"за {0} суботе"}
-                    one{"за {0} суботу"}
-                    other{"за {0} субота"}
-                }
-                past{
-                    few{"пре {0} суботе"}
-                    one{"пре {0} суботе"}
-                    other{"пре {0} субота"}
-                }
-            }
-        }
         sat-short{
             relative{
                 "-1"{"прошле суб"}
                 "0"{"у суб"}
                 "1"{"следеће суб"}
-            }
-            relativeTime{
-                future{
-                    few{"за {0} суботе"}
-                    one{"за {0} суботу"}
-                    other{"за {0} субота"}
-                }
-                past{
-                    few{"пре {0} суботе"}
-                    one{"пре {0} суботе"}
-                    other{"пре {0} субота"}
-                }
             }
         }
         second{
@@ -2091,42 +1581,11 @@ sr{
                 }
             }
         }
-        sun-narrow{
-            relative{
-                "-1"{"пр. нед."}
-                "0"{"у нед"}
-                "1"{"сл. нед."}
-            }
-            relativeTime{
-                future{
-                    few{"за {0} недеље"}
-                    one{"за {0} недељу"}
-                    other{"за {0} недеља"}
-                }
-                past{
-                    few{"пре {0} недеље"}
-                    one{"пре {0} недеље"}
-                    other{"пре {0} недеља"}
-                }
-            }
-        }
         sun-short{
             relative{
                 "-1"{"пр. нед."}
                 "0"{"у нед"}
                 "1"{"сл. нед."}
-            }
-            relativeTime{
-                future{
-                    few{"за {0} недеље"}
-                    one{"за {0} недељу"}
-                    other{"за {0} недеља"}
-                }
-                past{
-                    few{"пре {0} недеље"}
-                    one{"пре {0} недеље"}
-                    other{"пре {0} недеља"}
-                }
             }
         }
         thu{
@@ -2148,42 +1607,11 @@ sr{
                 }
             }
         }
-        thu-narrow{
-            relative{
-                "-1"{"прошлог чет"}
-                "0"{"у чет"}
-                "1"{"следећег чет"}
-            }
-            relativeTime{
-                future{
-                    few{"за {0} четвртка"}
-                    one{"за {0} четвртак"}
-                    other{"за {0} четвртака"}
-                }
-                past{
-                    few{"пре {0} четвртка"}
-                    one{"пре {0} четвртка"}
-                    other{"пре {0} четвртака"}
-                }
-            }
-        }
         thu-short{
             relative{
                 "-1"{"прошлог чет"}
                 "0"{"у чет"}
                 "1"{"следећег чет"}
-            }
-            relativeTime{
-                future{
-                    few{"за {0} четвртка"}
-                    one{"за {0} четвртак"}
-                    other{"за {0} четвртака"}
-                }
-                past{
-                    few{"пре {0} четвртка"}
-                    one{"пре {0} четвртка"}
-                    other{"пре {0} четвртака"}
-                }
             }
         }
         tue{
@@ -2205,42 +1633,11 @@ sr{
                 }
             }
         }
-        tue-narrow{
-            relative{
-                "-1"{"прошлог уто"}
-                "0"{"у уто"}
-                "1"{"следећег уто"}
-            }
-            relativeTime{
-                future{
-                    few{"за {0} уторка"}
-                    one{"за {0} уторак"}
-                    other{"за {0} уторака"}
-                }
-                past{
-                    few{"пре {0} уторка"}
-                    one{"пре {0} уторка"}
-                    other{"пре {0} уторака"}
-                }
-            }
-        }
         tue-short{
             relative{
                 "-1"{"прошлог уто"}
                 "0"{"у уто"}
                 "1"{"следећег уто"}
-            }
-            relativeTime{
-                future{
-                    few{"за {0} уторка"}
-                    one{"за {0} уторак"}
-                    other{"за {0} уторака"}
-                }
-                past{
-                    few{"пре {0} уторка"}
-                    one{"пре {0} уторка"}
-                    other{"пре {0} уторака"}
-                }
             }
         }
         wed{
@@ -2262,42 +1659,11 @@ sr{
                 }
             }
         }
-        wed-narrow{
-            relative{
-                "-1"{"прошле сре"}
-                "0"{"у сре"}
-                "1"{"следеће сре"}
-            }
-            relativeTime{
-                future{
-                    few{"за {0} среде"}
-                    one{"за {0} среду"}
-                    other{"за {0} среда"}
-                }
-                past{
-                    few{"пре {0} среде"}
-                    one{"пре {0} среде"}
-                    other{"пре {0} среда"}
-                }
-            }
-        }
         wed-short{
             relative{
                 "-1"{"прошле сре"}
                 "0"{"у сре"}
                 "1"{"следеће сре"}
-            }
-            relativeTime{
-                future{
-                    few{"за {0} среде"}
-                    one{"за {0} среду"}
-                    other{"за {0} среда"}
-                }
-                past{
-                    few{"пре {0} среде"}
-                    one{"пре {0} среде"}
-                    other{"пре {0} среда"}
-                }
             }
         }
         week{
@@ -2322,13 +1688,11 @@ sr{
             }
         }
         week-narrow{
-            dn{"нед."}
             relative{
                 "-1"{"прошле н."}
                 "0"{"ове н."}
                 "1"{"следеће н."}
             }
-            relativePeriod{"недеља која почиње {0}."}
             relativeTime{
                 future{
                     few{"за {0} н."}
@@ -2349,7 +1713,6 @@ sr{
                 "0"{"ове нед."}
                 "1"{"следеће нед."}
             }
-            relativePeriod{"недеља која почиње {0}."}
             relativeTime{
                 future{
                     few{"за {0} нед."}
@@ -2366,28 +1729,13 @@ sr{
         weekOfMonth{
             dn{"недеља у месецу"}
         }
-        weekOfMonth-narrow{
-            dn{"нед. у мес."}
-        }
         weekOfMonth-short{
             dn{"нед. у мес."}
         }
         weekday{
             dn{"дан у недељи"}
         }
-        weekday-narrow{
-            dn{"дан у недељи"}
-        }
-        weekday-short{
-            dn{"дан у недељи"}
-        }
         weekdayOfMonth{
-            dn{"дан у месецу"}
-        }
-        weekdayOfMonth-narrow{
-            dn{"дан у месецу"}
-        }
-        weekdayOfMonth-short{
             dn{"дан у месецу"}
         }
         year{
@@ -2453,67 +1801,15 @@ sr{
         zone{
             dn{"временска зона"}
         }
-        zone-narrow{
-            dn{"временска зона"}
-        }
-        zone-short{
-            dn{"временска зона"}
-        }
     }
     listPattern{
         or{
             2{"{0} или {1}"}
             end{"{0} или {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        or-narrow{
-            2{"{0} или {1}"}
-            end{"{0} или {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        or-short{
-            2{"{0} или {1}"}
-            end{"{0} или {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
         standard{
             2{"{0} и {1}"}
             end{"{0} и {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        standard-narrow{
-            2{"{0} и {1}"}
-            end{"{0} и {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        standard-short{
-            2{"{0} и {1}"}
-            end{"{0} и {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        unit{
-            2{"{0} и {1}"}
-            end{"{0} и {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        unit-narrow{
-            2{"{0} и {1}"}
-            end{"{0} и {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        unit-short{
-            2{"{0} и {1}"}
-            end{"{0} и {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
     }
     measurementSystemNames{
@@ -2524,28 +1820,28 @@ sr{
     parse{
         date{
             lenient{
-                "[\\--/]",
-                "[\\:∶]",
+                "[\\- ‑ . /]",
+                "[\\: ∶]",
             }
         }
         general{
             lenient{
-                "[.․。︒﹒．｡]",
-                "['ʼ՚᾽᾿’＇]",
-                "[%٪﹪％]",
-                "[؉‰]",
-                "[\$﹩＄$]",
-                "[£₤]",
+                "[.．․﹒ 。｡︒]",
+                "['＇’ ՚ ᾽᾿ ʼ]",
+                "[%％﹪ ٪]",
+                "[‰ ؉]",
+                "[\$＄﹩]",
+                "[£ ₤]",
                 "[¥￥]",
                 "[₩￦]",
-                "[₨₹{Rp}{Rs}]",
+                "[₹ ₨ {Rp} {Rs}]",
             }
         }
         number{
             lenient{
-                "[\\-‒⁻₋−➖﹣－]",
-                "[,،٫⹁、︐︑﹐﹑，､]",
-                "[+⁺₊➕﬩﹢＋]",
+                "[\\-－﹣ ‑ ‒ −⁻₋ ➖]",
+                "[,，﹐︐ ⹁ ، ٫ 、﹑､︑]",
+                "[+＋﬩﹢⁺₊ ➕]",
             }
         }
     }

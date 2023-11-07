@@ -1886,10 +1886,6 @@ ps{
         "meta:Yukon"{
             ls{"د یوکون وخت"}
         }
-        fallbackFormat{"{1} ({0})"}
-        gmtFormat{"GMT{0}"}
-        gmtZeroFormat{"GMT"}
-        hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"د {0} په وخت"}
         regionFormatDaylight{"{0} رڼا ورځ وخت"}
         regionFormatStandard{"{0} معیاری وخت"}

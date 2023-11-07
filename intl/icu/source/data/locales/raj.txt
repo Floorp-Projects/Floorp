@@ -4,22 +4,16 @@
 raj{
     AuxExemplarCharacters{"[आ इ ई उ ऊ ऋ ए ऐ ओ औ]"}
     ExemplarCharacters{
-        "[\u0901 \u0902 ः अ क ख ग घ ङ च छ ज झ ञ ट ठ ड ढ ण त थ द ध न प फ ब भ म य र ल व"
-        " श ष स ह ा ि ी \u0941 \u0942 \u0943 \u0945 \u0947 \u0948 ो ौ \u094D]"
+        "[ँ ंः अ क ख ग घ ङ च छ ज झ ञ ट ठ ड ढ ण त थ द ध न प फ ब भ म य र ल व श ष स ह ा "
+        "ि ी ु ू ृ ॅ े ै ो ौ ्]"
     }
     ExemplarCharactersNumbers{"[\\- ‑ , . % ‰ + 0० 1१ 2२ 3३ 4४ 5५ 6६ 7७ 8८ 9९]"}
     ExemplarCharactersPunctuation{
-        "[\\- ‑ , \\: ! ? . … ' ‘ ’ \u0022 “ ” ( ) \\[ \\] \\{ \\} § @ * / \\\\ \\& #"
-        " ` |]"
+        "[\\- ‑ , \\: ! ? . … '‘’ \u0022“” ( ) \\[ \\] \\{ \\} § @ * / \\\\ \\& # ` |"
+        "]"
     }
     NumberElements{
         default{"deva"}
-        latn{
-            symbols{
-                decimal{"."}
-            }
-        }
-        native{"latn"}
     }
     calendar{
         gregorian{

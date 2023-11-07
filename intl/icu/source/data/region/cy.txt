@@ -275,7 +275,7 @@ cy{
         UA{"Wcráin"}
         UG{"Uganda"}
         UM{"Ynysoedd Pellennig UDA"}
-        UN{"y Cenhedloedd Unedig"}
+        UN{"Y Cenhedloedd Unedig"}
         US{"Yr Unol Daleithiau"}
         UY{"Uruguay"}
         UZ{"Uzbekistan"}
@@ -298,12 +298,15 @@ cy{
         ZW{"Zimbabwe"}
         ZZ{"Rhanbarth Anhysbys"}
     }
+    Countries%chagos{
+        IO{"Ynysfor Chagos"}
+    }
     Countries%short{
         GB{"DU"}
         HK{"Hong Kong"}
         MO{"Macau"}
         PS{"Palesteina"}
-        UN{"UN"}
+        UN{"CU"}
         US{"UDA"}
     }
     Countries%variant{

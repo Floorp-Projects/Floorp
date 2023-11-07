@@ -55,22 +55,6 @@ sr_Latn_XK{
                         "dec",
                     }
                 }
-                stand-alone{
-                    abbreviated{
-                        "jan",
-                        "feb",
-                        "mart",
-                        "apr",
-                        "maj",
-                        "jun",
-                        "jul",
-                        "avg",
-                        "sept",
-                        "okt",
-                        "nov",
-                        "dec",
-                    }
-                }
             }
         }
     }

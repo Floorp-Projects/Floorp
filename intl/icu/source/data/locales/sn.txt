@@ -5,34 +5,13 @@ sn{
     AuxExemplarCharacters{"[q x]"}
     ExemplarCharacters{"[a b c d e f g h i j k l m n o p r s t u v w y z]"}
     ExemplarCharactersIndex{"[A B C D E F G H I J K L M N O P R S T U V W Y Z]"}
-    ExemplarCharactersNumbers{"[\\- ‑ , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     NumberElements{
         latn{
-            miscPatterns{
-                atLeast{"≥{0}"}
-                range{"{0}–{1}"}
-            }
             patterns{
                 accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
                 currencyFormat{"¤#,##0.00"}
-                decimalFormat{"#,##0.###"}
-                percentFormat{"#,##0%"}
-                scientificFormat{"#E0"}
-            }
-            symbols{
-                decimal{"."}
-                exponential{"E"}
-                group{","}
-                infinity{"∞"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
             }
         }
-        minimumGroupingDigits{"1"}
     }
     calendar{
         generic{
@@ -51,33 +30,12 @@ sn{
                 "{1} {0}",
                 "{1} {0}",
             }
-            DateTimeSkeletons{
-                "HHmmsszzzz",
-                "HHmmssz",
-                "HHmmss",
-                "HHmm",
-                "GyMMMMEEEEd",
-                "GyMMMMd",
-                "GyMMMd",
-                "GGGGGyMMdd",
-            }
             availableFormats{
-                E{"ccc"}
-                Ed{"d, E"}
-                Gy{"G y"}
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
-                M{"L"}
                 MEd{"E, M/d"}
-                MMM{"LLL"}
                 MMMEd{"E, MMM d"}
                 MMMMEd{"E, MMMM d"}
-                MMMMd{"MMMM d"}
-                MMMd{"MMM d"}
                 Md{"M/d"}
-                d{"d"}
                 hm{"h:mm a"}
-                ms{"mm:ss"}
                 y{"y"}
                 yM{"M/y"}
                 yMEd{"E, M/d/y"}
@@ -89,87 +47,19 @@ sn{
             }
         }
         gregorian{
-            AmPmMarkers{
-                "AM",
-                "PM",
-            }
-            AmPmMarkersAbbr{
-                "AM",
-                "PM",
-            }
             AmPmMarkersNarrow{
                 "a",
                 "p",
             }
-            DateTimePatterns{
-                "HH:mm:ss zzzz",
-                "HH:mm:ss z",
-                "HH:mm:ss",
-                "HH:mm",
-                "y MMMM d, EEEE",
-                "y MMMM d",
-                "y MMM d",
-                "y-MM-dd",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-            }
-            DateTimeSkeletons{
-                "HHmmsszzzz",
-                "HHmmssz",
-                "HHmmss",
-                "HHmm",
-                "yMMMMEEEEd",
-                "yMMMMd",
-                "yMMMd",
-                "yMMdd",
-            }
-            appendItems{
-                Timezone{"{0} {1}"}
-            }
             availableFormats{
-                E{"ccc"}
-                EHm{"E HH:mm"}
-                EHms{"E HH:mm:ss"}
-                Ed{"d, E"}
                 Ehm{"E h:mm a"}
                 Ehms{"E h:mm:ss a"}
-                Gy{"G y"}
-                GyMMM{"G y MMM"}
-                GyMMMEd{"G y MMM d, E"}
-                GyMMMd{"G y MMM d"}
-                H{"HH"}
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
-                Hmsv{"HH:mm:ss v"}
-                Hmv{"HH:mm v"}
-                M{"L"}
-                MEd{"MM-dd, E"}
-                MMM{"LLL"}
-                MMMEd{"MMM d, E"}
                 MMMMEd{"E, MMMM d"}
-                MMMMd{"MMMM d"}
-                MMMd{"MMM d"}
-                Md{"MM-dd"}
-                d{"d"}
                 h{"h a"}
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
                 hmsv{"h:mm:ss a v"}
                 hmv{"h:mm a v"}
-                ms{"mm:ss"}
-                y{"y"}
-                yM{"y-MM"}
-                yMEd{"y-MM-dd, E"}
-                yMMM{"y MMM"}
-                yMMMEd{"y MMM d, E"}
-                yMMMM{"y MMMM"}
-                yMMMd{"y MMM d"}
-                yMd{"y-MM-dd"}
-                yQQQ{"y QQQ"}
-                yQQQQ{"y QQQQ"}
             }
             dayNames{
                 format{
@@ -182,15 +72,6 @@ sn{
                         "Chs",
                         "Mug",
                     }
-                    narrow{
-                        "S",
-                        "M",
-                        "C",
-                        "C",
-                        "C",
-                        "C",
-                        "M",
-                    }
                     short{
                         "Sv",
                         "Mu",
@@ -211,15 +92,6 @@ sn{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "Svo",
-                        "Muv",
-                        "Chp",
-                        "Cht",
-                        "Chn",
-                        "Chs",
-                        "Mug",
-                    }
                     narrow{
                         "S",
                         "M",
@@ -228,40 +100,6 @@ sn{
                         "C",
                         "C",
                         "M",
-                    }
-                    short{
-                        "Sv",
-                        "Mu",
-                        "Cp",
-                        "Ct",
-                        "Cn",
-                        "Cs",
-                        "Mg",
-                    }
-                    wide{
-                        "Svondo",
-                        "Muvhuro",
-                        "Chipiri",
-                        "Chitatu",
-                        "China",
-                        "Chishanu",
-                        "Mugovera",
-                    }
-                }
-            }
-            dayPeriod{
-                stand-alone{
-                    abbreviated{
-                        am{"AM"}
-                        pm{"PM"}
-                    }
-                    narrow{
-                        am{"AM"}
-                        pm{"PM"}
-                    }
-                    wide{
-                        am{"AM"}
-                        pm{"PM"}
                     }
                 }
             }
@@ -280,29 +118,9 @@ sn{
                 }
             }
             intervalFormats{
-                H{
-                    H{"HH–HH"}
-                }
-                Hm{
-                    H{"HH:mm–HH:mm"}
-                    m{"HH:mm–HH:mm"}
-                }
-                Hmv{
-                    H{"HH:mm–HH:mm v"}
-                    m{"HH:mm–HH:mm v"}
-                }
-                Hv{
-                    H{"HH–HH v"}
-                }
-                M{
-                    M{"MM–MM"}
-                }
                 MEd{
                     M{"MM-dd, E – MM-dd, E"}
                     d{"MM-dd, E – MM-dd, E"}
-                }
-                MMM{
-                    M{"LLL–LLL"}
                 }
                 MMMEd{
                     M{"MMM d, E – MMM d, E"}
@@ -310,16 +128,11 @@ sn{
                 }
                 MMMd{
                     M{"MMM d – MMM d"}
-                    d{"MMM d–d"}
                 }
                 Md{
                     M{"MM-dd – MM-dd"}
                     d{"MM-dd – MM-dd"}
                 }
-                d{
-                    d{"d–d"}
-                }
-                fallback{"{0} – {1}"}
                 h{
                     a{"h a – h a"}
                     h{"h–h a"}
@@ -338,9 +151,6 @@ sn{
                     a{"h a – h a v"}
                     h{"h–h a v"}
                 }
-                y{
-                    y{"y–y"}
-                }
                 yM{
                     M{"y-MM – y-MM"}
                     y{"y-MM – y-MM"}
@@ -351,7 +161,6 @@ sn{
                     y{"y-MM-dd, E – y-MM-dd, E"}
                 }
                 yMMM{
-                    M{"y MMM–MMM"}
                     y{"y MMM – y MMM"}
                 }
                 yMMMEd{
@@ -360,12 +169,10 @@ sn{
                     y{"y MMM d, E – y MMM d, E"}
                 }
                 yMMMM{
-                    M{"y MMMM–MMMM"}
                     y{"y MMMM – y MMMM"}
                 }
                 yMMMd{
                     M{"y MMM d – MMM d"}
-                    d{"y MMM d–d"}
                     y{"y MMM d – y MMM d"}
                 }
                 yMd{
@@ -390,20 +197,6 @@ sn{
                         "Mbu",
                         "Zvi",
                     }
-                    narrow{
-                        "N",
-                        "K",
-                        "K",
-                        "K",
-                        "C",
-                        "C",
-                        "C",
-                        "N",
-                        "G",
-                        "G",
-                        "M",
-                        "Z",
-                    }
                     wide{
                         "Ndira",
                         "Kukadzi",
@@ -420,20 +213,6 @@ sn{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "Ndi",
-                        "Kuk",
-                        "Kur",
-                        "Kub",
-                        "Chv",
-                        "Chk",
-                        "Chg",
-                        "Nya",
-                        "Gun",
-                        "Gum",
-                        "Mbu",
-                        "Zvi",
-                    }
                     narrow{
                         "N",
                         "K",
@@ -447,20 +226,6 @@ sn{
                         "G",
                         "M",
                         "Z",
-                    }
-                    wide{
-                        "Ndira",
-                        "Kukadzi",
-                        "Kurume",
-                        "Kubvumbi",
-                        "Chivabvu",
-                        "Chikumi",
-                        "Chikunguru",
-                        "Nyamavhuvhu",
-                        "Gunyana",
-                        "Gumiguru",
-                        "Mbudzi",
-                        "Zvita",
                     }
                 }
             }
@@ -471,32 +236,6 @@ sn{
                         "K2",
                         "K3",
                         "K4",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                    }
-                    wide{
-                        "Kota 1",
-                        "Kota 2",
-                        "Kota 3",
-                        "Kota 4",
-                    }
-                }
-                stand-alone{
-                    abbreviated{
-                        "K1",
-                        "K2",
-                        "K3",
-                        "K4",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
                     }
                     wide{
                         "Kota 1",
@@ -509,9 +248,7 @@ sn{
         }
     }
     delimiters{
-        alternateQuotationEnd{"’"}
         alternateQuotationStart{"’"}
-        quotationEnd{"”"}
         quotationStart{"”"}
     }
     fields{

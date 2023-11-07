@@ -14,6 +14,34 @@ es_EC{
             }
         }
     }
+    calendar{
+        gregorian{
+            AmPmMarkers{
+                "a. m.",
+                "p. m.",
+            }
+            AmPmMarkersAbbr{
+                "a. m.",
+                "p. m.",
+            }
+            dayPeriod{
+                stand-alone{
+                    abbreviated{
+                        am{"a. m."}
+                        pm{"p. m."}
+                    }
+                    narrow{
+                        am{"a. m."}
+                        pm{"p. m."}
+                    }
+                    wide{
+                        am{"a. m."}
+                        pm{"p. m."}
+                    }
+                }
+            }
+        }
+    }
     fields{
         dayperiod{
             dn{"a. m./p. m."}

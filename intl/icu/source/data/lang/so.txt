@@ -47,6 +47,7 @@ so{
         bem{"Bemba"}
         bez{"Bena"}
         bg{"Bulgeeriyaan"}
+        bgc{"Haryanvi"}
         bho{"U dhashay Bhohp"}
         bi{"U dhashay Bislam"}
         bin{"U dhashay Bin"}
@@ -327,6 +328,7 @@ so{
         pt_BR{"Boortaqiiska Baraasiil"}
         pt_PT{"Boortaqiis (Boortuqaal)"}
         qu{"Quwejuwa"}
+        raj{"Rajasthani"}
         rap{"Rapanui"}
         rar{"Rarotongan"}
         rhg{"Rohingya"}
@@ -643,9 +645,8 @@ so{
             hebrew{"Habeentiriska yuhuudda"}
             indian{"Habeentiris Qarameedka Hindiya"}
             islamic{"Habeentiriska islaamka"}
-            islamic-civil{"Taariikhda Islaamiga (tabular, civil epoch)"}
-            islamic-rgsa{"Habeentiriska Islaamka (Sacuudiga, aragtida)"}
-            islamic-tbla{"Taariikhda Islaamiga (tabular, astronomical epoch)"}
+            islamic-civil{"Taariikhda Islaamiga (shax ahaan, waayo madaniyeed)"}
+            islamic-tbla{"Taariikhda Islaamiga (shax ahaan, waayo xiddigeed)"}
             islamic-umalqura{"Taariikhda Islaamiga(Umm al-Qura)"}
             iso8601{"Habeentiriska ISO-8601"}
             japanese{"Habeentiriska jabbaanka"}
@@ -827,6 +828,8 @@ so{
         compatibility{"{0} — waafaqsanaanta"}
         enclosed{"{0}— xiran"}
         extended{"{0}— dheereyey"}
+        facing-left{"{0} bidix u jeeda"}
+        facing-right{"{0} midig u jeeda"}
         historic{"{0}—taariikhi ah"}
         miscellaneous{"{0}— qaar kale"}
         other{"{0}—kale"}

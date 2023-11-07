@@ -19,9 +19,4 @@ mgo{
             latn{"inu"}
         }
     }
-    codePatterns{
-        language{"{0}"}
-        script{"{0}"}
-        territory{"{0}"}
-    }
 }

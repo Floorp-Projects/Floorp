@@ -405,9 +405,6 @@ el{
         "America:Louisville"{
             ec{"Λούιβιλ"}
         }
-        "America:Lower_Princes"{
-            ec{"Lower Prince’s Quarter"}
-        }
         "America:Maceio"{
             ec{"Μασεϊό"}
         }
@@ -1928,9 +1925,6 @@ el{
             ls{"Ώρα Γιούκον"}
         }
         fallbackFormat{"[{1} ({0})]"}
-        gmtFormat{"GMT{0}"}
-        gmtZeroFormat{"GMT"}
-        hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"Ώρα ({0})"}
         regionFormatDaylight{"Θερινή ώρα ({0})"}
         regionFormatStandard{"Χειμερινή ώρα ({0})"}

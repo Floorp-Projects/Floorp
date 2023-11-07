@@ -1916,12 +1916,6 @@ mk{
         "meta:Yukon"{
             ls{"Време во Јукон"}
         }
-        fallbackFormat{"{1} ({0})"}
-        gmtFormat{"GMT{0}"}
-        gmtZeroFormat{"GMT"}
-        hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"Време во {0}"}
-        regionFormatDaylight{"{0} (+1)"}
-        regionFormatStandard{"{0} (+0)"}
     }
 }

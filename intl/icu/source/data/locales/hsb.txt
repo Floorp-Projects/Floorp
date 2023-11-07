@@ -3,33 +3,27 @@
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 hsb{
     AuxExemplarCharacters{
-        "[á à ă â å ä ã ą ā æ ç ď đ é è ĕ ê ë ė ę ē ğ í ì ĭ î ï İ ī ı ĺ ľ ň ñ ò ŏ ô ö"
-        " ő ø ō œ ŕ ś ş ß ť ú ù ŭ û ů ü ű ū ý ÿ ż ź]"
+        "[áàăâåäãąā æ ç ďđ éèĕêëėęē ğ íìĭîïİī ı ĺľ ňñ òŏôöőøō œ ŕ śş ß ť úùŭûůüűū ýÿ "
+        "ż ź]"
     }
     ExemplarCharacters{
-        "[a b c č ć d {dź} e ě f g h {ch} i j k ł l m n ń o ó p q r ř s š t u v w x y"
-        " z ž]"
+        "[a b c č ć d {dź} e ě f g h {ch} i j k ł l m nń oó p q r ř s š t u v w x y z"
+        " ž]"
     }
     ExemplarCharactersIndex{"[A B C Č Ć D {DŹ} E F G H {CH} I J K Ł L M N O P Q R S Š T U V W X Y Z Ž]"}
-    ExemplarCharactersNumbers{"[\\- ‑ , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     ExemplarCharactersPunctuation{
-        "[\\- ‐ ‑ – — , ; \\: ! ? . … ' ‘ ’ ‚ \u0022 “ „ « » ( ) \\[ \\] \\{ \\} § @ "
-        "* / \\& #]"
+        "[\\- ‐‑ – — , ; \\: ! ? . … '‘’‚ \u0022“„ « » ( ) \\[ \\] \\{ \\} § @ * / "
+        "\\& #]"
     }
     NumberElements{
         latn{
             miscPatterns{
                 approximately{"≈{0}"}
                 atLeast{"{0}+"}
-                range{"{0}–{1}"}
             }
             patterns{
-                accountingFormat{"#,##0.00 ¤"}
-                accountingFormat%noCurrency{"#,##0.00"}
                 currencyFormat{"#,##0.00 ¤"}
-                decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0 %"}
-                scientificFormat{"#E0"}
             }
             patternsLong{
                 decimalFormat{
@@ -184,92 +178,60 @@ hsb{
                 }
                 decimalFormat{
                     1000{
-                        few{"0 tys'.'"}
                         one{"0 tys'.'"}
                         other{"0 tys'.'"}
-                        two{"0 tys'.'"}
                     }
                     10000{
-                        few{"00 tys'.'"}
                         one{"00 tys'.'"}
                         other{"00 tys'.'"}
-                        two{"00 tys'.'"}
                     }
                     100000{
-                        few{"000 tys'.'"}
                         one{"000 tys'.'"}
                         other{"000 tys'.'"}
-                        two{"000 tys'.'"}
                     }
                     1000000{
-                        few{"0 mio'.'"}
                         one{"0 mio'.'"}
                         other{"0 mio'.'"}
-                        two{"0 mio'.'"}
                     }
                     10000000{
-                        few{"00 mio'.'"}
                         one{"00 mio'.'"}
                         other{"00 mio'.'"}
-                        two{"00 mio'.'"}
                     }
                     100000000{
-                        few{"000 mio'.'"}
                         one{"000 mio'.'"}
                         other{"000 mio'.'"}
-                        two{"000 mio'.'"}
                     }
                     1000000000{
-                        few{"0 mrd'.'"}
                         one{"0 mrd'.'"}
                         other{"0 mrd'.'"}
-                        two{"0 mrd'.'"}
                     }
                     10000000000{
-                        few{"00 mrd'.'"}
                         one{"00 mrd'.'"}
                         other{"00 mrd'.'"}
-                        two{"00 mrd'.'"}
                     }
                     100000000000{
-                        few{"000 mrd'.'"}
                         one{"000 mrd'.'"}
                         other{"000 mrd'.'"}
-                        two{"000 mrd'.'"}
                     }
                     1000000000000{
-                        few{"0 bil'.'"}
                         one{"0 bil'.'"}
                         other{"0 bil'.'"}
-                        two{"0 bil'.'"}
                     }
                     10000000000000{
-                        few{"00 bil'.'"}
                         one{"00 bil'.'"}
                         other{"00 bil'.'"}
-                        two{"00 bil'.'"}
                     }
                     100000000000000{
-                        few{"000 bil'.'"}
                         one{"000 bil'.'"}
                         other{"000 bil'.'"}
-                        two{"000 bil'.'"}
                     }
                 }
             }
             symbols{
                 approximatelySign{"≈"}
                 decimal{","}
-                exponential{"E"}
                 group{"."}
-                infinity{"∞"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
                 superscriptingExponent{"·"}
-                timeSeparator{":"}
             }
         }
         minimalPairs{
@@ -283,7 +245,6 @@ hsb{
                 two{"{0} dnjej"}
             }
         }
-        minimumGroupingDigits{"1"}
     }
     calendar{
         generic{
@@ -320,10 +281,6 @@ hsb{
             }
             availableFormats{
                 Bh{"h 'hodź'. B"}
-                Bhm{"h:mm B"}
-                Bhms{"h:mm:ss B"}
-                EBhm{"E h:mm B"}
-                EBhms{"E h:mm:ss B"}
                 EHm{"E, HH:mm"}
                 EHms{"E, HH:mm:ss"}
                 Ed{"E, d."}
@@ -335,20 +292,14 @@ hsb{
                 GyMMMd{"d. MMM y G"}
                 GyMd{"d.M.y GGGGG"}
                 H{"HH 'hodź'."}
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
-                M{"L"}
                 MEd{"E, d.M."}
-                MMM{"LLL"}
                 MMMEd{"E, d. MMM"}
                 MMMMd{"d. MMMM"}
                 MMMd{"d. MMM"}
                 Md{"d.M."}
-                d{"d"}
                 h{"h 'hodź'. a"}
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
-                ms{"mm:ss"}
                 y{"y G"}
                 yyyy{"y G"}
                 yyyyM{"M.y GGGGG"}
@@ -364,16 +315,12 @@ hsb{
             intervalFormats{
                 Bh{
                     B{"h 'hodź'. B – h 'hodź'. B"}
-                    h{"h–h B"}
                 }
                 Bhm{
                     B{"h:mm 'hodź'. B – h:mm 'hodź'. B"}
-                    h{"h:mm–h:mm B"}
-                    m{"h:mm–h:mm B"}
                 }
                 Gy{
                     G{"G y – G y"}
-                    y{"G y–y"}
                 }
                 GyM{
                     G{"GGGGG y-MM – GGGGG y-MM"}
@@ -388,7 +335,6 @@ hsb{
                 }
                 GyMMM{
                     G{"G y MMM – G y MMM"}
-                    M{"G y MMM–MMM"}
                     y{"G y MMM – y MMM"}
                 }
                 GyMMMEd{
@@ -400,7 +346,6 @@ hsb{
                 GyMMMd{
                     G{"G y MMM d – G y MMM d"}
                     M{"G y MMM d – MMM d"}
-                    d{"G y MMM d–d"}
                     y{"G y MMM d – y MMM d"}
                 }
                 GyMd{
@@ -434,7 +379,6 @@ hsb{
                 d{
                     d{"d. – d."}
                 }
-                fallback{"{0} – {1}"}
                 y{
                     y{"y–y G"}
                 }
@@ -481,10 +425,6 @@ hsb{
                 "dop.",
                 "pop.",
             }
-            AmPmMarkersNarrow{
-                "dop.",
-                "pop.",
-            }
             DateTimePatterns{
                 "H:mm:ss zzzz",
                 "H:mm:ss z",
@@ -516,11 +456,7 @@ hsb{
                 "yMd",
                 "yyMd",
             }
-            appendItems{
-                Timezone{"{0} {1}"}
-            }
             availableFormats{
-                E{"ccc"}
                 EHm{"E, H:mm 'hodź'."}
                 EHms{"E, HH:mm:ss"}
                 Ed{"E, d."}
@@ -536,9 +472,7 @@ hsb{
                 Hms{"H:mm:ss"}
                 Hmsv{"H:mm:ss v"}
                 Hmv{"H:mm v"}
-                M{"L"}
                 MEd{"E, d.M."}
-                MMM{"LLL"}
                 MMMEd{"E, d. MMM"}
                 MMMMW{
                     few{"W. 'tydźeń' MMMM"}
@@ -555,8 +489,6 @@ hsb{
                 h{"h a"}
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
-                ms{"mm:ss"}
-                y{"y"}
                 yM{"M.y"}
                 yMEd{"E, d.M.y"}
                 yMM{"MM y"}
@@ -586,15 +518,6 @@ hsb{
                         "pja",
                         "sob",
                     }
-                    narrow{
-                        "n",
-                        "p",
-                        "w",
-                        "s",
-                        "š",
-                        "p",
-                        "s",
-                    }
                     short{
                         "nj",
                         "pó",
@@ -615,15 +538,6 @@ hsb{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "nje",
-                        "pón",
-                        "wut",
-                        "srj",
-                        "štw",
-                        "pja",
-                        "sob",
-                    }
                     narrow{
                         "n",
                         "p",
@@ -632,37 +546,11 @@ hsb{
                         "š",
                         "p",
                         "s",
-                    }
-                    short{
-                        "nj",
-                        "pó",
-                        "wu",
-                        "sr",
-                        "št",
-                        "pj",
-                        "so",
-                    }
-                    wide{
-                        "njedźela",
-                        "póndźela",
-                        "wutora",
-                        "srjeda",
-                        "štwórtk",
-                        "pjatk",
-                        "sobota",
                     }
                 }
             }
             dayPeriod{
                 stand-alone{
-                    abbreviated{
-                        am{"dop."}
-                        pm{"pop."}
-                    }
-                    narrow{
-                        am{"dop."}
-                        pm{"pop."}
-                    }
                     wide{
                         am{"dopołdnja"}
                         pm{"popołdnju"}
@@ -690,16 +578,12 @@ hsb{
             intervalFormats{
                 Bh{
                     B{"h 'hodź'. B – h 'hodź'. B"}
-                    h{"h–h B"}
                 }
                 Bhm{
                     B{"h:mm 'hodź'. B – h:mm 'hodź'. B"}
-                    h{"h:mm–h:mm B"}
-                    m{"h:mm–h:mm B"}
                 }
                 Gy{
                     G{"G y – G y"}
-                    y{"G y–y"}
                 }
                 GyM{
                     G{"MM/y G – MM/y G"}
@@ -774,7 +658,6 @@ hsb{
                 d{
                     d{"d. – d."}
                 }
-                fallback{"{0} – {1}"}
                 h{
                     a{"h a – h a"}
                     h{"h–h a"}
@@ -792,9 +675,6 @@ hsb{
                 hv{
                     a{"h a – h a v"}
                     h{"h–h a v"}
-                }
-                y{
-                    y{"y–y"}
                 }
                 yM{
                     M{"M.y – M.y"}
@@ -844,20 +724,6 @@ hsb{
                         "okt.",
                         "now.",
                         "dec.",
-                    }
-                    narrow{
-                        "j",
-                        "f",
-                        "m",
-                        "a",
-                        "m",
-                        "j",
-                        "j",
-                        "a",
-                        "s",
-                        "o",
-                        "n",
-                        "d",
                     }
                     wide{
                         "januara",
@@ -927,32 +793,6 @@ hsb{
                         "kw3",
                         "kw4",
                     }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                    }
-                    wide{
-                        "1. kwartal",
-                        "2. kwartal",
-                        "3. kwartal",
-                        "4. kwartal",
-                    }
-                }
-                stand-alone{
-                    abbreviated{
-                        "kw1",
-                        "kw2",
-                        "kw3",
-                        "kw4",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                    }
                     wide{
                         "1. kwartal",
                         "2. kwartal",
@@ -972,7 +812,6 @@ hsb{
         arrows{"kłoki"}
         body{"ćěło"}
         box_drawing{"znamješka ramika"}
-        braille{"braille"}
         building{"twarjenje"}
         bullets_stars{"naličenje/hwěžki"}
         consonantal_jamo{"jamo-konsonanty"}
@@ -984,28 +823,23 @@ hsb{
         downwards_arrows{"kłoki dele"}
         downwards_upwards_arrows{"kłoki horje-dele"}
         east_asian_scripts{"wuchodnoaziske pisma"}
-        emoji{"emoji"}
         european_scripts{"europske pisma"}
         female{"žona"}
         flag{"chorhojčka"}
         flags{"chorhojčki"}
         food_drink{"jědź a napoje"}
-        format{"format"}
         format_whitespace{"format a prózdnota"}
         full_width_form_variant{"warianty w połnej šěrokosći"}
         geometric_shapes{"geometriske formy"}
         half_width_form_variant{"połšěroke warianty"}
         han_characters{"han-znamješko"}
         han_radicals{"han-radikala"}
-        hanja{"hanja"}
         hanzi_simplified{"hanzi (zjednorjene)"}
         hanzi_traditional{"hanzi (tradicionelne)"}
         heart{"wutrobička"}
         historic_scripts{"historiske pisma"}
         ideographic_desc_characters{"ideografisce wopisowace znamješka"}
         japanese_kana{"japanske kana"}
-        kanbun{"kanbun"}
-        kanji{"kanji"}
         keycap{"tłóčatko"}
         leftwards_arrows{"kłoki dolěwa"}
         leftwards_rightwards_arrows{"kłoki dolěwa-doprawa"}
@@ -1033,12 +867,10 @@ hsb{
         rightwards_arrows{"kłoki doprawa"}
         sign_standard_symbols{"znamješko abo symbol"}
         small_form_variant{"małe warianty"}
-        smiley{"smiley"}
         smileys_people{"smiley abo wosoba"}
         south_asian_scripts{"južnoaziske pisma"}
         southeast_asian_scripts{"juhowuchodnoaziske pisma"}
         spacing{"wotstawk"}
-        sport{"sport"}
         symbols{"znamješko"}
         technical_symbols{"techniske znamješko"}
         tone_marks{"zwukowe znamješko"}
@@ -1103,7 +935,6 @@ hsb{
             }
         }
         day-short{
-            dn{"dźeń"}
             relative{
                 "-1"{"wčer."}
                 "0"{"dźens."}
@@ -1127,9 +958,6 @@ hsb{
         dayOfYear{
             dn{"dźeń lěta"}
         }
-        dayOfYear-narrow{
-            dn{"dźeń l."}
-        }
         dayOfYear-short{
             dn{"dźeń l."}
         }
@@ -1139,16 +967,7 @@ hsb{
         dayperiod-narrow{
             dn{"poł. dnja"}
         }
-        dayperiod-short{
-            dn{"połojca dnja"}
-        }
         era{
-            dn{"doba"}
-        }
-        era-narrow{
-            dn{"doba"}
-        }
-        era-short{
             dn{"doba"}
         }
         fri{
@@ -1408,25 +1227,10 @@ hsb{
             }
         }
         month-narrow{
-            dn{"měs."}
             relative{
                 "-1"{"zaš. měsac"}
                 "0"{"tu. měsac"}
                 "1"{"přich. měsac"}
-            }
-            relativeTime{
-                future{
-                    few{"za {0} měs."}
-                    one{"za {0} měs."}
-                    other{"za {0} měs."}
-                    two{"za {0} měs."}
-                }
-                past{
-                    few{"před {0} měs."}
-                    one{"před {0} měs."}
-                    other{"před {0} měs."}
-                    two{"před {0} měs."}
-                }
             }
         }
         month-short{
@@ -1900,26 +1704,10 @@ hsb{
             }
         }
         week-narrow{
-            dn{"tydź."}
             relative{
                 "-1"{"zaš. tydźeń"}
                 "0"{"tu. tydźeń"}
                 "1"{"přich. tydźeń"}
-            }
-            relativePeriod{"tydźeń wot {0}"}
-            relativeTime{
-                future{
-                    few{"za {0} tydź."}
-                    one{"za {0} tydź."}
-                    other{"za {0} tydź."}
-                    two{"za {0} tydź."}
-                }
-                past{
-                    few{"před {0} tydź."}
-                    one{"před {0} tydź."}
-                    other{"před {0} tydź."}
-                    two{"před {0} tydź."}
-                }
             }
         }
         week-short{
@@ -1929,7 +1717,6 @@ hsb{
                 "0"{"tut. tydźeń"}
                 "1"{"přichodn. tydźeń"}
             }
-            relativePeriod{"tydźeń wot {0}"}
             relativeTime{
                 future{
                     few{"za {0} tydź."}
@@ -1959,9 +1746,6 @@ hsb{
         }
         weekday-narrow{
             dn{"dź. tydźenja"}
-        }
-        weekday-short{
-            dn{"dźeń tydźenja"}
         }
         weekdayOfMonth{
             dn{"dźeń tydźenja w měsacu"}
@@ -1995,25 +1779,10 @@ hsb{
             }
         }
         year-narrow{
-            dn{"l."}
             relative{
                 "-1"{"lo."}
                 "0"{"lět."}
                 "1"{"klě."}
-            }
-            relativeTime{
-                future{
-                    few{"za {0} l."}
-                    one{"za {0} l."}
-                    other{"za {0} l."}
-                    two{"za {0} l."}
-                }
-                past{
-                    few{"před {0} l."}
-                    one{"před {0} l."}
-                    other{"před {0} l."}
-                    two{"před {0} l."}
-                }
             }
         }
         year-short{
@@ -2044,62 +1813,24 @@ hsb{
         zone-narrow{
             dn{"čas. pasmo"}
         }
-        zone-short{
-            dn{"časowe pasmo"}
-        }
     }
     listPattern{
         or{
             2{"{0} abo {1}"}
             end{"{0} abo {1}"}
         }
-        or-narrow{
-            2{"{0} abo {1}"}
-            end{"{0} abo {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        or-short{
-            2{"{0} abo {1}"}
-            end{"{0} abo {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
         standard{
             2{"{0} a {1}"}
             end{"{0} a {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        standard-narrow{
-            2{"{0} a {1}"}
-            end{"{0} a {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        standard-short{
-            2{"{0} a {1}"}
-            end{"{0} a {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
         unit{
             2{"{0} a {1}"}
-            end{"{0} a {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
         unit-narrow{
-            2{"{0}, {1}"}
             end{"{0}, {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
         unit-short{
             2{"{0}, {1}"}
-            end{"{0} a {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
     }
     measurementSystemNames{
@@ -2119,6 +1850,48 @@ hsb{
                 "yue",
                 "zh",
             }
+        }
+        namePattern{
+            givenFirst-long-addressing-formal{"{title} {surname}"}
+            givenFirst-long-addressing-informal{"{given-informal}"}
+            givenFirst-long-monogram-informal{"{given-informal-monogram-allCaps}{surname-monogram-allCaps}"}
+            givenFirst-long-referring-formal{"{title} {given} {given2} {surname} {generation} {credentials}"}
+            givenFirst-long-referring-informal{"{given-informal} {surname}"}
+            givenFirst-medium-addressing-formal{"{title} {surname}"}
+            givenFirst-medium-addressing-informal{"{given-informal}"}
+            givenFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
+            givenFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
+            givenFirst-medium-referring-formal{"{given} {given2-initial} {surname} {generation} {credentials}"}
+            givenFirst-medium-referring-informal{"{given-informal} {surname}"}
+            givenFirst-short-addressing-formal{"{title} {surname}"}
+            givenFirst-short-addressing-informal{"{given-informal}"}
+            givenFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
+            givenFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}
+            givenFirst-short-referring-formal{"{given-initial} {given2-initial} {surname}"}
+            givenFirst-short-referring-informal{"{given-informal} {surname-initial}"}
+            sorting-long-referring-formal{"{surname-core}, {given} {given2} {surname-prefix}"}
+            sorting-long-referring-informal{"{surname}, {given-informal}"}
+            sorting-medium-referring-formal{"{surname-core}, {given} {given2-initial} {surname-prefix}"}
+            sorting-medium-referring-informal{"{surname}, {given-informal}"}
+            sorting-short-referring-formal{"{surname-core}, {given-initial} {given2-initial} {surname-prefix}"}
+            sorting-short-referring-informal{"{surname}, {given-informal}"}
+            surnameFirst-long-addressing-formal{"{title} {surname}"}
+            surnameFirst-long-addressing-informal{"{given-informal}"}
+            surnameFirst-long-monogram-informal{"{surname-monogram-allCaps}{given-informal-monogram-allCaps}"}
+            surnameFirst-long-referring-formal{"{surname}, {title} {given} {given2} {generation} {credentials}"}
+            surnameFirst-long-referring-informal{"{surname}, {given-informal}"}
+            surnameFirst-medium-addressing-formal{"{title} {surname}"}
+            surnameFirst-medium-addressing-informal{"{given-informal}"}
+            surnameFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
+            surnameFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
+            surnameFirst-medium-referring-formal{"{surname}, {given} {given2-initial} {generation} {credentials}"}
+            surnameFirst-medium-referring-informal{"{surname}, {given-informal}"}
+            surnameFirst-short-addressing-formal{"{title} {surname}"}
+            surnameFirst-short-addressing-informal{"{given-informal}"}
+            surnameFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
+            surnameFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}
+            surnameFirst-short-referring-formal{"{surname}, {given-initial} {given2-initial}"}
+            surnameFirst-short-referring-informal{"{surname}, {given-initial}"}
         }
     }
 }

@@ -93,7 +93,6 @@ lag{
         IE{"Ayaláandi"}
         IL{"Isiraéeli"}
         IN{"Índia"}
-        IO{"Ɨsɨ yʉ Ʉɨngeréesa irivii ra Híindi"}
         IQ{"Iráaki"}
         IR{"Ʉajéemi"}
         IS{"Aisiláandi"}

@@ -3,14 +3,6 @@
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 sq{
     AuxExemplarCharacters{"[w]"}
-    Ellipsis{
-        final{"{0}…"}
-        initial{"…{0}"}
-        medial{"{0}…{1}"}
-        word-final{"{0} …"}
-        word-initial{"… {0}"}
-        word-medial{"{0} … {1}"}
-    }
     ExemplarCharacters{
         "[a b c ç d {dh} e ë f g {gj} h i j k l {ll} m n {nj} o p q r {rr} s {sh} t {"
         "th} u v x {xh} y z {zh}]"
@@ -21,17 +13,13 @@ sq{
     }
     ExemplarCharactersNumbers{"[  \\- ‑ , % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     ExemplarCharactersPunctuation{
-        "[\\- ‐ ‑ – — , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” « » ( ) \\[ \\] § @ * / \\& # "
-        "′ ″ ~]"
+        "[\\- ‐‑ – — , ; \\: ! ? . … '‘’ \u0022“” « » ( ) \\[ \\] § @ * / \\& # ′ ″ ~"
+        "]"
     }
-    MoreInformation{"?"}
     NumberElements{
-        default{"latn"}
         latn{
             miscPatterns{
                 approximately{"≈{0}"}
-                atLeast{"≥{0}"}
-                atMost{"≤{0}"}
                 range{"{0}-{1}"}
             }
             patterns{
@@ -39,9 +27,6 @@ sq{
                 accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
                 currencyFormat{"#,##0.00 ¤"}
                 currencyPatternAppendISO{"{0} ¤¤"}
-                decimalFormat{"#,##0.###"}
-                percentFormat{"#,##0%"}
-                scientificFormat{"#E0"}
             }
             patternsLong{
                 decimalFormat{
@@ -200,16 +185,7 @@ sq{
             symbols{
                 approximatelySign{"≈"}
                 decimal{","}
-                exponential{"E"}
                 group{" "}
-                infinity{"∞"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         minimalPairs{
@@ -224,7 +200,6 @@ sq{
             }
         }
         minimumGroupingDigits{"2"}
-        native{"latn"}
     }
     calendar{
         generic{
@@ -260,10 +235,6 @@ sq{
                 "GGGGGyMd",
             }
             availableFormats{
-                Bh{"h B"}
-                Bhm{"h:mm B"}
-                Bhms{"h:mm:ss B"}
-                E{"ccc"}
                 EBhm{"E, h:mm B"}
                 EBhms{"E, h:mm:ss B"}
                 EHm{"E, HH:mm"}
@@ -276,23 +247,16 @@ sq{
                 GyMMMEd{"E, d MMM y G"}
                 GyMMMd{"d MMM y G"}
                 GyMd{"d.M.y GGGGG"}
-                H{"HH"}
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
-                M{"L"}
                 MEd{"E, d.M"}
-                MMM{"LLL"}
                 MMMEd{"E, d MMM"}
                 MMMMEd{"E, d MMM"}
                 MMMMd{"d MMMM"}
                 MMMd{"d MMM"}
                 MMdd{"dd.MM"}
                 Md{"d.M"}
-                d{"d"}
                 h{"h a"}
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
-                ms{"mm:ss"}
                 y{"y G"}
                 yyyy{"y G"}
                 yyyyM{"M.y GGGGG"}
@@ -353,20 +317,6 @@ sq{
                     d{"d.M.y – d.M.y GGGGG"}
                     y{"d.M.y – d.M.y GGGGG"}
                 }
-                H{
-                    H{"HH–HH"}
-                }
-                Hm{
-                    H{"HH:mm–HH:mm"}
-                    m{"HH:mm–HH:mm"}
-                }
-                Hmv{
-                    H{"HH:mm–HH:mm v"}
-                    m{"HH:mm–HH:mm v"}
-                }
-                Hv{
-                    H{"HH–HH v"}
-                }
                 M{
                     M{"M – M"}
                 }
@@ -392,7 +342,6 @@ sq{
                 d{
                     d{"d – d"}
                 }
-                fallback{"{0} – {1}"}
                 h{
                     a{"h a – h a"}
                     h{"h – h a"}
@@ -457,10 +406,6 @@ sq{
                 "p.d.",
                 "m.d.",
             }
-            AmPmMarkersNarrow{
-                "p.d.",
-                "m.d.",
-            }
             DateTimePatterns{
                 "h:mm:ss a, zzzz",
                 "h:mm:ss a, z",
@@ -496,12 +441,6 @@ sq{
                 Timezone{"{0}, {1}"}
             }
             availableFormats{
-                Bh{"h B"}
-                Bhm{"h:mm B"}
-                Bhms{"h:mm:ss B"}
-                E{"ccc"}
-                EBhm{"E h:mm B"}
-                EBhms{"E h:mm:ss B"}
                 EHm{"E, HH:mm"}
                 EHms{"E, HH:mm:ss"}
                 Ed{"E, d"}
@@ -512,14 +451,9 @@ sq{
                 GyMMMEd{"E, d MMM y G"}
                 GyMMMd{"d MMM y G"}
                 GyMd{"d.M.y GGGG"}
-                H{"HH"}
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
                 Hmsv{"HH:mm:ss, v"}
                 Hmv{"HH:mm, v"}
-                M{"L"}
                 MEd{"E, d.M"}
-                MMM{"LLL"}
                 MMMEd{"E, d MMM"}
                 MMMMEd{"E, d MMMM"}
                 MMMMW{
@@ -530,14 +464,11 @@ sq{
                 MMMd{"d MMM"}
                 MMdd{"d.M"}
                 Md{"d.M"}
-                d{"d"}
                 h{"h a"}
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
                 hmsv{"h:mm:ss a, v"}
                 hmv{"h:mm a, v"}
-                ms{"mm:ss"}
-                y{"y"}
                 yM{"M.y"}
                 yMEd{"E, d.M.y"}
                 yMMM{"MMM y"}
@@ -555,24 +486,6 @@ sq{
             dayNames{
                 format{
                     abbreviated{
-                        "Die",
-                        "Hën",
-                        "Mar",
-                        "Mër",
-                        "Enj",
-                        "Pre",
-                        "Sht",
-                    }
-                    narrow{
-                        "d",
-                        "h",
-                        "m",
-                        "m",
-                        "e",
-                        "p",
-                        "sh",
-                    }
-                    short{
                         "die",
                         "hën",
                         "mar",
@@ -592,15 +505,6 @@ sq{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "die",
-                        "hën",
-                        "mar",
-                        "mër",
-                        "enj",
-                        "pre",
-                        "sht",
-                    }
                     narrow{
                         "d",
                         "h",
@@ -609,24 +513,6 @@ sq{
                         "e",
                         "p",
                         "sh",
-                    }
-                    short{
-                        "die",
-                        "hën",
-                        "mar",
-                        "mër",
-                        "enj",
-                        "pre",
-                        "sht",
-                    }
-                    wide{
-                        "e diel",
-                        "e hënë",
-                        "e martë",
-                        "e mërkurë",
-                        "e enjte",
-                        "e premte",
-                        "e shtunë",
                     }
                 }
             }
@@ -641,57 +527,19 @@ sq{
                         night1{"e natës"}
                         noon{"e mesditës"}
                     }
-                    narrow{
-                        afternoon1{"e pasdites"}
-                        evening1{"e mbrëmjes"}
-                        midnight{"e mesnatës"}
-                        morning1{"e mëngjesit"}
-                        morning2{"e paradites"}
-                        night1{"e natës"}
-                        noon{"e mesditës"}
-                    }
-                    wide{
-                        afternoon1{"e pasdites"}
-                        evening1{"e mbrëmjes"}
-                        midnight{"e mesnatës"}
-                        morning1{"e mëngjesit"}
-                        morning2{"e paradites"}
-                        night1{"e natës"}
-                        noon{"e mesditës"}
-                    }
                 }
                 stand-alone{
                     abbreviated{
                         afternoon1{"pasdite"}
-                        am{"p.d."}
                         evening1{"mbrëmje"}
                         midnight{"mesnatë"}
                         morning1{"mëngjes"}
                         morning2{"paradite"}
                         night1{"natë"}
                         noon{"mesditë"}
-                        pm{"m.d."}
-                    }
-                    narrow{
-                        afternoon1{"pasdite"}
-                        am{"p.d."}
-                        evening1{"mbrëmje"}
-                        midnight{"mesnatë"}
-                        morning1{"mëngjes"}
-                        morning2{"paradite"}
-                        night1{"natë"}
-                        noon{"mesditë"}
-                        pm{"m.d."}
                     }
                     wide{
-                        afternoon1{"pasdite"}
                         am{"paradite"}
-                        evening1{"mbrëmje"}
-                        midnight{"mesnatë"}
-                        morning1{"mëngjes"}
-                        morning2{"paradite"}
-                        night1{"natë"}
-                        noon{"mesditë"}
                         pm{"pasdite"}
                     }
                 }
@@ -702,14 +550,6 @@ sq{
                     "mb.K.",
                 }
                 abbreviated%variant{
-                    "p.e.s.",
-                    "e.s.",
-                }
-                narrow{
-                    "p.K.",
-                    "mb.K.",
-                }
-                narrow%variant{
                     "p.e.s.",
                     "e.s.",
                 }
@@ -809,7 +649,6 @@ sq{
                 d{
                     d{"d – d"}
                 }
-                fallback{"{0} – {1}"}
                 h{
                     a{"h a – h a"}
                     h{"h – h a"}
@@ -880,20 +719,6 @@ sq{
                         "nën",
                         "dhj",
                     }
-                    narrow{
-                        "j",
-                        "sh",
-                        "m",
-                        "p",
-                        "m",
-                        "q",
-                        "k",
-                        "g",
-                        "sh",
-                        "t",
-                        "n",
-                        "dh",
-                    }
                     wide{
                         "janar",
                         "shkurt",
@@ -910,20 +735,6 @@ sq{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "jan",
-                        "shk",
-                        "mar",
-                        "pri",
-                        "maj",
-                        "qer",
-                        "korr",
-                        "gush",
-                        "sht",
-                        "tet",
-                        "nën",
-                        "dhj",
-                    }
                     narrow{
                         "j",
                         "sh",
@@ -938,20 +749,6 @@ sq{
                         "n",
                         "dh",
                     }
-                    wide{
-                        "janar",
-                        "shkurt",
-                        "mars",
-                        "prill",
-                        "maj",
-                        "qershor",
-                        "korrik",
-                        "gusht",
-                        "shtator",
-                        "tetor",
-                        "nëntor",
-                        "dhjetor",
-                    }
                 }
             }
             quarters{
@@ -961,12 +758,6 @@ sq{
                         "tremujori II",
                         "tremujori III",
                         "tremujori IV",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
                     }
                     wide{
                         "tremujori i parë",
@@ -981,12 +772,6 @@ sq{
                         "Tremujori II",
                         "Tremujori III",
                         "Tremujori IV",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
                     }
                     wide{
                         "Tremujori i 1-rë",
@@ -1014,33 +799,10 @@ sq{
                 "{1}, {0}",
             }
             availableFormats{
-                E{"ccc"}
-                Ed{"E, d"}
-                Gy{"y G"}
                 GyMMM{"M.y G"}
                 GyMMMEd{"E, d.M.y G"}
                 GyMMMd{"d.M.y G"}
-                GyMd{"d.M.y GGGGG"}
-                M{"L"}
-                MEd{"E, d.M"}
-                MMM{"LLL"}
-                MMMEd{"E, d MMM"}
                 MMMMEd{"E, d MMMM"}
-                MMMMd{"d MMMM"}
-                MMMd{"d MMM"}
-                Md{"d.M"}
-                d{"d"}
-                y{"y G"}
-                yyyy{"y G"}
-                yyyyM{"M.y GGGGG"}
-                yyyyMEd{"E, d.M.y GGGGG"}
-                yyyyMMM{"MMM y G"}
-                yyyyMMMEd{"E, d MMM y G"}
-                yyyyMMMM{"MMMM y G"}
-                yyyyMMMd{"d MMM y G"}
-                yyyyMd{"d.M.y GGGGG"}
-                yyyyQQQ{"QQQ, y G"}
-                yyyyQQQQ{"QQQQ, y G"}
             }
             eras{
                 abbreviated{
@@ -1062,20 +824,6 @@ sq{
                         "shev.",
                         "dhul-k.",
                         "dhul-h.",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10",
-                        "11",
-                        "12",
                     }
                     wide{
                         "muharrem",
@@ -1106,20 +854,6 @@ sq{
                         "Shev.",
                         "Dhul-k.",
                         "Dhul-h.",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10",
-                        "11",
-                        "12",
                     }
                     wide{
                         "Muharrem",
@@ -1160,13 +894,11 @@ sq{
         downwards_arrows{"shigjeta për së poshti"}
         downwards_upwards_arrows{"shigjeta lart-poshtë"}
         east_asian_scripts{"shkrime të Azisë Lindore"}
-        emoji{"emoji"}
         european_scripts{"shkrime evropiane"}
         female{"femër"}
         flag{"flamur"}
         flags{"flamuj"}
         food_drink{"ushqim dhe pije"}
-        format{"format"}
         format_whitespace{"format dhe hapësirë e bardhë"}
         full_width_form_variant{"variant i formës me gjerësi të plotë"}
         geometric_shapes{"forma gjeometrike"}
@@ -1200,7 +932,6 @@ sq{
         objects{"objekte"}
         other{"tjetër"}
         paired{"i çiftuar"}
-        person{"person"}
         phonetic_alphabet{"alfabet fonetik"}
         pictographs{"piktografi"}
         place{"vend"}
@@ -1214,7 +945,6 @@ sq{
         south_asian_scripts{"shkrime të Azisë Jugore"}
         southeast_asian_scripts{"shkrime të Azisë Juglindore"}
         spacing{"hapësirë"}
-        sport{"sport"}
         symbols{"simbole"}
         technical_symbols{"simbole teknike"}
         tone_marks{"tregues tonaliteti"}
@@ -1252,104 +982,16 @@ sq{
                 }
             }
         }
-        day-narrow{
-            dn{"ditë"}
-            relative{
-                "-1"{"dje"}
-                "0"{"sot"}
-                "1"{"nesër"}
-            }
-            relativeTime{
-                future{
-                    one{"pas {0} dite"}
-                    other{"pas {0} ditësh"}
-                }
-                past{
-                    one{"{0} ditë më parë"}
-                    other{"{0} ditë më parë"}
-                }
-            }
-        }
-        day-short{
-            dn{"ditë"}
-            relative{
-                "-1"{"dje"}
-                "0"{"sot"}
-                "1"{"nesër"}
-            }
-            relativeTime{
-                future{
-                    one{"pas {0} dite"}
-                    other{"pas {0} ditësh"}
-                }
-                past{
-                    one{"{0} ditë më parë"}
-                    other{"{0} ditë më parë"}
-                }
-            }
-        }
         dayOfYear{
-            dn{"ditë e vitit"}
-        }
-        dayOfYear-narrow{
-            dn{"ditë e vitit"}
-        }
-        dayOfYear-short{
             dn{"ditë e vitit"}
         }
         dayperiod{
             dn{"paradite/pasdite"}
         }
-        dayperiod-narrow{
-            dn{"paradite/pasdite"}
-        }
-        dayperiod-short{
-            dn{"paradite/pasdite"}
-        }
         era{
             dn{"erë"}
         }
-        era-narrow{
-            dn{"erë"}
-        }
-        era-short{
-            dn{"erë"}
-        }
         fri{
-            relative{
-                "-1"{"të premten e kaluar"}
-                "0"{"këtë të premte"}
-                "1"{"të premten e ardhshme"}
-            }
-            relativeTime{
-                future{
-                    one{"pas {0} të premteje"}
-                    other{"pas {0} të premtesh"}
-                }
-                past{
-                    one{"{0} të premte më parë"}
-                    other{"{0} të premte më parë"}
-                }
-            }
-        }
-        fri-narrow{
-            relative{
-                "-1"{"të premten e kaluar"}
-                "0"{"këtë të premte"}
-                "1"{"të premten e ardhshme"}
-            }
-            relativeTime{
-                future{
-                    one{"pas {0} të premteje"}
-                    other{"pas {0} të premtesh"}
-                }
-                past{
-                    one{"{0} të premte më parë"}
-                    other{"{0} të premte më parë"}
-                }
-            }
-        }
-        fri-short{
             relative{
                 "-1"{"të premten e kaluar"}
                 "0"{"këtë të premte"}
@@ -1382,38 +1024,6 @@ sq{
                 }
             }
         }
-        hour-narrow{
-            dn{"orë"}
-            relative{
-                "0"{"këtë orë"}
-            }
-            relativeTime{
-                future{
-                    one{"pas {0} ore"}
-                    other{"pas {0} orësh"}
-                }
-                past{
-                    one{"{0} orë më parë"}
-                    other{"{0} orë më parë"}
-                }
-            }
-        }
-        hour-short{
-            dn{"orë"}
-            relative{
-                "0"{"këtë orë"}
-            }
-            relativeTime{
-                future{
-                    one{"pas {0} ore"}
-                    other{"pas {0} orësh"}
-                }
-                past{
-                    one{"{0} orë më parë"}
-                    other{"{0} orë më parë"}
-                }
-            }
-        }
         minute{
             dn{"minutë"}
             relative{
@@ -1430,27 +1040,8 @@ sq{
                 }
             }
         }
-        minute-narrow{
-            dn{"min"}
-            relative{
-                "0"{"këtë minutë"}
-            }
-            relativeTime{
-                future{
-                    one{"pas {0} min"}
-                    other{"pas {0} min"}
-                }
-                past{
-                    one{"{0} min më parë"}
-                    other{"{0} min më parë"}
-                }
-            }
-        }
         minute-short{
             dn{"min"}
-            relative{
-                "0"{"këtë minutë"}
-            }
             relativeTime{
                 future{
                     one{"pas {0} min"}
@@ -1479,77 +1070,7 @@ sq{
                 }
             }
         }
-        mon-narrow{
-            relative{
-                "-1"{"të hënën e kaluar"}
-                "0"{"këtë të hënë"}
-                "1"{"të hënën e ardhshme"}
-            }
-            relativeTime{
-                future{
-                    one{"pas {0} të hëne"}
-                    other{"pas {0} të hënash"}
-                }
-                past{
-                    one{"{0} të hënë më parë"}
-                    other{"{0} të hëna më parë"}
-                }
-            }
-        }
-        mon-short{
-            relative{
-                "-1"{"të hënën e kaluar"}
-                "0"{"këtë të hënë"}
-                "1"{"të hënën e ardhshme"}
-            }
-            relativeTime{
-                future{
-                    one{"pas {0} të hëne"}
-                    other{"pas {0} të hënash"}
-                }
-                past{
-                    one{"{0} të hënë më parë"}
-                    other{"{0} të hëna më parë"}
-                }
-            }
-        }
         month{
-            dn{"muaj"}
-            relative{
-                "-1"{"muajin e kaluar"}
-                "0"{"këtë muaj"}
-                "1"{"muajin e ardhshëm"}
-            }
-            relativeTime{
-                future{
-                    one{"pas {0} muaji"}
-                    other{"pas {0} muajsh"}
-                }
-                past{
-                    one{"{0} muaj më parë"}
-                    other{"{0} muaj më parë"}
-                }
-            }
-        }
-        month-narrow{
-            dn{"muaj"}
-            relative{
-                "-1"{"muajin e kaluar"}
-                "0"{"këtë muaj"}
-                "1"{"muajin e ardhshëm"}
-            }
-            relativeTime{
-                future{
-                    one{"pas {0} muaji"}
-                    other{"pas {0} muajsh"}
-                }
-                past{
-                    one{"{0} muaj më parë"}
-                    other{"{0} muaj më parë"}
-                }
-            }
-        }
-        month-short{
             dn{"muaj"}
             relative{
                 "-1"{"muajin e kaluar"}
@@ -1585,77 +1106,7 @@ sq{
                 }
             }
         }
-        quarter-narrow{
-            dn{"tremujor"}
-            relative{
-                "-1"{"tremujorin e kaluar"}
-                "0"{"këtë tremujor"}
-                "1"{"tremujorin e ardhshëm"}
-            }
-            relativeTime{
-                future{
-                    one{"pas {0} tremujori"}
-                    other{"pas {0} tremujorësh"}
-                }
-                past{
-                    one{"{0} tremujor më parë"}
-                    other{"{0} tremujorë më parë"}
-                }
-            }
-        }
-        quarter-short{
-            dn{"tremujor"}
-            relative{
-                "-1"{"tremujorin e kaluar"}
-                "0"{"këtë tremujor"}
-                "1"{"tremujorin e ardhshëm"}
-            }
-            relativeTime{
-                future{
-                    one{"pas {0} tremujori"}
-                    other{"pas {0} tremujorësh"}
-                }
-                past{
-                    one{"{0} tremujor më parë"}
-                    other{"{0} tremujorë më parë"}
-                }
-            }
-        }
         sat{
-            relative{
-                "-1"{"të shtunën e kaluar"}
-                "0"{"këtë të shtunë"}
-                "1"{"të shtunën e ardhshme"}
-            }
-            relativeTime{
-                future{
-                    one{"pas {0} të shtune"}
-                    other{"pas {0} të shtunash"}
-                }
-                past{
-                    one{"{0} të shtunë më parë"}
-                    other{"{0} të shtuna më parë"}
-                }
-            }
-        }
-        sat-narrow{
-            relative{
-                "-1"{"të shtunën e kaluar"}
-                "0"{"këtë të shtunë"}
-                "1"{"të shtunën e ardhshme"}
-            }
-            relativeTime{
-                future{
-                    one{"pas {0} të shtune"}
-                    other{"pas {0} të shtunash"}
-                }
-                past{
-                    one{"{0} të shtunë më parë"}
-                    other{"{0} të shtuna më parë"}
-                }
-            }
-        }
-        sat-short{
             relative{
                 "-1"{"të shtunën e kaluar"}
                 "0"{"këtë të shtunë"}
@@ -1688,27 +1139,8 @@ sq{
                 }
             }
         }
-        second-narrow{
-            dn{"sek"}
-            relative{
-                "0"{"tani"}
-            }
-            relativeTime{
-                future{
-                    one{"pas {0} sek"}
-                    other{"pas {0} sek"}
-                }
-                past{
-                    one{"{0} sek më parë"}
-                    other{"{0} sek më parë"}
-                }
-            }
-        }
         second-short{
             dn{"sek"}
-            relative{
-                "0"{"tani"}
-            }
             relativeTime{
                 future{
                     one{"pas {0} sek"}
@@ -1721,40 +1153,6 @@ sq{
             }
         }
         sun{
-            relative{
-                "-1"{"të dielën e kaluar"}
-                "0"{"këtë të diel"}
-                "1"{"të dielën e ardhshme"}
-            }
-            relativeTime{
-                future{
-                    one{"pas {0} të diele"}
-                    other{"pas {0} të dielash"}
-                }
-                past{
-                    one{"{0} të dielë më parë"}
-                    other{"{0} të diela më parë"}
-                }
-            }
-        }
-        sun-narrow{
-            relative{
-                "-1"{"të dielën e kaluar"}
-                "0"{"këtë të diel"}
-                "1"{"të dielën e ardhshme"}
-            }
-            relativeTime{
-                future{
-                    one{"pas {0} të diele"}
-                    other{"pas {0} të dielash"}
-                }
-                past{
-                    one{"{0} të dielë më parë"}
-                    other{"{0} të diela më parë"}
-                }
-            }
-        }
-        sun-short{
             relative{
                 "-1"{"të dielën e kaluar"}
                 "0"{"këtë të diel"}
@@ -1788,40 +1186,6 @@ sq{
                 }
             }
         }
-        thu-narrow{
-            relative{
-                "-1"{"të enjten e kaluar"}
-                "0"{"këtë të enjte"}
-                "1"{"të enjten e ardhshme"}
-            }
-            relativeTime{
-                future{
-                    one{"pas {0} të enjteje"}
-                    other{"pas {0} të enjtesh"}
-                }
-                past{
-                    one{"{0} të enjte më parë"}
-                    other{"{0} të enjte më parë"}
-                }
-            }
-        }
-        thu-short{
-            relative{
-                "-1"{"të enjten e kaluar"}
-                "0"{"këtë të enjte"}
-                "1"{"të enjten e ardhshme"}
-            }
-            relativeTime{
-                future{
-                    one{"pas {0} të enjteje"}
-                    other{"pas {0} të enjtesh"}
-                }
-                past{
-                    one{"{0} të enjte më parë"}
-                    other{"{0} të enjte më parë"}
-                }
-            }
-        }
         tue{
             relative{
                 "-1"{"të martën e kaluar"}
@@ -1839,75 +1203,7 @@ sq{
                 }
             }
         }
-        tue-narrow{
-            relative{
-                "-1"{"të martën e kaluar"}
-                "0"{"këtë të martë"}
-                "1"{"të martën e ardhshme"}
-            }
-            relativeTime{
-                future{
-                    one{"pas {0} të marte"}
-                    other{"pas {0} të martash"}
-                }
-                past{
-                    one{"{0} të martë më parë"}
-                    other{"{0} të marta më parë"}
-                }
-            }
-        }
-        tue-short{
-            relative{
-                "-1"{"të martën e kaluar"}
-                "0"{"këtë të martë"}
-                "1"{"të martën e ardhshme"}
-            }
-            relativeTime{
-                future{
-                    one{"pas {0} të marte"}
-                    other{"pas {0} të martash"}
-                }
-                past{
-                    one{"{0} të martë më parë"}
-                    other{"{0} të marta më parë"}
-                }
-            }
-        }
         wed{
-            relative{
-                "-1"{"të mërkurën e kaluar"}
-                "0"{"këtë të mërkurë"}
-                "1"{"të mërkurën e ardhshme"}
-            }
-            relativeTime{
-                future{
-                    one{"pas {0} të mërkure"}
-                    other{"pas {0} të mërkurash"}
-                }
-                past{
-                    one{"{0} të mërkurë më parë"}
-                    other{"{0} të mërkura më parë"}
-                }
-            }
-        }
-        wed-narrow{
-            relative{
-                "-1"{"të mërkurën e kaluar"}
-                "0"{"këtë të mërkurë"}
-                "1"{"të mërkurën e ardhshme"}
-            }
-            relativeTime{
-                future{
-                    one{"pas {0} të mërkure"}
-                    other{"pas {0} të mërkurash"}
-                }
-                past{
-                    one{"{0} të mërkurë më parë"}
-                    other{"{0} të mërkura më parë"}
-                }
-            }
-        }
-        wed-short{
             relative{
                 "-1"{"të mërkurën e kaluar"}
                 "0"{"këtë të mërkurë"}
@@ -1943,69 +1239,13 @@ sq{
                 }
             }
         }
-        week-narrow{
-            dn{"javë"}
-            relative{
-                "-1"{"javën e kaluar"}
-                "0"{"këtë javë"}
-                "1"{"javën e ardhshme"}
-            }
-            relativePeriod{"java e {0}"}
-            relativeTime{
-                future{
-                    one{"pas {0} jave"}
-                    other{"pas {0} javësh"}
-                }
-                past{
-                    one{"{0} javë më parë"}
-                    other{"{0} javë më parë"}
-                }
-            }
-        }
-        week-short{
-            dn{"javë"}
-            relative{
-                "-1"{"javën e kaluar"}
-                "0"{"këtë javë"}
-                "1"{"javën e ardhshme"}
-            }
-            relativePeriod{"java e {0}"}
-            relativeTime{
-                future{
-                    one{"pas {0} jave"}
-                    other{"pas {0} javësh"}
-                }
-                past{
-                    one{"{0} javë më parë"}
-                    other{"{0} javë më parë"}
-                }
-            }
-        }
         weekOfMonth{
-            dn{"javë e muajit"}
-        }
-        weekOfMonth-narrow{
-            dn{"javë e muajit"}
-        }
-        weekOfMonth-short{
             dn{"javë e muajit"}
         }
         weekday{
             dn{"ditë e javës"}
         }
-        weekday-narrow{
-            dn{"ditë e javës"}
-        }
-        weekday-short{
-            dn{"ditë e javës"}
-        }
         weekdayOfMonth{
-            dn{"ditë pune e muajit"}
-        }
-        weekdayOfMonth-narrow{
-            dn{"ditë pune e muajit"}
-        }
-        weekdayOfMonth-short{
             dn{"ditë pune e muajit"}
         }
         year{
@@ -2026,49 +1266,14 @@ sq{
                 }
             }
         }
-        year-narrow{
-            dn{"vit"}
-            relative{
-                "-1"{"vitin e kaluar"}
-                "0"{"këtë vit"}
-                "1"{"vitin e ardhshëm"}
-            }
-            relativeTime{
-                future{
-                    one{"pas {0} viti"}
-                    other{"pas {0} vjetësh"}
-                }
-                past{
-                    one{"{0} vit më parë"}
-                    other{"{0} vjet më parë"}
-                }
-            }
-        }
         year-short{
-            dn{"vit"}
             relative{
                 "-1"{"vitin e kaluar"}
                 "0"{"këtë vit"}
                 "1"{"vitin e ardhshëm"}
-            }
-            relativeTime{
-                future{
-                    one{"pas {0} viti"}
-                    other{"pas {0} vjetësh"}
-                }
-                past{
-                    one{"{0} vit më parë"}
-                    other{"{0} vjet më parë"}
-                }
             }
         }
         zone{
-            dn{"brezi orar"}
-        }
-        zone-narrow{
-            dn{"brezi orar"}
-        }
-        zone-short{
             dn{"brezi orar"}
         }
     }
@@ -2076,56 +1281,14 @@ sq{
         or{
             2{"{0} ose {1}"}
             end{"{0} ose {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        or-narrow{
-            2{"{0} ose {1}"}
-            end{"{0} ose {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        or-short{
-            2{"{0} ose {1}"}
-            end{"{0} ose {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
         standard{
             2{"{0} dhe {1}"}
             end{"{0} dhe {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        standard-narrow{
-            2{"{0} dhe {1}"}
-            end{"{0} dhe {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        standard-short{
-            2{"{0} dhe {1}"}
-            end{"{0} dhe {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        unit{
-            2{"{0} e {1}"}
-            end{"{0} e {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        unit-narrow{
-            2{"{0} e {1}"}
-            end{"{0} e {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
         unit-short{
             2{"{0} e {1}"}
             end{"{0} e {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
     }
     measurementSystemNames{
@@ -2150,33 +1313,20 @@ sq{
             givenFirst-long-addressing-formal{"{title} {surname}"}
             givenFirst-long-addressing-informal{"{title} {given-informal}"}
             givenFirst-long-monogram-formal{"{given-monogram-allCaps}{surname-monogram-allCaps}"}
-            givenFirst-long-monogram-informal{"{given-monogram-allCaps}{surname-monogram-allCaps}"}
             givenFirst-long-referring-formal{"{title} {given} {surname}, {credentials}"}
             givenFirst-long-referring-informal{"{title} {given} {surname}"}
             givenFirst-medium-addressing-formal{"{title} {surname}"}
             givenFirst-medium-addressing-informal{"{title} {given-informal}"}
-            givenFirst-medium-monogram-formal{"{given-monogram-allCaps}{surname-monogram-allCaps}"}
-            givenFirst-medium-monogram-informal{"{given-monogram-allCaps}{surname-monogram-allCaps}"}
-            givenFirst-medium-referring-formal{"{title} {given} {surname}, {credentials}"}
             givenFirst-medium-referring-informal{"{title} {given} {surname}"}
             givenFirst-short-addressing-formal{"{title} {surname}"}
             givenFirst-short-addressing-informal{"{title} {given-informal}"}
-            givenFirst-short-monogram-formal{"{given-monogram-allCaps}{surname-monogram-allCaps}"}
-            givenFirst-short-monogram-informal{"{given-monogram-allCaps}{surname-monogram-allCaps}"}
-            givenFirst-short-referring-formal{"{title} {given} {surname}, {credentials}"}
             givenFirst-short-referring-informal{"{title} {given} {surname}"}
             sorting-long-referring-formal{"{title} {surname-core}, {given} {surname-prefix}"}
             sorting-long-referring-informal{"{title} {surname}, {given-informal}"}
-            sorting-medium-referring-formal{"{title} {surname-core}, {given} {surname-prefix}"}
             sorting-medium-referring-informal{"{title} {surname}, {given-informal}"}
-            sorting-short-referring-formal{"{title} {surname-core}, {given} {surname-prefix}"}
             sorting-short-referring-informal{"{title} {surname}, {given-informal}"}
             surnameFirst-long-addressing-formal{"{title} {surname}"}
             surnameFirst-long-addressing-informal{"{title} {given-informal}"}
-            surnameFirst-long-monogram-formal{
-                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
-                "llCaps}"
-            }
             surnameFirst-long-monogram-informal{"{surname-monogram-allCaps}{given-informal-monogram-allCaps}"}
             surnameFirst-long-referring-formal{"{title} {surname}, {given} {given2-initial}, {credentials}"}
             surnameFirst-long-referring-informal{"{title} {surname}, {given}"}
@@ -2184,14 +1334,15 @@ sq{
             surnameFirst-medium-addressing-informal{"{title} {given-informal}"}
             surnameFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
             surnameFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
-            surnameFirst-medium-referring-formal{"{title} {surname}, {given} {given2-initial}, {credentials}"}
             surnameFirst-medium-referring-informal{"{title} {surname}, {given}"}
             surnameFirst-short-addressing-formal{"{title} {surname}"}
             surnameFirst-short-addressing-informal{"{title} {given-informal}"}
             surnameFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
             surnameFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}
-            surnameFirst-short-referring-formal{"{title} {surname}, {given} {given2-initial}, {credentials}"}
             surnameFirst-short-referring-informal{"{title} {surname}, {given}"}
+        }
+        parameterDefault{
+            formality{"informal"}
         }
     }
 }

@@ -35,6 +35,7 @@ bazelisk run //icu4c/source/tools/gennorm2 -- -o $ICU4C_COMMON/norm2_nfc_data.h 
 bazelisk run //icu4c/source/tools/gennorm2 -- -o $ICU4C_DATA_IN/nfc.nrm         -s $ICU4C_NORM2 nfc.txt
 bazelisk run //icu4c/source/tools/gennorm2 -- -o $ICU4C_DATA_IN/nfkc.nrm        -s $ICU4C_NORM2 nfc.txt nfkc.txt
 bazelisk run //icu4c/source/tools/gennorm2 -- -o $ICU4C_DATA_IN/nfkc_cf.nrm     -s $ICU4C_NORM2 nfc.txt nfkc.txt nfkc_cf.txt
+bazelisk run //icu4c/source/tools/gennorm2 -- -o $ICU4C_DATA_IN/nfkc_scf.nrm     -s $ICU4C_NORM2 nfc.txt nfkc.txt nfkc_scf.txt
 bazelisk run //icu4c/source/tools/gennorm2 -- -o $ICU4C_DATA_IN/uts46.nrm       -s $ICU4C_NORM2 nfc.txt uts46.txt
 
 # genprops writes several files directly into the source tree.

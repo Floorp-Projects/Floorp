@@ -695,9 +695,13 @@ is{
             "SKK",
             "Slóvakísk króna",
         }
+        SLE{
+            "SLE",
+            "síerraleónsk ljóna",
+        }
         SLL{
             "SLL",
-            "síerraleónsk ljóna",
+            "síerraleónsk ljóna (1964—2022)",
         }
         SOS{
             "SOS",
@@ -913,63 +917,11 @@ is{
         }
     }
     Currencies%narrow{
-        ARS{"$"}
-        AUD{"$"}
-        BBD{"$"}
-        BDT{"৳"}
-        BMD{"$"}
-        BND{"$"}
-        BRL{"R$"}
-        BSD{"$"}
-        BZD{"$"}
-        CAD{"$"}
-        CLP{"$"}
-        CNY{"¥"}
-        COP{"$"}
-        CRC{"₡"}
-        CUP{"$"}
         DKK{"kr."}
-        DOP{"$"}
-        EUR{"€"}
-        FJD{"$"}
-        GBP{"£"}
-        GIP{"£"}
-        GYD{"$"}
-        HKD{"$"}
-        IDR{"Rp"}
-        ILS{"₪"}
-        INR{"₹"}
         ISK{"kr."}
-        JMD{"$"}
-        JPY{"¥"}
-        KHR{"៛"}
-        KRW{"₩"}
-        KYD{"$"}
-        KZT{"₸"}
-        LAK{"₭"}
-        LRD{"$"}
-        MNT{"₮"}
-        MXN{"$"}
-        NAD{"$"}
-        NGN{"₦"}
         NOK{"kr."}
-        NZD{"$"}
-        PHP{"₱"}
-        PYG{"₲"}
-        SBD{"$"}
         SEK{"kr."}
-        SGD{"$"}
-        SRD{"$"}
-        SSP{"£"}
-        THB{"฿"}
-        TOP{"T$"}
-        TRY{"₺"}
-        TTD{"$"}
         TWD{"NT$"}
-        UAH{"₴"}
-        USD{"$"}
-        UYU{"$"}
-        VND{"₫"}
     }
     CurrencyPlurals{
         AED{
@@ -995,10 +947,6 @@ is{
         AOA{
             one{"angólsk kvansa"}
             other{"angólskar kvönsur"}
-        }
-        ARP{
-            one{"Argentískur pesi (1983–1985)"}
-            other{"Argentískur pesi (1983–1985)"}
         }
         ARS{
             one{"argentínskur pesi"}
@@ -1051,10 +999,6 @@ is{
         BOB{
             one{"bólivíani"}
             other{"bólivíanar"}
-        }
-        BOP{
-            one{"Bólivískur pesi"}
-            other{"Bólivískur pesi"}
         }
         BRL{
             one{"brasilískt ríal"}
@@ -1176,10 +1120,6 @@ is{
             one{"falklenskt pund"}
             other{"falklensk pund"}
         }
-        GBP{
-            one{"sterlingspund"}
-            other{"sterlingspund"}
-        }
         GEL{
             one{"georgískur lari"}
             other{"georgískir larar"}
@@ -1187,10 +1127,6 @@ is{
         GHS{
             one{"ganverskur sedi"}
             other{"ganverskir sedar"}
-        }
-        GIP{
-            one{"Gíbraltarspund"}
-            other{"Gíbraltarspund"}
         }
         GMD{
             one{"gambískur dalasi"}
@@ -1384,10 +1320,6 @@ is{
             one{"mexíkóskur pesi"}
             other{"mexíkóskir pesar"}
         }
-        MXP{
-            one{"Mexíkóskur silfurpesi (1861–1992)"}
-            other{"Mexíkóskur silfurpesi (1861–1992)"}
-        }
         MYR{
             one{"malasískt ringit"}
             other{"malasísk ringit"}
@@ -1460,10 +1392,6 @@ is{
             one{"katarskt ríal"}
             other{"katörsk ríöl"}
         }
-        ROL{
-            one{"Rúmenskt lei (1952–2006)"}
-            other{"Rúmenskt lei (1952–2006)"}
-        }
         RON{
             one{"rúmenskt lei"}
             other{"rúmensk lei"}
@@ -1508,9 +1436,13 @@ is{
             one{"helenskt pund"}
             other{"helensk pund"}
         }
-        SLL{
+        SLE{
             one{"síerraleónsk ljóna"}
             other{"síerraleónskar ljónur"}
+        }
+        SLL{
+            one{"síerraleónsk ljóna (1964—2022)"}
+            other{"síerraleónskar ljónur (1964—2022)"}
         }
         SOS{
             one{"sómalískur skildingur"}
@@ -1532,10 +1464,6 @@ is{
             one{"Saó Tóme og Prinsípe-dóbra"}
             other{"Saó Tóme og Prinsípe-dóbrur"}
         }
-        SVC{
-            one{"El Salvador Colon"}
-            other{"El Salvador Colon"}
-        }
         SYP{
             one{"sýrlenskt pund"}
             other{"sýrlensk pund"}
@@ -1551,10 +1479,6 @@ is{
         TJS{
             one{"tadsjikskur sómóni"}
             other{"tadsjikskir sómónar"}
-        }
-        TMM{
-            one{"Túrkmenskt manat (1993–2009)"}
-            other{"Túrkmenskt manat (1993–2009)"}
         }
         TMT{
             one{"túrkmenskt manat"}
@@ -1595,14 +1519,6 @@ is{
         USD{
             one{"Bandaríkjadalur"}
             other{"Bandaríkjadalir"}
-        }
-        USN{
-            one{"Bandaríkjadalur (næsta dag)"}
-            other{"Bandaríkjadalur (næsta dag)"}
-        }
-        USS{
-            one{"Bandaríkjadalur (sama dag)"}
-            other{"Bandaríkjadalur (sama dag)"}
         }
         UYU{
             one{"úrúgvæskur pesi"}

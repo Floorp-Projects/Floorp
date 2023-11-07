@@ -68,6 +68,7 @@ is{
         bem{"bemba"}
         bez{"bena"}
         bg{"búlgarska"}
+        bgc{"haryanví"}
         bgn{"vesturbalotsí"}
         bho{"bojpúrí"}
         bi{"bíslama"}
@@ -813,10 +814,11 @@ is{
     }
     characterLabelPattern{
         all{"{0} — allt"}
-        category-list{"{0}: {1}"}
         compatibility{"{0} — samhæfi"}
         enclosed{"{0} — lokað"}
         extended{"{0} — aukið"}
+        facing-left{"{0} snýr til vinstri"}
+        facing-right{"{0} snýr til hægri"}
         historic{"{0} — sögulegt"}
         miscellaneous{"{0} — ýmislegt"}
         other{"{0} — annað"}
@@ -832,10 +834,5 @@ is{
         language{"tungumál: {0}"}
         script{"leturgerð: {0}"}
         territory{"svæði: {0}"}
-    }
-    localeDisplayPattern{
-        keyTypePattern{"{0}: {1}"}
-        pattern{"{0} ({1})"}
-        separator{"{0}, {1}"}
     }
 }

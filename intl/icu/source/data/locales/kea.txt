@@ -2,28 +2,12 @@
 // License & terms of use: http://www.unicode.org/copyright.html
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 kea{
-    AuxExemplarCharacters{
-        "[ª á à ă â å ä ã ā æ c ç é è ĕ ê ë ẽ ē í ì ĭ î ï ĩ ī {n\u0308} º ó ò ŏ ô ö õ"
-        " ø ō œ q {rr} ᵘ ú ù ŭ û ü ũ ū w ÿ]"
-    }
-    Ellipsis{
-        final{"{0}…"}
-        initial{"…{0}"}
-        medial{"{0}…{1}"}
-        word-final{"{0} …"}
-        word-initial{"… {0}"}
-        word-medial{"{0} … {1}"}
-    }
-    ExemplarCharacters{"[a b d {dj} e f g h i j k l {lh} m n ñ {nh} o p r s t {tx} u v x y z]"}
+    AuxExemplarCharacters{"[ªáàăâåäãā æ cç éèĕêëẽē íìĭîïĩī {n̈} ºóòŏôöõøō œ q {rr} ᵘúùŭûüũū w ÿ]"}
+    ExemplarCharacters{"[a b d {dj} e f g h i j k l {lh} m nñ {nh} o p r s t {tx} u v x y z]"}
     ExemplarCharactersIndex{"[A B D E F G H I J K L M N O P R S T U V X Z]"}
     ExemplarCharactersNumbers{"[  \\- ‑ , % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
-    ExemplarCharactersPunctuation{
-        "[\\- ‐ ‑ – — , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” « » ( ) \\[ \\] § @ * / \\& # "
-        "† ‡]"
-    }
-    MoreInformation{"?"}
+    ExemplarCharactersPunctuation{"[\\- ‐‑ – — , ; \\: ! ? . … '‘’ \u0022“” « » ( ) \\[ \\] § @ * / \\& # † ‡]"}
     NumberElements{
-        default{"latn"}
         latn{
             miscPatterns{
                 atLeast{"+{0}"}
@@ -32,9 +16,6 @@ kea{
             patterns{
                 accountingFormat{"#,##0.00 ¤;(#,##0.00 ¤)"}
                 currencyFormat{"#,##0.00 ¤"}
-                decimalFormat{"#,##0.###"}
-                percentFormat{"#,##0%"}
-                scientificFormat{"#E0"}
             }
             patternsLong{
                 decimalFormat{
@@ -118,17 +99,7 @@ kea{
             }
             symbols{
                 decimal{","}
-                exponential{"E"}
                 group{" "}
-                infinity{"∞"}
-                list{";"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         minimalPairs{
@@ -139,8 +110,6 @@ kea{
                 other{"{0} dia"}
             }
         }
-        minimumGroupingDigits{"1"}
-        native{"latn"}
     }
     calendar{
         generic{
@@ -159,18 +128,7 @@ kea{
                 "{1}, {0}",
                 "{1}, {0}",
             }
-            DateTimeSkeletons{
-                "HHmmsszzzz",
-                "HHmmssz",
-                "HHmmss",
-                "HHmm",
-                "GyMMMMEEEEd",
-                "GyMMMMd",
-                "GyMMMd",
-                "GGGGGyMMdd",
-            }
             availableFormats{
-                E{"ccc"}
                 EHm{"E, HH:mm"}
                 EHms{"E, HH:mm:ss"}
                 Ed{"E, d"}
@@ -181,24 +139,17 @@ kea{
                 GyMMMEd{"E, d MMM y G"}
                 GyMMMd{"d MMM y G"}
                 GyMd{"dd/MM/y GGGGG"}
-                H{"HH"}
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
-                M{"L"}
                 MEd{"E, dd/MM"}
-                MMM{"LLL"}
                 MMMEd{"E, d MMM"}
                 MMMMEd{"E, d 'di' MMMM"}
                 MMMMd{"d 'di' MMMM"}
                 MMMd{"d MMM"}
                 MMdd{"dd/MM"}
                 Md{"dd/MM"}
-                d{"d"}
                 h{"h a"}
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
                 mmss{"mm:ss"}
-                ms{"mm:ss"}
                 y{"y"}
                 yM{"LL/y"}
                 yMEd{"E, dd/MM/y"}
@@ -260,20 +211,6 @@ kea{
                     d{"dd/MM/y – dd/MM/y GGGGG"}
                     y{"dd/MM/y – dd/MM/y GGGGG"}
                 }
-                H{
-                    H{"HH–HH"}
-                }
-                Hm{
-                    H{"HH:mm–HH:mm"}
-                    m{"HH:mm–HH:mm"}
-                }
-                Hmv{
-                    H{"HH:mm–HH:mm v"}
-                    m{"HH:mm–HH:mm v"}
-                }
-                Hv{
-                    H{"HH–HH v"}
-                }
                 M{
                     M{"L – L"}
                 }
@@ -299,7 +236,6 @@ kea{
                 d{
                     d{"d – d"}
                 }
-                fallback{"{0} – {1}"}
                 h{
                     a{"h a – h a"}
                     h{"h–h a"}
@@ -356,15 +292,7 @@ kea{
             }
         }
         gregorian{
-            AmPmMarkers{
-                "am",
-                "pm",
-            }
             AmPmMarkersAbbr{
-                "am",
-                "pm",
-            }
-            AmPmMarkersNarrow{
                 "am",
                 "pm",
             }
@@ -383,21 +311,7 @@ kea{
                 "{1}, {0}",
                 "{1}, {0}",
             }
-            DateTimeSkeletons{
-                "HHmmsszzzz",
-                "HHmmssz",
-                "HHmmss",
-                "HHmm",
-                "yMMMMEEEEd",
-                "yMMMMd",
-                "yMMMd",
-                "yMMdd",
-            }
-            appendItems{
-                Timezone{"{0} {1}"}
-            }
             availableFormats{
-                E{"ccc"}
                 EBhm{"E, h:mm B"}
                 EBhms{"E, h:mm:ss B"}
                 EHm{"E, HH:mm"}
@@ -410,12 +324,8 @@ kea{
                 GyMMMEd{"E, d MMM y G"}
                 GyMMMd{"d MMM y G"}
                 GyMd{"dd/MM/y GGGGG"}
-                H{"HH"}
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
                 Hmsv{"HH:mm:ss (v)"}
                 Hmv{"HH:mm (v)"}
-                M{"L"}
                 MEd{"E, dd/MM"}
                 MMMEd{"E, d MMM"}
                 MMMMEd{"E, d 'di' MMMM"}
@@ -426,15 +336,12 @@ kea{
                 MMMd{"d MMM"}
                 MMdd{"dd/MM"}
                 Md{"dd/MM"}
-                d{"d"}
                 h{"h a"}
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
                 hmsv{"h:mm:ss a (v)"}
                 hmv{"h:mm a (v)"}
                 mmss{"mm:ss"}
-                ms{"mm:ss"}
-                y{"y"}
                 yM{"LL/y"}
                 yMEd{"E, dd/MM/y"}
                 yMM{"LL/y"}
@@ -460,15 +367,6 @@ kea{
                         "ses",
                         "sab",
                     }
-                    narrow{
-                        "D",
-                        "S",
-                        "T",
-                        "K",
-                        "K",
-                        "S",
-                        "S",
-                    }
                     short{
                         "du",
                         "si",
@@ -489,15 +387,6 @@ kea{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "dum",
-                        "sig",
-                        "ter",
-                        "kua",
-                        "kin",
-                        "ses",
-                        "sab",
-                    }
                     narrow{
                         "D",
                         "S",
@@ -506,40 +395,6 @@ kea{
                         "K",
                         "S",
                         "S",
-                    }
-                    short{
-                        "du",
-                        "si",
-                        "te",
-                        "ku",
-                        "ki",
-                        "se",
-                        "sa",
-                    }
-                    wide{
-                        "dumingu",
-                        "sigunda-fera",
-                        "tersa-fera",
-                        "kuarta-fera",
-                        "kinta-fera",
-                        "sesta-fera",
-                        "sábadu",
-                    }
-                }
-            }
-            dayPeriod{
-                stand-alone{
-                    abbreviated{
-                        am{"am"}
-                        pm{"pm"}
-                    }
-                    narrow{
-                        am{"am"}
-                        pm{"pm"}
-                    }
-                    wide{
-                        am{"am"}
-                        pm{"pm"}
                     }
                 }
             }
@@ -646,7 +501,6 @@ kea{
                 d{
                     d{"d – d"}
                 }
-                fallback{"{0} – {1}"}
                 h{
                     a{"h a – h a"}
                     h{"h – h a"}
@@ -717,20 +571,6 @@ kea{
                         "Nuv",
                         "Diz",
                     }
-                    narrow{
-                        "J",
-                        "F",
-                        "M",
-                        "A",
-                        "M",
-                        "J",
-                        "J",
-                        "A",
-                        "S",
-                        "O",
-                        "N",
-                        "D",
-                    }
                     wide{
                         "Janeru",
                         "Febreru",
@@ -747,20 +587,6 @@ kea{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "Jan",
-                        "Feb",
-                        "Mar",
-                        "Abr",
-                        "Mai",
-                        "Jun",
-                        "Jul",
-                        "Ago",
-                        "Set",
-                        "Otu",
-                        "Nuv",
-                        "Diz",
-                    }
                     narrow{
                         "J",
                         "F",
@@ -774,20 +600,6 @@ kea{
                         "O",
                         "N",
                         "D",
-                    }
-                    wide{
-                        "Janeru",
-                        "Febreru",
-                        "Marsu",
-                        "Abril",
-                        "Maiu",
-                        "Junhu",
-                        "Julhu",
-                        "Agostu",
-                        "Setenbru",
-                        "Otubru",
-                        "Nuvenbru",
-                        "Dizenbru",
                     }
                 }
             }
@@ -799,32 +611,6 @@ kea{
                         "T3",
                         "T4",
                     }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                    }
-                    wide{
-                        "1º trimestri",
-                        "2º trimestri",
-                        "3º trimestri",
-                        "4º trimestri",
-                    }
-                }
-                stand-alone{
-                    abbreviated{
-                        "T1",
-                        "T2",
-                        "T3",
-                        "T4",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                    }
                     wide{
                         "1º trimestri",
                         "2º trimestri",
@@ -834,12 +620,6 @@ kea{
                 }
             }
         }
-    }
-    delimiters{
-        alternateQuotationEnd{"’"}
-        alternateQuotationStart{"‘"}
-        quotationEnd{"”"}
-        quotationStart{"“"}
     }
     fields{
         day{
@@ -858,63 +638,13 @@ kea{
                 }
             }
         }
-        day-narrow{
-            dn{"dia"}
-            relative{
-                "-1"{"onti"}
-                "0"{"oji"}
-                "1"{"manhan"}
-            }
-            relativeTime{
-                future{
-                    other{"di li {0} dia"}
-                }
-                past{
-                    other{"a ten {0} dia"}
-                }
-            }
-        }
-        day-short{
-            dn{"dia"}
-            relative{
-                "-1"{"onti"}
-                "0"{"oji"}
-                "1"{"manhan"}
-            }
-            relativeTime{
-                future{
-                    other{"di li {0} dia"}
-                }
-                past{
-                    other{"a ten {0} dia"}
-                }
-            }
-        }
         dayOfYear{
-            dn{"dia di anu"}
-        }
-        dayOfYear-narrow{
-            dn{"dia di anu"}
-        }
-        dayOfYear-short{
             dn{"dia di anu"}
         }
         dayperiod{
             dn{"am/pm"}
         }
-        dayperiod-narrow{
-            dn{"am/pm"}
-        }
-        dayperiod-short{
-            dn{"am/pm"}
-        }
         era{
-            dn{"era"}
-        }
-        era-narrow{
-            dn{"era"}
-        }
-        era-short{
             dn{"era"}
         }
         fri{
@@ -929,21 +659,6 @@ kea{
                 }
                 past{
                     other{"a ten {0} sesta-fera"}
-                }
-            }
-        }
-        fri-narrow{
-            relative{
-                "-1"{"ses. pasadu"}
-                "0"{"es ses. li"}
-                "1"{"prósimu ses."}
-            }
-            relativeTime{
-                future{
-                    other{"di li {0} ses."}
-                }
-                past{
-                    other{"a ten {0} ses."}
                 }
             }
         }
@@ -978,25 +693,6 @@ kea{
         }
         hour-narrow{
             dn{"h"}
-            relativeTime{
-                future{
-                    other{"di li {0} ora"}
-                }
-                past{
-                    other{"a ten {0} ora"}
-                }
-            }
-        }
-        hour-short{
-            dn{"ora"}
-            relativeTime{
-                future{
-                    other{"di li {0} ora"}
-                }
-                past{
-                    other{"a ten {0} ora"}
-                }
-            }
         }
         minute{
             dn{"minutu"}
@@ -1049,21 +745,6 @@ kea{
                 }
             }
         }
-        mon-narrow{
-            relative{
-                "-1"{"sig. pasadu"}
-                "0"{"es sig. li"}
-                "1"{"prósimu sig."}
-            }
-            relativeTime{
-                future{
-                    other{"di li {0} sig."}
-                }
-                past{
-                    other{"a ten {0} sig."}
-                }
-            }
-        }
         mon-short{
             relative{
                 "-1"{"sig. pasadu"}
@@ -1095,38 +776,6 @@ kea{
                 }
             }
         }
-        month-narrow{
-            dn{"mes"}
-            relative{
-                "-1"{"mes pasadu"}
-                "0"{"es mes li"}
-                "1"{"prósimu mes"}
-            }
-            relativeTime{
-                future{
-                    other{"di li {0} mes"}
-                }
-                past{
-                    other{"a ten {0} mes"}
-                }
-            }
-        }
-        month-short{
-            dn{"mes"}
-            relative{
-                "-1"{"mes pasadu"}
-                "0"{"es mes li"}
-                "1"{"prósimu mes"}
-            }
-            relativeTime{
-                future{
-                    other{"di li {0} mes"}
-                }
-                past{
-                    other{"a ten {0} mes"}
-                }
-            }
-        }
         quarter{
             dn{"trimestri"}
             relative{
@@ -1140,17 +789,6 @@ kea{
                 }
                 past{
                     other{"a ten {0} trimestri"}
-                }
-            }
-        }
-        quarter-narrow{
-            dn{"trim."}
-            relativeTime{
-                future{
-                    other{"di li {0} trim."}
-                }
-                past{
-                    other{"a ten {0} trim."}
                 }
             }
         }
@@ -1177,21 +815,6 @@ kea{
                 }
                 past{
                     other{"a ten {0} sabadu"}
-                }
-            }
-        }
-        sat-narrow{
-            relative{
-                "-1"{"sab. pasadu"}
-                "0"{"es sab. li"}
-                "1"{"prósimu sab."}
-            }
-            relativeTime{
-                future{
-                    other{"di li {0} sab."}
-                }
-                past{
-                    other{"a ten {0} sab."}
                 }
             }
         }
@@ -1261,21 +884,6 @@ kea{
                 }
             }
         }
-        sun-narrow{
-            relative{
-                "-1"{"dum. pasadu"}
-                "0"{"es dum. li"}
-                "1"{"prósimu dum."}
-            }
-            relativeTime{
-                future{
-                    other{"di li {0} dum."}
-                }
-                past{
-                    other{"a ten {0} dum."}
-                }
-            }
-        }
         sun-short{
             relative{
                 "-1"{"dum. pasadu"}
@@ -1303,21 +911,6 @@ kea{
                 }
                 past{
                     other{"a ten {0} kinta-fera"}
-                }
-            }
-        }
-        thu-narrow{
-            relative{
-                "-1"{"kin. pasadu"}
-                "0"{"es kin. li"}
-                "1"{"prósimu kin."}
-            }
-            relativeTime{
-                future{
-                    other{"di li {0} kin."}
-                }
-                past{
-                    other{"a ten {0} kin."}
                 }
             }
         }
@@ -1351,21 +944,6 @@ kea{
                 }
             }
         }
-        tue-narrow{
-            relative{
-                "-1"{"ter. pasadu"}
-                "0"{"es ter. li"}
-                "1"{"prósimu ter."}
-            }
-            relativeTime{
-                future{
-                    other{"di li {0} ter."}
-                }
-                past{
-                    other{"a ten {0} ter."}
-                }
-            }
-        }
         tue-short{
             relative{
                 "-1"{"ter. pasadu"}
@@ -1393,21 +971,6 @@ kea{
                 }
                 past{
                     other{"a ten {0} kuarta-fera"}
-                }
-            }
-        }
-        wed-narrow{
-            relative{
-                "-1"{"kua. pasadu"}
-                "0"{"es kua. li"}
-                "1"{"prósimu kua."}
-            }
-            relativeTime{
-                future{
-                    other{"di li {0} kua."}
-                }
-                past{
-                    other{"a ten {0} kua."}
                 }
             }
         }
@@ -1443,30 +1006,8 @@ kea{
                 }
             }
         }
-        week-narrow{
-            dn{"sim."}
-            relative{
-                "-1"{"simana pasadu"}
-                "0"{"es simana li"}
-                "1"{"prósimu simana"}
-            }
-            relativePeriod{"sim. di {0}"}
-            relativeTime{
-                future{
-                    other{"di li {0} sim."}
-                }
-                past{
-                    other{"a ten {0} sim."}
-                }
-            }
-        }
         week-short{
             dn{"sim."}
-            relative{
-                "-1"{"simana pasadu"}
-                "0"{"es simana li"}
-                "1"{"prósimu simana"}
-            }
             relativePeriod{"sim. di {0}"}
             relativeTime{
                 future{
@@ -1480,26 +1021,17 @@ kea{
         weekOfMonth{
             dn{"simana di mes"}
         }
-        weekOfMonth-narrow{
-            dn{"sim. di mes"}
-        }
         weekOfMonth-short{
             dn{"sim. di mes"}
         }
         weekday{
             dn{"dia di simana"}
         }
-        weekday-narrow{
-            dn{"dia di sim."}
-        }
         weekday-short{
             dn{"dia di sim."}
         }
         weekdayOfMonth{
             dn{"dia di simana di mes"}
-        }
-        weekdayOfMonth-narrow{
-            dn{"dia di sim. di mes"}
         }
         weekdayOfMonth-short{
             dn{"dia di sim. di mes"}
@@ -1520,45 +1052,7 @@ kea{
                 }
             }
         }
-        year-narrow{
-            dn{"anu"}
-            relative{
-                "-1"{"anu pasadu"}
-                "0"{"es anu li"}
-                "1"{"prósimu anu"}
-            }
-            relativeTime{
-                future{
-                    other{"di li {0} anu"}
-                }
-                past{
-                    other{"a ten {0} anu"}
-                }
-            }
-        }
-        year-short{
-            dn{"anu"}
-            relative{
-                "-1"{"anu pasadu"}
-                "0"{"es anu li"}
-                "1"{"prósimu anu"}
-            }
-            relativeTime{
-                future{
-                    other{"di li {0} anu"}
-                }
-                past{
-                    other{"a ten {0} anu"}
-                }
-            }
-        }
         zone{
-            dn{"ora lokal"}
-        }
-        zone-narrow{
-            dn{"ora lokal"}
-        }
-        zone-short{
             dn{"ora lokal"}
         }
     }
@@ -1567,53 +1061,17 @@ kea{
             2{"{0} o {1}"}
             end{"{0} o {1}"}
         }
-        or-narrow{
-            2{"{0} o {1}"}
-            end{"{0} o {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        or-short{
-            2{"{0} o {1}"}
-            end{"{0} o {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
         standard{
             2{"{0} i {1}"}
             end{"{0} i {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        standard-narrow{
-            2{"{0} i {1}"}
-            end{"{0} i {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        standard-short{
-            2{"{0} i {1}"}
-            end{"{0} i {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
         unit{
             2{"{0} i {1}"}
             end{"{0} i {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        unit-narrow{
-            2{"{0}, {1}"}
-            end{"{0}, {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
         unit-short{
             2{"{0}, {1}"}
             end{"{0}, {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
     }
     measurementSystemNames{

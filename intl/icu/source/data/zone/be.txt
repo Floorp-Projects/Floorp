@@ -1892,10 +1892,6 @@ be{
         "meta:Yukon"{
             ls{"Час Юкана"}
         }
-        fallbackFormat{"{1} ({0})"}
-        gmtFormat{"GMT{0}"}
-        gmtZeroFormat{"GMT"}
-        hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"Час: {0}"}
         regionFormatDaylight{"Летні час: {0}"}
         regionFormatStandard{"Стандартны час: {0}"}

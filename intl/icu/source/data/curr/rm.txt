@@ -895,9 +895,13 @@ rm{
             "SKK",
             "cruna slovaca",
         }
+        SLE{
+            "SLE",
+            "leone da la Sierra Leone",
+        }
         SLL{
             "SLL",
-            "leone da la Sierra Leone",
+            "leone da la Sierra Leone (1964—2022)",
         }
         SOS{
             "SOS",
@@ -1192,21 +1196,6 @@ rm{
             "dollar dal Simbabwe (2008)",
         }
     }
-    Currencies%narrow{
-        AUD{"$"}
-        BYN{"BYN"}
-        CAD{"$"}
-        EUR{"€"}
-        GBP{"£"}
-        JMD{"$"}
-        KYD{"$"}
-        MXN{"$"}
-        TRY{"₺"}
-        USD{"$"}
-    }
-    Currencies%variant{
-        TRY{"TL"}
-    }
     CurrencyPlurals{
         ADP{
             one{"peseta andorrana"}
@@ -1476,10 +1465,6 @@ rm{
             one{"dinar algerian"}
             other{"dinars algerians"}
         }
-        EEK{
-            one{"cruna estona"}
-            other{"cruna estona"}
-        }
         EGP{
             one{"glivra egipziana"}
             other{"glivras egipzianas"}
@@ -1507,10 +1492,6 @@ rm{
         EUR{
             one{"euro"}
             other{"euros"}
-        }
-        FIM{
-            one{"marc finlandais"}
-            other{"marc finlandais"}
         }
         FJD{
             one{"dollar dal Fidschi"}
@@ -1600,10 +1581,6 @@ rm{
             one{"rupia indonaisa"}
             other{"rupias indonaisas"}
         }
-        IEP{
-            one{"glivra indonaisa"}
-            other{"glivra indonaisa"}
-        }
         ILP{
             one{"glivra israeliana"}
             other{"glivras israelianas"}
@@ -1627,10 +1604,6 @@ rm{
         IRR{
             one{"rial iranais"}
             other{"rials iranais"}
-        }
-        ISJ{
-            one{"veglia cruna islandaisa"}
-            other{"veglia cruna islandaisa"}
         }
         ISK{
             one{"cruna islandaisa"}
@@ -1892,10 +1865,6 @@ rm{
             one{"zloty polac"}
             other{"zlotys polacs"}
         }
-        PLZ{
-            one{"zloty polac (1950–1995)"}
-            other{"zloty polac (1950–1995)"}
-        }
         PTE{
             one{"escudo portugais"}
             other{"escudos portugais"}
@@ -1923,10 +1892,6 @@ rm{
         RUB{
             one{"rubel russ"}
             other{"rubels russ"}
-        }
-        RUR{
-            one{"rubel russ (vegl)"}
-            other{"rubel russ (vegl)"}
         }
         RWF{
             one{"franc ruandais"}
@@ -1976,9 +1941,13 @@ rm{
             one{"cruna slovaca"}
             other{"crunas slovacas"}
         }
-        SLL{
+        SLE{
             one{"leone da la Sierra Leone"}
             other{"leones da la Sierra Leone"}
+        }
+        SLL{
+            one{"leone da la Sierra Leone (1964—2022)"}
+            other{"leones da la Sierra Leone (1964—2022)"}
         }
         SOS{
             one{"schilling somalian"}

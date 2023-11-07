@@ -4,5 +4,6 @@
 ar_YE{
     NumberElements{
         default{"arab"}
+        default_latn{"latn"}
     }
 }

@@ -83,6 +83,7 @@ de{
         bfd{"Bafut"}
         bfq{"Badaga"}
         bg{"Bulgarisch"}
+        bgc{"Haryanvi"}
         bgn{"Westliches Belutschi"}
         bho{"Bhodschpuri"}
         bi{"Bislama"}
@@ -673,7 +674,6 @@ de{
     }
     Languages%short{
         en_GB{"Englisch (GB)"}
-        en_US{"Englisch (USA)"}
     }
     Languages%variant{
         hi_Latn{"Hinglish"}
@@ -700,6 +700,7 @@ de{
         Cakm{"Chakma"}
         Cans{"UCAS"}
         Cari{"Karisch"}
+        Cham{"Cham"}
         Cher{"Cherokee"}
         Cirt{"Cirth"}
         Copt{"Koptisch"}
@@ -770,6 +771,7 @@ de{
         Merc{"Meroitisch kursiv"}
         Mero{"Meroitisch"}
         Mlym{"Malayalam"}
+        Modi{"Modi"}
         Mong{"Mongolisch"}
         Moon{"Moon"}
         Mroo{"Mro"}
@@ -866,11 +868,9 @@ de{
             gregorian{"Gregorianischer Kalender"}
             hebrew{"Hebräischer Kalender"}
             indian{"Indischer Nationalkalender"}
-            islamic{"Islamischer Kalender"}
-            islamic-civil{"Bürgerlicher islamischer Kalender (tabellarisch)"}
-            islamic-rgsa{"Islamischer Kalender (Saudi-Arabien, Beobachtung)"}
-            islamic-tbla{"Islamischer Kalender (tabellarisch, astronomische Epoche)"}
-            islamic-umalqura{"Islamischer Umm-al-Qura-Kalender"}
+            islamic{"Hidschri-Kalender"}
+            islamic-civil{"Bürgerlicher Hidschri-Kalender (tabellarisch)"}
+            islamic-umalqura{"Hidschri-Kalender (Umm al-Qura)"}
             iso8601{"ISO-8601-Kalender"}
             japanese{"Japanischer Kalender"}
             persian{"Persischer Kalender"}
@@ -1056,10 +1056,11 @@ de{
     }
     characterLabelPattern{
         all{"{0} — alle"}
-        category-list{"{0}: {1}"}
         compatibility{"{0} — Kompatibilität"}
         enclosed{"{0} — verschachtelt"}
         extended{"{0} — erweitert"}
+        facing-left{"{0} nach links"}
+        facing-right{"{0} nach rechts"}
         historic{"{0} — historisch"}
         miscellaneous{"{0} — verschiedene"}
         other{"{0} — sonstige"}
@@ -1075,10 +1076,5 @@ de{
         language{"Sprache: {0}"}
         script{"Schrift: {0}"}
         territory{"Region: {0}"}
-    }
-    localeDisplayPattern{
-        keyTypePattern{"{0}: {1}"}
-        pattern{"{0} ({1})"}
-        separator{"{0}, {1}"}
     }
 }

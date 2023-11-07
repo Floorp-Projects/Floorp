@@ -3,13 +3,12 @@
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 nn{
     %%Parent{"no"}
-    AuxExemplarCharacters{"[á ǎ č ç đ è ê ń ñ ŋ š ŧ ü ž ä ö]"}
+    AuxExemplarCharacters{"[áǎ čç đ èê ńñ ŋ š ŧ ü ž ä ö]"}
     NumberElements{
         latn{
             patterns{
                 accountingFormat{"#,##0.00 ¤"}
                 accountingFormat%noCurrency{"#,##0.00"}
-                currencyFormat{"#,##0.00 ¤"}
             }
             patternsLong{
                 decimalFormat{
@@ -18,11 +17,11 @@ nn{
                         other{"0 millionar"}
                     }
                     10000000{
-                        one{"00 million"}
+                        one{"00 millionar"}
                         other{"00 millionar"}
                     }
                     100000000{
-                        one{"000 million"}
+                        one{"000 millionar"}
                         other{"000 millionar"}
                     }
                     1000000000{
@@ -30,11 +29,11 @@ nn{
                         other{"0 milliardar"}
                     }
                     10000000000{
-                        one{"00 milliard"}
+                        one{"00 milliardar"}
                         other{"00 milliardar"}
                     }
                     100000000000{
-                        one{"000 milliard"}
+                        one{"000 milliardar"}
                         other{"000 milliardar"}
                     }
                     1000000000000{
@@ -42,11 +41,11 @@ nn{
                         other{"0 billionar"}
                     }
                     10000000000000{
-                        one{"00 billion"}
+                        one{"00 billionar"}
                         other{"00 billionar"}
                     }
                     100000000000000{
-                        one{"000 billion"}
+                        one{"000 billionar"}
                         other{"000 billionar"}
                     }
                 }
@@ -73,16 +72,8 @@ nn{
     calendar{
         generic{
             intervalFormats{
-                MEd{
-                    M{"E dd.MM.–E dd.MM."}
-                    d{"E dd.MM.–E dd.MM."}
-                }
                 MMMEd{
                     d{"E d.–E d. MMM"}
-                }
-                Md{
-                    M{"dd.MM.–dd.MM."}
-                    d{"dd.MM.–dd.MM."}
                 }
                 yM{
                     M{"MM.y–MM.y G"}
@@ -175,24 +166,6 @@ nn{
                         "fre",
                         "lau",
                     }
-                    short{
-                        "sø.",
-                        "må.",
-                        "ty.",
-                        "on.",
-                        "to.",
-                        "fr.",
-                        "la.",
-                    }
-                    wide{
-                        "søndag",
-                        "måndag",
-                        "tysdag",
-                        "onsdag",
-                        "torsdag",
-                        "fredag",
-                        "laurdag",
-                    }
                 }
             }
             dayPeriod{
@@ -207,10 +180,6 @@ nn{
                     }
                 }
                 stand-alone{
-                    narrow{
-                        am{"f.m."}
-                        pm{"e.m."}
-                    }
                     wide{
                         afternoon1{"ettermiddag"}
                         evening1{"kveld"}
@@ -233,14 +202,6 @@ nn{
                 }
             }
             quarters{
-                format{
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                    }
-                }
                 stand-alone{
                     narrow{
                         "1",
@@ -291,6 +252,7 @@ nn{
         numbers{"tal"}
         objects{"objekt"}
         other{"anna"}
+        paired{"para"}
         person{"person"}
         pictographs{"piktogram"}
         place{"stad"}
@@ -306,7 +268,6 @@ nn{
         technical_symbols{"tekniske symbol"}
         tone_marks{"tonemerke"}
         travel_places{"reise og stadar"}
-        upwards_arrows{"pil som peiker oppover"}
         variant_forms{"variantar"}
         weather{"vêr"}
         western_asian_scripts{"vestasiatiske skriftsystem"}
@@ -328,11 +289,6 @@ nn{
             }
         }
         day-narrow{
-            relative{
-                "-1"{"i går"}
-                "0"{"i dag"}
-                "1"{"i morgon"}
-            }
             relativeTime{
                 past{
                     one{"–{0} d."}
@@ -342,9 +298,8 @@ nn{
         }
         day-short{
             relative{
-                "-1"{"i går"}
-                "0"{"i dag"}
-                "1"{"i morgon"}
+                "-2"{"i forgårs"}
+                "2"{"i overmorgen"}
             }
             relativeTime{
                 past{
@@ -522,11 +477,6 @@ nn{
             }
         }
         month-narrow{
-            relative{
-                "-1"{"førre md."}
-                "0"{"denne md."}
-                "1"{"neste md."}
-            }
             relativeTime{
                 past{
                     one{"–{0} md."}
@@ -876,11 +826,6 @@ nn{
         }
         week-narrow{
             dn{"v."}
-            relative{
-                "-1"{"førre veke"}
-                "0"{"denne veka"}
-                "1"{"neste veke"}
-            }
             relativePeriod{"v. m. {0}"}
             relativeTime{
                 future{
@@ -894,12 +839,6 @@ nn{
             }
         }
         week-short{
-            dn{"veke"}
-            relative{
-                "-1"{"førre veke"}
-                "0"{"denne veka"}
-                "1"{"neste veke"}
-            }
             relativePeriod{"veka med {0}"}
             relativeTime{
                 future{
@@ -926,9 +865,6 @@ nn{
         }
         weekday-narrow{
             dn{"veked."}
-        }
-        weekday-short{
-            dn{"vekedag"}
         }
         weekdayOfMonth{
             dn{"vekedag i månaden"}
@@ -959,14 +895,6 @@ nn{
                 }
             }
         }
-        year-short{
-            relativeTime{
-                past{
-                    one{"for {0} år sidan"}
-                    other{"for {0} år sidan"}
-                }
-            }
-        }
     }
     listPattern{
         unit{
@@ -979,6 +907,9 @@ nn{
             middle{"{0} {1}"}
             start{"{0} {1}"}
         }
+    }
+    measurementSystemNames{
+        UK{"britisk"}
     }
     personNames{
         nameOrderLocales{

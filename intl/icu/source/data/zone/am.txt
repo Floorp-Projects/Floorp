@@ -1366,7 +1366,7 @@ am{
             ls{"የአርጀንቲና መደበኛ ሰዓት አቆጣጠር"}
         }
         "meta:Argentina_Western"{
-            ld{"የአርጀንቲና ምስራቃዊ በጋ ሰዓት አቆጣጠር"}
+            ld{"የምዕራባዊ አርጀንቲና የበጋ ሰዓት አቆጣጠር"}
             lg{"የአርጀንቲና ምስራቃዊ ሰዓት አቆጣጠር"}
             ls{"የምዕራባዊ አርጀንቲና መደበኛ ሰዓት አቆጣጠር"}
         }
@@ -1907,7 +1907,6 @@ am{
         "meta:Yukon"{
             ls{"የዩኮን ጊዜ"}
         }
-        fallbackFormat{"{1} ({0})"}
         gmtFormat{"ጂ ኤም ቲ{0}"}
         gmtZeroFormat{"ጂ ኤም ቲ"}
         hourFormat{"+HHmm;-HHmm"}

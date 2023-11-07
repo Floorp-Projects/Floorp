@@ -499,9 +499,13 @@ qu{
             "SHP",
             "Libra de Santa Helena",
         }
+        SLE{
+            "SLE",
+            "Leone de Sierra Leona",
+        }
         SLL{
             "SLL",
-            "Leone de Sierra Leona",
+            "Leone de Sierra Leona (1964—2022)",
         }
         SOS{
             "SOS",
@@ -642,9 +646,6 @@ qu{
         AFN{
             other{"Afgani afgano"}
         }
-        ALL{
-            other{"Lek albanés"}
-        }
         AMD{
             other{"drams Armenios"}
         }
@@ -657,9 +658,6 @@ qu{
         ARS{
             other{"Peso argentino"}
         }
-        AUD{
-            other{"Dólar Australiano"}
-        }
         AWG{
             other{"Florín arubeño"}
         }
@@ -669,14 +667,8 @@ qu{
         BAM{
             other{"Marco bosnioherzegovino"}
         }
-        BBD{
-            other{"Dólar de Barbados"}
-        }
         BDT{
             other{"Taka bangladesí"}
-        }
-        BGN{
-            other{"Lev"}
         }
         BHD{
             other{"Dinar bareiní"}
@@ -687,12 +679,6 @@ qu{
         BMD{
             other{"Dólar bermudeño"}
         }
-        BND{
-            other{"Dólar de Brunéi"}
-        }
-        BOB{
-            other{"Boliviano"}
-        }
         BRL{
             other{"Real brasileño"}
         }
@@ -701,9 +687,6 @@ qu{
         }
         BTN{
             other{"Ngultrum butanés"}
-        }
-        BWP{
-            other{"Pula Botswano"}
         }
         BYN{
             other{"Nuevo rublo bielorruso"}
@@ -762,17 +745,11 @@ qu{
         EGP{
             other{"Libra egipcia"}
         }
-        ERN{
-            other{"Nakfa Eritreano"}
-        }
         ETB{
             other{"Birr etíope"}
         }
         EUR{
             other{"euro"}
-        }
-        FJD{
-            other{"Dólar Fiyiano"}
         }
         FKP{
             other{"Libra malvinense"}
@@ -789,9 +766,6 @@ qu{
         GIP{
             other{"Libra gibraltareña"}
         }
-        GMD{
-            other{"Dalasi"}
-        }
         GNF{
             other{"Franco guineano"}
         }
@@ -800,9 +774,6 @@ qu{
         }
         GYD{
             other{"Dólar guyanés"}
-        }
-        HKD{
-            other{"Dólar de Hong Kong"}
         }
         HNL{
             other{"Lempira hondureño"}
@@ -876,9 +847,6 @@ qu{
         LBP{
             other{"Libra libanesa"}
         }
-        LKR{
-            other{"Rupia de Sri Lanka"}
-        }
         LRD{
             other{"Dólar liberiano"}
         }
@@ -909,14 +877,8 @@ qu{
         MOP{
             other{"Pataca macaense"}
         }
-        MRU{
-            other{"Uguiya Mauritano"}
-        }
         MUR{
             other{"Rupia de mauricio"}
-        }
-        MVR{
-            other{"Rupia de Maldivas"}
         }
         MWK{
             other{"Kwacha malauí"}
@@ -942,9 +904,6 @@ qu{
         NOK{
             other{"Corona noruega"}
         }
-        NPR{
-            other{"Rupia Nepalí"}
-        }
         NZD{
             other{"Dólar neozelandés"}
         }
@@ -965,9 +924,6 @@ qu{
         }
         PKR{
             other{"Rupia pakistaní"}
-        }
-        PLN{
-            other{"Zloty"}
         }
         PYG{
             other{"Guaraní paraguayo"}
@@ -990,9 +946,6 @@ qu{
         SAR{
             other{"Riyal saudí"}
         }
-        SBD{
-            other{"Dólar de las Islas Salomón"}
-        }
         SCR{
             other{"Rupia de seychelles"}
         }
@@ -1002,20 +955,17 @@ qu{
         SEK{
             other{"Corona sueca"}
         }
-        SGD{
-            other{"Dólar de Singapur"}
-        }
         SHP{
             other{"Libra de santa helena"}
         }
-        SLL{
+        SLE{
             other{"Leone de sierra leona"}
+        }
+        SLL{
+            other{"Leone de sierra leona (1964—2022)"}
         }
         SOS{
             other{"Chelín somalí"}
-        }
-        SRD{
-            other{"Dólar Surinamés"}
         }
         SSP{
             other{"Libra sursudanesa"}
@@ -1056,9 +1006,6 @@ qu{
         TZS{
             other{"Chelín tanzano"}
         }
-        UAH{
-            other{"Grivna"}
-        }
         UGX{
             other{"Chelín ugandés"}
         }
@@ -1067,9 +1014,6 @@ qu{
         }
         UYU{
             other{"Peso uruguayo"}
-        }
-        UZS{
-            other{"Som Ubzeko"}
         }
         VES{
             other{"Bolívar venezolano"}
@@ -1091,9 +1035,6 @@ qu{
         }
         XOF{
             other{"Franco CFA de áfrica occidental"}
-        }
-        XPF{
-            other{"Franco CFP"}
         }
         XXX{
             other{"Mana riqsisqa qullqi"}

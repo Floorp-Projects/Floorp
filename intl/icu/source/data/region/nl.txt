@@ -85,6 +85,7 @@ nl{
         CN{"China"}
         CO{"Colombia"}
         CP{"Clipperton"}
+        CQ{"Sark"}
         CR{"Costa Rica"}
         CU{"Cuba"}
         CV{"Kaapverdië"}
@@ -298,6 +299,9 @@ nl{
         ZW{"Zimbabwe"}
         ZZ{"onbekend gebied"}
     }
+    Countries%chagos{
+        IO{"Chagoseilanden"}
+    }
     Countries%short{
         GB{"VK"}
         HK{"Hongkong"}
@@ -315,5 +319,6 @@ nl{
         NZ{"Aotearoa Nieuw-Zeeland"}
         SZ{"Swaziland"}
         TL{"Democratische Republiek Oost-Timor"}
+        TR{"Türkiye"}
     }
 }

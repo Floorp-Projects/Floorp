@@ -44,17 +44,6 @@ sr_Latn_ME{
                         "subota",
                     }
                 }
-                stand-alone{
-                    wide{
-                        "nedjelja",
-                        "ponedeljak",
-                        "utorak",
-                        "srijeda",
-                        "četvrtak",
-                        "petak",
-                        "subota",
-                    }
-                }
             }
             dayPeriod{
                 format{
@@ -76,10 +65,6 @@ sr_Latn_ME{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        am{"prije podne"}
-                        pm{"po podne"}
-                    }
                     narrow{
                         am{"a"}
                         pm{"p"}
@@ -98,22 +83,6 @@ sr_Latn_ME{
             }
             monthNames{
                 format{
-                    abbreviated{
-                        "jan",
-                        "feb",
-                        "mart",
-                        "apr",
-                        "maj",
-                        "jun",
-                        "jul",
-                        "avg",
-                        "sept",
-                        "okt",
-                        "nov",
-                        "dec",
-                    }
-                }
-                stand-alone{
                     abbreviated{
                         "jan",
                         "feb",

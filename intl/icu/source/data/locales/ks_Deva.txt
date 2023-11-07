@@ -5,37 +5,14 @@ ks_Deva{
     %%Parent{"root"}
     AuxExemplarCharacters{"[\u200C\u200D]"}
     ExemplarCharacters{
-        "[\u093C \u0901 \u0902 अ आ इ ई उ ऊ ए ऑ ओ क ख ग च {च\u093C} छ {छ\u093C} ज ट ठ "
-        "ड त थ द न प फ ब म य र ल व श स ह ा ि ी \u0941 \u0942 \u0943 \u0944 \u0945 "
-        "\u0947 \u0948 ॉ ो ौ \u094D]"
+        "[़ ँ ं अ आ इ ई उ ऊ ए ऑ ओ क ख ग च{च़} छ{छ़} ज ट ठ ड त थ द न प फ ब म य र ल व श"
+        " स ह ा ि ी ु ू ृ ॄ ॅ े ै ॉ ो ौ ्]"
     }
-    ExemplarCharactersNumbers{"[\\- ‑ , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
-    ExemplarCharactersPunctuation{
-        "[\\- ‐ ‑ – — , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” ( ) \\[ \\] § @ * / \\& # † ‡ "
-        "′ ″]"
-    }
-    MoreInformation{"?"}
+    ExemplarCharactersPunctuation{"[\\- ‐‑ – — , ; \\: ! ? . … '‘’ \u0022“” ( ) \\[ \\] § @ * / \\& # † ‡ ′ ″]"}
     NumberElements{
         arabext{
             patterns{
                 currencyFormat{"¤#,##0.00"}
-                decimalFormat{"#,##0.###"}
-                percentFormat{"#,##0%"}
-                scientificFormat{"#E0"}
-            }
-        }
-        latn{
-            patterns{
-                currencyFormat{"¤#,##0.00"}
-                decimalFormat{"#,##0.###"}
-                percentFormat{"#,##0%"}
-                scientificFormat{"#E0"}
-            }
-            symbols{
-                group{","}
-                minusSign{"-"}
-                percentSign{"%"}
-                plusSign{"+"}
             }
         }
     }
@@ -90,9 +67,6 @@ ks_Deva{
                 "{1}, {0}",
             }
             availableFormats{
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
-                Hmsv{"HH:mm:ss v"}
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
                 hmsv{"h:mm:ss a v"}
@@ -107,25 +81,16 @@ ks_Deva{
                         "बुवार",
                         "बोदवार",
                         "ब्रेसवार",
-                        "जुम्मा",
+                        "जुमा",
                         "बटवार",
-                    }
-                    narrow{
-                        "अ",
-                        "च",
-                        "ब",
-                        "ब",
-                        "ब",
-                        "ज",
-                        "ब",
                     }
                     wide{
                         "आथवार",
-                        "चंदिरवार",
-                        "बुवार",
+                        "च़ंदिरवार",
+                        "बोमवार",
                         "बोदवार",
                         "ब्रेसवार",
-                        "जुम्मा",
+                        "जुमा",
                         "बटवार",
                     }
                 }
@@ -176,10 +141,6 @@ ks_Deva{
                     "ईसा ब्रोंठ",
                     "ईस्वी",
                 }
-                wide%variant{
-                    "BC",
-                    "AD",
-                }
             }
             intervalFormats{
                 fallback{"{0} – {1}"}
@@ -196,23 +157,9 @@ ks_Deva{
                         "जुलाई",
                         "अगस्त",
                         "सतुंबर",
-                        "अकतुम्बर",
+                        "अक्तूबर",
                         "नवूमबर",
                         "दसूमबर",
-                    }
-                    narrow{
-                        "ज",
-                        "फ़",
-                        "म",
-                        "अ",
-                        "म",
-                        "ज",
-                        "ज",
-                        "अ",
-                        "स",
-                        "ओ",
-                        "न",
-                        "द",
                     }
                     wide{
                         "जनवरी",
@@ -223,10 +170,10 @@ ks_Deva{
                         "जून",
                         "जुलाई",
                         "अगस्त",
-                        "सतुंबर",
-                        "अकतुम्बर",
-                        "नवूमबर",
-                        "दसूमबर",
+                        "सतमबर",
+                        "अक्तूबर",
+                        "नवमबर",
+                        "दसमबर",
                     }
                 }
                 stand-alone{
@@ -282,26 +229,6 @@ ks_Deva{
                         "Q3",
                         "Q4",
                     }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                    }
-                    wide{
-                        "1st सह माह",
-                        "2nd सह माह",
-                        "3rd सह माह",
-                        "4th सह माह",
-                    }
-                }
-                stand-alone{
-                    abbreviated{
-                        "Q1",
-                        "Q2",
-                        "Q3",
-                        "Q4",
-                    }
                     wide{
                         "1st सह माह",
                         "2nd सह माह",
@@ -321,22 +248,6 @@ ks_Deva{
                 "1"{"पगाह"}
             }
         }
-        day-narrow{
-            dn{"दोह"}
-            relative{
-                "-1"{"राथ"}
-                "0"{"अज़"}
-                "1"{"पगाह"}
-            }
-        }
-        day-short{
-            dn{"दोह"}
-            relative{
-                "-1"{"राथ"}
-                "0"{"अज़"}
-                "1"{"पगाह"}
-            }
-        }
         dayperiod{
             dn{"AM/PM"}
         }
@@ -346,67 +257,25 @@ ks_Deva{
         hour{
             dn{"गनटि"}
         }
-        hour-narrow{
-            dn{"गनटि"}
-        }
-        hour-short{
-            dn{"गनटि"}
-        }
         minute{
-            dn{"मिनट"}
-        }
-        minute-narrow{
-            dn{"मिनट"}
-        }
-        minute-short{
             dn{"मिनट"}
         }
         month{
             dn{"माह"}
         }
-        month-narrow{
-            dn{"माह"}
-        }
-        month-short{
-            dn{"माह"}
-        }
         quarter{
-            dn{"चूरिम"}
-        }
-        quarter-narrow{
-            dn{"चूरिम"}
-        }
-        quarter-short{
             dn{"चूरिम"}
         }
         second{
             dn{"सेकंड"}
         }
-        second-narrow{
-            dn{"सेकंड"}
-        }
-        second-short{
-            dn{"सेकंड"}
-        }
         week{
-            dn{"हफ़ति"}
-        }
-        week-narrow{
-            dn{"हफ़ति"}
-        }
-        week-short{
             dn{"हफ़ति"}
         }
         weekday{
             dn{"हफ़तूक दोह"}
         }
         year{
-            dn{"वरीह"}
-        }
-        year-narrow{
-            dn{"वरीह"}
-        }
-        year-short{
             dn{"वरीह"}
         }
         zone{
@@ -423,27 +292,6 @@ ks_Deva{
         UK{"यू के"}
         US{"यू एस"}
         metric{"मेट्रिक"}
-    }
-    parse{
-        date{
-            lenient{
-                "[\\--/]",
-                "[\\:∶︓﹕：]",
-            }
-        }
-        general{
-            lenient{
-                "[.․。︒﹒．｡]",
-                "['ʼ՚᾽᾿’＇]",
-                "[%٪﹪％]",
-                "[؉‰]",
-                "[\$﹩＄]",
-                "[£₤￡]",
-                "[¥￥]",
-                "[₩￦]",
-                "[₨₹{Rp}{Rs}]",
-            }
-        }
     }
     personNames{
         nameOrderLocales{

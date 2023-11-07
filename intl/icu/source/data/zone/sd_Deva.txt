@@ -53,7 +53,6 @@ sd_Deva{
         "meta:GMT"{
             ls{"ग्रीनविच मीन वक्तु"}
         }
-        fallbackFormat{"{1} ({0})"}
         gmtFormat{"जीएमटी{0}"}
         gmtZeroFormat{"जीएमटी"}
         regionFormat{"{0} वक्त"}

@@ -1892,12 +1892,6 @@ ky{
         "meta:Yukon"{
             ls{"Юкон убактысы"}
         }
-        fallbackFormat{"{1} ({0})"}
-        gmtFormat{"GMT{0}"}
-        gmtZeroFormat{"GMT"}
-        hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"{0} убактысы"}
-        regionFormatDaylight{"{0} (+1)"}
-        regionFormatStandard{"{0} (+0)"}
     }
 }

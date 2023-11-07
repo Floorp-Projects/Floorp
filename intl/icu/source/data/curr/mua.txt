@@ -175,9 +175,13 @@ mua{
             "SHP",
             "Solai Helena",
         }
+        SLE{
+            "SLE",
+            "solai Sierra leonǝ",
+        }
         SLL{
             "SLL",
-            "solai Sierra leonǝ",
+            "solai Sierra leonǝ (1964—2022)",
         }
         SOS{
             "SOS",

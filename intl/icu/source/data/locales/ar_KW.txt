@@ -4,5 +4,6 @@
 ar_KW{
     NumberElements{
         default{"arab"}
+        default_latn{"latn"}
     }
 }

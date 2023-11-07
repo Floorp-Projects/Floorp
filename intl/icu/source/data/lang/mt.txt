@@ -516,10 +516,12 @@ mt{
     }
     Scripts{
         Arab{"Għarbi"}
+        Brai{"Braille"}
         Cyrl{"Ċirilliku"}
         Grek{"Grieg"}
         Hans{"Simplifikat"}
         Hant{"Tradizzjonali"}
+        Jpan{"Ġappuniż"}
         Latn{"Latin"}
         Xpeo{"Persjan Antik"}
         Zxxx{"Mhux Miktub"}
@@ -538,8 +540,6 @@ mt{
             ethiopic{"Kalendarju Etjopiku"}
             gregorian{"Kalendarju Gregorjan"}
             hebrew{"Kalendarju Ebrajk"}
-            islamic{"Kalendarju Iżlamiku"}
-            islamic-civil{"Kalendarju Islamiku-Ċivili"}
             iso8601{"Kalendarju ISO-8601"}
             japanese{"Kalendarju Ġappuniż"}
         }
@@ -563,10 +563,5 @@ mt{
         language{"Lingwa: {0}"}
         script{"Skript: {0}"}
         territory{"Reġjun: {0}"}
-    }
-    localeDisplayPattern{
-        keyTypePattern{"{0}: {1}"}
-        pattern{"{0} ({1})"}
-        separator{"{0}, {1}"}
     }
 }

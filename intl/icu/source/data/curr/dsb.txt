@@ -615,9 +615,13 @@ dsb{
             "SHP",
             "St. Helena punt",
         }
+        SLE{
+            "SLE",
+            "sierra-leoneski leone",
+        }
         SLL{
             "SLL",
-            "sierra-leoneski leone",
+            "sierra-leoneski leone (1964—2022)",
         }
         SOS{
             "SOS",
@@ -759,9 +763,6 @@ dsb{
             "ZMW",
             "sambiska kwacha",
         }
-    }
-    Currencies%narrow{
-        EUR{"€"}
     }
     CurrencyPlurals{
         ADP{
@@ -1166,12 +1167,6 @@ dsb{
             other{"etiopiskich birrow"}
             two{"etiopiskej birra"}
         }
-        EUR{
-            few{"euro"}
-            one{"euro"}
-            other{"euro"}
-            two{"euro"}
-        }
         FJD{
             few{"fidźiske dolary"}
             one{"fidźiski dolar"}
@@ -1225,12 +1220,6 @@ dsb{
             one{"guatemalski quetzal"}
             other{"guatemalskich quetzalow"}
             two{"guatemalskej quetzala"}
-        }
-        GWP{
-            few{"Guinea-Bissau peso"}
-            one{"Guinea-Bissau peso"}
-            other{"Guinea-Bissau peso"}
-            two{"Guinea-Bissau peso"}
         }
         GYD{
             few{"guyańske dolary"}
@@ -1682,11 +1671,17 @@ dsb{
             other{"St. Helena puntow"}
             two{"St. Helena punta"}
         }
-        SLL{
+        SLE{
             few{"sierra-leoneske leone"}
             one{"sierra-leoneski leone"}
             other{"sierra-leoneskich leone"}
             two{"sierra-leoneskej leone"}
+        }
+        SLL{
+            few{"sierra-leoneske leone (1964—2022)"}
+            one{"sierra-leoneski leone (1964—2022)"}
+            other{"sierra-leoneskich leone (1964—2022)"}
+            two{"sierra-leoneskej leone (1964—2022)"}
         }
         SOS{
             few{"somaliske šilingi"}

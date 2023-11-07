@@ -3,9 +3,6 @@
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 wo{
     zoneStrings{
-        "Africa:Dakar"{
-            ec{"Dakar"}
-        }
         "Etc:UTC"{
             ls{"CUT (waxtu iniwelsel yuñ boole)"}
         }
@@ -55,12 +52,5 @@ wo{
         "meta:GMT"{
             ls{"GMT (waxtu Greenwich)"}
         }
-        fallbackFormat{"{1} ({0})"}
-        gmtFormat{"GMT{0}"}
-        gmtZeroFormat{"GMT"}
-        hourFormat{"+HH:mm;-HH:mm"}
-        regionFormat{"{0}"}
-        regionFormatDaylight{"{0} (+1)"}
-        regionFormatStandard{"{0} (+0)"}
     }
 }

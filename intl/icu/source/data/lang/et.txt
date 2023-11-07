@@ -12,7 +12,7 @@ et{
         colNormalization{"normaliseeritud järjestus"}
         colNumeric{"numbrite järjestus"}
         colStrength{"järjestuskaalud"}
-        collation{"sortimisjärjestus"}
+        collation{"järjestus"}
         currency{"vääring"}
         hc{"12 või 24 tunni süsteem"}
         lb{"reavahetuse laad"}
@@ -46,6 +46,7 @@ et{
         ang{"vanainglise"}
         ann{"obolo"}
         anp{"angika"}
+        apc{"Levandi araabia"}
         ar{"araabia"}
         ar_001{"tänapäeva araabia kirjakeel"}
         arc{"aramea"}
@@ -82,6 +83,7 @@ et{
         bfd{"bafuti"}
         bfq{"badaga"}
         bg{"bulgaaria"}
+        bgc{"harjaanvi"}
         bgn{"läänebelutši"}
         bho{"bhodžpuri"}
         bi{"bislama"}
@@ -90,6 +92,8 @@ et{
         bjn{"bandžari"}
         bkm{"komi (Aafrika)"}
         bla{"mustjalaindiaani"}
+        blo{"anii"}
+        blt{"tai-dami"}
         bm{"bambara"}
         bn{"bengali"}
         bo{"tiibeti"}
@@ -125,6 +129,7 @@ et{
         chp{"tšipevai"}
         chr{"tšerokii"}
         chy{"šaieeni"}
+        cic{"tšikasoo"}
         ckb{"sorani"}
         clc{"tšilkotini"}
         co{"korsika"}
@@ -335,6 +340,7 @@ et{
         kv{"komi"}
         kw{"korni"}
         kwk{"kvakvala"}
+        kxv{"kuvi"}
         ky{"kirgiisi"}
         la{"ladina"}
         lad{"ladiino"}
@@ -536,6 +542,7 @@ et{
         si{"singali"}
         sid{"sidamo"}
         sk{"slovaki"}
+        skr{"seraiki"}
         sl{"sloveeni"}
         slh{"Lõuna-Puget-Soundi sališi"}
         sli{"alamsileesia"}
@@ -600,6 +607,7 @@ et{
         tr{"türgi"}
         tru{"turojo"}
         trv{"taroko"}
+        trw{"torvali"}
         ts{"tsonga"}
         tsd{"tsakoonia"}
         tsi{"tsimši"}
@@ -628,6 +636,7 @@ et{
         vi{"vietnami"}
         vls{"lääneflaami"}
         vmf{"Maini frangi"}
+        vmw{"makua"}
         vo{"volapüki"}
         vot{"vadja"}
         vro{"võru"}
@@ -724,6 +733,7 @@ et{
         Egyh{"egiptuse hieraatiline"}
         Egyp{"egiptuse hieroglüüfkiri"}
         Elba{"Elbasani"}
+        Elym{"elümi"}
         Ethi{"etioopia"}
         Geok{"hutsuri"}
         Geor{"gruusia"}
@@ -756,6 +766,7 @@ et{
         Jurc{"tšurtšeni"}
         Kali{"kaja-lii"}
         Kana{"katakana"}
+        Kawi{"kaavi"}
         Khar{"kharoshthi"}
         Khmr{"khmeeri"}
         Khoj{"hodžki"}
@@ -793,6 +804,7 @@ et{
         Mtei{"meitei"}
         Mult{"Multani"}
         Mymr{"birma"}
+        Nagm{"Nagi mundari"}
         Narb{"Põhja-Araabia"}
         Nbat{"Nabatea"}
         Newa{"nevari"}
@@ -865,6 +877,7 @@ et{
         Wole{"voleai"}
         Xpeo{"vanapärsia"}
         Xsux{"sumeri-akadi kiilkiri"}
+        Yezi{"jeziidi"}
         Yiii{"jii"}
         Zanb{"Dzanabadzari ruutkiri"}
         Zinh{"päritud"}
@@ -893,11 +906,11 @@ et{
             gregorian{"Gregoriuse kalender"}
             hebrew{"juudi kalender"}
             indian{"India rahvuslik kalender"}
-            islamic{"islamikalender"}
-            islamic-civil{"islami ilmalik kalender"}
-            islamic-rgsa{"islamikalender (Saudi Araabia, vaatluspõhine)"}
-            islamic-tbla{"islamikalender (tabulaarne, astronoomiline ajastu)"}
-            islamic-umalqura{"islamikalender (Umm al-Qura)"}
+            islamic{"hidžra kalender"}
+            islamic-civil{"hidžra kalender (tabelkalender, ilmalik)"}
+            islamic-rgsa{"hidžra kalender (Saudi Araabia, vaatluspõhine)"}
+            islamic-tbla{"hidžra kalender (tabelkalender, astronoomiline ajastu)"}
+            islamic-umalqura{"hidžra kalender (Umm al-Qurá)"}
             iso8601{"ISO-8601 kalender"}
             japanese{"Jaapani kalender"}
             persian{"Pärsia kalender"}
@@ -943,7 +956,7 @@ et{
             big5han{"hiina traditsiooniline sortimisjärjestus (Big5)"}
             compat{"varasem sortimisjärjestus (ühilduvuse jaoks)"}
             dictionary{"sõnastiku sortimisjärjestus"}
-            ducet{"Unicode’i sortimise vaikejärjestus"}
+            ducet{"Unicode’i vaikejärjestus"}
             emoji{"emoji sortimisjärjestus"}
             eor{"Euroopa järjestusreeglid"}
             gb2312han{"hiina lihtsustatud sortimisjärjestus (GB2312)"}
@@ -953,7 +966,7 @@ et{
             reformed{"reformitud sortimisjärjestus"}
             search{"üldeesmärgiline otsing"}
             searchjl{"otsing korea alguskonsonandi järgi"}
-            standard{"standardne sortimisjärjestus"}
+            standard{"standardne järjestus"}
             stroke{"kriipsude sortimisjärjestus"}
             traditional{"traditsiooniline sortimisjärjestus"}
             unihan{"võtmete-kriipsude sortimisjärjestus"}
@@ -1019,6 +1032,7 @@ et{
             jpan{"jaapani numbrid"}
             jpanfin{"jaapani finantsnumbrid"}
             kali{"kaja-lii numbrid"}
+            kawi{"kaavi numbrid"}
             khmr{"khmeeri numbrid"}
             knda{"kannada numbrid"}
             lana{"tai tham hora numbrid"}
@@ -1035,6 +1049,7 @@ et{
             mymr{"birma numbrid"}
             mymrshan{"myanmari shan numbrid"}
             mymrtlng{"myanmari tai laing numbrid"}
+            nagm{"Nagi mundari numbrid"}
             native{"kohalikud numbrid"}
             nkoo{"nkoo numbrid"}
             olck{"santali numbrid"}
@@ -1057,6 +1072,7 @@ et{
             thai{"tai numbrid"}
             tibt{"tiibeti numbrid"}
             tirh{"tirhuta numbrid"}
+            tnsa{"tase numbrid"}
             traditional{"traditsioonilised numbrid"}
             vaii{"vai numbrid"}
             wara{"hoo numbrid"}
@@ -1105,10 +1121,11 @@ et{
     }
     characterLabelPattern{
         all{"{0} – kõik"}
-        category-list{"{0}: {1}"}
         compatibility{"{0} – ühilduvus"}
         enclosed{"{0} – suletud"}
         extended{"{0} – laiendatud"}
+        facing-left{"{0} suunaga vasakule"}
+        facing-right{"{0} suunaga paremale"}
         historic{"{0} – ajalooline"}
         miscellaneous{"{0} – mitmesugust"}
         other{"{0} – muu"}
@@ -1124,10 +1141,5 @@ et{
         language{"Keel: {0}"}
         script{"Kiri: {0}"}
         territory{"Piirkond: {0}"}
-    }
-    localeDisplayPattern{
-        keyTypePattern{"{0}: {1}"}
-        pattern{"{0} ({1})"}
-        separator{"{0}, {1}"}
     }
 }

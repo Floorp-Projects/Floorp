@@ -3,42 +3,26 @@
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 my{
     AuxExemplarCharacters{
-        "[၀႐ ၁႑ ၂႒ ၃႓ ၄႔ ၅႕ ၆႖ ၇႗ ၈႘ ၉႙ ၵ ၚ ၽ ၾ ၐ ၑ ၥ ဨ ဢ ၒ ၓ ၔ ၕ \u1033 ၖ ၗ \u1058 "
-        "\u1059 \u1086 \u1034 ၢ ၤ ႈ ႊ ႏ]"
-    }
-    Ellipsis{
-        final{"{0}…"}
-        initial{"…{0}"}
-        medial{"{0}…{1}"}
-        word-final{"{0} …"}
-        word-initial{"… {0}"}
-        word-medial{"{0} … {1}"}
+        "[၀႐ ၁႑ ၂႒ ၃႓ ၄႔ ၅႕ ၆႖ ၇႗ ၈႘ ၉႙ ၵ ၚ ၽ ၾ ၐ ၑ ၥ ဨ ဢ ၒ ၓ ၔ ၕ ဳ ၖ ၗ ၘ ၙ ႆ ဴ ၢ ၤ ႈ"
+        " ႊ ႏ]"
     }
     ExemplarCharacters{
-        "[က ခ ဂ ဃ င စ ဆ ဇ ဈ ဉ ည ဋ ဌ ဍ ဎ ဏ တ ထ ဒ ဓ န ပ ဖ ဗ ဘ မ ယ ရ လ ဝ သ ဟ ဠ အ ဣ ၏ ဤ ဥ"
-        " ဦ ဧ ဩ ဪ ာ ါ \u102D \u102E \u102F \u1030 ေ \u1032 \u1036 ဿ ျ ြ \u103D "
-        "\u103E \u1039 \u103A \u1037 း]"
+        "[က ခ ဂ ဃ င စ ဆ ဇ ဈ ဉ ည ဋ ဌ ဍ ဎ ဏ တ ထ ဒ ဓ န ပ ဖ ဗ ဘ မ ယ ရ လ ဝ သ ဟ ဠ အ ဣ၏ ဤ ဥ "
+        "ဦ ဧ ဩ ဪ ာါ ိ ီ ု ူ ေ ဲ ံ ဿ ျ ြ ွ ှ ္ ် ့ း]"
     }
     ExemplarCharactersIndex{"[က ခ ဂ ဃ င စ ဆ ဇ ဈ ဉ ည ဋ ဌ ဍ ဎ ဏ တ ထ ဒ ဓ န ပ ဖ ဗ ဘ မ ယ ရ လ ဝ သ ဟ ဠ အ]"}
     ExemplarCharactersNumbers{"[\\- ‑ , . % ‰ + 0၀ 1၁ 2၂ 3၃ 4၄ 5၅ 6၆ 7၇ 8၈ 9၉]"}
-    ExemplarCharactersPunctuation{"[\\- ‐ ‑ – — … ၊ ။ ‘ ’ “ ” ( ) \\[ \\] \\{ \\} @ * / #]"}
-    MoreInformation{"?"}
+    ExemplarCharactersPunctuation{"[\\- ‐‑ – — … ၊ ။ ‘’ “” ( ) \\[ \\] \\{ \\} @ * / #]"}
     NumberElements{
         default{"mymr"}
         latn{
             miscPatterns{
-                approximately{"~{0}"}
                 atLeast{"{0} နှင့်အထက်"}
-                atMost{"≤{0}"}
                 range{"{0} - {1}"}
             }
             patterns{
                 accountingFormat{"¤ #,##0.00"}
-                accountingFormat%noCurrency{"#,##0.00"}
                 currencyFormat{"#,##0.00 ¤"}
-                decimalFormat{"#,##0.###"}
-                percentFormat{"#,##0%"}
-                scientificFormat{"#E0"}
             }
             patternsLong{
                 decimalFormat{
@@ -159,18 +143,7 @@ my{
                 }
             }
             symbols{
-                decimal{"."}
-                exponential{"E"}
-                group{","}
-                infinity{"∞"}
-                list{";"}
-                minusSign{"-"}
                 nan{"ဂဏန်းမဟုတ်သော"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         minimalPairs{
@@ -181,28 +154,9 @@ my{
                 other{"{0} ရက်"}
             }
         }
-        minimumGroupingDigits{"1"}
         mymr{
-            patterns{
-                currencyFormat{"#,##0.00 ¤"}
-                currencyFormat%noCurrency{"#,##0.00"}
-                decimalFormat{"#,##0.###"}
-                percentFormat{"#,##0%"}
-                scientificFormat{"#E0"}
-            }
             symbols{
-                approximatelySign{"~"}
-                decimal{"."}
-                exponential{"E"}
-                group{","}
-                infinity{"∞"}
                 list{"၊"}
-                minusSign{"-"}
-                nan{"ဂဏန်းမဟုတ်သော"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
             }
         }
         native{"mymr"}
@@ -224,12 +178,6 @@ my{
                 "{1} {0}",
                 "{1} {0}",
             }
-            DateTimePatterns%atTime{
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-            }
             DateTimeSkeletons{
                 "HHmmsszzzz",
                 "HHmmssz",
@@ -244,54 +192,28 @@ my{
                 Bh{"B h"}
                 Bhm{"B h:mm"}
                 Bhms{"B h:mm:ss"}
-                E{"ccc"}
                 EBhm{"E B h:mm"}
                 EBhms{"E B h:mm:ss"}
-                EHm{"E HH:mm"}
-                EHms{"E HH:mm:ss"}
                 Ed{"d E"}
                 Ehm{"E a h:mm"}
                 Ehms{"E a h:mm:ss"}
-                Gy{"G y"}
-                GyMMM{"G y MMM"}
-                GyMMMEd{"G d MMM y Eနေ့"}
                 GyMMMd{"G d MMM y"}
                 GyMd{"GGGGG y/M/d"}
-                H{"HH"}
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
-                M{"L"}
-                MEd{"d/M Eနေ့"}
-                MMM{"LLL"}
                 MMMEd{"MMM d၊ E"}
                 MMMMEd{"MMMM d Eနေ့"}
-                MMMMd{"MMMM d"}
-                MMMd{"MMM d"}
                 Md{"d/M"}
-                d{"d"}
                 h{"a h"}
                 hm{"a h:mm"}
                 hms{"a h:mm:ss"}
-                ms{"mm:ss"}
-                y{"G y"}
-                yyyy{"G y"}
                 yyyyM{"G M/y"}
-                yyyyMEd{"GGGGG dd/MM/y Eနေ့"}
-                yyyyMMM{"G y MMM"}
-                yyyyMMMEd{"G d MMM y Eနေ့"}
-                yyyyMMMM{"G y MMMM"}
                 yyyyMMMd{"G d MMM y"}
                 yyyyMd{"GGGGG dd/MM/Y"}
-                yyyyQQQ{"G y QQQ"}
-                yyyyQQQQ{"G y QQQQ"}
             }
             intervalFormats{
                 Bh{
-                    B{"h B – h B"}
                     h{"h – h B"}
                 }
                 Bhm{
-                    B{"h:mm B – h:mm B"}
                     h{"h:mm – h:mm B"}
                     m{"h:mm – h:mm B"}
                 }
@@ -300,20 +222,6 @@ my{
                 }
                 GyM{
                     G{"GGGGG y/M – GGGGG y/M"}
-                }
-                H{
-                    H{"HH–HH"}
-                }
-                Hm{
-                    H{"HH:mm–HH:mm"}
-                    m{"HH:mm–HH:mm"}
-                }
-                Hmv{
-                    H{"HH:mm–HH:mm v"}
-                    m{"HH:mm–HH:mm v"}
-                }
-                Hv{
-                    H{"HH–HH v"}
                 }
                 M{
                     M{"M – M"}
@@ -341,24 +249,6 @@ my{
                     d{"d – d"}
                 }
                 fallback{"{0} – {1}"}
-                h{
-                    a{"h a – h a"}
-                    h{"h–h a"}
-                }
-                hm{
-                    a{"h:mm a – h:mm a"}
-                    h{"h:mm–h:mm a"}
-                    m{"h:mm–h:mm a"}
-                }
-                hmv{
-                    a{"h:mm a – h:mm a v"}
-                    h{"h:mm–h:mm a v"}
-                    m{"h:mm–h:mm a v"}
-                }
-                hv{
-                    a{"h a – h a v"}
-                    h{"h–h a v"}
-                }
                 y{
                     y{"G y – y"}
                 }
@@ -382,12 +272,9 @@ my{
                 }
                 yMMMM{
                     M{"G y MMMM – MMMM"}
-                    y{"G y MMMM – y MMMM"}
                 }
                 yMMMd{
-                    M{"G y MMM d – MMM d"}
                     d{"G d – d MMM y"}
-                    y{"G y MMM d – y MMM d"}
                 }
                 yMd{
                     M{"GGGGG d/M/y – d/M/y"}
@@ -397,15 +284,7 @@ my{
             }
         }
         gregorian{
-            AmPmMarkers{
-                "နံနက်",
-                "ညနေ",
-            }
             AmPmMarkersAbbr{
-                "နံနက်",
-                "ညနေ",
-            }
-            AmPmMarkersNarrow{
                 "နံနက်",
                 "ညနေ",
             }
@@ -419,12 +298,6 @@ my{
                 "y၊ MMM d",
                 "d/M/yy",
                 "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-            }
-            DateTimePatterns%atTime{
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
@@ -447,85 +320,41 @@ my{
                 Bh{"B h"}
                 Bhm{"B h:mm"}
                 Bhms{"B h:mm:ss"}
-                E{"ccc"}
                 EBhm{"E B h:mm"}
                 EBhms{"E B h:mm:ss"}
-                EHm{"E HH:mm"}
-                EHms{"E HH:mm:ss"}
                 Ed{"d ရက် E"}
                 Ehm{"E B h:mm"}
                 Ehms{"E B h:mm:ss"}
-                Gy{"G y"}
-                GyMMM{"G y MMM"}
                 GyMMMEd{"G y၊ MMM d၊ E"}
                 GyMMMd{"G y၊ MMM d"}
                 GyMd{"G y/M/d"}
-                H{"HH"}
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
                 Hmsv{"v HH:mm:ss"}
                 Hmv{"v HH:mm"}
-                M{"L"}
                 MEd{"d/M၊ E"}
-                MMM{"LLL"}
                 MMMEd{"MMM d၊ E"}
                 MMMMEd{"MMMM d ရက် E"}
                 MMMMW{
                     other{"MMMM လ W ပတ်မြောက်"}
                 }
-                MMMMd{"MMMM d"}
                 MMMd{"d MMM"}
                 Md{"d/M"}
-                d{"d"}
                 h{"B h"}
                 hm{"B h:mm"}
                 hms{"B h:mm:ss"}
                 hmsv{"v a h:mm:ss"}
                 hmv{"v a h:mm"}
-                ms{"mm:ss"}
-                y{"y"}
                 yM{"M/y"}
                 yMEd{"d/M/y၊ E"}
                 yMMM{"MMM y"}
                 yMMMEd{"y၊ MMM d၊ E"}
-                yMMMM{"y MMMM"}
                 yMMMd{"y၊ MMM d"}
                 yMd{"d/M/y"}
-                yQQQ{"y QQQ"}
-                yQQQQ{"y QQQQ"}
                 yw{
                     other{"Y ခု w ပတ်မြောက်"}
                 }
             }
             dayNames{
                 format{
-                    abbreviated{
-                        "တနင်္ဂနွေ",
-                        "တနင်္လာ",
-                        "အင်္ဂါ",
-                        "ဗုဒ္ဓဟူး",
-                        "ကြာသပတေး",
-                        "သောကြာ",
-                        "စနေ",
-                    }
-                    narrow{
-                        "တ",
-                        "တ",
-                        "အ",
-                        "ဗ",
-                        "က",
-                        "သ",
-                        "စ",
-                    }
-                    short{
-                        "တနင်္ဂနွေ",
-                        "တနင်္လာ",
-                        "အင်္ဂါ",
-                        "ဗုဒ္ဓဟူး",
-                        "ကြာသပတေး",
-                        "သောကြာ",
-                        "စနေ",
-                    }
                     wide{
                         "တနင်္ဂနွေ",
                         "တနင်္လာ",
@@ -537,15 +366,6 @@ my{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "တနင်္ဂနွေ",
-                        "တနင်္လာ",
-                        "အင်္ဂါ",
-                        "ဗုဒ္ဓဟူး",
-                        "ကြာသပတေး",
-                        "သောကြာ",
-                        "စနေ",
-                    }
                     narrow{
                         "တ",
                         "တ",
@@ -564,15 +384,6 @@ my{
                         "ကြာ",
                         "နေ",
                     }
-                    wide{
-                        "တနင်္ဂနွေ",
-                        "တနင်္လာ",
-                        "အင်္ဂါ",
-                        "ဗုဒ္ဓဟူး",
-                        "ကြာသပတေး",
-                        "သောကြာ",
-                        "စနေ",
-                    }
                 }
             }
             dayPeriod{
@@ -584,54 +395,6 @@ my{
                         morning1{"နံနက်"}
                         night1{"ည"}
                         noon{"မွန်းတည့်"}
-                    }
-                    narrow{
-                        afternoon1{"နေ့လယ်"}
-                        evening1{"ညနေ"}
-                        midnight{"သန်းခေါင်ယံ"}
-                        morning1{"နံနက်"}
-                        night1{"ည"}
-                        noon{"မွန်းတည့်"}
-                    }
-                    wide{
-                        afternoon1{"နေ့လယ်"}
-                        evening1{"ညနေ"}
-                        midnight{"သန်းခေါင်ယံ"}
-                        morning1{"နံနက်"}
-                        night1{"ည"}
-                        noon{"မွန်းတည့်"}
-                    }
-                }
-                stand-alone{
-                    abbreviated{
-                        afternoon1{"နေ့လယ်"}
-                        am{"နံနက်"}
-                        evening1{"ညနေ"}
-                        midnight{"သန်းခေါင်ယံ"}
-                        morning1{"နံနက်"}
-                        night1{"ည"}
-                        noon{"မွန်းတည့်"}
-                        pm{"ညနေ"}
-                    }
-                    narrow{
-                        afternoon1{"နေ့လယ်"}
-                        am{"နံနက်"}
-                        evening1{"ညနေ"}
-                        midnight{"သန်းခေါင်ယံ"}
-                        morning1{"နံနက်"}
-                        night1{"ည"}
-                        noon{"မွန်းတည့်"}
-                        pm{"ညနေ"}
-                    }
-                    wide{
-                        afternoon1{"နေ့လယ်"}
-                        am{"နံနက်"}
-                        evening1{"ညနေ"}
-                        midnight{"သန်းခေါင်ယံ"}
-                        morning1{"နံနက်"}
-                        night1{"ည"}
-                        noon{"မွန်းတည့်"}
-                        pm{"ညနေ"}
                     }
                 }
             }
@@ -655,16 +418,13 @@ my{
             }
             intervalFormats{
                 Bh{
-                    B{"h B – h B"}
                     h{"h – h B"}
                 }
                 Bhm{
-                    B{"h:mm B – h:mm B"}
                     h{"h:mm – h:mm B"}
                     m{"h:mm – h:mm B"}
                 }
                 Gy{
-                    G{"G y – G y"}
                     y{"G y – y"}
                 }
                 GyM{
@@ -678,11 +438,6 @@ my{
                     d{"G y/M/d၊ E – y/M/d၊ E"}
                     y{"G y/M/d၊ E – y/M/d၊ E"}
                 }
-                GyMMM{
-                    G{"G y MMM – G y MMM"}
-                    M{"G y MMM–MMM"}
-                    y{"G y MMM – y MMM"}
-                }
                 GyMMMEd{
                     G{"G y MMM d၊ E – G y MMM d၊ E"}
                     M{"G y MMM d၊ E – MMM d၊ E"}
@@ -690,10 +445,7 @@ my{
                     y{"G y MMM d၊ E – y MMM d၊ E"}
                 }
                 GyMMMd{
-                    G{"G y MMM d – G y MMM d"}
-                    M{"G y MMM d – MMM d"}
                     d{"G y MMM d – d"}
-                    y{"G y MMM d – y MMM d"}
                 }
                 GyMd{
                     G{"G y/M/d – G y/M/d"}
@@ -730,7 +482,6 @@ my{
                     d{"MMM d၊ E – MMM d၊ E"}
                 }
                 MMMd{
-                    M{"MMM d – MMM d"}
                     d{"MMM d – d"}
                 }
                 Md{
@@ -773,7 +524,6 @@ my{
                 }
                 yMMM{
                     M{"y MMM – MMM"}
-                    y{"y MMM – y MMM"}
                 }
                 yMMMEd{
                     M{"y၊ MMM d၊ EEEE – MMM d၊ EEEE"}
@@ -782,7 +532,6 @@ my{
                 }
                 yMMMM{
                     M{"y MMMM – MMMM"}
-                    y{"y MMMM – y MMMM"}
                 }
                 yMMMd{
                     M{"y၊ MMM d – MMM d"}
@@ -811,20 +560,6 @@ my{
                         "နို",
                         "ဒီ",
                     }
-                    narrow{
-                        "ဇ",
-                        "ဖ",
-                        "မ",
-                        "ဧ",
-                        "မ",
-                        "ဇ",
-                        "ဇ",
-                        "ဩ",
-                        "စ",
-                        "အ",
-                        "န",
-                        "ဒ",
-                    }
                     wide{
                         "ဇန်နဝါရီ",
                         "ဖေဖော်ဝါရီ",
@@ -841,20 +576,6 @@ my{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "ဇန်",
-                        "ဖေ",
-                        "မတ်",
-                        "ဧ",
-                        "မေ",
-                        "ဇွန်",
-                        "ဇူ",
-                        "ဩ",
-                        "စက်",
-                        "အောက်",
-                        "နို",
-                        "ဒီ",
-                    }
                     narrow{
                         "ဇ",
                         "ဖ",
@@ -868,37 +589,11 @@ my{
                         "အ",
                         "န",
                         "ဒ",
-                    }
-                    wide{
-                        "ဇန်နဝါရီ",
-                        "ဖေဖော်ဝါရီ",
-                        "မတ်",
-                        "ဧပြီ",
-                        "မေ",
-                        "ဇွန်",
-                        "ဇူလိုင်",
-                        "ဩဂုတ်",
-                        "စက်တင်ဘာ",
-                        "အောက်တိုဘာ",
-                        "နိုဝင်ဘာ",
-                        "ဒီဇင်ဘာ",
                     }
                 }
             }
             quarters{
                 format{
-                    abbreviated{
-                        "ပထမ သုံးလပတ်",
-                        "ဒုတိယ သုံးလပတ်",
-                        "တတိယ သုံးလပတ်",
-                        "စတုတ္ထ သုံးလပတ်",
-                    }
-                    narrow{
-                        "ပ",
-                        "ဒု",
-                        "တ",
-                        "စ",
-                    }
                     wide{
                         "ပထမ သုံးလပတ်",
                         "ဒုတိယ သုံးလပတ်",
@@ -907,23 +602,11 @@ my{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "ပထမ သုံးလပတ်",
-                        "ဒုတိယ သုံးလပတ်",
-                        "တတိယ သုံးလပတ်",
-                        "စတုတ္ထ သုံးလပတ်",
-                    }
                     narrow{
                         "ပ",
                         "ဒု",
                         "တ",
                         "စ",
-                    }
-                    wide{
-                        "ပထမ သုံးလပတ်",
-                        "ဒုတိယ သုံးလပတ်",
-                        "တတိယ သုံးလပတ်",
-                        "စတုတ္ထ သုံးလပတ်",
                     }
                 }
             }
@@ -1017,12 +700,6 @@ my{
         western_asian_scripts{"အနောက်အာရှ လက်ရေးမူ"}
         whitespace{"စာလုံးခြားကွက်လပ်"}
     }
-    delimiters{
-        alternateQuotationEnd{"’"}
-        alternateQuotationStart{"‘"}
-        quotationEnd{"”"}
-        quotationStart{"“"}
-    }
     fields{
         day{
             dn{"ရက်"}
@@ -1042,96 +719,16 @@ my{
                 }
             }
         }
-        day-narrow{
-            dn{"ရက်"}
-            relative{
-                "-1"{"မနေ့က"}
-                "0"{"ယနေ့"}
-                "1"{"မနက်ဖြန်"}
-            }
-            relativeTime{
-                future{
-                    other{"{0} ရက်အတွင်း"}
-                }
-                past{
-                    other{"ပြီးခဲ့သည့် {0} ရက်"}
-                }
-            }
-        }
-        day-short{
-            dn{"ရက်"}
-            relative{
-                "-1"{"မနေ့က"}
-                "0"{"ယနေ့"}
-                "1"{"မနက်ဖြန်"}
-            }
-            relativeTime{
-                future{
-                    other{"{0} ရက်အတွင်း"}
-                }
-                past{
-                    other{"ပြီးခဲ့သည့် {0} ရက်"}
-                }
-            }
-        }
         dayOfYear{
-            dn{"တစ်နှစ်အတွင်း ရက်ရေတွက်ပုံ"}
-        }
-        dayOfYear-narrow{
-            dn{"တစ်နှစ်အတွင်း ရက်ရေတွက်ပုံ"}
-        }
-        dayOfYear-short{
             dn{"တစ်နှစ်အတွင်း ရက်ရေတွက်ပုံ"}
         }
         dayperiod{
             dn{"နံနက်/ညနေ"}
         }
-        dayperiod-narrow{
-            dn{"နံနက်/ညနေ"}
-        }
-        dayperiod-short{
-            dn{"နံနက်/ညနေ"}
-        }
         era{
             dn{"ခေတ်"}
         }
-        era-narrow{
-            dn{"ခေတ်"}
-        }
-        era-short{
-            dn{"ခေတ်"}
-        }
         fri{
-            relative{
-                "-1"{"ပြီးခဲ့သည့် သောကြာနေ့"}
-                "0"{"ဤသောကြာနေ့"}
-                "1"{"လာမည့် သောကြာနေ့"}
-            }
-            relativeTime{
-                future{
-                    other{"သောကြာ {0} ပတ်အတွင်း"}
-                }
-                past{
-                    other{"ပြီးခဲ့သည့် သောကြာ {0} ပတ်အတွင်း"}
-                }
-            }
-        }
-        fri-narrow{
-            relative{
-                "-1"{"ပြီးခဲ့သည့် သောကြာနေ့"}
-                "0"{"ဤသောကြာနေ့"}
-                "1"{"လာမည့် သောကြာနေ့"}
-            }
-            relativeTime{
-                future{
-                    other{"သောကြာ {0} ပတ်အတွင်း"}
-                }
-                past{
-                    other{"ပြီးခဲ့သည့် သောကြာ {0} ပတ်အတွင်း"}
-                }
-            }
-        }
-        fri-short{
             relative{
                 "-1"{"ပြီးခဲ့သည့် သောကြာနေ့"}
                 "0"{"ဤသောကြာနေ့"}
@@ -1160,55 +757,11 @@ my{
                 }
             }
         }
-        hour-narrow{
-            dn{"နာရီ"}
-            relativeTime{
-                future{
-                    other{"{0} နာရီအတွင်း"}
-                }
-                past{
-                    other{"ပြီးခဲ့သည့် {0} နာရီ"}
-                }
-            }
-        }
-        hour-short{
-            dn{"နာရီ"}
-            relativeTime{
-                future{
-                    other{"{0} နာရီအတွင်း"}
-                }
-                past{
-                    other{"ပြီးခဲ့သည့် {0} နာရီ"}
-                }
-            }
-        }
         minute{
             dn{"မိနစ်"}
             relative{
                 "0"{"ဤမိနစ်"}
             }
-            relativeTime{
-                future{
-                    other{"{0} မိနစ်အတွင်း"}
-                }
-                past{
-                    other{"ပြီးခဲ့သည့် {0} မိနစ်"}
-                }
-            }
-        }
-        minute-narrow{
-            dn{"မိနစ်"}
-            relativeTime{
-                future{
-                    other{"{0} မိနစ်အတွင်း"}
-                }
-                past{
-                    other{"ပြီးခဲ့သည့် {0} မိနစ်"}
-                }
-            }
-        }
-        minute-short{
-            dn{"မိနစ်"}
             relativeTime{
                 future{
                     other{"{0} မိနစ်အတွင်း"}
@@ -1233,69 +786,7 @@ my{
                 }
             }
         }
-        mon-narrow{
-            relative{
-                "-1"{"ပြီးခဲ့သည့် တနင်္လာနေ့"}
-                "0"{"ဤတနင်္လာနေ့"}
-                "1"{"လာမည့် တနင်္လာနေ့"}
-            }
-            relativeTime{
-                future{
-                    other{"တနင်္လာ {0} ပတ်အတွင်း"}
-                }
-                past{
-                    other{"ပြီးခဲ့သည့် တနင်္လာ {0} ပတ်"}
-                }
-            }
-        }
-        mon-short{
-            relative{
-                "-1"{"ပြီးခဲ့သည့် တနင်္လာနေ့"}
-                "0"{"ဤတနင်္လာနေ့"}
-                "1"{"လာမည့် တနင်္လာနေ့"}
-            }
-            relativeTime{
-                future{
-                    other{"တနင်္လာ {0} ပတ်အတွင်း"}
-                }
-                past{
-                    other{"ပြီးခဲ့သည့် တနင်္လာ {0} ပတ်"}
-                }
-            }
-        }
         month{
-            dn{"လ"}
-            relative{
-                "-1"{"ပြီးခဲ့သည့်လ"}
-                "0"{"ယခုလ"}
-                "1"{"လာမည့်လ"}
-            }
-            relativeTime{
-                future{
-                    other{"{0} လအတွင်း"}
-                }
-                past{
-                    other{"ပြီးခဲ့သည့် {0} လ"}
-                }
-            }
-        }
-        month-narrow{
-            dn{"လ"}
-            relative{
-                "-1"{"ပြီးခဲ့သည့်လ"}
-                "0"{"ယခုလ"}
-                "1"{"လာမည့်လ"}
-            }
-            relativeTime{
-                future{
-                    other{"{0} လအတွင်း"}
-                }
-                past{
-                    other{"ပြီးခဲ့သည့် {0} လ"}
-                }
-            }
-        }
-        month-short{
             dn{"လ"}
             relative{
                 "-1"{"ပြီးခဲ့သည့်လ"}
@@ -1327,24 +818,7 @@ my{
                 }
             }
         }
-        quarter-narrow{
-            dn{"သုံးလပတ်"}
-            relative{
-                "-1"{"ပြီးခဲ့သောသုံးလပတ်"}
-                "0"{"ယခုသုံးလပတ်"}
-                "1"{"နောက်လာမည့်သုံးလပတ်"}
-            }
-            relativeTime{
-                future{
-                    other{"သုံးလပတ်ကာလ {0} ခုအတွင်း"}
-                }
-                past{
-                    other{"ပြီးခဲ့သည့် သုံးလပတ်ကာလ {0} ခုအတွင်း"}
-                }
-            }
-        }
         quarter-short{
-            dn{"သုံးလပတ်"}
             relative{
                 "-1"{"ပြီးခဲ့သောသုံးလပတ်"}
                 "0"{"ယခုသုံးလပတ်"}
@@ -1353,43 +827,10 @@ my{
             relativeTime{
                 future{
                     other{"သုံးလပတ်ကာလ {0} ခုအတွင်း"}
-                }
-                past{
-                    other{"ပြီးခဲ့သည့် သုံးလပတ်ကာလ {0} ခုအတွင်း"}
                 }
             }
         }
         sat{
-            relative{
-                "-1"{"ပြီးခဲ့သည့် စနေနေ့"}
-                "0"{"ဤစနေနေ့"}
-                "1"{"လာမည့် စနေနေ့"}
-            }
-            relativeTime{
-                future{
-                    other{"စနေ {0} ပတ်အတွင်း"}
-                }
-                past{
-                    other{"ပြီးခဲ့သည့် စနေ {0} ပတ်အတွင်း"}
-                }
-            }
-        }
-        sat-narrow{
-            relative{
-                "-1"{"ပြီးခဲ့သည့် စနေနေ့"}
-                "0"{"ဤစနေနေ့"}
-                "1"{"လာမည့် စနေနေ့"}
-            }
-            relativeTime{
-                future{
-                    other{"စနေ {0} ပတ်အတွင်း"}
-                }
-                past{
-                    other{"ပြီးခဲ့သည့် စနေ {0} ပတ်အတွင်း"}
-                }
-            }
-        }
-        sat-short{
             relative{
                 "-1"{"ပြီးခဲ့သည့် စနေနေ့"}
                 "0"{"ဤစနေနေ့"}
@@ -1418,59 +859,7 @@ my{
                 }
             }
         }
-        second-narrow{
-            dn{"စက္ကန့်"}
-            relativeTime{
-                future{
-                    other{"{0} စက္ကန့်အတွင်း"}
-                }
-                past{
-                    other{"ပြီးခဲ့သည့် {0} စက္ကန့်"}
-                }
-            }
-        }
-        second-short{
-            dn{"စက္ကန့်"}
-            relativeTime{
-                future{
-                    other{"{0} စက္ကန့်အတွင်း"}
-                }
-                past{
-                    other{"ပြီးခဲ့သည့် {0} စက္ကန့်"}
-                }
-            }
-        }
         sun{
-            relative{
-                "-1"{"ပြီးခဲ့သည့် တနင်္ဂနွေနေ့"}
-                "0"{"ဤတနင်္ဂနွေနေ့"}
-                "1"{"လာမည့် တနင်္ဂနွေနေ့"}
-            }
-            relativeTime{
-                future{
-                    other{"တနင်္ဂနွေ {0} ပတ်အတွင်း"}
-                }
-                past{
-                    other{"ပြီးခဲ့သည့် တနင်္ဂနွေ {0} ပတ်"}
-                }
-            }
-        }
-        sun-narrow{
-            relative{
-                "-1"{"ပြီးခဲ့သည့် တနင်္ဂနွေနေ့"}
-                "0"{"ဤတနင်္ဂနွေနေ့"}
-                "1"{"လာမည့် တနင်္ဂနွေနေ့"}
-            }
-            relativeTime{
-                future{
-                    other{"တနင်္ဂနွေ {0} ပတ်အတွင်း"}
-                }
-                past{
-                    other{"ပြီးခဲ့သည့် တနင်္ဂနွေ {0} ပတ်"}
-                }
-            }
-        }
-        sun-short{
             relative{
                 "-1"{"ပြီးခဲ့သည့် တနင်္ဂနွေနေ့"}
                 "0"{"ဤတနင်္ဂနွေနေ့"}
@@ -1500,36 +889,6 @@ my{
                 }
             }
         }
-        thu-narrow{
-            relative{
-                "-1"{"ပြီးခဲ့သည့် ကြာသပတေးနေ့"}
-                "0"{"ဤကြာသပတေးနေ့"}
-                "1"{"လာမည့် ကြာသပတေးနေ့"}
-            }
-            relativeTime{
-                future{
-                    other{"ကြာသပတေး {0} ပတ်အတွင်း"}
-                }
-                past{
-                    other{"ပြီးခဲ့သည့် ကြာသပတေး {0} ပတ်"}
-                }
-            }
-        }
-        thu-short{
-            relative{
-                "-1"{"ပြီးခဲ့သည့် ကြာသပတေးနေ့"}
-                "0"{"ဤကြာသပတေးနေ့"}
-                "1"{"လာမည့် ကြာသပတေးနေ့"}
-            }
-            relativeTime{
-                future{
-                    other{"ကြာသပတေး {0} ပတ်အတွင်း"}
-                }
-                past{
-                    other{"ပြီးခဲ့သည့် ကြာသပတေး {0} ပတ်"}
-                }
-            }
-        }
         tue{
             relative{
                 "-1"{"ပြီးခဲ့သည့် အင်္ဂါနေ့"}
@@ -1545,67 +904,7 @@ my{
                 }
             }
         }
-        tue-narrow{
-            relative{
-                "-1"{"ပြီးခဲ့သည့် အင်္ဂါနေ့"}
-                "0"{"ဤအင်္ဂါနေ့"}
-                "1"{"လာမည့် အင်္ဂါနေ့"}
-            }
-            relativeTime{
-                future{
-                    other{"အင်္ဂါ {0} ပတ်အတွင်း"}
-                }
-                past{
-                    other{"ပြီးခဲ့သည့် အင်္ဂါ {0} ပတ်"}
-                }
-            }
-        }
-        tue-short{
-            relative{
-                "-1"{"ပြီးခဲ့သည့် အင်္ဂါနေ့"}
-                "0"{"ဤအင်္ဂါနေ့"}
-                "1"{"လာမည့် အင်္ဂါနေ့"}
-            }
-            relativeTime{
-                future{
-                    other{"အင်္ဂါ {0} ပတ်အတွင်း"}
-                }
-                past{
-                    other{"ပြီးခဲ့သည့် အင်္ဂါ {0} ပတ်"}
-                }
-            }
-        }
         wed{
-            relative{
-                "-1"{"ပြီးခဲ့သည့် ဗုဒ္ဓဟူးနေ့"}
-                "0"{"ဤဗုဒ္ဓဟူးနေ့"}
-                "1"{"လာမည့် ဗုဒ္ဓဟူးနေ့"}
-            }
-            relativeTime{
-                future{
-                    other{"ဗုဒ္ဓဟူး {0} ပတ်အတွင်း"}
-                }
-                past{
-                    other{"ပြီးခဲ့သည့် ဗုဒ္ဓဟူး {0} ပတ်"}
-                }
-            }
-        }
-        wed-narrow{
-            relative{
-                "-1"{"ပြီးခဲ့သည့် ဗုဒ္ဓဟူးနေ့"}
-                "0"{"ဤဗုဒ္ဓဟူးနေ့"}
-                "1"{"လာမည့် ဗုဒ္ဓဟူးနေ့"}
-            }
-            relativeTime{
-                future{
-                    other{"ဗုဒ္ဓဟူး {0} ပတ်အတွင်း"}
-                }
-                past{
-                    other{"ပြီးခဲ့သည့် ဗုဒ္ဓဟူး {0} ပတ်"}
-                }
-            }
-        }
-        wed-short{
             relative{
                 "-1"{"ပြီးခဲ့သည့် ဗုဒ္ဓဟူးနေ့"}
                 "0"{"ဤဗုဒ္ဓဟူးနေ့"}
@@ -1637,65 +936,13 @@ my{
                 }
             }
         }
-        week-narrow{
-            dn{"ပတ်"}
-            relative{
-                "-1"{"ပြီးခဲ့သည့် သီတင်းပတ်"}
-                "0"{"ယခု သီတင်းပတ်"}
-                "1"{"လာမည့် သီတင်းပတ်"}
-            }
-            relativePeriod{"{0} ပတ်မြောက် သီတင်းပတ်"}
-            relativeTime{
-                future{
-                    other{"{0} ပတ်အတွင်း"}
-                }
-                past{
-                    other{"ပြီးခဲ့သည့် {0} ပတ်"}
-                }
-            }
-        }
-        week-short{
-            dn{"ပတ်"}
-            relative{
-                "-1"{"ပြီးခဲ့သည့် သီတင်းပတ်"}
-                "0"{"ယခု သီတင်းပတ်"}
-                "1"{"လာမည့် သီတင်းပတ်"}
-            }
-            relativePeriod{"{0} ပတ်မြောက် သီတင်းပတ်"}
-            relativeTime{
-                future{
-                    other{"{0} ပတ်အတွင်း"}
-                }
-                past{
-                    other{"ပြီးခဲ့သည့် {0} ပတ်"}
-                }
-            }
-        }
         weekOfMonth{
-            dn{"တစ်လအတွင်းရှိသီတင်းပတ်"}
-        }
-        weekOfMonth-narrow{
-            dn{"တစ်လအတွင်းရှိသီတင်းပတ်"}
-        }
-        weekOfMonth-short{
             dn{"တစ်လအတွင်းရှိသီတင်းပတ်"}
         }
         weekday{
             dn{"နေ့"}
         }
-        weekday-narrow{
-            dn{"နေ့"}
-        }
-        weekday-short{
-            dn{"နေ့"}
-        }
         weekdayOfMonth{
-            dn{"တစ်လအတွင်းရှိအလုပ်ရက်"}
-        }
-        weekdayOfMonth-narrow{
-            dn{"တစ်လအတွင်းရှိအလုပ်ရက်"}
-        }
-        weekdayOfMonth-short{
             dn{"တစ်လအတွင်းရှိအလုပ်ရက်"}
         }
         year{
@@ -1714,62 +961,12 @@ my{
                 }
             }
         }
-        year-narrow{
-            dn{"နှစ်"}
-            relative{
-                "-1"{"ယမန်နှစ်"}
-                "0"{"ယခုနှစ်"}
-                "1"{"လာမည့်နှစ်"}
-            }
-            relativeTime{
-                future{
-                    other{"{0} နှစ်အတွင်း"}
-                }
-                past{
-                    other{"ပြီးခဲ့သည့် {0} နှစ်"}
-                }
-            }
-        }
-        year-short{
-            dn{"နှစ်"}
-            relative{
-                "-1"{"ယမန်နှစ်"}
-                "0"{"ယခုနှစ်"}
-                "1"{"လာမည့်နှစ်"}
-            }
-            relativeTime{
-                future{
-                    other{"{0} နှစ်အတွင်း"}
-                }
-                past{
-                    other{"ပြီးခဲ့သည့် {0} နှစ်"}
-                }
-            }
-        }
         zone{
-            dn{"ဇုန်"}
-        }
-        zone-narrow{
-            dn{"ဇုန်"}
-        }
-        zone-short{
             dn{"ဇုန်"}
         }
     }
     listPattern{
         or{
-            2{"{0} သို့မဟုတ် {1}"}
-            end{"{0} သို့မဟုတ် {1}"}
-            middle{"{0} - {1}"}
-            start{"{0} - {1}"}
-        }
-        or-narrow{
-            2{"{0} သို့မဟုတ် {1}"}
-            end{"{0} သို့မဟုတ် {1}"}
-            middle{"{0} - {1}"}
-            start{"{0} - {1}"}
-        }
-        or-short{
             2{"{0} သို့မဟုတ် {1}"}
             end{"{0} သို့မဟုတ် {1}"}
             middle{"{0} - {1}"}
@@ -1781,35 +978,13 @@ my{
             middle{"{0} - {1}"}
             start{"{0} - {1}"}
         }
-        standard-narrow{
-            2{"{0}နှင့် {1}"}
-            end{"{0}နှင့် {1}"}
-            middle{"{0} - {1}"}
-            start{"{0} - {1}"}
-        }
-        standard-short{
-            2{"{0}နှင့် {1}"}
-            end{"{0}နှင့် {1}"}
-            middle{"{0} - {1}"}
-            start{"{0} - {1}"}
-        }
         unit{
-            2{"{0}နှင့်{1}"}
-            end{"{0}နှင့် {1}"}
             middle{"{0}- {1}"}
             start{"{0}- {1}"}
         }
         unit-narrow{
-            2{"{0}နှင့် {1}"}
-            end{"{0}နှင့် {1}"}
             middle{"{0} {1}"}
             start{"{0} {1}"}
-        }
-        unit-short{
-            2{"{0}နှင့် {1}"}
-            end{"{0}နှင့် {1}"}
-            middle{"{0}- {1}"}
-            start{"{0}- {1}"}
         }
     }
     measurementSystemNames{
@@ -1820,37 +995,36 @@ my{
     parse{
         date{
             lenient{
-                "[\\--/]",
-                "[\\:∶]",
+                "[\\- ‑ . /]",
+                "[\\: ∶]",
             }
         }
         general{
             lenient{
-                "[.․。︒﹒．｡]",
-                "['ʼ՚᾽᾿’＇]",
-                "[%٪﹪％]",
-                "[؉‰]",
-                "[\$﹩＄$]",
-                "[£₤]",
+                "[.．․﹒ 。｡︒]",
+                "['＇’ ՚ ᾽᾿ ʼ]",
+                "[%％﹪ ٪]",
+                "[‰ ؉]",
+                "[\$＄﹩]",
+                "[£ ₤]",
                 "[¥￥]",
                 "[₩￦]",
-                "[₨₹{Rp}{Rs}]",
+                "[₹ ₨ {Rp} {Rs}]",
             }
         }
         number{
             lenient{
-                "[\\-‒⁻₋−➖﹣－]",
-                "[,،٫、︐︑﹐﹑，､]",
-                "[+⁺₊➕﬩﹢＋]",
+                "[\\-－﹣ ‑ ‒ −⁻₋ ➖]",
+                "[,，﹐︐ ، ٫ 、﹑､︑]",
+                "[+＋﬩﹢⁺₊ ➕]",
             }
             stricter{
-                "[,٫︐﹐，]",
-                "[.․﹒．｡]",
+                "[,，﹐︐ ٫]",
+                "[.．․﹒ ｡]",
             }
         }
     }
     personNames{
-        foreignSpaceReplacement{" "}
         nameOrderLocales{
             givenFirst{
                 "und",
@@ -1867,75 +1041,57 @@ my{
             }
         }
         namePattern{
-            givenFirst-long-addressing-formal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
-            givenFirst-long-addressing-informal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
-            givenFirst-long-monogram-informal{
-                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
-                "llCaps}"
+            givenFirst-long-addressing-formal{"{title} {surname}"}
+            givenFirst-long-addressing-informal{"{given-informal}"}
+            givenFirst-long-monogram-formal{
+                "{given-monogram-allCaps} {given2-monogram-allCaps} {surname-monogram"
+                "-allCaps}"
             }
-            givenFirst-long-referring-informal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
-            givenFirst-medium-addressing-formal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
-            givenFirst-medium-addressing-informal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
-            givenFirst-medium-monogram-formal{
-                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
-                "llCaps}"
-            }
-            givenFirst-medium-monogram-informal{
-                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
-                "llCaps}"
-            }
-            givenFirst-medium-referring-formal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
-            givenFirst-medium-referring-informal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
-            givenFirst-short-addressing-formal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
-            givenFirst-short-addressing-informal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
-            givenFirst-short-monogram-formal{
-                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
-                "llCaps}"
-            }
-            givenFirst-short-monogram-informal{
-                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
-                "llCaps}"
-            }
-            givenFirst-short-referring-formal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
-            givenFirst-short-referring-informal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            givenFirst-long-monogram-informal{"{given-informal-monogram-allCaps} {surname-monogram-allCaps}"}
+            givenFirst-long-referring-formal{"{title} {given} {given2} {surname} {generation}၊ {credentials}"}
+            givenFirst-long-referring-informal{"{given-informal} {surname}"}
+            givenFirst-medium-addressing-formal{"{title} {surname}"}
+            givenFirst-medium-addressing-informal{"{given-informal}"}
+            givenFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
+            givenFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
+            givenFirst-medium-referring-formal{"{given} {given2-initial} {surname} {generation}၊ {credentials}"}
+            givenFirst-medium-referring-informal{"{given-informal} {surname}"}
+            givenFirst-short-addressing-formal{"{title} {surname}"}
+            givenFirst-short-addressing-informal{"{given-informal}"}
+            givenFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
+            givenFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}
+            givenFirst-short-referring-formal{"{given-initial} {given2-initial} {surname}"}
+            givenFirst-short-referring-informal{"{given-informal} {surname-initial}"}
             sorting-long-referring-formal{"{surname-core}၊ {given} {given2} {surname-prefix}"}
-            sorting-long-referring-informal{"{surname-core}၊ {given} {given2} {surname-prefix}"}
-            sorting-medium-referring-formal{"{surname-core}၊ {given} {given2} {surname-prefix}"}
-            sorting-medium-referring-informal{"{surname-core}၊ {given} {given2} {surname-prefix}"}
-            sorting-short-referring-formal{"{surname-core}၊ {given} {given2} {surname-prefix}"}
-            sorting-short-referring-informal{"{surname-core}၊ {given} {given2} {surname-prefix}"}
-            surnameFirst-long-addressing-formal{"{surname} {given} {given2} {credentials}"}
-            surnameFirst-long-addressing-informal{"{surname} {given} {given2} {credentials}"}
-            surnameFirst-long-monogram-informal{
-                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
-                "llCaps}"
+            sorting-long-referring-informal{"{surname}၊ {given-informal}"}
+            sorting-medium-referring-formal{"{surname-core}၊ {given} {given2-initial} {surname-prefix}"}
+            sorting-medium-referring-informal{"{surname}၊ {given-informal}"}
+            sorting-short-referring-formal{"{surname-core}၊ {given-initial} {given2-initial} {surname-prefix}"}
+            sorting-short-referring-informal{"{surname}၊ {given-informal}"}
+            surnameFirst-long-addressing-formal{"{title} {surname}"}
+            surnameFirst-long-addressing-informal{"{given-informal}"}
+            surnameFirst-long-monogram-formal{
+                "{surname-monogram-allCaps} {given-monogram-allCaps} {given2-monogram"
+                "-allCaps}"
             }
-            surnameFirst-long-referring-formal{"{surname} {given} {given2} {credentials}"}
-            surnameFirst-long-referring-informal{"{surname} {given} {given2} {credentials}"}
-            surnameFirst-medium-addressing-formal{"{surname} {given} {given2} {credentials}"}
-            surnameFirst-medium-addressing-informal{"{surname} {given} {given2} {credentials}"}
-            surnameFirst-medium-monogram-formal{
-                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
-                "llCaps}"
-            }
-            surnameFirst-medium-monogram-informal{
-                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
-                "llCaps}"
-            }
-            surnameFirst-medium-referring-formal{"{surname} {given} {given2} {credentials}"}
-            surnameFirst-medium-referring-informal{"{surname} {given} {given2} {credentials}"}
-            surnameFirst-short-addressing-formal{"{surname} {given} {given2} {credentials}"}
-            surnameFirst-short-addressing-informal{"{surname} {given} {given2} {credentials}"}
-            surnameFirst-short-monogram-formal{
-                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
-                "llCaps}"
-            }
-            surnameFirst-short-monogram-informal{
-                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
-                "llCaps}"
-            }
-            surnameFirst-short-referring-formal{"{surname} {given} {given2} {credentials}"}
-            surnameFirst-short-referring-informal{"{surname} {given} {given2} {credentials}"}
+            surnameFirst-long-monogram-informal{"{surname-monogram-allCaps}{given-informal-monogram-allCaps}"}
+            surnameFirst-long-referring-formal{"{surname} {title} {given} {given2} {generation}၊ {credentials}"}
+            surnameFirst-long-referring-informal{"{surname} {given-informal}"}
+            surnameFirst-medium-addressing-formal{"{title} {surname}"}
+            surnameFirst-medium-addressing-informal{"{given-informal}"}
+            surnameFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
+            surnameFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
+            surnameFirst-medium-referring-formal{"{surname} {given} {given2-initial} {generation}, {credentials}"}
+            surnameFirst-medium-referring-informal{"{surname} {given-informal}"}
+            surnameFirst-short-addressing-formal{"{title} {surname}"}
+            surnameFirst-short-addressing-informal{"{given-informal}"}
+            surnameFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
+            surnameFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}
+            surnameFirst-short-referring-formal{"{surname} {given-initial} {given2-initial}"}
+            surnameFirst-short-referring-informal{"{surname} {given-initial}"}
+        }
+        parameterDefault{
+            formality{"informal"}
         }
     }
 }

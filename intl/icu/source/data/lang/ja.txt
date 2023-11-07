@@ -83,6 +83,7 @@ ja{
         bfd{"バフット語"}
         bfq{"バダガ語"}
         bg{"ブルガリア語"}
+        bgc{"ハリヤーンウィー語"}
         bgn{"西バローチー語"}
         bho{"ボージュプリー語"}
         bi{"ビスラマ語"}
@@ -244,7 +245,6 @@ ja{
         hax{"南部ハイダ語"}
         he{"ヘブライ語"}
         hi{"ヒンディー語"}
-        hi_Latn{"ヒンディー語 (ラテン文字)"}
         hif{"フィジー・ヒンディー語"}
         hil{"ヒリガイノン語"}
         hit{"ヒッタイト語"}
@@ -880,8 +880,6 @@ ja{
             indian{"インド国定暦"}
             islamic{"イスラム暦"}
             islamic-civil{"イスラム暦(定周期、公民紀元)"}
-            islamic-rgsa{"イスラム暦(サウジアラビア、月観測)"}
-            islamic-tbla{"イスラム歴(定周期、天文紀元)"}
             islamic-umalqura{"イスラム暦(ウンム・アルクラー)"}
             iso8601{"ISO-8601"}
             japanese{"和暦"}
@@ -1096,10 +1094,11 @@ ja{
     }
     characterLabelPattern{
         all{"{0} — すべて"}
-        category-list{"{0}: {1}"}
         compatibility{"{0} — 互換文字"}
         enclosed{"{0} — 囲み"}
         extended{"{0} — 拡張"}
+        facing-left{"{0} 左向き"}
+        facing-right{"{0} 右向き"}
         historic{"{0} — 古代文字"}
         miscellaneous{"{0} — 雑多"}
         other{"{0} — その他"}
@@ -1116,8 +1115,6 @@ ja{
         territory{"地域: {0}"}
     }
     localeDisplayPattern{
-        keyTypePattern{"{0}: {1}"}
-        pattern{"{0} ({1})"}
         separator{"{0}、{1}"}
     }
 }

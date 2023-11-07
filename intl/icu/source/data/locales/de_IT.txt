@@ -50,20 +50,6 @@ de_IT{
                         "Nov",
                         "Dez",
                     }
-                    wide{
-                        "Jänner",
-                        "Februar",
-                        "März",
-                        "April",
-                        "Mai",
-                        "Juni",
-                        "Juli",
-                        "August",
-                        "September",
-                        "Oktober",
-                        "November",
-                        "Dezember",
-                    }
                 }
             }
         }

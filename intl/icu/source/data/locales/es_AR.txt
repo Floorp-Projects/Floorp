@@ -23,6 +23,14 @@ es_AR{
             }
         }
         gregorian{
+            AmPmMarkers{
+                "a. m.",
+                "p. m.",
+            }
+            AmPmMarkersAbbr{
+                "a. m.",
+                "p. m.",
+            }
             availableFormats{
                 GyMMMEd{"E, d 'de' MMM 'de' y G"}
                 GyMMMd{"d MMM y G"}
@@ -42,17 +50,20 @@ es_AR{
                         night1{"noche"}
                         noon{"mediodía"}
                     }
-                    wide{
-                        evening1{"tarde"}
-                        morning1{"madrugada"}
-                        morning2{"mañana"}
-                        night1{"noche"}
-                        noon{"mediodía"}
-                    }
                 }
                 stand-alone{
+                    abbreviated{
+                        am{"a. m."}
+                        pm{"p. m."}
+                    }
                     narrow{
+                        am{"a. m."}
                         noon{"m."}
+                        pm{"p. m."}
+                    }
+                    wide{
+                        am{"a. m."}
+                        pm{"p. m."}
                     }
                 }
             }
@@ -179,19 +190,6 @@ es_AR{
         }
         dayperiod{
             dn{"a. m./p. m."}
-        }
-        second-narrow{
-            dn{"seg."}
-            relativeTime{
-                future{
-                    one{"dentro de {0} seg."}
-                    other{"dentro de {0} seg."}
-                }
-                past{
-                    one{"hace {0} seg."}
-                    other{"hace {0} seg."}
-                }
-            }
         }
         second-short{
             dn{"seg."}

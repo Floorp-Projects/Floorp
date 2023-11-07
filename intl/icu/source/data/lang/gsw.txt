@@ -576,8 +576,6 @@ gsw{
             gregorian{"Gregoriaanisch Kaländer"}
             hebrew{"Hebrääisch Kaländer"}
             indian{"Indisch Nationaalkaländer"}
-            islamic{"Islaamisch Kaländer"}
-            islamic-civil{"Bürgerlich islaamisch Kaländer"}
             japanese{"Japaanisch Kaländer"}
             roc{"Kaländer vor Republik Chiina"}
         }
@@ -621,9 +619,5 @@ gsw{
         language{"Schpraach: {0}"}
         script{"Schrift: {0}"}
         territory{"Regioon: {0}"}
-    }
-    localeDisplayPattern{
-        pattern{"{0} ({1})"}
-        separator{"{0}, {1}"}
     }
 }

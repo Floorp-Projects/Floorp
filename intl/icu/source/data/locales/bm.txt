@@ -90,19 +90,6 @@ bm{
                 "yMMMd",
                 "yMd",
             }
-            appendItems{
-                Day{"{0} ({2}: {1})"}
-                Day-Of-Week{"{0} {1}"}
-                Era{"{1} {0}"}
-                Hour{"{0} ({2}: {1})"}
-                Minute{"{0} ({2}: {1})"}
-                Month{"{0} ({2}: {1})"}
-                Quarter{"{0} ({2}: {1})"}
-                Second{"{0} ({2}: {1})"}
-                Timezone{"{0} {1}"}
-                Week{"{0} ({2}: {1})"}
-                Year{"{1} {0}"}
-            }
             availableFormats{
                 M{"M"}
                 MMM{"MMM"}
@@ -114,7 +101,6 @@ bm{
                 MMdd{"dd/MM"}
                 Md{"d/M"}
                 ms{"m:ss"}
-                y{"y"}
                 yM{"M/y"}
                 yMEd{"E d/M/y"}
                 yMM{"MM/y"}

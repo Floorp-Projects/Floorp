@@ -289,10 +289,6 @@ fur{
             one{"franc svuizar"}
             other{"francs svuizars"}
         }
-        CNY{
-            one{"yuan cinês"}
-            other{"yuan cinês"}
-        }
         DKK{
             one{"corone danese"}
             other{"coronis danesis"}
@@ -317,14 +313,6 @@ fur{
             one{"rupie indiane"}
             other{"rupiis indianis"}
         }
-        JPY{
-            one{"yen gjaponês"}
-            other{"yen gjaponês"}
-        }
-        KRW{
-            one{"won de Coree dal Sud"}
-            other{"won de Coree dal Sud"}
-        }
         MXN{
             one{"peso messican"}
             other{"pesos messicans"}
@@ -348,10 +336,6 @@ fur{
         SEK{
             one{"corone svedese"}
             other{"coronis svedesis"}
-        }
-        THB{
-            one{"baht tailandês"}
-            other{"baht tailandês"}
         }
         TRY{
             one{"lire turche"}

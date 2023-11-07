@@ -1911,10 +1911,6 @@ hi{
         "meta:Yukon"{
             ls{"युकॉन समय"}
         }
-        fallbackFormat{"{1} ({0})"}
-        gmtFormat{"GMT{0}"}
-        gmtZeroFormat{"GMT"}
-        hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"{0} समय"}
         regionFormatDaylight{"{0} डेलाइट समय"}
         regionFormatStandard{"{0} मानक समय"}

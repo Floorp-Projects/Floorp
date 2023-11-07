@@ -4,5 +4,6 @@
 ar_SS{
     NumberElements{
         default{"arab"}
+        default_latn{"latn"}
     }
 }

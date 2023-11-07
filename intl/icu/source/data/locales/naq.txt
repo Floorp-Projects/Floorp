@@ -3,7 +3,7 @@
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 naq{
     AuxExemplarCharacters{"[j l v]"}
-    ExemplarCharacters{"[a â b c d e f g h i î k m n o ô p q r s t u û w x y z ǀ ǁ ǂ ǃ]"}
+    ExemplarCharacters{"[aâ b c d e f g h iî k m n oô p q r s t uû w x y z ǀ ǁ ǂ ǃ]"}
     ExemplarCharactersIndex{"[A B C D E F G H I K M N O P Q R S T U W X Y Z]"}
     NumberElements{
         latn{
@@ -29,30 +29,12 @@ naq{
                 "{1} {0}",
                 "{1} {0}",
             }
-            DateTimeSkeletons{
-                "ahmmsszzzz",
-                "ahmmssz",
-                "ahmmss",
-                "ahmm",
-                "GyMMMMEEEEd",
-                "GyMMMMd",
-                "GyMMMd",
-                "GGGGGyMMdd",
-            }
             availableFormats{
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
-                M{"L"}
                 MEd{"E, M/d"}
-                MMM{"LLL"}
                 MMMEd{"E, MMM d"}
                 MMMMEd{"E, MMMM d"}
-                MMMMd{"MMMM d"}
-                MMMd{"MMM d"}
                 Md{"M/d"}
-                d{"d"}
                 hm{"h:mm a"}
-                ms{"mm:ss"}
                 y{"y"}
                 yM{"M/y"}
                 yMEd{"E, M/d/y"}
@@ -64,10 +46,6 @@ naq{
             }
         }
         gregorian{
-            AmPmMarkers{
-                "ǁgoagas",
-                "ǃuias",
-            }
             AmPmMarkersAbbr{
                 "ǁgoagas",
                 "ǃuias",
@@ -98,20 +76,11 @@ naq{
                 "yMMdd",
             }
             availableFormats{
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
-                M{"L"}
                 MEd{"E, M/d"}
-                MMM{"LLL"}
                 MMMEd{"E, MMM d"}
                 MMMMEd{"E, MMMM d"}
-                MMMMd{"MMMM d"}
-                MMMd{"MMM d"}
                 Md{"M/d"}
-                d{"d"}
                 hm{"h:mm a"}
-                ms{"mm:ss"}
-                y{"y"}
                 yM{"M/y"}
                 yMEd{"E, M/d/y"}
                 yMMM{"MMM y"}
@@ -228,12 +197,6 @@ naq{
                 }
             }
         }
-    }
-    delimiters{
-        alternateQuotationEnd{"’"}
-        alternateQuotationStart{"‘"}
-        quotationEnd{"”"}
-        quotationStart{"“"}
     }
     fields{
         day{

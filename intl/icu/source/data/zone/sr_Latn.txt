@@ -1957,11 +1957,6 @@ sr_Latn{
         "meta:Yukon"{
             ls{"Jukon"}
         }
-        fallbackFormat{"{1} ({0})"}
-        gmtFormat{"GMT{0}"}
-        gmtZeroFormat{"GMT"}
-        hourFormat{"+HH:mm;-HH:mm"}
-        regionFormat{"{0}"}
         regionFormatDaylight{"{0}, letnje vreme"}
         regionFormatStandard{"{0}, standardno vreme"}
     }

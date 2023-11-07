@@ -221,7 +221,7 @@ no{
         }
         BYN{
             "BYN",
-            "nye hviterussiske rubler",
+            "nye belarusiske rubler",
         }
         BYR{
             "BYR",
@@ -899,9 +899,13 @@ no{
             "SKK",
             "slovakiske koruna",
         }
+        SLE{
+            "SLE",
+            "sierraleonske leone",
+        }
         SLL{
             "SLL",
-            "sierraleonske leone",
+            "sierraleonske leone (1964—2022)",
         }
         SOS{
             "SOS",
@@ -1213,104 +1217,9 @@ no{
         }
     }
     Currencies%narrow{
-        AOA{"Kz"}
-        ARS{"$"}
-        AUD{"$"}
-        BAM{"KM"}
-        BBD{"$"}
-        BDT{"৳"}
-        BMD{"$"}
-        BND{"$"}
-        BOB{"Bs"}
-        BRL{"R$"}
-        BSD{"$"}
-        BWP{"P"}
         BYN{"р."}
-        BZD{"$"}
-        CAD{"$"}
-        CLP{"$"}
-        CNY{"¥"}
-        COP{"$"}
-        CRC{"₡"}
-        CUC{"$"}
-        CUP{"$"}
-        CZK{"Kč"}
-        DKK{"kr"}
-        DOP{"$"}
-        EGP{"E£"}
-        EUR{"€"}
-        FJD{"$"}
-        FKP{"£"}
-        GBP{"£"}
-        GEL{"₾"}
-        GIP{"£"}
-        GNF{"FG"}
-        GTQ{"Q"}
-        GYD{"$"}
-        HKD{"$"}
-        HNL{"L"}
-        HRK{"kn"}
-        HUF{"Ft"}
-        IDR{"Rp"}
-        ILS{"₪"}
-        INR{"₹"}
-        ISK{"kr"}
-        JMD{"$"}
-        JPY{"¥"}
-        KHR{"៛"}
-        KMF{"CF"}
-        KPW{"₩"}
-        KRW{"₩"}
-        KYD{"$"}
-        KZT{"₸"}
-        LAK{"₭"}
-        LBP{"L£"}
-        LKR{"Rs"}
-        LRD{"$"}
-        LTL{"Lt"}
-        LVL{"Ls"}
-        MGA{"Ar"}
-        MMK{"K"}
-        MNT{"₮"}
-        MUR{"Rs"}
-        MXN{"$"}
-        MYR{"RM"}
-        NAD{"$"}
-        NGN{"₦"}
-        NIO{"C$"}
-        NOK{"kr"}
-        NPR{"Rs"}
-        NZD{"$"}
-        PHP{"₱"}
-        PKR{"Rs"}
-        PLN{"zł"}
-        PYG{"₲"}
         RON{"L"}
-        RUB{"₽"}
-        RWF{"RF"}
-        SBD{"$"}
-        SEK{"kr"}
-        SGD{"$"}
-        SHP{"£"}
-        SRD{"$"}
-        SSP{"£"}
-        SYP{"£"}
-        THB{"฿"}
-        TOP{"T$"}
-        TRY{"₺"}
-        TTD{"$"}
         TWD{"NT$"}
-        UAH{"₴"}
-        USD{"$"}
-        UYU{"$"}
-        VEF{"Bs"}
-        VND{"₫"}
-        XCD{"$"}
-        ZAR{"R"}
-        ZMW{"ZK"}
-    }
-    Currencies%variant{
-        TRY{"TL"}
     }
     CurrencyPlurals{
         ADP{
@@ -1477,10 +1386,6 @@ no{
             one{"boliviansk pesos"}
             other{"bolivianske pesos"}
         }
-        BOV{
-            one{"bolivianske mvdol"}
-            other{"bolivianske mvdol"}
-        }
         BRB{
             one{"brasiliansk cruzeiro novo (1967–1986)"}
             other{"brasilianske cruzeiro novo (1967–1986)"}
@@ -1530,8 +1435,8 @@ no{
             other{"hviterussiske nye rubler (1994–1999)"}
         }
         BYN{
-            one{"ny hviterussisk rubel"}
-            other{"nye hviterussiske rubler"}
+            one{"ny belarusisk rubel"}
+            other{"nye belarusiske rubler"}
         }
         BYR{
             one{"hviterussisk rubel (2000–2016)"}
@@ -1549,9 +1454,17 @@ no{
             one{"kongolesisk franc"}
             other{"kongolesiske franc"}
         }
+        CHE{
+            one{"WIR-euro"}
+            other{"WIR-euro"}
+        }
         CHF{
             one{"sveitsisk franc"}
             other{"sveitsiske franc"}
+        }
+        CHW{
+            one{"WIR-franc"}
+            other{"WIR-franc"}
         }
         CLE{
             one{"chilensk escudo"}
@@ -1568,10 +1481,6 @@ no{
         CNH{
             one{"kinesisk yuan (offshore)"}
             other{"kinesiske yuan (offshore)"}
-        }
-        CNX{
-            one{"Kinas folkebank dollar"}
-            other{"Kinas folkebank dollar"}
         }
         CNY{
             one{"kinesisk yuan"}
@@ -1677,10 +1586,6 @@ no{
             one{"etiopisk birr"}
             other{"etiopiske birr"}
         }
-        EUR{
-            one{"euro"}
-            other{"euro"}
-        }
         FIM{
             one{"finsk mark"}
             other{"finske mark"}
@@ -1688,10 +1593,6 @@ no{
         FJD{
             one{"fijiansk dollar"}
             other{"fijianske dollar"}
-        }
-        FKP{
-            one{"falklandspund"}
-            other{"falklandspund"}
         }
         FRF{
             one{"fransk franc"}
@@ -1749,17 +1650,9 @@ no{
             one{"portugisisk guinea escudo"}
             other{"portugisiske guinea escudo"}
         }
-        GWP{
-            one{"Guinea-Bissau-pesos"}
-            other{"Guinea-Bissau-pesos"}
-        }
         GYD{
             one{"guyansk dollar"}
             other{"guyanske dollar"}
-        }
-        HKD{
-            one{"Hongkong-dollar"}
-            other{"Hongkong-dollar"}
         }
         HNL{
             one{"honduransk lempira"}
@@ -2201,9 +2094,13 @@ no{
             one{"slovakisk koruna"}
             other{"slovakiske koruna"}
         }
-        SLL{
+        SLE{
             one{"sierraleonsk leone"}
             other{"sierraleonske leone"}
+        }
+        SLL{
+            one{"sierraleonsk leone (1964—2022)"}
+            other{"sierraleonske leone (1964—2022)"}
         }
         SOS{
             one{"somalisk shilling"}
@@ -2325,10 +2222,6 @@ no{
             one{"amerikansk dollar (samme dag)"}
             other{"amerikanske dollar (samme dag)"}
         }
-        UYI{
-            one{"uruguyanske pesos (indekserte enheter)"}
-            other{"uruguyanske pesos (indekserte enheter)"}
-        }
         UYP{
             one{"uruguayansk peso (1975–1993)"}
             other{"uruguayanske pesos (1975–1993)"}
@@ -2425,17 +2318,9 @@ no{
             one{"unse palladium"}
             other{"unser palladium"}
         }
-        XPF{
-            one{"CFP-franc"}
-            other{"CFP-franc"}
-        }
         XPT{
             one{"unse platina"}
             other{"unser platina"}
-        }
-        XSU{
-            one{"sucre"}
-            other{"sucre"}
         }
         XTS{
             one{"testvaluta"}

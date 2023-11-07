@@ -2,11 +2,8 @@
 // License & terms of use: http://www.unicode.org/copyright.html
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 wae{
-    AuxExemplarCharacters{"[à ă â å ā æ ç è ĕ ê ë ē ì ĭ î ï ī ñ ò ŏ ô ø ō œ ß ù ŭ û ū ÿ]"}
-    ExemplarCharacters{
-        "[a á ä ã b c č d e é f g h i í j k l m n o ó ö õ p q r s š t u ú ü ũ v w x y"
-        " z]"
-    }
+    AuxExemplarCharacters{"[àăâåā æ ç èĕêëē ìĭîïī ñ òŏôøō œ ß ùŭûū ÿ]"}
+    ExemplarCharacters{"[aáäã b cč d eé f g h ií j k l m n oóöõ p q r sš t uúüũ v w x y z]"}
     ExemplarCharactersIndex{"[A B C D E F G H I J K L M N O P Q R S T U V W X Y Z]"}
     ExemplarCharactersNumbers{"[\\- ‑ , ’ % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     NumberElements{
@@ -73,7 +70,6 @@ wae{
                 d{
                     d{"d – d"}
                 }
-                fallback{"{0} – {1}"}
                 h{
                     a{"h a – h a"}
                     h{"h – h a"}
@@ -144,16 +140,6 @@ wae{
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
-            }
-            DateTimeSkeletons{
-                "HHmmsszzzz",
-                "HHmmssz",
-                "HHmmss",
-                "HHmm",
-                "GyMMMMEEEEd",
-                "GyMMMMd",
-                "GyMMMd",
-                "GGGGGyMMdd",
             }
             availableFormats{
                 Ed{"E d."}
@@ -258,7 +244,6 @@ wae{
                 d{
                     d{"d – d"}
                 }
-                fallback{"{0} – {1}"}
                 h{
                     a{"h a – h a"}
                     h{"h – h a"}
@@ -330,16 +315,6 @@ wae{
                 "{1} {0}",
                 "{1} {0}",
             }
-            DateTimeSkeletons{
-                "HHmmsszzzz",
-                "HHmmssz",
-                "HHmmss",
-                "HHmm",
-                "yMMMMEEEEd",
-                "yMMMMd",
-                "yMMMd",
-                "yMMdd",
-            }
             availableFormats{
                 Ed{"E d."}
                 Ehm{"E h:mm a"}
@@ -369,15 +344,6 @@ wae{
                         "Fri",
                         "Sam",
                     }
-                    narrow{
-                        "S",
-                        "M",
-                        "Z",
-                        "M",
-                        "F",
-                        "F",
-                        "S",
-                    }
                     wide{
                         "Sunntag",
                         "Mäntag",
@@ -389,15 +355,6 @@ wae{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "Sun",
-                        "Män",
-                        "Ziš",
-                        "Mit",
-                        "Fró",
-                        "Fri",
-                        "Sam",
-                    }
                     narrow{
                         "S",
                         "M",
@@ -406,15 +363,6 @@ wae{
                         "F",
                         "F",
                         "S",
-                    }
-                    wide{
-                        "Sunntag",
-                        "Mäntag",
-                        "Zištag",
-                        "Mittwuč",
-                        "Fróntag",
-                        "Fritag",
-                        "Samštag",
                     }
                 }
             }
@@ -511,7 +459,6 @@ wae{
                 d{
                     d{"d – d"}
                 }
-                fallback{"{0} – {1}"}
                 h{
                     a{"h a – h a"}
                     h{"h – h a"}
@@ -582,20 +529,6 @@ wae{
                         "Win",
                         "Chr",
                     }
-                    narrow{
-                        "J",
-                        "H",
-                        "M",
-                        "A",
-                        "M",
-                        "B",
-                        "H",
-                        "Ö",
-                        "H",
-                        "W",
-                        "W",
-                        "C",
-                    }
                     wide{
                         "Jenner",
                         "Hornig",
@@ -612,20 +545,6 @@ wae{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "Jen",
-                        "Hor",
-                        "Mär",
-                        "Abr",
-                        "Mei",
-                        "Brá",
-                        "Hei",
-                        "Öig",
-                        "Her",
-                        "Wím",
-                        "Win",
-                        "Chr",
-                    }
                     narrow{
                         "J",
                         "H",
@@ -639,45 +558,11 @@ wae{
                         "W",
                         "W",
                         "C",
-                    }
-                    wide{
-                        "Jenner",
-                        "Hornig",
-                        "Märze",
-                        "Abrille",
-                        "Meije",
-                        "Bráčet",
-                        "Heiwet",
-                        "Öigšte",
-                        "Herbštmánet",
-                        "Wímánet",
-                        "Wintermánet",
-                        "Chrištmánet",
                     }
                 }
             }
             quarters{
                 format{
-                    abbreviated{
-                        "Q1",
-                        "Q2",
-                        "Q3",
-                        "Q4",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                    }
-                    wide{
-                        "1. quartal",
-                        "2. quartal",
-                        "3. quartal",
-                        "4. quartal",
-                    }
-                }
-                stand-alone{
                     abbreviated{
                         "Q1",
                         "Q2",

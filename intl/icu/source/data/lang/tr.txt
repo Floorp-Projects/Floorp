@@ -84,6 +84,7 @@ tr{
         bfd{"Bafut"}
         bfq{"Badaga"}
         bg{"Bulgarca"}
+        bgc{"Haryanvi dili"}
         bgn{"Batı Balochi"}
         bho{"Arayanice"}
         bi{"Bislama"}
@@ -780,6 +781,7 @@ tr{
         Lydi{"Lidya"}
         Mahj{"Mahajani"}
         Mand{"Manden"}
+        Mani{"Maniheist"}
         Maya{"Maya Hiyeroglifleri"}
         Mend{"Mende"}
         Merc{"Meroitik El Yazısı"}
@@ -883,9 +885,8 @@ tr{
             hebrew{"İbrani Takvimi"}
             indian{"Ulusal Hint Takvimi"}
             islamic{"Hicri Takvim"}
-            islamic-civil{"Arap Takvimi"}
-            islamic-rgsa{"Hicri Takvim (Suudi)"}
-            islamic-tbla{"Hicri Takvim (Astronomik Evreler)"}
+            islamic-civil{"Hicri Takvim (16 Temmuz 622)"}
+            islamic-tbla{"Hicri Takvim (15 Temmuz 622)"}
             islamic-umalqura{"Hicri Takvim (Ümmü-l Kurra Takvimi)"}
             iso8601{"ISO-8601 Takvimi"}
             japanese{"Japon Takvimi"}
@@ -1090,10 +1091,11 @@ tr{
     }
     characterLabelPattern{
         all{"{0} — tümü"}
-        category-list{"{0}: {1}"}
         compatibility{"{0} — uyumluluk"}
         enclosed{"{0} — etrafı çevrilmiş"}
         extended{"{0} — genişletilmiş"}
+        facing-left{"sola dönük {0}"}
+        facing-right{"sağa dönük {0}"}
         historic{"{0} — tarihi"}
         miscellaneous{"{0} — çeşitli"}
         other{"{0} — diğer"}
@@ -1109,10 +1111,5 @@ tr{
         language{"Dil: {0}"}
         script{"Alfabe: {0}"}
         territory{"Bölge: {0}"}
-    }
-    localeDisplayPattern{
-        keyTypePattern{"{0}: {1}"}
-        pattern{"{0} ({1})"}
-        separator{"{0}, {1}"}
     }
 }

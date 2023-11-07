@@ -50,6 +50,7 @@ pa{
         bem{"ਬੇਂਬਾ"}
         bez{"ਬੇਨਾ"}
         bg{"ਬੁਲਗਾਰੀਆਈ"}
+        bgc{"ਹਰਿਆਣਵੀ"}
         bgn{"ਪੱਛਮੀ ਬਲੂਚੀ"}
         bho{"ਭੋਜਪੁਰੀ"}
         bi{"ਬਿਸਲਾਮਾ"}
@@ -457,8 +458,6 @@ pa{
         yue{"ਕੈਂਟੋਨੀਜ਼"}
         zgh{"ਮਿਆਰੀ ਮੋਰੋਕੇਨ ਟਾਮਾਜ਼ਿਕ"}
         zh{"ਚੀਨੀ"}
-        zh_Hans{"ਚੀਨੀ (ਸਰਲ)"}
-        zh_Hant{"ਚੀਨੀ (ਰਵਾਇਤੀ)"}
         zu{"ਜ਼ੁਲੂ"}
         zun{"ਜ਼ੂਨੀ"}
         zxx{"ਬੋਲੀ ਸੰਬੰਧੀ ਕੋਈ ਸਮੱਗਰੀ ਨਹੀਂ"}
@@ -559,7 +558,6 @@ pa{
             indian{"ਭਾਰਤੀ ਕੌਮੀ ਕੈਲੰਡਰ"}
             islamic{"ਇਸਲਾਮੀ ਕੈਲੰਡਰ"}
             islamic-civil{"ਇਸਲਾਮੀ ਕੈਲੰਡਰ (ਸਾਰਨੀਬੱਧ, ਸਮਾਜਿਕ ਯੁੱਗ)"}
-            islamic-rgsa{"ਇਸਲਾਮੀ ਕੈਲੰਡਰ (ਸਾਊਦੀ ਅਰਬ, ਚੰਨ ਦਿਖਣਾ)"}
             islamic-tbla{"ਇਸਲਾਮੀ ਕੈਲੰਡਰ (ਟੇਬਲਰ, ਖਗੋਲੀ ਯੁੱਗ)"}
             islamic-umalqura{"ਇਸਲਾਮੀ ਕੈਲੰਡਰ (ਅਮ ਅਲ-ਕੁਰਾ)"}
             iso8601{"(ISO-8601) ਕੈਲੰਡਰ"}
@@ -642,10 +640,11 @@ pa{
     }
     characterLabelPattern{
         all{"{0} — ਸਭ"}
-        category-list{"{0}: {1}"}
         compatibility{"{0} — ਅਨੁਰੂਪਤਾ"}
         enclosed{"{0} — ਨੱਥੀ ਕੀਤਾ"}
         extended{"{0} — ਵਿਸਤ੍ਰਿਤ"}
+        facing-left{"{0} ਖੱਬੇ ਪਾਸੇ"}
+        facing-right{"{0} ਸੱਜੇ ਪਾਸੇ"}
         historic{"{0} — ਇਤਿਹਾਸਕ"}
         miscellaneous{"{0} — ਫੁਟਕਲ"}
         other{"{0} — ਹੋਰ"}
@@ -661,10 +660,5 @@ pa{
         language{"ਬੋਲੀ: {0}"}
         script{"ਲਿਪੀ: {0}"}
         territory{"ਇਲਾਕਾ: {0}"}
-    }
-    localeDisplayPattern{
-        keyTypePattern{"{0}: {1}"}
-        pattern{"{0} ({1})"}
-        separator{"{0}, {1}"}
     }
 }

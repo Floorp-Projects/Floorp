@@ -300,10 +300,6 @@ kea{
             gregorian{"Kalendáriu Gregorianu"}
             hebrew{"Kalendáriu ebraiku"}
             indian{"Kalendáriu nasional indianu"}
-            islamic{"Kalendáriu islámiku"}
-            islamic-civil{"Kalendáriu islámiku (sivil)"}
-            islamic-tbla{"Kalendáriu islámiku (astronómiku)"}
-            islamic-umalqura{"Kalendáriu islámiku (Umm al-Qura)"}
             iso8601{"Kalendáriu ISO-8601"}
             japanese{"Kalendáriu japones"}
             persian{"Kalendáriu persa"}
@@ -342,10 +338,5 @@ kea{
         language{"Lingua: {0}"}
         script{"Skrita: {0}"}
         territory{"Rejion: {0}"}
-    }
-    localeDisplayPattern{
-        keyTypePattern{"{0}: {1}"}
-        pattern{"{0} ({1})"}
-        separator{"{0}, {1}"}
     }
 }

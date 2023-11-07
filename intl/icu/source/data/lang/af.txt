@@ -60,6 +60,7 @@ af{
         bem{"Bemba"}
         bez{"Bena"}
         bg{"Bulgaars"}
+        bgc{"Haryanvi"}
         bgn{"Wes-Balochi"}
         bho{"Bhojpuri"}
         bi{"Bislama"}
@@ -342,10 +343,11 @@ af{
         pl{"Pools"}
         pqm{"Maliseet-Passamaquoddy"}
         prg{"Pruisies"}
-        ps{"Pasjto"}
+        ps{"Pasjtoe"}
         pt{"Portugees"}
         qu{"Quechua"}
         quc{"K’iche’"}
+        raj{"Rajasthani"}
         rap{"Rapanui"}
         rar{"Rarotongaans"}
         rhg{"Rohingya"}
@@ -693,10 +695,11 @@ af{
     }
     characterLabelPattern{
         all{"{0} – alle"}
-        category-list{"{0}: {1}"}
         compatibility{"{0} – versoenbaarheid"}
         enclosed{"{0} ingeslote"}
         extended{"{0} – uitgebreid"}
+        facing-left{"{0} kyk na links"}
+        facing-right{"{0} kyk na regs"}
         historic{"{0} – histories"}
         miscellaneous{"{0} – allerlei"}
         other{"{0} – ander"}
@@ -712,10 +715,5 @@ af{
         language{"Taal: {0}"}
         script{"Skrif: {0}"}
         territory{"Streek: {0}"}
-    }
-    localeDisplayPattern{
-        keyTypePattern{"{0}: {1}"}
-        pattern{"{0} ({1})"}
-        separator{"{0}, {1}"}
     }
 }

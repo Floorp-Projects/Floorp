@@ -58,10 +58,6 @@ doi{
         "meta:GMT"{
             ls{"ग्रीनविच मीन टाइम"}
         }
-        fallbackFormat{"{1} ({0})"}
-        gmtFormat{"GMT{0}"}
-        gmtZeroFormat{"GMT"}
-        hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"{0} समां"}
         regionFormatDaylight{"{0} डेलाइट समां"}
         regionFormatStandard{"{0} मानक समां"}

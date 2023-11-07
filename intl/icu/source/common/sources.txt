@@ -139,6 +139,8 @@ ulist.cpp
 uloc.cpp
 uloc_keytype.cpp
 uloc_tag.cpp
+ulocale.cpp
+ulocbuilder.cpp
 umapfile.cpp
 umath.cpp
 umutablecptrie.cpp

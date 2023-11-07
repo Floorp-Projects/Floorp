@@ -171,9 +171,13 @@ saq{
             "SHP",
             "Paunt eel Santahelena",
         }
+        SLE{
+            "SLE",
+            "Leoni",
+        }
         SLL{
             "SLL",
-            "Leoni",
+            "Leoni (1964—2022)",
         }
         SOS{
             "SOS",

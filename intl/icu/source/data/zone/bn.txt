@@ -1338,12 +1338,12 @@ bn{
         "meta:America_Eastern"{
             ld{"পূর্বাঞ্চলের দিবালোক সময়"}
             lg{"পূর্বাঞ্চলীয় সময়"}
-            ls{"পূর্বাঞ্চলের প্রমাণ সময়"}
+            ls{"পূর্বাঞ্চলের মানক সময়"}
         }
         "meta:America_Mountain"{
             ld{"পার্বত্য অঞ্চলের দিনের সময়"}
             lg{"পার্বত্য অঞ্চলের সময়"}
-            ls{"পার্বত্য অঞ্চলের প্রমাণ সময়"}
+            ls{"পার্বত্য অঞ্চলের মানক সময়"}
         }
         "meta:America_Pacific"{
             ld{"প্রশান্ত মহাসাগরীয় অঞ্চলের দিনের সময়"}
@@ -1913,10 +1913,7 @@ bn{
         "meta:Yukon"{
             ls{"ইউকোন সময়"}
         }
-        fallbackFormat{"{1} ({0})"}
         gmtFormat{"GMT {0}"}
-        gmtZeroFormat{"GMT"}
-        hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"{0} সময়"}
         regionFormatDaylight{"{0} দিবালোক সময়"}
         regionFormatStandard{"{0} মানক সময়"}

@@ -39,4 +39,7 @@ sr_Latn_BA{
             mymr{"mjanmarske cifre"}
         }
     }
+    characterLabelPattern{
+        facing-left{"{0} gleda ulijevo"}
+    }
 }

@@ -16,7 +16,7 @@ es_GT{
         }
     }
     CurrencyUnitPatterns{
-        one{"{1} {0}"}
+        one{"{0} {1}"}
         other{"{1} {0}"}
     }
 }

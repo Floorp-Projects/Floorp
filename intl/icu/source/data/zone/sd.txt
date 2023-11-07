@@ -1890,10 +1890,6 @@ sd{
         "meta:Yukon"{
             ls{"يڪون جو وقت"}
         }
-        fallbackFormat{"{1} ({0})"}
-        gmtFormat{"GMT{0}"}
-        gmtZeroFormat{"GMT"}
-        hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"{0} وقت"}
         regionFormatDaylight{"{0} ڏينهن جو وقت"}
         regionFormatStandard{"{0} معياري وقت"}

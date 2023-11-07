@@ -3,23 +3,14 @@
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 lb{
     zoneStrings{
-        "Africa:Accra"{
-            ec{"Accra"}
-        }
         "Africa:Addis_Ababa"{
             ec{"Addis Abeba"}
         }
         "Africa:Algiers"{
             ec{"Alger"}
         }
-        "Africa:Asmera"{
-            ec{"Asmara"}
-        }
         "Africa:Cairo"{
             ec{"Kairo"}
-        }
-        "Africa:Dar_es_Salaam"{
-            ec{"Dar es Salaam"}
         }
         "Africa:Djibouti"{
             ec{"Dschibuti"}
@@ -39,17 +30,11 @@ lb{
         "Africa:Sao_Tome"{
             ec{"São Tomé"}
         }
-        "Africa:Tripoli"{
-            ec{"Tripoli"}
-        }
         "America:Asuncion"{
             ec{"Asunción"}
         }
         "America:Cayman"{
             ec{"Kaimaninselen"}
-        }
-        "America:Coral_Harbour"{
-            ec{"Atikokan"}
         }
         "America:Curacao"{
             ec{"Curaçao"}
@@ -60,71 +45,17 @@ lb{
         "America:Havana"{
             ec{"Havanna"}
         }
-        "America:Indiana:Knox"{
-            ec{"Knox, Indiana"}
-        }
-        "America:Indiana:Marengo"{
-            ec{"Marengo, Indiana"}
-        }
-        "America:Indiana:Petersburg"{
-            ec{"Petersburg, Indiana"}
-        }
-        "America:Indiana:Tell_City"{
-            ec{"Tell City, Indiana"}
-        }
-        "America:Indiana:Vevay"{
-            ec{"Vevay, Indiana"}
-        }
-        "America:Indiana:Vincennes"{
-            ec{"Vincennes, Indiana"}
-        }
-        "America:Indiana:Winamac"{
-            ec{"Winamac, Indiana"}
-        }
         "America:Jamaica"{
             ec{"Jamaika"}
         }
-        "America:Kentucky:Monticello"{
-            ec{"Monticello, Kentucky"}
-        }
-        "America:Lower_Princes"{
-            ec{"Lower Prince’s Quarter"}
-        }
         "America:Mexico_City"{
             ec{"Mexiko-Stad"}
-        }
-        "America:North_Dakota:Beulah"{
-            ec{"Beulah, North Dakota"}
-        }
-        "America:North_Dakota:Center"{
-            ec{"Center, North Dakota"}
-        }
-        "America:North_Dakota:New_Salem"{
-            ec{"New Salem, North Dakota"}
         }
         "America:Port_of_Spain"{
             ec{"Port-of-Spain"}
         }
         "America:St_Barthelemy"{
             ec{"Saint-Barthélemy"}
-        }
-        "America:St_Johns"{
-            ec{"St. John’s"}
-        }
-        "America:St_Kitts"{
-            ec{"St. Kitts"}
-        }
-        "America:St_Lucia"{
-            ec{"St. Lucia"}
-        }
-        "America:St_Thomas"{
-            ec{"St. Thomas"}
-        }
-        "America:St_Vincent"{
-            ec{"St. Vincent"}
-        }
-        "Antarctica:DumontDUrville"{
-            ec{"Dumont d’Urville"}
         }
         "Antarctica:Vostok"{
             ec{"Wostok"}
@@ -147,17 +78,11 @@ lb{
         "Asia:Dushanbe"{
             ec{"Duschanbe"}
         }
-        "Asia:Hong_Kong"{
-            ec{"Hong Kong"}
-        }
         "Asia:Jayapura"{
             ec{"Port Numbay"}
         }
         "Asia:Kamchatka"{
             ec{"Kamtschatka"}
-        }
-        "Asia:Katmandu"{
-            ec{"Kathmandu"}
         }
         "Asia:Krasnoyarsk"{
             ec{"Krasnojarsk"}
@@ -236,9 +161,6 @@ lb{
         }
         "Atlantic:South_Georgia"{
             ec{"Südgeorgien"}
-        }
-        "Atlantic:St_Helena"{
-            ec{"St. Helena"}
         }
         "Etc:Unknown"{
             ec{"Onbekannt"}
@@ -329,12 +251,6 @@ lb{
         }
         "Pacific:Fiji"{
             ec{"Fidschi"}
-        }
-        "Pacific:Ponape"{
-            ec{"Pohnpei"}
-        }
-        "Pacific:Truk"{
-            ec{"Chuuk"}
         }
         "meta:Acre"{
             ld{"Acre-Summerzäit"}
@@ -944,10 +860,6 @@ lb{
             lg{"Jekaterinbuerg-Zäit"}
             ls{"Jekaterinbuerg-Normalzäit"}
         }
-        fallbackFormat{"{1} ({0})"}
-        gmtFormat{"GMT{0}"}
-        gmtZeroFormat{"GMT"}
-        hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"{0} Zäit"}
         regionFormatDaylight{"{0} Summerzäit"}
         regionFormatStandard{"{0} Normalzäit"}

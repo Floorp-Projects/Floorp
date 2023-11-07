@@ -73,6 +73,7 @@ mk{
         bfd{"бафут"}
         bfq{"бадага"}
         bg{"бугарски"}
+        bgc{"харијанви"}
         bgn{"западен балочи"}
         bho{"боџпури"}
         bi{"бислама"}
@@ -869,8 +870,6 @@ mk{
             indian{"Индиски национален календар"}
             islamic{"Исламски календар"}
             islamic-civil{"Исламски граѓански календар"}
-            islamic-rgsa{"Исламски календар (Саудиска Арабија)"}
-            islamic-tbla{"Исламски календар (астрономска епоха)"}
             islamic-umalqura{"Исламски календар (Ум ал-Кура)"}
             iso8601{"Календар ISO-8601"}
             japanese{"Јапонски календар"}
@@ -966,10 +965,11 @@ mk{
     }
     characterLabelPattern{
         all{"{0} - сите"}
-        category-list{"{0}: {1}"}
         compatibility{"{0} - компатибилност"}
         enclosed{"{0} - во загради"}
         extended{"{0} - проширени"}
+        facing-left{"{0} кон лево"}
+        facing-right{"{0} кон десно"}
         historic{"{0} - историски"}
         miscellaneous{"{0} - разно"}
         other{"{0} - друго"}
@@ -985,10 +985,5 @@ mk{
         language{"Јазик: {0}"}
         script{"Писмо: {0}"}
         territory{"Регион: {0}"}
-    }
-    localeDisplayPattern{
-        keyTypePattern{"{0}: {1}"}
-        pattern{"{0} ({1})"}
-        separator{"{0}, {1}"}
     }
 }

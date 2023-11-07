@@ -5,7 +5,7 @@ ceb{
     AuxExemplarCharacters{"[c f j ñ q v x z]"}
     ExemplarCharacters{"[a b d e g h i k l m n o p r s t u w y]"}
     ExemplarCharactersIndex{"[A B C D E F G H I J K L M N O P Q R S T U V W X Y Z]"}
-    ExemplarCharactersPunctuation{"[\\- ‑ , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” ( ) \\[ \\] @ * / \\& # ′ ″]"}
+    ExemplarCharactersPunctuation{"[\\- ‑ , ; \\: ! ? . … '‘’ \u0022“” ( ) \\[ \\] @ * / \\& # ′ ″]"}
     NumberElements{
         latn{
             miscPatterns{
@@ -16,15 +16,6 @@ ceb{
                 accountingFormat%alphaNextToNumber{"¤ #,##0.00;(¤ #,##0.00)"}
                 accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
                 currencyFormat{"¤#,##0.00"}
-                decimalFormat{"#,##0.###"}
-                scientificFormat{"#E0"}
-            }
-            symbols{
-                decimal{"."}
-                group{","}
-                minusSign{"-"}
-                percentSign{"%"}
-                plusSign{"+"}
             }
         }
         minimalPairs{
@@ -82,7 +73,6 @@ ceb{
                 MEd{"E, M/d"}
                 MMMEd{"E, MMM d"}
                 Md{"M/d"}
-                d{"d"}
                 y{"y G"}
                 yyyy{"y G"}
                 yyyyM{"M/y GGGGG"}
@@ -157,7 +147,6 @@ ceb{
                 d{
                     d{"d – d"}
                 }
-                fallback{"{0} – {1}"}
                 y{
                     y{"y – y G"}
                 }
@@ -196,10 +185,6 @@ ceb{
             }
         }
         gregorian{
-            AmPmMarkers{
-                "AM",
-                "PM",
-            }
             AmPmMarkersNarrow{
                 "a",
                 "p",
@@ -236,14 +221,6 @@ ceb{
                 "yyMd",
             }
             availableFormats{
-                Bh{"h B"}
-                Bhm{"h:mm B"}
-                Bhms{"h:mm:ss B"}
-                E{"ccc"}
-                EBhm{"E h:mm B"}
-                EBhms{"E h:mm:ss B"}
-                EHm{"E HH:mm"}
-                EHms{"E HH:mm:ss"}
                 Ed{"d E"}
                 Ehm{"E h:mm a"}
                 Ehms{"E h:mm:ss a"}
@@ -252,30 +229,18 @@ ceb{
                 GyMMMEd{"E, MMM d, y G"}
                 GyMMMd{"MMM d, y G"}
                 GyMd{"M/d/y GGGGG"}
-                H{"HH"}
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
-                Hmsv{"HH:mm:ss v"}
-                Hmv{"HH:mm v"}
-                M{"L"}
                 MEd{"E, M/d"}
-                MMM{"LLL"}
                 MMMEd{"E, MMM d"}
                 MMMMW{
                     one{"'semana' W 'sa' MMMM"}
                     other{"'semana' W 'sa' MMMM"}
                 }
-                MMMMd{"MMMM d"}
-                MMMd{"MMM d"}
                 Md{"M/d"}
-                d{"d"}
                 h{"h a"}
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
                 hmsv{"h:mm:ss a v"}
                 hmv{"h:mm a v"}
-                ms{"mm:ss"}
-                y{"y"}
                 yM{"M/y"}
                 yMEd{"E, M/d/y"}
                 yMMM{"MMM y"}
@@ -301,24 +266,6 @@ ceb{
                         "Biy",
                         "Sab",
                     }
-                    narrow{
-                        "D",
-                        "L",
-                        "M",
-                        "M",
-                        "H",
-                        "B",
-                        "S",
-                    }
-                    short{
-                        "Dom",
-                        "Lun",
-                        "Mar",
-                        "Miy",
-                        "Huw",
-                        "Biy",
-                        "Sab",
-                    }
                     wide{
                         "Domingo",
                         "Lunes",
@@ -330,15 +277,6 @@ ceb{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "Dom",
-                        "Lun",
-                        "Mar",
-                        "Miy",
-                        "Huw",
-                        "Biy",
-                        "Sab",
-                    }
                     narrow{
                         "D",
                         "L",
@@ -347,40 +285,6 @@ ceb{
                         "H",
                         "B",
                         "S",
-                    }
-                    short{
-                        "Dom",
-                        "Lun",
-                        "Mar",
-                        "Miy",
-                        "Huw",
-                        "Biy",
-                        "Sab",
-                    }
-                    wide{
-                        "Domingo",
-                        "Lunes",
-                        "Martes",
-                        "Miyerkules",
-                        "Huwebes",
-                        "Biyernes",
-                        "Sabado",
-                    }
-                }
-            }
-            dayPeriod{
-                stand-alone{
-                    abbreviated{
-                        am{"AM"}
-                        pm{"PM"}
-                    }
-                    narrow{
-                        am{"AM"}
-                        pm{"PM"}
-                    }
-                    wide{
-                        am{"AM"}
-                        pm{"PM"}
                     }
                 }
             }
@@ -398,7 +302,7 @@ ceb{
                     "Anno Domini",
                 }
                 wide%variant{
-                    "Wala Pa ang Komong Panahon",
+                    "Wala Pa ang Common Era",
                     "Komong Panahon",
                 }
             }
@@ -479,7 +383,6 @@ ceb{
                 d{
                     d{"d – d"}
                 }
-                fallback{"{0} – {1}"}
                 h{
                     h{"h – h a"}
                 }
@@ -541,24 +444,10 @@ ceb{
                         "Hun",
                         "Hul",
                         "Ago",
-                        "Set",
+                        "Sep",
                         "Okt",
                         "Nob",
                         "Dis",
-                    }
-                    narrow{
-                        "E",
-                        "P",
-                        "M",
-                        "A",
-                        "M",
-                        "H",
-                        "H",
-                        "A",
-                        "S",
-                        "O",
-                        "N",
-                        "D",
                     }
                     wide{
                         "Enero",
@@ -569,27 +458,13 @@ ceb{
                         "Hunyo",
                         "Hulyo",
                         "Agosto",
-                        "Setyembre",
+                        "Septiyembre",
                         "Oktubre",
                         "Nobyembre",
                         "Disyembre",
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "Ene",
-                        "Peb",
-                        "Mar",
-                        "Abr",
-                        "May",
-                        "Hun",
-                        "Hul",
-                        "Ago",
-                        "Set",
-                        "Okt",
-                        "Nob",
-                        "Dis",
-                    }
                     narrow{
                         "E",
                         "P",
@@ -603,20 +478,6 @@ ceb{
                         "O",
                         "N",
                         "D",
-                    }
-                    wide{
-                        "Enero",
-                        "Pebrero",
-                        "Marso",
-                        "Abril",
-                        "Mayo",
-                        "Hunyo",
-                        "Hulyo",
-                        "Agosto",
-                        "Setyembre",
-                        "Oktubre",
-                        "Nobyembre",
-                        "Disyembre",
                     }
                 }
             }
@@ -628,26 +489,6 @@ ceb{
                         "Q3",
                         "Q4",
                     }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                    }
-                    wide{
-                        "unang quarter",
-                        "ika-2 nga quarter",
-                        "ika-3 nga quarter",
-                        "ika-4 nga quarter",
-                    }
-                }
-                stand-alone{
-                    abbreviated{
-                        "Q1",
-                        "Q2",
-                        "Q3",
-                        "Q4",
-                    }
                     wide{
                         "unang quarter",
                         "ika-2 nga quarter",
@@ -657,31 +498,9 @@ ceb{
                 }
             }
         }
-    }
-    delimiters{
-        alternateQuotationEnd{"’"}
-        alternateQuotationStart{"‘"}
-        quotationEnd{"”"}
-        quotationStart{"“"}
     }
     fields{
         day{
-            dn{"adlaw"}
-            relative{
-                "-1"{"gahapon"}
-                "0"{"karong adlawa"}
-                "1"{"ugma"}
-            }
-        }
-        day-narrow{
-            dn{"adlaw"}
-            relative{
-                "-1"{"gahapon"}
-                "0"{"karong adlawa"}
-                "1"{"ugma"}
-            }
-        }
-        day-short{
             dn{"adlaw"}
             relative{
                 "-1"{"gahapon"}
@@ -698,19 +517,7 @@ ceb{
         hour{
             dn{"oras"}
         }
-        hour-narrow{
-            dn{"oras"}
-        }
-        hour-short{
-            dn{"oras"}
-        }
         minute{
-            dn{"minuto"}
-        }
-        minute-narrow{
-            dn{"minuto"}
-        }
-        minute-short{
             dn{"minuto"}
         }
         month{
@@ -721,27 +528,8 @@ ceb{
                 "1"{"sunod nga buwan"}
             }
         }
-        month-narrow{
-            dn{"buwan"}
-            relative{
-                "-1"{"miaging buwan"}
-                "0"{"karong buwana"}
-                "1"{"sunod nga buwan"}
-            }
-        }
-        month-short{
-            dn{"buwan"}
-            relative{
-                "-1"{"miaging buwan"}
-                "0"{"karong buwana"}
-                "1"{"sunod nga buwan"}
-            }
-        }
         quarter{
             dn{"quarter"}
-        }
-        quarter-narrow{
-            dn{"qtr."}
         }
         quarter-short{
             dn{"qtr."}
@@ -749,31 +537,10 @@ ceb{
         second{
             dn{"segundo"}
         }
-        second-narrow{
-            dn{"segundo"}
-        }
         second-short{
-            dn{"segundo"}
+            dn{"seg."}
         }
         week{
-            dn{"semana"}
-            relative{
-                "-1"{"miaging semana"}
-                "0"{"karong semanaha"}
-                "1"{"sunod nga semana"}
-            }
-            relativePeriod{"ang semana sa {0}"}
-        }
-        week-narrow{
-            dn{"semana"}
-            relative{
-                "-1"{"miaging semana"}
-                "0"{"karong semanaha"}
-                "1"{"sunod nga semana"}
-            }
-            relativePeriod{"ang semana sa {0}"}
-        }
-        week-short{
             dn{"semana"}
             relative{
                 "-1"{"miaging semana"}
@@ -793,70 +560,22 @@ ceb{
                 "1"{"sunod nga tuig"}
             }
         }
-        year-narrow{
-            dn{"tuig"}
-            relative{
-                "-1"{"miaging tuig"}
-                "0"{"karong tuiga"}
-                "1"{"sunod nga tuig"}
-            }
-        }
-        year-short{
-            dn{"tuig"}
-            relative{
-                "-1"{"miaging tuig"}
-                "0"{"karong tuiga"}
-                "1"{"sunod nga tuig"}
-            }
-        }
         zone{
             dn{"time zone"}
         }
-    }
-    layout{
-        characters{"left-to-right"}
-        lines{"top-to-bottom"}
     }
     listPattern{
         or{
             2{"{0} o {1}"}
             end{"{0}, o {1}"}
         }
-        or-narrow{
-            2{"{0} o {1}"}
-            end{"{0}, o {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        or-short{
-            2{"{0} o {1}"}
-            end{"{0}, o {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
         standard{
             2{"{0} ug {1}"}
             end{"{0}, ug {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
         standard-narrow{
             2{"{0}, {1}"}
             end{"{0}, {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        standard-short{
-            2{"{0} ug {1}"}
-            end{"{0}, ug {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        unit{
-            2{"{0}, {1}"}
-            end{"{0}, {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
         unit-narrow{
             2{"{0} {1}"}
@@ -867,14 +586,7 @@ ceb{
         unit-short{
             2{"{0}, {1}"}
             end{"{0}, {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
-    }
-    measurementSystemNames{
-        UK{"UK"}
-        US{"US"}
-        metric{"Metric"}
     }
     personNames{
         nameOrderLocales{

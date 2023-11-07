@@ -439,4 +439,7 @@ ckb{
         Hans{"هانی ئاسانکراو"}
         Hant{"هانی دێرین"}
     }
+    localeDisplayPattern{
+        separator{"{0}، {1}"}
+    }
 }

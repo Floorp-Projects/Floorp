@@ -48,6 +48,7 @@ chr{
         bem{"ᏇᎹᏆ"}
         bez{"ᏇᎾ"}
         bg{"ᏊᎵᎨᎵᎠᏂ"}
+        bgc{"ᎭᏯᏅᎢ"}
         bho{"ᏉᏣᏊᎵ"}
         bi{"ᏈᏍᎳᎹ"}
         bin{"ᏈᏂ"}
@@ -330,6 +331,7 @@ chr{
         pt_PT{"ᏳᎳᏈ ᏉᏧᎩᏍ"}
         qu{"ᎨᏧᏩ"}
         quc{"ᎩᏤ"}
+        raj{"ᎳᏣᏍᎭᏂ"}
         rap{"ᎳᏆᏄᏫ"}
         rar{"ᎳᎶᏙᎾᎦᏂ"}
         rhg{"ᎶᎯᏂᏯ"}
@@ -543,8 +545,8 @@ chr{
             gregorian{"ᎩᎴᎪᎵᎠᏂ ᏅᏙ ᏗᏎᏍᏗ"}
             hebrew{"ᎠᏂᏈᎷ ᏅᏙ ᏗᏎᏍᏗ"}
             islamic{"ᎢᏍᎳᎻᎩ ᏅᏙ ᏗᏎᏍᏗ"}
-            islamic-civil{"ᎢᏌᎳᎻ ᏅᏙ ᏗᏎᏍᏗ (ᏴᏫ ᎡᏆᎩ)"}
-            islamic-umalqura{"ᎢᏌᎳᎻ ᏅᏙ ᏗᏎᏍᏗ (ᎥᎻ ᎠᎵ-ᏊᎳ))"}
+            islamic-civil{"ᎢᏌᎳᎻᎩ ᏅᏙ ᏗᏎᏍᏗ (ᏴᏫ ᎡᏆᎩ)"}
+            islamic-umalqura{"ᎢᏌᎳᎻᎩ ᏅᏙ ᏗᏎᏍᏗ (ᎥᎻ ᎠᎵ-ᏊᎳ)"}
             iso8601{"ISO-8601 ᏅᏙ ᏗᏎᏍᏗ"}
             japanese{"ᏣᏆᏂᏏ ᏅᏙ ᏗᏎᏍᏗ"}
             persian{"ᏇᏏᎠᏂ ᏅᏙ ᏗᏎᏍᏗ"}
@@ -620,10 +622,11 @@ chr{
     }
     characterLabelPattern{
         all{"{0} — ᏂᎦᏓ"}
-        category-list{"{0}: {1}"}
         compatibility{"{0} — ᎤᏠᏯᏉᏗᏙᎵᎩ"}
         enclosed{"{0} — ᎠᏠᏯᏍᏔᏅ"}
         extended{"{0} — ᎦᏅᎯᏓ"}
+        facing-left{"{0} ᎠᎦᏍᎦᏂ ᎢᏗᏢ"}
+        facing-right{"{0} ᎠᎦᏘᏏ ᎢᏗᏢ"}
         historic{"{0} — ᏄᎵᏍᏔᏅᏅᎢ"}
         miscellaneous{"{0} — ᏧᏓᎴᏅᏛ"}
         other{"{0} — ᏐᎢ"}
@@ -639,10 +642,5 @@ chr{
         language{"ᎦᏬᏂᎯᏍᏗ: {0}"}
         script{"ᎧᏁᎢᏍᏗ: {0}"}
         territory{"ᎢᎬᎾᏕᎾ: {0}"}
-    }
-    localeDisplayPattern{
-        keyTypePattern{"{0}: {1}"}
-        pattern{"{0} ({1})"}
-        separator{"{0}, {1}"}
     }
 }

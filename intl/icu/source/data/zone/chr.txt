@@ -258,6 +258,9 @@ chr{
         "America:Chihuahua"{
             ec{"ᏥᏩᏩ"}
         }
+        "America:Ciudad_Juarez"{
+            ec{"ᏏᏳᏓ ᏆᎡᏏ"}
+        }
         "America:Coral_Harbour"{
             ec{"ᎠᏘᎪᎦᏂ"}
         }
@@ -1910,10 +1913,6 @@ chr{
         "meta:Yukon"{
             ls{"ᏳᎧᏂ ᎠᏟᎢᎵᏒ"}
         }
-        fallbackFormat{"{1} ({0})"}
-        gmtFormat{"GMT{0}"}
-        gmtZeroFormat{"GMT"}
-        hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"{0} ᎠᏟᎢᎵᏒ"}
         regionFormatDaylight{"{0} ᎪᎯ ᎢᎦ ᎠᏟᎢᎵᏒ"}
         regionFormatStandard{"{0} ᎠᏟᎶᏍᏗ ᎠᏟᎢᎵᏒ"}

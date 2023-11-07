@@ -1949,10 +1949,6 @@ th{
         "meta:Yukon"{
             ls{"เวลายูคอน"}
         }
-        fallbackFormat{"{1} ({0})"}
-        gmtFormat{"GMT{0}"}
-        gmtZeroFormat{"GMT"}
-        hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"เวลา{0}"}
         regionFormatDaylight{"เวลาออมแสง{0}"}
         regionFormatStandard{"เวลามาตรฐาน{0}"}

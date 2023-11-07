@@ -299,6 +299,9 @@ yue_Hans{
         ZW{"辛巴威"}
         ZZ{"未知区域"}
     }
+    Countries%chagos{
+        IO{"查哥斯群岛"}
+    }
     Countries%short{
         HK{"香港"}
         MO{"澳门"}

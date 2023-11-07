@@ -3,8 +3,8 @@
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ses{
     AuxExemplarCharacters{"[v]"}
-    ExemplarCharacters{"[a ã b c d e ẽ f g h i j k l m n ɲ ŋ o õ p q r s š t u w x y z ž]"}
-    ExemplarCharactersIndex{"[A Ã B C D E Ẽ F G H I J K L M N Ɲ Ŋ O Õ P Q R S Š T U W X Y Z Ž]"}
+    ExemplarCharacters{"[aã b c d eẽ f g h i j k l m n ɲ ŋ oõ p q r sš t u w x y zž]"}
+    ExemplarCharactersIndex{"[AÃ B C D EẼ F G H I J K L M N Ɲ Ŋ OÕ P Q R SŠ T U W X Y ZŽ]"}
     ExemplarCharactersNumbers{"[  \\- ‑ . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     NumberElements{
         latn{
@@ -67,10 +67,6 @@ ses{
             }
         }
         gregorian{
-            AmPmMarkers{
-                "Adduha",
-                "Aluula",
-            }
             AmPmMarkersAbbr{
                 "Adduha",
                 "Aluula",
@@ -100,19 +96,6 @@ ses{
                 "yMMMd",
                 "yMd",
             }
-            appendItems{
-                Day{"{0} ({2}: {1})"}
-                Day-Of-Week{"{0} {1}"}
-                Era{"{1} {0}"}
-                Hour{"{0} ({2}: {1})"}
-                Minute{"{0} ({2}: {1})"}
-                Month{"{0} ({2}: {1})"}
-                Quarter{"{0} ({2}: {1})"}
-                Second{"{0} ({2}: {1})"}
-                Timezone{"{0} {1}"}
-                Week{"{0} ({2}: {1})"}
-                Year{"{1} {0}"}
-            }
             availableFormats{
                 M{"M"}
                 MMM{"MMM"}
@@ -124,7 +107,6 @@ ses{
                 MMdd{"dd/MM"}
                 Md{"d/M"}
                 ms{"m:ss"}
-                y{"y"}
                 yM{"M/y"}
                 yMEd{"E d/M/y"}
                 yMM{"MM/y"}
@@ -243,12 +225,6 @@ ses{
                 }
             }
         }
-    }
-    delimiters{
-        alternateQuotationEnd{"’"}
-        alternateQuotationStart{"‘"}
-        quotationEnd{"”"}
-        quotationStart{"“"}
     }
     fields{
         day{

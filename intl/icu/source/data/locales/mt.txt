@@ -3,47 +3,13 @@
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 mt{
     AuxExemplarCharacters{"[c y]"}
-    Ellipsis{
-        final{"{0}…"}
-        initial{"…{0}"}
-        medial{"{0}…{1}"}
-        word-final{"{0} …"}
-        word-initial{"… {0}"}
-        word-medial{"{0} … {1}"}
-    }
-    ExemplarCharacters{"[a à b ċ d e è f ġ g {għ} h ħ i ì j k l m n o ò p q r s t u ù v w x ż z]"}
+    ExemplarCharacters{"[aà b ċ d eè f ġ g {għ} h ħ iì j k l m n oò p q r s t uù v w x ż z]"}
     ExemplarCharactersIndex{"[A B Ċ C D E F Ġ G {GĦ} H Ħ I {IE*} J K L M N O P Q R S T U V W X Y Ż Z]"}
-    ExemplarCharactersNumbers{"[\\- ‑ , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
-    ExemplarCharactersPunctuation{"[\\- ‑ , ; \\: ! ? . ' ‘ ’ \u0022 “ ” ( ) \\[ \\] \\{ \\}]"}
-    MoreInformation{"?"}
+    ExemplarCharactersPunctuation{"[\\- ‑ , ; \\: ! ? . '‘’ \u0022“” ( ) \\[ \\] \\{ \\}]"}
     NumberElements{
-        default{"latn"}
         latn{
-            miscPatterns{
-                approximately{"~{0}"}
-                atLeast{"≥{0}"}
-                atMost{"≤{0}"}
-                range{"{0}–{1}"}
-            }
             patterns{
-                accountingFormat{"¤#,##0.00"}
                 currencyFormat{"¤#,##0.00"}
-                decimalFormat{"#,##0.###"}
-                percentFormat{"#,##0%"}
-                scientificFormat{"#E0"}
-            }
-            symbols{
-                decimal{"."}
-                exponential{"E"}
-                group{","}
-                infinity{"∞"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         minimalPairs{
@@ -55,8 +21,6 @@ mt{
                 two{"jumejn"}
             }
         }
-        minimumGroupingDigits{"1"}
-        native{"latn"}
     }
     calendar{
         generic{
@@ -86,29 +50,16 @@ mt{
                 "GGGGGyMMdd",
             }
             availableFormats{
-                E{"ccc"}
-                Ed{"d, E"}
-                Gy{"G y"}
-                M{"L"}
                 MEd{"E, M/d"}
-                MMM{"LLL"}
                 MMMEd{"E, d 'ta'’ MMM"}
                 MMMMd{"d 'ta'’ MMMM"}
-                MMMd{"MMM d"}
-                Md{"MM-dd"}
-                d{"d"}
-                y{"G y"}
                 yMMMM{"MMMM y"}
-                yyyy{"G y"}
-                yyyyM{"GGGGG y-MM"}
                 yyyyMEd{"GGGGG E, dd-MM-y"}
                 yyyyMMM{"GGGGG MMM y"}
                 yyyyMMMEd{"GGGGG E, dd MMM y"}
                 yyyyMMMM{"GGGGG MMMM y"}
                 yyyyMMMd{"GGGGG dd MMM y"}
                 yyyyMd{"GGGGG dd-MM-y"}
-                yyyyQQQ{"G y QQQ"}
-                yyyyQQQQ{"G y QQQQ"}
             }
             intervalFormats{
                 M{
@@ -132,9 +83,6 @@ mt{
                 Md{
                     M{"dd/MM – dd/MM"}
                     d{"dd/MM – dd/MM"}
-                }
-                d{
-                    d{"d–d"}
                 }
                 y{
                     y{"y–y G"}
@@ -174,14 +122,6 @@ mt{
             }
         }
         gregorian{
-            AmPmMarkers{
-                "AM",
-                "PM",
-            }
-            AmPmMarkersAbbr{
-                "AM",
-                "PM",
-            }
             AmPmMarkersNarrow{
                 "am",
                 "pm",
@@ -211,33 +151,13 @@ mt{
                 "yMMMdd",
                 "yMMdd",
             }
-            appendItems{
-                Timezone{"{0} {1}"}
-            }
             availableFormats{
-                Bh{"h B"}
-                Bhm{"h:mm B"}
-                Bhms{"h:mm:ss B"}
-                E{"ccc"}
-                EBhm{"E h:mm B"}
-                EBhms{"E h:mm:ss B"}
-                EHm{"E HH:mm"}
-                EHms{"E HH:mm:ss"}
-                Ed{"d, E"}
                 Ehm{"E h:mm a"}
                 Ehms{"E h:mm:ss a"}
-                Gy{"G y"}
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E, d 'ta'’ MMM, y G"}
                 GyMMMd{"d MMM, y G"}
-                H{"HH"}
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
-                Hmsv{"HH:mm:ss v"}
-                Hmv{"HH:mm v"}
-                M{"L"}
                 MEd{"E, M-d"}
-                MMM{"LLL"}
                 MMMEd{"E, d 'ta'’ MMM"}
                 MMMMW{
                     few{"W 'ġimgħat' 'ta''' MMMM"}
@@ -247,17 +167,11 @@ mt{
                     two{"W 'ġimgħatejn' 'ta''' MMMM"}
                 }
                 MMMMd{"d 'ta'’ MMMM"}
-                MMMd{"MMM d"}
-                Md{"MM-dd"}
-                d{"d"}
                 h{"h a"}
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
                 hmsv{"h:mm:ss a v"}
                 hmv{"h:mm a v"}
-                ms{"mm:ss"}
-                y{"y"}
-                yM{"y-MM"}
                 yMEd{"E, d/M/y"}
                 yMMM{"MMM y"}
                 yMMMEd{"E, d 'ta'’ MMM, y"}
@@ -294,15 +208,6 @@ mt{
                         "Ġm",
                         "Sb",
                     }
-                    short{
-                        "Ħad",
-                        "Tne",
-                        "Tli",
-                        "Erb",
-                        "Ħam",
-                        "Ġim",
-                        "Sib",
-                    }
                     wide{
                         "Il-Ħadd",
                         "It-Tnejn",
@@ -314,15 +219,6 @@ mt{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "Ħad",
-                        "Tne",
-                        "Tli",
-                        "Erb",
-                        "Ħam",
-                        "Ġim",
-                        "Sib",
-                    }
                     narrow{
                         "Ħd",
                         "Tn",
@@ -332,39 +228,13 @@ mt{
                         "Ġm",
                         "Sb",
                     }
-                    short{
-                        "Ħad",
-                        "Tne",
-                        "Tli",
-                        "Erb",
-                        "Ħam",
-                        "Ġim",
-                        "Sib",
-                    }
-                    wide{
-                        "Il-Ħadd",
-                        "It-Tnejn",
-                        "It-Tlieta",
-                        "L-Erbgħa",
-                        "Il-Ħamis",
-                        "Il-Ġimgħa",
-                        "Is-Sibt",
-                    }
                 }
             }
             dayPeriod{
                 stand-alone{
-                    abbreviated{
-                        am{"AM"}
-                        pm{"PM"}
-                    }
                     narrow{
                         am{"am"}
                         pm{"pm"}
-                    }
-                    wide{
-                        am{"AM"}
-                        pm{"PM"}
                     }
                 }
             }
@@ -381,29 +251,8 @@ mt{
                     "Qabel Kristu",
                     "Wara Kristu",
                 }
-                wide%variant{
-                    "QEK",
-                    "EK",
-                }
             }
             intervalFormats{
-                H{
-                    H{"HH–HH"}
-                }
-                Hm{
-                    H{"HH:mm–HH:mm"}
-                    m{"HH:mm–HH:mm"}
-                }
-                Hmv{
-                    H{"HH:mm–HH:mm v"}
-                    m{"HH:mm–HH:mm v"}
-                }
-                Hv{
-                    H{"HH–HH v"}
-                }
-                M{
-                    M{"MM–MM"}
-                }
                 MEd{
                     M{"E, dd/MM – E, dd/MM"}
                     d{"E, dd/MM – E, dd/MM"}
@@ -422,9 +271,6 @@ mt{
                 Md{
                     M{"dd/MM – dd/MM"}
                     d{"dd/MM – dd/MM"}
-                }
-                d{
-                    d{"d–d"}
                 }
                 h{
                     a{"h a – h a"}
@@ -526,20 +372,6 @@ mt{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "Jan",
-                        "Fra",
-                        "Mar",
-                        "Apr",
-                        "Mej",
-                        "Ġun",
-                        "Lul",
-                        "Aww",
-                        "Set",
-                        "Ott",
-                        "Nov",
-                        "Diċ",
-                    }
                     narrow{
                         "Jn",
                         "Fr",
@@ -554,20 +386,6 @@ mt{
                         "Nv",
                         "Dċ",
                     }
-                    wide{
-                        "Jannar",
-                        "Frar",
-                        "Marzu",
-                        "April",
-                        "Mejju",
-                        "Ġunju",
-                        "Lulju",
-                        "Awwissu",
-                        "Settembru",
-                        "Ottubru",
-                        "Novembru",
-                        "Diċembru",
-                    }
                 }
             }
             quarters{
@@ -578,32 +396,6 @@ mt{
                         "K3",
                         "K4",
                     }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                    }
-                    wide{
-                        "1el kwart",
-                        "2ni kwart",
-                        "3et kwart",
-                        "4ba’ kwart",
-                    }
-                }
-                stand-alone{
-                    abbreviated{
-                        "K1",
-                        "K2",
-                        "K3",
-                        "K4",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                    }
                     wide{
                         "1el kwart",
                         "2ni kwart",
@@ -613,12 +405,6 @@ mt{
                 }
             }
         }
-    }
-    delimiters{
-        alternateQuotationEnd{"’"}
-        alternateQuotationStart{"‘"}
-        quotationEnd{"”"}
-        quotationStart{"“"}
     }
     fields{
         day{
@@ -646,7 +432,6 @@ mt{
             }
         }
         day-narrow{
-            dn{"Jum"}
             relativeTime{
                 future{
                     few{"fi żmien {0} ġurnata oħra"}
@@ -655,108 +440,22 @@ mt{
                     other{"fi żmien {0} ġurnata oħra"}
                     two{"fi żmien jumejn oħra"}
                 }
-                past{
-                    few{"{0} ġranet ilu"}
-                    many{"{0}-il ġurnata ilu"}
-                    one{"ġurnata ilu"}
-                    other{"{0} ġurnata ilu"}
-                    two{"jumejn ilu"}
-                }
             }
         }
         day-short{
             dn{"Jum"}
-            relativeTime{
-                future{
-                    few{"fi żmien {0} ġranet oħra"}
-                    many{"fi żmien {0}-il ġurnata oħra"}
-                    one{"fi żmien ġurnata"}
-                    other{"fi żmien {0} ġurnata oħra"}
-                    two{"fi żmien jumejn oħra"}
-                }
-                past{
-                    few{"{0} ġranet ilu"}
-                    many{"{0}-il ġurnata ilu"}
-                    one{"ġurnata ilu"}
-                    other{"{0} ġurnata ilu"}
-                    two{"jumejn ilu"}
-                }
-            }
         }
         dayOfYear{
             dn{"jum tas-sena"}
         }
-        dayOfYear-narrow{
-            dn{"jum tas-sena"}
-        }
         dayperiod{
             dn{"AM/PM"}
-        }
-        dayperiod-narrow{
-            dn{"AM/PM"}
-        }
-        dayperiod-short{
-            dn{"AM/PM"}
-        }
-        era{
-            dn{"Era"}
-        }
-        era-narrow{
-            dn{"Era"}
-        }
-        era-short{
-            dn{"Era"}
-        }
-        fri{
-            relative{
-                "-1"{"last Friday"}
-                "0"{"this Friday"}
-                "1"{"next Friday"}
-            }
         }
         hour{
             dn{"siegħa"}
             relative{
                 "0"{"din is-siegħa"}
             }
-            relativeTime{
-                future{
-                    few{"fi żmien {0} sigħat"}
-                    many{"fi żmien {0}-il siegħa"}
-                    one{"fi żmien siegħa oħra"}
-                    other{"fi żmien {0} siegħa"}
-                    two{"fi żmien sagħtejn"}
-                }
-                past{
-                    few{"{0} sigħat ilu"}
-                    many{"{0}-il siegħa ilu"}
-                    one{"siegħa ilu"}
-                    other{"{0} siegħa ilu"}
-                    two{"sagħtejn ilu"}
-                }
-            }
-        }
-        hour-narrow{
-            dn{"siegħa"}
-            relativeTime{
-                future{
-                    few{"fi żmien {0} sigħat"}
-                    many{"fi żmien {0}-il siegħa"}
-                    one{"fi żmien siegħa oħra"}
-                    other{"fi żmien {0} siegħa"}
-                    two{"fi żmien sagħtejn"}
-                }
-                past{
-                    few{"{0} sigħat ilu"}
-                    many{"{0}-il siegħa ilu"}
-                    one{"siegħa ilu"}
-                    other{"{0} siegħa ilu"}
-                    two{"sagħtejn ilu"}
-                }
-            }
-        }
-        hour-short{
-            dn{"siegħa"}
             relativeTime{
                 future{
                     few{"fi żmien {0} sigħat"}
@@ -806,13 +505,6 @@ mt{
                     other{"sa {0} min. oħra"}
                     two{"sa {0} min. oħra"}
                 }
-                past{
-                    few{"{0} min. ilu"}
-                    many{"{0}-il min. ilu"}
-                    one{"min. ilu"}
-                    other{"{0} min. ilu"}
-                    two{"{0} min. ilu"}
-                }
             }
         }
         minute-short{
@@ -839,13 +531,6 @@ mt{
                 "-1"{"It-Tnejn li għadda"}
                 "0"{"Dan It-Tnejn"}
                 "1"{"It-Tnejn li ġej"}
-            }
-        }
-        mon-narrow{
-            relative{
-                "-1"{"it-Tn. li għadda"}
-                "0"{"it-Tn. li ġej"}
-                "1"{"it-Tn. ta’ wara"}
             }
         }
         mon-short{
@@ -880,15 +565,7 @@ mt{
             }
         }
         month-narrow{
-            dn{"Xahar"}
             relativeTime{
-                future{
-                    few{"sa {0} xhur oħra"}
-                    many{"sa {0}-il xahar oħra"}
-                    one{"sa xahar ieħor"}
-                    other{"sa {0} xahar oħra"}
-                    two{"sa xahrejn oħra"}
-                }
                 past{
                     few{"{0} xhur ilu"}
                     many{"{0}-il xahar ilu"}
@@ -945,11 +622,6 @@ mt{
                 "l-ewwel kwart tas-sena, it-tieni kwart tas-sena, it-tielet kwart tas"
                 "-sena, ir-raba’ kwart tas-sena"
             }
-            relative{
-                "-1"{"il-kwart ta’ sena li għadda"}
-                "0"{"il-kwart ta’ sena li qegħdin fih"}
-                "1"{"il-kwart li jmiss tas-sena"}
-            }
             relativeTime{
                 future{
                     few{"f’{0} kwarti ta’ sena oħrajn"}
@@ -958,22 +630,10 @@ mt{
                     other{"f’{0} kwart ta’ sena oħrajn"}
                     two{"f’{0} kwarti ta’ sena oħrajn"}
                 }
-                past{
-                    few{"{0} kwarti ta’ sena ilu"}
-                    many{"{0}-il kwart ta’ sena ilu"}
-                    one{"fil-kwart tas-sena li għadda"}
-                    other{"{0} kwart ta’ sena ilu"}
-                    two{"{0} kwarti ta’ sena ilu"}
-                }
             }
         }
         quarter-short{
             dn{"kwrt"}
-            relative{
-                "-1"{"il-kwart ta’ sena li għadda"}
-                "0"{"il-kwart ta’ sena li qegħdin fih"}
-                "1"{"il-kwart li jmiss tas-sena"}
-            }
             relativeTime{
                 future{
                     few{"f’{0} kwarti ta’ sena oħrajn"}
@@ -1015,22 +675,6 @@ mt{
         }
         second-narrow{
             dn{"s"}
-            relativeTime{
-                future{
-                    few{"sa {0} sek. oħra"}
-                    many{"sa {0}-il sek. oħra"}
-                    one{"sa sek. oħra"}
-                    other{"sa {0} sek. oħra"}
-                    two{"sa {0} sek. oħra"}
-                }
-                past{
-                    few{"{0} sek. ilu"}
-                    many{"{0}-il sek. ilu"}
-                    one{"sek. ilu"}
-                    other{"{0} sek. ilu"}
-                    two{"{0} sek. ilu"}
-                }
-            }
         }
         second-short{
             dn{"sek."}
@@ -1075,19 +719,7 @@ mt{
             }
         }
         sun-narrow{
-            relative{
-                "-1"{"il-Ħd. li għadda"}
-                "0"{"il-Ħd. li ġej"}
-                "1"{"il-Ħd. ta’ wara"}
-            }
             relativeTime{
-                future{
-                    few{"sa {0} Ħd. oħra"}
-                    many{"sa {0}-il Ħd. oħra"}
-                    one{"sa Ħd. ieħor"}
-                    other{"sa {0} Ħd. oħra"}
-                    two{"sa {0} Ħd. oħra"}
-                }
                 past{
                     few{"{0} Ħd. ilu"}
                     many{"{0}-il Ħd. ilu"}
@@ -1152,61 +784,13 @@ mt{
                 }
             }
         }
-        week-narrow{
-            relativePeriod{"fil-ġimgħa ta’ {0}"}
-            relativeTime{
-                future{
-                    few{"sa {0} ġimgħat oħra"}
-                    many{"sa {0}-il ġimgħa oħra"}
-                    one{"sa ġimgħa oħra"}
-                    other{"sa {0} ġimgħa oħra"}
-                    two{"sa ġimagħtejn oħra"}
-                }
-                past{
-                    few{"{0} ġimgħat ilu"}
-                    many{"{0}-il ġimgħa ilu"}
-                    one{"ġimgħa ilu"}
-                    other{"{0} ġimgħa ilu"}
-                    two{"ġimagħtejn ilu"}
-                }
-            }
-        }
         week-short{
             dn{"ġm"}
-            relativePeriod{"fil-ġimgħa ta’ {0}"}
-            relativeTime{
-                future{
-                    few{"sa {0} ġimgħat oħra"}
-                    many{"sa {0}-il ġimgħa oħra"}
-                    one{"sa ġimgħa oħra"}
-                    other{"sa {0} ġimgħa oħra"}
-                    two{"sa ġimagħtejn oħra"}
-                }
-                past{
-                    few{"{0} ġimgħat ilu"}
-                    many{"{0}-il ġimgħa ilu"}
-                    one{"ġimgħa ilu"}
-                    other{"{0} ġimgħa ilu"}
-                    two{"ġimagħtejn ilu"}
-                }
-            }
         }
         weekOfMonth{
             dn{"ġimgħa tax-xahar"}
         }
-        weekOfMonth-narrow{
-            dn{"ġimgħa tax-xahar"}
-        }
-        weekOfMonth-short{
-            dn{"ġimgħa tax-xahar"}
-        }
         weekday{
-            dn{"jum tal-ġimgħa"}
-        }
-        weekday-narrow{
-            dn{"jum tal-ġimgħa"}
-        }
-        weekday-short{
             dn{"jum tal-ġimgħa"}
         }
         weekdayOfMonth{
@@ -1214,9 +798,6 @@ mt{
         }
         weekdayOfMonth-narrow{
             dn{"Weekday Of Month"}
-        }
-        weekdayOfMonth-short{
-            dn{"jum tax-xahar"}
         }
         year{
             dn{"Sena"}
@@ -1245,13 +826,6 @@ mt{
         year-narrow{
             dn{"Sena"}
             relativeTime{
-                future{
-                    few{"fi żmien {0} snin oħra"}
-                    many{"fi żmien {0}-il sena oħra"}
-                    one{"fi żmien sena"}
-                    other{"fi żmien {0} sena oħra"}
-                    two{"fi żmien sentejn oħra"}
-                }
                 past{
                     few{"{0} snin ilu"}
                     many{"{0}-il sena ilu"}
@@ -1264,13 +838,6 @@ mt{
         year-short{
             dn{"Sn"}
             relativeTime{
-                future{
-                    few{"fi żmien {0} snin oħra"}
-                    many{"fi żmien {0}-il sena oħra"}
-                    one{"fi żmien sena"}
-                    other{"fi żmien {0} sena oħra"}
-                    two{"fi żmien sentejn oħra"}
-                }
                 past{
                     few{"{0} snin ilu"}
                     many{"{0}-il sena ilu"}
@@ -1283,9 +850,6 @@ mt{
         zone{
             dn{"żona tal-ħin"}
         }
-        zone-narrow{
-            dn{"żona"}
-        }
         zone-short{
             dn{"żona"}
         }
@@ -1294,31 +858,13 @@ mt{
         standard{
             2{"{0} u {1}"}
             end{"{0}, u {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        unit{
-            2{"{0} u {1}"}
-            end{"{0}, u {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
         unit-narrow{
             2{"{0}, {1}"}
             end{"{0}, {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        unit-short{
-            2{"{0} u {1}"}
-            end{"{0}, u {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
     }
     measurementSystemNames{
-        UK{"UK"}
-        US{"US"}
         metric{"Metriku"}
     }
 }

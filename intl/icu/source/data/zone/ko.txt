@@ -1941,9 +1941,6 @@ ko{
             ls{"유콘 시간"}
         }
         fallbackFormat{"{1}({0})"}
-        gmtFormat{"GMT{0}"}
-        gmtZeroFormat{"GMT"}
-        hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"{0} 시간"}
         regionFormatDaylight{"{0} 하계 표준시"}
         regionFormatStandard{"{0} 표준시"}

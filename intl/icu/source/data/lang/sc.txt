@@ -27,6 +27,7 @@ sc{
         an{"aragonesu"}
         ann{"obolo"}
         anp{"angika"}
+        apc{"àrabu levantinu"}
         ar{"àrabu"}
         ar_001{"àrabu modernu istandard"}
         arn{"mapudungun"}
@@ -47,6 +48,7 @@ sc{
         bem{"bemba"}
         bez{"bena"}
         bg{"bùlgaru"}
+        bgc{"haryanvi"}
         bho{"bhojpuri"}
         bi{"bislama"}
         bin{"bini"}
@@ -232,6 +234,7 @@ sc{
         lij{"lìgure"}
         lil{"lillooet"}
         lkt{"lakota"}
+        lmo{"lombardu"}
         ln{"lingala"}
         lo{"laotianu"}
         lou{"crèolu de sa Louisiana"}
@@ -329,9 +332,11 @@ sc{
         pt_BR{"portoghesu brasilianu"}
         pt_PT{"portoghesu europeu"}
         qu{"quechua"}
+        raj{"rajasthani"}
         rap{"rapanui"}
         rar{"rarotonganu"}
         rhg{"rohingya"}
+        rif{"rifenu"}
         rm{"romànciu"}
         rn{"rundi"}
         ro{"rumenu"}
@@ -660,11 +665,11 @@ sc{
             gregorian{"calendàriu gregorianu"}
             hebrew{"calendàriu ebràicu"}
             indian{"calendàriu natzionale indianu"}
-            islamic{"calendàriu islàmicu"}
-            islamic-civil{"calendàriu islàmicu (tabulare, època tzivile)"}
+            islamic{"calendàriu egirianu"}
+            islamic-civil{"calendàriu egirianu (tabulare, època tzivile)"}
             islamic-rgsa{"calendàriu islàmicu (Aràbia Saudita, osservatzione)"}
             islamic-tbla{"calendàriu islàmicu (tabulare, època astronòmica)"}
-            islamic-umalqura{"calendàriu islàmicu (Umm al-Qura)"}
+            islamic-umalqura{"calendàriu egirianu (Umm al-Qura)"}
             iso8601{"calendàriu ISO-8601"}
             japanese{"calendàriu giaponesu"}
             persian{"calendàriu persianu"}
@@ -852,6 +857,8 @@ sc{
         LEMOSIN{"limosinu"}
         LENGADOC{"languedocianu"}
         LIPAW{"su dialetu lipovaz de su resianu"}
+        LTG1929{"ortografia de sa limba latgaliana de su 1929"}
+        LTG2007{"ortografia de sa limba latgaliana de su 2007"}
         LUNA1918{"ortografia russa riformada de su 1918"}
         METELKO{"alfabetu Metelko"}
         MONOTON{"monotònicu"}
@@ -909,6 +916,8 @@ sc{
         compatibility{"{0} — compatibilidade"}
         enclosed{"{0} — tancadu"}
         extended{"{0} — estèndidu"}
+        facing-left{"{0} cara a manca"}
+        facing-right{"{0} cara a dereta"}
         historic{"{0} — istòricu"}
         miscellaneous{"{0} — vàriu"}
         other{"{0} — àteru"}
@@ -924,10 +933,5 @@ sc{
         language{"Limba: {0}"}
         script{"Iscritura: {0}"}
         territory{"Regione: {0}"}
-    }
-    localeDisplayPattern{
-        keyTypePattern{"{0}: {1}"}
-        pattern{"{0} ({1})"}
-        separator{"{0}, {1}"}
     }
 }

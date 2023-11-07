@@ -628,6 +628,16 @@ ucal_getCanonicalTimeZoneID(const char16_t* id, int32_t len,
     return reslen;
 }
 
+U_DRAFT int32_t U_EXPORT2
+ucal_getIanaTimeZoneID(const char16_t* id, int32_t len,
+                        char16_t* result, int32_t resultCapacity, UErrorCode* status)
+{
+    UnicodeString ianaID;
+    TimeZone::getIanaID(UnicodeString(id, len), ianaID, *status);
+    return ianaID.extract(result, resultCapacity, *status);
+}
+
+
 U_CAPI const char * U_EXPORT2
 ucal_getType(const UCalendar *cal, UErrorCode* status)
 {

@@ -63,7 +63,7 @@ def generate_rb(config, io, common_vars):
             input_files = [InFile("%s.txt" % bn) for bn in basenames],
             output_files = [OutFile("%s.res" % bn) for bn in basenames],
             tool = IcuTool("genrb"),
-            args = "-q -s {IN_DIR} -d {OUT_DIR} {INPUT_FILE}",
+            args = "-q -i {LIBRARY_DATA_DIR} -s {IN_DIR} -d {OUT_DIR} {INPUT_FILE}",
             format_with = {},
             repeat_with = {}
         ),

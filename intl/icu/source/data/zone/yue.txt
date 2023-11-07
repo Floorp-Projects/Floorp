@@ -1949,10 +1949,6 @@ yue{
         "meta:Yukon"{
             ls{"育空時間"}
         }
-        fallbackFormat{"{1} ({0})"}
-        gmtFormat{"GMT{0}"}
-        gmtZeroFormat{"GMT"}
-        hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"{0}時間"}
         regionFormatDaylight{"{0}夏令時間"}
         regionFormatStandard{"{0}標準時間"}

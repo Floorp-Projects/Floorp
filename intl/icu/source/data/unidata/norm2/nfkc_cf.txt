@@ -12,7 +12,7 @@
 # and reformatted into syntax for the gennorm2 Normalizer2 data generator tool.
 # Use this file as the third gennorm2 input file after nfc.txt and nfkc.txt.
 
-* Unicode 15.0.0
+* Unicode 15.1.0
 
 0041>0061
 0042>0062

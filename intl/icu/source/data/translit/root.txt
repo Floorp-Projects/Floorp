@@ -1077,6 +1077,9 @@ root:table(nofallback){
         Latin-Ethiopic/Williamson{
             alias{"Latn-Ethi/Williamson"}
         }
+        Latin-Ethiopic/Xalaget{
+            alias{"byn_Latn-byn_Ethi/Xaleget"}
+        }
         Latin-Georgian{
             alias{"Latn-Geor"}
         }
@@ -2193,6 +2196,9 @@ root:table(nofallback){
         byn-Ethi-t-byn-latn-m0-tekieali{
             alias{"byn_Latn-byn_Ethi/Tekie_Alibekit"}
         }
+        byn-Ethi-t-byn-latn-m0-xaleget{
+            alias{"byn_Latn-byn_Ethi/Xaleget"}
+        }
         byn-Latn-t-byn-ethi-m0-tekieali{
             alias{"byn_Ethi-byn_Latn/Tekie_Alibekit"}
         }
@@ -2215,6 +2221,12 @@ root:table(nofallback){
             file{
                 direction{"REVERSE"}
                 resource:process(transliterator){"byn_Ethi_byn_Latn_Tekie_Alibekit.txt"}
+            }
+        }
+        byn_Latn-byn_Ethi/Xaleget{
+            file{
+                direction{"REVERSE"}
+                resource:process(transliterator){"byn_Ethi_byn_Latn_Xaleget.txt"}
             }
         }
         ch-am{
@@ -3799,7 +3811,7 @@ root:table(nofallback){
             alias{"Telu-Knda"}
         }
         und-Latn-t-s0-ascii{
-            alias{"Latin-ASCII"}
+            alias{"ASCII-Latin"}
         }
         und-Latn-t-und-arab{
             alias{"Arab-Latn"}
@@ -4056,9 +4068,6 @@ root:table(nofallback){
         und-t-d0-accents{
             alias{"Any-Accents"}
         }
-        und-t-d0-ascii{
-            alias{"Latin-ASCII"}
-        }
         und-t-d0-fwidth{
             alias{"Halfwidth-Fullwidth"}
         }
@@ -4073,6 +4082,9 @@ root:table(nofallback){
         }
         und-t-s0-publish{
             alias{"Publishing-Any"}
+        }
+        und-t-und-latn-d0-ascii{
+            alias{"Latin-ASCII"}
         }
         und_FONIPA-ar{
             file{

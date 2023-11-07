@@ -67,6 +67,7 @@ sw{
         bez{"Kibena"}
         bfd{"Kibafut"}
         bg{"Kibulgaria"}
+        bgc{"Kiharyanvi"}
         bgn{"Kibalochi cha Magharibi"}
         bho{"Kibhojpuri"}
         bi{"Kibislama"}
@@ -368,6 +369,7 @@ sw{
         pt_PT{"Kireno (Ulaya)"}
         qu{"Kikechua"}
         quc{"Kʼicheʼ"}
+        raj{"Kirajasthani"}
         rap{"Kirapanui"}
         rar{"Kirarotonga"}
         rhg{"Kirohingya"}
@@ -506,7 +508,6 @@ sw{
     Languages%short{
         az{"Kiazeri"}
         en_GB{"Kiingereza (UK)"}
-        en_US{"Kiingereza (US)"}
     }
     Languages%variant{
         hi_Latn{"Kihindi chenye Kiingereza"}
@@ -590,9 +591,9 @@ sw{
             gregorian{"Kalenda ya Kigregori"}
             hebrew{"Kalenda ya Kiebrania"}
             indian{"Kalenda ya Taifa ya India"}
-            islamic{"Kalenda ya Kiislamu"}
-            islamic-civil{"Kalenda ya Kiislamu/Rasmi"}
-            islamic-umalqura{"Kalenda ya kiislamu (Umm al-Qura)"}
+            islamic{"Kalenda ya Hijra"}
+            islamic-civil{"Kalenda ya Hijra (inayoanza usiku wa manane)"}
+            islamic-umalqura{"Kalenda ya Hijra (Umm ul-Qura)"}
             iso8601{"Kalenda ya ISO-8601"}
             japanese{"Kalenda ya Kijapani"}
             persian{"Kalenda ya Kiajemi"}
@@ -724,10 +725,11 @@ sw{
     }
     characterLabelPattern{
         all{"{0} — zote"}
-        category-list{"{0}: {1}"}
         compatibility{"{0} — uwiano"}
         enclosed{"{0} — finyu"}
         extended{"{0} — pana"}
+        facing-left{"{0} inayoangalia kushoto"}
+        facing-right{"{0} inayoangalia kulia"}
         historic{"{0} — ya kihistoria"}
         miscellaneous{"{0} — ziada"}
         other{"{0} — nyingine"}
@@ -743,10 +745,5 @@ sw{
         language{"Lugha: {0}"}
         script{"Hati: {0}"}
         territory{"Eneo: {0}"}
-    }
-    localeDisplayPattern{
-        keyTypePattern{"{0}: {1}"}
-        pattern{"{0} ({1})"}
-        separator{"{0}, {1}"}
     }
 }

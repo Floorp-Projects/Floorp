@@ -48,6 +48,7 @@ mn{
         bem{"бемба"}
         bez{"бена"}
         bg{"болгар"}
+        bgc{"Харьянви"}
         bho{"божпури"}
         bi{"бислам"}
         bin{"бини"}
@@ -332,6 +333,7 @@ mn{
         pt_PT{"португал хэл (Европ)"}
         qu{"кечуа"}
         quc{"киче"}
+        raj{"ражастани"}
         rap{"рапануи"}
         rar{"раротонг"}
         rhg{"рохинжа"}
@@ -667,9 +669,7 @@ mn{
             hebrew{"еврей цаглавар"}
             indian{"энэтхэгийн үндэсний цаглавар"}
             islamic{"исламын цаглавар"}
-            islamic-civil{"исламын цаглавар (tabular, civil epoch)"}
-            islamic-rgsa{"исламийн цаглавар (саудын араб, газарзүйн)"}
-            islamic-tbla{"исламийн цаглавар (хүснэгтэн, одон орны эрин)"}
+            islamic-civil{"исламын цаглавар (хүснэгт, иргэний эрин үе)"}
             islamic-umalqura{"исламын цаглавар (Umm al-Qura)"}
             iso8601{"ISO-8601 цаглавар"}
             japanese{"япон цаглавар"}
@@ -801,7 +801,6 @@ mn{
     }
     characterLabelPattern{
         all{"{0} — бүгд"}
-        category-list{"{0}: {1}"}
         compatibility{"{0} - нийцэл"}
         enclosed{"{0} — хавсаргасан"}
         extended{"{0} — өргөтгөсөн"}
@@ -820,8 +819,5 @@ mn{
         language{"Хэл: {0}"}
         script{"Бичиг: {0}"}
         territory{"Бүс: {0}"}
-    }
-    localeDisplayPattern{
-        pattern{"{0} ({1})"}
     }
 }

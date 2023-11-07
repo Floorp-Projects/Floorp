@@ -19,9 +19,6 @@ fr_HT{
         }
     }
     fields{
-        day-narrow{
-            dn{"jr."}
-        }
         day-short{
             dn{"jr."}
         }
@@ -32,14 +29,8 @@ fr_HT{
                 "1"{"ven prochain"}
             }
         }
-        hour-narrow{
-            dn{"hr"}
-        }
         hour-short{
             dn{"hr"}
-        }
-        minute-narrow{
-            dn{"min."}
         }
         minute-short{
             dn{"min."}

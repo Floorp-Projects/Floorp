@@ -13,6 +13,7 @@
 # :: [\u0000-\u007E ʹ ʺ [:Cyrillic:] [:Latin:] [:nonspacing mark:]] ;
 ### WARNING, \u0308 must be added to the generated filters, in both directions ###
 # MINIMAL FILTER
+# Cyrillic-Latin
 :: [ҺһңҢҰұҮүөӨҚқ\u0308Ă-ăĔ-ĕĞ-ğĬ-ĭŎ-ŏŬ-ŭ\u0306Ѐ-џҐ-ҕҘ-ҙӁ-ӂӐ-ӟӢ-ӧӬ-ӵӸ-ӹḜ-ḝẮ-ặᾰᾸῐῘῠῨ] ;
 :: NFD (NFC) ;
 $modprime = ʹ;
@@ -29,7 +30,10 @@ $descender = ˌ;
 $umlaut = \u0308 ;
 $macron = \u0304 ;
 $breveBelow = \u032E;
-# move up so not masked
+$ignoreForCase = [‧[:Mn:][:Me:]] ;
+$lower = [[:Latin:][:Cyrillic:] & [:Ll:]];
+$beforeLower = $ignoreForCase * $lower ;
+# Move up so not masked
 я ↔ a  $hat ; # CYRILLIC SMALL LETTER YA
 Я ↔  A $hat ; # CYRILLIC CAPITAL LETTER YA
 ч ↔ c $caron ; # CYRILLIC SMALL LETTER CHE
@@ -66,6 +70,10 @@ $breveBelow = \u032E;
 Ћ ↔ C $acute ; # CYRILLIC CAPITAL LETTER TSHE
 џ ↔ d $hat ; # CYRILLIC SMALL LETTER DZHE
 Џ ↔ D $hat ; # CYRILLIC CAPITAL LETTER DZHE
+# https://www.eki.ee/wgrs/v2_2/rom2_az.htm
+# but modified to not collide with Cyrillic HA
+һ ↔ h $breveBelow ; # CYRILLIC SMALL LETTER SHHA
+Һ ↔ H $breveBelow; # CYRILLIC CAPITAL LETTER SHHA
 # Normal order
 а ↔ a ; # CYRILLIC SMALL LETTER A
 А ↔ A ; # CYRILLIC CAPITAL LETTER A
@@ -160,11 +168,8 @@ $breveBelow = \u032E;
 # Ѹ ↔ XXX ; # CYRILLIC CAPITAL LETTER UK
 ф ↔ f ; # CYRILLIC SMALL LETTER EF
 Ф ↔ F ; # CYRILLIC CAPITAL LETTER EF
-х ↔ h$breveBelow ; # CYRILLIC SMALL LETTER HA
-Х ↔ H$breveBelow; # CYRILLIC CAPITAL LETTER HA
-#https://www.eki.ee/wgrs/v2_2/rom2_az.htm
-һ ↔ h ; # CYRILLIC SMALL LETTER SHHA
-Һ ↔ H ; # CYRILLIC CAPITAL LETTER SHHA
+х ↔ h ; # CYRILLIC SMALL LETTER HA
+Х ↔ H; # CYRILLIC CAPITAL LETTER HA
 # ҳ ↔ XXX ; # CYRILLIC SMALL LETTER HA WITH DESCENDER
 # Ҳ ↔ XXX ; # CYRILLIC CAPITAL LETTER HA WITH DESCENDER
 # ѡ ↔ XXX ; # CYRILLIC SMALL LETTER OMEGA
@@ -276,7 +281,7 @@ $ignore = [[:Mark:]''] * ;
 | ks ← x ;
 :: NFC (NFD) ;
 # note: a global filter is more efficient, but MUST include all source chars!!
-# :: ([\u0000-\u007E ʹ ʺ [:Cyrillic:] [:Latin:] [:nonspacing mark:]]);
+# :: ([\u0000-\u007E ʹ ʺ [:Cyrillic:] [:Latin:] [:nonspacing mark:] ‧]);
 # MINIMAL FILTER: Latin-Cyrillic
-:: ( [ˌ\u0308A-Za-zÀ-ÏÑ-ÖÙ-Ýà-ïñ-öù-ýÿ-ĥĨ-İĴ-ķĹ-ľŃ-ňŌ-őŔ-ťŨ-žƏƠ-ơƯ-ưǍ-ǜǞ-ǣǦ-ǰǴ-ǵǸ-țȞ-ȟȦ-ȳəʹ-ʺ\u0300-\u0302\u0306-\u0307\u030C\u0326\u0331\u0340-\u0341\u0344ʹ΅-ΆΈ-ΊΌΎ-ΐά-ΰό-ώϓЀЃЌ-ЎЙйѐѓќ-ўӁ-ӂӐ-ӑӖ-ӗḀ-ẙẛẠ-ỹἂ-ἅἊ-Ἅἒ-ἕἚ-Ἕἢ-ἥἪ-Ἥἲ-ἵἺ-Ἵὂ-ὅὊ-Ὅὒ-ὕὛὝὢ-ὥὪ-Ὥὰ-ώᾂ-ᾅᾊ-ᾍᾒ-ᾕᾚ-ᾝᾢ-ᾥᾪ-ᾭᾰᾲᾴᾸᾺ-ΆῂῄῈ-Ή῍-῎ῐῒ-ΐῘῚ-Ί῝-῞ῠῢ-ΰῨῪ-Ύ῭-΅ῲῴῸ-ΏK-Å] ) ;
+:: ( [ḫḪhH‧ˌ\u0308A-Za-zÀ-ÏÑ-ÖÙ-Ýà-ïñ-öù-ýÿ-ĥĨ-İĴ-ķĹ-ľŃ-ňŌ-őŔ-ťŨ-žƏƠ-ơƯ-ưǍ-ǜǞ-ǣǦ-ǰǴ-ǵǸ-țȞ-ȟȦ-ȳəʹ-ʺ\u0300-\u0302\u0306-\u0307\u030C\u0326\u0331\u0340-\u0341\u0344ʹ΅-ΆΈ-ΊΌΎ-ΐά-ΰό-ώϓЀЃЌ-ЎЙйѐѓќ-ўӁ-ӂӐ-ӑӖ-ӗḀ-ẙẛẠ-ỹἂ-ἅἊ-Ἅἒ-ἕἚ-Ἕἢ-ἥἪ-Ἥἲ-ἵἺ-Ἵὂ-ὅὊ-Ὅὒ-ὕὛὝὢ-ὥὪ-Ὥὰ-ώᾂ-ᾅᾊ-ᾍᾒ-ᾕᾚ-ᾝᾢ-ᾥᾪ-ᾭᾰᾲᾴᾸᾺ-ΆῂῄῈ-Ή῍-῎ῐῒ-ΐῘῚ-Ί῝-῞ῠῢ-ΰῨῪ-Ύ῭-΅ῲῴῸ-ΏK-Å] ) ;
 

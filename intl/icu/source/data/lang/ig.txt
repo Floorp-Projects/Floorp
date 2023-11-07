@@ -47,6 +47,7 @@ ig{
         bem{"Bembà"}
         bez{"Bena"}
         bg{"Bọlụgarịa"}
+        bgc{"Haryanvi"}
         bho{"Bojpuri"}
         bi{"Bislama"}
         bin{"Bini"}
@@ -121,7 +122,6 @@ ig{
         eu{"Baskwe"}
         ewo{"Ewọndọ"}
         fa{"Peshianụ"}
-        fa_AF{"Peshianụ (Afghanistan)"}
         ff{"Fula"}
         fi{"Fịnịsh"}
         fil{"Fịlịpịnọ"}
@@ -288,7 +288,6 @@ ig{
         nia{"Nias"}
         niu{"Niwan"}
         nl{"Dọchị"}
-        nl_BE{"Dọchị (Belgium)"}
         nmg{"Kwasịọ"}
         nn{"Nọrweyịan Nynersk"}
         nnh{"Nglembọn"}
@@ -325,6 +324,7 @@ ig{
         pt_BR{"Pọrtụgụese ndị Brazil"}
         pt_PT{"Asụsụ Portuguese ndị Europe"}
         qu{"Qụechụa"}
+        raj{"Rajastani"}
         rap{"Rapunwị"}
         rar{"Rarotonganị"}
         rhg{"Rohinga"}
@@ -525,9 +525,9 @@ ig{
             ethiopic-amete-alem{"Etiopic Amete Alem Kalenda"}
             gregorian{"Kalenda Gregory"}
             hebrew{"Kalịnda Hebrew"}
-            islamic{"Kalịnda Islam"}
-            islamic-civil{"Islamik Kalenda"}
-            islamic-umalqura{"Islamik Kalenda"}
+            islamic{"Kalenda Hijri"}
+            islamic-civil{"Kalenda Hijri"}
+            islamic-umalqura{"Kalenda Hijri (Umm al-Qura)"}
             iso8601{"Kalenda ISO-8601"}
             japanese{"Kalịnda Japanese"}
             persian{"Kalịnda Persian"}
@@ -600,6 +600,10 @@ ig{
             tibt{"Ọnụ ọgụgụ Tịbeta"}
             vaii{"Ọnụ ọgụgụ Vai"}
         }
+    }
+    characterLabelPattern{
+        facing-left{"{0} na-eche ihu aka ekpe"}
+        facing-right{"{0} na-eche ihu aka nri"}
     }
     codePatterns{
         language{"Asụsụ: {0}"}

@@ -71,6 +71,7 @@ hr{
         bez{"bena"}
         bfd{"bafut"}
         bg{"bugarski"}
+        bgc{"haryanvi"}
         bgn{"zapadnobaludžijski"}
         bho{"bhojpuri"}
         bi{"bislama"}
@@ -796,9 +797,9 @@ hr{
             gregorian{"gregorijanski kalendar"}
             hebrew{"hebrejski kalendar"}
             indian{"indijski nacionalni kalendar"}
-            islamic{"islamski kalendar"}
-            islamic-civil{"islamski civilni kalendar"}
-            islamic-umalqura{"islamski kalendar (Umm al-Qura)"}
+            islamic{"hijri kalendar"}
+            islamic-civil{"hijri kalendar (tabularni, civilna epoha)"}
+            islamic-umalqura{"hijri kalendar (Umm al-Qura)"}
             iso8601{"ISO-8601 kalendar"}
             japanese{"japanski kalendar"}
             persian{"perzijski kalendar"}
@@ -974,10 +975,11 @@ hr{
     }
     characterLabelPattern{
         all{"{0} – sve"}
-        category-list{"{0}: {1}"}
         compatibility{"{0} – kompatibilnost"}
         enclosed{"{0} – priloženo"}
         extended{"{0} – prošireno"}
+        facing-left{"{0} ulijevo"}
+        facing-right{"{0} udesno"}
         historic{"{0} – povijesno"}
         miscellaneous{"{0} – razno"}
         other{"{0} – ostalo"}
@@ -994,10 +996,5 @@ hr{
         language{"Jezik: {0}"}
         script{"Pismo: {0}"}
         territory{"Regija: {0}"}
-    }
-    localeDisplayPattern{
-        keyTypePattern{"{0}: {1}"}
-        pattern{"{0} ({1})"}
-        separator{"{0}, {1}"}
     }
 }

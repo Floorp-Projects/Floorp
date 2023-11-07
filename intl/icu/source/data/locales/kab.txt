@@ -3,8 +3,8 @@
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 kab{
     AuxExemplarCharacters{"[o v]"}
-    ExemplarCharacters{"[a b c č d ḍ e ɛ f g ǧ ɣ h ḥ i j k l m n p q r ṛ s ṣ t ṭ u w x y z ẓ]"}
-    ExemplarCharactersIndex{"[A B C Č D Ḍ E Ɛ F G Ǧ Ɣ H Ḥ I J K L M N P Q R Ṛ S Ṣ T Ṭ U W X Y Z Ẓ]"}
+    ExemplarCharacters{"[a b cč dḍ e ɛ f gǧ ɣ hḥ i j k l m n p q rṛ sṣ tṭ u w x y zẓ]"}
+    ExemplarCharactersIndex{"[A B CČ DḌ E Ɛ F GǦ Ɣ HḤ I J K L M N P Q RṚ SṢ TṬ U W X Y ZẒ]"}
     ExemplarCharactersNumbers{"[  \\- ‑ , % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     NumberElements{
         latn{
@@ -101,19 +101,6 @@ kab{
                 "yMMMd",
                 "yMd",
             }
-            appendItems{
-                Day{"{0} ({2}: {1})"}
-                Day-Of-Week{"{0} {1}"}
-                Era{"{1} {0}"}
-                Hour{"{0} ({2}: {1})"}
-                Minute{"{0} ({2}: {1})"}
-                Month{"{0} ({2}: {1})"}
-                Quarter{"{0} ({2}: {1})"}
-                Second{"{0} ({2}: {1})"}
-                Timezone{"{0} {1}"}
-                Week{"{0} ({2}: {1})"}
-                Year{"{1} {0}"}
-            }
             availableFormats{
                 M{"M"}
                 MMM{"MMM"}
@@ -125,7 +112,6 @@ kab{
                 MMdd{"dd/MM"}
                 Md{"d/M"}
                 ms{"m:ss"}
-                y{"y"}
                 yM{"M/y"}
                 yMEd{"E d/M/y"}
                 yMM{"MM/y"}

@@ -2,44 +2,33 @@
 // License & terms of use: http://www.unicode.org/copyright.html
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 km{
-    AuxExemplarCharacters{"[\u17B4\u17B5\u200B \u17CC \u17CE \u17CF \u17D1 ឝ ឞ]"}
-    Ellipsis{
-        final{"{0}…"}
-        initial{"…{0}"}
-        medial{"{0}…{1}"}
-        word-final{"{0} …"}
-        word-initial{"… {0}"}
-        word-medial{"{0} … {1}"}
-    }
+    AuxExemplarCharacters{"[\u17B4\u17B5\u200B ៌ ៎ ៏ ៑ ឝ ឞ]"}
     ExemplarCharacters{
-        "[\u17D0 ៈ \u17CB \u17C9 \u17CA \u17CD ក ខ គ ឃ ង ច ឆ ជ ឈ ញ ដ ឋ ឌ ឍ ណ ត ថ ទ ធ "
-        "ន ប ផ ព ភ ម យ រ ឫ ឬ ល ឭ ឮ វ ស ហ ឡ អ {អា} ឥ ឦ ឧ {ឧក} ឩ ឪ ឯ ឰ ឱ ឲ ឳ ា \u17B7 "
-        "\u17B8 \u17B9 \u17BA \u17BB \u17BC \u17BD ើ ឿ ៀ េ ែ ៃ ោ ៅ \u17C6 ះ \u17D2]"
+        "[័ៈ ់ ៉ ៊ ៍ ក ខ គ ឃ ង ច ឆ ជ ឈ ញ ដ ឋ ឌ ឍ ណ ត ថ ទ ធ ន ប ផ ព ភ ម យ រ ឫ ឬ ល ឭ ឮ "
+        "វ ស ហ ឡ អ {អា} ឥ ឦ ឧ {ឧក} ឩ ឪ ឯ ឰ ឱឲ ឳ ា ិ ី ឹ ឺ ុ ូ ួ ើ ឿ ៀ េ ែ ៃ ោ ៅ ំ ះ ្"
+        "]"
     }
     ExemplarCharactersIndex{
         "[ក ខ គ ឃ ង ច ឆ ជ ឈ ញ ដ ឋ ឌ ឍ ណ ត ថ ទ ធ ន ប ផ ព ភ ម យ រ ឫ ឬ ល ឭ ឮ វ ស ហ ឡ អ ឥ"
         " ឦ ឧ ឩ ឪ ឯ ឰ ឱ ឳ]"
     }
-    ExemplarCharactersNumbers{"[\\- ‑ , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
-    ExemplarCharactersPunctuation{"[\\- ‑ , ៖ ! ? . ។ ៕ ‘ ’ \u0022 “ ” ( ) \\[ \\] \\{ \\} ៙ ៚]"}
-    MoreInformation{"?"}
+    ExemplarCharactersPunctuation{"[\\- ‑ , ៖ ! ? . ។ ៕ ‘’ \u0022“” ( ) \\[ \\] \\{ \\} ៙ ៚]"}
     NumberElements{
-        default{"latn"}
+        khmr{
+            symbols{
+                decimal{","}
+                group{"."}
+            }
+        }
         latn{
             miscPatterns{
-                approximately{"~{0}"}
                 atLeast{"{0}+"}
-                atMost{"≤{0}"}
-                range{"{0}–{1}"}
             }
             patterns{
                 accountingFormat{"#,##0.00¤;(#,##0.00¤)"}
                 accountingFormat%alphaNextToNumber{"#,##0.00 ¤;(#,##0.00 ¤)"}
                 accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
                 currencyFormat{"#,##0.00¤"}
-                decimalFormat{"#,##0.###"}
-                percentFormat{"#,##0%"}
-                scientificFormat{"#E0"}
             }
             patternsLong{
                 decimalFormat{
@@ -197,20 +186,6 @@ km{
                     }
                 }
             }
-            symbols{
-                decimal{","}
-                exponential{"E"}
-                group{"."}
-                infinity{"∞"}
-                list{";"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
-            }
         }
         minimalPairs{
             ordinal{
@@ -220,7 +195,6 @@ km{
                 other{"{0} ថ្ងៃ"}
             }
         }
-        minimumGroupingDigits{"1"}
         native{"khmr"}
     }
     calendar{
@@ -257,43 +231,22 @@ km{
                 "GGGGGyMd",
             }
             availableFormats{
-                Bh{"h B"}
-                Bhm{"h:mm B"}
-                Bhms{"h:mm:ss B"}
-                E{"ccc"}
-                EBhm{"E h:mm B"}
-                EBhms{"E h:mm:ss B"}
-                EHm{"E HH:mm"}
-                EHms{"E HH:mm:ss"}
                 Ed{"d E"}
-                Ehm{"E h:mm a"}
-                Ehms{"E h:mm:ss a"}
                 Gy{"y G"}
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E, d MMM y G"}
                 GyMMMd{"d MMM y G"}
-                H{"HH"}
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
-                M{"L"}
                 MEd{"E d/M"}
-                MMM{"LLL"}
                 MMMEd{"E d MMM"}
                 MMMMd{"d MMMM"}
                 MMMd{"d MMM"}
                 Md{"d/M"}
-                d{"d"}
-                h{"h a"}
-                hm{"h:mm a"}
-                hms{"h:mm:ss a"}
-                ms{"mm:ss"}
                 y{"y G"}
                 yyyy{"y G"}
                 yyyyM{"M/y GGGGG"}
                 yyyyMEd{"E d/M/y GGGGG"}
                 yyyyMMM{"MMM y G"}
                 yyyyMMMEd{"E, d MMM y G"}
-                yyyyMMMM{"G y MMMM"}
                 yyyyMMMd{"d MMM y G"}
                 yyyyMd{"d/M/y GGGGG"}
                 yyyyQQQ{"QQQ y G"}
@@ -385,24 +338,6 @@ km{
                     d{"d – d"}
                 }
                 fallback{"{0} - {1}"}
-                h{
-                    a{"h a – h a"}
-                    h{"h–h a"}
-                }
-                hm{
-                    a{"h:mm a – h:mm a"}
-                    h{"h:mm–h:mm a"}
-                    m{"h:mm–h:mm a"}
-                }
-                hmv{
-                    a{"h:mm a – h:mm a v"}
-                    h{"h:mm–h:mm a v"}
-                    m{"h:mm–h:mm a v"}
-                }
-                hv{
-                    a{"h a – h a v"}
-                    h{"h–h a v"}
-                }
                 y{
                     y{"y – y G"}
                 }
@@ -441,14 +376,6 @@ km{
             }
         }
         gregorian{
-            AmPmMarkers{
-                "AM",
-                "PM",
-            }
-            AmPmMarkersAbbr{
-                "AM",
-                "PM",
-            }
             AmPmMarkersNarrow{
                 "a",
                 "p",
@@ -484,48 +411,19 @@ km{
                 "yMMMd",
                 "yyMd",
             }
-            appendItems{
-                Timezone{"{0} {1}"}
-            }
             availableFormats{
-                Bh{"h B"}
-                Bhm{"h:mm B"}
-                Bhms{"h:mm:ss B"}
-                E{"ccc"}
-                EBhm{"E h:mm B"}
-                EBhms{"E h:mm:ss B"}
-                EHm{"E HH:mm"}
-                EHms{"E HH:mm:ss"}
                 Ed{"d E"}
-                Ehm{"E h:mm a"}
-                Ehms{"E h:mm:ss a"}
                 Gy{"y G"}
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E d MMM y G"}
                 GyMMMd{"d MMM y G"}
-                H{"HH"}
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
-                Hmsv{"HH:mm:ss v"}
-                Hmv{"HH:mm v"}
-                M{"L"}
                 MEd{"E d/M"}
-                MMM{"LLL"}
                 MMMEd{"E d MMM"}
                 MMMMW{
                     other{"សប្តាហ៍ទី W នៃខែ MMMM"}
                 }
-                MMMMd{"MMMM d"}
                 MMMd{"d MMM"}
                 Md{"d/M"}
-                d{"d"}
-                h{"h a"}
-                hm{"h:mm a"}
-                hms{"h:mm:ss a"}
-                hmsv{"h:mm:ss a v"}
-                hmv{"h:mm a v"}
-                ms{"mm:ss"}
-                y{"y"}
                 yM{"M/y"}
                 yMEd{"E d/M/y"}
                 yMMM{"MMM y"}
@@ -550,15 +448,6 @@ km{
                         "សុក្រ",
                         "សៅរ៍",
                     }
-                    narrow{
-                        "អ",
-                        "ច",
-                        "អ",
-                        "ព",
-                        "ព",
-                        "ស",
-                        "ស",
-                    }
                     short{
                         "អា",
                         "ច",
@@ -579,15 +468,6 @@ km{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "អាទិត្យ",
-                        "ចន្ទ",
-                        "អង្គារ",
-                        "ពុធ",
-                        "ព្រហ",
-                        "សុក្រ",
-                        "សៅរ៍",
-                    }
                     narrow{
                         "អ",
                         "ច",
@@ -595,15 +475,6 @@ km{
                         "ព",
                         "ព",
                         "ស",
-                        "ស",
-                    }
-                    short{
-                        "អា",
-                        "ច",
-                        "អ",
-                        "ពុ",
-                        "ព្រ",
-                        "សុ",
                         "ស",
                     }
                     wide{
@@ -627,53 +498,14 @@ km{
                         night1{"នៅពេល​យប់"}
                         noon{"ថ្ងៃត្រង់"}
                     }
-                    narrow{
-                        afternoon1{"នៅពេលរសៀល"}
-                        evening1{"នៅពេល​ល្ងាច"}
-                        midnight{"អធ្រាត្រ"}
-                        morning1{"នៅពេល​ព្រឹក"}
-                        night1{"នៅពេល​យប់"}
-                        noon{"ថ្ងៃត្រង់"}
-                    }
-                    wide{
-                        afternoon1{"នៅពេលរសៀល"}
-                        evening1{"នៅពេល​ល្ងាច"}
-                        midnight{"អធ្រាត្រ"}
-                        morning1{"នៅពេល​ព្រឹក"}
-                        night1{"នៅពេល​យប់"}
-                        noon{"ថ្ងៃត្រង់"}
-                    }
                 }
                 stand-alone{
                     abbreviated{
                         afternoon1{"រសៀល"}
-                        am{"AM"}
                         evening1{"ល្ងាច"}
-                        midnight{"អធ្រាត្រ"}
                         morning1{"ព្រឹក"}
                         night1{"យប់"}
                         noon{"ថ្ងៃ​ត្រង់"}
-                        pm{"PM"}
-                    }
-                    narrow{
-                        afternoon1{"រសៀល"}
-                        am{"AM"}
-                        evening1{"ល្ងាច"}
-                        midnight{"អធ្រាត្រ"}
-                        morning1{"ព្រឹក"}
-                        night1{"យប់"}
-                        noon{"ថ្ងៃ​ត្រង់"}
-                        pm{"PM"}
-                    }
-                    wide{
-                        afternoon1{"រសៀល"}
-                        am{"AM"}
-                        evening1{"ល្ងាច"}
-                        midnight{"អធ្រាត្រ"}
-                        morning1{"ព្រឹក"}
-                        night1{"យប់"}
-                        noon{"ថ្ងៃ​ត្រង់"}
-                        pm{"PM"}
                     }
                 }
             }
@@ -689,10 +521,6 @@ km{
                 wide{
                     "មុន​គ្រិស្តសករាជ",
                     "គ្រិស្តសករាជ",
-                }
-                wide%variant{
-                    "BCE",
-                    "CE",
                 }
             }
             intervalFormats{
@@ -782,21 +610,17 @@ km{
                 }
                 fallback{"{0} - {1}"}
                 h{
-                    a{"h a – h a"}
                     h{"h – h a"}
                 }
                 hm{
-                    a{"h:mm a – h:mm a"}
                     h{"h:mm – h:mm a"}
                     m{"h:mm – h:mm a"}
                 }
                 hmv{
-                    a{"h:mm a – h:mm a v"}
                     h{"h:mm – h:mm a v"}
                     m{"h:mm – h:mm a v"}
                 }
                 hv{
-                    a{"h a – h a v"}
                     h{"h – h a v"}
                 }
                 y{
@@ -837,34 +661,6 @@ km{
             }
             monthNames{
                 format{
-                    abbreviated{
-                        "មករា",
-                        "កុម្ភៈ",
-                        "មីនា",
-                        "មេសា",
-                        "ឧសភា",
-                        "មិថុនា",
-                        "កក្កដា",
-                        "សីហា",
-                        "កញ្ញា",
-                        "តុលា",
-                        "វិច្ឆិកា",
-                        "ធ្នូ",
-                    }
-                    narrow{
-                        "ម",
-                        "ក",
-                        "ម",
-                        "ម",
-                        "ឧ",
-                        "ម",
-                        "ក",
-                        "ស",
-                        "ក",
-                        "ត",
-                        "វ",
-                        "ធ",
-                    }
                     wide{
                         "មករា",
                         "កុម្ភៈ",
@@ -881,20 +677,6 @@ km{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "មករា",
-                        "កុម្ភៈ",
-                        "មីនា",
-                        "មេសា",
-                        "ឧសភា",
-                        "មិថុនា",
-                        "កក្កដា",
-                        "សីហា",
-                        "កញ្ញា",
-                        "តុលា",
-                        "វិច្ឆិកា",
-                        "ធ្នូ",
-                    }
                     narrow{
                         "ម",
                         "ក",
@@ -908,57 +690,11 @@ km{
                         "ត",
                         "វ",
                         "ធ",
-                    }
-                    wide{
-                        "មករា",
-                        "កុម្ភៈ",
-                        "មីនា",
-                        "មេសា",
-                        "ឧសភា",
-                        "មិថុនា",
-                        "កក្កដា",
-                        "សីហា",
-                        "កញ្ញា",
-                        "តុលា",
-                        "វិច្ឆិកា",
-                        "ធ្នូ",
                     }
                 }
             }
             quarters{
                 format{
-                    abbreviated{
-                        "ត្រីមាសទី 1",
-                        "ត្រីមាសទី 2",
-                        "ត្រីមាសទី 3",
-                        "ត្រីមាសទី 4",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                    }
-                    wide{
-                        "ត្រីមាសទី 1",
-                        "ត្រីមាសទី 2",
-                        "ត្រីមាសទី 3",
-                        "ត្រីមាសទី 4",
-                    }
-                }
-                stand-alone{
-                    abbreviated{
-                        "ត្រីមាសទី 1",
-                        "ត្រីមាសទី 2",
-                        "ត្រីមាសទី 3",
-                        "ត្រីមាសទី 4",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                    }
                     wide{
                         "ត្រីមាសទី 1",
                         "ត្រីមាសទី 2",
@@ -1057,12 +793,6 @@ km{
         western_asian_scripts{"ក្រុមអក្សរអាស៊ីខាងលិច"}
         whitespace{"ចន្លោះ"}
     }
-    delimiters{
-        alternateQuotationEnd{"’"}
-        alternateQuotationStart{"‘"}
-        quotationEnd{"”"}
-        quotationStart{"“"}
-    }
     fields{
         day{
             dn{"ថ្ងៃ"}
@@ -1082,37 +812,13 @@ km{
                 }
             }
         }
-        day-narrow{
-            dn{"ថ្ងៃ"}
-            relative{
-                "-1"{"ម្សិលមិញ"}
-                "-2"{"ម្សិល​ម៉្ងៃ"}
-                "0"{"ថ្ងៃ​នេះ"}
-                "1"{"ថ្ងៃស្អែក"}
-                "2"{"​ខាន​ស្អែក"}
-            }
-            relativeTime{
-                future{
-                    other{"{0} ថ្ងៃទៀត"}
-                }
-                past{
-                    other{"{0} ថ្ងៃ​​មុន"}
-                }
-            }
-        }
         day-short{
-            dn{"ថ្ងៃ"}
             relative{
                 "-1"{"ម្សិលមិញ"}
-                "-2"{"ម្សិល​ម៉្ងៃ"}
                 "0"{"ថ្ងៃ​នេះ"}
                 "1"{"ថ្ងៃស្អែក"}
-                "2"{"​ខាន​ស្អែក"}
             }
             relativeTime{
-                future{
-                    other{"{0} ថ្ងៃទៀត"}
-                }
                 past{
                     other{"{0} ថ្ងៃ​​មុន"}
                 }
@@ -1121,61 +827,13 @@ km{
         dayOfYear{
             dn{"ថ្ងៃនៃឆ្នាំ"}
         }
-        dayOfYear-narrow{
-            dn{"ថ្ងៃនៃឆ្នាំ"}
-        }
-        dayOfYear-short{
-            dn{"ថ្ងៃនៃឆ្នាំ"}
-        }
         dayperiod{
-            dn{"ព្រឹក/ល្ងាច"}
-        }
-        dayperiod-narrow{
-            dn{"ព្រឹក/ល្ងាច"}
-        }
-        dayperiod-short{
             dn{"ព្រឹក/ល្ងាច"}
         }
         era{
             dn{"សករាជ"}
         }
-        era-narrow{
-            dn{"សករាជ"}
-        }
-        era-short{
-            dn{"សករាជ"}
-        }
         fri{
-            relative{
-                "-1"{"ថ្ងៃ​សុក្រ​មុន"}
-                "0"{"ថ្ងៃ​សុក្រ​នេះ"}
-                "1"{"ថ្ងៃ​សុក្រ​ក្រោយ"}
-            }
-            relativeTime{
-                future{
-                    other{"ក្នុងពេល {0} ថ្ងៃសុក្រទៀត"}
-                }
-                past{
-                    other{"កាលពី {0} ថ្ងៃសុក្រមុន"}
-                }
-            }
-        }
-        fri-narrow{
-            relative{
-                "-1"{"ថ្ងៃ​សុក្រ​មុន"}
-                "0"{"ថ្ងៃ​សុក្រ​នេះ"}
-                "1"{"ថ្ងៃ​សុក្រ​ក្រោយ"}
-            }
-            relativeTime{
-                future{
-                    other{"ក្នុងពេល {0} ថ្ងៃសុក្រទៀត"}
-                }
-                past{
-                    other{"កាលពី {0} ថ្ងៃសុក្រមុន"}
-                }
-            }
-        }
-        fri-short{
             relative{
                 "-1"{"ថ្ងៃ​សុក្រ​មុន"}
                 "0"{"ថ្ងៃ​សុក្រ​នេះ"}
@@ -1204,25 +862,10 @@ km{
                 }
             }
         }
-        hour-narrow{
-            dn{"ម៉ោង"}
-            relativeTime{
-                future{
-                    other{"{0} ម៉ោងទៀត"}
-                }
-                past{
-                    other{"{0} ម៉ោង​មុន"}
-                }
-            }
-        }
         hour-short{
-            dn{"ម៉ោង"}
             relativeTime{
                 future{
                     other{"{0} ម៉ោងទៀត"}
-                }
-                past{
-                    other{"{0} ម៉ោង​មុន"}
                 }
             }
         }
@@ -1240,23 +883,8 @@ km{
                 }
             }
         }
-        minute-narrow{
-            dn{"នាទី"}
-            relativeTime{
-                future{
-                    other{"{0} នាទីទៀត"}
-                }
-                past{
-                    other{"{0} នាទី​​មុន"}
-                }
-            }
-        }
         minute-short{
-            dn{"នាទី"}
             relativeTime{
-                future{
-                    other{"{0} នាទីទៀត"}
-                }
                 past{
                     other{"{0} នាទី​​មុន"}
                 }
@@ -1277,69 +905,7 @@ km{
                 }
             }
         }
-        mon-narrow{
-            relative{
-                "-1"{"ថ្ងៃចន្ទមុន"}
-                "0"{"ថ្ងៃចន្ទនេះ"}
-                "1"{"ថ្ងៃចន្ទក្រោយ"}
-            }
-            relativeTime{
-                future{
-                    other{"ក្នុងពេល {0} ថ្ងៃចន្ទទៀត"}
-                }
-                past{
-                    other{"កាលពី {0} ថ្ងៃចន្ទមុន"}
-                }
-            }
-        }
-        mon-short{
-            relative{
-                "-1"{"ថ្ងៃចន្ទមុន"}
-                "0"{"ថ្ងៃចន្ទនេះ"}
-                "1"{"ថ្ងៃចន្ទក្រោយ"}
-            }
-            relativeTime{
-                future{
-                    other{"ក្នុងពេល {0} ថ្ងៃចន្ទទៀត"}
-                }
-                past{
-                    other{"កាលពី {0} ថ្ងៃចន្ទមុន"}
-                }
-            }
-        }
         month{
-            dn{"ខែ"}
-            relative{
-                "-1"{"ខែ​មុន"}
-                "0"{"ខែ​នេះ"}
-                "1"{"ខែ​ក្រោយ"}
-            }
-            relativeTime{
-                future{
-                    other{"{0} ខែទៀត"}
-                }
-                past{
-                    other{"{0} ខែមុន"}
-                }
-            }
-        }
-        month-narrow{
-            dn{"ខែ"}
-            relative{
-                "-1"{"ខែ​មុន"}
-                "0"{"ខែ​នេះ"}
-                "1"{"ខែ​ក្រោយ"}
-            }
-            relativeTime{
-                future{
-                    other{"{0} ខែទៀត"}
-                }
-                past{
-                    other{"{0} ខែមុន"}
-                }
-            }
-        }
-        month-short{
             dn{"ខែ"}
             relative{
                 "-1"{"ខែ​មុន"}
@@ -1371,69 +937,7 @@ km{
                 }
             }
         }
-        quarter-narrow{
-            dn{"ត្រីមាស"}
-            relative{
-                "-1"{"ត្រីមាស​មុន"}
-                "0"{"ត្រីមាស​នេះ"}
-                "1"{"ត្រីមាស​ក្រោយ"}
-            }
-            relativeTime{
-                future{
-                    other{"{0} ត្រីមាសទៀត"}
-                }
-                past{
-                    other{"{0} ត្រីមាស​មុន"}
-                }
-            }
-        }
-        quarter-short{
-            dn{"ត្រីមាស"}
-            relative{
-                "-1"{"ត្រីមាស​មុន"}
-                "0"{"ត្រីមាស​នេះ"}
-                "1"{"ត្រីមាស​ក្រោយ"}
-            }
-            relativeTime{
-                future{
-                    other{"{0} ត្រីមាសទៀត"}
-                }
-                past{
-                    other{"{0} ត្រីមាស​មុន"}
-                }
-            }
-        }
         sat{
-            relative{
-                "-1"{"ថ្ងៃ​សៅរ៍​មុន"}
-                "0"{"ថ្ងៃ​សៅរ៍​នេះ"}
-                "1"{"ថ្ងៃ​សៅរ៍​ក្រោយ"}
-            }
-            relativeTime{
-                future{
-                    other{"ក្នុងពេល {0} ថ្ងៃសៅរ៍ ទៀត"}
-                }
-                past{
-                    other{"កាលពី {0} ថ្ងៃសៅរ៍ មុន"}
-                }
-            }
-        }
-        sat-narrow{
-            relative{
-                "-1"{"ថ្ងៃ​សៅរ៍​មុន"}
-                "0"{"ថ្ងៃ​សៅរ៍​នេះ"}
-                "1"{"ថ្ងៃ​សៅរ៍​ក្រោយ"}
-            }
-            relativeTime{
-                future{
-                    other{"ក្នុងពេល {0} ថ្ងៃសៅរ៍ ទៀត"}
-                }
-                past{
-                    other{"កាលពី {0} ថ្ងៃសៅរ៍ មុន"}
-                }
-            }
-        }
-        sat-short{
             relative{
                 "-1"{"ថ្ងៃ​សៅរ៍​មុន"}
                 "0"{"ថ្ងៃ​សៅរ៍​នេះ"}
@@ -1462,28 +966,6 @@ km{
                 }
             }
         }
-        second-narrow{
-            dn{"វិនាទី"}
-            relativeTime{
-                future{
-                    other{"{0} វិនាទីទៀត"}
-                }
-                past{
-                    other{"{0} វិនាទី​មុន"}
-                }
-            }
-        }
-        second-short{
-            dn{"វិនាទី"}
-            relativeTime{
-                future{
-                    other{"{0} វិនាទីទៀត"}
-                }
-                past{
-                    other{"{0} វិនាទី​មុន"}
-                }
-            }
-        }
         sun{
             relative{
                 "-1"{"ថ្ងៃ​អាទិត្យ​មុន"}
@@ -1500,11 +982,6 @@ km{
             }
         }
         sun-narrow{
-            relative{
-                "-1"{"ថ្ងៃ​អាទិត្យ​មុន"}
-                "0"{"ថ្ងៃ​អាទិត្យ​នេះ"}
-                "1"{"ថ្ងៃ​អាទិត្យ​ក្រោយ"}
-            }
             relativeTime{
                 future{
                     other{"ក្នុងពេល {0} ថ្ងៃអាទិត្យទៀត"}
@@ -1514,52 +991,7 @@ km{
                 }
             }
         }
-        sun-short{
-            relative{
-                "-1"{"ថ្ងៃ​អាទិត្យ​មុន"}
-                "0"{"ថ្ងៃ​អាទិត្យ​នេះ"}
-                "1"{"ថ្ងៃ​អាទិត្យ​ក្រោយ"}
-            }
-            relativeTime{
-                future{
-                    other{"ថ្ងៃអាទិត្យ {0} សប្តាហ៍ទៀត"}
-                }
-                past{
-                    other{"ថ្ងៃអាទិត្យ {0} សប្តាហ៍មុន"}
-                }
-            }
-        }
         thu{
-            relative{
-                "-1"{"ថ្ងៃ​ព្រហស្បតិ៍​មុន"}
-                "0"{"ថ្ងៃ​ព្រហស្បតិ៍​នេះ"}
-                "1"{"ថ្ងៃ​ព្រហស្បតិ៍​ក្រោយ"}
-            }
-            relativeTime{
-                future{
-                    other{"ក្នុងពេល {0} ថ្ងៃព្រហស្បតិ៍ទៀត"}
-                }
-                past{
-                    other{"កាលពី {0} ថ្ងៃព្រហស្បតិ៍មុន"}
-                }
-            }
-        }
-        thu-narrow{
-            relative{
-                "-1"{"ថ្ងៃ​ព្រហស្បតិ៍​មុន"}
-                "0"{"ថ្ងៃ​ព្រហស្បតិ៍​នេះ"}
-                "1"{"ថ្ងៃ​ព្រហស្បតិ៍​ក្រោយ"}
-            }
-            relativeTime{
-                future{
-                    other{"ក្នុងពេល {0} ថ្ងៃព្រហស្បតិ៍ទៀត"}
-                }
-                past{
-                    other{"កាលពី {0} ថ្ងៃព្រហស្បតិ៍មុន"}
-                }
-            }
-        }
-        thu-short{
             relative{
                 "-1"{"ថ្ងៃ​ព្រហស្បតិ៍​មុន"}
                 "0"{"ថ្ងៃ​ព្រហស្បតិ៍​នេះ"}
@@ -1589,67 +1021,7 @@ km{
                 }
             }
         }
-        tue-narrow{
-            relative{
-                "-1"{"ថ្ងៃ​អង្គារ​មុន"}
-                "0"{"ថ្ងៃ​អង្គារ​នេះ"}
-                "1"{"ថ្ងៃ​អង្គារ​ក្រោយ"}
-            }
-            relativeTime{
-                future{
-                    other{"ក្នុងពេល {0} ថ្ងៃអង្គារទៀត"}
-                }
-                past{
-                    other{"កាលពី {0} ថ្ងៃអង្គារមុន"}
-                }
-            }
-        }
-        tue-short{
-            relative{
-                "-1"{"ថ្ងៃ​អង្គារ​មុន"}
-                "0"{"ថ្ងៃ​អង្គារ​នេះ"}
-                "1"{"ថ្ងៃ​អង្គារ​ក្រោយ"}
-            }
-            relativeTime{
-                future{
-                    other{"ក្នុងពេល {0} ថ្ងៃអង្គារទៀត"}
-                }
-                past{
-                    other{"កាលពី {0} ថ្ងៃអង្គារមុន"}
-                }
-            }
-        }
         wed{
-            relative{
-                "-1"{"ថ្ងៃ​ពុធ​មុន"}
-                "0"{"ថ្ងៃ​ពុធ​នេះ"}
-                "1"{"ថ្ងៃ​ពុធ​ក្រោយ"}
-            }
-            relativeTime{
-                future{
-                    other{"ក្នុងពេល {0} ថ្ងៃពុធទៀត"}
-                }
-                past{
-                    other{"កាលពី {0} ថ្ងៃពុធមុន"}
-                }
-            }
-        }
-        wed-narrow{
-            relative{
-                "-1"{"ថ្ងៃ​ពុធ​មុន"}
-                "0"{"ថ្ងៃ​ពុធ​នេះ"}
-                "1"{"ថ្ងៃ​ពុធ​ក្រោយ"}
-            }
-            relativeTime{
-                future{
-                    other{"ក្នុងពេល {0} ថ្ងៃពុធទៀត"}
-                }
-                past{
-                    other{"កាលពី {0} ថ្ងៃពុធមុន"}
-                }
-            }
-        }
-        wed-short{
             relative{
                 "-1"{"ថ្ងៃ​ពុធ​មុន"}
                 "0"{"ថ្ងៃ​ពុធ​នេះ"}
@@ -1681,65 +1053,13 @@ km{
                 }
             }
         }
-        week-narrow{
-            dn{"សប្ដាហ៍"}
-            relative{
-                "-1"{"សប្ដាហ៍​មុន"}
-                "0"{"សប្ដាហ៍​នេះ"}
-                "1"{"សប្ដាហ៍​ក្រោយ"}
-            }
-            relativePeriod{"សប្តាហ៍នៃ {0}"}
-            relativeTime{
-                future{
-                    other{"{0} សប្ដាហ៍ទៀត"}
-                }
-                past{
-                    other{"{0} សប្ដាហ៍​មុន"}
-                }
-            }
-        }
-        week-short{
-            dn{"សប្ដាហ៍"}
-            relative{
-                "-1"{"សប្ដាហ៍​មុន"}
-                "0"{"សប្ដាហ៍​នេះ"}
-                "1"{"សប្ដាហ៍​ក្រោយ"}
-            }
-            relativePeriod{"សប្តាហ៍នៃ {0}"}
-            relativeTime{
-                future{
-                    other{"{0} សប្ដាហ៍ទៀត"}
-                }
-                past{
-                    other{"{0} សប្ដាហ៍​មុន"}
-                }
-            }
-        }
         weekOfMonth{
-            dn{"សប្ដាហ៍នៃខែ"}
-        }
-        weekOfMonth-narrow{
-            dn{"សប្ដាហ៍នៃខែ"}
-        }
-        weekOfMonth-short{
             dn{"សប្ដាហ៍នៃខែ"}
         }
         weekday{
             dn{"ថ្ងៃ​នៃ​សប្ដាហ៍"}
         }
-        weekday-narrow{
-            dn{"ថ្ងៃ​នៃ​សប្ដាហ៍"}
-        }
-        weekday-short{
-            dn{"ថ្ងៃ​នៃ​សប្ដាហ៍"}
-        }
         weekdayOfMonth{
-            dn{"ថ្ងៃសប្ដាហ៍នៃខែ"}
-        }
-        weekdayOfMonth-narrow{
-            dn{"ថ្ងៃសប្ដាហ៍នៃខែ"}
-        }
-        weekdayOfMonth-short{
             dn{"ថ្ងៃសប្ដាហ៍នៃខែ"}
         }
         year{
@@ -1758,45 +1078,7 @@ km{
                 }
             }
         }
-        year-narrow{
-            dn{"ឆ្នាំ"}
-            relative{
-                "-1"{"ឆ្នាំ​មុន"}
-                "0"{"ឆ្នាំ​នេះ"}
-                "1"{"ឆ្នាំ​ក្រោយ"}
-            }
-            relativeTime{
-                future{
-                    other{"{0} ឆ្នាំទៀត"}
-                }
-                past{
-                    other{"{0} ឆ្នាំ​មុន"}
-                }
-            }
-        }
-        year-short{
-            dn{"ឆ្នាំ"}
-            relative{
-                "-1"{"ឆ្នាំ​មុន"}
-                "0"{"ឆ្នាំ​នេះ"}
-                "1"{"ឆ្នាំ​ក្រោយ"}
-            }
-            relativeTime{
-                future{
-                    other{"{0} ឆ្នាំទៀត"}
-                }
-                past{
-                    other{"{0} ឆ្នាំ​មុន"}
-                }
-            }
-        }
         zone{
-            dn{"ល្វែងម៉ោង"}
-        }
-        zone-narrow{
-            dn{"ល្វែងម៉ោង"}
-        }
-        zone-short{
             dn{"ល្វែងម៉ោង"}
         }
     }
@@ -1804,50 +1086,17 @@ km{
         or{
             2{"{0} ឬ {1}"}
             end{"{0} ឬ {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        or-narrow{
-            2{"{0} ឬ {1}"}
-            end{"{0} ឬ {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        or-short{
-            2{"{0} ឬ {1}"}
-            end{"{0} ឬ {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
         standard{
             2{"{0} និង​{1}"}
             end{"{0} និង {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
         standard-narrow{
             2{"{0}, {1}"}
             end{"{0}, {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
         standard-short{
             2{"{0} និង {1}"}
-            end{"{0} និង {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        unit{
-            2{"{0} {1}"}
-            end{"{0} {1}"}
-            middle{"{0} {1}"}
-            start{"{0} {1}"}
-        }
-        unit-narrow{
-            2{"{0} {1}"}
-            end{"{0} {1}"}
-            middle{"{0} {1}"}
-            start{"{0} {1}"}
         }
         unit-short{
             2{"{0} {1}"}
@@ -1862,7 +1111,6 @@ km{
         metric{"រង្វាស់​ប្រវែង"}
     }
     personNames{
-        foreignSpaceReplacement{" "}
         nameOrderLocales{
             surnameFirst{
                 "ja",

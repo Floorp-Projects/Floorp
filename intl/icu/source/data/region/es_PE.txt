@@ -5,7 +5,7 @@ es_PE{
     %%Parent{"es_419"}
     Countries{
         BA{"Bosnia y Herzegovina"}
-        TA{"Tristán de Acuña"}
+        TL{"Timor-Leste"}
         UM{"Islas menores alejadas de EE. UU."}
     }
     Countries%short{

@@ -4,27 +4,16 @@
 bho{
     AuxExemplarCharacters{"[अ आ इ ई उ ऊ ऋ ए ऐ ओ औ]"}
     ExemplarCharacters{
-        "[\u093C \u0901 \u0902 ः क ख ग घ च छ ज झ ञ ट ठ ड ढ ण त थ द ध न प फ ब भ म य र "
-        "ल व श ष स ह ा ि ी \u0941 \u0942 \u0943 \u0945 \u0947 \u0948 ो ौ \u094D]"
+        "[़ ँ ंः क ख ग घ च छ ज झ ञ ट ठ ड ढ ण त थ द ध न प फ ब भ म य र ल व श ष स ह ा ि "
+        "ी ु ू ृ ॅ े ै ो ौ ्]"
     }
     ExemplarCharactersNumbers{"[\\- ‑ , . % ‰ + 0० 1१ 2२ 3३ 4४ 5५ 6६ 7७ 8८ 9९]"}
-    ExemplarCharactersPunctuation{
-        "[\\- ‐ ‑ – — , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” ( ) \\[ \\] § @ * / \\& # † ‡ "
-        "′ ″]"
-    }
+    ExemplarCharactersPunctuation{"[\\- ‐‑ – — , ; \\: ! ? . … '‘’ \u0022“” ( ) \\[ \\] § @ * / \\& # † ‡ ′ ″]"}
     NumberElements{
         default{"deva"}
         latn{
             patterns{
                 currencyFormat{"¤#,##0.00"}
-                decimalFormat{"#,##0.###"}
-            }
-            symbols{
-                decimal{"."}
-                group{","}
-                minusSign{"-"}
-                percentSign{"%"}
-                plusSign{"+"}
             }
         }
     }
@@ -58,16 +47,6 @@ bho{
                 "yMMMMd",
                 "yMMMd",
                 "yMMdd",
-            }
-            availableFormats{
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
-                Hmsv{"HH:mm:ss v"}
-                hm{"h:mm a"}
-                hms{"h:mm:ss a"}
-                hmsv{"h:mm:ss a v"}
-                yMMMd{"y MMM d"}
-                yMd{"y-MM-dd"}
             }
             dayNames{
                 format{

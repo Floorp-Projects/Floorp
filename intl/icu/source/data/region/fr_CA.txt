@@ -11,8 +11,10 @@ fr_CA{
         155{"Europe occidentale"}
         AC{"île de l’Ascension"}
         AX{"îles d’Åland"}
+        BN{"Brunéi"}
         BV{"île Bouvet"}
         BY{"Bélarus"}
+        BZ{"Bélize"}
         CC{"îles Cocos (Keeling)"}
         CK{"îles Cook"}
         CX{"île Christmas"}
@@ -21,8 +23,8 @@ fr_CA{
         HM{"îles Heard et McDonald"}
         IC{"îles Canaries"}
         IM{"île de Man"}
-        IO{"territoire britannique de l’océan Indien"}
         KG{"Kirghizistan"}
+        KN{"Saint‑Kitts‑et‑Nevis"}
         LR{"Libéria"}
         MF{"Saint-Martin (France)"}
         MM{"Myanmar"}
@@ -36,9 +38,16 @@ fr_CA{
         TL{"Timor-Leste"}
         UM{"îles mineures éloignées des États-Unis"}
         VA{"Cité du Vatican"}
+        VE{"Vénézuéla"}
         VG{"îles Vierges britanniques"}
         VI{"îles Vierges américaines"}
         VN{"Vietnam"}
+    }
+    Countries%biot{
+        IO{"territoire britannique de l’océan Indien"}
+    }
+    Countries%chagos{
+        IO{"archipel Chagos"}
     }
     Countries%variant{
         FK{"îles Falkland (Malouines)"}

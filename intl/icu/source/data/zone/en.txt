@@ -3,21 +3,6 @@
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 en{
     zoneStrings{
-        "Africa:Sao_Tome"{
-            ec{"São Tomé"}
-        }
-        "America:Asuncion"{
-            ec{"Asunción"}
-        }
-        "America:Curacao"{
-            ec{"Curaçao"}
-        }
-        "America:St_Barthelemy"{
-            ec{"St. Barthélemy"}
-        }
-        "Antarctica:DumontDUrville"{
-            ec{"Dumont d’Urville"}
-        }
         "Asia:Qostanay"{
             ec{"Kostanay"}
         }
@@ -33,17 +18,11 @@ en{
         "Europe:Dublin"{
             ld{"Irish Standard Time"}
         }
-        "Europe:Kiev"{
-            ec{"Kyiv"}
-        }
         "Europe:London"{
             ld{"British Summer Time"}
         }
         "Europe:Uzhgorod"{
             ec{"Uzhhorod"}
-        }
-        "Indian:Reunion"{
-            ec{"Réunion"}
         }
         "Pacific:Honolulu"{
             sd{"HDT"}

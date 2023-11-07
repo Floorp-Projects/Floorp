@@ -3,4 +3,15 @@
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 en_AT{
     %%Parent{"en_150"}
+    Currencies{
+        EUR{
+            "€",
+            "Euro",
+            {
+                "¤ #,##0.00",
+                ",",
+                ".",
+            }
+        }
+    }
 }

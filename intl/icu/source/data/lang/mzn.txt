@@ -270,9 +270,4 @@ mzn{
         script{"اسکریپت: {0}"}
         territory{"منطقه: {0}"}
     }
-    localeDisplayPattern{
-        keyTypePattern{"{0}: {1}"}
-        pattern{"{0} ({1})"}
-        separator{"{0}, {1}"}
-    }
 }

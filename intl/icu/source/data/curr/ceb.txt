@@ -499,9 +499,13 @@ ceb{
             "SHP",
             "St. Helena Pound",
         }
+        SLE{
+            "SLE",
+            "Sierra Leonean Leone",
+        }
         SLL{
             "SLL",
-            "Sierra Leonean Leone",
+            "Sierra Leonean Leone (1964—2022)",
         }
         SOS{
             "SOS",
@@ -631,9 +635,6 @@ ceb{
             "ZMW",
             "Zambian Kwacha",
         }
-    }
-    Currencies%narrow{
-        BYN{"BYN"}
     }
     CurrencyPlurals{
         AED{
@@ -1132,9 +1133,13 @@ ceb{
             one{"St. Helena pound"}
             other{"St. Helena pounds"}
         }
-        SLL{
+        SLE{
             one{"Sierra Leonean leone"}
             other{"Sierra Leonean leones"}
+        }
+        SLL{
+            one{"Sierra Leonean leone (1964—2022)"}
+            other{"Sierra Leonean leones (1964—2022)"}
         }
         SOS{
             one{"Somali shilling"}
@@ -1266,7 +1271,7 @@ ceb{
         }
     }
     CurrencyUnitPatterns{
-        one{"{1} {0}"}
+        one{"{0} {1}"}
         other{"{1} {0}"}
     }
 }

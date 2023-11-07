@@ -2,7 +2,7 @@
 // License & terms of use: http://www.unicode.org/copyright.html
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 root{
-    Version{"43"}
+    Version{"44"}
     durationUnits{
         hm{"h:mm"}
         hms{"h:mm:ss"}
@@ -106,7 +106,9 @@ root{
             10p-2{"c{0}"}
             10p-21{"z{0}"}
             10p-24{"y{0}"}
+            10p-27{"r{0}"}
             10p-3{"m{0}"}
+            10p-30{"q{0}"}
             10p-6{"μ{0}"}
             10p-9{"n{0}"}
             10p1{"da{0}"}
@@ -116,7 +118,9 @@ root{
             10p2{"h{0}"}
             10p21{"Z{0}"}
             10p24{"Y{0}"}
+            10p27{"R{0}"}
             10p3{"k{0}"}
+            10p30{"Q{0}"}
             10p6{"M{0}"}
             10p9{"G{0}"}
             per{"{0}/{1}"}
@@ -669,6 +673,10 @@ root{
             }
         }
         speed{
+            beaufort{
+                dnam{"Bft"}
+                other{"B {0}"}
+            }
             kilometer-per-hour{
                 dnam{"km/h"}
                 other{"{0} km/h"}

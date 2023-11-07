@@ -58,6 +58,7 @@ az{
         bem{"bemba"}
         bez{"bena"}
         bg{"bolqar"}
+        bgc{"Haryanvi"}
         bgn{"qərbi bəluc"}
         bho{"bxoçpuri"}
         bi{"bislama"}
@@ -732,10 +733,10 @@ az{
             gregorian{"Qreqorian təqvimi"}
             hebrew{"Yəhudi Təqvimi"}
             indian{"Hindi təqvimi"}
-            islamic{"İslam təqvimi"}
-            islamic-civil{"Ivrit təqvimi"}
-            islamic-tbla{"İslam təqvimi (astronomik)"}
-            islamic-umalqura{"İslam təqvimi (Umm Al-Qura)"}
+            islamic{"Hicri təqvimi"}
+            islamic-civil{"Hicri təqvimi (tabulyar, vətəndaşlıq dövrü)"}
+            islamic-tbla{"Hicri təqvim (tabulyar, astromonik dövr)"}
+            islamic-umalqura{"Hicri təqvim (Umm əl-Qura)"}
             iso8601{"ISO-8601 Təqvimi"}
             japanese{"Yapon Təqvimi"}
             persian{"İran Təqvimi"}
@@ -812,10 +813,11 @@ az{
     }
     characterLabelPattern{
         all{"{0} — Bütün"}
-        category-list{"{0}: {1}"}
         compatibility{"{0} — Uyğunluq"}
         enclosed{"{0} — Qapalı"}
         extended{"{0} — Artırılmış"}
+        facing-left{"{0} sola baxan"}
+        facing-right{"{0} sağa baxan"}
         historic{"{0} — Tarixi"}
         miscellaneous{"{0} — Qarışıq"}
         other{"{0} — Digər"}
@@ -831,10 +833,5 @@ az{
         language{"Dil: {0}"}
         script{"Skript: {0}"}
         territory{"Region: {0}"}
-    }
-    localeDisplayPattern{
-        keyTypePattern{"{0}: {1}"}
-        pattern{"{0} ({1})"}
-        separator{"{0}, {1}"}
     }
 }

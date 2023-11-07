@@ -1230,102 +1230,8 @@ eu{
         }
     }
     Currencies%narrow{
-        AOA{"Kz"}
-        ARS{"$"}
-        AUD{"$"}
-        BAM{"KM"}
-        BBD{"$"}
-        BDT{"৳"}
-        BMD{"$"}
-        BND{"$"}
-        BOB{"Bs"}
-        BRL{"R$"}
-        BSD{"$"}
-        BWP{"P"}
         BYN{"р."}
-        BZD{"$"}
-        CAD{"$"}
-        CLP{"$"}
-        CNY{"¥"}
-        COP{"$"}
-        CRC{"₡"}
-        CUC{"$"}
-        CUP{"$"}
-        CZK{"Kč"}
-        DKK{"kr"}
-        DOP{"$"}
-        EGP{"E£"}
-        EUR{"€"}
-        FJD{"$"}
-        FKP{"£"}
-        GBP{"£"}
-        GEL{"₾"}
-        GIP{"£"}
-        GNF{"FG"}
-        GTQ{"Q"}
-        GYD{"$"}
-        HKD{"$"}
-        HNL{"L"}
-        HRK{"kn"}
-        HUF{"Ft"}
-        IDR{"Rp"}
-        ILS{"₪"}
-        INR{"₹"}
-        ISK{"kr"}
-        JMD{"$"}
-        JPY{"¥"}
-        KHR{"៛"}
-        KMF{"CF"}
-        KPW{"₩"}
-        KRW{"₩"}
-        KYD{"$"}
-        KZT{"₸"}
-        LAK{"₭"}
-        LBP{"L£"}
-        LKR{"Rs"}
-        LRD{"$"}
-        MGA{"Ar"}
-        MMK{"K"}
-        MNT{"₮"}
-        MUR{"Rs"}
-        MXN{"$"}
-        MYR{"RM"}
-        NAD{"$"}
-        NGN{"₦"}
-        NIO{"C$"}
-        NOK{"kr"}
-        NPR{"Rs"}
-        NZD{"$"}
-        PHP{"₱"}
-        PKR{"Rs"}
-        PLN{"zł"}
-        PYG{"₲"}
-        RUB{"₽"}
-        RWF{"RF"}
-        SBD{"$"}
-        SEK{"kr"}
-        SGD{"$"}
-        SHP{"£"}
-        SRD{"$"}
-        SSP{"£"}
-        STN{"Db"}
-        SYP{"£"}
-        THB{"฿"}
-        TOP{"T$"}
-        TRY{"₺"}
-        TTD{"$"}
         TWD{"NT$"}
-        UAH{"₴"}
-        USD{"$"}
-        UYU{"$"}
-        VEF{"Bs"}
-        VND{"₫"}
-        XCD{"$"}
-        ZAR{"R"}
-        ZMW{"ZK"}
-    }
-    Currencies%variant{
-        TRY{"TL"}
     }
     CurrencyPlurals{
         ADP{
@@ -1451,10 +1357,6 @@ eu{
         BGL{
             one{"Lev bulgariar indartsu"}
             other{"Lev bulgariar indartsu"}
-        }
-        BGM{
-            one{"Lev bulgariar sozialista"}
-            other{"Lev bulgariar sozialista"}
         }
         BGN{
             one{"lev bulgariar"}
@@ -1719,10 +1621,6 @@ eu{
         FRF{
             one{"libera frantses"}
             other{"libera frantses"}
-        }
-        GBP{
-            one{"libera esterlina"}
-            other{"libera esterlina"}
         }
         GEK{
             one{"kupon larit georgiar"}
@@ -2008,10 +1906,6 @@ eu{
             one{"pataca macauar"}
             other{"pataca macauar"}
         }
-        MRO{
-            one{"Mauritaniako ouguiya (1973–2017)"}
-            other{"Mauritaniako ouguiya (1973–2017)"}
-        }
         MRU{
             one{"uguiya mauritaniar"}
             other{"uguiya mauritaniar"}
@@ -2019,10 +1913,6 @@ eu{
         MTL{
             one{"lira maltar"}
             other{"lira maltar"}
-        }
-        MTP{
-            one{"libera maltar"}
-            other{"libera maltar"}
         }
         MUR{
             one{"errupia mauriziar"}
@@ -2075,10 +1965,6 @@ eu{
         NGN{
             one{"naira nigeriar"}
             other{"naira nigeriar"}
-        }
-        NIC{
-            one{"kordoba nikaraguar (1988–1991)"}
-            other{"kordoba nikaraguar (1988–1991)"}
         }
         NIO{
             one{"cordoba nikaraguar"}
@@ -2212,10 +2098,6 @@ eu{
             one{"dolar singapurtar"}
             other{"dolar singapurtar"}
         }
-        SHP{
-            one{"Santa Helenako libera"}
-            other{"Santa Helenako libera"}
-        }
         SIT{
             one{"tolar esloveniar"}
             other{"tolar esloveniar"}
@@ -2247,10 +2129,6 @@ eu{
         SSP{
             one{"libera hegosudandar"}
             other{"libera hegosudandar"}
-        }
-        STD{
-            one{"Sao Tomeko eta Principeko dobra (1977–2017)"}
-            other{"Sao Tomeko eta Principeko dobra (1977–2017)"}
         }
         STN{
             one{"dobra saotometar"}
@@ -2392,10 +2270,6 @@ eu{
             one{"dong vietnamdar"}
             other{"dong vietnamdar"}
         }
-        VNN{
-            one{"dong vietnamdar (1978–1985)"}
-            other{"dong vietnamdar (1978–1985)"}
-        }
         VUV{
             one{"vatu vanuatuar"}
             other{"vatu vanuatuar"}
@@ -2464,10 +2338,6 @@ eu{
             one{"CFP franko"}
             other{"CFP franko"}
         }
-        XPT{
-            one{"platinozko troy ontza"}
-            other{"platinozko troy ontza"}
-        }
         XRE{
             one{"RINET funtsen unitate"}
             other{"RINET funtsen unitate"}
@@ -2519,10 +2389,6 @@ eu{
         ZAR{
             one{"rand hegoafrikar"}
             other{"rand hegoafrikar"}
-        }
-        ZMK{
-            one{"Zambiako kwacha (1968–2012)"}
-            other{"Zambiako kwacha (1968–2012)"}
         }
         ZMW{
             one{"kwacha zambiar"}

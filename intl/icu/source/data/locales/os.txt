@@ -2,46 +2,25 @@
 // License & terms of use: http://www.unicode.org/copyright.html
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 os{
-    AuxExemplarCharacters{"[]"}
-    Ellipsis{
-        final{"{0}…"}
-        initial{"…{0}"}
-        medial{"{0}…{1}"}
-    }
     ExemplarCharacters{
-        "[а ӕ б в г {гъ} д {дж} {дз} е ё ж з и й к {къ} л м н о п {пъ} р с т {тъ} у ф"
-        " х {хъ} ц {цъ} ч {чъ} ш щ ъ ы ь э ю я]"
+        "[а ӕ б в г {гъ} д {дж} {дз} её ж з и й к {къ} л м н о п {пъ} р с т {тъ} у ф "
+        "х {хъ} ц {цъ} ч {чъ} ш щ ъ ы ь э ю я]"
     }
     ExemplarCharactersIndex{
-        "[А Ӕ Б В Г {Гъ} Д {Дж} {Дз} Е Ё Ж З И Й К {Къ} Л М Н О П {Пъ} Р С Т {Тъ} У Ф"
-        " Х {Хъ} Ц {Цъ} Ч {Чъ} Ш Щ Ы Э Ю Я]"
+        "[А Ӕ Б В Г {Гъ} Д {Дж} {Дз} ЕЁ Ж З И Й К {Къ} Л М Н О П {Пъ} Р С Т {Тъ} У Ф "
+        "Х {Хъ} Ц {Цъ} Ч {Чъ} Ш Щ Ы Э Ю Я]"
     }
     ExemplarCharactersNumbers{"[  \\- ‑ , % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     ExemplarCharactersPunctuation{
-        "[\\- ‐ ‑ – — , ; \\: ! ? . … ' ‘ ‚ \u0022 “ „ « » ( ) \\[ \\] \\{ \\} § @ * "
-        "/ \\& #]"
+        "[\\- ‐‑ – — , ; \\: ! ? . … '‘‚ \u0022“„ « » ( ) \\[ \\] \\{ \\} § @ * / \\&"
+        " #]"
     }
-    MoreInformation{"?"}
     NumberElements{
-        default{"latn"}
         latn{
-            patterns{
-                currencyFormat{"¤ #,##0.00"}
-                decimalFormat{"#,##0.###"}
-                percentFormat{"#,##0%"}
-                scientificFormat{"#E0"}
-            }
             symbols{
                 decimal{","}
-                exponential{"E"}
                 group{" "}
-                infinity{"∞"}
-                list{";"}
-                minusSign{"-"}
                 nan{"НН"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
             }
         }
     }
@@ -73,20 +52,13 @@ os{
                 "GGGGGyyMMdd",
             }
             availableFormats{
-                H{"HH"}
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
-                M{"L"}
                 MEd{"E, dd.MM"}
-                MMM{"LLL"}
                 MMMEd{"ccc, d MMM"}
                 MMMd{"d MMM"}
                 Md{"dd.MM"}
-                d{"d"}
                 h{"h a"}
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
-                ms{"mm:ss"}
                 y{"y"}
                 yM{"MM.y"}
                 yMEd{"E, dd.MM.y"}
@@ -96,29 +68,12 @@ os{
                 yQQQQ{"y-'ӕм' 'азы' QQQQ"}
             }
             intervalFormats{
-                H{
-                    H{"HH–HH"}
-                }
-                Hm{
-                    H{"HH:mm–HH:mm"}
-                    m{"HH:mm–HH:mm"}
-                }
-                Hmv{
-                    H{"HH:mm–HH:mm v"}
-                    m{"HH:mm–HH:mm v"}
-                }
-                Hv{
-                    H{"HH–HH v"}
-                }
                 M{
                     M{"M–M"}
                 }
                 Md{
                     M{"dd.MM – dd.MM"}
                     d{"dd.MM – dd.MM"}
-                }
-                d{
-                    d{"d–d"}
                 }
                 fallback{"{0} – {1}"}
                 h{
@@ -146,10 +101,6 @@ os{
                 "ӕмбисбоны размӕ",
                 "ӕмбисбоны фӕстӕ",
             }
-            AmPmMarkersAbbr{
-                "AM",
-                "PM",
-            }
             DateTimePatterns{
                 "HH:mm:ss zzzz",
                 "HH:mm:ss z",
@@ -176,21 +127,13 @@ os{
                 "yyMMdd",
             }
             availableFormats{
-                H{"HH"}
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
-                M{"L"}
                 MEd{"E, dd.MM"}
-                MMM{"LLL"}
                 MMMEd{"ccc, d MMM"}
                 MMMd{"d MMM"}
                 Md{"dd.MM"}
-                d{"d"}
                 h{"h a"}
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
-                ms{"mm:ss"}
-                y{"y"}
                 yM{"MM.y"}
                 yMEd{"E, dd.MM.y"}
                 yMMM{"LLL y"}
@@ -208,15 +151,6 @@ os{
                         "цпр",
                         "мрб",
                         "сбт",
-                    }
-                    narrow{
-                        "Х",
-                        "К",
-                        "Д",
-                        "Ӕ",
-                        "Ц",
-                        "М",
-                        "С",
                     }
                     wide{
                         "хуыцаубон",
@@ -265,29 +199,12 @@ os{
                 }
             }
             intervalFormats{
-                H{
-                    H{"HH–HH"}
-                }
-                Hm{
-                    H{"HH:mm–HH:mm"}
-                    m{"HH:mm–HH:mm"}
-                }
-                Hmv{
-                    H{"HH:mm–HH:mm v"}
-                    m{"HH:mm–HH:mm v"}
-                }
-                Hv{
-                    H{"HH–HH v"}
-                }
                 M{
                     M{"M–M"}
                 }
                 Md{
                     M{"dd.MM – dd.MM"}
                     d{"dd.MM – dd.MM"}
-                }
-                d{
-                    d{"d–d"}
                 }
                 fallback{"{0} – {1}"}
                 h{
@@ -324,20 +241,6 @@ os{
                         "окт.",
                         "ноя.",
                         "дек.",
-                    }
-                    narrow{
-                        "Я",
-                        "Ф",
-                        "М",
-                        "А",
-                        "М",
-                        "И",
-                        "И",
-                        "А",
-                        "С",
-                        "О",
-                        "Н",
-                        "Д",
                     }
                     wide{
                         "январы",
@@ -406,32 +309,6 @@ os{
                         "2-аг кв.",
                         "3-аг кв.",
                         "4-ӕм кв.",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                    }
-                    wide{
-                        "1-аг квартал",
-                        "2-аг квартал",
-                        "3-аг квартал",
-                        "4-ӕм квартал",
-                    }
-                }
-                stand-alone{
-                    abbreviated{
-                        "1-аг кв.",
-                        "2-аг кв.",
-                        "3-аг кв.",
-                        "4-ӕм кв.",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
                     }
                     wide{
                         "1-аг квартал",
@@ -515,8 +392,6 @@ os{
         standard{
             2{"{0} ӕмӕ {1}"}
             end{"{0} ӕмӕ {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
     }
     measurementSystemNames{

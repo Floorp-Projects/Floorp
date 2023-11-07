@@ -60,6 +60,5 @@ su{
         "meta:Galapagos"{
             ls{"Waktu Galapagos"}
         }
-        fallbackFormat{"{1} ({0})"}
     }
 }

@@ -531,9 +531,6 @@ pcm{
             ethiopic-amete-alem{"Ẹtiópiá Amẹtẹ́ Álẹ́m Kalénda"}
             gregorian{"Grẹ́górí Kalẹ́nda"}
             hebrew{"Híbrú Kalẹ́nda"}
-            islamic{"Íslám Kalẹ́nda"}
-            islamic-civil{"Íslám Kalẹ́nda (Tébúlá Taip an Sívúl Taip)"}
-            islamic-umalqura{"Íslám Kalẹ́nda (Úmm al-Kúra)"}
             iso8601{"ISO-8601 Kalẹ́nda"}
             japanese{"Japán Kalẹ́nda"}
             persian{"Pẹ́shia Kalẹ́nda"}
@@ -609,7 +606,6 @@ pcm{
     }
     characterLabelPattern{
         all{"{0} — ọl"}
-        category-list{"{0}: {1}"}
         compatibility{"{0} — Fít ích ọ́da"}
         enclosed{"{0} — Sọráund"}
         extended{"{0} — Strẹch"}
@@ -628,10 +624,5 @@ pcm{
         language{"Lángwej: {0}"}
         script{"Haú to raít tins: {0}"}
         territory{"Éria: {0}"}
-    }
-    localeDisplayPattern{
-        keyTypePattern{"{0}: {1}"}
-        pattern{"{0} ({1})"}
-        separator{"{0}, {1}"}
     }
 }

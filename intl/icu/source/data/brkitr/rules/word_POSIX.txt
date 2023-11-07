@@ -38,7 +38,7 @@ $Regional_Indicator = [\p{Word_Break = Regional_Indicator}];
 $Format             = [\p{Word_Break = Format}];
 $Katakana           = [\p{Word_Break = Katakana}];
 $Hebrew_Letter      = [\p{Word_Break = Hebrew_Letter}];
-$ALetter            = [\p{Word_Break = ALetter} @];
+$ALetter            = [\p{Word_Break = ALetter}];
 $Single_Quote       = [\p{Word_Break = Single_Quote}];
 $Double_Quote       = [\p{Word_Break = Double_Quote}];
 $MidNumLet          = [\p{Word_Break = MidNumLet} - [.]];

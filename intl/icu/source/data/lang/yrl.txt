@@ -556,9 +556,6 @@ yrl{
         yue{"kãtunei (katuwa)"}
         zh{"xinanheẽga, mãdarĩ"}
     }
-    Languages%short{
-        en_US{"ẽgirixi (EUA)"}
-    }
     Languages%variant{
         ps{"puxitu"}
     }
@@ -718,9 +715,6 @@ yrl{
             gregorian{"Akayupawa Greguriuwara"}
             hebrew{"Akayupawa Yudeu"}
             indian{"Akayupawa Tetãmapawa Ĩdiawara"}
-            islamic{"Akayupawa Islãsuera"}
-            islamic-civil{"Akayupawa Siwiu Islãsuera"}
-            islamic-umalqura{"Akayupawa Islãsuera (Umm al-Qura)"}
             iso8601{"Akayupawa ISSO-8601"}
             japanese{"Akayupawa Nipõwara"}
             persian{"Akayupawa Persiyawara"}
@@ -893,7 +887,6 @@ yrl{
     }
     characterLabelPattern{
         all{"{0} — panhé"}
-        category-list{"{0}: {1}"}
         compatibility{"{0} — kũpatibilidadi"}
         enclosed{"{0} — sikĩdawa"}
         extended{"{0} — pukuwa"}
@@ -910,10 +903,5 @@ yrl{
         language{"Nheẽga: {0}"}
         script{"Letarasawa-ita: {0}"}
         territory{"Tẽdawa: {0}"}
-    }
-    localeDisplayPattern{
-        keyTypePattern{"{0}: {1}"}
-        pattern{"{0} ({1})"}
-        separator{"{0}, {1}"}
     }
 }

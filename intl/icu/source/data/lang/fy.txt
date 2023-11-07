@@ -715,8 +715,6 @@ fy{
             gregorian{"Gregoriaanske kalinder"}
             hebrew{"Hebreeuwse kalinder"}
             indian{"Indiase natjonale kalinder"}
-            islamic{"Islamityske kalinder"}
-            islamic-civil{"Islamityske kalinder (cyclysk)"}
             japanese{"Japanske kalinder"}
             persian{"Perzyske kalinder"}
             roc{"Kalinder fan de Sineeske Republyk"}
@@ -890,10 +888,5 @@ fy{
         language{"Taal: {0}"}
         script{"Skrift: {0}"}
         territory{"Regio: {0}"}
-    }
-    localeDisplayPattern{
-        keyTypePattern{"{0}: {1}"}
-        pattern{"{0} ({1})"}
-        separator{"{0}, {1}"}
     }
 }

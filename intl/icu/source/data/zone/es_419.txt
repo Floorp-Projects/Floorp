@@ -39,9 +39,6 @@ es_419{
         "Europe:Guernsey"{
             ec{"Guernsey"}
         }
-        "Pacific:Kanton"{
-            ec{"Kanton"}
-        }
         "Pacific:Wake"{
             ec{"Isla Wake"}
         }

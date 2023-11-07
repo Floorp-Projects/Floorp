@@ -43,9 +43,6 @@ nn{
         "Europe:Dublin"{
             ld{"irsk sommartid"}
         }
-        "Europe:Kiev"{
-            ec{"Kyiv"}
-        }
         "Europe:London"{
             ld{"britisk sommartid"}
         }
@@ -373,7 +370,7 @@ nn{
             ls{"kaledonsk normaltid"}
         }
         "meta:New_Zealand"{
-            ld{"nyzealandsk sumartid"}
+            ld{"nyzealandsk sommartid"}
             lg{"nyzealandsk tid"}
             ls{"nyzealandsk normaltid"}
         }

@@ -93,7 +93,6 @@ ewo{
         IE{"Irəlándə"}
         IL{"Isəraɛ́l"}
         IN{"ɛ́ndə"}
-        IO{"ǹnam ɛngəlís yá Máŋ mə́ ɛ́ndə"}
         IQ{"Irág"}
         IR{"Irán"}
         IS{"Isəlándə"}

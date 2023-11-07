@@ -895,9 +895,13 @@ pt{
             "SKK",
             "Coroa eslovaca",
         }
+        SLE{
+            "SLE",
+            "Leone de Serra Leoa",
+        }
         SLL{
             "SLL",
-            "Leone de Serra Leoa",
+            "Leone de Serra Leoa (1964—2022)",
         }
         SOS{
             "SOS",
@@ -1201,103 +1205,10 @@ pt{
         }
     }
     Currencies%narrow{
-        AOA{"Kz"}
-        ARS{"$"}
-        AUD{"$"}
-        BAM{"KM"}
-        BBD{"$"}
-        BDT{"৳"}
-        BMD{"$"}
-        BND{"$"}
-        BOB{"Bs"}
-        BRL{"R$"}
-        BSD{"$"}
-        BWP{"P"}
         BYN{"р."}
-        BZD{"$"}
-        CAD{"$"}
-        CLP{"$"}
-        CNY{"¥"}
-        COP{"$"}
-        CRC{"₡"}
-        CUC{"$"}
-        CUP{"$"}
-        CZK{"Kč"}
-        DKK{"kr"}
-        DOP{"$"}
-        EGP{"E£"}
-        EUR{"€"}
-        FJD{"$"}
-        FKP{"£"}
-        GBP{"£"}
-        GEL{"₾"}
-        GIP{"£"}
-        GNF{"FG"}
-        GTQ{"Q"}
-        GYD{"$"}
-        HKD{"$"}
-        HNL{"L"}
-        HRK{"kn"}
-        HUF{"Ft"}
-        IDR{"Rp"}
-        ILS{"₪"}
-        INR{"₹"}
-        ISK{"kr"}
-        JMD{"$"}
-        JPY{"¥"}
-        KHR{"៛"}
-        KMF{"CF"}
-        KPW{"₩"}
-        KRW{"₩"}
-        KYD{"$"}
-        KZT{"₸"}
-        LAK{"₭"}
-        LBP{"L£"}
-        LKR{"Rs"}
-        LRD{"$"}
-        MGA{"Ar"}
-        MMK{"K"}
-        MNT{"₮"}
-        MUR{"Rs"}
-        MXN{"$"}
-        MYR{"RM"}
-        NAD{"$"}
-        NGN{"₦"}
-        NIO{"C$"}
-        NOK{"kr"}
-        NPR{"Rs"}
-        NZD{"$"}
-        PHP{"₱"}
-        PKR{"Rs"}
-        PLN{"zł"}
-        PYG{"₲"}
         RON{"L"}
-        RUB{"₽"}
-        RWF{"RF"}
-        SBD{"$"}
-        SEK{"kr"}
-        SGD{"$"}
-        SHP{"£"}
-        SRD{"$"}
-        SSP{"£"}
-        STN{"Db"}
         SYP{"S£"}
-        THB{"฿"}
-        TOP{"T$"}
-        TRY{"₺"}
-        TTD{"$"}
         TWD{"NT$"}
-        UAH{"₴"}
-        USD{"$"}
-        UYU{"$"}
-        VEF{"Bs"}
-        VND{"₫"}
-        XCD{"$"}
-        ZAR{"R"}
-        ZMW{"ZK"}
-    }
-    Currencies%variant{
-        TRY{"TL"}
     }
     CurrencyPlurals{
         ADP{
@@ -1940,10 +1851,6 @@ pt{
             one{"Franco monegasco"}
             other{"Francos monegascos"}
         }
-        MDC{
-            one{"Cupon moldávio"}
-            other{"Cupon moldávio"}
-        }
         MDL{
             one{"Leu moldávio"}
             other{"Leus moldávios"}
@@ -2192,9 +2099,13 @@ pt{
             one{"Coroa eslovaca"}
             other{"Coroas eslovacas"}
         }
-        SLL{
+        SLE{
             one{"Leone de Serra Leoa"}
             other{"Leones de Serra Leoa"}
+        }
+        SLL{
+            one{"Leone de Serra Leoa (1964—2022)"}
+            other{"Leones de Serra Leoa (1964—2022)"}
         }
         SOS{
             one{"Xelim somali"}
@@ -2348,10 +2259,6 @@ pt{
             one{"Dong vietnamita"}
             other{"Dongs vietnamitas"}
         }
-        VNN{
-            one{"Dong vietnamita (1978–1985)"}
-            other{"Dong vietnamita (1978–1985)"}
-        }
         VUV{
             one{"Vatu de Vanuatu"}
             other{"Vatus de Vanuatu"}
@@ -2423,10 +2330,6 @@ pt{
         XPT{
             one{"Platina"}
             other{"Platinas"}
-        }
-        XRE{
-            one{"Fundos RINET"}
-            other{"Fundos RINET"}
         }
         XTS{
             one{"Código de moeda de teste"}

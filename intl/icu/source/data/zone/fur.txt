@@ -77,8 +77,5 @@ fur{
             lg{"Ore di Mosche"}
             ls{"Ore standard di Mosche"}
         }
-        fallbackFormat{"{1} ({0})"}
-        gmtFormat{"GMT{0}"}
-        hourFormat{"+HH:mm;-HH:mm"}
     }
 }

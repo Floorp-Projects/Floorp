@@ -171,9 +171,13 @@ kab{
             "SHP",
             "Apund Asant Ilini",
         }
+        SLE{
+            "SLE",
+            "Alyun",
+        }
         SLL{
             "SLL",
-            "Alyun",
+            "Alyun (1964—2022)",
         }
         SOS{
             "SOS",

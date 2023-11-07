@@ -1895,10 +1895,6 @@ kk{
         "meta:Yukon"{
             ls{"Юкон уақыты"}
         }
-        fallbackFormat{"{1} ({0})"}
-        gmtFormat{"GMT{0}"}
-        gmtZeroFormat{"GMT"}
-        hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"{0} уақыты"}
         regionFormatDaylight{"{0} жазғы уақыты"}
         regionFormatStandard{"{0} стандартты уақыты"}

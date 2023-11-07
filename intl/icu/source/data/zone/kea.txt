@@ -75,9 +75,6 @@ kea{
         "America:Martinique"{
             ec{"Martinika"}
         }
-        "America:Merida"{
-            ec{"Mérida"}
-        }
         "America:Mexico_City"{
             ec{"Sidadi di Méxiku"}
         }
@@ -128,9 +125,6 @@ kea{
         }
         "America:Winnipeg"{
             ec{"Uínipeg"}
-        }
-        "Atlantic:Bermuda"{
-            ec{"Bermuda"}
         }
         "Etc:UTC"{
             ls{"Ora Universal Kordenadu"}
@@ -274,10 +268,6 @@ kea{
         "meta:Yukon"{
             ls{"Ora di Yukon"}
         }
-        fallbackFormat{"{1} ({0})"}
-        gmtFormat{"GMT{0}"}
-        gmtZeroFormat{"GMT"}
-        hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"Ora di {0}"}
         regionFormatDaylight{"Ora di Veron di {0}"}
         regionFormatStandard{"Ora Padron di {0}"}

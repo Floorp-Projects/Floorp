@@ -61,8 +61,8 @@ xh{
     Scripts{
         Arab{"Isi-Arabhu"}
         Cyrl{"IsiCyrillic"}
-        Hans{"IsiHans"}
-        Hant{"IsiHant"}
+        Hans{"IsiHans Esenziwe Lula"}
+        Hant{"IsiHant Esiqhelekileyo"}
         Jpan{"IsiJapanese"}
         Kore{"IsiKorean"}
         Latn{"IsiLatin"}
@@ -70,8 +70,8 @@ xh{
         Zzzz{"Ulwimi Olungaziwayo"}
     }
     Scripts%stand-alone{
-        Hans{"IsiHan"}
-        Hant{"IsiHan"}
+        Hans{"IsiHan Esenziwe Lula"}
+        Hant{"IsiHan Esiqhelekileyo"}
     }
     Types{
         calendar{
@@ -89,9 +89,5 @@ xh{
         language{"Language: {0}"}
         script{"Script: {0}"}
         territory{"Region: {0}"}
-    }
-    localeDisplayPattern{
-        pattern{"{0} ({1})"}
-        separator{"{0}, {1}"}
     }
 }

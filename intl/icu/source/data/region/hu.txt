@@ -85,6 +85,7 @@ hu{
         CN{"Kína"}
         CO{"Kolumbia"}
         CP{"Clipperton-sziget"}
+        CQ{"Sark"}
         CR{"Costa Rica"}
         CU{"Kuba"}
         CV{"Zöld-foki Köztársaság"}
@@ -297,6 +298,9 @@ hu{
         ZM{"Zambia"}
         ZW{"Zimbabwe"}
         ZZ{"Ismeretlen körzet"}
+    }
+    Countries%chagos{
+        IO{"Chagos-szigetcsoport"}
     }
     Countries%short{
         GB{"UK"}

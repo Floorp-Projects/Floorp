@@ -5,7 +5,6 @@ ps_PK{
     units{
         acceleration{
             g-force{
-                dnam{"د جاذبے قوه"}
                 one{"{0} د جاذبے قوه"}
                 other{"{0} د جاذبے قوه"}
             }
@@ -17,27 +16,21 @@ ps_PK{
                 other{"{0} آرک ثانيے"}
             }
             degree{
-                dnam{"درجے"}
                 one{"{0} درجے"}
                 other{"{0} درجے"}
             }
         }
         area{
             hectare{
-                dnam{"هيکترے"}
                 one{"{0} هيکتر"}
                 other{"{0} هيکترے"}
             }
         }
         duration{
             day{
-                dnam{"ورځے"}
-                one{"{0} ورځ"}
-                other{"{0} ورځے"}
                 per{"{0} په هره ورځ کے"}
             }
             month{
-                dnam{"مياشتے"}
                 one{"{0} مياشت"}
                 other{"{0} مياشتے"}
             }
@@ -52,7 +45,6 @@ ps_PK{
                 other{"{0} فلکي احدے"}
             }
             inch{
-                dnam{"انچے"}
                 one{"{0} انچ"}
                 other{"{0} انچے"}
             }
@@ -83,7 +75,6 @@ ps_PK{
         }
         volume{
             cup{
-                dnam{"پيالے"}
                 one{"{0} پياله"}
                 other{"{0} پيالے"}
             }

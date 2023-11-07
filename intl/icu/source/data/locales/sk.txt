@@ -2,39 +2,25 @@
 // License & terms of use: http://www.unicode.org/copyright.html
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 sk{
-    AuxExemplarCharacters{"[à ă â å ā æ ç è ĕ ê ë ē ì ĭ î ï ī ñ ò ŏ ö ő ø ō œ ř ù ŭ û ü ű ū ÿ]"}
-    Ellipsis{
-        final{"{0}…"}
-        initial{"…{0}"}
-        medial{"{0}…{1}"}
-        word-final{"{0} …"}
-        word-initial{"… {0}"}
-        word-medial{"{0} … {1}"}
-    }
+    AuxExemplarCharacters{"[àăâåā æ ç èĕêëē ìĭîïī ñ òŏöőøō œ ř ùŭûüűū ÿ]"}
     ExemplarCharacters{
-        "[a á ä b c č d ď {dz} {dž} e é f g h {ch} i í j k l ĺ ľ m n ň o ó ô p q r ŕ "
-        "s š t ť u ú v w x y ý z ž]"
+        "[aá ä b c č dď {dz} {dž} eé f g h {ch} ií j k lĺľ m nň oó ô p q rŕ s š tť uú"
+        " v w x yý z ž]"
     }
-    ExemplarCharactersIndex{"[A Ä B C Č D Ď E F G H {CH} I J K L Ľ M N O Ô P Q R S Š T Ť U V W X Y Z Ž]"}
+    ExemplarCharactersIndex{"[A Ä B C Č DĎ E F G H {CH} I J K LĽ M N O Ô P Q R S Š TŤ U V W X Y Z Ž]"}
     ExemplarCharactersNumbers{"[  \\- ‑ , % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
-    ExemplarCharactersPunctuation{"[\\- ‐ ‑ – , ; \\: ! ? . … ‘ ‚ “ „ ( ) \\[ \\] § @ * / \\&]"}
-    MoreInformation{"?"}
+    ExemplarCharactersPunctuation{"[\\- ‐‑ – , ; \\: ! ? . … ‘‚ “„ ( ) \\[ \\] § @ * / \\&]"}
     NumberElements{
-        default{"latn"}
         latn{
             miscPatterns{
-                approximately{"~{0}"}
                 atLeast{"{0}+"}
-                atMost{"≤{0}"}
                 range{"{0} – {1}"}
             }
             patterns{
                 accountingFormat{"#,##0.00 ¤;(#,##0.00 ¤)"}
                 accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
                 currencyFormat{"#,##0.00 ¤"}
-                decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0 %"}
-                scientificFormat{"#E0"}
             }
             patternsLong{
                 decimalFormat{
@@ -189,93 +175,59 @@ sk{
                 }
                 decimalFormat{
                     1000{
-                        few{"0 tis'.'"}
-                        many{"0 tis'.'"}
                         one{"0 tis'.'"}
                         other{"0 tis'.'"}
                     }
                     10000{
-                        few{"00 tis'.'"}
-                        many{"00 tis'.'"}
                         one{"00 tis'.'"}
                         other{"00 tis'.'"}
                     }
                     100000{
-                        few{"000 tis'.'"}
-                        many{"000 tis'.'"}
                         one{"000 tis'.'"}
                         other{"000 tis'.'"}
                     }
                     1000000{
-                        few{"0 mil'.'"}
-                        many{"0 mil'.'"}
                         one{"0 mil'.'"}
                         other{"0 mil'.'"}
                     }
                     10000000{
-                        few{"00 mil'.'"}
-                        many{"00 mil'.'"}
                         one{"00 mil'.'"}
                         other{"00 mil'.'"}
                     }
                     100000000{
-                        few{"000 mil'.'"}
-                        many{"000 mil'.'"}
                         one{"000 mil'.'"}
                         other{"000 mil'.'"}
                     }
                     1000000000{
-                        few{"0 mld'.'"}
-                        many{"0 mld'.'"}
                         one{"0 mld'.'"}
                         other{"0 mld'.'"}
                     }
                     10000000000{
-                        few{"00 mld'.'"}
-                        many{"00 mld'.'"}
                         one{"00 mld'.'"}
                         other{"00 mld'.'"}
                     }
                     100000000000{
-                        few{"000 mld'.'"}
-                        many{"000 mld'.'"}
                         one{"000 mld'.'"}
                         other{"000 mld'.'"}
                     }
                     1000000000000{
-                        few{"0 bil'.'"}
-                        many{"0 bil'.'"}
                         one{"0 bil'.'"}
                         other{"0 bil'.'"}
                     }
                     10000000000000{
-                        few{"00 bil'.'"}
-                        many{"00 bil'.'"}
                         one{"00 bil'.'"}
                         other{"00 bil'.'"}
                     }
                     100000000000000{
-                        few{"000 bil'.'"}
-                        many{"000 bil'.'"}
                         one{"000 bil'.'"}
                         other{"000 bil'.'"}
                     }
                 }
             }
             symbols{
-                approximatelySign{"~"}
                 decimal{","}
                 exponential{"e"}
                 group{" "}
-                infinity{"∞"}
-                list{";"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         minimalPairs{
@@ -302,87 +254,11 @@ sk{
                 other{"{0} dní"}
             }
         }
-        minimumGroupingDigits{"1"}
-        native{"latn"}
     }
     calendar{
-        buddhist{
-            eras{
-                abbreviated{
-                    "BE",
-                }
-                narrow{
-                    "BE",
-                }
-                wide{
-                    "BE",
-                }
-            }
-        }
         coptic{
-            eras{
-                abbreviated{
-                    "ERA0",
-                    "ERA1",
-                }
-                narrow{
-                    "ERA0",
-                    "ERA1",
-                }
-                wide{
-                    "ERA0",
-                    "ERA1",
-                }
-            }
             monthNames{
                 format{
-                    abbreviated{
-                        "tout",
-                        "baba",
-                        "hator",
-                        "kiahk",
-                        "toba",
-                        "amshir",
-                        "baramhat",
-                        "baramouda",
-                        "bashans",
-                        "ba’ouna",
-                        "abib",
-                        "mesra",
-                        "nasie",
-                    }
-                    wide{
-                        "tout",
-                        "baba",
-                        "hator",
-                        "kiahk",
-                        "toba",
-                        "amshir",
-                        "baramhat",
-                        "baramouda",
-                        "bashans",
-                        "ba’ouna",
-                        "abib",
-                        "mesra",
-                        "nasie",
-                    }
-                }
-                stand-alone{
-                    abbreviated{
-                        "tout",
-                        "baba",
-                        "hator",
-                        "kiahk",
-                        "toba",
-                        "amshir",
-                        "baramhat",
-                        "baramouda",
-                        "bashans",
-                        "ba’ouna",
-                        "abib",
-                        "mesra",
-                        "nasie",
-                    }
                     wide{
                         "tout",
                         "baba",
@@ -402,69 +278,8 @@ sk{
             }
         }
         ethiopic{
-            eras{
-                abbreviated{
-                    "ERA0",
-                    "ERA1",
-                }
-                narrow{
-                    "ERA0",
-                    "ERA1",
-                }
-                wide{
-                    "ERA0",
-                    "ERA1",
-                }
-            }
             monthNames{
                 format{
-                    abbreviated{
-                        "meskerem",
-                        "tikemet",
-                        "hidar",
-                        "tahesas",
-                        "tir",
-                        "yekatit",
-                        "megabit",
-                        "miyaza",
-                        "ginbot",
-                        "sene",
-                        "hamle",
-                        "nehase",
-                        "pagume",
-                    }
-                    wide{
-                        "meskerem",
-                        "tikemet",
-                        "hidar",
-                        "tahesas",
-                        "tir",
-                        "yekatit",
-                        "megabit",
-                        "miyaza",
-                        "ginbot",
-                        "sene",
-                        "hamle",
-                        "nehase",
-                        "pagume",
-                    }
-                }
-                stand-alone{
-                    abbreviated{
-                        "meskerem",
-                        "tikemet",
-                        "hidar",
-                        "tahesas",
-                        "tir",
-                        "yekatit",
-                        "megabit",
-                        "miyaza",
-                        "ginbot",
-                        "sene",
-                        "hamle",
-                        "nehase",
-                        "pagume",
-                    }
                     wide{
                         "meskerem",
                         "tikemet",
@@ -516,12 +331,6 @@ sk{
                 "GGGGGyMd",
             }
             availableFormats{
-                Bh{"h B"}
-                Bhm{"h:mm B"}
-                Bhms{"h:mm:ss B"}
-                E{"ccc"}
-                EBhm{"E h:mm B"}
-                EBhms{"E h:mm:ss B"}
                 EHm{"E H:mm"}
                 EHms{"E H:mm:ss"}
                 Ed{"E d."}
@@ -537,7 +346,6 @@ sk{
                 Hms{"H:mm:ss"}
                 M{"M."}
                 MEd{"E d. M."}
-                MMM{"LLL"}
                 MMMEd{"E d. M."}
                 MMMMEd{"E d. MMMM"}
                 MMMMd{"d. MMMM"}
@@ -548,7 +356,6 @@ sk{
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
                 mmss{"mm:ss"}
-                ms{"mm:ss"}
                 y{"y G"}
                 yyyy{"y G"}
                 yyyyM{"M/y GGGGG"}
@@ -650,7 +457,6 @@ sk{
                 d{
                     d{"d. – d."}
                 }
-                fallback{"{0} – {1}"}
                 h{
                     a{"h a – h a"}
                     h{"h – h a"}
@@ -707,18 +513,6 @@ sk{
             }
         }
         gregorian{
-            AmPmMarkers{
-                "AM",
-                "PM",
-            }
-            AmPmMarkersAbbr{
-                "AM",
-                "PM",
-            }
-            AmPmMarkersNarrow{
-                "AM",
-                "PM",
-            }
             DateTimePatterns{
                 "H:mm:ss zzzz",
                 "H:mm:ss z",
@@ -750,18 +544,7 @@ sk{
                 "yMd",
                 "yMd",
             }
-            appendItems{
-                Timezone{"{0} {1}"}
-            }
             availableFormats{
-                Bh{"h B"}
-                Bhm{"h:mm B"}
-                Bhms{"h:mm:ss B"}
-                E{"ccc"}
-                EBhm{"E h:mm B"}
-                EBhms{"E h:mm:ss B"}
-                EHm{"E HH:mm"}
-                EHms{"E HH:mm:ss"}
                 Ed{"E d."}
                 Ehm{"E h:mm a"}
                 Ehms{"E h:mm:ss a"}
@@ -778,7 +561,6 @@ sk{
                 Hmv{"H:mm v"}
                 M{"L."}
                 MEd{"E d. M."}
-                MMM{"LLL"}
                 MMMEd{"E d. M."}
                 MMMMEd{"E d. MMMM"}
                 MMMMW{
@@ -797,8 +579,6 @@ sk{
                 hmsv{"h:mm:ss a v"}
                 hmv{"h:mm a v"}
                 mmss{"mm:ss"}
-                ms{"mm:ss"}
-                y{"y"}
                 yM{"M/y"}
                 yMEd{"E d. M. y"}
                 yMMM{"M/y"}
@@ -827,24 +607,6 @@ sk{
                         "pi",
                         "so",
                     }
-                    narrow{
-                        "n",
-                        "p",
-                        "u",
-                        "s",
-                        "š",
-                        "p",
-                        "s",
-                    }
-                    short{
-                        "ne",
-                        "po",
-                        "ut",
-                        "st",
-                        "št",
-                        "pi",
-                        "so",
-                    }
                     wide{
                         "nedeľa",
                         "pondelok",
@@ -856,15 +618,6 @@ sk{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "ne",
-                        "po",
-                        "ut",
-                        "st",
-                        "št",
-                        "pi",
-                        "so",
-                    }
                     narrow{
                         "n",
                         "p",
@@ -873,24 +626,6 @@ sk{
                         "š",
                         "p",
                         "s",
-                    }
-                    short{
-                        "ne",
-                        "po",
-                        "ut",
-                        "st",
-                        "št",
-                        "pi",
-                        "so",
-                    }
-                    wide{
-                        "nedeľa",
-                        "pondelok",
-                        "utorok",
-                        "streda",
-                        "štvrtok",
-                        "piatok",
-                        "sobota",
                     }
                 }
             }
@@ -927,36 +662,28 @@ sk{
                 stand-alone{
                     abbreviated{
                         afternoon1{"popol."}
-                        am{"AM"}
                         evening1{"večer"}
                         midnight{"poln."}
                         morning1{"ráno"}
                         morning2{"dopol."}
                         night1{"noc"}
                         noon{"pol."}
-                        pm{"PM"}
                     }
                     narrow{
                         afternoon1{"pop."}
-                        am{"AM"}
                         evening1{"več."}
-                        midnight{"poln."}
                         morning1{"ráno"}
                         morning2{"dop."}
                         night1{"noc"}
-                        noon{"pol."}
-                        pm{"PM"}
                     }
                     wide{
                         afternoon1{"popoludnie"}
-                        am{"AM"}
                         evening1{"večer"}
                         midnight{"polnoc"}
                         morning1{"ráno"}
                         morning2{"dopoludnie"}
                         night1{"noc"}
                         noon{"poludnie"}
-                        pm{"PM"}
                     }
                 }
             }
@@ -1066,7 +793,6 @@ sk{
                 d{
                     d{"d. – d."}
                 }
-                fallback{"{0} – {1}"}
                 h{
                     a{"h a – h a"}
                     h{"h – h a"}
@@ -1137,20 +863,6 @@ sk{
                         "nov",
                         "dec",
                     }
-                    narrow{
-                        "j",
-                        "f",
-                        "m",
-                        "a",
-                        "m",
-                        "j",
-                        "j",
-                        "a",
-                        "s",
-                        "o",
-                        "n",
-                        "d",
-                    }
                     wide{
                         "januára",
                         "februára",
@@ -1167,20 +879,6 @@ sk{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "jan",
-                        "feb",
-                        "mar",
-                        "apr",
-                        "máj",
-                        "jún",
-                        "júl",
-                        "aug",
-                        "sep",
-                        "okt",
-                        "nov",
-                        "dec",
-                    }
                     narrow{
                         "j",
                         "f",
@@ -1219,32 +917,6 @@ sk{
                         "Q3",
                         "Q4",
                     }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                    }
-                    wide{
-                        "1. štvrťrok",
-                        "2. štvrťrok",
-                        "3. štvrťrok",
-                        "4. štvrťrok",
-                    }
-                }
-                stand-alone{
-                    abbreviated{
-                        "Q1",
-                        "Q2",
-                        "Q3",
-                        "Q4",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                    }
                     wide{
                         "1. štvrťrok",
                         "2. štvrťrok",
@@ -1255,69 +927,8 @@ sk{
             }
         }
         hebrew{
-            eras{
-                abbreviated{
-                    "AM",
-                }
-                narrow{
-                    "AM",
-                }
-                wide{
-                    "AM",
-                }
-            }
             monthNames{
                 format{
-                    abbreviated{
-                        "tišri",
-                        "chešvan",
-                        "kislev",
-                        "tevet",
-                        "ševat",
-                        "adar I",
-                        "adar",
-                        "nisan",
-                        "ijar",
-                        "sivan",
-                        "tamuz",
-                        "av",
-                        "elul",
-                        "adar II",
-                    }
-                    wide{
-                        "tišri",
-                        "chešvan",
-                        "kislev",
-                        "tevet",
-                        "ševat",
-                        "adar I",
-                        "adar",
-                        "nisan",
-                        "ijar",
-                        "sivan",
-                        "tamuz",
-                        "av",
-                        "elul",
-                        "adar II",
-                    }
-                }
-                stand-alone{
-                    abbreviated{
-                        "tišri",
-                        "chešvan",
-                        "kislev",
-                        "tevet",
-                        "ševat",
-                        "adar I",
-                        "adar",
-                        "nisan",
-                        "ijar",
-                        "sivan",
-                        "tamuz",
-                        "av",
-                        "elul",
-                        "adar II",
-                    }
                     wide{
                         "tišri",
                         "chešvan",
@@ -1342,59 +953,9 @@ sk{
                 abbreviated{
                     "Šaka",
                 }
-                narrow{
-                    "Šaka",
-                }
-                wide{
-                    "Šaka",
-                }
             }
             monthNames{
                 format{
-                    abbreviated{
-                        "čaitra",
-                        "vaišákh",
-                        "džjéšth",
-                        "ášádh",
-                        "šrávana",
-                        "bhádrapad",
-                        "ášvin",
-                        "kártik",
-                        "agrahajana",
-                        "pauš",
-                        "mágh",
-                        "phálgun",
-                    }
-                    wide{
-                        "čaitra",
-                        "vaišákh",
-                        "džjéšth",
-                        "ášádh",
-                        "šrávana",
-                        "bhádrapad",
-                        "ášvin",
-                        "kártik",
-                        "agrahajana",
-                        "pauš",
-                        "mágh",
-                        "phálgun",
-                    }
-                }
-                stand-alone{
-                    abbreviated{
-                        "čaitra",
-                        "vaišákh",
-                        "džjéšth",
-                        "ášádh",
-                        "šrávana",
-                        "bhádrapad",
-                        "ášvin",
-                        "kártik",
-                        "agrahajana",
-                        "pauš",
-                        "mágh",
-                        "phálgun",
-                    }
                     wide{
                         "čaitra",
                         "vaišákh",
@@ -1413,49 +974,8 @@ sk{
             }
         }
         islamic{
-            eras{
-                abbreviated{
-                    "AH",
-                }
-                narrow{
-                    "AH",
-                }
-                wide{
-                    "AH",
-                }
-            }
             monthNames{
                 format{
-                    abbreviated{
-                        "muh.",
-                        "saf.",
-                        "rab. I",
-                        "rab. II",
-                        "džum. I",
-                        "džum. II",
-                        "rad.",
-                        "ša.",
-                        "ram.",
-                        "šau.",
-                        "dhú l-k.",
-                        "dhú l-h.",
-                    }
-                    wide{
-                        "al-muharram",
-                        "safar",
-                        "rabí´ al-avval",
-                        "rabí´ath-thání",
-                        "džumádá l-úlá",
-                        "džumádá l-áchira",
-                        "radžab",
-                        "ša´ bán",
-                        "ramadán",
-                        "šauvál",
-                        "dhú l-ka´ da",
-                        "dhú l-hidždža",
-                    }
-                }
-                stand-alone{
                     abbreviated{
                         "muh.",
                         "saf.",
@@ -1488,63 +1008,8 @@ sk{
             }
         }
         persian{
-            eras{
-                abbreviated{
-                    "AP",
-                }
-                narrow{
-                    "AP",
-                }
-                wide{
-                    "AP",
-                }
-            }
             monthNames{
                 format{
-                    abbreviated{
-                        "farvardin",
-                        "ordibehešt",
-                        "chordád",
-                        "tír",
-                        "mordád",
-                        "šahrívar",
-                        "mehr",
-                        "ábán",
-                        "ázar",
-                        "dei",
-                        "bahman",
-                        "esfand",
-                    }
-                    wide{
-                        "farvardin",
-                        "ordibehešt",
-                        "chordád",
-                        "tír",
-                        "mordád",
-                        "šahrívar",
-                        "mehr",
-                        "ábán",
-                        "ázar",
-                        "dei",
-                        "bahman",
-                        "esfand",
-                    }
-                }
-                stand-alone{
-                    abbreviated{
-                        "farvardin",
-                        "ordibehešt",
-                        "chordád",
-                        "tír",
-                        "mordád",
-                        "šahrívar",
-                        "mehr",
-                        "ábán",
-                        "ázar",
-                        "dei",
-                        "bahman",
-                        "esfand",
-                    }
                     wide{
                         "farvardin",
                         "ordibehešt",
@@ -1565,14 +1030,6 @@ sk{
         roc{
             eras{
                 abbreviated{
-                    "pred ROC",
-                    "ROC",
-                }
-                narrow{
-                    "pred ROC",
-                    "ROC",
-                }
-                wide{
                     "pred ROC",
                     "ROC",
                 }
@@ -1620,7 +1077,6 @@ sk{
         historic_scripts{"historické písma"}
         ideographic_desc_characters{"ideografické popisné znaky"}
         japanese_kana{"japonská kana"}
-        kanbun{"kanbun"}
         kanji{"kandži"}
         keycap{"kláves"}
         leftwards_arrows{"šípky doľava"}
@@ -1720,39 +1176,8 @@ sk{
                 }
             }
         }
-        day-narrow{
-            dn{"d."}
-            relative{
-                "-1"{"včera"}
-                "-2"{"predvčerom"}
-                "0"{"dnes"}
-                "1"{"zajtra"}
-                "2"{"pozajtra"}
-            }
-            relativeTime{
-                future{
-                    few{"o {0} d."}
-                    many{"o {0} d."}
-                    one{"o {0} d."}
-                    other{"o {0} d."}
-                }
-                past{
-                    few{"pred {0} d."}
-                    many{"pred {0} d."}
-                    one{"pred {0} d."}
-                    other{"pred {0} d."}
-                }
-            }
-        }
         day-short{
             dn{"d."}
-            relative{
-                "-1"{"včera"}
-                "-2"{"predvčerom"}
-                "0"{"dnes"}
-                "1"{"zajtra"}
-                "2"{"pozajtra"}
-            }
             relativeTime{
                 future{
                     few{"o {0} d."}
@@ -1771,26 +1196,14 @@ sk{
         dayOfYear{
             dn{"deň roka"}
         }
-        dayOfYear-narrow{
-            dn{"deň r."}
-        }
         dayOfYear-short{
             dn{"deň r."}
         }
         dayperiod{
             dn{"AM/PM"}
         }
-        dayperiod-narrow{
-            dn{"AM/PM"}
-        }
-        dayperiod-short{
-            dn{"AM/PM"}
-        }
         era{
             dn{"letopočet"}
-        }
-        era-narrow{
-            dn{"letop."}
         }
         era-short{
             dn{"letop."}
@@ -1813,27 +1226,6 @@ sk{
                     many{"pred {0} piatka"}
                     one{"pred {0} piatkom"}
                     other{"pred {0} piatkami"}
-                }
-            }
-        }
-        fri-narrow{
-            relative{
-                "-1"{"minulý pi."}
-                "0"{"tento pi."}
-                "1"{"budúci pi."}
-            }
-            relativeTime{
-                future{
-                    few{"o {0} pi."}
-                    many{"o {0} pi."}
-                    one{"o {0} pi."}
-                    other{"o {0} pi."}
-                }
-                past{
-                    few{"pred {0} pi."}
-                    many{"pred {0} pi."}
-                    one{"pred {0} pi."}
-                    other{"pred {0} pi."}
                 }
             }
         }
@@ -1878,23 +1270,6 @@ sk{
                 }
             }
         }
-        hour-narrow{
-            dn{"h"}
-            relativeTime{
-                future{
-                    few{"o {0} h"}
-                    many{"o {0} h"}
-                    one{"o {0} h"}
-                    other{"o {0} h"}
-                }
-                past{
-                    few{"pred {0} h"}
-                    many{"pred {0} h"}
-                    one{"pred {0} h"}
-                    other{"pred {0} h"}
-                }
-            }
-        }
         hour-short{
             dn{"h"}
             relativeTime{
@@ -1929,23 +1304,6 @@ sk{
                     many{"pred {0} minúty"}
                     one{"pred {0} minútou"}
                     other{"pred {0} minútami"}
-                }
-            }
-        }
-        minute-narrow{
-            dn{"min"}
-            relativeTime{
-                future{
-                    few{"o {0} min"}
-                    many{"o {0} min"}
-                    one{"o {0} min"}
-                    other{"o {0} min"}
-                }
-                past{
-                    few{"pred {0} min"}
-                    many{"pred {0} min"}
-                    one{"pred {0} min"}
-                    other{"pred {0} min"}
                 }
             }
         }
@@ -2051,28 +1409,6 @@ sk{
                 }
             }
         }
-        month-narrow{
-            dn{"mes."}
-            relative{
-                "-1"{"minulý mes."}
-                "0"{"tento mes."}
-                "1"{"budúci mes."}
-            }
-            relativeTime{
-                future{
-                    few{"o {0} mes."}
-                    many{"o {0} mes."}
-                    one{"o {0} mes."}
-                    other{"o {0} mes."}
-                }
-                past{
-                    few{"pred {0} mes."}
-                    many{"pred {0} mes."}
-                    one{"pred {0} mes."}
-                    other{"pred {0} mes."}
-                }
-            }
-        }
         month-short{
             dn{"mes."}
             relative{
@@ -2114,28 +1450,6 @@ sk{
                     many{"pred {0} štvrťroka"}
                     one{"pred {0} štvrťrokom"}
                     other{"pred {0} štvrťrokmi"}
-                }
-            }
-        }
-        quarter-narrow{
-            dn{"Q"}
-            relative{
-                "-1"{"minulý štvrťr."}
-                "0"{"tento štvrťr."}
-                "1"{"budúci štvrťr."}
-            }
-            relativeTime{
-                future{
-                    few{"o {0} štvrťr."}
-                    many{"o {0} štvrťr."}
-                    one{"o {0} štvrťr."}
-                    other{"o {0} štvrťr."}
-                }
-                past{
-                    few{"pred {0} štvrťr."}
-                    many{"pred {0} štvrťr."}
-                    one{"pred {0} štvrťr."}
-                    other{"pred {0} štvrťr."}
                 }
             }
         }
@@ -2182,27 +1496,6 @@ sk{
                 }
             }
         }
-        sat-narrow{
-            relative{
-                "-1"{"minulú so."}
-                "0"{"túto so."}
-                "1"{"budúcu so."}
-            }
-            relativeTime{
-                future{
-                    few{"o {0} so."}
-                    many{"o {0} so."}
-                    one{"o {0} so."}
-                    other{"o {0} so."}
-                }
-                past{
-                    few{"pred {0} so."}
-                    many{"pred {0} so."}
-                    one{"pred {0} so."}
-                    other{"pred {0} so."}
-                }
-            }
-        }
         sat-short{
             relative{
                 "-1"{"minulú so."}
@@ -2241,23 +1534,6 @@ sk{
                     many{"pred {0} sekundy"}
                     one{"pred {0} sekundou"}
                     other{"pred {0} sekundami"}
-                }
-            }
-        }
-        second-narrow{
-            dn{"s"}
-            relativeTime{
-                future{
-                    few{"o {0} s"}
-                    many{"o {0} s"}
-                    one{"o {0} s"}
-                    other{"o {0} s"}
-                }
-                past{
-                    few{"pred {0} s"}
-                    many{"pred {0} s"}
-                    one{"pred {0} s"}
-                    other{"pred {0} s"}
                 }
             }
         }
@@ -2359,27 +1635,6 @@ sk{
                     many{"pred {0} štvrtka"}
                     one{"pred {0} štvrtkom"}
                     other{"pred {0} štvrtkami"}
-                }
-            }
-        }
-        thu-narrow{
-            relative{
-                "-1"{"minulý št."}
-                "0"{"tento št."}
-                "1"{"budúci št."}
-            }
-            relativeTime{
-                future{
-                    few{"o {0} št."}
-                    many{"o {0} št."}
-                    one{"o {0} št."}
-                    other{"o {0} št."}
-                }
-                past{
-                    few{"pred {0} št."}
-                    many{"pred {0} št."}
-                    one{"pred {0} št."}
-                    other{"pred {0} št."}
                 }
             }
         }
@@ -2553,29 +1808,6 @@ sk{
                 }
             }
         }
-        week-narrow{
-            dn{"týž."}
-            relative{
-                "-1"{"minulý týž."}
-                "0"{"tento týž."}
-                "1"{"budúci týž."}
-            }
-            relativePeriod{"týž. dňa {0}"}
-            relativeTime{
-                future{
-                    few{"o {0} týž."}
-                    many{"o {0} týž."}
-                    one{"o {0} týž."}
-                    other{"o {0} týž."}
-                }
-                past{
-                    few{"pred {0} týž."}
-                    many{"pred {0} týž."}
-                    one{"pred {0} týž."}
-                    other{"pred {0} týž."}
-                }
-            }
-        }
         week-short{
             dn{"týž."}
             relative{
@@ -2602,26 +1834,17 @@ sk{
         weekOfMonth{
             dn{"týždeň mesiaca"}
         }
-        weekOfMonth-narrow{
-            dn{"týž. mes."}
-        }
         weekOfMonth-short{
             dn{"týž. mes."}
         }
         weekday{
             dn{"deň týždňa"}
         }
-        weekday-narrow{
-            dn{"deň týž."}
-        }
         weekday-short{
             dn{"deň týž."}
         }
         weekdayOfMonth{
             dn{"deň týždňa v mesiaci"}
-        }
-        weekdayOfMonth-narrow{
-            dn{"d. týž. v mes."}
         }
         weekdayOfMonth-short{
             dn{"d. týž. v mes."}
@@ -2648,35 +1871,8 @@ sk{
                 }
             }
         }
-        year-narrow{
-            dn{"r."}
-            relative{
-                "-1"{"minulý rok"}
-                "0"{"tento rok"}
-                "1"{"budúci rok"}
-            }
-            relativeTime{
-                future{
-                    few{"o {0} r."}
-                    many{"o {0} r."}
-                    one{"o {0} r."}
-                    other{"o {0} r."}
-                }
-                past{
-                    few{"pred {0} r."}
-                    many{"pred {0} r."}
-                    one{"pred {0} r."}
-                    other{"pred {0} r."}
-                }
-            }
-        }
         year-short{
             dn{"r."}
-            relative{
-                "-1"{"minulý rok"}
-                "0"{"tento rok"}
-                "1"{"budúci rok"}
-            }
             relativeTime{
                 future{
                     few{"o {0} r."}
@@ -2695,9 +1891,6 @@ sk{
         zone{
             dn{"časové pásmo"}
         }
-        zone-narrow{
-            dn{"pásmo"}
-        }
         zone-short{
             dn{"pásmo"}
         }
@@ -2706,56 +1899,14 @@ sk{
         or{
             2{"{0} alebo {1}"}
             end{"{0} alebo {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        or-narrow{
-            2{"{0} alebo {1}"}
-            end{"{0} alebo {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        or-short{
-            2{"{0} alebo {1}"}
-            end{"{0} alebo {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
         standard{
             2{"{0} a {1}"}
             end{"{0} a {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        standard-narrow{
-            2{"{0} a {1}"}
-            end{"{0} a {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        standard-short{
-            2{"{0} a {1}"}
-            end{"{0} a {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        unit{
-            2{"{0}, {1}"}
-            end{"{0}, {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        unit-narrow{
-            2{"{0}, {1}"}
-            end{"{0}, {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
         unit-short{
             2{"{0}, {1}"}
             end{"{0}, {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
     }
     measurementSystemNames{
@@ -2766,32 +1917,32 @@ sk{
     parse{
         date{
             lenient{
-                "[\\--/]",
-                "[\\:∶]",
+                "[\\- ‑ . /]",
+                "[\\: ∶]",
             }
         }
         general{
             lenient{
-                "[.․。︒﹒．｡]",
-                "['ʼ՚᾽᾿’＇]",
-                "[%٪﹪％]",
-                "[؉‰]",
-                "[\$﹩＄$]",
-                "[£₤]",
+                "[.．․﹒ 。｡︒]",
+                "['＇’ ՚ ᾽᾿ ʼ]",
+                "[%％﹪ ٪]",
+                "[‰ ؉]",
+                "[\$＄﹩]",
+                "[£ ₤]",
                 "[¥￥]",
                 "[₩￦]",
-                "[₨₹{Rp}{Rs}]",
+                "[₹ ₨ {Rp} {Rs}]",
             }
         }
         number{
             lenient{
-                "[\\-‒⁻₋−➖﹣－]",
-                "[,،٫、︐︑﹐﹑，､]",
-                "[+⁺₊➕﬩﹢＋]",
+                "[\\-－﹣ ‑ ‒ −⁻₋ ➖]",
+                "[,，﹐︐ ، ٫ 、﹑､︑]",
+                "[+＋﬩﹢⁺₊ ➕]",
             }
             stricter{
-                "[,٫︐﹐，]",
-                "[.․﹒．｡]",
+                "[,，﹐︐ ٫]",
+                "[.．․﹒ ｡]",
             }
         }
     }

@@ -30,7 +30,7 @@
 #
 # There are two copies of this file in the source repository,
 #   [ICU4C]   source/test/testdata/rbbitst.txt
-#   [ICU4J]   main/tests/core/src/com/ibm/icu/dev/test/rbbi/rbbitst.txt
+#   [ICU4J]   main/core/src/test/resources/com/ibm/icu/dev/test/rbbi/rbbitst.txt
 #
 # ICU4C's copy is the primary one.  If any changes are made to ICU4J's copy, make sure they
 #  are merged back into ICU4C's copy of the file, lest they get overwritten later.
@@ -1586,7 +1586,7 @@ Bangkok)•</data>
 <data>•Can't<200> •have<200> •breaks<200> •in<200> •xx<200>:•yy<200> •or<200> •struct.field<200> \
 •for<200> •CS<200>-•types<200>.•</data>
 <data>•\uFF92\uFF76\uFF9E<400> •</data>
-<data>•xx@yy<200>.•</data>
+<data>•xx<200>@•yy<200>.•</data>
 
 <locale en_US_POSIX>
 <word>
@@ -1594,21 +1594,21 @@ Bangkok)•</data>
 •for<200> •CS<200>-•types<200>.•</data>
 <data>•\u06c9<200>\uc799\ufffa•</data>
 <data>•\uFF92\uFF76\uFF9E<400> •</data>
-<data>•xx@yy<200>.•</data>
+<data>•xx<200>@•yy<200>.•</data>
 
 <locale fi>
 <word>
 <data>•Can't<200> •have<200> •breaks<200> •in<200> •xx:yy<200> •or<200> •struct.field<200> \
 •for<200> •CS<200>-•types<200>.•</data>
 <data>•\uFF92\uFF76\uFF9E<400> •</data>
-<data>•xx@yy<200>.•</data>
+<data>•xx<200>@•yy<200>.•</data>
 
 <locale sv>
 <word>
 <data>•Can't<200> •have<200> •breaks<200> •in<200> •xx:yy<200> •or<200> •struct.field<200> \
 •for<200> •CS<200>-•types<200>.•</data>
 <data>•\uFF92\uFF76\uFF9E<400> •</data>
-<data>•xx@yy<200>.•</data>
+<data>•xx<200>@•yy<200>.•</data>
 
 
 # UBreakIteratorType UBRK_CHARACTER, Locale "th"
@@ -2195,3 +2195,24 @@ Bangkok)•</data>
 [y] [a] [b] [c] [d] {600};
 </rules>
 <data>•ab<100>c•d•ab<200>e•f•ab<300>e•g•abch<400>xab<500>c•d•yabcd<600></data>
+
+#
+# Examples for line breaking at orthographic syllable boundaries
+# From Unicode document L2/22-080R
+#
+
+<locale en>
+<line>
+<data>•\U00011F26•\U00011F02\U00011F2D•\U00011F26\U00011F42\U00011F26•\U00011F31\U00011F41•</data>
+<data>•\u1BD7\u1BEC•\u1BD2\u1BEA\u1BC9\u1BF3•\u1BC2\u1BE7\u1BC9\u1BF3•</data>
+<data>•\u1B18•\u1B27\u1B44\u200C\u1B2B\u1B38•\u1B31\u1B44\u1B1D\u1B36•</data>
+
+# Line breaking around quotation marks (LB 15a and LB 15b).
+<locale en>
+<line>
+<data>•Some •« basic » •quoting•</data>
+<data>•Some •»German« •quoting•</data>
+<data>•( « bracketed » ) •quoting•</data>
+<data>•« « Nesting » »•</data>
+<data>•« Complex »« chaining » •</data>
+<data>•« .618 »•</data>  # Interaction with the ICU tailoring to break before such numbers.

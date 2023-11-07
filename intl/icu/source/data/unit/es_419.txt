@@ -98,11 +98,6 @@ es_419{
         }
     }
     unitsNarrow{
-        acceleration{
-            g-force{
-                dnam{"G"}
-            }
-        }
         area{
             square-meter{
                 dnam{"metros²"}
@@ -121,21 +116,12 @@ es_419{
                 dnam{"d."}
                 one{"{0}d."}
                 other{"{0}dd."}
-                per{"{0}/d."}
-            }
-            minute{
-                one{"{0}m"}
-                other{"{0}m"}
             }
             month{
                 dnam{"m."}
                 one{"{0}m."}
                 other{"{0}mm."}
                 per{"{0}/m."}
-            }
-            quarter{
-                one{"{0}/trim"}
-                other{"{0}/trim"}
             }
             week{
                 dnam{"sem."}
@@ -150,6 +136,10 @@ es_419{
             }
         }
         energy{
+            calorie{
+                one{"{0} cal"}
+                other{"{0}cal"}
+            }
             therm-us{
                 one{"{0}thm EE.UU."}
                 other{"{0}thm EE.UU."}
@@ -161,10 +151,13 @@ es_419{
                 other{"{0} kWh/100km"}
             }
         }
-        length{
-            astronomical-unit{
-                dnam{"ua"}
+        graphics{
+            dot{
+                one{"{0}p"}
+                other{"{0}p"}
             }
+        }
+        length{
             light-year{
                 dnam{"aa. l."}
                 one{"{0}a. l."}
@@ -175,7 +168,6 @@ es_419{
                 other{"{0}mi esc."}
             }
             nautical-mile{
-                dnam{"nmi"}
                 one{"{0}nmi"}
                 other{"{0}nmi"}
             }
@@ -184,25 +176,40 @@ es_419{
             }
         }
         mass{
+            ounce{
+                one{"{0} oz"}
+                other{"{0}oz"}
+            }
             ounce-troy{
-                dnam{"ozt"}
                 one{"{0}ozt"}
                 other{"{0}ozt"}
             }
+            pound{
+                one{"{0} lb"}
+                other{"{0}lb"}
+            }
             ton{
-                dnam{"ton"}
                 one{"{0}ton"}
                 other{"{0}ton"}
             }
         }
         power{
             horsepower{
-                dnam{"hp"}
                 one{"{0}hp"}
                 other{"{0}hp"}
             }
         }
+        speed{
+            beaufort{
+                one{"B {0}"}
+                other{"B {0}"}
+            }
+        }
         volume{
+            acre-foot{
+                one{"{0} ac ft"}
+                other{"{0}ac ft"}
+            }
             barrel{
                 one{"{0}bbl"}
                 other{"{0}bbl"}
@@ -216,11 +223,9 @@ es_419{
                 one{"{0}pt"}
                 other{"{0}pt"}
             }
-            tablespoon{
-                dnam{"cdas."}
-            }
-            teaspoon{
-                dnam{"cdtas."}
+            quart-imperial{
+                one{"{0} qt imp."}
+                other{"{0}qt imp"}
             }
         }
     }
@@ -241,6 +246,12 @@ es_419{
             mile-per-gallon-imperial{
                 one{"{0} mpg imp."}
                 other{"{0} mpg imp."}
+            }
+        }
+        digital{
+            byte{
+                one{"{0} byte"}
+                other{"{0} byte"}
             }
         }
         duration{
@@ -313,11 +324,6 @@ es_419{
                 dnam{"ton"}
                 one{"{0} ton"}
                 other{"{0} ton"}
-            }
-            tonne{
-                dnam{"t"}
-                one{"{0} t"}
-                other{"{0} t"}
             }
         }
         power{

@@ -3,29 +3,11 @@
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 cv{
     units{
-        compound{
-            per{"{0}/{1}"}
-            times{"{0}⋅{1}"}
-        }
         coordinate{
-            dnam{"енӗ"}
             east{"{0} хӗвелтухӑҫ тӑрӑхӗ"}
             north{"{0} ҫурҫӗр тӑрӑхӗ"}
             south{"{0} кӑнтӑр тӑрӑхӗ"}
             west{"{0} анăҫ тӑрӑхӗ"}
-        }
-    }
-    unitsNarrow{
-        compound{
-            per{"{0}/{1}"}
-            times{"{0}⋅{1}"}
-        }
-        coordinate{
-            dnam{"енӗ"}
-            east{"{0} х. т."}
-            north{"{0} ҫ. т."}
-            south{"{0} к. т."}
-            west{"{0} а. т."}
         }
     }
     unitsShort{

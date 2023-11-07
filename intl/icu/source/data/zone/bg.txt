@@ -1907,11 +1907,8 @@ bg{
         "meta:Yukon"{
             ls{"Юкон"}
         }
-        fallbackFormat{"{1} ({0})"}
         gmtFormat{"Гринуич{0}"}
         gmtZeroFormat{"Гринуич"}
-        hourFormat{"+HH:mm;-HH:mm"}
-        regionFormat{"{0}"}
         regionFormatDaylight{"{0} – лятно часово време"}
         regionFormatStandard{"{0} – стандартно време"}
     }

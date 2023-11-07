@@ -32,16 +32,6 @@ es_DO{
                 other{"{0}m."}
             }
         }
-        electric{
-            volt{
-                dnam{"voltios"}
-            }
-        }
-        power{
-            watt{
-                dnam{"vatios"}
-            }
-        }
     }
     unitsShort{
         duration{

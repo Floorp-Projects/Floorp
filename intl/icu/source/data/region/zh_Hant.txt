@@ -299,6 +299,9 @@ zh_Hant{
         ZW{"辛巴威"}
         ZZ{"未知區域"}
     }
+    Countries%chagos{
+        IO{"查哥斯群島"}
+    }
     Countries%short{
         HK{"香港"}
         MO{"澳門"}

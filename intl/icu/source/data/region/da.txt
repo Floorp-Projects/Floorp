@@ -298,6 +298,9 @@ da{
         ZW{"Zimbabwe"}
         ZZ{"Ukendt område"}
     }
+    Countries%chagos{
+        IO{"Chagosøerne"}
+    }
     Countries%short{
         HK{"Hongkong"}
         MO{"Macao"}

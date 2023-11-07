@@ -47,6 +47,7 @@ ha{
         bem{"Bemba"}
         bez{"Bena"}
         bg{"Bulgariyanci"}
+        bgc{"Haryanvi"}
         bho{"Bhojpuri"}
         bi{"Bislama"}
         bin{"Bini"}
@@ -327,6 +328,7 @@ ha{
         pt_BR{"Harshen Potugis na Birazil"}
         pt_PT{"Potugis Ƙasashen Turai"}
         qu{"Quechua"}
+        raj{"Rajasthani"}
         rap{"Rapanui"}
         rar{"Rarotongan"}
         rhg{"Harshen Rohingya"}
@@ -483,6 +485,7 @@ ha{
         Hebr{"Ibrananci"}
         Hira{"Tsarin Rubutun Hiragana"}
         Hrkt{"kalaman Jafananci"}
+        Jamo{"Jamo"}
         Jpan{"Jafanis"}
         Kana{"Tsarin Rubutun Katakana"}
         Khmr{"Yaren Khmer"}
@@ -609,10 +612,10 @@ ha{
     }
     characterLabelPattern{
         all{"{0} — duk"}
-        category-list{"{0}: {1}"}
         compatibility{"{0} — jituwa"}
         enclosed{"{0} — a kewaye"}
         extended{"{0} — faɗaɗaɗɗe"}
+        facing-left{"{0} kallon gefe"}
         historic{"{0} — na tarihi"}
         miscellaneous{"{0} — daban-daban"}
         other{"{0} — wani dabam"}

@@ -257,9 +257,7 @@ zh_Hans_MO{
                 "GyyMd",
             }
             availableFormats{
-                MEd{"M-dE"}
                 MMM{"M月"}
-                Md{"M-d"}
             }
         }
     }

@@ -83,6 +83,7 @@ cs{
         bfd{"bafut"}
         bfq{"badagština"}
         bg{"bulharština"}
+        bgc{"harijánština"}
         bgn{"balúčština (západní)"}
         bho{"bhódžpurština"}
         bi{"bislamština"}
@@ -151,7 +152,6 @@ cs{
         dar{"dargština"}
         dav{"taita"}
         de{"němčina"}
-        de_AT{"němčina (Rakousko)"}
         de_CH{"němčina standardní (Švýcarsko)"}
         del{"delawarština"}
         den{"slejvština (athabaský jazyk)"}
@@ -177,16 +177,12 @@ cs{
         el{"řečtina"}
         elx{"elamitština"}
         en{"angličtina"}
-        en_AU{"angličtina (Austrálie)"}
-        en_CA{"angličtina (Kanada)"}
         en_GB{"angličtina (Velká Británie)"}
         en_US{"angličtina (USA)"}
         enm{"angličtina (středověká)"}
         eo{"esperanto"}
         es{"španělština"}
-        es_419{"španělština (Latinská Amerika)"}
         es_ES{"španělština (Evropa)"}
-        es_MX{"španělština (Mexiko)"}
         esu{"jupikština (středoaljašská)"}
         et{"estonština"}
         eu{"baskičtina"}
@@ -204,8 +200,6 @@ cs{
         fo{"faerština"}
         fon{"fonština"}
         fr{"francouzština"}
-        fr_CA{"francouzština (Kanada)"}
-        fr_CH{"francouzština (Švýcarsko)"}
         frc{"francouzština (cajunská)"}
         frm{"francouzština (středověká)"}
         fro{"francouzština (stará)"}
@@ -249,7 +243,6 @@ cs{
         hax{"haidština (jižní)"}
         he{"hebrejština"}
         hi{"hindština"}
-        hi_Latn{"hindština (latinka)"}
         hif{"hindština (Fidži)"}
         hil{"hiligajnonština"}
         hit{"chetitština"}
@@ -488,7 +481,6 @@ cs{
         pro{"provensálština"}
         ps{"paštština"}
         pt{"portugalština"}
-        pt_BR{"portugalština (Brazílie)"}
         pt_PT{"portugalština (Evropa)"}
         qu{"kečuánština"}
         quc{"kičé"}
@@ -668,7 +660,6 @@ cs{
         zgh{"tamazight (standardní marocký)"}
         zh{"čínština"}
         zh_Hans{"čínština (zjednodušená)"}
-        zh_Hant{"čínština (tradiční)"}
         zu{"zuluština"}
         zun{"zunijština"}
         zxx{"žádný jazykový obsah"}
@@ -679,10 +670,12 @@ cs{
         zh_Hant{"standardní čínština (tradiční)"}
     }
     Languages%menu{
+        ckb{"kurdština (centrální)"}
         yue{"čínština (kantonština)"}
         zh{"standardní čínština"}
     }
     Languages%short{
+        az{"azerština"}
         en_GB{"angličtina (VB)"}
     }
     Languages%variant{
@@ -729,6 +722,7 @@ cs{
         Geok{"gruzínské chutsuri"}
         Geor{"gruzínské"}
         Glag{"hlaholice"}
+        Gong{"gundžala gondí"}
         Goth{"gotické"}
         Gran{"grantha"}
         Grek{"řecké"}
@@ -744,6 +738,7 @@ cs{
         Hira{"hiragana"}
         Hluw{"anatolské hieroglyfy"}
         Hmng{"hmongské"}
+        Hmnp{"nyiakeng puachue hmong"}
         Hrkt{"japonské slabičné"}
         Hung{"staromaďarské"}
         Inds{"harappské"}
@@ -853,6 +848,7 @@ cs{
         Xpeo{"staroperské klínové písmo"}
         Xsux{"sumero-akkadské klínové písmo"}
         Yiii{"yi"}
+        Zinh{"zděděné"}
         Zmth{"matematický zápis"}
         Zsye{"emodži"}
         Zsym{"symboly"}
@@ -878,9 +874,9 @@ cs{
             gregorian{"Gregoriánský kalendář"}
             hebrew{"Hebrejský kalendář"}
             indian{"Indický národní kalendář"}
-            islamic{"Islámský kalendář"}
-            islamic-civil{"Muslimský občanský kalendář"}
-            islamic-umalqura{"Muslimský kalendář (Umm al-Qura)"}
+            islamic{"Kalendář podle hidžry"}
+            islamic-civil{"Kalendář podle hidžry (občanský)"}
+            islamic-umalqura{"Kalendář podle hidžry (Umm al-Qura)"}
             iso8601{"Kalendář ISO-8601"}
             japanese{"Japonský kalendář"}
             persian{"Perský kalendář"}
@@ -1023,10 +1019,11 @@ cs{
     }
     characterLabelPattern{
         all{"{0} – vše"}
-        category-list{"{0}: {1}"}
         compatibility{"{0} – kompatibilita"}
         enclosed{"{0} – uzavřené"}
         extended{"{0} – rozšířené"}
+        facing-left{"{0} – směr doleva"}
+        facing-right{"{0} – směr doprava"}
         historic{"{0} – historické"}
         miscellaneous{"{0} – různé"}
         other{"{0} – jiné"}
@@ -1044,10 +1041,5 @@ cs{
         language{"Jazyk: {0}"}
         script{"Písmo: {0}"}
         territory{"Region: {0}"}
-    }
-    localeDisplayPattern{
-        keyTypePattern{"{0}: {1}"}
-        pattern{"{0} ({1})"}
-        separator{"{0}, {1}"}
     }
 }

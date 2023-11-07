@@ -48,6 +48,7 @@ kok{
         bem{"बेम्बा"}
         bez{"बेना"}
         bg{"बल्गेरियन"}
+        bgc{"हरयाणवी"}
         bho{"भोजपुरी"}
         bi{"बिसलमा"}
         bin{"बिनी"}
@@ -205,7 +206,7 @@ kok{
         kkj{"काको"}
         kl{"कालाल्लिसुट"}
         kln{"कालेंजीन"}
-        km{"ख्मेर"}
+        km{"कंबोडिया"}
         kmb{"किंबुंडु"}
         kn{"कन्नड"}
         ko{"कोरियन"}
@@ -332,6 +333,7 @@ kok{
         pt_PT{"युरोपियन पोर्तुगीज"}
         qu{"क्वेच्वा"}
         quc{"किचे"}
+        raj{"राजस्थानी"}
         rap{"रापान्यु"}
         rar{"रारोटोंगान"}
         rhg{"रोहिंग्या"}
@@ -503,7 +505,7 @@ kok{
         Jamo{"जामो"}
         Jpan{"जपानी"}
         Kana{"कटाकाना"}
-        Khmr{"खमेर"}
+        Khmr{"कंबोडियन"}
         Knda{"कन्नड"}
         Kore{"कोरियन"}
         Laoo{"लाओ"}
@@ -630,10 +632,11 @@ kok{
     }
     characterLabelPattern{
         all{"{0} — सगळें"}
-        category-list{"{0}: {1}"}
         compatibility{"{0} — अनुरुपताय"}
         enclosed{"{0} — जोडलां"}
         extended{"{0} — विस्तारायलां"}
+        facing-left{"{0} दाव्यान पळोवप"}
+        facing-right{"{0} उजव्यान पळोवप"}
         historic{"{0} — इतिहासीक"}
         miscellaneous{"{0} — तरेकवार"}
         other{"{0} — हेर"}
@@ -648,10 +651,5 @@ kok{
         language{"भासः{0}"}
         script{"लिपी: {0}"}
         territory{"प्रांत: {0}"}
-    }
-    localeDisplayPattern{
-        keyTypePattern{"{0}: {1}"}
-        pattern{"{0} ({1})"}
-        separator{"{0}, {1}"}
     }
 }

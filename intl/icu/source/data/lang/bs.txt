@@ -70,6 +70,7 @@ bs{
         bez{"bena"}
         bfd{"bafut"}
         bg{"bugarski"}
+        bgc{"harianvi"}
         bgn{"zapadni belučki"}
         bho{"bojpuri"}
         bi{"bislama"}
@@ -306,7 +307,7 @@ bs{
         ln{"lingala"}
         lo{"laoski"}
         lol{"mongo"}
-        lou{"luizijana kreolski"}
+        lou{"luizijanski kreolski"}
         loz{"lozi"}
         lrc{"sjeverni luri"}
         lsm{"samia"}
@@ -372,7 +373,7 @@ bs{
         ng{"ndonga"}
         nia{"nias"}
         niu{"niue"}
-        nl{"holandski"}
+        nl{"nizozemski"}
         nl_BE{"flamanski"}
         nmg{"kvasio"}
         nn{"norveški (Nynorsk)"}
@@ -583,15 +584,14 @@ bs{
         zh_Hant{"kineski (tradicionalni standardni)"}
     }
     Languages%menu{
-        yue{"jue"}
+        yue{"kineski, kantonski"}
         zh{"kineski (standardni)"}
     }
     Languages%short{
         az{"azerski"}
-        en_GB{"engleski (UK)"}
-        en_US{"engleski (SAD)"}
     }
     Languages%variant{
+        hi_Latn{"hingleski"}
         ps{"pušto"}
     }
     Scripts{
@@ -817,9 +817,7 @@ bs{
             hebrew{"hebrejski kalendar"}
             indian{"indijski nacionalni kalendar"}
             islamic{"islamski kalendar"}
-            islamic-civil{"islamski civilni kalendar, tabelarni"}
-            islamic-rgsa{"islamski kalendar za Saudijsku Arabiju"}
-            islamic-tbla{"islamski kalendar, tabelarni, astronomska epoha"}
+            islamic-civil{"islamski građanski kalendar, tabelarni"}
             islamic-umalqura{"islamski kalendar, Umm al-Qura"}
             iso8601{"kalendar ISO-8601"}
             japanese{"japanski kalendar"}
@@ -1108,10 +1106,11 @@ bs{
     }
     characterLabelPattern{
         all{"{0} – sve"}
-        category-list{"{0}: {1}"}
         compatibility{"{0} – kompatibilno"}
         enclosed{"{0} – priloženo"}
         extended{"{0} – produženo"}
+        facing-left{"{0} naprijed"}
+        facing-right{"{0} nadesno"}
         historic{"{0} – staro"}
         miscellaneous{"{0} – razno"}
         other{"{0} – ostalo"}
@@ -1128,10 +1127,5 @@ bs{
         language{"Jezik: {0}"}
         script{"Pismo: {0}"}
         territory{"Regija: {0}"}
-    }
-    localeDisplayPattern{
-        keyTypePattern{"{0}: {1}"}
-        pattern{"{0} ({1})"}
-        separator{"{0}, {1}"}
     }
 }

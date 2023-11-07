@@ -91,7 +91,6 @@ bas{
         IE{"Ìrlând"}
         IL{"Isràɛ̂l"}
         IN{"Indìà"}
-        IO{"Bìtèk bi Ŋgisì i Tūyɛ Īndìà"}
         IQ{"Ìrâk"}
         IR{"Ìrâŋ"}
         IS{"Ìslandìà"}

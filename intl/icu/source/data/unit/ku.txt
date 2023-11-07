@@ -15,12 +15,10 @@ ku{
                 other{"{0} çirkeyên kevanî"}
             }
             degree{
-                dnam{"derece"}
                 one{"{0} derece"}
                 other{"{0} derece"}
             }
             radian{
-                dnam{"radyan"}
                 one{"{0} radyan"}
                 other{"{0} radyan"}
             }
@@ -30,13 +28,8 @@ ku{
                 other{"{0} dewr"}
             }
         }
-        compound{
-            per{"{0}/{1}"}
-            times{"{0}⋅{1}"}
-        }
         concentr{
             karat{
-                dnam{"qerat"}
                 one{"{0} qerat"}
                 other{"{0} qerat"}
             }
@@ -47,6 +40,7 @@ ku{
             }
         }
         coordinate{
+            dnam{"hêlên sereke"}
             east{"{0} rojhilat"}
             north{"{0} bakur"}
             south{"{0} başûr"}
@@ -54,25 +48,18 @@ ku{
         }
         duration{
             day{
-                dnam{"roj"}
-                one{"{0} roj"}
-                other{"{0} roj"}
                 per{"{0}/roj"}
             }
             hour{
-                dnam{"saet"}
                 one{"{0} saet"}
                 other{"{0} saet"}
-                per{"{0}/st"}
             }
             minute{
                 dnam{"deqîqe"}
                 one{"{0} deqîqe"}
                 other{"{0} deqîqe"}
-                per{"{0}/d"}
             }
             month{
-                dnam{"meh"}
                 one{"{0} meh"}
                 other{"{0} meh"}
                 per{"{0}/meh"}
@@ -81,7 +68,6 @@ ku{
                 dnam{"sanî"}
                 one{"{0} saniye"}
                 other{"{0} saniye"}
-                per{"{0}/s"}
             }
             week{
                 dnam{"hefte"}
@@ -89,25 +75,9 @@ ku{
                 other{"{0} hefte"}
                 per{"{0}/hefte"}
             }
-            year{
-                dnam{"sal"}
-                one{"{0} sal"}
-                other{"{0} sal"}
-            }
         }
     }
     unitsNarrow{
-        compound{
-            per{"{0}/{1}"}
-            times{"{0}⋅{1}"}
-        }
-        concentr{
-            percent{
-                dnam{"%"}
-                one{"%{0}"}
-                other{"%{0}"}
-            }
-        }
         consumption{
             liter-per-100-kilometer{
                 dnam{"l/100km"}
@@ -123,27 +93,22 @@ ku{
         }
         duration{
             day{
-                dnam{"roj"}
                 one{"{0}r"}
                 other{"{0}r"}
             }
             hour{
-                dnam{"saet"}
                 one{"{0}st"}
                 other{"{0}st"}
             }
             minute{
-                dnam{"d"}
                 one{"{0}d"}
                 other{"{0}d"}
             }
             month{
-                dnam{"meh"}
                 one{"{0}m"}
                 other{"{0}m"}
             }
             second{
-                dnam{"s"}
                 one{"{0}s"}
                 other{"{0}s"}
             }
@@ -162,23 +127,15 @@ ku{
         angle{
             arc-minute{
                 dnam{"xlk. kevanî"}
-                one{"{0}′"}
-                other{"{0}′"}
             }
             arc-second{
                 dnam{"çrk. kevanî"}
-                one{"{0}″"}
-                other{"{0}″"}
             }
             degree{
                 dnam{"derece"}
-                one{"{0}°"}
-                other{"{0}°"}
             }
             radian{
                 dnam{"radyan"}
-                one{"{0} rad"}
-                other{"{0} rad"}
             }
             revolution{
                 dnam{"dwr"}
@@ -208,6 +165,7 @@ ku{
             }
         }
         coordinate{
+            dnam{"hêl"}
             east{"{0} Rh"}
             north{"{0} Bk"}
             south{"{0} Bş"}
@@ -234,15 +192,9 @@ ku{
             }
             month{
                 dnam{"meh"}
-                one{"{0} m"}
-                other{"{0} m"}
-                per{"{0}/m"}
             }
             second{
                 dnam{"s"}
-                one{"{0} s"}
-                other{"{0} s"}
-                per{"{0}/s"}
             }
             week{
                 dnam{"hf"}
@@ -255,18 +207,6 @@ ku{
                 one{"{0} sal"}
                 other{"{0} sal"}
                 per{"{0}/sal"}
-            }
-        }
-        force{
-            newton{
-                one{"{0} N"}
-                other{"{0} N"}
-            }
-        }
-        torque{
-            newton-meter{
-                one{"{0} N⋅m"}
-                other{"{0} N⋅m"}
             }
         }
     }

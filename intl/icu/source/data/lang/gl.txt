@@ -60,6 +60,7 @@ gl{
         bem{"bemba"}
         bez{"bena"}
         bg{"búlgaro"}
+        bgc{"hariani"}
         bgn{"baluchi occidental"}
         bho{"bhojpuri"}
         bi{"bislama"}
@@ -219,7 +220,7 @@ gl{
         kj{"kuanyama"}
         kk{"kazako"}
         kkj{"kako"}
-        kl{"groenlandés"}
+        kl{"kalaallisut"}
         kln{"kalenjin"}
         km{"khmer"}
         kmb{"kimbundu"}
@@ -349,6 +350,7 @@ gl{
         pt_PT{"portugués de Portugal"}
         qu{"quechua"}
         quc{"quiché"}
+        raj{"rajasthani"}
         rap{"rapanui"}
         rar{"rarotongano"}
         rhg{"rohingya"}
@@ -570,10 +572,9 @@ gl{
             gregorian{"calendario gregoriano"}
             hebrew{"calendario hebreo"}
             indian{"Calendario nacional indio"}
-            islamic{"calendario islámico"}
-            islamic-civil{"calendario islámico (tabular, época civil)"}
-            islamic-rgsa{"Calendario islámico (Arabia Saudita,"}
-            islamic-umalqura{"calendario islámico (Umm al-Qura)"}
+            islamic{"calendario da héxira"}
+            islamic-civil{"calendario da héxira (tabular, época civil)"}
+            islamic-umalqura{"calendario da héxira (Umm al-Qura)"}
             iso8601{"calendario ISO-8601"}
             japanese{"calendario xaponés"}
             persian{"calendario persa"}
@@ -705,10 +706,11 @@ gl{
     }
     characterLabelPattern{
         all{"{0} (todo)"}
-        category-list{"{0}: {1}"}
         compatibility{"{0} (compatibilidade)"}
         enclosed{"{0} (incluíd.)"}
         extended{"{0} (ampliad.)"}
+        facing-left{"{0} cara á esquerda"}
+        facing-right{"{0} cara á dereita"}
         historic{"{0} (históric.)"}
         miscellaneous{"{0} (variad.)"}
         other{"{0} (outr.)"}
@@ -724,10 +726,5 @@ gl{
         language{"Idioma: {0}"}
         script{"Sistema de escritura: {0}"}
         territory{"Rexión: {0}"}
-    }
-    localeDisplayPattern{
-        keyTypePattern{"{0}: {1}"}
-        pattern{"{0} ({1})"}
-        separator{"{0}, {1}"}
     }
 }

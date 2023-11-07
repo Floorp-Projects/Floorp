@@ -14,7 +14,6 @@ nn{
         151{"Aust-Europa"}
         AE{"Dei sameinte arabiske emirata"}
         AT{"Austerrike"}
-        BY{"Kviterussland"}
         CC{"Kokosøyane"}
         CD{"Kongo-Kinshasa"}
         CF{"Den sentralafrikanske republikken"}
@@ -44,18 +43,20 @@ nn{
         TF{"Dei franske sørterritoria"}
         TL{"Aust-Timor"}
         UM{"USAs ytre småøyar"}
-        UN{"SN"}
+        UN{"Sameinte nasjonar"}
         VC{"St. Vincent og Grenadinane"}
         VG{"Dei britiske Jomfruøyane"}
         VI{"Dei amerikanske Jomfruøyane"}
         XA{"pseudospråk – aksentar"}
         XB{"pseudospråk – RTL"}
     }
+    Countries%chagos{
+        IO{"Chagosøyane"}
+    }
     Countries%short{
         UN{"SN"}
     }
     Countries%variant{
-        CI{"Elfenbeinskysten"}
         FK{"Falklandsøyane (Islas Malvinas)"}
         TL{"Aust-Timor"}
     }

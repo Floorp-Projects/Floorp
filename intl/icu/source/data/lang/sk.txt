@@ -70,6 +70,7 @@ sk{
         bez{"bena"}
         bfd{"bafut"}
         bg{"bulharčina"}
+        bgc{"haryanvi"}
         bgn{"západná balúčtina"}
         bho{"bhódžpurčina"}
         bi{"bislama"}
@@ -183,7 +184,7 @@ sk{
         fr{"francúzština"}
         fr_CA{"francúzština (kanadská)"}
         fr_CH{"francúzština (švajčiarska)"}
-        frc{"francúzština (Cajun)"}
+        frc{"francúzština (cajunská)"}
         frm{"stredná francúzština"}
         fro{"stará francúzština"}
         frr{"severná frízština"}
@@ -592,8 +593,12 @@ sk{
         zh_Hant{"čínština (mandarínska tradičná)"}
     }
     Languages%menu{
+        ckb{"kurdčina (centrálna)"}
         yue{"čínština (kantonská)"}
         zh{"čínština (mandarínska)"}
+    }
+    Languages%variant{
+        hi_Latn{"hingliš"}
     }
     Scripts{
         Adlm{"adlam"}
@@ -683,9 +688,9 @@ sk{
             gregorian{"gregoriánsky kalendár"}
             hebrew{"židovský kalendár"}
             indian{"Indický národný kalendár"}
-            islamic{"islamský kalendár"}
-            islamic-civil{"islamský občiansky kalendár"}
-            islamic-umalqura{"islamský kalendár (Umm al-Qura)"}
+            islamic{"kalendár podľa hidžry"}
+            islamic-civil{"kalendár podľa hidžry (občiansky)"}
+            islamic-umalqura{"kalendár podľa hidžry (Umm al-Qura)"}
             iso8601{"kalendár ISO 8601"}
             japanese{"japonský kalendár"}
             persian{"perzský kalendár"}
@@ -823,10 +828,11 @@ sk{
     }
     characterLabelPattern{
         all{"{0} – všetko"}
-        category-list{"{0}: {1}"}
         compatibility{"{0} – kompatibilné"}
         enclosed{"{0} – uzavreté"}
         extended{"{0} – rozšírené"}
+        facing-left{"{0} smerom doľava"}
+        facing-right{"{0} smerom doprava"}
         historic{"{0} – historické"}
         miscellaneous{"{0} – rôzne"}
         other{"{0} – ostatné"}
@@ -844,10 +850,5 @@ sk{
         language{"Jazyk: {0}"}
         script{"Písmo: {0}"}
         territory{"Región: {0}"}
-    }
-    localeDisplayPattern{
-        keyTypePattern{"{0}: {1}"}
-        pattern{"{0} ({1})"}
-        separator{"{0}, {1}"}
     }
 }

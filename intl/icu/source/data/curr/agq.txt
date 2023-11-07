@@ -171,9 +171,13 @@ agq{
             "SHP",
             "Bɔ̀ŋ è Sɛ̀n Èlenà",
         }
+        SLE{
+            "SLE",
+            "Lyɔ̂ŋ",
+        }
         SLL{
             "SLL",
-            "Lyɔ̂ŋ",
+            "Lyɔ̂ŋ (1964—2022)",
         }
         SOS{
             "SOS",
