@@ -160,11 +160,6 @@ class CycleCollectedJSContext : dom::PerThreadAtomCache, private JS::JobQueue {
   void CleanupIDBTransactions(uint32_t aRecursionDepth);
 
  public:
-  enum DeferredFinalizeType {
-    FinalizeIncrementally,
-    FinalizeNow,
-  };
-
   virtual dom::WorkerJSContext* GetAsWorkerJSContext() { return nullptr; }
   virtual dom::WorkletJSContext* GetAsWorkletJSContext() { return nullptr; }
 

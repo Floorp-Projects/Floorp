@@ -301,8 +301,12 @@ class CycleCollectedJSRuntime {
                       js::SliceBudget& aBudget);
 
  public:
-  void FinalizeDeferredThings(
-      CycleCollectedJSContext::DeferredFinalizeType aType);
+  enum DeferredFinalizeType {
+    FinalizeIncrementally,
+    FinalizeNow,
+  };
+
+  void FinalizeDeferredThings(DeferredFinalizeType aType);
 
   virtual void PrepareForForgetSkippable() = 0;
   virtual void BeginCycleCollectionCallback(mozilla::CCReason aReason) = 0;
