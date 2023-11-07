@@ -438,12 +438,8 @@ pref("browser.urlbar.suggest.recentsearches",       true);
 // Feature gate pref for weather suggestions in the urlbar.
 pref("browser.urlbar.weather.featureGate", false);
 
-// Enable clipboard suggestions in Nightly.
-#ifdef NIGHTLY_BUILD
-pref("browser.urlbar.clipboard.featureGate", true);
-#else
+// Feature gate pref for clipboard suggestions in the urlbar.
 pref("browser.urlbar.clipboard.featureGate", false);
-#endif
 
 // When false, the weather suggestion will not be fetched when a VPN is
 // detected. When true, it will be fetched anyway.
