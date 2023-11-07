@@ -1,0 +1,30 @@
+From d73c974faed8568fa1b0777bf043eb09546b12a3 Mon Sep 17 00:00:00 2001
+From: Frank Tang <ftang@chromium.org>
+Date: Fri, 27 Oct 2023 23:52:54 -0700
+Subject: [PATCH] ICU-22545 Fix addLikelySubtags for pseudo Locales
+
+diff --git a/intl/icu/source/common/loclikelysubtags.cpp b/intl/icu/source/common/loclikelysubtags.cpp
+--- a/intl/icu/source/common/loclikelysubtags.cpp
++++ b/intl/icu/source/common/loclikelysubtags.cpp
+@@ -561,12 +561,21 @@ LSR XLikelySubtags::makeMaximizedLsr(const char *language, const char *script, c
+     if (region[0] == 'X' && (c1 = region[1]) != 0 && region[2] == 0) {
+         switch (c1) {
+         case 'A':
++            if (returnInputIfUnmatch) {
++                return LSR(language, script, region, LSR::EXPLICIT_LSR);
++            }
+             return LSR(PSEUDO_ACCENTS_PREFIX, language, script, region,
+                        LSR::EXPLICIT_LSR, errorCode);
+         case 'B':
++            if (returnInputIfUnmatch) {
++                return LSR(language, script, region, LSR::EXPLICIT_LSR);
++            }
+             return LSR(PSEUDO_BIDI_PREFIX, language, script, region,
+                        LSR::EXPLICIT_LSR, errorCode);
+         case 'C':
++            if (returnInputIfUnmatch) {
++                return LSR(language, script, region, LSR::EXPLICIT_LSR);
++            }
+             return LSR(PSEUDO_CRACKED_PREFIX, language, script, region,
+                        LSR::EXPLICIT_LSR, errorCode);
+         default:  // normal locale

@@ -1,0 +1,84 @@
+From 51da31e1992dbcdab70d79007422ef2a331a6a43 Mon Sep 17 00:00:00 2001
+From: Frank Tang <ftang@chromium.org>
+Date: Thu, 26 Oct 2023 16:24:36 -0700
+Subject: [PATCH] ICU-22547 fix addLikelySubtags for 4 chars script code
+
+Also fix ICU-22546 to correct the comments in the API doc
+and add additional unit tests
+
+diff --git a/intl/icu/source/common/loclikely.cpp b/intl/icu/source/common/loclikely.cpp
+--- a/intl/icu/source/common/loclikely.cpp
++++ b/intl/icu/source/common/loclikely.cpp
+@@ -467,7 +467,14 @@ _uloc_addLikelySubtags(const char* localeID,
+         goto error;
+     }
+     if (langLength > 3) {
+-        goto error;
++        if (langLength == 4 && scriptLength == 0) {
++            langLength = 0;
++            scriptLength = 4;
++            uprv_memcpy(script, lang, 4);
++            lang[0] = '\0';
++        } else {
++            goto error;
++        }
+     }
+ 
+     /* Find the length of the trailing portion. */
+diff --git a/intl/icu/source/common/unicode/locid.h b/intl/icu/source/common/unicode/locid.h
+--- a/intl/icu/source/common/unicode/locid.h
++++ b/intl/icu/source/common/unicode/locid.h
+@@ -518,20 +518,20 @@ class U_COMMON_API Locale : public UObject {
+      * If this Locale is already in the maximal form, or not valid, or there is
+      * no data available for maximization, the Locale will be unchanged.
+      *
+-     * For example, "und-Zzzz" cannot be maximized, since there is no
++     * For example, "sh" cannot be maximized, since there is no
+      * reasonable maximization.
+      *
+      * Examples:
+      *
++     * "und_Zzzz" maximizes to "en_Latn_US"
++     *
+      * "en" maximizes to "en_Latn_US"
+      *
+-     * "de" maximizes to "de_Latn_US"
++     * "de" maximizes to "de_Latn_DE"
+      *
+      * "sr" maximizes to "sr_Cyrl_RS"
+      *
+-     * "sh" maximizes to "sr_Latn_RS" (Note this will not reverse.)
+-     *
+-     * "zh_Hani" maximizes to "zh_Hans_CN" (Note this will not reverse.)
++     * "zh_Hani" maximizes to "zh_Hani_CN"
+      *
+      * @param status  error information if maximizing this Locale failed.
+      *                If this Locale is not well-formed, the error code is
+diff --git a/intl/icu/source/common/unicode/uloc.h b/intl/icu/source/common/unicode/uloc.h
+--- a/intl/icu/source/common/unicode/uloc.h
++++ b/intl/icu/source/common/unicode/uloc.h
+@@ -1158,19 +1158,20 @@ uloc_getLocaleForLCID(uint32_t hostID, char *locale, int32_t localeCapacity,
+  *
+  * If localeID is already in the maximal form, or there is no data available
+  * for maximization, it will be copied to the output buffer.  For example,
+- * "und-Zzzz" cannot be maximized, since there is no reasonable maximization.
++ * "sh" cannot be maximized, since there is no reasonable maximization.
+  *
+  * Examples:
+  *
++ * "und_Zzzz" maximizes to "en_Latn_US"
++ *
+  * "en" maximizes to "en_Latn_US"
+  *
+- * "de" maximizes to "de_Latn_US"
++ * "de" maximizes to "de_Latn_DE"
+  *
+  * "sr" maximizes to "sr_Cyrl_RS"
+  *
+- * "sh" maximizes to "sr_Latn_RS" (Note this will not reverse.)
++ * "zh_Hani" maximizes to "zh_Hani_CN"
+  *
+- * "zh_Hani" maximizes to "zh_Hans_CN" (Note this will not reverse.)
+  *
+  * @param localeID The locale to maximize
+  * @param maximizedLocaleID The maximized locale
