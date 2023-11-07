@@ -66,8 +66,6 @@ struct ReadableByteStreamQueueEntry
   size_t ByteLength() const { return mByteLength; }
   void SetByteLength(size_t aByteLength) { mByteLength = aByteLength; }
 
-  void ClearBuffer() { mBuffer = nullptr; }
-
  private:
   // An ArrayBuffer, which will be a transferred version of the one originally
   // supplied by the underlying byte source.
@@ -162,8 +160,6 @@ struct PullIntoDescriptor final
     mReaderType = aReaderType;
   }
 
-  void ClearBuffer() { mBuffer = nullptr; }
-
  private:
   JS::Heap<JSObject*> mBuffer;
   uint64_t mBufferByteLength = 0;
@@ -207,28 +203,11 @@ ReadableByteStreamController::ReadableByteStreamController(
     nsIGlobalObject* aGlobal)
     : ReadableStreamController(aGlobal) {}
 
-ReadableByteStreamController::~ReadableByteStreamController() {
-  ClearPendingPullIntos();
-  ClearQueue();
-}
+ReadableByteStreamController::~ReadableByteStreamController() = default;
 
-void ReadableByteStreamController::ClearQueue() {
-  // Since the pull intos are traced only by the owning
-  // ReadableByteStreamController, when clearning the list we also clear JS
-  // references to avoid dangling JS references.
-  for (auto* queueEntry : mQueue) {
-    queueEntry->ClearBuffer();
-  }
-  mQueue.clear();
-}
+void ReadableByteStreamController::ClearQueue() { mQueue.clear(); }
 
 void ReadableByteStreamController::ClearPendingPullIntos() {
-  // Since the pull intos are traced only by the owning
-  // ReadableByteStreamController, when clearning the list we also clear JS
-  // references to avoid dangling JS references.
-  for (auto* pullInto : mPendingPullIntos) {
-    pullInto->ClearBuffer();
-  }
   mPendingPullIntos.clear();
 }
 
