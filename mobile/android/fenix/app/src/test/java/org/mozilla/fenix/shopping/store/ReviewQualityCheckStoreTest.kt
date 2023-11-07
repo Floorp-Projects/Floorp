@@ -743,6 +743,77 @@ class ReviewQualityCheckStoreTest {
             captureActionsMiddleware.assertNotDispatched(ReviewQualityCheckAction.UpdateRecommendedProduct::class)
         }
 
+    @Test
+    fun `GIVEN product recommendations are enabled WHEN recommended product is clicked THEN click event is recorded`() =
+        runTest {
+            var productClicked: String? = null
+            val tested = ReviewQualityCheckStore(
+                middleware = provideReviewQualityCheckMiddleware(
+                    reviewQualityCheckPreferences = FakeReviewQualityCheckPreferences(
+                        isEnabled = true,
+                        isProductRecommendationsEnabled = true,
+                    ),
+                    reviewQualityCheckService = FakeReviewQualityCheckService(
+                        productAnalysis = { ProductAnalysisTestData.productAnalysis() },
+                        productRecommendation = ProductRecommendationTestData.productRecommendation(
+                            aid = "342",
+                        ),
+                        recordClick = {
+                            productClicked = it
+                        },
+                    ),
+                ),
+            )
+            tested.waitUntilIdle()
+            dispatcher.scheduler.advanceUntilIdle()
+            tested.waitUntilIdle()
+            tested.dispatch(ReviewQualityCheckAction.FetchProductAnalysis).joinBlocking()
+            tested.waitUntilIdle()
+            dispatcher.scheduler.advanceUntilIdle()
+            tested.dispatch(
+                ReviewQualityCheckAction.RecommendedProductClick(
+                    productAid = "342",
+                    productUrl = "https://test.com",
+                ),
+            ).joinBlocking()
+
+            assertEquals("342", productClicked)
+        }
+
+    @Test
+    fun `GIVEN product recommendations are enabled WHEN recommended product is viewed THEN impression event is recorded`() =
+        runTest {
+            var productViewed: String? = null
+            val tested = ReviewQualityCheckStore(
+                middleware = provideReviewQualityCheckMiddleware(
+                    reviewQualityCheckPreferences = FakeReviewQualityCheckPreferences(
+                        isEnabled = true,
+                        isProductRecommendationsEnabled = true,
+                    ),
+                    reviewQualityCheckService = FakeReviewQualityCheckService(
+                        productAnalysis = { ProductAnalysisTestData.productAnalysis() },
+                        productRecommendation = ProductRecommendationTestData.productRecommendation(
+                            aid = "342",
+                        ),
+                        recordImpression = {
+                            productViewed = it
+                        },
+                    ),
+                ),
+            )
+            tested.waitUntilIdle()
+            dispatcher.scheduler.advanceUntilIdle()
+            tested.waitUntilIdle()
+            tested.dispatch(ReviewQualityCheckAction.FetchProductAnalysis).joinBlocking()
+            tested.waitUntilIdle()
+            dispatcher.scheduler.advanceUntilIdle()
+            tested.dispatch(
+                ReviewQualityCheckAction.RecommendedProductImpression(productAid = "342"),
+            ).joinBlocking()
+
+            assertEquals("342", productViewed)
+        }
+
     private fun provideReviewQualityCheckMiddleware(
         reviewQualityCheckPreferences: ReviewQualityCheckPreferences = FakeReviewQualityCheckPreferences(),
         reviewQualityCheckVendorsService: FakeReviewQualityCheckVendorsService = FakeReviewQualityCheckVendorsService(),

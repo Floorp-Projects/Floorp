@@ -92,7 +92,7 @@ fun ProductAnalysis(
     onShowMoreRecentReviewsClicked: () -> Unit,
     onSettingsExpandToggleClick: () -> Unit,
     onInfoExpandToggleClick: () -> Unit,
-    onRecommendedProductClick: (String) -> Unit,
+    onRecommendedProductClick: (aid: String, url: String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -149,7 +149,10 @@ fun ProductAnalysis(
             ProductRecommendation(
                 product = productAnalysis.recommendedProductState,
                 onClick = {
-                    onRecommendedProductClick(productAnalysis.recommendedProductState.productUrl)
+                    onRecommendedProductClick(
+                        productAnalysis.recommendedProductState.aid,
+                        productAnalysis.recommendedProductState.productUrl,
+                    )
                 },
             )
         }
@@ -617,7 +620,7 @@ private fun ProductAnalysisPreview(
                 onShowMoreRecentReviewsClicked = {},
                 onSettingsExpandToggleClick = { isSettingsExpanded = !isSettingsExpanded },
                 onInfoExpandToggleClick = { isInfoExpanded = !isInfoExpanded },
-                onRecommendedProductClick = {},
+                onRecommendedProductClick = { _, _ -> },
             )
         }
     }

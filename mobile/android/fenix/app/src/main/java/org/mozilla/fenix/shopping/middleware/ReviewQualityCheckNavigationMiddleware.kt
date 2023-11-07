@@ -65,6 +65,6 @@ class ReviewQualityCheckNavigationMiddleware(
 
         is ReviewQualityCheckAction.OpenPoweredByLink -> POWERED_BY_URL
 
-        is ReviewQualityCheckAction.OpenRecommendedProduct -> action.productUrl
+        is ReviewQualityCheckAction.RecommendedProductClick -> action.productUrl
     }
 }

@@ -51,6 +51,16 @@ interface ReviewQualityCheckService {
      * @return [ProductRecommendation] if request succeeds, null otherwise.
      */
     suspend fun productRecommendation(): ProductRecommendation?
+
+    /**
+     * Sends a click attribution event for a given product aid.
+     */
+    suspend fun recordRecommendedProductClick(productAid: String)
+
+    /**
+     * Sends an impression attribution event for a given product aid.
+     */
+    suspend fun recordRecommendedProductImpression(productAid: String)
 }
 
 /**
@@ -137,6 +147,39 @@ class DefaultReviewQualityCheckService(
                 }
             }
         }
+
+    override suspend fun recordRecommendedProductClick(productAid: String) =
+        withContext(Dispatchers.Main) {
+            suspendCoroutine { continuation ->
+                browserStore.state.selectedTab?.engineState?.engineSession?.sendClickAttributionEvent(
+                    aid = productAid,
+                    onResult = {
+                        continuation.resume(Unit)
+                    },
+                    onException = {
+                        logger.error("Error sending click attribution event", it)
+                        continuation.resume(Unit)
+                    },
+                )
+            }
+        }
+
+    override suspend fun recordRecommendedProductImpression(productAid: String) {
+        withContext(Dispatchers.Main) {
+            suspendCoroutine { continuation ->
+                browserStore.state.selectedTab?.engineState?.engineSession?.sendImpressionAttributionEvent(
+                    aid = productAid,
+                    onResult = {
+                        continuation.resume(Unit)
+                    },
+                    onException = {
+                        logger.error("Error sending impression attribution event", it)
+                        continuation.resume(Unit)
+                    },
+                )
+            }
+        }
+    }
 }
 
 /**

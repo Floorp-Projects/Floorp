@@ -124,6 +124,14 @@ class ReviewQualityCheckNetworkMiddleware(
                         appStore.dispatch(ShoppingAction.RemoveFromProductAnalysed(it))
                     }
                 }
+
+                is ReviewQualityCheckAction.RecommendedProductClick -> {
+                    reviewQualityCheckService.recordRecommendedProductClick(action.productAid)
+                }
+
+                is ReviewQualityCheckAction.RecommendedProductImpression -> {
+                    reviewQualityCheckService.recordRecommendedProductImpression(action.productAid)
+                }
             }
         }
     }

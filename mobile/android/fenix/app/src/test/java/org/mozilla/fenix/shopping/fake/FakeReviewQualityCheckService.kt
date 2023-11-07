@@ -15,6 +15,8 @@ class FakeReviewQualityCheckService(
     private val status: AnalysisStatusDto? = null,
     private val selectedTabUrl: String? = null,
     private val productRecommendation: ProductRecommendation? = null,
+    private val recordClick: (String) -> Unit = {},
+    private val recordImpression: (String) -> Unit = {},
 ) : ReviewQualityCheckService {
 
     private var analysisCount = 0
@@ -30,5 +32,14 @@ class FakeReviewQualityCheckService(
     override suspend fun analysisStatus(): AnalysisStatusDto? = status
 
     override fun selectedTabUrl(): String? = selectedTabUrl
+
     override suspend fun productRecommendation(): ProductRecommendation? = productRecommendation
+
+    override suspend fun recordRecommendedProductClick(productAid: String) {
+        recordClick(productAid)
+    }
+
+    override suspend fun recordRecommendedProductImpression(productAid: String) {
+        recordImpression(productAid)
+    }
 }
