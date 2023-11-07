@@ -58,7 +58,7 @@ add_task(async function testProjectSearchCloseOnNavigation() {
   // We are waiting for the popup to be added...
   await waitFor(() => dbg.win.document.querySelector(".unavailable-source"));
   // ...and verify that the popup is made visible.
-  await waitFor(() => dbg.win.document.querySelector(".tooltip-visible"));
+  await waitFor(() => dbg.win.document.querySelector(".tooltip-shown"));
   info("Retry to open the discard source, this should hide the popup");
   await clickElement(dbg, "fileMatch");
   info("Wait for the popup to be hidden");
