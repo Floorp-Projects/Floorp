@@ -8,6 +8,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/CheckedInt.h"
+#include "mozilla/Compiler.h"
 #include "mozilla/FloatingPoint.h"
 #if JS_HAS_INTL_API
 #  include "mozilla/intl/String.h"
@@ -542,7 +543,12 @@ template <typename DestChar, typename SrcChar>
 static inline void CopyChars(DestChar* destChars, const SrcChar* srcChars,
                              size_t length) {
   if constexpr (std::is_same_v<DestChar, SrcChar>) {
+#if MOZ_IS_GCC
+    // Directly call memcpy to work around bug 1863131.
+    memcpy(destChars, srcChars, length * sizeof(DestChar));
+#else
     PodCopy(destChars, srcChars, length);
+#endif
   } else {
     for (size_t i = 0; i < length; i++) {
       destChars[i] = srcChars[i];
