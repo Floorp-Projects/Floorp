@@ -1415,13 +1415,8 @@ void nsHttpTransaction::Close(nsresult reason) {
   }
   mConnected = false;
 
-  // When mDoNotRemoveAltSvc is true, this means we want to keep the AltSvc in
-  // in the conncetion info. In this case, let's not apply HTTPS RR retry logic
-  // to make sure this transaction can be restarted with the same conncetion
-  // info.
   bool shouldRestartTransactionForHTTPSRR =
-      mOrigConnInfo && AllowedErrorForHTTPSRRFallback(reason) &&
-      !mDoNotRemoveAltSvc;
+      mOrigConnInfo && AllowedErrorForHTTPSRRFallback(reason);
 
   //
   // if the connection was reset or closed before we wrote any part of the
@@ -1855,11 +1850,9 @@ nsresult nsHttpTransaction::Restart() {
   // Use TRANSACTION_RESTART_OTHERS as a catch-all.
   SetRestartReason(TRANSACTION_RESTART_OTHERS);
 
-  if (!mDoNotResetIPFamilyPreference) {
-    // Reset the IP family preferences, so the new connection can try to use
-    // another IPv4 or IPv6 address.
-    gHttpHandler->ConnMgr()->ResetIPFamilyPreference(mConnInfo);
-  }
+  // Reset the IP family preferences, so the new connection can try to use
+  // another IPv4 or IPv6 address.
+  gHttpHandler->ConnMgr()->ResetIPFamilyPreference(mConnInfo);
 
   return gHttpHandler->InitiateTransaction(this, mPriority);
 }
