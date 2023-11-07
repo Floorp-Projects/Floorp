@@ -179,7 +179,6 @@ add_task(async function test_about_translations_language_identification() {
       { fromLang: "en", toLang: "fr" },
       { fromLang: "fr", toLang: "en" },
     ],
-    prefs: [["browser.translations.languageIdentification.useFastText", true]],
     runInPage: async ({ selectors }) => {
       const { document, window } = content;
       Cu.waiveXrays(window).DEBOUNCE_DELAY = 5; // Make the timer run faster for tests.
