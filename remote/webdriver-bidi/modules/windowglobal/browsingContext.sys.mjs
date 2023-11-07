@@ -11,6 +11,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   ClipRectangleType:
     "chrome://remote/content/webdriver-bidi/modules/root/browsingContext.sys.mjs",
   LoadListener: "chrome://remote/content/shared/listeners/LoadListener.sys.mjs",
+  OriginType:
+    "chrome://remote/content/webdriver-bidi/modules/root/browsingContext.sys.mjs",
 });
 
 class BrowsingContextModule extends WindowGlobalBiDiModule {
@@ -42,6 +44,33 @@ class BrowsingContextModule extends WindowGlobalBiDiModule {
       timestamp: Date.now(),
       url: data.target.URL,
     };
+  }
+
+  #getOriginRectangle(origin) {
+    const win = this.messageHandler.window;
+
+    if (origin === lazy.OriginType.viewport) {
+      const viewport = win.visualViewport;
+      // Until it's clarified in the scope of the issue:
+      // https://github.com/w3c/webdriver-bidi/issues/592
+      // if we should take into account scrollbar dimensions, when calculating
+      // the viewport size, we match the behavior of WebDriver Classic,
+      // meaning we include scrollbar dimensions.
+      return new DOMRect(
+        viewport.pageLeft,
+        viewport.pageTop,
+        win.innerWidth,
+        win.innerHeight
+      );
+    }
+
+    const documentElement = win.document.documentElement;
+    return new DOMRect(
+      0,
+      0,
+      documentElement.scrollWidth,
+      documentElement.scrollHeight
+    );
   }
 
   #startListening() {
@@ -245,37 +274,43 @@ class BrowsingContextModule extends WindowGlobalBiDiModule {
   }
 
   _getScreenshotRect(params = {}) {
-    const { clip } = params;
+    const { clip, origin } = params;
 
-    const win = this.messageHandler.window;
-    const viewportRect = new DOMRect(0, 0, win.innerWidth, win.innerHeight);
-
-    let clipRect = viewportRect;
+    const originRect = this.#getOriginRectangle(origin);
+    let clipRect = originRect;
 
     if (clip !== null) {
       switch (clip.type) {
         case lazy.ClipRectangleType.Box: {
-          clipRect = new DOMRect(clip.x, clip.y, clip.width, clip.height);
+          clipRect = new DOMRect(
+            clip.x + originRect.x,
+            clip.y + originRect.y,
+            clip.width,
+            clip.height
+          );
           break;
         }
 
         case lazy.ClipRectangleType.Element: {
           const realm = this.messageHandler.getRealm();
           const element = this.deserialize(realm, clip.element);
+          const viewportRect = this.#getOriginRectangle(
+            lazy.OriginType.viewport
+          );
+          const elementRect = element.getBoundingClientRect();
 
-          clipRect = element.getBoundingClientRect();
+          clipRect = new DOMRect(
+            elementRect.x + viewportRect.x,
+            elementRect.y + viewportRect.y,
+            elementRect.width,
+            elementRect.height
+          );
           break;
         }
       }
     }
 
-    const intersection = this.#rectangleIntersection(viewportRect, clipRect);
-
-    // Change coordinate system from viewport-based to document-based.
-    intersection.x += win.pageXOffset;
-    intersection.y += win.pageYOffset;
-
-    return intersection;
+    return this.#rectangleIntersection(originRect, clipRect);
   }
 }
 
