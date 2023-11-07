@@ -1942,10 +1942,6 @@ or{
         "meta:Yukon"{
             ls{"ୟୁକୋନ୍ ସମୟ"}
         }
-        fallbackFormat{"{1} ({0})"}
-        gmtFormat{"GMT{0}"}
-        gmtZeroFormat{"GMT"}
-        hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"{0} ସମୟ"}
         regionFormatDaylight{"{0} ଦିବାଲୋକ ସମୟ"}
         regionFormatStandard{"{0} ମାନାଙ୍କ ସମୟ"}

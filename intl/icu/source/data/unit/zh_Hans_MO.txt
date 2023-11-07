@@ -21,14 +21,7 @@ zh_Hans_MO{
     unitsNarrow{
         concentr{
             karat{
-                dnam{"开"}
                 other{"{0}开"}
-            }
-        }
-        temperature{
-            kelvin{
-                dnam{"开氏度"}
-                other{"{0}°K"}
             }
         }
     }

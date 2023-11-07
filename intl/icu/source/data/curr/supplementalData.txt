@@ -1159,6 +1159,10 @@ supplementalData:table(nofallback){
                     1468155904,
                 }
                 id{"CUC"}
+                to:intvector{
+                    374,
+                    -1067136001,
+                }
             }
             {
                 from:intvector{

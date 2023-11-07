@@ -83,6 +83,7 @@ lt{
         bfd{"bafutų"}
         bfq{"badaga"}
         bg{"bulgarų"}
+        bgc{"harijanvi"}
         bgn{"vakarų beludžių"}
         bho{"baučpuri"}
         bi{"bislama"}
@@ -778,7 +779,6 @@ lt{
         Merc{"Merojitų rankraštinis"}
         Mero{"meroitik"}
         Mlym{"malajalių"}
-        Modi{"Modi"}
         Mong{"mongolų"}
         Moon{"mūn"}
         Mroo{"Mro"}
@@ -876,8 +876,6 @@ lt{
             indian{"nacionalinis indų kalendorius"}
             islamic{"islamo kalendorius"}
             islamic-civil{"Islamo kalendorius (lentelinis, pilietinė era)"}
-            islamic-rgsa{"Islamo kalendorius (Saudo Arabija)"}
-            islamic-tbla{"Islamo kalendorius (lentelinis, astronominė era)"}
             islamic-umalqura{"Islamo kalendorius (Umm al-Qura)"}
             iso8601{"ISO 8601 kalendorius"}
             japanese{"japonų kalendorius"}
@@ -1070,10 +1068,11 @@ lt{
     }
     characterLabelPattern{
         all{"{0} – visi"}
-        category-list{"{0}: {1}"}
         compatibility{"{0} – suderinamumas"}
         enclosed{"{0} – pridedamas"}
         extended{"{0} – išplėstas"}
+        facing-left{"{0} atsisukęs į kairę"}
+        facing-right{"{0} atsisukęs į dešinę"}
         historic{"{0} – istorinis"}
         miscellaneous{"{0} – įvairus"}
         other{"{0} – kitas"}
@@ -1091,10 +1090,5 @@ lt{
         language{"Kalba: {0}"}
         script{"Rašmenys: {0}"}
         territory{"Sritis: {0}"}
-    }
-    localeDisplayPattern{
-        keyTypePattern{"{0}: {1}"}
-        pattern{"{0} ({1})"}
-        separator{"{0}, {1}"}
     }
 }

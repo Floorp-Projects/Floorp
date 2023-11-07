@@ -4,29 +4,14 @@
 bo{
     AuxExemplarCharacters{"[ༀ]"}
     ExemplarCharacters{
-        "[\u0F84 ཿ ཀ {ཀ\u0FB5} ཁ ག {ག\u0FB7} ང ཅ ཆ ཇ ཉ ཏ ཊ ཐ ཋ ད {ད\u0FB7} ཌ {ཌ"
-        "\u0FB7} ན ཎ པ ཕ བ {བ\u0FB7} མ \u0F7E ཙ ཚ ཛ {ཛ\u0FB7} ཝ ཞ ཟ འ ཡ ར ཪ ལ ཤ ཥ ས ཧ"
-        " ཨ \u0F72 {\u0F71\u0F72} \u0F80 {\u0F71\u0F80} \u0F74 {\u0F71\u0F74} \u0F7A "
-        "\u0F7B \u0F7C \u0F7D \u0F90 {\u0F90\u0FB5} \u0F91 \u0F92 {\u0F92\u0FB7} "
-        "\u0F94 \u0F95 \u0F96 \u0F97 \u0F99 \u0F9F \u0F9A \u0FA0 \u0F9B \u0FA1 {"
-        "\u0FA1\u0FB7} \u0F9C {\u0F9C\u0FB7} \u0FA3 \u0F9E \u0FA4 \u0FA5 \u0FA6 {"
-        "\u0FA6\u0FB7} \u0FA8 \u0FA9 \u0FAA \u0FAB {\u0FAB\u0FB7} \u0FAD \u0FBA "
-        "\u0FAE \u0FAF \u0FB0 \u0FB1 \u0FBB \u0FB2 \u0FBC \u0FB3 \u0FB4 \u0FB5 "
-        "\u0FB6 \u0FB7 \u0FB8 {\u0FB2\u0F80} \u0F77 {\u0FB3\u0F80} \u0F79]"
+        "[྄ཿ ཀ {ཀྵ} ཁ ག {གྷ} ང ཅ ཆ ཇ ཉ ཏ ཊ ཐ ཋ ད {དྷ} ཌ {ཌྷ} ན ཎ པ ཕ བ {བྷ} མ ཾ ཙ ཚ ཛ"
+        " {ཛྷ} ཝ ཞ ཟ འ ཡ རཪ ལ ཤ ཥ ས ཧ ཨ ི {ཱི} ྀ {ཱྀ} ུ {ཱུ} ེ ཻ ོ ཽ ྐ {ྐྵ} ྑ ྒ {ྒྷ} "
+        "ྔ ྕ ྖ ྗ ྙ ྟ ྚ ྠ ྛ ྡ {ྡྷ} ྜ {ྜྷ} ྣ ྞ ྤ ྥ ྦ {ྦྷ} ྨ ྩ ྪ ྫ {ྫྷ} ྭ ྺ ྮ ྯ ྰ ྱ ྻ ྲ "
+        "ྼ ླ ྴ ྵ ྶ ྷ ྸ {ྲྀ} ཷ {ླྀ} ཹ]"
     }
     ExemplarCharactersIndex{"[ཀ ཁ ག ང ཅ ཆ ཇ ཉ ཏ ཐ ད ན པ ཕ བ མ ཙ ཚ ཛ ཝ ཞ ཟ འ ཡ ར ལ ཤ ས ཧ ཨ]"}
     ExemplarCharactersNumbers{"[\\- ‑ , . % ‰ + 0༠ 1༡ 2༢ 3༣ 4༤ 5༥ 6༦ 7༧ 8༨ 9༩]"}
     NumberElements{
-        default{"latn"}
-        latn{
-            patterns{
-                percentFormat{"#,##0%"}
-            }
-            symbols{
-                group{","}
-                nan{"NaN"}
-            }
-        }
         native{"tibt"}
         tibt{
             symbols{
@@ -51,16 +36,6 @@ bo{
                 "{1} {0}",
                 "{1} {0}",
             }
-            DateTimeSkeletons{
-                "ahmmsszzzz",
-                "ahmmssz",
-                "ahmmss",
-                "ahmm",
-                "GyMMMMEEEEd",
-                "GyMMMMd",
-                "GyMMMd",
-                "GGGGGyMMdd",
-            }
             availableFormats{
                 yMMMMd{"G སྤྱི་ལོ་y MMMMའི་ཚེས་d"}
                 yMMMd{"G y ལོའི་MMMཚེས་d"}
@@ -68,10 +43,6 @@ bo{
             }
         }
         gregorian{
-            AmPmMarkers{
-                "སྔ་དྲོ་",
-                "ཕྱི་དྲོ་",
-            }
             AmPmMarkersAbbr{
                 "སྔ་དྲོ་",
                 "ཕྱི་དྲོ་",
@@ -121,15 +92,6 @@ bo{
                         "པ་སངས་",
                         "སྤེན་པ་",
                     }
-                    narrow{
-                        "ཉི",
-                        "ཟླ",
-                        "མིག",
-                        "ལྷག",
-                        "ཕུར",
-                        "སངས",
-                        "སྤེན",
-                    }
                     wide{
                         "གཟའ་ཉི་མ་",
                         "གཟའ་ཟླ་བ་",
@@ -141,15 +103,6 @@ bo{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "ཉི་མ་",
-                        "ཟླ་བ་",
-                        "མིག་དམར་",
-                        "ལྷག་པ་",
-                        "ཕུར་བུ་",
-                        "པ་སངས་",
-                        "སྤེན་པ་",
-                    }
                     narrow{
                         "ཉི",
                         "ཟླ",
@@ -158,15 +111,6 @@ bo{
                         "ཕུར",
                         "སངས",
                         "སྤེན",
-                    }
-                    wide{
-                        "གཟའ་ཉི་མ་",
-                        "གཟའ་ཟླ་བ་",
-                        "གཟའ་མིག་དམར་",
-                        "གཟའ་ལྷག་པ་",
-                        "གཟའ་ཕུར་བུ་",
-                        "གཟའ་པ་སངས་",
-                        "གཟའ་སྤེན་པ་",
                     }
                 }
             }
@@ -226,26 +170,6 @@ bo{
             }
             quarters{
                 format{
-                    abbreviated{
-                        "དུས་ཚིགས་དང་པོ།",
-                        "དུས་ཚིགས་གཉིས་པ།",
-                        "དུས་ཚིགས་གསུམ་པ།",
-                        "དུས་ཚིགས་བཞི་པ།",
-                    }
-                    wide{
-                        "དུས་ཚིགས་དང་པོ།",
-                        "དུས་ཚིགས་གཉིས་པ།",
-                        "དུས་ཚིགས་གསུམ་པ།",
-                        "དུས་ཚིགས་བཞི་པ།",
-                    }
-                }
-                stand-alone{
-                    abbreviated{
-                        "དུས་ཚིགས་དང་པོ།",
-                        "དུས་ཚིགས་གཉིས་པ།",
-                        "དུས་ཚིགས་གསུམ་པ།",
-                        "དུས་ཚིགས་བཞི་པ།",
-                    }
                     wide{
                         "དུས་ཚིགས་དང་པོ།",
                         "དུས་ཚིགས་གཉིས་པ།",

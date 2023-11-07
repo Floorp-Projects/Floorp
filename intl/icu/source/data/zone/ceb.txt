@@ -614,8 +614,6 @@ ceb{
         }
         fallbackFormat{"{1} {0}"}
         gmtFormat{"GMT {0}"}
-        gmtZeroFormat{"GMT"}
-        hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"Oras sa {0}"}
         regionFormatDaylight{"Daylight Time sa {0}"}
         regionFormatStandard{"Tamdanang Oras sa {0}"}

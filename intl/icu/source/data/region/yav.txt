@@ -93,7 +93,6 @@ yav{
         IE{"ililánd"}
         IL{"ísilayɛ́l"}
         IN{"ɛ́ɛnd"}
-        IO{"Kɔɔ́m kí ndián yi ngilís"}
         IQ{"ilák"}
         IR{"iláŋ"}
         IS{"isláand"}

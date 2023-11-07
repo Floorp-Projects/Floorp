@@ -6,9 +6,12 @@ eo{
     ExemplarCharacters{"[a b c ĉ d e f g ĝ h ĥ i j ĵ k l m n o p r s ŝ t u ŭ v z]"}
     ExemplarCharactersIndex{"[A B C Ĉ D E F G Ĝ H Ĥ I J Ĵ K L M N O P R S Ŝ T U Ŭ V Z]"}
     ExemplarCharactersNumbers{"[  , % ‰ + − 0 1 2 3 4 5 6 7 8 9]"}
-    ExemplarCharactersPunctuation{"[\\- ‐ ‑ – — , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” ( ) \\[ \\] \\{ \\} /]"}
+    ExemplarCharactersPunctuation{"[\\- ‐‑ – — , ; \\: ! ? . … '‘’ \u0022“” ( ) \\[ \\] \\{ \\} /]"}
     NumberElements{
         latn{
+            patterns{
+                currencyFormat{"#,##0.00 ¤"}
+            }
             symbols{
                 decimal{","}
                 group{" "}
@@ -18,11 +21,11 @@ eo{
     calendar{
         generic{
             DateTimePatterns{
-                "H-'a' 'horo' 'kaj' m:ss zzzz",
+                "HH:mm:ss zzzz",
                 "HH:mm:ss z",
                 "HH:mm:ss",
                 "HH:mm",
-                "EEEE, d-'a' 'de' MMMM y G",
+                "EEEE, 'la' d-'a' 'de' MMMM y G",
                 "G y-MMMM-dd",
                 "G y-MMM-dd",
                 "GGGGG y-MM-dd",
@@ -44,20 +47,16 @@ eo{
             }
         }
         gregorian{
-            AmPmMarkers{
-                "atm",
-                "ptm",
-            }
             AmPmMarkersAbbr{
                 "atm",
                 "ptm",
             }
             DateTimePatterns{
-                "H-'a' 'horo' 'kaj' m:ss zzzz",
+                "HH:mm:ss zzzz",
                 "HH:mm:ss z",
                 "HH:mm:ss",
                 "HH:mm",
-                "EEEE, d-'a' 'de' MMMM y",
+                "EEEE, 'la' d-'a' 'de' MMMM y",
                 "y-MMMM-dd",
                 "y-MMM-dd",
                 "yy-MM-dd",
@@ -76,6 +75,9 @@ eo{
                 "yMMMMdd",
                 "yMMMdd",
                 "yyMMdd",
+            }
+            availableFormats{
+                yMMMd{"d MMM y"}
             }
             dayNames{
                 format{
@@ -98,84 +100,62 @@ eo{
                         "sabato",
                     }
                 }
-                stand-alone{
-                    wide{
-                        "dimanĉo",
-                        "lundo",
-                        "mardo",
-                        "merkredo",
-                        "ĵaŭdo",
-                        "vendredo",
-                        "sabato",
-                    }
-                }
             }
             eras{
                 abbreviated{
-                    "aK",
-                    "pK",
+                    "a.n.e.",
+                    "n.e.",
                 }
-                narrow{
-                    "aK",
-                    "pK",
-                }
-                narrow%variant{
-                    "aK",
-                    "pK",
+                abbreviated%variant{
+                    "a.K.",
+                    "p.K.",
                 }
                 wide{
-                    "aK",
-                    "pK",
+                    "antaŭ nia erao",
+                    "de nia erao",
+                }
+                wide%variant{
+                    "antaŭ Kristo",
+                    "post Kristo",
                 }
             }
             monthNames{
                 format{
                     abbreviated{
-                        "jan",
-                        "feb",
-                        "mar",
-                        "apr",
-                        "maj",
-                        "jun",
-                        "jul",
-                        "aŭg",
-                        "sep",
-                        "okt",
-                        "nov",
-                        "dec",
+                        "Jan",
+                        "Feb",
+                        "Mar",
+                        "Apr",
+                        "Maj",
+                        "Jun",
+                        "Jul",
+                        "Aŭg",
+                        "Sep",
+                        "Okt",
+                        "Nov",
+                        "Dec",
                     }
                     wide{
-                        "januaro",
-                        "februaro",
-                        "marto",
-                        "aprilo",
-                        "majo",
-                        "junio",
-                        "julio",
-                        "aŭgusto",
-                        "septembro",
-                        "oktobro",
-                        "novembro",
-                        "decembro",
-                    }
-                }
-                stand-alone{
-                    wide{
-                        "januaro",
-                        "februaro",
-                        "marto",
-                        "aprilo",
-                        "majo",
-                        "junio",
-                        "julio",
-                        "aŭgusto",
-                        "septembro",
-                        "oktobro",
-                        "novembro",
-                        "decembro",
+                        "Januaro",
+                        "Februaro",
+                        "Marto",
+                        "Aprilo",
+                        "Majo",
+                        "Junio",
+                        "Julio",
+                        "Aŭgusto",
+                        "Septembro",
+                        "Oktobro",
+                        "Novembro",
+                        "Decembro",
                     }
                 }
             }
         }
+    }
+    measurementSystemNames{
+        UK{"brita"}
+        US{"usona"}
+        metric{"metra"}
     }
 }

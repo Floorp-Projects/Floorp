@@ -298,6 +298,9 @@ sl{
         ZW{"Zimbabve"}
         ZZ{"Neznano ali neveljavno območje"}
     }
+    Countries%chagos{
+        IO{"Otočje Chagos"}
+    }
     Countries%short{
         GB{"ZK"}
         HK{"Hongkong"}

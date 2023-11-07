@@ -68,6 +68,7 @@ sr_Latn{
         bem{"bemba"}
         bez{"bena"}
         bg{"bugarski"}
+        bgc{"harijanski"}
         bgn{"zapadni belučki"}
         bho{"bodžpuri"}
         bi{"bislama"}
@@ -523,7 +524,7 @@ sr_Latn{
         twq{"tasavak"}
         ty{"tahićanski"}
         tyv{"tuvinski"}
-        tzm{"centralnoatlaski tamazigt"}
+        tzm{"centralnoatlaski tamašek"}
         udm{"udmurtski"}
         ug{"ujgurski"}
         uga{"ugaritski"}
@@ -910,10 +911,11 @@ sr_Latn{
     }
     characterLabelPattern{
         all{"{0} — sve"}
-        category-list{"{0}: {1}"}
         compatibility{"{0} — kompatibilnost"}
         enclosed{"{0} — zatvoreno"}
         extended{"{0} — prošireno"}
+        facing-left{"{0} gleda ulevo"}
+        facing-right{"{0} gleda udesno"}
         historic{"{0} — istorijsko"}
         miscellaneous{"{0} — razno"}
         other{"{0} — drugo"}
@@ -930,10 +932,5 @@ sr_Latn{
         language{"Jezik: {0}"}
         script{"Pismo: {0}"}
         territory{"Region: {0}"}
-    }
-    localeDisplayPattern{
-        keyTypePattern{"{0}: {1}"}
-        pattern{"{0} ({1})"}
-        separator{"{0}, {1}"}
     }
 }

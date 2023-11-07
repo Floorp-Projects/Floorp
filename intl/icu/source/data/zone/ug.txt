@@ -670,9 +670,6 @@ ug{
             lg{"يېكاتېرىنبۇرگ ۋاقتى"}
             ls{"يېكاتېرىنبۇرگ ئۆلچەملىك ۋاقتى"}
         }
-        fallbackFormat{"{1} ({0})"}
-        gmtFormat{"GMT{0}"}
-        hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"{0} ۋاقتى"}
         regionFormatDaylight{"{0} يازلىق ۋاقتى"}
         regionFormatStandard{"{0} ئۆلچەملىك ۋاقتى"}

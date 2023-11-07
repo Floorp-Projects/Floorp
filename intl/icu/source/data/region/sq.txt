@@ -298,6 +298,9 @@ sq{
         ZW{"Zimbabve"}
         ZZ{"I panjohur"}
     }
+    Countries%chagos{
+        IO{"Arkipelagu i Çagosit"}
+    }
     Countries%short{
         GB{"MB"}
         HK{"Hong-Kong"}

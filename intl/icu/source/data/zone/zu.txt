@@ -711,9 +711,6 @@ zu{
         "Asia:Dushanbe"{
             ec{"i-Dushanbe"}
         }
-        "Asia:Famagusta"{
-            ec{"Famagusta"}
-        }
         "Asia:Gaza"{
             ec{"iGaza"}
         }
@@ -1898,10 +1895,6 @@ zu{
         "meta:Yukon"{
             ls{"Yukon Time"}
         }
-        fallbackFormat{"{1} ({0})"}
-        gmtFormat{"GMT{0}"}
-        gmtZeroFormat{"GMT"}
-        hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"Isikhathi sase-{0}"}
         regionFormatDaylight{"{0} Isikhathi sasemini"}
         regionFormatStandard{"{0} isikhathi esivamile"}

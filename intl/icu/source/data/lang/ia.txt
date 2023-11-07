@@ -405,11 +405,13 @@ ia{
         tpi{"tok pisin"}
         tr{"turco"}
         trv{"taroko"}
+        trw{"torwali"}
         ts{"tsonga"}
         tt{"tataro"}
         ttm{"tutchone del nord"}
         tum{"tumbuka"}
         tvl{"tuvaluano"}
+        tw{"twi"}
         twq{"tasawaq"}
         ty{"tahitiano"}
         tyv{"tuvano"}
@@ -423,6 +425,7 @@ ia{
         uz{"uzbeko"}
         vai{"vai"}
         ve{"venda"}
+        vec{"venetiano"}
         vi{"vietnamese"}
         vo{"volapük"}
         vun{"vunjo"}
@@ -430,6 +433,7 @@ ia{
         wae{"walser"}
         wal{"wolaytta"}
         war{"waray"}
+        wbp{"warlpiri"}
         wo{"wolof"}
         wuu{"wu"}
         xal{"calmuco"}
@@ -527,9 +531,6 @@ ia{
             ethiopic-amete-alem{"calendario ethiope Amete Alem"}
             gregorian{"calendario gregorian"}
             hebrew{"calendario hebraic"}
-            islamic{"calendario islamic"}
-            islamic-civil{"calendario islamic (tabular, epocha civil)"}
-            islamic-umalqura{"calendario islamic (Umm al-Qura)"}
             iso8601{"calendario ISO-8601"}
             japanese{"calendario japonese"}
             persian{"calendario persa"}
@@ -605,11 +606,9 @@ ia{
     }
     characterLabelPattern{
         all{"{0} — toto"}
-        category-list{"{0}: {1}"}
         compatibility{"{0} — compatibilitate"}
         enclosed{"{0} — inquadrate"}
         extended{"{0} — extendite"}
-        historic{"{0} — historic"}
         miscellaneous{"{0} — miscellanee"}
         other{"{0} — altere"}
         scripts{"scripturas — {0}"}

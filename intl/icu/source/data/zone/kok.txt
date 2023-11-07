@@ -1887,10 +1887,6 @@ kok{
         "meta:Yukon"{
             ls{"युकॉन वेळ"}
         }
-        fallbackFormat{"{1} ({0})"}
-        gmtFormat{"GMT{0}"}
-        gmtZeroFormat{"GMT"}
-        hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"{0} वेळ"}
         regionFormatDaylight{"{0} डेलायट वेळ"}
         regionFormatStandard{"{0} प्रमाणित वेळ"}

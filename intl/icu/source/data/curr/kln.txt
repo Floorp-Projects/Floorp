@@ -171,9 +171,13 @@ kln{
             "SHP",
             "Pouditab helena ne tilil",
         }
+        SLE{
+            "SLE",
+            "Leonit",
+        }
         SLL{
             "SLL",
-            "Leonit",
+            "Leonit (1964—2022)",
         }
         SOS{
             "SOS",

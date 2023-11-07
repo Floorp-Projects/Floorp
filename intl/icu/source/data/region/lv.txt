@@ -298,6 +298,9 @@ lv{
         ZW{"Zimbabve"}
         ZZ{"nezināms reģions"}
     }
+    Countries%chagos{
+        IO{"Čagosu arhipelāgs"}
+    }
     Countries%short{
         HK{"Honkonga"}
         MO{"Makao"}

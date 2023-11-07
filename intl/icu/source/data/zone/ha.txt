@@ -12,27 +12,6 @@ ha{
         "America:North_Dakota:New_Salem"{
             ec{"New Salem, Arewacin Dakota"}
         }
-        "Asia:Aden"{
-            ec{"Aden"}
-        }
-        "Asia:Amman"{
-            ec{"Amman"}
-        }
-        "Asia:Baghdad"{
-            ec{"Baghdad"}
-        }
-        "Asia:Bahrain"{
-            ec{"Bahrain"}
-        }
-        "Asia:Baku"{
-            ec{"Baku"}
-        }
-        "Asia:Bangkok"{
-            ec{"Bangkok"}
-        }
-        "Asia:Beirut"{
-            ec{"Beirut"}
-        }
         "Etc:UTC"{
             ls{"Hadewa Lokaci na Duniya"}
         }

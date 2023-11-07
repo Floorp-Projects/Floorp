@@ -53,6 +53,7 @@ ga{
         bem{"Beimbis"}
         bez{"Beinis"}
         bg{"Bulgáiris"}
+        bgc{"Haryanvi"}
         bho{"Vóispiris"}
         bi{"Bioslaimis"}
         bin{"Binis"}
@@ -371,6 +372,7 @@ ga{
         pt_PT{"Portaingéilis Ibéarach"}
         qu{"Ceatsuais"}
         quc{"Cuitséis"}
+        raj{"Rajasthani"}
         rap{"Rapanúis"}
         rar{"Raratongais"}
         rhg{"Róihinis"}
@@ -648,11 +650,9 @@ ga{
             gregorian{"Féilire Ghréagóra"}
             hebrew{"Féilire na nEabhrach"}
             indian{"Féilire Náisiúnta na hIndia"}
-            islamic{"Féilire Ioslamach"}
-            islamic-civil{"Féilire Ioslamach (táblach, seanré shibhialta)"}
-            islamic-rgsa{"Féilire Ioslamach (an Araib Shádach, dearcadh)"}
-            islamic-tbla{"Féilire Ioslamach (táblach, seanré réalteolaíoch)"}
-            islamic-umalqura{"Féilire Ioslamach (Umm al-Qura)"}
+            islamic{"Féilire Hijri"}
+            islamic-civil{"Féilire Hijiri (táblach, seanré shibhialta)"}
+            islamic-umalqura{"Féilire Hijiri (Umm al-Qura)"}
             iso8601{"Féilire ISO-8601"}
             japanese{"Féilire Seapánach"}
             persian{"Féilire Peirseach"}
@@ -863,10 +863,11 @@ ga{
     }
     characterLabelPattern{
         all{"{0} — uile"}
-        category-list{"{0}: {1}"}
         compatibility{"{0} — comhoiriúnacht"}
         enclosed{"{0} — iniata"}
         extended{"{0} — breisithe"}
+        facing-left{"{0} aghaidh ar chlé"}
+        facing-right{"{0} aghaidh ar dheis"}
         historic{"{0} — stairiúil"}
         miscellaneous{"{0} — ilghnéitheach"}
         other{"{0} — eile"}
@@ -885,10 +886,5 @@ ga{
         language{"Teanga: {0}"}
         script{"Script: {0}"}
         territory{"Réigiún: {0}"}
-    }
-    localeDisplayPattern{
-        keyTypePattern{"{0}: {1}"}
-        pattern{"{0} ({1})"}
-        separator{"{0}, {1}"}
     }
 }

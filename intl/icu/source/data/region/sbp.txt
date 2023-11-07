@@ -93,7 +93,6 @@ sbp{
         IE{"Ayalandi"}
         IL{"Isilaeli"}
         IN{"Indiya"}
-        IO{"Uluvala lwa Uwingelesa ku Bahali ya Hindi"}
         IQ{"Ilaki"}
         IR{"Uwajemi"}
         IS{"Ayisilendi"}

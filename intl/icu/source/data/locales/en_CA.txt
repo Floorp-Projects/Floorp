@@ -58,40 +58,6 @@ en_CA{
                     y{"y-MM-dd – y-MM-dd"}
                 }
             }
-            monthNames{
-                format{
-                    wide{
-                        "first month",
-                        "second month",
-                        "third month",
-                        "fourth month",
-                        "fifth month",
-                        "sixth month",
-                        "seventh month",
-                        "eighth month",
-                        "ninth month",
-                        "tenth month",
-                        "eleventh month",
-                        "twelfth month",
-                    }
-                }
-                stand-alone{
-                    wide{
-                        "first month",
-                        "second month",
-                        "third month",
-                        "fourth month",
-                        "fifth month",
-                        "sixth month",
-                        "seventh month",
-                        "eighth month",
-                        "ninth month",
-                        "tenth month",
-                        "eleventh month",
-                        "twelfth month",
-                    }
-                }
-            }
         }
         generic{
             DateTimePatterns{
@@ -253,7 +219,6 @@ en_CA{
             }
             availableFormats{
                 Ed{"E d"}
-                GyMd{"y-MM-dd G"}
                 MEd{"E, MM-dd"}
                 MMdd{"MM-dd"}
                 Md{"MM-dd"}
@@ -290,16 +255,6 @@ en_CA{
                         am{"a.m."}
                         pm{"p.m."}
                     }
-                }
-            }
-            eras{
-                wide{
-                    "before Christ",
-                    "Anno Domini",
-                }
-                wide%variant{
-                    "before Common Era",
-                    "Common Era",
                 }
             }
             intervalFormats{

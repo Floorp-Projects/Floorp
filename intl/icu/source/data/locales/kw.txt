@@ -12,10 +12,6 @@ kw{
     }
     calendar{
         gregorian{
-            AmPmMarkers{
-                "a.m.",
-                "p.m.",
-            }
             AmPmMarkersAbbr{
                 "a.m.",
                 "p.m.",

@@ -109,6 +109,14 @@ es_CO{
             }
         }
         gregorian{
+            AmPmMarkers{
+                "a. m.",
+                "p. m.",
+            }
+            AmPmMarkersAbbr{
+                "a. m.",
+                "p. m.",
+            }
             DateTimePatterns{
                 "h:mm:ss a zzzz",
                 "h:mm:ss a z",
@@ -148,6 +156,17 @@ es_CO{
                 yMMMd{"d 'de' MMM 'de' y"}
             }
             dayNames{
+                format{
+                    narrow{
+                        "D",
+                        "L",
+                        "M",
+                        "m",
+                        "J",
+                        "V",
+                        "S",
+                    }
+                }
                 stand-alone{
                     narrow{
                         "d",
@@ -171,10 +190,17 @@ es_CO{
                 }
                 stand-alone{
                     abbreviated{
+                        am{"a. m."}
                         noon{"m."}
+                        pm{"p. m."}
                     }
                     narrow{
-                        noon{"m."}
+                        am{"a. m."}
+                        pm{"p. m."}
+                    }
+                    wide{
+                        am{"a. m."}
+                        pm{"p. m."}
                     }
                 }
             }

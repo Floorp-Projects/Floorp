@@ -100,21 +100,17 @@ zh_Hant_HK{
             }
             intervalFormats{
                 h{
-                    a{"ah時至ah時"}
                     h{"ah時至h時"}
                 }
                 hm{
-                    a{"ah:mm至ah:mm"}
                     h{"ah:mm至h:mm"}
                     m{"ah:mm至h:mm"}
                 }
                 hmv{
-                    a{"ah:mm至ah:mm [v]"}
                     h{"ah:mm至h:mm [v]"}
                     m{"ah:mm至h:mm [v]"}
                 }
                 hv{
-                    a{"ah時至ah時 [v]"}
                     h{"ah時至h時 [v]"}
                 }
             }
@@ -179,34 +175,6 @@ zh_Hant_HK{
             }
             monthNames{
                 format{
-                    abbreviated{
-                        "正月",
-                        "二月",
-                        "三月",
-                        "四月",
-                        "五月",
-                        "六月",
-                        "七月",
-                        "八月",
-                        "九月",
-                        "十月",
-                        "十一月",
-                        "十二月",
-                    }
-                    narrow{
-                        "正",
-                        "二",
-                        "三",
-                        "四",
-                        "五",
-                        "六",
-                        "七",
-                        "八",
-                        "九",
-                        "十",
-                        "十一",
-                        "十二",
-                    }
                     wide{
                         "正月",
                         "二月",
@@ -223,20 +191,6 @@ zh_Hant_HK{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "正月",
-                        "二月",
-                        "三月",
-                        "四月",
-                        "五月",
-                        "六月",
-                        "七月",
-                        "八月",
-                        "九月",
-                        "十月",
-                        "十一月",
-                        "十二月",
-                    }
                     narrow{
                         "正",
                         "二",
@@ -251,78 +205,41 @@ zh_Hant_HK{
                         "十一",
                         "十二",
                     }
-                    wide{
-                        "正月",
-                        "二月",
-                        "三月",
-                        "四月",
-                        "五月",
-                        "六月",
-                        "七月",
-                        "八月",
-                        "九月",
-                        "十月",
-                        "十一月",
-                        "十二月",
-                    }
                 }
             }
         }
         coptic{
             intervalFormats{
                 h{
-                    a{"ah時至ah時"}
                     h{"ah時至h時"}
                 }
                 hm{
-                    a{"ah:mm至ah:mm"}
                     h{"ah:mm至h:mm"}
                     m{"ah:mm至h:mm"}
                 }
                 hmv{
-                    a{"ah:mm至ah:mm [v]"}
                     h{"ah:mm至h:mm [v]"}
                     m{"ah:mm至h:mm [v]"}
                 }
                 hv{
-                    a{"ah時至ah時 [v]"}
                     h{"ah時至h時 [v]"}
                 }
             }
         }
         dangi{
-            DateTimePatterns{
-                "ah:mm:ss [zzzz]",
-                "ah:mm:ss [z]",
-                "ah:mm:ss",
-                "ah:mm",
-                "U年MMMd日EEEE",
-                "U年MMMd日",
-                "U年MMMd日",
-                "U/M/d",
-                "{1}, {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1}, {0}",
-                "{1}, {0}",
-            }
             intervalFormats{
                 h{
-                    a{"ah時至ah時"}
                     h{"ah時至h時"}
                 }
                 hm{
-                    a{"ah:mm至ah:mm"}
                     h{"ah:mm至h:mm"}
                     m{"ah:mm至h:mm"}
                 }
                 hmv{
-                    a{"ah:mm至ah:mm [v]"}
                     h{"ah:mm至h:mm [v]"}
                     m{"ah:mm至h:mm [v]"}
                 }
                 hv{
-                    a{"ah時至ah時 [v]"}
                     h{"ah時至h時 [v]"}
                 }
             }
@@ -330,21 +247,17 @@ zh_Hant_HK{
         ethiopic{
             intervalFormats{
                 h{
-                    a{"ah時至ah時"}
                     h{"ah時至h時"}
                 }
                 hm{
-                    a{"ah:mm至ah:mm"}
                     h{"ah:mm至h:mm"}
                     m{"ah:mm至h:mm"}
                 }
                 hmv{
-                    a{"ah:mm至ah:mm [v]"}
                     h{"ah:mm至h:mm [v]"}
                     m{"ah:mm至h:mm [v]"}
                 }
                 hv{
-                    a{"ah時至ah時 [v]"}
                     h{"ah時至h時 [v]"}
                 }
             }
@@ -360,12 +273,6 @@ zh_Hant_HK{
                 "Gy年M月d日",
                 "Gy/M/d",
                 "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-            }
-            DateTimePatterns%atTime{
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
@@ -519,62 +426,10 @@ zh_Hant_HK{
                         morning2{"上午"}
                         night1{"凌晨"}
                     }
-                    narrow{
-                        afternoon1{"中午"}
-                        afternoon2{"下午"}
-                        evening1{"晚上"}
-                        midnight{"午夜"}
-                        morning1{"早上"}
-                        morning2{"上午"}
-                        night1{"凌晨"}
-                    }
-                    wide{
-                        afternoon1{"中午"}
-                        afternoon2{"下午"}
-                        evening1{"晚上"}
-                        midnight{"午夜"}
-                        morning1{"早上"}
-                        morning2{"上午"}
-                        night1{"凌晨"}
-                    }
-                }
-                stand-alone{
-                    abbreviated{
-                        afternoon1{"中午"}
-                        afternoon2{"下午"}
-                        evening1{"晚上"}
-                        morning1{"早上"}
-                        morning2{"上午"}
-                        night1{"凌晨"}
-                    }
-                    narrow{
-                        afternoon1{"中午"}
-                        afternoon2{"下午"}
-                        evening1{"晚上"}
-                        morning1{"早上"}
-                        morning2{"上午"}
-                        night1{"凌晨"}
-                    }
-                    wide{
-                        afternoon1{"中午"}
-                        afternoon2{"下午"}
-                        evening1{"晚上"}
-                        morning1{"早上"}
-                        morning2{"上午"}
-                        night1{"凌晨"}
-                    }
                 }
             }
             eras{
                 abbreviated{
-                    "公元前",
-                    "公元",
-                }
-                narrow{
-                    "公元前",
-                    "公元",
-                }
-                wide{
                     "公元前",
                     "公元",
                 }
@@ -626,34 +481,22 @@ zh_Hant_HK{
                         "Q4",
                     }
                 }
-                stand-alone{
-                    abbreviated{
-                        "Q1",
-                        "Q2",
-                        "Q3",
-                        "Q4",
-                    }
-                }
             }
         }
         hebrew{
             intervalFormats{
                 h{
-                    a{"ah時至ah時"}
                     h{"ah時至h時"}
                 }
                 hm{
-                    a{"ah:mm至ah:mm"}
                     h{"ah:mm至h:mm"}
                     m{"ah:mm至h:mm"}
                 }
                 hmv{
-                    a{"ah:mm至ah:mm [v]"}
                     h{"ah:mm至h:mm [v]"}
                     m{"ah:mm至h:mm [v]"}
                 }
                 hv{
-                    a{"ah時至ah時 [v]"}
                     h{"ah時至h時 [v]"}
                 }
             }
@@ -661,21 +504,17 @@ zh_Hant_HK{
         indian{
             intervalFormats{
                 h{
-                    a{"ah時至ah時"}
                     h{"ah時至h時"}
                 }
                 hm{
-                    a{"ah:mm至ah:mm"}
                     h{"ah:mm至h:mm"}
                     m{"ah:mm至h:mm"}
                 }
                 hmv{
-                    a{"ah:mm至ah:mm [v]"}
                     h{"ah:mm至h:mm [v]"}
                     m{"ah:mm至h:mm [v]"}
                 }
                 hv{
-                    a{"ah時至ah時 [v]"}
                     h{"ah時至h時 [v]"}
                 }
             }
@@ -683,41 +522,22 @@ zh_Hant_HK{
         islamic{
             intervalFormats{
                 h{
-                    a{"ah時至ah時"}
                     h{"ah時至h時"}
                 }
                 hm{
-                    a{"ah:mm至ah:mm"}
                     h{"ah:mm至h:mm"}
                     m{"ah:mm至h:mm"}
                 }
                 hmv{
-                    a{"ah:mm至ah:mm [v]"}
                     h{"ah:mm至h:mm [v]"}
                     m{"ah:mm至h:mm [v]"}
                 }
                 hv{
-                    a{"ah時至ah時 [v]"}
                     h{"ah時至h時 [v]"}
                 }
             }
         }
         japanese{
-            DateTimePatterns{
-                "ah:mm:ss [zzzz]",
-                "ah:mm:ss [z]",
-                "ah:mm:ss",
-                "ah:mm",
-                "Gy年M月d日EEEE",
-                "Gy年M月d日",
-                "Gy年M月d日",
-                "Gy/M/d",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-            }
             availableFormats{
                 h{"ah時"}
                 hm{"ah:mm"}
@@ -725,21 +545,17 @@ zh_Hant_HK{
             }
             intervalFormats{
                 h{
-                    a{"ah時至ah時"}
                     h{"ah時至h時"}
                 }
                 hm{
-                    a{"ah:mm至ah:mm"}
                     h{"ah:mm至h:mm"}
                     m{"ah:mm至h:mm"}
                 }
                 hmv{
-                    a{"ah:mm至ah:mm [v]"}
                     h{"ah:mm至h:mm [v]"}
                     m{"ah:mm至h:mm [v]"}
                 }
                 hv{
-                    a{"ah時至ah時 [v]"}
                     h{"ah時至h時 [v]"}
                 }
             }
@@ -747,49 +563,40 @@ zh_Hant_HK{
         persian{
             intervalFormats{
                 h{
-                    a{"ah時至ah時"}
                     h{"ah時至h時"}
                 }
                 hm{
-                    a{"ah:mm至ah:mm"}
                     h{"ah:mm至h:mm"}
                     m{"ah:mm至h:mm"}
                 }
                 hmv{
-                    a{"ah:mm至ah:mm [v]"}
                     h{"ah:mm至h:mm [v]"}
                     m{"ah:mm至h:mm [v]"}
                 }
                 hv{
-                    a{"ah時至ah時 [v]"}
                     h{"ah時至h時 [v]"}
                 }
             }
         }
         roc{
             availableFormats{
-                Ed{"d日E"}
                 MEd{"d-M（E）"}
                 Md{"d-M"}
                 yyyyMEd{"Gy/M/dE"}
             }
             intervalFormats{
                 h{
-                    a{"ah時至ah時"}
                     h{"ah時至h時"}
                 }
                 hm{
-                    a{"ah:mm至ah:mm"}
                     h{"ah:mm至h:mm"}
                     m{"ah:mm至h:mm"}
                 }
                 hmv{
-                    a{"ah:mm至ah:mm [v]"}
                     h{"ah:mm至h:mm [v]"}
                     m{"ah:mm至h:mm [v]"}
                 }
                 hv{
-                    a{"ah時至ah時 [v]"}
                     h{"ah時至h時 [v]"}
                 }
             }
@@ -823,13 +630,6 @@ zh_Hant_HK{
             }
         }
         day-narrow{
-            relative{
-                "-1"{"昨日"}
-                "-2"{"前日"}
-                "0"{"今日"}
-                "1"{"明日"}
-                "2"{"後日"}
-            }
             relativeTime{
                 future{
                     other{"{0}日後"}
@@ -839,49 +639,7 @@ zh_Hant_HK{
                 }
             }
         }
-        day-short{
-            relative{
-                "-1"{"昨日"}
-                "-2"{"前日"}
-                "0"{"今日"}
-                "1"{"明日"}
-                "2"{"後日"}
-            }
-            relativeTime{
-                future{
-                    other{"{0} 日後"}
-                }
-                past{
-                    other{"{0} 日前"}
-                }
-            }
-        }
         fri{
-            relative{
-                "-1"{"上星期五"}
-                "0"{"本星期五"}
-                "1"{"下星期五"}
-            }
-            relativeTime{
-                future{
-                    other{"{0} 個星期五後"}
-                }
-                past{
-                    other{"{0} 個星期五前"}
-                }
-            }
-        }
-        fri-narrow{
-            relativeTime{
-                future{
-                    other{"{0} 個星期五後"}
-                }
-                past{
-                    other{"{0} 個星期五前"}
-                }
-            }
-        }
-        fri-short{
             relative{
                 "-1"{"上星期五"}
                 "0"{"本星期五"}
@@ -903,9 +661,6 @@ zh_Hant_HK{
         }
         hour-narrow{
             dn{"時"}
-            relative{
-                "0"{"這個小時"}
-            }
             relativeTime{
                 future{
                     other{"{0}小時後"}
@@ -915,11 +670,6 @@ zh_Hant_HK{
                 }
             }
         }
-        hour-short{
-            relative{
-                "0"{"這個小時"}
-            }
-        }
         minute{
             relative{
                 "0"{"這分鐘"}
@@ -927,9 +677,6 @@ zh_Hant_HK{
         }
         minute-narrow{
             dn{"分"}
-            relative{
-                "0"{"這分鐘"}
-            }
             relativeTime{
                 future{
                     other{"{0}分後"}
@@ -939,37 +686,7 @@ zh_Hant_HK{
                 }
             }
         }
-        minute-short{
-            relative{
-                "0"{"這分鐘"}
-            }
-        }
         mon{
-            relative{
-                "-1"{"上星期一"}
-                "0"{"本星期一"}
-                "1"{"下星期一"}
-            }
-            relativeTime{
-                future{
-                    other{"{0} 個星期一後"}
-                }
-                past{
-                    other{"{0} 個星期一前"}
-                }
-            }
-        }
-        mon-narrow{
-            relativeTime{
-                future{
-                    other{"{0} 個星期一後"}
-                }
-                past{
-                    other{"{0} 個星期一前"}
-                }
-            }
-        }
-        mon-short{
             relative{
                 "-1"{"上星期一"}
                 "0"{"本星期一"}
@@ -1002,11 +719,6 @@ zh_Hant_HK{
             }
         }
         quarter-narrow{
-            relative{
-                "-1"{"上季"}
-                "0"{"今季"}
-                "1"{"下季"}
-            }
             relativeTime{
                 future{
                     other{"+{0}Q"}
@@ -1024,31 +736,6 @@ zh_Hant_HK{
             }
         }
         sat{
-            relative{
-                "-1"{"上星期六"}
-                "0"{"本星期六"}
-                "1"{"下星期六"}
-            }
-            relativeTime{
-                future{
-                    other{"{0} 個星期六後"}
-                }
-                past{
-                    other{"{0} 個星期六前"}
-                }
-            }
-        }
-        sat-narrow{
-            relativeTime{
-                future{
-                    other{"{0} 個星期六後"}
-                }
-                past{
-                    other{"{0} 個星期六前"}
-                }
-            }
-        }
-        sat-short{
             relative{
                 "-1"{"上星期六"}
                 "0"{"本星期六"}
@@ -1088,57 +775,7 @@ zh_Hant_HK{
                 }
             }
         }
-        sun-narrow{
-            relativeTime{
-                future{
-                    other{"{0} 個星期日後"}
-                }
-                past{
-                    other{"{0} 個星期日前"}
-                }
-            }
-        }
-        sun-short{
-            relative{
-                "-1"{"上星期日"}
-                "0"{"本星期日"}
-                "1"{"下星期日"}
-            }
-            relativeTime{
-                future{
-                    other{"{0} 個星期日後"}
-                }
-                past{
-                    other{"{0} 個星期日前"}
-                }
-            }
-        }
         thu{
-            relative{
-                "-1"{"上星期四"}
-                "0"{"本星期四"}
-                "1"{"下星期四"}
-            }
-            relativeTime{
-                future{
-                    other{"{0} 個星期四後"}
-                }
-                past{
-                    other{"{0} 個星期四前"}
-                }
-            }
-        }
-        thu-narrow{
-            relativeTime{
-                future{
-                    other{"{0} 個星期四後"}
-                }
-                past{
-                    other{"{0} 個星期四前"}
-                }
-            }
-        }
-        thu-short{
             relative{
                 "-1"{"上星期四"}
                 "0"{"本星期四"}
@@ -1168,57 +805,7 @@ zh_Hant_HK{
                 }
             }
         }
-        tue-narrow{
-            relativeTime{
-                future{
-                    other{"{0} 個星期二後"}
-                }
-                past{
-                    other{"{0} 個星期二前"}
-                }
-            }
-        }
-        tue-short{
-            relative{
-                "-1"{"上星期二"}
-                "0"{"本星期二"}
-                "1"{"下星期二"}
-            }
-            relativeTime{
-                future{
-                    other{"{0} 個星期二後"}
-                }
-                past{
-                    other{"{0} 個星期二前"}
-                }
-            }
-        }
         wed{
-            relative{
-                "-1"{"上星期三"}
-                "0"{"本星期三"}
-                "1"{"下星期三"}
-            }
-            relativeTime{
-                future{
-                    other{"{0} 個星期三後"}
-                }
-                past{
-                    other{"{0} 個星期三前"}
-                }
-            }
-        }
-        wed-narrow{
-            relativeTime{
-                future{
-                    other{"{0} 個星期三後"}
-                }
-                past{
-                    other{"{0} 個星期三前"}
-                }
-            }
-        }
-        wed-short{
             relative{
                 "-1"{"上星期三"}
                 "0"{"本星期三"}
@@ -1250,11 +837,6 @@ zh_Hant_HK{
             }
         }
         week-narrow{
-            relative{
-                "-1"{"上星期"}
-                "0"{"本星期"}
-                "1"{"下星期"}
-            }
             relativeTime{
                 future{
                     other{"{0}星期後"}
@@ -1264,29 +846,7 @@ zh_Hant_HK{
                 }
             }
         }
-        week-short{
-            dn{"星期"}
-            relative{
-                "-1"{"上星期"}
-                "0"{"本星期"}
-                "1"{"下星期"}
-            }
-            relativeTime{
-                future{
-                    other{"{0} 星期後"}
-                }
-                past{
-                    other{"{0} 星期前"}
-                }
-            }
-        }
         weekday{
-            dn{"星期幾"}
-        }
-        weekday-narrow{
-            dn{"星期幾"}
-        }
-        weekday-short{
             dn{"星期幾"}
         }
         year{
@@ -1297,11 +857,6 @@ zh_Hant_HK{
             }
         }
         year-narrow{
-            relative{
-                "-1"{"上年"}
-                "0"{"今年"}
-                "1"{"下年"}
-            }
             relativeTime{
                 future{
                     other{"{0}年後"}
@@ -1309,13 +864,6 @@ zh_Hant_HK{
                 past{
                     other{"{0}年前"}
                 }
-            }
-        }
-        year-short{
-            relative{
-                "-1"{"上年"}
-                "0"{"今年"}
-                "1"{"下年"}
             }
         }
     }
@@ -1326,11 +874,12 @@ zh_Hant_HK{
         }
         standard-narrow{
             2{"{0}及{1}"}
-            end{"{0}及{1}"}
         }
-        standard-short{
-            2{"{0}及{1}"}
-            end{"{0}及{1}"}
+    }
+    personNames{
+        namePattern{
+            givenFirst-long-referring-formal{"{title} {given} {given2} {surname} {generation}, {credentials}"}
+            givenFirst-short-referring-formal{"{title} {given} {given2} {surname} {generation}, {credentials}"}
         }
     }
 }

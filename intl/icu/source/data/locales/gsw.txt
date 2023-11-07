@@ -2,16 +2,14 @@
 // License & terms of use: http://www.unicode.org/copyright.html
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 gsw{
-    AuxExemplarCharacters{"[á à ă â å ā æ ç é è ĕ ê ë ē í ì ĭ î ï ī ñ ó ò ŏ ô ø ō œ ú ù ŭ û ū ÿ]"}
-    ExemplarCharacters{"[a ä b c d e f g h i j k l m n o ö p q r s t u ü v w x y z]"}
+    AuxExemplarCharacters{"[áàăâåā æ ç éèĕêëē íìĭîïī ñ óòŏôøō œ úùŭûū ÿ]"}
+    ExemplarCharacters{"[aä b c d e f g h i j k l m n oö p q r s t uü v w x y z]"}
     ExemplarCharactersNumbers{"[. ’ % ‰ + − 0 1 2 3 4 5 6 7 8 9]"}
     NumberElements{
         latn{
             patterns{
                 currencyFormat{"#,##0.00 ¤"}
-                decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0 %"}
-                scientificFormat{"#E0"}
             }
             patternsLong{
                 decimalFormat{
@@ -168,16 +166,8 @@ gsw{
                 }
             }
             symbols{
-                decimal{"."}
-                exponential{"E"}
                 group{"’"}
-                infinity{"∞"}
-                list{";"}
                 minusSign{"−"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
             }
         }
     }
@@ -238,11 +228,7 @@ gsw{
             availableFormats{
                 Ed{"E d."}
                 H{"H"}
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
-                M{"L"}
                 MEd{"E, d.M."}
-                MMM{"LLL"}
                 MMMEd{"E d. MMM"}
                 MMMMEd{"E d. MMMM"}
                 MMMMd{"d. MMMM"}
@@ -250,9 +236,7 @@ gsw{
                 MMd{"d.MM."}
                 MMdd{"dd.MM."}
                 Md{"d.M."}
-                d{"d"}
                 mmss{"mm:ss"}
-                ms{"mm:ss"}
                 y{"y"}
                 yM{"y-M"}
                 yMEd{"E, y-M-d"}
@@ -265,20 +249,6 @@ gsw{
                 yQQQQ{"QQQQ y"}
             }
             intervalFormats{
-                H{
-                    H{"HH–HH"}
-                }
-                Hm{
-                    H{"HH:mm–HH:mm"}
-                    m{"HH:mm–HH:mm"}
-                }
-                Hmv{
-                    H{"HH:mm–HH:mm v"}
-                    m{"HH:mm–HH:mm v"}
-                }
-                Hv{
-                    H{"HH–HH v"}
-                }
                 M{
                     M{"M.–M."}
                 }
@@ -307,7 +277,6 @@ gsw{
                 d{
                     d{"d.–d."}
                 }
-                fallback{"{0} – {1}"}
                 h{
                     a{"h a – h a"}
                     h{"h–h a"}
@@ -400,11 +369,7 @@ gsw{
             availableFormats{
                 Ed{"E d."}
                 H{"H"}
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
-                M{"L"}
                 MEd{"E, d.M."}
-                MMM{"LLL"}
                 MMMEd{"E d. MMM"}
                 MMMMEd{"E d. MMMM"}
                 MMMMd{"d. MMMM"}
@@ -412,10 +377,7 @@ gsw{
                 MMd{"d.MM."}
                 MMdd{"dd.MM."}
                 Md{"d.M."}
-                d{"d"}
                 mmss{"mm:ss"}
-                ms{"mm:ss"}
-                y{"y"}
                 yM{"y-M"}
                 yMEd{"E, y-M-d"}
                 yMM{"MM.y"}
@@ -469,14 +431,6 @@ gsw{
                         morning1{"am Morge"}
                         night1{"znacht"}
                     }
-                    wide{
-                        afternoon1{"zmittag"}
-                        afternoon2{"am Namittag"}
-                        evening1{"zaabig"}
-                        midnight{"Mitternacht"}
-                        morning1{"am Morge"}
-                        night1{"znacht"}
-                    }
                 }
                 stand-alone{
                     wide{
@@ -496,30 +450,8 @@ gsw{
                     "v. Chr.",
                     "n. Chr.",
                 }
-                narrow{
-                    "v. Chr.",
-                    "n. Chr.",
-                }
-                wide{
-                    "v. Chr.",
-                    "n. Chr.",
-                }
             }
             intervalFormats{
-                H{
-                    H{"HH–HH"}
-                }
-                Hm{
-                    H{"HH:mm–HH:mm"}
-                    m{"HH:mm–HH:mm"}
-                }
-                Hmv{
-                    H{"HH:mm–HH:mm v"}
-                    m{"HH:mm–HH:mm v"}
-                }
-                Hv{
-                    H{"HH–HH v"}
-                }
                 M{
                     M{"M.–M."}
                 }
@@ -548,7 +480,6 @@ gsw{
                 d{
                     d{"d.–d."}
                 }
-                fallback{"{0} – {1}"}
                 h{
                     a{"h a – h a"}
                     h{"h–h a"}
@@ -566,9 +497,6 @@ gsw{
                 hv{
                     a{"h a – h a v"}
                     h{"h–h a v"}
-                }
-                y{
-                    y{"y–y"}
                 }
                 yM{
                     M{"MM.y – MM.y"}
@@ -712,9 +640,6 @@ gsw{
         }
         year{
             dn{"Jaar"}
-        }
-        zone{
-            dn{"Zone"}
         }
     }
     listPattern{

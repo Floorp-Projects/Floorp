@@ -30,9 +30,6 @@ en_CA{
         "Atlantic:St_Helena"{
             ec{"Saint Helena"}
         }
-        "Etc:Unknown"{
-            ec{"unknown city"}
-        }
         "meta:Afghanistan"{
             ss{"AFT"}
         }
@@ -168,9 +165,6 @@ en_CA{
         }
         "meta:Greenland_Eastern"{
             sg{"EGT"}
-        }
-        "meta:Gulf"{
-            ss{"N/A"}
         }
         "meta:Guyana"{
             ss{"GYT"}

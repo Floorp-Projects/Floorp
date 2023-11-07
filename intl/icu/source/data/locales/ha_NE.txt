@@ -2,6 +2,6 @@
 // License & terms of use: http://www.unicode.org/copyright.html
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ha_NE{
-    AuxExemplarCharacters{"[á à â é è ê í ì î ó ò ô p q {r\u0303} ú ù û v x {ʼy}]"}
+    AuxExemplarCharacters{"[áàâ éèê íìî óòô p q {r̃} úùû v x {ʼy}]"}
     ExemplarCharactersIndex{"[A B Ɓ C D Ɗ E F G H I J K Ƙ L M N O P Q R S T U V W X Y Ƴ Z]"}
 }

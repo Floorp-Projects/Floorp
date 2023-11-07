@@ -67,6 +67,7 @@ sl{
         bem{"bemba"}
         bez{"benajščina"}
         bg{"bolgarščina"}
+        bgc{"harjanščina"}
         bgn{"zahodnobalučijščina"}
         bho{"bodžpuri"}
         bi{"bislamščina"}
@@ -101,7 +102,7 @@ sl{
         chp{"čipevščina"}
         chr{"čerokeščina"}
         chy{"čejenščina"}
-        ckb{"soranska kurdščina"}
+        ckb{"osrednja kurdščina"}
         clc{"čilkotinščina"}
         co{"korziščina"}
         cop{"koptščina"}
@@ -570,6 +571,10 @@ sl{
         zxx{"brez jezikoslovne vsebine"}
         zza{"zazajščina"}
     }
+    Languages%long{
+        zh_Hans{"poenostavljena mandarinska kitajščina"}
+        zh_Hant{"tradicionalna mandarinska kitajščina"}
+    }
     Languages%menu{
         yue{"kitajščina (kantonščina)"}
         zh{"kitajščina (mandarinščina)"}
@@ -580,6 +585,7 @@ sl{
         en_US{"angleščina (ZDA)"}
     }
     Languages%variant{
+        ckb{"soranska kurdščina"}
         hi_Latn{"hingleščina"}
     }
     Scripts{
@@ -732,8 +738,6 @@ sl{
             indian{"indijanski koledar"}
             islamic{"islamski koledar"}
             islamic-civil{"islamski civilni koledar"}
-            islamic-rgsa{"islamski koledar ( Saudova Arabija, opazovalni)"}
-            islamic-tbla{"islamski koledar (tabelarni, astronomska epoha)"}
             islamic-umalqura{"islamski koledar Umm al-Qura"}
             iso8601{"koledar ISO-8601"}
             japanese{"japonski koledar"}
@@ -933,10 +937,11 @@ sl{
     }
     characterLabelPattern{
         all{"{0} – vse"}
-        category-list{"{0}: {1}"}
         compatibility{"{0} – združljivost"}
         enclosed{"{0} – vključeno"}
         extended{"{0} – razširjeno"}
+        facing-left{"{0}, obrnjen v levo"}
+        facing-right{"{0}, obrnjen v desno"}
         historic{"{0} – zgodovinsko"}
         miscellaneous{"{0} – razno"}
         other{"{0} – drugo"}
@@ -954,10 +959,5 @@ sl{
         language{"Jezik: {0}"}
         script{"Pisava: {0}"}
         territory{"Regija: {0}"}
-    }
-    localeDisplayPattern{
-        keyTypePattern{"{0}: {1}"}
-        pattern{"{0} ({1})"}
-        separator{"{0}, {1}"}
     }
 }

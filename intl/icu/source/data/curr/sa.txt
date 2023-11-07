@@ -40,36 +40,7 @@ sa{
             "अज्ञात मुद्रा",
         }
     }
-    Currencies%narrow{
-        BRL{"R$"}
-        CNY{"¥"}
-        GBP{"£"}
-        INR{"₹"}
-        JPY{"¥"}
-        USD{"$"}
-    }
     CurrencyPlurals{
-        BRL{
-            other{"ब्राजीली रियाल"}
-        }
-        CNY{
-            other{"चीनी युआन"}
-        }
-        EUR{
-            other{"फिरङ्गिन् मुद्रा"}
-        }
-        GBP{
-            other{"आङ्ग्लदेशीयः पाउंड"}
-        }
-        INR{
-            other{"भारतीय रूप्यकम्"}
-        }
-        JPY{
-            other{"जापानी येन"}
-        }
-        RUB{
-            other{"रष्यदेशीय रूबल"}
-        }
         USD{
             other{"अमेरिकादेशः डॉलर"}
         }

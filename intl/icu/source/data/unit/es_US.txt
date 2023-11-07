@@ -6,10 +6,18 @@ es_US{
     units{
         compound{
             10p-2{"centí{0}"}
+            10p-27{"ronto {0}"}
+            10p-30{"quecto {0}"}
         }
         concentr{
             milligram-ofglucose-per-deciliter{
                 dnam{"miligramos por decilitro"}
+            }
+            percent{
+                dnam{"por ciento"}
+            }
+            permille{
+                dnam{"por mil"}
             }
         }
         electric{
@@ -82,6 +90,13 @@ es_US{
                 other{"{0} caballos de fuerza"}
             }
         }
+        speed{
+            beaufort{
+                dnam{"Escala Beaufort"}
+                one{"Escala Beaufort {0}"}
+                other{"Escala Beaufort {0}"}
+            }
+        }
         temperature{
             generic{
                 one{"{0} grado"}
@@ -119,12 +134,14 @@ es_US{
         }
     }
     unitsNarrow{
-        digital{
-            bit{
-                dnam{"bit"}
+        angle{
+            arc-minute{
+                one{"{0} arcmin"}
+                other{"{0}′"}
             }
-            byte{
-                dnam{"byte"}
+            arc-second{
+                one{"{0} arcsec"}
+                other{"{0}″"}
             }
         }
         duration{
@@ -142,34 +159,48 @@ es_US{
                 dnam{"a"}
                 one{"{0}a"}
                 other{"{0}a"}
+                per{"{0}/a"}
             }
         }
         energy{
             therm-us{
-                dnam{"th US"}
-            }
-        }
-        graphics{
-            dot{
-                dnam{"punto"}
-                one{"{0} p"}
-                other{"{0} p"}
+                one{"{0}th US"}
+                other{"{0}th US"}
             }
         }
         length{
+            astronomical-unit{
+                one{"{0}ua"}
+                other{"{0}ua"}
+            }
             fathom{
                 dnam{"braza"}
             }
             furlong{
                 dnam{"furlong"}
             }
+            kilometer{
+                one{"{0} km"}
+                other{"{0}km"}
+            }
             mile-scandinavian{
                 dnam{"mil"}
                 one{"{0}mil"}
                 other{"{0}mil"}
             }
+            millimeter{
+                one{"{0} mm"}
+                other{"{0}mm"}
+            }
             nautical-mile{
                 dnam{"mn"}
+                one{"{0}mn"}
+                other{"{0}mn"}
+            }
+        }
+        speed{
+            beaufort{
+                dnam{"B"}
             }
         }
         temperature{
@@ -178,26 +209,14 @@ es_US{
                 other{"{0}°"}
             }
         }
-        torque{
-            pound-force-foot{
-                dnam{"lbf⋅ft"}
-            }
-        }
         volume{
             bushel{
-                dnam{"bsh"}
-            }
-            cup{
-                dnam{"tza."}
-            }
-            dessert-spoon{
-                dnam{"cdapostre"}
-            }
-            dram{
-                dnam{"fl dracma"}
+                one{"{0}bsh"}
+                other{"{0}bsh"}
             }
             pint-metric{
-                dnam{"ptm"}
+                one{"{0}ptm"}
+                other{"{0}ptm"}
             }
         }
     }
@@ -242,13 +261,6 @@ es_US{
                 other{"{0} th US"}
             }
         }
-        graphics{
-            dot{
-                dnam{"px"}
-                one{"{0} px"}
-                other{"{0} px"}
-            }
-        }
         length{
             furlong{
                 dnam{"furlongs"}
@@ -272,6 +284,11 @@ es_US{
             }
         }
         speed{
+            beaufort{
+                dnam{"Beaufort"}
+                one{"Beaufort {0}"}
+                other{"Beaufort {0}"}
+            }
             knot{
                 one{"{0} nudo"}
                 other{"{0} nudos"}
@@ -292,7 +309,7 @@ es_US{
             }
             cup{
                 dnam{"tza."}
-                one{"{0} tza."}
+                one{"{0} tzas."}
                 other{"{0} tzas."}
             }
             dessert-spoon{

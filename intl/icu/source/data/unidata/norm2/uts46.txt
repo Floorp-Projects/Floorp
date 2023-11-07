@@ -1,12 +1,12 @@
 # Original file:
 # IdnaMappingTable.txt
-# Date: 2022-05-02, 19:29:26 GMT
-# © 2022 Unicode®, Inc.
+# Date: 2023-08-10, 22:32:27 GMT
+# © 2023 Unicode®, Inc.
 # Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
 # For terms of use, see https://www.unicode.org/terms_of_use.html
 #
 # Unicode IDNA Compatible Preprocessing for UTS #46
-# Version: 15.0.0
+# Version: 15.1.0
 #
 # For documentation and usage, see https://www.unicode.org/reports/tr46
 
@@ -2053,7 +2053,7 @@
 1E9A          >0061 02BE                # 1.1  LATIN SMALL LETTER A WITH RIGHT HALF RING
 1E9B          >1E61                     # 2.0  LATIN SMALL LETTER LONG S WITH DOT ABOVE
 # 1E9C..1E9D  valid                     # 5.1  LATIN SMALL LETTER LONG S WITH DIAGONAL STROKE..LATIN SMALL LETTER LONG S WITH HIGH STROKE
-1E9E          >0073 0073                # 5.1  LATIN CAPITAL LETTER SHARP S
+1E9E          >00DF                     # 5.1  LATIN CAPITAL LETTER SHARP S
 # 1E9F        valid                     # 5.1  LATIN SMALL LETTER DELTA
 1EA0          >1EA1                     # 1.1  LATIN CAPITAL LETTER A WITH DOT BELOW
 # 1EA1        valid                     # 1.1  LATIN SMALL LETTER A WITH DOT BELOW
@@ -2582,11 +2582,7 @@
 # 222E        valid                     # 1.1  CONTOUR INTEGRAL
 222F          >222E 222E                # 1.1  SURFACE INTEGRAL
 2230          >222E 222E 222E           #1.1  VOLUME INTEGRAL
-# 2231..225F  valid                     # 1.1  CLOCKWISE INTEGRAL..QUESTIONED EQUAL TO
-# 2260        disallowed_STD3_valid     # 1.1  NOT EQUAL TO
-# 2261..226D  valid                     # 1.1  IDENTICAL TO..NOT EQUIVALENT TO
-# 226E..226F  disallowed_STD3_valid     # 1.1  NOT LESS-THAN..NOT GREATER-THAN
-# 2270..22F1  valid                     # 1.1  NEITHER LESS-THAN NOR EQUAL TO..DOWN RIGHT DIAGONAL ELLIPSIS
+# 2231..22F1  valid                     # 1.1  CLOCKWISE INTEGRAL..DOWN RIGHT DIAGONAL ELLIPSIS
 # 22F2..22FF  valid                     # 3.2  ELEMENT OF WITH LONG HORIZONTAL STROKE..Z NOTATION BAG MEMBERSHIP
 # 2300        valid                     # 1.1  DIAMETER SIGN
 # 2301        valid                     # 3.0  ELECTRIC ARROW
@@ -3290,7 +3286,7 @@
 2FD5          >9FA0                     # 3.0  KANGXI RADICAL FLUTE
 2FD6..2FEF    >FFFD                     # NA   <reserved-2FD6>..<reserved-2FEF>
 2FF0..2FFB    >FFFD                     # 3.0  IDEOGRAPHIC DESCRIPTION CHARACTER LEFT TO RIGHT..IDEOGRAPHIC DESCRIPTION CHARACTER OVERLAID
-2FFC..2FFF    >FFFD                     # NA   <reserved-2FFC>..<reserved-2FFF>
+2FFC..2FFF    >FFFD                     # 15.1 IDEOGRAPHIC DESCRIPTION CHARACTER SURROUND FROM RIGHT..IDEOGRAPHIC DESCRIPTION CHARACTER ROTATION
 3000          >0020                     # 1.1  IDEOGRAPHIC SPACE
 # 3001        valid                     # 1.1  IDEOGRAPHIC COMMA
 3002          >002E                     # 1.1  IDEOGRAPHIC FULL STOP
@@ -3442,7 +3438,8 @@
 # 31BB..31BF  valid                     # 13.0 BOPOMOFO FINAL LETTER G..BOPOMOFO LETTER AH
 # 31C0..31CF  valid                     # 4.1  CJK STROKE T..CJK STROKE N
 # 31D0..31E3  valid                     # 5.1  CJK STROKE H..CJK STROKE Q
-31E4..31EF    >FFFD                     # NA   <reserved-31E4>..<reserved-31EF>
+31E4..31EE    >FFFD                     # NA   <reserved-31E4>..<reserved-31EE>
+31EF          >FFFD                     # 15.1 IDEOGRAPHIC DESCRIPTION CHARACTER SUBTRACTION
 # 31F0..31FF  valid                     # 3.2  KATAKANA LETTER SMALL KU..KATAKANA LETTER SMALL RO
 3200          >0028 1100 0029           #1.1  PARENTHESIZED HANGUL KIYEOK
 3201          >0028 1102 0029           #1.1  PARENTHESIZED HANGUL NIEUN
@@ -8467,7 +8464,9 @@ FFFE..FFFF    >FFFD                     # 1.1  <noncharacter-FFFE>..<noncharacte
 # 2B820..2CEA1valid                     # 8.0  CJK UNIFIED IDEOGRAPH-2B820..CJK UNIFIED IDEOGRAPH-2CEA1
 2CEA2..2CEAF  >FFFD                     # NA   <reserved-2CEA2>..<reserved-2CEAF>
 # 2CEB0..2EBE0valid                     # 10.0 CJK UNIFIED IDEOGRAPH-2CEB0..CJK UNIFIED IDEOGRAPH-2EBE0
-2EBE1..2F7FF  >FFFD                     # NA   <reserved-2EBE1>..<reserved-2F7FF>
+2EBE1..2EBEF  >FFFD                     # NA   <reserved-2EBE1>..<reserved-2EBEF>
+# 2EBF0..2EE5Dvalid                     # 15.1 CJK UNIFIED IDEOGRAPH-2EBF0..CJK UNIFIED IDEOGRAPH-2EE5D
+2EE5E..2F7FF  >FFFD                     # NA   <reserved-2EE5E>..<reserved-2F7FF>
 2F800         >4E3D                     # 3.1  CJK COMPATIBILITY IDEOGRAPH-2F800
 2F801         >4E38                     # 3.1  CJK COMPATIBILITY IDEOGRAPH-2F801
 2F802         >4E41                     # 3.1  CJK COMPATIBILITY IDEOGRAPH-2F802

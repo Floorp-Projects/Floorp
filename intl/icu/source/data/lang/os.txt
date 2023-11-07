@@ -102,9 +102,4 @@ os{
         script{"Скрипт: {0}"}
         territory{"Бӕстӕ: {0}"}
     }
-    localeDisplayPattern{
-        keyTypePattern{"{0}: {1}"}
-        pattern{"{0} ({1})"}
-        separator{"{0}, {1}"}
-    }
 }

@@ -815,9 +815,13 @@ az{
             "SKK",
             "Slovak Korunası",
         }
+        SLE{
+            "SLE",
+            "Sierra Leon Leonu",
+        }
         SLL{
             "SLL",
-            "Sierra Leon Leonu",
+            "Sierra Leon Leonu (1964—2022)",
         }
         SOS{
             "SOS",
@@ -1081,103 +1085,10 @@ az{
         }
     }
     Currencies%narrow{
-        AOA{"Kz"}
-        ARS{"$"}
-        AUD{"$"}
-        BAM{"KM"}
-        BBD{"$"}
-        BDT{"৳"}
-        BMD{"$"}
-        BND{"$"}
-        BOB{"Bs"}
-        BRL{"R$"}
-        BSD{"$"}
-        BWP{"P"}
         BYN{"р."}
-        BZD{"$"}
-        CAD{"$"}
-        CLP{"$"}
-        CNY{"¥"}
-        COP{"$"}
-        CRC{"₡"}
-        CUC{"$"}
-        CUP{"$"}
-        CZK{"Kč"}
-        DKK{"kr"}
-        DOP{"$"}
-        EGP{"E£"}
-        EUR{"€"}
-        FJD{"$"}
-        FKP{"£"}
-        GBP{"£"}
-        GEL{"₾"}
-        GIP{"£"}
-        GNF{"FG"}
-        GTQ{"Q"}
-        GYD{"$"}
-        HKD{"$"}
-        HNL{"L"}
-        HRK{"kn"}
-        HUF{"Ft"}
-        IDR{"Rp"}
-        ILS{"₪"}
-        INR{"₹"}
-        ISK{"kr"}
-        JMD{"$"}
-        JPY{"¥"}
-        KHR{"៛"}
-        KMF{"CF"}
-        KPW{"₩"}
-        KRW{"₩"}
-        KYD{"$"}
-        KZT{"₸"}
-        LAK{"₭"}
-        LBP{"L£"}
-        LKR{"Rs"}
-        LRD{"$"}
-        MGA{"Ar"}
-        MMK{"K"}
-        MNT{"₮"}
-        MUR{"Rs"}
-        MXN{"$"}
-        MYR{"RM"}
-        NAD{"$"}
-        NGN{"₦"}
-        NIO{"C$"}
-        NOK{"kr"}
-        NPR{"Rs"}
-        NZD{"$"}
-        PHP{"₱"}
-        PKR{"Rs"}
-        PLN{"zł"}
-        PYG{"₲"}
         RON{"ley"}
-        RUB{"₽"}
-        RWF{"RF"}
-        SBD{"$"}
-        SEK{"kr"}
-        SGD{"$"}
-        SHP{"£"}
-        SRD{"$"}
-        SSP{"£"}
-        STN{"Db"}
         SYP{"S£"}
-        THB{"฿"}
-        TOP{"T$"}
-        TRY{"₺"}
-        TTD{"$"}
         TWD{"NT$"}
-        UAH{"₴"}
-        USD{"$"}
-        UYU{"$"}
-        VEF{"Bs"}
-        VND{"₫"}
-        XCD{"$"}
-        ZAR{"R"}
-        ZMW{"ZK"}
-    }
-    Currencies%variant{
-        TRY{"TL"}
     }
     CurrencyPlurals{
         ADP{
@@ -1227,14 +1138,6 @@ az{
         AOR{
             one{"Anqola kvanzası (1995–1999)"}
             other{"Anqola kvanzası (1995–1999)"}
-        }
-        ARA{
-            one{"Argentina avstralı"}
-            other{"Argentina avstralı"}
-        }
-        ARP{
-            one{"Argentina pesosu (1983–1985)"}
-            other{"Argentina pesosu (1983–1985)"}
         }
         ARS{
             one{"Argentina pesosu"}
@@ -1316,37 +1219,9 @@ az{
             one{"Boliviya bolivianosu"}
             other{"Boliviya bolivianosu"}
         }
-        BOP{
-            one{"Boliviya pesosu"}
-            other{"Boliviya pesosu"}
-        }
-        BOV{
-            one{"Boliviya mvdolı"}
-            other{"Boliviya mvdolı"}
-        }
-        BRB{
-            one{"Braziliya kruzeyro novası"}
-            other{"Braziliya kruzeyro novası"}
-        }
-        BRC{
-            one{"Braziliya kruzadosu"}
-            other{"Braziliya kruzadosu"}
-        }
-        BRE{
-            one{"Braziliya kruzeyrosu (1990–1993)"}
-            other{"Braziliya kruzeyrosu (1990–1993)"}
-        }
         BRL{
             one{"Braziliya realı"}
             other{"Braziliya realı"}
-        }
-        BRN{
-            one{"Braziliya kruzado novası"}
-            other{"Braziliya kruzado novası"}
-        }
-        BRR{
-            one{"Braziliya kruzeyrosu"}
-            other{"Braziliya kruzeyrosu"}
         }
         BSD{
             one{"Baham dolları"}
@@ -1503,10 +1378,6 @@ az{
         ETB{
             one{"Efiopiya bırrı"}
             other{"Efiopiya bırrı"}
-        }
-        EUR{
-            one{"Avro"}
-            other{"Avro"}
         }
         FIM{
             one{"Fin markası"}
@@ -1824,10 +1695,6 @@ az{
             one{"Meksika pesosu"}
             other{"Meksika pesosu"}
         }
-        MXP{
-            one{"Meksika gümüş pesosu"}
-            other{"Meksika gümüş pesosu"}
-        }
         MYR{
             one{"Malayziya ringiti"}
             other{"Malayziya ringiti"}
@@ -1851,10 +1718,6 @@ az{
         NGN{
             one{"Nigeriya nairası"}
             other{"Nigeriya nairası"}
-        }
-        NIC{
-            one{"Nikaraqua kordobu"}
-            other{"Nikaraqua kordobu"}
         }
         NIO{
             one{"Nikaraqua kordobası"}
@@ -1992,9 +1855,13 @@ az{
             one{"Slovak korunası"}
             other{"Slovak korunası"}
         }
-        SLL{
+        SLE{
             one{"Sierra Leon leonu"}
             other{"Sierra Leon leonu"}
+        }
+        SLL{
+            one{"Sierra Leon leonu (1964—2022)"}
+            other{"Sierra Leon leonu (1964—2022)"}
         }
         SOS{
             one{"Somali şillinqi"}
@@ -2019,10 +1886,6 @@ az{
         SUR{
             one{"Sovet rublu"}
             other{"Sovet rublu"}
-        }
-        SVC{
-            one{"El Salvador kolonu"}
-            other{"El Salvador kolonu"}
         }
         SYP{
             one{"Suriya funtu"}
@@ -2104,14 +1967,6 @@ az{
             one{"ABŞ dolları"}
             other{"ABŞ dolları"}
         }
-        USN{
-            one{"ABŞ dolları (yeni gün)"}
-            other{"ABŞ dolları (yeni gün)"}
-        }
-        USS{
-            one{"ABŞ dolları (həmin gün)"}
-            other{"ABŞ dolları (həmin gün)"}
-        }
         UYI{
             one{"Uruqvay pesosu unidades indexadas"}
             other{"Uruqvay pesosu unidades indexadas"}
@@ -2160,14 +2015,6 @@ az{
             one{"Kamerun frankı"}
             other{"Kamerun frankı"}
         }
-        XAG{
-            one{"gümüş"}
-            other{"gümüş"}
-        }
-        XAU{
-            one{"qızıl"}
-            other{"qızıl"}
-        }
         XCD{
             one{"Şərqi Karib dolları"}
             other{"Şərqi Karib dolları"}
@@ -2183,10 +2030,6 @@ az{
         XOF{
             one{"Fil Dişi Sahili frankı"}
             other{"Fil Dişi Sahili frankı"}
-        }
-        XPD{
-            one{"Palladium"}
-            other{"Palladium"}
         }
         XPF{
             one{"Fransız Polineziyası frankı"}

@@ -44,16 +44,6 @@ wo{
             "Xaalis buñ Xamul",
         }
     }
-    Currencies%narrow{
-        BRL{"R$"}
-        CNY{"¥"}
-        EUR{"€"}
-        GBP{"£"}
-        INR{"₹"}
-        JPY{"¥"}
-        RUB{"₽"}
-        USD{"$"}
-    }
     CurrencyPlurals{
         BRL{
             other{"Real yu Bresil"}

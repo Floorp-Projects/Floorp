@@ -298,6 +298,9 @@ mn{
         ZW{"Зимбабве"}
         ZZ{"Тодорхойгүй бүс"}
     }
+    Countries%chagos{
+        IO{"Чагос олтриг"}
+    }
     Countries%short{
         GB{"ИБ"}
         HK{"Хонг Конг"}

@@ -53,41 +53,10 @@ to{
         FJD{"F$"}
         NZD{"NZ$"}
         SBD{"S$"}
-        TOP{"T$"}
     }
     CurrencyPlurals{
-        AUD{
-            other{"Tola fakaʻaositelēlia"}
-        }
         EUR{
             other{"ʻeulo"}
-        }
-        FJD{
-            other{"Tola fakafisi"}
-        }
-        NZD{
-            other{"Tola fakanuʻusila"}
-        }
-        PGK{
-            other{"Kina fakapapuaniukini"}
-        }
-        SBD{
-            other{"Tola fakaʻotusolomone"}
-        }
-        TOP{
-            other{"Paʻanga fakatonga"}
-        }
-        VUV{
-            other{"Vatu fakavanuatu"}
-        }
-        WST{
-            other{"Tala fakahaʻamoa"}
-        }
-        XPF{
-            other{"Falaniki fakapasifika"}
-        }
-        XXX{
-            other{"Pa’anga Ta’e’ilo"}
         }
     }
     CurrencyUnitPatterns{

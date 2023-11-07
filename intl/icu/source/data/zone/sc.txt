@@ -3,143 +3,20 @@
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 sc{
     zoneStrings{
-        "Africa:Abidjan"{
-            ec{"Abidjan"}
-        }
-        "Africa:Accra"{
-            ec{"Accra"}
-        }
         "Africa:Addis_Ababa"{
             ec{"Addis Abeba"}
         }
         "Africa:Algiers"{
             ec{"Algeri"}
         }
-        "Africa:Asmera"{
-            ec{"Asmara"}
-        }
-        "Africa:Bamako"{
-            ec{"Bamako"}
-        }
-        "Africa:Bangui"{
-            ec{"Bangui"}
-        }
-        "Africa:Banjul"{
-            ec{"Banjul"}
-        }
-        "Africa:Bissau"{
-            ec{"Bissau"}
-        }
-        "Africa:Blantyre"{
-            ec{"Blantyre"}
-        }
-        "Africa:Brazzaville"{
-            ec{"Brazzaville"}
-        }
-        "Africa:Bujumbura"{
-            ec{"Bujumbura"}
-        }
         "Africa:Cairo"{
             ec{"Su Càiru"}
-        }
-        "Africa:Casablanca"{
-            ec{"Casablanca"}
-        }
-        "Africa:Conakry"{
-            ec{"Conakry"}
-        }
-        "Africa:Dakar"{
-            ec{"Dakar"}
-        }
-        "Africa:Dar_es_Salaam"{
-            ec{"Dar es Salaam"}
-        }
-        "Africa:Djibouti"{
-            ec{"Djibouti"}
-        }
-        "Africa:Douala"{
-            ec{"Douala"}
-        }
-        "Africa:El_Aaiun"{
-            ec{"El Aaiun"}
-        }
-        "Africa:Freetown"{
-            ec{"Freetown"}
-        }
-        "Africa:Gaborone"{
-            ec{"Gaborone"}
-        }
-        "Africa:Harare"{
-            ec{"Harare"}
-        }
-        "Africa:Johannesburg"{
-            ec{"Johannesburg"}
-        }
-        "Africa:Juba"{
-            ec{"Juba"}
-        }
-        "Africa:Kampala"{
-            ec{"Kampala"}
-        }
-        "Africa:Khartoum"{
-            ec{"Khartoum"}
-        }
-        "Africa:Kigali"{
-            ec{"Kigali"}
-        }
-        "Africa:Kinshasa"{
-            ec{"Kinshasa"}
-        }
-        "Africa:Lagos"{
-            ec{"Lagos"}
-        }
-        "Africa:Libreville"{
-            ec{"Libreville"}
-        }
-        "Africa:Lome"{
-            ec{"Lome"}
-        }
-        "Africa:Luanda"{
-            ec{"Luanda"}
-        }
-        "Africa:Lubumbashi"{
-            ec{"Lubumbashi"}
-        }
-        "Africa:Lusaka"{
-            ec{"Lusaka"}
-        }
-        "Africa:Malabo"{
-            ec{"Malabo"}
-        }
-        "Africa:Maputo"{
-            ec{"Maputo"}
-        }
-        "Africa:Maseru"{
-            ec{"Maseru"}
-        }
-        "Africa:Mbabane"{
-            ec{"Mbabane"}
         }
         "Africa:Mogadishu"{
             ec{"Mogadìsciu"}
         }
         "Africa:Monrovia"{
             ec{"Monròvia"}
-        }
-        "Africa:Nairobi"{
-            ec{"Nairobi"}
-        }
-        "Africa:Ndjamena"{
-            ec{"Ndjamena"}
-        }
-        "Africa:Niamey"{
-            ec{"Niamey"}
-        }
-        "Africa:Nouakchott"{
-            ec{"Nouakchott"}
-        }
-        "Africa:Ouagadougou"{
-            ec{"Ouagadougou"}
         }
         "Africa:Porto-Novo"{
             ec{"Portu-Nou"}
@@ -153,14 +30,8 @@ sc{
         "Africa:Tunis"{
             ec{"Tùnisi"}
         }
-        "Africa:Windhoek"{
-            ec{"Windhoek"}
-        }
         "America:Argentina:Tucuman"{
             ec{"Tucumán"}
-        }
-        "America:Cancun"{
-            ec{"Cancún"}
         }
         "America:Curacao"{
             ec{"Curaçao"}
@@ -264,9 +135,6 @@ sc{
         "Asia:Tehran"{
             ec{"Teheràn"}
         }
-        "Asia:Tokyo"{
-            ec{"Tokyo"}
-        }
         "Asia:Ulaanbaatar"{
             ec{"Ulàn Bator"}
         }
@@ -287,6 +155,9 @@ sc{
         }
         "Atlantic:St_Helena"{
             ec{"Sant’Elene"}
+        }
+        "Australia:Currie"{
+            ec{"Currie"}
         }
         "Etc:UTC"{
             ls{"Tempus coordinadu universale"}
@@ -375,23 +246,8 @@ sc{
         "Europe:Zurich"{
             ec{"Zurigu"}
         }
-        "Indian:Antananarivo"{
-            ec{"Antananarivo"}
-        }
-        "Indian:Chagos"{
-            ec{"Chagos"}
-        }
         "Indian:Christmas"{
             ec{"Natividade"}
-        }
-        "Indian:Comoro"{
-            ec{"Comoro"}
-        }
-        "Indian:Kerguelen"{
-            ec{"Kerguelen"}
-        }
-        "Indian:Mahe"{
-            ec{"Mahe"}
         }
         "Indian:Maldives"{
             ec{"Maldivas"}
@@ -404,6 +260,9 @@ sc{
         }
         "Indian:Reunion"{
             ec{"Reunione"}
+        }
+        "Pacific:Enderbury"{
+            ec{"Enderbury"}
         }
         "Pacific:Guam"{
             ec{"Guàm"}

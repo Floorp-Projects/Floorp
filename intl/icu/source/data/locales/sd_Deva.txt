@@ -5,19 +5,10 @@ sd_Deva{
     %%Parent{"root"}
     AuxExemplarCharacters{"[\u200C\u200D]"}
     ExemplarCharacters{
-        "[\u093C \u0902 अ आ इ ई उ ऊ ए ऐ ओ औ क ख ग ॻ घ ङ च छ ज ॼ झ ञ ट ठ ड ॾ ढ ण त थ द"
-        " ध न प फ ब ॿ भ म य र ल व श ष स ह ा ि ी \u0941 \u0942 \u0943 \u0944 \u0945 "
-        "\u0947 \u0948 ॉ ो ौ \u094D]"
+        "[़ ं अ आ इ ई उ ऊ ए ऐ ओ औ क ख ग ॻ घ ङ च छ ज ॼ झ ञ ट ठ ड ॾ ढ ण त थ द ध न प फ ब"
+        " ॿ भ म य र ल व श ष स ह ा ि ी ु ू ृ ॄ ॅ े ै ॉ ो ौ ्]"
     }
-    ExemplarCharactersNumbers{"[\\- ‑ , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
-    ExemplarCharactersPunctuation{
-        "[\\- ‐ ‑ – — , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” ( ) \\[ \\] § @ * / \\& # † ‡ "
-        "′ ″]"
-    }
-    NumberElements{
-        default{"latn"}
-        native{"latn"}
-    }
+    ExemplarCharactersPunctuation{"[\\- ‐‑ – — , ; \\: ! ? . … '‘’ \u0022“” ( ) \\[ \\] § @ * / \\& # † ‡ ′ ″]"}
     calendar{
         generic{
             DateTimePatterns{
@@ -92,35 +83,15 @@ sd_Deva{
                 "yyMd",
             }
             availableFormats{
-                Bh{"h B"}
-                Bhm{"h:mm B"}
-                Bhms{"h:mm:ss B"}
-                EBhm{"E h:mm B"}
-                EBhms{"E h:mm:ss B"}
-                EHm{"E HH:mm"}
-                EHms{"E HH:mm:ss"}
                 Ed{"d E"}
-                Ehm{"E h:mm a"}
-                Ehms{"E h:mm:ss a"}
                 Gy{"y G"}
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E, MMM d, y G"}
                 GyMMMd{"MMM d, y G"}
                 GyMd{"M/d/y GGGGG"}
-                H{"HH"}
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
-                Hmsv{"HH:mm:ss v"}
-                Hmv{"HH:mm v"}
                 MEd{"E, M/d"}
                 MMMEd{"E, MMM d"}
                 Md{"M/d"}
-                h{"h a"}
-                hm{"h:mm a"}
-                hms{"h:mm:ss a"}
-                hmsv{"h:mm:ss a v"}
-                hmv{"h:mm a v"}
-                ms{"mm:ss"}
                 yM{"M/y"}
                 yMEd{"E, M/d/y"}
                 yMMM{"MMM y"}
@@ -141,15 +112,6 @@ sd_Deva{
                         "विस",
                         "जुम",
                         "छंछ",
-                    }
-                    narrow{
-                        "आ",
-                        "सू",
-                        "मं",
-                        "बु॒",
-                        "वि",
-                        "जु",
-                        "छं",
                     }
                     wide{
                         "आर्तवार",
@@ -296,18 +258,6 @@ sd_Deva{
             }
             quarters{
                 format{
-                    abbreviated{
-                        "पहिंरी टिमाही",
-                        "बीं॒ टिमाही",
-                        "टीं टिमाही",
-                        "चोथीं टिमाही",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                    }
                     wide{
                         "पहिंरी टिमाही",
                         "बीं॒ टिमाही",
@@ -318,18 +268,6 @@ sd_Deva{
                 stand-alone{
                     abbreviated{
                         "पहिरीं टिमाही",
-                        "बीं॒ टिमाही",
-                        "टीं टिमाही",
-                        "चोथीं टिमाही",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                    }
-                    wide{
-                        "पहिंरी टिमाही",
                         "बीं॒ टिमाही",
                         "टीं टिमाही",
                         "चोथीं टिमाही",
@@ -347,22 +285,6 @@ sd_Deva{
                 "1"{"सुभाणे"}
             }
         }
-        day-narrow{
-            dn{"दीं॒हुं"}
-            relative{
-                "-1"{"कल"}
-                "0"{"अॼु"}
-                "1"{"सुभाणे"}
-            }
-        }
-        day-short{
-            dn{"दीं॒हुं"}
-            relative{
-                "-1"{"कल"}
-                "0"{"अॼु"}
-                "1"{"सुभाणे"}
-            }
-        }
         dayperiod{
             dn{"दीं॒हुं/ रातु"}
         }
@@ -372,67 +294,25 @@ sd_Deva{
         hour{
             dn{"कलाक"}
         }
-        hour-narrow{
-            dn{"कलाक"}
-        }
-        hour-short{
-            dn{"कलाक"}
-        }
         minute{
-            dn{"मिंटु"}
-        }
-        minute-narrow{
-            dn{"मिंटु"}
-        }
-        minute-short{
             dn{"मिंटु"}
         }
         month{
             dn{"महिनो"}
         }
-        month-narrow{
-            dn{"महिनो"}
-        }
-        month-short{
-            dn{"महिनो"}
-        }
         quarter{
-            dn{"टिमाही"}
-        }
-        quarter-narrow{
-            dn{"टिमाही"}
-        }
-        quarter-short{
             dn{"टिमाही"}
         }
         second{
             dn{"सेकिंडु"}
         }
-        second-narrow{
-            dn{"सेकिंडु"}
-        }
-        second-short{
-            dn{"सेकिंडु"}
-        }
         week{
-            dn{"हफ्तो"}
-        }
-        week-narrow{
-            dn{"हफ्तो"}
-        }
-        week-short{
             dn{"हफ्तो"}
         }
         weekday{
             dn{"हफ्ते जो दीं॒हुं"}
         }
         year{
-            dn{"साल"}
-        }
-        year-narrow{
-            dn{"साल"}
-        }
-        year-short{
             dn{"साल"}
         }
         zone{

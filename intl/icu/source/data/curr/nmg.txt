@@ -175,9 +175,13 @@ nmg{
             "SHP",
             "Mɔn má Saint Lina",
         }
+        SLE{
+            "SLE",
+            "Mɔn Leɔne",
+        }
         SLL{
             "SLL",
-            "Mɔn Leɔne",
+            "Mɔn Leɔn (1964—2022)¨",
         }
         SOS{
             "SOS",

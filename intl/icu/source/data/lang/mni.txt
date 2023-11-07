@@ -61,7 +61,7 @@ mni{
         Jpan{"জপানিজ"}
         Kore{"কোরিয়ন"}
         Latn{"লেটিন"}
-        Mtei{"মেইটেই মায়েক"}
+        Mtei{"মীতৈ ময়েক"}
         Zxxx{"ইদবা"}
         Zzzz{"মশকখংদবা স্ক্রিপ্ট"}
     }
@@ -85,10 +85,5 @@ mni{
         language{"লোল: {0}"}
         script{"স্ক্রিপ্ট: {0}"}
         territory{"লমদম: {0}"}
-    }
-    localeDisplayPattern{
-        keyTypePattern{"{0}: {1}"}
-        pattern{"{0} ({1})"}
-        separator{"{0}, {1}"}
     }
 }

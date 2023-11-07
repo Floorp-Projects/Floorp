@@ -3,15 +3,13 @@
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 dyo{
     AuxExemplarCharacters{"[z]"}
-    ExemplarCharacters{"[a á b c d e é f g h i í j k l m n ñ ŋ o ó p q r s t u ú v w x y]"}
-    ExemplarCharactersIndex{"[A B C D E F G H I J K L M N Ñ Ŋ O P Q R S T U V W X Y]"}
+    ExemplarCharacters{"[aá b c d eé f g h ií j k l m nñ ŋ oó p q r s t uú v w x y]"}
+    ExemplarCharactersIndex{"[A B C D E F G H I J K L M NÑ Ŋ O P Q R S T U V W X Y]"}
     ExemplarCharactersNumbers{"[  \\- ‑ , % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     NumberElements{
         latn{
             patterns{
                 currencyFormat{"#,##0.00 ¤"}
-                decimalFormat{"#,##0.###"}
-                percentFormat{"#,##0%"}
             }
             symbols{
                 decimal{","}
@@ -48,15 +46,10 @@ dyo{
             }
             availableFormats{
                 Ed{"E d"}
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
-                M{"L"}
                 MEd{"E d/M"}
-                MMM{"LLL"}
                 MMMEd{"E d MMM"}
                 MMMd{"d MMM"}
                 Md{"d/M"}
-                d{"d"}
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
                 ms{"m:ss"}
@@ -99,19 +92,13 @@ dyo{
             }
             availableFormats{
                 Ed{"E d"}
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
-                M{"L"}
                 MEd{"E d/M"}
-                MMM{"LLL"}
                 MMMEd{"E d MMM"}
                 MMMd{"d MMM"}
                 Md{"d/M"}
-                d{"d"}
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
                 ms{"m:ss"}
-                y{"y"}
                 yM{"M/y"}
                 yMEd{"E d/M/y"}
                 yMMM{"MMM y"}

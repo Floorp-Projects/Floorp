@@ -77,6 +77,7 @@ ca{
         bfd{"bafut"}
         bfq{"badaga"}
         bg{"búlgar"}
+        bgc{"haryanvi"}
         bgn{"balutxi occidental"}
         bho{"bhojpuri"}
         bi{"bislama"}
@@ -173,7 +174,7 @@ ca{
         enm{"anglès mitjà"}
         eo{"esperanto"}
         es{"espanyol"}
-        es_419{"espanyol hispanoamericà"}
+        es_419{"espanyol llatinoamericà"}
         es_ES{"espanyol europeu"}
         es_MX{"espanyol de Mèxic"}
         et{"estonià"}
@@ -1052,10 +1053,11 @@ ca{
     }
     characterLabelPattern{
         all{"{0} — tot"}
-        category-list{"{0}: {1}"}
         compatibility{"{0} — compatibilitat"}
         enclosed{"{0} — inclosos"}
         extended{"{0} — ampliats"}
+        facing-left{"{0} que mira a l’esquerra"}
+        facing-right{"{0} que mira a la dreta"}
         historic{"{0} — històrics"}
         miscellaneous{"{0} — varis"}
         other{"{0} — altres"}
@@ -1071,10 +1073,5 @@ ca{
         language{"Llengua: {0}"}
         script{"Escriptura: {0}"}
         territory{"Regió: {0}"}
-    }
-    localeDisplayPattern{
-        keyTypePattern{"{0}: {1}"}
-        pattern{"{0} ({1})"}
-        separator{"{0}, {1}"}
     }
 }

@@ -4,27 +4,18 @@
 brx{
     AuxExemplarCharacters{"[\u200C\u200D]"}
     ExemplarCharacters{
-        "[\u093C \u0901 \u0902 अ आ इ ई उ ऊ ऍ ए ऐ ऑ ओ औ क ख ग घ च छ ज झ ञ ट ठ ड {ड"
-        "\u093C} ढ ण त थ द ध न प फ ब भ म य र ल ळ व श ष स ह ा ि ी \u0941 \u0942 "
-        "\u0943 \u0945 \u0947 \u0948 ॉ ो ौ \u094D]"
+        "[़ ँ ं अ आ इ ई उ ऊ ऍ ए ऐ ऑ ओ औ क ख ग घ च छ ज झ ञ ट ठ ड{ड़} ढ ण त थ द ध न प फ"
+        " ब भ म य र ल ळ व श ष स ह ा ि ी ु ू ृ ॅ े ै ॉ ो ौ ्]"
     }
     ExemplarCharactersIndex{
-        "[अ आ इ ई उ ऊ ऍ ए ऐ ऑ ओ औ क ख ग घ च छ ज झ ञ ट ठ ड {ड\u093C} ढ ण त थ द ध न प फ"
-        " ब भ म य र ल ळ व श ष स ह]"
+        "[अ आ इ ई उ ऊ ऍ ए ऐ ऑ ओ औ क ख ग घ च छ ज झ ञ ट ठ ड{ड़} ढ ण त थ द ध न प फ ब भ म"
+        " य र ल ळ व श ष स ह]"
     }
-    ExemplarCharactersNumbers{"[\\- ‑ , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
-    ExemplarCharactersPunctuation{
-        "[\\- ‐ ‑ – — , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” ( ) \\[ \\] § @ * / \\& # † ‡ "
-        "′ ″]"
-    }
+    ExemplarCharactersPunctuation{"[\\- ‐‑ – — , ; \\: ! ? . … '‘’ \u0022“” ( ) \\[ \\] § @ * / \\& # † ‡ ′ ″]"}
     NumberElements{
-        default{"latn"}
         latn{
             miscPatterns{
-                approximately{"~{0}"}
                 atLeast{"{0}+"}
-                atMost{"≤{0}"}
-                range{"{0}–{1}"}
             }
             patterns{
                 accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
@@ -33,7 +24,6 @@ brx{
                 currencyPatternAppendISO{"{0} ¤¤"}
                 decimalFormat{"#,##,##0.###"}
                 percentFormat{"#,##,##0%"}
-                scientificFormat{"#E0"}
             }
             patternsLong{
                 decimalFormat{
@@ -89,14 +79,6 @@ brx{
             }
             patternsShort{
                 currencyFormat{
-                    1000{
-                        one{"¤ 0K"}
-                        other{"¤ 0K"}
-                    }
-                    10000{
-                        one{"¤ 00K"}
-                        other{"¤ 00K"}
-                    }
                     100000{
                         one{"¤000K"}
                         other{"¤000K"}
@@ -190,21 +172,9 @@ brx{
                 }
             }
             symbols{
-                approximatelySign{"~"}
-                decimal{"."}
-                exponential{"E"}
-                group{","}
-                infinity{"∞"}
-                list{";"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
                 superscriptingExponent{"x"}
             }
         }
-        minimumGroupingDigits{"1"}
         native{"deva"}
     }
     calendar{
@@ -244,36 +214,23 @@ brx{
                 Bh{"B h"}
                 Bhm{"B h:mm"}
                 Bhms{"B h:mm:ss"}
-                E{"ccc"}
                 EBhm{"E B h:mm"}
                 EBhms{"E B h:mm:ss"}
-                EHm{"E HH:mm"}
-                EHms{"E HH:mm:ss"}
-                Ed{"d, E"}
                 Ehm{"E a h:mm"}
                 Ehms{"E a h:mm:ss"}
-                Gy{"G y"}
                 GyMMM{"G, MMMM y"}
                 GyMMMEd{"d MMM, G y, E"}
                 GyMMMd{"d MMM, G y"}
                 GyMd{"GGGGG d/M/y"}
-                H{"HH"}
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
-                M{"L"}
                 MEd{"d/M, E"}
-                MMM{"LLL"}
                 MMMEd{"d MMM, E"}
                 MMMMEd{"d MMMM, E"}
                 MMMMd{"d MMMM"}
                 MMMd{"d-MMM"}
                 Md{"d/M"}
-                d{"d"}
                 h{"a h"}
                 hm{"a h:mm"}
                 hms{"a h:mm:ss"}
-                ms{"mm:ss"}
-                y{"G y"}
                 yM{"M/y"}
                 yMEd{"d/M/y, E"}
                 yMMM{"MMM y"}
@@ -281,7 +238,6 @@ brx{
                 yMMMM{"MMMM y"}
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ y"}
-                yyyy{"G y"}
                 yyyyM{"GGGGG M/y"}
                 yyyyMEd{"GGGGG d/M/y, E"}
                 yyyyMMM{"G MMM y"}
@@ -289,8 +245,6 @@ brx{
                 yyyyMMMM{"G MMMM y"}
                 yyyyMMMd{"d MMM y, G"}
                 yyyyMd{"GGGGG d/M/y"}
-                yyyyQQQ{"G y QQQ"}
-                yyyyQQQQ{"G y QQQQ"}
             }
             intervalFormats{
                 Bh{
@@ -304,7 +258,6 @@ brx{
                 }
                 Gy{
                     G{"G y–G y"}
-                    y{"G y–y"}
                 }
                 GyM{
                     G{"GGGGG M/y – GGGGG M/y"}
@@ -362,13 +315,7 @@ brx{
                     M{"d/M – d/M"}
                     d{"d/M – d/M"}
                 }
-                d{
-                    d{"d–d"}
-                }
                 fallback{"{0} – {1}"}
-                y{
-                    y{"G y–y"}
-                }
                 yM{
                     M{"GGGGG M/y – M/y"}
                     y{"GGGGG M/y – M/y"}
@@ -404,10 +351,6 @@ brx{
             }
         }
         gregorian{
-            AmPmMarkers{
-                "फुं",
-                "बेलासे",
-            }
             AmPmMarkersAbbr{
                 "फुं",
                 "बेलासे",
@@ -447,49 +390,25 @@ brx{
                 "yMMMd",
                 "yyMd",
             }
-            appendItems{
-                Timezone{"{0} {1}"}
-            }
             availableFormats{
                 Bh{"B नि h"}
                 Bhm{"B नि h:mm"}
                 Bhms{"B नि h:mm:ss"}
-                E{"ccc"}
                 EBhm{"E B नि h:mm"}
                 EBhms{"E B नि h:mm:ss"}
-                EHm{"E HH:mm"}
-                EHms{"E HH:mm:ss"}
-                Ed{"d, E"}
                 Ehm{"a h:mm, E"}
                 Ehms{"a h:mm:ss, E"}
                 Gy{"Gy"}
-                GyMMM{"G y MMM"}
                 GyMMMEd{"G y MMM E d"}
-                GyMMMd{"G y MMM d"}
                 GyMd{"GGGGG dd-MM-y"}
-                H{"HH"}
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
-                Hmv{"HH:mm v"}
-                M{"L"}
                 MEd{"E, M/d"}
-                MMM{"LLL"}
                 MMMEd{"E, MMM d"}
                 MMMMEd{"E, MMMM d"}
-                MMMMW{
-                    one{"'week' W 'of' MMMM"}
-                    other{"'week' W 'of' MMMM"}
-                }
-                MMMMd{"MMMM d"}
                 MMMd{"d-MMM"}
                 Md{"M/d"}
-                d{"d"}
                 h{"a नि h"}
-                hms{"h:mm:ss a"}
                 hmsv{"a नि h:mm:ss v"}
                 hmv{"a h:mm v"}
-                ms{"mm:ss"}
-                y{"y"}
                 yM{"M/y"}
                 yMEd{"E, M/d/y"}
                 yMMM{"MMM y"}
@@ -499,32 +418,10 @@ brx{
                 yMd{"dd-MM-y"}
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ y"}
-                yw{
-                    one{"'week' w 'of' Y"}
-                    other{"'week' w 'of' Y"}
-                }
             }
             dayNames{
                 format{
                     abbreviated{
-                        "रबि",
-                        "सम",
-                        "मंगल",
-                        "बुध",
-                        "बिस्थि",
-                        "सुखुर",
-                        "सनि",
-                    }
-                    narrow{
-                        "र",
-                        "स",
-                        "मं",
-                        "बु",
-                        "बि",
-                        "सु",
-                        "स",
-                    }
-                    short{
                         "रबि",
                         "सम",
                         "मंगल",
@@ -544,15 +441,6 @@ brx{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "रबि",
-                        "सम",
-                        "मंगल",
-                        "बुध",
-                        "बिस्थि",
-                        "सुखुर",
-                        "सनि",
-                    }
                     narrow{
                         "र",
                         "स",
@@ -562,15 +450,6 @@ brx{
                         "सु",
                         "स",
                     }
-                    short{
-                        "रबि",
-                        "सम",
-                        "मंगल",
-                        "बुध",
-                        "बिस्थि",
-                        "सुखुर",
-                        "सनि",
-                    }
                     wide{
                         "रबिबार",
                         "समबार",
@@ -579,22 +458,6 @@ brx{
                         "बिस्थिबार",
                         "सुुखुरबार",
                         "सनिबार",
-                    }
-                }
-            }
-            dayPeriod{
-                stand-alone{
-                    abbreviated{
-                        am{"फुं"}
-                        pm{"बेलासे"}
-                    }
-                    narrow{
-                        am{"फुं"}
-                        pm{"बेलासे"}
-                    }
-                    wide{
-                        am{"फुं"}
-                        pm{"बेलासे"}
                     }
                 }
             }
@@ -626,10 +489,6 @@ brx{
                     h{"B नि h:mm–h:mm"}
                     m{"B नि h:mm–h:mm"}
                 }
-                Gy{
-                    G{"G y – G y"}
-                    y{"G y–y"}
-                }
                 GyM{
                     G{"G M/y – G M/y"}
                     M{"G M/y – M/y"}
@@ -642,8 +501,6 @@ brx{
                     y{"G d/M/y, E – d/My, E"}
                 }
                 GyMMM{
-                    G{"G y MMM – G y MMM"}
-                    M{"G y MMM–MMM"}
                     y{"G y MMM–y MMM"}
                 }
                 GyMMMEd{
@@ -700,9 +557,6 @@ brx{
                     M{"d/M –/dM"}
                     d{"d/M – d/M"}
                 }
-                d{
-                    d{"d–d"}
-                }
                 h{
                     a{"a नि h–a नि h"}
                     h{"a नि h–h"}
@@ -721,9 +575,6 @@ brx{
                     a{"a h– a h v"}
                     h{"a h–h v"}
                 }
-                y{
-                    y{"y–y"}
-                }
                 yM{
                     M{"M/y–M/y"}
                     y{"M/y–M/y"}
@@ -733,18 +584,10 @@ brx{
                     d{"d/M/y, E – d/M/y, E"}
                     y{"d/M/y, E – d/M/y, E"}
                 }
-                yMMM{
-                    M{"y MMM–MMM"}
-                    y{"y MMM – y MMM"}
-                }
                 yMMMEd{
                     M{"d MMM, y, E – d MMM, y, E"}
                     d{"y, d MMM, E– d MMM, E"}
                     y{"d MMM, y, E – d MMM, y,E"}
-                }
-                yMMMM{
-                    M{"y MMMM–MMMM"}
-                    y{"y MMMM – y MMMM"}
                 }
                 yMMMd{
                     M{"y, d MMM– d MMM"}
@@ -773,20 +616,6 @@ brx{
                         "नवे",
                         "डिसे",
                     }
-                    narrow{
-                        "ज",
-                        "फ",
-                        "म",
-                        "ए",
-                        "म",
-                        "ज",
-                        "ज",
-                        "आ",
-                        "स",
-                        "अ",
-                        "न",
-                        "ड",
-                    }
                     wide{
                         "जानुवारी",
                         "फेब्रूवारी",
@@ -803,20 +632,6 @@ brx{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "जान",
-                        "फेब",
-                        "मार्च",
-                        "एप्रि",
-                        "मे",
-                        "जुन",
-                        "जुल",
-                        "आग",
-                        "सेप",
-                        "अक्ट’",
-                        "नवे",
-                        "डिसे",
-                    }
                     narrow{
                         "ज",
                         "फ",
@@ -830,20 +645,6 @@ brx{
                         "अ",
                         "न",
                         "ड",
-                    }
-                    wide{
-                        "जानुवारी",
-                        "फेब्रूवारी",
-                        "मार्च",
-                        "एप्रिल",
-                        "मे",
-                        "जुन",
-                        "जुलाई",
-                        "आगष्ट",
-                        "सेप्थेम्बर",
-                        "अक्ट’बर",
-                        "नवेम्बर",
-                        "डिसेम्बर",
                     }
                 }
             }
@@ -854,32 +655,6 @@ brx{
                         "किउ 2",
                         "किउ 3",
                         "किउ 4",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                    }
-                    wide{
-                        "ब्रै बाहागोनि सेथि खोन्दो",
-                        "ब्रै बाहागोनि नैथि खोन्दो",
-                        "ब्रै बाहागोनि थामथि खोन्दो",
-                        "ब्रै बाहागोनि ब्रैथि खोन्दो",
-                    }
-                }
-                stand-alone{
-                    abbreviated{
-                        "किउ 1",
-                        "किउ 2",
-                        "किउ 3",
-                        "किउ 4",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
                     }
                     wide{
                         "ब्रै बाहागोनि सेथि खोन्दो",
@@ -898,78 +673,6 @@ brx{
             }
             monthNames{
                 format{
-                    abbreviated{
-                        "छैत्र",
-                        "बैसागो",
-                        "जेथो",
-                        "आसार",
-                        "सावोन",
-                        "भाद्र",
-                        "आसिन",
-                        "काथि",
-                        "आघोन",
-                        "पुष",
-                        "मागो",
-                        "फागुन",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10",
-                        "11",
-                        "12",
-                    }
-                    wide{
-                        "छैत्र",
-                        "बैसागो",
-                        "जेथो",
-                        "आसार",
-                        "सावोन",
-                        "भाद्र",
-                        "आसिन",
-                        "काथि",
-                        "आघोन",
-                        "पुष",
-                        "मागो",
-                        "फागुन",
-                    }
-                }
-                stand-alone{
-                    abbreviated{
-                        "छैत्र",
-                        "बैसागो",
-                        "जेथो",
-                        "आसार",
-                        "सावोन",
-                        "भाद्र",
-                        "आसिन",
-                        "काथि",
-                        "आघोन",
-                        "पुष",
-                        "मागो",
-                        "फागुन",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10",
-                        "11",
-                        "12",
-                    }
                     wide{
                         "छैत्र",
                         "बैसागो",
@@ -987,12 +690,6 @@ brx{
                 }
             }
         }
-    }
-    delimiters{
-        alternateQuotationEnd{"’"}
-        alternateQuotationStart{"‘"}
-        quotationEnd{"”"}
-        quotationStart{"“"}
     }
     fields{
         day{
@@ -1013,104 +710,16 @@ brx{
                 }
             }
         }
-        day-narrow{
-            dn{"सान"}
-            relative{
-                "-1"{"मैया"}
-                "0"{"दिनै"}
-                "1"{"गाबोन"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} सानाव"}
-                    other{"{0} सानाव"}
-                }
-                past{
-                    one{"{0} सान सिगां"}
-                    other{"{0} सान सिगां"}
-                }
-            }
-        }
-        day-short{
-            dn{"सान"}
-            relative{
-                "-1"{"मैया"}
-                "0"{"दिनै"}
-                "1"{"गाबोन"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} सानाव"}
-                    other{"{0} सानाव"}
-                }
-                past{
-                    one{"{0} सान सिगां"}
-                    other{"{0} सान सिगां"}
-                }
-            }
-        }
         dayOfYear{
-            dn{"बोसोरनि सान"}
-        }
-        dayOfYear-narrow{
-            dn{"बोसोरनि सान"}
-        }
-        dayOfYear-short{
             dn{"बोसोरनि सान"}
         }
         dayperiod{
             dn{"फुं/बेलासे"}
         }
-        dayperiod-narrow{
-            dn{"फुं/बेलासे"}
-        }
-        dayperiod-short{
-            dn{"फुं/बेलासे"}
-        }
         era{
             dn{"मुगा"}
         }
-        era-narrow{
-            dn{"मुगा"}
-        }
-        era-short{
-            dn{"मुगा"}
-        }
         fri{
-            relative{
-                "-1"{"थांनाय सुखुरबार"}
-                "0"{"बे सुखुरबार"}
-                "1"{"फैगौ सुखुरबार"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} सुखुरबाराव"}
-                    other{"{0} सुखुरबाराव"}
-                }
-                past{
-                    one{"{0} सुखुरबार सिगां"}
-                    other{"{0} सुखुरबार सिगां"}
-                }
-            }
-        }
-        fri-narrow{
-            relative{
-                "-1"{"थांनाय सुखुरबार"}
-                "0"{"बे सुखुरबार"}
-                "1"{"फैगौ सुखुरबार"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} सुखुरबाराव"}
-                    other{"{0} सुखुरबाराव"}
-                }
-                past{
-                    one{"{0} सुखुरबार सिगां"}
-                    other{"{0} सुखुरबार सिगां"}
-                }
-            }
-        }
-        fri-short{
             relative{
                 "-1"{"थांनाय सुखुरबार"}
                 "0"{"बे सुखुरबार"}
@@ -1143,63 +752,11 @@ brx{
                 }
             }
         }
-        hour-narrow{
-            dn{"घन्टा"}
-            relativeTime{
-                future{
-                    one{"{0} घन्टायाव"}
-                    other{"{0} घन्टायाव"}
-                }
-                past{
-                    one{"{0} घन्टा सिगां"}
-                    other{"{0} घन्टा सिगां"}
-                }
-            }
-        }
-        hour-short{
-            dn{"घन्टा"}
-            relativeTime{
-                future{
-                    one{"{0} घन्टायाव"}
-                    other{"{0} घन्टायाव"}
-                }
-                past{
-                    one{"{0} घन्टा सिगां"}
-                    other{"{0} घन्टा सिगां"}
-                }
-            }
-        }
         minute{
             dn{"मिनित"}
             relative{
                 "0"{"बे मिनिट"}
             }
-            relativeTime{
-                future{
-                    one{"{0} मिनिटआव"}
-                    other{"{0} मिनिटआव"}
-                }
-                past{
-                    one{"{0} मिनिट सिगां"}
-                    other{"{0} मिनिट सिगां"}
-                }
-            }
-        }
-        minute-narrow{
-            dn{"मिनित"}
-            relativeTime{
-                future{
-                    one{"{0} मिनिटआव"}
-                    other{"{0} मिनिटआव"}
-                }
-                past{
-                    one{"{0} मिनिट सिगां"}
-                    other{"{0} मिनिट सिगां"}
-                }
-            }
-        }
-        minute-short{
-            dn{"मिनित"}
             relativeTime{
                 future{
                     one{"{0} मिनिटआव"}
@@ -1228,77 +785,7 @@ brx{
                 }
             }
         }
-        mon-narrow{
-            relative{
-                "-1"{"थांनाय समबार"}
-                "0"{"बे समबार"}
-                "1"{"फैगौ समबार"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} समबाराव"}
-                    other{"{0} समबाराव"}
-                }
-                past{
-                    one{"{0} समबारनि सिगां"}
-                    other{"{0} समबारनि सिगां"}
-                }
-            }
-        }
-        mon-short{
-            relative{
-                "-1"{"थांनाय समबार"}
-                "0"{"बे समबार"}
-                "1"{"फैगौ समबार"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} समबाराव"}
-                    other{"{0} समबाराव"}
-                }
-                past{
-                    one{"{0} समबारनि सिगां"}
-                    other{"{0} समबारनि सिगां"}
-                }
-            }
-        }
         month{
-            dn{"दान"}
-            relative{
-                "-1"{"थांनाय दान"}
-                "0"{"बे दान"}
-                "1"{"फैगौ दान"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} दानाव"}
-                    other{"{0} दानाव"}
-                }
-                past{
-                    one{"{0} दान सिगां"}
-                    other{"{0} दान सिगां"}
-                }
-            }
-        }
-        month-narrow{
-            dn{"दान"}
-            relative{
-                "-1"{"थांनाय दान"}
-                "0"{"बे दान"}
-                "1"{"फैगौ दान"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} दानाव"}
-                    other{"{0} दानाव"}
-                }
-                past{
-                    one{"{0} दान सिगां"}
-                    other{"{0} दान सिगां"}
-                }
-            }
-        }
-        month-short{
             dn{"दान"}
             relative{
                 "-1"{"थांनाय दान"}
@@ -1334,67 +821,10 @@ brx{
                 }
             }
         }
-        quarter-narrow{
-            dn{"खोन्दोेसे"}
-            relativeTime{
-                future{
-                    one{"{0} खोन्दोसेआव"}
-                    other{"{0} खोन्दोसेआव"}
-                }
-                past{
-                    one{"{0} खोन्दोसे सिगां"}
-                    other{"{0} खोन्दोसे सिगां"}
-                }
-            }
-        }
         quarter-short{
             dn{"खोन्दोेसे"}
-            relativeTime{
-                future{
-                    one{"{0} खोन्दोसेआव"}
-                    other{"{0} खोन्दोसेआव"}
-                }
-                past{
-                    one{"{0} खोन्दोसे सिगां"}
-                    other{"{0} खोन्दोसे सिगां"}
-                }
-            }
         }
         sat{
-            relative{
-                "-1"{"थांनाय सनिबार"}
-                "0"{"बे सनिबार"}
-                "1"{"फैगौ सनिबार"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} सनिबाराव"}
-                    other{"{0} सनिबाराव"}
-                }
-                past{
-                    one{"{0} सनिबार सिगां"}
-                    other{"{0} सनिबार सिगां"}
-                }
-            }
-        }
-        sat-narrow{
-            relative{
-                "-1"{"थांनाय सनिबार"}
-                "0"{"बे सनिबार"}
-                "1"{"फैगौ सनिबार"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} सनिबाराव"}
-                    other{"{0} सनिबाराव"}
-                }
-                past{
-                    one{"{0} सनिबार सिगां"}
-                    other{"{0} सनिबार सिगां"}
-                }
-            }
-        }
-        sat-short{
             relative{
                 "-1"{"थांनाय सनिबार"}
                 "0"{"बे सनिबार"}
@@ -1427,67 +857,7 @@ brx{
                 }
             }
         }
-        second-narrow{
-            dn{"सेकेण्ड"}
-            relativeTime{
-                future{
-                    one{"{0} सेकेण्डआव"}
-                    other{"{0} सेकेण्डआव"}
-                }
-                past{
-                    one{"{0} सेकेण्ड सिगां"}
-                    other{"{0} सेकेण्ड सिगां"}
-                }
-            }
-        }
-        second-short{
-            dn{"सेकेण्ड"}
-            relativeTime{
-                future{
-                    one{"{0} सेकेण्डआव"}
-                    other{"{0} सेकेण्डआव"}
-                }
-                past{
-                    one{"{0} सेकेण्ड सिगां"}
-                    other{"{0} सेकेण्ड सिगां"}
-                }
-            }
-        }
         sun{
-            relative{
-                "-1"{"थांनाय रबिबार"}
-                "0"{"बे रबिबार"}
-                "1"{"फैगौ रबिबार"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} रबिबाराव"}
-                    other{"{0} रबिबाराव"}
-                }
-                past{
-                    one{"{0} रबिबारनि सिगां"}
-                    other{"{0} रबिबारनि सिगां"}
-                }
-            }
-        }
-        sun-narrow{
-            relative{
-                "-1"{"थांनाय रबिबार"}
-                "0"{"बे रबिबार"}
-                "1"{"फैगौ रबिबार"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} रबिबाराव"}
-                    other{"{0} रबिबाराव"}
-                }
-                past{
-                    one{"{0} रबिबारनि सिगां"}
-                    other{"{0} रबिबारनि सिगां"}
-                }
-            }
-        }
-        sun-short{
             relative{
                 "-1"{"थांनाय रबिबार"}
                 "0"{"बे रबिबार"}
@@ -1521,40 +891,6 @@ brx{
                 }
             }
         }
-        thu-narrow{
-            relative{
-                "-1"{"थांनाय बिस्थिबार"}
-                "0"{"बे बिस्थिबार"}
-                "1"{"फैगौ बिस्थिबार"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} बिस्थिबाराव"}
-                    other{"{0} बिस्थिबाराव"}
-                }
-                past{
-                    one{"{0} बिस्थिबार सिगां"}
-                    other{"{0} बिस्थिबार सिगां"}
-                }
-            }
-        }
-        thu-short{
-            relative{
-                "-1"{"थांनाय बिस्थिबार"}
-                "0"{"बे बिस्थिबार"}
-                "1"{"फैगौ बिस्थिबार"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} बिस्थिबाराव"}
-                    other{"{0} बिस्थिबाराव"}
-                }
-                past{
-                    one{"{0} बिस्थिबार सिगां"}
-                    other{"{0} बिस्थिबार सिगां"}
-                }
-            }
-        }
         tue{
             relative{
                 "-1"{"थांनाय मंगलबार"}
@@ -1572,75 +908,7 @@ brx{
                 }
             }
         }
-        tue-narrow{
-            relative{
-                "-1"{"थांनाय मंगलबार"}
-                "0"{"बे मंगलबार"}
-                "1"{"फैगौ मंगलबार"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} मंगलबाराव"}
-                    other{"{0} मंगलबाराव"}
-                }
-                past{
-                    one{"{0} मंगलबार सिगां"}
-                    other{"{0} मंगलबार सिगां"}
-                }
-            }
-        }
-        tue-short{
-            relative{
-                "-1"{"थांनाय मंगलबार"}
-                "0"{"बे मंगलबार"}
-                "1"{"फैगौ मंगलबार"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} मंगलबाराव"}
-                    other{"{0} मंगलबाराव"}
-                }
-                past{
-                    one{"{0} मंगलबार सिगां"}
-                    other{"{0} मंगलबार सिगां"}
-                }
-            }
-        }
         wed{
-            relative{
-                "-1"{"थांनाय बुधबार"}
-                "0"{"बे बुधबार"}
-                "1"{"फैगौ बुधबार"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} बुधबाराव"}
-                    other{"{0} बुधबाराव"}
-                }
-                past{
-                    one{"{0} बुधबार सिगां"}
-                    other{"{0} बुधबार सिगां"}
-                }
-            }
-        }
-        wed-narrow{
-            relative{
-                "-1"{"थांनाय बुधबार"}
-                "0"{"बे बुधबार"}
-                "1"{"फैगौ बुधबार"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} बुधबाराव"}
-                    other{"{0} बुधबाराव"}
-                }
-                past{
-                    one{"{0} बुधबार सिगां"}
-                    other{"{0} बुधबार सिगां"}
-                }
-            }
-        }
-        wed-short{
             relative{
                 "-1"{"थांनाय बुधबार"}
                 "0"{"बे बुधबार"}
@@ -1677,68 +945,18 @@ brx{
             }
         }
         week-narrow{
-            dn{"सप्थाह"}
-            relative{
-                "-1"{"थांनाय सप्थाह"}
-                "0"{"बे सप्थाह"}
-                "1"{"फैगौ सप्थाह"}
-            }
             relativePeriod{"{0}नि सप्थाह"}
-            relativeTime{
-                future{
-                    one{"{0} सप्थाहयाव"}
-                    other{"{0} सप्थाहयाव"}
-                }
-                past{
-                    one{"{0} सप्थाह सिगां"}
-                    other{"{0} सप्थाह सिगां"}
-                }
-            }
         }
         week-short{
-            dn{"सप्थाह"}
-            relative{
-                "-1"{"थांनाय सप्थाह"}
-                "0"{"बे सप्थाह"}
-                "1"{"फैगौ सप्थाह"}
-            }
             relativePeriod{"{0} नि सप्थाह"}
-            relativeTime{
-                future{
-                    one{"{0} सप्थाहयाव"}
-                    other{"{0} सप्थाहयाव"}
-                }
-                past{
-                    one{"{0} सप्थाह सिगां"}
-                    other{"{0} सप्थाह सिगां"}
-                }
-            }
         }
         weekOfMonth{
-            dn{"दाननि सप्थाह"}
-        }
-        weekOfMonth-narrow{
-            dn{"दाननि सप्थाह"}
-        }
-        weekOfMonth-short{
             dn{"दाननि सप्थाह"}
         }
         weekday{
             dn{"सप्थाहनि सान"}
         }
-        weekday-narrow{
-            dn{"सप्थाहनि सान"}
-        }
-        weekday-short{
-            dn{"सप्थाहनि सान"}
-        }
         weekdayOfMonth{
-            dn{"दाननि सप्थाहयारि सान"}
-        }
-        weekdayOfMonth-narrow{
-            dn{"दाननि सप्थाहयारि सान"}
-        }
-        weekdayOfMonth-short{
             dn{"दाननि सप्थाहयारि सान"}
         }
         year{
@@ -1759,47 +977,8 @@ brx{
                 }
             }
         }
-        year-narrow{
-            dn{"बोसोर"}
-            relative{
-                "-1"{"थांनाय बोसोर"}
-                "0"{"बे बोसोर"}
-                "1"{"फैगौ बोसोर"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} बोसोरआव"}
-                    other{"{0} बोसोरआव"}
-                }
-                past{
-                    one{"{0} बोसोर सिगां"}
-                    other{"{0} बोसोर सिगां"}
-                }
-            }
-        }
-        year-short{
-            dn{"बोसोर"}
-            relative{
-                "-1"{"थांनाय बोसोर"}
-                "0"{"बे बोसोर"}
-                "1"{"फैगौ बोसोर"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} बोसोरआव"}
-                    other{"{0} बोसोरआव"}
-                }
-                past{
-                    one{"{0} बोसोर सिगां"}
-                    other{"{0} बोसोर सिगां"}
-                }
-            }
-        }
         zone{
             dn{"सम मण्डल"}
-        }
-        zone-narrow{
-            dn{"मण्डल"}
         }
         zone-short{
             dn{"मण्डल"}
@@ -1832,19 +1011,6 @@ brx{
                 "yue",
                 "zh",
             }
-        }
-        namePattern{
-            givenFirst-long-addressing-formal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
-            givenFirst-long-addressing-informal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
-            givenFirst-long-referring-informal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
-            givenFirst-medium-monogram-informal{
-                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
-                "llCaps}"
-            }
-            givenFirst-medium-referring-formal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
-            givenFirst-medium-referring-informal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
-            surnameFirst-short-addressing-informal{"{surname} {surname2} {title} {given} {given2} {credentials}"}
-            surnameFirst-short-referring-informal{"{surname} {surname2} {title} {given} {given2} {credentials}"}
         }
     }
 }

@@ -175,9 +175,13 @@ tzm{
             "SHP",
             "Junih Usantehilini",
         }
+        SLE{
+            "SLE",
+            "Lyun Usirralyuni",
+        }
         SLL{
             "SLL",
-            "Lyun Usirralyuni",
+            "Lyun Usirralyuni (1964—2022)",
         }
         SOS{
             "SOS",

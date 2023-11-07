@@ -18,7 +18,7 @@ fr_CD{
                         evening1{"soir"}
                         midnight{"min."}
                         morning1{"mat."}
-                        night1{"nuit"}
+                        night1{"matin"}
                         noon{"midi"}
                     }
                 }

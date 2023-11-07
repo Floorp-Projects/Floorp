@@ -8,35 +8,27 @@ ti{
         " ⶡ ⶢ ⶣ ⶤ ⶥ ⶦ ⶨ ⶩ ⶪ ⶫ ⶬ ⶭ ⶮ ⶰ ⶱ ⶲ ⶳ ⶴ ⶵ ⶶ ⶸ ⶹ ⶺ ⶻ ⶼ ⶽ ⶾ ⷀ ⷁ ⷂ ⷃ ⷄ ⷅ ⷆ ⷈ ⷉ ⷊ ⷋ"
         " ⷌ ⷍ ⷎ ⷐ ⷑ ⷒ ⷓ ⷔ ⷕ ⷖ ⷘ ⷙ ⷚ ⷛ ⷜ ⷝ ⷞ]"
     }
-    Ellipsis{
-        final{"{0}…"}
-        word-initial{"… {0}"}
-    }
     ExemplarCharacters{
-        "[\u135F ሀ-ሆ ለ-ቆ ቈ ቊ-ቍ ቐ-ቖ ቘ ቚ-ቝ በ-ኆ ኈ ኊ-ኍ ነ-ኮ ኰ ኲ-ኵ ኸ-ኾ ዀ ዂ-ዅ ወ-ዎ ዐ-ዖ ዘ-ዮ ደ-"
-        "ዷ ጀ-ጎ ጐ ጒ-ጕ ጠ-ፗ]"
+        "[፟ ሀ ሁ ሂ ሃ ሄ ህ ሆ ለ ሉ ሊ ላ ሌ ል ሎ ሏ ሐ ሑ ሒ ሓ ሔ ሕ ሖ ሗ መ ሙ ሚ ማ ሜ ም ሞ ሟ ሠ ሡ ሢ ሣ ሤ ሥ"
+        " ሦ ሧ ረ ሩ ሪ ራ ሬ ር ሮ ሯ ሰ ሱ ሲ ሳ ሴ ስ ሶ ሷ ሸ ሹ ሺ ሻ ሼ ሽ ሾ ሿ ቀ ቁ ቂ ቃ ቄ ቅ ቆ ቈ ቊ ቋ ቌ ቍ"
+        " ቐ ቑ ቒ ቓ ቔ ቕ ቖ ቘ ቚ ቛ ቜ ቝ በ ቡ ቢ ባ ቤ ብ ቦ ቧ ቨ ቩ ቪ ቫ ቬ ቭ ቮ ቯ ተ ቱ ቲ ታ ቴ ት ቶ ቷ ቸ ቹ"
+        " ቺ ቻ ቼ ች ቾ ቿ ኀ ኁ ኂ ኃ ኄ ኅ ኆ ኈ ኊ ኋ ኌ ኍ ነ ኑ ኒ ና ኔ ን ኖ ኗ ኘ ኙ ኚ ኛ ኜ ኝ ኞ ኟ አ ኡ ኢ ኣ"
+        " ኤ እ ኦ ኧ ከ ኩ ኪ ካ ኬ ክ ኮ ኰ ኲ ኳ ኴ ኵ ኸ ኹ ኺ ኻ ኼ ኽ ኾ ዀ ዂ ዃ ዄ ዅ ወ ዉ ዊ ዋ ዌ ው ዎ ዐ ዑ ዒ"
+        " ዓ ዔ ዕ ዖ ዘ ዙ ዚ ዛ ዜ ዝ ዞ ዟ ዠ ዡ ዢ ዣ ዤ ዥ ዦ ዧ የ ዩ ዪ ያ ዬ ይ ዮ ደ ዱ ዲ ዳ ዴ ድ ዶ ዷ ጀ ጁ ጂ"
+        " ጃ ጄ ጅ ጆ ጇ ገ ጉ ጊ ጋ ጌ ግ ጎ ጐ ጒ ጓ ጔ ጕ ጠ ጡ ጢ ጣ ጤ ጥ ጦ ጧ ጨ ጩ ጪ ጫ ጬ ጭ ጮ ጯ ጰ ጱ ጲ ጳ ጴ"
+        " ጵ ጶ ጷ ጸ ጹ ጺ ጻ ጼ ጽ ጾ ጿ ፀ ፁ ፂ ፃ ፄ ፅ ፆ ፇ ፈ ፉ ፊ ፋ ፌ ፍ ፎ ፏ ፐ ፑ ፒ ፓ ፔ ፕ ፖ ፗ]"
     }
     ExemplarCharactersIndex{
         "[ሀ ለ ሐ መ ሠ ረ ሰ ሸ ቀ ቈ ቐ ቘ በ ቨ ተ ቸ ኀ ኈ ነ ኘ አ ከ ኰ ኸ ዀ ወ ዐ ዘ ዠ የ ደ ጀ ገ ጐ ጠ ጨ ጰ ጸ"
         " ፀ ፈ ፐ]"
     }
-    ExemplarCharactersNumbers{"[\\- ‑ , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
-    MoreInformation{"?"}
     NumberElements{
-        default{"latn"}
         latn{
             miscPatterns{
-                approximately{"~{0}"}
                 atLeast{"⩾{0}"}
-                atMost{"≤{0}"}
-                range{"{0}–{1}"}
             }
             patterns{
-                accountingFormat{"¤#,##0.00"}
                 currencyFormat{"¤#,##0.00"}
-                decimalFormat{"#,##0.###"}
-                percentFormat{"#,##0%"}
-                scientificFormat{"#E0"}
             }
             patternsLong{
                 decimalFormat{
@@ -192,20 +184,6 @@ ti{
                     }
                 }
             }
-            symbols{
-                approximatelySign{"~"}
-                decimal{"."}
-                exponential{"E"}
-                group{","}
-                infinity{"∞"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
-            }
         }
         minimalPairs{
             plural{
@@ -213,51 +191,9 @@ ti{
                 other{"{0} መዓልታት"}
             }
         }
-        minimumGroupingDigits{"1"}
-        native{"latn"}
         traditional{"ethi"}
     }
     calendar{
-        buddhist{
-            eras{
-                abbreviated{
-                    "BE",
-                }
-                narrow{
-                    "BE",
-                }
-                wide{
-                    "BE",
-                }
-            }
-        }
-        coptic{
-            DateTimePatterns{
-                "h:mm:ss a zzzz",
-                "h:mm:ss a z",
-                "h:mm:ss a",
-                "h:mm a",
-                "EEEE፣ d MMMM y G",
-                "d MMMM y G",
-                "d MMM y G",
-                "dd/MM/yy GGGGG",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-            }
-        }
-        dangi{
-            intervalFormats{
-                fallback{"{0} – {1}"}
-            }
-        }
-        ethiopic{
-            intervalFormats{
-                fallback{"{0} – {1}"}
-            }
-        }
         generic{
             DateTimePatterns{
                 "h:mm:ss a zzzz",
@@ -291,39 +227,19 @@ ti{
                 "GGGGGyyMMdd",
             }
             availableFormats{
-                Bh{"h B"}
-                Bhm{"h:mm B"}
-                Bhms{"h:mm:ss B"}
-                E{"ccc"}
-                EBhm{"E h:mm B"}
-                EBhms{"E h:mm:ss B"}
-                EHm{"E HH:mm"}
-                EHms{"E HH:mm:ss"}
                 Ed{"E d"}
-                Ehm{"E h:mm a"}
-                Ehms{"E h:mm:ss a"}
                 Gy{"y G"}
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E፣ d MMM y G"}
                 GyMMMd{"d MMM y G"}
                 GyMd{"d/M/y GGGGG"}
-                H{"HH"}
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
-                M{"L"}
                 MEd{"E፣ d/M"}
-                MMM{"LLL"}
                 MMMEd{"E፣ d MMM"}
                 MMMMd{"d MMMM"}
                 MMMMdd{"dd MMMM"}
                 MMMd{"d MMM"}
                 MMdd{"dd/MM"}
                 Md{"d/M"}
-                d{"d"}
-                h{"h a"}
-                hm{"h:mm a"}
-                hms{"h:mm:ss a"}
-                ms{"mm:ss"}
                 y{"y G"}
                 yMM{"MM/y"}
                 yMMMM{"MMMM y"}
@@ -340,40 +256,17 @@ ti{
                 yyyyQQQQ{"QQQQ y G"}
             }
             intervalFormats{
-                H{
-                    H{"HH–HH"}
-                }
-                Hv{
-                    H{"HH–HH v"}
-                }
                 M{
                     M{"M–M"}
                 }
                 fallback{"{0} – {1}"}
-                h{
-                    a{"h a – h a"}
-                    h{"h–h a"}
-                }
                 hm{
-                    a{"h:mm a – h:mm a"}
                     h{"h:mm – h:mm a"}
-                }
-                hv{
-                    a{"h a – h a v"}
-                    h{"h–h a v"}
                 }
             }
         }
         gregorian{
-            AmPmMarkers{
-                "ቅ.ቀ.",
-                "ድ.ቀ.",
-            }
             AmPmMarkersAbbr{
-                "ቅ.ቀ.",
-                "ድ.ቀ.",
-            }
-            AmPmMarkersNarrow{
                 "ቅ.ቀ.",
                 "ድ.ቀ.",
             }
@@ -408,16 +301,7 @@ ti{
                 "yMMMdd",
                 "yyMMdd",
             }
-            appendItems{
-                Timezone{"{0} {1}"}
-            }
             availableFormats{
-                Bh{"h B"}
-                Bhm{"h:mm B"}
-                Bhms{"h:mm:ss B"}
-                E{"ccc"}
-                EBhm{"E h:mm B"}
-                EBhms{"E h:mm:ss B"}
                 EHm{"E፣ HH:mm"}
                 EHms{"E፣ HH:mm:ss"}
                 Ed{"E d"}
@@ -428,14 +312,7 @@ ti{
                 GyMMMEd{"E፣ d MMM y G"}
                 GyMMMd{"d MMM y G"}
                 GyMd{"d/M/y GGGGG"}
-                H{"HH"}
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
-                Hmsv{"HH:mm:ss v"}
-                Hmv{"HH:mm v"}
-                M{"L"}
                 MEd{"E፣ d/M"}
-                MMM{"LLL"}
                 MMMEd{"E፣ d MMM"}
                 MMMMW{
                     one{"ሰሙን W ናይ MMMM"}
@@ -446,19 +323,10 @@ ti{
                 MMMd{"d MMM"}
                 MMdd{"d/M"}
                 Md{"d/M"}
-                d{"d"}
-                h{"h a"}
-                hm{"h:mm a"}
-                hms{"h:mm:ss a"}
-                hmsv{"h:mm:ss a v"}
-                hmv{"h:mm a v"}
-                ms{"mm:ss"}
-                y{"y"}
                 yM{"M/y"}
                 yMEd{"E፣ d/M/y"}
                 yMM{"M/y"}
                 yMMM{"MMM y"}
-                yMMMEd{"y MMM d, E"}
                 yMMMM{"MMMM y"}
                 yMMMd{"d MMM y"}
                 yMd{"d/M/y"}
@@ -480,24 +348,6 @@ ti{
                         "ዓር",
                         "ቀዳ",
                     }
-                    narrow{
-                        "ሰ",
-                        "ሰ",
-                        "ሰ",
-                        "ረ",
-                        "ሓ",
-                        "ዓ",
-                        "ቀ",
-                    }
-                    short{
-                        "ሰን",
-                        "ሰኑ",
-                        "ሰሉ",
-                        "ረቡ",
-                        "ሓሙ",
-                        "ዓር",
-                        "ቀዳ",
-                    }
                     wide{
                         "ሰንበት",
                         "ሰኑይ",
@@ -509,15 +359,6 @@ ti{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "ሰን",
-                        "ሰኑ",
-                        "ሰሉ",
-                        "ረቡ",
-                        "ሓሙ",
-                        "ዓር",
-                        "ቀዳ",
-                    }
                     narrow{
                         "ሰ",
                         "ሰ",
@@ -526,40 +367,6 @@ ti{
                         "ሓ",
                         "ዓ",
                         "ቀ",
-                    }
-                    short{
-                        "ሰን",
-                        "ሰኑ",
-                        "ሰሉ",
-                        "ረቡ",
-                        "ሓሙ",
-                        "ዓር",
-                        "ቀዳ",
-                    }
-                    wide{
-                        "ሰንበት",
-                        "ሰኑይ",
-                        "ሰሉስ",
-                        "ረቡዕ",
-                        "ሓሙስ",
-                        "ዓርቢ",
-                        "ቀዳም",
-                    }
-                }
-            }
-            dayPeriod{
-                stand-alone{
-                    abbreviated{
-                        am{"ቅ.ቀ."}
-                        pm{"ድ.ቀ."}
-                    }
-                    narrow{
-                        am{"ቅ.ቀ."}
-                        pm{"ድ.ቀ."}
-                    }
-                    wide{
-                        am{"ቅ.ቀ."}
-                        pm{"ድ.ቀ."}
                     }
                 }
             }
@@ -576,21 +383,8 @@ ti{
                     "ቅድመ ክርስቶስ",
                     "ዓመተ ምሕረት",
                 }
-                wide%variant{
-                    "ቅ.ል.ክ",
-                    "ድ.ል.ክ",
-                }
             }
             intervalFormats{
-                Bh{
-                    B{"h B – h B"}
-                    h{"h–h B"}
-                }
-                Bhm{
-                    B{"h:mm B – h:mm B"}
-                    h{"h:mm–h:mm B"}
-                    m{"h:mm–h:mm B"}
-                }
                 Gy{
                     G{"y G – y G"}
                     y{"y–y G"}
@@ -629,20 +423,6 @@ ti{
                     d{"d/M/y – d/M/y GGGGG"}
                     y{"d/M/y – d/M/y GGGGG"}
                 }
-                H{
-                    H{"HH–HH"}
-                }
-                Hm{
-                    H{"HH:mm–HH:mm"}
-                    m{"HH:mm–HH:mm"}
-                }
-                Hmv{
-                    H{"HH:mm–HH:mm v"}
-                    m{"HH:mm–HH:mm v"}
-                }
-                Hv{
-                    H{"HH–HH v"}
-                }
                 M{
                     M{"M–M"}
                 }
@@ -665,30 +445,10 @@ ti{
                     M{"d/M – d/M"}
                     d{"d/M – d/M"}
                 }
-                d{
-                    d{"d–d"}
-                }
                 fallback{"{0} – {1}"}
-                h{
-                    a{"h a – h a"}
-                    h{"h–h a"}
-                }
                 hm{
-                    a{"h:mm a – h:mm a"}
                     h{"h:mm – h:mm a"}
                     m{"h:mm – h:mm a"}
-                }
-                hmv{
-                    a{"h:mm a – h:mm a v"}
-                    h{"h:mm–h:mm a v"}
-                    m{"h:mm–h:mm a v"}
-                }
-                hv{
-                    a{"h a – h a v"}
-                    h{"h–h a v"}
-                }
-                y{
-                    y{"y–y"}
                 }
                 yM{
                     M{"M/y – M/y"}
@@ -739,20 +499,6 @@ ti{
                         "ሕዳ",
                         "ታሕ",
                     }
-                    narrow{
-                        "ጥ",
-                        "ለ",
-                        "መ",
-                        "ሚ",
-                        "ግ",
-                        "ሰ",
-                        "ሓ",
-                        "ነ",
-                        "መ",
-                        "ጥ",
-                        "ሕ",
-                        "ታ",
-                    }
                     wide{
                         "ጥሪ",
                         "ለካቲት",
@@ -769,20 +515,6 @@ ti{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "ጥሪ",
-                        "ለካ",
-                        "መጋ",
-                        "ሚያ",
-                        "ግን",
-                        "ሰነ",
-                        "ሓም",
-                        "ነሓ",
-                        "መስ",
-                        "ጥቅ",
-                        "ሕዳ",
-                        "ታሕ",
-                    }
                     narrow{
                         "ጥ",
                         "ለ",
@@ -796,20 +528,6 @@ ti{
                         "ጥ",
                         "ሕ",
                         "ታ",
-                    }
-                    wide{
-                        "ጥሪ",
-                        "ለካቲት",
-                        "መጋቢት",
-                        "ሚያዝያ",
-                        "ግንቦት",
-                        "ሰነ",
-                        "ሓምለ",
-                        "ነሓሰ",
-                        "መስከረም",
-                        "ጥቅምቲ",
-                        "ሕዳር",
-                        "ታሕሳስ",
                     }
                 }
             }
@@ -821,12 +539,6 @@ ti{
                         "ር3",
                         "ር4",
                     }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                    }
                     wide{
                         "1ይ ርብዒ",
                         "2ይ ርብዒ",
@@ -834,145 +546,6 @@ ti{
                         "4ይ ርብዒ",
                     }
                 }
-                stand-alone{
-                    abbreviated{
-                        "ር1",
-                        "ር2",
-                        "ር3",
-                        "ር4",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                    }
-                    wide{
-                        "1ይ ርብዒ",
-                        "2ይ ርብዒ",
-                        "3ይ ርብዒ",
-                        "4ይ ርብዒ",
-                    }
-                }
-            }
-        }
-        islamic{
-            DateTimePatterns{
-                "h:mm:ss a zzzz",
-                "h:mm:ss a z",
-                "h:mm:ss a",
-                "h:mm a",
-                "EEEE፣ d MMMM y G",
-                "d MMMM y G",
-                "d MMM y G",
-                "dd/MM/yy GGGGG",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-            }
-            DateTimeSkeletons{
-                "ahmmsszzzz",
-                "ahmmssz",
-                "ahmmss",
-                "ahmm",
-                "GyMMMMEEEEd",
-                "GyMMMMdd",
-                "GyMMMdd",
-                "GGGGGyyMMdd",
-            }
-            availableFormats{
-                E{"ccc"}
-                Ed{"E d"}
-                Gy{"y G"}
-                GyMMM{"MMM y G"}
-                GyMMMEd{"E፣ d MMM y G"}
-                GyMMMd{"d MMM y G"}
-                M{"L"}
-                MEd{"E፣ d/M"}
-                MMM{"LLL"}
-                MMMEd{"E፣ d MMM"}
-                MMMMd{"d MMMM"}
-                MMMd{"d MMM"}
-                Md{"d/M"}
-                d{"d"}
-                y{"y G"}
-                yMMMM{"MMMM y"}
-                yQQQ{"QQQ y"}
-                yyyy{"y G"}
-                yyyyM{"M/y GGGGG"}
-                yyyyMEd{"E፣ d/M/y GGGGG"}
-                yyyyMMM{"MMM y G"}
-                yyyyMMMEd{"E፣ d MMM y G"}
-                yyyyMMMM{"MMMM y G"}
-                yyyyMMMd{"d MMM y G"}
-                yyyyMd{"d/M/y GGGGG"}
-                yyyyQQQ{"QQQ y G"}
-                yyyyQQQQ{"QQQQ y G"}
-            }
-            monthNames{
-                format{
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10",
-                        "11",
-                        "12",
-                    }
-                }
-                stand-alone{
-                    abbreviated{
-                        "Muh.",
-                        "Saf.",
-                        "Rab. I",
-                        "Rab. II",
-                        "Jum. I",
-                        "Jum. II",
-                        "Raj.",
-                        "Sha.",
-                        "Ram.",
-                        "Shaw.",
-                        "Dhuʻl-Q.",
-                        "Dhuʻl-H.",
-                    }
-                    wide{
-                        "Muharram",
-                        "Safar",
-                        "Rabiʻ I",
-                        "Rabiʻ II",
-                        "Jumada I",
-                        "Jumada II",
-                        "Rajab",
-                        "Shaʻban",
-                        "Ramadan",
-                        "Shawwal",
-                        "Dhuʻl-Qiʻdah",
-                        "Dhuʻl-Hijjah",
-                    }
-                }
-            }
-        }
-        japanese{
-            intervalFormats{
-                fallback{"{0} – {1}"}
-            }
-        }
-        persian{
-            intervalFormats{
-                fallback{"{0} – {1}"}
-            }
-        }
-        roc{
-            intervalFormats{
-                fallback{"{0} – {1}"}
             }
         }
     }
@@ -1032,36 +605,8 @@ ti{
                 }
             }
         }
-        day-narrow{
-            dn{"መዓልቲ"}
-            relative{
-                "-1"{"ትማሊ"}
-                "0"{"ሎሚ"}
-                "1"{"ጽባሕ"}
-            }
-            relativeTime{
-                future{
-                    one{"ኣብ {0} መዓልቲ"}
-                    other{"ኣብ {0} መዓልቲ"}
-                }
-                past{
-                    one{"ቅድሚ {0} መዓልቲ"}
-                    other{"ቅድሚ {0} መዓልቲ"}
-                }
-            }
-        }
         day-short{
-            dn{"መዓልቲ"}
-            relative{
-                "-1"{"ትማሊ"}
-                "0"{"ሎሚ"}
-                "1"{"ጽባሕ"}
-            }
             relativeTime{
-                future{
-                    one{"ኣብ {0} መዓልቲ"}
-                    other{"ኣብ {0} መዓልቲ"}
-                }
                 past{
                     one{"ቅድሚ {0} መዓልቲ"}
                     other{"ቅድሚ {0} መዓልቲ"}
@@ -1071,28 +616,13 @@ ti{
         dayOfYear{
             dn{"መዓልቲ ናይ ዓመት"}
         }
-        dayOfYear-narrow{
-            dn{"መዓልቲ ናይ ዓ."}
-        }
         dayOfYear-short{
             dn{"መዓልቲ ናይ ዓ."}
         }
         dayperiod{
             dn{"AM/PM"}
         }
-        dayperiod-narrow{
-            dn{"AM/PM"}
-        }
-        dayperiod-short{
-            dn{"AM/PM"}
-        }
         era{
-            dn{"ዘመን"}
-        }
-        era-narrow{
-            dn{"ዘመን"}
-        }
-        era-short{
             dn{"ዘመን"}
         }
         fri{
@@ -1112,34 +642,8 @@ ti{
                 }
             }
         }
-        fri-narrow{
-            relative{
-                "-1"{"ዝሓለፈ ዓርቢ"}
-                "0"{"ሎሚ ዓርቢ"}
-                "1"{"ዝመጽእ ዓርቢ"}
-            }
-            relativeTime{
-                future{
-                    one{"ኣብ {0} ዓርቢ"}
-                    other{"ኣብ {0} ዓርቢ"}
-                }
-                past{
-                    one{"ቅድሚ {0} ዓርቢ"}
-                    other{"ቅድሚ {0} ዓርቢ"}
-                }
-            }
-        }
         fri-short{
-            relative{
-                "-1"{"ዝሓለፈ ዓርቢ"}
-                "0"{"ሎሚ ዓርቢ"}
-                "1"{"ዝመጽእ ዓርቢ"}
-            }
             relativeTime{
-                future{
-                    one{"ኣብ {0} ዓርቢ"}
-                    other{"ኣብ {0} ዓርቢ"}
-                }
                 past{
                     one{"ቅድሚ {0} ዓርቢ"}
                     other{"ቅድሚ {0} ዓርቢ"}
@@ -1147,38 +651,6 @@ ti{
             }
         }
         hour{
-            dn{"ሰዓት"}
-            relative{
-                "0"{"ኣብዚ ሰዓት"}
-            }
-            relativeTime{
-                future{
-                    one{"ኣብ {0} ሰዓት"}
-                    other{"ኣብ {0} ሰዓት"}
-                }
-                past{
-                    one{"ቅድሚ {0} ሰዓት"}
-                    other{"ቅድሚ {0} ሰዓት"}
-                }
-            }
-        }
-        hour-narrow{
-            dn{"ሰዓት"}
-            relative{
-                "0"{"ኣብዚ ሰዓት"}
-            }
-            relativeTime{
-                future{
-                    one{"ኣብ {0} ሰዓት"}
-                    other{"ኣብ {0} ሰዓት"}
-                }
-                past{
-                    one{"ቅድሚ {0} ሰዓት"}
-                    other{"ቅድሚ {0} ሰዓት"}
-                }
-            }
-        }
-        hour-short{
             dn{"ሰዓት"}
             relative{
                 "0"{"ኣብዚ ሰዓት"}
@@ -1212,35 +684,6 @@ ti{
         }
         minute-narrow{
             dn{"ደቒ."}
-            relative{
-                "0"{"ኣብዚ ደቒቕ"}
-            }
-            relativeTime{
-                future{
-                    one{"ኣብ {0} ደቒቕ"}
-                    other{"ኣብ {0} ደቒቕ"}
-                }
-                past{
-                    one{"ቅድሚ {0} ደቒቕ"}
-                    other{"ቅድሚ {0} ደቒቕ"}
-                }
-            }
-        }
-        minute-short{
-            dn{"ደቒቕ"}
-            relative{
-                "0"{"ኣብዚ ደቒቕ"}
-            }
-            relativeTime{
-                future{
-                    one{"ኣብ {0} ደቒቕ"}
-                    other{"ኣብ {0} ደቒቕ"}
-                }
-                past{
-                    one{"ቅድሚ {0} ደቒቕ"}
-                    other{"ቅድሚ {0} ደቒቕ"}
-                }
-            }
         }
         mon{
             relative{
@@ -1259,77 +702,7 @@ ti{
                 }
             }
         }
-        mon-narrow{
-            relative{
-                "-1"{"ዝሓለፈ ሰኑይ"}
-                "0"{"ሎሚ ሰኑይ"}
-                "1"{"ዝመጽእ ሰኑይ"}
-            }
-            relativeTime{
-                future{
-                    one{"ኣብ {0} ሰኑይ"}
-                    other{"ኣብ {0} ሰኑይ"}
-                }
-                past{
-                    one{"ቅድሚ {0} ሰኑይ"}
-                    other{"ቅድሚ {0} ሰኑይ"}
-                }
-            }
-        }
-        mon-short{
-            relative{
-                "-1"{"ዝሓለፈ ሰኑይ"}
-                "0"{"ሎሚ ሰኑይ"}
-                "1"{"ዝመጽእ ሰኑይ"}
-            }
-            relativeTime{
-                future{
-                    one{"ኣብ {0} ሰኑይ"}
-                    other{"ኣብ {0} ሰኑይ"}
-                }
-                past{
-                    one{"ቅድሚ {0} ሰኑይ"}
-                    other{"ቅድሚ {0} ሰኑይ"}
-                }
-            }
-        }
         month{
-            dn{"ወርሒ"}
-            relative{
-                "-1"{"ዝሓለፈ ወርሒ"}
-                "0"{"ህሉው ወርሒ"}
-                "1"{"ዝመጽእ ወርሒ"}
-            }
-            relativeTime{
-                future{
-                    one{"ኣብ {0} ወርሒ"}
-                    other{"ኣብ {0} ወርሒ"}
-                }
-                past{
-                    one{"ቅድሚ {0} ወርሒ"}
-                    other{"ቅድሚ {0} ወርሒ"}
-                }
-            }
-        }
-        month-narrow{
-            dn{"ወርሒ"}
-            relative{
-                "-1"{"ዝሓለፈ ወርሒ"}
-                "0"{"ህሉው ወርሒ"}
-                "1"{"ዝመጽእ ወርሒ"}
-            }
-            relativeTime{
-                future{
-                    one{"ኣብ {0} ወርሒ"}
-                    other{"ኣብ {0} ወርሒ"}
-                }
-                past{
-                    one{"ቅድሚ {0} ወርሒ"}
-                    other{"ቅድሚ {0} ወርሒ"}
-                }
-            }
-        }
-        month-short{
             dn{"ወርሒ"}
             relative{
                 "-1"{"ዝሓለፈ ወርሒ"}
@@ -1365,77 +738,7 @@ ti{
                 }
             }
         }
-        quarter-narrow{
-            dn{"ርብዒ"}
-            relative{
-                "-1"{"ዝሓለፈ ርብዒ"}
-                "0"{"ህሉው ርብዒ"}
-                "1"{"ዝመጽእ ርብዒ"}
-            }
-            relativeTime{
-                future{
-                    one{"ኣብ {0} ርብዒ"}
-                    other{"ኣብ {0} ርብዒ"}
-                }
-                past{
-                    one{"ቅድሚ {0} ርብዒ"}
-                    other{"ቅድሚ {0} ርብዒ"}
-                }
-            }
-        }
-        quarter-short{
-            dn{"ርብዒ"}
-            relative{
-                "-1"{"ዝሓለፈ ርብዒ"}
-                "0"{"ህሉው ርብዒ"}
-                "1"{"ዝመጽእ ርብዒ"}
-            }
-            relativeTime{
-                future{
-                    one{"ኣብ {0} ርብዒ"}
-                    other{"ኣብ {0} ርብዒ"}
-                }
-                past{
-                    one{"ቅድሚ {0} ርብዒ"}
-                    other{"ቅድሚ {0} ርብዒ"}
-                }
-            }
-        }
         sat{
-            relative{
-                "-1"{"ዝሓለፈ ቀዳም"}
-                "0"{"ሎሚ ቀዳም"}
-                "1"{"ዝመጽእ ቀዳም"}
-            }
-            relativeTime{
-                future{
-                    one{"ኣብ {0} ቀዳም"}
-                    other{"ኣብ {0} ቀዳም"}
-                }
-                past{
-                    one{"ቅድሚ {0} ቀዳም"}
-                    other{"ቅድሚ {0} ቀዳም"}
-                }
-            }
-        }
-        sat-narrow{
-            relative{
-                "-1"{"ዝሓለፈ ቀዳም"}
-                "0"{"ሎሚ ቀዳም"}
-                "1"{"ዝመጽእ ቀዳም"}
-            }
-            relativeTime{
-                future{
-                    one{"ኣብ {0} ቀዳም"}
-                    other{"ኣብ {0} ቀዳም"}
-                }
-                past{
-                    one{"ቅድሚ {0} ቀዳም"}
-                    other{"ቅድሚ {0} ቀዳም"}
-                }
-            }
-        }
-        sat-short{
             relative{
                 "-1"{"ዝሓለፈ ቀዳም"}
                 "0"{"ሎሚ ቀዳም"}
@@ -1468,73 +771,7 @@ ti{
                 }
             }
         }
-        second-narrow{
-            dn{"ካልኢት"}
-            relative{
-                "0"{"ሕጂ"}
-            }
-            relativeTime{
-                future{
-                    one{"ኣብ {0} ካልኢት"}
-                    other{"ኣብ {0} ካልኢት"}
-                }
-                past{
-                    one{"ቅድሚ {0} ካልኢት"}
-                    other{"ቅድሚ {0} ካልኢት"}
-                }
-            }
-        }
-        second-short{
-            dn{"ካልኢት"}
-            relative{
-                "0"{"ሕጂ"}
-            }
-            relativeTime{
-                future{
-                    one{"ኣብ {0} ካልኢት"}
-                    other{"ኣብ {0} ካልኢት"}
-                }
-                past{
-                    one{"ቅድሚ {0} ካልኢት"}
-                    other{"ቅድሚ {0} ካልኢት"}
-                }
-            }
-        }
         sun{
-            relative{
-                "-1"{"ዝሓለፈ ሰንበት"}
-                "0"{"ሎሚ ሰንበት"}
-                "1"{"ዝመጽእ ሰንበት"}
-            }
-            relativeTime{
-                future{
-                    one{"ኣብ {0} ሰንበት"}
-                    other{"ኣብ {0} ሰንበት"}
-                }
-                past{
-                    one{"ቅድሚ {0} ሰንበት"}
-                    other{"ቅድሚ {0} ሰንበት"}
-                }
-            }
-        }
-        sun-narrow{
-            relative{
-                "-1"{"ዝሓለፈ ሰንበት"}
-                "0"{"ሎሚ ሰንበት"}
-                "1"{"ዝመጽእ ሰንበት"}
-            }
-            relativeTime{
-                future{
-                    one{"ኣብ {0} ሰንበት"}
-                    other{"ኣብ {0} ሰንበት"}
-                }
-                past{
-                    one{"ቅድሚ {0} ሰንበት"}
-                    other{"ቅድሚ {0} ሰንበት"}
-                }
-            }
-        }
-        sun-short{
             relative{
                 "-1"{"ዝሓለፈ ሰንበት"}
                 "0"{"ሎሚ ሰንበት"}
@@ -1568,40 +805,6 @@ ti{
                 }
             }
         }
-        thu-narrow{
-            relative{
-                "-1"{"ዝሓለፈ ሓሙስ"}
-                "0"{"ሎሚ ሓሙስ"}
-                "1"{"ዝመጽእ ሓሙስ"}
-            }
-            relativeTime{
-                future{
-                    one{"ኣብ {0} ሓሙስ"}
-                    other{"ኣብ {0} ሓሙስ"}
-                }
-                past{
-                    one{"ቅድሚ {0} ሓሙስ"}
-                    other{"ቅድሚ {0} ሓሙስ"}
-                }
-            }
-        }
-        thu-short{
-            relative{
-                "-1"{"ዝሓለፈ ሓሙስ"}
-                "0"{"ሎሚ ሓሙስ"}
-                "1"{"ዝመጽእ ሓሙስ"}
-            }
-            relativeTime{
-                future{
-                    one{"ኣብ {0} ሓሙስ"}
-                    other{"ኣብ {0} ሓሙስ"}
-                }
-                past{
-                    one{"ቅድሚ {0} ሓሙስ"}
-                    other{"ቅድሚ {0} ሓሙስ"}
-                }
-            }
-        }
         tue{
             relative{
                 "-1"{"ዝሓለፈ ሰሉስ"}
@@ -1619,75 +822,7 @@ ti{
                 }
             }
         }
-        tue-narrow{
-            relative{
-                "-1"{"ዝሓለፈ ሰሉስ"}
-                "0"{"ሎሚ ሰሉስ"}
-                "1"{"ዝመጽእ ሰሉስ"}
-            }
-            relativeTime{
-                future{
-                    one{"ኣብ {0} ሰሉስ"}
-                    other{"ኣብ {0} ሰሉስ"}
-                }
-                past{
-                    one{"ቅድሚ {0} ሰሉስ"}
-                    other{"ቅድሚ {0} ሰሉስ"}
-                }
-            }
-        }
-        tue-short{
-            relative{
-                "-1"{"ዝሓለፈ ሰሉስ"}
-                "0"{"ሎሚ ሰሉስ"}
-                "1"{"ዝመጽእ ሰሉስ"}
-            }
-            relativeTime{
-                future{
-                    one{"ኣብ {0} ሰሉስ"}
-                    other{"ኣብ {0} ሰሉስ"}
-                }
-                past{
-                    one{"ቅድሚ {0} ሰሉስ"}
-                    other{"ቅድሚ {0} ሰሉስ"}
-                }
-            }
-        }
         wed{
-            relative{
-                "-1"{"ዝሓለፈ ረቡዕ"}
-                "0"{"ሎሚ ረቡዕ"}
-                "1"{"ዝመጽእ ረቡዕ"}
-            }
-            relativeTime{
-                future{
-                    one{"ኣብ {0} ረቡዕ"}
-                    other{"ኣብ {0} ረቡዕ"}
-                }
-                past{
-                    one{"ቅድሚ {0} ረቡዕ"}
-                    other{"ቅድሚ {0} ረቡዕ"}
-                }
-            }
-        }
-        wed-narrow{
-            relative{
-                "-1"{"ዝሓለፈ ረቡዕ"}
-                "0"{"ሎሚ ረቡዕ"}
-                "1"{"ዝመጽእ ረቡዕ"}
-            }
-            relativeTime{
-                future{
-                    one{"ኣብ {0} ረቡዕ"}
-                    other{"ኣብ {0} ረቡዕ"}
-                }
-                past{
-                    one{"ቅድሚ {0} ረቡዕ"}
-                    other{"ቅድሚ {0} ረቡዕ"}
-                }
-            }
-        }
-        wed-short{
             relative{
                 "-1"{"ዝሓለፈ ረቡዕ"}
                 "0"{"ሎሚ ረቡዕ"}
@@ -1723,49 +858,8 @@ ti{
                 }
             }
         }
-        week-narrow{
-            dn{"ሰሙን"}
-            relative{
-                "-1"{"ዝሓለፈ ሰሙን"}
-                "0"{"ህሉው ሰሙን"}
-                "1"{"ዝመጽእ ሰሙን"}
-            }
-            relativePeriod{"ሰሙን ናይ {0}"}
-            relativeTime{
-                future{
-                    one{"ኣብ {0} ሰሙን"}
-                    other{"ኣብ {0} ሰሙን"}
-                }
-                past{
-                    one{"ቅድሚ {0} ሰሙን"}
-                    other{"ቅድሚ {0} ሰሙን"}
-                }
-            }
-        }
-        week-short{
-            dn{"ሰሙን"}
-            relative{
-                "-1"{"ዝሓለፈ ሰሙን"}
-                "0"{"ህሉው ሰሙን"}
-                "1"{"ዝመጽእ ሰሙን"}
-            }
-            relativePeriod{"ሰሙን ናይ {0}"}
-            relativeTime{
-                future{
-                    one{"ኣብ {0} ሰሙን"}
-                    other{"ኣብ {0} ሰሙን"}
-                }
-                past{
-                    one{"ቅድሚ {0} ሰሙን"}
-                    other{"ቅድሚ {0} ሰሙን"}
-                }
-            }
-        }
         weekOfMonth{
             dn{"ሰሙን ናይ ወርሒ"}
-        }
-        weekOfMonth-narrow{
-            dn{"ሰሙ. ናይ ወር."}
         }
         weekOfMonth-short{
             dn{"ሰሙ. ናይ ወር."}
@@ -1776,17 +870,11 @@ ti{
         weekday-narrow{
             dn{"መዓልቲ ናይ ሰ."}
         }
-        weekday-short{
-            dn{"መዓልቲ ናይ ሰሙን"}
-        }
         weekdayOfMonth{
             dn{"መዓልታት ስራሕ ናይ ወርሒ"}
         }
         weekdayOfMonth-narrow{
             dn{"መ.ስራሕ ናይ ወርሒ"}
-        }
-        weekdayOfMonth-short{
-            dn{"መዓልታት ስራሕ ናይ ወርሒ"}
         }
         year{
             dn{"ዓመት"}
@@ -1807,17 +895,7 @@ ti{
             }
         }
         year-narrow{
-            dn{"ዓመት"}
-            relative{
-                "-1"{"ዓሚ"}
-                "0"{"ሎሚ ዓመት"}
-                "1"{"ንዓመታ"}
-            }
             relativeTime{
-                future{
-                    one{"ኣብ {0} ዓ"}
-                    other{"ኣብ {0} ዓ"}
-                }
                 past{
                     one{"ቅድሚ {0} ዓ"}
                     other{"ቅድሚ {0} ዓ"}
@@ -1825,17 +903,7 @@ ti{
             }
         }
         year-short{
-            dn{"ዓመት"}
-            relative{
-                "-1"{"ዓሚ"}
-                "0"{"ሎሚ ዓመት"}
-                "1"{"ንዓመታ"}
-            }
             relativeTime{
-                future{
-                    one{"ኣብ {0} ዓ"}
-                    other{"ኣብ {0} ዓ"}
-                }
                 past{
                     one{"ቅድሚ -{0} ዓ"}
                     other{"ቅድሚ {0} ዓ"}
@@ -1844,9 +912,6 @@ ti{
         }
         zone{
             dn{"ዞባ ግዜ"}
-        }
-        zone-narrow{
-            dn{"ዞባ"}
         }
         zone-short{
             dn{"ዞባ"}
@@ -1859,41 +924,14 @@ ti{
             middle{"{0}፣ {1}"}
             start{"{0}፣ {1}"}
         }
-        or-narrow{
-            2{"{0} ወይ {1}"}
-            end{"{0} ወይ {1}"}
-            middle{"{0}፣ {1}"}
-            start{"{0}፣ {1}"}
-        }
-        or-short{
-            2{"{0} ወይ {1}"}
-            end{"{0} ወይ {1}"}
-            middle{"{0}፣ {1}"}
-            start{"{0}፣ {1}"}
-        }
         standard{
             2{"{0}ን {1}ን"}
             end{"{0}ን {1}ን"}
             middle{"{0}፣ {1}"}
             start{"{0}፣ {1}"}
         }
-        standard-narrow{
-            2{"{0}ን {1}ን"}
-            end{"{0}ን {1}ን"}
-            middle{"{0}፣ {1}"}
-            start{"{0}፣ {1}"}
-        }
-        standard-short{
-            2{"{0}ን {1}ን"}
-            end{"{0}ን {1}ን"}
-            middle{"{0}፣ {1}"}
-            start{"{0}፣ {1}"}
-        }
         unit{
-            2{"{0}ን {1}ን"}
             end{"{0}ን {1}ን"}
-            middle{"{0}፣ {1}"}
-            start{"{0}፣ {1}"}
         }
         unit-narrow{
             2{"{0} {1}"}
@@ -1902,10 +940,7 @@ ti{
             start{"{0} {1}"}
         }
         unit-short{
-            2{"{0}ን {1}ን"}
             end{"{0}፣ {1}"}
-            middle{"{0}፣ {1}"}
-            start{"{0}፣ {1}"}
         }
     }
     measurementSystemNames{
@@ -1930,27 +965,16 @@ ti{
             }
         }
         namePattern{
-            givenFirst-long-addressing-formal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
-            givenFirst-long-addressing-informal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
-            givenFirst-long-monogram-informal{
-                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
-                "llCaps}"
-            }
-            givenFirst-long-referring-informal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
-            givenFirst-medium-addressing-formal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
-            givenFirst-medium-addressing-informal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
-            givenFirst-medium-monogram-formal{
-                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
-                "llCaps}"
-            }
-            givenFirst-medium-monogram-informal{
-                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
-                "llCaps}"
-            }
-            givenFirst-medium-referring-formal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
-            givenFirst-medium-referring-informal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
-            givenFirst-short-addressing-formal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
-            givenFirst-short-addressing-informal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            givenFirst-long-addressing-formal{"{title} {surname}"}
+            givenFirst-long-addressing-informal{"{given-informal}"}
+            givenFirst-long-monogram-formal{"{surname-monogram-allCaps}"}
+            givenFirst-long-referring-informal{"{given-informal} {surname}"}
+            givenFirst-medium-addressing-formal{"{title} {surname}"}
+            givenFirst-medium-addressing-informal{"{given-informal}"}
+            givenFirst-medium-referring-formal{"{given} {given2-initial} {surname} {generation}, {credentials}"}
+            givenFirst-medium-referring-informal{"{given-informal} {surname}"}
+            givenFirst-short-addressing-formal{"{title} {surname}"}
+            givenFirst-short-addressing-informal{"{given-informal}"}
             givenFirst-short-monogram-formal{
                 "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
                 "llCaps}"
@@ -1959,44 +983,27 @@ ti{
                 "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
                 "llCaps}"
             }
-            givenFirst-short-referring-formal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
-            givenFirst-short-referring-informal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
+            givenFirst-short-referring-informal{"{given-informal} {surname-initial}"}
+            sorting-long-referring-formal{"{surname-core}, {given} {given2} {surname-prefix}"}
             sorting-long-referring-informal{"{surname} {surname2}, {title} {given} {given2} {credentials}"}
-            sorting-medium-referring-formal{"{surname} {surname2}, {title} {given} {given2} {credentials}"}
-            sorting-medium-referring-informal{"{surname} {surname2}, {title} {given} {given2} {credentials}"}
-            sorting-short-referring-formal{"{surname} {surname2}, {title} {given} {given2} {credentials}"}
-            sorting-short-referring-informal{"{surname} {surname2}, {title} {given} {given2} {credentials}"}
-            surnameFirst-long-addressing-formal{"{surname} {surname2} {title} {given} {given2} {credentials}"}
-            surnameFirst-long-addressing-informal{"{surname} {surname2} {title} {given} {given2} {credentials}"}
-            surnameFirst-long-monogram-informal{
-                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
-                "llCaps}"
-            }
-            surnameFirst-long-referring-informal{"{surname} {surname2} {title} {given} {given2} {credentials}"}
-            surnameFirst-medium-addressing-formal{"{surname} {surname2} {title} {given} {given2} {credentials}"}
-            surnameFirst-medium-addressing-informal{"{surname} {surname2} {title} {given} {given2} {credentials}"}
-            surnameFirst-medium-monogram-formal{
-                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
-                "llCaps}"
-            }
-            surnameFirst-medium-monogram-informal{
-                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
-                "llCaps}"
-            }
-            surnameFirst-medium-referring-formal{"{surname} {surname2} {title} {given} {given2} {credentials}"}
-            surnameFirst-medium-referring-informal{"{surname} {surname2} {title} {given} {given2} {credentials}"}
-            surnameFirst-short-addressing-formal{"{surname} {surname2} {title} {given} {given2} {credentials}"}
-            surnameFirst-short-addressing-informal{"{surname} {surname2} {title} {given} {given2} {credentials}"}
-            surnameFirst-short-monogram-formal{
-                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
-                "llCaps}"
-            }
-            surnameFirst-short-monogram-informal{
-                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
-                "llCaps}"
-            }
+            sorting-medium-referring-formal{"{surname-core}, {given} {given2-initial} {surname-prefix}"}
+            sorting-medium-referring-informal{"{surname}, {given-informal}"}
+            surnameFirst-long-addressing-formal{"{title} {surname}"}
+            surnameFirst-long-addressing-informal{"{given-informal}"}
+            surnameFirst-long-monogram-informal{"{surname-monogram-allCaps}{given-informal-monogram-allCaps}"}
+            surnameFirst-long-referring-formal{"{title} {surname} {given} {given2} {generation}, {credentials}"}
+            surnameFirst-long-referring-informal{"{surname} {given-informal}"}
+            surnameFirst-medium-addressing-formal{"{title} {surname}"}
+            surnameFirst-medium-addressing-informal{"{given-informal}"}
+            surnameFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
+            surnameFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
+            surnameFirst-medium-referring-formal{"{surname} {given} {given2-initial} {generation}, {credentials}"}
+            surnameFirst-medium-referring-informal{"{surname} {given-informal}"}
+            surnameFirst-short-addressing-informal{"{given-informal}"}
+            surnameFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
+            surnameFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}
             surnameFirst-short-referring-formal{"{surname} {surname2} {title} {given} {given2} {credentials}"}
-            surnameFirst-short-referring-informal{"{surname} {surname2} {title} {given} {given2} {credentials}"}
+            surnameFirst-short-referring-informal{"{surname} {given-initial}"}
         }
     }
 }

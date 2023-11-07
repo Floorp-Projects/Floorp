@@ -83,6 +83,7 @@ yue{
         bfd{"富特文"}
         bfq{"巴達加文"}
         bg{"保加利亞文"}
+        bgc{"哈里亞納文"}
         bgn{"西俾路支文"}
         bho{"博傑普爾文"}
         bi{"比斯拉馬文"}
@@ -151,7 +152,7 @@ yue{
         dar{"達爾格瓦文"}
         dav{"台塔文"}
         de{"德文"}
-        de_CH{"高地德文（瑞士）"}
+        de_CH{"高地德文 (瑞士)"}
         del{"德拉瓦文"}
         den{"斯拉夫"}
         dgr{"多格里布文"}
@@ -214,7 +215,7 @@ yue{
         gd{"蘇格蘭蓋爾文"}
         gez{"吉茲文"}
         gil{"吉爾伯特群島文"}
-        gl{"加利西亞文"}
+        gl{"加里西亞文"}
         glk{"吉拉基文"}
         gmh{"中古高地德文"}
         gn{"瓜拉尼文"}
@@ -250,7 +251,7 @@ yue{
         ht{"海地文"}
         hu{"匈牙利文"}
         hup{"胡帕文"}
-        hur{"哈爾科梅勒姆文"}
+        hur{"哈爾魁梅林語"}
         hy{"亞美尼亞文"}
         hz{"赫雷羅文"}
         ia{"國際文"}
@@ -858,9 +859,7 @@ yue{
             indian{"印度國曆"}
             islamic{"伊斯蘭曆"}
             islamic-civil{"伊斯蘭民用曆"}
-            islamic-rgsa{"伊斯蘭新月曆"}
-            islamic-tbla{"伊斯蘭天文曆"}
-            islamic-umalqura{"烏姆庫拉曆"}
+            islamic-umalqura{"伊斯蘭曆 (烏姆庫拉)"}
             iso8601{"國際標準 ISO 8601"}
             japanese{"日本曆"}
             persian{"波斯曆"}
@@ -1070,10 +1069,11 @@ yue{
     }
     characterLabelPattern{
         all{"{0} — 全部"}
-        category-list{"{0}: {1}"}
         compatibility{"{0} — 相容性"}
         enclosed{"{0} — 包圍"}
         extended{"{0} — 擴充"}
+        facing-left{"{0} 向左"}
+        facing-right{"{0} 向右"}
         historic{"{0} - 古代"}
         miscellaneous{"{0} — 其他"}
         other{"{0} — 其他"}
@@ -1091,7 +1091,6 @@ yue{
     }
     localeDisplayPattern{
         keyTypePattern{"{0}：{1}"}
-        pattern{"{0} ({1})"}
         separator{"{0}，{1}"}
     }
 }

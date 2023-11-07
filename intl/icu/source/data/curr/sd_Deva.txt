@@ -41,11 +41,6 @@ sd_Deva{
             "अणजा॒तल सिको",
         }
     }
-    Currencies%narrow{
-        GBP{"£"}
-        RUB{"₽"}
-        USD{"$"}
-    }
     CurrencyPlurals{
         BRL{
             one{"ब्राज़ीली रियालु"}
@@ -54,10 +49,6 @@ sd_Deva{
         CNY{
             one{"चीनी युआनु"}
             other{"चीनी युआन"}
-        }
-        EUR{
-            one{"यूरो"}
-            other{"यूरो"}
         }
         GBP{
             one{"बरतानवी पाउंडु"}

@@ -827,9 +827,13 @@ es{
             "SKK",
             "corona eslovaca",
         }
+        SLE{
+            "SLE",
+            "leona",
+        }
         SLL{
             "SLL",
-            "leona",
+            "leona (1964—2022)",
         }
         SOS{
             "SOS",
@@ -1125,103 +1129,10 @@ es{
         }
     }
     Currencies%narrow{
-        AOA{"Kz"}
-        ARS{"$"}
-        AUD{"$"}
-        BAM{"KM"}
-        BBD{"$"}
-        BDT{"৳"}
-        BMD{"$"}
-        BND{"$"}
-        BOB{"Bs"}
-        BRL{"R$"}
-        BSD{"$"}
-        BWP{"P"}
         BYN{"р."}
-        BZD{"$"}
-        CAD{"$"}
-        CLP{"$"}
-        CNY{"¥"}
-        COP{"$"}
-        CRC{"₡"}
-        CUC{"$"}
-        CUP{"$"}
-        CZK{"Kč"}
-        DKK{"kr"}
-        DOP{"$"}
         EGP{"EGP"}
-        EUR{"€"}
-        FJD{"$"}
-        FKP{"£"}
-        GBP{"£"}
-        GEL{"₾"}
-        GIP{"£"}
-        GNF{"FG"}
-        GTQ{"Q"}
-        GYD{"$"}
-        HKD{"$"}
-        HNL{"L"}
-        HRK{"kn"}
-        HUF{"Ft"}
-        IDR{"Rp"}
-        ILS{"₪"}
-        INR{"₹"}
-        ISK{"kr"}
-        JMD{"$"}
-        JPY{"¥"}
-        KHR{"៛"}
-        KMF{"CF"}
-        KPW{"₩"}
-        KRW{"₩"}
-        KYD{"$"}
-        KZT{"₸"}
-        LAK{"₭"}
-        LBP{"L£"}
-        LKR{"Rs"}
-        LRD{"$"}
-        MGA{"Ar"}
-        MMK{"K"}
-        MNT{"₮"}
-        MUR{"Rs"}
-        MXN{"$"}
-        MYR{"RM"}
-        NAD{"$"}
-        NGN{"₦"}
-        NIO{"C$"}
-        NOK{"kr"}
-        NPR{"Rs"}
-        NZD{"$"}
-        PHP{"₱"}
-        PKR{"Rs"}
-        PLN{"zł"}
-        PYG{"₲"}
         RON{"L"}
-        RUB{"₽"}
-        RWF{"RF"}
-        SBD{"$"}
-        SEK{"kr"}
-        SGD{"$"}
-        SHP{"£"}
-        SRD{"$"}
-        SSP{"£"}
-        STN{"Db"}
-        SYP{"£"}
-        THB{"฿"}
-        TOP{"T$"}
-        TRY{"₺"}
-        TTD{"$"}
         TWD{"NT$"}
-        UAH{"₴"}
-        USD{"$"}
-        UYU{"$"}
-        VEF{"Bs"}
-        VND{"₫"}
-        XCD{"$"}
-        ZAR{"R"}
-        ZMW{"ZK"}
-    }
-    Currencies%variant{
-        TRY{"TL"}
     }
     CurrencyPlurals{
         ADP{
@@ -1992,9 +1903,13 @@ es{
             one{"corona eslovaca"}
             other{"coronas eslovacas"}
         }
-        SLL{
+        SLE{
             one{"leona"}
             other{"leonas"}
+        }
+        SLL{
+            one{"leona (1964—2022)"}
+            other{"leonas (1964—2022)"}
         }
         SOS{
             one{"chelín somalí"}
@@ -2148,14 +2063,6 @@ es{
             one{"franco CFA de África Central"}
             other{"francos CFA de África Central"}
         }
-        XAG{
-            one{"plata"}
-            other{"plata"}
-        }
-        XAU{
-            one{"oro"}
-            other{"oro"}
-        }
         XBA{
             one{"unidad compuesta europea"}
             other{"unidades compuestas europeas"}
@@ -2192,17 +2099,9 @@ es{
             one{"franco CFA de África Occidental"}
             other{"francos CFA de África Occidental"}
         }
-        XPD{
-            one{"paladio"}
-            other{"paladio"}
-        }
         XPF{
             one{"franco CFP"}
             other{"francos CFP"}
-        }
-        XPT{
-            one{"platino"}
-            other{"platino"}
         }
         XXX{
             one{"(moneda desconocida)"}

@@ -93,7 +93,6 @@ naq{
         IE{"Irlandi"}
         IL{"Israeli"}
         IN{"Indiab"}
-        IO{"British Indian Ocean Territory"}
         IQ{"Iraqi"}
         IR{"Iranni"}
         IS{"Iceland"}

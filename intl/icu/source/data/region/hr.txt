@@ -220,7 +220,7 @@ hr{
         PH{"Filipini"}
         PK{"Pakistan"}
         PL{"Poljska"}
-        PM{"Saint-Pierre-et-Miquelon"}
+        PM{"Sveti Petar i Mikelon"}
         PN{"Otoci Pitcairn"}
         PR{"Portoriko"}
         PS{"Palestinsko područje"}
@@ -298,6 +298,9 @@ hr{
         ZW{"Zimbabve"}
         ZZ{"nepoznato područje"}
     }
+    Countries%chagos{
+        IO{"Otočje Chagos"}
+    }
     Countries%short{
         GB{"UK"}
         HK{"Hong Kong"}
@@ -312,7 +315,9 @@ hr{
         CI{"Bjelokosna Obala"}
         CZ{"Češka Republika"}
         FK{"Falklandski otoci (Malvini)"}
+        NZ{"Aotearoa Novi Zeland"}
         SZ{"Svazi"}
         TL{"Istočni Timor"}
+        TR{"Türkiye"}
     }
 }

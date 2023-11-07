@@ -84,6 +84,7 @@ zh_Hant{
         bfd{"富特文"}
         bfq{"巴達加文"}
         bg{"保加利亞文"}
+        bgc{"哈里亞納文"}
         bgn{"西俾路支文"}
         bho{"博傑普爾文"}
         bi{"比斯拉馬文"}
@@ -143,7 +144,7 @@ zh_Hant{
         crs{"塞席爾克里奧爾法文"}
         cs{"捷克文"}
         csb{"卡舒布文"}
-        csw{"沼澤克里語"}
+        csw{"沼澤克里文"}
         cu{"宗教斯拉夫文"}
         cv{"楚瓦什文"}
         cy{"威爾斯文"}
@@ -232,7 +233,7 @@ zh_Hant{
         guz{"古西文"}
         gv{"曼島文"}
         gwi{"圭契文"}
-        ha{"豪撒文"}
+        ha{"豪薩文"}
         hai{"海達文"}
         hak{"客家話"}
         haw{"夏威夷文"}
@@ -243,7 +244,7 @@ zh_Hant{
         hif{"斐濟印地文"}
         hil{"希利蓋農文"}
         hit{"赫梯文"}
-        hmn{"孟文"}
+        hmn{"苗語"}
         ho{"西里莫圖土文"}
         hr{"克羅埃西亞文"}
         hsb{"上索布文"}
@@ -367,7 +368,7 @@ zh_Hant{
         lzz{"拉茲文"}
         mad{"馬都拉文"}
         maf{"馬法文"}
-        mag{"馬加伊文"}
+        mag{"摩揭陀文"}
         mai{"邁蒂利文"}
         mak{"望加錫文"}
         man{"曼丁哥文"}
@@ -423,7 +424,7 @@ zh_Hant{
         niu{"紐埃文"}
         njo{"阿沃那加文"}
         nl{"荷蘭文"}
-        nl_BE{"佛蘭芒文"}
+        nl_BE{"法蘭德斯文"}
         nmg{"夸西奧文"}
         nn{"耐諾斯克挪威文"}
         nnh{"恩甘澎文"}
@@ -812,6 +813,8 @@ zh_Hant{
         Sidd{"悉曇文字"}
         Sind{"信德文"}
         Sinh{"錫蘭文"}
+        Sogd{"粟特文"}
+        Sogo{"古粟特文"}
         Sora{"索朗桑朋文字"}
         Soyo{"索永布文字"}
         Sund{"巽他文"}
@@ -872,9 +875,7 @@ zh_Hant{
             indian{"印度國曆"}
             islamic{"伊斯蘭曆"}
             islamic-civil{"伊斯蘭民用曆"}
-            islamic-rgsa{"伊斯蘭新月曆"}
-            islamic-tbla{"伊斯蘭天文曆"}
-            islamic-umalqura{"烏姆庫拉曆"}
+            islamic-umalqura{"伊斯蘭曆（烏姆庫拉）"}
             iso8601{"ISO 8601 國際曆法"}
             japanese{"日本曆"}
             persian{"波斯曆"}
@@ -1117,10 +1118,12 @@ zh_Hant{
     }
     characterLabelPattern{
         all{"{0} — 全部"}
-        category-list{"{0}: {1}"}
+        category-list{"{0}：{1}"}
         compatibility{"{0} — 相容"}
         enclosed{"{0} — 加框"}
         extended{"{0} — 延伸"}
+        facing-left{"{0} 面左"}
+        facing-right{"{0} 面右"}
         historic{"{0} — 古老"}
         miscellaneous{"{0} — 混合"}
         other{"{0} — 其他"}

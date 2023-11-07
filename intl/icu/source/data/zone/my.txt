@@ -1900,10 +1900,6 @@ my{
         "meta:Yukon"{
             ls{"ယူကွန်း အချိန်"}
         }
-        fallbackFormat{"{1} ({0})"}
-        gmtFormat{"GMT{0}"}
-        gmtZeroFormat{"GMT"}
-        hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"{0} အချိန်"}
         regionFormatDaylight{"{0} နွေရာသီ စံတော်ချိန်"}
         regionFormatStandard{"{0} စံတော်ချိန်"}

@@ -9,5 +9,5 @@ package(
 )
 
 exports_files([
-    "nfc.txt", "nfkc.txt", "nfkc_cf.txt", "uts46.txt",
+    "nfc.txt", "nfkc.txt", "nfkc_cf.txt", "nfkc_scf.txt", "uts46.txt",
 ])

@@ -4,6 +4,7 @@
 ar_AE{
     NumberElements{
         default{"latn"}
+        default_latn{"latn"}
     }
     calendar{
         gregorian{
@@ -23,18 +24,6 @@ ar_AE{
         year{
             relative{
                 "-1"{"السنة الماضية"}
-                "0"{"هذه السنة"}
-                "1"{"السنة التالية"}
-            }
-        }
-        year-narrow{
-            relative{
-                "0"{"هذه السنة"}
-                "1"{"السنة التالية"}
-            }
-        }
-        year-short{
-            relative{
                 "0"{"هذه السنة"}
                 "1"{"السنة التالية"}
             }

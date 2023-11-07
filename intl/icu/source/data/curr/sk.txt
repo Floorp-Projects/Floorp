@@ -899,9 +899,13 @@ sk{
             "SKK",
             "slovenská koruna",
         }
+        SLE{
+            "SLE",
+            "sierraleonský leone",
+        }
         SLL{
             "SLL",
-            "sierraleonský leone",
+            "sierraleonský leone (1964—2022)",
         }
         SOS{
             "SOS",
@@ -1213,108 +1217,12 @@ sk{
         }
     }
     Currencies%narrow{
-        AOA{"Kz"}
-        ARS{"$"}
-        AUD{"$"}
-        BAM{"KM"}
-        BBD{"$"}
-        BDT{"৳"}
-        BMD{"$"}
-        BND{"$"}
-        BOB{"Bs"}
-        BRL{"R$"}
-        BSD{"$"}
-        BWP{"P"}
         BYN{"р."}
-        BZD{"$"}
-        CAD{"$"}
-        CLP{"$"}
-        CNY{"¥"}
-        COP{"$"}
-        CRC{"₡"}
-        CUC{"$"}
-        CUP{"$"}
-        CZK{"Kč"}
-        DKK{"kr"}
-        DOP{"$"}
-        EGP{"E£"}
-        ESP{"₧"}
-        EUR{"€"}
-        FJD{"$"}
-        FKP{"£"}
-        GBP{"£"}
-        GEL{"₾"}
-        GIP{"£"}
-        GNF{"FG"}
-        GTQ{"Q"}
-        GYD{"$"}
-        HKD{"$"}
-        HNL{"L"}
-        HRK{"kn"}
-        HUF{"Ft"}
-        IDR{"Rp"}
-        ILS{"₪"}
-        INR{"₹"}
-        ISK{"kr"}
-        JMD{"$"}
-        JPY{"¥"}
-        KHR{"៛"}
-        KMF{"CF"}
-        KPW{"₩"}
-        KRW{"₩"}
-        KYD{"$"}
-        KZT{"₸"}
-        LAK{"₭"}
-        LBP{"L£"}
-        LKR{"Rs"}
-        LRD{"$"}
-        LTL{"Lt"}
-        LVL{"Ls"}
-        MGA{"Ar"}
-        MMK{"K"}
-        MNT{"₮"}
-        MUR{"Rs"}
-        MXN{"$"}
-        MYR{"RM"}
-        NAD{"$"}
-        NGN{"₦"}
-        NIO{"C$"}
-        NOK{"kr"}
-        NPR{"Rs"}
-        NZD{"$"}
-        PHP{"₱"}
-        PKR{"Rs"}
-        PLN{"zł"}
-        PYG{"₲"}
-        RON{"lei"}
-        RUB{"₽"}
         RUR{"р."}
-        RWF{"RF"}
-        SBD{"$"}
-        SEK{"kr"}
-        SGD{"$"}
-        SHP{"£"}
-        SRD{"$"}
-        SSP{"£"}
-        STN{"Db"}
-        SYP{"£"}
-        THB{"฿"}
-        TOP{"T$"}
-        TRY{"₺"}
-        TTD{"$"}
         TWD{"NT$"}
-        UAH{"₴"}
-        USD{"$"}
-        UYU{"$"}
-        VEF{"Bs"}
-        VND{"₫"}
-        XCD{"$"}
-        ZAR{"R"}
-        ZMW{"ZK"}
     }
     Currencies%variant{
         RUB{"₽"}
-        TRY{"TL"}
     }
     CurrencyPlurals{
         ADP{
@@ -2661,11 +2569,17 @@ sk{
             one{"slovenská koruna"}
             other{"slovenských korún"}
         }
-        SLL{
+        SLE{
             few{"sierraleonské leone"}
             many{"sierraleonského leone"}
             one{"sierraleonský leone"}
             other{"sierraleonských leone"}
+        }
+        SLL{
+            few{"sierraleonské leone (1964—2022)"}
+            many{"sierraleonského leone (1964—2022)"}
+            one{"sierraleonský leone (1964—2022)"}
+            other{"sierraleonských leone (1964—2022)"}
         }
         SOS{
             few{"somálske šilingy"}
@@ -2961,12 +2875,6 @@ sk{
             one{"východokaribský dolár"}
             other{"východokaribských dolárov"}
         }
-        XDR{
-            few{"SDR"}
-            many{"SDR"}
-            one{"SDR"}
-            other{"SDR"}
-        }
         XEU{
             few{"európske menové jednotky"}
             many{"európskej menovej jednotky"}
@@ -3014,12 +2922,6 @@ sk{
             many{"jednotky fondov RINET"}
             one{"jednotka fondov RINET"}
             other{"jednotiek fondov RINET"}
-        }
-        XSU{
-            few{"sucre"}
-            many{"sucre"}
-            one{"sucre"}
-            other{"sucre"}
         }
         XTS{
             few{"jednotky testovacej meny"}

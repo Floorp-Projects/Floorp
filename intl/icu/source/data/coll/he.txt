@@ -8,7 +8,7 @@ he{
                 "[normalization on]"
                 "[reorder Hebr]"
             }
-            Version{"43"}
+            Version{"44"}
         }
     }
 }

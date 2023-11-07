@@ -48,6 +48,7 @@ sd{
         bem{"بيمبا"}
         bez{"بينا"}
         bg{"بلغاريائي"}
+        bgc{"ھريانوي"}
         bho{"ڀوجپوري"}
         bi{"بسلاما"}
         bin{"بني"}
@@ -329,6 +330,7 @@ sd{
         pt_PT{"يورپي پرتگالي"}
         qu{"ڪيچوا"}
         quc{"ڪچي"}
+        raj{"راجستاني"}
         rap{"ريپنوئي"}
         rar{"ريرو ٽينگو"}
         rhg{"روھنگيا"}
@@ -623,10 +625,11 @@ sd{
     }
     characterLabelPattern{
         all{"{0} — سڀئي"}
-        category-list{"{0}: {1}"}
         compatibility{"{0} - مطابقت"}
         enclosed{"{0} - ڳنڍيل"}
         extended{"{0} - وڌايل"}
+        facing-left{"{0} کاٻي طرف منهن"}
+        facing-right{"{0} ساڄي طرف منهن"}
         historic{"{0} - تاريخي"}
         miscellaneous{"{0} - متفرق"}
         other{"{0} - ٻيا"}
@@ -642,10 +645,5 @@ sd{
         language{"زبان: {0}"}
         script{"اسڪرپٽ: {0}"}
         territory{"خطو: {0}"}
-    }
-    localeDisplayPattern{
-        keyTypePattern{"{0}: {1}"}
-        pattern{"{0} ({1})"}
-        separator{"{0}, {1}"}
     }
 }

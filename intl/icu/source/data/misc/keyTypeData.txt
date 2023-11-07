@@ -8,6 +8,9 @@ keyTypeData:table(nofallback){
         }
         tz:alias{"/ICUDATA/timezoneTypes/bcpTypeAlias/tz"}
     }
+    ianaMap{
+        timezone:alias{"/ICUDATA/timezoneTypes/ianaMap/timezone"}
+    }
     keyInfo{
         deprecated{
             kh{"true"}

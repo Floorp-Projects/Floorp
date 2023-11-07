@@ -171,9 +171,13 @@ ksf{
             "SHP",
             "mɔni mǝ á sɛntɛ́len",
         }
+        SLE{
+            "SLE",
+            "mɔni mǝ á syɛraleon",
+        }
         SLL{
             "SLL",
-            "mɔni mǝ á syɛraleon",
+            "mɔni mǝ á syɛraleon (1964—2022)",
         }
         SOS{
             "SOS",

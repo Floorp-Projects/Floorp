@@ -167,6 +167,7 @@
     <ClCompile Include="uidna.cpp" />
     <ClCompile Include="uts46.cpp" />
     <ClCompile Include="localebuilder.cpp" />
+    <ClCompile Include="ulocbuilder.cpp" />
     <ClCompile Include="localematcher.cpp" />
     <ClCompile Include="localeprioritylist.cpp" />
     <ClCompile Include="locavailable.cpp" />
@@ -185,6 +186,7 @@
     <ClCompile Include="ucat.cpp" />
     <ClCompile Include="uloc.cpp" />
     <ClCompile Include="uloc_tag.cpp" />
+    <ClCompile Include="ulocale.cpp" />
     <ClCompile Include="ures_cnv.cpp" />
     <ClCompile Include="uresbund.cpp" />
     <ClCompile Include="uresdata.cpp" />

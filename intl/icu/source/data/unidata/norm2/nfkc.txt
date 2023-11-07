@@ -13,7 +13,7 @@
 # to NFKC one-way mappings.
 # Use this file as the second gennorm2 input file after nfc.txt.
 
-* Unicode 15.0.0
+* Unicode 15.1.0
 
 00A0>0020
 00A8>0020 0308

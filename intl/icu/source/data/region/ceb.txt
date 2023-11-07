@@ -146,7 +146,7 @@ ceb{
         IL{"Israel"}
         IM{"Isle of Man"}
         IN{"India"}
-        IO{"British Indian Ocean Territory"}
+        IO{"Teritoryo sa British Indian Ocean"}
         IQ{"Iraq"}
         IR{"Iran"}
         IS{"Iceland"}
@@ -297,6 +297,9 @@ ceb{
         ZM{"Zambia"}
         ZW{"Zimbabwe"}
         ZZ{"Wala Mailhing Rehiyon"}
+    }
+    Countries%chagos{
+        IO{"Chagos Archipelago"}
     }
     Countries%short{
         GB{"UK"}

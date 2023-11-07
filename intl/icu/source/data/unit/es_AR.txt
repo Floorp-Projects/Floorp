@@ -41,23 +41,12 @@ es_AR{
     unitsNarrow{
         duration{
             second{
-                dnam{"seg."}
                 one{"{0}seg."}
                 other{"{0}seg."}
             }
             year{
                 one{"{0}a."}
                 other{"{0}a."}
-            }
-        }
-        electric{
-            volt{
-                dnam{"voltios"}
-            }
-        }
-        power{
-            watt{
-                dnam{"vatios"}
             }
         }
     }

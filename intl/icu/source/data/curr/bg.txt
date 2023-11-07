@@ -803,9 +803,13 @@ bg{
             "SKK",
             "Словашка крона",
         }
+        SLE{
+            "SLE",
+            "Сиералеонско леоне",
+        }
         SLL{
             "SLL",
-            "Сиералеонско леоне",
+            "Сиералеонско леоне (1964—2022)",
         }
         SOS{
             "SOS",
@@ -918,14 +922,6 @@ bg{
         USD{
             "щ.д.",
             "Щатски долар",
-        }
-        USN{
-            "USN",
-            "USN",
-        }
-        USS{
-            "USS",
-            "USS",
         }
         UYI{
             "UYI",
@@ -1091,104 +1087,56 @@ bg{
     Currencies%narrow{
         AFN{"Af"}
         AMD{"AMD"}
-        AOA{"Kz"}
         ARS{"ARS"}
         AUD{"AUD"}
         AZN{"AZN"}
-        BAM{"KM"}
         BBD{"BBD"}
         BDT{"BDT"}
         BMD{"BMD"}
         BND{"BND"}
-        BOB{"Bs"}
         BRL{"BRL"}
         BSD{"BSD"}
-        BWP{"P"}
         BZD{"BZD"}
         CAD{"CAD"}
         CLP{"CLP"}
         CNY{"CNY"}
         COP{"COP"}
         CRC{"CRC"}
-        CUC{"$"}
         CUP{"CUP"}
-        CZK{"Kč"}
-        DKK{"kr"}
         DOP{"DOP"}
-        EGP{"E£"}
-        EUR{"€"}
         FJD{"FJD"}
         FKP{"FKP"}
-        GBP{"£"}
-        GEL{"₾"}
         GHS{"GHS"}
         GIP{"GIP"}
-        GNF{"FG"}
-        GTQ{"Q"}
         GYD{"GYD"}
         HKD{"HKD"}
-        HNL{"L"}
-        HRK{"kn"}
-        HUF{"Ft"}
-        IDR{"Rp"}
         ILS{"ILS"}
         INR{"INR"}
-        ISK{"kr"}
         JMD{"JMD"}
-        JPY{"¥"}
         KHR{"KHR"}
-        KMF{"CF"}
-        KPW{"₩"}
         KRW{"KRW"}
         KYD{"KYD"}
         KZT{"KZT"}
         LAK{"LAK"}
-        LBP{"L£"}
-        LKR{"Rs"}
         LRD{"LRD"}
-        MGA{"Ar"}
-        MMK{"K"}
         MNT{"MNT"}
-        MUR{"Rs"}
         MXN{"MXN"}
-        MYR{"RM"}
         NAD{"NAD"}
         NGN{"NGN"}
-        NIO{"C$"}
-        NOK{"kr"}
-        NPR{"Rs"}
         NZD{"NZD"}
         PHP{"PHP"}
-        PKR{"Rs"}
-        PLN{"zł"}
         PYG{"PYG"}
         RON{"RON"}
-        RUB{"₽"}
-        RWF{"RF"}
         SBD{"SBD"}
-        SEK{"kr"}
         SGD{"SGD"}
-        SHP{"£"}
         SRD{"SRD"}
         SSP{"SSP"}
-        STN{"Db"}
-        SYP{"£"}
-        THB{"฿"}
-        TOP{"T$"}
         TRY{"TRY"}
         TTD{"TTD"}
         TWD{"TWD"}
         UAH{"UAH"}
-        USD{"$"}
         UYU{"UYU"}
-        VEF{"Bs"}
         VND{"VND"}
-        XCD{"$"}
-        ZAR{"R"}
-        ZMW{"ZK"}
-    }
-    Currencies%variant{
-        TRY{"TL"}
     }
     CurrencyPlurals{
         ADP{
@@ -1903,9 +1851,13 @@ bg{
             one{"словашка крона"}
             other{"словашки крони"}
         }
-        SLL{
+        SLE{
             one{"сиералеонско леоне"}
             other{"сиералеонски леоне"}
+        }
+        SLL{
+            one{"сиералеонско леоне (1964—2022)"}
+            other{"сиералеонски леоне (1964—2022)"}
         }
         SOS{
             one{"сомалийски шилинг"}

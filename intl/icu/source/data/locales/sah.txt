@@ -2,33 +2,15 @@
 // License & terms of use: http://www.unicode.org/copyright.html
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 sah{
-    AuxExemplarCharacters{"[в е ё ж з ф ц ш щ ъ ь ю я]"}
-    Ellipsis{
-        final{"{0}…"}
-        initial{"…{0}"}
-        medial{"{0}…{1}"}
-        word-final{"{0} …"}
-        word-initial{"… {0}"}
-        word-medial{"{0} … {1}"}
-    }
+    AuxExemplarCharacters{"[в её ж з ф ц ш щ ъ ь ю я]"}
     ExemplarCharacters{"[а б г ҕ д {дь} и й к л м н {нь} ҥ о ө п р с т у ү х һ ч ы э]"}
     ExemplarCharactersIndex{"[А Б Г Ҕ Д {Дь} И Й К Л М Н {Нь} Ҥ О Ө П Р С Т У Ү Х Һ Ч Ы Э]"}
     ExemplarCharactersNumbers{"[  \\- ‑ , % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     ExemplarCharactersPunctuation{"[\\:]"}
-    MoreInformation{"?"}
     NumberElements{
-        default{"latn"}
         latn{
-            miscPatterns{
-                atLeast{"≥{0}"}
-                range{"{0}–{1}"}
-            }
             patterns{
-                accountingFormat{"#,##0.00 ¤"}
                 currencyFormat{"#,##0.00 ¤"}
-                decimalFormat{"#,##0.###"}
-                percentFormat{"#,##0%"}
-                scientificFormat{"#E0"}
             }
             patternsLong{
                 decimalFormat{
@@ -150,20 +132,10 @@ sah{
             }
             symbols{
                 decimal{","}
-                exponential{"E"}
                 group{" "}
-                infinity{"∞"}
-                minusSign{"-"}
                 nan{"чыыһыла буотах"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
-        minimumGroupingDigits{"1"}
-        native{"latn"}
     }
     calendar{
         generic{
@@ -194,15 +166,7 @@ sah{
             }
         }
         gregorian{
-            AmPmMarkers{
-                "ЭИ",
-                "ЭК",
-            }
             AmPmMarkersAbbr{
-                "ЭИ",
-                "ЭК",
-            }
-            AmPmMarkersNarrow{
                 "ЭИ",
                 "ЭК",
             }
@@ -231,52 +195,18 @@ sah{
                 "yMMMd",
                 "yyMd",
             }
-            appendItems{
-                Timezone{"{0} {1}"}
-            }
             availableFormats{
-                E{"ccc"}
-                EHm{"E HH:mm"}
-                EHms{"E HH:mm:ss"}
-                Ed{"d, E"}
                 Ehm{"E h:mm a"}
                 Ehms{"E h:mm:ss a"}
                 Gy{"y 'с'. G"}
-                GyMMM{"G y MMM"}
-                GyMMMEd{"G y MMM d, E"}
-                GyMMMd{"G y MMM d"}
-                H{"HH"}
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
-                Hmsv{"HH:mm:ss v"}
-                Hmv{"HH:mm v"}
-                M{"L"}
-                MEd{"MM-dd, E"}
-                MMM{"LLL"}
-                MMMEd{"MMM d, E"}
                 MMMMW{
                     other{"MMMM W 'нэдиэлэтэ'"}
                 }
-                MMMMd{"MMMM d"}
-                MMMd{"MMM d"}
-                Md{"MM-dd"}
-                d{"d"}
                 h{"h a"}
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
                 hmsv{"h:mm:ss a v"}
                 hmv{"h:mm a v"}
-                ms{"mm:ss"}
-                y{"y"}
-                yM{"y-MM"}
-                yMEd{"y-MM-dd, E"}
-                yMMM{"y MMM"}
-                yMMMEd{"y MMM d, E"}
-                yMMMM{"y MMMM"}
-                yMMMd{"y MMM d"}
-                yMd{"y-MM-dd"}
-                yQQQ{"y QQQ"}
-                yQQQQ{"y QQQQ"}
                 yw{
                     other{"Y 'сыл' w 'нэдиэлэтэ'"}
                 }
@@ -292,24 +222,6 @@ sah{
                         "бэ",
                         "сб",
                     }
-                    narrow{
-                        "Б",
-                        "Б",
-                        "О",
-                        "С",
-                        "Ч",
-                        "Б",
-                        "С",
-                    }
-                    short{
-                        "бс",
-                        "бн",
-                        "оп",
-                        "сэ",
-                        "чп",
-                        "бэ",
-                        "сб",
-                    }
                     wide{
                         "баскыһыанньа",
                         "бэнидиэнньик",
@@ -321,15 +233,6 @@ sah{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "бс",
-                        "бн",
-                        "оп",
-                        "сэ",
-                        "чп",
-                        "бэ",
-                        "сб",
-                    }
                     narrow{
                         "Б",
                         "Б",
@@ -338,40 +241,6 @@ sah{
                         "Ч",
                         "Б",
                         "С",
-                    }
-                    short{
-                        "бс",
-                        "бн",
-                        "оп",
-                        "сэ",
-                        "чп",
-                        "бэ",
-                        "сб",
-                    }
-                    wide{
-                        "баскыһыанньа",
-                        "бэнидиэнньик",
-                        "оптуорунньук",
-                        "сэрэдэ",
-                        "чэппиэр",
-                        "Бээтиҥсэ",
-                        "субуота",
-                    }
-                }
-            }
-            dayPeriod{
-                stand-alone{
-                    abbreviated{
-                        am{"ЭИ"}
-                        pm{"ЭК"}
-                    }
-                    narrow{
-                        am{"ЭИ"}
-                        pm{"ЭК"}
-                    }
-                    wide{
-                        am{"ЭИ"}
-                        pm{"ЭК"}
                     }
                 }
             }
@@ -384,55 +253,12 @@ sah{
                     "BCE",
                     "CE",
                 }
-                wide{
-                    "б. э. и.",
-                    "б. э",
-                }
                 wide%variant{
                     "биһиги ээрэбит иннинэ",
                     "биһиги ээрэбит",
                 }
             }
             intervalFormats{
-                H{
-                    H{"HH–HH"}
-                }
-                Hm{
-                    H{"HH:mm–HH:mm"}
-                    m{"HH:mm–HH:mm"}
-                }
-                Hmv{
-                    H{"HH:mm–HH:mm v"}
-                    m{"HH:mm–HH:mm v"}
-                }
-                Hv{
-                    H{"HH–HH v"}
-                }
-                M{
-                    M{"MM–MM"}
-                }
-                MEd{
-                    M{"MM-dd, E – MM-dd, E"}
-                    d{"MM-dd, E – MM-dd, E"}
-                }
-                MMM{
-                    M{"LLL–LLL"}
-                }
-                MMMEd{
-                    M{"MMM d, E – MMM d, E"}
-                    d{"MMM d, E – MMM d, E"}
-                }
-                MMMd{
-                    M{"MMM d – MMM d"}
-                    d{"MMM d–d"}
-                }
-                Md{
-                    M{"MM-dd – MM-dd"}
-                    d{"MM-dd – MM-dd"}
-                }
-                d{
-                    d{"d–d"}
-                }
                 fallback{"{0} – {1}"}
                 h{
                     a{"h a – h a"}
@@ -452,40 +278,12 @@ sah{
                     a{"h a – h a v"}
                     h{"h–h a v"}
                 }
-                y{
-                    y{"y–y"}
-                }
                 yM{
                     M{"MM.y – MM.y"}
                     y{"MM.y – MM.y"}
                 }
-                yMEd{
-                    M{"y-MM-dd, E – y-MM-dd, E"}
-                    d{"y-MM-dd, E – y-MM-dd, E"}
-                    y{"y-MM-dd, E – y-MM-dd, E"}
-                }
-                yMMM{
-                    M{"y MMM–MMM"}
-                    y{"y MMM – y MMM"}
-                }
-                yMMMEd{
-                    M{"y MMM d, E – MMM d, E"}
-                    d{"y MMM d, E – MMM d, E"}
-                    y{"y MMM d, E – y MMM d, E"}
-                }
-                yMMMM{
-                    M{"y MMMM–MMMM"}
-                    y{"y MMMM – y MMMM"}
-                }
-                yMMMd{
-                    M{"y MMM d – MMM d"}
-                    d{"y MMM d–d"}
-                    y{"y MMM d – y MMM d"}
-                }
                 yMd{
-                    M{"y-MM-dd – y-MM-dd"}
                     d{"dd.MM.y – dd.MM.y"}
-                    y{"y-MM-dd – y-MM-dd"}
                 }
             }
             monthNames{
@@ -504,20 +302,6 @@ sah{
                         "Сэт",
                         "Ахс",
                     }
-                    narrow{
-                        "Т",
-                        "О",
-                        "К",
-                        "М",
-                        "Ы",
-                        "Б",
-                        "О",
-                        "А",
-                        "Б",
-                        "А",
-                        "С",
-                        "А",
-                    }
                     wide{
                         "Тохсунньу",
                         "Олунньу",
@@ -534,20 +318,6 @@ sah{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "Тохс",
-                        "Олун",
-                        "Клн",
-                        "Мсу",
-                        "Ыам",
-                        "Бэс",
-                        "Отй",
-                        "Атр",
-                        "Блҕ",
-                        "Алт",
-                        "Сэт",
-                        "Ахс",
-                    }
                     narrow{
                         "Т",
                         "О",
@@ -585,32 +355,6 @@ sah{
                         "2-с кб",
                         "3-с кб",
                         "4-с кб",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                    }
-                    wide{
-                        "1-кы кыбаартал",
-                        "2-с кыбаартал",
-                        "3-с кыбаартал",
-                        "4-с кыбаартал",
-                    }
-                }
-                stand-alone{
-                    abbreviated{
-                        "1-кы кб",
-                        "2-с кб",
-                        "3-с кб",
-                        "4-с кб",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
                     }
                     wide{
                         "1-кы кыбаартал",
@@ -668,21 +412,6 @@ sah{
                 }
             }
         }
-        fri-narrow{
-            relative{
-                "-1"{"ааспыт бэ."}
-                "0"{"бу бэ."}
-                "1"{"кэлэр бэ."}
-            }
-            relativeTime{
-                future{
-                    other{"{0} бээтиҥсэнэн"}
-                }
-                past{
-                    other{"{0} бэ. анараа өттүгэр"}
-                }
-            }
-        }
         fri-short{
             relative{
                 "-1"{"ааспыт бэ."}
@@ -690,9 +419,6 @@ sah{
                 "1"{"кэлэр бэ."}
             }
             relativeTime{
-                future{
-                    other{"{0} бээтиҥсэнэн"}
-                }
                 past{
                     other{"{0} бэ. анараа өттүгэр"}
                 }
@@ -766,20 +492,9 @@ sah{
                 }
             }
         }
-        quarter-narrow{
-            dn{"чпр."}
-            relativeTime{
-                future{
-                    other{"{0} кыбаарталынан"}
-                }
-            }
-        }
         quarter-short{
             dn{"чпр."}
             relativeTime{
-                future{
-                    other{"{0} кыбаарталынан"}
-                }
                 past{
                     other{"{0} кыб. анараа өттүгэр"}
                 }
@@ -800,21 +515,6 @@ sah{
                 }
             }
         }
-        sat-narrow{
-            relative{
-                "-1"{"ааспыт сб."}
-                "0"{"бу сб."}
-                "1"{"кэлэр сб."}
-            }
-            relativeTime{
-                future{
-                    other{"{0} субуотанан"}
-                }
-                past{
-                    other{"{0} сб. анараа өттүгэр"}
-                }
-            }
-        }
         sat-short{
             relative{
                 "-1"{"ааспыт сб."}
@@ -822,9 +522,6 @@ sah{
                 "1"{"кэлэр сб."}
             }
             relativeTime{
-                future{
-                    other{"{0} субуотанан"}
-                }
                 past{
                     other{"{0} сб. анараа өттүгэр"}
                 }
@@ -888,21 +585,6 @@ sah{
                 }
             }
         }
-        thu-narrow{
-            relative{
-                "-1"{"ааспыт чп."}
-                "0"{"бу чп."}
-                "1"{"кэлэр чп."}
-            }
-            relativeTime{
-                future{
-                    other{"{0} чэппиэринэн"}
-                }
-                past{
-                    other{"{0} чп. анараа өттүгэр"}
-                }
-            }
-        }
         thu-short{
             relative{
                 "-1"{"ааспыт чп."}
@@ -910,9 +592,6 @@ sah{
                 "1"{"кэлэр чп."}
             }
             relativeTime{
-                future{
-                    other{"{0} чэппиэринэн"}
-                }
                 past{
                     other{"{0} чп. анараа өттүгэр"}
                 }
@@ -933,21 +612,6 @@ sah{
                 }
             }
         }
-        tue-narrow{
-            relative{
-                "-1"{"ааспыт оп."}
-                "0"{"бу оп."}
-                "1"{"кэлэр оп."}
-            }
-            relativeTime{
-                future{
-                    other{"{0} оптуорунньугунан"}
-                }
-                past{
-                    other{"{0} оп. анараа өттүгэр"}
-                }
-            }
-        }
         tue-short{
             relative{
                 "-1"{"ааспыт оп."}
@@ -955,9 +619,6 @@ sah{
                 "1"{"кэлэр оп."}
             }
             relativeTime{
-                future{
-                    other{"{0} оптуорунньугунан"}
-                }
                 past{
                     other{"{0} оп. анараа өттүгэр"}
                 }
@@ -1028,28 +689,9 @@ sah{
         standard{
             2{"{0} уонна {1}"}
             end{"{0} уонна {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        standard-short{
-            2{"{0} уонна {1}"}
-            end{"{0} уонна {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
         unit{
             2{"{0} уонна {1}"}
-            end{"{0} уонна {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        unit-narrow{
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        unit-short{
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
     }
     measurementSystemNames{

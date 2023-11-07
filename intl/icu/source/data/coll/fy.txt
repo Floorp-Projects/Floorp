@@ -5,7 +5,7 @@ fy{
     collations{
         standard{
             Sequence{"&I<<y<<<Y"}
-            Version{"43"}
+            Version{"44"}
         }
     }
 }

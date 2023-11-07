@@ -83,6 +83,7 @@ th{
         bfd{"บาฟัต"}
         bfq{"พทคะ"}
         bg{"บัลแกเรีย"}
+        bgc{"หริยนวี"}
         bgn{"บาลูจิตะวันตก"}
         bho{"โภชปุรี"}
         bi{"บิสลามา"}
@@ -883,8 +884,6 @@ th{
             indian{"ปฏิทินแห่งชาติอินเดีย"}
             islamic{"ปฏิทินอิสลาม"}
             islamic-civil{"ปฏิทินอิสลามซีวิล"}
-            islamic-rgsa{"ปฏิทินอิสลาม (ซาอุดีอาระเบีย แบบพระจันทร์เสี้ยว)"}
-            islamic-tbla{"ปฏิทินอิสลาม (แบบตาราง สมัยดาราศาสตร์)"}
             islamic-umalqura{"ปฏิทินอิสลาม (อุมม์อัลกุรา)"}
             iso8601{"ปฏิทิน ISO-8601"}
             japanese{"ปฏิทินญี่ปุ่น"}
@@ -1105,10 +1104,11 @@ th{
     }
     characterLabelPattern{
         all{"{0} — ทั้งหมด"}
-        category-list{"{0}: {1}"}
         compatibility{"{0} — ความเข้ากันได้"}
         enclosed{"{0} — ล้อมรอบ"}
         extended{"{0} — ขยาย"}
+        facing-left{"{0} หันซ้าย"}
+        facing-right{"{0} หันขวา"}
         historic{"{0} — โบราณ"}
         miscellaneous{"{0} — อื่นๆ"}
         other{"{0} — อื่นๆ"}
@@ -1123,10 +1123,5 @@ th{
         language{"ภาษา: {0}"}
         script{"ตัวอักษร: {0}"}
         territory{"ภูมิภาค: {0}"}
-    }
-    localeDisplayPattern{
-        keyTypePattern{"{0}: {1}"}
-        pattern{"{0} ({1})"}
-        separator{"{0}, {1}"}
     }
 }

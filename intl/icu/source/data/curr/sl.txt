@@ -827,9 +827,13 @@ sl{
             "SKK",
             "slovaška krona",
         }
+        SLE{
+            "SLE",
+            "sieraleonski leone",
+        }
         SLL{
             "SLL",
-            "sieraleonski leone",
+            "sieraleonski leone (1964—2022)",
         }
         SOS{
             "SOS",
@@ -989,7 +993,7 @@ sl{
         }
         XAF{
             "FCFA",
-            "CFA frank BEAC",
+            "srednjeafriški frank CFA",
         }
         XAG{
             "XAG",
@@ -1045,7 +1049,7 @@ sl{
         }
         XPF{
             "CFPF",
-            "CFP frank",
+            "frank CFP",
         }
         XPT{
             "XPT",
@@ -1113,103 +1117,8 @@ sl{
         }
     }
     Currencies%narrow{
-        AOA{"Kz"}
-        ARS{"$"}
-        AUD{"$"}
-        BAM{"KM"}
-        BBD{"$"}
-        BDT{"৳"}
-        BMD{"$"}
-        BND{"$"}
-        BOB{"Bs"}
-        BRL{"R$"}
-        BSD{"$"}
-        BWP{"P"}
         BYN{"р."}
-        BZD{"$"}
-        CAD{"$"}
-        CLP{"$"}
-        CNY{"¥"}
-        COP{"$"}
-        CRC{"₡"}
-        CUC{"$"}
-        CUP{"$"}
-        CZK{"Kč"}
-        DKK{"kr"}
-        DOP{"$"}
-        EGP{"E£"}
-        EUR{"€"}
-        FJD{"$"}
-        FKP{"£"}
-        GBP{"£"}
-        GEL{"₾"}
-        GIP{"£"}
-        GNF{"FG"}
-        GTQ{"Q"}
-        GYD{"$"}
-        HKD{"$"}
-        HNL{"L"}
-        HRK{"kn"}
-        HUF{"Ft"}
-        IDR{"Rp"}
-        ILS{"₪"}
-        INR{"₹"}
-        ISK{"kr"}
-        JMD{"$"}
-        JPY{"¥"}
-        KHR{"៛"}
-        KMF{"CF"}
-        KPW{"₩"}
-        KRW{"₩"}
-        KYD{"$"}
-        KZT{"₸"}
-        LAK{"₭"}
-        LBP{"L£"}
-        LKR{"Rs"}
-        LRD{"$"}
-        MGA{"Ar"}
-        MMK{"K"}
-        MNT{"₮"}
-        MUR{"Rs"}
-        MXN{"$"}
-        MYR{"RM"}
-        NAD{"$"}
-        NGN{"₦"}
-        NIO{"C$"}
-        NOK{"kr"}
-        NPR{"Rs"}
-        NZD{"$"}
-        PHP{"₱"}
-        PKR{"Rs"}
-        PLN{"zł"}
-        PYG{"₲"}
-        RON{"lei"}
-        RUB{"₽"}
-        RWF{"RF"}
-        SBD{"$"}
-        SEK{"kr"}
-        SGD{"$"}
-        SHP{"£"}
-        SRD{"$"}
-        SSP{"£"}
-        STN{"Db"}
-        SYP{"£"}
-        THB{"฿"}
-        TOP{"T$"}
-        TRY{"₺"}
-        TTD{"$"}
         TWD{"NT$"}
-        UAH{"₴"}
-        USD{"$"}
-        UYU{"$"}
-        VEF{"Bs"}
-        VND{"₫"}
-        XCD{"$"}
-        ZAR{"R"}
-        ZMW{"ZK"}
-    }
-    Currencies%variant{
-        TRY{"TL"}
     }
     CurrencyPlurals{
         AED{
@@ -1716,18 +1625,6 @@ sl{
             other{"lesotskih lotov"}
             two{"lesotska lota"}
         }
-        LTL{
-            few{"litovski litas"}
-            one{"litovski litas"}
-            other{"litovski litas"}
-            two{"litovski litas"}
-        }
-        LVL{
-            few{"latvijski lats"}
-            one{"latvijski lats"}
-            other{"latvijski lats"}
-            two{"latvijski lats"}
-        }
         LYD{
             few{"libijski dinarji"}
             one{"libijski dinar"}
@@ -1986,11 +1883,17 @@ sl{
             other{"funtov Sv. Helene"}
             two{"funta Sv. Helene"}
         }
-        SLL{
+        SLE{
             few{"sieraleonski leoni"}
             one{"sieraleonski leone"}
             other{"sieraleonskih leonov"}
             two{"sieraleonska leona"}
+        }
+        SLL{
+            few{"sieraleonski leoni (1964—2022)"}
+            one{"sieraleonski leone (1964—2022)"}
+            other{"sieraleonskih leonov (1964—2022)"}
+            two{"sieraleonska leona (1964—2022)"}
         }
         SOS{
             few{"somalski šilingi"}
@@ -2168,7 +2071,7 @@ sl{
         }
         XPF{
             few{"franki CFP"}
-            one{"CFP frank"}
+            one{"frank CFP"}
             other{"frankov CFP"}
             two{"franka CFP"}
         }

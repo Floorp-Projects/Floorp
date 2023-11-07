@@ -2,39 +2,28 @@
 // License & terms of use: http://www.unicode.org/copyright.html
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 xh{
-    AuxExemplarCharacters{
-        "[á à ă â å ä ã ā æ ç é è ĕ ê ë ē í ì ĭ î ï ī ñ ó ò ŏ ô ö ø ō œ ú ù ŭ û ü ū ÿ"
-        "]"
-    }
+    AuxExemplarCharacters{"[áàăâåäãā æ ç éèĕêëē íìĭîïī ñ óòŏôöøō œ úùŭûüū ÿ]"}
     ExemplarCharacters{"[a b c d e f g h i j k l m n o p q r s t u v w x y z]"}
     ExemplarCharactersIndex{"[A B C D E F G H I J K L M N O P Q R S T U V W X Y Z]"}
-    ExemplarCharactersNumbers{"[\\- ‑ , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
-    ExemplarCharactersPunctuation{
-        "[\\- ‐ ‑ – — , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” ( ) \\[ \\] § @ * / \\& # † ‡ "
-        "′ ″]"
-    }
+    ExemplarCharactersPunctuation{"[\\- ‐‑ – — , ; \\: ! ? . … '‘’ \u0022“” ( ) \\[ \\] § @ * / \\& # † ‡ ′ ″]"}
     NumberElements{
-        default{"latn"}
         latn{
             patterns{
-                accountingFormat{"¤#,##0.00"}
-                accountingFormat%alphaNextToNumber{"¤ #,##0.00"}
-                accountingFormat%noCurrency{"#,##0.00"}
                 currencyFormat{"¤#,##0.00"}
-                decimalFormat{"#,##0.###"}
-                percentFormat{"#,##0%"}
-                scientificFormat{"#E0"}
             }
             symbols{
-                decimal{"."}
                 group{" "}
-                minusSign{"-"}
-                percentSign{"%"}
-                plusSign{"+"}
             }
         }
-        minimumGroupingDigits{"1"}
-        native{"latn"}
+        minimalPairs{
+            ordinal{
+                other{"Thatha {0}th ekunene."}
+            }
+            plural{
+                one{"usuku {0}"}
+                other{"intsuku eziyi-{0}"}
+            }
+        }
     }
     calendar{
         generic{
@@ -60,9 +49,6 @@ xh{
                 "{1}, {0}",
             }
             availableFormats{
-                E{"ccc"}
-                EHm{"E HH:mm"}
-                EHms{"E HH:mm:ss"}
                 Ed{"d E"}
                 Ehm{"E h:mm a"}
                 Ehms{"E h:mm:ss a"}
@@ -71,21 +57,12 @@ xh{
                 GyMMMEd{"E, MMM d, y G"}
                 GyMMMd{"MMM d, y G"}
                 GyMd{"M/d/y GGGGG"}
-                H{"HH"}
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
-                M{"L"}
                 MEd{"E, M/d"}
-                MMM{"LLL"}
                 MMMEd{"E, MMM d"}
-                MMMMd{"MMMM d"}
-                MMMd{"MMM d"}
                 Md{"M/d"}
-                d{"d"}
                 h{"h a"}
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
-                ms{"mm:ss"}
                 y{"y G"}
                 yyyy{"y G"}
                 yyyyM{"M/y GGGGG"}
@@ -162,7 +139,6 @@ xh{
                 d{
                     d{"d – d"}
                 }
-                fallback{"{0} – {1}"}
                 y{
                     y{"y – y G"}
                 }
@@ -201,18 +177,6 @@ xh{
             }
         }
         gregorian{
-            AmPmMarkers{
-                "AM",
-                "PM",
-            }
-            AmPmMarkersAbbr{
-                "AM",
-                "PM",
-            }
-            AmPmMarkersNarrow{
-                "AM",
-                "PM",
-            }
             DateTimePatterns{
                 "HH:mm:ss zzzz",
                 "HH:mm:ss z",
@@ -234,27 +198,7 @@ xh{
                 "{1} {0}",
                 "{1} {0}",
             }
-            DateTimeSkeletons{
-                "HHmmsszzzz",
-                "HHmmssz",
-                "HHmmss",
-                "HHmm",
-                "yMMMMEEEEd",
-                "yMMMMd",
-                "yMMMd",
-                "yMMdd",
-            }
-            appendItems{
-                Timezone{"{0} {1}"}
-            }
             availableFormats{
-                Bh{"h B"}
-                Bhm{"h:mm B"}
-                Bhms{"h:mm:ss B"}
-                EBhm{"E h:mm B"}
-                EBhms{"E h:mm:ss B"}
-                EHm{"E HH:mm"}
-                EHms{"E HH:mm:ss"}
                 Ed{"d E"}
                 Ehm{"E h:mm a"}
                 Ehms{"E h:mm:ss a"}
@@ -263,29 +207,14 @@ xh{
                 GyMMMEd{"E, MMM d, y G"}
                 GyMMMd{"MMM d, y G"}
                 GyMd{"M/d/y G"}
-                H{"HH"}
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
-                Hmsv{"HH:mm:ss v"}
-                Hmv{"HH:mm v"}
-                M{"L"}
                 MEd{"E, M/d"}
-                MMM{"LLL"}
                 MMMEd{"E, MMM d"}
-                MMMMW{
-                    one{"'week' W 'of' MMMM"}
-                    other{"'week' W 'of' MMMM"}
-                }
-                MMMMd{"MMMM d"}
-                MMMd{"MMM d"}
                 Md{"M/d"}
                 h{"h a"}
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
                 hmsv{"h:mm:ss a v"}
                 hmv{"h:mm a v"}
-                ms{"mm:ss"}
-                y{"y"}
                 yM{"M/y"}
                 yMEd{"E, M/d/y"}
                 yMMM{"MMM y"}
@@ -295,10 +224,6 @@ xh{
                 yMd{"M/d/y"}
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ y"}
-                yw{
-                    one{"'week' w 'of' Y"}
-                    other{"'week' w 'of' Y"}
-                }
             }
             dayNames{
                 format{
@@ -318,15 +243,6 @@ xh{
                         "Tht",
                         "Sin",
                         "Hl",
-                        "Mgq",
-                    }
-                    short{
-                        "Caw",
-                        "Mvu",
-                        "Lwesb",
-                        "Tha",
-                        "Sin",
-                        "Hla",
                         "Mgq",
                     }
                     wide{
@@ -358,40 +274,6 @@ xh{
                         "Hl",
                         "Mgq",
                     }
-                    short{
-                        "Caw",
-                        "Mvu",
-                        "Lwesb",
-                        "Tha",
-                        "Sin",
-                        "Hla",
-                        "Mgq",
-                    }
-                    wide{
-                        "Cawe",
-                        "Mvulo",
-                        "Lwesibini",
-                        "Lwesithathu",
-                        "Lwesine",
-                        "Lwesihlanu",
-                        "Mgqibelo",
-                    }
-                }
-            }
-            dayPeriod{
-                stand-alone{
-                    abbreviated{
-                        am{"AM"}
-                        pm{"PM"}
-                    }
-                    narrow{
-                        am{"AM"}
-                        pm{"PM"}
-                    }
-                    wide{
-                        am{"AM"}
-                        pm{"PM"}
-                    }
                 }
             }
             eras{
@@ -403,13 +285,9 @@ xh{
                     "BCE",
                     "CE",
                 }
-                wide{
-                    "BC",
-                    "AD",
-                }
                 wide%variant{
-                    "BCE",
-                    "CE",
+                    "Phambi Kwexesha Eliqhelekileyo",
+                    "Ixesha Eliqhelekileyo",
                 }
             }
             intervalFormats{
@@ -451,16 +329,6 @@ xh{
                     d{"M/d/y – M/d/y G"}
                     y{"M/d/y – M/d/y G"}
                 }
-                Hm{
-                    H{"HH:mm–HH:mm"}
-                    m{"HH:mm–HH:mm"}
-                }
-                Hmv{
-                    m{"HH:mm–HH:mm v"}
-                }
-                Hv{
-                    H{"HH–HH v"}
-                }
                 M{
                     M{"M – M"}
                 }
@@ -486,7 +354,6 @@ xh{
                 d{
                     d{"d – d"}
                 }
-                fallback{"{0} – {1}"}
                 h{
                     a{"h a – h a"}
                     h{"h–h a"}
@@ -554,20 +421,6 @@ xh{
                         "Nov",
                         "Dis",
                     }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10",
-                        "11",
-                        "12",
-                    }
                     wide{
                         "Janyuwari",
                         "Februwari",
@@ -598,20 +451,6 @@ xh{
                         "Nov",
                         "Dis",
                     }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10",
-                        "11",
-                        "12",
-                    }
                     wide{
                         "Janyuwari",
                         "Februwari",
@@ -636,26 +475,6 @@ xh{
                         "Kota 3",
                         "Kota 4",
                     }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                    }
-                    wide{
-                        "ikota yoku-1",
-                        "ikota yesi-2",
-                        "ikota yesi-3",
-                        "ikota yesi-4",
-                    }
-                }
-                stand-alone{
-                    abbreviated{
-                        "Kota 1",
-                        "Kota 2",
-                        "Kota 3",
-                        "Kota 4",
-                    }
                     wide{
                         "ikota yoku-1",
                         "ikota yesi-2",
@@ -665,31 +484,9 @@ xh{
                 }
             }
         }
-    }
-    delimiters{
-        alternateQuotationEnd{"’"}
-        alternateQuotationStart{"‘"}
-        quotationEnd{"”"}
-        quotationStart{"“"}
     }
     fields{
         day{
-            dn{"usuku"}
-            relative{
-                "-1"{"izolo"}
-                "0"{"namhlanje"}
-                "1"{"ngomso"}
-            }
-        }
-        day-narrow{
-            dn{"usuku"}
-            relative{
-                "-1"{"izolo"}
-                "0"{"namhlanje"}
-                "1"{"ngomso"}
-            }
-        }
-        day-short{
             dn{"usuku"}
             relative{
                 "-1"{"izolo"}
@@ -758,7 +555,7 @@ xh{
             dn{"umzuzwana"}
         }
         second-narrow{
-            dn{"zuzwa."}
+            dn{"mzuzwa."}
         }
         second-short{
             dn{"zuzwa."}
@@ -779,7 +576,6 @@ xh{
                 "0"{"kule vek."}
                 "1"{"veki eza."}
             }
-            relativePeriod{"veki ye {0}"}
         }
         week-short{
             dn{"ive."}
@@ -823,52 +619,9 @@ xh{
     }
     listPattern{
         or-narrow{
-            2{"{0} or {1}"}
-            end{"{0}, or {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
+            2{"{0} okanye {1}"}
+            end{"{0}, okanye {1}"}
         }
-        or-short{
-            2{"{0} or {1}"}
-            end{"{0}, or {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        standard-narrow{
-            2{"{0}, {1}"}
-            end{"{0}, {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        standard-short{
-            2{"{0}, {1}"}
-            end{"{0}, {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        unit{
-            2{"{0}, {1}"}
-            end{"{0}, {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        unit-narrow{
-            2{"{0}, {1}"}
-            end{"{0}, {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        unit-short{
-            2{"{0}, {1}"}
-            end{"{0}, {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-    }
-    measurementSystemNames{
-        UK{"UK"}
-        US{"US"}
-        metric{"Metric"}
     }
     personNames{
         nameOrderLocales{

@@ -2,15 +2,6 @@
 // License & terms of use: http://www.unicode.org/copyright.html
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 kk{
-    AuxExemplarCharacters{"[]"}
-    Ellipsis{
-        final{"{0}…"}
-        initial{"…{0}"}
-        medial{"{0}…{1}"}
-        word-final{"{0} …"}
-        word-initial{"… {0}"}
-        word-medial{"{0} … {1}"}
-    }
     ExemplarCharacters{
         "[а ә б в г ғ д е ё ж з и й к қ л м н ң о ө п р с т у ұ ү ф х һ ц ч ш щ ъ ы і"
         " ь э ю я]"
@@ -21,26 +12,17 @@ kk{
     }
     ExemplarCharactersNumbers{"[  \\- ‑ , % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     ExemplarCharactersPunctuation{
-        "[\\- ‐ ‑ – — , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” « » ( ) \\[ \\] \\{ \\} § @ * "
-        "/ \\& #]"
+        "[\\- ‐‑ – — , ; \\: ! ? . … '‘’ \u0022“” « » ( ) \\[ \\] \\{ \\} § @ * / \\&"
+        " #]"
     }
-    MoreInformation{"?"}
     NumberElements{
-        default{"latn"}
         latn{
             miscPatterns{
-                approximately{"~{0}"}
                 atLeast{"{0}+"}
-                atMost{"≤{0}"}
-                range{"{0}–{1}"}
             }
             patterns{
-                accountingFormat{"#,##0.00 ¤"}
                 accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
                 currencyFormat{"#,##0.00 ¤"}
-                decimalFormat{"#,##0.###"}
-                percentFormat{"#,##0%"}
-                scientificFormat{"#E0"}
             }
             patternsLong{
                 decimalFormat{
@@ -198,16 +180,8 @@ kk{
             }
             symbols{
                 decimal{","}
-                exponential{"E"}
                 group{" "}
-                infinity{"∞"}
-                minusSign{"-"}
                 nan{"сан емес"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         minimalPairs{
@@ -220,75 +194,11 @@ kk{
                 other{"Себетте {0} Х бар. Олар сіздікі ме?"}
             }
         }
-        minimumGroupingDigits{"1"}
-        native{"latn"}
     }
     calendar{
         coptic{
             monthNames{
                 format{
-                    abbreviated{
-                        "Тут",
-                        "Баба",
-                        "Хатур",
-                        "Кийяк",
-                        "Туба",
-                        "Ашмир",
-                        "Барамхат",
-                        "Барамуда",
-                        "Башанс",
-                        "Ба’уна",
-                        "’абиб",
-                        "Мисра",
-                        "Наси’",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10",
-                        "11",
-                        "12",
-                        "13",
-                    }
-                    wide{
-                        "Тут",
-                        "Баба",
-                        "Хатур",
-                        "Кийяк",
-                        "Туба",
-                        "Ашмир",
-                        "Барамхат",
-                        "Барамуда",
-                        "Башанс",
-                        "Ба’уна",
-                        "’абиб",
-                        "Мисра",
-                        "Наси’",
-                    }
-                }
-                stand-alone{
-                    abbreviated{
-                        "Тут",
-                        "Баба",
-                        "Хатур",
-                        "Кийяк",
-                        "Туба",
-                        "Ашмир",
-                        "Барамхат",
-                        "Барамуда",
-                        "Башанс",
-                        "Ба’уна",
-                        "’абиб",
-                        "Мисра",
-                        "Наси’",
-                    }
                     wide{
                         "Тут",
                         "Баба",
@@ -323,12 +233,6 @@ kk{
                 "{1} {0}",
                 "{1} {0}",
             }
-            DateTimePatterns%atTime{
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-            }
             DateTimeSkeletons{
                 "HHmmsszzzz",
                 "HHmmssz",
@@ -343,12 +247,8 @@ kk{
                 Bh{"B h"}
                 Bhm{"B h:mm"}
                 Bhms{"B h:mm:ss"}
-                E{"ccc"}
                 EBhm{"E B h:mm"}
                 EBhms{"E B h:mm:ss"}
-                EHm{"E HH:mm"}
-                EHms{"E HH:mm:ss"}
-                Ed{"d, E"}
                 Ehm{"E h:mm a"}
                 Ehms{"E h:mm:ss a"}
                 Gy{"G y 'ж'."}
@@ -356,21 +256,14 @@ kk{
                 GyMMMEd{"G y 'ж'. d MMM, E"}
                 GyMMMd{"G y 'ж'. d MMM"}
                 GyMd{"d/M/y GGGGG"}
-                H{"HH"}
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
-                M{"L"}
                 MEd{"dd.MM, E"}
-                MMM{"LLL"}
                 MMMEd{"d MMM, E"}
                 MMMMd{"d MMMM"}
                 MMMd{"d MMM"}
                 Md{"dd.MM"}
-                d{"d"}
                 h{"h a"}
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
-                ms{"mm:ss"}
                 y{"G y 'ж'."}
                 yyyy{"G y 'ж'."}
                 yyyyM{"GGGGG MM.y"}
@@ -385,11 +278,9 @@ kk{
             }
             intervalFormats{
                 Bh{
-                    B{"h B – h B"}
                     h{"h – h B"}
                 }
                 Bhm{
-                    B{"h:mm B – h:mm B"}
                     h{"h:mm – h:mm B"}
                     m{"h:mm – h:mm B"}
                 }
@@ -404,20 +295,6 @@ kk{
                     M{"G y 'ж'. d MMM – d MMM"}
                     d{"G y 'ж'. d–d MMM"}
                     y{"G y 'ж'. d MMM – y 'ж'. d MMM"}
-                }
-                H{
-                    H{"HH–HH"}
-                }
-                Hm{
-                    H{"HH:mm–HH:mm"}
-                    m{"HH:mm–HH:mm"}
-                }
-                Hmv{
-                    H{"HH:mm–HH:mm v"}
-                    m{"HH:mm–HH:mm v"}
-                }
-                Hv{
-                    H{"HH–HH v"}
                 }
                 M{
                     M{"M–M"}
@@ -440,9 +317,6 @@ kk{
                 Md{
                     M{"dd.MM – dd.MM"}
                     d{"dd.MM – dd.MM"}
-                }
-                d{
-                    d{"d–d"}
                 }
                 fallback{"{0} - {1}"}
                 h{
@@ -497,18 +371,6 @@ kk{
             }
         }
         gregorian{
-            AmPmMarkers{
-                "AM",
-                "PM",
-            }
-            AmPmMarkersAbbr{
-                "AM",
-                "PM",
-            }
-            AmPmMarkersNarrow{
-                "AM",
-                "PM",
-            }
             DateTimePatterns{
                 "HH:mm:ss zzzz",
                 "HH:mm:ss z",
@@ -524,12 +386,6 @@ kk{
                 "{1}, {0}",
                 "{1}, {0}",
             }
-            DateTimePatterns%atTime{
-                "{1}, {0}",
-                "{1}, {0}",
-                "{1}, {0}",
-                "{1}, {0}",
-            }
             DateTimeSkeletons{
                 "HHmmsszzzz",
                 "HHmmssz",
@@ -540,19 +396,12 @@ kk{
                 "yMMMdd",
                 "yyMMdd",
             }
-            appendItems{
-                Timezone{"{0} {1}"}
-            }
             availableFormats{
                 Bh{"B h"}
                 Bhm{"B h:mm"}
                 Bhms{"B h:mm:ss"}
-                E{"ccc"}
                 EBhm{"E, B h:mm"}
                 EBhms{"E, B h:mm:ss"}
-                EHm{"E HH:mm"}
-                EHms{"E HH:mm:ss"}
-                Ed{"d, E"}
                 Ehm{"E h:mm a"}
                 Ehms{"E h:mm:ss a"}
                 Gy{"G y 'ж'."}
@@ -560,14 +409,7 @@ kk{
                 GyMMMEd{"G y 'ж'. d MMM, E"}
                 GyMMMd{"G y 'ж'. d MMM"}
                 GyMd{"dd-MM-GGGGG y"}
-                H{"HH"}
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
-                Hmsv{"HH:mm:ss v"}
-                Hmv{"HH:mm v"}
-                M{"L"}
                 MEd{"dd.MM, E"}
-                MMM{"LLL"}
                 MMMEd{"d MMM, E"}
                 MMMMW{
                     one{"MMMM 'айының' W-'аптасы'"}
@@ -576,14 +418,11 @@ kk{
                 MMMMd{"d MMMM"}
                 MMMd{"d MMM"}
                 Md{"dd.MM"}
-                d{"d"}
                 h{"h a"}
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
                 hmsv{"h:mm:ss a v"}
                 hmv{"h:mm a v"}
-                ms{"mm:ss"}
-                y{"y"}
                 yM{"MM.y"}
                 yMEd{"dd.MM.y, E"}
                 yMMM{"y 'ж'. MMM"}
@@ -609,24 +448,6 @@ kk{
                         "жм",
                         "сб",
                     }
-                    narrow{
-                        "Ж",
-                        "Д",
-                        "С",
-                        "С",
-                        "Б",
-                        "Ж",
-                        "С",
-                    }
-                    short{
-                        "жс",
-                        "дс",
-                        "сс",
-                        "ср",
-                        "бс",
-                        "жм",
-                        "сб",
-                    }
                     wide{
                         "жексенбі",
                         "дүйсенбі",
@@ -638,15 +459,6 @@ kk{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "жс",
-                        "дс",
-                        "сс",
-                        "ср",
-                        "бс",
-                        "жм",
-                        "сб",
-                    }
                     narrow{
                         "Ж",
                         "Д",
@@ -655,24 +467,6 @@ kk{
                         "Б",
                         "Ж",
                         "С",
-                    }
-                    short{
-                        "жс",
-                        "дс",
-                        "сс",
-                        "ср",
-                        "бс",
-                        "жм",
-                        "сб",
-                    }
-                    wide{
-                        "жексенбі",
-                        "дүйсенбі",
-                        "сейсенбі",
-                        "сәрсенбі",
-                        "бейсенбі",
-                        "жұма",
-                        "сенбі",
                     }
                 }
             }
@@ -694,58 +488,19 @@ kk{
                         night1{"түнгі"}
                         noon{"түскі"}
                     }
-                    wide{
-                        afternoon1{"түстен кейінгі"}
-                        evening1{"кешкі"}
-                        midnight{"түн жарымы"}
-                        morning1{"таңғы"}
-                        night1{"түнгі"}
-                        noon{"түскі"}
-                    }
                 }
                 stand-alone{
                     abbreviated{
                         afternoon1{"түстен кейін"}
-                        am{"AM"}
                         evening1{"кеш"}
-                        midnight{"түн жарымы"}
                         morning1{"таң"}
                         night1{"түн"}
                         noon{"талтүс"}
-                        pm{"PM"}
-                    }
-                    narrow{
-                        afternoon1{"түстен кейін"}
-                        am{"AM"}
-                        evening1{"кеш"}
-                        midnight{"түн жарымы"}
-                        morning1{"таң"}
-                        night1{"түн"}
-                        noon{"талтүс"}
-                        pm{"PM"}
-                    }
-                    wide{
-                        afternoon1{"түстен кейін"}
-                        am{"AM"}
-                        evening1{"кеш"}
-                        midnight{"түн жарымы"}
-                        morning1{"таң"}
-                        night1{"түн"}
-                        noon{"талтүс"}
-                        pm{"PM"}
                     }
                 }
             }
             eras{
                 abbreviated{
-                    "б.з.д.",
-                    "б.з.",
-                }
-                narrow{
-                    "б.з.д.",
-                    "б.з.",
-                }
-                narrow%variant{
                     "б.з.д.",
                     "б.з.",
                 }
@@ -760,11 +515,9 @@ kk{
             }
             intervalFormats{
                 Bh{
-                    B{"h B – h B"}
                     h{"h – h B"}
                 }
                 Bhm{
-                    B{"h:mm B – h:mm B"}
                     h{"h:mm – h:mm B"}
                     m{"h:mm – h:mm B"}
                 }
@@ -779,20 +532,6 @@ kk{
                     M{"G y 'ж'. d MMM – d MMM"}
                     d{"G y 'ж'. d–d MMM"}
                     y{"G y 'ж'. d MMM – y 'ж'. d MMM"}
-                }
-                H{
-                    H{"HH–HH"}
-                }
-                Hm{
-                    H{"HH:mm–HH:mm"}
-                    m{"HH:mm–HH:mm"}
-                }
-                Hmv{
-                    H{"HH:mm–HH:mm v"}
-                    m{"HH:mm–HH:mm v"}
-                }
-                Hv{
-                    H{"HH–HH v"}
                 }
                 M{
                     M{"M–M"}
@@ -816,9 +555,6 @@ kk{
                     M{"dd.MM – dd.MM"}
                     d{"dd.MM – dd.MM"}
                 }
-                d{
-                    d{"d–d"}
-                }
                 fallback{"{0} - {1}"}
                 h{
                     a{"h a – h a"}
@@ -837,9 +573,6 @@ kk{
                 hv{
                     a{"h a – h a v"}
                     h{"h–h a v"}
-                }
-                y{
-                    y{"y–y"}
                 }
                 yM{
                     M{"MM.y – MM.y"}
@@ -890,20 +623,6 @@ kk{
                         "қар.",
                         "жел.",
                     }
-                    narrow{
-                        "Қ",
-                        "А",
-                        "Н",
-                        "С",
-                        "М",
-                        "М",
-                        "Ш",
-                        "Т",
-                        "Қ",
-                        "Қ",
-                        "Қ",
-                        "Ж",
-                    }
                     wide{
                         "қаңтар",
                         "ақпан",
@@ -920,20 +639,6 @@ kk{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "қаң.",
-                        "ақп.",
-                        "нау.",
-                        "сәу.",
-                        "мам.",
-                        "мау.",
-                        "шіл.",
-                        "там.",
-                        "қыр.",
-                        "қаз.",
-                        "қар.",
-                        "жел.",
-                    }
                     narrow{
                         "Қ",
                         "А",
@@ -972,12 +677,6 @@ kk{
                         "ІІІ тқс.",
                         "IV тқс.",
                     }
-                    narrow{
-                        "I",
-                        "II",
-                        "III",
-                        "IV",
-                    }
                     wide{
                         "І тоқсан",
                         "ІІ тоқсан",
@@ -986,23 +685,11 @@ kk{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "І тқс.",
-                        "ІІ тқс.",
-                        "ІІІ тқс.",
-                        "IV тқс.",
-                    }
                     narrow{
                         "I",
                         "II",
                         "III",
                         "IV",
-                    }
-                    wide{
-                        "І тоқсан",
-                        "ІІ тоқсан",
-                        "ІІІ тоқсан",
-                        "IV тоқсан",
                     }
                 }
             }
@@ -1010,72 +697,6 @@ kk{
         hebrew{
             monthNames{
                 format{
-                    abbreviated{
-                        "Тишрей",
-                        "Хешван",
-                        "Кислев",
-                        "Тевет",
-                        "Шват",
-                        "Адар I",
-                        "Адар",
-                        "Нисан",
-                        "Ияр",
-                        "Сиван",
-                        "Тамуз",
-                        "Ав",
-                        "Элул",
-                        "Адар II",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10",
-                        "11",
-                        "12",
-                        "13",
-                        "7",
-                    }
-                    wide{
-                        "Тишрей",
-                        "Хешван",
-                        "Кислев",
-                        "Тевет",
-                        "Шват",
-                        "Адар I",
-                        "Адар",
-                        "Нисан",
-                        "Ияр",
-                        "Сиван",
-                        "Тамуз",
-                        "Ав",
-                        "Элул",
-                        "Адар II",
-                    }
-                }
-                stand-alone{
-                    abbreviated{
-                        "Тишрей",
-                        "Хешван",
-                        "Кислев",
-                        "Тевет",
-                        "Шват",
-                        "Адар I",
-                        "Адар",
-                        "Нисан",
-                        "Ияр",
-                        "Сиван",
-                        "Тамуз",
-                        "Ав",
-                        "Элул",
-                        "Адар II",
-                    }
                     wide{
                         "Тишрей",
                         "Хешван",
@@ -1098,64 +719,6 @@ kk{
         indian{
             monthNames{
                 format{
-                    abbreviated{
-                        "Чайтра",
-                        "Вайшакха",
-                        "Джьештха",
-                        "Ашадха",
-                        "Шравана",
-                        "Бхадрапада",
-                        "Ашвина",
-                        "Картика",
-                        "Маргаширша",
-                        "Пауша",
-                        "Магха",
-                        "Пхальгуна",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10",
-                        "11",
-                        "12",
-                    }
-                    wide{
-                        "Чайтра",
-                        "Вайшакха",
-                        "Джьештха",
-                        "Ашадха",
-                        "Шравана",
-                        "Бхадрапада",
-                        "Ашвина",
-                        "Картика",
-                        "Маргаширша",
-                        "Пауша",
-                        "Магха",
-                        "Пхальгуна",
-                    }
-                }
-                stand-alone{
-                    abbreviated{
-                        "Чайтра",
-                        "Вайшакха",
-                        "Джьештха",
-                        "Ашадха",
-                        "Шравана",
-                        "Бхадрапада",
-                        "Ашвина",
-                        "Картика",
-                        "Маргаширша",
-                        "Пауша",
-                        "Магха",
-                        "Пхальгуна",
-                    }
                     wide{
                         "Чайтра",
                         "Вайшакха",
@@ -1190,20 +753,6 @@ kk{
                         "Қар.",
                         "Жел.",
                     }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10",
-                        "11",
-                        "12",
-                    }
                     wide{
                         "Мұхаррам",
                         "Сафар",
@@ -1220,19 +769,19 @@ kk{
                     }
                 }
                 stand-alone{
-                    wide{
-                        "Мұхаррам",
-                        "Сафар",
-                        "Рабиғ әл-әууәл",
-                        "Рабиғ әс-сәни",
-                        "Джумада әл-әууәл",
-                        "Жумад ас-сәни",
-                        "Раджаб",
-                        "Шағбан",
-                        "Рамадан",
-                        "Шәууәл",
-                        "Зул-Қағда",
-                        "Зул-Хиджа",
+                    abbreviated{
+                        "Мұх.",
+                        "Саф.",
+                        "Раб. І",
+                        "Раб. ІІ",
+                        "Жум. І",
+                        "Жум. ІІ",
+                        "Радж.",
+                        "Шағ.",
+                        "Рам.",
+                        "Шәу.",
+                        "Зул-Қ.",
+                        "Зул-Х.",
                     }
                 }
             }
@@ -1240,64 +789,6 @@ kk{
         persian{
             monthNames{
                 format{
-                    abbreviated{
-                        "Фарвардин",
-                        "Ордибехешт",
-                        "Хордад",
-                        "Тир",
-                        "Мордад",
-                        "Шахривар",
-                        "Мехр",
-                        "Абан",
-                        "Азар",
-                        "Дей",
-                        "Бахман",
-                        "Эсфанд",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10",
-                        "11",
-                        "12",
-                    }
-                    wide{
-                        "Фарвардин",
-                        "Ордибехешт",
-                        "Хордад",
-                        "Тир",
-                        "Мордад",
-                        "Шахривар",
-                        "Мехр",
-                        "Абан",
-                        "Азар",
-                        "Дей",
-                        "Бахман",
-                        "Эсфанд",
-                    }
-                }
-                stand-alone{
-                    abbreviated{
-                        "Фарвардин",
-                        "Ордибехешт",
-                        "Хордад",
-                        "Тир",
-                        "Мордад",
-                        "Шахривар",
-                        "Мехр",
-                        "Абан",
-                        "Азар",
-                        "Дей",
-                        "Бахман",
-                        "Эсфанд",
-                    }
                     wide{
                         "Фарвардин",
                         "Ордибехешт",
@@ -1431,71 +922,18 @@ kk{
                 }
             }
         }
-        day-narrow{
-            dn{"күн"}
-            relative{
-                "-1"{"кеше"}
-                "-2"{"алдыңғы күні"}
-                "0"{"бүгін"}
-                "1"{"ертең"}
-                "2"{"бүрсігүні"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} күннен кейін"}
-                    other{"{0} күннен кейін"}
-                }
-                past{
-                    one{"{0} күн бұрын"}
-                    other{"{0} күн бұрын"}
-                }
-            }
-        }
         day-short{
-            dn{"күн"}
             relative{
-                "-1"{"кеше"}
                 "-2"{"алдыңғы күні"}
-                "0"{"бүгін"}
-                "1"{"ертең"}
-                "2"{"бүрсігүні"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} күннен кейін"}
-                    other{"{0} күннен кейін"}
-                }
-                past{
-                    one{"{0} күн бұрын"}
-                    other{"{0} күн бұрын"}
-                }
             }
         }
         dayOfYear{
             dn{"жылдағы күн"}
         }
-        dayOfYear-narrow{
-            dn{"жылдағы күн"}
-        }
-        dayOfYear-short{
-            dn{"жылдағы күн"}
-        }
         dayperiod{
             dn{"АМ/РМ"}
         }
-        dayperiod-narrow{
-            dn{"АМ/РМ"}
-        }
-        dayperiod-short{
-            dn{"АМ/РМ"}
-        }
         era{
-            dn{"дәуір"}
-        }
-        era-narrow{
-            dn{"дәуір"}
-        }
-        era-short{
             dn{"дәуір"}
         }
         fri{
@@ -1565,27 +1003,8 @@ kk{
                 }
             }
         }
-        hour-narrow{
-            dn{"сағ"}
-            relative{
-                "0"{"осы сағат"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} сағ. кейін"}
-                    other{"{0} сағ. кейін"}
-                }
-                past{
-                    one{"{0} сағ. бұрын"}
-                    other{"{0} сағ. бұрын"}
-                }
-            }
-        }
         hour-short{
             dn{"сағ"}
-            relative{
-                "0"{"осы сағат"}
-            }
             relativeTime{
                 future{
                     one{"{0} сағ. кейін"}
@@ -1615,25 +1034,9 @@ kk{
         }
         minute-narrow{
             dn{"мин"}
-            relative{
-                "0"{"осы минут"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} мин. кейін"}
-                    other{"{0} мин. кейін"}
-                }
-                past{
-                    one{"{0} мин. бұрын"}
-                    other{"{0} мин. бұрын"}
-                }
-            }
         }
         minute-short{
             dn{"мин."}
-            relative{
-                "0"{"осы минут"}
-            }
             relativeTime{
                 future{
                     one{"{0} мин. кейін"}
@@ -1714,42 +1117,6 @@ kk{
                 }
             }
         }
-        month-narrow{
-            dn{"ай"}
-            relative{
-                "-1"{"өткен ай"}
-                "0"{"осы ай"}
-                "1"{"келесі ай"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} айдан кейін"}
-                    other{"{0} айдан кейін"}
-                }
-                past{
-                    one{"{0} ай бұрын"}
-                    other{"{0} ай бұрын"}
-                }
-            }
-        }
-        month-short{
-            dn{"ай"}
-            relative{
-                "-1"{"өткен ай"}
-                "0"{"осы ай"}
-                "1"{"келесі ай"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} айдан кейін"}
-                    other{"{0} айдан кейін"}
-                }
-                past{
-                    one{"{0} ай бұрын"}
-                    other{"{0} ай бұрын"}
-                }
-            }
-        }
         quarter{
             dn{"ширек"}
             relative{
@@ -1768,31 +1135,8 @@ kk{
                 }
             }
         }
-        quarter-narrow{
-            dn{"ш."}
-            relative{
-                "-1"{"өткен тоқсан"}
-                "0"{"осы тоқсан"}
-                "1"{"келесі тоқсан"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} тқс. кейін"}
-                    other{"{0} тқс. кейін"}
-                }
-                past{
-                    one{"{0} тқс. бұрын"}
-                    other{"{0} тқс. бұрын"}
-                }
-            }
-        }
         quarter-short{
             dn{"ш."}
-            relative{
-                "-1"{"өткен тоқсан"}
-                "0"{"осы тоқсан"}
-                "1"{"келесі тоқсан"}
-            }
             relativeTime{
                 future{
                     one{"{0} тқс. кейін"}
@@ -1871,27 +1215,8 @@ kk{
                 }
             }
         }
-        second-narrow{
-            dn{"с"}
-            relative{
-                "0"{"қазір"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} сек. кейін"}
-                    other{"{0} сек. кейін"}
-                }
-                past{
-                    one{"{0} сек. бұрын"}
-                    other{"{0} сек. бұрын"}
-                }
-            }
-        }
         second-short{
             dn{"с"}
-            relative{
-                "0"{"қазір"}
-            }
             relativeTime{
                 future{
                     one{"{0} сек. кейін"}
@@ -2126,33 +1451,8 @@ kk{
                 }
             }
         }
-        week-narrow{
-            dn{"ап."}
-            relative{
-                "-1"{"өткен апта"}
-                "0"{"осы апта"}
-                "1"{"келесі апта"}
-            }
-            relativePeriod{"{0} аптасы"}
-            relativeTime{
-                future{
-                    one{"{0} ап. кейін"}
-                    other{"{0} ап. кейін"}
-                }
-                past{
-                    one{"{0} ап. бұрын"}
-                    other{"{0} ап. бұрын"}
-                }
-            }
-        }
         week-short{
             dn{"ап."}
-            relative{
-                "-1"{"өткен апта"}
-                "0"{"осы апта"}
-                "1"{"келесі апта"}
-            }
-            relativePeriod{"{0} аптасы"}
             relativeTime{
                 future{
                     one{"{0} ап. кейін"}
@@ -2167,26 +1467,11 @@ kk{
         weekOfMonth{
             dn{"айдағы апта"}
         }
-        weekOfMonth-narrow{
-            dn{"айдағы апта"}
-        }
-        weekOfMonth-short{
-            dn{"айдағы апта"}
-        }
         weekday{
-            dn{"апта күні"}
-        }
-        weekday-narrow{
-            dn{"апта күні"}
-        }
-        weekday-short{
             dn{"апта күні"}
         }
         weekdayOfMonth{
             dn{"айдағы апта күні"}
-        }
-        weekdayOfMonth-narrow{
-            dn{"айдағы ап. күні"}
         }
         weekdayOfMonth-short{
             dn{"айдағы ап. күні"}
@@ -2209,31 +1494,8 @@ kk{
                 }
             }
         }
-        year-narrow{
-            dn{"ж."}
-            relative{
-                "-1"{"былтырғы жыл"}
-                "0"{"биылғы жыл"}
-                "1"{"келесі жыл"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} ж. кейін"}
-                    other{"{0} ж. кейін"}
-                }
-                past{
-                    one{"{0} ж. бұрын"}
-                    other{"{0} ж. бұрын"}
-                }
-            }
-        }
         year-short{
             dn{"ж."}
-            relative{
-                "-1"{"былтырғы жыл"}
-                "0"{"биылғы жыл"}
-                "1"{"келесі жыл"}
-            }
             relativeTime{
                 future{
                     one{"{0} ж. кейін"}
@@ -2248,9 +1510,6 @@ kk{
         zone{
             dn{"уақыт белдеуі"}
         }
-        zone-narrow{
-            dn{"уақ. белдеуі"}
-        }
         zone-short{
             dn{"уақ. белдеуі"}
         }
@@ -2259,50 +1518,9 @@ kk{
         or{
             2{"{0} не {1}"}
             end{"{0}, не болмаса {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        or-narrow{
-            2{"{0} не {1}"}
-            end{"{0}, не болмаса {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        or-short{
-            2{"{0} не {1}"}
-            end{"{0}, не болмаса {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
         standard{
             2{"{0} және {1}"}
-            end{"{0}, {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        standard-narrow{
-            2{"{0} және {1}"}
-            end{"{0}, {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        standard-short{
-            2{"{0} және {1}"}
-            end{"{0}, {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        unit{
-            2{"{0} {1}"}
-            end{"{0} {1}"}
-            middle{"{0} {1}"}
-            start{"{0} {1}"}
-        }
-        unit-narrow{
-            2{"{0} {1}"}
-            end{"{0} {1}"}
-            middle{"{0} {1}"}
-            start{"{0} {1}"}
         }
         unit-short{
             2{"{0} {1}"}
@@ -2317,7 +1535,6 @@ kk{
         metric{"Метрлік"}
     }
     personNames{
-        foreignSpaceReplacement{" "}
         nameOrderLocales{
             givenFirst{
                 "und",
@@ -2341,7 +1558,6 @@ kk{
             givenFirst-medium-addressing-informal{"{given-informal}"}
             givenFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
             givenFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
-            givenFirst-medium-referring-formal{"{given} {surname} {generation}, {credentials}"}
             givenFirst-medium-referring-informal{"{given-informal}"}
             givenFirst-short-addressing-formal{"{surname}"}
             givenFirst-short-addressing-informal{"{given-informal}"}
@@ -2365,7 +1581,6 @@ kk{
             surnameFirst-medium-addressing-informal{"{given-informal}"}
             surnameFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
             surnameFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
-            surnameFirst-medium-referring-formal{"{surname} {given}"}
             surnameFirst-medium-referring-informal{"{surname} {given-informal}"}
             surnameFirst-short-addressing-formal{"{surname}"}
             surnameFirst-short-addressing-informal{"{given-informal}"}

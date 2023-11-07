@@ -366,7 +366,7 @@ US-ASCII { MIME* IANA JAVA WINDOWS }
     ibm-367 { IBM* } IBM367 { IANA WINDOWS } # This is not truely ibm-367 because it's missing the fallbacks.
 
 # GB 18030 is partly algorithmic, using the MBCS converter
-gb18030 { IANA* }       ibm-1392 { IBM* } windows-54936 { WINDOWS* } GB18030 { MIME* }
+gb18030-2022            ibm-1392 { IBM* } windows-54936 { WINDOWS* } GB18030 { MIME* IANA* }
 
 # Table-based interchange codepages
 

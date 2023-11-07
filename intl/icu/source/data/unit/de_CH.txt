@@ -6,14 +6,6 @@ de_CH{
         area{
             square-foot{
                 case{
-                    accusative{
-                        one{"{0} Quadratfuss"}
-                        other{"{0} Quadratfuss"}
-                    }
-                    dative{
-                        one{"{0} Quadratfuss"}
-                        other{"{0} Quadratfuss"}
-                    }
                     genitive{
                         one{"{0} Quadratfusses"}
                         other{"{0} Quadratfuss"}
@@ -32,23 +24,20 @@ de_CH{
         length{
             foot{
                 case{
-                    accusative{
-                        one{"{0} Fuss"}
-                        other{"{0} Fuss"}
-                    }
-                    dative{
-                        one{"{0} Fuss"}
-                        other{"{0} Fuss"}
-                    }
                     genitive{
                         one{"{0} Fusses"}
                         other{"{0} Fuss"}
                     }
                 }
-                dnam{"Fuss"}
                 one{"{0} Fuss"}
                 other{"{0} Fuss"}
                 per{"{0} pro Fuss"}
+            }
+        }
+        speed{
+            beaufort{
+                one{"{0} Beaufort"}
+                other{"{0} Beaufort"}
             }
         }
         volume{
@@ -71,33 +60,6 @@ de_CH{
                 one{"{0} Kubikfuss"}
                 other{"{0} Kubikfuss"}
             }
-            gallon-imperial{
-                case{
-                    accusative{
-                        one{"{0} gal Imp."}
-                        other{"{0} gal Imp."}
-                    }
-                    dative{
-                        one{"{0} gal Imp."}
-                        other{"{0} gal Imp."}
-                    }
-                    genitive{
-                        one{"{0} gal Imp."}
-                        other{"{0} gal Imp."}
-                    }
-                }
-                one{"{0} gal Imp."}
-                other{"{0} gal Imp."}
-                per{"{0}/gal Imp."}
-            }
-        }
-    }
-    unitsNarrow{
-        volume{
-            jigger{
-                one{"Schuss"}
-                other{"{0} Schuss"}
-            }
         }
     }
     unitsShort{
@@ -111,14 +73,17 @@ de_CH{
                 dnam{"Fuss"}
             }
         }
+        speed{
+            beaufort{
+                one{"{0} Bft"}
+                other{"{0} Bft"}
+            }
+        }
         volume{
             dram{
                 dnam{"Dram"}
                 one{"{0} dr."}
                 other{"{0} dr."}
-            }
-            gallon-imperial{
-                per{"{0}/gal Imp."}
             }
             jigger{
                 dnam{"Schuss"}

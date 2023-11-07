@@ -6,17 +6,11 @@ se{
         "America:Curacao"{
             ec{"Curaçao"}
         }
-        "America:Merida"{
-            ec{"Mérida"}
-        }
         "America:Sao_Paulo"{
             ec{"São Paulo"}
         }
         "America:St_Barthelemy"{
             ec{"Saint Barthélemy"}
-        }
-        "Antarctica:DumontDUrville"{
-            ec{"Dumont d’Urville"}
         }
         "Etc:Unknown"{
             ec{"dovdameahttun áigeavádat"}

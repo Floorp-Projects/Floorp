@@ -80,6 +80,7 @@ vi{
         bfd{"Tiếng Bafut"}
         bfq{"Tiếng Badaga"}
         bg{"Tiếng Bulgaria"}
+        bgc{"Tiếng Haryana"}
         bgn{"Tiếng Tây Balochi"}
         bho{"Tiếng Bhojpuri"}
         bi{"Tiếng Bislama"}
@@ -814,10 +815,8 @@ vi{
             hebrew{"Lịch Do Thái"}
             indian{"Lịch Quốc gia Ấn Độ"}
             islamic{"Lịch Hồi Giáo"}
-            islamic-civil{"Lịch Islamic-Civil"}
-            islamic-rgsa{"Lịch Hồi Giáo - Ả Rập Xê-út"}
-            islamic-tbla{"Lịch Hồi Giáo - Thiên văn"}
-            islamic-umalqura{"Lịch Hồi Giáo - Umm al-Qura"}
+            islamic-civil{"Lịch Hồi Giáo (dạng bảng, kỷ nguyên dân sự)"}
+            islamic-umalqura{"Lịch Hồi Giáo (Umm al-Qura)"}
             iso8601{"Lịch ISO-8601"}
             japanese{"Lịch Nhật Bản"}
             persian{"Lịch Ba Tư"}
@@ -1037,10 +1036,11 @@ vi{
     }
     characterLabelPattern{
         all{"{0} — tất cả"}
-        category-list{"{0}: {1}"}
         compatibility{"{0} — tương thích"}
         enclosed{"{0} — kín"}
         extended{"{0} — mở rộng"}
+        facing-left{"{0} hướng sang trái"}
+        facing-right{"{0} hướng sang phải"}
         historic{"{0} — lịch sử"}
         miscellaneous{"{0} — hỗn hợp"}
         other{"{0} — khác"}
@@ -1055,8 +1055,5 @@ vi{
         language{"Ngôn ngữ: {0}"}
         script{"Chữ viết: {0}"}
         territory{"Vùng: {0}"}
-    }
-    localeDisplayPattern{
-        keyTypePattern{"{0}: {1}"}
     }
 }

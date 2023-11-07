@@ -14,8 +14,4 @@ bho{
         script{"देवनागरी: {0}"}
         territory{"इलाका: {0}"}
     }
-    localeDisplayPattern{
-        pattern{"{0} ({1})"}
-        separator{"{0}, {1}"}
-    }
 }

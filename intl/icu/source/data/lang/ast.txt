@@ -824,11 +824,6 @@ ast{
             gregorian{"calendariu gregorianu"}
             hebrew{"calendariu hebréu"}
             indian{"calendariu nacional indiu"}
-            islamic{"calendariu islámicu"}
-            islamic-civil{"calendariu islámicu (tabular, época civil)"}
-            islamic-rgsa{"calendariu islámicu (Arabia Saudita, visual)"}
-            islamic-tbla{"calendariu islámicu (tabular, época astronómica)"}
-            islamic-umalqura{"calendariu islámicu (Umm al-Qura)"}
             iso8601{"calendariu ISO-8601"}
             japanese{"calendariu xaponés"}
             persian{"calendariu persa"}
@@ -1008,7 +1003,6 @@ ast{
     }
     characterLabelPattern{
         all{"{0} — too"}
-        category-list{"{0}: {1}"}
         compatibility{"{0} — compatibilidá"}
         enclosed{"{0} — arrodiáu"}
         extended{"{0} — enantáu"}
@@ -1025,10 +1019,5 @@ ast{
         language{"Llingua: {0}"}
         script{"Alfabetu: {0}"}
         territory{"Rexón: {0}"}
-    }
-    localeDisplayPattern{
-        keyTypePattern{"{0}: {1}"}
-        pattern{"{0} ({1})"}
-        separator{"{0}, {1}"}
     }
 }

@@ -4,49 +4,22 @@
 uz_Cyrl{
     %%Parent{"root"}
     AuxExemplarCharacters{"[ц щ ы ь]"}
-    Ellipsis{
-        final{"{0}…"}
-        initial{"…{0}"}
-        medial{"{0}…{1}"}
-        word-final{"{0} …"}
-        word-initial{"… {0}"}
-        word-medial{"{0} … {1}"}
-    }
-    ExemplarCharacters{"[а б в г ғ д е ё ж з и й к қ л м н о п р с т у ў ф х ҳ ч ш ъ э ю я]"}
+    ExemplarCharacters{"[а б в г ғ д её ж з и й к қ л м н о п р с т уў ф х ҳ ч ш ъ э ю я]"}
     ExemplarCharactersNumbers{"[  \\- ‑ , % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
-    MoreInformation{"?"}
     NumberElements{
         arabext{
-            patterns{
-                currencyFormat{"#,##0.00 ¤"}
-                decimalFormat{"#,##0.###"}
-                percentFormat{"#,##0%"}
-                scientificFormat{"#E0"}
-            }
             symbols{
-                decimal{"٫"}
-                exponential{"×۱۰^"}
-                group{"٬"}
-                infinity{"∞"}
                 minusSign{"-"}
                 nan{"ҳақиқий сон эмас"}
-                perMille{"؉"}
-                percentSign{"٪"}
                 plusSign{"+"}
-                superscriptingExponent{"×"}
             }
         }
         latn{
             miscPatterns{
                 atLeast{"{0}+"}
-                range{"{0}–{1}"}
             }
             patterns{
-                accountingFormat{"#,##0.00 ¤"}
                 currencyFormat{"#,##0.00 ¤"}
-                decimalFormat{"#,##0.###"}
-                percentFormat{"#,##0%"}
-                scientificFormat{"#E0"}
             }
             patternsLong{
                 decimalFormat{
@@ -154,15 +127,8 @@ uz_Cyrl{
             }
             symbols{
                 decimal{","}
-                exponential{"E"}
                 group{" "}
-                infinity{"∞"}
-                minusSign{"-"}
                 nan{"ҳақиқий сон эмас"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
             }
         }
     }
@@ -193,104 +159,12 @@ uz_Cyrl{
                 "GyMMMd",
                 "GGGGGyMMdd",
             }
-            availableFormats{
-                Ed{"d, E"}
-                Gy{"G y"}
-                GyMMM{"G y MMM"}
-                GyMMMEd{"G y MMM d, E"}
-                GyMMMd{"G y MMM d"}
-                M{"L"}
-                MEd{"MM-dd, E"}
-                MMM{"LLL"}
-                MMMEd{"MMM d, E"}
-                MMMd{"MMM d"}
-                Md{"MM-dd"}
-                d{"d"}
-                y{"G y"}
-                yyyy{"G y"}
-                yyyyM{"GGGGG y-MM"}
-                yyyyMEd{"GGGGG y-MM-dd, E"}
-                yyyyMMM{"G y MMM"}
-                yyyyMMMEd{"G y MMM d, E"}
-                yyyyMMMd{"G y MMM d"}
-                yyyyMd{"GGGGG y-MM-dd"}
-                yyyyQQQ{"G y QQQ"}
-                yyyyQQQQ{"G y QQQQ"}
-            }
             intervalFormats{
-                M{
-                    M{"MM–MM"}
-                }
-                MEd{
-                    M{"MM-dd, E – MM-dd, E"}
-                    d{"MM-dd, E – MM-dd, E"}
-                }
-                MMM{
-                    M{"LLL–LLL"}
-                }
-                MMMEd{
-                    M{"MMM d, E – MMM d, E"}
-                    d{"MMM d, E – MMM d, E"}
-                }
-                MMMd{
-                    M{"MMM d – MMM d"}
-                    d{"MMM d–d"}
-                }
-                Md{
-                    M{"MM-dd – MM-dd"}
-                    d{"MM-dd – MM-dd"}
-                }
-                d{
-                    d{"d–d"}
-                }
                 fallback{"{0} – {1}"}
-                y{
-                    y{"G y–y"}
-                }
-                yM{
-                    M{"GGGGG y-MM – y-MM"}
-                    y{"GGGGG y-MM – y-MM"}
-                }
-                yMEd{
-                    M{"GGGGG y-MM-dd, E – y-MM-dd, E"}
-                    d{"GGGGG y-MM-dd, E – y-MM-dd, E"}
-                    y{"GGGGG y-MM-dd, E – y-MM-dd, E"}
-                }
-                yMMM{
-                    M{"G y MMM–MMM"}
-                    y{"G y MMM – y MMM"}
-                }
-                yMMMEd{
-                    M{"G y MMM d, E – MMM d, E"}
-                    d{"G y MMM d, E – MMM d, E"}
-                    y{"G y MMM d, E – y MMM d, E"}
-                }
-                yMMMM{
-                    M{"G y MMMM–MMMM"}
-                    y{"G y MMMM – y MMMM"}
-                }
-                yMMMd{
-                    M{"G y MMM d – MMM d"}
-                    d{"G y MMM d–d"}
-                    y{"G y MMM d – y MMM d"}
-                }
-                yMd{
-                    M{"GGGGG y-MM-dd – y-MM-dd"}
-                    d{"GGGGG y-MM-dd – y-MM-dd"}
-                    y{"GGGGG y-MM-dd – y-MM-dd"}
-                }
             }
         }
         gregorian{
-            AmPmMarkers{
-                "ТО",
-                "ТК",
-            }
             AmPmMarkersAbbr{
-                "ТО",
-                "ТК",
-            }
-            AmPmMarkersNarrow{
                 "ТО",
                 "ТК",
             }
@@ -319,9 +193,6 @@ uz_Cyrl{
                 "yMMMd",
                 "yyMMdd",
             }
-            appendItems{
-                Timezone{"{0} {1}"}
-            }
             availableFormats{
                 Bh{"B h"}
                 Bhm{"B h:mm"}
@@ -330,21 +201,15 @@ uz_Cyrl{
                 EBhms{"E, B h:mm:ss"}
                 EHm{"E, HH:mm"}
                 EHms{"E, HH:mm:ss"}
-                Ed{"d, E"}
                 Ehm{"E, h:mm a"}
                 Ehms{"E, h:mm:ss a"}
-                Gy{"G y"}
                 GyMMM{"MMM, G y"}
                 GyMMMEd{"E, d-MMM, G y"}
                 GyMMMd{"d MMM, G y"}
-                H{"HH"}
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
                 Hmsv{"HH:mm:ss (v)"}
                 Hmv{"HH:mm (v)"}
                 M{"LL"}
                 MEd{"E, dd/MM"}
-                MMM{"LLL"}
                 MMMEd{"E, d MMM"}
                 MMMMW{
                     one{"MMMM, W-'ҳафта'"}
@@ -353,14 +218,11 @@ uz_Cyrl{
                 MMMMd{"d MMMM"}
                 MMMd{"d MMM"}
                 Md{"dd/MM"}
-                d{"d"}
                 h{"h a"}
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
                 hmsv{"h:mm:ss a (v)"}
                 hmv{"h:mm a (v)"}
-                ms{"mm:ss"}
-                y{"y"}
                 yM{"MM/y"}
                 yMEd{"E, dd/MM/y"}
                 yMMM{"MMM, y"}
@@ -386,15 +248,6 @@ uz_Cyrl{
                         "жум",
                         "шан",
                     }
-                    narrow{
-                        "Я",
-                        "Д",
-                        "С",
-                        "Ч",
-                        "П",
-                        "Ж",
-                        "Ш",
-                    }
                     short{
                         "як",
                         "ду",
@@ -415,15 +268,6 @@ uz_Cyrl{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "якш",
-                        "душ",
-                        "сеш",
-                        "чор",
-                        "пай",
-                        "жум",
-                        "шан",
-                    }
                     narrow{
                         "Я",
                         "Д",
@@ -432,24 +276,6 @@ uz_Cyrl{
                         "П",
                         "Ж",
                         "Ш",
-                    }
-                    short{
-                        "як",
-                        "ду",
-                        "се",
-                        "чо",
-                        "па",
-                        "жу",
-                        "ша",
-                    }
-                    wide{
-                        "якшанба",
-                        "душанба",
-                        "сешанба",
-                        "чоршанба",
-                        "пайшанба",
-                        "жума",
-                        "шанба",
                     }
                 }
             }
@@ -462,54 +288,6 @@ uz_Cyrl{
                         morning1{"эрталаб"}
                         night1{"кечаси"}
                         noon{"туш пайти"}
-                    }
-                    narrow{
-                        afternoon1{"кундузи"}
-                        evening1{"кечқурун"}
-                        midnight{"ярим тун"}
-                        morning1{"эрталаб"}
-                        night1{"кечаси"}
-                        noon{"туш пайти"}
-                    }
-                    wide{
-                        afternoon1{"кундузи"}
-                        evening1{"кечқурун"}
-                        midnight{"ярим тун"}
-                        morning1{"эрталаб"}
-                        night1{"кечаси"}
-                        noon{"туш пайти"}
-                    }
-                }
-                stand-alone{
-                    abbreviated{
-                        afternoon1{"кундузи"}
-                        am{"ТО"}
-                        evening1{"кечқурун"}
-                        midnight{"ярим тун"}
-                        morning1{"эрталаб"}
-                        night1{"кечаси"}
-                        noon{"туш пайти"}
-                        pm{"ТК"}
-                    }
-                    narrow{
-                        afternoon1{"кундузи"}
-                        am{"ТО"}
-                        evening1{"кечқурун"}
-                        midnight{"ярим тун"}
-                        morning1{"эрталаб"}
-                        night1{"кечаси"}
-                        noon{"туш пайти"}
-                        pm{"ТК"}
-                    }
-                    wide{
-                        afternoon1{"кундузи"}
-                        am{"ТО"}
-                        evening1{"кечқурун"}
-                        midnight{"ярим тун"}
-                        morning1{"эрталаб"}
-                        night1{"кечаси"}
-                        noon{"туш пайти"}
-                        pm{"ТК"}
                     }
                 }
             }
@@ -532,22 +310,12 @@ uz_Cyrl{
                 }
             }
             intervalFormats{
-                H{
-                    H{"HH–HH"}
-                }
-                Hm{
-                    H{"HH:mm–HH:mm"}
-                    m{"HH:mm–HH:mm"}
-                }
                 Hmv{
                     H{"HH:mm–HH:mm (v)"}
                     m{"HH:mm–HH:mm (v)"}
                 }
                 Hv{
                     H{"HH–HH (v)"}
-                }
-                M{
-                    M{"MM–MM"}
                 }
                 MEd{
                     M{"E, dd/MM – E, dd/MM"}
@@ -568,9 +336,6 @@ uz_Cyrl{
                     M{"dd/MM – dd/MM"}
                     d{"dd/MM – dd/MM"}
                 }
-                d{
-                    d{"d–d"}
-                }
                 fallback{"{0} – {1}"}
                 h{
                     a{"h a – h a"}
@@ -589,9 +354,6 @@ uz_Cyrl{
                 hv{
                     a{"h a – h a (v)"}
                     h{"h–h a (v)"}
-                }
-                y{
-                    y{"y–y"}
                 }
                 yM{
                     M{"MM/y – MM/y"}
@@ -642,20 +404,6 @@ uz_Cyrl{
                         "ноя",
                         "дек",
                     }
-                    narrow{
-                        "Я",
-                        "Ф",
-                        "М",
-                        "А",
-                        "М",
-                        "И",
-                        "И",
-                        "А",
-                        "С",
-                        "О",
-                        "Н",
-                        "Д",
-                    }
                     wide{
                         "январ",
                         "феврал",
@@ -672,20 +420,6 @@ uz_Cyrl{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "янв",
-                        "фев",
-                        "мар",
-                        "апр",
-                        "май",
-                        "июн",
-                        "июл",
-                        "авг",
-                        "сен",
-                        "окт",
-                        "ноя",
-                        "дек",
-                    }
                     narrow{
                         "Я",
                         "Ф",
@@ -699,20 +433,6 @@ uz_Cyrl{
                         "О",
                         "Н",
                         "Д",
-                    }
-                    wide{
-                        "январ",
-                        "феврал",
-                        "март",
-                        "апрел",
-                        "май",
-                        "июн",
-                        "июл",
-                        "август",
-                        "сентябр",
-                        "октябр",
-                        "ноябр",
-                        "декабр",
                     }
                 }
             }
@@ -724,32 +444,6 @@ uz_Cyrl{
                         "3-ч",
                         "4-ч",
                     }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                    }
-                    wide{
-                        "1-чорак",
-                        "2-чорак",
-                        "3-чорак",
-                        "4-чорак",
-                    }
-                }
-                stand-alone{
-                    abbreviated{
-                        "1-ч",
-                        "2-ч",
-                        "3-ч",
-                        "4-ч",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                    }
                     wide{
                         "1-чорак",
                         "2-чорак",
@@ -759,12 +453,6 @@ uz_Cyrl{
                 }
             }
         }
-    }
-    delimiters{
-        alternateQuotationEnd{"’"}
-        alternateQuotationStart{"‘"}
-        quotationEnd{"”"}
-        quotationStart{"“"}
     }
     fields{
         day{
@@ -896,7 +584,7 @@ uz_Cyrl{
         wed{
             relative{
                 "-1"{"ўтган чоршанба"}
-                "0"{"this Wednesday"}
+                "0"{"бу чоршанба"}
                 "1"{"кейинги чоршанба"}
             }
         }
@@ -942,34 +630,5 @@ uz_Cyrl{
         zone{
             dn{"Минтақа"}
         }
-    }
-    listPattern{
-        standard{
-            2{"{0}, {1}"}
-            end{"{0}, {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        unit{
-            2{"{0}, {1}"}
-            end{"{0}, {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        unit-narrow{
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        unit-short{
-            2{"{0}, {1}"}
-            end{"{0}, {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-    }
-    measurementSystemNames{
-        UK{"UK"}
-        US{"US"}
-        metric{"Metric"}
     }
 }

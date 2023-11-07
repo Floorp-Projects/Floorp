@@ -688,7 +688,6 @@ static void vlog_err(const char *prefix, const char *pattern, va_list ap)
     }
     vfprintf(stdout, pattern, ap);
     fflush(stdout);
-    va_end(ap);
     if((*pattern==0) || (pattern[strlen(pattern)-1]!='\n')) {
     	HANGING_OUTPUT=1;
     } else {
@@ -730,7 +729,6 @@ vlog_info(const char *prefix, const char *pattern, va_list ap)
     }
     vfprintf(stdout, pattern, ap);
     fflush(stdout);
-    va_end(ap);
     if((*pattern==0) || (pattern[strlen(pattern)-1]!='\n')) {
     	HANGING_OUTPUT=1;
     } else {
@@ -779,7 +777,6 @@ static void vlog_verbose(const char *prefix, const char *pattern, va_list ap)
     }
     vfprintf(stdout, pattern, ap);
     fflush(stdout);
-    va_end(ap);
     GLOBAL_PRINT_COUNT++;
     if((*pattern==0) || (pattern[strlen(pattern)-1]!='\n')) {
     	HANGING_OUTPUT=1;
@@ -805,13 +802,16 @@ log_err(const char* pattern, ...)
     }
     va_start(ap, pattern);
     vlog_err(NULL, pattern, ap);
+    va_end(ap);
 }
 
 UBool T_CTEST_EXPORT2
 log_knownIssue(const char *ticket, const char *pattern, ...) {
   va_list ap;
   va_start(ap, pattern);
-  return vlog_knownIssue(ticket, pattern, ap);
+  UBool result = vlog_knownIssue(ticket, pattern, ap);
+  va_end(ap);
+  return result;
 }
 
 void T_CTEST_EXPORT2
@@ -845,6 +845,7 @@ log_err_status(UErrorCode status, const char* pattern, ...)
         }
         vlog_err(NULL, pattern, ap); /* no need for prefix in default case */
     }
+    va_end(ap);
 }
 
 void T_CTEST_EXPORT2
@@ -854,6 +855,7 @@ log_info(const char* pattern, ...)
 
     va_start(ap, pattern);
     vlog_info(NULL, pattern, ap);
+    va_end(ap);
 }
 
 void T_CTEST_EXPORT2
@@ -863,6 +865,7 @@ log_verbose(const char* pattern, ...)
 
     va_start(ap, pattern);
     vlog_verbose(NULL, pattern, ap);
+    va_end(ap);
 }
 
 
@@ -884,6 +887,7 @@ log_data_err(const char* pattern, ...)
     } else {
         vlog_info("[DATA] ", pattern, ap); 
     }
+    va_end(ap);
 }
 
 

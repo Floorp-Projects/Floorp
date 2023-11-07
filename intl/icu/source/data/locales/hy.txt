@@ -3,14 +3,6 @@
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 hy{
     AuxExemplarCharacters{"[և]"}
-    Ellipsis{
-        final{"{0}…"}
-        initial{"…{0}"}
-        medial{"{0}…{1}"}
-        word-final{"{0} …"}
-        word-initial{"… {0}"}
-        word-medial{"{0} … {1}"}
-    }
     ExemplarCharacters{
         "[ա բ գ դ ե զ է ը թ ժ ի լ խ ծ կ հ ձ ղ ճ մ յ ն շ ո չ պ ջ ռ ս վ տ ր ց ւ փ ք օ ֆ"
         "]"
@@ -23,21 +15,12 @@ hy{
     ExemplarCharactersPunctuation{"[֊ , ՝ \\: ՜ ՞ . « » ՚ ՛ ՟]"}
     MoreInformation{"(՞)"}
     NumberElements{
-        default{"latn"}
         latn{
             miscPatterns{
-                approximately{"~{0}"}
                 atLeast{"{0}+"}
-                atMost{"≤{0}"}
-                range{"{0}–{1}"}
             }
             patterns{
-                accountingFormat{"#,##0.00 ¤"}
-                accountingFormat%noCurrency{"#,##0.00"}
                 currencyFormat{"#,##0.00 ¤"}
-                decimalFormat{"#,##0.###"}
-                percentFormat{"#,##0%"}
-                scientificFormat{"#E0"}
             }
             patternsLong{
                 decimalFormat{
@@ -195,17 +178,8 @@ hy{
             }
             symbols{
                 decimal{","}
-                exponential{"E"}
                 group{" "}
-                infinity{"∞"}
-                list{";"}
-                minusSign{"-"}
                 nan{"ՈչԹ"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         minimalPairs{
@@ -225,8 +199,6 @@ hy{
                 other{"այդ {0} պանակները"}
             }
         }
-        minimumGroupingDigits{"1"}
-        native{"latn"}
         traditional{"armn"}
     }
     calendar{
@@ -246,12 +218,6 @@ hy{
                 "{1}, {0}",
                 "{1}, {0}",
             }
-            DateTimePatterns%atTime{
-                "{1}, {0}",
-                "{1}, {0}",
-                "{1}, {0}",
-                "{1}, {0}",
-            }
             DateTimeSkeletons{
                 "HHmmsszzzz",
                 "HHmmssz",
@@ -266,14 +232,9 @@ hy{
                 Bh{"B h-ին"}
                 Bhm{"B h:mm-ին"}
                 Bhms{"B h:mm:ss"}
-                E{"ccc"}
                 EBhm{"E B h:mm-ին"}
                 EBhms{"E B h:mm:ss"}
-                EHm{"E HH:mm"}
-                EHms{"E HH:mm:ss"}
                 Ed{"d, ccc"}
-                Ehm{"E h:mm a"}
-                Ehms{"E h:mm:ss a"}
                 Gy{"G y թ․"}
                 GyMMM{"G y թ․ MMM"}
                 GyMMMEd{"G y թ․ MMM d, E"}
@@ -282,25 +243,16 @@ hy{
                 H{"H"}
                 Hm{"H:mm"}
                 Hms{"H:mm:ss"}
-                M{"L"}
                 MEd{"dd.MM, E"}
-                MMM{"LLL"}
                 MMMEd{"d MMM, E"}
-                MMMMd{"MMMM d"}
                 MMMd{"d MMM"}
                 Md{"dd.MM"}
-                d{"d"}
-                h{"h a"}
-                hm{"h:mm a"}
-                hms{"h:mm:ss a"}
-                ms{"mm:ss"}
                 y{"y, G"}
                 yyyy{"y, G"}
                 yyyyM{"G y թ. MM"}
                 yyyyMEd{"d.MM.y թ., G, E"}
                 yyyyMMM{"G y թ. LLL"}
                 yyyyMMMEd{"d MMM, y թ. G, E"}
-                yyyyMMMM{"G y MMMM"}
                 yyyyMMMd{"d MMM, y թ., G"}
                 yyyyMd{"d.M.y թ., G"}
                 yyyyQQQ{"G y թ, QQQ"}
@@ -352,28 +304,7 @@ hy{
                     M{"dd.MM – dd.MM"}
                     d{"dd.MM – dd.MM"}
                 }
-                d{
-                    d{"d–d"}
-                }
                 fallback{"{0} - {1}"}
-                h{
-                    a{"h a – h a"}
-                    h{"h–h a"}
-                }
-                hm{
-                    a{"h:mm a – h:mm a"}
-                    h{"h:mm–h:mm a"}
-                    m{"h:mm–h:mm a"}
-                }
-                hmv{
-                    a{"h:mm a – h:mm a v"}
-                    h{"h:mm–h:mm a v"}
-                    m{"h:mm–h:mm a v"}
-                }
-                hv{
-                    a{"h a – h a v"}
-                    h{"h–h a v"}
-                }
                 y{
                     y{"y–y G"}
                 }
@@ -412,14 +343,6 @@ hy{
             }
         }
         gregorian{
-            AmPmMarkers{
-                "AM",
-                "PM",
-            }
-            AmPmMarkersAbbr{
-                "AM",
-                "PM",
-            }
             AmPmMarkersNarrow{
                 "ա",
                 "հ",
@@ -439,12 +362,6 @@ hy{
                 "{1}, {0}",
                 "{1}, {0}",
             }
-            DateTimePatterns%atTime{
-                "{1}, {0}",
-                "{1}, {0}",
-                "{1}, {0}",
-                "{1}, {0}",
-            }
             DateTimeSkeletons{
                 "HHmmsszzzz",
                 "HHmmssz",
@@ -455,14 +372,10 @@ hy{
                 "yMMMdd",
                 "yyMMdd",
             }
-            appendItems{
-                Timezone{"{0} {1}"}
-            }
             availableFormats{
                 Bh{"B h-ին"}
                 Bhm{"B h:mm-ին"}
                 Bhms{"B h:mm:ss"}
-                E{"ccc"}
                 EBhm{"E B h:mm-ին"}
                 EBhms{"E B h:mm:ss"}
                 EHm{"E, HH:mm"}
@@ -478,27 +391,14 @@ hy{
                 H{"H"}
                 Hm{"H:mm"}
                 Hms{"H:mm:ss"}
-                Hmsv{"HH:mm:ss v"}
-                Hmv{"HH:mm v"}
-                M{"L"}
                 MEd{"dd.MM, E"}
-                MMM{"LLL"}
                 MMMEd{"d MMM, E"}
                 MMMMW{
                     one{"MMMM W-ին շաբաթ"}
                     other{"MMMM W-րդ շաբաթ"}
                 }
-                MMMMd{"MMMM d"}
                 MMMd{"d MMM"}
                 Md{"dd.MM"}
-                d{"d"}
-                h{"h a"}
-                hm{"h:mm a"}
-                hms{"h:mm:ss a"}
-                hmsv{"h:mm:ss a v"}
-                hmv{"h:mm a v"}
-                ms{"mm:ss"}
-                y{"y"}
                 yM{"MM.y"}
                 yMEd{"d.MM.y թ., E"}
                 yMMM{"y թ. LLL"}
@@ -524,15 +424,6 @@ hy{
                         "ուր",
                         "շբթ",
                     }
-                    narrow{
-                        "Կ",
-                        "Ե",
-                        "Ե",
-                        "Չ",
-                        "Հ",
-                        "Ո",
-                        "Շ",
-                    }
                     short{
                         "կր",
                         "եկ",
@@ -553,15 +444,6 @@ hy{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "կիր",
-                        "երկ",
-                        "երք",
-                        "չրք",
-                        "հնգ",
-                        "ուր",
-                        "շբթ",
-                    }
                     narrow{
                         "Կ",
                         "Ե",
@@ -570,24 +452,6 @@ hy{
                         "Հ",
                         "Ո",
                         "Շ",
-                    }
-                    short{
-                        "կր",
-                        "եկ",
-                        "եք",
-                        "չք",
-                        "հգ",
-                        "ու",
-                        "շբ",
-                    }
-                    wide{
-                        "կիրակի",
-                        "երկուշաբթի",
-                        "երեքշաբթի",
-                        "չորեքշաբթի",
-                        "հինգշաբթի",
-                        "ուրբաթ",
-                        "շաբաթ",
                     }
                 }
             }
@@ -621,33 +485,9 @@ hy{
                 stand-alone{
                     abbreviated{
                         afternoon1{"ցերեկ"}
-                        am{"AM"}
                         evening1{"երեկո"}
-                        midnight{"կեսգիշեր"}
                         morning1{"առավոտ"}
                         night1{"գիշեր"}
-                        noon{"կեսօր"}
-                        pm{"PM"}
-                    }
-                    narrow{
-                        afternoon1{"ցերեկ"}
-                        am{"AM"}
-                        evening1{"երեկո"}
-                        midnight{"կեսգիշեր"}
-                        morning1{"առավոտ"}
-                        night1{"գիշեր"}
-                        noon{"կեսօր"}
-                        pm{"PM"}
-                    }
-                    wide{
-                        afternoon1{"ցերեկ"}
-                        am{"AM"}
-                        evening1{"երեկո"}
-                        midnight{"կեսգիշեր"}
-                        morning1{"առավոտ"}
-                        night1{"գիշեր"}
-                        noon{"կեսօր"}
-                        pm{"PM"}
                     }
                 }
             }
@@ -694,9 +534,7 @@ hy{
                     y{"GGGGG dd.MM.y ccc – dd.MM.y ccc"}
                 }
                 GyMMM{
-                    G{"G y MMM – G y MMM"}
                     M{"G y թ. MMM – MMM"}
-                    y{"G y MMM – y MMM"}
                 }
                 GyMMMEd{
                     G{"G y թ. MMM d E – G MMM d E"}
@@ -752,31 +590,7 @@ hy{
                     M{"dd.MM – dd.MM"}
                     d{"dd.MM – dd.MM"}
                 }
-                d{
-                    d{"d–d"}
-                }
                 fallback{"{0} – {1}"}
-                h{
-                    a{"h a – h a"}
-                    h{"h–h a"}
-                }
-                hm{
-                    a{"h:mm a – h:mm a"}
-                    h{"h:mm–h:mm a"}
-                    m{"h:mm–h:mm a"}
-                }
-                hmv{
-                    a{"h:mm a – h:mm a v"}
-                    h{"h:mm–h:mm a v"}
-                    m{"h:mm–h:mm a v"}
-                }
-                hv{
-                    a{"h a – h a v"}
-                    h{"h–h a v"}
-                }
-                y{
-                    y{"y–y"}
-                }
                 yM{
                     M{"MM.y – MM.y"}
                     y{"MM.y – MM.y"}
@@ -788,7 +602,6 @@ hy{
                 }
                 yMMM{
                     M{"y թ. MMM – MMM"}
-                    y{"y MMM – y MMM"}
                 }
                 yMMMEd{
                     M{"E, d MMM – E, d MMM, y թ."}
@@ -826,20 +639,6 @@ hy{
                         "նոյ",
                         "դեկ",
                     }
-                    narrow{
-                        "Հ",
-                        "Փ",
-                        "Մ",
-                        "Ա",
-                        "Մ",
-                        "Հ",
-                        "Հ",
-                        "Օ",
-                        "Ս",
-                        "Հ",
-                        "Ն",
-                        "Դ",
-                    }
                     wide{
                         "հունվարի",
                         "փետրվարի",
@@ -856,20 +655,6 @@ hy{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "հնվ",
-                        "փտվ",
-                        "մրտ",
-                        "ապր",
-                        "մյս",
-                        "հնս",
-                        "հլս",
-                        "օգս",
-                        "սեպ",
-                        "հոկ",
-                        "նոյ",
-                        "դեկ",
-                    }
                     narrow{
                         "Հ",
                         "Փ",
@@ -907,32 +692,6 @@ hy{
                         "2-րդ եռմս.",
                         "3-րդ եռմս.",
                         "4-րդ եռմս.",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                    }
-                    wide{
-                        "1-ին եռամսյակ",
-                        "2-րդ եռամսյակ",
-                        "3-րդ եռամսյակ",
-                        "4-րդ եռամսյակ",
-                    }
-                }
-                stand-alone{
-                    abbreviated{
-                        "1-ին եռմս.",
-                        "2-րդ եռմս.",
-                        "3-րդ եռմս.",
-                        "4-րդ եռմս.",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
                     }
                     wide{
                         "1-ին եռամսյակ",
@@ -1059,69 +818,19 @@ hy{
                 }
             }
         }
-        day-narrow{
-            dn{"օր"}
-            relative{
-                "-1"{"երեկ"}
-                "-2"{"երեկ չէ առաջի օրը"}
-                "0"{"այսօր"}
-                "1"{"վաղը"}
-                "2"{"վաղը չէ մյուս օրը"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} օրից"}
-                    other{"{0} օրից"}
-                }
-                past{
-                    one{"{0} օր առաջ"}
-                    other{"{0} օր առաջ"}
-                }
-            }
-        }
         day-short{
-            dn{"օր"}
             relative{
-                "-1"{"երեկ"}
                 "-2"{"երեկ չէ առաջի օրը"}
-                "0"{"այսօր"}
-                "1"{"վաղը"}
-                "2"{"վաղը չէ մյուս օրը"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} օրից"}
-                    other{"{0} օրից"}
-                }
-                past{
-                    one{"{0} օր առաջ"}
-                    other{"{0} օր առաջ"}
-                }
             }
         }
         dayOfYear{
             dn{"տարվա օր"}
         }
-        dayOfYear-narrow{
-            dn{"տարվա օր"}
-        }
-        dayOfYear-short{
-            dn{"տարվա օր"}
-        }
         dayperiod{
-            dn{"ԿԱ/ԿՀ"}
-        }
-        dayperiod-narrow{
-            dn{"ԿԱ/ԿՀ"}
-        }
-        dayperiod-short{
             dn{"ԿԱ/ԿՀ"}
         }
         era{
             dn{"թվարկություն"}
-        }
-        era-narrow{
-            dn{"թ․"}
         }
         era-short{
             dn{"թ․"}
@@ -1140,23 +849,6 @@ hy{
                 past{
                     one{"{0} ուրբաթ առաջ"}
                     other{"{0} ուրբաթ առաջ"}
-                }
-            }
-        }
-        fri-narrow{
-            relative{
-                "-1"{"նխրդ ուրբ"}
-                "0"{"այս ուրբ"}
-                "1"{"հջրդ ուրբ"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} ուրբ հետո"}
-                    other{"{0} ուրբ հետո"}
-                }
-                past{
-                    one{"{0} ուրբ առաջ"}
-                    other{"{0} ուրբ առաջ"}
                 }
             }
         }
@@ -1193,19 +885,6 @@ hy{
                 }
             }
         }
-        hour-narrow{
-            dn{"ժ"}
-            relativeTime{
-                future{
-                    one{"{0} ժ-ից"}
-                    other{"{0} ժ-ից"}
-                }
-                past{
-                    one{"{0} ժ առաջ"}
-                    other{"{0} ժ առաջ"}
-                }
-            }
-        }
         hour-short{
             dn{"ժ"}
             relativeTime{
@@ -1232,19 +911,6 @@ hy{
                 past{
                     one{"{0} րոպե առաջ"}
                     other{"{0} րոպե առաջ"}
-                }
-            }
-        }
-        minute-narrow{
-            dn{"ր"}
-            relativeTime{
-                future{
-                    one{"{0} ր-ից"}
-                    other{"{0} ր-ից"}
-                }
-                past{
-                    one{"{0} ր առաջ"}
-                    other{"{0} ր առաջ"}
                 }
             }
         }
@@ -1275,23 +941,6 @@ hy{
                 past{
                     one{"{0} երկուշաբթի առաջ"}
                     other{"{0} երկուշաբթի առաջ"}
-                }
-            }
-        }
-        mon-narrow{
-            relative{
-                "-1"{"նխրդ երկ"}
-                "0"{"այս երկ"}
-                "1"{"հջրդ երկ"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} երկ հետո"}
-                    other{"{0} երկ հետո"}
-                }
-                past{
-                    one{"{0} երկ առաջ"}
-                    other{"{0} երկ առաջ"}
                 }
             }
         }
@@ -1330,41 +979,8 @@ hy{
                 }
             }
         }
-        month-narrow{
-            dn{"ամս"}
-            relative{
-                "-1"{"նախորդ ամիս"}
-                "0"{"այս ամիս"}
-                "1"{"հաջորդ ամիս"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} ամսից"}
-                    other{"{0} ամսից"}
-                }
-                past{
-                    one{"{0} ամիս առաջ"}
-                    other{"{0} ամիս առաջ"}
-                }
-            }
-        }
         month-short{
             dn{"ամս"}
-            relative{
-                "-1"{"նախորդ ամիս"}
-                "0"{"այս ամիս"}
-                "1"{"հաջորդ ամիս"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} ամսից"}
-                    other{"{0} ամսից"}
-                }
-                past{
-                    one{"{0} ամիս առաջ"}
-                    other{"{0} ամիս առաջ"}
-                }
-            }
         }
         quarter{
             dn{"եռամսյակ"}
@@ -1381,19 +997,6 @@ hy{
                 past{
                     one{"{0} եռամսյակ առաջ"}
                     other{"{0} եռամսյակ առաջ"}
-                }
-            }
-        }
-        quarter-narrow{
-            dn{"եռմս"}
-            relativeTime{
-                future{
-                    one{"{0} եռմս-ից"}
-                    other{"{0} եռմս-ից"}
-                }
-                past{
-                    one{"{0} եռմս առաջ"}
-                    other{"{0} եռմս առաջ"}
                 }
             }
         }
@@ -1424,23 +1027,6 @@ hy{
                 past{
                     one{"{0} շաբաթ օր առաջ"}
                     other{"{0} շաբաթ օր առաջ"}
-                }
-            }
-        }
-        sat-narrow{
-            relative{
-                "-1"{"նխրդ շբթ"}
-                "0"{"այս շբթ"}
-                "1"{"հջրդ շբթ"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} շբթ հետո"}
-                    other{"{0} շբթ հետո"}
-                }
-                past{
-                    one{"{0} շբթ առաջ"}
-                    other{"{0} շբթ առաջ"}
                 }
             }
         }
@@ -1478,7 +1064,6 @@ hy{
             }
         }
         second-narrow{
-            dn{"վ"}
             relativeTime{
                 future{
                     one{"{0} վ-ից"}
@@ -1520,23 +1105,6 @@ hy{
                 }
             }
         }
-        sun-narrow{
-            relative{
-                "-1"{"նխրդ կիր"}
-                "0"{"այս կիր"}
-                "1"{"հջրդ կիր"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} կիր հետո"}
-                    other{"{0} կիր հետո"}
-                }
-                past{
-                    one{"{0} կիր առաջ"}
-                    other{"{0} կիր առաջ"}
-                }
-            }
-        }
         sun-short{
             relative{
                 "-1"{"նխրդ կիր"}
@@ -1568,23 +1136,6 @@ hy{
                 past{
                     one{"{0} հինգշաբթի առաջ"}
                     other{"{0} հինգշաբթի առաջ"}
-                }
-            }
-        }
-        thu-narrow{
-            relative{
-                "-1"{"նխրդ հնգ"}
-                "0"{"այս հնգ"}
-                "1"{"հջրդ հնգ"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} հնգ հետո"}
-                    other{"{0} հնգ հետո"}
-                }
-                past{
-                    one{"{0} հնգ առաջ"}
-                    other{"{0} հնգ առաջ"}
                 }
             }
         }
@@ -1622,23 +1173,6 @@ hy{
                 }
             }
         }
-        tue-narrow{
-            relative{
-                "-1"{"նխրդ երք"}
-                "0"{"այս երք"}
-                "1"{"հջրդ երք"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} երք հետո"}
-                    other{"{0} երք հետո"}
-                }
-                past{
-                    one{"{0} երք առաջ"}
-                    other{"{0} երք առաջ"}
-                }
-            }
-        }
         tue-short{
             relative{
                 "-1"{"նխրդ երք"}
@@ -1670,23 +1204,6 @@ hy{
                 past{
                     one{"{0} չորեքշաբթի առաջ"}
                     other{"{0} չորեքշաբթի առաջ"}
-                }
-            }
-        }
-        wed-narrow{
-            relative{
-                "-1"{"նխրդ չրք"}
-                "0"{"այս չրք"}
-                "1"{"հջրդ չրք"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} չրք հետո"}
-                    other{"{0} չրք հետո"}
-                }
-                past{
-                    one{"{0} չրք առաջ"}
-                    other{"{0} չրք առաջ"}
                 }
             }
         }
@@ -1727,31 +1244,15 @@ hy{
             }
         }
         week-narrow{
-            dn{"շաբ"}
-            relative{
-                "-1"{"նախորդ շաբաթ"}
-                "0"{"այս շաբաթ"}
-                "1"{"հաջորդ շաբաթ"}
-            }
-            relativePeriod{"{0} շաբ-ում"}
             relativeTime{
                 future{
                     one{"{0} շաբ անց"}
                     other{"{0} շաբ անց"}
                 }
-                past{
-                    one{"{0} շաբ առաջ"}
-                    other{"{0} շաբ առաջ"}
-                }
             }
         }
         week-short{
             dn{"շաբ"}
-            relative{
-                "-1"{"նախորդ շաբաթ"}
-                "0"{"այս շաբաթ"}
-                "1"{"հաջորդ շաբաթ"}
-            }
             relativePeriod{"{0} շաբ-ում"}
             relativeTime{
                 future{
@@ -1776,20 +1277,11 @@ hy{
         weekday{
             dn{"շաբաթվա օր"}
         }
-        weekday-narrow{
-            dn{"շաբաթվա օր"}
-        }
-        weekday-short{
-            dn{"շաբաթվա օր"}
-        }
         weekdayOfMonth{
             dn{"ամսվա օր"}
         }
         weekdayOfMonth-narrow{
             dn{"ամս օր"}
-        }
-        weekdayOfMonth-short{
-            dn{"ամսվա օր"}
         }
         year{
             dn{"տարի"}
@@ -1809,36 +1301,9 @@ hy{
                 }
             }
         }
-        year-narrow{
-            dn{"տ"}
-            relative{
-                "-1"{"նախորդ տարի"}
-                "0"{"այս տարի"}
-                "1"{"հաջորդ տարի"}
-            }
-            relativeTime{
-                future{
-                    one{"{0} տարուց"}
-                    other{"{0} տարուց"}
-                }
-                past{
-                    one{"{0} տ առաջ"}
-                    other{"{0} տ առաջ"}
-                }
-            }
-        }
         year-short{
             dn{"տ"}
-            relative{
-                "-1"{"նախորդ տարի"}
-                "0"{"այս տարի"}
-                "1"{"հաջորդ տարի"}
-            }
             relativeTime{
-                future{
-                    one{"{0} տարուց"}
-                    other{"{0} տարուց"}
-                }
                 past{
                     one{"{0} տ առաջ"}
                     other{"{0} տ առաջ"}
@@ -1848,65 +1313,29 @@ hy{
         zone{
             dn{"ժամային գոտի"}
         }
-        zone-narrow{
-            dn{"ժամային գոտի"}
-        }
-        zone-short{
-            dn{"ժամային գոտի"}
-        }
     }
     listPattern{
         or{
             2{"{0} կամ {1}"}
             end{"{0} կամ {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        or-narrow{
-            2{"{0} կամ {1}"}
-            end{"{0} կամ {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        or-short{
-            2{"{0} կամ {1}"}
-            end{"{0} կամ {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
         standard{
             2{"{0} և {1}"}
             end{"{0} և {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
         standard-narrow{
             2{"{0}, {1}"}
             end{"{0}, {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        standard-short{
-            2{"{0} և {1}"}
-            end{"{0} և {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
         unit{
-            2{"{0} և {1}"}
-            end{"{0} և {1}"}
             middle{"{0}, {1}"}
             start{"{0}, {1}"}
         }
         unit-narrow{
             2{"{0} {1}"}
             end{"{0} {1}"}
-            middle{"{0} {1}"}
-            start{"{0} {1}"}
         }
         unit-short{
-            2{"{0} և {1}"}
-            end{"{0} և {1}"}
             middle{"{0} {1}"}
             start{"{0} {1}"}
         }
@@ -1953,8 +1382,6 @@ hy{
             givenFirst-short-referring-informal{"{given-informal} {surname-initial}"}
             sorting-long-referring-formal{"{surname-core} {given}"}
             sorting-long-referring-informal{"{surname} {given-informal}"}
-            sorting-medium-referring-formal{"{surname-core} {given}"}
-            sorting-medium-referring-informal{"{surname-core} {given}"}
             sorting-short-referring-formal{"{surname-core} {given-initial}"}
             sorting-short-referring-informal{"{surname} {given-informal}"}
             surnameFirst-long-addressing-formal{"{title} {surname}"}

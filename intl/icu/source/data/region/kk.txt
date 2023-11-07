@@ -298,6 +298,9 @@ kk{
         ZW{"Зимбабве"}
         ZZ{"Белгісіз аймақ"}
     }
+    Countries%chagos{
+        IO{"Чагос архипелагі"}
+    }
     Countries%short{
         HK{"Сянган"}
         MO{"Макао"}

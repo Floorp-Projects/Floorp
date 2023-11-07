@@ -896,9 +896,13 @@ ca{
             "SKK",
             "corona eslovaca",
         }
+        SLE{
+            "SLE",
+            "leone de Sierra Leone",
+        }
         SLL{
             "SLL",
-            "leone de Sierra Leone",
+            "leone de Sierra Leone (1964—2022)",
         }
         SOS{
             "SOS",
@@ -1202,103 +1206,8 @@ ca{
         }
     }
     Currencies%narrow{
-        AOA{"Kz"}
-        ARS{"$"}
-        AUD{"$"}
-        BAM{"KM"}
-        BBD{"$"}
-        BDT{"৳"}
-        BMD{"$"}
-        BND{"$"}
-        BOB{"Bs"}
-        BRL{"R$"}
-        BSD{"$"}
-        BWP{"P"}
         BYN{"р."}
-        BZD{"$"}
-        CAD{"$"}
-        CLP{"$"}
-        CNY{"¥"}
-        COP{"$"}
-        CRC{"₡"}
-        CUC{"$"}
-        CUP{"$"}
-        CZK{"Kč"}
-        DKK{"kr"}
-        DOP{"$"}
-        EGP{"E£"}
-        EUR{"€"}
-        FJD{"$"}
-        FKP{"£"}
-        GBP{"£"}
-        GEL{"₾"}
-        GIP{"£"}
-        GNF{"FG"}
-        GTQ{"Q"}
-        GYD{"$"}
-        HKD{"$"}
-        HNL{"L"}
-        HRK{"kn"}
-        HUF{"Ft"}
-        IDR{"Rp"}
-        ILS{"₪"}
-        INR{"₹"}
-        ISK{"kr"}
-        JMD{"$"}
-        JPY{"¥"}
-        KHR{"៛"}
-        KMF{"CF"}
-        KPW{"₩"}
-        KRW{"₩"}
-        KYD{"$"}
-        KZT{"₸"}
-        LAK{"₭"}
-        LBP{"L£"}
-        LKR{"Rs"}
-        LRD{"$"}
-        MGA{"Ar"}
-        MMK{"K"}
-        MNT{"₮"}
-        MUR{"Rs"}
-        MXN{"$"}
-        MYR{"RM"}
-        NAD{"$"}
-        NGN{"₦"}
-        NIO{"C$"}
-        NOK{"kr"}
-        NPR{"Rs"}
-        NZD{"$"}
-        PHP{"₱"}
-        PKR{"Rs"}
-        PLN{"zł"}
-        PYG{"₲"}
-        RON{"lei"}
-        RUB{"₽"}
-        RWF{"RF"}
-        SBD{"$"}
-        SEK{"kr"}
-        SGD{"$"}
-        SHP{"£"}
-        SRD{"$"}
-        SSP{"£"}
-        STN{"Db"}
-        SYP{"£"}
-        THB{"฿"}
-        TOP{"T$"}
-        TRY{"₺"}
-        TTD{"$"}
-        TWD{"$"}
-        UAH{"₴"}
-        USD{"$"}
-        UYU{"$"}
         VEF{"Bs F"}
-        VND{"₫"}
-        XCD{"$"}
-        ZAR{"R"}
-        ZMW{"ZK"}
-    }
-    Currencies%variant{
-        TRY{"TL"}
     }
     CurrencyPlurals{
         ADP{
@@ -1405,10 +1314,6 @@ ca{
             one{"dòlar de Barbados"}
             other{"dòlars de Barbados"}
         }
-        BDT{
-            one{"taka"}
-            other{"taka"}
-        }
         BEC{
             one{"franc belga (convertible)"}
             other{"francs belgues (convertibles)"}
@@ -1511,7 +1416,7 @@ ca{
         }
         BWP{
             one{"pula de Botswana"}
-            other{"pula de Botswana"}
+            other{"pules de Botswana"}
         }
         BYB{
             one{"nou ruble bielorús (1994–1999)"}
@@ -1788,10 +1693,6 @@ ca{
         ILP{
             one{"lliura israeliana"}
             other{"lliures israelianes"}
-        }
-        ILR{
-            one{"xéquel israelià"}
-            other{"xéquel israelià"}
         }
         ILS{
             one{"nou xéquel israelià"}
@@ -2193,9 +2094,13 @@ ca{
             one{"corona eslovaca"}
             other{"corones eslovaques"}
         }
-        SLL{
+        SLE{
             one{"leone de Sierra Leone"}
             other{"leones de Sierra Leone"}
+        }
+        SLL{
+            one{"leone de Sierra Leone (1964—2022)"}
+            other{"leones de Sierra Leone (1964—2022)"}
         }
         SOS{
             one{"xíling somali"}
@@ -2365,14 +2270,6 @@ ca{
             one{"franc CFA BEAC"}
             other{"francs CFA BEAC"}
         }
-        XAG{
-            one{"plata"}
-            other{"plata"}
-        }
-        XAU{
-            one{"or"}
-            other{"or"}
-        }
         XBA{
             one{"unitat compensatòria europea"}
             other{"unitats compensatòries europees"}
@@ -2393,10 +2290,6 @@ ca{
             one{"dòlar del Carib Oriental"}
             other{"dòlars del Carib Oriental"}
         }
-        XDR{
-            one{"drets especials de gir"}
-            other{"drets especials de gir"}
-        }
         XEU{
             one{"unitat de moneda europea"}
             other{"unitats de moneda europees"}
@@ -2413,25 +2306,9 @@ ca{
             one{"franc CFA BCEAO"}
             other{"francs CFA BCEAO"}
         }
-        XPD{
-            one{"pal·ladi"}
-            other{"pal·ladi"}
-        }
         XPF{
             one{"franc CFP"}
             other{"francs CFP"}
-        }
-        XPT{
-            one{"platí"}
-            other{"platí"}
-        }
-        XRE{
-            one{"fons RINET"}
-            other{"fons RINET"}
-        }
-        XTS{
-            one{"codi reservat per a proves"}
-            other{"codi reservat per a proves"}
         }
         XXX{
             one{"(unitat monetària desconeguda)"}

@@ -70,6 +70,7 @@ ro{
         bez{"bena"}
         bfd{"bafut"}
         bg{"bulgară"}
+        bgc{"haryanvi"}
         bgn{"baluchi occidentală"}
         bho{"bhojpuri"}
         bi{"bislama"}
@@ -587,6 +588,7 @@ ro{
         zh_Hant{"chineză mandarină tradițională"}
     }
     Languages%menu{
+        ckb{"kurdă, centrală"}
         yue{"chineză, cantoneză"}
         zh{"chineză, mandarină"}
     }
@@ -805,11 +807,9 @@ ro{
             gregorian{"calendar gregorian"}
             hebrew{"calendar ebraic"}
             indian{"calendar național indian"}
-            islamic{"calendar islamic"}
-            islamic-civil{"calendar islamic civil"}
-            islamic-rgsa{"calendar islamic (Arabia Saudită, lunar)"}
-            islamic-tbla{"calendar islamic (tabular, epocă astronomică)"}
-            islamic-umalqura{"calendar islamic (Umm al-Qura)"}
+            islamic{"calendarul hegirei"}
+            islamic-civil{"calendarul hegirei (tabular, civil)"}
+            islamic-umalqura{"calendarul hegirei (Umm al-Qura)"}
             iso8601{"calendar ISO-8601"}
             japanese{"calendar japonez"}
             persian{"calendar persan"}
@@ -992,61 +992,117 @@ ro{
         1994{"ortografie resiană standardizată"}
         1996{"ortografie germană de la 1996"}
         ABL1943{"formularea ortografică de la 1943"}
+        AKUAPEM{"Akuapem"}
         ALALC97{"ALA-LC, ediția din 1997"}
         ALUKU{"dialect aluku"}
         AO1990{"Acordul de ortografie a limbii portugheze de la 1990"}
+        ARANES{"Aranes"}
         AREVELA{"armeană orientală"}
         AREVMDA{"armeană occidentală"}
+        ARKAIKA{"Arkaika"}
+        ASANTE{"Asante"}
+        AUVERN{"Auvern"}
         BAKU1926{"alfabet latin altaic unificat"}
         BALANKA{"dialectul balanka al limbii anii"}
         BARLA{"grupul de dialecte barlavento al limbii kabuverdianu"}
+        BASICENG{"Basiceng"}
+        BAUDDHA{"Bauddha"}
+        BISCAYAN{"Biscayan"}
         BISKE{"dialect San Giorgio/Bila"}
         BOHORIC{"alfabet Bohorič"}
         BOONT{"boontling"}
+        BORNHOLM{"Bornholm"}
+        CISAUP{"Cisaup"}
         COLB1945{"Convenția ortografică a limbii portugheze braziliene de la 1945"}
+        CORNU{"Cornu"}
+        CREISS{"Creiss"}
         DAJNKO{"alfabet dajnko"}
         EKAVSK{"sârbă cu pronunție ekaviană"}
         EMODENG{"limba engleză modernă timpurie"}
         FONIPA{"alfabet fonetic internațional"}
+        FONKIRSH{"Fonkirsh"}
+        FONNAPA{"Fonnapa"}
         FONUPA{"alfabet fonetic uralic"}
+        FONXSAMP{"Fonxsamp"}
+        GALLO{"Gallo"}
+        GASCON{"Gascon"}
+        GRCLASS{"Grclass"}
+        GRITAL{"Grital"}
+        GRMISTR{"Grmistr"}
         HEPBURN{"hepburn"}
+        HOGNORSK{"Hognorsk"}
+        HSISTEMO{"Hsistemo"}
         IJEKAVSK{"sârbă cu pronunție ijekaviană"}
+        ITIHASA{"Itihasa"}
+        IVANCHOV{"Ivanchov"}
+        JAUER{"Jauer"}
+        JYUTPING{"Jyutping"}
         KKCOR{"ortografie comuna cornish"}
+        KOCIEWIE{"Kociewie"}
         KSCOR{"ortografie standard"}
+        LAUKIKA{"Laukika"}
+        LEMOSIN{"Lemosin"}
+        LENGADOC{"Lengadoc"}
         LIPAW{"dialect lipovaz din resiană"}
+        LUNA1918{"Luna1918"}
         METELKO{"alfabet metelko"}
         MONOTON{"monotonică"}
         NDYUKA{"dialect ndyuka"}
         NEDIS{"dialect Natisone"}
+        NEWFOUND{"Newfound"}
+        NICARD{"Nicard"}
         NJIVA{"dialect Gniva/Njiva"}
         NULIK{"volapük modernă"}
         OSOJS{"dialect Oseacco/Osojane"}
         OXENDICT{"ortografia dicționarului Oxford de limbă engleză"}
+        PAHAWH2{"Pahawh2"}
+        PAHAWH3{"Pahawh3"}
+        PAHAWH4{"Pahawh4"}
         PAMAKA{"dialect pamaka"}
+        PEANO{"Peano"}
+        PETR1708{"Petr1708"}
         PINYIN{"pinyin"}
         POLYTON{"politonică"}
         POSIX{"informatică"}
+        PROVENC{"Provenc"}
+        PUTER{"Puter"}
         REVISED{"ortografie revizuită"}
         RIGIK{"volapük clasică"}
         ROZAJ{"dialect resian"}
+        RUMGR{"Rumgr"}
         SAAHO{"dialect saho"}
         SCOTLAND{"engleză standard scoțiană"}
         SCOUSE{"dialect scouse"}
+        SIMPLE{"Simple"}
         SOLBA{"dialect Stolvizza/Solbica"}
         SOTAV{"grupul de dialecte sotavento al limbii kabuverdianu"}
+        SPANGLIS{"Spanglis"}
+        SURMIRAN{"Surmiran"}
+        SURSILV{"Sursilv"}
+        SUTSILV{"Sutsilv"}
+        SYNNEJYL{"Synnejyl"}
         TARASK{"ortografie taraskievica"}
+        TONGYONG{"Tongyong"}
+        TUNUMIIT{"Tunumiit"}
         UCCOR{"ortografie unificată cornish"}
         UCRCOR{"ortografie revizuită unificată cornish"}
+        ULSTER{"Ulster"}
         UNIFON{"alfabet fonetic unifon"}
+        VAIDIKA{"Vaidika"}
         VALENCIA{"valenciană"}
+        VALLADER{"Vallader"}
+        VECDRUKA{"Vecdruka"}
+        VIVARAUP{"Vivaraup"}
         WADEGILE{"Wade-Giles"}
+        XSISTEMO{"Xsistemo"}
     }
     characterLabelPattern{
         all{"{0} – toate"}
-        category-list{"{0}: {1}"}
         compatibility{"{0} – compatibilitate"}
         enclosed{"{0} – încadrate"}
         extended{"{0} – set extins"}
+        facing-left{"{0} orientate spre stânga"}
+        facing-right{"{0} orientate spre dreapta"}
         historic{"{0} – istorice"}
         miscellaneous{"{0} – diverse"}
         other{"{0} – altele"}
@@ -1063,10 +1119,5 @@ ro{
         language{"Limbă: {0}"}
         script{"Scriere: {0}"}
         territory{"Regiune: {0}"}
-    }
-    localeDisplayPattern{
-        keyTypePattern{"{0}: {1}"}
-        pattern{"{0} ({1})"}
-        separator{"{0}, {1}"}
     }
 }

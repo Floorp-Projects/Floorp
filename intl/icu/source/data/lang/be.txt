@@ -51,6 +51,7 @@ be{
         bem{"бемба"}
         bez{"бена"}
         bg{"балгарская"}
+        bgc{"харыанві"}
         bgn{"заходняя белуджская"}
         bho{"бхаджпуры"}
         bi{"біслама"}
@@ -569,9 +570,9 @@ be{
             ethiopic-amete-alem{"эфіопскі каляндар Аметэ Алем"}
             gregorian{"грыгарыянскі каляндар"}
             hebrew{"яўрэйскі каляндар"}
-            islamic{"мусульманскі каляндар"}
-            islamic-civil{"мусульманскі свецкі каляндар"}
-            islamic-umalqura{"мусульманскі каляндар (Ум аль-Кура)"}
+            islamic{"каляндар хіджры"}
+            islamic-civil{"свецкі каляндар хіджры (таблічны)"}
+            islamic-umalqura{"каляндар хіджры (Ум аль-Кура)"}
             iso8601{"каляндар ISO-8601"}
             japanese{"японскі каляндар"}
             persian{"персідскі каляндар"}
@@ -647,10 +648,11 @@ be{
     }
     characterLabelPattern{
         all{"{0} — Усё"}
-        category-list{"{0}: {1}"}
         compatibility{"{0} — Сумяшчальнасць"}
         enclosed{"{0} — Уключаны"}
         extended{"{0} — Пашыраны"}
+        facing-left{"{0}, накіраваныя ўлева"}
+        facing-right{"{0}, накіраваныя ўправа"}
         historic{"{0} — Гістарычны"}
         miscellaneous{"{0} — Рознае"}
         other{"{0} — Іншае"}
@@ -668,10 +670,5 @@ be{
         language{"Мова: {0}"}
         script{"Пісьмо: {0}"}
         territory{"Рэгіён: {0}"}
-    }
-    localeDisplayPattern{
-        keyTypePattern{"{0}: {1}"}
-        pattern{"{0} ({1})"}
-        separator{"{0}, {1}"}
     }
 }

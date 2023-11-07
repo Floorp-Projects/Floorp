@@ -94,7 +94,6 @@ vai_Latn{
         IE{"Áre Lumaã"}
         IL{"Bhanísiláila"}
         IN{"Índiya"}
-        IO{"Jengéesi Gbawoe Índiya Kɔiyɛ Lɔ"}
         IQ{"Iraki"}
         IR{"Iraŋ"}
         IS{"Áisi Lumaã"}

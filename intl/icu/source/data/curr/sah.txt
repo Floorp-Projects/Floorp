@@ -12,17 +12,6 @@ sah{
             "АХШ дуоллара",
         }
     }
-    Currencies%narrow{
-        RUB{"₽"}
-    }
-    CurrencyPlurals{
-        RUB{
-            other{"Арассыыйа солкуобайа"}
-        }
-        USD{
-            other{"АХШ дуоллара"}
-        }
-    }
     CurrencyUnitPatterns{
         other{"{0} {1}"}
     }

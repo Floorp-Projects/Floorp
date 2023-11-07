@@ -12,10 +12,4 @@ kl{
             "euro",
         }
     }
-    CurrencyPlurals{
-        EUR{
-            one{"euro"}
-            other{"euro"}
-        }
-    }
 }

@@ -146,7 +146,6 @@ yrl{
         IL{"Isirayeu"}
         IM{"Mã Kapuãma"}
         IN{"Ĩdiya"}
-        IO{"Biritãniku Usuasawa Useyanu Ĩdiku"}
         IQ{"Iraki"}
         IR{"Irã"}
         IS{"Isirãdiya"}

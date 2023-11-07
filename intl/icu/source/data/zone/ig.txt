@@ -3,9 +3,6 @@
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ig{
     zoneStrings{
-        "America:Araguaina"{
-            ec{"Araguaina"}
-        }
         "Etc:UTC"{
             ls{"Nhazi Oge Ụwa Niile"}
         }
@@ -612,10 +609,6 @@ ig{
         "meta:Yukon"{
             ls{"Oge Yukon"}
         }
-        fallbackFormat{"{1} ({0})"}
-        gmtFormat{"GMT{0}"}
-        gmtZeroFormat{"GMT"}
-        hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"Oge {0}"}
         regionFormatDaylight{"Oge Ihe {0}"}
         regionFormatStandard{"Oge Izugbe {0}"}

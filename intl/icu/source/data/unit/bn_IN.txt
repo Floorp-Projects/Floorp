@@ -10,11 +10,6 @@ bn_IN{
             dnam{"প্রধান দিক"}
         }
     }
-    unitsNarrow{
-        coordinate{
-            dnam{"দিক"}
-        }
-    }
     unitsShort{
         coordinate{
             dnam{"দিক"}

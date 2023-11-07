@@ -48,8 +48,10 @@ hi_Latn{
             }
         }
         graphics{
-            em{
-                dnam{"typographic em"}
+            dot-per-centimeter{
+                dnam{"dots per centimeter"}
+                one{"{0} dot per centimeter"}
+                other{"{0} dots per centimeter"}
             }
         }
         length{
@@ -68,6 +70,9 @@ hi_Latn{
             }
         }
         pressure{
+            gasoline-energy-density{
+                dnam{"gasoline equivalent"}
+            }
             inch-ofhg{
                 one{"{0} inch mercury"}
                 other{"{0} inches mercury"}
@@ -117,10 +122,6 @@ hi_Latn{
     unitsNarrow{
         compound{
             10p-6{"μ {0}"}
-            10p-9{"n {0}"}
-            10p12{"T {0}"}
-            10p15{"P {0}"}
-            10p6{"M {0}"}
         }
         concentr{
             karat{
@@ -216,13 +217,6 @@ hi_Latn{
                 one{"{0} rev"}
                 other{"{0} rev"}
             }
-        }
-        compound{
-            10p-6{"μ {0}"}
-            10p-9{"n {0}"}
-            10p12{"T {0}"}
-            10p15{"P {0}"}
-            10p6{"M {0}"}
         }
         concentr{
             karat{

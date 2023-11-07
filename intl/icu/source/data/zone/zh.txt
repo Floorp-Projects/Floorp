@@ -931,7 +931,7 @@ zh{
             ec{"布罗肯希尔"}
         }
         "Australia:Currie"{
-            ec{"库利"}
+            ec{"柯里"}
         }
         "Australia:Darwin"{
             ec{"达尔文"}
@@ -946,7 +946,7 @@ zh{
             ec{"林德曼"}
         }
         "Australia:Lord_Howe"{
-            ec{"豪勋爵"}
+            ec{"豪勋爵岛"}
         }
         "Australia:Melbourne"{
             ec{"墨尔本"}
@@ -1461,9 +1461,9 @@ zh{
             ls{"查莫罗时间"}
         }
         "meta:Chatham"{
-            ld{"查坦夏令时间"}
-            lg{"查坦时间"}
-            ls{"查坦标准时间"}
+            ld{"查塔姆夏令时间"}
+            lg{"查塔姆时间"}
+            ls{"查塔姆标准时间"}
         }
         "meta:Chile"{
             ld{"智利夏令时间"}
@@ -1950,9 +1950,6 @@ zh{
             ls{"育空时间"}
         }
         fallbackFormat{"{1}（{0}）"}
-        gmtFormat{"GMT{0}"}
-        gmtZeroFormat{"GMT"}
-        hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"{0}时间"}
         regionFormatDaylight{"{0}夏令时间"}
         regionFormatStandard{"{0}标准时间"}

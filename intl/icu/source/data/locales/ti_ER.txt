@@ -3,28 +3,6 @@
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ti_ER{
     calendar{
-        coptic{
-            DateTimePatterns{
-                "h:mm:ss a zzzz",
-                "h:mm:ss a z",
-                "h:mm:ss a",
-                "h:mm a",
-                "EEEE፡ dd MMMM መዓልቲ y G",
-                "d MMMM y G",
-                "d MMM y G",
-                "dd/MM/yy GGGGG",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-            }
-        }
-        ethiopic{
-            intervalFormats{
-                fallback{"{0} - {1}"}
-            }
-        }
         generic{
             DateTimePatterns{
                 "h:mm:ss a zzzz",
@@ -89,21 +67,6 @@ ti_ER{
                 "GyMMMMdd",
                 "GyMMMdd",
                 "GGGGGyyMMdd",
-            }
-        }
-        japanese{
-            intervalFormats{
-                fallback{"{0} - {1}"}
-            }
-        }
-        persian{
-            intervalFormats{
-                fallback{"{0} - {1}"}
-            }
-        }
-        roc{
-            intervalFormats{
-                fallback{"{0} - {1}"}
             }
         }
     }

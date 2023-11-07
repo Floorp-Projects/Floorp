@@ -4,10 +4,8 @@
 agq{
     AuxExemplarCharacters{"[q r x]"}
     ExemplarCharacters{
-        "[a à â ǎ ā b c d e è ê ě ē ɛ {ɛ\u0300} {ɛ\u0302} {ɛ\u030C} {ɛ\u0304} f g h i"
-        " ì î ǐ ī ɨ {ɨ\u0300} {ɨ\u0302} {ɨ\u030C} {ɨ\u0304} k l m n ŋ o ò ô ǒ ō ɔ {ɔ"
-        "\u0300} {ɔ\u0302} {ɔ\u030C} {ɔ\u0304} p s t u ù û ǔ ū ʉ {ʉ\u0300} {ʉ\u0302} "
-        "{ʉ\u030C} {ʉ\u0304} v w y z ʔ]"
+        "[aàâǎā b c d eèêěē ɛ{ɛ̀}{ɛ̂}{ɛ̌}{ɛ̄} f g h iìîǐī ɨ{ɨ̀}{ɨ̂}{ɨ̌}{ɨ̄} k l m n ŋ"
+        " oòôǒō ɔ{ɔ̀}{ɔ̂}{ɔ̌}{ɔ̄} p s t uùûǔū ʉ{ʉ̀}{ʉ̂}{ʉ̌}{ʉ̄} v w y z ʔ]"
     }
     ExemplarCharactersIndex{"[A B C D E Ɛ F G H I Ɨ K L M N Ŋ O Ɔ P S T U Ʉ V W Y Z ʔ]"}
     ExemplarCharactersNumbers{"[  \\- ‑ , % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
@@ -15,8 +13,6 @@ agq{
         latn{
             patterns{
                 currencyFormat{"#,##0.00¤"}
-                decimalFormat{"#,##0.###"}
-                percentFormat{"#,##0%"}
             }
             symbols{
                 decimal{","}
@@ -53,15 +49,10 @@ agq{
             }
             availableFormats{
                 Ed{"d E"}
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
-                M{"L"}
                 MEd{"E d/M"}
-                MMM{"LLL"}
                 MMMEd{"E d MMM"}
                 MMMd{"d MMM"}
                 Md{"d/M"}
-                d{"d"}
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
                 ms{"m:ss"}
@@ -77,10 +68,6 @@ agq{
             }
         }
         gregorian{
-            AmPmMarkers{
-                "a.g",
-                "a.k",
-            }
             AmPmMarkersAbbr{
                 "a.g",
                 "a.k",
@@ -112,19 +99,13 @@ agq{
             }
             availableFormats{
                 Ed{"d E"}
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
-                M{"L"}
                 MEd{"E d/M"}
-                MMM{"LLL"}
                 MMMEd{"E d MMM"}
                 MMMd{"d MMM"}
                 Md{"d/M"}
-                d{"d"}
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
                 ms{"m:ss"}
-                y{"y"}
                 yM{"M/y"}
                 yMEd{"E d/M/y"}
                 yMMM{"MMM y"}
@@ -238,9 +219,7 @@ agq{
         }
     }
     delimiters{
-        alternateQuotationEnd{"’"}
         alternateQuotationStart{"‚"}
-        quotationEnd{"”"}
         quotationStart{"„"}
     }
     fields{

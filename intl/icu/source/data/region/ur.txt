@@ -298,6 +298,9 @@ ur{
         ZW{"زمبابوے"}
         ZZ{"نامعلوم علاقہ"}
     }
+    Countries%chagos{
+        IO{"جزائر چاگوس"}
+    }
     Countries%short{
         GB{"یو کے"}
         HK{"ہانگ کانگ"}

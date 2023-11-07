@@ -1941,10 +1941,8 @@ brx{
         "meta:Yukon"{
             ls{"यूकन सम"}
         }
-        fallbackFormat{"{1} ({0})"}
         gmtFormat{"जि.एम.ति {0}"}
         gmtZeroFormat{"जि.एम.ति"}
-        hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"{0} सम"}
         regionFormatDaylight{"{0} साननि सोरां सम"}
         regionFormatStandard{"{0} थाखोआरि सम"}

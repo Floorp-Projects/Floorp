@@ -4,9 +4,6 @@
 en_AU{
     %%Parent{"en_001"}
     zoneStrings{
-        "Pacific:Johnston"{
-            ec{"Johnston"}
-        }
         "meta:Africa_Eastern"{
             ls{"Eastern Africa Time"}
         }
@@ -92,6 +89,5 @@ en_AU{
             lg{"Taipei Time"}
             ls{"Taipei Standard Time"}
         }
-        gmtZeroFormat{"GMT"}
     }
 }

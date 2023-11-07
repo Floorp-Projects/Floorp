@@ -72,6 +72,7 @@ ne{
         bfd{"बाफुट"}
         bfq{"बडागा"}
         bg{"बुल्गेरियाली"}
+        bgc{"हरयाणवी"}
         bgn{"पश्चिम बालोची"}
         bho{"भोजपुरी"}
         bi{"बिस्लाम"}
@@ -234,7 +235,6 @@ ne{
         hax{"दक्षिणी हैडा"}
         he{"हिब्रु"}
         hi{"हिन्दी"}
-        hi_Latn{"हिन्दी (ल्याटिन)"}
         hif{"फिजी हिन्दी"}
         hil{"हिलिगायनोन"}
         hit{"हिट्टिटे"}
@@ -775,8 +775,8 @@ ne{
             gregorian{"ग्रेगोरियन पात्रो"}
             hebrew{"हिब्रु पात्रो"}
             indian{"भारतीय राष्ट्रिय पात्रो"}
-            islamic{"इस्लामी पात्रो"}
-            islamic-civil{"इस्लामी नागरिक पात्रो"}
+            islamic{"हिजरी पात्रो"}
+            islamic-civil{"हिजरी पात्रो (टेबुलर, नागरिक युग)"}
             islamic-umalqura{"इस्लामी पात्रो"}
             iso8601{"ISO-8601 पात्रो"}
             japanese{"जापानी पात्रो"}
@@ -863,7 +863,6 @@ ne{
     }
     characterLabelPattern{
         all{"{0}-सबै"}
-        category-list{"{0}: {1}"}
         compatibility{"{0}-कम्प्याटिबिलिटी"}
         enclosed{"{0}-सम्मिलित"}
         extended{"{0} - विस्तारित"}
@@ -882,10 +881,5 @@ ne{
         language{"भाषा: {0}"}
         script{"लिपि: {0}"}
         territory{"क्षेत्र: {0}"}
-    }
-    localeDisplayPattern{
-        keyTypePattern{"{0}: {1}"}
-        pattern{"{0} ({1})"}
-        separator{"{0}, {1}"}
     }
 }

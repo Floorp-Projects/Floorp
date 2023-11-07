@@ -2,10 +2,7 @@
 // License & terms of use: http://www.unicode.org/copyright.html
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 fa_AF{
-    AuxExemplarCharacters{
-        "[\u200E\u200F \u064E \u0650 \u064F \u0652 \u0656 \u0670 \u200C \u200D إ ټ ځ "
-        "څ ډ ړ ږ ښ ك ګ ڼ ى ي]"
-    }
+    AuxExemplarCharacters{"[\u200E\u200F َ ِ ُ ْ ٖ ٰ \u200C\u200D إ ټ ځ څ ډ ړ ږ ښ ك ګ ڼ ىي]"}
     NumberElements{
         arabext{
             patterns{
@@ -64,25 +61,10 @@ fa_AF{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        afternoon1{"ظهر"}
-                        afternoon2{"بعدازچاشت"}
-                        morning1{"بامداد"}
-                        morning2{"صبح"}
-                        night1{"شب"}
-                        night2{"نیمه‌شب"}
-                    }
                     narrow{
                         afternoon1{"بعد از چاشت"}
                         morning1{"ب"}
                         night1{"ش"}
-                    }
-                    wide{
-                        afternoon1{"ظهر"}
-                        afternoon2{"بعدازچاشت"}
-                        morning1{"بامداد"}
-                        morning2{"صبح"}
-                        night2{"نیمه‌شب"}
                     }
                 }
             }
@@ -101,20 +83,6 @@ fa_AF{
                         "اکتوبر",
                         "نومبر",
                         "دسم",
-                    }
-                    narrow{
-                        "ج",
-                        "ف",
-                        "م",
-                        "ا",
-                        "م",
-                        "ج",
-                        "ج",
-                        "ا",
-                        "س",
-                        "ا",
-                        "ن",
-                        "د",
                     }
                     wide{
                         "جنوری",
@@ -178,20 +146,6 @@ fa_AF{
             }
             quarters{
                 format{
-                    abbreviated{
-                        "ر۱",
-                        "ر۲",
-                        "ر۳",
-                        "ر۴",
-                    }
-                    wide{
-                        "ربع اول",
-                        "ربع دوم",
-                        "ربع سوم",
-                        "ربع چهارم",
-                    }
-                }
-                stand-alone{
                     abbreviated{
                         "ر۱",
                         "ر۲",

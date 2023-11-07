@@ -33,7 +33,7 @@ CPPFLAGS += -I$(srcdir) -I$(top_srcdir)/common -I$(top_srcdir)/i18n -I$(top_srcd
 DEFS += -D'U_TOPSRCDIR="$(top_srcdir)/"' -D'U_TOPBUILDDIR="$(BUILDDIR)"'
 LIBS = $(LIBCTESTFW) $(LIBICUTOOLUTIL) $(LIBICUIO) $(LIBICUI18N) $(LIBICUUC) $(DEFAULT_LIBS) $(LIB_M)
 
-FUZZER_TARGETS = break_iterator_fuzzer collator_compare_fuzzer collator_rulebased_fuzzer converter_fuzzer locale_fuzzer number_format_fuzzer ucasemap_fuzzer uloc_canonicalize_fuzzer uloc_for_language_tag_fuzzer uloc_get_name_fuzzer uloc_is_right_to_left_fuzzer uloc_open_keywords_fuzzer unicode_string_codepage_create_fuzzer uregex_open_fuzzer
+FUZZER_TARGETS = break_iterator_fuzzer calendar_fuzzer collator_compare_fuzzer collator_rulebased_fuzzer converter_fuzzer date_format_fuzzer list_format_fuzzer locale_fuzzer locale_morph_fuzzer number_format_fuzzer relative_date_time_formatter_fuzzer ucasemap_fuzzer uloc_canonicalize_fuzzer uloc_for_language_tag_fuzzer uloc_get_name_fuzzer uloc_is_right_to_left_fuzzer uloc_open_keywords_fuzzer unicode_string_codepage_create_fuzzer uregex_open_fuzzer
 
 OBJECTS = $(FUZZER_TARGETS:%=%.o)
 OBJECTS += fuzzer_driver.o locale_util.o

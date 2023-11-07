@@ -298,6 +298,9 @@ lt{
         ZW{"Zimbabvė"}
         ZZ{"nežinoma sritis"}
     }
+    Countries%chagos{
+        IO{"Čagoso salynas"}
+    }
     Countries%short{
         GB{"JK"}
         HK{"Honkongas"}

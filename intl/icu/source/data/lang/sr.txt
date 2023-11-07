@@ -67,6 +67,7 @@ sr{
         bem{"бемба"}
         bez{"бена"}
         bg{"бугарски"}
+        bgc{"харијански"}
         bgn{"западни белучки"}
         bho{"боџпури"}
         bi{"бислама"}
@@ -522,7 +523,7 @@ sr{
         twq{"тасавак"}
         ty{"тахићански"}
         tyv{"тувински"}
-        tzm{"централноатласки тамазигт"}
+        tzm{"централноатласки тамашек"}
         udm{"удмуртски"}
         ug{"ујгурски"}
         uga{"угаритски"}
@@ -909,10 +910,11 @@ sr{
     }
     characterLabelPattern{
         all{"{0} — све"}
-        category-list{"{0}: {1}"}
         compatibility{"{0} — компатибилност"}
         enclosed{"{0} — затворено"}
         extended{"{0} — проширено"}
+        facing-left{"{0} гледа улево"}
+        facing-right{"{0} гледа удесно"}
         historic{"{0} — историјско"}
         miscellaneous{"{0} — разно"}
         other{"{0} — друго"}
@@ -929,10 +931,5 @@ sr{
         language{"Језик: {0}"}
         script{"Писмо: {0}"}
         territory{"Регион: {0}"}
-    }
-    localeDisplayPattern{
-        keyTypePattern{"{0}: {1}"}
-        pattern{"{0} ({1})"}
-        separator{"{0}, {1}"}
     }
 }

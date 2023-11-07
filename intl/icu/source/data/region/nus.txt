@@ -47,7 +47,6 @@ nus{
         CV{"Kɛp bedi ɣa̱ylɛn"}
         DZ{"Algeria"}
         HR{"Korwaatia"}
-        IO{"Burutic ɣe̱ndian oce̱n"}
         KH{"Kombodia"}
         KM{"Komruth"}
         KY{"Kaymɛn ɣa̱ylɛn"}

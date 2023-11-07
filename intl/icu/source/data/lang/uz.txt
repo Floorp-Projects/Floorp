@@ -48,6 +48,7 @@ uz{
         bem{"bemba"}
         bez{"bena"}
         bg{"bolgar"}
+        bgc{"harianvi"}
         bgn{"g‘arbiy baluj"}
         bho{"bxojpuri"}
         bi{"bislama"}
@@ -159,7 +160,6 @@ uz{
         hax{"janubiy hayda"}
         he{"ivrit"}
         hi{"hind"}
-        hi_Latn{"hind (lotin)"}
         hil{"hiligaynon"}
         hmn{"xmong"}
         hr{"xorvat"}
@@ -335,6 +335,7 @@ uz{
         pt_PT{"portugal (Yevropa)"}
         qu{"kechua"}
         quc{"kiche"}
+        raj{"rajastani"}
         rap{"rapanui"}
         rar{"rarotongan"}
         rhg{"rohinja"}
@@ -451,7 +452,6 @@ uz{
         yue{"kanton"}
         zgh{"tamazigxt"}
         zh{"xitoy"}
-        zh_Hans{"xitoy (soddalashgan)"}
         zh_Hant{"xitoy (an’anaviy)"}
         zu{"zulu"}
         zun{"zuni"}
@@ -548,10 +548,10 @@ uz{
             ethiopic-amete-alem{"Amete Alem habash taqvimi"}
             gregorian{"grigorian taqvimi"}
             hebrew{"yahudiy taqvimi"}
-            islamic{"islomiy taqvim"}
-            islamic-civil{"jadvalli islomiy taqvim"}
-            islamic-tbla{"jadvalli islomiy taqvim (astronomik davr)"}
-            islamic-umalqura{"islomiy taqvim (Ummul Quro)"}
+            islamic{"hijriy taqvim"}
+            islamic-civil{"jadvalli hijriy taqvim"}
+            islamic-tbla{"jadvalli hijriy taqvim (astronomik davr)"}
+            islamic-umalqura{"hijriy taqvim (Ummul Quro)"}
             iso8601{"ISO-8601 taqvimi"}
             japanese{"yapon taqvimi"}
             persian{"fors taqvimi"}
@@ -627,10 +627,11 @@ uz{
     }
     characterLabelPattern{
         all{"{0} — hammasi"}
-        category-list{"{0}: {1}"}
         compatibility{"{0} — mos"}
         enclosed{"{0} — biriktirilgan"}
         extended{"{0} — kengaytirilgan"}
+        facing-left{"chapga qaragan {0}"}
+        facing-right{"o‘ngga qaragan {0}"}
         historic{"{0} — tarixiy"}
         miscellaneous{"{0} — har xil"}
         other{"{0} — boshqa"}
@@ -646,10 +647,5 @@ uz{
         language{"Til: {0}"}
         script{"Yozuv: {0}"}
         territory{"Mintaqa: {0}"}
-    }
-    localeDisplayPattern{
-        keyTypePattern{"{0}: {1}"}
-        pattern{"{0} ({1})"}
-        separator{"{0}, {1}"}
     }
 }

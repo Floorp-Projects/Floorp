@@ -1917,9 +1917,7 @@ ks{
         "meta:Yukon"{
             ls{"یوکون ٹائم"}
         }
-        gmtFormat{"GMT{0}"}
         gmtZeroFormat{"جی ایم ٹی"}
-        hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"{0} وَکھ"}
         regionFormatDaylight{"{0} ڈے لائٹ وَکھ"}
         regionFormatStandard{"{0} معیٲری وَکھ"}

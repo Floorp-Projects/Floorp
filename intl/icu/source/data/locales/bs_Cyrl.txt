@@ -3,22 +3,12 @@
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 bs_Cyrl{
     %%Parent{"root"}
-    AuxExemplarCharacters{"[]"}
-    Ellipsis{
-        final{"{0}…"}
-        initial{"…{0}"}
-    }
     ExemplarCharacters{"[а б в г д ђ е ж з и ј к л љ м н њ о п р с т ћ у ф х ц ч џ ш]"}
     ExemplarCharactersIndex{"[А Б В Г Д Ђ Е Ж З И Ј К Л Љ М Н Њ О П Р С Т Ћ У Ф Х Ц Ч Џ Ш]"}
-    ExemplarCharactersNumbers{"[\\- ‑ , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     NumberElements{
         latn{
             patterns{
-                accountingFormat{"#,##0.00 ¤"}
                 currencyFormat{"#,##0.00 ¤"}
-                decimalFormat{"#,##0.###"}
-                percentFormat{"#,##0%"}
-                scientificFormat{"#E0"}
             }
             patternsLong{
                 decimalFormat{
@@ -149,62 +139,50 @@ bs_Cyrl{
                 }
                 decimalFormat{
                     1000{
-                        few{"0"}
                         one{"0"}
                         other{"0"}
                     }
                     10000{
-                        few{"00 хиљ"}
                         one{"00 хиљ"}
                         other{"00 хиљ"}
                     }
                     100000{
-                        few{"000 хиљ"}
                         one{"000 хиљ"}
                         other{"000 хиљ"}
                     }
                     1000000{
-                        few{"0 мил"}
                         one{"0 мил"}
                         other{"0 мил"}
                     }
                     10000000{
-                        few{"00 мил"}
                         one{"00 мил"}
                         other{"00 мил"}
                     }
                     100000000{
-                        few{"000 мил"}
                         one{"000 мил"}
                         other{"000 мил"}
                     }
                     1000000000{
-                        few{"0 млрд"}
                         one{"0 млрд"}
                         other{"0 млрд"}
                     }
                     10000000000{
-                        few{"00 млрд"}
                         one{"00 млрд"}
                         other{"00 млрд"}
                     }
                     100000000000{
-                        few{"000 млрд"}
                         one{"000 млрд"}
                         other{"000 млрд"}
                     }
                     1000000000000{
-                        few{"0 бил"}
                         one{"0 бил"}
                         other{"0 бил"}
                     }
                     10000000000000{
-                        few{"00 бил"}
                         one{"00 бил"}
                         other{"00 бил"}
                     }
                     100000000000000{
-                        few{"000 бил"}
                         one{"000 бил"}
                         other{"000 бил"}
                     }
@@ -212,16 +190,7 @@ bs_Cyrl{
             }
             symbols{
                 decimal{","}
-                exponential{"E"}
                 group{"."}
-                infinity{"∞"}
-                list{";"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
             }
         }
         minimalPairs{
@@ -317,19 +286,13 @@ bs_Cyrl{
                 GyMMM{"MMM y. G"}
                 GyMMMEd{"E, dd. MMM y. G"}
                 GyMMMd{"dd. MMM y. G"}
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
-                M{"L"}
                 MEd{"E, dd.MM."}
-                MMM{"LLL"}
                 MMMEd{"E, dd. MMM"}
                 MMMd{"dd. MMM"}
                 Md{"dd.MM."}
-                d{"d"}
                 h{"hh a"}
                 hm{"hh:mm a"}
                 hms{"hh:mm:ss a"}
-                ms{"mm:ss"}
                 y{"y. G"}
                 yyyy{"y. G"}
                 yyyyM{"MM.y. G"}
@@ -338,24 +301,8 @@ bs_Cyrl{
                 yyyyMMMEd{"E, dd. MMM y. G"}
                 yyyyMMMd{"dd. MMM y. G"}
                 yyyyMd{"dd.MM.y. G"}
-                yyyyQQQ{"G y QQQ"}
-                yyyyQQQQ{"G y QQQQ"}
             }
             intervalFormats{
-                H{
-                    H{"HH–HH"}
-                }
-                Hm{
-                    H{"HH:mm–HH:mm"}
-                    m{"HH:mm–HH:mm"}
-                }
-                Hmv{
-                    H{"HH:mm–HH:mm v"}
-                    m{"HH:mm–HH:mm v"}
-                }
-                Hv{
-                    H{"HH–HH v"}
-                }
                 M{
                     M{"M–M"}
                 }
@@ -377,9 +324,6 @@ bs_Cyrl{
                 Md{
                     M{"d.M – d.M"}
                     d{"d.M – d.M"}
-                }
-                d{
-                    d{"d–d"}
                 }
                 h{
                     a{"hh a – hh a"}
@@ -445,10 +389,6 @@ bs_Cyrl{
                 "пре подне",
                 "поподне",
             }
-            AmPmMarkersNarrow{
-                "пре подне",
-                "поподне",
-            }
             DateTimePatterns{
                 "HH:mm:ss zzzz",
                 "HH:mm:ss z",
@@ -480,11 +420,7 @@ bs_Cyrl{
                 GyMMM{"MMM y. G"}
                 GyMMMEd{"E, dd. MMM y. G"}
                 GyMMMd{"dd. MMM y. G"}
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
-                M{"L"}
                 MEd{"E, dd.MM."}
-                MMM{"LLL"}
                 MMMEd{"E, dd. MMM"}
                 MMMMW{
                     few{"'седмица' W 'мјесец' MMMM"}
@@ -494,8 +430,6 @@ bs_Cyrl{
                 MMMMd{"d. MMMM"}
                 MMMd{"dd. MMM"}
                 Md{"dd.MM."}
-                d{"d"}
-                ms{"mm:ss"}
                 y{"y."}
                 yM{"MM.y."}
                 yMEd{"E, dd.MM.y."}
@@ -504,8 +438,6 @@ bs_Cyrl{
                 yMMMM{"MMMM y."}
                 yMMMd{"dd. MMM y."}
                 yMd{"dd.MM.y."}
-                yQQQ{"y QQQ"}
-                yQQQQ{"y QQQQ"}
                 yw{
                     few{"'седмица' w 'година' Y"}
                     one{"'седмица' w 'година' Y"}
@@ -523,24 +455,6 @@ bs_Cyrl{
                         "пет",
                         "суб",
                     }
-                    narrow{
-                        "н",
-                        "п",
-                        "у",
-                        "с",
-                        "ч",
-                        "п",
-                        "с",
-                    }
-                    short{
-                        "нед",
-                        "пон",
-                        "уто",
-                        "сри",
-                        "чет",
-                        "пет",
-                        "суб",
-                    }
                     wide{
                         "недјеља",
                         "понедјељак",
@@ -552,15 +466,6 @@ bs_Cyrl{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "нед",
-                        "пон",
-                        "уто",
-                        "сри",
-                        "чет",
-                        "пет",
-                        "суб",
-                    }
                     narrow{
                         "н",
                         "п",
@@ -569,24 +474,6 @@ bs_Cyrl{
                         "ч",
                         "п",
                         "с",
-                    }
-                    short{
-                        "нед",
-                        "пон",
-                        "уто",
-                        "сри",
-                        "чет",
-                        "пет",
-                        "суб",
-                    }
-                    wide{
-                        "недјеља",
-                        "понедјељак",
-                        "уторак",
-                        "сриједа",
-                        "четвртак",
-                        "петак",
-                        "субота",
                     }
                 }
             }
@@ -600,52 +487,16 @@ bs_Cyrl{
                         night1{"ноћу"}
                         noon{"подне"}
                     }
-                    narrow{
-                        afternoon1{"у подне"}
-                        evening1{"увече"}
-                        midnight{"поноћ"}
-                        morning1{"ујутру"}
-                        night1{"ноћу"}
-                        noon{"подне"}
-                    }
-                    wide{
-                        afternoon1{"у подне"}
-                        evening1{"увече"}
-                        midnight{"поноћ"}
-                        morning1{"ујутру"}
-                        night1{"ноћу"}
-                        noon{"подне"}
-                    }
                 }
                 stand-alone{
                     abbreviated{
                         afternoon1{"послийеподне"}
-                        am{"пре подне"}
                         evening1{"вече"}
-                        midnight{"поноћ"}
                         morning1{"јутро"}
                         night1{"ноћ"}
-                        noon{"подне"}
-                        pm{"поподне"}
-                    }
-                    narrow{
-                        afternoon1{"послийеподне"}
-                        am{"пре подне"}
-                        evening1{"вече"}
-                        midnight{"поноћ"}
-                        morning1{"јутро"}
-                        night1{"ноћ"}
-                        noon{"подне"}
-                        pm{"поподне"}
                     }
                     wide{
-                        afternoon1{"послийеподне"}
                         am{"прије подне"}
-                        evening1{"вече"}
-                        midnight{"поноћ"}
-                        morning1{"јутро"}
-                        night1{"ноћ"}
-                        noon{"подне"}
                         pm{"послије подне"}
                     }
                 }
@@ -663,26 +514,8 @@ bs_Cyrl{
                     "прије нове ере",
                     "нове ере",
                 }
-                wide%variant{
-                    "п. н. е.",
-                    "н. е.",
-                }
             }
             intervalFormats{
-                H{
-                    H{"HH–HH"}
-                }
-                Hm{
-                    H{"HH:mm–HH:mm"}
-                    m{"HH:mm–HH:mm"}
-                }
-                Hmv{
-                    H{"HH:mm–HH:mm v"}
-                    m{"HH:mm–HH:mm v"}
-                }
-                Hv{
-                    H{"HH–HH v"}
-                }
                 M{
                     M{"M–M"}
                 }
@@ -705,9 +538,6 @@ bs_Cyrl{
                     M{"d.M – d.M"}
                     d{"d.M – d.M"}
                 }
-                d{
-                    d{"d–d"}
-                }
                 h{
                     a{"hh a – hh a"}
                     h{"hh–hh a"}
@@ -725,9 +555,6 @@ bs_Cyrl{
                 hv{
                     a{"hh a – hh a v"}
                     h{"hh–hh a v"}
-                }
-                y{
-                    y{"y–y"}
                 }
                 yM{
                     M{"MM.–MM. y."}
@@ -778,20 +605,6 @@ bs_Cyrl{
                         "нов",
                         "дец",
                     }
-                    narrow{
-                        "ј",
-                        "ф",
-                        "м",
-                        "а",
-                        "м",
-                        "ј",
-                        "ј",
-                        "а",
-                        "с",
-                        "о",
-                        "н",
-                        "д",
-                    }
                     wide{
                         "јануар",
                         "фебруар",
@@ -808,20 +621,6 @@ bs_Cyrl{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "јан",
-                        "феб",
-                        "мар",
-                        "апр",
-                        "мај",
-                        "јун",
-                        "јул",
-                        "ауг",
-                        "сеп",
-                        "окт",
-                        "нов",
-                        "дец",
-                    }
                     narrow{
                         "ј",
                         "ф",
@@ -835,20 +634,6 @@ bs_Cyrl{
                         "о",
                         "н",
                         "д",
-                    }
-                    wide{
-                        "јануар",
-                        "фебруар",
-                        "март",
-                        "април",
-                        "мај",
-                        "јуни",
-                        "јули",
-                        "аугуст",
-                        "септембар",
-                        "октобар",
-                        "новембар",
-                        "децембар",
                     }
                 }
             }
@@ -860,12 +645,6 @@ bs_Cyrl{
                         "К3",
                         "К4",
                     }
-                    narrow{
-                        "1.",
-                        "2.",
-                        "3.",
-                        "4.",
-                    }
                     wide{
                         "Прво тромесечје",
                         "Друго тромесечје",
@@ -874,23 +653,11 @@ bs_Cyrl{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "К1",
-                        "К2",
-                        "К3",
-                        "К4",
-                    }
                     narrow{
                         "1.",
                         "2.",
                         "3.",
                         "4.",
-                    }
-                    wide{
-                        "Прво тромесечје",
-                        "Друго тромесечје",
-                        "Треће тромесечје",
-                        "Четврто тромесечје",
                     }
                 }
             }
@@ -970,19 +737,6 @@ bs_Cyrl{
             }
             availableFormats{
                 Ed{"E, dd."}
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
-                M{"L"}
-                MEd{"E, dd.MM."}
-                MMM{"LLL"}
-                MMMEd{"E, dd. MMM"}
-                MMMd{"dd. MMM"}
-                Md{"dd.MM."}
-                d{"d"}
-                hm{"hh:mm a"}
-                hms{"hh:mm:ss a"}
-                ms{"mm:ss"}
-                y{"y. G"}
                 yM{"MM.y. G"}
                 yMEd{"E, dd.MM.y. G"}
                 yMMM{"MMM y. G"}
@@ -1342,51 +1096,8 @@ bs_Cyrl{
                 }
             }
         }
-        day-narrow{
-            dn{"дан"}
-            relative{
-                "-1"{"јуче"}
-                "0"{"данас"}
-                "1"{"сутра"}
-            }
-            relativeTime{
-                future{
-                    few{"за {0} дана"}
-                    one{"за {0} дан"}
-                    other{"за {0} дана"}
-                }
-                past{
-                    few{"прије {0} дана"}
-                    one{"прије {0} дан"}
-                    other{"прије {0} дана"}
-                }
-            }
-        }
-        day-short{
-            dn{"дан"}
-            relative{
-                "-1"{"јуче"}
-                "0"{"данас"}
-                "1"{"сутра"}
-            }
-            relativeTime{
-                future{
-                    few{"за {0} дана"}
-                    one{"за {0} дан"}
-                    other{"за {0} дана"}
-                }
-                past{
-                    few{"прије {0} дана"}
-                    one{"прије {0} дан"}
-                    other{"прије {0} дана"}
-                }
-            }
-        }
         dayOfYear{
             dn{"дан у години"}
-        }
-        dayOfYear-narrow{
-            dn{"дан у год."}
         }
         dayOfYear-short{
             dn{"дан у год."}
@@ -1394,19 +1105,7 @@ bs_Cyrl{
         dayperiod{
             dn{"прије подне/послије подне"}
         }
-        dayperiod-narrow{
-            dn{"прије подне/послије подне"}
-        }
-        dayperiod-short{
-            dn{"прије подне/послије подне"}
-        }
         era{
-            dn{"ера"}
-        }
-        era-narrow{
-            dn{"ера"}
-        }
-        era-short{
             dn{"ера"}
         }
         fri{
@@ -1415,36 +1114,12 @@ bs_Cyrl{
                 "0"{"овог петка"}
                 "1"{"сљедећег петка"}
             }
-            relativeTime{
-                future{
-                    few{"+{0} Fridays"}
-                    one{"+{0} Fridays"}
-                    other{"+{0} Fridays"}
-                }
-                past{
-                    few{"-{0} Fridays"}
-                    one{"-{0} Fridays"}
-                    other{"-{0} Fridays"}
-                }
-            }
         }
         fri-narrow{
             relative{
                 "-1"{"пр. петка"}
                 "0"{"овог пет."}
                 "1"{"сљ. петка"}
-            }
-            relativeTime{
-                future{
-                    few{"+{0} Fridays"}
-                    one{"+{0} Fridays"}
-                    other{"+{0} Fridays"}
-                }
-                past{
-                    few{"-{0} Fridays"}
-                    one{"-{0} Fridays"}
-                    other{"-{0} Fridays"}
-                }
             }
         }
         fri-short{
@@ -1453,54 +1128,12 @@ bs_Cyrl{
                 "0"{"овог пет."}
                 "1"{"сљед. петка"}
             }
-            relativeTime{
-                future{
-                    few{"+{0} Fridays"}
-                    one{"+{0} Fridays"}
-                    other{"+{0} Fridays"}
-                }
-                past{
-                    few{"-{0} Fridays"}
-                    one{"-{0} Fridays"}
-                    other{"-{0} Fridays"}
-                }
-            }
         }
         hour{
             dn{"сат"}
             relative{
                 "0"{"овог сата"}
             }
-            relativeTime{
-                future{
-                    few{"за {0} сата"}
-                    one{"за {0} сат"}
-                    other{"за {0} сати"}
-                }
-                past{
-                    few{"прије {0} сата"}
-                    one{"прије {0} сат"}
-                    other{"прије {0} сати"}
-                }
-            }
-        }
-        hour-narrow{
-            dn{"сат"}
-            relativeTime{
-                future{
-                    few{"за {0} сата"}
-                    one{"за {0} сат"}
-                    other{"за {0} сати"}
-                }
-                past{
-                    few{"прије {0} сата"}
-                    one{"прије {0} сат"}
-                    other{"прије {0} сати"}
-                }
-            }
-        }
-        hour-short{
-            dn{"сат"}
             relativeTime{
                 future{
                     few{"за {0} сата"}
@@ -1535,11 +1168,6 @@ bs_Cyrl{
         minute-narrow{
             dn{"мин"}
             relativeTime{
-                future{
-                    few{"за {0} минута"}
-                    one{"за {0} минут"}
-                    other{"за {0} минута"}
-                }
                 past{
                     few{"прије {0} мин."}
                     one{"прије {0} мин."}
@@ -1549,36 +1177,12 @@ bs_Cyrl{
         }
         minute-short{
             dn{"мин."}
-            relativeTime{
-                future{
-                    few{"за {0} минута"}
-                    one{"за {0} минут"}
-                    other{"за {0} минута"}
-                }
-                past{
-                    few{"прије {0} минута"}
-                    one{"прије {0} минут"}
-                    other{"прије {0} минута"}
-                }
-            }
         }
         mon{
             relative{
                 "-1"{"прошлог понедјељка"}
                 "0"{"овог понедјељка"}
                 "1"{"сљедећег понедјељка"}
-            }
-            relativeTime{
-                future{
-                    few{"+{0} Mondays"}
-                    one{"+{0} Mondays"}
-                    other{"+{0} Mondays"}
-                }
-                past{
-                    few{"-{0} Mondays"}
-                    one{"-{0} Mondays"}
-                    other{"-{0} Mondays"}
-                }
             }
         }
         mon-narrow{
@@ -1587,36 +1191,12 @@ bs_Cyrl{
                 "0"{"овог понедј."}
                 "1"{"сљ. понедј."}
             }
-            relativeTime{
-                future{
-                    few{"+{0} Mondays"}
-                    one{"+{0} Mondays"}
-                    other{"+{0} Mondays"}
-                }
-                past{
-                    few{"-{0} Mondays"}
-                    one{"-{0} Mondays"}
-                    other{"-{0} Mondays"}
-                }
-            }
         }
         mon-short{
             relative{
                 "-1"{"прошл. понедјељка"}
                 "0"{"овог понедј."}
                 "1"{"сљ. понедјељка"}
-            }
-            relativeTime{
-                future{
-                    few{"+{0} Mondays"}
-                    one{"+{0} Mondays"}
-                    other{"+{0} Mondays"}
-                }
-                past{
-                    few{"-{0} Mondays"}
-                    one{"-{0} Mondays"}
-                    other{"-{0} Mondays"}
-                }
             }
         }
         month{
@@ -1640,7 +1220,6 @@ bs_Cyrl{
             }
         }
         month-narrow{
-            dn{"мјес."}
             relative{
                 "-1"{"прош. мјес."}
                 "0"{"ов. мјес."}
@@ -1666,18 +1245,6 @@ bs_Cyrl{
                 "0"{"овог мјес."}
                 "1"{"сљед. мјесеца"}
             }
-            relativeTime{
-                future{
-                    few{"за {0} мјесеца"}
-                    one{"за {0} мјесец"}
-                    other{"за {0} мјесеци"}
-                }
-                past{
-                    few{"прије {0} мјесеца"}
-                    one{"прије {0} мјесец"}
-                    other{"прије {0} мјесеци"}
-                }
-            }
         }
         quarter{
             dn{"тромјесечје"}
@@ -1686,66 +1253,18 @@ bs_Cyrl{
                 "0"{"ово тромјесечје"}
                 "1"{"сљедеће тромјесечје"}
             }
-            relativeTime{
-                future{
-                    few{"+{0} Q"}
-                    one{"+{0} Q"}
-                    other{"+{0} Q"}
-                }
-                past{
-                    few{"-{0} Q"}
-                    one{"-{0} Q"}
-                    other{"-{0} Q"}
-                }
-            }
         }
         quarter-narrow{
             dn{"qtr."}
-            relativeTime{
-                future{
-                    few{"+{0} Q"}
-                    one{"+{0} Q"}
-                    other{"+{0} Q"}
-                }
-                past{
-                    few{"-{0} Q"}
-                    one{"-{0} Q"}
-                    other{"-{0} Q"}
-                }
-            }
         }
         quarter-short{
             dn{"тромје."}
-            relativeTime{
-                future{
-                    few{"+{0} Q"}
-                    one{"+{0} Q"}
-                    other{"+{0} Q"}
-                }
-                past{
-                    few{"-{0} Q"}
-                    one{"-{0} Q"}
-                    other{"-{0} Q"}
-                }
-            }
         }
         sat{
             relative{
                 "-1"{"прошле суботе"}
                 "0"{"ове суботе"}
                 "1"{"сљедеће суботе"}
-            }
-            relativeTime{
-                future{
-                    few{"+{0} Saturdays"}
-                    one{"+{0} Saturdays"}
-                    other{"+{0} Saturdays"}
-                }
-                past{
-                    few{"-{0} Saturdays"}
-                    one{"-{0} Saturdays"}
-                    other{"-{0} Saturdays"}
-                }
             }
         }
         sat-narrow{
@@ -1754,36 +1273,12 @@ bs_Cyrl{
                 "0"{"ове суб."}
                 "1"{"сљ. суботе"}
             }
-            relativeTime{
-                future{
-                    few{"+{0} Saturdays"}
-                    one{"+{0} Saturdays"}
-                    other{"+{0} Saturdays"}
-                }
-                past{
-                    few{"-{0} Saturdays"}
-                    one{"-{0} Saturdays"}
-                    other{"-{0} Saturdays"}
-                }
-            }
         }
         sat-short{
             relative{
                 "-1"{"прошл. суботе"}
                 "0"{"ове суб."}
                 "1"{"сљед. суботе"}
-            }
-            relativeTime{
-                future{
-                    few{"+{0} Saturdays"}
-                    one{"+{0} Saturdays"}
-                    other{"+{0} Saturdays"}
-                }
-                past{
-                    few{"-{0} Saturdays"}
-                    one{"-{0} Saturdays"}
-                    other{"-{0} Saturdays"}
-                }
             }
         }
         second{
@@ -1806,18 +1301,6 @@ bs_Cyrl{
         }
         second-narrow{
             dn{"сек"}
-            relativeTime{
-                future{
-                    few{"за {0} секунде"}
-                    one{"за {0} сек."}
-                    other{"за {0} секунди"}
-                }
-                past{
-                    few{"прије {0} сек."}
-                    one{"прије {0} сек."}
-                    other{"прије {0} сек."}
-                }
-            }
         }
         second-short{
             dn{"сек."}
@@ -1840,36 +1323,12 @@ bs_Cyrl{
                 "0"{"ове недјеље"}
                 "1"{"сљедеће недјеље"}
             }
-            relativeTime{
-                future{
-                    few{"+{0} Sundays"}
-                    one{"+{0} Sundays"}
-                    other{"+{0} Sundays"}
-                }
-                past{
-                    few{"-{0} Sundays"}
-                    one{"-{0} Sundays"}
-                    other{"-{0} Sundays"}
-                }
-            }
         }
         sun-narrow{
             relative{
                 "-1"{"пр. недјеље"}
                 "0"{"ове недј."}
                 "1"{"сљ. недјеље"}
-            }
-            relativeTime{
-                future{
-                    few{"+{0} Sundays"}
-                    one{"+{0} Sundays"}
-                    other{"+{0} Sundays"}
-                }
-                past{
-                    few{"-{0} Sundays"}
-                    one{"-{0} Sundays"}
-                    other{"-{0} Sundays"}
-                }
             }
         }
         sun-short{
@@ -1878,36 +1337,12 @@ bs_Cyrl{
                 "0"{"ове недјеље"}
                 "1"{"сљ. недјеље"}
             }
-            relativeTime{
-                future{
-                    few{"+{0} Sundays"}
-                    one{"+{0} Sundays"}
-                    other{"+{0} Sundays"}
-                }
-                past{
-                    few{"-{0} Sundays"}
-                    one{"-{0} Sundays"}
-                    other{"-{0} Sundays"}
-                }
-            }
         }
         thu{
             relative{
                 "-1"{"прошлог четвртка"}
                 "0"{"овог четвртка"}
                 "1"{"сљедећег четвртка"}
-            }
-            relativeTime{
-                future{
-                    few{"+{0} Thursdays"}
-                    one{"+{0} Thursdays"}
-                    other{"+{0} Thursdays"}
-                }
-                past{
-                    few{"-{0} Thursdays"}
-                    one{"-{0} Thursdays"}
-                    other{"-{0} Thursdays"}
-                }
             }
         }
         thu-narrow{
@@ -1916,36 +1351,12 @@ bs_Cyrl{
                 "0"{"овог чет."}
                 "1"{"сљ. чет."}
             }
-            relativeTime{
-                future{
-                    few{"+{0} Thursdays"}
-                    one{"+{0} Thursdays"}
-                    other{"+{0} Thursdays"}
-                }
-                past{
-                    few{"-{0} Thursdays"}
-                    one{"-{0} Thursdays"}
-                    other{"-{0} Thursdays"}
-                }
-            }
         }
         thu-short{
             relative{
                 "-1"{"прошл. чет."}
                 "0"{"овог чет."}
                 "1"{"сљед. чет."}
-            }
-            relativeTime{
-                future{
-                    few{"+{0} Thursdays"}
-                    one{"+{0} Thursdays"}
-                    other{"+{0} Thursdays"}
-                }
-                past{
-                    few{"-{0} Thursdays"}
-                    one{"-{0} Thursdays"}
-                    other{"-{0} Thursdays"}
-                }
             }
         }
         tue{
@@ -1954,36 +1365,12 @@ bs_Cyrl{
                 "0"{"овог уторка"}
                 "1"{"сљедећег уторка"}
             }
-            relativeTime{
-                future{
-                    few{"+{0} Tuesdays"}
-                    one{"+{0} Tuesdays"}
-                    other{"+{0} Tuesdays"}
-                }
-                past{
-                    few{"-{0} Tuesdays"}
-                    one{"-{0} Tuesdays"}
-                    other{"-{0} Tuesdays"}
-                }
-            }
         }
         tue-narrow{
             relative{
                 "-1"{"пр. уторка"}
                 "0"{"овог утор."}
                 "1"{"сљ. уторка"}
-            }
-            relativeTime{
-                future{
-                    few{"+{0} Tuesdays"}
-                    one{"+{0} Tuesdays"}
-                    other{"+{0} Tuesdays"}
-                }
-                past{
-                    few{"-{0} Tuesdays"}
-                    one{"-{0} Tuesdays"}
-                    other{"-{0} Tuesdays"}
-                }
             }
         }
         tue-short{
@@ -1992,36 +1379,12 @@ bs_Cyrl{
                 "0"{"овог утор."}
                 "1"{"сљед. уторка"}
             }
-            relativeTime{
-                future{
-                    few{"+{0} Tuesdays"}
-                    one{"+{0} Tuesdays"}
-                    other{"+{0} Tuesdays"}
-                }
-                past{
-                    few{"-{0} Tuesdays"}
-                    one{"-{0} Tuesdays"}
-                    other{"-{0} Tuesdays"}
-                }
-            }
         }
         wed{
             relative{
                 "-1"{"прошле сриједе"}
                 "0"{"ове сриједе"}
                 "1"{"сљедеће сриједе"}
-            }
-            relativeTime{
-                future{
-                    few{"+{0} Wednesdays"}
-                    one{"+{0} Wednesdays"}
-                    other{"+{0} Wednesdays"}
-                }
-                past{
-                    few{"-{0} Wednesdays"}
-                    one{"-{0} Wednesdays"}
-                    other{"-{0} Wednesdays"}
-                }
             }
         }
         wed-narrow{
@@ -2030,36 +1393,12 @@ bs_Cyrl{
                 "0"{"ове сриј."}
                 "1"{"сљ. сриједе"}
             }
-            relativeTime{
-                future{
-                    few{"+{0} Wednesdays"}
-                    one{"+{0} Wednesdays"}
-                    other{"+{0} Wednesdays"}
-                }
-                past{
-                    few{"-{0} Wednesdays"}
-                    one{"-{0} Wednesdays"}
-                    other{"-{0} Wednesdays"}
-                }
-            }
         }
         wed-short{
             relative{
                 "-1"{"прошл. сриједе"}
                 "0"{"ове сриједе"}
                 "1"{"сљед. сриједе"}
-            }
-            relativeTime{
-                future{
-                    few{"+{0} Wednesdays"}
-                    one{"+{0} Wednesdays"}
-                    other{"+{0} Wednesdays"}
-                }
-                past{
-                    few{"-{0} Wednesdays"}
-                    one{"-{0} Wednesdays"}
-                    other{"-{0} Wednesdays"}
-                }
             }
         }
         week{
@@ -2083,27 +1422,6 @@ bs_Cyrl{
                 }
             }
         }
-        week-narrow{
-            dn{"седм."}
-            relative{
-                "-1"{"прош. седм."}
-                "0"{"ове седм."}
-                "1"{"сљ. седм."}
-            }
-            relativePeriod{"седмица {0}"}
-            relativeTime{
-                future{
-                    few{"за {0} седм."}
-                    one{"за {0} седм."}
-                    other{"за {0} седм."}
-                }
-                past{
-                    few{"прије {0} седм."}
-                    one{"прије {0} седм."}
-                    other{"прије {0} седм."}
-                }
-            }
-        }
         week-short{
             dn{"седм."}
             relative{
@@ -2111,7 +1429,6 @@ bs_Cyrl{
                 "0"{"ове седм."}
                 "1"{"сљ. седм."}
             }
-            relativePeriod{"седмица {0}"}
             relativeTime{
                 future{
                     few{"за {0} седм."}
@@ -2136,9 +1453,6 @@ bs_Cyrl{
         }
         weekday{
             dn{"дан у седмици"}
-        }
-        weekday-narrow{
-            dn{"дан у седм."}
         }
         weekday-short{
             dn{"дан у седм."}
@@ -2174,23 +1488,6 @@ bs_Cyrl{
         }
         year-narrow{
             dn{"год."}
-            relative{
-                "-1"{"прош. године"}
-                "0"{"ове год."}
-                "1"{"сљед. године"}
-            }
-            relativeTime{
-                future{
-                    few{"за {0} године"}
-                    one{"за {0} годину"}
-                    other{"за {0} година"}
-                }
-                past{
-                    few{"прије {0} године"}
-                    one{"прије {0} годину"}
-                    other{"прије {0} година"}
-                }
-            }
         }
         year-short{
             dn{"год"}
@@ -2199,26 +1496,8 @@ bs_Cyrl{
                 "0"{"ове год."}
                 "1"{"сљед. године"}
             }
-            relativeTime{
-                future{
-                    few{"за {0} године"}
-                    one{"за {0} годину"}
-                    other{"за {0} година"}
-                }
-                past{
-                    few{"прије {0} године"}
-                    one{"прије {0} годину"}
-                    other{"прије {0} година"}
-                }
-            }
         }
         zone{
-            dn{"зона"}
-        }
-        zone-narrow{
-            dn{"зона"}
-        }
-        zone-short{
             dn{"зона"}
         }
     }

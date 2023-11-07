@@ -2,39 +2,18 @@
 // License & terms of use: http://www.unicode.org/copyright.html
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 el{
-    AuxExemplarCharacters{
-        "[ἀ ἄ ἂ ἆ ἁ ἅ ἃ ἇ ὰ ᾶ ἐ ἔ ἒ ἑ ἕ ἓ ὲ ἠ ἤ ἢ ἦ ἡ ἥ ἣ ἧ ὴ ῆ ἰ ἴ ἲ ἶ ἱ ἵ ἳ ἷ ὶ ῖ ῒ"
-        " ῗ ὄ ὂ ὃ ὸ ὐ ὔ ὒ ὖ ὑ ὕ ὓ ὗ ὺ ῦ ῢ ῧ ὤ ὢ ὦ ὥ ὣ ὧ ὼ ῶ]"
-    }
-    Ellipsis{
-        final{"{0}…"}
-        initial{"…{0}"}
-        medial{"{0}…{1}"}
-        word-final{"{0} …"}
-        word-initial{"… {0}"}
-        word-medial{"{0} … {1}"}
-    }
-    ExemplarCharacters{"[α ά β γ δ ε έ ζ η ή θ ι ί ϊ ΐ κ λ μ ν ξ ο ό π ρ σ ς τ υ ύ ϋ ΰ φ χ ψ ω ώ]"}
+    AuxExemplarCharacters{"[ἀἄἂἆἁἅἃἇὰᾶ ἐἔἒἑἕἓὲ ἠἤἢἦἡἥἣἧὴῆ ἰἴἲἶἱἵἳἷὶῖῒῗ ὄὂὃὸ ὐὔὒὖὑὕὓὗὺῦῢῧ ὤὢὦὥὣὧὼῶ]"}
+    ExemplarCharacters{"[αά β γ δ εέ ζ ηή θ ιίϊΐ κ λ μ ν ξ οό π ρ σς τ υύϋΰ φ χ ψ ωώ]"}
     ExemplarCharactersIndex{"[Α Β Γ Δ Ε Ζ Η Θ Ι Κ Λ Μ Ν Ξ Ο Π Ρ Σ Τ Υ Φ Χ Ψ Ω]"}
-    ExemplarCharactersNumbers{"[\\- ‑ , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
-    ExemplarCharactersPunctuation{"[\\- ‐ ‑ – — , ; \\: ! . … \u0022 « » ( ) \\[ \\] § @ * / \\\\ \\&]"}
+    ExemplarCharactersPunctuation{"[\\- ‐‑ – — , ; \\: ! . … \u0022 « » ( ) \\[ \\] § @ * / \\\\ \\&]"}
     MoreInformation{";"}
     NumberElements{
-        default{"latn"}
         latn{
             miscPatterns{
-                approximately{"~{0}"}
                 atLeast{"{0}+"}
-                atMost{"≤{0}"}
-                range{"{0}–{1}"}
             }
             patterns{
-                accountingFormat{"#,##0.00 ¤"}
-                accountingFormat%noCurrency{"#,##0.00"}
                 currencyFormat{"#,##0.00 ¤"}
-                decimalFormat{"#,##0.###"}
-                percentFormat{"#,##0%"}
-                scientificFormat{"#E0"}
             }
             patternsLong{
                 decimalFormat{
@@ -194,15 +173,6 @@ el{
                 decimal{","}
                 exponential{"e"}
                 group{"."}
-                infinity{"∞"}
-                list{";"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         minimalPairs{
@@ -224,204 +194,19 @@ el{
                 other{"{0} ημέρες"}
             }
         }
-        minimumGroupingDigits{"1"}
-        native{"latn"}
         traditional{"grek"}
     }
     calendar{
         buddhist{
-            DateTimePatterns{
-                "h:mm:ss a zzzz",
-                "h:mm:ss a z",
-                "h:mm:ss a",
-                "h:mm a",
-                "EEEE, d MMMM y G",
-                "d MMMM y G",
-                "d MMM y G",
-                "d/M/y GGGGG",
-                "{1}, {0}",
-                "{1} - {0}",
-                "{1} - {0}",
-                "{1}, {0}",
-                "{1}, {0}",
-            }
-            DateTimeSkeletons{
-                "ahmmsszzzz",
-                "ahmmssz",
-                "ahmmss",
-                "ahmm",
-                "GyMMMMEEEEd",
-                "GyMMMMd",
-                "GyMMMd",
-                "GGGGGyMd",
-            }
-            availableFormats{
-                E{"ccc"}
-                Ed{"E d"}
-                Gy{"y G"}
-                GyMMM{"MMM y G"}
-                GyMMMEd{"E, d MMM y G"}
-                GyMMMd{"d MMM y G"}
-                M{"L"}
-                MEd{"E, d/M"}
-                MMM{"LLL"}
-                MMMEd{"E, d MMM"}
-                MMMMEd{"E, d MMMM"}
-                MMMMd{"d MMMM"}
-                MMMd{"d MMM"}
-                Md{"d/M"}
-                d{"d"}
-                y{"y G"}
-                yyyy{"y G"}
-                yyyyM{"M/y GGGGG"}
-                yyyyMEd{"E, d/M/y GGGGG"}
-                yyyyMMM{"MMM y G"}
-                yyyyMMMEd{"E, d MMM y G"}
-                yyyyMMMM{"MMMM y G"}
-                yyyyMMMd{"d MMM y G"}
-                yyyyMd{"d/M/y GGGGG"}
-                yyyyQQQ{"G y QQQ"}
-                yyyyQQQQ{"G y QQQQ"}
-            }
             eras{
-                abbreviated{
-                    "BE",
-                }
-                narrow{
-                    "BE",
-                }
                 wide{
                     "Β.Ε.",
                 }
             }
-            intervalFormats{
-                H{
-                    H{"HH–HH"}
-                }
-                Hm{
-                    H{"HH:mm–HH:mm"}
-                    m{"HH:mm–HH:mm"}
-                }
-                Hmv{
-                    H{"HH:mm–HH:mm v"}
-                    m{"HH:mm–HH:mm v"}
-                }
-                Hv{
-                    H{"HH–HH v"}
-                }
-                M{
-                    M{"M–M"}
-                }
-                MEd{
-                    M{"E, dd/MM – E, dd/MM"}
-                    d{"E, dd/MM – E, dd/MM"}
-                }
-                MMM{
-                    M{"MMM–MMM"}
-                }
-                MMMEd{
-                    M{"E, dd MMM – E, dd MMM"}
-                    d{"E, dd – E, dd MMM"}
-                }
-                MMMd{
-                    M{"dd MMM – dd MMM"}
-                    d{"dd–dd MMM"}
-                }
-                Md{
-                    M{"dd/MM – dd/MM"}
-                    d{"dd/MM – dd/MM"}
-                }
-                d{
-                    d{"d–d"}
-                }
-                fallback{"{0} - {1}"}
-                h{
-                    a{"h a – h a"}
-                    h{"h–h a"}
-                }
-                hm{
-                    a{"h:mm a – h:mm a"}
-                    h{"h:mm–h:mm a"}
-                    m{"h:mm–h:mm a"}
-                }
-                hmv{
-                    a{"h:mm a – h:mm a v"}
-                    h{"h:mm–h:mm a v"}
-                    m{"h:mm–h:mm a v"}
-                }
-                hv{
-                    a{"h a – h a v"}
-                    h{"h–h a v"}
-                }
-                y{
-                    y{"y–y G"}
-                }
-                yM{
-                    M{"MM/y – MM/y GGGGG"}
-                    y{"MM/y – MM/y GGGGG"}
-                }
-                yMEd{
-                    M{"E, dd/MM/y – E, dd/MM/y GGGGG"}
-                    d{"E, dd/MM/y – E, dd/MM/y GGGGG"}
-                    y{"E, dd/MM/y – E, dd/MM/y GGGGG"}
-                }
-                yMMM{
-                    M{"MMM–MMM y G"}
-                    y{"MMM y – MMM y G"}
-                }
-                yMMMEd{
-                    M{"E, dd MMM – E, dd MMM y G"}
-                    d{"E, dd – E, dd MMM y G"}
-                    y{"E, dd MMM y – E, dd MMM y G"}
-                }
-                yMMMM{
-                    M{"MMMM–MMMM y G"}
-                    y{"MMMM y – MMMM y G"}
-                }
-                yMMMd{
-                    M{"dd MMM – dd MMM y G"}
-                    d{"dd–dd MMM y G"}
-                    y{"dd MMM y – dd MMM y G"}
-                }
-                yMd{
-                    M{"dd/MM/y – dd/MM/y GGGGG"}
-                    d{"dd/MM/y – dd/MM/y GGGGG"}
-                    y{"dd/MM/y – dd/MM/y GGGGG"}
-                }
-            }
         }
         coptic{
-            eras{
-                abbreviated{
-                    "ERA0",
-                    "ERA1",
-                }
-                narrow{
-                    "ERA0",
-                    "ERA1",
-                }
-                wide{
-                    "ERA0",
-                    "ERA1",
-                }
-            }
             monthNames{
                 format{
-                    abbreviated{
-                        "Τουτ",
-                        "Μπάπα",
-                        "Χατούρ",
-                        "Κεγιάχκ",
-                        "Τούμπα",
-                        "Αμσίρ",
-                        "Μπαραμχάτ",
-                        "Μπαρμούντα",
-                        "Μπασάνς",
-                        "Μπαούνα",
-                        "Αμπίπ",
-                        "Μέσρα",
-                        "Νεσγ",
-                    }
                     wide{
                         "Τουτ",
                         "Μπάπα",
@@ -436,120 +221,6 @@ el{
                         "Αμπίπ",
                         "Μέσρα",
                         "Νεσγ",
-                    }
-                }
-                stand-alone{
-                    abbreviated{
-                        "Τουτ",
-                        "Μπάπα",
-                        "Χατούρ",
-                        "Κεγιάχκ",
-                        "Τούμπα",
-                        "Αμσίρ",
-                        "Μπαραμχάτ",
-                        "Μπαρμούντα",
-                        "Μπασάνς",
-                        "Μπαούνα",
-                        "Αμπίπ",
-                        "Μέσρα",
-                        "Νεσγ",
-                    }
-                    wide{
-                        "Τουτ",
-                        "Μπάπα",
-                        "Χατούρ",
-                        "Κεγιάχκ",
-                        "Τούμπα",
-                        "Αμσίρ",
-                        "Μπαραμχάτ",
-                        "Μπαρμούντα",
-                        "Μπασάνς",
-                        "Μπαούνα",
-                        "Αμπίπ",
-                        "Μέσρα",
-                        "Νεσγ",
-                    }
-                }
-            }
-        }
-        ethiopic{
-            eras{
-                abbreviated{
-                    "ERA0",
-                    "ERA1",
-                }
-                narrow{
-                    "ERA0",
-                    "ERA1",
-                }
-                wide{
-                    "ERA0",
-                    "ERA1",
-                }
-            }
-            monthNames{
-                format{
-                    abbreviated{
-                        "Meskerem",
-                        "Tekemt",
-                        "Hedar",
-                        "Tahsas",
-                        "Ter",
-                        "Yekatit",
-                        "Megabit",
-                        "Miazia",
-                        "Genbot",
-                        "Sene",
-                        "Hamle",
-                        "Nehasse",
-                        "Pagumen",
-                    }
-                    wide{
-                        "Meskerem",
-                        "Tekemt",
-                        "Hedar",
-                        "Tahsas",
-                        "Ter",
-                        "Yekatit",
-                        "Megabit",
-                        "Miazia",
-                        "Genbot",
-                        "Sene",
-                        "Hamle",
-                        "Nehasse",
-                        "Pagumen",
-                    }
-                }
-                stand-alone{
-                    abbreviated{
-                        "Meskerem",
-                        "Tekemt",
-                        "Hedar",
-                        "Tahsas",
-                        "Ter",
-                        "Yekatit",
-                        "Megabit",
-                        "Miazia",
-                        "Genbot",
-                        "Sene",
-                        "Hamle",
-                        "Nehasse",
-                        "Pagumen",
-                    }
-                    wide{
-                        "Meskerem",
-                        "Tekemt",
-                        "Hedar",
-                        "Tahsas",
-                        "Ter",
-                        "Yekatit",
-                        "Megabit",
-                        "Miazia",
-                        "Genbot",
-                        "Sene",
-                        "Hamle",
-                        "Nehasse",
-                        "Pagumen",
                     }
                 }
             }
@@ -587,14 +258,6 @@ el{
                 "GGGGGyMd",
             }
             availableFormats{
-                Bh{"h B"}
-                Bhm{"h:mm B"}
-                Bhms{"h:mm:ss B"}
-                E{"ccc"}
-                EBhm{"E h:mm B"}
-                EBhms{"E h:mm:ss B"}
-                EHm{"E HH:mm"}
-                EHms{"E HH:mm:ss"}
                 Ed{"E d"}
                 Ehm{"E h:mm a"}
                 Ehms{"E h:mm:ss a"}
@@ -603,22 +266,15 @@ el{
                 GyMMMEd{"E, d MMM y G"}
                 GyMMMd{"d MMM y G"}
                 GyMd{"d/M/y GGGGG"}
-                H{"HH"}
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
-                M{"L"}
                 MEd{"E, d/M"}
-                MMM{"LLL"}
                 MMMEd{"E, d MMM"}
                 MMMMEd{"E, d MMMM"}
                 MMMMd{"d MMMM"}
                 MMMd{"d MMM"}
                 Md{"d/M"}
-                d{"d"}
                 h{"h a"}
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
-                ms{"mm:ss"}
                 y{"y G"}
                 yyyy{"y G"}
                 yyyyM{"M/y GGGGG"}
@@ -628,16 +284,12 @@ el{
                 yyyyMMMM{"MMMM y G"}
                 yyyyMMMd{"d MMM y G"}
                 yyyyMd{"d/M/y GGGGG"}
-                yyyyQQQ{"G y QQQ"}
-                yyyyQQQQ{"G y QQQQ"}
             }
             intervalFormats{
                 Bh{
-                    B{"h B – h B"}
                     h{"h – h B"}
                 }
                 Bhm{
-                    B{"h:mm B – h:mm B"}
                     h{"h:mm – h:mm B"}
                     m{"h:mm – h:mm B"}
                 }
@@ -679,20 +331,6 @@ el{
                     d{"dd-MM-y – dd-MM-y GGGGG"}
                     y{"dd-MM-y – dd-MM-y GGGGG"}
                 }
-                H{
-                    H{"HH–HH"}
-                }
-                Hm{
-                    H{"HH:mm–HH:mm"}
-                    m{"HH:mm–HH:mm"}
-                }
-                Hmv{
-                    H{"HH:mm–HH:mm v"}
-                    m{"HH:mm–HH:mm v"}
-                }
-                Hv{
-                    H{"HH–HH v"}
-                }
                 M{
                     M{"M–M"}
                 }
@@ -714,9 +352,6 @@ el{
                 Md{
                     M{"dd/MM – dd/MM"}
                     d{"dd/MM – dd/MM"}
-                }
-                d{
-                    d{"d–d"}
                 }
                 fallback{"{0} - {1}"}
                 h{
@@ -775,10 +410,6 @@ el{
             }
         }
         gregorian{
-            AmPmMarkers{
-                "π.μ.",
-                "μ.μ.",
-            }
             AmPmMarkersAbbr{
                 "π.μ.",
                 "μ.μ.",
@@ -818,18 +449,7 @@ el{
                 "yMMMd",
                 "yyMd",
             }
-            appendItems{
-                Timezone{"{0} {1}"}
-            }
             availableFormats{
-                Bh{"h B"}
-                Bhm{"h:mm B"}
-                Bhms{"h:mm:ss B"}
-                E{"ccc"}
-                EBhm{"E h:mm B"}
-                EBhms{"E h:mm:ss B"}
-                EHm{"E HH:mm"}
-                EHms{"E HH:mm:ss"}
                 Ed{"E d"}
                 Ehm{"E h:mm a"}
                 Ehms{"E h:mm:ss a"}
@@ -838,12 +458,6 @@ el{
                 GyMMMEd{"E d MMM y G"}
                 GyMMMd{"d MMM y G"}
                 GyMd{"d/M/y GGGGG"}
-                H{"HH"}
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
-                Hmsv{"HH:mm:ss v"}
-                Hmv{"HH:mm v"}
-                M{"L"}
                 MEd{"E d/M"}
                 MMM{"MMM"}
                 MMMEd{"E d MMM"}
@@ -855,14 +469,11 @@ el{
                 MMMMd{"d MMMM"}
                 MMMd{"d MMM"}
                 Md{"d/M"}
-                d{"d"}
                 h{"h a"}
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
                 hmsv{"h:mm:ss a v"}
                 hmv{"h:mm a v"}
-                ms{"mm:ss"}
-                y{"y"}
                 yM{"M/y"}
                 yMEd{"E d/M/y"}
                 yMMM{"MMM y"}
@@ -888,15 +499,6 @@ el{
                         "Παρ",
                         "Σάβ",
                     }
-                    narrow{
-                        "Κ",
-                        "Δ",
-                        "Τ",
-                        "Τ",
-                        "Π",
-                        "Π",
-                        "Σ",
-                    }
                     short{
                         "Κυ",
                         "Δε",
@@ -917,15 +519,6 @@ el{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "Κυρ",
-                        "Δευ",
-                        "Τρί",
-                        "Τετ",
-                        "Πέμ",
-                        "Παρ",
-                        "Σάβ",
-                    }
                     narrow{
                         "Κ",
                         "Δ",
@@ -935,35 +528,11 @@ el{
                         "Π",
                         "Σ",
                     }
-                    short{
-                        "Κυ",
-                        "Δε",
-                        "Τρ",
-                        "Τε",
-                        "Πέ",
-                        "Πα",
-                        "Σά",
-                    }
-                    wide{
-                        "Κυριακή",
-                        "Δευτέρα",
-                        "Τρίτη",
-                        "Τετάρτη",
-                        "Πέμπτη",
-                        "Παρασκευή",
-                        "Σάββατο",
-                    }
                 }
             }
             dayPeriod{
                 format{
                     abbreviated{
-                        afternoon1{"μεσημ."}
-                        evening1{"απόγ."}
-                        morning1{"πρωί"}
-                        night1{"βράδυ"}
-                    }
-                    narrow{
                         afternoon1{"μεσημ."}
                         evening1{"απόγ."}
                         morning1{"πρωί"}
@@ -977,29 +546,15 @@ el{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        afternoon1{"μεσημ."}
-                        am{"π.μ."}
-                        evening1{"απόγ."}
-                        morning1{"πρωί"}
-                        night1{"βράδυ"}
-                        pm{"μ.μ."}
-                    }
                     narrow{
-                        afternoon1{"μεσημ."}
                         am{"πμ"}
-                        evening1{"απόγ."}
-                        morning1{"πρωί"}
-                        night1{"βράδυ"}
                         pm{"μμ"}
                     }
                     wide{
                         afternoon1{"μεσημέρι"}
-                        am{"π.μ."}
                         evening1{"απόγευμα"}
                         morning1{"πρωί"}
                         night1{"βράδυ"}
-                        pm{"μ.μ."}
                     }
                 }
             }
@@ -1023,11 +578,9 @@ el{
             }
             intervalFormats{
                 Bh{
-                    B{"h B – h B"}
                     h{"h – h B"}
                 }
                 Bhm{
-                    B{"h:mm B – h:mm B"}
                     h{"h:mm – h:mm B"}
                     m{"h:mm – h:mm B"}
                 }
@@ -1069,20 +622,6 @@ el{
                     d{"d/M/y – d/M/y GGGGG"}
                     y{"d/M/y – d/M/y GGGGG"}
                 }
-                H{
-                    H{"HH–HH"}
-                }
-                Hm{
-                    H{"HH:mm–HH:mm"}
-                    m{"HH:mm–HH:mm"}
-                }
-                Hmv{
-                    H{"HH:mm–HH:mm v"}
-                    m{"HH:mm–HH:mm v"}
-                }
-                Hv{
-                    H{"HH–HH v"}
-                }
                 M{
                     M{"M–M"}
                 }
@@ -1105,9 +644,6 @@ el{
                     M{"d/M – d/M"}
                     d{"d/M – d/M"}
                 }
-                d{
-                    d{"d–d"}
-                }
                 fallback{"{0} - {1}"}
                 h{
                     a{"h a – h a"}
@@ -1126,9 +662,6 @@ el{
                 hv{
                     a{"h a – h a v"}
                     h{"h–h a v"}
-                }
-                y{
-                    y{"y–y"}
                 }
                 yM{
                     M{"M/y – M/y"}
@@ -1178,20 +711,6 @@ el{
                         "Οκτ",
                         "Νοε",
                         "Δεκ",
-                    }
-                    narrow{
-                        "Ι",
-                        "Φ",
-                        "Μ",
-                        "Α",
-                        "Μ",
-                        "Ι",
-                        "Ι",
-                        "Α",
-                        "Σ",
-                        "Ο",
-                        "Ν",
-                        "Δ",
                     }
                     wide{
                         "Ιανουαρίου",
@@ -1261,32 +780,6 @@ el{
                         "Τ3",
                         "Τ4",
                     }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                    }
-                    wide{
-                        "1ο τρίμηνο",
-                        "2ο τρίμηνο",
-                        "3ο τρίμηνο",
-                        "4ο τρίμηνο",
-                    }
-                }
-                stand-alone{
-                    abbreviated{
-                        "Τ1",
-                        "Τ2",
-                        "Τ3",
-                        "Τ4",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                    }
                     wide{
                         "1ο τρίμηνο",
                         "2ο τρίμηνο",
@@ -1297,69 +790,8 @@ el{
             }
         }
         hebrew{
-            eras{
-                abbreviated{
-                    "AM",
-                }
-                narrow{
-                    "AM",
-                }
-                wide{
-                    "AM",
-                }
-            }
             monthNames{
                 format{
-                    abbreviated{
-                        "Τισρί",
-                        "Χεσβάν",
-                        "Κισλέφ",
-                        "Τέβετ",
-                        "Σεβάτ",
-                        "Αντάρ I",
-                        "Αντάρ",
-                        "Νισάν",
-                        "Ιγιάρ",
-                        "Σιβάν",
-                        "Ταμούζ",
-                        "Αβ",
-                        "Έλουλ",
-                        "Αντάρ II",
-                    }
-                    wide{
-                        "Τισρί",
-                        "Χεσβάν",
-                        "Κισλέφ",
-                        "Τέβετ",
-                        "Σεβάτ",
-                        "Αντάρ I",
-                        "Αντάρ",
-                        "Νισάν",
-                        "Ιγιάρ",
-                        "Σιβάν",
-                        "Ταμούζ",
-                        "Αβ",
-                        "Έλουλ",
-                        "Αντάρ II",
-                    }
-                }
-                stand-alone{
-                    abbreviated{
-                        "Τισρί",
-                        "Χεσβάν",
-                        "Κισλέφ",
-                        "Τέβετ",
-                        "Σεβάτ",
-                        "Αντάρ I",
-                        "Αντάρ",
-                        "Νισάν",
-                        "Ιγιάρ",
-                        "Σιβάν",
-                        "Ταμούζ",
-                        "Αβ",
-                        "Έλουλ",
-                        "Αντάρ II",
-                    }
                     wide{
                         "Τισρί",
                         "Χεσβάν",
@@ -1384,148 +816,12 @@ el{
                 abbreviated{
                     "Σάκα",
                 }
-                narrow{
-                    "Σάκα",
-                }
-                wide{
-                    "Σάκα",
-                }
-            }
-            monthNames{
-                format{
-                    abbreviated{
-                        "Chaitra",
-                        "Vaisakha",
-                        "Jyaistha",
-                        "Asadha",
-                        "Sravana",
-                        "Bhadra",
-                        "Asvina",
-                        "Kartika",
-                        "Agrahayana",
-                        "Pausa",
-                        "Magha",
-                        "Phalguna",
-                    }
-                    wide{
-                        "Chaitra",
-                        "Vaisakha",
-                        "Jyaistha",
-                        "Asadha",
-                        "Sravana",
-                        "Bhadra",
-                        "Asvina",
-                        "Kartika",
-                        "Agrahayana",
-                        "Pausa",
-                        "Magha",
-                        "Phalguna",
-                    }
-                }
-                stand-alone{
-                    abbreviated{
-                        "Chaitra",
-                        "Vaisakha",
-                        "Jyaistha",
-                        "Asadha",
-                        "Sravana",
-                        "Bhadra",
-                        "Asvina",
-                        "Kartika",
-                        "Agrahayana",
-                        "Pausa",
-                        "Magha",
-                        "Phalguna",
-                    }
-                    wide{
-                        "Chaitra",
-                        "Vaisakha",
-                        "Jyaistha",
-                        "Asadha",
-                        "Sravana",
-                        "Bhadra",
-                        "Asvina",
-                        "Kartika",
-                        "Agrahayana",
-                        "Pausa",
-                        "Magha",
-                        "Phalguna",
-                    }
-                }
             }
         }
         islamic{
             eras{
                 abbreviated{
                     "Ε.Ε.",
-                }
-                narrow{
-                    "Ε.Ε.",
-                }
-                wide{
-                    "Ε.Ε.",
-                }
-            }
-            monthNames{
-                format{
-                    abbreviated{
-                        "Muh.",
-                        "Saf.",
-                        "Rab. I",
-                        "Rab. II",
-                        "Jum. I",
-                        "Jum. II",
-                        "Raj.",
-                        "Sha.",
-                        "Ram.",
-                        "Shaw.",
-                        "Dhuʻl-Q.",
-                        "Dhuʻl-H.",
-                    }
-                    wide{
-                        "Muharram",
-                        "Safar",
-                        "Rabiʻ I",
-                        "Rabiʻ II",
-                        "Jumada I",
-                        "Jumada II",
-                        "Rajab",
-                        "Shaʻban",
-                        "Ramadan",
-                        "Shawwal",
-                        "Dhuʻl-Qiʻdah",
-                        "Dhuʻl-Hijjah",
-                    }
-                }
-                stand-alone{
-                    abbreviated{
-                        "Muh.",
-                        "Saf.",
-                        "Rab. I",
-                        "Rab. II",
-                        "Jum. I",
-                        "Jum. II",
-                        "Raj.",
-                        "Sha.",
-                        "Ram.",
-                        "Shaw.",
-                        "Dhuʻl-Q.",
-                        "Dhuʻl-H.",
-                    }
-                    wide{
-                        "Muharram",
-                        "Safar",
-                        "Rabiʻ I",
-                        "Rabiʻ II",
-                        "Jumada I",
-                        "Jumada II",
-                        "Rajab",
-                        "Shaʻban",
-                        "Ramadan",
-                        "Shawwal",
-                        "Dhuʻl-Qiʻdah",
-                        "Dhuʻl-Hijjah",
-                    }
                 }
             }
         }
@@ -1556,14 +852,6 @@ el{
                 "yyMd",
             }
             availableFormats{
-                Ed{"E d"}
-                Gy{"y G"}
-                MEd{"E, d/M"}
-                MMM{"LLL"}
-                MMMEd{"E, d MMM"}
-                MMMd{"d MMM"}
-                Md{"d/M"}
-                y{"y G"}
                 yM{"MM/y GGGGG"}
                 yMEd{"E, dd/MM/y GGGGG"}
                 yMMM{"LLL y GGGGG"}
@@ -1814,92 +1102,9 @@ el{
                 }
             }
         }
-        persian{
-            eras{
-                abbreviated{
-                    "AP",
-                }
-                narrow{
-                    "AP",
-                }
-                wide{
-                    "AP",
-                }
-            }
-            monthNames{
-                format{
-                    abbreviated{
-                        "Farvardin",
-                        "Ordibehesht",
-                        "Khordad",
-                        "Tir",
-                        "Mordad",
-                        "Shahrivar",
-                        "Mehr",
-                        "Aban",
-                        "Azar",
-                        "Dey",
-                        "Bahman",
-                        "Esfand",
-                    }
-                    wide{
-                        "Farvardin",
-                        "Ordibehesht",
-                        "Khordad",
-                        "Tir",
-                        "Mordad",
-                        "Shahrivar",
-                        "Mehr",
-                        "Aban",
-                        "Azar",
-                        "Dey",
-                        "Bahman",
-                        "Esfand",
-                    }
-                }
-                stand-alone{
-                    abbreviated{
-                        "Farvardin",
-                        "Ordibehesht",
-                        "Khordad",
-                        "Tir",
-                        "Mordad",
-                        "Shahrivar",
-                        "Mehr",
-                        "Aban",
-                        "Azar",
-                        "Dey",
-                        "Bahman",
-                        "Esfand",
-                    }
-                    wide{
-                        "Farvardin",
-                        "Ordibehesht",
-                        "Khordad",
-                        "Tir",
-                        "Mordad",
-                        "Shahrivar",
-                        "Mehr",
-                        "Aban",
-                        "Azar",
-                        "Dey",
-                        "Bahman",
-                        "Esfand",
-                    }
-                }
-            }
-        }
         roc{
             eras{
                 abbreviated{
-                    "προ R.O.C.",
-                    "R.O.C.",
-                }
-                narrow{
-                    "προ R.O.C.",
-                    "R.O.C.",
-                }
-                wide{
                     "προ R.O.C.",
                     "R.O.C.",
                 }
@@ -1927,7 +1132,6 @@ el{
         downwards_arrows{"βέλος κάτω"}
         downwards_upwards_arrows{"βέλος κάτω-πάνω"}
         east_asian_scripts{"γραφή Ανατολικής Ασίας"}
-        emoji{"emoji"}
         european_scripts{"ευρωπαϊκή γραφή"}
         female{"γυναίκα"}
         flag{"σημαία"}
@@ -2028,17 +1232,7 @@ el{
             }
         }
         day-narrow{
-            dn{"ημ."}
-            relative{
-                "-1"{"χθες"}
-                "0"{"σήμερα"}
-                "1"{"αύριο"}
-            }
             relativeTime{
-                future{
-                    one{"σε {0} ημ."}
-                    other{"σε {0} ημ."}
-                }
                 past{
                     one{"{0} ημ. πριν"}
                     other{"{0} ημ. πριν"}
@@ -2047,11 +1241,6 @@ el{
         }
         day-short{
             dn{"ημ."}
-            relative{
-                "-1"{"χθες"}
-                "0"{"σήμερα"}
-                "1"{"αύριο"}
-            }
             relativeTime{
                 future{
                     one{"σε {0} ημ."}
@@ -2066,26 +1255,17 @@ el{
         dayOfYear{
             dn{"ημέρα έτους"}
         }
-        dayOfYear-narrow{
-            dn{"ημ. έτους"}
-        }
         dayOfYear-short{
             dn{"ημ. έτους"}
         }
         dayperiod{
             dn{"π.μ./μ.μ."}
         }
-        dayperiod-narrow{
-            dn{"πμ/μμ"}
-        }
         dayperiod-short{
             dn{"πμ/μμ"}
         }
         era{
             dn{"περίοδος"}
-        }
-        era-narrow{
-            dn{"περ."}
         }
         era-short{
             dn{"περ."}
@@ -2158,12 +1338,7 @@ el{
             }
         }
         hour-narrow{
-            dn{"ώ."}
             relativeTime{
-                future{
-                    one{"σε {0} ώ."}
-                    other{"σε {0} ώ."}
-                }
                 past{
                     one{"{0} ώ. πριν"}
                     other{"{0} ώ. πριν"}
@@ -2295,7 +1470,6 @@ el{
             }
         }
         month-narrow{
-            dn{"μήν."}
             relative{
                 "-1"{"προηγ. μήνας"}
                 "0"{"τρέχ. μήνας"}
@@ -2319,16 +1493,6 @@ el{
                 "0"{"τρέχων μήνας"}
                 "1"{"επόμ. μήνας"}
             }
-            relativeTime{
-                future{
-                    one{"σε {0} μήνα"}
-                    other{"σε {0} μήνες"}
-                }
-                past{
-                    one{"πριν από {0} μήνα"}
-                    other{"πριν από {0} μήνες"}
-                }
-            }
         }
         quarter{
             dn{"τρίμηνο"}
@@ -2349,17 +1513,7 @@ el{
             }
         }
         quarter-narrow{
-            dn{"τρίμ."}
-            relative{
-                "-1"{"προηγ. τρίμ."}
-                "0"{"τρέχον τρίμ."}
-                "1"{"επόμ. τρίμ."}
-            }
             relativeTime{
-                future{
-                    one{"σε {0} τρίμ."}
-                    other{"σε {0} τρίμ."}
-                }
                 past{
                     one{"{0} τρίμ. πριν"}
                     other{"{0} τρίμ. πριν"}
@@ -2701,18 +1855,12 @@ el{
             }
         }
         week-narrow{
-            dn{"εβδ."}
             relative{
                 "-1"{"προηγ. εβδ."}
                 "0"{"τρέχ. εβδ."}
                 "1"{"επόμ. εβδ."}
             }
-            relativePeriod{"την εβδ. {0}"}
             relativeTime{
-                future{
-                    one{"σε {0} εβδ."}
-                    other{"σε {0} εβδ."}
-                }
                 past{
                     one{"{0} εβδ. πριν"}
                     other{"{0} εβδ. πριν"}
@@ -2741,26 +1889,17 @@ el{
         weekOfMonth{
             dn{"εβδομάδα μήνα"}
         }
-        weekOfMonth-narrow{
-            dn{"εβδ. μήνα"}
-        }
         weekOfMonth-short{
             dn{"εβδ. μήνα"}
         }
         weekday{
             dn{"καθημερινή"}
         }
-        weekday-narrow{
-            dn{"καθημερ."}
-        }
         weekday-short{
             dn{"καθημερ."}
         }
         weekdayOfMonth{
             dn{"καθημερινή μήνα"}
-        }
-        weekdayOfMonth-narrow{
-            dn{"καθημερ. μήνα"}
         }
         weekdayOfMonth-short{
             dn{"καθημερ. μήνα"}
@@ -2784,17 +1923,7 @@ el{
             }
         }
         year-narrow{
-            dn{"έτ."}
-            relative{
-                "-1"{"πέρσι"}
-                "0"{"φέτος"}
-                "1"{"επόμενο έτος"}
-            }
             relativeTime{
-                future{
-                    one{"σε {0} έτος"}
-                    other{"σε {0} έτη"}
-                }
                 past{
                     one{"{0} έτος πριν"}
                     other{"{0} έτη πριν"}
@@ -2803,27 +1932,9 @@ el{
         }
         year-short{
             dn{"έτ."}
-            relative{
-                "-1"{"πέρσι"}
-                "0"{"φέτος"}
-                "1"{"επόμενο έτος"}
-            }
-            relativeTime{
-                future{
-                    one{"σε {0} έτος"}
-                    other{"σε {0} έτη"}
-                }
-                past{
-                    one{"πριν από {0} έτος"}
-                    other{"πριν από {0} έτη"}
-                }
-            }
         }
         zone{
             dn{"ζώνη ώρας"}
-        }
-        zone-narrow{
-            dn{"ζώνη"}
         }
         zone-short{
             dn{"ζώνη"}
@@ -2833,44 +1944,14 @@ el{
         or{
             2{"{0} ή {1}"}
             end{"{0} ή {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        or-narrow{
-            2{"{0} ή {1}"}
-            end{"{0} ή {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        or-short{
-            2{"{0} ή {1}"}
-            end{"{0} ή {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
         standard{
             2{"{0} και {1}"}
             end{"{0} και {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
         standard-narrow{
             2{"{0}, {1}"}
             end{"{0}, {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        standard-short{
-            2{"{0} και {1}"}
-            end{"{0} και {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        unit{
-            2{"{0}, {1}"}
-            end{"{0}, {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
         unit-narrow{
             2{"{0} {1}"}
@@ -2881,8 +1962,6 @@ el{
         unit-short{
             2{"{0}, {1}"}
             end{"{0}, {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
     }
     measurementSystemNames{
@@ -2893,32 +1972,32 @@ el{
     parse{
         date{
             lenient{
-                "[\\--/]",
-                "[\\:∶]",
+                "[\\- ‑ . /]",
+                "[\\: ∶]",
             }
         }
         general{
             lenient{
-                "[.․。︒﹒．｡]",
-                "['ʼ՚᾽᾿’＇]",
-                "[%٪﹪％]",
-                "[؉‰]",
-                "[\$﹩＄$]",
-                "[£₤]",
+                "[.．․﹒ 。｡︒]",
+                "['＇’ ՚ ᾽᾿ ʼ]",
+                "[%％﹪ ٪]",
+                "[‰ ؉]",
+                "[\$＄﹩]",
+                "[£ ₤]",
                 "[¥￥]",
                 "[₩￦]",
-                "[₨₹{Rp}{Rs}]",
+                "[₹ ₨ {Rp} {Rs}]",
             }
         }
         number{
             lenient{
-                "[\\-‒⁻₋−➖﹣－]",
-                "[,،٫、︐︑﹐﹑，､]",
-                "[+⁺₊➕﬩﹢＋]",
+                "[\\-－﹣ ‑ ‒ −⁻₋ ➖]",
+                "[,，﹐︐ ، ٫ 、﹑､︑]",
+                "[+＋﬩﹢⁺₊ ➕]",
             }
             stricter{
-                "[,٫︐﹐，]",
-                "[.․﹒．｡]",
+                "[,，﹐︐ ٫]",
+                "[.．․﹒ ｡]",
             }
         }
     }
@@ -2932,71 +2011,22 @@ el{
         namePattern{
             givenFirst-long-addressing-formal{"{title} {surname}"}
             givenFirst-long-addressing-informal{"{given-informal}"}
-            givenFirst-long-monogram-informal{
-                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
-                "llCaps}"
-            }
             givenFirst-long-referring-informal{"{given-informal} {surname}"}
-            givenFirst-medium-addressing-formal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
-            givenFirst-medium-addressing-informal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
-            givenFirst-medium-monogram-formal{
-                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
-                "llCaps}"
-            }
-            givenFirst-medium-monogram-informal{
-                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
-                "llCaps}"
-            }
-            givenFirst-medium-referring-formal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
-            givenFirst-medium-referring-informal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
-            givenFirst-short-addressing-formal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
             givenFirst-short-addressing-informal{"{given}"}
-            givenFirst-short-monogram-formal{
-                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
-                "llCaps}"
-            }
-            givenFirst-short-monogram-informal{
-                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
-                "llCaps}"
-            }
-            givenFirst-short-referring-formal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
-            givenFirst-short-referring-informal{"{title} {given} {given2} {surname} {surname2} {credentials}"}
             sorting-long-referring-formal{"{surname-core}, {surname-prefix} {given} {given2}"}
             sorting-long-referring-informal{"{surname}, {given-informal}"}
-            sorting-medium-referring-formal{"{surname-core}, {surname-prefix} {given} {given2}"}
             sorting-medium-referring-informal{"{surname}, {given-informal}"}
-            sorting-short-referring-formal{"{surname-core}, {surname-prefix} {given} {given2}"}
             sorting-short-referring-informal{"{surname}, {given-informal}"}
             surnameFirst-long-addressing-formal{"{title} {surname}"}
             surnameFirst-long-addressing-informal{"{given-informal}"}
-            surnameFirst-long-monogram-informal{
-                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
-                "llCaps}"
-            }
             surnameFirst-long-referring-formal{"{surname} {given} {given2} {credentials}"}
             surnameFirst-long-referring-informal{"{surname} {given-informal}"}
             surnameFirst-medium-addressing-formal{"{title} {surname}"}
             surnameFirst-medium-addressing-informal{"{given-informal}"}
-            surnameFirst-medium-monogram-formal{
-                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
-                "llCaps}"
-            }
-            surnameFirst-medium-monogram-informal{
-                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
-                "llCaps}"
-            }
             surnameFirst-medium-referring-formal{"{surname} {given} {given2-initial} {credentials}"}
             surnameFirst-medium-referring-informal{"{surname} {given-informal}"}
             surnameFirst-short-addressing-formal{"{title} {surname}"}
             surnameFirst-short-addressing-informal{"{given-informal}"}
-            surnameFirst-short-monogram-formal{
-                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
-                "llCaps}"
-            }
-            surnameFirst-short-monogram-informal{
-                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
-                "llCaps}"
-            }
             surnameFirst-short-referring-formal{"{surname} {given-initial} {given2-initial}"}
             surnameFirst-short-referring-informal{"{surname} {given-initial}"}
         }

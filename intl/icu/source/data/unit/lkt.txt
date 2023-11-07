@@ -2,80 +2,18 @@
 // License & terms of use: http://www.unicode.org/copyright.html
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 lkt{
-    units{
-        duration{
-            day{
-                other{"{0}-čháŋ"}
-            }
-            hour{
-                other{"Owápȟe {0}"}
-            }
-            month{
-                other{"Wíyawapi {0}"}
-            }
-            second{
-                other{"Okpí {0}"}
-            }
-            week{
-                other{"okó {0}"}
-            }
-            year{
-                other{"ómakȟa {0}"}
-            }
-        }
-        length{
-            foot{
-                other{"siíyutȟapi {0}"}
-            }
-            inch{
-                other{"oíyutȟe čísčila {0}"}
-            }
-            mile{
-                other{"makhíyutȟapi {0}"}
-            }
-            yard{
-                other{"čhaéglepi {0}"}
-            }
-        }
-        mass{
-            pound{
-                other{"tkeíyutȟapi {0}"}
-            }
-        }
-    }
     unitsNarrow{
         duration{
-            day{
-                other{"{0}-čháŋ"}
-            }
-            hour{
-                other{"Owápȟe {0}"}
-            }
             month{
                 other{"Wí {0}"}
             }
-            second{
-                other{"Okpí {0}"}
-            }
-            week{
-                other{"okó {0}"}
-            }
-            year{
-                other{"ómakȟa {0}"}
-            }
         }
         length{
-            foot{
-                other{"siíyutȟapi {0}"}
-            }
             inch{
                 other{"{0}″"}
             }
             mile{
                 other{"{0} makh"}
-            }
-            yard{
-                other{"čhaéglepi {0}"}
             }
         }
         mass{
@@ -84,9 +22,6 @@ lkt{
             }
         }
         temperature{
-            celsius{
-                other{"{0}°C"}
-            }
             fahrenheit{
                 other{"{0}°"}
             }

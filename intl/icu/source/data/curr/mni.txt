@@ -40,36 +40,4 @@ mni{
             "মশকখংদবা করেন্সি",
         }
     }
-    Currencies%narrow{
-        USD{"$"}
-    }
-    CurrencyPlurals{
-        BRL{
-            other{"ব্রাজিলিয়ান রেয়াল"}
-        }
-        CNY{
-            other{"চাইনিজ য়ুআন"}
-        }
-        EUR{
-            other{"য়ুরো"}
-        }
-        GBP{
-            other{"ব্রিটিশ পাউন্দ"}
-        }
-        INR{
-            other{"ইন্দিয়ান রুপী"}
-        }
-        JPY{
-            other{"জাপানিজ য়েন"}
-        }
-        RUB{
-            other{"রুসিয়ান রুবল"}
-        }
-        USD{
-            other{"য়ু এস দি"}
-        }
-        XXX{
-            other{"মশকখংদবা করেন্সি"}
-        }
-    }
 }

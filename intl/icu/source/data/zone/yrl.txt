@@ -51,9 +51,6 @@ yrl{
         "Africa:Conakry"{
             ec{"Kunakiri"}
         }
-        "Africa:Dakar"{
-            ec{"Dakar"}
-        }
         "Africa:Dar_es_Salaam"{
             ec{"Katuawa ruka"}
         }
@@ -71,9 +68,6 @@ yrl{
         }
         "Africa:Gaborone"{
             ec{"Gaburuni"}
-        }
-        "Africa:Harare"{
-            ec{"Harare"}
         }
         "Africa:Johannesburg"{
             ec{"Juanesibugu"}
@@ -108,17 +102,11 @@ yrl{
         "Africa:Lubumbashi"{
             ec{"Lubũbaxi"}
         }
-        "Africa:Lusaka"{
-            ec{"Lusaka"}
-        }
         "Africa:Malabo"{
             ec{"Malabu"}
         }
         "Africa:Maputo"{
             ec{"Maputu"}
-        }
-        "Africa:Maseru"{
-            ec{"Maseru"}
         }
         "Africa:Mbabane"{
             ec{"Ũbabani"}
@@ -194,9 +182,6 @@ yrl{
         }
         "America:Argentina:Ushuaia"{
             ec{"Uxuwaya"}
-        }
-        "America:Aruba"{
-            ec{"Aruba"}
         }
         "America:Asuncion"{
             ec{"Asũsiyõ"}
@@ -288,9 +273,6 @@ yrl{
         "America:Denver"{
             ec{"Dẽwer"}
         }
-        "America:Detroit"{
-            ec{"Detroit"}
-        }
         "America:Dominica"{
             ec{"Duminika"}
         }
@@ -335,9 +317,6 @@ yrl{
         }
         "America:Guyana"{
             ec{"Giyana"}
-        }
-        "America:Halifax"{
-            ec{"Halifax"}
         }
         "America:Havana"{
             ec{"Hawana"}
@@ -390,14 +369,8 @@ yrl{
         "America:Kralendijk"{
             ec{"Kararẽdiki"}
         }
-        "America:La_Paz"{
-            ec{"La Paz"}
-        }
         "America:Lima"{
             ec{"Rima"}
-        }
-        "America:Los_Angeles"{
-            ec{"Los Angeles"}
         }
         "America:Louisville"{
             ec{"Luwisiviri"}
@@ -431,9 +404,6 @@ yrl{
         }
         "America:Menominee"{
             ec{"Menomini"}
-        }
-        "America:Merida"{
-            ec{"Mérida"}
         }
         "America:Metlakatla"{
             ec{"Metirakatira"}
@@ -627,9 +597,6 @@ yrl{
         "Antarctica:Syowa"{
             ec{"Siyowa"}
         }
-        "Antarctica:Troll"{
-            ec{"Troll"}
-        }
         "Antarctica:Vostok"{
             ec{"Wosituki"}
         }
@@ -666,9 +633,6 @@ yrl{
         "Asia:Bahrain"{
             ec{"Barẽi"}
         }
-        "Asia:Baku"{
-            ec{"Baku"}
-        }
         "Asia:Bangkok"{
             ec{"Mág-kóki"}
         }
@@ -704,9 +668,6 @@ yrl{
         }
         "Asia:Dili"{
             ec{"Diri"}
-        }
-        "Asia:Dubai"{
-            ec{"Dubai"}
         }
         "Asia:Dushanbe"{
             ec{"Duxãbi"}
@@ -834,9 +795,6 @@ yrl{
         "Asia:Srednekolymsk"{
             ec{"Xeredinekorimiziki"}
         }
-        "Asia:Taipei"{
-            ec{"Taipei"}
-        }
         "Asia:Tashkent"{
             ec{"Tasikẽti"}
         }
@@ -893,9 +851,6 @@ yrl{
         }
         "Atlantic:Faeroe"{
             ec{"Kapuãma-ita Faruwe"}
-        }
-        "Atlantic:Madeira"{
-            ec{"Madeira"}
         }
         "Atlantic:Reykjavik"{
             ec{"Reikiyawiki"}
@@ -1055,23 +1010,14 @@ yrl{
         "Europe:Oslo"{
             ec{"Usiru"}
         }
-        "Europe:Paris"{
-            ec{"Paris"}
-        }
         "Europe:Podgorica"{
             ec{"Pudigurika"}
         }
         "Europe:Prague"{
             ec{"Praga"}
         }
-        "Europe:Riga"{
-            ec{"Riga"}
-        }
         "Europe:Rome"{
             ec{"Roma"}
-        }
-        "Europe:Samara"{
-            ec{"Samara"}
         }
         "Europe:San_Marino"{
             ec{"Sã Marinu"}
@@ -1193,9 +1139,6 @@ yrl{
         "Pacific:Fiji"{
             ec{"Fiyi"}
         }
-        "Pacific:Funafuti"{
-            ec{"Funafuti"}
-        }
         "Pacific:Galapagos"{
             ec{"Garapagu-ita"}
         }
@@ -1214,9 +1157,6 @@ yrl{
         "Pacific:Johnston"{
             ec{"Jũsitũ"}
         }
-        "Pacific:Kiritimati"{
-            ec{"Kiritimati"}
-        }
         "Pacific:Kosrae"{
             ec{"Kusirai"}
         }
@@ -1231,9 +1171,6 @@ yrl{
         }
         "Pacific:Midway"{
             ec{"Midiwei"}
-        }
-        "Pacific:Nauru"{
-            ec{"Nauru"}
         }
         "Pacific:Niue"{
             ec{"Niwe"}
@@ -1250,9 +1187,6 @@ yrl{
         "Pacific:Palau"{
             ec{"Parau"}
         }
-        "Pacific:Pitcairn"{
-            ec{"Pitcairn"}
-        }
         "Pacific:Port_Moresby"{
             ec{"Igarapawa Moresby"}
         }
@@ -1265,14 +1199,8 @@ yrl{
         "Pacific:Tahiti"{
             ec{"Taiti"}
         }
-        "Pacific:Tarawa"{
-            ec{"Tarawa"}
-        }
         "Pacific:Tongatapu"{
             ec{"Tũgatapu"}
-        }
-        "Pacific:Wake"{
-            ec{"Wake"}
         }
         "Pacific:Wallis"{
             ec{"Wari-ita"}
@@ -1931,10 +1859,6 @@ yrl{
             lg{"Ekaterĩbugu Hurariyu"}
             ls{"Ekaterĩbugu Hurariyu Retewa"}
         }
-        fallbackFormat{"{1} ({0})"}
-        gmtFormat{"GMT{0}"}
-        gmtZeroFormat{"GMT"}
-        hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"Hurariyu {0}"}
         regionFormatDaylight{"Kurasí Ara Hurariyu: {0}"}
         regionFormatStandard{"Hurariyu Retewa: {0}"}

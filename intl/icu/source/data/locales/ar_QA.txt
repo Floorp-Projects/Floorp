@@ -4,5 +4,6 @@
 ar_QA{
     NumberElements{
         default{"arab"}
+        default_latn{"latn"}
     }
 }

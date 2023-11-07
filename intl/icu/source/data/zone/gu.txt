@@ -1947,10 +1947,6 @@ gu{
         "meta:Yukon"{
             ls{"યુકોન સમય"}
         }
-        fallbackFormat{"{1} ({0})"}
-        gmtFormat{"GMT{0}"}
-        gmtZeroFormat{"GMT"}
-        hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"{0} સમય"}
         regionFormatDaylight{"{0} દિવસ સમય"}
         regionFormatStandard{"{0} માનક સમય"}

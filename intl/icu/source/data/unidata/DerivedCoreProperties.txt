@@ -1,6 +1,6 @@
-# DerivedCoreProperties-15.0.0.txt
-# Date: 2022-08-05, 22:17:05 GMT
-# © 2022 Unicode®, Inc.
+# DerivedCoreProperties-15.1.0.txt
+# Date: 2023-08-07, 15:21:24 GMT
+# © 2023 Unicode®, Inc.
 # Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
 # For terms of use, see https://www.unicode.org/terms_of_use.html
 #
@@ -1397,11 +1397,12 @@ FFDA..FFDC    ; Alphabetic
 2B740..2B81D  ; Alphabetic
 2B820..2CEA1  ; Alphabetic
 2CEB0..2EBE0  ; Alphabetic
+2EBF0..2EE5D  ; Alphabetic
 2F800..2FA1D  ; Alphabetic
 30000..3134A  ; Alphabetic
 31350..323AF  ; Alphabetic
 
-# Total code points: 137765
+# Total code points: 138387
 
 # ================================================
 
@@ -6853,11 +6854,12 @@ FFDA..FFDC    ; ID_Start
 2B740..2B81D  ; ID_Start
 2B820..2CEA1  ; ID_Start
 2CEB0..2EBE0  ; ID_Start
+2EBF0..2EE5D  ; ID_Start
 2F800..2FA1D  ; ID_Start
 30000..3134A  ; ID_Start
 31350..323AF  ; ID_Start
 
-# Total code points: 136345
+# Total code points: 136967
 
 # ================================================
 
@@ -7438,6 +7440,7 @@ FFDA..FFDC    ; ID_Start
 1FE0..1FEC    ; ID_Continue
 1FF2..1FF4    ; ID_Continue
 1FF6..1FFC    ; ID_Continue
+200C..200D    ; ID_Continue
 203F..2040    ; ID_Continue
 2054          ; ID_Continue
 2071          ; ID_Continue
@@ -7504,6 +7507,7 @@ FFDA..FFDC    ; ID_Start
 309D..309E    ; ID_Continue
 309F          ; ID_Continue
 30A1..30FA    ; ID_Continue
+30FB          ; ID_Continue
 30FC..30FE    ; ID_Continue
 30FF          ; ID_Continue
 3105..312F    ; ID_Continue
@@ -7683,6 +7687,7 @@ FF10..FF19    ; ID_Continue
 FF21..FF3A    ; ID_Continue
 FF3F          ; ID_Continue
 FF41..FF5A    ; ID_Continue
+FF65          ; ID_Continue
 FF66..FF6F    ; ID_Continue
 FF70          ; ID_Continue
 FF71..FF9D    ; ID_Continue
@@ -8207,12 +8212,13 @@ FFDA..FFDC    ; ID_Continue
 2B740..2B81D  ; ID_Continue
 2B820..2CEA1  ; ID_Continue
 2CEB0..2EBE0  ; ID_Continue
+2EBF0..2EE5D  ; ID_Continue
 2F800..2FA1D  ; ID_Continue
 30000..3134A  ; ID_Continue
 31350..323AF  ; ID_Continue
 E0100..E01EF  ; ID_Continue
 
-# Total code points: 139482
+# Total code points: 140108
 
 # ================================================
 
@@ -8962,11 +8968,12 @@ FFDA..FFDC    ; XID_Start
 2B740..2B81D  ; XID_Start
 2B820..2CEA1  ; XID_Start
 2CEB0..2EBE0  ; XID_Start
+2EBF0..2EE5D  ; XID_Start
 2F800..2FA1D  ; XID_Start
 30000..3134A  ; XID_Start
 31350..323AF  ; XID_Start
 
-# Total code points: 136322
+# Total code points: 136944
 
 # ================================================
 
@@ -9543,6 +9550,7 @@ FFDA..FFDC    ; XID_Start
 1FE0..1FEC    ; XID_Continue
 1FF2..1FF4    ; XID_Continue
 1FF6..1FFC    ; XID_Continue
+200C..200D    ; XID_Continue
 203F..2040    ; XID_Continue
 2054          ; XID_Continue
 2071          ; XID_Continue
@@ -9608,6 +9616,7 @@ FFDA..FFDC    ; XID_Start
 309D..309E    ; XID_Continue
 309F          ; XID_Continue
 30A1..30FA    ; XID_Continue
+30FB          ; XID_Continue
 30FC..30FE    ; XID_Continue
 30FF          ; XID_Continue
 3105..312F    ; XID_Continue
@@ -9793,6 +9802,7 @@ FF10..FF19    ; XID_Continue
 FF21..FF3A    ; XID_Continue
 FF3F          ; XID_Continue
 FF41..FF5A    ; XID_Continue
+FF65          ; XID_Continue
 FF66..FF6F    ; XID_Continue
 FF70          ; XID_Continue
 FF71..FF9D    ; XID_Continue
@@ -10317,12 +10327,13 @@ FFDA..FFDC    ; XID_Continue
 2B740..2B81D  ; XID_Continue
 2B820..2CEA1  ; XID_Continue
 2CEB0..2EBE0  ; XID_Continue
+2EBF0..2EE5D  ; XID_Continue
 2F800..2FA1D  ; XID_Continue
 30000..3134A  ; XID_Continue
 31350..323AF  ; XID_Continue
 E0100..E01EF  ; XID_Continue
 
-# Total code points: 139463
+# Total code points: 140089
 
 # ================================================
 
@@ -10335,6 +10346,15 @@ E0100..E01EF  ; XID_Continue
 #  - FFF9..FFFB (Interlinear annotation format characters)
 #  - 13430..13440 (Egyptian hieroglyph format characters)
 #  - Prepended_Concatenation_Mark (Exceptional format characters that should be visible)
+#
+# There are currently no stability guarantees for DICP. However, the
+# values of DICP interact with the derivation of XID_Continue
+# and NFKC_CF, for which there are stability guarantees.
+# Maintainers of this property should note that in the
+# unlikely case that the DICP value changes for an existing character
+# which is also XID_Continue=Yes, then exceptions must be put
+# in place to ensure that the NFKC_CF mapping value for that
+# existing character does not change.
 
 00AD          ; Default_Ignorable_Code_Point
 034F          ; Default_Ignorable_Code_Point
@@ -11602,7 +11622,7 @@ E0100..E01EF  ; Grapheme_Extend
 2E80..2E99    ; Grapheme_Base
 2E9B..2EF3    ; Grapheme_Base
 2F00..2FD5    ; Grapheme_Base
-2FF0..2FFB    ; Grapheme_Base
+2FF0..2FFF    ; Grapheme_Base
 3000          ; Grapheme_Base
 3001..3003    ; Grapheme_Base
 3004          ; Grapheme_Base
@@ -11657,6 +11677,7 @@ E0100..E01EF  ; Grapheme_Extend
 3196..319F    ; Grapheme_Base
 31A0..31BF    ; Grapheme_Base
 31C0..31E3    ; Grapheme_Base
+31EF          ; Grapheme_Base
 31F0..31FF    ; Grapheme_Base
 3200..321E    ; Grapheme_Base
 3220..3229    ; Grapheme_Base
@@ -12497,11 +12518,12 @@ FFFC..FFFD    ; Grapheme_Base
 2B740..2B81D  ; Grapheme_Base
 2B820..2CEA1  ; Grapheme_Base
 2CEB0..2EBE0  ; Grapheme_Base
+2EBF0..2EE5D  ; Grapheme_Base
 2F800..2FA1D  ; Grapheme_Base
 30000..3134A  ; Grapheme_Base
 31350..323AF  ; Grapheme_Base
 
-# Total code points: 146986
+# Total code points: 147613
 
 # ================================================
 
@@ -12571,5 +12593,240 @@ ABED          ; Grapheme_Link
 11F42         ; Grapheme_Link
 
 # Total code points: 65
+
+# ================================================
+
+# Derived Property: Indic_Conjunct_Break
+#  Generated from the Grapheme_Cluster_Break, Indic_Syllabic_Category,
+#  Canonical_Combining_Class, and Script properties as described in UAX #44:
+#  https://www.unicode.org/reports/tr44/.
+
+#  All code points not explicitly listed for Indic_Conjunct_Break
+#  have the value None.
+
+# @missing: 0000..10FFFF; InCB; None
+
+# ================================================
+
+# Indic_Conjunct_Break=Linker
+
+094D          ; InCB; Linker
+09CD          ; InCB; Linker
+0ACD          ; InCB; Linker
+0B4D          ; InCB; Linker
+0C4D          ; InCB; Linker
+0D4D          ; InCB; Linker
+
+# Total code points: 6
+
+# ================================================
+
+# Indic_Conjunct_Break=Consonant
+
+0915..0939    ; InCB; Consonant
+0958..095F    ; InCB; Consonant
+0978..097F    ; InCB; Consonant
+0995..09A8    ; InCB; Consonant
+09AA..09B0    ; InCB; Consonant
+09B2          ; InCB; Consonant
+09B6..09B9    ; InCB; Consonant
+09DC..09DD    ; InCB; Consonant
+09DF          ; InCB; Consonant
+09F0..09F1    ; InCB; Consonant
+0A95..0AA8    ; InCB; Consonant
+0AAA..0AB0    ; InCB; Consonant
+0AB2..0AB3    ; InCB; Consonant
+0AB5..0AB9    ; InCB; Consonant
+0AF9          ; InCB; Consonant
+0B15..0B28    ; InCB; Consonant
+0B2A..0B30    ; InCB; Consonant
+0B32..0B33    ; InCB; Consonant
+0B35..0B39    ; InCB; Consonant
+0B5C..0B5D    ; InCB; Consonant
+0B5F          ; InCB; Consonant
+0B71          ; InCB; Consonant
+0C15..0C28    ; InCB; Consonant
+0C2A..0C39    ; InCB; Consonant
+0C58..0C5A    ; InCB; Consonant
+0D15..0D3A    ; InCB; Consonant
+
+# Total code points: 240
+
+# ================================================
+
+# Indic_Conjunct_Break=Extend
+
+0300..034E    ; InCB; Extend
+0350..036F    ; InCB; Extend
+0483..0487    ; InCB; Extend
+0591..05BD    ; InCB; Extend
+05BF          ; InCB; Extend
+05C1..05C2    ; InCB; Extend
+05C4..05C5    ; InCB; Extend
+05C7          ; InCB; Extend
+0610..061A    ; InCB; Extend
+064B..065F    ; InCB; Extend
+0670          ; InCB; Extend
+06D6..06DC    ; InCB; Extend
+06DF..06E4    ; InCB; Extend
+06E7..06E8    ; InCB; Extend
+06EA..06ED    ; InCB; Extend
+0711          ; InCB; Extend
+0730..074A    ; InCB; Extend
+07EB..07F3    ; InCB; Extend
+07FD          ; InCB; Extend
+0816..0819    ; InCB; Extend
+081B..0823    ; InCB; Extend
+0825..0827    ; InCB; Extend
+0829..082D    ; InCB; Extend
+0859..085B    ; InCB; Extend
+0898..089F    ; InCB; Extend
+08CA..08E1    ; InCB; Extend
+08E3..08FF    ; InCB; Extend
+093C          ; InCB; Extend
+0951..0954    ; InCB; Extend
+09BC          ; InCB; Extend
+09FE          ; InCB; Extend
+0A3C          ; InCB; Extend
+0ABC          ; InCB; Extend
+0B3C          ; InCB; Extend
+0C3C          ; InCB; Extend
+0C55..0C56    ; InCB; Extend
+0CBC          ; InCB; Extend
+0D3B..0D3C    ; InCB; Extend
+0E38..0E3A    ; InCB; Extend
+0E48..0E4B    ; InCB; Extend
+0EB8..0EBA    ; InCB; Extend
+0EC8..0ECB    ; InCB; Extend
+0F18..0F19    ; InCB; Extend
+0F35          ; InCB; Extend
+0F37          ; InCB; Extend
+0F39          ; InCB; Extend
+0F71..0F72    ; InCB; Extend
+0F74          ; InCB; Extend
+0F7A..0F7D    ; InCB; Extend
+0F80          ; InCB; Extend
+0F82..0F84    ; InCB; Extend
+0F86..0F87    ; InCB; Extend
+0FC6          ; InCB; Extend
+1037          ; InCB; Extend
+1039..103A    ; InCB; Extend
+108D          ; InCB; Extend
+135D..135F    ; InCB; Extend
+1714          ; InCB; Extend
+17D2          ; InCB; Extend
+17DD          ; InCB; Extend
+18A9          ; InCB; Extend
+1939..193B    ; InCB; Extend
+1A17..1A18    ; InCB; Extend
+1A60          ; InCB; Extend
+1A75..1A7C    ; InCB; Extend
+1A7F          ; InCB; Extend
+1AB0..1ABD    ; InCB; Extend
+1ABF..1ACE    ; InCB; Extend
+1B34          ; InCB; Extend
+1B6B..1B73    ; InCB; Extend
+1BAB          ; InCB; Extend
+1BE6          ; InCB; Extend
+1C37          ; InCB; Extend
+1CD0..1CD2    ; InCB; Extend
+1CD4..1CE0    ; InCB; Extend
+1CE2..1CE8    ; InCB; Extend
+1CED          ; InCB; Extend
+1CF4          ; InCB; Extend
+1CF8..1CF9    ; InCB; Extend
+1DC0..1DFF    ; InCB; Extend
+200D          ; InCB; Extend
+20D0..20DC    ; InCB; Extend
+20E1          ; InCB; Extend
+20E5..20F0    ; InCB; Extend
+2CEF..2CF1    ; InCB; Extend
+2D7F          ; InCB; Extend
+2DE0..2DFF    ; InCB; Extend
+302A..302D    ; InCB; Extend
+302E..302F    ; InCB; Extend
+3099..309A    ; InCB; Extend
+A66F          ; InCB; Extend
+A674..A67D    ; InCB; Extend
+A69E..A69F    ; InCB; Extend
+A6F0..A6F1    ; InCB; Extend
+A82C          ; InCB; Extend
+A8E0..A8F1    ; InCB; Extend
+A92B..A92D    ; InCB; Extend
+A9B3          ; InCB; Extend
+AAB0          ; InCB; Extend
+AAB2..AAB4    ; InCB; Extend
+AAB7..AAB8    ; InCB; Extend
+AABE..AABF    ; InCB; Extend
+AAC1          ; InCB; Extend
+AAF6          ; InCB; Extend
+ABED          ; InCB; Extend
+FB1E          ; InCB; Extend
+FE20..FE2F    ; InCB; Extend
+101FD         ; InCB; Extend
+102E0         ; InCB; Extend
+10376..1037A  ; InCB; Extend
+10A0D         ; InCB; Extend
+10A0F         ; InCB; Extend
+10A38..10A3A  ; InCB; Extend
+10A3F         ; InCB; Extend
+10AE5..10AE6  ; InCB; Extend
+10D24..10D27  ; InCB; Extend
+10EAB..10EAC  ; InCB; Extend
+10EFD..10EFF  ; InCB; Extend
+10F46..10F50  ; InCB; Extend
+10F82..10F85  ; InCB; Extend
+11070         ; InCB; Extend
+1107F         ; InCB; Extend
+110BA         ; InCB; Extend
+11100..11102  ; InCB; Extend
+11133..11134  ; InCB; Extend
+11173         ; InCB; Extend
+111CA         ; InCB; Extend
+11236         ; InCB; Extend
+112E9..112EA  ; InCB; Extend
+1133B..1133C  ; InCB; Extend
+11366..1136C  ; InCB; Extend
+11370..11374  ; InCB; Extend
+11446         ; InCB; Extend
+1145E         ; InCB; Extend
+114C3         ; InCB; Extend
+115C0         ; InCB; Extend
+116B7         ; InCB; Extend
+1172B         ; InCB; Extend
+1183A         ; InCB; Extend
+1193E         ; InCB; Extend
+11943         ; InCB; Extend
+11A34         ; InCB; Extend
+11A47         ; InCB; Extend
+11A99         ; InCB; Extend
+11D42         ; InCB; Extend
+11D44..11D45  ; InCB; Extend
+11D97         ; InCB; Extend
+11F42         ; InCB; Extend
+16AF0..16AF4  ; InCB; Extend
+16B30..16B36  ; InCB; Extend
+1BC9E         ; InCB; Extend
+1D165         ; InCB; Extend
+1D167..1D169  ; InCB; Extend
+1D16E..1D172  ; InCB; Extend
+1D17B..1D182  ; InCB; Extend
+1D185..1D18B  ; InCB; Extend
+1D1AA..1D1AD  ; InCB; Extend
+1D242..1D244  ; InCB; Extend
+1E000..1E006  ; InCB; Extend
+1E008..1E018  ; InCB; Extend
+1E01B..1E021  ; InCB; Extend
+1E023..1E024  ; InCB; Extend
+1E026..1E02A  ; InCB; Extend
+1E08F         ; InCB; Extend
+1E130..1E136  ; InCB; Extend
+1E2AE         ; InCB; Extend
+1E2EC..1E2EF  ; InCB; Extend
+1E4EC..1E4EF  ; InCB; Extend
+1E8D0..1E8D6  ; InCB; Extend
+1E944..1E94A  ; InCB; Extend
+
+# Total code points: 884
 
 # EOF

@@ -3,36 +3,14 @@
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 mg{
     AuxExemplarCharacters{"[c q u w x]"}
-    ExemplarCharacters{"[a à â b d e é è ê ë f g h i ì î ï j k l m n ñ o ô p r s t v y z]"}
+    ExemplarCharacters{"[aàâ b d eéèêë f g h iìîï j k l m nñ oô p r s t v y z]"}
     ExemplarCharactersIndex{"[A B D E F G H I J K L M N O P R S T V Y Z]"}
-    ExemplarCharactersNumbers{"[\\- ‑ , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     NumberElements{
         latn{
-            miscPatterns{
-                atLeast{"≥{0}"}
-                range{"{0}–{1}"}
-            }
             patterns{
                 accountingFormat{"¤#,##0.00"}
-                currencyFormat{"¤ #,##0.00"}
-                decimalFormat{"#,##0.###"}
-                percentFormat{"#,##0%"}
-                scientificFormat{"#E0"}
-            }
-            symbols{
-                decimal{"."}
-                exponential{"E"}
-                group{","}
-                infinity{"∞"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
             }
         }
-        minimumGroupingDigits{"1"}
     }
     calendar{
         generic{
@@ -86,14 +64,6 @@ mg{
             }
         }
         gregorian{
-            AmPmMarkers{
-                "AM",
-                "PM",
-            }
-            AmPmMarkersAbbr{
-                "AM",
-                "PM",
-            }
             DateTimePatterns{
                 "HH:mm:ss zzzz",
                 "HH:mm:ss z",
@@ -109,45 +79,9 @@ mg{
                 "{1} {0}",
                 "{1} {0}",
             }
-            DateTimeSkeletons{
-                "HHmmsszzzz",
-                "HHmmssz",
-                "HHmmss",
-                "HHmm",
-                "yMMMMEEEEd",
-                "yMMMMd",
-                "yMMMd",
-                "yMMdd",
-            }
-            appendItems{
-                Day{"{0} ({2}: {1})"}
-                Day-Of-Week{"{0} {1}"}
-                Era{"{1} {0}"}
-                Hour{"{0} ({2}: {1})"}
-                Minute{"{0} ({2}: {1})"}
-                Month{"{0} ({2}: {1})"}
-                Quarter{"{0} ({2}: {1})"}
-                Second{"{0} ({2}: {1})"}
-                Timezone{"{0} {1}"}
-                Week{"{0} ({2}: {1})"}
-                Year{"{1} {0}"}
-            }
             availableFormats{
-                E{"ccc"}
-                EHm{"E HH:mm"}
-                EHms{"E HH:mm:ss"}
-                Ed{"d, E"}
                 Ehm{"E h:mm a"}
                 Ehms{"E h:mm:ss a"}
-                Gy{"G y"}
-                GyMMM{"G y MMM"}
-                GyMMMEd{"G y MMM d, E"}
-                GyMMMd{"G y MMM d"}
-                H{"HH"}
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
-                Hmsv{"HH:mm:ss v"}
-                Hmv{"HH:mm v"}
                 M{"M"}
                 MEd{"E d/M"}
                 MMM{"MMM"}
@@ -158,14 +92,12 @@ mg{
                 MMd{"d/MM"}
                 MMdd{"dd/MM"}
                 Md{"d/M"}
-                d{"d"}
                 h{"h a"}
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
                 hmsv{"h:mm:ss a v"}
                 hmv{"h:mm a v"}
                 ms{"m:ss"}
-                y{"y"}
                 yM{"M/y"}
                 yMEd{"E d/M/y"}
                 yMM{"MM/y"}
@@ -173,7 +105,6 @@ mg{
                 yMMMEd{"E d MMM y"}
                 yMMMM{"MMMM y"}
                 yMMMd{"d MMM y"}
-                yMd{"y-MM-dd"}
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ y"}
             }
@@ -188,24 +119,6 @@ mg{
                         "Zom",
                         "Asab",
                     }
-                    narrow{
-                        "A",
-                        "A",
-                        "T",
-                        "A",
-                        "A",
-                        "Z",
-                        "A",
-                    }
-                    short{
-                        "Alah",
-                        "Alats",
-                        "Tal",
-                        "Alar",
-                        "Alak",
-                        "Zom",
-                        "Asab",
-                    }
                     wide{
                         "Alahady",
                         "Alatsinainy",
@@ -217,15 +130,6 @@ mg{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "Alah",
-                        "Alats",
-                        "Tal",
-                        "Alar",
-                        "Alak",
-                        "Zom",
-                        "Asab",
-                    }
                     narrow{
                         "A",
                         "A",
@@ -234,40 +138,6 @@ mg{
                         "A",
                         "Z",
                         "A",
-                    }
-                    short{
-                        "Alah",
-                        "Alats",
-                        "Tal",
-                        "Alar",
-                        "Alak",
-                        "Zom",
-                        "Asab",
-                    }
-                    wide{
-                        "Alahady",
-                        "Alatsinainy",
-                        "Talata",
-                        "Alarobia",
-                        "Alakamisy",
-                        "Zoma",
-                        "Asabotsy",
-                    }
-                }
-            }
-            dayPeriod{
-                stand-alone{
-                    abbreviated{
-                        am{"AM"}
-                        pm{"PM"}
-                    }
-                    narrow{
-                        am{"AM"}
-                        pm{"PM"}
-                    }
-                    wide{
-                        am{"AM"}
-                        pm{"PM"}
                     }
                 }
             }
@@ -284,35 +154,11 @@ mg{
                     "Alohan’i JK",
                     "Aorian’i JK",
                 }
-                wide%variant{
-                    "BCE",
-                    "CE",
-                }
             }
             intervalFormats{
-                H{
-                    H{"HH–HH"}
-                }
-                Hm{
-                    H{"HH:mm–HH:mm"}
-                    m{"HH:mm–HH:mm"}
-                }
-                Hmv{
-                    H{"HH:mm–HH:mm v"}
-                    m{"HH:mm–HH:mm v"}
-                }
-                Hv{
-                    H{"HH–HH v"}
-                }
-                M{
-                    M{"MM–MM"}
-                }
                 MEd{
                     M{"MM-dd, E – MM-dd, E"}
                     d{"MM-dd, E – MM-dd, E"}
-                }
-                MMM{
-                    M{"LLL–LLL"}
                 }
                 MMMEd{
                     M{"MMM d, E – MMM d, E"}
@@ -320,16 +166,11 @@ mg{
                 }
                 MMMd{
                     M{"MMM d – MMM d"}
-                    d{"MMM d–d"}
                 }
                 Md{
                     M{"MM-dd – MM-dd"}
                     d{"MM-dd – MM-dd"}
                 }
-                d{
-                    d{"d–d"}
-                }
-                fallback{"{0} – {1}"}
                 h{
                     a{"h a – h a"}
                     h{"h–h a"}
@@ -348,9 +189,6 @@ mg{
                     a{"h a – h a v"}
                     h{"h–h a v"}
                 }
-                y{
-                    y{"y–y"}
-                }
                 yM{
                     M{"y-MM – y-MM"}
                     y{"y-MM – y-MM"}
@@ -361,7 +199,6 @@ mg{
                     y{"y-MM-dd, E – y-MM-dd, E"}
                 }
                 yMMM{
-                    M{"y MMM–MMM"}
                     y{"y MMM – y MMM"}
                 }
                 yMMMEd{
@@ -370,12 +207,10 @@ mg{
                     y{"y MMM d, E – y MMM d, E"}
                 }
                 yMMMM{
-                    M{"y MMMM–MMMM"}
                     y{"y MMMM – y MMMM"}
                 }
                 yMMMd{
                     M{"y MMM d – MMM d"}
-                    d{"y MMM d–d"}
                     y{"y MMM d – y MMM d"}
                 }
                 yMd{
@@ -400,20 +235,6 @@ mg{
                         "Nov",
                         "Des",
                     }
-                    narrow{
-                        "J",
-                        "F",
-                        "M",
-                        "A",
-                        "M",
-                        "J",
-                        "J",
-                        "A",
-                        "S",
-                        "O",
-                        "N",
-                        "D",
-                    }
                     wide{
                         "Janoary",
                         "Febroary",
@@ -430,20 +251,6 @@ mg{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "Jan",
-                        "Feb",
-                        "Mar",
-                        "Apr",
-                        "Mey",
-                        "Jon",
-                        "Jol",
-                        "Aog",
-                        "Sep",
-                        "Okt",
-                        "Nov",
-                        "Des",
-                    }
                     narrow{
                         "J",
                         "F",
@@ -457,20 +264,6 @@ mg{
                         "O",
                         "N",
                         "D",
-                    }
-                    wide{
-                        "Janoary",
-                        "Febroary",
-                        "Martsa",
-                        "Aprily",
-                        "Mey",
-                        "Jona",
-                        "Jolay",
-                        "Aogositra",
-                        "Septambra",
-                        "Oktobra",
-                        "Novambra",
-                        "Desambra",
                     }
                 }
             }
@@ -481,32 +274,6 @@ mg{
                         "T2",
                         "T3",
                         "T4",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                    }
-                    wide{
-                        "Telovolana voalohany",
-                        "Telovolana faharoa",
-                        "Telovolana fahatelo",
-                        "Telovolana fahefatra",
-                    }
-                }
-                stand-alone{
-                    abbreviated{
-                        "T1",
-                        "T2",
-                        "T3",
-                        "T4",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
                     }
                     wide{
                         "Telovolana voalohany",
@@ -535,9 +302,6 @@ mg{
         }
         dayperiod{
             dn{"AM/PM"}
-        }
-        era{
-            dn{"Era"}
         }
         hour{
             dn{"Ora"}

@@ -59,6 +59,7 @@ fil{
         bem{"Bemba"}
         bez{"Bena"}
         bg{"Bulgarian"}
+        bgc{"Haryanvi"}
         bgn{"Kanlurang Balochi"}
         bho{"Bhojpuri"}
         bi{"Bislama"}
@@ -121,8 +122,7 @@ fil{
         eka{"Ekajuk"}
         el{"Greek"}
         en{"Ingles"}
-        en_GB{"Ingles na British"}
-        en_US{"Ingles na American"}
+        en_US{"Ingles (American)"}
         eo{"Esperanto"}
         es{"Spanish"}
         es_419{"Latin American na Espanyol"}
@@ -343,6 +343,7 @@ fil{
         pt_PT{"European Portuguese"}
         qu{"Quechua"}
         quc{"Kʼicheʼ"}
+        raj{"Rajasthani"}
         rap{"Rapanui"}
         rar{"Rarotongan"}
         rhg{"Rohingya"}
@@ -485,6 +486,7 @@ fil{
     }
     Languages%variant{
         ckb{"Kurdish, Sorani"}
+        hi_Latn{"Hinglish"}
         ps{"Pushto"}
         ug{"Uighur"}
     }
@@ -566,11 +568,9 @@ fil{
             gregorian{"Gregorian na Kalendaryo"}
             hebrew{"Hebrew na Kalendaryo"}
             indian{"Pambansang Kalendaryong Indian"}
-            islamic{"Kalendaryong Islamic"}
-            islamic-civil{"Kalendaryong Islamic-Civil"}
-            islamic-rgsa{"Kalendaryong Islamiko (Saudi Arabia, sighting)"}
-            islamic-tbla{"Kalendaryong Islamiko (tabular, astronomikal na epoch)"}
-            islamic-umalqura{"Kalendaryong Islam (Umm al-Qura)"}
+            islamic{"Kalendaryong Islam"}
+            islamic-civil{"Kalendaryong Hijri (tabular, Civil epoch)"}
+            islamic-umalqura{"Kalendaryong Hijri (Umm al-Qura)"}
             iso8601{"ISO-8601 na Kalendaryo"}
             japanese{"Kalendaryong Japanese"}
             persian{"Kalendaryong Persian"}
@@ -666,7 +666,7 @@ fil{
             bali{"Balinese na Mga Digit"}
             beng{"Mga Bengali Digit"}
             brah{"Brahmi na Mga Digit"}
-            cakm{"Chakma na Mga Digit"}
+            cakm{"Mga Digit na Chakma"}
             cham{"Cham na Mga Digit"}
             cyrl{"Cyrillic na Mga Numero"}
             deva{"Mga Devanagari Digit"}
@@ -732,12 +732,12 @@ fil{
     }
     characterLabelPattern{
         all{"{0} — lahat"}
-        category-list{"{0}: {1}"}
         compatibility{"{0} — pagiging nababagay"}
         enclosed{"{0} — naka-enclose"}
         extended{"{0} — pinahaba"}
+        facing-left{"{0} nakaharap sa kaliwa"}
+        facing-right{"{0} nakaharap sa kanan"}
         historic{"{0} — makasaysayan"}
-        miscellaneous{"{0} — miscellaneous"}
         other{"{0} — iba pa"}
         scripts{"mga script — {0}"}
         strokes{
@@ -749,10 +749,5 @@ fil{
         language{"Wika: {0}"}
         script{"Script: {0}"}
         territory{"Rehiyon: {0}"}
-    }
-    localeDisplayPattern{
-        keyTypePattern{"{0}: {1}"}
-        pattern{"{0} ({1})"}
-        separator{"{0}, {1}"}
     }
 }

@@ -3,35 +3,14 @@
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 haw{
     AuxExemplarCharacters{"[b c d f g j q r s t v x y z]"}
-    ExemplarCharacters{"[a ā e ē i ī o ō u ū h k l m n p w ʻ]"}
-    ExemplarCharactersNumbers{"[\\- ‑ , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
+    ExemplarCharacters{"[aā eē iī oō uū h k l m n p w ʻ]"}
     NumberElements{
         latn{
-            miscPatterns{
-                atLeast{"≥{0}"}
-                range{"{0}–{1}"}
-            }
             patterns{
                 accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
                 currencyFormat{"¤#,##0.00"}
-                decimalFormat{"#,##0.###"}
-                percentFormat{"#,##0%"}
-                scientificFormat{"#E0"}
-            }
-            symbols{
-                decimal{"."}
-                exponential{"E"}
-                group{","}
-                infinity{"∞"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
             }
         }
-        minimumGroupingDigits{"1"}
     }
     calendar{
         generic{
@@ -68,18 +47,6 @@ haw{
             }
         }
         gregorian{
-            AmPmMarkers{
-                "AM",
-                "PM",
-            }
-            AmPmMarkersAbbr{
-                "AM",
-                "PM",
-            }
-            AmPmMarkersNarrow{
-                "AM",
-                "PM",
-            }
             DateTimePatterns{
                 "h:mm:ss a zzzz",
                 "h:mm:ss a z",
@@ -111,13 +78,7 @@ haw{
                     "M=romanlow",
                 }
             }
-            appendItems{
-                Timezone{"{0} {1}"}
-            }
             availableFormats{
-                E{"ccc"}
-                EHm{"E HH:mm"}
-                EHms{"E HH:mm:ss"}
                 Ed{"E d"}
                 Ehm{"E h:mm a"}
                 Ehms{"E h:mm:ss a"}
@@ -125,35 +86,21 @@ haw{
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E, d MMM y G"}
                 GyMMMd{"d MMM y G"}
-                H{"HH"}
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
-                Hmsv{"HH:mm:ss v"}
-                Hmv{"HH:mm v"}
-                M{"L"}
                 MEd{"E, d/M"}
-                MMM{"LLL"}
                 MMMEd{"E, d MMM"}
-                MMMMd{"MMMM d"}
                 MMMd{"d MMM"}
                 Md{"d/M"}
-                d{"d"}
                 h{"h a"}
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
                 hmsv{"h:mm:ss a v"}
                 hmv{"h:mm a v"}
-                ms{"mm:ss"}
-                y{"y"}
                 yM{"M/y"}
                 yMEd{"E, d/M/y"}
                 yMMM{"MMM y"}
                 yMMMEd{"E, d MMM y"}
-                yMMMM{"y MMMM"}
                 yMMMd{"d MMM y"}
                 yMd{"d/M/y"}
-                yQQQ{"y QQQ"}
-                yQQQQ{"y QQQQ"}
             }
             dayNames{
                 format{
@@ -166,24 +113,6 @@ haw{
                         "P5",
                         "P6",
                     }
-                    narrow{
-                        "S",
-                        "M",
-                        "T",
-                        "W",
-                        "T",
-                        "F",
-                        "S",
-                    }
-                    short{
-                        "LP",
-                        "P1",
-                        "P2",
-                        "P3",
-                        "P4",
-                        "P5",
-                        "P6",
-                    }
                     wide{
                         "Lāpule",
                         "Poʻakahi",
@@ -193,96 +122,12 @@ haw{
                         "Poʻalima",
                         "Poʻaono",
                     }
-                }
-                stand-alone{
-                    abbreviated{
-                        "LP",
-                        "P1",
-                        "P2",
-                        "P3",
-                        "P4",
-                        "P5",
-                        "P6",
-                    }
-                    narrow{
-                        "S",
-                        "M",
-                        "T",
-                        "W",
-                        "T",
-                        "F",
-                        "S",
-                    }
-                    short{
-                        "LP",
-                        "P1",
-                        "P2",
-                        "P3",
-                        "P4",
-                        "P5",
-                        "P6",
-                    }
-                    wide{
-                        "Lāpule",
-                        "Poʻakahi",
-                        "Poʻalua",
-                        "Poʻakolu",
-                        "Poʻahā",
-                        "Poʻalima",
-                        "Poʻaono",
-                    }
-                }
-            }
-            dayPeriod{
-                stand-alone{
-                    abbreviated{
-                        am{"AM"}
-                        pm{"PM"}
-                    }
-                    narrow{
-                        am{"AM"}
-                        pm{"PM"}
-                    }
-                    wide{
-                        am{"AM"}
-                        pm{"PM"}
-                    }
-                }
-            }
-            eras{
-                abbreviated{
-                    "BCE",
-                    "CE",
-                }
-                wide{
-                    "BCE",
-                    "CE",
                 }
             }
             intervalFormats{
-                H{
-                    H{"HH–HH"}
-                }
-                Hm{
-                    H{"HH:mm–HH:mm"}
-                    m{"HH:mm–HH:mm"}
-                }
-                Hmv{
-                    H{"HH:mm–HH:mm v"}
-                    m{"HH:mm–HH:mm v"}
-                }
-                Hv{
-                    H{"HH–HH v"}
-                }
-                M{
-                    M{"MM–MM"}
-                }
                 MEd{
                     M{"MM-dd, E – MM-dd, E"}
                     d{"MM-dd, E – MM-dd, E"}
-                }
-                MMM{
-                    M{"LLL–LLL"}
                 }
                 MMMEd{
                     M{"MMM d, E – MMM d, E"}
@@ -290,16 +135,11 @@ haw{
                 }
                 MMMd{
                     M{"MMM d – MMM d"}
-                    d{"MMM d–d"}
                 }
                 Md{
                     M{"MM-dd – MM-dd"}
                     d{"MM-dd – MM-dd"}
                 }
-                d{
-                    d{"d–d"}
-                }
-                fallback{"{0} – {1}"}
                 h{
                     a{"h a – h a"}
                     h{"h–h a"}
@@ -318,9 +158,6 @@ haw{
                     a{"h a – h a v"}
                     h{"h–h a v"}
                 }
-                y{
-                    y{"y–y"}
-                }
                 yM{
                     M{"y-MM – y-MM"}
                     y{"y-MM – y-MM"}
@@ -331,7 +168,6 @@ haw{
                     y{"y-MM-dd, E – y-MM-dd, E"}
                 }
                 yMMM{
-                    M{"y MMM–MMM"}
                     y{"y MMM – y MMM"}
                 }
                 yMMMEd{
@@ -340,12 +176,10 @@ haw{
                     y{"y MMM d, E – y MMM d, E"}
                 }
                 yMMMM{
-                    M{"y MMMM–MMMM"}
                     y{"y MMMM – y MMMM"}
                 }
                 yMMMd{
                     M{"y MMM d – MMM d"}
-                    d{"y MMM d–d"}
                     y{"y MMM d – y MMM d"}
                 }
                 yMd{
@@ -370,20 +204,6 @@ haw{
                         "Now.",
                         "Kek.",
                     }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10",
-                        "11",
-                        "12",
-                    }
                     wide{
                         "Ianuali",
                         "Pepeluali",
@@ -397,92 +217,6 @@ haw{
                         "ʻOkakopa",
                         "Nowemapa",
                         "Kekemapa",
-                    }
-                }
-                stand-alone{
-                    abbreviated{
-                        "Ian.",
-                        "Pep.",
-                        "Mal.",
-                        "ʻAp.",
-                        "Mei",
-                        "Iun.",
-                        "Iul.",
-                        "ʻAu.",
-                        "Kep.",
-                        "ʻOk.",
-                        "Now.",
-                        "Kek.",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10",
-                        "11",
-                        "12",
-                    }
-                    wide{
-                        "Ianuali",
-                        "Pepeluali",
-                        "Malaki",
-                        "ʻApelila",
-                        "Mei",
-                        "Iune",
-                        "Iulai",
-                        "ʻAukake",
-                        "Kepakemapa",
-                        "ʻOkakopa",
-                        "Nowemapa",
-                        "Kekemapa",
-                    }
-                }
-            }
-            quarters{
-                format{
-                    abbreviated{
-                        "Q1",
-                        "Q2",
-                        "Q3",
-                        "Q4",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                    }
-                    wide{
-                        "Q1",
-                        "Q2",
-                        "Q3",
-                        "Q4",
-                    }
-                }
-                stand-alone{
-                    abbreviated{
-                        "Q1",
-                        "Q2",
-                        "Q3",
-                        "Q4",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                    }
-                    wide{
-                        "Q1",
-                        "Q2",
-                        "Q3",
-                        "Q4",
                     }
                 }
             }

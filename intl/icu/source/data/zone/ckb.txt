@@ -2,4 +2,11 @@
 // License & terms of use: http://www.unicode.org/copyright.html
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ckb{
+    zoneStrings{
+        gmtFormat{"گرینیچ {0}"}
+        gmtZeroFormat{"گرینیچ"}
+        regionFormat{"بەکاتی {0}"}
+        regionFormatDaylight{"کاتی {0} هاوینە"}
+        regionFormatStandard{"کاتی {0} فەرمی"}
+    }
 }

@@ -8,6 +8,12 @@ es_MX{
             milligram-ofglucose-per-deciliter{
                 dnam{"miligramos por decilitro"}
             }
+            percent{
+                dnam{"por ciento"}
+            }
+            permille{
+                dnam{"por mil"}
+            }
         }
         electric{
             ohm{
@@ -49,6 +55,13 @@ es_MX{
                 other{"{0} caballos de fuerza"}
             }
         }
+        speed{
+            beaufort{
+                dnam{"Bft"}
+                one{"B {0}"}
+                other{"B {0}"}
+            }
+        }
         temperature{
             kelvin{
                 dnam{"kelvines"}
@@ -71,9 +84,26 @@ es_MX{
     unitsNarrow{
         concentr{
             karat{
-                dnam{"kt"}
                 one{"{0}kt"}
                 other{"{0}ct"}
+            }
+        }
+        digital{
+            gigabyte{
+                one{"{0} GB"}
+                other{"{0}GB"}
+            }
+            kilobit{
+                one{"{0} kb"}
+                other{"{0}kb"}
+            }
+            terabit{
+                one{"{0} Tb"}
+                other{"{0}Tb"}
+            }
+            terabyte{
+                one{"{0} TB"}
+                other{"{0}TB"}
             }
         }
         duration{
@@ -98,9 +128,51 @@ es_MX{
                 other{"{0}a"}
             }
         }
+        electric{
+            volt{
+                one{"{0} V"}
+                other{"{0}V"}
+            }
+        }
+        frequency{
+            gigahertz{
+                one{"{0} GHz"}
+                other{"{0}GHz"}
+            }
+            hertz{
+                one{"{0} Hz"}
+                other{"{0}Hz"}
+            }
+            kilohertz{
+                one{"{0} kHz"}
+                other{"{0}kHz"}
+            }
+            megahertz{
+                one{"{0} MHz"}
+                other{"{0}MHz"}
+            }
+        }
         length{
+            centimeter{
+                one{"{0} cm"}
+                other{"{0}cm"}
+            }
+            kilometer{
+                one{"{0} km"}
+                other{"{0}km"}
+            }
+            millimeter{
+                one{"{0} mm"}
+                other{"{0}mm"}
+            }
             nautical-mile{
                 dnam{"M"}
+            }
+        }
+        mass{
+            kilogram{
+                one{"{0} kg"}
+                other{"{0}kg"}
             }
         }
         power{
@@ -108,14 +180,10 @@ es_MX{
                 dnam{"CV"}
             }
         }
-        torque{
-            newton-meter{
-                dnam{"N⋅m"}
-            }
-        }
-        volume{
-            cup{
-                dnam{"tza."}
+        pressure{
+            atmosphere{
+                one{"{0} atm"}
+                other{"{0}atm"}
             }
         }
     }
@@ -128,7 +196,7 @@ es_MX{
         angle{
             degree{
                 dnam{"º"}
-                one{"{0}°"}
+                one{"{0} grados"}
                 other{"{0} grados"}
             }
         }
@@ -151,6 +219,12 @@ es_MX{
                 other{"{0} mi/gal imp."}
             }
         }
+        digital{
+            byte{
+                one{"{0} B"}
+                other{"{0} byte"}
+            }
+        }
         duration{
             day{
                 dnam{"días"}
@@ -160,12 +234,12 @@ es_MX{
             }
             month{
                 dnam{"meses"}
-                one{"{0} m"}
+                one{"{0} m."}
                 other{"{0} m"}
             }
             week{
                 dnam{"sem"}
-                one{"{0} sem"}
+                one{"{0} sem."}
                 other{"{0} sem"}
             }
             year{
@@ -173,13 +247,6 @@ es_MX{
                 one{"{0} a"}
                 other{"{0} a"}
                 per{"{0}/a"}
-            }
-        }
-        graphics{
-            dot{
-                dnam{"pto"}
-                one{"{0} pto"}
-                other{"{0} ptos"}
             }
         }
         length{
@@ -242,7 +309,7 @@ es_MX{
         volume{
             cup{
                 dnam{"tza."}
-                one{"{0} tza."}
+                one{"{0} tzas."}
                 other{"{0} tzas."}
             }
             pint{

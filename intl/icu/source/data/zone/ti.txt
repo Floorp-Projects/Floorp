@@ -258,6 +258,9 @@ ti{
         "America:Chihuahua"{
             ec{"ቺዋዋ"}
         }
+        "America:Ciudad_Juarez"{
+            ec{"ሲዩዳድ ጁዋረዝ"}
+        }
         "America:Coral_Harbour"{
             ec{"ኣቲኮካን"}
         }
@@ -1450,10 +1453,6 @@ ti{
         "meta:Venezuela"{
             ls{"ግዜ ቬኔዝዌላ"}
         }
-        fallbackFormat{"{1} ({0})"}
-        gmtFormat{"GMT{0}"}
-        gmtZeroFormat{"GMT"}
-        hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"ግዜ {0}"}
         regionFormatDaylight{"ግዜ ክረምቲ {0}"}
         regionFormatStandard{"ምዱብ ግዜ {0}"}

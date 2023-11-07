@@ -1930,10 +1930,6 @@ pa{
         "meta:Yukon"{
             ls{"ਯੂਕੋਨ ਸਮਾਂ"}
         }
-        fallbackFormat{"{1} ({0})"}
-        gmtFormat{"GMT{0}"}
-        gmtZeroFormat{"GMT"}
-        hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"{0} ਵੇਲਾ"}
         regionFormatDaylight{"{0} ਪ੍ਰਕਾਸ਼ ਵੇਲਾ"}
         regionFormatStandard{"{0} ਮਿਆਰੀ ਵੇਲਾ"}

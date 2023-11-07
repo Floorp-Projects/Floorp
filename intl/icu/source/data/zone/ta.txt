@@ -1947,10 +1947,6 @@ ta{
         "meta:Yukon"{
             ls{"யூகோன் நேரம்"}
         }
-        fallbackFormat{"{1} ({0})"}
-        gmtFormat{"GMT{0}"}
-        gmtZeroFormat{"GMT"}
-        hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"{0} நேரம்"}
         regionFormatDaylight{"{0} பகலொளி நேரம்"}
         regionFormatStandard{"{0} நிலையான நேரம்"}

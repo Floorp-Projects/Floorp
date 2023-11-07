@@ -2,464 +2,782 @@
 // License & terms of use: http://www.unicode.org/copyright.html
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 units:table(nofallback){
-    cldrVersion{"43"}
+    cldrVersion{"44"}
     convertUnits{
         100-kilometer{
             factor{"100000"}
+            systems{"si metric"}
             target{"meter"}
         }
         acre{
             factor{"ft2_to_m2 * 43560"}
+            systems{"ussystem uksystem"}
             target{"square-meter"}
         }
         ampere{
             factor{"1"}
+            systems{"si metric prefixable"}
             target{"ampere"}
         }
         arc-minute{
             factor{"1/360*60"}
+            systems{"si_acceptable metric_adjacent ussystem uksystem astronomical"}
             target{"revolution"}
         }
         arc-second{
             factor{"1/360*60*60"}
+            systems{"si_acceptable metric_adjacent ussystem uksystem astronomical"}
             target{"revolution"}
         }
         astronomical-unit{
             factor{"meters_per_AU"}
+            systems{"astronomical si_acceptable"}
             target{"meter"}
         }
         atmosphere{
             factor{"101325"}
+            systems{"ussystem uksystem"}
             target{"kilogram-per-meter-square-second"}
         }
         bar{
             factor{"100000"}
+            systems{"si_acceptable metric prefixable"}
             target{"kilogram-per-meter-square-second"}
         }
         barrel{
             factor{"42*gal_to_m3"}
+            systems{"ussystem"}
             target{"cubic-meter"}
+        }
+        becquerel{
+            factor{"1"}
+            systems{"si metric prefixable"}
+            target{"per-second"}
         }
         bit{
             factor{"1"}
+            systems{"metric_adjacent prefixable ussystem uksystem"}
             target{"bit"}
         }
         british-thermal-unit{
             factor{"4.184*2267.96185/9"}
+            systems{"ussystem uksystem"}
             target{"kilogram-square-meter-per-square-second"}
+        }
+        british-thermal-unit-it{
+            factor{"4.1868*2267.96185/9"}
+            systems{"ussystem uksystem"}
+            target{"kilogram-square-meter-per-square-second"}
+        }
+        bu-jp{
+            factor{"tsubo_to_m2*1"}
+            systems{"jpsystem"}
+            target{"square-meter"}
         }
         bushel{
             factor{"2150.42*in3_to_m3"}
+            systems{"ussystem"}
             target{"cubic-meter"}
         }
         byte{
             factor{"8"}
+            systems{"metric_adjacent prefixable ussystem uksystem"}
             target{"bit"}
         }
         calorie{
             factor{"4.184"}
+            systems{"metric_adjacent prefixable"}
+            target{"kilogram-square-meter-per-square-second"}
+        }
+        calorie-it{
+            factor{"4.1868"}
+            systems{"metric_adjacent prefixable"}
             target{"kilogram-square-meter-per-square-second"}
         }
         candela{
             factor{"1"}
+            systems{"si metric prefixable"}
             target{"candela"}
         }
         carat{
             factor{"0.0002"}
+            systems{"metric_adjacent ussystem uksystem"}
             target{"kilogram"}
         }
         celsius{
             factor{"1"}
             offset{"273.15"}
+            systems{"si metric"}
             target{"kelvin"}
         }
         century{
             factor{"100"}
+            systems{"metric_adjacent ussystem uksystem astronomical"}
             target{"year"}
+        }
+        chain{
+            factor{"ft_to_m*66"}
+            systems{"ussystem uksystem"}
+            target{"meter"}
+        }
+        cho{
+            factor{"tsubo_to_m2*3000"}
+            systems{"jpsystem"}
+            target{"square-meter"}
+        }
+        coulomb{
+            factor{"1"}
+            systems{"si metric prefixable"}
+            target{"second-ampere"}
         }
         cup{
             factor{"gal_to_m3/16"}
+            systems{"ussystem"}
+            target{"cubic-meter"}
+        }
+        cup-jp{
+            factor{"1*100*0.000001"}
+            systems{"jpsystem"}
             target{"cubic-meter"}
         }
         cup-metric{
             factor{"0.00025"}
+            systems{"metric_adjacent"}
             target{"cubic-meter"}
         }
         dalton{
-            factor{"1.49241808560E-10"}
-            target{"kilogram-square-meter-per-square-second"}
+            factor{"AMU"}
+            systems{"si_acceptable metric prefixable"}
+            target{"kilogram"}
         }
         day{
             factor{"86400"}
+            systems{
+                "si_acceptable metric_adjacent prefixable ussystem uksystem astronomi"
+                "cal"
+            }
             target{"second"}
         }
         day-person{
             factor{"86400"}
+            systems{"person_age"}
             target{"second"}
         }
         decade{
             factor{"10"}
+            systems{"metric_adjacent ussystem uksystem astronomical"}
             target{"year"}
         }
         degree{
             factor{"1/360"}
+            systems{"si_acceptable metric_adjacent ussystem uksystem astronomical"}
             target{"revolution"}
         }
         dessert-spoon{
             factor{"gal_to_m3/16*128"}
+            systems{"ussystem"}
             target{"cubic-meter"}
         }
         dessert-spoon-imperial{
             factor{"gal_imp_to_m3/16*128"}
+            systems{"uksystem"}
             target{"cubic-meter"}
         }
         dot{
             factor{"1"}
+            systems{"metric_adjacent ussystem uksystem"}
             target{"pixel"}
         }
         dram{
             factor{"gal_to_m3/128*8"}
+            systems{"ussystem"}
             target{"cubic-meter"}
         }
         drop{
             factor{"gal_to_m3/128*576"}
+            systems{"ussystem"}
             target{"cubic-meter"}
         }
         dunam{
             factor{"1000"}
+            systems{"metric_adjacent"}
             target{"square-meter"}
         }
         earth-mass{
             factor{"5.9722E+24"}
+            systems{"astronomical"}
             target{"kilogram"}
         }
         earth-radius{
             factor{"6.3781E6"}
+            systems{"astronomical"}
             target{"meter"}
         }
         electronvolt{
             factor{"1.602177E-19"}
+            systems{"si_acceptable metric_adjacent"}
             target{"kilogram-square-meter-per-square-second"}
         }
         em{
             factor{"1"}
+            systems{"metric_adjacent ussystem uksystem"}
             target{"em"}
         }
         fahrenheit{
             factor{"5/9"}
             offset{"2298.35/9"}
+            systems{"ussystem uksystem"}
             target{"kelvin"}
+        }
+        farad{
+            factor{"1"}
+            systems{"si metric prefixable"}
+            target{"pow4-second-square-ampere-per-kilogram-square-meter"}
         }
         fathom{
             factor{"ft_to_m * 6"}
+            systems{"ussystem uksystem"}
             target{"meter"}
         }
         fluid-ounce{
             factor{"gal_to_m3/128"}
+            systems{"ussystem"}
             target{"cubic-meter"}
         }
         fluid-ounce-imperial{
             factor{"gal_imp_to_m3/160"}
+            systems{"uksystem"}
             target{"cubic-meter"}
         }
         foodcalorie{
             factor{"4184"}
+            systems{"ussystem uksystem"}
             target{"kilogram-square-meter-per-square-second"}
         }
         foot{
             factor{"ft_to_m"}
+            systems{"ussystem uksystem"}
             target{"meter"}
+        }
+        fortnight{
+            factor{"86400*14"}
+            systems{"ussystem uksystem"}
+            target{"second"}
+        }
+        fun{
+            factor{"1*3/8000"}
+            systems{"jpsystem"}
+            target{"kilogram"}
         }
         furlong{
             factor{"ft_to_m*660"}
+            systems{"ussystem uksystem"}
             target{"meter"}
         }
         g-force{
             factor{"gravity"}
+            systems{"metric_adjacent ussystem uksystem"}
             target{"meter-per-square-second"}
         }
         gallon{
             factor{"gal_to_m3"}
+            systems{"ussystem"}
             target{"cubic-meter"}
         }
         gallon-imperial{
             factor{"gal_imp_to_m3"}
+            systems{"uksystem"}
             target{"cubic-meter"}
+        }
+        gasoline-energy-density{
+            factor{"33.705 * 3600 * 1000/gal_to_m3"}
+            systems{"metric_adjacent ussystem uksystem"}
+            target{"kilogram-per-meter-square-second"}
         }
         grain{
             factor{"lb_to_kg/7000"}
+            systems{"ussystem uksystem"}
             target{"kilogram"}
         }
         gram{
             factor{"0.001"}
+            systems{"si metric prefixable"}
             target{"kilogram"}
+        }
+        gray{
+            factor{"1"}
+            systems{"si metric prefixable"}
+            target{"square-meter-per-square-second"}
         }
         hectare{
             factor{"10000"}
+            systems{"si_acceptable metric"}
             target{"square-meter"}
+        }
+        henry{
+            factor{"1"}
+            systems{"si metric prefixable"}
+            target{"kilogram-square-meter-per-square-second-square-ampere"}
         }
         hertz{
             factor{"1"}
+            systems{"si metric prefixable"}
             target{"revolution-per-second"}
         }
         horsepower{
             factor{"ft_to_m * lb_to_kg * gravity * 550"}
+            systems{"ussystem uksystem"}
             target{"kilogram-square-meter-per-cubic-second"}
         }
         hour{
             factor{"3600"}
+            systems{
+                "si_acceptable metric_adjacent prefixable ussystem uksystem astronomi"
+                "cal"
+            }
             target{"second"}
         }
         inch{
             factor{"ft_to_m/12"}
+            systems{"ussystem uksystem"}
             target{"meter"}
         }
         item{
             factor{"1"}
+            systems{"metric_adjacent ussystem uksystem"}
             target{"item"}
         }
         jigger{
             factor{"gal_to_m3*3/128*2"}
+            systems{"ussystem"}
             target{"cubic-meter"}
+        }
+        jo-jp{
+            factor{"shaku_to_m*10"}
+            systems{"jpsystem"}
+            target{"meter"}
         }
         joule{
             factor{"1"}
+            systems{"si metric prefixable"}
             target{"kilogram-square-meter-per-square-second"}
         }
         karat{
             factor{"1/24"}
+            systems{"metric_adjacent ussystem uksystem"}
             target{"portion"}
+        }
+        katal{
+            factor{"item_per_mole"}
+            systems{"si metric"}
+            target{"item-per-second"}
         }
         kelvin{
             factor{"1"}
+            systems{"si metric prefixable"}
             target{"kelvin"}
+        }
+        ken{
+            factor{"shaku_to_m*6"}
+            systems{"jpsystem"}
+            target{"meter"}
         }
         kilogram{
             factor{"1"}
+            systems{"si metric"}
             target{"kilogram"}
+        }
+        kilogram-force{
+            factor{"gravity"}
+            systems{"metric_adjacent"}
+            target{"kilogram-meter-per-square-second"}
         }
         knot{
             factor{"1852/3600"}
+            systems{"ussystem uksystem si_acceptable"}
             target{"meter-per-second"}
+        }
+        koku{
+            factor{"sho_to_m3*100"}
+            systems{"jpsystem"}
+            target{"cubic-meter"}
+        }
+        kosaji{
+            factor{"1*5*0.000001"}
+            systems{"jpsystem"}
+            target{"cubic-meter"}
         }
         light-year{
             factor{"speed_of_light_meters_per_second*sec_per_julian_year"}
+            systems{"astronomical"}
             target{"meter"}
         }
         liter{
             factor{"0.001"}
+            systems{"si_acceptable metric prefixable"}
             target{"cubic-meter"}
         }
         lumen{
             factor{"1"}
+            systems{"si metric prefixable"}
             target{"candela-square-meter-per-square-meter"}
         }
         lux{
             factor{"1"}
+            systems{"si metric prefixable"}
             target{"candela-per-square-meter"}
         }
         meter{
             factor{"1"}
+            systems{"si metric prefixable"}
             target{"meter"}
         }
         mile{
             factor{"ft_to_m*5280"}
+            systems{"ussystem uksystem"}
             target{"meter"}
         }
         mile-scandinavian{
             factor{"10000"}
+            systems{"metric_adjacent"}
             target{"meter"}
         }
         minute{
             factor{"60"}
+            systems{
+                "si_acceptable metric_adjacent prefixable ussystem uksystem astronomi"
+                "cal"
+            }
             target{"second"}
         }
         mole{
             factor{"item_per_mole"}
+            systems{"si metric prefixable"}
             target{"item"}
         }
         month{
             factor{"1/12"}
+            systems{"metric_adjacent ussystem uksystem astronomical"}
             target{"year"}
         }
         month-person{
             factor{"1/12"}
+            systems{"person_age"}
             target{"year"}
         }
         nautical-mile{
             factor{"1852"}
+            systems{"ussystem uksystem si_acceptable"}
             target{"meter"}
         }
         newton{
             factor{"1"}
+            systems{"si metric prefixable"}
             target{"kilogram-meter-per-square-second"}
         }
         ofglucose{
             factor{"1000*item_per_mole/glucose_molar_mass"}
+            systems{"metric_adjacent"}
             target{"item-per-kilogram"}
         }
         ofhg{
             factor{"13595.1*gravity"}
+            systems{"metric_adjacent uksystem ussystem"}
             target{"kilogram-per-square-meter-square-second"}
         }
         ohm{
             factor{"1"}
+            systems{"si metric prefixable"}
             target{"kilogram-square-meter-per-cubic-second-square-ampere"}
+        }
+        osaji{
+            factor{"1*15*0.000001"}
+            systems{"jpsystem"}
+            target{"cubic-meter"}
         }
         ounce{
             factor{"lb_to_kg/16"}
+            systems{"ussystem uksystem"}
             target{"kilogram"}
         }
         ounce-troy{
             factor{"0.03110348"}
+            systems{"ussystem uksystem"}
             target{"kilogram"}
         }
         parsec{
             factor{"meters_per_AU*60*60*180/PI"}
+            systems{"astronomical prefixable"}
             target{"meter"}
         }
         pascal{
             factor{"1"}
+            systems{"si metric prefixable"}
             target{"kilogram-per-meter-square-second"}
         }
         percent{
             factor{"1/100"}
+            systems{"metric_adjacent ussystem uksystem"}
             target{"portion"}
         }
         permille{
             factor{"1/1000"}
+            systems{"metric_adjacent ussystem uksystem"}
             target{"portion"}
         }
         permillion{
             factor{"1/1000000"}
+            systems{"metric_adjacent ussystem uksystem"}
             target{"portion"}
         }
         permyriad{
             factor{"1/10000"}
+            systems{"metric_adjacent ussystem uksystem"}
             target{"portion"}
         }
         pinch{
             factor{"gal_to_m3/128*128"}
+            systems{"ussystem"}
             target{"cubic-meter"}
         }
         pint{
             factor{"gal_to_m3/8"}
+            systems{"ussystem"}
+            target{"cubic-meter"}
+        }
+        pint-imperial{
+            factor{"gal_imp_to_m3/8"}
+            systems{"uksystem"}
             target{"cubic-meter"}
         }
         pint-metric{
             factor{"0.0005"}
+            systems{"metric_adjacent"}
             target{"cubic-meter"}
         }
         pixel{
             factor{"1"}
+            systems{"metric_adjacent ussystem uksystem prefixable"}
             target{"pixel"}
         }
         point{
             factor{"ft_to_m/864"}
+            systems{"metric_adjacent ussystem uksystem"}
             target{"meter"}
         }
         portion{
             factor{"1"}
+            systems{"metric_adjacent ussystem uksystem"}
             target{"portion"}
         }
         pound{
             factor{"lb_to_kg"}
+            systems{"ussystem uksystem"}
             target{"kilogram"}
         }
         pound-force{
             factor{"lb_to_kg * gravity"}
+            systems{"ussystem uksystem"}
             target{"kilogram-meter-per-square-second"}
         }
         quart{
             factor{"gal_to_m3/4"}
+            systems{"ussystem"}
             target{"cubic-meter"}
         }
         quart-imperial{
             factor{"gal_imp_to_m3/4"}
+            systems{"uksystem"}
             target{"cubic-meter"}
         }
         quarter{
             factor{"1/4"}
+            systems{"metric_adjacent"}
             target{"year"}
         }
         radian{
             factor{"1/2*PI"}
+            systems{"si metric"}
             target{"revolution"}
+        }
+        rankine{
+            factor{"5/9"}
+            systems{"ussystem uksystem"}
+            target{"kelvin"}
         }
         revolution{
             factor{"1"}
+            systems{"metric_adjacent ussystem uksystem"}
             target{"revolution"}
+        }
+        ri-jp{
+            factor{"shaku_to_m*12960"}
+            systems{"jpsystem"}
+            target{"meter"}
+        }
+        rin{
+            factor{"shaku_to_m/1000"}
+            systems{"jpsystem"}
+            target{"meter"}
+        }
+        rod{
+            factor{"ft_to_m*16.5"}
+            systems{"ussystem uksystem"}
+            target{"meter"}
+        }
+        sai{
+            factor{"sho_to_m3/1000"}
+            systems{"jpsystem"}
+            target{"cubic-meter"}
+        }
+        se-jp{
+            factor{"tsubo_to_m2*30"}
+            systems{"jpsystem"}
+            target{"square-meter"}
         }
         second{
             factor{"1"}
+            systems{"si metric prefixable ussystem uksystem astronomical"}
             target{"second"}
+        }
+        shaku{
+            factor{"sho_to_m3/100"}
+            systems{"jpsystem"}
+            target{"cubic-meter"}
+        }
+        shaku-cloth{
+            factor{"shaku_to_m*5/4"}
+            systems{"jpsystem"}
+            target{"meter"}
+        }
+        shaku-length{
+            factor{"shaku_to_m"}
+            systems{"jpsystem"}
+            target{"meter"}
+        }
+        siemens{
+            factor{"1"}
+            systems{"si metric prefixable"}
+            target{"cubic-second-square-ampere-per-kilogram-square-meter"}
+        }
+        sievert{
+            factor{"1"}
+            systems{"si metric prefixable"}
+            target{"square-meter-per-square-second"}
+        }
+        slug{
+            factor{"lb_to_kg*gravity/ft_to_m"}
+            systems{"ussystem uksystem"}
+            target{"kilogram"}
         }
         solar-luminosity{
             factor{"3.828E+26"}
+            systems{"astronomical"}
             target{"kilogram-square-meter-per-cubic-second"}
         }
         solar-mass{
             factor{"1.98847E+30"}
+            systems{"astronomical"}
             target{"kilogram"}
         }
         solar-radius{
             factor{"695700000"}
+            systems{"astronomical"}
             target{"meter"}
+        }
+        steradian{
+            factor{"1/4*PI*PI"}
+            systems{"si metric"}
+            target{"square-revolution"}
         }
         stone{
             factor{"lb_to_kg*14"}
+            systems{"uksystem"}
             target{"kilogram"}
+        }
+        sun{
+            factor{"shaku_to_m/10"}
+            systems{"jpsystem"}
+            target{"meter"}
         }
         tablespoon{
             factor{"gal_to_m3/256"}
+            systems{"ussystem"}
             target{"cubic-meter"}
         }
         teaspoon{
             factor{"gal_to_m3/16*48"}
+            systems{"ussystem"}
             target{"cubic-meter"}
+        }
+        tesla{
+            factor{"1"}
+            systems{"si metric prefixable"}
+            target{"kilogram-per-square-second-ampere"}
         }
         therm-us{
             factor{"105480400"}
+            systems{"ussystem"}
             target{"kilogram-square-meter-per-square-second"}
+        }
+        to-jp{
+            factor{"sho_to_m3*10"}
+            systems{"jpsystem"}
+            target{"cubic-meter"}
         }
         ton{
             factor{"lb_to_kg*2000"}
+            systems{"ussystem uksystem"}
             target{"kilogram"}
         }
         tonne{
             factor{"1000"}
+            systems{"si_acceptable metric prefixable"}
             target{"kilogram"}
         }
         volt{
             factor{"1"}
+            systems{"si metric prefixable"}
             target{"kilogram-square-meter-per-cubic-second-ampere"}
         }
         watt{
             factor{"1"}
+            systems{"si metric prefixable"}
             target{"kilogram-square-meter-per-cubic-second"}
         }
+        weber{
+            factor{"1"}
+            systems{"si metric prefixable"}
+            target{"kilogram-square-meter-per-square-second-ampere"}
+        }
         week{
-            factor{"604800"}
+            factor{"86400*7"}
+            systems{"metric_adjacent ussystem uksystem astronomical"}
             target{"second"}
         }
         week-person{
-            factor{"604800"}
+            factor{"86400*7"}
+            systems{"person_age"}
             target{"second"}
         }
         yard{
             factor{"ft_to_m*3"}
+            systems{"ussystem uksystem"}
             target{"meter"}
         }
         year{
             factor{"1"}
+            systems{"metric_adjacent prefixable ussystem uksystem astronomical"}
             target{"year"}
         }
         year-person{
             factor{"1"}
+            systems{"person_age"}
             target{"year"}
         }
     }
     unitConstants{
+        AMU{"1.66053878283E-27"}
         G{"6.67408E-11"}
         PI{"411557987 / 131002976"}
         ft2_to_m2{"ft_to_m*ft_to_m"}
@@ -474,7 +792,10 @@ units:table(nofallback){
         lb_to_kg{"0.45359237"}
         meters_per_AU{"149597870700"}
         sec_per_julian_year{"31557600"}
+        shaku_to_m{"4/121"}
+        sho_to_m3{"2401/1331*1000"}
         speed_of_light_meters_per_second{"299792458"}
+        tsubo_to_m2{"400/121"}
     }
     unitPreferenceData{
         "area"{
@@ -1583,11 +1904,6 @@ units:table(nofallback){
                         unit{"millibar"}
                     }
                 }
-                IN{
-                    {
-                        unit{"inch-ofhg"}
-                    }
-                }
                 MX{
                     {
                         unit{"millimeter-ofhg"}
@@ -1686,6 +2002,11 @@ units:table(nofallback){
                 FI{
                     {
                         unit{"meter-per-second"}
+                    }
+                }
+                GB{
+                    {
+                        unit{"mile-per-hour"}
                     }
                 }
                 KR{
@@ -1945,7 +2266,7 @@ units:table(nofallback){
             square-meter{"area"}
         }
         {
-            square-meter-per-square-second{"dose"}
+            square-meter-per-square-second{"ionizing-radiation"}
         }
         {
             meter{"length"}
@@ -2006,6 +2327,12 @@ units:table(nofallback){
         }
         {
             item-per-cubic-meter{"concentration"}
+        }
+        {
+            item-per-second{"catalytic-activity"}
+        }
+        {
+            per-second{"radioactivity"}
         }
         {
             portion{"portion"}

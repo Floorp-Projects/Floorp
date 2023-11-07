@@ -2,27 +2,16 @@
 // License & terms of use: http://www.unicode.org/copyright.html
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ks{
-    AuxExemplarCharacters{"[\u200E\u200F \u064E \u064F \u0650 \u0654 \u0655 \u065F \u0656 \u0657 ئ]"}
+    AuxExemplarCharacters{"[\u200E\u200F َ ُ ِ ٔ ٕ ٟ ٖ ٗ ئ]"}
     ExemplarCharacters{
         "[ء آ أ ٲ ؤ ا ب پ ت ث ٹ ج چ ح خ د ذ ڈ ر ز ڑ ژ س ش ص ض ط ظ ع غ ف ق ک گ ل م ن ں"
         " ھ ہ و ۄ ۆ ی ۍ ؠ ے]"
     }
     ExemplarCharactersNumbers{"[\u200E \\- ‑ , ٫ ٬ . % ‰ + 0۰ 1۱ 2۲ 3۳ 4۴ 5۵ 6۶ 7۷ 8۸ 9۹]"}
-    ExemplarCharactersPunctuation{
-        "[\\- ‐ ‑ – — , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” ( ) \\[ \\] § @ * / \\& # † ‡ "
-        "′ ″]"
-    }
+    ExemplarCharactersPunctuation{"[\\- ‐‑ – — , ; \\: ! ? . … '‘’ \u0022“” ( ) \\[ \\] § @ * / \\& # † ‡ ′ ″]"}
     NumberElements{
         arabext{
-            patterns{
-                currencyFormat{"¤#,##0.00"}
-                decimalFormat{"#,##0.###"}
-                percentFormat{"#,##0%"}
-                scientificFormat{"#E0"}
-            }
             symbols{
-                decimal{"٫"}
-                group{"٬"}
                 timeSeparator{":"}
             }
         }
@@ -30,21 +19,9 @@ ks{
         latn{
             patterns{
                 currencyFormat{"¤#,##0.00"}
-                decimalFormat{"#,##0.###"}
-                percentFormat{"#,##0%"}
-                scientificFormat{"#E0"}
             }
             symbols{
-                decimal{"."}
-                exponential{"E"}
                 group{"،"}
-                infinity{"∞"}
-                list{";"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
             }
         }
         minimalPairs{
@@ -97,19 +74,10 @@ ks{
                 GyMMMEd{"E, MMM d, y G"}
                 GyMMMd{"MMM d, y G"}
                 GyMd{"M/d/y GGGGG"}
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
-                M{"L"}
                 MEd{"E, M/d"}
-                MMM{"LLL"}
                 MMMEd{"E, MMM d"}
                 MMMMEd{"E, MMMM d"}
-                MMMMd{"MMMM d"}
-                MMMd{"MMM d"}
                 Md{"M/d"}
-                d{"d"}
-                hm{"h:mm a"}
-                ms{"mm:ss"}
                 y{"y G"}
                 yyyy{"y G"}
                 yyyyM{"M/y GGGGG"}
@@ -267,30 +235,19 @@ ks{
                 GyMMMEd{"E, MMM d, y G"}
                 GyMMMd{"MMM d, y G"}
                 GyMd{"M/d/y GGGGG"}
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
-                M{"L"}
                 MEd{"E, M/d"}
-                MMM{"LLL"}
                 MMMEd{"E, MMM d"}
                 MMMMEd{"E, MMMM d"}
                 MMMMW{
                     one{"ہفتہ W از MMMM"}
                     other{"ہفتہ W از MMMM"}
                 }
-                MMMMd{"MMMM d"}
-                MMMd{"MMM d"}
                 Md{"M/d"}
-                d{"d"}
-                hm{"h:mm a"}
-                ms{"mm:ss"}
-                y{"y"}
                 yM{"M/y"}
                 yMEd{"E, M/d/y"}
                 yMMM{"MMM y"}
                 yMMMEd{"E, MMM d, y"}
                 yMMMM{"MMMM y"}
-                yMMMd{"MMM d, y"}
                 yMd{"M/d/y"}
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ y"}
@@ -310,24 +267,6 @@ ks{
                         "جُمہ",
                         "بٹوار",
                     }
-                    narrow{
-                        "ا",
-                        "ژ",
-                        "ب",
-                        "ب",
-                        "ب",
-                        "ج",
-                        "ب",
-                    }
-                    short{
-                        "آتھوار",
-                        "ژٔندٕروار",
-                        "بۆموار",
-                        "بودوار",
-                        "برؠسوار",
-                        "جُمہ",
-                        "بٹوار",
-                    }
                     wide{
                         "اَتھوار",
                         "ژٔندرٕروار",
@@ -339,15 +278,6 @@ ks{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "آتھوار",
-                        "ژٔندٕروار",
-                        "بۆموار",
-                        "بودوار",
-                        "برؠسوار",
-                        "جُمہ",
-                        "بٹوار",
-                    }
                     narrow{
                         "ا",
                         "ژ",
@@ -356,40 +286,6 @@ ks{
                         "ب",
                         "ج",
                         "ب",
-                    }
-                    short{
-                        "آتھوار",
-                        "ژٔندٕروار",
-                        "بۆموار",
-                        "بودوار",
-                        "برؠسوار",
-                        "جُمہ",
-                        "بٹوار",
-                    }
-                    wide{
-                        "اَتھوار",
-                        "ژٔندرٕروار",
-                        "بۆموار",
-                        "بودوار",
-                        "برؠسوار",
-                        "جُمہ",
-                        "بٹوار",
-                    }
-                }
-            }
-            dayPeriod{
-                stand-alone{
-                    abbreviated{
-                        am{"AM"}
-                        pm{"PM"}
-                    }
-                    narrow{
-                        am{"AM"}
-                        pm{"PM"}
-                    }
-                    wide{
-                        am{"AM"}
-                        pm{"PM"}
                     }
                 }
             }
@@ -517,26 +413,12 @@ ks{
                         "اپریل",
                         "مئی",
                         "جوٗن",
-                        "جوٗلایی",
+                        "جُلَے",
                         "اگست",
                         "ستمبر",
                         "اکتوٗبر",
                         "نومبر",
                         "دسمبر",
-                    }
-                    narrow{
-                        "ج",
-                        "ف",
-                        "م",
-                        "ا",
-                        "م",
-                        "ج",
-                        "ج",
-                        "ا",
-                        "س",
-                        "س",
-                        "ا",
-                        "ن",
                     }
                     wide{
                         "جنؤری",
@@ -545,12 +427,12 @@ ks{
                         "اپریل",
                         "مئی",
                         "جوٗن",
-                        "جوٗلایی",
+                        "جُلَے",
                         "اگست",
                         "ستمبر",
                         "اکتوٗبر",
                         "نومبر",
-                        "دسمبر",
+                        "دَسَمبَر",
                     }
                 }
                 stand-alone{
@@ -606,26 +488,6 @@ ks{
                         "کیو 3",
                         "کیو 4",
                     }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                    }
-                    wide{
-                        "گۄڑنیُک ژۄباگ",
-                        "دۆیِم ژۄباگ",
-                        "تریِم ژۄباگ",
-                        "ژوٗرِم ژۄباگ",
-                    }
-                }
-                stand-alone{
-                    abbreviated{
-                        "کیو 1",
-                        "کیو 2",
-                        "کیو 3",
-                        "کیو 4",
-                    }
                     wide{
                         "گۄڑنیُک ژۄباگ",
                         "دۆیِم ژۄباگ",
@@ -643,64 +505,6 @@ ks{
             }
             monthNames{
                 format{
-                    abbreviated{
-                        "محرم",
-                        "صفر",
-                        "ربیٖع الاول",
-                        "ربیٖع الثانی",
-                        "جمادی الاول",
-                        "جمادی الثانی",
-                        "رجب",
-                        "شعبان",
-                        "رمضان",
-                        "شوال",
-                        "ذِی القعدہ",
-                        "ذِی الحج",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10",
-                        "11",
-                        "12",
-                    }
-                    wide{
-                        "محرم",
-                        "صفر",
-                        "ربیٖع الاول",
-                        "ربیٖع الثانی",
-                        "جمادی الاول",
-                        "جمادی الثانی",
-                        "رجب",
-                        "شعبان",
-                        "رمضان",
-                        "شوال",
-                        "ذِی القعدہ",
-                        "ذِی الحج",
-                    }
-                }
-                stand-alone{
-                    abbreviated{
-                        "محرم",
-                        "صفر",
-                        "ربیٖع الاول",
-                        "ربیٖع الثانی",
-                        "جمادی الاول",
-                        "جمادی الثانی",
-                        "رجب",
-                        "شعبان",
-                        "رمضان",
-                        "شوال",
-                        "ذِی القعدہ",
-                        "ذِی الحج",
-                    }
                     wide{
                         "محرم",
                         "صفر",
@@ -728,22 +532,6 @@ ks{
                 "1"{"پگاہ"}
             }
         }
-        day-narrow{
-            dn{"دۄہ"}
-            relative{
-                "-1"{"راتھ"}
-                "0"{"اَز"}
-                "1"{"پگاہ"}
-            }
-        }
-        day-short{
-            dn{"دۄہ"}
-            relative{
-                "-1"{"راتھ"}
-                "0"{"اَز"}
-                "1"{"پگاہ"}
-            }
-        }
         dayperiod{
             dn{"صُبح/راتھ"}
         }
@@ -753,19 +541,7 @@ ks{
         hour{
             dn{"گٲنٹہٕ"}
         }
-        hour-narrow{
-            dn{"گٲنٹہٕ"}
-        }
-        hour-short{
-            dn{"گٲنٹہٕ"}
-        }
         minute{
-            dn{"مِنَٹ"}
-        }
-        minute-narrow{
-            dn{"مِنَٹ"}
-        }
-        minute-short{
             dn{"مِنَٹ"}
         }
         month{
@@ -776,59 +552,13 @@ ks{
                 "1"{"نو ریتھۍ"}
             }
         }
-        month-narrow{
-            dn{"رؠتھ"}
-            relative{
-                "-1"{"پٔتِم ریتھۍ"}
-                "0"{"یٕہ ریتھۍ"}
-                "1"{"نو ریتھۍ"}
-            }
-        }
-        month-short{
-            dn{"رؠتھ"}
-            relative{
-                "-1"{"پٔتِم ریتھۍ"}
-                "0"{"یٕہ ریتھۍ"}
-                "1"{"نو ریتھۍ"}
-            }
-        }
         quarter{
-            dn{"کوارٹر"}
-        }
-        quarter-narrow{
-            dn{"کوارٹر"}
-        }
-        quarter-short{
             dn{"کوارٹر"}
         }
         second{
             dn{"سؠکَنڈ"}
         }
-        second-narrow{
-            dn{"سؠکَنڈ"}
-        }
-        second-short{
-            dn{"سؠکَنڈ"}
-        }
         week{
-            dn{"ہفتہٕ"}
-            relative{
-                "-1"{"پٔتِم ہفتہ"}
-                "0"{"یٕہ ہفتہ"}
-                "1"{"نو ہفتہ"}
-            }
-            relativePeriod{"{0} ہُک ہفتہ"}
-        }
-        week-narrow{
-            dn{"ہفتہٕ"}
-            relative{
-                "-1"{"پٔتِم ہفتہ"}
-                "0"{"یٕہ ہفتہ"}
-                "1"{"نو ہفتہ"}
-            }
-            relativePeriod{"{0} ہُک ہفتہ"}
-        }
-        week-short{
             dn{"ہفتہٕ"}
             relative{
                 "-1"{"پٔتِم ہفتہ"}
@@ -841,22 +571,6 @@ ks{
             dn{"ہفتُک دۄہ"}
         }
         year{
-            dn{"ؤری"}
-            relative{
-                "-1"{"پٔتِم ؤری"}
-                "0"{"یٕہ ؤری"}
-                "1"{"نو ؤری"}
-            }
-        }
-        year-narrow{
-            dn{"ؤری"}
-            relative{
-                "-1"{"پٔتِم ؤری"}
-                "0"{"یٕہ ؤری"}
-                "1"{"نو ؤری"}
-            }
-        }
-        year-short{
             dn{"ؤری"}
             relative{
                 "-1"{"پٔتِم ؤری"}

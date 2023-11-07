@@ -899,9 +899,13 @@ cs{
             "SKK",
             "slovenská koruna",
         }
+        SLE{
+            "SLE",
+            "sierro-leonský leone",
+        }
         SLL{
             "SLL",
-            "sierro-leonský leone",
+            "sierro-leonský leone (1964—2022)",
         }
         SOS{
             "SOS",
@@ -1143,10 +1147,6 @@ cs{
             "XTS",
             "kód zvlášť vyhrazený pro testovací účely",
         }
-        XUA{
-            "XUA",
-            "XUA",
-        }
         XXX{
             "XXX",
             "neznámá měna",
@@ -1213,111 +1213,10 @@ cs{
         }
     }
     Currencies%narrow{
-        AFN{"؋"}
-        AMD{"֏"}
-        AOA{"Kz"}
-        ARS{"$"}
-        AUD{"$"}
-        AZN{"₼"}
-        BAM{"KM"}
-        BBD{"$"}
-        BDT{"৳"}
-        BMD{"$"}
-        BND{"$"}
-        BOB{"Bs"}
-        BRL{"R$"}
-        BSD{"$"}
-        BWP{"P"}
         BYN{"р."}
-        BZD{"$"}
-        CAD{"$"}
-        CLP{"$"}
-        CNY{"¥"}
-        COP{"$"}
-        CRC{"₡"}
-        CUC{"$"}
-        CUP{"$"}
-        CZK{"Kč"}
-        DKK{"kr"}
-        DOP{"$"}
-        EGP{"E£"}
-        ESP{"₧"}
-        EUR{"€"}
-        FJD{"$"}
-        FKP{"£"}
-        GBP{"£"}
-        GEL{"₾"}
-        GHS{"GH₵"}
-        GIP{"£"}
-        GNF{"FG"}
-        GTQ{"Q"}
-        GYD{"$"}
-        HKD{"$"}
-        HNL{"L"}
-        HRK{"kn"}
-        HUF{"Ft"}
-        IDR{"Rp"}
-        ILS{"₪"}
-        INR{"₹"}
-        ISK{"kr"}
-        JMD{"$"}
-        JPY{"¥"}
-        KHR{"៛"}
-        KMF{"CF"}
-        KPW{"₩"}
-        KRW{"₩"}
-        KYD{"$"}
-        KZT{"₸"}
-        LAK{"₭"}
-        LBP{"L£"}
-        LKR{"Rs"}
-        LRD{"$"}
-        LTL{"Lt"}
-        LVL{"Ls"}
-        MGA{"Ar"}
-        MMK{"K"}
-        MNT{"₮"}
-        MUR{"Rs"}
-        MXN{"$"}
-        MYR{"RM"}
-        NAD{"$"}
-        NGN{"₦"}
-        NIO{"C$"}
-        NOK{"kr"}
-        NPR{"Rs"}
-        NZD{"$"}
-        PHP{"₱"}
-        PKR{"Rs"}
-        PLN{"zł"}
-        PYG{"₲"}
         RON{"L"}
-        RUB{"₽"}
         RUR{"р."}
-        RWF{"RF"}
-        SBD{"$"}
-        SEK{"kr"}
-        SGD{"$"}
-        SHP{"£"}
-        SRD{"$"}
-        SSP{"£"}
-        STN{"Db"}
-        SYP{"£"}
-        THB{"฿"}
-        TOP{"T$"}
-        TRY{"₺"}
-        TTD{"$"}
         TWD{"NT$"}
-        UAH{"₴"}
-        USD{"$"}
-        UYU{"$"}
-        VEF{"Bs"}
-        VND{"₫"}
-        XCD{"$"}
-        ZAR{"R"}
-        ZMW{"ZK"}
-    }
-    Currencies%variant{
-        TRY{"TL"}
     }
     CurrencyPlurals{
         ADP{
@@ -2664,11 +2563,17 @@ cs{
             one{"slovenská koruna"}
             other{"slovenských korun"}
         }
-        SLL{
+        SLE{
             few{"sierro-leonské leone"}
             many{"sierro-leonského leone"}
             one{"sierro-leonský leone"}
             other{"sierro-leonských leone"}
+        }
+        SLL{
+            few{"sierro-leonské leone (1964—2022)"}
+            many{"sierro-leonského leone (1964—2022)"}
+            one{"sierro-leonský leone (1964—2022)"}
+            other{"sierro-leonských leone (1964—2022)"}
         }
         SOS{
             few{"somálské šilinky"}
@@ -3006,29 +2911,11 @@ cs{
             one{"trojská unce platiny"}
             other{"trojských uncí platiny"}
         }
-        XRE{
-            few{"kód fondů RINET"}
-            many{"kód fondů RINET"}
-            one{"kód fondů RINET"}
-            other{"kód fondů RINET"}
-        }
-        XSU{
-            few{"sucre"}
-            many{"sucre"}
-            one{"sucre"}
-            other{"sucre"}
-        }
         XTS{
             few{"kódy zvlášť vyhrazené pro testovací účely"}
             many{"kódu zvlášť vyhrazeného pro testovací účely"}
             one{"kód zvlášť vyhrazený pro testovací účely"}
             other{"kódů zvlášť vyhrazených pro testovací účely"}
-        }
-        XXX{
-            few{"neznámá měna"}
-            many{"neznámá měna"}
-            one{"neznámá měna"}
-            other{"neznámá měna"}
         }
         YDD{
             few{"jemenské dináry"}

@@ -69,6 +69,7 @@ ta{
         bez{"பெனா"}
         bfq{"படகா"}
         bg{"பல்கேரியன்"}
+        bgc{"ஹரியான்வி"}
         bgn{"மேற்கு பலோச்சி"}
         bho{"போஜ்பூரி"}
         bi{"பிஸ்லாமா"}
@@ -307,6 +308,7 @@ ta{
         lez{"லெஜ்ஜியன்"}
         lg{"கான்டா"}
         li{"லிம்பர்கிஷ்"}
+        lij{"லிகூரியன்"}
         lil{"லில்லூயிட்"}
         lkt{"லகோடா"}
         lmo{"லொம்பார்டு"}
@@ -899,10 +901,11 @@ ta{
     }
     characterLabelPattern{
         all{"{0} — அனைத்தும்"}
-        category-list{"{0}: {1}"}
         compatibility{"{0} — இணக்கத்தன்மை"}
         enclosed{"{0} — உள்ளடங்கியவை"}
         extended{"{0} — நீட்டிக்கப்பட்டவை"}
+        facing-left{"{0} இடதுபுறம் எதிர்கொள்ளுதல்"}
+        facing-right{"{0} வலதுபுறம் எதிர்கொள்ளுதல்"}
         historic{"{0} — வரலாறுடையவை"}
         miscellaneous{"{0} — பிற"}
         other{"{0} — மற்றவை"}
@@ -918,10 +921,5 @@ ta{
         language{"மொழி: {0}"}
         script{"எழுத்து: {0}"}
         territory{"பிரதேசம்: {0}"}
-    }
-    localeDisplayPattern{
-        keyTypePattern{"{0}: {1}"}
-        pattern{"{0} ({1})"}
-        separator{"{0}, {1}"}
     }
 }

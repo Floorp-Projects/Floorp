@@ -242,8 +242,6 @@ ee{
             gregorian{"Gregorian kalenda"}
             hebrew{"hebritɔwo ƒe kalenda"}
             indian{"india dukɔ ƒe kalenda"}
-            islamic{"islam subɔlawo ƒe kalenda"}
-            islamic-civil{"islam subɔlawo ƒe sivil kalenda"}
             japanese{"japantɔwo ƒe kalenda"}
             persian{"persiatɔwo ƒe kalenda"}
             roc{"china repɔbliktɔwo ƒe kalenda tso 1912"}
@@ -257,7 +255,6 @@ ee{
             pinyin{"pinyin ɖoɖomɔ nu"}
             reformed{"nugbugbɔtoɖo ƒe ɖoɖomɔ nu"}
             search{"nudidi hena zazã gbadza"}
-            standard{"standard"}
             stroke{"stroke ɖoɖomɔ nu"}
             traditional{"blema ɖoɖomɔ nu"}
             unihan{"ɖoɖomɔnutɔxɛ manɔŋu stroke ƒe ɖoɖo nu"}

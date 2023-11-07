@@ -171,9 +171,13 @@ rof{
             "SHP",
             "heleri sa Santahelena",
         }
+        SLE{
+            "SLE",
+            "leoni",
+        }
         SLL{
             "SLL",
-            "leoni",
+            "leoni (1964—2022)",
         }
         SOS{
             "SOS",

@@ -824,9 +824,13 @@ et{
             "SKK",
             "Slovaki kroon",
         }
+        SLE{
+            "SLE",
+            "Sierra Leone leoone",
+        }
         SLL{
             "SLL",
-            "Sierra Leone leoone",
+            "Sierra Leone leoone (1964–2022)",
         }
         SOS{
             "SOS",
@@ -1106,63 +1110,7 @@ et{
         }
     }
     Currencies%narrow{
-        AFN{"؋"}
-        AMD{"֏"}
-        ARS{"$"}
-        AUD{"$"}
-        AZN{"₼"}
-        BBD{"$"}
-        BDT{"৳"}
-        BMD{"$"}
-        BND{"$"}
-        BRL{"R$"}
-        BSD{"$"}
-        BZD{"$"}
-        CAD{"$"}
-        CLP{"$"}
-        CNY{"¥"}
-        COP{"$"}
-        CRC{"₡"}
-        CUP{"$"}
-        DKK{"kr"}
-        DOP{"$"}
-        EUR{"€"}
-        FJD{"$"}
-        GBP{"£"}
-        GHS{"GH₵"}
-        GIP{"£"}
-        GYD{"$"}
-        HKD{"$"}
-        ILS{"₪"}
-        INR{"₹"}
-        ISK{"kr"}
-        JMD{"$"}
-        JPY{"¥"}
-        KHR{"៛"}
-        KRW{"₩"}
-        KYD{"$"}
-        KZT{"₸"}
-        LAK{"₭"}
-        LRD{"$"}
-        MNT{"₮"}
-        MXN{"$"}
-        NAD{"$"}
-        NGN{"₦"}
-        NZD{"$"}
-        PHP{"₱"}
-        PYG{"₲"}
-        SBD{"$"}
-        SGD{"$"}
-        SRD{"$"}
-        SSP{"£"}
-        THB{"฿"}
-        TRY{"₺"}
-        TTD{"$"}
         TWD{"NT$"}
-        UAH{"₴"}
-        USD{"$"}
-        UYU{"$"}
-        VND{"₫"}
     }
     CurrencyPlurals{
         ADP{
@@ -1345,14 +1293,6 @@ et{
             one{"Valgevene uus rubla (1994–1999)"}
             other{"Valgevene uut rubla (1994–1999)"}
         }
-        BYN{
-            one{"Valgevene rubla"}
-            other{"Valgevene rubla"}
-        }
-        BYR{
-            one{"Valgevene rubla (2000–2016)"}
-            other{"Valgevene rubla (2000–2016)"}
-        }
         BZD{
             one{"Belize’i dollar"}
             other{"Belize’i dollarit"}
@@ -1489,10 +1429,6 @@ et{
             one{"Suurbritannia naelsterling"}
             other{"Suurbritannia naelsterlingit"}
         }
-        GEL{
-            one{"Gruusia lari"}
-            other{"Gruusia lari"}
-        }
         GHC{
             one{"Ghana sedi (1979–2007)"}
             other{"Ghana sedit (1979–2007)"}
@@ -1544,10 +1480,6 @@ et{
         HRD{
             one{"Horvaatia dinaar"}
             other{"Horvaatia dinaari"}
-        }
-        HRK{
-            one{"Horvaatia kuna"}
-            other{"Horvaatia kuna"}
         }
         HTG{
             one{"Haiti gurd"}
@@ -1688,10 +1620,6 @@ et{
         LVL{
             one{"Läti latt"}
             other{"Läti latti"}
-        }
-        LVR{
-            one{"Läti rubla"}
-            other{"Läti rubla"}
         }
         LYD{
             one{"Liibüa dinaar"}
@@ -1897,10 +1825,6 @@ et{
             one{"Serbia dinaar"}
             other{"Serbia dinaari"}
         }
-        RUB{
-            one{"Venemaa rubla"}
-            other{"Venemaa rubla"}
-        }
         RWF{
             one{"Rwanda frank"}
             other{"Rwanda franki"}
@@ -1949,9 +1873,13 @@ et{
             one{"Slovaki kroon"}
             other{"Slovaki krooni"}
         }
-        SLL{
+        SLE{
             one{"Sierra Leone leoone"}
             other{"Sierra Leone leoonet"}
+        }
+        SLL{
+            one{"Sierra Leone leoone (1964–2022)"}
+            other{"Sierra Leone leoonet (1964–2022)"}
         }
         SOS{
             one{"Somaalia šilling"}
@@ -1992,10 +1920,6 @@ et{
         THB{
             one{"Tai baat"}
             other{"Tai baati"}
-        }
-        TJR{
-            one{"Tadžikistani rubla"}
-            other{"Tadžikistani rubla"}
         }
         TJS{
             one{"Tadžikistani somoni"}

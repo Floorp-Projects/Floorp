@@ -2,39 +2,23 @@
 // License & terms of use: http://www.unicode.org/copyright.html
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 rm{
-    AuxExemplarCharacters{"[á ă â å ä ā æ ç ĕ ê ë ē í ĭ î ï ī ñ ó ŏ ô ö ø ō œ ú ŭ û ü ū ÿ]"}
-    ExemplarCharacters{"[a à b c d e é è f g h i ì j k l m n o ò p q r s t u ù v w x y z]"}
-    ExemplarCharactersIndex{"[A À B C D E É È F G H I Ì J K L M N O Ò P Q R S T U Ù V W X Y Z]"}
+    AuxExemplarCharacters{"[áăâåäā æ ç ĕêëē íĭîïī ñ óŏôöøō œ úŭûüū ÿ]"}
+    ExemplarCharacters{"[aà b c d eéè f g h iì j k l m n oò p q r s t uù v w x y z]"}
+    ExemplarCharactersIndex{"[AÀ B C D EÉÈ F G H IÌ J K L M N OÒ P Q R S T UÙ V W X Y Z]"}
     ExemplarCharactersNumbers{"[. ’ % ‰ + − 0 1 2 3 4 5 6 7 8 9]"}
     NumberElements{
-        default{"latn"}
         latn{
             miscPatterns{
                 approximately{"≈{0}"}
-                atLeast{"≥{0}"}
-                range{"{0}–{1}"}
             }
             patterns{
-                accountingFormat{"#,##0.00 ¤"}
                 currencyFormat{"#,##0.00 ¤"}
-                decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0 %"}
-                scientificFormat{"#E0"}
             }
             symbols{
                 approximatelySign{"≈"}
-                decimal{"."}
-                exponential{"E"}
                 group{"’"}
-                infinity{"∞"}
-                list{";"}
                 minusSign{"−"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         minimalPairs{
@@ -46,8 +30,6 @@ rm{
                 other{"{0} dis"}
             }
         }
-        minimumGroupingDigits{"1"}
-        native{"latn"}
     }
     calendar{
         generic{
@@ -83,9 +65,6 @@ rm{
                 "GGGGGyMMdd",
             }
             availableFormats{
-                E{"ccc"}
-                EHm{"E HH:mm"}
-                EHms{"E HH:mm:ss"}
                 Ed{"E d."}
                 Ehm{"E h:mm a"}
                 Ehms{"E h:mm:ss a"}
@@ -95,26 +74,19 @@ rm{
                 GyMMMMEd{"E, d MMMM y G"}
                 GyMMMMd{"d MMMM y G"}
                 GyMMMd{"dd-MM-y GGGGG"}
-                H{"HH"}
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
                 Hmsv{"HH:mm:ss v"}
                 Hmv{"HH:mm v"}
-                M{"L"}
                 MEd{"E, dd-MM"}
-                MMM{"LLL"}
                 MMMEd{"E, dd-MM"}
                 MMMMEd{"E, d MMMM"}
                 MMMMd{"d MMMM"}
                 MMMd{"dd-MM"}
                 Md{"dd-MM"}
-                d{"d"}
                 h{"h a"}
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
                 hmsv{"h:mm:ss a v"}
                 hmv{"h:mm a v"}
-                ms{"mm:ss"}
                 y{"y G"}
                 yM{"MM-y GGGGG"}
                 yMEd{"E, dd-MM-y GGGGG"}
@@ -128,29 +100,12 @@ rm{
                 yQQQQ{"QQQQ y G"}
             }
             intervalFormats{
-                H{
-                    H{"HH–HH"}
-                }
-                Hm{
-                    H{"HH:mm–HH:mm"}
-                    m{"HH:mm–HH:mm"}
-                }
-                Hmv{
-                    H{"HH:mm–HH:mm v"}
-                    m{"HH:mm–HH:mm v"}
-                }
-                Hv{
-                    H{"HH–HH v"}
-                }
                 M{
                     M{"LL–LL"}
                 }
                 MEd{
                     M{"E, dd-MM – E, dd-MM"}
                     d{"E, dd-MM – E, dd-MM"}
-                }
-                MMM{
-                    M{"LLL–LLL"}
                 }
                 MMMEd{
                     M{"E, dd-MM – E, dd-MM"}
@@ -175,7 +130,6 @@ rm{
                 d{
                     d{"d.–d."}
                 }
-                fallback{"{0} – {1}"}
                 h{
                     a{"h a – h a"}
                     h{"h–h a"}
@@ -242,18 +196,6 @@ rm{
             }
         }
         gregorian{
-            AmPmMarkers{
-                "AM",
-                "PM",
-            }
-            AmPmMarkersAbbr{
-                "AM",
-                "PM",
-            }
-            AmPmMarkersNarrow{
-                "AM",
-                "PM",
-            }
             DateTimePatterns{
                 "HH:mm:ss zzzz",
                 "HH:mm:ss z",
@@ -279,13 +221,7 @@ rm{
                 "yMMdd",
                 "yyMMdd",
             }
-            appendItems{
-                Timezone{"{0} {1}"}
-            }
             availableFormats{
-                E{"ccc"}
-                EHm{"E HH:mm"}
-                EHms{"E HH:mm:ss"}
                 Ed{"E d."}
                 Ehm{"E h:mm a"}
                 Ehms{"E h:mm:ss a"}
@@ -296,14 +232,7 @@ rm{
                 GyMMMMd{"d MMMM y G"}
                 GyMMMd{"dd-MM-y GGGGG"}
                 GyMd{"dd-MM-y GGGGG"}
-                H{"HH"}
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
-                Hmsv{"HH:mm:ss v"}
-                Hmv{"HH:mm v"}
-                M{"L"}
                 MEd{"E, dd-MM"}
-                MMM{"LLL"}
                 MMMEd{"E, dd-MM"}
                 MMMMEd{"E, d MMMM"}
                 MMMMW{
@@ -313,14 +242,11 @@ rm{
                 MMMMd{"d MMMM"}
                 MMMd{"dd-MM"}
                 Md{"dd-MM"}
-                d{"d"}
                 h{"h a"}
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
                 hmsv{"h:mm:ss a v"}
                 hmv{"h:mm a v"}
-                ms{"mm:ss"}
-                y{"y"}
                 yM{"LL-y"}
                 yMEd{"E, dd-MM-y"}
                 yMMM{"LLL y"}
@@ -348,24 +274,6 @@ rm{
                         "ve",
                         "so",
                     }
-                    narrow{
-                        "D",
-                        "G",
-                        "M",
-                        "M",
-                        "G",
-                        "V",
-                        "S",
-                    }
-                    short{
-                        "du",
-                        "gli",
-                        "ma",
-                        "me",
-                        "gie",
-                        "ve",
-                        "so",
-                    }
                     wide{
                         "dumengia",
                         "glindesdi",
@@ -377,15 +285,6 @@ rm{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "du",
-                        "gli",
-                        "ma",
-                        "me",
-                        "gie",
-                        "ve",
-                        "so",
-                    }
                     narrow{
                         "D",
                         "G",
@@ -394,40 +293,6 @@ rm{
                         "G",
                         "V",
                         "S",
-                    }
-                    short{
-                        "du",
-                        "gli",
-                        "ma",
-                        "me",
-                        "gie",
-                        "ve",
-                        "so",
-                    }
-                    wide{
-                        "dumengia",
-                        "glindesdi",
-                        "mardi",
-                        "mesemna",
-                        "gievgia",
-                        "venderdi",
-                        "sonda",
-                    }
-                }
-            }
-            dayPeriod{
-                stand-alone{
-                    abbreviated{
-                        am{"AM"}
-                        pm{"PM"}
-                    }
-                    narrow{
-                        am{"AM"}
-                        pm{"PM"}
-                    }
-                    wide{
-                        am{"AM"}
-                        pm{"PM"}
                     }
                 }
             }
@@ -444,35 +309,14 @@ rm{
                     "avant Cristus",
                     "suenter Cristus",
                 }
-                wide%variant{
-                    "BCE",
-                    "CE",
-                }
             }
             intervalFormats{
-                H{
-                    H{"HH–HH"}
-                }
-                Hm{
-                    H{"HH:mm–HH:mm"}
-                    m{"HH:mm–HH:mm"}
-                }
-                Hmv{
-                    H{"HH:mm–HH:mm v"}
-                    m{"HH:mm–HH:mm v"}
-                }
-                Hv{
-                    H{"HH–HH v"}
-                }
                 M{
                     M{"LL–LL"}
                 }
                 MEd{
                     M{"E, dd-MM – E, dd-MM"}
                     d{"E, dd-MM – E, dd-MM"}
-                }
-                MMM{
-                    M{"LLL–LLL"}
                 }
                 MMMEd{
                     M{"E, dd-MM – E, dd-MM"}
@@ -494,10 +338,6 @@ rm{
                     M{"dd-MM – dd-MM"}
                     d{"dd-MM – dd-MM"}
                 }
-                d{
-                    d{"d–d"}
-                }
-                fallback{"{0} – {1}"}
                 h{
                     a{"h a – h a"}
                     h{"h–h a"}
@@ -515,9 +355,6 @@ rm{
                 hv{
                     a{"h a – h a v"}
                     h{"h–h a v"}
-                }
-                y{
-                    y{"y–y"}
                 }
                 yM{
                     M{"LL-y – LL-y"}
@@ -578,20 +415,6 @@ rm{
                         "nov.",
                         "dec.",
                     }
-                    narrow{
-                        "S",
-                        "F",
-                        "M",
-                        "A",
-                        "M",
-                        "Z",
-                        "F",
-                        "A",
-                        "S",
-                        "O",
-                        "N",
-                        "D",
-                    }
                     wide{
                         "da schaner",
                         "da favrer",
@@ -608,20 +431,6 @@ rm{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "schan.",
-                        "favr.",
-                        "mars",
-                        "avr.",
-                        "matg",
-                        "zercl.",
-                        "fan.",
-                        "avust",
-                        "sett.",
-                        "oct.",
-                        "nov.",
-                        "dec.",
-                    }
                     narrow{
                         "S",
                         "F",
@@ -660,32 +469,6 @@ rm{
                         "Q3",
                         "Q4",
                     }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                    }
-                    wide{
-                        "1. quartal",
-                        "2. quartal",
-                        "3. quartal",
-                        "4. quartal",
-                    }
-                }
-                stand-alone{
-                    abbreviated{
-                        "Q1",
-                        "Q2",
-                        "Q3",
-                        "Q4",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                    }
                     wide{
                         "1. quartal",
                         "2. quartal",
@@ -715,19 +498,6 @@ rm{
         }
         day-narrow{
             dn{"d"}
-            relative{
-                "-1"{"ier"}
-                "0"{"oz"}
-                "1"{"damaun"}
-            }
-        }
-        day-short{
-            dn{"di"}
-            relative{
-                "-1"{"ier"}
-                "0"{"oz"}
-                "1"{"damaun"}
-            }
         }
         dayperiod{
             dn{"mesadad dal di"}
@@ -738,17 +508,8 @@ rm{
         hour{
             dn{"ura"}
         }
-        hour-narrow{
-            dn{"ura"}
-        }
-        hour-short{
-            dn{"ura"}
-        }
         minute{
             dn{"minuta"}
-        }
-        minute-narrow{
-            dn{"min"}
         }
         minute-short{
             dn{"min"}
@@ -756,26 +517,14 @@ rm{
         month{
             dn{"mais"}
         }
-        month-narrow{
-            dn{"mais"}
-        }
-        month-short{
-            dn{"mais"}
-        }
         quarter{
             dn{"quartal"}
-        }
-        quarter-narrow{
-            dn{"qrtl"}
         }
         quarter-short{
             dn{"qrtl"}
         }
         second{
             dn{"secunda"}
-        }
-        second-narrow{
-            dn{"s"}
         }
         second-short{
             dn{"s"}
@@ -791,12 +540,6 @@ rm{
         week{
             dn{"emna"}
         }
-        week-narrow{
-            dn{"emna"}
-        }
-        week-short{
-            dn{"emna"}
-        }
         weekday{
             dn{"di da l’emna"}
         }
@@ -808,12 +551,6 @@ rm{
                 "1"{"l’onn proxim"}
             }
         }
-        year-narrow{
-            dn{"onn"}
-        }
-        year-short{
-            dn{"onn"}
-        }
         zone{
             dn{"zona d’urari"}
         }
@@ -823,53 +560,15 @@ rm{
             2{"{0} u {1}"}
             end{"{0} u {1}"}
         }
-        or-narrow{
-            2{"{0} u {1}"}
-            end{"{0} u {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        or-short{
-            2{"{0} u {1}"}
-            end{"{0} u {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
         standard{
             2{"{0} e {1}"}
             end{"{0} e {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        standard-narrow{
-            2{"{0} e {1}"}
-            end{"{0} e {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        standard-short{
-            2{"{0} e {1}"}
-            end{"{0} e {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        unit{
-            2{"{0} e {1}"}
-            end{"{0} e {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
         unit-narrow{
             2{"{0} {1}"}
             end{"{0} {1}"}
             middle{"{0} {1}"}
             start{"{0} {1}"}
-        }
-        unit-short{
-            2{"{0} e {1}"}
-            end{"{0} e {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
     }
     measurementSystemNames{

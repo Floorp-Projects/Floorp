@@ -1895,7 +1895,6 @@ si{
         "meta:Yukon"{
             ls{"යුකොන් වේලාව"}
         }
-        fallbackFormat{"{1} ({0})"}
         gmtFormat{"ග්‍රිමවේ{0}"}
         gmtZeroFormat{"ග්‍රිමවේ"}
         hourFormat{"+HH.mm;-HH.mm"}

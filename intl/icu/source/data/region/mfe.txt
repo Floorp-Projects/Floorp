@@ -93,7 +93,6 @@ mfe{
         IE{"Irland"}
         IL{"Izrael"}
         IN{"Lenn"}
-        IO{"Teritwar Britanik Losean Indien"}
         IQ{"Irak"}
         IR{"Iran"}
         IS{"Island"}

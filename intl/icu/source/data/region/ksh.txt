@@ -144,7 +144,6 @@ ksh{
         IL{"Ißraäl"}
         IM{"de Ensel Män"}
         IN{"Indije"}
-        IO{"Brettesche Besezunge em indesche Oozejahn"}
         IQ{"Irak"}
         IR{"Persije"}
         IS{"Ißland"}

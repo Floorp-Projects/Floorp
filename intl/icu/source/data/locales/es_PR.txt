@@ -14,11 +14,11 @@ es_PR{
                 "d 'de' MMMM 'de' y G",
                 "MM/dd/y G",
                 "MM/dd/yy GGGGG",
-                "{1} {0}",
                 "{1}, {0}",
                 "{1}, {0}",
-                "{1} {0}",
-                "{1} {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
             }
             DateTimeSkeletons{
                 "ahmmsszzzz",
@@ -39,6 +39,14 @@ es_PR{
             }
         }
         gregorian{
+            AmPmMarkers{
+                "a. m.",
+                "p. m.",
+            }
+            AmPmMarkersAbbr{
+                "a. m.",
+                "p. m.",
+            }
             DateTimePatterns{
                 "h:mm:ss a zzzz",
                 "h:mm:ss a z",
@@ -48,10 +56,10 @@ es_PR{
                 "d 'de' MMMM 'de' y",
                 "MM/dd/y",
                 "MM/dd/yy",
-                "{1} {0}",
                 "{1}, {0}",
                 "{1}, {0}",
-                "{1} {0}",
+                "{1}, {0}",
+                "{1}, {0}",
                 "{1}, {0}",
             }
             DateTimeSkeletons{
@@ -70,6 +78,22 @@ es_PR{
                 yM{"MM/y"}
                 yMEd{"E MM/dd/y"}
                 yMd{"MM/dd/y"}
+            }
+            dayPeriod{
+                stand-alone{
+                    abbreviated{
+                        am{"a. m."}
+                        pm{"p. m."}
+                    }
+                    narrow{
+                        am{"a. m."}
+                        pm{"p. m."}
+                    }
+                    wide{
+                        am{"a. m."}
+                        pm{"p. m."}
+                    }
+                }
             }
         }
     }

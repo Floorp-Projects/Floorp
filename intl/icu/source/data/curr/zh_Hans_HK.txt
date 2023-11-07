@@ -17,9 +17,6 @@ zh_Hans_HK{
         }
     }
     CurrencyPlurals{
-        KYD{
-            other{"开曼群岛元"}
-        }
         NIO{
             other{"尼加拉瓜科多巴"}
         }

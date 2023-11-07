@@ -3,68 +3,19 @@
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 en_CA{
     Keys{
-        calendar{"calendar"}
-        cf{"currency format"}
-        colAlternate{"ignore-symbols sorting"}
-        colBackwards{"reversed-accent sorting"}
-        colCaseFirst{"uppercase/lowercase ordering"}
-        colCaseLevel{"case-sensitive sorting"}
-        colNormalization{"normalized sorting"}
-        colNumeric{"numeric sorting"}
-        colReorder{"script/block reordering"}
-        colStrength{"sorting strength"}
-        collation{"sort order"}
-        currency{"currency"}
-        d0{"transform destination"}
-        dx{"dictionary break exclusions"}
-        em{"emoji presentation style"}
-        fw{"first day of week"}
-        h0{"mixed-in"}
-        hc{"hour cycle (12 vs 24)"}
-        i0{"input method"}
-        k0{"keyboard"}
-        kv{"highest ignored"}
-        lb{"line break style"}
-        lw{"line breaks in words setting"}
-        m0{"transform rules"}
-        ms{"measurement system"}
-        mu{"measurement unit"}
-        numbers{"numbers"}
-        rg{"region for supplemental data"}
-        s0{"transform source"}
-        sd{"region subdivision"}
-        ss{"sentence break suppressions type"}
-        t{"transform"}
-        t0{"machine-translated"}
-        timezone{"time zone"}
-        va{"locale variant"}
-        x{"private-use"}
-        x0{"private-use transform"}
+        colCaseLevel{"Case-Sensitive Sorting"}
+        hc{"Hour cycle (12 vs. 24)"}
+        t0{"Machine-Translated"}
     }
     Languages{
         ar_001{"Arabic (Modern Standard)"}
         bn{"Bengali"}
         mfe{"Mauritian Creole"}
-        mul{"multiple languages"}
         nds_NL{"West Low German"}
         ro_MD{"Moldovan"}
-        und{"unknown language"}
-        zh_Hans{"simplified Chinese"}
-        zh_Hant{"traditional Chinese"}
-    }
-    Languages%long{
-        zh_Hans{"simplified Mandarin Chinese"}
-        zh_Hant{"traditional Mandarin Chinese"}
     }
     Languages%variant{
         my{"Myanmar language"}
-    }
-    Scripts{
-        Zmth{"mathematical notation"}
-        Zsye{"emoji"}
-        Zsym{"symbols"}
-        Zxxx{"unwritten"}
-        Zzzz{"unknown script"}
     }
     Types{
         calendar{
@@ -77,39 +28,18 @@ en_CA{
             gregorian{"Gregorian calendar"}
             hebrew{"Hebrew calendar"}
             indian{"Indian national calendar"}
-            islamic{"Islamic calendar"}
-            islamic-civil{"Islamic calendar (tabular, civil epoch)"}
-            islamic-tbla{"Islamic calendar (tabular, astronomical epoch)"}
-            islamic-umalqura{"Islamic calendar (Umm al-Qura)"}
+            islamic{"Hijri calendar"}
+            islamic-civil{"Hijri calendar (tabular, civil epoch)"}
+            islamic-tbla{"Hijri calendar (tabular, astronomical epoch)"}
+            islamic-umalqura{"Hijri calendar (Umm al-Qura)"}
             iso8601{"ISO-8601 calendar"}
             japanese{"Japanese calendar"}
             persian{"Persian calendar"}
             roc{"Minguo calendar"}
         }
-        cf{
-            account{"accounting currency format"}
-            standard{"standard currency format"}
-        }
         colNormalization{
             no{"Sort Without Normalisation"}
             yes{"Sort Unicode Normalised"}
-        }
-        collation{
-            big5han{"traditional Chinese sort order - Big5"}
-            compat{"previous sort order, for compatibility"}
-            dictionary{"dictionary sort order"}
-            ducet{"default Unicode sort order"}
-            gb2312han{"simplified Chinese sort order - GB2312"}
-            phonebook{"phonebook sort order"}
-            phonetic{"phonetic sort order"}
-            pinyin{"Pinyin sort order"}
-            reformed{"reformed sort order"}
-            search{"general-purpose search"}
-            standard{"standard sort order"}
-            stroke{"stroke sort order"}
-            traditional{"traditional sort order"}
-            unihan{"radical-stroke sort order"}
-            zhuyin{"Zhuyin sort order"}
         }
         d0{
             ascii{"to ASCII"}
@@ -119,19 +49,14 @@ en_CA{
             title{"to title case"}
             upper{"to uppercase"}
         }
-        em{
-            default{"use default presentation for emoji characters"}
-            emoji{"prefer emoji presentation for emoji characters"}
-            text{"prefer text presentation for emoji characters"}
-        }
         fw{
-            fri{"first day of week is Friday"}
-            mon{"first day of week is Monday"}
-            sat{"first day of week is Saturday"}
-            sun{"first day of week is Sunday"}
-            thu{"first day of week is Thursday"}
-            tue{"first day of week is Tuesday"}
-            wed{"first day of week is Wednesday"}
+            fri{"First day of week is Friday"}
+            mon{"First day of week is Monday"}
+            sat{"First day of week is Saturday"}
+            sun{"First day of week is Sunday"}
+            thu{"First day of week is Thursday"}
+            tue{"First day of week is Tuesday"}
+            wed{"First day of week is Wednesday"}
         }
         hc{
             h11{"12-hour system (0–11)"}
@@ -139,48 +64,28 @@ en_CA{
             h23{"24-hour system (0–23)"}
             h24{"24-hour system (1–24)"}
         }
-        lb{
-            loose{"loose line break style"}
-            normal{"normal line break style"}
-            strict{"strict line break style"}
-        }
-        lw{
-            breakall{"allow line breaks in all words"}
-            keepall{"prevent line breaks in all words"}
-            normal{"normal line breaks for words"}
-            phrase{"prevent line breaks in phrases"}
-        }
         m0{
             bgn{"US BGN transliteration"}
-            prprname{"personal name transliteration variant"}
             ungegn{"UN GEGN transliteration"}
         }
         ms{
-            metric{"metric system"}
-            uksystem{"imperial measurement system"}
             ussystem{"US measurement system"}
         }
         numbers{
             adlm{"Adlam digits"}
             arab{"Arabic-Indic digits"}
-            arabext{"extended Arabic-Indic digits"}
             armn{"Armenian numerals"}
             armnlow{"Armenian lowercase numerals"}
             beng{"Bangla digits"}
             cakm{"Chakma digits"}
             deva{"Devanagari digits"}
             ethi{"Ethiopic numerals"}
-            fullwide{"full-width digits"}
             geor{"Georgian numerals"}
             grek{"Greek numerals"}
             greklow{"Greek lowercase numerals"}
             gujr{"Gujarati digits"}
             guru{"Gurmukhi digits"}
             hanidec{"Chinese decimal numerals"}
-            hans{"simplified Chinese numerals"}
-            hansfin{"simplified Chinese financial numerals"}
-            hant{"traditional Chinese numerals"}
-            hantfin{"traditional Chinese financial numerals"}
             hebr{"Hebrew numerals"}
             java{"Javanese digits"}
             jpan{"Japanese numerals"}
@@ -197,19 +102,11 @@ en_CA{
             orya{"Odia digits"}
             roman{"Roman numerals"}
             romanlow{"Roman lowercase numerals"}
-            taml{"traditional Tamil numerals"}
             tamldec{"Tamil digits"}
             telu{"Telugu digits"}
             thai{"Thai digits"}
             tibt{"Tibetan digits"}
             vaii{"Vai digits"}
-        }
-        ss{
-            none{"sentence breaks without abbreviation handling"}
-            standard{"suppress sentence breaks after standard abbreviations"}
-        }
-        t0{
-            und{"unspecified machine translation"}
         }
     }
     characterLabelPattern{

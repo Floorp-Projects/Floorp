@@ -93,7 +93,6 @@ seh{
         IE{"Irlanda"}
         IL{"Israel"}
         IN{"Índia"}
-        IO{"Território Britânico do Oceano Índico"}
         IQ{"Iraque"}
         IR{"Irã"}
         IS{"Islândia"}

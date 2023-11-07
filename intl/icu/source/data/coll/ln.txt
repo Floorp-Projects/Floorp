@@ -16,14 +16,14 @@ ln{
                 "&S<sh<<<sH<<<Sh<<<SH"
                 "&T<ts<<<tS<<<Ts<<<TS"
             }
-            Version{"43"}
+            Version{"44"}
         }
         standard{
             Sequence{
                 "&E<ɛ<<<Ɛ"
                 "&O<<ɔ<<<Ɔ"
             }
-            Version{"43"}
+            Version{"44"}
         }
     }
 }

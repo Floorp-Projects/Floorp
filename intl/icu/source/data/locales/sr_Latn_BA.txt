@@ -33,26 +33,6 @@ sr_Latn_BA{
                         "subota",
                     }
                 }
-                stand-alone{
-                    abbreviated{
-                        "ned",
-                        "pon",
-                        "uto",
-                        "sri",
-                        "čet",
-                        "pet",
-                        "sub",
-                    }
-                    wide{
-                        "nedjelja",
-                        "ponedjeljak",
-                        "utorak",
-                        "srijeda",
-                        "četvrtak",
-                        "petak",
-                        "subota",
-                    }
-                }
             }
             dayPeriod{
                 format{
@@ -66,10 +46,6 @@ sr_Latn_BA{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        am{"prije podne"}
-                        pm{"po podne"}
-                    }
                     narrow{
                         am{"a"}
                         pm{"p"}
@@ -113,15 +89,6 @@ sr_Latn_BA{
                 }
             }
         }
-        day-narrow{
-            relativeTime{
-                past{
-                    few{"prije {0} d."}
-                    one{"prije {0} d."}
-                    other{"prije {0} d."}
-                }
-            }
-        }
         day-short{
             relativeTime{
                 past{
@@ -132,9 +99,6 @@ sr_Latn_BA{
             }
         }
         dayperiod{
-            dn{"prije podne/po podne"}
-        }
-        dayperiod-narrow{
             dn{"prije podne/po podne"}
         }
         dayperiod-short{
@@ -154,32 +118,11 @@ sr_Latn_BA{
                 }
             }
         }
-        fri-narrow{
-            relative{
-                "-1"{"prošlog pet"}
-                "0"{"u pet"}
-                "1"{"sljedećeg pet"}
-            }
-            relativeTime{
-                past{
-                    few{"prije {0} petka"}
-                    one{"prije {0} petka"}
-                    other{"prije {0} petaka"}
-                }
-            }
-        }
         fri-short{
             relative{
                 "-1"{"prošlog pet"}
                 "0"{"u pet"}
                 "1"{"sljedećeg pet"}
-            }
-            relativeTime{
-                past{
-                    few{"prije {0} petka"}
-                    one{"prije {0} petka"}
-                    other{"prije {0} petaka"}
-                }
             }
         }
         hour{
@@ -188,15 +131,6 @@ sr_Latn_BA{
                     few{"prije {0} sata"}
                     one{"prije {0} sata"}
                     other{"prije {0} sati"}
-                }
-            }
-        }
-        hour-narrow{
-            relativeTime{
-                past{
-                    few{"prije {0} č."}
-                    one{"prije {0} č."}
-                    other{"prije {0} č."}
                 }
             }
         }
@@ -215,15 +149,6 @@ sr_Latn_BA{
                     few{"prije {0} minuta"}
                     one{"prije {0} minuta"}
                     other{"prije {0} minuta"}
-                }
-            }
-        }
-        minute-narrow{
-            relativeTime{
-                past{
-                    few{"prije {0} min."}
-                    one{"prije {0} min."}
-                    other{"prije {0} min."}
                 }
             }
         }
@@ -256,21 +181,11 @@ sr_Latn_BA{
             }
         }
         mon-narrow{
-            relative{
-                "-1"{"prošlog pon"}
-                "0"{"u pon"}
-                "1"{"sljedećeg pon"}
-            }
             relativeTime{
                 future{
                     few{"za {0} ponedjeljka"}
                     one{"za {0} ponedjeljak"}
                     other{"za {0} ponedjeljaka"}
-                }
-                past{
-                    few{"prije {0} ponedjeljka"}
-                    one{"prije {0} ponedjeljka"}
-                    other{"prije {0} ponedjeljaka"}
                 }
             }
         }
@@ -279,18 +194,6 @@ sr_Latn_BA{
                 "-1"{"prošlog pon"}
                 "0"{"u pon"}
                 "1"{"sljedećeg pon"}
-            }
-            relativeTime{
-                future{
-                    few{"za {0} ponedjeljka"}
-                    one{"za {0} ponedjeljak"}
-                    other{"za {0} ponedjeljaka"}
-                }
-                past{
-                    few{"prije {0} ponedjeljka"}
-                    one{"prije {0} ponedjeljka"}
-                    other{"prije {0} ponedjeljaka"}
-                }
             }
         }
         month{
@@ -314,7 +217,6 @@ sr_Latn_BA{
             }
         }
         month-narrow{
-            dn{"mjes."}
             relative{
                 "-1"{"prošlog mjes."}
                 "0"{"ovog mjes."}
@@ -362,15 +264,6 @@ sr_Latn_BA{
                 }
             }
         }
-        quarter-narrow{
-            relativeTime{
-                past{
-                    few{"prije {0} kv."}
-                    one{"prije {0} kv."}
-                    other{"prije {0} kv."}
-                }
-            }
-        }
         quarter-short{
             relativeTime{
                 past{
@@ -394,32 +287,11 @@ sr_Latn_BA{
                 }
             }
         }
-        sat-narrow{
-            relative{
-                "-1"{"prošle sub"}
-                "0"{"u sub"}
-                "1"{"sljedeće sub"}
-            }
-            relativeTime{
-                past{
-                    few{"prije {0} subote"}
-                    one{"prije {0} subote"}
-                    other{"prije {0} subota"}
-                }
-            }
-        }
         sat-short{
             relative{
                 "-1"{"prošle sub"}
                 "0"{"u sub"}
                 "1"{"sljedeće sub"}
-            }
-            relativeTime{
-                past{
-                    few{"prije {0} subote"}
-                    one{"prije {0} subote"}
-                    other{"prije {0} subota"}
-                }
             }
         }
         second{
@@ -468,42 +340,11 @@ sr_Latn_BA{
                 }
             }
         }
-        sun-narrow{
-            relative{
-                "-1"{"pr. ned."}
-                "0"{"u ned"}
-                "1"{"slj. ned."}
-            }
-            relativeTime{
-                future{
-                    few{"za {0} nedjelje"}
-                    one{"za {0} nedjelju"}
-                    other{"za {0} nedjelja"}
-                }
-                past{
-                    few{"prije {0} nedjelje"}
-                    one{"prije {0} nedjelje"}
-                    other{"prije {0} nedjelja"}
-                }
-            }
-        }
         sun-short{
             relative{
                 "-1"{"pr. ned."}
                 "0"{"u ned"}
                 "1"{"slj. ned."}
-            }
-            relativeTime{
-                future{
-                    few{"za {0} nedjelje"}
-                    one{"za {0} nedjelju"}
-                    other{"za {0} nedjelja"}
-                }
-                past{
-                    few{"prije {0} nedjelje"}
-                    one{"prije {0} nedjelje"}
-                    other{"prije {0} nedjelja"}
-                }
             }
         }
         thu{
@@ -520,32 +361,11 @@ sr_Latn_BA{
                 }
             }
         }
-        thu-narrow{
-            relative{
-                "-1"{"prošlog čet"}
-                "0"{"u čet"}
-                "1"{"sljedećeg čet"}
-            }
-            relativeTime{
-                past{
-                    few{"prije {0} četvrtka"}
-                    one{"prije {0} četvrtka"}
-                    other{"prije {0} četvrtaka"}
-                }
-            }
-        }
         thu-short{
             relative{
                 "-1"{"prošlog čet"}
                 "0"{"u čet"}
                 "1"{"sljedećeg čet"}
-            }
-            relativeTime{
-                past{
-                    few{"prije {0} četvrtka"}
-                    one{"prije {0} četvrtka"}
-                    other{"prije {0} četvrtaka"}
-                }
             }
         }
         tue{
@@ -562,32 +382,11 @@ sr_Latn_BA{
                 }
             }
         }
-        tue-narrow{
-            relative{
-                "-1"{"prošlog uto"}
-                "0"{"u uto"}
-                "1"{"sljedećeg uto"}
-            }
-            relativeTime{
-                past{
-                    few{"prije {0} utorka"}
-                    one{"prije {0} utorka"}
-                    other{"prije {0} utoraka"}
-                }
-            }
-        }
         tue-short{
             relative{
                 "-1"{"prošlog uto"}
                 "0"{"u uto"}
                 "1"{"sljedećeg uto"}
-            }
-            relativeTime{
-                past{
-                    few{"prije {0} utorka"}
-                    one{"prije {0} utorka"}
-                    other{"prije {0} utoraka"}
-                }
             }
         }
         wed{
@@ -609,42 +408,11 @@ sr_Latn_BA{
                 }
             }
         }
-        wed-narrow{
-            relative{
-                "-1"{"prošle sri"}
-                "0"{"u sri"}
-                "1"{"sljedeće sri"}
-            }
-            relativeTime{
-                future{
-                    few{"za {0} srijede"}
-                    one{"za {0} srijedu"}
-                    other{"za {0} srijeda"}
-                }
-                past{
-                    few{"prije {0} srijede"}
-                    one{"prije {0} srijede"}
-                    other{"prije {0} srijeda"}
-                }
-            }
-        }
         wed-short{
             relative{
                 "-1"{"prošle sri"}
                 "0"{"u sri"}
                 "1"{"sljedeće sri"}
-            }
-            relativeTime{
-                future{
-                    few{"za {0} srijede"}
-                    one{"za {0} srijedu"}
-                    other{"za {0} srijeda"}
-                }
-                past{
-                    few{"prije {0} srijede"}
-                    one{"prije {0} srijede"}
-                    other{"prije {0} srijeda"}
-                }
             }
         }
         week{
@@ -669,13 +437,11 @@ sr_Latn_BA{
             }
         }
         week-narrow{
-            dn{"sedm."}
             relative{
                 "-1"{"prošle s."}
                 "0"{"ove s."}
                 "1"{"sljedeće s."}
             }
-            relativePeriod{"sedmica koja počinje {0}."}
             relativeTime{
                 future{
                     few{"za {0} s."}
@@ -696,7 +462,6 @@ sr_Latn_BA{
                 "0"{"ove sedm."}
                 "1"{"sljedeće sedm."}
             }
-            relativePeriod{"sedmica koja počinje {0}."}
             relativeTime{
                 future{
                     few{"za {0} sedm."}
@@ -713,28 +478,16 @@ sr_Latn_BA{
         weekOfMonth{
             dn{"sedmica u mjesecu"}
         }
-        weekOfMonth-narrow{
-            dn{"sedm. u mjes."}
-        }
         weekOfMonth-short{
             dn{"sedm. u mjes."}
         }
         weekday{
             dn{"dan u sedmici"}
         }
-        weekday-narrow{
-            dn{"dan u sedm."}
-        }
         weekday-short{
             dn{"dan u sedm."}
         }
         weekdayOfMonth{
-            dn{"dan u mjesecu"}
-        }
-        weekdayOfMonth-narrow{
-            dn{"dan u mjesecu"}
-        }
-        weekdayOfMonth-short{
             dn{"dan u mjesecu"}
         }
         year{

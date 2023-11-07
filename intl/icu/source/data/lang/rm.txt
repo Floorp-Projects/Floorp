@@ -677,8 +677,6 @@ rm{
             gregorian{"chalender gregorian"}
             hebrew{"chalender ebraic"}
             indian{"chalender naziunal indic"}
-            islamic{"chalender islamic"}
-            islamic-civil{"chalender islamic civil"}
             iso8601{"chalender tenor ISO 8601"}
             japanese{"chalender giapunais"}
             persian{"chalender persian"}
@@ -753,9 +751,5 @@ rm{
         language{"Lingua: {0}"}
         script{"Scrittira: {0}"}
         territory{"Regiun: {0}"}
-    }
-    localeDisplayPattern{
-        pattern{"{0} ({1})"}
-        separator{"{0}, {1}"}
     }
 }

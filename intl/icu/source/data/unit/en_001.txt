@@ -95,11 +95,6 @@ en_001{
             }
         }
         graphics{
-            dot-per-centimeter{
-                dnam{"dots per centimetre"}
-                one{"{0} dot per centimetre"}
-                other{"{0} dots per centimetre"}
-            }
             pixel-per-centimeter{
                 dnam{"pixels per centimetre"}
                 one{"{0} pixel per centimetre"}
@@ -531,12 +526,6 @@ en_001{
                 other{"{0} secs"}
             }
         }
-        graphics{
-            dot{
-                one{"{0} dot"}
-                other{"{0} dots"}
-            }
-        }
         length{
             meter{
                 dnam{"metres"}
@@ -586,8 +575,6 @@ en_001{
             }
             dram{
                 dnam{"dram"}
-                one{"{0} dram"}
-                other{"{0} drams"}
             }
             drop{
                 one{"{0} drops"}
@@ -619,10 +606,6 @@ en_001{
                 dnam{"hl"}
                 one{"{0} hl"}
                 other{"{0} hl"}
-            }
-            jigger{
-                one{"{0} jigger"}
-                other{"{0} jiggers"}
             }
             liter{
                 dnam{"litres"}

@@ -615,9 +615,13 @@ hsb{
             "SHP",
             "St. Helenski punt",
         }
+        SLE{
+            "SLE",
+            "sierra-leoneski leone",
+        }
         SLL{
             "SLL",
-            "sierra-leoneski leone",
+            "sierra-leoneski leone (1964—2022)",
         }
         SOS{
             "SOS",
@@ -759,9 +763,6 @@ hsb{
             "ZMW",
             "sambiski kwacha",
         }
-    }
-    Currencies%narrow{
-        EUR{"€"}
     }
     CurrencyPlurals{
         ADP{
@@ -1682,11 +1683,17 @@ hsb{
             other{"St. Helenskich puntow"}
             two{"St. Helenskej puntaj"}
         }
-        SLL{
+        SLE{
             few{"sierra-leoneske leony"}
             one{"sierra-leoneski leone"}
             other{"sierra-leoneskich leonow"}
             two{"sierra-leoneskej leonaj"}
+        }
+        SLL{
+            few{"sierra-leoneske leony (1964—2022)"}
+            one{"sierra-leoneski leone (1964—2022)"}
+            other{"sierra-leoneskich leonow (1964—2022)"}
+            two{"sierra-leoneskej leonaj (1964—2022)"}
         }
         SOS{
             few{"somaliske šilingi"}

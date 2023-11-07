@@ -67,6 +67,7 @@ kn{
         bem{"ಬೆಂಬಾ"}
         bez{"ಬೆನ"}
         bg{"ಬಲ್ಗೇರಿಯನ್"}
+        bgc{"ಹರ್ಯಾನ್ವಿ"}
         bgn{"ಪಶ್ಚಿಮ ಬಲೊಚಿ"}
         bho{"ಭೋಜಪುರಿ"}
         bi{"ಬಿಸ್ಲಾಮಾ"}
@@ -755,7 +756,6 @@ kn{
             indian{"ಭಾರತೀಯ ರಾಷ್ಟ್ರೀಯ ಕ್ಯಾಲೆಂಡರ್"}
             islamic{"ಇಸ್ಲಾಮಿಕ್ ಕ್ಯಾಲೆಂಡರ್"}
             islamic-civil{"ಇಸ್ಲಾಮಿಕ್-ಸಿವಿಲ್ ಕ್ಯಾಲೆಂಡರ್"}
-            islamic-rgsa{"ಇಸ್ಲಾಮಿಕ್‌ ಕ್ಯಾಲೆಂಡರ್‌ (ಸೌದಿ ಅರೇಬಿಯಾ, ಸೈಟಿಂಗ್‌)bia, sighting)"}
             islamic-umalqura{"ಇಸ್ಲಾಮಿಕ್ ಕ್ಯಾಲೆಂಡರ್ (ಉಮ್ ಅಲ್-ಖುರಾ)"}
             iso8601{"ISO-8601 ಕ್ಯಾಲೆಂಡರ್"}
             japanese{"ಜಪಾನೀಸ್ ಕ್ಯಾಲೆಂಡರ್"}
@@ -894,10 +894,11 @@ kn{
     }
     characterLabelPattern{
         all{"{0} — ಎಲ್ಲ"}
-        category-list{"{0}: {1}"}
         compatibility{"{0} — ಹೊಂದಾಣಿಕೆ"}
         enclosed{"{0} — ಲಗತ್ತಿಸಲಾಗಿದೆ"}
         extended{"{0} — ವಿಸ್ತೃತ"}
+        facing-left{"{0} ಎಡಕ್ಕೆ ಮುಖ ಮಾಡಿರುವುದು"}
+        facing-right{"{0} ಬಲಕ್ಕೆ ಮುಖ ಮಾಡಿರುವುದು"}
         historic{"{0} — ಐತಿಹಾಸಿಕ"}
         miscellaneous{"{0} — ವಿವಿಧ"}
         other{"{0} — ಇತರೆ"}
@@ -913,10 +914,5 @@ kn{
         language{"ಭಾಷೆ: {0}"}
         script{"ಲಿಪಿ : {0}"}
         territory{"ಪ್ರದೇಶ: {0}"}
-    }
-    localeDisplayPattern{
-        keyTypePattern{"{0}: {1}"}
-        pattern{"{0} ({1})"}
-        separator{"{0}, {1}"}
     }
 }

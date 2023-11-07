@@ -83,6 +83,7 @@ pl{
         bfd{"bafut"}
         bfq{"badaga"}
         bg{"bułgarski"}
+        bgc{"haryanvi"}
         bgn{"beludżi północny"}
         bho{"bhodżpuri"}
         bi{"bislama"}
@@ -851,10 +852,8 @@ pl{
             hebrew{"kalendarz hebrajski"}
             indian{"narodowy kalendarz hinduski"}
             islamic{"kalendarz muzułmański"}
-            islamic-civil{"kalendarz islamski (metoda obliczeniowa)"}
-            islamic-rgsa{"kalendarz islamski (Arabia Saudyjska, metoda wzrokowa)"}
-            islamic-tbla{"kalendarz islamski (metoda obliczeniowa, epoka astronomiczna)"}
-            islamic-umalqura{"kalendarz islamski (Umm al-Kura)"}
+            islamic-civil{"kalendarz muzułmański (metoda obliczeniowa)"}
+            islamic-umalqura{"kalendarz muzułmański (Umm al-Kura)"}
             iso8601{"kalendarz ISO-8601"}
             japanese{"kalendarz japoński"}
             persian{"kalendarz perski"}
@@ -1022,10 +1021,11 @@ pl{
     }
     characterLabelPattern{
         all{"{0} — wszystko"}
-        category-list{"{0}: {1}"}
         compatibility{"{0} — zgodność"}
         enclosed{"{0} — obwiedzione"}
         extended{"{0} — rozszerzone"}
+        facing-left{"{0} zwrócony w lewo"}
+        facing-right{"{0} zwrócony w prawo"}
         historic{"{0} — historyczne"}
         miscellaneous{"{0} — różne"}
         other{"{0} — inne"}

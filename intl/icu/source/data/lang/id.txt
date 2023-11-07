@@ -5,13 +5,13 @@ id{
     Keys{
         calendar{"Kalender"}
         cf{"Format Mata Uang"}
-        colAlternate{"Penyortiran Abaikan Simbol"}
-        colBackwards{"Penyortiran Aksen Terbalik"}
+        colAlternate{"Pengurutan Abaikan Simbol"}
+        colBackwards{"Pengurutan Aksen Terbalik"}
         colCaseFirst{"Pengurutan Huruf Besar/Huruf Kecil"}
-        colCaseLevel{"Penyortiran Peka Huruf Besar"}
-        colNormalization{"Penyortiran Dinormalisasi"}
-        colNumeric{"Penyortiran Numerik"}
-        colStrength{"Kekuatan Penyortiran"}
+        colCaseLevel{"Pengurutan Peka Huruf Besar"}
+        colNormalization{"Pengurutan Dinormalisasi"}
+        colNumeric{"Pengurutan Numerik"}
+        colStrength{"Kekuatan Pengurutan"}
         collation{"Aturan Pengurutan"}
         currency{"Mata Uang"}
         hc{"Siklus Jam (12 vs 24)"}
@@ -79,6 +79,7 @@ id{
         bez{"Bena"}
         bfd{"Bafut"}
         bg{"Bulgaria"}
+        bgc{"Haryanvi"}
         bgn{"Balochi Barat"}
         bho{"Bhojpuri"}
         bi{"Bislama"}
@@ -614,9 +615,9 @@ id{
     Languages%short{
         az{"Azeri"}
         en_GB{"Inggris (UK)"}
-        en_US{"Inggris (AS)"}
     }
     Languages%variant{
+        ckb{"Kurdi, Sorani"}
         hi_Latn{"Hinglish"}
         ps{"Pushto"}
         ug{"Uighur"}
@@ -838,7 +839,6 @@ id{
             indian{"Kalender Nasional India"}
             islamic{"Kalender Islam"}
             islamic-civil{"Kalender Sipil Islam"}
-            islamic-rgsa{"Kalender Islam (Arab Saudi, penglihatan)"}
             islamic-tbla{"Kalender Astronomi Islam"}
             islamic-umalqura{"Kalender Islam (Umm al-Qura)"}
             iso8601{"Kalender ISO-8601"}
@@ -883,23 +883,23 @@ id{
             tertiary{"Sortir Aksen/Ukuran Huruf/Lebar"}
         }
         collation{
-            big5han{"Urutan Sortir Tionghoa Tradisional - Big5"}
+            big5han{"Aturan Pengurutan Tionghoa Tradisional - Big5"}
             compat{"Aturan Pengurutan Sebelumnya, untuk kompatibilitas"}
-            dictionary{"Urutan Sortir Kamus"}
+            dictionary{"Aturan Pengurutan Kamus"}
             ducet{"Aturan Pengurutan Unicode Default"}
             emoji{"Urutan Sortir Emoji"}
             eor{"Aturan Pengurutan Eropa"}
-            gb2312han{"Urutan Sortir Tionghoa (Sederhana) - GB2312"}
-            phonebook{"Urutan Sortir Buku Telepon"}
-            phonetic{"Urutan Sortir Fonetik"}
-            pinyin{"Urutan Sortir Pinyin"}
-            reformed{"Urutan Sortir yang Diubah Bentuknya"}
+            gb2312han{"Aturan Pengurutan Tionghoa (Sederhana) - GB2312"}
+            phonebook{"Aturan Pengurutan Buku Telepon"}
+            phonetic{"Aturan Pengurutan Fonetik"}
+            pinyin{"Aturan Pengurutan Pinyin"}
+            reformed{"Aturan Pengurutan yang Diubah Bentuknya"}
             search{"Pencarian Tujuan Umum"}
             searchjl{"Pencarian Menurut Konsonan Awal Hangul"}
             standard{"Aturan Pengurutan Standar"}
-            stroke{"Urutan Sortir Guratan"}
-            traditional{"Urutan Sortir Tradisional"}
-            unihan{"Urutan Sortir Guratan Radikal"}
+            stroke{"Aturan Pengurutan Guratan"}
+            traditional{"Aturan Pengurutan Tradisional"}
+            unihan{"Aturan Pengurutan Guratan Radikal"}
             zhuyin{"Aturan Pengurutan Zhuyin"}
         }
         d0{
@@ -1074,10 +1074,11 @@ id{
     }
     characterLabelPattern{
         all{"{0} — semua"}
-        category-list{"{0}: {1}"}
         compatibility{"{0} — kompatibilitas"}
         enclosed{"{0} — terlampir"}
         extended{"{0} — diperluas"}
+        facing-left{"{0} menghadap kiri"}
+        facing-right{"{0} menghadap kanan"}
         historic{"{0} — historis"}
         miscellaneous{"{0} — lain-lain"}
         other{"{0} — lainnya"}
@@ -1092,10 +1093,5 @@ id{
         language{"Bahasa: {0}"}
         script{"Skrip: {0}"}
         territory{"Wilayah: {0}"}
-    }
-    localeDisplayPattern{
-        keyTypePattern{"{0}: {1}"}
-        pattern{"{0} ({1})"}
-        separator{"{0}, {1}"}
     }
 }

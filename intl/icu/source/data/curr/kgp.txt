@@ -895,9 +895,13 @@ kgp{
             "SKK",
             "Enhrovakija Rãgre",
         }
+        SLE{
+            "SLE",
+            "Krĩ Mĩgkusũg-fi Re’onĩ",
+        }
         SLL{
             "SLL",
-            "Krĩ Mĩgkusũg-fi Re’onĩ",
+            "Krĩ Mĩgkusũg-fi Re’onĩ (1964—2022)",
         }
         SOS{
             "SOS",
@@ -1201,103 +1205,10 @@ kgp{
         }
     }
     Currencies%narrow{
-        AOA{"Kz"}
-        ARS{"$"}
-        AUD{"$"}
-        BAM{"KM"}
-        BBD{"$"}
-        BDT{"৳"}
-        BMD{"$"}
-        BND{"$"}
-        BOB{"Bs"}
-        BRL{"R$"}
-        BSD{"$"}
-        BWP{"P"}
         BYN{"p."}
-        BZD{"$"}
-        CAD{"$"}
-        CLP{"$"}
-        CNY{"¥"}
-        COP{"$"}
-        CRC{"₡"}
-        CUC{"$"}
-        CUP{"$"}
-        CZK{"Kč"}
-        DKK{"kr"}
-        DOP{"$"}
-        EGP{"E£"}
-        EUR{"€"}
-        FJD{"$"}
-        FKP{"£"}
-        GBP{"£"}
-        GEL{"₾"}
-        GIP{"£"}
-        GNF{"FG"}
-        GTQ{"Q"}
-        GYD{"$"}
-        HKD{"$"}
-        HNL{"L"}
-        HRK{"kn"}
-        HUF{"Ft"}
-        IDR{"Rp"}
-        ILS{"₪"}
-        INR{"₹"}
-        ISK{"kr"}
-        JMD{"$"}
-        JPY{"¥"}
-        KHR{"៛"}
-        KMF{"CF"}
-        KPW{"₩"}
-        KRW{"₩"}
-        KYD{"$"}
-        KZT{"₸"}
-        LAK{"₭"}
-        LBP{"L£"}
-        LKR{"Rs"}
-        LRD{"$"}
-        MGA{"Ar"}
-        MMK{"K"}
-        MNT{"₮"}
-        MUR{"Rs"}
-        MXN{"$"}
-        MYR{"RM"}
-        NAD{"$"}
-        NGN{"₦"}
-        NIO{"C$"}
-        NOK{"kr"}
-        NPR{"Rs"}
-        NZD{"$"}
-        PHP{"₱"}
-        PKR{"Rs"}
-        PLN{"zł"}
-        PYG{"₲"}
         RON{"L"}
-        RUB{"₽"}
-        RWF{"RF"}
-        SBD{"$"}
-        SEK{"kr"}
-        SGD{"$"}
-        SHP{"£"}
-        SRD{"$"}
-        SSP{"£"}
-        STN{"Db"}
         SYP{"S£"}
-        THB{"฿"}
-        TOP{"T$"}
-        TRY{"₺"}
-        TTD{"$"}
         TWD{"NT$"}
-        UAH{"₴"}
-        USD{"$"}
-        UYU{"$"}
-        VEF{"Bs"}
-        VND{"₫"}
-        XCD{"$"}
-        ZAR{"R"}
-        ZMW{"ZK"}
-    }
-    Currencies%variant{
-        TRY{"TL"}
     }
     CurrencyPlurals{
         ADP{
@@ -2192,9 +2103,13 @@ kgp{
             one{"Enhrovakija Rãgre"}
             other{"Enhrovakija Rãgre ag"}
         }
-        SLL{
+        SLE{
             one{"Krĩ Mĩgkusũg-fi Re’onĩ"}
             other{"Krĩ Mĩgkusũg-fi Re’onĩ ag"}
+        }
+        SLL{
+            one{"Krĩ Mĩgkusũg-fi Re’onĩ (1964—2022)"}
+            other{"Krĩ Mĩgkusũg-fi Re’onĩ ag (1964—2022)"}
         }
         SOS{
             one{"Somỹrija Serĩm"}
@@ -2364,14 +2279,6 @@ kgp{
             one{"Vĩpir CFA tỹ BEAC"}
             other{"Vĩpir CFA tỹ BEAC ag"}
         }
-        XAG{
-            one{"Kyfé Kupri"}
-            other{"Kyfé Kupri"}
-        }
-        XAU{
-            one{"Kyfé Mỹrér"}
-            other{"Kyfé Mỹrér"}
-        }
         XBA{
             one{"Orópa tá Vẽnhkãmur ũ vẽnkikro"}
             other{"Orópa tá Vẽnhkãmur ũ vẽnkikro ag"}
@@ -2393,7 +2300,6 @@ kgp{
             other{"Karime Rãjur Nórar ag"}
         }
         XDR{
-            one{"Kuryj ty Vẽnhkãgán há"}
             other{"Kuryj ty Vẽnhkãgán há"}
         }
         XEU{
@@ -2481,7 +2387,6 @@ kgp{
             other{"Jajre tá Jajre Tãg ag"}
         }
         ZRZ{
-            one{"Jajre tá Jajre"}
             other{"Jajre tá Jajre"}
         }
         ZWD{

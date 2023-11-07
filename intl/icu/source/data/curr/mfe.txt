@@ -175,9 +175,13 @@ mfe{
             "SHP",
             "liv Sainte-Hélène",
         }
+        SLE{
+            "SLE",
+            "leonn Sierra-Leone",
+        }
         SLL{
             "SLL",
-            "leonn Sierra-Leone",
+            "leonn Sierra-Leone (1964—2022)",
         }
         SOS{
             "SOS",

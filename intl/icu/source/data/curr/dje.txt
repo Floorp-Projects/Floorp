@@ -175,9 +175,13 @@ dje{
             "SHP",
             "Seŋ Helena Fraŋ",
         }
+        SLE{
+            "SLE",
+            "Leeon",
+        }
         SLL{
             "SLL",
-            "Leeon",
+            "Leeon (1964—2022)",
         }
         SOS{
             "SOS",

@@ -1907,10 +1907,7 @@ ur{
         "meta:Yukon"{
             ls{"یوکون ٹائم"}
         }
-        fallbackFormat{"{1} ({0})"}
         gmtFormat{"GMT {0}"}
-        gmtZeroFormat{"GMT"}
-        hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"{0} وقت"}
         regionFormatDaylight{"{0} ڈے لائٹ ٹائم"}
         regionFormatStandard{"{0} معیاری وقت"}

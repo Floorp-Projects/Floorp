@@ -5,10 +5,8 @@ es_419{
     NumberElements{
         latn{
             patterns{
-                accountingFormat{"¤#,##0.00"}
-                accountingFormat%alphaNextToNumber{"¤ #,##0.00"}
                 currencyFormat{"¤#,##0.00"}
-                currencyPatternAppendISO{"{0} ¤¤"}
+                percentFormat{"#,##0%"}
             }
             patternsLong{
                 decimalFormat{
@@ -143,7 +141,6 @@ es_419{
                 }
             }
             symbols{
-                approximatelySign{"~"}
                 decimal{"."}
                 group{","}
             }
@@ -154,53 +151,6 @@ es_419{
         coptic{
             monthNames{
                 format{
-                    abbreviated{
-                        "Tout",
-                        "Baba",
-                        "Hator",
-                        "Kiahk",
-                        "Toba",
-                        "Amshir",
-                        "Baramhat",
-                        "Baramouda",
-                        "Bashans",
-                        "Paona",
-                        "Epep",
-                        "Mesra",
-                        "Nasie",
-                    }
-                    wide{
-                        "Tout",
-                        "Baba",
-                        "Hator",
-                        "Kiahk",
-                        "Toba",
-                        "Amshir",
-                        "Baramhat",
-                        "Baramouda",
-                        "Bashans",
-                        "Paona",
-                        "Epep",
-                        "Mesra",
-                        "Nasie",
-                    }
-                }
-                stand-alone{
-                    abbreviated{
-                        "Tout",
-                        "Baba",
-                        "Hator",
-                        "Kiahk",
-                        "Toba",
-                        "Amshir",
-                        "Baramhat",
-                        "Baramouda",
-                        "Bashans",
-                        "Paona",
-                        "Epep",
-                        "Mesra",
-                        "Nasie",
-                    }
                     wide{
                         "Tout",
                         "Baba",
@@ -221,25 +171,25 @@ es_419{
         }
         generic{
             DateTimePatterns{
-                "HH:mm:ss zzzz",
-                "HH:mm:ss z",
-                "HH:mm:ss",
-                "HH:mm",
+                "h:mm:ss a zzzz",
+                "h:mm:ss a z",
+                "h:mm:ss a",
+                "h:mm a",
                 "EEEE, d 'de' MMMM 'de' y G",
                 "d 'de' MMMM 'de' y G",
                 "d 'de' MMM 'de' y G",
                 "d/M/y GGGGG",
-                "{1} {0}",
                 "{1}, {0}",
                 "{1}, {0}",
-                "{1} {0}",
-                "{1} {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1}, {0}",
             }
             DateTimeSkeletons{
-                "HHmmsszzzz",
-                "HHmmssz",
-                "HHmmss",
-                "HHmm",
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
                 "GyMMMMEEEEd",
                 "GyMMMMd",
                 "GyMMMd",
@@ -288,26 +238,34 @@ es_419{
             }
         }
         gregorian{
+            AmPmMarkers{
+                "a.m.",
+                "p.m.",
+            }
+            AmPmMarkersAbbr{
+                "a.m.",
+                "p.m.",
+            }
             DateTimePatterns{
-                "HH:mm:ss zzzz",
-                "HH:mm:ss z",
-                "HH:mm:ss",
-                "HH:mm",
+                "h:mm:ss a zzzz",
+                "h:mm:ss a z",
+                "h:mm:ss a",
+                "h:mm a",
                 "EEEE, d 'de' MMMM 'de' y",
                 "d 'de' MMMM 'de' y",
                 "d MMM y",
                 "d/M/yy",
-                "{1} {0}",
                 "{1}, {0}",
                 "{1}, {0}",
-                "{1} {0}",
+                "{1}, {0}",
+                "{1}, {0}",
                 "{1}, {0}",
             }
             DateTimeSkeletons{
-                "HHmmsszzzz",
-                "HHmmssz",
-                "HHmmss",
-                "HHmm",
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
                 "yMMMMEEEEd",
                 "yMMMMd",
                 "yMMMd",
@@ -329,7 +287,7 @@ es_419{
                 yQQQ{"QQQ 'de' y"}
             }
             dayNames{
-                format{
+                stand-alone{
                     narrow{
                         "D",
                         "L",
@@ -340,15 +298,12 @@ es_419{
                         "S",
                     }
                 }
+            }
+            dayPeriod{
                 stand-alone{
-                    narrow{
-                        "D",
-                        "L",
-                        "M",
-                        "M",
-                        "J",
-                        "V",
-                        "S",
+                    wide{
+                        am{"a.m."}
+                        pm{"p.m."}
                     }
                 }
             }
@@ -457,69 +412,11 @@ es_419{
                         "4.º trimestre",
                     }
                 }
-                stand-alone{
-                    wide{
-                        "1.º trimestre",
-                        "2.º trimestre",
-                        "3.º trimestre",
-                        "4.º trimestre",
-                    }
-                }
             }
         }
         hebrew{
             monthNames{
                 format{
-                    abbreviated{
-                        "Tishri",
-                        "Heshvan",
-                        "Kislev",
-                        "Tevet",
-                        "Shevat",
-                        "Adar I",
-                        "Adar",
-                        "Nisan",
-                        "Iyar",
-                        "Sivan",
-                        "Tamuz",
-                        "Av",
-                        "Elul",
-                        "Adar II",
-                    }
-                    wide{
-                        "Tishri",
-                        "Heshvan",
-                        "Kislev",
-                        "Tevet",
-                        "Shevat",
-                        "Adar I",
-                        "Adar",
-                        "Nisan",
-                        "Iyar",
-                        "Sivan",
-                        "Tamuz",
-                        "Av",
-                        "Elul",
-                        "Adar II",
-                    }
-                }
-                stand-alone{
-                    abbreviated{
-                        "Tishri",
-                        "Heshvan",
-                        "Kislev",
-                        "Tevet",
-                        "Shevat",
-                        "Adar I",
-                        "Adar",
-                        "Nisan",
-                        "Iyar",
-                        "Sivan",
-                        "Tamuz",
-                        "av",
-                        "elul",
-                        "Adar II",
-                    }
                     wide{
                         "Tishri",
                         "Heshvan",
@@ -544,59 +441,9 @@ es_419{
                 abbreviated{
                     "Saka",
                 }
-                narrow{
-                    "Saka",
-                }
-                wide{
-                    "Saka",
-                }
             }
             monthNames{
                 format{
-                    abbreviated{
-                        "Chaitra",
-                        "Vaisakha",
-                        "Jyaistha",
-                        "Asadha",
-                        "Sravana",
-                        "Bhadra",
-                        "Asvina",
-                        "Kartika",
-                        "Agrahayana",
-                        "Pausa",
-                        "Magha",
-                        "Phalguna",
-                    }
-                    wide{
-                        "Chaitra",
-                        "Vaisakha",
-                        "Jyaistha",
-                        "Asadha",
-                        "Sravana",
-                        "Bhadra",
-                        "Asvina",
-                        "Kartika",
-                        "Agrahayana",
-                        "Pausa",
-                        "Magha",
-                        "Phalguna",
-                    }
-                }
-                stand-alone{
-                    abbreviated{
-                        "Chaitra",
-                        "Vaisakha",
-                        "Jyaistha",
-                        "Asadha",
-                        "Sravana",
-                        "Bhadra",
-                        "Asvina",
-                        "Kartika",
-                        "Agrahayana",
-                        "Pausa",
-                        "Magha",
-                        "Phalguna",
-                    }
                     wide{
                         "Chaitra",
                         "Vaisakha",
@@ -646,49 +493,11 @@ es_419{
                         "Dhuʻl-Hijjah",
                     }
                 }
-                stand-alone{
-                    abbreviated{
-                        "Muh.",
-                        "Saf.",
-                        "Rab. I",
-                        "Rab. II",
-                        "Jum. I",
-                        "Jum. II",
-                        "Raj.",
-                        "Sha.",
-                        "Ram.",
-                        "Shaw.",
-                        "Dhuʻl-Q.",
-                        "Dhuʻl-H.",
-                    }
-                    wide{
-                        "Muharram",
-                        "Safar",
-                        "Rabiʻ I",
-                        "Rabiʻ II",
-                        "Jumada I",
-                        "Jumada II",
-                        "Rajab",
-                        "Shaʻban",
-                        "Ramadan",
-                        "Shawwal",
-                        "Dhuʻl-Qiʻdah",
-                        "Dhuʻl-Hijjah",
-                    }
-                }
             }
         }
         roc{
             eras{
                 abbreviated{
-                    "antes de R.O.C.",
-                    "R.O.C.",
-                }
-                narrow{
-                    "antes de R.O.C.",
-                    "R.O.C.",
-                }
-                wide{
                     "antes de R.O.C.",
                     "R.O.C.",
                 }
@@ -757,25 +566,7 @@ es_419{
         western_asian_scripts{"sistemas de escritura de Asia Occidental"}
         whitespace{"espacio duro"}
     }
-    delimiters{
-        alternateQuotationEnd{"’"}
-        alternateQuotationStart{"‘"}
-        quotationEnd{"”"}
-        quotationStart{"“"}
-    }
     fields{
-        day-narrow{
-            relativeTime{
-                future{
-                    one{"dentro de {0} día"}
-                    other{"dentro de {0} días"}
-                }
-                past{
-                    one{"hace {0} día"}
-                    other{"hace {0} días"}
-                }
-            }
-        }
         day-short{
             relativeTime{
                 future{
@@ -788,19 +579,10 @@ es_419{
                 }
             }
         }
-        dayOfYear-narrow{
-            dn{"día del año"}
-        }
         dayOfYear-short{
             dn{"día del año"}
         }
         dayperiod{
-            dn{"a.m./p.m."}
-        }
-        dayperiod-narrow{
-            dn{"a.m./p.m."}
-        }
-        dayperiod-short{
             dn{"a.m./p.m."}
         }
         fri-narrow{
@@ -835,22 +617,6 @@ es_419{
                 }
             }
         }
-        tue{
-            relativeTime{
-                future{
-                    one{"dentro de {0} martes"}
-                    other{"en {0} martes"}
-                }
-            }
-        }
-        week-narrow{
-            relative{
-                "-1"{"sem. pas."}
-                "0"{"esta sem."}
-                "1"{"próx. sem."}
-            }
-            relativePeriod{"la semana del {0}"}
-        }
         week-short{
             relative{
                 "-1"{"sem. pas."}
@@ -859,16 +625,10 @@ es_419{
             }
             relativePeriod{"la semana del {0}"}
         }
-        weekOfMonth-narrow{
-            dn{"sem. del mes"}
-        }
         weekOfMonth-short{
             dn{"sem. del mes"}
         }
         weekdayOfMonth{
-            dn{"día hábil del mes"}
-        }
-        weekdayOfMonth-narrow{
             dn{"día hábil del mes"}
         }
         weekdayOfMonth-short{
@@ -876,10 +636,6 @@ es_419{
         }
     }
     personNames{
-        initialPattern{
-            initial{"{0}."}
-            initialSequence{"{0} {1}"}
-        }
         namePattern{
             givenFirst-medium-referring-formal{"{given} {given2-initial} {surname} {credentials}"}
             surnameFirst-long-addressing-formal{"{title} {surname} {surname2}"}

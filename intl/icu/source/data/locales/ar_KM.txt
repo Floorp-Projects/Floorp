@@ -4,6 +4,7 @@
 ar_KM{
     NumberElements{
         default{"arab"}
+        default_latn{"latn"}
     }
     calendar{
         gregorian{

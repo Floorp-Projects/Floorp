@@ -14,6 +14,5 @@ ru_BY{
     }
     Currencies%narrow{
         BYN{"Br"}
-        RUR{"р."}
     }
 }

@@ -2,7 +2,7 @@
 // License & terms of use: http://www.unicode.org/copyright.html
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 kl{
-    AuxExemplarCharacters{"[á â ã é ê ẽ í î ĩ ô õ ĸ ú û ũ]"}
+    AuxExemplarCharacters{"[áâã éêẽ íîĩ ôõ ĸ úûũ]"}
     ExemplarCharacters{"[a b c d e f g h i j k l m n o p q r s t u v w x y z æ ø å]"}
     ExemplarCharactersIndex{"[A B C D E F G H I J K L M N O P Q R S T U V W X Y Z Æ Ø Å]"}
     ExemplarCharactersNumbers{"[, . % ‰ + − 0 1 2 3 4 5 6 7 8 9]"}
@@ -41,48 +41,9 @@ kl{
                 "{1} {0}",
                 "{1} {0}",
             }
-            DateTimeSkeletons{
-                "HHmmsszzzz",
-                "HHmmssz",
-                "HHmmss",
-                "HHmm",
-                "yMMMMEEEEd",
-                "yMMMMd",
-                "yMMMd",
-                "yMMdd",
-            }
             dayNames{
                 format{
                     abbreviated{
-                        "sap",
-                        "ata",
-                        "mar",
-                        "pin",
-                        "sis",
-                        "tal",
-                        "arf",
-                    }
-                    short{
-                        "sap",
-                        "ata",
-                        "mar",
-                        "pin",
-                        "sis",
-                        "tal",
-                        "arf",
-                    }
-                    wide{
-                        "sapaat",
-                        "ataasinngorneq",
-                        "marlunngorneq",
-                        "pingasunngorneq",
-                        "sisamanngorneq",
-                        "tallimanngorneq",
-                        "arfininngorneq",
-                    }
-                }
-                stand-alone{
-                    short{
                         "sap",
                         "ata",
                         "mar",
@@ -134,20 +95,6 @@ kl{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "jan",
-                        "febr",
-                        "mar",
-                        "apr",
-                        "maj",
-                        "jun",
-                        "jul",
-                        "aug",
-                        "sept",
-                        "okt",
-                        "nov",
-                        "dec",
-                    }
                     wide{
                         "januaari",
                         "februaari",

@@ -47,6 +47,7 @@ nl{
         ang{"Oudengels"}
         ann{"Obolo"}
         anp{"Angika"}
+        apc{"Levantijns-Arabisch"}
         ar{"Arabisch"}
         ar_001{"modern standaard Arabisch"}
         arc{"Aramees"}
@@ -79,7 +80,7 @@ nl{
         be{"Belarussisch"}
         bej{"Beja"}
         bem{"Bemba"}
-        bew{"Betawi"}
+        bew{"Bataviaans"}
         bez{"Bena"}
         bfd{"Bafut"}
         bfq{"Badaga"}
@@ -669,8 +670,6 @@ nl{
     }
     Languages%short{
         az{"Azeri"}
-        en_GB{"Engels (VK)"}
-        en_US{"Engels (VS)"}
     }
     Languages%variant{
         ckb{"Koerdisch, Soranî"}
@@ -901,8 +900,6 @@ nl{
             indian{"Indiase nationale kalender"}
             islamic{"Islamitische kalender"}
             islamic-civil{"Islamitische kalender (cyclisch)"}
-            islamic-rgsa{"Islamitische kalender (Saudi–Arabië)"}
-            islamic-tbla{"Islamitische kalender (epoche)"}
             islamic-umalqura{"Islamitische kalender (Umm al-Qura)"}
             iso8601{"ISO-8601-kalender"}
             japanese{"Japanse kalender"}
@@ -1192,10 +1189,11 @@ nl{
     }
     characterLabelPattern{
         all{"{0} — alle"}
-        category-list{"{0}: {1}"}
         compatibility{"{0} — compatibiliteit"}
         enclosed{"{0} — ingebed"}
         extended{"{0} — uitgebreid"}
+        facing-left{"{0} naar links gericht"}
+        facing-right{"{0} naar rechts gericht"}
         historic{"{0} — historisch"}
         miscellaneous{"{0} — diverse"}
         other{"{0} — overige"}
@@ -1209,10 +1207,5 @@ nl{
         language{"Taal: {0}"}
         script{"Schrift: {0}"}
         territory{"Regio: {0}"}
-    }
-    localeDisplayPattern{
-        keyTypePattern{"{0}: {1}"}
-        pattern{"{0} ({1})"}
-        separator{"{0}, {1}"}
     }
 }

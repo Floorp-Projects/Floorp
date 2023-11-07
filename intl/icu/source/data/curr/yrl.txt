@@ -895,9 +895,13 @@ yrl{
             "SKK",
             "Kuruwa Esirowaka",
         }
+        SLE{
+            "SLE",
+            "Rioni Iwitera Reuwa yara",
+        }
         SLL{
             "SLL",
-            "Rioni Iwitera Reuwa yara",
+            "Rioni Iwitera Reuwa yara (1964—2022)",
         }
         SOS{
             "SOS",
@@ -1201,104 +1205,13 @@ yrl{
         }
     }
     Currencies%narrow{
-        AOA{"Kz"}
-        ARS{"$"}
-        AUD{"$"}
-        BAM{"KM"}
-        BBD{"$"}
-        BDT{"৳"}
-        BMD{"$"}
-        BND{"$"}
-        BOB{"Bs"}
-        BRL{"R$"}
-        BSD{"$"}
-        BWP{"P"}
         BYN{"p."}
-        BZD{"$"}
-        CAD{"$"}
-        CLP{"$"}
-        CNY{"¥"}
         COP{"COP"}
-        CRC{"₡"}
-        CUC{"$"}
-        CUP{"$"}
-        CZK{"Kč"}
-        DKK{"kr"}
-        DOP{"$"}
-        EGP{"E£"}
-        EUR{"€"}
-        FJD{"$"}
-        FKP{"£"}
-        GBP{"£"}
-        GEL{"₾"}
-        GIP{"£"}
-        GNF{"FG"}
-        GTQ{"Q"}
-        GYD{"$"}
-        HKD{"$"}
-        HNL{"L"}
-        HRK{"kn"}
-        HUF{"Ft"}
-        IDR{"Rp"}
-        ILS{"₪"}
-        INR{"₹"}
-        ISK{"kr"}
-        JMD{"$"}
-        JPY{"¥"}
-        KHR{"៛"}
-        KMF{"CF"}
-        KPW{"₩"}
-        KRW{"₩"}
-        KYD{"$"}
-        KZT{"₸"}
-        LAK{"₭"}
-        LBP{"L£"}
-        LKR{"Rs"}
-        LRD{"$"}
-        MGA{"Ar"}
-        MMK{"K"}
-        MNT{"₮"}
-        MUR{"Rs"}
-        MXN{"$"}
-        MYR{"RM"}
-        NAD{"$"}
-        NGN{"₦"}
-        NIO{"C$"}
-        NOK{"kr"}
-        NPR{"Rs"}
-        NZD{"$"}
-        PHP{"₱"}
-        PKR{"Rs"}
-        PLN{"zł"}
-        PYG{"₲"}
         RON{"L"}
-        RUB{"₽"}
-        RWF{"RF"}
-        SBD{"$"}
-        SEK{"kr"}
-        SGD{"$"}
-        SHP{"£"}
-        SRD{"$"}
-        SSP{"£"}
-        STN{"Db"}
         SYP{"S£"}
-        THB{"฿"}
-        TOP{"T$"}
-        TRY{"₺"}
-        TTD{"$"}
         TWD{"NT$"}
-        UAH{"₴"}
-        USD{"$"}
-        UYU{"$"}
-        VEF{"Bs"}
         VES{"VES"}
-        VND{"₫"}
-        XCD{"$"}
-        ZAR{"R"}
         ZMW{"Zk"}
-    }
-    Currencies%variant{
-        TRY{"TL"}
     }
     CurrencyPlurals{
         ADP{
@@ -1555,7 +1468,6 @@ yrl{
         }
         CLF{
             one{"Yepesawa Muapiresawa Xiriwara"}
-            other{"Yepesawa-ita Muapiresawa Xiriwara"}
         }
         CLP{
             one{"Pusewa Xiriwara"}
@@ -1586,7 +1498,6 @@ yrl{
             other{"Kurũ-ita Kupe-Rikawara"}
         }
         CSD{
-            one{"Dinari Kuxiímawara Sewiyawara"}
             other{"Dinari Kuxiímawara Sewiyawara"}
         }
         CSK{
@@ -1789,10 +1700,6 @@ yrl{
             one{"Ribara Isirayewara"}
             other{"Ribara-ita Isirayewara"}
         }
-        ILR{
-            one{"Xekeu Kuxiímawara Isirayerita"}
-            other{"Xekeu Kuxiímawara Isirayerita"}
-        }
         ILS{
             one{"Pisusawa Xekeu Isiraelẽsi"}
             other{"Pisusawa Xekeu-ita Isiraelẽsi"}
@@ -1808,10 +1715,6 @@ yrl{
         IRR{
             one{"Riau Irãwara"}
             other{"Riau-ita Irãwara"}
-        }
-        ISJ{
-            one{"Kuruwa Kuxiímawara Isirãdiawara"}
-            other{"Kuruwa Kuxiímawara Isirãdiawara"}
         }
         ISK{
             one{"Kuruwa Isirãdiawara"}
@@ -2030,7 +1933,6 @@ yrl{
             other{"Warakapá-ita Musãbikiwara"}
         }
         MZM{
-            one{"Metikau Kuxiímawara Musãbikiwara"}
             other{"Metikau Kuxiímawara Musãbikiwara"}
         }
         MZN{
@@ -2162,7 +2064,6 @@ yrl{
             other{"Rupiya-ita Seixeriwara"}
         }
         SDD{
-            one{"Dinari Kuxiímawara Sudawara"}
             other{"Dinari Kuxiímawara Sudawara"}
         }
         SDG{
@@ -2193,9 +2094,13 @@ yrl{
             one{"Kuruwa Esirowaka"}
             other{"Kuruwa-ita Esirowaka"}
         }
-        SLL{
+        SLE{
             one{"Rioni Iwitera Reuwa yara"}
             other{"Rioni-ita Iwitera Reuwa yara"}
+        }
+        SLL{
+            one{"Rioni Iwitera Reuwa yara (1964—2022)"}
+            other{"Rioni-ita Iwitera Reuwa yara (1964—2022)"}
         }
         SOS{
             one{"Xerĩ Sumariyawara"}

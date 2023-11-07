@@ -93,7 +93,6 @@ kde{
         IE{"Ayalandi"}
         IL{"Islaeli"}
         IN{"India"}
-        IO{"Lieneo lyaki Nngalesa Nbahali ya Hindi"}
         IQ{"Ilaki"}
         IR{"Uadyemi"}
         IS{"Aislandi"}

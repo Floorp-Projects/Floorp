@@ -12,11 +12,6 @@ ms_BN{
                 group{"."}
             }
         }
-        olck{
-            symbols{
-                decimal{","}
-            }
-        }
     }
     calendar{
         buddhist{

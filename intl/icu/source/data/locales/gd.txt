@@ -3,591 +3,29 @@
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 gd{
     AuxExemplarCharacters{
-        "[á ă â å ä ã ā æ ċ ç ḋ é ĕ ê ë ē ḟ ġ í ĭ î ï ī ı j k ł ṁ ñ ó ŏ ô ö ø ō œ ṗ q"
-        " ṡ ş ș ṫ ú ŭ û ü ū v w x y ÿ z]"
+        "[áăâåäãā æ ċç ḋ éĕêëē ḟ ġ íĭîïī ı j k ł ṁ ñ óŏôöøō œ ṗ q ṡşș ṫ úŭûüū v w x y"
+        "ÿ z]"
     }
-    Ellipsis{
-        final{"{0}…"}
-        initial{"…{0}"}
-        medial{"{0}…{1}"}
-        word-final{"{0} …"}
-        word-initial{"… {0}"}
-        word-medial{"{0} … {1}"}
-    }
-    ExemplarCharacters{"[a à b c d e è f g h i ì l m n o ò p r s t u ù]"}
+    ExemplarCharacters{"[aà b c d eè f g h iì l m n oò p r s t uù]"}
     ExemplarCharactersIndex{"[A B C D E F G H I L M N O P R S T U]"}
-    ExemplarCharactersNumbers{"[\\- ‑ , . % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
     ExemplarCharactersPunctuation{
-        "[\\- ‐ ‑ – — , ; \\: ! ¡ ? . … · ' ‘ ’ \u0022 “ ” ( ) \\[ \\] \\{ \\} § ¶ @ "
-        "* / \\& ⁊ # % † ‡ ‧ ° © ® ™]"
+        "[\\- ‐‑ – — , ; \\: ! ¡ ? . … · '‘’ \u0022“” ( ) \\[ \\] \\{ \\} § ¶ @ * / "
+        "\\& ⁊ # % † ‡ ‧ ° © ® ™]"
     }
-    MoreInformation{"?"}
     NumberElements{
-        adlm{
-            symbols{
-                approximatelySign{"~"}
-                decimal{"."}
-                exponential{"E"}
-                group{","}
-                infinity{"∞"}
-                list{";"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
-            }
-        }
         arab{
             symbols{
-                approximatelySign{"~"}
-                decimal{"٫"}
-                exponential{"اس"}
-                group{"٬"}
-                infinity{"∞"}
-                list{"؛"}
-                minusSign{"؜-"}
-                nan{"NaN"}
-                perMille{"؉"}
                 percentSign{"٪"}
-                plusSign{"؜+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         arabext{
             symbols{
-                approximatelySign{"~"}
-                decimal{"٫"}
-                exponential{"×۱۰^"}
-                group{"٬"}
-                infinity{"∞"}
-                list{"؛"}
                 minusSign{"-"}
-                nan{"NaN"}
-                perMille{"؉"}
-                percentSign{"٪"}
-                plusSign{"‎+‎"}
-                superscriptingExponent{"×"}
-                timeSeparator{"٫"}
-            }
-        }
-        bali{
-            symbols{
-                approximatelySign{"~"}
-                decimal{"."}
-                exponential{"E"}
-                group{","}
-                infinity{"∞"}
-                list{";"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
-            }
-        }
-        beng{
-            symbols{
-                approximatelySign{"~"}
-                decimal{"."}
-                exponential{"E"}
-                group{","}
-                infinity{"∞"}
-                list{";"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
-            }
-        }
-        brah{
-            symbols{
-                approximatelySign{"~"}
-                decimal{"."}
-                exponential{"E"}
-                group{","}
-                infinity{"∞"}
-                list{";"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
-            }
-        }
-        cakm{
-            symbols{
-                approximatelySign{"~"}
-                decimal{"."}
-                exponential{"E"}
-                group{","}
-                infinity{"∞"}
-                list{";"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
-            }
-        }
-        cham{
-            symbols{
-                approximatelySign{"~"}
-                decimal{"."}
-                exponential{"E"}
-                group{","}
-                infinity{"∞"}
-                list{";"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
-            }
-        }
-        default{"latn"}
-        deva{
-            symbols{
-                approximatelySign{"~"}
-                decimal{"."}
-                exponential{"E"}
-                group{","}
-                infinity{"∞"}
-                list{";"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
-            }
-        }
-        fullwide{
-            miscPatterns{
-                atLeast{"{0}+"}
-                range{"{0}–{1}"}
-            }
-            patterns{
-                accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
-                accountingFormat%alphaNextToNumber{"¤ #,##0.00;(¤ #,##0.00)"}
-                accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
-                currencyFormat{"¤#,##0.00"}
-                currencyFormat%alphaNextToNumber{"¤ #,##0.00"}
-                currencyFormat%noCurrency{"#,##0.00"}
-                decimalFormat{"#,##0.###"}
-                percentFormat{"#,##0%"}
-                scientificFormat{"#E0"}
-            }
-            patternsLong{
-                decimalFormat{
-                    1000{
-                        few{"0 mìltean"}
-                        one{"0 mhìle"}
-                        other{"0 mìle"}
-                        two{"0 mhìle"}
-                    }
-                    10000{
-                        few{"00 mìltean"}
-                        one{"00 mhìle"}
-                        other{"00 mìle"}
-                        two{"00 mhìle"}
-                    }
-                    100000{
-                        few{"000 mìltean"}
-                        one{"000 mhìle"}
-                        other{"000 mìle"}
-                        two{"000 mhìle"}
-                    }
-                    1000000{
-                        few{"0 milleanan"}
-                        one{"0 mhillean"}
-                        other{"0 millean"}
-                        two{"0 mhillean"}
-                    }
-                    10000000{
-                        few{"00 milleanan"}
-                        one{"00 mhillean"}
-                        other{"00 millean"}
-                        two{"00 mhillean"}
-                    }
-                    100000000{
-                        few{"000 milleanan"}
-                        one{"000 mhillean"}
-                        other{"000 millean"}
-                        two{"000 mhillean"}
-                    }
-                    1000000000{
-                        few{"0 billeanan"}
-                        one{"0 bhillean"}
-                        other{"0 billean"}
-                        two{"0 bhillean"}
-                    }
-                    10000000000{
-                        few{"00 billeanan"}
-                        one{"00 bhillean"}
-                        other{"00 billean"}
-                        two{"00 bhillean"}
-                    }
-                    100000000000{
-                        few{"000 billeanan"}
-                        one{"000 bhillean"}
-                        other{"000 billean"}
-                        two{"000 bhillean"}
-                    }
-                    1000000000000{
-                        few{"0 trilleanan"}
-                        one{"0 trillean"}
-                        other{"0 trillean"}
-                        two{"0 thrillean"}
-                    }
-                    10000000000000{
-                        few{"00 trilleanan"}
-                        one{"00 trillean"}
-                        other{"00 trillean"}
-                        two{"00 thrillean"}
-                    }
-                    100000000000000{
-                        few{"000 trilleanan"}
-                        one{"000 trillean"}
-                        other{"000 trillean"}
-                        two{"000 thrillean"}
-                    }
-                }
-            }
-            patternsShort{
-                currencyFormat{
-                    1000{
-                        few{"¤0K"}
-                        one{"¤0K"}
-                        other{"¤0K"}
-                        two{"¤0K"}
-                    }
-                    10000{
-                        few{"¤00K"}
-                        one{"¤00K"}
-                        other{"¤00K"}
-                        two{"¤00K"}
-                    }
-                    100000{
-                        few{"¤000K"}
-                        one{"¤000K"}
-                        other{"¤000K"}
-                        two{"¤000K"}
-                    }
-                    1000000{
-                        few{"¤0M"}
-                        one{"¤0M"}
-                        other{"¤0M"}
-                        two{"¤0M"}
-                    }
-                    10000000{
-                        few{"¤00M"}
-                        one{"¤00M"}
-                        other{"¤00M"}
-                        two{"¤00M"}
-                    }
-                    100000000{
-                        few{"¤000M"}
-                        one{"¤000M"}
-                        other{"¤000M"}
-                        two{"¤000M"}
-                    }
-                    1000000000{
-                        few{"¤0B"}
-                        one{"¤0B"}
-                        other{"¤0B"}
-                        two{"¤0B"}
-                    }
-                    10000000000{
-                        few{"¤00B"}
-                        one{"¤00B"}
-                        other{"¤00B"}
-                        two{"¤00B"}
-                    }
-                    100000000000{
-                        few{"¤000B"}
-                        one{"¤000B"}
-                        other{"¤000B"}
-                        two{"¤000B"}
-                    }
-                    1000000000000{
-                        few{"¤0T"}
-                        one{"¤0T"}
-                        other{"¤0T"}
-                        two{"¤0T"}
-                    }
-                    10000000000000{
-                        few{"¤00T"}
-                        one{"¤00T"}
-                        other{"¤00T"}
-                        two{"¤00T"}
-                    }
-                    100000000000000{
-                        few{"¤000T"}
-                        one{"¤000T"}
-                        other{"¤000T"}
-                        two{"¤000T"}
-                    }
-                }
-            }
-            symbols{
-                approximatelySign{"~"}
-                decimal{"."}
-                exponential{"E"}
-                group{","}
-                infinity{"∞"}
-                list{";"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
-            }
-        }
-        gong{
-            symbols{
-                approximatelySign{"~"}
-                decimal{"."}
-                exponential{"E"}
-                group{","}
-                infinity{"∞"}
-                list{";"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
-            }
-        }
-        gonm{
-            symbols{
-                approximatelySign{"~"}
-                decimal{"."}
-                exponential{"E"}
-                group{","}
-                infinity{"∞"}
-                list{";"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
-            }
-        }
-        gujr{
-            symbols{
-                approximatelySign{"~"}
-                decimal{"."}
-                exponential{"E"}
-                group{","}
-                infinity{"∞"}
-                list{";"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
-            }
-        }
-        guru{
-            symbols{
-                approximatelySign{"~"}
-                decimal{"."}
-                exponential{"E"}
-                group{","}
-                infinity{"∞"}
-                list{";"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
-            }
-        }
-        hanidec{
-            symbols{
-                approximatelySign{"~"}
-                decimal{"."}
-                exponential{"E"}
-                group{","}
-                infinity{"∞"}
-                list{";"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
-            }
-        }
-        hmnp{
-            symbols{
-                approximatelySign{"~"}
-                decimal{"."}
-                exponential{"E"}
-                group{","}
-                infinity{"∞"}
-                list{";"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
-            }
-        }
-        java{
-            symbols{
-                approximatelySign{"~"}
-                decimal{"."}
-                exponential{"E"}
-                group{","}
-                infinity{"∞"}
-                list{";"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
-            }
-        }
-        kali{
-            symbols{
-                approximatelySign{"~"}
-                decimal{"."}
-                exponential{"E"}
-                group{","}
-                infinity{"∞"}
-                list{";"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
-            }
-        }
-        khmr{
-            symbols{
-                approximatelySign{"~"}
-                decimal{"."}
-                exponential{"E"}
-                group{","}
-                infinity{"∞"}
-                list{";"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
-            }
-        }
-        knda{
-            symbols{
-                approximatelySign{"~"}
-                decimal{"."}
-                exponential{"E"}
-                group{","}
-                infinity{"∞"}
-                list{";"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
-            }
-        }
-        lana{
-            symbols{
-                approximatelySign{"~"}
-                decimal{"."}
-                exponential{"E"}
-                group{","}
-                infinity{"∞"}
-                list{";"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
-            }
-        }
-        lanatham{
-            symbols{
-                approximatelySign{"~"}
-                decimal{"."}
-                exponential{"E"}
-                group{","}
-                infinity{"∞"}
-                list{";"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
-            }
-        }
-        laoo{
-            symbols{
-                approximatelySign{"~"}
-                decimal{"."}
-                exponential{"E"}
-                group{","}
-                infinity{"∞"}
-                list{";"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         latn{
             miscPatterns{
-                approximately{"~{0}"}
                 atLeast{"{0}+"}
-                atMost{"≤{0}"}
-                range{"{0}–{1}"}
             }
             patterns{
                 accountingFormat{"¤#,##0.00;(¤#,##0.00)"}
@@ -595,11 +33,6 @@ gd{
                 accountingFormat%noCurrency{"#,##0.00;(#,##0.00)"}
                 currencyFormat{"¤#,##0.00"}
                 currencyFormat%alphaNextToNumber{"¤ #,##0.00"}
-                currencyFormat%noCurrency{"#,##0.00"}
-                currencyPatternAppendISO{"{0} ¤¤"}
-                decimalFormat{"#,##0.###"}
-                percentFormat{"#,##0%"}
-                scientificFormat{"#E0"}
             }
             patternsLong{
                 decimalFormat{
@@ -827,127 +260,19 @@ gd{
                     }
                 }
                 decimalFormat{
-                    1000{
-                        few{"0K"}
-                        one{"0K"}
-                        other{"0K"}
-                        two{"0K"}
-                    }
-                    10000{
-                        few{"00K"}
-                        one{"00K"}
-                        other{"00K"}
-                        two{"00K"}
-                    }
-                    100000{
-                        few{"000K"}
-                        one{"000K"}
-                        other{"000K"}
-                        two{"000K"}
-                    }
-                    1000000{
-                        few{"0M"}
-                        one{"0M"}
-                        other{"0M"}
-                        two{"0M"}
-                    }
-                    10000000{
-                        few{"00M"}
-                        one{"00M"}
-                        other{"00M"}
-                        two{"00M"}
-                    }
-                    100000000{
-                        few{"000M"}
-                        one{"000M"}
-                        other{"000M"}
-                        two{"000M"}
-                    }
                     1000000000{
-                        few{"0B"}
                         one{"0B"}
                         other{"0B"}
-                        two{"0B"}
                     }
                     10000000000{
-                        few{"00B"}
                         one{"00B"}
                         other{"00B"}
-                        two{"00B"}
                     }
                     100000000000{
-                        few{"000B"}
                         one{"000B"}
                         other{"000B"}
-                        two{"000B"}
-                    }
-                    1000000000000{
-                        few{"0T"}
-                        one{"0T"}
-                        other{"0T"}
-                        two{"0T"}
-                    }
-                    10000000000000{
-                        few{"00T"}
-                        one{"00T"}
-                        other{"00T"}
-                        two{"00T"}
-                    }
-                    100000000000000{
-                        few{"000T"}
-                        one{"000T"}
-                        other{"000T"}
-                        two{"000T"}
                     }
                 }
-            }
-            symbols{
-                decimal{"."}
-                exponential{"E"}
-                group{","}
-                infinity{"∞"}
-                list{";"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
-            }
-        }
-        lepc{
-            symbols{
-                approximatelySign{"~"}
-                decimal{"."}
-                exponential{"E"}
-                group{","}
-                infinity{"∞"}
-                list{";"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
-            }
-        }
-        limb{
-            symbols{
-                approximatelySign{"~"}
-                decimal{"."}
-                exponential{"E"}
-                group{","}
-                infinity{"∞"}
-                list{";"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
             }
         }
         minimalPairs{
@@ -964,420 +289,8 @@ gd{
                 two{"{0} bhròig"}
             }
         }
-        minimumGroupingDigits{"1"}
-        mlym{
-            symbols{
-                approximatelySign{"~"}
-                decimal{"."}
-                exponential{"E"}
-                group{","}
-                infinity{"∞"}
-                list{";"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
-            }
-        }
-        mong{
-            symbols{
-                approximatelySign{"~"}
-                decimal{"."}
-                exponential{"E"}
-                group{","}
-                infinity{"∞"}
-                list{";"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
-            }
-        }
-        mtei{
-            symbols{
-                approximatelySign{"~"}
-                decimal{"."}
-                exponential{"E"}
-                group{","}
-                infinity{"∞"}
-                list{";"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
-            }
-        }
-        mymr{
-            symbols{
-                approximatelySign{"~"}
-                decimal{"."}
-                exponential{"E"}
-                group{","}
-                infinity{"∞"}
-                list{";"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
-            }
-        }
-        mymrshan{
-            symbols{
-                approximatelySign{"~"}
-                decimal{"."}
-                exponential{"E"}
-                group{","}
-                infinity{"∞"}
-                list{";"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
-            }
-        }
-        native{"latn"}
-        nkoo{
-            symbols{
-                approximatelySign{"~"}
-                decimal{"."}
-                exponential{"E"}
-                group{","}
-                infinity{"∞"}
-                list{";"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
-            }
-        }
-        olck{
-            symbols{
-                approximatelySign{"~"}
-                decimal{"."}
-                exponential{"E"}
-                group{","}
-                infinity{"∞"}
-                list{";"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
-            }
-        }
-        orya{
-            symbols{
-                approximatelySign{"~"}
-                decimal{"."}
-                exponential{"E"}
-                group{","}
-                infinity{"∞"}
-                list{";"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
-            }
-        }
-        osma{
-            symbols{
-                approximatelySign{"~"}
-                decimal{"."}
-                exponential{"E"}
-                group{","}
-                infinity{"∞"}
-                list{";"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
-            }
-        }
-        rohg{
-            symbols{
-                approximatelySign{"~"}
-                decimal{"."}
-                exponential{"E"}
-                group{","}
-                infinity{"∞"}
-                list{";"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
-            }
-        }
-        saur{
-            symbols{
-                approximatelySign{"~"}
-                decimal{"."}
-                exponential{"E"}
-                group{","}
-                infinity{"∞"}
-                list{";"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
-            }
-        }
-        shrd{
-            symbols{
-                approximatelySign{"~"}
-                decimal{"."}
-                exponential{"E"}
-                group{","}
-                infinity{"∞"}
-                list{";"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
-            }
-        }
-        sora{
-            symbols{
-                approximatelySign{"~"}
-                decimal{"."}
-                exponential{"E"}
-                group{","}
-                infinity{"∞"}
-                list{";"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
-            }
-        }
-        sund{
-            symbols{
-                approximatelySign{"~"}
-                decimal{"."}
-                exponential{"E"}
-                group{","}
-                infinity{"∞"}
-                list{";"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
-            }
-        }
-        takr{
-            symbols{
-                approximatelySign{"~"}
-                decimal{"."}
-                exponential{"E"}
-                group{","}
-                infinity{"∞"}
-                list{";"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
-            }
-        }
-        talu{
-            symbols{
-                approximatelySign{"~"}
-                decimal{"."}
-                exponential{"E"}
-                group{","}
-                infinity{"∞"}
-                list{";"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
-            }
-        }
-        tamldec{
-            symbols{
-                approximatelySign{"~"}
-                decimal{"."}
-                exponential{"E"}
-                group{","}
-                infinity{"∞"}
-                list{";"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
-            }
-        }
-        telu{
-            symbols{
-                approximatelySign{"~"}
-                decimal{"."}
-                exponential{"E"}
-                group{","}
-                infinity{"∞"}
-                list{";"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
-            }
-        }
-        thai{
-            symbols{
-                approximatelySign{"~"}
-                decimal{"."}
-                exponential{"E"}
-                group{","}
-                infinity{"∞"}
-                list{";"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
-            }
-        }
-        tibt{
-            symbols{
-                approximatelySign{"~"}
-                decimal{"."}
-                exponential{"E"}
-                group{","}
-                infinity{"∞"}
-                list{";"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
-            }
-        }
-        vaii{
-            symbols{
-                approximatelySign{"~"}
-                decimal{"."}
-                exponential{"E"}
-                group{","}
-                infinity{"∞"}
-                list{";"}
-                minusSign{"-"}
-                nan{"NaN"}
-                perMille{"‰"}
-                percentSign{"%"}
-                plusSign{"+"}
-                superscriptingExponent{"×"}
-                timeSeparator{":"}
-            }
-        }
     }
     calendar{
-        buddhist{
-            DateTimePatterns{
-                "HH:mm:ss zzzz",
-                "HH:mm:ss z",
-                "HH:mm:ss",
-                "HH:mm",
-                "EEEE, d'mh' MMMM y G",
-                "d'mh' MMMM y G",
-                "d MMM y G",
-                "d/M/y GGGGG",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-            }
-            DateTimeSkeletons{
-                "HHmmsszzzz",
-                "HHmmssz",
-                "HHmmss",
-                "HHmm",
-                "GyMMMMEEEEd",
-                "GyMMMMd",
-                "GyMMMd",
-                "GGGGGyMd",
-            }
-            availableFormats{
-                MMMMd{"d'mh' MMMM"}
-                yMM{"LL/y"}
-                yyyyM{"L/y GGGGG"}
-                yyyyMMMM{"LLLL y G"}
-            }
-            intervalFormats{
-                H{
-                    H{"HH – HH"}
-                }
-                Hm{
-                    H{"HH:mm – HH:mm"}
-                    m{"HH:mm – HH:mm"}
-                }
-                Hmv{
-                    H{"HH:mm – HH:mm v"}
-                    m{"HH:mm – HH:mm v"}
-                }
-                Hv{
-                    H{"HH – HH v"}
-                }
-                M{
-                    M{"L – L"}
-                }
-                fallback{"{0} – {1}"}
-            }
-        }
         chinese{
             DateTimePatterns{
                 "HH:mm:ss zzzz",
@@ -1414,7 +327,6 @@ gd{
                 Bh{"hB"}
                 Bhm{"h:mmB"}
                 Bhms{"h:mm:ssB"}
-                E{"ccc"}
                 EBhm{"E h:mmB"}
                 EBhms{"E h:mm:ssB"}
                 Ed{"E d"}
@@ -1422,12 +334,7 @@ gd{
                 GyMMM{"LLL r(U)"}
                 GyMMMEd{"E, d'mh' MMM r(U)"}
                 GyMMMd{"d'mh' MMM r"}
-                H{"HH"}
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
-                M{"L"}
                 MEd{"E, d/M"}
-                MMM{"LLL"}
                 MMMEd{"E, d'mh' MMM"}
                 MMMMd{"d'mh' MMMM"}
                 MMMd{"d'mh' MMM"}
@@ -1436,14 +343,10 @@ gd{
                 UMMM{"LLL U"}
                 UMMMd{"d'mh' MMM U"}
                 UMd{"d/M/U"}
-                d{"d"}
                 h{"ha"}
                 hm{"h:mma"}
                 hms{"h:mm:ssa"}
-                ms{"mm:ss"}
-                y{"r(U)"}
                 yMd{"d/M/r"}
-                yyyy{"r(U)"}
                 yyyyM{"L/r"}
                 yyyyMEd{"E, d/M/r"}
                 yyyyMMM{"LLL r(U)"}
@@ -1553,34 +456,6 @@ gd{
                             "Cù",
                             "Muc",
                         }
-                        narrow{
-                            "Radan",
-                            "Damh",
-                            "Tìgear",
-                            "Coinean",
-                            "Dràgon",
-                            "Nathair",
-                            "Each",
-                            "Gobhar",
-                            "Muncaidh",
-                            "Coileach",
-                            "Cù",
-                            "Muc",
-                        }
-                        wide{
-                            "Radan",
-                            "Damh",
-                            "Tìgear",
-                            "Coinean",
-                            "Dràgon",
-                            "Nathair",
-                            "Each",
-                            "Gobhar",
-                            "Muncaidh",
-                            "Coileach",
-                            "Cù",
-                            "Muc",
-                        }
                     }
                 }
             }
@@ -1624,7 +499,6 @@ gd{
                 d{
                     d{"d – d"}
                 }
-                fallback{"{0} – {1}"}
                 h{
                     a{"ha – ha"}
                     h{"h – ha"}
@@ -1695,20 +569,6 @@ gd{
                         "Aon Deug",
                         "Dàrna Deug",
                     }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10",
-                        "11",
-                        "12",
-                    }
                     wide{
                         "dhen Chiad Mhìos",
                         "dhen Dàrna Mhìos",
@@ -1725,34 +585,6 @@ gd{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "Chiad",
-                        "Dàrna",
-                        "Treas",
-                        "Ceathr",
-                        "Còig",
-                        "Sia",
-                        "Seachd",
-                        "Ochd",
-                        "Naoidh",
-                        "Deich",
-                        "Aon Deug",
-                        "Dàrna Deug",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10",
-                        "11",
-                        "12",
-                    }
                     wide{
                         "A’ Chiad Mhìos",
                         "An Dàrna Mìos",
@@ -1767,468 +599,6 @@ gd{
                         "An t-Aonamh Mìos Deug",
                         "An Dàrna Mìos Deug",
                     }
-                }
-            }
-        }
-        coptic{
-            DateTimePatterns{
-                "HH:mm:ss zzzz",
-                "HH:mm:ss z",
-                "HH:mm:ss",
-                "HH:mm",
-                "EEEE, d'mh' MMMM y G",
-                "d'mh' MMMM y G",
-                "d MMM y G",
-                "d/M/y GGGGG",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-            }
-            DateTimeSkeletons{
-                "HHmmsszzzz",
-                "HHmmssz",
-                "HHmmss",
-                "HHmm",
-                "GyMMMMEEEEd",
-                "GyMMMMd",
-                "GyMMMd",
-                "GGGGGyMd",
-            }
-            availableFormats{
-                MMMMd{"d'mh' MMMM"}
-                yMM{"LL/y"}
-                yyyyM{"L/y GGGGG"}
-                yyyyMMMM{"LLLL y G"}
-            }
-            intervalFormats{
-                M{
-                    M{"L – L"}
-                }
-            }
-        }
-        dangi{
-            DateTimePatterns{
-                "HH:mm:ss zzzz",
-                "HH:mm:ss z",
-                "HH:mm:ss",
-                "HH:mm",
-                "EEEE, d'mh' MMMM r(U)",
-                "d'mh' MMMM r(U)",
-                "d MMM r",
-                "d/M/r",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-            }
-            DateTimePatterns%atTime{
-                "{1} 'aig' {0}",
-                "{1} 'aig' {0}",
-                "{1} {0}",
-                "{1} {0}",
-            }
-            DateTimeSkeletons{
-                "HHmmsszzzz",
-                "HHmmssz",
-                "HHmmss",
-                "HHmm",
-                "rMMMMEEEEd",
-                "rMMMMd",
-                "rMMMd",
-                "rMd",
-            }
-            availableFormats{
-                E{"ccc"}
-                Ed{"E d"}
-                Gy{"r(U)"}
-                GyMMM{"LLL r(U)"}
-                GyMMMEd{"E, d'mh' MMM r(U)"}
-                GyMMMd{"d'mh' MMM r"}
-                M{"L"}
-                MEd{"E, d/M"}
-                MMM{"LLL"}
-                MMMEd{"E, d'mh' MMM"}
-                MMMMd{"d'mh' MMMM"}
-                MMMd{"d'mh' MMM"}
-                Md{"d/M"}
-                UM{"L/U"}
-                UMMM{"LLL U"}
-                UMMMd{"d'mh' MMM U"}
-                UMd{"d/M/U"}
-                d{"d"}
-                y{"r(U)"}
-                yMd{"d/M/r"}
-                yyyy{"r(U)"}
-                yyyyM{"L/r"}
-                yyyyMEd{"E, d/M/r"}
-                yyyyMMM{"LLL r(U)"}
-                yyyyMMMEd{"E, d'mh' MMM r(U)"}
-                yyyyMMMM{"LLLL r(U)"}
-                yyyyMMMd{"d'mh' MMM r"}
-                yyyyMd{"d/M/r"}
-                yyyyQQQ{"QQQ r(U)"}
-                yyyyQQQQ{"QQQQ r(U)"}
-            }
-            cyclicNameSets{
-                solarTerms{
-                    format{
-                        abbreviated{
-                            "toiseach an earraich",
-                            "an t-uisge",
-                            "dùsgadh nam biastag",
-                            "co-fhad-thràth an earraich",
-                            "soilleir",
-                            "uisge a’ ghràin",
-                            "toiseach an t-samhraidh",
-                            "gràn làn",
-                            "gràn abaich",
-                            "grian-stad an t-samhraidh",
-                            "teas beag",
-                            "teas mòr",
-                            "toiseach an fhoghair",
-                            "deireadh an teasa",
-                            "driùchd geal",
-                            "co-fhad-thràth an fhoghair",
-                            "driùchd fuar",
-                            "teachd an reòthaidh",
-                            "toiseach a’ gheamhraidh",
-                            "sneachd beag",
-                            "sneachd mòr",
-                            "grian-stad a’ gheamhraidh",
-                            "fuachd bheag",
-                            "fuachd mhòr",
-                        }
-                        narrow{
-                            "toiseach earraich",
-                            "an t-uisge",
-                            "dùsgadh bhiastagan",
-                            "co-fhad-thràth earraich",
-                            "soilleir",
-                            "uisge gràin",
-                            "toiseach samhraidh",
-                            "gràn làn",
-                            "gràn abaich",
-                            "grian-stad samhraidh",
-                            "teas beag",
-                            "teas mòr",
-                            "toiseach foghair",
-                            "deireadh teasa",
-                            "driùchd geal",
-                            "co-fhad-thràth foghair",
-                            "driùchd fuar",
-                            "teachd reòthaidh",
-                            "toiseach geamhraidh",
-                            "sneachd beag",
-                            "sneachd mòr",
-                            "grian-stad geamhraidh",
-                            "fuachd bheag",
-                            "fuachd mhòr",
-                        }
-                        wide{
-                            "toiseach an earraich",
-                            "an t-uisge",
-                            "dùsgadh nam biastag",
-                            "co-fhad-thràth an earraich",
-                            "soilleir",
-                            "uisge a’ ghràin",
-                            "toiseach an t-samhraidh",
-                            "an gràn làn",
-                            "an gràn abaich",
-                            "grian-stad an t-samhraidh",
-                            "an teas beag",
-                            "an teas mòr",
-                            "toiseach an fhoghair",
-                            "deireadh an teasa",
-                            "an driùchd geal",
-                            "co-fhad-thràth an fhoghair",
-                            "an driùchd fuar",
-                            "teachd an reòthaidh",
-                            "toiseach a’ gheamhraidh",
-                            "an sneachd beag",
-                            "an sneachd mòr",
-                            "grian-stad a’ gheamhraidh",
-                            "an fhuachd bheag",
-                            "an fhuachd mhòr",
-                        }
-                    }
-                }
-                zodiacs{
-                    format{
-                        abbreviated{
-                            "Radan",
-                            "Damh",
-                            "Tìgear",
-                            "Coinean",
-                            "Dràgon",
-                            "Nathair",
-                            "Each",
-                            "Gobhar",
-                            "Muncaidh",
-                            "Coileach",
-                            "Cù",
-                            "Muc",
-                        }
-                        narrow{
-                            "Radan",
-                            "Damh",
-                            "Tìgear",
-                            "Coinean",
-                            "Dràgon",
-                            "Nathair",
-                            "Each",
-                            "Gobhar",
-                            "Muncaidh",
-                            "Coileach",
-                            "Cù",
-                            "Muc",
-                        }
-                        wide{
-                            "Radan",
-                            "Damh",
-                            "Tìgear",
-                            "Coinean",
-                            "Dràgon",
-                            "Nathair",
-                            "Each",
-                            "Gobhar",
-                            "Muncaidh",
-                            "Coileach",
-                            "Cù",
-                            "Muc",
-                        }
-                    }
-                }
-            }
-            intervalFormats{
-                H{
-                    H{"HH – HH"}
-                }
-                Hm{
-                    H{"HH:mm – HH:mm"}
-                    m{"HH:mm – HH:mm"}
-                }
-                Hmv{
-                    H{"HH:mm – HH:mm v"}
-                    m{"HH:mm – HH:mm v"}
-                }
-                Hv{
-                    H{"HH – HH v"}
-                }
-                M{
-                    M{"L – L"}
-                }
-                MEd{
-                    M{"E, d/M – E, d/M"}
-                    d{"E, d/M – E, d/M"}
-                }
-                MMM{
-                    M{"LLL – LLL"}
-                }
-                MMMEd{
-                    M{"E, d MMM – E, d MMM"}
-                    d{"E, d MMM – E, d MMM"}
-                }
-                MMMd{
-                    M{"d MMM – d MMM"}
-                    d{"d MMM – d"}
-                }
-                Md{
-                    M{"d/M – d/M"}
-                    d{"d/M – d/M"}
-                }
-                d{
-                    d{"d – d"}
-                }
-                fallback{"{0} – {1}"}
-                h{
-                    a{"ha – ha"}
-                    h{"h – ha"}
-                }
-                hm{
-                    a{"h:mma – h:mma"}
-                    h{"h:mm – h:mma"}
-                    m{"h:mm – h:mma"}
-                }
-                hmv{
-                    a{"h:mma – h:mma v"}
-                    h{"h:mm – h:mma v"}
-                    m{"h:mm – h:mma v"}
-                }
-                hv{
-                    a{"ha – ha v"}
-                    h{"h – ha v"}
-                }
-                y{
-                    y{"U – U"}
-                }
-                yM{
-                    M{"L/y – L/y"}
-                    y{"L/y – L/y"}
-                }
-                yMEd{
-                    M{"E, d/M/y – E, d/M/y"}
-                    d{"E, d/M/y – E, d/M/y"}
-                    y{"E, d/M/y – E, d/M/y"}
-                }
-                yMMM{
-                    M{"LLL – LLL U"}
-                    y{"LLL U – LLL U"}
-                }
-                yMMMEd{
-                    M{"E, d MMM – E, d MMM, U"}
-                    d{"E, d MMM – E, d MMM, U"}
-                    y{"E, d MMM, U – E, d MMM, U"}
-                }
-                yMMMM{
-                    M{"LLLL – LLLL U"}
-                    y{"LLLL U – LLLL U"}
-                }
-                yMMMd{
-                    M{"d MMM – d MMM, U"}
-                    d{"d MMM – d, U"}
-                    y{"d MMM, U – d MMM, U"}
-                }
-                yMd{
-                    M{"d/M/y – d/M/y"}
-                    d{"d/M/y – d/M/y"}
-                    y{"d/M/y – d/M/y"}
-                }
-            }
-            monthNames{
-                format{
-                    abbreviated{
-                        "Chiad",
-                        "Dàrna",
-                        "Treas",
-                        "Ceathr",
-                        "Còig",
-                        "Sia",
-                        "Seachd",
-                        "Ochd",
-                        "Naoidh",
-                        "Deich",
-                        "Aon Deug",
-                        "Dàrna Deug",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10",
-                        "11",
-                        "12",
-                    }
-                    wide{
-                        "dhen Chiad Mhìos",
-                        "dhen Dàrna Mhìos",
-                        "dhen Treas Mhìos",
-                        "dhen Cheathramh Mhìos",
-                        "dhen Chòigeamh Mhìos",
-                        "dhen t-Siathamh Mhìos",
-                        "dhen t-Seachdamh Mhìos",
-                        "dhen Ochdamh Mhìos",
-                        "dhen Naoidheamh Mhìos",
-                        "dhen Deicheamh Mhìos",
-                        "dhen Aonamh Mhìos Deug",
-                        "dhen Dàrna Mhìos Deug",
-                    }
-                }
-                stand-alone{
-                    abbreviated{
-                        "Chiad",
-                        "Dàrna",
-                        "Treas",
-                        "Ceathr",
-                        "Còig",
-                        "Sia",
-                        "Seachd",
-                        "Ochd",
-                        "Naoidh",
-                        "Deich",
-                        "Aon Deug",
-                        "Dàrna Deug",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                        "5",
-                        "6",
-                        "7",
-                        "8",
-                        "9",
-                        "10",
-                        "11",
-                        "12",
-                    }
-                    wide{
-                        "A’ Chiad Mhìos",
-                        "An Dàrna Mìos",
-                        "An Treas Mìos",
-                        "An Ceathramh Mìos",
-                        "An Còigeamh Mìos",
-                        "An Siathamh Mìos",
-                        "An Seachdamh Mìos",
-                        "An t-Ochdamh Mìos",
-                        "An Naoidheamh Mìos",
-                        "An Deicheamh Mìos",
-                        "An t-Aonamh Mìos Deug",
-                        "An Dàrna Mìos Deug",
-                    }
-                }
-            }
-        }
-        ethiopic{
-            DateTimePatterns{
-                "HH:mm:ss zzzz",
-                "HH:mm:ss z",
-                "HH:mm:ss",
-                "HH:mm",
-                "EEEE, d'mh' MMMM y G",
-                "d'mh' MMMM y G",
-                "d MMM y G",
-                "d/M/y GGGGG",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-            }
-            DateTimePatterns%atTime{
-                "{1} 'aig' {0}",
-                "{1} 'aig' {0}",
-                "{1}, {0}",
-                "{1}, {0}",
-            }
-            DateTimeSkeletons{
-                "HHmmsszzzz",
-                "HHmmssz",
-                "HHmmss",
-                "HHmm",
-                "GyMMMMEEEEd",
-                "GyMMMMd",
-                "GyMMMd",
-                "GGGGGyMd",
-            }
-            availableFormats{
-                MMMMd{"d'mh' MMMM"}
-                yMM{"LL/y"}
-                yyyyM{"L/y GGGGG"}
-                yyyyMMMM{"LLLL y G"}
-            }
-            intervalFormats{
-                M{
-                    M{"L – L"}
                 }
             }
         }
@@ -2264,42 +634,29 @@ gd{
                 "GyMMMd",
                 "GGGGGyMd",
             }
-            appendItems{
-                Timezone{"{0} {1}"}
-            }
             availableFormats{
                 Bh{"hB"}
                 Bhm{"h:mmB"}
                 Bhms{"h:mm:ssB"}
-                E{"ccc"}
                 EBhm{"E h:mmB"}
                 EBhms{"E h:mm:ssB"}
-                EHm{"E HH:mm"}
-                EHms{"E HH:mm:ss"}
                 Ed{"E, d"}
                 Ehm{"E h:mma"}
                 Ehms{"E h:mm:ssa"}
                 Gy{"y G"}
                 GyMMM{"LLL y G"}
-                GyMMMEd{"E, d MMM y G"}
-                GyMMMd{"d MMM y G"}
+                GyMMMEd{"E, d'mh' MMM y G"}
+                GyMMMd{"d'mh' MMM y G"}
                 GyMd{"d/M/y GGGGG"}
-                H{"HH"}
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
-                M{"L"}
                 MEd{"E, d/M"}
-                MMM{"LLL"}
                 MMMEd{"E, d MMM"}
                 MMMMd{"d'mh' MMMM"}
                 MMMd{"d MMM"}
                 MMdd{"dd/MM"}
                 Md{"d/M"}
-                d{"d"}
                 h{"ha"}
                 hm{"h:mma"}
                 hms{"h:mm:ssa"}
-                ms{"mm:ss"}
                 y{"y G"}
                 yMEd{"E, d/M/y"}
                 yMM{"LL/y"}
@@ -2403,7 +760,6 @@ gd{
                 d{
                     d{"d – d"}
                 }
-                fallback{"{0} – {1}"}
                 h{
                     a{"ha – ha"}
                     h{"h – ha"}
@@ -2460,15 +816,7 @@ gd{
             }
         }
         gregorian{
-            AmPmMarkers{
-                "m",
-                "f",
-            }
             AmPmMarkersAbbr{
-                "m",
-                "f",
-            }
-            AmPmMarkersNarrow{
                 "m",
                 "f",
             }
@@ -2493,44 +841,21 @@ gd{
                 "{1}, {0}",
                 "{1}, {0}",
             }
-            DateTimeSkeletons{
-                "HHmmsszzzz",
-                "HHmmssz",
-                "HHmmss",
-                "HHmm",
-                "yMMMMEEEEd",
-                "yMMMMd",
-                "yMMMd",
-                "yMMdd",
-            }
-            appendItems{
-                Timezone{"{0} {1}"}
-            }
             availableFormats{
                 Bh{"hB"}
                 Bhm{"h:mmB"}
                 Bhms{"h:mm:ssB"}
-                E{"ccc"}
                 EBhm{"E h:mmB"}
                 EBhms{"E h:mm:ssB"}
-                EHm{"E HH:mm"}
-                EHms{"E HH:mm:ss"}
                 Ed{"E, d"}
                 Ehm{"E h:mma"}
                 Ehms{"E h:mm:ss a"}
                 Gy{"y G"}
                 GyMMM{"LLL y G"}
-                GyMMMEd{"E, d MMM y G"}
-                GyMMMd{"d MMM y G"}
+                GyMMMEd{"E, d'mh' MMM y G"}
+                GyMMMd{"d'mh' MMM y G"}
                 GyMd{"d/M/y G"}
-                H{"HH"}
-                Hm{"HH:mm"}
-                Hms{"HH:mm:ss"}
-                Hmsv{"HH:mm:ss v"}
-                Hmv{"HH:mm v"}
-                M{"L"}
                 MEd{"E, d/M"}
-                MMM{"LLL"}
                 MMMEd{"E, d MMM"}
                 MMMMW{
                     few{"'seachdain' W MMMM"}
@@ -2542,21 +867,18 @@ gd{
                 MMMd{"d MMM"}
                 MMdd{"dd/MM"}
                 Md{"d/M"}
-                d{"d"}
                 h{"ha"}
                 hm{"h:mma"}
                 hms{"h:mm:ss a"}
                 hmsv{"h:mm:ss a v"}
                 hmv{"h:mma v"}
-                ms{"mm:ss"}
-                y{"y"}
                 yM{"L/y"}
                 yMEd{"E, d/M/y"}
                 yMM{"LL/y"}
                 yMMM{"LLL Y"}
-                yMMMEd{"E, d MMM y"}
+                yMMMEd{"E, d'mh' MMM y"}
                 yMMMM{"LLLL y"}
-                yMMMd{"d MMM y"}
+                yMMMd{"d'mh' MMM y"}
                 yMd{"d/M/y"}
                 yQQQ{"QQQ y"}
                 yQQQQ{"QQQQ y"}
@@ -2578,15 +900,6 @@ gd{
                         "Dih",
                         "DiS",
                     }
-                    narrow{
-                        "D",
-                        "L",
-                        "M",
-                        "C",
-                        "A",
-                        "H",
-                        "S",
-                    }
                     short{
                         "Dò",
                         "Lu",
@@ -2607,15 +920,6 @@ gd{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "DiD",
-                        "DiL",
-                        "DiM",
-                        "DiC",
-                        "Dia",
-                        "Dih",
-                        "DiS",
-                    }
                     narrow{
                         "D",
                         "L",
@@ -2624,40 +928,6 @@ gd{
                         "A",
                         "H",
                         "S",
-                    }
-                    short{
-                        "Dò",
-                        "Lu",
-                        "Mà",
-                        "Ci",
-                        "Da",
-                        "hA",
-                        "Sa",
-                    }
-                    wide{
-                        "DiDòmhnaich",
-                        "DiLuain",
-                        "DiMàirt",
-                        "DiCiadain",
-                        "DiarDaoin",
-                        "DihAoine",
-                        "DiSathairne",
-                    }
-                }
-            }
-            dayPeriod{
-                stand-alone{
-                    abbreviated{
-                        am{"m"}
-                        pm{"f"}
-                    }
-                    narrow{
-                        am{"m"}
-                        pm{"f"}
-                    }
-                    wide{
-                        am{"m"}
-                        pm{"f"}
                     }
                 }
             }
@@ -2673,6 +943,10 @@ gd{
                 wide{
                     "Ro Chrìosta",
                     "An dèidh Chrìosta",
+                }
+                wide%variant{
+                    "ron linn choitcheann",
+                    "dhen linn choitcheann",
                 }
             }
             intervalFormats{
@@ -2762,7 +1036,6 @@ gd{
                 d{
                     d{"d – d"}
                 }
-                fallback{"{0} – {1}"}
                 h{
                     a{"ha – ha"}
                     h{"h – ha"}
@@ -2833,20 +1106,6 @@ gd{
                         "Samh",
                         "Dùbh",
                     }
-                    narrow{
-                        "F",
-                        "G",
-                        "M",
-                        "G",
-                        "C",
-                        "Ò",
-                        "I",
-                        "L",
-                        "S",
-                        "D",
-                        "S",
-                        "D",
-                    }
                     wide{
                         "dhen Fhaoilleach",
                         "dhen Ghearran",
@@ -2863,20 +1122,6 @@ gd{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        "Faoi",
-                        "Gearr",
-                        "Màrt",
-                        "Gibl",
-                        "Cèit",
-                        "Ògmh",
-                        "Iuch",
-                        "Lùna",
-                        "Sult",
-                        "Dàmh",
-                        "Samh",
-                        "Dùbh",
-                    }
                     narrow{
                         "F",
                         "G",
@@ -2915,312 +1160,24 @@ gd{
                         "C3",
                         "C4",
                     }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                    }
                     wide{
                         "1d chairteal",
                         "2na cairteal",
                         "3s cairteal",
                         "4mh cairteal",
                     }
-                }
-                stand-alone{
-                    abbreviated{
-                        "C1",
-                        "C2",
-                        "C3",
-                        "C4",
-                    }
-                    narrow{
-                        "1",
-                        "2",
-                        "3",
-                        "4",
-                    }
-                    wide{
-                        "1d chairteal",
-                        "2na cairteal",
-                        "3s cairteal",
-                        "4mh cairteal",
-                    }
-                }
-            }
-        }
-        hebrew{
-            DateTimePatterns{
-                "HH:mm:ss zzzz",
-                "HH:mm:ss z",
-                "HH:mm:ss",
-                "HH:mm",
-                "EEEE, d'mh' MMMM y G",
-                "d'mh' MMMM y G",
-                "d MMM y G",
-                "d/M/y GGGGG",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-            }
-            DateTimePatterns%atTime{
-                "{1} 'aig' {0}",
-                "{1} 'aig' {0}",
-                "{1}, {0}",
-                "{1}, {0}",
-            }
-            DateTimeSkeletons{
-                "HHmmsszzzz",
-                "HHmmssz",
-                "HHmmss",
-                "HHmm",
-                "GyMMMMEEEEd",
-                "GyMMMMd",
-                "GyMMMd",
-                "GGGGGyMd",
-            }
-            availableFormats{
-                MMMMd{"d'mh' MMMM"}
-                yMM{"LL/y"}
-                yyyyM{"L/y GGGGG"}
-                yyyyMMMM{"LLLL y G"}
-            }
-            intervalFormats{
-                M{
-                    M{"L – L"}
-                }
-            }
-        }
-        indian{
-            DateTimePatterns{
-                "HH:mm:ss zzzz",
-                "HH:mm:ss z",
-                "HH:mm:ss",
-                "HH:mm",
-                "EEEE, d'mh' MMMM y G",
-                "d'mh' MMMM y G",
-                "d MMM y G",
-                "d/M/y GGGGG",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-            }
-            DateTimeSkeletons{
-                "HHmmsszzzz",
-                "HHmmssz",
-                "HHmmss",
-                "HHmm",
-                "GyMMMMEEEEd",
-                "GyMMMMd",
-                "GyMMMd",
-                "GGGGGyMd",
-            }
-            availableFormats{
-                MMMMd{"d'mh' MMMM"}
-                yMM{"LL/y"}
-                yyyyM{"L/y GGGGG"}
-                yyyyMMMM{"LLLL y G"}
-            }
-            intervalFormats{
-                M{
-                    M{"L – L"}
-                }
-            }
-        }
-        islamic{
-            DateTimePatterns{
-                "HH:mm:ss zzzz",
-                "HH:mm:ss z",
-                "HH:mm:ss",
-                "HH:mm",
-                "EEEE, d'mh' MMMM y G",
-                "d'mh' MMMM y G",
-                "d MMM y G",
-                "d/M/y GGGGG",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-            }
-            DateTimePatterns%atTime{
-                "{1} 'aig' {0}",
-                "{1} 'aig' {0}",
-                "{1}, {0}",
-                "{1}, {0}",
-            }
-            DateTimeSkeletons{
-                "HHmmsszzzz",
-                "HHmmssz",
-                "HHmmss",
-                "HHmm",
-                "GyMMMMEEEEd",
-                "GyMMMMd",
-                "GyMMMd",
-                "GGGGGyMd",
-            }
-            availableFormats{
-                MMMMd{"d'mh' MMMM"}
-                yMM{"LL/y"}
-                yyyyM{"L/y GGGGG"}
-                yyyyMMMM{"LLLL y G"}
-            }
-            intervalFormats{
-                M{
-                    M{"L – L"}
-                }
-            }
-        }
-        japanese{
-            DateTimePatterns{
-                "HH:mm:ss zzzz",
-                "HH:mm:ss z",
-                "HH:mm:ss",
-                "HH:mm",
-                "EEEE, d'mh' MMMM y G",
-                "d'mh' MMMM y G",
-                "d MMM y G",
-                "d/M/y GGGGG",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-            }
-            DateTimePatterns%atTime{
-                "{1} 'aig' {0}",
-                "{1} 'aig' {0}",
-                "{1}, {0}",
-                "{1}, {0}",
-            }
-            DateTimeSkeletons{
-                "HHmmsszzzz",
-                "HHmmssz",
-                "HHmmss",
-                "HHmm",
-                "GyMMMMEEEEd",
-                "GyMMMMd",
-                "GyMMMd",
-                "GGGGGyMd",
-            }
-            availableFormats{
-                MMMMd{"d'mh' MMMM"}
-                yMM{"LL/y"}
-                yyyyM{"L/y GGGGG"}
-                yyyyMMMM{"LLLL y G"}
-            }
-            intervalFormats{
-                M{
-                    M{"L – L"}
-                }
-            }
-        }
-        persian{
-            DateTimePatterns{
-                "HH:mm:ss zzzz",
-                "HH:mm:ss z",
-                "HH:mm:ss",
-                "HH:mm",
-                "EEEE, d'mh' MMMM y G",
-                "d'mh' MMMM y G",
-                "d MMM y G",
-                "d/M/y GGGGG",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-            }
-            DateTimePatterns%atTime{
-                "{1} 'aig' {0}",
-                "{1} 'aig' {0}",
-                "{1}, {0}",
-                "{1}, {0}",
-            }
-            DateTimeSkeletons{
-                "HHmmsszzzz",
-                "HHmmssz",
-                "HHmmss",
-                "HHmm",
-                "GyMMMMEEEEd",
-                "GyMMMMd",
-                "GyMMMd",
-                "GGGGGyMd",
-            }
-            availableFormats{
-                MMMMd{"d'mh' MMMM"}
-                yMM{"LL/y"}
-                yyyyM{"L/y GGGGG"}
-                yyyyMMMM{"LLLL y G"}
-            }
-            intervalFormats{
-                M{
-                    M{"L – L"}
                 }
             }
         }
         roc{
-            DateTimePatterns{
-                "HH:mm:ss zzzz",
-                "HH:mm:ss z",
-                "HH:mm:ss",
-                "HH:mm",
-                "EEEE, d'mh' MMMM y G",
-                "d'mh' MMMM y G",
-                "d MMM y G",
-                "d/M/y GGGGG",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-                "{1} {0}",
-            }
-            DateTimePatterns%atTime{
-                "{1} 'aig' {0}",
-                "{1} 'aig' {0}",
-                "{1}, {0}",
-                "{1}, {0}",
-            }
-            DateTimeSkeletons{
-                "HHmmsszzzz",
-                "HHmmssz",
-                "HHmmss",
-                "HHmm",
-                "GyMMMMEEEEd",
-                "GyMMMMd",
-                "GyMMMd",
-                "GGGGGyMd",
-            }
-            availableFormats{
-                Ed{"E, d"}
-                MMMMd{"d'mh' MMMM"}
-                d{"d"}
-                yMM{"LL/y"}
-                yyyyM{"L/y GGGGG"}
-                yyyyMMMM{"LLLL y G"}
-            }
             eras{
                 abbreviated{
-                    "Ro PnS",
-                    "Mínguó",
-                }
-                narrow{
                     "Ro PnS",
                     "Mínguó",
                 }
                 wide{
                     "Ro Ph. na Sìne",
                     "Mínguó",
-                }
-            }
-            intervalFormats{
-                M{
-                    M{"L – L"}
                 }
             }
         }
@@ -3241,7 +1198,6 @@ gd{
         currency_symbols{"samhla airgeadra"}
         dash_connector{"strìochag no ceangladair"}
         digits{"àireamh"}
-        dingbats{"dingbat"}
         divination_symbols{"samhla fàidheadaireachd"}
         downwards_arrows{"saighead sìos"}
         downwards_upwards_arrows{"saighead sìos is suas"}
@@ -3313,12 +1269,6 @@ gd{
         western_asian_scripts{"sgriobt Iar-Àisianach"}
         whitespace{"geal-spàs"}
     }
-    delimiters{
-        alternateQuotationEnd{"’"}
-        alternateQuotationStart{"‘"}
-        quotationEnd{"”"}
-        quotationStart{"“"}
-    }
     fields{
         day{
             dn{"latha"}
@@ -3346,15 +1296,6 @@ gd{
             }
         }
         day-narrow{
-            dn{"là"}
-            relative{
-                "-1"{"an-dè"}
-                "-2"{"a-bhòin-dè"}
-                "0"{"an-diugh"}
-                "1"{"a-màireach"}
-                "2"{"an-earar"}
-                "3"{"an-eararais"}
-            }
             relativeTime{
                 future{
                     few{"+{0} là"}
@@ -3372,14 +1313,6 @@ gd{
         }
         day-short{
             dn{"là"}
-            relative{
-                "-1"{"an-dè"}
-                "-2"{"a-bhòin-dè"}
-                "0"{"an-diugh"}
-                "1"{"a-màireach"}
-                "2"{"an-earar"}
-                "3"{"an-eararais"}
-            }
             relativeTime{
                 future{
                     few{"an {0} là."}
@@ -3407,20 +1340,11 @@ gd{
         dayperiod{
             dn{"m/f"}
         }
-        dayperiod-narrow{
-            dn{"m/f"}
-        }
-        dayperiod-short{
-            dn{"m/f"}
-        }
         era{
             dn{"linn"}
         }
         era-narrow{
             dn{"li."}
-        }
-        era-short{
-            dn{"linn"}
         }
         fri{
             relative{
@@ -3713,7 +1637,6 @@ gd{
             }
         }
         month-short{
-            dn{"mìos"}
             relative{
                 "-1"{"am mìos sa chaidh"}
                 "0"{"am mìos seo"}
@@ -3885,9 +1808,6 @@ gd{
         }
         second-narrow{
             dn{"d"}
-            relative{
-                "0"{"an-dràsta"}
-            }
             relativeTime{
                 future{
                     few{"+{0} d"}
@@ -3904,10 +1824,6 @@ gd{
             }
         }
         second-short{
-            dn{"diog"}
-            relative{
-                "0"{"an-dràsta"}
-            }
             relativeTime{
                 future{
                     few{"an {0} diog."}
@@ -4205,7 +2121,6 @@ gd{
                 "0"{"an t-sn. seo"}
                 "1"{"ath-shn."}
             }
-            relativePeriod{"an t-seachdain aig {0}"}
             relativeTime{
                 future{
                     few{"+{0} sn."}
@@ -4228,7 +2143,6 @@ gd{
                 "0"{"an t-seachd. seo"}
                 "1"{"an ath-sheachd."}
             }
-            relativePeriod{"an t-seachdain aig {0}"}
             relativeTime{
                 future{
                     few{"an {0} seachd."}
@@ -4246,9 +2160,6 @@ gd{
         }
         weekOfMonth{
             dn{"seachdain dhen mhìos"}
-        }
-        weekOfMonth-narrow{
-            dn{"seachd. mìos"}
         }
         weekOfMonth-short{
             dn{"seachd. mìos"}
@@ -4319,12 +2230,6 @@ gd{
         }
         year-short{
             dn{"blia."}
-            relative{
-                "-1"{"an-uiridh"}
-                "-2"{"a-bhòn-uiridh"}
-                "0"{"am bliadhna"}
-                "1"{"an ath-bhliadhna"}
-            }
             relativeTime{
                 future{
                     few{"an {0} blia."}
@@ -4343,9 +2248,6 @@ gd{
         zone{
             dn{"roinn-tìde"}
         }
-        zone-narrow{
-            dn{"roinn"}
-        }
         zone-short{
             dn{"roinn"}
         }
@@ -4354,44 +2256,22 @@ gd{
         or{
             2{"{0} no {1}"}
             end{"{0} no {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        or-narrow{
-            2{"{0} no {1}"}
-            end{"{0} no {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
-        }
-        or-short{
-            2{"{0} no {1}"}
-            end{"{0} no {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
         standard{
             2{"{0} agus {1}"}
             end{"{0} agus {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
         standard-narrow{
             2{"{0}, {1}"}
             end{"{0}, {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
         standard-short{
             2{"{0} ⁊ {1}"}
             end{"{0} ⁊ {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
         unit{
             2{"{0} agus {1}"}
             end{"{0} agus {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
         unit-narrow{
             2{"{0} {1}"}
@@ -4402,8 +2282,6 @@ gd{
         unit-short{
             2{"{0} ’s {1}"}
             end{"{0} ’s {1}"}
-            middle{"{0}, {1}"}
-            start{"{0}, {1}"}
         }
     }
     measurementSystemNames{
@@ -4414,40 +2292,36 @@ gd{
     parse{
         date{
             lenient{
-                "[\\--/]",
-                "[\\:∶]",
+                "[\\- ‑ . /]",
+                "[\\: ∶]",
             }
         }
         general{
             lenient{
-                "[.․。︒﹒．｡]",
-                "['ʼ՚᾽᾿’＇]",
-                "[%٪﹪％]",
-                "[؉‰]",
-                "[\$﹩＄$]",
-                "[£₤]",
+                "[.．․﹒ 。｡︒]",
+                "['＇’ ՚ ᾽᾿ ʼ]",
+                "[%％﹪ ٪]",
+                "[‰ ؉]",
+                "[\$＄﹩]",
+                "[£ ₤]",
                 "[¥￥]",
                 "[₩￦]",
-                "[₨₹{Rp}{Rs}]",
+                "[₹ ₨ {Rp} {Rs}]",
             }
         }
         number{
             lenient{
-                "[\\-‒⁻₋−➖﹣－]",
-                "[,،٫、︐︑﹐﹑，､]",
-                "[+⁺₊➕﬩﹢＋]",
+                "[\\-－﹣ ‑ ‒ −⁻₋ ➖]",
+                "[,，﹐︐ ، ٫ 、﹑､︑]",
+                "[+＋﬩﹢⁺₊ ➕]",
             }
             stricter{
-                "[,٫︐﹐，]",
-                "[.․﹒．｡]",
+                "[,，﹐︐ ٫]",
+                "[.．․﹒ ｡]",
             }
         }
     }
     personNames{
-        initialPattern{
-            initial{"{0}."}
-            initialSequence{"{0} {1}"}
-        }
         nameOrderLocales{
             givenFirst{
                 "und",
@@ -4455,75 +2329,56 @@ gd{
             }
         }
         namePattern{
-            givenFirst-long-addressing-formal{"{title} {surname}"}
-            givenFirst-long-addressing-informal{"{given-informal} {given2}"}
-            givenFirst-long-monogram-formal{
-                "{given-monogram-allCaps}{given2-monogram-allCaps}{surname-monogram-a"
-                "llCaps}"
-            }
+            givenFirst-long-addressing-formal{"{title-vocative} {surname-vocative}"}
+            givenFirst-long-addressing-informal{"{given-informal-vocative} {given2-vocative}"}
             givenFirst-long-monogram-informal{"{given-informal-monogram-allCaps}{surname-monogram-allCaps}"}
             givenFirst-long-referring-formal{
                 "{title} {given} {given2} {surname} {surname2} {generation}, {credent"
                 "ials}"
             }
             givenFirst-long-referring-informal{"{given-informal} {given2} {surname}"}
-            givenFirst-medium-addressing-formal{"{title} {surname}"}
-            givenFirst-medium-addressing-informal{"{given-informal}"}
+            givenFirst-medium-addressing-formal{"{title-vocative} {surname-vocative}"}
+            givenFirst-medium-addressing-informal{"{given-informal-vocative} {given2-vocative}"}
             givenFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
             givenFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
             givenFirst-medium-referring-formal{"{given} {given2-initial} {surname} {generation}, {credentials}"}
             givenFirst-medium-referring-informal{"{given-informal} {given2} {surname}"}
-            givenFirst-short-addressing-formal{"{title} {surname}"}
-            givenFirst-short-addressing-informal{"{given-informal}"}
+            givenFirst-short-addressing-formal{"{given-vocative} {surname-vocative}"}
+            givenFirst-short-addressing-informal{"{given-informal-vocative}"}
             givenFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
             givenFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}
             givenFirst-short-referring-formal{"{given-initial} {given2-initial} {surname}"}
             givenFirst-short-referring-informal{"{given-informal} {given2-initial}"}
             sorting-long-referring-formal{"{surname-core}, {given} {given2} {surname-prefix}"}
-            sorting-long-referring-informal{
-                "{surname}, {given-informal} {given2}",
-                "{surname-core}, {given} {given2} {surname-prefix}",
-            }
-            sorting-medium-referring-formal{
-                "{surname-core}, {given} {given2-initial} {surname-prefix}",
-                "{surname-core}, {given} {given2} {surname-prefix}",
-            }
-            sorting-medium-referring-informal{
-                "{surname}, {given-informal} {given2}",
-                "{surname-core}, {given} {given2} {surname-prefix}",
-            }
-            sorting-short-referring-formal{
-                "{surname-core}, {given-initial} {given2-initial} {surname-prefix}",
-                "{surname-core}, {given} {given2} {surname-prefix}",
-            }
-            sorting-short-referring-informal{
-                "{surname}, {given-informal} {given2}",
-                "{surname-core}, {given-informal} {given2} {surname-prefix}",
-            }
-            surnameFirst-long-addressing-formal{"{title} {surname}"}
-            surnameFirst-long-addressing-informal{"{given-informal} {given2}"}
-            surnameFirst-long-monogram-formal{
-                "{surname-monogram-allCaps}{given-monogram-allCaps}{given2-monogram-a"
-                "llCaps}"
-            }
+            sorting-long-referring-informal{"{surname}, {given-informal} {given2}"}
+            sorting-medium-referring-formal{"{surname-core}, {given} {given2-initial} {surname-prefix}"}
+            sorting-medium-referring-informal{"{surname}, {given-informal} {given2-informal-initial}"}
+            sorting-short-referring-formal{"{surname-core}, {given-initial} {given2-initial} {surname-prefix}"}
+            sorting-short-referring-informal{"{surname}, {given-informal} {given2-informal-initial}"}
+            surnameFirst-long-addressing-formal{"{title-vocative} {surname-vocative}"}
+            surnameFirst-long-addressing-informal{"{given-informal-vocative} {given2-vocative}"}
             surnameFirst-long-monogram-informal{"{surname-monogram-allCaps}{given-informal-monogram-allCaps}"}
             surnameFirst-long-referring-formal{
                 "{surname} {surname2} {title} {given} {given2} {generation}, {credent"
                 "ials}"
             }
             surnameFirst-long-referring-informal{"{surname} {surname2} {given-informal} {given2}"}
-            surnameFirst-medium-addressing-formal{"{title} {surname}"}
-            surnameFirst-medium-addressing-informal{"{given-informal}"}
+            surnameFirst-medium-addressing-formal{"{title-vocative} {surname-vocative}"}
+            surnameFirst-medium-addressing-informal{"{given-informal-vocative} {given2-vocative}"}
             surnameFirst-medium-monogram-formal{"{surname-monogram-allCaps}"}
             surnameFirst-medium-monogram-informal{"{given-informal-monogram-allCaps}"}
             surnameFirst-medium-referring-formal{"{surname} {given} {given2-initial} {generation}, {credentials}"}
             surnameFirst-medium-referring-informal{"{surname} {given-informal} {given2}"}
-            surnameFirst-short-addressing-formal{"{title} {surname}"}
-            surnameFirst-short-addressing-informal{"{given-informal}"}
+            surnameFirst-short-addressing-formal{"{title-vocative} {surname-vocative}"}
+            surnameFirst-short-addressing-informal{"{given-informal-vocative}"}
             surnameFirst-short-monogram-formal{"{surname-monogram-allCaps}"}
             surnameFirst-short-monogram-informal{"{given-informal-monogram-allCaps}"}
             surnameFirst-short-referring-formal{"{surname} {given-initial} {given2-initial}"}
             surnameFirst-short-referring-informal{"{given-informal} {given2-initial}"}
+        }
+        parameterDefault{
+            formality{"informal"}
+            length{"short"}
         }
     }
 }

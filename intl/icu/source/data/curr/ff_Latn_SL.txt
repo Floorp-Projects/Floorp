@@ -5,7 +5,7 @@ ff_Latn_SL{
     Currencies{
         SLE{
             "Le",
-            "SLE",
+            "Lewoon Seraa Liyon",
         }
     }
 }

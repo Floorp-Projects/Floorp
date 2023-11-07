@@ -21,7 +21,7 @@ cy{
         ady{"Circaseg Gorllewinol"}
         ae{"Afestaneg"}
         aeb{"Arabeg Tunisia"}
-        af{"Affricâneg"}
+        af{"Affricaneg"}
         afh{"Affrihili"}
         agq{"Aghemeg"}
         ain{"Ainŵeg"}
@@ -69,6 +69,7 @@ cy{
         bfd{"Baffwteg"}
         bfq{"Badaga"}
         bg{"Bwlgareg"}
+        bgc{"Haryanvi"}
         bgn{"Balochi Gorllewinol"}
         bho{"Bhojpuri"}
         bi{"Bislama"}
@@ -209,7 +210,6 @@ cy{
         hax{"Haida Deheuol"}
         he{"Hebraeg"}
         hi{"Hindi"}
-        hi_Latn{"Hindi (Lladin)"}
         hil{"Hiligaynon"}
         hit{"Hetheg"}
         hmn{"Hmongeg"}
@@ -679,9 +679,9 @@ cy{
             gregorian{"Calendr Gregori"}
             hebrew{"Calendr Hebreaidd"}
             indian{"Calendr Cenedlaethol India"}
-            islamic{"Calendr Islam"}
-            islamic-civil{"Calendr Islamaidd (tabl, cyfnod sifil)"}
-            islamic-umalqura{"Calendr Islam (Umm al-Qura)"}
+            islamic{"Calendr Hijri"}
+            islamic-civil{"Calendr Hijri (tabl, cyfnod sifil)"}
+            islamic-umalqura{"Calendr Hijri (Umm al-Qura)"}
             iso8601{"Calendr ISO-8601"}
             japanese{"Calendr Japan"}
             persian{"Calendr Persia"}
@@ -792,10 +792,11 @@ cy{
     }
     characterLabelPattern{
         all{"{0} — y cwbl"}
-        category-list{"{0}: {1}"}
         compatibility{"{0} — cydweddoldeb"}
         enclosed{"{0} — amgaeedig"}
         extended{"{0} — estynedig"}
+        facing-left{"{0} wynebu i’r chwith"}
+        facing-right{"{0} wynebu i’r dde"}
         historic{"{0} — hanesyddol"}
         miscellaneous{"{0} — amrywiol"}
         other{"{0} — arall"}
@@ -815,10 +816,5 @@ cy{
         language{"Iaith: {0}"}
         script{"Sgript: {0}"}
         territory{"Rhanbarth: {0}"}
-    }
-    localeDisplayPattern{
-        keyTypePattern{"{0}: {1}"}
-        pattern{"{0} ({1})"}
-        separator{"{0}, {1}"}
     }
 }

@@ -1949,11 +1949,6 @@ ru{
         "meta:Yukon"{
             ls{"Юкон"}
         }
-        fallbackFormat{"{1} ({0})"}
-        gmtFormat{"GMT{0}"}
-        gmtZeroFormat{"GMT"}
-        hourFormat{"+HH:mm;-HH:mm"}
-        regionFormat{"{0}"}
         regionFormatDaylight{"{0}, летнее время"}
         regionFormatStandard{"{0}, стандартное время"}
     }

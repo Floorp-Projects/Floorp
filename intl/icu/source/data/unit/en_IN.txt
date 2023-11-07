@@ -33,17 +33,5 @@ en_IN{
                 other{"{0} kph"}
             }
         }
-        temperature{
-            generic{
-                dnam{"°"}
-                one{"{0}°"}
-                other{"{0}°"}
-            }
-        }
-        volume{
-            cubic-centimeter{
-                per{"{0}/cm³"}
-            }
-        }
     }
 }

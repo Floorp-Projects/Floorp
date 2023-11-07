@@ -2,12 +2,9 @@
 // License & terms of use: http://www.unicode.org/copyright.html
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 gv{
-    ExemplarCharacters{"[a b c ç d e f g h i j k l m n o p q r s t u v w x y z]"}
+    ExemplarCharacters{"[a b cç d e f g h i j k l m n o p q r s t u v w x y z]"}
     ExemplarCharactersIndex{"[A B C D E F G H I J K L M N O P Q R S T U V W X Y Z]"}
-    ExemplarCharactersPunctuation{
-        "[\\- ‐ ‑ – — , ; \\: ! ? . … ' ‘ ’ \u0022 “ ” ( ) \\[ \\] § @ * / \\& # † ‡ "
-        "′ ″]"
-    }
+    ExemplarCharactersPunctuation{"[\\- ‐‑ – — , ; \\: ! ? . … '‘’ \u0022“” ( ) \\[ \\] § @ * / \\& # † ‡ ′ ″]"}
     NumberElements{
         latn{
             patterns{
@@ -26,10 +23,6 @@ gv{
     }
     calendar{
         gregorian{
-            AmPmMarkers{
-                "a.m.",
-                "p.m.",
-            }
             AmPmMarkersAbbr{
                 "a.m.",
                 "p.m.",
