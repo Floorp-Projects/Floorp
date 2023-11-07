@@ -41,19 +41,21 @@ import mozilla.components.support.utils.ColorUtils.getReadableTextColor
 import mozilla.components.ui.icons.R as iconsR
 
 /**
- * Initializes and resets the Toolbar for a Custom Tab based on the CustomTabConfig.
+ * Initializes and resets the [BrowserToolbar] for a Custom Tab based on the [CustomTabConfig].
  *
- * @param toolbar Reference to the browser toolbar, so that the color and menu items can be set.
- * @param sessionId ID of the custom tab session. No-op if null or invalid.
- * @param menuBuilder Menu builder reference to pull menu options from.
- * @param menuItemIndex Location to insert any custom menu options into the predefined menu list.
- * @param window Reference to the window so the navigation bar color can be set.
- * @param shareListener Invoked when the share button is pressed.
- * @param closeListener Invoked when the close button is pressed.
- * @param updateToolbarBackground Whether or not the toolbar background should be changed based on
- * [CustomTabConfig.toolbarColor].
- * @param forceActionButtonTinting When set to true the toolbar action button will always be tinted
- * based on the toolbar background, ignoring the value of [CustomTabActionButtonConfig.tint].
+ * @property store The given [BrowserStore] to use.
+ * @property toolbar Reference to the [BrowserToolbar], so that the color and menu items can be set.
+ * @property sessionId ID of the custom tab session. No-op if null or invalid.
+ * @property useCases The given [CustomTabsUseCases] to use.
+ * @property menuBuilder [BrowserMenuBuilder] reference to pull menu options from.
+ * @property menuItemIndex Location to insert any custom menu options into the predefined menu list.
+ * @property window Reference to the [Window] so the navigation bar color can be set.
+ * @property updateToolbarBackground Whether or not the [toolbar] background should be changed based
+ * on [CustomTabConfig.toolbarColor].
+ * @property forceActionButtonTinting When set to true the [toolbar] action button will always be tinted
+ * based on the [toolbar] background, ignoring the value of [CustomTabActionButtonConfig.tint].
+ * @property shareListener Invoked when the share button is pressed.
+ * @property closeListener Invoked when the close button is pressed.
  */
 @Suppress("LargeClass", "LongParameterList")
 class CustomTabsToolbarFeature(
