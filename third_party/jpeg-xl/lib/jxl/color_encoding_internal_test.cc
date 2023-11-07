@@ -5,6 +5,11 @@
 
 #include "lib/jxl/color_encoding_internal.h"
 
+#include <jxl/color_encoding.h>
+
+#include <cstdlib>  // rand
+
+#include "lib/jxl/cms/color_encoding_cms.h"
 #include "lib/jxl/encode_internal.h"
 #include "lib/jxl/test_utils.h"
 #include "lib/jxl/testing.h"
@@ -12,21 +17,23 @@
 namespace jxl {
 namespace {
 
+using jxl::cms::ColorEncoding;
+
 TEST(ColorEncodingTest, RoundTripAll) {
   for (const test::ColorEncodingDescriptor& cdesc : test::AllEncodings()) {
-    const ColorEncoding c_original = test::ColorEncodingFromDescriptor(cdesc);
+    ColorEncoding c_original = test::ColorEncodingFromDescriptor(cdesc).View();
     // Verify Set(Get) yields the same white point/primaries/gamma.
     {
       ColorEncoding c;
       EXPECT_TRUE(c.SetWhitePoint(c_original.GetWhitePoint()));
-      EXPECT_EQ(c_original.GetWhitePointType(), c.GetWhitePointType());
+      EXPECT_EQ(c_original.white_point, c.white_point);
     }
     {
       ColorEncoding c;
       EXPECT_TRUE(c.SetPrimaries(c_original.GetPrimaries()));
-      EXPECT_EQ(c_original.GetPrimariesType(), c.GetPrimariesType());
+      EXPECT_EQ(c_original.primaries, c.primaries);
     }
-    if (c_original.tf.IsGamma()) {
+    if (c_original.tf.have_gamma) {
       ColorEncoding c;
       EXPECT_TRUE(c.tf.SetGamma(c_original.tf.GetGamma()));
       EXPECT_TRUE(c_original.tf.IsSame(c.tf));
@@ -74,26 +81,26 @@ TEST(ColorEncodingTest, CustomGamma) {
   EXPECT_FALSE(c.tf.SetGamma(1.001));
 #endif
   EXPECT_TRUE(c.tf.SetGamma(1.0));
-  EXPECT_FALSE(c.tf.IsGamma());
+  EXPECT_FALSE(c.tf.have_gamma);
   EXPECT_TRUE(c.tf.IsLinear());
 
   EXPECT_TRUE(c.tf.SetGamma(0.123));
-  EXPECT_TRUE(c.tf.IsGamma());
+  EXPECT_TRUE(c.tf.have_gamma);
   const double gamma = c.tf.GetGamma();
 
   ColorEncoding c2;
   EXPECT_TRUE(c2.tf.SetGamma(gamma));
   EXPECT_TRUE(c.SameColorEncoding(c2));
-  EXPECT_TRUE(c2.tf.IsGamma());
+  EXPECT_TRUE(c2.tf.have_gamma);
 }
 
 TEST(ColorEncodingTest, InternalExternalConversion) {
   ColorEncoding source_internal;
-  JxlColorEncoding external;
+  JxlColorEncoding external = {};
   ColorEncoding destination_internal;
 
   for (int i = 0; i < 100; i++) {
-    source_internal.SetColorSpace(static_cast<ColorSpace>(rand() % 4));
+    source_internal.color_space = static_cast<ColorSpace>(rand() % 4);
     CIExy wp;
     wp.x = (float(rand()) / float((RAND_MAX)) * 0.5) + 0.25;
     wp.y = (float(rand()) / float((RAND_MAX)) * 0.5) + 0.25;
@@ -108,47 +115,41 @@ TEST(ColorEncodingTest, InternalExternalConversion) {
       primaries.b.y = (float(rand()) / float((RAND_MAX)) * 0.5) + 0.25;
       EXPECT_TRUE(source_internal.SetPrimaries(primaries));
     }
-    CustomTransferFunction tf;
+    jxl::cms::CustomTransferFunction tf;
     EXPECT_TRUE(tf.SetGamma((float(rand()) / float((RAND_MAX)) * 0.5) + 0.25));
     source_internal.tf = tf;
-    ASSERT_TRUE(source_internal.SetRenderingIntent(
-        static_cast<RenderingIntent>(rand() % 4)));
+    source_internal.rendering_intent = static_cast<RenderingIntent>(rand() % 4);
 
     source_internal.ToExternal(&external);
     EXPECT_TRUE(destination_internal.FromExternal(external));
 
-    EXPECT_EQ(source_internal.GetColorSpace(),
-              destination_internal.GetColorSpace());
-    EXPECT_EQ(source_internal.GetWhitePointType(),
-              destination_internal.GetWhitePointType());
-    EXPECT_EQ(source_internal.GetWhitePoint().x,
-              destination_internal.GetWhitePoint().x);
-    EXPECT_EQ(source_internal.GetWhitePoint().y,
-              destination_internal.GetWhitePoint().y);
+    EXPECT_EQ(source_internal.color_space, destination_internal.color_space);
+    EXPECT_EQ(source_internal.white_point, destination_internal.white_point);
+    CIExy src_wp = source_internal.GetWhitePoint();
+    CIExy dst_wp = destination_internal.GetWhitePoint();
+    EXPECT_EQ(src_wp.x, dst_wp.x);
+    EXPECT_EQ(src_wp.y, dst_wp.y);
     if (source_internal.HasPrimaries()) {
-      EXPECT_EQ(source_internal.GetPrimaries().r.x,
-                destination_internal.GetPrimaries().r.x);
-      EXPECT_EQ(source_internal.GetPrimaries().r.y,
-                destination_internal.GetPrimaries().r.y);
-      EXPECT_EQ(source_internal.GetPrimaries().g.x,
-                destination_internal.GetPrimaries().g.x);
-      EXPECT_EQ(source_internal.GetPrimaries().g.y,
-                destination_internal.GetPrimaries().g.y);
-      EXPECT_EQ(source_internal.GetPrimaries().b.x,
-                destination_internal.GetPrimaries().b.x);
-      EXPECT_EQ(source_internal.GetPrimaries().b.y,
-                destination_internal.GetPrimaries().b.y);
+      PrimariesCIExy src_p = source_internal.GetPrimaries();
+      PrimariesCIExy dst_p = destination_internal.GetPrimaries();
+      EXPECT_EQ(src_p.r.x, dst_p.r.x);
+      EXPECT_EQ(src_p.r.y, dst_p.r.y);
+      EXPECT_EQ(src_p.g.x, dst_p.g.x);
+      EXPECT_EQ(src_p.g.y, dst_p.g.y);
+      EXPECT_EQ(src_p.b.x, dst_p.b.x);
+      EXPECT_EQ(src_p.b.y, dst_p.b.y);
     }
-    EXPECT_EQ(source_internal.tf.IsGamma(), destination_internal.tf.IsGamma());
-    if (source_internal.tf.IsGamma()) {
+    EXPECT_EQ(source_internal.tf.have_gamma,
+              destination_internal.tf.have_gamma);
+    if (source_internal.tf.have_gamma) {
       EXPECT_EQ(source_internal.tf.GetGamma(),
                 destination_internal.tf.GetGamma());
     } else {
       EXPECT_EQ(source_internal.tf.GetTransferFunction(),
                 destination_internal.tf.GetTransferFunction());
     }
-    EXPECT_EQ(source_internal.GetRenderingIntent(),
-              destination_internal.GetRenderingIntent());
+    EXPECT_EQ(source_internal.rendering_intent,
+              destination_internal.rendering_intent);
   }
 }
 

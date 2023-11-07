@@ -10,10 +10,10 @@
 namespace jxl {
 
 void SetIntensityTarget(ImageMetadata* m) {
-  if (m->color_encoding.tf.IsPQ()) {
+  if (m->color_encoding.Tf().IsPQ()) {
     // Peak luminance of PQ as defined by SMPTE ST 2084:2014.
     m->SetIntensityTarget(10000);
-  } else if (m->color_encoding.tf.IsHLG()) {
+  } else if (m->color_encoding.Tf().IsHLG()) {
     // Nominal display peak luminance used as a reference by
     // Rec. ITU-R BT.2100-2.
     m->SetIntensityTarget(1000);

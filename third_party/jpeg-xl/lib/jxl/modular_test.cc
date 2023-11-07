@@ -369,7 +369,7 @@ TEST(ModularTest, RoundtripLosslessCustomFloat) {
   io.metadata.m.bit_depth.floating_point_sample = true;
   io.metadata.m.modular_16_bit_buffer_sufficient = false;
   ColorEncoding color_encoding;
-  color_encoding.tf.SetTransferFunction(TransferFunction::kLinear);
+  color_encoding.Tf().SetTransferFunction(TransferFunction::kLinear);
   color_encoding.SetColorSpace(ColorSpace::kRGB);
   Image3F testimage(xsize, ysize);
   float factor = 1.f / (1 << 14);

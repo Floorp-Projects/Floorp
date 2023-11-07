@@ -199,9 +199,9 @@ bool CanOutputToColorEncoding(const ColorEncoding& c_desired) {
     return false;
   }
   // TODO(veluca): keep in sync with dec_reconstruct.cc
-  if (!c_desired.tf.IsPQ() && !c_desired.tf.IsSRGB() &&
-      !c_desired.tf.IsGamma() && !c_desired.tf.IsLinear() &&
-      !c_desired.tf.IsHLG() && !c_desired.tf.IsDCI() && !c_desired.tf.Is709()) {
+  const auto& tf = c_desired.Tf();
+  if (!tf.IsPQ() && !tf.IsSRGB() && !tf.have_gamma && !tf.IsLinear() &&
+      !tf.IsHLG() && !tf.IsDCI() && !tf.Is709()) {
     return false;
   }
   if (c_desired.IsGray() && c_desired.GetWhitePointType() != WhitePoint::kD65) {
@@ -239,7 +239,7 @@ Status OutputEncodingInfo::MaybeSetColorEncoding(
   if (c_desired.GetColorSpace() == ColorSpace::kXYB &&
       ((color_encoding.GetColorSpace() == ColorSpace::kRGB &&
         color_encoding.GetPrimariesType() != Primaries::kSRGB) ||
-       color_encoding.tf.IsPQ())) {
+       color_encoding.Tf().IsPQ())) {
     return false;
   }
   if (!xyb_encoded && !CanOutputToColorEncoding(c_desired)) {
@@ -264,18 +264,15 @@ Status OutputEncodingInfo::SetColorEncoding(const ColorEncoding& c_desired) {
       !c_desired.IsGray()) {
     float srgb_to_xyzd50[9];
     const auto& srgb = ColorEncoding::SRGB(/*is_gray=*/false);
-    JXL_CHECK(PrimariesToXYZD50(
-        srgb.GetPrimaries().r.x, srgb.GetPrimaries().r.y,
-        srgb.GetPrimaries().g.x, srgb.GetPrimaries().g.y,
-        srgb.GetPrimaries().b.x, srgb.GetPrimaries().b.y,
-        srgb.GetWhitePoint().x, srgb.GetWhitePoint().y, srgb_to_xyzd50));
+    PrimariesCIExy p = srgb.GetPrimaries();
+    CIExy w = srgb.GetWhitePoint();
+    JXL_CHECK(PrimariesToXYZD50(p.r.x, p.r.y, p.g.x, p.g.y, p.b.x, p.b.y, w.x,
+                                w.y, srgb_to_xyzd50));
     float original_to_xyz[3][3];
-    JXL_RETURN_IF_ERROR(PrimariesToXYZ(
-        c_desired.GetPrimaries().r.x, c_desired.GetPrimaries().r.y,
-        c_desired.GetPrimaries().g.x, c_desired.GetPrimaries().g.y,
-        c_desired.GetPrimaries().b.x, c_desired.GetPrimaries().b.y,
-        c_desired.GetWhitePoint().x, c_desired.GetWhitePoint().y,
-        &original_to_xyz[0][0]));
+    p = c_desired.GetPrimaries();
+    w = c_desired.GetWhitePoint();
+    JXL_RETURN_IF_ERROR(PrimariesToXYZ(p.r.x, p.r.y, p.g.x, p.g.y, p.b.x, p.b.y,
+                                       w.x, w.y, &original_to_xyz[0][0]));
     memcpy(luminances, original_to_xyz[1], sizeof luminances);
     if (xyb_encoded) {
       float adapt_to_d50[9];
@@ -313,9 +310,10 @@ Status OutputEncodingInfo::SetColorEncoding(const ColorEncoding& c_desired) {
   }
 
   // Set the inverse gamma based on color space transfer function.
-  inverse_gamma = (c_desired.tf.IsGamma() ? c_desired.tf.GetGamma()
-                   : c_desired.tf.IsDCI() ? 1.0f / 2.6f
-                                          : 1.0);
+  const auto& tf = c_desired.Tf();
+  inverse_gamma = (tf.have_gamma ? tf.GetGamma()
+                   : tf.IsDCI()  ? 1.0f / 2.6f
+                                 : 1.0);
   return true;
 }
 

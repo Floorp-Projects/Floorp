@@ -123,9 +123,9 @@ ColorEncoding ColorEncodingFromDescriptor(const ColorEncodingDescriptor& desc) {
     if (desc.color_space != ColorSpace::kGray) {
       JXL_CHECK(c.SetPrimariesType(desc.primaries));
     }
-    c.tf.SetTransferFunction(desc.tf);
+    c.Tf().SetTransferFunction(desc.tf);
   }
-  JXL_CHECK(c.SetRenderingIntent(desc.rendering_intent));
+  c.SetRenderingIntent(desc.rendering_intent);
   JXL_CHECK(c.CreateICC());
   return c;
 }
@@ -139,7 +139,7 @@ void CheckSameEncodings(const std::vector<ColorEncoding>& a,
   for (size_t i = 0; i < a.size(); ++i) {
     if ((a[i].ICC() == b[i].ICC()) ||
         ((a[i].GetPrimariesType() == b[i].GetPrimariesType()) &&
-         a[i].tf.IsSame(b[i].tf))) {
+         a[i].Tf().IsSame(b[i].Tf()))) {
       continue;
     }
     failures << "CheckSameEncodings " << check_name << ": " << i
@@ -233,30 +233,19 @@ size_t Roundtrip(const extras::PackedPixelFile& ppf_in,
 std::vector<ColorEncodingDescriptor> AllEncodings() {
   std::vector<ColorEncodingDescriptor> all_encodings;
   all_encodings.reserve(300);
-  ColorEncoding c;
 
   for (ColorSpace cs : Values<ColorSpace>()) {
-    if (cs == ColorSpace::kUnknown || cs == ColorSpace::kXYB) continue;
-    c.SetColorSpace(cs);
+    if (cs == ColorSpace::kUnknown || cs == ColorSpace::kXYB ||
+        cs == ColorSpace::kGray) {
+      continue;
+    }
 
     for (WhitePoint wp : Values<WhitePoint>()) {
       if (wp == WhitePoint::kCustom) continue;
-      if (c.ImplicitWhitePoint() && c.GetWhitePointType() != wp) continue;
-      JXL_CHECK(c.SetWhitePointType(wp));
-
       for (Primaries primaries : Values<Primaries>()) {
         if (primaries == Primaries::kCustom) continue;
-        if (!c.HasPrimaries()) continue;
-        JXL_CHECK(c.SetPrimariesType(primaries));
-
         for (TransferFunction tf : Values<TransferFunction>()) {
           if (tf == TransferFunction::kUnknown) continue;
-          if (c.tf.SetImplicit() &&
-              (c.tf.IsGamma() || c.tf.GetTransferFunction() != tf)) {
-            continue;
-          }
-          c.tf.SetTransferFunction(tf);
-
           for (RenderingIntent ri : Values<RenderingIntent>()) {
             ColorEncodingDescriptor cdesc;
             cdesc.color_space = cs;

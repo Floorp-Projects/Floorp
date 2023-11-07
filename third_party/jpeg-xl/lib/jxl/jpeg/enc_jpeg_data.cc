@@ -215,8 +215,8 @@ static inline bool IsJPG(const Span<const uint8_t> bytes) {
 
 }  // namespace
 
-Status SetColorEncodingFromJpegData(const jpeg::JPEGData& jpg,
-                                    ColorEncoding* color_encoding) {
+void SetColorEncodingFromJpegData(const jpeg::JPEGData& jpg,
+                                  ColorEncoding* color_encoding) {
   IccBytes icc_profile;
   if (!ParseChunkedMarker(jpg, kApp2, ByteSpan(kIccProfileTag), &icc_profile)) {
     JXL_WARNING("ReJPEG: corrupted ICC profile\n");
@@ -226,10 +226,9 @@ Status SetColorEncodingFromJpegData(const jpeg::JPEGData& jpg,
   if (icc_profile.empty()) {
     bool is_gray = (jpg.components.size() == 1);
     *color_encoding = ColorEncoding::SRGB(is_gray);
-    return true;
+  } else {
+    color_encoding->SetICCRaw(std::move(icc_profile));
   }
-
-  return color_encoding->SetICC(std::move(icc_profile), /*cms=*/nullptr);
 }
 
 Status EncodeJPEGData(JPEGData& jpeg_data, PaddedBytes* bytes,
@@ -309,8 +308,7 @@ Status DecodeImageJPG(const Span<const uint8_t> bytes, CodecInOut* io) {
                       jpeg_data)) {
     return JXL_FAILURE("Error reading JPEG");
   }
-  JXL_RETURN_IF_ERROR(
-      SetColorEncodingFromJpegData(*jpeg_data, &io->metadata.m.color_encoding));
+  SetColorEncodingFromJpegData(*jpeg_data, &io->metadata.m.color_encoding);
   JXL_RETURN_IF_ERROR(SetBlobsFromJpegData(*jpeg_data, &io->blobs));
   size_t nbcomp = jpeg_data->components.size();
   if (nbcomp != 1 && nbcomp != 3) {

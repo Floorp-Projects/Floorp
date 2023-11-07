@@ -5,8 +5,8 @@
 # license that can be found in the LICENSE file.
 
 # Continuous integration helper module. This module is meant to be called from
-# the .gitlab-ci.yml file during the continuous integration build, as well as
-# from the command line for developers.
+# workflows during the continuous integration build, as well as from the
+# command line for developers.
 
 set -eu
 
@@ -84,8 +84,8 @@ if [[ ! -z "${HWY_BASELINE_TARGETS}" ]]; then
 fi
 
 # Version inferred from the CI variables.
-CI_COMMIT_SHA=${CI_COMMIT_SHA:-${GITHUB_SHA:-}}
-JPEGXL_VERSION=${JPEGXL_VERSION:-${CI_COMMIT_SHA:0:8}}
+CI_COMMIT_SHA=${GITHUB_SHA:-}
+JPEGXL_VERSION=${JPEGXL_VERSION:-}
 
 # Benchmark parameters
 STORE_IMAGES=${STORE_IMAGES:-1}
@@ -182,27 +182,6 @@ on_exit() {
   local retcode="$1"
   # Always cleanup the CLEANUP_FILES.
   cleanup
-
-  # Post a message in the MR when requested with POST_MESSAGE_ON_ERROR but only
-  # if the run failed and we are not running from a MR pipeline.
-  if [[ ${retcode} -ne 0 && -n "${CI_BUILD_NAME:-}" &&
-        -n "${POST_MESSAGE_ON_ERROR}" && -z "${CI_MERGE_REQUEST_ID:-}" &&
-        "${CI_BUILD_REF_NAME}" = "master" ]]; then
-    load_mr_vars_from_commit
-    { set +xeu; } 2>/dev/null
-    local message="**Run ${CI_BUILD_NAME} @ ${CI_COMMIT_SHORT_SHA} failed.**
-
-Check the output of the job at ${CI_JOB_URL:-} to see if this was your problem.
-If it was, please rollback this change or fix the problem ASAP, broken builds
-slow down development. Check if the error already existed in the previous build
-as well.
-
-Pipeline: ${CI_PIPELINE_URL}
-
-Previous build commit: ${CI_COMMIT_BEFORE_SHA}
-"
-    cmd_post_mr_comment "${message}"
-  fi
 }
 
 trap 'retcode=$?; { set +x; } 2>/dev/null; on_exit ${retcode}' INT TERM EXIT
@@ -227,29 +206,23 @@ merge_request_commits() {
     # changes on the Pull Request if needed. This fetches 10 more commits which
     # should be enough given that PR normally should have 1 commit.
     git -C "${MYDIR}" fetch -q origin "${GITHUB_SHA}" --depth 10
-    MR_HEAD_SHA=$(git -C "${MYDIR}" rev-parse HEAD)
+    if [ "${GITHUB_EVENT_NAME}" = "pull_request" ]; then
+      MR_HEAD_SHA="$(git rev-parse "FETCH_HEAD^2" 2>/dev/null ||
+                   echo "${GITHUB_SHA}")"
+    else
+      MR_HEAD_SHA="${GITHUB_SHA}"
+    fi
   else
-    # CI_BUILD_REF is the reference currently being build in the CI workflow.
-    MR_HEAD_SHA=$(git -C "${MYDIR}" rev-parse -q "${CI_BUILD_REF:-HEAD}")
+    MR_HEAD_SHA=$(git -C "${MYDIR}" rev-parse -q "HEAD")
   fi
 
-  if [[ -n "${CI_MERGE_REQUEST_IID:-}" ]]; then
-    # Merge request pipeline in CI. In this case the upstream is called "origin"
-    # but it refers to the forked project that's the source of the merge
-    # request. We need to get the target of the merge request, for which we need
-    # to query that repository using our CI_JOB_TOKEN.
-    echo "machine gitlab.com login gitlab-ci-token password ${CI_JOB_TOKEN}" \
-      >> "${HOME}/.netrc"
-    git -C "${MYDIR}" fetch "${CI_MERGE_REQUEST_PROJECT_URL}" \
-      "${CI_MERGE_REQUEST_TARGET_BRANCH_NAME}"
-    MR_ANCESTOR_SHA=$(git -C "${MYDIR}" rev-parse -q FETCH_HEAD)
-  elif [[ -n "${GITHUB_BASE_REF:-}" ]]; then
+  if [[ -n "${GITHUB_BASE_REF:-}" ]]; then
     # Pull request workflow in GitHub Actions. GitHub checkout action uses
     # "origin" as the remote for the git checkout.
     git -C "${MYDIR}" fetch -q origin "${GITHUB_BASE_REF}"
     MR_ANCESTOR_SHA=$(git -C "${MYDIR}" rev-parse -q FETCH_HEAD)
   else
-    # We are in a local branch, not a merge request.
+    # We are in a local branch, not a pull request workflow.
     MR_ANCESTOR_SHA=$(git -C "${MYDIR}" rev-parse -q HEAD@{upstream} || true)
   fi
 
@@ -268,40 +241,6 @@ merge_request_commits() {
   set -x
 }
 
-# Load the MR iid from the landed commit message when running not from a
-# merge request workflow. This is useful to post back results at the merge
-# request when running pipelines from master.
-load_mr_vars_from_commit() {
-  { set +x; } 2>/dev/null
-  if [[ -z "${CI_MERGE_REQUEST_IID:-}" ]]; then
-    local mr_iid=$(git rev-list --format=%B --max-count=1 HEAD |
-      grep -F "${CI_PROJECT_URL}" | grep -F "/merge_requests" | head -n 1)
-    # mr_iid contains a string like this if it matched:
-    #  Part-of: <https://gitlab.com/wg1/jpeg-xlm/merge_requests/123456>
-    if [[ -n "${mr_iid}" ]]; then
-      mr_iid=$(echo "${mr_iid}" |
-        sed -E 's,^.*merge_requests/([0-9]+)>.*$,\1,')
-      CI_MERGE_REQUEST_IID="${mr_iid}"
-      CI_MERGE_REQUEST_PROJECT_ID=${CI_PROJECT_ID}
-    fi
-  fi
-  set -x
-}
-
-# Posts a comment to the current merge request.
-cmd_post_mr_comment() {
-  { set +x; } 2>/dev/null
-  local comment="$1"
-  if [[ -n "${BOT_TOKEN:-}" && -n "${CI_MERGE_REQUEST_IID:-}" ]]; then
-    local url="${CI_API_V4_URL}/projects/${CI_MERGE_REQUEST_PROJECT_ID}/merge_requests/${CI_MERGE_REQUEST_IID}/notes"
-    curl -X POST -g \
-      -H "PRIVATE-TOKEN: ${BOT_TOKEN}" \
-      --data-urlencode "body=${comment}" \
-      --output /dev/null \
-      "${url}"
-  fi
-  set -x
-}
 
 # Set up and export the environment variables needed by the child processes.
 export_env() {
@@ -947,15 +886,7 @@ run_benchmark() {
     return ${PIPESTATUS[0]}
   )
 
-  if [[ -n "${CI_BUILD_NAME:-}" ]]; then
-    { set +x; } 2>/dev/null
-    local message="Results for ${CI_BUILD_NAME} @ ${CI_COMMIT_SHORT_SHA} (job ${CI_JOB_URL:-}):
 
-$(cat "${output_dir}/results.txt")
-"
-    cmd_post_mr_comment "${message}"
-    set -x
-  fi
 }
 
 # Helper function to wait for the CPU temperature to cool down on ARM.
@@ -1183,18 +1114,6 @@ cmd_arm_benchmark() {
   cmd_cpuset "${RUNNER_CPU_ALL:-}"
   cat "${runs_file}"
 
-  if [[ -n "${CI_BUILD_NAME:-}" ]]; then
-    load_mr_vars_from_commit
-    { set +x; } 2>/dev/null
-    local message="Results for ${CI_BUILD_NAME} @ ${CI_COMMIT_SHORT_SHA} (job ${CI_JOB_URL:-}):
-
-\`\`\`
-$(column -t -s "	" "${runs_file}")
-\`\`\`
-"
-    cmd_post_mr_comment "${message}"
-    set -x
-  fi
 }
 
 # Generate a corpus and run the fuzzer on that corpus.

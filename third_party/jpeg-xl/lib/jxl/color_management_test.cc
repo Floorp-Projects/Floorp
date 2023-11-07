@@ -11,11 +11,13 @@
 #include <string>
 #include <utility>
 
+#include "lib/jxl/base/common.h"
 #include "lib/jxl/base/compiler_specific.h"
 #include "lib/jxl/base/data_parallel.h"
 #include "lib/jxl/base/padded_bytes.h"
 #include "lib/jxl/base/random.h"
 #include "lib/jxl/base/span.h"
+#include "lib/jxl/cms/color_encoding_cms.h"
 #include "lib/jxl/cms/jxl_cms.h"
 #include "lib/jxl/cms/opsin_params.h"
 #include "lib/jxl/color_encoding_internal.h"
@@ -71,16 +73,17 @@ MATCHER_P(HasSameFieldsAs, expected, "") {
                      << ToString(expected.GetPrimariesType());
     return false;
   }
-  if (!arg.tf.IsSame(expected.tf)) {
-    static const auto tf_to_string = [](const CustomTransferFunction& tf) {
-      if (tf.IsGamma()) {
-        return "g" + ToString(tf.GetGamma());
-      }
-      return ToString(tf.GetTransferFunction());
-    };
+  if (!arg.Tf().IsSame(expected.Tf())) {
+    static const auto tf_to_string =
+        [](const jxl::cms::CustomTransferFunction& tf) {
+          if (tf.have_gamma) {
+            return "g" + ToString(tf.GetGamma());
+          }
+          return ToString(tf.transfer_function);
+        };
     *result_listener << "which has a different transfer function: "
-                     << tf_to_string(arg.tf) << " instead of "
-                     << tf_to_string(expected.tf);
+                     << tf_to_string(arg.Tf()) << " instead of "
+                     << tf_to_string(expected.Tf());
     return false;
   }
   return true;
@@ -164,7 +167,7 @@ class ColorManagementTest
     ColorSpaceTransform xform_fwd(cms);
     ColorSpaceTransform xform_rev(cms);
     const float intensity_target =
-        c.tf.IsHLG() ? 1000 : kDefaultIntensityTarget;
+        c.Tf().IsHLG() ? 1000 : kDefaultIntensityTarget;
     ASSERT_TRUE(
         xform_fwd.Init(c_native, c, intensity_target, kWidth, kNumThreads));
     ASSERT_TRUE(
@@ -246,15 +249,14 @@ TEST_F(ColorManagementTest, D2700Chromaticity) {
 }
 
 TEST_F(ColorManagementTest, D2700ToSRGB) {
-  const JxlCmsInterface& cms = *JxlGetDefaultCms();
   PaddedBytes icc_data =
       jxl::test::ReadTestData("jxl/color_management/sRGB-D2700.icc");
   IccBytes icc;
   Span<const uint8_t>(icc_data).AppendTo(&icc);
   ColorEncoding sRGB_D2700;
-  ASSERT_TRUE(sRGB_D2700.SetICC(std::move(icc), &cms));
+  ASSERT_TRUE(sRGB_D2700.SetICC(std::move(icc), JxlGetDefaultCms()));
 
-  ColorSpaceTransform transform(cms);
+  ColorSpaceTransform transform(*JxlGetDefaultCms());
   ASSERT_TRUE(transform.Init(sRGB_D2700, ColorEncoding::SRGB(),
                              kDefaultIntensityTarget, 1, 1));
   const float sRGB_D2700_values[3] = {0.863, 0.737, 0.490};
@@ -270,7 +272,7 @@ TEST_F(ColorManagementTest, P3HlgTo2020Hlg) {
   p3_hlg.SetColorSpace(ColorSpace::kRGB);
   ASSERT_TRUE(p3_hlg.SetWhitePointType(WhitePoint::kD65));
   ASSERT_TRUE(p3_hlg.SetPrimariesType(Primaries::kP3));
-  p3_hlg.tf.SetTransferFunction(TransferFunction::kHLG);
+  p3_hlg.Tf().SetTransferFunction(TransferFunction::kHLG);
   ASSERT_TRUE(p3_hlg.CreateICC());
 
   ColorEncoding rec2020_hlg = p3_hlg;
@@ -292,7 +294,7 @@ TEST_F(ColorManagementTest, HlgOotf) {
   p3_hlg.SetColorSpace(ColorSpace::kRGB);
   ASSERT_TRUE(p3_hlg.SetWhitePointType(WhitePoint::kD65));
   ASSERT_TRUE(p3_hlg.SetPrimariesType(Primaries::kP3));
-  p3_hlg.tf.SetTransferFunction(TransferFunction::kHLG);
+  p3_hlg.Tf().SetTransferFunction(TransferFunction::kHLG);
   ASSERT_TRUE(p3_hlg.CreateICC());
 
   ColorSpaceTransform transform_to_1000(*JxlGetDefaultCms());
@@ -335,7 +337,7 @@ TEST_F(ColorManagementTest, HlgOotf) {
   ColorEncoding grayscale_hlg;
   grayscale_hlg.SetColorSpace(ColorSpace::kGray);
   ASSERT_TRUE(grayscale_hlg.SetWhitePointType(WhitePoint::kD65));
-  grayscale_hlg.tf.SetTransferFunction(TransferFunction::kHLG);
+  grayscale_hlg.Tf().SetTransferFunction(TransferFunction::kHLG);
   ASSERT_TRUE(grayscale_hlg.CreateICC());
 
   ColorSpaceTransform grayscale_transform(*JxlGetDefaultCms());
@@ -351,7 +353,7 @@ TEST_F(ColorManagementTest, HlgOotf) {
 TEST_F(ColorManagementTest, XYBProfile) {
   ColorEncoding c_xyb;
   c_xyb.SetColorSpace(ColorSpace::kXYB);
-  ASSERT_TRUE(c_xyb.SetRenderingIntent(RenderingIntent::kPerceptual));
+  c_xyb.SetRenderingIntent(RenderingIntent::kPerceptual);
   ASSERT_TRUE(c_xyb.CreateICC());
   ColorEncoding c_native = ColorEncoding::LinearSRGB(false);
 

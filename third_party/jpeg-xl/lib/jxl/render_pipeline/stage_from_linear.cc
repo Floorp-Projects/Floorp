@@ -151,21 +151,21 @@ std::unique_ptr<FromLinearStage<Op>> MakeFromLinearStage(Op&& op) {
 
 std::unique_ptr<RenderPipelineStage> GetFromLinearStage(
     const OutputEncodingInfo& output_encoding_info) {
-  if (output_encoding_info.color_encoding.tf.IsLinear()) {
+  const auto& tf = output_encoding_info.color_encoding.Tf();
+  if (tf.IsLinear()) {
     return MakeFromLinearStage(MakePerChannelOp(OpLinear()));
-  } else if (output_encoding_info.color_encoding.tf.IsSRGB()) {
+  } else if (tf.IsSRGB()) {
     return MakeFromLinearStage(MakePerChannelOp(OpRgb()));
-  } else if (output_encoding_info.color_encoding.tf.IsPQ()) {
+  } else if (tf.IsPQ()) {
     return MakeFromLinearStage(
         MakePerChannelOp(OpPq(output_encoding_info.orig_intensity_target)));
-  } else if (output_encoding_info.color_encoding.tf.IsHLG()) {
+  } else if (tf.IsHLG()) {
     return MakeFromLinearStage(
         OpHlg(output_encoding_info.luminances,
               output_encoding_info.desired_intensity_target));
-  } else if (output_encoding_info.color_encoding.tf.Is709()) {
+  } else if (tf.Is709()) {
     return MakeFromLinearStage(MakePerChannelOp(Op709()));
-  } else if (output_encoding_info.color_encoding.tf.IsGamma() ||
-             output_encoding_info.color_encoding.tf.IsDCI()) {
+  } else if (tf.have_gamma || tf.IsDCI()) {
     return MakeFromLinearStage(
         MakePerChannelOp(OpGamma{output_encoding_info.inverse_gamma}));
   } else {

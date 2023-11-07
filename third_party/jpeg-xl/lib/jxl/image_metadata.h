@@ -325,7 +325,7 @@ struct ImageMetadata : public Fields {
   // must still use kNone (or kYCbCr, which would mean applying the YCbCr
   // transform to the 3-channel XYB data), since with !xyb_encoded, the 3
   // channels are stored as-is, no matter what meaning the color profile assigns
-  // to them. To use ColorEncoding::kXYB, xyb_encoded must be true.
+  // to them. To use ColorSpace::kXYB, xyb_encoded must be true.
   //
   // This value is defined in image metadata because this is the global
   // codestream header. This value does not affect the image itself, so is not
