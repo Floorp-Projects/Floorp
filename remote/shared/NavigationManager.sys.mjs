@@ -66,6 +66,7 @@ ChromeUtils.defineLazyGetter(lazy, "logger", () => lazy.Log.get());
 class NavigationRegistry extends EventEmitter {
   #managers;
   #navigations;
+  #navigationIds;
 
   constructor() {
     super();
@@ -75,6 +76,10 @@ class NavigationRegistry extends EventEmitter {
 
     // Maps navigable to NavigationInfo.
     this.#navigations = new WeakMap();
+
+    // Maps navigable id to navigation id. Only used to pre-register navigation
+    // ids before the actual event is detected.
+    this.#navigationIds = new Map();
   }
 
   /**
@@ -153,7 +158,7 @@ class NavigationRegistry extends EventEmitter {
     const navigable = lazy.TabManager.getNavigableForBrowsingContext(context);
     const navigableId = lazy.TabManager.getIdForBrowsingContext(context);
 
-    const navigationId = lazy.generateUUID();
+    const navigationId = this.#getOrCreateNavigationId(navigableId);
     const navigation = { finished: true, navigationId, url };
     this.#navigations.set(navigable, navigation);
 
@@ -197,13 +202,13 @@ class NavigationRegistry extends EventEmitter {
       return navigation;
     }
 
-    const navigationId = lazy.generateUUID();
+    const navigationId = this.#getOrCreateNavigationId(navigableId);
+    navigation = { finished: false, navigationId, url };
+    this.#navigations.set(navigable, navigation);
+
     lazy.logger.trace(
       lazy.truncate`[${navigableId}] Navigation started for url: ${url} (${navigationId})`
     );
-
-    navigation = { finished: false, navigationId, url };
-    this.#navigations.set(navigable, navigation);
 
     this.emit("navigation-started", { navigationId, navigableId, url });
 
@@ -259,6 +264,27 @@ class NavigationRegistry extends EventEmitter {
     return navigation;
   }
 
+  /**
+   * Register a navigation id to be used for the next navigation for the
+   * provided browsing context details.
+   *
+   * @param {object} data
+   * @param {BrowsingContextDetails} data.contextDetails
+   *     The details about the browsing context for this navigation.
+   * @returns {string}
+   *     The UUID created the upcoming navigation.
+   */
+  registerNavigationId(data) {
+    const { contextDetails } = data;
+    const context = this.#getContextFromContextDetails(contextDetails);
+    const navigableId = lazy.TabManager.getIdForBrowsingContext(context);
+
+    const navigationId = lazy.generateUUID();
+    this.#navigationIds.set(navigableId, navigationId);
+
+    return navigationId;
+  }
+
   #getContextFromContextDetails(contextDetails) {
     if (contextDetails.context) {
       return contextDetails.context;
@@ -267,6 +293,17 @@ class NavigationRegistry extends EventEmitter {
     return contextDetails.isTopBrowsingContext
       ? BrowsingContext.getCurrentTopByBrowserId(contextDetails.browserId)
       : BrowsingContext.get(contextDetails.browsingContextId);
+  }
+
+  #getOrCreateNavigationId(navigableId) {
+    let navigationId;
+    if (this.#navigationIds.has(navigableId)) {
+      navigationId = this.#navigationIds.get(navigableId, navigationId);
+      this.#navigationIds.delete(navigableId);
+    } else {
+      navigationId = lazy.generateUUID();
+    }
+    return navigationId;
   }
 }
 
@@ -304,6 +341,10 @@ export function notifyNavigationStarted(data) {
  */
 export function notifyNavigationStopped(data) {
   return navigationRegistry.notifyNavigationStopped(data);
+}
+
+export function registerNavigationId(data) {
+  return navigationRegistry.registerNavigationId(data);
 }
 
 /**
