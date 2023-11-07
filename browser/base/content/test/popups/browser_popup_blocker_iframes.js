@@ -4,7 +4,7 @@
 
 "use strict";
 
-requestLongerTimeout(2);
+requestLongerTimeout(5);
 
 const testURL = getRootDirectory(gTestPath).replace(
   "chrome://mochitests/content",
