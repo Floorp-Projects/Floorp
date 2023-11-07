@@ -3634,13 +3634,6 @@ pref("browser.translations.simulateUnsupportedEngine", false);
 pref("browser.translations.chaos.errors", false);
 pref("browser.translations.chaos.timeoutMS", 0);
 
-// A pref to manage the use of fastText for language detection in Translations.
-// The feature was initially built using fastText, but we are now putting it
-// behind a pref while we investigate some performance improvements.
-// In the meantime, we will use CLD2, which is already available in tree.
-// See https://bugzilla.mozilla.org/show_bug.cgi?id=1836974
-pref("browser.translations.languageIdentification.useFastText", false);
-
 // When a user cancels this number of authentication dialogs coming from
 // a single web page in a row, all following authentication dialogs will
 // be blocked (automatically canceled) for that page. The counter resets
