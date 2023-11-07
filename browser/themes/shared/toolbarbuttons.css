@@ -15,17 +15,17 @@
   --toolbarseparator-color: color-mix(in srgb, currentColor 60%, transparent);
 
   --bookmark-block-padding: 4px;
-}
 
-:root[uidensity=compact] {
-  --toolbarbutton-outer-padding: 3px;
-  --toolbarbutton-inner-padding: 6px;
-  --bookmark-block-padding: 1px;
-}
+  &[uidensity=compact] {
+    --toolbarbutton-outer-padding: 3px;
+    --toolbarbutton-inner-padding: 6px;
+    --bookmark-block-padding: 1px;
+  }
 
-:root[uidensity=touch] {
-  --toolbarbutton-inner-padding: 9px;
-  --bookmark-block-padding: 7px;
+  &[uidensity=touch] {
+    --toolbarbutton-inner-padding: 9px;
+    --bookmark-block-padding: 7px;
+  }
 }
 
 #TabsToolbar {
@@ -36,29 +36,23 @@
 
 /* ::::: primary toolbar buttons ::::: */
 
-:root:not([customizing]) .toolbarbutton-1[disabled=true] {
-  opacity: var(--toolbarbutton-disabled-opacity);
-}
+.toolbarbutton-1 {
+  :root:not([customizing]) &[disabled] {
+    opacity: var(--toolbarbutton-disabled-opacity);
+  }
 
-.toolbarbutton-1 > .toolbarbutton-icon {
-  margin-inline-end: 0 !important;
-}
+  > .toolbarbutton-icon {
+    margin-inline-end: 0 !important;
+  }
 
-.toolbarbutton-1 > .toolbarbutton-icon,
-.toolbarbutton-1 > .toolbarbutton-badge-stack > .toolbarbutton-icon {
-  width: 16px;
+  > .toolbarbutton-icon,
+  > .toolbarbutton-badge-stack > .toolbarbutton-icon {
+    width: 16px;
+  }
 }
 
 .toolbarbutton-combined-buttons-dropmarker > .toolbarbutton-icon {
   width: 12px;
-}
-
-#navigator-toolbox:not(:hover) #tabbrowser-arrowscrollbox:not([highlight])::part(scrollbutton-down) {
-  transition: 1s background-color ease-out;
-}
-
-#tabbrowser-arrowscrollbox[highlight]::part(scrollbutton-down) {
-  background-color: SelectedItem;
 }
 
 toolbar .toolbarbutton-1 {
@@ -66,131 +60,106 @@ toolbar .toolbarbutton-1 {
   margin: 0;
   padding: 0 var(--toolbarbutton-outer-padding);
   justify-content: center;
+
+  &:focus-visible {
+    outline: none;
+
+    > .toolbarbutton-icon,
+    > .toolbarbutton-text,
+    > .toolbarbutton-badge-stack {
+      outline: var(--focus-outline);
+      outline-offset: var(--focus-outline-inset);
+    }
+  }
+
+  > .toolbarbutton-icon,
+  > .toolbarbutton-text,
+  > .toolbarbutton-badge-stack {
+    padding: var(--toolbarbutton-inner-padding);
+    border-radius: var(--toolbarbutton-border-radius);
+  }
+
+  > .toolbarbutton-icon {
+    /* horizontal padding + actual icon width */
+    width: calc(2 * var(--toolbarbutton-inner-padding) + 16px);
+    height: calc(2 * var(--toolbarbutton-inner-padding) + 16px);
+  }
+
+  > .toolbarbutton-text {
+    padding-top: calc(var(--toolbarbutton-inner-padding) - 1px);
+    padding-bottom: 0;
+    /* To make the hover feedback line up with sibling buttons, it needs the same
+     * height as the button icons and the same vertical padding, but as a minimum,
+     * because otherwise an increase in text sizes would break things.
+     */
+    min-height: calc(16px + 2 * var(--toolbarbutton-inner-padding));
+
+    @media (-moz-platform: macos) {
+      padding-top: calc(var(--toolbarbutton-inner-padding) + 1px);
+    }
+  }
+
+  &:not([disabled]) {
+    &:hover > :is(.toolbarbutton-icon, .toolbarbutton-text, .toolbarbutton-badge-stack) {
+      background-color: var(--toolbarbutton-hover-background);
+      color: inherit;
+    }
+
+    &:is([open], [checked], :hover:active) > :is(.toolbarbutton-icon, .toolbarbutton-text, .toolbarbutton-badge-stack) {
+      background-color: var(--toolbarbutton-active-background);
+      color: inherit;
+    }
+  }
 }
 
 #TabsToolbar .toolbarbutton-1 {
   margin: 0 0 var(--tabs-navbar-shadow-size);
+
+  > .toolbarbutton-icon,
+  > .toolbarbutton-text,
+  > .toolbarbutton-badge-stack {
+    border-radius: var(--tab-border-radius);
+  }
 }
 
-#tabbrowser-arrowscrollbox::part(scrollbutton-up),
-#tabbrowser-arrowscrollbox::part(scrollbutton-down) {
-  appearance: none;
-  background-clip: padding-box;
-  border: 4px solid transparent;
-  border-radius: calc(var(--tab-border-radius) + 4px);
-  margin: 0;
-  padding: 0 calc(var(--toolbarbutton-inner-padding) - 6px);
-}
-
-/*** Adds padding to end of toolbar while making that space click the first button ***/
+/* Adds padding to end of toolbar while making that space click the first button */
 #PanelUI-menu-button {
   padding-inline-end: var(--toolbar-start-end-padding);
 }
 
-toolbar .toolbarbutton-1 > .toolbarbutton-icon,
-toolbar .toolbarbutton-1 > .toolbarbutton-text,
-toolbar .toolbarbutton-1 > .toolbarbutton-badge-stack {
-  padding: var(--toolbarbutton-inner-padding);
-  border-radius: var(--toolbarbutton-border-radius);
-}
-
-#TabsToolbar .toolbarbutton-1 > .toolbarbutton-icon,
-#TabsToolbar .toolbarbutton-1 > .toolbarbutton-text,
-#TabsToolbar .toolbarbutton-1 > .toolbarbutton-badge-stack {
-  border-radius: var(--tab-border-radius);
-}
-
-toolbar .toolbarbutton-1 > .toolbarbutton-icon {
-  /* horizontal padding + actual icon width */
-  width: calc(2 * var(--toolbarbutton-inner-padding) + 16px);
-  height: calc(2 * var(--toolbarbutton-inner-padding) + 16px);
-}
-
-toolbar .toolbarbutton-combined-buttons-dropmarker > .toolbarbutton-icon {
-  /* same height as regular buttons, but narrower, and for a 12x12 image */
-  padding-inline: 2px;
-  padding-block: calc(var(--toolbarbutton-inner-padding) + (16px - 12px) / 2);
-  width: calc(2 * 2px + 12px);
-}
-
-toolbar .toolbarbutton-1 > .toolbarbutton-text {
-  padding-top: calc(var(--toolbarbutton-inner-padding) - 1px);
-  padding-bottom: 0;
-  /* To make the hover feedback line up with sibling buttons, it needs the same
-   * height as the button icons and the same vertical padding, but as a minimum,
-   * because otherwise an increase in text sizes would break things.
-   */
-  min-height: calc(16px + 2 * var(--toolbarbutton-inner-padding));
-}
-
-@media (-moz-platform: macos) {
-  toolbar .toolbarbutton-1 > .toolbarbutton-text {
-    padding-top: calc(var(--toolbarbutton-inner-padding) + 1px);
-  }
-}
-
 toolbar .toolbaritem-combined-buttons {
   margin-inline: 2px;
-}
 
-toolbar .toolbaritem-combined-buttons > .toolbarbutton-1 {
-  padding-inline: 0;
-}
+  > .toolbarbutton-1 {
+    padding-inline: 0;
+  }
 
-toolbar .toolbaritem-combined-buttons:not(:hover) > separator {
-  content: "";
-  display: flex;
-  width: 1px;
-  height: 16px;
-  margin-inline-end: -1px;
-  background-image: linear-gradient(currentColor 0, currentColor 100%);
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: 1px 16px;
-  opacity: .2;
+  > .toolbarbutton-combined-buttons-dropmarker > .toolbarbutton-icon {
+    /* same height as regular buttons, but narrower, and for a 12x12 image */
+    padding-inline: 2px;
+    padding-block: calc(var(--toolbarbutton-inner-padding) + (16px - 12px) / 2);
+    width: calc(2 * 2px + 12px);
+  }
+
+  > separator {
+    width: 1px;
+    height: 16px;
+    margin-inline-end: -1px;
+    background-image: linear-gradient(currentColor 0, currentColor 100%);
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: 1px 16px;
+    opacity: .2;
+  }
+
+  &:hover > separator {
+    display: none;
+  }
 }
 
 toolbar[brighttext] .toolbaritem-combined-buttons > separator {
   opacity: .3;
 }
-
-#tabbrowser-arrowscrollbox:not([scrolledtostart=true])::part(scrollbutton-up):hover,
-#tabbrowser-arrowscrollbox:not([scrolledtoend=true])::part(scrollbutton-down):hover,
-toolbarbutton.bookmark-item:not(.subviewbutton, [disabled=true], [open]):hover,
-toolbar .toolbarbutton-1:not([disabled=true], [checked], [open], :active):hover > .toolbarbutton-icon,
-toolbar .toolbarbutton-1:not([disabled=true], [checked], [open], :active):hover > .toolbarbutton-text,
-toolbar .toolbarbutton-1:not([disabled=true], [checked], [open], :active):hover > .toolbarbutton-badge-stack {
-  background-color: var(--toolbarbutton-hover-background);
-  color: inherit;
-}
-
-#tabbrowser-arrowscrollbox:not([scrolledtostart=true])::part(scrollbutton-up):hover:active,
-#tabbrowser-arrowscrollbox:not([scrolledtoend=true])::part(scrollbutton-down):hover:active,
-toolbarbutton.bookmark-item:hover:active:not(.subviewbutton, [disabled="true"]),
-toolbarbutton.bookmark-item[open="true"],
-toolbar .toolbarbutton-1:not([disabled=true]):is([open],[checked],:hover:active) > .toolbarbutton-icon,
-toolbar .toolbarbutton-1:not([disabled=true]):is([open],[checked],:hover:active) > .toolbarbutton-text,
-toolbar .toolbarbutton-1:not([disabled=true]):is([open],[checked],:hover:active) > .toolbarbutton-badge-stack {
-  background-color: var(--toolbarbutton-active-background);
-  color: inherit;
-}
-
-/* Keyboard focus styling */
-.titlebar-button:focus-visible,
-findbar toolbarbutton.tabbable:focus-visible,
-toolbarbutton.bookmark-item:not(.subviewbutton):focus-visible,
-toolbar .toolbarbutton-1:focus-visible > .toolbarbutton-icon,
-toolbar .toolbarbutton-1:focus-visible > .toolbarbutton-text,
-toolbar .toolbarbutton-1:focus-visible > .toolbarbutton-badge-stack {
-  outline: var(--focus-outline);
-  outline-offset: var(--focus-outline-inset);
-}
-
-toolbar .toolbarbutton-1:focus-visible {
-  outline: none;
-}
-
-/* bookmarks menu button */
 
 /* ::::: bookmark buttons ::::: */
 
@@ -205,42 +174,53 @@ toolbarbutton.bookmark-item:not(.subviewbutton) {
    * (padding and margin, respectively) */
   --toolbarbutton-inner-padding: 4px;
   --toolbarbutton-outer-padding: 2px;
-}
 
-#PersonalToolbar .toolbarbutton-1 {
-  margin-block: 2px;
-}
+  :root[uidensity=compact] & {
+    --toolbarbutton-outer-padding: 1px;
+  }
 
-:root[uidensity=compact] toolbarbutton.bookmark-item:not(.subviewbutton) {
-  margin-inline: 1px;
-}
+  .toolbarbutton-1 {
+    margin-block: 2px;
 
-:root[uidensity=compact] #PersonalToolbar .toolbarbutton-1 {
-  --toolbarbutton-outer-padding: 1px;
-}
-
-/* Allow icons to grow with the toolbar to match bookmark item heights
- *
- * NOTE(emilio): This matches pre-existing behavior but it's inconsistent with
- * how e.g. combined items work, and maybe we should just remove this.
- */
-#PersonalToolbar .toolbarbutton-1 {
-  align-items: stretch;
-}
-#PersonalToolbar .toolbarbutton-1 > .toolbarbutton-icon {
-  height: auto;
-}
-#PersonalToolbar .toolbarbutton-1 > .toolbarbutton-badge-stack {
-  align-items: center;
+    /* Allow icons to grow with the toolbar to match bookmark item heights
+     *
+     * NOTE(emilio): This matches pre-existing behavior but it's inconsistent with
+     * how e.g. combined items work, and maybe we should just remove this.
+     */
+    align-items: stretch;
+    > .toolbarbutton-icon {
+      height: auto;
+    }
+    > .toolbarbutton-badge-stack {
+      align-items: center;
+    }
+  }
 }
 
 toolbarbutton.bookmark-item:not(.subviewbutton) {
   border-radius: var(--toolbarbutton-border-radius);
-}
-
-toolbarbutton.bookmark-item:not(.subviewbutton) {
   max-width: 13em;
   appearance: none;
+
+  &:not([disabled], [open]):hover {
+    background-color: var(--toolbarbutton-hover-background);
+    color: inherit;
+  }
+
+  &:hover:active:not([disabled]),
+  &[open="true"] {
+    background-color: var(--toolbarbutton-active-background);
+    color: inherit;
+  }
+
+  &:focus-visible {
+    outline: var(--focus-outline);
+    outline-offset: var(--focus-outline-inset);
+  }
+
+  :root[uidensity=compact] & {
+    margin-inline: 1px;
+  }
 }
 
 /**
@@ -258,6 +238,10 @@ toolbarbutton.bookmark-item:not(.subviewbutton) {
 .bookmark-item > .toolbarbutton-icon {
   width: 16px;
   height: 16px;
+
+  #PlacesToolbarItems > & {
+    margin-inline-end: 0;
+  }
 }
 
 /* Force the display of the label for bookmarks */
@@ -273,10 +257,6 @@ toolbarbutton.bookmark-item:not(.subviewbutton) {
 #personal-bookmarks {
   /* Make sure there's at least space for the chevron */
   min-width: calc(16px + 2 * var(--toolbarbutton-inner-padding) + 2 * var(--toolbarbutton-outer-padding));
-}
-
-#PlacesToolbarItems > .bookmark-item > .toolbarbutton-icon {
-  margin-inline-end: 0;
 }
 
 #managed-bookmarks > .toolbarbutton-icon,
@@ -295,53 +275,55 @@ toolbarbutton.bookmark-item:not(.subviewbutton) {
   margin: 0;
   padding-inline: 4px;
   appearance: none;
-}
 
-/* When adjacent to the bookmarks items, give the bookmarks items a leading separator. */
-#PlacesToolbarItems > toolbarseparator::before {
-  content: "";
-  display: block;
-  border-inline-start: 1px solid;
-  border-image-source: linear-gradient(
-    transparent 3.75px,
-    var(--toolbarseparator-color) 3.75px,
-    var(--toolbarseparator-color) calc(100% - 3.75px),
-    transparent calc(100% - 3.75px) );
-  border-image-slice: 1;
-}
+  /* When adjacent to the bookmarks items, give the bookmarks items a leading separator. */
+  &::before {
+    content: "";
+    display: block;
+    border-inline-start: 1px solid;
+    border-image-source: linear-gradient(
+      transparent 3.75px,
+      var(--toolbarseparator-color) 3.75px,
+      var(--toolbarseparator-color) calc(100% - 3.75px),
+      transparent calc(100% - 3.75px) );
+    border-image-slice: 1;
+  }
 
-@media (min-resolution: 2dppx) {
-  #PlacesToolbarItems > toolbarseparator::before {
-    border-inline-start-width: 0.5px;
+  @media (resolution >= 2x) {
+    &::before {
+      border-inline-start-width: 0.5px;
+    }
   }
 }
 
-/* The bookmarks toolbar is smaller than the other toolbars, so we
- * need to override the badge position to not be cut off. */
-#PersonalToolbar .toolbarbutton-badge {
-  margin-top: -1px !important;
-}
+.toolbarbutton-badge {
+  /* The bookmarks toolbar is smaller than the other toolbars, so we
+   * need to override the badge position to not be cut off. */
+  #PersonalToolbar & {
+    margin-top: -1px !important;
 
-:root[uidensity=touch] #PersonalToolbar .toolbarbutton-badge {
-  margin-top: -4px !important;
-}
+    :root[uidensity=touch] & {
+      margin-top: -4px !important;
+    }
+  }
 
-/* Remove a pixel of margin on the end so that the badge doesn't
- * overflow the toolbar and push the button into the overflow menu. */
-:root[uidensity=compact] .toolbarbutton-badge {
-  margin-inline-end: -7px !important;
-}
+  /* Remove a pixel of margin on the end so that the badge doesn't
+   * overflow the toolbar and push the button into the overflow menu. */
+  :root[uidensity=compact] & {
+    margin-inline-end: -7px !important;
+  }
 
-/* Alternative style for .toolbarbutton-badge used by CFR notifications */
-.toolbarbutton-badge.feature-callout {
-  width: 14px;
-  height: 14px;
-  min-width: auto;
-  box-shadow: none;
-  border: none;
-  padding: 0;
-  display: block;
-  margin: -7px 0 0 !important;
-  margin-inline-end: -6px !important;
-  background: url(chrome://global/skin/icons/badge-blue.svg);
+  /* Alternative style for .toolbarbutton-badge used by CFR notifications */
+  &.feature-callout {
+    width: 14px;
+    height: 14px;
+    min-width: auto;
+    box-shadow: none;
+    border: none;
+    padding: 0;
+    display: block;
+    margin: -7px 0 0 !important;
+    margin-inline-end: -6px !important;
+    background: url(chrome://global/skin/icons/badge-blue.svg);
+  }
 }

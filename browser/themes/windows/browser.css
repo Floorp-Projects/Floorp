@@ -139,6 +139,11 @@
     display: none;
   }
 
+  &:focus-visible {
+    outline: var(--focus-outline);
+    outline-offset: var(--focus-outline-inset);
+  }
+
   > .toolbarbutton-icon {
     width: 12px;
     height: 12px;

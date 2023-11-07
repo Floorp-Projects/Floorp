@@ -287,6 +287,11 @@ menuitem.bookmark-item {
 .titlebar-button:-moz-lwtheme {
   appearance: none;
   border-radius: 100%;
+
+  &:focus-visible {
+    outline: var(--focus-outline);
+    outline-offset: var(--focus-outline-inset);
+  }
 }
 .titlebar-button > .toolbarbutton-icon:-moz-lwtheme {
   padding: 6px;

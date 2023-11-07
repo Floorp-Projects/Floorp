@@ -114,6 +114,11 @@ html|input.findbar-textbox[flash="true"] {
   fill: var(--toolbarbutton-icon-fill);
   color: inherit;
   border-radius: 4px;
+
+  &:focus-visible {
+    outline: var(--focus-outline);
+    outline-offset: var(--focus-outline-inset);
+  }
 }
 
 .findbar-find-previous:not([disabled]):hover,
