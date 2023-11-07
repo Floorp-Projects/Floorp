@@ -2779,7 +2779,7 @@
       ],
       "webExtension": {
         "id": "yahoo-jp-auctions@search.mozilla.org",
-        "name": "ヤフオク!",
+        "name": "Yahoo!オークション",
         "encoding": "EUC-JP",
         "search_url": "https://auctions.yahoo.co.jp/search/search",
         "search_form": "https://auctions.yahoo.co.jp/",
