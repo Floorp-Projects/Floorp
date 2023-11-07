@@ -28,6 +28,8 @@ UNSUPPORTED_FEATURES = set(
         "resizable-arraybuffer",  # Bug 1670026
         "regexp-duplicate-named-groups",  # Bug 1773135
         "json-parse-with-source",  # Bug 1658310
+        "import-attributes",  # Bug 1835669
+        "set-methods",  # Bug 1805038
     ]
 )
 FEATURE_CHECK_NEEDED = {
