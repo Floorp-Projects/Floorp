@@ -5,6 +5,7 @@
 /* eslint max-len: ["error", 80] */
 /* import-globals-from aboutaddonsCommon.js */
 /* exported openAbuseReport */
+/* global windowRoot */
 
 /**
  * This script is part of the HTML about:addons page and it provides some
@@ -13,6 +14,16 @@
 
 const { AbuseReporter } = ChromeUtils.importESModule(
   "resource://gre/modules/AbuseReporter.sys.mjs"
+);
+
+// Whether the abuse report feature should open a form hosted on
+// addons.mozilla.org or use the abuse report panel integrated
+// in Firefox.
+XPCOMUtils.defineLazyPreferenceGetter(
+  this,
+  "ABUSE_REPORT_AMO_FORM_ENABLED",
+  "extensions.abuseReport.amoFormEnabled",
+  true
 );
 
 // Message Bars definitions.
@@ -180,7 +191,24 @@ async function openAbuseReport({ addonId, reportEntryPoint }) {
   }
 }
 
-window.openAbuseReport = openAbuseReport;
+// Unlike the openAbuseReport function, technically this method wouldn't need
+// to be async, but it is so that both the implementations will be providing
+// the same type signatures (returning a promise) to the callers, independently
+// from which abuse reporting feature is enabled.
+async function openAbuseReportAMOForm({ addonId, reportEntryPoint }) {
+  const amoUrl = Services.urlFormatter
+    .formatURLPref("extensions.abuseReport.amoFormURL")
+    .replace(/%addonID%/g, addonId);
+  windowRoot.ownerGlobal.openTrustedLinkIn(amoUrl, "tab", {
+    // Make sure the newly open tab is going to be focused, independently
+    // from general user prefs.
+    forceForeground: true,
+  });
+}
+
+window.openAbuseReport = ABUSE_REPORT_AMO_FORM_ENABLED
+  ? openAbuseReportAMOForm
+  : openAbuseReport;
 
 // Helper function used to create abuse report message bars in the
 // HTML about:addons page.
