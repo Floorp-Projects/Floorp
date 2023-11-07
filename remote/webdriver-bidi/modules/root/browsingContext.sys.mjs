@@ -18,6 +18,8 @@ ChromeUtils.defineESModuleGetters(lazy, {
   EventPromise: "chrome://remote/content/shared/Sync.sys.mjs",
   Log: "chrome://remote/content/shared/Log.sys.mjs",
   modal: "chrome://remote/content/shared/Prompt.sys.mjs",
+  registerNavigationId:
+    "chrome://remote/content/shared/NavigationManager.sys.mjs",
   NavigationListener:
     "chrome://remote/content/shared/listeners/NavigationListener.sys.mjs",
   pprint: "chrome://remote/content/shared/Format.sys.mjs",
@@ -1150,6 +1152,10 @@ class BrowsingContextModule extends Module {
       }
     });
 
+    const navigationId = lazy.registerNavigationId({
+      contextDetails: { context: webProgress.browsingContext },
+    });
+
     await startNavigationFn();
     await navigated;
 
@@ -1162,12 +1168,8 @@ class BrowsingContextModule extends Module {
       url = listener.currentURI.spec;
     }
 
-    const navigation =
-      this.messageHandler.navigationManager.getNavigationForBrowsingContext(
-        webProgress.browsingContext
-      );
     return {
-      navigation: navigation ? navigation.navigationId : null,
+      navigation: navigationId,
       url,
     };
   }
