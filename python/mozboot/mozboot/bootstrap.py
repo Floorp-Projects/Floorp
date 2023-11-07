@@ -492,22 +492,6 @@ class Bootstrapper(object):
 
     def _validate_python_environment(self, topsrcdir):
         valid = True
-        try:
-            # distutils is singled out here because some distros (namely Ubuntu)
-            # include it in a separate package outside of the main Python
-            # installation.
-            import distutils.spawn
-            import distutils.sysconfig
-
-            assert distutils.sysconfig is not None and distutils.spawn is not None
-        except ImportError as e:
-            print("ERROR: Could not import package %s" % e.name, file=sys.stderr)
-            self.instance.suggest_install_distutils()
-            valid = False
-        except AssertionError:
-            print("ERROR: distutils is not behaving as expected.", file=sys.stderr)
-            self.instance.suggest_install_distutils()
-            valid = False
         pip3 = to_optional_path(which("pip3"))
         if not pip3:
             print("ERROR: Could not find pip3.", file=sys.stderr)
