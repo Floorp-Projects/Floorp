@@ -1,7 +1,7 @@
 diff --git a/intl/icu/source/data/locales/dsb.txt b/intl/icu/source/data/locales/dsb.txt
 --- a/intl/icu/source/data/locales/dsb.txt
 +++ b/intl/icu/source/data/locales/dsb.txt
-@@ -547,23 +547,27 @@ dsb{
+@@ -480,21 +480,25 @@ dsb{
                      other{"W. 'tyźeń' MMMM"}
                      two{"W. 'tyźeń' MMMM"}
                  }
@@ -14,8 +14,6 @@ diff --git a/intl/icu/source/data/locales/dsb.txt b/intl/icu/source/data/locales
                  h{"h a"}
                  hm{"h:mm a"}
                  hms{"h:mm:ss a"}
-                 ms{"mm:ss"}
-                 y{"y"}
                  yM{"M.y"}
                  yMEd{"E, d.M.y"}
 +                yMM{"MM y"}
@@ -32,7 +30,7 @@ diff --git a/intl/icu/source/data/locales/dsb.txt b/intl/icu/source/data/locales
 diff --git a/intl/icu/source/data/locales/hsb.txt b/intl/icu/source/data/locales/hsb.txt
 --- a/intl/icu/source/data/locales/hsb.txt
 +++ b/intl/icu/source/data/locales/hsb.txt
-@@ -546,23 +546,27 @@ hsb{
+@@ -480,21 +480,25 @@ hsb{
                      other{"W. 'tydźeń' MMMM"}
                      two{"W. 'tydźeń' MMMM"}
                  }
@@ -45,8 +43,6 @@ diff --git a/intl/icu/source/data/locales/hsb.txt b/intl/icu/source/data/locales
                  h{"h a"}
                  hm{"h:mm a"}
                  hms{"h:mm:ss a"}
-                 ms{"mm:ss"}
-                 y{"y"}
                  yM{"M.y"}
                  yMEd{"E, d.M.y"}
 +                yMM{"MM y"}
