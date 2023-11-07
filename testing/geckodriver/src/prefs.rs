@@ -114,8 +114,8 @@ lazy_static! {
         // Don't do network connections for mitm priming
         ("security.certerrors.mitm.priming.enabled", Pref::new(false)),
 
-        // Ensure blocklist updates don't hit the network
-        ("services.settings.server", Pref::new("")),
+        // Ensure remote settings do not hit the network
+        ("services.settings.server", Pref::new("data:,#remote-settings-dummy/v1")),
 
         // Disable first run pages
         ("startup.homepage_welcome_url", Pref::new("about:blank")),
