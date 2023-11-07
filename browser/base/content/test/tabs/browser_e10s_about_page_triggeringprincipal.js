@@ -8,7 +8,9 @@ const kAboutPagesRegistered = Promise.all([
     registerCleanupFunction,
     "test-about-principal-child",
     kChildPage,
-    Ci.nsIAboutModule.URI_MUST_LOAD_IN_CHILD | Ci.nsIAboutModule.ALLOW_SCRIPT
+    Ci.nsIAboutModule.URI_MUST_LOAD_IN_CHILD |
+      Ci.nsIAboutModule.ALLOW_SCRIPT |
+      Ci.nsIAboutModule.URI_SAFE_FOR_UNTRUSTED_CONTENT
   ),
   BrowserTestUtils.registerAboutPage(
     registerCleanupFunction,
