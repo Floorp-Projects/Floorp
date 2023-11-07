@@ -757,9 +757,13 @@ export var QuarantinedDomains = {
 
     // Notify listeners, e.g. to update details in TelemetryEnvironment.
     const addon = await lazy.AddonManager.getAddonByID(addonId);
-    lazy.AddonManagerPrivate.callAddonListeners("onPropertyChanged", addon, [
-      "quarantineIgnoredByUser",
-    ]);
+    // Do not call onPropertyChanged listeners if the addon cannot be found
+    // anymore (e.g. it has been uninstalled).
+    if (addon) {
+      lazy.AddonManagerPrivate.callAddonListeners("onPropertyChanged", addon, [
+        "quarantineIgnoredByUser",
+      ]);
+    }
   },
   _onUpdatedDomainsListTelemetry(_subject, _topic, _prefName) {
     Glean.extensionsQuarantinedDomains.listsize.set(
