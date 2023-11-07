@@ -4887,7 +4887,8 @@ bool WorkerPrivate::NotifyInternal(WorkerStatus aStatus) {
       return true;
     }
 
-    MOZ_ASSERT_IF(aStatus == Killing, mStatus == Canceling);
+    MOZ_ASSERT_IF(aStatus == Killing,
+                  mStatus == Canceling && mParentStatus == Canceling);
 
     if (aStatus >= Canceling) {
       MutexAutoUnlock unlock(mMutex);
@@ -4906,6 +4907,12 @@ bool WorkerPrivate::NotifyInternal(WorkerStatus aStatus) {
     // dispatched after we clear the queue below.
     if (aStatus == Closing) {
       Close();
+    }
+
+    // Synchronize the mParentStatus with mStatus, such that event dispatching
+    // will fail in proper after WorkerPrivate gets into Killing status.
+    if (aStatus == Killing) {
+      mParentStatus = Killing;
     }
   }
 
