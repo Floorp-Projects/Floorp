@@ -2188,6 +2188,13 @@ bool CanonicalBrowsingContext::HasCreatedMediaController() const {
 
 bool CanonicalBrowsingContext::SupportsLoadingInParent(
     nsDocShellLoadState* aLoadState, uint64_t* aOuterWindowId) {
+  // We currently only support starting loads directly from the
+  // CanonicalBrowsingContext for top-level BCs.
+  if (!IsTopContent() || !GetContentParent() ||
+      (StaticPrefs::browser_tabs_documentchannel_parent_controlled())) {
+    return false;
+  }
+
   // We currently don't support initiating loads in the parent when they are
   // watched by devtools. This is because devtools tracks loads using content
   // process notifications, which happens after the load is initiated in this
@@ -2238,15 +2245,6 @@ bool CanonicalBrowsingContext::SupportsLoadingInParent(
 
 bool CanonicalBrowsingContext::LoadInParent(nsDocShellLoadState* aLoadState,
                                             bool aSetNavigating) {
-  // We currently only support starting loads directly from the
-  // CanonicalBrowsingContext for top-level BCs.
-  // We currently only support starting loads directly from the
-  // CanonicalBrowsingContext for top-level BCs.
-  if (!IsTopContent() || !GetContentParent() ||
-      !StaticPrefs::browser_tabs_documentchannel_parent_controlled()) {
-    return false;
-  }
-
   uint64_t outerWindowId = 0;
   if (!SupportsLoadingInParent(aLoadState, &outerWindowId)) {
     return false;
@@ -2266,17 +2264,9 @@ bool CanonicalBrowsingContext::LoadInParent(nsDocShellLoadState* aLoadState,
 
 bool CanonicalBrowsingContext::AttemptSpeculativeLoadInParent(
     nsDocShellLoadState* aLoadState) {
-  // We currently only support starting loads directly from the
-  // CanonicalBrowsingContext for top-level BCs.
-  // We currently only support starting loads directly from the
-  // CanonicalBrowsingContext for top-level BCs.
-  if (!IsTopContent() || !GetContentParent() ||
-      (StaticPrefs::browser_tabs_documentchannel_parent_controlled())) {
-    return false;
-  }
-
   uint64_t outerWindowId = 0;
-  if (!SupportsLoadingInParent(aLoadState, &outerWindowId)) {
+  if (!StaticPrefs::browser_tabs_documentchannel_speculative_load() ||
+      !SupportsLoadingInParent(aLoadState, &outerWindowId)) {
     return false;
   }
 
