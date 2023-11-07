@@ -70,9 +70,4 @@ endif
 
 endif
 
-# These defines are used to support the twin-topsrcdir model for comm-central.
-ifdef MOZILLA_SRCDIR
-  MOZILLA_DIR = $(MOZILLA_SRCDIR)
-else
-  MOZILLA_DIR = $(topsrcdir)
-endif
+MOZILLA_DIR = $(topsrcdir)
