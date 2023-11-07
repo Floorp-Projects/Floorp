@@ -1815,8 +1815,18 @@ export class UrlbarView {
             });
           };
           title.toggleAttribute("is-url", true);
-          break;
+
+          let label = { id: "urlbar-result-action-visit-from-clipboard" };
+          this.#l10nCache.ensure(label).then(() => {
+            let { value } = this.#l10nCache.get(label);
+            title.setAttribute("aria-label", `${value}, ${title.innerText}`);
+            action.setAttribute("aria-hidden", "true");
+          });
+        } else {
+          title.removeAttribute("aria-label");
+          action.removeAttribute("aria-hidden");
         }
+        break;
       // fall-through
       default:
         if (result.heuristic && !result.payload.title) {
