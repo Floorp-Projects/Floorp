@@ -1,4 +1,5 @@
 import base64
+from enum import Enum
 from typing import Any, Dict, List, Mapping, MutableMapping, Optional, Union
 
 from ._module import BidiModule, command
@@ -24,6 +25,11 @@ class BoxOptions(Dict[str, Any]):
 ClipOptions = Union[ElementOptions, BoxOptions]
 
 
+class OriginOptions(Enum):
+    DOCUMENT = "document"
+    VIEWPORT = "viewport"
+
+
 class BrowsingContext(BidiModule):
     @command
     def activate(self, context: str) -> Mapping[str, Any]:
@@ -31,12 +37,18 @@ class BrowsingContext(BidiModule):
 
     @command
     def capture_screenshot(
-        self, context: str, clip: Optional[ClipOptions] = None
+        self,
+        context: str,
+        clip: Optional[ClipOptions] = None,
+        origin: Optional[OriginOptions] = None,
     ) -> Mapping[str, Any]:
         params: MutableMapping[str, Any] = {"context": context}
 
         if clip is not None:
             params["clip"] = clip
+
+        if origin is not None:
+            params["origin"] = origin
 
         return params
 
