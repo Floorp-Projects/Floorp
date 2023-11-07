@@ -8,9 +8,12 @@
  * issues.
  */
 add_task(async function test_detected_language() {
+  const detectedLangTag = "en";
+
   const { cleanup, tab } = await loadTestPage({
     // This page will get its language changed by the test.
     page: ENGLISH_PAGE_URL,
+    detectedLangTag,
     autoDownloadFromRemoteSettings: true,
     // Empty out the accept languages.
     languagePairs: [
