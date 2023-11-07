@@ -9,12 +9,12 @@
  */
 
 /*
- * Created on Tue Oct 25 06:53:25 2022 from UCD data files with version info:
+ * Created on Fri Nov  3 15:06:16 2023 from UCD data files with version info:
  *
 
 # Unicode Character Database
-# Date: 2022-09-02
-# © 2022 Unicode®, Inc.
+# Date: 2023-08-28
+# © 2023 Unicode®, Inc.
 # Unicode and the Unicode Logo are registered trademarks of Unicode, Inc. in the U.S. and other countries.
 # For terms of use, see https://www.unicode.org/terms_of_use.html
 #
@@ -24,17 +24,17 @@
 # UAX #44, "Unicode Character Database"
 # UTS #51, "Unicode Emoji"
 #
-# The UAXes and UTS #51 can be accessed at https://www.unicode.org/versions/Unicode15.0.0/
+# The UAXes and UTS #51 can be accessed at https://www.unicode.org/versions/Unicode15.1.0/
 
-This directory contains the final data files
-for the Unicode Character Database, for Version 15.0.0 of the Unicode Standard.
+This directory contains final data files
+for the Unicode Character Database, for Version 15.1.0 of the Unicode Standard.
 
 # IdentifierStatus.txt
-# Date: 2022-08-26, 16:49:09 GMT
+# Date: 2023-08-11, 17:46:41 GMT
 
 #
 # Unihan_Variants.txt
-# Date: 2022-08-01 16:36:07 GMT [JHJ]
+# Date: 2023-07-15 00:00:00 GMT [KL]
 
 # VerticalOrientation-17.txt
 # Date: 2016-10-20, 07:00:00 GMT [EM, KI, LI]
