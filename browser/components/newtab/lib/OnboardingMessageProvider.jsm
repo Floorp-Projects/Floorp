@@ -125,57 +125,6 @@ const BASE_MESSAGES = () => [
     targeting: "pageLoad >= 4 && userPrefs.cfrFeatures",
   },
   {
-    id: "CFR_FIREFOX_VIEW",
-    groups: ["cfr"],
-    template: "cfr_doorhanger",
-    //If Firefox View button has been moved to the overflow menu, we want to change the anchor element
-    content: {
-      bucket_id: "CFR_FIREFOX_VIEW",
-      anchor_id: "firefox-view-button",
-      alt_anchor_id: "nav-bar-overflow-button",
-      layout: "icon_and_message",
-      icon: "chrome://browser/content/cfr-lightning.svg",
-      icon_dark_theme: "chrome://browser/content/cfr-lightning-dark.svg",
-      icon_class: "cfr-doorhanger-small-icon",
-      heading_text: {
-        string_id: "firefoxview-cfr-header-v2",
-      },
-      text: {
-        string_id: "firefoxview-cfr-body-v2",
-      },
-      buttons: {
-        primary: {
-          label: {
-            string_id: "firefoxview-cfr-primarybutton",
-          },
-          action: {
-            type: "OPEN_FIREFOX_VIEW",
-            navigate: true,
-          },
-        },
-        secondary: [
-          {
-            label: {
-              string_id: "firefoxview-cfr-secondarybutton",
-            },
-            action: {
-              type: "CANCEL",
-            },
-          },
-        ],
-      },
-      skip_address_bar_notifier: true,
-    },
-    frequency: {
-      lifetime: 1,
-    },
-    trigger: {
-      id: "nthTabClosed",
-    },
-    // Avoid breaking existing tests that close tabs for now.
-    targeting: `!inMr2022Holdback && fxViewButtonAreaType != null && (currentDate|date - profileAgeCreated) / 86400000 >= 2 && tabsClosedCount >= 3 && 'browser.firefox-view.view-count'|preferenceValue == 0 && !'browser.newtabpage.activity-stream.asrouter.providers.cfr'|preferenceIsUserSet`,
-  },
-  {
     id: "FX_MR_106_UPGRADE",
     template: "spotlight",
     targeting: "true",
