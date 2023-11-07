@@ -64,6 +64,8 @@ void gfxPlatformMac::FontRegistrationCallback(void* aUnused) {
   for (const auto& dir : kLangFontsDirs) {
     gfxMacPlatformFontList::ActivateFontsFromDir(dir);
   }
+
+  gfxMacPlatformFontList::GetSystemFontName();
 }
 
 PRThread* gfxPlatformMac::sFontRegistrationThread = nullptr;
