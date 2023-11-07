@@ -1037,3 +1037,12 @@
    ...
    fun:_ZN7mozilla3dom7Element7SetAttrEiP6nsAtomS3_RK12nsTSubstringIDsEP12nsIPrincipalb
 }
+
+{
+   False positive from new optimizations in rustc 1.73
+   Memcheck:Cond
+   ...
+   fun:drop_in_place<hashbrown::raw::RawIntoIter<(webrender_api::image::ImageFormat, (webrender::texture_pack::guillotine::GuillotineAllocator, alloc::vec::Vec<webrender::renderer::upload::BatchUploadBuffer, alloc::alloc::Global>)), alloc::alloc::Global>>
+   ...
+   fun:upload_to_texture_cache
+}
