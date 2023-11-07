@@ -1,8 +1,14 @@
 "use strict";
 
+const { AddonTestUtils } = ChromeUtils.importESModule(
+  "resource://testing-common/AddonTestUtils.sys.mjs"
+);
+
 const { ExtensionPermissions, QuarantinedDomains } = ChromeUtils.importESModule(
   "resource://gre/modules/ExtensionPermissions.sys.mjs"
 );
+
+AddonTestUtils.initMochitest(this);
 
 loadTestSubscript("head_unified_extensions.js");
 
@@ -663,7 +669,45 @@ const originControlsInContextMenu = async options => {
     }
   });
 
-  await Promise.all(extensions.map(e => e.unload()));
+  // Regression test for Bug 1861002.
+  const addonListener = {
+    registered: false,
+    onPropertyChanged(addon, changedProps) {
+      ok(
+        addon,
+        `onPropertyChanged should not be called without an AddonWrapper for changed properties: ${changedProps}`
+      );
+    },
+  };
+  AddonManager.addAddonListener(addonListener);
+  addonListener.registered = true;
+  const unregisterAddonListener = () => {
+    if (!addonListener.registered) {
+      return;
+    }
+    AddonManager.removeAddonListener(addonListener);
+    addonListener.registered = false;
+  };
+  registerCleanupFunction(unregisterAddonListener);
+
+  let { messages } = await AddonTestUtils.promiseConsoleOutput(async () => {
+    await Promise.all(extensions.map(e => e.unload()));
+  });
+
+  unregisterAddonListener();
+
+  AddonTestUtils.checkMessages(
+    messages,
+    {
+      forbidden: [
+        {
+          message:
+            /AddonListener threw exception when calling onPropertyChanged/,
+        },
+      ],
+    },
+    "Expect no exception raised from AddonListener onPropertyChanged callbacks"
+  );
 };
 
 add_task(async function originControls_in_browserAction_contextMenu() {
