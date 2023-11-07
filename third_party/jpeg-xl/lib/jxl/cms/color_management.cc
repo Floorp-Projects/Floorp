@@ -12,6 +12,18 @@
 #include <string>
 #include <vector>
 
+#include "lib/jxl/cms/color_encoding_cms.h"
+
+using jxl::cms::CIExy;
+using jxl::cms::ColorEncoding;
+using jxl::cms::ColorSpace;
+using jxl::cms::IccBytes;
+using jxl::cms::Primaries;
+using jxl::cms::PrimariesCIExy;
+using jxl::cms::RenderingIntent;
+using jxl::cms::TransferFunction;
+using jxl::cms::WhitePoint;
+
 #undef HWY_TARGET_INCLUDE
 #define HWY_TARGET_INCLUDE "lib/jxl/cms/color_management.cc"
 #include <hwy/foreach_target.h>
@@ -35,12 +47,11 @@ namespace HWY_NAMESPACE {
 
 Status ToneMapPixel(const ColorEncoding& c, const float in[3],
                     uint8_t pcslab_out[3]) {
-  const PrimariesCIExy primaries = c.GetPrimaries();
-  const CIExy white_point = c.GetWhitePoint();
+  const PrimariesCIExy p = c.GetPrimaries();
+  const CIExy wp = c.GetWhitePoint();
   float primaries_XYZ[9];
-  JXL_RETURN_IF_ERROR(PrimariesToXYZ(
-      primaries.r.x, primaries.r.y, primaries.g.x, primaries.g.y, primaries.b.x,
-      primaries.b.y, white_point.x, white_point.y, primaries_XYZ));
+  JXL_RETURN_IF_ERROR(PrimariesToXYZ(p.r.x, p.r.y, p.g.x, p.g.y, p.b.x, p.b.y,
+                                     wp.x, wp.y, primaries_XYZ));
   const float luminances[3] = {primaries_XYZ[3], primaries_XYZ[4],
                                primaries_XYZ[5]};
   float linear[3];
@@ -71,7 +82,7 @@ Status ToneMapPixel(const ColorEncoding& c, const float in[3],
   StoreU(b, d, &linear[2]);
 
   float chad[9];
-  JXL_RETURN_IF_ERROR(AdaptToXYZD50(white_point.x, white_point.y, chad));
+  JXL_RETURN_IF_ERROR(AdaptToXYZD50(wp.x, wp.y, chad));
   float to_xyzd50[9];
   Mul3x3Matrix(chad, primaries_XYZ, to_xyzd50);
 
@@ -176,14 +187,13 @@ bool CanToneMap(const ColorEncoding& encoding) {
   // If the color space cannot be represented by a CICP tag in the ICC profile
   // then the rest of the profile must unambiguously identify it; we have less
   // freedom to do use it for tone mapping.
-  return encoding.GetColorSpace() == ColorSpace::kRGB &&
-         encoding.HasPrimaries() &&
+  return encoding.color_space == ColorSpace::kRGB && encoding.HasPrimaries() &&
          (encoding.tf.IsPQ() || encoding.tf.IsHLG()) &&
-         ((encoding.GetPrimariesType() == Primaries::kP3 &&
-           (encoding.GetWhitePointType() == WhitePoint::kD65 ||
-            encoding.GetWhitePointType() == WhitePoint::kDCI)) ||
-          (encoding.GetPrimariesType() != Primaries::kCustom &&
-           encoding.GetWhitePointType() == WhitePoint::kD65));
+         ((encoding.primaries == Primaries::kP3 &&
+           (encoding.white_point == WhitePoint::kD65 ||
+            encoding.white_point == WhitePoint::kDCI)) ||
+          (encoding.primaries != Primaries::kCustom &&
+           encoding.white_point == WhitePoint::kD65));
 }
 
 void ICCComputeMD5(const IccBytes& data, uint8_t sum[16])
@@ -335,9 +345,9 @@ Status CreateICCHeader(const ColorEncoding& c, IccBytes* JXL_RESTRICT header) {
   WriteICCTag(kCmm, 4, header);
   WriteICCUint32(0x04400000u, 8, header);
   const char* profile_type =
-      c.GetColorSpace() == ColorSpace::kXYB ? "scnr" : "mntr";
+      c.color_space == ColorSpace::kXYB ? "scnr" : "mntr";
   WriteICCTag(profile_type, 12, header);
-  WriteICCTag(c.IsGray() ? "GRAY" : "RGB ", 16, header);
+  WriteICCTag(c.color_space == ColorSpace::kGray ? "GRAY" : "RGB ", 16, header);
   if (kEnable3DToneMapping && CanToneMap(c)) {
     // We are going to use a 3D LUT for tone mapping, which will be more compact
     // with an 8-bit LUT to CIELAB than with a 16-bit LUT to XYZ. 8-bit XYZ
@@ -366,7 +376,7 @@ Status CreateICCHeader(const ColorEncoding& c, IccBytes* JXL_RESTRICT header) {
   WriteICCUint32(0, 52, header);  // device model
   WriteICCUint32(0, 56, header);  // device attributes
   WriteICCUint32(0, 60, header);  // device attributes
-  WriteICCUint32(static_cast<uint32_t>(c.GetRenderingIntent()), 64, header);
+  WriteICCUint32(static_cast<uint32_t>(c.rendering_intent), 64, header);
 
   // Mandatory D50 white point of profile connection space
   WriteICCUint32(0x0000f6d6, 68, header);
@@ -434,25 +444,25 @@ void MaybeCreateICCCICPTag(const ColorEncoding& c, IccBytes* JXL_RESTRICT tags,
                            size_t* offset, size_t* size,
                            IccBytes* JXL_RESTRICT tagtable,
                            std::vector<size_t>* offsets) {
-  if (c.GetColorSpace() != ColorSpace::kRGB) {
+  if (c.color_space != ColorSpace::kRGB) {
     return;
   }
   uint8_t primaries = 0;
-  if (c.GetPrimariesType() == Primaries::kP3) {
-    if (c.GetWhitePointType() == WhitePoint::kD65) {
+  if (c.primaries == Primaries::kP3) {
+    if (c.white_point == WhitePoint::kD65) {
       primaries = 12;
-    } else if (c.GetWhitePointType() == WhitePoint::kDCI) {
+    } else if (c.white_point == WhitePoint::kDCI) {
       primaries = 11;
     } else {
       return;
     }
-  } else if (c.GetPrimariesType() != Primaries::kCustom &&
-             c.GetWhitePointType() == WhitePoint::kD65) {
-    primaries = static_cast<uint8_t>(c.GetPrimariesType());
+  } else if (c.primaries != Primaries::kCustom &&
+             c.white_point == WhitePoint::kD65) {
+    primaries = static_cast<uint8_t>(c.primaries);
   } else {
     return;
   }
-  if (c.tf.IsUnknown() || c.tf.IsGamma()) {
+  if (c.tf.IsUnknown() || c.tf.have_gamma) {
     return;
   }
   WriteICCTag("cicp", tags->size(), tags);
@@ -662,25 +672,112 @@ Status CreateICCNoOpBToATag(IccBytes* JXL_RESTRICT tags) {
 
 }  // namespace
 
+Status PrimariesToXYZ(float rx, float ry, float gx, float gy, float bx,
+                      float by, float wx, float wy, float matrix[9]) {
+  bool ok = (wx >= 0) && (wx <= 1) && (wy > 0) && (wy <= 1);
+  if (!ok) {
+    return JXL_FAILURE("Invalid white point");
+  }
+  // TODO(lode): also require rx, ry, gx, gy, bx, to be in range 0-1? ICC
+  // profiles in theory forbid negative XYZ values, but in practice the ACES P0
+  // color space uses a negative y for the blue primary.
+  float primaries[9] = {
+      rx, gx, bx, ry, gy, by, 1.0f - rx - ry, 1.0f - gx - gy, 1.0f - bx - by};
+  float primaries_inv[9];
+  memcpy(primaries_inv, primaries, sizeof(float) * 9);
+  JXL_RETURN_IF_ERROR(Inv3x3Matrix(primaries_inv));
+
+  float w[3] = {wx / wy, 1.0f, (1.0f - wx - wy) / wy};
+  // 1 / tiny float can still overflow
+  JXL_RETURN_IF_ERROR(std::isfinite(w[0]) && std::isfinite(w[2]));
+  float xyz[3];
+  Mul3x3Vector(primaries_inv, w, xyz);
+
+  float a[9] = {
+      xyz[0], 0, 0, 0, xyz[1], 0, 0, 0, xyz[2],
+  };
+
+  Mul3x3Matrix(primaries, a, matrix);
+  return true;
+}
+
+/* Chromatic adaptation matrices*/
+constexpr float kBradford[9] = {
+    0.8951f, 0.2664f, -0.1614f, -0.7502f, 1.7135f,
+    0.0367f, 0.0389f, -0.0685f, 1.0296f,
+};
+constexpr float kBradfordInv[9] = {
+    0.9869929f, -0.1470543f, 0.1599627f, 0.4323053f, 0.5183603f,
+    0.0492912f, -0.0085287f, 0.0400428f, 0.9684867f,
+};
+
+// Adapts whitepoint x, y to D50
+Status AdaptToXYZD50(float wx, float wy, float matrix[9]) {
+  bool ok = (wx >= 0) || (wx <= 1) || (wy > 0) || (wy <= 1);
+  if (!ok) {
+    // Out of range values can cause division through zero
+    // further down with the bradford adaptation too.
+    return JXL_FAILURE("Invalid white point");
+  }
+  float w[3] = {wx / wy, 1.0f, (1.0f - wx - wy) / wy};
+  // 1 / tiny float can still overflow
+  JXL_RETURN_IF_ERROR(std::isfinite(w[0]) && std::isfinite(w[2]));
+  float w50[3] = {0.96422f, 1.0f, 0.82521f};
+
+  float lms[3];
+  float lms50[3];
+
+  Mul3x3Vector(kBradford, w, lms);
+  Mul3x3Vector(kBradford, w50, lms50);
+
+  if (lms[0] == 0 || lms[1] == 0 || lms[2] == 0) {
+    return JXL_FAILURE("Invalid white point");
+  }
+  float a[9] = {
+      //       /----> 0, 1, 2, 3,          /----> 4, 5, 6, 7,          /----> 8,
+      lms50[0] / lms[0], 0, 0, 0, lms50[1] / lms[1], 0, 0, 0, lms50[2] / lms[2],
+  };
+  if (!std::isfinite(a[0]) || !std::isfinite(a[4]) || !std::isfinite(a[8])) {
+    return JXL_FAILURE("Invalid white point");
+  }
+
+  float b[9];
+  Mul3x3Matrix(a, kBradford, b);
+  Mul3x3Matrix(kBradfordInv, b, matrix);
+
+  return true;
+}
+
+Status PrimariesToXYZD50(float rx, float ry, float gx, float gy, float bx,
+                         float by, float wx, float wy, float matrix[9]) {
+  float toXYZ[9];
+  JXL_RETURN_IF_ERROR(PrimariesToXYZ(rx, ry, gx, gy, bx, by, wx, wy, toXYZ));
+  float d50[9];
+  JXL_RETURN_IF_ERROR(AdaptToXYZD50(wx, wy, d50));
+
+  Mul3x3Matrix(d50, toXYZ, matrix);
+  return true;
+}
+
 Status MaybeCreateProfile(const ColorEncoding& c, IccBytes* JXL_RESTRICT icc) {
   IccBytes header, tagtable, tags;
 
-  if (c.GetColorSpace() == ColorSpace::kUnknown || c.tf.IsUnknown()) {
+  if (c.color_space == ColorSpace::kUnknown || c.tf.IsUnknown()) {
     return false;  // Not an error
   }
 
-  switch (c.GetColorSpace()) {
+  switch (c.color_space) {
     case ColorSpace::kRGB:
     case ColorSpace::kGray:
     case ColorSpace::kXYB:
       break;  // OK
     default:
       return JXL_FAILURE("Invalid CS %u",
-                         static_cast<unsigned int>(c.GetColorSpace()));
+                         static_cast<unsigned int>(c.color_space));
   }
 
-  if (c.GetColorSpace() == ColorSpace::kXYB &&
-      c.GetRenderingIntent() != RenderingIntent::kPerceptual) {
+  if (c.color_space == ColorSpace::kXYB &&
+      c.rendering_intent != RenderingIntent::kPerceptual) {
     return JXL_FAILURE(
         "Only perceptual rendering intent implemented for XYB "
         "ICC profile.");
@@ -704,7 +801,7 @@ Status MaybeCreateProfile(const ColorEncoding& c, IccBytes* JXL_RESTRICT icc) {
   AddToICCTagTable("cprt", tag_offset, tag_size, &tagtable, &offsets);
 
   // TODO(eustas): isn't it the other way round: gray image has d50 WhitePoint?
-  if (c.IsGray()) {
+  if (c.color_space == ColorSpace::kGray) {
     float wtpt[3];
     JXL_RETURN_IF_ERROR(CIEXYZFromWhiteCIExy(c.GetWhitePoint(), wtpt));
     JXL_RETURN_IF_ERROR(CreateICCXYZTag(wtpt, &tags));
@@ -715,7 +812,7 @@ Status MaybeCreateProfile(const ColorEncoding& c, IccBytes* JXL_RESTRICT icc) {
   FinalizeICCTag(&tags, &tag_offset, &tag_size);
   AddToICCTagTable("wtpt", tag_offset, tag_size, &tagtable, &offsets);
 
-  if (!c.IsGray()) {
+  if (c.color_space != ColorSpace::kGray) {
     // Chromatic adaptation matrix
     float chad[9];
     JXL_RETURN_IF_ERROR(CreateICCChadMatrix(c.GetWhitePoint(), chad));
@@ -725,7 +822,7 @@ Status MaybeCreateProfile(const ColorEncoding& c, IccBytes* JXL_RESTRICT icc) {
     AddToICCTagTable("chad", tag_offset, tag_size, &tagtable, &offsets);
   }
 
-  if (c.GetColorSpace() == ColorSpace::kRGB) {
+  if (c.color_space == ColorSpace::kRGB) {
     MaybeCreateICCCICPTag(c, &tags, &tag_offset, &tag_size, &tagtable,
                           &offsets);
 
@@ -750,7 +847,7 @@ Status MaybeCreateProfile(const ColorEncoding& c, IccBytes* JXL_RESTRICT icc) {
     AddToICCTagTable("bXYZ", tag_offset, tag_size, &tagtable, &offsets);
   }
 
-  if (c.GetColorSpace() == ColorSpace::kXYB) {
+  if (c.color_space == ColorSpace::kXYB) {
     JXL_RETURN_IF_ERROR(CreateICCLutAtoBTagForXYB(&tags));
     FinalizeICCTag(&tags, &tag_offset, &tag_size);
     AddToICCTagTable("A2B0", tag_offset, tag_size, &tagtable, &offsets);
@@ -765,11 +862,11 @@ Status MaybeCreateProfile(const ColorEncoding& c, IccBytes* JXL_RESTRICT icc) {
     FinalizeICCTag(&tags, &tag_offset, &tag_size);
     AddToICCTagTable("B2A0", tag_offset, tag_size, &tagtable, &offsets);
   } else {
-    if (c.tf.IsGamma()) {
+    if (c.tf.have_gamma) {
       float gamma = 1.0 / c.tf.GetGamma();
       JXL_RETURN_IF_ERROR(CreateICCCurvParaTag({gamma}, 0, &tags));
-    } else if (c.GetColorSpace() != ColorSpace::kXYB) {
-      switch (c.tf.GetTransferFunction()) {
+    } else if (c.color_space != ColorSpace::kXYB) {
+      switch (c.tf.transfer_function) {
         case TransferFunction::kHLG:
           CreateICCCurvCurvTag(HWY_DYNAMIC_DISPATCH(CreateTableCurve)(
                                    64, ExtraTF::kHLG, CanToneMap(c)),
@@ -799,12 +896,12 @@ Status MaybeCreateProfile(const ColorEncoding& c, IccBytes* JXL_RESTRICT icc) {
               CreateICCCurvParaTag({2.6, 1.0, 0.0, 1.0, 0.0}, 3, &tags));
           break;
         default:
-          JXL_UNREACHABLE("Unknown TF %u", static_cast<unsigned int>(
-                                               c.tf.GetTransferFunction()));
+          JXL_UNREACHABLE("Unknown TF %u",
+                          static_cast<unsigned int>(c.tf.transfer_function));
       }
     }
     FinalizeICCTag(&tags, &tag_offset, &tag_size);
-    if (c.IsGray()) {
+    if (c.color_space == ColorSpace::kGray) {
       AddToICCTagTable("kTRC", tag_offset, tag_size, &tagtable, &offsets);
     } else {
       AddToICCTagTable("rTRC", tag_offset, tag_size, &tagtable, &offsets);

@@ -1091,12 +1091,18 @@ JxlEncoderStatus JxlEncoderSetICCProfile(JxlEncoder* enc,
     return JXL_API_ERROR(enc, JXL_ENC_ERR_API_USAGE,
                          "ICC profile is already set");
   }
+  if (size == 0) {
+    return JXL_API_ERROR(enc, JXL_ENC_ERR_BAD_INPUT, "Empty ICC profile");
+  }
   jxl::IccBytes icc;
   icc.assign(icc_profile, icc_profile + size);
-  if (!enc->metadata.m.color_encoding.SetICC(
-          std::move(icc), enc->cms_set ? &enc->cms : nullptr)) {
-    return JXL_API_ERROR(enc, JXL_ENC_ERR_BAD_INPUT,
-                         "ICC profile could not be set");
+  if (enc->cms_set) {
+    if (!enc->metadata.m.color_encoding.SetICC(std::move(icc), &enc->cms)) {
+      return JXL_API_ERROR(enc, JXL_ENC_ERR_BAD_INPUT,
+                           "ICC profile could not be set");
+    }
+  } else {
+    enc->metadata.m.color_encoding.SetICCRaw(std::move(icc));
   }
   if (enc->metadata.m.color_encoding.GetColorSpace() ==
       jxl::ColorSpace::kGray) {
@@ -2005,12 +2011,8 @@ JxlEncoderStatus JxlEncoderAddJPEGFrame(
   }
 
   if (!frame_settings->enc->color_encoding_set) {
-    if (!SetColorEncodingFromJpegData(
-            *io.Main().jpeg_data,
-            &frame_settings->enc->metadata.m.color_encoding)) {
-      return JXL_API_ERROR(frame_settings->enc, JXL_ENC_ERR_BAD_INPUT,
-                           "Error in input JPEG color space");
-    }
+    SetColorEncodingFromJpegData(
+        *io.Main().jpeg_data, &frame_settings->enc->metadata.m.color_encoding);
   }
 
   if (!frame_settings->enc->basic_info_set) {

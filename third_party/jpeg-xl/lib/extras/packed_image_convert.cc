@@ -82,7 +82,7 @@ Status ConvertPackedPixelFileToCodecInOut(const PackedPixelFile& ppf,
                ppf.info.exponent_bits_per_sample);
   }
 
-  const bool is_gray = ppf.info.num_color_channels == 1;
+  const bool is_gray = (ppf.info.num_color_channels == 1);
   JXL_ASSERT(ppf.info.num_color_channels == 1 ||
              ppf.info.num_color_channels == 3);
 
@@ -113,11 +113,15 @@ Status ConvertPackedPixelFileToCodecInOut(const PackedPixelFile& ppf,
   // Convert the color encoding.
   if (!ppf.icc.empty()) {
     IccBytes icc = ppf.icc;
-    const JxlCmsInterface& cms = *JxlGetDefaultCms();
-    if (!io->metadata.m.color_encoding.SetICC(std::move(icc), &cms)) {
+    if (!io->metadata.m.color_encoding.SetICC(std::move(icc),
+                                              JxlGetDefaultCms())) {
       fprintf(stderr, "Warning: error setting ICC profile, assuming SRGB\n");
       io->metadata.m.color_encoding = ColorEncoding::SRGB(is_gray);
     } else {
+      if (io->metadata.m.color_encoding.IsCMYK()) {
+        // We expect gray or tri-color.
+        return JXL_FAILURE("Embedded ICC is CMYK");
+      }
       if (io->metadata.m.color_encoding.IsGray() != is_gray) {
         // E.g. JPG image has 3 channels, but gray ICC.
         return JXL_FAILURE("Embedded ICC does not match image color type");

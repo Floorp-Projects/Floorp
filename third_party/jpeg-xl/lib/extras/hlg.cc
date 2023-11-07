@@ -21,7 +21,7 @@ Status HlgOOTF(ImageBundle* ib, const float gamma, ThreadPool* pool) {
   linear_rec2020.SetColorSpace(ColorSpace::kRGB);
   JXL_RETURN_IF_ERROR(linear_rec2020.SetPrimariesType(Primaries::k2100));
   JXL_RETURN_IF_ERROR(linear_rec2020.SetWhitePointType(WhitePoint::kD65));
-  linear_rec2020.tf.SetTransferFunction(TransferFunction::kLinear);
+  linear_rec2020.Tf().SetTransferFunction(TransferFunction::kLinear);
   JXL_RETURN_IF_ERROR(linear_rec2020.CreateICC());
   JXL_RETURN_IF_ERROR(
       ib->TransformTo(linear_rec2020, *JxlGetDefaultCms(), pool));

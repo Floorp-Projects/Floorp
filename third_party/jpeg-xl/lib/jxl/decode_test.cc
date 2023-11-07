@@ -1740,7 +1740,7 @@ TEST_P(DecodeAllEncodingsTest, PreserveOriginalProfileTest) {
   jxl::ColorEncoding c_in = jxl::test::ColorEncodingFromDescriptor(cdesc);
   if (c_in.GetRenderingIntent() != jxl::RenderingIntent::kRelative) return;
   std::string color_space_in = Description(c_in);
-  float intensity_in = c_in.tf.IsPQ() ? 10000 : 255;
+  float intensity_in = c_in.Tf().IsPQ() ? 10000 : 255;
   printf("Testing input color space %s\n", color_space_in.c_str());
   jxl::TestCodestreamParams params;
   params.color_space = color_space_in;
@@ -1785,7 +1785,7 @@ void SetPreferredColorProfileTest(
       jxl::test::GetSomeTestImage(xsize, ysize, num_channels, 0);
   JxlPixelFormat format = {num_channels, JXL_TYPE_UINT16, JXL_BIG_ENDIAN, 0};
   std::string color_space_in = Description(c_in);
-  float intensity_in = c_in.tf.IsPQ() ? 10000 : 255;
+  float intensity_in = c_in.Tf().IsPQ() ? 10000 : 255;
   jxl::TestCodestreamParams params;
   params.color_space = color_space_in;
   params.intensity_target = intensity_in;
@@ -1811,7 +1811,7 @@ void SetPreferredColorProfileTest(
         continue;
       }
     }
-    if (c_out.tf.IsHLG() && intensity_out > 300) {
+    if (c_out.Tf().IsHLG() && intensity_out > 300) {
       // The Linear->HLG OOTF function at this intensity level can push
       // saturated colors out of gamut, so we would need gamut mapping in
       // this case too.
@@ -1837,7 +1837,8 @@ void SetPreferredColorProfileTest(
     JxlColorEncoding encoding_out;
     EXPECT_TRUE(jxl::ParseDescription(color_space_out, &encoding_out));
     if (c_out.GetColorSpace() == jxl::ColorSpace::kXYB &&
-        (c_in.GetPrimariesType() != jxl::Primaries::kSRGB || c_in.tf.IsPQ())) {
+        (c_in.GetPrimariesType() != jxl::Primaries::kSRGB ||
+         c_in.Tf().IsPQ())) {
       EXPECT_EQ(JXL_DEC_ERROR,
                 JxlDecoderSetPreferredColorProfile(dec, &encoding_out));
       JxlDecoderDestroy(dec);
@@ -3741,7 +3742,8 @@ void AnalyzeCodestream(const jxl::PaddedBytes& data,
     ASSERT_TRUE(jxl::ReadICC(&br, &icc_data));
     jxl::IccBytes icc;
     jxl::Span<const uint8_t>(icc_data).AppendTo(&icc);
-    ASSERT_TRUE(metadata.m.color_encoding.SetICCRaw(std::move(icc)));
+    ASSERT_TRUE(!icc.empty());
+    metadata.m.color_encoding.SetICCRaw(std::move(icc));
   }
   ASSERT_TRUE(br.JumpToByteBoundary());
   bool has_preview = metadata.m.have_preview;

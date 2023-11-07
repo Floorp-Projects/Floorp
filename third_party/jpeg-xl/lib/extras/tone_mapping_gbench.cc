@@ -19,7 +19,7 @@ static void BM_ToneMapping(benchmark::State& state) {
   linear_rec2020.SetColorSpace(ColorSpace::kRGB);
   JXL_CHECK(linear_rec2020.SetPrimariesType(Primaries::k2100));
   JXL_CHECK(linear_rec2020.SetWhitePointType(WhitePoint::kD65));
-  linear_rec2020.tf.SetTransferFunction(TransferFunction::kLinear);
+  linear_rec2020.Tf().SetTransferFunction(TransferFunction::kLinear);
   JXL_CHECK(linear_rec2020.CreateICC());
 
   for (auto _ : state) {

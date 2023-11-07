@@ -1071,11 +1071,12 @@ JxlDecoderStatus JxlDecoderReadAllHeaders(JxlDecoder* dec) {
       // Other non-successful status is an error
       return JXL_DEC_ERROR;
     }
-    IccBytes icc;
-    Span<const uint8_t>(decoded_icc).AppendTo(&icc);
-    if (!dec->metadata.m.color_encoding.SetICCRaw(std::move(icc))) {
+    if (decoded_icc.empty()) {
       return JXL_DEC_ERROR;
     }
+    IccBytes icc;
+    Span<const uint8_t>(decoded_icc).AppendTo(&icc);
+    dec->metadata.m.color_encoding.SetICCRaw(std::move(icc));
   }
 
   dec->got_all_headers = true;
