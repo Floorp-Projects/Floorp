@@ -53,18 +53,18 @@ class Layer(MachLogger):
         return self.env.get_arg(name, default, self)
 
     def __enter__(self):
-        self.debug("Running %s:setup" % self.name)
+        self.info("Running %s:setup" % self.name)
         self.setup()
         return self
 
     def __exit__(self, type, value, traceback):
         # XXX deal with errors here
-        self.debug("Running %s:teardown" % self.name)
+        self.info("Running %s:teardown" % self.name)
         self.teardown()
 
     def __call__(self, metadata):
         has_exc_handler = self.env.hooks.exists("on_exception")
-        self.debug("Running %s:run" % self.name)
+        self.info("Running %s:run" % self.name)
         try:
             metadata = self.run(metadata)
         except Exception as e:

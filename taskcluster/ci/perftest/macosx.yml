@@ -8,6 +8,8 @@ job-defaults:
         build:
             - artifact: target.mozinfo.json
             - artifact: target.common.tests.tar.gz
+            - artifact: target.condprof.tests.tar.gz
+            - artifact: target.mochitest.tests.tar.gz
             - artifact: target.xpcshell.tests.tar.gz
             - artifact: target.perftests.tests.tar.gz
             - artifact: target.dmg
