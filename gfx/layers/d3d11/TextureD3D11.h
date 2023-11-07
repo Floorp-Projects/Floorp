@@ -382,7 +382,7 @@ class DXGITextureHostD3D11 : public TextureHost {
   uint32_t mArrayIndex = 0;
   RefPtr<DataTextureSourceD3D11> mTextureSource;
   gfx::IntSize mSize;
-  WindowsHandle mHandle;
+  HANDLE mHandle;
   gfx::SurfaceFormat mFormat;
   bool mHasKeyedMutex;
 
@@ -441,7 +441,7 @@ class DXGIYCbCrTextureHostD3D11 : public TextureHost {
   gfx::IntSize mSize;
   gfx::IntSize mSizeY;
   gfx::IntSize mSizeCbCr;
-  WindowsHandle mHandles[3];
+  HANDLE mHandles[3];
   bool mIsLocked;
   gfx::ColorDepth mColorDepth;
   gfx::YUVColorSpace mYUVColorSpace;

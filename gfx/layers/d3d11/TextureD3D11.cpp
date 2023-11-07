@@ -761,7 +761,7 @@ DXGITextureHostD3D11::DXGITextureHostD3D11(
       mGpuProcessTextureId(aDescriptor.gpuProcessTextureId()),
       mArrayIndex(aDescriptor.arrayIndex()),
       mSize(aDescriptor.size()),
-      mHandle(aDescriptor.handle()),
+      mHandle((HANDLE)aDescriptor.handle()),
       mFormat(aDescriptor.format()),
       mHasKeyedMutex(aDescriptor.hasKeyedMutex()),
       mColorSpace(aDescriptor.colorSpace()),
@@ -1088,9 +1088,9 @@ DXGIYCbCrTextureHostD3D11::DXGIYCbCrTextureHostD3D11(
       mColorDepth(aDescriptor.colorDepth()),
       mYUVColorSpace(aDescriptor.yUVColorSpace()),
       mColorRange(aDescriptor.colorRange()) {
-  mHandles[0] = aDescriptor.handleY();
-  mHandles[1] = aDescriptor.handleCb();
-  mHandles[2] = aDescriptor.handleCr();
+  mHandles[0] = (HANDLE)aDescriptor.handleY();
+  mHandles[1] = (HANDLE)aDescriptor.handleCb();
+  mHandles[2] = (HANDLE)aDescriptor.handleCr();
 }
 
 void DXGIYCbCrTextureHostD3D11::CreateRenderTexture(

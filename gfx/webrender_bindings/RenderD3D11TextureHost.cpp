@@ -21,8 +21,7 @@ namespace mozilla {
 namespace wr {
 
 RenderDXGITextureHost::RenderDXGITextureHost(
-    WindowsHandle aHandle,
-    Maybe<layers::GpuProcessTextureId>& aGpuProcessTextureId,
+    HANDLE aHandle, Maybe<layers::GpuProcessTextureId>& aGpuProcessTextureId,
     uint32_t aArrayIndex, gfx::SurfaceFormat aFormat,
     gfx::ColorSpace2 aColorSpace, gfx::ColorRange aColorRange,
     gfx::IntSize aSize, bool aHasKeyedMutex)
@@ -445,7 +444,7 @@ bool RenderDXGITextureHost::SyncObjectNeeded() {
 }
 
 RenderDXGIYCbCrTextureHost::RenderDXGIYCbCrTextureHost(
-    WindowsHandle (&aHandles)[3], gfx::YUVColorSpace aYUVColorSpace,
+    HANDLE (&aHandles)[3], gfx::YUVColorSpace aYUVColorSpace,
     gfx::ColorDepth aColorDepth, gfx::ColorRange aColorRange,
     gfx::IntSize aSizeY, gfx::IntSize aSizeCbCr)
     : mHandles{aHandles[0], aHandles[1], aHandles[2]},
