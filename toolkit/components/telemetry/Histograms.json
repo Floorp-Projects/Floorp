@@ -10817,23 +10817,6 @@
     "n_buckets": 10,
     "description": "Whenever the same-process MessageManager cannot be sent through sendAsyncMessage as it would cause an OOM, the size of the message content, in kb."
   },
-  "SLOW_ADDON_WARNING_STATES": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "expires_in_version": "never",
-    "kind": "enumerated",
-    "n_values": 20,
-    "description": "The states the Slow Add-on Warning goes through. 0: Displayed the warning. 1: User clicked on 'Disable add-on'. 2: User clicked 'Ignore add-on for now'. 3: User clicked 'Ignore add-on permanently'. 4: User closed notification. Other values are reserved for future uses."
-  },
-  "SLOW_ADDON_WARNING_RESPONSE_TIME": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 86400000,
-    "n_buckets": 30,
-    "description": "Time elapsed between before responding to Slow Add-on Warning UI (ms). Not updated if the user doesn't respond at all."
-  },
   "SEARCH_COUNTS": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
@@ -10957,15 +10940,6 @@
     "expires_in_version": "never",
     "kind": "flag",
     "description": "Whether content ever accesed the Components shim in this session"
-  },
-  "CHECK_ADDONS_MODIFIED_MS": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "expires_in_version": "never",
-    "kind": "exponential",
-    "high": 5000,
-    "n_buckets": 15,
-    "description": "Time (ms) it takes to figure out extension last modified time"
   },
   "SSL_SUCCESFUL_CERT_VALIDATION_TIME_MOZILLAPKIX": {
     "record_in_processes": ["main", "content"],
