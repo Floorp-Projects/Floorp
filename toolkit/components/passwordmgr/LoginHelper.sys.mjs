@@ -955,7 +955,7 @@ export const LoginHelper = {
           "Can't add a login with both a httpRealm and formActionOrigin."
         );
       }
-    } else if (newLogin.httpRealm) {
+    } else if (newLogin.httpRealm || newLogin.httpRealm == "") {
       // We have a HTTP realm. Can't have a form submit URL.
       if (newLogin.formActionOrigin != null) {
         throw new Error(

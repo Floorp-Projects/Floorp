@@ -431,6 +431,14 @@ LoginTestUtils.testData = {
         "the username",
         "the password"
       ),
+      // null formActionOrigin, empty httpRealm
+      new LoginInfo(
+        "http://example.net",
+        null,
+        "",
+        "the username",
+        "the password"
+      ),
 
       // --- Examples of logins added by extensions (chrome scheme) ---
 
