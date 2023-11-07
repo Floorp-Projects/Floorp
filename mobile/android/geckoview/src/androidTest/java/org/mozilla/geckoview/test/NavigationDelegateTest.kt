@@ -132,9 +132,7 @@ class NavigationDelegateTest : BaseSessionTest() {
                 }
 
                 @AssertCalled(count = 1, order = [2])
-                override fun onTitleChange(session: GeckoSession, title: String?) {
-                    assertThat("Title should not be empty", title, not(isEmptyOrNullString()))
-                }
+                override fun onTitleChange(session: GeckoSession, title: String?) {}
             })
         }
     }
@@ -156,7 +154,7 @@ class NavigationDelegateTest : BaseSessionTest() {
             testLoader,
             expectedCategory,
             expectedError,
-            createTestUrl(HELLO_HTML_PATH),
+            "about:blank",
         )
         testLoadErrorWithErrorPage(
             testLoader,
@@ -211,9 +209,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         if (errorPageUrl != null) {
             sessionRule.waitUntilCalled(object : ContentDelegate {
                 @AssertCalled(count = 1)
-                override fun onTitleChange(session: GeckoSession, title: String?) {
-                    assertThat("Title should not be empty", title, not(isEmptyOrNullString()))
-                }
+                override fun onTitleChange(session: GeckoSession, title: String?) {}
             })
         }
     }
@@ -223,7 +219,7 @@ class NavigationDelegateTest : BaseSessionTest() {
         expectedCategory: Int,
         expectedError: Int,
     ) {
-        testLoadEarlyErrorWithErrorPage(testUri, expectedCategory, expectedError, createTestUrl(HELLO_HTML_PATH))
+        testLoadEarlyErrorWithErrorPage(testUri, expectedCategory, expectedError, "about:blank")
         testLoadEarlyErrorWithErrorPage(testUri, expectedCategory, expectedError, null)
     }
 
@@ -249,9 +245,6 @@ class NavigationDelegateTest : BaseSessionTest() {
     }
 
     @Test fun loadUnknownHost() {
-        // TODO: Bug 1849060
-        assumeThat(sessionRule.env.isFission, equalTo(false))
-
         testLoadExpectError(
             UNKNOWN_HOST_URI,
             WebRequestError.ERROR_CATEGORY_URI,
@@ -308,8 +301,6 @@ class NavigationDelegateTest : BaseSessionTest() {
     }
 
     @Test fun loadUntrusted() {
-        // TODO: Bug 1849060
-        assumeThat(sessionRule.env.isFission, equalTo(false))
         val host = if (sessionRule.env.isAutomation) {
             "expired.example.com"
         } else {
@@ -322,32 +313,34 @@ class NavigationDelegateTest : BaseSessionTest() {
             WebRequestError.ERROR_SECURITY_BAD_CERT,
         )
 
-        mainSession.waitForJS("document.addCertException(false)")
-        mainSession.delegateDuringNextWait(
-            object : ProgressDelegate, NavigationDelegate, ContentDelegate {
-                @AssertCalled(count = 1, order = [1])
-                override fun onPageStart(session: GeckoSession, url: String) {
-                    assertThat("URI should be " + uri, url, equalTo(uri))
-                }
+        if (!sessionRule.env.isFission) { // todo: Bug 1673954
+            mainSession.waitForJS("document.addCertException(false)")
+            mainSession.delegateDuringNextWait(
+                object : ProgressDelegate, NavigationDelegate, ContentDelegate {
+                    @AssertCalled(count = 1, order = [1])
+                    override fun onPageStart(session: GeckoSession, url: String) {
+                        assertThat("URI should be " + uri, url, equalTo(uri))
+                    }
 
-                @AssertCalled(count = 1, order = [2])
-                override fun onSecurityChange(
-                    session: GeckoSession,
-                    securityInfo: ProgressDelegate.SecurityInformation,
-                ) {
-                    assertThat("Should be exception", securityInfo.isException, equalTo(true))
-                    assertThat("Should not be secure", securityInfo.isSecure, equalTo(false))
-                }
+                    @AssertCalled(count = 1, order = [2])
+                    override fun onSecurityChange(
+                        session: GeckoSession,
+                        securityInfo: ProgressDelegate.SecurityInformation,
+                    ) {
+                        assertThat("Should be exception", securityInfo.isException, equalTo(true))
+                        assertThat("Should not be secure", securityInfo.isSecure, equalTo(false))
+                    }
 
-                @AssertCalled(count = 1, order = [3])
-                override fun onPageStop(session: GeckoSession, success: Boolean) {
-                    assertThat("Load should succeed", success, equalTo(true))
-                    sessionRule.removeAllCertOverrides()
-                }
-            },
-        )
-        mainSession.evaluateJS("location.reload()")
-        mainSession.waitForPageStop()
+                    @AssertCalled(count = 1, order = [3])
+                    override fun onPageStop(session: GeckoSession, success: Boolean) {
+                        assertThat("Load should succeed", success, equalTo(true))
+                        sessionRule.removeAllCertOverrides()
+                    }
+                },
+            )
+            mainSession.evaluateJS("location.reload()")
+            mainSession.waitForPageStop()
+        }
     }
 
     @Test fun loadWithHTTPSOnlyMode() {
@@ -584,7 +577,7 @@ class NavigationDelegateTest : BaseSessionTest() {
                         error.code,
                         equalTo(WebRequestError.ERROR_HTTPS_ONLY),
                     )
-                    return GeckoResult.fromValue(createTestUrl(HELLO_HTML_PATH))
+                    return GeckoResult.fromValue("about:blank")
                 }
 
                 @AssertCalled(count = 1)
@@ -608,9 +601,7 @@ class NavigationDelegateTest : BaseSessionTest() {
             }
 
             @AssertCalled(count = 1, order = [2])
-            override fun onTitleChange(session: GeckoSession, title: String?) {
-                assertThat("Title should not be empty", title, not(isEmptyOrNullString()))
-            }
+            override fun onTitleChange(session: GeckoSession, title: String?) {}
         })
 
         sessionRule.delegateDuringNextWait(
@@ -1047,9 +1038,6 @@ class NavigationDelegateTest : BaseSessionTest() {
     }
 
     @Test fun safebrowsingPhishing() {
-        // TODO: Bug 1849060
-        assumeThat(sessionRule.env.isFission, equalTo(false))
-
         val phishingUri = "https://www.itisatrap.org/firefox/its-a-trap.html"
         val category = ContentBlocking.SafeBrowsing.PHISHING
 
@@ -1082,9 +1070,6 @@ class NavigationDelegateTest : BaseSessionTest() {
     }
 
     @Test fun safebrowsingMalware() {
-        // TODO: Bug 1849060
-        assumeThat(sessionRule.env.isFission, equalTo(false))
-
         val malwareUri = "https://www.itisatrap.org/firefox/its-an-attack.html"
         val category = ContentBlocking.SafeBrowsing.MALWARE
 
@@ -1116,8 +1101,6 @@ class NavigationDelegateTest : BaseSessionTest() {
     }
 
     @Test fun safebrowsingUnwanted() {
-        // TODO: Bug 1849060
-        assumeThat(sessionRule.env.isFission, equalTo(false))
         val unwantedUri = "https://www.itisatrap.org/firefox/unwanted.html"
         val category = ContentBlocking.SafeBrowsing.UNWANTED
 
@@ -1149,9 +1132,6 @@ class NavigationDelegateTest : BaseSessionTest() {
     }
 
     @Test fun safebrowsingHarmful() {
-        // TODO: Bug 1849060
-        assumeThat(sessionRule.env.isFission, equalTo(false))
-
         val harmfulUri = "https://www.itisatrap.org/firefox/harmful.html"
         val category = ContentBlocking.SafeBrowsing.HARMFUL
 

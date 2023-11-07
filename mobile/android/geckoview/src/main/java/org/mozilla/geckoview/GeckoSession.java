@@ -61,6 +61,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
+import java.util.Locale;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
@@ -751,6 +752,11 @@ public class GeckoSession {
                     url -> {
                       if (url == null) {
                         throw new IllegalArgumentException("abort");
+                      }
+                      final String lowerCasedUri = url.toLowerCase(Locale.ROOT);
+                      if (lowerCasedUri.startsWith("http") || lowerCasedUri.startsWith("https")) {
+                        throw new IllegalArgumentException(
+                            "Unsupported URI scheme for an error page");
                       }
                       return url;
                     }));
@@ -4998,9 +5004,9 @@ public class GeckoSession {
      * @param session The GeckoSession that initiated the callback.
      * @param uri The URI that failed to load.
      * @param error A WebRequestError containing details about the error
-     * @return A URI to display as an error. Returning null will halt the load entirely. The
-     *     following special methods are made available to the URI: -
-     *     document.addCertException(isTemporary), returns Promise -
+     * @return A URI to display as an error (cannot be http/https). Returning null or http/https URL
+     *     will halt the load entirely. The following special methods are made available to the URI:
+     *     - document.addCertException(isTemporary), returns Promise -
      *     document.getFailedCertSecurityInfo(), returns FailedCertSecurityInfo -
      *     document.getNetErrorInfo(), returns NetErrorInfo document.reloadWithHttpsOnlyException()
      * @see <a
