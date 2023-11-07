@@ -35,6 +35,7 @@ prefs = [
   "privacy.partition.network_state=false",
   "network.proxy.allow_hijacking_localhost=true",
   "media.devices.enumerate.legacy.enabled=false",
+  "media.aboutwebrtc.hist.poll_interval_ms=2000",
 ]
 
 ["test_peerConnection_addAudioTrackToExistingVideoStream.html"]
