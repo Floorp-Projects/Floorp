@@ -256,13 +256,27 @@ var SessionSaverInternal = {
     for (let window of windows) {
       for (let tab of window.tabs) {
         let ssbEnabled = tab.floorpSSB == "true";
-
         if (ssbEnabled && windows.length == 1){
           this.updateLastSaveTime();
           return Promise.resolve();
         } else if (ssbEnabled) {
           // Remove Window
           delete state.windows[window];
+        }
+      }
+    }
+
+    for (let windowKey in state.windows) {
+      let window = state.windows[windowKey];
+      for (let tab of window.tabs) {
+        let ssbEnabled = tab.floorpSSB == "true";
+        if (ssbEnabled && Object.keys(state.windows).length == 1){
+          this.updateLastSaveTime();
+          return Promise.resolve();
+        } else if (ssbEnabled) {
+          // Remove Window
+          delete state.windows[windowKey];
+          delete state._closedWindows[windowKey];
         }
       }
     }

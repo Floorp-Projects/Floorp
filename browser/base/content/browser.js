@@ -2357,13 +2357,6 @@ var gBrowserInit = {
       let uri = window.arguments?.[0];
 
       /*** Floorp Injections *********************************************************************************************/
-      let firstTab = gBrowser.tabs[0];
-      let pwaIsTrue = firstTab.getAttribute("floorpSSB");
-
-      if (pwaIsTrue) {
-        window.close();
-        return
-      }
 
       if (uri) {
         try {
@@ -2399,7 +2392,7 @@ var gBrowserInit = {
             );
           }
         } catch (e) {
-          console.log(e);
+          console.error(e);
         }
       }
 

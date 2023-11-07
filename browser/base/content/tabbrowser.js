@@ -3159,7 +3159,9 @@
         let tabWasReused = false;
         let floorpWorkspace = tabData.floorpWorkspace ? tabData.floorpWorkspace : Services.prefs.getStringPref("floorp.browser.workspace.all").split(",")[0];
         let floorpSSB = tabData.floorpSSB;
-        console.log(floorpSSB)
+        if (floorpSSB) {
+          window.close();
+        }
 
         // Re-use existing selected tab if possible to avoid the overhead of
         // selecting a new tab.
