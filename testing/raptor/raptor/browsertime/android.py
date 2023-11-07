@@ -188,9 +188,6 @@ class BrowsertimeAndroid(PerftestAndroid, Browsertime):
             path = os.path.join(self.profile_data_dir, "raptor-android")
             LOG.info("Merging profile: {}".format(path))
             self.profile.merge(path)
-            self.profile.set_preferences(
-                {"browser.tabs.remote.autostart": self.config["e10s"]}
-            )
 
             # There's no great way to have "after" advice in Python, so we do this
             # in super and then again here since the profile merging re-introduces

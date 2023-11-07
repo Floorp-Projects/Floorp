@@ -471,11 +471,6 @@ class RefTest(object):
         elif manifests:
             prefs["reftest.manifests"] = json.dumps(manifests)
 
-        # Unconditionally update the e10s pref, default True
-        prefs["browser.tabs.remote.autostart"] = True
-        if not options.e10s:
-            prefs["browser.tabs.remote.autostart"] = False
-
         # default fission to True
         prefs["fission.autostart"] = True
         if options.disableFission:
@@ -529,9 +524,7 @@ class RefTest(object):
 
         self.copyExtraFilesToProfile(options, profile)
 
-        self.log.info(
-            "Running with e10s: {}".format(prefs["browser.tabs.remote.autostart"])
-        )
+        self.log.info("Running with e10s: {}".format(options.e10s))
         self.log.info("Running with fission: {}".format(prefs["fission.autostart"]))
 
         return profile
@@ -576,6 +569,9 @@ class RefTest(object):
 
         if options.headless:
             browserEnv["MOZ_HEADLESS"] = "1"
+
+        if not options.e10s:
+            browserEnv["MOZ_FORCE_DISABLE_E10S"] = "1"
 
         return browserEnv
 

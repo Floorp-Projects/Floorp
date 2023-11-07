@@ -2005,9 +2005,6 @@ pref("dom.ipc.keepProcessesAlive.privilegedabout", 1);
 // Disable support for SVG
 pref("svg.disabled", false);
 
-// Disable e10s for Gecko by default. This is overridden in firefox.js.
-pref("browser.tabs.remote.autostart", false);
-
 // This pref will cause assertions when a remoteType triggers a process switch
 // to a new remoteType it should not be able to trigger.
 pref("browser.tabs.remote.enforceRemoteTypeRestrictions", false);
