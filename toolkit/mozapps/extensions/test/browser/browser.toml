@@ -59,6 +59,8 @@ prefs = [
 ["browser_addon_list_reordering.js"]
 fail-if = ["a11y_checks"] # Bug 1854646 clicked h1.header-name may not be focusable
 
+["browser_amo_abuse_report.js"]
+
 ["browser_bug572561.js"]
 
 ["browser_checkAddonCompatibility.js"]

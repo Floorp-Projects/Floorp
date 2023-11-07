@@ -1846,6 +1846,9 @@ pref("extensions.abuseReport.enabled", true);
 pref("extensions.abuseReport.amWebAPI.enabled", true);
 pref("extensions.abuseReport.url", "https://services.addons.mozilla.org/api/v4/abuse/report/addon/");
 pref("extensions.abuseReport.amoDetailsURL", "https://services.addons.mozilla.org/api/v4/addons/addon/");
+// Whether Firefox integrated abuse reporting feature should be opening the new abuse report form hosted on AMO.
+pref("extensions.abuseReport.amoFormEnabled", false);
+pref("extensions.abuseReport.amoFormURL", "https://addons.mozilla.org/%LOCALE%/%APP%/feedback/addon/%addonID%/");
 
 // Blocklist preferences
 pref("extensions.blocklist.enabled", true);

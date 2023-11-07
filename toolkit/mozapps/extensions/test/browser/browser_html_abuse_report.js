@@ -6,6 +6,13 @@
 loadTestSubscript("head_abuse_report.js");
 
 add_setup(async function () {
+  // Make sure the integrated abuse report panel is the one enabled
+  // while this test file runs (instead of the AMO hosted form).
+  // NOTE: behaviors expected when amoFormEnabled is true are tested
+  // in the separate browser_amo_abuse_report.js test file.
+  await SpecialPowers.pushPrefEnv({
+    set: [["extensions.abuseReport.amoFormEnabled", false]],
+  });
   await AbuseReportTestUtils.setup();
 });
 
