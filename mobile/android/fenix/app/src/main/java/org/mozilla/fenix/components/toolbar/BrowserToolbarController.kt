@@ -60,9 +60,9 @@ interface BrowserToolbarController {
     fun handleShoppingCfrActionClick()
 
     /**
-     * @see [BrowserToolbarInteractor.onShoppingCfrDismiss]
+     * @see [BrowserToolbarInteractor.onShoppingCfrDisplayed]
      */
-    fun handleShoppingCfrDismiss()
+    fun handleShoppingCfrDisplayed()
 
     /**
      * @see [BrowserToolbarInteractor.onTranslationsButtonClicked]
@@ -211,13 +211,12 @@ class DefaultBrowserToolbarController(
     }
 
     override fun handleShoppingCfrActionClick() {
-        updateShoppingCfrSettings()
         navController.navigate(
             BrowserFragmentDirections.actionBrowserFragmentToReviewQualityCheckDialogFragment(),
         )
     }
 
-    override fun handleShoppingCfrDismiss() {
+    override fun handleShoppingCfrDisplayed() {
         updateShoppingCfrSettings()
     }
 

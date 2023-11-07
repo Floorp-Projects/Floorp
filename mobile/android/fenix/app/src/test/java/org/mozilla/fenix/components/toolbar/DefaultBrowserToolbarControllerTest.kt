@@ -382,21 +382,18 @@ class DefaultBrowserToolbarControllerTest {
     }
 
     @Test
-    fun handleShoppingCfrActionClickAfterShowingThreeTimes() {
+    fun handleShoppingCfrActionClick() {
         val controller = createController()
-        every { activity.settings().reviewQualityCheckCfrDisplayTimeInMillis } returns System.currentTimeMillis()
-        every { activity.settings().reviewQualityCheckCFRClosedCounter } returns 3
 
         controller.handleShoppingCfrActionClick()
 
         verify {
-            activity.settings().shouldShowReviewQualityCheckCFR = false
             navController.navigate(BrowserFragmentDirections.actionBrowserFragmentToReviewQualityCheckDialogFragment())
         }
     }
 
     @Test
-    fun handleShoppingCfrDismissOnce() {
+    fun handleShoppingCfrDisplayedOnce() {
         val controller = createController()
         val mockSettings = mockk<Settings> {
             every { reviewQualityCheckCfrDisplayTimeInMillis } returns System.currentTimeMillis()
@@ -407,14 +404,14 @@ class DefaultBrowserToolbarControllerTest {
         }
         every { activity.settings() } returns mockSettings
 
-        controller.handleShoppingCfrDismiss()
+        controller.handleShoppingCfrDisplayed()
 
         verify(exactly = 0) { mockSettings.shouldShowReviewQualityCheckCFR = false }
         verify { mockSettings.reviewQualityCheckCfrDisplayTimeInMillis = any() }
     }
 
     @Test
-    fun handleShoppingCfrDismissTwice() {
+    fun handleShoppingCfrDisplayedTwice() {
         val controller = createController()
         val mockSettings = mockk<Settings> {
             every { reviewQualityCheckCfrDisplayTimeInMillis } returns System.currentTimeMillis()
@@ -425,14 +422,14 @@ class DefaultBrowserToolbarControllerTest {
         }
         every { activity.settings() } returns mockSettings
 
-        controller.handleShoppingCfrDismiss()
+        controller.handleShoppingCfrDisplayed()
 
         verify(exactly = 0) { mockSettings.shouldShowReviewQualityCheckCFR = false }
         verify { mockSettings.reviewQualityCheckCfrDisplayTimeInMillis = any() }
     }
 
     @Test
-    fun handleShoppingCfrDismissThreeTimes() {
+    fun handleShoppingCfrDisplayedThreeTimes() {
         val controller = createController()
         val mockSettings = mockk<Settings> {
             every { reviewQualityCheckCfrDisplayTimeInMillis } returns System.currentTimeMillis()
@@ -443,7 +440,7 @@ class DefaultBrowserToolbarControllerTest {
         }
         every { activity.settings() } returns mockSettings
 
-        controller.handleShoppingCfrDismiss()
+        controller.handleShoppingCfrDisplayed()
 
         verify { mockSettings.shouldShowReviewQualityCheckCFR = false }
         verify(exactly = 0) { mockSettings.reviewQualityCheckCfrDisplayTimeInMillis = any() }

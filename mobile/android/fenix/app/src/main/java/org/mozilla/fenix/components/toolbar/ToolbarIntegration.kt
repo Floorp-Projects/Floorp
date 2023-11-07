@@ -103,7 +103,7 @@ class DefaultToolbarIntegration(
         isPrivate = isPrivate,
         sessionId = sessionId,
         onShoppingCfrActionClicked = interactor::onShoppingCfrActionClicked,
-        onShoppingCfrDismiss = interactor::onShoppingCfrDismiss,
+        onShoppingCfrDisplayed = interactor::onShoppingCfrDisplayed,
     )
 
     init {
