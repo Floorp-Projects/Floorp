@@ -300,7 +300,7 @@ class HangMonitorParent : public PProcessHangMonitorParent {
   bool IsOnThread() { return mHangMonitor->IsOnThread(); }
 
  private:
-  ~HangMonitorParent() override;
+  ~HangMonitorParent() override = default;
 
   void SendHangNotification(const SlowScriptData& aSlowScriptData,
                             const nsString& aBrowserDumpId);
@@ -331,11 +331,6 @@ class HangMonitorParent : public PProcessHangMonitorParent {
 
   // Must be accessed with mMonitor held.
   bool mShutdownDone MOZ_GUARDED_BY(mMonitor);
-  // Map from plugin ID to crash dump ID. Protected by
-  // mBrowserCrashDumpHashLock.
-  nsTHashMap<nsUint32HashKey, nsString> mBrowserCrashDumpIds
-      MOZ_GUARDED_BY(mMonitor);
-  Mutex mBrowserCrashDumpHashLock MOZ_GUARDED_BY(mMonitor);
   mozilla::ipc::TaskFactory<HangMonitorParent> mMainThreadTaskFactory
       MOZ_GUARDED_BY(mMonitor);
 };
@@ -791,19 +786,8 @@ HangMonitorParent::HangMonitorParent(ProcessHangMonitor* aMonitor)
       mIPCOpen(true),
       mMonitor("HangMonitorParent lock"),
       mShutdownDone(false),
-      mBrowserCrashDumpHashLock("mBrowserCrashDumpIds lock"),
       mMainThreadTaskFactory(this) {
   MOZ_RELEASE_ASSERT(NS_IsMainThread());
-}
-
-HangMonitorParent::~HangMonitorParent() {
-  MutexAutoLock lock(mBrowserCrashDumpHashLock);
-
-  for (const auto& crashId : mBrowserCrashDumpIds.Values()) {
-    if (!crashId.IsEmpty()) {
-      CrashReporter::DeleteMinidumpFilesForID(crashId);
-    }
-  }
 }
 
 void HangMonitorParent::Shutdown() {
