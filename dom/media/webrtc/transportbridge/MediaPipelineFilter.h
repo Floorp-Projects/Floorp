@@ -17,11 +17,11 @@
 #include <set>
 #include <vector>
 
+#include "api/rtp_parameters.h"
 #include "mozilla/Maybe.h"
 
 namespace webrtc {
 struct RTPHeader;
-struct RtpExtension;
 }  // namespace webrtc
 
 namespace mozilla {
