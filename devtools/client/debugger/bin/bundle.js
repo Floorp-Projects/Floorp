@@ -63,6 +63,7 @@ async function bundleRollup() {
         plugins: [
           commonjs({
             transformMixedEsModules: true,
+            strictRequires: true,
           }),
           injectProcessEnv({ NODE_ENV: "production" }),
           nodeResolve(),
