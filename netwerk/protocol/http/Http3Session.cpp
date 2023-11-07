@@ -264,17 +264,13 @@ void Http3Session::Shutdown() {
           mNetAddr->GetNetAddr(&addr);
           gHttpHandler->ConnMgr()->SetRetryDifferentIPFamilyForHttp3(
               mConnInfo, addr.raw.family);
-          nsHttpTransaction* trans =
-              stream->Transaction()->QueryHttpTransaction();
-          if (trans) {
-            // This is a bit hacky. We redispatch the transaction here to avoid
-            // touching the complicated retry logic in nsHttpTransaction.
-            trans->RemoveConnection();
-            Unused << gHttpHandler->InitiateTransaction(trans,
-                                                        trans->Priority());
-          } else {
-            stream->Close(NS_ERROR_NET_RESET);
-          }
+          // We want the transaction to be restarted with the same connection
+          // info.
+          stream->Transaction()->DoNotRemoveAltSvc();
+          // We already set the preference in SetRetryDifferentIPFamilyForHttp3,
+          // so we want to keep it for the next retry.
+          stream->Transaction()->DoNotResetIPFamilyPreference();
+          stream->Close(NS_ERROR_NET_RESET);
           // Since Http3Session::Shutdown can be called multiple times, we set
           // mDontExclude for not putting this domain into the excluded list.
           mDontExclude = true;
