@@ -44,10 +44,14 @@ body {
 #root {
   float: left; /* The markup view should always be LTR */
   min-width: 100%;
-  /* Reserve extra space (in addition to the indent size) for DOM mutation
-   * breakpoint and pseudo icons. */
-  padding-left: 6px;
   box-sizing: border-box;
+
+  & > ul[role="tree"] {
+    /* Reserve extra space (in addition to the indent size) for DOM mutation
+    * breakpoint and pseudo icons. */
+    padding-inline-start: 6px;
+    outline-offset: -2px;
+  }
 }
 
 /* Reset the global rotation of the icon done for RTL layout.
