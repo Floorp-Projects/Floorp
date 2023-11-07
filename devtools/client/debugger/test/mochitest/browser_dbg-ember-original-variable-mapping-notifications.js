@@ -15,19 +15,45 @@ add_task(async function () {
     "router.js",
     { line: 13, column: 3 },
     async () => {
+      info("Assert the original variable mapping notifications are visible");
       is(
         getScopeNotificationMessage(dbg),
         DEBUGGER_L10N.getFormatStr(
           "scopes.noOriginalScopes",
           DEBUGGER_L10N.getStr("scopes.showOriginalScopes")
         ),
-        "Original mapping is disabled so the notification is visible"
+        "Original mapping is disabled so the scopes notification is visible"
       );
+
+      // Open the expressions pane
+      let notificationText;
+      const notificationVisible = waitUntil(() => {
+        notificationText = getExpressionNotificationMessage(dbg);
+        return notificationText;
+      });
+      await toggleExpressions(dbg);
+      await notificationVisible;
+
+      is(
+        notificationText,
+        DEBUGGER_L10N.getStr("expressions.noOriginalScopes"),
+        "Original mapping is disabled so the expressions notification is visible"
+      );
+
       await toggleMapScopes(dbg);
+
+      info(
+        "Assert the original variable mapping notifications no longer visible"
+      );
       ok(
         !getScopeNotificationMessage(dbg),
-        "Original mapping is enabled so the notification is no longer visible"
+        "Original mapping is enabled so the scopes notification is no longer visible"
       );
+      ok(
+        !getScopeNotificationMessage(dbg),
+        "Original mapping is enabled so the expressions notification is no longer visible"
+      );
+
       await assertScopes(dbg, [
         "Module",
         ["config", "{\u2026}"],
@@ -42,5 +68,11 @@ add_task(async function () {
 function getScopeNotificationMessage(dbg) {
   return dbg.win.document.querySelector(
     ".scopes-pane .pane-info.no-original-scopes-info"
+  )?.innerText;
+}
+
+function getExpressionNotificationMessage(dbg) {
+  return dbg.win.document.querySelector(
+    ".watch-expressions-pane .pane-info.no-original-scopes-info"
   )?.innerText;
 }
