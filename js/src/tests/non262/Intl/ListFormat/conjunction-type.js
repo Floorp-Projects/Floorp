@@ -47,7 +47,11 @@ const styles = ["long", "short", "narrow"];
         },
         "es": { long: [Element("A"), Literal(" y "), Element("B")] },
         "ja": { long: [Element("A"), Literal("、"), Element("B")] },
-        "nl": { long: [Element("A"), Literal(" en "), Element("B")] },
+        "nl": {
+            long: [Element("A"), Literal(" en "), Element("B")],
+            short: [Element("A"), Literal(" & "), Element("B")],
+            narrow: [Element("A"), Literal(", "), Element("B")],
+        },
         "th": { long: [Element("A"), Literal("และ"), Element("B")] },
         "zh": {
           long: [Element("A"), Literal("和"), Element("B")],
@@ -93,6 +97,8 @@ const styles = ["long", "short", "narrow"];
         },
         "nl": {
             long: [Element("A"), Literal(", "), Element("B"), Literal(", "), Element("C"), Literal(" en "), Element("D")],
+            short: [Element("A"), Literal(", "), Element("B"), Literal(", "), Element("C"), Literal(" & "), Element("D")],
+            narrow: [Element("A"), Literal(", "), Element("B"), Literal(", "), Element("C"), Literal(", "), Element("D")],
         },
         "th": {
             long: [Element("A"), Literal(" "), Element("B"), Literal(" "), Element("C"), Literal(" และ"), Element("D")],
