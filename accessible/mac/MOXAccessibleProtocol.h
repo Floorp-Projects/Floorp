@@ -261,6 +261,12 @@
 // AXSelectedRows
 - (NSArray* _Nullable)moxSelectedRows;
 
+// AXARIAPosInSet
+- (NSNumber* _Nullable)moxARIAPosInSet;
+
+// AXARIASetSize
+- (NSNumber* _Nullable)moxARIASetSize;
+
 // Math Attributes
 
 // AXMathRootRadicand

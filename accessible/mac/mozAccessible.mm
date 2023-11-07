@@ -159,6 +159,12 @@ using namespace mozilla::a11y;
     return ![self moxIsLiveRegion];
   }
 
+  if (selector == @selector(moxARIAPosInSet) || selector == @selector
+                                                    (moxARIASetSize)) {
+    GroupPos groupPos = mGeckoAccessible->GroupPosition();
+    return groupPos.setSize == 0;
+  }
+
   if (selector == @selector(moxExpanded)) {
     return [self stateWithMask:states::EXPANDABLE] == 0;
   }
@@ -618,6 +624,16 @@ struct RoleDescrComparator {
 
 - (NSString*)moxARIALive {
   return utils::GetAccAttr(self, nsGkAtoms::aria_live);
+}
+
+- (NSNumber*)moxARIAPosInSet {
+  GroupPos groupPos = mGeckoAccessible->GroupPosition();
+  return @(groupPos.posInSet);
+}
+
+- (NSNumber*)moxARIASetSize {
+  GroupPos groupPos = mGeckoAccessible->GroupPosition();
+  return @(groupPos.setSize);
 }
 
 - (NSString*)moxARIARelevant {
