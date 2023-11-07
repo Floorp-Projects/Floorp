@@ -18,6 +18,10 @@
   box-sizing: border-box;
 }
 
+.source-footer button {
+  outline-offset: -2px;
+}
+
 .source-footer-start {
   display: flex;
   align-items: center;

@@ -7,31 +7,24 @@
   display: flex;
   border-top: 1px solid var(--theme-splitter-color);
   height: var(--editor-searchbar-height);
+  transition: outline 150ms ease-out;
 }
 
-/* display a fake outline above the search bar's top border, and above
-   the source footer's top border */
-.search-bar::before {
-  content: "";
-  position: absolute;
-  z-index: 10;
-  top: -1px;
-  left: 0;
-  right: 0;
-  bottom: -1px;
-  border: solid 1px var(--blue-50);
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 150ms ease-out;
-}
-
-.search-bar:focus-within::before {
-  opacity: 1;
+/* Display an outline on the container when the child input is focused. If another element
+   is focused (e.g. a button), we only want the outline on that element */
+.search-bar:focus-within:has(input:focus-visible) {
+  outline: var(--theme-focus-outline);
+  outline-offset: -2px;
 }
 
 .search-bar .search-outline {
   flex-grow: 1;
   border-width: 0;
+}
+
+/* The outline is set on .search-bar already */
+.search-bar input:focus-visible {
+  outline: none;
 }
 
 .search-bar .result-list {
