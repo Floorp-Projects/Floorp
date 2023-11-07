@@ -220,7 +220,7 @@ add_task(async function test_about_translations_language_identification() {
         is(
           translation,
           translationResult.innerText,
-          "The language identification engine correctly informs the translation."
+          "The language identification correctly informs the translation."
         );
       }
 
