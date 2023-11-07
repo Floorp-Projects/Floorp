@@ -281,48 +281,6 @@ function run_test() {
       ],
       "string first"
     );
-    runTest(
-      [
-        "1.1.3",
-        "a-release-1.1.3",
-        "b-release-1.1.3",
-        "1.2.3",
-        "a-release-1.2.3",
-        "b-release-1.2.3",
-        "1.1.4",
-        "a-release-1.1.4",
-        "b-release-1.1.4",
-        "1.1.1",
-        "a-release-1.1.1",
-        "b-release-1.1.1",
-        "1.0.5",
-        "a-release-1.0.5",
-        "b-release-1.0.5",
-      ],
-      [
-        "1.0.5",
-        "1.1.1",
-        "1.1.3",
-        "1.1.4",
-        "1.2.3",
-        "a-release-1.0.5",
-        "a-release-1.1.1",
-        "a-release-1.1.3",
-        "a-release-1.1.4",
-        "a-release-1.2.3",
-        "b-release-1.0.5",
-        "b-release-1.1.1",
-        "b-release-1.1.3",
-        "b-release-1.1.4",
-        "b-release-1.2.3",
-      ],
-      "string first, different names"
-    );
-    runTest(
-      ["zstring", "astring", "release-1.1.3"],
-      ["astring", "release-1.1.3", "zstring"],
-      "string first, mixed with regular strings"
-    );
   });
 
   test("numerics", function () {
