@@ -1,8 +1,8 @@
 // |reftest| skip-if(!this.hasOwnProperty('Intl'))
 
 var testDataMaximal = {
-    // Keeps "und" primary language.
-    "und-AQ": "und-Latn-AQ",
+    // Used to keep "und" primary language before CLDR 44.
+    "und-AQ": "en-Latn-AQ",
 
     // Modifies primary language.
     "und-Cyrl-RO": "bg-Cyrl-RO",
@@ -13,7 +13,7 @@ var testDataMinimal = {
     "und": "en",
     "und-Thai": "th",
     "und-419": "es-419",
-    "und-150": "ru",
+    "und-150": "en-150",
     "und-AT": "de-AT",
 
     // https://ssl.icu-project.org/trac/ticket/13786

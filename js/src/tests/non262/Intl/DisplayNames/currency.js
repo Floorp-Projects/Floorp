@@ -17,9 +17,7 @@ const tests = {
       "XAU": "XAU",
     },
     narrow: {
-      "USD": "USD",
-      "EUR": "EUR",
-      "CNY": "CNY",
+      "CNY": "¥",
     },
   },
   "de": {

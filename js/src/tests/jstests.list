@@ -686,6 +686,40 @@ skip script test262/built-ins/Temporal/PlainMonthDay/prototype/with/basic.js
 skip script test262/built-ins/Temporal/Calendar/prototype/monthDayFromFields/missing-properties.js
 skip script test262/built-ins/Temporal/Calendar/prototype/monthDayFromFields/fields-missing-properties.js
 
+# https://github.com/tc39/test262/pull/3946
+skip script test262/intl402/Locale/likely-subtags.js
+skip script test262/intl402/Locale/prototype/minimize/removing-likely-subtags-first-adds-likely-subtags.js
+
+# https://github.com/tc39/test262/pull/3947
+skip script test262/built-ins/RegExp/unicode_full_case_folding.js
+
+# Tests need to be regenerated for Unicode 15.1
+# https://github.com/tc39/test262/issues/3945
+skip script test262/built-ins/RegExp/property-escapes/generated/Alphabetic.js
+skip script test262/built-ins/RegExp/property-escapes/generated/XID_Start.js
+skip script test262/built-ins/RegExp/property-escapes/generated/Unified_Ideograph.js
+skip script test262/built-ins/RegExp/property-escapes/generated/XID_Continue.js
+skip script test262/built-ins/RegExp/property-escapes/generated/General_Category_-_Letter.js
+skip script test262/built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Han.js
+skip script test262/built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Malayalam.js
+skip script test262/built-ins/RegExp/property-escapes/generated/Ideographic.js
+skip script test262/built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Sinhala.js
+skip script test262/built-ins/RegExp/property-escapes/generated/General_Category_-_Other.js
+skip script test262/built-ins/RegExp/property-escapes/generated/IDS_Binary_Operator.js
+skip script test262/built-ins/RegExp/property-escapes/generated/General_Category_-_Other_Letter.js
+skip script test262/built-ins/RegExp/property-escapes/generated/Script_-_Han.js
+skip script test262/built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Common.js
+skip script test262/built-ins/RegExp/property-escapes/generated/General_Category_-_Symbol.js
+skip script test262/built-ins/RegExp/property-escapes/generated/Script_-_Common.js
+skip script test262/built-ins/RegExp/property-escapes/generated/ID_Continue.js
+skip script test262/built-ins/RegExp/property-escapes/generated/Sentence_Terminal.js
+skip script test262/built-ins/RegExp/property-escapes/generated/General_Category_-_Unassigned.js
+skip script test262/built-ins/RegExp/property-escapes/generated/ID_Start.js
+skip script test262/built-ins/RegExp/property-escapes/generated/Grapheme_Base.js
+skip script test262/built-ins/RegExp/property-escapes/generated/Assigned.js
+skip script test262/built-ins/RegExp/property-escapes/generated/General_Category_-_Other_Symbol.js
+skip script test262/built-ins/RegExp/property-escapes/generated/Script_Extensions_-_Sharada.js
+
 
 ##############################################
 # Enable Iterator Helpers tests in the shell #
