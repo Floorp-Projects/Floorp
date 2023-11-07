@@ -22,7 +22,7 @@ shopping.settings:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845822
     data_sensitivity:
       - interaction
-    expires: 122 
+    expires: 134
     notification_emails:
       - betling@mozilla.com
       - fx-desktop-shopping-eng@mozilla.com
@@ -42,7 +42,7 @@ shopping.settings:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845822
     data_sensitivity:
       - interaction
-    expires: 122 
+    expires: 134
     notification_emails:
       - betling@mozilla.com
       - fx-desktop-shopping-eng@mozilla.com
@@ -63,7 +63,7 @@ shopping.settings:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845822
     data_sensitivity:
       - interaction
-    expires: 122
+    expires: 134
     notification_emails:
       - betling@mozilla.com
       - fx-desktop-shopping-eng@mozilla.com
@@ -82,7 +82,7 @@ shopping:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1848870#c2
     data_sensitivity:
       - interaction
-    expires: 122
+    expires: 134
     notification_emails:
       - betling@mozilla.com
       - fx-desktop-shopping-eng@mozilla.com
@@ -106,7 +106,7 @@ shopping:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1848870
     data_sensitivity:
       - interaction
-    expires: 122
+    expires: 134
     send_in_pings:
       - events
     notification_emails:
@@ -124,7 +124,7 @@ shopping:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1849382
     data_sensitivity:
       - interaction
-    expires: 122
+    expires: 134
     notification_emails:
       - betling@mozilla.com
       - fx-desktop-shopping-eng@mozilla.com
@@ -148,7 +148,7 @@ shopping:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1849382
     data_sensitivity:
       - interaction
-    expires: 122
+    expires: 134
     notification_emails:
       - betling@mozilla.com
       - fx-desktop-shopping-eng@mozilla.com
@@ -171,7 +171,7 @@ shopping:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1841892
     data_sensitivity:
       - interaction
-    expires: 122
+    expires: 134
     notification_emails:
       - betling@mozilla.com
       - fx-desktop-shopping-eng@mozilla.com
@@ -195,7 +195,7 @@ shopping:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1841892
     data_sensitivity:
       - interaction
-    expires: 122
+    expires: 134
     notification_emails:
       - betling@mozilla.com
       - fx-desktop-shopping-eng@mozilla.com
@@ -217,7 +217,7 @@ shopping:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1849241
     data_sensitivity:
       - interaction
-    expires: 122
+    expires: 134
     notification_emails:
       - betling@mozilla.com
     send_in_pings:
@@ -239,7 +239,7 @@ shopping:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1841892
     data_sensitivity:
       - interaction
-    expires: 122
+    expires: 134
     notification_emails:
       - betling@mozilla.com
       - fx-desktop-shopping-eng@mozilla.com
@@ -256,7 +256,7 @@ shopping:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1841892
     data_sensitivity:
       - interaction
-    expires: 122
+    expires: 134
     notification_emails:
       - betling@mozilla.com
       - fx-desktop-shopping-eng@mozilla.com
@@ -273,7 +273,7 @@ shopping:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1841892
     data_sensitivity:
       - interaction
-    expires: 122
+    expires: 134
     notification_emails:
       - betling@mozilla.com
       - fx-desktop-shopping-eng@mozilla.com
@@ -291,7 +291,7 @@ shopping:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1841892
     data_sensitivity:
       - interaction
-    expires: 122
+    expires: 134
     notification_emails:
       - betling@mozilla.com
       - fx-desktop-shopping-eng@mozilla.com
@@ -308,7 +308,7 @@ shopping:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1841892
     data_sensitivity:
       - interaction
-    expires: 122
+    expires: 134
     notification_emails:
       - betling@mozilla.com
       - fx-desktop-shopping-eng@mozilla.com
@@ -332,7 +332,7 @@ shopping:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1841892#c6
     data_sensitivity:
       - interaction
-    expires: 122
+    expires: 134
     notification_emails:
       - betling@mozilla.com
       - fx-desktop-shopping-eng@mozilla.com
@@ -351,7 +351,7 @@ shopping:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1841892
     data_sensitivity:
       - interaction
-    expires: 122
+    expires: 134
     notification_emails:
       - betling@mozilla.com
       - fx-desktop-shopping-eng@mozilla.com
@@ -369,7 +369,7 @@ shopping:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1851820#c2
     data_sensitivity:
       - interaction
-    expires: 122
+    expires: 134
     notification_emails:
       - betling@mozilla.com
       - fx-desktop-shopping-eng@mozilla.com
@@ -387,7 +387,7 @@ shopping:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1848870
     data_sensitivity:
       - interaction
-    expires: 122
+    expires: 134
     notification_emails:
       - betling@mozilla.com
       - fx-desktop-shopping-eng@mozilla.com
@@ -404,7 +404,7 @@ shopping:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1841892
     data_sensitivity:
       - interaction
-    expires: 122
+    expires: 134
     notification_emails:
       - betling@mozilla.com
       - fx-desktop-shopping-eng@mozilla.com
@@ -421,7 +421,7 @@ shopping:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1851675#c4
     data_sensitivity:
       - interaction
-    expires: 122
+    expires: 134
     notification_emails:
       - betling@mozilla.com
       - fx-desktop-shopping-eng@mozilla.com
@@ -439,7 +439,7 @@ shopping:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1854223
     data_sensitivity:
       - interaction
-    expires: 122
+    expires: 134
     notification_emails:
       - betling@mozilla.com
       - fx-desktop-shopping-eng@mozilla.com
@@ -458,7 +458,7 @@ shopping:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1848160
     data_sensitivity:
       - interaction
-    expires: 122
+    expires: 134
     notification_emails:
       - betling@mozilla.com
       - fx-desktop-shopping-eng@mozilla.com
@@ -477,7 +477,7 @@ shopping:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1853785
     data_sensitivity:
       - interaction
-    expires: 122
+    expires: 134
     notification_emails:
       - betling@mozilla.com
       - fx-desktop-shopping-eng@mozilla.com
@@ -494,7 +494,7 @@ shopping:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1854376
     data_sensitivity:
       - interaction
-    expires: 122
+    expires: 134
     notification_emails:
       - betling@mozilla.com
       - fx-desktop-shopping-eng@mozilla.com
@@ -516,7 +516,7 @@ shopping:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1855812
     data_sensitivity:
       - interaction
-    expires: 122
+    expires: 134
     notification_emails:
       - betling@mozilla.com
       - fx-desktop-shopping-eng@mozilla.com
@@ -533,7 +533,7 @@ shopping:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1855810
     data_sensitivity:
       - interaction
-    expires: 122
+    expires: 134
     notification_emails:
       - betling@mozilla.com
       - fx-desktop-shopping-eng@mozilla.com
@@ -552,7 +552,7 @@ shopping:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1855811
     data_sensitivity:
       - interaction
-    expires: 122
+    expires: 134
     notification_emails:
       - betling@mozilla.com
       - fx-desktop-shopping-eng@mozilla.com
