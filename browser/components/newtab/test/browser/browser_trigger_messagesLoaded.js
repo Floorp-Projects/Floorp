@@ -27,8 +27,9 @@ const TEST_MESSAGE_CONTENT = {
     bucket_id: "ON_LOAD_TEST_MESSAGE",
     anchor_id: "PanelUI-menu-button",
     layout: "icon_and_message",
-    icon: "chrome://browser/content/cfr-lightning.svg",
-    icon_dark_theme: "chrome://browser/content/cfr-lightning-dark.svg",
+    icon: "chrome://activity-stream/content/data/content/assets/glyph-webextension-16.svg",
+    icon_dark_theme:
+      "chrome://activity-stream/content/data/content/assets/glyph-webextension-16.svg",
     icon_class: "cfr-doorhanger-small-icon",
     heading_text: "Heading",
     text: "Text",
