@@ -3035,7 +3035,10 @@ def updateTzdata(topsrcdir, args):
     if not os.path.isdir(icuDir):
         raise RuntimeError("not a directory: %s" % icuDir)
 
-    icuTzDir = os.path.join(topsrcdir, "intl/tzdata/source")
+    # Use tzdata from ICU 74, because tzdata from "icu-data" isn't yet updated
+    # to use the correct time zone mappings.
+    # icuTzDir = os.path.join(topsrcdir, "intl/tzdata/source")
+    icuTzDir = os.path.join(topsrcdir, "intl/icu/source/data/misc")
     if not os.path.isdir(icuTzDir):
         raise RuntimeError("not a directory: %s" % icuTzDir)
 
