@@ -529,8 +529,11 @@ bool SharedMemory::Map(size_t bytes, void* fixed_address) {
 void* SharedMemory::FindFreeAddressSpace(size_t size) {
   void* memory = mmap(nullptr, size, PROT_NONE,
                       MAP_ANONYMOUS | MAP_NORESERVE | MAP_PRIVATE, -1, 0);
+  if (memory == MAP_FAILED) {
+    return nullptr;
+  }
   munmap(memory, size);
-  return memory != MAP_FAILED ? memory : NULL;
+  return memory;
 }
 
 SharedMemoryHandle SharedMemory::CloneHandle() {
