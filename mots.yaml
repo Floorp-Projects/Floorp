@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2023-10-31T23:48:55.507564'
+updated_at: '2023-11-07T14:09:31.961357'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -2804,6 +2804,10 @@ modules:
       - third_party/rust/wgpu-core/**/*
       - third_party/rust/wgpu-hal/**/*
       - third_party/rust/wgpu-types/**/*
+      - testing/web-platform/tests/webgpu/**/*
+      - testing/web-platform/meta/webgpu/**/*
+      - testing/web-platform/mozilla/tests/webgpu/**/*
+      - testing/web-platform/mozilla/meta/webgpu/**/*
     meta:
       group: dev-platform
       url: https://wiki.mozilla.org/Platform/GFX/WebGPU
@@ -4244,5 +4248,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: 446f87fc6c8a780b734b0ce717cf08e788002bb4
-  export: cb8fafd9fd8165ea6662e59d64053db91a8c32b2
+  config: e50c5804c707f1bb9672613069dce9afdd5339cc
+  export: afeef31384cadb7f29198b7e67d0fa9665d8ce6a
