@@ -170,13 +170,6 @@ class BaseBootstrapper(object):
         to the user, if necessary.
         """
 
-    def suggest_install_distutils(self):
-        """Called if distutils.{sysconfig,spawn} can't be imported."""
-        print(
-            "Does your distro require installing another package for distutils?",
-            file=sys.stderr,
-        )
-
     def suggest_install_pip3(self):
         """Called if pip3 can't be found."""
         print(
