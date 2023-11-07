@@ -117,8 +117,13 @@ add_task(async function test_about_preferences_manage_languages() {
     "All models were downloaded."
   );
   Assert.deepEqual(
-    await remoteClients.translationsWasm.resolvePendingDownloads(1),
-    ["bergamot-translator"],
+    await remoteClients.languageIdModels.resolvePendingDownloads(1),
+    ["lid.176.ftz"],
+    "Language ID model was downloaded."
+  );
+  Assert.deepEqual(
+    await remoteClients.translationsWasm.resolvePendingDownloads(2),
+    ["bergamot-translator", "fasttext-wasm"],
     "Wasm was downloaded."
   );
 
@@ -154,6 +159,7 @@ add_task(async function test_about_preferences_manage_languages() {
   );
 
   remoteClients.translationsWasm.assertNoNewDownloads();
+  remoteClients.languageIdModels.assertNoNewDownloads();
 
   await assertVisibility({
     message: "Everything is downloaded again.",

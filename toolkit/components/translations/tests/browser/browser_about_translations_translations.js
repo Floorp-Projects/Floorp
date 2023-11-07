@@ -173,10 +173,13 @@ add_task(async function test_about_translations_html() {
 
 add_task(async function test_about_translations_language_identification() {
   await openAboutTranslations({
+    detectedLangTag: "en",
+    detectedLanguageConfidence: "0.98",
     languagePairs: [
       { fromLang: "en", toLang: "fr" },
       { fromLang: "fr", toLang: "en" },
     ],
+    prefs: [["browser.translations.languageIdentification.useFastText", true]],
     runInPage: async ({ selectors }) => {
       const { document, window } = content;
       Cu.waiveXrays(window).DEBOUNCE_DELAY = 5; // Make the timer run faster for tests.
@@ -218,7 +221,7 @@ add_task(async function test_about_translations_language_identification() {
         is(
           translation,
           translationResult.innerText,
-          "The language identification correctly informs the translation."
+          "The language identification engine correctly informs the translation."
         );
       }
 
