@@ -434,7 +434,7 @@ class InputResultDetailTest : BaseSessionTest() {
             """.trimIndent(),
         )
 
-        // Explicitly call `waitForRoundTrip()` to make sure the above event listners
+        // Explicitly call `waitForRoundTrip()` to make sure the above event listeners
         // have set up in the content.
         mainSession.waitForRoundTrip()
 
@@ -489,5 +489,61 @@ class InputResultDetailTest : BaseSessionTest() {
         )
 
         mainSession.panZoomController.onTouchEvent(up)
+    }
+
+    @WithDisplay(width = 100, height = 100)
+    @Test
+    fun testTouchCancelBeforeFirstTouchMove() {
+        setupDocument(ROOT_100VH_HTML_PATH)
+
+        // Setup a touchmove event listener preventing scrolling.
+        mainSession.evaluateJS(
+            """
+            window.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+            }, { passive: false });
+            """.trimIndent(),
+        )
+
+        // Explicitly call `waitForRoundTrip()` to make sure the above event listener
+        // has been set up in the content.
+        mainSession.waitForRoundTrip()
+
+        mainSession.flushApzRepaints()
+
+        // Send a touchstart. The result will not be produced yet because
+        // we will wait for the first touchmove.
+        val downTime = SystemClock.uptimeMillis()
+        val down = MotionEvent.obtain(
+            downTime,
+            SystemClock.uptimeMillis(),
+            MotionEvent.ACTION_DOWN,
+            50f,
+            50f,
+            0,
+        )
+        val result = mainSession.panZoomController.onTouchEventForDetailResult(down)
+
+        // Before any touchmove, send a touchcancel.
+        val cancel = MotionEvent.obtain(
+            downTime,
+            SystemClock.uptimeMillis(),
+            MotionEvent.ACTION_CANCEL,
+            50f,
+            50f,
+            0,
+        )
+        mainSession.panZoomController.onTouchEvent(cancel)
+
+        // Check that the touchcancel results in the same response as if
+        // the touchmove was prevented.
+        val value = sessionRule.waitForResult(result)
+        assertResultDetail(
+            "testTouchCancelBeforeFirstTouchMove",
+            value,
+            PanZoomController.INPUT_RESULT_HANDLED_CONTENT,
+            PanZoomController.SCROLLABLE_FLAG_NONE,
+            (PanZoomController.OVERSCROLL_FLAG_HORIZONTAL or PanZoomController.OVERSCROLL_FLAG_VERTICAL),
+        )
     }
 }

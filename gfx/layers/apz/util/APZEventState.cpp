@@ -365,6 +365,16 @@ void APZEventState::ProcessTouchEvent(
 
       if (mPendingTouchPreventedResponse) {
         MOZ_ASSERT(aGuid == mPendingTouchPreventedGuid);
+        if (aEvent.mMessage == eTouchCancel) {
+          // If we received a touch-cancel and we were waiting for the
+          // first touch-move to send a content response, make the content
+          // response be preventDefault=true. This is the safer choice
+          // because content might have prevented the first touch-move,
+          // and even though the touch-cancel means any subsequent touch-moves
+          // will not be processed, the content response still influences
+          // the InputResult sent to GeckoView.
+          isTouchPrevented = true;
+        }
         mContentReceivedInputBlockCallback(aInputBlockId, isTouchPrevented);
         mPendingTouchPreventedResponse = false;
       }
