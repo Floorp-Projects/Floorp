@@ -528,6 +528,12 @@ HTMLTooltip.prototype = {
       this._pendingEventListenerPromise = null;
     }
 
+    // This is redundant with tooltip-visible, and tooltip-visible
+    // should only be added from here, after the click listener is set.
+    // Otherwise, code listening to tooltip-visible may be firing a click that would be lost.
+    // Unfortunately, doing this cause many non trivial test failures.
+    this.container.classList.add("tooltip-shown");
+
     this.emit("shown");
   },
 
@@ -803,7 +809,7 @@ HTMLTooltip.prototype = {
       this.removeEventListeners();
     }
 
-    this.container.classList.remove("tooltip-visible");
+    this.container.classList.remove("tooltip-visible", "tooltip-shown");
     if (this.useXulWrapper) {
       await this._hideXulWrapper();
     }
