@@ -433,6 +433,7 @@ skip-if = [
   "apple_catalina && !debug", # Bug 1638958
   "win10_2004 && bits == 64 && !debug", # Bug 1638958
   "os == 'linux' && !debug", # Bug 1638958
+  "win11_2009 && !debug", # Bug 1775605
 ]
 
 ["browser_movePendingTabToNewWindow.js"]
