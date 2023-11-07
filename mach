@@ -7,7 +7,8 @@ import os
 import platform
 import sys
 import subprocess
-from textwrap import dedent
+import traceback
+from textwrap import dedent, fill
 
 MIN_PYTHON_VERSION = (3, 7)
 MAX_PYTHON_VERSION_TO_CONSIDER = (3, 11)
@@ -38,13 +39,13 @@ def check_and_get_mach(dir_path, args):
     return None
 
 
-def try_alternate_python3_executables(args):
+def find_alternate_python3_executables():
     for i in range(MIN_PYTHON_VERSION[1], MAX_PYTHON_VERSION_TO_CONSIDER[1] + 1):
-        try:
-            potential_python_binary = f"python3.{i}"
-            if os.name == 'nt':
-                potential_python_binary += ".exe"
+        potential_python_binary = f"python3.{i}"
+        if os.name == "nt":
+            potential_python_binary += ".exe"
 
+        try:
             out = subprocess.run(
                 [potential_python_binary, "--version"],
                 stdout=subprocess.PIPE,
@@ -54,9 +55,21 @@ def try_alternate_python3_executables(args):
             binary_minor_version = int(out.stdout[9:11].strip("."))
 
             if binary_minor_version >= MIN_PYTHON_VERSION[1]:
-                print(f"We found '{potential_python_binary}' and will attempt to re-run Mach with it.")
-                os.execvp(potential_python_binary, [potential_python_binary] + ["mach"] + args)
+                yield potential_python_binary
 
+        except Exception:
+            pass
+
+
+def try_alternate_python3_executables(args):
+    for potential_python_binary in find_alternate_python3_executables():
+        try:
+            print(
+                f"We found '{potential_python_binary}' and will attempt to re-run Mach with it."
+            )
+            os.execvp(
+                potential_python_binary, [potential_python_binary] + ["mach"] + args
+            )
         except Exception:
             # We don't really care what goes wrong, just don't let it bubble up
             # If we can't successfully launch with a different python3 binary
@@ -114,11 +127,41 @@ def main(args):
     # https://github.com/python/cpython/pull/9516
     os.environ.pop("__PYVENV_LAUNCHER__", None)
 
-    mach = check_and_get_mach(os.path.dirname(os.path.realpath(__file__)), args)
-    if not mach:
-        print('Could not run mach: No mach source directory found.')
-        sys.exit(1)
-    sys.exit(mach.run(args))
+    try:
+        mach = check_and_get_mach(os.path.dirname(os.path.realpath(__file__)), args)
+        if not mach:
+            print("Could not run mach: No mach source directory found.")
+            sys.exit(1)
+        sys.exit(mach.run(args))
+    except:
+        if sys.version_info >= (
+            MAX_PYTHON_VERSION_TO_CONSIDER[0],
+            MAX_PYTHON_VERSION_TO_CONSIDER[1] + 1,
+        ):
+            traceback.print_exc()
+            print()
+            print("---")
+            print()
+            print(fill(dedent(f"""\
+                Note that you are running Mach with Python
+                {platform.python_version()}, which is higher than the highest
+                known working version of Python for Mach. Consider running Mach
+                with Python {MAX_PYTHON_VERSION_TO_CONSIDER[0]}.{MAX_PYTHON_VERSION_TO_CONSIDER[1]}
+                or lower."""
+            )))
+
+            try:
+                alternative = next(find_alternate_python3_executables())
+                print()
+                print("Running the following command may solve your issue:")
+                print()
+                print(f"    {alternative} {sys.argv[0]} {' '.join(args)}")
+                print()
+            except StopIteration:
+                pass
+            sys.exit(1)
+        else:
+            raise
 
 
 if __name__ == '__main__':
