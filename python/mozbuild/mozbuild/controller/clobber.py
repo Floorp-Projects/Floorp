@@ -61,12 +61,6 @@ class Clobberer(object):
         else:
             self.substs = dict()
 
-        # Try looking for mozilla/CLOBBER, for comm-central
-        if not os.path.isfile(self.src_clobber):
-            comm_clobber = mozpath.join(topsrcdir, "mozilla", "CLOBBER")
-            if os.path.isfile(comm_clobber):
-                self.src_clobber = comm_clobber
-
     def clobber_needed(self):
         """Returns a bool indicating whether a tree clobber is required."""
 
