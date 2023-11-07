@@ -369,6 +369,7 @@ class CreditCardAutofillTest {
     }
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/1512794
+    @Ignore("Failing, see https://bugzilla.mozilla.org/show_bug.cgi?id=1853625")
     @Test
     fun verifyMultipleCreditCardsCanBeAddedTest() {
         val creditCardFormPage = TestAssetHelper.getCreditCardFormAsset(mockWebServer)
