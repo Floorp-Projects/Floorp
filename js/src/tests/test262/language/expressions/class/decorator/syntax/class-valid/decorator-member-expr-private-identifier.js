@@ -33,7 +33,7 @@ info: |
 ---*/
 
 
-var C = class {
+class C {
   static #$() {}
   static #_() {}
   static #\u{6F}() {}
@@ -44,7 +44,7 @@ var C = class {
   static #await() {}
 
   static {
-    var C = @C.#$
+    var D = @C.#$
     @C.#_
     @C.#\u{6F}
     @C.#\u2118

@@ -47,8 +47,7 @@ let zdt = new Temporal.ZonedDateTime(
       [epochInstant], // Returned for NanosecondsToDays step 14, setting _intermediateNs_
     ],
     [
-      // Behave normally in 4 calls made prior to NanosecondsToDays
-      TemporalHelpers.SUBSTITUTE_SKIP,
+      // Behave normally in 3 calls made prior to NanosecondsToDays
       TemporalHelpers.SUBSTITUTE_SKIP,
       TemporalHelpers.SUBSTITUTE_SKIP,
       TemporalHelpers.SUBSTITUTE_SKIP,
@@ -75,8 +74,7 @@ zdt = new Temporal.ZonedDateTime(
       [epochInstant], // Returned for NanosecondsToDays step 14, setting _intermediateNs_
     ],
     [
-      // Behave normally in 4 calls made prior to NanosecondsToDays
-      TemporalHelpers.SUBSTITUTE_SKIP,
+      // Behave normally in 3 calls made prior to NanosecondsToDays
       TemporalHelpers.SUBSTITUTE_SKIP,
       TemporalHelpers.SUBSTITUTE_SKIP,
       TemporalHelpers.SUBSTITUTE_SKIP,
@@ -104,8 +102,7 @@ zdt = new Temporal.ZonedDateTime(
       [new Temporal.Instant(-4n)], // Returned for NanosecondsToDays step 18.a, setting _oneDayFartherNs_
     ],
     [
-      // Behave normally in 4 calls made prior to NanosecondsToDays
-      TemporalHelpers.SUBSTITUTE_SKIP,
+      // Behave normally in 3 calls made prior to NanosecondsToDays
       TemporalHelpers.SUBSTITUTE_SKIP,
       TemporalHelpers.SUBSTITUTE_SKIP,
       TemporalHelpers.SUBSTITUTE_SKIP,

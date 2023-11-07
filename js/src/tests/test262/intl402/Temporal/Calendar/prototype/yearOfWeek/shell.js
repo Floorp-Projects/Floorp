@@ -39,6 +39,24 @@ const SKIP_SYMBOL = Symbol("Skip");
 
 var TemporalHelpers = {
   /*
+   * Codes and maximum lengths of months in the ISO 8601 calendar.
+   */
+  ISOMonths: [
+    { month: 1, monthCode: "M01", daysInMonth: 31 },
+    { month: 2, monthCode: "M02", daysInMonth: 29 },
+    { month: 3, monthCode: "M03", daysInMonth: 31 },
+    { month: 4, monthCode: "M04", daysInMonth: 30 },
+    { month: 5, monthCode: "M05", daysInMonth: 31 },
+    { month: 6, monthCode: "M06", daysInMonth: 30 },
+    { month: 7, monthCode: "M07", daysInMonth: 31 },
+    { month: 8, monthCode: "M08", daysInMonth: 31 },
+    { month: 9, monthCode: "M09", daysInMonth: 30 },
+    { month: 10, monthCode: "M10", daysInMonth: 31 },
+    { month: 11, monthCode: "M11", daysInMonth: 30 },
+    { month: 12, monthCode: "M12", daysInMonth: 31 }
+  ],
+
+  /*
    * assertDuration(duration, years, ...,  nanoseconds[, description]):
    *
    * Shorthand for asserting that each field of a Temporal.Duration is equal to
@@ -2009,6 +2027,8 @@ var TemporalHelpers = {
     plainMonthDayStringsInvalid() {
       return [
         "11-18junk",
+        "11-18[u-ca=gregory]",
+        "11-18[u-ca=hebrew]",
       ];
     },
 

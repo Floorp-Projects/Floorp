@@ -17,7 +17,7 @@ class CheckedAdd extends Temporal.Calendar {
   }
   dateAdd(date, duration, options, constructor) {
     this.called += 1;
-    if (this.called == 3)
+    if (this.called == 2)
       assert.notSameValue(options, undefined, "options not undefined");
     return super.dateAdd(date, duration, options, constructor);
   }
@@ -28,10 +28,10 @@ const yearmonth = new Temporal.PlainYearMonth(2000, 3, calendar);
 const duration = { months: 1 };
 
 yearmonth.subtract(duration, undefined);
-assert(calendar.called == 3);
+assert.sameValue(calendar.called, 2, "dateAdd should have been called twice");
 
 calendar.called = 0;
 yearmonth.subtract(duration);
-assert(calendar.called == 3);
+assert.sameValue(calendar.called, 2, "dateAdd should have been called twice");
 
 reportCompare(0, 0);

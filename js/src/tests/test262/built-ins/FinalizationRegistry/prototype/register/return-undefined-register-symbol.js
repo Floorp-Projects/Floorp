@@ -1,4 +1,4 @@
-// |reftest| skip -- symbols-as-weakmap-keys is not supported
+// |reftest| shell-option(--enable-symbols-as-weakmap-keys) skip-if(!this.hasOwnProperty('FinalizationRegistry')||!xulRuntime.shell) -- FinalizationRegistry is not enabled unconditionally, requires shell-options
 // Copyright (C) 2022 Igalia, S.L. All rights reserved.
 // This code is governed by the BSD license found in the LICENSE file.
 
