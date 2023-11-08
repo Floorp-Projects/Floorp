@@ -7,8 +7,8 @@
 
 use crate::parser::{Parse, ParserContext};
 use crate::values::generics::grid::{GridTemplateComponent, ImplicitGridTracks, RepeatCount};
-use crate::values::generics::grid::{LineNameList, TrackBreadth, TrackRepeat, TrackSize};
-use crate::values::generics::grid::{TrackList, TrackListValue};
+use crate::values::generics::grid::{LineNameList, LineNameListValue, NameRepeat, TrackBreadth};
+use crate::values::generics::grid::{TrackList, TrackListValue, TrackRepeat, TrackSize};
 use crate::values::specified::{Integer, LengthPercentage};
 use crate::values::{CSSFloat, CustomIdent};
 use cssparser::{Parser, Token};
@@ -342,5 +342,100 @@ impl GridTemplateComponent<LengthPercentage, Integer> {
         }
         let track_list = TrackList::parse(context, input)?;
         Ok(GridTemplateComponent::TrackList(Box::new(track_list)))
+    }
+}
+
+impl Parse for NameRepeat<Integer> {
+    fn parse<'i, 't>(
+        context: &ParserContext,
+        input: &mut Parser<'i, 't>,
+    ) -> Result<Self, ParseError<'i>> {
+        input.expect_function_matching("repeat")?;
+        input.parse_nested_block(|i| {
+            let count = RepeatCount::parse(context, i)?;
+            // NameRepeat doesn't accept `auto-fit`
+            // https://drafts.csswg.org/css-grid/#typedef-name-repeat
+            if matches!(count, RepeatCount::AutoFit) {
+                return Err(i.new_custom_error(StyleParseErrorKind::UnspecifiedError));
+            }
+
+            i.expect_comma()?;
+            let mut names_list = vec![];
+            names_list.push(parse_line_names(i)?); // there should be at least one
+            while let Ok(names) = i.try_parse(parse_line_names) {
+                names_list.push(names);
+            }
+
+            Ok(NameRepeat {
+                count,
+                line_names: names_list.into(),
+            })
+        })
+    }
+}
+
+impl Parse for LineNameListValue<Integer> {
+    fn parse<'i, 't>(
+        context: &ParserContext,
+        input: &mut Parser<'i, 't>,
+    ) -> Result<Self, ParseError<'i>> {
+        if let Ok(repeat) = input.try_parse(|i| NameRepeat::parse(context, i)) {
+            return Ok(LineNameListValue::Repeat(repeat));
+        }
+
+        parse_line_names(input).map(LineNameListValue::LineNames)
+    }
+}
+
+impl LineNameListValue<Integer> {
+    /// Returns the length of `<line-names>` after expanding repeat(N, ...). This returns zero for
+    /// repeat(auto-fill, ...).
+    #[inline]
+    pub fn line_names_length(&self) -> usize {
+        match *self {
+            Self::LineNames(..) => 1,
+            Self::Repeat(ref r) => {
+                match r.count {
+                    // Note: RepeatCount is always >= 1.
+                    RepeatCount::Number(v) => r.line_names.len() * v.value() as usize,
+                    _ => 0,
+                }
+            },
+        }
+    }
+}
+
+impl Parse for LineNameList<Integer> {
+    fn parse<'i, 't>(
+        context: &ParserContext,
+        input: &mut Parser<'i, 't>,
+    ) -> Result<Self, ParseError<'i>> {
+        input.expect_ident_matching("subgrid")?;
+
+        let mut auto_repeat = false;
+        let mut expanded_line_names_length = 0;
+        let mut line_names = vec![];
+        while let Ok(value) = input.try_parse(|i| LineNameListValue::parse(context, i)) {
+            match value {
+                LineNameListValue::Repeat(ref r) if r.is_auto_fill() => {
+                    if auto_repeat {
+                        // On a subgridded axis, the auto-fill keyword is only valid once per
+                        // <line-name-list>.
+                        // https://drafts.csswg.org/css-grid/#auto-repeat
+                        return Err(input.new_custom_error(StyleParseErrorKind::UnspecifiedError));
+                    }
+                    auto_repeat = true;
+                },
+                _ => (),
+            };
+
+            expanded_line_names_length += value.line_names_length();
+            line_names.push(value);
+        }
+
+        Ok(LineNameList{
+          expanded_line_names_length,
+          line_names : line_names.into(),
+        })
     }
 }

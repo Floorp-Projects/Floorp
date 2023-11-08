@@ -7,7 +7,6 @@
 
 use crate::parser::{Parse, ParserContext};
 use crate::values::specified;
-use crate::values::specified::grid::parse_line_names;
 use crate::values::{CSSFloat, CustomIdent};
 use crate::{Atom, Zero};
 use cssparser::Parser;
@@ -415,7 +414,16 @@ where
 ///
 /// <https://drafts.csswg.org/css-grid/#typedef-track-repeat>
 #[derive(
-    Clone, Copy, Debug, MallocSizeOf, PartialEq, ToComputedValue, ToCss, ToResolvedValue, ToShmem,
+    Clone,
+    Copy,
+    Debug,
+    MallocSizeOf,
+    PartialEq,
+    SpecifiedValueInfo,
+    ToComputedValue,
+    ToCss,
+    ToResolvedValue,
+    ToShmem,
 )]
 #[repr(C, u8)]
 pub enum RepeatCount<Integer> {
@@ -446,9 +454,6 @@ impl Parse for RepeatCount<specified::Integer> {
 }
 
 /// The structure containing `<line-names>` and `<track-size>` values.
-///
-/// It can also hold `repeat()` function parameters, which expands into the respective
-/// values in its computed form.
 #[derive(
     Clone,
     Debug,
@@ -635,11 +640,114 @@ impl<L: ToCss, I: ToCss> ToCss for TrackList<L, I> {
     }
 }
 
+/// The `<name-repeat>` for subgrids.
+///
+/// <name-repeat> = repeat( [ <integer [1,∞]> | auto-fill ], <line-names>+)
+///
+/// https://drafts.csswg.org/css-grid/#typedef-name-repeat
+#[derive(
+    Clone,
+    Debug,
+    MallocSizeOf,
+    PartialEq,
+    SpecifiedValueInfo,
+    ToComputedValue,
+    ToResolvedValue,
+    ToShmem,
+)]
+#[repr(C)]
+pub struct GenericNameRepeat<I> {
+    /// The number of times for the value to be repeated (could also be `auto-fill`).
+    /// Note: `RepeatCount` accepts `auto-fit`, so we should reject it after parsing it.
+    pub count: RepeatCount<I>,
+    /// This represents `<line-names>+`. The length of the outer vector is at least one.
+    pub line_names: crate::OwnedSlice<crate::OwnedSlice<CustomIdent>>,
+}
+
+pub use self::GenericNameRepeat as NameRepeat;
+
+impl<I: ToCss> ToCss for NameRepeat<I> {
+    fn to_css<W>(&self, dest: &mut CssWriter<W>) -> fmt::Result
+    where
+        W: Write,
+    {
+        dest.write_str("repeat(")?;
+        self.count.to_css(dest)?;
+        dest.write_char(',')?;
+
+        for ref names in self.line_names.iter() {
+            if names.is_empty() {
+                // Note: concat_serialize_idents() skip the empty list so we have to handle it
+                // manually for NameRepeat.
+                dest.write_str(" []")?;
+            } else {
+                concat_serialize_idents(" [", "]", names, " ", dest)?;
+            }
+        }
+
+        dest.write_char(')')
+    }
+}
+
+impl<I> NameRepeat<I> {
+    /// Returns true if it is auto-fill.
+    #[inline]
+    pub fn is_auto_fill(&self) -> bool {
+        matches!(self.count, RepeatCount::AutoFill)
+    }
+}
+
+/// A single value for `<line-names>` or `<name-repeat>`.
+#[derive(
+    Clone,
+    Debug,
+    MallocSizeOf,
+    PartialEq,
+    SpecifiedValueInfo,
+    ToComputedValue,
+    ToResolvedValue,
+    ToShmem,
+)]
+#[repr(C, u8)]
+pub enum GenericLineNameListValue<I> {
+    /// `<line-names>`.
+    LineNames(crate::OwnedSlice<CustomIdent>),
+    /// `<name-repeat>`.
+    Repeat(GenericNameRepeat<I>),
+}
+
+pub use self::GenericLineNameListValue as LineNameListValue;
+
+impl<I: ToCss> ToCss for LineNameListValue<I> {
+    fn to_css<W>(&self, dest: &mut CssWriter<W>) -> fmt::Result
+    where
+        W: Write,
+    {
+        match *self {
+            Self::Repeat(ref r) => r.to_css(dest),
+            Self::LineNames(ref names) => {
+                dest.write_char('[')?;
+
+                if let Some((ref first, rest)) = names.split_first() {
+                    first.to_css(dest)?;
+                    for name in rest {
+                        dest.write_char(' ')?;
+                        name.to_css(dest)?;
+                    }
+                }
+
+                dest.write_char(']')
+            },
+        }
+    }
+}
+
 /// The `<line-name-list>` for subgrids.
 ///
-/// `subgrid [ <line-names> | repeat(<positive-integer> | auto-fill, <line-names>+) ]+`
+/// <line-name-list> = [ <line-names> | <name-repeat> ]+
+/// <name-repeat> = repeat( [ <integer [1,∞]> | auto-fill ], <line-names>+)
 ///
-/// https://drafts.csswg.org/css-grid-2/#typedef-line-name-list
+/// https://drafts.csswg.org/css-grid/#typedef-line-name-list
 #[derive(
     Clone,
     Debug,
@@ -652,114 +760,27 @@ impl<L: ToCss, I: ToCss> ToCss for TrackList<L, I> {
     ToShmem,
 )]
 #[repr(C)]
-pub struct LineNameList {
-    /// The optional `<line-name-list>`
-    pub names: crate::OwnedSlice<crate::OwnedSlice<CustomIdent>>,
-    /// Indicates the starting line names that requires `auto-fill`, if in bounds.
-    pub fill_start: usize,
-    /// Indicates the number of line names in the auto-fill
-    pub fill_len: usize,
+pub struct GenericLineNameList<I>{
+    /// The pre-computed length of line_names, without the length of repeat(auto-fill, ...).
+    // We precomputed this at parsing time, so we can avoid an extra loop when expanding
+    // repeat(auto-fill).
+    pub expanded_line_names_length: usize,
+    /// The line name list.
+    pub line_names: crate::OwnedSlice<GenericLineNameListValue<I>>,
 }
 
-impl Parse for LineNameList {
-    fn parse<'i, 't>(
-        context: &ParserContext,
-        input: &mut Parser<'i, 't>,
-    ) -> Result<Self, ParseError<'i>> {
-        input.expect_ident_matching("subgrid")?;
-        let mut line_names = vec![];
-        let mut fill_data = None;
-        // Rather than truncating the result after inserting values, just
-        // have a maximum number of values. This gives us an early out on very
-        // large name lists, but more importantly prevents OOM on huge repeat
-        // expansions. (bug 1583429)
-        let mut max_remaining = MAX_GRID_LINE as usize;
+pub use self::GenericLineNameList as LineNameList;
 
-        loop {
-            let repeat_parse_result = input.try_parse(|input| {
-                input.expect_function_matching("repeat")?;
-                input.parse_nested_block(|input| {
-                    let count = RepeatCount::parse(context, input)?;
-                    input.expect_comma()?;
-                    let mut names_list = vec![];
-                    names_list.push(parse_line_names(input)?); // there should be at least one
-                    while let Ok(names) = input.try_parse(parse_line_names) {
-                        names_list.push(names);
-                    }
-                    Ok((names_list, count))
-                })
-            });
-            if let Ok((names_list, count)) = repeat_parse_result {
-                let mut handle_size = |n| {
-                    let n = cmp::min(n, max_remaining);
-                    max_remaining -= n;
-                    n
-                };
-                match count {
-                    // FIXME(emilio): we shouldn't expand repeat() at
-                    // parse time for subgrid. (bug 1583429)
-                    RepeatCount::Number(num) => {
-                        let n = handle_size(num.value() as usize * names_list.len());
-                        line_names.extend(names_list.iter().cloned().cycle().take(n));
-                    },
-                    RepeatCount::AutoFill if fill_data.is_none() => {
-                        let fill_idx = line_names.len();
-                        let fill_len = names_list.len();
-                        fill_data = Some((fill_idx, fill_len));
-                        let n = handle_size(fill_len);
-                        line_names.extend(names_list.into_iter().take(n));
-                    },
-                    _ => return Err(input.new_custom_error(StyleParseErrorKind::UnspecifiedError)),
-                }
-            } else if let Ok(names) = input.try_parse(parse_line_names) {
-                if max_remaining > 0 {
-                    line_names.push(names);
-                    max_remaining -= 1;
-                }
-            } else {
-                break;
-            }
-        }
-
-        debug_assert!(line_names.len() <= MAX_GRID_LINE as usize);
-
-        let (fill_start, fill_len) = fill_data.unwrap_or((0, 0));
-
-        Ok(LineNameList {
-            names: line_names.into(),
-            fill_start: fill_start,
-            fill_len: fill_len,
-        })
-    }
-}
-
-impl ToCss for LineNameList {
+impl<I: ToCss> ToCss for LineNameList<I> {
     fn to_css<W>(&self, dest: &mut CssWriter<W>) -> fmt::Result
     where
         W: Write,
     {
         dest.write_str("subgrid")?;
-        let fill_start = self.fill_start;
-        let fill_len = self.fill_len;
-        for (i, names) in self.names.iter().enumerate() {
-            if fill_len > 0 && i == fill_start {
-                dest.write_str(" repeat(auto-fill,")?;
-            }
 
-            dest.write_str(" [")?;
-
-            if let Some((ref first, rest)) = names.split_first() {
-                first.to_css(dest)?;
-                for name in rest {
-                    dest.write_char(' ')?;
-                    name.to_css(dest)?;
-                }
-            }
-
-            dest.write_char(']')?;
-            if fill_len > 0 && i == fill_start + fill_len - 1 {
-                dest.write_char(')')?;
-            }
+        for value in self.line_names.iter() {
+            dest.write_char(' ')?;
+            value.to_css(dest)?;
         }
 
         Ok(())
@@ -795,7 +816,7 @@ pub enum GenericGridTemplateComponent<L, I> {
     /// A `subgrid <line-name-list>?`
     /// TODO: Support animations for this after subgrid is addressed in [grid-2] spec.
     #[animation(error)]
-    Subgrid(Box<LineNameList>),
+    Subgrid(Box<GenericLineNameList<I>>),
     /// `masonry` value.
     /// https://github.com/w3c/csswg-drafts/issues/4650
     Masonry,
