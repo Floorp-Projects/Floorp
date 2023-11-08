@@ -5,7 +5,7 @@ Working on Firefox, we strongly recommend working with stack of patches.
 Patches should be small and could be landed in the order used to push them.
 This also helps to breakdown the work for different reviewers.
 
-As it can be complex for new comers, this documentation explains the
+As it can be complex for newcomers, this documentation explains the
 various commands.
 
 In Phabricator, the stack can be seen in the `Revision Contents` section.
@@ -72,14 +72,15 @@ Fortunately, VCS support this easily.
 .. code-block:: shell
 
     # Mercurial
-    # Just change the order the patch. The tool should highlight
+    # Just change the order of the patches. The tool should highlight
     # potential risks of conflicts.
-    # Note that ctrl+c works well if used
+    # Note that ctrl+c works well if used.
     $ hg histedit
 
     # Git
-    # In the editor, just move the line below/above
-    # Remove everything if you want to cancel the operation
+    # In the editor, just move the patches to the line below/above to
+    # reorder commits.
+    # Remove everything if you want to cancel the operation.
     $ git rebase -i
 
 

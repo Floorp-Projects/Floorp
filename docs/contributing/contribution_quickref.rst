@@ -124,7 +124,25 @@ To write a patch
 
 Make the changes you need in the codebase. You can look up UI text in `Searchfox <https://searchfox.org>`__ to find the right file.
 
-Then:
+After making your changes, visualize your changes to ensure you're including all the necessary work:
+
+.. code-block:: shell
+
+    # Mercurial
+    # For files changed/added/removed
+    $ hg status
+
+    # For detailed line changes
+    $ hg diff
+
+    # Git
+    # For files changed/added/removed
+    $ git status
+
+    # For detailed line changes
+    $ git diff
+
+Then commit your changes:
 
 .. code-block:: shell
 
@@ -146,6 +164,10 @@ The commit message should look like:
 
 **Make sure you include the bug number and at least one reviewer (or reviewer group) in this format.**
 
+For example, here is an example of a good commit message:
+"Bug 123456 - Null-check presentation shell so we don't crash when a button removes itself
+during its own onclick handler. r=person"
+
 To :ref:`find a reviewer or a review group <Getting reviews>`, the easiest way is to run
 ``hg log <modified-file>`` (or ``git log <modified-file>``, if
 you're using git) on the relevant files, and look who usually is
@@ -164,7 +186,7 @@ To visualize your patch in the repository, run:
 
 :ref:`More information on how to work with stack of patches <Working with stack of patches Quick Reference>`
 
-:ref:`More information <Mercurial Overview>`
+:ref:`More information on Mercurial <Mercurial Overview>`
 
 To make sure the change follows the coding style
 ------------------------------------------------
@@ -261,7 +283,7 @@ If you wrote several patches on top of each other:
     $ moz-phab submit <first_revision>::<last_revision>
 
 `More
-information <https://moz-conduit.readthedocs.io/en/latest/phabricator-user.html>`__
+information on how to use Phabricator and MozPhab <https://moz-conduit.readthedocs.io/en/latest/phabricator-user.html>`__
 
 To update the working directory
 -------------------------------
@@ -285,6 +307,9 @@ If your patch is not loaded in your working directory, you first need to re-appl
 .. code-block:: shell
 
     $ moz-phab patch D<revision_id>
+
+    # Or you can use the URL of the revision on Phabricator
+    $ moz-phab patch https://phabricator.services.mozilla.com/D<revision_id>
 
 Make your changes in the working folder and run:
 
