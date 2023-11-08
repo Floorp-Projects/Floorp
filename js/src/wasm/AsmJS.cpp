@@ -728,10 +728,7 @@ static bool ParseVarOrConstStatement(AsmJSParser<Unit>& parser,
     return true;
   }
 
-  *var = parser.statementListItem(YieldIsName);
-  if (!*var) {
-    return false;
-  }
+  MOZ_TRY_VAR_OR_RETURN(*var, parser.statementListItem(YieldIsName), false);
 
   MOZ_ASSERT((*var)->isKind(ParseNodeKind::VarStmt) ||
              (*var)->isKind(ParseNodeKind::ConstDecl));
@@ -6378,10 +6375,9 @@ static bool CheckModuleReturn(ModuleValidator<Unit>& m) {
   }
   ts.anyCharsAccess().ungetToken();
 
-  ParseNode* returnStmt = m.parser().statementListItem(YieldIsName);
-  if (!returnStmt) {
-    return false;
-  }
+  ParseNode* returnStmt;
+  MOZ_TRY_VAR_OR_RETURN(returnStmt, m.parser().statementListItem(YieldIsName),
+                        false);
 
   ParseNode* returnExpr = ReturnExpr(returnStmt);
   if (!returnExpr) {
