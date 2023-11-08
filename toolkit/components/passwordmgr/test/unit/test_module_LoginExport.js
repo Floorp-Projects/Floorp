@@ -201,6 +201,7 @@ add_task(async function test_export_multiple_rows() {
     '"http://example.net","the username","the password","The HTTP Realm",,,,,',
     '"http://example.net","username two","the password","The HTTP Realm Other",,,,,',
     '"ftp://example.net","the username","the password","ftp://example.net",,,,,',
+    '"http://example.net","the username","the password","",,,,,',
     '"chrome://example_extension","the username","the password one","Example Login One",,,,,',
     '"chrome://example_extension","the username","the password two","Example Login Two",,,,,',
     '"file://","file: username","file: password",,"file://",,,,',
