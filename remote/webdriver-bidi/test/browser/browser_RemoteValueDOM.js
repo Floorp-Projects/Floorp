@@ -120,7 +120,6 @@ add_task(async function test_serializeRemoteComplexValues() {
     const domElRef = nodeCache.getOrCreateNodeReference(domEl, seenNodeIds);
 
     const REMOTE_COMPLEX_VALUES = [
-      { value: content, serialized: { type: "window" } },
       {
         value: content.document.querySelector("div"),
         serialized: {
@@ -179,46 +178,50 @@ add_task(async function test_serializeRemoteComplexValues() {
     ];
 
     for (const type of REMOTE_COMPLEX_VALUES) {
-      const { value, serialized } = type;
-      const serializationOptionsWithDefaults = setDefaultSerializationOptions();
-      const serializationInternalMapWithNone = new Map();
+      serializeAndAssertRemoteValue(type);
+    }
+  });
+});
 
-      info(`Checking '${serialized.type}' with none ownershipType`);
+add_task(async function test_serializeWindow() {
+  await loadURL(inline("<iframe>"));
 
-      const serializedValue = serialize(
-        value,
-        serializationOptionsWithDefaults,
-        "none",
-        serializationInternalMapWithNone,
-        realm,
-        { nodeCache, seenNodeIds }
-      );
+  await runTestInContent(() => {
+    const REMOTE_COMPLEX_VALUES = [
+      {
+        value: content,
+        serialized: {
+          type: "window",
+          value: {
+            context: content.browsingContext.browserId.toString(),
+            isTopBrowsingContext: true,
+          },
+        },
+      },
+      {
+        value: content.frames[0],
+        serialized: {
+          type: "window",
+          value: {
+            context: content.frames[0].browsingContext.id.toString(),
+          },
+        },
+      },
+      {
+        value: content.document.querySelector("iframe").contentWindow,
+        serialized: {
+          type: "window",
+          value: {
+            context: content.document
+              .querySelector("iframe")
+              .contentWindow.browsingContext.id.toString(),
+          },
+        },
+      },
+    ];
 
-      assertInternalIds(serializationInternalMapWithNone, 0);
-      Assert.deepEqual(serialized, serializedValue, "Got expected structure");
-
-      info(`Checking '${serialized.type}' with root ownershipType`);
-      const serializationInternalMapWithRoot = new Map();
-      const serializedWithRoot = serialize(
-        value,
-        serializationOptionsWithDefaults,
-        "root",
-        serializationInternalMapWithRoot,
-        realm,
-        { nodeCache, seenNodeIds }
-      );
-
-      assertInternalIds(serializationInternalMapWithRoot, 0);
-      Assert.equal(
-        typeof serializedWithRoot.handle,
-        "string",
-        "Got a handle property"
-      );
-      Assert.deepEqual(
-        Object.assign({}, serialized, { handle: serializedWithRoot.handle }),
-        serializedWithRoot,
-        "Got expected structure, plus a generated handle id"
-      );
+    for (const type of REMOTE_COMPLEX_VALUES) {
+      serializeAndAssertRemoteValue(type);
     }
   });
 });
@@ -790,6 +793,50 @@ function runTestInContent(callback) {
       const seenNodeIds = new Map();
       const realm = new WindowRealm(content);
       const serializationInternalMap = new Map();
+
+      function serializeAndAssertRemoteValue(remoteValue) {
+        const { value, serialized } = remoteValue;
+        const serializationOptionsWithDefaults =
+          setDefaultSerializationOptions();
+        const serializationInternalMapWithNone = new Map();
+
+        info(`Checking '${serialized.type}' with none ownershipType`);
+
+        const serializedValue = serialize(
+          value,
+          serializationOptionsWithDefaults,
+          "none",
+          serializationInternalMapWithNone,
+          realm,
+          { nodeCache, seenNodeIds }
+        );
+
+        assertInternalIds(serializationInternalMapWithNone, 0);
+        Assert.deepEqual(serialized, serializedValue, "Got expected structure");
+
+        info(`Checking '${serialized.type}' with root ownershipType`);
+        const serializationInternalMapWithRoot = new Map();
+        const serializedWithRoot = serialize(
+          value,
+          serializationOptionsWithDefaults,
+          "root",
+          serializationInternalMapWithRoot,
+          realm,
+          { nodeCache, seenNodeIds }
+        );
+
+        assertInternalIds(serializationInternalMapWithRoot, 0);
+        Assert.equal(
+          typeof serializedWithRoot.handle,
+          "string",
+          "Got a handle property"
+        );
+        Assert.deepEqual(
+          Object.assign({}, serialized, { handle: serializedWithRoot.handle }),
+          serializedWithRoot,
+          "Got expected structure, plus a generated handle id"
+        );
+      }
 
       // eslint-disable-next-line no-eval
       eval(`(${callback})()`);
