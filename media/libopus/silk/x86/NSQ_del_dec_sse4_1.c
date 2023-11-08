@@ -590,7 +590,7 @@ static OPUS_INLINE void silk_noise_shape_quantizer_del_dec_sse4_1(
                 /* Input minus prediction plus noise feedback                       */
                 /* r = x[ i ] - LTP_pred - LPC_pred + n_AR + n_Tilt + n_LF + n_LTP  */
                 tmp1 = silk_ADD_SAT32( n_AR_Q14, n_LF_Q14 );                                /* Q14 */
-                tmp2 = silk_ADD32( n_LTP_Q14, LPC_pred_Q14 );                               /* Q13 */
+                tmp2 = silk_ADD32_ovflw( n_LTP_Q14, LPC_pred_Q14 );                         /* Q13 */
                 tmp1 = silk_SUB_SAT32( tmp2, tmp1 );                                        /* Q13 */
                 tmp1 = silk_RSHIFT_ROUND( tmp1, 4 );                                        /* Q10 */
 
@@ -667,10 +667,10 @@ static OPUS_INLINE void silk_noise_shape_quantizer_del_dec_sse4_1(
 
                 /* Add predictions */
                 LPC_exc_Q14 = silk_ADD32( exc_Q14, LTP_pred_Q14 );
-                xq_Q14      = silk_ADD32( LPC_exc_Q14, LPC_pred_Q14 );
+                xq_Q14      = silk_ADD32_ovflw( LPC_exc_Q14, LPC_pred_Q14 );
 
                 /* Update states */
-                psSS[ 0 ].Diff_Q14     = silk_SUB_LSHIFT32( xq_Q14, x_Q10[ i ], 4 );
+                psSS[ 0 ].Diff_Q14     = silk_SUB32_ovflw( xq_Q14, silk_LSHIFT32( x_Q10[ i ], 4 ) );
                 sLF_AR_shp_Q14         = silk_SUB32_ovflw( psSS[ 0 ].Diff_Q14, n_AR_Q14 );
                 psSS[ 0 ].sLTP_shp_Q14 = silk_SUB_SAT32( sLF_AR_shp_Q14, n_LF_Q14 );
                 psSS[ 0 ].LF_AR_Q14    = sLF_AR_shp_Q14;
@@ -687,10 +687,10 @@ static OPUS_INLINE void silk_noise_shape_quantizer_del_dec_sse4_1(
 
                 /* Add predictions */
                 LPC_exc_Q14 = silk_ADD32( exc_Q14, LTP_pred_Q14 );
-                xq_Q14      = silk_ADD32( LPC_exc_Q14, LPC_pred_Q14 );
+                xq_Q14      = silk_ADD32_ovflw( LPC_exc_Q14, LPC_pred_Q14 );
 
                 /* Update states */
-                psSS[ 1 ].Diff_Q14     = silk_SUB_LSHIFT32( xq_Q14, x_Q10[ i ], 4 );
+                psSS[ 1 ].Diff_Q14     = silk_SUB32_ovflw( xq_Q14, silk_LSHIFT32( x_Q10[ i ], 4 ) );
                 sLF_AR_shp_Q14         = silk_SUB32_ovflw( psSS[ 1 ].Diff_Q14, n_AR_Q14 );
                 psSS[ 1 ].sLTP_shp_Q14 = silk_SUB_SAT32( sLF_AR_shp_Q14, n_LF_Q14 );
                 psSS[ 1 ].LF_AR_Q14    = sLF_AR_shp_Q14;
