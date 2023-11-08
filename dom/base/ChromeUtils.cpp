@@ -162,8 +162,10 @@ void ChromeUtils::Base64URLDecode(GlobalObject& aGlobal,
   }
 
   JS::Rooted<JSObject*> buffer(
-      aGlobal.Context(), ArrayBuffer::Create(aGlobal.Context(), data, aRv));
-  if (aRv.Failed()) {
+      aGlobal.Context(),
+      ArrayBuffer::Create(aGlobal.Context(), data.Length(), data.Elements()));
+  if (NS_WARN_IF(!buffer)) {
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return;
   }
   aRetval.set(buffer);

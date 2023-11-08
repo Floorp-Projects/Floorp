@@ -37,8 +37,9 @@ nsISupports* AuthenticatorResponse::GetParentObject() const { return mParent; }
 void AuthenticatorResponse::GetClientDataJSON(
     JSContext* aCx, JS::MutableHandle<JSObject*> aValue, ErrorResult& aRv) {
   if (!mClientDataJSONCachedObj) {
-    mClientDataJSONCachedObj = ArrayBuffer::Create(aCx, mClientDataJSON, aRv);
-    if (aRv.Failed()) {
+    mClientDataJSONCachedObj = ArrayBuffer::Create(aCx, mClientDataJSON);
+    if (!mClientDataJSONCachedObj) {
+      aRv.NoteJSContextException(aCx);
       return;
     }
   }

@@ -224,8 +224,10 @@ void IncomingDatagramStreamAlgorithms::ReturnDatagram(JSContext* aCx,
   UniquePtr<DatagramEntry> entry = mDatagrams->mIncomingDatagramsQueue.Pop();
 
   // Pull Step 6: Let chunk be a new Uint8Array object representing bytes.
-  JSObject* outView = Uint8Array::Create(aCx, entry->mBuffer, aRv);
-  if (aRv.Failed()) {
+  JSObject* outView = Uint8Array::Create(aCx, entry->mBuffer.Length(),
+                                         entry->mBuffer.Elements());
+  if (!outView) {
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return;
   }
   JS::Rooted<JSObject*> chunk(aCx, outView);

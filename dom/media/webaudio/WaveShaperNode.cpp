@@ -364,8 +364,7 @@ void WaveShaperNode::SendCurveToTrack() {
 }
 
 void WaveShaperNode::GetCurve(JSContext* aCx,
-                              JS::MutableHandle<JSObject*> aRetval,
-                              ErrorResult& aError) {
+                              JS::MutableHandle<JSObject*> aRetval) {
   // Let's return a null value if the list is empty.
   if (mCurve.IsEmpty()) {
     aRetval.set(nullptr);
@@ -373,11 +372,8 @@ void WaveShaperNode::GetCurve(JSContext* aCx,
   }
 
   MOZ_ASSERT(mCurve.Length() >= 2);
-  JSObject* curve = Float32Array::Create(aCx, this, mCurve, aError);
-  if (aError.Failed()) {
-    return;
-  }
-  aRetval.set(curve);
+  aRetval.set(
+      Float32Array::Create(aCx, this, mCurve.Length(), mCurve.Elements()));
 }
 
 void WaveShaperNode::SetOversample(OverSampleType aType) {

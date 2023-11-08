@@ -578,11 +578,11 @@ nsresult UDPSocket::DispatchReceivedData(const nsACString& aRemoteAddress,
   JSContext* cx = jsapi.cx();
 
   // Copy packet data to ArrayBuffer
-  ErrorResult error;
-  JS::Rooted<JSObject*> arrayBuf(cx, ArrayBuffer::Create(cx, aData, error));
+  JS::Rooted<JSObject*> arrayBuf(
+      cx, ArrayBuffer::Create(cx, aData.Length(), aData.Elements()));
 
-  if (NS_WARN_IF(error.Failed())) {
-    return error.StealNSResult();
+  if (NS_WARN_IF(!arrayBuf)) {
+    return NS_ERROR_FAILURE;
   }
 
   JS::Rooted<JS::Value> jsData(cx, JS::ObjectValue(*arrayBuf));

@@ -42,9 +42,9 @@ void Pose::SetFloat32Array(JSContext* aJSContext, nsWrapperCache* creator,
   }
 
   if (!aObj) {
-    aObj =
-        Float32Array::Create(aJSContext, creator, Span(aVal, aValLength), aRv);
-    if (aRv.Failed()) {
+    aObj = Float32Array::Create(aJSContext, creator, aValLength, aVal);
+    if (!aObj) {
+      aRv.NoteJSContextException(aJSContext);
       return;
     }
   } else {

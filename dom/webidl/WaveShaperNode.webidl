@@ -28,7 +28,7 @@ interface WaveShaperNode : AudioNode {
   constructor(BaseAudioContext context,
               optional WaveShaperOptions options = {});
 
-      [Cached, Pure, Throws]
+      [Cached, Pure, SetterThrows]
       attribute Float32Array? curve;
       attribute OverSampleType oversample;
 
