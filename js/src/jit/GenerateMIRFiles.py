@@ -135,6 +135,7 @@ def gen_mir_class(
     compute_range,
     can_recover,
     clone,
+    can_consume_float32,
 ):
     """Generates class definition for a single MIR opcode."""
 
@@ -268,6 +269,10 @@ def gen_mir_class(
             code += "  bool canRecoverOnBailout() const override { return true; }\\\n"
     if clone:
         code += "  ALLOW_CLONE(" + class_name + ")\\\n"
+    if can_consume_float32:
+        code += (
+            "  bool canConsumeFloat32(MUse* use) const override { return true; }\\\n"
+        )
     code += "};\\\n"
     return code
 
@@ -323,44 +328,43 @@ def generate_mir_header(c_out, yaml_path):
             assert arguments is None or isinstance(arguments, OrderedDict)
 
             no_type_policy = op.get("type_policy", None)
-            assert no_type_policy is None or no_type_policy == "none"
+            assert no_type_policy in (None, "none")
 
             result = op.get("result_type", None)
             assert result is None or isinstance(result, str)
 
             guard = op.get("guard", None)
-            assert guard is None or True
+            assert guard in (None, True, False)
 
             movable = op.get("movable", None)
-            assert movable is None or True
+            assert movable in (None, True, False)
 
             folds_to = op.get("folds_to", None)
-            assert folds_to is None or folds_to == "custom"
+            assert folds_to in (None, "custom")
 
             congruent_to = op.get("congruent_to", None)
-            assert (
-                congruent_to is None
-                or congruent_to == "if_operands_equal"
-                or congruent_to == "custom"
-            )
+            assert congruent_to in (None, "if_operands_equal", "custom")
 
             alias_set = op.get("alias_set", None)
-            assert alias_set is None or True or isinstance(alias_set, str)
+            assert alias_set in (None, "none", "custom")
 
             might_alias = op.get("might_alias", None)
-            assert might_alias is None or might_alias == "custom"
+            assert might_alias in (None, "custom")
 
             possibly_calls = op.get("possibly_calls", None)
-            assert possibly_calls is None or True or possibly_calls == "custom"
+            assert possibly_calls in (None, True, "custom")
 
             compute_range = op.get("compute_range", None)
-            assert compute_range is None or compute_range == "custom"
+            assert compute_range in (None, "custom")
 
             can_recover = op.get("can_recover", None)
-            assert can_recover is None or True or can_recover == "custom"
+            assert can_recover in (None, True, False, "custom")
 
             clone = op.get("clone", None)
-            assert clone is None or True
+            assert clone in (None, True, False)
+
+            can_consume_float32 = op.get("can_consume_float32", None)
+            assert can_consume_float32 in (None, True, False)
 
             code = gen_mir_class(
                 name,
@@ -378,6 +382,7 @@ def generate_mir_header(c_out, yaml_path):
                 compute_range,
                 can_recover,
                 clone,
+                can_consume_float32,
             )
             mir_op_classes.append(code)
 
