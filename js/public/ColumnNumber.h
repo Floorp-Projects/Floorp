@@ -520,7 +520,7 @@ class TaggedColumnNumberOneOrigin : public detail::TaggedColumnNumberWithOrigin<
                                          : other.oneOriginValue()) {}
 
   static TaggedColumnNumberOneOrigin forDifferentialTesting() {
-    return TaggedColumnNumberOneOrigin(LimitedColumnNumberOneOrigin(0));
+    return TaggedColumnNumberOneOrigin(LimitedColumnNumberOneOrigin());
   }
 };
 
