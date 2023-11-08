@@ -1201,11 +1201,11 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
             TripledotHandling tripledotHandling,
             PossibleError* possibleError = nullptr,
             InvokedPrediction invoked = PredictUninvoked);
-  Node assignExpr(InHandling inHandling, YieldHandling yieldHandling,
-                  TripledotHandling tripledotHandling,
-                  PossibleError* possibleError = nullptr,
-                  InvokedPrediction invoked = PredictUninvoked);
-  Node assignExprWithoutYieldOrAwait(YieldHandling yieldHandling);
+  NodeResult assignExpr(InHandling inHandling, YieldHandling yieldHandling,
+                        TripledotHandling tripledotHandling,
+                        PossibleError* possibleError = nullptr,
+                        InvokedPrediction invoked = PredictUninvoked);
+  NodeResult assignExprWithoutYieldOrAwait(YieldHandling yieldHandling);
   UnaryNodeType yieldExpression(InHandling inHandling);
   Node condExpr(InHandling inHandling, YieldHandling yieldHandling,
                 TripledotHandling tripledotHandling,
