@@ -47,12 +47,6 @@ export class PdfjsChild extends JSWindowActorChild {
         this.dispatchEvent(type, null);
         break;
       }
-
-      case "PDFJS:Child:fallbackDownload":
-        if (this.fallbackCallback) {
-          this.fallbackCallback(msg.data.download);
-        }
-        break;
     }
   }
 }

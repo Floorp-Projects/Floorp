@@ -58,10 +58,6 @@ export class PdfjsParent extends JSWindowActorParent {
 
   receiveMessage(aMsg) {
     switch (aMsg.name) {
-      case "PDFJS:Parent:displayWarning":
-        this._displayWarning(aMsg);
-        break;
-
       case "PDFJS:Parent:updateControlState":
         return this._updateControlState(aMsg);
       case "PDFJS:Parent:updateMatchesCount":
@@ -276,64 +272,5 @@ export class PdfjsParent extends JSWindowActorParent {
 
     // Clean up any SwapDocShells event listeners.
     browser?.removeEventListener("SwapDocShells", this);
-  }
-
-  /*
-   * Display a notification warning when the renderer isn't sure
-   * a pdf displayed correctly.
-   */
-  _displayWarning(aMsg) {
-    let data = aMsg.data;
-    let browser = this.browser;
-
-    let tabbrowser = browser.getTabBrowser();
-    let notificationBox = tabbrowser.getNotificationBox(browser);
-
-    // Flag so we don't send the message twice, since if the user clicks
-    // "open with different viewer" both the button callback and
-    // eventCallback will be called.
-    let messageSent = false;
-    let sendMessage = download => {
-      // Don't send a response again if we already responded when the button was
-      // clicked.
-      if (messageSent) {
-        return;
-      }
-      try {
-        this.sendAsyncMessage("PDFJS:Child:fallbackDownload", { download });
-        messageSent = true;
-      } catch (ex) {
-        // Ignore any exception if it is related to the child
-        // getting destroyed before the message can be sent.
-        if (!/JSWindowActorParent cannot send at the moment/.test(ex.message)) {
-          throw ex;
-        }
-      }
-    };
-    let buttons = [
-      {
-        label: data.label,
-        accessKey: data.accessKey,
-        callback() {
-          sendMessage(true);
-        },
-      },
-    ];
-    notificationBox.appendNotification(
-      "pdfjs-fallback",
-      {
-        label: data.message,
-        priority: notificationBox.PRIORITY_INFO_MEDIUM,
-        eventCallback: eventType => {
-          // Currently there is only one event "removed" but if there are any other
-          // added in the future we still only care about removed at the moment.
-          if (eventType !== "removed") {
-            return;
-          }
-          sendMessage(false);
-        },
-      },
-      buttons
-    );
   }
 }

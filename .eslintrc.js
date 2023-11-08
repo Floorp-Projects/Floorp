@@ -1796,7 +1796,6 @@ module.exports = {
         "toolkit/components/pdfjs/test/browser_pdfjs_js.js",
         "toolkit/components/pdfjs/test/browser_pdfjs_main.js",
         "toolkit/components/pdfjs/test/browser_pdfjs_navigation.js",
-        "toolkit/components/pdfjs/test/browser_pdfjs_notification_close_on_navigation.js",
         "toolkit/components/pdfjs/test/browser_pdfjs_saveas.js",
         "toolkit/components/pdfjs/test/browser_pdfjs_savedialog.js",
         "toolkit/components/pdfjs/test/browser_pdfjs_views.js",
