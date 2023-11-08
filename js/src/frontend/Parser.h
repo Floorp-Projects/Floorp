@@ -538,18 +538,18 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
                                               ListNodeType body);
   bool finishFunction(bool isStandaloneFunction = false);
 
-  inline NameNodeType newName(TaggedParserAtomIndex name);
-  inline NameNodeType newName(TaggedParserAtomIndex name, TokenPos pos);
+  inline NameNodeResult newName(TaggedParserAtomIndex name);
+  inline NameNodeResult newName(TaggedParserAtomIndex name, TokenPos pos);
 
-  inline NameNodeType newPrivateName(TaggedParserAtomIndex name);
+  inline NameNodeResult newPrivateName(TaggedParserAtomIndex name);
 
   NameNodeType newInternalDotName(TaggedParserAtomIndex name);
   NameNodeType newThisName();
   NameNodeType newNewTargetName();
   NameNodeType newDotGeneratorName();
 
-  NameNodeType identifierReference(TaggedParserAtomIndex name);
-  NameNodeType privateNameReference(TaggedParserAtomIndex name);
+  NameNodeResult identifierReference(TaggedParserAtomIndex name);
+  NameNodeResult privateNameReference(TaggedParserAtomIndex name);
 
   Node noSubstitutionTaggedTemplate();
 
