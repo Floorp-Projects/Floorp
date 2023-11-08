@@ -526,6 +526,33 @@ void nsDOMNavigationTiming::NotifyDocShellStateChanged(
       (aDocShellState == DocShellState::eActive);
 }
 
+void nsDOMNavigationTiming::MaybeAddLCPProfilerMarker() {
+  // This method might get called from outside of the main thread, so can't
+  // check `profiler_thread_is_being_profiled_for_markers()` here.
+  if (!profiler_is_active_and_unpaused()) {
+    return;
+  }
+
+  TimeStamp navStartTime = GetNavigationStartTimeStamp();
+  TimeStamp lcpTime = GetLargestContentfulRenderTimeStamp();
+
+  if (!navStartTime || !lcpTime) {
+    return;
+  }
+
+  TimeDuration elapsed = lcpTime - navStartTime;
+  nsPrintfCString marker("Largest contentful paint after %dms",
+                         int(elapsed.ToMilliseconds()));
+  PROFILER_MARKER_TEXT(
+      "LargestContentfulPaint", DOM,
+      // Putting this marker to the main thread even if it's called from another
+      // one.
+      MarkerOptions(MarkerThreadId::MainThread(),
+                    MarkerTiming::Interval(navStartTime, lcpTime),
+                    MarkerInnerWindowIdFromDocShell(mDocShell)),
+      marker);
+}
+
 mozilla::TimeStamp nsDOMNavigationTiming::GetUnloadEventStartTimeStamp() const {
   nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
   // todo: if you intend to update CheckSameOriginURI to log the error to the
