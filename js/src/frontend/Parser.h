@@ -1193,10 +1193,10 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
                                                     ParseNodeKind* forHeadKind,
                                                     Node* forInOrOfExpression);
 
-  Node expr(InHandling inHandling, YieldHandling yieldHandling,
-            TripledotHandling tripledotHandling,
-            PossibleError* possibleError = nullptr,
-            InvokedPrediction invoked = PredictUninvoked);
+  NodeResult expr(InHandling inHandling, YieldHandling yieldHandling,
+                  TripledotHandling tripledotHandling,
+                  PossibleError* possibleError = nullptr,
+                  InvokedPrediction invoked = PredictUninvoked);
   NodeResult assignExpr(InHandling inHandling, YieldHandling yieldHandling,
                         TripledotHandling tripledotHandling,
                         PossibleError* possibleError = nullptr,
@@ -1228,9 +1228,9 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
                          TripledotHandling tripledotHandling, TokenKind tt,
                          PossibleError* possibleError,
                          InvokedPrediction invoked);
-  Node exprInParens(InHandling inHandling, YieldHandling yieldHandling,
-                    TripledotHandling tripledotHandling,
-                    PossibleError* possibleError = nullptr);
+  NodeResult exprInParens(InHandling inHandling, YieldHandling yieldHandling,
+                          TripledotHandling tripledotHandling,
+                          PossibleError* possibleError = nullptr);
 
   bool tryNewTarget(NewTargetNodeType* newTarget);
 
