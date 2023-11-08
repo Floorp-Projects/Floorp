@@ -44,6 +44,7 @@ import org.mozilla.fenix.compose.Divider
 import org.mozilla.fenix.compose.Image
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.compose.button.SecondaryButton
+import org.mozilla.fenix.compose.ext.onShown
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.HighlightType
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.OptedIn.ProductReviewState.AnalysisPresent
@@ -55,6 +56,9 @@ import java.util.SortedMap
 
 private val combinedParentHorizontalPadding = 32.dp
 private val productRecommendationImageSize = 60.dp
+
+private const val PRODUCT_RECOMMENDATION_SETTLE_TIME_MS = 1500
+private const val PRODUCT_RECOMMENDATION_IMPRESSION_THRESHOLD = 0.5f
 
 /**
  * UI for review quality check content displaying product analysis.
@@ -74,6 +78,7 @@ private val productRecommendationImageSize = 60.dp
  * @param onSettingsExpandToggleClick Invoked when the user expands or collapses the settings card.
  * @param onInfoExpandToggleClick Invoked when the user expands or collapses the info card.
  * @param onRecommendedProductClick Invoked when the user clicks on the product recommendation.
+ * @param onRecommendedProductImpression Invoked when the user has seen the product recommendation.
  * @param modifier The modifier to be applied to the Composable.
  */
 @Composable
@@ -93,6 +98,7 @@ fun ProductAnalysis(
     onSettingsExpandToggleClick: () -> Unit,
     onInfoExpandToggleClick: () -> Unit,
     onRecommendedProductClick: (aid: String, url: String) -> Unit,
+    onRecommendedProductImpression: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -148,12 +154,8 @@ fun ProductAnalysis(
         if (productAnalysis.recommendedProductState is RecommendedProductState.Product) {
             ProductRecommendation(
                 product = productAnalysis.recommendedProductState,
-                onClick = {
-                    onRecommendedProductClick(
-                        productAnalysis.recommendedProductState.aid,
-                        productAnalysis.recommendedProductState.productUrl,
-                    )
-                },
+                onClick = onRecommendedProductClick,
+                onImpression = onRecommendedProductImpression,
             )
         }
 
@@ -436,13 +438,21 @@ private enum class Highlight(
 @Composable
 private fun ProductRecommendation(
     product: RecommendedProductState.Product,
-    onClick: () -> Unit,
+    onClick: (String, String) -> Unit,
+    onImpression: (String) -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         ReviewQualityCheckCard(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable(onClick = onClick),
+                .clickable {
+                    onClick(product.aid, product.productUrl)
+                }
+                .onShown(
+                    threshold = PRODUCT_RECOMMENDATION_IMPRESSION_THRESHOLD,
+                    settleTime = PRODUCT_RECOMMENDATION_SETTLE_TIME_MS,
+                    onVisible = { onImpression(product.aid) },
+                ),
         ) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(
@@ -621,6 +631,7 @@ private fun ProductAnalysisPreview(
                 onSettingsExpandToggleClick = { isSettingsExpanded = !isSettingsExpanded },
                 onInfoExpandToggleClick = { isInfoExpanded = !isInfoExpanded },
                 onRecommendedProductClick = { _, _ -> },
+                onRecommendedProductImpression = {},
             )
         }
     }
