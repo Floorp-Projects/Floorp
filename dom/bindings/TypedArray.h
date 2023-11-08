@@ -799,14 +799,14 @@ using ArrayBuffer = TypedArray<JS::ArrayBuffer>;
 //       So this is best used to pass from things that understand nsTArray to
 //       things that understand TypedArray, as with ToJSValue.
 template <typename TypedArrayType>
-class TypedArrayCreator {
+class MOZ_STACK_CLASS TypedArrayCreator {
   typedef nsTArray<typename TypedArrayType::element_type> ArrayType;
 
  public:
   explicit TypedArrayCreator(const ArrayType& aArray) : mArray(aArray) {}
 
   JSObject* Create(JSContext* aCx) const {
-    return TypedArrayType::Create(aCx, mArray.Length(), mArray.Elements());
+    return TypedArrayType::Create(aCx, mArray);
   }
 
  private:
