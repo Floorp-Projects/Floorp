@@ -156,6 +156,13 @@
 #   - attribute not specified (default): no code generated
 #   - true: allows cloning
 #
+# can_consume_float32
+# ===================
+# Indicates whether this instruction's operands can have MIRType::Float32.
+# Possible values:
+#   - attribute not specified (default): no code generated
+#   - true: canConsumeFloat32 returns true
+#
 
 # TODO(no-TI): try to remove this instruction.
 - name: Start
@@ -2309,6 +2316,7 @@
   congruent_to: if_operands_equal
   alias_set: none
   type_policy: none
+  can_consume_float32: true
 
 - name: HasClass
   gen_boilerplate: false
