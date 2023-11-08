@@ -269,6 +269,7 @@ class BrowserIcons constructor(
      * via an in-memory cache is attempted first, followed by an asynchronous load as a fallback.
      *
      * @param url The URL of the website an icon should be loaded for.
+     * @param iconResource Optional [IconRequest.Resource] to load the icon from.
      * @param iconSize The preferred size of the icon that should be loaded.
      * @param isPrivate Whether this request for this icon came from a private session.
      * @param content The Composable content block to render the icon.
@@ -276,11 +277,13 @@ class BrowserIcons constructor(
     @Composable
     fun LoadableImage(
         url: String,
+        iconResource: IconRequest.Resource? = null,
         iconSize: IconRequest.Size = IconRequest.Size.DEFAULT,
         isPrivate: Boolean = false,
         content: @Composable IconLoaderScope.() -> Unit,
     ) {
-        val request = IconRequest(url, iconSize, emptyList(), null, isPrivate)
+        val iconResources = iconResource?.let { listOf(it) } ?: emptyList()
+        val request = IconRequest(url, iconSize, iconResources, null, isPrivate)
         val iconLoaderScope = remember(request) { InternalIconLoaderScope() }
 
         // Happy path: try to load icon synchronously from an in-memory cache.

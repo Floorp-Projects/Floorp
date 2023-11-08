@@ -38,12 +38,8 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -61,8 +57,6 @@ import org.mozilla.fenix.compose.Favicon
 import org.mozilla.fenix.compose.MenuItem
 import org.mozilla.fenix.compose.PagerIndicator
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
-import org.mozilla.fenix.ext.bitmapForUrl
-import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.settings.SupportUtils
 import org.mozilla.fenix.theme.FirefoxTheme
 import org.mozilla.fenix.wallpapers.WallpaperState
@@ -374,9 +368,9 @@ private fun TopSiteFaviconCard(
                 shape = RoundedCornerShape(4.dp),
             ) {
                 if (topSite is TopSite.Provided) {
-                    FaviconBitmap(topSite)
+                    TopSiteFavicon(topSite.url, topSite.imageUrl)
                 } else {
-                    FavIconForUrl(topSite.url)
+                    TopSiteFavicon(topSite.url)
                 }
             }
         }
@@ -394,45 +388,7 @@ private fun FaviconImage(painter: Painter) {
 }
 
 @Composable
-private fun FaviconBitmap(topSite: TopSite.Provided) {
-    var faviconBitmapUiState by remember { mutableStateOf<FaviconBitmapUiState>(FaviconBitmapUiState.Loading) }
-
-    val client = LocalContext.current.components.core.client
-
-    LaunchedEffect(topSite.imageUrl) {
-        val bitmapForUrl = client.bitmapForUrl(topSite.imageUrl)
-
-        faviconBitmapUiState = if (bitmapForUrl == null) {
-            FaviconBitmapUiState.Error
-        } else {
-            FaviconBitmapUiState.Data(bitmapForUrl.asImageBitmap())
-        }
-    }
-
-    when (val uiState = faviconBitmapUiState) {
-        is FaviconBitmapUiState.Data -> FaviconImage(BitmapPainter(uiState.imageBitmap))
-        is FaviconBitmapUiState.Error -> FaviconDefault(topSite.url)
-        is FaviconBitmapUiState.Loading -> {
-            // no-op
-            // Don't update the icon while loading else the top site icon could have a 'flashing' effect
-            // caused by the 'place holder letter' icon being immediately updated with the desired bitmap.
-        }
-    }
-}
-
-private sealed class FaviconBitmapUiState {
-    data class Data(val imageBitmap: ImageBitmap) : FaviconBitmapUiState()
-    object Loading : FaviconBitmapUiState()
-    object Error : FaviconBitmapUiState()
-}
-
-@Composable
-private fun FaviconDefault(url: String) {
-    Favicon(url = url, size = TOP_SITES_FAVICON_SIZE.dp)
-}
-
-@Composable
-private fun FavIconForUrl(url: String) {
+private fun TopSiteFavicon(url: String, imageUrl: String? = null) {
     when (url) {
         SupportUtils.POCKET_TRENDING_URL -> FaviconImage(painterResource(R.drawable.ic_pocket))
         SupportUtils.BAIDU_URL -> FaviconImage(painterResource(R.drawable.ic_baidu))
@@ -440,7 +396,7 @@ private fun FavIconForUrl(url: String) {
         SupportUtils.PDD_URL -> FaviconImage(painterResource(R.drawable.ic_pdd))
         SupportUtils.TC_URL -> FaviconImage(painterResource(R.drawable.ic_tc))
         SupportUtils.MEITUAN_URL -> FaviconImage(painterResource(R.drawable.ic_meituan))
-        else -> FaviconDefault(url)
+        else -> Favicon(url = url, size = TOP_SITES_FAVICON_SIZE.dp, imageUrl = imageUrl)
     }
 }
 

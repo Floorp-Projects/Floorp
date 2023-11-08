@@ -27,11 +27,12 @@ import org.mozilla.fenix.theme.FirefoxTheme
 /**
  * Load and display the favicon of a particular website.
  *
- * @param url Website [url] for which the favicon will be shown.
+ * @param url Website URL for which the favicon will be shown.
  * @param size [Dp] height and width of the image to be loaded.
  * @param modifier [Modifier] to be applied to the layout.
  * @param isPrivate Whether or not a private request (like in private browsing) should be used to
  * download the icon (if needed).
+ * @param imageUrl Optional image URL to create an [IconRequest.Resource] from.
  */
 @Composable
 fun Favicon(
@@ -39,6 +40,7 @@ fun Favicon(
     size: Dp,
     modifier: Modifier = Modifier,
     isPrivate: Boolean = false,
+    imageUrl: String? = null,
 ) {
     if (inComposePreview) {
         FaviconPlaceholder(
@@ -46,8 +48,16 @@ fun Favicon(
             modifier = modifier,
         )
     } else {
+        val iconResource = imageUrl?.let {
+            IconRequest.Resource(
+                url = imageUrl,
+                type = IconRequest.Resource.Type.FAVICON,
+            )
+        }
+
         components.core.icons.LoadableImage(
             url = url,
+            iconResource = iconResource,
             isPrivate = isPrivate,
             iconSize = size.toIconRequestSize(),
         ) {
