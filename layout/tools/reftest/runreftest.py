@@ -1020,7 +1020,7 @@ class RefTest(object):
         return status
 
     def getActiveTests(self, manifests, options, testDumpFile=None):
-        # These prefs will cause reftest.jsm to parse the manifests,
+        # These prefs will cause reftest.sys.mjs to parse the manifests,
         # dump the resulting tests to a file, and exit.
         prefs = {
             "reftest.manifests": json.dumps(manifests),

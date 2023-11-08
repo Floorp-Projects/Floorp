@@ -1,13 +1,11 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
 
-var EXPORTED_SYMBOLS = ["OnRefTestLoad", "OnRefTestUnload"];
+import { FileUtils } from "resource://gre/modules/FileUtils.sys.mjs";
 
-const { FileUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/FileUtils.sys.mjs"
-);
+import { globals } from "resource://reftest/globals.sys.mjs";
+
 const {
   XHTML_NS,
   XUL_NS,
@@ -35,26 +33,18 @@ const {
   FOCUS_FILTER_NON_NEEDS_FOCUS_TESTS,
 
   g,
-} = ChromeUtils.import("resource://reftest/globals.jsm");
-const { HttpServer } = ChromeUtils.importESModule(
-  "resource://reftest/httpd.sys.mjs"
-);
-const { ReadTopManifest, CreateUrls } = ChromeUtils.import(
-  "resource://reftest/manifest.jsm"
-);
-const { StructuredLogger } = ChromeUtils.importESModule(
-  "resource://reftest/StructuredLog.sys.mjs"
-);
-const { PerTestCoverageUtils } = ChromeUtils.importESModule(
-  "resource://reftest/PerTestCoverageUtils.sys.mjs"
-);
-const { XPCOMUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/XPCOMUtils.sys.mjs"
-);
+} = globals;
 
-const { E10SUtils } = ChromeUtils.importESModule(
-  "resource://gre/modules/E10SUtils.sys.mjs"
-);
+import { HttpServer } from "resource://reftest/httpd.sys.mjs";
+
+import {
+  ReadTopManifest,
+  CreateUrls,
+} from "resource://reftest/manifest.sys.mjs";
+import { StructuredLogger } from "resource://reftest/StructuredLog.sys.mjs";
+import { PerTestCoverageUtils } from "resource://reftest/PerTestCoverageUtils.sys.mjs";
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+import { E10SUtils } from "resource://gre/modules/E10SUtils.sys.mjs";
 
 const lazy = {};
 
@@ -154,7 +144,7 @@ function ReleaseCanvas(canvas) {
   }
 }
 
-function OnRefTestLoad(win) {
+export function OnRefTestLoad(win) {
   g.crashDumpDir = Services.dirsvc.get("ProfD", Ci.nsIFile);
   g.crashDumpDir.append("minidumps");
 
@@ -621,7 +611,7 @@ function StartTests() {
   }
 }
 
-function OnRefTestUnload() {}
+export function OnRefTestUnload() {}
 
 function AddURIUseCount(uri) {
   if (uri == null) {

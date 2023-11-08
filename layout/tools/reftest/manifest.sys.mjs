@@ -1,9 +1,8 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
 
-var EXPORTED_SYMBOLS = ["ReadTopManifest", "CreateUrls"];
+import { globals } from "resource://reftest/globals.sys.mjs";
 
 const {
   NS_GFXINFO_CONTRACTID,
@@ -27,13 +26,10 @@ const {
   FOCUS_FILTER_NON_NEEDS_FOCUS_TESTS,
 
   g,
-} = ChromeUtils.import("resource://reftest/globals.jsm");
-const { NetUtil } = ChromeUtils.importESModule(
-  "resource://gre/modules/NetUtil.sys.mjs"
-);
-const { AppConstants } = ChromeUtils.importESModule(
-  "resource://gre/modules/AppConstants.sys.mjs"
-);
+} = globals;
+
+import { NetUtil } from "resource://gre/modules/NetUtil.sys.mjs";
+import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 
 const NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX =
   "@mozilla.org/network/protocol;1?name=";
@@ -41,7 +37,7 @@ const NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX =
 const RE_PROTOCOL = /^\w+:/;
 const RE_PREF_ITEM = /^(|test-|ref-)pref\((.+?),(.*)\)$/;
 
-function ReadTopManifest(aFileURL, aFilter, aManifestID) {
+export function ReadTopManifest(aFileURL, aFilter, aManifestID) {
   var url = g.ioService.newURI(aFileURL);
   if (!url) {
     throw new Error("Expected a file or http URL for the manifest.");
@@ -937,7 +933,7 @@ function ServeTestBase(aURL, depth) {
   );
 }
 
-function CreateUrls(test) {
+export function CreateUrls(test) {
   let manifestURL = g.ioService.newURI(test.manifest);
 
   let testbase = manifestURL;

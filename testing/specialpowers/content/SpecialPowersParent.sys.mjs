@@ -428,7 +428,7 @@ export class SpecialPowersParent extends JSWindowActorParent {
   _applyPrefs(actions) {
     let requiresRefresh = false;
     for (let pref of actions) {
-      // This logic should match PrefRequiresRefresh in reftest.jsm
+      // This logic should match PrefRequiresRefresh in reftest.sys.mjs
       requiresRefresh =
         requiresRefresh ||
         pref.name == "layout.css.prefers-color-scheme.content-override" ||

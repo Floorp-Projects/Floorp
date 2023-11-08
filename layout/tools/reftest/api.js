@@ -98,8 +98,8 @@ this.reftest = class extends ExtensionAPI {
     // top-level window.
     let win = GetMainWindow();
     if (Services.appinfo.OS == "Android") {
-      ({ OnRefTestLoad, OnRefTestUnload } = ChromeUtils.import(
-        "resource://reftest/reftest.jsm"
+      ({ OnRefTestLoad, OnRefTestUnload } = ChromeUtils.importESModule(
+        "resource://reftest/reftest.sys.mjs"
       ));
       if (win) {
         startAndroid(win);
@@ -160,7 +160,6 @@ this.reftest = class extends ExtensionAPI {
 
     if (Services.appinfo.OS == "Android") {
       OnRefTestUnload();
-      Cu.unload("resource://reftest/reftest.jsm");
     }
   }
 };
