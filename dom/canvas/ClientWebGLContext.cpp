@@ -2795,7 +2795,7 @@ void ClientWebGLContext::GetUniform(JSContext* const cx,
     case LOCAL_GL_FLOAT_MAT4x2:
     case LOCAL_GL_FLOAT_MAT4x3: {
       const auto ptr = reinterpret_cast<const float*>(res.data);
-      JSObject* obj = dom::Float32Array::Create(cx, this, elemCount, ptr);
+      JSObject* obj = dom::Float32Array::Create(cx, this, Span(ptr, elemCount));
       MOZ_ASSERT(obj);
       retval.set(JS::ObjectOrNullValue(obj));
       return;
@@ -2805,7 +2805,7 @@ void ClientWebGLContext::GetUniform(JSContext* const cx,
     case LOCAL_GL_INT_VEC3:
     case LOCAL_GL_INT_VEC4: {
       const auto ptr = reinterpret_cast<const int32_t*>(res.data);
-      JSObject* obj = dom::Int32Array::Create(cx, this, elemCount, ptr);
+      JSObject* obj = dom::Int32Array::Create(cx, this, Span(ptr, elemCount));
       MOZ_ASSERT(obj);
       retval.set(JS::ObjectOrNullValue(obj));
       return;
@@ -2815,7 +2815,7 @@ void ClientWebGLContext::GetUniform(JSContext* const cx,
     case LOCAL_GL_UNSIGNED_INT_VEC3:
     case LOCAL_GL_UNSIGNED_INT_VEC4: {
       const auto ptr = reinterpret_cast<const uint32_t*>(res.data);
-      JSObject* obj = dom::Uint32Array::Create(cx, this, elemCount, ptr);
+      JSObject* obj = dom::Uint32Array::Create(cx, this, Span(ptr, elemCount));
       MOZ_ASSERT(obj);
       retval.set(JS::ObjectOrNullValue(obj));
       return;
@@ -4740,33 +4740,35 @@ void ClientWebGLContext::GetVertexAttrib(JSContext* cx, GLuint index,
 
   switch (pname) {
     case LOCAL_GL_CURRENT_VERTEX_ATTRIB: {
-      JS::Rooted<JSObject*> obj(cx);
-
       const auto& attrib = genericAttribs[index];
       switch (attrib.type) {
-        case webgl::AttribBaseType::Float:
-          obj = dom::Float32Array::Create(
-              cx, this, 4, reinterpret_cast<const float*>(attrib.data.data()));
+        case webgl::AttribBaseType::Float: {
+          const auto ptr = reinterpret_cast<const float*>(attrib.data.data());
+          retval.setObjectOrNull(
+              dom::Float32Array::Create(cx, this, Span(ptr, 4)));
           break;
-        case webgl::AttribBaseType::Int:
-          obj = dom::Int32Array::Create(
-              cx, this, 4,
-              reinterpret_cast<const int32_t*>(attrib.data.data()));
+        }
+        case webgl::AttribBaseType::Int: {
+          const auto ptr = reinterpret_cast<const int32_t*>(attrib.data.data());
+          retval.setObjectOrNull(
+              dom::Int32Array::Create(cx, this, Span(ptr, 4)));
           break;
-        case webgl::AttribBaseType::Uint:
-          obj = dom::Uint32Array::Create(
-              cx, this, 4,
-              reinterpret_cast<const uint32_t*>(attrib.data.data()));
+        }
+        case webgl::AttribBaseType::Uint: {
+          const auto ptr =
+              reinterpret_cast<const uint32_t*>(attrib.data.data());
+          retval.setObjectOrNull(
+              dom::Uint32Array::Create(cx, this, Span(ptr, 4)));
           break;
+        }
         case webgl::AttribBaseType::Boolean:
           MOZ_CRASH("impossible");
       }
 
-      if (!obj) {
+      if (retval.isNull()) {
         rv.Throw(NS_ERROR_OUT_OF_MEMORY);
         return;
       }
-      retval.set(JS::ObjectValue(*obj));
       return;
     }
 
