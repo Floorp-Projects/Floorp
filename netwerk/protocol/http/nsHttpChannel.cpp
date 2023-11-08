@@ -5557,6 +5557,7 @@ NS_IMETHODIMP nsHttpChannel::OnAuthAvailable() {
 
 NS_IMETHODIMP nsHttpChannel::OnAuthCancelled(bool userCancel) {
   LOG(("nsHttpChannel::OnAuthCancelled [this=%p]", this));
+  MOZ_ASSERT(mAuthRetryPending, "OnAuthCancelled should not be called twice");
 
   if (mTransactionPump) {
     // If the channel is trying to authenticate to a proxy and
