@@ -21,7 +21,8 @@ NS_IMPL_CYCLE_COLLECTION(ClipboardItem::ItemEntry, mGlobal, mData,
                          mPendingGetTypeRequests)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(ClipboardItem::ItemEntry)
-  NS_INTERFACE_MAP_ENTRY(nsISupports)
+  NS_INTERFACE_MAP_ENTRY(nsIAsyncClipboardRequestCallback)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, PromiseNativeHandler)
 NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ClipboardItem::ItemEntry)
@@ -30,7 +31,7 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(ClipboardItem::ItemEntry)
 void ClipboardItem::ItemEntry::ResolvedCallback(JSContext* aCx,
                                                 JS::Handle<JS::Value> aValue,
                                                 ErrorResult& aRv) {
-  MOZ_ASSERT(!mLoadingPromise.Exists());
+  MOZ_ASSERT(!mTransferable);
   mIsLoadingData = false;
   OwningStringOrBlob clipboardData;
   if (!clipboardData.Init(aCx, aValue)) {
@@ -45,7 +46,7 @@ void ClipboardItem::ItemEntry::ResolvedCallback(JSContext* aCx,
 void ClipboardItem::ItemEntry::RejectedCallback(JSContext* aCx,
                                                 JS::Handle<JS::Value> aValue,
                                                 ErrorResult& aRv) {
-  MOZ_ASSERT(!mLoadingPromise.Exists());
+  MOZ_ASSERT(!mTransferable);
   mIsLoadingData = false;
   RejectPendingPromises(NS_ERROR_DOM_DATA_ERR);
 }
@@ -77,94 +78,95 @@ ClipboardItem::ItemEntry::GetData() {
   return GetDataPromise::CreateAndResolve(std::move(data), __func__);
 }
 
+NS_IMETHODIMP ClipboardItem::ItemEntry::OnComplete(nsresult aResult) {
+  MOZ_ASSERT(mIsLoadingData);
+
+  mIsLoadingData = false;
+  nsCOMPtr<nsITransferable> trans = std::move(mTransferable);
+
+  if (NS_FAILED(aResult)) {
+    RejectPendingPromises(aResult);
+    return NS_OK;
+  }
+
+  MOZ_ASSERT(trans);
+  nsCOMPtr<nsISupports> data;
+  nsresult rv = trans->GetTransferData(NS_ConvertUTF16toUTF8(mType).get(),
+                                       getter_AddRefs(data));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    RejectPendingPromises(rv);
+    return NS_OK;
+  }
+
+  RefPtr<Blob> blob;
+  if (nsCOMPtr<nsISupportsString> supportsstr = do_QueryInterface(data)) {
+    nsAutoString str;
+    supportsstr->GetData(str);
+
+    blob = Blob::CreateStringBlob(mGlobal, NS_ConvertUTF16toUTF8(str), mType);
+  } else if (nsCOMPtr<nsIInputStream> istream = do_QueryInterface(data)) {
+    uint64_t available;
+    void* data = nullptr;
+    rv = NS_ReadInputStreamToBuffer(istream, &data, -1, &available);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      RejectPendingPromises(rv);
+      return NS_OK;
+    }
+
+    blob = Blob::CreateMemoryBlob(mGlobal, data, available, mType);
+  } else if (nsCOMPtr<nsISupportsCString> supportscstr =
+                 do_QueryInterface(data)) {
+    nsAutoCString str;
+    supportscstr->GetData(str);
+
+    blob = Blob::CreateStringBlob(mGlobal, str, mType);
+  }
+
+  if (!blob) {
+    RejectPendingPromises(NS_ERROR_DOM_DATA_ERR);
+    return NS_OK;
+  }
+
+  OwningStringOrBlob clipboardData;
+  clipboardData.SetAsBlob() = std::move(blob);
+  MaybeResolvePendingPromises(std::move(clipboardData));
+  return NS_OK;
+}
+
 void ClipboardItem::ItemEntry::LoadDataFromSystemClipboard(
-    nsITransferable& aTransferable) {
+    nsIAsyncGetClipboardData* aDataGetter) {
+  MOZ_ASSERT(aDataGetter);
   // XXX maybe we could consider adding a method to check whether the union
   // object is uninitialized or initialized.
   MOZ_DIAGNOSTIC_ASSERT(!mData.IsString() && !mData.IsBlob(),
                         "Data should be uninitialized.");
   MOZ_DIAGNOSTIC_ASSERT(mLoadResult.isNothing(), "Should have no load result");
-  MOZ_DIAGNOSTIC_ASSERT(!mIsLoadingData && !mLoadingPromise.Exists(),
+  MOZ_DIAGNOSTIC_ASSERT(!mIsLoadingData && !mTransferable,
                         "Should not be in the process of loading data");
 
-  nsresult rv;
-  nsCOMPtr<nsIClipboard> clipboard(
-      do_GetService("@mozilla.org/widget/clipboard;1", &rv));
-  if (NS_FAILED(rv)) {
+  mIsLoadingData = true;
+
+  mTransferable = do_CreateInstance("@mozilla.org/widget/transferable;1");
+  if (NS_WARN_IF(!mTransferable)) {
+    OnComplete(NS_ERROR_FAILURE);
     return;
   }
 
-  mIsLoadingData = true;
-  nsCOMPtr<nsITransferable> trans(&aTransferable);
-  clipboard->AsyncGetData(trans, nsIClipboard::kGlobalClipboard)
-      ->Then(
-          GetMainThreadSerialEventTarget(), __func__,
-          /* resolved */
-          [self = RefPtr{this}, trans]() {
-            self->mIsLoadingData = false;
-            self->mLoadingPromise.Complete();
+  mTransferable->Init(nullptr);
+  mTransferable->AddDataFlavor(NS_ConvertUTF16toUTF8(mType).get());
 
-            nsCOMPtr<nsISupports> data;
-            nsresult rv = trans->GetTransferData(
-                NS_ConvertUTF16toUTF8(self->Type()).get(),
-                getter_AddRefs(data));
-            if (NS_WARN_IF(NS_FAILED(rv))) {
-              self->RejectPendingPromises(rv);
-              return;
-            }
-
-            RefPtr<Blob> blob;
-            if (nsCOMPtr<nsISupportsString> supportsstr =
-                    do_QueryInterface(data)) {
-              nsAutoString str;
-              supportsstr->GetData(str);
-
-              blob = Blob::CreateStringBlob(
-                  self->mGlobal, NS_ConvertUTF16toUTF8(str), self->Type());
-            } else if (nsCOMPtr<nsIInputStream> istream =
-                           do_QueryInterface(data)) {
-              uint64_t available;
-              void* data = nullptr;
-              nsresult rv =
-                  NS_ReadInputStreamToBuffer(istream, &data, -1, &available);
-              if (NS_WARN_IF(NS_FAILED(rv))) {
-                self->RejectPendingPromises(rv);
-                return;
-              }
-
-              blob = Blob::CreateMemoryBlob(self->mGlobal, data, available,
-                                            self->Type());
-            } else if (nsCOMPtr<nsISupportsCString> supportscstr =
-                           do_QueryInterface(data)) {
-              nsAutoCString str;
-              supportscstr->GetData(str);
-
-              blob = Blob::CreateStringBlob(self->mGlobal, str, self->Type());
-            }
-
-            if (!blob) {
-              self->RejectPendingPromises(NS_ERROR_DOM_DATA_ERR);
-              return;
-            }
-
-            OwningStringOrBlob clipboardData;
-            clipboardData.SetAsBlob() = std::move(blob);
-            self->MaybeResolvePendingPromises(std::move(clipboardData));
-          },
-          /* rejected */
-          [self = RefPtr{this}](nsresult rv) {
-            self->mIsLoadingData = false;
-            self->mLoadingPromise.Complete();
-            self->RejectPendingPromises(rv);
-          })
-      ->Track(mLoadingPromise);
+  nsresult rv = aDataGetter->GetData(mTransferable, this);
+  if (NS_FAILED(rv)) {
+    OnComplete(rv);
+    return;
+  }
 }
 
 void ClipboardItem::ItemEntry::LoadDataFromDataPromise(Promise& aDataPromise) {
   MOZ_DIAGNOSTIC_ASSERT(!mData.IsString() && !mData.IsBlob(),
                         "Data should be uninitialized");
   MOZ_DIAGNOSTIC_ASSERT(mLoadResult.isNothing(), "Should have no load result");
-  MOZ_DIAGNOSTIC_ASSERT(!mIsLoadingData && !mLoadingPromise.Exists(),
+  MOZ_DIAGNOSTIC_ASSERT(!mIsLoadingData && !mTransferable,
                         "Should not be in the process of loading data");
 
   mIsLoadingData = true;
@@ -221,7 +223,7 @@ void ClipboardItem::ItemEntry::RejectPendingPromises(nsresult aRv) {
   MOZ_DIAGNOSTIC_ASSERT(!mData.IsString() && !mData.IsBlob(),
                         "Data should be uninitialized");
   MOZ_DIAGNOSTIC_ASSERT(mLoadResult.isNothing(), "Should not have load result");
-  MOZ_DIAGNOSTIC_ASSERT(!mIsLoadingData && !mLoadingPromise.Exists(),
+  MOZ_DIAGNOSTIC_ASSERT(!mIsLoadingData && !mTransferable,
                         "Should not be in the process of loading data");
   mLoadResult.emplace(aRv);
   auto promiseHolders = std::move(mPendingGetDataRequests);
@@ -239,7 +241,7 @@ void ClipboardItem::ItemEntry::MaybeResolvePendingPromises(
   MOZ_DIAGNOSTIC_ASSERT(!mData.IsString() && !mData.IsBlob(),
                         "Data should be uninitialized");
   MOZ_DIAGNOSTIC_ASSERT(mLoadResult.isNothing(), "Should not have load result");
-  MOZ_DIAGNOSTIC_ASSERT(!mIsLoadingData && !mLoadingPromise.Exists(),
+  MOZ_DIAGNOSTIC_ASSERT(!mIsLoadingData && !mTransferable,
                         "Should not be in the process of loading data");
   mLoadResult.emplace(NS_OK);
   mData = std::move(aData);
