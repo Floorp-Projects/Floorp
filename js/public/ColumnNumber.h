@@ -225,6 +225,8 @@ struct ColumnNumberWithOrigin {
       return true;
     }
 
+    MOZ_ASSERT_IF(Origin == 1, value_ != 0);
+
     return value_ <= LimitValue;
   }
 };
