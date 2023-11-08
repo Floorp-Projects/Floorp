@@ -3,7 +3,14 @@
 
 const TEST_CONFIG = [
   {
-    webExtension: { id: "get@search.mozilla.org" },
+    webExtension: {
+      id: "get@search.mozilla.org",
+      name: "Get Engine",
+      search_url: "https://example.com",
+      search_url_get_params: "webExtension=1&search={searchTerms}",
+      suggest_url: "https://example.com",
+      suggest_url_get_params: "webExtension=1&suggest={searchTerms}",
+    },
     appliesTo: [{ included: { everywhere: true } }],
     suggestExtraParams: [
       {

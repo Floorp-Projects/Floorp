@@ -88,43 +88,55 @@ add_task(async function test_install_duplicate_engine() {
   await extension.unload();
 });
 
-add_task(async function basic_multilocale_test() {
-  await promiseSetHomeRegion("an");
+add_task(
+  // Not needed for new configuration.
+  { skip_if: () => SearchUtils.newSearchConfigEnabled },
+  async function basic_multilocale_test() {
+    await promiseSetHomeRegion("an");
 
-  Assert.deepEqual(await getEngineNames(), [
-    "Plain",
-    "Special",
-    "Multilocale AN",
-  ]);
-});
+    Assert.deepEqual(await getEngineNames(), [
+      "Plain",
+      "Special",
+      "Multilocale AN",
+    ]);
+  }
+);
 
-add_task(async function complex_multilocale_test() {
-  await promiseSetHomeRegion("af");
+add_task(
+  // Not needed for new configuration.
+  { skip_if: () => SearchUtils.newSearchConfigEnabled },
+  async function complex_multilocale_test() {
+    await promiseSetHomeRegion("af");
 
-  Assert.deepEqual(await getEngineNames(), [
-    "Plain",
-    "Special",
-    "Multilocale AF",
-    "Multilocale AN",
-  ]);
-});
+    Assert.deepEqual(await getEngineNames(), [
+      "Plain",
+      "Special",
+      "Multilocale AF",
+      "Multilocale AN",
+    ]);
+  }
+);
 
-add_task(async function test_manifest_selection() {
-  // Sets the home region without updating.
-  Region._setHomeRegion("an", false);
-  await promiseSetLocale("af");
+add_task(
+  // Not needed for new configuration.
+  { skip_if: () => SearchUtils.newSearchConfigEnabled },
+  async function test_manifest_selection() {
+    // Sets the home region without updating.
+    Region._setHomeRegion("an", false);
+    await promiseSetLocale("af");
 
-  let engine = await Services.search.getEngineByName("Multilocale AN");
-  Assert.ok(
-    engine.iconURI.spec.endsWith("favicon-an.ico"),
-    "Should have the correct favicon for an extension of one locale using a different locale."
-  );
-  Assert.equal(
-    engine.description,
-    "A enciclopedia Libre",
-    "Should have the correct engine name for an extension of one locale using a different locale."
-  );
-});
+    let engine = await Services.search.getEngineByName("Multilocale AN");
+    Assert.ok(
+      engine.iconURI.spec.endsWith("favicon-an.ico"),
+      "Should have the correct favicon for an extension of one locale using a different locale."
+    );
+    Assert.equal(
+      engine.description,
+      "A enciclopedia Libre",
+      "Should have the correct engine name for an extension of one locale using a different locale."
+    );
+  }
+);
 
 add_task(async function test_load_favicon_invalid() {
   let observed = TestUtils.consoleMessageObserved(msg => {

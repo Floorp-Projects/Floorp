@@ -8,6 +8,28 @@ const CONFIG = [
     // Just a basic engine that won't be changed.
     webExtension: {
       id: "engine@search.mozilla.org",
+      name: "Test search engine",
+      search_url: "https://www.google.com/search",
+      params: [
+        {
+          name: "q",
+          value: "{searchTerms}",
+        },
+        {
+          name: "channel",
+          condition: "purpose",
+          purpose: "contextmenu",
+          value: "rcs",
+        },
+        {
+          name: "channel",
+          condition: "purpose",
+          purpose: "keyword",
+          value: "fflb",
+        },
+      ],
+      suggest_url:
+        "https://suggestqueries.google.com/complete/search?output=firefox&client=firefox&hl={moz:locale}&q={searchTerms}",
     },
     appliesTo: [
       {
@@ -20,6 +42,17 @@ const CONFIG = [
     // This engine will have the locale swapped when the experiment is set.
     webExtension: {
       id: "engine-same-name@search.mozilla.org",
+      default_locale: "en",
+      searchProvider: {
+        en: {
+          name: "engine-same-name",
+          search_url: "https://www.google.com/search?q={searchTerms}",
+        },
+        gd: {
+          name: "engine-same-name",
+          search_url: "https://www.example.com/search?q={searchTerms}",
+        },
+      },
     },
     appliesTo: [
       {

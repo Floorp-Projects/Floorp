@@ -2,7 +2,20 @@
   "data": [
     {
       "webExtension": {
-        "id": "basic@search.mozilla.org"
+        "id": "basic@search.mozilla.org",
+        "name": "basic",
+        "search_url": "https://ar.wikipedia.org/wiki/%D8%AE%D8%A7%D8%B5:%D8%A8%D8%AD%D8%AB",
+        "params": [
+          {
+            "name": "search",
+            "value": "{searchTerms}"
+          },
+          {
+            "name": "sourceId",
+            "value": "Mozilla-search"
+          }
+        ],
+        "suggest_url": "https://ar.wikipedia.org/w/api.php?action=opensearch&search={searchTerms}"
       },
       "telemetryId": "telemetry",
       "appliesTo": [
@@ -14,7 +27,20 @@
     },
     {
       "webExtension": {
-        "id": "simple@search.mozilla.org"
+        "id": "simple@search.mozilla.org",
+        "name": "Simple Engine",
+        "search_url": "https://example.com",
+        "params": [
+          {
+            "name": "sourceId",
+            "value": "Mozilla-search"
+          },
+          {
+            "name": "search",
+            "value": "{searchTerms}"
+          }
+        ],
+        "suggest_url": "https://example.com?search={searchTerms}"
       },
       "appliesTo": [
         {

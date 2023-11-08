@@ -2,7 +2,28 @@
   "data": [
     {
       "webExtension": {
-        "id": "engine@search.mozilla.org"
+        "id": "engine@search.mozilla.org",
+        "name": "Test search engine",
+        "search_url": "https://www.google.com/search",
+        "params": [
+          {
+            "name": "q",
+            "value": "{searchTerms}"
+          },
+          {
+            "name": "channel",
+            "condition": "purpose",
+            "purpose": "contextmenu",
+            "value": "rcs"
+          },
+          {
+            "name": "channel",
+            "condition": "purpose",
+            "purpose": "keyword",
+            "value": "fflb"
+          }
+        ],
+        "suggest_url": "https://suggestqueries.google.com/complete/search?output=firefox&client=firefox&hl={moz:locale}&q={searchTerms}"
       },
       "appliesTo": [
         {
@@ -13,7 +34,33 @@
     },
     {
       "webExtension": {
-        "id": "engine-rel-searchform-purpose@search.mozilla.org"
+        "id": "engine-rel-searchform-purpose@search.mozilla.org",
+        "name": "engine-rel-searchform-purpose",
+        "search_url": "https://www.google.com/search",
+        "params": [
+          {
+            "name": "q",
+            "value": "{searchTerms}"
+          },
+          {
+            "name": "channel",
+            "condition": "purpose",
+            "purpose": "contextmenu",
+            "value": "rcs"
+          },
+          {
+            "name": "channel",
+            "condition": "purpose",
+            "purpose": "keyword",
+            "value": "fflb"
+          },
+          {
+            "name": "channel",
+            "condition": "purpose",
+            "purpose": "searchbar",
+            "value": "sb"
+          }
+        ]
       },
       "orderHint": 1000,
       "appliesTo": [
@@ -26,7 +73,15 @@
     },
     {
       "webExtension": {
-        "id": "engine-chromeicon@search.mozilla.org"
+        "id": "engine-chromeicon@search.mozilla.org",
+        "name": "engine-chromeicon",
+        "search_url": "https://www.google.com/search",
+        "params": [
+          {
+            "name": "q",
+            "value": "{searchTerms}"
+          }
+        ]
       },
       "orderHint": 1000,
       "appliesTo": [
@@ -43,7 +98,19 @@
     },
     {
       "webExtension": {
-        "id": "engine-resourceicon@search.mozilla.org"
+        "id": "engine-resourceicon@search.mozilla.org",
+        "name": "engine-resourceicon",
+        "search_url": "https://www.google.com/search",
+        "search_provider": {
+          "en": {
+            "name": "engine-resourceicon",
+            "search_url": "https://www.google.com/search"
+          },
+          "gd": {
+            "name": "engine-resourceicon-gd",
+            "search_url": "https://www.google.com/search"
+          }
+        }
       },
       "appliesTo": [
         {
@@ -57,7 +124,28 @@
     },
     {
       "webExtension": {
-        "id": "engine-reordered@search.mozilla.org"
+        "id": "engine-reordered@search.mozilla.org",
+        "name": "Test search engine (Reordered)",
+        "search_url": "https://www.google.com/search",
+        "params": [
+          {
+            "name": "q",
+            "value": "{searchTerms}"
+          },
+          {
+            "name": "channel",
+            "condition": "purpose",
+            "purpose": "contextmenu",
+            "value": "rcs"
+          },
+          {
+            "name": "channel",
+            "condition": "purpose",
+            "purpose": "keyword",
+            "value": "fflb"
+          }
+        ],
+        "suggest_url": "https://suggestqueries.google.com/complete/search?output=firefox&client=firefox&hl={moz:locale}&q={searchTerms}"
       },
       "appliesTo": [
         {
@@ -69,7 +157,25 @@
     },
     {
       "webExtension": {
-        "id": "engine-pref@search.mozilla.org"
+        "id": "engine-pref@search.mozilla.org",
+        "name": "engine-pref",
+        "search_url": "https://www.google.com/search",
+        "params": [
+          {
+            "name": "q",
+            "value": "{searchTerms}"
+          },
+          {
+            "name": "code",
+            "condition": "pref",
+            "pref": "code"
+          },
+          {
+            "name": "test",
+            "condition": "pref",
+            "pref": "test"
+          }
+        ]
       },
       "appliesTo": [
         {

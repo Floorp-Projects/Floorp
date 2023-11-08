@@ -95,7 +95,7 @@ const TEST_CONFIG = [
 const engineSelector = new SearchEngineSelectorOld();
 
 add_setup(async function () {
-  const settings = await RemoteSettings(SearchUtils.SETTINGS_KEY);
+  const settings = await RemoteSettings(SearchUtils.OLD_SETTINGS_KEY);
   sinon.stub(settings, "get").returns(TEST_CONFIG);
 });
 

@@ -140,113 +140,125 @@ function makeMultiLocaleExtension(version) {
   };
 }
 
-add_setup(async function () {
-  await SearchTestUtils.useTestEngines("test-extensions", null, TEST_CONFIG);
-  await promiseStartupManager();
+add_setup(
+  { skip_if: () => SearchUtils.newSearchConfigEnabled },
+  async function () {
+    await SearchTestUtils.useTestEngines("test-extensions", null, TEST_CONFIG);
+    await promiseStartupManager();
 
-  registerCleanupFunction(promiseShutdownManager);
-  await Services.search.init();
-});
+    registerCleanupFunction(promiseShutdownManager);
+    await Services.search.init();
+  }
+);
 
-add_task(async function basic_multilocale_test() {
-  Assert.deepEqual(await getEngineNames(), [
-    "Multilocale AF",
-    "Multilocale AN",
-    "Plain",
-  ]);
+add_task(
+  { skip_if: () => SearchUtils.newSearchConfigEnabled },
+  async function basic_multilocale_test() {
+    Assert.deepEqual(await getEngineNames(), [
+      "Multilocale AF",
+      "Multilocale AN",
+      "Plain",
+    ]);
 
-  let ext = ExtensionTestUtils.loadExtension(makeMultiLocaleExtension("2.0"));
-  await ext.startup();
-  await AddonTestUtils.waitForSearchProviderStartup(ext);
+    let ext = ExtensionTestUtils.loadExtension(makeMultiLocaleExtension("2.0"));
+    await ext.startup();
+    await AddonTestUtils.waitForSearchProviderStartup(ext);
 
-  Assert.deepEqual(await getEngineNames(), [
-    "Multilocale AF",
-    "Multilocale AN",
-    "Plain",
-  ]);
+    Assert.deepEqual(await getEngineNames(), [
+      "Multilocale AF",
+      "Multilocale AN",
+      "Plain",
+    ]);
 
-  let engine = await Services.search.getEngineByName("Multilocale AF");
-  Assert.equal(
-    engine.getSubmission("test").uri.spec,
-    "https://example.af/?q=test&version=2.0",
-    "Engine got update"
-  );
-  engine = await Services.search.getEngineByName("Multilocale AN");
-  Assert.equal(
-    engine.getSubmission("test").uri.spec,
-    "https://example.an/?q=test&version=2.0",
-    "Engine got update"
-  );
+    let engine = await Services.search.getEngineByName("Multilocale AF");
+    Assert.equal(
+      engine.getSubmission("test").uri.spec,
+      "https://example.af/?q=test&version=2.0",
+      "Engine got update"
+    );
+    engine = await Services.search.getEngineByName("Multilocale AN");
+    Assert.equal(
+      engine.getSubmission("test").uri.spec,
+      "https://example.an/?q=test&version=2.0",
+      "Engine got update"
+    );
 
-  await ext.unload();
-});
+    await ext.unload();
+  }
+);
 
-add_task(async function upgrade_with_configuration_change_test() {
-  Assert.deepEqual(await getEngineNames(), [
-    "Multilocale AF",
-    "Multilocale AN",
-    "Plain",
-  ]);
+add_task(
+  { skip_if: () => SearchUtils.newSearchConfigEnabled },
+  async function upgrade_with_configuration_change_test() {
+    Assert.deepEqual(await getEngineNames(), [
+      "Multilocale AF",
+      "Multilocale AN",
+      "Plain",
+    ]);
 
-  let engine = await Services.search.getEngineByName("Plain");
-  Assert.ok(engine.isAppProvided);
-  Assert.equal(
-    engine.getSubmission("test").uri.spec,
-    // This test engine specifies the q and t params in its search_url, therefore
-    // we get both those and the extra parameter specified in the test config.
-    "https://duckduckgo.com/?q=test&t=ffsb&config=applied",
-    "Should have the configuration applied before update."
-  );
+    let engine = await Services.search.getEngineByName("Plain");
+    Assert.ok(engine.isAppProvided);
+    Assert.equal(
+      engine.getSubmission("test").uri.spec,
+      // This test engine specifies the q and t params in its search_url, therefore
+      // we get both those and the extra parameter specified in the test config.
+      "https://duckduckgo.com/?q=test&t=ffsb&config=applied",
+      "Should have the configuration applied before update."
+    );
 
-  let ext = ExtensionTestUtils.loadExtension(makePlainExtension("2.0"));
-  await ext.startup();
-  await AddonTestUtils.waitForSearchProviderStartup(ext);
+    let ext = ExtensionTestUtils.loadExtension(makePlainExtension("2.0"));
+    await ext.startup();
+    await AddonTestUtils.waitForSearchProviderStartup(ext);
 
-  Assert.deepEqual(await getEngineNames(), [
-    "Multilocale AF",
-    "Multilocale AN",
-    "Plain",
-  ]);
+    Assert.deepEqual(await getEngineNames(), [
+      "Multilocale AF",
+      "Multilocale AN",
+      "Plain",
+    ]);
 
-  engine = await Services.search.getEngineByName("Plain");
-  Assert.equal(
-    engine.getSubmission("test").uri.spec,
-    // This test engine specifies the q and t params in its search_url, therefore
-    // we get both those and the extra parameter specified in the test config.
-    "https://duckduckgo.com/?q=test&t=ffsb&config=applied",
-    "Should still have the configuration applied after update."
-  );
+    engine = await Services.search.getEngineByName("Plain");
+    Assert.equal(
+      engine.getSubmission("test").uri.spec,
+      // This test engine specifies the q and t params in its search_url, therefore
+      // we get both those and the extra parameter specified in the test config.
+      "https://duckduckgo.com/?q=test&t=ffsb&config=applied",
+      "Should still have the configuration applied after update."
+    );
 
-  await ext.unload();
-});
+    await ext.unload();
+  }
+);
 
-add_task(async function test_upgrade_with_name_change() {
-  Assert.deepEqual(await getEngineNames(), [
-    "Multilocale AF",
-    "Multilocale AN",
-    "Plain",
-  ]);
+add_task(
+  { skip_if: () => SearchUtils.newSearchConfigEnabled },
+  async function test_upgrade_with_name_change() {
+    Assert.deepEqual(await getEngineNames(), [
+      "Multilocale AF",
+      "Multilocale AN",
+      "Plain",
+    ]);
 
-  let ext = ExtensionTestUtils.loadExtension(
-    makePlainExtension("2.0", "Plain2")
-  );
-  await ext.startup();
-  await AddonTestUtils.waitForSearchProviderStartup(ext);
+    let ext = ExtensionTestUtils.loadExtension(
+      makePlainExtension("2.0", "Plain2")
+    );
+    await ext.startup();
+    await AddonTestUtils.waitForSearchProviderStartup(ext);
 
-  Assert.deepEqual(await getEngineNames(), [
-    "Multilocale AF",
-    "Multilocale AN",
-    "Plain2",
-  ]);
+    Assert.deepEqual(await getEngineNames(), [
+      "Multilocale AF",
+      "Multilocale AN",
+      "Plain2",
+    ]);
 
-  let engine = await Services.search.getEngineByName("Plain2");
-  Assert.equal(
-    engine.getSubmission("test").uri.spec,
-    // This test engine specifies the q and t params in its search_url, therefore
-    // we get both those and the extra parameter specified in the test config.
-    "https://duckduckgo.com/?q=test&t=ffsb&config=applied",
-    "Should still have the configuration applied after update."
-  );
+    let engine = await Services.search.getEngineByName("Plain2");
+    Assert.equal(
+      engine.getSubmission("test").uri.spec,
+      // This test engine specifies the q and t params in its search_url, therefore
+      // we get both those and the extra parameter specified in the test config.
+      "https://duckduckgo.com/?q=test&t=ffsb&config=applied",
+      "Should still have the configuration applied after update."
+    );
 
-  await ext.unload();
-});
+    await ext.unload();
+  }
+);

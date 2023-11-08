@@ -5,21 +5,38 @@
 
 const CONFIG_DEFAULT = [
   {
-    webExtension: { id: "plainengine@search.mozilla.org" },
+    webExtension: {
+      id: "plainengine@search.mozilla.org",
+      name: "Plain",
+      search_url: "https://duckduckgo.com/",
+      params: [
+        {
+          name: "q",
+          value: "{searchTerms}",
+        },
+      ],
+    },
     appliesTo: [{ included: { everywhere: true } }],
   },
   {
-    webExtension: { id: "special-engine@search.mozilla.org" },
+    webExtension: {
+      id: "special-engine@search.mozilla.org",
+      name: "Special",
+      search_url: "https://www.google.com/search",
+      params: [
+        {
+          name: "q",
+          value: "{searchTerms}",
+        },
+      ],
+    },
     appliesTo: [{ included: { everywhere: true } }],
   },
 ];
 
-const CONFIG_UPDATED = [
-  {
-    webExtension: { id: "plainengine@search.mozilla.org" },
-    appliesTo: [{ included: { everywhere: true } }],
-  },
-];
+const CONFIG_UPDATED = CONFIG_DEFAULT.filter(r =>
+  r.webExtension.id.startsWith("plainengine")
+);
 
 async function startup() {
   let settingsFileWritten = promiseAfterSettings();

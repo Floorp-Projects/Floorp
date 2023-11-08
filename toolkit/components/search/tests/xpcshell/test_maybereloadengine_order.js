@@ -5,11 +5,46 @@
 
 const TEST_CONFIG = [
   {
-    webExtension: { id: "plainengine@search.mozilla.org" },
+    webExtension: {
+      id: "plainengine@search.mozilla.org",
+      name: "Plain",
+      search_url: "https://duckduckgo.com/",
+      params: [
+        {
+          name: "q",
+          value: "{searchTerms}",
+        },
+      ],
+      suggest_url: "https://ac.duckduckgo.com/ac/q={searchTerms}&type=list",
+    },
     appliesTo: [{ included: { everywhere: true } }],
   },
   {
-    webExtension: { id: "special-engine@search.mozilla.org" },
+    webExtension: {
+      id: "special-engine@search.mozilla.org",
+      name: "Special",
+      search_url: "https://www.google.com/search",
+      params: [
+        {
+          name: "q",
+          value: "{searchTerms}",
+        },
+        {
+          name: "client",
+          condition: "purpose",
+          purpose: "keyword",
+          value: "firefox-b-1-ab",
+        },
+        {
+          name: "client",
+          condition: "purpose",
+          purpose: "searchbar",
+          value: "firefox-b-1",
+        },
+      ],
+      suggest_url:
+        "https://www.google.com/complete/search?client=firefox&q={searchTerms}",
+    },
     appliesTo: [{ default: "yes", included: { regions: ["FR"] } }],
   },
 ];

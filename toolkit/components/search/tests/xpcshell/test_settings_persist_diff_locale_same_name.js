@@ -5,13 +5,34 @@
 
 const CONFIG = [
   {
-    webExtension: { id: "engine@search.mozilla.org" },
+    webExtension: {
+      id: "engine@search.mozilla.org",
+      name: "Test search engine",
+      search_url: "https://www.google.com/search",
+      params: [
+        {
+          name: "q",
+          value: "{searchTerms}",
+        },
+      ],
+    },
     appliesTo: [{ included: { everywhere: true } }],
   },
   {
     // This engine has the same name, but still should be replaced correctly.
     webExtension: {
       id: "engine-same-name@search.mozilla.org",
+      default_locale: "en",
+      searchProvider: {
+        en: {
+          name: "engine-same-name",
+          search_url: "https://www.google.com/search?q={searchTerms}",
+        },
+        gd: {
+          name: "engine-same-name",
+          search_url: "https://www.example.com/search?q={searchTerms}",
+        },
+      },
     },
     appliesTo: [
       {
