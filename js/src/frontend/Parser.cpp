@@ -12009,21 +12009,20 @@ GeneralParser<ParseHandler, Unit>::objectLiteral(YieldHandling yieldHandling,
 
 #ifdef ENABLE_RECORD_TUPLE
 template <class ParseHandler, typename Unit>
-typename ParseHandler::ListNodeType
+typename ParseHandler::ListNodeResult
 GeneralParser<ParseHandler, Unit>::recordLiteral(YieldHandling yieldHandling) {
   MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::HashCurly));
 
   uint32_t openedPos = pos().begin;
 
   ListNodeType literal;
-  MOZ_TRY_VAR_OR_RETURN(literal, handler_.newRecordLiteral(pos().begin),
-                        null());
+  MOZ_TRY_VAR(literal, handler_.newRecordLiteral(pos().begin));
 
   TaggedParserAtomIndex propAtom;
   for (;;) {
     TokenKind tt;
     if (!tokenStream.peekToken(&tt)) {
-      return null();
+      return errorResult();
     }
     if (tt == TokenKind::RightCurly) {
       break;
@@ -12035,49 +12034,44 @@ GeneralParser<ParseHandler, Unit>::recordLiteral(YieldHandling yieldHandling) {
 
       TokenPos innerPos;
       if (!tokenStream.peekTokenPos(&innerPos, TokenStream::SlashIsRegExp)) {
-        return null();
+        return errorResult();
       }
 
       Node inner;
-      MOZ_TRY_VAR_OR_RETURN(
-          inner, assignExpr(InAllowed, yieldHandling, TripledotProhibited),
-          null());
+      MOZ_TRY_VAR(inner,
+                  assignExpr(InAllowed, yieldHandling, TripledotProhibited));
 
       if (!handler_.addSpreadProperty(literal, begin, inner)) {
-        return null();
+        return errorResult();
       }
     } else {
       TokenPos namePos = anyChars.nextToken().pos;
 
       PropertyType propType;
       Node propName;
-      MOZ_TRY_VAR_OR_RETURN(
-          propName,
-          propertyOrMethodName(yieldHandling, PropertyNameInRecord,
-                               /* maybeDecl */ Nothing(), literal, &propType,
-                               &propAtom),
-          null());
+      MOZ_TRY_VAR(propName,
+                  propertyOrMethodName(yieldHandling, PropertyNameInRecord,
+                                       /* maybeDecl */ Nothing(), literal,
+                                       &propType, &propAtom));
 
       if (propType == PropertyType::Normal) {
         TokenPos exprPos;
         if (!tokenStream.peekTokenPos(&exprPos, TokenStream::SlashIsRegExp)) {
-          return null();
+          return errorResult();
         }
 
         Node propExpr;
-        MOZ_TRY_VAR_OR_RETURN(
-            propExpr, assignExpr(InAllowed, yieldHandling, TripledotProhibited),
-            null());
+        MOZ_TRY_VAR(propExpr,
+                    assignExpr(InAllowed, yieldHandling, TripledotProhibited));
 
         if (propAtom == TaggedParserAtomIndex::WellKnown::proto_()) {
           errorAt(namePos.begin, JSMSG_RECORD_NO_PROTO);
-          return null();
+          return errorResult();
         }
 
         BinaryNodeType propDef;
-        MOZ_TRY_VAR_OR_RETURN(
-            propDef, handler_.newPropertyDefinition(propName, propExpr),
-            null());
+        MOZ_TRY_VAR(propDef,
+                    handler_.newPropertyDefinition(propName, propExpr));
 
         handler_.addPropertyDefinition(literal, propDef);
       } else if (propType == PropertyType::Shorthand) {
@@ -12087,26 +12081,26 @@ GeneralParser<ParseHandler, Unit>::recordLiteral(YieldHandling yieldHandling) {
          */
         TaggedParserAtomIndex name = identifierReference(yieldHandling);
         if (!name) {
-          return null();
+          return errorResult();
         }
 
         NameNodeType nameExpr;
-        MOZ_TRY_VAR_OR_RETURN(nameExpr, identifierReference(name), null());
+        MOZ_TRY_VAR(nameExpr, identifierReference(name));
 
         if (!handler_.addShorthand(literal, handler_.asNameNode(propName),
                                    nameExpr)) {
-          return null();
+          return errorResult();
         }
       } else {
         error(JSMSG_BAD_PROP_ID);
-        return null();
+        return errorResult();
       }
     }
 
     bool matched;
     if (!tokenStream.matchToken(&matched, TokenKind::Comma,
                                 TokenStream::SlashIsInvalid)) {
-      return null();
+      return errorResult();
     }
     if (!matched) {
       break;
@@ -12118,7 +12112,7 @@ GeneralParser<ParseHandler, Unit>::recordLiteral(YieldHandling yieldHandling) {
             this->reportMissingClosing(JSMSG_CURLY_AFTER_LIST,
                                        JSMSG_CURLY_OPENED, openedPos);
           })) {
-    return null();
+    return errorResult();
   }
 
   handler_.setEndPosition(literal, pos().end);
@@ -12126,23 +12120,23 @@ GeneralParser<ParseHandler, Unit>::recordLiteral(YieldHandling yieldHandling) {
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::ListNodeType
+typename ParseHandler::ListNodeResult
 GeneralParser<ParseHandler, Unit>::tupleLiteral(YieldHandling yieldHandling) {
   MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::HashBracket));
 
   uint32_t begin = pos().begin;
   ListNodeType literal;
-  MOZ_TRY_VAR_OR_RETURN(literal, handler_.newTupleLiteral(begin), null());
+  MOZ_TRY_VAR(literal, handler_.newTupleLiteral(begin));
 
   for (uint32_t index = 0;; index++) {
     if (index >= NativeObject::MAX_DENSE_ELEMENTS_COUNT) {
       error(JSMSG_ARRAY_INIT_TOO_BIG);
-      return null();
+      return errorResult();
     }
 
     TokenKind tt;
     if (!tokenStream.peekToken(&tt, TokenStream::SlashIsRegExp)) {
-      return null();
+      return errorResult();
     }
     if (tt == TokenKind::RightBracket) {
       break;
@@ -12155,34 +12149,32 @@ GeneralParser<ParseHandler, Unit>::tupleLiteral(YieldHandling yieldHandling) {
 
       TokenPos innerPos;
       if (!tokenStream.peekTokenPos(&innerPos, TokenStream::SlashIsRegExp)) {
-        return null();
+        return errorResult();
       }
 
       Node inner;
-      MOZ_TRY_VAR_OR_RETURN(
-          inner, assignExpr(InAllowed, yieldHandling, TripledotProhibited),
-          null());
+      MOZ_TRY_VAR(inner,
+                  assignExpr(InAllowed, yieldHandling, TripledotProhibited));
 
       if (!handler_.addSpreadElement(literal, begin, inner)) {
-        return null();
+        return errorResult();
       }
     } else {
       TokenPos elementPos;
       if (!tokenStream.peekTokenPos(&elementPos, TokenStream::SlashIsRegExp)) {
-        return null();
+        return errorResult();
       }
 
       Node element;
-      MOZ_TRY_VAR_OR_RETURN(
-          element, assignExpr(InAllowed, yieldHandling, TripledotProhibited),
-          null());
+      MOZ_TRY_VAR(element,
+                  assignExpr(InAllowed, yieldHandling, TripledotProhibited));
       handler_.addArrayElement(literal, element);
     }
 
     bool matched;
     if (!tokenStream.matchToken(&matched, TokenKind::Comma,
                                 TokenStream::SlashIsRegExp)) {
-      return null();
+      return errorResult();
     }
     if (!matched) {
       break;
@@ -12193,7 +12185,7 @@ GeneralParser<ParseHandler, Unit>::tupleLiteral(YieldHandling yieldHandling) {
         this->reportMissingClosing(JSMSG_BRACKET_AFTER_LIST,
                                    JSMSG_BRACKET_OPENED, begin);
       })) {
-    return null();
+    return errorResult();
   }
 
   handler_.setEndPosition(literal, pos().end);
@@ -12423,10 +12415,10 @@ GeneralParser<ParseHandler, Unit>::primaryExpr(
 
 #ifdef ENABLE_RECORD_TUPLE
     case TokenKind::HashCurly:
-      return toResult(recordLiteral(yieldHandling));
+      return recordLiteral(yieldHandling);
 
     case TokenKind::HashBracket:
-      return toResult(tupleLiteral(yieldHandling));
+      return tupleLiteral(yieldHandling);
 #endif
 
 #ifdef ENABLE_DECORATORS

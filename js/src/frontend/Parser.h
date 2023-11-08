@@ -1447,8 +1447,8 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
                                PossibleError* possibleError);
 
 #ifdef ENABLE_RECORD_TUPLE
-  ListNodeType recordLiteral(YieldHandling yieldHandling);
-  ListNodeType tupleLiteral(YieldHandling yieldHandling);
+  ListNodeResult recordLiteral(YieldHandling yieldHandling);
+  ListNodeResult tupleLiteral(YieldHandling yieldHandling);
 #endif
 
   BinaryNodeResult bindingInitializer(Node lhs, DeclarationKind kind,
