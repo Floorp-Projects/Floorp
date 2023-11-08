@@ -544,10 +544,10 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
 
   inline NameNodeResult newPrivateName(TaggedParserAtomIndex name);
 
-  NameNodeType newInternalDotName(TaggedParserAtomIndex name);
-  NameNodeType newThisName();
-  NameNodeType newNewTargetName();
-  NameNodeType newDotGeneratorName();
+  NameNodeResult newInternalDotName(TaggedParserAtomIndex name);
+  NameNodeResult newThisName();
+  NameNodeResult newNewTargetName();
+  NameNodeResult newDotGeneratorName();
 
   NameNodeResult identifierReference(TaggedParserAtomIndex name);
   NameNodeResult privateNameReference(TaggedParserAtomIndex name);

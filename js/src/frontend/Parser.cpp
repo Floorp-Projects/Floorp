@@ -2027,30 +2027,30 @@ SyntaxParseHandler::ModuleNodeType Parser<SyntaxParseHandler, Unit>::moduleBody(
 }
 
 template <class ParseHandler>
-typename ParseHandler::NameNodeType
+typename ParseHandler::NameNodeResult
 PerHandlerParser<ParseHandler>::newInternalDotName(TaggedParserAtomIndex name) {
   NameNodeType nameNode;
-  MOZ_TRY_VAR_OR_RETURN(nameNode, newName(name), null());
+  MOZ_TRY_VAR(nameNode, newName(name));
   if (!noteUsedName(name)) {
-    return null();
+    return errorResult();
   }
   return nameNode;
 }
 
 template <class ParseHandler>
-typename ParseHandler::NameNodeType
+typename ParseHandler::NameNodeResult
 PerHandlerParser<ParseHandler>::newThisName() {
   return newInternalDotName(TaggedParserAtomIndex::WellKnown::dot_this_());
 }
 
 template <class ParseHandler>
-typename ParseHandler::NameNodeType
+typename ParseHandler::NameNodeResult
 PerHandlerParser<ParseHandler>::newNewTargetName() {
   return newInternalDotName(TaggedParserAtomIndex::WellKnown::dot_newTarget_());
 }
 
 template <class ParseHandler>
-typename ParseHandler::NameNodeType
+typename ParseHandler::NameNodeResult
 PerHandlerParser<ParseHandler>::newDotGeneratorName() {
   return newInternalDotName(TaggedParserAtomIndex::WellKnown::dot_generator_());
 }
@@ -2463,10 +2463,8 @@ GeneralParser<ParseHandler, Unit>::functionBody(InHandling inHandling,
       return errorResult();
     }
     if (pc_->isGenerator()) {
-      NameNodeType generator = newDotGeneratorName();
-      if (!generator) {
-        return errorResult();
-      }
+      NameNodeType generator;
+      MOZ_TRY_VAR(generator, newDotGeneratorName());
       if (!handler_.prependInitialYield(handler_.asListNode(body), generator)) {
         return errorResult();
       }
@@ -8261,10 +8259,8 @@ bool GeneralParser<ParseHandler, Unit>::synthesizeConstructorBody(
       return false;
     }
 
-    NameNodeType thisName = newThisName();
-    if (!thisName) {
-      return false;
-    }
+    NameNodeType thisName;
+    MOZ_TRY_VAR_OR_RETURN(thisName, newThisName(), false);
 
     UnaryNodeType superBase;
     MOZ_TRY_VAR_OR_RETURN(
@@ -8602,10 +8598,8 @@ GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(
   handler_.setFunctionFormalParametersAndBody(funNode, argsbody);
   funbox->setArgCount(0);
 
-  NameNodeType thisName = newThisName();
-  if (!thisName) {
-    return errorResult();
-  }
+  NameNodeType thisName;
+  MOZ_TRY_VAR(thisName, newThisName());
 
   // Build `this.field` expression.
   ThisLiteralType propAssignThis;
@@ -8619,11 +8613,14 @@ GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(
     // .fieldKeys means and its purpose.
     NameNodeType fieldKeysName;
     if (isStatic) {
-      fieldKeysName = newInternalDotName(
-          TaggedParserAtomIndex::WellKnown::dot_staticFieldKeys_());
+      MOZ_TRY_VAR(
+          fieldKeysName,
+          newInternalDotName(
+              TaggedParserAtomIndex::WellKnown::dot_staticFieldKeys_()));
     } else {
-      fieldKeysName = newInternalDotName(
-          TaggedParserAtomIndex::WellKnown::dot_fieldKeys_());
+      MOZ_TRY_VAR(fieldKeysName,
+                  newInternalDotName(
+                      TaggedParserAtomIndex::WellKnown::dot_fieldKeys_()));
     }
     if (!fieldKeysName) {
       return errorResult();
@@ -8875,10 +8872,8 @@ GeneralParser<ParseHandler, Unit>::synthesizeAccessorBody(
 
   // Build `this` expression to access the privateStateName for use in the
   // operations to create the getter and setter below.
-  NameNodeType thisName = newThisName();
-  if (!thisName) {
-    return errorResult();
-  }
+  NameNodeType thisName;
+  MOZ_TRY_VAR(thisName, newThisName());
 
   ThisLiteralType propThis;
   MOZ_TRY_VAR(propThis, handler_.newThisLiteral(propNamePos, thisName));
@@ -10583,10 +10578,8 @@ typename ParseHandler::NodeResult GeneralParser<ParseHandler, Unit>::memberExpr(
           lhs, handler_.newNewExpression(newBegin, ctorExpr, args, isSpread));
     }
   } else if (tt == TokenKind::Super) {
-    NameNodeType thisName = newThisName();
-    if (!thisName) {
-      return errorResult();
-    }
+    NameNodeType thisName;
+    MOZ_TRY_VAR(thisName, newThisName());
     MOZ_TRY_VAR(lhs, handler_.newSuperBase(thisName, pos()));
   } else if (tt == TokenKind::Import) {
     lhs = importExpr(yieldHandling, allowCallSyntax);
@@ -10855,10 +10848,8 @@ GeneralParser<ParseHandler, Unit>::memberSuperCall(
     return errorResult();
   }
 
-  NameNodeType thisName = newThisName();
-  if (!thisName) {
-    return errorResult();
-  }
+  NameNodeType thisName;
+  MOZ_TRY_VAR(thisName, newThisName());
 
   return handler_.newSetThis(thisName, superCall);
 }
@@ -12362,10 +12353,8 @@ bool GeneralParser<ParseHandler, Unit>::tryNewTarget(
   NullaryNodeType targetHolder;
   MOZ_TRY_VAR_OR_RETURN(targetHolder, handler_.newPosHolder(pos()), false);
 
-  NameNodeType newTargetName = newNewTargetName();
-  if (!newTargetName) {
-    return false;
-  }
+  NameNodeType newTargetName;
+  MOZ_TRY_VAR_OR_RETURN(newTargetName, newNewTargetName(), false);
 
   MOZ_TRY_VAR_OR_RETURN(
       *newTarget, handler_.newNewTarget(newHolder, targetHolder, newTargetName),
@@ -12598,10 +12587,7 @@ GeneralParser<ParseHandler, Unit>::primaryExpr(
     case TokenKind::This: {
       NameNodeType thisName = null();
       if (pc_->sc()->hasFunctionThisBinding()) {
-        thisName = newThisName();
-        if (!thisName) {
-          return errorResult();
-        }
+        MOZ_TRY_VAR(thisName, newThisName());
       }
       return handler_.newThisLiteral(pos(), thisName);
     }
