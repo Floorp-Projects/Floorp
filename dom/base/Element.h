@@ -620,6 +620,8 @@ class Element : public FragmentOrElement {
    */
   void SetCustomElementData(UniquePtr<CustomElementData> aData);
 
+  nsTArray<RefPtr<nsAtom>>& EnsureCustomStates();
+
   /**
    * Gets the custom element definition used by web components custom element.
    *

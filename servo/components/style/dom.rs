@@ -14,7 +14,7 @@ use crate::context::{PostAnimationTasks, UpdateAnimationsTasks};
 use crate::data::ElementData;
 use crate::media_queries::Device;
 use crate::properties::{AnimationDeclarations, ComputedValues, PropertyDeclarationBlock};
-use crate::selector_parser::{AttrValue, Lang, PseudoElement, SelectorImpl};
+use crate::selector_parser::{AttrValue, CustomState, Lang, PseudoElement, SelectorImpl};
 use crate::shared_lock::{Locked, SharedRwLock};
 use crate::stylist::CascadeData;
 use crate::values::computed::Display;
@@ -511,6 +511,11 @@ pub trait TElement:
 
     /// Get this element's state, for non-tree-structural pseudos.
     fn state(&self) -> ElementState;
+
+    /// Returns whether this element's CustomStateSet contains a given state.
+    fn has_custom_state(&self, _state: &CustomState) -> bool {
+        false
+    }
 
     /// Returns whether this element has a `part` attribute.
     fn has_part_attr(&self) -> bool;

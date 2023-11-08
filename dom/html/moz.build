@@ -41,6 +41,7 @@ EXPORTS.mozilla += [
 
 EXPORTS.mozilla.dom += [
     "ConstraintValidation.h",
+    "CustomStateSet.h",
     "ElementInternals.h",
     "FetchPriority.h",
     "HTMLAllCollection.h",
@@ -126,6 +127,7 @@ EXPORTS.mozilla.dom += [
 
 UNIFIED_SOURCES += [
     "ConstraintValidation.cpp",
+    "CustomStateSet.cpp",
     "ElementInternals.cpp",
     "FetchPriority.cpp",
     "HTMLAllCollection.cpp",
