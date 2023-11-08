@@ -161,18 +161,7 @@ nsCookieBannerService::Observe(nsISupports* aSubject, const char* aTopic,
   // Clear the executed data for private session when the last private browsing
   // session exits.
   if (nsCRT::strcmp(aTopic, "last-pb-context-exited") == 0) {
-    for (auto iter = mExecutedDataForSites.Iter(); !iter.Done(); iter.Next()) {
-      auto& data = iter.Data();
-      // Clear private flags.
-      data.hasExecutedInTopPrivate = false;
-      data.hasExecutedInFramePrivate = false;
-
-      // Remove the entry if the site hasn't been handled in normal windows.
-      if (!data.hasExecutedInTop && !data.hasExecutedInFrame) {
-        iter.Remove();
-      }
-    }
-    return NS_OK;
+    return RemoveAllExecutedRecords(true);
   }
 
   return NS_OK;
@@ -925,6 +914,34 @@ nsCookieBannerService::RemoveAllDomainPrefs(const bool aIsPrivate) {
 }
 
 NS_IMETHODIMP
+nsCookieBannerService::HasExecutedForSite(const nsACString& aSite,
+                                          const bool aIsTopLevel,
+                                          const bool aIsPrivate,
+                                          bool* aHasExecuted) {
+  if (!mIsInitialized) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  auto entry = mExecutedDataForSites.MaybeGet(aSite);
+
+  if (!entry) {
+    return NS_OK;
+  }
+
+  auto& data = entry.ref();
+
+  if (aIsPrivate) {
+    *aHasExecuted = aIsTopLevel ? data.hasExecutedInTopPrivate
+                                : data.hasExecutedInFramePrivate;
+  } else {
+    *aHasExecuted =
+        aIsTopLevel ? data.hasExecutedInTop : data.hasExecutedInFrame;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsCookieBannerService::MarkSiteExecuted(const nsACString& aSite,
                                         const bool aIsTopLevel,
                                         const bool aIsPrivate) {
@@ -954,28 +971,59 @@ nsCookieBannerService::MarkSiteExecuted(const nsACString& aSite,
 }
 
 NS_IMETHODIMP
-nsCookieBannerService::HasExecutedForSite(const nsACString& aSite,
-                                          const bool aIsTopLevel,
-                                          const bool aIsPrivate,
-                                          bool* aHasExecuted) {
+nsCookieBannerService::RemoveExecutedRecordForSite(const nsACString& aSite,
+                                                   const bool aIsPrivate) {
   if (!mIsInitialized) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  auto entry = mExecutedDataForSites.MaybeGet(aSite);
+  auto entry = mExecutedDataForSites.Lookup(aSite);
 
   if (!entry) {
     return NS_OK;
   }
 
-  auto& data = entry.ref();
+  auto data = entry.Data();
 
   if (aIsPrivate) {
-    *aHasExecuted = aIsTopLevel ? data.hasExecutedInTopPrivate
-                                : data.hasExecutedInFramePrivate;
+    data.hasExecutedInTopPrivate = false;
+    data.hasExecutedInFramePrivate = false;
   } else {
-    *aHasExecuted =
-        aIsTopLevel ? data.hasExecutedInTop : data.hasExecutedInFrame;
+    data.hasExecutedInTop = false;
+    data.hasExecutedInFrame = false;
+  }
+
+  // We can remove the entry if there is no flag set after removal.
+  if (!data.hasExecutedInTop && !data.hasExecutedInFrame &&
+      !data.hasExecutedInTopPrivate && !data.hasExecutedInFramePrivate) {
+    entry.Remove();
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCookieBannerService::RemoveAllExecutedRecords(const bool aIsPrivate) {
+  if (!mIsInitialized) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  for (auto iter = mExecutedDataForSites.Iter(); !iter.Done(); iter.Next()) {
+    auto& data = iter.Data();
+    // Clear the flags.
+    if (aIsPrivate) {
+      data.hasExecutedInTopPrivate = false;
+      data.hasExecutedInFramePrivate = false;
+    } else {
+      data.hasExecutedInTop = false;
+      data.hasExecutedInFrame = false;
+    }
+
+    // Remove the entry if there is no flag set.
+    if (!data.hasExecutedInTop && !data.hasExecutedInFrame &&
+        !data.hasExecutedInTopPrivate && !data.hasExecutedInFramePrivate) {
+      iter.Remove();
+    }
   }
 
   return NS_OK;
