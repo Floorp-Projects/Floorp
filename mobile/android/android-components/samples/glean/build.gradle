@@ -45,7 +45,6 @@ android {
 
     buildFeatures {
         viewBinding true
-        buildConfig true
     }
 
     namespace 'org.mozilla.samples.glean'

@@ -31,19 +31,13 @@ ext.configurePublish = { groupIdArg, artifactIdArg, descriptionArg ->
         archiveClassifier = 'sources'
     }
 
-    android {
-        publishing {
-            singleVariant("release") {
-                withSourcesJar()
-            }
-        }
-    }
-
     afterEvaluate {
         publishing {
             publications {
                 release(MavenPublication) {
                     from components.release
+
+                    artifact sourcesJar
 
                     groupId = groupIdArg
                     artifactId = artifactIdArg

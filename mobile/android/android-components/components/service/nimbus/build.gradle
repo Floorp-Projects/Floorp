@@ -49,10 +49,6 @@ android {
         }
     }
 
-    buildFeatures {
-        buildConfig true
-    }
-
     namespace 'mozilla.components.service.nimbus'
 }
 

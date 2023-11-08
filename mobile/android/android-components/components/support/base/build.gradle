@@ -5,7 +5,7 @@
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
-def generatedSrcDir = new File(layout.buildDirectory.get().asFile, "generated/components/src/main/java")
+def generatedSrcDir = new File(buildDir, "generated/components/src/main/java")
 
 // This gitHash functionality is duplicated in publish.gradle.
 def getGitHash = { ->
@@ -55,7 +55,6 @@ android {
 
     buildFeatures {
         viewBinding true
-        buildConfig true
     }
 
     namespace 'mozilla.components.support.base'

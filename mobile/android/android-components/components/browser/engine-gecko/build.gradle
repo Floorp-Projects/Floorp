@@ -43,10 +43,6 @@ android {
         }
     }
 
-    buildFeatures {
-        buildConfig true
-    }
-
     namespace  'mozilla.components.browser.engine.gecko'
 }
 

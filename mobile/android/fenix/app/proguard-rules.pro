@@ -124,9 +124,3 @@
 # Keep Android Lifecycle methods
 # https://bugzilla.mozilla.org/show_bug.cgi?id=1596302
 -keep class androidx.lifecycle.** { *; }
-
--dontwarn java.beans.BeanInfo
--dontwarn java.beans.FeatureDescriptor
--dontwarn java.beans.IntrospectionException
--dontwarn java.beans.Introspector
--dontwarn java.beans.PropertyDescriptor

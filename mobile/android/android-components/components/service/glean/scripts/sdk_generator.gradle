@@ -277,8 +277,8 @@ ext.gleanAttachGeneratingTasks = {
         standardOutput = new ByteArrayOutputStream()
         errorOutput = standardOutput
         doLast {
-            if (executionResult.exitValue != 0) {
-                throw new GradleException("Process '${commandLine}' finished with non-zero exit value ${executionResult.exitValue}:\n\n${standardOutput.toString()}")
+            if (execResult.exitValue != 0) {
+                throw new GradleException("Process '${commandLine}' finished with non-zero exit value ${execResult.exitValue}:\n\n${standardOutput.toString()}")
             }
         }
     }
@@ -341,8 +341,8 @@ ext.gleanAttachGeneratingTasks = {
         standardOutput = new ByteArrayOutputStream()
         errorOutput = standardOutput
         doLast {
-            if (executionResult.exitValue != 0) {
-                throw new GradleException("Process '${commandLine}' finished with non-zero exit value ${executionResult.exitValue}:\n\n${standardOutput.toString()}")
+            if (execResult.exitValue != 0) {
+                throw new GradleException("Process '${commandLine}' finished with non-zero exit value ${execResult.exitValue}:\n\n${standardOutput.toString()}")
             }
         }
     }

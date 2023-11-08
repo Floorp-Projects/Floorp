@@ -175,21 +175,8 @@ allprojects {
     }
 }
 
-subprojects {
-    afterEvaluate {
-        if (it.hasProperty('android')) {
-            android {
-                compileOptions {
-                    sourceCompatibility JavaVersion.VERSION_17
-                    targetCompatibility JavaVersion.VERSION_17
-                }
-            }
-        }
-    }
-}
-
 tasks.register('clean', Delete) {
-    delete rootProject.layout.buildDirectory
+    delete rootProject.buildDir
 }
 
 detekt {
