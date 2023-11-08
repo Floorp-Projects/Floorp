@@ -173,63 +173,6 @@ const CookieCleaner = {
   },
 };
 
-// A cleaner for clearing cookie banner handling exceptions.
-const CookieBannerExceptionCleaner = {
-  async deleteAll() {
-    Services.cookieBanners.removeAllDomainPrefs(false);
-  },
-
-  async deleteByPrincipal(aPrincipal) {
-    Services.cookieBanners.removeDomainPref(aPrincipal.URI, false);
-  },
-
-  async deleteByBaseDomain(aDomain) {
-    Services.cookieBanners.removeDomainPref(
-      Services.io.newURI("https://" + aDomain),
-      false
-    );
-  },
-
-  async deleteByHost(aHost, aOriginAttributes) {
-    let isPrivate =
-      !!aOriginAttributes.privateBrowsingId &&
-      aOriginAttributes.privateBrowsingId !==
-        Services.scriptSecurityManager.DEFAULT_PRIVATE_BROWSING_ID;
-
-    Services.cookieBanners.removeDomainPref(
-      Services.io.newURI("https://" + aHost),
-      isPrivate
-    );
-  },
-};
-
-// A cleaner for cleaning cookie banner handling executed records.
-const CookieBannerExecutedRecordCleaner = {
-  async deleteAll() {
-    Services.cookieBanners.removeAllExecutedRecords(false);
-  },
-
-  async deleteByPrincipal(aPrincipal) {
-    Services.cookieBanners.removeExecutedRecordForSite(
-      aPrincipal.baseDomain,
-      false
-    );
-  },
-
-  async deleteByBaseDomain(aDomain) {
-    Services.cookieBanners.removeExecutedRecordForSite(aDomain, false);
-  },
-
-  async deleteByHost(aHost, aOriginAttributes) {
-    let isPrivate =
-      !!aOriginAttributes.privateBrowsingId &&
-      aOriginAttributes.privateBrowsingId !==
-        Services.scriptSecurityManager.DEFAULT_PRIVATE_BROWSING_ID;
-
-    Services.cookieBanners.removeExecutedRecordForSite(aHost, isPrivate);
-  },
-};
-
 const CertCleaner = {
   async deleteByHost(aHost, aOriginAttributes) {
     let overrideService = Cc["@mozilla.org/security/certoverride;1"].getService(
@@ -1676,16 +1619,6 @@ const FLAGS_MAP = [
   {
     flag: Ci.nsIClearDataService.CLEAR_CREDENTIAL_MANAGER_STATE,
     cleaners: [IdentityCredentialStorageCleaner],
-  },
-
-  {
-    flag: Ci.nsIClearDataService.CLEAR_COOKIE_BANNER_EXCEPTION,
-    cleaners: [CookieBannerExceptionCleaner],
-  },
-
-  {
-    flag: Ci.nsIClearDataService.CLEAR_COOKIE_BANNER_EXECUTED_RECORD,
-    cleaners: [CookieBannerExecutedRecordCleaner],
   },
 ];
 

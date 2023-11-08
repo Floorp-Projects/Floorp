@@ -22,12 +22,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "cookiebanners.service.mode.privateBrowsing",
   Ci.nsICookieBannerService.MODE_DISABLED
 );
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
-  "executeOnce",
-  "cookiebanners.bannerClicking.executeOnce",
-  true
-);
 
 ChromeUtils.defineLazyGetter(lazy, "CookieBannerL10n", () => {
   return new Localization([
@@ -52,24 +46,12 @@ export class CookieBannerParent extends JSWindowActorParent {
     return topBC.embedderElement;
   }
 
-  get #isTopLevel() {
-    return !this.manager.browsingContext.parent;
-  }
-
-  #isPrivateBrowsingCached;
-  get #isPrivateBrowsing() {
-    if (this.#isPrivateBrowsingCached !== undefined) {
-      return this.#isPrivateBrowsingCached;
-    }
+  #isPrivateBrowsing() {
     let browser = this.#browserElement;
     if (!browser) {
       return false;
     }
-
-    this.#isPrivateBrowsingCached =
-      lazy.PrivateBrowsingUtils.isBrowserPrivate(browser);
-
-    return this.#isPrivateBrowsingCached;
+    return lazy.PrivateBrowsingUtils.isBrowserPrivate(browser);
   }
 
   /**
@@ -144,28 +126,14 @@ export class CookieBannerParent extends JSWindowActorParent {
       return undefined;
     }
 
-    let domain = this.manager.documentPrincipal?.baseDomain;
-
-    if (message.name == "CookieBanner::MarkSiteExecuted") {
-      if (!domain) {
-        return undefined;
-      }
-
-      Services.cookieBanners.markSiteExecuted(
-        domain,
-        this.#isTopLevel,
-        this.#isPrivateBrowsing
-      );
-      return undefined;
-    }
-
     if (message.name != "CookieBanner::GetClickRules") {
       return undefined;
     }
 
     // TODO: Bug 1790688: consider moving this logic to the cookie banner service.
     let mode;
-    if (this.#isPrivateBrowsing) {
+    let isPrivateBrowsing = this.#isPrivateBrowsing();
+    if (isPrivateBrowsing) {
       mode = lazy.serviceModePBM;
     } else {
       mode = lazy.serviceMode;
@@ -182,7 +150,7 @@ export class CookieBannerParent extends JSWindowActorParent {
       try {
         let perDomainMode = Services.cookieBanners.getDomainPref(
           topURI,
-          this.#isPrivateBrowsing
+          isPrivateBrowsing
         );
 
         if (perDomainMode != Ci.nsICookieBannerService.MODE_UNSET) {
@@ -200,43 +168,33 @@ export class CookieBannerParent extends JSWindowActorParent {
       }
     }
 
-    // Check if we previously executed banner clicking for the site before. If
-    // the pref instructs to always execute banner clicking, we will set it to
-    // false.
-    let hasExecuted = false;
-    if (lazy.executeOnce) {
-      hasExecuted = Services.cookieBanners.hasExecutedForSite(
-        domain,
-        this.#isTopLevel,
-        this.#isPrivateBrowsing
-      );
+    // Service is disabled for current context (normal or private browsing),
+    // return empty array.
+    if (mode == Ci.nsICookieBannerService.MODE_DISABLED) {
+      return [];
     }
 
-    // If we have previously executed banner clicking or the service is disabled
-    // for current context (normal or private browsing), return empty array.
-    if (hasExecuted || mode == Ci.nsICookieBannerService.MODE_DISABLED) {
-      return { rules: [], hasExecuted };
-    }
+    let domain = this.manager.documentPrincipal?.baseDomain;
 
     if (!domain) {
-      return { rules: [], hasExecuted };
+      return [];
     }
 
+    let isTopLevel = !this.manager.browsingContext.parent;
     let rules = Services.cookieBanners.getClickRulesForDomain(
       domain,
-      this.#isTopLevel
+      isTopLevel
     );
 
     if (!rules.length) {
-      return { rules: [], hasExecuted };
+      return [];
     }
 
     // Determine whether we can fall back to opt-in rules. This includes the
     // detect-only mode where don't interact with the banner.
     let modeAllowsOptIn =
       mode == Ci.nsICookieBannerService.MODE_REJECT_OR_ACCEPT;
-
-    rules = rules.map(rule => {
+    return rules.map(rule => {
       let target = rule.optOut;
 
       if (modeAllowsOptIn && !target) {
@@ -249,7 +207,5 @@ export class CookieBannerParent extends JSWindowActorParent {
         target,
       };
     });
-
-    return { rules, hasExecuted };
   }
 }
