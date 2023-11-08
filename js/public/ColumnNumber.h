@@ -151,8 +151,7 @@ struct ColumnNumberWithOrigin {
   ColumnNumberOffset operator-(
       const ColumnNumberWithOrigin<Origin, LimitValue>& other) const {
     MOZ_ASSERT(valid());
-    return ColumnNumberOffset(int32_t(value_) -
-                              int32_t(other.zeroOriginValue()));
+    return ColumnNumberOffset(int32_t(value_) - int32_t(other.value_));
   }
 
   ColumnNumberWithOrigin<Origin, LimitValue>& operator+=(
