@@ -506,7 +506,7 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
     return errorResult();
   }
 
-  NameNodeType stringLiteral();
+  NameNodeResult stringLiteral();
 
   const char* nameIsArgumentsOrEval(Node node);
 
@@ -1012,8 +1012,8 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   }
 
  private:
-  NameNodeType noSubstitutionUntaggedTemplate();
-  ListNodeType templateLiteral(YieldHandling yieldHandling);
+  NameNodeResult noSubstitutionUntaggedTemplate();
+  ListNodeResult templateLiteral(YieldHandling yieldHandling);
   bool taggedTemplate(YieldHandling yieldHandling, ListNodeType tagArgsList,
                       TokenKind tt);
   bool appendToCallSiteObj(CallSiteNodeType callSiteObj);
@@ -1229,9 +1229,10 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
                   bool allowCallSyntax, PossibleError* possibleError,
                   InvokedPrediction invoked);
   Node decoratorExpr(YieldHandling yieldHandling, TokenKind tt);
-  Node primaryExpr(YieldHandling yieldHandling,
-                   TripledotHandling tripledotHandling, TokenKind tt,
-                   PossibleError* possibleError, InvokedPrediction invoked);
+  NodeResult primaryExpr(YieldHandling yieldHandling,
+                         TripledotHandling tripledotHandling, TokenKind tt,
+                         PossibleError* possibleError,
+                         InvokedPrediction invoked);
   Node exprInParens(InHandling inHandling, YieldHandling yieldHandling,
                     TripledotHandling tripledotHandling,
                     PossibleError* possibleError = nullptr);
@@ -1443,7 +1444,7 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
       PropertyNameContext propertyNameContext, ListNodeType literal);
   ListNodeType arrayInitializer(YieldHandling yieldHandling,
                                 PossibleError* possibleError);
-  inline RegExpLiteralType newRegExp();
+  inline RegExpLiteralResult newRegExp();
 
   ListNodeType objectLiteral(YieldHandling yieldHandling,
                              PossibleError* possibleError);
@@ -1478,12 +1479,11 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
                                            PossibleError* exprPossibleError,
                                            PossibleError* possibleError);
 
-  NumericLiteralType newNumber(const Token& tok) {
-    return handler_.newNumber(tok.number(), tok.decimalPoint(), tok.pos)
-        .unwrapOr(null());
+  NumericLiteralResult newNumber(const Token& tok) {
+    return handler_.newNumber(tok.number(), tok.decimalPoint(), tok.pos);
   }
 
-  inline BigIntLiteralType newBigInt();
+  inline BigIntLiteralResult newBigInt();
 
   enum class OptionalKind {
     NonOptional = 0,
@@ -1650,8 +1650,8 @@ class MOZ_STACK_CLASS Parser<SyntaxParseHandler, Unit> final
   inline void setAwaitHandling(AwaitHandling awaitHandling);
   inline void setInParametersOfAsyncFunction(bool inParameters);
 
-  RegExpLiteralType newRegExp();
-  BigIntLiteralType newBigInt();
+  RegExpLiteralResult newRegExp();
+  BigIntLiteralResult newBigInt();
 
   // Parse a module.
   ModuleNodeType moduleBody(ModuleSharedContext* modulesc);
@@ -1800,8 +1800,8 @@ class MOZ_STACK_CLASS Parser<FullParseHandler, Unit> final
   friend class AutoInParametersOfAsyncFunction<SyntaxParseHandler, Unit>;
   inline void setInParametersOfAsyncFunction(bool inParameters);
 
-  RegExpLiteralType newRegExp();
-  BigIntLiteralType newBigInt();
+  RegExpLiteralResult newRegExp();
+  BigIntLiteralResult newBigInt();
 
   // Parse a module.
   ModuleNodeType moduleBody(ModuleSharedContext* modulesc);
