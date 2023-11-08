@@ -5,7 +5,9 @@
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okio.ByteString
-import okio.Okio
+import okio.ByteString.Companion.encodeUtf8
+import okio.buffer
+import okio.sink
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import java.io.File
@@ -33,9 +35,9 @@ class PublicSuffixListPlugin : Plugin<Project> {
     }
 
     private fun writeListToDisk(destination: String, data: PublicSuffixListData) {
-        val fileSink = Okio.sink(File(destination))
+        val fileSink = File(destination).sink()
 
-        Okio.buffer(fileSink).use { sink ->
+        fileSink.buffer().use { sink ->
             sink.writeInt(data.totalRuleBytes)
 
             for (domain in data.sortedRules) {
@@ -58,7 +60,7 @@ class PublicSuffixListPlugin : Plugin<Project> {
             .build()
 
         client.newCall(request).execute().use { response ->
-            val source = response.body()!!.source()
+            val source = response.body!!.source()
 
             val data = PublicSuffixListData()
 
@@ -73,15 +75,15 @@ class PublicSuffixListPlugin : Plugin<Project> {
                     assertWildcardRule(line)
                 }
 
-                var rule = ByteString.encodeUtf8(line)
+                var rule = line.encodeUtf8()
 
                 if (rule.startsWith(EXCEPTION_RULE_MARKER)) {
                     rule = rule.substring(1)
                     // We use '\n' for end of value.
-                    data.totalExceptionRuleBytes += rule.size() + 1
+                    data.totalExceptionRuleBytes += rule.size + 1
                     data.sortedExceptionRules.add(rule)
                 } else {
-                    data.totalRuleBytes += rule.size() + 1 // We use '\n' for end of value.
+                    data.totalRuleBytes += rule.size + 1 // We use '\n' for end of value.
                     data.sortedRules.add(rule)
                 }
             }
@@ -107,7 +109,7 @@ class PublicSuffixListPlugin : Plugin<Project> {
 
     companion object {
         private const val WILDCARD_CHAR = "*"
-        private val EXCEPTION_RULE_MARKER = ByteString.encodeUtf8("!")
+        private val EXCEPTION_RULE_MARKER = "!".encodeUtf8()
     }
 }
 
