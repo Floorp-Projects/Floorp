@@ -93,6 +93,13 @@ CodeGeneratorShared::CodeGeneratorShared(MIRGenerator* gen, LIRGraph* graph,
 #endif
 
     if (gen->needsStaticStackAlignment()) {
+#ifdef ENABLE_WASM_TAIL_CALLS
+      // Tail calls expect stack arguments to be aligned when collapsing frames.
+      // Insert padding to align the stack arguments so that a future tail call
+      // doesn't overwrite a local.
+      frameDepth_ = AlignBytes(frameDepth_, WasmStackAlignment);
+#endif
+
       // Since wasm uses the system ABI which does not necessarily use a
       // regular array where all slots are sizeof(Value), it maintains the max
       // argument stack depth separately.
