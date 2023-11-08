@@ -532,8 +532,9 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
   bool checkForUndefinedPrivateFields(EvalSharedContext* evalSc = nullptr);
 
   bool finishFunctionScopes(bool isStandaloneFunction);
-  LexicalScopeNodeType finishLexicalScope(ParseContext::Scope& scope, Node body,
-                                          ScopeKind kind = ScopeKind::Lexical);
+  LexicalScopeNodeResult finishLexicalScope(
+      ParseContext::Scope& scope, Node body,
+      ScopeKind kind = ScopeKind::Lexical);
   ClassBodyScopeNodeResult finishClassBodyScope(ParseContext::Scope& scope,
                                                 ListNodeType body);
   bool finishFunction(bool isStandaloneFunction = false);
@@ -1027,8 +1028,8 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
 
  public:
   /* Public entry points for parsing. */
-  Node statementListItem(YieldHandling yieldHandling,
-                         bool canHaveDirectives = false);
+  NodeResult statementListItem(YieldHandling yieldHandling,
+                               bool canHaveDirectives = false);
 
   // Parse an inner function given an enclosing ParseContext and a
   // FunctionBox for the inner function.
@@ -1062,41 +1063,41 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
                                   InvokedPrediction invoked,
                                   FunctionAsyncKind asyncKind);
 
-  Node statement(YieldHandling yieldHandling);
+  NodeResult statement(YieldHandling yieldHandling);
   bool maybeParseDirective(ListNodeType list, Node pn, bool* cont);
 
-  LexicalScopeNodeType blockStatement(
+  LexicalScopeNodeResult blockStatement(
       YieldHandling yieldHandling,
       unsigned errorNumber = JSMSG_CURLY_IN_COMPOUND);
-  BinaryNodeType doWhileStatement(YieldHandling yieldHandling);
-  BinaryNodeType whileStatement(YieldHandling yieldHandling);
+  BinaryNodeResult doWhileStatement(YieldHandling yieldHandling);
+  BinaryNodeResult whileStatement(YieldHandling yieldHandling);
 
-  Node forStatement(YieldHandling yieldHandling);
+  NodeResult forStatement(YieldHandling yieldHandling);
   bool forHeadStart(YieldHandling yieldHandling, IteratorKind iterKind,
                     ParseNodeKind* forHeadKind, Node* forInitialPart,
                     mozilla::Maybe<ParseContext::Scope>& forLetImpliedScope,
                     Node* forInOrOfExpression);
-  Node expressionAfterForInOrOf(ParseNodeKind forHeadKind,
-                                YieldHandling yieldHandling);
+  NodeResult expressionAfterForInOrOf(ParseNodeKind forHeadKind,
+                                      YieldHandling yieldHandling);
 
-  SwitchStatementType switchStatement(YieldHandling yieldHandling);
-  ContinueStatementType continueStatement(YieldHandling yieldHandling);
-  BreakStatementType breakStatement(YieldHandling yieldHandling);
-  UnaryNodeType returnStatement(YieldHandling yieldHandling);
-  BinaryNodeType withStatement(YieldHandling yieldHandling);
-  UnaryNodeType throwStatement(YieldHandling yieldHandling);
-  TernaryNodeType tryStatement(YieldHandling yieldHandling);
-  LexicalScopeNodeType catchBlockStatement(
+  SwitchStatementResult switchStatement(YieldHandling yieldHandling);
+  ContinueStatementResult continueStatement(YieldHandling yieldHandling);
+  BreakStatementResult breakStatement(YieldHandling yieldHandling);
+  UnaryNodeResult returnStatement(YieldHandling yieldHandling);
+  BinaryNodeResult withStatement(YieldHandling yieldHandling);
+  UnaryNodeResult throwStatement(YieldHandling yieldHandling);
+  TernaryNodeResult tryStatement(YieldHandling yieldHandling);
+  LexicalScopeNodeResult catchBlockStatement(
       YieldHandling yieldHandling, ParseContext::Scope& catchParamScope);
-  DebuggerStatementType debuggerStatement();
+  DebuggerStatementResult debuggerStatement();
 
   DeclarationListNodeResult variableStatement(YieldHandling yieldHandling);
 
-  LabeledStatementType labeledStatement(YieldHandling yieldHandling);
-  Node labeledItem(YieldHandling yieldHandling);
+  LabeledStatementResult labeledStatement(YieldHandling yieldHandling);
+  NodeResult labeledItem(YieldHandling yieldHandling);
 
-  TernaryNodeType ifStatement(YieldHandling yieldHandling);
-  Node consequentOrAlternative(YieldHandling yieldHandling);
+  TernaryNodeResult ifStatement(YieldHandling yieldHandling);
+  NodeResult consequentOrAlternative(YieldHandling yieldHandling);
 
   DeclarationListNodeResult lexicalDeclaration(YieldHandling yieldHandling,
                                                DeclarationKind kind);
@@ -1132,7 +1133,7 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   BinaryNodeType exportDefault(uint32_t begin);
   Node exportDeclaration();
 
-  UnaryNodeType expressionStatement(
+  UnaryNodeResult expressionStatement(
       YieldHandling yieldHandling,
       InvokedPrediction invoked = PredictUninvoked);
 
@@ -1202,7 +1203,7 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
                         PossibleError* possibleError = nullptr,
                         InvokedPrediction invoked = PredictUninvoked);
   NodeResult assignExprWithoutYieldOrAwait(YieldHandling yieldHandling);
-  UnaryNodeType yieldExpression(InHandling inHandling);
+  UnaryNodeResult yieldExpression(InHandling inHandling);
   NodeResult condExpr(InHandling inHandling, YieldHandling yieldHandling,
                       TripledotHandling tripledotHandling,
                       PossibleError* possibleError, InvokedPrediction invoked);
@@ -1265,7 +1266,7 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   UnaryNodeResult unaryOpExpr(YieldHandling yieldHandling, ParseNodeKind kind,
                               uint32_t begin);
 
-  Node condition(InHandling inHandling, YieldHandling yieldHandling);
+  NodeResult condition(InHandling inHandling, YieldHandling yieldHandling);
 
   ListNodeResult argumentList(YieldHandling yieldHandling, bool* isSpread,
                               PossibleError* possibleError = nullptr);
@@ -1507,7 +1508,7 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
                                        YieldHandling yieldHandling,
                                        TokenKind hint = TokenKind::Limit);
 
-  ListNodeType statementList(YieldHandling yieldHandling);
+  ListNodeResult statementList(YieldHandling yieldHandling);
 
   [[nodiscard]] FunctionNodeResult innerFunction(
       FunctionNodeType funNode, ParseContext* outerpc,

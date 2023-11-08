@@ -392,10 +392,8 @@ typename ParseHandler::ListNodeType GeneralParser<ParseHandler, Unit>::parse() {
     return null();
   }
 
-  ListNodeType stmtList = statementList(YieldIsName);
-  if (!stmtList) {
-    return null();
-  }
+  ListNodeType stmtList;
+  MOZ_TRY_VAR_OR_RETURN(stmtList, statementList(YieldIsName), null());
 
   TokenKind tt;
   if (!tokenStream.getToken(&tt, TokenStream::SlashIsRegExp)) {
@@ -1622,29 +1620,30 @@ Maybe<ClassBodyScope::ParserData*> ParserBase::newClassBodyScopeData(
 }
 
 template <>
-SyntaxParseHandler::LexicalScopeNodeType
+SyntaxParseHandler::LexicalScopeNodeResult
 PerHandlerParser<SyntaxParseHandler>::finishLexicalScope(
     ParseContext::Scope& scope, Node body, ScopeKind kind) {
   if (!propagateFreeNamesAndMarkClosedOverBindings(scope)) {
-    return null();
+    return errorResult();
   }
 
-  return handler_.newLexicalScope(body).unwrapOr(null());
+  return handler_.newLexicalScope(body);
 }
 
 template <>
-LexicalScopeNode* PerHandlerParser<FullParseHandler>::finishLexicalScope(
+FullParseHandler::LexicalScopeNodeResult
+PerHandlerParser<FullParseHandler>::finishLexicalScope(
     ParseContext::Scope& scope, ParseNode* body, ScopeKind kind) {
   if (!propagateFreeNamesAndMarkClosedOverBindings(scope)) {
-    return nullptr;
+    return errorResult();
   }
 
   Maybe<LexicalScope::ParserData*> bindings = newLexicalScopeData(scope);
   if (!bindings) {
-    return nullptr;
+    return errorResult();
   }
 
-  return handler_.newLexicalScope(*bindings, body, kind).unwrapOr(null());
+  return handler_.newLexicalScope(*bindings, body, kind);
 }
 
 template <>
@@ -1753,10 +1752,8 @@ LexicalScopeNode* Parser<FullParseHandler, Unit>::evalBody(
       return nullptr;
     }
 
-    ListNode* list = statementList(YieldIsName);
-    if (!list) {
-      return nullptr;
-    }
+    ListNode* list;
+    MOZ_TRY_VAR_OR_RETURN(list, statementList(YieldIsName), nullptr);
 
     if (!checkStatementsEOF()) {
       return nullptr;
@@ -1767,10 +1764,8 @@ LexicalScopeNode* Parser<FullParseHandler, Unit>::evalBody(
       return nullptr;
     }
 
-    body = finishLexicalScope(lexicalScope, list);
-    if (!body) {
-      return nullptr;
-    }
+    MOZ_TRY_VAR_OR_RETURN(body, finishLexicalScope(lexicalScope, list),
+                          nullptr);
   }
 
 #ifdef DEBUG
@@ -1841,10 +1836,8 @@ ListNode* Parser<FullParseHandler, Unit>::globalBody(
     return nullptr;
   }
 
-  ListNode* body = statementList(YieldIsName);
-  if (!body) {
-    return nullptr;
-  }
+  ListNode* body;
+  MOZ_TRY_VAR_OR_RETURN(body, statementList(YieldIsName), nullptr);
 
   if (!checkStatementsEOF()) {
     return nullptr;
@@ -1915,13 +1908,11 @@ ModuleNode* Parser<FullParseHandler, Unit>::moduleBody(
 
   AutoAwaitIsKeyword<FullParseHandler, Unit> awaitIsKeyword(
       this, AwaitIsModuleKeyword);
-  ListNode* stmtList = statementList(YieldIsName);
-  if (!stmtList) {
-    return null();
-  }
+  ListNode* stmtList;
+  MOZ_TRY_VAR_OR_RETURN(stmtList, statementList(YieldIsName), null());
 
   MOZ_ASSERT(stmtList->isKind(ParseNodeKind::StatementList));
-  moduleNode->setBody(&stmtList->as<ListNode>());
+  moduleNode->setBody(&stmtList->template as<ListNode>());
 
   if (pc_->isAsync()) {
     if (!noteUsedName(TaggedParserAtomIndex::WellKnown::dot_generator_())) {
@@ -2424,10 +2415,7 @@ GeneralParser<ParseHandler, Unit>::functionBody(InHandling inHandling,
   Node body;
   if (type == StatementListBody) {
     bool inheritedStrict = pc_->sc()->strict();
-    body = statementList(yieldHandling);
-    if (!body) {
-      return errorResult();
-    }
+    MOZ_TRY_VAR(body, statementList(yieldHandling));
 
     // When we transitioned from non-strict to strict mode, we need to
     // validate that all parameter names are valid strict mode names.
@@ -2502,8 +2490,7 @@ GeneralParser<ParseHandler, Unit>::functionBody(InHandling inHandling,
     }
   }
 
-  return toResult(
-      finishLexicalScope(pc_->varScope(), body, ScopeKind::FunctionLexical));
+  return finishLexicalScope(pc_->varScope(), body, ScopeKind::FunctionLexical);
 }
 
 template <class ParseHandler, typename Unit>
@@ -3980,15 +3967,15 @@ bool GeneralParser<ParseHandler, Unit>::maybeParseDirective(
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::ListNodeType
+typename ParseHandler::ListNodeResult
 GeneralParser<ParseHandler, Unit>::statementList(YieldHandling yieldHandling) {
   AutoCheckRecursionLimit recursion(this->fc_);
   if (!recursion.check(this->fc_)) {
-    return null();
+    return errorResult();
   }
 
   ListNodeType stmtList;
-  MOZ_TRY_VAR_OR_RETURN(stmtList, handler_.newStatementList(pos()), null());
+  MOZ_TRY_VAR(stmtList, handler_.newStatementList(pos()));
 
   bool canHaveDirectives = pc_->atBodyLevel();
   if (canHaveDirectives) {
@@ -4011,12 +3998,12 @@ GeneralParser<ParseHandler, Unit>::statementList(YieldHandling yieldHandling) {
       if (anyChars.isEOF()) {
         isUnexpectedEOF_ = true;
       }
-      return null();
+      return errorResult();
     }
     if (tt == TokenKind::Eof || tt == TokenKind::RightCurly) {
       TokenPos pos;
       if (!tokenStream.peekTokenPos(&pos, TokenStream::SlashIsRegExp)) {
-        return null();
+        return errorResult();
       }
       handler_.setListEndPosition(stmtList, pos);
       break;
@@ -4024,21 +4011,22 @@ GeneralParser<ParseHandler, Unit>::statementList(YieldHandling yieldHandling) {
     if (afterReturn) {
       if (!tokenStream.peekOffset(&statementBegin,
                                   TokenStream::SlashIsRegExp)) {
-        return null();
+        return errorResult();
       }
     }
-    Node next = statementListItem(yieldHandling, canHaveDirectives);
-    if (!next) {
+    auto nextResult = statementListItem(yieldHandling, canHaveDirectives);
+    if (nextResult.isErr()) {
       if (anyChars.isEOF()) {
         isUnexpectedEOF_ = true;
       }
-      return null();
+      return errorResult();
     }
+    Node next = nextResult.unwrap();
     if (!warnedAboutStatementsAfterReturn) {
       if (afterReturn) {
         if (!handler_.isStatementPermittedAfterReturnStatement(next)) {
           if (!warningAt(statementBegin, JSMSG_STMT_AFTER_RETURN)) {
-            return null();
+            return errorResult();
           }
 
           warnedAboutStatementsAfterReturn = true;
@@ -4050,7 +4038,7 @@ GeneralParser<ParseHandler, Unit>::statementList(YieldHandling yieldHandling) {
 
     if (canHaveDirectives) {
       if (!maybeParseDirective(stmtList, next, &canHaveDirectives)) {
-        return null();
+        return errorResult();
       }
     }
 
@@ -4061,18 +4049,17 @@ GeneralParser<ParseHandler, Unit>::statementList(YieldHandling yieldHandling) {
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::condition(
+typename ParseHandler::NodeResult GeneralParser<ParseHandler, Unit>::condition(
     InHandling inHandling, YieldHandling yieldHandling) {
   if (!mustMatchToken(TokenKind::LeftParen, JSMSG_PAREN_BEFORE_COND)) {
-    return null();
+    return errorResult();
   }
 
   Node pn;
-  MOZ_TRY_VAR_OR_RETURN(
-      pn, exprInParens(inHandling, yieldHandling, TripledotProhibited), null());
+  MOZ_TRY_VAR(pn, exprInParens(inHandling, yieldHandling, TripledotProhibited));
 
   if (!mustMatchToken(TokenKind::RightParen, JSMSG_PAREN_AFTER_COND)) {
-    return null();
+    return errorResult();
   }
 
   return pn;
@@ -4566,7 +4553,7 @@ GeneralParser<ParseHandler, Unit>::destructuringDeclarationWithoutYieldOrAwait(
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::LexicalScopeNodeType
+typename ParseHandler::LexicalScopeNodeResult
 GeneralParser<ParseHandler, Unit>::blockStatement(YieldHandling yieldHandling,
                                                   unsigned errorNumber) {
   MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::LeftCurly));
@@ -4575,36 +4562,33 @@ GeneralParser<ParseHandler, Unit>::blockStatement(YieldHandling yieldHandling,
   ParseContext::Statement stmt(pc_, StatementKind::Block);
   ParseContext::Scope scope(this);
   if (!scope.init(pc_)) {
-    return null();
+    return errorResult();
   }
 
-  ListNodeType list = statementList(yieldHandling);
-  if (!list) {
-    return null();
-  }
+  ListNodeType list;
+  MOZ_TRY_VAR(list, statementList(yieldHandling));
 
   if (!mustMatchToken(TokenKind::RightCurly, [this, errorNumber,
                                               openedPos](TokenKind actual) {
         this->reportMissingClosing(errorNumber, JSMSG_CURLY_OPENED, openedPos);
       })) {
-    return null();
+    return errorResult();
   }
 
   return finishLexicalScope(scope, list);
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::Node
+typename ParseHandler::NodeResult
 GeneralParser<ParseHandler, Unit>::expressionAfterForInOrOf(
     ParseNodeKind forHeadKind, YieldHandling yieldHandling) {
   MOZ_ASSERT(forHeadKind == ParseNodeKind::ForIn ||
              forHeadKind == ParseNodeKind::ForOf);
   if (forHeadKind == ParseNodeKind::ForOf) {
-    return assignExpr(InAllowed, yieldHandling, TripledotProhibited)
-        .unwrapOr(null());
+    return assignExpr(InAllowed, yieldHandling, TripledotProhibited);
   }
 
-  return expr(InAllowed, yieldHandling, TripledotProhibited).unwrapOr(null());
+  return expr(InAllowed, yieldHandling, TripledotProhibited);
 }
 
 template <class ParseHandler, typename Unit>
@@ -4634,11 +4618,8 @@ GeneralParser<ParseHandler, Unit>::declarationPattern(
     }
 
     if (*forHeadKind != ParseNodeKind::ForHead) {
-      *forInOrOfExpression =
-          expressionAfterForInOrOf(*forHeadKind, yieldHandling);
-      if (!*forInOrOfExpression) {
-        return errorResult();
-      }
+      MOZ_TRY_VAR(*forInOrOfExpression,
+                  expressionAfterForInOrOf(*forHeadKind, yieldHandling));
 
       return pattern;
     }
@@ -4703,11 +4684,9 @@ GeneralParser<ParseHandler, Unit>::initializerInNameDeclaration(
         return errorResult();
       }
 
-      *forInOrOfExpression =
-          expressionAfterForInOrOf(ParseNodeKind::ForIn, yieldHandling);
-      if (!*forInOrOfExpression) {
-        return errorResult();
-      }
+      MOZ_TRY_VAR(
+          *forInOrOfExpression,
+          expressionAfterForInOrOf(ParseNodeKind::ForIn, yieldHandling));
     } else {
       *forHeadKind = ParseNodeKind::ForHead;
     }
@@ -4778,11 +4757,8 @@ GeneralParser<ParseHandler, Unit>::declarationName(DeclarationKind declKind,
     }
 
     if (forHeadKind && *forHeadKind != ParseNodeKind::ForHead) {
-      *forInOrOfExpression =
-          expressionAfterForInOrOf(*forHeadKind, yieldHandling);
-      if (!*forInOrOfExpression) {
-        return errorResult();
-      }
+      MOZ_TRY_VAR(*forInOrOfExpression,
+                  expressionAfterForInOrOf(*forHeadKind, yieldHandling));
     } else {
       // Normal const declarations, and const declarations in for(;;)
       // heads, must be initialized.
@@ -5317,7 +5293,7 @@ GeneralParser<ParseHandler, Unit>::importDeclarationOrImportExpr(
   }
 
   if (tt == TokenKind::Dot || tt == TokenKind::LeftParen) {
-    return expressionStatement(yieldHandling);
+    return expressionStatement(yieldHandling).unwrapOr(null());
   }
 
   return importDeclaration();
@@ -6241,28 +6217,26 @@ GeneralParser<ParseHandler, Unit>::exportDeclaration() {
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::UnaryNodeType
+typename ParseHandler::UnaryNodeResult
 GeneralParser<ParseHandler, Unit>::expressionStatement(
     YieldHandling yieldHandling, InvokedPrediction invoked) {
   anyChars.ungetToken();
   Node pnexpr;
-  MOZ_TRY_VAR_OR_RETURN(pnexpr,
-                        expr(InAllowed, yieldHandling, TripledotProhibited,
-                             /* possibleError = */ nullptr, invoked),
-                        null());
+  MOZ_TRY_VAR(pnexpr, expr(InAllowed, yieldHandling, TripledotProhibited,
+                           /* possibleError = */ nullptr, invoked));
   if (!matchOrInsertSemicolon()) {
-    return null();
+    return errorResult();
   }
-  return handler_.newExprStatement(pnexpr, pos().end).unwrapOr(null());
+  return handler_.newExprStatement(pnexpr, pos().end);
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::Node
+typename ParseHandler::NodeResult
 GeneralParser<ParseHandler, Unit>::consequentOrAlternative(
     YieldHandling yieldHandling) {
   TokenKind next;
   if (!tokenStream.peekToken(&next, TokenStream::SlashIsRegExp)) {
-    return null();
+    return errorResult();
   }
 
   // Annex B.3.4 says that unbraced FunctionDeclarations under if/else in
@@ -6278,32 +6252,31 @@ GeneralParser<ParseHandler, Unit>::consequentOrAlternative(
     // every other error case, it seems best to handle this.
     if (pc_->sc()->strict()) {
       error(JSMSG_FORBIDDEN_AS_STATEMENT, "function declarations");
-      return null();
+      return errorResult();
     }
 
     TokenKind maybeStar;
     if (!tokenStream.peekToken(&maybeStar)) {
-      return null();
+      return errorResult();
     }
 
     if (maybeStar == TokenKind::Mul) {
       error(JSMSG_FORBIDDEN_AS_STATEMENT, "generator declarations");
-      return null();
+      return errorResult();
     }
 
     ParseContext::Statement stmt(pc_, StatementKind::Block);
     ParseContext::Scope scope(this);
     if (!scope.init(pc_)) {
-      return null();
+      return errorResult();
     }
 
     TokenPos funcPos = pos();
     Node fun;
-    MOZ_TRY_VAR_OR_RETURN(
-        fun, functionStmt(pos().begin, yieldHandling, NameRequired), null());
+    MOZ_TRY_VAR(fun, functionStmt(pos().begin, yieldHandling, NameRequired));
 
     ListNodeType block;
-    MOZ_TRY_VAR_OR_RETURN(block, handler_.newStatementList(funcPos), null());
+    MOZ_TRY_VAR(block, handler_.newStatementList(funcPos));
 
     handler_.addStatementToList(block, fun);
     return finishLexicalScope(scope, block);
@@ -6313,7 +6286,7 @@ GeneralParser<ParseHandler, Unit>::consequentOrAlternative(
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::TernaryNodeType
+typename ParseHandler::TernaryNodeResult
 GeneralParser<ParseHandler, Unit>::ifStatement(YieldHandling yieldHandling) {
   Vector<Node, 4> condList(fc_), thenList(fc_);
   Vector<uint32_t, 4> posList(fc_);
@@ -6325,43 +6298,36 @@ GeneralParser<ParseHandler, Unit>::ifStatement(YieldHandling yieldHandling) {
     uint32_t begin = pos().begin;
 
     /* An IF node has three kids: condition, then, and optional else. */
-    Node cond = condition(InAllowed, yieldHandling);
-    if (!cond) {
-      return null();
-    }
+    Node cond;
+    MOZ_TRY_VAR(cond, condition(InAllowed, yieldHandling));
 
     TokenKind tt;
     if (!tokenStream.peekToken(&tt, TokenStream::SlashIsRegExp)) {
-      return null();
+      return errorResult();
     }
 
-    Node thenBranch = consequentOrAlternative(yieldHandling);
-    if (!thenBranch) {
-      return null();
-    }
+    Node thenBranch;
+    MOZ_TRY_VAR(thenBranch, consequentOrAlternative(yieldHandling));
 
     if (!condList.append(cond) || !thenList.append(thenBranch) ||
         !posList.append(begin)) {
-      return null();
+      return errorResult();
     }
 
     bool matched;
     if (!tokenStream.matchToken(&matched, TokenKind::Else,
                                 TokenStream::SlashIsRegExp)) {
-      return null();
+      return errorResult();
     }
     if (matched) {
       if (!tokenStream.matchToken(&matched, TokenKind::If,
                                   TokenStream::SlashIsRegExp)) {
-        return null();
+        return errorResult();
       }
       if (matched) {
         continue;
       }
-      elseBranch = consequentOrAlternative(yieldHandling);
-      if (!elseBranch) {
-        return null();
-      }
+      MOZ_TRY_VAR(elseBranch, consequentOrAlternative(yieldHandling));
     } else {
       elseBranch = null();
     }
@@ -6370,10 +6336,8 @@ GeneralParser<ParseHandler, Unit>::ifStatement(YieldHandling yieldHandling) {
 
   TernaryNodeType ifNode;
   for (int i = condList.length() - 1; i >= 0; i--) {
-    MOZ_TRY_VAR_OR_RETURN(ifNode,
-                          handler_.newIfStatement(posList[i], condList[i],
-                                                  thenList[i], elseBranch),
-                          null());
+    MOZ_TRY_VAR(ifNode, handler_.newIfStatement(posList[i], condList[i],
+                                                thenList[i], elseBranch));
     elseBranch = ifNode;
   }
 
@@ -6381,22 +6345,18 @@ GeneralParser<ParseHandler, Unit>::ifStatement(YieldHandling yieldHandling) {
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::BinaryNodeType
+typename ParseHandler::BinaryNodeResult
 GeneralParser<ParseHandler, Unit>::doWhileStatement(
     YieldHandling yieldHandling) {
   uint32_t begin = pos().begin;
   ParseContext::Statement stmt(pc_, StatementKind::DoLoop);
-  Node body = statement(yieldHandling);
-  if (!body) {
-    return null();
-  }
+  Node body;
+  MOZ_TRY_VAR(body, statement(yieldHandling));
   if (!mustMatchToken(TokenKind::While, JSMSG_WHILE_AFTER_DO)) {
-    return null();
+    return errorResult();
   }
-  Node cond = condition(InAllowed, yieldHandling);
-  if (!cond) {
-    return null();
-  }
+  Node cond;
+  MOZ_TRY_VAR(cond, condition(InAllowed, yieldHandling));
 
   // The semicolon after do-while is even more optional than most
   // semicolons in JS.  Web compat required this by 2004:
@@ -6407,26 +6367,21 @@ GeneralParser<ParseHandler, Unit>::doWhileStatement(
   bool ignored;
   if (!tokenStream.matchToken(&ignored, TokenKind::Semi,
                               TokenStream::SlashIsRegExp)) {
-    return null();
+    return errorResult();
   }
-  return handler_.newDoWhileStatement(body, cond, TokenPos(begin, pos().end))
-      .unwrapOr(null());
+  return handler_.newDoWhileStatement(body, cond, TokenPos(begin, pos().end));
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::BinaryNodeType
+typename ParseHandler::BinaryNodeResult
 GeneralParser<ParseHandler, Unit>::whileStatement(YieldHandling yieldHandling) {
   uint32_t begin = pos().begin;
   ParseContext::Statement stmt(pc_, StatementKind::WhileLoop);
-  Node cond = condition(InAllowed, yieldHandling);
-  if (!cond) {
-    return null();
-  }
-  Node body = statement(yieldHandling);
-  if (!body) {
-    return null();
-  }
-  return handler_.newWhileStatement(begin, cond, body).unwrapOr(null());
+  Node cond;
+  MOZ_TRY_VAR(cond, condition(InAllowed, yieldHandling));
+  Node body;
+  MOZ_TRY_VAR(body, statement(yieldHandling));
+  return handler_.newWhileStatement(begin, cond, body);
 }
 
 template <class ParseHandler, typename Unit>
@@ -6639,13 +6594,15 @@ bool GeneralParser<ParseHandler, Unit>::forHeadStart(
 
   // Finally, parse the iterated expression, making the for-loop's closing
   // ')' the next token.
-  *forInOrOfExpression = expressionAfterForInOrOf(*forHeadKind, yieldHandling);
-  return *forInOrOfExpression != null();
+  MOZ_TRY_VAR_OR_RETURN(*forInOrOfExpression,
+                        expressionAfterForInOrOf(*forHeadKind, yieldHandling),
+                        false);
+  return true;
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::forStatement(
-    YieldHandling yieldHandling) {
+typename ParseHandler::NodeResult
+GeneralParser<ParseHandler, Unit>::forStatement(YieldHandling yieldHandling) {
   MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::For));
 
   uint32_t begin = pos().begin;
@@ -6658,14 +6615,14 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::forStatement(
   if (pc_->isAsync() || pc_->sc()->isModuleContext()) {
     bool matched;
     if (!tokenStream.matchToken(&matched, TokenKind::Await)) {
-      return null();
+      return errorResult();
     }
 
     // If we come across a top level await here, mark the module as async.
     if (matched && pc_->sc()->isModuleContext() && !pc_->isAsync()) {
       if (!options().topLevelAwait) {
         error(JSMSG_TOP_LEVEL_AWAIT_NOT_SUPPORTED);
-        return null();
+        return errorResult();
       }
       pc_->sc()->asModuleContext()->setIsAsync();
       MOZ_ASSERT(pc_->isAsync());
@@ -6682,7 +6639,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::forStatement(
                         ? JSMSG_FOR_AWAIT_OUTSIDE_ASYNC
                         : JSMSG_PAREN_AFTER_FOR);
       })) {
-    return null();
+    return errorResult();
   }
 
   // ParseNodeKind::ForHead, ParseNodeKind::ForIn, or
@@ -6723,7 +6680,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::forStatement(
   // TokenStream::SlashIsDiv semantics.
   if (!forHeadStart(yieldHandling, iterKind, &headKind, &startNode,
                     forLoopLexicalScope, &iteratedExpr)) {
-    return null();
+    return errorResult();
   }
 
   MOZ_ASSERT(headKind == ParseNodeKind::ForIn ||
@@ -6732,7 +6689,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::forStatement(
 
   if (iterKind == IteratorKind::Async && headKind != ParseNodeKind::ForOf) {
     errorAt(begin, JSMSG_FOR_AWAIT_NOT_OF);
-    return null();
+    return errorResult();
   }
 
   TernaryNodeType forHead;
@@ -6742,45 +6699,42 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::forStatement(
     // Look for an operand: |for (;| means we might have already examined
     // this semicolon with that modifier.
     if (!mustMatchToken(TokenKind::Semi, JSMSG_SEMI_AFTER_FOR_INIT)) {
-      return null();
+      return errorResult();
     }
 
     TokenKind tt;
     if (!tokenStream.peekToken(&tt, TokenStream::SlashIsRegExp)) {
-      return null();
+      return errorResult();
     }
 
     Node test;
     if (tt == TokenKind::Semi) {
       test = null();
     } else {
-      MOZ_TRY_VAR_OR_RETURN(
-          test, expr(InAllowed, yieldHandling, TripledotProhibited), null());
+      MOZ_TRY_VAR(test, expr(InAllowed, yieldHandling, TripledotProhibited));
     }
 
     if (!mustMatchToken(TokenKind::Semi, JSMSG_SEMI_AFTER_FOR_COND)) {
-      return null();
+      return errorResult();
     }
 
     if (!tokenStream.peekToken(&tt, TokenStream::SlashIsRegExp)) {
-      return null();
+      return errorResult();
     }
 
     Node update;
     if (tt == TokenKind::RightParen) {
       update = null();
     } else {
-      MOZ_TRY_VAR_OR_RETURN(
-          update, expr(InAllowed, yieldHandling, TripledotProhibited), null());
+      MOZ_TRY_VAR(update, expr(InAllowed, yieldHandling, TripledotProhibited));
     }
 
     if (!mustMatchToken(TokenKind::RightParen, JSMSG_PAREN_AFTER_FOR_CTRL)) {
-      return null();
+      return errorResult();
     }
 
     TokenPos headPos(begin, pos().end);
-    MOZ_TRY_VAR_OR_RETURN(
-        forHead, handler_.newForHead(init, test, update, headPos), null());
+    MOZ_TRY_VAR(forHead, handler_.newForHead(init, test, update, headPos));
   } else {
     MOZ_ASSERT(headKind == ParseNodeKind::ForIn ||
                headKind == ParseNodeKind::ForOf);
@@ -6801,24 +6755,19 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::forStatement(
     // token follows an {Assignment,}Expression and so must be interpreted
     // as an operand to be consistent with normal expression tokenizing.
     if (!mustMatchToken(TokenKind::RightParen, JSMSG_PAREN_AFTER_FOR_CTRL)) {
-      return null();
+      return errorResult();
     }
 
     TokenPos headPos(begin, pos().end);
-    MOZ_TRY_VAR_OR_RETURN(
-        forHead,
-        handler_.newForInOrOfHead(headKind, target, iteratedExpr, headPos),
-        null());
+    MOZ_TRY_VAR(forHead, handler_.newForInOrOfHead(headKind, target,
+                                                   iteratedExpr, headPos));
   }
 
-  Node body = statement(yieldHandling);
-  if (!body) {
-    return null();
-  }
+  Node body;
+  MOZ_TRY_VAR(body, statement(yieldHandling));
 
   ForNodeType forLoop;
-  MOZ_TRY_VAR_OR_RETURN(
-      forLoop, handler_.newForStatement(begin, forHead, body, iflags), null());
+  MOZ_TRY_VAR(forLoop, handler_.newForStatement(begin, forHead, body, iflags));
 
   if (forLoopLexicalScope) {
     return finishLexicalScope(*forLoopLexicalScope, forLoop);
@@ -6828,42 +6777,41 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::forStatement(
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::SwitchStatementType
+typename ParseHandler::SwitchStatementResult
 GeneralParser<ParseHandler, Unit>::switchStatement(
     YieldHandling yieldHandling) {
   MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Switch));
   uint32_t begin = pos().begin;
 
   if (!mustMatchToken(TokenKind::LeftParen, JSMSG_PAREN_BEFORE_SWITCH)) {
-    return null();
+    return errorResult();
   }
 
   Node discriminant;
-  MOZ_TRY_VAR_OR_RETURN(
-      discriminant, exprInParens(InAllowed, yieldHandling, TripledotProhibited),
-      null());
+  MOZ_TRY_VAR(discriminant,
+              exprInParens(InAllowed, yieldHandling, TripledotProhibited));
 
   if (!mustMatchToken(TokenKind::RightParen, JSMSG_PAREN_AFTER_SWITCH)) {
-    return null();
+    return errorResult();
   }
   if (!mustMatchToken(TokenKind::LeftCurly, JSMSG_CURLY_BEFORE_SWITCH)) {
-    return null();
+    return errorResult();
   }
 
   ParseContext::Statement stmt(pc_, StatementKind::Switch);
   ParseContext::Scope scope(this);
   if (!scope.init(pc_)) {
-    return null();
+    return errorResult();
   }
 
   ListNodeType caseList;
-  MOZ_TRY_VAR_OR_RETURN(caseList, handler_.newStatementList(pos()), null());
+  MOZ_TRY_VAR(caseList, handler_.newStatementList(pos()));
 
   bool seenDefault = false;
   TokenKind tt;
   while (true) {
     if (!tokenStream.getToken(&tt, TokenStream::SlashIsRegExp)) {
-      return null();
+      return errorResult();
     }
     if (tt == TokenKind::RightCurly) {
       break;
@@ -6875,36 +6823,35 @@ GeneralParser<ParseHandler, Unit>::switchStatement(
       case TokenKind::Default:
         if (seenDefault) {
           error(JSMSG_TOO_MANY_DEFAULTS);
-          return null();
+          return errorResult();
         }
         seenDefault = true;
         caseExpr = null();  // The default case has pn_left == nullptr.
         break;
 
       case TokenKind::Case:
-        MOZ_TRY_VAR_OR_RETURN(
-            caseExpr, expr(InAllowed, yieldHandling, TripledotProhibited),
-            null());
+        MOZ_TRY_VAR(caseExpr,
+                    expr(InAllowed, yieldHandling, TripledotProhibited));
         break;
 
       default:
         error(JSMSG_BAD_SWITCH);
-        return null();
+        return errorResult();
     }
 
     if (!mustMatchToken(TokenKind::Colon, JSMSG_COLON_AFTER_CASE)) {
-      return null();
+      return errorResult();
     }
 
     ListNodeType body;
-    MOZ_TRY_VAR_OR_RETURN(body, handler_.newStatementList(pos()), null());
+    MOZ_TRY_VAR(body, handler_.newStatementList(pos()));
 
     bool afterReturn = false;
     bool warnedAboutStatementsAfterReturn = false;
     uint32_t statementBegin = 0;
     while (true) {
       if (!tokenStream.peekToken(&tt, TokenStream::SlashIsRegExp)) {
-        return null();
+        return errorResult();
       }
       if (tt == TokenKind::RightCurly || tt == TokenKind::Case ||
           tt == TokenKind::Default) {
@@ -6913,18 +6860,16 @@ GeneralParser<ParseHandler, Unit>::switchStatement(
       if (afterReturn) {
         if (!tokenStream.peekOffset(&statementBegin,
                                     TokenStream::SlashIsRegExp)) {
-          return null();
+          return errorResult();
         }
       }
-      Node stmt = statementListItem(yieldHandling);
-      if (!stmt) {
-        return null();
-      }
+      Node stmt;
+      MOZ_TRY_VAR(stmt, statementListItem(yieldHandling));
       if (!warnedAboutStatementsAfterReturn) {
         if (afterReturn) {
           if (!handler_.isStatementPermittedAfterReturnStatement(stmt)) {
             if (!warningAt(statementBegin, JSMSG_STMT_AFTER_RETURN)) {
-              return null();
+              return errorResult();
             }
 
             warnedAboutStatementsAfterReturn = true;
@@ -6937,26 +6882,22 @@ GeneralParser<ParseHandler, Unit>::switchStatement(
     }
 
     CaseClauseType caseClause;
-    MOZ_TRY_VAR_OR_RETURN(caseClause,
-                          handler_.newCaseOrDefault(caseBegin, caseExpr, body),
-                          null());
+    MOZ_TRY_VAR(caseClause,
+                handler_.newCaseOrDefault(caseBegin, caseExpr, body));
     handler_.addCaseStatementToList(caseList, caseClause);
   }
 
-  LexicalScopeNodeType lexicalForCaseList = finishLexicalScope(scope, caseList);
-  if (!lexicalForCaseList) {
-    return null();
-  }
+  LexicalScopeNodeType lexicalForCaseList;
+  MOZ_TRY_VAR(lexicalForCaseList, finishLexicalScope(scope, caseList));
 
   handler_.setEndPosition(lexicalForCaseList, pos().end);
 
-  return handler_
-      .newSwitchStatement(begin, discriminant, lexicalForCaseList, seenDefault)
-      .unwrapOr(null());
+  return handler_.newSwitchStatement(begin, discriminant, lexicalForCaseList,
+                                     seenDefault);
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::ContinueStatementType
+typename ParseHandler::ContinueStatementResult
 GeneralParser<ParseHandler, Unit>::continueStatement(
     YieldHandling yieldHandling) {
   MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Continue));
@@ -6964,7 +6905,7 @@ GeneralParser<ParseHandler, Unit>::continueStatement(
 
   TaggedParserAtomIndex label;
   if (!matchLabel(yieldHandling, &label)) {
-    return null();
+    return errorResult();
   }
 
   auto validity = pc_->checkContinueStatement(label);
@@ -6977,26 +6918,25 @@ GeneralParser<ParseHandler, Unit>::continueStatement(
         error(JSMSG_LABEL_NOT_FOUND);
         break;
     }
-    return null();
+    return errorResult();
   }
 
   if (!matchOrInsertSemicolon()) {
-    return null();
+    return errorResult();
   }
 
-  return handler_.newContinueStatement(label, TokenPos(begin, pos().end))
-      .unwrapOr(null());
+  return handler_.newContinueStatement(label, TokenPos(begin, pos().end));
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::BreakStatementType
+typename ParseHandler::BreakStatementResult
 GeneralParser<ParseHandler, Unit>::breakStatement(YieldHandling yieldHandling) {
   MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Break));
   uint32_t begin = pos().begin;
 
   TaggedParserAtomIndex label;
   if (!matchLabel(yieldHandling, &label)) {
-    return null();
+    return errorResult();
   }
 
   auto validity = pc_->checkBreakStatement(label);
@@ -7004,23 +6944,22 @@ GeneralParser<ParseHandler, Unit>::breakStatement(YieldHandling yieldHandling) {
     switch (validity.unwrapErr()) {
       case ParseContext::BreakStatementError::ToughBreak:
         errorAt(begin, JSMSG_TOUGH_BREAK);
-        return null();
+        return errorResult();
       case ParseContext::BreakStatementError::LabelNotFound:
         error(JSMSG_LABEL_NOT_FOUND);
-        return null();
+        return errorResult();
     }
   }
 
   if (!matchOrInsertSemicolon()) {
-    return null();
+    return errorResult();
   }
 
-  return handler_.newBreakStatement(label, TokenPos(begin, pos().end))
-      .unwrapOr(null());
+  return handler_.newBreakStatement(label, TokenPos(begin, pos().end));
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::UnaryNodeType
+typename ParseHandler::UnaryNodeResult
 GeneralParser<ParseHandler, Unit>::returnStatement(
     YieldHandling yieldHandling) {
   MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Return));
@@ -7034,7 +6973,7 @@ GeneralParser<ParseHandler, Unit>::returnStatement(
   Node exprNode;
   TokenKind tt = TokenKind::Eof;
   if (!tokenStream.peekTokenSameLine(&tt, TokenStream::SlashIsRegExp)) {
-    return null();
+    return errorResult();
   }
   switch (tt) {
     case TokenKind::Eol:
@@ -7044,22 +6983,20 @@ GeneralParser<ParseHandler, Unit>::returnStatement(
       exprNode = null();
       break;
     default: {
-      MOZ_TRY_VAR_OR_RETURN(exprNode,
-                            expr(InAllowed, yieldHandling, TripledotProhibited),
-                            null());
+      MOZ_TRY_VAR(exprNode,
+                  expr(InAllowed, yieldHandling, TripledotProhibited));
     }
   }
 
   if (!matchOrInsertSemicolon()) {
-    return null();
+    return errorResult();
   }
 
-  return handler_.newReturnStatement(exprNode, TokenPos(begin, pos().end))
-      .unwrapOr(null());
+  return handler_.newReturnStatement(exprNode, TokenPos(begin, pos().end));
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::UnaryNodeType
+typename ParseHandler::UnaryNodeResult
 GeneralParser<ParseHandler, Unit>::yieldExpression(InHandling inHandling) {
   MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Yield));
   uint32_t begin = pos().begin;
@@ -7073,7 +7010,7 @@ GeneralParser<ParseHandler, Unit>::yieldExpression(InHandling inHandling) {
   ParseNodeKind kind = ParseNodeKind::YieldExpr;
   TokenKind tt = TokenKind::Eof;
   if (!tokenStream.peekTokenSameLine(&tt, TokenStream::SlashIsRegExp)) {
-    return null();
+    return errorResult();
   }
   switch (tt) {
     // TokenKind::Eol is special; it implements the [no LineTerminator here]
@@ -7099,75 +7036,69 @@ GeneralParser<ParseHandler, Unit>::yieldExpression(InHandling inHandling) {
       tokenStream.consumeKnownToken(TokenKind::Mul, TokenStream::SlashIsRegExp);
       [[fallthrough]];
     default:
-      MOZ_TRY_VAR_OR_RETURN(
-          exprNode, assignExpr(inHandling, YieldIsKeyword, TripledotProhibited),
-          null());
+      MOZ_TRY_VAR(exprNode,
+                  assignExpr(inHandling, YieldIsKeyword, TripledotProhibited));
   }
   if (kind == ParseNodeKind::YieldStarExpr) {
-    return handler_.newYieldStarExpression(begin, exprNode).unwrapOr(null());
+    return handler_.newYieldStarExpression(begin, exprNode);
   }
-  return handler_.newYieldExpression(begin, exprNode).unwrapOr(null());
+  return handler_.newYieldExpression(begin, exprNode);
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::BinaryNodeType
+typename ParseHandler::BinaryNodeResult
 GeneralParser<ParseHandler, Unit>::withStatement(YieldHandling yieldHandling) {
   MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::With));
   uint32_t begin = pos().begin;
 
   if (pc_->sc()->strict()) {
     if (!strictModeError(JSMSG_STRICT_CODE_WITH)) {
-      return null();
+      return errorResult();
     }
   }
 
   if (!mustMatchToken(TokenKind::LeftParen, JSMSG_PAREN_BEFORE_WITH)) {
-    return null();
+    return errorResult();
   }
 
   Node objectExpr;
-  MOZ_TRY_VAR_OR_RETURN(
-      objectExpr, exprInParens(InAllowed, yieldHandling, TripledotProhibited),
-      null());
+  MOZ_TRY_VAR(objectExpr,
+              exprInParens(InAllowed, yieldHandling, TripledotProhibited));
 
   if (!mustMatchToken(TokenKind::RightParen, JSMSG_PAREN_AFTER_WITH)) {
-    return null();
+    return errorResult();
   }
 
   Node innerBlock;
   {
     ParseContext::Statement stmt(pc_, StatementKind::With);
-    innerBlock = statement(yieldHandling);
-    if (!innerBlock) {
-      return null();
-    }
+    MOZ_TRY_VAR(innerBlock, statement(yieldHandling));
   }
 
   pc_->sc()->setBindingsAccessedDynamically();
 
-  return handler_.newWithStatement(begin, objectExpr, innerBlock)
-      .unwrapOr(null());
+  return handler_.newWithStatement(begin, objectExpr, innerBlock);
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::labeledItem(
-    YieldHandling yieldHandling) {
+typename ParseHandler::NodeResult
+GeneralParser<ParseHandler, Unit>::labeledItem(YieldHandling yieldHandling) {
   TokenKind tt;
   if (!tokenStream.getToken(&tt, TokenStream::SlashIsRegExp)) {
-    return null();
+    return errorResult();
   }
 
   if (tt == TokenKind::Function) {
     TokenKind next;
     if (!tokenStream.peekToken(&next)) {
-      return null();
+      return errorResult();
     }
 
     // GeneratorDeclaration is only matched by HoistableDeclaration in
     // StatementListItem, so generators can't be inside labels.
     if (next == TokenKind::Mul) {
       error(JSMSG_GENERATOR_LABEL);
-      return null();
+      return errorResult();
     }
 
     // Per 13.13.1 it's a syntax error if LabelledItem: FunctionDeclaration
@@ -7175,11 +7106,10 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::labeledItem(
     // applies only to strict mode code.
     if (pc_->sc()->strict()) {
       error(JSMSG_FUNCTION_LABEL);
-      return null();
+      return errorResult();
     }
 
-    return functionStmt(pos().begin, yieldHandling, NameRequired)
-        .unwrapOr(null());
+    return functionStmt(pos().begin, yieldHandling, NameRequired);
   }
 
   anyChars.ungetToken();
@@ -7187,12 +7117,12 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::labeledItem(
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::LabeledStatementType
+typename ParseHandler::LabeledStatementResult
 GeneralParser<ParseHandler, Unit>::labeledStatement(
     YieldHandling yieldHandling) {
   TaggedParserAtomIndex label = labelIdentifier(yieldHandling);
   if (!label) {
-    return null();
+    return errorResult();
   }
 
   auto hasSameLabel = [&label](ParseContext::LabelStatement* stmt) {
@@ -7204,23 +7134,21 @@ GeneralParser<ParseHandler, Unit>::labeledStatement(
   if (pc_->template findInnermostStatement<ParseContext::LabelStatement>(
           hasSameLabel)) {
     errorAt(begin, JSMSG_DUPLICATE_LABEL);
-    return null();
+    return errorResult();
   }
 
   tokenStream.consumeKnownToken(TokenKind::Colon);
 
   /* Push a label struct and parse the statement. */
   ParseContext::LabelStatement stmt(pc_, label);
-  Node pn = labeledItem(yieldHandling);
-  if (!pn) {
-    return null();
-  }
+  Node pn;
+  MOZ_TRY_VAR(pn, labeledItem(yieldHandling));
 
-  return handler_.newLabeledStatement(label, pn, begin).unwrapOr(null());
+  return handler_.newLabeledStatement(label, pn, begin);
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::UnaryNodeType
+typename ParseHandler::UnaryNodeResult
 GeneralParser<ParseHandler, Unit>::throwStatement(YieldHandling yieldHandling) {
   MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Throw));
   uint32_t begin = pos().begin;
@@ -7228,32 +7156,30 @@ GeneralParser<ParseHandler, Unit>::throwStatement(YieldHandling yieldHandling) {
   /* ECMA-262 Edition 3 says 'throw [no LineTerminator here] Expr'. */
   TokenKind tt = TokenKind::Eof;
   if (!tokenStream.peekTokenSameLine(&tt, TokenStream::SlashIsRegExp)) {
-    return null();
+    return errorResult();
   }
   if (tt == TokenKind::Eof || tt == TokenKind::Semi ||
       tt == TokenKind::RightCurly) {
     error(JSMSG_MISSING_EXPR_AFTER_THROW);
-    return null();
+    return errorResult();
   }
   if (tt == TokenKind::Eol) {
     error(JSMSG_LINE_BREAK_AFTER_THROW);
-    return null();
+    return errorResult();
   }
 
   Node throwExpr;
-  MOZ_TRY_VAR_OR_RETURN(
-      throwExpr, expr(InAllowed, yieldHandling, TripledotProhibited), null());
+  MOZ_TRY_VAR(throwExpr, expr(InAllowed, yieldHandling, TripledotProhibited));
 
   if (!matchOrInsertSemicolon()) {
-    return null();
+    return errorResult();
   }
 
-  return handler_.newThrowStatement(throwExpr, TokenPos(begin, pos().end))
-      .unwrapOr(null());
+  return handler_.newThrowStatement(throwExpr, TokenPos(begin, pos().end));
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::TernaryNodeType
+typename ParseHandler::TernaryNodeResult
 GeneralParser<ParseHandler, Unit>::tryStatement(YieldHandling yieldHandling) {
   MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Try));
   uint32_t begin = pos().begin;
@@ -7279,7 +7205,7 @@ GeneralParser<ParseHandler, Unit>::tryStatement(YieldHandling yieldHandling) {
   Node innerBlock;
   {
     if (!mustMatchToken(TokenKind::LeftCurly, JSMSG_CURLY_BEFORE_TRY)) {
-      return null();
+      return errorResult();
     }
 
     uint32_t openedPos = pos().begin;
@@ -7287,32 +7213,26 @@ GeneralParser<ParseHandler, Unit>::tryStatement(YieldHandling yieldHandling) {
     ParseContext::Statement stmt(pc_, StatementKind::Try);
     ParseContext::Scope scope(this);
     if (!scope.init(pc_)) {
-      return null();
+      return errorResult();
     }
 
-    innerBlock = statementList(yieldHandling);
-    if (!innerBlock) {
-      return null();
-    }
+    MOZ_TRY_VAR(innerBlock, statementList(yieldHandling));
 
-    innerBlock = finishLexicalScope(scope, innerBlock);
-    if (!innerBlock) {
-      return null();
-    }
+    MOZ_TRY_VAR(innerBlock, finishLexicalScope(scope, innerBlock));
 
     if (!mustMatchToken(
             TokenKind::RightCurly, [this, openedPos](TokenKind actual) {
               this->reportMissingClosing(JSMSG_CURLY_AFTER_TRY,
                                          JSMSG_CURLY_OPENED, openedPos);
             })) {
-      return null();
+      return errorResult();
     }
   }
 
   LexicalScopeNodeType catchScope = null();
   TokenKind tt;
   if (!tokenStream.getToken(&tt)) {
-    return null();
+    return errorResult();
   }
   if (tt == TokenKind::Catch) {
     /*
@@ -7322,7 +7242,7 @@ GeneralParser<ParseHandler, Unit>::tryStatement(YieldHandling yieldHandling) {
     ParseContext::Statement stmt(pc_, StatementKind::Catch);
     ParseContext::Scope scope(this);
     if (!scope.init(pc_)) {
-      return null();
+      return errorResult();
     }
 
     /*
@@ -7333,7 +7253,7 @@ GeneralParser<ParseHandler, Unit>::tryStatement(YieldHandling yieldHandling) {
      */
     bool omittedBinding;
     if (!tokenStream.matchToken(&omittedBinding, TokenKind::LeftCurly)) {
-      return null();
+      return errorResult();
     }
 
     Node catchName;
@@ -7341,63 +7261,54 @@ GeneralParser<ParseHandler, Unit>::tryStatement(YieldHandling yieldHandling) {
       catchName = null();
     } else {
       if (!mustMatchToken(TokenKind::LeftParen, JSMSG_PAREN_BEFORE_CATCH)) {
-        return null();
+        return errorResult();
       }
 
       if (!tokenStream.getToken(&tt)) {
-        return null();
+        return errorResult();
       }
       switch (tt) {
         case TokenKind::LeftBracket:
         case TokenKind::LeftCurly:
-          MOZ_TRY_VAR_OR_RETURN(
-              catchName,
-              destructuringDeclaration(DeclarationKind::CatchParameter,
-                                       yieldHandling, tt),
-              null());
+          MOZ_TRY_VAR(catchName,
+                      destructuringDeclaration(DeclarationKind::CatchParameter,
+                                               yieldHandling, tt));
           break;
 
         default: {
           if (!TokenKindIsPossibleIdentifierName(tt)) {
             error(JSMSG_CATCH_IDENTIFIER);
-            return null();
+            return errorResult();
           }
 
-          MOZ_TRY_VAR_OR_RETURN(
-              catchName,
-              bindingIdentifier(DeclarationKind::SimpleCatchParameter,
-                                yieldHandling),
-              null());
+          MOZ_TRY_VAR(catchName,
+                      bindingIdentifier(DeclarationKind::SimpleCatchParameter,
+                                        yieldHandling));
           break;
         }
       }
 
       if (!mustMatchToken(TokenKind::RightParen, JSMSG_PAREN_AFTER_CATCH)) {
-        return null();
+        return errorResult();
       }
 
       if (!mustMatchToken(TokenKind::LeftCurly, JSMSG_CURLY_BEFORE_CATCH)) {
-        return null();
+        return errorResult();
       }
     }
 
-    LexicalScopeNodeType catchBody = catchBlockStatement(yieldHandling, scope);
-    if (!catchBody) {
-      return null();
-    }
+    LexicalScopeNodeType catchBody;
+    MOZ_TRY_VAR(catchBody, catchBlockStatement(yieldHandling, scope));
 
-    catchScope = finishLexicalScope(scope, catchBody);
-    if (!catchScope) {
-      return null();
-    }
+    MOZ_TRY_VAR(catchScope, finishLexicalScope(scope, catchBody));
 
     if (!handler_.setupCatchScope(catchScope, catchName, catchBody)) {
-      return null();
+      return errorResult();
     }
     handler_.setEndPosition(catchScope, pos().end);
 
     if (!tokenStream.getToken(&tt, TokenStream::SlashIsRegExp)) {
-      return null();
+      return errorResult();
     }
   }
 
@@ -7405,7 +7316,7 @@ GeneralParser<ParseHandler, Unit>::tryStatement(YieldHandling yieldHandling) {
 
   if (tt == TokenKind::Finally) {
     if (!mustMatchToken(TokenKind::LeftCurly, JSMSG_CURLY_BEFORE_FINALLY)) {
-      return null();
+      return errorResult();
     }
 
     uint32_t openedPos = pos().begin;
@@ -7413,40 +7324,33 @@ GeneralParser<ParseHandler, Unit>::tryStatement(YieldHandling yieldHandling) {
     ParseContext::Statement stmt(pc_, StatementKind::Finally);
     ParseContext::Scope scope(this);
     if (!scope.init(pc_)) {
-      return null();
+      return errorResult();
     }
 
-    finallyBlock = statementList(yieldHandling);
-    if (!finallyBlock) {
-      return null();
-    }
+    MOZ_TRY_VAR(finallyBlock, statementList(yieldHandling));
 
-    finallyBlock = finishLexicalScope(scope, finallyBlock);
-    if (!finallyBlock) {
-      return null();
-    }
+    MOZ_TRY_VAR(finallyBlock, finishLexicalScope(scope, finallyBlock));
 
     if (!mustMatchToken(
             TokenKind::RightCurly, [this, openedPos](TokenKind actual) {
               this->reportMissingClosing(JSMSG_CURLY_AFTER_FINALLY,
                                          JSMSG_CURLY_OPENED, openedPos);
             })) {
-      return null();
+      return errorResult();
     }
   } else {
     anyChars.ungetToken();
   }
   if (!catchScope && !finallyBlock) {
     error(JSMSG_CATCH_OR_FINALLY);
-    return null();
+    return errorResult();
   }
 
-  return handler_.newTryStatement(begin, innerBlock, catchScope, finallyBlock)
-      .unwrapOr(null());
+  return handler_.newTryStatement(begin, innerBlock, catchScope, finallyBlock);
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::LexicalScopeNodeType
+typename ParseHandler::LexicalScopeNodeResult
 GeneralParser<ParseHandler, Unit>::catchBlockStatement(
     YieldHandling yieldHandling, ParseContext::Scope& catchParamScope) {
   uint32_t openedPos = pos().begin;
@@ -7459,26 +7363,24 @@ GeneralParser<ParseHandler, Unit>::catchBlockStatement(
   // lexical scope.
   ParseContext::Scope scope(this);
   if (!scope.init(pc_)) {
-    return null();
+    return errorResult();
   }
 
   // The catch parameter names cannot be redeclared inside the catch
   // block, so declare the name in the inner scope.
   if (!scope.addCatchParameters(pc_, catchParamScope)) {
-    return null();
+    return errorResult();
   }
 
-  ListNodeType list = statementList(yieldHandling);
-  if (!list) {
-    return null();
-  }
+  ListNodeType list;
+  MOZ_TRY_VAR(list, statementList(yieldHandling));
 
   if (!mustMatchToken(
           TokenKind::RightCurly, [this, openedPos](TokenKind actual) {
             this->reportMissingClosing(JSMSG_CURLY_AFTER_CATCH,
                                        JSMSG_CURLY_OPENED, openedPos);
           })) {
-    return null();
+    return errorResult();
   }
 
   // The catch parameter names are not bound in the body scope, so remove
@@ -7488,16 +7390,16 @@ GeneralParser<ParseHandler, Unit>::catchBlockStatement(
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::DebuggerStatementType
+typename ParseHandler::DebuggerStatementResult
 GeneralParser<ParseHandler, Unit>::debuggerStatement() {
   TokenPos p;
   p.begin = pos().begin;
   if (!matchOrInsertSemicolon()) {
-    return null();
+    return errorResult();
   }
   p.end = pos().end;
 
-  return handler_.newDebuggerStatement(p).unwrapOr(null());
+  return handler_.newDebuggerStatement(p);
 }
 
 static AccessorType ToAccessorType(PropertyType propType) {
@@ -7925,10 +7827,8 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
       false);
 
   if (dotInitializersScope.isSome()) {
-    method = finishLexicalScope(*dotInitializersScope, method);
-    if (!method) {
-      return false;
-    }
+    MOZ_TRY_VAR_OR_RETURN(
+        method, finishLexicalScope(*dotInitializersScope, method), false);
     dotInitializersScope.reset();
   }
 
@@ -7977,11 +7877,9 @@ bool GeneralParser<ParseHandler, Unit>::finishClassConstructor(
                           handler_.newDefaultClassConstructor(
                               constructorNameNode, synthesizedCtor),
                           false);
-    LexicalScopeNodeType scope =
-        finishLexicalScope(dotInitializersScope, method);
-    if (!scope) {
-      return false;
-    }
+    LexicalScopeNodeType scope;
+    MOZ_TRY_VAR_OR_RETURN(
+        scope, finishLexicalScope(dotInitializersScope, method), false);
     if (!handler_.addClassMemberDefinition(classMembers, scope)) {
       return false;
     }
@@ -8195,10 +8093,7 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
       MOZ_TRY_VAR(innerName, newName(className, namePos));
     }
 
-    classBlock = finishLexicalScope(innerScope, classBodyBlock);
-    if (!classBlock) {
-      return errorResult();
-    }
+    MOZ_TRY_VAR(classBlock, finishLexicalScope(innerScope, classBodyBlock));
 
     // Pop the inner scope.
   }
@@ -8420,11 +8315,11 @@ bool GeneralParser<ParseHandler, Unit>::synthesizeConstructorBody(
     return false;
   }
 
-  auto initializerBody =
-      finishLexicalScope(pc_->varScope(), stmtList, ScopeKind::FunctionLexical);
-  if (!initializerBody) {
-    return false;
-  }
+  LexicalScopeNodeType initializerBody;
+  MOZ_TRY_VAR_OR_RETURN(
+      initializerBody,
+      finishLexicalScope(pc_->varScope(), stmtList, ScopeKind::FunctionLexical),
+      false);
   handler_.setBeginPosition(initializerBody, stmtList);
   handler_.setEndPosition(initializerBody, stmtList);
 
@@ -8501,11 +8396,9 @@ GeneralParser<ParseHandler, Unit>::privateMethodInitializer(
     return errorResult();
   }
 
-  LexicalScopeNodeType initializerBody =
-      finishLexicalScope(pc_->varScope(), stmtList, ScopeKind::FunctionLexical);
-  if (!initializerBody) {
-    return errorResult();
-  }
+  LexicalScopeNodeType initializerBody;
+  MOZ_TRY_VAR(initializerBody, finishLexicalScope(pc_->varScope(), stmtList,
+                                                  ScopeKind::FunctionLexical));
   handler_.setBeginPosition(initializerBody, stmtList);
   handler_.setEndPosition(initializerBody, stmtList);
   handler_.setFunctionBody(funNode, initializerBody);
@@ -8806,11 +8699,10 @@ GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(
   }
 
   // Set the function's body to the field assignment.
-  LexicalScopeNodeType initializerBody = finishLexicalScope(
-      pc_->varScope(), statementList, ScopeKind::FunctionLexical);
-  if (!initializerBody) {
-    return errorResult();
-  }
+  LexicalScopeNodeType initializerBody;
+  MOZ_TRY_VAR(initializerBody,
+              finishLexicalScope(pc_->varScope(), statementList,
+                                 ScopeKind::FunctionLexical));
 
   handler_.setFunctionBody(funNode, initializerBody);
 
@@ -9052,11 +8944,10 @@ GeneralParser<ParseHandler, Unit>::synthesizeAccessorBody(
     return errorResult();
   }
 
-  LexicalScopeNodeType initializerBody = finishLexicalScope(
-      pc_->varScope(), statementList, ScopeKind::FunctionLexical);
-  if (!initializerBody) {
-    return errorResult();
-  }
+  LexicalScopeNodeType initializerBody;
+  MOZ_TRY_VAR(initializerBody,
+              finishLexicalScope(pc_->varScope(), statementList,
+                                 ScopeKind::FunctionLexical));
 
   handler_.setFunctionBody(funNode, initializerBody);
 
@@ -9117,18 +9008,18 @@ GeneralParser<ParseHandler, Unit>::variableStatement(
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::statement(
+typename ParseHandler::NodeResult GeneralParser<ParseHandler, Unit>::statement(
     YieldHandling yieldHandling) {
   MOZ_ASSERT(checkOptionsCalled_);
 
   AutoCheckRecursionLimit recursion(this->fc_);
   if (!recursion.check(this->fc_)) {
-    return null();
+    return errorResult();
   }
 
   TokenKind tt;
   if (!tokenStream.getToken(&tt, TokenStream::SlashIsRegExp)) {
-    return null();
+    return errorResult();
   }
 
   switch (tt) {
@@ -9138,11 +9029,11 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::statement(
 
     // VariableStatement[?Yield]
     case TokenKind::Var:
-      return variableStatement(yieldHandling).unwrapOr(null());
+      return variableStatement(yieldHandling);
 
     // EmptyStatement
     case TokenKind::Semi:
-      return handler_.newEmptyStatement(pos()).unwrapOr(null());
+      return handler_.newEmptyStatement(pos());
 
       // ExpressionStatement[?Yield].
 
@@ -9158,7 +9049,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::statement(
 
       TokenKind next;
       if (!tokenStream.peekToken(&next, modifier)) {
-        return null();
+        return errorResult();
       }
 
       if (next == TokenKind::Colon) {
@@ -9175,7 +9066,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::statement(
         if (pc_->atModuleTopLevel()) {
           if (!options().topLevelAwait) {
             error(JSMSG_TOP_LEVEL_AWAIT_NOT_SUPPORTED);
-            return null();
+            return errorResult();
           }
           pc_->sc()->asModuleContext()->setIsAsync();
           MOZ_ASSERT(pc_->isAsync());
@@ -9193,7 +9084,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::statement(
 
       TokenKind next;
       if (!tokenStream.peekToken(&next)) {
-        return null();
+        return errorResult();
       }
 
       // |let| here can only be an Identifier, not a declaration.  Give nicer
@@ -9214,7 +9105,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::statement(
           // correctly but with a worse error message.
           TokenKind nextSameLine;
           if (!tokenStream.peekTokenSameLine(&nextSameLine)) {
-            return null();
+            return errorResult();
           }
 
           MOZ_ASSERT(TokenKindIsPossibleIdentifier(nextSameLine) ||
@@ -9226,7 +9117,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::statement(
 
         if (forbiddenLetDeclaration) {
           error(JSMSG_FORBIDDEN_AS_STATEMENT, "lexical declarations");
-          return null();
+          return errorResult();
         }
       } else if (tt == TokenKind::Async) {
         // Peek only on the same line: ExpressionStatement's lookahead
@@ -9245,12 +9136,12 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::statement(
         //   function clownshoes() {}
         TokenKind maybeFunction;
         if (!tokenStream.peekTokenSameLine(&maybeFunction)) {
-          return null();
+          return errorResult();
         }
 
         if (maybeFunction == TokenKind::Function) {
           error(JSMSG_FORBIDDEN_AS_STATEMENT, "async function declarations");
-          return null();
+          return errorResult();
         }
 
         // Otherwise this |async| begins an ExpressionStatement or is a
@@ -9305,7 +9196,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::statement(
       // everywhere.
       if (!pc_->allowReturn()) {
         error(JSMSG_BAD_RETURN_OR_YIELD, "return");
-        return null();
+        return errorResult();
       }
       return returnStatement(yieldHandling);
 
@@ -9333,49 +9224,49 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::statement(
     // handles that).
     case TokenKind::Function:
       error(JSMSG_FORBIDDEN_AS_STATEMENT, "function declarations");
-      return null();
+      return errorResult();
 
     // |class| is also forbidden by lookahead restriction.
     case TokenKind::Class:
       error(JSMSG_FORBIDDEN_AS_STATEMENT, "classes");
-      return null();
+      return errorResult();
 
     // ImportDeclaration (only inside modules)
     case TokenKind::Import:
-      return importDeclarationOrImportExpr(yieldHandling);
+      return toResult(importDeclarationOrImportExpr(yieldHandling));
 
     // ExportDeclaration (only inside modules)
     case TokenKind::Export:
-      return exportDeclaration();
+      return toResult(exportDeclaration());
 
       // Miscellaneous error cases arguably better caught here than elsewhere.
 
     case TokenKind::Catch:
       error(JSMSG_CATCH_WITHOUT_TRY);
-      return null();
+      return errorResult();
 
     case TokenKind::Finally:
       error(JSMSG_FINALLY_WITHOUT_TRY);
-      return null();
+      return errorResult();
 
       // NOTE: default case handled in the ExpressionStatement section.
   }
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::Node
+typename ParseHandler::NodeResult
 GeneralParser<ParseHandler, Unit>::statementListItem(
     YieldHandling yieldHandling, bool canHaveDirectives /* = false */) {
   MOZ_ASSERT(checkOptionsCalled_);
 
   AutoCheckRecursionLimit recursion(this->fc_);
   if (!recursion.check(this->fc_)) {
-    return null();
+    return errorResult();
   }
 
   TokenKind tt;
   if (!tokenStream.getToken(&tt, TokenStream::SlashIsRegExp)) {
-    return null();
+    return errorResult();
   }
 
   switch (tt) {
@@ -9385,11 +9276,11 @@ GeneralParser<ParseHandler, Unit>::statementListItem(
 
     // VariableStatement[?Yield]
     case TokenKind::Var:
-      return variableStatement(yieldHandling).unwrapOr(null());
+      return variableStatement(yieldHandling);
 
     // EmptyStatement
     case TokenKind::Semi:
-      return handler_.newEmptyStatement(pos()).unwrapOr(null());
+      return handler_.newEmptyStatement(pos());
 
     // ExpressionStatement[?Yield].
     //
@@ -9400,7 +9291,7 @@ GeneralParser<ParseHandler, Unit>::statementListItem(
           anyChars.currentToken().atom() ==
               TaggedParserAtomIndex::WellKnown::use_asm_()) {
         if (!warning(JSMSG_USE_ASM_DIRECTIVE_FAIL)) {
-          return null();
+          return errorResult();
         }
       }
       return expressionStatement(yieldHandling);
@@ -9417,7 +9308,7 @@ GeneralParser<ParseHandler, Unit>::statementListItem(
 
       TokenKind next;
       if (!tokenStream.peekToken(&next, modifier)) {
-        return null();
+        return errorResult();
       }
 
       if (next == TokenKind::Colon) {
@@ -9434,7 +9325,7 @@ GeneralParser<ParseHandler, Unit>::statementListItem(
         if (pc_->atModuleTopLevel()) {
           if (!options().topLevelAwait) {
             error(JSMSG_TOP_LEVEL_AWAIT_NOT_SUPPORTED);
-            return null();
+            return errorResult();
           }
           pc_->sc()->asModuleContext()->setIsAsync();
           MOZ_ASSERT(pc_->isAsync());
@@ -9452,25 +9343,23 @@ GeneralParser<ParseHandler, Unit>::statementListItem(
 
       TokenKind next;
       if (!tokenStream.peekToken(&next)) {
-        return null();
+        return errorResult();
       }
 
       if (tt == TokenKind::Let && nextTokenContinuesLetDeclaration(next)) {
-        return lexicalDeclaration(yieldHandling, DeclarationKind::Let)
-            .unwrapOr(null());
+        return lexicalDeclaration(yieldHandling, DeclarationKind::Let);
       }
 
       if (tt == TokenKind::Async) {
         TokenKind nextSameLine = TokenKind::Eof;
         if (!tokenStream.peekTokenSameLine(&nextSameLine)) {
-          return null();
+          return errorResult();
         }
         if (nextSameLine == TokenKind::Function) {
           uint32_t toStringStart = pos().begin;
           tokenStream.consumeKnownToken(TokenKind::Function);
           return functionStmt(toStringStart, yieldHandling, NameRequired,
-                              FunctionAsyncKind::AsyncFunction)
-              .unwrapOr(null());
+                              FunctionAsyncKind::AsyncFunction);
         }
       }
 
@@ -9520,7 +9409,7 @@ GeneralParser<ParseHandler, Unit>::statementListItem(
       // everywhere.
       if (!pc_->allowReturn()) {
         error(JSMSG_BAD_RETURN_OR_YIELD, "return");
-        return null();
+        return errorResult();
       }
       return returnStatement(yieldHandling);
 
@@ -9547,45 +9436,41 @@ GeneralParser<ParseHandler, Unit>::statementListItem(
 
     //   HoistableDeclaration[?Yield, ~Default]
     case TokenKind::Function:
-      return functionStmt(pos().begin, yieldHandling, NameRequired)
-          .unwrapOr(null());
+      return functionStmt(pos().begin, yieldHandling, NameRequired);
 
       //   DecoratorList[?Yield, ?Await] opt ClassDeclaration[?Yield, ~Default]
 #ifdef ENABLE_DECORATORS
     case TokenKind::At:
-      return classDefinition(yieldHandling, ClassStatement, NameRequired)
-          .unwrapOr(null());
+      return classDefinition(yieldHandling, ClassStatement, NameRequired);
 #endif
 
     case TokenKind::Class:
-      return classDefinition(yieldHandling, ClassStatement, NameRequired)
-          .unwrapOr(null());
+      return classDefinition(yieldHandling, ClassStatement, NameRequired);
 
     //   LexicalDeclaration[In, ?Yield]
     //     LetOrConst BindingList[?In, ?Yield]
     case TokenKind::Const:
       // [In] is the default behavior, because for-loops specially parse
       // their heads to handle |in| in this situation.
-      return lexicalDeclaration(yieldHandling, DeclarationKind::Const)
-          .unwrapOr(null());
+      return lexicalDeclaration(yieldHandling, DeclarationKind::Const);
 
     // ImportDeclaration (only inside modules)
     case TokenKind::Import:
-      return importDeclarationOrImportExpr(yieldHandling);
+      return toResult(importDeclarationOrImportExpr(yieldHandling));
 
     // ExportDeclaration (only inside modules)
     case TokenKind::Export:
-      return exportDeclaration();
+      return toResult(exportDeclaration());
 
       // Miscellaneous error cases arguably better caught here than elsewhere.
 
     case TokenKind::Catch:
       error(JSMSG_CATCH_WITHOUT_TRY);
-      return null();
+      return errorResult();
 
     case TokenKind::Finally:
       error(JSMSG_FINALLY_WITHOUT_TRY);
-      return null();
+      return errorResult();
 
       // NOTE: default case handled in the ExpressionStatement section.
   }
@@ -9981,7 +9866,7 @@ typename ParseHandler::NodeResult GeneralParser<ParseHandler, Unit>::assignExpr(
   }
 
   if (firstToken == TokenKind::Yield && yieldExpressionsSupported()) {
-    return toResult(yieldExpression(inHandling));
+    return yieldExpression(inHandling);
   }
 
   bool maybeAsyncArrow = false;
