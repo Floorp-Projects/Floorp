@@ -1847,7 +1847,9 @@ var SessionStoreInternal = {
             target.linkedBrowser,
             aEvent.detail.adoptedBy.linkedBrowser
           );
-        } else {
+        } else if (!aEvent.detail.skipSessionStore) {
+          // `skipSessionStore` is set by tab close callers to indicate that we
+          // shouldn't record the closed tab.
           this.onTabClose(win, target);
         }
         this.onTabRemove(win, target);
@@ -2728,23 +2730,12 @@ var SessionStoreInternal = {
 
     // Clear closed tab data.
     if (windowData._closedTabs.length) {
-      // Remove all of the closed tabs from the _lastClosedActions list
-      for (let closedTab of windowData._closedTabs) {
-        // If the closed tab's state still has a .permanentKey property then we
-        // haven't seen its final update message yet. Remove it from the map of
-        // closed tabs so that we will simply discard its last messages and will
-        // not add it back to the list of closed tabs again.
-        if (closedTab.permanentKey) {
-          this._closingTabMap.delete(closedTab.permanentKey);
-          this._tabClosingByWindowMap.delete(closedTab.permanentKey);
-          delete closedTab.permanentKey;
-        }
-        this._removeClosedAction(
-          this._LAST_ACTION_CLOSED_TAB,
-          closedTab.closedId
-        );
+      // Remove all of the closed tabs data.
+      // This also clears out the permenentKey-mapped data for pending state updates
+      // and removes the tabs from from the _lastClosedActions list
+      while (windowData._closedTabs.length) {
+        this.removeClosedTabData(windowData, windowData._closedTabs, 0);
       }
-
       // Reset the closed tab list.
       windowData._closedTabs = [];
       windowData._lastClosedTabGroupCount = -1;

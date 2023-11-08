@@ -3635,11 +3635,19 @@
      *   using it in tandem with `runBeforeUnloadForTabs`.
      * @param {boolean} options.skipRemoves
      *   Skips actually removing the tabs. The beforeunload handlers still run.
+     * @param {boolean} options.skipSessionStore
+     *   If true, don't record the closed tabs in SessionStore.
      * @returns {_startRemoveTabsReturnValue}
      */
     _startRemoveTabs(
       tabs,
-      { animate, suppressWarnAboutClosingWindow, skipPermitUnload, skipRemoves }
+      {
+        animate,
+        suppressWarnAboutClosingWindow,
+        skipPermitUnload,
+        skipRemoves,
+        skipSessionStore,
+      }
     ) {
       // Note: if you change any of the unload algorithm, consider also
       // changing `runBeforeUnloadForTabs` above.
@@ -3685,6 +3693,7 @@
                       animate,
                       prewarmed: true,
                       skipPermitUnload: true,
+                      skipSessionStore,
                     });
                   }
                 } else {
@@ -3717,6 +3726,7 @@
             animate,
             prewarmed: true,
             skipPermitUnload,
+            skipSessionStore,
           });
         }
       }
@@ -3786,6 +3796,8 @@
      * @param {boolean} [options.skipPermitUnload]
      *   Skips the before unload checks for the tabs. Only set this to true when
      *   using it in tandem with `runBeforeUnloadForTabs`.
+     * @param {boolean}  [options.skipSessionStore]
+     *   If true, don't record the closed tabs in SessionStore.
      */
     removeTabs(
       tabs,
@@ -3793,6 +3805,7 @@
         animate = true,
         suppressWarnAboutClosingWindow = false,
         skipPermitUnload = false,
+        skipSessionStore = false,
       } = {}
     ) {
       // When 'closeWindowWithLastTab' pref is enabled, closing all tabs
@@ -3820,6 +3833,7 @@
             suppressWarnAboutClosingWindow,
             skipPermitUnload,
             skipRemoves: false,
+            skipSessionStore,
           });
 
         // Wait for all the beforeunload events to have been processed by content processes.
@@ -3842,6 +3856,7 @@
           animate,
           prewarmed: true,
           skipPermitUnload,
+          skipSessionStore,
         };
 
         // Now run again sequentially the beforeunload listeners that will result in a prompt.
@@ -3886,6 +3901,7 @@
         skipPermitUnload,
         closeWindowWithLastTab,
         prewarmed,
+        skipSessionStore,
       } = {}
     ) {
       if (UserInteraction.running("browser.tabs.opening", window)) {
@@ -3924,6 +3940,7 @@
           skipPermitUnload,
           closeWindowWithLastTab,
           prewarmed,
+          skipSessionStore,
         })
       ) {
         TelemetryStopwatch.cancel("FX_TAB_CLOSE_TIME_ANIM_MS", aTab);
@@ -4004,6 +4021,7 @@
         closeWindowFastpath,
         skipPermitUnload,
         prewarmed,
+        skipSessionStore = false,
       } = {}
     ) {
       if (aTab.closing || this._windowIsClosing) {
@@ -4149,7 +4167,7 @@
       // inspect the tab that's about to close.
       let evt = new CustomEvent("TabClose", {
         bubbles: true,
-        detail: { adoptedBy: adoptedByTab },
+        detail: { adoptedBy: adoptedByTab, skipSessionStore },
       });
       aTab.dispatchEvent(evt);
 
