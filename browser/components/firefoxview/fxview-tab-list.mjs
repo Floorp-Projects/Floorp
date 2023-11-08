@@ -37,6 +37,7 @@ if (!window.IS_STORYBOOK) {
  * @property {string} hasPopup - The aria-haspopup attribute for the secondary action, if required
  * @property {number} maxTabsLength - The max number of tabs for the list
  * @property {Array} tabItems - Items to show in the tab list
+ * @property {string} searchQuery - The query string to highlight, if provided.
  */
 export default class FxviewTabList extends MozLitElement {
   constructor() {
@@ -63,6 +64,7 @@ export default class FxviewTabList extends MozLitElement {
     maxTabsLength: { type: Number },
     tabItems: { type: Array },
     visible: { type: Boolean },
+    searchQuery: { type: String },
   };
 
   static queries = {
@@ -227,6 +229,9 @@ export default class FxviewTabList extends MozLitElement {
       // Can set maxTabsLength to -1 to have no max
       this.tabItems = this.tabItems.slice(0, this.maxTabsLength);
     }
+    if (this.searchQuery && this.tabItems.length === 0) {
+      return this.#emptySearchResultsTemplate();
+    }
     const {
       activeIndex,
       currentActiveElementId,
@@ -279,6 +284,7 @@ export default class FxviewTabList extends MozLitElement {
               .timeMsPref=${ifDefined(this.timeMsPref)}
               .title=${tabItem.title}
               .url=${ifDefined(tabItem.url)}
+              .searchQuery=${ifDefined(this.searchQuery)}
             >
             </fxview-tab-row>
           `;
@@ -286,6 +292,15 @@ export default class FxviewTabList extends MozLitElement {
       </div>
       <slot name="menu"></slot>
     `;
+  }
+
+  #emptySearchResultsTemplate() {
+    return html` <fxview-empty-state
+      headerLabel="firefoxview-search-results-empty"
+      .headerArgs=${{ query: this.searchQuery }}
+      isInnerCard
+    >
+    </fxview-empty-state>`;
   }
 }
 customElements.define("fxview-tab-list", FxviewTabList);
@@ -311,6 +326,7 @@ customElements.define("fxview-tab-list", FxviewTabList);
  * @property {string} title - The title for the tab item.
  * @property {string} url - The url for the tab item.
  * @property {number} timeMsPref - The frequency in milliseconds of updates to relative time
+ * @property {string} searchQuery - The query string to highlight, if provided.
  */
 export class FxviewTabRow extends MozLitElement {
   constructor() {
@@ -338,6 +354,7 @@ export class FxviewTabRow extends MozLitElement {
     title: { type: String },
     timeMsPref: { type: Number },
     url: { type: String },
+    searchQuery: { type: String },
   };
 
   static queries = {
@@ -520,7 +537,11 @@ export class FxviewTabRow extends MozLitElement {
           id="fxview-tab-row-title"
           dir="auto"
         >
-          ${title}
+          ${when(
+            this.searchQuery,
+            () => this.#highlightSearchMatches(this.searchQuery, title),
+            () => title
+          )}
         </span>
         <span
           class="fxview-tab-row-url text-truncated-ellipsis"
@@ -568,6 +589,35 @@ export class FxviewTabRow extends MozLitElement {
         ></button>`
       )}
     `;
+  }
+
+  /**
+   * Find all matches of query within the given string, and compute the result
+   * to be rendered.
+   *
+   * @param {string} query
+   * @param {string} string
+   */
+  #highlightSearchMatches(query, string) {
+    const fragments = [];
+    const regex = RegExp(this.#escapeRegExp(query), "dgi");
+    let prevIndexEnd = 0;
+    let result;
+    while ((result = regex.exec(string)) !== null) {
+      const [indexStart, indexEnd] = result.indices[0];
+      fragments.push(string.substring(prevIndexEnd, indexStart));
+      fragments.push(
+        html`<strong>${string.substring(indexStart, indexEnd)}</strong>`
+      );
+      prevIndexEnd = regex.lastIndex;
+    }
+    fragments.push(string.substring(prevIndexEnd));
+    return fragments;
+  }
+
+  // from MDN...
+  #escapeRegExp(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   }
 }
 

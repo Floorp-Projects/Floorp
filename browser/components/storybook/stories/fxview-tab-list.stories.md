@@ -88,6 +88,7 @@ You'll need to pass along some of the following properties:
         * `time` (**Optional**) - The time in milliseconds for expected last interaction with the tab (Ex: `lastUsed` for SyncedTabs tabs, `closedAt` for RecentlyClosed tabs, etc.)
         * `title` (**Required**) - The title for the tab
         * `url` (**Optional**) - The full URL for the tab
+* `searchQuery` (**Optional**) - Highlights matches of the query string for titles of each row.
 
 
 ### Notes

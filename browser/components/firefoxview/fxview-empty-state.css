@@ -20,6 +20,16 @@
   justify-content: center;
 }
 
+[slot="main"].imageHidden .image-container {
+  display: none;
+}
+
+[slot="main"].imageHidden .main {
+  display: flex;
+  flex: 1;
+  justify-content: center;
+}
+
 .image-container {
   min-width: 150px;
   text-align: center;

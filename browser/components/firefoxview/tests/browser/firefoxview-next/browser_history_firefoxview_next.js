@@ -153,7 +153,12 @@ async function addHistoryItems(dateAdded) {
 }
 
 add_setup(async () => {
-  await SpecialPowers.pushPrefEnv({ set: [[FXVIEW_NEXT_ENABLED_PREF, true]] });
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      [FXVIEW_NEXT_ENABLED_PREF, true],
+      ["browser.firefox-view.search.enabled", true],
+    ],
+  });
   registerCleanupFunction(async () => {
     await SpecialPowers.popPrefEnv();
     await PlacesUtils.history.clear();
@@ -413,5 +418,54 @@ add_task(async function test_show_all_history_telemetry() {
     let library = Services.wm.getMostRecentWindow("Places:Organizer");
     await BrowserTestUtils.closeWindow(library);
     gBrowser.removeTab(gBrowser.selectedTab);
+  });
+});
+
+add_task(async function test_search_history() {
+  await withFirefoxView({}, async browser => {
+    const { document } = browser.contentWindow;
+    navigateToCategory(document, "history");
+    const historyComponent = document.querySelector("view-history");
+    historyComponent.profileAge = 8;
+    await historyComponentReady(historyComponent);
+    const searchTextbox = await TestUtils.waitForCondition(
+      () => historyComponent.searchTextbox,
+      "The search textbox is displayed."
+    );
+
+    info("Input a search query.");
+    EventUtils.synthesizeMouseAtCenter(searchTextbox, {}, content);
+    EventUtils.sendString("Example Domain 1", content);
+    await BrowserTestUtils.waitForMutationCondition(
+      historyComponent.shadowRoot,
+      { childList: true, subtree: true },
+      () =>
+        historyComponent.cards.length === 1 &&
+        document.l10n.getAttributes(
+          historyComponent.cards[0].querySelector("[slot=header]")
+        ).id === "firefoxview-search-results-header"
+    );
+    await TestUtils.waitForCondition(() => {
+      const { rowEls } = historyComponent.lists[0];
+      return rowEls.length === 1 && rowEls[0].mainEl.href === URLs[0];
+    }, "There is one matching search result.");
+
+    info("Input a bogus search query.");
+    EventUtils.synthesizeMouseAtCenter(searchTextbox, {}, content);
+    EventUtils.sendString("Bogus Query", content);
+    await TestUtils.waitForCondition(() => {
+      const tabList = historyComponent.lists[0];
+      return tabList?.shadowRoot.querySelector("fxview-empty-state");
+    }, "There are no matching search results.");
+
+    info("Clear the search query.");
+    EventUtils.synthesizeMouseAtCenter(searchTextbox.clearButton, {}, content);
+    await BrowserTestUtils.waitForMutationCondition(
+      historyComponent.shadowRoot,
+      { childList: true, subtree: true },
+      () =>
+        historyComponent.cards.length ===
+        historyComponent.historyMapByDate.length
+    );
   });
 });

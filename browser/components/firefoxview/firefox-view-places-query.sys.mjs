@@ -86,14 +86,16 @@ export class FirefoxViewPlacesQuery extends PlacesQuery {
     return visitsPerMonth;
   }
 
-  appendToCache(visit) {
-    super.appendToCache(visit);
+  formatRowAsVisit(row) {
+    const visit = super.formatRowAsVisit(row);
     this.#normalizeVisit(visit);
+    return visit;
   }
 
-  insertSortedIntoCache(visit) {
-    super.insertSortedIntoCache(visit);
+  formatEventAsVisit(event) {
+    const visit = super.formatEventAsVisit(event);
     this.#normalizeVisit(visit);
+    return visit;
   }
 
   /**
