@@ -3000,29 +3000,23 @@ bool GeneralParser<ParseHandler, Unit>::taggedTemplate(
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::ListNodeType
+typename ParseHandler::ListNodeResult
 GeneralParser<ParseHandler, Unit>::templateLiteral(
     YieldHandling yieldHandling) {
-  NameNodeType literal = noSubstitutionUntaggedTemplate();
-  if (!literal) {
-    return null();
-  }
+  NameNodeType literal;
+  MOZ_TRY_VAR(literal, noSubstitutionUntaggedTemplate());
 
   ListNodeType nodeList;
-  MOZ_TRY_VAR_OR_RETURN(
-      nodeList,
-      handler_.newList(ParseNodeKind::TemplateStringListExpr, literal), null());
+  MOZ_TRY_VAR(nodeList,
+              handler_.newList(ParseNodeKind::TemplateStringListExpr, literal));
 
   TokenKind tt;
   do {
     if (!addExprAndGetNextTemplStrToken(yieldHandling, nodeList, &tt)) {
-      return null();
+      return errorResult();
     }
 
-    literal = noSubstitutionUntaggedTemplate();
-    if (!literal) {
-      return null();
-    }
+    MOZ_TRY_VAR(literal, noSubstitutionUntaggedTemplate());
 
     handler_.addList(nodeList, literal);
   } while (tt == TokenKind::TemplateHead);
@@ -5023,10 +5017,8 @@ bool GeneralParser<ParseHandler, Unit>::assertClause(
       return false;
     }
 
-    NameNodeType valueNode = stringLiteral();
-    if (!valueNode) {
-      return false;
-    }
+    NameNodeType valueNode;
+    MOZ_TRY_VAR_OR_RETURN(valueNode, stringLiteral(), false);
 
     BinaryNodeType importAssertionNode;
     MOZ_TRY_VAR_OR_RETURN(importAssertionNode,
@@ -5308,10 +5300,8 @@ GeneralParser<ParseHandler, Unit>::importDeclaration() {
     }
   }
 
-  NameNodeType moduleSpec = stringLiteral();
-  if (!moduleSpec) {
-    return null();
-  }
+  NameNodeType moduleSpec;
+  MOZ_TRY_VAR_OR_RETURN(moduleSpec, stringLiteral(), null());
 
   if (!tokenStream.peekTokenSameLine(&tt, TokenStream::SlashIsRegExp)) {
     return null();
@@ -5667,10 +5657,8 @@ GeneralParser<ParseHandler, Unit>::exportFrom(uint32_t begin, Node specList) {
     return null();
   }
 
-  NameNodeType moduleSpec = stringLiteral();
-  if (!moduleSpec) {
-    return null();
-  }
+  NameNodeType moduleSpec;
+  MOZ_TRY_VAR_OR_RETURN(moduleSpec, stringLiteral(), null());
 
   TokenKind tt;
   if (!tokenStream.peekTokenSameLine(&tt, TokenStream::SlashIsRegExp)) {
@@ -10114,7 +10102,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::assignExpr(
       return null();
     }
     if (endsExpr) {
-      return newNumber(anyChars.currentToken());
+      return newNumber(anyChars.currentToken()).unwrapOr(null());
     }
   }
 
@@ -10123,7 +10111,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::assignExpr(
       return null();
     }
     if (endsExpr) {
-      return stringLiteral();
+      return stringLiteral().unwrapOr(null());
     }
   }
 
@@ -10897,11 +10885,10 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::memberExpr(
       return null();
     }
   } else {
-    lhs = primaryExpr(yieldHandling, tripledotHandling, tt, possibleError,
-                      invoked);
-    if (!lhs) {
-      return null();
-    }
+    MOZ_TRY_VAR_OR_RETURN(lhs,
+                          primaryExpr(yieldHandling, tripledotHandling, tt,
+                                      possibleError, invoked),
+                          null());
   }
 
   MOZ_ASSERT_IF(handler_.isSuperBase(lhs),
@@ -11469,10 +11456,9 @@ PerHandlerParser<ParseHandler>::privateNameReference(
 }
 
 template <class ParseHandler>
-typename ParseHandler::NameNodeType
+typename ParseHandler::NameNodeResult
 PerHandlerParser<ParseHandler>::stringLiteral() {
-  return handler_.newStringLiteral(anyChars.currentToken().atom(), pos())
-      .unwrapOr(null());
+  return handler_.newStringLiteral(anyChars.currentToken().atom(), pos());
 }
 
 template <class ParseHandler>
@@ -11489,19 +11475,19 @@ PerHandlerParser<ParseHandler>::noSubstitutionTaggedTemplate() {
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::NameNodeType
+typename ParseHandler::NameNodeResult
 GeneralParser<ParseHandler, Unit>::noSubstitutionUntaggedTemplate() {
   if (!tokenStream.checkForInvalidTemplateEscapeError()) {
-    return null();
+    return errorResult();
   }
 
-  return handler_
-      .newTemplateStringLiteral(anyChars.currentToken().atom(), pos())
-      .unwrapOr(null());
+  return handler_.newTemplateStringLiteral(anyChars.currentToken().atom(),
+                                           pos());
 }
 
 template <typename Unit>
-RegExpLiteral* Parser<FullParseHandler, Unit>::newRegExp() {
+FullParseHandler::RegExpLiteralResult
+Parser<FullParseHandler, Unit>::newRegExp() {
   MOZ_ASSERT(!options().selfHostingMode);
 
   // Create the regexp and check its syntax.
@@ -11521,14 +11507,14 @@ RegExpLiteral* Parser<FullParseHandler, Unit>::newRegExp() {
     if (!irregexp::CheckPatternSyntax(
             this->alloc_, this->fc_->stackLimit(), anyChars, range, flags,
             Some(line), Some(JS::ColumnNumberZeroOrigin(column)))) {
-      return nullptr;
+      return errorResult();
     }
   }
 
   auto atom =
       this->parserAtoms().internChar16(fc_, chars.begin(), chars.length());
   if (!atom) {
-    return nullptr;
+    return errorResult();
   }
   // RegExp patterm must be atomized.
   this->parserAtoms().markUsedByStencil(atom, ParserAtom::Atomize::Yes);
@@ -11536,18 +11522,18 @@ RegExpLiteral* Parser<FullParseHandler, Unit>::newRegExp() {
   RegExpIndex index(this->compilationState_.regExpData.length());
   if (uint32_t(index) >= TaggedScriptThingIndex::IndexLimit) {
     ReportAllocationOverflow(fc_);
-    return nullptr;
+    return errorResult();
   }
   if (!this->compilationState_.regExpData.emplaceBack(atom, flags)) {
     js::ReportOutOfMemory(this->fc_);
-    return nullptr;
+    return errorResult();
   }
 
-  return handler_.newRegExp(index, pos()).unwrapOr(null());
+  return handler_.newRegExp(index, pos());
 }
 
 template <typename Unit>
-SyntaxParseHandler::RegExpLiteralType
+SyntaxParseHandler::RegExpLiteralResult
 Parser<SyntaxParseHandler, Unit>::newRegExp() {
   MOZ_ASSERT(!options().selfHostingMode);
 
@@ -11564,21 +11550,21 @@ Parser<SyntaxParseHandler, Unit>::newRegExp() {
   if (!irregexp::CheckPatternSyntax(this->alloc_, this->fc_->stackLimit(),
                                     anyChars, source, flags, Some(line),
                                     Some(JS::ColumnNumberZeroOrigin(column)))) {
-    return null();
+    return errorResult();
   }
 
-  return handler_.newRegExp(SyntaxParseHandler::Node::NodeGeneric, pos())
-      .unwrapOr(null());
+  return handler_.newRegExp(SyntaxParseHandler::Node::NodeGeneric, pos());
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::RegExpLiteralType
+typename ParseHandler::RegExpLiteralResult
 GeneralParser<ParseHandler, Unit>::newRegExp() {
   return asFinalParser()->newRegExp();
 }
 
 template <typename Unit>
-BigIntLiteral* Parser<FullParseHandler, Unit>::newBigInt() {
+FullParseHandler::BigIntLiteralResult
+Parser<FullParseHandler, Unit>::newBigInt() {
   // The token's charBuffer contains the DecimalIntegerLiteral or
   // NonDecimalIntegerLiteral production, and as such does not include the
   // BigIntLiteralSuffix (the trailing "n").  Note that NonDecimalIntegerLiteral
@@ -11586,41 +11572,41 @@ BigIntLiteral* Parser<FullParseHandler, Unit>::newBigInt() {
   const auto& chars = tokenStream.getCharBuffer();
   if (chars.length() > UINT32_MAX) {
     ReportAllocationOverflow(fc_);
-    return null();
+    return errorResult();
   }
 
   BigIntIndex index(this->compilationState_.bigIntData.length());
   if (uint32_t(index) >= TaggedScriptThingIndex::IndexLimit) {
     ReportAllocationOverflow(fc_);
-    return null();
+    return errorResult();
   }
   if (!this->compilationState_.bigIntData.emplaceBack()) {
     js::ReportOutOfMemory(this->fc_);
-    return null();
+    return errorResult();
   }
 
   if (!this->compilationState_.bigIntData[index].init(
           this->fc_, this->stencilAlloc(), chars)) {
-    return null();
+    return errorResult();
   }
 
   bool isZero = this->compilationState_.bigIntData[index].isZero();
 
   // Should the operations below fail, the buffer held by data will
   // be cleaned up by the CompilationState destructor.
-  return handler_.newBigInt(index, isZero, pos()).unwrapOr(null());
+  return handler_.newBigInt(index, isZero, pos());
 }
 
 template <typename Unit>
-SyntaxParseHandler::BigIntLiteralType
+SyntaxParseHandler::BigIntLiteralResult
 Parser<SyntaxParseHandler, Unit>::newBigInt() {
   // The tokenizer has already checked the syntax of the bigint.
 
-  return handler_.newBigInt().unwrapOr(null());
+  return handler_.newBigInt();
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::BigIntLiteralType
+typename ParseHandler::BigIntLiteralResult
 GeneralParser<ParseHandler, Unit>::newBigInt() {
   return asFinalParser()->newBigInt();
 }
@@ -11891,14 +11877,12 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::propertyName(
         return null();
       }
       *propAtomOut = numAtom;
-      return newNumber(anyChars.currentToken());
+      return newNumber(anyChars.currentToken()).unwrapOr(null());
     }
 
     case TokenKind::BigInt: {
-      Node biNode = newBigInt();
-      if (!biNode) {
-        return null();
-      }
+      Node biNode;
+      MOZ_TRY_VAR_OR_RETURN(biNode, newBigInt(), null());
       return handler_.newSyntheticComputedName(biNode, pos().begin, pos().end)
           .unwrapOr(null());
     }
@@ -11909,7 +11893,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::propertyName(
       if (this->parserAtoms().isIndex(str, &index)) {
         return handler_.newNumber(index, NoDecimal, pos()).unwrapOr(null());
       }
-      return stringLiteral();
+      return stringLiteral().unwrapOr(null());
     }
 
     case TokenKind::LeftBracket:
@@ -12849,46 +12833,49 @@ GeneralParser<ParseHandler, Unit>::importExpr(YieldHandling yieldHandling,
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::primaryExpr(
+typename ParseHandler::NodeResult
+GeneralParser<ParseHandler, Unit>::primaryExpr(
     YieldHandling yieldHandling, TripledotHandling tripledotHandling,
     TokenKind tt, PossibleError* possibleError, InvokedPrediction invoked) {
   MOZ_ASSERT(anyChars.isCurrentTokenType(tt));
   AutoCheckRecursionLimit recursion(this->fc_);
   if (!recursion.check(this->fc_)) {
-    return null();
+    return errorResult();
   }
 
   switch (tt) {
     case TokenKind::Function:
-      return functionExpr(pos().begin, invoked,
-                          FunctionAsyncKind::SyncFunction);
+      return toResult(
+          functionExpr(pos().begin, invoked, FunctionAsyncKind::SyncFunction));
 
     case TokenKind::Class:
-      return classDefinition(yieldHandling, ClassExpression, NameRequired);
+      return toResult(
+          classDefinition(yieldHandling, ClassExpression, NameRequired));
 
     case TokenKind::LeftBracket:
-      return arrayInitializer(yieldHandling, possibleError);
+      return toResult(arrayInitializer(yieldHandling, possibleError));
 
     case TokenKind::LeftCurly:
-      return objectLiteral(yieldHandling, possibleError);
+      return toResult(objectLiteral(yieldHandling, possibleError));
 
 #ifdef ENABLE_RECORD_TUPLE
     case TokenKind::HashCurly:
-      return recordLiteral(yieldHandling);
+      return toResult(recordLiteral(yieldHandling));
 
     case TokenKind::HashBracket:
-      return tupleLiteral(yieldHandling);
+      return toResult(tupleLiteral(yieldHandling));
 #endif
 
 #ifdef ENABLE_DECORATORS
     case TokenKind::At:
-      return classDefinition(yieldHandling, ClassExpression, NameRequired);
+      return toResult(
+          classDefinition(yieldHandling, ClassExpression, NameRequired));
 #endif
 
     case TokenKind::LeftParen: {
       TokenKind next;
       if (!tokenStream.peekToken(&next, TokenStream::SlashIsRegExp)) {
-        return null();
+        return errorResult();
       }
 
       if (next == TokenKind::RightParen) {
@@ -12898,28 +12885,28 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::primaryExpr(
                                       TokenStream::SlashIsRegExp);
 
         if (!tokenStream.peekToken(&next)) {
-          return null();
+          return errorResult();
         }
         if (next != TokenKind::Arrow) {
           error(JSMSG_UNEXPECTED_TOKEN, "expression",
                 TokenKindToDesc(TokenKind::RightParen));
-          return null();
+          return errorResult();
         }
 
         // Now just return something that will allow parsing to continue.
         // It doesn't matter what; when we reach the =>, we will rewind and
         // reparse the whole arrow function. See Parser::assignExpr.
-        return handler_.newNullLiteral(pos()).unwrapOr(null());
+        return handler_.newNullLiteral(pos());
       }
 
       // Pass |possibleError| to support destructuring in arrow parameters.
       Node expr = exprInParens(InAllowed, yieldHandling, TripledotAllowed,
                                possibleError);
       if (!expr) {
-        return null();
+        return errorResult();
       }
       if (!mustMatchToken(TokenKind::RightParen, JSMSG_PAREN_IN_PAREN)) {
-        return null();
+        return errorResult();
       }
       return handler_.parenthesize(expr);
     }
@@ -12936,29 +12923,29 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::primaryExpr(
     default: {
       if (!TokenKindIsPossibleIdentifier(tt)) {
         error(JSMSG_UNEXPECTED_TOKEN, "expression", TokenKindToDesc(tt));
-        return null();
+        return errorResult();
       }
 
       if (tt == TokenKind::Async) {
         TokenKind nextSameLine = TokenKind::Eof;
         if (!tokenStream.peekTokenSameLine(&nextSameLine)) {
-          return null();
+          return errorResult();
         }
 
         if (nextSameLine == TokenKind::Function) {
           uint32_t toStringStart = pos().begin;
           tokenStream.consumeKnownToken(TokenKind::Function);
-          return functionExpr(toStringStart, PredictUninvoked,
-                              FunctionAsyncKind::AsyncFunction);
+          return toResult(functionExpr(toStringStart, PredictUninvoked,
+                                       FunctionAsyncKind::AsyncFunction));
         }
       }
 
       TaggedParserAtomIndex name = identifierReference(yieldHandling);
       if (!name) {
-        return null();
+        return errorResult();
       }
 
-      return identifierReference(name);
+      return toResult(identifierReference(name));
     }
 
     case TokenKind::RegExp:
@@ -12971,21 +12958,21 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::primaryExpr(
       return newBigInt();
 
     case TokenKind::True:
-      return handler_.newBooleanLiteral(true, pos()).unwrapOr(null());
+      return handler_.newBooleanLiteral(true, pos());
     case TokenKind::False:
-      return handler_.newBooleanLiteral(false, pos()).unwrapOr(null());
+      return handler_.newBooleanLiteral(false, pos());
     case TokenKind::This: {
       NameNodeType thisName = null();
       if (pc_->sc()->hasFunctionThisBinding()) {
         thisName = newThisName();
         if (!thisName) {
-          return null();
+          return errorResult();
         }
       }
-      return handler_.newThisLiteral(pos(), thisName).unwrapOr(null());
+      return handler_.newThisLiteral(pos(), thisName);
     }
     case TokenKind::Null:
-      return handler_.newNullLiteral(pos()).unwrapOr(null());
+      return handler_.newNullLiteral(pos());
 
     case TokenKind::TripleDot: {
       // This isn't valid expression syntax, but it's valid in an arrow
@@ -12996,12 +12983,12 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::primaryExpr(
       // present.
       if (tripledotHandling != TripledotAllowed) {
         error(JSMSG_UNEXPECTED_TOKEN, "expression", TokenKindToDesc(tt));
-        return null();
+        return errorResult();
       }
 
       TokenKind next;
       if (!tokenStream.getToken(&next)) {
-        return null();
+        return errorResult();
       }
 
       if (next == TokenKind::LeftBracket || next == TokenKind::LeftCurly) {
@@ -13009,7 +12996,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::primaryExpr(
         // function is reparsed in functionFormalParametersAndBody().
         if (!destructuringDeclaration(DeclarationKind::CoverArrowParameter,
                                       yieldHandling, next)) {
-          return null();
+          return errorResult();
         }
       } else {
         // This doesn't check that the provided name is allowed, e.g. if
@@ -13019,35 +13006,35 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::primaryExpr(
         if (!TokenKindIsPossibleIdentifier(next)) {
           error(JSMSG_UNEXPECTED_TOKEN, "rest argument name",
                 TokenKindToDesc(next));
-          return null();
+          return errorResult();
         }
       }
 
       if (!tokenStream.getToken(&next)) {
-        return null();
+        return errorResult();
       }
       if (next != TokenKind::RightParen) {
         error(JSMSG_UNEXPECTED_TOKEN, "closing parenthesis",
               TokenKindToDesc(next));
-        return null();
+        return errorResult();
       }
 
       if (!tokenStream.peekToken(&next)) {
-        return null();
+        return errorResult();
       }
       if (next != TokenKind::Arrow) {
         // Advance the scanner for proper error location reporting.
         tokenStream.consumeKnownToken(next);
         error(JSMSG_UNEXPECTED_TOKEN, "'=>' after argument list",
               TokenKindToDesc(next));
-        return null();
+        return errorResult();
       }
 
       anyChars.ungetToken();  // put back right paren
 
       // Return an arbitrary expression node. See case TokenKind::RightParen
       // above.
-      return handler_.newNullLiteral(pos()).unwrapOr(null());
+      return handler_.newNullLiteral(pos());
     }
   }
 }
