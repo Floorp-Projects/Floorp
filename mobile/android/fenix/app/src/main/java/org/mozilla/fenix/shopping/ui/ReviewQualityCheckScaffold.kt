@@ -23,12 +23,17 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.traversalIndex
 import androidx.compose.ui.unit.dp
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.BetaLabel
 import org.mozilla.fenix.compose.BottomSheetHandle
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
+import org.mozilla.fenix.shopping.ui.ext.headingResource
 import org.mozilla.fenix.theme.FirefoxTheme
 
 private val bottomSheetShape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp)
@@ -69,7 +74,8 @@ fun ReviewQualityCheckScaffold(
                 contentDescription = stringResource(R.string.review_quality_check_close_handle_content_description),
                 modifier = Modifier
                     .fillMaxWidth(BOTTOM_SHEET_HANDLE_WIDTH_PERCENT)
-                    .align(Alignment.CenterHorizontally),
+                    .align(Alignment.CenterHorizontally)
+                    .semantics { traversalIndex = -1f },
             )
 
             Spacer(modifier = Modifier.height(16.dp))
@@ -87,19 +93,27 @@ fun ReviewQualityCheckScaffold(
 
 @Composable
 private fun Header() {
+    val reviewCheckerFeatureName = stringResource(R.string.review_quality_check_feature_name_2)
+    val betaText = stringResource(R.string.review_quality_check_beta_flag)
+    val titleContentDescription = headingResource("$reviewCheckerFeatureName, $betaText")
+
     Row(
-        modifier = Modifier.semantics(mergeDescendants = true) {},
+        modifier = Modifier.semantics(mergeDescendants = true) {
+            heading()
+            contentDescription = titleContentDescription
+        },
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            text = stringResource(R.string.review_quality_check_feature_name_2),
+            text = reviewCheckerFeatureName,
             color = FirefoxTheme.colors.textPrimary,
             style = FirefoxTheme.typography.headline6,
+            modifier = Modifier.clearAndSetSemantics {},
         )
 
         Spacer(modifier = Modifier.width(8.dp))
 
-        BetaLabel()
+        BetaLabel(modifier = Modifier.clearAndSetSemantics {})
     }
 }
 

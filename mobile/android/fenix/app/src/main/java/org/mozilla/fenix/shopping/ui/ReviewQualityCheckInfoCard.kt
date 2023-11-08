@@ -22,6 +22,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
@@ -31,6 +34,7 @@ import org.mozilla.fenix.compose.LinkText
 import org.mozilla.fenix.compose.LinkTextState
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
 import org.mozilla.fenix.compose.button.PrimaryButton
+import org.mozilla.fenix.shopping.ui.ext.headingResource
 import org.mozilla.fenix.theme.FirefoxTheme
 
 /**
@@ -61,6 +65,8 @@ fun ReviewQualityCheckInfoCard(
         ),
         elevation = 0.dp,
     ) {
+        val titleContentDescription = headingResource(title)
+
         Row {
             when (type) {
                 ReviewQualityCheckInfoType.Warning -> {
@@ -90,6 +96,10 @@ fun ReviewQualityCheckInfoCard(
                     text = title,
                     color = FirefoxTheme.colors.textPrimary,
                     style = FirefoxTheme.typography.headline8,
+                    modifier = Modifier.semantics {
+                        heading()
+                        contentDescription = titleContentDescription
+                    },
                 )
 
                 description?.let {

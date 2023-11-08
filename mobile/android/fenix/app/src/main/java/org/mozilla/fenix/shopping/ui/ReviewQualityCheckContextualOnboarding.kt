@@ -16,6 +16,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -29,6 +32,7 @@ import org.mozilla.fenix.compose.button.PrimaryButton
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.ProductVendor
 import org.mozilla.fenix.shopping.ui.ext.displayName
+import org.mozilla.fenix.shopping.ui.ext.headingResource
 import org.mozilla.fenix.theme.FirefoxTheme
 
 const val PLACEHOLDER_URL = "www.fakespot.com"
@@ -60,12 +64,18 @@ fun ReviewQualityCheckContextualOnboarding(
         stringResource(id = R.string.review_quality_check_contextual_onboarding_privacy_policy_2)
     val termsOfUseText =
         stringResource(id = R.string.review_quality_check_contextual_onboarding_terms_use_2)
+    val titleContentDescription =
+        headingResource(R.string.review_quality_check_contextual_onboarding_title)
 
     ReviewQualityCheckCard(modifier = Modifier.fillMaxWidth()) {
         Text(
             text = stringResource(R.string.review_quality_check_contextual_onboarding_title),
             color = FirefoxTheme.colors.textPrimary,
             style = FirefoxTheme.typography.headline5,
+            modifier = Modifier.semantics {
+                heading()
+                contentDescription = titleContentDescription
+            },
         )
 
         Spacer(modifier = Modifier.height(16.dp))

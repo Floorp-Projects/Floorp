@@ -34,6 +34,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.PreviewParameter
@@ -51,6 +53,7 @@ import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.OptedIn.ProductR
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.OptedIn.ProductReviewState.AnalysisPresent.AnalysisStatus
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.OptedIn.ProductReviewState.AnalysisPresent.HighlightsInfo
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.RecommendedProductState
+import org.mozilla.fenix.shopping.ui.ext.headingResource
 import org.mozilla.fenix.theme.FirefoxTheme
 
 private val combinedParentHorizontalPadding = 32.dp
@@ -203,7 +206,7 @@ private fun ReviewGradeCard(
     reviewGrade: ReviewQualityCheckState.Grade,
     modifier: Modifier = Modifier,
 ) {
-    ReviewQualityCheckCard(modifier = modifier.semantics(mergeDescendants = true) {}) {
+    ReviewQualityCheckCard(modifier = modifier.semantics(mergeDescendants = true) { heading() }) {
         Text(
             text = stringResource(R.string.review_quality_check_grade_title),
             color = FirefoxTheme.colors.textPrimary,
@@ -222,7 +225,7 @@ private fun AdjustedProductRatingCard(
     rating: Float,
     modifier: Modifier = Modifier,
 ) {
-    ReviewQualityCheckCard(modifier = modifier.semantics(mergeDescendants = true) {}) {
+    ReviewQualityCheckCard(modifier = modifier.semantics(mergeDescendants = true) { heading() }) {
         FlowRow(
             horizontalArrangement = Arrangement.SpaceBetween,
             modifier = Modifier.fillMaxWidth(),
@@ -267,11 +270,16 @@ private fun HighlightsCard(
                 highlightsInfo.highlightsForCompactMode
             }
         }
+        val titleContentDescription = headingResource(id = R.string.review_quality_check_highlights_title)
 
         Text(
             text = stringResource(R.string.review_quality_check_highlights_title),
             color = FirefoxTheme.colors.textPrimary,
             style = FirefoxTheme.typography.headline8,
+            modifier = Modifier.semantics {
+                heading()
+                contentDescription = titleContentDescription
+            },
         )
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -437,6 +445,7 @@ private fun ProductRecommendation(
         ReviewQualityCheckCard(
             modifier = Modifier
                 .fillMaxWidth()
+                .semantics { heading() }
                 .clickable {
                     onClick(product.aid, product.productUrl)
                 }

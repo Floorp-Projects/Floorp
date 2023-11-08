@@ -30,10 +30,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import org.mozilla.fenix.R
 import org.mozilla.fenix.compose.annotation.LightDarkPreview
+import org.mozilla.fenix.shopping.ui.ext.headingResource
 import org.mozilla.fenix.theme.FirefoxTheme
 
 private val cardShape = RoundedCornerShape(8.dp)
@@ -61,10 +65,13 @@ fun ReviewQualityCheckExpandableCard(
         modifier = modifier,
         contentPadding = PaddingValues(0.dp),
     ) {
+        val titleContentDescription = headingResource(title)
+
         Row(
             horizontalArrangement = Arrangement.SpaceBetween,
             modifier = Modifier
                 .fillMaxWidth()
+                .semantics { heading() }
                 .clickable(
                     onClickLabel = if (isExpanded) {
                         stringResource(R.string.a11y_action_label_collapse)
@@ -80,6 +87,9 @@ fun ReviewQualityCheckExpandableCard(
                 text = title,
                 color = FirefoxTheme.colors.textPrimary,
                 style = FirefoxTheme.typography.headline8,
+                modifier = Modifier.semantics {
+                    contentDescription = titleContentDescription
+                },
             )
 
             val chevronDrawable = if (isExpanded) {
