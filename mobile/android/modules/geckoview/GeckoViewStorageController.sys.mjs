@@ -36,8 +36,7 @@ const ClearFlags = [
     // COOKIES
     1 << 0,
     Ci.nsIClearDataService.CLEAR_COOKIES |
-      Ci.nsIClearDataService.CLEAR_MEDIA_DEVICES |
-      Ci.nsIClearDataService.CLEAR_COOKIE_BANNER_EXECUTED_RECORD,
+      Ci.nsIClearDataService.CLEAR_MEDIA_DEVICES,
   ],
   [
     // NETWORK_CACHE
@@ -60,8 +59,7 @@ const ClearFlags = [
     1 << 4,
     Ci.nsIClearDataService.CLEAR_DOM_QUOTA |
       Ci.nsIClearDataService.CLEAR_DOM_PUSH_NOTIFICATIONS |
-      Ci.nsIClearDataService.CLEAR_REPORTS |
-      Ci.nsIClearDataService.CLEAR_COOKIE_BANNER_EXECUTED_RECORD,
+      Ci.nsIClearDataService.CLEAR_REPORTS,
   ],
   [
     // AUTH_SESSIONS

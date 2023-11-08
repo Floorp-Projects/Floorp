@@ -389,16 +389,11 @@ export var Sanitizer = {
           await maybeSanitizeSessionPrincipals(
             progress,
             principalsForShutdownClearing,
-            Ci.nsIClearDataService.CLEAR_COOKIES |
-              Ci.nsIClearDataService.CLEAR_COOKIE_BANNER_EXECUTED_RECORD
+            Ci.nsIClearDataService.CLEAR_COOKIES
           );
         } else {
           // Not on shutdown
-          await clearData(
-            range,
-            Ci.nsIClearDataService.CLEAR_COOKIES |
-              Ci.nsIClearDataService.CLEAR_COOKIE_BANNER_EXECUTED_RECORD
-          );
+          await clearData(range, Ci.nsIClearDataService.CLEAR_COOKIES);
         }
         await clearData(range, Ci.nsIClearDataService.CLEAR_MEDIA_DEVICES);
         TelemetryStopwatch.finish("FX_SANITIZE_COOKIES_2", refObj);
@@ -416,16 +411,11 @@ export var Sanitizer = {
           await maybeSanitizeSessionPrincipals(
             progress,
             principalsForShutdownClearing,
-            Ci.nsIClearDataService.CLEAR_DOM_STORAGES |
-              Ci.nsIClearDataService.CLEAR_COOKIE_BANNER_EXECUTED_RECORD
+            Ci.nsIClearDataService.CLEAR_DOM_STORAGES
           );
         } else {
           // Not on shutdown
-          await clearData(
-            range,
-            Ci.nsIClearDataService.CLEAR_DOM_STORAGES |
-              Ci.nsIClearDataService.CLEAR_COOKIE_BANNER_EXECUTED_RECORD
-          );
+          await clearData(range, Ci.nsIClearDataService.CLEAR_DOM_STORAGES);
         }
       },
     },
@@ -559,8 +549,7 @@ export var Sanitizer = {
             Ci.nsIClearDataService.CLEAR_DOM_PUSH_NOTIFICATIONS |
             Ci.nsIClearDataService.CLEAR_CLIENT_AUTH_REMEMBER_SERVICE |
             Ci.nsIClearDataService.CLEAR_CERT_EXCEPTIONS |
-            Ci.nsIClearDataService.CLEAR_CREDENTIAL_MANAGER_STATE |
-            Ci.nsIClearDataService.CLEAR_COOKIE_BANNER_EXCEPTION
+            Ci.nsIClearDataService.CLEAR_CREDENTIAL_MANAGER_STATE
         );
         TelemetryStopwatch.finish("FX_SANITIZE_SITESETTINGS", refObj);
       },

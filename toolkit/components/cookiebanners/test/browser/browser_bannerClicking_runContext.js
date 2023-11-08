@@ -47,9 +47,6 @@ add_task(async function test_embedded_iframe() {
 
   insertTestRules({ runContext: Ci.nsIClickRule.RUN_TOP });
 
-  // Clear executed records before testing.
-  Services.cookieBanners.removeAllExecutedRecords(false);
-
   await openIframeAndVerify({
     win: window,
     domain: TEST_DOMAIN_A,
@@ -57,9 +54,6 @@ add_task(async function test_embedded_iframe() {
     visible: true,
     expected: "NoClick",
   });
-
-  Services.cookieBanners.removeAllExecutedRecords(false);
-
   await openPageAndVerify({
     win: window,
     domain: TEST_DOMAIN_A,
@@ -67,8 +61,6 @@ add_task(async function test_embedded_iframe() {
     visible: false,
     expected: "OptOut",
   });
-
-  Services.cookieBanners.removeAllExecutedRecords(false);
 
   insertTestRules({ runContext: Ci.nsIClickRule.RUN_CHILD });
 
@@ -79,9 +71,6 @@ add_task(async function test_embedded_iframe() {
     visible: false,
     expected: "OptOut",
   });
-
-  Services.cookieBanners.removeAllExecutedRecords(false);
-
   await openPageAndVerify({
     win: window,
     domain: TEST_DOMAIN_A,
@@ -89,8 +78,6 @@ add_task(async function test_embedded_iframe() {
     visible: true,
     expected: "NoClick",
   });
-
-  Services.cookieBanners.removeAllExecutedRecords(false);
 
   insertTestRules({ runContext: Ci.nsIClickRule.RUN_ALL });
   await openIframeAndVerify({
@@ -100,9 +87,6 @@ add_task(async function test_embedded_iframe() {
     visible: false,
     expected: "OptOut",
   });
-
-  Services.cookieBanners.removeAllExecutedRecords(false);
-
   await openPageAndVerify({
     win: window,
     domain: TEST_DOMAIN_A,
@@ -110,6 +94,4 @@ add_task(async function test_embedded_iframe() {
     visible: false,
     expected: "OptOut",
   });
-
-  Services.cookieBanners.removeAllExecutedRecords(false);
 });

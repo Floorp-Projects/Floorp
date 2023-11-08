@@ -399,9 +399,7 @@ export var SiteDataTestUtils = {
           Ci.nsIClearDataService.CLEAR_PREDICTOR_NETWORK_DATA |
           Ci.nsIClearDataService.CLEAR_CLIENT_AUTH_REMEMBER_SERVICE |
           Ci.nsIClearDataService.CLEAR_EME |
-          Ci.nsIClearDataService.CLEAR_STORAGE_ACCESS |
-          Ci.nsIClearDataService.CLEAR_COOKIE_BANNER_EXCEPTION |
-          Ci.nsIClearDataService.CLEAR_COOKIE_BANNER_EXECUTED_RECORD,
+          Ci.nsIClearDataService.CLEAR_STORAGE_ACCESS,
         resolve
       );
     });

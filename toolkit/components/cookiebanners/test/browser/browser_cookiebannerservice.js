@@ -587,7 +587,7 @@ add_task(async function test_globalRules() {
   );
 
   let clickRules = Services.cookieBanners.getClickRulesForDomain(
-    "thishasnorule.com",
+    Services.io.newURI("http://thishasnorule.com"),
     true
   );
   is(
@@ -627,8 +627,10 @@ add_task(async function test_globalRules() {
   );
 
   is(
-    Services.cookieBanners.getClickRulesForDomain("thishasnorule.com", true)
-      .length,
+    Services.cookieBanners.getClickRulesForDomain(
+      Services.io.newURI("http://thishasnorule.com"),
+      true
+    ).length,
     0,
     "There should be no click rules for thishasnorule.com since global rules are disabled"
   );
