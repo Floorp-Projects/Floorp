@@ -1094,7 +1094,7 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
       YieldHandling yieldHandling, ParseContext::Scope& catchParamScope);
   DebuggerStatementType debuggerStatement();
 
-  DeclarationListNodeType variableStatement(YieldHandling yieldHandling);
+  DeclarationListNodeResult variableStatement(YieldHandling yieldHandling);
 
   LabeledStatementType labeledStatement(YieldHandling yieldHandling);
   Node labeledItem(YieldHandling yieldHandling);
@@ -1102,8 +1102,8 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   TernaryNodeType ifStatement(YieldHandling yieldHandling);
   Node consequentOrAlternative(YieldHandling yieldHandling);
 
-  DeclarationListNodeType lexicalDeclaration(YieldHandling yieldHandling,
-                                             DeclarationKind kind);
+  DeclarationListNodeResult lexicalDeclaration(YieldHandling yieldHandling,
+                                               DeclarationKind kind);
 
   NameNodeType moduleExportName();
 
@@ -1160,10 +1160,10 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   // Otherwise, for for-in/of loops, the next token is the ')' ending the
   // loop-head.  Additionally, the expression that the loop iterates over was
   // parsed into |*forInOrOfExpression|.
-  DeclarationListNodeType declarationList(YieldHandling yieldHandling,
-                                          ParseNodeKind kind,
-                                          ParseNodeKind* forHeadKind = nullptr,
-                                          Node* forInOrOfExpression = nullptr);
+  DeclarationListNodeResult declarationList(
+      YieldHandling yieldHandling, ParseNodeKind kind,
+      ParseNodeKind* forHeadKind = nullptr,
+      Node* forInOrOfExpression = nullptr);
 
   // The items in a declaration list are either patterns or names, with or
   // without initializers.  These two methods parse a single pattern/name and
@@ -1174,25 +1174,28 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   // |*forInOrOfExpression|.  (An "initial declaration" is the first
   // declaration in a declaration list: |a| but not |b| in |var a, b|, |{c}|
   // but not |d| in |let {c} = 3, d|.)
-  Node declarationPattern(DeclarationKind declKind, TokenKind tt,
-                          bool initialDeclaration, YieldHandling yieldHandling,
-                          ParseNodeKind* forHeadKind,
-                          Node* forInOrOfExpression);
-  Node declarationName(DeclarationKind declKind, TokenKind tt,
-                       bool initialDeclaration, YieldHandling yieldHandling,
-                       ParseNodeKind* forHeadKind, Node* forInOrOfExpression);
+  NodeResult declarationPattern(DeclarationKind declKind, TokenKind tt,
+                                bool initialDeclaration,
+                                YieldHandling yieldHandling,
+                                ParseNodeKind* forHeadKind,
+                                Node* forInOrOfExpression);
+  NodeResult declarationName(DeclarationKind declKind, TokenKind tt,
+                             bool initialDeclaration,
+                             YieldHandling yieldHandling,
+                             ParseNodeKind* forHeadKind,
+                             Node* forInOrOfExpression);
 
   // Having parsed a name (not found in a destructuring pattern) declared by
   // a declaration, with the current token being the '=' separating the name
   // from its initializer, parse and bind that initializer -- and possibly
   // consume trailing in/of and subsequent expression, if so directed by
   // |forHeadKind|.
-  AssignmentNodeType initializerInNameDeclaration(NameNodeType binding,
-                                                  DeclarationKind declKind,
-                                                  bool initialDeclaration,
-                                                  YieldHandling yieldHandling,
-                                                  ParseNodeKind* forHeadKind,
-                                                  Node* forInOrOfExpression);
+  AssignmentNodeResult initializerInNameDeclaration(NameNodeType binding,
+                                                    DeclarationKind declKind,
+                                                    bool initialDeclaration,
+                                                    YieldHandling yieldHandling,
+                                                    ParseNodeKind* forHeadKind,
+                                                    Node* forInOrOfExpression);
 
   Node expr(InHandling inHandling, YieldHandling yieldHandling,
             TripledotHandling tripledotHandling,
@@ -1270,11 +1273,11 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
 
   ListNodeType argumentList(YieldHandling yieldHandling, bool* isSpread,
                             PossibleError* possibleError = nullptr);
-  Node destructuringDeclaration(DeclarationKind kind,
-                                YieldHandling yieldHandling, TokenKind tt);
-  Node destructuringDeclarationWithoutYieldOrAwait(DeclarationKind kind,
-                                                   YieldHandling yieldHandling,
-                                                   TokenKind tt);
+  NodeResult destructuringDeclaration(DeclarationKind kind,
+                                      YieldHandling yieldHandling,
+                                      TokenKind tt);
+  NodeResult destructuringDeclarationWithoutYieldOrAwait(
+      DeclarationKind kind, YieldHandling yieldHandling, TokenKind tt);
 
   inline bool checkExportedName(TaggedParserAtomIndex exportName);
   inline bool checkExportedNamesForArrayBinding(ListNodeType array);
@@ -1449,16 +1452,17 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   ListNodeType tupleLiteral(YieldHandling yieldHandling);
 #endif
 
-  BinaryNodeType bindingInitializer(Node lhs, DeclarationKind kind,
-                                    YieldHandling yieldHandling);
-  NameNodeType bindingIdentifier(DeclarationKind kind,
-                                 YieldHandling yieldHandling);
-  Node bindingIdentifierOrPattern(DeclarationKind kind,
-                                  YieldHandling yieldHandling, TokenKind tt);
-  ListNodeType objectBindingPattern(DeclarationKind kind,
-                                    YieldHandling yieldHandling);
-  ListNodeType arrayBindingPattern(DeclarationKind kind,
+  BinaryNodeResult bindingInitializer(Node lhs, DeclarationKind kind,
+                                      YieldHandling yieldHandling);
+  NameNodeResult bindingIdentifier(DeclarationKind kind,
                                    YieldHandling yieldHandling);
+  NodeResult bindingIdentifierOrPattern(DeclarationKind kind,
+                                        YieldHandling yieldHandling,
+                                        TokenKind tt);
+  ListNodeResult objectBindingPattern(DeclarationKind kind,
+                                      YieldHandling yieldHandling);
+  ListNodeResult arrayBindingPattern(DeclarationKind kind,
+                                     YieldHandling yieldHandling);
 
   enum class TargetBehavior {
     PermitAssignmentPattern,
