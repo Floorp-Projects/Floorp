@@ -828,7 +828,6 @@ mochitest-webgl1-core:
                 by-test-platform:
                     android.*: []
                     .*-tsan.*: []
-                    .*-wayland/debug.*: []
                     default: built-projects
     # Bug 1296733: llvmpipe with mesa 9.2.1 lacks thread safety
     allow-software-gl-layers: false
@@ -884,7 +883,6 @@ mochitest-webgl1-ext:
                 by-test-platform:
                     android.*: []
                     .*-tsan.*: []
-                    .*-wayland/debug.*: []
                     default: built-projects
     # Bug 1296733: llvmpipe with mesa 9.2.1 lacks thread safety
     allow-software-gl-layers: false
@@ -986,7 +984,6 @@ mochitest-webgl2-ext:
                 by-test-platform:
                     android.*: []
                     .*-tsan.*: []
-                    .*-wayland/debug.*: []
                     default: built-projects
     chunks: 4
     test-manifest-loader: null  # don't load tests in the taskgraph
