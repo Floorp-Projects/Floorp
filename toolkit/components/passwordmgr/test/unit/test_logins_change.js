@@ -182,7 +182,7 @@ add_task(async function event_data_includes_plaintext_username_and_password() {
  * Tests invalid combinations of httpRealm and formActionOrigin.
  *
  * For an nsILoginInfo to be valid for storage, one of the two properties should
- * be strictly equal to null, and the other must not be null or an empty string.
+ * be strictly equal to null, and the other must not be null.
  *
  * The legacy case of an empty string in formActionOrigin and a null value in
  * httpRealm is also supported for storage at the moment.
@@ -191,12 +191,6 @@ add_task(async function test_invalid_httpRealm_formActionOrigin() {
   // httpRealm === null, formActionOrigin === null
   await checkLoginInvalid(
     TestData.formLogin({ formActionOrigin: null }),
-    /without a httpRealm or formActionOrigin/
-  );
-
-  // httpRealm === "", formActionOrigin === null
-  await checkLoginInvalid(
-    TestData.authLogin({ httpRealm: "" }),
     /without a httpRealm or formActionOrigin/
   );
 
