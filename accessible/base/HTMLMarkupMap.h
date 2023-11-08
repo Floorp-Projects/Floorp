@@ -400,6 +400,13 @@ MARKUPMAP(
         // A <tr> within a row isn't valid.
         return nullptr;
       }
+      const nsRoleMapEntry* roleMapEntry = aria::GetRoleMap(aElement);
+      if (roleMapEntry && roleMapEntry->role != roles::NOTHING &&
+          roleMapEntry->role != roles::ROW) {
+        // There is a valid ARIA role which isn't "row". Don't treat this as an
+        // HTML table row.
+        return nullptr;
+      }
       // Check if this <tr> is within a table. We check the grandparent because
       // it might be inside a rowgroup. We don't specifically check for an HTML
       // table because there are cases where there is a <tr> inside a
