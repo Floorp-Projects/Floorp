@@ -2241,7 +2241,7 @@
     <!-- Clickable text that links to review quality check SuMo page. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
     <string name="review_quality_check_info_learn_more_link" moz:RemovedIn="121" tools:ignore="UnusedResources">Wie %s von Mozilla die Qualität der Bewertungen feststellt</string>
     <!-- Clickable text that links to review quality check SuMo page. First parameter is the Fakespot product name. -->
-    <string name="review_quality_check_info_learn_more_link_2">Wie %s die Qualität der Überprüfung bestimmt</string>
+    <string name="review_quality_check_info_learn_more_link_2">Wie %s die Qualität der Rezensionen bestimmt</string>
     <!-- Text for title of settings section. -->
     <string name="review_quality_check_settings_title">Einstellungen</string>
     <!-- Text for label for switch preference to show recommended products from review quality check settings section. -->
@@ -2331,7 +2331,7 @@
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
     <string name="review_quality_check_contextual_onboarding_privacy_policy" moz:RemovedIn="121" tools:ignore="UnusedResources">Datenschutzerklärung</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
-    <string name="review_quality_check_contextual_onboarding_privacy_policy_2">Datenschutzerklärung</string>
+    <string name="review_quality_check_contextual_onboarding_privacy_policy_2">Datenschutzrichtlinie</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
     <string name="review_quality_check_contextual_onboarding_terms_use" moz:RemovedIn="121" tools:ignore="UnusedResources">Nutzungsbedingungen</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->

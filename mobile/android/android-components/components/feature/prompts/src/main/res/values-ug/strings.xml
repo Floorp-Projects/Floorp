@@ -4,6 +4,8 @@
     <string name="mozac_feature_prompts_ok">ماقۇل</string>
     <!-- Text for confirmation for a negative action in dialog.  -->
     <string name="mozac_feature_prompts_cancel">بىكار قىلىش</string>
+    <!-- When a page shows many dialogs, this checkbox will appear for letting the user choose to prevent showing more dialogs. -->
+    <string name="mozac_feature_prompts_no_more_dialogs">بۇ بەتنىڭ تېخىمۇ كۆپ سۆزلەشكۈ قۇرۇشىنىڭ ئالدىنى ئالىدۇ</string>
     <!-- Text for a positive button, when an user selects a date in date/time picker. -->
     <string name="mozac_feature_prompts_set_date">تەڭشەك</string>
     <!-- Text for a button that clears the selected input in the date/time picker. -->
@@ -16,16 +18,43 @@
     <string name="mozac_feature_prompt_password_hint">پارول</string>
     <!-- Negative confirmation that we should not save the new or updated login -->
     <string name="mozac_feature_prompt_dont_save">ساقلىما</string>
+    <!-- Negative confirmation that we should never save a login for this site -->
+    <string name="mozac_feature_prompt_never_save">ھەرگىز ساقلىما</string>
+    <!-- Negative confirmation that we should not save a credit card for this site -->
+    <string name="mozac_feature_prompt_not_now">ھازىر ئەمەس</string>
+    <!-- Positive confirmation that we should save the new or updated login -->
+    <string name="mozac_feature_prompt_save_confirmation">ساقلا</string>
     <!-- Negative confirmation that we should not save the updated login -->
     <string name="mozac_feature_prompt_dont_update">يېڭىلانمىسۇن</string>
     <!-- Positive confirmation that we should save the updated login -->
     <string name="mozac_feature_prompt_update_confirmation">يېڭىلاش</string>
+    <!-- Error text displayed underneath the password field when it is in an error case -->
+    <string name="mozac_feature_prompt_error_empty_password">ئىم بۆلىكى بوش قالمايدۇ</string>
+    <!-- Error text displayed underneath the password field when it is in an error case -->
+    <string name="mozac_feature_prompt_error_unknown_cause">كىرىش ئۇچۇرىنى ساقلىيالمايدۇ</string>
+    <!-- Prompt message displayed when app detects a user has entered a new username and password and user decides if app should save the new login. -->
+    <string name="mozac_feature_prompt_login_save_headline">بۇ كىرىشنى ساقلامدۇ؟</string>
+    <!-- Prompt message displayed when app detects a user has entered a new password for an existing login and user decides if app should update the login. -->
+    <string name="mozac_feature_prompt_login_update_headline">بۇ كىرىشنى يېڭىلامدۇ؟</string>
+    <!-- Prompt message displayed when app detects a user has entered a username for an existing login without a username and user decides if app should update the login. -->
+    <string name="mozac_feature_prompt_login_add_username_headline">ساقلانغان ئىمغا ئىشلەتكۈچى ئاتىنى قوشامدۇ؟</string>
+    <!-- Text for a label for the field when prompt requesting a text is shown. -->
+    <!-- For more info take a look here https://developer.mozilla.org/en-US/docs/Web/API/Window/prompt -->
+    <string name="mozac_feature_prompts_content_description_input_label">تېكىست كىرگۈزۈش بۆلىكىنىڭ بەلگىسى</string>
+    <!-- Title of a color picker dialog, this text is shown above a color picker. -->
+    <string name="mozac_feature_prompts_choose_a_color">رەڭ تاللىنىدۇ</string>
     <!-- Text of a confirm button in dialog requesting to open a new window. -->
     <string name="mozac_feature_prompts_allow">رۇخسەت قىلىش</string>
     <!-- Text of a negative button in dialog requesting to open a new window. -->
     <string name="mozac_feature_prompts_deny">رەت قىلىش</string>
     <!-- Title of the dialog shown when a user is leaving a website and there is still data not saved yet. -->
     <string name="mozac_feature_prompt_before_unload_dialog_title">جەزملەشتۈرەمسىز؟</string>
+    <!-- Body text of the dialog shown when a user is leaving a website and there is still data not saved yet. -->
+    <string name="mozac_feature_prompt_before_unload_dialog_body">بۇ تور بېكەتتىن ئايرىلامسىز؟ سىز كىرگۈزگەن سانلىق مەلۇماتلار ساقلانماسلىقى مۇمكىن</string>
+    <!-- Stay button of the dialog shown when a user is leaving a website and there is still data not saved yet, this indicates that the user wants to stay in the website. -->
+    <string name="mozac_feature_prompts_before_unload_stay">قېپقال</string>
+    <!-- Leave button of the dialog shown when a user is leaving a website and there is still data not saved yet, this indicates that the user wants to leave in the website. -->
+    <string name="mozac_feature_prompts_before_unload_leave">ئايرىل</string>
     <!-- Title of the month chooser dialog. -->
     <string name="mozac_feature_prompts_set_month">ئاي تاللاڭ</string>
 
@@ -54,7 +83,65 @@
     <!-- December month of the year (short description), used on the month chooser dialog. -->
     <string name="mozac_feature_prompts_dec">دېكابر</string>
 
+    <!-- Title of the time picker dialog. -->
+    <string name="mozac_feature_prompts_set_time">ۋاقىت تەڭشىكى</string>
+    <!-- Option in expanded select login prompt that links to login settings -->
+    <string name="mozac_feature_prompts_manage_logins">كىرىشنى باشقۇرۇش</string>
+    <!-- Content description for expanding the saved logins options in the select login prompt -->
+    <string name="mozac_feature_prompts_expand_logins_content_description">تەۋسىيە كىرىشنى كېڭەيتىدۇ</string>
+    <!-- Content description for collapsing the saved logins options in the select login prompt -->
+    <string name="mozac_feature_prompts_collapse_logins_content_description">تەۋسىيە كىرىشنى يىغ</string>
+    <!-- Header for the select login prompt to allow users to fill a form with a saved login -->
+    <string name="mozac_feature_prompts_saved_logins">تەۋسىيە كىرىش</string>
+
+    <!-- Strings shown in a dialog that appear when users try to refresh a certain kind of webpages -->
+    <string name="mozac_feature_prompt_repost_title">بۇ بېكەتكە سانلىق مەلۇماتنى قايتا يوللامدۇ؟</string>
+    <string name="mozac_feature_prompt_repost_message">بۇ بەت يېڭىلانسا چىقىم قىلىش ياكى ئىنكاسنى ئىككى قېتىم يوللاشقا ئوخشاش يېقىنقى مەشغۇلاتلارنى كۆپەيتىدۇ.</string>
+    <!-- Pressing this will dismiss the dialog and reload the page sending again the previous data -->
+    <string name="mozac_feature_prompt_repost_positive_button_text">سانلىق مەلۇماتنى قايتا يوللايدۇ</string>
     <!-- Pressing this will dismiss the dialog and not refresh the webpage -->
     <string name="mozac_feature_prompt_repost_negative_button_text">بىكار قىلىش</string>
 
-    </resources>
+    <!-- Credit Card Autofill -->
+    <!-- Header for the select credit card prompt to allow users to fill a form with a saved credit card. -->
+    <string name="mozac_feature_prompts_select_credit_card">ئىناۋەتلىك كارتا تاللىنىدۇ</string>
+    <!-- Content description for expanding the select credit card options in the select credit card prompt. -->
+    <string name="mozac_feature_prompts_expand_credit_cards_content_description">تەۋسىيە قىلىنغان ئىناۋەتلىك كارتىنى كېڭەيتىدۇ</string>
+    <!-- Content description for collapsing the select credit card options in the select credit prompt. -->
+    <string name="mozac_feature_prompts_collapse_credit_cards_content_description">تەۋسىيە قىلىنغان ئىناۋەتلىك كارتىنى يىغىدۇ</string>
+    <!-- Option in the expanded select credit card prompt that links to credit cards settings. -->
+    <string name="mozac_feature_prompts_manage_credit_cards">ئىناۋەتلىك كارتا باشقۇرۇش</string>
+    <!-- Text for the title of a save credit card dialog. -->
+    <string name="mozac_feature_prompts_save_credit_card_prompt_title">بۇ كارتىنى بىخەتەر ساقلامدۇ؟</string>
+    <!-- Text for the title of an update credit card dialog. -->
+    <string name="mozac_feature_prompts_update_credit_card_prompt_title">كارتىنىڭ مۇددىتى توشۇش قەرەلىنى يېڭىلامدۇ؟</string>
+    <!-- Subtitle text displayed under the title of the save credit card dialog. -->
+    <string name="mozac_feature_prompts_save_credit_card_prompt_body">كارتا نومۇرى شىفىرلىنىدۇ. بىخەتەرلىك كودى ساقلانمايدۇ.</string>
+
+    <!-- Address Autofill -->
+    <!-- Header for the select address prompt to allow users to fill a form with a saved address. -->
+    <string name="mozac_feature_prompts_select_address_2">ئادرېس تاللىنىدۇ</string>
+
+    <!-- Content description for expanding the select addresses options in the select address prompt. -->
+    <string name="mozac_feature_prompts_expand_address_content_description">تەۋسىيە ئادرېسنى كېڭەيتىدۇ</string>
+    <!-- Content description for collapsing the select address options in the select address prompt. -->
+    <string name="mozac_feature_prompts_collapse_address_content_description">تەۋسىيە ئادرېسنى يىغىدۇ</string>
+    <!-- Text for the manage addresses button. -->
+    <string name="mozac_feature_prompts_manage_address">ئادرېس باشقۇرۇش</string>
+
+    <!-- Federated Credential Management prompts -->
+    <!--Content description for the Account picture in the Select Account FedCM prompt -->
+    <string name="mozac_feature_prompts_account_picture">ھېسابات رەسىمى</string>
+    <!-- Title of the Identity Credential provider dialog choose. -->
+    <string name="mozac_feature_prompts_identity_credentials_choose_provider">تىزىمغا كىرىشنى تەمىنلىگۈچى تاللىنىدۇ</string>
+    <!-- Title of an account picker dialog for identity credentials. -->
+    <string name="mozac_feature_prompts_identity_credentials_choose_account" moz:removedIn="119" tools:ignore="UnusedResources">ھېسابات تاللىنىدۇ</string>
+    <!-- Title of an account picker dialog for identity credentials. The %1$s will be replaced with the name of the provider -->
+    <string name="mozac_feature_prompts_identity_credentials_choose_account_for_provider">%1$s ھېساباتىدا تىزىمغا كىرىدۇ</string>
+    <!-- Title of the Identity Credential privacy policy dialog title. The %1$s will be replaced with the name of the provider. -->
+    <string name="mozac_feature_prompts_identity_credentials_privacy_policy_title">تىزىمغا كىرىشنى تەمىنلىگۈچىگە %1$s نى ئىشلىتىدۇ</string>
+    <!-- Title of the Identity Credential privacy policy dialog description. The %1$s will be replaced with the name of the provider, %2$s will be replaced with the account, %3$s will be replaced with the privacy policy url and  %4$s will be replaced with the terms of service. -->
+    <string name="mozac_feature_prompts_identity_credentials_privacy_policy_description"><![CDATA[بىر %2$s ھېساباتىدا %1$s غا تىزىمغا كىرىشتە ئۇلارنىڭ <a href="%3$s">شەخسىيەت تۈزۈمى</a> ۋە <a href="%4$s">مۇلازىمەت ماددىلىرى</a>غا بويسۇنىدۇ]]></string>
+    <!-- Title of the Identity Credential provider dialog choose. -->
+    <string name="mozac_feature_prompts_identity_credentials_continue">داۋاملاشتۇر</string>
+</resources>

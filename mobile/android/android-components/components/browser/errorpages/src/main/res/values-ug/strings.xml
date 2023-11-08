@@ -40,6 +40,9 @@
     <!-- The text shown inside the advanced options button used to bypass the invalid SSL certificate. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_accept_temporary">خەتەرنى قوبۇل قىلىپ داۋاملاشتۇرۇش</string>
 
+    <!-- The document title and heading of the error page shown when a website uses HSTS. -->
+    <string name="mozac_browser_errorpages_security_bad_hsts_cert_title">بۇ تور بېكەت بىخەتەر ئۇلىنىشنى تەلەپ قىلىدۇ.</string>
+
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website uses HSTS. -->
     <string name="mozac_browser_errorpages_security_bad_hsts_cert_advanced">ئالىي…</string>
 
@@ -70,6 +73,9 @@
     <string name="mozac_browser_errorpages_unknown_socket_type_message"><![CDATA[
  <p>تور بېكەتنىڭ تور تەلىپىگە قايتۇرغان ئىنكاسى مۆلچەردىكىگە ئۇيغۇن ئەمەس، تور كۆرگۈچ داۋاملاشتۇرۇشقا ئامالسىز.</p>
  ]]></string>
+
+    <!-- The document title and heading of the error page shown when the browser gets stuck in an infinite loop when loading a website. -->
+    <string name="mozac_browser_errorpages_redirect_loop_title">بۇ بەت توغرا قايتا نىشانلىيالمىدى</string>
 
     <!-- The document title and heading of the error page shown when a website cannot be loaded because the browser is in offline mode. -->
     <string name="mozac_browser_errorpages_offline_title">تورسىز ھالەت</string>
