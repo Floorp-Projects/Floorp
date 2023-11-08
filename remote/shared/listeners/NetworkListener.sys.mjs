@@ -65,6 +65,10 @@ export class NetworkListener {
       onNetworkEvent: this.#onNetworkEvent,
     });
 
+    // Enable the auth prompt listening to support the auth-required event and
+    // phase.
+    this.#devtoolsNetworkObserver.setAuthPromptListenerEnabled(true);
+
     this.#listening = true;
   }
 
