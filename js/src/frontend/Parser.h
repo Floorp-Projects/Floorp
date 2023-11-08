@@ -551,7 +551,7 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
   NameNodeResult identifierReference(TaggedParserAtomIndex name);
   NameNodeResult privateNameReference(TaggedParserAtomIndex name);
 
-  Node noSubstitutionTaggedTemplate();
+  NodeResult noSubstitutionTaggedTemplate();
 
   inline bool processExport(Node node);
   inline bool processExportFrom(BinaryNodeType node);
@@ -586,10 +586,6 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
   inline void clearAbortedSyntaxParse();
 
  public:
-  PropertyAccessType newPropertyAccess(Node expr, NameNodeType key) {
-    return handler_.newPropertyAccess(expr, key).unwrapOr(null());
-  }
-
   FunctionBox* newFunctionBox(FunctionNodeType funNode,
                               TaggedParserAtomIndex explicitName,
                               FunctionFlags flags, uint32_t toStringStart,
@@ -1219,15 +1215,15 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
                  InvokedPrediction invoked = PredictUninvoked,
                  PrivateNameHandling privateNameHandling =
                      PrivateNameHandling::PrivateNameProhibited);
-  Node optionalExpr(YieldHandling yieldHandling,
-                    TripledotHandling tripledotHandling, TokenKind tt,
-                    PossibleError* possibleError = nullptr,
-                    InvokedPrediction invoked = PredictUninvoked);
-  Node memberExpr(YieldHandling yieldHandling,
-                  TripledotHandling tripledotHandling, TokenKind tt,
-                  bool allowCallSyntax, PossibleError* possibleError,
-                  InvokedPrediction invoked);
-  Node decoratorExpr(YieldHandling yieldHandling, TokenKind tt);
+  NodeResult optionalExpr(YieldHandling yieldHandling,
+                          TripledotHandling tripledotHandling, TokenKind tt,
+                          PossibleError* possibleError = nullptr,
+                          InvokedPrediction invoked = PredictUninvoked);
+  NodeResult memberExpr(YieldHandling yieldHandling,
+                        TripledotHandling tripledotHandling, TokenKind tt,
+                        bool allowCallSyntax, PossibleError* possibleError,
+                        InvokedPrediction invoked);
+  NodeResult decoratorExpr(YieldHandling yieldHandling, TokenKind tt);
   NodeResult primaryExpr(YieldHandling yieldHandling,
                          TripledotHandling tripledotHandling, TokenKind tt,
                          PossibleError* possibleError,
@@ -1271,8 +1267,8 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
 
   Node condition(InHandling inHandling, YieldHandling yieldHandling);
 
-  ListNodeType argumentList(YieldHandling yieldHandling, bool* isSpread,
-                            PossibleError* possibleError = nullptr);
+  ListNodeResult argumentList(YieldHandling yieldHandling, bool* isSpread,
+                              PossibleError* possibleError = nullptr);
   NodeResult destructuringDeclaration(DeclarationKind kind,
                                       YieldHandling yieldHandling,
                                       TokenKind tt);
@@ -1321,7 +1317,7 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
     }
   };
 #ifdef ENABLE_DECORATORS
-  ListNodeType decoratorList(YieldHandling yieldHandling);
+  ListNodeResult decoratorList(YieldHandling yieldHandling);
 #endif
   [[nodiscard]] bool classMember(
       YieldHandling yieldHandling,
@@ -1488,16 +1484,17 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
     NonOptional = 0,
     Optional,
   };
-  Node memberPropertyAccess(
+  NodeResult memberPropertyAccess(
       Node lhs, OptionalKind optionalKind = OptionalKind::NonOptional);
-  Node memberPrivateAccess(
+  NodeResult memberPrivateAccess(
       Node lhs, OptionalKind optionalKind = OptionalKind::NonOptional);
-  Node memberElemAccess(Node lhs, YieldHandling yieldHandling,
+  NodeResult memberElemAccess(
+      Node lhs, YieldHandling yieldHandling,
+      OptionalKind optionalKind = OptionalKind::NonOptional);
+  NodeResult memberSuperCall(Node lhs, YieldHandling yieldHandling);
+  NodeResult memberCall(TokenKind tt, Node lhs, YieldHandling yieldHandling,
+                        PossibleError* possibleError,
                         OptionalKind optionalKind = OptionalKind::NonOptional);
-  Node memberSuperCall(Node lhs, YieldHandling yieldHandling);
-  Node memberCall(TokenKind tt, Node lhs, YieldHandling yieldHandling,
-                  PossibleError* possibleError,
-                  OptionalKind optionalKind = OptionalKind::NonOptional);
 
  protected:
   // Match the current token against the BindingIdentifier production with
