@@ -16,6 +16,9 @@ add_task(async function test_clicking_global_rules() {
     ],
   });
 
+  // Clear the executed records before testing.
+  Services.cookieBanners.removeAllExecutedRecords(false);
+
   info("Clearing existing rules");
   Services.cookieBanners.resetRules(false);
 
@@ -91,6 +94,8 @@ add_task(async function test_clicking_global_rules() {
     false
   );
 
+  Services.cookieBanners.removeAllExecutedRecords(false);
+
   await openPageAndVerify({
     domain: TEST_DOMAIN_B,
     testURL: TEST_PAGE_B,
@@ -105,6 +110,8 @@ add_task(async function test_clicking_global_rules() {
     },
     false
   );
+
+  Services.cookieBanners.removeAllExecutedRecords(false);
 
   info("No global rule should handle TEST_PAGE_C with div#bannerB.");
   await openPageAndVerify({
@@ -128,6 +135,9 @@ add_task(async function test_clicking_global_rules() {
   await SpecialPowers.pushPrefEnv({
     set: [["cookiebanners.bannerClicking.timeoutAfterLoad", 10000]],
   });
+
+  // Clear the executed records before testing.
+  Services.cookieBanners.removeAllExecutedRecords(false);
 
   info("Test delayed banner handling with global rules.");
   let TEST_PAGE =
@@ -163,6 +173,9 @@ add_task(async function test_clicking_global_rules_precedence() {
       ["cookiebanners.service.enableGlobalRules", true],
     ],
   });
+
+  // Clear the executed records before testing.
+  Services.cookieBanners.removeAllExecutedRecords(false);
 
   info("Clearing existing rules");
   Services.cookieBanners.resetRules(false);

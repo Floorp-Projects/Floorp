@@ -26,6 +26,11 @@ add_task(async function test_cookie_banner_service_disabled() {
       ],
     });
 
+    // Clear the executed records before testing.
+    if (serviceMode != Ci.nsICookieBannerService.MODE_DISABLED) {
+      Services.cookieBanners.removeAllExecutedRecords(false);
+    }
+
     await openPageAndVerify({
       win: window,
       domain: TEST_DOMAIN_A,
@@ -49,6 +54,9 @@ add_task(async function test_no_rules() {
       ["cookiebanners.service.mode", Ci.nsICookieBannerService.MODE_REJECT],
     ],
   });
+
+  // Clear the executed records before testing.
+  Services.cookieBanners.removeAllExecutedRecords(false);
 
   info("Clearing existing rules");
   Services.cookieBanners.resetRules(false);
@@ -75,6 +83,9 @@ add_task(async function test_clicking_mode_reject() {
     ],
   });
 
+  // Clear the executed records before testing.
+  Services.cookieBanners.removeAllExecutedRecords(false);
+
   insertTestClickRules();
 
   await openPageAndVerify({
@@ -89,6 +100,8 @@ add_task(async function test_clicking_mode_reject() {
     { success: 1, success_dom_content_loaded: 1 },
     false
   );
+
+  Services.cookieBanners.removeAllExecutedRecords(false);
 
   // No opt out rule for the example.org, the banner shouldn't be clicked.
   await openPageAndVerify({
@@ -121,6 +134,9 @@ add_task(async function test_clicking_mode_reject_or_accept() {
     ],
   });
 
+  // Clear the executed records before testing.
+  Services.cookieBanners.removeAllExecutedRecords(false);
+
   insertTestClickRules();
 
   await testClickResultTelemetry({});
@@ -140,6 +156,8 @@ add_task(async function test_clicking_mode_reject_or_accept() {
     },
     false
   );
+
+  Services.cookieBanners.removeAllExecutedRecords(false);
 
   await openPageAndVerify({
     win: window,
@@ -166,6 +184,9 @@ add_task(async function test_clicking_with_delayed_banner() {
       ["cookiebanners.bannerClicking.timeoutAfterLoad", 10000],
     ],
   });
+
+  // Clear the executed records before testing.
+  Services.cookieBanners.removeAllExecutedRecords(false);
 
   insertTestClickRules();
 
@@ -197,6 +218,9 @@ add_task(async function test_embedded_iframe() {
     ],
   });
 
+  // Clear the executed records before testing.
+  Services.cookieBanners.removeAllExecutedRecords(false);
+
   insertTestClickRules();
 
   await testClickResultTelemetry({});
@@ -227,6 +251,9 @@ add_task(async function test_pbm() {
       ],
     ],
   });
+
+  // Clear the executed records before testing.
+  Services.cookieBanners.removeAllExecutedRecords(false);
 
   insertTestClickRules();
 
@@ -267,6 +294,9 @@ add_task(async function test_pref_pbm_pref() {
     ],
   });
 
+  // Clear the executed records before testing.
+  Services.cookieBanners.removeAllExecutedRecords(false);
+
   insertTestClickRules();
 
   await testClickResultTelemetry({});
@@ -289,6 +319,8 @@ add_task(async function test_pref_pbm_pref() {
     },
     false
   );
+
+  Services.cookieBanners.removeAllExecutedRecords(false);
 
   await openPageAndVerify({
     win: pbmWindow,
@@ -317,6 +349,8 @@ add_task(async function test_pref_pbm_pref() {
     ],
   });
 
+  Services.cookieBanners.removeAllExecutedRecords(false);
+
   await openPageAndVerify({
     domain: TEST_DOMAIN_A,
     testURL: TEST_PAGE_A,
@@ -331,6 +365,8 @@ add_task(async function test_pref_pbm_pref() {
     },
     false
   );
+
+  Services.cookieBanners.removeAllExecutedRecords(false);
 
   await openPageAndVerify({
     win: pbmWindow,
@@ -364,6 +400,8 @@ add_task(async function test_pref_pbm_pref() {
     ],
   });
 
+  Services.cookieBanners.removeAllExecutedRecords(false);
+
   info(
     "The normal browsing window accepts the banner according to the opt-in rule."
   );
@@ -382,6 +420,8 @@ add_task(async function test_pref_pbm_pref() {
     },
     false
   );
+
+  Services.cookieBanners.removeAllExecutedRecords(false);
 
   info(
     "The private browsing window should not perform any click, because there is only an opt-in rule."
@@ -416,6 +456,9 @@ add_task(async function test_embedded_iframe_pbm() {
       ],
     ],
   });
+
+  // Clear the executed records before testing.
+  Services.cookieBanners.removeAllExecutedRecords(false);
 
   insertTestClickRules();
 
