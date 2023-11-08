@@ -31,8 +31,11 @@ inline uint32_t js::ErrorObject::lineNumber() const {
 
 inline JS::ColumnNumberOneOrigin js::ErrorObject::columnNumber() const {
   Value val = getReservedSlot(COLUMNNUMBER_SLOT);
+  // If Error object's `columnNumber` property is modified from JS code,
+  // COLUMNNUMBER_SLOT slot can contain non-int32 value.
+  // Use column number 1 as fallback value for such case.
   return val.isInt32() ? JS::ColumnNumberOneOrigin(val.toInt32())
-                       : JS::ColumnNumberOneOrigin::zero();
+                       : JS::ColumnNumberOneOrigin();
 }
 
 inline JSObject* js::ErrorObject::stack() const {
