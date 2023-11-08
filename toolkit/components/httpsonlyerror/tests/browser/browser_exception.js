@@ -85,27 +85,7 @@ add_task(async function () {
       true
     );
 
-    // click on exception-button and wait for page to load
-    await SpecialPowers.spawn(browser, [], async function () {
-      let openInsecureButton = content.document.getElementById("openInsecure");
-      ok(openInsecureButton != null, "openInsecureButton should exist.");
-      info("Waiting for openInsecureButton to be enabled.");
-      function callback() {
-        if (!openInsecureButton.inert) {
-          info("openInsecureButton was enabled, waiting two frames.");
-          observer.disconnect();
-          content.requestAnimationFrame(() => {
-            content.requestAnimationFrame(() => {
-              info("clicking openInsecureButton.");
-              openInsecureButton.click();
-            });
-          });
-        }
-      }
-      const observer = new content.MutationObserver(callback);
-      observer.observe(openInsecureButton, { attributeFilter: ["inert"] });
-      callback();
-    });
+    await waitForAndClickOpenInsecureButton(browser);
 
     await pageShownPromise;
 
