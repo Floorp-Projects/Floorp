@@ -124,6 +124,14 @@ void CredentialsContainer::EnsureWebAuthnManager() {
   }
 }
 
+already_AddRefed<WebAuthnManager> CredentialsContainer::GetWebAuthnManager() {
+  MOZ_ASSERT(NS_IsMainThread());
+
+  EnsureWebAuthnManager();
+  RefPtr<WebAuthnManager> ref = mManager;
+  return ref.forget();
+}
+
 JSObject* CredentialsContainer::WrapObject(JSContext* aCx,
                                            JS::Handle<JSObject*> aGivenProto) {
   return CredentialsContainer_Binding::Wrap(aCx, this, aGivenProto);

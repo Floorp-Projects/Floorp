@@ -132,18 +132,20 @@ bool WinWebAuthnService::AreWebAuthNApisAvailable() {
          gWinWebauthnGetApiVersionNumber() >= kMinWinWebAuthNApiVersion;
 }
 
-// static
-bool WinWebAuthnService::IsUserVerifyingPlatformAuthenticatorAvailable() {
+NS_IMETHODIMP
+WinWebAuthnService::GetIsUVPAA(bool* aAvailable) {
   nsresult rv = EnsureWinWebAuthnModuleLoaded();
-  NS_ENSURE_SUCCESS(rv, false);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   if (WinWebAuthnService::AreWebAuthNApisAvailable()) {
     BOOL isUVPAA = FALSE;
     StaticAutoReadLock lock(gWinWebAuthnModuleLock);
-    return gWinWebAuthnModule && gWinWebauthnIsUVPAA(&isUVPAA) == S_OK &&
-           isUVPAA == TRUE;
+    *aAvailable = gWinWebAuthnModule && gWinWebauthnIsUVPAA(&isUVPAA) == S_OK &&
+                  isUVPAA == TRUE;
+  } else {
+    *aAvailable = false;
   }
-  return false;
+  return NS_OK;
 }
 
 NS_IMETHODIMP

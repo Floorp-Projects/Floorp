@@ -614,6 +614,17 @@ impl AuthrsService {
             .or(Err(NS_ERROR_FAILURE))
     }
 
+    xpcom_method!(get_is_uvpaa => GetIsUVPAA() -> bool);
+    fn get_is_uvpaa(&self) -> Result<bool, nsresult> {
+        if static_prefs::pref!("security.webauth.webauthn_enable_usbtoken") {
+            Ok(false)
+        } else if static_prefs::pref!("security.webauth.webauthn_enable_softtoken") {
+            Ok(self.test_token_manager.has_platform_authenticator())
+        } else {
+            Err(NS_ERROR_NOT_AVAILABLE)
+        }
+    }
+
     xpcom_method!(make_credential => MakeCredential(aTid: u64, aBrowsingContextId: u64, aArgs: *const nsIWebAuthnRegisterArgs, aPromise: *const nsIWebAuthnRegisterPromise));
     fn make_credential(
         &self,

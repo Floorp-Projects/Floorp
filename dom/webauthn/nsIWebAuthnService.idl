@@ -22,6 +22,9 @@ interface nsICredentialParameters : nsISupports
 [scriptable, uuid(e236a9b4-a26f-11ed-b6cc-07a9834e19b1)]
 interface nsIWebAuthnService : nsISupports
 {
+    // IsUserVerifyingPlatformAuthenticatorAvailable
+    readonly attribute bool isUVPAA;
+
     void makeCredential(
         in uint64_t aTransactionId,
         in uint64_t browsingContextId,

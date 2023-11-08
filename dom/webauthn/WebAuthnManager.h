@@ -95,6 +95,8 @@ class WebAuthnManager final : public WebAuthnManagerBase, public AbortFollower {
   already_AddRefed<Promise> Store(const Credential& aCredential,
                                   ErrorResult& aError);
 
+  already_AddRefed<Promise> IsUVPAA(GlobalObject& aGlobal, ErrorResult& aError);
+
   // WebAuthnManagerBase
 
   void FinishMakeCredential(
