@@ -197,7 +197,7 @@ JS_PUBLIC_API JSString* JS::GetRequestedModuleSpecifier(
 
 JS_PUBLIC_API void JS::GetRequestedModuleSourcePos(
     JSContext* cx, Handle<JSObject*> moduleRecord, uint32_t index,
-    uint32_t* lineNumber, JS::ColumnNumberZeroOrigin* columnNumber) {
+    uint32_t* lineNumber, JS::ColumnNumberOneOrigin* columnNumber) {
   AssertHeapIsIdle();
   CHECK_THREAD(cx);
   cx->check(moduleRecord);
@@ -206,7 +206,8 @@ JS_PUBLIC_API void JS::GetRequestedModuleSourcePos(
 
   auto& module = moduleRecord->as<ModuleObject>();
   *lineNumber = module.requestedModules()[index].lineNumber();
-  *columnNumber = module.requestedModules()[index].columnNumber();
+  *columnNumber = JS::ColumnNumberOneOrigin(
+      module.requestedModules()[index].columnNumber());
 }
 
 JS_PUBLIC_API JSScript* JS::GetModuleScript(JS::HandleObject moduleRecord) {

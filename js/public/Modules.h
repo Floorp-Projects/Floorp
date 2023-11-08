@@ -14,7 +14,7 @@
 #include "jstypes.h"  // JS_PUBLIC_API
 
 #include "js/AllocPolicy.h"     // js::SystemAllocPolicy
-#include "js/ColumnNumber.h"    // JS::ColumnNumberZeroOrigin
+#include "js/ColumnNumber.h"    // JS::ColumnNumberOneOrigin
 #include "js/CompileOptions.h"  // JS::ReadOnlyCompileOptions
 #include "js/RootingAPI.h"      // JS::{Mutable,}Handle
 #include "js/Value.h"           // JS::Value
@@ -269,7 +269,7 @@ extern JS_PUBLIC_API JSString* GetRequestedModuleSpecifier(
  */
 extern JS_PUBLIC_API void GetRequestedModuleSourcePos(
     JSContext* cx, Handle<JSObject*> moduleRecord, uint32_t index,
-    uint32_t* lineNumber, JS::ColumnNumberZeroOrigin* columnNumber);
+    uint32_t* lineNumber, JS::ColumnNumberOneOrigin* columnNumber);
 
 /*
  * Get the top-level script for a module which has not yet been executed.
