@@ -46,7 +46,7 @@ add_task(async function test_escape() {
     matches: [
       makeVisitResult(context, {
         uri: "http://escapeduri/%40",
-        fallbackTitle: "http://escapeduri/%40",
+        fallbackTitle: "http://escapeduri/@",
         iconUri: "page-icon:http://escapeduri/",
         source: UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
         heuristic: true,
