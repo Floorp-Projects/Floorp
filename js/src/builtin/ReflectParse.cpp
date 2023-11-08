@@ -3756,7 +3756,7 @@ static bool reflect_parse(JSContext* cx, uint32_t argc, Value* vp) {
 
   ParseNode* pn;
   if (target == ParseGoal::Script) {
-    pn = parser.parse();
+    pn = parser.parse().unwrapOr(nullptr);
     if (!pn) {
       return false;
     }
@@ -3768,7 +3768,7 @@ static bool reflect_parse(JSContext* cx, uint32_t argc, Value* vp) {
         len, options.lineno,
         JS::LimitedColumnNumberZeroOrigin::fromUnlimited(options.column));
     ModuleSharedContext modulesc(&fc, options, builder, extent);
-    pn = parser.moduleBody(&modulesc);
+    pn = parser.moduleBody(&modulesc).unwrapOr(nullptr);
     if (!pn) {
       return false;
     }

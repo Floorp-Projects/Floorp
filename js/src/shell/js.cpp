@@ -5625,13 +5625,13 @@ static bool DumpAST(JSContext* cx, const JS::ReadOnlyCompileOptions& options,
 
   js::frontend::ParseNode* pn;
   if (goal == frontend::ParseGoal::Script) {
-    pn = parser.parse();
+    pn = parser.parse().unwrapOr(nullptr);
   } else {
     ModuleBuilder builder(&fc, &parser);
 
     SourceExtent extent = SourceExtent::makeGlobalExtent(length);
     ModuleSharedContext modulesc(&fc, options, builder, extent);
-    pn = parser.moduleBody(&modulesc);
+    pn = parser.moduleBody(&modulesc).unwrapOr(nullptr);
   }
 
   if (!pn) {
@@ -5987,7 +5987,7 @@ static bool SyntaxParse(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  bool succeeded = parser.parse();
+  bool succeeded = parser.parse().isOk();
   if (fc.hadErrors()) {
     return false;
   }

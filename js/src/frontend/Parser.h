@@ -951,7 +951,7 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   /*
    * Parse a top-level JS script.
    */
-  ListNodeType parse();
+  ListNodeResult parse();
 
  private:
   /*
@@ -1653,7 +1653,7 @@ class MOZ_STACK_CLASS Parser<SyntaxParseHandler, Unit> final
   BigIntLiteralResult newBigInt();
 
   // Parse a module.
-  ModuleNodeType moduleBody(ModuleSharedContext* modulesc);
+  ModuleNodeResult moduleBody(ModuleSharedContext* modulesc);
 
   inline bool checkLocalExportNames(ListNodeType node);
   inline bool checkExportedName(TaggedParserAtomIndex exportName);
@@ -1803,7 +1803,7 @@ class MOZ_STACK_CLASS Parser<FullParseHandler, Unit> final
   BigIntLiteralResult newBigInt();
 
   // Parse a module.
-  ModuleNodeType moduleBody(ModuleSharedContext* modulesc);
+  ModuleNodeResult moduleBody(ModuleSharedContext* modulesc);
 
   bool checkLocalExportNames(ListNodeType node);
   bool checkExportedName(TaggedParserAtomIndex exportName);
@@ -1835,7 +1835,7 @@ class MOZ_STACK_CLASS Parser<FullParseHandler, Unit> final
   // Eval scripts are distinguished from global scripts in that in ES6, per
   // 18.2.1.1 steps 9 and 10, all eval scripts are executed under a fresh
   // lexical scope.
-  LexicalScopeNodeType evalBody(EvalSharedContext* evalsc);
+  LexicalScopeNodeResult evalBody(EvalSharedContext* evalsc);
 
   // Parse a function, given only its arguments and body. Used for lazily
   // parsed functions.
@@ -1855,7 +1855,7 @@ class MOZ_STACK_CLASS Parser<FullParseHandler, Unit> final
   bool checkStatementsEOF();
 
   // Parse the body of a global script.
-  ListNodeType globalBody(GlobalSharedContext* globalsc);
+  ListNodeResult globalBody(GlobalSharedContext* globalsc);
 
   bool checkLocalExportName(TaggedParserAtomIndex ident, uint32_t offset) {
     return checkLabelOrIdentifierReference(ident, offset, YieldIsName);
