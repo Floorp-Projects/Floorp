@@ -124,6 +124,11 @@ To write a patch
 
 Make the changes you need in the codebase. You can look up UI text in `Searchfox <https://searchfox.org>`__ to find the right file.
 
+.. note::
+    If you are unsure of what changes you need to make, or need help from the mentor of the bug,
+    please don't hesitate to use the needinfo feature ("Request information from") on `Bugzilla <https://bugzilla.mozilla.org/home>`__ to get the attention of your mentor.
+
+
 After making your changes, visualize your changes to ensure you're including all the necessary work:
 
 .. code-block:: shell
