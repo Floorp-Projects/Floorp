@@ -184,8 +184,6 @@ class nsDOMNavigationTiming final : public mozilla::RelativeTimeline {
   void NotifyDOMContentFlushedForRootContentDocument();
   void NotifyDocShellStateChanged(DocShellState aDocShellState);
 
-  void MaybeAddLCPProfilerMarker();
-
   DOMTimeMilliSec TimeStampToDOM(mozilla::TimeStamp aStamp) const;
 
   inline DOMHighResTimeStamp TimeStampToDOMHighRes(

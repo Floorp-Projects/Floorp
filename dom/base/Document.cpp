@@ -16219,8 +16219,6 @@ void Document::ReportLCP() {
 
   mozilla::glean::perf::largest_contentful_paint_from_response_start
       .AccumulateRawDuration(lcpTime - responseStart);
-
-  GetNavigationTiming()->MaybeAddLCPProfilerMarker();
 }
 
 void Document::SendPageUseCounters() {
