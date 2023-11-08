@@ -37,7 +37,11 @@ def run_awsy(command_context, tests, binary=None, **kwargs):
 
     awsy_source_dir = os.path.join(command_context.topsrcdir, "testing", "awsy")
     if not tests:
-        tests = [os.path.join(awsy_source_dir, "awsy", "test_memory_usage.py")]
+        if kwargs["base"]:
+            filename = "test_base_memory_usage.py"
+        else:
+            filename = "test_memory_usage.py"
+        tests = [os.path.join(awsy_source_dir, "awsy", filename)]
 
     args = argparse.Namespace(tests=tests)
 
@@ -281,6 +285,14 @@ def run_awsy(command_context, tests, binary=None, **kwargs):
     dest="tp6",
     default=False,
     help="Use the tp6 pageset during testing.",
+)
+@CommandArgument(
+    "--base",
+    group="AWSY",
+    action="store_true",
+    dest="base",
+    default=False,
+    help="Run base memory usage tests.",
 )
 def run_awsy_test(command_context, tests, **kwargs):
     """mach awsy-test runs the in-tree version of the Are We Slim Yet
