@@ -15,10 +15,11 @@ namespace mozilla::dom {
 void TextEncoder::Encode(JSContext* aCx, JS::Handle<JSObject*> aObj,
                          const nsACString& aUtf8String,
                          JS::MutableHandle<JSObject*> aRetval,
-                         ErrorResult& aRv) {
+                         OOMReporter& aRv) {
   JSAutoRealm ar(aCx, aObj);
-  JSObject* outView = Uint8Array::Create(aCx, aUtf8String, aRv);
-  if (aRv.Failed()) {
+  JSObject* outView = Uint8Array::Create(aCx, aUtf8String);
+  if (!outView) {
+    aRv.ReportOOM();
     return;
   }
 

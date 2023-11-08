@@ -223,11 +223,8 @@ nsUDPMessage::GetOutputStream(nsIOutputStream** aOutputStream) {
 NS_IMETHODIMP
 nsUDPMessage::GetRawData(JSContext* cx, JS::MutableHandle<JS::Value> aRawData) {
   if (!mJsobj) {
-    ErrorResult error;
-    mJsobj = dom::Uint8Array::Create(cx, nullptr, mData, error);
-    if (error.Failed()) {
-      return error.StealNSResult();
-    }
+    mJsobj =
+        dom::Uint8Array::Create(cx, nullptr, mData.Length(), mData.Elements());
     HoldJSObjects(this);
   }
   aRawData.setObject(*mJsobj);

@@ -83,8 +83,10 @@ void MIDIMessageEvent::GetData(JSContext* cx,
                                JS::MutableHandle<JSObject*> aData,
                                ErrorResult& aRv) {
   if (!mData) {
-    mData = Uint8Array::Create(cx, this, mRawData, aRv);
-    if (aRv.Failed()) {
+    mData =
+        Uint8Array::Create(cx, this, mRawData.Length(), mRawData.Elements());
+    if (!mData) {
+      aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
       return;
     }
     mRawData.Clear();
