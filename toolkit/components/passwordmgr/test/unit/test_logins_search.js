@@ -94,11 +94,11 @@ add_setup(async () => {
  */
 add_task(function test_search_all_basic() {
   // Find all logins, using no filters in the search functions.
-  checkAllSearches({}, 27);
+  checkAllSearches({}, 28);
 
   // Find all form logins, then all authentication logins.
   checkAllSearches({ httpRealm: null }, 17);
-  checkAllSearches({ formActionOrigin: null }, 10);
+  checkAllSearches({ formActionOrigin: null }, 11);
 
   // Find all form logins on one host, then all authentication logins.
   checkAllSearches({ origin: "http://www4.example.com", httpRealm: null }, 3);
@@ -169,7 +169,7 @@ add_task(function test_searchLogins() {
   checkSearchLogins({ passwordField: "form_field_password" }, 13);
 
   // Find all logins with an empty usernameField, including for authentication.
-  checkSearchLogins({ usernameField: "" }, 15);
+  checkSearchLogins({ usernameField: "" }, 16);
 
   // Find form logins with an empty usernameField.
   checkSearchLogins({ httpRealm: null, usernameField: "" }, 5);

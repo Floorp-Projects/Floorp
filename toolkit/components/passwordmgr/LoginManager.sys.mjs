@@ -251,7 +251,7 @@ LoginManager.prototype = {
       throw new Error("Can't add a login with a null or empty password.");
     }
 
-    // Duplicated from toolkit/components/passwordmgr/LoginHelper.jsm
+    // Duplicated from toolkit/components/passwordmgr/LoginHelper.sys.jms
     // TODO: move all validations into this function.
     //
     // In theory these nulls should just be rolled up into the encrypted
@@ -269,7 +269,7 @@ LoginManager.prototype = {
           "Can't add a login with both a httpRealm and formActionOrigin."
         );
       }
-    } else if (login.httpRealm) {
+    } else if (login.httpRealm || login.httpRealm == "") {
       // We have a HTTP realm. Can't have a form submit URL.
       if (login.formActionOrigin != null) {
         throw new Error(
