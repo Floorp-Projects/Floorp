@@ -16,24 +16,101 @@ ChromeUtils.defineESModuleGetters(this, {
 
 const BASE_CONFIG = [
   {
-    webExtension: { id: "engine@search.mozilla.org" },
+    webExtension: {
+      id: "engine@search.mozilla.org",
+      name: "Test search engine",
+      search_url: "https://www.google.com/search",
+      params: [
+        {
+          name: "q",
+          value: "{searchTerms}",
+        },
+        {
+          name: "channel",
+          condition: "purpose",
+          purpose: "contextmenu",
+          value: "rcs",
+        },
+        {
+          name: "channel",
+          condition: "purpose",
+          purpose: "keyword",
+          value: "fflb",
+        },
+      ],
+      suggest_url:
+        "https://suggestqueries.google.com/complete/search?output=firefox&client=firefox&hl={moz:locale}&q={searchTerms}",
+    },
     appliesTo: [{ included: { everywhere: true } }],
     default: "yes",
   },
 ];
 const MAIN_CONFIG = [
   {
-    webExtension: { id: "engine@search.mozilla.org" },
+    webExtension: {
+      id: "engine@search.mozilla.org",
+      name: "Test search engine",
+      search_url: "https://www.google.com/search",
+      params: [
+        {
+          name: "q",
+          value: "{searchTerms}",
+        },
+        {
+          name: "channel",
+          condition: "purpose",
+          purpose: "contextmenu",
+          value: "rcs",
+        },
+        {
+          name: "channel",
+          condition: "purpose",
+          purpose: "keyword",
+          value: "fflb",
+        },
+      ],
+      suggest_url:
+        "https://suggestqueries.google.com/complete/search?output=firefox&client=firefox&hl={moz:locale}&q={searchTerms}",
+    },
     appliesTo: [{ included: { everywhere: true } }],
     default: "no",
   },
   {
-    webExtension: { id: "engine-chromeicon@search.mozilla.org" },
+    webExtension: {
+      id: "engine-chromeicon@search.mozilla.org",
+
+      name: "engine-chromeicon",
+      search_url: "https://www.google.com/search",
+      params: [
+        {
+          name: "q",
+          value: "{searchTerms}",
+        },
+      ],
+    },
     appliesTo: [{ included: { everywhere: true } }],
     default: "yes-if-no-other",
   },
   {
-    webExtension: { id: "engine-fr@search.mozilla.org" },
+    webExtension: {
+      id: "engine-fr@search.mozilla.org",
+      name: "Test search engine (fr)",
+      search_url: "https://www.google.fr/search",
+      params: [
+        {
+          name: "q",
+          value: "{searchTerms}",
+        },
+        {
+          name: "ie",
+          value: "iso-8859-1",
+        },
+        {
+          name: "oe",
+          value: "iso-8859-1",
+        },
+      ],
+    },
     appliesTo: [
       { included: { everywhere: true } },
       {
@@ -45,7 +122,27 @@ const MAIN_CONFIG = [
     default: "no",
   },
   {
-    webExtension: { id: "engine-pref@search.mozilla.org" },
+    webExtension: {
+      id: "engine-pref@search.mozilla.org",
+      name: "engine-pref",
+      search_url: "https://www.google.com/search",
+      params: [
+        {
+          name: "q",
+          value: "{searchTerms}",
+        },
+        {
+          name: "code",
+          condition: "pref",
+          pref: "code",
+        },
+        {
+          name: "test",
+          condition: "pref",
+          pref: "test",
+        },
+      ],
+    },
     appliesTo: [
       { included: { everywhere: true } },
       { included: { regions: ["DE"] }, default: "yes" },
@@ -53,7 +150,11 @@ const MAIN_CONFIG = [
     default: "no",
   },
   {
-    webExtension: { id: "engine2@search.mozilla.org" },
+    webExtension: {
+      id: "engine2@search.mozilla.org",
+      name: "A second test engine",
+      search_url: "https://duckduckgo.com/?q={searchTerms}",
+    },
     appliesTo: [
       { included: { everywhere: true } },
       { included: { everywhere: true }, experiment: "test1", default: "yes" },
@@ -65,31 +166,42 @@ const MAIN_CONFIG = [
 const testSearchEngine = {
   id: "engine",
   name: "Test search engine",
-  loadPath: "[addon]engine@search.mozilla.org",
+  loadPath: SearchUtils.newSearchConfigEnabled
+    ? "[app]engine@search.mozilla.org"
+    : "[addon]engine@search.mozilla.org",
   submissionUrl: "https://www.google.com/search?q=",
 };
 const testChromeIconEngine = {
   id: "engine-chromeicon",
   name: "engine-chromeicon",
-  loadPath: "[addon]engine-chromeicon@search.mozilla.org",
+  loadPath: SearchUtils.newSearchConfigEnabled
+    ? "[app]engine-chromeicon@search.mozilla.org"
+    : "[addon]engine-chromeicon@search.mozilla.org",
+
   submissionUrl: "https://www.google.com/search?q=",
 };
 const testFrEngine = {
   id: "engine-fr",
   name: "Test search engine (fr)",
-  loadPath: "[addon]engine-fr@search.mozilla.org",
+  loadPath: SearchUtils.newSearchConfigEnabled
+    ? "[app]engine-fr@search.mozilla.org"
+    : "[addon]engine-fr@search.mozilla.org",
   submissionUrl: "https://www.google.fr/search?q=&ie=iso-8859-1&oe=iso-8859-1",
 };
 const testPrefEngine = {
   id: "engine-pref",
   name: "engine-pref",
-  loadPath: "[addon]engine-pref@search.mozilla.org",
+  loadPath: SearchUtils.newSearchConfigEnabled
+    ? "[app]engine-pref@search.mozilla.org"
+    : "[addon]engine-pref@search.mozilla.org",
   submissionUrl: "https://www.google.com/search?q=",
 };
 const testEngine2 = {
   id: "engine2",
   name: "A second test engine",
-  loadPath: "[addon]engine2@search.mozilla.org",
+  loadPath: SearchUtils.newSearchConfigEnabled
+    ? "[app]engine2@search.mozilla.org"
+    : "[addon]engine2@search.mozilla.org",
   submissionUrl: "https://duckduckgo.com/?q=",
 };
 

@@ -10,6 +10,28 @@ const CONFIG = [
   {
     webExtension: {
       id: "engine@search.mozilla.org",
+      name: "Test search engine",
+      search_url: "https://www.google.com/search",
+      params: [
+        {
+          name: "q",
+          value: "{searchTerms}",
+        },
+        {
+          name: "channel",
+          condition: "purpose",
+          purpose: "contextmenu",
+          value: "rcs",
+        },
+        {
+          name: "channel",
+          condition: "purpose",
+          purpose: "keyword",
+          value: "fflb",
+        },
+      ],
+      suggest_url:
+        "https://suggestqueries.google.com/complete/search?output=firefox&client=firefox&hl={moz:locale}&q={searchTerms}",
     },
     orderHint: 30,
     appliesTo: [
@@ -24,6 +46,24 @@ const CONFIG = [
   {
     webExtension: {
       id: "engine-pref@search.mozilla.org",
+      name: "engine-pref",
+      search_url: "https://www.google.com/search",
+      params: [
+        {
+          name: "q",
+          value: "{searchTerms}",
+        },
+        {
+          name: "code",
+          condition: "pref",
+          pref: "code",
+        },
+        {
+          name: "test",
+          condition: "pref",
+          pref: "test",
+        },
+      ],
     },
     orderHint: 20,
     appliesTo: [

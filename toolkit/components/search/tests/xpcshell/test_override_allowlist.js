@@ -375,7 +375,9 @@ for (const test of tests) {
         {
           defaultSearchEngine: "simple-addon",
           defaultSearchEngineData: {
-            loadPath: "[addon]simple@search.mozilla.org",
+            loadPath: SearchUtils.newSearchConfigEnabled
+              ? "[app]simple@search.mozilla.org"
+              : "[addon]simple@search.mozilla.org",
             name: "Simple Engine",
             origin: "default",
             submissionURL: test.expected.searchUrl.replace("{searchTerms}", ""),

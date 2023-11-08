@@ -2,7 +2,46 @@
   "data": [
     {
       "webExtension": {
-        "id": "plainengine@search.mozilla.org"
+        "id": "plainengine@search.mozilla.org",
+        "name": "Plain",
+        "search_url": "https://duckduckgo.com/",
+        "params": [
+          {
+            "name": "q",
+            "value": "{searchTerms}"
+          },
+          {
+            "name": "t",
+            "condition": "purpose",
+            "purpose": "contextmenu",
+            "value": "ffcm"
+          },
+          {
+            "name": "t",
+            "condition": "purpose",
+            "purpose": "keyword",
+            "value": "ffab"
+          },
+          {
+            "name": "t",
+            "condition": "purpose",
+            "purpose": "searchbar",
+            "value": "ffsb"
+          },
+          {
+            "name": "t",
+            "condition": "purpose",
+            "purpose": "homepage",
+            "value": "ffhp"
+          },
+          {
+            "name": "t",
+            "condition": "purpose",
+            "purpose": "newtab",
+            "value": "ffnt"
+          }
+        ],
+        "suggest_url": "https://ac.duckduckgo.com/ac/q={searchTerms}&type=list"
       },
       "orderHint": 10000,
       "sendAttributionRequest": true,
@@ -15,7 +54,28 @@
     },
     {
       "webExtension": {
-        "id": "special-engine@search.mozilla.org"
+        "id": "special-engine@search.mozilla.org",
+        "name": "Special",
+        "search_url": "https://www.google.com/search",
+        "params": [
+          {
+            "name": "q",
+            "value": "{searchTerms}"
+          },
+          {
+            "name": "client",
+            "condition": "purpose",
+            "purpose": "keyword",
+            "value": "firefox-b-1-ab"
+          },
+          {
+            "name": "client",
+            "condition": "purpose",
+            "purpose": "searchbar",
+            "value": "firefox-b-1"
+          }
+        ],
+        "suggest_url": "https://www.google.com/complete/search?client=firefox&q={searchTerms}"
       },
       "orderHint": 7000,
       "appliesTo": [
@@ -32,25 +92,37 @@
     {
       "webExtension": {
         "id": "multilocale@search.mozilla.org",
-        "locales": ["an"]
+        "default_locale": "af",
+        "searchProvider": {
+          "an": {
+            "name": "Multilocale AN",
+            "description": "A enciclopedia Libre",
+            "search_url": "https://an.wikipedia.org/wiki/Especial:Mirar",
+            "suggest_url": "https://an.wikipedia.org/w/api.php"
+          },
+          "af": {
+            "name": "Multilocale AF",
+            "description": "Wikipedia, die vrye ensiklopedie",
+            "search_url": "https://af.wikipedia.org/wiki/Spesiaal:Soek",
+            "suggest_url": "https://af.wikipedia.org/w/api.php"
+          }
+        }
       },
       "orderHint": 6000,
       "appliesTo": [
         {
           "included": { "regions": ["an"] },
+          "webExtension": {
+            "locales": ["an"]
+          },
           "default": "yes"
-        }
-      ]
-    },
-    {
-      "webExtension": {
-        "id": "multilocale@search.mozilla.org",
-        "locales": ["af", "an"]
-      },
-      "orderHint": 6500,
-      "appliesTo": [
+        },
         {
-          "included": { "regions": ["af"] }
+          "included": { "regions": ["af"] },
+          "webExtension": {
+            "locales": ["af", "an"]
+          },
+          "orderHint": 6500
         }
       ]
     }

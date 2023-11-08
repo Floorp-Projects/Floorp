@@ -90,7 +90,7 @@ const expectedDefaultEngine = {
 const engineSelector = new SearchEngineSelectorOld();
 
 add_task(async function test_engine_selector_channels() {
-  const settings = await RemoteSettings(SearchUtils.SETTINGS_KEY);
+  const settings = await RemoteSettings(SearchUtils.OLD_SETTINGS_KEY);
   sinon.stub(settings, "get").returns(TEST_CONFIG);
 
   for (let [channel, expected] of Object.entries(expectedEnginesPerChannel)) {

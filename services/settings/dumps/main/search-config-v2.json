@@ -1866,18 +1866,16 @@
           "us": {
             "keyword": "@amazon",
             "name": "Amazon.com",
-            "search_url": "https://www.amazon.com/exec/obidos/external-search/",
-            "search_form": "https://www.amazon.com/exec/obidos/external-search/",
-            "suggest_url": "https://completion.amazon.com/search/complete?q={searchTerms}&search-alias=aps&mkt=1",
-            "search_url_get_params": "field-keywords={searchTerms}&ie={inputEncoding}&mode=blended&tag=moz-us-20&sourceid=Mozilla-search"
+            "search_url": "https://www.amazon.com/exec/s",
+            "search_form": "https://www.amazon.com/",
+            "search_url_get_params": "k={searchTerms}"
           },
           "en": {
             "keyword": "@amazon",
             "name": "Amazon.com",
-            "search_url": "https://www.amazon.com/exec/obidos/external-search/",
-            "search_form": "https://www.amazon.com/exec/obidos/external-search/",
-            "suggest_url": "https://completion.amazon.com/search/complete?q={searchTerms}&search-alias=aps&mkt=1",
-            "search_url_get_params": "field-keywords={searchTerms}&ie={inputEncoding}&mode=blended&tag=mozilla-20&sourceid=Mozilla-search"
+            "search_url": "https://www.amazon.com/exec/s",
+            "search_form": "https://www.amazon.com/",
+            "search_url_get_params": "k={searchTerms}"
           }
         }
       },
@@ -1978,101 +1976,79 @@
           "sweden": {
             "keyword": "@amazon",
             "name": "Amazon.se",
-            "search_url": "https://www.amazon.se/exec/obidos/external-search/",
+            "search_url": "https://www.amazon.se/s",
             "search_form": "https://www.amazon.se/",
-            "search_url_get_params": "field-keywords={searchTerms}&ie={inputEncoding}&mode=blended&tag=mozillasweede-21&sourceid=Mozilla-search",
-            "suggest_url": "https://completion.amazon.se/search/complete",
-            "suggest_url_get_params": "q={searchTerms}&search-alias=aps&mkt=704403121"
+            "search_url_get_params": "k={searchTerms}"
           },
           "france": {
             "keyword": "@amazon",
             "name": "Amazon.fr",
-            "search_url": "https://www.amazon.fr/exec/obidos/external-search/",
+            "search_url": "https://www.amazon.fr/exec/s",
             "search_form": "https://www.amazon.fr/",
-            "search_url_get_params": "field-keywords={searchTerms}&ie={inputEncoding}&mode=blended&tag=firefox-fr-21&sourceid=Mozilla-search",
-            "suggest_url": "https://completion.amazon.fr/search/complete",
-            "suggest_url_get_params": "q={searchTerms}&search-alias=aps&mkt=5"
+            "search_url_get_params": "k={searchTerms}"
           },
           "in": {
             "keyword": "@amazon",
             "name": "Amazon.in",
-            "search_url": "https://www.amazon.in/exec/obidos/external-search/",
+            "search_url": "https://www.amazon.in/s",
             "search_form": "https://www.amazon.in/",
-            "search_url_get_params": "field-keywords={searchTerms}&ie={inputEncoding}&mode=blended&sourceid=Mozilla-search",
-            "suggest_url": "https://completion.amazon.in/search/complete",
-            "suggest_url_get_params": "q={searchTerms}&search-alias=aps&mkt=44571"
+            "search_url_get_params": "k={searchTerms}"
           },
           "spain": {
             "keyword": "@amazon",
             "name": "Amazon.es",
-            "search_url": "https://www.amazon.es/exec/obidos/external-search/",
+            "search_url": "https://www.amazon.es/s",
             "search_form": "https://www.amazon.es/",
-            "search_url_get_params": "field-keywords={searchTerms}&ie={inputEncoding}&mode=blended&tag=mozillaspain-21&sourceid=Mozilla-search",
-            "suggest_url": "https://completion.amazon.es/search/complete",
-            "suggest_url_get_params": "q={searchTerms}&search-alias=aps&mkt=44551"
+            "search_url_get_params": "k={searchTerms}"
           },
           "it": {
             "keyword": "@amazon",
             "name": "Amazon.it",
-            "search_url": "https://www.amazon.it/exec/obidos/external-search/",
+            "search_url": "https://www.amazon.it/s",
             "search_form": "https://www.amazon.it/",
-            "search_url_get_params": "field-keywords={searchTerms}&ie={inputEncoding}&mode=blended&tag=firefoxit-21&sourceid=Mozilla-search",
-            "suggest_url": "https://completion.amazon.it/search/complete",
-            "suggest_url_get_params": "q={searchTerms}&search-alias=aps&mkt=35691"
+            "search_url_get_params": "k={searchTerms}"
           },
           "ca": {
             "keyword": "@amazon",
             "name": "Amazon.ca",
-            "search_url": "https://www.amazon.ca/exec/obidos/external-search/",
-            "search_form": "https://www.amazon.ca/exec/obidos/external-search/",
-            "search_url_get_params": "field-keywords={searchTerms}&ie={inputEncoding}&mode=blended&tag=mozillacanada-20&sourceid=Mozilla-search",
-            "suggest_url": "https://completion.amazon.ca/search/complete",
-            "suggest_url_get_params": "q={searchTerms}&search-alias=aps&mkt=7"
+            "search_url": "https://www.amazon.ca/s",
+            "search_form": "https://www.amazon.ca/",
+            "search_url_get_params": "k={searchTerms}"
           },
           "en-GB": {
             "keyword": "@amazon",
             "name": "Amazon.co.uk",
-            "search_url": "https://www.amazon.co.uk/exec/obidos/external-search/",
+            "search_url": "https://www.amazon.co.uk/s",
             "search_form": "https://www.amazon.co.uk/",
-            "search_url_get_params": "field-keywords={searchTerms}&ie={inputEncoding}&mode=blended&tag=firefox-uk-21&sourceid=Mozilla-search",
-            "suggest_url": "https://completion.amazon.co.uk/search/complete",
-            "suggest_url_get_params": "q={searchTerms}&search-alias=aps&mkt=3"
+            "search_url_get_params": "k={searchTerms}"
           },
           "au": {
             "keyword": "@amazon",
             "name": "Amazon.com.au",
-            "search_url": "https://www.amazon.com.au/exec/obidos/external-search/",
-            "search_form": "https://www.amazon.com.au/exec/obidos/external-search/",
-            "search_url_get_params": "field-keywords={searchTerms}&ie={inputEncoding}&mode=blended",
-            "suggest_url": "https://completion.amazon.com.au/search/complete",
-            "suggest_url_get_params": "q={searchTerms}&search-alias=aps&mkt=111172"
+            "search_url": "https://www.amazon.com.au/s",
+            "search_form": "https://www.amazon.com.au/",
+            "search_url_get_params": "k={searchTerms}"
           },
           "nl": {
             "keyword": "@amazon",
             "name": "Amazon.nl",
-            "search_url": "https://www.amazon.nl/gp/search",
+            "search_url": "https://www.amazon.nl/s",
             "search_form": "https://www.amazon.nl/",
-            "search_url_get_params": "ie={inputEncoding}&tag=mozillanether-21&index=aps&keywords={searchTerms}",
-            "suggest_url": "https://completion.amazon.nl/search/complete",
-            "suggest_url_get_params": "q={searchTerms}&search-alias=aps&mkt=328451"
+            "search_url_get_params": "k={searchTerms}"
           },
           "de": {
             "keyword": "@amazon",
             "name": "Amazon.de",
-            "search_url": "https://www.amazon.de/exec/obidos/external-search/",
+            "search_url": "https://www.amazon.de/s",
             "search_form": "https://www.amazon.de/",
-            "search_url_get_params": "field-keywords={searchTerms}&ie={inputEncoding}&mode=blended&tag=firefox-de-21&sourceid=Mozilla-search",
-            "suggest_url": "https://completion.amazon.de/search/complete",
-            "suggest_url_get_params": "q={searchTerms}&search-alias=aps&mkt=4"
+            "search_url_get_params": "k={searchTerms}"
           },
           "jp": {
             "keyword": "@amazon",
             "name": "Amazon.co.jp",
             "search_url": "https://www.amazon.co.jp/exec/obidos/external-search/",
             "search_form": "https://www.amazon.co.jp/",
-            "search_url_get_params": "field-keywords={searchTerms}&mode=blended&tag=mozillajapan-fx-22&sourceid=Mozilla-search",
-            "suggest_url": "https://completion.amazon.co.jp/search/complete",
-            "suggest_url_get_params": "q={searchTerms}&search-alias=aps&mkt=6"
+            "search_url_get_params": "field-keywords={searchTerms}&mode=blended&tag=mozillajapan-fx-22&sourceid=Mozilla-search"
           }
         }
       },
@@ -2098,16 +2074,16 @@
           "default": {
             "keyword": "@amazon",
             "name": "亚马逊",
-            "search_url": "https://www.amazon.cn/mn/searchApp",
+            "search_url": "https://www.amazon.cn/s",
             "search_form": "https://www.amazon.cn/",
-            "search_url_get_params": "ix=sunray&pageletid=headsearch&searchType=&Go.x=0&Go.y=0&bestSaleNum=0&keywords={searchTerms}"
+            "search_url_get_params": "k={searchTerms}"
           },
           "mozillaonline": {
             "keyword": "@amazon",
             "name": "亚马逊",
-            "search_url": "https://www.amazon.cn/gp/search",
+            "search_url": "https://www.amazon.cn/gp/s",
             "search_form": "https://www.amazon.cn/",
-            "search_url_get_params": "ie=UTF8&camp=536&creative=3200&index=aps&linkCode=ur2&tag=mozilla&keywords={searchTerms}"
+            "search_url_get_params": "k={searchTerms}"
           }
         }
       },

@@ -33,6 +33,9 @@ export class AppProvidedSearchEngine extends SearchEngine {
       id,
     });
 
+    this._extensionID = extensionId;
+    this._locale = details?.locale;
+
     if (details) {
       if (!details.config.webExtension.id) {
         throw Components.Exception(
@@ -58,6 +61,8 @@ export class AppProvidedSearchEngine extends SearchEngine {
    *   The search engine configuration for application provided engines.
    */
   update({ locale, configuration } = {}) {
+    this._urls = [];
+    this._iconMapObj = null;
     this.#init(locale, configuration);
     lazy.SearchUtils.notifyAction(this, lazy.SearchUtils.MODIFIED_TYPE.CHANGED);
   }
@@ -68,18 +73,33 @@ export class AppProvidedSearchEngine extends SearchEngine {
    *
    * @param {object} options
    *   The options object.
-   * @param {object} [options.config]
+   * @param {object} [options.configuration]
    *   The search engine configuration for application provided engines.
    * @param {string} [options.locale]
    *   The locale to use for getting details of the search engine.
    * @returns {boolean}
    *   Returns true if the engine was updated, false otherwise.
    */
-  async updateIfNoNameChange({ config, locale }) {
-    if (this.name != config.search_provider.name.trim()) {
+  async updateIfNoNameChange({ configuration, locale }) {
+    let newName;
+    if (locale != "default") {
+      newName = configuration.webExtension.searchProvider[locale].name;
+    } else if (
+      locale == "default" &&
+      configuration.webExtension.default_locale
+    ) {
+      newName =
+        configuration.webExtension.searchProvider[
+          configuration.webExtension.default_locale
+        ].name;
+    } else {
+      newName = configuration.webExtension.name;
+    }
+
+    if (this.name != newName.trim()) {
       return false;
     }
-    this.update(locale, config);
+    this.update({ locale, configuration });
     return true;
   }
 
@@ -111,7 +131,8 @@ export class AppProvidedSearchEngine extends SearchEngine {
 
   get isGeneralPurposeEngine() {
     return !!(
-      this.id && lazy.SearchUtils.GENERAL_SEARCH_ENGINE_IDS.has(this.id)
+      this._extensionID &&
+      lazy.SearchUtils.GENERAL_SEARCH_ENGINE_IDS.has(this._extensionID)
     );
   }
 

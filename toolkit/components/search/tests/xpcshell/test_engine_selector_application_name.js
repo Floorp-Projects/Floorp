@@ -101,6 +101,7 @@ const tests = [
 ];
 
 add_setup(async function () {
+  Services.prefs.setBoolPref("browser.search.newSearchConfig.enabled", false);
   await SearchTestUtils.useTestEngines("data", null, CONFIG);
   await AddonTestUtils.promiseStartupManager();
 

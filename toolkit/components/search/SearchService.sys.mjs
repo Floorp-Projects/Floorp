@@ -1650,28 +1650,33 @@ export class SearchService {
       this.#addEngineToStore(engine);
     }
 
-    if (!lazy.SearchUtils.newSearchConfigEnabled) {
-      lazy.logConsole.debug(
-        "#loadEngines: loading",
-        this.#startupExtensions.size,
-        "engines reported by AddonManager startup"
-      );
-      for (let extension of this.#startupExtensions) {
-        try {
-          await this.#installExtensionEngine(
-            extension,
-            [lazy.SearchUtils.DEFAULT_TAG],
-            true
-          );
-        } catch (ex) {
-          lazy.logConsole.error(
-            `#installExtensionEngine failed for ${extension.id}`,
-            ex
-          );
-        }
-      }
-      this.#startupExtensions.clear();
+    if (
+      this.#startupExtensions.size &&
+      lazy.SearchUtils.newSearchConfigEnabled
+    ) {
+      await lazy.AddonManager.readyPromise;
     }
+
+    lazy.logConsole.debug(
+      "#loadEngines: loading",
+      this.#startupExtensions.size,
+      "engines reported by AddonManager startup"
+    );
+    for (let extension of this.#startupExtensions) {
+      try {
+        await this.#installExtensionEngine(
+          extension,
+          [lazy.SearchUtils.DEFAULT_TAG],
+          true
+        );
+      } catch (ex) {
+        lazy.logConsole.error(
+          `#installExtensionEngine failed for ${extension.id}`,
+          ex
+        );
+      }
+    }
+    this.#startupExtensions.clear();
 
     this.#loadEnginesFromPolicies();
 

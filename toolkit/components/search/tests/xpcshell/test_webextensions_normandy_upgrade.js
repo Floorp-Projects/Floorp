@@ -34,60 +34,73 @@ async function getEngineNames() {
   return engines.map(engine => engine._name);
 }
 
-add_setup(async function () {
-  await SearchTestUtils.useTestEngines("test-extensions", null, CONFIG_DEFAULT);
-  await AddonTestUtils.promiseStartupManager();
-  registerCleanupFunction(AddonTestUtils.promiseShutdownManager);
-  SearchTestUtils.useMockIdleService();
-  await Services.search.init();
-});
+add_setup(
+  { skip_if: () => SearchUtils.newSearchConfigEnabled },
+  async function () {
+    await SearchTestUtils.useTestEngines(
+      "test-extensions",
+      null,
+      CONFIG_DEFAULT
+    );
+    await AddonTestUtils.promiseStartupManager();
+    registerCleanupFunction(AddonTestUtils.promiseShutdownManager);
+    SearchTestUtils.useMockIdleService();
+    await Services.search.init();
+  }
+);
 
 // Test the situation where we receive an updated configuration
 // that references an engine that doesnt exist locally as it
 // will be installed by Normandy.
-add_task(async function test_config_before_normandy() {
-  // Ensure initial default setup.
-  await SearchTestUtils.updateRemoteSettingsConfig(CONFIG_DEFAULT);
-  await restart();
-  Assert.deepEqual(await getEngineNames(), ["Plain"]);
-  // Updated configuration references nonexistant engine.
-  await SearchTestUtils.updateRemoteSettingsConfig(CONFIG_UPDATED);
-  Assert.deepEqual(
-    await getEngineNames(),
-    ["Plain"],
-    "Updated engine hasnt been installed yet"
-  );
-  // Normandy then installs the engine.
-  let addon = await SearchTestUtils.installSystemSearchExtension();
-  Assert.deepEqual(
-    await getEngineNames(),
-    ["Plain", "Example"],
-    "Both engines are now enabled"
-  );
-  await addon.unload();
-});
+add_task(
+  { skip_if: () => SearchUtils.newSearchConfigEnabled },
+  async function test_config_before_normandy() {
+    // Ensure initial default setup.
+    await SearchTestUtils.updateRemoteSettingsConfig(CONFIG_DEFAULT);
+    await restart();
+    Assert.deepEqual(await getEngineNames(), ["Plain"]);
+    // Updated configuration references nonexistant engine.
+    await SearchTestUtils.updateRemoteSettingsConfig(CONFIG_UPDATED);
+    Assert.deepEqual(
+      await getEngineNames(),
+      ["Plain"],
+      "Updated engine hasnt been installed yet"
+    );
+    // Normandy then installs the engine.
+    let addon = await SearchTestUtils.installSystemSearchExtension();
+    Assert.deepEqual(
+      await getEngineNames(),
+      ["Plain", "Example"],
+      "Both engines are now enabled"
+    );
+    await addon.unload();
+  }
+);
 
 // Test the situation where we receive a newly installed
 // engine from Normandy followed by the update to the
 // configuration that uses that engine.
-add_task(async function test_normandy_before_config() {
-  // Ensure initial default setup.
-  await SearchTestUtils.updateRemoteSettingsConfig(CONFIG_DEFAULT);
-  await restart();
-  Assert.deepEqual(await getEngineNames(), ["Plain"]);
-  // Normandy installs the enigne.
-  let addon = await SearchTestUtils.installSystemSearchExtension();
-  Assert.deepEqual(
-    await getEngineNames(),
-    ["Plain"],
-    "Normandy engine ignored as not in config yet"
-  );
-  // Configuration is updated to use the engine.
-  await SearchTestUtils.updateRemoteSettingsConfig(CONFIG_UPDATED);
-  Assert.deepEqual(
-    await getEngineNames(),
-    ["Plain", "Example"],
-    "Both engines are now enabled"
-  );
-  await addon.unload();
-});
+add_task(
+  { skip_if: () => SearchUtils.newSearchConfigEnabled },
+  async function test_normandy_before_config() {
+    // Ensure initial default setup.
+    await SearchTestUtils.updateRemoteSettingsConfig(CONFIG_DEFAULT);
+    await restart();
+    Assert.deepEqual(await getEngineNames(), ["Plain"]);
+    // Normandy installs the enigne.
+    let addon = await SearchTestUtils.installSystemSearchExtension();
+    Assert.deepEqual(
+      await getEngineNames(),
+      ["Plain"],
+      "Normandy engine ignored as not in config yet"
+    );
+    // Configuration is updated to use the engine.
+    await SearchTestUtils.updateRemoteSettingsConfig(CONFIG_UPDATED);
+    Assert.deepEqual(
+      await getEngineNames(),
+      ["Plain", "Example"],
+      "Both engines are now enabled"
+    );
+    await addon.unload();
+  }
+);

@@ -18,6 +18,53 @@ add_setup(async function () {
     {
       webExtension: {
         id: "engine-purposes@search.mozilla.org",
+        name: "Test Engine With Purposes",
+        search_url: "https://www.example.com/search",
+        params: [
+          {
+            name: "form",
+            condition: "purpose",
+            purpose: "keyword",
+            value: "MOZKEYWORD",
+          },
+          {
+            name: "form",
+            condition: "purpose",
+            purpose: "contextmenu",
+            value: "MOZCONTEXT",
+          },
+          {
+            name: "form",
+            condition: "purpose",
+            purpose: "newtab",
+            value: "MOZNEWTAB",
+          },
+          {
+            name: "form",
+            condition: "purpose",
+            purpose: "searchbar",
+            value: "MOZSEARCHBAR",
+          },
+          {
+            name: "form",
+            condition: "purpose",
+            purpose: "homepage",
+            value: "MOZHOMEPAGE",
+          },
+          {
+            name: "pc",
+            value: "FIREFOX",
+          },
+          {
+            name: "channel",
+            condition: "pref",
+            pref: "testChannelEnabled",
+          },
+          {
+            name: "q",
+            value: "{searchTerms}",
+          },
+        ],
       },
       appliesTo: [
         {

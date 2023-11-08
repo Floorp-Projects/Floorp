@@ -2,7 +2,15 @@
   "data": [
     {
       "webExtension": {
-        "id": "engine1@search.mozilla.org"
+        "id": "engine1@search.mozilla.org",
+        "name": "engine1",
+        "search_url": "https://1.example.com/search",
+        "params": [
+          {
+            "name": "q",
+            "value": "{searchTerms}"
+          }
+        ]
       },
       "orderHint": 10000,
       "appliesTo": [
@@ -15,7 +23,15 @@
     },
     {
       "webExtension": {
-        "id": "engine2@search.mozilla.org"
+        "id": "engine2@search.mozilla.org",
+        "name": "engine2",
+        "search_url": "https://2.example.com/search",
+        "params": [
+          {
+            "name": "q",
+            "value": "{searchTerms}"
+          }
+        ]
       },
       "orderHint": 7000,
       "appliesTo": [
@@ -32,7 +48,15 @@
     },
     {
       "webExtension": {
-        "id": "exp2@search.mozilla.org"
+        "id": "exp2@search.mozilla.org",
+        "name": "exp2",
+        "search_url": "https://2.example.com/searchexp",
+        "params": [
+          {
+            "name": "q",
+            "value": "{searchTerms}"
+          }
+        ]
       },
       "orderHint": 5000,
       "appliesTo": [
@@ -45,7 +69,15 @@
     },
     {
       "webExtension": {
-        "id": "exp3@search.mozilla.org"
+        "id": "exp3@search.mozilla.org",
+        "name": "exp3",
+        "search_url": "https://3.example.com/searchexp",
+        "params": [
+          {
+            "name": "q",
+            "value": "{searchTerms}"
+          }
+        ]
       },
       "orderHint": 20000,
       "appliesTo": [

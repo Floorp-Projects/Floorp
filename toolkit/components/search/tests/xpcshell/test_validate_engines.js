@@ -24,9 +24,7 @@ add_task(async function test_validate_engines() {
           },
         },
       ],
-      webExtension: {
-        id: e.webExtension.id,
-      },
+      webExtension: e.webExtension,
     };
   });
 

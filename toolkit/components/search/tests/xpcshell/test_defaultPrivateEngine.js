@@ -56,14 +56,18 @@ add_task(async function test_defaultPrivateEngine() {
     normal: {
       engineId: "engine",
       displayName: "Test search engine",
-      loadPath: "[addon]engine@search.mozilla.org",
+      loadPath: SearchUtils.newSearchConfigEnabled
+        ? "[app]engine@search.mozilla.org"
+        : "[addon]engine@search.mozilla.org",
       submissionUrl: "https://www.google.com/search?q=",
       verified: "default",
     },
     private: {
       engineId: "engine-pref",
       displayName: "engine-pref",
-      loadPath: "[addon]engine-pref@search.mozilla.org",
+      loadPath: SearchUtils.newSearchConfigEnabled
+        ? "[app]engine-pref@search.mozilla.org"
+        : "[addon]engine-pref@search.mozilla.org",
       submissionUrl: "https://www.google.com/search?q=",
       verified: "default",
     },
@@ -92,14 +96,18 @@ add_task(async function test_defaultPrivateEngine() {
     normal: {
       engineId: "engine",
       displayName: "Test search engine",
-      loadPath: "[addon]engine@search.mozilla.org",
+      loadPath: SearchUtils.newSearchConfigEnabled
+        ? "[app]engine@search.mozilla.org"
+        : "[addon]engine@search.mozilla.org",
       submissionUrl: "https://www.google.com/search?q=",
       verified: "default",
     },
     private: {
       engineId: "engine-rel-searchform-purpose",
       displayName: "engine-rel-searchform-purpose",
-      loadPath: "[addon]engine-rel-searchform-purpose@search.mozilla.org",
+      loadPath: SearchUtils.newSearchConfigEnabled
+        ? "[app]engine-rel-searchform-purpose@search.mozilla.org"
+        : "[addon]engine-rel-searchform-purpose@search.mozilla.org",
       submissionUrl: "https://www.google.com/search?q=&channel=sb",
       verified: "default",
     },
@@ -139,14 +147,18 @@ add_task(async function test_defaultPrivateEngine() {
     normal: {
       engineId: "engine",
       displayName: "Test search engine",
-      loadPath: "[addon]engine@search.mozilla.org",
+      loadPath: SearchUtils.newSearchConfigEnabled
+        ? "[app]engine@search.mozilla.org"
+        : "[addon]engine@search.mozilla.org",
       submissionUrl: "https://www.google.com/search?q=",
       verified: "default",
     },
     private: {
       engineId: "engine-chromeicon",
       displayName: "engine-chromeicon",
-      loadPath: "[addon]engine-chromeicon@search.mozilla.org",
+      loadPath: SearchUtils.newSearchConfigEnabled
+        ? "[app]engine-chromeicon@search.mozilla.org"
+        : "[addon]engine-chromeicon@search.mozilla.org",
       submissionUrl: "https://www.google.com/search?q=",
       verified: "default",
     },
