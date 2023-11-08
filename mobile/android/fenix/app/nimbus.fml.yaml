@@ -272,7 +272,7 @@ features:
         type: Map<CookieBannersSection, Int>
         default:
           {
-            "feature-ui": 0,
+            "feature-ui": 1,
             "feature-setting-value": 0,
             "feature-setting-value-pbm": 0,
             "feature-setting-detect-only": 0,

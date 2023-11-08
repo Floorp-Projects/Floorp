@@ -60,7 +60,8 @@ class ProtectionsView(
         bindTrackingProtectionInfo(state.isTrackingProtectionEnabled)
         bindCookieBannerProtection(state.cookieBannerUIMode)
         binding.trackingProtectionSwitch.isVisible = settings.shouldUseTrackingProtection
-        binding.cookieBannerItem.isVisible = shouldShowCookieBanner &&
+        val isPrivateSession = state.tab?.content?.private == true
+        binding.cookieBannerItem.isVisible = isPrivateSession && shouldShowCookieBanner &&
             state.cookieBannerUIMode != CookieBannerUIMode.HIDE
 
         binding.trackingProtectionDetails.setOnClickListener {
@@ -98,11 +99,11 @@ class ProtectionsView(
     )
 
     private val shouldShowCookieBanner: Boolean
-        get() = settings.shouldShowCookieBannerUI && settings.shouldUseCookieBanner
+        get() = settings.shouldShowCookieBannerUI && settings.shouldUseCookieBannerPrivateMode
 
     private fun bindCookieBannerProtection(cookieBannerMode: CookieBannerUIMode) {
         val context = binding.cookieBannerItem.context
-        val label = context.getString(R.string.preferences_cookie_banner_reduction)
+        val label = context.getString(R.string.cookie_banner_blocker)
 
         binding.cookieBannerItem.apply {
             setContent {

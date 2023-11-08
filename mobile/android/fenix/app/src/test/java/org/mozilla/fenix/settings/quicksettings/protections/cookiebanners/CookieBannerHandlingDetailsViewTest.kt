@@ -97,7 +97,7 @@ class CookieBannerHandlingDetailsViewTest {
 
             val expectedText =
                 testContext.getString(
-                    R.string.reduce_cookie_banner_details_panel_title_off_for_site,
+                    R.string.reduce_cookie_banner_details_panel_title_off_for_site_1,
                     "mozilla.org",
                 )
 
@@ -137,7 +137,7 @@ class CookieBannerHandlingDetailsViewTest {
 
             val expectedText =
                 testContext.getString(
-                    R.string.reduce_cookie_banner_details_panel_title_on_for_site,
+                    R.string.reduce_cookie_banner_details_panel_title_on_for_site_1,
                     "mozilla.org",
                 )
 
@@ -161,7 +161,7 @@ class CookieBannerHandlingDetailsViewTest {
 
         val expectedText =
             testContext.getString(
-                R.string.reduce_cookie_banner_details_panel_description_off_for_site,
+                R.string.reduce_cookie_banner_details_panel_description_off_for_site_1,
                 testContext.getString(R.string.app_name),
             )
 
@@ -189,7 +189,7 @@ class CookieBannerHandlingDetailsViewTest {
         val appName = testContext.getString(R.string.app_name)
         val expectedText =
             testContext.getString(
-                R.string.reduce_cookie_banner_details_panel_description_on_for_site_2,
+                R.string.reduce_cookie_banner_details_panel_description_on_for_site_3,
                 appName,
                 appName,
             )

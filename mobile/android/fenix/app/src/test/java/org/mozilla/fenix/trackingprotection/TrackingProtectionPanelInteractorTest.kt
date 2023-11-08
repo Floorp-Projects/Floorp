@@ -135,7 +135,7 @@ class TrackingProtectionPanelInteractorTest {
 
     @Test
     fun `WHEN onBackPressed is called THEN call popBackStack and navigate`() = runTestOnMain {
-        every { context.settings().shouldUseCookieBanner } returns false
+        every { context.settings().shouldUseCookieBannerPrivateMode } returns false
 
         interactor.onBackPressed()
 

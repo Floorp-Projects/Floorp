@@ -95,11 +95,11 @@ class CookieBannerHandlingDetailsView(
                 val shortUrl = data.toShortUrl(publicSuffixList)
                 val title = when (state) {
                     CookieBannerUIMode.ENABLE -> context.getString(
-                        R.string.reduce_cookie_banner_details_panel_title_off_for_site,
+                        R.string.reduce_cookie_banner_details_panel_title_off_for_site_1,
                         shortUrl,
                     )
                     CookieBannerUIMode.DISABLE -> context.getString(
-                        R.string.reduce_cookie_banner_details_panel_title_on_for_site,
+                        R.string.reduce_cookie_banner_details_panel_title_on_for_site_1,
                         shortUrl,
                     )
                     CookieBannerUIMode.SITE_NOT_SUPPORTED -> context.getString(
@@ -117,11 +117,11 @@ class CookieBannerHandlingDetailsView(
         val appName = context.getString(R.string.app_name)
         val description = when (state) {
             CookieBannerUIMode.ENABLE -> context.getString(
-                R.string.reduce_cookie_banner_details_panel_description_off_for_site,
+                R.string.reduce_cookie_banner_details_panel_description_off_for_site_1,
                 appName,
             )
             CookieBannerUIMode.DISABLE -> context.getString(
-                R.string.reduce_cookie_banner_details_panel_description_on_for_site_2,
+                R.string.reduce_cookie_banner_details_panel_description_on_for_site_3,
                 appName,
             )
             CookieBannerUIMode.SITE_NOT_SUPPORTED -> context.getString(

@@ -108,7 +108,7 @@ class ProtectionsViewTest {
         )
 
         every { settings.shouldShowCookieBannerUI } returns true
-        every { settings.shouldUseCookieBanner } returns false
+        every { settings.shouldUseCookieBannerPrivateMode } returns false
 
         view.update(state)
 
@@ -129,7 +129,7 @@ class ProtectionsViewTest {
         )
 
         every { settings.shouldShowCookieBannerUI } returns false
-        every { settings.shouldUseCookieBanner } returns false
+        every { settings.shouldUseCookieBannerPrivateMode } returns false
 
         view.update(state)
 
@@ -150,7 +150,7 @@ class ProtectionsViewTest {
         )
 
         every { settings.shouldShowCookieBannerUI } returns true
-        every { settings.shouldUseCookieBanner } returns true
+        every { settings.shouldUseCookieBannerPrivateMode } returns true
 
         view.update(state)
 
@@ -184,7 +184,7 @@ class ProtectionsViewTest {
         )
 
         every { settings.shouldShowCookieBannerUI } returns true
-        every { settings.shouldUseCookieBanner } returns true
+        every { settings.shouldUseCookieBannerPrivateMode } returns true
 
         view.update(state)
 

@@ -135,7 +135,7 @@ internal class DefaultCookieBannerDetailsControllerTest {
 
     @Test
     fun `WHEN handleBackPressed is called THEN should call popBackStack and navigate`() = runTestOnMain {
-        every { context.settings().shouldUseCookieBanner } returns false
+        every { context.settings().shouldUseCookieBannerPrivateMode } returns false
 
         controller.handleBackPressed()
 
