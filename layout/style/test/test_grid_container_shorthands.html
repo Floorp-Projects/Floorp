@@ -155,15 +155,14 @@ var grid_template_test_cases = [
     {
         specified: "subgrid [foo] repeat(3, [] [a b] [c]) / subgrid",
         gridTemplateColumns: "subgrid",
-        gridTemplateRows: "subgrid [foo] [] [a b] [c] [] [a b] [c] [] [a b] [c]",
+        gridTemplateRows: "subgrid [foo] repeat(3, [] [a b] [c])",
     },
     {
         // Test that the number of lines is clamped to kMaxLine = 10000.
+        // https://drafts.csswg.org/css-grid/#overlarge-grids
         specified: "subgrid [foo] repeat(999999999, [a]) / subgrid",
         gridTemplateColumns: "subgrid",
-        // Array(n).join(s) is a hack for the non-standard s.repeat(n - 1) .
-        // [foo] + 9999 [a] gives us 10000 lines.
-        gridTemplateRows: "subgrid [foo]" + Array(10000).join(" [a]"),
+        gridTemplateRows: "subgrid [foo] repeat(10000, [a])",
     },
     {
         specified: "subgrid [bar]/ subgrid [] [foo",
