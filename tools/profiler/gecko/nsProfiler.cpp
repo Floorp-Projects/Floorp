@@ -478,9 +478,8 @@ nsProfiler::GetProfileDataAsArrayBuffer(double aSinceTime, JSContext* aCx,
             }
 
             JSContext* cx = jsapi.cx();
-            JSObject* typedArray = dom::ArrayBuffer::Create(
-                cx, aResult.mProfile.Length(),
-                reinterpret_cast<const uint8_t*>(aResult.mProfile.Data()));
+            JSObject* typedArray =
+                dom::ArrayBuffer::Create(cx, aResult.mProfile);
             if (typedArray) {
               JS::Rooted<JS::Value> val(cx, JS::ObjectValue(*typedArray));
               promise->MaybeResolve(val);
@@ -582,8 +581,7 @@ nsProfiler::GetProfileDataAsGzippedArrayBuffer(double aSinceTime,
 
             JSContext* cx = jsapi.cx();
             // Get the profile typedArray.
-            JSObject* typedArray = dom::ArrayBuffer::Create(
-                cx, outBuff.Length(), outBuff.Elements());
+            JSObject* typedArray = dom::ArrayBuffer::Create(cx, outBuff);
             if (!typedArray) {
               promise->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
               return;
@@ -706,14 +704,11 @@ nsProfiler::GetSymbolTable(const nsACString& aDebugPath,
             JSContext* cx = jsapi.cx();
 
             JS::Rooted<JSObject*> addrsArray(
-                cx, dom::Uint32Array::Create(cx, aSymbolTable.mAddrs.Length(),
-                                             aSymbolTable.mAddrs.Elements()));
+                cx, dom::Uint32Array::Create(cx, aSymbolTable.mAddrs));
             JS::Rooted<JSObject*> indexArray(
-                cx, dom::Uint32Array::Create(cx, aSymbolTable.mIndex.Length(),
-                                             aSymbolTable.mIndex.Elements()));
+                cx, dom::Uint32Array::Create(cx, aSymbolTable.mIndex));
             JS::Rooted<JSObject*> bufferArray(
-                cx, dom::Uint8Array::Create(cx, aSymbolTable.mBuffer.Length(),
-                                            aSymbolTable.mBuffer.Elements()));
+                cx, dom::Uint8Array::Create(cx, aSymbolTable.mBuffer));
 
             if (addrsArray && indexArray && bufferArray) {
               JS::Rooted<JSObject*> tuple(cx, JS::NewArrayObject(cx, 3));

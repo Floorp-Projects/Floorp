@@ -1935,6 +1935,16 @@ bool ClientWebGLContext::IsEnabled(GLenum cap) const {
   return ret;
 }
 
+template <typename T, typename S>
+static JS::Value Create(JSContext* cx, nsWrapperCache* creator, const S& src,
+                        ErrorResult& rv) {
+  const auto obj = T::Create(cx, creator, src);
+  if (!obj) {
+    rv = NS_ERROR_OUT_OF_MEMORY;
+  }
+  return JS::ObjectOrNullValue(obj);
+}
+
 void ClientWebGLContext::GetInternalformatParameter(
     JSContext* cx, GLenum target, GLenum internalformat, GLenum pname,
     JS::MutableHandle<JS::Value> retval, ErrorResult& rv) {
@@ -1961,13 +1971,8 @@ void ClientWebGLContext::GetInternalformatParameter(
   if (!maybe) {
     return;
   }
-  // zero-length array indicates out-of-memory
-  JSObject* obj =
-      dom::Int32Array::Create(cx, this, maybe->size(), maybe->data());
-  if (!obj) {
-    rv = NS_ERROR_OUT_OF_MEMORY;
-  }
-  retval.setObjectOrNull(obj);
+
+  retval.set(Create<dom::Int32Array>(cx, this, *maybe, rv));
 }
 
 static JS::Value StringValue(JSContext* cx, const std::string& str,
@@ -1989,23 +1994,6 @@ bool ToJSValueOrNull(JSContext* const cx, const RefPtr<T>& ptr,
     return true;
   }
   return dom::ToJSValue(cx, ptr, retval);
-}
-
-template <typename T, typename U, typename S>
-static JS::Value CreateAs(JSContext* cx, nsWrapperCache* creator, const S& src,
-                          ErrorResult& rv) {
-  const auto obj =
-      T::Create(cx, creator, src.size(), reinterpret_cast<U>(src.data()));
-  if (!obj) {
-    rv = NS_ERROR_OUT_OF_MEMORY;
-  }
-  return JS::ObjectOrNullValue(obj);
-}
-
-template <typename T, typename S>
-static JS::Value Create(JSContext* cx, nsWrapperCache* creator, const S& src,
-                        ErrorResult& rv) {
-  return CreateAs<T, decltype(&src[0]), S>(cx, creator, src, rv);
 }
 
 Maybe<double> ClientWebGLContext::GetNumber(const GLenum pname) {
@@ -2178,9 +2166,9 @@ void ClientWebGLContext::GetParameter(JSContext* cx, GLenum pname,
 
     // 2 ints
     case LOCAL_GL_MAX_VIEWPORT_DIMS: {
-      const auto dims =
-          std::array<uint32_t, 2>{limits.maxViewportDim, limits.maxViewportDim};
-      retval.set(CreateAs<dom::Int32Array, const int32_t*>(cx, this, dims, rv));
+      auto maxViewportDim = BitwiseCast<int32_t>(limits.maxViewportDim);
+      const auto dims = std::array<int32_t, 2>{maxViewportDim, maxViewportDim};
+      retval.set(Create<dom::Int32Array>(cx, this, dims, rv));
       return;
     }
 
@@ -6112,13 +6100,7 @@ void ClientWebGLContext::GetActiveUniformBlockParameter(
 
       case LOCAL_GL_UNIFORM_BLOCK_ACTIVE_UNIFORM_INDICES: {
         const auto& indices = block.activeUniformIndices;
-        JS::Rooted<JSObject*> obj(
-            cx,
-            dom::Uint32Array::Create(cx, this, indices.size(), indices.data()));
-        if (!obj) {
-          rv = NS_ERROR_OUT_OF_MEMORY;
-        }
-        return JS::ObjectOrNullValue(obj);
+        return Create<dom::Uint32Array>(cx, this, indices, rv);
       }
 
       case LOCAL_GL_UNIFORM_BLOCK_REFERENCED_BY_VERTEX_SHADER:

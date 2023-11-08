@@ -26,8 +26,7 @@ void PushUtil::CopyArrayToArrayBuffer(JSContext* aCx,
     aValue.set(nullptr);
     return;
   }
-  JS::Rooted<JSObject*> buffer(
-      aCx, ArrayBuffer::Create(aCx, aArray.Length(), aArray.Elements()));
+  JS::Rooted<JSObject*> buffer(aCx, ArrayBuffer::Create(aCx, aArray));
   if (NS_WARN_IF(!buffer)) {
     aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
     return;
