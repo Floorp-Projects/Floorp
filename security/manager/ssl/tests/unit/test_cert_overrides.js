@@ -14,6 +14,11 @@
 do_get_profile();
 
 function check_telemetry() {
+  // This telemetry isn't collected on android.
+  if (AppConstants.platform == "android") {
+    run_next_test();
+    return;
+  }
   let histogram = Services.telemetry
     .getHistogramById("SSL_CERT_ERROR_OVERRIDES")
     .snapshot();

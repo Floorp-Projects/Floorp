@@ -258,6 +258,11 @@ function test_enforce_test_mode() {
 }
 
 function check_pinning_telemetry() {
+  // This telemetry isn't collected on android.
+  if (AppConstants.platform == "android") {
+    run_next_test();
+    return;
+  }
   let prod_histogram = Services.telemetry
     .getHistogramById("CERT_PINNING_RESULTS")
     .snapshot();

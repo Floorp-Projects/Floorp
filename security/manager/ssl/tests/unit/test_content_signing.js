@@ -38,6 +38,10 @@ function loadChain(prefix, names) {
 }
 
 function check_telemetry(expected_index, expected, expectedId) {
+  // This telemetry isn't collected on android.
+  if (AppConstants.platform == "android") {
+    return;
+  }
   for (let i = 0; i < 10; i++) {
     let expected_value = 0;
     if (i == expected_index) {
