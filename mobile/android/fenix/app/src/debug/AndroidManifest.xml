@@ -26,6 +26,8 @@
     <application
             tools:replace="android:name"
             android:name="org.mozilla.fenix.DebugFenixApplication">
+
+        <activity android:name="androidx.activity.ComponentActivity" />
     </application>
 
 </manifest>

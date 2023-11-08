@@ -9,7 +9,6 @@ package org.mozilla.fenix.home.pocket
 import android.content.res.Configuration
 import android.graphics.Rect
 import android.net.Uri
-import androidx.annotation.FloatRange
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -27,19 +26,12 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.composed
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.LayoutCoordinates
-import androidx.compose.ui.layout.boundsInWindow
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -58,10 +50,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.tooling.preview.PreviewParameter
 import androidx.compose.ui.tooling.preview.PreviewParameterProvider
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.max
-import kotlinx.coroutines.delay
 import mozilla.components.service.pocket.PocketStory
 import mozilla.components.service.pocket.PocketStory.PocketRecommendedStory
 import mozilla.components.service.pocket.PocketStory.PocketSponsoredStory
@@ -78,24 +68,15 @@ import org.mozilla.fenix.compose.SelectableChip
 import org.mozilla.fenix.compose.SelectableChipColors
 import org.mozilla.fenix.compose.StaggeredHorizontalGrid
 import org.mozilla.fenix.compose.TabSubtitleWithInterdot
+import org.mozilla.fenix.compose.ext.onShown
 import org.mozilla.fenix.compose.inComposePreview
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.theme.FirefoxTheme
-import kotlin.math.max
-import kotlin.math.min
 import kotlin.math.roundToInt
 
 private const val URI_PARAM_UTM_KEY = "utm_source"
 private const val POCKET_STORIES_UTM_VALUE = "pocket-newtab-android"
 private const val POCKET_FEATURE_UTM_KEY_VALUE = "utm_source=ff_android"
-
-/**
- * The Pocket section may appear first on the homescreen and be fully constructed
- * to then be pushed downwards when other elements appear.
- * This can lead to overcounting impressions with multiple such events being possible
- * without the user actually having time to see the stories or scrolling to see the Pocket section.
- */
-private const val MINIMUM_TIME_TO_SETTLE_MS = 1000
 
 /**
  * Placeholder [PocketStory] allowing to combine other items in the same list that shows stories.
@@ -258,7 +239,7 @@ fun PocketSponsoredStory(
  * @param onDiscoverMoreClicked Callback for when the user taps an element which contains an
  */
 @OptIn(ExperimentalComposeUiApi::class)
-@Suppress("LongParameterList")
+@Suppress("LongParameterList", "LongMethod")
 @Composable
 fun PocketStories(
     @PreviewParameter(PocketStoryProvider::class) stories: List<PocketStory>,
@@ -325,10 +306,28 @@ fun PocketStories(
                                 onStoryClicked(it.copy(url = uri), rowIndex to columnIndex)
                             }
                         } else if (story is PocketSponsoredStory) {
+                            val screenBounds = Rect()
+                                .apply { LocalView.current.getWindowVisibleDisplayFrame(this) }
+                                .apply {
+                                    // Check if this is in a preview because `.settings()` breaks previews
+                                    if (!inComposePreview) {
+                                        val verticalOffset = LocalContext.current.resources.getDimensionPixelSize(
+                                            R.dimen.browser_toolbar_height,
+                                        )
+
+                                        if (LocalContext.current.settings().shouldUseBottomToolbar) {
+                                            bottom -= verticalOffset
+                                        } else {
+                                            top += verticalOffset
+                                        }
+                                    }
+                                }
                             Box(
-                                modifier = Modifier.onShown(0.5f) {
-                                    onStoryShown(story, rowIndex to columnIndex)
-                                },
+                                modifier = Modifier.onShown(
+                                    threshold = 0.5f,
+                                    onVisible = { onStoryShown(story, rowIndex to columnIndex) },
+                                    screenBounds = screenBounds,
+                                ),
                             ) {
                                 PocketSponsoredStory(
                                     story = story,
@@ -357,101 +356,6 @@ private fun endPadding(configuration: Configuration, screenWidth: Dp, contentPad
  */
 private fun alignColumnToTitlePadding(screenWidth: Dp, contentPadding: Dp) =
     max(screenWidth - (ITEM_WIDTH.dp + contentPadding), contentPadding)
-
-/**
- * Add a callback for when this Composable is "shown" on the screen.
- * This checks whether the composable has at least [threshold] ratio of it's total area drawn inside
- * the screen bounds.
- * Does not account for other Views / Windows covering it.
- */
-private fun Modifier.onShown(
-    @FloatRange(from = 0.0, to = 1.0) threshold: Float,
-    onVisible: () -> Unit,
-): Modifier {
-    val initialTime = System.currentTimeMillis()
-    var lastVisibleCoordinates: LayoutCoordinates? = null
-
-    return composed {
-        if (inComposePreview) {
-            Modifier
-        } else {
-            val context = LocalContext.current
-            var wasEventReported by remember { mutableStateOf(false) }
-
-            val toolbarHeight = context.resources.getDimensionPixelSize(R.dimen.browser_toolbar_height)
-            val isToolbarPlacedAtBottom = context.settings().shouldUseBottomToolbar
-            // Get a Rect of the entire screen minus system insets minus the toolbar
-            val screenBounds = Rect()
-                .apply { LocalView.current.getWindowVisibleDisplayFrame(this) }
-                .apply {
-                    when (isToolbarPlacedAtBottom) {
-                        true -> bottom -= toolbarHeight
-                        false -> top += toolbarHeight
-                    }
-                }
-
-            // In the event this composable starts as visible but then gets pushed offscreen
-            // before MINIMUM_TIME_TO_SETTLE_MS we will not report is as being visible.
-            // In the LaunchedEffect we add support for when the composable starts as visible and then
-            // it's position isn't changed after MINIMUM_TIME_TO_SETTLE_MS so it must be reported as visible.
-            LaunchedEffect(initialTime) {
-                delay(MINIMUM_TIME_TO_SETTLE_MS.toLong())
-                if (!wasEventReported && lastVisibleCoordinates?.isVisible(screenBounds, threshold) == true) {
-                    wasEventReported = true
-                    onVisible()
-                }
-            }
-
-            onGloballyPositioned { coordinates ->
-                if (!wasEventReported && coordinates.isVisible(screenBounds, threshold)) {
-                    if (System.currentTimeMillis() - initialTime > MINIMUM_TIME_TO_SETTLE_MS) {
-                        wasEventReported = true
-                        onVisible()
-                    } else {
-                        lastVisibleCoordinates = coordinates
-                    }
-                }
-            }
-        }
-    }
-}
-
-/**
- * Return whether this has at least [threshold] ratio of it's total area drawn inside
- * the screen bounds.
- */
-private fun LayoutCoordinates.isVisible(
-    visibleRect: Rect,
-    @FloatRange(from = 0.0, to = 1.0) threshold: Float,
-): Boolean {
-    if (!isAttached) return false
-
-    val boundsInWindow = boundsInWindow()
-    return Rect(
-        boundsInWindow.left.toInt(),
-        boundsInWindow.top.toInt(),
-        boundsInWindow.right.toInt(),
-        boundsInWindow.bottom.toInt(),
-    ).getIntersectPercentage(size, visibleRect) >= threshold
-}
-
-/**
- * Returns the ratio of how much this intersects with [other].
- *
- * @param realSize [IntSize] containing the true height and width of the composable.
- * @param other Other [Rect] for whcih to check the intersection area.
- *
- * @return A `0..1` float range for how much this [Rect] intersects with other.
- */
-@FloatRange(from = 0.0, to = 1.0)
-private fun Rect.getIntersectPercentage(realSize: IntSize, other: Rect): Float {
-    val composableArea = realSize.height * realSize.width
-    val heightOverlap = max(0, min(bottom, other.bottom) - max(top, other.top))
-    val widthOverlap = max(0, min(right, other.right) - max(left, other.left))
-    val intersectionArea = heightOverlap * widthOverlap
-
-    return (intersectionArea.toFloat() / composableArea)
-}
 
 /**
  * Displays a list of [PocketRecommendedStoriesCategory]s.
