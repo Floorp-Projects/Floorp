@@ -73,14 +73,14 @@ class FullParseHandler {
 
   bool reuseGCThings;
 
- public:
   /* new_ methods for creating parse nodes. These report OOM on context. */
   JS_DECLARE_NEW_METHODS(new_, allocParseNode, inline)
 
-  struct NodeError {};
+ public:
+  using NodeError = ParseNodeError;
 
   using Node = ParseNode*;
-  using NodeResult = mozilla::Result<ParseNode*, NodeError>;
+  using NodeResult = ParseNodeResult;
   using NodeErrorResult = mozilla::GenericErrorResult<NodeError>;
 
 #define DECLARE_TYPE(typeName)      \
@@ -312,11 +312,7 @@ class FullParseHandler {
  public:
   NodeResult appendOrCreateList(ParseNodeKind kind, Node left, Node right,
                                 ParseContext* pc) {
-    auto* pn = ParseNode::appendOrCreateList(kind, left, right, this, pc);
-    if (!pn) {
-      return errorResult();
-    }
-    return pn;
+    return ParseNode::appendOrCreateList(kind, left, right, this, pc);
   }
 
   // Expressions
