@@ -64,6 +64,10 @@
 #include <string.h>
 #include <memory>
 
+#ifdef MOZ_SKIA
+#include "nsCocoaFeatures.h"
+#endif
+
 using namespace skia_private;
 
 /** Assumes src and dst are not nullptr. */
@@ -235,6 +239,7 @@ SkUniqueCFRef<CTFontRef> SkCTFontCreateExactCopy(CTFontRef baseFont, CGFloat tex
 
     // If we have a system font we need to use the CGFont APIs to avoid having the
     // underlying font change for us when using CTFontCreateCopyWithAttributes.
+    CFDictionaryRef variations = nullptr;
     if (IsInstalledFont(baseFont)) {
         baseCGFont.reset(CTFontCopyGraphicsFont(baseFont, nullptr));
 
@@ -273,18 +278,40 @@ SkUniqueCFRef<CTFontRef> SkCTFontCreateExactCopy(CTFontRef baseFont, CGFloat tex
         //    ctfont_create_exact_copy in SkFontHost_mac.cpp
 
         // Not UniqueCFRef<> because CGFontCopyVariations can return null!
-        CFDictionaryRef variations = CGFontCopyVariations(baseCGFont.get());
+        variations = CGFontCopyVariations(baseCGFont.get());
         if (variations) {
             CFDictionarySetValue(attr.get(), kCTFontVariationAttribute, variations);
-            CFRelease(variations);
         }
     }
 
     SkUniqueCFRef<CTFontDescriptorRef> desc(CTFontDescriptorCreateWithAttributes(attr.get()));
 
     if (baseCGFont.get()) {
-        return SkUniqueCFRef<CTFontRef>(
-          CTFontCreateWithGraphicsFont(baseCGFont.get(), textSize, nullptr, desc.get()));
+        auto ctFont = SkUniqueCFRef<CTFontRef>(
+            CTFontCreateWithGraphicsFont(baseCGFont.get(), textSize, nullptr, desc.get()));
+        if (variations) {
+#ifdef MOZ_SKIA
+            if (nsCocoaFeatures::OnVenturaOrLater()) {
+                // On recent macOS versions, CTFontCreateWithGraphicsFont fails to apply
+                // the variations from the descriptor, so to get the correct values we use
+                // CTFontCreateCopyWithAttributes to re-apply them to the new instance.
+                // (We don't do this on older versions to minimize the risk of regressing
+                // something that has been working OK in the past.)
+                SkUniqueCFRef<CFDictionaryRef> attrs(CFDictionaryCreate(
+                    nullptr, (const void**)&kCTFontVariationAttribute,
+                    (const void**)&variations, 1, &kCFTypeDictionaryKeyCallBacks,
+                    &kCFTypeDictionaryValueCallBacks));
+                // Get the original descriptor from the CTFont, then add the variations
+                // attribute to it.
+                SkUniqueCFRef<CTFontDescriptorRef> desc(CTFontCopyFontDescriptor(ctFont.get()));
+                desc.reset(CTFontDescriptorCreateCopyWithAttributes(desc.get(), attrs.get()));
+                // Return a copy of the font that has the variations added.
+                ctFont.reset(CTFontCreateCopyWithAttributes(ctFont.get(), 0.0, nullptr, desc.get()));
+            }
+#endif
+            CFRelease(variations);
+        }
+        return ctFont;
     }
 
     return SkUniqueCFRef<CTFontRef>(
