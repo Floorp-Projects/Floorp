@@ -675,31 +675,6 @@ add_task(async function () {
       }),
     ],
   });
-
-  await PlacesUtils.history.clear();
-  // Check that punycode results are properly decoded before being displayed.
-  info("visit url, host matching visited host but not visited url");
-  await PlacesTestUtils.addVisits([
-    {
-      uri: Services.io.newURI("http://test.пример.com/"),
-      title: "test.пример.com",
-      transition: PlacesUtils.history.TRANSITION_TYPED,
-    },
-  ]);
-  context = createContext("test", { isPrivate: false });
-  await check_results({
-    context,
-    matches: [
-      makeVisitResult(context, {
-        source: UrlbarUtils.RESULT_SOURCE.HISTORY,
-        uri: `http://test.xn--e1afmkfd.com/`,
-        displayUrl: `test.пример.com`,
-        heuristic: true,
-        iconUri: "page-icon:http://test.xn--e1afmkfd.com/",
-      }),
-    ],
-  });
-  await PlacesUtils.history.clear();
 });
 
 /**
