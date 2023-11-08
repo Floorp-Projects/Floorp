@@ -93,7 +93,6 @@ class gfxPlatformMac : public gfxPlatform {
 
   static void FontRegistrationCallback(void* aUnused);
 
-  nsCString mSystemFontName;
   uint32_t mFontAntiAliasingThreshold;
 
   static PRThread* sFontRegistrationThread;
