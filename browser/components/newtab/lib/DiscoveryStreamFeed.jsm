@@ -1530,8 +1530,8 @@ class DiscoveryStreamFeed {
     }
   }
 
-  async enable(options = {}) {
-    await this.refreshAll(options);
+  async enable() {
+    await this.refreshAll({ updateOpenTabs: true, isStartup: true });
     this.loaded = true;
   }
 
@@ -1570,6 +1570,15 @@ class DiscoveryStreamFeed {
       ac.BroadcastToContent({ type: at.DISCOVERY_STREAM_LAYOUT_RESET })
     );
     this.setupPrefs(false /* isStartup */);
+    this.store.dispatch(
+      ac.BroadcastToContent({
+        type: at.DISCOVERY_STREAM_COLLECTION_DISMISSIBLE_TOGGLE,
+        data: {
+          value:
+            this.store.getState().Prefs.values[PREF_COLLECTION_DISMISSIBLE],
+        },
+      })
+    );
     this.loaded = false;
   }
 
@@ -1578,7 +1587,7 @@ class DiscoveryStreamFeed {
     await this.reset();
     if (this.config.enabled) {
       // Load data from all endpoints
-      await this.enable({ updateOpenTabs: true });
+      await this.enable();
     }
   }
 
@@ -1770,7 +1779,7 @@ class DiscoveryStreamFeed {
         this.setupPrefs(true /* isStartup */);
         // 2. If config.enabled is true, start loading data.
         if (this.config.enabled) {
-          await this.enable({ updateOpenTabs: true, isStartup: true });
+          await this.enable();
         }
         Services.prefs.addObserver(PREF_POCKET_BUTTON, this);
         break;
