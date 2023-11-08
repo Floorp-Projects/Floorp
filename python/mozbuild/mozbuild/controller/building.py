@@ -1086,7 +1086,7 @@ class BuildDriver(MozbuildObject):
             append_env,
         )
 
-        record_usage = status == 0
+        record_usage = True
 
         # On automation, only record usage for plain `mach build`
         if "MOZ_AUTOMATION" in os.environ and what:
