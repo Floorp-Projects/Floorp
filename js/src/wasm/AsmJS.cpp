@@ -24,6 +24,7 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/Sprintf.h"  // SprintfLiteral
+#include "mozilla/Try.h"      // MOZ_TRY*
 #include "mozilla/Utf8.h"     // mozilla::Utf8Unit
 #include "mozilla/Variant.h"
 
@@ -36,6 +37,7 @@
 #include "frontend/FrontendContext.h"     // js::FrontendContext
 #include "frontend/FunctionSyntaxKind.h"  // FunctionSyntaxKind
 #include "frontend/ParseNode.h"
+#include "frontend/Parser-macros.h"  // MOZ_TRY_*
 #include "frontend/Parser.h"
 #include "frontend/ParserAtom.h"     // ParserAtomsTable, TaggedParserAtomIndex
 #include "frontend/SharedContext.h"  // TopLevelFunction
@@ -6067,11 +6069,11 @@ static bool ParseFunction(ModuleValidator<Unit>& m, FunctionNode** funNodeOut,
     return false;
   }
 
-  FunctionNode* funNode = m.parser().handler_.newFunction(
-      FunctionSyntaxKind::Statement, m.parser().pos());
-  if (!funNode) {
-    return false;
-  }
+  FunctionNode* funNode;
+  MOZ_TRY_VAR_OR_RETURN(funNode,
+                        m.parser().handler_.newFunction(
+                            FunctionSyntaxKind::Statement, m.parser().pos()),
+                        false);
 
   ParseContext* outerpc = m.parser().pc_;
   Directives directives(outerpc);

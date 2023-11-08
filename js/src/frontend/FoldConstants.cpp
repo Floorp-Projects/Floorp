@@ -8,6 +8,7 @@
 
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/Maybe.h"  // mozilla::Maybe
+#include "mozilla/Try.h"    // MOZ_TRY*
 
 #include "jslibmath.h"
 #include "jsmath.h"
@@ -15,7 +16,8 @@
 #include "frontend/FullParseHandler.h"
 #include "frontend/ParseNode.h"
 #include "frontend/ParseNodeVisitor.h"
-#include "frontend/ParserAtom.h"  // ParserAtomsTable, TaggedParserAtomIndex
+#include "frontend/Parser-macros.h"  // MOZ_TRY_VAR_OR_RETURN
+#include "frontend/ParserAtom.h"     // ParserAtomsTable, TaggedParserAtomIndex
 #include "js/Conversions.h"
 #include "js/Stack.h"           // JS::NativeStackLimit
 #include "util/StringBuffer.h"  // StringBuffer
@@ -480,8 +482,9 @@ static bool FoldType(FoldInfo info, ParseNode** pnp, ParseNodeKind kind) {
         if (pn->isKind(ParseNodeKind::StringExpr)) {
           auto atom = pn->as<NameNode>().atom();
           double d = info.parserAtoms.toNumber(atom);
-          if (!TryReplaceNode(
-                  pnp, info.handler->newNumber(d, NoDecimal, pn->pn_pos))) {
+          if (!TryReplaceNode(pnp,
+                              info.handler->newNumber(d, NoDecimal, pn->pn_pos)
+                                  .unwrapOr(nullptr))) {
             return false;
           }
         }
@@ -494,8 +497,9 @@ static bool FoldType(FoldInfo info, ParseNode** pnp, ParseNodeKind kind) {
           if (!atom) {
             return false;
           }
-          if (!TryReplaceNode(
-                  pnp, info.handler->newStringLiteral(atom, pn->pn_pos))) {
+          if (!TryReplaceNode(pnp,
+                              info.handler->newStringLiteral(atom, pn->pn_pos)
+                                  .unwrapOr(nullptr))) {
             return false;
           }
         }
@@ -580,8 +584,9 @@ static bool SimplifyCondition(FoldInfo info, ParseNode** nodePtr) {
     // that appears on a method list corrupts the method list. However,
     // methods are M's in statements of the form 'this.foo = M;', which we
     // never fold, so we're okay.
-    if (!TryReplaceNode(nodePtr, info.handler->newBooleanLiteral(
-                                     t == Truthy, node->pn_pos))) {
+    if (!TryReplaceNode(
+            nodePtr, info.handler->newBooleanLiteral(t == Truthy, node->pn_pos)
+                         .unwrapOr(nullptr))) {
       return false;
     }
   }
@@ -614,7 +619,8 @@ static bool FoldTypeOfExpr(FoldInfo info, ParseNode** nodePtr) {
 
   if (result) {
     if (!TryReplaceNode(nodePtr,
-                        info.handler->newStringLiteral(result, node->pn_pos))) {
+                        info.handler->newStringLiteral(result, node->pn_pos)
+                            .unwrapOr(nullptr))) {
       return false;
     }
   }
@@ -632,7 +638,8 @@ static bool FoldDeleteExpr(FoldInfo info, ParseNode** nodePtr) {
   // For effectless expressions, eliminate the expression evaluation.
   if (IsEffectless(expr)) {
     if (!TryReplaceNode(nodePtr,
-                        info.handler->newBooleanLiteral(true, node->pn_pos))) {
+                        info.handler->newBooleanLiteral(true, node->pn_pos)
+                            .unwrapOr(nullptr))) {
       return false;
     }
   }
@@ -656,7 +663,8 @@ static bool FoldDeleteElement(FoldInfo info, ParseNode** nodePtr) {
   if (expr->isKind(ParseNodeKind::DotExpr)) {
     // newDelete will detect and use DeletePropExpr
     if (!TryReplaceNode(nodePtr,
-                        info.handler->newDelete(node->pn_pos.begin, expr))) {
+                        info.handler->newDelete(node->pn_pos.begin, expr)
+                            .unwrapOr(nullptr))) {
       return false;
     }
     MOZ_ASSERT((*nodePtr)->getKind() == ParseNodeKind::DeletePropExpr);
@@ -679,8 +687,9 @@ static bool FoldNot(FoldInfo info, ParseNode** nodePtr) {
       expr->isKind(ParseNodeKind::FalseExpr)) {
     bool newval = !expr->isKind(ParseNodeKind::TrueExpr);
 
-    if (!TryReplaceNode(
-            nodePtr, info.handler->newBooleanLiteral(newval, node->pn_pos))) {
+    if (!TryReplaceNode(nodePtr,
+                        info.handler->newBooleanLiteral(newval, node->pn_pos)
+                            .unwrapOr(nullptr))) {
       return false;
     }
   }
@@ -713,7 +722,8 @@ static bool FoldUnaryArithmetic(FoldInfo info, ParseNode** nodePtr) {
     }
 
     if (!TryReplaceNode(nodePtr,
-                        info.handler->newNumber(d, NoDecimal, node->pn_pos))) {
+                        info.handler->newNumber(d, NoDecimal, node->pn_pos)
+                            .unwrapOr(nullptr))) {
       return false;
     }
   }
@@ -948,8 +958,9 @@ static bool FoldIf(FoldInfo info, ParseNode** nodePtr) {
       // If there's no replacement node, we have a constantly-false |if|
       // with no |else|.  Replace the entire thing with an empty
       // statement list.
-      if (!TryReplaceNode(nodePtr,
-                          info.handler->newStatementList(node->pn_pos))) {
+      if (!TryReplaceNode(
+              nodePtr,
+              info.handler->newStatementList(node->pn_pos).unwrapOr(nullptr))) {
         return false;
       }
     } else {
@@ -1036,7 +1047,9 @@ static bool FoldBinaryArithmetic(FoldInfo info, ParseNode** nodePtr) {
                                (*next)->as<NumericLiteral>().value());
 
       TokenPos pos((*elem)->pn_pos.begin, (*next)->pn_pos.end);
-      if (!TryReplaceNode(elem, info.handler->newNumber(d, NoDecimal, pos))) {
+      if (!TryReplaceNode(
+              elem,
+              info.handler->newNumber(d, NoDecimal, pos).unwrapOr(nullptr))) {
         return false;
       }
 
@@ -1092,8 +1105,9 @@ static bool FoldExponentiation(FoldInfo info, ParseNode** nodePtr) {
   double d1 = base->as<NumericLiteral>().value();
   double d2 = exponent->as<NumericLiteral>().value();
 
-  return TryReplaceNode(nodePtr, info.handler->newNumber(
-                                     ecmaPow(d1, d2), NoDecimal, node->pn_pos));
+  return TryReplaceNode(
+      nodePtr, info.handler->newNumber(ecmaPow(d1, d2), NoDecimal, node->pn_pos)
+                   .unwrapOr(nullptr));
 }
 
 static bool FoldElement(FoldInfo info, ParseNode** nodePtr) {
@@ -1108,9 +1122,9 @@ static bool FoldElement(FoldInfo info, ParseNode** nodePtr) {
     if (info.parserAtoms.isIndex(keyIndex, &index)) {
       // Optimization 1: We have something like expr["100"]. This is
       // equivalent to expr[100] which is faster.
-      if (!TryReplaceNode(
-              elem->unsafeRightReference(),
-              info.handler->newNumber(index, NoDecimal, key->pn_pos))) {
+      if (!TryReplaceNode(elem->unsafeRightReference(),
+                          info.handler->newNumber(index, NoDecimal, key->pn_pos)
+                              .unwrapOr(nullptr))) {
         return false;
       }
       key = &elem->key();
@@ -1139,12 +1153,13 @@ static bool FoldElement(FoldInfo info, ParseNode** nodePtr) {
   // Optimization 3: We have expr["foo"] where foo is not an index.  Convert
   // to a property access (like expr.foo) that optimizes better downstream.
 
-  NameNode* propertyNameExpr = info.handler->newPropertyName(name, key->pn_pos);
-  if (!propertyNameExpr) {
-    return false;
-  }
-  if (!TryReplaceNode(
-          nodePtr, info.handler->newPropertyAccess(expr, propertyNameExpr))) {
+  NameNode* propertyNameExpr;
+  MOZ_TRY_VAR_OR_RETURN(propertyNameExpr,
+                         info.handler->newPropertyName(name, key->pn_pos),
+                         false);
+  if (!TryReplaceNode(nodePtr,
+                      info.handler->newPropertyAccess(expr, propertyNameExpr)
+                          .unwrapOr(nullptr))) {
     return false;
   }
 
@@ -1175,8 +1190,9 @@ static bool FoldAdd(FoldInfo info, ParseNode** nodePtr) {
       double right = (*next)->as<NumericLiteral>().value();
       TokenPos pos((*current)->pn_pos.begin, (*next)->pn_pos.end);
 
-      if (!TryReplaceNode(
-              current, info.handler->newNumber(left + right, NoDecimal, pos))) {
+      if (!TryReplaceNode(current,
+                          info.handler->newNumber(left + right, NoDecimal, pos)
+                              .unwrapOr(nullptr))) {
         return false;
       }
 

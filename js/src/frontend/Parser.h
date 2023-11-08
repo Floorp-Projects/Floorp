@@ -587,11 +587,11 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
 
  public:
   NameNodeType newPropertyName(TaggedParserAtomIndex key, const TokenPos& pos) {
-    return handler_.newPropertyName(key, pos);
+    return handler_.newPropertyName(key, pos).unwrapOr(null());
   }
 
   PropertyAccessType newPropertyAccess(Node expr, NameNodeType key) {
-    return handler_.newPropertyAccess(expr, key);
+    return handler_.newPropertyAccess(expr, key).unwrapOr(null());
   }
 
   FunctionBox* newFunctionBox(FunctionNodeType funNode,
@@ -1479,7 +1479,8 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
                                            PossibleError* possibleError);
 
   NumericLiteralType newNumber(const Token& tok) {
-    return handler_.newNumber(tok.number(), tok.decimalPoint(), tok.pos);
+    return handler_.newNumber(tok.number(), tok.decimalPoint(), tok.pos)
+        .unwrapOr(null());
   }
 
   inline BigIntLiteralType newBigInt();
