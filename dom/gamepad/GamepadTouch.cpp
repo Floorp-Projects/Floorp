@@ -45,10 +45,14 @@ void GamepadTouch::GetPosition(JSContext* aCx,
 void GamepadTouch::GetSurfaceDimensions(JSContext* aCx,
                                         JS::MutableHandle<JSObject*> aRetval,
                                         ErrorResult& aRv) {
-  mSurfaceDimensions = Uint32Array::Create(aCx, this, 2,
-                                           mTouchState.isSurfaceDimensionsValid
-                                               ? mTouchState.surfaceDimensions
-                                               : nullptr);
+  if (mTouchState.isSurfaceDimensionsValid) {
+    mSurfaceDimensions = Uint32Array::Create(
+        aCx, this, std::size(mTouchState.surfaceDimensions));
+
+  } else {
+    mSurfaceDimensions =
+        Uint32Array::Create(aCx, this, mTouchState.surfaceDimensions);
+  }
 
   if (!mSurfaceDimensions) {
     aRv.NoteJSContextException(aCx);
