@@ -74,6 +74,9 @@ skip-if = ["toolkit != 'cocoa'"] # Cocoa widget test
 ["test_clipboard_chrome.html"]
 support-files = "file_test_clipboard.js"
 
+["test_clipboard_asyncGetData_chrome.html"]
+support-files = "file_test_clipboard_asyncGetData.js"
+
 ["test_clipboard_asyncSetData_chrome.html"]
 support-files = "file_test_clipboard_asyncSetData.js"
 

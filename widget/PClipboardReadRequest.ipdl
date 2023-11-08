@@ -1,0 +1,25 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include protocol PContent;
+
+include DOMTypes;
+include IPCTransferable;
+include NeckoChannelParams;
+
+using nsContentPolicyType from "nsIContentPolicy.h";
+
+namespace mozilla {
+
+protocol PClipboardReadRequest {
+  manager PContent;
+
+ parent:
+  async GetData(nsCString[] aFlavors) returns (IPCTransferableDataOrError aTransferableData);
+
+ both:
+  async __delete__();
+};
+
+} // namespace mozilla

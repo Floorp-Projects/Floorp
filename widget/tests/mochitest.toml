@@ -24,6 +24,9 @@ skip-if = [
 ]
 support-files = ["file_test_clipboard.js"]
 
+["test_clipboard_asyncGetData.html"]
+support-files = ["file_test_clipboard_asyncGetData.js"]
+
 ["test_clipboard_asyncSetData.html"]
 support-files = ["file_test_clipboard_asyncSetData.js"]
 

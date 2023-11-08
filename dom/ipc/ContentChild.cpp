@@ -24,6 +24,7 @@
 #include "imgLoader.h"
 #include "ScrollingMetrics.h"
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/ClipboardReadRequestChild.h"
 #include "mozilla/Components.h"
 #include "mozilla/HangDetails.h"
 #include "mozilla/LoadInfo.h"
@@ -1985,6 +1986,12 @@ PRemotePrintJobChild* ContentChild::AllocPRemotePrintJobChild() {
 #else
   return nullptr;
 #endif
+}
+
+already_AddRefed<PClipboardReadRequestChild>
+ContentChild::AllocPClipboardReadRequestChild(
+    const nsTArray<nsCString>& aTypes) {
+  return MakeAndAddRef<ClipboardReadRequestChild>(aTypes);
 }
 
 media::PMediaChild* ContentChild::AllocPMediaChild() {
