@@ -78,6 +78,8 @@
 #include "mozilla/dom/MouseEventBinding.h"
 #include "mozilla/dom/ToggleEvent.h"
 #include "mozilla/dom/TouchEvent.h"
+#include "mozilla/dom/InputEvent.h"
+#include "mozilla/dom/InvokeEvent.h"
 #include "mozilla/ErrorResult.h"
 #include "nsHTMLDocument.h"
 #include "nsGlobalWindowInner.h"
@@ -2817,15 +2819,27 @@ nsGenericHTMLFormControlElementWithState::
 bool nsGenericHTMLFormControlElementWithState::ParseAttribute(
     int32_t aNamespaceID, nsAtom* aAttribute, const nsAString& aValue,
     nsIPrincipal* aMaybeScriptedPrincipal, nsAttrValue& aResult) {
-  if (aNamespaceID == kNameSpaceID_None &&
-      StaticPrefs::dom_element_popover_enabled()) {
-    if (aAttribute == nsGkAtoms::popovertargetaction) {
-      return aResult.ParseEnumValue(aValue, kPopoverTargetActionTable, false,
-                                    kPopoverTargetActionDefault);
+  if (aNamespaceID == kNameSpaceID_None) {
+    if (StaticPrefs::dom_element_popover_enabled()) {
+      if (aAttribute == nsGkAtoms::popovertargetaction) {
+        return aResult.ParseEnumValue(aValue, kPopoverTargetActionTable, false,
+                                      kPopoverTargetActionDefault);
+      }
+      if (aAttribute == nsGkAtoms::popovertarget) {
+        aResult.ParseAtom(aValue);
+        return true;
+      }
     }
-    if (aAttribute == nsGkAtoms::popovertarget) {
-      aResult.ParseAtom(aValue);
-      return true;
+
+    if (StaticPrefs::dom_element_invokers_enabled()) {
+      if (aAttribute == nsGkAtoms::invokeaction) {
+        aResult.ParseAtom(aValue);
+        return true;
+      }
+      if (aAttribute == nsGkAtoms::invoketarget) {
+        aResult.ParseAtom(aValue);
+        return true;
+      }
     }
   }
 
@@ -2866,6 +2880,69 @@ void nsGenericHTMLFormControlElementWithState::HandlePopoverTargetAction() {
   } else if (canShow && !target->IsPopoverOpen()) {
     target->ShowPopoverInternal(this, IgnoreErrors());
   }
+}
+
+void nsGenericHTMLFormControlElementWithState::GetInvokeAction(
+    nsAString& aValue) const {
+  GetInvokeAction()->ToString(aValue);
+}
+
+nsAtom* nsGenericHTMLFormControlElementWithState::GetInvokeAction() const {
+  const nsAttrValue* attr = GetParsedAttr(nsGkAtoms::invokeaction);
+  if (attr && attr->GetAtomValue() != nsGkAtoms::_empty) {
+    return attr->GetAtomValue();
+  }
+  return nsGkAtoms::_auto;
+}
+
+mozilla::dom::Element*
+nsGenericHTMLFormControlElementWithState::GetInvokeTargetElement() const {
+  if (StaticPrefs::dom_element_invokers_enabled()) {
+    return GetAttrAssociatedElement(nsGkAtoms::invoketarget);
+  }
+  return nullptr;
+}
+
+void nsGenericHTMLFormControlElementWithState::SetInvokeTargetElement(
+    mozilla::dom::Element* aElement) {
+  ExplicitlySetAttrElement(nsGkAtoms::invoketarget, aElement);
+}
+
+void nsGenericHTMLFormControlElementWithState::HandleInvokeTargetAction() {
+  // 1. Let invokee be node's invoke target element.
+  RefPtr<Element> invokee = GetInvokeTargetElement();
+
+  // 2. If invokee is null, then return.
+  if (!invokee) {
+    return;
+  }
+
+  // 3. Let action be node's invokeaction attribute
+  // 4. If action is null or empty, then let action be the string "auto".
+  RefPtr<nsAtom> aAction = GetInvokeAction();
+  MOZ_ASSERT(!aAction->IsEmpty(), "Action should not be empty");
+
+  // 5. Let notCancelled be the result of firing an event named invoke at
+  // invokee with its action set to action, its invoker set to node,
+  // and its cancelable attribute initialized to true.
+  InvokeEventInit init;
+  aAction->ToString(init.mAction);
+  init.mInvoker = this;
+  init.mCancelable = true;
+  init.mComposed = true;
+  RefPtr<Event> event = InvokeEvent::Constructor(this, u"invoke"_ns, init);
+  event->SetTrusted(true);
+  event->SetTarget(invokee);
+
+  EventDispatcher::DispatchDOMEvent(invokee, nullptr, event, nullptr, nullptr);
+
+  // 6. If notCancelled is true and invokee has an associated invocation action
+  // algorithm then run the invokee's invocation action algorithm given action.
+  if (event->DefaultPrevented()) {
+    return;
+  }
+
+  invokee->HandleInvokeInternal(aAction, IgnoreErrors());
 }
 
 void nsGenericHTMLFormControlElementWithState::GenerateStateKey() {

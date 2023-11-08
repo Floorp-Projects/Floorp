@@ -2349,6 +2349,12 @@
   mirror: always
   rust: true
 
+# Whether the invoketarget attribute implementation is enabled
+- name: dom.element.invokers.enabled
+  type: bool
+  value: false
+  mirror: always
+
 - name: dom.mouse_capture.enabled
   type: bool
   value: true

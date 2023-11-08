@@ -49,3 +49,5 @@ interface HTMLButtonElement : HTMLElement {
 };
 
 HTMLButtonElement includes PopoverInvokerElement;
+
+HTMLButtonElement includes InvokerElement;

@@ -278,7 +278,11 @@ void HTMLButtonElement::ActivationBehavior(EventChainPostVisitor& aVisitor) {
       // https://html.spec.whatwg.org/multipage/form-elements.html#attr-button-type-button-state
       // NS_FORM_BUTTON_BUTTON do nothing.
     }
-    HandlePopoverTargetAction();
+    if (!GetInvokeTargetElement()) {
+      HandlePopoverTargetAction();
+    } else {
+      HandleInvokeTargetAction();
+    }
   }
 
   EndSubmitClick(aVisitor);
