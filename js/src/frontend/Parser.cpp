@@ -2952,10 +2952,9 @@ bool GeneralParser<ParseHandler, Unit>::skipLazyInnerFunction(
 template <class ParseHandler, typename Unit>
 bool GeneralParser<ParseHandler, Unit>::addExprAndGetNextTemplStrToken(
     YieldHandling yieldHandling, ListNodeType nodeList, TokenKind* ttp) {
-  Node pn = expr(InAllowed, yieldHandling, TripledotProhibited);
-  if (!pn) {
-    return false;
-  }
+  Node pn;
+  MOZ_TRY_VAR_OR_RETURN(pn, expr(InAllowed, yieldHandling, TripledotProhibited),
+                        false);
   handler_.addList(nodeList, pn);
 
   TokenKind tt;
@@ -4068,10 +4067,9 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::condition(
     return null();
   }
 
-  Node pn = exprInParens(inHandling, yieldHandling, TripledotProhibited);
-  if (!pn) {
-    return null();
-  }
+  Node pn;
+  MOZ_TRY_VAR_OR_RETURN(
+      pn, exprInParens(inHandling, yieldHandling, TripledotProhibited), null());
 
   if (!mustMatchToken(TokenKind::RightParen, JSMSG_PAREN_AFTER_COND)) {
     return null();
@@ -4606,7 +4604,7 @@ GeneralParser<ParseHandler, Unit>::expressionAfterForInOrOf(
         .unwrapOr(null());
   }
 
-  return expr(InAllowed, yieldHandling, TripledotProhibited);
+  return expr(InAllowed, yieldHandling, TripledotProhibited).unwrapOr(null());
 }
 
 template <class ParseHandler, typename Unit>
@@ -6247,11 +6245,11 @@ typename ParseHandler::UnaryNodeType
 GeneralParser<ParseHandler, Unit>::expressionStatement(
     YieldHandling yieldHandling, InvokedPrediction invoked) {
   anyChars.ungetToken();
-  Node pnexpr = expr(InAllowed, yieldHandling, TripledotProhibited,
-                     /* possibleError = */ nullptr, invoked);
-  if (!pnexpr) {
-    return null();
-  }
+  Node pnexpr;
+  MOZ_TRY_VAR_OR_RETURN(pnexpr,
+                        expr(InAllowed, yieldHandling, TripledotProhibited,
+                             /* possibleError = */ nullptr, invoked),
+                        null());
   if (!matchOrInsertSemicolon()) {
     return null();
   }
@@ -6565,11 +6563,10 @@ bool GeneralParser<ParseHandler, Unit>::forHeadStart(
   // |InProhibited| so that |in| isn't parsed in a RelationalExpression as a
   // binary operator.  |in| makes it a for-in loop, *not* an |in| expression.
   PossibleError possibleError(*this);
-  *forInitialPart =
-      expr(InProhibited, yieldHandling, TripledotProhibited, &possibleError);
-  if (!*forInitialPart) {
-    return false;
-  }
+  MOZ_TRY_VAR_OR_RETURN(
+      *forInitialPart,
+      expr(InProhibited, yieldHandling, TripledotProhibited, &possibleError),
+      false);
 
   bool isForIn, isForOf;
   if (!matchInOrOf(&isForIn, &isForOf)) {
@@ -6757,10 +6754,8 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::forStatement(
     if (tt == TokenKind::Semi) {
       test = null();
     } else {
-      test = expr(InAllowed, yieldHandling, TripledotProhibited);
-      if (!test) {
-        return null();
-      }
+      MOZ_TRY_VAR_OR_RETURN(
+          test, expr(InAllowed, yieldHandling, TripledotProhibited), null());
     }
 
     if (!mustMatchToken(TokenKind::Semi, JSMSG_SEMI_AFTER_FOR_COND)) {
@@ -6775,10 +6770,8 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::forStatement(
     if (tt == TokenKind::RightParen) {
       update = null();
     } else {
-      update = expr(InAllowed, yieldHandling, TripledotProhibited);
-      if (!update) {
-        return null();
-      }
+      MOZ_TRY_VAR_OR_RETURN(
+          update, expr(InAllowed, yieldHandling, TripledotProhibited), null());
     }
 
     if (!mustMatchToken(TokenKind::RightParen, JSMSG_PAREN_AFTER_FOR_CTRL)) {
@@ -6845,11 +6838,10 @@ GeneralParser<ParseHandler, Unit>::switchStatement(
     return null();
   }
 
-  Node discriminant =
-      exprInParens(InAllowed, yieldHandling, TripledotProhibited);
-  if (!discriminant) {
-    return null();
-  }
+  Node discriminant;
+  MOZ_TRY_VAR_OR_RETURN(
+      discriminant, exprInParens(InAllowed, yieldHandling, TripledotProhibited),
+      null());
 
   if (!mustMatchToken(TokenKind::RightParen, JSMSG_PAREN_AFTER_SWITCH)) {
     return null();
@@ -6890,10 +6882,9 @@ GeneralParser<ParseHandler, Unit>::switchStatement(
         break;
 
       case TokenKind::Case:
-        caseExpr = expr(InAllowed, yieldHandling, TripledotProhibited);
-        if (!caseExpr) {
-          return null();
-        }
+        MOZ_TRY_VAR_OR_RETURN(
+            caseExpr, expr(InAllowed, yieldHandling, TripledotProhibited),
+            null());
         break;
 
       default:
@@ -7053,10 +7044,9 @@ GeneralParser<ParseHandler, Unit>::returnStatement(
       exprNode = null();
       break;
     default: {
-      exprNode = expr(InAllowed, yieldHandling, TripledotProhibited);
-      if (!exprNode) {
-        return null();
-      }
+      MOZ_TRY_VAR_OR_RETURN(exprNode,
+                            expr(InAllowed, yieldHandling, TripledotProhibited),
+                            null());
     }
   }
 
@@ -7135,10 +7125,10 @@ GeneralParser<ParseHandler, Unit>::withStatement(YieldHandling yieldHandling) {
     return null();
   }
 
-  Node objectExpr = exprInParens(InAllowed, yieldHandling, TripledotProhibited);
-  if (!objectExpr) {
-    return null();
-  }
+  Node objectExpr;
+  MOZ_TRY_VAR_OR_RETURN(
+      objectExpr, exprInParens(InAllowed, yieldHandling, TripledotProhibited),
+      null());
 
   if (!mustMatchToken(TokenKind::RightParen, JSMSG_PAREN_AFTER_WITH)) {
     return null();
@@ -7250,10 +7240,9 @@ GeneralParser<ParseHandler, Unit>::throwStatement(YieldHandling yieldHandling) {
     return null();
   }
 
-  Node throwExpr = expr(InAllowed, yieldHandling, TripledotProhibited);
-  if (!throwExpr) {
-    return null();
-  }
+  Node throwExpr;
+  MOZ_TRY_VAR_OR_RETURN(
+      throwExpr, expr(InAllowed, yieldHandling, TripledotProhibited), null());
 
   if (!matchOrInsertSemicolon()) {
     return null();
@@ -9603,28 +9592,26 @@ GeneralParser<ParseHandler, Unit>::statementListItem(
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::expr(
+typename ParseHandler::NodeResult GeneralParser<ParseHandler, Unit>::expr(
     InHandling inHandling, YieldHandling yieldHandling,
     TripledotHandling tripledotHandling,
     PossibleError* possibleError /* = nullptr */,
     InvokedPrediction invoked /* = PredictUninvoked */) {
   Node pn;
-  MOZ_TRY_VAR_OR_RETURN(pn,
-                        assignExpr(inHandling, yieldHandling, tripledotHandling,
-                                   possibleError, invoked),
-                        null());
+  MOZ_TRY_VAR(pn, assignExpr(inHandling, yieldHandling, tripledotHandling,
+                             possibleError, invoked));
 
   bool matched;
   if (!tokenStream.matchToken(&matched, TokenKind::Comma,
                               TokenStream::SlashIsRegExp)) {
-    return null();
+    return errorResult();
   }
   if (!matched) {
     return pn;
   }
 
   ListNodeType seq;
-  MOZ_TRY_VAR_OR_RETURN(seq, handler_.newCommaExpressionList(pn), null());
+  MOZ_TRY_VAR(seq, handler_.newCommaExpressionList(pn));
   while (true) {
     // Trailing comma before the closing parenthesis is valid in an arrow
     // function parameters list: `(a, b, ) => body`. Check if we are
@@ -9634,7 +9621,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::expr(
     if (tripledotHandling == TripledotAllowed) {
       TokenKind tt;
       if (!tokenStream.peekToken(&tt, TokenStream::SlashIsRegExp)) {
-        return null();
+        return errorResult();
       }
 
       if (tt == TokenKind::RightParen) {
@@ -9642,12 +9629,12 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::expr(
                                       TokenStream::SlashIsRegExp);
 
         if (!tokenStream.peekToken(&tt)) {
-          return null();
+          return errorResult();
         }
         if (tt != TokenKind::Arrow) {
           error(JSMSG_UNEXPECTED_TOKEN, "expression",
                 TokenKindToDesc(TokenKind::RightParen));
-          return null();
+          return errorResult();
         }
 
         anyChars.ungetToken();  // put back right paren
@@ -9660,15 +9647,13 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::expr(
     // information needed to determine whether or not we're dealing with
     // a non-recoverable situation.
     PossibleError possibleErrorInner(*this);
-    MOZ_TRY_VAR_OR_RETURN(pn,
-                          assignExpr(inHandling, yieldHandling,
-                                     tripledotHandling, &possibleErrorInner),
-                          null());
+    MOZ_TRY_VAR(pn, assignExpr(inHandling, yieldHandling, tripledotHandling,
+                               &possibleErrorInner));
 
     if (!possibleError) {
       // Report any pending expression error.
       if (!possibleErrorInner.checkForExpressionError()) {
-        return null();
+        return errorResult();
       }
     } else {
       possibleErrorInner.transferErrorsTo(possibleError);
@@ -9678,7 +9663,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::expr(
 
     if (!tokenStream.matchToken(&matched, TokenKind::Comma,
                                 TokenStream::SlashIsRegExp)) {
-      return null();
+      return errorResult();
     }
     if (!matched) {
       break;
@@ -10812,11 +10797,9 @@ GeneralParser<ParseHandler, Unit>::decoratorExpr(YieldHandling yieldHandling,
 
   if (tt == TokenKind::LeftParen) {
     // DecoratorParenthesizedExpression
-    Node expr = exprInParens(InAllowed, yieldHandling, TripledotAllowed,
-                             /* possibleError*/ nullptr);
-    if (!expr) {
-      return errorResult();
-    }
+    Node expr;
+    MOZ_TRY_VAR(expr, exprInParens(InAllowed, yieldHandling, TripledotAllowed,
+                                   /* possibleError*/ nullptr));
     if (!mustMatchToken(TokenKind::RightParen, JSMSG_PAREN_AFTER_DECORATOR)) {
       return errorResult();
     }
@@ -10949,10 +10932,8 @@ GeneralParser<ParseHandler, Unit>::memberElemAccess(
     Node lhs, YieldHandling yieldHandling,
     OptionalKind optionalKind /* = OptionalKind::NonOptional */) {
   MOZ_ASSERT(anyChars.currentToken().type == TokenKind::LeftBracket);
-  Node propExpr = expr(InAllowed, yieldHandling, TripledotProhibited);
-  if (!propExpr) {
-    return errorResult();
-  }
+  Node propExpr;
+  MOZ_TRY_VAR(propExpr, expr(InAllowed, yieldHandling, TripledotProhibited));
 
   if (!mustMatchToken(TokenKind::RightBracket, JSMSG_BRACKET_IN_INDEX)) {
     return errorResult();
@@ -12670,11 +12651,9 @@ GeneralParser<ParseHandler, Unit>::primaryExpr(
       }
 
       // Pass |possibleError| to support destructuring in arrow parameters.
-      Node expr = exprInParens(InAllowed, yieldHandling, TripledotAllowed,
-                               possibleError);
-      if (!expr) {
-        return errorResult();
-      }
+      Node expr;
+      MOZ_TRY_VAR(expr, exprInParens(InAllowed, yieldHandling, TripledotAllowed,
+                                     possibleError));
       if (!mustMatchToken(TokenKind::RightParen, JSMSG_PAREN_IN_PAREN)) {
         return errorResult();
       }
@@ -12808,7 +12787,8 @@ GeneralParser<ParseHandler, Unit>::primaryExpr(
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::exprInParens(
+typename ParseHandler::NodeResult
+GeneralParser<ParseHandler, Unit>::exprInParens(
     InHandling inHandling, YieldHandling yieldHandling,
     TripledotHandling tripledotHandling,
     PossibleError* possibleError /* = nullptr */) {
