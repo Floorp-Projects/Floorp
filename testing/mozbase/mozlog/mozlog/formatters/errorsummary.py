@@ -49,21 +49,29 @@ class ErrorSummaryFormatter(BaseFormatter):
         }
         return self._output("test_result", data)
 
-    def _update_group_result(self, group, item):
-        ginfo = self.groups[group]
+    def _get_group_result(self, group, item):
+        group_info = self.groups[group]
+        result = group_info["status"]
 
-        if item["status"] == "SKIP":
-            if ginfo["status"] is None:
-                ginfo["status"] = "SKIP"
-        elif (
-            ("expected" not in item and item["status"] in ["OK", "PASS"])
-            or ("expected" in item and item["status"] == item["expected"])
-            or item["status"] in item.get("known_intermittent", [])
-        ):
-            if ginfo["status"] in (None, "SKIP"):
-                ginfo["status"] = "OK"
+        if result == "ERROR":
+            return result
+
+        # If status == expected, we delete item[expected]
+        test_status = item["status"]
+        test_expected = item.get("expected", test_status)
+        known_intermittent = item.get("known_intermittent", [])
+
+        if test_status == "SKIP":
+            if result is None:
+                result = "SKIP"
+        elif test_status == test_expected or test_status in known_intermittent:
+            # If the test status is expected, or it's a known intermittent
+            # the group has at least one passing test
+            result = "OK"
         else:
-            ginfo["status"] = "ERROR"
+            result = "ERROR"
+
+        return result
 
     def _clean_test_name(self, test):
         retVal = test
@@ -105,7 +113,7 @@ class ErrorSummaryFormatter(BaseFormatter):
     def test_status(self, item):
         group = self.test_to_group.get(self._clean_test_name(item["test"]), None)
         if group:
-            self._update_group_result(group, item)
+            self.groups[group]["status"] = self._get_group_result(group, item)
 
         if not self.dump_passing_tests and "expected" not in item:
             return
@@ -120,7 +128,7 @@ class ErrorSummaryFormatter(BaseFormatter):
     def test_end(self, item):
         group = self.test_to_group.get(self._clean_test_name(item["test"]), None)
         if group:
-            self._update_group_result(group, item)
+            self.groups[group]["status"] = self._get_group_result(group, item)
             self.groups[group]["end"] = item["time"]
 
         if not self.dump_passing_tests and "expected" not in item:
