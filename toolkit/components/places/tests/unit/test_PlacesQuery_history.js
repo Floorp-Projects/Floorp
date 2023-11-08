@@ -216,3 +216,30 @@ add_task(async function test_dedupe_visits_by_url() {
 
   await PlacesUtils.history.clear();
 });
+
+add_task(async function test_search_visits() {
+  const now = new Date();
+  await PlacesUtils.history.insertMany([
+    {
+      url: "https://www.example.com/",
+      title: "First Visit",
+      visits: [{ date: now }],
+    },
+    {
+      url: "https://example.net/",
+      title: "Second Visit",
+      visits: [{ date: now }],
+    },
+  ]);
+
+  let results = await placesQuery.searchHistory("Visit");
+  Assert.equal(results.length, 2, "Both visits match the search query.");
+
+  results = await placesQuery.searchHistory("First Visit");
+  Assert.equal(results.length, 1, "One visit matches the search query.");
+
+  results = await placesQuery.searchHistory("Bogus");
+  Assert.equal(results.length, 0, "Neither visit matches the search query.");
+
+  await PlacesUtils.history.clear();
+});

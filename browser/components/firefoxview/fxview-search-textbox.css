@@ -1,0 +1,71 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+.search-container {
+  border: 1px solid var(--fxview-border);
+  color: var(--fxview-text-primary-color);
+  position: relative;
+}
+
+.search-icon {
+  background-image: url(chrome://global/skin/icons/search-textbox.svg);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+  fill: currentColor;
+  -moz-context-properties: fill;
+  height: 16px;
+  width: 16px;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  margin: auto 0;
+  padding: 2px;
+}
+
+.search-icon:dir(ltr) {
+  left: 8px;
+}
+
+.search-icon:dir(rtl) {
+  right: 8px;
+}
+
+input {
+  border: none;
+  padding-block-start: 8px;
+  padding-block-end: 8px;
+  padding-inline-start: 32px;
+  padding-inline-end: 32px;
+}
+
+.clear-icon {
+  background-image: url(chrome://global/skin/icons/close-12.svg);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: 16px;
+  fill: currentColor;
+  -moz-context-properties: fill;
+  cursor: pointer;
+  height: 16px;
+  width: 16px;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  margin: auto 0;
+  padding: 2px;
+}
+
+.clear-icon:hover {
+  background-color: var(--fxview-element-background-hover);
+  color: var(--fxview-text-color-hover);
+}
+
+.clear-icon:dir(ltr) {
+  right: 8px;
+}
+
+.clear-icon:dir(rtl) {
+  left: 8px;
+}

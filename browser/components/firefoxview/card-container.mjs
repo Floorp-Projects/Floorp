@@ -6,6 +6,7 @@ import {
   classMap,
   html,
   ifDefined,
+  when,
 } from "chrome://global/content/vendor/lit.all.mjs";
 import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
 
@@ -19,6 +20,7 @@ import { MozLitElement } from "chrome://global/content/lit-utils.mjs";
  * @property {boolean} preserveCollapseState - Whether or not the expanded/collapsed state should persist
  * @property {string} shortPageName - Page name that the 'View all' link will navigate to and the preserveCollapseState pref will use
  * @property {boolean} showViewAll - True if you need to display a 'View all' header link to navigate
+ * @property {boolean} toggleDisabled - Optional property given if the card container should not be collapsible
  */
 class CardContainer extends MozLitElement {
   initiallyExpanded = true;
@@ -32,6 +34,7 @@ class CardContainer extends MozLitElement {
     preserveCollapseState: { type: Boolean },
     shortPageName: { type: String },
     showViewAll: { type: Boolean },
+    toggleDisabled: { type: Boolean },
   };
 
   static queries = {
@@ -108,40 +111,70 @@ class CardContainer extends MozLitElement {
         aria-labelledby="header"
         aria-label=${ifDefined(this.sectionLabel)}
       >
-        <details
-          class=${classMap({
-            "card-container": true,
-            inner: this.isInnerCard,
-            "empty-state": this.isEmptyState && !this.isInnerCard,
-          })}
-          ?open=${this.isExpanded}
-          @toggle=${this.onToggleContainer}
-        >
-          <summary
-            id="header"
-            class="card-container-header"
-            ?hidden=${ifDefined(this.hideHeader)}
-            ?withViewAll=${this.showViewAll}
+        ${when(
+          this.toggleDisabled,
+          () => html`<div
+            class=${classMap({
+              "card-container": true,
+              inner: this.isInnerCard,
+              "empty-state": this.isEmptyState && !this.isInnerCard,
+            })}
           >
             <span
-              class="icon chevron-icon"
-              aria-role="presentation"
-              data-l10n-id="firefoxview-collapse-button-${this.isExpanded
-                ? "hide"
-                : "show"}"
-            ></span>
-            <slot name="header"></slot>
-          </summary>
-          <a
-            href="about:firefoxview-next#${this.shortPageName}"
-            @click=${this.viewAllClicked}
-            class="view-all-link"
-            data-l10n-id="firefoxview-view-all-link"
-            ?hidden=${!this.showViewAll}
-          ></a>
-          <slot name="main"></slot>
-          <slot name="footer" class="card-container-footer"></slot>
-        </details>
+              id="header"
+              class="card-container-header"
+              ?hidden=${ifDefined(this.hideHeader)}
+              toggleDisabled
+              ?withViewAll=${this.showViewAll}
+            >
+              <slot name="header"></slot>
+              <slot name="secondary-header"></slot>
+            </span>
+            <a
+              href="about:firefoxview-next#${this.shortPageName}"
+              @click=${this.viewAllClicked}
+              class="view-all-link"
+              data-l10n-id="firefoxview-view-all-link"
+              ?hidden=${!this.showViewAll}
+            ></a>
+            <slot name="main"></slot>
+            <slot name="footer" class="card-container-footer"></slot>
+          </div>`,
+          () => html`<details
+            class=${classMap({
+              "card-container": true,
+              inner: this.isInnerCard,
+              "empty-state": this.isEmptyState && !this.isInnerCard,
+            })}
+            ?open=${this.isExpanded}
+            @toggle=${this.onToggleContainer}
+          >
+            <summary
+              id="header"
+              class="card-container-header"
+              ?hidden=${ifDefined(this.hideHeader)}
+              ?withViewAll=${this.showViewAll}
+            >
+              <span
+                class="icon chevron-icon"
+                aria-role="presentation"
+                data-l10n-id="firefoxview-collapse-button-${this.isExpanded
+                  ? "hide"
+                  : "show"}"
+              ></span>
+              <slot name="header"></slot>
+            </summary>
+            <a
+              href="about:firefoxview-next#${this.shortPageName}"
+              @click=${this.viewAllClicked}
+              class="view-all-link"
+              data-l10n-id="firefoxview-view-all-link"
+              ?hidden=${!this.showViewAll}
+            ></a>
+            <slot name="main"></slot>
+            <slot name="footer" class="card-container-footer"></slot>
+          </details>`
+        )}
       </section>
     `;
   }

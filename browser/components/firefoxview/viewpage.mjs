@@ -9,6 +9,8 @@ import "chrome://browser/content/firefoxview/card-container.mjs";
 // eslint-disable-next-line import/no-unassigned-import
 import "chrome://browser/content/firefoxview/fxview-empty-state.mjs";
 // eslint-disable-next-line import/no-unassigned-import
+import "chrome://browser/content/firefoxview/fxview-search-textbox.mjs";
+// eslint-disable-next-line import/no-unassigned-import
 import "chrome://browser/content/firefoxview/fxview-tab-list.mjs";
 
 import { placeLinkOnClipboard } from "./helpers.mjs";

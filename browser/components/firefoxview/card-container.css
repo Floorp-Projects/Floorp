@@ -36,6 +36,10 @@
   display: none;
 }
 
+.card-container-header[toggleDisabled] {
+  cursor: auto;
+}
+
 .view-all-link {
   color: var(--fxview-primary-action-background);
   float: inline-end;
@@ -103,13 +107,24 @@
   display: none;
 }
 
-::slotted([slot=header]) {
-  display: flex;
-  align-items: center;
+::slotted([slot=header]),
+::slotted([slot=secondary-header]) {
+  align-self: center;
   margin: 0;
   font-size: 1.13em;
   font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
   user-select: none;
+  white-space: nowrap;
+}
+
+::slotted([slot=header]) {
+  flex: 1;
+}
+
+::slotted([slot=secondary-header]) {
+  padding-inline-end: 1em;
 }
 
 .card-container-footer {
