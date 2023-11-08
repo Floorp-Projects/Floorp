@@ -427,9 +427,6 @@ var FullScreen = {
     } else {
       toolbox.style.removeProperty("transform");
       toolbox.style.removeProperty("z-index");
-
-      // If menubar is animating away, we might need to hide the toolbox also.
-      this.hideNavToolbox(false);
     }
   },
 
