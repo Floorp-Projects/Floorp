@@ -21,8 +21,6 @@ import { DevToolsInfaillibleUtils } from "resource://devtools/shared/DevToolsInf
 
 ChromeUtils.defineESModuleGetters(lazy, {
   ChannelMap: "resource://devtools/shared/network-observer/ChannelMap.sys.mjs",
-  NetworkAuthListener:
-    "resource://devtools/shared/network-observer/NetworkAuthListener.sys.mjs",
   NetworkHelper:
     "resource://devtools/shared/network-observer/NetworkHelper.sys.mjs",
   NetworkOverride:
@@ -125,12 +123,6 @@ export class NetworkObserver {
    * @type {Map}
    */
   #decodedCertificateCache = new Map();
-  /**
-   * Whether the consumer supports listening and handling auth prompts.
-   *
-   * @type {boolean}
-   */
-  #authPromptListenerEnabled = false;
   /**
    * See constructor argument of the same name.
    *
@@ -235,10 +227,6 @@ export class NetworkObserver {
       this.#serviceWorkerRequest,
       "service-worker-synthesized-response"
     );
-  }
-
-  setAuthPromptListenerEnabled(enabled) {
-    this.#authPromptListenerEnabled = enabled;
   }
 
   setSaveRequestAndResponseBodies(save) {
@@ -715,10 +703,6 @@ export class NetworkObserver {
         fromCache,
         fromServiceWorker,
       });
-    }
-
-    if (this.#authPromptListenerEnabled) {
-      new lazy.NetworkAuthListener(httpActivity.channel, httpActivity.owner);
     }
 
     return httpActivity;
@@ -1391,10 +1375,6 @@ export class NetworkObserver {
    * listening.
    */
   destroy() {
-    if (this.#isDestroyed) {
-      return;
-    }
-
     if (Services.appinfo.processType != Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT) {
       gActivityDistributor.removeObserver(this);
       Services.obs.removeObserver(
