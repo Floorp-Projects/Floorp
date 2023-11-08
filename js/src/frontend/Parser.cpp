@@ -2033,7 +2033,7 @@ template <typename Unit>
 SyntaxParseHandler::ModuleNodeType Parser<SyntaxParseHandler, Unit>::moduleBody(
     ModuleSharedContext* modulesc) {
   MOZ_ALWAYS_FALSE(abortIfSyntaxParser());
-  return SyntaxParseHandler::NodeFailure;
+  return SyntaxParseHandler::Node::NodeFailure;
 }
 
 template <class ParseHandler>
@@ -3195,7 +3195,7 @@ bool Parser<FullParseHandler, Unit>::trySyntaxParseInnerFunction(
 
     SyntaxParseHandler::Node syntaxNode =
         syntaxParser->innerFunctionForFunctionBox(
-            SyntaxParseHandler::NodeGeneric, pc_, funbox, inHandling,
+            SyntaxParseHandler::Node::NodeGeneric, pc_, funbox, inHandling,
             yieldHandling, kind, newDirectives);
     if (!syntaxNode) {
       if (syntaxParser->hadAbortedSyntaxParse()) {
@@ -11645,7 +11645,7 @@ Parser<SyntaxParseHandler, Unit>::newRegExp() {
     return null();
   }
 
-  return handler_.newRegExp(SyntaxParseHandler::NodeGeneric, pos());
+  return handler_.newRegExp(SyntaxParseHandler::Node::NodeGeneric, pos());
 }
 
 template <class ParseHandler, typename Unit>

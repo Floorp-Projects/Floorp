@@ -8,7 +8,8 @@
 #define frontend_SyntaxParseHandler_h
 
 #include "mozilla/Assertions.h"
-#include "mozilla/Maybe.h"  // mozilla::Maybe
+#include "mozilla/Maybe.h"   // mozilla::Maybe
+#include "mozilla/Result.h"  // mozilla::Result, mozilla::UnusedZero
 
 #include <string.h>
 
@@ -22,7 +23,108 @@
 #include "frontend/TokenStream.h"
 
 namespace js {
+namespace frontend {
+enum SyntaxParseHandlerNode {
+  NodeFailure = 0,
+  NodeGeneric,
+  NodeGetProp,
+  NodeStringExprStatement,
+  NodeReturn,
+  NodeBreak,
+  NodeThrow,
+  NodeEmptyStatement,
 
+  NodeVarDeclaration,
+  NodeLexicalDeclaration,
+
+  // A non-arrow function expression with block body, from bog-standard
+  // ECMAScript.
+  NodeFunctionExpression,
+
+  NodeFunctionArrow,
+  NodeFunctionStatement,
+
+  // This is needed for proper assignment-target handling.  ES6 formally
+  // requires function calls *not* pass IsValidSimpleAssignmentTarget,
+  // but at last check there were still sites with |f() = 5| and similar
+  // in code not actually executed (or at least not executed enough to be
+  // noticed).
+  NodeFunctionCall,
+
+  NodeOptionalFunctionCall,
+
+  // Node representing normal names which don't require any special
+  // casing.
+  NodeName,
+
+  // Nodes representing the names "arguments" and "eval".
+  NodeArgumentsName,
+  NodeEvalName,
+
+  // Node representing the "async" name, which may actually be a
+  // contextual keyword.
+  NodePotentialAsyncKeyword,
+
+  // Node representing private names.
+  NodePrivateName,
+
+  NodeDottedProperty,
+  NodeOptionalDottedProperty,
+  NodeElement,
+  NodeOptionalElement,
+  // A distinct node for [PrivateName], to make detecting delete this.#x
+  // detectable in syntax parse
+  NodePrivateMemberAccess,
+  NodeOptionalPrivateMemberAccess,
+
+  // Destructuring target patterns can't be parenthesized: |([a]) = [3];|
+  // must be a syntax error.  (We can't use NodeGeneric instead of these
+  // because that would trigger invalid-left-hand-side ReferenceError
+  // semantics when SyntaxError semantics are desired.)
+  NodeParenthesizedArray,
+  NodeParenthesizedObject,
+
+  // In rare cases a parenthesized |node| doesn't have the same semantics
+  // as |node|.  Each such node has a special Node value, and we use a
+  // different Node value to represent the parenthesized form.  See also
+  // is{Unp,P}arenthesized*(Node), parenthesize(Node), and the various
+  // functions that deal in NodeUnparenthesized* below.
+
+  // Valuable for recognizing potential destructuring patterns.
+  NodeUnparenthesizedArray,
+  NodeUnparenthesizedObject,
+
+  // The directive prologue at the start of a FunctionBody or ScriptBody
+  // is the longest sequence (possibly empty) of string literal
+  // expression statements at the start of a function.  Thus we need this
+  // to treat |"use strict";| as a possible Use Strict Directive and
+  // |("use strict");| as a useless statement.
+  NodeUnparenthesizedString,
+
+  // For destructuring patterns an assignment element with
+  // an initializer expression is not allowed be parenthesized.
+  // i.e. |{x = 1} = obj|
+  NodeUnparenthesizedAssignment,
+
+  // This node is necessary to determine if the base operand in an
+  // exponentiation operation is an unparenthesized unary expression.
+  // We want to reject |-2 ** 3|, but still need to allow |(-2) ** 3|.
+  NodeUnparenthesizedUnary,
+
+  // This node is necessary to determine if the LHS of a property access is
+  // super related.
+  NodeSuperBase
+};
+
+}  // namespace frontend
+}  // namespace js
+
+template <>
+struct mozilla::detail::UnusedZero<js::frontend::SyntaxParseHandlerNode> {
+  static const bool value = true;
+};
+
+namespace js {
 namespace frontend {
 
 // Parse handler used when processing the syntax in a block of code, to generate
@@ -41,99 +143,16 @@ class SyntaxParseHandler {
   TokenPos lastStringPos;
 
  public:
-  enum Node {
-    NodeFailure = 0,
-    NodeGeneric,
-    NodeGetProp,
-    NodeStringExprStatement,
-    NodeReturn,
-    NodeBreak,
-    NodeThrow,
-    NodeEmptyStatement,
+  struct NodeError {};
 
-    NodeVarDeclaration,
-    NodeLexicalDeclaration,
+  using Node = SyntaxParseHandlerNode;
 
-    // A non-arrow function expression with block body, from bog-standard
-    // ECMAScript.
-    NodeFunctionExpression,
+  using NodeResult = mozilla::Result<Node, NodeError>;
+  using NodeErrorResult = mozilla::GenericErrorResult<NodeError>;
 
-    NodeFunctionArrow,
-    NodeFunctionStatement,
-
-    // This is needed for proper assignment-target handling.  ES6 formally
-    // requires function calls *not* pass IsValidSimpleAssignmentTarget,
-    // but at last check there were still sites with |f() = 5| and similar
-    // in code not actually executed (or at least not executed enough to be
-    // noticed).
-    NodeFunctionCall,
-
-    NodeOptionalFunctionCall,
-
-    // Node representing normal names which don't require any special
-    // casing.
-    NodeName,
-
-    // Nodes representing the names "arguments" and "eval".
-    NodeArgumentsName,
-    NodeEvalName,
-
-    // Node representing the "async" name, which may actually be a
-    // contextual keyword.
-    NodePotentialAsyncKeyword,
-
-    // Node representing private names.
-    NodePrivateName,
-
-    NodeDottedProperty,
-    NodeOptionalDottedProperty,
-    NodeElement,
-    NodeOptionalElement,
-    // A distinct node for [PrivateName], to make detecting delete this.#x
-    // detectable in syntax parse
-    NodePrivateMemberAccess,
-    NodeOptionalPrivateMemberAccess,
-
-    // Destructuring target patterns can't be parenthesized: |([a]) = [3];|
-    // must be a syntax error.  (We can't use NodeGeneric instead of these
-    // because that would trigger invalid-left-hand-side ReferenceError
-    // semantics when SyntaxError semantics are desired.)
-    NodeParenthesizedArray,
-    NodeParenthesizedObject,
-
-    // In rare cases a parenthesized |node| doesn't have the same semantics
-    // as |node|.  Each such node has a special Node value, and we use a
-    // different Node value to represent the parenthesized form.  See also
-    // is{Unp,P}arenthesized*(Node), parenthesize(Node), and the various
-    // functions that deal in NodeUnparenthesized* below.
-
-    // Valuable for recognizing potential destructuring patterns.
-    NodeUnparenthesizedArray,
-    NodeUnparenthesizedObject,
-
-    // The directive prologue at the start of a FunctionBody or ScriptBody
-    // is the longest sequence (possibly empty) of string literal
-    // expression statements at the start of a function.  Thus we need this
-    // to treat |"use strict";| as a possible Use Strict Directive and
-    // |("use strict");| as a useless statement.
-    NodeUnparenthesizedString,
-
-    // For destructuring patterns an assignment element with
-    // an initializer expression is not allowed be parenthesized.
-    // i.e. |{x = 1} = obj|
-    NodeUnparenthesizedAssignment,
-
-    // This node is necessary to determine if the base operand in an
-    // exponentiation operation is an unparenthesized unary expression.
-    // We want to reject |-2 ** 3|, but still need to allow |(-2) ** 3|.
-    NodeUnparenthesizedUnary,
-
-    // This node is necessary to determine if the LHS of a property access is
-    // super related.
-    NodeSuperBase
-  };
-
-#define DECLARE_TYPE(typeName) using typeName##Type = Node;
+#define DECLARE_TYPE(typeName) \
+  using typeName##Type = Node; \
+  using typeName##Result = mozilla::Result<Node, NodeError>;
   FOR_EACH_PARSENODE_SUBCLASS(DECLARE_TYPE)
 #undef DECLARE_TYPE
 
@@ -177,6 +196,9 @@ class SyntaxParseHandler {
   }
 
   static NullNode null() { return NodeFailure; }
+  static constexpr NodeErrorResult errorResult() {
+    return NodeErrorResult(NodeError());
+  }
 
 #define DECLARE_AS(typeName) \
   static typeName##Type as##typeName(Node node) { return node; }

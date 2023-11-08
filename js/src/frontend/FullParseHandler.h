@@ -7,7 +7,8 @@
 #ifndef frontend_FullParseHandler_h
 #define frontend_FullParseHandler_h
 
-#include "mozilla/Maybe.h"  // mozilla::Maybe
+#include "mozilla/Maybe.h"   // mozilla::Maybe
+#include "mozilla/Result.h"  // mozilla::Result, mozilla::UnusedZero
 
 #include <cstddef>  // std::nullptr_t
 #include <string.h>
@@ -21,6 +22,19 @@
 #include "frontend/ParserAtom.h"  // TaggedParserAtomIndex
 #include "frontend/SharedContext.h"
 #include "frontend/Stencil.h"
+
+template <>
+struct mozilla::detail::UnusedZero<js::frontend::ParseNode*> {
+  static const bool value = true;
+};
+
+#define DEFINE_UNUSED_ZERO(typeName)                            \
+  template <>                                                   \
+  struct mozilla::detail::UnusedZero<js::frontend::typeName*> { \
+    static const bool value = true;                             \
+  };
+FOR_EACH_PARSENODE_SUBCLASS(DEFINE_UNUSED_ZERO)
+#undef DEFINE_UNUSED_ZERO
 
 namespace js {
 namespace frontend {
@@ -61,11 +75,26 @@ class FullParseHandler {
   /* new_ methods for creating parse nodes. These report OOM on context. */
   JS_DECLARE_NEW_METHODS(new_, allocParseNode, inline)
 
-  using Node = ParseNode*;
+  struct NodeError {};
 
-#define DECLARE_TYPE(typeName) using typeName##Type = typeName*;
+  using Node = ParseNode*;
+  using NodeResult = mozilla::Result<ParseNode*, NodeError>;
+  using NodeErrorResult = mozilla::GenericErrorResult<NodeError>;
+
+#define DECLARE_TYPE(typeName)      \
+  using typeName##Type = typeName*; \
+  using typeName##Result = mozilla::Result<typeName*, NodeError>;
   FOR_EACH_PARSENODE_SUBCLASS(DECLARE_TYPE)
 #undef DECLARE_TYPE
+
+  template <class T, typename... Args>
+  inline mozilla::Result<T*, NodeError> newResult(Args&&... args) {
+    auto* node = new_<T>(std::forward<Args>(args)...);
+    if (!node) {
+      return mozilla::Result<T*, NodeError>(NodeError());
+    }
+    return node;
+  }
 
   using NullNode = std::nullptr_t;
 
@@ -108,6 +137,9 @@ class FullParseHandler {
         reuseGCThings(compilationState.input.isDelazifying()) {}
 
   static NullNode null() { return NullNode(); }
+  static constexpr NodeErrorResult errorResult() {
+    return NodeErrorResult(NodeError());
+  }
 
 #define DECLARE_AS(typeName)                      \
   static typeName##Type as##typeName(Node node) { \

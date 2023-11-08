@@ -440,9 +440,11 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
 
  private:
   using Node = typename ParseHandler::Node;
+  using NodeResult = typename ParseHandler::NodeResult;
 
-#define DECLARE_TYPE(typeName) \
-  using typeName##Type = typename ParseHandler::typeName##Type;
+#define DECLARE_TYPE(typeName)                                  \
+  using typeName##Type = typename ParseHandler::typeName##Type; \
+  using typeName##Result = typename ParseHandler::typeName##Result;
   FOR_EACH_PARSENODE_SUBCLASS(DECLARE_TYPE)
 #undef DECLARE_TYPE
 
@@ -486,6 +488,23 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
                          static_cast<void*>(syntaxParser)) {}
 
   static typename ParseHandler::NullNode null() { return ParseHandler::null(); }
+
+  // The return value for the error case in the functions that returns
+  // Result type.
+  static constexpr typename ParseHandler::NodeErrorResult errorResult() {
+    return ParseHandler::errorResult();
+  }
+
+  // Temporary helper function to return raw nullable node.
+  // This function should be removed once all functions are rewritten to use
+  // Result type.
+  template <typename T>
+  mozilla::Result<T, typename ParseHandler::NodeError> toResult(T node) {
+    if (node) {
+      return node;
+    }
+    return errorResult();
+  }
 
   NameNodeType stringLiteral();
 
@@ -687,9 +706,11 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   using Base = PerHandlerParser<ParseHandler>;
   using FinalParser = Parser<ParseHandler, Unit>;
   using Node = typename ParseHandler::Node;
+  using NodeResult = typename ParseHandler::NodeResult;
 
-#define DECLARE_TYPE(typeName) \
-  using typeName##Type = typename ParseHandler::typeName##Type;
+#define DECLARE_TYPE(typeName)                                  \
+  using typeName##Type = typename ParseHandler::typeName##Type; \
+  using typeName##Result = typename ParseHandler::typeName##Result;
   FOR_EACH_PARSENODE_SUBCLASS(DECLARE_TYPE)
 #undef DECLARE_TYPE
 
@@ -712,6 +733,7 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   using Base::checkOptionsCalled_;
 #endif
   using Base::checkForUndefinedPrivateFields;
+  using Base::errorResult;
   using Base::finishClassBodyScope;
   using Base::finishFunctionScopes;
   using Base::finishLexicalScope;
@@ -729,6 +751,7 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   using Base::propagateFreeNamesAndMarkClosedOverBindings;
   using Base::setLocalStrictMode;
   using Base::stringLiteral;
+  using Base::toResult;
   using Base::yieldExpressionsSupported;
 
   using Base::abortIfSyntaxParser;
@@ -1525,9 +1548,11 @@ class MOZ_STACK_CLASS Parser<SyntaxParseHandler, Unit> final
     : public GeneralParser<SyntaxParseHandler, Unit> {
   using Base = GeneralParser<SyntaxParseHandler, Unit>;
   using Node = SyntaxParseHandler::Node;
+  using NodeResult = typename SyntaxParseHandler::NodeResult;
 
-#define DECLARE_TYPE(typeName) \
-  using typeName##Type = SyntaxParseHandler::typeName##Type;
+#define DECLARE_TYPE(typeName)                               \
+  using typeName##Type = SyntaxParseHandler::typeName##Type; \
+  using typeName##Result = SyntaxParseHandler::typeName##Result;
   FOR_EACH_PARSENODE_SUBCLASS(DECLARE_TYPE)
 #undef DECLARE_TYPE
 
@@ -1583,6 +1608,7 @@ class MOZ_STACK_CLASS Parser<SyntaxParseHandler, Unit> final
   using Base::checkOptionsCalled_;
 #endif
   using Base::checkForUndefinedPrivateFields;
+  using Base::errorResult;
   using Base::finishFunctionScopes;
   using Base::functionFormalParametersAndBody;
   using Base::handler_;
@@ -1602,6 +1628,7 @@ class MOZ_STACK_CLASS Parser<SyntaxParseHandler, Unit> final
   using Base::ss;
   using Base::statementList;
   using Base::stringLiteral;
+  using Base::toResult;
   using Base::usedNames_;
 
  private:
@@ -1659,9 +1686,11 @@ class MOZ_STACK_CLASS Parser<FullParseHandler, Unit> final
     : public GeneralParser<FullParseHandler, Unit> {
   using Base = GeneralParser<FullParseHandler, Unit>;
   using Node = FullParseHandler::Node;
+  using NodeResult = typename FullParseHandler::NodeResult;
 
-#define DECLARE_TYPE(typeName) \
-  using typeName##Type = FullParseHandler::typeName##Type;
+#define DECLARE_TYPE(typeName)                             \
+  using typeName##Type = FullParseHandler::typeName##Type; \
+  using typeName##Result = FullParseHandler::typeName##Result;
   FOR_EACH_PARSENODE_SUBCLASS(DECLARE_TYPE)
 #undef DECLARE_TYPE
 
@@ -1724,6 +1753,7 @@ class MOZ_STACK_CLASS Parser<FullParseHandler, Unit> final
   using Base::checkOptionsCalled_;
 #endif
   using Base::checkForUndefinedPrivateFields;
+  using Base::errorResult;
   using Base::fc_;
   using Base::finishClassBodyScope;
   using Base::finishFunctionScopes;
@@ -1745,6 +1775,7 @@ class MOZ_STACK_CLASS Parser<FullParseHandler, Unit> final
   using Base::propagateFreeNamesAndMarkClosedOverBindings;
   using Base::statementList;
   using Base::stringLiteral;
+  using Base::toResult;
   using Base::usedNames_;
 
   using Base::abortIfSyntaxParser;
