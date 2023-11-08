@@ -377,7 +377,27 @@ bool RemoteAccessible::ContainsPoint(int32_t aX, int32_t aY) {
     return false;
   }
   if (!IsTextLeaf()) {
-    return true;
+    if (RefPtr{DisplayStyle()} != nsGkAtoms::inlinevalue) {
+      // This isn't an inline element, so we don't need to walk lines. It's
+      // enough that our rect contains the point.
+      return true;
+    }
+    // Inline elements can wrap across lines just like text leaves; see below.
+    // Walk the children, which will walk the lines of text in any text leaves.
+    uint32_t count = ChildCount();
+    for (uint32_t c = 0; c < count; ++c) {
+      RemoteAccessible* child = RemoteChildAt(c);
+      if (child->Role() == roles::TEXT_CONTAINER && child->IsClipped()) {
+        // There is a clipped child. This is a candidate for fuzzy hit testing.
+        // See RemoteAccessible::DoFuzzyHittesting.
+        return true;
+      }
+      if (child->ContainsPoint(aX, aY)) {
+        return true;
+      }
+    }
+    // None of our descendants contain the point, so nor do we.
+    return false;
   }
   // This is a text leaf. The text might wrap across lines, which means our
   // rect might cover a wider area than the actual text. For example, if the
