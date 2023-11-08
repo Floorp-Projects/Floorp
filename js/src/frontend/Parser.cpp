@@ -373,7 +373,8 @@ bool ParserBase::setSourceMapInfo() {
  * Parse a top-level JS script.
  */
 template <class ParseHandler, typename Unit>
-typename ParseHandler::ListNodeType GeneralParser<ParseHandler, Unit>::parse() {
+typename ParseHandler::ListNodeResult
+GeneralParser<ParseHandler, Unit>::parse() {
   MOZ_ASSERT(checkOptionsCalled_);
 
   SourceExtent extent = SourceExtent::makeGlobalExtent(
@@ -384,28 +385,28 @@ typename ParseHandler::ListNodeType GeneralParser<ParseHandler, Unit>::parse() {
                                directives, extent);
   SourceParseContext globalpc(this, &globalsc, /* newDirectives = */ nullptr);
   if (!globalpc.init()) {
-    return null();
+    return errorResult();
   }
 
   ParseContext::VarScope varScope(this);
   if (!varScope.init(pc_)) {
-    return null();
+    return errorResult();
   }
 
   ListNodeType stmtList;
-  MOZ_TRY_VAR_OR_RETURN(stmtList, statementList(YieldIsName), null());
+  MOZ_TRY_VAR(stmtList, statementList(YieldIsName));
 
   TokenKind tt;
   if (!tokenStream.getToken(&tt, TokenStream::SlashIsRegExp)) {
-    return null();
+    return errorResult();
   }
   if (tt != TokenKind::Eof) {
     error(JSMSG_GARBAGE_AFTER_INPUT, "script", TokenKindToDesc(tt));
-    return null();
+    return errorResult();
   }
 
   if (!CheckParseTree(this->fc_, alloc_, stmtList)) {
-    return null();
+    return errorResult();
   }
 
   if (foldConstants_) {
@@ -414,7 +415,7 @@ typename ParseHandler::ListNodeType GeneralParser<ParseHandler, Unit>::parse() {
     // tree that doesn't type-check as asm.js.
     if (!pc_->useAsmOrInsideUseAsm()) {
       if (!FoldConstants(this->fc_, this->parserAtoms(), &node, &handler_)) {
-        return null();
+        return errorResult();
       }
     }
     stmtList = handler_.asListNode(node);
@@ -1732,16 +1733,16 @@ bool PerHandlerParser<ParseHandler>::checkForUndefinedPrivateFields(
 }
 
 template <typename Unit>
-LexicalScopeNode* Parser<FullParseHandler, Unit>::evalBody(
-    EvalSharedContext* evalsc) {
+FullParseHandler::LexicalScopeNodeResult
+Parser<FullParseHandler, Unit>::evalBody(EvalSharedContext* evalsc) {
   SourceParseContext evalpc(this, evalsc, /* newDirectives = */ nullptr);
   if (!evalpc.init()) {
-    return nullptr;
+    return errorResult();
   }
 
   ParseContext::VarScope varScope(this);
   if (!varScope.init(pc_)) {
-    return nullptr;
+    return errorResult();
   }
 
   LexicalScopeNode* body;
@@ -1749,23 +1750,22 @@ LexicalScopeNode* Parser<FullParseHandler, Unit>::evalBody(
     // All evals have an implicit non-extensible lexical scope.
     ParseContext::Scope lexicalScope(this);
     if (!lexicalScope.init(pc_)) {
-      return nullptr;
+      return errorResult();
     }
 
     ListNode* list;
-    MOZ_TRY_VAR_OR_RETURN(list, statementList(YieldIsName), nullptr);
+    MOZ_TRY_VAR(list, statementList(YieldIsName));
 
     if (!checkStatementsEOF()) {
-      return nullptr;
+      return errorResult();
     }
 
     // Private names not lexically defined must trigger a syntax error.
     if (!checkForUndefinedPrivateFields(evalsc)) {
-      return nullptr;
+      return errorResult();
     }
 
-    MOZ_TRY_VAR_OR_RETURN(body, finishLexicalScope(lexicalScope, list),
-                          nullptr);
+    MOZ_TRY_VAR(body, finishLexicalScope(lexicalScope, list));
   }
 
 #ifdef DEBUG
@@ -1783,7 +1783,7 @@ LexicalScopeNode* Parser<FullParseHandler, Unit>::evalBody(
 #endif
 
   if (!CheckParseTree(this->fc_, alloc_, body)) {
-    return null();
+    return errorResult();
   }
 
   ParseNode* node = body;
@@ -1791,18 +1791,18 @@ LexicalScopeNode* Parser<FullParseHandler, Unit>::evalBody(
   // tree that doesn't type-check as asm.js.
   if (!pc_->useAsmOrInsideUseAsm()) {
     if (!FoldConstants(this->fc_, this->parserAtoms(), &node, &handler_)) {
-      return null();
+      return errorResult();
     }
   }
   body = handler_.asLexicalScopeNode(node);
 
   if (!this->setSourceMapInfo()) {
-    return nullptr;
+    return errorResult();
   }
 
   if (pc_->sc()->strict()) {
     if (!propagateFreeNamesAndMarkClosedOverBindings(varScope)) {
-      return nullptr;
+      return errorResult();
     }
   } else {
     // For non-strict eval scripts, since all bindings are automatically
@@ -1810,13 +1810,13 @@ LexicalScopeNode* Parser<FullParseHandler, Unit>::evalBody(
     // AndMarkClosedOverBindings. However, Annex B.3.3 functions still need to
     // be marked.
     if (!varScope.propagateAndMarkAnnexBFunctionBoxes(pc_, this)) {
-      return nullptr;
+      return errorResult();
     }
   }
 
   Maybe<EvalScope::ParserData*> bindings = newEvalScopeData(pc_->varScope());
   if (!bindings) {
-    return nullptr;
+    return errorResult();
   }
   evalsc->bindings = *bindings;
 
@@ -1824,31 +1824,31 @@ LexicalScopeNode* Parser<FullParseHandler, Unit>::evalBody(
 }
 
 template <typename Unit>
-ListNode* Parser<FullParseHandler, Unit>::globalBody(
+FullParseHandler::ListNodeResult Parser<FullParseHandler, Unit>::globalBody(
     GlobalSharedContext* globalsc) {
   SourceParseContext globalpc(this, globalsc, /* newDirectives = */ nullptr);
   if (!globalpc.init()) {
-    return nullptr;
+    return errorResult();
   }
 
   ParseContext::VarScope varScope(this);
   if (!varScope.init(pc_)) {
-    return nullptr;
+    return errorResult();
   }
 
   ListNode* body;
-  MOZ_TRY_VAR_OR_RETURN(body, statementList(YieldIsName), nullptr);
+  MOZ_TRY_VAR(body, statementList(YieldIsName));
 
   if (!checkStatementsEOF()) {
-    return nullptr;
+    return errorResult();
   }
 
   if (!CheckParseTree(this->fc_, alloc_, body)) {
-    return null();
+    return errorResult();
   }
 
   if (!checkForUndefinedPrivateFields()) {
-    return null();
+    return errorResult();
   }
 
   ParseNode* node = body;
@@ -1856,26 +1856,26 @@ ListNode* Parser<FullParseHandler, Unit>::globalBody(
   // tree that doesn't type-check as asm.js.
   if (!pc_->useAsmOrInsideUseAsm()) {
     if (!FoldConstants(this->fc_, this->parserAtoms(), &node, &handler_)) {
-      return null();
+      return errorResult();
     }
   }
   body = &node->as<ListNode>();
 
   if (!this->setSourceMapInfo()) {
-    return nullptr;
+    return errorResult();
   }
 
   // For global scripts, whether bindings are closed over or not doesn't
   // matter, so no need to call propagateFreeNamesAndMarkClosedOver-
   // Bindings. However, Annex B.3.3 functions still need to be marked.
   if (!varScope.propagateAndMarkAnnexBFunctionBoxes(pc_, this)) {
-    return nullptr;
+    return errorResult();
   }
 
   Maybe<GlobalScope::ParserData*> bindings =
       newGlobalScopeData(pc_->varScope());
   if (!bindings) {
-    return nullptr;
+    return errorResult();
   }
   globalsc->bindings = *bindings;
 
@@ -1883,54 +1883,54 @@ ListNode* Parser<FullParseHandler, Unit>::globalBody(
 }
 
 template <typename Unit>
-ModuleNode* Parser<FullParseHandler, Unit>::moduleBody(
+FullParseHandler::ModuleNodeResult Parser<FullParseHandler, Unit>::moduleBody(
     ModuleSharedContext* modulesc) {
   MOZ_ASSERT(checkOptionsCalled_);
 
   this->compilationState_.moduleMetadata =
       fc_->getAllocator()->template new_<StencilModuleMetadata>();
   if (!this->compilationState_.moduleMetadata) {
-    return null();
+    return errorResult();
   }
 
   SourceParseContext modulepc(this, modulesc, nullptr);
   if (!modulepc.init()) {
-    return null();
+    return errorResult();
   }
 
   ParseContext::VarScope varScope(this);
   if (!varScope.init(pc_)) {
-    return null();
+    return errorResult();
   }
 
   ModuleNodeType moduleNode;
-  MOZ_TRY_VAR_OR_RETURN(moduleNode, handler_.newModule(pos()), null());
+  MOZ_TRY_VAR(moduleNode, handler_.newModule(pos()));
 
   AutoAwaitIsKeyword<FullParseHandler, Unit> awaitIsKeyword(
       this, AwaitIsModuleKeyword);
   ListNode* stmtList;
-  MOZ_TRY_VAR_OR_RETURN(stmtList, statementList(YieldIsName), null());
+  MOZ_TRY_VAR(stmtList, statementList(YieldIsName));
 
   MOZ_ASSERT(stmtList->isKind(ParseNodeKind::StatementList));
   moduleNode->setBody(&stmtList->template as<ListNode>());
 
   if (pc_->isAsync()) {
     if (!noteUsedName(TaggedParserAtomIndex::WellKnown::dot_generator_())) {
-      return null();
+      return errorResult();
     }
 
     if (!pc_->declareTopLevelDotGeneratorName()) {
-      return null();
+      return errorResult();
     }
   }
 
   TokenKind tt;
   if (!tokenStream.getToken(&tt, TokenStream::SlashIsRegExp)) {
-    return null();
+    return errorResult();
   }
   if (tt != TokenKind::Eof) {
     error(JSMSG_GARBAGE_AFTER_INPUT, "module", TokenKindToDesc(tt));
-    return null();
+    return errorResult();
   }
 
   // Set the module to async if an await keyword was found at the top level.
@@ -1941,7 +1941,7 @@ ModuleNode* Parser<FullParseHandler, Unit>::moduleBody(
 
   // Generate the Import/Export tables and store in CompilationState.
   if (!modulesc->builder.buildTables(*this->compilationState_.moduleMetadata)) {
-    return null();
+    return errorResult();
   }
 
   // Check exported local bindings exist and mark them as closed over.
@@ -1953,11 +1953,11 @@ ModuleNode* Parser<FullParseHandler, Unit>::moduleBody(
       UniqueChars str = this->parserAtoms().toPrintableString(entry.localName);
       if (!str) {
         ReportOutOfMemory(this->fc_);
-        return null();
+        return errorResult();
       }
 
       errorNoOffset(JSMSG_MISSING_EXPORT, str.get());
-      return null();
+      return errorResult();
     }
 
     p->value()->setClosedOver();
@@ -1968,7 +1968,7 @@ ModuleNode* Parser<FullParseHandler, Unit>::moduleBody(
   if (!noteDeclaredName(
           TaggedParserAtomIndex::WellKnown::star_namespace_star_(),
           DeclarationKind::Const, pos())) {
-    return nullptr;
+    return errorResult();
   }
   modulepc.varScope()
       .lookupDeclaredName(
@@ -1983,7 +1983,7 @@ ModuleNode* Parser<FullParseHandler, Unit>::moduleBody(
   }
 
   if (!CheckParseTree(this->fc_, alloc_, stmtList)) {
-    return null();
+    return errorResult();
   }
 
   ParseNode* node = stmtList;
@@ -1991,28 +1991,28 @@ ModuleNode* Parser<FullParseHandler, Unit>::moduleBody(
   // tree that doesn't type-check as asm.js.
   if (!pc_->useAsmOrInsideUseAsm()) {
     if (!FoldConstants(this->fc_, this->parserAtoms(), &node, &handler_)) {
-      return null();
+      return errorResult();
     }
   }
   stmtList = &node->as<ListNode>();
 
   if (!this->setSourceMapInfo()) {
-    return null();
+    return errorResult();
   }
 
   // Private names not lexically defined must trigger a syntax error.
   if (!checkForUndefinedPrivateFields()) {
-    return null();
+    return errorResult();
   }
 
   if (!propagateFreeNamesAndMarkClosedOverBindings(modulepc.varScope())) {
-    return null();
+    return errorResult();
   }
 
   Maybe<ModuleScope::ParserData*> bindings =
       newModuleScopeData(modulepc.varScope());
   if (!bindings) {
-    return nullptr;
+    return errorResult();
   }
 
   modulesc->bindings = *bindings;
@@ -2020,10 +2020,10 @@ ModuleNode* Parser<FullParseHandler, Unit>::moduleBody(
 }
 
 template <typename Unit>
-SyntaxParseHandler::ModuleNodeType Parser<SyntaxParseHandler, Unit>::moduleBody(
-    ModuleSharedContext* modulesc) {
+SyntaxParseHandler::ModuleNodeResult
+Parser<SyntaxParseHandler, Unit>::moduleBody(ModuleSharedContext* modulesc) {
   MOZ_ALWAYS_FALSE(abortIfSyntaxParser());
-  return SyntaxParseHandler::Node::NodeFailure;
+  return errorResult();
 }
 
 template <class ParseHandler>

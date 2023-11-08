@@ -957,9 +957,9 @@ bool ScriptCompiler<Unit>::compile(JSContext* maybeCx, SharedContext* sc) {
                           JS::ProfilingCategoryPair::JS_Parsing);
     }
     if (sc->isEvalContext()) {
-      pn = parser->evalBody(sc->asEvalContext());
+      pn = parser->evalBody(sc->asEvalContext()).unwrapOr(nullptr);
     } else {
-      pn = parser->globalBody(sc->asGlobalContext());
+      pn = parser->globalBody(sc->asGlobalContext()).unwrapOr(nullptr);
     }
   }
 
@@ -1020,7 +1020,7 @@ bool ModuleCompiler<Unit>::compile(JSContext* maybeCx, FrontendContext* fc) {
       JS::LimitedColumnNumberZeroOrigin::fromUnlimited(options.column));
   ModuleSharedContext modulesc(fc, options, builder, extent);
 
-  ParseNode* pn = parser->moduleBody(&modulesc);
+  ParseNode* pn = parser->moduleBody(&modulesc).unwrapOr(nullptr);
   if (!pn) {
     return false;
   }
