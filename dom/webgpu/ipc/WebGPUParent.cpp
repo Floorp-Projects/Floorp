@@ -46,15 +46,16 @@ extern bool wgpu_server_ensure_external_texture_for_swap_chain(
       aSwapChainId, aDeviceId, aTextureId, aWidth, aHeight, aFormat);
 }
 
-extern WGPUTextureRaw* wgpu_server_get_external_texture_raw(void* aParam,
-                                                            WGPUTextureId aId) {
+extern void* wgpu_server_get_external_texture_handle(void* aParam,
+                                                     WGPUTextureId aId) {
   auto* parent = static_cast<WebGPUParent*>(aParam);
+
   auto externalTexture = parent->GetExternalTexture(aId);
   if (!externalTexture) {
     MOZ_ASSERT_UNREACHABLE("unexpected to be called");
     return nullptr;
   }
-  return externalTexture->GetTextureRaw();
+  return externalTexture->GetExternalTextureHandle();
 }
 
 }  // namespace ffi
@@ -1455,16 +1456,6 @@ std::shared_ptr<ExternalTexture> WebGPUParent::CreateExternalTexture(
     gfxCriticalNoteOnce << "Failed to get shared handle";
     return nullptr;
   }
-
-  auto* textureRaw = wgpu_server_create_external_texture_raw(
-      mContext.get(), aDeviceId, sharedHandle);
-  if (!textureRaw) {
-    MOZ_ASSERT_UNREACHABLE("unexpected to be called");
-    gfxCriticalNoteOnce << "Failed to create TextureRaw";
-    return nullptr;
-  }
-
-  texture->SetTextureRaw(textureRaw);
 
   std::shared_ptr<ExternalTexture> shared(texture.release());
   mExternalTextures.emplace(aTextureId, shared);

@@ -26,16 +26,6 @@ ExternalTexture::ExternalTexture(const uint32_t aWidth, const uint32_t aHeight,
                                  const struct ffi::WGPUTextureFormat aFormat)
     : mWidth(aWidth), mHeight(aHeight), mFormat(aFormat) {}
 
-ExternalTexture::~ExternalTexture() {
-  if (mTextureRaw) {
-    wgpu_server_destroy_external_texture_raw(mTextureRaw);
-    mTextureRaw = nullptr;
-  }
-}
-
-void ExternalTexture::SetTextureRaw(ffi::WGPUTextureRaw* aTextureRaw) {
-  MOZ_ASSERT(!mTextureRaw);
-  mTextureRaw = aTextureRaw;
-}
+ExternalTexture::~ExternalTexture() {}
 
 }  // namespace mozilla::webgpu

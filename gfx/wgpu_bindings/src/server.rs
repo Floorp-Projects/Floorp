@@ -20,7 +20,6 @@ use std::borrow::Cow;
 #[allow(unused_imports)]
 use std::mem;
 use std::os::raw::c_void;
-use std::ptr;
 use std::slice;
 use std::sync::atomic::{AtomicU32, Ordering};
 
@@ -495,62 +494,6 @@ pub extern "C" fn wgpu_server_buffer_drop(global: &Global, self_id: id::BufferId
     gfx_select!(self_id => global.buffer_drop(self_id, false));
 }
 
-/// Owns gpu resource that can be used by the wgpu implementation.
-/// It is created and destroyed by gecko side's ExternalTexture.
-#[repr(transparent)]
-pub struct TextureRaw {
-    #[cfg(target_os = "windows")]
-    d3d12_resource: d3d12::Resource,
-    #[cfg(not(target_os = "windows"))]
-    _dummy: bool, // FFI requests field
-}
-
-#[allow(unused_variables)]
-#[no_mangle]
-pub extern "C" fn wgpu_server_create_external_texture_raw(
-    global: &mut Global,
-    device_id: id::DeviceId,
-    shared_texture_handle: *mut c_void,
-) -> *mut TextureRaw {
-    assert!(device_id.backend() == wgt::Backend::Dx12);
-
-    #[cfg(target_os = "windows")]
-    if device_id.backend() == wgt::Backend::Dx12 {
-        let mut resource = d3d12::Resource::null();
-
-        let dx12_device = unsafe {
-            global.device_as_hal::<wgc::api::Dx12, _, d3d12::Device>(device_id, |hal_device| {
-                hal_device.unwrap().raw_device().clone()
-            })
-        };
-
-        let hr = unsafe {
-            dx12_device.OpenSharedHandle(
-                shared_texture_handle,
-                &d3d12_ty::ID3D12Resource::uuidof(),
-                resource.mut_void(),
-            )
-        };
-
-        if hr != 0 {
-            return ptr::null_mut();
-        }
-
-        let texture = TextureRaw {
-            d3d12_resource: resource,
-        };
-
-        return Box::into_raw(Box::new(texture));
-    }
-
-    ptr::null_mut()
-}
-
-#[no_mangle]
-pub unsafe extern "C" fn wgpu_server_destroy_external_texture_raw(texture: *mut TextureRaw) {
-    let _ = Box::from_raw(texture);
-}
-
 extern "C" {
     #[allow(dead_code)]
     fn wgpu_server_use_external_texture_for_swap_chain(
@@ -568,10 +511,10 @@ extern "C" {
         format: wgt::TextureFormat,
     ) -> bool;
     #[allow(dead_code)]
-    fn wgpu_server_get_external_texture_raw(
+    fn wgpu_server_get_external_texture_handle(
         param: *mut c_void,
         id: id::TextureId,
-    ) -> *mut TextureRaw;
+    ) -> *mut c_void;
 }
 
 impl Global {
@@ -629,18 +572,40 @@ impl Global {
                             });
                             return;
                         }
-                        let texture_wgpu =
-                            unsafe { wgpu_server_get_external_texture_raw(self.owner, id) };
-                        if texture_wgpu.is_null() {
+
+                        let dx12_device = unsafe {
+                            self.device_as_hal::<wgc::api::Dx12, _, d3d12::Device>(
+                                self_id,
+                                |hal_device| hal_device.unwrap().raw_device().clone(),
+                            )
+                        };
+
+                        let handle =
+                            unsafe { wgpu_server_get_external_texture_handle(self.owner, id) };
+                        if handle.is_null() {
                             error_buf.init(ErrMsg {
-                                message: "Failed to get external texture wgpu",
+                                message: "Failed to get external texture handle",
                                 r#type: ErrorBufferType::Internal,
                             });
-                            return;
                         }
+                        let mut resource = d3d12::Resource::null();
+                        let hr = unsafe {
+                            dx12_device.OpenSharedHandle(
+                                handle,
+                                &d3d12_ty::ID3D12Resource::uuidof(),
+                                resource.mut_void(),
+                            )
+                        };
+                        if hr != 0 {
+                            error_buf.init(ErrMsg {
+                                message: "Failed to open shared handle",
+                                r#type: ErrorBufferType::Internal,
+                            });
+                        }
+
                         let hal_texture = unsafe {
                             <wgh::api::Dx12 as wgh::Api>::Device::texture_from_raw(
-                                (*texture_wgpu).d3d12_resource.clone(),
+                                resource,
                                 wgt::TextureFormat::Bgra8Unorm,
                                 wgt::TextureDimension::D2,
                                 desc.size,
