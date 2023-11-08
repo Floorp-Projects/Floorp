@@ -203,8 +203,9 @@ void nsHyphenationManager::LoadPatternList() {
 // Extract the locale code we'll use to identify a given hyphenation resource
 // from the path name as found in omnijar or on disk.
 static already_AddRefed<nsAtom> LocaleAtomFromPath(const nsCString& aPath) {
-  MOZ_ASSERT(StringEndsWith(aPath, ".hyf"_ns) ||
-             StringEndsWith(aPath, ".dic"_ns));
+  if (!StringEndsWith(aPath, ".hyf"_ns) && !StringEndsWith(aPath, ".dic"_ns)) {
+    return nullptr;
+  }
   nsCString locale(aPath);
   locale.Truncate(locale.Length() - 4);      // strip ".hyf" or ".dic"
   locale.Cut(0, locale.RFindChar('/') + 1);  // strip directory
@@ -212,11 +213,7 @@ static already_AddRefed<nsAtom> LocaleAtomFromPath(const nsCString& aPath) {
   if (StringBeginsWith(locale, "hyph_"_ns)) {
     locale.Cut(0, 5);
   }
-  for (uint32_t i = 0; i < locale.Length(); ++i) {
-    if (locale[i] == '_') {
-      locale.Replace(i, 1, '-');
-    }
-  }
+  locale.ReplaceChar('_', '-');
   return NS_Atomize(locale);
 }
 
@@ -254,6 +251,9 @@ void nsHyphenationManager::LoadPatternListFromOmnijar(Omnijar::Type aType) {
       continue;
     }
     RefPtr<nsAtom> localeAtom = LocaleAtomFromPath(locale);
+    if (!localeAtom) {
+      continue;
+    }
     mPatternFiles.InsertOrUpdate(localeAtom, uri);
   }
 
@@ -289,6 +289,9 @@ void nsHyphenationManager::LoadPatternListFromDir(nsIFile* aDir) {
       continue;
     }
     RefPtr<nsAtom> localeAtom = LocaleAtomFromPath(path);
+    if (!localeAtom) {
+      continue;
+    }
     nsCOMPtr<nsIURI> uri;
     nsresult rv = NS_NewFileURI(getter_AddRefs(uri), file);
     if (NS_SUCCEEDED(rv)) {
@@ -345,6 +348,10 @@ void nsHyphenationManager::ShareHyphDictToProcess(
   }
 
   RefPtr<nsAtom> localeAtom = LocaleAtomFromPath(path);
+  if (!localeAtom) {
+    MOZ_ASSERT_UNREACHABLE("bad path");
+    return;
+  }
   RefPtr<nsHyphenator> hyph = GetHyphenator(localeAtom);
   if (!hyph) {
     MOZ_ASSERT_UNREACHABLE("failed to find hyphenator");
