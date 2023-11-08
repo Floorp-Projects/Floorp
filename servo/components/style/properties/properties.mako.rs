@@ -1751,6 +1751,7 @@ impl UnparsedValue {
             &self.css,
             self.first_token_type,
             custom_properties,
+            &self.url_data,
             stylist,
             computed_context,
         ) {
@@ -2481,7 +2482,7 @@ impl PropertyDeclaration {
                 let value = match input.try_parse(CSSWideKeyword::parse) {
                     Ok(keyword) => CustomDeclarationValue::CSSWideKeyword(keyword),
                     Err(()) => CustomDeclarationValue::Value(
-                        crate::custom_properties::SpecifiedValue::parse(input)?
+                        crate::custom_properties::SpecifiedValue::parse(input, &context.url_data)?
                     ),
                 };
                 declarations.push(PropertyDeclaration::Custom(CustomDeclaration {
