@@ -17,8 +17,8 @@ add_task(async function testSingleRequest() {
     content.wrappedJSObject.sendRequest(_url);
   });
 
-  const eventsCount = await onNetworkEvents;
-  is(eventsCount, 1, "Received the expected number of network events");
+  const events = await onNetworkEvents;
+  is(events.length, 1, "Received the expected number of network events");
 });
 
 add_task(async function testMultipleRequests() {
@@ -39,9 +39,9 @@ add_task(async function testMultipleRequests() {
     }
   );
 
-  const eventsCount = await onNetworkEvents;
+  const events = await onNetworkEvents;
   is(
-    eventsCount,
+    events.length,
     EXPECTED_REQUESTS_COUNT,
     "Received the expected number of network events"
   );
