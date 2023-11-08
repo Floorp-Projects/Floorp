@@ -534,8 +534,8 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
   bool finishFunctionScopes(bool isStandaloneFunction);
   LexicalScopeNodeType finishLexicalScope(ParseContext::Scope& scope, Node body,
                                           ScopeKind kind = ScopeKind::Lexical);
-  ClassBodyScopeNodeType finishClassBodyScope(ParseContext::Scope& scope,
-                                              ListNodeType body);
+  ClassBodyScopeNodeResult finishClassBodyScope(ParseContext::Scope& scope,
+                                                ListNodeType body);
   bool finishFunction(bool isStandaloneFunction = false);
 
   inline NameNodeResult newName(TaggedParserAtomIndex name);
@@ -1287,9 +1287,9 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   inline bool checkExportedNameForClause(NameNodeType nameNode);
 
   enum ClassContext { ClassStatement, ClassExpression };
-  ClassNodeType classDefinition(YieldHandling yieldHandling,
-                                ClassContext classContext,
-                                DefaultHandling defaultHandling);
+  ClassNodeResult classDefinition(YieldHandling yieldHandling,
+                                  ClassContext classContext,
+                                  DefaultHandling defaultHandling);
 
   struct ClassInitializedMembers {
     // The number of instance class fields.
@@ -1333,43 +1333,42 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
       const ClassInitializedMembers& classInitializedMembers,
       ListNodeType& classMembers);
 
-  FunctionNodeType privateMethodInitializer(
+  FunctionNodeResult privateMethodInitializer(
       TokenPos propNamePos, TaggedParserAtomIndex propAtom,
       TaggedParserAtomIndex storedMethodAtom);
-  FunctionNodeType fieldInitializerOpt(
+  FunctionNodeResult fieldInitializerOpt(
       TokenPos propNamePos, Node name, TaggedParserAtomIndex atom,
       ClassInitializedMembers& classInitializedMembers, bool isStatic,
       HasHeritage hasHeritage);
 
-  FunctionNodeType synthesizePrivateMethodInitializer(
+  FunctionNodeResult synthesizePrivateMethodInitializer(
       TaggedParserAtomIndex propAtom, AccessorType accessorType,
       TokenPos propNamePos);
 
 #ifdef ENABLE_DECORATORS
-  ClassMethodType synthesizeAccessor(
+  ClassMethodResult synthesizeAccessor(
       Node propName, TokenPos propNamePos, TaggedParserAtomIndex propAtom,
       TaggedParserAtomIndex privateStateNameAtom, bool isStatic,
       FunctionSyntaxKind syntaxKind,
       ClassInitializedMembers& classInitializedMembers);
 
-  FunctionNodeType synthesizeAccessorBody(TaggedParserAtomIndex funNameAtom,
-                                          TokenPos propNamePos,
-                                          TaggedParserAtomIndex propNameAtom,
-                                          FunctionSyntaxKind syntaxKind);
+  FunctionNodeResult synthesizeAccessorBody(TaggedParserAtomIndex funNameAtom,
+                                            TokenPos propNamePos,
+                                            TaggedParserAtomIndex propNameAtom,
+                                            FunctionSyntaxKind syntaxKind);
 #endif
 
-  FunctionNodeType staticClassBlock(
+  FunctionNodeResult staticClassBlock(
       ClassInitializedMembers& classInitializedMembers);
 
-  FunctionNodeType synthesizeConstructor(TaggedParserAtomIndex className,
-                                         TokenPos synthesizedBodyPos,
-                                         HasHeritage hasHeritage);
+  FunctionNodeResult synthesizeConstructor(TaggedParserAtomIndex className,
+                                           TokenPos synthesizedBodyPos,
+                                           HasHeritage hasHeritage);
 
  protected:
-  FunctionNodeType synthesizeConstructorBody(TokenPos synthesizedBodyPos,
-                                             HasHeritage hasHeritage,
-                                             FunctionNodeType funNode,
-                                             FunctionBox* funbox);
+  bool synthesizeConstructorBody(TokenPos synthesizedBodyPos,
+                                 HasHeritage hasHeritage,
+                                 FunctionNodeType funNode, FunctionBox* funbox);
 
  private:
   bool checkBindingIdentifier(TaggedParserAtomIndex ident, uint32_t offset,
