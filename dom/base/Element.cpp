@@ -4401,6 +4401,12 @@ void Element::SetCustomElementData(UniquePtr<CustomElementData> aData) {
   slots->mCustomElementData = std::move(aData);
 }
 
+nsTArray<RefPtr<nsAtom>>& Element::EnsureCustomStates() {
+  MOZ_ASSERT(IsHTMLElement());
+  nsExtendedDOMSlots* slots = ExtendedDOMSlots();
+  return slots->mCustomStates;
+}
+
 CustomElementDefinition* Element::GetCustomElementDefinition() const {
   CustomElementData* data = GetCustomElementData();
   if (!data) {

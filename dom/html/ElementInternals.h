@@ -11,6 +11,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/ElementInternalsBinding.h"
 #include "mozilla/dom/UnionTypes.h"
+#include "mozilla/dom/CustomStateSet.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIConstraintValidation.h"
 #include "nsIFormControl.h"
@@ -71,6 +72,7 @@ class ElementInternals final : public nsIFormControl,
   bool ReportValidity(ErrorResult& aRv);
   already_AddRefed<nsINodeList> GetLabels(ErrorResult& aRv) const;
   nsGenericHTMLElement* GetValidationAnchor(ErrorResult& aRv) const;
+  CustomStateSet* States();
 
   // nsIFormControl
   mozilla::dom::HTMLFieldSetElement* GetFieldSet() override {
@@ -202,6 +204,8 @@ class ElementInternals final : public nsIFormControl,
   // Used to store the key to a form-associated custom element in the current
   // session. Is empty until element has been upgraded.
   nsCString mStateKey;
+
+  RefPtr<CustomStateSet> mCustomStateSet;
 
   // A number for a form-associated custom element that is unique within its
   // owner document. This is only set to a number for elements inserted into the

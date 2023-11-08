@@ -9,6 +9,7 @@
 #include "mozAutoDocUpdate.h"
 #include "mozilla/dom/CustomElementRegistry.h"
 #include "mozilla/dom/CustomEvent.h"
+#include "mozilla/dom/CustomStateSet.h"
 #include "mozilla/dom/ElementInternalsBinding.h"
 #include "mozilla/dom/FormData.h"
 #include "mozilla/dom/HTMLElement.h"
@@ -28,13 +29,14 @@ NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_CLASS(ElementInternals)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(ElementInternals)
   tmp->Unlink();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mTarget, mSubmissionValue, mState, mValidity,
-                                  mValidationAnchor);
+                                  mValidationAnchor, mCustomStateSet);
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(ElementInternals)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mTarget, mSubmissionValue, mState,
-                                    mValidity, mValidationAnchor);
+                                    mValidity, mValidationAnchor,
+                                    mCustomStateSet);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(ElementInternals)
@@ -340,6 +342,13 @@ nsGenericHTMLElement* ElementInternals::GetValidationAnchor(
     return nullptr;
   }
   return mValidationAnchor;
+}
+
+CustomStateSet* ElementInternals::States() {
+  if (!mCustomStateSet) {
+    mCustomStateSet = new CustomStateSet(mTarget);
+  }
+  return mCustomStateSet;
 }
 
 void ElementInternals::SetForm(HTMLFormElement* aForm) { mForm = aForm; }

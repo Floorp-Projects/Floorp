@@ -218,6 +218,11 @@ class FragmentOrElement : public nsIContent {
     UniquePtr<PopoverData> mPopoverData;
 
     /**
+     * CustomStates for the element.
+     */
+    nsTArray<RefPtr<nsAtom>> mCustomStates;
+
+    /**
      * RadioGroupContainer for radio buttons grouped under this disconnected
      * element.
      */

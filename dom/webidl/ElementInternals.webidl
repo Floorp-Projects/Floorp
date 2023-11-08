@@ -37,6 +37,25 @@ interface ElementInternals {
 
   [Throws]
   readonly attribute NodeList labels;
+
+  [Pref="dom.element.customstateset.enabled", SameObject] readonly attribute CustomStateSet states;
+};
+
+[Pref="dom.element.customstateset.enabled", Exposed=Window]
+interface CustomStateSet {
+  setlike<DOMString>;
+};
+
+partial interface CustomStateSet {
+  // Setlike methods need to be overriden.
+  [Throws]
+  undefined add(DOMString state);
+
+  [Throws]
+  boolean delete(DOMString state);
+
+  [Throws]
+  undefined clear();
 };
 
 partial interface ElementInternals {
