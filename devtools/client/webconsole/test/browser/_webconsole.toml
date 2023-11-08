@@ -286,6 +286,7 @@ fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and
 skip-if = [
   "tsan", # Bug 1767724
   "a11y_checks", # Bug 1849028 and 1849230 for causing crashes
+  "release_or_beta", # requires dom.postMessage.sharedArrayBuffer.bypassCOOP_COEP.insecure.enabled
 ]
 
 ["browser_webconsole_console_profile_unavailable.js"]
@@ -829,5 +830,6 @@ skip-if = ["true"] # Bug 1765369
 ["browser_webconsole_worker_promise_error.js"]
 
 ["browser_webconsole_worklet_console.js"]
+skip-if = ["release_or_beta"] # requires dom.postMessage.sharedArrayBuffer.bypassCOOP_COEP.insecure.enabled
 
 ["browser_webconsole_worklet_error.js"]

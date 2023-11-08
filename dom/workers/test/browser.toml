@@ -19,6 +19,7 @@ skip-if = ["!nightly_build"] # to be enabled once ES module in workers is enable
 run-if = ["buildapp == 'browser'"]
 
 ["browser_consoleSharedWorkers.js"]
+skip-if = ["release_or_beta"] # requires dom.postMessage.sharedArrayBuffer.bypassCOOP_COEP.insecure.enabled
 support-files = [
   "sharedWorker_console.js",
   "empty.html",
