@@ -217,11 +217,11 @@ void gfxPlatformGtk::InitDmabufConfig() {
                          "FEATURE_FAILURE_REQUIRES_EGL"_ns);
   }
 
-  if (feature.IsEnabled()) {
-    nsAutoCString drmRenderDevice;
-    gfxInfo->GetDrmRenderDevice(drmRenderDevice);
-    gfxVars::SetDrmRenderDevice(drmRenderDevice);
+  nsAutoCString drmRenderDevice;
+  gfxInfo->GetDrmRenderDevice(drmRenderDevice);
+  gfxVars::SetDrmRenderDevice(drmRenderDevice);
 
+  if (feature.IsEnabled()) {
     if (!GetDMABufDevice()->IsEnabled(failureId)) {
       feature.ForceDisable(FeatureStatus::Failed, "Failed to configure",
                            failureId);
