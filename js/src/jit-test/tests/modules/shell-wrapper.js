@@ -63,7 +63,7 @@ import a from 'b';
 assertEq(e.requestedModules.length, 1);
 assertEq(e.requestedModules[0].moduleRequest.specifier, 'b');
 assertEq(e.requestedModules[0].lineNumber, 2);
-assertEq(e.requestedModules[0].columnNumber, 14);
+assertEq(e.requestedModules[0].columnNumber, 15);
 testGetter(e, "requestedModules");
 testGetter(e.requestedModules[0], "moduleRequest");
 testGetter(e.requestedModules[0].moduleRequest, "specifier");
@@ -79,7 +79,7 @@ assertEq(f.importEntries[0].moduleRequest.specifier, 'b');
 assertEq(f.importEntries[0].importName, 'a');
 assertEq(f.importEntries[0].localName, 'A');
 assertEq(f.importEntries[0].lineNumber, 2);
-assertEq(f.importEntries[0].columnNumber, 8);
+assertEq(f.importEntries[0].columnNumber, 9);
 testGetter(f, "importEntries");
 testGetter(f.importEntries[0], "moduleRequest");
 testGetter(f.importEntries[0].moduleRequest, "specifier");
@@ -98,7 +98,7 @@ assertEq(g.localExportEntries[0].moduleRequest, null);
 assertEq(g.localExportEntries[0].importName, null);
 assertEq(g.localExportEntries[0].localName, 'v');
 assertEq(g.localExportEntries[0].lineNumber, 0);
-assertEq(g.localExportEntries[0].columnNumber, 0);
+assertEq(g.localExportEntries[0].columnNumber, 1);
 testGetter(g, "localExportEntries");
 testGetter(g.localExportEntries[0], "exportName");
 testGetter(g.localExportEntries[0], "moduleRequest");
@@ -117,7 +117,7 @@ assertEq(h.indirectExportEntries[0].moduleRequest.specifier, "b");
 assertEq(h.indirectExportEntries[0].importName, "v");
 assertEq(h.indirectExportEntries[0].localName, null);
 assertEq(h.indirectExportEntries[0].lineNumber, 2);
-assertEq(h.indirectExportEntries[0].columnNumber, 8);
+assertEq(h.indirectExportEntries[0].columnNumber, 9);
 
 // ==== starExportEntries getter ====
 const i = parseModule(`
@@ -129,7 +129,7 @@ assertEq(i.starExportEntries[0].moduleRequest.specifier, "b");
 assertEq(i.starExportEntries[0].importName, null);
 assertEq(i.starExportEntries[0].localName, null);
 assertEq(i.starExportEntries[0].lineNumber, 2);
-assertEq(i.starExportEntries[0].columnNumber, 7);
+assertEq(i.starExportEntries[0].columnNumber, 8);
 
 // ==== dfsIndex and dfsAncestorIndex getters ====
 const j = registerModule('j', parseModule(`
