@@ -676,6 +676,16 @@ JSString* js::SubstringKernel(JSContext* cx, HandleString str, int32_t beginInt,
       return nullptr;
     }
 
+    // The dependent string of a two-byte string can be a Latin-1 string, so
+    // check again if the result fits into an inline string.
+    if (left->hasLatin1Chars() && right->hasLatin1Chars()) {
+      if (JSInlineString::lengthFits<Latin1Char>(len)) {
+        MOZ_ASSERT(rope->hasTwoByteChars(), "Latin-1 ropes are handled above");
+        return SubstringInlineString<Latin1Char>(cx, left, right, 0, lhsLength,
+                                                 rhsLength);
+      }
+    }
+
     return JSRope::new_<CanGC>(cx, left, right, len);
   }
 
