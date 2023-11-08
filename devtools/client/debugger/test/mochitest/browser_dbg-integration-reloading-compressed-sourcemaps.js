@@ -13,7 +13,6 @@
 requestLongerTimeout(10);
 
 add_task(async function () {
-  await pushPref("devtools.debugger.map-scopes-enabled", true);
   const testFolder = "sourcemaps-reload-compressed";
   const isCompressed = true;
 

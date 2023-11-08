@@ -17,7 +17,8 @@ add_task(async function () {
   await addBreakpoint(dbg, "times2.js", 2);
 
   invokeInTab("keepMeAlive");
-  await waitForPausedInOriginalFileAndToggleMapScopes(dbg, "times2.js");
+  await waitForPaused(dbg);
+  await waitForSelectedSource(dbg, "times2.js");
 
   info("Test previewing in the original location");
   await assertPreviews(dbg, [
@@ -36,3 +37,9 @@ add_task(async function () {
   await hoverAtPos(dbg, { line: 2, column: 17 });
   await assertNoTooltip(dbg);
 });
+
+async function assertNoTooltip(dbg) {
+  await wait(200);
+  const el = findElement(dbg, "previewPopup");
+  is(el, null, "Tooltip should not exist");
+}

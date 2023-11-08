@@ -52,7 +52,7 @@ export async function buildMappedScopes(
   source,
   content,
   frame,
-  generatedScopes,
+  scopes,
   thunkArgs
 ) {
   const { getState, parserWorker } = thunkArgs;
@@ -77,16 +77,13 @@ export async function buildMappedScopes(
   );
 
   if (hasLineMappings(originalRanges)) {
-    // Fallback to generated scopes as there are no clear mappings to original scopes
-    // This means the scope variable names are likely the same for both the original
-    // generated sources.
-    return { scope: generatedScopes };
+    return null;
   }
 
   let generatedAstBindings;
-  if (generatedScopes) {
+  if (scopes) {
     generatedAstBindings = buildGeneratedBindingList(
-      generatedScopes,
+      scopes,
       generatedAstScopes,
       frame.this
     );
@@ -104,8 +101,8 @@ export async function buildMappedScopes(
       thunkArgs
     );
 
-  const globalLexicalScope = generatedScopes
-    ? getGlobalFromScope(generatedScopes)
+  const globalLexicalScope = scopes
+    ? getGlobalFromScope(scopes)
     : generateGlobalFromAst(generatedAstScopes);
   const mappedGeneratedScopes = generateClientScope(
     globalLexicalScope,
@@ -114,7 +111,7 @@ export async function buildMappedScopes(
 
   return isReliableScope(mappedGeneratedScopes)
     ? { mappings: expressionLookup, scope: mappedGeneratedScopes }
-    : { scope: generatedScopes };
+    : null;
 }
 
 async function mapOriginalBindingsToGenerated(

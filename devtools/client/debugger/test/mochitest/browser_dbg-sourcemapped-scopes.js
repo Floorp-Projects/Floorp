@@ -73,8 +73,8 @@ async function breakpointScopes(
 }
 
 add_task(async function () {
-  await pushPref("devtools.debugger.map-scopes-enabled", true);
   const dbg = await initDebugger("doc-sourcemapped.html");
+  dbg.actions.toggleMapScopes();
 
   for (const fixture of ACTIVE_FIXTURES) {
     await fixture(dbg);

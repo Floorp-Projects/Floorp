@@ -53,8 +53,7 @@ body {
     * |  +----------------------+  ↔                 |
     * |  |  [EagerEvaluation]   |  ↔                 |
     * |  +----------------------+  ↔                 |
-    * |  |  [EvalNotification]  |  ↔                 |
-    * |  +----------------------+  ↔                 |
+    * |                            ↔                 |
     * +----------------------------↔                 |
     * |  [Reverse search input]    ↔                 |
     * +----------------------------------------------+
@@ -68,9 +67,8 @@ body {
                        "filter-toolbar           sidebar"
                        "filter-toolbar-secondary sidebar"
                        "output-input             sidebar"
-                       "eval-notification        sidebar"
                        "reverse-search           sidebar";
-  grid-template-rows: auto var(--primary-toolbar-height) auto 1fr auto auto;
+  grid-template-rows: auto var(--primary-toolbar-height) auto 1fr auto;
   grid-template-columns: minmax(200px, 1fr) minmax(0, auto);
   max-height: 100vh !important;
   height: 100vh !important;
@@ -281,8 +279,6 @@ body {
      * +--------------------------↔                          ↔                 |
      * |    [Eager evaluation]    ↔                          ↔                 |
      * +--------------------------↔                          ↔                 |
-     * |   [Eval Notification]    ↔                          ↔                 |
-     * +--------------------------↔                          ↔                 |
      * |  [Reverse search input]  ↔                          ↔                 |
      * +-----------------------------------------------------+-----------------+
      *
@@ -297,7 +293,6 @@ body {
                        "editor                filter-toolbar-secondary  sidebar"
                        "editor                output                    sidebar"
                        "eager-evaluation      output                    sidebar"
-                       "eval-notification     output                    sidebar"
                        "reverse-search        output                    sidebar";
   grid-template-rows:
     auto
@@ -305,7 +300,6 @@ body {
     var(--primary-toolbar-height)
     auto
     1fr
-    auto
     auto
     auto;
   grid-template-columns: minmax(150px, auto) minmax(200px, 1fr) minmax(0, auto);
@@ -451,17 +445,6 @@ body {
     will still take the whole available space. */
   min-width: 100%;
   width: 0;
-}
-
-.evaluation-notification {
-  grid-area: eval-notification;
-  /* The next 2 lines make it so the element isn't impacting the grid column size, but
-    will still take the whole available space. */
-  min-width: 100%;
-  width: 0;
-  border: 1px solid;
-  display: flex;
-  padding: 0.5em;
 }
 
 .jsterm-editor .editor-resizer {

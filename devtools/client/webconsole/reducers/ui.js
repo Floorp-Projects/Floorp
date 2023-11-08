@@ -20,7 +20,6 @@ const {
   EDITOR_PRETTY_PRINT,
   EDITOR_SET_WIDTH,
   ENABLE_NETWORK_MONITORING,
-  SHOW_EVALUATION_NOTIFICATION,
 } = require("resource://devtools/client/webconsole/constants.js");
 
 const {
@@ -49,7 +48,6 @@ const UiState = overrides =>
         // Only used in the browser toolbox console/ browser console
         // turned off by default
         enableNetworkMonitoring: false,
-        notification: null,
       },
       overrides
     )
@@ -85,11 +83,6 @@ function ui(state = UiState(), action) {
       return { ...state, sidebarVisible: true, frontInSidebar: action.front };
     case SPLIT_CONSOLE_CLOSE_BUTTON_TOGGLE:
       return { ...state, closeButtonVisible: action.shouldDisplayButton };
-    case SHOW_EVALUATION_NOTIFICATION:
-      if (state.notification == action.notification) {
-        return state;
-      }
-      return { ...state, notification: action.notification };
     case REVERSE_SEARCH_INPUT_TOGGLE:
       return {
         ...state,

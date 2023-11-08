@@ -37,7 +37,7 @@ add_task(async function () {
   await assertBreakpoint(dbg, 4);
   invokeInTab("logMessage");
 
-  await waitForPausedInOriginalFileAndToggleMapScopes(dbg);
+  await waitForPaused(dbg);
   assertPausedAtSourceAndLine(dbg, mainSrc.id, 4);
 
   // Tests the existence of the sourcemap link in the original source.

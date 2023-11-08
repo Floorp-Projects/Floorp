@@ -29,7 +29,6 @@ import {
   getHighlightedLineRangeForSelectedSource,
   isSourceMapIgnoreListEnabled,
   isSourceOnSourceMapIgnoreList,
-  isMapScopesEnabled,
 } from "../../selectors";
 
 // Redux actions
@@ -120,7 +119,6 @@ class Editor extends PureComponent {
       breakableLines: PropTypes.object.isRequired,
       highlightedLineRange: PropTypes.object,
       isSourceOnIgnoreList: PropTypes.bool,
-      mapScopesEnabled: PropTypes.bool,
     };
   }
 
@@ -624,7 +622,6 @@ class Editor extends PureComponent {
       blackboxedRanges,
       isSourceOnIgnoreList,
       selectedSourceIsBlackBoxed,
-      mapScopesEnabled,
     } = this.props;
     const { editor } = this.state;
 
@@ -641,15 +638,10 @@ class Editor extends PureComponent {
       React.createElement(Breakpoints, {
         editor,
       }),
-      isPaused &&
-        selectedSource.isOriginal &&
-        !selectedSource.isPrettyPrinted &&
-        !mapScopesEnabled
-        ? null
-        : React.createElement(Preview, {
-            editor,
-            editorRef: this.$editorWrapper,
-          }),
+      React.createElement(Preview, {
+        editor,
+        editorRef: this.$editorWrapper,
+      }),
       highlightedLineRange
         ? React.createElement(HighlightLines, {
             editor,
@@ -674,11 +666,7 @@ class Editor extends PureComponent {
       React.createElement(ColumnBreakpoints, {
         editor,
       }),
-      isPaused &&
-        inlinePreviewEnabled &&
-        (!selectedSource.isOriginal ||
-          (selectedSource.isOriginal && selectedSource.isPrettyPrinted) ||
-          (selectedSource.isOriginal && mapScopesEnabled))
+      isPaused && inlinePreviewEnabled
         ? React.createElement(InlinePreviews, {
             editor,
             selectedSource,
@@ -743,9 +731,6 @@ const mapStateToProps = state => {
     blackboxedRanges: getBlackBoxRanges(state),
     breakableLines: getSelectedBreakableLines(state),
     highlightedLineRange: getHighlightedLineRangeForSelectedSource(state),
-    mapScopesEnabled: selectedSource?.isOriginal
-      ? isMapScopesEnabled(state)
-      : null,
   };
 };
 

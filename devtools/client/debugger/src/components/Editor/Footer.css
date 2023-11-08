@@ -5,9 +5,13 @@
 .source-footer {
   background: var(--theme-body-background);
   border-top: 1px solid var(--theme-splitter-color);
-  grid-area: editor-footer;
+  position: absolute;
   display: flex;
+  bottom: 0;
+  left: 0;
+  right: 0;
   opacity: 1;
+  z-index: 1;
   width: calc(100% - 1px);
   user-select: none;
   height: var(--editor-footer-height);

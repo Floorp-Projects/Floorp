@@ -100,10 +100,10 @@ class DebuggerPanel {
     return this;
   }
 
-  async _onDebuggerStateChange(state, oldState) {
+  _onDebuggerStateChange(state, oldState) {
     const { getCurrentThread } = this._selectors;
-    const currentThreadActorID = getCurrentThread(state);
 
+    const currentThreadActorID = getCurrentThread(state);
     if (
       currentThreadActorID &&
       currentThreadActorID !== getCurrentThread(oldState)
@@ -112,20 +112,6 @@ class DebuggerPanel {
         this.commands.client.getFrontByID(currentThreadActorID);
       this.toolbox.selectTarget(threadFront?.targetFront.actorID);
     }
-
-    this.toolbox.emit(
-      "show-original-variable-mapping-warnings",
-      this.shouldShowOriginalVariableMappingWarnings()
-    );
-  }
-
-  shouldShowOriginalVariableMappingWarnings() {
-    const { getSelectedSource, isMapScopesEnabled } = this._selectors;
-    if (!this.isPaused() || isMapScopesEnabled(this._getState())) {
-      return false;
-    }
-    const selectedSource = getSelectedSource(this._getState());
-    return selectedSource?.isOriginal && !selectedSource?.isPrettyPrinted;
   }
 
   getVarsForTests() {

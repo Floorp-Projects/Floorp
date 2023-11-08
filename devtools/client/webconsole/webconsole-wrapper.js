@@ -472,14 +472,6 @@ class WebConsoleWrapper {
   closeSplitConsole() {
     this.toolbox.closeSplitConsole();
   }
-
-  toggleOriginalVariableMappingEvaluationNotification(show) {
-    store.dispatch(
-      actions.showEvaluationNotification(
-        show ? Constants.ORIGINAL_VARIABLE_MAPPING : ""
-      )
-    );
-  }
 }
 
 // Exports from this module

@@ -22,8 +22,6 @@ async function enableMutationBreakpoints() {
 add_task(async function () {
   // Enable features
   await enableMutationBreakpoints();
-  await pushPref("devtools.debugger.map-scopes-enabled", true);
-
   info("Switches over to the inspector pane");
 
   const { inspector, toolbox } = await openInspectorForURL(DMB_TEST_URL);
