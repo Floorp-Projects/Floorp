@@ -5,6 +5,7 @@
 package org.mozilla.fenix.home.sessioncontrol.viewholders
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,10 +14,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Card
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.tooling.preview.Preview
@@ -35,13 +37,13 @@ import org.mozilla.fenix.theme.FirefoxTheme
 fun FeltPrivacyModeInfoCard(
     onLearnMoreClick: () -> Unit,
 ) {
-    Card(
+    Box(
         modifier = Modifier
+            .shadow(elevation = 5.dp, shape = RoundedCornerShape(8.dp), clip = true)
+            .clip(shape = RoundedCornerShape(8.dp))
+            .fillMaxWidth()
             .wrapContentHeight()
-            .fillMaxWidth(),
-        backgroundColor = FirefoxTheme.colors.layer2,
-        shape = RoundedCornerShape(8.dp),
-        elevation = 5.dp,
+            .background(FirefoxTheme.colors.layer2),
     ) {
         Column(
             modifier = Modifier.padding(16.dp),
