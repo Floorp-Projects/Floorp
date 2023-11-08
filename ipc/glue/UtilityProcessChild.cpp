@@ -310,9 +310,6 @@ mozilla::ipc::IPCResult UtilityProcessChild::RecvStartWinFileDialogService(
       "UtilityProcessChild::RecvStartWinFileDialogService", OTHER,
       MarkerOptions(MarkerTiming::IntervalUntilNowFrom(mChildStartTime)));
 
-  MOZ_RELEASE_ASSERT(!mFileDialogInstance,
-                     "attempted to double-start file dialog service");
-
   auto instance = MakeRefPtr<widget::filedialog::WinFileDialogChild>();
   if (!instance) {
     return IPC_FAIL(this, "Failed to create WinFileDialogChild");
@@ -323,7 +320,6 @@ mozilla::ipc::IPCResult UtilityProcessChild::RecvStartWinFileDialogService(
     return IPC_FAIL(this, "Failed to bind created WinFileDialogChild");
   }
 
-  mFileDialogInstance = std::move(instance);
   return IPC_OK();
 }
 
