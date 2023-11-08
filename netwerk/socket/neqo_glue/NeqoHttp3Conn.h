@@ -19,12 +19,12 @@ class NeqoHttp3Conn final {
                        uint64_t aMaxData, uint64_t aMaxStreamData,
                        bool aVersionNegotiation, bool aWebTransport,
                        const nsACString& aQlogDir, uint32_t aDatagramSize,
-                       NeqoHttp3Conn** aConn) {
-    return neqo_http3conn_new(&aOrigin, &aAlpn, &aLocalAddr, &aRemoteAddr,
-                              aMaxTableSize, aMaxBlockedStreams, aMaxData,
-                              aMaxStreamData, aVersionNegotiation,
-                              aWebTransport, &aQlogDir, aDatagramSize,
-                              (const mozilla::net::NeqoHttp3Conn**)aConn);
+                       uint32_t aMaxAccumulatedTime, NeqoHttp3Conn** aConn) {
+    return neqo_http3conn_new(
+        &aOrigin, &aAlpn, &aLocalAddr, &aRemoteAddr, aMaxTableSize,
+        aMaxBlockedStreams, aMaxData, aMaxStreamData, aVersionNegotiation,
+        aWebTransport, &aQlogDir, aDatagramSize, aMaxAccumulatedTime,
+        (const mozilla::net::NeqoHttp3Conn**)aConn);
   }
 
   void Close(uint64_t aError) { neqo_http3conn_close(this, aError); }
@@ -46,11 +46,10 @@ class NeqoHttp3Conn final {
     return neqo_http3conn_process_input(this, &aRemoteAddr, &aPacket);
   }
 
-  bool ProcessOutput(nsACString* aRemoteAddr, uint16_t* aPort,
-                     nsTArray<uint8_t>& aData, uint64_t* aTimeout) {
-    aData.TruncateLength(0);
-    return neqo_http3conn_process_output(this, aRemoteAddr, aPort, &aData,
-                                         aTimeout);
+  nsresult ProcessOutputAndSend(void* aContext, SendFunc aSendFunc,
+                                SetTimerFunc aSetTimerFunc) {
+    return neqo_http3conn_process_output_and_send(this, aContext, aSendFunc,
+                                                  aSetTimerFunc);
   }
 
   nsresult GetEvent(Http3Event* aEvent, nsTArray<uint8_t>& aData) {

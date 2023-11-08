@@ -12423,6 +12423,14 @@
   mirror: always
   rust: true
 
+# It represents the maximum duration that we used to accumulate
+# callback timeouts before we set a timer and break out of the loop.
+- name: network.http.http3.max_accumlated_time_ms
+  type: RelaxedAtomicUint32
+  value: 1
+  mirror: always
+  rust: true
+
 # When true, a http request will be upgraded to https when HTTPS RR is
 # available.
 - name: network.dns.upgrade_with_https_rr
