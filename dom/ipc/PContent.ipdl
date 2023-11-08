@@ -6,7 +6,6 @@
 
 include protocol PBackgroundStarter;
 include protocol PBrowser;
-include protocol PClipboardReadRequest;
 include protocol PClipboardWriteRequest;
 include protocol PCompositorManager;
 include protocol PContentPermissionRequest;
@@ -462,8 +461,8 @@ struct IPCImage {
     ImageIntSize size;
 };
 
-union PClipboardReadRequestOrError {
-    PClipboardReadRequest;
+union IPCTransferableDataOrError {
+    IPCTransferableData;
     nsresult;
 };
 
@@ -476,7 +475,6 @@ union PClipboardReadRequestOrError {
 sync protocol PContent
 {
     manages PBrowser;
-    manages PClipboardReadRequest;
     manages PClipboardWriteRequest;
     manages PContentPermissionRequest;
     manages PCycleCollectWithLogs;
@@ -1045,11 +1043,10 @@ child:
     // details.
     async InitNextGenLocalStorageEnabled(bool enabled);
 
-    async PRemotePrintJob();
-
-    async PClipboardReadRequest(nsCString[] aTypes);
+  async PRemotePrintJob();
 
 parent:
+
     async SynchronizeLayoutHistoryState(MaybeDiscardedBrowsingContext aContext,
                                         nullable nsILayoutHistoryState aState);
 
@@ -1219,9 +1216,9 @@ parent:
     // Returns a list of formats supported by the clipboard
     sync GetExternalClipboardFormats(int32_t aWhichClipboard, bool aPlainTextOnly) returns (nsCString[] aTypes);
 
-    // Requests getting data from clipboard.
-    async GetClipboardAsync(nsCString[] aTypes, int32_t aWhichClipboard)
-        returns (PClipboardReadRequestOrError aClipboardReadRequest);
+    // Given a list of supported types, returns the clipboard data for the
+    // first type that matches.
+    async GetClipboardAsync(nsCString[] aTypes, int32_t aWhichClipboard) returns (IPCTransferableDataOrError transferableData);
 
     // Clears the clipboard.
     async EmptyClipboard(int32_t aWhichClipboard);
@@ -1229,6 +1226,11 @@ parent:
     // Returns true if data of one of the specified types is on the clipboard.
     sync ClipboardHasType(nsCString[] aTypes, int32_t aWhichClipboard)
         returns (bool hasType);
+
+    // Given a list of supported types, returns a list of types that clipboard
+    // constains the data for the specified type.
+    async ClipboardHasTypesAsync(nsCString [] aTypes, int32_t aWhichClipboard)
+        returns (nsCString [] types);
 
     /**
      * Notify the parent that the child has started a clipboard write request,
