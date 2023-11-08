@@ -36,16 +36,16 @@ diff --git a/llvm/docs/ReleaseNotes.rst b/llvm/docs/ReleaseNotes.rst
 index 660bb4e70a5a..352420e1110d 100644
 --- a/llvm/docs/ReleaseNotes.rst
 +++ b/llvm/docs/ReleaseNotes.rst
-@@ -177,9 +177,6 @@ Changes to the LLVM tools
+@@ -205,9 +205,6 @@ Changes to the LLVM tools
  * llvm-readelf now supports ``--extra-sym-info`` (``-X``) to display extra
    information (section name) when showing symbols.
  
 -* ``llvm-nm`` now supports the ``--line-numbers`` (``-l``) option to use
 -  debugging information to print symbols' filenames and line numbers.
 -
- Changes to LLDB
- ---------------------------------
+ * llvm-symbolizer and llvm-addr2line now support addresses specified as symbol names.
  
+ Changes to LLDB
 diff --git a/llvm/test/tools/llvm-nm/X86/line-numbers.test b/llvm/test/tools/llvm-nm/X86/line-numbers.test
 deleted file mode 100644
 index 4b9817ab5c62..000000000000
