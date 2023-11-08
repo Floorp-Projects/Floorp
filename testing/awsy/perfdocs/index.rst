@@ -43,7 +43,7 @@ Base Memory Usage tests
 
 .. code-block:: bash
 
-    ./mach awsy-test testing/awsy/awsy/test_base_memory_usage.py
+    ./mach awsy-test --base
 
 Running AWSY on Try
 ********************
