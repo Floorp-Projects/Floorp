@@ -11,20 +11,6 @@ job-defaults:
         script: repack_rust.py
         toolchain-artifact: public/build/rustc.tar.zst
 
-linux64-rust-1.65:
-    treeherder:
-        symbol: TL(rust-1.65)
-    run:
-        arguments: [
-            '--channel', '1.65.0',
-            '--host', 'x86_64-unknown-linux-gnu',
-            '--target', 'x86_64-unknown-linux-gnu',
-            '--target', 'i686-unknown-linux-gnu',
-            '--target', 'wasm32-wasi',
-        ]
-        toolchain-alias:
-            - linux64-rust-toolchain
-
 linux64-rust-1.70:
     treeherder:
         symbol: TL(rust-1.70)
@@ -38,6 +24,7 @@ linux64-rust-1.70:
         ]
         toolchain-alias:
             - linux64-rust-base
+            - linux64-rust-toolchain
 
 linux64-rust-1.72:
     treeherder:
@@ -153,13 +140,13 @@ linux64-rust-static-1.73:
         ]
         toolchain-alias: linux64-rust-static
 
-linux64-rust-macos-1.65:
+linux64-rust-macos-1.70:
     description: "rust repack with macos-cross support"
     treeherder:
-        symbol: TL(rust-macos-1.65)
+        symbol: TL(rust-macos-1.70)
     run:
         arguments: [
-            '--channel', '1.65.0',
+            '--channel', '1.70.0',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-apple-darwin',
@@ -198,13 +185,13 @@ linux64-rust-android-1.73:
         ]
         toolchain-alias: linux64-rust-android
 
-linux64-rust-windows-1.65:
+linux64-rust-windows-1.70:
     description: "rust repack with windows-cross support"
     treeherder:
-        symbol: TL(rust-win-1.65)
+        symbol: TL(rust-win-1.70)
     run:
         arguments: [
-            '--channel', '1.65.0',
+            '--channel', '1.70.0',
             '--host', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-unknown-linux-gnu',
             '--target', 'x86_64-pc-windows-msvc',
