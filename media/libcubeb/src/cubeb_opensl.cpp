@@ -1051,12 +1051,8 @@ opensl_configure_capture(cubeb_stream * stm, cubeb_stream_params * params)
                         stm->context->eng, &stm->recorderObj, &dataSource,
                         &dataSink, NELEMS(lSoundRecorderIIDs),
                         lSoundRecorderIIDs, lSoundRecorderReqs);
-
-          if (res != SL_RESULT_SUCCESS) {
-            LOG("Failed to create recorder. Error code: %lu", res);
-            return CUBEB_ERROR;
-          }
-        } else {
+        }
+        if (res != SL_RESULT_SUCCESS) {
           LOG("Failed to create recorder, not trying other input"
               " rate. Error code: %lu",
               res);

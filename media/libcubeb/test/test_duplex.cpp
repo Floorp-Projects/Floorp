@@ -50,7 +50,6 @@ long data_cb_duplex(cubeb_stream * stream, void * user, const void * inputbuffer
   for (long i = 0; i < nframes; i++) {
     if (ib[i] <= -1.0 || ib[i] >= 1.0) {
       u->invalid_audio_value = 1;
-      break;
     }
     ob[output_index] = ob[output_index + 1] = ib[i];
     output_index += 2;
