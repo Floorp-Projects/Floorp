@@ -4,8 +4,8 @@
 
 "use strict";
 
-const { OnRefTestLoad, OnRefTestUnload } = ChromeUtils.import(
-  "resource://reftest/reftest.jsm"
+const { OnRefTestLoad, OnRefTestUnload } = ChromeUtils.importESModule(
+  "resource://reftest/reftest.sys.mjs"
 );
 
 function OnLoad() {

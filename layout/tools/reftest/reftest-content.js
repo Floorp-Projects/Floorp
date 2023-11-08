@@ -52,7 +52,7 @@ const TYPE_SCRIPT = "script"; // test contains individual test results
 const TYPE_PRINT = "print"; // test and reference will be printed to PDF's and
 // compared structurally
 
-// keep this in sync with globals.jsm
+// keep this in sync with globals.sys.mjs
 const URL_TARGET_TYPE_TEST = 0; // first url
 const URL_TARGET_TYPE_REFERENCE = 1; // second url, if any
 

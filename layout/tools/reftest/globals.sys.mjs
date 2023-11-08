@@ -1,11 +1,8 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-"use strict";
 
-var EXPORTED_SYMBOLS = [];
-
-for (let [key, val] of Object.entries({
+export const globals = {
   /* Constants */
   XHTML_NS: "http://www.w3.org/1999/xhtml",
   XUL_NS: "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
@@ -157,8 +154,4 @@ for (let [key, val] of Object.entries({
     // manifest URL (yet!).
     dumpedConditionSandbox: false,
   },
-})) {
-  // eslint-disable-next-line mozilla/reject-global-this
-  this[key] = val;
-  EXPORTED_SYMBOLS.push(key);
-}
+};

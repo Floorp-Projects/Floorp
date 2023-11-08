@@ -55,8 +55,8 @@ In this case, ``cocoaWidget`` and ``isDebugbuild`` are booleans.
 
 The test will download the build's ``target.mozinfo.json``, then in addition to
 the mozinfo, will query runtime info from the browser to build a sandbox of
-keywords. This logic lives in `manifest.jsm
-<https://searchfox.org/mozilla-central/source/layout/tools/reftest/manifest.jsm#439>`__.
+keywords. This logic lives in `manifest.sys.mjs
+<https://searchfox.org/mozilla-central/source/layout/tools/reftest/manifest.sys.mjs#439>`__.
 
 How to Add a Keyword
 ~~~~~~~~~~~~~~~~~~~~
@@ -73,8 +73,8 @@ patch like this:
 
 .. code-block:: diff
 
-    --- a/layout/tools/reftest/manifest.jsm
-    +++ b/layout/tools/reftest/manifest.jsm
+    --- a/layout/tools/reftest/manifest.sys.mjs
+    +++ b/layout/tools/reftest/manifest.sys.mjs
     @@ -572,16 +572,18 @@ function BuildConditionSandbox(aURL) {
 
         // Set OSX to be the Mac OS X version, as an integer, or undefined

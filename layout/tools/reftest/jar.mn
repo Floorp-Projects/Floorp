@@ -47,7 +47,7 @@ reftest.jar:
   content/crashtests/view/crashtests (../../../view/crashtests/*)
   content/crashtests/widget/cocoa/crashtests (../../../widget/cocoa/crashtests/*)
 
-  res/globals.jsm (globals.jsm)
+  res/globals.sys.mjs (globals.sys.mjs)
   res/reftest-content.js (reftest-content.js)
   res/ReftestFissionParent.sys.mjs (ReftestFissionParent.sys.mjs)
   res/ReftestFissionChild.sys.mjs (ReftestFissionChild.sys.mjs)
@@ -57,8 +57,8 @@ reftest.jar:
   res/PerTestCoverageUtils.sys.mjs (../../../tools/code-coverage/PerTestCoverageUtils.sys.mjs)
   res/input.css (../../../editor/reftests/xul/input.css)
   res/progress.css (../../../layout/reftests/forms/progress/style.css)
-  res/manifest.jsm (manifest.jsm)
-  res/reftest.jsm (reftest.jsm)
+  res/manifest.sys.mjs (manifest.sys.mjs)
+  res/reftest.sys.mjs (reftest.sys.mjs)
   res/reftest-chrome.js (reftest-chrome.js)
 
 # Android doesn't ship global.css
