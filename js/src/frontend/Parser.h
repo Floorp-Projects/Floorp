@@ -495,17 +495,6 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
     return ParseHandler::errorResult();
   }
 
-  // Temporary helper function to return raw nullable node.
-  // This function should be removed once all functions are rewritten to use
-  // Result type.
-  template <typename T>
-  mozilla::Result<T, typename ParseHandler::NodeError> toResult(T node) {
-    if (node) {
-      return node;
-    }
-    return errorResult();
-  }
-
   NameNodeResult stringLiteral();
 
   const char* nameIsArgumentsOrEval(Node node);
@@ -744,7 +733,6 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   using Base::propagateFreeNamesAndMarkClosedOverBindings;
   using Base::setLocalStrictMode;
   using Base::stringLiteral;
-  using Base::toResult;
   using Base::yieldExpressionsSupported;
 
   using Base::abortIfSyntaxParser;
@@ -1628,7 +1616,6 @@ class MOZ_STACK_CLASS Parser<SyntaxParseHandler, Unit> final
   using Base::ss;
   using Base::statementList;
   using Base::stringLiteral;
-  using Base::toResult;
   using Base::usedNames_;
 
  private:
@@ -1775,7 +1762,6 @@ class MOZ_STACK_CLASS Parser<FullParseHandler, Unit> final
   using Base::propagateFreeNamesAndMarkClosedOverBindings;
   using Base::statementList;
   using Base::stringLiteral;
-  using Base::toResult;
   using Base::usedNames_;
 
   using Base::abortIfSyntaxParser;
