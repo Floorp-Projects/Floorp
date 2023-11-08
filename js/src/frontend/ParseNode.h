@@ -689,6 +689,10 @@ static inline bool IsMethodDefinitionKind(FunctionSyntaxKind kind) {
 #  define JS_PARSE_NODE_ASSERT MOZ_ASSERT
 #endif
 
+class ParseNode;
+struct ParseNodeError {};
+using ParseNodeResult = mozilla::Result<ParseNode*, ParseNodeError>;
+
 class ParseNode {
   const ParseNodeKind pn_type;
 
@@ -795,10 +799,10 @@ class ParseNode {
    * If |left| is a list of the given kind/left-associative op, append
    * |right| to it and return |left|.  Otherwise return a [left, right] list.
    */
-  static ParseNode* appendOrCreateList(ParseNodeKind kind, ParseNode* left,
-                                       ParseNode* right,
-                                       FullParseHandler* handler,
-                                       ParseContext* pc);
+  static ParseNodeResult appendOrCreateList(ParseNodeKind kind, ParseNode* left,
+                                            ParseNode* right,
+                                            FullParseHandler* handler,
+                                            ParseContext* pc);
 
   /* True if pn is a parsenode representing a literal constant. */
   bool isLiteral() const {
