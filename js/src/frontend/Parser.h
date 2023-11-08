@@ -1203,18 +1203,18 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
                         InvokedPrediction invoked = PredictUninvoked);
   NodeResult assignExprWithoutYieldOrAwait(YieldHandling yieldHandling);
   UnaryNodeType yieldExpression(InHandling inHandling);
-  Node condExpr(InHandling inHandling, YieldHandling yieldHandling,
-                TripledotHandling tripledotHandling,
-                PossibleError* possibleError, InvokedPrediction invoked);
-  Node orExpr(InHandling inHandling, YieldHandling yieldHandling,
-              TripledotHandling tripledotHandling, PossibleError* possibleError,
-              InvokedPrediction invoked);
-  Node unaryExpr(YieldHandling yieldHandling,
-                 TripledotHandling tripledotHandling,
-                 PossibleError* possibleError = nullptr,
-                 InvokedPrediction invoked = PredictUninvoked,
-                 PrivateNameHandling privateNameHandling =
-                     PrivateNameHandling::PrivateNameProhibited);
+  NodeResult condExpr(InHandling inHandling, YieldHandling yieldHandling,
+                      TripledotHandling tripledotHandling,
+                      PossibleError* possibleError, InvokedPrediction invoked);
+  NodeResult orExpr(InHandling inHandling, YieldHandling yieldHandling,
+                    TripledotHandling tripledotHandling,
+                    PossibleError* possibleError, InvokedPrediction invoked);
+  NodeResult unaryExpr(YieldHandling yieldHandling,
+                       TripledotHandling tripledotHandling,
+                       PossibleError* possibleError = nullptr,
+                       InvokedPrediction invoked = PredictUninvoked,
+                       PrivateNameHandling privateNameHandling =
+                           PrivateNameHandling::PrivateNameProhibited);
   NodeResult optionalExpr(YieldHandling yieldHandling,
                           TripledotHandling tripledotHandling, TokenKind tt,
                           PossibleError* possibleError = nullptr,
@@ -1262,8 +1262,8 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
                                       FunctionSyntaxKind kind,
                                       FunctionBodyType type);
 
-  UnaryNodeType unaryOpExpr(YieldHandling yieldHandling, ParseNodeKind kind,
-                            uint32_t begin);
+  UnaryNodeResult unaryOpExpr(YieldHandling yieldHandling, ParseNodeKind kind,
+                              uint32_t begin);
 
   Node condition(InHandling inHandling, YieldHandling yieldHandling);
 

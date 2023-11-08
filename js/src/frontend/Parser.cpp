@@ -9744,7 +9744,7 @@ static int Precedence(ParseNodeKind pnk) {
 enum class EnforcedParentheses : uint8_t { CoalesceExpr, AndOrExpr, None };
 
 template <class ParseHandler, typename Unit>
-MOZ_ALWAYS_INLINE typename ParseHandler::Node
+MOZ_ALWAYS_INLINE typename ParseHandler::NodeResult
 GeneralParser<ParseHandler, Unit>::orExpr(InHandling inHandling,
                                           YieldHandling yieldHandling,
                                           TripledotHandling tripledotHandling,
@@ -9761,17 +9761,15 @@ GeneralParser<ParseHandler, Unit>::orExpr(InHandling inHandling,
   Node pn;
   EnforcedParentheses unparenthesizedExpression = EnforcedParentheses::None;
   for (;;) {
-    pn = unaryExpr(yieldHandling, tripledotHandling, possibleError, invoked,
-                   PrivateNameHandling::PrivateNameAllowed);
-    if (!pn) {
-      return null();
-    }
+    MOZ_TRY_VAR(
+        pn, unaryExpr(yieldHandling, tripledotHandling, possibleError, invoked,
+                      PrivateNameHandling::PrivateNameAllowed));
 
     // If a binary operator follows, consume it and compute the
     // corresponding operator.
     TokenKind tok;
     if (!tokenStream.getToken(&tok)) {
-      return null();
+      return errorResult();
     }
 
     // Ensure that if we have a private name lhs we are legally constructing a
@@ -9779,7 +9777,7 @@ GeneralParser<ParseHandler, Unit>::orExpr(InHandling inHandling,
     if (handler_.isPrivateName(pn)) {
       if (tok != TokenKind::In || inHandling != InAllowed) {
         error(JSMSG_ILLEGAL_PRIVATE_NAME);
-        return null();
+        return errorResult();
       }
     }
 
@@ -9789,7 +9787,7 @@ GeneralParser<ParseHandler, Unit>::orExpr(InHandling inHandling,
       // We're definitely not in a destructuring context, so report any
       // pending expression error now.
       if (possibleError && !possibleError->checkForExpressionError()) {
-        return null();
+        return errorResult();
       }
 
       bool isErgonomicBrandCheck = false;
@@ -9798,7 +9796,7 @@ GeneralParser<ParseHandler, Unit>::orExpr(InHandling inHandling,
         case TokenKind::Pow:
           if (handler_.isUnparenthesizedUnaryExpression(pn)) {
             error(JSMSG_BAD_POW_LEFTSIDE);
-            return null();
+            return errorResult();
           }
           break;
 
@@ -9809,7 +9807,7 @@ GeneralParser<ParseHandler, Unit>::orExpr(InHandling inHandling,
           // and &&) unless one expression is parenthesized
           if (unparenthesizedExpression == EnforcedParentheses::CoalesceExpr) {
             error(JSMSG_BAD_COALESCE_MIXING);
-            return null();
+            return errorResult();
           }
           // If we have not detected a mixing error at this point, record that
           // we have an unparenthesized expression, in case we have one later.
@@ -9819,7 +9817,7 @@ GeneralParser<ParseHandler, Unit>::orExpr(InHandling inHandling,
         case TokenKind::Coalesce:
           if (unparenthesizedExpression == EnforcedParentheses::AndOrExpr) {
             error(JSMSG_BAD_COALESCE_MIXING);
-            return null();
+            return errorResult();
           }
           // If we have not detected a mixing error at this point, record that
           // we have an unparenthesized expression, in case we have one later.
@@ -9836,7 +9834,7 @@ GeneralParser<ParseHandler, Unit>::orExpr(InHandling inHandling,
             if (depth > 0 && Precedence(kindStack[depth - 1]) >=
                                  Precedence(ParseNodeKind::InExpr)) {
               error(JSMSG_INVALID_PRIVATE_NAME_PRECEDENCE);
-              return null();
+              return errorResult();
             }
 
             isErgonomicBrandCheck = true;
@@ -9872,10 +9870,8 @@ GeneralParser<ParseHandler, Unit>::orExpr(InHandling inHandling,
     while (depth > 0 && Precedence(kindStack[depth - 1]) >= Precedence(pnk)) {
       depth--;
       ParseNodeKind combiningPnk = kindStack[depth];
-      MOZ_TRY_VAR_OR_RETURN(
-          pn,
-          handler_.appendOrCreateList(combiningPnk, nodeStack[depth], pn, pc_),
-          null());
+      MOZ_TRY_VAR(pn, handler_.appendOrCreateList(combiningPnk,
+                                                  nodeStack[depth], pn, pc_));
     }
 
     if (pnk == ParseNodeKind::Limit) {
@@ -9899,43 +9895,38 @@ GeneralParser<ParseHandler, Unit>::orExpr(InHandling inHandling,
 }
 
 template <class ParseHandler, typename Unit>
-MOZ_ALWAYS_INLINE typename ParseHandler::Node
+MOZ_ALWAYS_INLINE typename ParseHandler::NodeResult
 GeneralParser<ParseHandler, Unit>::condExpr(InHandling inHandling,
                                             YieldHandling yieldHandling,
                                             TripledotHandling tripledotHandling,
                                             PossibleError* possibleError,
                                             InvokedPrediction invoked) {
-  Node condition = orExpr(inHandling, yieldHandling, tripledotHandling,
-                          possibleError, invoked);
-  if (!condition) {
-    return null();
-  }
+  Node condition;
+  MOZ_TRY_VAR(condition, orExpr(inHandling, yieldHandling, tripledotHandling,
+                                possibleError, invoked));
 
   bool matched;
   if (!tokenStream.matchToken(&matched, TokenKind::Hook,
                               TokenStream::SlashIsInvalid)) {
-    return null();
+    return errorResult();
   }
   if (!matched) {
     return condition;
   }
 
   Node thenExpr;
-  MOZ_TRY_VAR_OR_RETURN(
-      thenExpr, assignExpr(InAllowed, yieldHandling, TripledotProhibited),
-      null());
+  MOZ_TRY_VAR(thenExpr,
+              assignExpr(InAllowed, yieldHandling, TripledotProhibited));
 
   if (!mustMatchToken(TokenKind::Colon, JSMSG_COLON_IN_COND)) {
-    return null();
+    return errorResult();
   }
 
   Node elseExpr;
-  MOZ_TRY_VAR_OR_RETURN(
-      elseExpr, assignExpr(inHandling, yieldHandling, TripledotProhibited),
-      null());
+  MOZ_TRY_VAR(elseExpr,
+              assignExpr(inHandling, yieldHandling, TripledotProhibited));
 
-  return handler_.newConditional(condition, thenExpr, elseExpr)
-      .unwrapOr(null());
+  return handler_.newConditional(condition, thenExpr, elseExpr);
 }
 
 template <class ParseHandler, typename Unit>
@@ -10071,11 +10062,8 @@ typename ParseHandler::NodeResult GeneralParser<ParseHandler, Unit>::assignExpr(
       MOZ_TRY_VAR(lhs, identifierReference(asyncName));
     }
   } else {
-    lhs = condExpr(inHandling, yieldHandling, tripledotHandling,
-                   &possibleErrorInner, invoked);
-    if (!lhs) {
-      return errorResult();
-    }
+    MOZ_TRY_VAR(lhs, condExpr(inHandling, yieldHandling, tripledotHandling,
+                              &possibleErrorInner, invoked));
 
     // Use SlashIsRegExp here because the ConditionalExpression parsed above
     // could be the entirety of this AssignmentExpression, and then ASI
@@ -10299,15 +10287,13 @@ bool GeneralParser<ParseHandler, Unit>::checkIncDecOperand(
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::UnaryNodeType
+typename ParseHandler::UnaryNodeResult
 GeneralParser<ParseHandler, Unit>::unaryOpExpr(YieldHandling yieldHandling,
                                                ParseNodeKind kind,
                                                uint32_t begin) {
-  Node kid = unaryExpr(yieldHandling, TripledotProhibited);
-  if (!kid) {
-    return null();
-  }
-  return handler_.newUnary(kind, begin, kid).unwrapOr(null());
+  Node kid;
+  MOZ_TRY_VAR(kid, unaryExpr(yieldHandling, TripledotProhibited));
+  return handler_.newUnary(kind, begin, kid);
 }
 
 template <class ParseHandler, typename Unit>
@@ -10402,19 +10388,19 @@ GeneralParser<ParseHandler, Unit>::optionalExpr(
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::unaryExpr(
+typename ParseHandler::NodeResult GeneralParser<ParseHandler, Unit>::unaryExpr(
     YieldHandling yieldHandling, TripledotHandling tripledotHandling,
     PossibleError* possibleError /* = nullptr */,
     InvokedPrediction invoked /* = PredictUninvoked */,
     PrivateNameHandling privateNameHandling /* = PrivateNameProhibited */) {
   AutoCheckRecursionLimit recursion(this->fc_);
   if (!recursion.check(this->fc_)) {
-    return null();
+    return errorResult();
   }
 
   TokenKind tt;
   if (!tokenStream.getToken(&tt, TokenStream::SlashIsRegExp)) {
-    return null();
+    return errorResult();
   }
   uint32_t begin = pos().begin;
   switch (tt) {
@@ -10441,53 +10427,48 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::unaryExpr(
       //   // Evaluates expression, triggering a runtime ReferenceError for
       //   // the undefined name.
       //   typeof (1, nonExistentName);
-      Node kid = unaryExpr(yieldHandling, TripledotProhibited);
-      if (!kid) {
-        return null();
-      }
+      Node kid;
+      MOZ_TRY_VAR(kid, unaryExpr(yieldHandling, TripledotProhibited));
 
-      return handler_.newTypeof(begin, kid).unwrapOr(null());
+      return handler_.newTypeof(begin, kid);
     }
 
     case TokenKind::Inc:
     case TokenKind::Dec: {
       TokenKind tt2;
       if (!tokenStream.getToken(&tt2, TokenStream::SlashIsRegExp)) {
-        return null();
+        return errorResult();
       }
 
       uint32_t operandOffset = pos().begin;
       Node operand;
-      MOZ_TRY_VAR_OR_RETURN(
-          operand, optionalExpr(yieldHandling, TripledotProhibited, tt2),
-          null());
+      MOZ_TRY_VAR(operand,
+                  optionalExpr(yieldHandling, TripledotProhibited, tt2));
       if (!checkIncDecOperand(operand, operandOffset)) {
-        return null();
+        return errorResult();
       }
       ParseNodeKind pnk = (tt == TokenKind::Inc)
                               ? ParseNodeKind::PreIncrementExpr
                               : ParseNodeKind::PreDecrementExpr;
-      return handler_.newUpdate(pnk, begin, operand).unwrapOr(null());
+      return handler_.newUpdate(pnk, begin, operand);
     }
     case TokenKind::PrivateName: {
       if (privateNameHandling == PrivateNameHandling::PrivateNameAllowed) {
         TaggedParserAtomIndex field = anyChars.currentName();
-        return privateNameReference(field).unwrapOr(null());
+        return privateNameReference(field);
       }
       error(JSMSG_INVALID_PRIVATE_NAME_IN_UNARY_EXPR);
-      return null();
+      return errorResult();
     }
 
     case TokenKind::Delete: {
       uint32_t exprOffset;
       if (!tokenStream.peekOffset(&exprOffset, TokenStream::SlashIsRegExp)) {
-        return null();
+        return errorResult();
       }
 
-      Node expr = unaryExpr(yieldHandling, TripledotProhibited);
-      if (!expr) {
-        return null();
-      }
+      Node expr;
+      MOZ_TRY_VAR(expr, unaryExpr(yieldHandling, TripledotProhibited));
 
       // Per spec, deleting most unary expressions is valid -- it simply
       // returns true -- except for two cases:
@@ -10495,7 +10476,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::unaryExpr(
       // 2. Private fields cannot be deleted.
       if (handler_.isName(expr)) {
         if (!strictModeErrorAt(exprOffset, JSMSG_DEPRECATED_DELETE_OPERAND)) {
-          return null();
+          return errorResult();
         }
 
         pc_->sc()->setBindingsAccessedDynamically();
@@ -10503,17 +10484,17 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::unaryExpr(
 
       if (handler_.isPrivateMemberAccess(expr)) {
         errorAt(exprOffset, JSMSG_PRIVATE_DELETE);
-        return null();
+        return errorResult();
       }
 
-      return handler_.newDelete(begin, expr).unwrapOr(null());
+      return handler_.newDelete(begin, expr);
     }
     case TokenKind::Await: {
       // If we encounter an await in a module, mark it as async.
       if (!pc_->isAsync() && pc_->sc()->isModule()) {
         if (!options().topLevelAwait) {
           error(JSMSG_TOP_LEVEL_AWAIT_NOT_SUPPORTED);
-          return null();
+          return errorResult();
         }
         pc_->sc()->asModuleContext()->setIsAsync();
         MOZ_ASSERT(pc_->isAsync());
@@ -10522,15 +10503,13 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::unaryExpr(
       if (pc_->isAsync()) {
         if (inParametersOfAsyncFunction()) {
           error(JSMSG_AWAIT_IN_PARAMETER);
-          return null();
+          return errorResult();
         }
-        Node kid =
-            unaryExpr(yieldHandling, tripledotHandling, possibleError, invoked);
-        if (!kid) {
-          return null();
-        }
+        Node kid;
+        MOZ_TRY_VAR(kid, unaryExpr(yieldHandling, tripledotHandling,
+                                   possibleError, invoked));
         pc_->lastAwaitOffset = begin;
-        return handler_.newAwaitExpression(begin, kid).unwrapOr(null());
+        return handler_.newAwaitExpression(begin, kid);
       }
     }
 
@@ -10538,14 +10517,12 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::unaryExpr(
 
     default: {
       Node expr;
-      MOZ_TRY_VAR_OR_RETURN(expr,
-                            optionalExpr(yieldHandling, tripledotHandling, tt,
-                                         possibleError, invoked),
-                            null());
+      MOZ_TRY_VAR(expr, optionalExpr(yieldHandling, tripledotHandling, tt,
+                                     possibleError, invoked));
 
       /* Don't look across a newline boundary for a postfix incop. */
       if (!tokenStream.peekTokenSameLine(&tt)) {
-        return null();
+        return errorResult();
       }
 
       if (tt != TokenKind::Inc && tt != TokenKind::Dec) {
@@ -10554,13 +10531,13 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::unaryExpr(
 
       tokenStream.consumeKnownToken(tt);
       if (!checkIncDecOperand(expr, begin)) {
-        return null();
+        return errorResult();
       }
 
       ParseNodeKind pnk = (tt == TokenKind::Inc)
                               ? ParseNodeKind::PostIncrementExpr
                               : ParseNodeKind::PostDecrementExpr;
-      return handler_.newUpdate(pnk, begin, expr).unwrapOr(null());
+      return handler_.newUpdate(pnk, begin, expr);
     }
   }
 }
