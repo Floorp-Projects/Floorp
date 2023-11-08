@@ -586,10 +586,6 @@ class MOZ_STACK_CLASS PerHandlerParser : public ParserBase {
   inline void clearAbortedSyntaxParse();
 
  public:
-  NameNodeType newPropertyName(TaggedParserAtomIndex key, const TokenPos& pos) {
-    return handler_.newPropertyName(key, pos).unwrapOr(null());
-  }
-
   PropertyAccessType newPropertyAccess(Node expr, NameNodeType key) {
     return handler_.newPropertyAccess(expr, key).unwrapOr(null());
   }
@@ -1429,25 +1425,25 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
     PropertyNameInRecord
 #endif
   };
-  Node propertyName(YieldHandling yieldHandling,
-                    PropertyNameContext propertyNameContext,
-                    const mozilla::Maybe<DeclarationKind>& maybeDecl,
-                    ListNodeType propList, TaggedParserAtomIndex* propAtomOut);
-  Node propertyOrMethodName(YieldHandling yieldHandling,
-                            PropertyNameContext propertyNameContext,
-                            const mozilla::Maybe<DeclarationKind>& maybeDecl,
-                            ListNodeType propList, PropertyType* propType,
-                            TaggedParserAtomIndex* propAtomOut);
-  UnaryNodeType computedPropertyName(
+  NodeResult propertyName(YieldHandling yieldHandling,
+                          PropertyNameContext propertyNameContext,
+                          const mozilla::Maybe<DeclarationKind>& maybeDecl,
+                          ListNodeType propList,
+                          TaggedParserAtomIndex* propAtomOut);
+  NodeResult propertyOrMethodName(
+      YieldHandling yieldHandling, PropertyNameContext propertyNameContext,
+      const mozilla::Maybe<DeclarationKind>& maybeDecl, ListNodeType propList,
+      PropertyType* propType, TaggedParserAtomIndex* propAtomOut);
+  UnaryNodeResult computedPropertyName(
       YieldHandling yieldHandling,
       const mozilla::Maybe<DeclarationKind>& maybeDecl,
       PropertyNameContext propertyNameContext, ListNodeType literal);
-  ListNodeType arrayInitializer(YieldHandling yieldHandling,
-                                PossibleError* possibleError);
+  ListNodeResult arrayInitializer(YieldHandling yieldHandling,
+                                  PossibleError* possibleError);
   inline RegExpLiteralResult newRegExp();
 
-  ListNodeType objectLiteral(YieldHandling yieldHandling,
-                             PossibleError* possibleError);
+  ListNodeResult objectLiteral(YieldHandling yieldHandling,
+                               PossibleError* possibleError);
 
 #ifdef ENABLE_RECORD_TUPLE
   ListNodeType recordLiteral(YieldHandling yieldHandling);
