@@ -3849,18 +3849,22 @@
     "description": "ms elapsed time of OCSP etc.. that failed"
   },
   "SSL_KEY_EXCHANGE_ALGORITHM_FULL": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
     "alert_emails": ["seceng-telemetry@mozilla.com"],
+    "bug_numbers": [1862062],
+    "releaseChannelCollection": "opt-out",
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 16,
     "description": "SSL Handshake Key Exchange Algorithm for full handshake (null=0, rsa=1, dh=2, fortezza=3, ecdh=4)"
   },
   "SSL_KEY_EXCHANGE_ALGORITHM_RESUMED": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
     "alert_emails": ["seceng-telemetry@mozilla.com"],
+    "bug_numbers": [1862062],
+    "releaseChannelCollection": "opt-out",
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 16,
@@ -13232,23 +13236,16 @@
     "n_values": 64,
     "description": "TLS/SSL version intolerance was falsely detected, server rejected handshake (see tlsIntoleranceTelemetryBucket() in nsNSSIOLayer.cpp)."
   },
-  "SSL_CIPHER_SUITE_FULL": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
+  "TLS_CIPHER_SUITE": {
+    "record_in_processes": ["main"],
+    "products": ["firefox"],
     "alert_emails": ["seceng-telemetry@mozilla.com"],
+    "bug_numbers": [1862062],
+    "releaseChannelCollection": "opt-out",
     "expires_in_version": "never",
     "kind": "enumerated",
-    "n_values": 128,
-    "description": "Negotiated cipher suite in full handshake (see key in AccumulateCipherSuite in nsNSSCallbacks.cpp). Entries #8, 9, 47, 48, 68, and 69 correspond to ciphers that use RC4."
-  },
-  "SSL_CIPHER_SUITE_RESUMED": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": ["seceng-telemetry@mozilla.com"],
-    "expires_in_version": "never",
-    "kind": "enumerated",
-    "n_values": 128,
-    "description": "Negotiated cipher suite in resumed handshake (see key in AccumulateCipherSuite in nsNSSCallbacks.cpp)"
+    "n_values": 64,
+    "description": "Negotiated cipher suite in TLS handshake (see key in AccumulateCipherSuite in nsNSSCallbacks.cpp)"
   },
   "SSL_KEA_RSA_KEY_SIZE_FULL": {
     "record_in_processes": ["main"],
@@ -13315,24 +13312,6 @@
     "kind": "enumerated",
     "n_values": 36,
     "description": "ECDSA signature curve for TLS_*_ECDSA_* in full handshake (23=P-256, 24=P-384, 25=P-521)"
-  },
-  "SSL_SYMMETRIC_CIPHER_FULL": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": ["seceng-telemetry@mozilla.com"],
-    "expires_in_version": "never",
-    "kind": "enumerated",
-    "n_values": 32,
-    "description": "Symmetric cipher used in full handshake (null=0, 3des=4, aes-cbc=7, aes-gcm=10, chacha20=11)"
-  },
-  "SSL_SYMMETRIC_CIPHER_RESUMED": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": ["seceng-telemetry@mozilla.com"],
-    "expires_in_version": "never",
-    "kind": "enumerated",
-    "n_values": 32,
-    "description": "Symmetric cipher used in resumed handshake (null=0, 3des=4, aes-cbc=7, aes-gcm=10, chacha20=11)"
   },
   "SSL_REASONS_FOR_NOT_FALSE_STARTING": {
     "record_in_processes": ["main"],
