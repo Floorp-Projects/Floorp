@@ -881,16 +881,6 @@ static int DaysInMonth(int year, int month) {
  *
  * These are:
  *
- *   Standalone time part:
- *     Any of the time formats below can be parsed without a date part.
- *     E.g. "T19:00:00Z" will parse successfully. The date part will then
- *     default to 1970-01-01.
- *
- *   'T' from the time part may be replaced with a space character:
- *     "1970-01-01 12:00:00Z" will parse successfully. Note that only a single
- *     space is permitted and this is not permitted in the standalone
- *     version above.
- *
  *   One or more decimal digits for milliseconds:
  *     The specification requires exactly three decimal digits for
  *     the fractional part but we allow for one or more digits.
@@ -898,11 +888,6 @@ static int DaysInMonth(int year, int month) {
  *   Time zone specifier without ':':
  *     We allow the time zone to be specified without a ':' character.
  *     E.g. "T19:00:00+0700" is equivalent to "T19:00:00+07:00".
- *
- *   One or two digits for months, days, hours, minutes and seconds:
- *     The specification requires exactly two decimal digits for the fields
- *     above. We allow for one or two decimal digits. I.e. "1970-1-1" is
- *     equivalent to "1970-01-01".
  *
  * Date part:
  *
@@ -924,16 +909,16 @@ static int DaysInMonth(int year, int month) {
  *     Thh:mm:ssTZD (eg T19:20:30+01:00)
  *
  *  Hours, minutes, seconds and a decimal fraction of a second:
- *     Thh:mm:ss.sTZD (eg T19:20:30.45+01:00)
+ *     Thh:mm:ss.sssTZD (eg T19:20:30.45+01:00)
  *
  * where:
  *
  *   YYYY = four-digit year or six digit year as +YYYYYY or -YYYYYY
  *   MM   = two-digit month (01=January, etc.)
  *   DD   = two-digit day of month (01 through 31)
- *   hh   = one or two digits of hour (00 through 23) (am/pm NOT allowed)
- *   mm   = one or two digits of minute (00 through 59)
- *   ss   = one or two digits of second (00 through 59)
+ *   hh   = two digits of hour (00 through 24) (am/pm NOT allowed)
+ *   mm   = two digits of minute (00 through 59)
+ *   ss   = two digits of second (00 through 59)
  *   sss  = one or more digits representing a decimal fraction of a second
  *   TZD  = time zone designator (Z or +hh:mm or -hh:mm or missing for local)
  */
@@ -941,7 +926,6 @@ template <typename CharT>
 static bool ParseISOStyleDate(DateTimeInfo::ForceUTC forceUTC, const CharT* s,
                               size_t length, ClippedTime* result) {
   size_t i = 0;
-  size_t pre = 0;
   int tzMul = 1;
   int dateMul = 1;
   size_t year = 1970;
@@ -954,8 +938,6 @@ static bool ParseISOStyleDate(DateTimeInfo::ForceUTC forceUTC, const CharT* s,
   bool isLocalTime = false;
   size_t tzHour = 0;
   size_t tzMin = 0;
-  bool isPermissive = false;
-  bool isStrict = false;
 
 #define PEEK(ch) (i < length && s[i] == ch)
 
@@ -985,19 +967,6 @@ static bool ParseISOStyleDate(DateTimeInfo::ForceUTC forceUTC, const CharT* s,
     return false;                                \
   }
 
-#define NEED_NDIGITS_OR_LESS(n, field)                 \
-  pre = i;                                             \
-  if (!ParseDigitsNOrLess(n, &field, s, &i, length)) { \
-    return false;                                      \
-  }                                                    \
-  if (i < pre + (n)) {                                 \
-    if (isStrict) {                                    \
-      return false;                                    \
-    } else {                                           \
-      isPermissive = true;                             \
-    }                                                  \
-  }
-
   if (PEEK('+') || PEEK('-')) {
     if (PEEK('-')) {
       dateMul = -1;
@@ -1020,26 +989,18 @@ static bool ParseISOStyleDate(DateTimeInfo::ForceUTC forceUTC, const CharT* s,
 
 done_date:
   if (PEEK('T')) {
-    if (isPermissive) {
-      // Require standard format "[+00]1970-01-01" if a time part marker "T"
-      // exists
-      return false;
-    }
-    isStrict = true;
-    i++;
-  } else if (PEEK(' ')) {
-    i++;
+    ++i;
   } else {
     goto done;
   }
 
-  NEED_NDIGITS_OR_LESS(2, hour);
+  NEED_NDIGITS(2, hour);
   NEED(':');
-  NEED_NDIGITS_OR_LESS(2, min);
+  NEED_NDIGITS(2, min);
 
   if (PEEK(':')) {
     ++i;
-    NEED_NDIGITS_OR_LESS(2, sec);
+    NEED_NDIGITS(2, sec);
     if (PEEK('.')) {
       ++i;
       if (!ParseFractional(&frac, s, &i, length)) {
@@ -1056,13 +1017,6 @@ done_date:
     }
     ++i;
     NEED_NDIGITS(2, tzHour);
-    /*
-     * Non-standard extension to the ISO date format:
-     * allow two digits for the time zone offset.
-     */
-    if (i >= length && !isStrict) {
-      goto done;
-    }
     /*
      * Non-standard extension to the ISO date format (permitted by ES5):
      * allow "-0700" as a time zone offset, not just "-07:00".
@@ -1106,7 +1060,6 @@ done:
 #undef NEED
 #undef DONE_UNLESS
 #undef NEED_NDIGITS
-#undef NEED_NDIGITS_OR_LESS
 }
 
 int FixupNonFullYear(int year) {
