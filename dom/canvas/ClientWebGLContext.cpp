@@ -1938,11 +1938,7 @@ bool ClientWebGLContext::IsEnabled(GLenum cap) const {
 template <typename T, typename S>
 static JS::Value Create(JSContext* cx, nsWrapperCache* creator, const S& src,
                         ErrorResult& rv) {
-  const auto obj = T::Create(cx, creator, src);
-  if (!obj) {
-    rv = NS_ERROR_OUT_OF_MEMORY;
-  }
-  return JS::ObjectOrNullValue(obj);
+  return JS::ObjectOrNullValue(T::Create(cx, creator, src, rv));
 }
 
 void ClientWebGLContext::GetInternalformatParameter(
@@ -2795,7 +2791,9 @@ void ClientWebGLContext::GetUniform(JSContext* const cx,
     case LOCAL_GL_FLOAT_MAT4x2:
     case LOCAL_GL_FLOAT_MAT4x3: {
       const auto ptr = reinterpret_cast<const float*>(res.data);
-      JSObject* obj = dom::Float32Array::Create(cx, this, Span(ptr, elemCount));
+      IgnoredErrorResult error;
+      JSObject* obj =
+          dom::Float32Array::Create(cx, this, Span(ptr, elemCount), error);
       MOZ_ASSERT(obj);
       retval.set(JS::ObjectOrNullValue(obj));
       return;
@@ -2805,7 +2803,9 @@ void ClientWebGLContext::GetUniform(JSContext* const cx,
     case LOCAL_GL_INT_VEC3:
     case LOCAL_GL_INT_VEC4: {
       const auto ptr = reinterpret_cast<const int32_t*>(res.data);
-      JSObject* obj = dom::Int32Array::Create(cx, this, Span(ptr, elemCount));
+      IgnoredErrorResult error;
+      JSObject* obj =
+          dom::Int32Array::Create(cx, this, Span(ptr, elemCount), error);
       MOZ_ASSERT(obj);
       retval.set(JS::ObjectOrNullValue(obj));
       return;
@@ -2815,7 +2815,9 @@ void ClientWebGLContext::GetUniform(JSContext* const cx,
     case LOCAL_GL_UNSIGNED_INT_VEC3:
     case LOCAL_GL_UNSIGNED_INT_VEC4: {
       const auto ptr = reinterpret_cast<const uint32_t*>(res.data);
-      JSObject* obj = dom::Uint32Array::Create(cx, this, Span(ptr, elemCount));
+      IgnoredErrorResult error;
+      JSObject* obj =
+          dom::Uint32Array::Create(cx, this, Span(ptr, elemCount), error);
       MOZ_ASSERT(obj);
       retval.set(JS::ObjectOrNullValue(obj));
       return;
@@ -4745,30 +4747,26 @@ void ClientWebGLContext::GetVertexAttrib(JSContext* cx, GLuint index,
         case webgl::AttribBaseType::Float: {
           const auto ptr = reinterpret_cast<const float*>(attrib.data.data());
           retval.setObjectOrNull(
-              dom::Float32Array::Create(cx, this, Span(ptr, 4)));
+              dom::Float32Array::Create(cx, this, Span(ptr, 4), rv));
           break;
         }
         case webgl::AttribBaseType::Int: {
           const auto ptr = reinterpret_cast<const int32_t*>(attrib.data.data());
           retval.setObjectOrNull(
-              dom::Int32Array::Create(cx, this, Span(ptr, 4)));
+              dom::Int32Array::Create(cx, this, Span(ptr, 4), rv));
           break;
         }
         case webgl::AttribBaseType::Uint: {
           const auto ptr =
               reinterpret_cast<const uint32_t*>(attrib.data.data());
           retval.setObjectOrNull(
-              dom::Uint32Array::Create(cx, this, Span(ptr, 4)));
+              dom::Uint32Array::Create(cx, this, Span(ptr, 4), rv));
           break;
         }
         case webgl::AttribBaseType::Boolean:
           MOZ_CRASH("impossible");
       }
 
-      if (retval.isNull()) {
-        rv.Throw(NS_ERROR_OUT_OF_MEMORY);
-        return;
-      }
       return;
     }
 
