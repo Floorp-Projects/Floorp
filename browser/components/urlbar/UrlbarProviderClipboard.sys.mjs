@@ -102,15 +102,20 @@ class ProviderClipboard extends UrlbarProvider {
     let result = new lazy.UrlbarResult(
       UrlbarUtils.RESULT_TYPE.URL,
       UrlbarUtils.RESULT_SOURCE.OTHER_LOCAL,
-      {
-        url: this.#previousClipboard.value,
-        title: this.#previousClipboard.value,
+      ...lazy.UrlbarResult.payloadAndSimpleHighlights(queryContext.tokens, {
+        fallbackTitle: [
+          UrlbarUtils.prepareUrlForDisplay(this.#previousClipboard.value, {
+            trimURL: false,
+          }),
+          UrlbarUtils.HIGHLIGHT.NONE,
+        ],
+        url: [this.#previousClipboard.value, UrlbarUtils.HIGHLIGHT.NONE],
         icon: "chrome://global/skin/icons/clipboard.svg",
         isBlockable: true,
         blockL10n: {
           id: "urlbar-result-menu-dismiss-firefox-suggest",
         },
-      }
+      })
     );
 
     addCallback(this, result);
