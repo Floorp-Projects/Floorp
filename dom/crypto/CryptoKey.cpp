@@ -200,7 +200,7 @@ void CryptoKey::GetAlgorithm(JSContext* cx,
       break;
     case KeyAlgorithmProxy::RSA: {
       RootedDictionary<RsaHashedKeyAlgorithm> rsa(cx);
-      converted = mAlgorithm.mRsa.ToKeyAlgorithm(cx, rsa);
+      converted = mAlgorithm.mRsa.ToKeyAlgorithm(cx, rsa, aRv);
       if (converted) {
         converted = ToJSValue(cx, rsa, &val);
       }

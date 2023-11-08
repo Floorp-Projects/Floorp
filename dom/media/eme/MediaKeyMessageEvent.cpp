@@ -89,9 +89,8 @@ void MediaKeyMessageEvent::GetMessage(JSContext* cx,
                                       JS::MutableHandle<JSObject*> aMessage,
                                       ErrorResult& aRv) {
   if (!mMessage) {
-    mMessage = ArrayBuffer::Create(cx, this, mRawMessage);
-    if (!mMessage) {
-      aRv.NoteJSContextException(cx);
+    mMessage = ArrayBuffer::Create(cx, this, mRawMessage, aRv);
+    if (aRv.Failed()) {
       return;
     }
     mRawMessage.Clear();

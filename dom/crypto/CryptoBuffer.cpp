@@ -122,12 +122,14 @@ bool CryptoBuffer::ToSECItem(PLArenaPool* aArena, SECItem* aItem) const {
   return true;
 }
 
-JSObject* CryptoBuffer::ToUint8Array(JSContext* aCx) const {
-  return Uint8Array::Create(aCx, *this);
+JSObject* CryptoBuffer::ToUint8Array(JSContext* aCx,
+                                     ErrorResult& aError) const {
+  return Uint8Array::Create(aCx, *this, aError);
 }
 
-JSObject* CryptoBuffer::ToArrayBuffer(JSContext* aCx) const {
-  return ArrayBuffer::Create(aCx, *this);
+JSObject* CryptoBuffer::ToArrayBuffer(JSContext* aCx,
+                                      ErrorResult& aError) const {
+  return ArrayBuffer::Create(aCx, *this, aError);
 }
 
 // "BigInt" comes from the WebCrypto spec

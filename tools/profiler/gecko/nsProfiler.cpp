@@ -478,13 +478,14 @@ nsProfiler::GetProfileDataAsArrayBuffer(double aSinceTime, JSContext* aCx,
             }
 
             JSContext* cx = jsapi.cx();
+            ErrorResult error;
             JSObject* typedArray =
-                dom::ArrayBuffer::Create(cx, aResult.mProfile);
-            if (typedArray) {
+                dom::ArrayBuffer::Create(cx, aResult.mProfile, error);
+            if (!error.Failed()) {
               JS::Rooted<JS::Value> val(cx, JS::ObjectValue(*typedArray));
               promise->MaybeResolve(val);
             } else {
-              promise->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
+              promise->MaybeReject(std::move(error));
             }
           },
           [promise](nsresult aRv) { promise->MaybeReject(aRv); });
@@ -581,9 +582,10 @@ nsProfiler::GetProfileDataAsGzippedArrayBuffer(double aSinceTime,
 
             JSContext* cx = jsapi.cx();
             // Get the profile typedArray.
-            JSObject* typedArray = dom::ArrayBuffer::Create(cx, outBuff);
-            if (!typedArray) {
-              promise->MaybeReject(NS_ERROR_OUT_OF_MEMORY);
+            ErrorResult error;
+            JSObject* typedArray = dom::ArrayBuffer::Create(cx, outBuff, error);
+            if (error.Failed()) {
+              promise->MaybeReject(std::move(error));
               return;
             }
             JS::Rooted<JS::Value> typedArrayValue(cx,
@@ -703,22 +705,33 @@ nsProfiler::GetSymbolTable(const nsACString& aDebugPath,
 
             JSContext* cx = jsapi.cx();
 
+            ErrorResult error;
             JS::Rooted<JSObject*> addrsArray(
-                cx, dom::Uint32Array::Create(cx, aSymbolTable.mAddrs));
-            JS::Rooted<JSObject*> indexArray(
-                cx, dom::Uint32Array::Create(cx, aSymbolTable.mIndex));
-            JS::Rooted<JSObject*> bufferArray(
-                cx, dom::Uint8Array::Create(cx, aSymbolTable.mBuffer));
-
-            if (addrsArray && indexArray && bufferArray) {
-              JS::Rooted<JSObject*> tuple(cx, JS::NewArrayObject(cx, 3));
-              JS_SetElement(cx, tuple, 0, addrsArray);
-              JS_SetElement(cx, tuple, 1, indexArray);
-              JS_SetElement(cx, tuple, 2, bufferArray);
-              promise->MaybeResolve(tuple);
-            } else {
-              promise->MaybeReject(NS_ERROR_FAILURE);
+                cx, dom::Uint32Array::Create(cx, aSymbolTable.mAddrs, error));
+            if (error.Failed()) {
+              promise->MaybeReject(std::move(error));
+              return;
             }
+
+            JS::Rooted<JSObject*> indexArray(
+                cx, dom::Uint32Array::Create(cx, aSymbolTable.mIndex, error));
+            if (error.Failed()) {
+              promise->MaybeReject(std::move(error));
+              return;
+            }
+
+            JS::Rooted<JSObject*> bufferArray(
+                cx, dom::Uint8Array::Create(cx, aSymbolTable.mBuffer, error));
+            if (error.Failed()) {
+              promise->MaybeReject(std::move(error));
+              return;
+            }
+
+            JS::Rooted<JSObject*> tuple(cx, JS::NewArrayObject(cx, 3));
+            JS_SetElement(cx, tuple, 0, addrsArray);
+            JS_SetElement(cx, tuple, 1, indexArray);
+            JS_SetElement(cx, tuple, 2, bufferArray);
+            promise->MaybeResolve(tuple);
           },
           [promise](nsresult aRv) { promise->MaybeReject(aRv); });
 

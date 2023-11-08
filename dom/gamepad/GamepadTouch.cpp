@@ -33,9 +33,8 @@ GamepadTouch::~GamepadTouch() { mozilla::DropJSObjects(this); }
 void GamepadTouch::GetPosition(JSContext* aCx,
                                JS::MutableHandle<JSObject*> aRetval,
                                ErrorResult& aRv) {
-  mPosition = Float32Array::Create(aCx, this, mTouchState.position);
-  if (!mPosition) {
-    aRv.NoteJSContextException(aCx);
+  mPosition = Float32Array::Create(aCx, this, mTouchState.position, aRv);
+  if (aRv.Failed()) {
     return;
   }
 
@@ -47,15 +46,14 @@ void GamepadTouch::GetSurfaceDimensions(JSContext* aCx,
                                         ErrorResult& aRv) {
   if (mTouchState.isSurfaceDimensionsValid) {
     mSurfaceDimensions = Uint32Array::Create(
-        aCx, this, std::size(mTouchState.surfaceDimensions));
+        aCx, this, std::size(mTouchState.surfaceDimensions), aRv);
 
   } else {
     mSurfaceDimensions =
-        Uint32Array::Create(aCx, this, mTouchState.surfaceDimensions);
+        Uint32Array::Create(aCx, this, mTouchState.surfaceDimensions, aRv);
   }
 
-  if (!mSurfaceDimensions) {
-    aRv.NoteJSContextException(aCx);
+  if (aRv.Failed()) {
     return;
   }
 

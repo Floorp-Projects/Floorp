@@ -6231,10 +6231,9 @@ static already_AddRefed<ImageData> CreateImageData(
   }
 
   // Create the fast typed array; it's initialized to 0 by default.
-  JSObject* darray = Uint8ClampedArray::Create(aCx, aContext, len.value());
-  if (!darray) {
-    // TODO: Should use OOMReporter.
-    aError.Throw(NS_ERROR_OUT_OF_MEMORY);
+  JSObject* darray =
+      Uint8ClampedArray::Create(aCx, aContext, len.value(), aError);
+  if (aError.Failed()) {
     return nullptr;
   }
 
