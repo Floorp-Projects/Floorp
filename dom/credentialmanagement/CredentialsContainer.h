@@ -22,6 +22,8 @@ class CredentialsContainer final : public nsISupports, public nsWrapperCache {
 
   nsPIDOMWindowInner* GetParentObject() const { return mParent; }
 
+  already_AddRefed<WebAuthnManager> GetWebAuthnManager();
+
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
 

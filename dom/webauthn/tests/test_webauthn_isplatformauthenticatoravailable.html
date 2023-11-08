@@ -18,18 +18,29 @@
 <script class="testbody" type="text/javascript">
 "use strict";
 
-add_task(async function test_is_platform_available() {
-  // This test ensures that isUserVerifyingPlatformAuthenticatorAvailable()
-  // is a callable method, but with the softtoken enabled, it's not useful to
-  // figure out what it actually returns, so we'll just make sure it runs.
-  await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()
-  .then(function(aResult) {
-    ok(true, "Resolved: " + aResult);
-  })
-  .catch(function(aProblem) {
-    ok(false, "Problem encountered: " + aProblem);
-  });
+add_task(async function test_uvpaa_with_no_authenticator() {
+  let uvpaa = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+  ok(uvpaa === false, "Platform authenticator is not available");
 });
+
+add_task(async () => {
+  await addVirtualAuthenticator("ctap2_1", "usb");
+});
+
+add_task(async function test_uvpaa_with_usb_authenticator() {
+  let uvpaa = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+  ok(uvpaa === false, "Platform authenticator is not available");
+});
+
+add_task(async () => {
+  await addVirtualAuthenticator("ctap2_1", "internal");
+});
+
+add_task(async function test_uvpaa_with_usb_and_platform_authenticator() {
+  let uvpaa = await PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+  ok(uvpaa === true, "Platform authenticator is available");
+});
+
 
 </script>
 

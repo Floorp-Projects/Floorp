@@ -20,21 +20,45 @@ var { AppConstants } = SpecialPowers.ChromeUtils.importESModule(
   "resource://gre/modules/AppConstants.sys.mjs"
 );
 
-async function addVirtualAuthenticator() {
-  let id = await SpecialPowers.spawnChrome([], () => {
-    let webauthnService = Cc["@mozilla.org/webauthn/service;1"].getService(
-      Ci.nsIWebAuthnService
-    );
-    let id = webauthnService.addVirtualAuthenticator(
-      "ctap2_1",
-      "internal",
-      true,
-      true,
-      true,
-      true
-    );
-    return id;
-  });
+async function addVirtualAuthenticator(
+  protocol = "ctap2_1",
+  transport = "internal",
+  hasResidentKey = true,
+  hasUserVerification = true,
+  isUserConsenting = true,
+  isUserVerified = true
+) {
+  let id = await SpecialPowers.spawnChrome(
+    [
+      protocol,
+      transport,
+      hasResidentKey,
+      hasUserVerification,
+      isUserConsenting,
+      isUserVerified,
+    ],
+    (
+      protocol,
+      transport,
+      hasResidentKey,
+      hasUserVerification,
+      isUserConsenting,
+      isUserVerified
+    ) => {
+      let webauthnService = Cc["@mozilla.org/webauthn/service;1"].getService(
+        Ci.nsIWebAuthnService
+      );
+      let id = webauthnService.addVirtualAuthenticator(
+        protocol,
+        transport,
+        hasResidentKey,
+        hasUserVerification,
+        isUserConsenting,
+        isUserVerified
+      );
+      return id;
+    }
+  );
 
   SimpleTest.registerCleanupFunction(async () => {
     await SpecialPowers.spawnChrome([id], id => {

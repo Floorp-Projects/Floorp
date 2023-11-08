@@ -18,6 +18,7 @@
 #include "mozilla/dom/PublicKeyCredential.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PWebAuthnTransaction.h"
+#include "mozilla/dom/PWebAuthnTransactionChild.h"
 #include "mozilla/dom/WebAuthnManager.h"
 #include "mozilla/dom/WebAuthnTransactionChild.h"
 #include "mozilla/dom/WebAuthnUtil.h"
@@ -724,6 +725,32 @@ already_AddRefed<Promise> WebAuthnManager::Store(const Credential& aCredential,
   }
 
   promise->MaybeReject(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+  return promise.forget();
+}
+
+already_AddRefed<Promise> WebAuthnManager::IsUVPAA(GlobalObject& aGlobal,
+                                                   ErrorResult& aError) {
+  RefPtr<Promise> promise =
+      Promise::Create(xpc::CurrentNativeGlobal(aGlobal.Context()), aError);
+  if (aError.Failed()) {
+    return nullptr;
+  }
+
+  if (!MaybeCreateBackgroundActor()) {
+    promise->MaybeReject(NS_ERROR_DOM_OPERATION_ERR);
+    return promise.forget();
+  }
+
+  mChild->SendRequestIsUVPAA()->Then(
+      GetCurrentSerialEventTarget(), __func__,
+      [promise](const PWebAuthnTransactionChild::RequestIsUVPAAPromise::
+                    ResolveOrRejectValue& aValue) {
+        if (aValue.IsResolve()) {
+          promise->MaybeResolve(aValue.ResolveValue());
+        } else {
+          promise->MaybeReject(NS_ERROR_DOM_NOT_ALLOWED_ERR);
+        }
+      });
   return promise.forget();
 }
 

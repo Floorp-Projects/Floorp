@@ -35,6 +35,9 @@ class WebAuthnTransactionParent final : public PWebAuthnTransactionParent {
   mozilla::ipc::IPCResult RecvRequestCancel(
       const Tainted<uint64_t>& aTransactionId);
 
+  mozilla::ipc::IPCResult RecvRequestIsUVPAA(
+      RequestIsUVPAAResolver&& aResolver);
+
   mozilla::ipc::IPCResult RecvDestroyMe();
 
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;

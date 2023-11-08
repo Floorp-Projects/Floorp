@@ -34,6 +34,11 @@ namespace dom {
 NS_IMPL_ISUPPORTS(AndroidWebAuthnService, nsIWebAuthnService)
 
 NS_IMETHODIMP
+AndroidWebAuthnService::GetIsUVPAA(bool* aAvailable) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 AndroidWebAuthnService::MakeCredential(uint64_t aTransactionId,
                                        uint64_t browsingContextId,
                                        nsIWebAuthnRegisterArgs* aArgs,

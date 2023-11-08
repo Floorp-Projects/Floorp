@@ -9,10 +9,13 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_security.h"
 #include "mozilla/dom/AuthenticatorResponse.h"
+#include "mozilla/dom/CredentialsContainer.h"
 #include "mozilla/dom/ChromeUtils.h"
+#include "mozilla/dom/Navigator.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PublicKeyCredential.h"
 #include "mozilla/dom/WebAuthenticationBinding.h"
+#include "mozilla/dom/WebAuthnManager.h"
 #include "nsCycleCollectionParticipant.h"
 
 #ifdef XP_WIN
@@ -117,46 +120,16 @@ void PublicKeyCredential::SetAssertionResponse(
 already_AddRefed<Promise>
 PublicKeyCredential::IsUserVerifyingPlatformAuthenticatorAvailable(
     GlobalObject& aGlobal, ErrorResult& aError) {
-  RefPtr<Promise> promise =
-      Promise::Create(xpc::CurrentNativeGlobal(aGlobal.Context()), aError);
-  if (aError.Failed()) {
+  nsCOMPtr<nsPIDOMWindowInner> window =
+      do_QueryInterface(aGlobal.GetAsSupports());
+  if (!window) {
+    aError.Throw(NS_ERROR_FAILURE);
     return nullptr;
   }
 
-// https://w3c.github.io/webauthn/#isUserVerifyingPlatformAuthenticatorAvailable
-//
-// If on latest windows, call system APIs, otherwise return false, as we don't
-// have other UVPAAs available at this time.
-#ifdef XP_WIN
-
-  if (WinWebAuthnService::IsUserVerifyingPlatformAuthenticatorAvailable()) {
-    promise->MaybeResolve(true);
-    return promise.forget();
-  }
-
-  promise->MaybeResolve(false);
-#elif defined(MOZ_WIDGET_ANDROID)
-  if (StaticPrefs::
-          security_webauthn_webauthn_enable_android_fido2_residentkey()) {
-    auto result = java::WebAuthnTokenManager::
-        WebAuthnIsUserVerifyingPlatformAuthenticatorAvailable();
-    auto geckoResult = java::GeckoResult::LocalRef(std::move(result));
-    MozPromise<bool, bool, false>::FromGeckoResult(geckoResult)
-        ->Then(
-            GetMainThreadSerialEventTarget(), __func__,
-            [promise](const MozPromise<bool, bool, false>::ResolveOrRejectValue&
-                          aValue) {
-              if (aValue.IsResolve()) {
-                promise->MaybeResolve(aValue.ResolveValue());
-              }
-            });
-  } else {
-    promise->MaybeResolve(false);
-  }
-#else
-  promise->MaybeResolve(false);
-#endif
-  return promise.forget();
+  RefPtr<WebAuthnManager> manager =
+      window->Navigator()->Credentials()->GetWebAuthnManager();
+  return manager->IsUVPAA(aGlobal, aError);
 }
 
 /* static */

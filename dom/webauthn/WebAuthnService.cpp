@@ -41,6 +41,14 @@ WebAuthnService::GetAssertion(uint64_t aTransactionId,
 }
 
 NS_IMETHODIMP
+WebAuthnService::GetIsUVPAA(bool* aAvailable) {
+  if (StaticPrefs::security_webauth_webauthn_enable_softtoken()) {
+    return mTestService->GetIsUVPAA(aAvailable);
+  }
+  return mPlatformService->GetIsUVPAA(aAvailable);
+}
+
+NS_IMETHODIMP
 WebAuthnService::Reset() {
   if (StaticPrefs::security_webauth_webauthn_enable_softtoken()) {
     return mTestService->Reset();

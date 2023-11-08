@@ -870,4 +870,19 @@ impl TestTokenManager {
         .may_block(true)
         .dispatch_background_task();
     }
+
+    pub fn has_platform_authenticator(&self) -> bool {
+        if !static_prefs::pref!("security.webauth.webauthn_enable_softtoken") {
+            return false;
+        }
+
+        for token in self.state.lock().unwrap().values_mut() {
+            let _ = token.init();
+            if token.transport.as_str() == "internal" {
+                return true;
+            }
+        }
+
+        false
+    }
 }
