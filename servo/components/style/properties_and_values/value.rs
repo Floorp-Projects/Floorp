@@ -371,7 +371,7 @@ impl SpecifiedValue {
             let mut input = ParserInput::new(&value);
             let mut input = CSSParser::new(&mut input);
             // TODO(zrhoffman, bug 1858305): Get the variable without parsing
-            ComputedPropertyValue::parse(&mut input)
+            ComputedPropertyValue::parse(&mut input, &registration.url_data)
         };
         if let Ok(value) = result {
             Ok(value)
@@ -389,7 +389,7 @@ impl SpecifiedValue {
         allow_computationally_dependent: AllowComputationallyDependent,
     ) -> Result<Self, StyleParseError<'i>> {
         if syntax.is_universal() {
-            return Ok(Self::Universal(ComputedPropertyValue::parse(&mut input)?));
+            return Ok(Self::Universal(ComputedPropertyValue::parse(&mut input, url_data)?));
         }
 
         let mut values = SmallComponentVec::new();
