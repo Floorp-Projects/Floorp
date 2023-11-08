@@ -384,3 +384,8 @@ http://profile.stage.mozaws.net:80          privileged
 https://profile.stage.mozaws.net:443        privileged
 http://ocsp.pki.goog:80                     privileged
 https://ocsp.pki.goog:443                   privileged
+
+
+# External IP address only available via http (Bug 1855734)
+http://123.123.123.123:80      privileged
+https://123.123.123.123:443    privileged,nocert
