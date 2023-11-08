@@ -2452,10 +2452,9 @@ GeneralParser<ParseHandler, Unit>::functionBody(InHandling inHandling,
       MOZ_TRY_VAR(stmtList, handler_.newStatementList(pos()));
     }
 
-    Node kid = assignExpr(inHandling, yieldHandling, TripledotProhibited);
-    if (!kid) {
-      return errorResult();
-    }
+    Node kid;
+    MOZ_TRY_VAR(kid,
+                assignExpr(inHandling, yieldHandling, TripledotProhibited));
 
     MOZ_TRY_VAR(body, handler_.newExpressionBody(kid));
 
@@ -2829,10 +2828,9 @@ bool GeneralParser<ParseHandler, Unit>::functionArguments(
         }
         funbox->hasParameterExprs = true;
 
-        Node def_expr = assignExprWithoutYieldOrAwait(yieldHandling);
-        if (!def_expr) {
-          return false;
-        }
+        Node def_expr;
+        MOZ_TRY_VAR_OR_RETURN(
+            def_expr, assignExprWithoutYieldOrAwait(yieldHandling), false);
         if (!handler_.setLastFunctionFormalParameterDefault(funNode,
                                                             def_expr)) {
           return false;
@@ -4247,10 +4245,8 @@ GeneralParser<ParseHandler, Unit>::bindingInitializer(
     pc_->functionBox()->hasParameterExprs = true;
   }
 
-  Node rhs = assignExpr(InAllowed, yieldHandling, TripledotProhibited);
-  if (!rhs) {
-    return errorResult();
-  }
+  Node rhs;
+  MOZ_TRY_VAR(rhs, assignExpr(InAllowed, yieldHandling, TripledotProhibited));
 
   BinaryNodeType assign;
   MOZ_TRY_VAR(assign,
@@ -4607,10 +4603,12 @@ GeneralParser<ParseHandler, Unit>::expressionAfterForInOrOf(
     ParseNodeKind forHeadKind, YieldHandling yieldHandling) {
   MOZ_ASSERT(forHeadKind == ParseNodeKind::ForIn ||
              forHeadKind == ParseNodeKind::ForOf);
-  Node pn = forHeadKind == ParseNodeKind::ForOf
-                ? assignExpr(InAllowed, yieldHandling, TripledotProhibited)
-                : expr(InAllowed, yieldHandling, TripledotProhibited);
-  return pn;
+  if (forHeadKind == ParseNodeKind::ForOf) {
+    return assignExpr(InAllowed, yieldHandling, TripledotProhibited)
+        .unwrapOr(null());
+  }
+
+  return expr(InAllowed, yieldHandling, TripledotProhibited);
 }
 
 template <class ParseHandler, typename Unit>
@@ -4654,11 +4652,9 @@ GeneralParser<ParseHandler, Unit>::declarationPattern(
     return errorResult();
   }
 
-  Node init = assignExpr(forHeadKind ? InProhibited : InAllowed, yieldHandling,
-                         TripledotProhibited);
-  if (!init) {
-    return errorResult();
-  }
+  Node init;
+  MOZ_TRY_VAR(init, assignExpr(forHeadKind ? InProhibited : InAllowed,
+                               yieldHandling, TripledotProhibited));
 
   return handler_.newAssignment(ParseNodeKind::AssignExpr, pattern, init);
 }
@@ -4676,11 +4672,9 @@ GeneralParser<ParseHandler, Unit>::initializerInNameDeclaration(
     return errorResult();
   }
 
-  Node initializer = assignExpr(forHeadKind ? InProhibited : InAllowed,
-                                yieldHandling, TripledotProhibited);
-  if (!initializer) {
-    return errorResult();
-  }
+  Node initializer;
+  MOZ_TRY_VAR(initializer, assignExpr(forHeadKind ? InProhibited : InAllowed,
+                                      yieldHandling, TripledotProhibited));
 
   if (forHeadKind && initialDeclaration) {
     bool isForIn, isForOf;
@@ -6113,10 +6107,9 @@ GeneralParser<ParseHandler, Unit>::exportDefaultAssignExpr(uint32_t begin) {
     return null();
   }
 
-  Node kid = assignExpr(InAllowed, YieldIsName, TripledotProhibited);
-  if (!kid) {
-    return null();
-  }
+  Node kid;
+  MOZ_TRY_VAR_OR_RETURN(
+      kid, assignExpr(InAllowed, YieldIsName, TripledotProhibited), null());
 
   if (!matchOrInsertSemicolon()) {
     return null();
@@ -7118,10 +7111,9 @@ GeneralParser<ParseHandler, Unit>::yieldExpression(InHandling inHandling) {
       tokenStream.consumeKnownToken(TokenKind::Mul, TokenStream::SlashIsRegExp);
       [[fallthrough]];
     default:
-      exprNode = assignExpr(inHandling, YieldIsKeyword, TripledotProhibited);
-      if (!exprNode) {
-        return null();
-      }
+      MOZ_TRY_VAR_OR_RETURN(
+          exprNode, assignExpr(inHandling, YieldIsKeyword, TripledotProhibited),
+          null());
   }
   if (kind == ParseNodeKind::YieldStarExpr) {
     return handler_.newYieldStarExpression(begin, exprNode).unwrapOr(null());
@@ -8719,10 +8711,8 @@ GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(
     // Parse the expression for the field initializer.
     {
       AutoAwaitIsKeyword awaitHandling(this, AwaitIsName);
-      initializerExpr = assignExpr(InAllowed, YieldIsName, TripledotProhibited);
-      if (!initializerExpr) {
-        return errorResult();
-      }
+      MOZ_TRY_VAR(initializerExpr,
+                  assignExpr(InAllowed, YieldIsName, TripledotProhibited));
     }
 
     handler_.checkAndSetIsDirectRHSAnonFunction(initializerExpr);
@@ -9631,11 +9621,11 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::expr(
     TripledotHandling tripledotHandling,
     PossibleError* possibleError /* = nullptr */,
     InvokedPrediction invoked /* = PredictUninvoked */) {
-  Node pn = assignExpr(inHandling, yieldHandling, tripledotHandling,
-                       possibleError, invoked);
-  if (!pn) {
-    return null();
-  }
+  Node pn;
+  MOZ_TRY_VAR_OR_RETURN(pn,
+                        assignExpr(inHandling, yieldHandling, tripledotHandling,
+                                   possibleError, invoked),
+                        null());
 
   bool matched;
   if (!tokenStream.matchToken(&matched, TokenKind::Comma,
@@ -9683,11 +9673,10 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::expr(
     // information needed to determine whether or not we're dealing with
     // a non-recoverable situation.
     PossibleError possibleErrorInner(*this);
-    pn = assignExpr(inHandling, yieldHandling, tripledotHandling,
-                    &possibleErrorInner);
-    if (!pn) {
-      return null();
-    }
+    MOZ_TRY_VAR_OR_RETURN(pn,
+                          assignExpr(inHandling, yieldHandling,
+                                     tripledotHandling, &possibleErrorInner),
+                          null());
 
     if (!possibleError) {
       // Report any pending expression error.
@@ -9944,33 +9933,33 @@ GeneralParser<ParseHandler, Unit>::condExpr(InHandling inHandling,
     return condition;
   }
 
-  Node thenExpr = assignExpr(InAllowed, yieldHandling, TripledotProhibited);
-  if (!thenExpr) {
-    return null();
-  }
+  Node thenExpr;
+  MOZ_TRY_VAR_OR_RETURN(
+      thenExpr, assignExpr(InAllowed, yieldHandling, TripledotProhibited),
+      null());
 
   if (!mustMatchToken(TokenKind::Colon, JSMSG_COLON_IN_COND)) {
     return null();
   }
 
-  Node elseExpr = assignExpr(inHandling, yieldHandling, TripledotProhibited);
-  if (!elseExpr) {
-    return null();
-  }
+  Node elseExpr;
+  MOZ_TRY_VAR_OR_RETURN(
+      elseExpr, assignExpr(inHandling, yieldHandling, TripledotProhibited),
+      null());
 
   return handler_.newConditional(condition, thenExpr, elseExpr)
       .unwrapOr(null());
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::assignExpr(
+typename ParseHandler::NodeResult GeneralParser<ParseHandler, Unit>::assignExpr(
     InHandling inHandling, YieldHandling yieldHandling,
     TripledotHandling tripledotHandling,
     PossibleError* possibleError /* = nullptr */,
     InvokedPrediction invoked /* = PredictUninvoked */) {
   AutoCheckRecursionLimit recursion(this->fc_);
   if (!recursion.check(this->fc_)) {
-    return null();
+    return errorResult();
   }
 
   // It's very common at this point to have a "detectably simple" expression,
@@ -9986,7 +9975,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::assignExpr(
 
   TokenKind firstToken;
   if (!tokenStream.getToken(&firstToken, TokenStream::SlashIsRegExp)) {
-    return null();
+    return errorResult();
   }
 
   TokenPos exprPos = pos();
@@ -9998,45 +9987,45 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::assignExpr(
   // and other hard cases are handled outside this fast path.
   if (firstToken == TokenKind::Name) {
     if (!tokenStream.nextTokenEndsExpr(&endsExpr)) {
-      return null();
+      return errorResult();
     }
     if (endsExpr) {
       TaggedParserAtomIndex name = identifierReference(yieldHandling);
       if (!name) {
-        return null();
+        return errorResult();
       }
 
-      return identifierReference(name).unwrapOr(null());
+      return identifierReference(name);
     }
   }
 
   if (firstToken == TokenKind::Number) {
     if (!tokenStream.nextTokenEndsExpr(&endsExpr)) {
-      return null();
+      return errorResult();
     }
     if (endsExpr) {
-      return newNumber(anyChars.currentToken()).unwrapOr(null());
+      return newNumber(anyChars.currentToken());
     }
   }
 
   if (firstToken == TokenKind::String) {
     if (!tokenStream.nextTokenEndsExpr(&endsExpr)) {
-      return null();
+      return errorResult();
     }
     if (endsExpr) {
-      return stringLiteral().unwrapOr(null());
+      return stringLiteral();
     }
   }
 
   if (firstToken == TokenKind::Yield && yieldExpressionsSupported()) {
-    return yieldExpression(inHandling);
+    return toResult(yieldExpression(inHandling));
   }
 
   bool maybeAsyncArrow = false;
   if (firstToken == TokenKind::Async) {
     TokenKind nextSameLine = TokenKind::Eof;
     if (!tokenStream.peekTokenSameLine(&nextSameLine)) {
-      return null();
+      return errorResult();
     }
 
     if (TokenKindIsPossibleIdentifier(nextSameLine)) {
@@ -10060,18 +10049,18 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::assignExpr(
 
     TokenKind tokenAfterAsync;
     if (!tokenStream.getToken(&tokenAfterAsync)) {
-      return null();
+      return errorResult();
     }
     MOZ_ASSERT(TokenKindIsPossibleIdentifier(tokenAfterAsync));
 
     // Check yield validity here.
     TaggedParserAtomIndex name = bindingIdentifier(yieldHandling);
     if (!name) {
-      return null();
+      return errorResult();
     }
 
     if (!tokenStream.peekToken(&tokenAfterLHS, TokenStream::SlashIsRegExp)) {
-      return null();
+      return errorResult();
     }
 
     isArrow = tokenAfterLHS == TokenKind::Arrow;
@@ -10089,23 +10078,23 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::assignExpr(
 
       TaggedParserAtomIndex asyncName = identifierReference(yieldHandling);
       if (!asyncName) {
-        return null();
+        return errorResult();
       }
 
-      MOZ_TRY_VAR_OR_RETURN(lhs, identifierReference(asyncName), null());
+      MOZ_TRY_VAR(lhs, identifierReference(asyncName));
     }
   } else {
     lhs = condExpr(inHandling, yieldHandling, tripledotHandling,
                    &possibleErrorInner, invoked);
     if (!lhs) {
-      return null();
+      return errorResult();
     }
 
     // Use SlashIsRegExp here because the ConditionalExpression parsed above
     // could be the entirety of this AssignmentExpression, and then ASI
     // permits this token to be a regular expression.
     if (!tokenStream.peekToken(&tokenAfterLHS, TokenStream::SlashIsRegExp)) {
-      return null();
+      return errorResult();
     }
 
     isArrow = tokenAfterLHS == TokenKind::Arrow;
@@ -10125,7 +10114,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::assignExpr(
 
     TokenKind next;
     if (!tokenStream.getToken(&next, TokenStream::SlashIsRegExp)) {
-      return null();
+      return errorResult();
     }
     TokenPos startPos = pos();
     uint32_t toStringStart = startPos.begin;
@@ -10138,7 +10127,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::assignExpr(
 
       TokenKind nextSameLine = TokenKind::Eof;
       if (!tokenStream.peekTokenSameLine(&nextSameLine)) {
-        return null();
+        return errorResult();
       }
 
       // The AsyncArrowFunction production are
@@ -10154,13 +10143,11 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::assignExpr(
 
     FunctionSyntaxKind syntaxKind = FunctionSyntaxKind::Arrow;
     FunctionNodeType funNode;
-    MOZ_TRY_VAR_OR_RETURN(funNode, handler_.newFunction(syntaxKind, startPos),
-                          null());
+    MOZ_TRY_VAR(funNode, handler_.newFunction(syntaxKind, startPos));
 
     return functionDefinition(funNode, toStringStart, inHandling, yieldHandling,
                               TaggedParserAtomIndex::null(), syntaxKind,
-                              GeneratorKind::NotGenerator, asyncKind)
-        .unwrapOr(null());
+                              GeneratorKind::NotGenerator, asyncKind);
   }
 
   MOZ_ALWAYS_TRUE(
@@ -10221,7 +10208,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::assignExpr(
       MOZ_ASSERT(!anyChars.isCurrentTokenAssignment());
       if (!possibleError) {
         if (!possibleErrorInner.checkForExpressionError()) {
-          return null();
+          return errorResult();
         }
       } else {
         possibleErrorInner.transferErrorsTo(possibleError);
@@ -10235,17 +10222,17 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::assignExpr(
   if (handler_.isUnparenthesizedDestructuringPattern(lhs)) {
     if (kind != ParseNodeKind::AssignExpr) {
       error(JSMSG_BAD_DESTRUCT_ASS);
-      return null();
+      return errorResult();
     }
 
     if (!possibleErrorInner.checkForDestructuringErrorOrWarning()) {
-      return null();
+      return errorResult();
     }
   } else if (handler_.isName(lhs)) {
     if (const char* chars = nameIsArgumentsOrEval(lhs)) {
       // |chars| is "arguments" or "eval" here.
       if (!strictModeErrorAt(exprPos.begin, JSMSG_BAD_STRICT_ASSIGN, chars)) {
-        return null();
+        return errorResult();
       }
     }
   } else if (handler_.isPropertyOrPrivateMemberAccess(lhs)) {
@@ -10259,11 +10246,11 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::assignExpr(
         kind == ParseNodeKind::OrAssignExpr ||
         kind == ParseNodeKind::AndAssignExpr) {
       errorAt(exprPos.begin, JSMSG_BAD_LEFTSIDE_OF_ASS);
-      return null();
+      return errorResult();
     }
 
     if (!strictModeErrorAt(exprPos.begin, JSMSG_BAD_LEFTSIDE_OF_ASS)) {
-      return null();
+      return errorResult();
     }
 
     if (possibleError) {
@@ -10272,19 +10259,17 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::assignExpr(
     }
   } else {
     errorAt(exprPos.begin, JSMSG_BAD_LEFTSIDE_OF_ASS);
-    return null();
+    return errorResult();
   }
 
   if (!possibleErrorInner.checkForExpressionError()) {
-    return null();
+    return errorResult();
   }
 
-  Node rhs = assignExpr(inHandling, yieldHandling, TripledotProhibited);
-  if (!rhs) {
-    return null();
-  }
+  Node rhs;
+  MOZ_TRY_VAR(rhs, assignExpr(inHandling, yieldHandling, TripledotProhibited));
 
-  return handler_.newAssignment(kind, lhs, rhs).unwrapOr(null());
+  return handler_.newAssignment(kind, lhs, rhs);
 }
 
 template <class ParseHandler>
@@ -10611,21 +10596,22 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::unaryExpr(
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::Node
+typename ParseHandler::NodeResult
 GeneralParser<ParseHandler, Unit>::assignExprWithoutYieldOrAwait(
     YieldHandling yieldHandling) {
   uint32_t startYieldOffset = pc_->lastYieldOffset;
   uint32_t startAwaitOffset = pc_->lastAwaitOffset;
-  Node res = assignExpr(InAllowed, yieldHandling, TripledotProhibited);
-  if (res) {
-    if (pc_->lastYieldOffset != startYieldOffset) {
-      errorAt(pc_->lastYieldOffset, JSMSG_YIELD_IN_PARAMETER);
-      return null();
-    }
-    if (pc_->lastAwaitOffset != startAwaitOffset) {
-      errorAt(pc_->lastAwaitOffset, JSMSG_AWAIT_IN_PARAMETER);
-      return null();
-    }
+
+  Node res;
+  MOZ_TRY_VAR(res, assignExpr(InAllowed, yieldHandling, TripledotProhibited));
+
+  if (pc_->lastYieldOffset != startYieldOffset) {
+    errorAt(pc_->lastYieldOffset, JSMSG_YIELD_IN_PARAMETER);
+    return errorResult();
+  }
+  if (pc_->lastAwaitOffset != startAwaitOffset) {
+    errorAt(pc_->lastAwaitOffset, JSMSG_AWAIT_IN_PARAMETER);
+    return errorResult();
   }
   return res;
 }
@@ -10661,11 +10647,11 @@ GeneralParser<ParseHandler, Unit>::argumentList(
       *isSpread = true;
     }
 
-    Node argNode = assignExpr(InAllowed, yieldHandling, TripledotProhibited,
-                              possibleError);
-    if (!argNode) {
-      return null();
-    }
+    Node argNode;
+    MOZ_TRY_VAR_OR_RETURN(argNode,
+                          assignExpr(InAllowed, yieldHandling,
+                                     TripledotProhibited, possibleError),
+                          null());
     if (spread) {
       MOZ_TRY_VAR_OR_RETURN(argNode, handler_.newSpread(begin, argNode),
                             null());
@@ -11695,11 +11681,10 @@ GeneralParser<ParseHandler, Unit>::arrayInitializer(
         }
 
         PossibleError possibleErrorInner(*this);
-        Node inner = assignExpr(InAllowed, yieldHandling, TripledotProhibited,
-                                &possibleErrorInner);
-        if (!inner) {
-          return errorResult();
-        }
+        Node inner;
+        MOZ_TRY_VAR(inner,
+                    assignExpr(InAllowed, yieldHandling, TripledotProhibited,
+                               &possibleErrorInner));
         if (!checkDestructuringAssignmentTarget(
                 inner, innerPos, &possibleErrorInner, possibleError)) {
           return errorResult();
@@ -11716,11 +11701,10 @@ GeneralParser<ParseHandler, Unit>::arrayInitializer(
         }
 
         PossibleError possibleErrorInner(*this);
-        Node element = assignExpr(InAllowed, yieldHandling, TripledotProhibited,
-                                  &possibleErrorInner);
-        if (!element) {
-          return errorResult();
-        }
+        Node element;
+        MOZ_TRY_VAR(element,
+                    assignExpr(InAllowed, yieldHandling, TripledotProhibited,
+                               &possibleErrorInner));
         if (!checkDestructuringAssignmentElement(
                 element, elementPos, &possibleErrorInner, possibleError)) {
           return errorResult();
@@ -12062,10 +12046,9 @@ GeneralParser<ParseHandler, Unit>::computedPropertyName(
     handler_.setListHasNonConstInitializer(literal);
   }
 
-  Node assignNode = assignExpr(InAllowed, yieldHandling, TripledotProhibited);
-  if (!assignNode) {
-    return errorResult();
-  }
+  Node assignNode;
+  MOZ_TRY_VAR(assignNode,
+              assignExpr(InAllowed, yieldHandling, TripledotProhibited));
 
   if (!mustMatchToken(TokenKind::RightBracket, JSMSG_COMP_PROP_UNTERM_EXPR)) {
     return errorResult();
@@ -12107,11 +12090,9 @@ GeneralParser<ParseHandler, Unit>::objectLiteral(YieldHandling yieldHandling,
       }
 
       PossibleError possibleErrorInner(*this);
-      Node inner = assignExpr(InAllowed, yieldHandling, TripledotProhibited,
-                              &possibleErrorInner);
-      if (!inner) {
-        return errorResult();
-      }
+      Node inner;
+      MOZ_TRY_VAR(inner, assignExpr(InAllowed, yieldHandling,
+                                    TripledotProhibited, &possibleErrorInner));
       if (!checkDestructuringAssignmentTarget(
               inner, innerPos, &possibleErrorInner, possibleError,
               TargetBehavior::ForbidAssignmentPattern)) {
@@ -12136,11 +12117,10 @@ GeneralParser<ParseHandler, Unit>::objectLiteral(YieldHandling yieldHandling,
         }
 
         PossibleError possibleErrorInner(*this);
-        Node propExpr = assignExpr(InAllowed, yieldHandling,
-                                   TripledotProhibited, &possibleErrorInner);
-        if (!propExpr) {
-          return errorResult();
-        }
+        Node propExpr;
+        MOZ_TRY_VAR(propExpr,
+                    assignExpr(InAllowed, yieldHandling, TripledotProhibited,
+                               &possibleErrorInner));
 
         if (!checkDestructuringAssignmentElement(
                 propExpr, exprPos, &possibleErrorInner, possibleError)) {
@@ -12247,10 +12227,9 @@ GeneralParser<ParseHandler, Unit>::objectLiteral(YieldHandling yieldHandling,
           }
         }
 
-        Node rhs = assignExpr(InAllowed, yieldHandling, TripledotProhibited);
-        if (!rhs) {
-          return errorResult();
-        }
+        Node rhs;
+        MOZ_TRY_VAR(rhs,
+                    assignExpr(InAllowed, yieldHandling, TripledotProhibited));
 
         BinaryNodeType propExpr;
         MOZ_TRY_VAR(propExpr, handler_.newAssignment(ParseNodeKind::AssignExpr,
@@ -12349,10 +12328,10 @@ GeneralParser<ParseHandler, Unit>::recordLiteral(YieldHandling yieldHandling) {
         return null();
       }
 
-      Node inner = assignExpr(InAllowed, yieldHandling, TripledotProhibited);
-      if (!inner) {
-        return null();
-      }
+      Node inner;
+      MOZ_TRY_VAR_OR_RETURN(
+          inner, assignExpr(InAllowed, yieldHandling, TripledotProhibited),
+          null());
 
       if (!handler_.addSpreadProperty(literal, begin, inner)) {
         return null();
@@ -12375,11 +12354,10 @@ GeneralParser<ParseHandler, Unit>::recordLiteral(YieldHandling yieldHandling) {
           return null();
         }
 
-        Node propExpr =
-            assignExpr(InAllowed, yieldHandling, TripledotProhibited);
-        if (!propExpr) {
-          return null();
-        }
+        Node propExpr;
+        MOZ_TRY_VAR_OR_RETURN(
+            propExpr, assignExpr(InAllowed, yieldHandling, TripledotProhibited),
+            null());
 
         if (propAtom == TaggedParserAtomIndex::WellKnown::proto_()) {
           errorAt(namePos.begin, JSMSG_RECORD_NO_PROTO);
@@ -12470,10 +12448,10 @@ GeneralParser<ParseHandler, Unit>::tupleLiteral(YieldHandling yieldHandling) {
         return null();
       }
 
-      Node inner = assignExpr(InAllowed, yieldHandling, TripledotProhibited);
-      if (!inner) {
-        return null();
-      }
+      Node inner;
+      MOZ_TRY_VAR_OR_RETURN(
+          inner, assignExpr(InAllowed, yieldHandling, TripledotProhibited),
+          null());
 
       if (!handler_.addSpreadElement(literal, begin, inner)) {
         return null();
@@ -12484,10 +12462,10 @@ GeneralParser<ParseHandler, Unit>::tupleLiteral(YieldHandling yieldHandling) {
         return null();
       }
 
-      Node element = assignExpr(InAllowed, yieldHandling, TripledotProhibited);
-      if (!element) {
-        return null();
-      }
+      Node element;
+      MOZ_TRY_VAR_OR_RETURN(
+          element, assignExpr(InAllowed, yieldHandling, TripledotProhibited),
+          null());
       handler_.addArrayElement(literal, element);
     }
 
@@ -12652,10 +12630,9 @@ GeneralParser<ParseHandler, Unit>::importExpr(YieldHandling yieldHandling,
 
     return handler_.newImportMeta(importHolder, metaHolder).unwrapOr(null());
   } else if (next == TokenKind::LeftParen && allowCallSyntax) {
-    Node arg = assignExpr(InAllowed, yieldHandling, TripledotProhibited);
-    if (!arg) {
-      return null();
-    }
+    Node arg;
+    MOZ_TRY_VAR_OR_RETURN(
+        arg, assignExpr(InAllowed, yieldHandling, TripledotProhibited), null());
 
     if (!tokenStream.peekToken(&next, TokenStream::SlashIsRegExp)) {
       return null();
@@ -12672,11 +12649,10 @@ GeneralParser<ParseHandler, Unit>::importExpr(YieldHandling yieldHandling,
         }
 
         if (next != TokenKind::RightParen) {
-          optionalArg =
-              assignExpr(InAllowed, yieldHandling, TripledotProhibited);
-          if (!optionalArg) {
-            return null();
-          }
+          MOZ_TRY_VAR_OR_RETURN(
+              optionalArg,
+              assignExpr(InAllowed, yieldHandling, TripledotProhibited),
+              null());
 
           if (!tokenStream.peekToken(&next, TokenStream::SlashIsRegExp)) {
             return null();
