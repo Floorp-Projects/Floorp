@@ -351,14 +351,6 @@ class ChromeActions {
     }
   }
 
-  /**
-   * @param {Object} args - Object with `featureId` and `url` properties.
-   * @param {function} sendResponse - Callback function.
-   */
-  fallback(args, sendResponse) {
-    sendResponse(false);
-  }
-
   updateFindControlState(data) {
     if (!this.supportsIntegratedFind()) {
       return;
