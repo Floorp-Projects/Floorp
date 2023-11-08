@@ -183,6 +183,9 @@ export const ResetPBMPanel = {
       newTab,
       {
         skipPermitUnload: true,
+        // Instruct the SessionStore to not save closed tab data for these tabs.
+        // We don't want to leak them into the next private browsing session.
+        skipSessionStore: true,
         animate: false,
       },
       true
