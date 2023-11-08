@@ -1102,12 +1102,12 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
   DeclarationListNodeResult lexicalDeclaration(YieldHandling yieldHandling,
                                                DeclarationKind kind);
 
-  NameNodeType moduleExportName();
+  NameNodeResult moduleExportName();
 
   bool assertClause(ListNodeType assertionsSet);
 
-  BinaryNodeType importDeclaration();
-  Node importDeclarationOrImportExpr(YieldHandling yieldHandling);
+  BinaryNodeResult importDeclaration();
+  NodeResult importDeclarationOrImportExpr(YieldHandling yieldHandling);
   bool namedImports(ListNodeType importSpecSet);
   bool namespaceImport(ListNodeType importSpecSet);
 
@@ -1115,23 +1115,24 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
     return bindingIdentifier(YieldIsName);
   }
 
-  BinaryNodeType exportFrom(uint32_t begin, Node specList);
-  BinaryNodeType exportBatch(uint32_t begin);
+  BinaryNodeResult exportFrom(uint32_t begin, Node specList);
+  BinaryNodeResult exportBatch(uint32_t begin);
   inline bool checkLocalExportNames(ListNodeType node);
-  Node exportClause(uint32_t begin);
-  UnaryNodeType exportFunctionDeclaration(
+  NodeResult exportClause(uint32_t begin);
+  UnaryNodeResult exportFunctionDeclaration(
       uint32_t begin, uint32_t toStringStart,
       FunctionAsyncKind asyncKind = FunctionAsyncKind::SyncFunction);
-  UnaryNodeType exportVariableStatement(uint32_t begin);
-  UnaryNodeType exportClassDeclaration(uint32_t begin);
-  UnaryNodeType exportLexicalDeclaration(uint32_t begin, DeclarationKind kind);
-  BinaryNodeType exportDefaultFunctionDeclaration(
+  UnaryNodeResult exportVariableStatement(uint32_t begin);
+  UnaryNodeResult exportClassDeclaration(uint32_t begin);
+  UnaryNodeResult exportLexicalDeclaration(uint32_t begin,
+                                           DeclarationKind kind);
+  BinaryNodeResult exportDefaultFunctionDeclaration(
       uint32_t begin, uint32_t toStringStart,
       FunctionAsyncKind asyncKind = FunctionAsyncKind::SyncFunction);
-  BinaryNodeType exportDefaultClassDeclaration(uint32_t begin);
-  BinaryNodeType exportDefaultAssignExpr(uint32_t begin);
-  BinaryNodeType exportDefault(uint32_t begin);
-  Node exportDeclaration();
+  BinaryNodeResult exportDefaultClassDeclaration(uint32_t begin);
+  BinaryNodeResult exportDefaultAssignExpr(uint32_t begin);
+  BinaryNodeResult exportDefault(uint32_t begin);
+  NodeResult exportDeclaration();
 
   UnaryNodeResult expressionStatement(
       YieldHandling yieldHandling,
@@ -1235,7 +1236,8 @@ class MOZ_STACK_CLASS GeneralParser : public PerHandlerParser<ParseHandler> {
 
   bool tryNewTarget(NewTargetNodeType* newTarget);
 
-  BinaryNodeType importExpr(YieldHandling yieldHandling, bool allowCallSyntax);
+  BinaryNodeResult importExpr(YieldHandling yieldHandling,
+                              bool allowCallSyntax);
 
   FunctionNodeResult methodDefinition(uint32_t toStringStart,
                                       PropertyType propType,

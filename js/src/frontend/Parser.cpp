@@ -4879,15 +4879,15 @@ GeneralParser<ParseHandler, Unit>::lexicalDeclaration(
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::NameNodeType
+typename ParseHandler::NameNodeResult
 GeneralParser<ParseHandler, Unit>::moduleExportName() {
   MOZ_ASSERT(anyChars.currentToken().type == TokenKind::String);
   TaggedParserAtomIndex name = anyChars.currentToken().atom();
   if (!this->parserAtoms().isModuleExportName(name)) {
     error(JSMSG_UNPAIRED_SURROGATE_EXPORT);
-    return null();
+    return errorResult();
   }
-  return handler_.newStringLiteral(name, pos()).unwrapOr(null());
+  return handler_.newStringLiteral(name, pos());
 }
 
 template <class ParseHandler, typename Unit>
@@ -5009,10 +5009,7 @@ bool GeneralParser<ParseHandler, Unit>::namedImports(
       importName = anyChars.currentName();
       MOZ_TRY_VAR_OR_RETURN(importNameNode, newName(importName), false);
     } else if (tt == TokenKind::String) {
-      importNameNode = moduleExportName();
-      if (!importNameNode) {
-        return false;
-      }
+      MOZ_TRY_VAR_OR_RETURN(importNameNode, moduleExportName(), false);
     } else {
       error(JSMSG_NO_IMPORT_NAME);
       return false;
@@ -5132,29 +5129,28 @@ bool GeneralParser<ParseHandler, Unit>::namespaceImport(
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::BinaryNodeType
+typename ParseHandler::BinaryNodeResult
 GeneralParser<ParseHandler, Unit>::importDeclaration() {
   if (!abortIfSyntaxParser()) {
-    return null();
+    return errorResult();
   }
 
   MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Import));
 
   if (!pc_->atModuleLevel()) {
     error(JSMSG_IMPORT_DECL_AT_TOP_LEVEL);
-    return null();
+    return errorResult();
   }
 
   uint32_t begin = pos().begin;
   TokenKind tt;
   if (!tokenStream.getToken(&tt)) {
-    return null();
+    return errorResult();
   }
 
   ListNodeType importSpecSet;
-  MOZ_TRY_VAR_OR_RETURN(importSpecSet,
-                        handler_.newList(ParseNodeKind::ImportSpecList, pos()),
-                        null());
+  MOZ_TRY_VAR(importSpecSet,
+              handler_.newList(ParseNodeKind::ImportSpecList, pos()));
 
   if (tt == TokenKind::String) {
     // Handle the form |import 'a'| by leaving the list empty. This is
@@ -5163,11 +5159,11 @@ GeneralParser<ParseHandler, Unit>::importDeclaration() {
   } else {
     if (tt == TokenKind::LeftCurly) {
       if (!namedImports(importSpecSet)) {
-        return null();
+        return errorResult();
       }
     } else if (tt == TokenKind::Mul) {
       if (!namespaceImport(importSpecSet)) {
-        return null();
+        return errorResult();
       }
     } else if (TokenKindIsPossibleIdentifierName(tt)) {
       // Handle the form |import a from 'b'|, by adding a single import
@@ -5175,123 +5171,115 @@ GeneralParser<ParseHandler, Unit>::importDeclaration() {
       // 'a' as the binding name. This is equivalent to
       // |import { default as a } from 'b'|.
       NameNodeType importName;
-      MOZ_TRY_VAR_OR_RETURN(
-          importName, newName(TaggedParserAtomIndex::WellKnown::default_()),
-          null());
+      MOZ_TRY_VAR(importName,
+                  newName(TaggedParserAtomIndex::WellKnown::default_()));
 
       TaggedParserAtomIndex bindingAtom = importedBinding();
       if (!bindingAtom) {
-        return null();
+        return errorResult();
       }
 
       NameNodeType bindingName;
-      MOZ_TRY_VAR_OR_RETURN(bindingName, newName(bindingAtom), null());
+      MOZ_TRY_VAR(bindingName, newName(bindingAtom));
 
       if (!noteDeclaredName(bindingAtom, DeclarationKind::Import, pos())) {
-        return null();
+        return errorResult();
       }
 
       BinaryNodeType importSpec;
-      MOZ_TRY_VAR_OR_RETURN(
-          importSpec, handler_.newImportSpec(importName, bindingName), null());
+      MOZ_TRY_VAR(importSpec, handler_.newImportSpec(importName, bindingName));
 
       handler_.addList(importSpecSet, importSpec);
 
       if (!tokenStream.peekToken(&tt)) {
-        return null();
+        return errorResult();
       }
 
       if (tt == TokenKind::Comma) {
         tokenStream.consumeKnownToken(tt);
         if (!tokenStream.getToken(&tt)) {
-          return null();
+          return errorResult();
         }
 
         if (tt == TokenKind::LeftCurly) {
           if (!namedImports(importSpecSet)) {
-            return null();
+            return errorResult();
           }
         } else if (tt == TokenKind::Mul) {
           if (!namespaceImport(importSpecSet)) {
-            return null();
+            return errorResult();
           }
         } else {
           error(JSMSG_NAMED_IMPORTS_OR_NAMESPACE_IMPORT);
-          return null();
+          return errorResult();
         }
       }
     } else {
       error(JSMSG_DECLARATION_AFTER_IMPORT);
-      return null();
+      return errorResult();
     }
 
     if (!mustMatchToken(TokenKind::From, JSMSG_FROM_AFTER_IMPORT_CLAUSE)) {
-      return null();
+      return errorResult();
     }
 
     if (!mustMatchToken(TokenKind::String, JSMSG_MODULE_SPEC_AFTER_FROM)) {
-      return null();
+      return errorResult();
     }
   }
 
   NameNodeType moduleSpec;
-  MOZ_TRY_VAR_OR_RETURN(moduleSpec, stringLiteral(), null());
+  MOZ_TRY_VAR(moduleSpec, stringLiteral());
 
   if (!tokenStream.peekTokenSameLine(&tt, TokenStream::SlashIsRegExp)) {
-    return null();
+    return errorResult();
   }
 
   ListNodeType importAssertionList;
-  MOZ_TRY_VAR_OR_RETURN(
-      importAssertionList,
-      handler_.newList(ParseNodeKind::ImportAssertionList, pos()), null());
+  MOZ_TRY_VAR(importAssertionList,
+              handler_.newList(ParseNodeKind::ImportAssertionList, pos()));
 
   if (tt == TokenKind::Assert) {
     tokenStream.consumeKnownToken(TokenKind::Assert,
                                   TokenStream::SlashIsRegExp);
 
     if (!assertClause(importAssertionList)) {
-      return null();
+      return errorResult();
     }
   }
 
   if (!matchOrInsertSemicolon(TokenStream::SlashIsRegExp)) {
-    return null();
+    return errorResult();
   }
 
   BinaryNodeType moduleRequest;
-  MOZ_TRY_VAR_OR_RETURN(
-      moduleRequest,
-      handler_.newModuleRequest(moduleSpec, importAssertionList,
-                                TokenPos(begin, pos().end)),
-      null());
+  MOZ_TRY_VAR(moduleRequest,
+              handler_.newModuleRequest(moduleSpec, importAssertionList,
+                                        TokenPos(begin, pos().end)));
 
   BinaryNodeType node;
-  MOZ_TRY_VAR_OR_RETURN(
-      node,
-      handler_.newImportDeclaration(importSpecSet, moduleRequest,
-                                    TokenPos(begin, pos().end)),
-      null());
+  MOZ_TRY_VAR(node, handler_.newImportDeclaration(importSpecSet, moduleRequest,
+                                                  TokenPos(begin, pos().end)));
   if (!processImport(node)) {
-    return null();
+    return errorResult();
   }
 
   return node;
 }
 
 template <class ParseHandler, typename Unit>
-inline typename ParseHandler::Node
+inline typename ParseHandler::NodeResult
 GeneralParser<ParseHandler, Unit>::importDeclarationOrImportExpr(
     YieldHandling yieldHandling) {
   MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Import));
 
   TokenKind tt;
   if (!tokenStream.peekToken(&tt)) {
-    return null();
+    return errorResult();
   }
 
   if (tt == TokenKind::Dot || tt == TokenKind::LeftParen) {
-    return expressionStatement(yieldHandling).unwrapOr(null());
+    return expressionStatement(yieldHandling);
   }
 
   return importDeclaration();
@@ -5579,124 +5567,113 @@ inline bool PerHandlerParser<SyntaxParseHandler>::processImport(
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::BinaryNodeType
+typename ParseHandler::BinaryNodeResult
 GeneralParser<ParseHandler, Unit>::exportFrom(uint32_t begin, Node specList) {
   if (!abortIfSyntaxParser()) {
-    return null();
+    return errorResult();
   }
 
   MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::From));
 
   if (!mustMatchToken(TokenKind::String, JSMSG_MODULE_SPEC_AFTER_FROM)) {
-    return null();
+    return errorResult();
   }
 
   NameNodeType moduleSpec;
-  MOZ_TRY_VAR_OR_RETURN(moduleSpec, stringLiteral(), null());
+  MOZ_TRY_VAR(moduleSpec, stringLiteral());
 
   TokenKind tt;
   if (!tokenStream.peekTokenSameLine(&tt, TokenStream::SlashIsRegExp)) {
-    return null();
+    return errorResult();
   }
   uint32_t moduleSpecPos = pos().begin;
 
   ListNodeType importAssertionList;
-  MOZ_TRY_VAR_OR_RETURN(
-      importAssertionList,
-      handler_.newList(ParseNodeKind::ImportAssertionList, pos()), null());
+  MOZ_TRY_VAR(importAssertionList,
+              handler_.newList(ParseNodeKind::ImportAssertionList, pos()));
   if (tt == TokenKind::Assert) {
     tokenStream.consumeKnownToken(TokenKind::Assert,
                                   TokenStream::SlashIsRegExp);
 
     if (!assertClause(importAssertionList)) {
-      return null();
+      return errorResult();
     }
   }
 
   if (!matchOrInsertSemicolon(TokenStream::SlashIsRegExp)) {
-    return null();
+    return errorResult();
   }
 
   BinaryNodeType moduleRequest;
-  MOZ_TRY_VAR_OR_RETURN(
-      moduleRequest,
-      handler_.newModuleRequest(moduleSpec, importAssertionList,
-                                TokenPos(moduleSpecPos, pos().end)),
-      null());
+  MOZ_TRY_VAR(moduleRequest,
+              handler_.newModuleRequest(moduleSpec, importAssertionList,
+                                        TokenPos(moduleSpecPos, pos().end)));
 
   BinaryNodeType node;
-  MOZ_TRY_VAR_OR_RETURN(
-      node, handler_.newExportFromDeclaration(begin, specList, moduleRequest),
-      null());
+  MOZ_TRY_VAR(
+      node, handler_.newExportFromDeclaration(begin, specList, moduleRequest));
 
   if (!processExportFrom(node)) {
-    return null();
+    return errorResult();
   }
 
   return node;
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::BinaryNodeType
+typename ParseHandler::BinaryNodeResult
 GeneralParser<ParseHandler, Unit>::exportBatch(uint32_t begin) {
   if (!abortIfSyntaxParser()) {
-    return null();
+    return errorResult();
   }
 
   MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Mul));
   uint32_t beginExportSpec = pos().begin;
 
   ListNodeType kid;
-  MOZ_TRY_VAR_OR_RETURN(
-      kid, handler_.newList(ParseNodeKind::ExportSpecList, pos()), null());
+  MOZ_TRY_VAR(kid, handler_.newList(ParseNodeKind::ExportSpecList, pos()));
 
   bool foundAs;
   if (!tokenStream.matchToken(&foundAs, TokenKind::As)) {
-    return null();
+    return errorResult();
   }
 
   if (foundAs) {
     TokenKind tt;
     if (!tokenStream.getToken(&tt)) {
-      return null();
+      return errorResult();
     }
 
     NameNodeType exportName = null();
     if (TokenKindIsPossibleIdentifierName(tt)) {
-      MOZ_TRY_VAR_OR_RETURN(exportName, newName(anyChars.currentName()),
-                            null());
+      MOZ_TRY_VAR(exportName, newName(anyChars.currentName()));
     } else if (tt == TokenKind::String) {
-      exportName = moduleExportName();
-      if (!exportName) {
-        return null();
-      }
+      MOZ_TRY_VAR(exportName, moduleExportName());
     } else {
       error(JSMSG_NO_EXPORT_NAME);
-      return null();
+      return errorResult();
     }
 
     if (!checkExportedNameForClause(exportName)) {
-      return null();
+      return errorResult();
     }
 
     UnaryNodeType exportSpec;
-    MOZ_TRY_VAR_OR_RETURN(
-        exportSpec,
-        handler_.newExportNamespaceSpec(beginExportSpec, exportName), null());
+    MOZ_TRY_VAR(exportSpec,
+                handler_.newExportNamespaceSpec(beginExportSpec, exportName));
 
     handler_.addList(kid, exportSpec);
   } else {
     // Handle the form |export *| by adding a special export batch
     // specifier to the list.
     NullaryNodeType exportSpec;
-    MOZ_TRY_VAR_OR_RETURN(exportSpec, handler_.newExportBatchSpec(pos()),
-                          null());
+    MOZ_TRY_VAR(exportSpec, handler_.newExportBatchSpec(pos()));
 
     handler_.addList(kid, exportSpec);
   }
 
   if (!mustMatchToken(TokenKind::From, JSMSG_FROM_AFTER_EXPORT_STAR)) {
-    return null();
+    return errorResult();
   }
 
   return exportFrom(begin, kid);
@@ -5738,24 +5715,23 @@ inline bool GeneralParser<ParseHandler, Unit>::checkLocalExportNames(
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::exportClause(
-    uint32_t begin) {
+typename ParseHandler::NodeResult
+GeneralParser<ParseHandler, Unit>::exportClause(uint32_t begin) {
   if (!abortIfSyntaxParser()) {
-    return null();
+    return errorResult();
   }
 
   MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::LeftCurly));
 
   ListNodeType kid;
-  MOZ_TRY_VAR_OR_RETURN(
-      kid, handler_.newList(ParseNodeKind::ExportSpecList, pos()), null());
+  MOZ_TRY_VAR(kid, handler_.newList(ParseNodeKind::ExportSpecList, pos()));
 
   TokenKind tt;
   while (true) {
     // Handle the forms |export {}| and |export { ..., }| (where ... is non
     // empty), by escaping the loop early if the next token is }.
     if (!tokenStream.getToken(&tt)) {
-      return null();
+      return errorResult();
     }
 
     if (tt == TokenKind::RightCurly) {
@@ -5764,67 +5740,54 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::exportClause(
 
     NameNodeType bindingName = null();
     if (TokenKindIsPossibleIdentifierName(tt)) {
-      MOZ_TRY_VAR_OR_RETURN(bindingName, newName(anyChars.currentName()),
-                            null());
+      MOZ_TRY_VAR(bindingName, newName(anyChars.currentName()));
     } else if (tt == TokenKind::String) {
-      bindingName = moduleExportName();
-      if (!bindingName) {
-        return null();
-      }
+      MOZ_TRY_VAR(bindingName, moduleExportName());
     } else {
       error(JSMSG_NO_BINDING_NAME);
-      return null();
+      return errorResult();
     }
 
     bool foundAs;
     if (!tokenStream.matchToken(&foundAs, TokenKind::As)) {
-      return null();
+      return errorResult();
     }
 
     NameNodeType exportName = null();
     if (foundAs) {
       TokenKind tt;
       if (!tokenStream.getToken(&tt)) {
-        return null();
+        return errorResult();
       }
 
       if (TokenKindIsPossibleIdentifierName(tt)) {
-        MOZ_TRY_VAR_OR_RETURN(exportName, newName(anyChars.currentName()),
-                              null());
+        MOZ_TRY_VAR(exportName, newName(anyChars.currentName()));
       } else if (tt == TokenKind::String) {
-        exportName = moduleExportName();
-        if (!exportName) {
-          return null();
-        }
+        MOZ_TRY_VAR(exportName, moduleExportName());
       } else {
         error(JSMSG_NO_EXPORT_NAME);
-        return null();
+        return errorResult();
       }
     } else {
       if (tt != TokenKind::String) {
-        MOZ_TRY_VAR_OR_RETURN(exportName, newName(anyChars.currentName()),
-                              null());
+        MOZ_TRY_VAR(exportName, newName(anyChars.currentName()));
       } else {
-        exportName = moduleExportName();
-        if (!exportName) {
-          return null();
-        }
+        MOZ_TRY_VAR(exportName, moduleExportName());
       }
     }
 
     if (!checkExportedNameForClause(exportName)) {
-      return null();
+      return errorResult();
     }
 
     BinaryNodeType exportSpec;
-    MOZ_TRY_VAR_OR_RETURN(
-        exportSpec, handler_.newExportSpec(bindingName, exportName), null());
+    MOZ_TRY_VAR(exportSpec, handler_.newExportSpec(bindingName, exportName));
 
     handler_.addList(kid, exportSpec);
 
     TokenKind next;
     if (!tokenStream.getToken(&next)) {
-      return null();
+      return errorResult();
     }
 
     if (next == TokenKind::RightCurly) {
@@ -5833,7 +5796,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::exportClause(
 
     if (next != TokenKind::Comma) {
       error(JSMSG_RC_AFTER_EXPORT_SPEC_LIST);
-      return null();
+      return errorResult();
     }
   }
 
@@ -5854,7 +5817,7 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::exportClause(
   bool matched;
   if (!tokenStream.matchToken(&matched, TokenKind::From,
                               TokenStream::SlashIsRegExp)) {
-    return null();
+    return errorResult();
   }
 
   if (matched) {
@@ -5862,123 +5825,116 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::exportClause(
   }
 
   if (!matchOrInsertSemicolon()) {
-    return null();
+    return errorResult();
   }
 
   if (!checkLocalExportNames(kid)) {
-    return null();
+    return errorResult();
   }
 
   UnaryNodeType node;
-  MOZ_TRY_VAR_OR_RETURN(
-      node, handler_.newExportDeclaration(kid, TokenPos(begin, pos().end)),
-      null());
+  MOZ_TRY_VAR(node,
+              handler_.newExportDeclaration(kid, TokenPos(begin, pos().end)));
 
   if (!processExport(node)) {
-    return null();
+    return errorResult();
   }
 
   return node;
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::UnaryNodeType
+typename ParseHandler::UnaryNodeResult
 GeneralParser<ParseHandler, Unit>::exportVariableStatement(uint32_t begin) {
   if (!abortIfSyntaxParser()) {
-    return null();
+    return errorResult();
   }
 
   MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Var));
 
   DeclarationListNodeType kid;
-  MOZ_TRY_VAR_OR_RETURN(
-      kid, declarationList(YieldIsName, ParseNodeKind::VarStmt), null());
+  MOZ_TRY_VAR(kid, declarationList(YieldIsName, ParseNodeKind::VarStmt));
   if (!matchOrInsertSemicolon()) {
-    return null();
+    return errorResult();
   }
   if (!checkExportedNamesForDeclarationList(kid)) {
-    return null();
+    return errorResult();
   }
 
   UnaryNodeType node;
-  MOZ_TRY_VAR_OR_RETURN(
-      node, handler_.newExportDeclaration(kid, TokenPos(begin, pos().end)),
-      null());
+  MOZ_TRY_VAR(node,
+              handler_.newExportDeclaration(kid, TokenPos(begin, pos().end)));
 
   if (!processExport(node)) {
-    return null();
+    return errorResult();
   }
 
   return node;
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::UnaryNodeType
+typename ParseHandler::UnaryNodeResult
 GeneralParser<ParseHandler, Unit>::exportFunctionDeclaration(
     uint32_t begin, uint32_t toStringStart,
     FunctionAsyncKind asyncKind /* = SyncFunction */) {
   if (!abortIfSyntaxParser()) {
-    return null();
+    return errorResult();
   }
 
   MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Function));
 
   Node kid;
-  MOZ_TRY_VAR_OR_RETURN(
-      kid, functionStmt(toStringStart, YieldIsName, NameRequired, asyncKind),
-      null());
+  MOZ_TRY_VAR(
+      kid, functionStmt(toStringStart, YieldIsName, NameRequired, asyncKind));
 
   if (!checkExportedNameForFunction(handler_.asFunctionNode(kid))) {
-    return null();
+    return errorResult();
   }
 
   UnaryNodeType node;
-  MOZ_TRY_VAR_OR_RETURN(
-      node, handler_.newExportDeclaration(kid, TokenPos(begin, pos().end)),
-      null());
+  MOZ_TRY_VAR(node,
+              handler_.newExportDeclaration(kid, TokenPos(begin, pos().end)));
 
   if (!processExport(node)) {
-    return null();
+    return errorResult();
   }
 
   return node;
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::UnaryNodeType
+typename ParseHandler::UnaryNodeResult
 GeneralParser<ParseHandler, Unit>::exportClassDeclaration(uint32_t begin) {
   if (!abortIfSyntaxParser()) {
-    return null();
+    return errorResult();
   }
 
   MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Class));
 
   ClassNodeType kid;
-  MOZ_TRY_VAR_OR_RETURN(
-      kid, classDefinition(YieldIsName, ClassStatement, NameRequired), null());
+  MOZ_TRY_VAR(kid, classDefinition(YieldIsName, ClassStatement, NameRequired));
 
   if (!checkExportedNameForClass(kid)) {
-    return null();
+    return errorResult();
   }
 
   UnaryNodeType node;
-  MOZ_TRY_VAR_OR_RETURN(
-      node, handler_.newExportDeclaration(kid, TokenPos(begin, pos().end)),
-      null());
+  MOZ_TRY_VAR(node,
+              handler_.newExportDeclaration(kid, TokenPos(begin, pos().end)));
 
   if (!processExport(node)) {
-    return null();
+    return errorResult();
   }
 
   return node;
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::UnaryNodeType
+typename ParseHandler::UnaryNodeResult
 GeneralParser<ParseHandler, Unit>::exportLexicalDeclaration(
     uint32_t begin, DeclarationKind kind) {
   if (!abortIfSyntaxParser()) {
-    return null();
+    return errorResult();
   }
 
   MOZ_ASSERT(kind == DeclarationKind::Const || kind == DeclarationKind::Let);
@@ -5988,132 +5944,121 @@ GeneralParser<ParseHandler, Unit>::exportLexicalDeclaration(
                 anyChars.isCurrentTokenType(TokenKind::Let));
 
   DeclarationListNodeType kid;
-  MOZ_TRY_VAR_OR_RETURN(kid, lexicalDeclaration(YieldIsName, kind), null());
+  MOZ_TRY_VAR(kid, lexicalDeclaration(YieldIsName, kind));
   if (!checkExportedNamesForDeclarationList(kid)) {
-    return null();
+    return errorResult();
   }
 
   UnaryNodeType node;
-  MOZ_TRY_VAR_OR_RETURN(
-      node, handler_.newExportDeclaration(kid, TokenPos(begin, pos().end)),
-      null());
+  MOZ_TRY_VAR(node,
+              handler_.newExportDeclaration(kid, TokenPos(begin, pos().end)));
 
   if (!processExport(node)) {
-    return null();
+    return errorResult();
   }
 
   return node;
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::BinaryNodeType
+typename ParseHandler::BinaryNodeResult
 GeneralParser<ParseHandler, Unit>::exportDefaultFunctionDeclaration(
     uint32_t begin, uint32_t toStringStart,
     FunctionAsyncKind asyncKind /* = SyncFunction */) {
   if (!abortIfSyntaxParser()) {
-    return null();
+    return errorResult();
   }
 
   MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Function));
 
   Node kid;
-  MOZ_TRY_VAR_OR_RETURN(
-      kid,
-      functionStmt(toStringStart, YieldIsName, AllowDefaultName, asyncKind),
-      null());
+  MOZ_TRY_VAR(kid, functionStmt(toStringStart, YieldIsName, AllowDefaultName,
+                                asyncKind));
 
   BinaryNodeType node;
-  MOZ_TRY_VAR_OR_RETURN(node,
-                        handler_.newExportDefaultDeclaration(
-                            kid, null(), TokenPos(begin, pos().end)),
-                        null());
+  MOZ_TRY_VAR(node, handler_.newExportDefaultDeclaration(
+                        kid, null(), TokenPos(begin, pos().end)));
 
   if (!processExport(node)) {
-    return null();
+    return errorResult();
   }
 
   return node;
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::BinaryNodeType
+typename ParseHandler::BinaryNodeResult
 GeneralParser<ParseHandler, Unit>::exportDefaultClassDeclaration(
     uint32_t begin) {
   if (!abortIfSyntaxParser()) {
-    return null();
+    return errorResult();
   }
 
   MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Class));
 
   ClassNodeType kid;
-  MOZ_TRY_VAR_OR_RETURN(
-      kid, classDefinition(YieldIsName, ClassStatement, AllowDefaultName),
-      null());
+  MOZ_TRY_VAR(kid,
+              classDefinition(YieldIsName, ClassStatement, AllowDefaultName));
 
   BinaryNodeType node;
-  MOZ_TRY_VAR_OR_RETURN(node,
-                        handler_.newExportDefaultDeclaration(
-                            kid, null(), TokenPos(begin, pos().end)),
-                        null());
+  MOZ_TRY_VAR(node, handler_.newExportDefaultDeclaration(
+                        kid, null(), TokenPos(begin, pos().end)));
 
   if (!processExport(node)) {
-    return null();
+    return errorResult();
   }
 
   return node;
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::BinaryNodeType
+typename ParseHandler::BinaryNodeResult
 GeneralParser<ParseHandler, Unit>::exportDefaultAssignExpr(uint32_t begin) {
   if (!abortIfSyntaxParser()) {
-    return null();
+    return errorResult();
   }
 
   TaggedParserAtomIndex name = TaggedParserAtomIndex::WellKnown::default_();
   NameNodeType nameNode;
-  MOZ_TRY_VAR_OR_RETURN(nameNode, newName(name), null());
+  MOZ_TRY_VAR(nameNode, newName(name));
   if (!noteDeclaredName(name, DeclarationKind::Const, pos())) {
-    return null();
+    return errorResult();
   }
 
   Node kid;
-  MOZ_TRY_VAR_OR_RETURN(
-      kid, assignExpr(InAllowed, YieldIsName, TripledotProhibited), null());
+  MOZ_TRY_VAR(kid, assignExpr(InAllowed, YieldIsName, TripledotProhibited));
 
   if (!matchOrInsertSemicolon()) {
-    return null();
+    return errorResult();
   }
 
   BinaryNodeType node;
-  MOZ_TRY_VAR_OR_RETURN(node,
-                        handler_.newExportDefaultDeclaration(
-                            kid, nameNode, TokenPos(begin, pos().end)),
-                        null());
+  MOZ_TRY_VAR(node, handler_.newExportDefaultDeclaration(
+                        kid, nameNode, TokenPos(begin, pos().end)));
 
   if (!processExport(node)) {
-    return null();
+    return errorResult();
   }
 
   return node;
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::BinaryNodeType
+typename ParseHandler::BinaryNodeResult
 GeneralParser<ParseHandler, Unit>::exportDefault(uint32_t begin) {
   if (!abortIfSyntaxParser()) {
-    return null();
+    return errorResult();
   }
 
   MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Default));
 
   TokenKind tt;
   if (!tokenStream.getToken(&tt, TokenStream::SlashIsRegExp)) {
-    return null();
+    return errorResult();
   }
 
   if (!checkExportedName(TaggedParserAtomIndex::WellKnown::default_())) {
-    return null();
+    return errorResult();
   }
 
   switch (tt) {
@@ -6123,7 +6068,7 @@ GeneralParser<ParseHandler, Unit>::exportDefault(uint32_t begin) {
     case TokenKind::Async: {
       TokenKind nextSameLine = TokenKind::Eof;
       if (!tokenStream.peekTokenSameLine(&nextSameLine)) {
-        return null();
+        return errorResult();
       }
 
       if (nextSameLine == TokenKind::Function) {
@@ -6147,24 +6092,24 @@ GeneralParser<ParseHandler, Unit>::exportDefault(uint32_t begin) {
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::Node
+typename ParseHandler::NodeResult
 GeneralParser<ParseHandler, Unit>::exportDeclaration() {
   if (!abortIfSyntaxParser()) {
-    return null();
+    return errorResult();
   }
 
   MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Export));
 
   if (!pc_->atModuleLevel()) {
     error(JSMSG_EXPORT_DECL_AT_TOP_LEVEL);
-    return null();
+    return errorResult();
   }
 
   uint32_t begin = pos().begin;
 
   TokenKind tt;
   if (!tokenStream.getToken(&tt)) {
-    return null();
+    return errorResult();
   }
   switch (tt) {
     case TokenKind::Mul:
@@ -6182,7 +6127,7 @@ GeneralParser<ParseHandler, Unit>::exportDeclaration() {
     case TokenKind::Async: {
       TokenKind nextSameLine = TokenKind::Eof;
       if (!tokenStream.peekTokenSameLine(&nextSameLine)) {
-        return null();
+        return errorResult();
       }
 
       if (nextSameLine == TokenKind::Function) {
@@ -6193,7 +6138,7 @@ GeneralParser<ParseHandler, Unit>::exportDeclaration() {
       }
 
       error(JSMSG_DECLARATION_AFTER_EXPORT);
-      return null();
+      return errorResult();
     }
 
     case TokenKind::Class:
@@ -6210,7 +6155,7 @@ GeneralParser<ParseHandler, Unit>::exportDeclaration() {
 
     default:
       error(JSMSG_DECLARATION_AFTER_EXPORT);
-      return null();
+      return errorResult();
   }
 }
 
@@ -9228,11 +9173,11 @@ typename ParseHandler::NodeResult GeneralParser<ParseHandler, Unit>::statement(
 
     // ImportDeclaration (only inside modules)
     case TokenKind::Import:
-      return toResult(importDeclarationOrImportExpr(yieldHandling));
+      return importDeclarationOrImportExpr(yieldHandling);
 
     // ExportDeclaration (only inside modules)
     case TokenKind::Export:
-      return toResult(exportDeclaration());
+      return exportDeclaration();
 
       // Miscellaneous error cases arguably better caught here than elsewhere.
 
@@ -9451,11 +9396,11 @@ GeneralParser<ParseHandler, Unit>::statementListItem(
 
     // ImportDeclaration (only inside modules)
     case TokenKind::Import:
-      return toResult(importDeclarationOrImportExpr(yieldHandling));
+      return importDeclarationOrImportExpr(yieldHandling);
 
     // ExportDeclaration (only inside modules)
     case TokenKind::Export:
-      return toResult(exportDeclaration());
+      return exportDeclaration();
 
       // Miscellaneous error cases arguably better caught here than elsewhere.
 
@@ -10582,10 +10527,7 @@ typename ParseHandler::NodeResult GeneralParser<ParseHandler, Unit>::memberExpr(
     MOZ_TRY_VAR(thisName, newThisName());
     MOZ_TRY_VAR(lhs, handler_.newSuperBase(thisName, pos()));
   } else if (tt == TokenKind::Import) {
-    lhs = importExpr(yieldHandling, allowCallSyntax);
-    if (!lhs) {
-      return errorResult();
-    }
+    MOZ_TRY_VAR(lhs, importExpr(yieldHandling, allowCallSyntax));
   } else {
     MOZ_TRY_VAR(lhs, primaryExpr(yieldHandling, tripledotHandling, tt,
                                  possibleError, invoked));
@@ -12364,44 +12306,45 @@ bool GeneralParser<ParseHandler, Unit>::tryNewTarget(
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::BinaryNodeType
+typename ParseHandler::BinaryNodeResult
 GeneralParser<ParseHandler, Unit>::importExpr(YieldHandling yieldHandling,
                                               bool allowCallSyntax) {
   MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Import));
 
   NullaryNodeType importHolder;
-  MOZ_TRY_VAR_OR_RETURN(importHolder, handler_.newPosHolder(pos()), null());
+  MOZ_TRY_VAR(importHolder, handler_.newPosHolder(pos()));
 
   TokenKind next;
   if (!tokenStream.getToken(&next)) {
-    return null();
+    return errorResult();
   }
 
   if (next == TokenKind::Dot) {
     if (!tokenStream.getToken(&next)) {
-      return null();
+      return errorResult();
     }
     if (next != TokenKind::Meta) {
       error(JSMSG_UNEXPECTED_TOKEN, "meta", TokenKindToDesc(next));
-      return null();
+      return errorResult();
     }
 
     if (parseGoal() != ParseGoal::Module) {
       errorAt(pos().begin, JSMSG_IMPORT_META_OUTSIDE_MODULE);
-      return null();
+      return errorResult();
     }
 
     NullaryNodeType metaHolder;
-    MOZ_TRY_VAR_OR_RETURN(metaHolder, handler_.newPosHolder(pos()), null());
+    MOZ_TRY_VAR(metaHolder, handler_.newPosHolder(pos()));
 
-    return handler_.newImportMeta(importHolder, metaHolder).unwrapOr(null());
-  } else if (next == TokenKind::LeftParen && allowCallSyntax) {
+    return handler_.newImportMeta(importHolder, metaHolder);
+  }
+
+  if (next == TokenKind::LeftParen && allowCallSyntax) {
     Node arg;
-    MOZ_TRY_VAR_OR_RETURN(
-        arg, assignExpr(InAllowed, yieldHandling, TripledotProhibited), null());
+    MOZ_TRY_VAR(arg, assignExpr(InAllowed, yieldHandling, TripledotProhibited));
 
     if (!tokenStream.peekToken(&next, TokenStream::SlashIsRegExp)) {
-      return null();
+      return errorResult();
     }
 
     Node optionalArg;
@@ -12411,17 +12354,15 @@ GeneralParser<ParseHandler, Unit>::importExpr(YieldHandling yieldHandling,
                                       TokenStream::SlashIsRegExp);
 
         if (!tokenStream.peekToken(&next, TokenStream::SlashIsRegExp)) {
-          return null();
+          return errorResult();
         }
 
         if (next != TokenKind::RightParen) {
-          MOZ_TRY_VAR_OR_RETURN(
-              optionalArg,
-              assignExpr(InAllowed, yieldHandling, TripledotProhibited),
-              null());
+          MOZ_TRY_VAR(optionalArg, assignExpr(InAllowed, yieldHandling,
+                                              TripledotProhibited));
 
           if (!tokenStream.peekToken(&next, TokenStream::SlashIsRegExp)) {
-            return null();
+            return errorResult();
           }
 
           if (next == TokenKind::Comma) {
@@ -12429,34 +12370,30 @@ GeneralParser<ParseHandler, Unit>::importExpr(YieldHandling yieldHandling,
                                           TokenStream::SlashIsRegExp);
           }
         } else {
-          MOZ_TRY_VAR_OR_RETURN(
-              optionalArg,
-              handler_.newPosHolder(TokenPos(pos().end, pos().end)), null());
+          MOZ_TRY_VAR(optionalArg,
+                      handler_.newPosHolder(TokenPos(pos().end, pos().end)));
         }
       } else {
-        MOZ_TRY_VAR_OR_RETURN(
-            optionalArg, handler_.newPosHolder(TokenPos(pos().end, pos().end)),
-            null());
+        MOZ_TRY_VAR(optionalArg,
+                    handler_.newPosHolder(TokenPos(pos().end, pos().end)));
       }
     } else {
-      MOZ_TRY_VAR_OR_RETURN(
-          optionalArg, handler_.newPosHolder(TokenPos(pos().end, pos().end)),
-          null());
+      MOZ_TRY_VAR(optionalArg,
+                  handler_.newPosHolder(TokenPos(pos().end, pos().end)));
     }
 
     if (!mustMatchToken(TokenKind::RightParen, JSMSG_PAREN_AFTER_ARGS)) {
-      return null();
+      return errorResult();
     }
 
     Node spec;
-    MOZ_TRY_VAR_OR_RETURN(spec, handler_.newCallImportSpec(arg, optionalArg),
-                          null());
+    MOZ_TRY_VAR(spec, handler_.newCallImportSpec(arg, optionalArg));
 
-    return handler_.newCallImport(importHolder, spec).unwrapOr(null());
-  } else {
-    error(JSMSG_UNEXPECTED_TOKEN_NO_EXPECT, TokenKindToDesc(next));
-    return null();
+    return handler_.newCallImport(importHolder, spec);
   }
+
+  error(JSMSG_UNEXPECTED_TOKEN_NO_EXPECT, TokenKindToDesc(next));
+  return errorResult();
 }
 
 template <class ParseHandler, typename Unit>
