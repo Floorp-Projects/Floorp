@@ -11,7 +11,7 @@
 #include "ScriptLoadRequest.h"
 
 #include "ImportMap.h"
-#include "js/ColumnNumber.h"  // JS::ColumnNumberZeroOrigin
+#include "js/ColumnNumber.h"  // JS::ColumnNumberOneOrigin
 #include "js/TypeDecls.h"     // JS::MutableHandle, JS::Handle, JS::Root
 #include "js/Modules.h"
 #include "nsRefPtrHashtable.h"
@@ -359,7 +359,7 @@ class ModuleLoaderBase : public nsISupports {
   nsresult HandleResolveFailure(JSContext* aCx, LoadedScript* aScript,
                                 const nsAString& aSpecifier,
                                 ResolveError aError, uint32_t aLineNumber,
-                                JS::ColumnNumberZeroOrigin aColumnNumber,
+                                JS::ColumnNumberOneOrigin aColumnNumber,
                                 JS::MutableHandle<JS::Value> aErrorOut);
 
   enum class RestartRequest { No, Yes };
