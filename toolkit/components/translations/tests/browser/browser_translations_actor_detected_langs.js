@@ -4,11 +4,9 @@
 "use strict";
 
 add_task(async function test_detected_language() {
-  const detectedLangTag = "en";
   const { cleanup, tab } = await loadTestPage({
     // This page will get its language changed by the test.
     page: ENGLISH_PAGE_URL,
-    detectedLangTag,
     autoDownloadFromRemoteSettings: true,
     languagePairs: [
       // Spanish
@@ -77,7 +75,7 @@ add_task(async function test_detected_language() {
   Assert.deepEqual(
     await getDetectedLanguagesFor("gibberish"),
     {
-      docLangTag: detectedLangTag,
+      docLangTag: "en",
       userLangTag: null,
       isDocLangTagSupported: true,
     },
