@@ -93,6 +93,10 @@ export class CookieBannerChild extends JSWindowActorChild {
   };
   // For measuring the cookie banner handling duration.
   #gleanBannerHandlingTimer = null;
+  // Indicates whether we should stop running the cookie banner handling
+  // mechanism because it has been previously executed for the site. So, we can
+  // cool down the cookie banner handing to improve performance.
+  #isCooledDownInSession = false;
 
   handleEvent(event) {
     if (!this.#isEnabled) {
@@ -168,7 +172,10 @@ export class CookieBannerChild extends JSWindowActorChild {
    * @returns {boolean} Whether we handled the banner and dispatched events.
    */
   #dispatchEventsForBannerHandledByInjection() {
-    if (!this.#hasInjectedCookieForCookieBannerHandling) {
+    if (
+      !this.#hasInjectedCookieForCookieBannerHandling ||
+      this.#isCooledDownInSession
+    ) {
       return false;
     }
     // Strictly speaking we don't actively detect a banner when we handle it by
@@ -209,7 +216,12 @@ export class CookieBannerChild extends JSWindowActorChild {
     let rules;
 
     try {
-      rules = await this.sendQuery("CookieBanner::GetClickRules", {});
+      let data = await this.sendQuery("CookieBanner::GetClickRules", {});
+
+      rules = data.rules;
+      // Set we are cooling down for this session if the cookie banner handling
+      // has been executed previously.
+      this.#isCooledDownInSession = data.hasExecuted;
     } catch (e) {
       lazy.logConsole.warn("Failed to get click rule from parent.", e);
       return;
@@ -247,6 +259,9 @@ export class CookieBannerChild extends JSWindowActorChild {
 
     let { bannerHandled, bannerDetected, matchedRule } =
       await this.handleCookieBanner();
+
+    // Send a message to mark that the cookie banner handling has been executed.
+    this.sendAsyncMessage("CookieBanner::MarkSiteExecuted");
 
     let dispatchedEventsForCookieInjection =
       this.#dispatchEventsForBannerHandledByInjection();
