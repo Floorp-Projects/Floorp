@@ -231,6 +231,18 @@ class MOZ_STACK_CLASS InitExprInterpreter {
     return pushRef(RefType::i31().asNonNullable(),
                    AnyRef::fromUint32Truncate(value));
   }
+
+  bool evalExternInternalize(JSContext* cx) {
+    AnyRef ref = stack.back().ref();
+    stack.popBack();
+    return pushRef(RefType::extern_(), ref);
+  }
+
+  bool evalExternExternalize(JSContext* cx) {
+    AnyRef ref = stack.back().ref();
+    stack.popBack();
+    return pushRef(RefType::any(), ref);
+  }
 #endif  // ENABLE_WASM_GC
 };
 
@@ -389,6 +401,12 @@ bool InitExprInterpreter::evaluate(JSContext* cx, Decoder& d) {
           }
           case uint32_t(GcOp::RefI31): {
             CHECK(evalI31New(cx));
+          }
+          case uint32_t(GcOp::ExternInternalize): {
+            CHECK(evalExternInternalize(cx));
+          }
+          case uint32_t(GcOp::ExternExternalize): {
+            CHECK(evalExternExternalize(cx));
           }
           default: {
             MOZ_CRASH();
@@ -596,6 +614,22 @@ bool wasm::DecodeConstantExpression(Decoder& d, ModuleEnvironment* env,
             if (!iter.readConversion(ValType::I32,
                                      ValType(RefType::i31().asNonNullable()),
                                      &value)) {
+              return false;
+            }
+            break;
+          }
+          case uint32_t(GcOp::ExternInternalize): {
+            Nothing value;
+            if (!iter.readRefConversion(RefType::extern_(), RefType::any(),
+                                        &value)) {
+              return false;
+            }
+            break;
+          }
+          case uint32_t(GcOp::ExternExternalize): {
+            Nothing value;
+            if (!iter.readRefConversion(RefType::any(), RefType::extern_(),
+                                        &value)) {
               return false;
             }
             break;
