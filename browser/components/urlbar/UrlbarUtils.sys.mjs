@@ -1320,19 +1320,16 @@ export var UrlbarUtils = {
    * the URL.
    *
    * @param {string} url The url that should be prepared for display.
-   * @param {object} [options] Preparation options.
-   * @param {boolean} options.trimURL Whether the displayed URL should be
-   *                  trimmed or not.
    * @returns {string} Prepared url.
    */
-  prepareUrlForDisplay(url, { trimURL = true } = {}) {
+  prepareUrlForDisplay(url) {
     // Some domains are encoded in punycode. The following ensures we display
     // the url in utf-8.
     try {
       url = new URL(url).URI.displaySpec;
     } catch {} // In some cases url is not a valid url.
 
-    if (url && trimURL && lazy.UrlbarPrefs.get("trimURLs")) {
+    if (url && lazy.UrlbarPrefs.get("trimURLs")) {
       url = lazy.BrowserUIUtils.removeSingleTrailingSlashFromURL(url);
       if (url.startsWith("https://")) {
         url = url.substring(8);

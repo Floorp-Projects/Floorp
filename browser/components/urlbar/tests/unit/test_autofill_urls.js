@@ -879,26 +879,3 @@ add_task(async function wwwHistory() {
     await cleanupPlaces();
   }
 });
-
-add_task(async function formatPunycodeResultCorrectly() {
-  await PlacesTestUtils.addVisits([
-    {
-      uri: `http://test.xn--e1afmkfd.com/`,
-    },
-  ]);
-  let context = createContext("test", { isPrivate: false });
-  await check_results({
-    context,
-    autofilled: "test.xn--e1afmkfd.com/",
-    completed: "http://test.xn--e1afmkfd.com/",
-    matches: [
-      makeVisitResult(context, {
-        uri: "http://test.xn--e1afmkfd.com/",
-        title: "test visit for http://test.xn--e1afmkfd.com/",
-        displayUrl: "http://test.пример.com",
-        heuristic: true,
-      }),
-    ],
-  });
-  await cleanupPlaces();
-});
