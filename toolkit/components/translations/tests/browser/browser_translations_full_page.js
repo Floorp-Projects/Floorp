@@ -101,7 +101,6 @@ add_task(async function test_language_identification_for_page_translation() {
     detectedLangTag: "es",
     detectedLanguageConfidence: 0.95,
     resolveLanguageIdDownloads: true,
-    prefs: [["browser.translations.languageIdentification.useFastText", true]],
     languagePairs: [
       { fromLang: "es", toLang: "en" },
       { fromLang: "en", toLang: "es" },
