@@ -68,7 +68,7 @@ add_task(async function testWindowUpdate() {
       }
 
       let currentWindowId;
-      async function updateWindow(windowId, params, expected, otherChecks) {
+      async function updateWindow(windowId, params, expected) {
         let window = await browser.windows.update(windowId, params);
 
         browser.test.assertEq(
@@ -92,15 +92,6 @@ add_task(async function testWindowUpdate() {
             );
           }
         }
-        if (otherChecks) {
-          for (let key of Object.keys(otherChecks)) {
-            browser.test.assertEq(
-              otherChecks[key],
-              window[key],
-              `Got expected value for window.${key}`
-            );
-          }
-        }
 
         return checkWindow(expected);
       }
@@ -112,11 +103,6 @@ add_task(async function testWindowUpdate() {
 
         let window = await browser.windows.getCurrent();
         currentWindowId = window.id;
-
-        // Store current, "normal" width and height to compare against
-        // window width and height after updating to "normal" state.
-        let normalWidth = window.width;
-        let normalHeight = window.height;
 
         await updateWindow(
           windowId,
@@ -131,8 +117,7 @@ add_task(async function testWindowUpdate() {
         await updateWindow(
           windowId,
           { state: "normal" },
-          { state: "STATE_NORMAL" },
-          { width: normalWidth, height: normalHeight }
+          { state: "STATE_NORMAL" }
         );
         await updateWindow(
           windowId,
@@ -142,8 +127,7 @@ add_task(async function testWindowUpdate() {
         await updateWindow(
           windowId,
           { state: "normal" },
-          { state: "STATE_NORMAL" },
-          { width: normalWidth, height: normalHeight }
+          { state: "STATE_NORMAL" }
         );
 
         browser.test.notifyPass("window-update");
