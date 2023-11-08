@@ -567,6 +567,8 @@ STATIC_ATOMS = [
     Atom("internals", "internals"),
     Atom("intersection", "intersection"),
     Atom("intersectionobserverlist", "intersectionobserverlist"),
+    Atom("invoketarget", "invoketarget"),
+    Atom("invokeaction", "invokeaction"),
     Atom("is", "is"),
     Atom("ismap", "ismap"),
     Atom("itemid", "itemid"),

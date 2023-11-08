@@ -175,6 +175,9 @@ with Files("InputEvent.webidl"):
 with Files("InstallTrigger.webidl"):
     BUG_COMPONENT = ("Toolkit", "Add-ons Manager")
 
+with Files("InvokerElement.webidl"):
+    BUG_COMPONENT = ("Core", "DOM: Core & HTML")
+
 with Files("KeyAlgorithm.webidl"):
     BUG_COMPONENT = ("Core", "DOM: Security")
 
@@ -684,6 +687,8 @@ WEBIDL_FILES = [
     "InputEvent.webidl",
     "IntersectionObserver.webidl",
     "IntlUtils.webidl",
+    "InvokeEvent.webidl",
+    "InvokerElement.webidl",
     "IterableIterator.webidl",
     "KeyAlgorithm.webidl",
     "KeyboardEvent.webidl",

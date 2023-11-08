@@ -1097,6 +1097,9 @@ class Element : public FragmentOrElement {
 
   static nsStaticAtom* const* HTMLSVGPropertiesToTraverseAndUnlink();
 
+  MOZ_CAN_RUN_SCRIPT virtual void HandleInvokeInternal(nsAtom* aAction,
+                                                       ErrorResult& aRv) {}
+
  private:
   void DescribeAttribute(uint32_t index, nsAString& aOutDescription) const;
 
