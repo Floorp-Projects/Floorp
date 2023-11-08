@@ -1648,29 +1648,30 @@ LexicalScopeNode* PerHandlerParser<FullParseHandler>::finishLexicalScope(
 }
 
 template <>
-SyntaxParseHandler::ClassBodyScopeNodeType
+SyntaxParseHandler::ClassBodyScopeNodeResult
 PerHandlerParser<SyntaxParseHandler>::finishClassBodyScope(
     ParseContext::Scope& scope, ListNodeType body) {
   if (!propagateFreeNamesAndMarkClosedOverBindings(scope)) {
-    return null();
+    return errorResult();
   }
 
-  return handler_.newClassBodyScope(body).unwrapOr(null());
+  return handler_.newClassBodyScope(body);
 }
 
 template <>
-ClassBodyScopeNode* PerHandlerParser<FullParseHandler>::finishClassBodyScope(
+FullParseHandler::ClassBodyScopeNodeResult
+PerHandlerParser<FullParseHandler>::finishClassBodyScope(
     ParseContext::Scope& scope, ListNode* body) {
   if (!propagateFreeNamesAndMarkClosedOverBindings(scope)) {
-    return nullptr;
+    return errorResult();
   }
 
   Maybe<ClassBodyScope::ParserData*> bindings = newClassBodyScopeData(scope);
   if (!bindings) {
-    return nullptr;
+    return errorResult();
   }
 
-  return handler_.newClassBodyScope(*bindings, body).unwrapOr(null());
+  return handler_.newClassBodyScope(*bindings, body);
 }
 
 template <class ParseHandler>
@@ -6003,11 +6004,9 @@ GeneralParser<ParseHandler, Unit>::exportClassDeclaration(uint32_t begin) {
 
   MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Class));
 
-  ClassNodeType kid =
-      classDefinition(YieldIsName, ClassStatement, NameRequired);
-  if (!kid) {
-    return null();
-  }
+  ClassNodeType kid;
+  MOZ_TRY_VAR_OR_RETURN(
+      kid, classDefinition(YieldIsName, ClassStatement, NameRequired), null());
 
   if (!checkExportedNameForClass(kid)) {
     return null();
@@ -6099,11 +6098,10 @@ GeneralParser<ParseHandler, Unit>::exportDefaultClassDeclaration(
 
   MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Class));
 
-  ClassNodeType kid =
-      classDefinition(YieldIsName, ClassStatement, AllowDefaultName);
-  if (!kid) {
-    return null();
-  }
+  ClassNodeType kid;
+  MOZ_TRY_VAR_OR_RETURN(
+      kid, classDefinition(YieldIsName, ClassStatement, AllowDefaultName),
+      null());
 
   BinaryNodeType node;
   MOZ_TRY_VAR_OR_RETURN(node,
@@ -7634,11 +7632,9 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
 
     if (tt == TokenKind::LeftCurly) {
       /* Parsing static class block: static { ... } */
-      FunctionNodeType staticBlockBody =
-          staticClassBlock(classInitializedMembers);
-      if (!staticBlockBody) {
-        return false;
-      }
+      FunctionNodeType staticBlockBody;
+      MOZ_TRY_VAR_OR_RETURN(staticBlockBody,
+                            staticClassBlock(classInitializedMembers), false);
 
       StaticClassBlockType classBlock;
       MOZ_TRY_VAR_OR_RETURN(
@@ -7735,12 +7731,13 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
 
       // Step 5. Let getter be MakeAutoAccessorGetter(homeObject, name,
       // privateStateName).
-      accessorGetterNode = synthesizeAccessor(
-          propName, propNamePos, propAtom, privateStateName, isStatic,
-          FunctionSyntaxKind::Getter, classInitializedMembers);
-      if (!accessorGetterNode) {
-        return false;
-      }
+      MOZ_TRY_VAR_OR_RETURN(
+          accessorGetterNode,
+          synthesizeAccessor(propName, propNamePos, propAtom, privateStateName,
+                             isStatic, FunctionSyntaxKind::Getter,
+                             classInitializedMembers),
+          false);
+
       // If the accessor is not decorated or is a non-static private field,
       // add it to the class here. Otherwise, we'll handle this when the
       // decorators are called. We don't need to keep a reference to the node
@@ -7760,12 +7757,12 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
 
       // Step 6. Let setter be MakeAutoAccessorSetter(homeObject, name,
       // privateStateName).
-      accessorSetterNode = synthesizeAccessor(
-          propName, propNamePos, propAtom, privateStateName, isStatic,
-          FunctionSyntaxKind::Setter, classInitializedMembers);
-      if (!accessorSetterNode) {
-        return false;
-      }
+      MOZ_TRY_VAR_OR_RETURN(
+          accessorSetterNode,
+          synthesizeAccessor(propName, propNamePos, propAtom, privateStateName,
+                             isStatic, FunctionSyntaxKind::Setter,
+                             classInitializedMembers),
+          false);
 
       if (addAccessorImmediately) {
         if (!handler_.addClassMemberDefinition(classMembers,
@@ -7796,12 +7793,12 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
     }
 
     TokenPos propNamePos(propNameOffset, pos().end);
-    FunctionNodeType initializer =
+    FunctionNodeType initializer;
+    MOZ_TRY_VAR_OR_RETURN(
+        initializer,
         fieldInitializerOpt(propNamePos, propName, propAtom,
-                            classInitializedMembers, isStatic, hasHeritage);
-    if (!initializer) {
-      return false;
-    }
+                            classInitializedMembers, isStatic, hasHeritage),
+        false);
 
     if (!matchOrInsertSemicolon(TokenStream::SlashIsInvalid)) {
       return false;
@@ -7942,11 +7939,11 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
       if (atype == AccessorType::Getter || atype == AccessorType::Setter) {
         classInitializedMembers.privateAccessors++;
         TokenPos propNamePos(propNameOffset, pos().end);
-        auto initializerNode =
-            synthesizePrivateMethodInitializer(propAtom, atype, propNamePos);
-        if (!initializerNode) {
-          return false;
-        }
+        FunctionNodeType initializerNode;
+        MOZ_TRY_VAR_OR_RETURN(
+            initializerNode,
+            synthesizePrivateMethodInitializer(propAtom, atype, propNamePos),
+            false);
         initializerIfPrivate = Some(initializerNode);
       } else {
         MOZ_ASSERT(atype == AccessorType::None);
@@ -8001,11 +7998,11 @@ bool GeneralParser<ParseHandler, Unit>::finishClassConstructor(
 
     // synthesizeConstructor assigns to classStmt.constructorBox
     TokenPos synthesizedBodyPos(classStartOffset, classEndOffset);
-    FunctionNodeType synthesizedCtor =
-        synthesizeConstructor(className, synthesizedBodyPos, hasHeritage);
-    if (!synthesizedCtor) {
-      return false;
-    }
+    FunctionNodeType synthesizedCtor;
+    MOZ_TRY_VAR_OR_RETURN(
+        synthesizedCtor,
+        synthesizeConstructor(className, synthesizedBodyPos, hasHeritage),
+        false);
 
     // Note: the *function* has the name of the class, but the *property*
     // containing the function has the name "constructor"
@@ -8053,7 +8050,7 @@ bool GeneralParser<ParseHandler, Unit>::finishClassConstructor(
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::ClassNodeType
+typename ParseHandler::ClassNodeResult
 GeneralParser<ParseHandler, Unit>::classDefinition(
     YieldHandling yieldHandling, ClassContext classContext,
     DefaultHandling defaultHandling) {
@@ -8065,15 +8062,15 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
   if (anyChars.isCurrentTokenType(TokenKind::At)) {
     decorators = decoratorList(yieldHandling);
     if (!decorators) {
-      return null();
+      return errorResult();
     }
     TokenKind next;
     if (!tokenStream.getToken(&next)) {
-      return null();
+      return errorResult();
     }
     if (next != TokenKind::Class) {
       error(JSMSG_CLASS_EXPECTED);
-      return null();
+      return errorResult();
     }
   }
 #else
@@ -8086,19 +8083,19 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
   // Classes are quite broken in self-hosted code.
   if (options().selfHostingMode) {
     error(JSMSG_SELFHOSTED_CLASS);
-    return null();
+    return errorResult();
   }
 
   TokenKind tt;
   if (!tokenStream.getToken(&tt)) {
-    return null();
+    return errorResult();
   }
 
   TaggedParserAtomIndex className;
   if (TokenKindIsPossibleIdentifier(tt)) {
     className = bindingIdentifier(yieldHandling);
     if (!className) {
-      return null();
+      return errorResult();
     }
   } else if (classContext == ClassStatement) {
     if (defaultHandling == AllowDefaultName) {
@@ -8107,7 +8104,7 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
     } else {
       // Class statements must have a bound name
       error(JSMSG_UNNAMED_CLASS_STMT);
-      return null();
+      return errorResult();
     }
   } else {
     // Make sure to put it back, whatever it was
@@ -8137,39 +8134,38 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
     ParseContext::Statement innerScopeStmt(pc_, StatementKind::Block);
     ParseContext::Scope innerScope(this);
     if (!innerScope.init(pc_)) {
-      return null();
+      return errorResult();
     }
 
     bool hasHeritageBool;
     if (!tokenStream.matchToken(&hasHeritageBool, TokenKind::Extends)) {
-      return null();
+      return errorResult();
     }
     HasHeritage hasHeritage =
         hasHeritageBool ? HasHeritage::Yes : HasHeritage::No;
     if (hasHeritage == HasHeritage::Yes) {
       if (!tokenStream.getToken(&tt)) {
-        return null();
+        return errorResult();
       }
       classHeritage = optionalExpr(yieldHandling, TripledotProhibited, tt);
       if (!classHeritage) {
-        return null();
+        return errorResult();
       }
     }
 
     if (!mustMatchToken(TokenKind::LeftCurly, JSMSG_CURLY_BEFORE_CLASS)) {
-      return null();
+      return errorResult();
     }
 
     {
       ParseContext::Statement bodyScopeStmt(pc_, StatementKind::Block);
       ParseContext::Scope bodyScope(this);
       if (!bodyScope.init(pc_)) {
-        return null();
+        return errorResult();
       }
 
       ListNodeType classMembers;
-      MOZ_TRY_VAR_OR_RETURN(classMembers,
-                            handler_.newClassMemberList(pos().begin), null());
+      MOZ_TRY_VAR(classMembers, handler_.newClassMemberList(pos().begin));
 
       ClassInitializedMembers classInitializedMembers{};
       for (;;) {
@@ -8177,7 +8173,7 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
         if (!classMember(yieldHandling, classStmt, className, classStartOffset,
                          hasHeritage, classInitializedMembers, classMembers,
                          &done)) {
-          return null();
+          return errorResult();
         }
         if (done) {
           break;
@@ -8194,7 +8190,7 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
         if (!noteDeclaredName(
                 TaggedParserAtomIndex::WellKnown::dot_privateBrand_(),
                 DeclarationKind::Synthetic, namePos, ClosedOver::Yes)) {
-          return null();
+          return errorResult();
         }
       }
 
@@ -8202,7 +8198,7 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
         if (!noteDeclaredName(
                 TaggedParserAtomIndex::WellKnown::dot_fieldKeys_(),
                 DeclarationKind::Synthetic, namePos)) {
-          return null();
+          return errorResult();
         }
       }
 
@@ -8210,7 +8206,7 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
         if (!noteDeclaredName(
                 TaggedParserAtomIndex::WellKnown::dot_staticInitializers_(),
                 DeclarationKind::Synthetic, namePos)) {
-          return null();
+          return errorResult();
         }
       }
 
@@ -8218,7 +8214,7 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
         if (!noteDeclaredName(
                 TaggedParserAtomIndex::WellKnown::dot_staticFieldKeys_(),
                 DeclarationKind::Synthetic, namePos)) {
-          return null();
+          return errorResult();
         }
       }
 
@@ -8226,13 +8222,11 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
       if (!finishClassConstructor(classStmt, className, hasHeritage,
                                   classStartOffset, classEndOffset,
                                   classInitializedMembers, classMembers)) {
-        return null();
+        return errorResult();
       }
 
-      classBodyBlock = finishClassBodyScope(bodyScope, classMembers);
-      if (!classBodyBlock) {
-        return null();
-      }
+      MOZ_TRY_VAR(classBodyBlock,
+                  finishClassBodyScope(bodyScope, classMembers));
 
       // Pop the class body scope
     }
@@ -8240,15 +8234,15 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
     if (className) {
       // The inner name is immutable.
       if (!noteDeclaredName(className, DeclarationKind::Const, namePos)) {
-        return null();
+        return errorResult();
       }
 
-      MOZ_TRY_VAR_OR_RETURN(innerName, newName(className, namePos), null());
+      MOZ_TRY_VAR(innerName, newName(className, namePos));
     }
 
     classBlock = finishLexicalScope(innerScope, classBodyBlock);
     if (!classBlock) {
-      return null();
+      return errorResult();
     }
 
     // Pop the inner scope.
@@ -8259,48 +8253,45 @@ GeneralParser<ParseHandler, Unit>::classDefinition(
     if (classContext == ClassStatement) {
       // The outer name is mutable.
       if (!noteDeclaredName(className, DeclarationKind::Class, namePos)) {
-        return null();
+        return errorResult();
       }
 
-      MOZ_TRY_VAR_OR_RETURN(outerName, newName(className, namePos), null());
+      MOZ_TRY_VAR(outerName, newName(className, namePos));
     }
 
-    MOZ_TRY_VAR_OR_RETURN(nameNode,
-                          handler_.newClassNames(outerName, innerName, namePos),
-                          null());
+    MOZ_TRY_VAR(nameNode,
+                handler_.newClassNames(outerName, innerName, namePos));
   }
   MOZ_ALWAYS_TRUE(setLocalStrictMode(savedStrictness));
   // We're leaving a class definition that was not itself nested within a class
   if (!isInClass) {
     mozilla::Maybe<UnboundPrivateName> maybeUnboundName;
     if (!usedNames_.hasUnboundPrivateNames(fc_, maybeUnboundName)) {
-      return null();
+      return errorResult();
     }
     if (maybeUnboundName) {
       UniqueChars str =
           this->parserAtoms().toPrintableString(maybeUnboundName->atom);
       if (!str) {
         ReportOutOfMemory(this->fc_);
-        return null();
+        return errorResult();
       }
 
       errorAt(maybeUnboundName->position.begin, JSMSG_MISSING_PRIVATE_DECL,
               str.get());
-      return null();
+      return errorResult();
     }
   }
 
-  return handler_
-      .newClass(nameNode, classHeritage, classBlock,
+  return handler_.newClass(nameNode, classHeritage, classBlock,
 #ifdef ENABLE_DECORATORS
-                decorators,
+                           decorators,
 #endif
-                TokenPos(classStartOffset, classEndOffset))
-      .unwrapOr(null());
+                           TokenPos(classStartOffset, classEndOffset));
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::FunctionNodeType
+typename ParseHandler::FunctionNodeResult
 GeneralParser<ParseHandler, Unit>::synthesizeConstructor(
     TaggedParserAtomIndex className, TokenPos synthesizedBodyPos,
     HasHeritage hasHeritage) {
@@ -8316,9 +8307,8 @@ GeneralParser<ParseHandler, Unit>::synthesizeConstructor(
 
   // Create the top-level field initializer node.
   FunctionNodeType funNode;
-  MOZ_TRY_VAR_OR_RETURN(
-      funNode, handler_.newFunction(functionSyntaxKind, synthesizedBodyPos),
-      null());
+  MOZ_TRY_VAR(funNode,
+              handler_.newFunction(functionSyntaxKind, synthesizedBodyPos));
 
   // If we see any inner function, note it on our current context. The bytecode
   // emitter may eliminate the function later, but we use a conservative
@@ -8331,7 +8321,7 @@ GeneralParser<ParseHandler, Unit>::synthesizeConstructor(
   if (handler_.reuseLazyInnerFunctions()) {
     if (!skipLazyInnerFunction(funNode, synthesizedBodyPos.begin,
                                /* tryAnnexB = */ false)) {
-      return null();
+      return errorResult();
     }
 
     return funNode;
@@ -8343,7 +8333,7 @@ GeneralParser<ParseHandler, Unit>::synthesizeConstructor(
       funNode, className, flags, synthesizedBodyPos.begin, directives,
       GeneratorKind::NotGenerator, FunctionAsyncKind::SyncFunction);
   if (!funbox) {
-    return null();
+    return errorResult();
   }
   funbox->initWithEnclosingParseContext(pc_, functionSyntaxKind);
   setFunctionEndFromCurrentToken(funbox);
@@ -8357,24 +8347,23 @@ GeneralParser<ParseHandler, Unit>::synthesizeConstructor(
   ParseContext* outerpc = pc_;
   SourceParseContext funpc(this, funbox, /* newDirectives = */ nullptr);
   if (!funpc.init()) {
-    return null();
+    return errorResult();
   }
 
   if (!synthesizeConstructorBody(synthesizedBodyPos, hasHeritage, funNode,
                                  funbox)) {
-    return null();
+    return errorResult();
   }
 
   if (!leaveInnerFunction(outerpc)) {
-    return null();
+    return errorResult();
   }
 
   return funNode;
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::FunctionNodeType
-GeneralParser<ParseHandler, Unit>::synthesizeConstructorBody(
+bool GeneralParser<ParseHandler, Unit>::synthesizeConstructorBody(
     TokenPos synthesizedBodyPos, HasHeritage hasHeritage,
     FunctionNodeType funNode, FunctionBox* funbox) {
   MOZ_ASSERT(funbox->isClassConstructor());
@@ -8383,7 +8372,7 @@ GeneralParser<ParseHandler, Unit>::synthesizeConstructorBody(
   // parameters).
   ParamsBodyNodeType argsbody;
   MOZ_TRY_VAR_OR_RETURN(argsbody, handler_.newParamsBody(synthesizedBodyPos),
-                        null());
+                        false);
   handler_.setFunctionFormalParametersAndBody(funNode, argsbody);
   setFunctionStartAtPosition(funbox, synthesizedBodyPos);
 
@@ -8395,7 +8384,7 @@ GeneralParser<ParseHandler, Unit>::synthesizeConstructorBody(
             synthesizedBodyPos.begin,
             /* disallowDuplicateParams = */ false,
             /* duplicatedParam = */ nullptr)) {
-      return null();
+      return false;
     }
     funbox->setArgCount(1);
   } else {
@@ -8406,100 +8395,96 @@ GeneralParser<ParseHandler, Unit>::synthesizeConstructorBody(
 
   ListNodeType stmtList;
   MOZ_TRY_VAR_OR_RETURN(stmtList, handler_.newStatementList(synthesizedBodyPos),
-                        null());
+                        false);
 
   if (!noteUsedName(TaggedParserAtomIndex::WellKnown::dot_this_())) {
-    return null();
+    return false;
   }
 
   if (!noteUsedName(TaggedParserAtomIndex::WellKnown::dot_initializers_())) {
-    return null();
+    return false;
   }
 
   if (hasHeritage == HasHeritage::Yes) {
     // |super()| implicitly reads |new.target|.
     if (!noteUsedName(TaggedParserAtomIndex::WellKnown::dot_newTarget_())) {
-      return null();
+      return false;
     }
 
     NameNodeType thisName = newThisName();
     if (!thisName) {
-      return null();
+      return false;
     }
 
     UnaryNodeType superBase;
     MOZ_TRY_VAR_OR_RETURN(
-        superBase, handler_.newSuperBase(thisName, synthesizedBodyPos), null());
+        superBase, handler_.newSuperBase(thisName, synthesizedBodyPos), false);
 
     ListNodeType arguments;
     MOZ_TRY_VAR_OR_RETURN(arguments, handler_.newArguments(synthesizedBodyPos),
-                          null());
+                          false);
 
     NameNodeType argsNameNode;
     MOZ_TRY_VAR_OR_RETURN(argsNameNode,
                           newName(TaggedParserAtomIndex::WellKnown::dot_args_(),
                                   synthesizedBodyPos),
-                          null());
+                          false);
     if (!noteUsedName(TaggedParserAtomIndex::WellKnown::dot_args_())) {
-      return null();
+      return false;
     }
 
     UnaryNodeType spreadArgs;
     MOZ_TRY_VAR_OR_RETURN(
         spreadArgs, handler_.newSpread(synthesizedBodyPos.begin, argsNameNode),
-        null());
+        false);
     handler_.addList(arguments, spreadArgs);
 
     CallNodeType superCall;
     MOZ_TRY_VAR_OR_RETURN(
         superCall,
         handler_.newSuperCall(superBase, arguments, /* isSpread = */ true),
-        null());
+        false);
 
     BinaryNodeType setThis;
     MOZ_TRY_VAR_OR_RETURN(setThis, handler_.newSetThis(thisName, superCall),
-                          null());
+                          false);
 
     UnaryNodeType exprStatement;
     MOZ_TRY_VAR_OR_RETURN(
         exprStatement,
-        handler_.newExprStatement(setThis, synthesizedBodyPos.end), null());
+        handler_.newExprStatement(setThis, synthesizedBodyPos.end), false);
 
     handler_.addStatementToList(stmtList, exprStatement);
   }
 
   bool canSkipLazyClosedOverBindings = handler_.reuseClosedOverBindings();
   if (!pc_->declareFunctionThis(usedNames_, canSkipLazyClosedOverBindings)) {
-    return null();
+    return false;
   }
   if (!pc_->declareNewTarget(usedNames_, canSkipLazyClosedOverBindings)) {
-    return null();
+    return false;
   }
 
   auto initializerBody =
       finishLexicalScope(pc_->varScope(), stmtList, ScopeKind::FunctionLexical);
   if (!initializerBody) {
-    return null();
+    return false;
   }
   handler_.setBeginPosition(initializerBody, stmtList);
   handler_.setEndPosition(initializerBody, stmtList);
 
   handler_.setFunctionBody(funNode, initializerBody);
 
-  if (!finishFunction()) {
-    return null();
-  }
-
-  return funNode;
+  return finishFunction();
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::FunctionNodeType
+typename ParseHandler::FunctionNodeResult
 GeneralParser<ParseHandler, Unit>::privateMethodInitializer(
     TokenPos propNamePos, TaggedParserAtomIndex propAtom,
     TaggedParserAtomIndex storedMethodAtom) {
   if (!abortIfSyntaxParser()) {
-    return null();
+    return errorResult();
   }
 
   // Synthesize an initializer function that the constructor can use to stamp a
@@ -8512,15 +8497,14 @@ GeneralParser<ParseHandler, Unit>::privateMethodInitializer(
       InitialFunctionFlags(syntaxKind, generatorKind, asyncKind, isSelfHosting);
 
   FunctionNodeType funNode;
-  MOZ_TRY_VAR_OR_RETURN(funNode, handler_.newFunction(syntaxKind, propNamePos),
-                        null());
+  MOZ_TRY_VAR(funNode, handler_.newFunction(syntaxKind, propNamePos));
 
   Directives directives(true);
   FunctionBox* funbox =
       newFunctionBox(funNode, TaggedParserAtomIndex::null(), flags,
                      propNamePos.begin, directives, generatorKind, asyncKind);
   if (!funbox) {
-    return null();
+    return errorResult();
   }
   funbox->initWithEnclosingParseContext(pc_, syntaxKind);
 
@@ -8528,13 +8512,13 @@ GeneralParser<ParseHandler, Unit>::privateMethodInitializer(
   ParseContext* outerpc = pc_;
   SourceParseContext funpc(this, funbox, /* newDirectives = */ nullptr);
   if (!funpc.init()) {
-    return null();
+    return errorResult();
   }
   pc_->functionScope().useAsVarScope(pc_);
 
   // Add empty parameter list.
   ParamsBodyNodeType argsbody;
-  MOZ_TRY_VAR_OR_RETURN(argsbody, handler_.newParamsBody(propNamePos), null());
+  MOZ_TRY_VAR(argsbody, handler_.newParamsBody(propNamePos));
   handler_.setFunctionFormalParametersAndBody(funNode, argsbody);
   setFunctionStartAtCurrentToken(funbox);
   funbox->setArgCount(0);
@@ -8543,33 +8527,29 @@ GeneralParser<ParseHandler, Unit>::privateMethodInitializer(
   // used in the initializer. They will be emitted into the method body in the
   // BCE.
   if (!noteUsedName(storedMethodAtom)) {
-    return null();
+    return errorResult();
   }
-  NameNodeType privateNameNode;
-  MOZ_TRY_VAR_OR_RETURN(privateNameNode, privateNameReference(propAtom),
-                        null());
-  (void)privateNameNode;
+  MOZ_TRY(privateNameReference(propAtom));
 
   // Unlike field initializers, private method initializers are not created with
   // a body of synthesized AST nodes. Instead, the body is left empty and the
   // initializer is synthesized at the bytecode level.
   // See BytecodeEmitter::emitPrivateMethodInitializer.
   ListNodeType stmtList;
-  MOZ_TRY_VAR_OR_RETURN(stmtList, handler_.newStatementList(propNamePos),
-                        null());
+  MOZ_TRY_VAR(stmtList, handler_.newStatementList(propNamePos));
 
   bool canSkipLazyClosedOverBindings = handler_.reuseClosedOverBindings();
   if (!pc_->declareFunctionThis(usedNames_, canSkipLazyClosedOverBindings)) {
-    return null();
+    return errorResult();
   }
   if (!pc_->declareNewTarget(usedNames_, canSkipLazyClosedOverBindings)) {
-    return null();
+    return errorResult();
   }
 
   LexicalScopeNodeType initializerBody =
       finishLexicalScope(pc_->varScope(), stmtList, ScopeKind::FunctionLexical);
   if (!initializerBody) {
-    return null();
+    return errorResult();
   }
   handler_.setBeginPosition(initializerBody, stmtList);
   handler_.setEndPosition(initializerBody, stmtList);
@@ -8581,24 +8561,24 @@ GeneralParser<ParseHandler, Unit>::privateMethodInitializer(
   setFunctionEndFromCurrentToken(funbox);
 
   if (!finishFunction()) {
-    return null();
+    return errorResult();
   }
 
   if (!leaveInnerFunction(outerpc)) {
-    return null();
+    return errorResult();
   }
 
   return funNode;
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::FunctionNodeType
+typename ParseHandler::FunctionNodeResult
 GeneralParser<ParseHandler, Unit>::staticClassBlock(
     ClassInitializedMembers& classInitializedMembers) {
   // Both for getting-this-done, and because this will invariably be executed,
   // syntax parsing should be aborted.
   if (!abortIfSyntaxParser()) {
-    return null();
+    return errorResult();
   }
 
   FunctionSyntaxKind syntaxKind = FunctionSyntaxKind::StaticClassBlock;
@@ -8612,8 +8592,7 @@ GeneralParser<ParseHandler, Unit>::staticClassBlock(
 
   // Create the function node for the static class body.
   FunctionNodeType funNode;
-  MOZ_TRY_VAR_OR_RETURN(funNode, handler_.newFunction(syntaxKind, pos()),
-                        null());
+  MOZ_TRY_VAR(funNode, handler_.newFunction(syntaxKind, pos()));
 
   // Create the FunctionBox and link it to the function object.
   Directives directives(true);
@@ -8621,7 +8600,7 @@ GeneralParser<ParseHandler, Unit>::staticClassBlock(
       newFunctionBox(funNode, TaggedParserAtomIndex::null(), flags, pos().begin,
                      directives, generatorKind, asyncKind);
   if (!funbox) {
-    return null();
+    return errorResult();
   }
   funbox->initWithEnclosingParseContext(pc_, syntaxKind);
   MOZ_ASSERT(funbox->isSyntheticFunction());
@@ -8637,7 +8616,7 @@ GeneralParser<ParseHandler, Unit>::staticClassBlock(
   ParseContext* outerpc = pc_;
   SourceParseContext funpc(this, funbox, /* newDirectives = */ nullptr);
   if (!funpc.init()) {
-    return null();
+    return errorResult();
   }
 
   pc_->functionScope().useAsVarScope(pc_);
@@ -8652,15 +8631,13 @@ GeneralParser<ParseHandler, Unit>::staticClassBlock(
   classInitializedMembers.staticFields++;
 
   LexicalScopeNodeType body;
-  MOZ_TRY_VAR_OR_RETURN(
-      body,
-      functionBody(InHandling::InAllowed, YieldHandling::YieldIsKeyword,
-                   syntaxKind, FunctionBodyType::StatementListBody),
-      null());
+  MOZ_TRY_VAR(body,
+              functionBody(InHandling::InAllowed, YieldHandling::YieldIsKeyword,
+                           syntaxKind, FunctionBodyType::StatementListBody));
 
   if (anyChars.isEOF()) {
     error(JSMSG_UNTERMINATED_STATIC_CLASS_BLOCK);
-    return null();
+    return errorResult();
   }
 
   tokenStream.consumeKnownToken(TokenKind::RightCurly,
@@ -8674,7 +8651,7 @@ GeneralParser<ParseHandler, Unit>::staticClassBlock(
   // Create a ParamsBodyNode for the parameters + body (there are no
   // parameters).
   ParamsBodyNodeType argsbody;
-  MOZ_TRY_VAR_OR_RETURN(argsbody, handler_.newParamsBody(wholeBodyPos), null());
+  MOZ_TRY_VAR(argsbody, handler_.newParamsBody(wholeBodyPos));
 
   handler_.setFunctionFormalParametersAndBody(funNode, argsbody);
   funbox->setArgCount(0);
@@ -8688,30 +8665,30 @@ GeneralParser<ParseHandler, Unit>::staticClassBlock(
   handler_.setFunctionBody(funNode, body);
 
   if (!finishFunction()) {
-    return null();
+    return errorResult();
   }
 
   if (!leaveInnerFunction(outerpc)) {
-    return null();
+    return errorResult();
   }
 
   return funNode;
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::FunctionNodeType
+typename ParseHandler::FunctionNodeResult
 GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(
     TokenPos propNamePos, Node propName, TaggedParserAtomIndex propAtom,
     ClassInitializedMembers& classInitializedMembers, bool isStatic,
     HasHeritage hasHeritage) {
   if (!abortIfSyntaxParser()) {
-    return null();
+    return errorResult();
   }
 
   bool hasInitializer = false;
   if (!tokenStream.matchToken(&hasInitializer, TokenKind::Assign,
                               TokenStream::SlashIsDiv)) {
-    return null();
+    return errorResult();
   }
 
   FunctionSyntaxKind syntaxKind = FunctionSyntaxKind::FieldInitializer;
@@ -8723,8 +8700,7 @@ GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(
 
   // Create the top-level field initializer node.
   FunctionNodeType funNode;
-  MOZ_TRY_VAR_OR_RETURN(funNode, handler_.newFunction(syntaxKind, propNamePos),
-                        null());
+  MOZ_TRY_VAR(funNode, handler_.newFunction(syntaxKind, propNamePos));
 
   // Create the FunctionBox and link it to the function object.
   Directives directives(true);
@@ -8732,7 +8708,7 @@ GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(
       newFunctionBox(funNode, TaggedParserAtomIndex::null(), flags,
                      propNamePos.begin, directives, generatorKind, asyncKind);
   if (!funbox) {
-    return null();
+    return errorResult();
   }
   funbox->initWithEnclosingParseContext(pc_, syntaxKind);
   MOZ_ASSERT(funbox->isSyntheticFunction());
@@ -8746,7 +8722,7 @@ GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(
   ParseContext* outerpc = pc_;
   SourceParseContext funpc(this, funbox, /* newDirectives = */ nullptr);
   if (!funpc.init()) {
-    return null();
+    return errorResult();
   }
 
   pc_->functionScope().useAsVarScope(pc_);
@@ -8758,14 +8734,13 @@ GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(
       AutoAwaitIsKeyword awaitHandling(this, AwaitIsName);
       initializerExpr = assignExpr(InAllowed, YieldIsName, TripledotProhibited);
       if (!initializerExpr) {
-        return null();
+        return errorResult();
       }
     }
 
     handler_.checkAndSetIsDirectRHSAnonFunction(initializerExpr);
   } else {
-    MOZ_TRY_VAR_OR_RETURN(initializerExpr,
-                          handler_.newRawUndefinedLiteral(propNamePos), null());
+    MOZ_TRY_VAR(initializerExpr, handler_.newRawUndefinedLiteral(propNamePos));
   }
 
   TokenPos wholeInitializerPos(propNamePos.begin, pos().end);
@@ -8777,21 +8752,19 @@ GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(
   // Create a ParamsBodyNode for the parameters + body (there are no
   // parameters).
   ParamsBodyNodeType argsbody;
-  MOZ_TRY_VAR_OR_RETURN(argsbody, handler_.newParamsBody(wholeInitializerPos),
-                        null());
+  MOZ_TRY_VAR(argsbody, handler_.newParamsBody(wholeInitializerPos));
   handler_.setFunctionFormalParametersAndBody(funNode, argsbody);
   funbox->setArgCount(0);
 
   NameNodeType thisName = newThisName();
   if (!thisName) {
-    return null();
+    return errorResult();
   }
 
   // Build `this.field` expression.
   ThisLiteralType propAssignThis;
-  MOZ_TRY_VAR_OR_RETURN(propAssignThis,
-                        handler_.newThisLiteral(wholeInitializerPos, thisName),
-                        null());
+  MOZ_TRY_VAR(propAssignThis,
+              handler_.newThisLiteral(wholeInitializerPos, thisName));
 
   Node propAssignFieldAccess;
   uint32_t indexValue;
@@ -8807,7 +8780,7 @@ GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(
           TaggedParserAtomIndex::WellKnown::dot_fieldKeys_());
     }
     if (!fieldKeysName) {
-      return null();
+      return errorResult();
     }
 
     double fieldKeyIndex;
@@ -8817,24 +8790,18 @@ GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(
       fieldKeyIndex = classInitializedMembers.instanceFieldKeys++;
     }
     Node fieldKeyIndexNode;
-    MOZ_TRY_VAR_OR_RETURN(
-        fieldKeyIndexNode,
-        handler_.newNumber(fieldKeyIndex, DecimalPoint::NoDecimal,
-                           wholeInitializerPos),
-        null());
+    MOZ_TRY_VAR(fieldKeyIndexNode,
+                handler_.newNumber(fieldKeyIndex, DecimalPoint::NoDecimal,
+                                   wholeInitializerPos));
 
     Node fieldKeyValue;
-    MOZ_TRY_VAR_OR_RETURN(
-        fieldKeyValue,
-        handler_.newPropertyByValue(fieldKeysName, fieldKeyIndexNode,
-                                    wholeInitializerPos.end),
-        null());
+    MOZ_TRY_VAR(fieldKeyValue,
+                handler_.newPropertyByValue(fieldKeysName, fieldKeyIndexNode,
+                                            wholeInitializerPos.end));
 
-    MOZ_TRY_VAR_OR_RETURN(
-        propAssignFieldAccess,
-        handler_.newPropertyByValue(propAssignThis, fieldKeyValue,
-                                    wholeInitializerPos.end),
-        null());
+    MOZ_TRY_VAR(propAssignFieldAccess,
+                handler_.newPropertyByValue(propAssignThis, fieldKeyValue,
+                                            wholeInitializerPos.end));
   } else if (handler_.isPrivateName(propName)) {
     // It would be nice if we could tweak this here such that only if
     // HasHeritage::Yes we end up emitting CheckPrivateField, but otherwise we
@@ -8846,60 +8813,50 @@ GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(
     // semantic check.
 
     NameNodeType privateNameNode;
-    MOZ_TRY_VAR_OR_RETURN(privateNameNode, privateNameReference(propAtom),
-                          null());
+    MOZ_TRY_VAR(privateNameNode, privateNameReference(propAtom));
 
-    MOZ_TRY_VAR_OR_RETURN(
-        propAssignFieldAccess,
-        handler_.newPrivateMemberAccess(propAssignThis, privateNameNode,
-                                        wholeInitializerPos.end),
-        null());
+    MOZ_TRY_VAR(propAssignFieldAccess,
+                handler_.newPrivateMemberAccess(propAssignThis, privateNameNode,
+                                                wholeInitializerPos.end));
   } else if (this->parserAtoms().isIndex(propAtom, &indexValue)) {
-    MOZ_TRY_VAR_OR_RETURN(propAssignFieldAccess,
-                          handler_.newPropertyByValue(propAssignThis, propName,
-                                                      wholeInitializerPos.end),
-                          null());
+    MOZ_TRY_VAR(propAssignFieldAccess,
+                handler_.newPropertyByValue(propAssignThis, propName,
+                                            wholeInitializerPos.end));
   } else {
     NameNodeType propAssignName;
-    MOZ_TRY_VAR_OR_RETURN(
-        propAssignName, handler_.newPropertyName(propAtom, wholeInitializerPos),
-        null());
+    MOZ_TRY_VAR(propAssignName,
+                handler_.newPropertyName(propAtom, wholeInitializerPos));
 
-    MOZ_TRY_VAR_OR_RETURN(
-        propAssignFieldAccess,
-        handler_.newPropertyAccess(propAssignThis, propAssignName), null());
+    MOZ_TRY_VAR(propAssignFieldAccess,
+                handler_.newPropertyAccess(propAssignThis, propAssignName));
   }
 
   // Synthesize an property init.
   BinaryNodeType initializerPropInit;
-  MOZ_TRY_VAR_OR_RETURN(
-      initializerPropInit,
-      handler_.newInitExpr(propAssignFieldAccess, initializerExpr), null());
+  MOZ_TRY_VAR(initializerPropInit,
+              handler_.newInitExpr(propAssignFieldAccess, initializerExpr));
 
   UnaryNodeType exprStatement;
-  MOZ_TRY_VAR_OR_RETURN(
-      exprStatement,
-      handler_.newExprStatement(initializerPropInit, wholeInitializerPos.end),
-      null());
+  MOZ_TRY_VAR(exprStatement, handler_.newExprStatement(
+                                 initializerPropInit, wholeInitializerPos.end));
 
   ListNodeType statementList;
-  MOZ_TRY_VAR_OR_RETURN(statementList,
-                        handler_.newStatementList(wholeInitializerPos), null());
+  MOZ_TRY_VAR(statementList, handler_.newStatementList(wholeInitializerPos));
   handler_.addStatementToList(statementList, exprStatement);
 
   bool canSkipLazyClosedOverBindings = handler_.reuseClosedOverBindings();
   if (!pc_->declareFunctionThis(usedNames_, canSkipLazyClosedOverBindings)) {
-    return null();
+    return errorResult();
   }
   if (!pc_->declareNewTarget(usedNames_, canSkipLazyClosedOverBindings)) {
-    return null();
+    return errorResult();
   }
 
   // Set the function's body to the field assignment.
   LexicalScopeNodeType initializerBody = finishLexicalScope(
       pc_->varScope(), statementList, ScopeKind::FunctionLexical);
   if (!initializerBody) {
-    return null();
+    return errorResult();
   }
 
   handler_.setFunctionBody(funNode, initializerBody);
@@ -8909,42 +8866,42 @@ GeneralParser<ParseHandler, Unit>::fieldInitializerOpt(
   }
 
   if (!finishFunction()) {
-    return null();
+    return errorResult();
   }
 
   if (!leaveInnerFunction(outerpc)) {
-    return null();
+    return errorResult();
   }
 
   return funNode;
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::FunctionNodeType
+typename ParseHandler::FunctionNodeResult
 GeneralParser<ParseHandler, Unit>::synthesizePrivateMethodInitializer(
     TaggedParserAtomIndex propAtom, AccessorType accessorType,
     TokenPos propNamePos) {
   if (!abortIfSyntaxParser()) {
-    return null();
+    return errorResult();
   }
 
   // Synthesize a name for the lexical variable that will store the
   // accessor body.
   StringBuffer storedMethodName(fc_);
   if (!storedMethodName.append(this->parserAtoms(), propAtom)) {
-    return null();
+    return errorResult();
   }
   if (!storedMethodName.append(
           accessorType == AccessorType::Getter ? ".getter" : ".setter")) {
-    return null();
+    return errorResult();
   }
   auto storedMethodProp =
       storedMethodName.finishParserAtom(this->parserAtoms(), fc_);
   if (!storedMethodProp) {
-    return null();
+    return errorResult();
   }
   if (!noteDeclaredName(storedMethodProp, DeclarationKind::Synthetic, pos())) {
-    return null();
+    return errorResult();
   }
 
   return privateMethodInitializer(propNamePos, propAtom, storedMethodProp);
@@ -8953,7 +8910,7 @@ GeneralParser<ParseHandler, Unit>::synthesizePrivateMethodInitializer(
 #ifdef ENABLE_DECORATORS
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::ClassMethodType
+typename ParseHandler::ClassMethodResult
 GeneralParser<ParseHandler, Unit>::synthesizeAccessor(
     Node propName, TokenPos propNamePos, TaggedParserAtomIndex propAtom,
     TaggedParserAtomIndex privateStateNameAtom, bool isStatic,
@@ -8970,7 +8927,7 @@ GeneralParser<ParseHandler, Unit>::synthesizeAccessor(
   // (an Object), name (a property key or Private Name), and privateStateName (a
   // Private Name) and returns a function object.
   if (!abortIfSyntaxParser()) {
-    return null();
+    return errorResult();
   }
 
   AccessorType accessorType = syntaxKind == FunctionSyntaxKind::Getter
@@ -8980,11 +8937,9 @@ GeneralParser<ParseHandler, Unit>::synthesizeAccessor(
   mozilla::Maybe<FunctionNodeType> initializerIfPrivate = Nothing();
   if (!isStatic && handler_.isPrivateName(propName)) {
     classInitializedMembers.privateAccessors++;
-    auto initializerNode =
-        synthesizePrivateMethodInitializer(propAtom, accessorType, propNamePos);
-    if (!initializerNode) {
-      return null();
-    }
+    FunctionNodeType initializerNode;
+    MOZ_TRY_VAR(initializerNode, synthesizePrivateMethodInitializer(
+                                     propAtom, accessorType, propNamePos));
     initializerIfPrivate = Some(initializerNode);
     handler_.setPrivateNameKind(propName, PrivateNameKind::GetterSetter);
   }
@@ -8997,16 +8952,15 @@ GeneralParser<ParseHandler, Unit>::synthesizeAccessor(
   StringBuffer storedMethodName(fc_);
   if (!storedMethodName.append(accessorType == AccessorType::Getter ? "get"
                                                                     : "set")) {
-    return null();
+    return errorResult();
   }
   TaggedParserAtomIndex funNameAtom =
       storedMethodName.finishParserAtom(this->parserAtoms(), fc_);
 
-  FunctionNodeType funNode = synthesizeAccessorBody(
-      funNameAtom, propNamePos, privateStateNameAtom, syntaxKind);
-  if (!funNode) {
-    return null();
-  }
+  FunctionNodeType funNode;
+  MOZ_TRY_VAR(funNode,
+              synthesizeAccessorBody(funNameAtom, propNamePos,
+                                     privateStateNameAtom, syntaxKind));
 
   // https://arai-a.github.io/ecma262-compare/?pr=2417&id=sec-makeautoaccessorgetter
   // 3. Perform MakeMethod(getter, homeObject).
@@ -9015,19 +8969,17 @@ GeneralParser<ParseHandler, Unit>::synthesizeAccessor(
   // https://arai-a.github.io/ecma262-compare/?pr=2417&id=sec-makeautoaccessorsetter
   // 3. Perform MakeMethod(setter, homeObject).
   // 4. Return setter.
-  return handler_
-      .newClassMethodDefinition(propName, funNode, accessorType, isStatic,
-                                initializerIfPrivate, null())
-      .unwrapOr(null());
+  return handler_.newClassMethodDefinition(
+      propName, funNode, accessorType, isStatic, initializerIfPrivate, null());
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::FunctionNodeType
+typename ParseHandler::FunctionNodeResult
 GeneralParser<ParseHandler, Unit>::synthesizeAccessorBody(
     TaggedParserAtomIndex funNameAtom, TokenPos propNamePos,
     TaggedParserAtomIndex propNameAtom, FunctionSyntaxKind syntaxKind) {
   if (!abortIfSyntaxParser()) {
-    return null();
+    return errorResult();
   }
 
   FunctionAsyncKind asyncKind = FunctionAsyncKind::SyncFunction;
@@ -9038,8 +8990,7 @@ GeneralParser<ParseHandler, Unit>::synthesizeAccessorBody(
 
   // Create the top-level function node.
   FunctionNodeType funNode;
-  MOZ_TRY_VAR_OR_RETURN(funNode, handler_.newFunction(syntaxKind, propNamePos),
-                        null());
+  MOZ_TRY_VAR(funNode, handler_.newFunction(syntaxKind, propNamePos));
 
   // Create the FunctionBox and link it to the function object.
   Directives directives(true);
@@ -9047,7 +8998,7 @@ GeneralParser<ParseHandler, Unit>::synthesizeAccessorBody(
       newFunctionBox(funNode, funNameAtom, flags, propNamePos.begin, directives,
                      generatorKind, asyncKind);
   if (!funbox) {
-    return null();
+    return errorResult();
   }
   funbox->initWithEnclosingParseContext(pc_, syntaxKind);
   funbox->setSyntheticFunction();
@@ -9056,7 +9007,7 @@ GeneralParser<ParseHandler, Unit>::synthesizeAccessorBody(
   ParseContext* outerpc = pc_;
   SourceParseContext funpc(this, funbox, /* newDirectives = */ nullptr);
   if (!funpc.init()) {
-    return null();
+    return errorResult();
   }
 
   pc_->functionScope().useAsVarScope(pc_);
@@ -9068,8 +9019,7 @@ GeneralParser<ParseHandler, Unit>::synthesizeAccessorBody(
 
   // Create a ListNode for the parameters + body
   ParamsBodyNodeType paramsbody;
-  MOZ_TRY_VAR_OR_RETURN(paramsbody, handler_.newParamsBody(propNamePos),
-                        null());
+  MOZ_TRY_VAR(paramsbody, handler_.newParamsBody(propNamePos));
   handler_.setFunctionFormalParametersAndBody(funNode, paramsbody);
 
   if (syntaxKind == FunctionSyntaxKind::Getter) {
@@ -9082,22 +9032,18 @@ GeneralParser<ParseHandler, Unit>::synthesizeAccessorBody(
   // operations to create the getter and setter below.
   NameNodeType thisName = newThisName();
   if (!thisName) {
-    return null();
+    return errorResult();
   }
 
   ThisLiteralType propThis;
-  MOZ_TRY_VAR_OR_RETURN(propThis,
-                        handler_.newThisLiteral(propNamePos, thisName), null());
+  MOZ_TRY_VAR(propThis, handler_.newThisLiteral(propNamePos, thisName));
 
   NameNodeType privateNameNode;
-  MOZ_TRY_VAR_OR_RETURN(privateNameNode, privateNameReference(propNameAtom),
-                        null());
+  MOZ_TRY_VAR(privateNameNode, privateNameReference(propNameAtom));
 
   Node propFieldAccess;
-  MOZ_TRY_VAR_OR_RETURN(propFieldAccess,
-                        handler_.newPrivateMemberAccess(
-                            propThis, privateNameNode, propNamePos.end),
-                        null());
+  MOZ_TRY_VAR(propFieldAccess, handler_.newPrivateMemberAccess(
+                                   propThis, privateNameNode, propNamePos.end));
 
   Node accessorBody;
   if (syntaxKind == FunctionSyntaxKind::Getter) {
@@ -9107,9 +9053,8 @@ GeneralParser<ParseHandler, Unit>::synthesizeAccessorBody(
     // captures privateStateName and performs the following steps when called:
     //  1.a. Let o be the this value.
     //  1.b. Return ? PrivateGet(privateStateName, o).
-    MOZ_TRY_VAR_OR_RETURN(
-        accessorBody, handler_.newReturnStatement(propFieldAccess, propNamePos),
-        null());
+    MOZ_TRY_VAR(accessorBody,
+                handler_.newReturnStatement(propFieldAccess, propNamePos));
   } else {
     // Decorators Proposal
     // https://arai-a.github.io/ecma262-compare/?pr=2417&id=sec-makeautoaccessorsetter
@@ -9126,44 +9071,38 @@ GeneralParser<ParseHandler, Unit>::synthesizeAccessorBody(
                                   /* duplicatedParam = */ nullptr);
 
     Node initializerExpr;
-    MOZ_TRY_VAR_OR_RETURN(
-        initializerExpr,
-        handler_.newName(TaggedParserAtomIndex::WellKnown::value(),
-                         propNamePos),
-        null());
+    MOZ_TRY_VAR(initializerExpr,
+                handler_.newName(TaggedParserAtomIndex::WellKnown::value(),
+                                 propNamePos));
 
     //   1.b. Perform ? PrivateSet(privateStateName, o, value).
     Node assignment;
-    MOZ_TRY_VAR_OR_RETURN(
-        assignment,
-        handler_.newAssignment(ParseNodeKind::AssignExpr, propFieldAccess,
-                               initializerExpr),
-        null());
+    MOZ_TRY_VAR(assignment,
+                handler_.newAssignment(ParseNodeKind::AssignExpr,
+                                       propFieldAccess, initializerExpr));
 
-    MOZ_TRY_VAR_OR_RETURN(
-        accessorBody, handler_.newExprStatement(assignment, propNamePos.end),
-        null());
+    MOZ_TRY_VAR(accessorBody,
+                handler_.newExprStatement(assignment, propNamePos.end));
 
     //   1.c. Return undefined.
   }
 
   ListNodeType statementList;
-  MOZ_TRY_VAR_OR_RETURN(statementList, handler_.newStatementList(propNamePos),
-                        null());
+  MOZ_TRY_VAR(statementList, handler_.newStatementList(propNamePos));
   handler_.addStatementToList(statementList, accessorBody);
 
   bool canSkipLazyClosedOverBindings = handler_.reuseClosedOverBindings();
   if (!pc_->declareFunctionThis(usedNames_, canSkipLazyClosedOverBindings)) {
-    return null();
+    return errorResult();
   }
   if (!pc_->declareNewTarget(usedNames_, canSkipLazyClosedOverBindings)) {
-    return null();
+    return errorResult();
   }
 
   LexicalScopeNodeType initializerBody = finishLexicalScope(
       pc_->varScope(), statementList, ScopeKind::FunctionLexical);
   if (!initializerBody) {
-    return null();
+    return errorResult();
   }
 
   handler_.setFunctionBody(funNode, initializerBody);
@@ -9173,11 +9112,11 @@ GeneralParser<ParseHandler, Unit>::synthesizeAccessorBody(
   }
 
   if (!finishFunction()) {
-    return null();
+    return errorResult();
   }
 
   if (!leaveInnerFunction(outerpc)) {
-    return null();
+    return errorResult();
   }
 
   return funNode;
@@ -9663,11 +9602,13 @@ GeneralParser<ParseHandler, Unit>::statementListItem(
       //   DecoratorList[?Yield, ?Await] opt ClassDeclaration[?Yield, ~Default]
 #ifdef ENABLE_DECORATORS
     case TokenKind::At:
-      return classDefinition(yieldHandling, ClassStatement, NameRequired);
+      return classDefinition(yieldHandling, ClassStatement, NameRequired)
+          .unwrapOr(null());
 #endif
 
     case TokenKind::Class:
-      return classDefinition(yieldHandling, ClassStatement, NameRequired);
+      return classDefinition(yieldHandling, ClassStatement, NameRequired)
+          .unwrapOr(null());
 
     //   LexicalDeclaration[In, ?Yield]
     //     LetOrConst BindingList[?In, ?Yield]
@@ -12807,8 +12748,7 @@ GeneralParser<ParseHandler, Unit>::primaryExpr(
                           FunctionAsyncKind::SyncFunction);
 
     case TokenKind::Class:
-      return toResult(
-          classDefinition(yieldHandling, ClassExpression, NameRequired));
+      return classDefinition(yieldHandling, ClassExpression, NameRequired);
 
     case TokenKind::LeftBracket:
       return arrayInitializer(yieldHandling, possibleError);
@@ -12826,8 +12766,7 @@ GeneralParser<ParseHandler, Unit>::primaryExpr(
 
 #ifdef ENABLE_DECORATORS
     case TokenKind::At:
-      return toResult(
-          classDefinition(yieldHandling, ClassExpression, NameRequired));
+      return classDefinition(yieldHandling, ClassExpression, NameRequired);
 #endif
 
     case TokenKind::LeftParen: {
