@@ -72,12 +72,6 @@ XPCOMUtils.defineLazyPreferenceGetter(
 
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
-  "autoTranslatePagePref",
-  "browser.translations.autoTranslate"
-);
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
   "chaosErrorsPref",
   "browser.translations.chaos.errors"
 );
@@ -965,17 +959,7 @@ export class TranslationsParent extends JSWindowActorParent {
       return false;
     }
 
-    if (
-      // The user has not marked this language as always translate.
-      !TranslationsParent.shouldAlwaysTranslateLanguage(langTags) &&
-      // The pref to always auto-translate is off.
-      !lazy.autoTranslatePagePref
-    ) {
-      return false;
-    }
-
-    // The page can be auto-translated
-    return true;
+    return TranslationsParent.shouldAlwaysTranslateLanguage(langTags);
   }
 
   /** @type {Promise<LanguageIdModelRecord> | null} */

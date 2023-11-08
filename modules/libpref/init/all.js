@@ -3600,7 +3600,6 @@ pref("browser.sanitizer.loglevel", "Warn");
 // engine https://browser.mt/. See Bug 971044. Note that this pref can be turned
 // on in different apps like Firefox Desktop, even if it's disabled by default here.
 pref("browser.translations.enable", false);
-
 // Set to "All" to see all logs, which are useful for debugging. Set to "Info" to see
 // the application logic logs, and not all of the translated messages, which can be
 // slow and overwhelming.
@@ -3616,10 +3615,6 @@ pref("browser.translations.neverTranslateLanguages", "");
 // and the full page translations uses HTML. Set this pref to true to use the HTML
 // translation behavior on about:translations. Requires a page refresh.
 pref("browser.translations.useHTML", false);
-// Normally there is a UI to ask the user to translate a page, this pref makes it
-// so that the page automatically performs a translation if one is detected as being
-// required.
-pref("browser.translations.autoTranslate", false);
 // Automatically popup an offer to translate on sites.
 pref("browser.translations.automaticallyPopup", true);
 // Simulate the behavior of using a device that does not support the translations engine.
