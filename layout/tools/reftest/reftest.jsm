@@ -5,9 +5,6 @@
 
 var EXPORTED_SYMBOLS = ["OnRefTestLoad", "OnRefTestUnload"];
 
-// These are globals defined when this file is loaded directly into reftest.xhtml.
-/* globals window, document, pdfjsLib */
-
 const { FileUtils } = ChromeUtils.importESModule(
   "resource://gre/modules/FileUtils.sys.mjs"
 );
@@ -179,9 +176,6 @@ function OnRefTestLoad(win) {
 
   g.logLevel = Services.prefs.getStringPref("reftest.logLevel", "info");
 
-  if (win === undefined || win == null) {
-    win = window;
-  }
   if (g.containingWindow == null && win != null) {
     g.containingWindow = win;
   }
@@ -216,7 +210,7 @@ function OnRefTestLoad(win) {
     // can't register this actor
     ChromeUtils.unregisterWindowActor("LoadURIDelegate");
   } else {
-    document.getElementById("reftest-window").appendChild(g.browser);
+    win.document.getElementById("reftest-window").appendChild(g.browser);
   }
 
   g.browserMessageManager = g.browser.frameLoader.messageManager;
@@ -2121,11 +2115,13 @@ function pdfjsHasLoadedPromise() {
 }
 
 function readPdf(path, callback) {
+  const win = g.containingWindow;
+
   IOUtils.read(path).then(
     function (data) {
-      pdfjsLib.GlobalWorkerOptions.workerSrc =
+      win.pdfjsLib.GlobalWorkerOptions.workerSrc =
         "resource://pdf.js/build/pdf.worker.mjs";
-      pdfjsLib
+      win.pdfjsLib
         .getDocument({
           data,
         })
