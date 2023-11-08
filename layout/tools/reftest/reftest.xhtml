@@ -5,10 +5,13 @@
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
   id="reftest-window"
   hidechrome="true"
-  onload="OnRefTestLoad();"
-  onunload="OnRefTestUnload();"
+  onload="OnLoad();"
+  onunload="OnUnload();"
   style="background: white; overflow: hidden"
 >
-  <script type="application/ecmascript" src="resource://reftest/reftest.jsm" />
+  <script
+    type="application/ecmascript"
+    src="resource://reftest/reftest-chrome.js"
+  />
   <!-- The reftest browser element is dynamically created, here -->
 </window>
