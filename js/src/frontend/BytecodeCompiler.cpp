@@ -1063,9 +1063,11 @@ FunctionNode* StandaloneFunctionCompiler<Unit>::parse(
   FunctionNode* fn;
   for (;;) {
     Directives newDirectives = compilationState_.directives;
-    fn = parser->standaloneFunction(parameterListEnd, syntaxKind, generatorKind,
-                                    asyncKind, compilationState_.directives,
-                                    &newDirectives);
+    fn = parser
+             ->standaloneFunction(parameterListEnd, syntaxKind, generatorKind,
+                                  asyncKind, compilationState_.directives,
+                                  &newDirectives)
+             .unwrapOr(nullptr);
     if (fn) {
       break;
     }
@@ -1443,9 +1445,12 @@ static bool CompileLazyFunctionToStencilMaybeInstantiate(
     return false;
   }
 
-  FunctionNode* pn = parser.standaloneLazyFunction(
-      input, input.extent().toStringStart, input.strict(),
-      input.generatorKind(), input.asyncKind());
+  FunctionNode* pn =
+      parser
+          .standaloneLazyFunction(input, input.extent().toStringStart,
+                                  input.strict(), input.generatorKind(),
+                                  input.asyncKind())
+          .unwrapOr(nullptr);
   if (!pn) {
     return false;
   }

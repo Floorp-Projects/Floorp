@@ -2301,7 +2301,8 @@ static FunctionFlags InitialFunctionFlags(FunctionSyntaxKind kind,
 }
 
 template <typename Unit>
-FunctionNode* Parser<FullParseHandler, Unit>::standaloneFunction(
+FullParseHandler::FunctionNodeResult
+Parser<FullParseHandler, Unit>::standaloneFunction(
     const Maybe<uint32_t>& parameterListEnd, FunctionSyntaxKind syntaxKind,
     GeneratorKind generatorKind, FunctionAsyncKind asyncKind,
     Directives inheritedDirectives, Directives* newDirectives) {
@@ -2309,23 +2310,23 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneFunction(
   // Skip prelude.
   TokenKind tt;
   if (!tokenStream.getToken(&tt, TokenStream::SlashIsRegExp)) {
-    return null();
+    return errorResult();
   }
   if (asyncKind == FunctionAsyncKind::AsyncFunction) {
     MOZ_ASSERT(tt == TokenKind::Async);
     if (!tokenStream.getToken(&tt, TokenStream::SlashIsRegExp)) {
-      return null();
+      return errorResult();
     }
   }
   MOZ_ASSERT(tt == TokenKind::Function);
 
   if (!tokenStream.getToken(&tt)) {
-    return null();
+    return errorResult();
   }
   if (generatorKind == GeneratorKind::Generator) {
     MOZ_ASSERT(tt == TokenKind::Mul);
     if (!tokenStream.getToken(&tt)) {
-      return null();
+      return errorResult();
     }
   }
 
@@ -2338,11 +2339,10 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneFunction(
   }
 
   FunctionNodeType funNode;
-  MOZ_TRY_VAR_OR_RETURN(funNode, handler_.newFunction(syntaxKind, pos()),
-                        null());
+  MOZ_TRY_VAR(funNode, handler_.newFunction(syntaxKind, pos()));
 
   ParamsBodyNodeType argsbody;
-  MOZ_TRY_VAR_OR_RETURN(argsbody, handler_.newParamsBody(pos()), null());
+  MOZ_TRY_VAR(argsbody, handler_.newParamsBody(pos()));
   funNode->setBody(argsbody);
 
   bool isSelfHosting = options().selfHostingMode;
@@ -2352,7 +2352,7 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneFunction(
       newFunctionBox(funNode, explicitName, flags, /* toStringStart = */ 0,
                      inheritedDirectives, generatorKind, asyncKind);
   if (!funbox) {
-    return null();
+    return errorResult();
   }
 
   // Function is not syntactically part of another script.
@@ -2362,7 +2362,7 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneFunction(
 
   SourceParseContext funpc(this, funbox, newDirectives);
   if (!funpc.init()) {
-    return null();
+    return errorResult();
   }
 
   YieldHandling yieldHandling = GetYieldHandling(generatorKind);
@@ -2372,19 +2372,19 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneFunction(
   if (!functionFormalParametersAndBody(InAllowed, yieldHandling, &funNode,
                                        syntaxKind, parameterListEnd,
                                        /* isStandaloneFunction = */ true)) {
-    return null();
+    return errorResult();
   }
 
   if (!tokenStream.getToken(&tt, TokenStream::SlashIsRegExp)) {
-    return null();
+    return errorResult();
   }
   if (tt != TokenKind::Eof) {
     error(JSMSG_GARBAGE_AFTER_INPUT, "function body", TokenKindToDesc(tt));
-    return null();
+    return errorResult();
   }
 
   if (!CheckParseTree(this->fc_, alloc_, funNode)) {
-    return null();
+    return errorResult();
   }
 
   ParseNode* node = funNode;
@@ -2392,24 +2392,24 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneFunction(
   // tree that doesn't type-check as asm.js.
   if (!pc_->useAsmOrInsideUseAsm()) {
     if (!FoldConstants(this->fc_, this->parserAtoms(), &node, &handler_)) {
-      return null();
+      return errorResult();
     }
   }
   funNode = &node->as<FunctionNode>();
 
   if (!checkForUndefinedPrivateFields(nullptr)) {
-    return null();
+    return errorResult();
   }
 
   if (!this->setSourceMapInfo()) {
-    return null();
+    return errorResult();
   }
 
   return funNode;
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::LexicalScopeNodeType
+typename ParseHandler::LexicalScopeNodeResult
 GeneralParser<ParseHandler, Unit>::functionBody(InHandling inHandling,
                                                 YieldHandling yieldHandling,
                                                 FunctionSyntaxKind kind,
@@ -2425,7 +2425,7 @@ GeneralParser<ParseHandler, Unit>::functionBody(InHandling inHandling,
     bool inheritedStrict = pc_->sc()->strict();
     body = statementList(yieldHandling);
     if (!body) {
-      return null();
+      return errorResult();
     }
 
     // When we transitioned from non-strict to strict mode, we need to
@@ -2438,7 +2438,7 @@ GeneralParser<ParseHandler, Unit>::functionBody(InHandling inHandling,
         // Request that this function be reparsed as strict to report
         // the invalid parameter name at the correct source location.
         pc_->newDirectives->setStrict();
-        return null();
+        return errorResult();
       }
     }
   } else {
@@ -2448,15 +2448,15 @@ GeneralParser<ParseHandler, Unit>::functionBody(InHandling inHandling,
     // assumed to be statement lists, to prepend initial `yield`.
     ListNodeType stmtList = null();
     if (pc_->isAsync()) {
-      MOZ_TRY_VAR_OR_RETURN(stmtList, handler_.newStatementList(pos()), null());
+      MOZ_TRY_VAR(stmtList, handler_.newStatementList(pos()));
     }
 
     Node kid = assignExpr(inHandling, yieldHandling, TripledotProhibited);
     if (!kid) {
-      return null();
+      return errorResult();
     }
 
-    MOZ_TRY_VAR_OR_RETURN(body, handler_.newExpressionBody(kid), null());
+    MOZ_TRY_VAR(body, handler_.newExpressionBody(kid));
 
     if (pc_->isAsync()) {
       handler_.addStatementToList(stmtList, body);
@@ -2472,15 +2472,15 @@ GeneralParser<ParseHandler, Unit>::functionBody(InHandling inHandling,
   if (pc_->needsDotGeneratorName()) {
     MOZ_ASSERT_IF(!pc_->isAsync(), type == StatementListBody);
     if (!pc_->declareDotGeneratorName()) {
-      return null();
+      return errorResult();
     }
     if (pc_->isGenerator()) {
       NameNodeType generator = newDotGeneratorName();
       if (!generator) {
-        return null();
+        return errorResult();
       }
       if (!handler_.prependInitialYield(handler_.asListNode(body), generator)) {
-        return null();
+        return errorResult();
       }
     }
   }
@@ -2492,17 +2492,18 @@ GeneralParser<ParseHandler, Unit>::functionBody(InHandling inHandling,
     bool canSkipLazyClosedOverBindings = handler_.reuseClosedOverBindings();
     if (!pc_->declareFunctionArgumentsObject(usedNames_,
                                              canSkipLazyClosedOverBindings)) {
-      return null();
+      return errorResult();
     }
     if (!pc_->declareFunctionThis(usedNames_, canSkipLazyClosedOverBindings)) {
-      return null();
+      return errorResult();
     }
     if (!pc_->declareNewTarget(usedNames_, canSkipLazyClosedOverBindings)) {
-      return null();
+      return errorResult();
     }
   }
 
-  return finishLexicalScope(pc_->varScope(), body, ScopeKind::FunctionLexical);
+  return toResult(
+      finishLexicalScope(pc_->varScope(), body, ScopeKind::FunctionLexical));
 }
 
 template <class ParseHandler, typename Unit>
@@ -3020,7 +3021,7 @@ GeneralParser<ParseHandler, Unit>::templateLiteral(
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::FunctionNodeType
+typename ParseHandler::FunctionNodeResult
 GeneralParser<ParseHandler, Unit>::functionDefinition(
     FunctionNodeType funNode, uint32_t toStringStart, InHandling inHandling,
     YieldHandling yieldHandling, TaggedParserAtomIndex funName,
@@ -3038,7 +3039,7 @@ GeneralParser<ParseHandler, Unit>::functionDefinition(
   // extents are recorded and may be skipped.
   if (handler_.reuseLazyInnerFunctions()) {
     if (!skipLazyInnerFunction(funNode, toStringStart, tryAnnexB)) {
-      return null();
+      return errorResult();
     }
 
     return funNode;
@@ -3080,7 +3081,7 @@ GeneralParser<ParseHandler, Unit>::functionDefinition(
 
     // Return on error.
     if (anyChars.hadError() || directives == newDirectives) {
-      return null();
+      return errorResult();
     }
 
     // Assignment must be monotonic to prevent infinitely attempting to
@@ -3168,11 +3169,10 @@ bool Parser<FullParseHandler, Unit>::trySyntaxParseInnerFunction(
     }
     funbox->initWithEnclosingParseContext(pc_, kind);
 
-    SyntaxParseHandler::Node syntaxNode =
-        syntaxParser->innerFunctionForFunctionBox(
-            SyntaxParseHandler::Node::NodeGeneric, pc_, funbox, inHandling,
-            yieldHandling, kind, newDirectives);
-    if (!syntaxNode) {
+    auto syntaxNodeResult = syntaxParser->innerFunctionForFunctionBox(
+        SyntaxParseHandler::Node::NodeGeneric, pc_, funbox, inHandling,
+        yieldHandling, kind, newDirectives);
+    if (syntaxNodeResult.isErr()) {
       if (syntaxParser->hadAbortedSyntaxParse()) {
         // Try again with a full parse. UsedNameTracker needs to be
         // rewound to just before we tried the syntax parse for
@@ -3204,13 +3204,13 @@ bool Parser<FullParseHandler, Unit>::trySyntaxParseInnerFunction(
   } while (false);
 
   // We failed to do a syntax parse above, so do the full parse.
-  FunctionNodeType innerFunc =
+  FunctionNodeType innerFunc;
+  MOZ_TRY_VAR_OR_RETURN(
+      innerFunc,
       innerFunction(*funNode, pc_, explicitName, flags, toStringStart,
                     inHandling, yieldHandling, kind, generatorKind, asyncKind,
-                    tryAnnexB, inheritedDirectives, newDirectives);
-  if (!innerFunc) {
-    return false;
-  }
+                    tryAnnexB, inheritedDirectives, newDirectives),
+      false);
 
   *funNode = innerFunc;
   return true;
@@ -3224,14 +3224,13 @@ bool Parser<SyntaxParseHandler, Unit>::trySyntaxParseInnerFunction(
     GeneratorKind generatorKind, FunctionAsyncKind asyncKind, bool tryAnnexB,
     Directives inheritedDirectives, Directives* newDirectives) {
   // This is already a syntax parser, so just parse the inner function.
-  FunctionNodeType innerFunc =
+  FunctionNodeType innerFunc;
+  MOZ_TRY_VAR_OR_RETURN(
+      innerFunc,
       innerFunction(*funNode, pc_, explicitName, flags, toStringStart,
                     inHandling, yieldHandling, kind, generatorKind, asyncKind,
-                    tryAnnexB, inheritedDirectives, newDirectives);
-
-  if (!innerFunc) {
-    return false;
-  }
+                    tryAnnexB, inheritedDirectives, newDirectives),
+      false);
 
   *funNode = innerFunc;
   return true;
@@ -3251,7 +3250,7 @@ inline bool GeneralParser<ParseHandler, Unit>::trySyntaxParseInnerFunction(
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::FunctionNodeType
+typename ParseHandler::FunctionNodeResult
 GeneralParser<ParseHandler, Unit>::innerFunctionForFunctionBox(
     FunctionNodeType funNode, ParseContext* outerpc, FunctionBox* funbox,
     InHandling inHandling, YieldHandling yieldHandling, FunctionSyntaxKind kind,
@@ -3264,23 +3263,23 @@ GeneralParser<ParseHandler, Unit>::innerFunctionForFunctionBox(
   // Push a new ParseContext.
   SourceParseContext funpc(this, funbox, newDirectives);
   if (!funpc.init()) {
-    return null();
+    return errorResult();
   }
 
   if (!functionFormalParametersAndBody(inHandling, yieldHandling, &funNode,
                                        kind)) {
-    return null();
+    return errorResult();
   }
 
   if (!leaveInnerFunction(outerpc)) {
-    return null();
+    return errorResult();
   }
 
   return funNode;
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::FunctionNodeType
+typename ParseHandler::FunctionNodeResult
 GeneralParser<ParseHandler, Unit>::innerFunction(
     FunctionNodeType funNode, ParseContext* outerpc,
     TaggedParserAtomIndex explicitName, FunctionFlags flags,
@@ -3297,20 +3296,19 @@ GeneralParser<ParseHandler, Unit>::innerFunction(
       newFunctionBox(funNode, explicitName, flags, toStringStart,
                      inheritedDirectives, generatorKind, asyncKind);
   if (!funbox) {
-    return null();
+    return errorResult();
   }
   funbox->initWithEnclosingParseContext(outerpc, kind);
 
-  FunctionNodeType innerFunc = innerFunctionForFunctionBox(
-      funNode, outerpc, funbox, inHandling, yieldHandling, kind, newDirectives);
-  if (!innerFunc) {
-    return null();
-  }
+  FunctionNodeType innerFunc;
+  MOZ_TRY_VAR(innerFunc,
+              innerFunctionForFunctionBox(funNode, outerpc, funbox, inHandling,
+                                          yieldHandling, kind, newDirectives));
 
   // Append possible Annex B function box only upon successfully parsing.
   if (tryAnnexB) {
     if (!pc_->innermostScope()->addPossibleAnnexBFunctionBox(pc_, funbox)) {
-      return null();
+      return errorResult();
     }
   }
 
@@ -3338,15 +3336,15 @@ bool GeneralParser<ParseHandler, Unit>::appendToCallSiteObj(
 }
 
 template <typename Unit>
-FunctionNode* Parser<FullParseHandler, Unit>::standaloneLazyFunction(
+FullParseHandler::FunctionNodeResult
+Parser<FullParseHandler, Unit>::standaloneLazyFunction(
     CompilationInput& input, uint32_t toStringStart, bool strict,
     GeneratorKind generatorKind, FunctionAsyncKind asyncKind) {
   MOZ_ASSERT(checkOptionsCalled_);
 
   FunctionSyntaxKind syntaxKind = input.functionSyntaxKind();
   FunctionNodeType funNode;
-  MOZ_TRY_VAR_OR_RETURN(funNode, handler_.newFunction(syntaxKind, pos()),
-                        null());
+  MOZ_TRY_VAR(funNode, handler_.newFunction(syntaxKind, pos()));
 
   TaggedParserAtomIndex displayAtom =
       this->getCompilationState().previousParseCache.displayAtom();
@@ -3356,7 +3354,7 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneLazyFunction(
       newFunctionBox(funNode, displayAtom, input.functionFlags(), toStringStart,
                      directives, generatorKind, asyncKind);
   if (!funbox) {
-    return null();
+    return errorResult();
   }
   const ScriptStencilExtra& funExtra =
       this->getCompilationState().previousParseCache.funExtra();
@@ -3369,7 +3367,7 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneLazyFunction(
   Directives newDirectives = directives;
   SourceParseContext funpc(this, funbox, &newDirectives);
   if (!funpc.init()) {
-    return null();
+    return errorResult();
   }
 
   // Our tokenStream has no current token, so funNode's position is garbage.
@@ -3382,7 +3380,7 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneLazyFunction(
                           ? TokenStream::SlashIsRegExp
                           : TokenStream::SlashIsDiv;
   if (!tokenStream.peekTokenPos(&funNode->pn_pos, modifier)) {
-    return null();
+    return errorResult();
   }
 
   YieldHandling yieldHandling = GetYieldHandling(generatorKind);
@@ -3404,18 +3402,18 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneLazyFunction(
 
     if (!this->synthesizeConstructorBody(synthesizedBodyPos, hasHeritage,
                                          funNode, funbox)) {
-      return null();
+      return errorResult();
     }
   } else {
     if (!functionFormalParametersAndBody(InAllowed, yieldHandling, &funNode,
                                          syntaxKind)) {
       MOZ_ASSERT(directives == newDirectives);
-      return null();
+      return errorResult();
     }
   }
 
   if (!CheckParseTree(this->fc_, alloc_, funNode)) {
-    return null();
+    return errorResult();
   }
 
   ParseNode* node = funNode;
@@ -3423,7 +3421,7 @@ FunctionNode* Parser<FullParseHandler, Unit>::standaloneLazyFunction(
   // tree that doesn't type-check as asm.js.
   if (!pc_->useAsmOrInsideUseAsm()) {
     if (!FoldConstants(this->fc_, this->parserAtoms(), &node, &handler_)) {
-      return null();
+      return errorResult();
     }
   }
   funNode = &node->as<FunctionNode>();
@@ -3569,10 +3567,9 @@ bool GeneralParser<ParseHandler, Unit>::functionFormalParametersAndBody(
                                                           bodyAwaitHandling);
     AutoInParametersOfAsyncFunction<ParseHandler, Unit> inParameters(this,
                                                                      false);
-    body = functionBody(inHandling, bodyYieldHandling, kind, bodyType);
-    if (!body) {
-      return false;
-    }
+    MOZ_TRY_VAR_OR_RETURN(
+        body, functionBody(inHandling, bodyYieldHandling, kind, bodyType),
+        false);
   }
 
   // Revalidate the function name when we transitioned to strict mode.
@@ -3650,7 +3647,7 @@ bool GeneralParser<ParseHandler, Unit>::functionFormalParametersAndBody(
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::FunctionNodeType
+typename ParseHandler::FunctionNodeResult
 GeneralParser<ParseHandler, Unit>::functionStmt(uint32_t toStringStart,
                                                 YieldHandling yieldHandling,
                                                 DefaultHandling defaultHandling,
@@ -3673,20 +3670,20 @@ GeneralParser<ParseHandler, Unit>::functionStmt(uint32_t toStringStart,
 
     if (declaredInStmt && !StatementKindIsBraced(declaredInStmt->kind())) {
       error(JSMSG_SLOPPY_FUNCTION_LABEL);
-      return null();
+      return errorResult();
     }
   }
 
   TokenKind tt;
   if (!tokenStream.getToken(&tt)) {
-    return null();
+    return errorResult();
   }
 
   GeneratorKind generatorKind = GeneratorKind::NotGenerator;
   if (tt == TokenKind::Mul) {
     generatorKind = GeneratorKind::Generator;
     if (!tokenStream.getToken(&tt)) {
-      return null();
+      return errorResult();
     }
   }
 
@@ -3694,7 +3691,7 @@ GeneralParser<ParseHandler, Unit>::functionStmt(uint32_t toStringStart,
   if (TokenKindIsPossibleIdentifier(tt)) {
     name = bindingIdentifier(yieldHandling);
     if (!name) {
-      return null();
+      return errorResult();
     }
   } else if (defaultHandling == AllowDefaultName) {
     name = TaggedParserAtomIndex::WellKnown::default_();
@@ -3702,7 +3699,7 @@ GeneralParser<ParseHandler, Unit>::functionStmt(uint32_t toStringStart,
   } else {
     /* Unnamed function expressions are forbidden in statement context. */
     error(JSMSG_UNNAMED_FUNCTION_STMT);
-    return null();
+    return errorResult();
   }
 
   // Note the declared name and check for early errors.
@@ -3722,13 +3719,12 @@ GeneralParser<ParseHandler, Unit>::functionStmt(uint32_t toStringStart,
   }
 
   if (!noteDeclaredName(name, kind, pos())) {
-    return null();
+    return errorResult();
   }
 
   FunctionSyntaxKind syntaxKind = FunctionSyntaxKind::Statement;
   FunctionNodeType funNode;
-  MOZ_TRY_VAR_OR_RETURN(funNode, handler_.newFunction(syntaxKind, pos()),
-                        null());
+  MOZ_TRY_VAR(funNode, handler_.newFunction(syntaxKind, pos()));
 
   // Under sloppy mode, try Annex B.3.3 semantics. If making an additional
   // 'var' binding of the same name does not throw an early error, do so.
@@ -3746,7 +3742,7 @@ GeneralParser<ParseHandler, Unit>::functionStmt(uint32_t toStringStart,
 }
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::FunctionNodeType
+typename ParseHandler::FunctionNodeResult
 GeneralParser<ParseHandler, Unit>::functionExpr(uint32_t toStringStart,
                                                 InvokedPrediction invoked,
                                                 FunctionAsyncKind asyncKind) {
@@ -3757,13 +3753,13 @@ GeneralParser<ParseHandler, Unit>::functionExpr(uint32_t toStringStart,
   GeneratorKind generatorKind = GeneratorKind::NotGenerator;
   TokenKind tt;
   if (!tokenStream.getToken(&tt)) {
-    return null();
+    return errorResult();
   }
 
   if (tt == TokenKind::Mul) {
     generatorKind = GeneratorKind::Generator;
     if (!tokenStream.getToken(&tt)) {
-      return null();
+      return errorResult();
     }
   }
 
@@ -3773,7 +3769,7 @@ GeneralParser<ParseHandler, Unit>::functionExpr(uint32_t toStringStart,
   if (TokenKindIsPossibleIdentifier(tt)) {
     name = bindingIdentifier(yieldHandling);
     if (!name) {
-      return null();
+      return errorResult();
     }
   } else {
     anyChars.ungetToken();
@@ -3781,8 +3777,7 @@ GeneralParser<ParseHandler, Unit>::functionExpr(uint32_t toStringStart,
 
   FunctionSyntaxKind syntaxKind = FunctionSyntaxKind::Expression;
   FunctionNodeType funNode;
-  MOZ_TRY_VAR_OR_RETURN(funNode, handler_.newFunction(syntaxKind, pos()),
-                        null());
+  MOZ_TRY_VAR(funNode, handler_.newFunction(syntaxKind, pos()));
 
   if (invoked) {
     funNode = handler_.setLikelyIIFE(funNode);
@@ -5978,10 +5973,10 @@ GeneralParser<ParseHandler, Unit>::exportFunctionDeclaration(
 
   MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Function));
 
-  Node kid = functionStmt(toStringStart, YieldIsName, NameRequired, asyncKind);
-  if (!kid) {
-    return null();
-  }
+  Node kid;
+  MOZ_TRY_VAR_OR_RETURN(
+      kid, functionStmt(toStringStart, YieldIsName, NameRequired, asyncKind),
+      null());
 
   if (!checkExportedNameForFunction(handler_.asFunctionNode(kid))) {
     return null();
@@ -6075,11 +6070,11 @@ GeneralParser<ParseHandler, Unit>::exportDefaultFunctionDeclaration(
 
   MOZ_ASSERT(anyChars.isCurrentTokenType(TokenKind::Function));
 
-  Node kid =
-      functionStmt(toStringStart, YieldIsName, AllowDefaultName, asyncKind);
-  if (!kid) {
-    return null();
-  }
+  Node kid;
+  MOZ_TRY_VAR_OR_RETURN(
+      kid,
+      functionStmt(toStringStart, YieldIsName, AllowDefaultName, asyncKind),
+      null());
 
   BinaryNodeType node;
   MOZ_TRY_VAR_OR_RETURN(node,
@@ -6333,10 +6328,9 @@ GeneralParser<ParseHandler, Unit>::consequentOrAlternative(
     }
 
     TokenPos funcPos = pos();
-    Node fun = functionStmt(pos().begin, yieldHandling, NameRequired);
-    if (!fun) {
-      return null();
-    }
+    Node fun;
+    MOZ_TRY_VAR_OR_RETURN(
+        fun, functionStmt(pos().begin, yieldHandling, NameRequired), null());
 
     ListNodeType block;
     MOZ_TRY_VAR_OR_RETURN(block, handler_.newStatementList(funcPos), null());
@@ -7219,7 +7213,8 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::labeledItem(
       return null();
     }
 
-    return functionStmt(pos().begin, yieldHandling, NameRequired);
+    return functionStmt(pos().begin, yieldHandling, NameRequired)
+        .unwrapOr(null());
   }
 
   anyChars.ungetToken();
@@ -7914,11 +7909,12 @@ bool GeneralParser<ParseHandler, Unit>::classMember(
   // Calling toString on constructors need to return the source text for
   // the entire class. The end offset is unknown at this point in
   // parsing and will be amended when class parsing finishes below.
-  FunctionNodeType funNode = methodDefinition(
-      isConstructor ? classStartOffset : propNameOffset, propType, funName);
-  if (!funNode) {
-    return false;
-  }
+  FunctionNodeType funNode;
+  MOZ_TRY_VAR_OR_RETURN(
+      funNode,
+      methodDefinition(isConstructor ? classStartOffset : propNameOffset,
+                       propType, funName),
+      false);
 
   AccessorType atype = ToAccessorType(propType);
 
@@ -8655,12 +8651,12 @@ GeneralParser<ParseHandler, Unit>::staticClassBlock(
   // .staticInitializers is noted as used.
   classInitializedMembers.staticFields++;
 
-  LexicalScopeNodeType body =
+  LexicalScopeNodeType body;
+  MOZ_TRY_VAR_OR_RETURN(
+      body,
       functionBody(InHandling::InAllowed, YieldHandling::YieldIsKeyword,
-                   syntaxKind, FunctionBodyType::StatementListBody);
-  if (!body) {
-    return null();
-  }
+                   syntaxKind, FunctionBodyType::StatementListBody),
+      null());
 
   if (anyChars.isEOF()) {
     error(JSMSG_UNTERMINATED_STATIC_CLASS_BLOCK);
@@ -9583,7 +9579,8 @@ GeneralParser<ParseHandler, Unit>::statementListItem(
           uint32_t toStringStart = pos().begin;
           tokenStream.consumeKnownToken(TokenKind::Function);
           return functionStmt(toStringStart, yieldHandling, NameRequired,
-                              FunctionAsyncKind::AsyncFunction);
+                              FunctionAsyncKind::AsyncFunction)
+              .unwrapOr(null());
         }
       }
 
@@ -9660,7 +9657,8 @@ GeneralParser<ParseHandler, Unit>::statementListItem(
 
     //   HoistableDeclaration[?Yield, ~Default]
     case TokenKind::Function:
-      return functionStmt(pos().begin, yieldHandling, NameRequired);
+      return functionStmt(pos().begin, yieldHandling, NameRequired)
+          .unwrapOr(null());
 
       //   DecoratorList[?Yield, ?Await] opt ClassDeclaration[?Yield, ~Default]
 #ifdef ENABLE_DECORATORS
@@ -10234,7 +10232,8 @@ typename ParseHandler::Node GeneralParser<ParseHandler, Unit>::assignExpr(
 
     return functionDefinition(funNode, toStringStart, inHandling, yieldHandling,
                               TaggedParserAtomIndex::null(), syntaxKind,
-                              GeneratorKind::NotGenerator, asyncKind);
+                              GeneratorKind::NotGenerator, asyncKind)
+        .unwrapOr(null());
   }
 
   MOZ_ALWAYS_TRUE(
@@ -12349,11 +12348,9 @@ GeneralParser<ParseHandler, Unit>::objectLiteral(YieldHandling yieldHandling,
           }
         }
 
-        FunctionNodeType funNode =
-            methodDefinition(namePos.begin, propType, funName);
-        if (!funNode) {
-          return errorResult();
-        }
+        FunctionNodeType funNode;
+        MOZ_TRY_VAR(funNode,
+                    methodDefinition(namePos.begin, propType, funName));
 
         AccessorType atype = ToAccessorType(propType);
         if (!handler_.addObjectMethodDefinition(literal, propName, funNode,
@@ -12590,7 +12587,7 @@ GeneralParser<ParseHandler, Unit>::tupleLiteral(YieldHandling yieldHandling) {
 #endif
 
 template <class ParseHandler, typename Unit>
-typename ParseHandler::FunctionNodeType
+typename ParseHandler::FunctionNodeResult
 GeneralParser<ParseHandler, Unit>::methodDefinition(
     uint32_t toStringStart, PropertyType propType,
     TaggedParserAtomIndex funName) {
@@ -12636,8 +12633,7 @@ GeneralParser<ParseHandler, Unit>::methodDefinition(
   YieldHandling yieldHandling = GetYieldHandling(generatorKind);
 
   FunctionNodeType funNode;
-  MOZ_TRY_VAR_OR_RETURN(funNode, handler_.newFunction(syntaxKind, pos()),
-                        null());
+  MOZ_TRY_VAR(funNode, handler_.newFunction(syntaxKind, pos()));
 
   return functionDefinition(funNode, toStringStart, InAllowed, yieldHandling,
                             funName, syntaxKind, generatorKind, asyncKind);
@@ -12807,8 +12803,8 @@ GeneralParser<ParseHandler, Unit>::primaryExpr(
 
   switch (tt) {
     case TokenKind::Function:
-      return toResult(
-          functionExpr(pos().begin, invoked, FunctionAsyncKind::SyncFunction));
+      return functionExpr(pos().begin, invoked,
+                          FunctionAsyncKind::SyncFunction);
 
     case TokenKind::Class:
       return toResult(
@@ -12897,8 +12893,8 @@ GeneralParser<ParseHandler, Unit>::primaryExpr(
         if (nextSameLine == TokenKind::Function) {
           uint32_t toStringStart = pos().begin;
           tokenStream.consumeKnownToken(TokenKind::Function);
-          return toResult(functionExpr(toStringStart, PredictUninvoked,
-                                       FunctionAsyncKind::AsyncFunction));
+          return functionExpr(toStringStart, PredictUninvoked,
+                              FunctionAsyncKind::AsyncFunction);
         }
       }
 
