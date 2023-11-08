@@ -13357,17 +13357,6 @@
     "releaseChannelCollection": "opt-out",
     "description": "If certificate verification failed in a TLS handshake, what was the error? (see MapCertErrorToProbeValue in security/manager/ssl/SSLServerCertVerification.cpp and the values in security/pkix/include/pkix/Result.h)"
   },
-  "SSL_CT_POLICY_COMPLIANCE_OF_EV_CERTS": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox", "fennec"],
-    "alert_emails": ["seceng-telemetry@mozilla.com"],
-    "expires_in_version": "62",
-    "kind": "enumerated",
-    "n_values": 10,
-    "bug_numbers": [1320567],
-    "releaseChannelCollection": "opt-out",
-    "description": "Certificate Transparency Policy compliance of successfully established SSL connections with EV certificate (1=Compliant, 2=Insufficient number of SCTs, 3=Insufficient diversity of CT Log operators)"
-  },
   "SSL_CT_POLICY_COMPLIANT_CONNECTIONS_BY_CA": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
