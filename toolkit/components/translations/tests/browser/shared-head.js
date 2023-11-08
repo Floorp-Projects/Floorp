@@ -665,10 +665,14 @@ async function captureTranslationsError(callback) {
  * @param {Object} options - The options for `loadTestPage` plus a `runInPage` function.
  */
 async function autoTranslatePage(options) {
-  const { prefs, ...otherOptions } = options;
+  const { prefs, languagePairs, ...otherOptions } = options;
+  const fromLangs = languagePairs.map(language => language.fromLang).join(",");
   const { cleanup, runInPage } = await loadTestPage({
     autoDownloadFromRemoteSettings: true,
-    prefs: [["browser.translations.autoTranslate", true], ...(prefs ?? [])],
+    prefs: [
+      ["browser.translations.alwaysTranslateLanguages", fromLangs],
+      ...(prefs ?? []),
+    ],
     ...otherOptions,
   });
   await runInPage(options.runInPage);
