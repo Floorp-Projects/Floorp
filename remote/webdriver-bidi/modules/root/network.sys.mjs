@@ -490,11 +490,13 @@ class NetworkModule extends Module {
       contextId,
       isNavigationRequest,
       redirectCount,
+      requestChannel,
       requestData,
       responseData,
       timestamp,
     } = data;
 
+    let isBlocked = false;
     try {
       const browsingContext = lazy.TabManager.getBrowsingContextById(contextId);
       if (!browsingContext) {
@@ -547,11 +549,28 @@ class NetworkModule extends Module {
         authRequiredEvent,
         this.#getContextInfo(browsingContext)
       );
+
+      if (authRequiredEvent.isBlocked) {
+        isBlocked = true;
+
+        // requestChannel.suspend() is not needed here because the request is
+        // already blocked on the authentication prompt notification until
+        // one of the authCallbacks is called.
+        this.#blockedRequests.set(authRequiredEvent.request.request, {
+          request: requestChannel,
+          phase: InterceptPhase.AuthRequired,
+        });
+
+        // TODO: Once we implement network.continueWithAuth, we should create a
+        // promise here which will wait until the request is resumed and removes
+        // the request from the blockedRequests. See Bug 1826196.
+      }
     } finally {
-      // Bug 1852223: Until we handle intercepted requests in the authRequired
-      // phase, we should always forward the auth prompt notification so that it
-      // can be handled by the browser.
-      authCallbacks.forwardAuthPrompt();
+      if (!isBlocked) {
+        // If the request was not blocked, forward the auth prompt notification
+        // to the next consumer.
+        authCallbacks.forwardAuthPrompt();
+      }
     }
   };
 
@@ -712,9 +731,9 @@ class NetworkModule extends Module {
         phase: InterceptPhase.ResponseStarted,
       });
 
-      // TODO: Once we implement network.continueRequest, we should create a
+      // TODO: Once we implement network.continueResponse, we should create a
       // promise here which will wait until the request is resumed and removes
-      // the request from the blockedRequests. See Bug 1850680.
+      // the request from the blockedRequests. See Bug 1853887.
     }
   };
 
