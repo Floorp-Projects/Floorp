@@ -2979,12 +2979,6 @@ var SessionStoreInternal = {
    *        Tab reference
    */
   onTabClose: function ssi_onTabClose(aWindow, aTab) {
-    // notify the tabbrowser that the tab state will be retrieved for the last time
-    // (so that extension authors can easily set data on soon-to-be-closed tabs)
-    var event = aWindow.document.createEvent("Events");
-    event.initEvent("SSTabClosing", true, false);
-    aTab.dispatchEvent(event);
-
     // don't update our internal state if we don't have to
     if (this._max_tabs_undo == 0) {
       return;
