@@ -8,8 +8,8 @@
 requestLongerTimeout(3);
 
 add_task(async function () {
-  await pushPref("devtools.debugger.map-scopes-enabled", true);
   const dbg = await initDebugger("doc-sourcemapped.html");
+  dbg.actions.toggleMapScopes();
 
   await testForOf(dbg);
   await testShadowing(dbg);

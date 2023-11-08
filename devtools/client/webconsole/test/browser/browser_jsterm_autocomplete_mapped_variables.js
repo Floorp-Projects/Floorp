@@ -11,7 +11,6 @@ const TEST_URI =
   "test/browser/test-autocomplete-mapped.html";
 
 add_task(async function () {
-  await pushPref("devtools.debugger.map-scopes-enabled", true);
   const hud = await openNewTabAndConsole(TEST_URI);
   const { jsterm } = hud;
   const { autocompletePopup: popup } = jsterm;
@@ -20,6 +19,7 @@ add_task(async function () {
   info("Opening Debugger and enabling map scopes");
   await openDebugger();
   const dbg = createDebuggerContext(toolbox);
+  dbg.actions.toggleMapScopes();
 
   info("Waiting for pause");
   // This calls firstCall() on the content page and waits for pause. (firstCall
@@ -116,11 +116,8 @@ add_task(async function () {
   );
   info("got popup items: " + JSON.stringify(getAutocompletePopupLabels(popup)));
 
-  info("Switch to the debugger and disabling map scopes");
-  await toolbox.selectTool("jsdebugger");
-  await toggleMapScopes(dbg);
-  await toolbox.selectTool("webconsole");
-
+  info("Disabling map scopes");
+  dbg.actions.toggleMapScopes();
   await setInputValueForAutocompletion(hud, "tem");
   const autocompleteLabels = getAutocompletePopupLabels(popup);
   ok(

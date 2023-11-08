@@ -68,7 +68,6 @@ class WebConsoleUI {
     this._onResourceAvailable = this._onResourceAvailable.bind(this);
     this._onNetworkResourceUpdated = this._onNetworkResourceUpdated.bind(this);
     this._onScopePrefChanged = this._onScopePrefChanged.bind(this);
-    this._onShowConsoleEvaluation = this._onShowConsoleEvaluation.bind(this);
 
     if (this.isBrowserConsole) {
       Services.prefs.addObserver(
@@ -128,7 +127,6 @@ class WebConsoleUI {
       // console is initialized. Otherwise `showToolbox` will resolve before
       // all already existing console messages are displayed.
       await this.wrapper.waitAsyncDispatches();
-      this._initNotifications();
     })();
 
     return this._initializer;
@@ -158,10 +156,6 @@ class WebConsoleUI {
       toolbox.off("webconsole-selected", this._onPanelSelected);
       toolbox.off("split-console", this._onChangeSplitConsoleState);
       toolbox.off("select", this._onChangeSplitConsoleState);
-      toolbox.off(
-        "show-original-variable-mapping-warnings",
-        this._onShowConsoleEvaluation
-      );
     }
 
     if (this.isBrowserConsole) {
@@ -630,20 +624,6 @@ class WebConsoleUI {
     );
   }
 
-  _initNotifications() {
-    if (this.hud.toolbox) {
-      this.wrapper.toggleOriginalVariableMappingEvaluationNotification(
-        !!this.hud.toolbox
-          .getPanel("jsdebugger")
-          ?.shouldShowOriginalVariableMappingWarnings()
-      );
-      this.hud.toolbox.on(
-        "show-original-variable-mapping-warnings",
-        this._onShowConsoleEvaluation
-      );
-    }
-  }
-
   _initShortcuts() {
     const shortcuts = new KeyShortcuts({
       window: this.window,
@@ -713,12 +693,6 @@ class WebConsoleUI {
     if (this.isBrowserConsole) {
       this.hud.updateWindowTitle();
     }
-  }
-
-  _onShowConsoleEvaluation(isOriginalVariableMappingEnabled) {
-    this.wrapper.toggleOriginalVariableMappingEvaluationNotification(
-      isOriginalVariableMappingEnabled
-    );
   }
 
   getInputCursor() {
