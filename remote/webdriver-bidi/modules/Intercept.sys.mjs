@@ -7,6 +7,7 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   getSeenNodesForBrowsingContext:
     "chrome://remote/content/shared/webdriver/Session.sys.mjs",
+  TabManager: "chrome://remote/content/shared/TabManager.sys.mjs",
 });
 
 /**
@@ -45,5 +46,56 @@ export function processExtraData(sessionId, payload) {
     delete payload._extraData;
   }
 
+  // Find serialized WindowProxy and resolve browsing context to a navigable id.
+  if (payload?.result) {
+    payload.result = addContextIdToSerializedWindow(payload.result);
+  } else if (payload.exceptionDetails) {
+    payload.exceptionDetails = addContextIdToSerializedWindow(
+      payload.exceptionDetails
+    );
+  }
+
   return payload;
+}
+
+function addContextIdToSerializedWindow(serialized) {
+  if (serialized.value) {
+    switch (serialized.type) {
+      case "array":
+      case "htmlcollection":
+      case "nodelist":
+      case "set": {
+        serialized.value = serialized.value.map(value =>
+          addContextIdToSerializedWindow(value)
+        );
+        break;
+      }
+
+      case "map":
+      case "object": {
+        serialized.value = serialized.value.map(([key, value]) => [
+          key,
+          addContextIdToSerializedWindow(value),
+        ]);
+        break;
+      }
+
+      case "window": {
+        if (serialized.value.isTopBrowsingContext) {
+          const browsingContext = BrowsingContext.getCurrentTopByBrowserId(
+            serialized.value.context
+          );
+
+          serialized.value = {
+            context: lazy.TabManager.getIdForBrowsingContext(browsingContext),
+          };
+        }
+        break;
+      }
+    }
+  } else if (serialized.exception) {
+    serialized.exception = addContextIdToSerializedWindow(serialized.exception);
+  }
+
+  return serialized;
 }
