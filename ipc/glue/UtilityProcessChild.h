@@ -100,7 +100,6 @@ class UtilityProcessChild final : public PUtilityProcessChild {
   RefPtr<dom::JSOracleChild> mJSOracleInstance{};
 #ifdef XP_WIN
   RefPtr<PWindowsUtilsChild> mWindowsUtilsInstance;
-  RefPtr<PWinFileDialogChild> mFileDialogInstance;
 #endif
 
   AsyncBlockers mShutdownBlockers;
