@@ -517,19 +517,6 @@ impl VariableValue {
         )
     }
 
-    /// Create VariableValue from an integer amount of milliseconds.
-    fn int_ms(number: i32, url_data: &UrlExtraData) -> Self {
-        Self::from_token(
-            Token::Dimension {
-                has_sign: false,
-                value: number as f32,
-                int_value: Some(number),
-                unit: CowRcStr::from("ms"),
-            },
-            url_data,
-        )
-    }
-
     /// Create VariableValue from an integer amount of CSS pixels.
     fn int_pixels(number: i32, url_data: &UrlExtraData) -> Self {
         Self::from_token(
