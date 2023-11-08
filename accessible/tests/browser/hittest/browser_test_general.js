@@ -104,9 +104,34 @@ async function runTests(browser, accDoc) {
   );
 
   info("Testing wrapped text");
-  const wrappedTextP = findAccessibleChildByID(accDoc, "wrappedTextP");
-  const wrappedTextA = findAccessibleChildByID(accDoc, "wrappedTextA");
-  await hitTest(browser, wrappedTextP, wrappedTextA, wrappedTextA.firstChild);
+  const wrappedTextLinkFirstP = findAccessibleChildByID(
+    accDoc,
+    "wrappedTextLinkFirstP"
+  );
+  const wrappedTextLinkFirstA = findAccessibleChildByID(
+    accDoc,
+    "wrappedTextLinkFirstA"
+  );
+  await hitTest(
+    browser,
+    wrappedTextLinkFirstP,
+    wrappedTextLinkFirstA,
+    wrappedTextLinkFirstA.firstChild
+  );
+  const wrappedTextLeafFirstP = findAccessibleChildByID(
+    accDoc,
+    "wrappedTextLeafFirstP"
+  );
+  const wrappedTextLeafFirstMark = findAccessibleChildByID(
+    accDoc,
+    "wrappedTextLeafFirstMark"
+  );
+  await hitTest(
+    browser,
+    wrappedTextLeafFirstP,
+    wrappedTextLeafFirstMark,
+    wrappedTextLeafFirstMark.firstChild
+  );
 }
 
 addAccessibleTask(
@@ -149,8 +174,12 @@ addAccessibleTask(
     <p id="containerWithInaccessibleChild_p2">bye</p>
   </div>
 
-  <p id="wrappedTextP" style="width: 3ch; font-family: monospace;">
-    <a id="wrappedTextA" href="https://example.com/">a</a>b cd
+  <p id="wrappedTextLinkFirstP" style="width: 3ch; font-family: monospace;">
+    <a id="wrappedTextLinkFirstA" href="https://example.com/">a</a>b cd
+  </p>
+
+  <p id="wrappedTextLeafFirstP" style="width: 3ch; font-family: monospace;">
+    <mark id="wrappedTextLeafFirstMark">a</mark><a href="https://example.com/">b cd</a>
   </p>
   `,
   runTests,
