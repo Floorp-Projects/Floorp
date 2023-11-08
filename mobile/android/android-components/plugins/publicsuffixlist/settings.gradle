@@ -3,3 +3,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 // Prevents gradle builds from looking for a root settings.gradle
+
+pluginManagement {
+    includeBuild("../dependencies")
+}
+
+plugins {
+    id "mozac.DependenciesPlugin"
+}
