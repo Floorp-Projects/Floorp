@@ -17,6 +17,7 @@ description = "Workspace hack for mozilla-central"
 
 [dependencies]
 arrayvec = { version = "0.7", features = ["serde"], optional = true }
+bitflags = { version = "2", features = ["serde", "std"], optional = true }
 bytes = { version = "1", optional = true }
 chrono = { version = "0.4", features = ["serde"], optional = true }
 env_logger = { version = "0.10", default-features = false, features = ["color"], optional = true }
@@ -31,14 +32,16 @@ hyper = { version = "0.14", features = ["full"], optional = true }
 indexmap = { version = "1", default-features = false, features = ["serde-1", "std"], optional = true }
 libc = { version = "0.2", features = ["extra_traits"] }
 log = { version = "0.4", features = ["release_max_level_info"], optional = true }
+mio = { version = "0.8", features = ["log"], optional = true }
 num-integer = { version = "0.1", optional = true }
-num-traits = { version = "0.2", features = ["i128"], optional = true }
+num-traits = { version = "0.2", features = ["i128", "libm"], optional = true }
 once_cell = { version = "1", optional = true }
 regex = { version = "1", optional = true }
 semver = { version = "1", features = ["serde"], optional = true }
-serde = { version = "1", features = ["derive", "rc"], optional = true }
+serde = { version = "1", features = ["derive", "rc"] }
 serde_json = { version = "1", features = ["preserve_order", "unbounded_depth"], optional = true }
 smallvec = { version = "1", features = ["const_new", "serde", "union"], optional = true }
+time = { version = "0.3", features = ["macros", "parsing"], optional = true }
 tokio = { version = "1", features = ["fs", "num_cpus", "rt-multi-thread"], optional = true }
 tokio-util = { version = "0.7", features = ["io"], optional = true }
 tracing = { version = "0.1", features = ["log"], optional = true }
@@ -57,8 +60,8 @@ proc-macro2 = "1"
 quote = "1"
 regex = { version = "1", default-features = false, features = ["perf"], optional = true }
 semver = { version = "1", features = ["serde"], optional = true }
-serde = { version = "1", features = ["derive"], optional = true }
-syn = { version = "2", features = ["extra-traits", "full", "visit", "visit-mut"] }
+serde = { version = "1", features = ["derive"] }
+syn = { version = "2", features = ["extra-traits", "fold", "full", "visit", "visit-mut"] }
 
 [target."cfg(windows)".dependencies.winapi]
 version = "0.3.6"
@@ -153,13 +156,12 @@ features = [
 ]
 
 [features]
-builtins-static = ["dep:bindgen", "dep:memchr", "dep:nom", "dep:regex", "dep:serde", "dep:smallvec"]
-defaultagent-static = ["dep:bytes", "dep:getrandom", "dep:hashbrown", "dep:indexmap", "dep:log", "dep:once_cell", "dep:scopeguard", "dep:serde", "dep:serde_json", "dep:smallvec", "dep:url"]
-geckodriver = ["dep:bytes", "dep:chrono", "dep:flate2", "dep:futures-channel", "dep:futures-core", "dep:futures-sink", "dep:futures-util", "dep:getrandom", "dep:hashbrown", "dep:hyper", "dep:indexmap", "dep:log", "dep:memchr", "dep:num-integer", "dep:num-traits", "dep:once_cell", "dep:regex", "dep:semver", "dep:serde", "dep:serde_json", "dep:smallvec", "dep:tokio", "dep:tokio-util", "dep:tracing", "dep:url", "dep:uuid"]
-gkrust = ["dep:arrayvec", "dep:bindgen", "dep:bytes", "dep:chrono", "dep:env_logger", "dep:flate2", "dep:futures-channel", "dep:futures-core", "dep:futures-sink", "dep:futures-util", "dep:getrandom", "dep:hashbrown", "dep:indexmap", "dep:log", "dep:memchr", "dep:nom", "dep:num-integer", "dep:num-traits", "dep:once_cell", "dep:regex", "dep:scopeguard", "dep:semver", "dep:serde", "dep:serde_json", "dep:smallvec", "dep:url", "dep:uuid"]
+builtins-static = ["dep:bindgen", "dep:bitflags", "dep:memchr", "dep:nom", "dep:regex", "dep:smallvec"]
+geckodriver = ["dep:bitflags", "dep:bytes", "dep:chrono", "dep:flate2", "dep:futures-channel", "dep:futures-core", "dep:futures-sink", "dep:futures-util", "dep:getrandom", "dep:hashbrown", "dep:hyper", "dep:indexmap", "dep:log", "dep:memchr", "dep:mio", "dep:num-integer", "dep:num-traits", "dep:once_cell", "dep:regex", "dep:semver", "dep:serde_json", "dep:smallvec", "dep:time", "dep:tokio", "dep:tokio-util", "dep:tracing", "dep:url", "dep:uuid"]
+gkrust = ["dep:arrayvec", "dep:bindgen", "dep:bitflags", "dep:bytes", "dep:chrono", "dep:env_logger", "dep:flate2", "dep:futures-channel", "dep:futures-core", "dep:futures-sink", "dep:futures-util", "dep:getrandom", "dep:hashbrown", "dep:indexmap", "dep:log", "dep:memchr", "dep:nom", "dep:num-integer", "dep:num-traits", "dep:once_cell", "dep:regex", "dep:scopeguard", "dep:semver", "dep:serde_json", "dep:smallvec", "dep:time", "dep:url", "dep:uuid"]
 gkrust-gtest = ["gkrust"]
-http3server = ["dep:arrayvec", "dep:bindgen", "dep:bytes", "dep:chrono", "dep:env_logger", "dep:futures-channel", "dep:futures-core", "dep:futures-sink", "dep:futures-util", "dep:getrandom", "dep:hashbrown", "dep:hyper", "dep:indexmap", "dep:log", "dep:memchr", "dep:nom", "dep:num-integer", "dep:num-traits", "dep:once_cell", "dep:regex", "dep:serde", "dep:serde_json", "dep:smallvec", "dep:tokio", "dep:tokio-util", "dep:tracing", "dep:url"]
-ipcclientcerts-static = ["dep:bindgen", "dep:memchr", "dep:nom", "dep:regex"]
-jsrust = ["dep:arrayvec", "dep:env_logger", "dep:getrandom", "dep:hashbrown", "dep:indexmap", "dep:log", "dep:memchr", "dep:once_cell", "dep:semver", "dep:serde", "dep:smallvec", "dep:url"]
-mozwer_s = ["dep:getrandom", "dep:hashbrown", "dep:indexmap", "dep:once_cell", "dep:serde", "dep:serde_json", "dep:uuid"]
-osclientcerts-static = ["dep:bindgen", "dep:env_logger", "dep:log", "dep:memchr", "dep:nom", "dep:regex"]
+http3server = ["dep:arrayvec", "dep:bindgen", "dep:bitflags", "dep:bytes", "dep:chrono", "dep:env_logger", "dep:futures-channel", "dep:futures-core", "dep:futures-sink", "dep:futures-util", "dep:getrandom", "dep:hashbrown", "dep:hyper", "dep:indexmap", "dep:log", "dep:memchr", "dep:mio", "dep:nom", "dep:num-integer", "dep:num-traits", "dep:once_cell", "dep:regex", "dep:serde_json", "dep:smallvec", "dep:time", "dep:tokio", "dep:tokio-util", "dep:tracing", "dep:url"]
+ipcclientcerts-static = ["dep:bindgen", "dep:bitflags", "dep:memchr", "dep:nom", "dep:regex"]
+jsrust = ["dep:arrayvec", "dep:env_logger", "dep:getrandom", "dep:hashbrown", "dep:indexmap", "dep:log", "dep:memchr", "dep:num-traits", "dep:once_cell", "dep:semver", "dep:smallvec", "dep:url"]
+mozwer_s = ["dep:getrandom", "dep:hashbrown", "dep:indexmap", "dep:once_cell", "dep:serde_json", "dep:uuid"]
+osclientcerts-static = ["dep:bindgen", "dep:bitflags", "dep:env_logger", "dep:log", "dep:memchr", "dep:nom", "dep:regex"]

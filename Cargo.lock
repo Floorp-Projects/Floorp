@@ -3635,6 +3635,7 @@ version = "0.1.0"
 dependencies = [
  "arrayvec",
  "bindgen 0.68.1",
+ "bitflags 2.4.0",
  "bytes",
  "chrono",
  "env_logger",
@@ -3650,6 +3651,7 @@ dependencies = [
  "libc",
  "log",
  "memchr",
+ "mio 0.8.8",
  "nom",
  "num-integer",
  "num-traits",
@@ -3663,6 +3665,7 @@ dependencies = [
  "serde_json",
  "smallvec",
  "syn",
+ "time 0.3.23",
  "tokio",
  "tokio-util",
  "tracing",
