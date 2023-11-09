@@ -362,7 +362,6 @@ mochitest-browser-media:
             default:
                 by-test-platform:
                     android.*: []
-                    .*-wayland/debug: []
                     default: built-projects
     tier: default
     max-run-time:
