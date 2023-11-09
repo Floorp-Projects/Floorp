@@ -271,7 +271,11 @@ bool WebGLContext::CreateAndInitGL(
 
   auto flags = gl::CreateContextFlags::PREFER_ROBUSTNESS;
 
-  if (StaticPrefs::webgl_gl_khr_no_error()) {
+  // Bug 1862039 - All versions of Mesa as of Nov 2023 have issues with
+  // GL_CONTEXT_FLAG_NO_ERROR_BIT. We should aspire to reenable it at
+  // some point when the bugs are fixed.
+  // See also https://gitlab.freedesktop.org/mesa/mesa/-/issues/10062
+  if (!gl->IsMesa() && StaticPrefs::webgl_gl_khr_no_error()) {
     flags |= gl::CreateContextFlags::NO_VALIDATION;
   }
 
