@@ -194,6 +194,10 @@ class nsAHttpTransaction : public nsSupportsWeakReference {
   // want to use the alt-svc on the restart.
   virtual void DoNotRemoveAltSvc() {}
 
+  // We call this function if we do want to reset IP family preference again on
+  // the next restart.
+  virtual void DoNotResetIPFamilyPreference() {}
+
   // Returns true if early-data is possible and transaction will remember
   // that it is in 0RTT mode (to know should it rewide transaction or not
   // in the case of an error).
