@@ -733,10 +733,10 @@ export class AddressEditDoorhanger extends AutofillDoorhanger {
     menuitem.setAttribute("value", "");
     menupopup.appendChild(menuitem);
 
-    for (const [regionCode] of this.layout.addressLevel1Options) {
+    for (const [regionCode, regionName] of this.layout.addressLevel1Options) {
       menuitem = this.doc.createXULElement("menuitem");
       menuitem.setAttribute("label", regionCode);
-      menuitem.setAttribute("value", regionCode);
+      menuitem.setAttribute("value", regionName);
       menupopup.appendChild(menuitem);
     }
 
@@ -780,12 +780,13 @@ export class AddressEditDoorhanger extends AutofillDoorhanger {
     div.appendChild(label);
 
     let input;
+    let popup;
     if ("street-address".includes(fieldName)) {
       input = this.doc.createElement("textarea");
       input.setAttribute("rows", 3);
     } else if (fieldName == "country") {
       input = this.doc.createXULElement("menulist");
-      const popup = this.#buildCountryMenupopup();
+      popup = this.#buildCountryMenupopup();
       popup.addEventListener("popuphidden", e => e.stopPropagation());
       input.appendChild(popup);
 
@@ -800,7 +801,7 @@ export class AddressEditDoorhanger extends AutofillDoorhanger {
       this.layout.addressLevel1Options
     ) {
       input = this.doc.createXULElement("menulist");
-      const popup = this.#buildAddressLevel1Menupopup();
+      popup = this.#buildAddressLevel1Menupopup();
       popup.addEventListener("popuphidden", e => e.stopPropagation());
       input.appendChild(popup);
     } else {
@@ -808,7 +809,19 @@ export class AddressEditDoorhanger extends AutofillDoorhanger {
     }
 
     input.setAttribute("id", AddressEditDoorhanger.getInputId(fieldName));
-    input.value = this.#getFieldDisplayData(fieldName) ?? null;
+
+    const value = this.#getFieldDisplayData(fieldName) ?? null;
+    if (popup) {
+      const menuitem = Array.from(popup.childNodes).find(
+        item =>
+          item.label.toLowerCase() === value?.toLowerCase() ||
+          item.value.toLowerCase() === value?.toLowerCase()
+      );
+      input.selectedItem = menuitem;
+    } else {
+      input.value = value;
+    }
+
     div.appendChild(input);
 
     return div;

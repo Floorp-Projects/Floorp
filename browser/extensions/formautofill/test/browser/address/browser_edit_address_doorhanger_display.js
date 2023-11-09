@@ -69,7 +69,7 @@ add_task(async function test_save_edited_fields() {
       description: "doing all kinds of stuff",
       editedFields: {
         organization: initRecord.organization.toLowerCase(),
-        "address-level1": "CA",
+        "address-level1": "California",
         tel: "",
         "street-address": initRecord["street-address"] + " Apt.6",
         name: "Jane Doe",
