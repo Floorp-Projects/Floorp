@@ -38,7 +38,7 @@ const TEST_CASE = [
     description: "doing all kinds of stuff",
     editedFields: {
       organization: SUBMIT_RECORD.organization.toLowerCase(),
-      "address-level1": "California",
+      "address-level1": "CA",
       tel: "",
       "street-address": SUBMIT_RECORD["street-address"] + " Apt.6",
       name: "Jane Doe",
@@ -83,18 +83,20 @@ add_task(async function test_save_edited_fields() {
       async function (browser) {
         info(`Test ${TEST.description}`);
 
-        const onSavePopupShown = waitForPopupShown();
+        let onPopupShown = waitForPopupShown();
+
         await focusUpdateSubmitForm(browser, {
           focusSelector: "#given-name",
           newValues: recordToFormSelector(SUBMIT_RECORD),
         });
-        await onSavePopupShown;
 
-        const onEditPopupShown = waitForPopupShown();
+        await onPopupShown;
+
+        onPopupShown = waitForPopupShown();
         await clickAddressDoorhangerButton(EDIT_ADDRESS_BUTTON);
-        await onEditPopupShown;
-
+        await onPopupShown;
         fillEditDoorhanger(TEST.editedFields);
+
         await clickAddressDoorhangerButton(MAIN_BUTTON);
       }
     );
