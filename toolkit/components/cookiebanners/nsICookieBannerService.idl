@@ -142,6 +142,18 @@ interface nsICookieBannerService : nsISupports {
                         in bool aIsTopLevel,
                         in bool aIsPrivate);
 
+  /*
+   * Remove the executed record for a given site under the private browsing
+   * session or the normal session.
+   */
+  void removeExecutedRecordForSite(in ACString aSite, in bool aIsPrivate);
+
+  /**
+   * Remove all the record of sites where cookie banner handling has been
+   * executed under the private browsing session or normal session.
+   */
+  void removeAllExecutedRecords(in bool aIsPrivate);
+
   /**
    * Clears the in-memory set that we use to maintain the domains that we have
    * reported telemetry. This function will clear the entry for the given

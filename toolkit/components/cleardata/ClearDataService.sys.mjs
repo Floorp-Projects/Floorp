@@ -173,6 +173,119 @@ const CookieCleaner = {
   },
 };
 
+// A cleaner for clearing cookie banner handling exceptions.
+const CookieBannerExceptionCleaner = {
+  async deleteAll() {
+    try {
+      Services.cookieBanners.removeAllDomainPrefs(false);
+    } catch (e) {
+      // Don't throw an error if the cookie banner handling is disabled.
+      if (e.result != Cr.NS_ERROR_NOT_AVAILABLE) {
+        throw e;
+      }
+    }
+  },
+
+  async deleteByPrincipal(aPrincipal) {
+    try {
+      Services.cookieBanners.removeDomainPref(aPrincipal.URI, false);
+    } catch (e) {
+      // Don't throw an error if the cookie banner handling is disabled.
+      if (e.result != Cr.NS_ERROR_NOT_AVAILABLE) {
+        throw e;
+      }
+    }
+  },
+
+  async deleteByBaseDomain(aDomain) {
+    try {
+      Services.cookieBanners.removeDomainPref(
+        Services.io.newURI("https://" + aDomain),
+        false
+      );
+    } catch (e) {
+      // Don't throw an error if the cookie banner handling is disabled.
+      if (e.result != Cr.NS_ERROR_NOT_AVAILABLE) {
+        throw e;
+      }
+    }
+  },
+
+  async deleteByHost(aHost, aOriginAttributes) {
+    try {
+      let isPrivate =
+        !!aOriginAttributes.privateBrowsingId &&
+        aOriginAttributes.privateBrowsingId !==
+          Services.scriptSecurityManager.DEFAULT_PRIVATE_BROWSING_ID;
+
+      Services.cookieBanners.removeDomainPref(
+        Services.io.newURI("https://" + aHost),
+        isPrivate
+      );
+    } catch (e) {
+      // Don't throw an error if the cookie banner handling is disabled.
+      if (e.result != Cr.NS_ERROR_NOT_AVAILABLE) {
+        throw e;
+      }
+    }
+  },
+};
+
+// A cleaner for cleaning cookie banner handling executed records.
+const CookieBannerExecutedRecordCleaner = {
+  async deleteAll() {
+    try {
+      Services.cookieBanners.removeAllExecutedRecords(false);
+    } catch (e) {
+      // Don't throw an error if the cookie banner handling is disabled.
+      if (e.result != Cr.NS_ERROR_NOT_AVAILABLE) {
+        throw e;
+      }
+    }
+  },
+
+  async deleteByPrincipal(aPrincipal) {
+    try {
+      Services.cookieBanners.removeExecutedRecordForSite(
+        aPrincipal.baseDomain,
+        false
+      );
+    } catch (e) {
+      // Don't throw an error if the cookie banner handling is disabled.
+      if (e.result != Cr.NS_ERROR_NOT_AVAILABLE) {
+        throw e;
+      }
+    }
+  },
+
+  async deleteByBaseDomain(aDomain) {
+    try {
+      Services.cookieBanners.removeExecutedRecordForSite(aDomain, false);
+    } catch (e) {
+      // Don't throw an error if the cookie banner handling is disabled.
+      if (e.result != Cr.NS_ERROR_NOT_AVAILABLE) {
+        throw e;
+      }
+    }
+  },
+
+  async deleteByHost(aHost, aOriginAttributes) {
+    try {
+      let isPrivate =
+        !!aOriginAttributes.privateBrowsingId &&
+        aOriginAttributes.privateBrowsingId !==
+          Services.scriptSecurityManager.DEFAULT_PRIVATE_BROWSING_ID;
+
+      Services.cookieBanners.removeExecutedRecordForSite(aHost, isPrivate);
+    } catch (e) {
+      // Don't throw error if the cookie banner handling is disabled.
+      if (e.result != Cr.NS_ERROR_NOT_AVAILABLE) {
+        throw e;
+      }
+    }
+  },
+};
+
 const CertCleaner = {
   async deleteByHost(aHost, aOriginAttributes) {
     let overrideService = Cc["@mozilla.org/security/certoverride;1"].getService(
@@ -1619,6 +1732,16 @@ const FLAGS_MAP = [
   {
     flag: Ci.nsIClearDataService.CLEAR_CREDENTIAL_MANAGER_STATE,
     cleaners: [IdentityCredentialStorageCleaner],
+  },
+
+  {
+    flag: Ci.nsIClearDataService.CLEAR_COOKIE_BANNER_EXCEPTION,
+    cleaners: [CookieBannerExceptionCleaner],
+  },
+
+  {
+    flag: Ci.nsIClearDataService.CLEAR_COOKIE_BANNER_EXECUTED_RECORD,
+    cleaners: [CookieBannerExecutedRecordCleaner],
   },
 ];
 
