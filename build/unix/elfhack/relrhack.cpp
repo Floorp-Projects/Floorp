@@ -339,10 +339,10 @@ bool RelR<bits>::hack(std::fstream& f) {
         s.sh_addr = dyn_info[DT_RELR];
       }
       write_one_at(f, shdr_offset, s);
-    }
-    // If DT_JMPREL has been adjusted to swap with DT_RELR, also adjust
-    // the corresponding section header.
-    if (jmprel && (s.sh_addr == jmprel) && (s.sh_addr != dyn_info[DT_JMPREL])) {
+    } else if (jmprel && (s.sh_addr == jmprel) &&
+               (s.sh_addr != dyn_info[DT_JMPREL])) {
+      // If DT_JMPREL has been adjusted to swap with DT_RELR, also adjust
+      // the corresponding section header.
       s.sh_offset -= s.sh_addr - dyn_info[DT_JMPREL];
       s.sh_addr = dyn_info[DT_JMPREL];
       write_one_at(f, shdr_offset, s);
