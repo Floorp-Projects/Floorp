@@ -2090,9 +2090,6 @@ class GLContext : public GenericAtomicRefCounted, public SupportsWeakPtr {
     mSymbols.fFramebufferTexture2D(target, attachmentPoint, textureTarget,
                                    texture, level);
     AFTER_GL_CALL;
-    if (mNeedsCheckAfterAttachTextureToFb) {
-      fCheckFramebufferStatus(target);
-    }
   }
 
   void fFramebufferTextureLayer(GLenum target, GLenum attachment,
@@ -3657,7 +3654,6 @@ class GLContext : public GenericAtomicRefCounted, public SupportsWeakPtr {
   bool mNeedsTextureSizeChecks = false;
   bool mNeedsFlushBeforeDeleteFB = false;
   bool mTextureAllocCrashesOnMapFailure = false;
-  bool mNeedsCheckAfterAttachTextureToFb = false;
   const bool mWorkAroundDriverBugs;
   mutable uint64_t mSyncGLCallCount = 0;
 

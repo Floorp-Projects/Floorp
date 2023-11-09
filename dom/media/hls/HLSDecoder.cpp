@@ -152,9 +152,7 @@ MediaDecoderStateMachineBase* HLSDecoder::CreateStateMachine(
   return new MediaDecoderStateMachine(this, mReader);
 }
 
-bool HLSDecoder::IsEnabled() {
-  return StaticPrefs::media_hls_enabled() && (jni::GetAPIVersion() >= 16);
-}
+bool HLSDecoder::IsEnabled() { return StaticPrefs::media_hls_enabled(); }
 
 bool HLSDecoder::IsSupportedType(const MediaContainerType& aContainerType) {
   return IsEnabled() && DecoderTraits::IsHttpLiveStreamingType(aContainerType);

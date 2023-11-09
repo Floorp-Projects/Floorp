@@ -75,17 +75,7 @@ void AllocPolicyImpl::RejectAll() {
   }
 }
 
-static int32_t MediaDecoderLimitDefault() {
-#ifdef MOZ_WIDGET_ANDROID
-  if (jni::GetAPIVersion() < 18) {
-    // Older Android versions have broken support for multiple simultaneous
-    // decoders, see bug 1278574.
-    return 1;
-  }
-#endif
-  // Otherwise, set no decoder limit.
-  return -1;
-}
+static int32_t MediaDecoderLimitDefault() { return -1; }
 
 StaticMutex GlobalAllocPolicy::sMutex;
 

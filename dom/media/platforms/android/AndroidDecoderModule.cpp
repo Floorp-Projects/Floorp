@@ -80,10 +80,6 @@ media::MediaCodecsSupported AndroidDecoderModule::GetSupportedCodecs() {
 
 DecodeSupportSet AndroidDecoderModule::SupportsMimeType(
     const nsACString& aMimeType) {
-  if (jni::GetAPIVersion() < 16) {
-    return media::DecodeSupportSet{};
-  }
-
   if (!sSupportedSwMimeTypes) {
     SetSupportedMimeTypes();
   }
