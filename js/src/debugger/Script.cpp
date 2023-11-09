@@ -909,7 +909,8 @@ class DebuggerScript::GetPossibleBreakpointsMatcher {
 
       size_t offset = r.frontOffset();
       uint32_t lineno = r.frontLineNumber();
-      JS::LimitedColumnNumberZeroOrigin colno = r.frontColumnNumber();
+      JS::LimitedColumnNumberZeroOrigin colno =
+          JS::LimitedColumnNumberZeroOrigin(r.frontColumnNumber());
 
       if (!maybeAppendEntry(offset, lineno, colno,
                             r.frontIsBreakableStepPoint())) {
@@ -1323,7 +1324,7 @@ class DebuggerScript::GetOffsetLocationMatcher {
     JS::LimitedColumnNumberZeroOrigin column;
     if (r.frontIsEntryPoint()) {
       lineno = r.frontLineNumber();
-      column = r.frontColumnNumber();
+      column = JS::LimitedColumnNumberZeroOrigin(r.frontColumnNumber());
     } else {
       MOZ_ASSERT(flowData[r.frontOffset()].hasSingleEdge());
       lineno = flowData[r.frontOffset()].lineno();
@@ -1842,7 +1843,8 @@ class DebuggerScript::GetAllColumnOffsetsMatcher {
 
     for (BytecodeRangeWithPosition r(cx_, script); !r.empty(); r.popFront()) {
       uint32_t lineno = r.frontLineNumber();
-      JS::LimitedColumnNumberZeroOrigin column = r.frontColumnNumber();
+      JS::LimitedColumnNumberZeroOrigin column =
+          JS::LimitedColumnNumberZeroOrigin(r.frontColumnNumber());
       size_t offset = r.frontOffset();
 
       // Make a note, if the current instruction is an entry point for
