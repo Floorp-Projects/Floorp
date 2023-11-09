@@ -86,6 +86,10 @@ body {
   margin: 0;
 }
 
+fxview-category-button:focus-visible {
+  outline-offset: var(--in-content-focus-outline-inset);
+}
+
 fxview-category-button[name="recentbrowsing"]::part(icon) {
   background-image: url("chrome://browser/content/firefoxview/category-recentbrowsing.svg");
 }
