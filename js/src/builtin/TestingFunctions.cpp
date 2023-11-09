@@ -8435,9 +8435,8 @@ static bool EncodeAsUtf8InBuffer(JSContext* cx, unsigned argc, Value* vp) {
     return false;
   }
 
-  size_t length;
+  mozilla::Span<uint8_t> span;
   bool isSharedMemory = false;
-  uint8_t* data = nullptr;
   {
     // The hazard analysis does not track the data pointer, so it can neither
     // tell that `data` is dead if ReportUsageErrorASCII is called, nor that
@@ -8446,12 +8445,12 @@ static bool EncodeAsUtf8InBuffer(JSContext* cx, unsigned argc, Value* vp) {
     // with a safer mechanism.
     JS::AutoCheckCannotGC nogc(cx);
     if (!view.isDetached()) {
-      data = view.get().getLengthAndData(&length, &isSharedMemory, nogc);
+      span = view.get().getData(&isSharedMemory, nogc);
     }
   }
 
   if (isSharedMemory ||  // exclude views of SharedArrayBuffers
-      !data) {           // exclude views of detached ArrayBuffers
+      !span.data()) {    // exclude views of detached ArrayBuffers
     ReportUsageErrorASCII(
         cx, callee,
         "Second argument must be an unshared, non-detached Uint8Array");
@@ -8460,7 +8459,7 @@ static bool EncodeAsUtf8InBuffer(JSContext* cx, unsigned argc, Value* vp) {
 
   Maybe<std::tuple<size_t, size_t>> amounts =
       JS_EncodeStringToUTF8BufferPartial(cx, args[0].toString(),
-                                         AsWritableChars(Span(data, length)));
+                                         AsWritableChars(span));
   if (!amounts) {
     ReportOutOfMemory(cx);
     return false;

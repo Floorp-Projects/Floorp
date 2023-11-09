@@ -2500,19 +2500,19 @@ const JSClass* const JS::ArrayBuffer::SharedClass =
   return JS::ArrayBuffer(ArrayBufferObject::createZeroed(cx, nbytes));
 }
 
-uint8_t* JS::ArrayBuffer::getLengthAndData(size_t* length, bool* isSharedMemory,
-                                           const JS::AutoRequireNoGC& nogc) {
+mozilla::Span<uint8_t> JS::ArrayBuffer::getData(
+    bool* isSharedMemory, const JS::AutoRequireNoGC& nogc) {
   auto* buffer = obj->maybeUnwrapAs<ArrayBufferObjectMaybeShared>();
   if (!buffer) {
     return nullptr;
   }
-  *length = buffer->byteLength();
+  size_t length = buffer->byteLength();
   if (buffer->is<SharedArrayBufferObject>()) {
     *isSharedMemory = true;
-    return buffer->dataPointerEither().unwrap();
+    return {buffer->dataPointerEither().unwrap(), length};
   }
   *isSharedMemory = false;
-  return buffer->as<ArrayBufferObject>().dataPointer();
+  return {buffer->as<ArrayBufferObject>().dataPointer(), length};
 };
 
 JS::ArrayBuffer JS::ArrayBuffer::unwrap(JSObject* maybeWrapped) {
