@@ -25,7 +25,7 @@
 #include "gc/Zone.h"           // for Zone
 #include "gc/ZoneAllocator.h"  // for AddCellMemory
 #include "js/CallArgs.h"       // for CallArgs, CallArgsFromVp
-#include "js/ColumnNumber.h"  // JS::LimitedColumnNumberZeroOrigin, JS::WasmFunctionIndex
+#include "js/ColumnNumber.h"  // JS::LimitedColumnNumberZeroOrigin, JS::LimitedColumnNumberOneOrigin, JS::WasmFunctionIndex
 #include "js/friend/ErrorMessages.h"  // for GetErrorMessage, JSMSG_*
 #include "js/GCVariant.h"             // for GCVariant
 #include "js/HeapAPI.h"               // for GCCellPtr
@@ -378,11 +378,13 @@ bool DebuggerScript::CallData::getStartLine() {
 }
 
 bool DebuggerScript::CallData::getStartColumn() {
-  args.rval().setNumber(referent.get().match(
-      [](BaseScript*& s) { return s->column().zeroOriginValue(); },
+  JS::LimitedColumnNumberOneOrigin column = referent.get().match(
+      [](BaseScript*& s) { return s->column(); },
       [](WasmInstanceObject*&) {
-        return JS::WasmFunctionIndex::DefaultBinarySourceColumnNumberZeroOrigin;
-      }));
+        return JS::LimitedColumnNumberOneOrigin(
+            JS::WasmFunctionIndex::DefaultBinarySourceColumnNumberOneOrigin);
+      });
+  args.rval().setNumber(column.zeroOriginValue());
   return true;
 }
 
@@ -632,12 +634,12 @@ class DebuggerScript::GetPossibleBreakpointsMatcher {
   Maybe<size_t> maxOffset;
 
   Maybe<uint32_t> minLine;
-  JS::LimitedColumnNumberZeroOrigin minColumn;
+  JS::LimitedColumnNumberOneOrigin minColumn;
   Maybe<uint32_t> maxLine;
-  JS::LimitedColumnNumberZeroOrigin maxColumn;
+  JS::LimitedColumnNumberOneOrigin maxColumn;
 
   bool passesQuery(size_t offset, uint32_t lineno,
-                   JS::LimitedColumnNumberZeroOrigin colno) {
+                   JS::LimitedColumnNumberOneOrigin colno) {
     // [minOffset, maxOffset) - Inclusive minimum and exclusive maximum.
     if ((minOffset && offset < *minOffset) ||
         (maxOffset && offset >= *maxOffset)) {
@@ -660,7 +662,7 @@ class DebuggerScript::GetPossibleBreakpointsMatcher {
   }
 
   bool maybeAppendEntry(size_t offset, uint32_t lineno,
-                        JS::LimitedColumnNumberZeroOrigin colno,
+                        JS::LimitedColumnNumberOneOrigin colno,
                         bool isStepStart) {
     if (!passesQuery(offset, lineno, colno)) {
       return true;
@@ -724,8 +726,14 @@ class DebuggerScript::GetPossibleBreakpointsMatcher {
     return parseIntValueImpl(value, result);
   }
   bool parseColumnValue(HandleValue value,
-                        JS::LimitedColumnNumberZeroOrigin* result) {
-    return parseIntValueImpl(value, result->addressOfValueForTranscode());
+                        JS::LimitedColumnNumberOneOrigin* result) {
+    uint32_t tmp;
+    if (!parseIntValueImpl(value, &tmp)) {
+      return false;
+    }
+    *result = JS::LimitedColumnNumberOneOrigin(
+        JS::LimitedColumnNumberZeroOrigin(tmp));
+    return true;
   }
   bool parseSizeTValue(HandleValue value, size_t* result) {
     return parseIntValueImpl(value, result);
@@ -909,8 +917,7 @@ class DebuggerScript::GetPossibleBreakpointsMatcher {
 
       size_t offset = r.frontOffset();
       uint32_t lineno = r.frontLineNumber();
-      JS::LimitedColumnNumberZeroOrigin colno =
-          JS::LimitedColumnNumberZeroOrigin(r.frontColumnNumber());
+      JS::LimitedColumnNumberOneOrigin colno = r.frontColumnNumber();
 
       if (!maybeAppendEntry(offset, lineno, colno,
                             r.frontIsBreakableStepPoint())) {
@@ -936,7 +943,17 @@ class DebuggerScript::GetPossibleBreakpointsMatcher {
 
     for (uint32_t i = 0; i < offsets.length(); i++) {
       uint32_t lineno = offsets[i].lineno;
-      JS::LimitedColumnNumberZeroOrigin column(offsets[i].column);
+      // FIXME: wasm::ExprLoc::column contains "1". which is "1 in 1-origin",
+      //        but currently the debugger API returns 0-origin column number,
+      //        and the value becomes "0 in 0-origin".
+      //        the existing wasm debug functionality expects the observable
+      //        column number be "1", so it is "1 in 0-origin".
+      //        Once the debugger API is rewritten to use 1-origin, this
+      //        part also needs to be rewritten to directly pass the
+      //        "1 in 1-origin" (bug 1863878).
+      JS::LimitedColumnNumberOneOrigin column =
+          JS::LimitedColumnNumberOneOrigin(
+              JS::LimitedColumnNumberZeroOrigin(offsets[i].column));
       size_t offset = offsets[i].offset;
       if (!maybeAppendEntry(offset, lineno, column, true)) {
         return false;
@@ -1321,15 +1338,16 @@ class DebuggerScript::GetOffsetLocationMatcher {
     // point, otherwise settle on the next instruction and take the incoming
     // edge position.
     uint32_t lineno;
-    JS::LimitedColumnNumberZeroOrigin column;
+    JS::LimitedColumnNumberOneOrigin column;
     if (r.frontIsEntryPoint()) {
       lineno = r.frontLineNumber();
-      column = JS::LimitedColumnNumberZeroOrigin(r.frontColumnNumber());
+      column = r.frontColumnNumber();
     } else {
       MOZ_ASSERT(flowData[r.frontOffset()].hasSingleEdge());
       lineno = flowData[r.frontOffset()].lineno();
       column =
-          JS::LimitedColumnNumberZeroOrigin(flowData[r.frontOffset()].column());
+          JS::LimitedColumnNumberOneOrigin(JS::LimitedColumnNumberZeroOrigin(
+              flowData[r.frontOffset()].column()));
     }
 
     RootedValue value(cx_, NumberValue(lineno));
@@ -1793,7 +1811,7 @@ class DebuggerScript::GetAllColumnOffsetsMatcher {
   MutableHandleObject result_;
 
   bool appendColumnOffsetEntry(uint32_t lineno,
-                               JS::LimitedColumnNumberZeroOrigin column,
+                               JS::LimitedColumnNumberOneOrigin column,
                                size_t offset) {
     Rooted<PlainObject*> entry(cx_, NewPlainObject(cx_));
     if (!entry) {
@@ -1843,8 +1861,7 @@ class DebuggerScript::GetAllColumnOffsetsMatcher {
 
     for (BytecodeRangeWithPosition r(cx_, script); !r.empty(); r.popFront()) {
       uint32_t lineno = r.frontLineNumber();
-      JS::LimitedColumnNumberZeroOrigin column =
-          JS::LimitedColumnNumberZeroOrigin(r.frontColumnNumber());
+      JS::LimitedColumnNumberOneOrigin column = r.frontColumnNumber();
       size_t offset = r.frontOffset();
 
       // Make a note, if the current instruction is an entry point for
@@ -1875,7 +1892,10 @@ class DebuggerScript::GetAllColumnOffsetsMatcher {
 
     for (uint32_t i = 0; i < offsets.length(); i++) {
       uint32_t lineno = offsets[i].lineno;
-      JS::LimitedColumnNumberZeroOrigin column(offsets[i].column);
+      // See the comment in GetPossibleBreakpointsMatcher::parseQuery.
+      JS::LimitedColumnNumberOneOrigin column =
+          JS::LimitedColumnNumberOneOrigin(
+              JS::LimitedColumnNumberZeroOrigin(offsets[i].column));
       size_t offset = offsets[i].offset;
       if (!appendColumnOffsetEntry(lineno, column, offset)) {
         return false;
