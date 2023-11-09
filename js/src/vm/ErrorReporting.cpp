@@ -68,7 +68,7 @@ bool js::ReportCompileWarning(FrontendContext* fc, ErrorMetadata&& metadata,
 
   err.filename = JS::ConstUTF8CharsZ(metadata.filename);
   err.lineno = metadata.lineNumber;
-  err.column = JS::ColumnNumberOneOrigin(metadata.columnNumber);
+  err.column = metadata.columnNumber;
   err.isMuted = metadata.isMuted;
 
   if (UniqueTwoByteChars lineOfContext = std::move(metadata.lineOfContext)) {
@@ -97,7 +97,7 @@ static void ReportCompileErrorImpl(FrontendContext* fc,
 
   err.filename = JS::ConstUTF8CharsZ(metadata.filename);
   err.lineno = metadata.lineNumber;
-  err.column = JS::ColumnNumberOneOrigin(metadata.columnNumber);
+  err.column = metadata.columnNumber;
   err.isMuted = metadata.isMuted;
 
   if (UniqueTwoByteChars lineOfContext = std::move(metadata.lineOfContext)) {

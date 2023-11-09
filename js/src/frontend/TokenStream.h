@@ -205,7 +205,7 @@
 #include "frontend/Token.h"
 #include "frontend/TokenKind.h"
 #include "js/CharacterEncoding.h"  // JS::ConstUTF8CharsZ
-#include "js/ColumnNumber.h"  // JS::LimitedColumnNumberZeroOrigin, JS::ColumnNumberZeroOrigin
+#include "js/ColumnNumber.h"  // JS::LimitedColumnNumberZeroOrigin, JS::ColumnNumberZeroOrigin, JS::ColumnNumberOneOrigin
 #include "js/CompileOptions.h"
 #include "js/friend/ErrorMessages.h"  // JSMSG_*
 #include "js/HashTable.h"             // js::HashMap
@@ -2000,7 +2000,8 @@ class GeneralTokenStreamChars : public SpecializedTokenStreamCharsBase<Unit> {
     if (anyCharsAccess().fillExceptingContext(err, offset)) {
       JS::LimitedColumnNumberZeroOrigin columnNumber;
       computeLineAndColumn(offset, &err->lineNumber, &columnNumber);
-      err->columnNumber = JS::ColumnNumberZeroOrigin(columnNumber);
+      err->columnNumber =
+          JS::ColumnNumberOneOrigin(columnNumber.oneOriginValue());
       return true;
     }
     return false;
