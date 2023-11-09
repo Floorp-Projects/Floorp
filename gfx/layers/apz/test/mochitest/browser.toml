@@ -29,6 +29,8 @@ support-files = ["helper_content_response_timeout.html"]
 skip-if = [
   "os == 'win' && bits == 32", # intermittent failures on win7/32, still run on win11/32
   "os == 'linux' && bits == 64", # Bug 1773830
+  "os == 'mac' && !debug", # Bug 1784757
+  "win11_2009 && !debuug", # Bug 1784757
 ]
 support-files = [
   "FissionTestHelperParent.sys.mjs",
