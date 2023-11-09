@@ -6,6 +6,7 @@
 import re
 import sys
 import os
+import unittest
 
 # Add this directory to the import path.
 sys.path.append(os.path.dirname(__file__))
@@ -271,8 +272,9 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
         self.assertEqual(target_content2, sel.selected_content)
 
     @parameterized(_input_id, el_id=_input_id)
-    @parameterized(_textarea_id, el_id=_textarea_id)
-    @parameterized(_textarea_disabled_id, el_id=_textarea_disabled_id)
+    # Bug 1855083: Skip textarea tests due to high frequent intermittent.
+    # @parameterized(_textarea_id, el_id=_textarea_id)
+    # @parameterized(_textarea_disabled_id, el_id=_textarea_disabled_id)
     @parameterized(_textarea_rtl_id, el_id=_textarea_rtl_id)
     @parameterized(_contenteditable_id, el_id=_contenteditable_id)
     @parameterized(_content_id, el_id=_content_id)
@@ -768,6 +770,7 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
 
         self.assertEqual("DDDDDD EEEEEE", sel.selected_content)
 
+    @unittest.skip("Bug 1855083: High frequent intermittent.")
     def test_carets_not_show_after_key_scroll_down_and_up(self):
         self.open_test_html(self._key_scroll_html)
         html = self.marionette.find_element(By.ID, "html")
@@ -785,6 +788,10 @@ class AccessibleCaretSelectionModeTestCase(MarionetteTestCase):
         (_, _), (x1, y1) = sel.carets_location()
 
         # Step 2: Scroll the page down and up.
+        #
+        # FIXME: The selection highlight on "AAAAA" often disappears after page
+        # up, which is the root cause of the intermittent. Longer pause between
+        # the page down and page up might help, but it's not a great solution.
         self.actions.key_chain.send_keys(Keys.PAGE_DOWN).pause(1000).send_keys(
             Keys.PAGE_UP
         ).perform()
