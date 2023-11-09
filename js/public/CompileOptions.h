@@ -61,7 +61,7 @@
 #include "jstypes.h"  // JS_PUBLIC_API
 
 #include "js/CharacterEncoding.h"  // JS::ConstUTF8CharsZ
-#include "js/ColumnNumber.h"       // JS::ColumnNumberZeroOrigin
+#include "js/ColumnNumber.h"       // JS::ColumnNumberOneOrigin
 #include "js/TypeDecls.h"          // JS::MutableHandle (fwd)
 
 namespace js {
@@ -449,7 +449,7 @@ class JS_PUBLIC_API ReadOnlyCompileOptions : public TransitiveCompileOptions {
   // Line number of the first character (1-origin).
   uint32_t lineno = 1;
   // Column number of the first character in UTF-16 code units.
-  JS::ColumnNumberZeroOrigin column;
+  JS::ColumnNumberOneOrigin column;
 
   // The offset within the ScriptSource's full uncompressed text of the first
   // character we're presenting for compilation with this CompileOptions.
@@ -615,7 +615,7 @@ class MOZ_STACK_CLASS JS_PUBLIC_API CompileOptions final
     return *this;
   }
 
-  CompileOptions& setColumn(JS::ColumnNumberZeroOrigin c) {
+  CompileOptions& setColumn(JS::ColumnNumberOneOrigin c) {
     column = c;
     return *this;
   }
