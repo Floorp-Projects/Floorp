@@ -25,7 +25,7 @@
 #include "gc/Zone.h"           // for Zone
 #include "gc/ZoneAllocator.h"  // for AddCellMemory
 #include "js/CallArgs.h"       // for CallArgs, CallArgsFromVp
-#include "js/ColumnNumber.h"  // JS::LimitedColumnNumberZeroOrigin, JS::LimitedColumnNumberOneOrigin, JS::WasmFunctionIndex
+#include "js/ColumnNumber.h"  // JS::LimitedColumnNumberOneOrigin, JS::WasmFunctionIndex
 #include "js/friend/ErrorMessages.h"  // for GetErrorMessage, JSMSG_*
 #include "js/GCVariant.h"             // for GCVariant
 #include "js/HeapAPI.h"               // for GCCellPtr
@@ -731,8 +731,7 @@ class DebuggerScript::GetPossibleBreakpointsMatcher {
     if (!parseIntValueImpl(value, &tmp)) {
       return false;
     }
-    *result = JS::LimitedColumnNumberOneOrigin(
-        JS::LimitedColumnNumberZeroOrigin(tmp));
+    *result = JS::LimitedColumnNumberOneOrigin::fromZeroOrigin(tmp);
     return true;
   }
   bool parseSizeTValue(HandleValue value, size_t* result) {
@@ -952,8 +951,7 @@ class DebuggerScript::GetPossibleBreakpointsMatcher {
       //        part also needs to be rewritten to directly pass the
       //        "1 in 1-origin" (bug 1863878).
       JS::LimitedColumnNumberOneOrigin column =
-          JS::LimitedColumnNumberOneOrigin(
-              JS::LimitedColumnNumberZeroOrigin(offsets[i].column));
+          JS::LimitedColumnNumberOneOrigin::fromZeroOrigin(offsets[i].column);
       size_t offset = offsets[i].offset;
       if (!maybeAppendEntry(offset, lineno, column, true)) {
         return false;
@@ -1910,8 +1908,7 @@ class DebuggerScript::GetAllColumnOffsetsMatcher {
       uint32_t lineno = offsets[i].lineno;
       // See the comment in GetPossibleBreakpointsMatcher::parseQuery.
       JS::LimitedColumnNumberOneOrigin column =
-          JS::LimitedColumnNumberOneOrigin(
-              JS::LimitedColumnNumberZeroOrigin(offsets[i].column));
+          JS::LimitedColumnNumberOneOrigin::fromZeroOrigin(offsets[i].column);
       size_t offset = offsets[i].offset;
       if (!appendColumnOffsetEntry(lineno, column, offset)) {
         return false;
