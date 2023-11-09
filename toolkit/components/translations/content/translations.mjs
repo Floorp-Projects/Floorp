@@ -8,7 +8,7 @@
 
 /* global AT_getSupportedLanguages, AT_log, AT_getScriptDirection,
    AT_logError, AT_createTranslationsPort, AT_isHtmlTranslation,
-   AT_isTranslationEngineSupported, AT_identifyLanguage */
+   AT_isTranslationEngineSupported, AT_createLanguageIdEngine, AT_identifyLanguage */
 
 // Allow tests to override this value so that they can run faster.
 // This is the delay in milliseconds.
@@ -80,6 +80,14 @@ class TranslationsState {
     this.isTranslationEngineSupported = isSupported;
 
     /**
+     * Allow code to wait for the engine to be created.
+     * @type {Promise<void>}
+     */
+    this.languageIdEngineCreated = isSupported
+      ? AT_createLanguageIdEngine()
+      : Promise.resolve();
+
+    /**
      * @type {SupportedLanguages}
      */
     this.supportedLanguages = isSupported
@@ -90,13 +98,12 @@ class TranslationsState {
     this.ui.setup();
 
     // Set the UI as ready after all of the state promises have settled.
-    this.supportedLanguages
-      .then(() => {
-        this.ui.setAsReady();
-      })
-      .catch(error => {
-        AT_logError("Failed to load the supported languages", error);
-      });
+    Promise.allSettled([
+      this.languageIdEngineCreated,
+      this.supportedLanguages,
+    ]).then(() => {
+      this.ui.setAsReady();
+    });
   }
 
   /**
@@ -108,6 +115,7 @@ class TranslationsState {
    * @param {string} message
    */
   async identifyLanguage(message) {
+    await this.languageIdEngineCreated;
     const start = performance.now();
     const { langTag, confidence } = await AT_identifyLanguage(message);
     const duration = performance.now() - start;

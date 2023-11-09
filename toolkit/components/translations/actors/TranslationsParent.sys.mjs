@@ -120,6 +120,12 @@ XPCOMUtils.defineLazyPreferenceGetter(
   "browser.translations.simulateUnsupportedEngine"
 );
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "useFastTextPref",
+  "browser.translations.languageIdentification.useFastText"
+);
+
 // At this time the signatures of the files are not being checked when they are being
 // loaded from disk. This signature check involves hitting the network, and translations
 // are explicitly an offline-capable feature. See Bug 1827265 for re-enabling this
@@ -129,11 +135,13 @@ const VERIFY_SIGNATURES_FROM_FS = false;
 /**
  * @typedef {import("../translations").TranslationModelRecord} TranslationModelRecord
  * @typedef {import("../translations").RemoteSettingsClient} RemoteSettingsClient
+ * @typedef {import("../translations").LanguageIdEngineMockedPayload} LanguageIdEngineMockedPayload
  * @typedef {import("../translations").LanguageTranslationModelFiles} LanguageTranslationModelFiles
  * @typedef {import("../translations").WasmRecord} WasmRecord
  * @typedef {import("../translations").LangTags} LangTags
  * @typedef {import("../translations").LanguagePair} LanguagePair
  * @typedef {import("../translations").SupportedLanguages} SupportedLanguages
+ * @typedef {import("../translations").LanguageIdModelRecord} LanguageIdModelRecord
  * @typedef {import("../translations").TranslationErrors} TranslationErrors
  */
 
@@ -220,6 +228,13 @@ export class TranslationsParent extends JSWindowActorParent {
   }
 
   /**
+   * The remote settings client that retrieves the language-identification model binary.
+   *
+   * @type {RemoteSettingsClient | null}
+   */
+  static #languageIdModelsRemoteClient = null;
+
+  /**
    * A map of the TranslationModelRecord["id"] to the record of the model in Remote Settings.
    * Used to coordinate the downloads.
    *
@@ -254,6 +269,22 @@ export class TranslationsParent extends JSWindowActorParent {
    * @type {bool}
    */
   static #isTranslationsEngineMocked = false;
+
+  /**
+   * The language identification engine can be mocked for testing
+   * by pre-defining this value.
+   *
+   * @type {string | null}
+   */
+  static #mockedLangTag = null;
+
+  /**
+   * The language identification engine can be mocked for testing
+   * by pre-defining this value.
+   *
+   * @type {number | null}
+   */
+  static #mockedLanguageIdConfidence = null;
 
   /**
    * @type {null | Promise<boolean>}
@@ -753,6 +784,18 @@ export class TranslationsParent extends JSWindowActorParent {
 
   async receiveMessage({ name, data }) {
     switch (name) {
+      case "Translations:GetLanguageIdEnginePayload": {
+        const [modelBuffer, wasmBuffer] = await Promise.all([
+          TranslationsParent.#getLanguageIdModelArrayBuffer(),
+          TranslationsParent.#getLanguageIdWasmArrayBuffer(),
+        ]);
+        return {
+          modelBuffer,
+          wasmBuffer,
+          mockedConfidence: TranslationsParent.#mockedLanguageIdConfidence,
+          mockedLangTag: TranslationsParent.#mockedLangTag,
+        };
+      }
       case "Translations:ReportLangTags": {
         const { documentElementLang, href } = data;
         const detectedLanguages = await this.getDetectedLanguages(
@@ -917,6 +960,152 @@ export class TranslationsParent extends JSWindowActorParent {
     }
 
     return TranslationsParent.shouldAlwaysTranslateLanguage(langTags);
+  }
+
+  /** @type {Promise<LanguageIdModelRecord> | null} */
+  static #languageIdModelRecord = null;
+
+  /**
+   * Retrieves the language-identification model binary from remote settings.
+   *
+   * @returns {Promise<ArrayBuffer>}
+   */
+  static async #getLanguageIdModelArrayBuffer() {
+    lazy.console.log("Getting language-identification model array buffer.");
+    const now = Date.now();
+    const client = TranslationsParent.#getLanguageIdModelRemoteClient();
+
+    if (!TranslationsParent.#languageIdModelRecord) {
+      // Place the records into a promise to prevent any races.
+      TranslationsParent.#languageIdModelRecord = (async () => {
+        /** @type {LanguageIdModelRecord[]} */
+        let modelRecords = await TranslationsParent.getMaxVersionRecords(
+          client
+        );
+
+        if (modelRecords.length === 0) {
+          throw new Error(
+            "Unable to get language-identification model record from remote settings"
+          );
+        }
+
+        if (modelRecords.length > 1) {
+          TranslationsParent.reportError(
+            new Error(
+              "Expected the language-identification model collection to have only 1 record."
+            ),
+            modelRecords
+          );
+        }
+        return modelRecords[0];
+      })();
+    }
+
+    await chaosMode(1 / 3);
+
+    try {
+      /** @type {{buffer: ArrayBuffer}} */
+      const { buffer } = await client.attachments.download(
+        await TranslationsParent.#languageIdModelRecord
+      );
+
+      const duration = (Date.now() - now) / 1000;
+      lazy.console.log(
+        `Remote language-identification model loaded in ${duration} seconds.`
+      );
+
+      return buffer;
+    } catch (error) {
+      TranslationsParent.#languageIdModelRecord = null;
+      throw error;
+    }
+  }
+
+  /**
+   * Initializes the RemoteSettingsClient for the language-identification model binary.
+   *
+   * @returns {RemoteSettingsClient}
+   */
+  static #getLanguageIdModelRemoteClient() {
+    if (TranslationsParent.#languageIdModelsRemoteClient) {
+      return TranslationsParent.#languageIdModelsRemoteClient;
+    }
+
+    /** @type {RemoteSettingsClient} */
+    const client = lazy.RemoteSettings("translations-identification-models");
+
+    TranslationsParent.#languageIdModelsRemoteClient = client;
+    return client;
+  }
+
+  /** @type {Promise<LanguageIdModelRecord> | null} */
+  static #languageIdWasmRecord = null;
+
+  /**
+   * Retrieves the language-identification wasm binary from remote settings.
+   *
+   * @returns {Promise<ArrayBuffer>}
+   */
+  static async #getLanguageIdWasmArrayBuffer() {
+    const start = Date.now();
+    const client = TranslationsParent.#getTranslationsWasmRemoteClient();
+
+    // Load the wasm binary from remote settings, if it hasn't been already.
+    lazy.console.log(`Getting remote language-identification wasm binary.`);
+    if (!TranslationsParent.#languageIdWasmRecord) {
+      // Place the records into a promise to prevent any races.
+      TranslationsParent.#languageIdWasmRecord = (async () => {
+        /** @type {WasmRecord[]} */
+        let wasmRecords = await TranslationsParent.getMaxVersionRecords(
+          client,
+          {
+            filters: { name: "fasttext-wasm" },
+          }
+        );
+
+        if (wasmRecords.length === 0) {
+          // The remote settings client provides an empty list of records when there is
+          // an error.
+          throw new Error(
+            'Unable to get "fasttext-wasm" language-identification wasm binary from Remote Settings.'
+          );
+        }
+
+        if (wasmRecords.length > 1) {
+          TranslationsParent.reportError(
+            new Error(
+              'Expected the "fasttext-wasm" language-identification wasm collection to only have 1 record.'
+            ),
+            wasmRecords
+          );
+        }
+        return wasmRecords[0];
+      })();
+    }
+
+    try {
+      // Unlike the models, greedily download the wasm. It will pull it from a locale
+      // cache on disk if it's already been downloaded. Do not retain a copy, as
+      // this will be running in the parent process. It's not worth holding onto
+      // this much memory, so reload it every time it is needed.
+
+      await chaosMode(1 / 3);
+
+      /** @type {{buffer: ArrayBuffer}} */
+      const { buffer } = await client.attachments.download(
+        await TranslationsParent.#languageIdWasmRecord
+      );
+
+      const duration = (Date.now() - start) / 1000;
+      lazy.console.log(
+        `Remote language-identification wasm binary loaded in ${duration} seconds.`
+      );
+
+      return buffer;
+    } catch (error) {
+      TranslationsParent.#languageIdWasmRecord = null;
+      throw error;
+    }
   }
 
   /**
@@ -1138,7 +1327,7 @@ export class TranslationsParent extends JSWindowActorParent {
    *     This function should take a record as input and return a string that represents the lookup key for the record.
    *     For most record types, the name (default) is sufficient, however if a collection contains records with
    *     non-unique name values, it may be necessary to provide an alternative function here.
-   * @returns {Array<TranslationModelRecord | WasmRecord>}
+   * @returns {Array<TranslationModelRecord | LanguageIdModelRecord | WasmRecord>}
    */
   static async getMaxVersionRecords(
     remoteSettingsClient,
@@ -1505,6 +1694,12 @@ export class TranslationsParent extends JSWindowActorParent {
     queue.push({
       download: () => TranslationsParent.#getBergamotWasmArrayBuffer(),
     });
+    queue.push({
+      download: () => TranslationsParent.#getLanguageIdModelArrayBuffer(),
+    });
+    queue.push({
+      download: () => TranslationsParent.#getLanguageIdWasmArrayBuffer(),
+    });
 
     return downloadManager(queue);
   }
@@ -1755,10 +1950,13 @@ export class TranslationsParent extends JSWindowActorParent {
     // Records.
     TranslationsParent.#bergamotWasmRecord = null;
     TranslationsParent.#translationModelRecords = null;
+    TranslationsParent.#languageIdModelRecord = null;
+    TranslationsParent.#languageIdWasmRecord = null;
 
     // Clients.
     TranslationsParent.#translationModelsRemoteClient = null;
     TranslationsParent.#translationsWasmRemoteClient = null;
+    TranslationsParent.#languageIdModelsRemoteClient = null;
 
     // Derived data.
     TranslationsParent.#preferredLanguages = null;
@@ -1782,6 +1980,33 @@ export class TranslationsParent extends JSWindowActorParent {
     TranslationsParent.#isTranslationsEngineMocked = false;
   }
 
+  /**
+   * For testing purposes, allow the LanguageIdEngine to be mocked. If called
+   * with `null` in each argument, the mock is removed.
+   *
+   * @param {string} langTag - The BCP 47 language tag.
+   * @param {number} confidence  - The confidence score of the detected language.
+   * @param {RemoteSettingsClient} client
+   */
+  static mockLanguageIdentification(langTag, confidence, client) {
+    lazy.console.log("Mocking language identification.", {
+      langTag,
+      confidence,
+    });
+    TranslationsParent.#mockedLangTag = langTag;
+    TranslationsParent.#mockedLanguageIdConfidence = confidence;
+    TranslationsParent.#languageIdModelsRemoteClient = client;
+  }
+
+  /**
+   * Remove the mocks for the language identification, make sure and call clearCache after
+   * to remove the cached values.
+   */
+  static unmockLanguageIdentification() {
+    lazy.console.log("Removing language identification mock.");
+    TranslationsParent.#mockedLangTag = null;
+    TranslationsParent.#mockedLanguageIdConfidence = null;
+  }
   /**
    * Report an error. Having this as a method allows tests to check that an error
    * was properly reported.
@@ -1932,11 +2157,13 @@ export class TranslationsParent extends JSWindowActorParent {
   async queryIdentifyLanguage() {
     if (
       TranslationsParent.isInAutomation() &&
-      !TranslationsParent.#isTranslationsEngineMocked
+      !TranslationsParent.#mockedLangTag
     ) {
       return null;
     }
-    return this.sendQuery("Translations:IdentifyLanguage").catch(error => {
+    return this.sendQuery("Translations:IdentifyLanguage", {
+      useFastText: lazy.useFastTextPref,
+    }).catch(error => {
       if (this.#isDestroyed) {
         // The actor was destroyed while this message was still being resolved.
         return null;
@@ -2042,7 +2269,8 @@ export class TranslationsParent extends JSWindowActorParent {
         }
       }
     } else {
-      // If the document's markup had no specified langTag, attempt to identify the page's language.
+      // If the document's markup had no specified langTag, attempt
+      // to identify the page's language using the LanguageIdEngine.
       langTags.docLangTag = await this.queryIdentifyLanguage();
       if (this.#isDestroyed) {
         return null;

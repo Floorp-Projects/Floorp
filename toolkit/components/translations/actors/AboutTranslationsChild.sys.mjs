@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+
 const lazy = {};
 
 ChromeUtils.defineLazyGetter(lazy, "console", () => {
@@ -16,7 +18,14 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "resource://gre/modules/translation/LanguageDetector.sys.mjs",
 });
 
+XPCOMUtils.defineLazyPreferenceGetter(
+  lazy,
+  "useFastTextPref",
+  "browser.translations.languageIdentification.useFastText"
+);
+
 /**
+ * @typedef {import("./TranslationsChild.sys.mjs").LanguageIdEngine} LanguageIdEngine
  * @typedef {import("./TranslationsChild.sys.mjs").TranslationsEngine} TranslationsEngine
  * @typedef {import("./TranslationsChild.sys.mjs").SupportedLanguages} SupportedLanguages
  */
@@ -26,6 +35,9 @@ ChromeUtils.defineESModuleGetters(lazy, {
  * are exposed to the un-privileged scope of the about:translations page.
  */
 export class AboutTranslationsChild extends JSWindowActorChild {
+  /** @type {LanguageIdEngine | null} */
+  languageIdEngine = null;
+
   /**
    * The translations engine uses text translations by default in about:translations,
    * but it can be changed to translate HTML by setting this pref to true. This is
@@ -143,6 +155,7 @@ export class AboutTranslationsChild extends JSWindowActorChild {
       "AT_getSupportedLanguages",
       "AT_isTranslationEngineSupported",
       "AT_isHtmlTranslation",
+      "AT_createLanguageIdEngine",
       "AT_createTranslationsPort",
       "AT_identifyLanguage",
       "AT_getScriptDirection",
@@ -212,6 +225,32 @@ export class AboutTranslationsChild extends JSWindowActorChild {
   }
 
   /**
+   * Creates the LanguageIdEngine which attempts to identify in which
+   * human language a string is written.
+   *
+   * Unlike TranslationsEngine, which handles only a single language pair
+   * and must be rebuilt to handle a new language pair, the LanguageIdEngine
+   * is a one-to-many engine that can recognize all of its supported languages.
+   *
+   * Subsequent calls to this function after the engine is initialized will do nothing
+   * instead of rebuilding the engine.
+   *
+   * @returns {Promise<void>}
+   */
+  AT_createLanguageIdEngine() {
+    if (this.languageIdEngine) {
+      return this.#convertToContentPromise(Promise.resolve());
+    }
+    return this.#convertToContentPromise(
+      this.#getTranslationsChild()
+        .getOrCreateLanguageIdEngine()
+        .then(engine => {
+          this.languageIdEngine = engine;
+        })
+    );
+  }
+
+  /**
    * Requests a port to the TranslationsEngine process. An engine will be created on
    * the fly for translation requests through this port. This port is unique to its
    * language pair. In order to translate a different language pair, a new port must be
@@ -231,11 +270,26 @@ export class AboutTranslationsChild extends JSWindowActorChild {
 
   /**
    * Attempts to identify the human language in which the message is written.
+   * @see LanguageIdEngine#identifyLanguage for more detailed documentation.
    *
    * @param {string} message
    * @returns {Promise<{ langTag: string, confidence: number }>}
    */
   AT_identifyLanguage(message) {
+    if (lazy.useFastTextPref) {
+      if (!this.languageIdEngine) {
+        const { Promise, Error } = this.contentWindow;
+        return Promise.reject(
+          new Error("The language identification was not created.")
+        );
+      }
+
+      return this.#convertToContentPromise(
+        this.languageIdEngine
+          .identifyLanguage(message)
+          .then(data => Cu.cloneInto(data, this.contentWindow))
+      );
+    }
     return this.#convertToContentPromise(
       lazy.LanguageDetector.detectLanguage(message).then(data =>
         Cu.cloneInto(

@@ -80,16 +80,20 @@ architecture to identify content as being written in a detected language.
 
 ### Technology
 
-Firefox Translations utilizes a [CLD2] language detector to identify in which language content is written.
+Firefox Translations utilizes a [WASM] version of the [fastText] library to identify in which
+language content is written.
 
 ### Models
 
-No models are currently used for language identification, since [CLD2] exists in the Firefox source tree.
+Unlike the language translations models in the [section](#language-translations) above, the [fastText]
+model is a is a one-to-many model that is capable of detecting all of our supported languages
+from the single model.
 
 ---
 ## Remote Settings
 
-Remote Settings is not currently used for language identification, since [CLD2] exists in the Firefox source tree.
+Firefox Translations utilizes [Remote Settings] to download [WASM] binaries, [Language Translation](#language-translation)
+models and [Language Identification](#language-identification) models to use locally on your system.
 
 ---
 ## Using Firefox Translations
@@ -135,7 +139,7 @@ It is, however, useful and fun, so it is documented here.
 
 <!-- Hyperlinks -->
 [Bergamot]: https://browser.mt/
-[CLD2]: https://github.com/CLD2Owners/cld2
+[fastText]: https://fasttext.cc/
 [Firefox Nightly]: https://www.mozilla.org/en-US/firefox/channel/desktop/
 [Marian]: https://aclanthology.org/P18-4020/
 [Remote Settings]: https://remote-settings.readthedocs.io/en/latest/
