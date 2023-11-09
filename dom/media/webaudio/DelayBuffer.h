@@ -86,8 +86,8 @@ class DelayBuffer final {
 
   // Circular buffer for capturing delayed samples.
   FallibleTArray<AudioChunk> mChunks;
-  // Cache upmixed channel arrays.
-  AutoTArray<const float*, GUESS_AUDIO_CHANNELS> mUpmixChannels;
+  // Cached upmixed channel arrays, to avoid repeated allocations.
+  CopyableAutoTArray<const float*, GUESS_AUDIO_CHANNELS> mUpmixChannels;
   // Maximum delay, in ticks
   int mMaxDelayTicks;
   // The current position in the circular buffer.  The next write will be to
