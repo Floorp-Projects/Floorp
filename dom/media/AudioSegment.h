@@ -514,9 +514,8 @@ class AudioSegment : public MediaSegmentBase<AudioSegment, AudioChunk> {
 template <typename SrcT>
 void WriteChunk(const AudioChunk& aChunk, uint32_t aOutputChannels,
                 float aVolume, AudioDataValue* aOutputBuffer) {
-  AutoTArray<const SrcT*, GUESS_AUDIO_CHANNELS> channelData;
-
-  channelData = aChunk.ChannelData<SrcT>().Clone();
+  CopyableAutoTArray<const SrcT*, GUESS_AUDIO_CHANNELS> channelData;
+  channelData.AppendElements(aChunk.ChannelData<SrcT>());
 
   if (channelData.Length() < aOutputChannels) {
     // Up-mix. Note that this might actually make channelData have more
