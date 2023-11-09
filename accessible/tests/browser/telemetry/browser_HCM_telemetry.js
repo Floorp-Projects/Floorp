@@ -27,6 +27,7 @@ function reset() {
   Services.prefs.clearUserPref("browser.display.document_color_use");
   Services.prefs.clearUserPref("browser.display.permit_backplate");
   Services.prefs.clearUserPref("browser.display.use_system_colors");
+  Services.prefs.clearUserPref("layout.css.always_underline_links");
   Services.telemetry.clearEvents();
   TelemetryTestUtils.assertNumberOfEvents(0);
   Services.prefs.clearUserPref("browser.display.foreground_color");
@@ -74,6 +75,18 @@ function verifyUseSystemColors(expectedValue) {
     expectedValue,
     "System colors scalar is logged as " + expectedValue
   );
+}
+
+async function verifyAlwaysUnderlineLinks(expectedValue) {
+  let snapshot = TelemetryTestUtils.getProcessScalars("parent", false, false);
+  ok(
+    "a11y.always_underline_links" in snapshot,
+    "Always underline links was logged."
+  );
+  await TestUtils.waitForCondition(() => {
+    snapshot = TelemetryTestUtils.getProcessScalars("parent", false, false);
+    return snapshot["a11y.always_underline_links"] == expectedValue;
+  }, "Always underline links has expected value " + expectedValue);
 }
 
 // The magic numbers below are the uint32_t values representing RGB white
@@ -360,6 +373,35 @@ add_task(async function testSystemColors() {
 
   verifyUseSystemColors(!expectedInitVal);
 
+  reset();
+  gBrowser.removeCurrentTab();
+});
+
+add_task(async function testAlwaysUnderlineLinks() {
+  const expectedInitVal = false;
+  await verifyAlwaysUnderlineLinks(expectedInitVal);
+  await openPreferencesViaOpenPreferencesAPI("general", { leaveOpen: true });
+  const checkbox = gBrowser.selectedBrowser.contentDocument.getElementById(
+    "alwaysUnderlineLinks"
+  );
+  is(
+    checkbox.checked,
+    expectedInitVal,
+    "Always underline links checkbox has correct initial state"
+  );
+  checkbox.click();
+
+  is(
+    checkbox.checked,
+    !expectedInitVal,
+    "Always underline links checkbox should be modified"
+  );
+  is(
+    Services.prefs.getBoolPref("layout.css.always_underline_links"),
+    !expectedInitVal,
+    "Always underline links pref reflects new value."
+  );
+  await verifyAlwaysUnderlineLinks(!expectedInitVal);
   reset();
   gBrowser.removeCurrentTab();
 });
