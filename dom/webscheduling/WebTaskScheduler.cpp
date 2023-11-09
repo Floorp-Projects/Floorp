@@ -324,9 +324,10 @@ void WebTaskScheduler::Disconnect() {
 }
 
 void WebTaskScheduler::RunTaskSignalPriorityChange(TaskSignal* aTaskSignal) {
-  WebTaskQueue* const taskQueue = mDynamicPriorityTaskQueues.Get(aTaskSignal);
-  MOZ_ASSERT(taskQueue);
-  taskQueue->SetPriority(aTaskSignal->Priority());
+  if (WebTaskQueue* const taskQueue =
+          mDynamicPriorityTaskQueues.Get(aTaskSignal)) {
+    taskQueue->SetPriority(aTaskSignal->Priority());
+  }
 }
 
 WebTaskQueue& WebTaskScheduler::SelectTaskQueue(
