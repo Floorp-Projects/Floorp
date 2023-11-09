@@ -293,8 +293,7 @@ TEST(TestUDPSocket, TestUDPSocketMain)
   clientAddr.inet.ip = PR_htonl(127 << 24 | 1);
 
   phase = TEST_SEND_API;
-  rv = server->SendWithAddress(&clientAddr, data.Elements(), data.Length(),
-                               &count);
+  rv = server->SendWithAddress(&clientAddr, data, &count);
   ASSERT_NS_SUCCEEDED(rv);
   EXPECT_EQ(count, sizeof(uint32_t));
 
@@ -323,8 +322,7 @@ TEST(TestUDPSocket, TestUDPSocketMain)
   // Send multicast ping
   timerCb->mResult = NS_OK;
   timer->InitWithCallback(timerCb, MULTICAST_TIMEOUT, nsITimer::TYPE_ONE_SHOT);
-  rv = client->SendWithAddress(&multicastAddr, data.Elements(), data.Length(),
-                               &count);
+  rv = client->SendWithAddress(&multicastAddr, data, &count);
   ASSERT_NS_SUCCEEDED(rv);
   EXPECT_EQ(count, sizeof(uint32_t));
 
@@ -342,8 +340,7 @@ TEST(TestUDPSocket, TestUDPSocketMain)
   // Send multicast ping
   timerCb->mResult = NS_OK;
   timer->InitWithCallback(timerCb, MULTICAST_TIMEOUT, nsITimer::TYPE_ONE_SHOT);
-  rv = client->SendWithAddress(&multicastAddr, data.Elements(), data.Length(),
-                               &count);
+  rv = client->SendWithAddress(&multicastAddr, data, &count);
   ASSERT_NS_SUCCEEDED(rv);
   EXPECT_EQ(count, sizeof(uint32_t));
 
@@ -365,8 +362,7 @@ TEST(TestUDPSocket, TestUDPSocketMain)
   // Send multicast ping
   timerCb->mResult = NS_OK;
   timer->InitWithCallback(timerCb, MULTICAST_TIMEOUT, nsITimer::TYPE_ONE_SHOT);
-  rv = client->SendWithAddress(&multicastAddr, data.Elements(), data.Length(),
-                               &count);
+  rv = client->SendWithAddress(&multicastAddr, data, &count);
   ASSERT_NS_SUCCEEDED(rv);
   EXPECT_EQ(count, sizeof(uint32_t));
 
@@ -388,8 +384,7 @@ TEST(TestUDPSocket, TestUDPSocketMain)
   // Send multicast ping
   timerCb->mResult = NS_OK;
   timer->InitWithCallback(timerCb, MULTICAST_TIMEOUT, nsITimer::TYPE_ONE_SHOT);
-  rv = client->SendWithAddress(&multicastAddr, data.Elements(), data.Length(),
-                               &count);
+  rv = client->SendWithAddress(&multicastAddr, data, &count);
   ASSERT_NS_SUCCEEDED(rv);
   EXPECT_EQ(count, sizeof(uint32_t));
 
