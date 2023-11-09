@@ -606,7 +606,7 @@ bool BytecodeEmitter::updateSourceCoordNotes(uint32_t offset) {
   }
 
   JS::LimitedColumnNumberZeroOrigin columnIndex =
-      errorReporter().columnAt(offset);
+      JS::LimitedColumnNumberZeroOrigin(errorReporter().columnAt(offset));
 
   // Assert colspan is always representable.
   static_assert((0 - ptrdiff_t(JS::LimitedColumnNumberZeroOrigin::Limit)) >=

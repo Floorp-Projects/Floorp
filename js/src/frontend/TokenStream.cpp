@@ -35,7 +35,7 @@
 #include "frontend/ParserAtom.h"
 #include "frontend/ReservedWords.h"
 #include "js/CharacterEncoding.h"  // JS::ConstUTF8CharsZ
-#include "js/ColumnNumber.h"  // JS::LimitedColumnNumberZeroOrigin, JS::ColumnNumberZeroOrigin, JS::ColumnNumberOneOrigin, JS::TaggedColumnNumberZeroOrigin, JS::TaggedColumnNumberOneOrigin
+#include "js/ColumnNumber.h"  // JS::LimitedColumnNumberOneOrigin, JS::ColumnNumberOneOrigin, JS::TaggedColumnNumberOneOrigin
 #include "js/ErrorReport.h"   // JSErrorBase
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/Printf.h"                // JS_smprintf
@@ -454,8 +454,8 @@ TokenStreamSpecific<Unit, AnyCharsAccess>::TokenStreamSpecific(
 
 bool TokenStreamAnyChars::checkOptions() {
   // Constrain starting columns to where they will saturate.
-  if (options().column.zeroOriginValue() >
-      JS::LimitedColumnNumberZeroOrigin::Limit) {
+  if (options().column.oneOriginValue() >
+      JS::LimitedColumnNumberOneOrigin::Limit) {
     reportErrorNoOffset(JSMSG_BAD_COLUMN_NUMBER);
     return false;
   }
@@ -833,7 +833,7 @@ JS::ColumnNumberUnsignedOffset TokenStreamAnyChars::computeColumnOffsetForUTF8(
 }
 
 template <typename Unit, class AnyCharsAccess>
-JS::LimitedColumnNumberZeroOrigin
+JS::LimitedColumnNumberOneOrigin
 GeneralTokenStreamChars<Unit, AnyCharsAccess>::computeColumn(
     LineToken lineToken, uint32_t offset) const {
   lineToken.assertConsistentOffset(offset);
@@ -844,16 +844,16 @@ GeneralTokenStreamChars<Unit, AnyCharsAccess>::computeColumn(
       anyChars.computeColumnOffset(lineToken, offset, this->sourceUnits);
 
   if (!lineToken.isFirstLine()) {
-    return JS::LimitedColumnNumberZeroOrigin::fromUnlimited(
-        JS::ColumnNumberZeroOrigin::zero() + columnOffset);
+    return JS::LimitedColumnNumberOneOrigin::fromUnlimited(
+        JS::ColumnNumberOneOrigin::zero() + columnOffset);
   }
 
-  if (columnOffset.value() > JS::LimitedColumnNumberZeroOrigin::Limit) {
-    return JS::LimitedColumnNumberZeroOrigin::limit();
+  if (1 + columnOffset.value() > JS::LimitedColumnNumberOneOrigin::Limit) {
+    return JS::LimitedColumnNumberOneOrigin::limit();
   }
 
-  return JS::LimitedColumnNumberZeroOrigin::fromUnlimited(
-      anyChars.options_.column + columnOffset);
+  return JS::LimitedColumnNumberOneOrigin::fromUnlimited(
+      (anyChars.options_.column + columnOffset).oneOriginValue());
 }
 
 template <typename Unit, class AnyCharsAccess>
@@ -864,7 +864,7 @@ void GeneralTokenStreamChars<Unit, AnyCharsAccess>::computeLineAndColumn(
 
   auto lineToken = anyChars.lineToken(offset);
   *line = anyChars.lineNumber(lineToken);
-  *column = JS::LimitedColumnNumberOneOrigin(computeColumn(lineToken, offset));
+  *column = computeColumn(lineToken, offset);
 }
 
 template <class AnyCharsAccess>
