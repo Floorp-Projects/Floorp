@@ -43,6 +43,7 @@ const expected = [
   "has item.calendar.year",
   "has item.calendar.yearMonthFromFields",
   "has item.calendar.yearOfWeek",
+  "get item.calendar.dateFromFields",
   "get item.calendar.fields",
   "call item.calendar.fields",
   // PrepareTemporalFields
@@ -90,7 +91,6 @@ const expected = [
   "call options.offset.toString",
   "get options.overflow.toString",
   "call options.overflow.toString",
-  "get item.calendar.dateFromFields",
   "call item.calendar.dateFromFields",
   // InterpretISODateTimeOffset
   "get item.timeZone.getPossibleInstantsFor",
