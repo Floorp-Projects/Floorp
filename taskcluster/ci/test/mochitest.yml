@@ -211,10 +211,7 @@ mochitest-a11y:
                     android-em-7.0-x86_64-qr/debug: built-projects
                     linux.*64-qr/debug: built-projects
                     default: []
-            1proc:
-                by-test-platform:
-                    .*-wayland/debug.*: []
-                    default: built-projects
+            1proc: built-projects
     mozharness:
         mochitest-flavor: a11y
 
