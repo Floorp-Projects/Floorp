@@ -23,7 +23,7 @@
 #include "frontend/TypedIndex.h"   // js::frontend::TypedIndex
 
 #include "js/AllocPolicy.h"            // js::SystemAllocPolicy
-#include "js/ColumnNumber.h"           // JS::LimitedColumnNumberZeroOrigin
+#include "js/ColumnNumber.h"           // JS::LimitedColumnNumberOneOrigin
 #include "js/TypeDecls.h"              // JSContext,jsbytecode
 #include "js/UniquePtr.h"              // js::UniquePtr
 #include "js/Vector.h"                 // js::Vector
@@ -193,7 +193,7 @@ struct SourceExtent {
 
   SourceExtent(uint32_t sourceStart, uint32_t sourceEnd, uint32_t toStringStart,
                uint32_t toStringEnd, uint32_t lineno,
-               JS::LimitedColumnNumberZeroOrigin column)
+               JS::LimitedColumnNumberOneOrigin column)
       : sourceStart(sourceStart),
         sourceEnd(sourceEnd),
         toStringStart(toStringStart),
@@ -202,12 +202,11 @@ struct SourceExtent {
         column(column) {}
 
   static SourceExtent makeGlobalExtent(uint32_t len) {
-    return SourceExtent(0, len, 0, len, 1,
-                        JS::LimitedColumnNumberZeroOrigin::zero());
+    return SourceExtent(0, len, 0, len, 1, JS::LimitedColumnNumberOneOrigin());
   }
 
   static SourceExtent makeGlobalExtent(
-      uint32_t len, uint32_t lineno, JS::LimitedColumnNumberZeroOrigin column) {
+      uint32_t len, uint32_t lineno, JS::LimitedColumnNumberOneOrigin column) {
     return SourceExtent(0, len, 0, len, lineno, column);
   }
 
@@ -225,7 +224,7 @@ struct SourceExtent {
   // Line number (1-origin).
   uint32_t lineno = 1;
   // Column number in UTF-16 code units.
-  JS::LimitedColumnNumberZeroOrigin column;
+  JS::LimitedColumnNumberOneOrigin column;
 
   FunctionKey toFunctionKey() const {
     // In eval("x=>1"), the arrow function will have a sourceStart of 0 which

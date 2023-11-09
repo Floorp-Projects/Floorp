@@ -327,7 +327,8 @@ template <typename Unit>
 
   SourceExtent extent = SourceExtent::makeGlobalExtent(
       srcBuf.length(), input.options.lineno,
-      JS::LimitedColumnNumberZeroOrigin::fromUnlimited(input.options.column));
+      JS::LimitedColumnNumberOneOrigin::fromUnlimited(
+          JS::ColumnNumberOneOrigin(input.options.column)));
 
   GlobalSharedContext globalsc(fc, scopeKind, input.options,
                                compiler.compilationState().directives, extent);
@@ -700,7 +701,8 @@ static JSScript* CompileEvalScriptImpl(
     uint32_t len = srcBuf.length();
     SourceExtent extent = SourceExtent::makeGlobalExtent(
         len, options.lineno,
-        JS::LimitedColumnNumberZeroOrigin::fromUnlimited(options.column));
+        JS::LimitedColumnNumberOneOrigin::fromUnlimited(
+            JS::ColumnNumberOneOrigin(options.column)));
     EvalSharedContext evalsc(&fc, compiler.compilationState(), extent);
     if (!compiler.compile(cx, &evalsc)) {
       return nullptr;
@@ -1017,7 +1019,8 @@ bool ModuleCompiler<Unit>::compile(JSContext* maybeCx, FrontendContext* fc) {
   uint32_t len = this->sourceBuffer_.length();
   SourceExtent extent = SourceExtent::makeGlobalExtent(
       len, options.lineno,
-      JS::LimitedColumnNumberZeroOrigin::fromUnlimited(options.column));
+      JS::LimitedColumnNumberOneOrigin::fromUnlimited(
+          JS::ColumnNumberOneOrigin(options.column)));
   ModuleSharedContext modulesc(fc, options, builder, extent);
 
   ParseNode* pn = parser->moduleBody(&modulesc).unwrapOr(nullptr);
@@ -1112,13 +1115,13 @@ bool StandaloneFunctionCompiler<Unit>::compile(
     // line and column.
     const auto& options = compilationState_.input.options;
     compilationState_.scriptExtra[CompilationStencil::TopLevelIndex].extent =
-        SourceExtent{
-            /* sourceStart = */ 0,
-            sourceBuffer_.length(),
-            funbox->extent().toStringStart,
-            funbox->extent().toStringEnd,
-            options.lineno,
-            JS::LimitedColumnNumberZeroOrigin::fromUnlimited(options.column)};
+        SourceExtent{/* sourceStart = */ 0,
+                     sourceBuffer_.length(),
+                     funbox->extent().toStringStart,
+                     funbox->extent().toStringEnd,
+                     options.lineno,
+                     JS::LimitedColumnNumberOneOrigin::fromUnlimited(
+                         JS::ColumnNumberOneOrigin(options.column))};
   } else {
     // The asm.js module was created by parser. Instantiation below will
     // allocate the JSFunction that wraps it.
