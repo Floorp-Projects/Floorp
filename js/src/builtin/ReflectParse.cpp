@@ -19,7 +19,7 @@
 #include "frontend/ModuleSharedContext.h"
 #include "frontend/ParseNode.h"
 #include "frontend/Parser.h"
-#include "js/ColumnNumber.h"  // JS::LimitedColumnNumberZeroOrigin, JS::LimitedColumnNumberOneOrigin
+#include "js/ColumnNumber.h"          // JS::LimitedColumnNumberOneOrigin
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/friend/StackLimits.h"    // js::AutoCheckRecursionLimit
 #include "js/PropertyAndElement.h"    // JS_DefineFunction
@@ -3766,7 +3766,8 @@ static bool reflect_parse(JSContext* cx, uint32_t argc, Value* vp) {
     uint32_t len = chars.length();
     SourceExtent extent = SourceExtent::makeGlobalExtent(
         len, options.lineno,
-        JS::LimitedColumnNumberZeroOrigin::fromUnlimited(options.column));
+        JS::LimitedColumnNumberOneOrigin::fromUnlimited(
+            JS::ColumnNumberOneOrigin(options.column)));
     ModuleSharedContext modulesc(&fc, options, builder, extent);
     pn = parser.moduleBody(&modulesc).unwrapOr(nullptr);
     if (!pn) {
