@@ -13,19 +13,48 @@ use std::path::{Path, PathBuf};
 use tar::Archive;
 use walkdir::{DirEntry, WalkDir};
 
-const REVISION: &str = "5e1d3299a290026b85787bc9c7e72bcc53ac283f";
+const REVISION: &str = "a2f5f9691b6ce64c1703feaf9363710dfd7a56cf";
 
 #[rustfmt::skip]
 static EXCLUDE_FILES: &[&str] = &[
+    // TODO: CStr literals: c"…", cr"…"
+    // https://github.com/dtolnay/syn/issues/1502
+    "src/tools/clippy/tests/ui/needless_raw_string.rs",
+    "src/tools/clippy/tests/ui/needless_raw_string_hashes.rs",
+    "src/tools/rust-analyzer/crates/parser/test_data/parser/inline/ok/0085_expr_literals.rs",
+
+    // TODO: explicit tail calls: `become _g()`
+    // https://github.com/dtolnay/syn/issues/1501
+    "tests/ui/explicit-tail-calls/return-lifetime-sub.rs",
+
     // TODO: non-lifetime binders: `where for<'a, T> &'a Struct<T>: Trait`
     // https://github.com/dtolnay/syn/issues/1435
+    "src/tools/rustfmt/tests/source/issue_5721.rs",
+    "src/tools/rustfmt/tests/source/non-lifetime-binders.rs",
+    "src/tools/rustfmt/tests/target/issue_5721.rs",
+    "src/tools/rustfmt/tests/target/non-lifetime-binders.rs",
     "tests/rustdoc-json/non_lifetime_binders.rs",
+    "tests/rustdoc/inline_cross/auxiliary/non_lifetime_binders.rs",
     "tests/rustdoc/non_lifetime_binders.rs",
 
     // TODO: return type notation: `where T: Trait<method(): Send>`
     // https://github.com/dtolnay/syn/issues/1434
+    "src/tools/rust-analyzer/crates/parser/test_data/parser/inline/ok/0208_associated_return_type_bounds.rs",
     "tests/ui/associated-type-bounds/return-type-notation/basic.rs",
     "tests/ui/feature-gates/feature-gate-return_type_notation.rs",
+
+    // TODO: lazy type alias syntax with where-clause in trailing position
+    // https://github.com/dtolnay/syn/issues/1525
+    "tests/rustdoc/typedef-inner-variants-lazy_type_alias.rs",
+
+    // TODO: gen blocks and functions
+    // https://github.com/dtolnay/syn/issues/1526
+    "tests/ui/coroutine/gen_block_is_iter.rs",
+    "tests/ui/coroutine/gen_block_iterate.rs",
+
+    // TODO: struct literal in match guard
+    // https://github.com/dtolnay/syn/issues/1527
+    "tests/ui/parser/struct-literal-in-match-guard.rs",
 
     // Compile-fail expr parameter in const generic position: f::<1 + 2>()
     "tests/ui/const-generics/early/closing-args-token.rs",
@@ -37,11 +66,14 @@ static EXCLUDE_FILES: &[&str] = &[
     // Need at least one trait in impl Trait, no such type as impl 'static
     "tests/ui/type-alias-impl-trait/generic_type_does_not_live_long_enough.rs",
 
+    // Negative polarity trait bound: `where T: !Copy`
+    "src/tools/rustfmt/tests/target/negative-bounds.rs",
+
     // Lifetime bound inside for<>: `T: ~const ?for<'a: 'b> Trait<'a>`
-    "tests/ui/rfc-2632-const-trait-impl/tilde-const-syntax.rs",
+    "tests/ui/rfcs/rfc-2632-const-trait-impl/tilde-const-syntax.rs",
 
     // Const impl that is not a trait impl: `impl ~const T {}`
-    "tests/ui/rfc-2632-const-trait-impl/syntax.rs",
+    "tests/ui/rfcs/rfc-2632-const-trait-impl/syntax.rs",
 
     // Deprecated anonymous parameter syntax in traits
     "src/tools/rustfmt/tests/source/trait.rs",
@@ -63,6 +95,7 @@ static EXCLUDE_FILES: &[&str] = &[
     "src/tools/rust-analyzer/crates/parser/test_data/parser/inline/ok/0004_value_parameters_no_patterns.rs",
     "src/tools/rust-analyzer/crates/parser/test_data/parser/inline/ok/0104_path_fn_trait_args.rs",
     "src/tools/rust-analyzer/crates/parser/test_data/parser/inline/ok/0202_typepathfn_with_coloncolon.rs",
+    "src/tools/rust-analyzer/crates/parser/test_data/parser/inline/ok/0209_bare_dyn_types_with_paren_as_generic_args.rs",
     "src/tools/rustfmt/tests/source/attrib.rs",
     "src/tools/rustfmt/tests/source/closure.rs",
     "src/tools/rustfmt/tests/source/existential_type.rs",
@@ -85,8 +118,8 @@ static EXCLUDE_FILES: &[&str] = &[
     "tests/codegen-units/item-collection/non-generic-closures.rs",
     "tests/debuginfo/recursive-enum.rs",
     "tests/pretty/closure-reform-pretty.rs",
-    "tests/run-make-fulldeps/reproducible-build-2/reproducible-build.rs",
-    "tests/run-make-fulldeps/reproducible-build/reproducible-build.rs",
+    "tests/run-make/reproducible-build-2/reproducible-build.rs",
+    "tests/run-make/reproducible-build/reproducible-build.rs",
     "tests/ui/auxiliary/typeid-intrinsic-aux1.rs",
     "tests/ui/auxiliary/typeid-intrinsic-aux2.rs",
     "tests/ui/impl-trait/generic-with-implicit-hrtb-without-dyn.rs",
@@ -95,19 +128,11 @@ static EXCLUDE_FILES: &[&str] = &[
     "tests/ui/lifetimes/bare-trait-object.rs",
     "tests/ui/parser/bounds-obj-parens.rs",
 
-    // Old type ascription expression syntax
-    "src/tools/rustfmt/tests/source/type-ascription.rs",
-    "src/tools/rustfmt/tests/target/type-ascription.rs",
-
-    // Obsolete box syntax
-    "src/tools/rust-analyzer/crates/parser/test_data/parser/inline/ok/0132_box_expr.rs",
-
     // Invalid unparenthesized range pattern inside slice pattern: `[1..]`
     "tests/ui/consts/miri_unleashed/const_refers_to_static_cross_crate.rs",
 
     // Various extensions to Rust syntax made up by rust-analyzer
     "src/tools/rust-analyzer/crates/parser/test_data/parser/inline/ok/0012_type_item_where_clause.rs",
-    "src/tools/rust-analyzer/crates/parser/test_data/parser/inline/ok/0040_crate_keyword_vis.rs",
     "src/tools/rust-analyzer/crates/parser/test_data/parser/inline/ok/0058_range_pat.rs",
     "src/tools/rust-analyzer/crates/parser/test_data/parser/inline/ok/0123_param_list_vararg.rs",
     "src/tools/rust-analyzer/crates/parser/test_data/parser/inline/ok/0131_existential_type.rs",
@@ -280,21 +305,38 @@ pub fn clone_rust() {
     if needs_clone {
         download_and_unpack().unwrap();
     }
+
     let mut missing = String::new();
     let test_src = Path::new("tests/rust");
+
+    let mut exclude_files_set = BTreeSet::new();
     for exclude in EXCLUDE_FILES {
+        if !exclude_files_set.insert(exclude) {
+            panic!("duplicate path in EXCLUDE_FILES: {}", exclude);
+        }
+        for dir in EXCLUDE_DIRS {
+            if Path::new(exclude).starts_with(dir) {
+                panic!("excluded file {} is inside an excluded dir", exclude);
+            }
+        }
         if !test_src.join(exclude).is_file() {
             missing += "\ntests/rust/";
             missing += exclude;
         }
     }
+
+    let mut exclude_dirs_set = BTreeSet::new();
     for exclude in EXCLUDE_DIRS {
+        if !exclude_dirs_set.insert(exclude) {
+            panic!("duplicate path in EXCLUDE_DIRS: {}", exclude);
+        }
         if !test_src.join(exclude).is_dir() {
             missing += "\ntests/rust/";
             missing += exclude;
             missing += "/";
         }
     }
+
     if !missing.is_empty() {
         panic!("excluded test file does not exist:{}\n", missing);
     }

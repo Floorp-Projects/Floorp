@@ -1,43 +1,52 @@
 use core::ffi::c_void;
-use core::ptr;
+use core::ptr::NonNull;
 
 /// Raw display handle for the Redox operating system.
-///
-/// ## Construction
-/// ```
-/// # use raw_window_handle::OrbitalDisplayHandle;
-/// let mut display_handle = OrbitalDisplayHandle::empty();
-/// /* set fields */
-/// ```
 #[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub struct OrbitalDisplayHandle;
+pub struct OrbitalDisplayHandle {}
 
 impl OrbitalDisplayHandle {
-    pub fn empty() -> Self {
+    /// Create a new empty display handle.
+    ///
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use raw_window_handle::OrbitalDisplayHandle;
+    /// let handle = OrbitalDisplayHandle::new();
+    /// ```
+    pub fn new() -> Self {
         Self {}
     }
 }
 
 /// Raw window handle for the Redox operating system.
-///
-/// ## Construction
-/// ```
-/// # use raw_window_handle::OrbitalWindowHandle;
-/// let mut window_handle = OrbitalWindowHandle::empty();
-/// /* set fields */
-/// ```
 #[non_exhaustive]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct OrbitalWindowHandle {
     /// A pointer to an orbclient window.
-    pub window: *mut c_void,
+    // TODO(madsmtm): I think this is a file descriptor, so perhaps it should
+    // actually use `std::os::fd::RawFd`, or some sort of integer instead?
+    pub window: NonNull<c_void>,
 }
 
 impl OrbitalWindowHandle {
-    pub fn empty() -> Self {
-        Self {
-            window: ptr::null_mut(),
-        }
+    /// Create a new handle to a window.
+    ///
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use core::ptr::NonNull;
+    /// # use raw_window_handle::OrbitalWindowHandle;
+    /// # type Window = ();
+    /// #
+    /// let window: NonNull<Window>;
+    /// # window = NonNull::from(&());
+    /// let mut handle = OrbitalWindowHandle::new(window.cast());
+    /// ```
+    pub fn new(window: NonNull<c_void>) -> Self {
+        Self { window }
     }
 }

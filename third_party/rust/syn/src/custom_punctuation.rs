@@ -113,8 +113,8 @@ macro_rules! custom_punctuation {
 #[macro_export]
 macro_rules! impl_parse_for_custom_punctuation {
     ($ident:ident, $($tt:tt)+) => {
-        impl $crate::token::CustomToken for $ident {
-            fn peek(cursor: $crate::buffer::Cursor) -> bool {
+        impl $crate::__private::CustomToken for $ident {
+            fn peek(cursor: $crate::buffer::Cursor) -> $crate::__private::bool {
                 $crate::__private::peek_punct(cursor, $crate::stringify_punct!($($tt)+))
             }
 
@@ -195,7 +195,7 @@ macro_rules! impl_clone_for_custom_punctuation {
 macro_rules! impl_extra_traits_for_custom_punctuation {
     ($ident:ident, $($tt:tt)+) => {
         impl $crate::__private::Debug for $ident {
-            fn fmt(&self, f: &mut $crate::__private::Formatter) -> $crate::__private::fmt::Result {
+            fn fmt(&self, f: &mut $crate::__private::Formatter) -> $crate::__private::FmtResult {
                 $crate::__private::Formatter::write_str(f, $crate::__private::stringify!($ident))
             }
         }

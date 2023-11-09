@@ -228,7 +228,17 @@ impl LitStr {
         let mut tokens = TokenStream::from_str(&self.value())?;
         tokens = respan_token_stream(tokens, self.span());
 
-        parser.parse2(tokens)
+        let result = parser.parse2(tokens)?;
+
+        let suffix = self.suffix();
+        if !suffix.is_empty() {
+            return Err(Error::new(
+                self.span(),
+                format!("unexpected suffix `{}` on string literal", suffix),
+            ));
+        }
+
+        Ok(result)
     }
 
     pub fn span(&self) -> Span {
@@ -748,10 +758,12 @@ macro_rules! lit_extra_traits {
         }
 
         #[cfg(feature = "parsing")]
-        #[doc(hidden)]
-        #[allow(non_snake_case)]
-        pub fn $ty(marker: lookahead::TokenMarker) -> $ty {
-            match marker {}
+        pub_if_not_doc! {
+            #[doc(hidden)]
+            #[allow(non_snake_case)]
+            pub fn $ty(marker: lookahead::TokenMarker) -> $ty {
+                match marker {}
+            }
         }
     };
 }
@@ -764,10 +776,12 @@ lit_extra_traits!(LitInt);
 lit_extra_traits!(LitFloat);
 
 #[cfg(feature = "parsing")]
-#[doc(hidden)]
-#[allow(non_snake_case)]
-pub fn LitBool(marker: lookahead::TokenMarker) -> LitBool {
-    match marker {}
+pub_if_not_doc! {
+    #[doc(hidden)]
+    #[allow(non_snake_case)]
+    pub fn LitBool(marker: lookahead::TokenMarker) -> LitBool {
+        match marker {}
+    }
 }
 
 ast_enum! {
@@ -784,10 +798,12 @@ ast_enum! {
 }
 
 #[cfg(feature = "parsing")]
-#[doc(hidden)]
-#[allow(non_snake_case)]
-pub fn Lit(marker: lookahead::TokenMarker) -> Lit {
-    match marker {}
+pub_if_not_doc! {
+    #[doc(hidden)]
+    #[allow(non_snake_case)]
+    pub fn Lit(marker: lookahead::TokenMarker) -> Lit {
+        match marker {}
+    }
 }
 
 #[cfg(feature = "parsing")]
@@ -1079,6 +1095,7 @@ mod value {
                 // c"...", cr"...", cr#"..."#
                 // TODO: add a Lit::CStr variant?
                 b'c' => return Lit::Verbatim(token),
+                b'(' if repr == "(/*ERROR*/)" => return Lit::Verbatim(token),
                 _ => {}
             }
 
@@ -1166,7 +1183,7 @@ mod value {
                         b'x' => {
                             let (byte, rest) = backslash_x(s);
                             s = rest;
-                            assert!(byte <= 0x80, "Invalid \\x byte in string literal");
+                            assert!(byte <= 0x7F, "Invalid \\x byte in string literal");
                             char::from_u32(u32::from(byte)).unwrap()
                         }
                         b'u' => {
@@ -1273,8 +1290,7 @@ mod value {
                         b'"' => b'"',
                         b'\r' | b'\n' => loop {
                             let byte = byte(v, 0);
-                            let ch = char::from_u32(u32::from(byte)).unwrap();
-                            if ch.is_whitespace() {
+                            if matches!(byte, b' ' | b'\t' | b'\n' | b'\r') {
                                 v = &v[1..];
                             } else {
                                 continue 'outer;

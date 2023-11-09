@@ -39,6 +39,10 @@ notes = "This is a pinned version of the upstream code, presumably to get a fix 
 audit-as-crates-io = true
 notes = "This is upstream plus a warning fix from bug 1823866."
 
+[policy.d3d12]
+audit-as-crates-io = true
+notes = "Part of the wgpu repository, pinned as the rest of wgpu crates."
+
 [policy.diplomat]
 audit-as-crates-io = true
 notes = "Upstream version not to use syn 1.x"

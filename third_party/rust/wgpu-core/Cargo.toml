@@ -14,7 +14,7 @@ edition = "2021"
 rust-version = "1.65"
 name = "wgpu-core"
 version = "0.18.0"
-authors = ["wgpu developers"]
+authors = ["gfx-rs developers"]
 description = "WebGPU core logic on wgpu-hal"
 homepage = "https://wgpu.rs/"
 keywords = ["graphics"]
@@ -67,7 +67,7 @@ version = "1"
 default-features = false
 
 [dependencies.raw-window-handle]
-version = "0.5"
+version = "0.6"
 optional = true
 
 [dependencies.ron]

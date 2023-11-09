@@ -1,8 +1,21 @@
 # Changelog
 
-## Unreleased
+## 0.6.0 (2023-09-30)
 
-* Add several types for using raw window handles safely, including `HasWindowHandle`, `WindowHandle`, `HasDisplayHandle`, `DisplayHandle` and `Active`.
+* **Breaking:** Raw pointer handles now use `NonNull` where appropriate, to avoid null pointer dereferences.
+* **Breaking:** Renamed `empty` methods to `new`, and take parameters in most of those, to better match normal Rust semantics.
+* **Breaking:** `HasRaw(Display/Window)Handle::raw_(display/window)_handle` returns a result indicating if fetching the window handle failed (#122).
+* **Breaking:** Remove the `Active/ActiveHandle` types from the public API (#126).
+* **Breaking:** Remove `AppKitWindowHandle::ns_window` and `UiKitWindowHandle::ui_window` since they can be retrieved from the view (#129).
+* **Breaking:** Remove `Copy` derive from `RawWindowHandle` and `WindowHandle` (#140).
+* Implement `PartialEq`, `Eq` and `Hash` for `WindowHandle` too. (#128)
+* Implement the relevant traits for `&mut T where T: <trait>`. (#130)
+* Add web handles for `wasm-bindgen` v0.2. They are locked behind the `wasm-bindgen-0-2` feature. (#134)
+* Deprecate the raw window/display handle traits. They will be removed at the next stable release. (#139)
+
+## 0.5.2 (2023-03-31)
+
+* Add several types for using raw window handles safely, including `HasWindowHandle`, `WindowHandle`, `HasDisplayHandle`, `DisplayHandle` and `Active` (#110).
 
 ## 0.5.1 (2023-03-07)
 
@@ -32,7 +45,7 @@
 ## 0.4.0 (2021-11-15)
 
 * **Breaking:** Remove `_do_not_use` tags to use `#[non_exhaustive]` macro
-* **Breaking:** `RawWindowHandle` variants are no longer cfg-guarded by platform. 
+* **Breaking:** `RawWindowHandle` variants are no longer cfg-guarded by platform.
 * **Breaking:** Rename `IOS` to `UiKit`.
 * **Breaking:** Rename `MacOS` to `AppKit`.
 * **Breaking:** Rename `Windows` to `Win32`.

@@ -39,12 +39,12 @@ contains some APIs that may be useful more generally.
   procedural macros enable only what they need, and do not pay in compile time
   for all the rest.
 
-[`syn::File`]: https://docs.rs/syn/1.0/syn/struct.File.html
-[`syn::Item`]: https://docs.rs/syn/1.0/syn/enum.Item.html
-[`syn::Expr`]: https://docs.rs/syn/1.0/syn/enum.Expr.html
-[`syn::Type`]: https://docs.rs/syn/1.0/syn/enum.Type.html
-[`syn::DeriveInput`]: https://docs.rs/syn/1.0/syn/struct.DeriveInput.html
-[parser functions]: https://docs.rs/syn/1.0/syn/parse/index.html
+[`syn::File`]: https://docs.rs/syn/2.0/syn/struct.File.html
+[`syn::Item`]: https://docs.rs/syn/2.0/syn/enum.Item.html
+[`syn::Expr`]: https://docs.rs/syn/2.0/syn/enum.Expr.html
+[`syn::Type`]: https://docs.rs/syn/2.0/syn/enum.Type.html
+[`syn::DeriveInput`]: https://docs.rs/syn/2.0/syn/struct.DeriveInput.html
+[parser functions]: https://docs.rs/syn/2.0/syn/parse/index.html
 
 *Version requirement: Syn supports rustc 1.56 and up.*
 

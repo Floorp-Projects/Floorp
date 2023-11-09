@@ -33,6 +33,7 @@ use rustc_errors::{translation, Diagnostic, PResult};
 use rustc_session::parse::ParseSess;
 use rustc_span::source_map::FilePathMapping;
 use rustc_span::FileName;
+use std::borrow::Cow;
 use std::fs;
 use std::panic;
 use std::path::Path;
@@ -154,7 +155,7 @@ fn librustc_parse(content: String, sess: &ParseSess) -> PResult<Crate> {
     parse::parse_crate_from_source_str(name, content, sess)
 }
 
-fn translate_message(diagnostic: &Diagnostic) -> String {
+fn translate_message(diagnostic: &Diagnostic) -> Cow<'static, str> {
     thread_local! {
         static FLUENT_BUNDLE: LazyFallbackBundle = {
             let locale_resources = rustc_driver::DEFAULT_LOCALE_RESOURCES.to_vec();
@@ -186,7 +187,7 @@ fn translate_message(diagnostic: &Diagnostic) -> String {
         let mut err = Vec::new();
         let translated = fluent_bundle.format_pattern(value, Some(&args), &mut err);
         assert!(err.is_empty());
-        translated.into_owned()
+        Cow::Owned(translated.into_owned())
     })
 }
 

@@ -1,5 +1,7 @@
 #![no_std]
 #![cfg_attr(docsrs, feature(doc_cfg))]
+#![allow(clippy::new_without_default)]
+#![deny(unsafe_op_in_unsafe_fn)]
 
 //! Interoperability library for Rust Windowing applications.
 //!
@@ -10,7 +12,7 @@
 //!
 //! ## Safety guarantees
 //!
-//! Please see the docs of [`HasRawWindowHandle`] and [`HasRawDisplayHandle`].
+//! Please see the docs of [`HasWindowHandle`] and [`HasDisplayHandle`].
 //!
 //! ## Platform handle initialization
 //!
@@ -33,8 +35,6 @@ extern crate std;
 
 mod android;
 mod appkit;
-#[cfg(any(feature = "std", not(target_os = "android")))]
-#[cfg_attr(docsrs, doc(cfg(any(feature = "std", not(target_os = "android")))))]
 mod borrowed;
 mod haiku;
 mod redox;
@@ -45,11 +45,7 @@ mod windows;
 
 pub use android::{AndroidDisplayHandle, AndroidNdkWindowHandle};
 pub use appkit::{AppKitDisplayHandle, AppKitWindowHandle};
-#[cfg(any(feature = "std", not(target_os = "android")))]
-pub use borrowed::{
-    Active, ActiveHandle, DisplayHandle, HandleError, HasDisplayHandle, HasWindowHandle,
-    WindowHandle,
-};
+pub use borrowed::{DisplayHandle, HasDisplayHandle, HasWindowHandle, WindowHandle};
 pub use haiku::{HaikuDisplayHandle, HaikuWindowHandle};
 pub use redox::{OrbitalDisplayHandle, OrbitalWindowHandle};
 pub use uikit::{UiKitDisplayHandle, UiKitWindowHandle};
@@ -57,14 +53,18 @@ pub use unix::{
     DrmDisplayHandle, DrmWindowHandle, GbmDisplayHandle, GbmWindowHandle, WaylandDisplayHandle,
     WaylandWindowHandle, XcbDisplayHandle, XcbWindowHandle, XlibDisplayHandle, XlibWindowHandle,
 };
-pub use web::{WebDisplayHandle, WebWindowHandle};
+pub use web::{
+    WebCanvasWindowHandle, WebDisplayHandle, WebOffscreenCanvasWindowHandle, WebWindowHandle,
+};
 pub use windows::{Win32WindowHandle, WinRtWindowHandle, WindowsDisplayHandle};
+
+use core::fmt;
 
 /// Window that wraps around a raw window handle.
 ///
 /// # Safety
 ///
-/// Users can safely assume that non-`null`/`0` fields are valid handles, and it is up to the
+/// Users can safely assume that pointers and non-zero fields are valid, and it is up to the
 /// implementer of this trait to ensure that condition is upheld.
 ///
 /// Despite that qualification, implementers should still make a best-effort attempt to fill in all
@@ -74,27 +74,15 @@ pub use windows::{Win32WindowHandle, WinRtWindowHandle, WindowsDisplayHandle};
 ///
 /// The exact handles returned by `raw_window_handle` must remain consistent between multiple calls
 /// to `raw_window_handle` as long as not indicated otherwise by platform specific events.
+#[deprecated = "Use `HasWindowHandle` instead"]
 pub unsafe trait HasRawWindowHandle {
-    fn raw_window_handle(&self) -> RawWindowHandle;
+    fn raw_window_handle(&self) -> Result<RawWindowHandle, HandleError>;
 }
 
-unsafe impl<'a, T: HasRawWindowHandle + ?Sized> HasRawWindowHandle for &'a T {
-    fn raw_window_handle(&self) -> RawWindowHandle {
-        (*self).raw_window_handle()
-    }
-}
-#[cfg(feature = "alloc")]
-#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-unsafe impl<T: HasRawWindowHandle + ?Sized> HasRawWindowHandle for alloc::rc::Rc<T> {
-    fn raw_window_handle(&self) -> RawWindowHandle {
-        (**self).raw_window_handle()
-    }
-}
-#[cfg(feature = "alloc")]
-#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-unsafe impl<T: HasRawWindowHandle + ?Sized> HasRawWindowHandle for alloc::sync::Arc<T> {
-    fn raw_window_handle(&self) -> RawWindowHandle {
-        (**self).raw_window_handle()
+#[allow(deprecated)]
+unsafe impl<T: HasWindowHandle + ?Sized> HasRawWindowHandle for T {
+    fn raw_window_handle(&self) -> Result<RawWindowHandle, HandleError> {
+        self.window_handle().map(Into::into)
     }
 }
 
@@ -114,7 +102,7 @@ unsafe impl<T: HasRawWindowHandle + ?Sized> HasRawWindowHandle for alloc::sync::
 /// some hints on where this variant might be expected.
 ///
 /// Note that these "Availability Hints" are not normative. That is to say, a
-/// [`HasRawWindowHandle`] implementor is completely allowed to return something
+/// [`HasWindowHandle`] implementor is completely allowed to return something
 /// unexpected. (For example, it's legal for someone to return a
 /// [`RawWindowHandle::Xlib`] on macOS, it would just be weird, and probably
 /// requires something like XQuartz be used).
@@ -188,6 +176,20 @@ pub enum RawWindowHandle {
     /// ## Availability Hints
     /// This variant is used on Wasm or asm.js targets when targeting the Web/HTML5.
     Web(WebWindowHandle),
+    /// A raw window handle for a Web canvas registered via [`wasm-bindgen`].
+    ///
+    /// ## Availability Hints
+    /// This variant is used on Wasm or asm.js targets when targeting the Web/HTML5.
+    ///
+    /// [`wasm-bindgen`]: https://crates.io/crates/wasm-bindgen
+    WebCanvas(WebCanvasWindowHandle),
+    /// A raw window handle for a Web offscreen canvas registered via [`wasm-bindgen`].
+    ///
+    /// ## Availability Hints
+    /// This variant is used on Wasm or asm.js targets when targeting the Web/HTML5.
+    ///
+    /// [`wasm-bindgen`]: https://crates.io/crates/wasm-bindgen
+    WebOffscreenCanvas(WebOffscreenCanvasWindowHandle),
     /// A raw window handle for Android NDK.
     ///
     /// ## Availability Hints
@@ -204,7 +206,7 @@ pub enum RawWindowHandle {
 ///
 /// # Safety
 ///
-/// Users can safely assume that non-`null`/`0` fields are valid handles, and it is up to the
+/// Users can safely assume that pointers and non-zero fields are valid, and it is up to the
 /// implementer of this trait to ensure that condition is upheld.
 ///
 /// Despite that qualification, implementers should still make a best-effort attempt to fill in all
@@ -214,29 +216,15 @@ pub enum RawWindowHandle {
 ///
 /// The exact handles returned by `raw_display_handle` must remain consistent between multiple calls
 /// to `raw_display_handle` as long as not indicated otherwise by platform specific events.
+#[deprecated = "Use `HasDisplayHandle` instead"]
 pub unsafe trait HasRawDisplayHandle {
-    fn raw_display_handle(&self) -> RawDisplayHandle;
+    fn raw_display_handle(&self) -> Result<RawDisplayHandle, HandleError>;
 }
 
-unsafe impl<'a, T: HasRawDisplayHandle + ?Sized> HasRawDisplayHandle for &'a T {
-    fn raw_display_handle(&self) -> RawDisplayHandle {
-        (*self).raw_display_handle()
-    }
-}
-
-#[cfg(feature = "alloc")]
-#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-unsafe impl<T: HasRawDisplayHandle + ?Sized> HasRawDisplayHandle for alloc::rc::Rc<T> {
-    fn raw_display_handle(&self) -> RawDisplayHandle {
-        (**self).raw_display_handle()
-    }
-}
-
-#[cfg(feature = "alloc")]
-#[cfg_attr(docsrs, doc(cfg(feature = "alloc")))]
-unsafe impl<T: HasRawDisplayHandle + ?Sized> HasRawDisplayHandle for alloc::sync::Arc<T> {
-    fn raw_display_handle(&self) -> RawDisplayHandle {
-        (**self).raw_display_handle()
+#[allow(deprecated)]
+unsafe impl<T: HasDisplayHandle + ?Sized> HasRawDisplayHandle for T {
+    fn raw_display_handle(&self) -> Result<RawDisplayHandle, HandleError> {
+        self.display_handle().map(Into::into)
     }
 }
 
@@ -262,7 +250,7 @@ unsafe impl<T: HasRawDisplayHandle + ?Sized> HasRawDisplayHandle for alloc::sync
 /// some hints on where this variant might be expected.
 ///
 /// Note that these "Availability Hints" are not normative. That is to say, a
-/// [`HasRawDisplayHandle`] implementor is completely allowed to return something
+/// [`HasDisplayHandle`] implementor is completely allowed to return something
 /// unexpected. (For example, it's legal for someone to return a
 /// [`RawDisplayHandle::Xlib`] on macOS, it would just be weird, and probably
 /// requires something like XQuartz be used).
@@ -319,7 +307,7 @@ pub enum RawDisplayHandle {
     ///
     /// ## Availability Hints
     /// This variant is present regardless of windowing backend and likely to be used with
-    /// EGL_MESA_platfrom_gbm or EGL_KHR_platfrom_gbm.
+    /// EGL_MESA_platform_gbm or EGL_KHR_platform_gbm.
     Gbm(GbmDisplayHandle),
     /// A raw display handle for Win32.
     ///
@@ -342,6 +330,53 @@ pub enum RawDisplayHandle {
     /// This variant is used on HaikuOS.
     Haiku(HaikuDisplayHandle),
 }
+
+/// An error that can occur while fetching a display or window handle.
+#[derive(Debug, Clone)]
+#[non_exhaustive]
+pub enum HandleError {
+    /// The underlying handle cannot be represented using the types in this crate.
+    ///
+    /// This may be returned if the underlying window system does not support any of the
+    /// representative C window handles in this crate. For instance, if you were using a pure Rust
+    /// library to set up X11 (like [`x11rb`]), you would not be able to use any of the
+    /// [`RawWindowHandle`] variants, as they all represent C types.
+    ///
+    /// Another example would be a system that isn't supported by `raw-window-handle` yet,
+    /// like some game consoles.
+    ///
+    /// In the event that this error is returned, you should try to use the underlying window
+    /// system's native API to get the handle you need.
+    ///
+    /// [`x11rb`]: https://crates.io/crates/x11rb
+    NotSupported,
+
+    /// The underlying handle is not available.
+    ///
+    /// In some cases the underlying window handle may become temporarily unusable. For example, on
+    /// Android, the native window pointer can arbitrarily be replaced or removed by the system. In
+    /// this case, returning a window handle would be disingenuous, as it would not be usable. A
+    /// similar situation can occur on Wayland for the layer shell windows.
+    ///
+    /// In the event that this error is returned, you should wait until the handle becomes available
+    /// again.
+    Unavailable,
+}
+
+impl fmt::Display for HandleError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::NotSupported => write!(
+                f,
+                "the underlying handle cannot be represented using the types in this crate"
+            ),
+            Self::Unavailable => write!(f, "the underlying handle is not available"),
+        }
+    }
+}
+
+#[cfg(feature = "std")]
+impl std::error::Error for HandleError {}
 
 macro_rules! from_impl {
     ($($to:ident, $enum:ident, $from:ty)*) => ($(
@@ -377,5 +412,11 @@ from_impl!(RawWindowHandle, Gbm, GbmWindowHandle);
 from_impl!(RawWindowHandle, Win32, Win32WindowHandle);
 from_impl!(RawWindowHandle, WinRt, WinRtWindowHandle);
 from_impl!(RawWindowHandle, Web, WebWindowHandle);
+from_impl!(RawWindowHandle, WebCanvas, WebCanvasWindowHandle);
+from_impl!(
+    RawWindowHandle,
+    WebOffscreenCanvas,
+    WebOffscreenCanvasWindowHandle
+);
 from_impl!(RawWindowHandle, AndroidNdk, AndroidNdkWindowHandle);
 from_impl!(RawWindowHandle, Haiku, HaikuWindowHandle);

@@ -3,10 +3,8 @@ use arrayvec::ArrayVec;
 use glow::HasContext;
 use std::{mem, slice, sync::Arc};
 
-#[cfg(not(target_arch = "wasm32"))]
 const DEBUG_ID: u32 = 0;
 
-#[cfg(not(target_arch = "wasm32"))]
 fn extract_marker<'a>(data: &'a [u8], range: &std::ops::Range<u32>) -> &'a str {
     std::str::from_utf8(&data[range.start as usize..range.end as usize]).unwrap()
 }
@@ -129,6 +127,7 @@ impl super::Queue {
                     };
                 } else {
                     unsafe {
+                        assert_eq!(view.mip_levels.len(), 1);
                         gl.framebuffer_texture_2d(
                             fbo_target,
                             attachment,
@@ -971,7 +970,13 @@ impl super::Queue {
                 unsafe { gl.bind_framebuffer(glow::DRAW_FRAMEBUFFER, Some(self.draw_fbo)) };
             }
             C::InvalidateAttachments(ref list) => {
-                unsafe { gl.invalidate_framebuffer(glow::DRAW_FRAMEBUFFER, list) };
+                if self
+                    .shared
+                    .private_caps
+                    .contains(PrivateCapabilities::INVALIDATE_FRAMEBUFFER)
+                {
+                    unsafe { gl.invalidate_framebuffer(glow::DRAW_FRAMEBUFFER, list) };
+                }
             }
             C::SetDrawColorBuffers(count) => {
                 self.draw_buffer_count = count;
@@ -993,7 +998,13 @@ impl super::Queue {
                 {
                     unsafe { self.perform_shader_clear(gl, draw_buffer, *color) };
                 } else {
-                    unsafe { gl.clear_buffer_f32_slice(glow::COLOR, draw_buffer, color) };
+                    // Prefer `clear` as `clear_buffer` functions have issues on Sandy Bridge
+                    // on Windows.
+                    unsafe {
+                        gl.draw_buffers(&[glow::COLOR_ATTACHMENT0 + draw_buffer]);
+                        gl.clear_color(color[0], color[1], color[2], color[3]);
+                        gl.clear(glow::COLOR_BUFFER_BIT);
+                    }
                 }
             }
             C::ClearColorU(draw_buffer, ref color) => {
@@ -1003,20 +1014,29 @@ impl super::Queue {
                 unsafe { gl.clear_buffer_i32_slice(glow::COLOR, draw_buffer, color) };
             }
             C::ClearDepth(depth) => {
-                unsafe { gl.clear_buffer_f32_slice(glow::DEPTH, 0, &[depth]) };
+                // Prefer `clear` as `clear_buffer` functions have issues on Sandy Bridge
+                // on Windows.
+                unsafe {
+                    gl.clear_depth_f32(depth);
+                    gl.clear(glow::DEPTH_BUFFER_BIT);
+                }
             }
             C::ClearStencil(value) => {
-                unsafe { gl.clear_buffer_i32_slice(glow::STENCIL, 0, &[value as i32]) };
+                // Prefer `clear` as `clear_buffer` functions have issues on Sandy Bridge
+                // on Windows.
+                unsafe {
+                    gl.clear_stencil(value as i32);
+                    gl.clear(glow::STENCIL_BUFFER_BIT);
+                }
             }
             C::ClearDepthAndStencil(depth, stencil_value) => {
+                // Prefer `clear` as `clear_buffer` functions have issues on Sandy Bridge
+                // on Windows.
                 unsafe {
-                    gl.clear_buffer_depth_stencil(
-                        glow::DEPTH_STENCIL,
-                        0,
-                        depth,
-                        stencil_value as i32,
-                    )
-                };
+                    gl.clear_depth_f32(depth);
+                    gl.clear_stencil(stencil_value as i32);
+                    gl.clear(glow::DEPTH_BUFFER_BIT | glow::STENCIL_BUFFER_BIT);
+                }
             }
             C::BufferBarrier(raw, usage) => {
                 let mut flags = 0;
@@ -1327,9 +1347,21 @@ impl super::Queue {
                 texture,
                 target,
                 aspects,
+                ref mip_levels,
             } => {
                 unsafe { gl.active_texture(glow::TEXTURE0 + slot) };
                 unsafe { gl.bind_texture(target, Some(texture)) };
+
+                unsafe {
+                    gl.tex_parameter_i32(target, glow::TEXTURE_BASE_LEVEL, mip_levels.start as i32)
+                };
+                unsafe {
+                    gl.tex_parameter_i32(
+                        target,
+                        glow::TEXTURE_MAX_LEVEL,
+                        (mip_levels.end - 1) as i32,
+                    )
+                };
 
                 let version = gl.version();
                 let is_min_es_3_1 = version.is_embedded && (version.major, version.minor) >= (3, 1);
@@ -1364,98 +1396,280 @@ impl super::Queue {
                     )
                 };
             }
-            #[cfg(not(target_arch = "wasm32"))]
             C::InsertDebugMarker(ref range) => {
                 let marker = extract_marker(data_bytes, range);
                 unsafe {
-                    gl.debug_message_insert(
-                        glow::DEBUG_SOURCE_APPLICATION,
-                        glow::DEBUG_TYPE_MARKER,
-                        DEBUG_ID,
-                        glow::DEBUG_SEVERITY_NOTIFICATION,
-                        marker,
-                    )
+                    if self
+                        .shared
+                        .private_caps
+                        .contains(PrivateCapabilities::DEBUG_FNS)
+                    {
+                        gl.debug_message_insert(
+                            glow::DEBUG_SOURCE_APPLICATION,
+                            glow::DEBUG_TYPE_MARKER,
+                            DEBUG_ID,
+                            glow::DEBUG_SEVERITY_NOTIFICATION,
+                            marker,
+                        )
+                    }
                 };
             }
-            #[cfg(target_arch = "wasm32")]
-            C::InsertDebugMarker(_) => (),
-            #[cfg_attr(target_arch = "wasm32", allow(unused))]
             C::PushDebugGroup(ref range) => {
-                #[cfg(not(target_arch = "wasm32"))]
                 let marker = extract_marker(data_bytes, range);
-                #[cfg(not(target_arch = "wasm32"))]
                 unsafe {
-                    gl.push_debug_group(glow::DEBUG_SOURCE_APPLICATION, DEBUG_ID, marker)
+                    if self
+                        .shared
+                        .private_caps
+                        .contains(PrivateCapabilities::DEBUG_FNS)
+                    {
+                        gl.push_debug_group(glow::DEBUG_SOURCE_APPLICATION, DEBUG_ID, marker)
+                    }
                 };
             }
             C::PopDebugGroup => {
-                #[cfg(not(target_arch = "wasm32"))]
                 unsafe {
-                    gl.pop_debug_group()
+                    if self
+                        .shared
+                        .private_caps
+                        .contains(PrivateCapabilities::DEBUG_FNS)
+                    {
+                        gl.pop_debug_group()
+                    }
                 };
             }
             C::SetPushConstants {
                 ref uniform,
                 offset,
             } => {
-                fn get_data<T>(data: &[u8], offset: u32) -> &[T] {
-                    let raw = &data[(offset as usize)..];
-                    unsafe {
-                        slice::from_raw_parts(
-                            raw.as_ptr() as *const _,
-                            raw.len() / mem::size_of::<T>(),
-                        )
-                    }
+                // T must be POD
+                //
+                // This function is absolutely sketchy and we really should be using bytemuck.
+                unsafe fn get_data<T, const COUNT: usize>(data: &[u8], offset: u32) -> &[T; COUNT] {
+                    let data_required = mem::size_of::<T>() * COUNT;
+
+                    let raw = &data[(offset as usize)..][..data_required];
+
+                    debug_assert_eq!(data_required, raw.len());
+
+                    let slice: &[T] =
+                        unsafe { slice::from_raw_parts(raw.as_ptr() as *const _, COUNT) };
+
+                    slice.try_into().unwrap()
                 }
 
-                let location = uniform.location.as_ref();
+                let location = Some(&uniform.location);
 
-                match uniform.utype {
-                    glow::FLOAT => {
-                        let data = get_data::<f32>(data_bytes, offset)[0];
+                match uniform.ty {
+                    //
+                    // --- Float 1-4 Component ---
+                    //
+                    naga::TypeInner::Scalar {
+                        kind: naga::ScalarKind::Float,
+                        width: 4,
+                    } => {
+                        let data = unsafe { get_data::<f32, 1>(data_bytes, offset)[0] };
                         unsafe { gl.uniform_1_f32(location, data) };
                     }
-                    glow::FLOAT_VEC2 => {
-                        let data = get_data::<[f32; 2]>(data_bytes, offset)[0];
-                        unsafe { gl.uniform_2_f32_slice(location, &data) };
+                    naga::TypeInner::Vector {
+                        kind: naga::ScalarKind::Float,
+                        size: naga::VectorSize::Bi,
+                        width: 4,
+                    } => {
+                        let data = unsafe { get_data::<f32, 2>(data_bytes, offset) };
+                        unsafe { gl.uniform_2_f32_slice(location, data) };
                     }
-                    glow::FLOAT_VEC3 => {
-                        let data = get_data::<[f32; 3]>(data_bytes, offset)[0];
-                        unsafe { gl.uniform_3_f32_slice(location, &data) };
+                    naga::TypeInner::Vector {
+                        kind: naga::ScalarKind::Float,
+                        size: naga::VectorSize::Tri,
+                        width: 4,
+                    } => {
+                        let data = unsafe { get_data::<f32, 3>(data_bytes, offset) };
+                        unsafe { gl.uniform_3_f32_slice(location, data) };
                     }
-                    glow::FLOAT_VEC4 => {
-                        let data = get_data::<[f32; 4]>(data_bytes, offset)[0];
-                        unsafe { gl.uniform_4_f32_slice(location, &data) };
+                    naga::TypeInner::Vector {
+                        kind: naga::ScalarKind::Float,
+                        size: naga::VectorSize::Quad,
+                        width: 4,
+                    } => {
+                        let data = unsafe { get_data::<f32, 4>(data_bytes, offset) };
+                        unsafe { gl.uniform_4_f32_slice(location, data) };
                     }
-                    glow::INT => {
-                        let data = get_data::<i32>(data_bytes, offset)[0];
+
+                    //
+                    // --- Int 1-4 Component ---
+                    //
+                    naga::TypeInner::Scalar {
+                        kind: naga::ScalarKind::Sint,
+                        width: 4,
+                    } => {
+                        let data = unsafe { get_data::<i32, 1>(data_bytes, offset)[0] };
                         unsafe { gl.uniform_1_i32(location, data) };
                     }
-                    glow::INT_VEC2 => {
-                        let data = get_data::<[i32; 2]>(data_bytes, offset)[0];
-                        unsafe { gl.uniform_2_i32_slice(location, &data) };
+                    naga::TypeInner::Vector {
+                        kind: naga::ScalarKind::Sint,
+                        size: naga::VectorSize::Bi,
+                        width: 4,
+                    } => {
+                        let data = unsafe { get_data::<i32, 2>(data_bytes, offset) };
+                        unsafe { gl.uniform_2_i32_slice(location, data) };
                     }
-                    glow::INT_VEC3 => {
-                        let data = get_data::<[i32; 3]>(data_bytes, offset)[0];
-                        unsafe { gl.uniform_3_i32_slice(location, &data) };
+                    naga::TypeInner::Vector {
+                        kind: naga::ScalarKind::Sint,
+                        size: naga::VectorSize::Tri,
+                        width: 4,
+                    } => {
+                        let data = unsafe { get_data::<i32, 3>(data_bytes, offset) };
+                        unsafe { gl.uniform_3_i32_slice(location, data) };
                     }
-                    glow::INT_VEC4 => {
-                        let data = get_data::<[i32; 4]>(data_bytes, offset)[0];
-                        unsafe { gl.uniform_4_i32_slice(location, &data) };
+                    naga::TypeInner::Vector {
+                        kind: naga::ScalarKind::Sint,
+                        size: naga::VectorSize::Quad,
+                        width: 4,
+                    } => {
+                        let data = unsafe { get_data::<i32, 4>(data_bytes, offset) };
+                        unsafe { gl.uniform_4_i32_slice(location, data) };
                     }
-                    glow::FLOAT_MAT2 => {
-                        let data = get_data::<[f32; 4]>(data_bytes, offset)[0];
-                        unsafe { gl.uniform_matrix_2_f32_slice(location, false, &data) };
+
+                    //
+                    // --- Uint 1-4 Component ---
+                    //
+                    naga::TypeInner::Scalar {
+                        kind: naga::ScalarKind::Uint,
+                        width: 4,
+                    } => {
+                        let data = unsafe { get_data::<u32, 1>(data_bytes, offset)[0] };
+                        unsafe { gl.uniform_1_u32(location, data) };
                     }
-                    glow::FLOAT_MAT3 => {
-                        let data = get_data::<[f32; 9]>(data_bytes, offset)[0];
-                        unsafe { gl.uniform_matrix_3_f32_slice(location, false, &data) };
+                    naga::TypeInner::Vector {
+                        kind: naga::ScalarKind::Uint,
+                        size: naga::VectorSize::Bi,
+                        width: 4,
+                    } => {
+                        let data = unsafe { get_data::<u32, 2>(data_bytes, offset) };
+                        unsafe { gl.uniform_2_u32_slice(location, data) };
                     }
-                    glow::FLOAT_MAT4 => {
-                        let data = get_data::<[f32; 16]>(data_bytes, offset)[0];
-                        unsafe { gl.uniform_matrix_4_f32_slice(location, false, &data) };
+                    naga::TypeInner::Vector {
+                        kind: naga::ScalarKind::Uint,
+                        size: naga::VectorSize::Tri,
+                        width: 4,
+                    } => {
+                        let data = unsafe { get_data::<u32, 3>(data_bytes, offset) };
+                        unsafe { gl.uniform_3_u32_slice(location, data) };
                     }
-                    _ => panic!("Unsupported uniform datatype!"),
+                    naga::TypeInner::Vector {
+                        kind: naga::ScalarKind::Uint,
+                        size: naga::VectorSize::Quad,
+                        width: 4,
+                    } => {
+                        let data = unsafe { get_data::<u32, 4>(data_bytes, offset) };
+                        unsafe { gl.uniform_4_u32_slice(location, data) };
+                    }
+
+                    //
+                    // --- Matrix 2xR ---
+                    //
+                    naga::TypeInner::Matrix {
+                        columns: naga::VectorSize::Bi,
+                        rows: naga::VectorSize::Bi,
+                        width: 4,
+                    } => {
+                        let data = unsafe { get_data::<f32, 4>(data_bytes, offset) };
+                        unsafe { gl.uniform_matrix_2_f32_slice(location, false, data) };
+                    }
+                    naga::TypeInner::Matrix {
+                        columns: naga::VectorSize::Bi,
+                        rows: naga::VectorSize::Tri,
+                        width: 4,
+                    } => {
+                        // repack 2 vec3s into 6 values.
+                        let unpacked_data = unsafe { get_data::<f32, 8>(data_bytes, offset) };
+                        #[rustfmt::skip]
+                        let packed_data = [
+                            unpacked_data[0], unpacked_data[1], unpacked_data[2],
+                            unpacked_data[4], unpacked_data[5], unpacked_data[6],
+                        ];
+                        unsafe { gl.uniform_matrix_2x3_f32_slice(location, false, &packed_data) };
+                    }
+                    naga::TypeInner::Matrix {
+                        columns: naga::VectorSize::Bi,
+                        rows: naga::VectorSize::Quad,
+                        width: 4,
+                    } => {
+                        let data = unsafe { get_data::<f32, 8>(data_bytes, offset) };
+                        unsafe { gl.uniform_matrix_2x4_f32_slice(location, false, data) };
+                    }
+
+                    //
+                    // --- Matrix 3xR ---
+                    //
+                    naga::TypeInner::Matrix {
+                        columns: naga::VectorSize::Tri,
+                        rows: naga::VectorSize::Bi,
+                        width: 4,
+                    } => {
+                        let data = unsafe { get_data::<f32, 6>(data_bytes, offset) };
+                        unsafe { gl.uniform_matrix_3x2_f32_slice(location, false, data) };
+                    }
+                    naga::TypeInner::Matrix {
+                        columns: naga::VectorSize::Tri,
+                        rows: naga::VectorSize::Tri,
+                        width: 4,
+                    } => {
+                        // repack 3 vec3s into 9 values.
+                        let unpacked_data = unsafe { get_data::<f32, 12>(data_bytes, offset) };
+                        #[rustfmt::skip]
+                        let packed_data = [
+                            unpacked_data[0], unpacked_data[1], unpacked_data[2],
+                            unpacked_data[4], unpacked_data[5], unpacked_data[6],
+                            unpacked_data[8], unpacked_data[9], unpacked_data[10],
+                        ];
+                        unsafe { gl.uniform_matrix_3_f32_slice(location, false, &packed_data) };
+                    }
+                    naga::TypeInner::Matrix {
+                        columns: naga::VectorSize::Tri,
+                        rows: naga::VectorSize::Quad,
+                        width: 4,
+                    } => {
+                        let data = unsafe { get_data::<f32, 12>(data_bytes, offset) };
+                        unsafe { gl.uniform_matrix_3x4_f32_slice(location, false, data) };
+                    }
+
+                    //
+                    // --- Matrix 4xR ---
+                    //
+                    naga::TypeInner::Matrix {
+                        columns: naga::VectorSize::Quad,
+                        rows: naga::VectorSize::Bi,
+                        width: 4,
+                    } => {
+                        let data = unsafe { get_data::<f32, 8>(data_bytes, offset) };
+                        unsafe { gl.uniform_matrix_4x2_f32_slice(location, false, data) };
+                    }
+                    naga::TypeInner::Matrix {
+                        columns: naga::VectorSize::Quad,
+                        rows: naga::VectorSize::Tri,
+                        width: 4,
+                    } => {
+                        // repack 4 vec3s into 12 values.
+                        let unpacked_data = unsafe { get_data::<f32, 16>(data_bytes, offset) };
+                        #[rustfmt::skip]
+                        let packed_data = [
+                            unpacked_data[0], unpacked_data[1], unpacked_data[2],
+                            unpacked_data[4], unpacked_data[5], unpacked_data[6],
+                            unpacked_data[8], unpacked_data[9], unpacked_data[10],
+                            unpacked_data[12], unpacked_data[13], unpacked_data[14],
+                        ];
+                        unsafe { gl.uniform_matrix_4x3_f32_slice(location, false, &packed_data) };
+                    }
+                    naga::TypeInner::Matrix {
+                        columns: naga::VectorSize::Quad,
+                        rows: naga::VectorSize::Quad,
+                        width: 4,
+                    } => {
+                        let data = unsafe { get_data::<f32, 16>(data_bytes, offset) };
+                        unsafe { gl.uniform_matrix_4_f32_slice(location, false, data) };
+                    }
+                    _ => panic!("Unsupported uniform datatype: {:?}!", uniform.ty),
                 }
             }
         }
@@ -1476,17 +1690,26 @@ impl crate::Queue<super::Api> for super::Queue {
             // this at the beginning of the loop in case something outside of wgpu modified
             // this state prior to commit.
             unsafe { self.reset_state(gl) };
-            #[cfg(not(target_arch = "wasm32"))]
             if let Some(ref label) = cmd_buf.label {
-                unsafe { gl.push_debug_group(glow::DEBUG_SOURCE_APPLICATION, DEBUG_ID, label) };
+                if self
+                    .shared
+                    .private_caps
+                    .contains(PrivateCapabilities::DEBUG_FNS)
+                {
+                    unsafe { gl.push_debug_group(glow::DEBUG_SOURCE_APPLICATION, DEBUG_ID, label) };
+                }
             }
 
             for command in cmd_buf.commands.iter() {
                 unsafe { self.process(gl, command, &cmd_buf.data_bytes, &cmd_buf.queries) };
             }
 
-            #[cfg(not(target_arch = "wasm32"))]
-            if cmd_buf.label.is_some() {
+            if cmd_buf.label.is_some()
+                && self
+                    .shared
+                    .private_caps
+                    .contains(PrivateCapabilities::DEBUG_FNS)
+            {
                 unsafe { gl.pop_debug_group() };
             }
         }

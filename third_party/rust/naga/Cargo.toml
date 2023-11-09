@@ -14,7 +14,7 @@ edition = "2021"
 rust-version = "1.65"
 name = "naga"
 version = "0.14.0"
-authors = ["Naga Developers"]
+authors = ["gfx-rs developers"]
 exclude = [
     "bin/**/*",
     "tests/**/*",
@@ -22,7 +22,6 @@ exclude = [
     "target/**/*",
 ]
 description = "Shader translation infrastructure"
-homepage = "https://github.com/gfx-rs/naga"
 readme = "README.md"
 keywords = [
     "shader",
@@ -31,7 +30,7 @@ keywords = [
     "MSL",
 ]
 license = "MIT OR Apache-2.0"
-repository = "https://github.com/gfx-rs/naga"
+repository = "https://github.com/gfx-rs/wgpu/tree/trunk/naga"
 resolver = "2"
 
 [package.metadata.docs.rs]
@@ -75,7 +74,7 @@ version = "0.2.1"
 optional = true
 
 [dependencies.serde]
-version = "1.0.103"
+version = "1.0.191"
 features = ["derive"]
 optional = true
 
@@ -98,6 +97,7 @@ env_logger = "0.10"
 ron = "0.8.0"
 
 [dev-dependencies.hlsl-snapshots]
+version = "0.1.0"
 path = "./hlsl-snapshots"
 
 [dev-dependencies.rspirv]

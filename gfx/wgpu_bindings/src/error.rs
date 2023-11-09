@@ -249,7 +249,7 @@ mod foreign {
                 | CreateTextureError::InvalidDimensionUsages(_, _)
                 | CreateTextureError::InvalidMultisampledStorageBinding
                 | CreateTextureError::InvalidMultisampledFormat(_)
-                | CreateTextureError::InvalidSampleCount(_, _)
+                | CreateTextureError::InvalidSampleCount(..)
                 | CreateTextureError::MultisampledNotRenderAttachment
                 | CreateTextureError::MissingFeatures(_, _)
                 | CreateTextureError::MissingDownlevelFlags(_) => ErrorBufferType::Validation,
