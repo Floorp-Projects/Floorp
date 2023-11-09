@@ -94,12 +94,12 @@ bool DebugState::getAllColumnOffsets(Vector<ExprLoc>* offsets) {
 }
 
 bool DebugState::getOffsetLocation(uint32_t offset, uint32_t* lineno,
-                                   JS::LimitedColumnNumberZeroOrigin* column) {
+                                   JS::LimitedColumnNumberOneOrigin* column) {
   if (!SlowCallSiteSearchByOffset(metadata(Tier::Debug), offset)) {
     return false;
   }
   *lineno = offset;
-  *column = JS::LimitedColumnNumberZeroOrigin(
+  *column = JS::LimitedColumnNumberOneOrigin(
       JS::WasmFunctionIndex::DefaultBinarySourceColumnNumberOneOrigin);
   return true;
 }
