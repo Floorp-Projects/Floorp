@@ -43,6 +43,6 @@ abstract class StorageMaintenanceWorker(context: Context, params: WorkerParamete
     abstract fun onError(exception: Exception)
 
     companion object {
-        const val WORKER_PERIOD_IN_HOURS = 24L
+        const val WORKER_PERIOD_IN_HOURS = 12L
     }
 }
