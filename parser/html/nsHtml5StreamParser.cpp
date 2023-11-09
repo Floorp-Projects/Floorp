@@ -1423,6 +1423,9 @@ nsresult nsHtml5StreamParser::OnStopRequest(
         // Let the MainThread event handle this, even though it will just
         // send it back to this thread, so we can accurately judge the impact
         // of this change.   This should eventually be removed
+        mOnStopCalled = false;
+        // don't record any telemetry for this
+        return NS_OK;
       }
     }
   }
