@@ -447,7 +447,10 @@ skip-if = ["os == 'linux' && tsan"] #Bug 1838736
 ["test_peerConnection_twoAudioTracksInOneStream.html"]
 
 ["test_peerConnection_twoAudioVideoStreams.html"]
-skip-if = ["os == 'linux' && tsan"] #Bug 1838736
+skip-if = [
+  "os == 'android'", # android(Bug 1189784)
+  "os == 'linux' && tsan", #Bug 1838736
+]
 
 ["test_peerConnection_twoAudioVideoStreamsCombined.html"]
 skip-if = [
