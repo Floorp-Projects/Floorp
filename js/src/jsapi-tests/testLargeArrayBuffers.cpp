@@ -63,9 +63,9 @@ BEGIN_TEST(testLargeArrayBuffers) {
 
     length = 0;
     JS::AutoCheckCannotGC nogc(cx);
-    CHECK(data = JS::TypedArray<Scalar::Uint8>::unwrap(tarr).getLengthAndData(
-              &length, &isShared, nogc));
-    CHECK_EQUAL(length, nbytes);
+    mozilla::Span<uint8_t> span =
+        JS::TypedArray<Scalar::Uint8>::unwrap(tarr).getData(&isShared, nogc);
+    CHECK_EQUAL(span.Length(), nbytes);
 
     length = 0;
     CHECK(JS_GetObjectAsArrayBufferView(tarr, &length, &isShared, &data));
@@ -94,10 +94,9 @@ BEGIN_TEST(testLargeArrayBuffers) {
 
     length = 0;
     JS::AutoCheckCannotGC nogc(cx);
-    CHECK(int16Data =
-              JS::TypedArray<Scalar::Int16>::unwrap(tarr).getLengthAndData(
-                  &length, &isShared, nogc));
-    CHECK_EQUAL(length, nbytes / 2);
+    mozilla::Span<short> span =
+        JS::TypedArray<Scalar::Int16>::unwrap(tarr).getData(&isShared, nogc);
+    CHECK_EQUAL(span.Length(), nbytes / 2);
 
     length = 0;
     CHECK(JS_GetObjectAsArrayBufferView(tarr, &length, &isShared, &data));

@@ -653,13 +653,12 @@ struct TypedArray_base : public SpiderMonkeyInterfaceObjectStorage,
     // Intentionally return a pointer and length that escape from a nogc region.
     // Private so it can only be used in very limited situations.
     JS::AutoCheckCannotGC nogc;
-    size_t length;
     bool shared;
-    element_type* data =
-        ArrayT::fromObject(mImplObj).getLengthAndData(&length, &shared, nogc);
-    MOZ_RELEASE_ASSERT(length <= INT32_MAX,
+    Span<element_type> span =
+        ArrayT::fromObject(mImplObj).getData(&shared, nogc);
+    MOZ_RELEASE_ASSERT(span.Length() <= INT32_MAX,
                        "Bindings must have checked ArrayBuffer{View} length");
-    return Span(data, length);
+    return span;
   }
 
   template <typename T, typename F, typename... Calculator>
@@ -738,11 +737,11 @@ struct TypedArray : public TypedArray_base<ArrayT> {
     if (data) {
       JS::AutoCheckCannotGC nogc;
       bool isShared;
-      element_type* buf = array.getData(&isShared, nogc);
+      mozilla::Span<element_type> span = array.getData(&isShared, nogc);
       // Data will not be shared, until a construction protocol exists
       // for constructing shared data.
       MOZ_ASSERT(!isShared);
-      memcpy(buf, data, length * sizeof(element_type));
+      memcpy(span.data(), data, span.size_bytes());
     }
     return array.asObject();
   }

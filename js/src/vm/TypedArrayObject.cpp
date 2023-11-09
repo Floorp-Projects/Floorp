@@ -2840,8 +2840,11 @@ bool js::intrinsic_TypedArrayNativeSort(JSContext* cx, unsigned argc,
     if (!tarr) {                                                              \
       return nullptr;                                                         \
     }                                                                         \
-    return JS::TypedArray<JS::Scalar::Name>::fromObject(tarr)                 \
-        .getLengthAndData(length, isSharedMemory, nogc);                      \
+    mozilla::Span<ExternalType> span =                                        \
+        JS::TypedArray<JS::Scalar::Name>::fromObject(tarr).getData(           \
+            isSharedMemory, nogc);                                            \
+    *length = span.Length();                                                  \
+    return span.data();                                                       \
   }                                                                           \
                                                                               \
   JS_PUBLIC_API ExternalType* JS_Get##Name##ArrayData(                        \
@@ -2959,21 +2962,21 @@ JS::TypedArray_base JS::TypedArray_base::fromObject(JSObject* unwrapped) {
   return TypedArray_base(nullptr);
 }
 
-// Template getLengthAndData function for TypedArrays, implemented here because
+// Template getData function for TypedArrays, implemented here because
 // it requires internal APIs.
 template <JS::Scalar::Type EType>
-typename TypedArray<EType>::DataType* TypedArray<EType>::getLengthAndData(
-    size_t* length, bool* isSharedMemory, const AutoRequireNoGC&) {
+typename mozilla::Span<typename TypedArray<EType>::DataType>
+TypedArray<EType>::getData(bool* isSharedMemory, const AutoRequireNoGC&) {
   using ExternalType = TypedArray<EType>::DataType;
   if (!obj) {
     return nullptr;
   }
   TypedArrayObject* tarr = &obj->as<TypedArrayObject>();
   MOZ_ASSERT(tarr);
-  *length = tarr->length();
   *isSharedMemory = tarr->isSharedMemory();
-  return static_cast<ExternalType*>(
-      tarr->dataPointerEither().unwrap(/*safe - caller sees isShared*/));
+  return {static_cast<ExternalType*>(tarr->dataPointerEither().unwrap(
+              /*safe - caller sees isShared*/)),
+          tarr->length()};
 };
 
 // Force the method defined above to actually be instantianted in this
@@ -2982,10 +2985,10 @@ typename TypedArray<EType>::DataType* TypedArray<EType>::getLengthAndData(
 // satisfied by the linker. (This happens with opt gtest, at least. In a DEBUG
 // build, the header contains a call to this function so it will always be
 // emitted.)
-#define INSTANTIATE_GET_DATA(a, b, Name)                    \
-  template typename TypedArray<JS::Scalar::Name>::DataType* \
-  TypedArray<JS::Scalar::Name>::getLengthAndData(           \
-      size_t* length, bool* isSharedMemory, const AutoRequireNoGC&);
+#define INSTANTIATE_GET_DATA(a, b, Name)                                  \
+  template mozilla::Span<typename TypedArray<JS::Scalar::Name>::DataType> \
+  TypedArray<JS::Scalar::Name>::getData(bool* isSharedMemory,             \
+                                        const AutoRequireNoGC&);
 JS_FOR_EACH_TYPED_ARRAY(INSTANTIATE_GET_DATA)
 #undef INSTANTIATE_GET_DATA
 
