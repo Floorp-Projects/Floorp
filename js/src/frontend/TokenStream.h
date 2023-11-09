@@ -205,7 +205,7 @@
 #include "frontend/Token.h"
 #include "frontend/TokenKind.h"
 #include "js/CharacterEncoding.h"  // JS::ConstUTF8CharsZ
-#include "js/ColumnNumber.h"  // JS::LimitedColumnNumberZeroOrigin, JS::ColumnNumberOneOrigin, JS::ColumnNumberUnsignedOffset
+#include "js/ColumnNumber.h"  // JS::LimitedColumnNumberOneOrigin, JS::ColumnNumberOneOrigin, JS::ColumnNumberUnsignedOffset
 #include "js/CompileOptions.h"
 #include "js/friend/ErrorMessages.h"  // JSMSG_*
 #include "js/HashTable.h"             // js::HashMap
@@ -914,6 +914,11 @@ class TokenStreamAnyChars : public TokenStreamShared {
    * line/column of the script.  For example, consider this HTML with
    * line/column number keys:
    *
+   *     Column number in 1-origin
+   *                1         2            3
+   *       123456789012345678901234   567890
+   *
+   *     Column number in 0-origin, and the offset from 1st column
    *                 1         2            3
    *       0123456789012345678901234   567890
    *     ------------------------------------
@@ -926,12 +931,13 @@ class TokenStreamAnyChars : public TokenStreamShared {
    *   7 | </html>
    *
    * The script would be compiled specifying initial (line, column) of (3, 10)
-   * using |JS::ReadOnlyCompileOptions::{lineno,column}|.  And the column
-   * reported by |computeColumn| for the "v" of |var| would be 10.  But the
-   * column number offset of the "v" in |var|, that this function returns,
-   * would be 0.  On the other hand, the column reported by |computeColumn| and
-   * the column number offset returned by this function for the "c" in |const|
-   * would both be 0, because it's not in the first line of source text.
+   * using |JS::ReadOnlyCompileOptions::{lineno,column}|, which is 0-origin.
+   * And the column reported by |computeColumn| for the "v" of |var| would be
+   * 11 (in 1-origin).  But the column number offset of the "v" in |var|, that
+   * this function returns, would be 0.  On the other hand, the column reported
+   * by |computeColumn| would be 1 (in 1-origin) and the column number offset
+   * returned by this function for the "c" in |const| would be 0, because it's
+   * not in the first line of source text.
    *
    * The column number offset is with respect *only* to the JavaScript source
    * text as SpiderMonkey sees it.  In the example, the "&lt;" is converted to
@@ -1986,8 +1992,8 @@ class GeneralTokenStreamChars : public SpecializedTokenStreamCharsBase<Unit> {
    * |offset| must be a code point boundary, preceded only by validly-encoded
    * source units.  (It doesn't have to be *followed* by valid source units.)
    */
-  JS::LimitedColumnNumberZeroOrigin computeColumn(LineToken lineToken,
-                                                  uint32_t offset) const;
+  JS::LimitedColumnNumberOneOrigin computeColumn(LineToken lineToken,
+                                                 uint32_t offset) const;
   void computeLineAndColumn(uint32_t offset, uint32_t* line,
                             JS::LimitedColumnNumberOneOrigin* column) const;
 
@@ -2539,7 +2545,7 @@ class MOZ_STACK_CLASS TokenStreamSpecific
     return anyChars.lineNumber(lineToken);
   }
 
-  JS::LimitedColumnNumberZeroOrigin columnAt(size_t offset) const final {
+  JS::LimitedColumnNumberOneOrigin columnAt(size_t offset) const final {
     return computeColumn(anyCharsAccess().lineToken(offset), offset);
   }
 
