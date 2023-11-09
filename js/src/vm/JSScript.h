@@ -27,7 +27,7 @@
 
 #include "frontend/ScriptIndex.h"  // ScriptIndex
 #include "gc/Barrier.h"
-#include "js/ColumnNumber.h"  // JS::LimitedColumnNumberZeroOrigin, JS::LimitedColumnNumberOneOrigin
+#include "js/ColumnNumber.h"  // JS::LimitedColumnNumberOneOrigin, JS::LimitedColumnNumberOneOrigin
 #include "js/CompileOptions.h"
 #include "js/Transcoding.h"
 #include "js/UbiNode.h"
@@ -623,7 +623,7 @@ class ScriptSource {
   uint32_t startLine_ = 0;
   // Column number within the file where this source starts,
   // in UTF-16 code units.
-  JS::LimitedColumnNumberZeroOrigin startColumn_;
+  JS::LimitedColumnNumberOneOrigin startColumn_;
 
   // See: CompileOptions::mutedErrors.
   bool mutedErrors_ = false;
@@ -1063,7 +1063,7 @@ class ScriptSource {
   bool mutedErrors() const { return mutedErrors_; }
 
   uint32_t startLine() const { return startLine_; }
-  JS::LimitedColumnNumberZeroOrigin startColumn() const { return startColumn_; }
+  JS::LimitedColumnNumberOneOrigin startColumn() const { return startColumn_; }
 
   JS::DelazificationOption delazificationMode() const {
     return delazificationMode_;
@@ -1545,9 +1545,7 @@ class BaseScript : public gc::TenuredCellWithNonGCPointer<uint8_t> {
   // Line number (1-origin)
   uint32_t lineno() const { return extent_.lineno; }
   // Column number in UTF-16 code units
-  JS::LimitedColumnNumberZeroOrigin column() const {
-    return JS::LimitedColumnNumberZeroOrigin(extent_.column);
-  }
+  JS::LimitedColumnNumberOneOrigin column() const { return extent_.column; }
 
   JS::DelazificationOption delazificationMode() const {
     return scriptSource()->delazificationMode();
