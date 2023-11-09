@@ -845,12 +845,6 @@ def build_generic_worker_payload(config, task, task_def):
         ),
         Optional("entitlements-url"): str,
         Optional("requirements-plist-url"): str,
-        Optional("provisioning-profile-config"): [
-            {
-                Required("profile_name"): str,
-                Required("target_path"): str,
-            }
-        ],
         Optional("hardened-sign-config"): [
             {
                 Optional("deep"): bool,
@@ -876,7 +870,6 @@ def build_scriptworker_signing_payload(config, task, task_def):
             "entitlements-url",
             "requirements-plist-url",
             "hardened-sign-config",
-            "provisioning-profile-config",
         ):
             if worker.get(attribute):
                 task_def["payload"][attribute] = worker[attribute]

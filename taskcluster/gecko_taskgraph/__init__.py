@@ -38,8 +38,6 @@ schema.EXCEPTED_SCHEMA_IDENTIFIERS.extend(
         "test_name",
         "json_location",
         "video_location",
-        "profile_name",
-        "target_path",
     ]
 )
 
