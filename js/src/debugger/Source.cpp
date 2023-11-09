@@ -348,21 +348,22 @@ bool DebuggerSource::CallData::getStartLine() {
 
 class DebuggerSourceGetStartColumnMatcher {
  public:
-  using ReturnType = uint32_t;
+  using ReturnType = JS::LimitedColumnNumberOneOrigin;
 
   ReturnType match(Handle<ScriptSourceObject*> sourceObject) {
     ScriptSource* ss = sourceObject->source();
-    return ss->startColumn().zeroOriginValue();
+    return ss->startColumn();
   }
   ReturnType match(Handle<WasmInstanceObject*> instanceObj) {
-    return JS::WasmFunctionIndex::DefaultBinarySourceColumnNumberZeroOrigin;
+    return JS::LimitedColumnNumberOneOrigin(
+        JS::WasmFunctionIndex::DefaultBinarySourceColumnNumberOneOrigin);
   }
 };
 
 bool DebuggerSource::CallData::getStartColumn() {
   DebuggerSourceGetStartColumnMatcher matcher;
-  uint32_t column = referent.match(matcher);
-  args.rval().setNumber(column);
+  JS::LimitedColumnNumberOneOrigin column = referent.match(matcher);
+  args.rval().setNumber(column.zeroOriginValue());
   return true;
 }
 
