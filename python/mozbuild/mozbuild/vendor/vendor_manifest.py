@@ -201,9 +201,7 @@ class VendorManifest(MozbuildObject):
         from mozbuild.vendor.vendor_rust import VendorRust
 
         vendor_command = command_context._spawn(VendorRust)
-        vendor_command.vendor(
-            ignore_modified=True, build_peers_said_large_imports_were_ok=False
-        )
+        vendor_command.vendor(ignore_modified=True)
 
         self.update_yaml(new_revision, timestamp)
 
