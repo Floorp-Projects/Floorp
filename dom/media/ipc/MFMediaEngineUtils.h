@@ -107,6 +107,7 @@ const char* MFVideoTransferFunctionToStr(MFVideoTransferFunction aFunc);
 const char* MFVideoPrimariesToStr(MFVideoPrimaries aPrimaries);
 void ByteArrayFromGUID(REFGUID aGuidIn, nsTArray<uint8_t>& aByteArrayOut);
 void GUIDFromByteArray(const nsTArray<uint8_t>& aByteArrayIn, GUID& aGuidOut);
+BSTR CreateBSTRFromConstChar(const char* aNarrowStr);
 
 // See cdm::SubsampleEntry
 struct MediaFoundationSubsampleEntry {

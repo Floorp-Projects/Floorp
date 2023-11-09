@@ -5,6 +5,7 @@
 #include "MFCDMParent.h"
 
 #include <mfmediaengine.h>
+#include <wtypes.h>
 #define INITGUID          // Enable DEFINE_PROPERTYKEY()
 #include <propkeydef.h>   // For DEFINE_PROPERTYKEY() definition
 #include <propvarutil.h>  // For InitPropVariantFrom*()
@@ -45,6 +46,15 @@ DEFINE_PROPERTYKEY(EME_CONTENTDECRYPTIONMODULE_ORIGIN_ID, 0x1218a3e2, 0xcfb0,
     if (MOZ_UNLIKELY(FAILED(rv))) {                     \
       MFCDM_PARENT_SLOG("(" #x ") failed, rv=%lx", rv); \
       return rv;                                        \
+    }                                                   \
+  } while (false)
+
+#define MFCDM_RETURN_BOOL_IF_FAILED(x)                  \
+  do {                                                  \
+    HRESULT rv = x;                                     \
+    if (MOZ_UNLIKELY(FAILED(rv))) {                     \
+      MFCDM_PARENT_SLOG("(" #x ") failed, rv=%lx", rv); \
+      return false;                                     \
     }                                                   \
   } while (false)
 
@@ -474,16 +484,17 @@ static nsString GetRobustnessStringForKeySystem(const nsString& aKeySystem,
 }
 
 // Use IMFContentDecryptionModuleFactory::IsTypeSupported() to get DRM
-// capabilities. It appears to be the same as
-// Windows.Media.Protection.ProtectionCapabilities.IsTypeSupported(). See
-// https://learn.microsoft.com/en-us/uwp/api/windows.media.protection.protectioncapabilities.istypesupported?view=winrt-19041
+// capabilities. The query string is based on following, they are pretty much
+// equivalent.
+// https://learn.microsoft.com/en-us/uwp/api/windows.media.protection.protectioncapabilities.istypesupported?view=winrt-22621
+// https://learn.microsoft.com/en-us/windows/win32/api/mfmediaengine/nf-mfmediaengine-imfextendeddrmtypesupport-istypesupportedex
 static bool FactorySupports(ComPtr<IMFContentDecryptionModuleFactory>& aFactory,
                             const nsString& aKeySystem,
                             const nsCString& aVideoCodec,
                             const nsCString& aAudioCodec = nsCString(""),
                             const nsString& aAdditionalFeatures = nsString(u""),
                             bool aIsHWSecure = false) {
-  // MP4 is the only container supported.
+  // Create query string, MP4 is the only container supported.
   nsString contentType(u"video/mp4;codecs=\"");
   MOZ_ASSERT(!aVideoCodec.IsEmpty());
   contentType.AppendASCII(aVideoCodec);
@@ -500,13 +511,44 @@ static bool FactorySupports(ComPtr<IMFContentDecryptionModuleFactory>& aFactory,
   if (!aAdditionalFeatures.IsEmpty()) {
     contentType.Append(aAdditionalFeatures);
   }
-  if (aIsHWSecure) {
-    contentType.AppendLiteral(u"encryption-robustness=HW_SECURE_ALL");
-  } else {
-    contentType.AppendLiteral(u"encryption-robustness=SW_SECURE_DECODE");
+  // `encryption-robustness` is for Widevine only.
+  if (IsWidevineExperimentKeySystemAndSupported(aKeySystem) ||
+      IsWidevineKeySystem(aKeySystem)) {
+    if (aIsHWSecure) {
+      contentType.AppendLiteral(u"encryption-robustness=HW_SECURE_ALL");
+    } else {
+      contentType.AppendLiteral(u"encryption-robustness=SW_SECURE_DECODE");
+    }
   }
-  // End of the query string
   contentType.AppendLiteral(u"\"");
+  // End of the query string
+
+  // PlayReady doesn't implement IsTypeSupported properly, so it requires us to
+  // use another way to check the capabilities.
+  if (IsPlayReadyKeySystemAndSupported(aKeySystem)) {
+    ComPtr<IMFMediaEngineClassFactory> spFactory;
+    ComPtr<IMFExtendedDRMTypeSupport> spDrmTypeSupport;
+    MFCDM_RETURN_BOOL_IF_FAILED(
+        CoCreateInstance(CLSID_MFMediaEngineClassFactory, NULL,
+                         CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&spFactory)));
+    MFCDM_RETURN_BOOL_IF_FAILED(spFactory.As(&spDrmTypeSupport));
+    BSTR keySystem = aIsHWSecure
+                         ? CreateBSTRFromConstChar(kPlayReadyKeySystemHardware)
+                         : CreateBSTRFromConstChar(kPlayReadyKeySystemName);
+    MF_MEDIA_ENGINE_CANPLAY canPlay;
+    spDrmTypeSupport->IsTypeSupportedEx(SysAllocString(contentType.get()),
+                                        keySystem, &canPlay);
+    const bool support =
+        canPlay !=
+        MF_MEDIA_ENGINE_CANPLAY::MF_MEDIA_ENGINE_CANPLAY_NOT_SUPPORTED;
+    MFCDM_PARENT_SLOG("IsTypeSupportedEx=%d (key-system=%ls, content-type=%s)",
+                      support, keySystem,
+                      NS_ConvertUTF16toUTF8(contentType).get());
+    return support;
+  }
+
+  // Checking capabilies from CDM's IsTypeSupported. Widevine implements this
+  // method well.
   bool support = aFactory->IsTypeSupported(
       GetOriginalKeySystem(aKeySystem).get(), contentType.get());
   MFCDM_PARENT_SLOG("IsTypeSupport=%d (key-system=%s, content-type=%s)",
@@ -901,6 +943,7 @@ already_AddRefed<MFCDMProxy> MFCDMParent::GetMFCDMProxy() {
 #undef MFCDM_REJECT_IF_FAILED
 #undef MFCDM_REJECT_IF
 #undef MFCDM_RETURN_IF_FAILED
+#undef MFCDM_RETURN_BOOL_IF_FAILED
 #undef MFCDM_PARENT_SLOG
 #undef MFCDM_PARENT_LOG
 
