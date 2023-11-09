@@ -1,8 +1,8 @@
 {
-  "name": "ヤフオク!",
+  "name": "Yahoo!オークション",
   "description": "ヤフオク! 検索",
   "manifest_version": 2,
-  "version": "1.4",
+  "version": "1.5",
   "browser_specific_settings": {
     "gecko": {
       "id": "yahoo-jp-auctions@search.mozilla.org"
@@ -15,7 +15,7 @@
   "web_accessible_resources": ["favicon.ico"],
   "chrome_settings_overrides": {
     "search_provider": {
-      "name": "ヤフオク!",
+      "name": "Yahoo!オークション",
       "encoding": "EUC-JP",
       "search_url": "https://auctions.yahoo.co.jp/search/search",
       "search_form": "https://auctions.yahoo.co.jp/",
