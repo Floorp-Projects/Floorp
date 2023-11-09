@@ -19,8 +19,8 @@
 #include "gc/GCContext.h"
 #include "gc/HashUtil.h"
 #include "js/CharacterEncoding.h"
-#include "js/ColumnNumber.h"  // JS::LimitedColumnNumberZeroOrigin, JS::LimitedColumnNumberOneOrigin, JS::TaggedColumnNumberOneOrigin
-#include "js/ErrorReport.h"   // JSErrorBase
+#include "js/ColumnNumber.h"  // JS::LimitedColumnNumberOneOrigin, JS::TaggedColumnNumberOneOrigin
+#include "js/ErrorReport.h"           // JSErrorBase
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/PropertyAndElement.h"    // JS_DefineProperty, JS_GetProperty
 #include "js/PropertySpec.h"
@@ -1875,13 +1875,12 @@ bool SavedStacks::getLocation(JSContext* cx, const FrameIter& iter,
     }
 
     uint32_t sourceId = script->scriptSource()->id();
-    JS::LimitedColumnNumberZeroOrigin column;
+    JS::LimitedColumnNumberOneOrigin column;
     uint32_t line = PCToLineNumber(script, pc, &column);
 
     PCKey key(script, pc);
     LocationValue value(source, sourceId, line,
-                        JS::TaggedColumnNumberOneOrigin(
-                            JS::LimitedColumnNumberOneOrigin(column)));
+                        JS::TaggedColumnNumberOneOrigin(column));
     if (!pcLocationMap.add(p, key, value)) {
       ReportOutOfMemory(cx);
       return false;

@@ -46,7 +46,7 @@
 #include "jit/JitOptions.h"
 #include "jit/JitRuntime.h"
 #include "js/CharacterEncoding.h"  // JS_EncodeStringToUTF8
-#include "js/ColumnNumber.h"  // JS::LimitedColumnNumberZeroOrigin, JS::ColumnNumberOffset
+#include "js/ColumnNumber.h"  // JS::LimitedColumnNumberZeroOrigin, JS::LimitedColumnNumberOneOrigin, JS::ColumnNumberOffset
 #include "js/CompileOptions.h"
 #include "js/experimental/SourceHook.h"
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
@@ -2625,12 +2625,12 @@ void JSScript::addSizeOfJitScript(mozilla::MallocSizeOf mallocSizeOf,
 js::GlobalObject& JSScript::uninlinedGlobal() const { return global(); }
 
 unsigned js::PCToLineNumber(unsigned startLine,
-                            JS::LimitedColumnNumberZeroOrigin startCol,
+                            JS::LimitedColumnNumberOneOrigin startCol,
                             SrcNote* notes, SrcNote* notesEnd, jsbytecode* code,
                             jsbytecode* pc,
-                            JS::LimitedColumnNumberZeroOrigin* columnp) {
+                            JS::LimitedColumnNumberOneOrigin* columnp) {
   unsigned lineno = startLine;
-  JS::LimitedColumnNumberZeroOrigin column = startCol;
+  JS::LimitedColumnNumberOneOrigin column = startCol;
 
   /*
    * Walk through source notes accumulating their deltas, keeping track of
@@ -2649,16 +2649,18 @@ unsigned js::PCToLineNumber(unsigned startLine,
     SrcNoteType type = sn->type();
     if (type == SrcNoteType::SetLine) {
       lineno = SrcNote::SetLine::getLine(sn, startLine);
-      column = JS::LimitedColumnNumberZeroOrigin::zero();
+      column = JS::LimitedColumnNumberOneOrigin();
     } else if (type == SrcNoteType::SetLineColumn) {
       lineno = SrcNote::SetLineColumn::getLine(sn, startLine);
-      column = SrcNote::SetLineColumn::getColumn(sn);
+      column = JS::LimitedColumnNumberOneOrigin(
+          SrcNote::SetLineColumn::getColumn(sn));
     } else if (type == SrcNoteType::NewLine) {
       lineno++;
-      column = JS::LimitedColumnNumberZeroOrigin::zero();
+      column = JS::LimitedColumnNumberOneOrigin();
     } else if (type == SrcNoteType::NewLineColumn) {
       lineno++;
-      column = SrcNote::NewLineColumn::getColumn(sn);
+      column = JS::LimitedColumnNumberOneOrigin(
+          SrcNote::NewLineColumn::getColumn(sn));
     } else if (type == SrcNoteType::ColSpan) {
       column += SrcNote::ColSpan::getSpan(sn);
     }
@@ -2672,14 +2674,15 @@ unsigned js::PCToLineNumber(unsigned startLine,
 }
 
 unsigned js::PCToLineNumber(JSScript* script, jsbytecode* pc,
-                            JS::LimitedColumnNumberZeroOrigin* columnp) {
+                            JS::LimitedColumnNumberOneOrigin* columnp) {
   /* Cope with InterpreterFrame.pc value prior to entering Interpret. */
   if (!pc) {
     return 0;
   }
 
-  return PCToLineNumber(script->lineno(), script->column(), script->notes(),
-                        script->notesEnd(), script->code(), pc, columnp);
+  return PCToLineNumber(
+      script->lineno(), JS::LimitedColumnNumberOneOrigin(script->column()),
+      script->notes(), script->notesEnd(), script->code(), pc, columnp);
 }
 
 jsbytecode* js::LineNumberToPC(JSScript* script, unsigned target) {
