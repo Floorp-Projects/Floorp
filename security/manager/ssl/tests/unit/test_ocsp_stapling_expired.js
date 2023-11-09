@@ -4,6 +4,13 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 "use strict";
 
+// Enable the collection (during test) for all products so even products
+// that don't collect the data will be able to run the test without failure.
+Services.prefs.setBoolPref(
+  "toolkit.telemetry.testing.overrideProductsCheck",
+  true
+);
+
 // In which we connect to a number of domains (as faked by a server running
 // locally) with OCSP stapling enabled to determine that good things happen
 // and bad things don't, specifically with respect to various expired OCSP
@@ -285,11 +292,6 @@ function run_test() {
 }
 
 function check_ocsp_stapling_telemetry() {
-  // This telemetry isn't collected on android.
-  if (AppConstants.platform == "android") {
-    run_next_test();
-    return;
-  }
   let histogram = Services.telemetry
     .getHistogramById("SSL_OCSP_STAPLING")
     .snapshot();

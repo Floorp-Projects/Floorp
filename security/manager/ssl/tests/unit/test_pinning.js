@@ -24,6 +24,13 @@
 
 "use strict";
 
+// Enable the collection (during test) for all products so even products
+// that don't collect the data will be able to run the test without failure.
+Services.prefs.setBoolPref(
+  "toolkit.telemetry.testing.overrideProductsCheck",
+  true
+);
+
 do_get_profile(); // must be called before getting nsIX509CertDB
 const certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
   Ci.nsIX509CertDB
@@ -258,11 +265,6 @@ function test_enforce_test_mode() {
 }
 
 function check_pinning_telemetry() {
-  // This telemetry isn't collected on android.
-  if (AppConstants.platform == "android") {
-    run_next_test();
-    return;
-  }
   let prod_histogram = Services.telemetry
     .getHistogramById("CERT_PINNING_RESULTS")
     .snapshot();

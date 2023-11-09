@@ -8,6 +8,13 @@
 // locally) with and without OCSP stapling enabled to determine that good
 // things happen and bad things don't.
 
+// Enable the collection (during test) for all products so even products
+// that don't collect the data will be able to run the test without failure.
+Services.prefs.setBoolPref(
+  "toolkit.telemetry.testing.overrideProductsCheck",
+  true
+);
+
 var gExpectOCSPRequest;
 
 function add_ocsp_test(
@@ -332,11 +339,6 @@ function add_tests() {
 }
 
 function check_ocsp_stapling_telemetry() {
-  // This telemetry isn't collected on android.
-  if (AppConstants.platform == "android") {
-    run_next_test();
-    return;
-  }
   let histogram = Services.telemetry
     .getHistogramById("SSL_OCSP_STAPLING")
     .snapshot();
