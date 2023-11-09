@@ -254,13 +254,13 @@ subprojects {
 
                         def fileFilter = ['**/R.class', '**/R$*.class', '**/BuildConfig.*', '**/Manifest*.*',
                                           '**/*Test*.*', 'android/**/*.*', '**/*$[0-9].*']
-                        def kotlinDebugTree = fileTree(dir: "$project.buildDir/tmp/kotlin-classes/${buildType.name}", excludes: fileFilter)
-                        def javaDebugTree = fileTree(dir: "$project.buildDir/intermediates/classes/${buildType.name}", excludes: fileFilter)
+                        def kotlinDebugTree = fileTree(dir: "$project.layout.buildDirectory/tmp/kotlin-classes/${buildType.name}", excludes: fileFilter)
+                        def javaDebugTree = fileTree(dir: "$project.layout.buildDirectory/intermediates/classes/${buildType.name}", excludes: fileFilter)
                         def mainSrc = "$project.projectDir/src/main/java"
 
                         sourceDirectories.setFrom(files([mainSrc]))
                         classDirectories.setFrom(files([kotlinDebugTree, javaDebugTree]))
-                        getExecutionData().setFrom(fileTree(project.buildDir).include([
+                        getExecutionData().setFrom(fileTree(project.layout.buildDirectory).include([
                                 "jacoco/test${buildType.name.capitalize()}UnitTest.exec"
                         ]))
                     }
@@ -279,7 +279,7 @@ subprojects {
 }
 
 tasks.register("clean", Delete) {
-    delete rootProject.buildDir
+    delete rootProject.layout.buildDirectory
 }
 
 detekt {
@@ -318,6 +318,8 @@ tasks.withType(Detekt).configureEach() {
     exclude "**/tmp/**"
     exclude "**/tooling/fetch/tests/**"
     exclude "**/tooling/fetch-tests/**"
+    exclude "**/src/main/assets/extensions/**"
+    exclude "**/docs/**"
 }
 
 // Apply same path exclusions as for the main task

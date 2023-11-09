@@ -21,6 +21,10 @@ android {
         }
     }
 
+    buildFeatures {
+        buildConfig true
+    }
+
     namespace 'mozilla.components.concept.fetch'
 }
 
