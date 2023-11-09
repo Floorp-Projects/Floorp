@@ -55,24 +55,6 @@ add_setup(async function () {
   });
 });
 
-async function showDoorhanger(browser, values = null) {
-  const defaultValues = {
-    "#given-name": "John",
-    "#family-name": "Doe",
-    "#organization": "Mozilla",
-    "#street-address": "123 Sesame Street",
-  };
-
-  const onPopupShown = waitForPopupShown();
-  const promise = BrowserTestUtils.browserLoaded(browser);
-  await focusUpdateSubmitForm(browser, {
-    focusSelector: "#given-name",
-    newValues: values ?? defaultValues,
-  });
-  await promise;
-  await onPopupShown;
-}
-
 // Save address doorhanger should show description when users has no saved address
 add_task(async function test_save_doorhanger_show_description() {
   await expectSavedAddresses(0);
@@ -80,7 +62,7 @@ add_task(async function test_save_doorhanger_show_description() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: ADDRESS_FORM_URL },
     async function (browser) {
-      await showDoorhanger(browser);
+      await showAddressDoorhanger(browser);
 
       const header = AutofillDoorhanger.header(getNotification());
       is(checkVisibility(header), true, "Should always show header");
@@ -103,7 +85,7 @@ add_task(async function test_save_doorhanger_hide_description() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: ADDRESS_FORM_URL },
     async function (browser) {
-      await showDoorhanger(browser);
+      await showAddressDoorhanger(browser);
 
       const header = AutofillDoorhanger.header(getNotification());
       is(checkVisibility(header), true, "Should always show header");
@@ -127,7 +109,7 @@ add_task(async function test_click_learn_more_button_in_edit_doorhanger() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: ADDRESS_FORM_URL },
     async function (browser) {
-      await showDoorhanger(browser);
+      await showAddressDoorhanger(browser);
 
       let tabOpenPromise = BrowserTestUtils.waitForNewTab(gBrowser, url =>
         url.endsWith(AddressSaveDoorhanger.learnMoreURL)
@@ -148,7 +130,7 @@ add_task(async function test_click_address_setting_button_in_edit_doorhanger() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: ADDRESS_FORM_URL },
     async function (browser) {
-      await showDoorhanger(browser);
+      await showAddressDoorhanger(browser);
 
       let tabOpenPromise = BrowserTestUtils.waitForNewTab(
         gBrowser,
@@ -205,7 +187,7 @@ add_task(async function test_address_display_in_save_doorhanger() {
       { gBrowser, url: ADDRESS_FORM_URL },
       async function (browser) {
         info(TEST.description);
-        await showDoorhanger(browser, TEST.form);
+        await showAddressDoorhanger(browser, TEST.form);
 
         is(
           getNotification().querySelectorAll(
@@ -244,7 +226,7 @@ add_task(async function test_show_added_text_in_update_doorhanger() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: ADDRESS_FORM_URL },
     async function (browser) {
-      await showDoorhanger(browser, recordToFormSelector(form));
+      await showAddressDoorhanger(browser, recordToFormSelector(form));
 
       // When the form has no country field, doorhanger shows the default region
       verifyDoorhangerContent({
@@ -277,7 +259,7 @@ add_task(async function test_show_removed_text_in_update_doorhanger() {
   await BrowserTestUtils.withNewTab(
     { gBrowser, url: ADDRESS_FORM_URL },
     async function (browser) {
-      await showDoorhanger(browser, recordToFormSelector(form));
+      await showAddressDoorhanger(browser, recordToFormSelector(form));
 
       // When the form has no country field, doorhanger shows the default region
       verifyDoorhangerContent(

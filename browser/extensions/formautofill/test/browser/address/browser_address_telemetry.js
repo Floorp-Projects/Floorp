@@ -1,6 +1,6 @@
 "use strict";
 
-requestLongerTimeout(2);
+requestLongerTimeout(3);
 
 const { TelemetryTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/TelemetryTestUtils.sys.mjs"
@@ -670,6 +670,66 @@ add_task(async function test_histogram() {
     undefined
   );
 
+  Services.telemetry.clearEvents();
+  Services.telemetry.clearScalars();
+});
+
+add_task(async function test_click_doorhanger_menuitems() {
+  const TESTS = [
+    {
+      button: ADDRESS_MENU_BUTTON,
+      menuItem: ADDRESS_MENU_LEARN_MORE,
+      expectedEvt: "learn_more",
+    },
+    {
+      button: ADDRESS_MENU_BUTTON,
+      menuItem: ADDRESS_MENU_PREFENCE,
+      expectedEvt: "pref",
+    },
+  ];
+  for (const TEST of TESTS) {
+    await BrowserTestUtils.withNewTab(
+      { gBrowser, url: TEST_BASIC_ADDRESS_FORM_URL },
+      async function (browser) {
+        await showAddressDoorhanger(browser);
+
+        const tabOpenPromise = BrowserTestUtils.waitForNewTab(gBrowser);
+        await clickAddressDoorhangerButton(TEST.button, TEST.menuItem);
+        gBrowser.removeTab(await tabOpenPromise);
+      }
+    );
+
+    await assertTelemetry(undefined, [
+      [EVENT_CATEGORY, "show", "capture_doorhanger"],
+      [EVENT_CATEGORY, TEST.expectedEvt, "capture_doorhanger"],
+    ]);
+
+    Services.telemetry.clearEvents();
+    Services.telemetry.clearScalars();
+  }
+});
+
+add_task(async function test_show_edit_doorhanger() {
+  await BrowserTestUtils.withNewTab(
+    { gBrowser, url: TEST_BASIC_ADDRESS_FORM_URL },
+    async function (browser) {
+      await showAddressDoorhanger(browser);
+
+      const onEditPopupShown = waitForPopupShown();
+      await clickAddressDoorhangerButton(EDIT_ADDRESS_BUTTON);
+      await onEditPopupShown;
+
+      await clickAddressDoorhangerButton(MAIN_BUTTON);
+    }
+  );
+
+  await assertTelemetry(undefined, [
+    [EVENT_CATEGORY, "show", "capture_doorhanger"],
+    [EVENT_CATEGORY, "show", "edit_doorhanger"],
+    [EVENT_CATEGORY, "save", "edit_doorhanger"],
+  ]);
+
+  await removeAllRecords();
   Services.telemetry.clearEvents();
   Services.telemetry.clearScalars();
 });

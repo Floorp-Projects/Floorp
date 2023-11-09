@@ -432,6 +432,7 @@ address:
     objects:
       - "capture_doorhanger"
       - "update_doorhanger"
+      - "edit_doorhanger"
     methods:
       - "show"
       - "save"
@@ -439,6 +440,7 @@ address:
       - "cancel"
       - "disable"
       - "pref"
+      - "learn_more"
     bug_numbers: [1801039]
     notification_emails: ["autofill@lists.mozilla.org", "passwords-dev@mozilla.org"]
     expiry_version: never
