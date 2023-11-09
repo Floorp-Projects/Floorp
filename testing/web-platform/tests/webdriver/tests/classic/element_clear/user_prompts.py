@@ -3,7 +3,13 @@
 import pytest
 
 from tests.support.asserts import assert_dialog_handled, assert_error, assert_success
-from . import element_clear
+
+
+def element_clear(session, element):
+    return session.transport.send(
+        "POST", "/session/{session_id}/element/{element_id}/clear".format(
+            session_id=session.session_id,
+            element_id=element.id))
 
 
 @pytest.fixture
