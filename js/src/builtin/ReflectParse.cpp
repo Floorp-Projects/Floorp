@@ -19,7 +19,7 @@
 #include "frontend/ModuleSharedContext.h"
 #include "frontend/ParseNode.h"
 #include "frontend/Parser.h"
-#include "js/ColumnNumber.h"          // JS::LimitedColumnNumberZeroOrigin
+#include "js/ColumnNumber.h"  // JS::LimitedColumnNumberZeroOrigin, JS::LimitedColumnNumberOneOrigin
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/friend/StackLimits.h"    // js::AutoCheckRecursionLimit
 #include "js/PropertyAndElement.h"    // JS_DefineFunction
@@ -727,7 +727,7 @@ bool NodeBuilder::newNodeLoc(TokenPos* pos, MutableHandleValue dst) {
   dst.setObject(*loc);
 
   uint32_t startLineNum, endLineNum;
-  JS::LimitedColumnNumberZeroOrigin startColumnIndex, endColumnIndex;
+  JS::LimitedColumnNumberOneOrigin startColumnIndex, endColumnIndex;
   parser->tokenStream.computeLineAndColumn(pos->begin, &startLineNum,
                                            &startColumnIndex);
   parser->tokenStream.computeLineAndColumn(pos->end, &endLineNum,

@@ -1987,7 +1987,7 @@ class GeneralTokenStreamChars : public SpecializedTokenStreamCharsBase<Unit> {
   JS::LimitedColumnNumberZeroOrigin computeColumn(LineToken lineToken,
                                                   uint32_t offset) const;
   void computeLineAndColumn(uint32_t offset, uint32_t* line,
-                            JS::LimitedColumnNumberZeroOrigin* column) const;
+                            JS::LimitedColumnNumberOneOrigin* column) const;
 
   /**
    * Fill in |err| completely, except for line-of-context information.
@@ -1998,10 +1998,9 @@ class GeneralTokenStreamChars : public SpecializedTokenStreamCharsBase<Unit> {
   [[nodiscard]] bool fillExceptingContext(ErrorMetadata* err,
                                           uint32_t offset) const {
     if (anyCharsAccess().fillExceptingContext(err, offset)) {
-      JS::LimitedColumnNumberZeroOrigin columnNumber;
+      JS::LimitedColumnNumberOneOrigin columnNumber;
       computeLineAndColumn(offset, &err->lineNumber, &columnNumber);
-      err->columnNumber =
-          JS::ColumnNumberOneOrigin(columnNumber.oneOriginValue());
+      err->columnNumber = JS::ColumnNumberOneOrigin(columnNumber);
       return true;
     }
     return false;
