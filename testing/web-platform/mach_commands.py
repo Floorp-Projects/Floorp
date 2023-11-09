@@ -11,7 +11,6 @@ from mach.decorators import Command
 from mach_commands_base import WebPlatformTestsRunner, create_parser_wpt
 from mozbuild.base import MachCommandConditions as conditions
 from mozbuild.base import MozbuildObject
-from six import iteritems
 
 here = os.path.abspath(os.path.dirname(__file__))
 INTEROP_REQUIREMENTS_PATH = os.path.join(here, "interop_requirements.txt")
@@ -275,7 +274,7 @@ class WebPlatformTestsServeRunner(MozbuildObject):
         def get_route_builder(*args, **kwargs):
             route_builder = serve.get_route_builder(*args, **kwargs)
 
-            for url_base, paths in iteritems(test_paths):
+            for url_base, paths in test_paths.items():
                 if url_base != "/":
                     route_builder.add_mount_point(url_base, paths.tests_path)
 
@@ -363,7 +362,7 @@ class WebPlatformTestsTestPathsRunner(MozbuildObject):
             wptcommandline.config.read(config_path)
         )
         results = {}
-        for url_base, paths in iteritems(test_paths):
+        for url_base, paths in test_paths.items():
             if "manifest_path" not in paths:
                 paths["manifest_path"] = os.path.join(
                     paths["metadata_path"], "MANIFEST.json"
