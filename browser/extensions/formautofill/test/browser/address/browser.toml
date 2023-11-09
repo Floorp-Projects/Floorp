@@ -20,6 +20,7 @@ support-files = [
 skip-if = ["a11y_checks"] # Bug 1859968 - Add accessibility support for address doorhanger
 
 ["browser_address_telemetry.js"]
+skip-if = ["a11y_checks"] # Bug 1859968 - Add accessibility support for address doorhanger
 
 ["browser_edit_address_doorhanger_display.js"]
 skip-if = ["a11y_checks"] # Bug 1859968 - Add accessibility support for address doorhanger

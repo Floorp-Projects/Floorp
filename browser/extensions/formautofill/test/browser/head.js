@@ -1218,6 +1218,24 @@ async function verifyConfirmationHint(
   }
 }
 
+async function showAddressDoorhanger(browser, values = null) {
+  const defaultValues = {
+    "#given-name": "John",
+    "#family-name": "Doe",
+    "#organization": "Mozilla",
+    "#street-address": "123 Sesame Street",
+  };
+
+  const onPopupShown = waitForPopupShown();
+  const promise = BrowserTestUtils.browserLoaded(browser);
+  await focusUpdateSubmitForm(browser, {
+    focusSelector: "#given-name",
+    newValues: values ?? defaultValues,
+  });
+  await promise;
+  await onPopupShown;
+}
+
 add_setup(function () {
   OSKeyStoreTestUtils.setup();
 });
