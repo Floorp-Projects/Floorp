@@ -60,7 +60,7 @@ class DownloadFileTypesTest(fileName: String) {
         downloadRobot {
             openPageAndDownloadFile(url = downloadTestPage.toUri(), downloadFile = downloadFile)
             verifyDownloadCompleteNotificationPopup()
-        }.closeCompletedDownloadPrompt {
+        }.closeDownloadPrompt {
         }.openThreeDotMenu {
         }.openDownloadsManager {
             waitForDownloadsListToExist()

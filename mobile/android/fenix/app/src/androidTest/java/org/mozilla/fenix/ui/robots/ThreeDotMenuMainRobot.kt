@@ -209,7 +209,9 @@ class ThreeDotMenuMainRobot {
 
         fun openDownloadsManager(interact: DownloadRobot.() -> Unit): DownloadRobot.Transition {
             threeDotMenuRecyclerView().perform(swipeDown())
+            Log.i(TAG, "openDownloadsManager: Swiped up main menu")
             downloadsButton.click()
+            Log.i(TAG, "openDownloadsManager: Clicked main menu \"DOWNLOADS\" button")
 
             DownloadRobot().interact()
             return DownloadRobot.Transition()
@@ -310,6 +312,7 @@ class ThreeDotMenuMainRobot {
 
         fun clickShareButton(interact: ShareOverlayRobot.() -> Unit): ShareOverlayRobot.Transition {
             shareButton.click()
+            Log.i(TAG, "clickShareButton: Clicked main menu share button")
             mDevice.waitNotNull(Until.findObject(By.text("ALL ACTIONS")), waitingTime)
 
             ShareOverlayRobot().interact()

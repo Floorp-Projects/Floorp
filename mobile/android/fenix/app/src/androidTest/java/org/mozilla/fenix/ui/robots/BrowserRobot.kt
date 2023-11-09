@@ -1007,17 +1007,20 @@ class BrowserRobot {
         )
     }
 
-    fun clickStayInPrivateBrowsingPromptButton() =
+    fun clickStayInPrivateBrowsingPromptButton() {
         itemWithResIdContainingText(
             "$packageName:id/deny_button",
             getStringResource(R.string.mozac_feature_downloads_cancel_active_private_downloads_deny),
         ).click()
+        Log.i(TAG, "clickStayInPrivateBrowsingPromptButton: Clicked \"STAY IN PRIVATE BROWSING\" prompt button")
+    }
 
     fun clickCancelPrivateDownloadsPromptButton() {
         itemWithResIdContainingText(
             "$packageName:id/accept_button",
             getStringResource(R.string.mozac_feature_downloads_cancel_active_downloads_accept),
         ).click()
+        Log.i(TAG, "clickCancelPrivateDownloadsPromptButton: Clicked \"CANCEL DOWNLOADS\" prompt button")
 
         mDevice.waitForWindowUpdate(packageName, waitingTime)
     }
@@ -1025,6 +1028,7 @@ class BrowserRobot {
     fun fillPdfForm(name: String) {
         // Set PDF form text for the text box
         itemWithResId("pdfjs_internal_id_10R").setText(name)
+        Log.i(TAG, "fillPdfForm: Set PDF form text box text to: $name")
         mDevice.waitForWindowUpdate(packageName, waitingTime)
         if (
             !itemWithResId("pdfjs_internal_id_11R").exists() &&
@@ -1034,15 +1038,17 @@ class BrowserRobot {
         ) {
             // Close the keyboard
             mDevice.pressBack()
+            Log.i(TAG, "fillPdfForm: Closing the keyboard using device back button")
         }
         // Click PDF form check box
         itemWithResId("pdfjs_internal_id_11R").click()
+        Log.i(TAG, "fillPdfForm: Clicked PDF form check box")
     }
 
     class Transition {
         fun openThreeDotMenu(interact: ThreeDotMenuMainRobot.() -> Unit): ThreeDotMenuMainRobot.Transition {
             mDevice.waitForIdle(waitingTime)
-            Log.i(TAG, "openThreeDotMenu: Device was idle for $waitingTime")
+            Log.i(TAG, "openThreeDotMenu: Device was idle for $waitingTime ms")
             threeDotButton().perform(click())
             Log.i(TAG, "openThreeDotMenu: Clicked the main menu button")
 
@@ -1127,6 +1133,7 @@ class BrowserRobot {
 
         fun openNotificationShade(interact: NotificationRobot.() -> Unit): NotificationRobot.Transition {
             mDevice.openNotification()
+            Log.i(TAG, "openNotificationShade: Opened notification tray")
 
             NotificationRobot().interact()
             return NotificationRobot.Transition()

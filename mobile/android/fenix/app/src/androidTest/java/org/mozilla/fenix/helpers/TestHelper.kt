@@ -6,6 +6,7 @@ package org.mozilla.fenix.helpers
 
 import android.content.Context
 import android.net.Uri
+import android.util.Log
 import android.view.View
 import androidx.test.core.app.launchActivity
 import androidx.test.espresso.Espresso.onView
@@ -32,6 +33,7 @@ import org.junit.Assert
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
+import org.mozilla.fenix.helpers.Constants.TAG
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdAndText
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
@@ -120,6 +122,7 @@ object TestHelper {
             mDevice.findObject(UiSelector().resourceId("$packageName:id/toolbar"))
         while (!toolbar.waitForExists(waitingTimeShort)) {
             mDevice.pressBack()
+            Log.i(TAG, "exitMenu: Exiting app settings menus using device back button")
         }
     }
 

@@ -205,7 +205,7 @@ class ComposeSettingsDeleteBrowsingDataOnQuitTest {
         downloadRobot {
             openPageAndDownloadFile(url = downloadTestPage.toUri(), downloadFile = "smallZip.zip")
             verifyDownloadCompleteNotificationPopup()
-        }.closeCompletedDownloadPrompt {
+        }.closeDownloadPrompt {
         }.goToHomescreen {
         }.openThreeDotMenu {
             clickQuit()

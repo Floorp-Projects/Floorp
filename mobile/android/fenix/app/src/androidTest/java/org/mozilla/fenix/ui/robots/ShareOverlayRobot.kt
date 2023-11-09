@@ -6,6 +6,7 @@ package org.mozilla.fenix.ui.robots
 
 import android.content.Intent
 import android.net.Uri
+import android.util.Log
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.intent.Intents
@@ -20,6 +21,7 @@ import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import org.hamcrest.Matchers.allOf
 import org.mozilla.fenix.R
+import org.mozilla.fenix.helpers.Constants.TAG
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextExists
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdAndTextExists
@@ -137,6 +139,7 @@ class ShareOverlayRobot {
     class Transition {
         fun clickSaveAsPDF(interact: DownloadRobot.() -> Unit): DownloadRobot.Transition {
             itemContainingText("Save as PDF").click()
+            Log.i(TAG, "clickSaveAsPDF: Clicked \"SAVE AS PDF\" share overlay button")
 
             DownloadRobot().interact()
             return DownloadRobot.Transition()

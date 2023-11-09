@@ -201,7 +201,7 @@ class DownloadTest {
         downloadRobot {
             openPageAndDownloadFile(url = downloadTestPage.toUri(), downloadFile = firstDownloadedFile)
             verifyDownloadedFileName(firstDownloadedFile)
-        }.closeCompletedDownloadPrompt {
+        }.closeDownloadPrompt {
         }.clickDownloadLink(secondDownloadedFile) {
             verifyDownloadPrompt(secondDownloadedFile)
         }.clickDownload {
