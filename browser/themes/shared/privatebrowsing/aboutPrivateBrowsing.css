@@ -256,9 +256,13 @@ p {
   .search-handoff-button:hover:not(.focused),
   .search-handoff-button:active,
   .search-handoff-button:enabled:hover:active {
-    border: 3px solid #952bb9;
+    border: 3px solid var(--in-content-border-color);
     border-radius: 6px;
     box-shadow: none;
+
+    @media not (prefers-contrast) {
+      border-color: #952bb9;
+    }
   }
 
   .search-handoff-button,
@@ -268,10 +272,13 @@ p {
   .search-inner-wrapper .search-handoff-button:hover,
   .search-inner-wrapper .search-handoff-button:hover:active {
     background-image: url(chrome://global/skin/icons/search-glass.svg);
-    background-color: #321c64;
     background-repeat: no-repeat;
     background-size: 16px;
-    fill: rgb(251, 251, 254);
+
+    @media not (prefers-contrast) {
+      background-color: #321c64;
+      fill: rgb(251, 251, 254);
+    }
   }
 
   .search-handoff-button.focused:not(.disabled) {
@@ -279,9 +286,12 @@ p {
   }
 
   .fake-textbox {
-    color: #fbfbfe;
     font-size: 0.87em;
     opacity: 1;
+
+    @media not (prefers-contrast) {
+      color: #fbfbfe;
+    }
   }
 
   @media not (prefers-contrast) {
@@ -365,21 +375,27 @@ p {
 @media (-moz-bool-pref: "browser.privatebrowsing.felt-privacy-v1") {
   .info-border {
     border-radius: 8px;
-    box-shadow: 0 2px 6px 0 rgba(58, 57, 68, 0.20);
-    background: rgba(149, 43, 185, 0.5);
     margin-top: 64px;
     padding: 17px;
+
+    @media not (prefers-contrast) {
+      box-shadow: 0 2px 6px 0 rgba(58, 57, 68, 0.20);
+      background: rgba(149, 43, 185, 0.5);
+    }
   }
 
   .info {
-    background-color: #321c64;
     background-image: none;
     border-radius: 6px;
-    box-shadow: 0 2px 6px 0 rgba(58, 57, 68, 0.20);
     font-size: 0.93em;
     margin: 0;
     padding-inline-start: 20px;
     padding-block-end: 25px;
+
+    @media not (prefers-contrast) {
+      background-color: #321c64;
+      box-shadow: 0 2px 6px 0 rgba(58, 57, 68, 0.20);
+    }
   }
 
   #info-title:not([hidden]) + #info-body {
@@ -438,19 +454,17 @@ p {
   align-self: start;
   top: -11px;
   inset-inline-end: -11px;
-}
 
-@media not (prefers-contrast) {
-  .promo-dismiss {
+  @media not (prefers-contrast) {
     opacity: 0.6;
-  }
 
-  .promo-dismiss:hover {
-    background-color: color-mix(in srgb, currentColor 10%, transparent) !important;
-  }
+    &:hover {
+      background-color: color-mix(in srgb, currentColor 10%, transparent) !important;
+    }
 
-  .promo-dismiss:hover:active {
-    background-color: color-mix(in srgb, currentColor 20%, transparent) !important;
+    &:hover:active {
+      background-color: color-mix(in srgb, currentColor 20%, transparent) !important;
+    }
   }
 }
 
@@ -580,12 +594,17 @@ p {
 
 /* stylelint-disable-next-line media-query-no-invalid */
 @media (-moz-bool-pref: "browser.privatebrowsing.felt-privacy-v1") {
-  html.private {
-    background: linear-gradient(45deg, #722291 0%, #45278D 50%, #393473 100%);
+  .promo.below-search.promo-visible {
+    margin-block: 0 25px;
+
+    @media not (prefers-contrast) {
+      background-color: #321c64;
+    }
   }
 
-  .promo.below-search.promo-visible {
-    background-color: #321c64;
-    margin-block: 0 25px;
+  @media not (prefers-contrast) {
+    html.private {
+      background: linear-gradient(45deg, #722291 0%, #45278D 50%, #393473 100%);
+    }
   }
 }
