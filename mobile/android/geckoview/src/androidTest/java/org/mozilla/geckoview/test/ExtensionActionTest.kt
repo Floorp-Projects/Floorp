@@ -218,7 +218,7 @@ class ExtensionActionTest : BaseSessionTest() {
         var json = JSONObject(
             """{
            "action": "setPopupCheckRestrictions",
-           "popup": "$popupUrl" 
+           "popup": "$popupUrl"
         }""",
         )
 

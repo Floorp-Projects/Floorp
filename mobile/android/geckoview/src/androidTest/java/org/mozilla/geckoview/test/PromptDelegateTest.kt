@@ -640,7 +640,7 @@ class PromptDelegateTest : BaseSessionTest(
         })
 
         mainSession.waitForJS(
-            """  
+            """
         navigator.credentials.get({
         identity: {
           providers: [{
