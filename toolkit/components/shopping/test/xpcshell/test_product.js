@@ -50,8 +50,6 @@ const API_ERROR_ONCE = "http://example.com/errors/error_once.json";
 const API_ERROR_BAD_REQUEST = "http://example.com/errors/bad_request.json";
 const API_ERROR_UNPROCESSABLE =
   "http://example.com/errors/unprocessable_entity.json";
-const API_ERROR_TOO_MANY_REQUESTS =
-  "http://example.com/errors/too_many_requests.json";
 const API_POLL = "http://example.com/poll/poll_analysis_response.json";
 const API_ANALYSIS_IN_PROGRESS =
   "http://example.com/poll/analysis_in_progress.json";
@@ -125,20 +123,6 @@ server.registerPathHandler(
       false
     );
     response.write(readFile("data/unprocessable_entity.json", false));
-  }
-);
-
-// Too many requests to the API.
-server.registerPathHandler(
-  new URL(API_ERROR_TOO_MANY_REQUESTS).pathname,
-  (request, response) => {
-    response.setStatusLine(request.httpVersion, 429, "Too many requests");
-    response.setHeader(
-      "Content-Type",
-      "application/json; charset=utf-8",
-      false
-    );
-    response.write(readFile("data/too_many_requests.json", false));
   }
 );
 
@@ -509,42 +493,6 @@ add_task(async function test_ohttp_headers() {
     { "content-type": "application/json" },
     "Should have expected response headers."
   );
-  disableOHTTP();
-});
-
-add_task(async function test_ohttp_too_many_requests() {
-  let uri = new URL("https://www.walmart.com/ip/926485654");
-  let product = new ShoppingProduct(uri, { allowValidationFailure: false });
-
-  Assert.ok(product.isProduct(), "Should recognize a valid product.");
-
-  gExpectedProductDetails = JSON.stringify({
-    product_id: "926485654",
-    website: "walmart.com",
-  });
-
-  enableOHTTP();
-
-  let configURL = Services.prefs.getCharPref("toolkit.shopping.ohttpConfigURL");
-  let config = await product.getOHTTPConfig(configURL);
-  Assert.ok(config, "Should have gotten a config.");
-  let ohttpDetails = await product.ohttpRequest(
-    API_OHTTP_RELAY,
-    config,
-    API_ERROR_TOO_MANY_REQUESTS,
-    {
-      method: "POST",
-      body: gExpectedProductDetails,
-      headers: {
-        Accept: "application/json",
-        "Content-Type": "application/json",
-      },
-      signal: new AbortController().signal,
-    }
-  );
-  Assert.equal(ohttpDetails.status, 429, "Request should return 429.");
-  Assert.equal(ohttpDetails.ok, false, "Request should not be ok.");
-
   disableOHTTP();
 });
 
