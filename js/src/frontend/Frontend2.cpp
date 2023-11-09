@@ -582,7 +582,7 @@ bool Smoosh::tryCompileGlobalScriptToExtensibleStencil(
     ErrorMetadata metadata;
     metadata.filename = JS::ConstUTF8CharsZ("<unknown>");
     metadata.lineNumber = 1;
-    metadata.columnNumber = JS::ColumnNumberZeroOrigin::zero();
+    metadata.columnNumber = JS::ColumnNumberOneOrigin();
     metadata.isMuted = false;
     ReportSmooshCompileError(cx, fc, std::move(metadata),
                              JSMSG_SMOOSH_COMPILE_ERROR,

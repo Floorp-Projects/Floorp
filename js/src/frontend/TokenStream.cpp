@@ -1460,7 +1460,7 @@ void TokenStreamAnyChars::computeErrorMetadataNoOffset(
   err->isMuted = mutedErrors;
   err->filename = filename_;
   err->lineNumber = 0;
-  err->columnNumber = JS::ColumnNumberZeroOrigin::zero();
+  err->columnNumber = JS::ColumnNumberOneOrigin();
 
   MOZ_ASSERT(err->lineOfContext == nullptr);
 }
@@ -1483,8 +1483,7 @@ bool TokenStreamAnyChars::fillExceptingContext(ErrorMetadata* err,
         err->lineNumber = iter.computeLine(&columnNumber);
         // NOTE: Wasm frame cannot appear here.
         err->columnNumber =
-            JS::ColumnNumberZeroOrigin(JS::LimitedColumnNumberZeroOrigin(
-                columnNumber.toLimitedColumnNumber()));
+            JS::ColumnNumberOneOrigin(columnNumber.toLimitedColumnNumber());
         return false;
       }
     }
