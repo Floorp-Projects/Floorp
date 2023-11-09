@@ -208,15 +208,13 @@ class BytecodeRangeWithPosition : private BytecodeRange {
         column = JS::LimitedColumnNumberOneOrigin();
       } else if (type == SrcNoteType::SetLineColumn) {
         lineno = SrcNote::SetLineColumn::getLine(sn, initialLine);
-        column = JS::LimitedColumnNumberOneOrigin(
-            SrcNote::SetLineColumn::getColumn(sn));
+        column = SrcNote::SetLineColumn::getColumn(sn);
       } else if (type == SrcNoteType::NewLine) {
         lineno++;
         column = JS::LimitedColumnNumberOneOrigin();
       } else if (type == SrcNoteType::NewLineColumn) {
         lineno++;
-        column = JS::LimitedColumnNumberOneOrigin(
-            SrcNote::NewLineColumn::getColumn(sn));
+        column = SrcNote::NewLineColumn::getColumn(sn);
       } else if (type == SrcNoteType::Breakpoint) {
         isBreakpoint = true;
       } else if (type == SrcNoteType::BreakpointStepSep) {
