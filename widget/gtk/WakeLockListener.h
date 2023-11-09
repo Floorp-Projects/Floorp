@@ -12,7 +12,7 @@
 
 #include "mozilla/StaticPtr.h"
 #include "nsHashKeys.h"
-#include "nsClassHashtable.h"
+#include "nsRefPtrHashtable.h"
 
 #include "nsIDOMWakeLockListener.h"
 
@@ -43,7 +43,7 @@ class WakeLockListener final : public nsIDOMMozWakeLockListener {
 
   // Map of topic names to |WakeLockTopic|s.
   // We assume a small, finite-sized set of topics.
-  nsClassHashtable<nsStringHashKey, RefPtr<WakeLockTopic>> mTopics;
+  nsRefPtrHashtable<nsStringHashKey, WakeLockTopic> mTopics;
 };
 
 #endif  // __WakeLockListener_h__
