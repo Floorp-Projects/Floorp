@@ -13,21 +13,17 @@
 #include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/StyleSheet.h"
 #include "mozilla/StyleSheetInlines.h"
-#include "mozilla/Telemetry.h"
 #include "mozilla/css/Loader.h"
-#include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/dom/ReferrerInfo.h"
 #include "mozilla/dom/SRIMetadata.h"
 #include "mozilla/ipc/SharedMemory.h"
 #include "MainThreadUtils.h"
-#include "nsColor.h"
 #include "nsContentUtils.h"
 #include "nsIConsoleService.h"
 #include "nsIFile.h"
 #include "nsIObserverService.h"
 #include "nsIXULRuntime.h"
 #include "nsNetUtil.h"
-#include "nsPresContext.h"
 #include "nsPrintfCString.h"
 #include "nsServiceManagerUtils.h"
 #include "nsXULAppAPI.h"
@@ -291,12 +287,11 @@ void GlobalStyleSheetCache::LoadSheetFromSharedMemory(
 
   sheet->SetPrincipal(nsContentUtils::GetSystemPrincipal());
   sheet->SetURIs(uri, uri, uri);
-  sheet->SetSharedContents(aHeader->mSheets[i]);
-  sheet->SetComplete();
-
   nsCOMPtr<nsIReferrerInfo> referrerInfo =
       dom::ReferrerInfo::CreateForExternalCSSResources(sheet);
   sheet->SetReferrerInfo(referrerInfo);
+  sheet->SetSharedContents(aHeader->mSheets[i]);
+  sheet->SetComplete();
   URLExtraData::sShared[i] = sheet->URLData();
 
   *aSheet = std::move(sheet);
