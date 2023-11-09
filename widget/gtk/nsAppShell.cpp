@@ -25,7 +25,7 @@
 #ifdef MOZ_ENABLE_DBUS
 #  include <gio/gio.h>
 #  include "nsIObserverService.h"
-#  include "AsyncDBus.h"
+#  include "WidgetUtilsGtk.h"
 #endif
 #include "WakeLockListener.h"
 #include "gfxPlatform.h"

@@ -33,8 +33,6 @@ RefPtr<DBusCallPromise> DBusProxyCallWithUnixFDList(
     GDBusProxy*, const char* aMethod, GVariant* aArgs, GDBusCallFlags,
     gint aTimeout = -1, GUnixFDList* = nullptr, GCancellable* = nullptr);
 
-bool IsCancelledGError(GError* aGError);
-
 }  // namespace mozilla::widget
 
 #endif

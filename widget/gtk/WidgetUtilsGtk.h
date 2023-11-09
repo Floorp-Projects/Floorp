@@ -14,6 +14,7 @@
 
 typedef struct _GdkDisplay GdkDisplay;
 typedef struct _GdkDevice GdkDevice;
+typedef struct _GError GError;
 typedef union _GdkEvent GdkEvent;
 class nsWindow;
 
@@ -74,6 +75,8 @@ nsTArray<nsCString> ParseTextURIList(const nsACString& data);
 
 using FocusRequestPromise = MozPromise<nsCString, bool, false>;
 RefPtr<FocusRequestPromise> RequestWaylandFocusPromise();
+
+bool IsCancelledGError(GError* aGError);
 
 }  // namespace mozilla::widget
 
