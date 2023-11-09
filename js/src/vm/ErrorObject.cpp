@@ -266,7 +266,7 @@ static ErrorObject* CreateErrorObject(JSContext* cx, const CallArgs& args,
       return nullptr;
     }
   } else {
-    JS::TaggedColumnNumberZeroOrigin tmp;
+    JS::TaggedColumnNumberOneOrigin tmp;
     lineNumber = iter.done() ? 0 : iter.computeLine(&tmp);
     columnNumber = JS::ColumnNumberOneOrigin(tmp.oneOriginValue());
   }
