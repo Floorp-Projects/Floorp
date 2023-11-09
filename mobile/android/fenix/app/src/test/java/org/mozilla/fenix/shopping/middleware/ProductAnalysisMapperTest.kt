@@ -11,6 +11,7 @@ import org.mozilla.fenix.shopping.ProductAnalysisTestData
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.HighlightType
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.OptedIn.ProductReviewState.AnalysisPresent.AnalysisStatus
+import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.OptedIn.ProductReviewState.AnalysisPresent.HighlightsInfo
 
 class ProductAnalysisMapperTest {
 
@@ -37,12 +38,14 @@ class ProductAnalysisMapperTest {
             analysisStatus = AnalysisStatus.UP_TO_DATE,
             adjustedRating = 3.4f,
             productUrl = "https://example.com",
-            highlights = sortedMapOf(
-                HighlightType.QUALITY to listOf("\"quality\""),
-                HighlightType.PRICE to listOf("\"price\""),
-                HighlightType.SHIPPING to listOf("\"shipping\""),
-                HighlightType.PACKAGING_AND_APPEARANCE to listOf("\"appearance\""),
-                HighlightType.COMPETITIVENESS to listOf("\"competitiveness\""),
+            highlightsInfo = HighlightsInfo(
+                mapOf(
+                    HighlightType.QUALITY to listOf("\"quality\""),
+                    HighlightType.PRICE to listOf("\"price\""),
+                    HighlightType.SHIPPING to listOf("\"shipping\""),
+                    HighlightType.PACKAGING_AND_APPEARANCE to listOf("\"appearance\""),
+                    HighlightType.COMPETITIVENESS to listOf("\"competitiveness\""),
+                ),
             ),
         )
 
@@ -72,10 +75,12 @@ class ProductAnalysisMapperTest {
             analysisStatus = AnalysisStatus.NEEDS_ANALYSIS,
             adjustedRating = 3.4f,
             productUrl = "https://example.com",
-            highlights = sortedMapOf(
-                HighlightType.QUALITY to listOf("\"quality\""),
-                HighlightType.PACKAGING_AND_APPEARANCE to listOf("\"appearance\""),
-                HighlightType.COMPETITIVENESS to listOf("\"competitiveness\""),
+            highlightsInfo = HighlightsInfo(
+                mapOf(
+                    HighlightType.QUALITY to listOf("\"quality\""),
+                    HighlightType.PACKAGING_AND_APPEARANCE to listOf("\"appearance\""),
+                    HighlightType.COMPETITIVENESS to listOf("\"competitiveness\""),
+                ),
             ),
         )
 
@@ -172,7 +177,7 @@ class ProductAnalysisMapperTest {
         val expected = ProductAnalysisTestData.analysisPresent(
             reviewGrade = null,
             adjustedRating = 3.5f,
-            highlights = null,
+            highlightsInfo = null,
         )
 
         assertEquals(expected, actual)
@@ -189,7 +194,7 @@ class ProductAnalysisMapperTest {
         val expected = ProductAnalysisTestData.analysisPresent(
             reviewGrade = ReviewQualityCheckState.Grade.B,
             adjustedRating = null,
-            highlights = null,
+            highlightsInfo = null,
         )
 
         assertEquals(expected, actual)
@@ -212,10 +217,12 @@ class ProductAnalysisMapperTest {
         val expected = ProductAnalysisTestData.analysisPresent(
             reviewGrade = null,
             adjustedRating = null,
-            highlights = sortedMapOf(
-                HighlightType.QUALITY to listOf("\"quality\""),
-                HighlightType.PACKAGING_AND_APPEARANCE to listOf("\"appearance\""),
-                HighlightType.COMPETITIVENESS to listOf("\"competitiveness\""),
+            highlightsInfo = HighlightsInfo(
+                mapOf(
+                    HighlightType.QUALITY to listOf("\"quality\""),
+                    HighlightType.PACKAGING_AND_APPEARANCE to listOf("\"appearance\""),
+                    HighlightType.COMPETITIVENESS to listOf("\"competitiveness\""),
+                ),
             ),
         )
 
@@ -239,10 +246,12 @@ class ProductAnalysisMapperTest {
         val expected = ProductAnalysisTestData.analysisPresent(
             reviewGrade = ReviewQualityCheckState.Grade.B,
             adjustedRating = null,
-            highlights = sortedMapOf(
-                HighlightType.QUALITY to listOf("\"quality\""),
-                HighlightType.PACKAGING_AND_APPEARANCE to listOf("\"appearance\""),
-                HighlightType.COMPETITIVENESS to listOf("\"competitiveness\""),
+            highlightsInfo = HighlightsInfo(
+                mapOf(
+                    HighlightType.QUALITY to listOf("\"quality\""),
+                    HighlightType.PACKAGING_AND_APPEARANCE to listOf("\"appearance\""),
+                    HighlightType.COMPETITIVENESS to listOf("\"competitiveness\""),
+                ),
             ),
         )
 
@@ -266,10 +275,12 @@ class ProductAnalysisMapperTest {
         val expected = ProductAnalysisTestData.analysisPresent(
             reviewGrade = null,
             adjustedRating = 3.4f,
-            highlights = sortedMapOf(
-                HighlightType.QUALITY to listOf("\"quality\""),
-                HighlightType.PACKAGING_AND_APPEARANCE to listOf("\"appearance\""),
-                HighlightType.COMPETITIVENESS to listOf("\"competitiveness\""),
+            highlightsInfo = HighlightsInfo(
+                mapOf(
+                    HighlightType.QUALITY to listOf("\"quality\""),
+                    HighlightType.PACKAGING_AND_APPEARANCE to listOf("\"appearance\""),
+                    HighlightType.COMPETITIVENESS to listOf("\"competitiveness\""),
+                ),
             ),
         )
 
@@ -282,7 +293,8 @@ class ProductAnalysisMapperTest {
             pageNotSupported = true,
         ).toProductReviewState()
 
-        val expected = ReviewQualityCheckState.OptedIn.ProductReviewState.Error.UnsupportedProductTypeError
+        val expected =
+            ReviewQualityCheckState.OptedIn.ProductReviewState.Error.UnsupportedProductTypeError
 
         assertEquals(expected, actual)
     }

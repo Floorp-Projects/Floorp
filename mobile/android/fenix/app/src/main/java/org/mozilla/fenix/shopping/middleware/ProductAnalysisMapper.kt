@@ -10,6 +10,7 @@ import org.mozilla.fenix.shopping.store.ReviewQualityCheckState
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.HighlightType
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.OptedIn.ProductReviewState
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.OptedIn.ProductReviewState.AnalysisPresent.AnalysisStatus
+import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.OptedIn.ProductReviewState.AnalysisPresent.HighlightsInfo
 
 /**
  * Maps [ProductAnalysis] to [ProductReviewState].
@@ -44,7 +45,7 @@ private fun ProductAnalysis.toProductReview(isInitialAnalysis: Boolean): Product
                 analysisStatus = needsAnalysis.toAnalysisStatus(),
                 adjustedRating = mappedRating,
                 productUrl = analysisURL!!,
-                highlights = mappedHighlights,
+                highlightsInfo = mappedHighlights?.let { HighlightsInfo(it) },
             )
         }
     }

@@ -178,7 +178,7 @@ sealed interface ReviewQualityCheckAction : Action {
     /**
      * Triggered when the user expands the recent reviews card.
      */
-    object ShowMoreRecentReviewsClicked : TelemetryAction
+    object ExpandCollapseHighlights : TelemetryAction, UpdateAction
 
     /**
      * Triggered when the user expands or collapses the settings card.

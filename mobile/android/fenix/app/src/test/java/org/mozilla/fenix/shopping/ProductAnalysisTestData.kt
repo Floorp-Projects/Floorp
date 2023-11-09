@@ -8,8 +8,8 @@ import mozilla.components.concept.engine.shopping.Highlight
 import mozilla.components.concept.engine.shopping.ProductAnalysis
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.OptedIn.ProductReviewState.AnalysisPresent.AnalysisStatus
+import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.OptedIn.ProductReviewState.AnalysisPresent.HighlightsInfo
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.RecommendedProductState
-import java.util.SortedMap
 
 object ProductAnalysisTestData {
 
@@ -43,7 +43,7 @@ object ProductAnalysisTestData {
         reviewGrade: ReviewQualityCheckState.Grade? = ReviewQualityCheckState.Grade.A,
         adjustedRating: Float? = 4.5f,
         analysisStatus: AnalysisStatus = AnalysisStatus.UP_TO_DATE,
-        highlights: SortedMap<ReviewQualityCheckState.HighlightType, List<String>>? = null,
+        highlightsInfo: HighlightsInfo? = null,
         recommendedProductState: RecommendedProductState = RecommendedProductState.Initial,
     ): ReviewQualityCheckState.OptedIn.ProductReviewState.AnalysisPresent =
         ReviewQualityCheckState.OptedIn.ProductReviewState.AnalysisPresent(
@@ -52,7 +52,7 @@ object ProductAnalysisTestData {
             reviewGrade = reviewGrade,
             adjustedRating = adjustedRating,
             analysisStatus = analysisStatus,
-            highlights = highlights,
+            highlightsInfo = highlightsInfo,
             recommendedProductState = recommendedProductState,
         )
 }

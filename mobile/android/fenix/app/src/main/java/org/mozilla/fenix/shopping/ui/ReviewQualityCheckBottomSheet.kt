@@ -102,8 +102,8 @@ fun ReviewQualityCheckBottomSheet(
                     onNoAnalysisPresent = {
                         store.dispatch(ReviewQualityCheckAction.NoAnalysisDisplayed)
                     },
-                    onShowMoreRecentReviewsClicked = {
-                        store.dispatch(ReviewQualityCheckAction.ShowMoreRecentReviewsClicked)
+                    onHighlightsExpandToggleClick = {
+                        store.dispatch(ReviewQualityCheckAction.ExpandCollapseHighlights)
                     },
                     onRecommendedProductClick = { aid, url ->
                         onRequestDismiss(BottomSheetDismissSource.LINK_OPENED)
@@ -134,7 +134,7 @@ private fun ProductReview(
     onAnalyzeClick: () -> Unit,
     onReanalyzeClick: () -> Unit,
     onProductRecommendationsEnabledStateChange: (Boolean) -> Unit,
-    onShowMoreRecentReviewsClicked: () -> Unit,
+    onHighlightsExpandToggleClick: () -> Unit,
     onNoAnalysisPresent: () -> Unit,
     onSettingsExpandToggleClick: () -> Unit,
     onInfoExpandToggleClick: () -> Unit,
@@ -155,10 +155,11 @@ private fun ProductReview(
                     productVendor = state.productVendor,
                     isSettingsExpanded = state.isSettingsExpanded,
                     isInfoExpanded = state.isInfoExpanded,
+                    isHighlightsExpanded = state.isHighlightsExpanded,
                     onOptOutClick = onOptOutClick,
                     onReanalyzeClick = onReanalyzeClick,
                     onProductRecommendationsEnabledStateChange = onProductRecommendationsEnabledStateChange,
-                    onShowMoreRecentReviewsClicked = onShowMoreRecentReviewsClicked,
+                    onHighlightsExpandToggleClick = onHighlightsExpandToggleClick,
                     onSettingsExpandToggleClick = onSettingsExpandToggleClick,
                     onInfoExpandToggleClick = onInfoExpandToggleClick,
                     onReviewGradeLearnMoreClick = onReviewGradeLearnMoreClick,

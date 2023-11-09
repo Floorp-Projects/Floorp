@@ -113,10 +113,40 @@ class ReviewQualityCheckTelemetryMiddlewareTest {
 
     @Test
     fun `WHEN the expand button from the highlights card is clicked THEN the show more recent reviews event is recorded`() {
-        store.dispatch(ReviewQualityCheckAction.ShowMoreRecentReviewsClicked).joinBlocking()
-        store.waitUntilIdle()
+        val tested = ReviewQualityCheckStore(
+            initialState = ReviewQualityCheckState.OptedIn(
+                productRecommendationsPreference = true,
+                productVendor = ReviewQualityCheckState.ProductVendor.AMAZON,
+                isHighlightsExpanded = false,
+            ),
+            middleware = listOf(
+                ReviewQualityCheckTelemetryMiddleware(),
+            ),
+        )
+        tested.waitUntilIdle()
+        tested.dispatch(ReviewQualityCheckAction.ExpandCollapseHighlights).joinBlocking()
+        tested.waitUntilIdle()
 
         assertNotNull(Shopping.surfaceShowMoreRecentReviewsClicked.testGetValue())
+    }
+
+    @Test
+    fun `WHEN the collapse button from the highlights card is clicked THEN the show more recent reviews event is not recorded`() {
+        val tested = ReviewQualityCheckStore(
+            initialState = ReviewQualityCheckState.OptedIn(
+                productRecommendationsPreference = true,
+                productVendor = ReviewQualityCheckState.ProductVendor.AMAZON,
+                isHighlightsExpanded = true,
+            ),
+            middleware = listOf(
+                ReviewQualityCheckTelemetryMiddleware(),
+            ),
+        )
+        tested.waitUntilIdle()
+        tested.dispatch(ReviewQualityCheckAction.ExpandCollapseHighlights).joinBlocking()
+        tested.waitUntilIdle()
+
+        assertNull(Shopping.surfaceShowMoreRecentReviewsClicked.testGetValue())
     }
 
     @Test

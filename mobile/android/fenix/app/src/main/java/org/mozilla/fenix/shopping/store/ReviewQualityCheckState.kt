@@ -6,8 +6,6 @@ package org.mozilla.fenix.shopping.store
 
 import androidx.compose.runtime.Immutable
 import mozilla.components.lib.state.State
-import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.HighlightType
-import java.util.SortedMap
 
 private const val NUMBER_OF_HIGHLIGHTS_FOR_COMPACT_MODE = 2
 
@@ -46,6 +44,7 @@ sealed interface ReviewQualityCheckState : State {
      * @property productVendor The vendor of the product.
      * @property isSettingsExpanded Whether or not the settings card is expanded.
      * @property isInfoExpanded Whether or not the info card is expanded.
+     * @property isHighlightsExpanded Whether or not the highlights card is expanded.
      */
     data class OptedIn(
         val productReviewState: ProductReviewState = ProductReviewState.Loading,
@@ -53,6 +52,7 @@ sealed interface ReviewQualityCheckState : State {
         val productVendor: ProductVendor,
         val isSettingsExpanded: Boolean = false,
         val isInfoExpanded: Boolean = false,
+        val isHighlightsExpanded: Boolean = false,
     ) : ReviewQualityCheckState {
 
         /**
@@ -104,32 +104,51 @@ sealed interface ReviewQualityCheckState : State {
              * @property analysisStatus The status of the product analysis.
              * @property adjustedRating The adjusted rating taking review quality into consideration.
              * @property productUrl The url of the product the user is browsing.
-             * @property highlights Optional highlights based on recent reviews of the product.
+             * @property highlightsInfo Optional highlights based on recent reviews of the product.
              * @property recommendedProductState The state of the recommended product.
              */
-            @Immutable
             data class AnalysisPresent(
                 val productId: String,
                 val reviewGrade: Grade?,
                 val analysisStatus: AnalysisStatus,
                 val adjustedRating: Float?,
                 val productUrl: String,
-                val highlights: SortedMap<HighlightType, List<String>>?,
+                val highlightsInfo: HighlightsInfo?,
                 val recommendedProductState: RecommendedProductState = RecommendedProductState.Initial,
             ) : ProductReviewState {
                 init {
-                    require(!(highlights == null && reviewGrade == null && adjustedRating == null)) {
+                    require(!(highlightsInfo == null && reviewGrade == null && adjustedRating == null)) {
                         "AnalysisPresent state should only be created when at least one of " +
                             "reviewGrade, adjustedRating or highlights is not null"
                     }
                 }
 
-                val showMoreButtonVisible: Boolean =
-                    highlights != null && highlights != highlights.forCompactMode()
+                /**
+                 * Container for highlights and it's derived properties
+                 *
+                 * @property highlights highlights based on recent reviews of the product.
+                 */
+                @Immutable
+                data class HighlightsInfo(
+                    val highlights: Map<HighlightType, List<String>>,
+                ) {
 
-                val highlightsFadeVisible: Boolean =
-                    highlights != null && showMoreButtonVisible &&
-                        highlights.forCompactMode().entries.first().value.size > 1
+                    /**
+                     * Highlights to display in compact mode that contains first 2 highlights of the
+                     * first highlight type.
+                     */
+                    val highlightsForCompactMode: Map<HighlightType, List<String>> =
+                        highlights.entries.first().let { entry ->
+                            mapOf(
+                                entry.key to entry.value.take(NUMBER_OF_HIGHLIGHTS_FOR_COMPACT_MODE),
+                            )
+                        }
+
+                    val showMoreButtonVisible: Boolean = highlights != highlightsForCompactMode
+
+                    val highlightsFadeVisible: Boolean =
+                        showMoreButtonVisible && highlightsForCompactMode.entries.first().value.size > 1
+                }
 
                 /**
                  * The status of the product analysis.
@@ -201,12 +220,3 @@ sealed interface ReviewQualityCheckState : State {
             this
         }
 }
-
-/**
- * Highlights to display in compact mode that contains first 2 highlights of the first
- * highlight type.
- */
-fun Map<HighlightType, List<String>>.forCompactMode(): Map<HighlightType, List<String>> =
-    entries.first().let { entry ->
-        mapOf(entry.key to entry.value.take(NUMBER_OF_HIGHLIGHTS_FOR_COMPACT_MODE))
-    }

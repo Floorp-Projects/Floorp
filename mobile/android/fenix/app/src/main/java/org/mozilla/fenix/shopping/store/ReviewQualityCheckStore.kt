@@ -75,6 +75,12 @@ private fun mapStateForUpdateAction(
             }
         }
 
+        ReviewQualityCheckAction.ExpandCollapseHighlights -> {
+            state.mapIfOptedIn {
+                it.copy(isHighlightsExpanded = !it.isHighlightsExpanded)
+            }
+        }
+
         ReviewQualityCheckAction.ToggleProductRecommendation -> {
             if (state is ReviewQualityCheckState.OptedIn && state.productRecommendationsPreference != null) {
                 if (state.productReviewState is ProductReviewState.AnalysisPresent &&

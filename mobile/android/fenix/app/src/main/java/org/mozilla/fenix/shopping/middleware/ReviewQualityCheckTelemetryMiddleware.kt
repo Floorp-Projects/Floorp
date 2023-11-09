@@ -78,8 +78,11 @@ class ReviewQualityCheckTelemetryMiddleware : ReviewQualityCheckMiddleware {
                 Shopping.surfaceNotNowClicked.record()
             }
 
-            is ReviewQualityCheckAction.ShowMoreRecentReviewsClicked -> {
-                Shopping.surfaceShowMoreRecentReviewsClicked.record()
+            is ReviewQualityCheckAction.ExpandCollapseHighlights -> {
+                val state = store.state
+                if (state is ReviewQualityCheckState.OptedIn && state.isHighlightsExpanded) {
+                    Shopping.surfaceShowMoreRecentReviewsClicked.record()
+                }
             }
 
             is ReviewQualityCheckAction.ExpandCollapseSettings -> {
