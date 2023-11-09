@@ -19,7 +19,7 @@
 #include "jstypes.h"
 
 #include "irregexp/RegExpTypes.h"
-#include "js/ColumnNumber.h"  // JS::ColumnNumberZeroOrigin
+#include "js/ColumnNumber.h"  // JS::ColumnNumberOneOigin
 #include "js/Stack.h"         // JS::NativeStackLimit
 #include "vm/RegExpShared.h"
 
@@ -57,7 +57,7 @@ bool CheckPatternSyntax(
     frontend::TokenStreamAnyChars& ts,
     const mozilla::Range<const char16_t> chars, JS::RegExpFlags flags,
     mozilla::Maybe<uint32_t> line = mozilla::Nothing(),
-    mozilla::Maybe<JS::ColumnNumberZeroOrigin> column = mozilla::Nothing());
+    mozilla::Maybe<JS::ColumnNumberOneOrigin> column = mozilla::Nothing());
 bool CheckPatternSyntax(JSContext* cx, JS::NativeStackLimit stackLimit,
                         frontend::TokenStreamAnyChars& ts,
                         Handle<JSAtom*> pattern, JS::RegExpFlags flags);

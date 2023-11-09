@@ -11105,7 +11105,7 @@ Parser<FullParseHandler, Unit>::newRegExp() {
     // skip this.
     if (!irregexp::CheckPatternSyntax(
             this->alloc_, this->fc_->stackLimit(), anyChars, range, flags,
-            Some(line), Some(JS::ColumnNumberZeroOrigin(column)))) {
+            Some(line), Some(JS::ColumnNumberOneOrigin(column)))) {
       return errorResult();
     }
   }
@@ -11148,7 +11148,7 @@ Parser<SyntaxParseHandler, Unit>::newRegExp() {
   mozilla::Range<const char16_t> source(chars.begin(), chars.length());
   if (!irregexp::CheckPatternSyntax(this->alloc_, this->fc_->stackLimit(),
                                     anyChars, source, flags, Some(line),
-                                    Some(JS::ColumnNumberZeroOrigin(column)))) {
+                                    Some(JS::ColumnNumberOneOrigin(column)))) {
     return errorResult();
   }
 
