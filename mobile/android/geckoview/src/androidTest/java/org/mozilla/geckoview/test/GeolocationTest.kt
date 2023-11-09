@@ -92,8 +92,8 @@ class GeolocationTest : BaseSessionTest() {
                     new Promise((resolve, reject) =>
                     window.navigator.geolocation.getCurrentPosition(
                         position => resolve(
-                            {latitude: position.coords.latitude, 
-                            longitude:  position.coords.longitude, 
+                            {latitude: position.coords.latitude,
+                            longitude:  position.coords.longitude,
                             accuracy:  position.coords.accuracy}),
                         error => reject(error.code),
                         {maximumAge: $maximumAge,
