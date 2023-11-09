@@ -185,9 +185,9 @@ fun createInitialSearchFragmentState(
         showSessionSuggestionsForCurrentEngine = false,
         showAllSessionSuggestions = true,
         showSponsoredSuggestions = activity.browsingModeManager.mode == BrowsingMode.Normal &&
-            settings.showSponsoredSuggestions,
+            settings.enableFxSuggest && settings.showSponsoredSuggestions,
         showNonSponsoredSuggestions = activity.browsingModeManager.mode == BrowsingMode.Normal &&
-            settings.showNonSponsoredSuggestions,
+            settings.enableFxSuggest && settings.showNonSponsoredSuggestions,
         tabId = tabId,
         pastedText = pastedText,
         searchAccessPoint = searchAccessPoint,
@@ -281,9 +281,9 @@ private fun searchStateReducer(state: SearchFragmentState, action: SearchFragmen
                 showAllSyncedTabsSuggestions = action.settings.shouldShowSyncedTabsSuggestions,
                 showSessionSuggestionsForCurrentEngine = false, // we'll show all local tabs
                 showSponsoredSuggestions = action.browsingMode == BrowsingMode.Normal &&
-                    action.settings.showSponsoredSuggestions,
+                    action.settings.enableFxSuggest && action.settings.showSponsoredSuggestions,
                 showNonSponsoredSuggestions = action.browsingMode == BrowsingMode.Normal &&
-                    action.settings.showNonSponsoredSuggestions,
+                    action.settings.enableFxSuggest && action.settings.showNonSponsoredSuggestions,
                 showAllSessionSuggestions = true,
             )
         is SearchFragmentAction.SearchShortcutEngineSelected ->

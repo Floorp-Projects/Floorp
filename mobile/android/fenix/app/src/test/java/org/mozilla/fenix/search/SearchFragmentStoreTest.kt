@@ -64,6 +64,7 @@ class SearchFragmentStoreTest {
         every { settings.shouldShowHistorySuggestions } returns true
         every { settings.shouldShowSearchSuggestions } returns true
         every { settings.shouldShowSearchSuggestionsInPrivate } returns false
+        every { settings.enableFxSuggest } returns true
         every { settings.showSponsoredSuggestions } returns true
         every { settings.showNonSponsoredSuggestions } returns true
 
@@ -130,6 +131,7 @@ class SearchFragmentStoreTest {
         every { settings.shouldShowHistorySuggestions } returns true
         every { settings.shouldShowSearchSuggestions } returns true
         every { settings.shouldShowSearchSuggestionsInPrivate } returns false
+        every { settings.enableFxSuggest } returns true
         every { settings.showSponsoredSuggestions } returns true
         every { settings.showNonSponsoredSuggestions } returns true
 
@@ -224,6 +226,25 @@ class SearchFragmentStoreTest {
                 searchAccessPoint = MetricsUtils.Source.SHORTCUT,
             ),
         )
+    }
+
+    @Test
+    fun `GIVEN sponsored and non-sponsored suggestions are enabled and Firefox Suggest is disabled WHEN the initial state is created THEN neither are displayed`() {
+        activity.browsingModeManager.mode = BrowsingMode.Normal
+        every { components.core.store.state } returns BrowserState()
+        every { settings.enableFxSuggest } returns false
+        every { settings.showSponsoredSuggestions } returns true
+        every { settings.showNonSponsoredSuggestions } returns true
+
+        val initialState = createInitialSearchFragmentState(
+            activity,
+            components,
+            tabId = null,
+            pastedText = "pastedText",
+            searchAccessPoint = MetricsUtils.Source.ACTION,
+        )
+        assertFalse(initialState.showSponsoredSuggestions)
+        assertFalse(initialState.showNonSponsoredSuggestions)
     }
 
     @Test
@@ -415,6 +436,7 @@ class SearchFragmentStoreTest {
     fun `GIVEN sponsored suggestions are enabled WHEN the default search engine is selected THEN sponsored suggestions are displayed`() = runTest {
         val initialState = emptyDefaultState(showSponsoredSuggestions = false, showNonSponsoredSuggestions = false)
         val store = SearchFragmentStore(initialState)
+        every { settings.enableFxSuggest } returns true
         every { settings.showSponsoredSuggestions } returns true
         every { settings.showNonSponsoredSuggestions } returns false
 
@@ -435,6 +457,7 @@ class SearchFragmentStoreTest {
     fun `GIVEN non-sponsored suggestions are enabled WHEN the default search engine is selected THEN non-sponsored suggestions are displayed`() = runTest {
         val initialState = emptyDefaultState(showSponsoredSuggestions = false, showNonSponsoredSuggestions = false)
         val store = SearchFragmentStore(initialState)
+        every { settings.enableFxSuggest } returns true
         every { settings.showSponsoredSuggestions } returns false
         every { settings.showNonSponsoredSuggestions } returns true
 
@@ -452,9 +475,10 @@ class SearchFragmentStoreTest {
     }
 
     @Test
-    fun `GIVEN sponsored and non-sponsored suggestions are enabled WHEN the default search engine is selected THEN both are displayed`() = runTest {
+    fun `GIVEN sponsored and non-sponsored suggestions are enabled and Firefox Suggest is enabled WHEN the default search engine is selected THEN both are displayed`() = runTest {
         val initialState = emptyDefaultState(showSponsoredSuggestions = false, showNonSponsoredSuggestions = false)
         val store = SearchFragmentStore(initialState)
+        every { settings.enableFxSuggest } returns true
         every { settings.showSponsoredSuggestions } returns true
         every { settings.showNonSponsoredSuggestions } returns true
 
@@ -472,9 +496,31 @@ class SearchFragmentStoreTest {
     }
 
     @Test
+    fun `GIVEN sponsored and non-sponsored suggestions are enabled and Firefox Suggest is disabled WHEN the default search engine is selected THEN neither are displayed`() = runTest {
+        val initialState = emptyDefaultState(showSponsoredSuggestions = true, showNonSponsoredSuggestions = true)
+        val store = SearchFragmentStore(initialState)
+        every { settings.enableFxSuggest } returns false
+        every { settings.showSponsoredSuggestions } returns true
+        every { settings.showNonSponsoredSuggestions } returns true
+
+        store.dispatch(
+            SearchFragmentAction.SearchDefaultEngineSelected(
+                engine = searchEngine,
+                browsingMode = BrowsingMode.Normal,
+                settings = settings,
+            ),
+        ).join()
+
+        assertNotSame(initialState, store.state)
+        assertFalse(store.state.showSponsoredSuggestions)
+        assertFalse(store.state.showNonSponsoredSuggestions)
+    }
+
+    @Test
     fun `GIVEN sponsored and non-sponsored suggestions are disabled WHEN the default search engine is selected THEN neither are displayed`() = runTest {
         val initialState = emptyDefaultState(showSponsoredSuggestions = true, showNonSponsoredSuggestions = true)
         val store = SearchFragmentStore(initialState)
+        every { settings.enableFxSuggest } returns true
         every { settings.showSponsoredSuggestions } returns false
         every { settings.showNonSponsoredSuggestions } returns false
 
@@ -496,6 +542,7 @@ class SearchFragmentStoreTest {
         val initialState =
             emptyDefaultState(showSponsoredSuggestions = true, showNonSponsoredSuggestions = true)
         val store = SearchFragmentStore(initialState)
+        every { settings.enableFxSuggest } returns true
         every { settings.showSponsoredSuggestions } returns true
         every { settings.showNonSponsoredSuggestions } returns true
 
@@ -517,6 +564,7 @@ class SearchFragmentStoreTest {
         val initialState =
             emptyDefaultState(showSponsoredSuggestions = true, showNonSponsoredSuggestions = true)
         val store = SearchFragmentStore(initialState)
+        every { settings.enableFxSuggest } returns true
         every { settings.showSponsoredSuggestions } returns true
         every { settings.showNonSponsoredSuggestions } returns true
 
@@ -532,6 +580,7 @@ class SearchFragmentStoreTest {
         val initialState =
             emptyDefaultState(showSponsoredSuggestions = true, showNonSponsoredSuggestions = true)
         val store = SearchFragmentStore(initialState)
+        every { settings.enableFxSuggest } returns true
         every { settings.showSponsoredSuggestions } returns true
         every { settings.showNonSponsoredSuggestions } returns true
 
@@ -547,6 +596,7 @@ class SearchFragmentStoreTest {
         val initialState =
             emptyDefaultState(showSponsoredSuggestions = true, showNonSponsoredSuggestions = true)
         val store = SearchFragmentStore(initialState)
+        every { settings.enableFxSuggest } returns true
         every { settings.showSponsoredSuggestions } returns true
         every { settings.showNonSponsoredSuggestions } returns true
 
@@ -569,6 +619,7 @@ class SearchFragmentStoreTest {
         every { settings.shouldShowSyncedTabsSuggestions } returns false
         every { settings.shouldShowSearchSuggestions } returns true
         every { settings.shouldShowSearchSuggestionsInPrivate } returns true
+        every { settings.enableFxSuggest } returns true
         every { settings.showSponsoredSuggestions } returns true
         every { settings.showNonSponsoredSuggestions } returns true
 
@@ -611,6 +662,7 @@ class SearchFragmentStoreTest {
         every { settings.shouldShowSyncedTabsSuggestions } returns false
         every { settings.shouldShowSearchSuggestions } returns true
         every { settings.shouldShowSearchSuggestionsInPrivate } returns true
+        every { settings.enableFxSuggest } returns true
         every { settings.showSponsoredSuggestions } returns true
         every { settings.showNonSponsoredSuggestions } returns true
 
@@ -652,6 +704,7 @@ class SearchFragmentStoreTest {
         every { settings.shouldShowBookmarkSuggestions } returns true
         every { settings.shouldShowSyncedTabsSuggestions } returns true
         every { settings.shouldShowSearchSuggestions } returns true
+        every { settings.enableFxSuggest } returns true
         every { settings.showSponsoredSuggestions } returns true
         every { settings.showNonSponsoredSuggestions } returns true
 
@@ -721,6 +774,7 @@ class SearchFragmentStoreTest {
         every { settings.shouldShowHistorySuggestions } returns true
         every { settings.shouldShowBookmarkSuggestions } returns false
         every { settings.shouldShowSyncedTabsSuggestions } returns false
+        every { settings.enableFxSuggest } returns true
         every { settings.showSponsoredSuggestions } returns true
         every { settings.showNonSponsoredSuggestions } returns true
 
@@ -762,6 +816,7 @@ class SearchFragmentStoreTest {
         every { settings.shouldShowSyncedTabsSuggestions } returns true
         every { settings.shouldShowSearchSuggestions } returns true
         every { settings.shouldShowSearchSuggestionsInPrivate } returns true
+        every { settings.enableFxSuggest } returns true
         every { settings.showSponsoredSuggestions } returns true
         every { settings.showNonSponsoredSuggestions } returns true
 
