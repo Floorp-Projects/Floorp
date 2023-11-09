@@ -9,9 +9,9 @@ function fatty() {
     }
 }
 
-if (!getBuildConfiguration("root-analysis")) { // >:(
-    foo = evalcx("(function foo() { foo.bar() })");
-    foo.bar = evalcx("(function bar() {})");
 
-    fatty();
-}
+foo = evalcx("(function foo() { foo.bar() })");
+foo.bar = evalcx("(function bar() {})");
+
+fatty();
+
