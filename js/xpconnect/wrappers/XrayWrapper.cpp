@@ -16,7 +16,7 @@
 
 #include "jsapi.h"
 #include "js/CallAndConstruct.h"  // JS::Call, JS::Construct, JS::IsCallable
-#include "js/ColumnNumber.h"      // JS::ColumnNumberZeroOrigin
+#include "js/ColumnNumber.h"      // JS::ColumnNumberOneOrigin
 #include "js/experimental/TypedData.h"  // JS_GetTypedArrayLength
 #include "js/friend/WindowProxy.h"      // js::IsWindowProxy
 #include "js/friend/XrayJitInfo.h"      // JS::XrayJitInfo
@@ -219,7 +219,7 @@ bool ReportWrapperDenial(JSContext* cx, HandleId id, WrapperDenialType type,
   }
   AutoFilename filename;
   uint32_t line = 0;
-  JS::ColumnNumberZeroOrigin column;
+  JS::ColumnNumberOneOrigin column;
   DescribeScriptedCaller(cx, &filename, &line, &column);
 
   // Warn to the terminal for the logs.
