@@ -9,7 +9,7 @@
 #include "mozilla/dom/WebSocketBinding.h"
 #include "mozilla/net/WebSocketChannel.h"
 
-#include "js/ColumnNumber.h"  // JS::ColumnNumberZeroOrigin
+#include "js/ColumnNumber.h"  // JS::ColumnNumberOneOrigin
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "mozilla/Atomics.h"
@@ -1371,7 +1371,7 @@ already_AddRefed<WebSocket> WebSocket::ConstructorCommon(
     MOZ_ASSERT(workerPrivate);
 
     uint32_t lineno;
-    JS::ColumnNumberZeroOrigin column;
+    JS::ColumnNumberOneOrigin column;
     JS::AutoFilename file;
     if (!JS::DescribeScriptedCaller(aGlobal.Context(), &file, &lineno,
                                     &column)) {
@@ -1610,7 +1610,7 @@ nsresult WebSocketImpl::Init(JSContext* aCx, bool aIsSecure,
     MOZ_ASSERT(aCx);
 
     uint32_t lineno;
-    JS::ColumnNumberZeroOrigin column;
+    JS::ColumnNumberOneOrigin column;
     JS::AutoFilename file;
     if (JS::DescribeScriptedCaller(aCx, &file, &lineno, &column)) {
       mScriptFile = file.get();

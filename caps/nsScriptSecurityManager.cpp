@@ -71,7 +71,7 @@
 #include "nsContentUtils.h"
 #include "nsJSUtils.h"
 #include "nsILoadInfo.h"
-#include "js/ColumnNumber.h"  // JS::ColumnNumberZeroOrigin
+#include "js/ColumnNumber.h"  // JS::ColumnNumberOneOrigin
 
 // This should be probably defined on some other place... but I couldn't find it
 #define WEBAPPS_PERM_NAME "webapps-manage"
@@ -533,7 +533,7 @@ bool nsScriptSecurityManager::ContentSecurityPolicyPermitsJSAction(
     JS::AutoFilename scriptFilename;
     nsAutoString fileName;
     uint32_t lineNum = 0;
-    JS::ColumnNumberZeroOrigin columnNum;
+    JS::ColumnNumberOneOrigin columnNum;
     if (JS::DescribeScriptedCaller(cx, &scriptFilename, &lineNum, &columnNum)) {
       if (const char* file = scriptFilename.get()) {
         CopyUTF8toUTF16(nsDependentCString(file), fileName);
