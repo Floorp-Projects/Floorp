@@ -148,17 +148,21 @@ addressbar-header-firefox-suggest = Address Bar — { -firefox-suggest-brand-nam
 # the address bar section in the preferences UI.
 addressbar-suggest-firefox-suggest = Choose the type of suggestions that appear in the address bar:
 
-# First Firefox Suggest checkbox main label and description. This checkbox
+# First Firefox Suggest toggle button main label and description. This toggle
 # controls non-sponsored suggestions related to the user's search string.
+# .description is transferred into a separate paragraph by the moz-toggle
+# custom element code.
 addressbar-firefox-suggest-nonsponsored =
   .label = Suggestions from the web
-addressbar-firefox-suggest-nonsponsored-desc = Get suggestions from { -brand-product-name } related to your search.
+  .description = Get suggestions from { -brand-product-name } related to your search.
 
-# Second Firefox Suggest checkbox main label and description. This checkbox
+# Second Firefox Suggest toggle button main label and description. This toggle
 # controls sponsored suggestions related to the user's search string.
+# .description is transferred into a separate paragraph by the moz-toggle
+# custom element code.
 addressbar-firefox-suggest-sponsored =
   .label = Suggestions from sponsors
-addressbar-firefox-suggest-sponsored-desc = Support the development of { -brand-short-name } with occasional sponsored suggestions.
+  .description = Support the development of { -brand-short-name } with occasional sponsored suggestions.
 
 # An additional toggle button in the Firefox Suggest settings that controls
 # whether userdata-based suggestions like history and bookmarks should be
@@ -166,18 +170,20 @@ addressbar-firefox-suggest-sponsored-desc = Support the development of { -brand-
 addressbar-firefox-suggest-private =
   .label = Show suggestions in Private Windows
 
-# Third Firefox Suggest checkbox main label and description. This checkbox
+# Third Firefox Suggest toggle button main label and description. This toggle
 # controls data collection related to the user's search string.
+# .description is transferred into a separate paragraph by the moz-toggle
+# custom element code.
 addressbar-firefox-suggest-data-collection =
   .label = Improve the { -firefox-suggest-brand-name } experience
-addressbar-firefox-suggest-data-collection-desc = Help create a richer search experience by allowing { -vendor-short-name } to process your search queries.
+  .description = Help create a richer search experience by allowing { -vendor-short-name } to process your search queries.
 
 # The "Learn more" link shown in the Firefox Suggest preferences UI.
 addressbar-locbar-firefox-suggest-learn-more = Learn more
 
 ## The following addressbar-firefox-suggest-info strings are shown in the
-## Firefox Suggest preferences UI in the info box underneath the checkboxes.
-## Each string is shown when a particular checkbox combination is active.
+## Firefox Suggest preferences UI in the info box underneath the toggle buttons.
+## Each string is shown when a particular toggle combination is active.
 
 # Non-sponsored suggestions: on
 # Sponsored suggestions: on
