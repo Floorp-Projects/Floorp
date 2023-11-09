@@ -139,7 +139,8 @@ BytecodeEmitter::BytecodeEmitter(BytecodeEmitter* parent, FrontendContext* fc,
     : sc(sc),
       fc(fc),
       parent(parent),
-      bytecodeSection_(fc, sc->extent().lineno, sc->extent().column),
+      bytecodeSection_(fc, sc->extent().lineno,
+                       JS::LimitedColumnNumberOneOrigin(sc->extent().column)),
       perScriptData_(fc, compilationState),
       errorReporter_(errorReporter),
       compilationState(compilationState),
@@ -605,8 +606,8 @@ bool BytecodeEmitter::updateSourceCoordNotes(uint32_t offset) {
     return false;
   }
 
-  JS::LimitedColumnNumberZeroOrigin columnIndex =
-      JS::LimitedColumnNumberZeroOrigin(errorReporter().columnAt(offset));
+  JS::LimitedColumnNumberOneOrigin columnIndex =
+      errorReporter().columnAt(offset);
 
   // Assert colspan is always representable.
   static_assert((0 - ptrdiff_t(JS::LimitedColumnNumberZeroOrigin::Limit)) >=
@@ -619,17 +620,19 @@ bool BytecodeEmitter::updateSourceCoordNotes(uint32_t offset) {
   if (colspan != JS::ColumnNumberOffset::zero()) {
     if (lastLineOnlySrcNoteIndex != LastSrcNoteIsNotLineOnly) {
       MOZ_ASSERT(bytecodeSection().lastColumn() ==
-                 JS::LimitedColumnNumberZeroOrigin::zero());
+                 JS::LimitedColumnNumberOneOrigin());
 
       const SrcNotesVector& notes = bytecodeSection().notes();
       SrcNoteType type = notes[lastLineOnlySrcNoteIndex].type();
       if (type == SrcNoteType::NewLine) {
-        if (!convertLastNewLineToNewLineColumn(columnIndex)) {
+        if (!convertLastNewLineToNewLineColumn(
+                JS::LimitedColumnNumberZeroOrigin(columnIndex))) {
           return false;
         }
       } else {
         MOZ_ASSERT(type == SrcNoteType::SetLine);
-        if (!convertLastSetLineToSetLineColumn(columnIndex)) {
+        if (!convertLastSetLineToSetLineColumn(
+                JS::LimitedColumnNumberZeroOrigin(columnIndex))) {
           return false;
         }
       }
