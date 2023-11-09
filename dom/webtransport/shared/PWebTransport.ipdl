@@ -71,6 +71,11 @@ async protocol PWebTransport
   async GetMaxDatagramSize()
     returns(uint64_t maxDatagramSize);
 
+  /**
+  * Set the sendOrder for an existing stream
+  */
+  async SetSendOrder(uint64_t streamId, int64_t? sendOrder);
+
  child:
 
   async IncomingUnidirectionalStream(uint64_t streamId, nullable DataPipeReceiver receive);

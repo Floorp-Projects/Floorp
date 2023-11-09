@@ -660,7 +660,7 @@ void Http3WebTransportStream::SendStopSending(uint8_t aErrorCode) {
   mSession->StreamHasDataToWrite(this);
 }
 
-void Http3WebTransportStream::SetSendOrder(int64_t aSendOrder) {
+void Http3WebTransportStream::SetSendOrder(Maybe<int64_t> aSendOrder) {
   mSession->SetSendOrder(this, aSendOrder);
 }
 

@@ -118,6 +118,8 @@ class WebTransport final : public nsISupports, public nsWrapperCache {
   MOZ_CAN_RUN_SCRIPT_BOUNDARY already_AddRefed<ReadableStream>
   IncomingUnidirectionalStreams();
 
+  void SendSetSendOrder(uint64_t aStreamId, Maybe<int64_t> aSendOrder);
+
   void Shutdown() {}
 
  private:

@@ -11,12 +11,15 @@ interface nsIInputStreamCallback;
 interface nsIEventTarget;
 
 %{C++
+#include "mozilla/Maybe.h"
+
 namespace mozilla {
 class TimeStamp;
 }
 %}
 
 native TimeStamp(mozilla::TimeStamp);
+native MaybeInt64(mozilla::Maybe<int64_t>);
 
 [builtinclass, scriptable, uuid(ccc3e685-8411-48f0-8b3e-ff6d1fae4809)]
 interface nsIWebTransportSendStreamStats : nsISupports {
@@ -62,7 +65,7 @@ interface nsIWebTransportSendStream : nsISupports {
   void getSendStreamStats(in nsIWebTransportStreamStatsCallback aCallback);
   readonly attribute nsIAsyncOutputStream outputStream;
   readonly attribute uint64_t streamId;
-  void setSendOrder(in int64_t aSendOrder);
+  [noscript] void setSendOrder(in MaybeInt64 aSendOrder);
 };
 
 [builtinclass, scriptable, uuid(f9ecb509-36db-4689-97d6-137639a08750)]
@@ -82,5 +85,5 @@ interface nsIWebTransportBidirectionalStream : nsISupports {
   readonly attribute nsIAsyncInputStream inputStream;
   readonly attribute nsIAsyncOutputStream outputStream;
   readonly attribute uint64_t streamId;
-  void setSendOrder(in int64_t aSendOrder);
+  [noscript] void setSendOrder(in MaybeInt64 aSendOrder);
 };
