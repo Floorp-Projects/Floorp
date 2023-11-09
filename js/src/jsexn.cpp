@@ -28,7 +28,7 @@
 #include "frontend/FrontendContext.h"  // AutoReportFrontendContext
 #include "js/CharacterEncoding.h"      // JS::UTF8Chars, JS::ConstUTF8CharsZ
 #include "js/Class.h"
-#include "js/ColumnNumber.h"  // JS::ColumnNumberOneOrigin, JS::TaggedColumnNumberZeroOrigin
+#include "js/ColumnNumber.h"  // JS::ColumnNumberOneOrigin, JS::TaggedColumnNumberOneOrigin
 #include "js/Conversions.h"
 #include "js/ErrorReport.h"             // JS::PrintError
 #include "js/Exception.h"               // JS::ExceptionStack
@@ -684,7 +684,7 @@ bool JS::ErrorReportBuilder::populateUncaughtExceptionReportUTF8VA(
     NonBuiltinFrameIter iter(cx, cx->realm()->principals());
     if (!iter.done()) {
       ownedReport.filename = JS::ConstUTF8CharsZ(iter.filename());
-      JS::TaggedColumnNumberZeroOrigin column;
+      JS::TaggedColumnNumberOneOrigin column;
       ownedReport.sourceId =
           iter.hasScript() ? iter.script()->scriptSource()->id() : 0;
       ownedReport.lineno = iter.computeLine(&column);

@@ -42,7 +42,7 @@
 #include "jit/JitSpewer.h"
 #include "js/CallAndConstruct.h"  // JS::IsCallable
 #include "js/CharacterEncoding.h"
-#include "js/ColumnNumber.h"  // JS::TaggedColumnNumberZeroOrigin, JS::ColumnNumberZeroOrigin, JS::ColumnNumberOneOrigin
+#include "js/ColumnNumber.h"  // JS::TaggedColumnNumberOneOrigin, JS::ColumnNumberZeroOrigin, JS::ColumnNumberOneOrigin
 #include "js/CompileOptions.h"
 #include "js/ContextOptions.h"  // JS::ContextOptions{,Ref}
 #include "js/Conversions.h"
@@ -4658,13 +4658,13 @@ JS_PUBLIC_API bool DescribeScriptedCaller(JSContext* cx, AutoFilename* filename,
   }
 
   if (lineno) {
-    JS::TaggedColumnNumberZeroOrigin columnNumber;
+    JS::TaggedColumnNumberOneOrigin columnNumber;
     *lineno = i.computeLine(&columnNumber);
     if (column) {
       *column = JS::ColumnNumberZeroOrigin(columnNumber.zeroOriginValue());
     }
   } else if (column) {
-    JS::TaggedColumnNumberZeroOrigin columnNumber;
+    JS::TaggedColumnNumberOneOrigin columnNumber;
     i.computeLine(&columnNumber);
     *column = JS::ColumnNumberZeroOrigin(columnNumber.zeroOriginValue());
   }

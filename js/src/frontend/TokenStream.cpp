@@ -35,7 +35,7 @@
 #include "frontend/ParserAtom.h"
 #include "frontend/ReservedWords.h"
 #include "js/CharacterEncoding.h"  // JS::ConstUTF8CharsZ
-#include "js/ColumnNumber.h"  // JS::LimitedColumnNumberZeroOrigin, JS::ColumnNumberZeroOrigin, JS::ColumnNumberOneOrigin, JS::TaggedColumnNumberZeroOrigin
+#include "js/ColumnNumber.h"  // JS::LimitedColumnNumberZeroOrigin, JS::ColumnNumberZeroOrigin, JS::ColumnNumberOneOrigin, JS::TaggedColumnNumberZeroOrigin, JS::TaggedColumnNumberOneOrigin
 #include "js/ErrorReport.h"   // JSErrorBase
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/Printf.h"                // JS_smprintf
@@ -1479,11 +1479,12 @@ bool TokenStreamAnyChars::fillExceptingContext(ErrorMetadata* err,
                                maybeCx->realm()->principals());
       if (!iter.done() && iter.filename()) {
         err->filename = JS::ConstUTF8CharsZ(iter.filename());
-        JS::TaggedColumnNumberZeroOrigin columnNumber;
+        JS::TaggedColumnNumberOneOrigin columnNumber;
         err->lineNumber = iter.computeLine(&columnNumber);
         // NOTE: Wasm frame cannot appear here.
         err->columnNumber =
-            JS::ColumnNumberZeroOrigin(columnNumber.toLimitedColumnNumber());
+            JS::ColumnNumberZeroOrigin(JS::LimitedColumnNumberZeroOrigin(
+                columnNumber.toLimitedColumnNumber()));
         return false;
       }
     }
