@@ -133,8 +133,7 @@ void DownmixAndInterleave(const nsTArray<const SrcT*>& aChannelData,
     for (uint32_t i = 0; i < aOutputChannels; i++) {
       outputChannelData[i] = outputBuffers.Elements() + aDuration * i;
     }
-    AudioChannelsDownMix(aChannelData, outputChannelData.Elements(),
-                         aOutputChannels, aDuration);
+    AudioChannelsDownMix<SrcT>(aChannelData, outputChannelData, aDuration);
     InterleaveAndConvertBuffer(outputChannelData.Elements(), aDuration, aVolume,
                                aOutputChannels, aOutput);
   }
