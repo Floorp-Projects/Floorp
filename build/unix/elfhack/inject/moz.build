@@ -35,7 +35,10 @@ for v in ("OS_CPPFLAGS", "OS_CFLAGS", "DEBUG", "CLANG_PLUGIN", "OPTIMIZE", "FRAM
     for flag in COMPILE_FLAGS[v]:
         if flag == "-isystem":
             flags.append("".join(COMPILE_FLAGS[v][idx : idx + 2]))
-        elif flag.startswith(("-m", "-I", "-isystem", "--sysroot=")) or flag == "-fPIC":
+        elif (
+            flag.startswith(("-g", "-m", "-I", "-isystem", "--sysroot="))
+            or flag == "-fPIC"
+        ):
             flags.append(flag)
         idx += 1
     COMPILE_FLAGS[v] = flags
