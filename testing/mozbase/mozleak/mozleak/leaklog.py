@@ -179,13 +179,18 @@ def process_leak_log(
     ignore_missing_leaks should be a list of process types. If a process
     creates a leak log without a TOTAL, then we report an error if it isn't
     in the list ignore_missing_leaks.
+
+    Returns a list of files that were processed. The caller is responsible for
+    cleaning these up.
     """
     log = log or _get_default_logger()
+
+    processed_files = []
 
     leakLogFile = leak_log_file
     if not os.path.exists(leakLogFile):
         log.warning("leakcheck | refcount logging is off, so leaks can't be detected!")
-        return
+        return processed_files
 
     log.info(
         "leakcheck | Processing log file %s%s"
@@ -246,3 +251,5 @@ def process_leak_log(
                 scope=scope,
                 allowed=allowed,
             )
+            processed_files.append(thisFile)
+    return processed_files
