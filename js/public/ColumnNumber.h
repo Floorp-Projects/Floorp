@@ -94,6 +94,46 @@ struct ColumnNumberOffset {
   int32_t value() const { return value_; }
 };
 
+// The positive offset from certain column number.
+struct ColumnNumberUnsignedOffset {
+ private:
+  uint32_t value_ = 0;
+
+ public:
+  constexpr ColumnNumberUnsignedOffset() = default;
+  constexpr ColumnNumberUnsignedOffset(
+      const ColumnNumberUnsignedOffset& other) = default;
+
+  inline explicit ColumnNumberUnsignedOffset(uint32_t value) : value_(value) {}
+
+  static constexpr ColumnNumberUnsignedOffset zero() {
+    return ColumnNumberUnsignedOffset();
+  }
+
+  ColumnNumberUnsignedOffset operator+(
+      const ColumnNumberUnsignedOffset& offset) const {
+    return ColumnNumberUnsignedOffset(value_ + offset.value());
+  }
+
+  ColumnNumberUnsignedOffset& operator+=(
+      const ColumnNumberUnsignedOffset& offset) {
+    value_ += offset.value();
+    return *this;
+  }
+
+  bool operator==(const ColumnNumberUnsignedOffset& rhs) const {
+    return value_ == rhs.value_;
+  }
+
+  bool operator!=(const ColumnNumberUnsignedOffset& rhs) const {
+    return !(*this == rhs);
+  }
+
+  uint32_t value() const { return value_; }
+
+  uint32_t* addressOfValueForTranscode() { return &value_; }
+};
+
 namespace detail {
 
 template <typename T>
@@ -139,6 +179,13 @@ struct ColumnNumberWithOrigin {
 
   ColumnNumberWithOrigin<Origin, LimitValue> operator+(
       const ColumnNumberOffset& offset) const {
+    MOZ_ASSERT(valid());
+    MOZ_ASSERT(ptrdiff_t(value_) + offset.value() >= 0);
+    return ColumnNumberWithOrigin<Origin, LimitValue>(value_ + offset.value());
+  }
+
+  ColumnNumberWithOrigin<Origin, LimitValue> operator+(
+      const ColumnNumberUnsignedOffset& offset) const {
     MOZ_ASSERT(valid());
     MOZ_ASSERT(ptrdiff_t(value_) + offset.value() >= 0);
     return ColumnNumberWithOrigin<Origin, LimitValue>(value_ + offset.value());
