@@ -10,7 +10,7 @@ from tryselect.tasks import cache_key, filter_tasks_by_paths, resolve_tests_by_s
 
 
 def test_filter_tasks_by_paths(patch_resolver):
-    tasks = ["foobar/xpcshell-1", "foobar/mochitest", "foobar/xpcshell"]
+    tasks = {"foobar/xpcshell-1": {}, "foobar/mochitest": {}, "foobar/xpcshell": {}}
 
     patch_resolver(["xpcshell"], {})
     assert list(filter_tasks_by_paths(tasks, "dummy")) == []
