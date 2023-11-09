@@ -7,6 +7,7 @@ package org.mozilla.fenix.ui
 import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.R
@@ -114,6 +115,7 @@ class SettingsAddonsTest {
 
     // TestRail link: https://testrail.stage.mozaws.net/index.php?/cases/view/561600
     // Installs 3 add-on and checks that the app doesn't crash while navigating the app
+    @Ignore("Failing, see: https://bugzilla.mozilla.org/show_bug.cgi?id=1857875 ")
     @SmokeTest
     @Test
     fun noCrashWithAddonInstalledTest() {
