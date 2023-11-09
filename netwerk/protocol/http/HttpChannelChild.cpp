@@ -857,6 +857,13 @@ class RecordStopRequestDelta final {
 
  private:
   ~RecordStopRequestDelta() {
+    MOZ_ASSERT_IF(StaticPrefs::network_send_OnDataFinished(),
+                  !mOnDataFinishedTime.IsNull());
+    MOZ_ASSERT(!mOnStopRequestTime.IsNull());
+    if (mOnDataFinishedTime.IsNull()) {
+      return;
+    }
+
     TimeDuration delta = (mOnStopRequestTime - mOnDataFinishedTime);
     if (delta.ToMilliseconds() < 0) {
       // Because Telemetry can't handle negatives
