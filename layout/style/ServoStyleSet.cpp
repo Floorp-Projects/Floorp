@@ -811,9 +811,9 @@ bool ServoStyleSet::StyleDocument(ServoTraversalFlags aFlags) {
                   !parent->HasAnyOfFlags(Element::kAllServoDescendantBits));
 
     postTraversalRequired |=
-        Servo_TraverseSubtree(root, mRawData.get(), &snapshots, aFlags) ||
-        root->HasAnyOfFlags(Element::kAllServoDescendantBits |
-                            NODE_NEEDS_FRAME);
+        Servo_TraverseSubtree(root, mRawData.get(), &snapshots, aFlags);
+    postTraversalRequired |= root->HasAnyOfFlags(
+        Element::kAllServoDescendantBits | NODE_NEEDS_FRAME);
 
     {
       uint32_t existingBits = mDocument->GetServoRestyleRootDirtyBits();
@@ -851,13 +851,14 @@ bool ServoStyleSet::StyleDocument(ServoTraversalFlags aFlags) {
   // traversal caused, for example, the font-size to change, the SMIL style
   // won't be updated until the next tick anyway.
   if (GetPresContext()->EffectCompositor()->PreTraverse(aFlags)) {
-    DocumentStyleRootIterator iter(mDocument->GetServoRestyleRoot());
-    while (Element* root = iter.GetNextStyleRoot()) {
-      postTraversalRequired |=
-          Servo_TraverseSubtree(root, mRawData.get(), &snapshots, aFlags) ||
-          root->HasAnyOfFlags(Element::kAllServoDescendantBits |
-                              NODE_NEEDS_FRAME);
-    }
+    nsINode* styleRoot = mDocument->GetServoRestyleRoot();
+    Element* root =
+        styleRoot->IsElement() ? styleRoot->AsElement() : rootElement;
+
+    postTraversalRequired |=
+        Servo_TraverseSubtree(root, mRawData.get(), &snapshots, aFlags);
+    postTraversalRequired |= root->HasAnyOfFlags(
+        Element::kAllServoDescendantBits | NODE_NEEDS_FRAME);
   }
 
   return postTraversalRequired;
