@@ -919,6 +919,7 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       aResult = mCSDReversedPlacement;
       break;
     case IntID::PrefersReducedMotion: {
+      EnsureInit();
       aResult = mPrefersReducedMotion;
       break;
     }
