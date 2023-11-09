@@ -212,6 +212,8 @@
     <string name="browser_menu_library">Βιβλιοθήκη</string>
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">Έκδοση υπολογιστή</string>
+    <!-- Browser menu button that reopens a private tab as a regular tab -->
+    <string name="browser_menu_open_in_regular_tab">Άνοιγμα σε κανονική καρτέλα</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">Προσθήκη στην αρχική οθόνη</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
@@ -344,7 +346,7 @@
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_description_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Το Firefox θέτει σε προτεραιότητα τους ανθρώπους και όχι τα κέρδη, προστατεύοντας το απόρρητό σας με αποκλεισμό των ιχνηλατών μεταξύ ιστοτόπων.\n\nΜάθετε περισσότερα στη σημείωση απορρήτου μας.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
-    <string name="juno_onboarding_default_browser_description_nimbus_2">Το πρόγραμμα περιήγησής του μη κερδοσκοπικού μας οργανισμού σταματά τις εταιρείες από το να σας ακολουθούν κρυφά σε όλο το διαδίκτυο.\n\nΜάθετε περισσότερα στη σημείωση απορρήτου μας.</string>
+    <string name="juno_onboarding_default_browser_description_nimbus_2">Το πρόγραμμα περιήγησης του μη κερδοσκοπικού μας οργανισμού σταματά τις εταιρείες από το να σας ακολουθούν κρυφά σε όλο το διαδίκτυο.\n\nΜάθετε περισσότερα στη σημείωση απορρήτου μας.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
     <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">σημείωση απορρήτου</string>
@@ -420,7 +422,7 @@
     <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
     <string name="preferences_manage_search_shortcuts_2">Διαχείριση εναλλακτικών μηχανών αναζήτησης</string>
     <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
-    <string name="preferences_manage_search_shortcuts_summary">Επεξεργασία μηχανών που είναι ορατές στο μενού αναζήτησης</string>
+    <string name="preferences_manage_search_shortcuts_summary">Επεξεργαστείτε τις μηχανές που εμφανίζονται στο μενού αναζήτησης</string>
     <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
     <string name="preferences_category_engines_in_search_menu">Ορατές μηχανές στο μενού αναζήτησης</string>
     <!-- Preference for settings related to changing the default search engine -->
@@ -457,9 +459,9 @@
     <!-- Preference for opening links in a private tab-->
     <string name="preferences_open_links_in_a_private_tab">Άνοιγμα συνδέσμων σε ιδιωτική καρτέλα</string>
     <!-- Preference for allowing screenshots to be taken while in a private tab-->
-    <string name="preferences_allow_screenshots_in_private_mode">Να επιτρέπονται στιγμιότυπα στην ιδιωτική περιήγηση</string>
+    <string name="preferences_allow_screenshots_in_private_mode">Στιγμιότυπα οθόνης στην ιδιωτική περιήγηση</string>
     <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
-    <string name="preferences_screenshots_in_private_mode_disclaimer">Αν επιτραπούν, οι ιδιωτικές καρτέλες θα είναι επίσης ορατές όταν είναι ανοιχτές πολλές εφαρμογές</string>
+    <string name="preferences_screenshots_in_private_mode_disclaimer">Αν ενεργοποιηθεί, οι ιδιωτικές καρτέλες θα είναι επίσης ορατές όταν είναι ανοικτές πολλές εφαρμογές</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Προσθήκη συντόμευσης ιδιωτικής περιήγησης</string>
     <!-- Preference for enabling "HTTPS-Only" mode -->
@@ -601,12 +603,12 @@
     <string name="preferences_show_sponsored_suggestions">Προτάσεις από χορηγούς</string>
     <!-- Summary for preference to show sponsored Firefox Suggest search suggestions.
          The first parameter is the name of the application. -->
-    <string name="preferences_show_sponsored_suggestions_summary">Υποστήριξη του %1$s με περιστασιακές προτάσεις χορηγών</string>
+    <string name="preferences_show_sponsored_suggestions_summary">Υποστηρίξτε το %1$s με περιστασιακές προτάσεις χορηγών</string>
     <!-- Preference title for switch preference to show Firefox Suggest search suggestions for web content.
          The first parameter is the name of the application. -->
-    <string name="preferences_show_nonsponsored_suggestions">Προτάσεις από %1$s</string>
+    <string name="preferences_show_nonsponsored_suggestions">Προτάσεις από το %1$s</string>
     <!-- Summary for preference to show Firefox Suggest search suggestions for web content -->
-    <string name="preferences_show_nonsponsored_suggestions_summary">Λήψη προτάσεων σχετικά με την αναζήτησή σας από το διαδίκτυο</string>
+    <string name="preferences_show_nonsponsored_suggestions_summary">Λάβετε προτάσεις από το διαδίκτυο που σχετίζονται με την αναζήτησή σας</string>
     <!-- Preference for open links in third party apps -->
     <string name="preferences_open_links_in_apps">Άνοιγμα συνδέσμων σε εφαρμογές</string>
     <!-- Preference for open links in third party apps always open in apps option -->
@@ -629,9 +631,9 @@
     <string name="preferences_notifications">Ειδοποιήσεις</string>
 
     <!-- Summary for notification preference indicating notifications are allowed -->
-    <string name="notifications_allowed_summary">Επιτρέπεται</string>
+    <string name="notifications_allowed_summary">Επιτρέπονται</string>
     <!-- Summary for notification preference indicating notifications are not allowed -->
-    <string name="notifications_not_allowed_summary">Δεν επιτρέπεται</string>
+    <string name="notifications_not_allowed_summary">Δεν επιτρέπονται</string>
 
     <!-- Add-on Preferences -->
     <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
@@ -949,7 +951,7 @@
     <!-- Category header of a preference that allows a user to enable or disable the inactive tabs feature -->
     <string name="preferences_inactive_tabs">Μετακίνηση παλαιών καρτελών στις ανενεργές</string>
     <!-- Title of inactive tabs preference -->
-    <string name="preferences_inactive_tabs_title">Οι καρτέλες που δεν έχετε προβάλει για δύο εβδομάδες μετακινούνται στην ενότητα «Ανενεργές».</string>
+    <string name="preferences_inactive_tabs_title">Μετακίνηση των καρτελών που δεν έχουν προβληθεί για δύο εβδομάδες στην ενότητα «Ανενεργές».</string>
 
     <!-- Studies -->
     <!-- Title of the remove studies button -->
@@ -1162,7 +1164,7 @@
 
     <!-- Site Permissions -->
     <!-- Button label that take the user to the Android App setting -->
-    <string name="phone_feature_go_to_settings">Μετάβαση στις Ρυθμίσεις</string>
+    <string name="phone_feature_go_to_settings">Μετάβαση στις ρυθμίσεις</string>
     <!-- Content description (not visible, for screen readers etc.): Quick settings sheet
         to give users access to site specific information / settings. For example:
         Secure settings status and a button to modify site permissions -->
@@ -1204,9 +1206,9 @@
     <!-- Label that indicates that a permission must be blocked -->
     <string name="preference_option_phone_feature_blocked">Φραγή</string>
     <!-- Label that indicates that a permission must be allowed -->
-    <string name="preference_option_phone_feature_allowed">Επιτρέπεται</string>
+    <string name="preference_option_phone_feature_allowed">Αποδοχή</string>
     <!--Label that indicates a permission is by the Android OS-->
-    <string name="phone_feature_blocked_by_android">Αποκλείστηκε από Android</string>
+    <string name="phone_feature_blocked_by_android">Αποκλείστηκε από το Android</string>
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">Εξαιρέσεις</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
@@ -1224,7 +1226,7 @@
     <!-- Label that indicates that video and audio autoplay is only allowed over Wi-Fi -->
     <string name="preference_option_autoplay_allowed_wifi_only2">Φραγή ήχου και βίντεο μόνο σε σύνδεση δεδομένων</string>
     <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
-    <string name="preference_option_autoplay_allowed_wifi_subtext">Η αναπαραγωγή ήχων/βίντεο θα γίνεται σε Wi-Fi</string>
+    <string name="preference_option_autoplay_allowed_wifi_subtext">Θα γίνεται αναπαραγωγή ήχου και βίντεο σε Wi-Fi</string>
     <!-- Label for global setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->
     <string name="preference_option_autoplay_block_audio2">Φραγή ήχου μόνο</string>
     <!-- Label for site specific setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->
@@ -1445,7 +1447,7 @@
     <string name="preference_accessibility_auto_size_2">Αυτόματο μέγεθος γραμματοσειράς</string>
 
     <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
-    <string name="preference_accessibility_auto_size_summary">Το μέγεθος θα καθορίζεται από τις ρυθμίσεις Android. Απενεργοποιήστε το για να διαχειριστείτε το μέγεθος από εδώ.</string>
+    <string name="preference_accessibility_auto_size_summary">Το μέγεθος θα καθορίζεται από τις ρυθμίσεις του Android. Απενεργοποιήστε το για να διαχειριστείτε το μέγεθος από εδώ.</string>
 
     <!-- Title for the Delete browsing data preference -->
     <string name="preferences_delete_browsing_data">Διαγραφή δεδομένων περιήγησης</string>
@@ -1558,7 +1560,7 @@
     <!-- Preference summary for enhanced tracking protection settings on/off switch -->
     <string name="preference_enhanced_tracking_protection_summary">Τώρα με Ολική προστασία cookie, η πιο ισχυρή μας φύλαξη ενάντια στους ιχνηλάτες μεταξύ ιστοτόπων.</string>
     <!-- Description of enhanced tracking protection. The parameter is the name of the application (For example: Firefox Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation_2">Το %s σάς προστατεύει από τους περισσότερους, συνηθισμένους ιχνηλάτες που ακολουθούν ό,τι κάνετε στο διαδίκτυο.</string>
+    <string name="preference_enhanced_tracking_protection_explanation_2">Το %s σάς προστατεύει από τους περισσότερους, συνηθισμένους ιχνηλάτες που καταγράφουν ό,τι κάνετε στο διαδίκτυο.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Μάθετε περισσότερα</string>
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
@@ -1601,7 +1603,7 @@
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">Cryptominer</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
-    <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Fingerprinters</string>
+    <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Fingerprinter</string>
     <!-- Button label for navigating to the Enhanced Tracking Protection details -->
     <string name="enhanced_tracking_protection_details">Λεπτομέρειες</string>
     <!-- Header for categories that are being being blocked by current Enhanced Tracking Protection settings -->
@@ -1625,7 +1627,7 @@
     <!-- Description of cryptominers that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cryptominers_description">Εμποδίζει την πρόσβαση κακόβουλων σεναρίων εξόρυξης ψηφιακών νομισμάτων στη συσκευή σας.</string>
     <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_fingerprinters_title">Fingerprinters</string>
+    <string name="etp_fingerprinters_title">Fingerprinter</string>
     <!-- Description of fingerprinters that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_fingerprinters_description">Διακόπτει τη συλλογή μοναδικών, αναγνωριστικών δεδομένων της συσκευής σας που μπορούν να χρησιμοποιηθούν για σκοπούς καταγραφής.</string>
     <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
@@ -1960,7 +1962,7 @@
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
     <string name="search_add_custom_engine_search_string_hint_2">URL για χρήση στην αναζήτηση</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
-    <string name="search_add_custom_engine_search_string_example" formatted="false">Αντικαταστήστε το ερώτημα με “%s”. Παράδειγμα:\nhttps://www.google.com/search?q=%s</string>
+    <string name="search_add_custom_engine_search_string_example" formatted="false">Αντικαταστήστε τον όρο αναζήτησης με «%s». Παράδειγμα:\nhttps://www.google.com/search?q=%s</string>
 
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">Λεπτομέρειες προσαρμοσμένης μηχανής αναζήτησης</string>
@@ -1968,7 +1970,7 @@
     <!-- Label for the TextField in which user enters custom search engine suggestion URL -->
     <string name="search_add_custom_engine_suggest_url_label">API προτάσεων αναζήτησης (προαιρετικό)</string>
     <!-- Placeholder text shown in the Search Suggestion String TextField before a user enters text -->
-    <string name="search_add_custom_engine_suggest_string_hint">URL API προτάσεων αναζήτησης</string>
+    <string name="search_add_custom_engine_suggest_string_hint">URL για το API προτάσεων αναζήτησης</string>
     <!-- Description text for the Search Suggestion String TextField. The %s is part of the string -->
     <string name="search_add_custom_engine_suggest_string_example_2" formatted="false">Αντικαταστήστε τον όρο αναζήτησης με «%s». Παράδειγμα:\nhttps://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
     <!-- The text for the "Save" button for saving a custom search engine -->
@@ -1992,13 +1994,13 @@
     <string name="search_delete_search_engine_success_message">Το %s διαγράφηκε</string>
 
     <!-- Heading for the instructions to allow a permission -->
-    <string name="phone_feature_blocked_intro">Για να το επιτρέψετε:</string>
+    <string name="phone_feature_blocked_intro">Για να επιτρέψετε την πρόσβαση:</string>
     <!-- First step for the allowing a permission -->
-    <string name="phone_feature_blocked_step_settings">1. Μεταβείτε στις Ρυθμίσεις Android</string>
+    <string name="phone_feature_blocked_step_settings">1. Μεταβείτε στις ρυθμίσεις του Android</string>
     <!-- Second step for the allowing a permission -->
-    <string name="phone_feature_blocked_step_permissions"><![CDATA[2. Επιλέξτε <b>Άδειες</b>]]></string>
+    <string name="phone_feature_blocked_step_permissions"><![CDATA[2. Επιλέξτε <b>Δικαιώματα</b>]]></string>
     <!-- Third step for the allowing a permission (Fore example: Camera) -->
-    <string name="phone_feature_blocked_step_feature"><![CDATA[3. Ενεργοποιήστε το <b>%1$s</b>]]></string>
+    <string name="phone_feature_blocked_step_feature"><![CDATA[3. Ενεργοποιήστε την επιλογή <b>%1$s</b>]]></string>
 
     <!-- Label that indicates a site is using a secure connection -->
     <string name="quick_settings_sheet_secure_connection_2">Η σύνδεση είναι ασφαλής</string>
@@ -2076,7 +2078,7 @@
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">Παρακαλούμε επαληθεύστε ξανά την ταυτότητά σας.</string>
     <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
-    <string name="synced_tabs_enable_tab_syncing">Παρακαλούμε ενεργοποιήστε το συγχρονισμό καρτελών.</string>
+    <string name="synced_tabs_enable_tab_syncing">Παρακαλούμε ενεργοποιήστε τον συγχρονισμό καρτελών.</string>
 
     <!-- Text displayed when user has no tabs that have been synced -->
     <string name="synced_tabs_no_tabs">Δεν έχετε καμία άλλη καρτέλα ανοικτή στο Firefox σε άλλες σας συσκευές.</string>
