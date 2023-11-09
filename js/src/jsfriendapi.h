@@ -11,7 +11,7 @@
 
 #include "js/CallArgs.h"
 #include "js/Class.h"
-#include "js/ColumnNumber.h"  // JS::LimitedColumnNumberZeroOrigin
+#include "js/ColumnNumber.h"  // JS::LimitedColumnNumberOneOrigin
 #include "js/GCAPI.h"
 #include "js/HeapAPI.h"
 #include "js/Object.h"           // JS::GetClass
@@ -58,7 +58,7 @@ extern JS_PUBLIC_API bool JS_NondeterministicGetWeakSetKeys(
 // Raw JSScript* because this needs to be callable from a signal handler.
 extern JS_PUBLIC_API unsigned JS_PCToLineNumber(
     JSScript* script, jsbytecode* pc,
-    JS::LimitedColumnNumberZeroOrigin* columnp = nullptr);
+    JS::LimitedColumnNumberOneOrigin* columnp = nullptr);
 
 /**
  * Determine whether the given object is backed by a DeadObjectProxy.

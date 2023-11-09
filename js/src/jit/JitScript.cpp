@@ -19,7 +19,7 @@
 #include "jit/JitSpewer.h"
 #include "jit/ScriptFromCalleeToken.h"
 #include "jit/TrialInlining.h"
-#include "js/ColumnNumber.h"  // JS::LimitedColumnNumberZeroOrigin
+#include "js/ColumnNumber.h"  // JS::LimitedColumnNumberOneOrigin
 #include "vm/BytecodeUtil.h"
 #include "vm/Compartment.h"
 #include "vm/FrameIter.h"  // js::OnlyJSJitFrameIter
@@ -595,7 +595,7 @@ void jit::JitSpewBaselineICStats(JSScript* script, const char* dumpReason) {
     uint32_t pcOffset = fallback->pcOffset();
     jsbytecode* pc = script->offsetToPC(pcOffset);
 
-    JS::LimitedColumnNumberZeroOrigin column;
+    JS::LimitedColumnNumberOneOrigin column;
     unsigned int line = PCToLineNumber(script, pc, &column);
 
     spew->beginObject();

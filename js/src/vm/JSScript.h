@@ -27,7 +27,7 @@
 
 #include "frontend/ScriptIndex.h"  // ScriptIndex
 #include "gc/Barrier.h"
-#include "js/ColumnNumber.h"  // JS::LimitedColumnNumberZeroOrigin
+#include "js/ColumnNumber.h"  // JS::LimitedColumnNumberZeroOrigin, JS::LimitedColumnNumberOneOrigin
 #include "js/CompileOptions.h"
 #include "js/Transcoding.h"
 #include "js/UbiNode.h"
@@ -2231,12 +2231,12 @@ namespace js {
 
 extern unsigned PCToLineNumber(
     JSScript* script, jsbytecode* pc,
-    JS::LimitedColumnNumberZeroOrigin* columnp = nullptr);
+    JS::LimitedColumnNumberOneOrigin* columnp = nullptr);
 
 extern unsigned PCToLineNumber(
-    unsigned startLine, JS::LimitedColumnNumberZeroOrigin startCol,
+    unsigned startLine, JS::LimitedColumnNumberOneOrigin startCol,
     SrcNote* notes, SrcNote* notesEnd, jsbytecode* code, jsbytecode* pc,
-    JS::LimitedColumnNumberZeroOrigin* columnp = nullptr);
+    JS::LimitedColumnNumberOneOrigin* columnp = nullptr);
 
 /*
  * This function returns the file and line number of the script currently

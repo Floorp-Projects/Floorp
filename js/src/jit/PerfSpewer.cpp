@@ -67,7 +67,7 @@ pid_t gettid_pthread() {
 #include "jit/JitSpewer.h"
 #include "jit/LIR.h"
 #include "jit/MIR.h"
-#include "js/ColumnNumber.h"  // JS::LimitedColumnNumberZeroOrigin, JS::ColumnNumberOffset
+#include "js/ColumnNumber.h"  // JS::LimitedColumnNumberZeroOrigin, JS::LimitedColumnNumberOneOrigin, JS::ColumnNumberOffset
 #include "js/JitCodeAPI.h"
 #include "js/Printf.h"
 #include "vm/BytecodeUtil.h"
@@ -862,7 +862,9 @@ void PerfSpewer::saveJitCodeSourceInfo(JSScript* script, JitCode* code,
     }
     // We could probably make this a bit faster by caching the previous pc
     // offset, but it currently doesn't seem noticeable when testing.
-    lineno = PCToLineNumber(script, pc, &colno);
+    JS::LimitedColumnNumberOneOrigin oneOriginColumn;
+    lineno = PCToLineNumber(script, pc, &oneOriginColumn);
+    colno = JS::LimitedColumnNumberZeroOrigin(oneOriginColumn);
 
     if (JS::JitCodeSourceInfo* srcInfo =
             CreateProfilerSourceEntry(profilerRecord, lock)) {
@@ -966,10 +968,11 @@ void IonICPerfSpewer::saveJitCodeSourceInfo(JSScript* script, JitCode* code,
   WriteToJitDumpFile(&debug_record, sizeof(debug_record), lock);
 
   uint32_t lineno;
-  JS::LimitedColumnNumberZeroOrigin colno;
+  JS::LimitedColumnNumberOneOrigin colno;
   lineno = PCToLineNumber(script, pc, &colno);
 
-  WriteJitDumpDebugEntry(uint64_t(code->raw()), filename, lineno, colno, lock);
+  WriteJitDumpDebugEntry(uint64_t(code->raw()), filename, lineno,
+                         JS::LimitedColumnNumberZeroOrigin(colno), lock);
 #endif
 }
 
