@@ -2652,15 +2652,13 @@ unsigned js::PCToLineNumber(unsigned startLine,
       column = JS::LimitedColumnNumberOneOrigin();
     } else if (type == SrcNoteType::SetLineColumn) {
       lineno = SrcNote::SetLineColumn::getLine(sn, startLine);
-      column = JS::LimitedColumnNumberOneOrigin(
-          SrcNote::SetLineColumn::getColumn(sn));
+      column = SrcNote::SetLineColumn::getColumn(sn);
     } else if (type == SrcNoteType::NewLine) {
       lineno++;
       column = JS::LimitedColumnNumberOneOrigin();
     } else if (type == SrcNoteType::NewLineColumn) {
       lineno++;
-      column = JS::LimitedColumnNumberOneOrigin(
-          SrcNote::NewLineColumn::getColumn(sn));
+      column = SrcNote::NewLineColumn::getColumn(sn);
     } else if (type == SrcNoteType::ColSpan) {
       column += SrcNote::ColSpan::getSpan(sn);
     }
@@ -3513,7 +3511,8 @@ bool JSScript::dumpSrcNotes(JSContext* cx, JS::Handle<JSScript*> script,
 
       case SrcNoteType::SetLineColumn:
         lineno = SrcNote::SetLineColumn::getLine(sn, script->lineno());
-        column = SrcNote::SetLineColumn::getColumn(sn);
+        column = JS::LimitedColumnNumberZeroOrigin(
+            SrcNote::SetLineColumn::getColumn(sn));
         sp->printf(" lineno %u column %u", lineno, column.zeroOriginValue());
         break;
 
@@ -3523,7 +3522,8 @@ bool JSScript::dumpSrcNotes(JSContext* cx, JS::Handle<JSScript*> script,
         break;
 
       case SrcNoteType::NewLineColumn:
-        column = SrcNote::NewLineColumn::getColumn(sn);
+        column = JS::LimitedColumnNumberZeroOrigin(
+            SrcNote::NewLineColumn::getColumn(sn));
         sp->printf(" column %u", column.zeroOriginValue());
         ++lineno;
         break;

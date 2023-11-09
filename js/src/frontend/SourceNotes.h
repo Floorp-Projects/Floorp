@@ -14,7 +14,7 @@
 #include <stdint.h>   // int8_t, uint8_t, uint32_t
 
 #include "jstypes.h"  // js::{Bit, BitMask}
-#include "js/ColumnNumber.h"  // JS::ColumnNumberOffset, JS::LimitedColumnNumberZeroOrigin
+#include "js/ColumnNumber.h"  // JS::ColumnNumberOffset, JS::LimitedColumnNumberOneOrigin
 
 namespace js {
 
@@ -264,19 +264,17 @@ class SrcNote {
     enum class Operands { Column, Count };
 
    private:
-    static inline JS::LimitedColumnNumberZeroOrigin fromOperand(
+    static inline JS::LimitedColumnNumberOneOrigin fromOperand(
         ptrdiff_t operand) {
-      return JS::LimitedColumnNumberZeroOrigin(operand);
+      return JS::LimitedColumnNumberOneOrigin(operand);
     }
 
    public:
-    static inline ptrdiff_t toOperand(
-        JS::LimitedColumnNumberZeroOrigin column) {
-      return column.zeroOriginValue();
+    static inline ptrdiff_t toOperand(JS::LimitedColumnNumberOneOrigin column) {
+      return column.oneOriginValue();
     }
 
-    static inline JS::LimitedColumnNumberZeroOrigin getColumn(
-        const SrcNote* sn);
+    static inline JS::LimitedColumnNumberOneOrigin getColumn(const SrcNote* sn);
   };
 
   class SetLine {
@@ -318,20 +316,19 @@ class SrcNote {
       return size_t(operand);
     }
 
-    static inline JS::LimitedColumnNumberZeroOrigin columnFromOperand(
+    static inline JS::LimitedColumnNumberOneOrigin columnFromOperand(
         ptrdiff_t operand) {
-      return JS::LimitedColumnNumberZeroOrigin(operand);
+      return JS::LimitedColumnNumberOneOrigin(operand);
     }
 
    public:
     static inline ptrdiff_t columnToOperand(
-        JS::LimitedColumnNumberZeroOrigin column) {
-      return column.zeroOriginValue();
+        JS::LimitedColumnNumberOneOrigin column) {
+      return column.oneOriginValue();
     }
 
     static inline size_t getLine(const SrcNote* sn, size_t initialLine);
-    static inline JS::LimitedColumnNumberZeroOrigin getColumn(
-        const SrcNote* sn);
+    static inline JS::LimitedColumnNumberOneOrigin getColumn(const SrcNote* sn);
   };
 
   friend class SrcNoteWriter;
@@ -444,7 +441,7 @@ inline JS::ColumnNumberOffset SrcNote::ColSpan::getSpan(const SrcNote* sn) {
 }
 
 /* static */
-inline JS::LimitedColumnNumberZeroOrigin SrcNote::NewLineColumn::getColumn(
+inline JS::LimitedColumnNumberOneOrigin SrcNote::NewLineColumn::getColumn(
     const SrcNote* sn) {
   return fromOperand(SrcNoteReader::getOperand(sn, unsigned(Operands::Column)));
 }
@@ -463,7 +460,7 @@ inline size_t SrcNote::SetLineColumn::getLine(const SrcNote* sn,
 }
 
 /* static */
-inline JS::LimitedColumnNumberZeroOrigin SrcNote::SetLineColumn::getColumn(
+inline JS::LimitedColumnNumberOneOrigin SrcNote::SetLineColumn::getColumn(
     const SrcNote* sn) {
   return columnFromOperand(
       SrcNoteReader::getOperand(sn, unsigned(Operands::Column)));

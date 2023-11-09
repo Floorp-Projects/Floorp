@@ -34,7 +34,7 @@
 #include "frontend/SourceNotes.h"          // SrcNoteType
 #include "frontend/ValueUsage.h"           // ValueUsage
 #include "js/AllocPolicy.h"                // ReportOutOfMemory
-#include "js/ColumnNumber.h"               // JS::LimitedColumnNumberZeroOrigin
+#include "js/ColumnNumber.h"               // JS::LimitedColumnNumberOneOrigin
 #include "js/TypeDecls.h"                  // jsbytecode
 #include "vm/BuiltinObjectKind.h"          // BuiltinObjectKind
 #include "vm/CheckIsObjectKind.h"          // CheckIsObjectKind
@@ -495,9 +495,9 @@ struct MOZ_STACK_CLASS BytecodeEmitter {
   [[nodiscard]] bool newSrcNote2(SrcNoteType type, ptrdiff_t operand,
                                  unsigned* indexp = nullptr);
   [[nodiscard]] bool convertLastNewLineToNewLineColumn(
-      JS::LimitedColumnNumberZeroOrigin column);
+      JS::LimitedColumnNumberOneOrigin column);
   [[nodiscard]] bool convertLastSetLineToSetLineColumn(
-      JS::LimitedColumnNumberZeroOrigin column);
+      JS::LimitedColumnNumberOneOrigin column);
 
   [[nodiscard]] bool newSrcNoteOperand(ptrdiff_t operand);
 
