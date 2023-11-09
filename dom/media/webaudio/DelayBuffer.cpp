@@ -214,7 +214,7 @@ void DelayBuffer::UpdateUpmixChannels(
                        "Smoothing is making feedback delay too small.");
 
   mLastReadChunk = aNewReadChunk;
-  mUpmixChannels = mChunks[aNewReadChunk].ChannelData<float>().Clone();
+  mUpmixChannels = mChunks[aNewReadChunk].ChannelData<float>();
   MOZ_ASSERT(mUpmixChannels.Length() <= aChannelCount);
   if (mUpmixChannels.Length() < aChannelCount) {
     if (aChannelInterpretation == ChannelInterpretation::Speakers) {
