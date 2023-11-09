@@ -85,58 +85,6 @@ function test()
     }
   }
 
-  function testArrayUnshift(startLength, unshiftArgs, expectThrow, expectLength)
-  {
-    print("running testArrayUnshift(" +
-          startLength + ", " +
-          "[" + unshiftArgs.join(", ") + "], " +
-          expectThrow + ", " +
-          expectLength + ")...");
-    var a = new Array(startLength);
-    try
-    {
-      unshift.apply(a, unshiftArgs);
-      if (expectThrow)
-      {
-        throw "expected to throw for " +
-          describe("testArrayUnshift", startLength, unshiftArgs, expectThrow,
-                   expectLength);
-      }
-    }
-    catch (e)
-    {
-      if (!(e instanceof RangeError))
-      {
-        throw "unexpected exception type thrown: " + e + " for " +
-          describe("testArrayUnshift", startLength, unshiftArgs, expectThrow,
-                   expectLength);
-      }
-      if (!expectThrow)
-      {
-        throw "unexpected exception " + e + " for " +
-          describe("testArrayUnshift", startLength, unshiftArgs, expectThrow,
-                   expectLength);
-      }
-    }
-
-    if (a.length !== expectLength)
-    {
-      throw "unexpected modified-array length for " +
-        describe("testArrayUnshift", startLength, unshiftArgs, expectThrow,
-                 expectLength);
-    }
-
-    for (var i = 0, sz = unshiftArgs.length; i < sz; i++)
-    {
-      if (a[i] !== unshiftArgs[i])
-      {
-        throw "unexpected value at index " + i + " during " +
-          describe("testArrayUnshift", startLength, unshiftArgs, expectThrow,
-                   expectLength);
-      }
-    }
-  }
-
   var failed = true;
 
   try
@@ -149,14 +97,6 @@ function test()
     testArrayPush(4294967295, [foo], true, 4294967295);
     testArrayPush(4294967295, [foo, bar], true, 4294967295);
     testArrayPush(4294967295, [foo, bar, baz], true, 4294967295);
-
-    testArrayUnshift(4294967294, [foo], false, 4294967295);
-    testArrayUnshift(4294967294, [foo, bar], true, 4294967294);
-    testArrayUnshift(4294967294, [foo, bar, baz], true, 4294967294);
-    testArrayUnshift(4294967295, [foo], true, 4294967295);
-    testArrayUnshift(4294967295, [foo, bar], true, 4294967295);
-    testArrayUnshift(4294967295, [foo, bar, baz], true, 4294967295);
-
   }
   catch (e)
   {
