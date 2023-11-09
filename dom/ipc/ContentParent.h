@@ -987,6 +987,10 @@ class ContentParent final : public PContentParent,
                                                const int32_t& aWhichClipboard,
                                                bool* aHasType);
 
+  mozilla::ipc::IPCResult RecvClipboardHasTypesAsync(
+      nsTArray<nsCString>&& aTypes, const int32_t& aWhichClipboard,
+      ClipboardHasTypesAsyncResolver&& aResolver);
+
   mozilla::ipc::IPCResult RecvGetExternalClipboardFormats(
       const int32_t& aWhichClipboard, const bool& aPlainTextOnly,
       nsTArray<nsCString>* aTypes);
