@@ -757,3 +757,68 @@ add_task(async function test_reset_action_purges_session_store() {
   // Cleanup: Close the private window that remained open.
   await BrowserTestUtils.closeWindow(win);
 });
+
+/**
+ * Test that the the reset action closes all tabs, including pinned and (multi-)selected
+ * tabs.
+ */
+add_task(async function test_reset_action_closes_pinned_and_selected_tabs() {
+  await SpecialPowers.pushPrefEnv({
+    set: [["browser.privatebrowsing.resetPBM.enabled", true]],
+  });
+
+  info("Open a private browsing window.");
+  let win = await BrowserTestUtils.openNewBrowserWindow({
+    private: true,
+  });
+
+  info("Load a list of tabs.");
+  let loadPromises = [
+    "https://example.com",
+    "https://example.org",
+    "https://example.net",
+    "about:blank",
+  ].map(async url => {
+    let tab = BrowserTestUtils.addTab(win.gBrowser, url);
+    await BrowserTestUtils.browserLoaded(tab.linkedBrowser);
+    return tab;
+  });
+  let tabs = await Promise.all(loadPromises);
+
+  info("Pin a tab");
+  win.gBrowser.pinTab(tabs[0]);
+
+  info("Multi-select tabs.");
+  await BrowserTestUtils.switchTab(win.gBrowser, tabs[2]);
+  win.gBrowser.addToMultiSelectedTabs(tabs[3]);
+
+  // Create promises for tab close for all tabs in the triggering private browsing window.
+  let promisesTabsClosed = win.gBrowser.tabs.map(tab =>
+    BrowserTestUtils.waitForTabClosing(tab)
+  );
+
+  info("Trigger the restart PBM action");
+  await ResetPBMPanel._restartPBM(win);
+
+  info("Wait for all tabs to be closed.");
+  await promisesTabsClosed;
+
+  Assert.equal(
+    win.gBrowser.tabs.length,
+    1,
+    "Should only have 1 tab remaining."
+  );
+
+  await BrowserTestUtils.waitForCondition(
+    () =>
+      win.gBrowser.selectedBrowser.currentURI.spec == "about:privatebrowsing"
+  );
+  Assert.equal(
+    win.gBrowser.selectedBrowser.currentURI.spec,
+    "about:privatebrowsing",
+    "The remaining tab should point to about:privatebrowsing."
+  );
+
+  // Cleanup: Close the private window/
+  await BrowserTestUtils.closeWindow(win);
+});
