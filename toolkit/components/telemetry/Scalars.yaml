@@ -7,6 +7,23 @@
 
 # The following section contains the accessibility scalars.
 a11y:
+  always_underline_links:
+    bug_numbers:
+      - 1835194
+    description: >
+      Bool tracking if the user has always underline links enabled in firefox.
+    expires: never
+    kind: boolean
+    notification_emails:
+      - accessibility@mozilla.com
+      - mreschenberg@mozilla.com
+    products:
+      - 'firefox'
+    record_in_processes:
+      - 'main'
+    release_channel_collection: opt-out
+    keyed: false
+
   use_system_colors:
     bug_numbers:
       - 1835194

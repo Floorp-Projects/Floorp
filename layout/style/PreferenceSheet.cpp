@@ -12,6 +12,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_browser.h"
 #include "mozilla/StaticPrefs_devtools.h"
+#include "mozilla/StaticPrefs_layout.h"
 #include "mozilla/StaticPrefs_widget.h"
 #include "mozilla/StaticPrefs_ui.h"
 #include "mozilla/Telemetry.h"
@@ -309,6 +310,8 @@ void PreferenceSheet::Initialize() {
                        StaticPrefs::browser_display_permit_backplate());
   Telemetry::ScalarSet(Telemetry::ScalarID::A11Y_USE_SYSTEM_COLORS,
                        StaticPrefs::browser_display_use_system_colors());
+  Telemetry::ScalarSet(Telemetry::ScalarID::A11Y_ALWAYS_UNDERLINE_LINKS,
+                       StaticPrefs::layout_css_always_underline_links());
 }
 
 bool PreferenceSheet::AffectedByPref(const nsACString& aPref) {
