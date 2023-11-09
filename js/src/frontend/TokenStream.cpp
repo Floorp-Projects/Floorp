@@ -845,7 +845,7 @@ GeneralTokenStreamChars<Unit, AnyCharsAccess>::computeColumn(
 
   if (!lineToken.isFirstLine()) {
     return JS::LimitedColumnNumberOneOrigin::fromUnlimited(
-        JS::ColumnNumberOneOrigin::zero() + columnOffset);
+        JS::ColumnNumberOneOrigin() + columnOffset);
   }
 
   if (1 + columnOffset.value() > JS::LimitedColumnNumberOneOrigin::Limit) {

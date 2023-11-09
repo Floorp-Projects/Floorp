@@ -4240,7 +4240,7 @@ static bool Reject(JSContext* cx, const CompileArgs& args,
 
   RootedObject errorObj(
       cx, ErrorObject::create(cx, JSEXN_WASMCOMPILEERROR, stack, fileName, 0,
-                              line, JS::ColumnNumberOneOrigin::zero(), nullptr,
+                              line, JS::ColumnNumberOneOrigin(), nullptr,
                               message, cause));
   if (!errorObj) {
     return false;
