@@ -17,7 +17,6 @@
 @import url(chrome://devtools/skin/compatibility.css) layer(shared);
 
 /* Tooltip specific theme variables */
-
 .theme-dark {
   --bezier-diagonal-color: #eee;
   --bezier-grid-color: rgba(255, 255, 255, 0.1);
@@ -69,6 +68,17 @@
 
 :root[platform="mac"].theme-light {
   --theme-arrowpanel-separator: hsla(210,4%,10%,.14);
+}
+
+/*
+  There's a specific color-scheme defined for panels in https://searchfox.org/mozilla-central/rev/02841791400cf7cf5760c0cfaf31f5d772624253/toolkit/themes/shared/popup.css#9-13
+  This could create issues when the Firefox theme is at odd with the DevTools one (e.g.
+  if Firefox uses a dark theme but the user has a DevTools light theme.
+  Unset the color-scheme on those element so it uses the one we set on :root in common.css,
+  which matches our light/dark theme.
+*/
+menupopup, panel {
+  color-scheme: unset
 }
 
 strong {
