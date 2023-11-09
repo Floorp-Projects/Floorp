@@ -18,10 +18,12 @@ class ExternalTextureD3D11 final : public ExternalTexture {
  public:
   static UniquePtr<ExternalTextureD3D11> Create(
       const uint32_t aWidth, const uint32_t aHeight,
-      const struct ffi::WGPUTextureFormat aFormat);
+      const struct ffi::WGPUTextureFormat aFormat,
+      const ffi::WGPUTextureUsages aUsage);
 
   ExternalTextureD3D11(const uint32_t aWidth, const uint32_t aHeight,
                        const struct ffi::WGPUTextureFormat aFormat,
+                       const ffi::WGPUTextureUsages aUsage,
                        RefPtr<ID3D11Texture2D> aTexture);
   virtual ~ExternalTextureD3D11();
 

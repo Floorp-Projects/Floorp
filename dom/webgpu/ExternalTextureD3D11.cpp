@@ -16,7 +16,8 @@ namespace mozilla::webgpu {
 // static
 UniquePtr<ExternalTextureD3D11> ExternalTextureD3D11::Create(
     const uint32_t aWidth, const uint32_t aHeight,
-    const struct ffi::WGPUTextureFormat aFormat) {
+    const struct ffi::WGPUTextureFormat aFormat,
+    const ffi::WGPUTextureUsages aUsage) {
   const RefPtr<ID3D11Device> d3d11Device =
       gfx::DeviceManagerDx::Get()->GetCompositorDevice();
   if (!d3d11Device) {
@@ -33,6 +34,10 @@ UniquePtr<ExternalTextureD3D11> ExternalTextureD3D11::Create(
       DXGI_FORMAT_B8G8R8A8_UNORM, aWidth, aHeight, 1, 1,
       D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET);
 
+  if (aUsage & WGPUTextureUsages_STORAGE_BINDING) {
+    desc.BindFlags |= D3D11_BIND_UNORDERED_ACCESS;
+  }
+
   desc.MiscFlags = D3D11_RESOURCE_MISC_SHARED;
 
   RefPtr<ID3D11Texture2D> texture;
@@ -42,14 +47,15 @@ UniquePtr<ExternalTextureD3D11> ExternalTextureD3D11::Create(
     gfxCriticalNoteOnce << "CreateTexture2D failed:  " << gfx::hexa(hr);
     return nullptr;
   }
-  return MakeUnique<ExternalTextureD3D11>(aWidth, aHeight, aFormat, texture);
+  return MakeUnique<ExternalTextureD3D11>(aWidth, aHeight, aFormat, aUsage,
+                                          texture);
 }
 
 ExternalTextureD3D11::ExternalTextureD3D11(
     const uint32_t aWidth, const uint32_t aHeight,
     const struct ffi::WGPUTextureFormat aFormat,
-    RefPtr<ID3D11Texture2D> aTexture)
-    : ExternalTexture(aWidth, aHeight, aFormat), mTexture(aTexture) {
+    const ffi::WGPUTextureUsages aUsage, RefPtr<ID3D11Texture2D> aTexture)
+    : ExternalTexture(aWidth, aHeight, aFormat, aUsage), mTexture(aTexture) {
   MOZ_ASSERT(mTexture);
 }
 
