@@ -215,7 +215,7 @@ class Http3Session final : public nsAHttpTransaction, public nsAHttpConnection {
 
   uint64_t MaxDatagramSize(uint64_t aSessionId);
 
-  void SetSendOrder(Http3StreamBase* aStream, int64_t aSendOrder);
+  void SetSendOrder(Http3StreamBase* aStream, Maybe<int64_t> aSendOrder);
 
   void CloseWebTransportConn();
 
