@@ -188,9 +188,6 @@ class CreateOnUiThread : public Runnable {
     auto regOnExit = MakeScopeExit(
         [&stackTop]() { profiler_register_thread("AndroidUI", stackTop); });
 
-    // Bionic does not properly support pthread_attr_getstack for the UI thread
-    // until Lollipop (API 21).
-#  if __ANDROID_API__ >= __ANDROID_API_L__
     pthread_attr_t attrs;
     if (pthread_getattr_np(pthread_self(), &attrs)) {
       return;
@@ -203,8 +200,7 @@ class CreateOnUiThread : public Runnable {
     }
 
     stackTop = static_cast<char*>(stackBase) + stackSize - 1;
-#  endif  // __ANDROID_API__ >= __ANDROID_API_L__
-#endif    // defined(MOZ_GECKO_PROFILER)
+#endif  // defined(MOZ_GECKO_PROFILER)
   }
 };
 

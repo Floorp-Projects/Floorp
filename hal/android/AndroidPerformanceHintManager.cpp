@@ -175,16 +175,6 @@ UniquePtr<hal::PerformanceHintSession> CreatePerformanceHintSession(
     return nullptr;
   }
 
-#if __ANDROID_API__ < __ANDROID_API_L__
-  // pthread_gettid_np() (used below) didn't exist prior to lollipop. Currently
-  // 32-bit builds use an older NDK minimum version than this, meaning we cannot
-  // use this feature. But that's okay since only the very most recent devices
-  // support PerformanceHintManager, and users will likely be running 64 bit
-  // builds on them. This limitation will be removed when we next update the
-  // minimum version in bug 1820295.
-  return nullptr;
-#else
-
   const auto* api = PerformanceHintManagerApi::Get();
 
   nsTArray<pid_t> tids(aThreads.Length());
@@ -199,7 +189,6 @@ UniquePtr<hal::PerformanceHintSession> CreatePerformanceHintSession(
   }
 
   return MakeUnique<AndroidPerformanceHintSession>(session);
-#endif
 }
 
 }  // namespace hal_impl
