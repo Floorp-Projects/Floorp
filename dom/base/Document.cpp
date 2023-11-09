@@ -16219,6 +16219,12 @@ void Document::ReportLCP() {
 
   mozilla::glean::perf::largest_contentful_paint_from_response_start
       .AccumulateRawDuration(lcpTime - responseStart);
+
+  if (profiler_thread_is_being_profiled_for_markers()) {
+    MarkerInnerWindowId innerWindowID =
+        MarkerInnerWindowIdFromDocShell(GetDocShell());
+    GetNavigationTiming()->MaybeAddLCPProfilerMarker(innerWindowID);
+  }
 }
 
 void Document::SendPageUseCounters() {
