@@ -6,10 +6,6 @@ const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   TranslationsDocument:
     "chrome://global/content/translations/translations-document.sys.mjs",
-  // The fastText languageIdEngine
-  LanguageIdEngine:
-    "chrome://global/content/translations/language-id-engine.sys.mjs",
-  // The CLD2 language detector
   LanguageDetector:
     "resource://gre/modules/translation/LanguageDetector.sys.mjs",
 });
@@ -93,14 +89,5 @@ export class TranslationsChild extends JSWindowActorChild {
       default:
         throw new Error("Unknown message.", name);
     }
-  }
-
-  getOrCreateLanguageIdEngine() {
-    return lazy.LanguageIdEngine.getOrCreate(() => {
-      if (!this.manager || !this.manager.isCurrentGlobal) {
-        throw new Error("The page was already hidden.");
-      }
-      return this.sendQuery("Translations:GetLanguageIdEnginePayload");
-    });
   }
 }
