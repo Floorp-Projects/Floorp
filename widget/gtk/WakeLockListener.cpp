@@ -71,8 +71,8 @@ enum WakeLockType {
   Unsupported = 6,
 };
 
-bool IsDBusWakeLock(int aWakeLockType) {
 #if defined(MOZ_ENABLE_DBUS)
+bool IsDBusWakeLock(int aWakeLockType) {
   switch (aWakeLockType) {
     case FreeDesktopScreensaver:
     case FreeDesktopPower:
@@ -81,10 +81,8 @@ bool IsDBusWakeLock(int aWakeLockType) {
     default:
       return false;
   }
-#else
-  return false;
-#endif
 }
+#endif
 
 #ifdef MOZ_LOGGING
 const char* WakeLockTypeNames[7] = {
@@ -696,6 +694,7 @@ bool WakeLockTopic::SwitchToNextWakeLockType() {
   });
 #endif
 
+#if defined(MOZ_ENABLE_DBUS)
   if (IsDBusWakeLock(sWakeLockType)) {
     // We're switching out of DBus wakelock - clear our recent DBus states.
     mWaitingForDBusInhibit = false;
@@ -703,6 +702,7 @@ bool WakeLockTopic::SwitchToNextWakeLockType() {
     mInhibitRequestID = 0;
     mInhibited = false;
   }
+#endif
 
   while (sWakeLockType != Unsupported) {
     sWakeLockType++;
