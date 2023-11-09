@@ -1145,42 +1145,54 @@ class FlowGraphSummary {
  public:
   class Entry {
    public:
-    static Entry createWithSingleEdge(uint32_t lineno, uint32_t column) {
+    static constexpr uint32_t Line_HasNoEdge = UINT32_MAX;
+    static constexpr uint32_t Column_HasMultipleEdge = UINT32_MAX;
+
+    // NOTE: column can be Column_HasMultipleEdge.
+    static Entry createWithSingleEdgeOrMultipleEdge(uint32_t lineno,
+                                                    uint32_t column) {
       return Entry(lineno, column);
     }
 
     static Entry createWithMultipleEdgesFromSingleLine(uint32_t lineno) {
-      return Entry(lineno, UINT32_MAX);
+      return Entry(lineno, Column_HasMultipleEdge);
     }
 
     static Entry createWithMultipleEdgesFromMultipleLines() {
-      return Entry(UINT32_MAX, UINT32_MAX);
+      return Entry(Line_HasNoEdge, Column_HasMultipleEdge);
     }
 
-    Entry() : lineno_(UINT32_MAX), column_(0) {}
+    Entry() : lineno_(Line_HasNoEdge), column_(1) {}
 
     bool hasNoEdges() const {
-      return lineno_ == UINT32_MAX && column_ != UINT32_MAX;
+      return lineno_ == Line_HasNoEdge && column_ != Column_HasMultipleEdge;
     }
 
     bool hasSingleEdge() const {
-      return lineno_ != UINT32_MAX && column_ != UINT32_MAX;
+      return lineno_ != Line_HasNoEdge && column_ != Column_HasMultipleEdge;
     }
 
     uint32_t lineno() const { return lineno_; }
 
-    uint32_t column() const { return column_; }
+    // Returns 1-origin column number or the sentinel value
+    // Column_HasMultipleEdge.
+    uint32_t columnOrSentinel() const { return column_; }
+
+    JS::LimitedColumnNumberOneOrigin column() const {
+      MOZ_ASSERT(column_ != Column_HasMultipleEdge);
+      return JS::LimitedColumnNumberOneOrigin(column_);
+    }
 
    private:
     Entry(uint32_t lineno, uint32_t column)
         : lineno_(lineno), column_(column) {}
 
     // Line number (1-origin).
-    // UINT32_MAX for no edge.
+    // Line_HasNoEdge for no edge.
     uint32_t lineno_;
 
-    // Column number in UTF-16 code units (0-origin).
-    // UINT32_MAX for multiple edge.
+    // Column number in UTF-16 code units (1-origin).
+    // Column_HasMultipleEdge for multiple edge.
     uint32_t column_;
   };
 
@@ -1195,8 +1207,12 @@ class FlowGraphSummary {
     unsigned mainOffset = script->pcToOffset(script->main());
     entries_[mainOffset] = Entry::createWithMultipleEdgesFromMultipleLines();
 
+    // The following code uses uint32_t for column numbers.
+    // The value is either 1-origin column number,
+    // or Entry::Column_HasMultipleEdge.
+
     uint32_t prevLineno = script->lineno();
-    uint32_t prevColumn = 0;
+    uint32_t prevColumn = 1;
     JSOp prevOp = JSOp::Nop;
     for (BytecodeRangeWithPosition r(cx, script); !r.empty(); r.popFront()) {
       uint32_t lineno = prevLineno;
@@ -1214,12 +1230,12 @@ class FlowGraphSummary {
       // where this assumption holds.
       if (BytecodeIsJumpTarget(op) && !entries_[r.frontOffset()].hasNoEdges()) {
         lineno = entries_[r.frontOffset()].lineno();
-        column = entries_[r.frontOffset()].column();
+        column = entries_[r.frontOffset()].columnOrSentinel();
       }
 
       if (r.frontIsEntryPoint()) {
         lineno = r.frontLineNumber();
-        column = r.frontColumnNumber().zeroOriginValue();
+        column = r.frontColumnNumber().oneOriginValue();
       }
 
       if (IsJumpOpcode(op)) {
@@ -1268,15 +1284,17 @@ class FlowGraphSummary {
   }
 
  private:
+  // sourceColumn is either 1-origin column number,
+  // or Entry::Column_HasMultipleEdge.
   void addEdge(uint32_t sourceLineno, uint32_t sourceColumn,
                size_t targetOffset) {
     if (entries_[targetOffset].hasNoEdges()) {
       entries_[targetOffset] =
-          Entry::createWithSingleEdge(sourceLineno, sourceColumn);
+          Entry::createWithSingleEdgeOrMultipleEdge(sourceLineno, sourceColumn);
     } else if (entries_[targetOffset].lineno() != sourceLineno) {
       entries_[targetOffset] =
           Entry::createWithMultipleEdgesFromMultipleLines();
-    } else if (entries_[targetOffset].column() != sourceColumn) {
+    } else if (entries_[targetOffset].columnOrSentinel() != sourceColumn) {
       entries_[targetOffset] =
           Entry::createWithMultipleEdgesFromSingleLine(sourceLineno);
     }
@@ -1345,9 +1363,7 @@ class DebuggerScript::GetOffsetLocationMatcher {
     } else {
       MOZ_ASSERT(flowData[r.frontOffset()].hasSingleEdge());
       lineno = flowData[r.frontOffset()].lineno();
-      column =
-          JS::LimitedColumnNumberOneOrigin(JS::LimitedColumnNumberZeroOrigin(
-              flowData[r.frontOffset()].column()));
+      column = flowData[r.frontOffset()].column();
     }
 
     RootedValue value(cx_, NumberValue(lineno));
@@ -1363,8 +1379,8 @@ class DebuggerScript::GetOffsetLocationMatcher {
     // The same entry point test that is used by getAllColumnOffsets.
     isEntryPoint = (isEntryPoint && !flowData[offset].hasNoEdges() &&
                     (flowData[offset].lineno() != r.frontLineNumber() ||
-                     flowData[offset].column() !=
-                         r.frontColumnNumber().zeroOriginValue()));
+                     flowData[offset].columnOrSentinel() !=
+                         r.frontColumnNumber().oneOriginValue()));
     value.setBoolean(isEntryPoint);
     if (!DefineDataProperty(cx_, result_, cx_->names().isEntryPoint, value)) {
       return false;
@@ -1868,7 +1884,7 @@ class DebuggerScript::GetAllColumnOffsetsMatcher {
       // the current position.
       if (r.frontIsEntryPoint() && !flowData[offset].hasNoEdges() &&
           (flowData[offset].lineno() != lineno ||
-           flowData[offset].column() != column.zeroOriginValue())) {
+           flowData[offset].columnOrSentinel() != column.oneOriginValue())) {
         if (!appendColumnOffsetEntry(lineno, column, offset)) {
           return false;
         }
