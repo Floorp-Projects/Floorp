@@ -909,6 +909,50 @@ class WebExtensionSupportTest {
     }
 
     @Test
+    fun `reacts to WebExtensionDelegate onReady by updating the extension details stored in the installedExtensions map`() {
+        val store = spy(BrowserStore())
+        val ext: WebExtension = mock()
+        whenever(ext.id).thenReturn("test")
+        whenever(ext.isEnabled()).thenReturn(true)
+        val extMeta: Metadata = mock()
+        whenever(ext.getMetadata()).thenReturn(extMeta)
+        val installedList = mutableListOf(ext)
+
+        val engine: Engine = mock()
+        val callbackCaptor = argumentCaptor<((List<WebExtension>) -> Unit)>()
+        whenever(engine.listInstalledWebExtensions(callbackCaptor.capture(), any())).thenAnswer {
+            callbackCaptor.value.invoke(installedList)
+        }
+
+        // Initialize WebExtensionSupport and expect the extension metadata
+        // to be the one coming from the first mock WebExtension instance.
+        WebExtensionSupport.initialize(engine, store)
+        assertEquals(1, WebExtensionSupport.installedExtensions.size)
+        assertEquals(ext, WebExtensionSupport.installedExtensions[ext.id])
+        assertEquals(extMeta, WebExtensionSupport.installedExtensions[ext.id]?.getMetadata())
+
+        val delegateCaptor = argumentCaptor<WebExtensionDelegate>()
+        verify(engine).registerWebExtensionDelegate(delegateCaptor.capture())
+
+        // Mock a call to the WebExtensionDelegate.onReady delegate and the
+        // extension and its metadata instances stored in the installExtensions
+        // map to have been updated as a side-effect of that.
+        val extOnceReady: WebExtension = mock()
+        whenever(extOnceReady.id).thenReturn("test")
+        whenever(extOnceReady.isEnabled()).thenReturn(true)
+        val extOnceReadyMeta: Metadata = mock()
+        whenever(extOnceReady.getMetadata()).thenReturn(extOnceReadyMeta)
+
+        delegateCaptor.value.onReady(extOnceReady)
+
+        assertEquals(1, WebExtensionSupport.installedExtensions.size)
+        assertEquals(extOnceReady, WebExtensionSupport.installedExtensions[ext.id])
+        assertEquals(extOnceReadyMeta, WebExtensionSupport.installedExtensions[ext.id]?.getMetadata())
+
+        store.waitUntilIdle()
+    }
+
+    @Test
     fun `reacts to extensions process spawning disabled`() {
         val store = BrowserStore()
         val engine: Engine = mock()

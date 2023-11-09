@@ -382,6 +382,10 @@ class GeckoEngine(
                 webExtensionDelegate.onEnabled(GeckoWebExtension(extension, runtime))
             }
 
+            override fun onReady(extension: org.mozilla.geckoview.WebExtension) {
+                webExtensionDelegate.onReady(GeckoWebExtension(extension, runtime))
+            }
+
             override fun onUninstalled(extension: org.mozilla.geckoview.WebExtension) {
                 webExtensionDelegate.onUninstalled(GeckoWebExtension(extension, runtime))
             }

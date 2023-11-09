@@ -42,6 +42,13 @@ interface WebExtensionDelegate {
     fun onDisabled(extension: WebExtension) = Unit
 
     /**
+     * Invoked when a web extension was started successfully.
+     *
+     * @param extension The extension that has completed its startup.
+     */
+    fun onReady(extension: WebExtension) = Unit
+
+    /**
      * Invoked when a web extension in private browsing allowed is set.
      *
      * @param extension the modified [WebExtension] instance.

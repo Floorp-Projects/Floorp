@@ -275,6 +275,10 @@ object WebExtensionSupport {
                     store.dispatch(WebExtensionAction.UpdateWebExtensionEnabledAction(extension.id, false))
                 }
 
+                override fun onReady(extension: WebExtension) {
+                    installedExtensions[extension.id] = extension
+                }
+
                 override fun onAllowedInPrivateBrowsingChanged(extension: WebExtension) {
                     installedExtensions[extension.id] = extension
                     store.dispatch(
