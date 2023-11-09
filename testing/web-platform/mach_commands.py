@@ -204,19 +204,19 @@ class WebPlatformTestsRunnerSetup(MozbuildObject):
             self.virtualenv_manager.virtualenv_root, skip_virtualenv_setup=True
         )
         try:
-            kwargs = run.setup_wptrunner(venv, **kwargs)
+            browser_cls, kwargs = run.setup_wptrunner(venv, **kwargs)
         except run.WptrunError as e:
             print(e, file=sys.stderr)
             sys.exit(1)
 
         # This is kind of a hack; override the metadata paths so we don't use
         # gecko metadata for non-gecko products
-        for key, value in list(iteritems(kwargs["test_paths"])):
-            meta_suffix = key.strip("/")
+        for url_base, test_root in kwargs["test_paths"].items():
+            meta_suffix = url_base.strip("/")
             meta_dir = os.path.join(
                 self._here, "products", kwargs["product"].name, meta_suffix
             )
-            value["metadata_path"] = meta_dir
+            test_root.metadata_path = meta_dir
             if not os.path.exists(meta_dir):
                 os.makedirs(meta_dir)
         return kwargs
