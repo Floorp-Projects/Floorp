@@ -158,6 +158,23 @@ nsCookieBannerService::Observe(nsISupports* aSubject, const char* aTopic,
     return RemoveWebProgressListener(aSubject);
   }
 
+  // Clear the executed data for private session when the last private browsing
+  // session exits.
+  if (nsCRT::strcmp(aTopic, "last-pb-context-exited") == 0) {
+    for (auto iter = mExecutedDataForSites.Iter(); !iter.Done(); iter.Next()) {
+      auto& data = iter.Data();
+      // Clear private flags.
+      data.hasExecutedInTopPrivate = false;
+      data.hasExecutedInFramePrivate = false;
+
+      // Remove the entry if the site hasn't been handled in normal windows.
+      if (!data.hasExecutedInTop && !data.hasExecutedInFrame) {
+        iter.Remove();
+      }
+    }
+    return NS_OK;
+  }
+
   return NS_OK;
 }
 
@@ -208,6 +225,8 @@ nsresult nsCookieBannerService::Init() {
   obsSvc->AddObserver(this, OBSERVER_TOPIC_BC_ATTACHED, false);
   obsSvc->AddObserver(this, OBSERVER_TOPIC_BC_DISCARDED, false);
 
+  obsSvc->AddObserver(this, "last-pb-context-exited", false);
+
   return NS_OK;
 }
 
@@ -234,6 +253,8 @@ nsresult nsCookieBannerService::Shutdown() {
 
   obsSvc->RemoveObserver(this, OBSERVER_TOPIC_BC_ATTACHED);
   obsSvc->RemoveObserver(this, OBSERVER_TOPIC_BC_DISCARDED);
+
+  obsSvc->RemoveObserver(this, "last-pb-context-exited");
 
   return NS_OK;
 }
@@ -899,6 +920,63 @@ nsCookieBannerService::RemoveAllDomainPrefs(const bool aIsPrivate) {
 
   nsresult rv = mDomainPrefService->RemoveAll(aIsPrivate);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCookieBannerService::MarkSiteExecuted(const nsACString& aSite,
+                                        const bool aIsTopLevel,
+                                        const bool aIsPrivate) {
+  NS_ENSURE_TRUE(!aSite.IsEmpty(), NS_ERROR_INVALID_ARG);
+
+  if (!mIsInitialized) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  auto& data = mExecutedDataForSites.LookupOrInsert(aSite);
+
+  if (aIsPrivate) {
+    if (aIsTopLevel) {
+      data.hasExecutedInTopPrivate = true;
+    } else {
+      data.hasExecutedInFramePrivate = true;
+    }
+  } else {
+    if (aIsTopLevel) {
+      data.hasExecutedInTop = true;
+    } else {
+      data.hasExecutedInFrame = true;
+    }
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCookieBannerService::HasExecutedForSite(const nsACString& aSite,
+                                          const bool aIsTopLevel,
+                                          const bool aIsPrivate,
+                                          bool* aHasExecuted) {
+  if (!mIsInitialized) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  auto entry = mExecutedDataForSites.MaybeGet(aSite);
+
+  if (!entry) {
+    return NS_OK;
+  }
+
+  auto& data = entry.ref();
+
+  if (aIsPrivate) {
+    *aHasExecuted = aIsTopLevel ? data.hasExecutedInTopPrivate
+                                : data.hasExecutedInFramePrivate;
+  } else {
+    *aHasExecuted =
+        aIsTopLevel ? data.hasExecutedInTop : data.hasExecutedInFrame;
+  }
 
   return NS_OK;
 }

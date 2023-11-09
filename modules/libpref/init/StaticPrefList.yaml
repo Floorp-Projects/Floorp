@@ -2033,6 +2033,13 @@
   value: 31536000
   mirror: always
 
+# Whether the banner clicking code only get executed once when the site is
+# loaded in the browsing session.
+- name: cookiebanners.bannerClicking.executeOnce
+  type: bool
+  value: true
+  mirror: always
+
 #---------------------------------------------------------------------------
 # Prefs starting with "datareporting."
 #---------------------------------------------------------------------------
