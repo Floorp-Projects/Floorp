@@ -179,17 +179,15 @@ export const ResetPBMPanel = {
     }
 
     // 3. Close all other tabs.
-    triggeringWindow.gBrowser.removeAllTabsBut(
-      newTab,
-      {
-        skipPermitUnload: true,
-        // Instruct the SessionStore to not save closed tab data for these tabs.
-        // We don't want to leak them into the next private browsing session.
-        skipSessionStore: true,
-        animate: false,
-      },
-      true
-    );
+    triggeringWindow.gBrowser.removeAllTabsBut(newTab, {
+      skipPermitUnload: true,
+      // Instruct the SessionStore to not save closed tab data for these tabs.
+      // We don't want to leak them into the next private browsing session.
+      skipSessionStore: true,
+      animate: false,
+      skipWarnAboutClosingTabs: true,
+      skipPinnedOrSelectedTabs: false,
+    });
 
     // In the remaining PBM window: If the sidebar is open close it.
     triggeringWindow.SidebarUI?.hide();

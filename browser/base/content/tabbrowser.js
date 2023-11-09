@@ -3558,29 +3558,42 @@
     },
 
     /**
-     * In a multi-select context, all unpinned and unselected tabs are removed.
-     * Otherwise all unpinned tabs except aTab are removed.
+     * Remove all tabs but aTab. By default, in a multi-select context, all
+     * unpinned and unselected tabs are removed. Otherwise all unpinned tabs
+     * except aTab are removed. This behavior can be changed using the the bool
+     * flags below.
      *
-     * @param   aTab
-     *          The tab we will skip removing
-     * @param   aParams
-     *          An optional set of parameters that will be passed to the
+     * @param   aTab The tab we will skip removing
+     * @param   aParams An optional set of parameters that will be passed to the
      *          removeTabs function.
-     * @param   {boolean} [skipWarnAboutClosingTabs=false]
-     *          Whether to skip the tab close warning prompt.mach
+     * @param   {boolean} [aParams.skipWarnAboutClosingTabs=false] Skip showing
+     *          the tab close warning prompt.
+     * @param   {boolean} [aParams.skipPinnedOrSelectedTabs=true] Skip closing
+     *          tabs that are selected or pinned.
      */
-    removeAllTabsBut(aTab, aParams, skipWarnAboutClosingTabs = false) {
-      let tabsToRemove = [];
-      if (aTab && aTab.multiselected) {
-        tabsToRemove = this.visibleTabs.filter(
-          tab => !tab.multiselected && !tab.pinned
-        );
+    removeAllTabsBut(aTab, aParams = {}) {
+      let {
+        skipWarnAboutClosingTabs = false,
+        skipPinnedOrSelectedTabs = true,
+      } = aParams;
+
+      let filterFn;
+
+      // If enabled also filter by selected or pinned state.
+      if (skipPinnedOrSelectedTabs) {
+        if (aTab?.multiselected) {
+          filterFn = tab => !tab.multiselected && !tab.pinned;
+        } else {
+          filterFn = tab => tab != aTab && !tab.pinned;
+        }
       } else {
-        tabsToRemove = this.visibleTabs.filter(
-          tab => tab != aTab && !tab.pinned
-        );
+        // Exclude just aTab from being removed.
+        filterFn = tab => tab != aTab;
       }
 
+      let tabsToRemove = this.visibleTabs.filter(filterFn);
+
+      // If enabled show the tab close warning.
       if (
         !skipWarnAboutClosingTabs &&
         !this.warnAboutClosingTabs(
