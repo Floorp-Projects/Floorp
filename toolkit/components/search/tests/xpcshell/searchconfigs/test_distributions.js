@@ -397,16 +397,17 @@ function hasEnginesFirst(engines, expectedEngines) {
 
 engineSelector = new SearchEngineSelector();
 
-AddonTestUtils.init(GLOBAL_SCOPE);
-AddonTestUtils.createAppInfo(
-  "xpcshell@tests.mozilla.org",
-  "XPCShell",
-  "42",
-  "42"
-);
-
 add_setup(async function () {
-  await AddonTestUtils.promiseStartupManager();
+  if (!SearchUtils.newSearchConfigEnabled) {
+    AddonTestUtils.init(GLOBAL_SCOPE);
+    AddonTestUtils.createAppInfo(
+      "xpcshell@tests.mozilla.org",
+      "XPCShell",
+      "42",
+      "42"
+    );
+    await AddonTestUtils.promiseStartupManager();
+  }
 
   await maybeSetupConfig();
 });
