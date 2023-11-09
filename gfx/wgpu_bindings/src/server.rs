@@ -509,6 +509,7 @@ extern "C" {
         width: u32,
         height: u32,
         format: wgt::TextureFormat,
+        usage: wgt::TextureUsages,
     ) -> bool;
     #[allow(dead_code)]
     fn wgpu_server_get_external_texture_handle(
@@ -563,6 +564,7 @@ impl Global {
                                 desc.size.width,
                                 desc.size.height,
                                 desc.format,
+                                desc.usage,
                             )
                         };
                         if ret != true {

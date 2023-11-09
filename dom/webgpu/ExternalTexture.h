@@ -24,10 +24,12 @@ class ExternalTexture {
  public:
   static UniquePtr<ExternalTexture> Create(
       const uint32_t aWidth, const uint32_t aHeight,
-      const struct ffi::WGPUTextureFormat aFormat);
+      const struct ffi::WGPUTextureFormat aFormat,
+      const ffi::WGPUTextureUsages aUsage);
 
   ExternalTexture(const uint32_t aWidth, const uint32_t aHeight,
-                  const struct ffi::WGPUTextureFormat aFormat);
+                  const struct ffi::WGPUTextureFormat aFormat,
+                  const ffi::WGPUTextureUsages aUsage);
   virtual ~ExternalTexture();
 
   virtual void* GetExternalTextureHandle() { return nullptr; }
@@ -42,6 +44,7 @@ class ExternalTexture {
   const uint32_t mWidth;
   const uint32_t mHeight;
   const struct ffi::WGPUTextureFormat mFormat;
+  const ffi::WGPUTextureUsages mUsage;
 };
 
 }  // namespace webgpu

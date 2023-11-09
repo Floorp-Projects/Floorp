@@ -135,12 +135,14 @@ class WebGPUParent final : public PWebGPUParent {
                                          ffi::WGPUDeviceId aDeviceId,
                                          ffi::WGPUTextureId aTextureId,
                                          uint32_t aWidth, uint32_t aHeight,
-                                         struct ffi::WGPUTextureFormat aFormat);
+                                         struct ffi::WGPUTextureFormat aFormat,
+                                         ffi::WGPUTextureUsages aUsage);
 
   std::shared_ptr<ExternalTexture> CreateExternalTexture(
       ffi::WGPUDeviceId aDeviceId, ffi::WGPUTextureId aTextureId,
       uint32_t aWidth, uint32_t aHeight,
-      const struct ffi::WGPUTextureFormat aFormat);
+      const struct ffi::WGPUTextureFormat aFormat,
+      ffi::WGPUTextureUsages aUsage);
 
   std::shared_ptr<ExternalTexture> GetExternalTexture(ffi::WGPUTextureId aId);
 
