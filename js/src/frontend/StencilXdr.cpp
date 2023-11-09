@@ -19,7 +19,6 @@
 #include "ds/LifoAlloc.h"                 // LifoAlloc
 #include "frontend/CompilationStencil.h"  // CompilationStencil, ExtensibleCompilationStencil
 #include "frontend/ScriptIndex.h"  // ScriptIndex
-#include "js/ColumnNumber.h"       // JS::ColumnNumberZeroOrigin
 #include "vm/Scope.h"              // SizeOfParserScopeData
 #include "vm/StencilEnums.h"       // js::ImmutableScriptFlagsEnum
 
