@@ -41,6 +41,9 @@ async function runTest({ mode, detectOnly = false, openPageOptions = {} }) {
     });
   };
 
+  // Clear executed records before testing.
+  Services.cookieBanners.removeAllExecutedRecords(false);
+
   await runEventTest({ mode, detectOnly, initFn, triggerFn, testURL });
 
   // Clean up the test tab opened by openPageAndVerify.
