@@ -385,7 +385,7 @@ impl Clone for Error {
 impl Clone for ErrorMessage {
     fn clone(&self) -> Self {
         ErrorMessage {
-            span: self.span.clone(),
+            span: self.span,
             message: self.message.clone(),
         }
     }

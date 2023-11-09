@@ -1149,6 +1149,11 @@ who = "Nicolas Silva <nical@fastmail.com>"
 criteria = "safe-to-deploy"
 delta = "0.6.0@git:b940b1d71ab7083ae80eec697872672dc1f2bd32 -> 0.7.0"
 
+[[audits.d3d12]]
+who = "Nicolas Silva <nical@fastmail.com>"
+criteria = "safe-to-deploy"
+delta = "0.7.0 -> 0.7.0@git:ba3d6898f18c25bb5a2b8ba18790134b97758e83"
+
 [[audits.darling]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
@@ -2322,6 +2327,11 @@ who = "Jim Blandy <jimb@red-bean.com>"
 criteria = "safe-to-deploy"
 delta = "0.14.0 -> 0.14.0@git:34e947de4b3e0b0d6b0e2f40cede926467ea9f1e"
 
+[[audits.naga]]
+who = "Nicolas Silva <nical@fastmail.com>"
+criteria = "safe-to-deploy"
+delta = "0.14.0@git:34e947de4b3e0b0d6b0e2f40cede926467ea9f1e -> 0.14.0@git:ba3d6898f18c25bb5a2b8ba18790134b97758e83"
+
 [[audits.net2]]
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-run"
@@ -2804,6 +2814,11 @@ notes = "I looked through all the sources of the v0.5.0 crate."
 who = "Mike Hommey <mh+mozilla@glandium.org>"
 criteria = "safe-to-deploy"
 delta = "0.5.0 -> 0.5.2"
+
+[[audits.raw-window-handle]]
+who = "Nicolas Silva <nical@fastmail.com>"
+criteria = "safe-to-deploy"
+delta = "0.5.2 -> 0.6.0"
 
 [[audits.rayon]]
 who = "Josh Stone <jistone@redhat.com>"
@@ -4011,6 +4026,11 @@ who = "Jim Blandy <jimb@red-bean.com>"
 criteria = "safe-to-deploy"
 delta = "0.18.0 -> 0.18.0@git:34e947de4b3e0b0d6b0e2f40cede926467ea9f1e"
 
+[[audits.wgpu-core]]
+who = "Nicolas Silva <nical@fastmail.com>"
+criteria = "safe-to-deploy"
+delta = "0.18.0@git:34e947de4b3e0b0d6b0e2f40cede926467ea9f1e -> 0.18.0@git:ba3d6898f18c25bb5a2b8ba18790134b97758e83"
+
 [[audits.wgpu-hal]]
 who = "Dzmitry Malyshau <kvark@fastmail.com>"
 criteria = "safe-to-deploy"
@@ -4059,6 +4079,11 @@ who = "Jim Blandy <jimb@red-bean.com>"
 criteria = "safe-to-deploy"
 delta = "0.18.0 -> 0.18.0@git:34e947de4b3e0b0d6b0e2f40cede926467ea9f1e"
 
+[[audits.wgpu-hal]]
+who = "Nicolas Silva <nical@fastmail.com>"
+criteria = "safe-to-deploy"
+delta = "0.18.0@git:34e947de4b3e0b0d6b0e2f40cede926467ea9f1e -> 0.18.0@git:ba3d6898f18c25bb5a2b8ba18790134b97758e83"
+
 [[audits.wgpu-types]]
 who = "Dzmitry Malyshau <kvark@fastmail.com>"
 criteria = "safe-to-deploy"
@@ -4106,6 +4131,11 @@ delta = "0.17.0 -> 0.18.0"
 who = "Jim Blandy <jimb@red-bean.com>"
 criteria = "safe-to-deploy"
 delta = "0.18.0 -> 0.18.0@git:34e947de4b3e0b0d6b0e2f40cede926467ea9f1e"
+
+[[audits.wgpu-types]]
+who = "Nicolas Silva <nical@fastmail.com>"
+criteria = "safe-to-deploy"
+delta = "0.18.0@git:34e947de4b3e0b0d6b0e2f40cede926467ea9f1e -> 0.18.0@git:ba3d6898f18c25bb5a2b8ba18790134b97758e83"
 
 [[audits.whatsys]]
 who = "Bobby Holley <bobbyholley@gmail.com>"

@@ -12,6 +12,9 @@ pub(crate) struct ThreadBound<T> {
 unsafe impl<T> Sync for ThreadBound<T> {}
 
 // Send bound requires Copy, as otherwise Drop could run in the wrong place.
+//
+// Today Copy and Drop are mutually exclusive so `T: Copy` implies `T: !Drop`.
+// This impl needs to be revisited if that restriction is relaxed in the future.
 unsafe impl<T: Copy> Send for ThreadBound<T> {}
 
 impl<T> ThreadBound<T> {
@@ -40,11 +43,18 @@ impl<T: Debug> Debug for ThreadBound<T> {
     }
 }
 
-impl<T: Clone> Clone for ThreadBound<T> {
+// Copy the bytes of T, even if the currently running thread is the "wrong"
+// thread. This is fine as long as the original thread is not simultaneously
+// mutating this value via interior mutability, which would be a data race.
+//
+// Currently `T: Copy` is sufficient to guarantee that T contains no interior
+// mutability, because _all_ interior mutability in Rust is built on
+// std::cell::UnsafeCell, which has no Copy impl. This impl needs to be
+// revisited if that restriction is relaxed in the future.
+impl<T: Copy> Copy for ThreadBound<T> {}
+
+impl<T: Copy> Clone for ThreadBound<T> {
     fn clone(&self) -> Self {
-        ThreadBound {
-            value: self.value.clone(),
-            thread_id: self.thread_id,
-        }
+        *self
     }
 }

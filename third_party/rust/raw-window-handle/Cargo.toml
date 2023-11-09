@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.64"
 name = "raw-window-handle"
-version = "0.5.2"
+version = "0.6.0"
 authors = ["Osspial <osspial@gmail.com>"]
 description = "Interoperability library for Rust Windowing applications."
 documentation = "https://docs.rs/raw-window-handle"
@@ -32,3 +32,13 @@ rustdoc-args = [
 [features]
 alloc = []
 std = ["alloc"]
+wasm-bindgen-0-2 = [
+    "wasm-bindgen",
+    "std",
+]
+
+[target."cfg(target_family = \"wasm\")".dependencies.wasm-bindgen]
+version = "0.2.87"
+features = ["std"]
+optional = true
+default-features = false

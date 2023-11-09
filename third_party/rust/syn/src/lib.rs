@@ -249,7 +249,7 @@
 //!   dynamic library libproc_macro from rustc toolchain.
 
 // Syn types in rustdoc of other crates get linked to here.
-#![doc(html_root_url = "https://docs.rs/syn/2.0.18")]
+#![doc(html_root_url = "https://docs.rs/syn/2.0.39")]
 #![cfg_attr(doc_cfg, feature(doc_cfg))]
 #![allow(non_camel_case_types)]
 #![allow(
@@ -265,6 +265,7 @@
     clippy::explicit_auto_deref,
     clippy::if_not_else,
     clippy::inherent_to_string,
+    clippy::into_iter_without_iter,
     clippy::items_after_statements,
     clippy::large_enum_variant,
     clippy::let_underscore_untyped, // https://github.com/rust-lang/rust-clippy/issues/10410
@@ -373,6 +374,7 @@ pub use crate::generics::{
 pub use crate::generics::{ImplGenerics, Turbofish, TypeGenerics};
 
 mod ident;
+#[doc(inline)]
 pub use crate::ident::Ident;
 
 #[cfg(feature = "full")]
@@ -388,9 +390,11 @@ pub use crate::item::{
 };
 
 mod lifetime;
+#[doc(inline)]
 pub use crate::lifetime::Lifetime;
 
 mod lit;
+#[doc(inline)]
 pub use crate::lit::{
     Lit, LitBool, LitByte, LitByteStr, LitChar, LitFloat, LitInt, LitStr, StrStyle,
 };
@@ -808,6 +812,8 @@ mod gen {
     #[path = "../gen_helper.rs"]
     mod helper;
 }
+
+#[cfg(any(feature = "fold", feature = "visit", feature = "visit-mut"))]
 pub use crate::gen::*;
 
 // Not public API.
