@@ -596,23 +596,20 @@ dom.isDisabled = function (el) {
     return false;
   }
 
-  // Check form elements
   switch (el.localName) {
     case "option":
     case "optgroup":
-    case "select":
+      if (el.disabled) {
+        return true;
+      }
+      let parent = dom.findClosest(el, "optgroup,select");
+      return dom.isDisabled(parent);
+
     case "button":
     case "input":
+    case "select":
     case "textarea":
-      if (el.disabled) {
-        return el.disabled;
-      }
-
-      // Checking the disabled state of the element based on the parent nodes
-      // can be complex. This can more easily be done by just checking if the
-      // style will match.
-      // Note: This might trigger a flush of layout / styling.
-      return el.matches(":disabled");
+      return el.disabled;
 
     default:
       return false;
