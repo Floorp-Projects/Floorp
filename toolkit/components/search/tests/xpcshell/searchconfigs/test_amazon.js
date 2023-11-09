@@ -290,12 +290,22 @@ add_task(async function test_searchConfig_amazon() {
 });
 
 add_task(async function test_searchConfig_amazon_pre89() {
-  AddonTestUtils.createAppInfo(
-    "xpcshell@tests.mozilla.org",
-    "XPCShell",
-    "88.0",
-    "88.0"
-  );
+  const version = "88.0";
+  if (SearchUtils.newSearchConfigEnabled) {
+    updateAppInfo({
+      name: "XPCShell",
+      ID: "xpcshell@tests.mozilla.org",
+      version,
+      platformVersion: version,
+    });
+  } else {
+    AddonTestUtils.createAppInfo(
+      "xpcshell@tests.mozilla.org",
+      "XPCShell",
+      version,
+      version
+    );
+  }
   // For pre-89, Amazon has a slightly different config.
   let details = test._config.details.find(
     d => d.telemetryId == "amazondotcom-us"

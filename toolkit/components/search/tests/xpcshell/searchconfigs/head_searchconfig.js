@@ -8,7 +8,7 @@ const { XPCOMUtils } = ChromeUtils.importESModule(
 );
 
 ChromeUtils.defineESModuleGetters(this, {
-  AddonManager: "resource://gre/modules/AddonManager.sys.mjs",
+  // Only needed when SearchUtils.newSearchConfigEnabled is false.
   AddonTestUtils: "resource://testing-common/AddonTestUtils.sys.mjs",
   ObjectUtils: "resource://gre/modules/ObjectUtils.sys.mjs",
   Region: "resource://gre/modules/Region.sys.mjs",
@@ -18,6 +18,7 @@ ChromeUtils.defineESModuleGetters(this, {
   SearchTestUtils: "resource://testing-common/SearchTestUtils.sys.mjs",
   SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
   sinon: "resource://testing-common/Sinon.sys.mjs",
+  updateAppInfo: "resource://testing-common/AppInfo.sys.mjs",
 });
 
 XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
@@ -111,13 +112,22 @@ class SearchConfigTest {
    *   The version to simulate for running the tests.
    */
   async setup(version = "42.0") {
-    AddonTestUtils.init(GLOBAL_SCOPE);
-    AddonTestUtils.createAppInfo(
-      "xpcshell@tests.mozilla.org",
-      "XPCShell",
-      version,
-      version
-    );
+    if (SearchUtils.newSearchConfigEnabled) {
+      updateAppInfo({
+        name: "XPCShell",
+        ID: "xpcshell@tests.mozilla.org",
+        version,
+        platformVersion: version,
+      });
+    } else {
+      AddonTestUtils.init(GLOBAL_SCOPE);
+      AddonTestUtils.createAppInfo(
+        "xpcshell@tests.mozilla.org",
+        "XPCShell",
+        version,
+        version
+      );
+    }
 
     await maybeSetupConfig();
 
@@ -135,7 +145,9 @@ class SearchConfigTest {
       true
     );
 
-    await AddonTestUtils.promiseStartupManager();
+    if (!SearchUtils.newSearchConfigEnabled) {
+      await AddonTestUtils.promiseStartupManager();
+    }
     await Services.search.init();
 
     // We must use the engine selector that the search service has created (if
