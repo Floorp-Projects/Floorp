@@ -894,9 +894,10 @@ void HttpChannelChild::ProcessOnStopRequest(
     mEncodedBodySize = aTiming.encodedBodySize();
   }
 
-  RefPtr<RecordStopRequestDelta> timing(new RecordStopRequestDelta);
+  RefPtr<RecordStopRequestDelta> timing;
   TimeStamp start = TimeStamp::Now();
   if (StaticPrefs::network_send_OnDataFinished()) {
+    timing = new RecordStopRequestDelta;
     mEventQ->RunOrEnqueue(new ChannelFunctionEvent(
         [self = UnsafePtr<HttpChannelChild>(this)]() {
           return self->GetODATarget();
@@ -920,7 +921,9 @@ void HttpChannelChild::ProcessOnStopRequest(
         TimeDuration delay = now - start;
         glean::networking::http_content_onstop_delay.AccumulateRawDuration(
             delay);
-        timing->mOnStopRequestTime = now;
+        if (timing) {
+          timing->mOnStopRequestTime = now;
+        }
         self->OnStopRequest(aChannelStatus, aTiming, aResponseTrailers);
         if (!aFromSocketProcess) {
           self->DoOnConsoleReport(std::move(consoleReports));
