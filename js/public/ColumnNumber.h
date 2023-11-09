@@ -379,6 +379,10 @@ struct LimitedColumnNumberOneOrigin
       const ColumnNumberWithOrigin<1, 0>& value) {
     return fromUnlimited(value.oneOriginValue());
   }
+
+  static LimitedColumnNumberOneOrigin fromZeroOrigin(uint32_t value) {
+    return LimitedColumnNumberOneOrigin(value + 1);
+  }
 };
 
 // Column number in 0-origin.
@@ -428,6 +432,10 @@ struct ColumnNumberOneOrigin : public detail::ColumnNumberWithOrigin<1> {
       : Base(other.oneOriginValue()) {}
   explicit ColumnNumberOneOrigin(const LimitedColumnNumberOneOrigin& other)
       : Base(other.oneOriginValue()) {}
+
+  static ColumnNumberOneOrigin fromZeroOrigin(uint32_t value) {
+    return ColumnNumberOneOrigin(value + 1);
+  }
 };
 
 namespace detail {
