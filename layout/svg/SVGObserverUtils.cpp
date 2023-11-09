@@ -1761,7 +1761,8 @@ void SVGObserverUtils::AddRenderingObserver(Element* aElement,
   if (!observers) {
     observers = new SVGRenderingObserverSet();
     aElement->SetProperty(nsGkAtoms::renderingobserverset, observers,
-                          nsINode::DeleteProperty<SVGRenderingObserverSet>);
+                          nsINode::DeleteProperty<SVGRenderingObserverSet>,
+                          /* aTransfer = */ true);
   }
   aElement->SetHasRenderingObservers(true);
   observers->Add(aObserver);
