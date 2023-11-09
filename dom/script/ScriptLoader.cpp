@@ -20,8 +20,7 @@
 #include "jsapi.h"
 #include "jsfriendapi.h"
 #include "js/Array.h"         // JS::GetArrayLength
-#include "js/ColumnNumber.h"  // #include "js/CompilationAndEvaluation.h"
-
+#include "js/ColumnNumber.h"  // JS::ColumnNumberZeroOrigin, JS::ColumnNumberOneOrigin
 #include "js/CompilationAndEvaluation.h"
 #include "js/CompileOptions.h"  // JS::CompileOptions, JS::OwningCompileOptions, JS::DecodeOptions, JS::OwningDecodeOptions, JS::DelazificationOption
 #include "js/ContextOptions.h"  // JS::ContextOptionsRef
@@ -2332,8 +2331,8 @@ nsresult ScriptLoader::FillCompileOptionsForRequest(
   if (aRequest->GetScriptLoadContext()->mIsInline &&
       aRequest->GetScriptLoadContext()->GetParserCreated() ==
           FROM_PARSER_NETWORK) {
-    aOptions->setColumn(JS::ColumnNumberZeroOrigin(
-        aRequest->GetScriptLoadContext()->mColumnNo));
+    aOptions->setColumn(JS::ColumnNumberOneOrigin(JS::ColumnNumberZeroOrigin(
+        aRequest->GetScriptLoadContext()->mColumnNo)));
   }
   aOptions->setIsRunOnce(true);
   aOptions->setNoScriptRval(true);
