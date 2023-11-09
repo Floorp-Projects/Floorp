@@ -19,9 +19,10 @@ import androidx.test.uiautomator.By.text
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import org.hamcrest.CoreMatchers
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
+import org.mozilla.fenix.helpers.MatcherHelper.assertCheckedItemWithResIdExists
+import org.mozilla.fenix.helpers.MatcherHelper.checkedItemWithResId
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestHelper.appName
 import org.mozilla.fenix.helpers.TestHelper.mDevice
@@ -137,7 +138,10 @@ private fun assertOpenLinksInPrivateTabEnabled() =
     openLinksInPrivateTabSwitch().check(matches(isEnabled(true)))
 
 private fun assertOpenLinksInPrivateTabOff() {
-    assertFalse(mDevice.findObject(UiSelector().resourceId("android:id/switch_widget")).isChecked())
+    assertCheckedItemWithResIdExists(
+        checkedItemWithResId("android:id/switch_widget", isChecked = true),
+        exists = false,
+    )
     openLinksInPrivateTabSwitch()
         .check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 }

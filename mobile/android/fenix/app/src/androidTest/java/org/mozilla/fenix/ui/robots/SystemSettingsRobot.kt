@@ -9,6 +9,8 @@ import androidx.test.espresso.intent.matcher.IntentMatchers.hasAction
 import androidx.test.uiautomator.UiSelector
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextExists
+import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdAndDescription
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestHelper
@@ -63,10 +65,7 @@ fun systemSettings(interact: SystemSettingsRobot.() -> Unit): SystemSettingsRobo
 private fun assertSystemNotificationsView() {
     mDevice.findObject(UiSelector().resourceId("com.android.settings:id/list"))
         .waitForExists(waitingTime)
-    assertTrue(
-        mDevice.findObject(UiSelector().textContains("All ${TestHelper.appName} notifications"))
-            .waitForExists(waitingTime),
-    )
+    assertItemContainingTextExists(itemContainingText("All ${TestHelper.appName} notifications"))
 }
 
 private val allSystemSettingsNotificationsToggle =

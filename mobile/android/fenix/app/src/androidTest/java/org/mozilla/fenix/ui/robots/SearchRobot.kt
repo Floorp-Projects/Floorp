@@ -29,7 +29,6 @@ import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiSelector
 import org.hamcrest.CoreMatchers.allOf
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.AppAndSystemHelper.grantSystemPermission
@@ -39,9 +38,12 @@ import org.mozilla.fenix.helpers.Constants.LONG_CLICK_DURATION
 import org.mozilla.fenix.helpers.Constants.RETRY_COUNT
 import org.mozilla.fenix.helpers.Constants.SPEECH_RECOGNITION
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
+import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextExists
+import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithDescriptionExists
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdExists
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithDescription
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
 import org.mozilla.fenix.helpers.SessionLoadedIdlingResource
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
@@ -53,12 +55,7 @@ import org.mozilla.fenix.helpers.TestHelper.waitForObjects
  * Implementation of Robot Pattern for the search fragment.
  */
 class SearchRobot {
-    fun verifySearchView() =
-        assertTrue(
-            mDevice.findObject(
-                UiSelector().resourceId("$packageName:id/search_wrapper"),
-            ).waitForExists(waitingTime),
-        )
+    fun verifySearchView() = assertItemWithResIdExists(itemWithResId("$packageName:id/search_wrapper"))
 
     fun verifySearchToolbar(isDisplayed: Boolean) =
         assertItemWithResIdExists(
@@ -66,25 +63,11 @@ class SearchRobot {
             exists = isDisplayed,
         )
 
-    fun verifyScanButtonVisibility(visible: Boolean = true) {
-        if (visible) {
-            assertTrue(
-                scanButton.waitForExists(waitingTime),
-            )
-        } else {
-            assertTrue(
-                scanButton.waitUntilGone(waitingTime),
-            )
-        }
-    }
+    fun verifyScanButtonVisibility(visible: Boolean = true) =
+        assertItemWithDescriptionExists(scanButton, exists = visible)
 
-    fun verifyVoiceSearchButtonVisibility(enabled: Boolean) {
-        if (enabled) {
-            assertTrue(voiceSearchButton.waitForExists(waitingTime))
-        } else {
-            assertFalse(voiceSearchButton.waitForExists(waitingTimeShort))
-        }
-    }
+    fun verifyVoiceSearchButtonVisibility(enabled: Boolean) =
+        assertItemWithDescriptionExists(voiceSearchButton, exists = enabled)
 
     // Device or AVD requires a Google Services Android OS installation
     fun startVoiceSearch() {
@@ -154,33 +137,14 @@ class SearchRobot {
         }
     }
 
-    fun verifyAllowSuggestionsInPrivateModeDialog() {
-        assertTrue(
-            mDevice.findObject(
-                UiSelector().text(getStringResource(R.string.search_suggestions_onboarding_title)),
-            ).waitForExists(waitingTime),
+    fun verifyAllowSuggestionsInPrivateModeDialog() =
+        assertItemContainingTextExists(
+            itemWithText(getStringResource(R.string.search_suggestions_onboarding_title)),
+            itemWithText(getStringResource(R.string.search_suggestions_onboarding_text)),
+            itemWithText("Learn more"),
+            itemWithText(getStringResource(R.string.search_suggestions_onboarding_allow_button)),
+            itemWithText(getStringResource(R.string.search_suggestions_onboarding_do_not_allow_button)),
         )
-        assertTrue(
-            mDevice.findObject(
-                UiSelector().text(getStringResource(R.string.search_suggestions_onboarding_text)),
-            ).exists(),
-        )
-        assertTrue(
-            mDevice.findObject(
-                UiSelector().text("Learn more"),
-            ).exists(),
-        )
-        assertTrue(
-            mDevice.findObject(
-                UiSelector().text(getStringResource(R.string.search_suggestions_onboarding_allow_button)),
-            ).exists(),
-        )
-        assertTrue(
-            mDevice.findObject(
-                UiSelector().text(getStringResource(R.string.search_suggestions_onboarding_do_not_allow_button)),
-            ).exists(),
-        )
-    }
 
     fun denySuggestionsInPrivateMode() {
         mDevice.findObject(
@@ -194,17 +158,14 @@ class SearchRobot {
         ).click()
     }
 
-    fun verifySearchSelectorButton() {
-        assertTrue(searchSelectorButton.waitForExists(waitingTime))
-    }
+    fun verifySearchSelectorButton() = assertItemWithResIdExists(searchSelectorButton)
 
     fun clickSearchSelectorButton() {
         searchSelectorButton.waitForExists(waitingTime)
         searchSelectorButton.click()
     }
 
-    fun verifySearchEngineIcon(name: String) =
-        assertTrue(itemWithDescription(name).waitForExists(waitingTime))
+    fun verifySearchEngineIcon(name: String) = assertItemWithDescriptionExists(itemWithDescription(name))
 
     fun verifySearchBarPlaceholder(text: String) {
         browserToolbarEditView().waitForExists(waitingTime)
@@ -216,9 +177,8 @@ class SearchRobot {
     fun verifySearchShortcutListContains(vararg searchEngineName: String, shouldExist: Boolean = true) {
         searchEngineName.forEach {
             if (shouldExist) {
-                assertTrue(
-                    searchShortcutList.getChild(UiSelector().text(it))
-                        .waitForExists(waitingTimeShort),
+                assertItemWithResIdExists(
+                    searchShortcutList.getChild(UiSelector().text(it)),
                 )
             } else {
                 assertTrue(
@@ -363,11 +323,7 @@ class SearchRobot {
             mDevice.pressEnter()
 
             runWithIdleRes(sessionLoadedIdlingResource) {
-                assertTrue(
-                    mDevice.findObject(
-                        UiSelector().resourceId("$packageName:id/browserLayout"),
-                    ).waitForExists(waitingTime),
-                )
+                assertItemWithResIdExists(itemWithResId("$packageName:id/browserLayout"))
             }
 
             BrowserRobot().interact()

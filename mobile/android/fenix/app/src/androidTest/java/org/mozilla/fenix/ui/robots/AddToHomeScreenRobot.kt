@@ -13,8 +13,8 @@ import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
-import org.junit.Assert.assertTrue
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextExists
+import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdAndText
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
@@ -60,12 +60,8 @@ class AddToHomeScreenRobot {
         }
     }
 
-    fun verifyShortcutAdded(shortcutTitle: String) {
-        assertTrue(
-            mDevice.findObject(UiSelector().text(shortcutTitle))
-                .waitForExists(waitingTime),
-        )
-    }
+    fun verifyShortcutAdded(shortcutTitle: String) =
+        assertItemContainingTextExists(itemContainingText(shortcutTitle))
 
     class Transition {
         fun openHomeScreenShortcut(title: String, interact: BrowserRobot.() -> Unit): BrowserRobot.Transition {

@@ -36,6 +36,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.Constants.RETRY_COUNT
 import org.mozilla.fenix.helpers.Constants.TAG
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
+import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdExists
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeLong
 import org.mozilla.fenix.helpers.TestHelper.appName
@@ -51,17 +52,8 @@ import org.mozilla.fenix.helpers.ext.waitNotNull
  */
 
 class SettingsSubMenuAddonsManagerRobot {
-    fun verifyAddonsListIsDisplayed(shouldBeDisplayed: Boolean) {
-        if (shouldBeDisplayed) {
-            assertTrue(
-                addonsList().waitForExists(waitingTime),
-            )
-        } else {
-            assertTrue(
-                addonsList().waitUntilGone(waitingTime),
-            )
-        }
-    }
+    fun verifyAddonsListIsDisplayed(shouldBeDisplayed: Boolean) =
+        assertItemWithResIdExists(addonsList(), exists = shouldBeDisplayed)
 
     fun verifyAddonPermissionPrompt(addonName: String) {
         mDevice.waitNotNull(Until.findObject(By.text("Add $addonName?")), waitingTime)

@@ -103,12 +103,12 @@ class SettingsHomepageTest {
         navigationToolbar {
         }.enterURLAndEnterToBrowser(genericURL.url) {
         }.goToHomescreen {
-            verifyRecentlyVisitedSectionIsDisplayed()
+            verifyRecentlyVisitedSectionIsDisplayed(true)
         }.openThreeDotMenu {
         }.openCustomizeHome {
             clickRecentlyVisited()
         }.goBackToHomeScreen {
-            verifyRecentlyVisitedSectionIsNotDisplayed()
+            verifyRecentlyVisitedSectionIsDisplayed(false)
         }
     }
 
@@ -141,12 +141,12 @@ class SettingsHomepageTest {
         }.openThreeDotMenu {
         }.bookmarkPage {
         }.goToHomescreen {
-            verifyRecentBookmarksSectionIsDisplayed()
+            verifyRecentBookmarksSectionIsDisplayed(exists = true)
         }.openThreeDotMenu {
         }.openCustomizeHome {
             clickRecentBookmarksButton()
         }.goBackToHomeScreen {
-            verifyRecentBookmarksSectionIsNotDisplayed()
+            verifyRecentBookmarksSectionIsDisplayed(exists = false)
         }
     }
 

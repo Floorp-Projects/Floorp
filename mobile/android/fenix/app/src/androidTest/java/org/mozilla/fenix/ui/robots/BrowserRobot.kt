@@ -46,6 +46,7 @@ import org.mozilla.fenix.helpers.Constants.TAG
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
 import org.mozilla.fenix.helpers.HomeActivityComposeTestRule
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextExists
+import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithDescriptionExists
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdAndTextExists
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdExists
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
@@ -84,12 +85,11 @@ class BrowserRobot {
         sessionLoadedIdlingResource = SessionLoadedIdlingResource()
 
         runWithIdleRes(sessionLoadedIdlingResource) {
-            assertTrue(
-                mDevice.findObject(
-                    UiSelector()
-                        .resourceId("$packageName:id/mozac_browser_toolbar_url_view")
-                        .textContains(url.replace("http://", "")),
-                ).waitForExists(waitingTime),
+            assertItemWithResIdAndTextExists(
+                itemWithResIdContainingText(
+                    "$packageName:id/mozac_browser_toolbar_url_view",
+                    url.replace("http://", ""),
+                ),
             )
         }
     }
@@ -119,10 +119,7 @@ class BrowserRobot {
         )
 
         runWithIdleRes(sessionLoadedIdlingResource) {
-            assertTrue(
-                "Page didn't load or doesn't contain the expected text",
-                mDevice.findObject(UiSelector().textContains(expectedText)).waitForExists(waitingTime),
-            )
+            assertItemContainingTextExists(itemContainingText(expectedText))
         }
     }
 
@@ -154,7 +151,7 @@ class BrowserRobot {
 
         for (i in 1..RETRY_COUNT) {
             try {
-                assertTrue(cacheSizeInfo.waitForExists(waitingTime))
+                assertItemContainingTextExists(cacheSizeInfo)
                 break
             } catch (e: AssertionError) {
                 browserScreen {
@@ -164,25 +161,17 @@ class BrowserRobot {
         }
     }
 
-    fun verifyTabCounter(expectedText: String) {
-        val counter =
-            mDevice.findObject(
-                UiSelector()
-                    .resourceId("$packageName:id/counter_text")
-                    .text(expectedText),
-            )
-        assertTrue(counter.waitForExists(waitingTime))
-    }
+    fun verifyTabCounter(expectedText: String) =
+        assertItemWithResIdAndTextExists(
+            itemWithResIdContainingText(
+                "$packageName:id/counter_text",
+                expectedText,
+            ),
+        )
 
     fun verifySnackBarText(expectedText: String) {
         mDevice.waitForObjects(mDevice.findObject(UiSelector().textContains(expectedText)))
-
-        assertTrue(
-            mDevice.findObject(
-                UiSelector()
-                    .textContains(expectedText),
-            ).waitForExists(waitingTime),
-        )
+        assertItemContainingTextExists(itemContainingText(expectedText))
     }
 
     fun verifyContextMenuForLocalHostLinks(containsURL: Uri) {
@@ -269,17 +258,13 @@ class BrowserRobot {
         )
     }
 
-    fun verifyNotificationDotOnMainMenu() {
-        assertTrue(
-            mDevice.findObject(UiSelector().resourceId("$packageName:id/notification_dot"))
-                .waitForExists(waitingTime),
-        )
-    }
+    fun verifyNotificationDotOnMainMenu() =
+        assertItemWithResIdExists(itemWithResId("$packageName:id/notification_dot"))
 
     fun verifyHomeScreenButton() =
         homeScreenButton().check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
 
-    fun verifySearchBar() = assertTrue(searchBar().waitForExists(waitingTime))
+    fun verifySearchBar() = assertItemWithResIdExists(searchBar())
 
     fun dismissContentContextMenu() {
         mDevice.pressBack()
@@ -304,17 +289,11 @@ class BrowserRobot {
 
     fun longClickPDFImage() = longClickPageObject(itemWithResId("pdfjs_internal_id_13R"))
 
-    fun verifyPDFReaderToolbarItems() {
-        assertTrue(
-            itemWithResIdAndText("download", "Download")
-                .waitForExists(waitingTime),
+    fun verifyPDFReaderToolbarItems() =
+        assertItemWithResIdAndTextExists(
+            itemWithResIdContainingText("download", "Download"),
+            itemWithResIdContainingText("openInApp", "Open in app"),
         )
-        assertTrue(
-            itemWithResIdAndText("openInApp", "Open in app")
-                .waitForExists(waitingTime),
-        )
-    }
-
     fun clickSubmitLoginButton() {
         clickPageObject(itemWithResId("submit"))
         itemWithResId("submit").waitUntilGone(waitingTime)
@@ -411,7 +390,7 @@ class BrowserRobot {
     fun clickSelectAddressButton() {
         for (i in 1..RETRY_COUNT) {
             try {
-                assertTrue(selectAddressButton().waitForExists(waitingTime))
+                assertItemWithResIdExists(selectAddressButton())
                 selectAddressButton().clickAndWaitForNewWindow(waitingTime)
 
                 break
@@ -465,7 +444,12 @@ class BrowserRobot {
 
     fun verifyCreditCardSuggestion(vararg creditCardNumbers: String) {
         for (creditCardNumber in creditCardNumbers) {
-            assertTrue(creditCardSuggestion(creditCardNumber).waitForExists(waitingTime))
+            assertItemWithResIdAndTextExists(
+                itemWithResIdContainingText(
+                    "$packageName:id/credit_card_number",
+                    creditCardNumber,
+                ),
+            )
         }
     }
 
@@ -474,10 +458,7 @@ class BrowserRobot {
             UiSelector()
                 .resourceId("$packageName:id/mozac_feature_login_multiselect_expand"),
         ).waitForExists(waitingTime)
-
-        assertTrue(
-            mDevice.findObject(UiSelector().textContains(userName)).waitForExists(waitingTime),
-        )
+        assertItemContainingTextExists(itemContainingText(userName))
     }
 
     fun verifyPrefilledLoginCredentials(userName: String, password: String, credentialsArePrefilled: Boolean) {
@@ -519,26 +500,17 @@ class BrowserRobot {
 
     fun verifyAutofilledAddress(streetAddress: String) {
         mDevice.waitForObjects(itemWithResIdAndText("streetAddress", streetAddress))
-        assertTrue(
-            itemWithResIdAndText("streetAddress", streetAddress)
-                .waitForExists(waitingTime),
-        )
+        assertItemWithResIdAndTextExists(itemWithResIdAndText("streetAddress", streetAddress))
     }
 
     fun verifyManuallyFilledAddress(apartment: String) {
         mDevice.waitForObjects(itemWithResIdAndText("apartment", apartment))
-        assertTrue(
-            itemWithResIdAndText("apartment", apartment)
-                .waitForExists(waitingTime),
-        )
+        assertItemWithResIdAndTextExists(itemWithResIdAndText("apartment", apartment))
     }
 
     fun verifyAutofilledCreditCard(creditCardNumber: String) {
         mDevice.waitForObjects(itemWithResIdAndText("cardNumber", creditCardNumber))
-        assertTrue(
-            itemWithResIdAndText("cardNumber", creditCardNumber)
-                .waitForExists(waitingTime),
-        )
+        assertItemWithResIdAndTextExists(itemWithResIdAndText("cardNumber", creditCardNumber))
     }
 
     fun verifyPrefilledPWALoginCredentials(userName: String, shortcutTitle: String) {
@@ -547,7 +519,7 @@ class BrowserRobot {
         var currentTries = 0
         while (currentTries++ < 3) {
             try {
-                assertTrue(itemWithResId("submit").waitForExists(waitingTime))
+                assertItemWithResIdExists(itemWithResId("submit"))
                 itemWithResId("submit").click()
                 assertTrue(itemWithResId("username").text.equals(userName))
                 break
@@ -572,11 +544,7 @@ class BrowserRobot {
     fun verifyTrackingProtectionWebContent(state: String) {
         for (i in 1..RETRY_COUNT) {
             try {
-                assertTrue(
-                    mDevice.findObject(
-                        UiSelector().textContains(state),
-                    ).waitForExists(waitingTimeLong),
-                )
+                assertItemContainingTextExists(itemContainingText(state))
 
                 break
             } catch (e: AssertionError) {
@@ -637,12 +605,7 @@ class BrowserRobot {
 
         for (i in 1..RETRY_COUNT) {
             try {
-                assertTrue(
-                    mDevice.findObject(
-                        UiSelector()
-                            .text("Selected date is: $currentDate"),
-                    ).waitForExists(waitingTime),
-                )
+                assertItemContainingTextExists(itemContainingText("Selected date is: $currentDate"))
 
                 break
             } catch (e: AssertionError) {
@@ -655,34 +618,21 @@ class BrowserRobot {
             }
         }
 
-        assertTrue(
-            mDevice.findObject(
-                UiSelector()
-                    .text("Selected date is: $currentDate"),
-            ).waitForExists(waitingTime),
-        )
+        assertItemContainingTextExists(itemContainingText("Selected date is: $currentDate"))
     }
 
     fun verifyNoDateIsSelected() {
         val currentDate = LocalDate.now()
-
-        assertFalse(
-            mDevice.findObject(
-                UiSelector()
-                    .text("Selected date is: $currentDate"),
-            ).waitForExists(waitingTimeShort),
+        assertItemContainingTextExists(
+            itemContainingText("Selected date is: $currentDate"),
+            exists = false,
         )
     }
 
     fun verifySelectedTime(hour: Int, minute: Int) {
         for (i in 1..RETRY_COUNT) {
             try {
-                assertTrue(
-                    mDevice.findObject(
-                        UiSelector()
-                            .text("Selected time is: $hour:$minute"),
-                    ).waitForExists(waitingTime),
-                )
+                assertItemContainingTextExists(itemContainingText("Selected time is: $hour:$minute"))
 
                 break
             } catch (e: AssertionError) {
@@ -696,24 +646,13 @@ class BrowserRobot {
                 clickPageObject(itemWithResId("submitTime"))
             }
         }
-
-        assertTrue(
-            mDevice.findObject(
-                UiSelector()
-                    .text("Selected time is: $hour:$minute"),
-            ).waitForExists(waitingTime),
-        )
+        assertItemContainingTextExists(itemContainingText("Selected time is: $hour:$minute"))
     }
 
     fun verifySelectedColor(hexValue: String) {
         for (i in 1..RETRY_COUNT) {
             try {
-                assertTrue(
-                    mDevice.findObject(
-                        UiSelector()
-                            .text("Selected color is: $hexValue"),
-                    ).waitForExists(waitingTime),
-                )
+                assertItemContainingTextExists(itemContainingText("Selected color is: $hexValue"))
 
                 break
             } catch (e: AssertionError) {
@@ -726,12 +665,7 @@ class BrowserRobot {
             }
         }
 
-        assertTrue(
-            mDevice.findObject(
-                UiSelector()
-                    .text("Selected color is: $hexValue"),
-            ).waitForExists(waitingTime),
-        )
+        assertItemContainingTextExists(itemContainingText("Selected color is: $hexValue"))
     }
 
     fun verifySelectedDropDownOption(optionName: String) {
@@ -743,12 +677,7 @@ class BrowserRobot {
                         .resourceId("submitOption"),
                 ).waitForExists(waitingTime)
 
-                assertTrue(
-                    mDevice.findObject(
-                        UiSelector()
-                            .text("Selected option is: $optionName"),
-                    ).waitForExists(waitingTime),
-                )
+                assertItemContainingTextExists(itemContainingText("Selected option is: $optionName"))
 
                 break
             } catch (e: AssertionError) {
@@ -760,31 +689,14 @@ class BrowserRobot {
             }
         }
 
-        assertTrue(
-            mDevice.findObject(
-                UiSelector()
-                    .text("Selected option is: $optionName"),
-            ).waitForExists(waitingTime),
-        )
+        assertItemContainingTextExists(itemContainingText("Selected option is: $optionName"))
     }
 
-    fun verifyNoTimeIsSelected(hour: Int, minute: Int) {
-        assertFalse(
-            mDevice.findObject(
-                UiSelector()
-                    .text("Selected date is: $hour:$minute"),
-            ).waitForExists(waitingTimeShort),
-        )
-    }
+    fun verifyNoTimeIsSelected(hour: Int, minute: Int) =
+        assertItemContainingTextExists(itemContainingText("Selected date is: $hour:$minute"), exists = false)
 
-    fun verifyColorIsNotSelected(hexValue: String) {
-        assertFalse(
-            mDevice.findObject(
-                UiSelector()
-                    .text("Selected date is: $hexValue"),
-            ).waitForExists(waitingTimeShort),
-        )
-    }
+    fun verifyColorIsNotSelected(hexValue: String) =
+        assertItemContainingTextExists(itemContainingText("Selected date is: $hexValue"), exists = false)
 
     fun verifyCookieBannerExists(exists: Boolean) {
         for (i in 1..RETRY_COUNT) {
@@ -907,16 +819,7 @@ class BrowserRobot {
         }
     }
 
-    fun verifySurveyButton() {
-        val button = mDevice.findObject(
-            UiSelector().text(
-                getStringResource(
-                    R.string.preferences_take_survey,
-                ),
-            ),
-        )
-        assertTrue(button.waitForExists(waitingTime))
-    }
+    fun verifySurveyButton() = assertItemContainingTextExists(itemContainingText(getStringResource(R.string.preferences_take_survey)))
 
     fun verifySurveyButtonDoesNotExist() {
         val button = mDevice.findObject(
@@ -929,25 +832,13 @@ class BrowserRobot {
         assertTrue(button.waitUntilGone(waitingTime))
     }
 
-    fun verifySurveyNoThanksButton() {
-        val button = mDevice.findObject(
-            UiSelector().text(
-                getStringResource(
-                    R.string.preferences_not_take_survey,
-                ),
-            ),
+    fun verifySurveyNoThanksButton() =
+        assertItemContainingTextExists(
+            itemContainingText(getStringResource(R.string.preferences_not_take_survey)),
         )
-        assertTrue(button.waitForExists(waitingTime))
-    }
 
-    fun verifyHomeScreenSurveyCloseButton() {
-        val button = mDevice.findObject(
-            UiSelector().descriptionContains(
-                "Close",
-            ),
-        )
-        assertTrue(button.waitForExists(waitingTime))
-    }
+    fun verifyHomeScreenSurveyCloseButton() =
+        assertItemWithDescriptionExists(itemWithDescription("Close"))
 
     fun clickOpenLinksInAppsDismissCFRButton() =
         itemWithResIdContainingText(
@@ -1076,10 +967,7 @@ class BrowserRobot {
                     )
 
                     tabsCounter().click()
-                    assertTrue(
-                        itemWithResId("$packageName:id/new_tab_button")
-                            .waitForExists(waitingTime),
-                    )
+                    assertItemWithResIdExists(itemWithResId("$packageName:id/new_tab_button"))
 
                     break
                 } catch (e: AssertionError) {
@@ -1091,10 +979,7 @@ class BrowserRobot {
                 }
             }
 
-            assertTrue(
-                itemWithResId("$packageName:id/new_tab_button")
-                    .waitForExists(waitingTime),
-            )
+            assertItemWithResIdExists(itemWithResId("$packageName:id/new_tab_button"))
 
             TabDrawerRobot().interact()
             return TabDrawerRobot.Transition()
@@ -1355,9 +1240,6 @@ private fun progressBar() =
 private fun suggestedLogins() = itemWithResId("$packageName:id/loginSelectBar")
 private fun selectAddressButton() = itemWithResId("$packageName:id/select_address_header")
 private fun selectCreditCardButton() = itemWithResId("$packageName:id/select_credit_card_header")
-
-private fun creditCardSuggestion(creditCardNumber: String) =
-    itemWithResIdAndText("$packageName:id/credit_card_number", "$creditCardNumber")
 
 private fun siteSecurityToolbarButton() =
     itemWithResId("$packageName:id/mozac_browser_toolbar_security_indicator")

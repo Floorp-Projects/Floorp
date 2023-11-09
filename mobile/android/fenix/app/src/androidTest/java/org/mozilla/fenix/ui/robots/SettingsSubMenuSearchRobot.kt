@@ -45,8 +45,11 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.DataGenerationHelper.getAvailableSearchEngines
 import org.mozilla.fenix.helpers.DataGenerationHelper.getRegionSearchEnginesList
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
+import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextExists
+import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdAndTextExists
+import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdAndText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
-import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
 import org.mozilla.fenix.helpers.TestHelper.hasCousin
 import org.mozilla.fenix.helpers.TestHelper.mDevice
@@ -91,9 +94,8 @@ class SettingsSubMenuSearchRobot {
             .check(matches(hasSibling(withText("Edit engines visible in the search menu"))))
     }
 
-    fun verifyEnginesShortcutsListHeader() {
-        assertTrue(itemWithText("Engines visible on the search menu").exists())
-    }
+    fun verifyEnginesShortcutsListHeader() =
+        assertItemContainingTextExists(itemWithText("Engines visible on the search menu"))
 
     fun verifyAddressBarSectionHeader() {
         onView(withText("Address bar - Firefox Suggest")).check(matches(isDisplayed()))
@@ -109,7 +111,7 @@ class SettingsSubMenuSearchRobot {
         defaultSearchEngineOption("DuckDuckGo")
             .check(matches(hasSibling(withId(R.id.engine_icon))))
             .check(matches(isDisplayed()))
-        assertTrue(addSearchEngineButton.exists())
+        assertItemContainingTextExists(addSearchEngineButton)
     }
 
     fun verifyManageShortcutsList(testRule: ComposeTestRule) {
@@ -121,7 +123,7 @@ class SettingsSubMenuSearchRobot {
                 .assertIsDisplayed()
         }
 
-        assertTrue(addSearchEngineButton.exists())
+        assertItemContainingTextExists(addSearchEngineButton)
     }
 
     /**
@@ -239,13 +241,8 @@ class SettingsSubMenuSearchRobot {
 
     fun openAddSearchEngineMenu() = addSearchEngineButton.click()
 
-    fun verifyEngineListContains(searchEngineName: String, shouldExist: Boolean) {
-        if (shouldExist) {
-            assertTrue(itemWithText(searchEngineName).waitForExists(waitingTimeShort))
-        } else {
-            assertFalse(itemWithText(searchEngineName).waitForExists(waitingTimeShort))
-        }
-    }
+    fun verifyEngineListContains(searchEngineName: String, shouldExist: Boolean) =
+        assertItemContainingTextExists(itemWithText(searchEngineName), exists = shouldExist)
 
     fun verifyDefaultSearchEngineSelected(searchEngineName: String) {
         defaultSearchEngineOption(searchEngineName).check(matches(isChecked(true)))
@@ -264,44 +261,27 @@ class SettingsSubMenuSearchRobot {
         try {
             mDevice.findObject(By.res("$packageName:id/edit_engine_name")).clear()
             mDevice.findObject(By.res("$packageName:id/edit_engine_name")).text = engineName
-            assertTrue(
-                mDevice.findObject(
-                    UiSelector()
-                        .resourceId("$packageName:id/edit_engine_name")
-                        .text(engineName),
-                ).waitForExists(waitingTime),
+            assertItemWithResIdAndTextExists(
+                itemWithResIdAndText("$packageName:id/edit_engine_name", engineName),
             )
 
             mDevice.findObject(By.res("$packageName:id/edit_search_string")).clear()
             mDevice.findObject(By.res("$packageName:id/edit_search_string")).text = engineURL
-            assertTrue(
-                mDevice.findObject(
-                    UiSelector()
-                        .resourceId("$packageName:id/edit_search_string")
-                        .text(engineURL),
-                ).waitForExists(waitingTime),
+            assertItemWithResIdAndTextExists(
+                itemWithResIdAndText("$packageName:id/edit_search_string", engineURL),
             )
         } catch (e: AssertionError) {
             println("The name or the search string were not set properly")
 
             mDevice.findObject(By.res("$packageName:id/edit_engine_name")).clear()
             mDevice.findObject(By.res("$packageName:id/edit_engine_name")).setText(engineName)
-            assertTrue(
-                mDevice.findObject(
-                    UiSelector()
-                        .resourceId("$packageName:id/edit_engine_name")
-                        .text(engineName),
-                ).waitForExists(waitingTime),
+            assertItemWithResIdAndTextExists(
+                itemWithResIdAndText("$packageName:id/edit_engine_name", engineName),
             )
-
             mDevice.findObject(By.res("$packageName:id/edit_search_string")).clear()
             mDevice.findObject(By.res("$packageName:id/edit_search_string")).setText(engineURL)
-            assertTrue(
-                mDevice.findObject(
-                    UiSelector()
-                        .resourceId("$packageName:id/edit_search_string")
-                        .text(engineURL),
-                ).waitForExists(waitingTime),
+            assertItemWithResIdAndTextExists(
+                itemWithResIdAndText("$packageName:id/edit_search_string", engineURL),
             )
         }
     }
@@ -344,11 +324,7 @@ class SettingsSubMenuSearchRobot {
 
     fun saveEditSearchEngine() {
         onView(withId(R.id.save_button)).click()
-        assertTrue(
-            mDevice.findObject(
-                UiSelector().textContains("Saved"),
-            ).waitForExists(waitingTime),
-        )
+        assertItemContainingTextExists(itemContainingText("Saved"))
     }
 
     fun verifyInvalidTemplateSearchStringFormatError() {

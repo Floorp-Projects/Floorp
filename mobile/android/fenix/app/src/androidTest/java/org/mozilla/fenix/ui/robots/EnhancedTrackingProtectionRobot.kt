@@ -17,14 +17,15 @@ import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
-import junit.framework.TestCase.assertTrue
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.containsString
 import org.hamcrest.Matchers.not
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
+import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextExists
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdExists
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
@@ -42,10 +43,7 @@ class EnhancedTrackingProtectionRobot {
     fun verifyETPSwitchVisibility(visible: Boolean) = assertETPSwitchVisibility(visible)
 
     fun verifyCrossSiteCookiesBlocked(isBlocked: Boolean) {
-        assertTrue(
-            mDevice.findObject(UiSelector().resourceId("$packageName:id/cross_site_tracking"))
-                .waitForExists(waitingTime),
-        )
+        assertItemWithResIdExists(itemWithResId("$packageName:id/cross_site_tracking"))
         crossSiteCookiesBlockListButton.click()
         // Verifies the trackers block/allow list
         onView(withId(R.id.details_blocking_header))
@@ -63,10 +61,7 @@ class EnhancedTrackingProtectionRobot {
     }
 
     fun verifySocialMediaTrackersBlocked(isBlocked: Boolean) {
-        assertTrue(
-            mDevice.findObject(UiSelector().resourceId("$packageName:id/social_media_trackers"))
-                .waitForExists(waitingTime),
-        )
+        assertItemWithResIdExists(itemWithResId("$packageName:id/social_media_trackers"))
         socialTrackersBlockListButton.click()
         // Verifies the trackers block/allow list
         onView(withId(R.id.details_blocking_header))
@@ -85,10 +80,7 @@ class EnhancedTrackingProtectionRobot {
     }
 
     fun verifyFingerprintersBlocked(isBlocked: Boolean) {
-        assertTrue(
-            mDevice.findObject(UiSelector().resourceId("$packageName:id/fingerprinters"))
-                .waitForExists(waitingTime),
-        )
+        assertItemWithResIdExists(itemWithResId("$packageName:id/fingerprinters"))
         fingerprintersBlockListButton.click()
         // Verifies the trackers block/allow list
         onView(withId(R.id.details_blocking_header))
@@ -107,10 +99,7 @@ class EnhancedTrackingProtectionRobot {
     }
 
     fun verifyCryptominersBlocked(isBlocked: Boolean) {
-        assertTrue(
-            mDevice.findObject(UiSelector().resourceId("$packageName:id/cryptominers"))
-                .waitForExists(waitingTime),
-        )
+        assertItemWithResIdExists(itemWithResId("$packageName:id/cryptominers"))
         cryptominersBlockListButton.click()
         // Verifies the trackers block/allow list
         onView(withId(R.id.details_blocking_header))
@@ -129,10 +118,7 @@ class EnhancedTrackingProtectionRobot {
     }
 
     fun verifyTrackingContentBlocked(isBlocked: Boolean) {
-        assertTrue(
-            mDevice.findObject(UiSelector().text("Tracking Content"))
-                .waitForExists(waitingTime),
-        )
+        assertItemContainingTextExists(itemWithText("Tracking Content"))
         trackingContentBlockListButton.click()
         // Verifies the trackers block/allow list
         onView(withId(R.id.details_blocking_header))
@@ -304,9 +290,5 @@ private val fingerprintersBlockListButton =
 private fun assertSecuritySheetIsCompletelyDisplayed() {
     mDevice.findObject(UiSelector().description(getStringResource(R.string.quick_settings_sheet)))
         .waitForExists(waitingTime)
-    assertTrue(
-        mDevice.findObject(
-            UiSelector().resourceId("$packageName:id/quick_action_sheet"),
-        ).waitForExists(waitingTime),
-    )
+    assertItemWithResIdExists(itemWithResId("$packageName:id/quick_action_sheet"))
 }

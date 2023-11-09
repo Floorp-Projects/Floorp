@@ -12,13 +12,14 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiSelector
-import junit.framework.TestCase.assertTrue
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.Constants.LONG_CLICK_DURATION
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
+import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextExists
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithDescriptionExists
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdAndTextExists
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdExists
+import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithDescription
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdAndText
@@ -55,26 +56,20 @@ class CustomTabRobot {
         findInPageButton().check(matches(isDisplayed()))
     }
 
-    fun verifyPoweredByTextIsDisplayed() {
-        assertTrue(
-            mDevice.findObject(UiSelector().textContains("POWERED BY $appName"))
-                .waitForExists(waitingTime),
-        )
-    }
+    fun verifyPoweredByTextIsDisplayed() =
+        assertItemContainingTextExists(itemContainingText("POWERED BY $appName"))
 
     fun verifyOpenInBrowserButtonExists() {
         openInBrowserButton().check(matches(isDisplayed()))
     }
 
-    fun verifyBackButtonExists() = assertTrue(backButton().waitForExists(waitingTime))
+    fun verifyBackButtonExists() = assertItemWithDescriptionExists(itemWithDescription("Back"))
 
-    fun verifyForwardButtonExists() = assertTrue(forwardButton().waitForExists(waitingTime))
+    fun verifyForwardButtonExists() = assertItemWithDescriptionExists(itemWithDescription("Forward"))
 
-    fun verifyRefreshButtonExists() = assertTrue(refreshButton().waitForExists(waitingTime))
+    fun verifyRefreshButtonExists() = assertItemWithDescriptionExists(itemWithDescription("Refresh"))
 
-    fun verifyCustomMenuItem(label: String) {
-        assertTrue(mDevice.findObject(UiSelector().text(label)).waitForExists(waitingTime))
-    }
+    fun verifyCustomMenuItem(label: String) = assertItemContainingTextExists(itemContainingText(label))
 
     fun verifyCustomTabCloseButton() {
         closeButton().check(matches(isDisplayed()))
@@ -95,12 +90,8 @@ class CustomTabRobot {
             waitingTime,
         )
 
-        assertTrue(
-            mDevice.findObject(
-                UiSelector()
-                    .resourceId("$packageName:id/mozac_browser_toolbar_title_view")
-                    .textContains(title),
-            ).waitForExists(waitingTime),
+        assertItemWithResIdAndTextExists(
+            itemWithResIdContainingText("$packageName:id/mozac_browser_toolbar_title_view", title),
         )
     }
 
@@ -182,12 +173,6 @@ private fun desktopSiteButton() = onView(withId(R.id.switch_widget))
 private fun findInPageButton() = onView(withText("Find in page"))
 
 private fun openInBrowserButton() = onView(withText("Open in $appName"))
-
-private fun refreshButton() = mDevice.findObject(UiSelector().description("Refresh"))
-
-private fun forwardButton() = mDevice.findObject(UiSelector().description("Forward"))
-
-private fun backButton() = mDevice.findObject(UiSelector().description("Back"))
 
 private fun closeButton() = onView(withContentDescription("Return to previous app"))
 

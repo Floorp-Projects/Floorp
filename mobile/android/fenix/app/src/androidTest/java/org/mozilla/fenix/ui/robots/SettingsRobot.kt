@@ -41,7 +41,6 @@ import junit.framework.AssertionFailedError
 import org.hamcrest.CoreMatchers
 import org.hamcrest.CoreMatchers.endsWith
 import org.hamcrest.Matchers.allOf
-import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.AppAndSystemHelper.isPackageInstalled
 import org.mozilla.fenix.helpers.Constants.LISTS_MAXSWIPES
@@ -187,8 +186,8 @@ class SettingsRobot {
     // ABOUT SECTION
     fun verifyAboutHeading() = assertAboutHeading()
 
-    fun verifyRateOnGooglePlay() = assertTrue(rateOnGooglePlayHeading().waitForExists(waitingTime))
-    fun verifyAboutFirefoxPreview() = assertTrue(aboutFirefoxHeading().waitForExists(waitingTime))
+    fun verifyRateOnGooglePlay() = assertItemContainingTextExists(rateOnGooglePlayHeading())
+    fun verifyAboutFirefoxPreview() = assertItemContainingTextExists(aboutFirefoxHeading())
     fun verifyGooglePlayRedirect() = assertGooglePlayRedirect()
 
     fun verifySettingsOptionSummary(setting: String, summary: String) {
@@ -640,10 +639,7 @@ private fun aboutFirefoxHeading(): UiObject {
     for (i in 1..RETRY_COUNT) {
         try {
             settingsList().scrollToEnd(LISTS_MAXSWIPES)
-            assertTrue(
-                mDevice.findObject(UiSelector().text("About $appName"))
-                    .waitForExists(waitingTime),
-            )
+            assertItemContainingTextExists(itemWithText("About $appName"))
 
             break
         } catch (e: AssertionError) {

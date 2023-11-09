@@ -17,6 +17,7 @@ import androidx.test.uiautomator.UiSelector
 import org.hamcrest.CoreMatchers.allOf
 import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
+import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextExists
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestHelper.appName
 import org.mozilla.fenix.helpers.TestHelper.mDevice
@@ -191,7 +192,7 @@ private fun assertOpenTabsDescription(tabNumber: String) =
     openTabsDescription(tabNumber).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun assertBrowsingHistoryDescription(addresses: String) =
-    assertTrue(browsingHistoryDescription(addresses).waitForExists(waitingTime))
+    assertItemContainingTextExists(browsingHistoryDescription(addresses))
 
 private fun assertDeleteBrowsingDataSnackbar() {
     assertTrue(

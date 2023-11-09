@@ -31,7 +31,6 @@ import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.CoreMatchers.not
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.Constants
@@ -39,7 +38,10 @@ import org.mozilla.fenix.helpers.Constants.LONG_CLICK_DURATION
 import org.mozilla.fenix.helpers.Constants.TAG
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
 import org.mozilla.fenix.helpers.HomeActivityComposeTestRule
+import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdAndTextExists
+import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdExists
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdAndText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdContainingText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
 import org.mozilla.fenix.helpers.SessionLoadedIdlingResource
@@ -80,30 +82,17 @@ class NavigationToolbarRobot {
     }
 
     fun verifyClipboardSuggestionsAreDisplayed(link: String = "", shouldBeDisplayed: Boolean) {
-        when (shouldBeDisplayed) {
-            true -> {
-                assertTrue(
-                    mDevice.findObject(UiSelector().resourceId("$packageName:id/fill_link_from_clipboard"))
-                        .waitForExists(waitingTime),
-                )
-
-                assertTrue(
-                    mDevice.findObject(UiSelector().resourceId("$packageName:id/clipboard_url").text(link))
-                        .waitForExists(waitingTime),
-                )
-            }
-            false -> {
-                assertFalse(
-                    mDevice.findObject(UiSelector().resourceId("$packageName:id/fill_link_from_clipboard"))
-                        .waitForExists(waitingTimeShort),
-                )
-
-                assertFalse(
-                    mDevice.findObject(UiSelector().resourceId("$packageName:id/clipboard_url").text(link))
-                        .waitForExists(waitingTimeShort),
-                )
-            }
-        }
+        assertItemWithResIdExists(
+            itemWithResId("$packageName:id/fill_link_from_clipboard"),
+            exists = shouldBeDisplayed,
+        )
+        assertItemWithResIdAndTextExists(
+            itemWithResIdAndText(
+                "$packageName:id/clipboard_url",
+                link,
+            ),
+            exists = shouldBeDisplayed,
+        )
     }
 
     fun longClickEditModeToolbar() =
@@ -135,10 +124,8 @@ class NavigationToolbarRobot {
 
     // New unified search UI selector
     fun verifyDefaultSearchEngine(engineName: String) =
-        assertTrue(
-            searchSelectorButton
-                .getChild(UiSelector().description(engineName))
-                .waitForExists(waitingTime),
+        assertItemWithResIdExists(
+            searchSelectorButton.getChild(UiSelector().description(engineName)),
         )
 
     fun verifyTextSelectionOptions(vararg textSelectionOptions: String) {

@@ -20,12 +20,12 @@ import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextExists
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithDescriptionExists
+import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdExists
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithDescription
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
@@ -40,27 +40,16 @@ import org.mozilla.fenix.helpers.ext.waitNotNull
 class CollectionRobot {
 
     fun verifySelectCollectionScreen() {
-        assertTrue(
-            mDevice.findObject(UiSelector().text("Select collection"))
-                .exists(),
+        assertItemContainingTextExists(
+            itemContainingText("Select collection"),
+            itemContainingText("Add new collection"),
         )
-        assertTrue(
-            mDevice.findObject(UiSelector().resourceId("$packageName:id/collections_list"))
-                .exists(),
-        )
-        assertTrue(
-            mDevice.findObject(UiSelector().text("Add new collection"))
-                .exists(),
-        )
+        assertItemWithResIdExists(itemWithResId("$packageName:id/collections_list"))
     }
 
     fun clickAddNewCollection() = addNewCollectionButton().click()
 
-    fun verifyCollectionNameTextField() {
-        assertTrue(
-            mainMenuEditCollectionNameField().waitForExists(waitingTime),
-        )
-    }
+    fun verifyCollectionNameTextField() = assertItemWithResIdExists(mainMenuEditCollectionNameField())
 
     // names a collection saved from tab drawer
     fun typeCollectionNameAndSave(collectionName: String) {
@@ -87,9 +76,7 @@ class CollectionRobot {
     fun verifyTabSavedInCollection(title: String, visible: Boolean = true) {
         if (visible) {
             scrollToElementByText(title)
-            assertTrue(
-                collectionListItem(title).waitForExists(waitingTime),
-            )
+            assertItemContainingTextExists(collectionListItem(title))
         } else {
             assertTrue(
                 collectionListItem(title).waitUntilGone(waitingTime),
@@ -97,23 +84,11 @@ class CollectionRobot {
         }
     }
 
-    fun verifyCollectionTabUrl(visible: Boolean, url: String) {
-        val tabUrl = mDevice.findObject(UiSelector().text(url))
+    fun verifyCollectionTabUrl(visible: Boolean, url: String) =
+        assertItemContainingTextExists(itemContainingText(url), exists = visible)
 
-        if (visible) {
-            assertTrue(tabUrl.exists())
-        } else {
-            assertFalse(tabUrl.exists())
-        }
-    }
-
-    fun verifyShareCollectionButtonIsVisible(visible: Boolean) {
-        if (visible) {
-            assertTrue(shareCollectionButton().exists())
-        } else {
-            assertFalse(shareCollectionButton().exists())
-        }
-    }
+    fun verifyShareCollectionButtonIsVisible(visible: Boolean) =
+        assertItemWithDescriptionExists(shareCollectionButton(), exists = visible)
 
     fun verifyCollectionMenuIsVisible(visible: Boolean, rule: ComposeTestRule) {
         if (visible) {
@@ -159,17 +134,8 @@ class CollectionRobot {
             .performClick()
     }
 
-    fun verifyCollectionItemRemoveButtonIsVisible(title: String, visible: Boolean) {
-        if (visible) {
-            assertTrue(
-                removeTabFromCollectionButton(title).exists(),
-            )
-        } else {
-            assertFalse(
-                removeTabFromCollectionButton(title).exists(),
-            )
-        }
-    }
+    fun verifyCollectionItemRemoveButtonIsVisible(title: String, visible: Boolean) =
+        assertItemContainingTextExists(removeTabFromCollectionButton(title), exists = visible)
 
     fun removeTabFromCollection(title: String) = removeTabFromCollectionButton(title).click()
 

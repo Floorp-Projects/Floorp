@@ -31,7 +31,6 @@ import androidx.test.uiautomator.Until
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.containsString
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextExists
@@ -41,6 +40,7 @@ import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithDescription
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdAndText
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdContainingText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
@@ -403,12 +403,7 @@ private fun assertBookmarkFolderIsNotCreated(title: String) {
             .resourceId("$packageName:id/bookmarks_wrapper"),
     ).waitForExists(waitingTime)
 
-    assertFalse(
-        mDevice.findObject(
-            UiSelector()
-                .textContains(title),
-        ).waitForExists(waitingTimeShort),
-    )
+    assertItemContainingTextExists(itemContainingText(title), exists = false)
 }
 
 private fun assertBookmarkFavicon(forUrl: Uri) = bookmarkFavicon(forUrl.toString()).check(
@@ -434,12 +429,12 @@ private fun assertBookmarkIsDeleted(expectedTitle: String) {
             .resourceId("$packageName:id/bookmarks_wrapper"),
     ).waitForExists(waitingTime)
 
-    assertFalse(
-        mDevice.findObject(
-            UiSelector()
-                .resourceId("$packageName:id/title")
-                .textContains(expectedTitle),
-        ).waitForExists(waitingTimeShort),
+    assertItemContainingTextExists(
+        itemWithResIdContainingText(
+            "$packageName:id/title",
+            expectedTitle,
+        ),
+        exists = false,
     )
 }
 private fun assertUndoDeleteSnackBarButton() =

@@ -97,9 +97,15 @@ object MatcherHelper {
         }
     }
 
-    fun assertCheckedItemWithResIdExists(vararg appItems: UiObject) {
+    fun assertCheckedItemWithResIdExists(vararg appItems: UiObject, exists: Boolean = true) {
         for (appItem in appItems) {
-            assertTrue(appItem.waitForExists(waitingTime))
+            if (exists) {
+                assertTrue("${appItem.selector} does not exist", appItem.waitForExists(waitingTime))
+                Log.i(TAG, "assertCheckedItemWithResIdExists: Verified ${appItem.selector} exists")
+            } else {
+                assertFalse("${appItem.selector} exists", appItem.waitForExists(waitingTimeShort))
+                Log.i(TAG, "assertItemContainingTextExists: Verified ${appItem.selector} does not exist")
+            }
         }
     }
 

@@ -17,7 +17,6 @@ import androidx.test.uiautomator.UiSelector
 import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.CoreMatchers.endsWith
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.Constants.TAG
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
@@ -88,11 +87,7 @@ class SettingsSubMenuAutofillRobot {
             addAddressButton,
         )
         for (savedAddressDetail in savedAddressDetails) {
-            assertTrue(
-                mDevice.findObject(
-                    UiSelector().textContains(savedAddressDetail),
-                ).waitForExists(waitingTime),
-            )
+            assertItemContainingTextExists(itemContainingText(savedAddressDetail))
             Log.i(TAG, "verifyManageAddressesSection: Verified saved address detail: $savedAddressDetail exists")
         }
     }
@@ -289,7 +284,7 @@ class SettingsSubMenuAutofillRobot {
         Log.i(TAG, "clickCountryOption: Clicked \"Country or region\" $country dropdown option")
     }
     fun verifyAddAddressButton() {
-        assertTrue(addAddressButton.waitForExists(waitingTime))
+        assertItemContainingTextExists(addAddressButton)
         Log.i(TAG, "verifyAddAddressButton: Verified \"Add address\" button exists")
     }
 
@@ -381,7 +376,7 @@ class SettingsSubMenuAutofillRobot {
         expiryYearOption(expiryYear).click()
     }
 
-    fun verifyAddCreditCardsButton() = assertTrue(addCreditCardButton.waitForExists(waitingTime))
+    fun verifyAddCreditCardsButton() = assertItemContainingTextExists(addCreditCardButton)
 
     fun fillAndSaveCreditCard(cardNumber: String, cardName: String, expiryMonth: String, expiryYear: String) {
         creditCardNumberTextInput.waitForExists(waitingTime)

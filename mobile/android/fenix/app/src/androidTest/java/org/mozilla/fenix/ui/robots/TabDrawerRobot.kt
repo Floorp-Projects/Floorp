@@ -31,7 +31,6 @@ import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import androidx.test.uiautomator.Until.findObject
 import com.google.android.material.bottomsheet.BottomSheetBehavior
-import junit.framework.TestCase.assertFalse
 import junit.framework.TestCase.assertTrue
 import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.CoreMatchers.anyOf
@@ -42,6 +41,7 @@ import org.mozilla.fenix.helpers.Constants.LONG_CLICK_DURATION
 import org.mozilla.fenix.helpers.Constants.RETRY_COUNT
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextExists
+import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithDescriptionExists
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdAndTextExists
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdExists
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
@@ -210,14 +210,8 @@ class TabDrawerRobot {
         }
     }
 
-    fun verifySnackBarText(expectedText: String) {
-        assertTrue(
-            "SnackBar message: $expectedText - not found",
-            mDevice.findObject(
-                UiSelector().textContains(expectedText),
-            ).waitForExists(waitingTime),
-        )
-    }
+    fun verifySnackBarText(expectedText: String) =
+        assertItemContainingTextExists(itemContainingText(expectedText))
 
     fun snackBarButtonClick(expectedText: String) {
         val snackBarButton =
@@ -231,8 +225,7 @@ class TabDrawerRobot {
         snackBarButton.click()
     }
 
-    fun verifyTabMediaControlButtonState(action: String) =
-        assertTrue(tabMediaControlButton(action).waitForExists(waitingTime))
+    fun verifyTabMediaControlButtonState(action: String) = assertItemWithDescriptionExists(tabMediaControlButton(action))
 
     fun clickTabMediaControlButton(action: String) {
         tabMediaControlButton(action).also {
@@ -530,9 +523,7 @@ private fun assertExistingOpenTabs(vararg tabTitles: String) {
 
 private fun assertNoExistingOpenTabs(vararg tabTitles: String) {
     for (title in tabTitles) {
-        assertFalse(
-            tabItem(title).waitForExists(waitingTimeShort),
-        )
+        assertItemContainingTextExists(tabItem(title), exists = false)
     }
 }
 
@@ -540,12 +531,7 @@ private fun assertExistingTabList() {
     mDevice.findObject(
         UiSelector().resourceId("$packageName:id/tabsTray"),
     ).waitForExists(waitingTime)
-
-    assertTrue(
-        mDevice.findObject(
-            UiSelector().resourceId("$packageName:id/tray_list_item"),
-        ).waitForExists(waitingTime),
-    )
+    assertItemWithResIdExists(itemWithResId("$packageName:id/tray_list_item"))
 }
 
 private fun assertNoOpenTabsInNormalBrowsing() =

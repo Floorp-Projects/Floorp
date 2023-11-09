@@ -20,8 +20,9 @@ import androidx.test.uiautomator.UiSelector
 import org.hamcrest.CoreMatchers
 import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.Matchers
-import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
+import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextExists
+import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
 import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.helpers.TestHelper.mDevice
@@ -98,11 +99,8 @@ class SettingsSubMenuHomepageRobot {
         mDevice.findObject(UiSelector().description(wallpaperName)).click()
 
     fun verifySnackBarText(expectedText: String) =
-        assertTrue(
-            mDevice.findObject(
-                UiSelector()
-                    .textContains(expectedText),
-            ).waitForExists(waitingTimeShort),
+        assertItemContainingTextExists(
+            itemContainingText(expectedText),
         )
 
     fun verifySponsoredShortcutsCheckBox(checked: Boolean) = assertSponsoredShortcutsCheckBox(checked)

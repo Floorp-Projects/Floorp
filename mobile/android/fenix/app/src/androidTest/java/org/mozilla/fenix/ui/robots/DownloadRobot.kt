@@ -24,7 +24,6 @@ import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import org.hamcrest.CoreMatchers.allOf
-import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.AppAndSystemHelper.assertExternalAppOpens
 import org.mozilla.fenix.helpers.AppAndSystemHelper.getPermissionAllowID
@@ -108,7 +107,8 @@ class DownloadRobot {
 
     fun verifyPhotosAppOpens() = assertExternalAppOpens(GOOGLE_APPS_PHOTOS)
 
-    fun verifyDownloadedFileName(fileName: String) = assertItemContainingTextExists(itemContainingText(fileName))
+    fun verifyDownloadedFileName(fileName: String) =
+        assertItemContainingTextExists(itemContainingText(fileName))
 
     fun verifyDownloadedFileIcon() = assertItemWithResIdExists(itemWithResId("$packageName:id/favicon"))
 
@@ -120,14 +120,8 @@ class DownloadRobot {
         Log.i(TAG, "verifyEmptyDownloadsList: Verified \"No downloaded files\" list message")
     }
 
-    fun waitForDownloadsListToExist() {
-        assertTrue(
-            "Downloads list either empty or not displayed",
-            mDevice.findObject(UiSelector().resourceId("$packageName:id/download_list"))
-                .waitForExists(waitingTime),
-        )
-        Log.i(TAG, "waitForDownloadsListToExist: Verified that the download list exists")
-    }
+    fun waitForDownloadsListToExist() =
+        assertItemWithResIdExists(itemWithResId("$packageName:id/download_list"))
 
     fun openDownloadedFile(fileName: String) {
         downloadedFile(fileName)

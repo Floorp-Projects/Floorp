@@ -14,15 +14,13 @@ import androidx.test.espresso.matcher.ViewMatchers.withEffectiveVisibility
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.uiautomator.UiSelector
-import junit.framework.TestCase.assertTrue
 import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.CoreMatchers.containsString
-import org.hamcrest.CoreMatchers.not
-import org.hamcrest.Matchers.contains
-import org.junit.Assert.assertFalse
 import org.mozilla.fenix.R
+import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextExists
+import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
-import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
 import org.mozilla.fenix.helpers.click
@@ -35,10 +33,8 @@ class SettingsSubMenuEnhancedTrackingProtectionExceptionsRobot {
     fun verifyNavigationToolBarHeader() = assertNavigationToolBarHeader()
 
     fun verifyTPExceptionsDefaultView() {
-        assertTrue(
-            mDevice.findObject(
-                UiSelector().text("Exceptions let you disable tracking protection for selected sites."),
-            ).waitForExists(waitingTime),
+        assertItemContainingTextExists(
+            itemWithText("Exceptions let you disable tracking protection for selected sites."),
         )
         learnMoreLink.check(matches(isDisplayed()))
     }
@@ -52,17 +48,7 @@ class SettingsSubMenuEnhancedTrackingProtectionExceptionsRobot {
 
     fun verifySiteExceptionExists(siteUrl: String, shouldExist: Boolean) {
         exceptionsList.waitForExists(waitingTime)
-        if (shouldExist) {
-            assertTrue(
-                mDevice.findObject(UiSelector().textContains(siteUrl))
-                    .waitForExists(waitingTime),
-            )
-        } else {
-            assertFalse(
-                mDevice.findObject(UiSelector().textContains(siteUrl))
-                    .waitForExists(waitingTimeShort),
-            )
-        }
+        assertItemContainingTextExists(itemContainingText(siteUrl), exists = shouldExist)
     }
 
     class Transition {
