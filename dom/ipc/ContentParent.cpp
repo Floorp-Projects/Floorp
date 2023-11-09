@@ -53,6 +53,7 @@
 #include "mozilla/BenchmarkStorageParent.h"
 #include "mozilla/Casting.h"
 #include "mozilla/ClearOnShutdown.h"
+#include "mozilla/ClipboardReadRequestParent.h"
 #include "mozilla/ClipboardWriteRequestParent.h"
 #include "mozilla/ContentBlockingUserInteraction.h"
 #include "mozilla/FOGIPC.h"
@@ -3563,26 +3564,6 @@ mozilla::ipc::IPCResult ContentParent::RecvClipboardHasType(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult ContentParent::RecvClipboardHasTypesAsync(
-    nsTArray<nsCString>&& aTypes, const int32_t& aWhichClipboard,
-    ClipboardHasTypesAsyncResolver&& aResolver) {
-  nsresult rv;
-  nsCOMPtr<nsIClipboard> clipboard(do_GetService(kCClipboardCID, &rv));
-  if (NS_FAILED(rv)) {
-    return IPC_FAIL(this, "RecvGetClipboardTypes failed.");
-  }
-
-  clipboard->AsyncHasDataMatchingFlavors(aTypes, aWhichClipboard)
-      ->Then(
-          GetMainThreadSerialEventTarget(), __func__,
-          /* resolve */
-          [aResolver](nsTArray<nsCString> types) { aResolver(types); },
-          /* reject */
-          [aResolver](nsresult rv) { aResolver(nsTArray<nsCString>{}); });
-
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult ContentParent::RecvGetExternalClipboardFormats(
     const int32_t& aWhichClipboard, const bool& aPlainTextOnly,
     nsTArray<nsCString>* aTypes) {
@@ -3591,6 +3572,54 @@ mozilla::ipc::IPCResult ContentParent::RecvGetExternalClipboardFormats(
                                             aTypes);
   return IPC_OK();
 }
+
+namespace {
+
+class ClipboardGetCallback final : public nsIAsyncClipboardGetCallback {
+ public:
+  ClipboardGetCallback(ContentParent* aContentParent,
+                       ContentParent::GetClipboardAsyncResolver&& aResolver)
+      : mContentParent(aContentParent), mResolver(std::move(aResolver)) {}
+
+  // This object will never be held by a cycle-collected object, so it doesn't
+  // need to be cycle-collected despite holding alive cycle-collected objects.
+  NS_DECL_ISUPPORTS
+
+  // nsIAsyncClipboardGetCallback
+  NS_IMETHOD OnSuccess(
+      nsIAsyncGetClipboardData* aAsyncGetClipboardData) override {
+    nsTArray<nsCString> flavors;
+    nsresult rv = aAsyncGetClipboardData->GetFlavorList(flavors);
+    if (NS_FAILED(rv)) {
+      return OnError(rv);
+    }
+
+    auto requestParent = MakeNotNull<RefPtr<ClipboardReadRequestParent>>(
+        mContentParent, aAsyncGetClipboardData);
+    if (!mContentParent->SendPClipboardReadRequestConstructor(
+            requestParent, std::move(flavors))) {
+      return OnError(NS_ERROR_FAILURE);
+    }
+
+    mResolver(PClipboardReadRequestOrError(requestParent));
+    return NS_OK;
+  }
+
+  NS_IMETHOD OnError(nsresult aResult) override {
+    mResolver(aResult);
+    return NS_OK;
+  }
+
+ protected:
+  ~ClipboardGetCallback() = default;
+
+  RefPtr<ContentParent> mContentParent;
+  ContentParent::GetClipboardAsyncResolver mResolver;
+};
+
+NS_IMPL_ISUPPORTS(ClipboardGetCallback, nsIAsyncClipboardGetCallback)
+
+}  // namespace
 
 mozilla::ipc::IPCResult ContentParent::RecvGetClipboardAsync(
     nsTArray<nsCString>&& aTypes, const int32_t& aWhichClipboard,
@@ -3603,25 +3632,13 @@ mozilla::ipc::IPCResult ContentParent::RecvGetClipboardAsync(
     return IPC_OK();
   }
 
-  // Create transferable
-  auto result = CreateTransferable(aTypes);
-  if (result.isErr()) {
-    aResolver(result.unwrapErr());
+  auto callback = MakeRefPtr<ClipboardGetCallback>(this, std::move(aResolver));
+  rv = clipboard->AsyncGetData(aTypes, aWhichClipboard, callback);
+  if (NS_FAILED(rv)) {
+    callback->OnError(rv);
     return IPC_OK();
   }
 
-  // Get data from clipboard
-  nsCOMPtr<nsITransferable> trans = result.unwrap();
-  clipboard->AsyncGetData(trans, nsIClipboard::kGlobalClipboard)
-      ->Then(
-          GetMainThreadSerialEventTarget(), __func__,
-          [trans, aResolver,
-           self = RefPtr{this}](GenericPromise::ResolveOrRejectValue&& aValue) {
-            IPCTransferableData ipcTransferableData;
-            nsContentUtils::TransferableToIPCTransferableData(
-                trans, &ipcTransferableData, false /* aInSyncMessage */, self);
-            aResolver(std::move(ipcTransferableData));
-          });
   return IPC_OK();
 }
 
