@@ -853,12 +853,12 @@ GeneralTokenStreamChars<Unit, AnyCharsAccess>::computeColumn(
 template <typename Unit, class AnyCharsAccess>
 void GeneralTokenStreamChars<Unit, AnyCharsAccess>::computeLineAndColumn(
     uint32_t offset, uint32_t* line,
-    JS::LimitedColumnNumberZeroOrigin* column) const {
+    JS::LimitedColumnNumberOneOrigin* column) const {
   const TokenStreamAnyChars& anyChars = anyCharsAccess();
 
   auto lineToken = anyChars.lineToken(offset);
   *line = anyChars.lineNumber(lineToken);
-  *column = computeColumn(lineToken, offset);
+  *column = JS::LimitedColumnNumberOneOrigin(computeColumn(lineToken, offset));
 }
 
 template <class AnyCharsAccess>
@@ -913,7 +913,7 @@ MOZ_COLD void TokenStreamChars<Utf8Unit, AnyCharsAccess>::internalEncodingError(
     ptr[-1] = '\0';
 
     uint32_t line;
-    JS::LimitedColumnNumberZeroOrigin column;
+    JS::LimitedColumnNumberOneOrigin column;
     computeLineAndColumn(offset, &line, &column);
 
     if (!notes->addNoteASCII(anyChars.fc, anyChars.getFilename().c_str(), 0,

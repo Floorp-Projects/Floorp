@@ -45,7 +45,7 @@
 #include "frontend/ScriptIndex.h"  // ScriptIndex
 #include "frontend/TokenStream.h"  // IsKeyword, ReservedWordTokenKind, ReservedWordToCharZ, DeprecatedContent, *TokenStream*, CharBuffer, TokenKindToDesc
 #include "irregexp/RegExpAPI.h"
-#include "js/ColumnNumber.h"  // JS::LimitedColumnNumberZeroOrigin, JS::ColumnNumberZeroOrigin, JS::ColumnNumberOneOrigin
+#include "js/ColumnNumber.h"  // JS::LimitedColumnNumberZeroOrigin, JS::LimitedColumnNumberOneOrigin, JS::ColumnNumberOneOrigin
 #include "js/ErrorReport.h"   // JSErrorBase
 #include "js/friend/ErrorMessages.h"  // js::GetErrorMessage, JSMSG_*
 #include "js/HashTable.h"
@@ -469,7 +469,7 @@ void GeneralParser<ParseHandler, Unit>::reportMissingClosing(
   }
 
   uint32_t line;
-  JS::LimitedColumnNumberZeroOrigin column;
+  JS::LimitedColumnNumberOneOrigin column;
   tokenStream.computeLineAndColumn(openedPos, &line, &column);
 
   const size_t MaxWidth = sizeof("4294967295");
@@ -511,7 +511,7 @@ void GeneralParser<ParseHandler, Unit>::reportRedeclarationHelper(
   }
 
   uint32_t line;
-  JS::LimitedColumnNumberZeroOrigin column;
+  JS::LimitedColumnNumberOneOrigin column;
   tokenStream.computeLineAndColumn(prevPos, &line, &column);
 
   const size_t MaxWidth = sizeof("4294967295");
@@ -2587,7 +2587,7 @@ template <class ParseHandler, typename Unit>
 void GeneralParser<ParseHandler, Unit>::setFunctionStartAtPosition(
     FunctionBox* funbox, TokenPos pos) const {
   uint32_t startLine;
-  JS::LimitedColumnNumberZeroOrigin startColumn;
+  JS::LimitedColumnNumberOneOrigin startColumn;
   tokenStream.computeLineAndColumn(pos.begin, &startLine, &startColumn);
 
   // NOTE: `Debugger::CallData::findScripts` relies on sourceStart and
@@ -11096,7 +11096,7 @@ Parser<FullParseHandler, Unit>::newRegExp() {
 
   uint32_t offset = anyChars.currentToken().pos.begin;
   uint32_t line;
-  JS::LimitedColumnNumberZeroOrigin column;
+  JS::LimitedColumnNumberOneOrigin column;
   tokenStream.computeLineAndColumn(offset, &line, &column);
 
   if (!handler_.reuseRegexpSyntaxParse()) {
@@ -11142,7 +11142,7 @@ Parser<SyntaxParseHandler, Unit>::newRegExp() {
 
   uint32_t offset = anyChars.currentToken().pos.begin;
   uint32_t line;
-  JS::LimitedColumnNumberZeroOrigin column;
+  JS::LimitedColumnNumberOneOrigin column;
   tokenStream.computeLineAndColumn(offset, &line, &column);
 
   mozilla::Range<const char16_t> source(chars.begin(), chars.length());
