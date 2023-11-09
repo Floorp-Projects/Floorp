@@ -121,17 +121,16 @@ static const DownMixMatrix gDownMixMatrices[CUSTOM_CHANNEL_LAYOUTS *
  * input count <= output count.
  */
 template <typename T>
-void AudioChannelsDownMix(const nsTArray<const T*>& aChannelArray,
-                          T** aOutputChannels, uint32_t aOutputChannelCount,
-                          uint32_t aDuration) {
-  uint32_t inputChannelCount = aChannelArray.Length();
-  const T* const* inputChannels = aChannelArray.Elements();
-  NS_ASSERTION(inputChannelCount > aOutputChannelCount, "Nothing to do");
+void AudioChannelsDownMix(Span<const T* const> aInputChannels,
+                          Span<T* const> aOutputChannels, uint32_t aDuration) {
+  uint32_t inputChannelCount = aInputChannels.Length();
+  uint32_t outputChannelCount = aOutputChannels.Length();
+  NS_ASSERTION(inputChannelCount > outputChannelCount, "Nothing to do");
 
   if (inputChannelCount > 6) {
     // Just drop the unknown channels.
-    for (uint32_t o = 0; o < aOutputChannelCount; ++o) {
-      PodCopy(aOutputChannels[o], inputChannels[o], aDuration);
+    for (uint32_t o = 0; o < outputChannelCount; ++o) {
+      PodCopy(aOutputChannels[o], aInputChannels[o], aDuration);
     }
     return;
   }
@@ -140,8 +139,8 @@ void AudioChannelsDownMix(const nsTArray<const T*>& aChannelArray,
   inputChannelCount = std::min<uint32_t>(6, inputChannelCount);
 
   const DownMixMatrix& m =
-      gDownMixMatrices[gMixingMatrixIndexByChannels[aOutputChannelCount - 1] +
-                       inputChannelCount - aOutputChannelCount - 1];
+      gDownMixMatrices[gMixingMatrixIndexByChannels[outputChannelCount - 1] +
+                       inputChannelCount - outputChannelCount - 1];
 
   // This is slow, but general. We can define custom code for special
   // cases later.
@@ -151,16 +150,15 @@ void AudioChannelsDownMix(const nsTArray<const T*>& aChannelArray,
     T outputChannels[CUSTOM_CHANNEL_LAYOUTS + 1] = {0};
     for (uint32_t c = 0; c < inputChannelCount; ++c) {
       outputChannels[m.mInputDestination[c]] +=
-          m.mInputCoefficient[c] * (static_cast<const T*>(inputChannels[c]))[s];
+          m.mInputCoefficient[c] * aInputChannels[c][s];
     }
     // Utilize the fact that in every layout, C is the third channel.
     if (m.mCExtraDestination != IGNORE) {
       outputChannels[m.mCExtraDestination] +=
-          m.mInputCoefficient[SURROUND_C] *
-          (static_cast<const T*>(inputChannels[SURROUND_C]))[s];
+          m.mInputCoefficient[SURROUND_C] * aInputChannels[SURROUND_C][s];
     }
 
-    for (uint32_t c = 0; c < aOutputChannelCount; ++c) {
+    for (uint32_t c = 0; c < outputChannelCount; ++c) {
       aOutputChannels[c][s] = outputChannels[c];
     }
   }

@@ -215,7 +215,7 @@ void TestDownmixStereo() {
     inputptr[channel] = input[channel];
   }
 
-  AudioChannelsDownMix(inputptr, output, 1, arraySize);
+  AudioChannelsDownMix<T>(inputptr, Span(output, 1), arraySize);
 
   for (size_t i = 0; i < arraySize; i++) {
     ASSERT_TRUE(output[0][i] == GetSilentValue<T>());
