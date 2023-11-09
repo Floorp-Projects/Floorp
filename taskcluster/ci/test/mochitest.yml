@@ -604,7 +604,6 @@ mochitest-chrome-gpu:
             1proc:
                 by-test-platform:
                     android.*/.*: []
-                    .*-wayland/debug.*: []
                     default: built-projects
     tier: default
     mozharness:
