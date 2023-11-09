@@ -2,8 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
-
 const lazy = {};
 
 ChromeUtils.defineLazyGetter(lazy, "console", () => {
@@ -17,12 +15,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   LanguageDetector:
     "resource://gre/modules/translation/LanguageDetector.sys.mjs",
 });
-
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
-  "useFastTextPref",
-  "browser.translations.languageIdentification.useFastText"
-);
 
 /**
  * @typedef {import("./TranslationsChild.sys.mjs").LanguageIdEngine} LanguageIdEngine
@@ -276,20 +268,6 @@ export class AboutTranslationsChild extends JSWindowActorChild {
    * @returns {Promise<{ langTag: string, confidence: number }>}
    */
   AT_identifyLanguage(message) {
-    if (lazy.useFastTextPref) {
-      if (!this.languageIdEngine) {
-        const { Promise, Error } = this.contentWindow;
-        return Promise.reject(
-          new Error("The language identification was not created.")
-        );
-      }
-
-      return this.#convertToContentPromise(
-        this.languageIdEngine
-          .identifyLanguage(message)
-          .then(data => Cu.cloneInto(data, this.contentWindow))
-      );
-    }
     return this.#convertToContentPromise(
       lazy.LanguageDetector.detectLanguage(message).then(data =>
         Cu.cloneInto(

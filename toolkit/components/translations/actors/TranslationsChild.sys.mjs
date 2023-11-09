@@ -78,16 +78,6 @@ export class TranslationsChild extends JSWindowActorChild {
         }
 
         try {
-          // Try to use the fastText engine if directed to do so.
-          if (data.useFastText) {
-            const engine = await this.getOrCreateLanguageIdEngine();
-            if (!engine) {
-              return null;
-            }
-            return engine.identifyLanguageFromDocument(this.document);
-          }
-
-          // Use the CLD2 language detector otherwise.
           return lazy.LanguageDetector.detectLanguageFromDocument(
             this.document
           );
