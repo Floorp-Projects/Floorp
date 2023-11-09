@@ -49,6 +49,9 @@ add_task(async function test_banner_clicking_log_web_console() {
 
   let consoleMsgPromise = waitForCookieBannerHandledConsoleMsg();
 
+  // Clear the executed records before testing.
+  Services.cookieBanners.removeAllExecutedRecords(false);
+
   info("Handle the banner via click and wait for console message to appear.");
   await openPageAndVerify({
     domain: TEST_DOMAIN_A,
@@ -78,6 +81,9 @@ add_task(async function test_cookie_injection_log_web_console() {
   insertTestCookieRules();
 
   let consoleMsgPromise = waitForCookieBannerHandledConsoleMsg();
+
+  // Clear the executed records before testing.
+  Services.cookieBanners.removeAllExecutedRecords(false);
 
   info(
     "Handle the banner via cookie injection and wait for console message to appear."
