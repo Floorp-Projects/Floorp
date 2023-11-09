@@ -2049,8 +2049,14 @@ impl Connection {
 
         if primary {
             let stats = &mut self.stats.borrow_mut().frame_tx;
-            self.acks
-                .write_frame(space, now, builder, &mut tokens, stats)?;
+            self.acks.write_frame(
+                space,
+                now,
+                path.borrow().rtt().estimate(),
+                builder,
+                &mut tokens,
+                stats,
+            )?;
         }
         let ack_end = builder.len();
 

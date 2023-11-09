@@ -116,7 +116,8 @@ fn key_update_client() {
     assert_eq!(client.get_epochs(), (Some(4), Some(3)));
 
     // Send something to propagate the update.
-    assert!(send_and_receive(&mut client, &mut server, now).is_none());
+    // Note that the server will acknowledge immediately when RTT is zero.
+    assert!(send_and_receive(&mut client, &mut server, now).is_some());
 
     // The server should now be waiting to discharge read keys.
     assert_eq!(server.get_epochs(), (Some(4), Some(3)));
