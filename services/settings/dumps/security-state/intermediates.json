@@ -1,6 +1,24 @@
 {
   "data": [
     {
+      "schema": 1699393717540,
+      "derHash": "fgqMmETQ+Z7IQwdIPy4zGYB0n4inGFZJ1Nmfo8NYnlI=",
+      "subject": "CN=Nya Labs CA,O=NYA LABS LLC,C=US",
+      "subjectDN": "MDoxCzAJBgNVBAYTAlVTMRUwEwYDVQQKDAxOWUEgTEFCUyBMTEMxFDASBgNVBAMMC055YSBMYWJzIENB",
+      "whitelist": false,
+      "attachment": {
+        "hash": "8dd9e0eaea313ca057fd25d7162b3677e82a2bd0366f1d4782cd40d4927b2ea5",
+        "size": 1695,
+        "filename": "XIN17Ax-J-06c6SQNYGeDokCHRH1HFMjAG-HQ0JRIXQ=.pem",
+        "location": "security-state-staging/intermediates/cc150b3e-701e-4b42-8c17-7e45893068dc.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "XIN17Ax+J+06c6SQNYGeDokCHRH1HFMjAG+HQ0JRIXQ=",
+      "crlite_enrolled": false,
+      "id": "c7b75907-142e-4576-bb48-80df34dc792f",
+      "last_modified": 1699394223213
+    },
+    {
       "schema": 1698353584270,
       "derHash": "+OEat/gzu+k70Tu+0+MKPqup40pFEONEq8k0BMJtGAE=",
       "subject": "CN=ZDNS ECC EV SSL CA,O=互联网域名系统北京市工程研究中心有限公司,C=CN",
@@ -28963,5 +28981,5 @@
       "last_modified": 1559865884636
     }
   ],
-  "timestamp": 1698379023347
+  "timestamp": 1699394223213
 }
