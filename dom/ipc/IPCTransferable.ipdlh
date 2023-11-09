@@ -74,11 +74,6 @@ struct IPCTransferableData
   IPCTransferableDataItem[] items;
 };
 
-union IPCTransferableDataOrError {
-    IPCTransferableData;
-    nsresult;
-};
-
 struct IPCTransferable
 {
   IPCTransferableData data;
