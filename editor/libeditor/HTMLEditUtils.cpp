@@ -15,8 +15,9 @@
 #include "HTMLEditHelpers.h"  // for EditorInlineStyle
 #include "WSRunObject.h"      // for WSRunScanner
 
-#include "mozilla/ArrayUtils.h"           // for ArrayLength
-#include "mozilla/Assertions.h"           // for MOZ_ASSERT, etc.
+#include "mozilla/ArrayUtils.h"  // for ArrayLength
+#include "mozilla/Assertions.h"  // for MOZ_ASSERT, etc.
+#include "mozilla/Attributes.h"
 #include "mozilla/StaticPrefs_editor.h"   // for StaticPrefs::editor_
 #include "mozilla/RangeUtils.h"           // for RangeUtils
 #include "mozilla/dom/DocumentInlines.h"  // for GetBodyElement()
@@ -44,6 +45,7 @@
 #include "nsPrintfCString.h"     // nsPringfCString
 #include "nsString.h"            // for nsAutoString
 #include "nsStyledElement.h"
+#include "nsStyleStruct.h"   // for StyleDisplay
 #include "nsStyleUtil.h"     // for nsStyleUtil
 #include "nsTextFragment.h"  // for nsTextFragment
 #include "nsTextFrame.h"     // for nsTextFrame
@@ -923,9 +925,11 @@ bool HTMLEditUtils::IsEmptyNode(nsPresContext* aPresContext,
                : !IsVisibleTextNode(*text);
   }
 
-  // XXX Why do we treat non-content node is not empty?
-  // XXX Why do we treat non-text data node may be not empty?
-  if (!aNode.IsContent() ||
+  if (!aNode.IsElement()) {
+    return false;
+  }
+
+  if (
       // If it's not a container such as an <hr> or <br>, etc, it should be
       // treated as not empty.
       !IsContainerNode(*aNode.AsContent()) ||
@@ -934,18 +938,65 @@ bool HTMLEditUtils::IsEmptyNode(nsPresContext* aPresContext,
       IsNamedAnchor(&aNode) ||
       // Form widgets should be treated as not empty because they have special
       // meaning even if invisible.
-      IsFormWidget(&aNode) ||
-      // If the caller treats a list item element as visible, respect it.
-      (aOptions.contains(EmptyCheckOption::TreatListItemAsVisible) &&
-       IsListItem(&aNode)) ||
-      // If the caller treats a table cell element as visible, respect it.
-      (aOptions.contains(EmptyCheckOption::TreatTableCellAsVisible) &&
-       IsTableCell(&aNode))) {
+      IsFormWidget(&aNode)) {
     return false;
   }
 
-  const bool isListItem = IsListItem(&aNode);
-  const bool isTableCell = IsTableCell(&aNode);
+  const auto [isListItem, isTableCell, hasAppearance] =
+      [&]() MOZ_NEVER_INLINE_DEBUG -> std::tuple<bool, bool, bool> {
+    if (!StaticPrefs::editor_block_inline_check_use_computed_style()) {
+      return {IsListItem(&aNode), IsTableCell(&aNode), false};
+    }
+    // Let's stop treating the document element and the <body> as a list item
+    // nor a table cell to avoid tricky cases.
+    if (aNode.OwnerDoc()->GetDocumentElement() == &aNode ||
+        (aNode.IsHTMLElement(nsGkAtoms::body) &&
+         aNode.OwnerDoc()->GetBodyElement() == &aNode)) {
+      return {false, false, false};
+    }
+
+    RefPtr<const ComputedStyle> elementStyle =
+        nsComputedDOMStyle::GetComputedStyleNoFlush(aNode.AsElement());
+    // If there is no style information like in a document fragment, let's refer
+    // the default style.
+    if (MOZ_UNLIKELY(!elementStyle)) {
+      return {IsListItem(&aNode), IsTableCell(&aNode), false};
+    }
+    const nsStyleDisplay* styleDisplay = elementStyle->StyleDisplay();
+    if (NS_WARN_IF(!styleDisplay)) {
+      return {IsListItem(&aNode), IsTableCell(&aNode), false};
+    }
+    if (styleDisplay->mDisplay != StyleDisplay::None &&
+        styleDisplay->HasAppearance()) {
+      return {false, false, true};
+    }
+    if (styleDisplay->IsListItem()) {
+      return {true, false, false};
+    }
+    if (styleDisplay->mDisplay == StyleDisplay::TableCell) {
+      return {false, true, false};
+    }
+    // The default display of <dt> and <dd> is block.  Therefore, we need
+    // special handling for them.
+    return {styleDisplay->mDisplay == StyleDisplay::Block &&
+                aNode.IsAnyOfHTMLElements(nsGkAtoms::dd, nsGkAtoms::dt),
+            false, false};
+  }();
+
+  // The web author created native widget without form control elements.  Let's
+  // treat it as visible.
+  if (hasAppearance) {
+    return false;
+  }
+
+  if (isListItem &&
+      aOptions.contains(EmptyCheckOption::TreatListItemAsVisible)) {
+    return false;
+  }
+  if (isTableCell &&
+      aOptions.contains(EmptyCheckOption::TreatTableCellAsVisible)) {
+    return false;
+  }
 
   bool seenBR = aSeenBR && *aSeenBR;
   for (nsIContent* childContent = aNode.GetFirstChild(); childContent;
@@ -966,11 +1017,7 @@ bool HTMLEditUtils::IsEmptyNode(nsPresContext* aPresContext,
       continue;
     }
 
-    // An editable, non-text node. We need to check its content.
-    // Is it the node we are iterating over?
-    if (childContent == &aNode) {
-      break;
-    }
+    MOZ_ASSERT(childContent != &aNode);
 
     if (!aOptions.contains(EmptyCheckOption::TreatSingleBRElementAsVisible) &&
         !seenBR && childContent->IsHTMLElement(nsGkAtoms::br)) {
@@ -983,24 +1030,14 @@ bool HTMLEditUtils::IsEmptyNode(nsPresContext* aPresContext,
       continue;
     }
 
-    // is it an empty node of some sort?
-    // note: list items or table cells are not considered empty
+    // Note: list items or table cells are not considered empty
     // if they contain other lists or tables
-    if (childContent->IsElement()) {
-      if (isListItem || isTableCell) {
-        if (IsAnyListElement(childContent) ||
-            childContent->IsHTMLElement(nsGkAtoms::table)) {
-          // break out if we find we aren't empty
-          return false;
-        }
-      } else if (IsFormWidget(childContent)) {
-        // is it a form widget?
-        // break out if we find we aren't empty
-        return false;
-      }
+    EmptyCheckOptions options(aOptions);
+    if (childContent->IsElement() && (isListItem || isTableCell)) {
+      options += {EmptyCheckOption::TreatListItemAsVisible,
+                  EmptyCheckOption::TreatTableCellAsVisible};
     }
-
-    if (!IsEmptyNode(aPresContext, *childContent, aOptions, &seenBR)) {
+    if (!IsEmptyNode(aPresContext, *childContent, options, &seenBR)) {
       if (aSeenBR) {
         *aSeenBR = seenBR;
       }
