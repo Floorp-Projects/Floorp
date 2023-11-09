@@ -10,6 +10,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_memory.h"
 #include "mozilla/Telemetry.h"
+#include "prsystem.h"
 
 namespace mozilla {
 
@@ -28,9 +29,16 @@ static void PrefChangeCallback(const char* aPrefName, void* aNull) {
 }
 
 void InitPHCState() {
-  SetPHCState(GetPHCStateFromPref());
+  size_t memSize = PR_GetPhysicalMemorySize();
+  // Only enable PHC if there are at least 8GB of ram.  Note that we use
+  // 1000 bytes per kilobyte rather than 1024.  Some 8GB machines will have
+  // slightly lower actual RAM available after some hardware devices
+  // reserve some.
+  if (memSize >= size_t(8'000'000'000llu)) {
+    SetPHCState(GetPHCStateFromPref());
 
-  Preferences::RegisterCallback(PrefChangeCallback, kPHCPref);
+    Preferences::RegisterCallback(PrefChangeCallback, kPHCPref);
+  }
 }
 
 void ReportPHCTelemetry() {
