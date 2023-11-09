@@ -642,14 +642,12 @@ JSString* js::SubstringKernel(JSContext* cx, HandleString str, int32_t beginInt,
     size_t lhsLength = rope->leftChild()->length() - begin;
     size_t rhsLength = begin + len - rope->leftChild()->length();
 
-    Rooted<JSRope*> ropeRoot(cx, rope);
-
-    Rooted<JSLinearString*> left(cx, ropeRoot->leftChild()->ensureLinear(cx));
+    Rooted<JSLinearString*> left(cx, rope->leftChild()->ensureLinear(cx));
     if (!left) {
       return nullptr;
     }
 
-    Rooted<JSLinearString*> right(cx, ropeRoot->rightChild()->ensureLinear(cx));
+    Rooted<JSLinearString*> right(cx, rope->rightChild()->ensureLinear(cx));
     if (!right) {
       return nullptr;
     }
@@ -674,6 +672,16 @@ JSString* js::SubstringKernel(JSContext* cx, HandleString str, int32_t beginInt,
     right = NewDependentString(cx, right, 0, rhsLength);
     if (!right) {
       return nullptr;
+    }
+
+    // The dependent string of a two-byte string can be a Latin-1 string, so
+    // check again if the result fits into an inline string.
+    if (left->hasLatin1Chars() && right->hasLatin1Chars()) {
+      if (JSInlineString::lengthFits<Latin1Char>(len)) {
+        MOZ_ASSERT(str->hasTwoByteChars(), "Latin-1 ropes are handled above");
+        return SubstringInlineString<Latin1Char>(cx, left, right, 0, lhsLength,
+                                                 rhsLength);
+      }
     }
 
     return JSRope::new_<CanGC>(cx, left, right, len);
