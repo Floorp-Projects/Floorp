@@ -7166,12 +7166,16 @@ static bool EvalStencil(JSContext* cx, uint32_t argc, Value* vp) {
   }
 
   /* Prepare the input byte array. */
-  if (!args[0].isObject() || !args[0].toObject().is<js::StencilObject>()) {
-    JS_ReportErrorASCII(cx, "evalStencil: Stencil object expected");
+  if (!args[0].isObject()) {
+    JS_ReportErrorASCII(cx, "evalStencil: Object expected");
     return false;
   }
   Rooted<js::StencilObject*> stencilObj(
-      cx, &args[0].toObject().as<js::StencilObject>());
+      cx, args[0].toObject().maybeUnwrapAs<js::StencilObject>());
+  if (!stencilObj) {
+    JS_ReportErrorASCII(cx, "evalStencil: Stencil expected");
+    return false;
+  }
 
   if (stencilObj->stencil()->isModule()) {
     JS_ReportErrorASCII(cx,
