@@ -73,6 +73,18 @@ async function observe_styling_in_oopif(aFrameCount) {
   return styleCountData.data;
 }
 
+async function promiseScrollInfoArrivalInOOPIF() {
+  const scrollPromise = new Promise(resolve => {
+    scroller.addEventListener("scroll", resolve, { once: true });
+  });
+
+  const transformReceivedPromise = SpecialPowers.spawn(testframe, [], async () => {
+    await SpecialPowers.contentTransformsReceived(content);
+  });
+
+  await Promise.all([scrollPromise, transformReceivedPromise]);
+}
+
 // The actual test
 
 async function test() {
@@ -87,9 +99,7 @@ async function test() {
 
   // Scroll synchronously to a position where the iframe gets visible.
   scroller.scrollTo(0, 1000);
-  await new Promise(resolve => {
-    scroller.addEventListener("scroll", resolve, { once: true });
-  });
+  await promiseScrollInfoArrivalInOOPIF();
 
   // Wait for a frame to make sure the notification of the last scroll position
   // from APZC reaches the iframe process
@@ -102,9 +112,7 @@ async function test() {
 
   // Scroll synchronously to a position where the iframe is invisible again.
   scroller.scrollTo(0, 0);
-  await new Promise(resolve => {
-    scroller.addEventListener("scroll", resolve, { once: true });
-  });
+  await promiseScrollInfoArrivalInOOPIF();
 
   // Wait for a frame to make sure the notification of the last scroll position
   // from APZC reaches the iframe process
