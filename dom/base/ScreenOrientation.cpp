@@ -825,14 +825,7 @@ ScreenOrientation::VisibleEventListener::HandleEvent(Event* aEvent) {
     return NS_OK;
   }
 
-  ErrorResult rv;
-  nsScreen* screen = win->GetScreen(rv);
-  if (NS_WARN_IF(rv.Failed())) {
-    return rv.StealNSResult();
-  }
-
-  MOZ_ASSERT(screen);
-  ScreenOrientation* orientation = screen->Orientation();
+  ScreenOrientation* orientation = win->Screen()->Orientation();
   MOZ_ASSERT(orientation);
 
   doc->RemoveSystemEventListener(u"visibilitychange"_ns, this, true);
@@ -847,12 +840,8 @@ ScreenOrientation::VisibleEventListener::HandleEvent(Event* aEvent) {
 
     nsCOMPtr<nsIRunnable> runnable =
         orientation->DispatchChangeEventAndResolvePromise();
-    rv = NS_DispatchToMainThread(runnable);
-    if (NS_WARN_IF(rv.Failed())) {
-      return rv.StealNSResult();
-    }
+    MOZ_TRY(NS_DispatchToMainThread(runnable));
   }
-
   return NS_OK;
 }
 

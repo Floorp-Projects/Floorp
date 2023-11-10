@@ -14,27 +14,11 @@
 #include "nsCOMPtr.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsLayoutUtils.h"
-#include "nsJSUtils.h"
 #include "nsDeviceContext.h"
 #include "mozilla/widget/ScreenManager.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
-
-/* static */
-already_AddRefed<nsScreen> nsScreen::Create(nsPIDOMWindowInner* aWindow) {
-  MOZ_ASSERT(aWindow);
-
-  if (!aWindow->GetDocShell()) {
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(aWindow);
-  NS_ENSURE_TRUE(sgo, nullptr);
-
-  RefPtr<nsScreen> screen = new nsScreen(aWindow);
-  return screen.forget();
-}
 
 nsScreen::nsScreen(nsPIDOMWindowInner* aWindow)
     : DOMEventTargetHelper(aWindow),
@@ -52,19 +36,15 @@ NS_IMPL_RELEASE_INHERITED(nsScreen, DOMEventTargetHelper)
 NS_IMPL_CYCLE_COLLECTION_INHERITED(nsScreen, DOMEventTargetHelper,
                                    mScreenOrientation)
 
-int32_t nsScreen::GetPixelDepth(ErrorResult& aRv) {
+int32_t nsScreen::PixelDepth() {
   // Return 24 to prevent fingerprinting.
   if (ShouldResistFingerprinting(RFPTarget::ScreenPixelDepth)) {
     return 24;
   }
-
   nsDeviceContext* context = GetDeviceContext();
-
-  if (!context) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return -1;
+  if (NS_WARN_IF(!context)) {
+    return 24;
   }
-
   return context->GetDepth();
 }
 
@@ -72,7 +52,6 @@ nsPIDOMWindowOuter* nsScreen::GetOuter() const {
   if (nsPIDOMWindowInner* inner = GetOwner()) {
     return inner->GetOuterWindow();
   }
-
   return nullptr;
 }
 
@@ -80,67 +59,62 @@ nsDeviceContext* nsScreen::GetDeviceContext() const {
   return nsLayoutUtils::GetDeviceContextForScreenInfo(GetOuter());
 }
 
-nsresult nsScreen::GetRect(CSSIntRect& aRect) {
+CSSIntRect nsScreen::GetRect() {
   // Return window inner rect to prevent fingerprinting.
   if (ShouldResistFingerprinting(RFPTarget::ScreenRect)) {
-    return GetWindowInnerRect(aRect);
+    return GetWindowInnerRect();
   }
 
   // Here we manipulate the value of aRect to represent the screen size,
   // if in RDM.
-  if (nsCOMPtr<nsPIDOMWindowInner> owner = GetOwner()) {
+  if (nsPIDOMWindowInner* owner = GetOwner()) {
     if (Document* doc = owner->GetExtantDoc()) {
       Maybe<CSSIntSize> deviceSize =
           nsGlobalWindowOuter::GetRDMDeviceSize(*doc);
       if (deviceSize.isSome()) {
         const CSSIntSize& size = deviceSize.value();
-        aRect.SetRect(0, 0, size.width, size.height);
-        return NS_OK;
+        return {0, 0, size.width, size.height};
       }
     }
   }
 
   nsDeviceContext* context = GetDeviceContext();
-
-  if (!context) {
-    return NS_ERROR_FAILURE;
+  if (NS_WARN_IF(!context)) {
+    return {};
   }
 
   nsRect r;
   context->GetRect(r);
-  aRect = CSSIntRect::FromAppUnitsRounded(r);
-  return NS_OK;
+  return CSSIntRect::FromAppUnitsRounded(r);
 }
 
-nsresult nsScreen::GetAvailRect(CSSIntRect& aRect) {
+CSSIntRect nsScreen::GetAvailRect() {
   // Return window inner rect to prevent fingerprinting.
   if (ShouldResistFingerprinting(RFPTarget::ScreenAvailRect)) {
-    return GetWindowInnerRect(aRect);
+    return GetWindowInnerRect();
   }
 
   // Here we manipulate the value of aRect to represent the screen size,
   // if in RDM.
-  if (nsCOMPtr<nsPIDOMWindowInner> owner = GetOwner()) {
+  if (nsPIDOMWindowInner* owner = GetOwner()) {
     if (Document* doc = owner->GetExtantDoc()) {
       Maybe<CSSIntSize> deviceSize =
           nsGlobalWindowOuter::GetRDMDeviceSize(*doc);
       if (deviceSize.isSome()) {
         const CSSIntSize& size = deviceSize.value();
-        aRect.SetRect(0, 0, size.width, size.height);
-        return NS_OK;
+        return {0, 0, size.width, size.height};
       }
     }
   }
 
   nsDeviceContext* context = GetDeviceContext();
-  if (!context) {
-    return NS_ERROR_FAILURE;
+  if (NS_WARN_IF(!context)) {
+    return {};
   }
 
   nsRect r;
   context->GetClientRect(r);
-  aRect = CSSIntRect::FromAppUnitsRounded(r);
-  return NS_OK;
+  return CSSIntRect::FromAppUnitsRounded(r);
 }
 
 uint16_t nsScreen::GetOrientationAngle() const {
@@ -185,46 +159,24 @@ void nsScreen::GetMozOrientation(nsString& aOrientation,
   }
 }
 
-bool nsScreen::MozLockOrientation(const nsAString& aOrientation,
-                                  ErrorResult& aRv) {
-  nsString orientation(aOrientation);
-  Sequence<nsString> orientations;
-  if (!orientations.AppendElement(orientation, fallible)) {
-    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
-    return false;
-  }
-  return MozLockOrientation(orientations, aRv);
-}
-
-// This function is deprecated, use ScreenOrientation API instead.
-bool nsScreen::MozLockOrientation(const Sequence<nsString>& aOrientations,
-                                  ErrorResult& aRv) {
-  return false;
-}
-
-void nsScreen::MozUnlockOrientation() {}
-
 /* virtual */
 JSObject* nsScreen::WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) {
   return Screen_Binding::Wrap(aCx, this, aGivenProto);
 }
 
-nsresult nsScreen::GetWindowInnerRect(CSSIntRect& aRect) {
-  aRect.x = 0;
-  aRect.y = 0;
+CSSIntRect nsScreen::GetWindowInnerRect() {
   nsCOMPtr<nsPIDOMWindowInner> win = GetOwner();
   if (!win) {
-    return NS_ERROR_FAILURE;
+    return {};
   }
   double width;
   double height;
-  nsresult rv = win->GetInnerWidth(&width);
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = win->GetInnerHeight(&height);
-  NS_ENSURE_SUCCESS(rv, rv);
-  aRect.SizeTo(std::round(width), std::round(height));
-  return NS_OK;
+  if (NS_FAILED(win->GetInnerWidth(&width)) ||
+      NS_FAILED(win->GetInnerHeight(&height))) {
+    return {};
+  }
+  return {0, 0, int32_t(std::round(width)), int32_t(std::round(height))};
 }
 
 bool nsScreen::ShouldResistFingerprinting(RFPTarget aTarget) const {
