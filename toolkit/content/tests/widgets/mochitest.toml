@@ -90,9 +90,6 @@ skip-if = [
   "os == 'linux'",   #Bug 1366957
 ]
 
-["test_videocontrols_orientation.html"]
-skip-if = ["true"] # Bug 1483656
-
 ["test_videocontrols_scrubber_position.html"]
 
 ["test_videocontrols_scrubber_position_nopreload.html"]

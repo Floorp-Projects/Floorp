@@ -112,14 +112,6 @@ class HTMLVideoElement final : public HTMLMediaElement {
 
   already_AddRefed<VideoPlaybackQuality> GetVideoPlaybackQuality();
 
-  bool MozOrientationLockEnabled() const {
-    return StaticPrefs::media_videocontrols_lock_video_orientation();
-  }
-
-  bool MozIsOrientationLocked() const { return mIsOrientationLocked; }
-
-  void SetMozIsOrientationLocked(bool aLock) { mIsOrientationLocked = aLock; }
-
   already_AddRefed<Promise> CloneElementVisually(HTMLVideoElement& aTarget,
                                                  ErrorResult& rv);
 
@@ -156,8 +148,6 @@ class HTMLVideoElement final : public HTMLMediaElement {
   gfx::IntSize GetVideoIntrinsicDimensions();
 
   RefPtr<WakeLock> mScreenWakeLock;
-
-  bool mIsOrientationLocked;
 
   WatchManager<HTMLVideoElement> mVideoWatchManager;
 

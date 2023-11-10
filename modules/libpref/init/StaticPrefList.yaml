@@ -10505,11 +10505,6 @@
   value: true
   mirror: always
 
-- name: media.videocontrols.lock-video-orientation
-  type: bool
-  value: false
-  mirror: always
-
 # Media Seamless Looping
 - name: media.seamless-looping
   type: RelaxedAtomicBool
