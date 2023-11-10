@@ -83,12 +83,14 @@ ifdef ENABLE_MOZSEARCH_PLUGIN
 	cd $(topobjdir)/ && cp _build_manifests/install/dist_include '$(ABS_DIST)/$(PKG_PATH)$(MOZSEARCH_INCLUDEMAP_BASENAME).map'
 	@echo 'Generating mozsearch scip index...'
 	$(RM) $(MOZSEARCH_SCIP_INDEX_BASENAME).zip
+	cp $(topsrcdir)/.cargo/config.in $(topsrcdir)/.cargo/config
 	cd $(topsrcdir)/ && \
           CARGO=$(MOZ_FETCHES_DIR)/rustc/bin/cargo \
           RUSTC=$(MOZ_FETCHES_DIR)/rustc/bin/rustc \
           $(MOZ_FETCHES_DIR)/rustc/bin/rust-analyzer scip . && \
           zip -r5D '$(ABS_DIST)/$(PKG_PATH)$(MOZSEARCH_SCIP_INDEX_BASENAME).zip' \
           index.scip
+	rm $(topsrcdir)/.cargo/config
 endif
 ifeq (Darwin, $(OS_ARCH))
 ifneq (,$(MOZ_ASAN)$(LIBFUZZER)$(MOZ_UBSAN))
