@@ -54,15 +54,21 @@ add_task(async function test_telemetry() {
   await Services.fog.testFlushAllChildren();
   resetTelemetryData();
 
-  let process = IS_OOP ? "content" : "parent";
-  ok(
-    !(HISTOGRAM in getSnapshots(process)),
-    `No data recorded for histogram: ${HISTOGRAM}.`
-  );
-  ok(
-    !(HISTOGRAM_KEYED in getKeyedSnapshots(process)),
-    `No data recorded for keyed histogram: ${HISTOGRAM_KEYED}.`
-  );
+  let process = "content";
+
+  // Assert unified telemetry data.
+  if (AppConstants.platform != "android") {
+    ok(
+      !(HISTOGRAM in getSnapshots(process)),
+      `No data recorded for histogram: ${HISTOGRAM}.`
+    );
+    ok(
+      !(HISTOGRAM_KEYED in getKeyedSnapshots(process)),
+      `No data recorded for keyed histogram: ${HISTOGRAM_KEYED}.`
+    );
+  }
+
+  // Assert glean telemetry data.
   assertGleanMetricsNoSamples({
     metricId: GLEAN_METRIC_ID,
     gleanMetric: Glean.extensionsTiming[GLEAN_METRIC_ID],
@@ -74,14 +80,19 @@ add_task(async function test_telemetry() {
 
   info(`Started extension with id ${extensionId}`);
 
-  ok(
-    !(HISTOGRAM in getSnapshots(process)),
-    `No data recorded for histogram after startup: ${HISTOGRAM}.`
-  );
-  ok(
-    !(HISTOGRAM_KEYED in getKeyedSnapshots(process)),
-    `No data recorded for keyed histogram: ${HISTOGRAM_KEYED}.`
-  );
+  // Assert unified telemetry data.
+  if (AppConstants.platform != "android") {
+    ok(
+      !(HISTOGRAM in getSnapshots(process)),
+      `No data recorded for histogram after startup: ${HISTOGRAM}.`
+    );
+    ok(
+      !(HISTOGRAM_KEYED in getKeyedSnapshots(process)),
+      `No data recorded for keyed histogram: ${HISTOGRAM_KEYED}.`
+    );
+  }
+
+  // Assert glean telemetry data.
   assertGleanMetricsNoSamples({
     metricId: GLEAN_METRIC_ID,
     gleanMetric: Glean.extensionsTiming[GLEAN_METRIC_ID],
@@ -92,19 +103,30 @@ add_task(async function test_telemetry() {
     `${BASE_URL}/file_sample.html`
   );
   await extension1.awaitMessage("content-script-run");
-  await promiseTelemetryRecorded(HISTOGRAM, process, 1);
-  await promiseKeyedTelemetryRecorded(HISTOGRAM_KEYED, process, extensionId, 1);
 
-  equal(
-    valueSum(getSnapshots(process)[HISTOGRAM].values),
-    1,
-    `Data recorded for histogram: ${HISTOGRAM}.`
-  );
-  equal(
-    valueSum(getKeyedSnapshots(process)[HISTOGRAM_KEYED][extensionId].values),
-    1,
-    `Data recorded for histogram: ${HISTOGRAM_KEYED} with key ${extensionId}.`
-  );
+  // Assert unified telemetry data.
+  if (AppConstants.platform != "android") {
+    await promiseTelemetryRecorded(HISTOGRAM, process, 1);
+    await promiseKeyedTelemetryRecorded(
+      HISTOGRAM_KEYED,
+      process,
+      extensionId,
+      1
+    );
+
+    equal(
+      valueSum(getSnapshots(process)[HISTOGRAM].values),
+      1,
+      `Data recorded for histogram: ${HISTOGRAM}.`
+    );
+    equal(
+      valueSum(getKeyedSnapshots(process)[HISTOGRAM_KEYED][extensionId].values),
+      1,
+      `Data recorded for histogram: ${HISTOGRAM_KEYED} with key ${extensionId}.`
+    );
+  }
+
+  // Assert glean telemetry data.
   await Services.fog.testFlushAllChildren();
   assertGleanMetricsSamplesCount({
     metricId: GLEAN_METRIC_ID,
@@ -121,20 +143,25 @@ add_task(async function test_telemetry() {
 
   info(`Started extension with id ${extensionId2}`);
 
-  equal(
-    valueSum(getSnapshots(process)[HISTOGRAM].values),
-    1,
-    `No new data recorded for histogram after extension2 startup: ${HISTOGRAM}.`
-  );
-  equal(
-    valueSum(getKeyedSnapshots(process)[HISTOGRAM_KEYED][extensionId].values),
-    1,
-    `No new data recorded for histogram after extension2 startup: ${HISTOGRAM_KEYED} with key ${extensionId}.`
-  );
-  ok(
-    !(extensionId2 in getKeyedSnapshots(process)[HISTOGRAM_KEYED]),
-    `No data recorded for histogram after startup: ${HISTOGRAM_KEYED} with key ${extensionId2}.`
-  );
+  // Assert unified telemetry data.
+  if (AppConstants.platform != "android") {
+    equal(
+      valueSum(getSnapshots(process)[HISTOGRAM].values),
+      1,
+      `No new data recorded for histogram after extension2 startup: ${HISTOGRAM}.`
+    );
+    equal(
+      valueSum(getKeyedSnapshots(process)[HISTOGRAM_KEYED][extensionId].values),
+      1,
+      `No new data recorded for histogram after extension2 startup: ${HISTOGRAM_KEYED} with key ${extensionId}.`
+    );
+    ok(
+      !(extensionId2 in getKeyedSnapshots(process)[HISTOGRAM_KEYED]),
+      `No data recorded for histogram after startup: ${HISTOGRAM_KEYED} with key ${extensionId2}.`
+    );
+  }
+
+  // Assert glean telemetry data.
   await Services.fog.testFlushAllChildren();
   assertGleanMetricsSamplesCount({
     metricId: GLEAN_METRIC_ID,
@@ -148,30 +175,37 @@ add_task(async function test_telemetry() {
     `${BASE_URL}/file_sample.html`
   );
   await extension2.awaitMessage("content-script-run");
-  await promiseTelemetryRecorded(HISTOGRAM, process, 2);
-  await promiseKeyedTelemetryRecorded(
-    HISTOGRAM_KEYED,
-    process,
-    extensionId2,
-    1
-  );
 
-  equal(
-    valueSum(getSnapshots(process)[HISTOGRAM].values),
-    2,
-    `Data recorded for histogram: ${HISTOGRAM}.`
-  );
-  equal(
-    valueSum(getKeyedSnapshots(process)[HISTOGRAM_KEYED][extensionId].values),
-    1,
-    `No new data recorded for histogram: ${HISTOGRAM_KEYED} with key ${extensionId}.`
-  );
-  equal(
-    valueSum(getKeyedSnapshots(process)[HISTOGRAM_KEYED][extensionId2].values),
-    1,
-    `Data recorded for histogram: ${HISTOGRAM_KEYED} with key ${extensionId2}.`
-  );
+  // Assert unified telemetry data.
+  if (AppConstants.platform != "android") {
+    await promiseTelemetryRecorded(HISTOGRAM, process, 2);
+    await promiseKeyedTelemetryRecorded(
+      HISTOGRAM_KEYED,
+      process,
+      extensionId2,
+      1
+    );
 
+    equal(
+      valueSum(getSnapshots(process)[HISTOGRAM].values),
+      2,
+      `Data recorded for histogram: ${HISTOGRAM}.`
+    );
+    equal(
+      valueSum(getKeyedSnapshots(process)[HISTOGRAM_KEYED][extensionId].values),
+      1,
+      `No new data recorded for histogram: ${HISTOGRAM_KEYED} with key ${extensionId}.`
+    );
+    equal(
+      valueSum(
+        getKeyedSnapshots(process)[HISTOGRAM_KEYED][extensionId2].values
+      ),
+      1,
+      `Data recorded for histogram: ${HISTOGRAM_KEYED} with key ${extensionId2}.`
+    );
+  }
+
+  // Assert glean telemetry data.
   await Services.fog.testFlushAllChildren();
   assertGleanMetricsSamplesCount({
     metricId: GLEAN_METRIC_ID,
