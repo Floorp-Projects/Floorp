@@ -431,6 +431,7 @@ async function testInstallMethod(installFn, telemetryBase) {
 // updates applied automatically or not.
 async function interactiveUpdateTest(autoUpdate, checkFn) {
   AddonTestUtils.initMochitest(this);
+  Services.fog.testResetFOG();
 
   const ID = "update2@tests.mozilla.org";
   const FAKE_INSTALL_SOURCE = "fake-install-source";
@@ -552,23 +553,34 @@ async function interactiveUpdateTest(autoUpdate, checkFn) {
     }
   );
 
+  const expectedSteps = [
+    // First update is cancelled on the permission prompt.
+    "started",
+    "download_started",
+    "download_completed",
+    "permissions_prompt",
+    "cancelled",
+    // Second update is expected to be completed.
+    "started",
+    "download_started",
+    "download_completed",
+    "permissions_prompt",
+    "completed",
+  ];
+
   Assert.deepEqual(
+    expectedSteps,
     collectedUpdateEvents.map(evt => evt.extra.step),
-    [
-      // First update is cancelled on the permission prompt.
-      "started",
-      "download_started",
-      "download_completed",
-      "permissions_prompt",
-      "cancelled",
-      // Second update is expected to be completed.
-      "started",
-      "download_started",
-      "download_completed",
-      "permissions_prompt",
-      "completed",
-    ],
     "Got the expected sequence on update telemetry events"
+  );
+
+  let gleanEvents = AddonTestUtils.getAMGleanEvents("update");
+  Services.fog.testResetFOG();
+
+  Assert.deepEqual(
+    expectedSteps,
+    gleanEvents.map(e => e.step),
+    "Got the expected sequence on update Glean events."
   );
 
   ok(
@@ -587,6 +599,19 @@ async function interactiveUpdateTest(autoUpdate, checkFn) {
     collectedUpdateEvents.every(evt => evt.extra.updated_from === "user"),
     "Every update telemetry event should have the update_from extra var 'user'"
   );
+
+  for (let e of gleanEvents) {
+    is(e.addon_id, ID, "Glean event has the expected addon_id.");
+    is(e.source, FAKE_INSTALL_SOURCE, "Glean event has the expected source.");
+    is(e.updated_from, "user", "Glean event has the expected updated_from.");
+
+    if (e.step === "permissions_prompt") {
+      ok(parseInt(e.num_strings) > 0, "Expected num_strings.");
+    }
+    if (e.step === "download_completed") {
+      ok(parseInt(e.download_time) > 0, "Valid download_time.");
+    }
+  }
 
   let hasPermissionsExtras = collectedUpdateEvents
     .filter(evt => {

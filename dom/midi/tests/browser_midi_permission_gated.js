@@ -71,6 +71,7 @@ add_task(async function testRequestMIDIAccess() {
   gBrowser.selectedTab = BrowserTestUtils.addTab(gBrowser, EXAMPLE_COM_URL);
   await BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
   const testPageHost = gBrowser.selectedTab.linkedBrowser.documentURI.host;
+  Services.fog.testResetFOG();
 
   info("Check that midi-sysex isn't set");
   ok(
@@ -415,6 +416,12 @@ add_task(async function testRequestMIDIAccess() {
     `Rejection should be delayed by a randomized interval no less than 3 seconds (got ${
       denyIntervalElapsed / 1000
     } seconds)`
+  );
+
+  Assert.deepEqual(
+    [{ suspicious_site: "example.com" }],
+    AddonTestUtils.getAMGleanEvents("reportSuspiciousSite"),
+    "Expected Glean event recorded."
   );
 
   // Invoking getAMTelemetryEvents resets the mocked event array, and we want
