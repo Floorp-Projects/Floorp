@@ -61,6 +61,7 @@ async function testNoPrompt(origUrl, id) {
       ],
     ],
   });
+  Services.fog.testResetFOG();
 
   // Install version 1.0 of the test extension
   let addon = await promiseInstallAddon(origUrl);
@@ -106,11 +107,25 @@ async function testNoPrompt(origUrl, id) {
       return evt.extra.step;
     });
 
+  let expected = [
+    "started",
+    "download_started",
+    "download_completed",
+    "completed",
+  ];
   // Expect telemetry events related to a completed update with no permissions_prompt event.
   Assert.deepEqual(
+    expected,
     updateEventsSteps,
-    ["started", "download_started", "download_completed", "completed"],
     "Got the steps from the collected telemetry events"
+  );
+
+  Assert.deepEqual(
+    expected,
+    AddonTestUtils.getAMGleanEvents("update", { addon_id: id }).map(
+      e => e.step
+    ),
+    "Got the steps from the collected Glean events."
   );
 }
 

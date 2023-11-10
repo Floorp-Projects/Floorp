@@ -5055,6 +5055,17 @@ AMTelemetry = {
     }
 
     this.recordEvent({ method, object, value: install.hashedAddonId, extra });
+    Glean.addonsManager.installStats.record(
+      this.formatExtraVars({
+        addon_id: extra.addon_id,
+        addon_type: object,
+        taar_based: extra.taar_based,
+        utm_campaign: extra.utm_campaign,
+        utm_content: extra.utm_content,
+        utm_medium: extra.utm_medium,
+        utm_source: extra.utm_source,
+      })
+    );
   },
 
   /**
@@ -5157,6 +5168,21 @@ AMTelemetry = {
     extra = this.formatExtraVars({ ...extraVars, ...extra });
 
     this.recordEvent({ method: eventMethod, object, value: installId, extra });
+    Glean.addonsManager[eventMethod]?.record(
+      this.formatExtraVars({
+        addon_id: extra.addon_id,
+        addon_type: object,
+        install_id: installId,
+        download_time: extra.download_time,
+        error: extra.error,
+        source: extra.source,
+        source_method: extra.method,
+        num_strings: extra.num_strings,
+        updated_from: extra.updated_from,
+        install_origins: extra.install_origins,
+        step: extra.step,
+      })
+    );
   },
 
   /**
@@ -5210,6 +5236,16 @@ AMTelemetry = {
       value,
       extra: hasExtraVars ? extra : null,
     });
+    Glean.addonsManager.manage.record(
+      this.formatExtraVars({
+        method,
+        addon_id: value,
+        addon_type: object,
+        source: extra.source,
+        source_method: extra.method,
+        num_strings: extra.num_strings,
+      })
+    );
   },
 
   /**
@@ -5236,6 +5272,31 @@ AMTelemetry = {
         error_type: errorType,
       }),
     });
+    Glean.addonsManager.report.record(
+      this.formatExtraVars({
+        addon_id: addonId,
+        addon_type: addonType,
+        entry_point: reportEntryPoint,
+        error_type: errorType,
+      })
+    );
+  },
+
+  /**
+   * @params {object} opts
+   * @params {nsIURI} opts.displayURI
+   */
+  recordSuspiciousSiteEvent({ displayURI }) {
+    let site = displayURI?.displayHost ?? "(unknown)";
+    this.recordEvent({
+      method: "reportSuspiciousSite",
+      object: "suspiciousSite",
+      value: site,
+      extra: {},
+    });
+    Glean.addonsManager.reportSuspiciousSite.record(
+      this.formatExtraVars({ suspiciousSite: site })
+    );
   },
 
   recordEvent({ method, object, value, extra }) {

@@ -1809,6 +1809,31 @@ export var AddonTestUtils = {
 
     return events;
   },
+
+  /**
+   * @param {string|string[]} events - The event(s) to retrieve.
+   * @param {object} [filter] - key/value pairs to filter events.
+   * @returns {object[]} Collected extra objects from events.
+   */
+  getAMGleanEvents(events, filter = {}) {
+    let result = [];
+    for (let event of [].concat(events)) {
+      result = result.concat(Glean.addonsManager[event].testGetValue() ?? []);
+    }
+
+    // When combining multiple events, we want them in chronological order.
+    result.sort((a, b) => a.timestamp - b.timestamp);
+
+    result = result.filter(e =>
+      Object.keys(filter).every(key => e.extra[key] === filter[key])
+    );
+
+    // We (usually) don't care about install_id, so drop it to ease comparison.
+    result.forEach(e => delete e.extra.install_id);
+
+    // For Glean events, all data is in the extra object.
+    return result.map(e => e.extra);
+  },
 };
 
 for (let [key, val] of Object.entries(AddonTestUtils)) {

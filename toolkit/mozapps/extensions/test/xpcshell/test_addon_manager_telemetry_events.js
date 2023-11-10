@@ -16,11 +16,17 @@ const EVENT_CATEGORY = "addonsManager";
 const EVENT_METHODS_INSTALL = ["install", "update"];
 const EVENT_METHODS_MANAGE = ["disable", "enable", "uninstall"];
 const EVENT_METHODS = [...EVENT_METHODS_INSTALL, ...EVENT_METHODS_MANAGE];
+const GLEAN_EVENT_NAMES = ["install", "update", "manage"];
 
 const FAKE_INSTALL_TELEMETRY_INFO = {
   source: "fake-install-source",
   method: "fake-install-method",
 };
+
+add_setup(() => {
+  do_get_profile();
+  Services.fog.initializeFOG();
+});
 
 function getTelemetryEvents(includeMethods = EVENT_METHODS) {
   const snapshot = Services.telemetry.snapshotEvents(
@@ -136,6 +142,7 @@ add_task(
     await extension.unload();
 
     let amEvents = getTelemetryEvents();
+    let gleanEvents = AddonTestUtils.getAMGleanEvents(GLEAN_EVENT_NAMES);
 
     const amMethods = amEvents.map(evt => evt.method);
     const expectedMethods = [
@@ -153,6 +160,18 @@ add_task(
       amMethods,
       expectedMethods,
       "Got the addonsManager telemetry events in the expected order"
+    );
+    Assert.deepEqual(
+      expectedMethods,
+      gleanEvents.map(evt => {
+        // Install events don't have a method, so use ducktyping to recognize
+        // them: they have a step, but unlike update events, no updated_from.
+        if (evt.step && !evt.updated_from) {
+          return "install";
+        }
+        return evt.method;
+      }),
+      "Got the addonsManager Glean events in the expected order."
     );
 
     const installEvents = amEvents.filter(evt => evt.method === "install");
@@ -186,6 +205,38 @@ add_task(
       "Got the expected addonsManager.install events"
     );
 
+    let gleanInstall = {
+      addon_type: "extension",
+      addon_id: "basic@test.extension",
+      source: FAKE_INSTALL_TELEMETRY_INFO.source,
+      source_method: FAKE_INSTALL_TELEMETRY_INFO.method,
+      install_origins: "0",
+    };
+    Assert.deepEqual(
+      AddonTestUtils.getAMGleanEvents("install"),
+      [
+        { step: "started", ...gleanInstall },
+        { step: "completed", ...gleanInstall },
+      ],
+      "Got the expected addonsManager Glean events."
+    );
+
+    let gleanManage = {
+      addon_type: "extension",
+      addon_id: "basic@test.extension",
+      source: FAKE_INSTALL_TELEMETRY_INFO.source,
+      source_method: FAKE_INSTALL_TELEMETRY_INFO.method,
+    };
+    Assert.deepEqual(
+      AddonTestUtils.getAMGleanEvents("manage"),
+      [
+        { method: "disable", ...gleanManage },
+        { method: "enable", ...gleanManage },
+        { method: "uninstall", ...gleanManage },
+      ],
+      "Got the expected addonsManager Glean events"
+    );
+
     const manageEvents = amEvents.filter(evt =>
       EVENT_METHODS_MANAGE.includes(evt.method)
     );
@@ -216,6 +267,7 @@ add_task(
       "Got the expected addonsManager.manage events"
     );
 
+    Services.fog.testResetFOG();
     // Verify that on every install flow, the value of the addonsManager.install Telemetry events
     // is being incremented.
 
@@ -235,6 +287,17 @@ add_task(
       "Got the expected number of addonsManager install events"
     );
 
+    equal(
+      3,
+      AddonTestUtils.getAMGleanEvents(GLEAN_EVENT_NAMES).length,
+      "Got the expected number of addonsManager Glean events."
+    );
+    equal(
+      2,
+      AddonTestUtils.getAMGleanEvents("install", { install_id: "2" }).length,
+      "Got the expected install_id for Glean install event."
+    );
+
     const eventValues = eventsFromNewInstall
       .filter(evt => evt.method === "install")
       .map(evt => evt.value);
@@ -244,6 +307,8 @@ add_task(
       expectedValues,
       "Got the expected install id"
     );
+
+    Services.fog.testResetFOG();
   }
 );
 
@@ -392,6 +457,23 @@ add_task(
     const addon_id = "basic@test.extension";
     const object = "extension";
 
+    let gleanInstall = {
+      addon_id,
+      addon_type: "extension",
+      install_origins: "0",
+      source: FAKE_INSTALL_TELEMETRY_INFO.source,
+      source_method: FAKE_INSTALL_TELEMETRY_INFO.method,
+    };
+
+    Assert.deepEqual(
+      AddonTestUtils.getAMGleanEvents("install"),
+      [
+        { step: "started", ...gleanInstall },
+        { step: "completed", ...gleanInstall },
+      ],
+      "Got the expected install Glean events."
+    );
+
     Assert.deepEqual(
       installEvents,
       [
@@ -428,6 +510,38 @@ add_task(
 
     const method = "update";
     const baseExtra = FAKE_INSTALL_TELEMETRY_INFO;
+
+    let glean = AddonTestUtils.getAMGleanEvents("update");
+    glean.forEach(e => delete e.download_time);
+
+    let gleanUpdate = {
+      addon_id,
+      addon_type: "extension",
+      source: FAKE_INSTALL_TELEMETRY_INFO.source,
+      source_method: FAKE_INSTALL_TELEMETRY_INFO.method,
+    };
+    Assert.deepEqual(
+      glean,
+      [
+        { step: "started", updated_from: "user", ...gleanUpdate },
+        { step: "download_started", updated_from: "user", ...gleanUpdate },
+        { step: "download_completed", updated_from: "user", ...gleanUpdate },
+        { step: "completed", updated_from: "user", ...gleanUpdate },
+        { step: "started", updated_from: "app", ...gleanUpdate },
+        { step: "download_started", updated_from: "app", ...gleanUpdate },
+        { step: "download_completed", updated_from: "app", ...gleanUpdate },
+        { step: "completed", updated_from: "app", ...gleanUpdate },
+        { step: "started", updated_from: "app", ...gleanUpdate },
+        { step: "download_started", updated_from: "app", ...gleanUpdate },
+        {
+          step: "download_failed",
+          updated_from: "app",
+          error: "ERROR_NETWORK_FAILURE",
+          ...gleanUpdate,
+        },
+      ],
+      "Got the expected Glean update events."
+    );
 
     const expectedUpdateEvents = [
       // User-requested update to the 2.1 version.
@@ -536,6 +650,15 @@ add_task(
       },
     ];
 
+    AddonTestUtils.getAMGleanEvents("update")
+      .filter(e => ["download_completed", "download_failed"].includes(e.step))
+      .forEach(e =>
+        ok(
+          parseInt(e.download_time, 10) > 0,
+          `At step ${e.step} download_time: ${e.download_time}`
+        )
+      );
+
     for (let i = 0; i < updateEvents.length; i++) {
       if (
         ["download_completed", "download_failed"].includes(
@@ -568,6 +691,7 @@ add_task(
 
     // Clear any AMTelemetry events related to the uninstalled extensions.
     getTelemetryEvents();
+    Services.fog.testResetFOG();
   }
 );
 
@@ -728,6 +852,8 @@ add_task(async function test_collect_attribution_data_for_amo() {
     await extension.startup();
 
     const installStatsEvents = getTelemetryEvents(["install_stats"]);
+    let gleanEvents = AddonTestUtils.getAMGleanEvents(["installStats"]);
+    Services.fog.testResetFOG();
 
     if (expectNoEvent === true) {
       Assert.equal(
@@ -735,11 +861,21 @@ add_task(async function test_collect_attribution_data_for_amo() {
         0,
         "no install_stats event should be recorded"
       );
+      Assert.equal(
+        gleanEvents.length,
+        0,
+        "No install_stats Glean event should be recorded."
+      );
     } else {
       Assert.equal(
         installStatsEvents.length,
         1,
         "only one install_stats event should be recorded"
+      );
+      Assert.equal(
+        gleanEvents.length,
+        1,
+        "Only one install_stats Glean event should be recorded."
       );
 
       const installStatsEvent = installStatsEvents[0];
@@ -752,6 +888,11 @@ add_task(async function test_collect_attribution_data_for_amo() {
           addon_id: addonId,
           ...expectedAmoAttribution,
         },
+      });
+      Assert.deepEqual(gleanEvents[0], {
+        addon_id: addonId,
+        addon_type: "extension",
+        ...expectedAmoAttribution,
       });
     }
 
@@ -769,7 +910,14 @@ add_task(async function test_collect_attribution_data_for_amo() {
       "no install_stats event should be recorded on addon updates"
     );
 
+    Assert.deepEqual(
+      AddonTestUtils.getAMGleanEvents(["installStats"]),
+      [],
+      "No install_stats Glean event should be recorded on addon updates."
+    );
+
     await extension.unload();
+    Services.fog.testResetFOG();
   }
 
   getTelemetryEvents();
@@ -824,6 +972,19 @@ add_task(async function test_collect_attribution_data_for_amo_with_long_id() {
       utm_content: "utm-content-value",
     },
   });
+
+  Assert.deepEqual(
+    AddonTestUtils.getAMGleanEvents(["installStats"]),
+    [
+      {
+        addon_type: "extension",
+        addon_id: AMTelemetry.getTrimmedString(addonId),
+        utm_content: "utm-content-value",
+      },
+    ],
+    "Got the expected install_stats Glean event."
+  );
+  Services.fog.testResetFOG();
 });
 
 add_task(async function test_collect_attribution_data_for_rtamo() {
@@ -868,6 +1029,18 @@ add_task(async function test_collect_attribution_data_for_rtamo() {
       addon_id: AMTelemetry.getTrimmedString(addonId),
     },
   });
+
+  Assert.deepEqual(
+    AddonTestUtils.getAMGleanEvents(["installStats"]),
+    [
+      {
+        addon_type: "extension",
+        addon_id: AMTelemetry.getTrimmedString(addonId),
+      },
+    ],
+    "Got the expected install_stats Glean event."
+  );
+  Services.fog.testResetFOG();
 });
 
 add_task(async function teardown() {
