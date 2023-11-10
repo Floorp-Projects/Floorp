@@ -9,8 +9,6 @@
 #ifndef nsStyleSheetService_h_
 #define nsStyleSheetService_h_
 
-#include "nsCOMArray.h"
-#include "nsCOMPtr.h"
 #include "nsIMemoryReporter.h"
 #include "nsIStyleSheetService.h"
 #include "mozilla/Array.h"
@@ -18,8 +16,6 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/StyleSheet.h"
 
-class nsICategoryManager;
-class nsIMemoryReporter;
 class nsISimpleEnumerator;
 
 namespace mozilla {
@@ -63,11 +59,6 @@ class nsStyleSheetService final : public nsIStyleSheetService,
 
  private:
   ~nsStyleSheetService();
-
-  void RegisterFromEnumerator(nsICategoryManager* aManager,
-                              const char* aCategory,
-                              nsISimpleEnumerator* aEnumerator,
-                              uint32_t aSheetType);
 
   int32_t FindSheetByURI(uint32_t aSheetType, nsIURI* aSheetURI);
 
