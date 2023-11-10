@@ -11,7 +11,7 @@ echo "" > pwfile
 
 certutil -d . -N -f pwfile
 
-certutil -S -z noise -g 1024 -d . -n ca -s "CN=NSS Test CA,O=BOGUS NSS,L=Mountain View,ST=California,C=US" -t C,C,C -x -m 1 -w -2 -v 120 -1 -2 -5 <<CERTSCRIPT
+certutil -S -z noise -g 1024 -d . -n ca -s "CN=NSS Test CA,O=BOGUS NSS,L=Mountain View,ST=California,C=US" -t C,C,C -x -m 1 -w -2 -v 240 -1 -2 -5 <<CERTSCRIPT
 5
 6
 9
@@ -26,7 +26,7 @@ n
 n
 CERTSCRIPT
 
-certutil -S -z noise -g 1024 -d . -n ica -s "CN=NSS Intermediate CA,O=BOGUS NSS,L=Mountain View,ST=California,C=US" -t ,, -c ca -m 20 -w -1 -v 118 -1 -2 -5 --extNC <<CERTSCRIPT
+certutil -S -z noise -g 1024 -d . -n ica -s "CN=NSS Intermediate CA,O=BOGUS NSS,L=Mountain View,ST=California,C=US" -t ,, -c ca -m 20 -w -1 -v 238 -1 -2 -5 --extNC <<CERTSCRIPT
 5
 6
 9
@@ -46,7 +46,7 @@ n
 n
 CERTSCRIPT
 
-certutil -S -z noise -g 1024 -d . -n server1 -s "CN=test.invalid,O=BOGUS NSS,L=Mountain View,ST=California,C=US" -t ,, -c ica -m 40 -v 115 -1 -2 -5 -8 test.invalid <<CERTSCRIPT
+certutil -S -z noise -g 1024 -d . -n server1 -s "CN=test.invalid,O=BOGUS NSS,L=Mountain View,ST=California,C=US" -t ,, -c ica -m 40 -v 235 -1 -2 -5 -8 test.invalid <<CERTSCRIPT
 0
 2
 3
@@ -62,7 +62,7 @@ y
 n
 CERTSCRIPT
 
-certutil -S -z noise -g 1024 -d . -n server2 -s "CN=another_test.invalid,O=BOGUS NSS,L=Mountain View,ST=California,C=US" -t ,, -c ica -m 41 -v 115 -1 -2 -5 <<CERTSCRIPT
+certutil -S -z noise -g 1024 -d . -n server2 -s "CN=another_test.invalid,O=BOGUS NSS,L=Mountain View,ST=California,C=US" -t ,, -c ica -m 41 -v 235 -1 -2 -5 <<CERTSCRIPT
 0
 2
 3
@@ -78,7 +78,7 @@ y
 n
 CERTSCRIPT
 
-certutil -S -z noise -g 1024 -d . -n server3 -s "CN=test.example,O=BOGUS NSS,L=Mountain View,ST=California,C=US" -t ,, -c ica -m 42 -v 115 -1 -2 -5 -8 test.example <<CERTSCRIPT
+certutil -S -z noise -g 1024 -d . -n server3 -s "CN=test.example,O=BOGUS NSS,L=Mountain View,ST=California,C=US" -t ,, -c ica -m 42 -v 235 -1 -2 -5 -8 test.example <<CERTSCRIPT
 0
 2
 3
@@ -94,7 +94,7 @@ y
 n
 CERTSCRIPT
 
-certutil -S -z noise -g 1024 -d . -n ica2 -s "CN=NSS Intermediate CA 2,O=BOGUS NSS,L=Mountain View,ST=California,C=US" -t ,, -c ica -m 21 -w -2 -v 120 -1 -2 -5 <<CERTSCRIPT
+certutil -S -z noise -g 1024 -d . -n ica2 -s "CN=NSS Intermediate CA 2,O=BOGUS NSS,L=Mountain View,ST=California,C=US" -t ,, -c ica -m 21 -w -2 -v 240 -1 -2 -5 <<CERTSCRIPT
 5
 6
 9
@@ -109,7 +109,7 @@ n
 n
 CERTSCRIPT
 
-certutil -S -z noise -g 1024 -d . -n server4 -s "CN=test2.invalid,O=BOGUS NSS,L=Mountain View,ST=California,C=US" -t ,, -c ica2 -m 50 -v 115 -1 -2 -5 -8 test.invalid <<CERTSCRIPT
+certutil -S -z noise -g 1024 -d . -n server4 -s "CN=test2.invalid,O=BOGUS NSS,L=Mountain View,ST=California,C=US" -t ,, -c ica2 -m 50 -v 235 -1 -2 -5 -8 test.invalid <<CERTSCRIPT
 0
 2
 3
@@ -125,7 +125,7 @@ y
 n
 CERTSCRIPT
 
-certutil -S -z noise -g 1024 -d . -n server5 -s "CN=another_test2.invalid,O=BOGUS NSS,L=Mountain View,ST=California,C=US" -t ,, -c ica2 -m 51 -v 115 -1 -2 -5 <<CERTSCRIPT
+certutil -S -z noise -g 1024 -d . -n server5 -s "CN=another_test2.invalid,O=BOGUS NSS,L=Mountain View,ST=California,C=US" -t ,, -c ica2 -m 51 -v 235 -1 -2 -5 <<CERTSCRIPT
 0
 2
 3
@@ -142,7 +142,7 @@ n
 CERTSCRIPT
 
 
-certutil -S -z noise -g 1024 -d . -n server6 -s "CN=test2.example,O=BOGUS NSS,L=Mountain View,ST=California,C=US" -t ,, -c ica2 -m 52 -v 115 -1 -2 -5 -8 test.example <<CERTSCRIPT
+certutil -S -z noise -g 1024 -d . -n server6 -s "CN=test2.example,O=BOGUS NSS,L=Mountain View,ST=California,C=US" -t ,, -c ica2 -m 52 -v 235 -1 -2 -5 -8 test.example <<CERTSCRIPT
 0
 2
 3
@@ -158,7 +158,7 @@ y
 n
 CERTSCRIPT
 
-certutil -S -z noise -g 1024 -d . -n ica3 -s "CN=NSS Intermediate CA3,O=BOGUS NSS,L=Mountain View,ST=California,C=US" -t ,, -c ca -m 21 -w -1 -v 118 -1 -2 -5 --extNC <<CERTSCRIPT
+certutil -S -z noise -g 1024 -d . -n ica3 -s "CN=NSS Intermediate CA3,O=BOGUS NSS,L=Mountain View,ST=California,C=US" -t ,, -c ca -m 21 -w -1 -v 238 -1 -2 -5 --extNC <<CERTSCRIPT
 5
 6
 9
@@ -182,7 +182,7 @@ n
 n
 CERTSCRIPT
 
-certutil -S -z noise -g 1024 -d . -n ica4 -s "CN=NSS Intermediate CA 2,O=Foo,ST=CA,C=US" -t ,, -c ica3 -m 61 -w -2 -v 120 -1 -2 -5 <<CERTSCRIPT
+certutil -S -z noise -g 1024 -d . -n ica4 -s "CN=NSS Intermediate CA 2,O=Foo,ST=CA,C=US" -t ,, -c ica3 -m 61 -w -2 -v 240 -1 -2 -5 <<CERTSCRIPT
 5
 6
 9
@@ -197,7 +197,7 @@ n
 n
 CERTSCRIPT
 
-certutil -S -z noise -g 1024 -d . -n server7 -s "CN=bat.foo.example,ou=bar,O=Foo,ST=CA,C=US" -t ,, -c ica4 -m 41 -v 115 -1 -2 -5 <<CERTSCRIPT
+certutil -S -z noise -g 1024 -d . -n server7 -s "CN=bat.foo.example,ou=bar,O=Foo,ST=CA,C=US" -t ,, -c ica4 -m 41 -v 235 -1 -2 -5 <<CERTSCRIPT
 0
 2
 3
@@ -213,7 +213,7 @@ y
 n
 CERTSCRIPT
 
-certutil -S -z noise -g 1024 -d . -n server8 -s "CN=bat.foo.example,O=Foo,ST=CA,C=US" -t ,, -c ica4 -m 42 -v 115 -1 -2 -5 <<CERTSCRIPT
+certutil -S -z noise -g 1024 -d . -n server8 -s "CN=bat.foo.example,O=Foo,ST=CA,C=US" -t ,, -c ica4 -m 42 -v 235 -1 -2 -5 <<CERTSCRIPT
 0
 2
 3
@@ -229,7 +229,7 @@ y
 n
 CERTSCRIPT
 
-certutil -S -z noise -g 1024 -d . -n server9 -s "CN=bat.foo.example,O=Foo,C=US" -t ,, -c ica4 -m 43 -v 115 -1 -2 -5 <<CERTSCRIPT
+certutil -S -z noise -g 1024 -d . -n server9 -s "CN=bat.foo.example,O=Foo,C=US" -t ,, -c ica4 -m 43 -v 235 -1 -2 -5 <<CERTSCRIPT
 0
 2
 3
@@ -245,7 +245,7 @@ y
 n
 CERTSCRIPT
 
-certutil -S -z noise -g 1024 -d . -n server10 -s "CN=bar.example,O=Foo,ST=CA,C=US" -t ,, -c ica4 -m 44 -v 115 -1 -2 -5 <<CERTSCRIPT
+certutil -S -z noise -g 1024 -d . -n server10 -s "CN=bar.example,O=Foo,ST=CA,C=US" -t ,, -c ica4 -m 44 -v 235 -1 -2 -5 <<CERTSCRIPT
 0
 2
 3
@@ -261,7 +261,7 @@ y
 n
 CERTSCRIPT
 
-certutil -S -z noise -g 1024 -d . -n server11 -s "CN=site.example,O=Foo,ST=CA,C=US" -t ,, -c ica4 -m 45 -v 115 -1 -2 -5 -8 foo.example <<CERTSCRIPT
+certutil -S -z noise -g 1024 -d . -n server11 -s "CN=site.example,O=Foo,ST=CA,C=US" -t ,, -c ica4 -m 45 -v 235 -1 -2 -5 -8 foo.example <<CERTSCRIPT
 0
 2
 3
@@ -277,7 +277,7 @@ y
 n
 CERTSCRIPT
 
-certutil -S -z noise -g 1024 -d . -n server12 -s "CN=Honest Achmed,O=Foo,ST=CA,C=US" -t ,, -c ica4 -m 46 -v 115 -1 -2 -5 <<CERTSCRIPT
+certutil -S -z noise -g 1024 -d . -n server12 -s "CN=Honest Achmed,O=Foo,ST=CA,C=US" -t ,, -c ica4 -m 46 -v 235 -1 -2 -5 <<CERTSCRIPT
 0
 2
 3
@@ -293,7 +293,7 @@ y
 n
 CERTSCRIPT
 
-certutil -S -z noise -g 1024 -d . -n ica5 -s "CN=NSS Intermediate CA 2,O=OtherOrg,ST=CA,C=US" -t ,, -c ica3 -m 62 -w -2 -v 120 -1 -2 -5 <<CERTSCRIPT
+certutil -S -z noise -g 1024 -d . -n ica5 -s "CN=NSS Intermediate CA 2,O=OtherOrg,ST=CA,C=US" -t ,, -c ica3 -m 62 -w -2 -v 240 -1 -2 -5 <<CERTSCRIPT
 5
 6
 9
@@ -308,7 +308,7 @@ n
 n
 CERTSCRIPT
 
-certutil -S -z noise -g 1024 -d . -n server13 -s "CN=bat.foo.example,O=OtherOrg,ST=CA,C=US" -t ,, -c ica5 -m 41 -v 115 -1 -2 -5 <<CERTSCRIPT
+certutil -S -z noise -g 1024 -d . -n server13 -s "CN=bat.foo.example,O=OtherOrg,ST=CA,C=US" -t ,, -c ica5 -m 41 -v 235 -1 -2 -5 <<CERTSCRIPT
 0
 2
 3
@@ -324,7 +324,7 @@ y
 n
 CERTSCRIPT
 
-certutil -S -z noise -g 1024 -d . -n server14 -s "CN=another.foo.example,O=Foo,ST=CA,C=US" -t ,, -c ica5 -m 490 -v 115 -1 -2 -5 <<CERTSCRIPT
+certutil -S -z noise -g 1024 -d . -n server14 -s "CN=another.foo.example,O=Foo,ST=CA,C=US" -t ,, -c ica5 -m 490 -v 235 -1 -2 -5 <<CERTSCRIPT
 0
 2
 3
@@ -340,7 +340,7 @@ y
 n
 CERTSCRIPT
 
-certutil -S -z noise -g 1024 -d . -n ncca -s "CN=NSS Name Constrained Root CA,O=BOGUS NSS,L=Mountain View,ST=CA,C=US" -t C,C,C -x -m 2 -w -1 -v 118 -1 -2 -5 --extNC <<CERTSCRIPT
+certutil -S -z noise -g 1024 -d . -n ncca -s "CN=NSS Name Constrained Root CA,O=BOGUS NSS,L=Mountain View,ST=CA,C=US" -t C,C,C -x -m 2 -w -1 -v 238 -1 -2 -5 --extNC <<CERTSCRIPT
 5
 6
 9
@@ -360,7 +360,7 @@ n
 n
 CERTSCRIPT
 
-certutil -S -z noise -g 1024 -d . -n ica6 -s "CN=NSS Intermediate CA6,O=OtherOrg,ST=CA,C=US" -t ,, -c ncca -m 63 -w -2 -v 120 -1 -2 -5 <<CERTSCRIPT
+certutil -S -z noise -g 1024 -d . -n ica6 -s "CN=NSS Intermediate CA6,O=OtherOrg,ST=CA,C=US" -t ,, -c ncca -m 63 -w -2 -v 240 -1 -2 -5 <<CERTSCRIPT
 5
 6
 9
@@ -375,7 +375,7 @@ n
 n
 CERTSCRIPT
 
-certutil -S -z noise -g 1024 -d . -n server15 -s "CN=testfoo.invalid,O=BOGUS NSS,L=Mountain View,ST=California,C=US" -t ,, -c ica6 -m 64 -v 115 -1 -2 -5 -8 testfoo.invalid <<CERTSCRIPT
+certutil -S -z noise -g 1024 -d . -n server15 -s "CN=testfoo.invalid,O=BOGUS NSS,L=Mountain View,ST=California,C=US" -t ,, -c ica6 -m 64 -v 235 -1 -2 -5 -8 testfoo.invalid <<CERTSCRIPT
 0
 2
 3
@@ -391,7 +391,7 @@ y
 n
 CERTSCRIPT
 
-certutil -S -z noise -g 1024 -d . -n server16 -s "CN=another_test3.invalid,O=BOGUS NSS,L=Mountain View,ST=California,C=US" -t ,, -c ica6 -m 65 -v 115 -1 -2 -5 <<CERTSCRIPT
+certutil -S -z noise -g 1024 -d . -n server16 -s "CN=another_test3.invalid,O=BOGUS NSS,L=Mountain View,ST=California,C=US" -t ,, -c ica6 -m 65 -v 235 -1 -2 -5 <<CERTSCRIPT
 0
 2
 3
@@ -407,7 +407,7 @@ y
 n
 CERTSCRIPT
 
-certutil -S -z noise -g 1024 -d . -n server17 -s "CN=test4.example,O=BOGUS NSS,L=Mountain View,ST=California,C=US" -t ,, -c ica6 -m 66 -v 115 -1 -2 -5 -8 test4.example <<CERTSCRIPT
+certutil -S -z noise -g 1024 -d . -n server17 -s "CN=test4.example,O=BOGUS NSS,L=Mountain View,ST=California,C=US" -t ,, -c ica6 -m 66 -v 235 -1 -2 -5 -8 test4.example <<CERTSCRIPT
 0
 2
 3
@@ -424,7 +424,7 @@ n
 CERTSCRIPT
 
 #DCISS copy certs
-certutil -S -z noise -g 2048 -d . -n dcisscopy -s "E=igca@sgdn.pm.gouv.fr,CN=IGC/A,OU=DCSSI,O=PM/SGDN,L=Paris,ST=France,C=FR" -t C,C,C -x -m 998899 -w -2 -v 120 -1 -2 -5 <<CERTSCRIPT
+certutil -S -z noise -g 2048 -d . -n dcisscopy -s "E=igca@sgdn.pm.gouv.fr,CN=IGC/A,OU=DCSSI,O=PM/SGDN,L=Paris,ST=France,C=FR" -t C,C,C -x -m 998899 -w -2 -v 240 -1 -2 -5 <<CERTSCRIPT
 5
 6
 9
@@ -440,7 +440,7 @@ n
 CERTSCRIPT
 
 #the following cert MUST not pass
-certutil -S -z noise -g 2048 -d . -n dcissblocked -s "CN=foo.example.com,O=Foo,ST=CA,C=US" -t ,, -c dcisscopy -m 998900 -v 120 -1 -2 -5 <<CERTSCRIPT
+certutil -S -z noise -g 2048 -d . -n dcissblocked -s "CN=foo.example.com,O=Foo,ST=CA,C=US" -t ,, -c dcisscopy -m 998900 -v 240 -1 -2 -5 <<CERTSCRIPT
 0
 2
 3
@@ -457,7 +457,7 @@ n
 CERTSCRIPT
 
 #the following cert MUST pass
-certutil -S -z noise -g 2048 -d . -n dcissallowed -s "CN=foo.example.fr,O=Foo,ST=CA,C=US" -t ,, -c dcisscopy -m 998901 -v 120 -1 -2 -5 <<CERTSCRIPT
+certutil -S -z noise -g 2048 -d . -n dcissallowed -s "CN=foo.example.fr,O=Foo,ST=CA,C=US" -t ,, -c dcisscopy -m 998901 -v 240 -1 -2 -5 <<CERTSCRIPT
 0
 2
 3
