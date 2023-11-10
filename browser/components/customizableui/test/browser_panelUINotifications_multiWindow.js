@@ -36,13 +36,15 @@ add_task(async function testDoesNotShowDoorhangerForBackgroundWindow() {
       "The background window has a badge."
     );
 
+    let popupShown = BrowserTestUtils.waitForEvent(
+      PanelUI.notificationPanel,
+      "popupshown"
+    );
+
     await BrowserTestUtils.closeWindow(win);
     await SimpleTest.promiseFocus(window);
-    isnot(
-      PanelUI.notificationPanel.state,
-      "closed",
-      "update-manual doorhanger is showing."
-    );
+    await popupShown;
+
     let notifications = [...PanelUI.notificationPanel.children].filter(
       n => !n.hidden
     );
@@ -59,6 +61,12 @@ add_task(async function testDoesNotShowDoorhangerForBackgroundWindow() {
     );
 
     let button = doorhanger.button;
+
+    Assert.equal(
+      PanelUI.notificationPanel.state,
+      "open",
+      "Expect panel state to be open when clicking panel buttons"
+    );
     button.click();
 
     ok(mainActionCalled, "Main action callback was called");
