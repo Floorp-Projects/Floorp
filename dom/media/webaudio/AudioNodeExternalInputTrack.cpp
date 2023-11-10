@@ -53,7 +53,7 @@ static void CopyChunkToBlock(AudioChunk& aInput, AudioBlock* aBlock,
     channels.SetLength(blockChannels);
     PodZero(channels.Elements(), blockChannels);
   } else {
-    const nsTArray<const T*>& inputChannels = aInput.ChannelData<T>();
+    Span inputChannels = aInput.ChannelData<T>();
     channels.SetLength(inputChannels.Length());
     PodCopy(channels.Elements(), inputChannels.Elements(), channels.Length());
     if (channels.Length() != blockChannels) {

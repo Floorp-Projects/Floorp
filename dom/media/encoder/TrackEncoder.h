@@ -223,8 +223,8 @@ class AudioTrackEncoder : public TrackEncoder {
     }
 
     if (aInput.Length() > aOutputChannels) {
-      DownmixAndInterleave(aInput, aDuration, aVolume, aOutputChannels,
-                           aOutput);
+      DownmixAndInterleave<T>(aInput, aDuration, aVolume, aOutputChannels,
+                              aOutput);
     } else {
       InterleaveAndConvertBuffer(aInput.Elements(), aDuration, aVolume,
                                  aOutputChannels, aOutput);
