@@ -122,6 +122,13 @@ skip-if = [
   "os == 'android'", # autocomplete
 ]
 
+["test_autocomplete_password_generation_telemetry.html"]
+scheme = "https"
+skip-if = [
+  "xorigin",
+  "os == 'android'", # autocomplete
+]
+
 ["test_autocomplete_password_generation_confirm.html"]
 scheme = "https"
 skip-if = ["os == 'android'"] # autocomplete
