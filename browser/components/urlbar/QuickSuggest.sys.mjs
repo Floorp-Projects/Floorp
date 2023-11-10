@@ -474,7 +474,10 @@ class _QuickSuggest {
       this.ensureExposureEventRecorded();
     }
 
-    if (!lazy.UrlbarPrefs.get("quickSuggestShouldShowOnboardingDialog")) {
+    if (
+      !lazy.UrlbarPrefs.get("quickSuggestShouldShowOnboardingDialog") ||
+      lazy.UrlbarPrefs.get("quicksuggest.contextualOptIn")
+    ) {
       return false;
     }
 

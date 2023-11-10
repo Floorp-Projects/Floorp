@@ -23,6 +23,7 @@
   --urlbarView-small-font-size: 0.85em;
 
   --urlbarView-item-inline-padding: var(--urlbar-icon-padding);
+  --urlbarView-item-block-padding: 6px;
   --urlbarView-favicon-width: 16px;
   --urlbarView-icon-margin-start: 0px;
   --urlbarView-icon-margin-end: calc(var(--urlbar-icon-padding) + var(--identity-box-margin-inline));
@@ -141,7 +142,7 @@
   flex: 1 1;
   overflow: hidden;
   padding-inline: var(--urlbarView-item-inline-padding);
-  padding-block: 6px;
+  padding-block: var(--urlbarView-item-block-padding);
 
   :root:not([uidensity=compact]) & {
     min-height: 20px; /* row min-height 32px - (2 * padding-block 6px) */
@@ -397,18 +398,19 @@
       background-color: var(--button-bgcolor);
     }
 
-    &[selected] {
+    &:is([selected], [primary]) {
       color: var(--button-primary-color);
       background-color: var(--button-primary-bgcolor);
+      outline-color: var(--button-primary-bgcolor);
       outline-offset: var(--focus-outline-offset);
-    }
 
-    &[selected]:hover {
-      background-color: var(--button-primary-hover-bgcolor);
-    }
+      &:hover {
+        background-color: var(--button-primary-hover-bgcolor);
+      }
 
-    &[selected]:hover:active {
-      background-color: var(--button-primary-active-bgcolor);
+      &:hover:active {
+        background-color: var(--button-primary-active-bgcolor);
+      }
     }
 
     &:last-child {
