@@ -2566,17 +2566,37 @@ class NavigationDelegateTest : BaseSessionTest() {
             }
         })
 
+        val onReadyResult = GeckoResult<String>()
+        var extBaseUrl = ""
+        sessionRule.addExternalDelegateUntilTestEnd(
+            WebExtensionController.AddonManagerDelegate::class,
+            { delegate -> controller.setAddonManagerDelegate(delegate) },
+            { controller.setAddonManagerDelegate(null) },
+            object : WebExtensionController.AddonManagerDelegate {
+                @AssertCalled(count = 1)
+                override fun onReady(extension: WebExtension) {
+                    extBaseUrl = extension.metaData.baseUrl
+                    onReadyResult.complete(null)
+                    super.onReady(extension)
+                }
+            },
+        )
+
         val extension = sessionRule.waitForResult(
             controller.install("https://example.org/tests/junit/page-history.xpi"),
         )
 
+        // Wait for the extension to have been started before trying to navigate
+        // to the test extension page.
+        sessionRule.waitForResult(onReadyResult)
+
         assertThat(
             "baseUrl should be a valid extension URL",
-            extension.metaData.baseUrl,
+            extBaseUrl,
             startsWith("moz-extension://"),
         )
 
-        val url = extension.metaData.baseUrl + "page.html"
+        val url = extBaseUrl + "page.html"
         processSwitchingTest(url)
 
         sessionRule.waitForResult(controller.uninstall(extension))
