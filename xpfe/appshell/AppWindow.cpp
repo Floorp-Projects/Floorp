@@ -1114,17 +1114,8 @@ NS_IMETHODIMP AppWindow::GetAvailScreenSize(int32_t* aAvailWidth,
   RefPtr<nsScreen> screen = window->GetScreen();
   NS_ENSURE_STATE(screen);
 
-  ErrorResult rv;
-  *aAvailWidth = screen->GetAvailWidth(rv);
-  if (NS_WARN_IF(rv.Failed())) {
-    return rv.StealNSResult();
-  }
-
-  *aAvailHeight = screen->GetAvailHeight(rv);
-  if (NS_WARN_IF(rv.Failed())) {
-    return rv.StealNSResult();
-  }
-
+  *aAvailWidth = screen->AvailWidth();
+  *aAvailHeight = screen->AvailHeight();
   return NS_OK;
 }
 

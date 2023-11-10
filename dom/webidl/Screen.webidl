@@ -7,26 +7,16 @@
 interface Screen : EventTarget {
   // CSSOM-View
   // http://dev.w3.org/csswg/cssom-view/#the-screen-interface
-  [Throws]
   readonly attribute long availWidth;
-  [Throws]
   readonly attribute long availHeight;
-  [Throws]
   readonly attribute long width;
-  [Throws]
   readonly attribute long height;
-  [Throws]
   readonly attribute long colorDepth;
-  [Throws]
   readonly attribute long pixelDepth;
 
-  [Throws]
   readonly attribute long top;
-  [Throws]
   readonly attribute long left;
-  [Throws]
   readonly attribute long availTop;
-  [Throws]
   readonly attribute long availLeft;
 
   /**
@@ -42,17 +32,13 @@ interface Screen : EventTarget {
 
   /**
    * DEPRECATED, use ScreenOrientation API instead.
-   * Lock screen orientation to the specified type.
+   * Lock/unlock screen orientation to the specified type.
+   *
+   * FIXME(emilio): These do literally nothing, we should
+   * try to remove these.
    */
-  [Throws]
   boolean mozLockOrientation(DOMString orientation);
-  [Throws]
   boolean mozLockOrientation(sequence<DOMString> orientation);
-
-  /**
-   * DEPRECATED, use ScreenOrientation API instead.
-   * Unlock the screen orientation.
-   */
   undefined mozUnlockOrientation();
 };
 

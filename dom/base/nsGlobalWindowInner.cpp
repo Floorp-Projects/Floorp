@@ -2400,19 +2400,13 @@ VisualViewport* nsGlobalWindowInner::VisualViewport() {
   if (!mVisualViewport) {
     mVisualViewport = new mozilla::dom::VisualViewport(this);
   }
-
   return mVisualViewport;
 }
 
-nsScreen* nsGlobalWindowInner::GetScreen(ErrorResult& aError) {
+nsScreen* nsGlobalWindowInner::Screen() {
   if (!mScreen) {
-    mScreen = nsScreen::Create(this);
-    if (!mScreen) {
-      aError.Throw(NS_ERROR_UNEXPECTED);
-      return nullptr;
-    }
+    mScreen = new nsScreen(this);
   }
-
   return mScreen;
 }
 
@@ -2420,7 +2414,6 @@ nsHistory* nsGlobalWindowInner::GetHistory(ErrorResult& aError) {
   if (!mHistory) {
     mHistory = new nsHistory(this);
   }
-
   return mHistory;
 }
 
@@ -7278,11 +7271,7 @@ int16_t nsGlobalWindowInner::Orientation(CallerType aCallerType) {
           aCallerType, RFPTarget::ScreenOrientation)) {
     return 0;
   }
-  nsScreen* s = GetScreen(IgnoreErrors());
-  if (!s) {
-    return 0;
-  }
-  int16_t angle = AssertedCast<int16_t>(s->GetOrientationAngle());
+  int16_t angle = AssertedCast<int16_t>(Screen()->GetOrientationAngle());
   return angle <= 180 ? angle : angle - 360;
 }
 
