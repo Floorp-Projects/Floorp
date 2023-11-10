@@ -608,7 +608,10 @@ pub struct TemplateAreas {
     /// `named area` containing for each template area
     #[css(skip)]
     pub areas: crate::OwnedSlice<NamedArea>,
-    /// The original CSS string value of each template area
+    /// The simplified CSS strings for serialization purpose.
+    /// https://drafts.csswg.org/css-grid/#serialize-template
+    // Note: We also use the length of `strings` when computing the explicit grid end line number
+    // (i.e. row number).
     #[css(iterable)]
     pub strings: crate::OwnedSlice<crate::OwnedStr>,
     /// The number of columns of the grid.
@@ -623,17 +626,23 @@ impl TemplateAreas {
             return Err(());
         }
         let mut areas: Vec<NamedArea> = vec![];
+        let mut simplified_strings: Vec<crate::OwnedStr> = vec![];
         let mut width = 0;
         {
             let mut row = 0u32;
             let mut area_indices = PrecomputedHashMap::<Atom, usize>::default();
             for string in &strings {
+                let mut simplified_string = String::new();
                 let mut current_area_index: Option<usize> = None;
                 row += 1;
                 let mut column = 0u32;
                 for token in TemplateAreasTokenizer(string) {
                     column += 1;
+                    if column > 1 {
+                        simplified_string.push(' ');
+                    }
                     let name = if let Some(token) = token? {
+                        simplified_string.push_str(token);
                         Atom::from(token)
                     } else {
                         if let Some(index) = current_area_index.take() {
@@ -641,6 +650,7 @@ impl TemplateAreas {
                                 return Err(());
                             }
                         }
+                        simplified_string.push('.');
                         continue;
                     };
                     if let Some(index) = current_area_index {
@@ -693,11 +703,13 @@ impl TemplateAreas {
                 } else if width != column {
                     return Err(());
                 }
+
+                simplified_strings.push(simplified_string.into());
             }
         }
         Ok(TemplateAreas {
             areas: areas.into(),
-            strings: strings.into(),
+            strings: simplified_strings.into(),
             width,
         })
     }
