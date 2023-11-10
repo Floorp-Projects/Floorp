@@ -70,6 +70,7 @@ GLOBAL_OVERRIDES = (
     "gecko_profile_entries",
     "gecko_profile_features",
     "gecko_profile_threads",
+    "gecko_profile_extra_threads",
     "tpcycles",
     "tppagecycles",
     "tpmanifest",
