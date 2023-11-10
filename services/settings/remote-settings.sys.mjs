@@ -194,6 +194,9 @@ function remoteSettingsFunction() {
     trigger = "manual",
     full = false,
   } = {}) => {
+    if (lazy.Utils.shouldSkipRemoteActivityDueToTests) {
+      return;
+    }
     // When running in full mode, we ignore last polling status.
     if (full) {
       lazy.gPrefs.clearUserPref(PREF_SETTINGS_SERVER_BACKOFF);
