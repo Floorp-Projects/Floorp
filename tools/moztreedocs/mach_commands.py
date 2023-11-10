@@ -204,11 +204,12 @@ def build_docs(
         if fatal_warnings:
             msg += f"Error: Got fatal warnings:\n{''.join(fatal_warnings)}"
     if check_num_warnings:
-        num_new = _check_sphinx_num_warnings(warnings)
+        [num_new, num_actual] = _check_sphinx_num_warnings(warnings)
+        print("Logged %s warnings\n" % num_actual)
         if num_new:
-            msg += f"Error: {num_new} new warnings"
+            msg += f"Error: {num_new} new warnings have been introduced compared to the limit in docs/config.yml"
     if msg:
-        return die(f"failed to generate documentation:\n {msg}")
+        return dieWithTestFailure(msg)
 
     # Upload the artifact containing the link to S3
     # This would be used by code-review to post the link to Phabricator
@@ -346,8 +347,8 @@ def _check_sphinx_num_warnings(warnings):
     with open(os.path.join(DOC_ROOT, "config.yml"), "r") as fh:
         max_num = yaml.safe_load(fh)["max_num_warnings"]
     if num_warnings > max_num:
-        return num_warnings - max_num
-    return None
+        return [num_warnings - max_num, num_warnings]
+    return [0, num_warnings]
 
 
 def manager():
@@ -526,6 +527,12 @@ def show_reference_targets(command_context, fmt="html", outdir=None):
 
 
 def die(msg, exit_code=1):
-    msg = "%s: %s" % (sys.argv[0], msg)
+    msg = "%s %s: %s" % (sys.argv[0], sys.argv[1], msg)
+    print(msg, file=sys.stderr)
+    return exit_code
+
+
+def dieWithTestFailure(msg, exit_code=1):
+    msg = "TEST-UNEXPECTED-FAILURE | %s %s | %s" % (sys.argv[0], sys.argv[1], msg)
     print(msg, file=sys.stderr)
     return exit_code
