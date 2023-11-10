@@ -29,7 +29,7 @@ const GLEAN_METRICS_TYPES = {
   browserActionPopupOpen: "timing_distribution",
   browserActionPreloadResult: null,
   contentScriptInjection: "timing_distribution",
-  eventPageRunningTime: null,
+  eventPageRunningTime: "custom_distribution",
   eventPageIdleResult: null,
   extensionStartup: "timing_distribution",
   pageActionPopupOpen: "timing_distribution",
@@ -275,6 +275,18 @@ class ExtensionTelemetryMetric {
       keyedHistogram.add(extensionId, category, value);
     } else {
       keyedHistogram.add(extensionId, value);
+    }
+
+    if (GLEAN_METRICS_TYPES[metric] === "custom_distribution") {
+      if (typeof category === "string") {
+        throw new Error(
+          `Unexpected unsupported category on Glean metric ${metric}`
+        );
+      }
+      // NOTE: extensionsTiming may become a property of the GLEAN_METRICS_TYPES
+      // map once we may introduce new metrics that are not part of the
+      // extensionsTiming Glean metrics category.
+      Glean.extensionsTiming[metric].accumulateSamples([value]);
     }
   }
 }

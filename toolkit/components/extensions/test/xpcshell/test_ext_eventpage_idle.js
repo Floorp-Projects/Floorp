@@ -30,12 +30,19 @@ add_setup(async () => {
 });
 
 add_task(async function test_eventpage_idle() {
-  clearHistograms();
+  const { GleanCustomDistribution } = globalThis;
+
+  resetTelemetryData();
 
   assertHistogramEmpty(WEBEXT_EVENTPAGE_RUNNING_TIME_MS);
   assertKeyedHistogramEmpty(WEBEXT_EVENTPAGE_RUNNING_TIME_MS_BY_ADDONID);
   assertHistogramEmpty(WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT);
   assertKeyedHistogramEmpty(WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT_BY_ADDONID);
+  assertGleanMetricsNoSamples({
+    metricId: "eventPageRunningTime",
+    gleanMetric: Glean.extensionsTiming.eventPageRunningTime,
+    gleanMetricConstructor: GleanCustomDistribution,
+  });
 
   let extension = ExtensionTestUtils.loadExtension({
     useAddonManager: "permanent",
@@ -145,6 +152,11 @@ add_task(async function test_eventpage_idle() {
       category: "suspend",
       categories: HISTOGRAM_EVENTPAGE_IDLE_RESULT_CATEGORIES,
     }
+  );
+
+  ok(
+    Glean.extensionsTiming.eventPageRunningTime.testGetValue()?.sum > 0,
+    `Expect stored values in the eventPageRunningTime Glean metric`
   );
 });
 
