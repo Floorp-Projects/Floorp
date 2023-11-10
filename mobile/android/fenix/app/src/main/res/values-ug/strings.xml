@@ -56,20 +56,57 @@
     <string name="recently_saved_menu_item_remove">چىقىرىۋەت</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
-    <string name="about_content">%1$s Mozilla ياسىغان.</string>
+    <string name="about_content">%1$s نى Mozilla ياسىغان.</string>
 
+    <!-- Private Browsing -->
+    <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="private_browsing_placeholder_description_2">
+ئەپنى تاقىغان تياكى چېكىنگەندە %1$s شەخسىي بەتكۈچلەردىن ئىزدەش ۋە زىيارەت تارىخىڭىزنى تازىلايدۇ. گەرچە بۇ سىزنى تور بېكەت ياكى ئىنتېرنېت مۇلازىمەت تەمىنلىگۈچىڭىزگە نىسبەتەن ئاتسىز قىلمىسىمۇ ئەمما توردا نېمە ئىش قىلغانلىقىڭىزنى مەزكۇر ئۈسكۈنىنى ئىشلىتىدىغان باشقا كىشىلەردىن سىر تۇرۇشنى ئاسانلاشتۇرىدۇ.</string>
+
+    <string name="private_browsing_common_myths">
+شەخسىيەت زىيارىتى ھەققىدە كۆپ ئۇچرايدىغان قاراشلار</string>
+
+    <!-- True Private Browsing Mode -->
+    <!-- Title for info card on private homescreen in True Private Browsing Mode. -->
+    <string name="felt_privacy_desc_card_title">بۇ ئۈسكۈنىدە ئىز قالدۇرمايدۇ</string>
+    <!-- Explanation for private browsing displayed to users on home view when they first enable
+        private mode in our new Total Private Browsing mode.
+        The first parameter is the name of the app defined in app_name (for example: Firefox Nightly)
+        The second parameter is the clickable link text in felt_privacy_info_card_subtitle_link_text -->
+    <string name="felt_privacy_info_card_subtitle" moz:removedIn="120" tools:ignore="UnusedResources">بارلىق شەخسىيەت كۆزنەكلىرى تاقالغاندا %1$s سىزنىڭ cookies، تارىخ ۋە تور بېكەت سانلىق مەلۇماتلىرىڭىزنى ئۆچۈرىدۇ. %2$s</string>
+    <!-- Explanation for private browsing displayed to users on home view when they first enable
+        private mode in our new Total Private Browsing mode.
+        The first parameter is the name of the app defined in app_name (for example: Firefox Nightly)
+        The second parameter is the clickable link text in felt_privacy_info_card_subtitle_link_text -->
+    <string name="felt_privacy_info_card_subtitle_2">بارلىق شەخسىيەت بەتكۈچلەر تاقالغاندا %1$s سىزنىڭ cookies، تارىخ ۋە تور بېكەت سانلىق مەلۇماتلىرىڭىزنى ئۆچۈرىدۇ. %2$s</string>
     <!-- Clickable portion of the explanation for private browsing that links the user to our
         about privacy page.
         This string is used in felt_privacy_info_card_subtitle as the second parameter.-->
     <string name="felt_privacy_info_card_subtitle_link_text">پائالىيىتىمنى كىم كۆرەلەيدۇ؟</string>
 
+    <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
+    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
+    <string name="private_mode_cfr_message_2">بىر چېكىپلا كېيىنكى شەخسىيەت بەتكۈچنى قوزغىتالايسىز.</string>
+    <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
+    <string name="private_mode_cfr_pos_button_text">باش ئېكرانغا قوش</string>
     <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
     <string name="cfr_neg_button_text">بولدى رەھمەت</string>
 
+    <!-- Open in App "contextual feature recommendation" (CFR) -->
+    <!-- Text for the info message. The first parameter is the name of the application.-->
+    <string name="open_in_app_cfr_info_message_2">ئەپتە ئۇلانمىلارنى ئۆزلۈكىدىن ئېچىشقا %1$s نى تەڭشىيەلەيسىز.</string>
     <!-- Text for the positive action button -->
     <string name="open_in_app_cfr_positive_button_text">تەڭشەككە يۆتكەل</string>
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">بولدىلا</string>
+
+
+    <!-- Total cookie protection "contextual feature recommendation" (CFR) -->
+    <!-- Text for the message displayed in the contextual feature recommendation popup promoting the total cookie protection feature. -->
+    <string name="tcp_cfr_message">ئەڭ كۈچلۈك شەخسىيەت ئىقتىدارى: بېكەت ھالقىپ ئىزلىغۇچنى ئايرىۋېتىدۇ.</string>
+    <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
+    <string name="tcp_cfr_learn_more">ئومۇميۈزلۈك Cookie دىن قوغداش ھەققىدىكى بىلدۈرگۈ</string>
 
 
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
@@ -149,6 +186,8 @@
     <string name="browser_menu_add">قوشۇش</string>
     <!-- Browser menu label for editing a bookmark -->
     <string name="browser_menu_edit">تەھرىرلەش</string>
+    <!-- Button shown on the home page that opens the Customize home settings -->
+    <string name="browser_menu_customize_home_1">باش بەتنى خاسلاشتۇر</string>
     <!-- Browser Toolbar -->
     <!-- Content description for the Home screen button on the browser toolbar -->
     <string name="browser_toolbar_home">باش ئېكران</string>
@@ -175,7 +214,7 @@
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
     <string name="awesomebar_clipboard_title">چاپلاش تاختىسىدىكى ئۇلىنىشنى ئېچىش</string>
     <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
-    <string name="search_suggestions_onboarding_allow_button">رۇخسەت بەر</string>
+    <string name="search_suggestions_onboarding_allow_button">يول قوي</string>
     <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
     <string name="search_suggestions_onboarding_do_not_allow_button">رۇخسەت بەرمە</string>
     <!-- Search engine suggestion title text. The first parameter is the name of the suggested engine-->
@@ -293,6 +332,14 @@
     <string name="remove_top_site">چىقىرىۋەت</string>
 
 
+    <!-- Text for the button to clear all history -->
+    <string name="history_delete_all">تارىخنى ئۆچۈر</string>
+    <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
+    <string name="history_delete_multiple_items_snackbar">تارىخ ئۆچۈرۈلدى</string>
+    <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. The first parameter is the shortened URL of the deleted history item. -->
+    <string name="history_delete_single_item_snackbar"> %1$s ئۆچۈرۈلدى</string>
+    <!-- Context description text for the button to delete a single history item -->
+    <string name="history_delete_item">ئۆچۈر</string>
     <!-- Text for the header that groups the history for today -->
     <string name="history_today">بۈگۈن</string>
     <!-- Text for the header that groups the history for yesterday -->
@@ -300,6 +347,13 @@
     <!-- Text for the header that groups the history older than the last month -->
     <string name="history_older">تېخىمۇ بۇرۇن</string>
 
+
+    <!-- Text for the button to remove a single download item -->
+    <string name="download_delete_item_1">چىقىرىۋەت</string>
+
+
+    <!-- Close tab button text on the tab crash page -->
+    <string name="tab_crash_close">بەتكۈچنى ياپ</string>
 
     <!-- Snackbar edit button shown after a bookmark has been created. -->
     <string name="edit_bookmark_snackbar_action">تەھرىرلەش</string>

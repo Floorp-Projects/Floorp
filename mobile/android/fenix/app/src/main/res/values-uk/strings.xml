@@ -206,6 +206,8 @@
     <string name="browser_menu_library">Бібліотека</string>
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">Версія для комп’ютера</string>
+    <!-- Browser menu button that reopens a private tab as a regular tab -->
+    <string name="browser_menu_open_in_regular_tab">Відкрити у звичайній вкладці</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">Додати на головний екран</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
@@ -2217,6 +2219,8 @@
     <string name="review_quality_check_info_learn_more">Дізнатися більше про %s.</string>
     <!-- Clickable text that links to review quality check SuMo page. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
     <string name="review_quality_check_info_learn_more_link" moz:RemovedIn="121" tools:ignore="UnusedResources">як %s від Mozilla визначає якість відгуку</string>
+    <!-- Clickable text that links to review quality check SuMo page. First parameter is the Fakespot product name. -->
+    <string name="review_quality_check_info_learn_more_link_2">як %s визначає якість відгуку</string>
     <!-- Text for title of settings section. -->
     <string name="review_quality_check_settings_title">Налаштування</string>
     <!-- Text for label for switch preference to show recommended products from review quality check settings section. -->

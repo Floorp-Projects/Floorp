@@ -190,10 +190,38 @@
     <string name="mozac_feature_addons_successfully_installed"> %1$s مۇۋەپپەقىيەتلىك قاچىلاندى</string>
     <!-- Text shown after failed to install an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_install"> %1$s نى ئورنىتىش مەغلۇپ بولدى</string>
+    <!-- Text shown after failing to install an add-on for which we don't have its name. -->
+    <string name="mozac_feature_addons_failed_to_install_generic">بۇ قوشۇلمىنى ئورنىتالمىدى.</string>
+    <!-- Text shown when attempting to install an add-on and a network error happened. -->
+    <string name="mozac_feature_addons_failed_to_install_network_error">باغلىنالمىغانلىق سەۋەبىدىن بۇ قوشۇلمىنى چۈشۈرەلمەيدۇ.</string>
+    <!-- Text shown when attempting to install an add-on and the downloaded file is corrupted. -->
+    <string name="mozac_feature_addons_failed_to_install_corrupt_error">بۇ قوشۇلمىنى ئورنىتالمايدۇ چۈنكى ئۇ بۇزۇلغاندەك تۇرىدۇ.</string>
+    <!-- Text shown when attempting to install an add-on and an error occurred because the extension was not signed. -->
+    <string name="mozac_feature_addons_failed_to_install_not_signed_error">بۇ قوشۇلمىنى ئورنىتالمايدۇ چۈنكى ئۇ دەلىللەنمىگەن.</string>
+    <!-- Text shown when attempting to install an add-on and an error occurred because the extension was incompatible. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
+    <string name="mozac_feature_addons_failed_to_install_incompatible_error">%1$s ئورنىتالمايدۇ چۈنكى ئۇ %2$s %3$s بىلەن ماسلاشمايدۇ.</string>
+    <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_blocklisted_1">%1$s ئورنىتالمايدۇ چۈنكى ئۇنىڭ مۇقىملىق ياكى بىخەتەرلىق مەسىلىسى كەلتۈرۈپ چىقىرىش خەۋپى يۇقىرى.</string>
+    <!-- Text shown when attempting to install a blocklisted add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_blocklisted" moz:removedIn="119" tools:ignore="UnusedResources">%1$s ئورنىتالمايدۇ چۈنكى ئۇنىڭ مۇقىملىق ياكى بىخەتەرلىق مەسىلىسى كەلتۈرۈپ چىقىرىش خەۋپى يۇقىرى</string>
     <!-- Text shown after successfully enabled an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_successfully_enabled"> %1$sمۇۋەپپەقىيەتلىك قوزغىتىلدى</string>
     <!-- Text shown after failed to enable an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_failed_to_enable"> %1$s نى قوزغىتىش مەغلۇپ بولدى</string>
+    <!-- Text shown after successfully disabled an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_disabled"> %1$sمۇۋەپپەقىيەتلىك چەكلەندى</string>
+    <!-- Text shown after failed to disable an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_disable">%1$s نى چەكلىيەلمىدى</string>
+    <!-- Text shown after successfully uninstalled an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_uninstalled">%1$s نى مۇۋەپپەقىيەتلىك ئۆچۈرۈۋەتتى</string>
+    <!-- Text shown after failed to uninstall an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_uninstall">%1$s نى ئۆچۈرەلمىدى</string>
+    <!-- Text shown after successfully removed an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_successfully_removed" tools:ignore="UnusedResources"> %1$s نى مۇۋەپپەقىيەتلىك چىقىرىۋەتتى</string>
+    <!-- Text shown after failed to remove an add-on. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_failed_to_remove" tools:ignore="UnusedResources">%1$s نى چىقىرىۋېتەلمىدى</string>
+    <!-- Label shown to indicate that the add-on was migrated from a previous version of the app. %1$s is the app name most of the case it will be Firefox. -->
+    <string name="mozac_feature_addons_migrated_from_a_previous_version_label" tools:ignore="UnusedResources">بۇ قوشۇلما %1$s نىڭ ئالدىنقى نەشرىدىن كۆچۈرۈلگەن</string>
     <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter. -->
     <string name="mozac_feature_addons_unsupported_caption">1 قىستۇرما</string>
     <!-- Text shown in not yet supported add-ons section in AddonsManagerAdapter - plural. %1$s is the number of unsupported add-ons -->
@@ -212,8 +240,18 @@
     <string name="mozac_feature_addons_updater_dialog_last_attempt">ئاخىرقى سىناق:</string>
     <!-- Displayed in the "Status" field for the updater when an add-on has been correctly updated -->
     <string name="mozac_feature_addons_updater_dialog_status">ھالىتى:</string>
+    <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. %2$s is the app name. -->
+    <string name="mozac_feature_addons_installed_dialog_title">%2$s غا %1$s قوشۇلدى</string>
     <!-- Text shown in the dialog when add-on installation is completed. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_installed_dialog_description">تىزىملىكتىن ئېچىش</string>
     <!-- Confirmation button text for the dialog when add-on installation is completed. -->
     <string name="mozac_feature_addons_installed_dialog_okay_button">ماقۇل</string>
-    </resources>
+    <!-- "Learn more" link displayed below an add-on status message. -->
+    <string name="mozac_feature_addons_status_learn_more">تەپسىلاتى</string>
+    <!-- Status message below an add-on in the add-ons manager when this add-on has been blocklisted. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_status_blocklisted">بىخەتەرلىك ياكى مۇقىملىق مەسىلىسى سەۋەبىدىن %1$s چەكلەنگەن.</string>
+    <!-- Status message below an add-on in the add-ons manager when this add-on hasn't been signed correctly. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_status_unsigned">%1$s بىخەتەر دەپ دەلىللەنمىگەچكە چەكلەندى.</string>
+    <!-- Status message below an add-on in the add-ons manager when this add-on isn't compatible with the application version. %1$s is the add-on name, %2$s is the app name and %3$s is the app version. -->
+    <string name="mozac_feature_addons_status_incompatible">سىز ئىشلىتىۋاتقان نەشرى %2$s (%3$s نەشرى) بىلەن %1$s ماسلاشمايدۇ.</string>
+</resources>

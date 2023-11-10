@@ -206,6 +206,8 @@
     <string name="browser_menu_library">Librarie</string>
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">Sît par scritori</string>
+    <!-- Browser menu button that reopens a private tab as a regular tab -->
+    <string name="browser_menu_open_in_regular_tab">Vierç intune schede normâl</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">Zonte a schermade principâl</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
@@ -262,7 +264,7 @@
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">Scansione</string>
     <!-- Button in the search view that lets a user change their search engine -->
-    <string name="search_engine_button">Motôr di ricercje</string>
+    <string name="search_engine_button" moz:RemovedIn="121" tools:ignore="UnusedResources">Motôr di ricercje</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Impostazions motôr di ricercje</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
@@ -495,16 +497,16 @@
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
     <string name="reduce_cookie_banner_details_panel_description_on_for_site_2">%1$s al cîr di refudâ in automatic dutis lis richiestis dai cookies sui sîts supuartâts.</string>
     <!-- Title text for the cookie banner re-engagement dialog. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_dialog_title" moz:RemovedIn="120" tools:ignore="UnusedResources">Permeti a %1$s di refudâ i strissons dai cookies?</string>
+    <string name="reduce_cookie_banner_dialog_title" moz:RemovedIn="121" tools:ignore="UnusedResources">Permeti a %1$s di refudâ i strissons dai cookies?</string>
     <!-- Body text for the cookie banner re-engagement dialog use. The first parameter is the application name. -->
-    <string name="reduce_cookie_banner_dialog_body" moz:RemovedIn="120" tools:ignore="UnusedResources">%1$s al pues refudâ in automatic tantis richiestis dai strissons dai cookies.</string>
+    <string name="reduce_cookie_banner_dialog_body" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s al pues refudâ in automatic tantis richiestis dai strissons dai cookies.</string>
     <!-- Remind me later text button for the onboarding dialog -->
-    <string name="reduce_cookie_banner_dialog_not_now_button" moz:RemovedIn="120" tools:ignore="UnusedResources">No cumò</string>
+    <string name="reduce_cookie_banner_dialog_not_now_button" moz:RemovedIn="121" tools:ignore="UnusedResources">No cumò</string>
     <!-- Snack text for the cookie banner dialog, after user hit the dismiss banner button -->
-    <string name="reduce_cookie_banner_dialog_snackbar_text" moz:RemovedIn="120" tools:ignore="UnusedResources">Tu viodarâs mancul richiestis di cookies</string>
+    <string name="reduce_cookie_banner_dialog_snackbar_text" moz:RemovedIn="121" tools:ignore="UnusedResources">Tu viodarâs mancul richiestis di cookies</string>
 
     <!-- Change setting text button, for the cookie banner re-engagement dialog -->
-    <string name="reduce_cookie_banner_dialog_change_setting_button" moz:RemovedIn="120" tools:ignore="UnusedResources">Permet</string>
+    <string name="reduce_cookie_banner_dialog_change_setting_button" moz:RemovedIn="121" tools:ignore="UnusedResources">Permet</string>
 
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Al cîr di conetisi in automatic ai sîts doprant il protocol di cifradure HTTPS par vê une sigurece miorade.</string>
@@ -2198,7 +2200,9 @@
     <!-- Text for learn more caption presenting a link with information about review quality. First parameter is for clickable text defined in review_quality_check_info_learn_more_link. -->
     <string name="review_quality_check_info_learn_more">Scuvierç altris informazions su %s.</string>
     <!-- Clickable text that links to review quality check SuMo page. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
-    <string name="review_quality_check_info_learn_more_link">cemût che %s di Mozilla al determine la cualitât des recensions</string>
+    <string name="review_quality_check_info_learn_more_link" moz:RemovedIn="121" tools:ignore="UnusedResources">cemût che %s di Mozilla al determine la cualitât des recensions</string>
+    <!-- Clickable text that links to review quality check SuMo page. First parameter is the Fakespot product name. -->
+    <string name="review_quality_check_info_learn_more_link_2">cemût che %s al determine la cualitât des recensions</string>
     <!-- Text for title of settings section. -->
     <string name="review_quality_check_settings_title">Impostazions</string>
     <!-- Text for label for switch preference to show recommended products from review quality check settings section. -->
@@ -2290,11 +2294,11 @@
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
     <string name="review_quality_check_contextual_onboarding_learn_more_link">Plui informazions</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is the Fakespot product name. Following parameters are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy and review_quality_check_contextual_onboarding_terms_use. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
-    <string name="review_quality_check_contextual_onboarding_caption">Selezionant “Sì, provilu” tu acetis la %2$s e i %3$s di %1$s di Mozilla.</string>
+    <string name="review_quality_check_contextual_onboarding_caption" moz:RemovedIn="121" tools:ignore="UnusedResources">Selezionant “Sì, provilu” tu acetis la %2$s e i %3$s di %1$s di Mozilla.</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
-    <string name="review_quality_check_contextual_onboarding_privacy_policy">informative su la riservatece</string>
+    <string name="review_quality_check_contextual_onboarding_privacy_policy" moz:RemovedIn="121" tools:ignore="UnusedResources">informative su la riservatece</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
-    <string name="review_quality_check_contextual_onboarding_terms_use">tiermins di utilizazion</string>
+    <string name="review_quality_check_contextual_onboarding_terms_use" moz:RemovedIn="121" tools:ignore="UnusedResources">tiermins di utilizazion</string>
     <!-- Text for opt-in button from the review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_primary_button_text">Sì, provilu</string>
     <!-- Text for opt-out button from the review quality check contextual onboarding card. -->
