@@ -34,6 +34,8 @@ glob:testing/perfdocs/generated/**
 
 # Python API docs.
 glob:**/*.py
+# Referenced by some python files.
+glob:taskcluster/ci/docker-image/kind.yml
 
 # moz.build files are read to discover location of docs.
 glob:**/moz.build
