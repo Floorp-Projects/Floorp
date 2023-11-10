@@ -840,10 +840,10 @@ bool gfxShapedText::FilterIfIgnorable(uint32_t aIndex, uint32_t aCh) {
   return false;
 }
 
-void gfxShapedText::AdjustAdvancesForSyntheticBold(float aSynBoldOffset,
-                                                   uint32_t aOffset,
-                                                   uint32_t aLength) {
-  int32_t synAppUnitOffset = aSynBoldOffset * mAppUnitsPerDevUnit;
+void gfxShapedText::ApplyTrackingToClusters(float aTrackingAdjustment,
+                                            uint32_t aOffset,
+                                            uint32_t aLength) {
+  int32_t appUnitAdjustment = aTrackingAdjustment * mAppUnitsPerDevUnit;
   CompressedGlyph* charGlyphs = GetCharacterGlyphs();
   for (uint32_t i = aOffset; i < aOffset + aLength; ++i) {
     CompressedGlyph* glyphData = charGlyphs + i;
@@ -851,7 +851,7 @@ void gfxShapedText::AdjustAdvancesForSyntheticBold(float aSynBoldOffset,
       // simple glyphs ==> just add the advance
       int32_t advance = glyphData->GetSimpleAdvance();
       if (advance > 0) {
-        advance += synAppUnitOffset;
+        advance = std::max(0, advance + appUnitAdjustment);
         if (CompressedGlyph::IsSimpleAdvance(advance)) {
           glyphData->SetSimpleGlyph(advance, glyphData->GetSimpleGlyph());
         } else {
@@ -872,14 +872,10 @@ void gfxShapedText::AdjustAdvancesForSyntheticBold(float aSynBoldOffset,
         if (!details) {
           continue;
         }
-        if (IsRightToLeft()) {
-          if (details[0].mAdvance > 0) {
-            details[0].mAdvance += synAppUnitOffset;
-          }
-        } else {
-          if (details[detailedLength - 1].mAdvance > 0) {
-            details[detailedLength - 1].mAdvance += synAppUnitOffset;
-          }
+        auto& advance = IsRightToLeft() ? details[0].mAdvance
+                                        : details[detailedLength - 1].mAdvance;
+        if (advance > 0) {
+          advance = std::max(0, advance + appUnitAdjustment);
         }
       }
     }
@@ -3341,7 +3337,7 @@ bool gfxFont::ShapeText(DrawTarget* aDrawTarget, const char16_t* aText,
       // synthetic bold: we want to apply between clusters, not to
       // non-spacing glyphs within a cluster. So we can reuse that
       // helper here.
-      aShapedText->AdjustAdvancesForSyntheticBold(tracking, aOffset, aLength);
+      aShapedText->ApplyTrackingToClusters(tracking, aOffset, aLength);
     }
     return true;
   }
@@ -3357,8 +3353,8 @@ void gfxFont::PostShapingFixup(DrawTarget* aDrawTarget, const char16_t* aText,
     const Metrics& metrics = GetMetrics(aVertical ? nsFontMetrics::eVertical
                                                   : nsFontMetrics::eHorizontal);
     if (metrics.maxAdvance > metrics.aveCharWidth) {
-      aShapedText->AdjustAdvancesForSyntheticBold(GetSyntheticBoldOffset(),
-                                                  aOffset, aLength);
+      aShapedText->ApplyTrackingToClusters(GetSyntheticBoldOffset(), aOffset,
+                                           aLength);
     }
   }
 }
