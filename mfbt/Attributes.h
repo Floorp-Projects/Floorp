@@ -88,6 +88,22 @@
 #  endif
 #endif
 
+/**
+ * Per clang's documentation:
+ *
+ * If a statement is marked nomerge and contains call expressions, those call
+ * expressions inside the statement will not be merged during optimization. This
+ * attribute can be used to prevent the optimizer from obscuring the source
+ * location of certain calls.
+ *
+ * This is useful to have clearer information on assertion failures.
+ */
+#if defined(__clang__) && __has_attribute(nomerge)
+#  define MOZ_NOMERGE __attribute__((nomerge))
+#else
+#  define MOZ_NOMERGE
+#endif
+
 /*
  * MOZ_NEVER_INLINE is a macro which expands to tell the compiler that the
  * method decorated with it must never be inlined, even if the compiler would

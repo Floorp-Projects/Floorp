@@ -210,13 +210,13 @@ MOZ_NoReturn(int aLine) {
 #    define MOZ_REALLY_CRASH(line)                                  \
       do {                                                          \
         *((volatile int*)MOZ_CRASH_WRITE_ADDR) = line; /* NOLINT */ \
-        ::abort();                                                  \
+        MOZ_NOMERGE ::abort();                                      \
       } while (false)
 #  else
 #    define MOZ_REALLY_CRASH(line)                                  \
       do {                                                          \
         *((volatile int*)MOZ_CRASH_WRITE_ADDR) = line; /* NOLINT */ \
-        abort();                                                    \
+        MOZ_NOMERGE abort();                                        \
       } while (false)
 #  endif
 #endif
