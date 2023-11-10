@@ -21,10 +21,6 @@ class AutoLockGC;
 class AutoLockGCBgAlloc;
 class Nursery;
 
-// To prevent false sharing, some data structures are aligned to a typical cache
-// line size.
-static constexpr size_t TypicalCacheLineSize = 64;
-
 namespace gc {
 
 class Arena;
@@ -710,9 +706,9 @@ class TenuredChunk : public TenuredChunkBase {
   Arena* fetchNextFreeArena(GCRuntime* gc);
 
 #ifdef DEBUG
-  void verify() const;
+  void verify();
 #else
-  void verify() const {}
+  void verify() {}
 #endif
 
  private:
