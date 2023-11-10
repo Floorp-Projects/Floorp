@@ -360,6 +360,28 @@ extensions.timing:
       data_sensitivity:
         - technical
 
+    event_page_running_time:
+      type: custom_distribution
+      unit: ms
+      range_min: 1
+      range_max: 60000
+      bucket_count: 100
+      histogram_type: exponential
+      expires: never
+      description: |
+        Amount of time (keyed by addon id) that an event page has been running before being suspended,
+        or the entire addon shutdown.
+      lifetime: application
+      notification_emails:
+        - addons-dev-internal@mozilla.com
+      bugs:
+        - https://bugzilla.mozilla.org/1787940
+        - https://bugzilla.mozilla.org/1820158
+      data_reviews:
+        - https://bugzilla.mozilla.org/show_bug.cgi?id=1820158#c8
+      data_sensitivity:
+        - technical
+
     extension_startup:
       type: timing_distribution
       time_unit: millisecond
