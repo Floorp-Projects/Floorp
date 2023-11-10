@@ -2762,18 +2762,12 @@ export class UrlbarInput {
   ) {
     // No point in setting these because we'll handleRevert() a few rows below.
     if (openUILinkWhere == "current") {
-      // Make sure URL is formatted properly (don't show punycode).
-      let formattedURL = url;
-      try {
-        formattedURL = new URL(formattedURL).URI.displaySpec;
-      } catch {}
-
       this.value =
         lazy.UrlbarPrefs.get("showSearchTermsFeatureGate") &&
         lazy.UrlbarPrefs.get("showSearchTerms.enabled") &&
         resultDetails?.searchTerm
           ? resultDetails.searchTerm
-          : formattedURL;
+          : url;
       browser.userTypedValue = this.value;
     }
 

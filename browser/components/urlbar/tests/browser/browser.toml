@@ -626,8 +626,6 @@ https_first_disabled = true
 ["browser_updateForDomainCompletion.js"]
 https_first_disabled = true
 
-["browser_url_formatted_correctly_on_load.js"]
-
 ["browser_urlbar_annotation.js"]
 support-files = ["redirect_to.sjs"]
 
