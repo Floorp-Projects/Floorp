@@ -597,6 +597,10 @@ export class RemoteSettingsClient extends EventEmitter {
    * @param {Object} options See #maybeSync() options.
    */
   async sync(options) {
+    if (lazy.Utils.shouldSkipRemoteActivityDueToTests) {
+      return;
+    }
+
     // We want to know which timestamp we are expected to obtain in order to leverage
     // cache busting. We don't provide ETag because we don't want a 304.
     const { changes } = await lazy.Utils.fetchLatestChanges(
@@ -614,7 +618,7 @@ export class RemoteSettingsClient extends EventEmitter {
     // According to API, there will be one only (fail if not).
     const [{ last_modified: expectedTimestamp }] = changes;
 
-    return this.maybeSync(expectedTimestamp, { ...options, trigger: "forced" });
+    await this.maybeSync(expectedTimestamp, { ...options, trigger: "forced" });
   }
 
   /**

@@ -107,6 +107,13 @@ export var Utils = {
    */
   log,
 
+  get shouldSkipRemoteActivityDueToTests() {
+    return (
+      (lazy.isRunningTests || Cu.isInAutomation) &&
+      this.SERVER_URL == "data:,#remote-settings-dummy/v1"
+    );
+  },
+
   get CERT_CHAIN_ROOT_IDENTIFIER() {
     if (this.SERVER_URL == AppConstants.REMOTE_SETTINGS_SERVER_URL) {
       return Ci.nsIContentSignatureVerifier.ContentSignatureProdRoot;
