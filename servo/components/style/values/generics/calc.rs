@@ -599,7 +599,10 @@ impl<L: CalcNodeLeaf> CalcNode<L> {
                     child.negate();
                 }
             },
-            CalcNode::Abs(ref mut child) | CalcNode::Sign(ref mut child) => {
+            CalcNode::Abs(_) => {
+                wrap_self_in_negate(self);
+            },
+            CalcNode::Sign(ref mut child) => {
                 child.negate();
             },
         }
