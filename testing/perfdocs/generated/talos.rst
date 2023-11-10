@@ -1551,6 +1551,7 @@ For the sample commands found below, note that the capitalization used is import
 
    * cycles: 5
    * extensions: ['${talos}/pageloader', '${talos}/tests/devtools/addon']
+   * gecko_profile_extra_threads: DOM Worker
    * gecko_profile_interval: 10
    * linux_counters: None
    * mac_counters: None
