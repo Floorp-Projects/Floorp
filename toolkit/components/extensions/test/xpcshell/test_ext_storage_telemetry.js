@@ -164,36 +164,38 @@ async function test_telemetry_background() {
   }
 
   // Assert unified telemetry data.
-  for (let id of expectedNonEmptyHistograms) {
-    await promiseTelemetryRecorded(id, process, 1);
-  }
-  for (let id of expectedNonEmptyKeyedHistograms) {
-    await promiseKeyedTelemetryRecorded(id, process, EXTENSION_ID1, 1);
-  }
+  if (AppConstants.platform != "android") {
+    for (let id of expectedNonEmptyHistograms) {
+      await promiseTelemetryRecorded(id, process, 1);
+    }
+    for (let id of expectedNonEmptyKeyedHistograms) {
+      await promiseKeyedTelemetryRecorded(id, process, EXTENSION_ID1, 1);
+    }
 
-  // Telemetry from extension1's background page should be recorded.
-  snapshots = getSnapshots(process);
-  keyedSnapshots = getKeyedSnapshots(process);
+    // Telemetry from extension1's background page should be recorded.
+    snapshots = getSnapshots(process);
+    keyedSnapshots = getKeyedSnapshots(process);
 
-  for (let id of expectedNonEmptyHistograms) {
-    equal(
-      valueSum(snapshots[id].values),
-      1,
-      `Data recorded for histogram: ${id}.`
-    );
-  }
+    for (let id of expectedNonEmptyHistograms) {
+      equal(
+        valueSum(snapshots[id].values),
+        1,
+        `Data recorded for histogram: ${id}.`
+      );
+    }
 
-  for (let id of expectedNonEmptyKeyedHistograms) {
-    Assert.deepEqual(
-      Object.keys(keyedSnapshots[id]),
-      [EXTENSION_ID1],
-      `Data recorded for histogram: ${id}.`
-    );
-    equal(
-      valueSum(keyedSnapshots[id][EXTENSION_ID1].values),
-      1,
-      `Data recorded for histogram: ${id}.`
-    );
+    for (let id of expectedNonEmptyKeyedHistograms) {
+      Assert.deepEqual(
+        Object.keys(keyedSnapshots[id]),
+        [EXTENSION_ID1],
+        `Data recorded for histogram: ${id}.`
+      );
+      equal(
+        valueSum(keyedSnapshots[id][EXTENSION_ID1].values),
+        1,
+        `Data recorded for histogram: ${id}.`
+      );
+    }
   }
 
   await extension2.startup();
@@ -211,44 +213,51 @@ async function test_telemetry_background() {
   }
 
   // Assert unified telemetry data.
-  for (let id of expectedNonEmptyHistograms) {
-    await promiseTelemetryRecorded(id, process, 2);
-  }
-  for (let id of expectedNonEmptyKeyedHistograms) {
-    await promiseKeyedTelemetryRecorded(id, process, EXTENSION_ID2, 1);
-  }
+  if (AppConstants.platform != "android") {
+    for (let id of expectedNonEmptyHistograms) {
+      await promiseTelemetryRecorded(id, process, 2);
+    }
+    for (let id of expectedNonEmptyKeyedHistograms) {
+      await promiseKeyedTelemetryRecorded(id, process, EXTENSION_ID2, 1);
+    }
 
-  // Telemetry from extension2's background page should be recorded.
-  snapshots = getSnapshots(process);
-  keyedSnapshots = getKeyedSnapshots(process);
+    // Telemetry from extension2's background page should be recorded.
+    snapshots = getSnapshots(process);
+    keyedSnapshots = getKeyedSnapshots(process);
 
-  for (let id of expectedNonEmptyHistograms) {
-    equal(
-      valueSum(snapshots[id].values),
-      2,
-      `Additional data recorded for histogram: ${id}.`
-    );
-  }
+    for (let id of expectedNonEmptyHistograms) {
+      equal(
+        valueSum(snapshots[id].values),
+        2,
+        `Additional data recorded for histogram: ${id}.`
+      );
+    }
 
-  for (let id of expectedNonEmptyKeyedHistograms) {
-    Assert.deepEqual(
-      Object.keys(keyedSnapshots[id]).sort(),
-      [EXTENSION_ID1, EXTENSION_ID2],
-      `Additional data recorded for histogram: ${id}.`
-    );
-    equal(
-      valueSum(keyedSnapshots[id][EXTENSION_ID2].values),
-      1,
-      `Additional data recorded for histogram: ${id}.`
-    );
+    for (let id of expectedNonEmptyKeyedHistograms) {
+      Assert.deepEqual(
+        Object.keys(keyedSnapshots[id]).sort(),
+        [EXTENSION_ID1, EXTENSION_ID2],
+        `Additional data recorded for histogram: ${id}.`
+      );
+      equal(
+        valueSum(keyedSnapshots[id][EXTENSION_ID2].values),
+        1,
+        `Additional data recorded for histogram: ${id}.`
+      );
+    }
   }
 
   await extension2.unload();
 
+  await Services.fog.testFlushAllChildren();
+  resetTelemetryData();
+
   // Run a content script.
-  process = IS_OOP ? "content" : "parent";
-  let expectedCount = IS_OOP ? 1 : 3;
-  let expectedKeyedCount = IS_OOP ? 1 : 2;
+  process = "content";
+  // Expect only telemetry for the single extension content script
+  // that should be executed when loading the test webpage.
+  let expectedCount = 1;
+  let expectedKeyedCount = 1;
 
   let contentPage = await ExtensionTestUtils.loadContentPage(
     `${BASE_URL}/file_sample.html`
@@ -262,46 +271,48 @@ async function test_telemetry_background() {
       metricId,
       gleanMetric: Glean.extensionsTiming[metricId],
       gleanMetricConstructor: GleanTimingDistribution,
-      expectedSamplesCount: 3,
+      expectedSamplesCount: expectedCount,
     });
   }
 
   // Assert unified telemetry data.
-  for (let id of expectedNonEmptyHistograms) {
-    await promiseTelemetryRecorded(id, process, expectedCount);
-  }
-  for (let id of expectedNonEmptyKeyedHistograms) {
-    await promiseKeyedTelemetryRecorded(
-      id,
-      process,
-      EXTENSION_ID1,
-      expectedKeyedCount
-    );
-  }
+  if (AppConstants.platform != "android") {
+    for (let id of expectedNonEmptyHistograms) {
+      await promiseTelemetryRecorded(id, process, expectedCount);
+    }
+    for (let id of expectedNonEmptyKeyedHistograms) {
+      await promiseKeyedTelemetryRecorded(
+        id,
+        process,
+        EXTENSION_ID1,
+        expectedKeyedCount
+      );
+    }
 
-  // Telemetry from extension1's content script should be recorded.
-  snapshots = getSnapshots(process);
-  keyedSnapshots = getKeyedSnapshots(process);
+    // Telemetry from extension1's content script should be recorded.
+    snapshots = getSnapshots(process);
+    keyedSnapshots = getKeyedSnapshots(process);
 
-  for (let id of expectedNonEmptyHistograms) {
-    equal(
-      valueSum(snapshots[id].values),
-      expectedCount,
-      `Data recorded in content script for histogram: ${id}.`
-    );
-  }
+    for (let id of expectedNonEmptyHistograms) {
+      equal(
+        valueSum(snapshots[id].values),
+        expectedCount,
+        `Data recorded in content script for histogram: ${id}.`
+      );
+    }
 
-  for (let id of expectedNonEmptyKeyedHistograms) {
-    Assert.deepEqual(
-      Object.keys(keyedSnapshots[id]).sort(),
-      IS_OOP ? [EXTENSION_ID1] : [EXTENSION_ID1, EXTENSION_ID2],
-      `Additional data recorded for histogram: ${id}.`
-    );
-    equal(
-      valueSum(keyedSnapshots[id][EXTENSION_ID1].values),
-      expectedKeyedCount,
-      `Additional data recorded for histogram: ${id}.`
-    );
+    for (let id of expectedNonEmptyKeyedHistograms) {
+      Assert.deepEqual(
+        Object.keys(keyedSnapshots[id]).sort(),
+        [EXTENSION_ID1],
+        `Additional data recorded for histogram: ${id}.`
+      );
+      equal(
+        valueSum(keyedSnapshots[id][EXTENSION_ID1].values),
+        expectedKeyedCount,
+        `Additional data recorded for histogram: ${id}.`
+      );
+    }
   }
 
   await extension1.unload();
@@ -319,16 +330,18 @@ async function test_telemetry_background() {
   }
 
   // Assert unified telemetry data.
-  for (let id of expectedEmptyHistograms) {
-    ok(!(id in snapshots), `No data recorded for histogram: ${id}.`);
-  }
+  if (AppConstants.platform != "android") {
+    for (let id of expectedEmptyHistograms) {
+      ok(!(id in snapshots), `No data recorded for histogram: ${id}.`);
+    }
 
-  for (let id of expectedEmptyKeyedHistograms) {
-    Assert.deepEqual(
-      Object.keys(keyedSnapshots[id] || {}),
-      [],
-      `No data recorded for histogram: ${id}.`
-    );
+    for (let id of expectedEmptyKeyedHistograms) {
+      Assert.deepEqual(
+        Object.keys(keyedSnapshots[id] || {}),
+        [],
+        `No data recorded for histogram: ${id}.`
+      );
+    }
   }
 
   await contentPage.close();
