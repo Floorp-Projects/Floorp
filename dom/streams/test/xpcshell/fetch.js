@@ -12,7 +12,6 @@ AddonTestUtils.createAppInfo(
   "42"
 );
 
-Cu.importGlobalProperties(["fetch"]);
 add_task(async function helper() {
   do_get_profile();
 

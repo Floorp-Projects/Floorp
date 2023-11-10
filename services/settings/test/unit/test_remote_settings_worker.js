@@ -17,8 +17,6 @@ const { Database } = ChromeUtils.importESModule(
   "resource://services-settings/Database.sys.mjs"
 );
 
-XPCOMUtils.defineLazyGlobalGetters(this, ["indexedDB"]);
-
 const IS_ANDROID = AppConstants.platform == "android";
 
 add_task(async function test_canonicaljson() {

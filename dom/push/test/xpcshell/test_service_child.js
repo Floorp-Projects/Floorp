@@ -3,8 +3,6 @@
 
 "use strict";
 
-Cu.importGlobalProperties(["crypto"]);
-
 var db;
 
 function done() {

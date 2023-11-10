@@ -32,7 +32,6 @@ const nonBlockedAddon = {
 };
 
 async function sha256(arrayBuffer) {
-  Cu.importGlobalProperties(["crypto"]);
   let hash = await crypto.subtle.digest("SHA-256", arrayBuffer);
   const toHex = b => b.toString(16).padStart(2, "0");
   return Array.from(new Uint8Array(hash), toHex).join("");

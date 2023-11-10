@@ -77,7 +77,6 @@ function run_test() {
     sb
   );
 
-  Cu.importGlobalProperties(["indexedDB"]);
   do_test_pending();
   Promise.all([innerPromise, exerciseInterface()]).then(do_test_finished);
 }

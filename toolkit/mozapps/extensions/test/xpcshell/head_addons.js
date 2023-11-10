@@ -1147,7 +1147,6 @@ function copyBlocklistToProfile(blocklistFile) {
 }
 
 async function mockGfxBlocklistItemsFromDisk(path) {
-  Cu.importGlobalProperties(["fetch"]);
   let response = await fetch(Services.io.newFileURI(do_get_file(path)).spec);
   let json = await response.json();
   return mockGfxBlocklistItems(json);

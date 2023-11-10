@@ -21,8 +21,6 @@ ChromeUtils.defineESModuleGetters(this, {
   updateAppInfo: "resource://testing-common/AppInfo.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
-
 const GLOBAL_SCOPE = this;
 const TEST_DEBUG = Services.env.get("TEST_DEBUG");
 

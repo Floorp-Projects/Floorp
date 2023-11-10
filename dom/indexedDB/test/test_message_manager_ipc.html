@@ -26,8 +26,6 @@ async function chromeScriptFunc() {
     const blobText = blobData.join("");
     const blobType = "text/plain";
 
-    Cu.importGlobalProperties(["indexedDB"]);
-
     function info(msg) {
       sendAsyncMessage(mmName, { op: "info", msg });
     }

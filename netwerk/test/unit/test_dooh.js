@@ -5,8 +5,6 @@
 
 /* import-globals-from trr_common.js */
 
-Cu.importGlobalProperties(["fetch"]);
-
 const { setTimeout } = ChromeUtils.importESModule(
   "resource://gre/modules/Timer.sys.mjs"
 );

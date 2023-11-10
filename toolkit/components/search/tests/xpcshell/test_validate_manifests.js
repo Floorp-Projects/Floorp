@@ -3,8 +3,6 @@
 
 "use strict";
 
-Cu.importGlobalProperties(["fetch"]);
-
 const { ExtensionData } = ChromeUtils.importESModule(
   "resource://gre/modules/Extension.sys.mjs"
 );

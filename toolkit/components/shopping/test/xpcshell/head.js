@@ -4,8 +4,6 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 "use strict";
 /* exported createHttpServer, loadJSONfromFile, readFile */
 
-Cu.importGlobalProperties(["fetch"]);
-
 const { AddonTestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/AddonTestUtils.sys.mjs"
 );

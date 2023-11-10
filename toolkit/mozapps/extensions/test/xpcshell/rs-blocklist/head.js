@@ -38,7 +38,6 @@ async function load_mlbf_record_as_blob() {
   const url = Services.io.newFileURI(
     do_get_file("../data/mlbf-blocked1-unblocked2.bin")
   ).spec;
-  Cu.importGlobalProperties(["fetch"]);
   return (await fetch(url)).blob();
 }
 

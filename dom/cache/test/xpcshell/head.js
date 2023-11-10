@@ -47,8 +47,7 @@ add_setup(function () {
 
   enableTesting();
 
-  // Expose Cache and Fetch symbols on the global
-  Cu.importGlobalProperties(["caches", "fetch"]);
+  Cu.importGlobalProperties(["caches"]);
 
   registerCleanupFunction(resetTesting);
 });
