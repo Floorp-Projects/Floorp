@@ -248,6 +248,14 @@ urlbar:
       type: boolean
       fallbackPref: browser.urlbar.quicksuggest.allowPositionInSuggestions
       description: Whether quick suggest results can be shown in position specified in the suggestions.
+    quickSuggestContextualOptInEnabled:
+      type: boolean
+      setPref: browser.urlbar.quicksuggest.contextualOptIn
+      description: Whether the Firefox Suggest contextual opt-in result is enabled. If true, this implicitly disables shouldShowOnboardingDialog.
+    quickSuggestContextualOptInSayHello:
+      type: boolean
+      setPref: browser.urlbar.quicksuggest.contextualOptIn.sayHello
+      description: Controls which variant of the copy is used for the Firefox Suggest contextual opt-in result.
     quickSuggestDataCollectionEnabled:
       type: boolean
       description: Whether data collection should be enabled by default. If this variable is specified, it will override the value implied by the scenario. It will never override the user's local preference to disable (or enable) data collection, if the user has already toggled that preference.
