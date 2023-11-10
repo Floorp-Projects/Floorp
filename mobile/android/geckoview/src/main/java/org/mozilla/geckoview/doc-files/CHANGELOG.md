@@ -20,6 +20,7 @@ exclude: true
 - Added [`GeckoSession.sendImpressionAttributionEvent`][121.5] for sending impression attribution event for a given product recommendation.
 - Added support for controlling `privacy.query_stripping.enabled` and `privacy.query_stripping.enabled.pbmode` via [`GeckoSession.ContentDelegate.queryParameterStrippingEnabled`][121.6] and [`GeckoSession.ContentDelegate.queryParameterStrippingPrivateBrowsingEnabled`][121.7].
 - Added support for controlling `privacy.query_stripping.allow_list` and `privacy.query_stripping.strip_list` via [`GeckoSession.ContentDelegate.queryParameterStrippingAllowList`][121.8] and [`GeckoSession.ContentDelegate.queryParameterStrippingStripList`][121.9].
+- Add [`WebExtensionController.AddonManagerDelegate.onReady`][121.10] ([bug 1859585]({{bugzilla}}1859585).
 
 [121.1]: {{javadoc_uri}}/TranslationsController.RuntimeTranslation.html
 [121.2]: {{javadoc_uri}}/ContentBlocking.Settings.Builder.html#cookieBannerGlobalRulesEnabled(boolean)
@@ -30,6 +31,7 @@ exclude: true
 [121.7]: {{javadoc_uri}}/ContentBlocking.Settings.Builder.html#queryParameterStrippingPrivateBrowsingEnabled(boolean)
 [121.8]: {{javadoc_uri}}/ContentBlocking.Settings.Builder.html#queryParameterStrippingAllowList(String)
 [121.9]: {{javadoc_uri}}/ContentBlocking.Settings.Builder.html#queryParameterStrippingStripList(boolean)
+[121.10]: {{javadoc_uri}}/WebExtensionController.AddonManagerDelegate.html#onReady
 
 ## v120
 - Added [`disableExtensionProcessSpawning`][120.1] for disabling the extension process spawning. ([bug 1855405]({{bugzilla}}1855405))
@@ -1467,4 +1469,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: f650e289305768d5bfc8717d610d5c0348c140ea
+[api-version]: 447654edd260c5b5341f0cadc98a4a8e8a68672a

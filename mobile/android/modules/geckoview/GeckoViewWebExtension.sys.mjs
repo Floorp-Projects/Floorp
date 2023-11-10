@@ -487,32 +487,12 @@ class ExtensionInstallListener {
 
   async onInstallEnded(aInstall, aAddon) {
     debug`onInstallEnded addonId=${aAddon.id}`;
-    const addonId = aAddon.id;
-    const { sourceURI } = aInstall;
-
-    if (aAddon.userDisabled || aAddon.embedderDisabled) {
-      const extension = await exportExtension(
-        aAddon,
-        aAddon.userPermissions,
-        sourceURI
-      );
-      this.resolve({ extension });
-      return; // we don't want to wait until extension is enabled, so return early.
-    }
-
-    const onReady = async (name, { id }) => {
-      if (id != addonId) {
-        return;
-      }
-      lazy.Management.off("ready", onReady);
-      const extension = await exportExtension(
-        aAddon,
-        aAddon.userPermissions,
-        sourceURI
-      );
-      this.resolve({ extension });
-    };
-    lazy.Management.on("ready", onReady);
+    const extension = await exportExtension(
+      aAddon,
+      aAddon.userPermissions,
+      aInstall.sourceURI
+    );
+    this.resolve({ extension });
   }
 }
 
@@ -611,6 +591,40 @@ new AddonInstallObserver();
 class AddonManagerListener {
   constructor() {
     lazy.AddonManager.addAddonListener(this);
+    // Some extension properties are not going to be available right away after the extension
+    // have been installed (e.g. in particular metaData.optionsPageURL), the GeckoView event
+    // dispatched from onExtensionReady listener will be providing updated extension metadata to
+    // the GeckoView side when it is actually going to be available.
+    this.onExtensionReady = this.onExtensionReady.bind(this);
+    lazy.Management.on("ready", this.onExtensionReady);
+  }
+
+  async onExtensionReady(name, extInstance) {
+    // In xpcshell tests there wil be test extensions that trigger this event while the
+    // AddonManager has not been started at all, on the contrary on a regular browser
+    // instance the AddonManager is expected to be already fully started for an extension
+    // for the extension to be able to reach the "ready" state, and so we just silently
+    // early exit here if the AddonManager is not ready.
+    if (!lazy.AddonManager.isReady) {
+      return;
+    }
+
+    debug`onExtensionReady ${extInstance.id}`;
+
+    const addonWrapper = await lazy.AddonManager.getAddonByID(extInstance.id);
+    if (!addonWrapper) {
+      return;
+    }
+
+    const extension = await exportExtension(
+      addonWrapper,
+      addonWrapper.userPermissions,
+      /* aSourceURI */ null
+    );
+    lazy.EventDispatcher.instance.sendRequest({
+      type: "GeckoView:WebExtension:OnReady",
+      extension,
+    });
   }
 
   async onDisabling(aAddon) {

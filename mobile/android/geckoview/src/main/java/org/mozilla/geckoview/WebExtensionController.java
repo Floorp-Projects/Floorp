@@ -399,6 +399,16 @@ public class WebExtensionController {
     @UiThread
     default void onInstallationFailed(
         final @Nullable WebExtension extension, final @NonNull InstallException installException) {}
+
+    /**
+     * Called whenever an extension startup has been completed (and relative urls to assets packaged
+     * with the extension can be resolved into a full moz-extension url, e.g. optionsPageUrl is
+     * going to be empty until the extension has reached this callback).
+     *
+     * @param extension The {@link WebExtension} that has been fully started.
+     */
+    @UiThread
+    default void onReady(final @NonNull WebExtension extension) {}
   }
 
   /** This delegate is used to notify of extension process state changes. */
@@ -486,7 +496,8 @@ public class WebExtensionController {
               "GeckoView:WebExtension:OnUninstalled",
               "GeckoView:WebExtension:OnInstalling",
               "GeckoView:WebExtension:OnInstallationFailed",
-              "GeckoView:WebExtension:OnInstalled");
+              "GeckoView:WebExtension:OnInstalled",
+              "GeckoView:WebExtension:OnReady");
     } else if (delegate != null && mAddonManagerDelegate == null) {
       EventDispatcher.getInstance()
           .registerUiThreadListener(
@@ -499,7 +510,8 @@ public class WebExtensionController {
               "GeckoView:WebExtension:OnUninstalled",
               "GeckoView:WebExtension:OnInstalling",
               "GeckoView:WebExtension:OnInstallationFailed",
-              "GeckoView:WebExtension:OnInstalled");
+              "GeckoView:WebExtension:OnInstalled",
+              "GeckoView:WebExtension:OnReady");
     }
 
     mAddonManagerDelegate = delegate;
@@ -934,6 +946,9 @@ public class WebExtensionController {
     } else if ("GeckoView:WebExtension:OnInstallationFailed".equals(event)) {
       onInstallationFailed(bundle);
       return;
+    } else if ("GeckoView:WebExtension:OnReady".equals(event)) {
+      onReady(bundle);
+      return;
     }
 
     extensionFromBundle(bundle)
@@ -1223,6 +1238,17 @@ public class WebExtensionController {
     final GeckoBundle extensionBundle = bundle.getBundle("extension");
     final WebExtension extension = new WebExtension(mDelegateControllerProvider, extensionBundle);
     mAddonManagerDelegate.onInstalled(extension);
+  }
+
+  private void onReady(final GeckoBundle bundle) {
+    if (mAddonManagerDelegate == null) {
+      Log.e(LOGTAG, "no AddonManager delegate registered");
+      return;
+    }
+
+    final GeckoBundle extensionBundle = bundle.getBundle("extension");
+    final WebExtension extension = new WebExtension(mDelegateControllerProvider, extensionBundle);
+    mAddonManagerDelegate.onReady(extension);
   }
 
   private void onDisabledProcessSpawning() {

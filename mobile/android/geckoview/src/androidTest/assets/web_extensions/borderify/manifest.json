@@ -16,5 +16,8 @@
       "matches": ["*://*.example.com/*"],
       "js": ["borderify.js"]
     }
-  ]
+  ],
+  "options_ui": {
+    "page": "dummy.html"
+  }
 }
