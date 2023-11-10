@@ -657,16 +657,15 @@ void PerformanceMainThread::FinalizeLCPEntriesForText() {
 
   bool canFinalize = StaticPrefs::dom_enable_largest_contentful_paint() &&
                      !presContext->HasStoppedGeneratingLCP();
-  nsTHashMap<nsRefPtrHashKey<Element>, nsRect> textFrameUnion =
-      std::move(GetTextFrameUnions());
   if (canFinalize) {
-    for (const auto& textFrameUnion : textFrameUnion) {
+    for (const auto& textFrameUnion : GetTextFrameUnions()) {
       LCPHelpers::FinalizeLCPEntryForText(
           this, renderTime, textFrameUnion.GetKey(), textFrameUnion.GetData(),
           presContext);
     }
   }
-  MOZ_ASSERT(GetTextFrameUnions().IsEmpty());
+
+  ClearTextFrameUnions();
 }
 
 void PerformanceMainThread::StoreImageLCPEntry(
@@ -687,11 +686,10 @@ PerformanceMainThread::GetImageLCPEntry(Element* aElement,
   Document* doc = aElement->GetComposedDoc();
   MOZ_ASSERT(doc, "Element should be connected when it's painted");
 
-  Maybe<LCPImageEntryKey>& contentIdentifier =
+  const Maybe<const LCPImageEntryKey>& contentIdentifier =
       entry.value()->GetLCPImageEntryKey();
   if (contentIdentifier.isSome()) {
     doc->ContentIdentifiersForLCP().EnsureRemoved(contentIdentifier.value());
-    contentIdentifier.reset();
   }
 
   return entry.value().forget();
@@ -712,19 +710,14 @@ void PerformanceMainThread::SetHasDispatchedScrollEvent() {
 
 void PerformanceMainThread::SetHasDispatchedInputEvent() {
   mHasDispatchedInputEvent = true;
+  mImageLCPEntryMap.Clear();
   ClearGeneratedTempDataForLCP();
 }
 
-void PerformanceMainThread::ClearGeneratedTempDataForLCP() {
-  mTextFrameUnions.Clear();
-  mImageLCPEntryMap.Clear();
-  mImagesPendingRendering.Clear();
+void PerformanceMainThread::ClearTextFrameUnions() { mTextFrameUnions.Clear(); }
 
-  if (auto* innerWindow = GetOwnerGlobal()->GetAsInnerWindow()) {
-    if (Document* document =
-            GetOwnerGlobal()->GetAsInnerWindow()->GetExtantDoc()) {
-      document->ContentIdentifiersForLCP().Clear();
-    }
-  }
+void PerformanceMainThread::ClearGeneratedTempDataForLCP() {
+  ClearTextFrameUnions();
+  mImageLCPEntryMap.Clear();
 }
 }  // namespace mozilla::dom
