@@ -14,6 +14,26 @@ const EXTENSION_ID2 = "@test-extension2";
 // Keep this in sync with the order in Histograms.json for
 // WEBEXT_BROWSERACTION_POPUP_PRELOAD_RESULT_COUNT
 const CATEGORIES = ["popupShown", "clearAfterHover", "clearAfterMousedown"];
+const GLEAN_RESULT_LABELS = [...CATEGORIES, "__other__"];
+
+function assertGleanPreloadResultLabelCounter(expectedLabelsValue) {
+  for (const label of GLEAN_RESULT_LABELS) {
+    const expectedLabelValue = expectedLabelsValue[label];
+    Assert.deepEqual(
+      Glean.extensionsCounters.browserActionPreloadResult[label].testGetValue(),
+      expectedLabelValue,
+      `Expect Glean browserActionPreloadResult metric label ${label} to be ${
+        expectedLabelValue > 0 ? expectedLabelValue : "empty"
+      }`
+    );
+  }
+}
+
+function assertGleanPreloadResultLabelCounterEmpty() {
+  // All empty labels passed to the other helpers to make it
+  // assert that all labels are empty.
+  assertGleanPreloadResultLabelCounter({});
+}
 
 /**
  * Takes a Telemetry histogram snapshot and makes sure
@@ -273,6 +293,7 @@ add_task(async function testBrowserActionTelemetryResults() {
 
   histogram.clear();
   histogramKeyed.clear();
+  Services.fog.testResetFOG();
 
   is(
     histogram.snapshot().sum,
@@ -284,6 +305,7 @@ add_task(async function testBrowserActionTelemetryResults() {
     0,
     `No data recorded for histogram: ${RESULT_HISTOGRAM_KEYED}.`
   );
+  assertGleanPreloadResultLabelCounterEmpty();
 
   await extension.startup();
 
@@ -314,6 +336,7 @@ add_task(async function testBrowserActionTelemetryResults() {
   );
 
   assertOnlyOneTypeSet(histogram.snapshot(), "clearAfterHover");
+  assertGleanPreloadResultLabelCounter({ clearAfterHover: 1 });
 
   let keyedSnapshot = histogramKeyed.snapshot();
   Assert.deepEqual(
@@ -325,6 +348,7 @@ add_task(async function testBrowserActionTelemetryResults() {
 
   histogram.clear();
   histogramKeyed.clear();
+  Services.fog.testResetFOG();
 
   // TODO: Create a test for cancel after mousedown.
   // This is tricky because calling mouseout after mousedown causes a
@@ -334,6 +358,7 @@ add_task(async function testBrowserActionTelemetryResults() {
   await awaitExtensionPanel(extension);
 
   assertOnlyOneTypeSet(histogram.snapshot(), "popupShown");
+  assertGleanPreloadResultLabelCounter({ popupShown: 1 });
 
   keyedSnapshot = histogramKeyed.snapshot();
   Assert.deepEqual(

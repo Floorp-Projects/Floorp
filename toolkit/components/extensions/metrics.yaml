@@ -295,6 +295,66 @@ extensions.quarantined_domains:
       - technical
     telemetry_mirror: EXTENSIONS_QUARANTINEDDOMAINS_REMOTEHASH
 
+extensions.counters:
+
+    browser_action_preload_result:
+      type: labeled_counter
+      expires: never
+      description: |
+        Number of times an event page hit the idle timeout and results in one of the labels.
+      # Keep these labels in sync with the ones in WEBEXT_BROWSERACTION_POPUP_PRELOAD_RESULT_COUNT
+      # as defined in Histograms.json 
+      labels:
+        - popupShown
+        - clearAfterHover
+        - clearAfterMousedown
+      lifetime: application
+      notification_emails:
+        - addons-dev-internal@mozilla.com
+      bugs:
+        - https://bugzilla.mozilla.org/1297167
+        - https://bugzilla.mozilla.org/1513556
+        - https://bugzilla.mozilla.org/1578225
+        - https://bugzilla.mozilla.org/1623315
+        - https://bugzilla.mozilla.org/1666980
+        - https://bugzilla.mozilla.org/1706839
+        - https://bugzilla.mozilla.org/1745271
+        - https://bugzilla.mozilla.org/1777402
+        - https://bugzilla.mozilla.org/1811155
+        - https://bugzilla.mozilla.org/1861303
+        - https://bugzilla.mozilla.org/1820158
+      data_reviews:
+        - https://bugzilla.mozilla.org/show_bug.cgi?id=1820158#c8
+      data_sensitivity:
+        - technical
+
+    event_page_idle_result:
+      type: labeled_counter
+      expires: never
+      description: |
+        Number of times an event page hit the idle timeout and results in one of the labels.
+      # Keep these labels in sync with the ones in WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT
+      # as defined in Histograms.json 
+      labels:
+        - suspend
+        - reset_other
+        - reset_event
+        - reset_listeners
+        - reset_nativeapp
+        - reset_streamfilter
+      lifetime: application
+      notification_emails:
+        - addons-dev-internal@mozilla.com
+      bugs:
+        - https://bugzilla.mozilla.org/1787940
+        - https://bugzilla.mozilla.org/1817103
+        - https://bugzilla.mozilla.org/1861303
+        - https://bugzilla.mozilla.org/1820158
+      data_reviews:
+        - https://bugzilla.mozilla.org/show_bug.cgi?id=1820158#c8
+      data_sensitivity:
+        - technical
+
 extensions.timing:
 
     background_page_load:
