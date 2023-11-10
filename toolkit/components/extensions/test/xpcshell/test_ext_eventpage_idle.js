@@ -43,6 +43,11 @@ add_task(async function test_eventpage_idle() {
     gleanMetric: Glean.extensionsTiming.eventPageRunningTime,
     gleanMetricConstructor: GleanCustomDistribution,
   });
+  assertGleanLabeledCounterEmpty({
+    metricId: "eventPageIdleResult",
+    gleanMetric: Glean.extensionsCounters.eventPageIdleResult,
+    gleanMetricLabels: GLEAN_EVENTPAGE_IDLE_RESULT_CATEGORIES,
+  });
 
   let extension = ExtensionTestUtils.loadExtension({
     useAddonManager: "permanent",
@@ -143,6 +148,11 @@ add_task(async function test_eventpage_idle() {
     category: "suspend",
     categories: HISTOGRAM_EVENTPAGE_IDLE_RESULT_CATEGORIES,
   });
+  assertGleanLabeledCounterNotEmpty({
+    metricId: "eventPageIdleResult",
+    gleanMetric: Glean.extensionsCounters.eventPageIdleResult,
+    expectedNotEmptyLabels: ["suspend"],
+  });
 
   assertHistogramCategoryNotEmpty(
     WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT_BY_ADDONID,
@@ -207,10 +217,15 @@ add_task(
 add_task(
   { pref_set: [["extensions.webextensions.runtime.timeout", 1000]] },
   async function test_eventpage_runtime_onSuspend_canceled() {
-    clearHistograms();
+    resetTelemetryData();
 
     assertHistogramEmpty(WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT);
     assertKeyedHistogramEmpty(WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT_BY_ADDONID);
+    assertGleanLabeledCounterEmpty({
+      metricId: "eventPageIdleResult",
+      gleanMetric: Glean.extensionsCounters.eventPageIdleResult,
+      gleanMetricLabels: GLEAN_EVENTPAGE_IDLE_RESULT_CATEGORIES,
+    });
 
     let extension = ExtensionTestUtils.loadExtension({
       useAddonManager: "permanent",
@@ -255,6 +270,11 @@ add_task(
     assertHistogramCategoryNotEmpty(WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT, {
       category: "reset_event",
       categories: HISTOGRAM_EVENTPAGE_IDLE_RESULT_CATEGORIES,
+    });
+    assertGleanLabeledCounterNotEmpty({
+      metricId: "eventPageIdleResult",
+      gleanMetric: Glean.extensionsCounters.eventPageIdleResult,
+      expectedNotEmptyLabels: ["reset_event"],
     });
 
     assertHistogramCategoryNotEmpty(
@@ -426,10 +446,15 @@ function createPendingListenerTestExtension() {
 add_task(
   { pref_set: [["extensions.background.idle.timeout", 500]] },
   async function test_eventpage_idle_reset_on_async_listener_unresolved() {
-    clearHistograms();
+    resetTelemetryData();
 
     assertHistogramEmpty(WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT);
     assertKeyedHistogramEmpty(WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT_BY_ADDONID);
+    assertGleanLabeledCounterEmpty({
+      metricId: "eventPageIdleResult",
+      gleanMetric: Glean.extensionsCounters.eventPageIdleResult,
+      gleanMetricLabels: GLEAN_EVENTPAGE_IDLE_RESULT_CATEGORIES,
+    });
 
     let extension = createPendingListenerTestExtension();
     await extension.startup();
@@ -471,6 +496,16 @@ add_task(
     assertHistogramCategoryNotEmpty(WEBEXT_EVENTPAGE_IDLE_RESULT_COUNT, {
       category: "reset_listeners",
       categories: HISTOGRAM_EVENTPAGE_IDLE_RESULT_CATEGORIES,
+    });
+
+    assertGleanLabeledCounter({
+      metricId: "eventPageIdleResult",
+      gleanMetric: Glean.extensionsCounters.eventPageIdleResult,
+      gleanMetricLabels: GLEAN_EVENTPAGE_IDLE_RESULT_CATEGORIES,
+      ignoreNonExpectedLabels: true, // Only check values on the labels listed below.
+      expectedLabelsValue: {
+        reset_listeners: 1,
+      },
     });
 
     assertHistogramCategoryNotEmpty(

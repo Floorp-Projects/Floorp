@@ -41,6 +41,11 @@ const HISTOGRAM_EVENTPAGE_IDLE_RESULT_CATEGORIES = [
   "reset_streamfilter",
 ];
 
+const GLEAN_EVENTPAGE_IDLE_RESULT_CATEGORIES = [
+  ...HISTOGRAM_EVENTPAGE_IDLE_RESULT_CATEGORIES,
+  "__other__",
+];
+
 function valueSum(arr) {
   return Object.values(arr).reduce((a, b) => a + b, 0);
 }
@@ -270,6 +275,92 @@ function assertGleanMetricsSamplesCount({
     expectedSamplesCount,
     `Got the expected number of samples for Glean metric ${metricId} ${msg}`
   );
+}
+
+function assertGleanLabeledCounter({
+  metricId,
+  gleanMetric,
+  gleanMetricLabels,
+  expectedLabelsValue,
+  ignoreNonExpectedLabels,
+  message,
+}) {
+  const { GleanLabeled } = globalThis;
+  const msg = message ? `(${message})` : "";
+  if (!Array.isArray(gleanMetricLabels) || !gleanMetricLabels.length) {
+    throw new Error(
+      `Missing mandatory gleanMetricLabels property ${msg}: ${gleanMetricLabels}`
+    );
+  }
+
+  if (!(gleanMetric instanceof GleanLabeled)) {
+    throw new Error(
+      `Glean metric "${metricId}" should be an instance of GleanLabeled: ${gleanMetric} ${msg}`
+    );
+  }
+
+  for (const label of gleanMetricLabels) {
+    const expectedLabelValue = expectedLabelsValue[label];
+    if (ignoreNonExpectedLabels && !(label in expectedLabelsValue)) {
+      continue;
+    }
+    Assert.deepEqual(
+      gleanMetric[label].testGetValue(),
+      expectedLabelValue,
+      `Expect Glean "${metricId}" metric label "${label}" to be ${
+        expectedLabelValue > 0 ? expectedLabelValue : "empty"
+      }`
+    );
+  }
+}
+
+function assertGleanLabeledCounterEmpty({
+  metricId,
+  gleanMetric,
+  gleanMetricLabels,
+  message,
+}) {
+  // All empty labels passed to the other helpers to make it
+  // assert that all labels are empty.
+  assertGleanLabeledCounter({
+    metricId,
+    gleanMetric,
+    gleanMetricLabels,
+    expectedLabelsValue: {},
+    message,
+  });
+}
+
+function assertGleanLabeledCounterNotEmpty({
+  metricId,
+  gleanMetric,
+  expectedNotEmptyLabels,
+  message,
+}) {
+  const { GleanLabeled } = globalThis;
+  const msg = message ? `(${message})` : "";
+  if (
+    !Array.isArray(expectedNotEmptyLabels) ||
+    !expectedNotEmptyLabels.length
+  ) {
+    throw new Error(
+      `Missing mandatory expectedNotEmptyLabels property ${msg}: ${expectedNotEmptyLabels}`
+    );
+  }
+
+  if (!(gleanMetric instanceof GleanLabeled)) {
+    throw new Error(
+      `Glean metric "${metricId}" should be an instance of GleanLabeled: ${gleanMetric} ${msg}`
+    );
+  }
+
+  for (const label of expectedNotEmptyLabels) {
+    Assert.notEqual(
+      gleanMetric[label].testGetValue(),
+      undefined,
+      `Expect Glean "${metricId}" metric label "${label}" to not be empty`
+    );
+  }
 }
 
 function assertDNRTelemetryMetricsDefined(metrics) {

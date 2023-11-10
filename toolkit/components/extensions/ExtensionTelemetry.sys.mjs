@@ -27,10 +27,10 @@ const HISTOGRAMS_IDS = {
 const GLEAN_METRICS_TYPES = {
   backgroundPageLoad: "timing_distribution",
   browserActionPopupOpen: "timing_distribution",
-  browserActionPreloadResult: null,
+  browserActionPreloadResult: "labeled_counter",
   contentScriptInjection: "timing_distribution",
   eventPageRunningTime: "custom_distribution",
-  eventPageIdleResult: null,
+  eventPageIdleResult: "labeled_counter",
   extensionStartup: "timing_distribution",
   pageActionPopupOpen: "timing_distribution",
   storageLocalGetJson: "timing_distribution",
@@ -251,12 +251,14 @@ class ExtensionTelemetryMetric {
    */
   _histogramAdd(metric, { category, extension, value }) {
     if (!extension) {
-      throw new Error(`Mandatory extension parameter is undefined`);
+      Cu.reportError(`Mandatory extension parameter is undefined`);
+      return;
     }
 
     const baseId = HISTOGRAMS_IDS[metric];
     if (!baseId) {
-      throw new Error(`Unknown metric ${metric}`);
+      Cu.reportError(`Unknown metric ${metric}`);
+      return;
     }
 
     const histogram = Services.telemetry.getHistogramById(baseId);
@@ -277,16 +279,34 @@ class ExtensionTelemetryMetric {
       keyedHistogram.add(extensionId, value);
     }
 
-    if (GLEAN_METRICS_TYPES[metric] === "custom_distribution") {
-      if (typeof category === "string") {
-        throw new Error(
-          `Unexpected unsupported category on Glean metric ${metric}`
-        );
+    switch (GLEAN_METRICS_TYPES[metric]) {
+      case "custom_distribution": {
+        if (typeof category === "string") {
+          Cu.reportError(
+            `Unexpected unsupported category parameter set on Glean metric ${metric}`
+          );
+          return;
+        }
+        // NOTE: extensionsTiming may become a property of the GLEAN_METRICS_TYPES
+        // map once we may introduce new histograms that are not part of the
+        // extensionsTiming Glean metrics category.
+        Glean.extensionsTiming[metric].accumulateSamples([value]);
+        break;
       }
-      // NOTE: extensionsTiming may become a property of the GLEAN_METRICS_TYPES
-      // map once we may introduce new metrics that are not part of the
-      // extensionsTiming Glean metrics category.
-      Glean.extensionsTiming[metric].accumulateSamples([value]);
+      case "labeled_counter": {
+        if (typeof category !== "string") {
+          Cu.reportError(
+            `Missing mandatory category on adding data to labeled Glean metric ${metric}`
+          );
+          return;
+        }
+        Glean.extensionsCounters[metric][category].add(value ?? 1);
+        break;
+      }
+      default:
+        Cu.reportError(
+          `Unexpected unsupported Glean metric type "${GLEAN_METRICS_TYPES[metric]}" for metric ${metric}`
+        );
     }
   }
 }
