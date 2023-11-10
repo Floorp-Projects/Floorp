@@ -247,12 +247,12 @@ void DynamicResampler::WarmUpResampler(bool aSkipLatency) {
   mIsWarmingUp = false;
 }
 
-void DynamicResampler::AppendInput(const nsTArray<const float*>& aInBuffer,
+void DynamicResampler::AppendInput(Span<const float* const> aInBuffer,
                                    uint32_t aInFrames) {
   MOZ_ASSERT(mSampleFormat == AUDIO_FORMAT_FLOAT32);
   AppendInputInternal(aInBuffer, aInFrames);
 }
-void DynamicResampler::AppendInput(const nsTArray<const int16_t*>& aInBuffer,
+void DynamicResampler::AppendInput(Span<const int16_t* const> aInBuffer,
                                    uint32_t aInFrames) {
   MOZ_ASSERT(mSampleFormat == AUDIO_FORMAT_S16);
   AppendInputInternal(aInBuffer, aInFrames);

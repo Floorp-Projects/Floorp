@@ -40,7 +40,7 @@ class AudibilityMonitor {
     ProcessPlanar(aData.ChannelData<float>(), aData.GetDuration());
   }
 
-  void ProcessPlanar(const nsTArray<const float*>& aPlanar, TrackTime aFrames) {
+  void ProcessPlanar(Span<const float* const> aPlanar, TrackTime aFrames) {
     uint32_t lastFrameAudibleAcrossChannels = 0;
     for (uint32_t channel = 0; channel < aPlanar.Length(); channel++) {
       uint32_t lastSampleAudible = 0;

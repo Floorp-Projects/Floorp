@@ -85,8 +85,8 @@ Reverb::Reverb(const AudioChunk& impulseResponse, size_t maxFFTSize,
   size_t impulseResponseBufferLength = impulseResponse.mDuration;
   float scale = impulseResponse.mVolume;
 
-  CopyableAutoTArray<const float*, 4> irChannels(
-      impulseResponse.ChannelData<float>());
+  CopyableAutoTArray<const float*, 4> irChannels;
+  irChannels.AppendElements(impulseResponse.ChannelData<float>());
   AutoTArray<float, 1024> tempBuf;
 
   if (normalize) {

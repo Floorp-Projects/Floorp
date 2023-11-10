@@ -63,9 +63,8 @@ class DynamicResampler final {
    * Append `aInFrames` number of frames from `aInBuffer` to the internal input
    * buffer. Memory copy/move takes place.
    */
-  void AppendInput(const nsTArray<const float*>& aInBuffer, uint32_t aInFrames);
-  void AppendInput(const nsTArray<const int16_t*>& aInBuffer,
-                   uint32_t aInFrames);
+  void AppendInput(Span<const float* const> aInBuffer, uint32_t aInFrames);
+  void AppendInput(Span<const int16_t* const> aInBuffer, uint32_t aInFrames);
   /**
    * Append `aInFrames` number of frames of silence to the internal input
    * buffer. Memory copy/move takes place.
@@ -126,7 +125,7 @@ class DynamicResampler final {
 
  private:
   template <typename T>
-  void AppendInputInternal(const nsTArray<const T*>& aInBuffer,
+  void AppendInputInternal(Span<const T* const>& aInBuffer,
                            uint32_t aInFrames) {
     MOZ_ASSERT(aInBuffer.Length() == (uint32_t)mChannels);
     for (uint32_t i = 0; i < mChannels; ++i) {
