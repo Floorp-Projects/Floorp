@@ -12,8 +12,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   JsonSchema: "resource://gre/modules/JsonSchema.sys.mjs",
 });
 
-XPCOMUtils.defineLazyGlobalGetters(this, ["fetch"]);
-
 function assertValidates(validator, obj, msg) {
   const result = validator.validate(obj);
   Assert.ok(

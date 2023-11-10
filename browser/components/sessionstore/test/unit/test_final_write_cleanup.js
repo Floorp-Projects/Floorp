@@ -22,8 +22,6 @@ const {
 const MAX_ENTRIES = 9;
 const URL = "http://example.com/#";
 
-Cu.importGlobalProperties(["structuredClone"]);
-
 async function prepareWithLimit(back, fwd) {
   SessionWriter.init("empty", false, Paths, {
     maxSerializeBack: back,

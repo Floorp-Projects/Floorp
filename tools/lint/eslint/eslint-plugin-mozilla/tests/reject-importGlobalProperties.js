@@ -23,11 +23,11 @@ ruleTester.run("reject-importGlobalProperties", rule, {
     },
     {
       options: ["allownonwebidl"],
-      code: "Cu.importGlobalProperties(['fetch'])",
+      code: "Cu.importGlobalProperties(['caches'])",
     },
     {
       options: ["allownonwebidl"],
-      code: "XPCOMUtils.defineLazyGlobalGetters(this, ['fetch'])",
+      code: "XPCOMUtils.defineLazyGlobalGetters(this, ['caches'])",
     },
   ],
   invalid: [

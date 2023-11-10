@@ -11,8 +11,6 @@ load("utils.js");
 NormandyTestUtils.init({ add_task });
 const { decorate_task } = NormandyTestUtils;
 
-Cu.importGlobalProperties(["fetch"]);
-
 decorate_task(withMockApiServer(), async function test_get({ serverUrl }) {
   // Test that NormandyApi can fetch from the test server.
   const response = await NormandyApi.get(`${serverUrl}/api/v1/`);

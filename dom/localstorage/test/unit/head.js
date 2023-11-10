@@ -21,8 +21,6 @@ add_setup(function () {
 
   enableTesting();
 
-  Cu.importGlobalProperties(["crypto"]);
-
   registerCleanupFunction(resetTesting);
 });
 

@@ -4,8 +4,6 @@ const { Utils } = ChromeUtils.importESModule(
   "resource://services-settings/Utils.sys.mjs"
 );
 
-Cu.importGlobalProperties(["fetch"]);
-
 async function getLocalDumpLastModified(bucket, collection) {
   let res;
   try {

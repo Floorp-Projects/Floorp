@@ -27,7 +27,6 @@ function run_test() {
     sb
   );
 
-  Cu.importGlobalProperties(["structuredClone"]);
   const clone = structuredClone({ b: 2 });
   Assert.equal(clone.b, 2);
 }

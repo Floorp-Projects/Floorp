@@ -3,8 +3,6 @@
 
 "use strict";
 
-Cu.importGlobalProperties(["structuredClone"]);
-
 const CONFIG = [
   {
     // Engine initially default, but the defaults will be changed to engine-pref.

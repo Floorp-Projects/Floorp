@@ -12,7 +12,6 @@ const { EventEmitter } = ChromeUtils.importESModule(
 ChromeUtils.defineESModuleGetters(this, {
   jwcrypto: "resource://services-crypto/jwcrypto.sys.mjs",
 });
-XPCOMUtils.defineLazyGlobalGetters(this, ["crypto"]);
 
 const CHANNEL_ID = "sW-UA97Q6Dljqen7XRlYPw";
 const CHANNEL_KEY = crypto.getRandomValues(new Uint8Array(32));

@@ -21,11 +21,5 @@ module.exports = {
     // JS can run. It's definitely available in JSMs. So even if this is not
     // the perfect place to add it, it's not wrong, and we can move it later.
     WebAssembly: false,
-    // These are hard-coded and available in .jsm scopes.
-    // See BackstagePass::Resolve.
-    fetch: false,
-    crypto: false,
-    indexedDB: false,
-    structuredClone: false,
   },
 };

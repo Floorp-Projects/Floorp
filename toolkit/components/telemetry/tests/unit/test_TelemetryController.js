@@ -804,7 +804,6 @@ add_task(async function test_encryptedPing() {
     // The underlying jwcrypto module being used here is not currently available on Android.
     return;
   }
-  Cu.importGlobalProperties(["crypto"]);
 
   const ECDH_PARAMS = {
     name: "ECDH",
@@ -1050,7 +1049,6 @@ add_task(async function test_encryptedPing_overrideId() {
     // The underlying jwcrypto module being used here is not currently available on Android.
     return;
   }
-  Cu.importGlobalProperties(["crypto"]);
 
   const publicKey = {
     crv: "P-256",

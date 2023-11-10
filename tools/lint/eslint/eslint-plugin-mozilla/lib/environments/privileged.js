@@ -810,5 +810,11 @@ module.exports = {
     XULScrollElement: false,
     XULTextElement: false,
     console: false,
+    // These are hard-coded and available in privileged scopes.
+    // See BackstagePass::Resolve.
+    fetch: false,
+    crypto: false,
+    indexedDB: false,
+    structuredClone: false,
   },
 };

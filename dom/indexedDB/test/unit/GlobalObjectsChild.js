@@ -19,8 +19,6 @@ function finishTest() {
 function run_test() {
   const name = "Splendid Test";
 
-  Cu.importGlobalProperties(["indexedDB"]);
-
   do_test_pending();
 
   let keyRange = IDBKeyRange.only(42);
