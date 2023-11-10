@@ -507,12 +507,15 @@ void js::gc::MarkingValidator::nonIncrementalMark(AutoGCSession& session) {
     AutoLockGC lock(gc);
     for (auto chunk = gc->allNonEmptyChunks(lock); !chunk.done();
          chunk.next()) {
-      MarkBitmap* bitmap = &chunk->markBits;
-      auto entry = MakeUnique<MarkBitmap>();
-      if (!entry) {
+      // Bug 1842582: Allocate mark bit buffer in two stages to avoid alignment
+      // restriction which we currently can't support.
+      void* buffer = js_malloc(sizeof(MarkBitmap));
+      if (!buffer) {
         return;
       }
+      UniquePtr<MarkBitmap> entry(new (buffer) MarkBitmap);
 
+      MarkBitmap* bitmap = &chunk->markBits;
       memcpy((void*)entry->bitmap, (void*)bitmap->bitmap,
              sizeof(bitmap->bitmap));
 

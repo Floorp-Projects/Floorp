@@ -610,7 +610,10 @@ void ChunkPool::verifyChunks() const {
   }
 }
 
-void TenuredChunk::verify() const {
+void TenuredChunk::verify() {
+  MOZ_ASSERT(
+      (uintptr_t(markBits.arenaBits(&arenas[0])) % TypicalCacheLineSize) == 0);
+
   MOZ_ASSERT(info.numArenasFree <= ArenasPerChunk);
   MOZ_ASSERT(info.numArenasFreeCommitted <= info.numArenasFree);
 
