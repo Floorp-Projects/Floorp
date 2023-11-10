@@ -29,7 +29,7 @@ this.storage = class extends ExtensionAPI {
     return {
       get(keys) {
         return measureOp(
-          ExtensionTelemetry.storageLocalGetJSON,
+          ExtensionTelemetry.storageLocalGetJson,
           context.extension,
           () => {
             return context.childManager
@@ -42,7 +42,7 @@ this.storage = class extends ExtensionAPI {
       },
       set(items) {
         return measureOp(
-          ExtensionTelemetry.storageLocalSetJSON,
+          ExtensionTelemetry.storageLocalSetJson,
           context.extension,
           () => {
             return context.childManager.callParentAsyncFunction(
@@ -90,7 +90,7 @@ this.storage = class extends ExtensionAPI {
     return {
       get(keys) {
         return measureOp(
-          ExtensionTelemetry.storageLocalGetIDB,
+          ExtensionTelemetry.storageLocalGetIdb,
           context.extension,
           async () => {
             const db = await getDB();
@@ -108,7 +108,7 @@ this.storage = class extends ExtensionAPI {
         }
 
         return measureOp(
-          ExtensionTelemetry.storageLocalSetIDB,
+          ExtensionTelemetry.storageLocalSetIdb,
           context.extension,
           async () => {
             const db = await getDB();

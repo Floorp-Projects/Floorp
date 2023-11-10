@@ -4,6 +4,7 @@
 
 const HISTOGRAM = "WEBEXT_CONTENT_SCRIPT_INJECTION_MS";
 const HISTOGRAM_KEYED = "WEBEXT_CONTENT_SCRIPT_INJECTION_MS_BY_ADDONID";
+const GLEAN_METRIC_ID = "contentScriptInjection";
 
 const server = createHttpServer();
 server.registerDirectory("/data/", do_get_file("data"));
@@ -11,6 +12,8 @@ server.registerDirectory("/data/", do_get_file("data"));
 const BASE_URL = `http://localhost:${server.identity.primaryPort}/data`;
 
 add_task(async function test_telemetry() {
+  const { GleanTimingDistribution } = globalThis;
+
   function contentScript() {
     browser.test.sendMessage("content-script-run");
   }
@@ -46,7 +49,10 @@ add_task(async function test_telemetry() {
     },
   });
 
-  clearHistograms();
+  // Make sure to force flushing glean fog data from child processes before
+  // resetting the already collected data.
+  await Services.fog.testFlushAllChildren();
+  resetTelemetryData();
 
   let process = IS_OOP ? "content" : "parent";
   ok(
@@ -57,6 +63,11 @@ add_task(async function test_telemetry() {
     !(HISTOGRAM_KEYED in getKeyedSnapshots(process)),
     `No data recorded for keyed histogram: ${HISTOGRAM_KEYED}.`
   );
+  assertGleanMetricsNoSamples({
+    metricId: GLEAN_METRIC_ID,
+    gleanMetric: Glean.extensionsTiming[GLEAN_METRIC_ID],
+    gleanMetricConstructor: GleanTimingDistribution,
+  });
 
   await extension1.startup();
   let extensionId = extension1.extension.id;
@@ -71,6 +82,11 @@ add_task(async function test_telemetry() {
     !(HISTOGRAM_KEYED in getKeyedSnapshots(process)),
     `No data recorded for keyed histogram: ${HISTOGRAM_KEYED}.`
   );
+  assertGleanMetricsNoSamples({
+    metricId: GLEAN_METRIC_ID,
+    gleanMetric: Glean.extensionsTiming[GLEAN_METRIC_ID],
+    gleanMetricConstructor: GleanTimingDistribution,
+  });
 
   let contentPage = await ExtensionTestUtils.loadContentPage(
     `${BASE_URL}/file_sample.html`
@@ -89,6 +105,13 @@ add_task(async function test_telemetry() {
     1,
     `Data recorded for histogram: ${HISTOGRAM_KEYED} with key ${extensionId}.`
   );
+  await Services.fog.testFlushAllChildren();
+  assertGleanMetricsSamplesCount({
+    metricId: GLEAN_METRIC_ID,
+    gleanMetric: Glean.extensionsTiming[GLEAN_METRIC_ID],
+    gleanMetricConstructor: GleanTimingDistribution,
+    expectedSamplesCount: 1,
+  });
 
   await contentPage.close();
   await extension1.unload();
@@ -112,6 +135,14 @@ add_task(async function test_telemetry() {
     !(extensionId2 in getKeyedSnapshots(process)[HISTOGRAM_KEYED]),
     `No data recorded for histogram after startup: ${HISTOGRAM_KEYED} with key ${extensionId2}.`
   );
+  await Services.fog.testFlushAllChildren();
+  assertGleanMetricsSamplesCount({
+    metricId: GLEAN_METRIC_ID,
+    gleanMetric: Glean.extensionsTiming[GLEAN_METRIC_ID],
+    gleanMetricConstructor: GleanTimingDistribution,
+    expectedSamplesCount: 1,
+    message: "No new data recorded yet after extension 2 startup",
+  });
 
   contentPage = await ExtensionTestUtils.loadContentPage(
     `${BASE_URL}/file_sample.html`
@@ -140,6 +171,15 @@ add_task(async function test_telemetry() {
     1,
     `Data recorded for histogram: ${HISTOGRAM_KEYED} with key ${extensionId2}.`
   );
+
+  await Services.fog.testFlushAllChildren();
+  assertGleanMetricsSamplesCount({
+    metricId: GLEAN_METRIC_ID,
+    gleanMetric: Glean.extensionsTiming[GLEAN_METRIC_ID],
+    gleanMetricConstructor: GleanTimingDistribution,
+    expectedSamplesCount: 2,
+    message: "New data recorded after extension 2 content script injection",
+  });
 
   await contentPage.close();
   await extension2.unload();
