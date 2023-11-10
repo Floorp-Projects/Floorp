@@ -9,16 +9,7 @@
 #include "nsITransferable.idl"
 #include "nsIClipboardOwner.idl"
 
-%{C++
-#include "mozilla/MozPromise.h"
-
-using DataFlavorsPromise = mozilla::MozPromise<nsTArray<nsCString>, nsresult, true>;
-%}
-
 interface nsIArray;
-
-native AsyncGetDataPromise(RefPtr<mozilla::GenericPromise>);
-native AsyncDataFlavorsPromise(RefPtr<DataFlavorsPromise>);
 
 [scriptable, builtinclass, uuid(801e2318-c8fa-11ed-afa1-0242ac120002)]
 interface nsIAsyncSetClipboardData : nsISupports {
@@ -53,6 +44,54 @@ interface nsIAsyncClipboardRequestCallback : nsISupports
    *         that indicates the reason for failure or cancellation.
    */
   void onComplete(in nsresult aResult);
+};
+
+[scriptable, builtinclass, uuid(c18ea2f7-6b6f-4a38-9ab3-a8781fdfcc39)]
+interface nsIAsyncGetClipboardData : nsISupports {
+  /**
+   * Determines whether this request is still valid (e.g., the clipboard content
+   * associated with this request is not stale).
+   */
+  readonly attribute boolean valid;
+
+  /**
+   * The available flavors in the clipboard.
+   */
+  readonly attribute Array<ACString> flavorList;
+
+  /**
+   * Filters the flavors that `aTransferable` can import (see
+   * `nsITransferable::flavorsTransferableCanImport`). Every specified flavors
+   * must exist in `flavorList`, or the request will be rejected. If the request
+   * remains valid, it retrieves the data for the first flavor. The data is then
+   * set for `aTransferable`.
+   *
+   * @param  aTransferable
+   *         The transferable which contains the flavors to be read.
+   * @param  aCallback
+   *         The nsIAsyncClipboardRequestCallback to be invoked once the get
+   *         request is either successfully completed or rejected.
+   * @result NS_OK if no errors
+   */
+  void getData(in nsITransferable aTransferable,
+               in nsIAsyncClipboardRequestCallback aCallback);
+};
+
+[scriptable, uuid(ce23c1c4-58fd-4c33-8579-fa0796d9652c)]
+interface nsIAsyncClipboardGetCallback : nsISupports
+{
+  /**
+   * Indicates that the clipboard get request has succeeded.
+   */
+  void onSuccess(in nsIAsyncGetClipboardData aAsyncGetClipboardData);
+
+  /**
+   * Indicates that the clipboard get request has rejected.
+   *
+   * @param  aResult
+   *         The reason for the rejection, can not be NS_OK.
+   */
+  void onError(in nsresult aResult);
 };
 
 [scriptable, builtinclass, uuid(ceaa0047-647f-4b8e-ad1c-aff9fa62aa51)]
@@ -109,6 +148,26 @@ interface nsIClipboard : nsISupports
 
     void getData ( in nsITransferable aTransferable, in long aWhichClipboard ) ;
 
+    /**
+     * Requests getting data asynchronously from the native clipboard. This does
+     * not actually retreive the data, but returns a nsIAsyncGetClipboardData
+     * contains current avaiable data formats. If the native clipboard is
+     * updated, either by us or other application, the existing
+     * nsIAsyncGetClipboardData becomes invalid.
+     *
+     * @param  aFlavorList
+     *         Specific data formats ('flavors') that can be retrieved from the
+     *         clipboard.
+     * @param  aWhichClipboard
+     *         Specifies the clipboard to which this operation applies.
+     * @param  aCallback
+     *         The callback object that will be notified upon completion.
+     * @result NS_OK if no errors
+     */
+    void asyncGetData(in Array<ACString> aFlavorList,
+                      in long aWhichClipboard,
+                      in nsIAsyncClipboardGetCallback aCallback);
+
    /**
     * This empties the clipboard and notifies the clipboard owner.
     * This empties the "logical" clipboard. It does not clear the native clipboard.
@@ -143,29 +202,4 @@ interface nsIClipboard : nsISupports
      */
     [infallible]
     boolean isClipboardTypeSupported(in long aWhichClipboard);
-
-    /**
-     * Filters the flavors aTransferable can import (see
-     * `nsITransferable::flavorsTransferableCanImport`) and gets the data for the
-     * first flavor. That data is set for aTransferable.
-     *
-     * @param  aTransferable   The transferable
-     * @param  aWhichClipboard Specifies the clipboard to which this operation applies.
-     * @return MozPromise      The returned promise will resolve when the data is ready or reject
-     *                         if any error occurs.
-     */
-    [noscript, notxpcom, nostdcall]
-    AsyncGetDataPromise asyncGetData(in nsITransferable aTransferable, in long aWhichClipboard);
-
-    /**
-     * Check if there is data on the clipboard matching each of the flavors in the
-     * given list.
-     *
-     * @param  aFlavorList     An array of ASCII strings.
-     * @param  aWhichClipboard Specifies the clipboard to which this operation applies.
-     * @return MozPromise      The returned promise will resolve with the list of matched flavors
-     *                         when the check is completed or reject if any error occurs.
-     */
-    [noscript, notxpcom, nostdcall]
-    AsyncDataFlavorsPromise asyncHasDataMatchingFlavors(in Array<ACString> aFlavorList, in long aWhichClipboard);
 };
