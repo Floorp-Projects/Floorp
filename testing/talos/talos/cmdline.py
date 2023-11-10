@@ -171,6 +171,12 @@ def create_parser(mach_interface=False):
         help="Comma-separated list of threads to sample",
     )
     add_arg(
+        "--gecko-profile-extra-threads",
+        dest="gecko_profile_extra_threads",
+        type=str,
+        help="Comma-separated list of extra threads to add to the default list of threads to profile.",
+    )
+    add_arg(
         "--extension",
         dest="extensions",
         action="append",

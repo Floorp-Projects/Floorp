@@ -218,6 +218,14 @@ class Talos(
                 },
             ],
             [
+                ["--gecko-profile-extra-threads"],
+                {
+                    "dest": "gecko_profile_extra_threads",
+                    "type": "str",
+                    "help": "Comma-separated list of extra threads to add to the default list of threads to profile.",
+                },
+            ],
+            [
                 ["--disable-e10s"],
                 {
                     "dest": "e10s",

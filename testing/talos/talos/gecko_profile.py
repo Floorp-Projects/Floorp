@@ -48,6 +48,12 @@ class GeckoProfile(object):
             "gecko_profile_threads", "GeckoMain,Compositor,Renderer"
         )
 
+        gecko_profile_extra_threads = test_config.get(
+            "gecko_profile_extra_threads", None
+        )
+        if gecko_profile_extra_threads:
+            gecko_profile_threads += "," + gecko_profile_extra_threads
+
         # Make sure no archive already exists in the location where
         # we plan to output our profiler archive
         # If individual talos is ran (--activeTest) instead of suite (--suite)
