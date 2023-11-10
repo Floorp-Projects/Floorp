@@ -16,6 +16,10 @@ function histogramCountsSum(histogram) {
   return snapshotCountsSum(histogram.snapshot());
 }
 
+function gleanMetricSamplesCount(gleanMetric) {
+  return snapshotCountsSum(gleanMetric.testGetValue() ?? { values: {} });
+}
+
 add_task(async function testPageActionTelemetry() {
   let extensionOptions = {
     manifest: {
@@ -63,6 +67,7 @@ add_task(async function testPageActionTelemetry() {
 
   histogram.clear();
   histogramKeyed.clear();
+  Services.fog.testResetFOG();
 
   is(
     histogramCountsSum(histogram),
@@ -73,6 +78,11 @@ add_task(async function testPageActionTelemetry() {
     Object.keys(histogramKeyed).length,
     0,
     `No data recorded for histogram: ${HISTOGRAM_KEYED}.`
+  );
+  Assert.deepEqual(
+    Glean.extensionsTiming.pageActionPopupOpen.testGetValue(),
+    undefined,
+    "No data recorded for glean metric extensionsTiming.pageActionPopupOpen"
   );
 
   await extension1.startup();
@@ -90,6 +100,11 @@ add_task(async function testPageActionTelemetry() {
     0,
     `No data recorded for histogram after PageAction shown: ${HISTOGRAM_KEYED}.`
   );
+  is(
+    gleanMetricSamplesCount(Glean.extensionsTiming.pageActionPopupOpen),
+    0,
+    "No data recorded for glean metric extensionsTiming.pageActionPopupOpen"
+  );
 
   clickPageAction(extension1, window);
   await awaitExtensionPanel(extension1);
@@ -99,6 +114,12 @@ add_task(async function testPageActionTelemetry() {
     1,
     `Data recorded for first extension for histogram: ${HISTOGRAM}.`
   );
+  is(
+    gleanMetricSamplesCount(Glean.extensionsTiming.pageActionPopupOpen),
+    1,
+    `Data recorded for first extension on Glean metric extensionsTiming.pageActionPopupOpen`
+  );
+
   let keyedSnapshot = histogramKeyed.snapshot();
   Assert.deepEqual(
     Object.keys(keyedSnapshot),
@@ -121,6 +142,12 @@ add_task(async function testPageActionTelemetry() {
     2,
     `Data recorded for second extension for histogram: ${HISTOGRAM}.`
   );
+  is(
+    gleanMetricSamplesCount(Glean.extensionsTiming.pageActionPopupOpen),
+    2,
+    `Data recorded for second extension on Glean metric extensionsTiming.pageActionPopupOpen`
+  );
+
   keyedSnapshot = histogramKeyed.snapshot();
   Assert.deepEqual(
     Object.keys(keyedSnapshot).sort(),
@@ -148,6 +175,12 @@ add_task(async function testPageActionTelemetry() {
     3,
     `Data recorded for second opening of popup for histogram: ${HISTOGRAM}.`
   );
+  is(
+    gleanMetricSamplesCount(Glean.extensionsTiming.pageActionPopupOpen),
+    3,
+    `Data recorded for second opening popup on Glean metric extensionsTiming.pageActionPopupOpen`
+  );
+
   keyedSnapshot = histogramKeyed.snapshot();
   is(
     snapshotCountsSum(keyedSnapshot[EXTENSION_ID2]),
@@ -168,8 +201,14 @@ add_task(async function testPageActionTelemetry() {
   is(
     histogramCountsSum(histogram),
     4,
-    `Data recorded for second opening of popup for histogram: ${HISTOGRAM}.`
+    `Data recorded for third opening of popup for histogram: ${HISTOGRAM}.`
   );
+  is(
+    gleanMetricSamplesCount(Glean.extensionsTiming.pageActionPopupOpen),
+    4,
+    `Data recorded for third opening popup on Glean metric extensionsTiming.pageActionPopupOpen`
+  );
+
   keyedSnapshot = histogramKeyed.snapshot();
   is(
     snapshotCountsSum(keyedSnapshot[EXTENSION_ID1]),

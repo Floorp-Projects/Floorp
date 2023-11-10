@@ -18,13 +18,19 @@ function processKeyedSnapshot(snapshot) {
 }
 
 add_task(async function test_telemetry() {
+  const { GleanTimingDistribution } = globalThis;
   let extension1 = ExtensionTestUtils.loadExtension({});
   let extension2 = ExtensionTestUtils.loadExtension({});
 
-  clearHistograms();
+  resetTelemetryData();
 
   assertHistogramEmpty(HISTOGRAM);
   assertKeyedHistogramEmpty(HISTOGRAM_KEYED);
+  assertGleanMetricsNoSamples({
+    metricId: "extensionStartup",
+    gleanMetric: Glean.extensionsTiming.extensionStartup,
+    gleanMetricConstructor: GleanTimingDistribution,
+  });
 
   await extension1.startup();
 
@@ -45,6 +51,13 @@ add_task(async function test_telemetry() {
     },
     `Data recorded for first extension for histogram ${HISTOGRAM_KEYED}`
   );
+
+  assertGleanMetricsSamplesCount({
+    metricId: "extensionStartup",
+    gleanMetric: Glean.extensionsTiming.extensionStartup,
+    gleanMetricConstructor: GleanTimingDistribution,
+    expectedSamplesCount: 1,
+  });
 
   let histogram = Services.telemetry.getHistogramById(HISTOGRAM);
   let histogramKeyed =
@@ -81,6 +94,13 @@ add_task(async function test_telemetry() {
     histogramSumExt1,
     `Data recorder for first extension is unchanged on the keyed histogram ${HISTOGRAM_KEYED}`
   );
+
+  assertGleanMetricsSamplesCount({
+    metricId: "extensionStartup",
+    gleanMetric: Glean.extensionsTiming.extensionStartup,
+    gleanMetricConstructor: GleanTimingDistribution,
+    expectedSamplesCount: 2,
+  });
 
   await extension1.unload();
   await extension2.unload();

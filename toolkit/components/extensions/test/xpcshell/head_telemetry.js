@@ -197,6 +197,81 @@ function resetTelemetryData() {
   clearScalars();
 }
 
+function assertValidGleanMetric({
+  metricId,
+  gleanMetric,
+  gleanMetricConstructor,
+  msg,
+}) {
+  const { GleanMetric } = globalThis;
+  if (!(gleanMetric instanceof GleanMetric)) {
+    throw new Error(
+      `gleanMetric "${metricId}" ${gleanMetric} should be an instance of GleanMetric ${msg}`
+    );
+  }
+
+  if (
+    gleanMetricConstructor &&
+    !(gleanMetric instanceof gleanMetricConstructor)
+  ) {
+    throw new Error(
+      `gleanMetric "${metricId}" should be an instance of the given GleanMetric constructor: ${gleanMetric} not an instance of ${gleanMetricConstructor} ${msg}`
+    );
+  }
+}
+
+// TODO reuse this helper inside the DNR specific test helper which would be doing
+// a similar assertion on DNR metrics.
+function assertGleanMetricsNoSamples({
+  metricId,
+  gleanMetric,
+  gleanMetricConstructor,
+  message,
+}) {
+  const msg = message ? `(${message})` : "";
+  assertValidGleanMetric({
+    metricId,
+    gleanMetric,
+    gleanMetricConstructor,
+    msg,
+  });
+  const gleanData = gleanMetric.testGetValue();
+  Assert.deepEqual(
+    gleanData,
+    undefined,
+    `Got no sample for Glean metric ${metricId} ${msg}`
+  );
+}
+
+// TODO reuse this helper inside the DNR specific test helper which would be doing
+// a similar assertion on DNR metrics.
+function assertGleanMetricsSamplesCount({
+  metricId,
+  gleanMetric,
+  gleanMetricConstructor,
+  expectedSamplesCount,
+  message,
+}) {
+  const msg = message ? `(${message})` : "";
+  assertValidGleanMetric({
+    metricId,
+    gleanMetric,
+    gleanMetricConstructor,
+    msg,
+  });
+  const gleanData = gleanMetric.testGetValue();
+  Assert.notEqual(
+    gleanData,
+    undefined,
+    `Got some sample for Glean metric ${metricId} ${msg}`
+  );
+  Assert.equal(
+    valueSum(gleanData.values),
+    expectedSamplesCount,
+    `Got the expected number of samples for Glean metric ${metricId} ${msg}`
+  );
+}
+
 function assertDNRTelemetryMetricsDefined(metrics) {
   const metricsNotFound = metrics.filter(metricDetails => {
     const { metric, label } = metricDetails;

@@ -294,3 +294,217 @@ extensions.quarantined_domains:
     data_sensitivity:
       - technical
     telemetry_mirror: EXTENSIONS_QUARANTINEDDOMAINS_REMOTEHASH
+
+extensions.timing:
+
+    background_page_load:
+      type: timing_distribution
+      time_unit: millisecond
+      expires: never
+      description: |
+        Amount of time it takes to load a WebExtensions background page, from when the
+        build function is called to when the page has finished processing the onload event.
+      lifetime: application
+      notification_emails:
+        - addons-dev-internal@mozilla.com
+      bugs:
+        - https://bugzilla.mozilla.org/1353172
+        - https://bugzilla.mozilla.org/1489524
+        - https://bugzilla.mozilla.org/1820158
+      data_reviews:
+        - https://bugzilla.mozilla.org/show_bug.cgi?id=1820158#c8
+      data_sensitivity:
+        - technical
+
+    browser_action_popup_open:
+      type: timing_distribution
+      time_unit: millisecond
+      expires: never
+      description: |
+        Amount of time it takes for a BrowserAction popup to open.
+      lifetime: application
+      notification_emails:
+        - addons-dev-internal@mozilla.com
+      bugs:
+        - https://bugzilla.mozilla.org/1297167
+        - https://bugzilla.mozilla.org/1513556
+        - https://bugzilla.mozilla.org/1578225
+        - https://bugzilla.mozilla.org/1623315
+        - https://bugzilla.mozilla.org/1666980
+        - https://bugzilla.mozilla.org/1706839
+        - https://bugzilla.mozilla.org/1745271
+        - https://bugzilla.mozilla.org/1777402
+        - https://bugzilla.mozilla.org/1811155
+        - https://bugzilla.mozilla.org/1861303
+        - https://bugzilla.mozilla.org/1820158
+      data_reviews:
+        - https://bugzilla.mozilla.org/show_bug.cgi?id=1820158#c8
+      data_sensitivity:
+        - technical
+
+    content_script_injection:
+      type: timing_distribution
+      time_unit: millisecond
+      expires: never
+      description: |
+        Amount of time it takes for content scripts from a WebExtension to be injected into a window.
+      lifetime: application
+      notification_emails:
+        - addons-dev-internal@mozilla.com
+      bugs:
+        - https://bugzilla.mozilla.org/1356323
+        - https://bugzilla.mozilla.org/1489524
+        - https://bugzilla.mozilla.org/1820158
+      data_reviews:
+        - https://bugzilla.mozilla.org/show_bug.cgi?id=1820158#c8
+      data_sensitivity:
+        - technical
+
+    extension_startup:
+      type: timing_distribution
+      time_unit: millisecond
+      expires: never
+      description: |
+        Amount of time it takes for a WebExtension to start up, from when the
+        startup function is called to when the startup promise resolves.
+      lifetime: application
+      notification_emails:
+        - addons-dev-internal@mozilla.com
+      bugs:
+        - https://bugzilla.mozilla.org/1353171
+        - https://bugzilla.mozilla.org/1489524 
+        - https://bugzilla.mozilla.org/1820158
+      data_reviews:
+        - https://bugzilla.mozilla.org/show_bug.cgi?id=1820158#c8
+      data_sensitivity:
+        - technical
+
+    page_action_popup_open:
+      type: timing_distribution
+      time_unit: millisecond
+      expires: never
+      description: |
+        Amount of time it takes for a PageAction popup to open.
+      lifetime: application
+      notification_emails:
+        - addons-dev-internal@mozilla.com
+      bugs:
+        - https://bugzilla.mozilla.org/1297167
+        - https://bugzilla.mozilla.org/1513556
+        - https://bugzilla.mozilla.org/1578225
+        - https://bugzilla.mozilla.org/1623315
+        - https://bugzilla.mozilla.org/1666980
+        - https://bugzilla.mozilla.org/1706839
+        - https://bugzilla.mozilla.org/1745271
+        - https://bugzilla.mozilla.org/1777402
+        - https://bugzilla.mozilla.org/1811155
+        - https://bugzilla.mozilla.org/1861303
+        - https://bugzilla.mozilla.org/1820158
+      data_reviews:
+        - https://bugzilla.mozilla.org/show_bug.cgi?id=1820158#c8
+      data_sensitivity:
+        - technical
+
+    storage_local_get_json:
+      type: timing_distribution
+      time_unit: millisecond
+      expires: 128
+      description: |
+        Amount of time it takes to perform a get via storage.local using the JSONFile backend.
+      lifetime: application
+      notification_emails:
+        - addons-dev-internal@mozilla.com
+      bugs:
+        - https://bugzilla.mozilla.org/1371398
+        - https://bugzilla.mozilla.org/1513556
+        - https://bugzilla.mozilla.org/1578225
+        - https://bugzilla.mozilla.org/1623315
+        - https://bugzilla.mozilla.org/1666980
+        - https://bugzilla.mozilla.org/1706839
+        - https://bugzilla.mozilla.org/1745271
+        - https://bugzilla.mozilla.org/1777402
+        - https://bugzilla.mozilla.org/1811155
+        - https://bugzilla.mozilla.org/1861303
+        - https://bugzilla.mozilla.org/1820158
+      data_reviews:
+        - https://bugzilla.mozilla.org/show_bug.cgi?id=1820158#c8
+      data_sensitivity:
+        - technical
+
+    storage_local_set_json:
+      type: timing_distribution
+      time_unit: millisecond
+      expires: 128
+      description: |
+        Amount of time it takes to perform a set via storage.local using the JSONFile backend.
+      lifetime: application
+      notification_emails:
+        - addons-dev-internal@mozilla.com
+      bugs:
+        - https://bugzilla.mozilla.org/1371398
+        - https://bugzilla.mozilla.org/1513556
+        - https://bugzilla.mozilla.org/1578225
+        - https://bugzilla.mozilla.org/1623315
+        - https://bugzilla.mozilla.org/1666980
+        - https://bugzilla.mozilla.org/1706839
+        - https://bugzilla.mozilla.org/1745271
+        - https://bugzilla.mozilla.org/1777402
+        - https://bugzilla.mozilla.org/1811155
+        - https://bugzilla.mozilla.org/1861303
+        - https://bugzilla.mozilla.org/1820158
+      data_reviews:
+        - https://bugzilla.mozilla.org/show_bug.cgi?id=1820158#c8
+      data_sensitivity:
+        - technical
+
+    storage_local_get_idb:
+      type: timing_distribution
+      time_unit: millisecond
+      expires: never
+      description: |
+        Amount of time it takes to perform a get via storage.local using the IndexedDB backend.
+      lifetime: application
+      notification_emails:
+        - addons-dev-internal@mozilla.com
+      bugs:
+        - https://bugzilla.mozilla.org/1465120
+        - https://bugzilla.mozilla.org/1513556
+        - https://bugzilla.mozilla.org/1578225
+        - https://bugzilla.mozilla.org/1623315
+        - https://bugzilla.mozilla.org/1666980
+        - https://bugzilla.mozilla.org/1706839
+        - https://bugzilla.mozilla.org/1745271
+        - https://bugzilla.mozilla.org/1777402
+        - https://bugzilla.mozilla.org/1811155
+        - https://bugzilla.mozilla.org/1861303
+        - https://bugzilla.mozilla.org/1820158
+      data_reviews:
+        - https://bugzilla.mozilla.org/show_bug.cgi?id=1820158#c8
+      data_sensitivity:
+        - technical
+
+    storage_local_set_idb:
+      type: timing_distribution
+      time_unit: millisecond
+      expires: never
+      description: |
+        Amount of time it takes to perform a set via storage.local using the Indexed backend.
+      lifetime: application
+      notification_emails:
+        - addons-dev-internal@mozilla.com
+      bugs:
+        - https://bugzilla.mozilla.org/1465120
+        - https://bugzilla.mozilla.org/1513556
+        - https://bugzilla.mozilla.org/1578225
+        - https://bugzilla.mozilla.org/1623315
+        - https://bugzilla.mozilla.org/1666980
+        - https://bugzilla.mozilla.org/1706839
+        - https://bugzilla.mozilla.org/1745271
+        - https://bugzilla.mozilla.org/1777402
+        - https://bugzilla.mozilla.org/1811155
+        - https://bugzilla.mozilla.org/1861303
+        - https://bugzilla.mozilla.org/1820158
+      data_reviews:
+        - https://bugzilla.mozilla.org/show_bug.cgi?id=1820158#c8
+      data_sensitivity:
+        - technical

@@ -6,6 +6,8 @@ const HISTOGRAM = "WEBEXT_BACKGROUND_PAGE_LOAD_MS";
 const HISTOGRAM_KEYED = "WEBEXT_BACKGROUND_PAGE_LOAD_MS_BY_ADDONID";
 
 add_task(async function test_telemetry() {
+  const { GleanTimingDistribution } = globalThis;
+
   let extension1 = ExtensionTestUtils.loadExtension({
     background() {
       browser.test.sendMessage("loaded");
@@ -18,10 +20,15 @@ add_task(async function test_telemetry() {
     },
   });
 
-  clearHistograms();
+  resetTelemetryData();
 
   assertHistogramEmpty(HISTOGRAM);
   assertKeyedHistogramEmpty(HISTOGRAM_KEYED);
+  assertGleanMetricsNoSamples({
+    metricId: "backgroundPageLoad",
+    gleanMetric: Glean.extensionsTiming.backgroundPageLoad,
+    gleanMetricConstructor: GleanTimingDistribution,
+  });
 
   await extension1.startup();
   await extension1.awaitMessage("loaded");
@@ -55,6 +62,13 @@ add_task(async function test_telemetry() {
     },
     `Data recorded for first extension for histogram ${HISTOGRAM_KEYED}`
   );
+
+  assertGleanMetricsSamplesCount({
+    metricId: "backgroundPageLoad",
+    gleanMetric: Glean.extensionsTiming.backgroundPageLoad,
+    gleanMetricConstructor: GleanTimingDistribution,
+    expectedSamplesCount: 1,
+  });
 
   let histogram = Services.telemetry.getHistogramById(HISTOGRAM);
   let histogramKeyed =
@@ -92,6 +106,13 @@ add_task(async function test_telemetry() {
     histogramSumExt1,
     `Data recorder for first extension is unchanged on the keyed histogram ${HISTOGRAM_KEYED}`
   );
+
+  assertGleanMetricsSamplesCount({
+    metricId: "backgroundPageLoad",
+    gleanMetric: Glean.extensionsTiming.backgroundPageLoad,
+    gleanMetricConstructor: GleanTimingDistribution,
+    expectedSamplesCount: 2,
+  });
 
   await extension1.unload();
   await extension2.unload();
