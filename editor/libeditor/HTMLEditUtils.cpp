@@ -1667,6 +1667,10 @@ EditorDOMPointType HTMLEditUtils::GetPreviousEditablePoint(
                "HTMLEditUtils::GetPreviousEditablePoint() may return a point "
                "between table structure elements");
 
+  if (&aContent == aAncestorLimiter) {
+    return EditorDOMPointType();
+  }
+
   // First, look for previous content.
   nsIContent* previousContent = aContent.GetPreviousSibling();
   if (!previousContent) {
@@ -1675,12 +1679,10 @@ EditorDOMPointType HTMLEditUtils::GetPreviousEditablePoint(
     }
     nsIContent* inclusiveAncestor = &aContent;
     for (Element* parentElement : aContent.AncestorsOfType<Element>()) {
-      previousContent = parentElement->GetPreviousSibling();
-      if (!previousContent &&
-          (parentElement == aAncestorLimiter ||
-           !HTMLEditUtils::IsSimplyEditableNode(*parentElement) ||
-           !HTMLEditUtils::CanCrossContentBoundary(*parentElement,
-                                                   aHowToTreatTableBoundary))) {
+      if (parentElement == aAncestorLimiter ||
+          !HTMLEditUtils::IsSimplyEditableNode(*parentElement) ||
+          !HTMLEditUtils::CanCrossContentBoundary(*parentElement,
+                                                  aHowToTreatTableBoundary)) {
         // If cannot cross the parent element boundary, return the point of
         // last inclusive ancestor point.
         return EditorDOMPointType(inclusiveAncestor);
@@ -1693,6 +1695,7 @@ EditorDOMPointType HTMLEditUtils::GetPreviousEditablePoint(
         inclusiveAncestor = parentElement;
       }
 
+      previousContent = parentElement->GetPreviousSibling();
       if (!previousContent) {
         continue;  // Keep looking for previous sibling of an ancestor.
       }
@@ -1777,6 +1780,10 @@ EditorDOMPointType HTMLEditUtils::GetNextEditablePoint(
                "HTMLEditUtils::GetPreviousEditablePoint() may return a point "
                "between table structure elements");
 
+  if (&aContent == aAncestorLimiter) {
+    return EditorDOMPointType();
+  }
+
   // First, look for next content.
   nsIContent* nextContent = aContent.GetNextSibling();
   if (!nextContent) {
@@ -1785,19 +1792,10 @@ EditorDOMPointType HTMLEditUtils::GetNextEditablePoint(
     }
     nsIContent* inclusiveAncestor = &aContent;
     for (Element* parentElement : aContent.AncestorsOfType<Element>()) {
-      // End of the parent element is a next editable point if it's an
-      // element which is not a table structure element.
-      if (!HTMLEditUtils::IsAnyTableElement(parentElement) ||
-          HTMLEditUtils::IsTableCellOrCaption(*parentElement)) {
-        inclusiveAncestor = parentElement;
-      }
-
-      nextContent = parentElement->GetNextSibling();
-      if (!nextContent &&
-          (parentElement == aAncestorLimiter ||
-           !HTMLEditUtils::IsSimplyEditableNode(*parentElement) ||
-           !HTMLEditUtils::CanCrossContentBoundary(*parentElement,
-                                                   aHowToTreatTableBoundary))) {
+      if (parentElement == aAncestorLimiter ||
+          !HTMLEditUtils::IsSimplyEditableNode(*parentElement) ||
+          !HTMLEditUtils::CanCrossContentBoundary(*parentElement,
+                                                  aHowToTreatTableBoundary)) {
         // If cannot cross the parent element boundary, return the point of
         // last inclusive ancestor point.
         return EditorDOMPointType(inclusiveAncestor);
@@ -1810,6 +1808,7 @@ EditorDOMPointType HTMLEditUtils::GetNextEditablePoint(
         inclusiveAncestor = parentElement;
       }
 
+      nextContent = parentElement->GetNextSibling();
       if (!nextContent) {
         continue;  // Keep looking for next sibling of an ancestor.
       }
