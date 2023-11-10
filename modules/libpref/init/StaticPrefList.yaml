@@ -12344,7 +12344,7 @@
 
 - name: network.http.http2.move_to_pending_list_after_network_change
   type: RelaxedAtomicBool
-  value: false
+  value: @IS_EARLY_BETA_OR_EARLIER@
   mirror: always
 
 # Enable HTTP/3
