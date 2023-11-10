@@ -36,6 +36,7 @@ import zipfile
 import zlib
 from contextlib import contextmanager
 from io import BytesIO
+from queue import Empty, Queue
 
 import mozinfo
 import six
@@ -1593,21 +1594,6 @@ class ScriptMixin(PlatformMixin):
         else:
             parser = output_parser
 
-        def timer():
-            nonlocal t
-            seconds_since_last_output = time.time() - output_time
-            next_possible_timeout = output_timeout - seconds_since_last_output
-            if next_possible_timeout <= 0:
-                self.info(
-                    "Automation Error: mozharness timed out after "
-                    "%s seconds running %s" % (str(output_timeout), str(command))
-                )
-                p.kill()
-                t = None
-            else:
-                t = threading.Timer(next_possible_timeout, timer)
-                t.start()
-
         try:
             p = subprocess.Popen(
                 command,
@@ -1618,28 +1604,38 @@ class ScriptMixin(PlatformMixin):
                 env=env,
                 bufsize=0,
             )
-            loop = True
-            output_time = time.time()
-            t = None
             if output_timeout:
                 self.info(
                     "Calling %s with output_timeout %d" % (command, output_timeout)
                 )
-                t = threading.Timer(output_timeout, timer)
-                t.start()
-            while loop:
-                if p.poll() is not None:
-                    """Avoid losing the final lines of the log?"""
-                    loop = False
-                while True:
-                    line = p.stdout.readline()
-                    if not line:
-                        break
-                    output_time = time.time()
+
+                def reader(fh, queue):
+                    for line in iter(fh.readline, b""):
+                        queue.put(line)
+                    # Give a chance to the reading loop to exit without a timeout.
+                    queue.put(b"")
+
+                queue = Queue()
+                threading.Thread(
+                    target=reader, args=(p.stdout, queue), daemon=True
+                ).start()
+
+                try:
+                    for line in iter(
+                        functools.partial(queue.get, timeout=output_timeout), b""
+                    ):
+                        parser.add_lines(line)
+                except Empty:
+                    self.info(
+                        "Automation Error: mozharness timed out after "
+                        "%s seconds running %s" % (str(output_timeout), str(command))
+                    )
+                    p.kill()
+            else:
+                for line in iter(p.stdout.readline, b""):
                     parser.add_lines(line)
+            p.wait()
             returncode = p.returncode
-            if t:
-                t.cancel()
         except KeyboardInterrupt:
             level = error_level
             if halt_on_failure:
