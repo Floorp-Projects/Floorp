@@ -20,7 +20,6 @@
 #include "mozilla/ipc/URIUtils.h"
 #include "nsIURI.h"
 #include "nsCOMPtr.h"
-#include "nsICategoryManager.h"
 #include "nsISupportsPrimitives.h"
 #include "nsISimpleEnumerator.h"
 #include "nsNetUtil.h"
@@ -54,31 +53,6 @@ nsStyleSheetService::~nsStyleSheetService() {
 
 NS_IMPL_ISUPPORTS(nsStyleSheetService, nsIStyleSheetService, nsIMemoryReporter)
 
-void nsStyleSheetService::RegisterFromEnumerator(
-    nsICategoryManager* aManager, const char* aCategory,
-    nsISimpleEnumerator* aEnumerator, uint32_t aSheetType) {
-  if (!aEnumerator) return;
-
-  bool hasMore;
-  while (NS_SUCCEEDED(aEnumerator->HasMoreElements(&hasMore)) && hasMore) {
-    nsCOMPtr<nsISupports> element;
-    if (NS_FAILED(aEnumerator->GetNext(getter_AddRefs(element)))) break;
-
-    nsCOMPtr<nsISupportsCString> icStr = do_QueryInterface(element);
-    NS_ASSERTION(icStr, "category manager entries must be nsISupportsCStrings");
-
-    nsAutoCString name;
-    icStr->GetData(name);
-
-    nsCString spec;
-    aManager->GetCategoryEntry(nsDependentCString(aCategory), name, spec);
-
-    nsCOMPtr<nsIURI> uri;
-    NS_NewURI(getter_AddRefs(uri), spec);
-    if (uri) LoadAndRegisterSheetInternal(uri, aSheetType);
-  }
-}
-
 static bool SheetHasURI(StyleSheet* aSheet, nsIURI* aSheetURI) {
   MOZ_ASSERT(aSheetURI);
 
@@ -104,24 +78,6 @@ nsresult nsStyleSheetService::Init() {
   if (XRE_IsContentProcess()) {
     return NS_OK;
   }
-
-  // Enumerate all of the style sheet URIs registered in the category
-  // manager and load them.
-
-  nsCOMPtr<nsICategoryManager> catMan =
-      do_GetService(NS_CATEGORYMANAGER_CONTRACTID);
-
-  NS_ENSURE_TRUE(catMan, NS_ERROR_OUT_OF_MEMORY);
-
-  nsCOMPtr<nsISimpleEnumerator> sheets;
-  catMan->EnumerateCategory("agent-style-sheets", getter_AddRefs(sheets));
-  RegisterFromEnumerator(catMan, "agent-style-sheets", sheets, AGENT_SHEET);
-
-  catMan->EnumerateCategory("user-style-sheets", getter_AddRefs(sheets));
-  RegisterFromEnumerator(catMan, "user-style-sheets", sheets, USER_SHEET);
-
-  catMan->EnumerateCategory("author-style-sheets", getter_AddRefs(sheets));
-  RegisterFromEnumerator(catMan, "author-style-sheets", sheets, AUTHOR_SHEET);
 
   RegisterWeakMemoryReporter(this);
 
