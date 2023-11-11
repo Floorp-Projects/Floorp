@@ -178,7 +178,7 @@ bool gfxMacFont::ShapeText(DrawTarget* aDrawTarget, const char16_t* aText,
         // synthetic bold: we want to apply between clusters, not to
         // non-spacing glyphs within a cluster. So we can reuse that
         // helper here.
-        aShapedText->AdjustAdvancesForSyntheticBold(tracking, aOffset, aLength);
+        aShapedText->ApplyTrackingToClusters(tracking, aOffset, aLength);
       }
       return true;
     }
