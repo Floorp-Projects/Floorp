@@ -826,7 +826,7 @@ bool gfxShapedText::FilterIfIgnorable(uint32_t aIndex, uint32_t aCh) {
 void gfxShapedText::AdjustAdvancesForSyntheticBold(float aSynBoldOffset,
                                                    uint32_t aOffset,
                                                    uint32_t aLength) {
-  uint32_t synAppUnitOffset = aSynBoldOffset * mAppUnitsPerDevUnit;
+  int32_t synAppUnitOffset = aSynBoldOffset * mAppUnitsPerDevUnit;
   CompressedGlyph* charGlyphs = GetCharacterGlyphs();
   for (uint32_t i = aOffset; i < aOffset + aLength; ++i) {
     CompressedGlyph* glyphData = charGlyphs + i;
