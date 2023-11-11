@@ -2349,7 +2349,7 @@
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
     <string name="review_quality_check_contextual_onboarding_privacy_policy" moz:RemovedIn="121" tools:ignore="UnusedResources">temiñemi porureko</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
-    <string name="review_quality_check_contextual_onboarding_privacy_policy_2">Temiñemi purureko</string>
+    <string name="review_quality_check_contextual_onboarding_privacy_policy_2">Temiñemi porureko</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
     <string name="review_quality_check_contextual_onboarding_terms_use" moz:RemovedIn="121" tools:ignore="UnusedResources">temiñemi jeporurã</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->

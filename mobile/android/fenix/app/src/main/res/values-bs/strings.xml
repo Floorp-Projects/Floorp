@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools" xmlns:moz="http://mozac.org/tools">
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_5">Privatni %s</string>
     <!-- App name for private browsing mode. The first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="app_name_private_4">%s (Privatno)</string>
+
     <!-- Home Fragment -->
     <!-- Content description (not visible, for screen readers etc.): "Three dot" menu button. -->
     <string name="content_description_menu">Više opcija</string>
@@ -11,16 +12,22 @@
     <string name="content_description_private_browsing_button">Omogući privatno surfanje</string>
     <!-- Content description (not visible, for screen readers etc.): "Private Browsing" menu button. -->
     <string name="content_description_disable_private_browsing_button">Onemogući privatno surfanje</string>
-    <!-- Placeholder text shown in the search bar before a user enters text -->
+    <!-- Placeholder text shown in the search bar before a user enters text for the default engine -->
     <string name="search_hint">Tražite ili unesite adresu</string>
+    <!-- Placeholder text shown in the search bar before a user enters text for a general engine -->
+    <string name="search_hint_general_engine">Pretraži web</string>
+    <!-- Placeholder text shown in search bar when using history search -->
+    <string name="history_search_hint">Pretraži historiju</string>
+    <!-- Placeholder text shown in search bar when using bookmarks search -->
+    <string name="bookmark_search_hint">Pretraži zabilješke</string>
+    <!-- Placeholder text shown in search bar when using tabs search -->
+    <string name="tab_search_hint">Pretraži tabove</string>
+    <!-- Placeholder text shown in the search bar when using application search engines -->
+    <string name="application_search_hint">Unesi pojmove za pretragu</string>
     <!-- No Open Tabs Message Description -->
     <string name="no_open_tabs_description">Vaši otvoreni tabovi će biti prikazani ovdje.</string>
     <!-- No Private Tabs Message Description -->
     <string name="no_private_tabs_description">Vaši privatni tabovi će biti prikazani ovdje.</string>
-    <!-- Message announced to the user when tab tray is selected with 1 tab -->
-    <string name="open_tab_tray_single">1 otvoren tab. Dodirnite za promjenu tabova.</string>
-    <!-- Message announced to the user when tab tray is selected with 0 or 2+ tabs -->
-    <string name="open_tab_tray_plural">%1$s otvoren tab. Dodirnite za promjenu tabova.</string>
 
     <!-- Tab tray multi select title in app bar. The first parameter is the number of tabs selected -->
     <string name="tab_tray_multi_select_title">%1$d označeno</string>
@@ -34,54 +41,72 @@
     <string name="tab_tray_close_multiselect_content_description">Izađite iz režima s više izbora</string>
     <!-- Content description for save to collection button while in multiselect mode in tab tray -->
     <string name="tab_tray_collection_button_multiselect_content_description">Spasi označene tabove u kolekciju</string>
-    <!-- Content description for checkmark while tab is selected while in multiselect mode in tab tray. The first parameter is the title of the tab selected -->
-    <string name="tab_tray_item_selected_multiselect_content_description">Označeno %1$s</string>
 
-    <!-- Content description when tab is unselected while in multiselect mode in tab tray. The first parameter is the title of the tab unselected -->
-    <string name="tab_tray_item_unselected_multiselect_content_description">Neizabrano %1$s</string>
-    <!-- Content description announcement when exiting multiselect mode in tab tray -->
-    <string name="tab_tray_exit_multiselect_content_description">Izašao iz režima s više izbora</string>
-    <!-- Content description announcement when entering multiselect mode in tab tray -->
-    <string name="tab_tray_enter_multiselect_content_description">Ušao u režim s više izbora, označite tabove da ih spasite u kolekciju</string>
     <!-- Content description on checkmark while tab is selected in multiselect mode in tab tray -->
     <string name="tab_tray_multiselect_selected_content_description">Označeno</string>
+
+    <!-- Home - Recently saved bookmarks -->
+    <!-- Title for the home screen section with recently saved bookmarks. -->
+    <string name="recently_saved_title">Nedavno sačuvano</string>
+    <!-- Content description for the button which navigates the user to show all of their saved bookmarks. -->
+    <string name="recently_saved_show_all_content_description_2">Prikaži sve sačuvane oznake</string>
+    <!-- Text for the menu button to remove a recently saved bookmark from the user's home screen -->
+    <string name="recently_saved_menu_item_remove">Ukloni</string>
 
     <!-- About content. The first parameter is the name of the application. (For example: Fenix) -->
     <string name="about_content">%1$s je razvila Mozilla.</string>
 
     <!-- Private Browsing -->
-    <!-- Title for private session option -->
-    <string name="private_browsing_title">Nalazite se u privatnoj sesiji</string>
     <!-- Explanation for private browsing displayed to users on home view when they first enable private mode
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="private_browsing_placeholder_description_2">%1$s briše vašu historiju pretraga i surfanja iz privatnih tabova kada ih zatvore ili ugasite aplikaciju. Ovo vas ne čini anonimnim web stranicama ili vašem internet provajderu, ali olakšava da vaše online aktivnosti ostanu privatne od bilo kojeg drugog korisnika ovog uređaja.</string>
     <string name="private_browsing_common_myths">Uobičajeni mitovi o privatnom surfanju</string>
-    <!-- Delete session button to erase your history in a private session -->
-    <string name="private_browsing_delete_session">Obriši sesiju</string>
+
+    <!-- True Private Browsing Mode -->
+    <!-- Title for info card on private homescreen in True Private Browsing Mode. -->
+    <string name="felt_privacy_desc_card_title">Ne ostavljaj tragove na ovom uređaju</string>
+    <!-- Explanation for private browsing displayed to users on home view when they first enable
+        private mode in our new Total Private Browsing mode.
+        The first parameter is the name of the app defined in app_name (for example: Firefox Nightly)
+        The second parameter is the clickable link text in felt_privacy_info_card_subtitle_link_text -->
+    <string name="felt_privacy_info_card_subtitle" moz:removedIn="120" tools:ignore="UnusedResources">%1$s briše vaše kolačiće, historiju i podatke o web stranici kada zatvorite sve svoje privatne prozore. %2$s</string>
+    <!-- Explanation for private browsing displayed to users on home view when they first enable
+        private mode in our new Total Private Browsing mode.
+        The first parameter is the name of the app defined in app_name (for example: Firefox Nightly)
+        The second parameter is the clickable link text in felt_privacy_info_card_subtitle_link_text -->
+    <string name="felt_privacy_info_card_subtitle_2">%1$s briše vaše kolačiće, historiju i podatke o web stranici kada zatvorite sve svoje privatne tabove. %2$s</string>
+    <!-- Clickable portion of the explanation for private browsing that links the user to our
+        about privacy page.
+        This string is used in felt_privacy_info_card_subtitle as the second parameter.-->
+    <string name="felt_privacy_info_card_subtitle_link_text">Ko bi mogao vidjeti moju aktivnost?</string>
 
     <!-- Private mode shortcut "contextual feature recommendation" (CFR) -->
-    <!-- Text for the main message -->
-    <string name="cfr_message">Dodajte prečicu za otvaranje privatnih tabova sa Početnog ekrana.</string>
-    <!-- Text for the positive button -->
-    <string name="cfr_pos_button_text">Dodaj prečicu</string>
-    <!-- Text for the negative button -->
+    <!-- Text for the Private mode shortcut CFR message for adding a private mode shortcut to open private tabs from the Home screen -->
+    <string name="private_mode_cfr_message_2">Pokrenite svoj sljedeći privatni tab jednim dodirom.</string>
+    <!-- Text for the positive button to accept adding a Private Browsing shortcut to the Home screen -->
+    <string name="private_mode_cfr_pos_button_text">Dodaj na početni ekran</string>
+    <!-- Text for the negative button to decline adding a Private Browsing shortcut to the Home screen -->
     <string name="cfr_neg_button_text">Ne, hvala</string>
 
-    <!-- Search widget "contextual feature recommendation" (CFR) -->
-    <!-- Text for the main message. 'Firefox' intentionally hardcoded here.-->
-    <string name="search_widget_cfr_message">Brže dođite do Firefoxa. Dodajte widget na svoj Početni ekran.</string>
-    <!-- Text for the positive button -->
-    <string name="search_widget_cfr_pos_button_text">Dodaj widget</string>
-    <!-- Text for the negative button -->
-    <string name="search_widget_cfr_neg_button_text">Ne sada</string>
-
     <!-- Open in App "contextual feature recommendation" (CFR) -->
-    <!-- Text for the info message. 'Firefox' intentionally hardcoded here.-->
-    <string name="open_in_app_cfr_info_message">Možete podesiti Firefox da automatski otvara linkove u aplikacijama.</string>
+    <!-- Text for the info message. The first parameter is the name of the application.-->
+    <string name="open_in_app_cfr_info_message_2">Možete podesiti %1$s da automatski otvara linkove u aplikacijama.</string>
     <!-- Text for the positive action button -->
     <string name="open_in_app_cfr_positive_button_text">Idi na postavke</string>
     <!-- Text for the negative action button -->
     <string name="open_in_app_cfr_negative_button_text">Odbaci</string>
+
+
+    <!-- Total cookie protection "contextual feature recommendation" (CFR) -->
+    <!-- Text for the message displayed in the contextual feature recommendation popup promoting the total cookie protection feature. -->
+    <string name="tcp_cfr_message">Naša najmoćnija funkcija privatnosti, ali ipak izolira praćenje na više lokacija.</string>
+    <!-- Text displayed that links to website containing documentation about the "Total cookie protection" feature. -->
+    <string name="tcp_cfr_learn_more">Saznajte više o potpunoj zaštiti od kolačića</string>
+
+    <!-- Private browsing erase action "contextual feature recommendation" (CFR) -->
+    <!-- Text for the message displayed in the contextual feature recommendation popup promoting the erase private browsing feature. -->
+    <string name="erase_action_cfr_message">Dodirnite ovdje da započnete novu privatnu sesiju. Izbrišite svoju historiju, kolačiće — sve.</string>
+
 
     <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
     <string name="camera_permissions_needed_message">Potreban pristup kameri. Idite na Android postavke, dodirnite dozvole i dodirnite dozvoli.</string>
@@ -97,18 +122,60 @@
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">Odbaci</string>
 
+
+    <!-- Text for the banner message to tell users about our inactive tabs feature. -->
+    <string name="tab_tray_inactive_onboarding_message">Tabovi koje niste pogledali dvije sedmice se premještaju ovdje.</string>
+    <!-- Text for the action link to go to Settings for inactive tabs. -->
+    <string name="tab_tray_inactive_onboarding_button_text">Isključite u postavkama</string>
+    <!-- Text for title for the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_title">Automatsko zatvaranje nakon mjesec dana?</string>
+    <!-- Text for the body for the auto-close dialog of the inactive tabs.
+        The first parameter is the name of the application.-->
+    <string name="tab_tray_inactive_auto_close_body_2">%1$s može zatvoriti tabove koje niste pogledali u proteklom mjesecu.</string>
+    <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_button_content_description">Zatvori</string>
+
+    <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_turn_on_auto_close_button_2">Uključite automatsko zatvaranje</string>
+
+
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
     <string name="home_screen_shortcut_open_new_tab_2">Novi tab</string>
     <!-- Shortcut action to open new private tab -->
     <string name="home_screen_shortcut_open_new_private_tab_2">Novi privatni tab</string>
 
-    <!-- Heading for the Top Sites block -->
-    <string name="home_screen_top_sites_heading">Top stranice</string>
+    <!-- Shortcut action to open Passwords screens -->
+    <string name="home_screen_shortcut_open_password_screen">Prečica za lozinke</string>
+
+    <!-- Recent Tabs -->
+    <!-- Header text for jumping back into the recent tab in the home screen -->
+    <string name="recent_tabs_header">Vrati se nazad</string>
+    <!-- Button text for showing all the tabs in the tabs tray -->
+    <string name="recent_tabs_show_all">Prikaži sve</string>
+    <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
+    <string name="recent_tabs_show_all_content_description_2">Prikaži dugme za prikaz svih nedavnih tabova</string>
+    <!-- Text for button in synced tab card that opens synced tabs tray -->
+    <string name="recent_tabs_see_all_synced_tabs_button_text">Pogledajte sve sinhronizovane tabove</string>
+    <!-- Accessibility description for device icon used for recent synced tab -->
+    <string name="recent_tabs_synced_device_icon_content_description">Sinhronizovani uređaj</string>
+    <!-- Text for the dropdown menu to remove a recent synced tab from the homescreen -->
+    <string name="recent_synced_tab_menu_item_remove">Ukloni</string>
+    <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
+         in the Recently visited section -->
+    <string name="recent_tab_menu_item_remove">Ukloni</string>
+
+    <!-- History Metadata -->
+    <!-- Header text for a section on the home screen that displays grouped highlights from the
+         user's browsing history, such as topics they have researched or explored on the web -->
+    <string name="history_metadata_header_2">Nedavno posjećeno</string>
+    <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
+         in the Recently visited section -->
+    <string name="recently_visited_menu_item_remove">Ukloni</string>
+    <!-- Content description for the button which navigates the user to show all of their history. -->
+    <string name="past_explorations_show_all_content_description_2">Prikaži sva prošla istraživanja</string>
 
     <!-- Browser Fragment -->
-    <!-- Content description (not visible, for screen readers etc.): Navigate to open tabs -->
-    <string name="browser_tabs_button">Otvoreni tabovi</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
     <string name="browser_menu_back">Nazad</string>
     <!-- Content description (not visible, for screen readers etc.): Navigate forward (browsing history) -->
@@ -117,12 +184,10 @@
     <string name="browser_menu_refresh">Osvježi</string>
     <!-- Content description (not visible, for screen readers etc.): Stop loading current website -->
     <string name="browser_menu_stop">Zaustavi</string>
-    <!-- Content description (not visible, for screen readers etc.): Bookmark the current page -->
-    <string name="browser_menu_bookmark">Zabilješka</string>
-    <!-- Content description (not visible, for screen readers etc.): Un-bookmark the current page -->
-    <string name="browser_menu_edit_bookmark">Uredi zabilješku</string>
     <!-- Browser menu button that opens the addon manager -->
     <string name="browser_menu_add_ons">Add-oni</string>
+    <!-- Browser menu button that opens account settings -->
+    <string name="browser_menu_account_settings">Podaci o računu</string>
     <!-- Text displayed when there are no add-ons to be shown -->
     <string name="no_add_ons">Ovdje nema add-ona</string>
     <!-- Browser menu button that sends a user to help articles -->
@@ -135,24 +200,20 @@
     <string name="browser_menu_library">Biblioteka</string>
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">Desktop stranica</string>
+    <!-- Browser menu button that reopens a private tab as a regular tab -->
+    <string name="browser_menu_open_in_regular_tab">Otvori u standardnom tabu </string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">Dodaj na Početni ekran</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
     <string name="browser_menu_install_on_homescreen">Instaliraj</string>
-    <!-- Menu option on the toolbar that takes you to synced tabs page-->
-    <string name="synced_tabs">Sinhronizovani tabovi</string>
+    <!-- Content description (not visible, for screen readers etc.) for the Resync tabs button -->
+    <string name="resync_button_content_description">Ponovo sinhronizuj</string>
     <!-- Browser menu button that opens the find in page menu -->
     <string name="browser_menu_find_in_page">Pronađi na stranici</string>
-    <!-- Browser menu button that creates a private tab -->
-    <string name="browser_menu_private_tab">Privatni tab</string>
-    <!-- Browser menu button that creates a new tab -->
-    <string name="browser_menu_new_tab">Novi tab</string>
     <!-- Browser menu button that saves the current tab to a collection -->
     <string name="browser_menu_save_to_collection_2">Spasi u kolekciju</string>
     <!-- Browser menu button that open a share menu to share the current site -->
     <string name="browser_menu_share">Podijeli</string>
-    <!-- Share menu title, displayed when a user is sharing their current site -->
-    <string name="menu_share_with">Podijeli sa…</string>
     <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_open_in_fenix">Otvori u %1$s</string>
@@ -168,17 +229,24 @@
     <string name="browser_menu_read_close">Zatvori prikaz za čitanje</string>
     <!-- Browser menu button to open the current page in an external app -->
     <string name="browser_menu_open_app_link">Otvori u aplikaciji</string>
-    <!-- Browser menu button to configure reader mode appearance e.g. the used font type and size -->
-    <string name="browser_menu_read_appearance">Izgled</string>
-    <!-- Error message to show when the user tries to access a scheme not
-        handled by the app (Ex: blob, tel etc) -->
-    <string name="unknown_scheme_error_message">Ne mogu se povezati. Neprepoznatljiva URL shema.</string>
 
+    <!-- Browser menu button to show reader view appearance controls e.g. the used font type and size -->
+    <string name="browser_menu_customize_reader_view">Prilagodite prikaz čitača</string>
+    <!-- Browser menu label for adding a bookmark -->
+    <string name="browser_menu_add">Dodaj</string>
+    <!-- Browser menu label for editing a bookmark -->
+    <string name="browser_menu_edit">Uredi</string>
+    <!-- Button shown on the home page that opens the Customize home settings -->
+    <string name="browser_menu_customize_home_1">Prilagodi početnu stranicu</string>
+    <!-- Browser Toolbar -->
+    <!-- Content description for the Home screen button on the browser toolbar -->
+    <string name="browser_toolbar_home">Početni ekran</string>
+    <!-- Content description (not visible, for screen readers etc.): Erase button: Erase the browsing
+         history and go back to the home screen. -->
+    <string name="browser_toolbar_erase">Izbriši historiju pretraživanja</string>
     <!-- Locale Settings Fragment -->
     <!-- Content description for tick mark on selected language -->
     <string name="a11y_selected_locale_content_description">Izabrani jezik</string>
-    <!-- Content description for search icon -->
-    <string name="a11y_search_icon_content_description">Traži</string>
     <!-- Text for default locale item -->
     <string name="default_locale_text">Slijedi jezik uređaja</string>
 
@@ -189,11 +257,9 @@
     <!-- Button in the search view that lets a user search by scanning a QR code -->
     <string name="search_scan_button">Skeniraj</string>
     <!-- Button in the search view that lets a user change their search engine -->
-    <string name="search_engine_button">Pretraživač</string>
+    <string name="search_engine_button" moz:RemovedIn="121" tools:ignore="UnusedResources">Pretraživač</string>
     <!-- Button in the search view when shortcuts are displayed that takes a user to the search engine settings -->
     <string name="search_shortcuts_engine_settings">Postavke pretraživača</string>
-    <!-- Header displayed when selecting a shortcut search engine -->
-    <string name="search_engines_search_with">Ovaj put, traži sa:</string>
     <!-- Button in the search view that lets a user navigate to the site in their clipboard -->
     <string name="awesomebar_clipboard_title">Popuni link iz clipboarda</string>
     <!-- Button in the search suggestions onboarding that allows search suggestions in private sessions -->
@@ -204,10 +270,91 @@
     <string name="search_suggestions_onboarding_title">Dozvoliti prijedloge za pretraživanje u privatnim sesijama?</string>
     <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
     <string name="search_suggestions_onboarding_text">%s će podijeliti sve što unesete u adresnu traku sa vašim glavnim pretraživačem.</string>
-    <!-- Search suggestion onboarding hint Learn more link text -->
-    <string name="search_suggestions_onboarding_learn_more_link">Saznajte više</string>
 
-    <!-- Search Widget -->
+    <!-- Search engine suggestion title text. The first parameter is the name of the suggested engine-->
+    <string name="search_engine_suggestions_title">Pretraži %s</string>
+    <!-- Search engine suggestion description text -->
+    <string name="search_engine_suggestions_description">Pretražujte direktno iz adresne trake</string>
+    <!-- Menu option in the search selector menu to open the search settings -->
+    <string name="search_settings_menu_item">Postavke pretraživanja</string>
+    <!-- Header text for the search selector menu -->
+    <string name="search_header_menu_item_2">Ovaj put traži u:</string>
+    <!-- Content description (not visible, for screen readers etc.): Search engine icon. The first parameter is the search engine name (for example: DuckDuckGo). -->
+    <string name="search_engine_icon_content_description" tools:ignore="UnusedResources">%s pretraživač</string>
+
+    <!-- Home onboarding -->
+    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
+    <string name="onboarding_home_screen_jump_back_contextual_hint_2">Upoznajte svoju personalizovanu početnu stranicu. Ovdje će se pojaviti nedavni tabovi, oznake i rezultati pretraživanja.</string>
+    <!-- Home onboarding dialog welcome screen title text. -->
+    <string name="onboarding_home_welcome_title_2">Dobrodošli na ličniji internet</string>
+    <!-- Home onboarding dialog welcome screen description text. -->
+    <string name="onboarding_home_welcome_description">Više boja. Bolja privatnost. Ista posvećenost ljudima iznad profita.</string>
+    <!-- Home onboarding dialog sign into sync screen title text. -->
+    <string name="onboarding_home_sync_title_3">Prebacivanje ekrana je lakše nego ikad</string>
+    <!-- Home onboarding dialog sign into sync screen description text. -->
+    <string name="onboarding_home_sync_description">Nastavite gdje ste stali s tabovima s drugih uređaja sada na vašoj početnoj stranici.</string>
+    <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_get_started_button">Započnite</string>
+    <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
+    <string name="onboarding_home_sign_in_button">Prijava</string>
+    <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_skip_button">Preskoči</string>
+    <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
+    <string name="sync_cfr_message">Vaši tabovi se sinhroniziraju! Nastavite gdje ste stali na svom drugom uređaju.</string>
+    <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
+    <string name="onboarding_home_content_description_close_button">Zatvori</string>
+
+    <!-- Notification pre-permission dialog -->
+    <!-- Enable notification pre permission dialog title
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="onboarding_home_enable_notifications_title">Obavještenja vam pomažu da učinite više sa %s</string>
+    <!-- Enable notification pre permission dialog description with rationale
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="onboarding_home_enable_notifications_description">Sinhronizujte svoje tabove između uređaja, upravljajte preuzimanjima, primajte savjete o tome kako maksimalno iskoristiti %s zaštitu privatnosti i još mnogo toga.</string>
+    <!-- Text for the button to request notification permission on the device -->
+    <string name="onboarding_home_enable_notifications_positive_button">Nastavi</string>
+    <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
+    <string name="onboarding_home_enable_notifications_negative_button">Ne sada</string>
+
+    <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_default_browser_title_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Učinite Firefox vašim glavnim pretraživačem</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_title_nimbus_2">Volimo da vas čuvamo</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_default_browser_description_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Firefox stavlja ljude iznad profita i brani vašu privatnost blokiranjem praćenja na različitim lokacijama.\n\nSaznajte više u našoj obavijesti o privatnosti.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_2">Naš neprofitni pretraživač pomaže spriječiti kompanije da vas potajno prate širom weba.\n\nSaznajte više u našem obavještenju o privatnosti.</string>
+    <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
+    This is part of the string with the key "juno_onboarding_default_browser_description". -->
+    <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">obavještenje o privatnosti</string>
+    <!-- Text for the button to set firefox as default browser on the device -->
+    <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">Postavi kao zadani pretraživač</string>
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">Ne sada</string>
+    <!-- Title for sign in to sync screen. -->
+    <string name="juno_onboarding_sign_in_title" moz:removedIn="120" tools:ignore="UnusedResources">Prebacite se sa telefona na laptop i nazad</string>
+    <!-- Title for sign in to sync screen. -->
+    <string name="juno_onboarding_sign_in_title_2">Ostanite šifrovani kada prelazite s jednog uređaja na drugi</string>
+    <!-- Description for sign in to sync screen. -->
+    <string name="juno_onboarding_sign_in_description" moz:removedIn="120" tools:ignore="UnusedResources">Dohvatite otvorene tabove i lozinke s vašeg drugog uređaja i nastavite gdje ste stali.</string>
+    <!-- Description for sign in to sync screen. Nimbus experiments do not support string placeholders.
+     Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_sign_in_description_2">Kada ste prijavljeni i sinhronizovani, sigurniji ste. Firefox šifruje vaše lozinke, oznake i još mnogo toga.</string>
+    <!-- Text for the button to sign in to sync on the device -->
+    <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">Prijava</string>
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">Ne sada</string>
+    <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_enable_notifications_title_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Obavještenja vam pomažu da učinite više sa Firefoxom</string>
+
+    <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_enable_notifications_title_nimbus_2">Obavještenja vam pomažu da ostanete sigurniji sa Firefoxom</string>
+
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">Traži</string>
     <!-- Text preview for larger sized widgets -->
@@ -218,8 +365,6 @@
     <!-- Preferences -->
     <!-- Title for the settings page-->
     <string name="settings">Postavke</string>
-    <!-- Preference category for basic settings -->
-    <string name="preferences_category_basics">Osnove</string>
     <!-- Preference category for general settings -->
     <string name="preferences_category_general">Opće</string>
     <!-- Preference category for all links about Fenix -->
@@ -229,29 +374,17 @@
     <!-- Preference for settings related to Search -->
     <string name="preferences_search">Pretraga</string>
     <!-- Preference for settings related to Search address bar -->
-    <string name="preferences_search_address_bar">Adresna traka</string>
-    <!-- Preference linking to help about Fenix -->
-    <string name="preferences_help">Pomoć</string>
+    <string name="preferences_search_address_bar" moz:removedIn="120" tools:ignore="UnusedResources">Adresna traka</string>
     <!-- Preference link to rating Fenix on the Play Store -->
     <string name="preferences_rate">Ocijenite na Google Play</string>
 
-    <!-- Preference for giving feedback about Fenix -->
-    <string name="preferences_feedback">Pošalji povratnu info.</string>
     <!-- Preference linking to about page for Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="preferences_about">O %1$s</string>
-    <!-- Preference linking to the your rights SUMO page -->
-    <string name="preferences_your_rights">Vaša prava</string>
-    <!-- Preference for settings related to saved passwords -->
-    <string name="preferences_passwords">Lozinke</string>
-    <!-- Preference for settings related to saved credit cards and addresses -->
-    <string name="preferences_credit_cards_addresses">Kreditne kartice i adrese</string>
     <!-- Preference for settings related to changing the default browser -->
     <string name="preferences_set_as_default_browser">Postavi kao glavni browser</string>
     <!-- Preference category for advanced settings -->
     <string name="preferences_category_advanced">Napredno</string>
-    <!-- Preference category for privacy settings -->
-    <string name="preferences_category_privacy">Privatnost</string>
     <!-- Preference category for privacy and security settings -->
     <string name="preferences_category_privacy_security">Privatnost i sigurnost</string>
     <!-- Preference for advanced site permissions -->
@@ -264,30 +397,25 @@
     <string name="preferences_allow_screenshots_in_private_mode">Dozvoli screenshote u privatnom surfanju</string>
     <!-- Preference for adding private browsing shortcut -->
     <string name="preferences_add_private_browsing_shortcut">Dodaj prečicu za privatno surfanje</string>
+
     <!-- Preference for accessibility -->
     <string name="preferences_accessibility">Pristupačnost</string>
     <!-- Preference to override the Firefox Account server -->
-    <string name="preferences_override_fxa_server">Zaseban Firefox Account server</string>
+    <string name="preferences_override_fxa_server" moz:RemovedIn="120" tools:ignore="UnusedResources">Zaseban Firefox Account server</string>
     <!-- Preference to override the Sync token server -->
     <string name="preferences_override_sync_tokenserver">Zaseban Sync server</string>
     <!-- Toast shown after updating the FxA/Sync server override preferences -->
-    <string name="toast_override_fxa_sync_server_done">Firefox Account/Sync server promijenjen. Ugasite aplikaciju za primjenu promjena…</string>
+    <string name="toast_override_fxa_sync_server_done" moz:RemovedIn="120" tools:ignore="UnusedResources">Firefox Account/Sync server promijenjen. Ugasite aplikaciju za primjenu promjena…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">Račun</string>
-    <!-- Preference shown on banner to sign into account -->
-    <string name="preferences_sign_in">Prijava</string>
     <!-- Preference for changing where the toolbar is positioned -->
     <string name="preferences_toolbar">Alatna traka</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">Tema</string>
-    <!-- Preference for customizing the home screen -->
-    <string name="preferences_home">Početna</string>
     <!-- Preference for settings related to visual options -->
     <string name="preferences_customize">Prilagodi</string>
-    <!-- Preference description for banner about signing in -->
-    <string name="preferences_sign_in_description">Sinhronizujte zabilješke, historiju i više od toga s vašim Firefox računom</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
-    <string name="preferences_account_default_name">Firefox račun</string>
+    <string name="preferences_account_default_name" moz:RemovedIn="120" tools:ignore="UnusedResources">Firefox račun</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
     <string name="preferences_account_sync_error">Ponovo se povežite za nastavak sinhronizacije</string>
     <!-- Preference for language -->
@@ -296,14 +424,10 @@
     <string name="preferences_data_choices">Izbori podataka</string>
     <!-- Preference for data collection -->
     <string name="preferences_data_collection">Kolekcije podataka</string>
-    <!-- Preference linking to the privacy notice -->
-    <string name="preferences_privacy_link">Pravila privatnosti</string>
-    <!-- Preference category for developer tools -->
-    <string name="developer_tools_category">Razvojni alati</string>
     <!-- Preference for developers -->
     <string name="preferences_remote_debugging">Udaljeno debagiranje preko USB-a</string>
     <!-- Preference title for switch preference to show search engines -->
-    <string name="preferences_show_search_engines">Prikaži pretraživače</string>
+    <string name="preferences_show_search_engines" moz:RemovedIn="120" tools:ignore="UnusedResources">Prikaži pretraživače</string>
     <!-- Preference title for switch preference to show search suggestions -->
     <string name="preferences_show_search_suggestions">Prikaži prijedloge za pretraživanje</string>
     <!-- Preference title for switch preference to show voice search button -->
@@ -322,13 +446,13 @@
     <string name="preferences_open_links_in_apps">Otvori linkove u aplikacijama</string>
     <!-- Preference for open download with an external download manager app -->
     <string name="preferences_external_download_manager">Vanjski menadžer preuzimanja</string>
+
     <!-- Preference for add_ons -->
     <string name="preferences_addons">Add-oni</string>
 
     <!-- Preference for notifications -->
     <string name="preferences_notifications">Obavijesti</string>
 
-    <!-- Account Preferences -->
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Sinhr. odmah</string>
     <!-- Preference category for sync -->
@@ -370,22 +494,12 @@
     <string name="fxa_received_tab_channel_description">Obavještenja za tabove primljene od drugih Firefox uređaja.</string>
     <!--  The body for these is the URL of the tab received  -->
     <string name="fxa_tab_received_notification_name">Tab primljen</string>
-    <!-- When multiple tabs have been received -->
-    <string name="fxa_tabs_received_notification_name">Tabovi primljeni</string>
     <!-- %s is the device name -->
     <string name="fxa_tab_received_from_notification_name">Tab iz %s</string>
 
     <!-- Advanced Preferences -->
-    <!-- Preference for tracking protection settings -->
-    <string name="preferences_tracking_protection_settings">Zaštita od praćenja</string>
-    <!-- Preference switch for tracking protection -->
-    <string name="preferences_tracking_protection">Zaštita od praćenja</string>
-    <!-- Preference switch description for tracking protection -->
-    <string name="preferences_tracking_protection_description">Blokirajte sadržaj i skripte koje vas prate na internetu</string>
     <!-- Preference for tracking protection exceptions -->
     <string name="preferences_tracking_protection_exceptions">Izuzeci</string>
-    <!-- Preference description for tracking protection exceptions -->
-    <string name="preferences_tracking_protection_exceptions_description">Zaštita od praćenja je isključena za ove stranice</string>
 
     <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
     <string name="preferences_tracking_protection_exceptions_turn_on_for_all">Uključi za sve stranice</string>
@@ -394,37 +508,13 @@
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">Saznajte više</string>
 
-    <!-- Description in Quick Settings that tells user tracking protection is off globally for all sites, and links to Settings to turn it on -->
-    <string name="preferences_tracking_protection_turned_off_globally">Globalno isključeno, možete uključiti u Postavkama.</string>
-
-    <!-- Preference switch for Telemetry -->
-    <string name="preferences_telemetry">Telemetrija</string>
     <!-- Preference switch for usage and technical data collection -->
     <string name="preference_usage_data">Tehnički i podaci o upotrebi</string>
     <!-- Preference description for usage and technical data collection -->
     <string name="preferences_usage_data_description">Šalje podatke Mozilli o performansama, upotrebi, hardveru i prilagođenjima vašeg browsera kako bi nam pomogli da poboljšamo %1$s</string>
     <!-- Preference switch for marketing data collection -->
     <string name="preferences_marketing_data">Marketinški podaci</string>
-    <!-- Preference description for marketing data collection, parameter is the app name (e.g. Firefox) -->
-    <string name="preferences_marketing_data_description">Šalje podatke Leanplumu, našem mobile marketing vendoru, o opcijama koje koristite u %1$s</string>
-    <!-- Title for experiments preferences -->
-    <string name="preference_experiments">Eksperimenti</string>
-    <!-- Summary for experiments preferences -->
-    <string name="preference_experiments_summary">Dozvoljava Mozilli da instalira i prikuplja podatke o eksperimentalnim opcijama</string>
-    <!-- Preference switch for crash reporter -->
-    <string name="preferences_crash_reporter">Izvještač o rušenju</string>
-    <!-- Preference switch for Mozilla location service -->
-    <string name="preferences_mozilla_location_service">Mozilla lokacijski servis</string>
-    <!-- Preference switch for app health report. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preferences_fenix_health_report">%s izvještaj o zdravlju</string>
 
-    <!-- Turn On Sync Preferences -->
-    <!-- Header of the Turn on Sync preference view -->
-    <string name="preferences_sync">Uključi Sync</string>
-    <!-- Preference for pairing -->
-    <string name="preferences_sync_pair">Skenirajte kod za uparivanje u desktop Firefoxu</string>
-    <!-- Preference for account login -->
-    <string name="preferences_sync_sign_in">Prijava</string>
     <!-- Preference for reconnecting to FxA sync -->
     <string name="preferences_sync_sign_in_to_reconnect">Prijavite se radi ponovnog povezivanja</string>
     <!-- Preference for removing FxA account -->
@@ -433,10 +523,6 @@
     <!-- Pairing Feature strings -->
     <!-- Instructions on how to access pairing -->
     <string name="pair_instructions_2"><![CDATA[Skenirajte QR kod prikazan na <b>firefox.com/pair</b>]]></string>
-    <!-- Button to open camera for pairing -->
-    <string name="pair_open_camera">Otvori kameru</string>
-    <!-- Button to cancel pairing -->
-    <string name="pair_cancel">Otkaži</string>
 
     <!-- Toolbar Preferences -->
     <!-- Preference for using top toolbar -->
@@ -454,11 +540,12 @@
     <!-- Preference for using following device theme -->
     <string name="preference_follow_device_theme">Slijedi temu uređaja</string>
 
+    <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">Prevucite alatnu traku u stranu da promijenite tabove</string>
+    <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
+    <string name="preference_gestures_swipe_toolbar_show_tabs">Prevucite alatnu traku prema gore da biste otvorili tabove</string>
+
     <!-- Library -->
-    <!-- Option in Library to open Sessions page -->
-    <string name="library_sessions">Sesije</string>
-    <!-- Option in Library to open Screenshots page -->
-    <string name="library_screenshots">Snimci ekrana</string>
     <!-- Option in Library to open Downloads page -->
     <string name="library_downloads">Preuzimanja</string>
     <!-- Option in library to open Bookmarks page -->
@@ -474,16 +561,8 @@
     <!-- Option in Library to open History page -->
     <string name="library_history">Historija</string>
 
-    <!-- Option in Library to open Synced Tabs page -->
-    <string name="library_synced_tabs">Sinhronizovani tabovi</string>
-    <!-- Option in Library to open Reading List -->
-    <string name="library_reading_list">Lista za čitanje</string>
-    <!-- Menu Item Label for Search in Library -->
-    <string name="library_search">Traži</string>
     <!-- Settings Page Title -->
     <string name="settings_title">Postavke</string>
-    <!-- Content description (not visible, for screen readers etc.): "Menu icon for items on a history item" -->
-    <string name="content_description_history_menu">Meni stavke iz historije</string>
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">Zatvori</string>
 
@@ -500,7 +579,6 @@
     <!-- Recently closed tabs screen message when there are no recently closed tabs -->
     <string name="recently_closed_empty_message">Nema nedavno zatvorenih tabova</string>
 
-    <!-- Tab Management -->
     <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
     <string name="preferences_close_tabs">Zatvori tabove</string>
     <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
@@ -516,8 +594,6 @@
     <!-- Title for the list of tabs -->
     <string name="tab_header_label">Otvoreni tabovi</string>
     <!-- Title for the list of tabs in the current private session -->
-    <string name="tabs_header_private_title">Privatna sesija</string>
-    <!-- Title for the list of tabs in the current private session -->
     <string name="tabs_header_private_tabs_title">Privatni tabovi</string>
     <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
     <string name="add_tab">Dodaj tab</string>
@@ -525,10 +601,6 @@
     <string name="add_private_tab">Dodaj privatni tab</string>
     <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
     <string name="tab_drawer_fab_content">Privatni</string>
-    <!-- Text shown as the title of the open tab tray -->
-    <string name="tab_tray_title">Otvoreni tabovi</string>
-    <!-- Text shown in the menu for saving tabs to a collection -->
-    <string name="tab_tray_menu_item_save">Spasi u kolekciju</string>
     <!-- Text shown in the menu for sharing all tabs -->
     <string name="tab_tray_menu_item_share">Podijeli sve tabove</string>
     <!-- Text shown in the menu to view recently closed tabs -->
@@ -537,12 +609,6 @@
     <string name="tab_tray_menu_tab_settings">Postavke taba</string>
     <!-- Text shown in the menu for closing all tabs -->
     <string name="tab_tray_menu_item_close">Zatvori sve tabove</string>
-    <!-- Shortcut action to open new tab -->
-    <string name="tab_tray_menu_open_new_tab">Novi tab</string>
-    <!-- Shortcut action to open the home screen -->
-    <string name="tab_tray_menu_home">Početni</string>
-    <!-- Shortcut action to toggle private mode -->
-    <string name="tab_tray_menu_toggle">Promijeni režim taba</string>
     <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
     <string name="remove_tab_from_collection">Ukloni tab iz kolekcije</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
@@ -551,26 +617,8 @@
     <string name="close_tab_title">Zatvori tab %s</string>
     <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
     <string name="open_tabs_menu">Meni otvorenih tabova</string>
-    <!-- Open tabs menu item to close all tabs -->
-    <string name="tabs_menu_close_all_tabs">Zatvori sve tabove</string>
-    <!-- Open tabs menu item to share all tabs -->
-    <string name="tabs_menu_share_tabs">Podijeli tabove</string>
     <!-- Open tabs menu item to save tabs to collection -->
     <string name="tabs_menu_save_to_collection1">Spasi tabove u kolekciju</string>
-    <!-- Content description (not visible, for screen readers etc.): Opens the tab menu when pressed -->
-    <string name="tab_menu">Meni tabova</string>
-    <!-- Tab menu item to share the tab -->
-    <string name="tab_share">Podijeli tab</string>
-    <!-- Button in the current session menu. Deletes the session when pressed -->
-    <string name="current_session_delete">Obriši</string>
-    <!-- Button in the current session menu. Saves the session when pressed -->
-    <string name="current_session_save">Spasi</string>
-    <!-- Button in the current session menu. Opens the share menu when pressed -->
-    <string name="current_session_share">Podijeli</string>
-    <!-- Content description (not visible, for screen readers etc.): Title icon for current session menu -->
-    <string name="current_session_image">Slika trenutne sesije</string>
-    <!-- Button to save the current set of tabs into a collection -->
-    <string name="save_to_collection">Spasi u kolekciju</string>
     <!-- Text for the menu button to delete a collection -->
     <string name="collection_delete">Obriši kolekciju</string>
     <!-- Text for the menu button to rename a collection -->
@@ -584,38 +632,17 @@
     <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
     <string name="pwa_site_controls_title_private">%1$s (Privatni režim)</string>
 
-    <!-- Button in the current tab tray header in multiselect mode. Saved the selected tabs to a collection when pressed. -->
-    <string name="tab_tray_save_to_collection">Spasi</string>
-
-    <!-- History -->
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">Obriši historiju</string>
-    <!-- Text for the dialog to confirm clearing all history -->
-    <string name="history_delete_all_dialog">Da li ste sigurni da želite obrisati vašu historiju?</string>
     <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
     <string name="history_delete_multiple_items_snackbar">Historija obrisana</string>
     <!-- Text for the snackbar to confirm that a single browsing history item has been deleted. The first parameter is the shortened URL of the deleted history item. -->
     <string name="history_delete_single_item_snackbar">Obrisao %1$s</string>
-    <!-- Text for positive action to delete history in deleting history dialog -->
-    <string name="history_clear_dialog">Očisti</string>
-    <!-- History overflow menu copy button -->
-    <string name="history_menu_copy_button">Kopiraj</string>
-    <!-- History overflow menu share button -->
-    <string name="history_menu_share_button">Podijeli</string>
-    <!-- History overflow menu open in new tab button -->
-    <string name="history_menu_open_in_new_tab_button">Otvori u novom tabu</string>
-    <!-- History overflow menu open in private tab button -->
-    <string name="history_menu_open_in_private_tab_button">Otvori u privatnom tabu</string>
-    <!-- Text for the button to delete a single history item -->
+    <!-- Context description text for the button to delete a single history item -->
     <string name="history_delete_item">Obriši</string>
     <!-- History multi select title in app bar
     The first parameter is the number of bookmarks selected -->
     <string name="history_multi_select_title">%1$d označeno</string>
-    <!-- Text for the button to clear selected history items. The first parameter
-        is a digit showing the number of items you have selected -->
-    <string name="history_delete_some">Obriši %1$d stavki</string>
-    <!-- Text for the header that groups the history for last 24 hours -->
-    <string name="history_24_hours">Zadnja 24 sata</string>
     <!-- Text for the header that groups the history the past 7 days -->
     <string name="history_7_days">Zadnjih 7 dana</string>
     <!-- Text for the header that groups the history the past 30 days -->
@@ -625,18 +652,14 @@
     <!-- Text shown when no history exists -->
     <string name="history_empty_message">Nema historije</string>
 
-    <!-- Downloads -->
-    <!-- Text shown when no download exists -->
-    <string name="download_empty_message">Nema preuzimanja</string>
     <!-- History multi select title in app bar
     The first parameter is the number of downloads selected -->
     <string name="download_multi_select_title">%1$d označeno</string>
 
+
     <!-- Crashes -->
     <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
     <string name="tab_crash_title_2">Oprostite. %1$s ne može učitati stranicu.</string>
-    <!-- Description text displayed on the tab crash page -->
-    <string name="tab_crash_description">Možete pokušati vratiti ili zatvoriti ovaj tab u nastavku.</string>
     <!-- Send crash report checkbox text on the tab crash page -->
     <string name="tab_crash_send_report">Pošalji izvještaj o rušenju %1$s-i</string>
     <!-- Close tab button text on the tab crash page -->
@@ -644,37 +667,19 @@
     <!-- Restore tab button text on the tab crash page -->
     <string name="tab_crash_restore">Vrati tab</string>
 
-    <!-- Content Description for session item menu button -->
-    <string name="content_description_session_menu">Opcije sesije</string>
-
-    <!-- Content Description for session item share button -->
-    <string name="content_description_session_share">Podijeli sesiju</string>
-
     <!-- Bookmarks -->
-    <!-- Content description for bookmarks library menu -->
-    <string name="bookmark_menu_content_description">Meni sa zabilješkama</string>
-    <!-- Screen title for editing bookmarks -->
-    <string name="bookmark_edit">Uredi zabilješku</string>
-    <!-- Screen title for selecting a bookmarks folder -->
-    <string name="bookmark_select_folder">Izaberite direktorij</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
     <string name="bookmark_delete_folder_confirmation_dialog">Da li ste sigurni da želite obrisati ovaj direktorij?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
     <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s će obrisati označene stavke.</string>
-    <!-- Snackbar title shown after a folder has been deleted. This first parameter is the name of the deleted folder -->
-    <string name="bookmark_delete_folder_snackbar">Obrisao %1$s</string>
     <!-- Screen title for adding a bookmarks folder -->
     <string name="bookmark_add_folder">Dodaj direktorij</string>
-    <!-- deprecated: Snackbar title shown after a bookmark has been created. -->
-    <string name="bookmark_created_snackbar">Zabilješka kreirana.</string>
     <!-- Snackbar title shown after a bookmark has been created. -->
     <string name="bookmark_saved_snackbar">Zabilješka spašena!</string>
     <!-- Snackbar edit button shown after a bookmark has been created. -->
     <string name="edit_bookmark_snackbar_action">UREDI</string>
     <!-- Bookmark overflow menu edit button -->
     <string name="bookmark_menu_edit_button">Uredi</string>
-    <!-- Bookmark overflow menu select button -->
-    <string name="bookmark_menu_select_button">Izaberi</string>
     <!-- Bookmark overflow menu copy button -->
     <string name="bookmark_menu_copy_button">Kopiraj</string>
     <!-- Bookmark overflow menu share button -->
@@ -723,8 +728,6 @@
     <string name="bookmark_undo_deletion">VRATI</string>
 
     <!-- Site Permissions -->
-    <!-- Site permissions preferences header -->
-    <string name="permissions_header">Dozvole</string>
     <!-- Button label that take the user to the Android App setting -->
     <string name="phone_feature_go_to_settings">Idi na Postavke</string>
     <!-- Content description (not visible, for screen readers etc.): Quick settings sheet
@@ -733,8 +736,6 @@
     <string name="quick_settings_sheet">Lista brzih postavki</string>
     <!-- Label that indicates that this option it the recommended one -->
     <string name="phone_feature_recommended">Preporučeno</string>
-    <!-- button that allows editing site permissions settings -->
-    <string name="quick_settings_sheet_manage_site_permissions">Upravljanje dozvolama stranice</string>
     <!-- Button label for clearing all the information of site permissions-->
     <string name="clear_permissions">Obriši dozvole</string>
     <!-- Button label for clearing a site permission-->
@@ -761,20 +762,18 @@
     <string name="phone_feature_blocked_by_android">Blokirao Android</string>
     <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
     <string name="preference_exceptions">Izuzeci</string>
-    <!-- Summary of tracking protection preference if tracking protection is set to on -->
-    <string name="tracking_protection_on">Uklj.</string>
     <!-- Summary of tracking protection preference if tracking protection is set to off -->
     <string name="tracking_protection_off">Isklj.</string>
-    <!-- Label that indicates that all video and audio autoplay is allowed -->
+    <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
     <string name="preference_option_autoplay_allowed2">Dozvoli audio i video</string>
     <!-- Label that indicates that video and audio autoplay is only allowed over Wi-Fi -->
     <string name="preference_option_autoplay_allowed_wifi_only2">Blokiraj audio i video samo na mobilnom internetu</string>
     <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
     <string name="preference_option_autoplay_allowed_wifi_subtext">Audio i video će se reproducirati na Wi-Fi</string>
-    <!-- Label that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <!-- Label for global setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->
     <string name="preference_option_autoplay_block_audio2">Blokiraj samo audio</string>
 
-    <!-- Label that indicates that all video and audio autoplay is blocked -->
+    <!-- Label for global setting that indicates that all video and audio autoplay is blocked -->
     <string name="preference_option_autoplay_blocked3">Blokiraj audio i video</string>
     <!-- Summary of delete browsing data on quit preference if it is set to on -->
     <string name="delete_browsing_data_quit_on">Uklj.</string>
@@ -826,14 +825,10 @@
 
     <!-- Share -->
     <!-- Share screen header -->
-    <string name="share_header">Pošalji i podijeli</string>
-    <!-- Share screen header -->
     <string name="share_header_2">Podijeli</string>
     <!-- Content description (not visible, for screen readers etc.):
         "Share" button. Opens the share menu when pressed. -->
     <string name="share_button_content_description">Podijeli</string>
-    <!-- Sub-header in the dialog to share a link to another app -->
-    <string name="share_link_subheader">Podijeli link</string>
     <!-- Sub-header in the dialog to share a link to another sync device -->
     <string name="share_device_subheader">Pošalji na uređaj</string>
     <!-- Sub-header in the dialog to share a link to an app from the full list -->
@@ -842,7 +837,7 @@
     <string name="share_link_recent_apps_subheader">Nedavno korišteno</string>
     <!-- An option from the share dialog to sign into sync -->
     <string name="sync_sign_in">Prijavite se na Sync</string>
-    <!-- An option from the share dialog to send link to all other sync devices -->
+     <!-- An option from the share dialog to send link to all other sync devices -->
     <string name="sync_send_to_all">Pošalji na sve uređaje</string>
     <!-- An option from the share dialog to reconnect to sync -->
     <string name="sync_reconnect">Ponovo se poveži na Sync</string>
@@ -866,46 +861,26 @@
     <string name="sync_add_new_device_connect_button">Poveži drugi uređaj…</string>
 
     <!-- Notifications -->
-    <!-- The user visible name of the "notification channel" (Android 8+ feature) for the ongoing notification shown while a browsing session is active. -->
-    <string name="notification_pbm_channel_name">Sesija privatnog surfanja</string>
-    <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
-    <string name="notification_pbm_delete_text">Obriši privatne tabove</string>
     <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
     <string name="notification_pbm_delete_text_2">Zatvori privatne tabove</string>
-    <!-- Notification action to open Fenix and resume the current browsing session. -->
-    <string name="notification_pbm_action_open">Otvori</string>
-    <!-- Notification action to delete all current private browsing sessions AND switch to Fenix (bring it to the foreground) -->
-    <string name="notification_pbm_action_delete_and_open">Obriši i otvori</string>
-    <!-- Name of the "Powered by Fenix" notification channel. Displayed in the "App notifications" system settings for the app -->
-    <string name="notification_powered_by_channel_name">Powered By</string>
+
+    <!-- Snackbar -->
     <!-- Text shown in snackbar when user deletes a collection -->
     <string name="snackbar_collection_deleted">Kolekcija obrisana</string>
     <!-- Text shown in snackbar when user renames a collection -->
     <string name="snackbar_collection_renamed">Kolekcija preimenovana</string>
-    <!-- Text shown in snackbar when user deletes a tab -->
-    <string name="snackbar_tab_deleted">Tab obrisan</string>
-    <!-- Text shown in snackbar when user deletes all tabs -->
-    <string name="snackbar_tabs_deleted">Tabovi obrisani</string>
     <!-- Text shown in snackbar when user closes a tab -->
     <string name="snackbar_tab_closed">Tab zatvoren</string>
     <!-- Text shown in snackbar when user closes all tabs -->
     <string name="snackbar_tabs_closed">Tabovi zatvoreni</string>
-    <!-- Text shown in snackbar when user adds a site to top sites -->
-    <string name="snackbar_added_to_top_sites">Dodano u top stranice!</string>
     <!-- Text shown in snackbar when user closes a private tab -->
     <string name="snackbar_private_tab_closed">Privatni tab zatvoren</string>
     <!-- Text shown in snackbar when user closes all private tabs -->
     <string name="snackbar_private_tabs_closed">Privatni tabovi zatvoreni</string>
-    <!-- Text shown in snackbar when user deletes all private tabs -->
-    <string name="snackbar_private_tabs_deleted">Privatni tabovi obrisani</string>
     <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
     <string name="snackbar_deleted_undo">VRATI</string>
     <!-- Text shown in snackbar when user removes a top site -->
     <string name="snackbar_top_site_removed">Stranica uklonjena</string>
-    <!-- Text for action to undo deleting a tab or collection shown in a11y dialog -->
-    <string name="a11y_dialog_deleted_undo">Vrati</string>
-    <!-- Text for action to confirm deleting a tab or collection shown in a11y dialog -->
-    <string name="a11y_dialog_deleted_confirm">Potvrdi</string>
     <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
         First parameter is the name of the app, second parameter is the URL or text scanned-->
     <string name="qr_scanner_confirmation_dialog_message">Dozvoli da %1$s otvori %2$s</string>
@@ -921,8 +896,6 @@
     <string name="delete_tab_and_collection_dialog_title">Obrisati %1$s?</string>
     <!-- Tab collection deletion prompt dialog option to delete the collection -->
     <string name="tab_collection_dialog_positive">Obriši</string>
-    <!-- Tab collection deletion prompt dialog option to cancel deleting the collection -->
-    <string name="tab_collection_dialog_negative">Otkaži</string>
     <!-- Text displayed in a notification when the user enters full screen mode -->
     <string name="full_screen_notification">Ulazim u režim cijelog ekrana</string>
     <!-- Message for copying the URL via long press on the toolbar -->
@@ -947,17 +920,11 @@
     <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
     <string name="preferences_delete_browsing_data_tabs_subtitle">%d tabova</string>
     <!-- Title for the data and history items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_data_title">Historiju surfanja i podatke stranica</string>
+    <!-- Title for the history item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_history_title">Historiju</string>
     <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
         number of history items the user has -->
     <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d adresa</string>
-    <!-- Title for history items in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_browsing_history_title">Historiju</string>
-    <!-- Subtitle for the history items in delete browsing data, parameter will be replaced with the
-        number of history pages the user has -->
-    <string name="preferences_delete_browsing_data_browsing_history_subtitle">%d stranica</string>
-    <!-- Title for the cookies item in Delete browsing data -->
-    <string name="preferences_delete_browsing_data_cookies">Kolačiće</string>
     <!-- Subtitle for the cookies item in Delete browsing data -->
     <string name="preferences_delete_browsing_data_cookies_subtitle">Bit ćete odjavljeni na većini stranica</string>
     <!-- Title for the cached images and files item in Delete browsing data -->
@@ -972,14 +939,10 @@
     <string name="preferences_delete_browsing_data_on_quit">Obriši podatke surfanja pri izlazu</string>
 
     <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
-    <string name="preference_summary_delete_browsing_data_on_quit">Automatski briše podatke o surfanju kada izaberete &quot;Ugasi&quot; iz menija</string>
-    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
     <string name="preference_summary_delete_browsing_data_on_quit_2">Automatski briše podatke o surfanju kada izaberete \&quot;Ugasi\&quot; iz menija</string>
     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">Ugasi</string>
 
-    <!-- Dialog message to the user asking to delete browsing data. -->
-    <string name="delete_browsing_data_prompt_message">Ovo će obrisati sve vaše podatke surfanja.</string>
     <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
     <string name="delete_browsing_data_prompt_message_3">%s će obrisati izabrane podatke surfanja.</string>
     <!-- Text for the cancel button for the data deletion dialog -->
@@ -992,125 +955,11 @@
     <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
     <string name="deleting_browsing_data_in_progress">Brišem podatke surfanja…</string>
 
-    <!-- Tips -->
-    <!-- text for firefox preview moving tip header "Firefox Preview" and "Firefox Nightly" are intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_header">Firefox Preview je sada Firefox Nightly</string>
-    <!-- text for firefox preview moving tip description -->
-    <string name="tip_firefox_preview_moved_description">Firefox Nightly se ažurira svake noći i sadrži eksperimentalne opcije.
-        Međutim, može biti manje stabilan. Za više stabilnosti, preuzmite naš beta browser.</string>
-    <!-- text for firefox preview moving tip button. "Firefox for Android Beta" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_button_2">Preuzmi Firefox za Android Beta</string>
-
-    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_header_preview_installed">Firefox Nightly se preselio</string>
-    <!-- text for firefox preview moving tip description -->
-    <string name="tip_firefox_preview_moved_description_preview_installed">Ova aplikacija više neće dobijati sigurnosne nadogradnje. Prestanite koristiti aplikaciju i pređite na novi Nightly.
-        \n\nDa prebacite vaše zabilješke, prijave i historiju na drugu aplikaciju, kreirajte Firefox račun.</string>
-    <!-- text for firefox preview moving tip button  -->
-    <string name="tip_firefox_preview_moved_button_preview_installed">Prebacite se na novi Nightly</string>
-
-    <!-- text for firefox preview moving tip header. "Firefox Nightly" is intentionally hardcoded -->
-    <string name="tip_firefox_preview_moved_header_preview_not_installed">Firefox Nightly se preselio</string>
-    <!-- text for firefox preview moving tip description -->
-    <string name="tip_firefox_preview_moved_description_preview_not_installed">Ova aplikacija više neće dobijati sigurnosne nadogradnje. Preuzmite novi Nightly i prestanite koristiti ovu aplikaciju.
-        \n\nDa prebacite vaše zabilješke, prijave i historiju na drugu aplikaciju, kreirajte Firefox račun.</string>
-    <!-- text for firefox preview moving tip button  -->
-    <string name="tip_firefox_preview_moved_button_preview_not_installed">Nabavite novi Nightly</string>
-
     <!-- Onboarding -->
-    <!-- Text for onboarding welcome message
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_header">Dobrodošli u %s!</string>
-    <!-- text for the Firefox Accounts section header -->
-    <string name="onboarding_fxa_section_header">Već imate račun?</string>
-    <!-- text for the Firefox Preview feature section header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_feature_section_header">Upoznajte %s</string>
-    <!-- text for the "What's New" onboarding card header -->
-    <string name="onboarding_whats_new_header1">Pogledajte šta je novo</string>
-    <!-- text for the "what's new" onboarding card description
-    The first parameter is the short name of the app (e.g. Firefox) -->
-    <string name="onboarding_whats_new_description">Imate pitanja o redizajniranom %su? Želite znati šta se promijenilo?</string>
-    <!-- text for underlined clickable link that is part of "what's new" onboarding card description that links to an FAQ -->
-    <string name="onboarding_whats_new_description_linktext">Dobijte odgovore ovdje</string>
-    <!-- text for the Firefox account onboarding sign in card header -->
-    <string name="onboarding_account_sign_in_header">Počnite sinhronizirati zabilješke, lozinke i još mnogo toga sa svojim Firefox računom.</string>
-    <!-- Text for the button to learn more about signing in to your Firefox account -->
-    <string name="onboarding_manual_sign_in_learn_more">Saznajte više</string>
-    <!-- text for the firefox account onboarding card header when we detect you're already signed in to
-        another Firefox browser. (The word `Firefox` should not be translated)
-        The first parameter is the email of the detected user's account -->
-    <string name="onboarding_firefox_account_auto_signin_header_2">Prijavljeni ste kao %s na drugim Firefox browseru na ovom telefonu. Da li se želite prijaviti s ovim računom?</string>
-    <!-- text for the button to confirm automatic sign-in -->
-    <string name="onboarding_firefox_account_auto_signin_confirm">Da, prijavi me</string>
-    <!-- text for the automatic sign-in button while signing in is in process -->
-    <string name="onboarding_firefox_account_signing_in">Prijava…</string>
-    <!-- text for the button to manually sign into Firefox account. The word "Firefox" should not be translated -->
-    <string name="onboarding_firefox_account_sign_in">Prijava u Firefox</string>
-    <!-- text for the button to stay signed out when presented with an option to automatically sign-in. -->
-    <string name="onboarding_firefox_account_stay_signed_out">Ostanite odjavljeni</string>
     <!-- text to display in the snackbar once account is signed-in -->
     <string name="onboarding_firefox_account_sync_is_on">Sync je uključen</string>
-    <!-- text to display in the snackbar if automatic sign-in fails. user may try again -->
-    <string name="onboarding_firefox_account_automatic_signin_failed">Neuspješna prijava</string>
-    <!-- text for the tracking protection onboarding card header -->
-    <string name="onboarding_tracking_protection_header_2">Automatska privatnost</string>
-    <!-- text for the tracking protection card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_tracking_protection_description_2">Postavke privatnosti i sigurnosti blokiraju trackere, malware i kompanije koje vas prate.</string>
-    <!-- text for tracking protection radio button option for standard level of blocking -->
-    <string name="onboarding_tracking_protection_standard_button_2">Standardno (izvorno)</string>
-    <!-- text for standard blocking option button description -->
-    <string name="onboarding_tracking_protection_standard_button_description_2">Blokira manje trackera. Stranice se normalno učitavaju.</string>
-    <!-- text for tracking protection radio button option for strict level of blocking -->
-    <string name="onboarding_tracking_protection_strict_button">Strogo (preporučeno)</string>
-    <!-- text for tracking protection radio button option for strict level of blocking -->
-    <string name="onboarding_tracking_protection_strict_option">Strogo</string>
-    <!-- text for strict blocking option button description -->
-    <string name="onboarding_tracking_protection_strict_button_description_2">Blokira više trackera, reklama i popupa. Stranice se brže učitavaju, ali neke funkcionalnosti možda neće raditi.</string>
-    <!-- text for the toolbar position card header
-        In English this is an idiom for "choose a side as in an argument or fight"
-        but it is ok to make this more literally about "choosing a position in a physical space -->
-    <string name="onboarding_toolbar_position_header">Zauzmite poziciju</string>
-    <!-- text for the toolbar position card description -->
-    <string name="onboarding_toolbar_position_description">Isprobajte jednoručno surafanje s alatnom trakom na dnu ili vrhu.</string>
-    <!-- text for the private browsing onboarding card header -->
-    <string name="onboarding_private_browsing_header">Surfajte privatno</string>
-    <!-- text for the private browsing onboarding card description
-    The first parameter is an icon that represents private browsing -->
-    <string name="onboarding_private_browsing_description1">Otvorite privatni tab jednom: dodirnite %s ikonicu.</string>
-    <!-- text for the private browsing onboarding card description, explaining how to always using private browsing -->
-    <string name="onboarding_private_browsing_always_description">Otvorite privatni tab svaki put: ažurirajte postavke privatnog surfanja.</string>
-    <!-- text for the private browsing onbording card button, that launches settings -->
-    <string name="onboarding_private_browsing_button">Otvori postavke</string>
-    <!-- text for the privacy notice onboarding card header -->
-    <string name="onboarding_privacy_notice_header">Vaša privatnost</string>
-    <!-- text for the privacy notice onboarding card description
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_privacy_notice_description">%s smo dizajnirali da vam pruži kontrolu nad onim što dijelite
-        online i što dijelite s nama.</string>
-    <!-- Text for the button to read the privacy notice -->
-    <string name="onboarding_privacy_notice_read_button">Pročitajte naša pravila privatnosti</string>
-    <!-- Content description (not visible, for screen readers etc.): Close onboarding screen -->
-    <string name="onboarding_close">Zatvori</string>
-
-    <!-- text for the button to finish onboarding -->
-    <string name="onboarding_finish">Započni surfanje</string>
 
     <!-- Onboarding theme -->
-    <!-- text for the theme picker onboarding card header -->
-    <string name="onboarding_theme_picker_header">Izaberite vašu temu</string>
-    <!-- text for the theme picker onboarding card description -->
-    <string name="onboarding_theme_picker_description1">Štedite bateriju i vid omogućavanjem tamnog režima.</string>
-    <!-- Automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_title">Automatski</string>
-    <!-- Summary of automatic theme setting (will follow device setting) -->
-    <string name="onboarding_theme_automatic_summary">Prilagođava se postavkama vašeg uređaja</string>
-    <!-- Theme setting for dark mode -->
-    <string name="onboarding_theme_dark_title">Tamna tema</string>
-    <!-- Theme setting for light mode -->
-    <string name="onboarding_theme_light_title">Svijetla tema</string>
-
     <!-- Text shown in snackbar when multiple tabs have been sent to device -->
     <string name="sync_sent_tabs_snackbar">Tabovi poslani!</string>
     <!-- Text shown in snackbar when one tab has been sent to device  -->
@@ -1130,8 +979,6 @@
     <string name="sign_in_with_camera">Prijavite se pomoću kamere</string>
     <!-- Text shown for settings option for sign with email -->
     <string name="sign_in_with_email">Radije koristi email</string>
-    <!-- Text shown in confirmation dialog to sign out of account -->
-    <string name="sign_out_confirmation_message">Firefox će zaustaviti sinhronizaciju s vašim računom, ali neće obrisati ništa od vaših podataka surfanja na ovom uređaju.</string>
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
     <string name="sign_out_confirmation_message_2">%s će zaustaviti sinhronizaciju s vašim računom, ali neće obrisati ništa od vaših podataka surfanja na ovom uređaju.</string>
     <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
@@ -1147,23 +994,15 @@
     <string name="etp_settings">Postavke zaštite</string>
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">Napredna zaštita od praćenja</string>
-    <!-- Title for the description of enhanced tracking protection -->
-    <string name="preference_enhanced_tracking_protection_explanation_title">Surfajte bez da vas prate</string>
-    <!-- Description of enhanced tracking protection. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="preference_enhanced_tracking_protection_explanation">Zadržite podatke za sebe. %s vas štiti od većine najčešćih pratilaca koji prate ono što radite online.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">Saznajte više</string>
 
     <!-- Preference for enhanced tracking protection for the standard protection settings -->
     <string name="preference_enhanced_tracking_protection_standard_default_1">Standardno (izvorno)</string>
-    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
-    <string name="preference_enhanced_tracking_protection_standard_description_3">Blokira manje trackera. Stranice se normalno učitavaju.</string>
     <!--  Accessibility text for the Standard protection information icon  -->
     <string name="preference_enhanced_tracking_protection_standard_info_button">Šta je blokirano od strane standardne tracking zaštite</string>
     <!-- Preference for enhanced tracking protection for the strict protection settings -->
     <string name="preference_enhanced_tracking_protection_strict">Strogo</string>
-    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
-    <string name="preference_enhanced_tracking_protection_strict_description_2">Blokira više trackera, reklama i popupa. Stranice se brže učitavaju, ali neke funkcionalnosti možda neće raditi.</string>
     <!--  Accessibility text for the Strict protection information icon  -->
     <string name="preference_enhanced_tracking_protection_strict_info_button">Šta je blokirano od strane stroge tracking zaštite</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
@@ -1189,12 +1028,11 @@
     <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">U svim tabovima</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">Samo u Privatnim tabovima</string>
-    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
-    <string name="preference_enhanced_tracking_protection_custom_tracking_content_3">Samo u Custom tabovima</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_cryptominers">Kriptomajneri</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings -->
     <string name="preference_enhanced_tracking_protection_custom_fingerprinters">Fingerprinteri</string>
+    <!-- Header for categories that are being being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_blocked">Blokirano</string>
     <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
     <string name="enhanced_tracking_protection_allowed">Dozvoljeno</string>
@@ -1218,8 +1056,6 @@
     <string name="etp_tracking_content_title">Praćenje sadržaja</string>
     <!-- Description of tracking content that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_tracking_content_description">Zaustavlja reklame, video, i druge sadržaje koji sadrže kod za praćenje. Može uticati na funkcionisanje nekih web stranica.</string>
-    <!-- Enhanced Tracking Protection Onboarding Message shown in a dialog above the toolbar. The first parameter is the name of the application (For example: Fenix) -->
-    <string name="etp_onboarding_cfr_message">Svaki put kada je štit ljubičast, %s je blokirao pratioce na stranici. Dodirnite za više info.</string>
     <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
     <string name="etp_panel_on">Zaštite za ovu stranicu su UKLJUČENE</string>
     <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
@@ -1229,10 +1065,6 @@
     <!-- Content description (not visible, for screen readers etc.): Navigate
     back from ETP details (Ex: Tracking content) -->
     <string name="etp_back_button_content_description">Vrati me nazad</string>
-    <!-- About page Your rights link text -->
-    <string name="about_your_rights">Vaša prava</string>
-    <!-- About page link text to open open source licenses screen -->
-    <string name="about_open_source_licenses">Open source biblioteke koje koristimo</string>
     <!-- About page link text to open what's new link -->
     <string name="about_whats_new">Šta je novo u %s</string>
     <!-- Open source licenses page title
@@ -1257,11 +1089,6 @@
     <string name="about_debug_menu_toast_progress">Debug meni: %1$d klik(ova) ostalo</string>
     <string name="about_debug_menu_toast_done">Debug meni omogućen</string>
 
-    <!-- Content description of the tab counter toolbar button when one tab is open -->
-    <string name="tab_counter_content_description_one_tab">1 tab</string>
-    <!-- Content description of the tab counter toolbar button when multiple tabs are open. First parameter will be replaced with the number of tabs (always more than one) -->
-    <string name="tab_counter_content_description_multi_tab">%d tabova</string>
-
     <!-- Browser long press popup menu -->
     <!-- Copy the current url -->
     <string name="browser_toolbar_long_press_popup_copy">Kopiraj</string>
@@ -1282,8 +1109,6 @@
     <string name="add_to_homescreen_continue">Nastavi na web stranicu</string>
     <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
     <string name="add_to_homescreen_text_placeholder">Naziv prečice</string>
-    <!-- Describes the add to homescreen functionality -->
-    <string name="add_to_homescreen_description">Ovu web stranicu možete lahko dodati na Početni ekran telefona za brz pristup istoj i da surfate brže s iskustvom sličnom aplikaciji.</string>
 
     <!-- Preference for managing the settings for logins and passwords in Fenix -->
     <string name="preferences_passwords_logins_and_passwords">Prijave i lozinke</string>
@@ -1293,18 +1118,9 @@
     <string name="preferences_passwords_save_logins_ask_to_save">Pitaj za spašavanje</string>
     <!-- Preference option for never saving passwords in Fenix -->
     <string name="preferences_passwords_save_logins_never_save">Ne spašavaj nikad</string>
-    <!-- Preference for autofilling saved logins in Fenix -->
-    <string name="preferences_passwords_autofill">Auto. unos</string>
+
     <!-- Preference for syncing saved logins in Fenix -->
     <string name="preferences_passwords_sync_logins">Sinkroniziraj prijave</string>
-    <!-- Syncing saved logins in Fenix is on -->
-    <string name="preferences_passwords_sync_logins_on">Uklj</string>
-    <!-- Syncing saved logins in Fenix is off -->
-    <string name="preferences_passwords_sync_logins_off">Isklj</string>
-    <!-- Syncing saved logins in Fenix needs reconnect to sync -->
-    <string name="preferences_passwords_sync_logins_reconnect">Ponovo poveži</string>
-    <!-- Syncing saved logins in Fenix needs login -->
-    <string name="preferences_passwords_sync_logins_sign_in">Prijavite se na Sync</string>
     <!-- Preference to access list of saved logins -->
     <string name="preferences_passwords_saved_logins">Spašene prijave</string>
     <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
@@ -1321,43 +1137,21 @@
     <string name="preferences_passwords_exceptions_remove_all">Obriši sve izuzetke</string>
     <!-- Hint for search box in logins list -->
     <string name="preferences_passwords_saved_logins_search">Pretraži prijave</string>
-    <!-- Option to sort logins list A-Z, alphabetically -->
-    <string name="preferences_passwords_saved_logins_alphabetically">Po abecedi</string>
-    <!-- Option to sort logins list by most recently used -->
-    <string name="preferences_passwords_saved_logins_recently_used">Nedavno korišteno</string>
     <!-- The header for the site that a login is for -->
     <string name="preferences_passwords_saved_logins_site">Stranica</string>
     <!-- The header for the username for a login -->
     <string name="preferences_passwords_saved_logins_username">Korisničko ime</string>
     <!-- The header for the password for a login -->
     <string name="preferences_passwords_saved_logins_password">Lozinka</string>
-    <!-- Message displayed in security prompt to reenter a secret pin to access saved logins -->
-    <string name="preferences_passwords_saved_logins_enter_pin">Ponovo unesite PIN</string>
-    <!-- Message displayed in security prompt to access saved logins -->
-    <string name="preferences_passwords_saved_logins_enter_pin_description">Otključajte za pregled spašenih prijava</string>
-    <!-- Message displayed when a connection is insecure and we detect the user is entering a password -->
-    <string name="logins_insecure_connection_warning">Ova veza nije sigurna. Prijave unešene ovdje mogu biti kompromitovane.</string>
-    <!-- Learn more link that will link to a page with more information displayed when a connection is insecure and we detect the user is entering a password -->
-    <string name="logins_insecure_connection_warning_learn_more">Saznajte više</string>
-    <!-- Prompt message displayed when Fenix detects a user has entered a password and user decides if Fenix should save it. The first parameter is the name of the application (For example: Fenix)  -->
-    <string name="logins_doorhanger_save">Da li želite da %s spasi ovu prijavu?</string>
-    <!-- Positive confirmation that Fenix should save the new or updated login -->
-    <string name="logins_doorhanger_save_confirmation">Spasi</string>
-    <!-- Negative confirmation that Fenix should not save the new or updated login -->
-    <string name="logins_doorhanger_save_dont_save">Nemoj spasiti</string>
     <!-- Shown in snackbar to tell user that the password has been copied -->
     <string name="logins_password_copied">Lozinka kopirana u clipboard</string>
 
     <!-- Shown in snackbar to tell user that the username has been copied -->
     <string name="logins_username_copied">Korisničko ime kopirano u clipboard</string>
-    <!-- Shown in snackbar to tell user that the site has been copied -->
-    <string name="logins_site_copied">Stranica kopirana u clipboard</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
     <string name="saved_logins_copy_password">Kopiraj lozinku</string>
     <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
     <string name="saved_login_copy_username">Kopiraj korisničko ime</string>
-    <!-- Content Description (for screenreaders etc) read for the button to copy a site in logins -->
-    <string name="saved_login_copy_site">Kopiraj stranicu</string>
     <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
     <string name="saved_login_open_site">Otvori stranicu u browseru</string>
     <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
@@ -1393,34 +1187,28 @@
     <!-- Title of the Edit search engine screen -->
     <string name="search_engine_edit_custom_search_engine_title">Uredi pretraživač</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
-    <string name="search_engine_add_button_content_description">Dodaj</string>
+    <string name="search_engine_add_button_content_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Dodaj</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
-    <string name="search_engine_add_custom_search_engine_edit_button_content_description">Spasi</string>
+    <string name="search_engine_add_custom_search_engine_edit_button_content_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Spasi</string>
     <!-- Text for the menu button to edit a search engine -->
     <string name="search_engine_edit">Uredi</string>
     <!-- Text for the menu button to delete a search engine -->
     <string name="search_engine_delete">Obriši</string>
 
     <!-- Text for the button to create a custom search engine on the Add search engine screen -->
-    <string name="search_add_custom_engine_label_other">Ostalo</string>
+    <string name="search_add_custom_engine_label_other" moz:RemovedIn="120" tools:ignore="UnusedResources">Ostalo</string>
     <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
-    <string name="search_add_custom_engine_name_hint">Naziv</string>
+    <string name="search_add_custom_engine_name_hint" moz:RemovedIn="120" tools:ignore="UnusedResources">Naziv</string>
     <!-- Placeholder text shown in the Search String TextField before a user enters text -->
-    <string name="search_add_custom_engine_search_string_hint">Tekst za pretragu</string>
+    <string name="search_add_custom_engine_search_string_hint" moz:RemovedIn="120" tools:ignore="UnusedResources">Tekst za pretragu</string>
     <!-- Description text for the Search String TextField. The %s is part of the string -->
     <string name="search_add_custom_engine_search_string_example" formatted="false">Zamijenite izraz sa “%s”. Primjer:\nhttps://www.google.ba/search?q=%s</string>
-    <!-- Text for the button to learn more about adding a custom search engine -->
-    <string name="search_add_custom_engine_learn_more_label">Saznajte više</string>
 
     <!-- Accessibility description for the form in which details about the custom search engine are entered -->
     <string name="search_add_custom_engine_form_description">Detalji korisnički podešenog pretraživača</string>
-    <!-- Accessibility description for the 'Learn more' link -->
-    <string name="search_add_custom_engine_learn_more_description">Link za saznajte više</string>
 
     <!-- Text shown when a user leaves the name field empty -->
     <string name="search_add_custom_engine_error_empty_name">Unesite naziv pretraživača</string>
-    <!-- Text shown when a user tries to add a search engine that already exists -->
-    <string name="search_add_custom_engine_error_existing_name">Pretraživač s nazivom “%s” već postoji.</string>
     <!-- Text shown when a user leaves the search string field empty -->
     <string name="search_add_custom_engine_error_empty_search_string">Unesite pojam za pretragu</string>
     <!-- Text shown when a user leaves out the required template string -->
@@ -1434,19 +1222,6 @@
     <!-- Text shown when a user successfully deletes a custom search engine -->
     <string name="search_delete_search_engine_success_message">Obrisano %s</string>
 
-    <!-- Title text shown for the migration screen to the new browser. Placeholder replaced with app name -->
-    <string name="migration_title">Dobrodošli u potpuno novi %s</string>
-    <!-- Description text followed by a list of things migrating (e.g. Bookmarks, History). Placeholder replaced with app name-->
-    <string name="migration_description">Čeka vas potpuno redizajniran browser, unaprijeđenih performansi, s kojim možete uraditi više online.\n\nMolimo da sačekate dok nadogradimo %s s vašim</string>
-    <!-- Text on the disabled button while in progress. Placeholder replaced with app name -->
-    <string name="migration_updating_app_button_text">Nadograđujem %s…</string>
-    <!-- Text on the enabled button. Placeholder replaced with app name-->
-    <string name="migration_update_app_button">Pokreni %s</string>
-    <!-- Accessibility description text for a completed migration item -->
-    <string name="migration_icon_description">Migracija završena</string>
-    <!--Text on list of migrated items (e.g. Settings, History, etc.)-->
-    <string name="migration_text_passwords">Lozinke</string>
-
     <!-- Heading for the instructions to allow a permission -->
     <string name="phone_feature_blocked_intro">Da omogućite:</string>
     <!-- First step for the allowing a permission -->
@@ -1456,10 +1231,6 @@
     <!-- Third step for the allowing a permission (Fore example: Camera) -->
     <string name="phone_feature_blocked_step_feature"><![CDATA[3. Podesite <b>%1$s</b> na ON]]></string>
 
-    <!-- Label that indicates a site is using a secure connection -->
-    <string name="quick_settings_sheet_secure_connection">Sigurna veza</string>
-    <!-- Label that indicates a site is using a insecure connection -->
-    <string name="quick_settings_sheet_insecure_connection">Nesigurna veza</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
     <string name="confirm_clear_permissions_on_all_sites">Da li ste sigurni da želite obrisati sve dozvole za sve stranice?</string>
     <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
@@ -1468,12 +1239,8 @@
     <string name="confirm_clear_permission_site">Da li ste sigurni da želite obrisati ovu dozvolu za ovu stranicu?</string>
     <!-- label shown when there are not site exceptions to show in the site exception settings -->
     <string name="no_site_exceptions">Nema izuzetaka stranice</string>
-    <!-- Label for the Pocket default top site -->
-    <string name="pocket_top_articles">Top članci</string>
     <!-- Bookmark deletion confirmation -->
     <string name="bookmark_deletion_confirmation">Da li ste sigurni da želite obrisati ovu zabilješku?</string>
-    <!-- Browser menu button that adds a top site to the home fragment -->
-    <string name="browser_menu_add_to_top_sites">Dodaj u top stranice</string>
     <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
      the certificate authority that verified the ticket-->
     <string name="certificate_info_verified_by">Verifikovao: %1$s</string>
@@ -1495,12 +1262,10 @@
     <string name="saved_login_password_description">Izmjenjivo tekstualno polje za lozinku prijave.</string>
     <!--  The button description to save changes to an edited login. -->
     <string name="save_changes_to_login">Spasite izmjene za prijavu.</string>
-    <!--  The button description to discard changes to an edited login. -->
-    <string name="discard_changes">Odbaci izmjene</string>
     <!--  The page title for editing a saved login. -->
     <string name="edit">Uredi</string>
 
-    <!--  The error message in edit login view when password field is blank. -->
+    <!--  The error message in add/edit login view when password field is blank. -->
     <string name="saved_login_password_required">Potrebna lozinka</string>
     <!-- Voice search button content description  -->
     <string name="voice_search_content_description">Glasovna pretraga</string>
@@ -1510,7 +1275,7 @@
     <string name="saved_login_duplicate">Prijava sa tim korisničkim imenom već postoji</string>
 
     <!-- Synced Tabs -->
-   <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
     <string name="synced_tabs_connect_another_device">Povežite drugi uređaj</string>
     <!-- Text displayed asking user to re-authenticate -->
     <string name="synced_tabs_reauth">Ponovo potvrdite identitet.</string>
@@ -1526,26 +1291,10 @@
     <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
     <string name="synced_tabs_no_open_tabs">Nema otvorenih tabova</string>
 
-    <!-- Top Sites -->
-    <!-- Title text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_title">Dosegli ste limit za Top stranice</string>
-    <!-- Content description text displayed in the dialog when top sites limit is reached. -->
-    <string name="top_sites_max_limit_content">Da dodate novu top stranicu, uklonite jednu. Pritisnite stranicu i držite, pa izaberite uklanjanje.</string>
     <!-- Confirmation dialog button text when top sites limit is reached. -->
     <string name="top_sites_max_limit_confirmation_button">OK, razumijem</string>
-
-    <!-- Label for the show most visited sites preference -->
-    <string name="top_sites_toggle_top_frecent_sites">Prikaži najposjećenije stranice</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Ukloni</string>
 
-    <!-- depcrecated: text for the firefox account onboarding card header
-    The first parameter is the name of the app (e.g. Firefox Preview) -->
-    <string name="onboarding_firefox_account_header">Izvucite maksimum iz %s.</string>
-
-    <!-- Deprecated: No Open Tabs Message Header -->
-    <string name="no_collections_header1">Sakupite stvari koje su vam važne</string>
-    <!-- Deprecated: Label to describe what collections are to a new user without any collections -->
-    <string name="no_collections_description1">Grupišite slične pretrage, stranice i tabove za brži pristup kasnije.</string>
     </resources>
