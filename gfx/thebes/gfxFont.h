@@ -1036,8 +1036,8 @@ class gfxShapedText {
     return mDetailedGlyphs->Get(aCharIndex);
   }
 
-  void ApplyTrackingToClusters(gfxFloat aTrackingAdjustment, uint32_t aOffset,
-                               uint32_t aLength);
+  void AdjustAdvancesForSyntheticBold(float aSynBoldOffset, uint32_t aOffset,
+                                      uint32_t aLength);
 
   // Mark clusters in the CompressedGlyph records, starting at aOffset,
   // based on the Unicode properties of the text in aString.
@@ -2211,10 +2211,6 @@ class gfxFont {
 
   gfxFontStyle mStyle;
   mutable gfxFloat mAdjustedSize;
-
-  // Tracking adjustment to be applied for CSS px size mCachedTrackingSize.
-  gfxFloat mTracking = 0.0;
-  gfxFloat mCachedTrackingSize = -1.0;
 
   // Conversion factor from font units to dev units; note that this may be
   // zero (in the degenerate case where mAdjustedSize has become zero).
