@@ -33,7 +33,7 @@ interface TextEncoder {
    * replacing lone surrogates with the REPLACEMENT CHARACTER, so the
    * observable behavior of USVString is matched.)
    */
-  [NewObject]
+  [NewObject, Throws]
   Uint8Array encode(optional UTF8String input = "");
 
   /*

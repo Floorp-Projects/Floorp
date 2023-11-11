@@ -670,10 +670,9 @@ class PushEventOp final : public ExtendableEventOp {
 
     if (args.data().type() != OptionalPushData::Tvoid_t) {
       auto& bytes = args.data().get_ArrayOfuint8_t();
-      JSObject* data = Uint8Array::Create(aCx, bytes);
+      JSObject* data = Uint8Array::Create(aCx, bytes, result);
 
-      if (!data) {
-        result = ErrorResult(NS_ERROR_FAILURE);
+      if (result.Failed()) {
         return false;
       }
 
