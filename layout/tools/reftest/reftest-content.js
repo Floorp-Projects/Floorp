@@ -825,13 +825,19 @@ function WaitForTestEnd(
           var notification = content.document.createEvent("Events");
           notification.initEvent("MozReftestInvalidate", true, false);
           contentRootElement.dispatchEvent(notification);
+        } else {
+          LogInfo(
+            "MakeProgress: couldn't send MozReftestInvalidate event because content root element does not exist"
+          );
         }
 
+        CheckForLivenessOfContentRootElement();
         if (!inPrintMode && doPrintMode(contentRootElement)) {
           LogInfo("MakeProgress: setting up print mode");
           setupPrintMode(contentRootElement);
         }
 
+        CheckForLivenessOfContentRootElement();
         if (
           hasReftestWait &&
           !shouldWaitForReftestWaitRemoval(contentRootElement)
