@@ -1036,8 +1036,8 @@ class gfxShapedText {
     return mDetailedGlyphs->Get(aCharIndex);
   }
 
-  void AdjustAdvancesForSyntheticBold(float aSynBoldOffset, uint32_t aOffset,
-                                      uint32_t aLength);
+  void ApplyTrackingToClusters(float aTrackingAdjustment, uint32_t aOffset,
+                               uint32_t aLength);
 
   // Mark clusters in the CompressedGlyph records, starting at aOffset,
   // based on the Unicode properties of the text in aString.
