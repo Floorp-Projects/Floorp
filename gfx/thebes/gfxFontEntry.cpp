@@ -1131,7 +1131,7 @@ bool gfxFontEntry::ParseTrakTable() {
   return true;
 }
 
-gfxFloat gfxFontEntry::TrackingForCSSPx(gfxFloat aSize) const {
+float gfxFontEntry::TrackingForCSSPx(float aSize) const {
   // No locking because this does read-only access of fields that are inert
   // once initialized.
   MOZ_ASSERT(TrakTableInitialized() && mTrakTable && mTrakValues &&
