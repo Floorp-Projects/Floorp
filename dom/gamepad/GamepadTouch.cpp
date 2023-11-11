@@ -33,7 +33,7 @@ GamepadTouch::~GamepadTouch() { mozilla::DropJSObjects(this); }
 void GamepadTouch::GetPosition(JSContext* aCx,
                                JS::MutableHandle<JSObject*> aRetval,
                                ErrorResult& aRv) {
-  mPosition = Float32Array::Create(aCx, this, 2, mTouchState.position);
+  mPosition = Float32Array::Create(aCx, this, mTouchState.position);
   if (!mPosition) {
     aRv.NoteJSContextException(aCx);
     return;

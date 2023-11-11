@@ -68,8 +68,7 @@ void PublicKeyCredential::GetRawId(JSContext* aCx,
                                    JS::MutableHandle<JSObject*> aValue,
                                    ErrorResult& aRv) {
   if (!mRawIdCachedObj) {
-    mRawIdCachedObj =
-        ArrayBuffer::Create(aCx, mRawId.Length(), mRawId.Elements());
+    mRawIdCachedObj = ArrayBuffer::Create(aCx, mRawId);
     if (!mRawIdCachedObj) {
       aRv.NoteJSContextException(aCx);
       return;
