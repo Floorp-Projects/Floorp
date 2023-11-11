@@ -479,7 +479,7 @@ skip-if = [
 
 ["browser_searchMode_setURI.js"]
 https_first_disabled = true
-skip-if = ["a11y_checks"] # Bugs 1858041 and 1854660 for causing intermittent crashes
+fail-if = ["a11y_checks"] # Bug 1854660 clicked button.searchbar-engine-one-off-item may not be focusable
 
 ["browser_searchMode_suggestions.js"]
 support-files = [

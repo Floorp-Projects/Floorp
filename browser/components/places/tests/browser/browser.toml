@@ -216,7 +216,6 @@ fail-if = ["a11y_checks"] # Bug 1854443 tree#bookmarks-view and tree#historyTree
 ["browser_stayopenmenu.js"]
 
 ["browser_toolbar_drop_bookmarklet.js"]
-skip-if = ["a11y_checks"] # Bug 1849230 for causing crashes
 
 ["browser_toolbar_drop_multiple_flavors.js"]
 

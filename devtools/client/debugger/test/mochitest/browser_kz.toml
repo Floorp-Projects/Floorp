@@ -229,7 +229,7 @@ skip-if = [
   "debug",
   "tsan",
   "verify && debug && os == 'linux'",
-  "a11y_checks", # Bug 1858041, 1849230, 1849028 intermittent crashes a11y_checks results (fails/crashes on Try, passes on Autoland)
+  "a11y_checks", # Bugs 1858041 and 1849028 intermittent results (fails on Try, passes on Autoland)
 ]
 
 ["browser_dbg-sourcemapped-stepping.js"]
