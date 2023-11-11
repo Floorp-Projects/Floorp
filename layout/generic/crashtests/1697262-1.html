@@ -1,9 +1,20 @@
+<html class="reftest-wait">
 <script>
+let pp;
+window.addEventListener("MozReftestInvalidate", finish);
 window.onload = () => {
   try { document.getElementById('a').setAttribute('style', 'left:76%') } catch (e) {}
-  window.print()
+  pp = SpecialPowers.wrap(self).printPreview();
+  pp?.print()
   setTimeout(window.close, 250)
 }
+function finish() {
+  setTimeout(function() {
+    pp.close();
+    document.documentElement.className = "";
+  }, 400);
+}
+
 </script>
 <style>
 :last-of-type {
@@ -15,3 +26,4 @@ window.onload = () => {
 <option>
 </select>
 <video id='a'>
+</html>

@@ -803,7 +803,7 @@ load 1682686-1.html
 load 1682686-2.html
 HTTP load 1682882.html
 load 1683126.html
-load 1697262-1.html
+skip-if(Android) load 1697262-1.html # printPreview doesn't work on android
 load 1682032.html
 load 1699263.html
 load 1699468.html
