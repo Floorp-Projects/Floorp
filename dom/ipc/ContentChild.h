@@ -229,9 +229,6 @@ class ContentChild final : public PContentChild,
 
   PRemotePrintJobChild* AllocPRemotePrintJobChild();
 
-  already_AddRefed<PClipboardReadRequestChild> AllocPClipboardReadRequestChild(
-      const nsTArray<nsCString>& aTypes);
-
   PMediaChild* AllocPMediaChild();
 
   bool DeallocPMediaChild(PMediaChild* aActor);
