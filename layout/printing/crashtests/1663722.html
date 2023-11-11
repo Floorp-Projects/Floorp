@@ -4,7 +4,10 @@
     document.addEventListener("DOMContentLoaded", () => {
       const proxy = SpecialPowers.wrap(self).printPreview();
       proxy.sizeToContent();
-      document.documentElement.className = "";
+      setTimeout(function () {
+        proxy.close();
+        document.documentElement.className = "";
+      }, 0);
     })
   </script>
 </head>
