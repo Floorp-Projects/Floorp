@@ -534,7 +534,7 @@ class gfxFontEntry {
 
   // Return the tracking (in font units) to be applied for the given size.
   // (This is a floating-point number because of possible interpolation.)
-  float TrackingForCSSPx(float aSize) const;
+  gfxFloat TrackingForCSSPx(gfxFloat aSize) const;
 
   mozilla::gfx::Rect GetFontExtents(float aFUnitScaleFactor) const {
     // Flip the y-axis here to match the orientation of Gecko's coordinates.

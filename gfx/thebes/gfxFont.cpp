@@ -840,10 +840,11 @@ bool gfxShapedText::FilterIfIgnorable(uint32_t aIndex, uint32_t aCh) {
   return false;
 }
 
-void gfxShapedText::ApplyTrackingToClusters(float aTrackingAdjustment,
+void gfxShapedText::ApplyTrackingToClusters(gfxFloat aTrackingAdjustment,
                                             uint32_t aOffset,
                                             uint32_t aLength) {
-  int32_t appUnitAdjustment = aTrackingAdjustment * mAppUnitsPerDevUnit;
+  int32_t appUnitAdjustment =
+      NS_round(aTrackingAdjustment * gfxFloat(mAppUnitsPerDevUnit));
   CompressedGlyph* charGlyphs = GetCharacterGlyphs();
   for (uint32_t i = aOffset; i < aOffset + aLength; ++i) {
     CompressedGlyph* glyphData = charGlyphs + i;
@@ -3328,16 +3329,30 @@ bool gfxFont::ShapeText(DrawTarget* aDrawTarget, const char16_t* aText,
     if (GetFontEntry()->HasTrackingTable()) {
       // Convert font size from device pixels back to CSS px
       // to use in selecting tracking value
-      float trackSize = GetAdjustedSize() *
-                        aShapedText->GetAppUnitsPerDevUnit() /
-                        AppUnitsPerCSSPixel();
-      float tracking =
-          GetFontEntry()->TrackingForCSSPx(trackSize) * mFUnitsConvFactor;
-      // Applying tracking is a lot like the adjustment we do for
-      // synthetic bold: we want to apply between clusters, not to
-      // non-spacing glyphs within a cluster. So we can reuse that
-      // helper here.
-      aShapedText->ApplyTrackingToClusters(tracking, aOffset, aLength);
+      gfxFloat trackSize = GetAdjustedSize() *
+                           aShapedText->GetAppUnitsPerDevUnit() /
+                           AppUnitsPerCSSPixel();
+      // Usually, a given font will be used with the same appunit scale, so we
+      // can cache the tracking value rather than recompute it every time.
+      {
+        AutoReadLock lock(mLock);
+        if (trackSize == mCachedTrackingSize) {
+          // Applying tracking is a lot like the adjustment we do for
+          // synthetic bold: we want to apply between clusters, not to
+          // non-spacing glyphs within a cluster. So we can reuse that
+          // helper here.
+          aShapedText->ApplyTrackingToClusters(mTracking, aOffset, aLength);
+          return true;
+        }
+      }
+      // We didn't have the appropriate tracking value cached yet.
+      AutoWriteLock lock(mLock);
+      if (trackSize != mCachedTrackingSize) {
+        mCachedTrackingSize = trackSize;
+        mTracking =
+            GetFontEntry()->TrackingForCSSPx(trackSize) * mFUnitsConvFactor;
+      }
+      aShapedText->ApplyTrackingToClusters(mTracking, aOffset, aLength);
     }
     return true;
   }
