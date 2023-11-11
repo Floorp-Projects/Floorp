@@ -63,7 +63,6 @@ skip-if = [
 ]
 
 ["browser_print_margins.js"]
-skip-if = ["a11y_checks"] # Bug 1858041 for causing intermittent crashes
 
 ["browser_print_page_range.js"]
 

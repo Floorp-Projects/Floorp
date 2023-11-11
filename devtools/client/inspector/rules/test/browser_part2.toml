@@ -66,7 +66,6 @@ skip-if = [
 skip-if = ["a11y_checks"] # Bugs 1858041 and 1849028 for intermittent a11y_checks results
 
 ["browser_rules_css-compatibility-toggle-rules.js"]
-skip-if = ["a11y_checks"] # Bugs 1858041, 1849028 and 1849230 for causing intermittent crashes
 
 ["browser_rules_css-compatibility-tooltip-telemetry.js"]
 
