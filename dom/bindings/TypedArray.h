@@ -517,7 +517,7 @@ struct TypedArray_base : public SpiderMonkeyInterfaceObjectStorage,
           if (!aResult.get()) {
             return false;
           }
-          memcpy(aResult.get(), aData.Elements(), aData.size_bytes());
+          memcpy(aResult.get(), aData.Elements(), aData.LengthBytes());
           return true;
         },
         std::forward<Calculator>(aCalculator)...);
@@ -692,58 +692,57 @@ struct TypedArray : public TypedArray_base<ArrayT> {
   TypedArray(TypedArray&& aOther) = default;
 
   static inline JSObject* Create(JSContext* cx, nsWrapperCache* creator,
-                                 uint32_t length,
-                                 const element_type* data = nullptr) {
+                                 size_t length) {
+    return CreateCommon(cx, creator, length).asObject();
+  }
+
+  static inline JSObject* Create(JSContext* cx, size_t length) {
+    return CreateCommon(cx, length).asObject();
+  }
+
+  static inline JSObject* Create(JSContext* cx, nsWrapperCache* creator,
+                                 Span<const element_type> data) {
+    ArrayT array = CreateCommon(cx, creator, data.Length());
+    if (array) {
+      CopyFrom(cx, data, array);
+    }
+    return array.asObject();
+  }
+
+  static inline JSObject* Create(JSContext* cx, Span<const element_type> data) {
+    ArrayT array = CreateCommon(cx, data.Length());
+    if (array) {
+      CopyFrom(cx, data, array);
+    }
+    return array.asObject();
+  }
+
+ private:
+  static inline ArrayT CreateCommon(JSContext* cx, nsWrapperCache* creator,
+                                    size_t length) {
     JS::Rooted<JSObject*> creatorWrapper(cx);
     Maybe<JSAutoRealm> ar;
     if (creator && (creatorWrapper = creator->GetWrapperPreserveColor())) {
       ar.emplace(cx, creatorWrapper);
     }
 
-    return CreateCommon(cx, length, data);
+    return CreateCommon(cx, length);
   }
-
-  static inline JSObject* Create(JSContext* cx, uint32_t length,
-                                 const element_type* data = nullptr) {
-    return CreateCommon(cx, length, data);
+  static inline ArrayT CreateCommon(JSContext* cx, size_t length) {
+    return ArrayT::create(cx, length);
   }
-
-  static inline JSObject* Create(JSContext* cx, nsWrapperCache* creator,
-                                 Span<const element_type> data) {
-    // Span<> uses size_t as a length, and we use uint32_t instead.
-    if (MOZ_UNLIKELY(data.Length() > UINT32_MAX)) {
-      JS_ReportOutOfMemory(cx);
-      return nullptr;
-    }
-    return Create(cx, creator, data.Length(), data.Elements());
-  }
-
-  static inline JSObject* Create(JSContext* cx, Span<const element_type> data) {
-    // Span<> uses size_t as a length, and we use uint32_t instead.
-    if (MOZ_UNLIKELY(data.Length() > UINT32_MAX)) {
-      JS_ReportOutOfMemory(cx);
-      return nullptr;
-    }
-    return CreateCommon(cx, data.Length(), data.Elements());
-  }
-
- private:
-  static inline JSObject* CreateCommon(JSContext* cx, uint32_t length,
-                                       const element_type* data) {
-    auto array = ArrayT::create(cx, length);
-    if (!array) {
-      return nullptr;
-    }
-    if (data) {
-      JS::AutoCheckCannotGC nogc;
-      bool isShared;
-      mozilla::Span<element_type> span = array.getData(&isShared, nogc);
-      // Data will not be shared, until a construction protocol exists
-      // for constructing shared data.
-      MOZ_ASSERT(!isShared);
-      memcpy(span.data(), data, span.size_bytes());
-    }
-    return array.asObject();
+  static inline void CopyFrom(JSContext* cx,
+                              const Span<const element_type>& data,
+                              ArrayT& dest) {
+    JS::AutoCheckCannotGC nogc;
+    bool isShared;
+    mozilla::Span<element_type> span = dest.getData(&isShared, nogc);
+    MOZ_ASSERT(span.size() == data.size(),
+               "Didn't create a large enough typed array object?");
+    // Data will not be shared, until a construction protocol exists
+    // for constructing shared data.
+    MOZ_ASSERT(!isShared);
+    memcpy(span.Elements(), data.Elements(), data.LengthBytes());
   }
 
   TypedArray(const TypedArray&) = delete;
