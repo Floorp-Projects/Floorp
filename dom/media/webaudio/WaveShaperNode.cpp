@@ -372,8 +372,7 @@ void WaveShaperNode::GetCurve(JSContext* aCx,
   }
 
   MOZ_ASSERT(mCurve.Length() >= 2);
-  aRetval.set(
-      Float32Array::Create(aCx, this, mCurve.Length(), mCurve.Elements()));
+  aRetval.set(Float32Array::Create(aCx, this, mCurve));
 }
 
 void WaveShaperNode::SetOversample(OverSampleType aType) {

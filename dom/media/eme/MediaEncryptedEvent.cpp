@@ -94,8 +94,7 @@ void MediaEncryptedEvent::GetInitData(JSContext* cx,
                                       JS::MutableHandle<JSObject*> aData,
                                       ErrorResult& aRv) {
   if (mRawInitData.Length()) {
-    mInitData = ArrayBuffer::Create(cx, this, mRawInitData.Length(),
-                                    mRawInitData.Elements());
+    mInitData = ArrayBuffer::Create(cx, this, mRawInitData);
     if (!mInitData) {
       aRv.NoteJSContextException(cx);
       return;
