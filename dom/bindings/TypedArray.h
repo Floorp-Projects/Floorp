@@ -692,42 +692,59 @@ struct TypedArray : public TypedArray_base<ArrayT> {
   TypedArray(TypedArray&& aOther) = default;
 
   static inline JSObject* Create(JSContext* cx, nsWrapperCache* creator,
-                                 size_t length) {
-    return CreateCommon(cx, creator, length).asObject();
+                                 size_t length, ErrorResult& error) {
+    return CreateCommon(cx, creator, length, error).asObject();
   }
 
-  static inline JSObject* Create(JSContext* cx, size_t length) {
-    return CreateCommon(cx, length).asObject();
+  static inline JSObject* Create(JSContext* cx, size_t length,
+                                 ErrorResult& error) {
+    return CreateCommon(cx, length, error).asObject();
   }
 
   static inline JSObject* Create(JSContext* cx, nsWrapperCache* creator,
-                                 Span<const element_type> data) {
-    ArrayT array = CreateCommon(cx, creator, data.Length());
-    if (array) {
+                                 Span<const element_type> data,
+                                 ErrorResult& error) {
+    ArrayT array = CreateCommon(cx, creator, data.Length(), error);
+    if (!error.Failed()) {
       CopyFrom(cx, data, array);
     }
     return array.asObject();
   }
 
-  static inline JSObject* Create(JSContext* cx, Span<const element_type> data) {
-    ArrayT array = CreateCommon(cx, data.Length());
-    if (array) {
+  static inline JSObject* Create(JSContext* cx, Span<const element_type> data,
+                                 ErrorResult& error) {
+    ArrayT array = CreateCommon(cx, data.Length(), error);
+    if (!error.Failed()) {
       CopyFrom(cx, data, array);
     }
     return array.asObject();
   }
 
  private:
+  template <typename>
+  friend class TypedArrayCreator;
+
   static inline ArrayT CreateCommon(JSContext* cx, nsWrapperCache* creator,
-                                    size_t length) {
+                                    size_t length, ErrorResult& error) {
     JS::Rooted<JSObject*> creatorWrapper(cx);
     Maybe<JSAutoRealm> ar;
     if (creator && (creatorWrapper = creator->GetWrapperPreserveColor())) {
       ar.emplace(cx, creatorWrapper);
     }
 
-    return CreateCommon(cx, length);
+    return CreateCommon(cx, length, error);
   }
+  static inline ArrayT CreateCommon(JSContext* cx, size_t length,
+                                    ErrorResult& error) {
+    ArrayT array = CreateCommon(cx, length);
+    if (array) {
+      return array;
+    }
+    error.StealExceptionFromJSContext(cx);
+    return ArrayT::fromObject(nullptr);
+  }
+  // NOTE: this leaves any exceptions on the JSContext, and the caller is
+  //       required to deal with them.
   static inline ArrayT CreateCommon(JSContext* cx, size_t length) {
     return ArrayT::create(cx, length);
   }
@@ -803,8 +820,14 @@ class MOZ_STACK_CLASS TypedArrayCreator {
  public:
   explicit TypedArrayCreator(const ArrayType& aArray) : mArray(aArray) {}
 
+  // NOTE: this leaves any exceptions on the JSContext, and the caller is
+  //       required to deal with them.
   JSObject* Create(JSContext* aCx) const {
-    return TypedArrayType::Create(aCx, mArray);
+    auto array = TypedArrayType::CreateCommon(aCx, mArray.Length());
+    if (array) {
+      TypedArrayType::CopyFrom(aCx, mArray, array);
+    }
+    return array.asObject();
   }
 
  private:
