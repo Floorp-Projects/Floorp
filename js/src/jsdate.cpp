@@ -1104,6 +1104,8 @@ static constexpr size_t ShortestMonthNameLength = 3;
  * Try to parse the following date formats:
  *   dd-MMM-yyyy
  *   dd-MMM-yy
+ *   MMM-dd-yyyy
+ *   MMM-dd-yy
  *   yyyy-MMM-dd
  *   yy-MMM-dd
  *
@@ -1115,6 +1117,15 @@ static bool TryParseDashedDatePrefix(const CharT* s, size_t length,
                                      size_t* indexOut, int* yearOut,
                                      int* monOut, int* mdayOut) {
   size_t i = *indexOut;
+
+  if (*monOut != -1) {
+    // If the month has already been set by ParseDate, we'll be at a '-', we
+    // can skip it and start parsing the mday
+    if (i >= length || s[i] != '-') {
+      return false;
+    }
+    ++i;
+  }
 
   size_t pre = i;
   size_t mday;
@@ -1128,35 +1139,39 @@ static bool TryParseDashedDatePrefix(const CharT* s, size_t length,
   }
   ++i;
 
-  size_t start = i;
-  for (; i < length; i++) {
-    if (!IsAsciiAlpha(s[i])) {
-      break;
-    }
-  }
-
-  if (i - start < ShortestMonthNameLength) {
-    return false;
-  }
-
   size_t mon = 0;
-  for (size_t m = 0; m < std::size(months_names); ++m) {
-    // If the field isn't a prefix of the month (an exact match is *not*
-    // required), try the next one.
-    if (IsPrefixOfKeyword(s + start, i - start, months_names[m])) {
-      // Use numeric value.
-      mon = m + 1;
-      break;
+  if (*monOut == -1) {
+    // If month wasn't already set by ParseDate, it must be in the middle of
+    // this format, let's look for it
+    size_t start = i;
+    for (; i < length; i++) {
+      if (!IsAsciiAlpha(s[i])) {
+        break;
+      }
     }
-  }
-  if (mon == 0) {
-    return false;
-  }
 
-  if (i >= length || s[i] != '-') {
-    return false;
+    if (i - start < ShortestMonthNameLength) {
+      return false;
+    }
+
+    for (size_t m = 0; m < std::size(months_names); ++m) {
+      // If the field isn't a prefix of the month (an exact match is *not*
+      // required), try the next one.
+      if (IsPrefixOfKeyword(s + start, i - start, months_names[m])) {
+        // Use numeric value.
+        mon = m + 1;
+        break;
+      }
+    }
+    if (mon == 0) {
+      return false;
+    }
+
+    if (i >= length || s[i] != '-') {
+      return false;
+    }
+    ++i;
   }
-  ++i;
 
   pre = i;
   size_t year;
@@ -1185,7 +1200,9 @@ static bool TryParseDashedDatePrefix(const CharT* s, size_t length,
 
   *indexOut = i;
   *yearOut = year;
-  *monOut = mon;
+  if (*monOut == -1) {
+    *monOut = mon;
+  }
   *mdayOut = mday;
   return true;
 }
