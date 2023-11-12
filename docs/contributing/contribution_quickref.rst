@@ -21,8 +21,7 @@ Windows dependencies
 --------------------
 
 #. You need a :ref:`supported version of Windows<tier_1_hosts>`.
-#. Download and install `Visual Studio Community Edition. <https://visualstudio.microsoft.com/downloads/>`__
-#. Finally download the `MozillaBuild Package. <https://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-Latest.exe>`__ Installation directory should be:
+#. Download the `MozillaBuild Package. <https://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-Latest.exe>`__ Installation directory should be:
 
     .. code-block:: shell
 
