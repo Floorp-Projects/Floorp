@@ -203,6 +203,8 @@
     <string name="browser_menu_library">Biblioteca</string>
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">Per visur grond</string>
+    <!-- Browser menu button that reopens a private tab as a regular tab -->
+    <string name="browser_menu_open_in_regular_tab">Avrir en in tab normal</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">Agiuntar al visur da partenza</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
@@ -454,16 +456,20 @@
     <string name="preferences_https_only_title">Modus mo HTTPS</string>
 
     <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
-    <string name="preferences_cookie_banner_reduction">Reducziun da bandieras da cookies</string>
+    <string name="preferences_cookie_banner_reduction" moz:RemovedIn="121" tools:ignore="UnusedResources">Reducziun da bandieras da cookies</string>
+    <!-- Label for cookie banner section in quick settings panel. -->
+    <string name="cookie_banner_blocker">Bloccada da bandieras da cookies</string>
+    <!-- Preference for removing cookie/consent banners from sites automatically in private mode. See reduce_cookie_banner_summary for additional context. -->
+    <string name="preferences_cookie_banner_reduction_private_mode">Bloccada da bandieras da cookies en il modus privat</string>
     <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
-    <string name="reduce_cookie_banner_option">Reducir las bandieras da cookies</string>
+    <string name="reduce_cookie_banner_option" moz:RemovedIn="121" tools:ignore="UnusedResources">Reducir las bandieras da cookies</string>
     <!-- Summary of cookie banner handling preference if the setting disabled is set to off -->
-    <string name="reduce_cookie_banner_option_off">Deactivà</string>
+    <string name="reduce_cookie_banner_option_off" moz:RemovedIn="121" tools:ignore="UnusedResources">Deactivà</string>
     <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
-    <string name="reduce_cookie_banner_option_on">Activà</string>
+    <string name="reduce_cookie_banner_option_on" moz:RemovedIn="121" tools:ignore="UnusedResources">Activà</string>
 
     <!-- Summary for the preference for rejecting all cookies whenever possible. The first parameter is the application name -->
-    <string name="reduce_cookie_banner_summary_1">%1$s emprova da refusar automaticamain dumondas da deponer cookies cura ch\'ina bandiera da cookies sa mussa.</string>
+    <string name="reduce_cookie_banner_summary_1" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s emprova da refusar automaticamain dumondas da deponer cookies cura ch\'ina bandiera da cookies sa mussa.</string>
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">Deactivà per questa website</string>
     <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
@@ -482,15 +488,23 @@
     <string name="reduce_cookie_banner_unsupported_site">Questa website na vegn actualmain betg sustegnida</string>
 
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
-    <string name="reduce_cookie_banner_details_panel_title_on_for_site">Activar la reducziun da bandieras da cookies per %1$s?</string>
+    <string name="reduce_cookie_banner_details_panel_title_on_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">Activar la reducziun da bandieras da cookies per %1$s?</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_on_for_site_1">Activar la bloccada da bandieras da cookies per %1$s?</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
-    <string name="reduce_cookie_banner_details_panel_title_off_for_site">Deactivar la reducziun da bandieras da cookies per %1$s?</string>
+    <string name="reduce_cookie_banner_details_panel_title_off_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">Deactivar la reducziun da bandieras da cookies per %1$s?</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_off_for_site_1">Deactivar la bloccada da bandieras da cookies per %1$s?</string>
     <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name-->
     <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request_2">%1$s na po betg refusar automaticamain dumondas da deponer cookies da questa website. Ti pos trametter ina dumonda da sustegnair questa website en avegnir.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s vegn a stizzar ils cookies da questa website ed actualisar la pagina. Cun stizzar tut ils cookies vegns ti eventualmain deconnectà da websites ed i po dar che chanasters da cumpras vegnan svidads.</string>
+    <string name="reduce_cookie_banner_details_panel_description_off_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s vegn a stizzar ils cookies da questa website ed actualisar la pagina. Cun stizzar tut ils cookies vegns ti eventualmain deconnectà da websites ed i po dar che chanasters da cumpras vegnan svidads.</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_off_for_site_1">Suenter la deactivaziun vegn %1$s ad allontanar ils cookies e rechargiar questa website. Quai po ta deconnectar da la website e svidar eventuals chanasters da cumpras.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_on_for_site_2">%1$s emprova da refusar automaticamain tut las dumondas da deponer cookies da paginas sustegnidas.</string>
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site_2" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s emprova da refusar automaticamain tut las dumondas da deponer cookies da paginas sustegnidas.</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site_3">Activescha la bloccada e %1$s vegn ad empruvar da refusar automaticamain tut las bandieras da cookies sin questa website.</string>
     <!-- Title text for the cookie banner re-engagement dialog. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_dialog_title" moz:RemovedIn="121" tools:ignore="UnusedResources">Permetter a %1$s da refusar bandieras da cookies?</string>
     <!-- Body text for the cookie banner re-engagement dialog use. The first parameter is the application name. -->
@@ -2207,6 +2221,8 @@
     <string name="review_quality_check_info_learn_more">Ulteriuras infurmaziuns davart %s.</string>
     <!-- Clickable text that links to review quality check SuMo page. First parameter is the Fakespot product name. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
     <string name="review_quality_check_info_learn_more_link" moz:RemovedIn="121" tools:ignore="UnusedResources">co %s da Mozilla determinescha la qualitad da las recensiuns</string>
+    <!-- Clickable text that links to review quality check SuMo page. First parameter is the Fakespot product name. -->
+    <string name="review_quality_check_info_learn_more_link_2">co %s determinescha la qualitad da las recensiuns</string>
     <!-- Text for title of settings section. -->
     <string name="review_quality_check_settings_title">Parameters</string>
     <!-- Text for label for switch preference to show recommended products from review quality check settings section. -->
@@ -2291,10 +2307,16 @@
     <string name="review_quality_check_contextual_onboarding_learn_more_link">Ulteriuras infurmaziuns</string>
     <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. First parameter is the Fakespot product name. Following parameters are for clickable texts defined in review_quality_check_contextual_onboarding_privacy_policy and review_quality_check_contextual_onboarding_terms_use. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
     <string name="review_quality_check_contextual_onboarding_caption" moz:RemovedIn="121" tools:ignore="UnusedResources">Cun tscherner «Gea, empruvar» acceptas ti las %2$s e las %3$s da %1$s da Mozilla.</string>
+    <!-- Caption text to be displayed in review quality check contextual onboarding card above the opt-in button. Parameter is the Fakespot product name. After the colon, what appears are two links, each on their own line. The first link is to a Privacy policy (review_quality_check_contextual_onboarding_privacy_policy_2). The second link is to Terms of use (review_quality_check_contextual_onboarding_terms_use_2). -->
+    <string name="review_quality_check_contextual_onboarding_caption_2">Cun tscherner «Gea, empruvar», acceptas ti ils suandants puncts da %1$s:</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
     <string name="review_quality_check_contextual_onboarding_privacy_policy" moz:RemovedIn="121" tools:ignore="UnusedResources">directivas per la protecziun da datas</string>
+    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
+    <string name="review_quality_check_contextual_onboarding_privacy_policy_2">Directivas per la protecziun da datas</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
     <string name="review_quality_check_contextual_onboarding_terms_use" moz:RemovedIn="121" tools:ignore="UnusedResources">cundiziuns d\'utilisaziun</string>
+    <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot terms of use. -->
+    <string name="review_quality_check_contextual_onboarding_terms_use_2">Cundiziuns d\'utilisaziun</string>
     <!-- Text for opt-in button from the review quality check contextual onboarding card. -->
     <string name="review_quality_check_contextual_onboarding_primary_button_text">Gea, empruvar</string>
     <!-- Text for opt-out button from the review quality check contextual onboarding card. -->
@@ -2333,8 +2355,12 @@
     <!-- Accessibility services actions labels. These will be appended to accessibility actions like "Double tap to.." but not by or applications but by services like Talkback. -->
     <!-- Action label for elements that can be collapsed if interacting with them. Talkback will append this to say "Double tap to collapse". -->
     <string name="a11y_action_label_collapse">reducir</string>
+    <!-- Current state for elements that can be collapsed if interacting with them. Talkback will dictate this after a state change. -->
+    <string name="a11y_state_label_collapsed">reducì</string>
     <!-- Action label for elements that can be expanded if interacting with them. Talkback will append this to say "Double tap to expand". -->
     <string name="a11y_action_label_expand">extender</string>
+    <!-- Current state for elements that can be expanded if interacting with them. Talkback will dictate this after a state change. -->
+    <string name="a11y_state_label_expanded">expandì</string>
     <!-- Action label for links to a website containing documentation about a wallpaper collection. Talkback will append this to say "Double tap to open link to learn more about this collection". -->
     <string name="a11y_action_label_wallpaper_collection_learn_more">avrir la colliaziun per vegnir a savair dapli davart questa collecziun</string>
     <!-- Action label for links that point to an article. Talkback will append this to say "Double tap to read the article". -->

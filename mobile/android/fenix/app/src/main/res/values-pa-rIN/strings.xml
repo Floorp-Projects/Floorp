@@ -468,17 +468,21 @@
     <string name="preferences_https_only_title">ਸਿਰਫ਼-HTTPS ਢੰਗ</string>
 
     <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
-    <string name="preferences_cookie_banner_reduction">ਕੂਕੀਜ਼ ਬੈਨਰ ਘਟਾਉਣਾ</string>
+    <string name="preferences_cookie_banner_reduction" moz:RemovedIn="121" tools:ignore="UnusedResources">ਕੂਕੀਜ਼ ਬੈਨਰ ਘਟਾਉਣਾ</string>
+    <!-- Label for cookie banner section in quick settings panel. -->
+    <string name="cookie_banner_blocker">ਕੂਕੀ ਬੈਨਰ ਰੋਕੂ</string>
+    <!-- Preference for removing cookie/consent banners from sites automatically in private mode. See reduce_cookie_banner_summary for additional context. -->
+    <string name="preferences_cookie_banner_reduction_private_mode">ਪ੍ਰਾਈਵੇਟ ਬਰਾਊਜ਼ਿੰਗ ਵਿੱਚ ਕੂਕੀ ਬੈਨਰ ਰੋਕੂ</string>
     <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
-    <string name="reduce_cookie_banner_option">ਕੂਕੀਜ਼ ਬੈਨਰ ਘਟਾਓ</string>
+    <string name="reduce_cookie_banner_option" moz:RemovedIn="121" tools:ignore="UnusedResources">ਕੂਕੀਜ਼ ਬੈਨਰ ਘਟਾਓ</string>
 
     <!-- Summary of cookie banner handling preference if the setting disabled is set to off -->
-    <string name="reduce_cookie_banner_option_off">ਬੰਦ</string>
+    <string name="reduce_cookie_banner_option_off" moz:RemovedIn="121" tools:ignore="UnusedResources">ਬੰਦ</string>
     <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
-    <string name="reduce_cookie_banner_option_on">ਚਾਲੂ</string>
+    <string name="reduce_cookie_banner_option_on" moz:RemovedIn="121" tools:ignore="UnusedResources">ਚਾਲੂ</string>
 
     <!-- Summary for the preference for rejecting all cookies whenever possible. The first parameter is the application name -->
-    <string name="reduce_cookie_banner_summary_1">%1$s ਕੂਕੀ ਬੈਨਰਾਂ ਤੋਂ ਕੂਕੀ ਬੇਨਤੀਆਂ ਨੂੰ ਆਪਣੇ-ਆਪਹੀ ਰੱਦ ਕਰਨ ਦੀ ਕੋਸ਼ਿਸ਼ ਕਰਦਾ ਹੈ।</string>
+    <string name="reduce_cookie_banner_summary_1" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s ਕੂਕੀ ਬੈਨਰਾਂ ਤੋਂ ਕੂਕੀ ਬੇਨਤੀਆਂ ਨੂੰ ਆਪਣੇ-ਆਪਹੀ ਰੱਦ ਕਰਨ ਦੀ ਕੋਸ਼ਿਸ਼ ਕਰਦਾ ਹੈ।</string>
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">ਇਸ ਸਾਈਟ ਲਈ ਬੰਦ</string>
     <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
@@ -497,17 +501,25 @@
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_unsupported_site">ਸਾਈਟ ਇਸ ਵੇਲੇ ਸਹਾਇਕ ਨਹੀਂ ਹੈ</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
-    <string name="reduce_cookie_banner_details_panel_title_on_for_site">%1$s ਲਈ ਕੁਕੀ ਬੈਨਰ ਘਟਾਉਣੇ ਚਾਲੂ ਕਰਨੇ ਹਨ?</string>
+    <string name="reduce_cookie_banner_details_panel_title_on_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s ਲਈ ਕੁਕੀ ਬੈਨਰ ਘਟਾਉਣੇ ਚਾਲੂ ਕਰਨੇ ਹਨ?</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_on_for_site_1">ਕੀ %1$s ਲਈ ਕੂਕੀ ਬੈਨਰ ਰੋਕੂ ਚਾਲੂ ਕਰਨਾ ਹੈ?</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
-    <string name="reduce_cookie_banner_details_panel_title_off_for_site">%1$s ਲਈ ਕੁਕੀ ਬੈਨਰ ਘਟਾਉਣੇ ਬੰਦ ਕਰਨੇ ਹਨ?</string>
+    <string name="reduce_cookie_banner_details_panel_title_off_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s ਲਈ ਕੁਕੀ ਬੈਨਰ ਘਟਾਉਣੇ ਬੰਦ ਕਰਨੇ ਹਨ?</string>
 
+    <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_off_for_site_1">ਕੀ %1$s ਲਈ ਕੂਕੀ ਬੈਨਰ ਰੋਕੂ ਬੰਦ ਕਰਨਾ ਹੈ?</string>
     <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name-->
     <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request_2">%1$s ਇਸ ਸਾਈਟ ਲਈ ਆਪਣੇ-ਆਪ ਕੂਕੀ ਬੇਨਤੀਆਂ ਨੂੰ ਰੱਦ ਨਹੀਂ ਕਰ ਸਕਦਾ ਹੈ। ਤੁਸੀਂ ਭਵਿੱਖ ਵਿੱਚ ਇਸ ਸਾਈਟ ਵਾਸਤੇ ਸਹਾਇਤਾ ਲਈ ਬੇਨਤੀ ਕਰ ਸਕਦੇ ਹੋ।</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s ਇਸ ਸਾਈਟ ਦੀਆਂ ਕੁਕੀਆਂ ਨੂੰ ਸਾਫ਼ ਕਰ ਕੇ ਵਰਕੇ ਨੂੰ ਸੱਜਰਾ ਕਰ ਦੇਵੇਗਾ। ਸਾਰੀਆਂ ਕੁਕੀਆਂ ਨੂੰ ਸਾਫ਼ ਕਰਨ ਨਾਲ ਤੁਸੀਂ ਸਾਈਨ ਆਊਟ ਹੋ ਸਕਦੇ ਹੋ ਜਾਂ ਖਰੀਦਦਾਰੀ ਵਾਲੀ ਟੋਕਰੀ ਖਾਲੀ ਹੋ ਸਕਦੀ ਹੈ।</string>
+    <string name="reduce_cookie_banner_details_panel_description_off_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s ਇਸ ਸਾਈਟ ਦੀਆਂ ਕੁਕੀਆਂ ਨੂੰ ਸਾਫ਼ ਕਰ ਕੇ ਵਰਕੇ ਨੂੰ ਸੱਜਰਾ ਕਰ ਦੇਵੇਗਾ। ਸਾਰੀਆਂ ਕੁਕੀਆਂ ਨੂੰ ਸਾਫ਼ ਕਰਨ ਨਾਲ ਤੁਸੀਂ ਸਾਈਨ ਆਊਟ ਹੋ ਸਕਦੇ ਹੋ ਜਾਂ ਖਰੀਦਦਾਰੀ ਵਾਲੀ ਟੋਕਰੀ ਖਾਲੀ ਹੋ ਸਕਦੀ ਹੈ।</string>
 
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_off_for_site_1">ਬੰਦ ਕਰਨ ਨਾਲ %1$s ਇਸ ਸਾਈਟ ਲਈ ਕੂਕੀਜ਼ ਮਿਟਾ ਕੇ ਇਸ ਨੂੰ ਮੁੜ ਲੋਡ ਕਰੇਗਾ। ਇਹ ਤੁਹਾਨੂੰ ਸਾਈਟ ਆਉਟ ਜਾਂ ਤੁਹਾਡੀ ਖਰੀਦਦਾਰੀ ਕਾਰਟਾਂ ਨੂੰ ਖਾਲੀ ਕਰੇਗਾ।</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_on_for_site_2">%1$s ਸਹਾਇਤਾ ਪ੍ਰਾਪਤ ਸਾਈਟਾਂ ਉੱਤੇ ਸਾਰੀਆਂ ਕੂਕੀ ਬੇਨਤੀਆਂ ਨੂੰ ਆਪਣੇ-ਆਪ ਰੱਦ ਕਰਨ ਦੀ ਕੋਸ਼ਿਸ਼ ਕਰਦਾ ਹੈ।</string>
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site_2" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s ਸਹਾਇਤਾ ਪ੍ਰਾਪਤ ਸਾਈਟਾਂ ਉੱਤੇ ਸਾਰੀਆਂ ਕੂਕੀ ਬੇਨਤੀਆਂ ਨੂੰ ਆਪਣੇ-ਆਪ ਰੱਦ ਕਰਨ ਦੀ ਕੋਸ਼ਿਸ਼ ਕਰਦਾ ਹੈ।</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site_3">ਚਾਲੂ ਕਰੋ ਅਤੇ %1$s ਇਸ ਸਾਈਟ ਵਾਸਤੇ ਕੂਕੀ ਬੈਨਰ ਨੂੰ ਆਪਣੇ-ਆਪ ਇਨਕਾਰ ਕਰਨ ਦੀ ਕੋਸ਼ਿਸ਼ ਕਰੇਗਾ।</string>
     <!-- Title text for the cookie banner re-engagement dialog. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_dialog_title" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s ਨੂੰ ਕੂਕੀ ਬੈਨਰ ਰੱਦ ਕਰਨ ਦੀ ਇਜਾਜ਼ਤ ਦੇਣੀ ਹੈ?</string>
     <!-- Body text for the cookie banner re-engagement dialog use. The first parameter is the application name. -->

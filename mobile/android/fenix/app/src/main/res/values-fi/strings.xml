@@ -343,6 +343,8 @@
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_description_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Firefox asettaa ihmiset voittojen edelle ja suojaa yksityisyyttäsi estämällä sivustojen väliset seuraimet.\n\nLisätietoja on tietosuojaselosteessamme.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_2">Voittoa tavoittelemattoman tahon tukema selaimemme auttaa estämään yrityksiä seuraamasta sinua salaa verkossa.\n\nLisätietoja on tietosuojakäytännössämme.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
     <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">tietosuojaselosteessamme</string>
@@ -465,16 +467,20 @@
     <string name="preferences_https_only_title">Vain HTTPS -tila</string>
 
     <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
-    <string name="preferences_cookie_banner_reduction">Evästeilmoitusten vähennys</string>
+    <string name="preferences_cookie_banner_reduction" moz:RemovedIn="121" tools:ignore="UnusedResources">Evästeilmoitusten vähennys</string>
+    <!-- Label for cookie banner section in quick settings panel. -->
+    <string name="cookie_banner_blocker">Evästeilmoitusten esto</string>
+    <!-- Preference for removing cookie/consent banners from sites automatically in private mode. See reduce_cookie_banner_summary for additional context. -->
+    <string name="preferences_cookie_banner_reduction_private_mode">Evästeilmoitusten esto yksityisessä selaamisessa</string>
     <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
-    <string name="reduce_cookie_banner_option">Vähennä evästeisiin liittyviä ilmoituksia</string>
+    <string name="reduce_cookie_banner_option" moz:RemovedIn="121" tools:ignore="UnusedResources">Vähennä evästeisiin liittyviä ilmoituksia</string>
     <!-- Summary of cookie banner handling preference if the setting disabled is set to off -->
-    <string name="reduce_cookie_banner_option_off">Pois</string>
+    <string name="reduce_cookie_banner_option_off" moz:RemovedIn="121" tools:ignore="UnusedResources">Pois</string>
     <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
-    <string name="reduce_cookie_banner_option_on">Päällä</string>
+    <string name="reduce_cookie_banner_option_on" moz:RemovedIn="121" tools:ignore="UnusedResources">Päällä</string>
 
     <!-- Summary for the preference for rejecting all cookies whenever possible. The first parameter is the application name -->
-    <string name="reduce_cookie_banner_summary_1">%1$s yrittää hylätä automaattisesti evästeilmoituksissa olevat evästepyynnöt.</string>
+    <string name="reduce_cookie_banner_summary_1" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s yrittää hylätä automaattisesti evästeilmoituksissa olevat evästepyynnöt.</string>
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">Ei käytössä tällä sivustolla</string>
     <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
@@ -492,16 +498,24 @@
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_unsupported_site">Sivusto ei ole tuettu tällä hetkellä</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
-    <string name="reduce_cookie_banner_details_panel_title_on_for_site">Haluatko ottaa evästeilmoitusten vähennystoiminnon käyttöön sivustolla %1$s?</string>
+    <string name="reduce_cookie_banner_details_panel_title_on_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">Haluatko ottaa evästeilmoitusten vähennystoiminnon käyttöön sivustolla %1$s?</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_on_for_site_1">Haluatko ottaa evästeilmoitusten eston käyttöön sivustolla %1$s?</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
-    <string name="reduce_cookie_banner_details_panel_title_off_for_site">Haluatko poistaa evästeilmoitusten vähennystoiminnon käytöstä sivustolla %1$s?</string>
+    <string name="reduce_cookie_banner_details_panel_title_off_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">Haluatko poistaa evästeilmoitusten vähennystoiminnon käytöstä sivustolla %1$s?</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_off_for_site_1">Haluatko poistaa evästeilmoitusten eston käytöstä sivustolla %1$s?</string>
     <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name-->
     <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request_2">%1$s ei voi automaattisesti hylätä tämän sivuston evästepyyntöjä. Voit lähettää pyynnön ja pyytää tukea tälle sivustolle tulevaisuudessa.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s poistaa tämän sivuston evästeet ja päivittää sivun. Kaikkien evästeiden poistaminen saattaa kirjata sinut ulos tai tyhjentää ostoskorit.</string>
+    <string name="reduce_cookie_banner_details_panel_description_off_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s poistaa tämän sivuston evästeet ja päivittää sivun. Kaikkien evästeiden poistaminen saattaa kirjata sinut ulos tai tyhjentää ostoskorit.</string>
 
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_off_for_site_1">Poista käytöstä ja %1$s poistaa evästeet sekä lataa tämän sivuston uudelleen. Tämä voi kirjata sinut ulos tai tyhjentää ostoskorin.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_on_for_site_2">%1$s yrittää hylätä kaikki evästepyynnöt automaattisesti tuetuilla sivustoilla.</string>
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site_2" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s yrittää hylätä kaikki evästepyynnöt automaattisesti tuetuilla sivustoilla.</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site_3">Ota käyttöön ja %1$s yrittää automaattisesti hylätä evästeilmoitukset tällä sivustolla.</string>
     <!-- Title text for the cookie banner re-engagement dialog. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_dialog_title" moz:RemovedIn="121" tools:ignore="UnusedResources">Saako %1$s vastata evästepyyntöihin kielteisesti?</string>
     <!-- Body text for the cookie banner re-engagement dialog use. The first parameter is the application name. -->
@@ -2228,10 +2242,16 @@
     <string name="review_quality_check_settings_title">Asetukset</string>
     <!-- Text for label for switch preference to show recommended products from review quality check settings section. -->
     <string name="review_quality_check_settings_recommended_products">Näytä mainoksia arvostelujen tarkistimessa</string>
+    <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
+    <string name="review_quality_check_settings_recommended_products_description" moz:RemovedIn="120" tools:ignore="UnusedResources">Näet ajoittain asiaan liittyvien tuotteiden mainoksia. Kaikkien mainosten on täytettävä arvosteluille asettamamme laatustandardit. %s</string>
+    <!-- Description for switch preference to show recommended products from review quality check settings section. First parameter is for clickable text defined in review_quality_check_settings_recommended_products_learn_more.-->
+    <string name="review_quality_check_settings_recommended_products_description_2" tools:ignore="UnusedResources">Näet ajoittain asiaan liittyvien tuotteiden mainoksia. Mainostamme vain luotettavia arvosteluja saaneita tuotteita. %s</string>
     <!-- Clickable text that links to review quality check recommended products support article. -->
     <string name="review_quality_check_settings_recommended_products_learn_more" tools:ignore="UnusedResources">Lue lisää</string>
     <!-- Text for turning sidebar off button from review quality check settings section. -->
     <string name="review_quality_check_settings_turn_off">Poista arvostelujen tarkistus käytöstä</string>
+    <!-- Text for title of recommended product section. This is displayed above a product image, suggested as an alternative to the product reviewed. -->
+    <string name="review_quality_check_ad_title" tools:ignore="UnusedResources">Lisää harkittavaa</string>
     <!-- Caption for recommended product section indicating this is an ad by Fakespot. First parameter is the Fakespot product name. -->
     <string name="review_quality_check_ad_caption" tools:ignore="UnusedResources">Mainostaja %s</string>
     <!-- Caption for review quality check panel. First parameter is for clickable text defined in review_quality_check_powered_by_link. -->

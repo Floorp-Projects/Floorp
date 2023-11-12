@@ -84,6 +84,8 @@
     <string name="mozac_feature_addons_learn_more">Leuwih jéntré ngeunaan idin</string>
     <!-- The rating of the add-on. -->
     <string name="mozac_feature_addons_rating">Peunteun</string>
+    <!-- A link that points to the detail page of the add-on. -->
+    <string name="mozac_feature_addons_more_info_link">Leuwih lengkep ngeunaan ieu émboh</string>
     <!-- The settings of the add-on. -->
     <string name="mozac_feature_addons_settings">Setélan</string>
     <!-- Indicates the add-on is enabled. -->
@@ -120,6 +122,8 @@
     <string name="mozac_feature_addons_optional_permissions_dialog_title">%1$s ménta idin tambahan.</string>
     <!-- This is the subtitle of a dialog that asks the users if they want to install or not an add-on, the subtitle lists the permissions that this add-on requires, the permissions will dynamically be listed after the ":". -->
     <string name="mozac_feature_addons_permissions_dialog_subtitle">Butuh idin anjeun pikeun:</string>
+    <!-- This is the subtitle of a dialog that asks the users to grant optional permissions, the subtitle lists the permissions that this add-on requests, the permissions will dynamically be listed after the ":". -->
+    <string name="mozac_feature_addons_optional_permissions_dialog_subtitle">Kahayangna:</string>
     <!-- This is a button to add (install) an add-on . -->
     <string name="mozac_feature_addons_permissions_dialog_add">Nambah</string>
     <!-- This is a button to allow the optional permissions requested by an add-on . -->

@@ -109,34 +109,77 @@
     <string name="tcp_cfr_learn_more">ئومۇميۈزلۈك Cookie دىن قوغداش ھەققىدىكى بىلدۈرگۈ</string>
 
 
+    <!-- Private browsing erase action "contextual feature recommendation" (CFR) -->
+    <!-- Text for the message displayed in the contextual feature recommendation popup promoting the erase private browsing feature. -->
+    <string name="erase_action_cfr_message">بۇ جاي چېكىلسە يېڭى شەخسىي سۆزلەشكۈنى باشلايدۇ. تارىخ، cookies-دەك ھەممە ئۇچۇرلىرىڭىزنى ئۆچۈرىدۇ.</string>
+
+
+    <!-- Text for the info dialog when camera permissions have been denied but user tries to access a camera feature. -->
+    <string name="camera_permissions_needed_message">كامېرا ئىجازىتى زۆرۈر. ئاندىرويىد تەڭشىكىگە يۆتكىلىپ، ئىجازەتنى چېكىپ، ئاندىن يول قوينى چېكىڭ.</string>
     <!-- Text for the positive action button to go to Android Settings to grant permissions. -->
     <string name="camera_permissions_needed_positive_button_text">تەڭشەككە يۆتكەل</string>
     <!-- Text for the negative action button to dismiss the dialog. -->
     <string name="camera_permissions_needed_negative_button_text">بولدىلا</string>
 
+    <!-- Text for the banner message to tell users about our auto close feature. -->
+    <string name="tab_tray_close_tabs_banner_message">ئۆتكەن بىر كۈن، ھەپتە ياكى ئايدا كۆرمىگەن ئېچىلغان بەتكۈچلەرنى ئاپتوماتىك يېپىشنى تەڭشەيدۇ.</string>
     <!-- Text for the positive action button to go to Settings for auto close tabs. -->
     <string name="tab_tray_close_tabs_banner_positive_button_text">كۆرۈنۈش تاللانمىلار</string>
     <!-- Text for the negative action button to dismiss the Close Tabs Banner. -->
     <string name="tab_tray_close_tabs_banner_negative_button_text">بولدىلا</string>
+    <!-- Text for the banner message to tell users about our inactive tabs feature. -->
+    <string name="tab_tray_inactive_onboarding_message">ئىككى ھەپتە كۆرمىگەن بەتكۈچلەر بۇ جايغا يۆتكىلىدۇ.</string>
+    <!-- Text for the action link to go to Settings for inactive tabs. -->
+    <string name="tab_tray_inactive_onboarding_button_text">تەڭشەكلەردىن تاقايدۇ</string>
+    <!-- Text for title for the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_auto_close_title">بىر ئايدىن كېيىن ئاپتوماتىك ياپامدۇ؟</string>
+    <!-- Text for the body for the auto-close dialog of the inactive tabs.
+        The first parameter is the name of the application.-->
+    <string name="tab_tray_inactive_auto_close_body_2">%1$s بىر ئايغىچە كۆرمىگەن بەتكۈچلەرنى ئاپتوماتىك ياپىدۇ.</string>
     <!-- Content description for close button in the auto-close dialog of the inactive tabs. -->
     <string name="tab_tray_inactive_auto_close_button_content_description">تاقاش</string>
+
+
+    <!-- Text for turn on auto close tabs button in the auto-close dialog of the inactive tabs. -->
+    <string name="tab_tray_inactive_turn_on_auto_close_button_2">ئاپتوماتىك ياپنى ئاچ</string>
 
 
     <!-- Home screen icons - Long press shortcuts -->
     <!-- Shortcut action to open new tab -->
     <string name="home_screen_shortcut_open_new_tab_2">يېڭى بەتكۈچ</string>
 
+    <!-- Shortcut action to open new private tab -->
+    <string name="home_screen_shortcut_open_new_private_tab_2">يېڭى شەخسىي بەتكۈچ</string>
+    <!-- Shortcut action to open Passwords screens -->
+    <string name="home_screen_shortcut_open_password_screen">ئىم تېزلەتمىسى</string>
+
+    <!-- Recent Tabs -->
+    <!-- Header text for jumping back into the recent tab in the home screen -->
+    <string name="recent_tabs_header">ئالدىنقى بەتكە قايت</string>
     <!-- Button text for showing all the tabs in the tabs tray -->
     <string name="recent_tabs_show_all">ھەممىنى كۆرسەت</string>
+    <!-- Content description for the button which navigates the user to show all recent tabs in the tabs tray. -->
+    <string name="recent_tabs_show_all_content_description_2">يېقىنقى ھەممە بەتكۈچنى كۆرسەت توپچە</string>
+    <!-- Text for button in synced tab card that opens synced tabs tray -->
+    <string name="recent_tabs_see_all_synced_tabs_button_text">قەدەمداشلانغان ھەممە بەتكۈچلەرنى كۆرسەت</string>
+    <!-- Accessibility description for device icon used for recent synced tab -->
+    <string name="recent_tabs_synced_device_icon_content_description">قەدەمداشلانغان ئۈسكۈنە</string>
     <!-- Text for the dropdown menu to remove a recent synced tab from the homescreen -->
     <string name="recent_synced_tab_menu_item_remove">چىقىرىۋەت</string>
     <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
          in the Recently visited section -->
     <string name="recent_tab_menu_item_remove">چىقىرىۋەت</string>
 
+    <!-- History Metadata -->
+    <!-- Header text for a section on the home screen that displays grouped highlights from the
+         user's browsing history, such as topics they have researched or explored on the web -->
+    <string name="history_metadata_header_2">يېقىندا زىيارەت قىلغان</string>
     <!-- Text for the menu button to remove a grouped highlight from the user's browsing history
          in the Recently visited section -->
     <string name="recently_visited_menu_item_remove">چىقىرىۋەت</string>
+
+    <!-- Content description for the button which navigates the user to show all of their history. -->
+    <string name="past_explorations_show_all_content_description_2">ئىلگىرىكى ئىزدىنىشلەرنىڭ ھەممىسىنى كۆرسەت</string>
 
     <!-- Browser Fragment -->
     <!-- Content description (not visible, for screen readers etc.): Navigate backward (browsing history) -->
@@ -155,10 +198,16 @@
     <string name="no_add_ons">بۇ يەردە ھېچقانداق قوشۇلما يوق</string>
     <!-- Browser menu button that sends a user to help articles -->
     <string name="browser_menu_help">ياردەم</string>
+    <!-- Browser menu button that sends a to a the what's new article -->
+    <string name="browser_menu_whats_new">نېمە يېڭىلىق بار</string>
     <!-- Browser menu button that opens the settings menu -->
     <string name="browser_menu_settings">تەڭشەك</string>
+    <!-- Browser menu button that opens a user's library -->
+    <string name="browser_menu_library">توپلام</string>
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">ئۈستەل يۈزى تور بېكىتى</string>
+    <!-- Browser menu button that reopens a private tab as a regular tab -->
+    <string name="browser_menu_open_in_regular_tab">ئادەتتىكى بەتكۈچتە ئاچ</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">باش ئېكرانغا قوش</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
@@ -174,6 +223,12 @@
     <!-- Browser menu button shown in custom tabs that opens the current tab in Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="browser_menu_open_in_fenix">%1$s دا ئاچ</string>
+    <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_powered_by">تەمىنلىگۈچى %1$s</string>
+    <!-- Browser menu text shown in custom tabs to indicate this is a Fenix tab
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="browser_menu_powered_by2">تەمىنلىگۈچى %1$s</string>
     <!-- Browser menu button to put the current page in reader mode -->
     <string name="browser_menu_read">ئوقۇرمەن كۆرۈنۈشى</string>
     <!-- Browser menu button content description to close reader mode and return the user to the regular browser -->
@@ -217,16 +272,99 @@
     <string name="search_suggestions_onboarding_allow_button">يول قوي</string>
     <!-- Button in the search suggestions onboarding that does not allow search suggestions in private sessions -->
     <string name="search_suggestions_onboarding_do_not_allow_button">رۇخسەت بەرمە</string>
+    <!-- Search suggestion onboarding hint title text -->
+    <string name="search_suggestions_onboarding_title">شەخسىي سۆزلىشىشتە ئىزدەش تەۋسىيەسىگە يول قويامدۇ؟</string>
+    <!-- Search suggestion onboarding hint description text, first parameter is the name of the app defined in app_name (for example: Fenix)-->
+    <string name="search_suggestions_onboarding_text">%s سىز ئادرېس بالداققا كىرگۈزگەن ھەممە نەرسىنى كۆڭۈلدىكى ئىزدەش موتورىغا ھەمبەھىرلەيدۇ.</string>
     <!-- Search engine suggestion title text. The first parameter is the name of the suggested engine-->
     <string name="search_engine_suggestions_title">ئىزدەش%s</string>
+    <!-- Search engine suggestion description text -->
+    <string name="search_engine_suggestions_description">ئادرېس بالداقتىن بىۋاسىتە ئىزدەيدۇ</string>
     <!-- Menu option in the search selector menu to open the search settings -->
     <string name="search_settings_menu_item">ئىزدەش تەڭشىكى</string>
 
+    <!-- Header text for the search selector menu -->
+    <string name="search_header_menu_item_2">بۇ قېتىمقى ئىزدەش:</string>
+    <!-- Content description (not visible, for screen readers etc.): Search engine icon. The first parameter is the search engine name (for example: DuckDuckGo). -->
+    <string name="search_engine_icon_content_description" tools:ignore="UnusedResources">%s ئىزدەش موتورى</string>
+
+    <!-- Home onboarding -->
+    <!-- Onboarding home screen popup dialog, shown on top of the Jump back in section. -->
+    <string name="onboarding_home_screen_jump_back_contextual_hint_2">خاسلاشتۇرۇلغان باش بېتىڭىز بىلەن تونۇشۇڭ. يېقىنقى بەتكۈچ، خەتكۈچ ۋە ئىزدەش نەتىجىسى بۇ يەردە كۆرۈنىدۇ.</string>
+    <!-- Home onboarding dialog welcome screen title text. -->
+    <string name="onboarding_home_welcome_title_2">تېخىمۇ خاسلاشتۇرۇلغان ئىنتېرنېتقا خۇش كەلدىڭىز</string>
+
+    <!-- Home onboarding dialog welcome screen description text. -->
+    <string name="onboarding_home_welcome_description">تېخىمۇ رەڭدار. شەخسىيەت تېخىمۇ بىخەتەر. كىشىلەرنىڭ مەنپەئەتتىن ئۈستۈنلۈكىگە ۋەدە بېرىدۇ.</string>
+    <!-- Home onboarding dialog sign into sync screen title text. -->
+    <string name="onboarding_home_sync_title_3">كۆپ ئېكران ئارا ئالمىشىش تېخىمۇ ئاسان</string>
+    <!-- Home onboarding dialog sign into sync screen description text. -->
+    <string name="onboarding_home_sync_description">باش بېتىڭىزدىن باشقا ئۈسكۈنىلىرىڭىزدىكى بەتكۈچلەرنى داۋاملاشتۇرۇپ زىيارەت قىلالايسىز.</string>
+    <!-- Text for the button to continue the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_get_started_button">باشلاڭ</string>
+    <!-- Text for the button to navigate to the sync sign in screen on the home onboarding dialog. -->
+    <string name="onboarding_home_sign_in_button">تىزىمغا كىرىڭ</string>
+    <!-- Text for the button to skip the onboarding on the home onboarding dialog. -->
+    <string name="onboarding_home_skip_button">ئاتلا</string>
+    <!-- Onboarding home screen sync popup dialog message, shown on top of Recent Synced Tabs in the Jump back in section. -->
+    <string name="sync_cfr_message">بەتكۈچلىرىڭىز قەدەمداشلىنىۋاتىدۇ! باشقا ئۈسكۈنىڭىزدە زىيارەتنى داۋاملاشتۇرالايسىز.</string>
+    <!-- Content description (not visible, for screen readers etc.): Close button for the home onboarding dialog -->
+    <string name="onboarding_home_content_description_close_button">تاقاش</string>
+
+    <!-- Notification pre-permission dialog -->
+    <!-- Enable notification pre permission dialog title
+        The first parameter is the name of the app defined in app_name (for example: Fenix) -->
+    <string name="onboarding_home_enable_notifications_title">ئۇقتۇرۇشلار %s بىلەن تېخىمۇ كۆپ ئىشلارنى قىلىشىڭىزغا ياردەم بېرىدۇ</string>
+    <!-- Text for the button to request notification permission on the device -->
+    <string name="onboarding_home_enable_notifications_positive_button">داۋاملاشتۇر</string>
+    <!-- Text for the button to not request notification permission on the device and dismiss the dialog -->
+    <string name="onboarding_home_enable_notifications_negative_button">ھازىر ئەمەس</string>
+
+    <!-- Juno first user onboarding flow experiment, strings are marked unused as they are only referenced by Nimbus experiments. -->
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_default_browser_title_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Firefox نى ئاساسىي تور كۆرگۈڭىزگە ئايلاندۇرۇڭ</string>
+    <!-- Title for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_title_nimbus_2">بىخەتەرلىكىڭىزنى ساقلاشنى ياخشى كۆرىمىز</string>
+    <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
+    This is part of the string with the key "juno_onboarding_default_browser_description". -->
+    <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">شەخسىيەت ئۇقتۇرۇشى</string>
+    <!-- Text for the button to set firefox as default browser on the device -->
+    <string name="juno_onboarding_default_browser_positive_button" tools:ignore="UnusedResources">كۆڭۈلدىكى توركۆرگۈ قىلىپ تەڭشە</string>
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_default_browser_negative_button" tools:ignore="UnusedResources">ھازىر ئەمەس</string>
+    <!-- Title for sign in to sync screen. -->
+    <string name="juno_onboarding_sign_in_title" moz:removedIn="120" tools:ignore="UnusedResources">تېلېفوندىن يان كومپيۇتېر ئارىسىدا تېز ئالماشتۇرىدۇ</string>
+    <!-- Title for sign in to sync screen. -->
+    <string name="juno_onboarding_sign_in_title_2">ئۈسكۈنىلەر ئارا ئالماشتۇرغاندا شىفىرلىنىدۇ</string>
+    <!-- Description for sign in to sync screen. -->
+    <string name="juno_onboarding_sign_in_description" moz:removedIn="120" tools:ignore="UnusedResources">باشقا ئۈسكۈنىلىرىڭىزدىكى بەتكۈچ ۋە ئىملارنى قەدەمداشلاپ، كەلگەن جايدىن داۋاملاشتۇرالايسىز.</string>
+    <!-- Text for the button to sign in to sync on the device -->
+    <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">تىزىمغا كىرىڭ</string>
+    <!-- Text for the button dismiss the screen and move on with the flow -->
+    <string name="juno_onboarding_sign_in_negative_button" tools:ignore="UnusedResources">ھازىر ئەمەس</string>
+    <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_enable_notifications_title_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">ئۇقتۇرۇشلار Firefox بىلەن تېخىمۇ كۆپ ئىشلارنى قىلىشىڭىزغا ياردەم بېرىدۇ</string>
+    <!-- Title for enable notification permission screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_enable_notifications_title_nimbus_2">ئۇقتۇرۇشلار Firefox ئارقىلىق تېخىمۇ بىخەتەر بولۇشىڭىزغا ياردەم بېرىدۇ</string>
+    <!-- Text for the button to request notification permission on the device -->
+    <string name="juno_onboarding_enable_notifications_positive_button" tools:ignore="UnusedResources">ئۇقتۇرۇشنى ئاچ</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_enable_notifications_negative_button" tools:ignore="UnusedResources">ھازىر ئەمەس</string>
+    <!-- Title for add search widget screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_add_search_widget_title" tools:ignore="UnusedResources">Firefox ئىزدەش ئەپچەنى سىناڭ</string>
+    <!-- Text for the button to add search widget on the device used by Nimbus experiments. Nimbus experiments do not support string placeholders.
+        Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_add_search_widget_positive_button" tools:ignore="UnusedResources">Firefox ئەپچە قوش</string>
     <!-- Text for the button to dismiss the screen and move on with the flow -->
     <string name="juno_onboarding_add_search_widget_negative_button" tools:ignore="UnusedResources">ھازىر ئەمەس</string>
 
+    <!-- Search Widget -->
+    <!-- Content description for searching with a widget. The first parameter is the name of the application.-->
+    <string name="search_widget_content_description_2">يېڭى %1$s بەتكۈچىنى ئاچ</string>
     <!-- Text preview for smaller sized widgets -->
     <string name="search_widget_text_short">ئىزدەش</string>
     <!-- Text preview for larger sized widgets -->
@@ -241,53 +379,392 @@
     <string name="preferences_category_general">ئادەتتىكى</string>
     <!-- Preference category for all links about Fenix -->
     <string name="preferences_category_about">ھەققىدە</string>
+    <!-- Preference category for settings related to changing the default search engine -->
+    <string name="preferences_category_select_default_search_engine">بىرى تاللىنىدۇ</string>
+    <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_manage_search_shortcuts" moz:removedIn="120" tools:ignore="UnusedResources">ئىزدەش قىسقا يولى باشقۇرۇش</string>
+    <!-- Preference for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_manage_search_shortcuts_2">باشقا ئىزدەش موتورلىرىنى باشقۇرۇش</string>
+    <!-- Summary for preference for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_manage_search_shortcuts_summary">ئىزدەش تىزىملىكىدە كۆرۈنىدىغان موتورلارنى تەھرىرلەيدۇ</string>
+    <!-- Preference category for settings related to managing search shortcuts for the quick search menu -->
+    <string name="preferences_category_engines_in_search_menu">ئىزدەش تىزىملىكىدە كۆرۈنىدىغان موتورلار</string>
+    <!-- Preference for settings related to changing the default search engine -->
+    <string name="preferences_default_search_engine">كۆڭۈلدىكى ئىزدەش موتورى</string>
     <!-- Preference for settings related to Search -->
     <string name="preferences_search">ئىزدەش</string>
+    <!-- Preference for settings related to Search engines -->
+    <string name="preferences_search_engines">ئىزدەش موتورى</string>
+    <!-- Preference for settings related to Search engines suggestions-->
+    <string name="preferences_search_engines_suggestions">ئىزدەش موتورىنىڭ تەكلىپلىرى</string>
     <!-- Preference for settings related to Search address bar -->
     <string name="preferences_search_address_bar" moz:removedIn="120" tools:ignore="UnusedResources">ئادرېس ستونى</string>
+    <!-- Preference Category for settings related to Search address bar -->
+    <string name="preferences_settings_address_bar">ئادرېس بالداق مايىللىقى</string>
+    <!-- Preference Category for settings to Firefox Suggest -->
+    <string name="preference_search_address_bar_fx_suggest">ئادرېس بالدىقى - Firefox تەكلىپى</string>
+    <!-- Preference link to Learn more about Firefox Suggest -->
+    <string name="preference_search_learn_about_fx_suggest">Firefox تەكلىپى ھەققىدىكى تەپسىلاتلار</string>
+    <!-- Preference link to rating Fenix on the Play Store -->
+    <string name="preferences_rate">Google Play دىكى باھا</string>
     <!-- Preference linking to about page for Fenix
         The first parameter is the name of the app defined in app_name (for example: Fenix) -->
     <string name="preferences_about">ھەققىدە %1$s</string>
 
+    <!-- Preference for settings related to changing the default browser -->
+    <string name="preferences_set_as_default_browser">كۆڭۈلدىكى توركۆرگۈ قىلىپ تەڭشە</string>
+    <!-- Preference category for advanced settings -->
+    <string name="preferences_category_advanced">ئالىي</string>
+    <!-- Preference category for privacy and security settings -->
+    <string name="preferences_category_privacy_security">شەخسىيەت ۋە بىخەتەرلىك</string>
+    <!-- Preference for advanced site permissions -->
+    <string name="preferences_site_permissions">بېكەت ئىجازەتنامىسى</string>
+    <!-- Preference for private browsing options -->
+    <string name="preferences_private_browsing_options">شەخسىي زىيارەت</string>
+    <!-- Preference for opening links in a private tab-->
+    <string name="preferences_open_links_in_a_private_tab">ئۇلانمىنى شەخسىي بەتكۈچتە ئاچ</string>
+
+    <!-- Preference for allowing screenshots to be taken while in a private tab-->
+    <string name="preferences_allow_screenshots_in_private_mode">شەخسىي تور زىيارەتتە ئېكران كەسمىسىگە يول قويىدۇ</string>
+    <!-- Will inform the user of the risk of activating Allow screenshots in private browsing option -->
+    <string name="preferences_screenshots_in_private_mode_disclaimer">ئەگەر يول قويۇلسا، كۆپ ئەپ ئېچىلغاندا شەخسىي بەتكۈچلەرمۇ كۆرۈنىدۇ</string>
+    <!-- Preference for adding private browsing shortcut -->
+    <string name="preferences_add_private_browsing_shortcut">شەخسىي تور زىيارەت قىسقا يولى قوش</string>
+    <!-- Preference for enabling "HTTPS-Only" mode -->
+    <string name="preferences_https_only_title">ساپ HTTPS ھالىتى</string>
+
+    <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
+    <string name="preferences_cookie_banner_reduction" moz:RemovedIn="121" tools:ignore="UnusedResources">cookie لوزۇنكىسىنى ئازايتىش</string>
+    <!-- Label for cookie banner section in quick settings panel. -->
+    <string name="cookie_banner_blocker">cookie لوزۇنكىسى توسقۇچ</string>
+    <!-- Preference for removing cookie/consent banners from sites automatically in private mode. See reduce_cookie_banner_summary for additional context. -->
+    <string name="preferences_cookie_banner_reduction_private_mode">شەخسىي تور زىيارەتتىكى cookie لوزۇنكىسىنى توسقۇچ</string>
+    <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
+    <string name="reduce_cookie_banner_option" moz:RemovedIn="121" tools:ignore="UnusedResources">cookie لوزۇنكىسىدىن ساقلان</string>
+    <!-- Summary of cookie banner handling preference if the setting disabled is set to off -->
+    <string name="reduce_cookie_banner_option_off" moz:RemovedIn="121" tools:ignore="UnusedResources">تاقاق</string>
+    <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
+    <string name="reduce_cookie_banner_option_on" moz:RemovedIn="121" tools:ignore="UnusedResources">ئوچۇق</string>
+    <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_off_for_site">بۇ تور بېكەتكە تاقاق</string>
+    <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_cancel_button">ۋاز كەچ</string>
+    <!-- Text for request support button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_request_support_button_2">ئىلتىماس يوللا</string>
+    <!-- Text for title indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
+    <string name="cookie_banner_handling_details_site_is_not_supported_title_2">بۇ تور بېكەتنى قوللاشنى ئىلتىماس قىلامسىز؟</string>
+    <!-- Label for the snackBar, after the user reports with success a website where cookie banner reducer did not work -->
+    <string name="cookie_banner_handling_report_site_snack_bar_text_2">ئىلتىماس يوللاندى</string>
+    <!-- Text for indicating cookie banner handling is on this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_on_for_site">بۇ تور بېكەتكە ئوچۇق</string>
+    <!-- Text for indicating that a request for unsupported site was sent to Nimbus (it's a Mozilla library for experiments), this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_unsupported_site_request_submitted_2">قوللاش ئىلتىماسى يوللاندى</string>
+
+    <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
+    <string name="reduce_cookie_banner_unsupported_site">بېكەت ھازىر قوللىمايدۇ</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_on_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s غا cookie لوزۇنكىسى ئازايتىشنى ئاچامدۇ؟</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_on_for_site_1">%1$s غا cookie لوزۇنكىسى توسقۇچنى ئاچامدۇ؟</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_off_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s غا cookie لوزۇنكىسى ئازايتىشنى تاقامدۇ؟</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_off_for_site_1">%1$s غا cookie لوزۇنكىسى توسقۇچنى تاقامدۇ؟</string>
+    <!-- Title text for the cookie banner re-engagement dialog. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_dialog_title" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s نىڭ cookie لوزۇنكىسىنى رەت قىلىشىغا يول قويامدۇ؟</string>
+    <!-- Body text for the cookie banner re-engagement dialog use. The first parameter is the application name. -->
+    <string name="reduce_cookie_banner_dialog_body" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s نۇرغۇن cookie لوزۇنكا تەلىپىنى ئاپتوماتىك رەت قىلالايدۇ.</string>
+    <!-- Remind me later text button for the onboarding dialog -->
+    <string name="reduce_cookie_banner_dialog_not_now_button" moz:RemovedIn="121" tools:ignore="UnusedResources">ھازىر ئەمەس</string>
+    <!-- Snack text for the cookie banner dialog, after user hit the dismiss banner button -->
+    <string name="reduce_cookie_banner_dialog_snackbar_text" moz:RemovedIn="121" tools:ignore="UnusedResources">سىز كۆرىدىغان cookie ئىلتىماسلىرى ئازىيىدۇ</string>
+    <!-- Change setting text button, for the cookie banner re-engagement dialog -->
+    <string name="reduce_cookie_banner_dialog_change_setting_button" moz:RemovedIn="121" tools:ignore="UnusedResources">يول قوي</string>
+
     <!-- Summary of https only preference if https only is set to off -->
     <string name="preferences_https_only_off">تاقاق</string>
+    <!-- Summary of https only preference if https only is set to on in all tabs -->
+    <string name="preferences_https_only_on_all">بارلىق بەتكۈچتە ئوچۇق</string>
+    <!-- Summary of https only preference if https only is set to on in private tabs only -->
+    <string name="preferences_https_only_on_private">شەخسىي بەتكۈچتە ئوچۇق</string>
     <!-- Text displayed that links to website containing documentation about "HTTPS-Only" mode -->
     <string name="preferences_http_only_learn_more">تەپسىلاتى</string>
+    <!-- Option for the https only setting -->
+    <string name="preferences_https_only_in_all_tabs">بارلىق بەتكۈچتە قوزغات</string>
+    <!-- Option for the https only setting -->
+    <string name="preferences_https_only_in_private_tabs">شەخسىي بەتكۈچتىلا قوزغات</string>
+    <!-- Title shown in the error page for when trying to access a http website while https only mode is enabled. -->
+    <string name="errorpage_httpsonly_title">بىخەتەر تور بېكەت يوق</string>
+    <!-- Message shown in the error page for when trying to access a http website while https only mode is enabled. The message has two paragraphs. This is the first. -->
+    <string name="errorpage_httpsonly_message_title">بەلكىم بو تور بېكەت HTTPS نى قوللىماسلىقى مۇمكىن.</string>
+    <!-- Preference for accessibility -->
+    <string name="preferences_accessibility">قۇلايلىقلار</string>
+    <!-- Preference to override the Firefox Account server -->
+    <string name="preferences_override_fxa_server" moz:RemovedIn="120" tools:ignore="UnusedResources">ئىختىيارى Firefox ھېسابات مۇلازىمېتىرى</string>
+    <!-- Preference to override the Mozilla account server -->
+    <string name="preferences_override_account_server">ئىختىيارى Mozilla ھېسابات مۇلازىمېتىرى</string>
+    <!-- Preference to override the Sync token server -->
+    <string name="preferences_override_sync_tokenserver">ئىختىيارى قەدەمداش مۇلازىمېتىر</string>
+    <!-- Toast shown after updating the FxA/Sync server override preferences -->
+    <string name="toast_override_fxa_sync_server_done" moz:RemovedIn="120" tools:ignore="UnusedResources">Firefox ھېساباتى/قەدەمداش مۇلازىمېتىرى ئۆزگەرتىلدى. پىروگراممىنىڭ ئۆزگەرتىش ئىلتىماسىدىن ۋاز كېچىۋاتىدۇ…</string>
     <!-- Preference category for account information -->
     <string name="preferences_category_account">ھېسابات</string>
+    <!-- Preference for changing where the toolbar is positioned -->
+    <string name="preferences_toolbar">قورال بالداق</string>
     <!-- Preference for changing default theme to dark or light mode -->
     <string name="preferences_theme">ئۇسلۇب</string>
     <!-- Preference for customizing the home screen -->
     <string name="preferences_home_2">باشبەت</string>
+    <!-- Preference for gestures based actions -->
+    <string name="preferences_gestures">قول ئىشارىسى</string>
+    <!-- Preference for settings related to visual options -->
+    <string name="preferences_customize">ئىختىيارىچە</string>
+    <!-- Preference description for banner about signing in -->
+    <string name="preferences_sign_in_description_2">تىزىمغا كىرسە بەتكۈچ، خەتكۈچ، ئىم ۋە باشقا سانلىق مەلۇماتلار قەدەمداشلىنىدۇ.</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name" moz:RemovedIn="120" tools:ignore="UnusedResources">ئوتتۈلكە ھېساباتى</string>
+    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
+    <string name="preferences_account_default_name_2">Mozilla ھېسابات</string>
+    <!-- Preference text for account title when there was an error syncing FxA -->
+    <string name="preferences_account_sync_error">قايتا باغلىنىپ قەدەمداشلاشنى داۋاملاشتۇرىدۇ</string>
     <!-- Preference for language -->
     <string name="preferences_language">تىل</string>
 
+    <!-- Preference for data choices -->
+    <string name="preferences_data_choices">سانلىق مەلۇمات تاللاش</string>
+    <!-- Preference for data collection -->
+    <string name="preferences_data_collection">سانلىق مەلۇمات توپلاش</string>
+    <!-- Preference for developers -->
+    <string name="preferences_remote_debugging">USB ئارقىلىق يىراقتىن سازلاش</string>
+    <!-- Preference title for switch preference to show search engines -->
+    <string name="preferences_show_search_engines" moz:RemovedIn="120" tools:ignore="UnusedResources">ئىزدەش موتورىنى كۆرسىتىدۇ</string>
+    <!-- Preference title for switch preference to show search suggestions -->
+    <string name="preferences_show_search_suggestions">ئىزدەش تەكلىپلىرىنى كۆرسىتىدۇ</string>
+    <!-- Preference title for switch preference to show voice search button -->
+    <string name="preferences_show_voice_search">ئاۋازلىق ئىزدەشنى كۆرسەت</string>
+    <!-- Preference title for switch preference to show search suggestions also in private mode -->
+    <string name="preferences_show_search_suggestions_in_private">شەخسىي سۆزلەشكۈدە كۆرسىتىدۇ</string>
+    <!-- Preference title for switch preference to show a clipboard suggestion when searching -->
+    <string name="preferences_show_clipboard_suggestions">چاپلاش تاختىسى تەكلىپىنى كۆرسەت</string>
+    <!-- Preference title for switch preference to suggest browsing history when searching -->
+    <string name="preferences_search_browsing_history">زىيارەت تارىخىنى ئىزدە</string>
+    <!-- Preference title for switch preference to suggest bookmarks when searching -->
+    <string name="preferences_search_bookmarks">خەتكۈچ ئىزدەيدۇ</string>
+    <!-- Preference title for switch preference to suggest synced tabs when searching -->
+    <string name="preferences_search_synced_tabs">قەدەمداش بەتكۈچنى ئىزدەيدۇ</string>
     <!-- Preference for account settings -->
     <string name="preferences_account_settings">ھېسابات تەڭشىكى</string>
 
+    <!-- Preference for enabling url autocomplete-->
+    <string name="preferences_enable_autocomplete_urls">ئۆزلۈكىدىن تاماملانغان تور ئادرېسلىرى</string>
+    <!-- Preference title for switch preference to show sponsored Firefox Suggest search suggestions -->
+    <string name="preferences_show_sponsored_suggestions">ياردەمچىنىڭ تەكلىپلىرى</string>
+    <!-- Preference title for switch preference to show Firefox Suggest search suggestions for web content.
+         The first parameter is the name of the application. -->
+    <string name="preferences_show_nonsponsored_suggestions">%1$s نىڭ تەكلىپى</string>
+
+    <!-- Summary for preference to show Firefox Suggest search suggestions for web content -->
+    <string name="preferences_show_nonsponsored_suggestions_summary">توردىن ئىزدىگىنىڭىزگە مۇناسىۋەتلىك تەكلىپكە ئېرىشىڭ</string>
+    <!-- Preference for open links in third party apps -->
+    <string name="preferences_open_links_in_apps">ئۇلىنىشنى ئەپتە ئاچ</string>
+    <!-- Preference for open links in third party apps always open in apps option -->
+    <string name="preferences_open_links_in_apps_always">ھەمىشە</string>
+    <!-- Preference for open links in third party apps ask before opening option -->
+    <string name="preferences_open_links_in_apps_ask">ئېچىشتىن ئىلگىرى سورا</string>
+    <!-- Preference for open links in third party apps never open in apps option -->
+    <string name="preferences_open_links_in_apps_never">ھەرگىز</string>
+    <!-- Preference for open download with an external download manager app -->
+    <string name="preferences_external_download_manager">سىرتقى چۈشۈرۈش باشقۇرغۇچ</string>
+    <!-- Preference for enabling gecko engine logs -->
+    <string name="preferences_enable_gecko_logs">Gecko خاتىرىسىنى قوزغات</string>
+    <!-- Message to indicate users that we are quitting the application to apply the changes -->
+    <string name="quit_application">ئۆزگەرتىشنى قوللىنىش ئۈچۈن ئەپتىن چېكىنىۋاتىدۇ…</string>
+
+    <!-- Preference for add_ons -->
+    <string name="preferences_addons">قوشۇلما</string>
+    <!-- Preference for notifications -->
+    <string name="preferences_notifications">ئۇقتۇرۇش</string>
+    <!-- Summary for notification preference indicating notifications are allowed -->
+    <string name="notifications_allowed_summary">يول قويغان</string>
+    <!-- Summary for notification preference indicating notifications are not allowed -->
+    <string name="notifications_not_allowed_summary">يول قويمايدۇ</string>
+
+    <!-- Add-on Preferences -->
+    <!-- Preference to customize the configured AMO (addons.mozilla.org) collection -->
+    <string name="preferences_customize_amo_collection">ئىختىيارى قوشۇلما توپلىمى</string>
     <!-- Button caption to confirm the add-on collection configuration -->
     <string name="customize_addon_collection_ok">ھەئە</string>
     <!-- Button caption to abort the add-on collection configuration -->
     <string name="customize_addon_collection_cancel">بىكار قىلىش</string>
 
+    <!-- Hint displayed on input field for custom collection name -->
+    <string name="customize_addon_collection_hint">توپلام ئىسمى</string>
+    <!-- Hint displayed on input field for custom collection user ID-->
+    <string name="customize_addon_collection_user_hint">توپلىغۇچى ئىگىسى (ئىشلەتكۈچى كىملىكى)</string>
+    <!-- Toast shown after confirming the custom add-on collection configuration -->
+    <string name="toast_customize_addon_collection_done">قوشۇلما توپلىمى ئۆزگەرتىلدى. پىروگراممىنىڭ ئۆزگەرتىش ئىلتىماسىدىن ۋاز كېچىۋاتىدۇ…</string>
+
+    <!-- Customize Home -->
+    <!-- Header text for jumping back into the recent tab in customize the home screen -->
+    <string name="customize_toggle_jump_back_in">كەينىگە قايت</string>
+
+    <!-- Title for the customize home screen section with recently saved bookmarks. -->
+    <string name="customize_toggle_recent_bookmarks">يېقىنقى خەتكۈچلەر</string>
+    <!-- Title for the customize home screen section with recently visited. Recently visited is
+    a section where users see a list of tabs that they have visited in the past few days -->
+    <string name="customize_toggle_recently_visited">يېقىندا زىيارەت قىلغان</string>
+    <!-- Title for the customize home screen section with Pocket. -->
+    <string name="customize_toggle_pocket_2">نادىر ھېكايە</string>
+    <!-- Summary for the customize home screen section with Pocket. The first parameter is product name Pocket -->
+    <string name="customize_toggle_pocket_summary">ماقالە تەمىنلىگۈچى %s</string>
+    <!-- Title for the customize home screen section with sponsored Pocket stories. -->
+    <string name="customize_toggle_pocket_sponsored">قوللىغان ھېكايىلەر</string>
+    <!-- Title for the opening wallpaper settings screen -->
+    <string name="customize_wallpapers">تام قەغىزى</string>
+    <!-- Title for the customize home screen section with sponsored shortcuts. -->
+    <string name="customize_toggle_contile">قوللايدىغان تېزلەتمىلەر</string>
+
+    <!-- Wallpapers -->
+    <!-- Content description for various wallpapers. The first parameter is the name of the wallpaper -->
+    <string name="wallpapers_item_name_content_description">تام قەغىزى تۈرى: %1$s</string>
+    <!-- Snackbar message for when wallpaper is selected -->
+    <string name="wallpaper_updated_snackbar_message">تام قەغىزى يېڭىلاندى!</string>
     <!-- Snackbar label for action to view selected wallpaper -->
     <string name="wallpaper_updated_snackbar_action">كۆرۈش</string>
 
+    <!-- Snackbar message for when wallpaper couldn't be downloaded -->
+    <string name="wallpaper_download_error_snackbar_message">تام قەغىزىنى چۈشۈرەلمىدى</string>
+    <!-- Snackbar label for action to retry downloading the wallpaper -->
+    <string name="wallpaper_download_error_snackbar_action">قايتا سىنا</string>
+    <!-- Snackbar message for when wallpaper couldn't be selected because of the disk error -->
+    <string name="wallpaper_select_error_snackbar_message">تام قەغىزىنى ئۆزگەرتەلمىدى</string>
+    <!-- Text displayed that links to website containing documentation about the "Limited Edition" wallpapers. -->
+    <string name="wallpaper_learn_more">تەپسىلاتى</string>
+    <!-- Text for classic wallpapers title. The first parameter is the Firefox name. -->
+    <string name="wallpaper_classic_title">ئەنئەنىۋى %s</string>
+    <!-- Text for artist series wallpapers title. "Artist series" represents a collection of artist collaborated wallpapers. -->
+    <string name="wallpaper_artist_series_title">سەنئەتكار يۈرۈشلۈكلىرى</string>
+    <!-- Description text for the artist series wallpapers with learn more link. The first parameter is the learn more string defined in wallpaper_learn_more. "Independent voices" is the name of the wallpaper collection -->
+    <string name="wallpaper_artist_series_description_with_learn_more">مۇستەقىل ئاۋاز توپلىمى. %s</string>
+    <!-- Description text for the artist series wallpapers. "Independent voices" is the name of the wallpaper collection -->
+    <string name="wallpaper_artist_series_description">مۇستەقىل ئاۋاز توپلىمى.</string>
+    <!-- Wallpaper onboarding dialog header text. -->
+    <string name="wallpapers_onboarding_dialog_title_text">يېڭى رەڭ سىناڭ</string>
+    <!-- Wallpaper onboarding dialog body text. -->
+    <string name="wallpapers_onboarding_dialog_body_text">سىز ياقتۇرىدىغان تام قەغەزنى تاللاڭ.</string>
+    <!-- Wallpaper onboarding dialog learn more button text. The button navigates to the wallpaper settings screen. -->
+    <string name="wallpapers_onboarding_dialog_explore_more_button_text">تېخىمۇ كۆپ تام قەغەزنى ئىزدەيدۇ</string>
+
+    <!-- Add-ons general availability nimbus message-->
+    <!-- Title of the Nimbus message for add-ons general availability-->
+    <string name="addon_ga_message_title" tools:ignore="UnusedResources">ھازىر يېڭى قوشۇلما بار</string>
+
+    <!-- Body of the Nimbus message for add-ons general availability. 'Firefox' intentionally hardcoded here-->
+    <string name="addon_ga_message_body" tools:ignore="UnusedResources">ئۆزىڭىزنىڭ Firefox غا ئايلاندۇرىدىغان 100+ يېڭى كېڭەيتىلمىلەرنى تاپالايسىز.</string>
+    <!-- Button text of the Nimbus message for add-ons general availability. -->
+    <string name="addon_ga_message_button" tools:ignore="UnusedResources">قوشۇلما ئىزدەش</string>
+
+    <!-- Add-on Installation from AMO-->
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
+    <string name="addon_not_supported_error" moz:removedIn="120" tools:ignore="UnusedResources">قوشۇلمىنى قوللىمايدۇ</string>
+    <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
+    <string name="addon_already_installed" moz:removedIn="120" tools:ignore="UnusedResources">قوشۇلما ئورنىتىلغان</string>
+
+    <!-- Add-on process crash dialog to user -->
+    <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
+    <string name="addon_process_crash_dialog_title" tools:ignore="UnusedResources">قوشۇلما ۋاقىتلىق چەكلەنگەن</string>
+    <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
+    <string name="addon_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">قوشۇلمىنى قايتا قوزغىتىپ بېقىڭ</string>
+    <!-- The user will continue with all add-ons disabled -->
+    <string name="addon_process_crash_dialog_disable_addons_button_text" tools:ignore="UnusedResources">قوشۇلمىنى چەكلەپ داۋاملاشتۇرىدۇ</string>
+
+    <!-- Account Preferences -->
+    <!-- Preference for managing your account via accounts.firefox.com -->
+    <string name="preferences_manage_account">ھېسابات باشقۇرۇش</string>
+    <!-- Summary of the preference for managing your account via accounts.firefox.com. -->
+    <string name="preferences_manage_account_summary">ئىم ئۆزگەرتىش، سانلىق مەلۇمات توپلىمىنى باشقۇرۇش ياكى ھېسابات ئۆچۈرۈش</string>
+    <!-- Preference for triggering sync -->
+    <string name="preferences_sync_now">ھازىر قەدەمداشلا</string>
+    <!-- Preference category for sync -->
+    <string name="preferences_sync_category">قەدەمداش تاللىنىدۇ</string>
     <!-- Preference for syncing history -->
     <string name="preferences_sync_history">تارىخ</string>
+    <!-- Preference for syncing bookmarks -->
+    <string name="preferences_sync_bookmarks">خەتكۈچ</string>
+    <!-- Preference for syncing logins -->
+    <string name="preferences_sync_logins">كىرىش</string>
+    <!-- Preference for syncing tabs -->
+    <string name="preferences_sync_tabs_2">بەتكۈچ ئاچ</string>
     <!-- Preference for signing out -->
     <string name="preferences_sign_out">چېكىنىش</string>
+    <!-- Preference displays and allows changing current FxA device name -->
+    <string name="preferences_sync_device_name">ئۈسكۈنە ئىسمى</string>
+    <!-- Text shown when user enters empty device name -->
+    <string name="empty_device_name_error">ئۈسكۈنە ئىسمى بوش قالمايدۇ.</string>
+    <!-- Label indicating that sync is in progress -->
+    <string name="sync_syncing_in_progress">قەدەمداشلاۋاتىدۇ…</string>
+    <!-- Label summary indicating that sync failed. The first parameter is the date stamp showing last time it succeeded -->
+    <string name="sync_failed_summary">قەدەمداشلىيالمىدى. مۇۋەپپەقىيەتلىك ئاخىرقى قېتىمى: %s</string>
+    <!-- Label summary showing never synced -->
+    <string name="sync_failed_never_synced_summary">قەدەمداشلىيالمىدى. مۇۋەپپەقىيەتلىك ئاخىرقى قېتىمى: ھەرگىز</string>
+    <!-- Label summary the date we last synced. The first parameter is date stamp showing last time synced -->
+    <string name="sync_last_synced_summary">ئاخىرقى قەدەمداش: %s</string>
+    <!-- Label summary showing never synced -->
+    <string name="sync_never_synced_summary">ئاخىرقى قەدەمداش: ھەرگىز</string>
+    <!-- Text for displaying the default device name.
+        The first parameter is the application name, the second is the device manufacturer name
+        and the third is the device model. -->
+    <string name="default_device_name_2">%2$s %3$s دىكى %1$s</string>
+    <!-- Preference for syncing credit cards -->
+    <string name="preferences_sync_credit_cards">ئىناۋەتلىك كارتا</string>
     <!-- Preference for syncing addresses -->
     <string name="preferences_sync_address">ئادرېس</string>
 
+    <!-- Send Tab -->
+    <!-- Name of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_name">تاپشۇرۇۋالغان بەتكۈچ</string>
+    <!-- Description of the "receive tabs" notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="fxa_received_tab_channel_description">باشقا Firefox ئۈسكۈنىلىرىدىن تاپشۇرۇۋالغان بەتكۈچ ئۇقتۇرۇشى.</string>
+    <!--  The body for these is the URL of the tab received  -->
+    <string name="fxa_tab_received_notification_name">بەتكۈچ تاپشۇرۇۋالدى</string>
+    <!-- %s is the device name -->
+    <string name="fxa_tab_received_from_notification_name">%s بەتكۈچى</string>
+
+    <!-- Advanced Preferences -->
+    <!-- Preference for tracking protection exceptions -->
+    <string name="preferences_tracking_protection_exceptions">مۇستەسنا</string>
+    <!-- Button in Exceptions Preference to turn on tracking protection for all sites (remove all exceptions) -->
+    <string name="preferences_tracking_protection_exceptions_turn_on_for_all">ھەممە تور بېكەتكە ئوچۇق</string>
+    <!-- Text displayed when there are no exceptions -->
+    <string name="exceptions_empty_message_description">تاللانغان تور بېكەتلەرگە مۇستەسنا تەڭشەپ، ئىزلاشتىن قوغدىيالايسىز.</string>
     <!-- Text displayed when there are no exceptions, with learn more link that brings users to a tracking protection SUMO page -->
     <string name="exceptions_empty_message_learn_more_link">تەپسىلاتى</string>
+
+    <!-- Preference switch for usage and technical data collection -->
+    <string name="preference_usage_data">ئىشلىتىلىشى ۋە تېخنىكىلىق سانلىق مەلۇمات</string>
+
+    <!-- Preference switch for marketing data collection -->
+    <string name="preferences_marketing_data">بازارچىلىق سانلىق مەلۇماتلىرى</string>
+    <!-- Title for studies preferences -->
+    <string name="preference_experiments_2">تەتقىقات</string>
+
+    <!-- Summary for studies preferences -->
+    <string name="preference_experiments_summary_2">Mozilla نىڭ تەتقىقاتىنى ئورنىتىپ ۋە ئىجرا قىلىشىغا يول قويىدۇ</string>
+
+    <!-- Turn On Sync Preferences -->
+    <!-- Header of the Sync and save your data preference view -->
+    <string name="preferences_sync_2">سانلىق مەلۇماتلىرىڭىزنى قەدەمداشلاپ ۋە ساقلايدۇ</string>
+    <!-- Preference for reconnecting to FxA sync -->
+    <string name="preferences_sync_sign_in_to_reconnect">قايتا باشلىنىش ئۈچۈن تىزىمغا كىرىڭ</string>
+    <!-- Preference for removing FxA account -->
+    <string name="preferences_sync_remove_account">ھېساباتنى چىقىرىۋەت</string>
 
     <!-- Toolbar Preferences -->
     <!-- Preference for using top toolbar -->
     <string name="preference_top_toolbar">چوققا</string>
+
+    <!-- Preference for using bottom toolbar -->
+    <string name="preference_bottom_toolbar">ئاستى</string>
 
     <!-- Theme Preferences -->
     <!-- Preference for using light theme -->
@@ -295,9 +772,34 @@
     <!-- Preference for using dark theme -->
     <string name="preference_dark_theme">قاراڭغۇ</string>
 
+    <!-- Preference for using using dark or light theme automatically set by battery -->
+    <string name="preference_auto_battery_theme">توك تېجىگۈچ تەڭشىدى</string>
+    <!-- Preference for using following device theme -->
+    <string name="preference_follow_device_theme">ئۈسكۈنە ئۆرنىكىگە ئەگىشىدۇ</string>
+
+    <!-- Gestures Preferences-->
+    <!-- Preferences for using pull to refresh in a webpage -->
+    <string name="preference_gestures_website_pull_to_refresh">تارتىلما يېڭىلاش</string>
+    <!-- Preference for using the dynamic toolbar -->
+    <string name="preference_gestures_dynamic_toolbar">دومىلاتقاندا قورال بالداقنى يوشۇر</string>
+    <!-- Preference for switching tabs by swiping horizontally on the toolbar -->
+    <string name="preference_gestures_swipe_toolbar_switch_tabs">قورال بالداق يانغا سۈرۈلسە بەتكۈچ ئالماشتۇرىدۇ</string>
+    <!-- Preference for showing the opened tabs by swiping up on the toolbar-->
+    <string name="preference_gestures_swipe_toolbar_show_tabs">قورال بالداق ئۈستىگە سۈرۈلسە بەتكۈچ ئاچىدۇ</string>
+
     <!-- Library -->
     <!-- Option in Library to open Downloads page -->
     <string name="library_downloads">چۈشۈرۈلمىلەر</string>
+    <!-- Option in library to open Bookmarks page -->
+    <string name="library_bookmarks">خەتكۈچ</string>
+    <!-- Option in library to open Desktop Bookmarks root page -->
+    <string name="library_desktop_bookmarks_root">ئۈستەل ئۈسكۈنە خەتكۈچى</string>
+    <!-- Option in library to open Desktop Bookmarks "menu" page -->
+    <string name="library_desktop_bookmarks_menu">خەتكۈچ تىزىملىك</string>
+    <!-- Option in library to open Desktop Bookmarks "toolbar" page -->
+    <string name="library_desktop_bookmarks_toolbar">خەتكۈچ قورال بالداق</string>
+    <!-- Option in library to open Desktop Bookmarks "unfiled" page -->
+    <string name="library_desktop_bookmarks_unfiled">باشقا خەتكۈچ</string>
     <!-- Option in Library to open History page -->
     <string name="library_history">تارىخ</string>
     <!-- Option in Library to open a new tab -->
@@ -307,31 +809,179 @@
     <!-- Content description (not visible, for screen readers etc.): "Close button for library settings" -->
     <string name="content_description_close_button">تاقاش</string>
 
+    <!-- Title to show in alert when a lot of tabs are to be opened
+    %d is a placeholder for the number of tabs that will be opened -->
+    <string name="open_all_warning_title">بەتكۈچ %d نى ئاچامدۇ؟</string>
+    <!-- Dialog button text for confirming open all tabs -->
+    <string name="open_all_warning_confirm">بەتكۈچ ئاچ</string>
+    <!-- Dialog button text for canceling open all tabs -->
+    <string name="open_all_warning_cancel">ۋاز كەچ</string>
+
+    <!-- Text to show users they have one page in the history group section of the History fragment.
+    %d is a placeholder for the number of pages in the group. -->
+    <string name="history_search_group_site_1">%d بەت</string>
+    <!-- Text to show users they have multiple pages in the history group section of the History fragment.
+    %d is a placeholder for the number of pages in the group. -->
+    <string name="history_search_group_sites_1">%d بەت</string>
+
+    <!-- Option in library for Recently Closed Tabs -->
+    <string name="library_recently_closed_tabs">يېقىندا تاقالغان بەتكۈچلەر</string>
+    <!-- Option in library to open Recently Closed Tabs page -->
+    <string name="recently_closed_show_full_history">بارلىق تارىخ خاتىرىسىنى كۆرسەت</string>
+    <!-- Text to show users they have multiple tabs saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tabs">%d بەتكۈچ</string>
+    <!-- Text to show users they have one tab saved in the Recently Closed Tabs section of history.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="recently_closed_tab">%d بەتكۈچ</string>
+    <!-- Recently closed tabs screen message when there are no recently closed tabs -->
+    <string name="recently_closed_empty_message">يېقىندا تاقالغان بەتكۈچ يوق</string>
+
+    <!-- Tab Management -->
+    <!-- Title of preference for tabs management -->
+    <string name="preferences_tabs">بەتكۈچ</string>
+    <!-- Title of preference that allows a user to specify the tab view -->
+    <string name="preferences_tab_view">بەتكۈچ كۆرۈنۈش</string>
+    <!-- Option for a list tab view -->
+    <string name="tab_view_list">تىزىم</string>
+    <!-- Option for a grid tab view -->
+    <string name="tab_view_grid">سېتكا</string>
+    <!-- Title of preference that allows a user to auto close tabs after a specified amount of time -->
+    <string name="preferences_close_tabs">بەتكۈچنى ياپ</string>
+
+    <!-- Option for auto closing tabs that will never auto close tabs, always allows user to manually close tabs -->
+    <string name="close_tabs_manually">ھەرگىز</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one day -->
+    <string name="close_tabs_after_one_day">بىر كۈندىن كېيىن</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one week -->
+    <string name="close_tabs_after_one_week">بىر ھەپتىدىن كېيىن</string>
+    <!-- Option for auto closing tabs that will auto close tabs after one month -->
+    <string name="close_tabs_after_one_month">بىر ئايدىن كېيىن</string>
+    <!-- Title of preference that allows a user to specify the auto-close settings for open tabs -->
+    <string name="preference_auto_close_tabs" tools:ignore="UnusedResources">ئوچۇق بەتكۈچلەرنى ئاپتوماتىك تاقاش</string>
+
+    <!-- Opening screen -->
+    <!-- Title of a preference that allows a user to choose what screen to show after opening the app -->
+    <string name="preferences_opening_screen">ئوچۇق ئېكران</string>
     <!-- Option for always opening the homepage when re-opening the app -->
     <string name="opening_screen_homepage">باشبەت</string>
 
     <!-- Option for always opening the user's last-open tab when re-opening the app -->
     <string name="opening_screen_last_tab">ئاخىرقى بەتكۈچ</string>
 
+    <!-- Option for always opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity">تۆت سائەت ئىشلەتمىسە باش بەتكە قايتىدۇ</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to manual close-->
+    <string name="close_tabs_manually_summary">قولدا تاقا</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one day-->
+    <string name="close_tabs_after_one_day_summary">بىر كۈندىن كېيىن تاقا</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one week-->
+    <string name="close_tabs_after_one_week_summary">بىر ھەپتىدىن كېيىن تاقا</string>
+    <!-- Summary for tabs preference when auto closing tabs setting is set to auto close tabs after one month-->
+    <string name="close_tabs_after_one_month_summary">بىر ئايدىن كېيىن تاقا</string>
+    <!-- Summary for homepage preference indicating always opening the homepage when re-opening the app -->
+    <string name="opening_screen_homepage_summary">باش بەتتە ئاچ</string>
+    <!-- Summary for homepage preference indicating always opening the last-open tab when re-opening the app -->
+    <string name="opening_screen_last_tab_summary">ئاخىرقى بەتكۈچتە ئاچ</string>
+    <!-- Summary for homepage preference indicating opening the homepage when re-opening the app after four hours of inactivity -->
+    <string name="opening_screen_after_four_hours_of_inactivity_summary">تۆت سائەتتىن كېيىن باش بەتتە ئاچ</string>
+
+    <!-- Inactive tabs -->
+    <!-- Category header of a preference that allows a user to enable or disable the inactive tabs feature -->
+    <string name="preferences_inactive_tabs">كونا بەتكۈچنى ئاكتىپسىز ھالەتكە يۆتكەيدۇ</string>
+    <!-- Title of inactive tabs preference -->
+    <string name="preferences_inactive_tabs_title">سىز ئىككى ھەپتە كۆرمىگەن بەتكۈچلەر ئاكتىپسىز بۆلەككە يۆتكىلىدۇ.</string>
+
     <!-- Studies -->
     <!-- Title of the remove studies button -->
     <string name="studies_remove">چىقىرىۋەت</string>
 
+    <!-- Title of the active section on the studies list -->
+    <string name="studies_active">ئاكتىپ</string>
+    <!-- Description for studies, it indicates why Firefox use studies. The first parameter is the name of the application. -->
+    <string name="studies_description_2">%1$s پات-پات تەتقىقاتلارنى ئورنىتىپ ئىجرا قىلالايدۇ.</string>
     <!-- Learn more link for studies, links to an article for more information about studies. -->
     <string name="studies_learn_more">تەپسىلاتى</string>
 
+    <!-- Dialog message shown after removing a study -->
+    <string name="studies_restart_app">ئۆزگەرتىشلەرنى قوللىنىش ئۈچۈن ئەپتىن چېكىنىدۇ</string>
+
+    <!-- Dialog button to confirm the removing a study. -->
+    <string name="studies_restart_dialog_ok">جەزملە</string>
+    <!-- Dialog button text for canceling removing a study. -->
+    <string name="studies_restart_dialog_cancel">ۋاز كەچ</string>
+    <!-- Toast shown after turning on/off studies preferences -->
+    <string name="studies_toast_quit_application" tools:ignore="UnusedResources">ئۆزگەرتىشنى قوللىنىش ئۈچۈن ئەپتىن چېكىنىۋاتىدۇ…</string>
+
+    <!-- Sessions -->
+    <!-- Title for the list of tabs -->
+    <string name="tab_header_label">بەتكۈچ ئاچ</string>
+    <!-- Title for the list of tabs in the current private session -->
+    <string name="tabs_header_private_tabs_title">شەخسىي بەتكۈچ</string>
+    <!-- Title for the list of tabs in the synced tabs -->
+    <string name="tabs_header_synced_tabs_title">قەدەمداشلانغان بەتكۈچ</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_tab">بەتكۈچ قوش</string>
+    <!-- Content description (not visible, for screen readers etc.): Add tab button. Adds a news tab when pressed -->
+    <string name="add_private_tab">شەخسىي بەتكۈچ قوش</string>
+    <!-- Text for the new tab button to indicate adding a new private tab in the tab -->
+    <string name="tab_drawer_fab_content">شەخسىي</string>
+    <!-- Text for the new tab button to indicate syncing command on the synced tabs page -->
+    <string name="tab_drawer_fab_sync">قەدەمداش</string>
+    <!-- Text shown in the menu for sharing all tabs -->
+    <string name="tab_tray_menu_item_share">ھەممە بەتكۈچ ھەمبەھىر</string>
+    <!-- Text shown in the menu to view recently closed tabs -->
+    <string name="tab_tray_menu_recently_closed">يېقىندا تاقالغان بەتكۈچلەر</string>
+    <!-- Text shown in the tabs tray inactive tabs section -->
+    <string name="tab_tray_inactive_recently_closed" tools:ignore="UnusedResources">يېقىندا تاقالغان</string>
     <!-- Text shown in the menu to view account settings -->
     <string name="tab_tray_menu_account_settings">ھېسابات تەڭشىكى</string>
+    <!-- Text shown in the menu to view tab settings -->
+    <string name="tab_tray_menu_tab_settings">بەتكۈچ تەڭشىكى</string>
+    <!-- Text shown in the menu for closing all tabs -->
+    <string name="tab_tray_menu_item_close">ھەممە بەتكۈچنى ياپ</string>
+    <!-- Text shown in the multiselect menu for bookmarking selected tabs. -->
+    <string name="tab_tray_multiselect_menu_item_bookmark">خەتكۈچ</string>
     <!-- Text shown in the multiselect menu for closing selected tabs. -->
     <string name="tab_tray_multiselect_menu_item_close">تاقاش</string>
+    <!-- Content description for tabs tray multiselect share button -->
+    <string name="tab_tray_multiselect_share_content_description">تاللانغان بەتكۈچنى ھەمبەھىرلە</string>
+    <!-- Content description for tabs tray multiselect menu -->
+    <string name="tab_tray_multiselect_menu_content_description">تاللانغان بەتكۈچ تىزىملىكى</string>
+    <!-- Content description (not visible, for screen readers etc.): Removes tab from collection button. Removes the selected tab from collection when pressed -->
+    <string name="remove_tab_from_collection">بەتكۈچنى يىغقۇچتىن چىقىرىۋەت</string>
+    <!-- Text for button to enter multiselect mode in tabs tray -->
+    <string name="tabs_tray_select_tabs">بەتكۈچنى تاللا</string>
     <!-- Content description (not visible, for screen readers etc.): Close tab button. Closes the current session when pressed -->
     <string name="close_tab">بەتكۈچنى تاقاش</string>
+    <!-- Content description (not visible, for screen readers etc.): Close tab <title> button. First parameter is tab title  -->
+    <string name="close_tab_title">%s بەتكۈچنى ياپ</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the open tabs menu when pressed -->
+    <string name="open_tabs_menu">بەتكۈچ تىزىملىكىنى ئاچ</string>
+    <!-- Open tabs menu item to save tabs to collection -->
+    <string name="tabs_menu_save_to_collection1">بەتكۈچلەرنى يىغقۇچقا ساقلا</string>
+    <!-- Text for the menu button to delete a collection -->
+    <string name="collection_delete">يىغقۇچنى ئۆچۈر</string>
+    <!-- Text for the menu button to rename a collection -->
+    <string name="collection_rename">يىغقۇچ ئاتىنى ئۆزگەرت</string>
+    <!-- Text for the button to open tabs of the selected collection -->
+    <string name="collection_open_tabs">بەتكۈچ ئاچ</string>
+    <!-- Hint for adding name of a collection -->
+    <string name="collection_name_hint">يىغقۇچ ئىسمى</string>
     <!-- Text for the menu button to rename a top site -->
     <string name="rename_top_site">ئىسىم ئۆزگەرتىش</string>
     <!-- Text for the menu button to remove a top site -->
     <string name="remove_top_site">چىقىرىۋەت</string>
 
 
+    <!-- Text for the menu button to delete a top site from history -->
+    <string name="delete_from_history">تارىختىن ئۆچۈر</string>
+    <!-- Postfix for private WebApp titles, placeholder is replaced with app name -->
+    <string name="pwa_site_controls_title_private">%1$s (شەخسىي ھالەت)</string>
+
+    <!-- History -->
+    <!-- Text for the button to search all history -->
+    <string name="history_search_1">ئىزدەيدىغان ئاتالغۇ كىرگۈزۈلىدۇ</string>
     <!-- Text for the button to clear all history -->
     <string name="history_delete_all">تارىخنى ئۆچۈر</string>
     <!-- Text for the snackbar to confirm that multiple browsing history items has been deleted -->
@@ -340,21 +990,60 @@
     <string name="history_delete_single_item_snackbar"> %1$s ئۆچۈرۈلدى</string>
     <!-- Context description text for the button to delete a single history item -->
     <string name="history_delete_item">ئۆچۈر</string>
+    <!-- History multi select title in app bar
+    The first parameter is the number of bookmarks selected -->
+    <string name="history_multi_select_title">%1$d تاللاندى</string>
     <!-- Text for the header that groups the history for today -->
     <string name="history_today">بۈگۈن</string>
     <!-- Text for the header that groups the history for yesterday -->
     <string name="history_yesterday">تۈنۈگۈن</string>
+    <!-- Text for the header that groups the history the past 7 days -->
+    <string name="history_7_days">ئاخىرقى 7 كۈن</string>
+    <!-- Text for the header that groups the history the past 30 days -->
+    <string name="history_30_days">ئاخىرقى 30 كۈن</string>
     <!-- Text for the header that groups the history older than the last month -->
     <string name="history_older">تېخىمۇ بۇرۇن</string>
 
 
+    <!-- Text shown when no history exists -->
+    <string name="history_empty_message">ھېچقانداق تارىخ خاتىرىسى يوق</string>
+
+    <!-- Downloads -->
+    <!-- Text for the snackbar to confirm that multiple downloads items have been removed -->
+    <string name="download_delete_multiple_items_snackbar_1">چۈشۈرۈش چىقىرىۋېتىلدى</string>
+    <!-- Text for the snackbar to confirm that a single download item has been removed. The first parameter is the name of the download item. -->
+    <string name="download_delete_single_item_snackbar">چىقىرىۋېتىلگىنى %1$s</string>
+    <!-- Text shown when no download exists -->
+    <string name="download_empty_message_1">چۈشۈرۈلگەن ھۆججەت يوق</string>
+    <!-- History multi select title in app bar
+    The first parameter is the number of downloads selected -->
+    <string name="download_multi_select_title">%1$d تاللاندى</string>
     <!-- Text for the button to remove a single download item -->
     <string name="download_delete_item_1">چىقىرىۋەت</string>
 
 
+    <!-- Crashes -->
+    <!-- Title text displayed on the tab crash page. This first parameter is the name of the application (For example: Fenix) -->
+    <string name="tab_crash_title_2">كەچۈرۈڭ. %1$s بۇ بەتنى يۈكلىيەلمەيدۇ.</string>
+    <!-- Send crash report checkbox text on the tab crash page -->
+    <string name="tab_crash_send_report">يىمىرىلىش دوكلاتىنى Mozilla غا يوللايدۇ</string>
     <!-- Close tab button text on the tab crash page -->
     <string name="tab_crash_close">بەتكۈچنى ياپ</string>
 
+    <!-- Restore tab button text on the tab crash page -->
+    <string name="tab_crash_restore">بەتكۈچنى ئەسلىگە قايتۇر</string>
+
+    <!-- Bookmarks -->
+    <!-- Confirmation message for a dialog confirming if the user wants to delete the selected folder -->
+    <string name="bookmark_delete_folder_confirmation_dialog">بۇ قىسقۇچنى راستىنلا ئۆچۈرەمسىز؟</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete multiple items including folders. Parameter will be replaced by app name. -->
+    <string name="bookmark_delete_multiple_folders_confirmation_dialog">%s تاللانغان تۈرلەرنى ئۆچۈرۈۋېتىدۇ.</string>
+    <!-- Text for the cancel button on delete bookmark dialog -->
+    <string name="bookmark_delete_negative">ۋاز كەچ</string>
+    <!-- Screen title for adding a bookmarks folder -->
+    <string name="bookmark_add_folder">قىسقۇچ قوش</string>
+    <!-- Snackbar title shown after a bookmark has been created. -->
+    <string name="bookmark_saved_snackbar">خەتكۈچ ساقلاندى!</string>
     <!-- Snackbar edit button shown after a bookmark has been created. -->
     <string name="edit_bookmark_snackbar_action">تەھرىرلەش</string>
     <!-- Bookmark overflow menu edit button -->
@@ -367,12 +1056,210 @@
     <string name="bookmark_menu_open_in_new_tab_button">يېڭى بەتكۈچتە ئېچىش</string>
     <!-- Bookmark overflow menu open in private tab button -->
     <string name="bookmark_menu_open_in_private_tab_button">شەخسىي بەتكۈچتە ئېچىش</string>
+    <!-- Bookmark overflow menu open all in tabs button -->
+    <string name="bookmark_menu_open_all_in_tabs_button">ھەممىنى يېڭى بەتكۈچتە ئاچ</string>
+    <!-- Bookmark overflow menu open all in private tabs button -->
+    <string name="bookmark_menu_open_all_in_private_tabs_button">ھەممىنى شەخسىي بەتكۈچتە ئاچ</string>
     <!-- Bookmark overflow menu delete button -->
     <string name="bookmark_menu_delete_button">ئۆچۈرۈش</string>
     <!--Bookmark overflow menu save button -->
     <string name="bookmark_menu_save_button">ساقلاش</string>
 
-    <!-- Action item in menu for the Delete browsing data on quit feature -->
+    <!-- Bookmark multi select title in app bar
+     The first parameter is the number of bookmarks selected -->
+    <string name="bookmarks_multi_select_title">%1$d تاللاندى</string>
+    <!-- Bookmark editing screen title -->
+    <string name="edit_bookmark_fragment_title">خەتكۈچ تەھرىر</string>
+    <!-- Bookmark folder editing screen title -->
+    <string name="edit_bookmark_folder_fragment_title">قىسقۇچ تەھرىر</string>
+    <!-- Bookmark sign in button message -->
+    <string name="bookmark_sign_in_button">قەدەمداش خەتكۈچنى كۆرۈشتە تىزىمغا كىرىڭ</string>
+    <!-- Bookmark URL editing field label -->
+    <string name="bookmark_url_label">تور ئادرېسى</string>
+    <!-- Bookmark FOLDER editing field label -->
+    <string name="bookmark_folder_label">قىسقۇچ</string>
+    <!-- Bookmark NAME editing field label -->
+    <string name="bookmark_name_label">ئىسىم</string>
+    <!-- Bookmark add folder screen title -->
+    <string name="bookmark_add_folder_fragment_label">قىسقۇچ قوش</string>
+    <!-- Bookmark select folder screen title -->
+    <string name="bookmark_select_folder_fragment_label">قىسقۇچ تاللا</string>
+    <!-- Bookmark editing error missing title -->
+    <string name="bookmark_empty_title_error">ماۋزۇ بولۇشى كېرەك</string>
+    <!-- Bookmark editing error missing or improper URL -->
+    <string name="bookmark_invalid_url_error">ئىناۋەتسىز تور ئادرېسى</string>
+
+    <!-- Bookmark screen message for empty bookmarks folder -->
+    <string name="bookmarks_empty_message">ھېچقانداق خەتكۈچ يوق</string>
+    <!-- Bookmark snackbar message on deletion
+     The first parameter is the host part of the URL of the bookmark deleted, if any -->
+    <string name="bookmark_deletion_snackbar_message"> %1$s ئۆچۈرۈلدى</string>
+    <!-- Bookmark snackbar message on deleting multiple bookmarks not including folders-->
+    <string name="bookmark_deletion_multiple_snackbar_message_2">خەتكۈچ ئۆچۈرۈلدى</string>
+    <!-- Bookmark snackbar message on deleting multiple bookmarks including folders-->
+    <string name="bookmark_deletion_multiple_snackbar_message_3">تاللانغان قىسقۇچنى ئۆچۈرۈۋاتىدۇ</string>
+    <!-- Bookmark undo button for deletion snackbar action -->
+    <string name="bookmark_undo_deletion">يېنىۋال</string>
+    <!-- Text for the button to search all bookmarks -->
+    <string name="bookmark_search">ئىزدەيدىغان ئاتالغۇ كىرگۈزۈلىدۇ</string>
+
+    <!-- Site Permissions -->
+    <!-- Button label that take the user to the Android App setting -->
+    <string name="phone_feature_go_to_settings">تەڭشەككە يۆتكەل</string>
+    <!-- Content description (not visible, for screen readers etc.): Quick settings sheet
+        to give users access to site specific information / settings. For example:
+        Secure settings status and a button to modify site permissions -->
+    <string name="quick_settings_sheet">تېز تەڭشەك جەدۋىلى</string>
+    <!-- Label that indicates that this option it the recommended one -->
+    <string name="phone_feature_recommended">تەۋسىيەلەندى</string>
+    <!-- Button label for clearing all the information of site permissions-->
+    <string name="clear_permissions">ئىجازەتنى تازىلا</string>
+    <!-- Text for the OK button on Clear permissions dialog -->
+    <string name="clear_permissions_positive">جەزملە</string>
+    <!-- Text for the cancel button on Clear permissions dialog -->
+    <string name="clear_permissions_negative">ۋاز كەچ</string>
+    <!-- Button label for clearing a site permission-->
+    <string name="clear_permission">ئىجازەتنى تازىلا</string>
+    <!-- Text for the OK button on Clear permission dialog -->
+    <string name="clear_permission_positive">جەزملە</string>
+    <!-- Text for the cancel button on Clear permission dialog -->
+    <string name="clear_permission_negative">ۋاز كەچ</string>
+    <!-- Button label for clearing all the information on all sites-->
+    <string name="clear_permissions_on_all_sites">ھەممە تور بېكەتنىڭ ئىجازىتىنى تازىلايدۇ</string>
+    <!-- Preference for altering video and audio autoplay for all websites -->
+    <string name="preference_browser_feature_autoplay">ئاپتوماتىك قويۇش</string>
+    <!-- Preference for altering the camera access for all websites -->
+    <string name="preference_phone_feature_camera">كامېرا</string>
+    <!-- Preference for altering the microphone access for all websites -->
+    <string name="preference_phone_feature_microphone">مىكروفون</string>
+    <!-- Preference for altering the location access for all websites -->
+    <string name="preference_phone_feature_location">ئورنى</string>
+    <!-- Preference for altering the notification access for all websites -->
+    <string name="preference_phone_feature_notification">ئۇقتۇرۇش</string>
+    <!-- Preference for altering the persistent storage access for all websites -->
+    <string name="preference_phone_feature_persistent_storage">مەڭگۈلۈك ساقلىغۇچ</string>
+    <!-- Preference for altering the storage access setting for all websites -->
+    <string name="preference_phone_feature_cross_origin_storage_access">بېكەت ھالقىغان cookies</string>
+    <!-- Preference for altering the EME access for all websites -->
+    <string name="preference_phone_feature_media_key_system_access">DRM كونترول قىلىنىدىغان مەزمۇن</string>
+    <!-- Label that indicates that a permission must be asked always -->
+    <string name="preference_option_phone_feature_ask_to_allow">ئىجازەت سورا</string>
+    <!-- Label that indicates that a permission must be blocked -->
+    <string name="preference_option_phone_feature_blocked">توسۇلغان</string>
+    <!-- Label that indicates that a permission must be allowed -->
+    <string name="preference_option_phone_feature_allowed">يول قويغان</string>
+    <!--Label that indicates a permission is by the Android OS-->
+    <string name="phone_feature_blocked_by_android">ئاندىرويىد توسقان</string>
+    <!-- Preference for showing a list of websites that the default configurations won't apply to them -->
+    <string name="preference_exceptions">مۇستەسنا</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to off -->
+    <string name="tracking_protection_off">تاقاق</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to standard -->
+    <string name="tracking_protection_standard">ئۆلچەملىك</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to strict -->
+    <string name="tracking_protection_strict">قاتتىق</string>
+    <!-- Summary of tracking protection preference if tracking protection is set to custom -->
+    <string name="tracking_protection_custom">ئىختىيارىچە</string>
+    <!-- Label for global setting that indicates that all video and audio autoplay is allowed -->
+    <string name="preference_option_autoplay_allowed2">ئۈن ۋە سىنغا يول قوي</string>
+    <!-- Label for site specific setting that indicates that all video and audio autoplay is allowed -->
+    <string name="quick_setting_option_autoplay_allowed">ئۈن ۋە سىنغا يول قوي</string>
+    <!-- Label that indicates that video and audio autoplay is only allowed over Wi-Fi -->
+    <string name="preference_option_autoplay_allowed_wifi_only2">كۆچمە سانلىق مەلۇماتتىلا ئۈن ۋە سىننى توسىدۇ</string>
+
+    <!-- Subtext that explains 'autoplay on Wi-Fi only' option -->
+    <string name="preference_option_autoplay_allowed_wifi_subtext">ئۈن ۋە سىننى Wi-Fi دا قويىدۇ</string>
+    <!-- Label for global setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <string name="preference_option_autoplay_block_audio2">ئاۋازنىلا چەكلە</string>
+    <!-- Label for site specific setting that indicates that video autoplay is allowed, but audio autoplay is blocked -->
+    <string name="quick_setting_option_autoplay_block_audio">ئاۋازنىلا چەكلە</string>
+    <!-- Label for global setting that indicates that all video and audio autoplay is blocked -->
+    <string name="preference_option_autoplay_blocked3">ئۈن ۋە سىننى چەكلە</string>
+    <!-- Label for site specific setting that indicates that all video and audio autoplay is blocked -->
+    <string name="quick_setting_option_autoplay_blocked">ئۈن ۋە سىننى چەكلە</string>
+    <!-- Summary of delete browsing data on quit preference if it is set to on -->
+    <string name="delete_browsing_data_quit_on">ئوچۇق</string>
+    <!-- Summary of delete browsing data on quit preference if it is set to off -->
+    <string name="delete_browsing_data_quit_off">تاقاق</string>
+    <!-- Summary of studies preference if it is set to on -->
+    <string name="studies_on">ئوچۇق</string>
+    <!-- Summary of studies data on quit preference if it is set to off -->
+    <string name="studies_off">تاقاق</string>
+
+    <!-- Collections -->
+    <!-- Collections header on home fragment -->
+    <string name="collections_header">يىغقۇچ</string>
+    <!-- Content description (not visible, for screen readers etc.): Opens the collection menu when pressed -->
+    <string name="collection_menu_button_content_description">يىغقۇچ تىزىملىكى</string>
+    <!-- Label to describe what collections are to a new user without any collections -->
+    <string name="no_collections_description2">كېرەكلىك نەرسىلەر بۇ جايغا يىغىلىدۇ.\nكېيىن تېز زىيارەت قىلىش ئۈچۈن ئوخشىشىپ كېتىدىغان ئىزدەش، بېكەت ۋە بەتكۈچلەر گۇرۇپپىلىنىدۇ.</string>
+    <!-- Title for the "select tabs" step of the collection creator -->
+    <string name="create_collection_select_tabs">بەتكۈچنى تاللا</string>
+    <!-- Title for the "select collection" step of the collection creator -->
+    <string name="create_collection_select_collection">يىغقۇچ تاللا</string>
+    <!-- Title for the "name collection" step of the collection creator -->
+    <string name="create_collection_name_collection">يىغقۇچ ئاتاش</string>
+    <!-- Button to add new collection for the "select collection" step of the collection creator -->
+    <string name="create_collection_add_new_collection">يېڭى يىغقۇچ قوش</string>
+    <!-- Button to select all tabs in the "select tabs" step of the collection creator -->
+    <string name="create_collection_select_all">ھەممىنى تاللا</string>
+    <!-- Button to deselect all tabs in the "select tabs" step of the collection creator -->
+    <string name="create_collection_deselect_all">ھەممىنى تاللىما</string>
+    <!-- Text to prompt users to select the tabs to save in the "select tabs" step of the collection creator -->
+    <string name="create_collection_save_to_collection_empty">ساقلايدىغان بەتكۈچ تاللىنىدۇ</string>
+    <!-- Text to show users how many tabs they have selected in the "select tabs" step of the collection creator.
+     %d is a placeholder for the number of tabs selected. -->
+    <string name="create_collection_save_to_collection_tabs_selected">%d بەتكۈچ تاللاندى</string>
+    <!-- Text to show users they have one tab selected in the "select tabs" step of the collection creator.
+    %d is a placeholder for the number of tabs selected. -->
+    <string name="create_collection_save_to_collection_tab_selected">%d بەتكۈچ تاللاندى</string>
+    <!-- Text shown in snackbar when multiple tabs have been saved in a collection -->
+    <string name="create_collection_tabs_saved">بەتكۈچ ساقلاندى!</string>
+    <!-- Text shown in snackbar when one or multiple tabs have been saved in a new collection -->
+    <string name="create_collection_tabs_saved_new_collection">يىغقۇچ ساقلاندى!</string>
+    <!-- Text shown in snackbar when one tab has been saved in a collection -->
+    <string name="create_collection_tab_saved">بەتكۈچ ساقلاندى!</string>
+    <!-- Content description (not visible, for screen readers etc.): button to close the collection creator -->
+    <string name="create_collection_close">تاقا</string>
+    <!-- Button to save currently selected tabs in the "select tabs" step of the collection creator-->
+    <string name="create_collection_save">ساقلا</string>
+    <!-- Snackbar action to view the collection the user just created or updated -->
+    <string name="create_collection_view">كۆرۈنۈش</string>
+    <!-- Text for the OK button from collection dialogs -->
+    <string name="create_collection_positive">جەزملە</string>
+    <!-- Text for the cancel button from collection dialogs -->
+    <string name="create_collection_negative">ۋاز كەچ</string>
+
+    <!-- Default name for a new collection in "name new collection" step of the collection creator. %d is a placeholder for the number of collections-->
+    <string name="create_collection_default_name">يىغقۇچ %d</string>
+
+    <!-- Share -->
+    <!-- Share screen header -->
+    <string name="share_header_2">ھەمبەھىر</string>
+    <!-- Content description (not visible, for screen readers etc.):
+        "Share" button. Opens the share menu when pressed. -->
+    <string name="share_button_content_description">ھەمبەھىر</string>
+    <!-- Text for the Save to PDF feature in the share menu -->
+    <string name="share_save_to_pdf">PDF كە ساقلا</string>
+    <!-- Text for error message when generating a PDF file Text. -->
+    <string name="unable_to_save_to_pdf_error">PDF ھاسىل قىلالمىدى</string>
+    <!-- Text for standard error snackbar dismiss button. -->
+    <string name="standard_snackbar_error_dismiss">بولدىلا</string>
+    <!-- Text for error message when printing a page and it fails. -->
+    <string name="unable_to_print_error" moz:removedIn="121" tools:ignore="UnusedResources">باسالمىدى</string>
+    <!-- Text for error message when printing a page and it fails. -->
+    <string name="unable_to_print_page_error">بۇ بەتنى باسالمايدۇ</string>
+    <!-- Text for the print feature in the share and browser menu -->
+    <string name="menu_print">باس</string>
+    <!-- Sub-header in the dialog to share a link to another sync device -->
+    <string name="share_device_subheader">ئۈسكۈنىگە يوللا</string>
+    <!-- Sub-header in the dialog to share a link to an app from the full list -->
+    <string name="share_link_all_apps_subheader">بارلىق مەشغۇلات</string>
+    <!-- Sub-header in the dialog to share a link to an app from the most-recent sorted list -->
+    <string name="share_link_recent_apps_subheader">يېقىندا ئىشلەتكەن</string>
+    <!-- Text for the copy link action in the share screen. -->
+    <string name="share_copy_link_to_clipboard">چاپلاش تاختىسىغا كۆچۈر</string>
+     <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">چېكىنىش</string>
 
     <!-- Text displayed that links to website about enhanced tracking protection -->
