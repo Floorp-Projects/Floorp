@@ -30,3 +30,5 @@
 #include "xsimd_neon_register.hpp"
 
 #include "xsimd_sve_register.hpp"
+
+#include "xsimd_wasm_register.hpp"

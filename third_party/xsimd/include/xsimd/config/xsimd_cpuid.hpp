@@ -57,7 +57,7 @@ namespace xsimd
             // version number of the best arch available
             unsigned best;
 
-            supported_arch() noexcept
+            inline supported_arch() noexcept
             {
                 memset(this, 0, sizeof(supported_arch));
 

@@ -9,6 +9,23 @@
 Changelog
 =========
 
+11.2.0
+------
+
+    * Provide shuffle operations of floating point batches
+
+    * Provide a generic implementation of xsimd::swizzle with dynamic indices
+
+    * Implement rotl, rotr, rotate_left and rotate_right
+
+    * Let CMake figure out pkgconfig directories 
+
+    * Add missing boolean operators in xsimd_api.hpp
+
+    * Initial Implementation for the new WASM based instruction set
+
+    * Provide a generic version for float to uint32_t conversion 
+
 11.1.0
 ------
 
