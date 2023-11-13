@@ -579,11 +579,6 @@ bool IPCFuzzController::MakeTargetDecision(
   *seqno = seqNos.first - 1;
   *fseqno = seqNos.second + 1;
 
-  if (update) {
-    portSeqNos.insert_or_assign(*name,
-                                std::pair<int32_t, uint64_t>(*seqno, *fseqno));
-  }
-
   // If a type is already specified, we must be in preserveHeaderMode.
   bool isPreserveHeader = *type;
 
@@ -637,6 +632,11 @@ bool IPCFuzzController::MakeTargetDecision(
       portNameToProtocolName[*name].c_str(), ProtocolIdToName(ids.second),
       IPC::StringFromIPCMessageType(*type), *type, actorIndex, actors.size(),
       *actorId, isPreserveHeader);
+
+  if (update) {
+    portSeqNos.insert_or_assign(*name,
+                                std::pair<int32_t, uint64_t>(*seqno, *fseqno));
+  }
 
   return true;
 }
