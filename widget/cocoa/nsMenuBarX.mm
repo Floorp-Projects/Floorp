@@ -414,46 +414,6 @@ void nsMenuBarX::SetSystemHelpMenu() {
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-// macOS is adding some menu items every time that `NSApp.mainMenu` is set, but
-// never removes them. This ultimately causes a significant slowdown when
-// switching between windows because the number of items held by the key
-// equivalent uniquer used by `NSApp.mainMenu` is growing without bounds.
-//
-// The known problematic menu items are:
-//   - Start Dictation...
-//   - Emoji & Symbols
-//
-// Removing these items before setting `NSApp.mainMenu` prevents this slowdown.
-// See bug 1808223.
-static bool RemoveProblematicMenuItems(NSMenu* aMenu) {
-  uint8_t problematicSelectorCount = 2;
-  NSMutableArray* itemsToRemove =
-      [NSMutableArray arrayWithCapacity:problematicSelectorCount];
-
-  for (NSInteger i = 0; i < aMenu.numberOfItems; i++) {
-    NSMenuItem* item = [aMenu itemAtIndex:i];
-
-    if (item.action == @selector(startDictation:) ||
-        item.action == @selector(orderFrontCharacterPalette:)) {
-      [itemsToRemove addObject:@(i)];
-    }
-
-    if (item.hasSubmenu && RemoveProblematicMenuItems(item.submenu)) {
-      return true;
-    }
-  }
-
-  for (NSNumber* index in [itemsToRemove reverseObjectEnumerator]) {
-    [aMenu removeItemAtIndex:index.integerValue];
-  }
-
-  if (itemsToRemove.count >= problematicSelectorCount) {
-    return true;
-  }
-
-  return false;
-}
-
 nsresult nsMenuBarX::Paint() {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
@@ -472,8 +432,6 @@ nsresult nsMenuBarX::Paint() {
   [outgoingMenu removeItemAtIndex:0];
   [mNativeMenu insertItem:appMenuItem atIndex:0];
   [appMenuItem release];
-
-  RemoveProblematicMenuItems(mNativeMenu);
 
   // Set menu bar and event target.
   NSApp.mainMenu = mNativeMenu;
