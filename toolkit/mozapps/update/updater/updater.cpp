@@ -2853,7 +2853,7 @@ int LaunchCallbackAndPostProcessApps(int argc, NS_tchar** argv,
   // possible.
   class RaiiOutputFinish {
    public:
-    RaiiOutputFinish() : mCalled(false){};
+    RaiiOutputFinish() : mCalled(false) {}
     ~RaiiOutputFinish() { call(); }
     void call() {
       if (!mCalled) {
