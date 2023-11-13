@@ -894,6 +894,22 @@ nsresult HTMLCanvasElement::ExtractData(JSContext* aCx,
   // If no permission, return all-white, opaque image data.
   bool usePlaceholder = !CanvasUtils::IsImageExtractionAllowed(
       OwnerDoc(), aCx, aSubjectPrincipal);
+
+  if (!usePlaceholder) {
+    auto size = GetWidthHeight();
+    CanvasContextType type = GetCurrentContextType();
+    CanvasFeatureUsage featureUsage = CanvasFeatureUsage::None;
+    if (type == CanvasContextType::Canvas2D) {
+      if (auto ctx =
+              static_cast<CanvasRenderingContext2D*>(GetCurrentContext())) {
+        featureUsage = ctx->FeatureUsage();
+      }
+    }
+
+    CanvasUsage usage(size, type, featureUsage);
+    OwnerDoc()->RecordCanvasUsage(usage);
+  }
+
   return ImageEncoder::ExtractData(aType, aOptions, GetSize(), usePlaceholder,
                                    mCurrentContext, mOffscreenDisplay, aStream);
 }

@@ -145,9 +145,10 @@
 #include "mozilla/dom/BrowserChild.h"
 #include "mozilla/dom/BrowsingContext.h"
 #include "mozilla/dom/BrowsingContextGroup.h"
+#include "mozilla/dom/CanonicalBrowsingContext.h"
+#include "mozilla/dom/CanvasRenderingContextHelper.h"
 #include "mozilla/dom/CDATASection.h"
 #include "mozilla/dom/CSPDictionariesBinding.h"
-#include "mozilla/dom/CanonicalBrowsingContext.h"
 #include "mozilla/dom/ChromeObserver.h"
 #include "mozilla/dom/ClientInfo.h"
 #include "mozilla/dom/ClientState.h"
@@ -16353,6 +16354,24 @@ bool Document::ShouldResistFingerprinting(RFPTarget aTarget) const {
   return mShouldResistFingerprinting &&
          nsRFPService::IsRFPEnabledFor(aTarget,
                                        mOverriddenFingerprintingSettings);
+}
+
+void Document::RecordCanvasUsage(CanvasUsage& aUsage) {
+  // Limit the number of recent canvas extraction uses that are tracked.
+  const size_t kTrackedCanvasLimit = 8;
+  // Timeout between different canvas extractions.
+  const uint64_t kTimeoutUsec = 3000 * 1000;
+
+  uint64_t now = PR_Now();
+  if ((mCanvasUsage.Length() > kTrackedCanvasLimit) ||
+      ((now - mLastCanvasUsage) > kTimeoutUsec)) {
+    mCanvasUsage.ClearAndRetainStorage();
+  }
+
+  mCanvasUsage.AppendElement(aUsage);
+  mLastCanvasUsage = now;
+
+  nsRFPService::MaybeReportCanvasFingerprinter(mCanvasUsage);
 }
 
 WindowContext* Document::GetWindowContextForPageUseCounters() const {
