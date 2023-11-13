@@ -11,23 +11,27 @@ var actual = 'No Crash';
 var expect = 'No Crash';
 
 printBugNumber(BUGNUMBER);
-printStatus (summary);
+printStatus(summary);
 
 expectExitCode(0);
 expectExitCode(5);
 expectExitCode(3);
 
-var fe="v";
+try {
+  var fe = "v";
 
-for (i=0; i<25; i++)
-  fe += fe;
+  for (i = 0; i < 25; i++)
+    fe += fe;
 
-var fu=new Function(
-  fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe,
-  fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe,
-  "done"
+  var fu = new Function(
+    fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe,
+    fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe, fe,
+    "done"
   );
 
-print('Done');
+  print('Done');
+} catch (e) {
+  assertEq(e, "out of memory");
+}
 
 reportCompare(expect, actual, summary);
