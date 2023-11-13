@@ -6,6 +6,8 @@
 #define mozilla_dom_WebAuthnResult_h_
 
 #include "nsIWebAuthnResult.h"
+#include "nsString.h"
+#include "nsTArray.h"
 
 #include "mozilla/Maybe.h"
 #include "nsString.h"
@@ -28,7 +30,7 @@ class WebAuthnRegisterResult final : public nsIWebAuthnRegisterResult {
   NS_DECL_NSIWEBAUTHNREGISTERRESULT
 
   WebAuthnRegisterResult(const nsTArray<uint8_t>& aAttestationObject,
-                         const nsCString& aClientDataJSON,
+                         const Maybe<nsCString>& aClientDataJSON,
                          const nsTArray<uint8_t>& aCredentialId,
                          const nsTArray<nsString>& aTransports,
                          const Maybe<nsString>& aAuthenticatorAttachment)
@@ -48,10 +50,10 @@ class WebAuthnRegisterResult final : public nsIWebAuthnRegisterResult {
         reinterpret_cast<uint8_t*>(
             aResponse->AttestationObject()->GetElements().Elements()),
         aResponse->AttestationObject()->Length());
-    mClientDataJSON.Assign(
+    mClientDataJSON = Some(nsAutoCString(
         reinterpret_cast<const char*>(
             aResponse->ClientDataJson()->GetElements().Elements()),
-        aResponse->ClientDataJson()->Length());
+        aResponse->ClientDataJson()->Length()));
     mCredentialId.AppendElements(
         reinterpret_cast<uint8_t*>(
             aResponse->KeyHandle()->GetElements().Elements()),
@@ -68,8 +70,8 @@ class WebAuthnRegisterResult final : public nsIWebAuthnRegisterResult {
 
 #ifdef XP_WIN
   WebAuthnRegisterResult(nsACString& aClientDataJSON,
-                         PCWEBAUTHN_CREDENTIAL_ATTESTATION aResponse)
-      : mClientDataJSON(aClientDataJSON) {
+                         PCWEBAUTHN_CREDENTIAL_ATTESTATION aResponse) {
+    mClientDataJSON = Some(aClientDataJSON);
     mCredentialId.AppendElements(aResponse->pbCredentialId,
                                  aResponse->cbCredentialId);
 
@@ -140,7 +142,7 @@ class WebAuthnRegisterResult final : public nsIWebAuthnRegisterResult {
   nsTArray<uint8_t> mAttestationObject;
   nsTArray<uint8_t> mCredentialId;
   nsTArray<nsString> mTransports;
-  nsCString mClientDataJSON;
+  Maybe<nsCString> mClientDataJSON;
   Maybe<bool> mCredPropsRk;
   Maybe<bool> mHmacCreateSecret;
   Maybe<nsString> mAuthenticatorAttachment;
@@ -152,7 +154,7 @@ class WebAuthnSignResult final : public nsIWebAuthnSignResult {
   NS_DECL_NSIWEBAUTHNSIGNRESULT
 
   WebAuthnSignResult(const nsTArray<uint8_t>& aAuthenticatorData,
-                     const nsCString& aClientDataJSON,
+                     const Maybe<nsCString>& aClientDataJSON,
                      const nsTArray<uint8_t>& aCredentialId,
                      const nsTArray<uint8_t>& aSignature,
                      const nsTArray<uint8_t>& aUserHandle,
@@ -173,10 +175,10 @@ class WebAuthnSignResult final : public nsIWebAuthnSignResult {
         reinterpret_cast<uint8_t*>(
             aResponse->AuthData()->GetElements().Elements()),
         aResponse->AuthData()->Length());
-    mClientDataJSON.Assign(
+    mClientDataJSON = Some(nsAutoCString(
         reinterpret_cast<const char*>(
             aResponse->ClientDataJson()->GetElements().Elements()),
-        aResponse->ClientDataJson()->Length());
+        aResponse->ClientDataJson()->Length()));
     mCredentialId.AppendElements(
         reinterpret_cast<uint8_t*>(
             aResponse->KeyHandle()->GetElements().Elements()),
@@ -196,8 +198,8 @@ class WebAuthnSignResult final : public nsIWebAuthnSignResult {
 
 #ifdef XP_WIN
   WebAuthnSignResult(nsACString& aClientDataJSON,
-                     PCWEBAUTHN_ASSERTION aResponse)
-      : mClientDataJSON(aClientDataJSON) {
+                     PCWEBAUTHN_ASSERTION aResponse) {
+    mClientDataJSON = Some(aClientDataJSON);
     mSignature.AppendElements(aResponse->pbSignature, aResponse->cbSignature);
 
     mCredentialId.AppendElements(aResponse->Credential.pbId,
@@ -216,7 +218,7 @@ class WebAuthnSignResult final : public nsIWebAuthnSignResult {
   ~WebAuthnSignResult() = default;
 
   nsTArray<uint8_t> mAuthenticatorData;
-  nsCString mClientDataJSON;
+  Maybe<nsCString> mClientDataJSON;
   nsTArray<uint8_t> mCredentialId;
   nsTArray<uint8_t> mSignature;
   nsTArray<uint8_t> mUserHandle;
