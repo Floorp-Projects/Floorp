@@ -26,8 +26,6 @@ class ParentCrashTest : BaseSessionTest() {
     @Test
     @ClosedSessionAtStart
     fun crashParent() {
-        // TODO: Bug 1673956
-        assumeThat(sessionRule.env.isFission, equalTo(false))
         val client = TestCrashHandler.Client(targetContext)
 
         assertTrue(client.connect(timeout))
