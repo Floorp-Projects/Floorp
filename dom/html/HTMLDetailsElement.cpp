@@ -143,4 +143,20 @@ JSObject* HTMLDetailsElement::WrapNode(JSContext* aCx,
   return HTMLDetailsElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
+void HTMLDetailsElement::HandleInvokeInternal(nsAtom* aAction,
+                                              ErrorResult& aRv) {
+  if (nsContentUtils::EqualsIgnoreASCIICase(aAction, nsGkAtoms::_auto) ||
+      nsContentUtils::EqualsIgnoreASCIICase(aAction, nsGkAtoms::toggle)) {
+    ToggleOpen();
+  } else if (nsContentUtils::EqualsIgnoreASCIICase(aAction, nsGkAtoms::close)) {
+    if (Open()) {
+      SetOpen(false, IgnoreErrors());
+    }
+  } else if (nsContentUtils::EqualsIgnoreASCIICase(aAction, nsGkAtoms::open)) {
+    if (!Open()) {
+      SetOpen(true, IgnoreErrors());
+    }
+  }
+}
+
 }  // namespace mozilla::dom

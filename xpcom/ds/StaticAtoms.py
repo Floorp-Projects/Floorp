@@ -1240,6 +1240,7 @@ STATIC_ATOMS = [
     Atom("title", "title"),
     Atom("titlebar", "titlebar"),
     Atom("titletip", "titletip"),
+    Atom("toggle", "toggle"),
     Atom("token", "token"),
     Atom("tokenize", "tokenize"),
     Atom("toolbar", "toolbar"),
