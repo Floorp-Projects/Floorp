@@ -98,6 +98,18 @@
           true
         );
       });
+      XPCOMUtils.defineLazyPreferenceGetter(
+        this,
+        "_shouldExposeContentTitle",
+        "privacy.exposeContentTitleInWindow",
+        true
+      );
+      XPCOMUtils.defineLazyPreferenceGetter(
+        this,
+        "_shouldExposeContentTitlePbm",
+        "privacy.exposeContentTitleInWindow.pbm",
+        true
+      );
 
       if (AppConstants.MOZ_CRASHREPORTER) {
         ChromeUtils.defineESModuleGetters(this, {
@@ -1028,6 +1040,19 @@
     getWindowTitleForBrowser(aBrowser) {
       let docElement = document.documentElement;
       let title = "";
+      let dataSuffix =
+        docElement.getAttribute("privatebrowsingmode") == "temporary"
+          ? "Private"
+          : "Default";
+      let defaultTitle = docElement.dataset["title" + dataSuffix];
+
+      if (
+        !this._shouldExposeContentTitle ||
+        (PrivateBrowsingUtils.isWindowPrivate(window) &&
+          !this._shouldExposeContentTitlePbm)
+      ) {
+        return defaultTitle;
+      }
 
       // If location bar is hidden and the URL type supports a host,
       // add the scheme and host to the title to prevent spoofing.
@@ -1065,10 +1090,6 @@
         title += tab.getAttribute("label").replace(/\0/g, "");
       }
 
-      let dataSuffix =
-        docElement.getAttribute("privatebrowsingmode") == "temporary"
-          ? "Private"
-          : "Default";
       if (title) {
         // We're using a function rather than just using `title` as the
         // new substring to avoid `$$`, `$'` etc. having a special
@@ -1081,7 +1102,7 @@
         );
       }
 
-      return docElement.dataset["title" + dataSuffix];
+      return defaultTitle;
     },
 
     updateTitlebar() {
