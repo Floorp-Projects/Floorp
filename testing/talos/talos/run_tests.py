@@ -5,6 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import copy
 import os
+import pathlib
 import sys
 import time
 import traceback
@@ -316,6 +317,15 @@ function FindProxyForURL(url, host) {
 
             mytest = TTest()
 
+            utility_path = None
+            if config.get("screenshot_on_failure"):
+                obj_dir = os.environ.get("MOZ_DEVELOPER_OBJ_DIR", None)
+                if obj_dir is None:
+                    build_dir = pathlib.Path(os.environ.get("MOZ_UPLOAD_DIR")).parent
+                    utility_path = pathlib.Path(build_dir, "tests", "bin")
+                else:
+                    utility_path = os.path.join(obj_dir, "dist", "bin")
+
             # some tests like ts_paint return multiple results in a single iteration
             if test.get("firstpaint", False) or test.get("userready", None):
                 # we need a 'testeventmap' to tell us which tests each event should map to
@@ -349,12 +359,16 @@ function FindProxyForURL(url, host) {
             # and store the base and reference test replicates in results.json for upload
             elif test.get("base_vs_ref", False):
                 # run the test, results will be reported for each page like two tests in the suite
-                base_and_reference_results = mytest.runTest(browser_config, test)
+                base_and_reference_results = mytest.runTest(
+                    browser_config, test, utility_path=utility_path
+                )
                 # now compare each test, and create a new test object for the comparison
                 talos_results.add(make_comparison_result(base_and_reference_results))
             else:
                 # just expecting regular test - one result value per iteration
-                talos_results.add(mytest.runTest(browser_config, test))
+                talos_results.add(
+                    mytest.runTest(browser_config, test, utility_path=utility_path)
+                )
             LOG.test_end(testname, status="OK")
 
     except TalosRegression as exc:
