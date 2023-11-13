@@ -468,7 +468,10 @@ AppWindow::GetLiveResizeListeners() {
   nsTArray<RefPtr<mozilla::LiveResizeListener>> listeners;
   if (mPrimaryBrowserParent) {
     BrowserHost* host = BrowserHost::GetFrom(mPrimaryBrowserParent.get());
-    listeners.AppendElement(host->GetActor());
+    RefPtr<mozilla::LiveResizeListener> actor = host->GetActor();
+    if (actor) {
+      listeners.AppendElement(actor);
+    }
   }
   return listeners;
 }
