@@ -338,11 +338,7 @@ export class GeckoViewPdfjsParent extends GeckoViewActorParent {
     } catch (e) {
       warn`Cannot get experiment feature: ${e}`;
     }
-    this.browser.sendMessageToActor(
-      "PDFJS:Child:getNimbus",
-      result,
-      "GeckoViewPdfjs"
-    );
+    this.sendAsyncMessage("PDFJS:Child:getNimbus", result);
   }
 
   async #recordExposure() {
@@ -350,7 +346,7 @@ export class GeckoViewPdfjsParent extends GeckoViewActorParent {
       const experimentActor = this.window.moduleManager.getActor(
         "GeckoViewExperimentDelegate"
       );
-      experimentActor.recordExposure("pdfjs");
+      await experimentActor.recordExposure("pdfjs");
     } catch (e) {
       warn`Cannot record experiment exposure: ${e}`;
     }
