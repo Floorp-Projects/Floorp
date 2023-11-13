@@ -4225,6 +4225,13 @@ screenshots:
       - 1801019
     expiry_version: "never"
     release_channel_collection: opt-out
+    extra_keys:
+      fullpage: Number of times a full page was selected
+      visible: Number of times a visible page was selected
+      element: Number of times an element was selected
+      region: Number of times a region was selected
+      move: Number of times a region was moved
+      resize: Number of times a region was resized
   copy:
     objects: ["overlay_copy", "preview_copy"]
     description: >
@@ -4239,6 +4246,13 @@ screenshots:
       - 1801019
     expiry_version: "never"
     release_channel_collection: opt-out
+    extra_keys:
+      fullpage: Number of times a full page was selected
+      visible: Number of times a visible page was selected
+      element: Number of times an element was selected
+      region: Number of times a region was selected
+      move: Number of times a region was moved
+      resize: Number of times a region was resized
   selected:
     objects: ["element", "region_selection", "visible", "full_page"]
     description: >
