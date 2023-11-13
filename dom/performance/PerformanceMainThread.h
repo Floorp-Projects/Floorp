@@ -171,6 +171,7 @@ class PerformanceMainThread final : public Performance,
   RefPtr<PerformanceEventTiming> mPendingPointerDown;
 
  private:
+  void ClearTextFrameUnions();
   void ClearGeneratedTempDataForLCP();
 
   void SetHasDispatchedInputEvent();
