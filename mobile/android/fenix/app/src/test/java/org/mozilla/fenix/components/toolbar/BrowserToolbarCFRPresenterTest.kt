@@ -15,6 +15,7 @@ import io.mockk.verify
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import mozilla.components.browser.state.action.ContentAction
+import mozilla.components.browser.state.action.CookieBannerAction
 import mozilla.components.browser.state.action.TabListAction
 import mozilla.components.browser.state.state.BrowserState
 import mozilla.components.browser.state.state.CustomTabSessionState
@@ -23,6 +24,7 @@ import mozilla.components.browser.state.state.createCustomTab
 import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.browser.toolbar.BrowserToolbar
+import mozilla.components.concept.engine.EngineSession
 import mozilla.components.support.test.ext.joinBlocking
 import mozilla.components.support.test.robolectric.testContext
 import mozilla.components.support.test.rule.MainCoroutineRule
@@ -67,6 +69,40 @@ class BrowserToolbarCFRPresenterTest {
 
         browserStore.dispatch(ContentAction.UpdateProgressAction(customTab.id, 100)).joinBlocking()
         verify { presenter.showTcpCfr() }
+    }
+
+    @Test
+    fun `GIVEN the cookie banners handling CFR should be shown for a custom tab WHEN the custom tab is fully loaded THEN the TCP CFR is shown`() {
+        val privateTab = createTab(url = "", private = true)
+        val browserStore = createBrowserStore(tab = privateTab, selectedTabId = privateTab.id)
+        val settings: Settings = mockk(relaxed = true) {
+            every { shouldShowTotalCookieProtectionCFR } returns false
+            every { shouldShowReviewQualityCheckCFR } returns false
+            every { reviewQualityCheckOptInTimeInMillis } returns System.currentTimeMillis()
+            every { shouldShowEraseActionCFR } returns false
+            every { shouldShowCookieBannersCFR } returns true
+            every { shouldUseCookieBannerPrivateMode } returns true
+            every { reviewQualityCheckCfrDisplayTimeInMillis } returns 0L
+        }
+        val presenter = createPresenter(
+            isPrivate = true,
+            browserStore = browserStore,
+            settings = settings,
+        )
+
+        presenter.start()
+
+        assertNotNull(presenter.scope)
+
+        browserStore.dispatch(
+            CookieBannerAction.UpdateStatusAction(
+                privateTab.id,
+                EngineSession.CookieBannerHandlingStatus.HANDLED,
+            ),
+        ).joinBlocking()
+
+        verify { presenter.showCookieBannersCFR() }
+        verify { settings.shouldShowCookieBannersCFR = false }
     }
 
     @Test
@@ -457,6 +493,7 @@ class BrowserToolbarCFRPresenterTest {
             every { shouldShowTotalCookieProtectionCFR } returns true
             every { shouldShowEraseActionCFR } returns true
             every { openTabsCount } returns 5
+            every { shouldShowCookieBannersCFR } returns true
             every { shouldShowReviewQualityCheckCFR } returns true
         },
         toolbar: BrowserToolbar = mockk {
