@@ -34,24 +34,15 @@ namespace dom {
 class WorkerPrivate;
 
 // Use this runnable to communicate from the worker to its parent or vice-versa.
-// The busy count must be taken into consideration and declared at construction
-// time.
 class WorkerRunnable : public nsIRunnable {
  public:
-  enum TargetAndBusyBehavior {
+  enum Target {
     // Target the main thread for top-level workers, otherwise target the
-    // WorkerThread of the worker's parent. No change to the busy count.
-    ParentThreadUnchangedBusyCount,
+    // WorkerThread of the worker's parent.
+    ParentThread,
 
-    // Target the thread where the worker event loop runs. The busy count will
-    // be incremented before dispatching and decremented (asynchronously) after
-    // running.
-    WorkerThreadModifyBusyCount,
-
-    // Target the thread where the worker event loop runs. The busy count will
-    // not be modified in any way. Besides worker-internal runnables this is
-    // almost always the wrong choice.
-    WorkerThreadUnchangedBusyCount
+    // Target the thread where the worker event loop runs.
+    WorkerThread,
   };
 
  protected:
@@ -59,7 +50,7 @@ class WorkerRunnable : public nsIRunnable {
   WorkerPrivate* mWorkerPrivate;
 
   // See above.
-  TargetAndBusyBehavior mBehavior;
+  Target mTarget;
 
  private:
   // Whether or not Cancel() is currently being called from inside the Run()
@@ -90,13 +81,12 @@ class WorkerRunnable : public nsIRunnable {
   static WorkerRunnable* FromRunnable(nsIRunnable* aRunnable);
 
  protected:
-  WorkerRunnable(WorkerPrivate* aWorkerPrivate,
-                 TargetAndBusyBehavior aBehavior = WorkerThreadModifyBusyCount)
+  WorkerRunnable(WorkerPrivate* aWorkerPrivate, Target aTarget = WorkerThread)
 #ifdef DEBUG
       ;
 #else
       : mWorkerPrivate(aWorkerPrivate),
-        mBehavior(aBehavior),
+        mTarget(aTarget),
         mCallingCancelWithinRun(false) {
   }
 #endif
@@ -111,13 +101,11 @@ class WorkerRunnable : public nsIRunnable {
   nsIGlobalObject* DefaultGlobalObject() const;
 
   // By default asserts that Dispatch() is being called on the right thread
-  // (ParentThread if |mTarget| is WorkerThread, or WorkerThread otherwise).
-  // Also increments the busy count of |mWorkerPrivate| if targeting the
-  // WorkerThread.
+  // (ParentThread if |mTarget| is WorkerThread).
   virtual bool PreDispatch(WorkerPrivate* aWorkerPrivate);
 
   // By default asserts that Dispatch() is being called on the right thread
-  // (ParentThread if |mTarget| is WorkerThread, or WorkerThread otherwise).
+  // (ParentThread if |mTarget| is WorkerThread).
   virtual void PostDispatch(WorkerPrivate* aWorkerPrivate,
                             bool aDispatchResult);
 
@@ -133,11 +121,11 @@ class WorkerRunnable : public nsIRunnable {
   // Must be implemented by subclasses. Called on the target thread.  The return
   // value will be passed to PostRun().  The JSContext passed in here comes from
   // an AutoJSAPI (or AutoEntryScript) that we set up on the stack.  If
-  // mBehavior is ParentThreadUnchangedBusyCount, it is in the compartment of
+  // mTarget is ParentThread, it is in the compartment of
   // mWorkerPrivate's reflector (i.e. the worker object in the parent thread),
   // unless that reflector is null, in which case it's in the compartment of the
   // parent global (which is the compartment reflector would have been in), or
-  // in the null compartment if there is no parent global.  For other mBehavior
+  // in the null compartment if there is no parent global.  For other mTarget
   // values, we're running on the worker thread and aCx is in whatever
   // compartment GetCurrentWorkerThreadJSContext() was in when
   // nsIRunnable::Run() got called.  This is actually important for cases when a
@@ -154,8 +142,7 @@ class WorkerRunnable : public nsIRunnable {
   virtual bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) = 0;
 
   // By default asserts that Run() (and WorkerRun()) were called on the correct
-  // thread.  Also sends an asynchronous message to the ParentThread if the
-  // busy count was previously modified in PreDispatch().
+  // thread.
   //
   // The aCx passed here is the same one as was passed to WorkerRun and is
   // still in the same compartment.  PostRun implementations must NOT leave an
@@ -175,7 +162,7 @@ class WorkerRunnable : public nsIRunnable {
 class WorkerDebuggerRunnable : public WorkerRunnable {
  protected:
   explicit WorkerDebuggerRunnable(WorkerPrivate* aWorkerPrivate)
-      : WorkerRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount) {}
+      : WorkerRunnable(aWorkerPrivate, WorkerThread) {}
 
   virtual ~WorkerDebuggerRunnable() = default;
 
@@ -244,18 +231,16 @@ class MainThreadWorkerSyncRunnable : public WorkerSyncRunnable {
 // This runnable is processed as soon as it is received by the worker,
 // potentially running before previously queued runnables and perhaps even with
 // other JS code executing on the stack. These runnables must not alter the
-// state of the JS runtime and should only twiddle state values. The busy count
-// is never modified.
+// state of the JS runtime and should only twiddle state values.
 class WorkerControlRunnable : public WorkerRunnable {
   friend class WorkerPrivate;
 
  protected:
-  WorkerControlRunnable(WorkerPrivate* aWorkerPrivate,
-                        TargetAndBusyBehavior aBehavior)
+  WorkerControlRunnable(WorkerPrivate* aWorkerPrivate, Target aTarget)
 #ifdef DEBUG
       ;
 #else
-      : WorkerRunnable(aWorkerPrivate, aBehavior) {
+      : WorkerRunnable(aWorkerPrivate, aTarget) {
   }
 #endif
 
@@ -278,7 +263,7 @@ class WorkerControlRunnable : public WorkerRunnable {
 class MainThreadWorkerRunnable : public WorkerRunnable {
  protected:
   explicit MainThreadWorkerRunnable(WorkerPrivate* aWorkerPrivate)
-      : WorkerRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount) {
+      : WorkerRunnable(aWorkerPrivate, WorkerThread) {
     AssertIsOnMainThread();
   }
 
@@ -300,7 +285,7 @@ class MainThreadWorkerRunnable : public WorkerRunnable {
 class MainThreadWorkerControlRunnable : public WorkerControlRunnable {
  protected:
   explicit MainThreadWorkerControlRunnable(WorkerPrivate* aWorkerPrivate)
-      : WorkerControlRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount) {}
+      : WorkerControlRunnable(aWorkerPrivate, WorkerThread) {}
 
   virtual ~MainThreadWorkerControlRunnable() = default;
 
@@ -316,15 +301,14 @@ class MainThreadWorkerControlRunnable : public WorkerControlRunnable {
 };
 
 // A WorkerRunnable that should be dispatched from the worker to itself for
-// async tasks. This will increment the busy count PostDispatch() (only if
-// dispatch was successful) and decrement it in PostRun().
+// async tasks.
 //
 // Async tasks will almost always want to use this since
 // a WorkerSameThreadRunnable keeps the Worker from being GCed.
 class WorkerSameThreadRunnable : public WorkerRunnable {
  protected:
   explicit WorkerSameThreadRunnable(WorkerPrivate* aWorkerPrivate)
-      : WorkerRunnable(aWorkerPrivate, WorkerThreadModifyBusyCount) {}
+      : WorkerRunnable(aWorkerPrivate, WorkerThread) {}
 
   virtual ~WorkerSameThreadRunnable() = default;
 
@@ -404,9 +388,7 @@ class WorkerProxyToMainThreadRunnable : public Runnable {
 };
 
 // This runnable is used to stop a sync loop and it's meant to be used on the
-// main-thread only. As sync loops keep the busy count incremented as long as
-// they run this runnable does not modify the busy count
-// in any way.
+// main-thread only.
 class MainThreadStopSyncLoopRunnable : public WorkerSyncRunnable {
   nsresult mResult;
 
@@ -460,10 +442,9 @@ class MainThreadStopSyncLoopRunnable : public WorkerSyncRunnable {
 // a top-level worker also pauses mMainThreadDebuggeeEventTarget.
 class WorkerDebuggeeRunnable : public WorkerRunnable {
  protected:
-  WorkerDebuggeeRunnable(
-      WorkerPrivate* aWorkerPrivate,
-      TargetAndBusyBehavior aBehavior = ParentThreadUnchangedBusyCount)
-      : WorkerRunnable(aWorkerPrivate, aBehavior) {}
+  WorkerDebuggeeRunnable(WorkerPrivate* aWorkerPrivate,
+                         Target aTarget = ParentThread)
+      : WorkerRunnable(aWorkerPrivate, aTarget) {}
 
   bool PreDispatch(WorkerPrivate* aWorkerPrivate) override;
 
@@ -480,7 +461,7 @@ class WorkerDebuggeeRunnable : public WorkerRunnable {
   // WorkerPrivate::GetWindow may only be used on the main thread.
   //
   // Runnables sent downwards, from content to a worker or from a worker to a
-  // child, keep the sender alive because they are WorkerThreadModifyBusyCount
+  // child, keep the sender alive because they are WorkerThread
   // runnables, and so leave this null.
   RefPtr<ThreadSafeWorkerRef> mSender;
 };

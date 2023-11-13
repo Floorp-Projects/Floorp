@@ -602,8 +602,7 @@ class JSDispatchableRunnable final : public WorkerRunnable {
  public:
   JSDispatchableRunnable(WorkerPrivate* aWorkerPrivate,
                          JS::Dispatchable* aDispatchable)
-      : WorkerRunnable(aWorkerPrivate,
-                       WorkerRunnable::WorkerThreadUnchangedBusyCount),
+      : WorkerRunnable(aWorkerPrivate, WorkerRunnable::WorkerThread),
         mDispatchable(aDispatchable) {
     MOZ_ASSERT(mDispatchable);
   }
@@ -1461,7 +1460,7 @@ namespace {
 class DumpCrashInfoRunnable : public WorkerControlRunnable {
  public:
   explicit DumpCrashInfoRunnable(WorkerPrivate* aWorkerPrivate)
-      : WorkerControlRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount),
+      : WorkerControlRunnable(aWorkerPrivate, WorkerThread),
         mMonitor("DumpCrashInfoRunnable::mMonitor") {}
 
   bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override {
@@ -1525,12 +1524,7 @@ struct ActiveWorkerStats {
           new DumpCrashInfoRunnable(worker);
       if (runnable->DispatchAndWait()) {
         ++(this->*Category);
-
-        // BC: Busy Count
-        mMessage.AppendPrintf("-BC:%d", worker->BusyCount());
         mMessage.Append(runnable->MsgData());
-      } else {
-        mMessage.AppendPrintf("-BC:%d DispatchFailed", worker->BusyCount());
       }
     }
   }
@@ -1984,8 +1978,6 @@ void LogWorker(WorkerPrivate* worker, const char* category) {
   nsCString loadingOrigin;
   worker->GetLoadingPrincipal()->GetOrigin(loadingOrigin);
   SHUTDOWN_LOG(("LoadingPrincipal: %s", loadingOrigin.get()));
-
-  SHUTDOWN_LOG(("BusyCount: %d", worker->BusyCount()));
 
   RefPtr<DumpCrashInfoRunnable> runnable = new DumpCrashInfoRunnable(worker);
   if (runnable->DispatchAndWait()) {

@@ -33,7 +33,7 @@
 namespace mozilla::dom {
 EventWithOptionsRunnable::EventWithOptionsRunnable(Worker& aWorker)
     : WorkerDebuggeeRunnable(aWorker.mWorkerPrivate,
-                             WorkerRunnable::WorkerThreadModifyBusyCount),
+                             WorkerRunnable::WorkerThread),
       StructuredCloneHolder(CloningSupported, TransferringSupported,
                             StructuredCloneScope::SameProcess) {}
 
@@ -131,7 +131,7 @@ bool EventWithOptionsRunnable::BuildAndFireEvent(
 
 bool EventWithOptionsRunnable::WorkerRun(JSContext* aCx,
                                          WorkerPrivate* aWorkerPrivate) {
-  if (mBehavior == ParentThreadUnchangedBusyCount) {
+  if (mTarget == ParentThread) {
     // Don't fire this event if the JS object has been disconnected from the
     // private object.
     if (!aWorkerPrivate->IsAcceptingEvents()) {

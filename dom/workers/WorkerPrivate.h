@@ -365,8 +365,6 @@ class WorkerPrivate final
 
   void UnlinkTimeouts();
 
-  bool ModifyBusyCountFromWorker(bool aIncrease);
-
   bool AddChildWorker(WorkerPrivate& aChildWorker);
 
   void RemoveChildWorker(WorkerPrivate& aChildWorker);
@@ -646,12 +644,6 @@ class WorkerPrivate final
     MOZ_DIAGNOSTIC_ASSERT(!mParentEventTargetRef);
     mParentEventTargetRef = aParentEventTargetRef;
   }
-
-  bool ModifyBusyCount(bool aIncrease);
-
-  // This method is used by RuntimeService to know what is going wrong the
-  // shutting down.
-  uint32_t BusyCount() { return mBusyCount; }
 
   // Check whether this worker is a secure context.  For use from the parent
   // thread only; the canonical "is secure context" boolean is stored on the
@@ -1141,6 +1133,35 @@ class WorkerPrivate final
     return data->mCancelBeforeWorkerScopeConstructed;
   }
 
+  enum class CCFlag : uint8_t {
+    EligibleForWorkerRef,
+    IneligibleForWorkerRef,
+    EligibleForChildWorker,
+    IneligibleForChildWorker,
+    EligibleForTimeout,
+    IneligibleForTimeout,
+    CheckBackgroundActors,
+  };
+
+  // When create/release a StrongWorkerRef, child worker, and timeout, this
+  // method is used to setup if mParentEventTargetRef can get into
+  // cycle-collection.
+  // When this method is called, it will also checks if any background actor
+  // should block the mParentEventTargetRef cycle-collection when there is no
+  // StrongWorkerRef/ChildWorker/Timeout.
+  // Worker thread only.
+  void UpdateCCFlag(const CCFlag);
+
+  // This is used in WorkerPrivate::Traverse() to checking if
+  // mParentEventTargetRef should get into cycle-collection.
+  // Parent thread only method.
+  bool IsEligibleForCC();
+
+  // A method which adjusts the count of background actors which should not
+  // block WorkerPrivate::mParentEventTargetRef cycle-collection.
+  // Worker thread only.
+  void AdjustNonblockingCCBackgroundActorCount(int32_t aCount);
+
  private:
   WorkerPrivate(
       WorkerPrivate* aParent, const nsAString& aScriptURL, bool aIsChromeWorker,
@@ -1308,7 +1329,7 @@ class WorkerPrivate final
 
   // The worker is owned by its thread, which is represented here.  This is set
   // in Constructor() and emptied by WorkerFinishedRunnable, and conditionally
-  // traversed by the cycle collector if the busy count is zero.
+  // traversed by the cycle collector if no other things preventing shutdown.
   //
   // There are 4 ways a worker can be terminated:
   // 1. GC/CC - When the worker is in idle state (busycount == 0), it allows to
@@ -1400,10 +1421,6 @@ class WorkerPrivate final
   WorkerStatus mParentStatus MOZ_GUARDED_BY(mMutex);
   WorkerStatus mStatus MOZ_GUARDED_BY(mMutex);
 
-  // This is touched on parent thread only, but it can be read on a different
-  // thread before crashing because hanging.
-  Atomic<uint64_t> mBusyCount;
-
   TimeStamp mCreationTimeStamp;
   DOMHighResTimeStamp mCreationTimeHighRes;
 
@@ -1463,6 +1480,11 @@ class WorkerPrivate final
 
     uint32_t mNumWorkerRefsPreventingShutdownStart;
     uint32_t mDebuggerEventLoopLevel;
+
+    // This is the count of background actors that binding with IPCWorkerRefs.
+    // This count would be used in WorkerPrivate::UpdateCCFlag for checking if
+    // CC should be blocked by background actors.
+    uint32_t mNonblockingCCBackgroundActorCount;
 
     uint32_t mErrorHandlerRecursionCount;
     int32_t mNextTimeoutId;
@@ -1584,6 +1606,8 @@ class WorkerPrivate final
   nsTArray<nsCOMPtr<nsITargetShutdownTask>> mShutdownTasks
       MOZ_GUARDED_BY(mMutex);
   bool mShutdownTasksRun MOZ_GUARDED_BY(mMutex) = false;
+
+  bool mCCFlagSaysEligible MOZ_GUARDED_BY(mMutex){true};
 };
 
 class AutoSyncLoopHolder {

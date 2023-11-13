@@ -209,9 +209,14 @@ class IPCWorkerRef final : public WorkerRef {
 
   WorkerPrivate* Private() const;
 
+  void SetActorCount(uint32_t aCount);
+
  private:
   IPCWorkerRef(WorkerPrivate* aWorkerPrivate, const char* aName);
   ~IPCWorkerRef();
+
+  // The count of background actors which binding with this IPCWorkerRef.
+  uint32_t mActorCount;
 };
 
 // Template class to keep an Actor pointer, as a raw pointer, in a ref-counted

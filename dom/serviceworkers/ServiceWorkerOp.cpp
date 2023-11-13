@@ -277,7 +277,7 @@ class ServiceWorkerOp::ServiceWorkerOpRunnable : public WorkerDebuggeeRunnable {
 
   ServiceWorkerOpRunnable(RefPtr<ServiceWorkerOp> aOwner,
                           WorkerPrivate* aWorkerPrivate)
-      : WorkerDebuggeeRunnable(aWorkerPrivate, WorkerThreadModifyBusyCount),
+      : WorkerDebuggeeRunnable(aWorkerPrivate, WorkerThread),
         mOwner(std::move(aOwner)) {
     AssertIsOnMainThread();
     MOZ_ASSERT(mOwner);
@@ -856,10 +856,7 @@ class NotificationEventOp : public ExtendableEventOp,
     timer.swap(mTimer);
 
     // We swap first and then initialize the timer so that even if initializing
-    // fails, we still clean the busy count and interaction count correctly.
-    // The timer can't be initialized before modyfing the busy count since the
-    // timer thread could run and call the timeout but the worker may
-    // already be terminating and modifying the busy count could fail.
+    // fails, we still clean the interaction count correctly.
     uint32_t delay = mArgs.get_ServiceWorkerNotificationEventOpArgs()
                          .disableOpenClickDelay();
     rv = mTimer->InitWithCallback(this, delay, nsITimer::TYPE_ONE_SHOT);

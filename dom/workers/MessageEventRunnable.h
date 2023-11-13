@@ -20,8 +20,7 @@ namespace dom {
 class MessageEventRunnable final : public WorkerDebuggeeRunnable,
                                    public StructuredCloneHolder {
  public:
-  MessageEventRunnable(WorkerPrivate* aWorkerPrivate,
-                       TargetAndBusyBehavior aBehavior);
+  MessageEventRunnable(WorkerPrivate* aWorkerPrivate, Target aTarget);
 
   bool DispatchDOMEvent(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
                         DOMEventTargetHelper* aTarget, bool aIsMainThread);

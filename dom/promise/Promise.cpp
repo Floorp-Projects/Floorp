@@ -776,8 +776,7 @@ class PromiseWorkerProxyRunnable : public WorkerRunnable {
  public:
   PromiseWorkerProxyRunnable(PromiseWorkerProxy* aPromiseWorkerProxy,
                              PromiseWorkerProxy::RunCallbackFunc aFunc)
-      : WorkerRunnable(aPromiseWorkerProxy->GetWorkerPrivate(),
-                       WorkerThreadUnchangedBusyCount),
+      : WorkerRunnable(aPromiseWorkerProxy->GetWorkerPrivate(), WorkerThread),
         mPromiseWorkerProxy(aPromiseWorkerProxy),
         mFunc(aFunc) {
     MOZ_ASSERT(NS_IsMainThread());
