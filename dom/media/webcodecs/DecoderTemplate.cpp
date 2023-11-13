@@ -606,11 +606,12 @@ MessageProcessedResult DecoderTemplate<DecoderType>::ProcessConfigureMessage(
     } else if (!decoderAgentCreated) {
       errorMessage.Append("DecoderAgent creation failed.");
     }
-    LOGE("%s %p ProcessConfigureMessage error (sync): %s", DecoderType::Name.get(), this,
-         errorMessage.get());
+    LOGE("%s %p ProcessConfigureMessage error (sync): %s",
+         DecoderType::Name.get(), this, errorMessage.get());
     mProcessingMessage.reset();
     NS_DispatchToCurrentThread(NS_NewRunnableFunction(
-        "ProcessConfigureMessage (async): invalid config", [self = RefPtr(this), errorMessage] {
+        "ProcessConfigureMessage (async): invalid config",
+        [self = RefPtr(this), errorMessage] {
           LOGE("%s %p ProcessConfigureMessage (async close): %s",
                DecoderType::Name.get(), self.get(), errorMessage.get());
           DebugOnly<Result<Ok, nsresult>> r =
@@ -632,44 +633,44 @@ MessageProcessedResult DecoderTemplate<DecoderType>::ProcessConfigureMessage(
   bool lowLatency = mActiveConfig->mOptimizeForLatency.isSome() &&
                     mActiveConfig->mOptimizeForLatency.value();
   mAgent->Configure(preferSW, lowLatency)
-      ->Then(GetCurrentSerialEventTarget(), __func__,
-             [self = RefPtr{this}, id = mAgent->mId](
-                 const DecoderAgent::ConfigurePromise::ResolveOrRejectValue&
-                     aResult) {
-               MOZ_ASSERT(self->mProcessingMessage);
-               MOZ_ASSERT(self->mProcessingMessage->AsConfigureMessage());
-               MOZ_ASSERT(self->mState == CodecState::Configured);
-               MOZ_ASSERT(self->mAgent);
-               MOZ_ASSERT(id == self->mAgent->mId);
-               MOZ_ASSERT(self->mActiveConfig);
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [self = RefPtr{this}, id = mAgent->mId](
+              const DecoderAgent::ConfigurePromise::ResolveOrRejectValue&
+                  aResult) {
+            MOZ_ASSERT(self->mProcessingMessage);
+            MOZ_ASSERT(self->mProcessingMessage->AsConfigureMessage());
+            MOZ_ASSERT(self->mState == CodecState::Configured);
+            MOZ_ASSERT(self->mAgent);
+            MOZ_ASSERT(id == self->mAgent->mId);
+            MOZ_ASSERT(self->mActiveConfig);
 
-               ConfigureMessage* msg =
-                   self->mProcessingMessage->AsConfigureMessage();
-               LOG("%s %p, DecodeAgent #%d %s has been %s. now unblocks "
-                   "message-queue-processing",
+            ConfigureMessage* msg =
+                self->mProcessingMessage->AsConfigureMessage();
+            LOG("%s %p, DecodeAgent #%d %s has been %s. now unblocks "
+                "message-queue-processing",
+                DecoderType::Name.get(), self.get(), id, msg->ToString().get(),
+                aResult.IsResolve() ? "resolved" : "rejected");
+
+            msg->Complete();
+            self->mProcessingMessage.reset();
+
+            if (aResult.IsReject()) {
+              // The spec asks to close the decoder with an
+              // NotSupportedError so we log the exact error here.
+              const MediaResult& error = aResult.RejectValue();
+              LOGE("%s %p, DecodeAgent #%d failed to configure: %s",
                    DecoderType::Name.get(), self.get(), id,
-                   msg->ToString().get(),
-                   aResult.IsResolve() ? "resolved" : "rejected");
+                   error.Description().get());
+              DebugOnly<Result<Ok, nsresult>> r =
+                  self->CloseInternal(NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR);
+              MOZ_ASSERT(r.value.isOk());
+              return;  // No further process
+            }
 
-               msg->Complete();
-               self->mProcessingMessage.reset();
-
-               if (aResult.IsReject()) {
-                 // The spec asks to close the decoder with an
-                 // NotSupportedError so we log the exact error here.
-                 const MediaResult& error = aResult.RejectValue();
-                 LOGE("%s %p, DecodeAgent #%d failed to configure: %s",
-                      DecoderType::Name.get(), self.get(), id,
-                      error.Description().get());
-                 DebugOnly<Result<Ok, nsresult>> r =
-                     self->CloseInternal(NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR);
-                 MOZ_ASSERT(r.value.isOk());
-                 return;  // No further process
-               }
-
-               self->mMessageQueueBlocked = false;
-               self->ProcessControlMessageQueue();
-             })
+            self->mMessageQueueBlocked = false;
+            self->ProcessControlMessageQueue();
+          })
       ->Track(msg->Request());
 
   return MessageProcessedResult::Processed;
