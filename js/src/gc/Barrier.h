@@ -1152,27 +1152,6 @@ struct StableCellHasher<HeapPtr<T>> {
   }
 };
 
-// NB: The specialization works based on pointer equality and not on JS Value
-// semantics, and it will assert if the Value's isGCThing() is false.
-template <>
-struct StableCellHasher<HeapPtr<Value>> {
-  using Key = HeapPtr<Value>;
-  using Lookup = Value;
-
-  static bool maybeGetHash(const Lookup& l, HashNumber* hashOut) {
-    return StableCellHasher<gc::Cell*>::maybeGetHash(l.toGCThing(), hashOut);
-  }
-  static bool ensureHash(const Lookup& l, HashNumber* hashOut) {
-    return StableCellHasher<gc::Cell*>::ensureHash(l.toGCThing(), hashOut);
-  }
-  static HashNumber hash(const Lookup& l) {
-    return StableCellHasher<gc::Cell*>::hash(l.toGCThing());
-  }
-  static bool match(const Key& k, const Lookup& l) {
-    return StableCellHasher<gc::Cell*>::match(k.toGCThing(), l.toGCThing());
-  }
-};
-
 template <typename T>
 struct StableCellHasher<WeakHeapPtr<T>> {
   using Key = WeakHeapPtr<T>;
