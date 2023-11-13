@@ -1507,6 +1507,8 @@ void WindowGlobalParent::ActorDestroy(ActorDestroyReason aWhy) {
                              net::SchemeIsHTTPS(mDocumentURI))) {
           GetContentBlockingLog()->ReportCanvasFingerprintingLog(
               DocumentPrincipal());
+          GetContentBlockingLog()->ReportFontFingerprintingLog(
+              DocumentPrincipal());
           GetContentBlockingLog()->ReportEmailTrackingLog(DocumentPrincipal());
         }
       }

@@ -16380,6 +16380,15 @@ void Document::RecordCanvasUsage(CanvasUsage& aUsage) {
                                                originNoSuffix);
 }
 
+void Document::RecordFontFingerprinting() {
+  nsCString originNoSuffix;
+  if (NS_FAILED(NodePrincipal()->GetOriginNoSuffix(originNoSuffix))) {
+    return;
+  }
+
+  nsRFPService::MaybeReportFontFingerprinter(GetChannel(), originNoSuffix);
+}
+
 WindowContext* Document::GetWindowContextForPageUseCounters() const {
   if (mDisplayDocument) {
     // If we are a resource document, then go through it to find the

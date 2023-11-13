@@ -4097,6 +4097,7 @@ class Document : public nsINode,
   bool RecomputeResistFingerprinting();
 
   void RecordCanvasUsage(CanvasUsage& aUsage);
+  void RecordFontFingerprinting();
 
   bool MayHaveDOMActivateListeners() const;
 

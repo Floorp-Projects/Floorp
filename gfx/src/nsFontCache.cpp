@@ -10,6 +10,9 @@
 #include "mozilla/ServoUtils.h"
 #include "nsCRT.h"
 
+#include "mozilla/dom/Document.h"
+#include "nsPresContext.h"
+
 using mozilla::services::GetObserverService;
 
 NS_IMPL_ISUPPORTS(nsFontCache, nsIObserver)
@@ -78,6 +81,22 @@ already_AddRefed<nsFontMetrics> nsFontCache::GetMetricsFor(
       }
       fm->GetThebesFontGroup()->UpdateUserFonts();
       return do_AddRef(fm);
+    }
+  }
+
+  if (!mReportedProbableFingerprinting) {
+    // We try to detect font fingerprinting attempts by recognizing a large
+    // number of cache misses in a short amount of time, which indicates the
+    // usage of an unreasonable amount of different fonts by the web page.
+    PRTime now = PR_Now();
+    if (now - mLastCacheMiss > kFingerprintingTimeout) {
+      mCacheMisses = 0;
+    }
+    mCacheMisses++;
+    mLastCacheMiss = now;
+    if (NS_IsMainThread() && mCacheMisses > kFingerprintingCacheMissThreshold) {
+      mContext->Document()->RecordFontFingerprinting();
+      mReportedProbableFingerprinting = true;
     }
   }
 
@@ -153,4 +172,7 @@ void nsFontCache::Flush(int32_t aFlushCount) {
     NS_RELEASE(fm);
   }
   mFontMetrics.RemoveElementsAt(0, n);
+
+  mLastCacheMiss = 0;
+  mCacheMisses = 0;
 }

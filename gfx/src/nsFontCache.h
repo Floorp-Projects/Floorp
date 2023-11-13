@@ -15,6 +15,7 @@
 #include "nsISupports.h"
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
+#include "prtime.h"
 
 class gfxUserFontSet;
 class nsAtom;
@@ -48,7 +49,18 @@ class nsFontCache final : public nsIObserver {
   // In practice, the great majority of cache hits are among the last
   // few entries; keeping thousands of older entries becomes counter-
   // productive because it can then take too long to scan the cache.
-  static const int32_t kMaxCacheEntries = 128;
+  static constexpr int32_t kMaxCacheEntries = 128;
+
+  // Number of cache misses before we assume that a font fingerprinting attempt
+  // is being made. Usually fingerprinters will lookup the same font-family
+  // three times, as "sans-serif", "serif" and "monospace".
+  static constexpr int32_t kFingerprintingCacheMissThreshold = 3 * 20;
+  // We assume that fingerprinters will lookup a large number of fonts in a
+  // short amount of time.
+  static constexpr PRTime kFingerprintingTimeout =
+      PRTime(PR_USEC_PER_SEC) * 3;  // 3 seconds
+
+  static_assert(kFingerprintingCacheMissThreshold < kMaxCacheEntries);
 
   ~nsFontCache() = default;
 
@@ -80,6 +92,10 @@ class nsFontCache final : public nsIObserver {
    private:
     RefPtr<nsFontCache> mCache;
   };
+
+  PRTime mLastCacheMiss = 0;
+  uint64_t mCacheMisses = 0;
+  bool mReportedProbableFingerprinting = false;
 };
 
 #endif /* _NS_FONTCACHE_H_ */

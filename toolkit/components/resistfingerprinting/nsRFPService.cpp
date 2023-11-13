@@ -1494,6 +1494,18 @@ nsresult nsRFPService::RandomizePixels(nsICookieJarSettings* aCookieJarSettings,
       Some(featureUsage & CanvasFeatureUsage::KnownFingerprintText));
 }
 
+/* static */ void nsRFPService::MaybeReportFontFingerprinter(
+    nsIChannel* aChannel, nsACString& aOriginNoSuffix) {
+  if (!aChannel) {
+    return;
+  }
+
+  ContentBlockingNotifier::OnEvent(
+      aChannel, false,
+      nsIWebProgressListener::STATE_ALLOWED_FONT_FINGERPRINTING,
+      aOriginNoSuffix);
+}
+
 /* static */
 nsresult nsRFPService::CreateOverrideDomainKey(
     nsIFingerprintingOverride* aOverride, nsACString& aDomainKey) {
