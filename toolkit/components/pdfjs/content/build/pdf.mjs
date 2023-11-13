@@ -1948,7 +1948,9 @@ class AnnotationEditorUIManager {
     }], [["Backspace", "alt+Backspace", "ctrl+Backspace", "shift+Backspace", "mac+Backspace", "mac+alt+Backspace", "mac+ctrl+Backspace", "Delete", "ctrl+Delete", "shift+Delete", "mac+Delete"], proto.delete, {
       checker: textInputChecker
     }], [["Enter", "mac+Enter"], proto.addNewEditorFromKeyboard, {
-      checker: self => self.#container.contains(document.activeElement) && !self.isEnterHandled
+      checker: (self, {
+        target: el
+      }) => !(el instanceof HTMLButtonElement) && self.#container.contains(el) && !self.isEnterHandled
     }], [[" ", "mac+ "], proto.addNewEditorFromKeyboard, {
       checker: self => self.#container.contains(document.activeElement)
     }], [["Escape", "mac+Escape"], proto.unselectAll], [["ArrowLeft", "mac+ArrowLeft"], proto.translateSelectedEditors, {
@@ -2746,7 +2748,71 @@ class AnnotationEditorUIManager {
   }
 }
 
+;// CONCATENATED MODULE: ./src/display/editor/toolbar.js
+
+class EditorToolbar {
+  #toolbar = null;
+  #editor;
+  #buttons = null;
+  constructor(editor) {
+    this.#editor = editor;
+  }
+  render() {
+    const editToolbar = this.#toolbar = document.createElement("div");
+    editToolbar.className = "editToolbar";
+    editToolbar.addEventListener("contextmenu", noContextMenu);
+    editToolbar.addEventListener("pointerdown", EditorToolbar.#pointerDown);
+    const buttons = this.#buttons = document.createElement("div");
+    buttons.className = "buttons";
+    editToolbar.append(buttons);
+    this.#addDeleteButton();
+    return editToolbar;
+  }
+  static #pointerDown(e) {
+    e.stopPropagation();
+  }
+  #focusIn(e) {
+    this.#editor._focusEventsAllowed = false;
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  #focusOut(e) {
+    this.#editor._focusEventsAllowed = true;
+    e.preventDefault();
+    e.stopPropagation();
+  }
+  #addListenersToElement(element) {
+    element.addEventListener("focusin", this.#focusIn.bind(this), {
+      capture: true
+    });
+    element.addEventListener("focusout", this.#focusOut.bind(this), {
+      capture: true
+    });
+    element.addEventListener("contextmenu", noContextMenu);
+  }
+  hide() {
+    this.#toolbar.classList.add("hidden");
+  }
+  show() {
+    this.#toolbar.classList.remove("hidden");
+  }
+  #addDeleteButton() {
+    const button = document.createElement("button");
+    button.className = "delete";
+    button.tabIndex = 0;
+    this.#addListenersToElement(button);
+    button.addEventListener("click", e => {
+      this.#editor._uiManager.delete();
+    });
+    this.#buttons.append(button);
+  }
+  remove() {
+    this.#toolbar.remove();
+  }
+}
+
 ;// CONCATENATED MODULE: ./src/display/editor/editor.js
+
 
 
 
@@ -2763,6 +2829,7 @@ class AnnotationEditor {
   #savedDimensions = null;
   #boundFocusin = this.focusin.bind(this);
   #boundFocusout = this.focusout.bind(this);
+  #editToolbar = null;
   #focusedResizerName = "";
   #hasBeenClicked = false;
   #isEditing = false;
@@ -3440,6 +3507,20 @@ class AnnotationEditor {
     });
     this.#altTextWasFromKeyBoard = false;
   }
+  addEditToolbar() {
+    if (this.#editToolbar || this.#isInEditMode) {
+      return;
+    }
+    this.#editToolbar = new EditorToolbar(this);
+    this.div.append(this.#editToolbar.render());
+  }
+  removeEditToolbar() {
+    if (!this.#editToolbar) {
+      return;
+    }
+    this.#editToolbar.remove();
+    this.#editToolbar = null;
+  }
   getClientDimensions() {
     return this.div.getBoundingClientRect();
   }
@@ -3644,6 +3725,7 @@ class AnnotationEditor {
       this.#moveInDOMTimeout = null;
     }
     this.#stopResizing();
+    this.removeEditToolbar();
   }
   get isResizable() {
     return false;
@@ -3763,6 +3845,8 @@ class AnnotationEditor {
   select() {
     this.makeResizable();
     this.div?.classList.add("selectedEditor");
+    this.addEditToolbar();
+    this.#editToolbar?.show();
   }
   unselect() {
     this.#resizersDiv?.classList.add("hidden");
@@ -3770,6 +3854,7 @@ class AnnotationEditor {
     if (this.div?.contains(document.activeElement)) {
       this._uiManager.currentLayer.div.focus();
     }
+    this.#editToolbar?.hide();
   }
   updateParams(type, value) {}
   disableEditing() {
@@ -8060,7 +8145,7 @@ function getDocument(src) {
   }
   const fetchDocParams = {
     docId,
-    apiVersion: '4.0.189',
+    apiVersion: '4.0.223',
     data,
     password,
     disableAutoFetch,
@@ -9684,8 +9769,8 @@ class InternalRenderTask {
     }
   }
 }
-const version = '4.0.189';
-const build = '50f52b43a';
+const version = '4.0.223';
+const build = '788411997';
 
 ;// CONCATENATED MODULE: ./src/display/text_layer.js
 
@@ -11304,7 +11389,9 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement {
           }
           elementData.lastCommittedValue = target.value;
           elementData.commitKey = 1;
-          elementData.focused = true;
+          if (!this.data.actions?.Focus) {
+            elementData.focused = true;
+          }
         });
         element.addEventListener("updatefromsandbox", jsEvent => {
           this.showElementAndHideCanvas(jsEvent.target);
@@ -11408,7 +11495,9 @@ class TextWidgetAnnotationElement extends WidgetAnnotationElement {
           if (!elementData.focused || !event.relatedTarget) {
             return;
           }
-          elementData.focused = false;
+          if (!this.data.actions?.Blur) {
+            elementData.focused = false;
+          }
           const {
             value
           } = event.target;
@@ -13621,7 +13710,7 @@ class InkEditor extends AnnotationEditor {
     this.#disableEditing = true;
     this.div.classList.add("disabled");
     this.#fitToContent(true);
-    this.makeResizable();
+    this.select();
     this.parent.addInkEditorIfNeeded(true);
     this.moveInDOM();
     this.div.focus({
@@ -14866,8 +14955,8 @@ class AnnotationEditorLayer {
 
 
 
-const pdfjsVersion = '4.0.189';
-const pdfjsBuild = '50f52b43a';
+const pdfjsVersion = '4.0.223';
+const pdfjsBuild = '788411997';
 
 var __webpack_exports__AbortException = __webpack_exports__.AbortException;
 var __webpack_exports__AnnotationEditorLayer = __webpack_exports__.AnnotationEditorLayer;
