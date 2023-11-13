@@ -584,13 +584,30 @@ MessageProcessedResult DecoderTemplate<DecoderType>::ProcessConfigureMessage(
   DestroyDecoderAgentIfAny();
 
   auto i = DecoderType::CreateTrackInfo(msg->Config());
-  if (!DecoderType::IsSupported(msg->Config()) || i.isErr() ||
-      !CreateDecoderAgent(msg->mId, msg->TakeConfig(), i.unwrap())) {
+  bool supported = !i.isErr() && DecoderType::IsSupported(msg->Config());
+  bool decoderAgentCreated =
+      supported && !i.isErr() &&
+      CreateDecoderAgent(msg->mId, msg->TakeConfig(), i.unwrap());
+  if (!supported || i.isErr() || !decoderAgentCreated) {
+    nsCString errorMessage;
+    if (i.isErr()) {
+      errorMessage.Append(errorMessage);
+    } else if (!supported) {
+      errorMessage.Append("Not supported.");
+    } else if (!decoderAgentCreated) {
+      errorMessage.Append("DecoderAgent creation failed.");
+    }
+    LOGE("%s %p ProcessConfigureMessage error (sync): %s", DecoderType::Name.get(), this,
+         errorMessage.get());
     mProcessingMessage.reset();
-    DebugOnly<Result<Ok, nsresult>> r =
-        CloseInternal(NS_ERROR_DOM_MEDIA_NOT_SUPPORTED_ERR);
-    MOZ_ASSERT(r.value.isOk());
-    LOGE("%s %p cannot be configured", DecoderType::Name.get(), this);
+    NS_DispatchToCurrentThread(NS_NewRunnableFunction(
+        "ProcessConfigureMessage (async): invalid config", [self = RefPtr(this), errorMessage] {
+          LOGE("%s %p ProcessConfigureMessage (async close): %s",
+               DecoderType::Name.get(), self.get(), errorMessage.get());
+          DebugOnly<Result<Ok, nsresult>> r =
+              self->CloseInternal(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+          MOZ_ASSERT(r.value.isOk());
+        }));
     return MessageProcessedResult::Processed;
   }
 
@@ -636,7 +653,7 @@ MessageProcessedResult DecoderTemplate<DecoderType>::ProcessConfigureMessage(
                       DecoderType::Name.get(), self.get(), id,
                       error.Description().get());
                  DebugOnly<Result<Ok, nsresult>> r =
-                     self->CloseInternal(NS_ERROR_DOM_MEDIA_NOT_SUPPORTED_ERR);
+                     self->CloseInternal(NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR);
                  MOZ_ASSERT(r.value.isOk());
                  return;  // No further process
                }
@@ -767,16 +784,11 @@ MessageProcessedResult DecoderTemplate<DecoderType>::ProcessFlushMessage(
   LOG("%s %p starts processing %s", DecoderType::Name.get(), this,
       msg->ToString().get());
 
-  // Treat it like decode error if no DecoderAgent is available.
+  // No agent, no thing to do. The promise has been rejected with the
+  // appropriate error in ResetInternal already.
   if (!mAgent) {
-    LOGE("%s %p is not configured", DecoderType::Name.get(), this);
-
-    SchedulePromiseResolveOrReject(msg->TakePromise(),
-                                   NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR);
+    LOGE("%s %p no agent, nothing to do", DecoderType::Name.get(), this);
     mProcessingMessage.reset();
-
-    ScheduleClose(NS_ERROR_DOM_ENCODING_NOT_SUPPORTED_ERR);
-
     return MessageProcessedResult::Processed;
   }
 
