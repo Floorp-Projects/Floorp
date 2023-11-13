@@ -3,9 +3,7 @@ package org.mozilla.geckoview.test.crash
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import androidx.test.platform.app.InstrumentationRegistry
-import org.hamcrest.Matchers.equalTo
 import org.junit.Assert.assertTrue
-import org.junit.Assume.assumeThat
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.GeckoRuntime
@@ -26,8 +24,6 @@ class ParentCrashTest : BaseSessionTest() {
     @Test
     @ClosedSessionAtStart
     fun crashParent() {
-        // TODO: Bug 1673956
-        assumeThat(sessionRule.env.isFission, equalTo(false))
         val client = TestCrashHandler.Client(targetContext)
 
         assertTrue(client.connect(timeout))
