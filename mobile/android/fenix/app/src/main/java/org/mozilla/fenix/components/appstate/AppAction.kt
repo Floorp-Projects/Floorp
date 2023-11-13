@@ -237,5 +237,29 @@ sealed class AppAction : Action {
          * analysed.
          */
         data class RemoveFromProductAnalysed(val productPageUrl: String) : ShoppingAction()
+
+        /**
+         * [ShoppingAction] used to update the expansion state of the highlights card.
+         */
+        data class HighlightsCardExpanded(
+            val productPageUrl: String,
+            val expanded: Boolean,
+        ) : ShoppingAction()
+
+        /**
+         * [ShoppingAction] used to update the expansion state of the info card.
+         */
+        data class InfoCardExpanded(
+            val productPageUrl: String,
+            val expanded: Boolean,
+        ) : ShoppingAction()
+
+        /**
+         * [ShoppingAction] used to update the expansion state of the settings card.
+         */
+        data class SettingsCardExpanded(
+            val productPageUrl: String,
+            val expanded: Boolean,
+        ) : ShoppingAction()
     }
 }

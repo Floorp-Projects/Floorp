@@ -43,7 +43,7 @@ object ReviewQualityCheckMiddlewareProvider {
         scope: CoroutineScope,
     ): List<ReviewQualityCheckMiddleware> =
         listOf(
-            providePreferencesMiddleware(settings, browserStore, scope),
+            providePreferencesMiddleware(settings, browserStore, appStore, scope),
             provideNetworkMiddleware(browserStore, appStore, context, scope),
             provideNavigationMiddleware(TabsUseCases.SelectOrAddUseCase(browserStore), context),
             provideTelemetryMiddleware(),
@@ -52,10 +52,12 @@ object ReviewQualityCheckMiddlewareProvider {
     private fun providePreferencesMiddleware(
         settings: Settings,
         browserStore: BrowserStore,
+        appStore: AppStore,
         scope: CoroutineScope,
     ) = ReviewQualityCheckPreferencesMiddleware(
         reviewQualityCheckPreferences = DefaultReviewQualityCheckPreferences(settings),
         reviewQualityCheckVendorsService = DefaultReviewQualityCheckVendorsService(browserStore),
+        appStore = appStore,
         scope = scope,
     )
 

@@ -6,6 +6,7 @@ package org.mozilla.fenix.components.appstate.shopping
 
 import org.mozilla.fenix.components.appstate.AppAction.ShoppingAction
 import org.mozilla.fenix.components.appstate.AppState
+import org.mozilla.fenix.components.appstate.shopping.ShoppingState.CardState
 
 /**
  * Reducer for the shopping state that handles [ShoppingAction]s.
@@ -34,5 +35,49 @@ internal object ShoppingStateReducer {
                     productsInAnalysis = state.shoppingState.productsInAnalysis - action.productPageUrl,
                 ),
             )
+
+            is ShoppingAction.HighlightsCardExpanded -> {
+                val updatedValue =
+                    state.shoppingState.productCardState[action.productPageUrl]?.copy(
+                        isHighlightsExpanded = action.expanded,
+                    ) ?: CardState(isHighlightsExpanded = action.expanded)
+
+                state.copy(
+                    shoppingState = state.shoppingState.updateProductCardState(
+                        action.productPageUrl,
+                        updatedValue,
+                    ),
+                )
+            }
+
+            is ShoppingAction.InfoCardExpanded -> {
+                val updatedValue =
+                    state.shoppingState.productCardState[action.productPageUrl]?.copy(isInfoExpanded = action.expanded)
+                        ?: CardState(isInfoExpanded = action.expanded)
+
+                state.copy(
+                    shoppingState = state.shoppingState.updateProductCardState(
+                        action.productPageUrl,
+                        updatedValue,
+                    ),
+                )
+            }
+
+            is ShoppingAction.SettingsCardExpanded -> {
+                val updatedValue =
+                    state.shoppingState.productCardState[action.productPageUrl]?.copy(
+                        isSettingsExpanded = action.expanded,
+                    ) ?: CardState(isSettingsExpanded = action.expanded)
+
+                state.copy(
+                    shoppingState = state.shoppingState.updateProductCardState(
+                        action.productPageUrl,
+                        updatedValue,
+                    ),
+                )
+            }
         }
+
+    private fun ShoppingState.updateProductCardState(key: String, value: CardState): ShoppingState =
+        copy(productCardState = productCardState + (key to value))
 }

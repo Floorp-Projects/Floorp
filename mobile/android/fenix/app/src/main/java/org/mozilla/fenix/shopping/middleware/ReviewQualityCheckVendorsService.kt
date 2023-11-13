@@ -22,6 +22,11 @@ private val defaultVendorsList = enumValues<ProductVendor>().toList()
 interface ReviewQualityCheckVendorsService {
 
     /**
+     * Returns the selected tab url.
+     */
+    fun selectedTabUrl(): String?
+
+    /**
      * Returns the list of product vendors in order.
      */
     fun productVendors(): List<ProductVendor>
@@ -37,8 +42,11 @@ class DefaultReviewQualityCheckVendorsService(
     private val browserStore: BrowserStore,
 ) : ReviewQualityCheckVendorsService {
 
+    override fun selectedTabUrl(): String? =
+        browserStore.state.selectedTab?.content?.url
+
     override fun productVendors(): List<ProductVendor> {
-        val selectedTabUrl = browserStore.state.selectedTab?.content?.url
+        val selectedTabUrl = selectedTabUrl()
 
         return if (selectedTabUrl == null) {
             defaultVendorsList

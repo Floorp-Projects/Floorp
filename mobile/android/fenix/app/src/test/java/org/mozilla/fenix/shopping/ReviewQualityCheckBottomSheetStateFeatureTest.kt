@@ -35,6 +35,9 @@ class ReviewQualityCheckBottomSheetStateFeatureTest {
             ReviewQualityCheckAction.OptInCompleted(
                 isProductRecommendationsEnabled = true,
                 productVendor = ReviewQualityCheckState.ProductVendor.WALMART,
+                isHighlightsExpanded = false,
+                isInfoExpanded = false,
+                isSettingsExpanded = false,
             ),
         ).joinBlocking()
         store.dispatch(ReviewQualityCheckAction.OptOutCompleted(emptyList())).joinBlocking()

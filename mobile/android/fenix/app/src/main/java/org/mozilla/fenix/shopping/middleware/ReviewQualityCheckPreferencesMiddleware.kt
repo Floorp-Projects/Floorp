@@ -8,9 +8,18 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import mozilla.components.lib.state.MiddlewareContext
 import mozilla.components.lib.state.Store
+import org.mozilla.fenix.components.AppStore
+import org.mozilla.fenix.components.appstate.AppAction
+import org.mozilla.fenix.components.appstate.AppAction.ShoppingAction
+import org.mozilla.fenix.components.appstate.AppAction.ShoppingAction.HighlightsCardExpanded
+import org.mozilla.fenix.components.appstate.AppAction.ShoppingAction.InfoCardExpanded
+import org.mozilla.fenix.components.appstate.AppAction.ShoppingAction.SettingsCardExpanded
+import org.mozilla.fenix.components.appstate.AppState
+import org.mozilla.fenix.components.appstate.shopping.ShoppingState.CardState
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckAction
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckMiddleware
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState
+import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.OptedIn
 
 /**
  * Middleware for getting and setting review quality check user preferences.
@@ -19,11 +28,13 @@ import org.mozilla.fenix.shopping.store.ReviewQualityCheckState
  * set preferences for the review quality check feature.
  * @param reviewQualityCheckVendorsService The [ReviewQualityCheckVendorsService] instance for
  * getting the list of product vendors.
+ * @param appStore The [AppStore] instance for dispatching [ShoppingAction]s.
  * @param scope The [CoroutineScope] to use for launching coroutines.
  */
 class ReviewQualityCheckPreferencesMiddleware(
     private val reviewQualityCheckPreferences: ReviewQualityCheckPreferences,
     private val reviewQualityCheckVendorsService: ReviewQualityCheckVendorsService,
+    private val appStore: AppStore,
     private val scope: CoroutineScope,
 ) : ReviewQualityCheckMiddleware {
 
@@ -44,6 +55,7 @@ class ReviewQualityCheckPreferencesMiddleware(
         }
     }
 
+    @Suppress("LongMethod")
     private fun processAction(
         store: Store<ReviewQualityCheckState, ReviewQualityCheckAction>,
         action: ReviewQualityCheckAction.PreferencesMiddlewareAction,
@@ -56,9 +68,17 @@ class ReviewQualityCheckPreferencesMiddleware(
                         reviewQualityCheckPreferences.productRecommendationsEnabled()
 
                     val updateUserPreferences = if (hasUserOptedIn) {
+                        val savedCardState =
+                            reviewQualityCheckVendorsService.selectedTabUrl()?.let {
+                                appStore.state.shoppingState.productCardState.getOrElse(it) { CardState() }
+                            } ?: CardState()
+
                         ReviewQualityCheckAction.OptInCompleted(
                             isProductRecommendationsEnabled = isProductRecommendationsEnabled,
                             productVendor = reviewQualityCheckVendorsService.productVendor(),
+                            isHighlightsExpanded = savedCardState.isHighlightsExpanded,
+                            isInfoExpanded = savedCardState.isInfoExpanded,
+                            isSettingsExpanded = savedCardState.isSettingsExpanded,
                         )
                     } else {
                         val productVendors = reviewQualityCheckVendorsService.productVendors()
@@ -76,6 +96,9 @@ class ReviewQualityCheckPreferencesMiddleware(
                         ReviewQualityCheckAction.OptInCompleted(
                             isProductRecommendationsEnabled = isProductRecommendationsEnabled,
                             productVendor = reviewQualityCheckVendorsService.productVendor(),
+                            isHighlightsExpanded = false,
+                            isInfoExpanded = false,
+                            isSettingsExpanded = false,
                         ),
                     )
 
@@ -102,6 +125,53 @@ class ReviewQualityCheckPreferencesMiddleware(
                         )
                     }
                 }
+            }
+
+            ReviewQualityCheckAction.ExpandCollapseHighlights -> {
+                appStore.dispatchShoppingAction(
+                    reviewQualityCheckState = store.state,
+                    action = { productPageUrl, optedIn ->
+                        HighlightsCardExpanded(
+                            productPageUrl = productPageUrl,
+                            expanded = optedIn.isHighlightsExpanded,
+                        )
+                    },
+                )
+            }
+
+            ReviewQualityCheckAction.ExpandCollapseInfo -> {
+                appStore.dispatchShoppingAction(
+                    reviewQualityCheckState = store.state,
+                    action = { productPageUrl, optedIn ->
+                        InfoCardExpanded(
+                            productPageUrl = productPageUrl,
+                            expanded = optedIn.isInfoExpanded,
+                        )
+                    },
+                )
+            }
+
+            ReviewQualityCheckAction.ExpandCollapseSettings -> {
+                appStore.dispatchShoppingAction(
+                    reviewQualityCheckState = store.state,
+                    action = { productPageUrl, optedIn ->
+                        SettingsCardExpanded(
+                            productPageUrl = productPageUrl,
+                            expanded = optedIn.isSettingsExpanded,
+                        )
+                    },
+                )
+            }
+        }
+    }
+
+    private fun Store<AppState, AppAction>.dispatchShoppingAction(
+        reviewQualityCheckState: ReviewQualityCheckState,
+        action: (productPageUrl: String, optedIn: OptedIn) -> ShoppingAction,
+    ) {
+        if (reviewQualityCheckState is OptedIn) {
+            reviewQualityCheckVendorsService.selectedTabUrl()?.let {
+                dispatch(action(it, reviewQualityCheckState))
             }
         }
     }

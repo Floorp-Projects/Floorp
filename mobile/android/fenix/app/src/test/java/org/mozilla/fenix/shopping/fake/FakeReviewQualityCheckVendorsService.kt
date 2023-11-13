@@ -8,11 +8,14 @@ import org.mozilla.fenix.shopping.middleware.ReviewQualityCheckVendorsService
 import org.mozilla.fenix.shopping.store.ReviewQualityCheckState.ProductVendor
 
 class FakeReviewQualityCheckVendorsService(
+    private val selectedTabUrl: String? = null,
     private val productVendors: List<ProductVendor> = listOf(
         ProductVendor.BEST_BUY,
         ProductVendor.WALMART,
         ProductVendor.AMAZON,
     ),
 ) : ReviewQualityCheckVendorsService {
+    override fun selectedTabUrl(): String? = selectedTabUrl
+
     override fun productVendors(): List<ProductVendor> = productVendors
 }
