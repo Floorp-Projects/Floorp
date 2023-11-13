@@ -446,6 +446,9 @@ class HttpChannelChild final : public PHttpChannelChild,
   // Collect telemetry for the successful rate of OMT.
   void CollectOMTTelemetry();
 
+  // Collect telemetry for mixed content.
+  void CollectMixedContentTelemetry();
+
   void RecordChannelCompletionDurationForEarlyHint();
 
   friend class HttpAsyncAborter<HttpChannelChild>;
