@@ -142,6 +142,7 @@ void DecoderTemplate<DecoderType>::Configure(const ConfigType& aConfig,
   }
 
   if (mState == CodecState::Closed) {
+    LOG("Configure: CodecState::Closed, rejecting with InvalidState");
     aRv.ThrowInvalidStateError("The codec is no longer usable");
     return;
   }
@@ -283,8 +284,10 @@ Result<Ok, nsresult> DecoderTemplate<DecoderType>::CloseInternal(
   MOZ_TRY(ResetInternal(aResult));
   mState = CodecState::Closed;
   if (aResult != NS_ERROR_DOM_ABORT_ERR) {
-    LOGE("%s %p Close on error: 0x%08" PRIx32, DecoderType::Name.get(), this,
-         static_cast<uint32_t>(aResult));
+    nsCString error;
+    GetErrorName(aResult, error);
+    LOGE("%s %p Close on error: %s", DecoderType::Name.get(), this,
+         error.get());
     ScheduleReportError(aResult);
   }
   return Ok();
@@ -330,8 +333,10 @@ class DecoderTemplate<DecoderType>::ErrorRunnable final
   // MOZ_CAN_RUN_SCRIPT_BOUNDARY until Runnable::Run is MOZ_CAN_RUN_SCRIPT.
   // See bug 1535398.
   MOZ_CAN_RUN_SCRIPT_BOUNDARY NS_IMETHOD Run() override {
-    LOGE("%s %p report error: 0x%08" PRIx32, DecoderType::Name.get(),
-         mDecoder.get(), static_cast<uint32_t>(mError));
+    nsCString error;
+    GetErrorName(mError, error);
+    LOGE("%s %p report error: %s", DecoderType::Name.get(), mDecoder.get(),
+         error.get());
     RefPtr<Self> d = std::move(mDecoder);
     d->ReportError(mError);
     return NS_OK;
@@ -345,8 +350,10 @@ class DecoderTemplate<DecoderType>::ErrorRunnable final
 template <typename DecoderType>
 void DecoderTemplate<DecoderType>::ScheduleReportError(
     const nsresult& aResult) {
-  LOGE("%s %p, schedule to report error: 0x%08" PRIx32, DecoderType::Name.get(),
-       this, static_cast<uint32_t>(aResult));
+  nsCString error;
+  GetErrorName(aResult, error);
+  LOGE("%s %p, schedule to report error: %s", DecoderType::Name.get(), this,
+       error.get());
   MOZ_ALWAYS_SUCCEEDS(
       NS_DispatchToCurrentThread(MakeAndAddRef<ErrorRunnable>(this, aResult)));
 }
@@ -417,8 +424,10 @@ void DecoderTemplate<DecoderType>::ScheduleClose(const nsresult& aResult) {
 
   auto task = [self = RefPtr{this}, result = aResult] {
     if (self->mState == CodecState::Closed) {
-      LOGW("%s %p has been closed. Ignore close with 0x%08" PRIx32,
-           DecoderType::Name.get(), self.get(), static_cast<uint32_t>(result));
+      nsCString error;
+      GetErrorName(result, error);
+      LOGW("%s %p has been closed. Ignore close with %s",
+           DecoderType::Name.get(), self.get(), error.get());
       return;
     }
     DebugOnly<Result<Ok, nsresult>> r = self->CloseInternal(result);
