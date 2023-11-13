@@ -1396,6 +1396,104 @@ nsresult nsRFPService::RandomizePixels(nsICookieJarSettings* aCookieJarSettings,
   return NS_OK;
 }
 
+#include <iostream>
+
+/* static */ void nsRFPService::MaybeReportCanvasFingerprinter(
+    nsTArray<CanvasUsage>& aUses) {
+  uint32_t extractedWebGL = 0;
+  bool seenExtractedWebGL_300x150 = false;
+
+  uint32_t extracted2D = 0;
+  bool seenExtracted2D_16x16 = false;
+  bool seenExtracted2D_122x110 = false;
+  bool seenExtracted2D_240x60 = false;
+  bool seenExtracted2D_280x60 = false;
+  bool seenExtracted2D_860x6 = false;
+  CanvasFeatureUsage featureUsage = CanvasFeatureUsage::None;
+
+  uint32_t extractedOther = 0;
+
+  for (const auto& usage : aUses) {
+    int32_t width = usage.mSize.width;
+    int32_t height = usage.mSize.height;
+
+    if (width > 2000 || height > 1000) {
+      // Canvases used for fingerprinting are usually relatively small.
+      continue;
+    }
+
+    if (usage.mType == dom::CanvasContextType::Canvas2D) {
+      featureUsage |= usage.mFeatureUsage;
+      extracted2D++;
+      if (width == 16 && height == 16) {
+        seenExtracted2D_16x16 = true;
+      } else if (width == 240 && height == 60) {
+        seenExtracted2D_240x60 = true;
+      } else if (width == 122 && height == 110) {
+        seenExtracted2D_122x110 = true;
+      } else if (width == 280 && height == 60) {
+        seenExtracted2D_280x60 = true;
+      } else if (width == 860 && height == 6) {
+        seenExtracted2D_860x6 = true;
+      }
+    } else if (usage.mType == dom::CanvasContextType::WebGL1) {
+      extractedWebGL++;
+      if (width == 300 && height == 150) {
+        seenExtractedWebGL_300x150 = true;
+      }
+    } else {
+      extractedOther++;
+    }
+  }
+
+  if (seenExtractedWebGL_300x150 && seenExtracted2D_240x60 &&
+      seenExtracted2D_122x110) {
+    // pintrest.com seems use fingerprintJs, but does not use WebGL
+    std::cerr << "[DEBUG][FINGERPRINTER] FingerprintJS commercial "
+                 "fingerprinting detected."
+              << std::endl;
+  } else if (seenExtractedWebGL_300x150 && seenExtracted2D_280x60 &&
+             seenExtracted2D_16x16) {
+    std::cerr << "[DEBUG][FINGERPRINTER] Akamai fingerprinting detected."
+              << std::endl;
+  } else if (seenExtractedWebGL_300x150 && extracted2D > 0 &&
+             (featureUsage & CanvasFeatureUsage::SetFont)) {
+    std::cerr << "[DEBUG][HIGHLY LIKELY FINGERPRINTER] Unknown "
+                 "fingerprinting detected (Variant 1)."
+              << std::endl;
+  } else if (extractedWebGL > 0 && extracted2D > 1 &&
+             seenExtracted2D_860x6 /* added */) {
+    // manage.wix.com / zoominfo.com
+    // Uses:
+    // width: 650 height: 12 type: Canvas2D (12 !!!)
+    // width: 860 height: 6 type: Canvas2D
+    // width: 2000 height: 200 type: WebGL1
+    std::cerr << "[DEBUG][HIGHLY LIKELY FINGERPRINTER] Unknown "
+                 "fingerprinting detected (Variant 2)."
+              << std::endl;
+  } else if (extractedOther > 0 && (extractedWebGL > 0 || extracted2D > 0)) {
+    // This was never hit in the top 1k sites
+    std::cerr << "[DEBUG][LIKELY FINGERPRINTER] Likely fingerprinting "
+                 "detected (Variant 3)."
+              << std::endl;
+  } else if (extracted2D > 0 && (featureUsage & CanvasFeatureUsage::SetFont) &&
+             (featureUsage &
+              (CanvasFeatureUsage::FillRect | CanvasFeatureUsage::LineTo |
+               CanvasFeatureUsage::Stroke))) {
+    std::cerr << "[DEBUG][LIKELY FINGERPRINTER] Likely fingerprinting "
+                 "detected (Variant 4)."
+              << std::endl;
+  } else if (extractedOther + extractedWebGL + extracted2D > 1) {
+    // This I added primarily to not miss anything, but it can cause false
+    // positives.
+    std::cerr << "[DEBUG][MAYBE FINGERPRINTER] Potential fingerprinting "
+                 "detected."
+              << std::endl;
+  } else {
+    std::cerr << "[DEBUG][NO FINGERPRINTER]" << std::endl;
+  }
+}
+
 /* static */
 nsresult nsRFPService::CreateOverrideDomainKey(
     nsIFingerprintingOverride* aOverride, nsACString& aDomainKey) {

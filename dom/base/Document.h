@@ -186,6 +186,7 @@ struct nsFont;
 namespace mozilla {
 class AbstractThread;
 class AttributeStyles;
+class CanvasUsage;
 class StyleSheet;
 class EditorBase;
 class EditorCommand;
@@ -4095,6 +4096,8 @@ class Document : public nsINode,
   // the state was changed.
   bool RecomputeResistFingerprinting();
 
+  void RecordCanvasUsage(CanvasUsage& aUsage);
+
   bool MayHaveDOMActivateListeners() const;
 
  protected:
@@ -5326,6 +5329,11 @@ class Document : public nsINode,
 
   // Registry of custom highlight definitions associated with this document.
   RefPtr<class HighlightRegistry> mHighlightRegistry;
+
+  // Used for tracking a number of recent canvas extractions (e.g. toDataURL),
+  // this is used for a canvas fingerprinter detection heuristic.
+  nsTArray<CanvasUsage> mCanvasUsage;
+  uint64_t mLastCanvasUsage = 0;
 
   UniquePtr<RadioGroupContainer> mRadioGroupContainer;
 
