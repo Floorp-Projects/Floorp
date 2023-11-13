@@ -50,6 +50,8 @@ class HTMLDetailsElement final : public nsGenericHTMLElement {
 
   virtual void AsyncEventRunning(AsyncEventDispatcher* aEvent) override;
 
+  void HandleInvokeInternal(nsAtom* aAction, ErrorResult& aRv) override;
+
  protected:
   virtual ~HTMLDetailsElement();
   void SetupShadowTree();
