@@ -191,6 +191,8 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="browser_menu_library">Tamkarḍit</string>
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">Asmel n tnarit</string>
+    <!-- Browser menu button that reopens a private tab as a regular tab -->
+    <string name="browser_menu_open_in_regular_tab">Ldi deg yiccer amagnu</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">Rnu ɣer ugdil agejdan</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
@@ -335,6 +337,9 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="juno_onboarding_sign_in_title_2">Mmesten iman-ik s ttawil n uwgelhen mi ara tɛeddiḍ seg yibenk ɣer wayeḍ</string>
     <!-- Description for sign in to sync screen. -->
     <string name="juno_onboarding_sign_in_description" moz:removedIn="120" tools:ignore="UnusedResources">Err-d accaren d wawalen uffiren seg yibenkan-ik·im-nniḍen i wakken ad tkemmleḍ segwanda i tḥebseḍ.</string>
+    <!-- Description for sign in to sync screen. Nimbus experiments do not support string placeholders.
+     Note: The word "Firefox" should NOT be translated -->
+    <string name="juno_onboarding_sign_in_description_2">Mi ara teqqneḍ rnu ad tremdeḍ amtawi, taɣellist tettwaseǧhed. Firefox yettwgelhin awalen-ik uffiren, ticraḍ n yisebtar, akked wayen niḍen.</string>
     <!-- Text for the button to sign in to sync on the device -->
     <string name="juno_onboarding_sign_in_positive_button" tools:ignore="UnusedResources">Kcem</string>
     <!-- Text for the button dismiss the screen and move on with the flow -->
@@ -428,16 +433,16 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <string name="preferences_https_only_title">Askar HTTPS-Only</string>
 
     <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
-    <string name="preferences_cookie_banner_reduction">Asenqes n yiɣarracen n yinagan n tuqqna</string>
+    <string name="preferences_cookie_banner_reduction" moz:RemovedIn="121" tools:ignore="UnusedResources">Asenqes n yiɣarracen n yinagan n tuqqna</string>
     <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
-    <string name="reduce_cookie_banner_option">Senqes iɣarracen n yinagan n tuqqna</string>
+    <string name="reduce_cookie_banner_option" moz:RemovedIn="121" tools:ignore="UnusedResources">Senqes iɣarracen n yinagan n tuqqna</string>
     <!-- Summary of cookie banner handling preference if the setting disabled is set to off -->
-    <string name="reduce_cookie_banner_option_off">Yensa</string>
+    <string name="reduce_cookie_banner_option_off" moz:RemovedIn="121" tools:ignore="UnusedResources">Yensa</string>
     <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
-    <string name="reduce_cookie_banner_option_on">Yermed</string>
+    <string name="reduce_cookie_banner_option_on" moz:RemovedIn="121" tools:ignore="UnusedResources">Yermed</string>
 
     <!-- Summary for the preference for rejecting all cookies whenever possible. The first parameter is the application name -->
-    <string name="reduce_cookie_banner_summary_1">%1$s iɛerreḍ s wudem awurman ad yagi isuturen n yinagan n tuqqna deg yiɣarracen n yinagan n tuqqna. </string>
+    <string name="reduce_cookie_banner_summary_1" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s iɛerreḍ s wudem awurman ad yagi isuturen n yinagan n tuqqna deg yiɣarracen n yinagan n tuqqna. </string>
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">Sens i usmel-a</string>
     <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
@@ -455,17 +460,17 @@ Tiktiwin tigejdanin yuzzlen ur nṣeḥḥi ara
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_unsupported_site">Asmel-a ur yettusefrak ara akka tura</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
-    <string name="reduce_cookie_banner_details_panel_title_on_for_site">Rmed asenqes n yiɣerracen n yinagan n tuqqna i %1$s?</string>
+    <string name="reduce_cookie_banner_details_panel_title_on_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">Rmed asenqes n yiɣerracen n yinagan n tuqqna i %1$s?</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
-    <string name="reduce_cookie_banner_details_panel_title_off_for_site">Sens asenqes n yiɣerracen n yinagan n tuqqna i %1$s?</string>
+    <string name="reduce_cookie_banner_details_panel_title_off_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">Sens asenqes n yiɣerracen n yinagan n tuqqna i %1$s?</string>
 
     <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name-->
     <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request_2">%1$s ur yezmir ara ad yagi issutar n trusi n yinagan n tuqqna s wudem awurman ɣef usmel-a. Tzemreḍ ad tazneḍ assuter i tallalt n usmel-a ɣer sdat.</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s ad isfeḍ inagan n tuqqna n usmel-a syen ad issesfer asebter. Asfaḍ meṛṛa n yinagan n tuqqna yezmer ad ak·am-isseḥbes tuqqna neɣ ad yenɣel tiqecwalin n tiɣtin.</string>
+    <string name="reduce_cookie_banner_details_panel_description_off_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s ad isfeḍ inagan n tuqqna n usmel-a syen ad issesfer asebter. Asfaḍ meṛṛa n yinagan n tuqqna yezmer ad ak·am-isseḥbes tuqqna neɣ ad yenɣel tiqecwalin n tiɣtin.</string>
 
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_on_for_site_2">%1$s yettaɛraḍ s wudem awurman ad yagi issutar n yinagan n tuqqna deg yismal i ten-yessefraken.</string>
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site_2" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s yettaɛraḍ s wudem awurman ad yagi issutar n yinagan n tuqqna deg yismal i ten-yessefraken.</string>
     <!-- Title text for the cookie banner re-engagement dialog. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_dialog_title" moz:RemovedIn="121" tools:ignore="UnusedResources">Sireg %1$s ad yagi iɣarracen n yinagan n tuqqna?</string>
     <!-- Body text for the cookie banner re-engagement dialog use. The first parameter is the application name. -->

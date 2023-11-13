@@ -84,6 +84,8 @@
     <string name="mozac_feature_addons_learn_more">Les mer om tillatelser</string>
     <!-- The rating of the add-on. -->
     <string name="mozac_feature_addons_rating">Vurdering</string>
+    <!-- A link that points to the detail page of the add-on. -->
+    <string name="mozac_feature_addons_more_info_link">Mer om denne utvidelsen</string>
     <!-- The settings of the add-on. -->
     <string name="mozac_feature_addons_settings">Innstillinger</string>
     <!-- Indicates the add-on is enabled. -->

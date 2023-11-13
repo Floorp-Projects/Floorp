@@ -84,6 +84,8 @@
     <string name="mozac_feature_addons_learn_more">Więcej informacji o uprawnieniach</string>
     <!-- The rating of the add-on. -->
     <string name="mozac_feature_addons_rating">Ocena</string>
+    <!-- A link that points to the detail page of the add-on. -->
+    <string name="mozac_feature_addons_more_info_link">Więcej o tym dodatku</string>
     <!-- The settings of the add-on. -->
     <string name="mozac_feature_addons_settings">Ustawienia</string>
     <!-- Indicates the add-on is enabled. -->

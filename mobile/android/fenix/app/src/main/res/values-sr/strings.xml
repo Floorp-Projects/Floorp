@@ -336,6 +336,8 @@
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
     <string name="juno_onboarding_default_browser_description_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Firefox ставља људе испред профита и штити вашу приватност тако што блокира елементе за праћење.\n\nСазнајте више у нашем обавештењу о приватности.</string>
+    <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
+    <string name="juno_onboarding_default_browser_description_nimbus_2">Наш непрофитни прегледач спречава компаније да вас тајно прате на мрежи.\n\nСазнајте више у нашем обавештењу о приватности.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
     This is part of the string with the key "juno_onboarding_default_browser_description". -->
     <string name="juno_onboarding_default_browser_description_link_text" tools:ignore="UnusedResources">обавештење о приватности</string>
@@ -517,6 +519,8 @@
     <string name="preferences_sign_in_description_2">Пријавите се да бисте синхронизовали своје језичке, обележиваче, лозинке и друго.</string>
     <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
     <string name="preferences_account_default_name" moz:RemovedIn="120" tools:ignore="UnusedResources">Firefox налог</string>
+    <!-- Preference shown instead of account display name while account profile information isn't available yet. -->
+    <string name="preferences_account_default_name_2">Mozilla налог</string>
     <!-- Preference text for account title when there was an error syncing FxA -->
     <string name="preferences_account_sync_error">Поново се повежите за наставак синхронизовања</string>
     <!-- Preference for language -->
@@ -622,6 +626,12 @@
     <!-- Text for classic wallpapers title. The first parameter is the Firefox name. -->
     <string name="wallpaper_classic_title">Класнични %s</string>
 
+    <!-- Text for artist series wallpapers title. "Artist series" represents a collection of artist collaborated wallpapers. -->
+    <string name="wallpaper_artist_series_title">Збирка уметника</string>
+    <!-- Description text for the artist series wallpapers with learn more link. The first parameter is the learn more string defined in wallpaper_learn_more. "Independent voices" is the name of the wallpaper collection -->
+    <string name="wallpaper_artist_series_description_with_learn_more">Збирка „Независни гласови“. %s</string>
+    <!-- Description text for the artist series wallpapers. "Independent voices" is the name of the wallpaper collection -->
+    <string name="wallpaper_artist_series_description">Збирка „Независни гласови“.</string>
     <!-- Wallpaper onboarding dialog header text. -->
     <string name="wallpapers_onboarding_dialog_title_text">Пробајте нове боје</string>
     <!-- Wallpaper onboarding dialog body text. -->
@@ -629,15 +639,35 @@
     <!-- Wallpaper onboarding dialog learn more button text. The button navigates to the wallpaper settings screen. -->
     <string name="wallpapers_onboarding_dialog_explore_more_button_text">Истражите још позадина</string>
 
+    <!-- Add-ons general availability nimbus message-->
+    <!-- Title of the Nimbus message for add-ons general availability-->
+    <string name="addon_ga_message_title" tools:ignore="UnusedResources">Нови додаци су доступни</string>
+    <!-- Body of the Nimbus message for add-ons general availability. 'Firefox' intentionally hardcoded here-->
+    <string name="addon_ga_message_body" tools:ignore="UnusedResources">Откријте преко 100 нових додатака који вам омогућавају да прилагодите Firefox.</string>
+    <!-- Button text of the Nimbus message for add-ons general availability. -->
+    <string name="addon_ga_message_button" tools:ignore="UnusedResources">Истражите додатке</string>
+
     <!-- Add-on Installation from AMO-->
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is not supported -->
     <string name="addon_not_supported_error" moz:removedIn="120" tools:ignore="UnusedResources">Додатак није подржан</string>
     <!-- Error displayed when user attempts to install an add-on from AMO (addons.mozilla.org) that is already installed -->
     <string name="addon_already_installed" moz:removedIn="120" tools:ignore="UnusedResources">Додатак је већ инсталиран</string>
 
+    <!-- Add-on process crash dialog to user -->
+    <!-- Title of a dialog shown to the user when enough errors have occurred with addons and they need to be temporarily disabled -->
+    <string name="addon_process_crash_dialog_title" tools:ignore="UnusedResources">Додаци су привремено онемогућени</string>
+    <!-- The first parameter is the application name. This is a message shown to the user when too many errors have occurred with the addons process and they have been disabled. The user can decide if they would like to continue trying to start add-ons or if they'd rather continue without them. -->
+    <string name="addon_process_crash_dialog_message" tools:ignore="UnusedResources">Један или више додатака је престало да ради што је довело до нестабилности вашег система. %1$s је покушао да их поново покрене без успеха.\n\nДодаци неће бити поново покренути током тренутне сесије.\n\nУклањање или онемогућавање додатака може да реши проблем.</string>
+    <!-- This will cause the add-ons to try restarting but the dialog will reappear if it is unsuccessful again -->
+    <string name="addon_process_crash_dialog_retry_button_text" tools:ignore="UnusedResources">Покушајте поново покренути додатке</string>
+    <!-- The user will continue with all add-ons disabled -->
+    <string name="addon_process_crash_dialog_disable_addons_button_text" tools:ignore="UnusedResources">Наставите са онемогућеним додацима</string>
+
     <!-- Account Preferences -->
     <!-- Preference for managing your account via accounts.firefox.com -->
     <string name="preferences_manage_account">Управљајте налогом</string>
+    <!-- Summary of the preference for managing your account via accounts.firefox.com. -->
+    <string name="preferences_manage_account_summary">Промените лозинку, управљајте прикупљањем података или обришите налог</string>
     <!-- Preference for triggering sync -->
     <string name="preferences_sync_now">Синхронизуј сада</string>
     <!-- Preference category for sync -->
@@ -2079,6 +2109,16 @@
     <!-- Snackbar button text to navigate to telemetry settings.-->
     <string name="experiments_snackbar_button">Иди у подешавања</string>
 
+    <!-- Text for learn more caption presenting a link with information about review quality. First parameter is for clickable text defined in review_quality_check_info_learn_more_link. -->
+    <string name="review_quality_check_info_learn_more">Сазнајте више о %s.</string>
+    <!-- Text for title of settings section. -->
+    <string name="review_quality_check_settings_title">Подешавања</string>
+    <!-- Clickable text that links to review quality check recommended products support article. -->
+    <string name="review_quality_check_settings_recommended_products_learn_more" tools:ignore="UnusedResources">Сазнајте више</string>
+    <!-- Title for warning card informing the user that the current product is currently not available. -->
+    <string name="review_quality_check_product_availability_warning_title" tools:ignore="UnusedResources">Производ није доступан</string>
+    <!-- Text for body of warning card informing the user that the current product's analysis is still processing. -->
+    <string name="review_quality_check_analysis_in_progress_warning_body">Ово може да потраје око 60 секунди.</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->
     <string name="review_quality_check_contextual_onboarding_privacy_policy" moz:RemovedIn="121" tools:ignore="UnusedResources">политика приватности</string>
     <!-- Clickable text from the review quality check contextual onboarding card that links to Fakespot privacy policy. -->

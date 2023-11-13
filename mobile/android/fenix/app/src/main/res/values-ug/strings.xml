@@ -1259,21 +1259,573 @@
     <string name="share_link_recent_apps_subheader">يېقىندا ئىشلەتكەن</string>
     <!-- Text for the copy link action in the share screen. -->
     <string name="share_copy_link_to_clipboard">چاپلاش تاختىسىغا كۆچۈر</string>
-     <!-- Action item in menu for the Delete browsing data on quit feature -->
+     <!-- Toast shown after copying link to clipboard -->
+    <string name="toast_copy_link_to_clipboard">چاپلاش تاختىسىغا كۆچۈرۈلدى</string>
+    <!-- An option from the share dialog to sign into sync -->
+    <string name="sync_sign_in">قەدەمداشلاشتا تىزىمغا كىرىڭ</string>
+     <!-- An option from the three dot menu to sync and save data -->
+    <string name="sync_menu_sync_and_save_data"> سانلىق مەلۇمات قەدەمداش ۋە ساقلاش</string>
+    <!-- An option from the share dialog to send link to all other sync devices -->
+    <string name="sync_send_to_all">ھەممە ئۈسكۈنىگە يوللا</string>
+    <!-- An option from the share dialog to reconnect to sync -->
+    <string name="sync_reconnect">قەدەمداشقا قايتا باغلىنىدۇ</string>
+    <!-- Text displayed when sync is offline and cannot be accessed -->
+    <string name="sync_offline">تورسىز</string>
+    <!-- An option to connect additional devices -->
+    <string name="sync_connect_device">باشقا ئۈسكۈنىگە باغلىنىدۇ</string>
+    <!-- The dialog text shown when additional devices are not available -->
+    <string name="sync_connect_device_dialog">ئاز دېگەندە بىر ئۈسكۈنىدە Firefox تىزىمغا كىرگەندە ئاندىن بەتكۈچ يوللىيالايدۇ.</string>
+    <!-- Confirmation dialog button -->
+    <string name="sync_confirmation_button">بىلدىم</string>
+    <!-- Share error message -->
+    <string name="share_error_snackbar">بۇ ئەپكە ھەمبەھىرلىيەلمەيدۇ</string>
+    <!-- Add new device screen title -->
+    <string name="sync_add_new_device_title">ئۈسكۈنىگە يوللا</string>
+    <!-- Text for the warning message on the Add new device screen -->
+    <string name="sync_add_new_device_message">ھېچقانداق ئۈسكۈنە باغلانمىدى</string>
+    <!-- Text for the button to learn about sending tabs -->
+    <string name="sync_add_new_device_learn_button">بەتكۈچ يوللاش ھەققىدىكى تەپسىلات…</string>
+    <!-- Text for the button to connect another device -->
+    <string name="sync_add_new_device_connect_button">باشقا ئۈسكۈنىگە باغلىنىۋاتىدۇ…</string>
+
+    <!-- Notifications -->
+    <!-- Text shown in the notification that pops up to remind the user that a private browsing session is active. -->
+    <string name="notification_pbm_delete_text_2">شەخسىي بەتكۈچنى ياپ</string>
+    <!-- Name of the marketing notification channel. Displayed in the "App notifications" system settings for the app -->
+    <string name="notification_marketing_channel_name">بازارچىلىق</string>
+    <!-- Title shown in the notification that pops up to remind the user to set fenix as default browser.
+    The app name is in the text, due to limitations with localizing Nimbus experiments -->
+    <string name="nimbus_notification_default_browser_title" tools:ignore="UnusedResources">Firefox تېز ھەم شەخسىي</string>
+
+    <!-- Text shown in the notification that pops up to remind the user to set fenix as default browser.
+    The app name is in the text, due to limitations with localizing Nimbus experiments -->
+    <string name="nimbus_notification_default_browser_text" tools:ignore="UnusedResources">Firefox نى كۆڭۈلدىكى توركۆرگۈ قىلىڭ</string>
+    <!-- Title shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_title">شەخسىي زىيارەتنى سىناڭ</string>
+    <!-- Text shown in the notification that pops up to re-engage the user.
+    %1$s is a placeholder that will be replaced by the app name. -->
+    <string name="notification_re_engagement_text">%1$s زىيارەت داۋامىدا cookies ۋە تارىخ خاتىرىسىنى ساقلىمايدۇ</string>
+    <!-- Title A shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_A_title">ئىزسىز زىيارەت</string>
+    <!-- Text A shown in the notification that pops up to re-engage the user.
+    %1$s is a placeholder that will be replaced by the app name. -->
+    <string name="notification_re_engagement_A_text">شەخسىي زىيارەتتە %1$s ئۇچۇرلىرىڭىزنى ساقلىمايدۇ.</string>
+    <!-- Title B shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_B_title">تۇنجى ئىزدەشنى باشلاڭ</string>
+    <!-- Text B shown in the notification that pops up to re-engage the user -->
+    <string name="notification_re_engagement_B_text">ئەتراپتىكى نەرسىلەرنى ئىزدەڭ. ياكى قىزىقارلىق ئىشلارنى بايقاڭ.</string>
+
+    <!-- Survey -->
+    <!-- Text shown in the fullscreen message that pops up to ask user to take a short survey.
+    The app name is in the text, due to limitations with localizing Nimbus experiments -->
+    <string name="nimbus_survey_message_text">قىسقا تەكشۈرۈشكە قاتنىشىپ Firefox نى تېخىمۇ ياخشىلاشقا ياردەملىشىڭ.</string>
+    <!-- Preference for taking the short survey. -->
+    <string name="preferences_take_survey">تەكشۈرۈشكە قاتنىشىڭ</string>
+    <!-- Preference for not taking the short survey. -->
+    <string name="preferences_not_take_survey">ياق رەھمەت</string>
+
+    <!-- Snackbar -->
+    <!-- Text shown in snackbar when user deletes a collection -->
+    <string name="snackbar_collection_deleted">يىغقۇچ ئۆچۈرۈلدى</string>
+    <!-- Text shown in snackbar when user renames a collection -->
+    <string name="snackbar_collection_renamed">يىغقۇچ ئىسمى ئۆزگەرتىلدى</string>
+
+    <!-- Text shown in snackbar when user closes a tab -->
+    <string name="snackbar_tab_closed">بەتكۈچ تاقالدى</string>
+    <!-- Text shown in snackbar when user closes all tabs -->
+    <string name="snackbar_tabs_closed">بەتكۈچ تاقالدى</string>
+    <!-- Text shown in snackbar when user bookmarks a list of tabs -->
+    <string name="snackbar_message_bookmarks_saved">خەتكۈچ ساقلاندى!</string>
+    <!-- Text shown in snackbar when user adds a site to shortcuts -->
+    <string name="snackbar_added_to_shortcuts">تېزلەتمىگە قوشۇلدى!</string>
+    <!-- Text shown in snackbar when user closes a private tab -->
+    <string name="snackbar_private_tab_closed">شەخسىي بەتكۈچ تاقالدى</string>
+    <!-- Text shown in snackbar when user closes all private tabs -->
+    <string name="snackbar_private_tabs_closed">شەخسىي بەتكۈچ تاقالدى</string>
+    <!-- Text shown in snackbar when user erases their private browsing data -->
+    <string name="snackbar_private_data_deleted">شەخسىي زىيارەت سانلىق مەلۇماتلىرى ئۆچۈرۈلدى</string>
+    <!-- Text shown in snackbar to undo deleting a tab, top site or collection -->
+    <string name="snackbar_deleted_undo">يېنىۋال</string>
+    <!-- Text shown in snackbar when user removes a top site -->
+    <string name="snackbar_top_site_removed">بېكەت چىقىرىۋېتىلدى</string>
+    <!-- QR code scanner prompt which appears after scanning a code, but before navigating to it
+        First parameter is the name of the app, second parameter is the URL or text scanned-->
+    <string name="qr_scanner_confirmation_dialog_message">%1$s نىڭ %2$s نى ئېچىشىغا يول قويىدۇ</string>
+    <!-- QR code scanner prompt dialog positive option to allow navigation to scanned link -->
+    <string name="qr_scanner_dialog_positive">يول قوي</string>
+    <!-- QR code scanner prompt dialog positive option to deny navigation to scanned link -->
+    <string name="qr_scanner_dialog_negative">رەت قىل</string>
+    <!-- QR code scanner prompt dialog error message shown when a hostname does not contain http or https. -->
+    <string name="qr_scanner_dialog_invalid">تور ئادرېس ئىناۋەتسىز.</string>
+    <!-- QR code scanner prompt dialog positive option when there is an error -->
+    <string name="qr_scanner_dialog_invalid_ok">جەزملە</string>
+    <!-- Tab collection deletion prompt dialog message. Placeholder will be replaced with the collection name -->
+    <string name="tab_collection_dialog_message">بۇ %1$s نى راستىنلا ئۆچۈرەمسىز؟</string>
+    <!-- Collection and tab deletion prompt dialog message. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_message">بۇ بەتكۈچ ئۆچۈرۈلسە پۈتكۈل يىغقۇچنى ئۆچۈرۈۋېتىدۇ. خالىغان ۋاقىتتا يېڭى يىغقۇچ قۇرالايسىز.</string>
+    <!-- Collection and tab deletion prompt dialog title. Placeholder will be replaced with the collection name. This will show when the last tab from a collection is deleted -->
+    <string name="delete_tab_and_collection_dialog_title"> %1$s نى ئۆچۈرەمدۇ؟</string>
+    <!-- Tab collection deletion prompt dialog option to delete the collection -->
+    <string name="tab_collection_dialog_positive">ئۆچۈر</string>
+    <!-- Text displayed in a notification when the user enters full screen mode -->
+    <string name="full_screen_notification">تولۇق ئېكران ھالىتىگە كىرىۋاتىدۇ</string>
+    <!-- Message for copying the URL via long press on the toolbar -->
+    <string name="url_copied">تور ئادرېسى كۆچۈرۈلدى</string>
+    <!-- Sample text for accessibility font size -->
+    <string name="accessibility_text_size_sample_text_1">بۇ ئۈلگە تېكىست. بۇ تەڭشەك بىلەن تېكىستنى چوڭايتقاندا ياكى كىچىكلەتكەندە تېكىستنىڭ قانداق كۆرۈلىدىغانلىقىنى كۆرسىتىپ بېرىدۇ.</string>
+    <!-- Summary for Accessibility Text Size Scaling Preference -->
+    <string name="preference_accessibility_text_size_summary">تور بېكەتلەردە تېكىستنى چوڭايتىدۇ ياكى كىچىكلىتىدۇ</string>
+    <!-- Title for Accessibility Text Size Scaling Preference -->
+    <string name="preference_accessibility_font_size_title">خەت چوڭلۇقى</string>
+
+    <!-- Title for Accessibility Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size_2">ئاپتوماتىك خەت چوڭلۇقى</string>
+
+    <!-- Summary for Accessibility Text Automatic Size Scaling Preference -->
+    <string name="preference_accessibility_auto_size_summary">خەت چوڭلۇقى ئاندىرويىد تەڭشىكىڭىزگە ماسلىشىدۇ. بۇ يەردە خەت چوڭلۇقىنى باشقۇرۇشنى چەكلىگىلى بولىدۇ.</string>
+
+    <!-- Title for the Delete browsing data preference -->
+    <string name="preferences_delete_browsing_data">توركۆرگۈ زىيارەت سانلىق مەلۇماتلىرىنى ئۆچۈرىدۇ</string>
+    <!-- Title for the tabs item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_tabs_title_2">بەتكۈچ ئاچ</string>
+    <!-- Subtitle for the tabs item in Delete browsing data, parameter will be replaced with the number of open tabs -->
+    <string name="preferences_delete_browsing_data_tabs_subtitle">%d بەتكۈچ</string>
+    <!-- Title for the data and history items in Delete browsing data -->
+    <!-- Title for the history item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_browsing_history_title">زىيارەت تارىخى</string>
+    <!-- Subtitle for the data and history items in delete browsing data, parameter will be replaced with the
+        number of history items the user has -->
+    <string name="preferences_delete_browsing_data_browsing_data_subtitle">%d ئادرېس</string>
+    <!-- Title for the cookies and site data items in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies_and_site_data">Cookies ۋە تور بېكەت سانلىق مەلۇماتلىرى</string>
+    <!-- Subtitle for the cookies item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cookies_subtitle">كۆپىنچە تور بېكەتلەردىكى تىزىمغا كىرىش ھالىتىدىن چېكىنىپ چىقىسىز</string>
+    <!-- Title for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files">غەملەنگەن سۈرەت ۋە ھۆججەت</string>
+    <!-- Subtitle for the cached images and files item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_cached_files_subtitle">ساقلىغۇچ بوشلۇقىنى بوشىتىدۇ</string>
+    <!-- Title for the site permissions item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_site_permissions">بېكەت ئىجازەتنامىسى</string>
+    <!-- Title for the downloads item in Delete browsing data -->
+    <string name="preferences_delete_browsing_data_downloads">چۈشۈرۈلمىلەر</string>
+    <!-- Text for the button to delete browsing data -->
+    <string name="preferences_delete_browsing_data_button">توركۆرگۈ زىيارەت سانلىق مەلۇماتلىرىنى ئۆچۈرىدۇ</string>
+    <!-- Title for the Delete browsing data on quit preference -->
+    <string name="preferences_delete_browsing_data_on_quit">چېكىنگەندە توركۆرگۈ زىيارەت سانلىق مەلۇماتلىرىنى ئۆچۈرىدۇ</string>
+    <!-- Summary for the Delete browsing data on quit preference. "Quit" translation should match delete_browsing_data_on_quit_action translation. -->
+    <string name="preference_summary_delete_browsing_data_on_quit_2">باش تىزىملىكتىن «چېكىن» نى تاللىغاندا توركۆرگۈ سانلىق مەلۇماتلىرىنى ئاپتوماتىك ئۆچۈرىدۇ</string>
+    <!-- Action item in menu for the Delete browsing data on quit feature -->
     <string name="delete_browsing_data_on_quit_action">چېكىنىش</string>
 
+    <!-- Title text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_title">ئۆچۈرىدىغان ۋاقىت دائىرىسى</string>
+    <!-- Body text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_body" moz:RemovedIn="130" tools:ignore="UnusedResources">تارىخ خاتىرىسى (باشقا ئۈسكۈنىلەردىن قەدەمداشلانغان تارىخ خاتىرىسىنى ئۆز ئىچىگە ئالىدۇ)، cookies ۋە باشقا توركۆرگۈ زىيارەت سانلىق مەلۇماتلىرىنى ئۆچۈرۈۋېتىدۇ.</string>
+    <!-- Body text of a delete browsing data dialog. -->
+    <string name="delete_history_prompt_body_2">تارىخ خاتىرىسى (باشقا ئۈسكۈنىلەردىن قەدەمداشلىغان تارىخ خاتىرىسىنىمۇ ئۆز ئىچىگە ئالىدۇ) نى ئۆچۈرىدۇ</string>
+    <!-- Radio button in the delete browsing data dialog to delete history items for the last hour. -->
+    <string name="delete_history_prompt_button_last_hour">ئاخىرقى سائەت</string>
+    <!-- Radio button in the delete browsing data dialog to delete history items for today and yesterday. -->
+    <string name="delete_history_prompt_button_today_and_yesterday">بۈگۈن ۋە تۈنۈگۈن</string>
+    <!-- Radio button in the delete browsing data dialog to delete all history. -->
+    <string name="delete_history_prompt_button_everything">ھەممىسى</string>
+
+    <!-- Dialog message to the user asking to delete browsing data. Parameter will be replaced by app name. -->
+    <string name="delete_browsing_data_prompt_message_3">%s تاللانغان توركۆرگۈ زىيارەت سانلىق مەلۇماتلىرىنى ئۆچۈرۈۋېتىدۇ.</string>
+    <!-- Text for the cancel button for the data deletion dialog -->
+    <string name="delete_browsing_data_prompt_cancel">ۋاز كەچ</string>
+    <!-- Text for the allow button for the data deletion dialog -->
+    <string name="delete_browsing_data_prompt_allow">ئۆچۈر</string>
+    <!-- Text for the snackbar confirmation that the data was deleted -->
+    <string name="preferences_delete_browsing_data_snackbar">توركۆرگۈ سانلىق مەلۇماتى ئۆچۈرۈلدى</string>
+    <!-- Text for the snackbar to show the user that the deletion of browsing data is in progress -->
+    <string name="deleting_browsing_data_in_progress">توركۆرگۈ زىيارەت سانلىق مەلۇماتىنى ئۆچۈرۈۋاتىدۇ…</string>
+
+    <!-- Dialog message to the user asking to delete all history items inside the opened group. Parameter will be replaced by a history group name. -->
+    <string name="delete_all_history_group_prompt_message">«%s» دىكى بارلىق تور بېكەتلەرنى ئۆچۈرىدۇ</string>
+    <!-- Text for the cancel button for the history group deletion dialog -->
+    <string name="delete_history_group_prompt_cancel">ۋاز كەچ</string>
+    <!-- Text for the allow button for the history group dialog -->
+    <string name="delete_history_group_prompt_allow">ئۆچۈر</string>
+    <!-- Text for the snackbar confirmation that the history group was deleted -->
+    <string name="delete_history_group_snackbar">گۇرۇپپا ئۆچۈرۈلدى</string>
+
+    <!-- Onboarding -->
+    <!-- text to display in the snackbar once account is signed-in -->
+    <string name="onboarding_firefox_account_sync_is_on">قەدەمداش ئوچۇق</string>
+
+    <!-- Onboarding theme -->
+    <!-- Text shown in snackbar when multiple tabs have been sent to device -->
+    <string name="sync_sent_tabs_snackbar">بەتكۈچ يوللاندى!</string>
+    <!-- Text shown in snackbar when one tab has been sent to device  -->
+    <string name="sync_sent_tab_snackbar">بەتكۈچ يوللاندى!</string>
+    <!-- Text shown in snackbar when sharing tabs failed  -->
+    <string name="sync_sent_tab_error_snackbar">يوللىيالمىدى</string>
+    <!-- Text shown in snackbar for the "retry" action that the user has after sharing tabs failed -->
+    <string name="sync_sent_tab_error_snackbar_action">قايتا سىنا</string>
+    <!-- Title of QR Pairing Fragment -->
+    <string name="sync_scan_code">كودنى تارا</string>
+    <!-- Instructions on how to access pairing -->
+    <string name="sign_in_instructions"><![CDATA[كومپيۇتېرىڭىزدىكى Firefox دا <b>https://firefox.com/pair</b> ئاچىدۇ]]></string>
+    <!-- Text shown for sign in pairing when ready -->
+    <string name="sign_in_ready_for_scan">تاراشقا تەييار</string>
+    <!-- Text shown for settings option for sign with pairing -->
+    <string name="sign_in_with_camera">كامېرا بىلەن كىرىڭ</string>
+    <!-- Text shown for settings option for sign with email -->
+    <string name="sign_in_with_email">ئورنىغا ئېلخەت ئىشلىتىڭ</string>
+    <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
+    <string name="sign_in_create_account_text"><![CDATA[ھېساباتىڭىز يوق؟ <u> Firefox نى ئۈسكۈنىلەر ئارا قەدەمداشلاش ئۈچۈن بىرنى قۇرۇڭ </u>.]]></string>
+    <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
+    <string name="sign_out_confirmation_message_2">%s ھېساباتىڭىز بىلەن قەدەمداشلاشنى توختىتىدۇ، ئەمما بۇ ئۈسكۈنىدىكى توركۆرگۈ سانلىق مەلۇماتلىرىڭىزنى ئۆچۈرمەيدۇ.</string>
+    <!-- Option to continue signing out of account shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_disconnect">ئۇلانمىنى ئۈز</string>
+    <!-- Option to cancel signing out shown in confirmation dialog to sign out of account -->
+    <string name="sign_out_cancel">ۋاز كەچ</string>
+    <!-- Error message snackbar shown after the user tried to select a default folder which cannot be altered -->
+    <string name="bookmark_cannot_edit_root">كۆڭۈلدىكى قىسقۇچنى تەھرىرلىيەلمەيدۇ</string>
+
+    <!-- Enhanced Tracking Protection -->
+    <!-- Link displayed in enhanced tracking protection panel to access tracking protection settings -->
+    <string name="etp_settings">قوغداش تەڭشەكلىرى</string>
+    <!-- Preference title for enhanced tracking protection settings -->
+    <string name="preference_enhanced_tracking_protection">كۈچەيتىلگەن ئىزلاشتىن قوغداش</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
     <string name="preference_enhanced_tracking_protection_explanation_learn_more">تەپسىلاتى</string>
+    <!-- Preference for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_default_1">ئۆلچەملىك (كۆڭۈلدىكى)</string>
+    <!-- Preference description for enhanced tracking protection for the standard protection settings -->
+    <string name="preference_enhanced_tracking_protection_standard_description_5">بەتلەر نورمال يۈكلىنىدۇ ، ئەمما ئازراق ئىز قوغلىغۇچنى توسىدۇ.</string>
+    <!--  Accessibility text for the Standard protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_standard_info_button">ئۆلچەملىك ئىز قوغلاشتىن قوغداشتا نېمىلەر توسۇلىدۇ</string>
+    <!-- Preference for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_strict">قاتتىق</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_strict_info_button">ئىز قوغلاشتىن قاتتىق قوغداشتا نېمىلەر توسۇلىدۇ</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom">ئىختىيارىچە</string>
+    <!-- Preference description for enhanced tracking protection for the strict protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_description_2">قايسى ئىز قوغلىغۇچ ۋە قوليازمىلارنى توسىدىغانلىقى تاللىنىدۇ.</string>
+    <!--  Accessibility text for the Strict protection information icon  -->
+    <string name="preference_enhanced_tracking_protection_custom_info_button">ئىختىيارىچە ئىز قوغلاشتىن قوغداشتا نېمىلەر توسۇلىدۇ</string>
+    <!-- Header for categories that are being blocked by current Enhanced Tracking Protection settings -->
+    <!-- Preference for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies">Cookies</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_1">بېكەت ھالقىپ ۋە ئىجتىمائىي تاراتقۇ ئىزلىغۇچ</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_2">زىيارەت قىلمىغان بېكەتنىڭ Cookies سى</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_3">بارلىق ئۈچىنچى تەرەپ Cookies (تور بېكەتلەرنىڭ بۇزۇلۇشىنى كەلتۈرۈپ چىقىرىشى مۇمكىن)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_4">بارلىق Cookies (تور بېكەتلەرنىڭ بۇزۇلۇشىنى كەلتۈرۈپ چىقىرىدۇ)</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
+    <string name="preference_enhanced_tracking_protection_custom_cookies_5">بېكەت ھالقىغان Cookies نى ئايرىۋېتىدۇ</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content">ئىز قوغلاش مەزمۇنى</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_1">ھەممە بەتكۈچتە</string>
+    <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
+    <string name="preference_enhanced_tracking_protection_custom_tracking_content_2">شەخسىي بەتكۈچتىلا</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_cryptominers">شىفىرلىق پۇل قازغۇچ</string>
+    <!-- Preference for enhanced tracking protection for the custom protection settings -->
+    <string name="preference_enhanced_tracking_protection_custom_fingerprinters">بارماق ئىزى ئىزلىغۇچ</string>
+    <!-- Button label for navigating to the Enhanced Tracking Protection details -->
+    <string name="enhanced_tracking_protection_details">تەپسىلاتى</string>
+    <!-- Header for categories that are being being blocked by current Enhanced Tracking Protection settings -->
+    <string name="enhanced_tracking_protection_blocked">توسۇلغان</string>
+    <!-- Header for categories that are being not being blocked by current Enhanced Tracking Protection settings -->
+    <string name="enhanced_tracking_protection_allowed">يول قويغان</string>
+    <!-- Category of trackers (social media trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_social_media_trackers_title">ئىجتىمائىي تاراتقۇ ئىزلىغۇچ</string>
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title">بېكەت ھالقىغان ئىزلاش cookie</string>
+    <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cookies_title_2">بېكەت ھالقىغان cookies</string>
+    <!-- Category of trackers (cryptominers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_cryptominers_title">شىفىرلىق پۇل قازغۇچ</string>
+    <!-- Category of trackers (fingerprinters) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_fingerprinters_title">بارماق ئىزى ئىزلىغۇچ</string>
+    <!-- Category of trackers (tracking content) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_tracking_content_title">ئىز قوغلاش مەزمۇنى</string>
+    <!-- Enhanced Tracking Protection message that protection is currently on for this site -->
+    <string name="etp_panel_on">قوغداش بۇ بېكەتكە ئوچۇق</string>
+    <!-- Enhanced Tracking Protection message that protection is currently off for this site -->
+    <string name="etp_panel_off">قوغداش بۇ بېكەتكە تاقاق</string>
+    <!-- Header for exceptions list for which sites enhanced tracking protection is always off -->
+    <string name="enhanced_tracking_protection_exceptions">كۈچەيتىلگەن ئىز قوغلاشتىن قوغداش بۇ تور بېكەتلەر ئۈچۈن تاقالغان</string>
+    <!-- Content description (not visible, for screen readers etc.): Navigate
+    back from ETP details (Ex: Tracking content) -->
+    <string name="etp_back_button_content_description">كەينىگە قايت</string>
+    <!-- About page link text to open what's new link -->
+    <string name="about_whats_new">%s دىكى يېڭىلىقلار</string>
+    <!-- Open source licenses page title
+    The first parameter is the app name -->
+    <string name="open_source_licenses_title">%s | ئوچۇق كودلۇق يۇمشاق دېتال ئامبارلىرى</string>
+    <!-- Category of trackers (redirect trackers) that can be blocked by Enhanced Tracking Protection -->
+    <string name="etp_redirect_trackers_title">قايتا نىشانلايدىغان ئىز قوغلىغۇچ</string>
     <!-- Text displayed that links to website about enhanced tracking protection SmartBlock -->
     <string name="preference_etp_smartblock_learn_more">تەپسىلاتى</string>
+
+    <!-- About page link text to open support link -->
+    <string name="about_support">قوللاش</string>
+    <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
+    <string name="about_crashes">يىمىرىلىش</string>
+    <!-- About page link text to open privacy notice link -->
+    <string name="about_privacy_notice">شەخسىيەت ئۇقتۇرۇشى</string>
+    <!-- About page link text to open know your rights link -->
+    <string name="about_know_your_rights">ھوقۇقىڭىزنى بىلىۋېلىڭ</string>
+    <!-- About page link text to open licensing information link -->
+    <string name="about_licensing_information">ئىجازەت ئۇچۇرى</string>
+
+    <!-- About page link text to open a screen with libraries that are used -->
+    <string name="about_other_open_source_libraries">بىز ئىشلىتىدىغان ئامبارلار</string>
+    <!-- Toast shown to the user when they are activating the secret dev menu
+        The first parameter is number of long clicks left to enable the menu -->
+    <string name="about_debug_menu_toast_progress">سازلاش تىزىملىكى: %1$d چېكىلسە قوزغىتىدۇ</string>
+    <string name="about_debug_menu_toast_done">سازلاش تىزىملىكى قوزغىتىلدى</string>
 
     <!-- Browser long press popup menu -->
     <!-- Copy the current url -->
     <string name="browser_toolbar_long_press_popup_copy">كۆچۈرۈش</string>
 
+    <!-- Paste & go the text in the clipboard. '&amp;' is replaced with the ampersand symbol: & -->
+    <string name="browser_toolbar_long_press_popup_paste_and_go">چاپلاپ يۆتكەل</string>
+    <!-- Paste the text in the clipboard -->
+    <string name="browser_toolbar_long_press_popup_paste">چاپلا</string>
+
+    <!-- Snackbar message shown after an URL has been copied to clipboard. -->
+    <string name="browser_toolbar_url_copied_to_clipboard_snackbar">تور ئادرېسى چاپلاش تاختىسىغا كۆچۈرۈلدى</string>
+
+    <!-- Title text for the Add To Homescreen dialog -->
+    <string name="add_to_homescreen_title">باش ئېكرانغا قوش</string>
+    <!-- Cancel button text for the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_cancel">ۋاز كەچ</string>
     <!-- Add button text for the Add to Homescreen dialog -->
     <string name="add_to_homescreen_add">قوشاي</string>
 
+    <!-- Continue to website button text for the first-time Add to Homescreen dialog -->
+    <string name="add_to_homescreen_continue">توربېكەتنى داۋاملاشتۇر</string>
+    <!-- Placeholder text for the TextView in the Add to Homescreen dialog -->
+    <string name="add_to_homescreen_text_placeholder">تېزلەتمە ئىسمى</string>
+
+    <!-- Preference for managing the settings for logins and passwords in Fenix -->
+    <string name="preferences_passwords_logins_and_passwords">كىرىش ۋە ئىم</string>
+    <!-- Preference for managing the saving of logins and passwords in Fenix -->
+    <string name="preferences_passwords_save_logins">كىرىش ۋە ئىم ساقلا</string>
+    <!-- Preference option for asking to save passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_ask_to_save">ساقلاشنى سورا</string>
+    <!-- Preference option for never saving passwords in Fenix -->
+    <string name="preferences_passwords_save_logins_never_save">ھەرگىز ساقلىما</string>
+    <!-- Preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
+    <string name="preferences_passwords_autofill2">%1$s دا ئاپتوماتىك تولدۇر</string>
+    <!-- Description for the preference for autofilling saved logins in Firefox (in web content), %1$s will be replaced with the app name -->
+    <string name="preferences_passwords_autofill_description">%1$s نى ئىشلەتكەندە توربېكەتتىكى ئىشلەتكۈچى ئىسمى ۋە پارولىنى تولدۇرىدۇ ۋە ساقلايدۇ.</string>
+    <!-- Preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill">باشقا ئەپلەردە ئاپتوماتىك تولدۇرىدۇ</string>
+    <!-- Description for the preference for autofilling logins from Fenix in other apps (e.g. autofilling the Twitter app) -->
+    <string name="preferences_android_autofill_description">ئۈسكۈنىڭىزدىكى باشقا ئەپلەردە ئىشلەتكۈچى ئىسمى ۋە ئىمنى تولدۇرىدۇ.</string>
+    <!-- Preference option for adding a login -->
+    <string name="preferences_logins_add_login">كىرىشنى قوش</string>
+
+    <!-- Preference for syncing saved logins in Fenix -->
+    <string name="preferences_passwords_sync_logins">كىرىشنى قەدەمداشلا</string>
+    <!-- Preference for syncing saved logins in Fenix, when not signed in-->
+    <string name="preferences_passwords_sync_logins_across_devices">ئۈسكۈنىلەر ئارا قەدەمداشلا</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins">ساقلانغان كىرىش</string>
+    <!-- Description of empty list of saved passwords. Placeholder is replaced with app name.  -->
+    <string name="preferences_passwords_saved_logins_description_empty_text">سىز ساقلىغان كىرىش ياكى %s بىلەن بولغان قەدەمداش بۇ جايدا كۆرۈنىدۇ.</string>
+    <!-- Preference to access list of saved logins -->
+    <string name="preferences_passwords_saved_logins_description_empty_learn_more_link">قەدەمداش ھەققىدىكى تەپسىلاتلار.</string>
+    <!-- Preference to access list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions">مۇستەسنا</string>
+    <!-- Empty description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description_empty">ساقلانمىغان كىرىش ۋە ئىم بۇ يەردە كۆرسىتىلىدۇ.</string>
+    <!-- Description of list of login exceptions that we never save logins for -->
+    <string name="preferences_passwords_exceptions_description">بۇ تور بېكەتلەرنىڭ كىرىش ۋە ئىم ئۇچۇرلىرى ساقلانمايدۇ.</string>
+    <!-- Text on button to remove all saved login exceptions -->
+    <string name="preferences_passwords_exceptions_remove_all">ھەممە مۇستەسنالارنى ئۆچۈرىدۇ</string>
+    <!-- Hint for search box in logins list -->
+    <string name="preferences_passwords_saved_logins_search">كىرىش خاتىرىسىنى ئىزدە</string>
+    <!-- The header for the site that a login is for -->
+    <string name="preferences_passwords_saved_logins_site">بېكەت</string>
+    <!-- The header for the username for a login -->
+    <string name="preferences_passwords_saved_logins_username">ئىشلەتكۈچى ئىسمى</string>
+    <!-- The header for the password for a login -->
+    <string name="preferences_passwords_saved_logins_password">پارول</string>
+    <!-- Shown in snackbar to tell user that the password has been copied -->
+    <string name="logins_password_copied">ئىم چاپلاش تاختىسىغا كۆچۈرۈلدى</string>
+    <!-- Shown in snackbar to tell user that the username has been copied -->
+    <string name="logins_username_copied">ئىشلەتكۈچى ئىسمى چاپلاش تاختىسىغا كۆچۈرۈلدى</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a password in logins-->
+    <string name="saved_logins_copy_password">ئىم كۆچۈر</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a password while editing a login-->
+    <string name="saved_logins_clear_password">ئىم تازىلا</string>
+    <!-- Content Description (for screenreaders etc) read for the button to copy a username in logins -->
+    <string name="saved_login_copy_username">ئىشلەتكۈچى ئىسمىنى كۆچۈر</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear a username while editing a login -->
+    <string name="saved_login_clear_username">ئىشلەتكۈچى ئىسمىنى تازىلا</string>
+    <!-- Content Description (for screenreaders etc) read for the button to clear the hostname field while creating a login -->
+    <string name="saved_login_clear_hostname">مۇلازىم ئىسمىنى تازىلا</string>
+    <!-- Content Description (for screenreaders etc) read for the button to open a site in logins -->
+    <string name="saved_login_open_site">تور بېكەتنى توركۆرگۈدە ئاچىدۇ</string>
+    <!-- Content Description (for screenreaders etc) read for the button to reveal a password in logins -->
+    <string name="saved_login_reveal_password">ئىم كۆرسەت</string>
+    <!-- Content Description (for screenreaders etc) read for the button to hide a password in logins -->
+    <string name="saved_login_hide_password">ئىم يوشۇر</string>
+
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their logins -->
+    <string name="logins_biometric_prompt_message">ساقلانغان كىرىشلىرىڭىزنى كۆرۈش ئۈچۈن قۇلۇپ ئېچىڭ</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_title">كىرىش ۋە ئىمنى قوغدايدۇ</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_later">كېيىنچە</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="logins_warning_dialog_set_up_now">ھازىر تەڭشە</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their logins -->
+    <string name="logins_biometric_prompt_message_pin">ئۈسكۈنىڭىزنىڭ قۇلۇپىنى ئېچىڭ</string>
+    <!-- Title for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom">ھەممە تور بېكەتلەرنى چوڭايتىدۇ</string>
+
+    <!-- Summary for Accessibility Force Enable Zoom Preference -->
+    <string name="preference_accessibility_force_enable_zoom_summary">ھەتتا ئىشارەتنىڭ ئالدىنى ئالىدىغان تور بېكەتلەردىمۇ كىچىكلىتىش ۋە چوڭايتىشقا يول قويىدۇ.</string>
+
+    <!-- Saved logins sorting strategy menu item -by name- (if selected, it will sort saved logins alphabetically) -->
+    <string name="saved_logins_sort_strategy_alphabetically">ئىسمى (A-Z)</string>
+    <!-- Saved logins sorting strategy menu item -by last used- (if selected, it will sort saved logins by last used) -->
+    <string name="saved_logins_sort_strategy_last_used">ئاخىرقى قېتىم ئىشلىتىلگەن</string>
+    <!-- Content description (not visible, for screen readers etc.): Sort saved logins dropdown menu chevron icon -->
+    <string name="saved_logins_menu_dropdown_chevron_icon_content_description">كىرىش تىزىملىكىنى تەرتىپلەيدۇ</string>
+
+    <!-- Autofill -->
+    <!-- Preference and title for managing the autofill settings -->
+    <string name="preferences_autofill">ئاپتوماتىك تولدۇر</string>
+    <!-- Preference and title for managing the settings for addresses -->
+    <string name="preferences_addresses">ئادرېس</string>
+    <!-- Preference and title for managing the settings for credit cards -->
+    <string name="preferences_credit_cards">ئىناۋەتلىك كارتا</string>
+    <!-- Preference for saving and autofilling credit cards -->
+    <string name="preferences_credit_cards_save_and_autofill_cards">كارتا ساقلاش ۋە ئاپتوماتىك تولدۇرۇش</string>
+    <!-- Preference summary for saving and autofilling credit card data -->
+    <string name="preferences_credit_cards_save_and_autofill_cards_summary">سانلىق مەلۇمات شىفىرلانغان</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is not signed into sync -->
+    <string name="preferences_credit_cards_sync_cards_across_devices">كارتىنى ئۈسكۈنىلەر ئارا قەدەمداشلايدۇ</string>
+    <!-- Preference option for syncing credit cards across devices. This is displayed when the user is signed into sync -->
+    <string name="preferences_credit_cards_sync_cards">كارتا قەدەمداشلا</string>
+    <!-- Preference option for adding a credit card -->
+    <string name="preferences_credit_cards_add_credit_card">ئىناۋەتلىك كارتا قوش</string>
+    <!-- Preference option for managing saved credit cards -->
+    <string name="preferences_credit_cards_manage_saved_cards">ساقلانغان كارتا باشقۇرۇش</string>
+    <!-- Preference option for adding an address -->
+    <string name="preferences_addresses_add_address">ئادرېس قوش</string>
+    <!-- Preference option for managing saved addresses -->
+    <string name="preferences_addresses_manage_addresses">ئادرېس باشقۇرۇش</string>
+    <!-- Preference for saving and autofilling addresses -->
+    <string name="preferences_addresses_save_and_autofill_addresses">ئادرېسلارنى ساقلاش ۋە ئاپتوماتىك تولدۇرۇش</string>
+    <!-- Preference summary for saving and autofilling address data -->
+    <string name="preferences_addresses_save_and_autofill_addresses_summary">سان، ئېلخەت ۋە توشۇش ئادرېسى قاتارلىق ئۇچۇرلارنى ئۆز ئىچىگە ئالىدۇ</string>
+
+    <!-- Title of the "Add card" screen -->
+    <string name="credit_cards_add_card">كارتا قوش</string>
+    <!-- Title of the "Edit card" screen -->
+    <string name="credit_cards_edit_card">كارتا تەھرىر</string>
+    <!-- The header for the card number of a credit card -->
+    <string name="credit_cards_card_number">كارتا نومۇرى</string>
+    <!-- The header for the expiration date of a credit card -->
+    <string name="credit_cards_expiration_date">مۇددىتى توشىدىغان چېسلا</string>
+    <!-- The label for the expiration date month of a credit card to be used by a11y services-->
+    <string name="credit_cards_expiration_date_month">مۇددىتى توشىدىغان چېسلا ئاي</string>
+    <!-- The label for the expiration date year of a credit card to be used by a11y services-->
+    <string name="credit_cards_expiration_date_year">مۇددىتى توشىدىغان چېسلا يىل</string>
+    <!-- The header for the name on the credit card -->
+    <string name="credit_cards_name_on_card">كارتىدىكى ئىسىم</string>
+    <!-- The text for the "Delete card" menu item for deleting a credit card -->
+    <string name="credit_cards_menu_delete_card">كارتىنى ئۆچۈر</string>
+    <!-- The text for the "Delete card" button for deleting a credit card -->
+    <string name="credit_cards_delete_card_button">كارتىنى ئۆچۈر</string>
+    <!-- The text for the confirmation message of "Delete card" dialog -->
+    <string name="credit_cards_delete_dialog_confirmation">بۇ ئىناۋەتلىك كارتىنى راستىنلا ئۆچۈرەمسىز؟</string>
+    <!-- The text for the positive button on "Delete card" dialog -->
+    <string name="credit_cards_delete_dialog_button">ئۆچۈر</string>
+    <!-- The title for the "Save" menu item for saving a credit card -->
+    <string name="credit_cards_menu_save">ساقلا</string>
+    <!-- The text for the "Save" button for saving a credit card -->
+    <string name="credit_cards_save_button">ساقلا</string>
+    <!-- The text for the "Cancel" button for cancelling adding, updating or deleting a credit card -->
+    <string name="credit_cards_cancel_button">ۋاز كەچ</string>
+    <!-- Title of the "Saved cards" screen -->
+    <string name="credit_cards_saved_cards">ساقلانغان كارتا</string>
+    <!-- Error message for credit card number validation -->
+    <string name="credit_cards_number_validation_error_message">ئىناۋەتلىك كارتا نومۇرىنى كىرگۈزۈڭ</string>
+    <!-- Error message for credit card name on card validation -->
+    <string name="credit_cards_name_on_card_validation_error_message">بۇ بۆلەكنى تولدۇرۇڭ</string>
+    <!-- Message displayed in biometric prompt displayed for authentication before allowing users to view their saved credit cards -->
+    <string name="credit_cards_biometric_prompt_message">ساقلانغان كارتىلىرىڭىزنى كۆرۈش ئۈچۈن قۇلۇپ ئېچىڭ</string>
+    <!-- Title of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_title">ئىناۋەتلىك كارتىڭىزنى شىفىرلايدۇ</string>
+
+    <!-- Message of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_message">ئۈسكۈنە قۇلۇپلاش ئەندىزىسى، PIN ياكى ئىم ئورنىتىشنى تەڭشىسىڭىز، ئۈسكۈنىڭىز باشقىلارنىڭ قولىدا بولسىمۇ ساقلانغان ئىناۋەتلىك كارتىڭىزنى زىيارەت قىلالمايدۇ.</string>
+    <!-- Positive button to send users to set up a pin of warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_set_up_now">ھازىر تەڭشە</string>
+    <!-- Negative button to ignore warning dialog if users have no device authentication set up -->
+    <string name="credit_cards_warning_dialog_later">كېيىنچە</string>
+    <!-- Title of PIN verification dialog to direct users to re-enter their device credentials to access their credit cards -->
+    <string name="credit_cards_biometric_prompt_message_pin">ئۈسكۈنىڭىزنىڭ قۇلۇپىنى ئېچىڭ</string>
+    <!-- Message displayed in biometric prompt for authentication, before allowing users to use their stored credit card information -->
+    <string name="credit_cards_biometric_prompt_unlock_message">ساقلانغان ئىناۋەتلىك كارتا ئۇچۇرلىرىنى ئىشلىتىش ئۈچۈن قۇلۇپ ئېچىڭ</string>
+    <!-- Title of the "Add address" screen -->
+    <string name="addresses_add_address">ئادرېس قوش</string>
+    <!-- Title of the "Edit address" screen -->
+    <string name="addresses_edit_address">ئادرېس تەھرىر</string>
+    <!-- Title of the "Manage addresses" screen -->
+    <string name="addresses_manage_addresses">ئادرېس باشقۇرۇش</string>
+    <!-- The header for the first name of an address -->
+    <string name="addresses_first_name">ئىسمى</string>
+    <!-- The header for the middle name of an address -->
+    <string name="addresses_middle_name">ئوتتۇرا ئىسمى</string>
+    <!-- The header for the last name of an address -->
+    <string name="addresses_last_name">تەگئات</string>
+    <!-- The header for the street address of an address -->
+    <string name="addresses_street_address">كوچا ئادرېسى</string>
+    <!-- The header for the city of an address -->
+    <string name="addresses_city">شەھەر</string>
+    <!-- The header for the subregion of an address when "state" should be used -->
+    <string name="addresses_state">شىتات</string>
+    <!-- The header for the subregion of an address when "province" should be used -->
+    <string name="addresses_province">ئۆلكە</string>
+    <!-- The header for the zip code of an address -->
+    <string name="addresses_zip">پوچتا نومۇرى</string>
+    <!-- The header for the country or region of an address -->
+    <string name="addresses_country">دۆلەت ياكى رايون</string>
+    <!-- The header for the phone number of an address -->
+    <string name="addresses_phone">تېلېفون</string>
+    <!-- The header for the email of an address -->
+    <string name="addresses_email">ئېلخەت</string>
+    <!-- The text for the "Save" button for saving an address -->
+    <string name="addresses_save_button">ساقلا</string>
+    <!-- The text for the "Cancel" button for cancelling adding, updating or deleting an address -->
+    <string name="addresses_cancel_button">ۋاز كەچ</string>
+    <!-- The text for the "Delete address" button for deleting an address -->
+    <string name="addressess_delete_address_button">ئادرېس ئۆچۈر</string>
+    <!-- The title for the "Delete address" confirmation dialog -->
+    <string name="addressess_confirm_dialog_message">بۇ ئادرېسنى راستىنلا ئۆچۈرەمسىز؟</string>
+    <!-- The text for the positive button on "Delete address" dialog -->
+    <string name="addressess_confirm_dialog_ok_button">ئۆچۈر</string>
+    <!-- The text for the negative button on "Delete address" dialog -->
+    <string name="addressess_confirm_dialog_cancel_button">ۋاز كەچ</string>
+    <!-- The text for the "Save address" menu item for saving an address -->
+    <string name="address_menu_save_address">ئادرېسنى ساقلا</string>
+    <!-- The text for the "Delete address" menu item for deleting an address -->
+    <string name="address_menu_delete_address">ئادرېس ئۆچۈر</string>
+
+    <!-- Title of the Add search engine screen -->
+    <string name="search_engine_add_custom_search_engine_title">ئىزدەش موتورى قوش</string>
+    <!-- Content description (not visible, for screen readers etc.): Title for the button that navigates to add new engine screen -->
+    <string name="search_engine_add_custom_search_engine_button_content_description">يېڭى ئىزدەش موتورى قوش</string>
+    <!-- Title of the Edit search engine screen -->
+    <string name="search_engine_edit_custom_search_engine_title">ئىزدەش موتورى تەھرىر</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to add a search engine in the action bar -->
     <string name="search_engine_add_button_content_description" moz:RemovedIn="120" tools:ignore="UnusedResources">قوشۇش</string>
     <!-- Content description (not visible, for screen readers etc.): Title for the button to save a search engine in the action bar -->
@@ -1286,12 +1838,224 @@
     <!-- Text for the button to create a custom search engine on the Add search engine screen -->
     <string name="search_add_custom_engine_label_other" moz:RemovedIn="120" tools:ignore="UnusedResources">باشقا</string>
 
+    <!-- Label for the TextField in which user enters custom search engine name -->
+    <string name="search_add_custom_engine_name_label">ئىسمى</string>
+    <!-- Placeholder text shown in the Search Engine Name TextField before a user enters text -->
+    <string name="search_add_custom_engine_name_hint" moz:RemovedIn="120" tools:ignore="UnusedResources">ئىسمى</string>
+    <!-- Placeholder text shown in the Search Engine Name text field before a user enters text -->
+    <string name="search_add_custom_engine_name_hint_2">ئىزدەش موتورىنىڭ ئىسمى</string>
+    <!-- Label for the TextField in which user enters custom search engine URL -->
+    <string name="search_add_custom_engine_url_label">ئىزدەيدىغان تىزىقنىڭ تور ئادرېسى</string>
+    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
+    <string name="search_add_custom_engine_search_string_hint" moz:RemovedIn="120" tools:ignore="UnusedResources">ئىشلىتىدىغان ئىزدەش تىزىقى</string>
+    <!-- Placeholder text shown in the Search String TextField before a user enters text -->
+    <string name="search_add_custom_engine_search_string_hint_2">ئىزدەشكە ئىشلىتىدىغان تور ئادرېسى</string>
+
+    <!-- Description text for the Search String TextField. The %s is part of the string -->
+    <string name="search_add_custom_engine_search_string_example" formatted="false">سۈرۈشتۈرۈشنى «%s» غا ئالماشتۇرىدۇ. مەسىلەن:\nhttps://www.google.com/search?q=%s</string>
+    <!-- Accessibility description for the form in which details about the custom search engine are entered -->
+    <string name="search_add_custom_engine_form_description">ئىختىيارى ئىزدەش موتورىنىڭ تەپسىلاتى</string>
+    <!-- Label for the TextField in which user enters custom search engine suggestion URL -->
+    <string name="search_add_custom_engine_suggest_url_label">ئىزدەش تەۋسىيە API (تاللاشچان)</string>
+    <!-- Placeholder text shown in the Search Suggestion String TextField before a user enters text -->
+    <string name="search_add_custom_engine_suggest_string_hint">ئىزدەش تەۋسىيە API تور ئادرېسى</string>
+    <!-- Description text for the Search Suggestion String TextField. The %s is part of the string -->
+    <string name="search_add_custom_engine_suggest_string_example_2" formatted="false">سۈرۈشتۈرۈشنى «%s» غا ئالماشتۇرىدۇ. مەسىلەن:\nhttps://suggestqueries.google.com/complete/search?client=firefox&amp;q=%s</string>
+    <!-- The text for the "Save" button for saving a custom search engine -->
+    <string name="search_custom_engine_save_button">ساقلا</string>
+
+    <!-- Text shown when a user leaves the name field empty -->
+    <string name="search_add_custom_engine_error_empty_name">ئىزدەش موتورىنىڭ ئىسمى كىرگۈزۈلىدۇ</string>
+    <!-- Text shown when a user leaves the search string field empty -->
+    <string name="search_add_custom_engine_error_empty_search_string">ئىزدەيدىغان تىزىق كىرگۈزۈلىدۇ</string>
+    <!-- Text shown when a user leaves out the required template string -->
+    <string name="search_add_custom_engine_error_missing_template">ئىزدەيدىغان تىزىق ماس كېلىدىغان مىسال پىچىمنى تەكشۈرىدۇ</string>
+    <!-- Text shown when we aren't able to validate the custom search query. The first parameter is the url of the custom search engine -->
+    <string name="search_add_custom_engine_error_cannot_reach">«%s» غا باغلىنىشتا خاتالىق كۆرۈلدى</string>
+    <!-- Text shown when a user creates a new search engine -->
+    <string name="search_add_custom_engine_success_message">%s قۇرۇلدى</string>
+    <!-- Text shown when a user successfully edits a custom search engine -->
+    <string name="search_edit_custom_engine_success_message">%sساقلاندى</string>
+    <!-- Text shown when a user successfully deletes a custom search engine -->
+    <string name="search_delete_search_engine_success_message">%s ئۆچۈرۈلدى</string>
+
+    <!-- Heading for the instructions to allow a permission -->
+    <string name="phone_feature_blocked_intro">يول قويىدۇ:</string>
+    <!-- First step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_settings">1. ئاندىرويىد تەڭشىكىگە يۆتكىلىڭ</string>
+
+    <!-- Second step for the allowing a permission -->
+    <string name="phone_feature_blocked_step_permissions"><![CDATA[2. <b>ئىجازەت</b> نى چېكىڭ]]></string>
+    <!-- Third step for the allowing a permission (Fore example: Camera) -->
+    <string name="phone_feature_blocked_step_feature"><![CDATA[3. <b>%1$s</b> نى ئوچۇققا ئالماشتۇرۇڭ]]></string>
+
+    <!-- Label that indicates a site is using a secure connection -->
+    <string name="quick_settings_sheet_secure_connection_2">باغلىنىش بىخەتەر</string>
+    <!-- Label that indicates a site is using a insecure connection -->
+    <string name="quick_settings_sheet_insecure_connection_2">باغلىنىش بىخەتەر ئەمەس</string>
+    <!-- Label to clear site data -->
+    <string name="clear_site_data">Cookies ۋە تور بېكەت سانلىق مەلۇماتلىرىنى ئۆچۈرىدۇ</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all data for current site -->
+    <string name="confirm_clear_site_data"><![CDATA[بۇ <b>%s</b> تور بېكەتنىڭ بارلىق cookies ۋە سانلىق مەلۇماتلىرىنى راستىنلا تازىلامسىز؟]]></string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for all sites-->
+    <string name="confirm_clear_permissions_on_all_sites">بارلىق تور بېكەتلەردىكى ھەممە ئىجازەتلەرنى راستىنلا ئۆچۈرەمسىز؟</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to delete all the permissions for a site-->
+    <string name="confirm_clear_permissions_site">بۇ تور بېكەتتىكى ھەممە ئىجازەتلەرنى راستىنلا ئۆچۈرەمسىز؟</string>
+    <!-- Confirmation message for a dialog confirming if the user wants to set default value a permission for a site-->
+    <string name="confirm_clear_permission_site">بۇ تور بېكەتتىكى مەزكۇر ئىجازەتنى راستىنلا ئۆچۈرەمسىز؟</string>
+    <!-- label shown when there are not site exceptions to show in the site exception settings -->
+    <string name="no_site_exceptions">تور بېكەت مۇستەسنا يوق</string>
+    <!-- Bookmark deletion confirmation -->
+    <string name="bookmark_deletion_confirmation">بۇ خەتكۈچنى راستىنلا ئۆچۈرەمسىز؟</string>
+    <!-- Browser menu button that adds a shortcut to the home fragment -->
+    <string name="browser_menu_add_to_shortcuts">تېزلەتمىگە قوش</string>
+    <!-- Browser menu button that removes a shortcut from the home fragment -->
+    <string name="browser_menu_remove_from_shortcuts">تېزلەتمىدىن چىقىرىۋەت</string>
+    <!-- text shown before the issuer name to indicate who its verified by, parameter is the name of
+     the certificate authority that verified the ticket-->
+    <string name="certificate_info_verified_by">دەلىللىگۈچى: %1$s </string>
+    <!-- Login overflow menu delete button -->
+    <string name="login_menu_delete_button">ئۆچۈر</string>
+    <!-- Login overflow menu edit button -->
+    <string name="login_menu_edit_button">تەھرىر</string>
+    <!-- Message in delete confirmation dialog for logins -->
+    <string name="login_deletion_confirmation">بۇ كىرىشنى راستىنلا ئۆچۈرەمسىز؟</string>
+    <!-- Positive action of a dialog asking to delete  -->
+    <string name="dialog_delete_positive">ئۆچۈر</string>
+    <!-- Negative action of a dialog asking to delete login -->
+    <string name="dialog_delete_negative">ۋاز كەچ</string>
+    <!--  The saved login options menu description. -->
+    <string name="login_options_menu">كىرىش تاللانمىلىرى</string>
+    <!--  The editable text field for a login's web address. -->
+    <string name="saved_login_hostname_description">كىرىشنىڭ تور ئادرېسىنى تەھرىرلىگىلى بولىدىغان تېكىست بۆلىكى.</string>
+    <!--  The editable text field for a login's username. -->
+    <string name="saved_login_username_description">كىرىشنىڭ ئىشلەتكۈچى ئىسمىنى تەھرىرلىگىلى بولىدىغان تېكىست بۆلىكى.</string>
+
+    <!--  The editable text field for a login's password. -->
+    <string name="saved_login_password_description">كىرىشنىڭ ئىمىنى تەھرىرلىگىلى بولىدىغان تېكىست بۆلىكى.</string>
+    <!--  The button description to save changes to an edited login. -->
+    <string name="save_changes_to_login">كىرىش ئۆزگەرتىشلىرىنى ساقلايدۇ.</string>
+    <!--  The page title for editing a saved login. -->
+    <string name="edit">تەھرىر</string>
+    <!--  The page title for adding new login. -->
+    <string name="add_login">يېڭى كىرىش قوش</string>
+    <!--  The error message in add/edit login view when password field is blank. -->
+    <string name="saved_login_password_required">ئىم زۆرۈر</string>
+    <!--  The error message in add login view when username field is blank. -->
+    <string name="saved_login_username_required">ئىشلەتكۈچى ئىسمى زۆرۈر</string>
+    <!--  The error message in add login view when hostname field is blank. -->
+    <string name="saved_login_hostname_required" tools:ignore="UnusedResources">مۇلازىم ئىسمى زۆرۈر</string>
+    <!-- Voice search button content description  -->
+    <string name="voice_search_content_description">ئاۋازلىق ئىزدەش</string>
+    <!-- Voice search prompt description displayed after the user presses the voice search button -->
+    <string name="voice_search_explainer">ھازىر سۆزلەڭ</string>
+    <!--  The error message in edit login view when a duplicate username exists. -->
+    <string name="saved_login_duplicate">بۇ ئىشلەتكۈچى ئىسمىدىكى كىرىش مەۋجۇت</string>
+    <!-- This is the hint text that is shown inline on the hostname field of the create new login page. 'https://www.example.com' intentionally hardcoded here -->
+    <string name="add_login_hostname_hint_text">https://www.example.com</string>
+    <!-- This is an error message shown below the hostname field of the add login page when a hostname does not contain http or https. -->
+    <string name="add_login_hostname_invalid_text_3">تور ئادرېسىدا چوقۇم «https://» ياكى «http://» بولۇشى كېرەك.</string>
+    <!-- This is an error message shown below the hostname field of the add login page when a hostname is invalid. -->
+    <string name="add_login_hostname_invalid_text_2">ئىناۋەتلىك مۇلازىم ئىسمى زۆرۈر</string>
+
+    <!-- Synced Tabs -->
+    <!-- Text displayed to ask user to connect another device as no devices found with account -->
+    <string name="synced_tabs_connect_another_device">باشقا ئۈسكۈنىگە باغلىنىدۇ.</string>
+    <!-- Text displayed asking user to re-authenticate -->
+    <string name="synced_tabs_reauth">قايتا دەلىللەڭ.</string>
+    <!-- Text displayed when user has disabled tab syncing in Firefox Sync Account -->
+    <string name="synced_tabs_enable_tab_syncing">بەتكۈچ قەدەمداشنى قوزغىتىڭ.</string>
+    <!-- Text displayed when user has no tabs that have been synced -->
+    <string name="synced_tabs_no_tabs">كونا ئۈسكۈنىڭىزدە Firefox دا ھېچقانداق بەتكۈچ ئاچمىغان.</string>
+    <!-- Text displayed in the synced tabs screen when a user is not signed in to Firefox Sync describing Synced Tabs -->
+    <string name="synced_tabs_sign_in_message">باشقا ئۈسكۈنىڭىزدىن بەتكۈچ تىزىمىنى كۆرسىتىدۇ.</string>
+    <!-- Text displayed on a button in the synced tabs screen to link users to sign in when a user is not signed in to Firefox Sync -->
+    <string name="synced_tabs_sign_in_button">قەدەمداشقا تىزىمغا كىرىڭ</string>
+    <!-- The text displayed when a synced device has no tabs to show in the list of Synced Tabs. -->
+    <string name="synced_tabs_no_open_tabs">ئوچۇق بەتكۈچ يوق</string>
+
+    <!-- Content description for expanding a group of synced tabs. -->
+    <string name="synced_tabs_expand_group">قەدەمداشلانغان بەتكۈچ گۇرۇپپىسىنى يايىدۇ</string>
+    <!-- Content description for collapsing a group of synced tabs. -->
+    <string name="synced_tabs_collapse_group">قەدەمداشلانغان بەتكۈچ گۇرۇپپىسىنى يىغىدۇ</string>
+
+    <!-- Top Sites -->
+    <!-- Title text displayed in the dialog when shortcuts limit is reached. -->
+    <string name="shortcut_max_limit_title">تېزلەتمە چېكىگە يەتتى</string>
+    <!-- Content description text displayed in the dialog when shortcut limit is reached. -->
+    <string name="shortcut_max_limit_content">يېڭى تىزلەتمە قوشۇش ئۈچۈن بىرنى چىقىرىۋېتىش كېرەك. بېكەتنى چېكىپ تۇرۇپ ئاندىن چىقىرىۋەت تاللىنىدۇ.</string>
+    <!-- Confirmation dialog button text when top sites limit is reached. -->
+    <string name="top_sites_max_limit_confirmation_button">ماقۇل، چۈشىنىشلىك</string>
+    <!-- Label for the preference to show the shortcuts for the most visited top sites on the homepage -->
+    <string name="top_sites_toggle_top_recent_sites_4">تېزلەتمە</string>
+    <!-- Title text displayed in the rename top site dialog. -->
+    <string name="top_sites_rename_dialog_title">ئىسمى</string>
+    <!-- Hint for renaming title of a shortcut -->
+    <string name="shortcut_name_hint">تېزلەتمە ئىسمى</string>
+    <!-- Button caption to confirm the renaming of the top site. -->
+    <string name="top_sites_rename_dialog_ok">جەزملە</string>
+    <!-- Dialog button text for canceling the rename top site prompt. -->
+    <string name="top_sites_rename_dialog_cancel">ۋاز كەچ</string>
     <!-- Text for the menu button to open the homepage settings. -->
     <string name="top_sites_menu_settings">تەڭشەك</string>
+
+    <!-- Text for the menu button to navigate to sponsors and privacy support articles. '&amp;' is replaced with the ampersand symbol: & -->
+    <string name="top_sites_menu_sponsor_privacy">قوللىغۇچىلىرىمىز ۋە شەخسىيىتىڭىز</string>
+    <!-- Label text displayed for a sponsored top site. -->
+    <string name="top_sites_sponsored_label">قوللىغان</string>
+
+    <!-- Inactive tabs in the tabs tray -->
+    <!-- Title text displayed in the tabs tray when a tab has been unused for 14 days. -->
+    <string name="inactive_tabs_title">ئاكتىپسىز بەتكۈچ</string>
+    <!-- Content description for closing all inactive tabs -->
+    <string name="inactive_tabs_delete_all">بارلىق ئاكتىپسىز بەتكۈچلەرنى تاقايدۇ</string>
+    <!-- Content description for expanding the inactive tabs section. -->
+    <string name="inactive_tabs_expand_content_description">ئاكتىپسىز بەتكۈچلەرنى يايىدۇ</string>
+    <!-- Content description for collapsing the inactive tabs section. -->
+    <string name="inactive_tabs_collapse_content_description">ئاكتىپسىز بەتكۈچلەرنى يىغىدۇ</string>
+
+    <!-- Inactive tabs auto-close message in the tabs tray -->
+    <!-- The header text of the auto-close message when the user is asked if they want to turn on the auto-closing of inactive tabs. -->
+    <string name="inactive_tabs_auto_close_message_header" tools:ignore="UnusedResources">بىر ئايدىن كېيىن ئاپتوماتىك ياپامدۇ؟</string>
+    <!-- A description below the header to notify the user what the inactive tabs auto-close feature is. -->
+    <string name="inactive_tabs_auto_close_message_description" tools:ignore="UnusedResources">Firefox ئۆتكەن بىر ئايدا كۆرمىگەن بەتكۈچلەرنى تاقىۋېتەلەيدۇ.</string>
+    <!-- A call to action below the description to allow the user to turn on the auto closing of inactive tabs. -->
+    <string name="inactive_tabs_auto_close_message_action" tools:ignore="UnusedResources">ئاپتوماتىك تاقاشنى ئاچىدۇ</string>
+    <!-- Text for the snackbar to confirm auto-close is enabled for inactive tabs -->
+    <string name="inactive_tabs_auto_close_message_snackbar">ئاپتوماتىك تاقاش قوزغىتىلدى</string>
+
+    <!-- Awesome bar suggestion's headers -->
+    <!-- Search suggestions title for Firefox Suggest. -->
+    <string name="firefox_suggest_header">Firefox تەكلىپى</string>
+    <!-- Title for search suggestions when Google is the default search suggestion engine. -->
+    <string name="google_search_engine_suggestion_header">Google ئىزدەش</string>
+    <!-- Title for search suggestions when the default search suggestion engine is anything other than Google. The first parameter is default search engine name. -->
+    <string name="other_default_search_engine_suggestion_header">%s ئىزدەش</string>
+
+    <!-- Default browser experiment -->
+    <string name="default_browser_experiment_card_text">تور بېكەت، ئېلخەت ۋە ئۇچۇر ئۇلانمىلىرىنى Firefox تا ئاپتوماتىك ئېچىشقا تەڭشەيدۇ.</string>
+
+    <!-- Content description for close button in collection placeholder. -->
+    <string name="remove_home_collection_placeholder_content_description">چىقىرىۋەت</string>
+
+    <!-- Content description radio buttons with a link to more information -->
+    <string name="radio_preference_info_content_description">تەپسىلات ئۈچۈن چېكىڭ</string>
+
+    <!-- Content description for the action bar "up" button -->
+    <string name="action_bar_up_description">ئۈستىگە يول باشلا</string>
 
     <!-- Content description for privacy content close button -->
     <string name="privacy_content_close_button_content_description">تاقاش</string>
 
+    <!-- Pocket recommended stories -->
+    <!-- Header text for a section on the home screen. -->
+    <string name="pocket_stories_header_1">نادىر ھېكايە</string>
+    <!-- Header text for a section on the home screen. -->
+    <string name="pocket_stories_categories_header">تېما بويىچە ھېكايىلەر</string>
+    <!-- Text of a button allowing users to access an external url for more Pocket recommendations. -->
+    <string name="pocket_stories_placeholder_text">تېخىمۇ كۆپ بايقاش</string>
+    <!-- Title of an app feature. Smaller than a heading. The first parameter is product name Pocket -->
+    <string name="pocket_stories_feature_title_2">تەمىنلىگۈچى %1$s.</string>
     <!-- Clickable text for opening an external link for more information about Pocket. -->
     <string name="pocket_stories_feature_learn_more">تەپسىلاتى</string>
 

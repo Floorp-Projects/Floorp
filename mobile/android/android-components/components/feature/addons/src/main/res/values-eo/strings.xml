@@ -84,6 +84,8 @@
     <string name="mozac_feature_addons_learn_more">Pli da informo pri permesoj</string>
     <!-- The rating of the add-on. -->
     <string name="mozac_feature_addons_rating">Taksado</string>
+    <!-- A link that points to the detail page of the add-on. -->
+    <string name="mozac_feature_addons_more_info_link">Pli da informo pri tiu ĉi aldonaĵo</string>
     <!-- The settings of the add-on. -->
     <string name="mozac_feature_addons_settings">Agordoj</string>
     <!-- Indicates the add-on is enabled. -->
