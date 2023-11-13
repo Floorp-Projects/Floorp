@@ -2599,7 +2599,7 @@ static bool IsRepeatable(nscoord aFrameBSize, nscoord aPageBSize) {
 nscoord nsTableFrame::SetupHeaderFooterChild(
     const TableReflowInput& aReflowInput, nsTableRowGroupFrame* aFrame) {
   nsPresContext* presContext = PresContext();
-  WritingMode wm = aFrame->GetWritingMode();
+  const WritingMode wm = GetWritingMode();
   const nscoord pageBSize =
       LogicalSize(wm, presContext->GetPageSize()).BSize(wm);
 
@@ -2629,7 +2629,7 @@ void nsTableFrame::PlaceRepeatedFooter(TableReflowInput& aReflowInput,
                                        nsTableRowGroupFrame* aTfoot,
                                        nscoord aFooterBSize) {
   nsPresContext* presContext = PresContext();
-  WritingMode wm = aTfoot->GetWritingMode();
+  const WritingMode wm = GetWritingMode();
   LogicalSize kidAvailSize = aReflowInput.mAvailSize;
   kidAvailSize.BSize(wm) = aFooterBSize;
 
