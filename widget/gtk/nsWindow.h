@@ -657,6 +657,8 @@ class nsWindow final : public nsBaseWidget {
   bool mHasMappedToplevel : 1;
   bool mRetryPointerGrab : 1;
   bool mPanInProgress : 1;
+  // Use dedicated GdkWindow for mContainer
+  bool mDrawToContainer : 1;
   // Draw titlebar with :backdrop css state (inactive/unfocused).
   bool mTitlebarBackdropState : 1;
   // It's undecorated popup utility window, without resizers/titlebar,
