@@ -44,6 +44,7 @@ const REGION_CHANGE_THRESHOLD = 5;
 const SCROLL_BY_EDGE = 20;
 
 export class ScreenshotsOverlay {
+  #content;
   #initialized = false;
   #state = "";
   #moverId;
@@ -53,6 +54,7 @@ export class ScreenshotsOverlay {
   #lastClientX;
   #lastClientY;
   #previousDimensions;
+  #methodsUsed;
 
   get markup() {
     let [cancel, instructions, download, copy] =
@@ -144,6 +146,10 @@ export class ScreenshotsOverlay {
     return this.#state;
   }
 
+  get methodsUsed() {
+    return this.#methodsUsed;
+  }
+
   constructor(contentDocument) {
     this.document = contentDocument;
     this.window = contentDocument.ownerGlobal;
@@ -151,13 +157,14 @@ export class ScreenshotsOverlay {
     this.windowDimensions = new WindowDimensions();
     this.selectionRegion = new Region(this.windowDimensions);
     this.hoverElementRegion = new Region(this.windowDimensions);
+    this.resetMethodsUsed();
   }
 
   get content() {
-    if (!this._content || Cu.isDeadWrapper(this._content)) {
+    if (!this.#content || Cu.isDeadWrapper(this.#content)) {
       return null;
     }
-    return this._content;
+    return this.#content;
   }
 
   getElementById(id) {
@@ -171,8 +178,8 @@ export class ScreenshotsOverlay {
 
     this.windowDimensions.reset();
 
-    this._content = this.document.insertAnonymousContent();
-    this._content.root.appendChild(this.fragment);
+    this.#content = this.document.insertAnonymousContent();
+    this.#content.root.appendChild(this.fragment);
 
     this.initializeElements();
     this.updateWindowDimensions();
@@ -214,17 +221,21 @@ export class ScreenshotsOverlay {
   /**
    * Removes all event listeners and removes the overlay from the Anonymous Content
    */
-  tearDown() {
-    if (this._content) {
+  tearDown(options = {}) {
+    if (this.#content) {
       this.removeEventListeners();
+      if (!(options.doNotResetMethods === true)) {
+        this.resetMethodsUsed();
+      }
       try {
-        this.document.removeAnonymousContent(this._content);
+        this.document.removeAnonymousContent(this.#content);
       } catch (e) {
         // If the current window isn't the one the content was inserted into, this
         // will fail, but that's fine.
       }
     }
     this.#initialized = false;
+    this.#setState("");
   }
 
   /**
@@ -279,6 +290,15 @@ export class ScreenshotsOverlay {
     this.screenshotsContainer.removeEventListener("pointerdown", this);
     this.screenshotsContainer.removeEventListener("pointermove", this);
     this.screenshotsContainer.removeEventListener("pointerup", this);
+  }
+
+  resetMethodsUsed() {
+    this.#methodsUsed = {
+      element: 0,
+      region: 0,
+      move: 0,
+      resize: 0,
+    };
   }
 
   /**
@@ -742,6 +762,7 @@ export class ScreenshotsOverlay {
         eventName: "selected",
         reason: "element",
       });
+      this.#methodsUsed.element += 1;
     } else {
       this.#setState("crosshairs");
     }
@@ -759,7 +780,29 @@ export class ScreenshotsOverlay {
     };
     this.selectionRegion.sortCoords();
     this.#setState("selected");
+    this.maybeRecordRegionSelected();
+    this.#methodsUsed.region += 1;
+  }
 
+  /**
+   * Update the selection region dimensions by calling `resizingDrag` and set
+   * the state to selected.
+   * @param {Number} pageX The x position relative to the page
+   * @param {Number} pageY The y position relative to the page
+   */
+  resizingDragEnd(pageX, pageY, targetId) {
+    this.resizingDrag(pageX, pageY, targetId);
+    this.selectionRegion.sortCoords();
+    this.#setState("selected");
+    this.maybeRecordRegionSelected();
+    if (targetId === "highlight") {
+      this.#methodsUsed.move += 1;
+    } else {
+      this.#methodsUsed.resize += 1;
+    }
+  }
+
+  maybeRecordRegionSelected() {
     let { width, height } = this.selectionRegion.dimensions;
 
     if (
@@ -775,18 +818,6 @@ export class ScreenshotsOverlay {
       });
     }
     this.#previousDimensions = { width, height };
-  }
-
-  /**
-   * Update the selection region dimensions by calling `resizingDrag` and set
-   * the state to selected.
-   * @param {Number} pageX The x position relative to the page
-   * @param {Number} pageY The y position relative to the page
-   */
-  resizingDragEnd(pageX, pageY, targetId) {
-    this.resizingDrag(pageX, pageY, targetId);
-    this.selectionRegion.sortCoords();
-    this.#setState("selected");
   }
 
   /**
