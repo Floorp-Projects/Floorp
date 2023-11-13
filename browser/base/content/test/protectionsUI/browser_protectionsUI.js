@@ -431,7 +431,14 @@ add_task(async function testToggleSwitchFlow() {
     gProtectionsHandler._protectionsPopup,
     "popuphidden"
   );
+  // We intentionally turn off a11y_checks, because the following click
+  // is targeting static toast message that's not meant to be interactive and
+  // is not expected to be accessible:
+  AccessibilityUtils.setEnv({
+    mustHaveAccessibleRule: false,
+  });
   document.getElementById("protections-popup-mainView-panel-header").click();
+  AccessibilityUtils.resetEnv();
   await popuphiddenPromise;
   await popupShownPromise;
 
