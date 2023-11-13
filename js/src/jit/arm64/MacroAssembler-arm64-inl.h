@@ -1389,9 +1389,8 @@ void MacroAssembler::branchTruncateDoubleMaybeModUint32(FloatRegister src,
                                                         Register dest,
                                                         Label* fail) {
   // ARMv8.3 chips support the FJCVTZS instruction, which handles exactly this
-  // logic. But the simulator does not implement it, and when the simulator runs
-  // on ARM64 hardware we want to override vixl's detection of it.
-#if defined(JS_SIMULATOR_ARM64) && (defined(__aarch64__) || defined(_M_ARM64))
+  // logic. But the simulator does not implement it.
+#if defined(JS_SIMULATOR_ARM64)
   const bool fjscvt = false;
 #else
   const bool fjscvt = CPUHas(vixl::CPUFeatures::kFP, vixl::CPUFeatures::kJSCVT);
