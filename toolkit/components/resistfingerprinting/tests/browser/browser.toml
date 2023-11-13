@@ -1,5 +1,6 @@
 [DEFAULT]
 support-files = [
+  "canvas-fingerprinter.html",
   "empty.html",
   "head.js",
   "scriptExecPage.html",
@@ -8,6 +9,8 @@ support-files = [
   "testPage.html",
   "worker.js",
 ]
+
+["browser_canvas_fingerprinter_telemetry.js"]
 
 ["browser_canvas_randomization.js"]
 
