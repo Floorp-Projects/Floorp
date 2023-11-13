@@ -353,6 +353,9 @@ class nsRFPService final : public nsIObserver, public nsIRFPService {
                                              nsIChannel* aChannel,
                                              nsACString& aOriginNoSuffix);
 
+  static void MaybeReportFontFingerprinter(nsIChannel* aChannel,
+                                           nsACString& aOriginNoSuffix);
+
  private:
   nsresult Init();
 

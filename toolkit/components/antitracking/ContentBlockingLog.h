@@ -102,6 +102,7 @@ class ContentBlockingLog final {
 
   void ReportLog(nsIPrincipal* aFirstPartyPrincipal);
   void ReportCanvasFingerprintingLog(nsIPrincipal* aFirstPartyPrincipal);
+  void ReportFontFingerprintingLog(nsIPrincipal* aFirstPartyPrincipal);
   void ReportEmailTrackingLog(nsIPrincipal* aFirstPartyPrincipal);
 
   nsAutoCString Stringify() {
@@ -338,8 +339,8 @@ class ContentBlockingLog final {
     }
   }
 
-  bool RecordLogEntryInCustomField(
-      uint32_t aType, OriginEntry& aEntry, bool aBlocked) {
+  bool RecordLogEntryInCustomField(uint32_t aType, OriginEntry& aEntry,
+                                   bool aBlocked) {
     if (aType ==
         nsIWebProgressListener::STATE_LOADED_LEVEL_1_TRACKING_CONTENT) {
       aEntry.mData->mHasLevel1TrackingContentLoaded = aBlocked;

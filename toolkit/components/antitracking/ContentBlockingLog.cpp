@@ -110,6 +110,7 @@ Maybe<uint32_t> ContentBlockingLog::RecordLogParent(
     case nsIWebProgressListener::STATE_ALLOWED_FINGERPRINTING_CONTENT:
     case nsIWebProgressListener::STATE_REPLACED_TRACKING_CONTENT:
     case nsIWebProgressListener::STATE_ALLOWED_TRACKING_CONTENT:
+    case nsIWebProgressListener::STATE_ALLOWED_FONT_FINGERPRINTING:
       RecordLogInternal(aOrigin, aType, blockedValue);
       break;
 
@@ -225,6 +226,41 @@ void ContentBlockingLog::ReportCanvasFingerprintingLog(
         canvasFingerprinterKnownText ? "known_text"_ns : "unknown"_ns,
         fingerprinter);
   }
+}
+
+void ContentBlockingLog::ReportFontFingerprintingLog(
+    nsIPrincipal* aFirstPartyPrincipal) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aFirstPartyPrincipal);
+
+  // We don't need to report if the first party is not a content.
+  if (!BasePrincipal::Cast(aFirstPartyPrincipal)->IsContentPrincipal()) {
+    return;
+  }
+
+  bool hasFontFingerprinter = false;
+  for (const auto& originEntry : mLog) {
+    if (!originEntry.mData) {
+      continue;
+    }
+
+    for (const auto& logEntry : originEntry.mData->mLogs) {
+      if (logEntry.mType !=
+          nsIWebProgressListener::STATE_ALLOWED_FONT_FINGERPRINTING) {
+        continue;
+      }
+
+      hasFontFingerprinter = true;
+    }
+
+    if (hasFontFingerprinter) {
+      break;
+    }
+  }
+
+  Telemetry::Accumulate(Telemetry::FONT_FINGERPRINTING_PER_TAB,
+                        hasFontFingerprinter);
 }
 
 void ContentBlockingLog::ReportEmailTrackingLog(
