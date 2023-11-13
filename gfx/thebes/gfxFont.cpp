@@ -1716,7 +1716,6 @@ bool gfxFont::HasFeatureSet(uint32_t aFeature, bool& aFeatureOn) {
 already_AddRefed<mozilla::gfx::ScaledFont> gfxFont::GetScaledFont(
     mozilla::gfx::DrawTarget* aDrawTarget) {
   TextRunDrawParams params;
-  params.dt = aDrawTarget;
   return GetScaledFont(params);
 }
 
