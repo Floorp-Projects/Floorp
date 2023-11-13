@@ -336,7 +336,10 @@ void NotifyEventInChild(
     nsIChannel* aTrackingChannel, bool aBlocked, uint32_t aRejectedReason,
     const nsACString& aTrackingOrigin,
     const Maybe<ContentBlockingNotifier::StorageAccessPermissionGrantedReason>&
-        aReason) {
+        aReason,
+    const Maybe<ContentBlockingNotifier::CanvasFingerprinter>
+        aCanvasFingerprinter,
+    const Maybe<bool> aCanvasFingerprinterKnownText) {
   MOZ_ASSERT(XRE_IsContentProcess());
 
   // We don't need to find the top-level window here because the
@@ -365,9 +368,10 @@ void NotifyEventInChild(
         trackingFullHashes);
   }
 
-  browserChild->NotifyContentBlockingEvent(aRejectedReason, aTrackingChannel,
-                                           aBlocked, aTrackingOrigin,
-                                           trackingFullHashes, aReason);
+  browserChild->NotifyContentBlockingEvent(
+      aRejectedReason, aTrackingChannel, aBlocked, aTrackingOrigin,
+      trackingFullHashes, aReason, aCanvasFingerprinter,
+      aCanvasFingerprinterKnownText);
 }
 
 // Update the ContentBlockingLog of the top-level WindowGlobalParent of
@@ -376,7 +380,10 @@ void NotifyEventInParent(
     nsIChannel* aTrackingChannel, bool aBlocked, uint32_t aRejectedReason,
     const nsACString& aTrackingOrigin,
     const Maybe<ContentBlockingNotifier::StorageAccessPermissionGrantedReason>&
-        aReason) {
+        aReason,
+    const Maybe<ContentBlockingNotifier::CanvasFingerprinter>
+        aCanvasFingerprinter,
+    const Maybe<bool> aCanvasFingerprinterKnownText) {
   MOZ_ASSERT(XRE_IsParentProcess());
 
   nsCOMPtr<nsILoadInfo> loadInfo = aTrackingChannel->LoadInfo();
@@ -402,7 +409,9 @@ void NotifyEventInParent(
   }
 
   wgp->NotifyContentBlockingEvent(aRejectedReason, aTrackingChannel, aBlocked,
-                                  aTrackingOrigin, trackingFullHashes, aReason);
+                                  aTrackingOrigin, trackingFullHashes, aReason,
+                                  aCanvasFingerprinter,
+                                  aCanvasFingerprinterKnownText);
 }
 
 }  // namespace
@@ -565,12 +574,16 @@ void ContentBlockingNotifier::OnEvent(nsIChannel* aTrackingChannel,
 void ContentBlockingNotifier::OnEvent(
     nsIChannel* aTrackingChannel, bool aBlocked, uint32_t aRejectedReason,
     const nsACString& aTrackingOrigin,
-    const Maybe<StorageAccessPermissionGrantedReason>& aReason) {
+    const Maybe<StorageAccessPermissionGrantedReason>& aReason,
+    const Maybe<CanvasFingerprinter>& aCanvasFingerprinter,
+    const Maybe<bool> aCanvasFingerprinterKnownText) {
   if (XRE_IsParentProcess()) {
     NotifyEventInParent(aTrackingChannel, aBlocked, aRejectedReason,
-                        aTrackingOrigin, aReason);
+                        aTrackingOrigin, aReason, aCanvasFingerprinter,
+                        aCanvasFingerprinterKnownText);
   } else {
     NotifyEventInChild(aTrackingChannel, aBlocked, aRejectedReason,
-                       aTrackingOrigin, aReason);
+                       aTrackingOrigin, aReason, aCanvasFingerprinter,
+                       aCanvasFingerprinterKnownText);
   }
 }

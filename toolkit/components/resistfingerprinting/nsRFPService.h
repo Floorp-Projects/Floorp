@@ -74,7 +74,7 @@ class WidgetKeyboardEvent;
 namespace dom {
 class Document;
 enum class CanvasContextType : uint8_t;
-}
+}  // namespace dom
 
 enum KeyboardLang { EN = 0x01 };
 
@@ -349,7 +349,9 @@ class nsRFPService final : public nsIObserver, public nsIRFPService {
 
   // --------------------------------------------------------------------------
 
-  static void MaybeReportCanvasFingerprinter(nsTArray<CanvasUsage>& aUses);
+  static void MaybeReportCanvasFingerprinter(nsTArray<CanvasUsage>& aUses,
+                                             nsIChannel* aChannel,
+                                             nsACString& aOriginNoSuffix);
 
  private:
   nsresult Init();

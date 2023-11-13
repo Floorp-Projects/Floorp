@@ -54,6 +54,14 @@ struct ParamTraits<nsILoadInfo::StoragePermissionState>
           nsILoadInfo::StoragePermissionState,
           nsILoadInfo::StoragePermissionState::NoStoragePermission,
           nsILoadInfo::StoragePermissionState::StoragePermissionAllowListed> {};
+
+// ContentBlockingNotifier::CanvasFingerprinter over IPC.
+template <>
+struct ParamTraits<mozilla::ContentBlockingNotifier::CanvasFingerprinter>
+    : public ContiguousEnumSerializerInclusive<
+          mozilla::ContentBlockingNotifier::CanvasFingerprinter,
+          mozilla::ContentBlockingNotifier::CanvasFingerprinter::eFingerprintJS,
+          mozilla::ContentBlockingNotifier::CanvasFingerprinter::eMaybe> {};
 }  // namespace IPC
 
 #endif  // mozilla_antitrackingipcutils_h

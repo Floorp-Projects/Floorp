@@ -303,7 +303,10 @@ class BrowserParent final : public PBrowserParent,
       const bool aBlocked, const nsACString& aTrackingOrigin,
       nsTArray<nsCString>&& aTrackingFullHashes,
       const Maybe<mozilla::ContentBlockingNotifier::
-                      StorageAccessPermissionGrantedReason>& aReason);
+                      StorageAccessPermissionGrantedReason>& aReason,
+      const Maybe<mozilla::ContentBlockingNotifier::CanvasFingerprinter>&
+          aCanvasFingerprinter,
+      const Maybe<bool>& aCanvasFingerprinterKnownText);
 
   mozilla::ipc::IPCResult RecvNavigationFinished();
 

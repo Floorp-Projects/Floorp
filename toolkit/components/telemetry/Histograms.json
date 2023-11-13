@@ -2479,6 +2479,19 @@
     "description": "WebGL2 creation success",
     "bug_numbers": [1247327]
   },
+  "CANVAS_FINGERPRINTING_PER_TAB": {
+    "record_in_processes": ["main"],
+    "products": ["firefox", "fennec"],
+    "alert_emails": ["seceng-telemetry@mozilla.com"],
+    "expires_in_version": "126",
+    "keyed": true,
+    "keys": ["known_text", "unknown"],
+    "kind": "enumerated",
+    "n_values": 8,
+    "releaseChannelCollection": "opt-out",
+    "description": "Type of canvas fingerprinter detected (keyed by known_fingerprinting_text or unknown), 0 = none",
+    "bug_numbers": [1847990]
+  },
   "TOTAL_CONTENT_PAGE_LOAD_TIME": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec", "geckoview_streaming"],

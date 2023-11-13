@@ -101,6 +101,7 @@ using mozilla::ScrollFlags from "mozilla/PresShellForwards.h";
 using struct InputFormData from "mozilla/dom/SessionStoreMessageUtils.h";
 using struct CollectedInputDataValue from "mozilla/dom/SessionStoreMessageUtils.h";
 using mozilla::ContentBlockingNotifier::StorageAccessPermissionGrantedReason from "mozilla/ContentBlockingNotifier.h";
+using mozilla::ContentBlockingNotifier::CanvasFingerprinter from "mozilla/ContentBlockingNotifier.h";
 using mozilla::dom::CallerType from "mozilla/dom/BindingDeclarations.h";
 using mozilla::dom::EmbedderElementEventType from "mozilla/dom/TabMessageTypes.h";
 using mozilla::IntrinsicSize from "nsIFrame.h";
@@ -554,7 +555,9 @@ parent:
     async NotifyContentBlockingEvent(uint32_t aEvent, RequestData aRequestData,
                                      bool aBlocked, nsCString aTrackingOrigin,
                                      nsCString[] aTrackingFullHashes,
-                                     StorageAccessPermissionGrantedReason? aReason);
+                                     StorageAccessPermissionGrantedReason? aReason,
+                                     CanvasFingerprinter? aCanvasFingerprinter,
+                                     bool? aCanvasFingerprinterKnownText);
 
     async NavigationFinished();
 
