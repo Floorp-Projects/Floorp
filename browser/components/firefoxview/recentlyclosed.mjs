@@ -287,6 +287,7 @@ class RecentlyClosedTabsInView extends ViewPage {
           ?preserveCollapseState=${this.recentBrowsing ? true : null}
           ?hideHeader=${this.selectedTab}
           ?hidden=${!this.recentlyClosedTabs.length && !this.recentBrowsing}
+          ?isEmptyState=${!this.recentlyClosedTabs.length}
         >
           <h3
             slot="header"
