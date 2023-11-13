@@ -264,7 +264,7 @@ function satchelCommonSetup() {
 }
 
 function add_named_task(name, fn) {
-  add_task(
+  return add_task(
     {
       [name]() {
         return fn();
