@@ -478,6 +478,7 @@ class SyncedTabsInView extends ViewPage {
           shortPageName="syncedtabs"
           ?showViewAll=${this._currentSetupStateIndex == 4 &&
           this.currentSyncedTabs.length}
+          ?isEmptyState=${!this.currentSyncedTabs.length}
         >
           >
           <h3
