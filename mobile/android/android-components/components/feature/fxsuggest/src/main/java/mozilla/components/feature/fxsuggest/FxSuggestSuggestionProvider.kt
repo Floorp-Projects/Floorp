@@ -123,6 +123,7 @@ class FxSuggestSuggestionProvider(
                 onSuggestionClicked = {
                     loadUrlUseCase.invoke(details.url)
                 },
+                score = Int.MIN_VALUE,
                 metadata = buildMap {
                     details.clickInfo?.let { put(MetadataKeys.CLICK_INFO, it) }
                     details.impressionInfo?.let { put(MetadataKeys.IMPRESSION_INFO, it) }
