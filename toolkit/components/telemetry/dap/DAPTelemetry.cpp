@@ -192,6 +192,20 @@ NS_IMETHODIMP DAPTelemetry::GetReportU8(
   return NS_OK;
 }
 
+NS_IMETHODIMP DAPTelemetry::GetReportVecU8(
+    const nsTArray<uint8_t>& aLeaderHpkeConfig,
+    const nsTArray<uint8_t>& aHelperHpkeConfig,
+    const nsTArray<uint8_t>& aMeasurement, const nsTArray<uint8_t>& aTaskID,
+    const uint64_t aTimePrecision, nsTArray<uint8_t>& aOutReport) {
+  MOZ_RELEASE_ASSERT(aTaskID.Length() == 32, "TaskID must have 32 bytes.");
+  if (!dapGetReportVecU8(&aLeaderHpkeConfig, &aHelperHpkeConfig, &aMeasurement,
+                         &aTaskID, aTimePrecision, &aOutReport)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
+
 NS_IMETHODIMP DAPTelemetry::GetReportVecU16(
     const nsTArray<uint8_t>& aLeaderHpkeConfig,
     const nsTArray<uint8_t>& aHelperHpkeConfig,

@@ -13,7 +13,10 @@ ChromeUtils.defineLazyGetter(lazy, "logConsole", function () {
   });
 });
 ChromeUtils.defineESModuleGetters(lazy, {
+  AsyncShutdown: "resource://gre/modules/AsyncShutdown.sys.mjs",
   NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
+  DAPVisitCounter: "resource://gre/modules/DAPVisitCounter.sys.mjs",
+  setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
 
 const PREF_LEADER = "toolkit.telemetry.dap_leader";
@@ -32,65 +35,90 @@ XPCOMUtils.defineLazyPreferenceGetter(lazy, "HELPER", PREF_HELPER, undefined);
 
 export const DAPTelemetrySender = new (class {
   startup() {
-    lazy.logConsole.info("Performing DAP startup");
+    lazy.logConsole.debug("Performing DAP startup");
+
+    if (lazy.NimbusFeatures.dapTelemetry.getVariable("visitCountingEnabled")) {
+      lazy.DAPVisitCounter.startup();
+    }
 
     if (lazy.NimbusFeatures.dapTelemetry.getVariable("task1Enabled")) {
-      // For now we are sending a constant value because it simplifies verification.
-      let measurement = 3;
-      this.sendVerificationTaskReport(measurement);
+      let tasks = [];
+      lazy.logConsole.debug("Task 1 is enabled.");
+      let task1_id =
+        lazy.NimbusFeatures.dapTelemetry.getVariable("task1TaskId");
+      if (task1_id !== undefined && task1_id != "") {
+        /** @typedef { 'u8' | 'vecu8' | 'vecu16' } measurementtype */
+
+        /**
+         * @typedef {object} Task
+         * @property {string} id - The task ID, base 64 encoded.
+         * @property {string} leader_endpoint - Base URL for the leader.
+         * @property {string} helper_endpoint - Base URL for the helper.
+         * @property {number} time_precision - Timestamps (in s) are rounded to the nearest multiple of this.
+         * @property {measurementtype} measurement_type - Defines measurements and aggregations used by this task. Effectively specifying the VDAF.
+         */
+        let task = {
+          // this is testing task 1
+          id: task1_id,
+          leader_endpoint: null,
+          helper_endpoint: null,
+          time_precision: 300,
+          measurement_type: "vecu8",
+        };
+        tasks.push(task);
+
+        lazy.setTimeout(
+          () => this.timedSendTestReports(tasks),
+          this.timeout_value()
+        );
+
+        lazy.NimbusFeatures.dapTelemetry.onUpdate(async (event, reason) => {
+          if (typeof this.counters !== "undefined") {
+            await this.sendTestReports(tasks);
+          }
+        });
+      }
+
+      this._asyncShutdownBlocker = async () => {
+        lazy.logConsole.debug(`Sending on shutdown.`);
+        await this.sendTestReports(tasks);
+      };
+
+      lazy.AsyncShutdown.quitApplicationGranted.addBlocker(
+        "DAPTelemetrySender: sending data",
+        this._asyncShutdownBlocker
+      );
     }
   }
 
-  async sendTestReports() {
-    /** @typedef { 'u8' | 'vecu16'} measurementtype */
-
-    /**
-     * @typedef {object} Task
-     * @property {string} id_hexstring - The task's ID hex encoded.
-     * @property {string} id_base64 - The same ID base 64 encoded.
-     * @property {string} leader_endpoint - Base URL for the leader.
-     * @property {string} helper_endpoint - Base URL for the helper.
-     * @property {number} time_precision - Timestamps (in s) are rounded to the nearest multiple of this.
-     * @property {measurementtype} measurement_type - Defines measurements and aggregations used by this task. Effectively specifying the VDAF.
-     */
-
-    // For now tasks are hardcoded here.
-    const tasks = [
-      {
-        // this is load testing task 1
-        id_hexstring:
-          "423303e27f25fcc1c1a0badb09f2d3162f210b6eb87c2e7d48a1cfbe23c5d2af",
-        id_base64: "QjMD4n8l_MHBoLrbCfLTFi8hC264fC59SKHPviPF0q8",
-        leader_endpoint: null,
-        helper_endpoint: null,
-        time_precision: 60, // TODO what is a reasonable value
-        measurement_type: "u8",
-      },
-      {
-        // this is load testing task 2
-        id_hexstring:
-          "0d2646305876ea10585cd68abe12ff3780070373f99439f5f689f5bc53c1c493",
-        id_base64: "DSZGMFh26hBYXNaKvhL_N4AHA3P5lDn19on1vFPBxJM",
-        leader_endpoint: null,
-        helper_endpoint: null,
-        time_precision: 60,
-        measurement_type: "vecu16",
-      },
-    ];
-
+  async sendTestReports(tasks) {
     for (let task of tasks) {
       let measurement;
       if (task.measurement_type == "u8") {
         measurement = 3;
-      } else if (task.measurement_type == "vecu16") {
-        measurement = new Uint16Array(1024);
+      } else if (task.measurement_type == "vecu8") {
+        measurement = new Uint8Array(20);
         let r = Math.floor(Math.random() * 10);
         measurement[r] += 1;
-        measurement[1000] += 1;
+        measurement[19] += 1;
       }
 
-      await this.sendTestReport(task, measurement);
+      await this.sendDAPMeasurement(task, measurement);
     }
+  }
+
+  async timedSendTestReports(tasks) {
+    lazy.logConsole.debug("Sending on timer.");
+    await this.sendTestReports(tasks);
+    lazy.setTimeout(
+      () => this.timedSendTestReports(tasks),
+      this.timeout_value()
+    );
+  }
+
+  timeout_value() {
+    const MINUTE = 60 * 1000;
+    return MINUTE * (9 + Math.random() * 2); // 9 - 11 minutes
   }
 
   /**
@@ -101,7 +129,7 @@ export const DAPTelemetrySender = new (class {
    * @param {number} measurement
    *   The measured value for which a report is generated.
    */
-  async sendTestReport(task, measurement) {
+  async sendDAPMeasurement(task, measurement) {
     task.leader_endpoint = lazy.LEADER;
     if (!task.leader_endpoint) {
       lazy.logConsole.error('Preference "' + PREF_LEADER + '" not set');
@@ -117,10 +145,10 @@ export const DAPTelemetrySender = new (class {
     try {
       let report = await this.generateReport(task, measurement);
       Glean.dap.reportGenerationStatus.success.add(1);
-      await this.sendReport(task.leader_endpoint, task.id_base64, report);
+      await this.sendReport(task.leader_endpoint, task.id, report);
     } catch (e) {
       Glean.dap.reportGenerationStatus.failure.add(1);
-      lazy.logConsole.error("DAP report generation failed: " + e.message);
+      lazy.logConsole.error("DAP report generation failed: " + e);
     }
   }
 
@@ -138,16 +166,27 @@ export const DAPTelemetrySender = new (class {
   async generateReport(task, measurement) {
     let [leader_config_bytes, helper_config_bytes] = await Promise.all([
       this.getHpkeConfig(
-        task.leader_endpoint + "/hpke_config?task_id=" + task.id_base64
+        task.leader_endpoint + "/hpke_config?task_id=" + task.id
       ),
       this.getHpkeConfig(
-        task.helper_endpoint + "/hpke_config?task_id=" + task.id_base64
+        task.helper_endpoint + "/hpke_config?task_id=" + task.id
       ),
     ]);
-    let task_id = hexString2Binary(task.id_hexstring);
+    let task_id = new Uint8Array(
+      ChromeUtils.base64URLDecode(task.id, { padding: "ignore" })
+    );
     let report = {};
     if (task.measurement_type == "u8") {
       Services.DAPTelemetry.GetReportU8(
+        leader_config_bytes,
+        helper_config_bytes,
+        measurement,
+        task_id,
+        task.time_precision,
+        report
+      );
+    } else if (task.measurement_type == "vecu8") {
+      Services.DAPTelemetry.GetReportVecU8(
         leader_config_bytes,
         helper_config_bytes,
         measurement,
@@ -166,7 +205,7 @@ export const DAPTelemetrySender = new (class {
       );
     } else {
       throw new Error(
-        `Unknown measurement type for task ${task.id_base64}: ${task.measurement_type}`
+        `Unknown measurement type for task ${task.id}: ${task.measurement_type}`
       );
     }
     let reportData = new Uint8Array(report.value);
@@ -233,7 +272,7 @@ export const DAPTelemetrySender = new (class {
 
         Glean.dap.uploadStatus.failure.add(1);
       } else {
-        lazy.logConsole.info("DAP report sent");
+        lazy.logConsole.debug("DAP report sent");
         Glean.dap.uploadStatus.success.add(1);
       }
     } catch (err) {
@@ -242,17 +281,3 @@ export const DAPTelemetrySender = new (class {
     }
   }
 })();
-
-/**
- * Converts a hex representation of a byte string into an array
- * @param {string} hexstring - a list of bytes represented as a hex string two characters per bytes
- * @return {Uint8Array} - the input byte list as an array
- */
-function hexString2Binary(hexstring) {
-  const binlen = hexstring.length / 2;
-  let binary = new Uint8Array(binlen);
-  for (var i = 0; i < binlen; i++) {
-    binary[i] = parseInt(hexstring.substring(2 * i, 2 * (i + 1)), 16);
-  }
-  return binary;
-}

@@ -26,6 +26,10 @@ interface nsIDAPTelemetry : nsISupports {
                  in Array<uint8_t> helperHpkeConfig, in uint8_t measurement,
                  in Array<uint8_t> task_id, in uint64_t time_precision,
                  out Array<uint8_t> report);
+  void GetReportVecU8(in Array<uint8_t> leaderHpkeConfig,
+                 in Array<uint8_t> helperHpkeConfig,
+                 in Array<uint8_t> measurement, in Array<uint8_t> task_id,
+                 in uint64_t time_precision, out Array<uint8_t> report);
   void GetReportVecU16(in Array<uint8_t> leaderHpkeConfig,
                  in Array<uint8_t> helperHpkeConfig,
                  in Array<uint16_t> measurement, in Array<uint8_t> task_id,
