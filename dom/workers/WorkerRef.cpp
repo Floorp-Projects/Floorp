@@ -20,7 +20,7 @@ class ReleaseRefControlRunnable final : public WorkerControlRunnable {
  public:
   ReleaseRefControlRunnable(WorkerPrivate* aWorkerPrivate,
                             already_AddRefed<StrongWorkerRef> aRef)
-      : WorkerControlRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount),
+      : WorkerControlRunnable(aWorkerPrivate, WorkerThread),
         mRef(std::move(aRef)) {
     MOZ_ASSERT(mRef);
   }
@@ -229,20 +229,34 @@ already_AddRefed<IPCWorkerRef> IPCWorkerRef::Create(
   if (!ref->HoldWorker(Canceling)) {
     return nullptr;
   }
-
+  ref->mWorkerPrivate->AdjustNonblockingCCBackgroundActorCount(1);
   ref->mCallback = std::move(aCallback);
 
   return ref.forget();
 }
 
 IPCWorkerRef::IPCWorkerRef(WorkerPrivate* aWorkerPrivate, const char* aName)
-    : WorkerRef(aWorkerPrivate, aName, false) {}
+    : WorkerRef(aWorkerPrivate, aName, false), mActorCount(1) {}
 
-IPCWorkerRef::~IPCWorkerRef() = default;
+IPCWorkerRef::~IPCWorkerRef() {
+  NS_ASSERT_OWNINGTHREAD(IPCWorkerRef);
+  // explicit type convertion to avoid undefined behavior of uint32_t overflow.
+  mWorkerPrivate->AdjustNonblockingCCBackgroundActorCount(
+      (int32_t)-mActorCount);
+  ReleaseWorker();
+};
 
 WorkerPrivate* IPCWorkerRef::Private() const {
   NS_ASSERT_OWNINGTHREAD(IPCWorkerRef);
   return mWorkerPrivate;
+}
+
+void IPCWorkerRef::SetActorCount(uint32_t aCount) {
+  NS_ASSERT_OWNINGTHREAD(IPCWorkerRef);
+  // explicit type convertion to avoid undefined behavior of uint32_t overflow.
+  mWorkerPrivate->AdjustNonblockingCCBackgroundActorCount((int32_t)aCount -
+                                                          (int32_t)mActorCount);
+  mActorCount = aCount;
 }
 
 }  // namespace mozilla::dom

@@ -2740,7 +2740,7 @@ class WorkerRunnableDispatcher final : public WorkerRunnable {
   WorkerRunnableDispatcher(WebSocketImpl* aImpl,
                            ThreadSafeWorkerRef* aWorkerRef,
                            already_AddRefed<nsIRunnable> aEvent)
-      : WorkerRunnable(aWorkerRef->Private(), WorkerThreadUnchangedBusyCount),
+      : WorkerRunnable(aWorkerRef->Private(), WorkerThread),
         mWebSocketImpl(aImpl),
         mEvent(std::move(aEvent)) {}
 

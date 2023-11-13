@@ -290,6 +290,8 @@ class IProtocol : public HasResultCodes {
   virtual void AllManagedActors(
       nsTArray<RefPtr<ActorLifecycleProxy>>& aActors) const = 0;
 
+  virtual uint32_t AllManagedActorsCount() const = 0;
+
   // Internal method called when the actor becomes connected.
   void ActorConnected();
 

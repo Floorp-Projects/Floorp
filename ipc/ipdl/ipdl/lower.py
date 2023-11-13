@@ -3973,6 +3973,38 @@ class _GenerateProtocolActorCode(ipdl.ast.Visitor):
 
         self.cls.addstmts([managedmeth, Whitespace.NL])
 
+        # AllManagedActorsCount() const
+        managedmeth = MethodDefn(
+            MethodDecl(
+                "AllManagedActorsCount",
+                ret=Type.UINT32,
+                methodspec=MethodSpec.OVERRIDE,
+                const=True,
+            )
+        )
+
+        # Count the number of managed actors.
+        managedmeth.addcode(
+            """
+            uint32_t total = 0;
+            """
+        )
+        for managed in ptype.manages:
+            managedmeth.addcode(
+                """
+                total += ${container}.Count();
+                """,
+                container=p.managedVar(managed, self.side),
+            )
+        managedmeth.addcode(
+            """
+            return total;
+
+            """
+        )
+
+        self.cls.addstmts([managedmeth, Whitespace.NL])
+
         # OpenPEndpoint(...)/BindPEndpoint(...)
         for managed in ptype.manages:
             self.genManagedEndpoint(managed)

@@ -53,10 +53,9 @@ const nsIID kWorkerRunnableIID = {
 }  // namespace
 
 #ifdef DEBUG
-WorkerRunnable::WorkerRunnable(WorkerPrivate* aWorkerPrivate,
-                               TargetAndBusyBehavior aBehavior)
+WorkerRunnable::WorkerRunnable(WorkerPrivate* aWorkerPrivate, Target aTarget)
     : mWorkerPrivate(aWorkerPrivate),
-      mBehavior(aBehavior),
+      mTarget(aTarget),
       mCallingCancelWithinRun(false) {
   LOG(("WorkerRunnable::WorkerRunnable [%p]", this));
   MOZ_ASSERT(aWorkerPrivate);
@@ -77,13 +76,12 @@ bool WorkerRunnable::PreDispatch(WorkerPrivate* aWorkerPrivate) {
 #ifdef DEBUG
   MOZ_ASSERT(aWorkerPrivate);
 
-  switch (mBehavior) {
-    case ParentThreadUnchangedBusyCount:
+  switch (mTarget) {
+    case ParentThread:
       aWorkerPrivate->AssertIsOnWorkerThread();
       break;
 
-    case WorkerThreadModifyBusyCount:
-    case WorkerThreadUnchangedBusyCount:
+    case WorkerThread:
       aWorkerPrivate->AssertIsOnParentThread();
       break;
 
@@ -91,11 +89,6 @@ bool WorkerRunnable::PreDispatch(WorkerPrivate* aWorkerPrivate) {
       MOZ_ASSERT_UNREACHABLE("Unknown behavior!");
   }
 #endif
-
-  if (mBehavior == WorkerThreadModifyBusyCount) {
-    return aWorkerPrivate->ModifyBusyCount(true);
-  }
-
   return true;
 }
 
@@ -112,8 +105,7 @@ bool WorkerRunnable::DispatchInternal() {
   LOG(("WorkerRunnable::DispatchInternal [%p]", this));
   RefPtr<WorkerRunnable> runnable(this);
 
-  if (mBehavior == WorkerThreadModifyBusyCount ||
-      mBehavior == WorkerThreadUnchangedBusyCount) {
+  if (mTarget == WorkerThread) {
     if (IsDebuggerRunnable()) {
       return NS_SUCCEEDED(
           mWorkerPrivate->DispatchDebuggerRunnable(runnable.forget()));
@@ -122,7 +114,7 @@ bool WorkerRunnable::DispatchInternal() {
     }
   }
 
-  MOZ_ASSERT(mBehavior == ParentThreadUnchangedBusyCount);
+  MOZ_ASSERT(mTarget == ParentThread);
 
   if (WorkerPrivate* parent = mWorkerPrivate->GetParent()) {
     return NS_SUCCEEDED(parent->Dispatch(runnable.forget()));
@@ -143,16 +135,12 @@ void WorkerRunnable::PostDispatch(WorkerPrivate* aWorkerPrivate,
   MOZ_ASSERT(aWorkerPrivate);
 
 #ifdef DEBUG
-  switch (mBehavior) {
-    case ParentThreadUnchangedBusyCount:
+  switch (mTarget) {
+    case ParentThread:
       aWorkerPrivate->AssertIsOnWorkerThread();
       break;
 
-    case WorkerThreadModifyBusyCount:
-      aWorkerPrivate->AssertIsOnParentThread();
-      break;
-
-    case WorkerThreadUnchangedBusyCount:
+    case WorkerThread:
       aWorkerPrivate->AssertIsOnParentThread();
       break;
 
@@ -160,12 +148,6 @@ void WorkerRunnable::PostDispatch(WorkerPrivate* aWorkerPrivate,
       MOZ_ASSERT_UNREACHABLE("Unknown behavior!");
   }
 #endif
-
-  if (!aDispatchResult) {
-    if (mBehavior == WorkerThreadModifyBusyCount) {
-      aWorkerPrivate->ModifyBusyCount(false);
-    }
-  }
 }
 
 bool WorkerRunnable::PreRun(WorkerPrivate* aWorkerPrivate) { return true; }
@@ -176,16 +158,12 @@ void WorkerRunnable::PostRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
   MOZ_ASSERT(aWorkerPrivate);
 
 #ifdef DEBUG
-  switch (mBehavior) {
-    case ParentThreadUnchangedBusyCount:
+  switch (mTarget) {
+    case ParentThread:
       aWorkerPrivate->AssertIsOnParentThread();
       break;
 
-    case WorkerThreadModifyBusyCount:
-      aWorkerPrivate->AssertIsOnWorkerThread();
-      break;
-
-    case WorkerThreadUnchangedBusyCount:
+    case WorkerThread:
       aWorkerPrivate->AssertIsOnWorkerThread();
       break;
 
@@ -193,10 +171,6 @@ void WorkerRunnable::PostRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
       MOZ_ASSERT_UNREACHABLE("Unknown behavior!");
   }
 #endif
-
-  if (mBehavior == WorkerThreadModifyBusyCount) {
-    aWorkerPrivate->ModifyBusyCountFromWorker(false);
-  }
 }
 
 // static
@@ -230,14 +204,13 @@ NS_INTERFACE_MAP_END
 NS_IMETHODIMP
 WorkerRunnable::Run() {
   LOG(("WorkerRunnable::Run [%p]", this));
-  bool targetIsWorkerThread = mBehavior == WorkerThreadModifyBusyCount ||
-                              mBehavior == WorkerThreadUnchangedBusyCount;
+  bool targetIsWorkerThread = mTarget == WorkerThread;
 
 #ifdef DEBUG
   if (targetIsWorkerThread) {
     mWorkerPrivate->AssertIsOnWorkerThread();
   } else {
-    MOZ_ASSERT(mBehavior == ParentThreadUnchangedBusyCount);
+    MOZ_ASSERT(mTarget == ParentThread);
     mWorkerPrivate->AssertIsOnParentThread();
   }
 #endif
@@ -247,9 +220,6 @@ WorkerRunnable::Run() {
     mCallingCancelWithinRun = true;
     Cancel();
     mCallingCancelWithinRun = false;
-    if (mBehavior == WorkerThreadModifyBusyCount) {
-      mWorkerPrivate->ModifyBusyCountFromWorker(false);
-    }
     return NS_OK;
   }
 
@@ -409,7 +379,7 @@ void WorkerDebuggerRunnable::PostDispatch(WorkerPrivate* aWorkerPrivate,
 
 WorkerSyncRunnable::WorkerSyncRunnable(WorkerPrivate* aWorkerPrivate,
                                        nsIEventTarget* aSyncLoopTarget)
-    : WorkerRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount),
+    : WorkerRunnable(aWorkerPrivate, WorkerThread),
       mSyncLoopTarget(aSyncLoopTarget) {
 #ifdef DEBUG
   if (mSyncLoopTarget) {
@@ -420,7 +390,7 @@ WorkerSyncRunnable::WorkerSyncRunnable(WorkerPrivate* aWorkerPrivate,
 
 WorkerSyncRunnable::WorkerSyncRunnable(
     WorkerPrivate* aWorkerPrivate, nsCOMPtr<nsIEventTarget>&& aSyncLoopTarget)
-    : WorkerRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount),
+    : WorkerRunnable(aWorkerPrivate, WorkerThread),
       mSyncLoopTarget(std::move(aSyncLoopTarget)) {
 #ifdef DEBUG
   if (mSyncLoopTarget) {
@@ -491,12 +461,9 @@ void MainThreadStopSyncLoopRunnable::PostDispatch(WorkerPrivate* aWorkerPrivate,
 
 #ifdef DEBUG
 WorkerControlRunnable::WorkerControlRunnable(WorkerPrivate* aWorkerPrivate,
-                                             TargetAndBusyBehavior aBehavior)
-    : WorkerRunnable(aWorkerPrivate, aBehavior) {
+                                             Target aTarget)
+    : WorkerRunnable(aWorkerPrivate, aTarget) {
   MOZ_ASSERT(aWorkerPrivate);
-  MOZ_ASSERT(aBehavior == ParentThreadUnchangedBusyCount ||
-                 aBehavior == WorkerThreadUnchangedBusyCount,
-             "WorkerControlRunnables should not modify the busy count");
 }
 #endif
 
@@ -512,7 +479,7 @@ nsresult WorkerControlRunnable::Cancel() {
 bool WorkerControlRunnable::DispatchInternal() {
   RefPtr<WorkerControlRunnable> runnable(this);
 
-  if (mBehavior == WorkerThreadUnchangedBusyCount) {
+  if (mTarget == WorkerThread) {
     return NS_SUCCEEDED(
         mWorkerPrivate->DispatchControlRunnable(runnable.forget()));
   }
@@ -591,26 +558,13 @@ WorkerMainThreadRunnable::Run() {
 }
 
 bool WorkerSameThreadRunnable::PreDispatch(WorkerPrivate* aWorkerPrivate) {
-  // We don't call WorkerRunnable::PreDispatch, because we're using
-  // WorkerThreadModifyBusyCount for mBehavior, and WorkerRunnable will assert
-  // that PreDispatch is on the parent thread in that case.
   aWorkerPrivate->AssertIsOnWorkerThread();
   return true;
 }
 
 void WorkerSameThreadRunnable::PostDispatch(WorkerPrivate* aWorkerPrivate,
                                             bool aDispatchResult) {
-  // We don't call WorkerRunnable::PostDispatch, because we're using
-  // WorkerThreadModifyBusyCount for mBehavior, and WorkerRunnable will assert
-  // that PostDispatch is on the parent thread in that case.
   aWorkerPrivate->AssertIsOnWorkerThread();
-  if (aDispatchResult) {
-    DebugOnly<bool> willIncrement =
-        aWorkerPrivate->ModifyBusyCountFromWorker(true);
-    // Should never fail since if this thread is still running, so should the
-    // parent and it should be able to process a control runnable.
-    MOZ_ASSERT(willIncrement);
-  }
 }
 
 WorkerProxyToMainThreadRunnable::WorkerProxyToMainThreadRunnable()
@@ -697,7 +651,7 @@ void WorkerProxyToMainThreadRunnable::PostDispatchOnMainThread() {
 void WorkerProxyToMainThreadRunnable::ReleaseWorker() { mWorkerRef = nullptr; }
 
 bool WorkerDebuggeeRunnable::PreDispatch(WorkerPrivate* aWorkerPrivate) {
-  if (mBehavior == ParentThreadUnchangedBusyCount) {
+  if (mTarget == ParentThread) {
     RefPtr<StrongWorkerRef> strongRef = StrongWorkerRef::Create(
         aWorkerPrivate, "WorkerDebuggeeRunnable::mSender");
     if (!strongRef) {

@@ -61,6 +61,8 @@
 #include "mozilla/dom/WindowContext.h"
 #include "mozilla/extensions/ExtensionBrowser.h"  // extensions::Create{AndDispatchInitWorkerContext,WorkerLoaded,WorkerDestroyed}Runnable
 #include "mozilla/extensions/WebExtensionPolicy.h"
+#include "mozilla/ipc/BackgroundChild.h"
+#include "mozilla/ipc/PBackgroundChild.h"
 #include "mozilla/StorageAccess.h"
 #include "mozilla/StoragePrincipalHelper.h"
 #include "mozilla/Telemetry.h"
@@ -182,7 +184,7 @@ class ExternalRunnableWrapper final : public WorkerRunnable {
  public:
   ExternalRunnableWrapper(WorkerPrivate* aWorkerPrivate,
                           nsIRunnable* aWrappedRunnable)
-      : WorkerRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount),
+      : WorkerRunnable(aWorkerPrivate, WorkerThread),
         mWrappedRunnable(aWrappedRunnable) {
     MOZ_ASSERT(aWorkerPrivate);
     MOZ_ASSERT(aWrappedRunnable);
@@ -245,7 +247,7 @@ class WorkerFinishedRunnable final : public WorkerControlRunnable {
  public:
   WorkerFinishedRunnable(WorkerPrivate* aWorkerPrivate,
                          WorkerPrivate* aFinishedWorker)
-      : WorkerControlRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount),
+      : WorkerControlRunnable(aWorkerPrivate, WorkerThread),
         mFinishedWorker(aFinishedWorker) {
     aFinishedWorker->IncreaseWorkerFinishedRunnableCount();
   }
@@ -322,31 +324,6 @@ class TopLevelWorkerFinishedRunnable final : public Runnable {
   }
 };
 
-class ModifyBusyCountRunnable final : public WorkerControlRunnable {
-  bool mIncrease;
-
- public:
-  ModifyBusyCountRunnable(WorkerPrivate* aWorkerPrivate, bool aIncrease)
-      : WorkerControlRunnable(aWorkerPrivate, ParentThreadUnchangedBusyCount),
-        mIncrease(aIncrease) {}
-
- private:
-  virtual bool WorkerRun(JSContext* aCx,
-                         WorkerPrivate* aWorkerPrivate) override {
-    return aWorkerPrivate->ModifyBusyCount(mIncrease);
-  }
-
-  virtual void PostRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
-                       bool aRunResult) override {
-    if (mIncrease) {
-      WorkerControlRunnable::PostRun(aCx, aWorkerPrivate, aRunResult);
-      return;
-    }
-    // Don't do anything here as it's possible that aWorkerPrivate has been
-    // deleted.
-  }
-};
-
 class CompileScriptRunnable final : public WorkerDebuggeeRunnable {
   nsString mScriptURL;
   const mozilla::Encoding* mDocumentEncoding;
@@ -357,7 +334,7 @@ class CompileScriptRunnable final : public WorkerDebuggeeRunnable {
                                  UniquePtr<SerializedStackHolder> aOriginStack,
                                  const nsAString& aScriptURL,
                                  const mozilla::Encoding* aDocumentEncoding)
-      : WorkerDebuggeeRunnable(aWorkerPrivate, WorkerThreadModifyBusyCount),
+      : WorkerDebuggeeRunnable(aWorkerPrivate, WorkerThread),
         mScriptURL(aScriptURL),
         mDocumentEncoding(aDocumentEncoding),
         mOriginStack(aOriginStack.release()) {}
@@ -464,8 +441,7 @@ class NotifyRunnable final : public WorkerControlRunnable {
 
  public:
   NotifyRunnable(WorkerPrivate* aWorkerPrivate, WorkerStatus aStatus)
-      : WorkerControlRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount),
-        mStatus(aStatus) {
+      : WorkerControlRunnable(aWorkerPrivate, WorkerThread), mStatus(aStatus) {
     MOZ_ASSERT(aStatus == Closing || aStatus == Canceling ||
                aStatus == Killing);
   }
@@ -473,34 +449,27 @@ class NotifyRunnable final : public WorkerControlRunnable {
  private:
   virtual bool PreDispatch(WorkerPrivate* aWorkerPrivate) override {
     aWorkerPrivate->AssertIsOnParentThread();
-    return aWorkerPrivate->ModifyBusyCount(true);
+    return true;
   }
 
   virtual void PostDispatch(WorkerPrivate* aWorkerPrivate,
                             bool aDispatchResult) override {
     aWorkerPrivate->AssertIsOnParentThread();
-    if (!aDispatchResult) {
-      // We couldn't dispatch to the worker, which means it's already dead.
-      // Undo the busy count modification.
-      aWorkerPrivate->ModifyBusyCount(false);
-    }
-  }
-
-  virtual void PostRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
-                       bool aRunResult) override {
-    aWorkerPrivate->ModifyBusyCountFromWorker(false);
   }
 
   virtual bool WorkerRun(JSContext* aCx,
                          WorkerPrivate* aWorkerPrivate) override {
     return aWorkerPrivate->NotifyInternal(mStatus);
   }
+
+  virtual void PostRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate,
+                       bool aRunResult) override {}
 };
 
 class FreezeRunnable final : public WorkerControlRunnable {
  public:
   explicit FreezeRunnable(WorkerPrivate* aWorkerPrivate)
-      : WorkerControlRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount) {}
+      : WorkerControlRunnable(aWorkerPrivate, WorkerThread) {}
 
  private:
   virtual bool WorkerRun(JSContext* aCx,
@@ -512,7 +481,7 @@ class FreezeRunnable final : public WorkerControlRunnable {
 class ThawRunnable final : public WorkerControlRunnable {
  public:
   explicit ThawRunnable(WorkerPrivate* aWorkerPrivate)
-      : WorkerControlRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount) {}
+      : WorkerControlRunnable(aWorkerPrivate, WorkerThread) {}
 
  private:
   virtual bool WorkerRun(JSContext* aCx,
@@ -526,7 +495,7 @@ class PropagateStorageAccessPermissionGrantedRunnable final
  public:
   explicit PropagateStorageAccessPermissionGrantedRunnable(
       WorkerPrivate* aWorkerPrivate)
-      : WorkerControlRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount) {}
+      : WorkerControlRunnable(aWorkerPrivate, WorkerThread) {}
 
  private:
   bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override {
@@ -567,7 +536,7 @@ class ReportErrorToConsoleRunnable final : public WorkerRunnable {
   ReportErrorToConsoleRunnable(WorkerPrivate* aWorkerPrivate,
                                const char* aMessage,
                                const nsTArray<nsString>& aParams)
-      : WorkerRunnable(aWorkerPrivate, ParentThreadUnchangedBusyCount),
+      : WorkerRunnable(aWorkerPrivate, ParentThread),
         mMessage(aMessage),
         mParams(aParams.Clone()) {}
 
@@ -595,7 +564,7 @@ class TimerRunnable final : public WorkerRunnable,
   NS_DECL_ISUPPORTS_INHERITED
 
   explicit TimerRunnable(WorkerPrivate* aWorkerPrivate)
-      : WorkerRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount) {}
+      : WorkerRunnable(aWorkerPrivate, WorkerThread) {}
 
  private:
   ~TimerRunnable() = default;
@@ -637,8 +606,7 @@ class DebuggerImmediateRunnable : public WorkerRunnable {
  public:
   explicit DebuggerImmediateRunnable(WorkerPrivate* aWorkerPrivate,
                                      dom::Function& aHandler)
-      : WorkerRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount),
-        mHandler(&aHandler) {}
+      : WorkerRunnable(aWorkerPrivate, WorkerThread), mHandler(&aHandler) {}
 
  private:
   virtual bool IsDebuggerRunnable() const override { return true; }
@@ -698,7 +666,7 @@ class UpdateContextOptionsRunnable final : public WorkerControlRunnable {
  public:
   UpdateContextOptionsRunnable(WorkerPrivate* aWorkerPrivate,
                                const JS::ContextOptions& aContextOptions)
-      : WorkerControlRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount),
+      : WorkerControlRunnable(aWorkerPrivate, WorkerThread),
         mContextOptions(aContextOptions) {}
 
  private:
@@ -733,7 +701,7 @@ class UpdateJSWorkerMemoryParameterRunnable final
   UpdateJSWorkerMemoryParameterRunnable(WorkerPrivate* aWorkerPrivate,
                                         JSGCParamKey aKey,
                                         Maybe<uint32_t> aValue)
-      : WorkerControlRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount),
+      : WorkerControlRunnable(aWorkerPrivate, WorkerThread),
         mValue(aValue),
         mKey(aKey) {}
 
@@ -753,7 +721,7 @@ class UpdateGCZealRunnable final : public WorkerControlRunnable {
  public:
   UpdateGCZealRunnable(WorkerPrivate* aWorkerPrivate, uint8_t aGCZeal,
                        uint32_t aFrequency)
-      : WorkerControlRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount),
+      : WorkerControlRunnable(aWorkerPrivate, WorkerThread),
         mGCZeal(aGCZeal),
         mFrequency(aFrequency) {}
 
@@ -771,8 +739,7 @@ class SetLowMemoryStateRunnable final : public WorkerControlRunnable {
 
  public:
   SetLowMemoryStateRunnable(WorkerPrivate* aWorkerPrivate, bool aState)
-      : WorkerControlRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount),
-        mState(aState) {}
+      : WorkerControlRunnable(aWorkerPrivate, WorkerThread), mState(aState) {}
 
  private:
   virtual bool WorkerRun(JSContext* aCx,
@@ -789,7 +756,7 @@ class GarbageCollectRunnable final : public WorkerControlRunnable {
  public:
   GarbageCollectRunnable(WorkerPrivate* aWorkerPrivate, bool aShrinking,
                          bool aCollectChildren)
-      : WorkerControlRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount),
+      : WorkerControlRunnable(aWorkerPrivate, WorkerThread),
         mShrinking(aShrinking),
         mCollectChildren(aCollectChildren) {}
 
@@ -823,7 +790,7 @@ class CycleCollectRunnable : public WorkerControlRunnable {
 
  public:
   CycleCollectRunnable(WorkerPrivate* aWorkerPrivate, bool aCollectChildren)
-      : WorkerControlRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount),
+      : WorkerControlRunnable(aWorkerPrivate, WorkerThread),
         mCollectChildren(aCollectChildren) {}
 
   bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override {
@@ -849,7 +816,7 @@ class OfflineStatusChangeRunnable : public WorkerRunnable {
 class MemoryPressureRunnable : public WorkerControlRunnable {
  public:
   explicit MemoryPressureRunnable(WorkerPrivate* aWorkerPrivate)
-      : WorkerControlRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount) {}
+      : WorkerControlRunnable(aWorkerPrivate, WorkerThread) {}
 
   bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override {
     aWorkerPrivate->MemoryPressureInternal();
@@ -880,8 +847,7 @@ PRThread* PRThreadFromThread(nsIThread* aThread) {
 class CancelingOnParentRunnable final : public WorkerDebuggeeRunnable {
  public:
   explicit CancelingOnParentRunnable(WorkerPrivate* aWorkerPrivate)
-      : WorkerDebuggeeRunnable(aWorkerPrivate, ParentThreadUnchangedBusyCount) {
-  }
+      : WorkerDebuggeeRunnable(aWorkerPrivate, ParentThread) {}
 
   bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override {
     aWorkerPrivate->Cancel();
@@ -894,7 +860,7 @@ class CancelingWithTimeoutOnParentRunnable final
     : public WorkerControlRunnable {
  public:
   explicit CancelingWithTimeoutOnParentRunnable(WorkerPrivate* aWorkerPrivate)
-      : WorkerControlRunnable(aWorkerPrivate, ParentThreadUnchangedBusyCount) {}
+      : WorkerControlRunnable(aWorkerPrivate, ParentThread) {}
 
   bool WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate) override {
     aWorkerPrivate->AssertIsOnParentThread();
@@ -1558,12 +1524,14 @@ void WorkerPrivate::Traverse(nsCycleCollectionTraversalCallback& aCb) {
 
   // The WorkerPrivate::mParentEventTargetRef has a reference to the exposed
   // Worker object, which is really held by the worker thread.  We traverse this
-  // reference if and only if our busy count is zero and we have not released
-  // the main thread reference.  We do not unlink it.  This allows the CC to
-  // break cycles involving the Worker and begin shutting it down (which does
-  // happen in unlink) but ensures that the WorkerPrivate won't be deleted
-  // before we're done shutting down the thread.
-  if (!mBusyCount && !mMainThreadObjectsForgotten) {
+  // reference if and only if all main thread event queues are empty, no
+  // shutdown tasks, no StrongWorkerRefs, no child workers, no timeouts, no
+  // blocking background actors, and we have not released the main thread
+  // reference.  We do not unlink it. This allows the CC to break cycles
+  // involving the Worker and begin shutting it down (which does happen in
+  // unlink) but ensures that the WorkerPrivate won't be deleted before we're
+  // done shutting down the thread.
+  if (IsEligibleForCC() && !mMainThreadObjectsForgotten) {
     nsCycleCollectionTraversalCallback& cb = aCb;
     WorkerPrivate* tmp = this;
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mParentEventTargetRef);
@@ -1944,31 +1912,6 @@ bool WorkerPrivate::Close() {
   return true;
 }
 
-bool WorkerPrivate::ModifyBusyCount(bool aIncrease) {
-  AssertIsOnParentThread();
-
-  MOZ_ASSERT(aIncrease || mBusyCount, "Mismatched busy count mods!");
-
-  if (aIncrease) {
-    mBusyCount++;
-    return true;
-  }
-
-  if (--mBusyCount == 0) {
-    bool shouldCancel;
-    {
-      MutexAutoLock lock(mMutex);
-      shouldCancel = mParentStatus == Canceling;
-    }
-
-    if (shouldCancel && !Cancel()) {
-      return false;
-    }
-  }
-
-  return true;
-}
-
 bool WorkerPrivate::ProxyReleaseMainThreadObjects() {
   AssertIsOnParentThread();
   MOZ_ASSERT(!mMainThreadObjectsForgotten);
@@ -2289,6 +2232,7 @@ WorkerPrivate::WorkerThreadAccessible::WorkerThreadAccessible(
     WorkerPrivate* const aParent)
     : mNumWorkerRefsPreventingShutdownStart(0),
       mDebuggerEventLoopLevel(0),
+      mNonblockingCCBackgroundActorCount(0),
       mErrorHandlerRecursionCount(0),
       mNextTimeoutId(1),
       mCurrentTimerNestingLevel(0),
@@ -2362,7 +2306,6 @@ WorkerPrivate::WorkerPrivate(
           new WorkerEventTarget(this, WorkerEventTarget::Behavior::Hybrid)),
       mParentStatus(Pending),
       mStatus(Pending),
-      mBusyCount(0),
       mCreationTimeStamp(TimeStamp::Now()),
       mCreationTimeHighRes((double)PR_Now() / PR_USEC_PER_MSEC),
       mReportedUseCounters(false),
@@ -3393,6 +3336,13 @@ void WorkerPrivate::DoRunLoop(JSContext* aCx) {
       }
     }
 
+    // Checking the background actors if needed, any runnable execution could
+    // release background actors which blocks GC/CC on
+    // WorkerPrivate::mParentEventTargetRef.
+    if (currentStatus < Canceling) {
+      UpdateCCFlag(CCFlag::CheckBackgroundActors);
+    }
+
     if (!debuggerRunnablesPending && !normalRunnablesPending) {
       // Both the debugger event queue and the normal event queue has been
       // exhausted, cancel the periodic GC timer and schedule the idle GC timer.
@@ -4120,24 +4070,6 @@ void WorkerPrivate::UnlinkTimeouts() {
   data->mTimeouts.Clear();
 }
 
-bool WorkerPrivate::ModifyBusyCountFromWorker(bool aIncrease) {
-  AssertIsOnWorkerThread();
-
-  {
-    MutexAutoLock lock(mMutex);
-
-    // If we're in shutdown then the busy count is no longer being considered so
-    // just return now.
-    if (mStatus >= Killing) {
-      return true;
-    }
-  }
-
-  RefPtr<ModifyBusyCountRunnable> runnable =
-      new ModifyBusyCountRunnable(this, aIncrease);
-  return runnable->Dispatch();
-}
-
 bool WorkerPrivate::AddChildWorker(WorkerPrivate& aChildWorker) {
   auto data = mWorkerThreadAccessible.Access();
 
@@ -4157,8 +4089,11 @@ bool WorkerPrivate::AddChildWorker(WorkerPrivate& aChildWorker) {
                "Already know about this one!");
   data->mChildWorkers.AppendElement(&aChildWorker);
 
-  return data->mChildWorkers.Length() == 1 ? ModifyBusyCountFromWorker(true)
-                                           : true;
+  if (data->mChildWorkers.Length() == 1) {
+    UpdateCCFlag(CCFlag::IneligibleForChildWorker);
+  }
+
+  return true;
 }
 
 void WorkerPrivate::RemoveChildWorker(WorkerPrivate& aChildWorker) {
@@ -4168,8 +4103,8 @@ void WorkerPrivate::RemoveChildWorker(WorkerPrivate& aChildWorker) {
                "Didn't know about this one!");
   data->mChildWorkers.RemoveElement(&aChildWorker);
 
-  if (data->mChildWorkers.IsEmpty() && !ModifyBusyCountFromWorker(false)) {
-    NS_WARNING("Failed to modify busy count!");
+  if (data->mChildWorkers.IsEmpty()) {
+    UpdateCCFlag(CCFlag::EligibleForChildWorker);
   }
 }
 
@@ -4204,11 +4139,10 @@ bool WorkerPrivate::AddWorkerRef(WorkerRef* aWorkerRef,
              "Already know about this one!");
 
   if (aWorkerRef->IsPreventingShutdown()) {
-    if (!data->mNumWorkerRefsPreventingShutdownStart &&
-        !ModifyBusyCountFromWorker(true)) {
-      return false;
-    }
     data->mNumWorkerRefsPreventingShutdownStart += 1;
+    if (data->mNumWorkerRefsPreventingShutdownStart == 1) {
+      UpdateCCFlag(CCFlag::IneligibleForWorkerRef);
+    }
   }
 
   data->mWorkerRefs.AppendElement(aWorkerRef);
@@ -4227,9 +4161,8 @@ void WorkerPrivate::RemoveWorkerRef(WorkerRef* aWorkerRef) {
 
   if (aWorkerRef->IsPreventingShutdown()) {
     data->mNumWorkerRefsPreventingShutdownStart -= 1;
-    if (!data->mNumWorkerRefsPreventingShutdownStart &&
-        !ModifyBusyCountFromWorker(false)) {
-      NS_WARNING("Failed to modify busy count!");
+    if (!data->mNumWorkerRefsPreventingShutdownStart) {
+      UpdateCCFlag(CCFlag::EligibleForWorkerRef);
     }
   }
 }
@@ -4304,6 +4237,120 @@ void WorkerPrivate::RunShutdownTasks() {
   mWorkerHybridEventTarget->ForgetWorkerPrivate(this);
 }
 
+void WorkerPrivate::AdjustNonblockingCCBackgroundActorCount(int32_t aCount) {
+  AssertIsOnWorkerThread();
+  auto data = mWorkerThreadAccessible.Access();
+  LOGV(("WorkerPrivate::AdjustNonblockingCCBackgroundActors [%p] (%d/%u)", this,
+        aCount, data->mNonblockingCCBackgroundActorCount));
+
+#ifdef DEBUG
+  if (aCount < 0) {
+    MOZ_ASSERT(data->mNonblockingCCBackgroundActorCount >=
+               (uint32_t)abs(aCount));
+  }
+#endif
+
+  data->mNonblockingCCBackgroundActorCount += aCount;
+}
+
+void WorkerPrivate::UpdateCCFlag(const CCFlag aFlag) {
+  LOGV(("WorkerPrivate::UpdateCCFlag [%p]", this));
+  AssertIsOnWorkerThread();
+
+  auto data = mWorkerThreadAccessible.Access();
+
+#ifdef DEBUG
+  switch (aFlag) {
+    case CCFlag::EligibleForWorkerRef: {
+      MOZ_ASSERT(!data->mNumWorkerRefsPreventingShutdownStart);
+      break;
+    }
+    case CCFlag::IneligibleForWorkerRef: {
+      MOZ_ASSERT(data->mNumWorkerRefsPreventingShutdownStart);
+      break;
+    }
+    case CCFlag::EligibleForChildWorker: {
+      MOZ_ASSERT(data->mChildWorkers.IsEmpty());
+      break;
+    }
+    case CCFlag::IneligibleForChildWorker: {
+      MOZ_ASSERT(!data->mChildWorkers.IsEmpty());
+      break;
+    }
+    case CCFlag::EligibleForTimeout: {
+      MOZ_ASSERT(data->mTimeouts.IsEmpty());
+      break;
+    }
+    case CCFlag::IneligibleForTimeout: {
+      MOZ_ASSERT(!data->mTimeouts.IsEmpty());
+      break;
+    }
+    case CCFlag::CheckBackgroundActors: {
+      break;
+    }
+  }
+#endif
+
+  {
+    MutexAutoLock lock(mMutex);
+    if (mStatus > Canceling) {
+      mCCFlagSaysEligible = true;
+      return;
+    }
+  }
+  auto HasBackgroundActors = [nonblockingActorCount =
+                                  data->mNonblockingCCBackgroundActorCount]() {
+    RefPtr<PBackgroundChild> backgroundChild =
+        BackgroundChild::GetForCurrentThread();
+    MOZ_ASSERT(backgroundChild);
+    auto totalCount = backgroundChild->AllManagedActorsCount();
+    LOGV(("WorkerPrivate::UpdateCCFlag HasBackgroundActors: %s(%u/%u)",
+          totalCount > nonblockingActorCount ? "true" : "false", totalCount,
+          nonblockingActorCount));
+
+    return totalCount > nonblockingActorCount;
+  };
+
+  bool eligibleForCC = data->mChildWorkers.IsEmpty() &&
+                       data->mTimeouts.IsEmpty() &&
+                       !data->mNumWorkerRefsPreventingShutdownStart;
+
+  // Only checking BackgroundActors when no strong WorkerRef, ChildWorker, and
+  // Timeout since the checking is expensive.
+  if (eligibleForCC) {
+    eligibleForCC = !HasBackgroundActors();
+  }
+
+  {
+    MutexAutoLock lock(mMutex);
+    mCCFlagSaysEligible = eligibleForCC;
+  }
+}
+
+bool WorkerPrivate::IsEligibleForCC() {
+  LOGV(("WorkerPrivate::IsEligibleForCC [%p]", this));
+  MutexAutoLock lock(mMutex);
+  if (mStatus > Canceling) {
+    return true;
+  }
+
+  bool HasShutdownTasks = !mShutdownTasks.IsEmpty();
+
+  LOGV(("mMainThreadEventTarget: %s",
+        mMainThreadEventTarget->IsEmpty() ? "empty" : "non-empty"));
+  LOGV(("mMainThreadEventTargetForMessaging: %s",
+        mMainThreadEventTargetForMessaging->IsEmpty() ? "empty" : "non-empty"));
+  LOGV(("mMainThreadDebuggerEventTarget: %s",
+        mMainThreadDebuggeeEventTarget->IsEmpty() ? "empty" : "non-empty"));
+  LOGV(("mCCFlagSaysEligible: %s", mCCFlagSaysEligible ? "true" : "false"));
+  LOGV(("HasShutdownTasks: %s", HasShutdownTasks ? "true" : "false"));
+
+  return mMainThreadEventTarget->IsEmpty() &&
+         mMainThreadEventTargetForMessaging->IsEmpty() &&
+         mMainThreadDebuggeeEventTarget->IsEmpty() && mCCFlagSaysEligible &&
+         !HasShutdownTasks;
+}
+
 void WorkerPrivate::CancelAllTimeouts() {
   auto data = mWorkerThreadAccessible.Access();
 
@@ -4326,7 +4373,7 @@ void WorkerPrivate::CancelAllTimeouts() {
     // them.  Otherwise, we need to clean them up ourselves.
     if (!data->mRunningExpiredTimeouts) {
       data->mTimeouts.Clear();
-      ModifyBusyCountFromWorker(false);
+      UpdateCCFlag(CCFlag::EligibleForTimeout);
     }
 
     // Set mTimerRunning false even if mRunningExpiredTimeouts is true, so that
@@ -4711,8 +4758,8 @@ void WorkerPrivate::PostMessageToParent(
     return;
   }
 
-  RefPtr<MessageEventRunnable> runnable = new MessageEventRunnable(
-      this, WorkerRunnable::ParentThreadUnchangedBusyCount);
+  RefPtr<MessageEventRunnable> runnable =
+      new MessageEventRunnable(this, WorkerRunnable::ParentThread);
 
   JS::CloneDataPolicy clonePolicy;
 
@@ -5095,10 +5142,7 @@ int32_t WorkerPrivate::SetTimeout(JSContext* aCx, TimeoutHandler* aHandler,
     }
 
     if (!data->mTimerRunning) {
-      if (!ModifyBusyCountFromWorker(true)) {
-        aRv.Throw(NS_ERROR_FAILURE);
-        return 0;
-      }
+      UpdateCCFlag(CCFlag::IneligibleForTimeout);
       data->mTimerRunning = true;
     }
 
@@ -5279,9 +5323,7 @@ bool WorkerPrivate::RunExpiredTimeouts(JSContext* aCx) {
   // Either signal the parent that we're no longer using timeouts or reschedule
   // the timer.
   if (data->mTimeouts.IsEmpty()) {
-    if (!ModifyBusyCountFromWorker(false)) {
-      retval = false;
-    }
+    UpdateCCFlag(CCFlag::EligibleForTimeout);
     data->mTimerRunning = false;
   } else if (retval && !RescheduleTimeoutTimer(aCx)) {
     retval = false;
@@ -5327,9 +5369,12 @@ bool WorkerPrivate::RescheduleTimeoutTimer(JSContext* aCx) {
 void WorkerPrivate::StartCancelingTimer() {
   AssertIsOnParentThread();
 
-  auto errorCleanup = MakeScopeExit([&] { mCancelingTimer = nullptr; });
+  // return if mCancelingTimer has already existed.
+  if (mCancelingTimer) {
+    return;
+  }
 
-  MOZ_ASSERT(!mCancelingTimer);
+  auto errorCleanup = MakeScopeExit([&] { mCancelingTimer = nullptr; });
 
   if (WorkerPrivate* parent = GetParent()) {
     mCancelingTimer = NS_NewTimer(parent->ControlEventTarget());
