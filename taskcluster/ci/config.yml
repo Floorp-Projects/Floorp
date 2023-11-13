@@ -150,6 +150,7 @@ treeherder:
         'W-swr-cf': 'Web platform tests confirm falure with software webrender enabled'
         'W-b': 'Web platform tests (backlog)'
         'W-b-nofis': 'Web platform tests (backlog) without fission enabled'
+        'W-pb': 'Web platform tests with private browsing enabled'
         'X': 'Xpcshell tests'
         'X-cf': 'Xpcshell tests confirm failure'
         'X-condprof': 'Xpcshell tests with a conditioned profile'

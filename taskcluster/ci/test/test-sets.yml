@@ -18,6 +18,7 @@
 web-platform-tests:
     - web-platform-tests
     - web-platform-tests-crashtest
+    - web-platform-tests-privatebrowsing
     - web-platform-tests-print-reftest
     - web-platform-tests-reftest
     - web-platform-tests-wdspec
