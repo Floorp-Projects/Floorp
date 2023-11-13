@@ -390,7 +390,9 @@ def setup_tasks_for_fzf(
     return all_tasks, dep_cache, cache_dir
 
 
-def build_base_cmd(fzf, dep_cache, cache_dir, show_estimates=True):
+def build_base_cmd(
+    fzf, dep_cache, cache_dir, show_estimates=True, preview_script=PREVIEW_SCRIPT
+):
     key_shortcuts = [k + ":" + v for k, v in fzf_shortcuts.items()]
     base_cmd = [
         fzf,
@@ -408,7 +410,7 @@ def build_base_cmd(fzf, dep_cache, cache_dir, show_estimates=True):
             [
                 "--preview",
                 '{} {} -g {} -s -c {} -t "{{+f}}"'.format(
-                    sys.executable, PREVIEW_SCRIPT, dep_cache, cache_dir
+                    sys.executable, preview_script, dep_cache, cache_dir
                 ),
             ]
         )
@@ -416,7 +418,7 @@ def build_base_cmd(fzf, dep_cache, cache_dir, show_estimates=True):
         base_cmd.extend(
             [
                 "--preview",
-                '{} {} -t "{{+f}}"'.format(sys.executable, PREVIEW_SCRIPT),
+                '{} {} -t "{{+f}}"'.format(sys.executable, preview_script),
             ]
         )
 

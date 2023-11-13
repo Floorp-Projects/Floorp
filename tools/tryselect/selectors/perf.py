@@ -39,6 +39,9 @@ from .perfselector.utils import LogProcessor
 here = os.path.abspath(os.path.dirname(__file__))
 build = MozbuildObject.from_environment(cwd=here)
 cache_file = pathlib.Path(get_state_dir(), "try_perf_revision_cache.json")
+PREVIEW_SCRIPT = pathlib.Path(
+    build.topsrcdir, "tools/tryselect/selectors/perf_preview.py"
+)
 
 PERFHERDER_BASE_URL = (
     "https://treeherder.mozilla.org/perfherder/"
@@ -737,6 +740,7 @@ class PerfParser(CompareParser):
                     "suites": category_info["suites"],
                     "base-category": base_category,
                     "base-category-name": category,
+                    "description": category_info["description"],
                 }
                 for app in Apps:
                     if not any(
@@ -779,6 +783,7 @@ class PerfParser(CompareParser):
                         "app": app,
                         "suites": category_info["suites"],
                         "base-category": base_category,
+                        "description": category_info["description"],
                     }
 
                 if not base_category:
@@ -1211,7 +1216,13 @@ class PerfParser(CompareParser):
             full=True,
             disable_target_task_filter=False,
         )
-        base_cmd = build_base_cmd(fzf, dep_cache, cache_dir, show_estimates=False)
+        base_cmd = build_base_cmd(
+            fzf,
+            dep_cache,
+            cache_dir,
+            show_estimates=False,
+            preview_script=PREVIEW_SCRIPT,
+        )
 
         # Perform the selection, then push to try and return the revisions
         queries = []
@@ -1242,6 +1253,8 @@ class PerfParser(CompareParser):
         elif not show_all:
             # Expand the categories first
             categories = PerfParser.get_categories(**kwargs)
+            PerfParser.build_category_description(base_cmd, categories)
+
             selected_tasks, selected_categories, queries = PerfParser.get_perf_tasks(
                 base_cmd, all_tasks, categories, query=query
             )
@@ -1377,6 +1390,24 @@ class PerfParser(CompareParser):
             "and re-run this command. \nEnsure you supply the --android, "
             "and select the correct tasks (fenix, geckoview) or use "
             "--show-all for mozperftest task selection.\n"
+        )
+
+    def build_category_description(base_cmd, categories):
+        descriptions = {}
+
+        for category in categories:
+            if categories[category].get("description"):
+                descriptions[category] = categories[category].get("description")
+
+        description_file = pathlib.Path(
+            get_state_dir(), "try_perf_categories_info.json"
+        )
+        with description_file.open("w") as f:
+            json.dump(descriptions, f, indent=4)
+
+        preview_option = base_cmd.index("--preview") + 1
+        base_cmd[preview_option] = (
+            base_cmd[preview_option] + f' -d "{description_file}" -l "{{}}"'
         )
 
 
