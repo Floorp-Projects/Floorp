@@ -10,6 +10,7 @@
 #include "mozilla/MemoryReporting.h"
 
 #include "gc/Barrier.h"
+#include "gc/GCArray.h"
 #include "util/BitArray.h"
 #include "vm/NativeObject.h"
 
@@ -55,13 +56,7 @@ class RareArgumentsData {
 // property is modified, when the relevant value is flagged to memorialize the
 // modification.
 struct ArgumentsData {
-  /*
-   * numArgs = std::max(numFormalArgs, numActualArgs)
-   * The array 'args' has numArgs elements.
-   */
-  uint32_t numArgs;
-
-  RareArgumentsData* rareData;
+  RareArgumentsData* rareData = nullptr;
 
   /*
    * This array holds either the current argument value or the magic
@@ -71,19 +66,31 @@ struct ArgumentsData {
    * canonical value so any element access to the arguments object should load
    * the value out of the CallObject (which is pointed to by MAYBE_CALL_SLOT).
    */
-  GCPtr<Value> args[1];
+  GCArray<GCPtr<Value>> args;
 
-  /* For jit use: */
-  static ptrdiff_t offsetOfArgs() { return offsetof(ArgumentsData, args); }
+  /*
+   * numArgs = std::max(numFormalArgs, numActualArgs)
+   * The array 'args' has numArgs elements.
+   */
+  explicit ArgumentsData(uint32_t numArgs);
+
+  uint32_t numArgs() const { return args.size(); }
 
   /* Iterate args. */
-  GCPtr<Value>* begin() { return args; }
-  const GCPtr<Value>* begin() const { return args; }
-  GCPtr<Value>* end() { return args + numArgs; }
-  const GCPtr<Value>* end() const { return args + numArgs; }
+  GCPtr<Value>* begin() { return args.begin(); }
+  const GCPtr<Value>* begin() const { return args.begin(); }
+  GCPtr<Value>* end() { return args.end(); }
+  const GCPtr<Value>* end() const { return args.end(); }
+
+  /* For jit use: */
+  static constexpr ptrdiff_t offsetOfArgs() {
+    return offsetof(ArgumentsData, args) +
+           GCArray<GCPtr<Value>>::offsetOfElements();
+  }
 
   static size_t bytesRequired(size_t numArgs) {
-    return offsetof(ArgumentsData, args) + numArgs * sizeof(Value);
+    return offsetof(ArgumentsData, args) +
+           GCArray<GCPtr<Value>>::bytesRequired(numArgs);
   }
 };
 
@@ -337,7 +344,7 @@ class ArgumentsObject : public NativeObject {
    * ArgumentsData::args.
    */
   bool isElementDeleted(uint32_t i) const {
-    MOZ_ASSERT(i < data()->numArgs);
+    MOZ_ASSERT(i < data()->numArgs());
     if (i >= initialLength()) {
       return false;
     }
@@ -385,14 +392,14 @@ class ArgumentsObject : public NativeObject {
   inline void setElement(uint32_t i, const Value& v);
 
   const Value& arg(unsigned i) const {
-    MOZ_ASSERT(i < data()->numArgs);
+    MOZ_ASSERT(i < data()->numArgs());
     const Value& v = data()->args[i];
     MOZ_ASSERT(!v.isMagic());
     return v;
   }
 
   void setArg(unsigned i, const Value& v) {
-    MOZ_ASSERT(i < data()->numArgs);
+    MOZ_ASSERT(i < data()->numArgs());
     GCPtr<Value>& lhs = data()->args[i];
     MOZ_ASSERT(!lhs.isMagic());
     lhs = v;
@@ -403,7 +410,7 @@ class ArgumentsObject : public NativeObject {
    * CallObject and can't be directly read from |ArgumentsData::args|.
    */
   bool argIsForwarded(unsigned i) const {
-    MOZ_ASSERT(i < data()->numArgs);
+    MOZ_ASSERT(i < data()->numArgs());
     const Value& v = data()->args[i];
     MOZ_ASSERT_IF(IsMagicScopeSlotValue(v), anyArgIsForwarded());
     return IsMagicScopeSlotValue(v);
@@ -450,7 +457,7 @@ class ArgumentsObject : public NativeObject {
     return mallocSizeOf(data()) + mallocSizeOf(maybeRareData());
   }
   size_t sizeOfData() const {
-    return ArgumentsData::bytesRequired(data()->numArgs) +
+    return ArgumentsData::bytesRequired(data()->numArgs()) +
            (maybeRareData() ? RareArgumentsData::bytesRequired(initialLength())
                             : 0);
   }
