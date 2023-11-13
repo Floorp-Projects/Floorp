@@ -29,6 +29,7 @@ impl Ping {
         name: S,
         include_client_id: bool,
         send_if_empty: bool,
+        precise_timestamps: bool,
         reason_codes: Vec<String>,
     ) -> Self {
         if need_ipc() {
@@ -38,6 +39,7 @@ impl Ping {
                 name,
                 include_client_id,
                 send_if_empty,
+                precise_timestamps,
                 reason_codes,
             ))
         }
@@ -95,7 +97,7 @@ mod test {
     };
 
     // Smoke test for what should be the generated code.
-    static PROTOTYPE_PING: Lazy<Ping> = Lazy::new(|| Ping::new("prototype", false, true, vec![]));
+    static PROTOTYPE_PING: Lazy<Ping> = Lazy::new(|| Ping::new("prototype", false, true, true, vec![]));
 
     #[test]
     fn smoke_test_custom_ping() {

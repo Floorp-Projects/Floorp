@@ -165,6 +165,7 @@ fn test_sending_of_event_ping_when_it_fills_up() {
             store_name.clone(),
             true,
             false,
+            true,
             vec!["max_capacity".to_string()],
         ));
     }
@@ -444,7 +445,13 @@ fn event_storage_trimming() {
         let (mut glean, _dir) = new_glean(Some(tempdir));
         // In Rust, pings are registered via construction.
         // But that's done asynchronously, so we do it synchronously here:
-        glean.register_ping_type(&PingType::new(store_name.to_string(), true, false, vec![]));
+        glean.register_ping_type(&PingType::new(
+            store_name.to_string(),
+            true,
+            false,
+            true,
+            vec![],
+        ));
 
         glean.on_ready_to_submit_pings(true);
 
@@ -470,7 +477,8 @@ fn with_event_timestamps() {
         trim_data_to_registered_pings: false,
         log_level: None,
         rate_limit: None,
-        enable_event_timestamps: true, // Enabling event timestamps
+        enable_event_timestamps: true,
+        experimentation_id: None, // Enabling event timestamps
     };
     let glean = Glean::new(cfg).unwrap();
 

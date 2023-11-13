@@ -132,6 +132,10 @@ pub struct InternalConfiguration {
     pub rate_limit: Option<PingRateLimit>,
     /// (Experimental) Whether to add a wallclock timestamp to all events.
     pub enable_event_timestamps: bool,
+    /// An experimentation identifier derived by the application to be sent with all pings, it should
+    /// be noted that this has an underlying StringMetric and so should conform to the limitations that
+    /// StringMetric places on length, etc.
+    pub experimentation_id: Option<String>,
 }
 
 /// How to specify the rate at which pings may be uploaded before they are throttled.
@@ -189,6 +193,14 @@ static STATE: OnceCell<Mutex<State>> = OnceCell::new();
 #[track_caller] // If this fails we're interested in the caller.
 fn global_state() -> &'static Mutex<State> {
     STATE.get().unwrap()
+}
+
+/// Attempt to get a reference to the global state object.
+///
+/// If it hasn't been set yet, we return None.
+#[track_caller] // If this fails we're interested in the caller.
+fn maybe_global_state() -> Option<&'static Mutex<State>> {
+    STATE.get()
 }
 
 /// Set or replace the global bindings State object.
@@ -855,11 +867,24 @@ pub fn glean_test_get_experiment_data(experiment_id: String) -> Option<RecordedE
     core::with_glean(|glean| glean.test_get_experiment_data(experiment_id.to_owned()))
 }
 
+/// TEST ONLY FUNCTION.
+/// Gets stored experimentation id annotation.
+pub fn glean_test_get_experimentation_id() -> Option<String> {
+    block_on_dispatcher();
+    core::with_glean(|glean| glean.test_get_experimentation_id())
+}
+
 /// Sets a remote configuration to override metrics' default enabled/disabled
 /// state
 ///
 /// See [`core::Glean::set_metrics_enabled_config`].
 pub fn glean_set_metrics_enabled_config(json: String) {
+    // An empty config means it is not set,
+    // so we avoid logging an error about it.
+    if json.is_empty() {
+        return;
+    }
+
     match MetricsEnabledConfig::try_from(json) {
         Ok(cfg) => launch_with_glean(|glean| {
             glean.set_metrics_enabled_config(cfg);

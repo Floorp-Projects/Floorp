@@ -24,6 +24,8 @@ struct InnerPing {
     pub include_client_id: bool,
     /// Whether the ping should be sent if it is empty
     pub send_if_empty: bool,
+    /// Whether to use millisecond-precise start/end times.
+    pub precise_timestamps: bool,
     /// The "reason" codes that this ping can send
     pub reason_codes: Vec<String>,
 }
@@ -34,6 +36,7 @@ impl fmt::Debug for PingType {
             .field("name", &self.0.name)
             .field("include_client_id", &self.0.include_client_id)
             .field("send_if_empty", &self.0.send_if_empty)
+            .field("precise_timestamps", &self.0.precise_timestamps)
             .field("reason_codes", &self.0.reason_codes)
             .finish()
     }
@@ -57,12 +60,14 @@ impl PingType {
         name: A,
         include_client_id: bool,
         send_if_empty: bool,
+        precise_timestamps: bool,
         reason_codes: Vec<String>,
     ) -> Self {
         let this = Self(Arc::new(InnerPing {
             name: name.into(),
             include_client_id,
             send_if_empty,
+            precise_timestamps,
             reason_codes,
         }));
 
@@ -83,6 +88,10 @@ impl PingType {
 
     pub(crate) fn send_if_empty(&self) -> bool {
         self.0.send_if_empty
+    }
+
+    pub(crate) fn precise_timestamps(&self) -> bool {
+        self.0.precise_timestamps
     }
 
     /// Submits the ping for eventual uploading.

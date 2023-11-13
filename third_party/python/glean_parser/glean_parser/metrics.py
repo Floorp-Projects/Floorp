@@ -86,8 +86,7 @@ class Metric:
         if send_in_pings is None:
             send_in_pings = ["default"]
         self.send_in_pings = send_in_pings
-        if unit is not None:
-            self.unit = unit
+        self.unit = unit
         self.gecko_datapoint = gecko_datapoint
         if no_lint is None:
             no_lint = []
@@ -178,6 +177,8 @@ class Metric:
                 d[key] = [x.name for x in val]
         del d["name"]
         del d["category"]
+        if not d["unit"]:
+            d.pop("unit")
         d.pop("_config", None)
         d.pop("_generate_enums", None)
         return d

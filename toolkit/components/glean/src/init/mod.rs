@@ -183,6 +183,7 @@ fn build_configuration(
         log_level: None,
         rate_limit,
         enable_event_timestamps,
+        experimentation_id: None,
     };
 
     Ok((configuration, client_info))

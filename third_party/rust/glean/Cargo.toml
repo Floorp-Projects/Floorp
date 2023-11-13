@@ -11,9 +11,9 @@
 
 [package]
 edition = "2021"
-rust-version = "1.62"
+rust-version = "1.63"
 name = "glean"
-version = "54.0.0"
+version = "55.0.0"
 authors = [
     "Jan-Erik Rediger <jrediger@mozilla.com>",
     "The Glean Team <glean-team@mozilla.com>",
@@ -42,7 +42,7 @@ features = ["serde"]
 version = "0.5"
 
 [dependencies.glean-core]
-version = "54.0.0"
+version = "55.0.0"
 
 [dependencies.inherent]
 version = "1"
@@ -75,10 +75,7 @@ version = "0.3.0"
 
 [dev-dependencies.env_logger]
 version = "0.10.0"
-features = [
-    "auto-color",
-    "humantime",
-]
+features = ["humantime"]
 default-features = false
 
 [dev-dependencies.flate2]

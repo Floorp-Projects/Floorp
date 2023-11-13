@@ -120,9 +120,9 @@ fn counters_must_not_increment_when_passed_zero_or_negative() {
     // Check that nothing was recorded
     assert_eq!(1, metric.get_value(&glean, Some("store1")).unwrap());
 
-    // Make sure that the errors have been recorded
+    // Make sure that the error has been recorded
     assert_eq!(
-        Ok(2),
+        Ok(1),
         test_get_num_recorded_errors(&glean, metric.meta(), ErrorType::InvalidValue)
     );
 }

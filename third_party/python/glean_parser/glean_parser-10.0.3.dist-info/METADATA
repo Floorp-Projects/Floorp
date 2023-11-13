@@ -1,6 +1,6 @@
 Metadata-Version: 2.1
 Name: glean-parser
-Version: 8.1.0
+Version: 10.0.3
 Summary: Parser tools for Mozilla's Glean telemetry
 Home-page: https://github.com/mozilla/glean_parser
 Author: The Glean Team
@@ -10,7 +10,6 @@ Classifier: Development Status :: 5 - Production/Stable
 Classifier: Intended Audience :: Developers
 Classifier: Natural Language :: English
 Classifier: Programming Language :: Python :: 3
-Classifier: Programming Language :: Python :: 3.6
 Classifier: Programming Language :: Python :: 3.7
 Classifier: Programming Language :: Python :: 3.8
 Classifier: Programming Language :: Python :: 3.9
@@ -19,14 +18,12 @@ Classifier: Programming Language :: Python :: 3.11
 Description-Content-Type: text/markdown
 License-File: LICENSE
 License-File: AUTHORS.md
-Requires-Dist: appdirs (>=1.4)
-Requires-Dist: Click (>=7)
-Requires-Dist: diskcache (>=4)
-Requires-Dist: Jinja2 (>=2.10.1)
-Requires-Dist: MarkupSafe (<=2.0.1,>=1.1.1)
-Requires-Dist: jsonschema (>=3.0.2)
-Requires-Dist: PyYAML (>=5.3.1)
-Requires-Dist: iso8601 (>=0.1.10) ; python_version <= "3.6"
+Requires-Dist: appdirs >=1.4
+Requires-Dist: Click >=7
+Requires-Dist: diskcache >=4
+Requires-Dist: Jinja2 >=2.10.1
+Requires-Dist: jsonschema >=3.0.2
+Requires-Dist: PyYAML >=5.3.1
 
 # Glean Parser
 
@@ -46,7 +43,7 @@ code for various integrations, linting and coverage testing.
 
 ## Requirements
 
--   Python 3.6 (or later)
+-   Python 3.7 (or later)
 
 The following library requirements are installed automatically when
 `glean_parser` is installed by `pip`.
@@ -57,10 +54,6 @@ The following library requirements are installed automatically when
 -   Jinja2
 -   jsonschema
 -   PyYAML
-
-Additionally on Python 3.6:
-
--   iso8601
 
 ## Usage
 
@@ -85,6 +78,35 @@ $ glean_parser check < ping.json
 # Changelog
 
 ## Unreleased
+
+## 10.0.3
+
+- Warn about empty or TODO-tagged data reviews in the list ([#634](https://github.com/mozilla/glean_parser/pull/634))
+- Allow `unit` field on all metrics, but warn for all but quantity and custom distribution ([#636](https://github.com/mozilla/glean_parser/pull/636))
+
+## 10.0.2
+
+- Allow `unit` field for string again, but warn about it in the linter ([#634](https://github.com/mozilla/glean_parser/pull/634))
+
+## 10.0.1
+
+- Allow `unit` field for custom distribution again ([#633](https://github.com/mozilla/glean_parser/pull/633))
+
+## 10.0.0
+
+- Add Ruby log outputter (`ruby_server`) ([#620](https://github.com/mozilla/glean_parser/pull/620))
+- BREAKING CHANE: `ping` lifetime metrics on the events ping are now disallowed ([#625](https://github.com/mozilla/glean_parser/pull/625))
+- Disallow `unit` field for anything but quantity ([#630](https://github.com/mozilla/glean_parser/pull/630)).
+  Note that this was already considered the case, now the code enforces it.
+
+## 9.0.0
+
+- BREAKING CHANGE: Dropped support for Python 3.6 ([#615](https://github.com/mozilla/glean_parser/issues/615))
+- Allow metadata to configure precise timestamps in pings ([#592](https://github.com/mozilla/glean_parser/pull/592))
+
+## 8.1.1
+
+- Small updates to the `javascript_server` tempalte to address lint warnings ([#598](https://github.com/mozilla/glean_parser/pull/598))
 
 ## 8.1.0
 

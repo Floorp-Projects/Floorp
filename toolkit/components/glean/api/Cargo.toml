@@ -9,7 +9,7 @@ license = "MPL-2.0"
 [dependencies]
 bincode = "1.0"
 chrono = "0.4.10"
-glean = "54.0.0"
+glean = "55.0.0"
 inherent = "1.0.0"
 log = "0.4"
 nsstring = { path = "../../../../xpcom/rust/nsstring", optional = true }

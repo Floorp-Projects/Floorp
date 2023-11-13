@@ -76,6 +76,15 @@ additionalProperties:
           items:
             type: string
             maxLength: 80
+        precise_timestamps:
+          title: Precise Timestamps
+          description: |
+            When `true` Glean uses millisecond-precise timestamps for
+            the ping's start/end time (the default).
+            When `false` Glean uses minute-precise timestamps for
+            the ping's start/end time.
+          type: boolean
+
       default: {}
 
     include_client_id:

@@ -136,10 +136,11 @@ pub fn create_and_register_ping(
     ping_name: String,
     include_client_id: bool,
     send_if_empty: bool,
+    precise_timestamps: bool,
     reason_codes: Vec<String>,
 ) -> Result<u32, Box<dyn std::error::Error>> {
     let ping_id = NEXT_PING_ID.fetch_add(1, Ordering::SeqCst);
-    let ping = Ping::new(ping_name, include_client_id, send_if_empty, reason_codes);
+    let ping = Ping::new(ping_name, include_client_id, send_if_empty, precise_timestamps, reason_codes);
     assert!(
         __jog_metric_maps::PING_MAP.write()?.insert(ping_id.into(), ping).is_none(),
         "We should never insert a runtime ping with an already-used id."

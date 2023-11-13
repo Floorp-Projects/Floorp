@@ -286,6 +286,49 @@ def check_old_event_api(
         yield ("The old event API is gone. Extra keys require a type.")
 
 
+def check_metric_on_events_lifetime(
+    metric: metrics.Metric, parser_config: Dict[str, Any]
+) -> LintGenerator:
+    """A non-event metric on the Events ping only makes sense if its value
+    is immutable over the life of the ping."""
+    if (
+        "events" in metric.send_in_pings
+        and "all_pings" not in metric.send_in_pings
+        and metric.type != "event"
+        and metric.lifetime == metrics.Lifetime.ping
+    ):
+        yield (
+            "Non-event metrics sent on the Events ping should not have the ping"
+            " lifetime."
+        )
+
+
+def check_unexpected_unit(
+    metric: metrics.Metric, parser_config: Dict[str, Any]
+) -> LintGenerator:
+    """
+    `unit` was allowed on all metrics and recently disallowed.
+    We now warn about its use on all but quantity and custom distribution
+    metrics.
+    """
+    allowed_types = [metrics.Quantity, metrics.CustomDistribution]
+    if not any([isinstance(metric, ty) for ty in allowed_types]) and metric.unit:
+        yield (
+            "The `unit` property is only allowed for quantity "
+            + "and custom distribution metrics."
+        )
+
+
+def check_empty_datareview(
+    metric: metrics.Metric, parser_config: Dict[str, Any]
+) -> LintGenerator:
+    disallowed_datareview = ["", "todo"]
+    data_reviews = [dr.lower() in disallowed_datareview for dr in metric.data_reviews]
+
+    if any(data_reviews):
+        yield "List of data reviews should not contain empty strings or TODO markers."
+
+
 def check_redundant_ping(
     pings: pings.Ping, parser_config: Dict[str, Any]
 ) -> LintGenerator:
@@ -366,6 +409,9 @@ METRIC_CHECKS: Dict[
     "USER_LIFETIME_EXPIRATION": (check_user_lifetime_expiration, CheckType.warning),
     "EXPIRED": (check_expired_metric, CheckType.warning),
     "OLD_EVENT_API": (check_old_event_api, CheckType.warning),
+    "METRIC_ON_EVENTS_LIFETIME": (check_metric_on_events_lifetime, CheckType.error),
+    "UNEXPECTED_UNIT": (check_unexpected_unit, CheckType.warning),
+    "EMPTY_DATAREVIEW": (check_empty_datareview, CheckType.warning),
 }
 
 

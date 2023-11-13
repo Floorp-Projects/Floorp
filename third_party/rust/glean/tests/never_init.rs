@@ -39,7 +39,7 @@ mod pings {
 
     #[allow(non_upper_case_globals)]
     pub static validation: Lazy<PingType> =
-        Lazy::new(|| glean::private::PingType::new("validation", true, true, vec![]));
+        Lazy::new(|| glean::private::PingType::new("validation", true, true, true, vec![]));
 }
 
 /// Test scenario: Glean is never initialized.

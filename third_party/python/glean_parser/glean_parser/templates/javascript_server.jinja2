@@ -15,6 +15,9 @@ import { v4 as uuidv4 } from 'uuid';
 import mozlog{% if lang == "typescript" %}, { Logger }{% endif %} from 'mozlog';
 
 const GLEAN_EVENT_MOZLOG_TYPE = 'glean-server-event';
+{% if lang == "typescript" %}
+type LoggerOptions = { app: string; fmt?: 'heka' };
+{% endif %}
 
 let _logger{% if lang == "typescript" %}: Logger{% endif %};
 
@@ -31,13 +34,14 @@ class {{ ping|event_class_name }} {
    * @param {string} applicationId - The application ID.
    * @param {string} appDisplayVersion - The application display version.
    * @param {string} channel - The channel.
+   * @param {LoggerOptions} logger_options - The logger options.
    */
   {% if lang == "typescript" %}
   constructor(
     applicationId: string,
     appDisplayVersion: string,
     channel: string,
-    logger_options: any
+    logger_options: LoggerOptions
   ) {
   {% else %}
   constructor(applicationId, appDisplayVersion, channel, logger_options) {
@@ -64,6 +68,9 @@ class {{ ping|event_class_name }} {
    * Record and submit a server event object.
    * Event is logged using internal mozlog logger.
    *
+   * @param {string} user_agent - The user agent.
+   * @param {string} ip_address - The IP address. Will be used to decode Geo
+   *                              information and scrubbed at ingestion.
    {% for metric_type, metrics in metrics_by_type.items() %}
    {% for metric in metrics %}
    * @param { {{-metric|js_metric_type-}} } {{ metric|metric_argument_name }} - {{ metric|metric_argument_description }}.
@@ -71,6 +78,8 @@ class {{ ping|event_class_name }} {
    {% endfor %}
    */
   record({
+    user_agent,
+    ip_address,
     {% for metric_type, metrics in metrics_by_type.items() %}
     {% for metric in metrics %}
     {{ metric|metric_argument_name }},
@@ -78,6 +87,8 @@ class {{ ping|event_class_name }} {
     {% endfor %}
   {% if lang == "typescript" %}
   }: {
+    user_agent: string,
+    ip_address: string,
     {% for metric_type, metrics in metrics_by_type.items() %}
     {% for metric in metrics %}
     {{ metric|metric_argument_name }}: {{ metric|js_metric_type }};
@@ -85,8 +96,8 @@ class {{ ping|event_class_name }} {
     {% endfor %}
   {% endif %}
   }) {
-    let timestamp = new Date().toISOString();
-    let eventPayload = {
+    const timestamp = new Date().toISOString();
+    const eventPayload = {
       metrics: {
         {% for metric_type, metrics in metrics_by_type.items() %}
         {{ metric_type }}: {
@@ -113,14 +124,16 @@ class {{ ping|event_class_name }} {
         app_channel: this._channel,
       },
     };
-    let eventPayloadSerialized = JSON.stringify(eventPayload);
+    const eventPayloadSerialized = JSON.stringify(eventPayload);
 
     // This is the message structure that Decoder expects: https://github.com/mozilla/gcp-ingestion/pull/2400
-    let ping = {
+    const ping = {
       document_namespace: this._applicationId,
       document_type: '{{ ping }}',
       document_version: '1',
       document_id: uuidv4(),
+      user_agent: user_agent,
+      ip_address: ip_address,
       payload: eventPayloadSerialized,
     };
 
@@ -141,7 +154,7 @@ export const {{ ping|factory_method }} = function ({
   applicationId: string;
   appDisplayVersion: string;
   channel: string;
-  logger_options: any;
+  logger_options: LoggerOptions;
 {% endif %}
 }) {
   return new {{ ping|event_class_name }}(

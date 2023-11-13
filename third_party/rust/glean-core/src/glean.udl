@@ -32,6 +32,9 @@ namespace glean {
     void glean_set_experiment_inactive(string experiment_id);
     RecordedExperiment? glean_test_get_experiment_data(string experiment_id);
 
+    // Experimentation ID API
+    string? glean_test_get_experimentation_id();
+
     // Server Knobs API
     void glean_set_metrics_enabled_config(string json);
 
@@ -75,6 +78,7 @@ dictionary InternalConfiguration {
     LevelFilter? log_level;
     PingRateLimit? rate_limit;
     boolean enable_event_timestamps;
+    string? experimentation_id;
 };
 
 // How to specify the rate pings may be uploaded before they are throttled.
@@ -266,7 +270,7 @@ enum ErrorType {
 };
 
 interface PingType {
-    constructor(string name, boolean include_client_id, boolean send_if_empty, sequence<string> reason_codes);
+    constructor(string name, boolean include_client_id, boolean send_if_empty, boolean precise_timestamps, sequence<string> reason_codes);
     void submit(optional string? reason = null);
 };
 

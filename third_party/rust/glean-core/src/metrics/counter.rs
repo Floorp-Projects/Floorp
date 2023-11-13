@@ -2,6 +2,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at https://mozilla.org/MPL/2.0/.
 
+use std::cmp::Ordering;
 use std::sync::Arc;
 
 use crate::common_metric_data::CommonMetricDataInternal;
@@ -62,16 +63,23 @@ impl CounterMetric {
             return;
         }
 
-        if amount <= 0 {
-            record_error(
-                glean,
-                &self.meta,
-                ErrorType::InvalidValue,
-                format!("Added negative or zero value {}", amount),
-                None,
-            );
-            return;
-        }
+        match amount.cmp(&0) {
+            Ordering::Less => {
+                record_error(
+                    glean,
+                    &self.meta,
+                    ErrorType::InvalidValue,
+                    format!("Added negative value {}", amount),
+                    None,
+                );
+                return;
+            }
+            Ordering::Equal => {
+                // Silently ignore.
+                return;
+            }
+            Ordering::Greater => (),
+        };
 
         // Let's be defensive here:
         // The uploader tries to store a counter metric,

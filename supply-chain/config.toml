@@ -515,10 +515,6 @@ criteria = "safe-to-deploy"
 version = "0.2.1"
 criteria = "safe-to-deploy"
 
-[[exemptions.instant]]
-version = "0.1.12"
-criteria = "safe-to-deploy"
-
 [[exemptions.ioctl-sys]]
 version = "0.7.1"
 criteria = "safe-to-deploy"
@@ -591,10 +587,6 @@ criteria = "safe-to-deploy"
 version = "0.2.1"
 criteria = "safe-to-deploy"
 
-[[exemptions.miniz_oxide]]
-version = "0.5.3"
-criteria = "safe-to-deploy"
-
 [[exemptions.mio]]
 version = "0.8.0"
 criteria = "safe-to-deploy"
@@ -605,7 +597,7 @@ criteria = "safe-to-run"
 
 [[exemptions.miow]]
 version = "0.3.7"
-criteria = "safe-to-deploy"
+criteria = "safe-to-run"
 
 [[exemptions.murmurhash3]]
 version = "0.0.5"
@@ -621,10 +613,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.nom]]
 version = "7.1.1"
-criteria = "safe-to-deploy"
-
-[[exemptions.ntapi]]
-version = "0.3.7"
 criteria = "safe-to-deploy"
 
 [[exemptions.objc]]
@@ -693,10 +681,6 @@ criteria = "safe-to-deploy"
 
 [[exemptions.prost-derive]]
 version = "0.8.0"
-criteria = "safe-to-deploy"
-
-[[exemptions.qlog]]
-version = "0.4.0"
 criteria = "safe-to-deploy"
 
 [[exemptions.quick-error]]
@@ -798,10 +782,6 @@ criteria = "safe-to-deploy"
 [[exemptions.time]]
 version = "0.1.44"
 criteria = "safe-to-deploy"
-
-[[exemptions.tokio]]
-version = "1.17.0"
-criteria = "safe-to-run"
 
 [[exemptions.triple_buffer]]
 version = "5.0.6"

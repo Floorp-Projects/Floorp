@@ -4,7 +4,6 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from collections import OrderedDict
 import datetime
 import functools
 import json
@@ -21,28 +20,13 @@ import jsonschema  # type: ignore
 from jsonschema import _utils  # type: ignore
 import yaml
 
-if sys.version_info < (3, 7):
-    import iso8601  # type: ignore
 
-    def date_fromisoformat(datestr: str) -> datetime.date:
-        try:
-            return iso8601.parse_date(datestr).date()
-        except iso8601.ParseError:
-            raise ValueError()
+def date_fromisoformat(datestr: str) -> datetime.date:
+    return datetime.date.fromisoformat(datestr)
 
-    def datetime_fromisoformat(datestr: str) -> datetime.datetime:
-        try:
-            return iso8601.parse_date(datestr)
-        except iso8601.ParseError:
-            raise ValueError()
 
-else:
-
-    def date_fromisoformat(datestr: str) -> datetime.date:
-        return datetime.date.fromisoformat(datestr)
-
-    def datetime_fromisoformat(datestr: str) -> datetime.datetime:
-        return datetime.datetime.fromisoformat(datestr)
+def datetime_fromisoformat(datestr: str) -> datetime.datetime:
+    return datetime.datetime.fromisoformat(datestr)
 
 
 TESTING_MODE = "pytest" in sys.modules
@@ -55,21 +39,9 @@ The types supported by JSON.
 This is only an approximation -- this should really be a recursive type.
 """
 
-# Adapted from
-# https://stackoverflow.com/questions/34667108/ignore-dates-and-times-while-parsing-yaml
 
-
-# A wrapper around OrderedDict for Python < 3.7 (where dict ordering is not
-# maintained by default), and regular dict everywhere else.
-if sys.version_info < (3, 7):
-
-    class DictWrapper(OrderedDict):
-        pass
-
-else:
-
-    class DictWrapper(dict):
-        pass
+class DictWrapper(dict):
+    pass
 
 
 class _NoDatesSafeLoader(yaml.SafeLoader):
@@ -552,6 +524,7 @@ ping_args = [
     "name",
     "include_client_id",
     "send_if_empty",
+    "precise_timestamps",
     "reason_codes",
 ]
 

@@ -9,6 +9,7 @@ use std::time::{Duration, Instant};
 
 use crossbeam_channel::RecvTimeoutError;
 use flate2::read::GzDecoder;
+use glean_core::glean_test_get_experimentation_id;
 use serde_json::Value as JsonValue;
 
 use crate::private::PingType;
@@ -54,7 +55,7 @@ fn send_a_ping() {
 
     // Define a new ping and submit it.
     const PING_NAME: &str = "test-ping";
-    let custom_ping = private::PingType::new(PING_NAME, true, true, vec![]);
+    let custom_ping = private::PingType::new(PING_NAME, true, true, true, vec![]);
     custom_ping.submit(None);
 
     // Wait for the ping to arrive.
@@ -140,6 +141,31 @@ fn test_experiments_recording_before_glean_inits() {
     assert!(!test_is_experiment_active(
         "experiment_preinit_disabled".to_string()
     ));
+}
+
+#[test]
+fn test_experimentation_id_recording() {
+    let _lock = lock_test();
+    let dir = tempfile::tempdir().unwrap();
+    let tmpname = dir.path().to_path_buf();
+
+    destroy_glean(true, &tmpname);
+
+    test_reset_glean(
+        ConfigurationBuilder::new(true, tmpname, GLOBAL_APPLICATION_ID)
+            .with_server_endpoint("invalid-test-host")
+            .with_experimentation_id("alpha-beta-gamma-delta".to_string())
+            .build(),
+        ClientInfoMetrics::unknown(),
+        false,
+    );
+
+    let exp_id = glean_test_get_experimentation_id().expect("Experimentation id must not be None");
+    assert_eq!(
+        "alpha-beta-gamma-delta".to_string(),
+        exp_id,
+        "Experimentation id must match"
+    );
 }
 
 #[test]
@@ -551,7 +577,7 @@ fn ping_collection_must_happen_after_concurrently_scheduled_metrics_recordings()
     );
 
     let ping_name = "custom_ping_1";
-    let ping = private::PingType::new(ping_name, true, false, vec![]);
+    let ping = private::PingType::new(ping_name, true, false, true, vec![]);
     let metric = private::StringMetric::new(CommonMetricData {
         name: "string_metric".into(),
         category: "telemetry".into(),
@@ -738,6 +764,74 @@ fn no_sending_of_deletion_ping_if_unchanged_outside_of_run() {
     );
 
     assert_eq!(0, r.len());
+}
+
+#[test]
+fn deletion_request_ping_contains_experimentation_id() {
+    let _lock = lock_test();
+
+    let (s, r) = crossbeam_channel::bounded::<JsonValue>(1);
+
+    // Define a fake uploader that reports back the submission URL
+    // using a crossbeam channel.
+    #[derive(Debug)]
+    pub struct FakeUploader {
+        sender: crossbeam_channel::Sender<JsonValue>,
+    }
+    impl net::PingUploader for FakeUploader {
+        fn upload(
+            &self,
+            _url: String,
+            body: Vec<u8>,
+            _headers: Vec<(String, String)>,
+        ) -> net::UploadResult {
+            let mut gzip_decoder = GzDecoder::new(&body[..]);
+            let mut body_str = String::with_capacity(body.len());
+            let data: JsonValue = gzip_decoder
+                .read_to_string(&mut body_str)
+                .ok()
+                .map(|_| &body_str[..])
+                .or_else(|| std::str::from_utf8(&body).ok())
+                .and_then(|payload| serde_json::from_str(payload).ok())
+                .unwrap();
+            self.sender.send(data).unwrap();
+            net::UploadResult::http_status(200)
+        }
+    }
+
+    // Create a custom configuration to use a fake uploader.
+    let dir = tempfile::tempdir().unwrap();
+    let tmpname = dir.path().to_path_buf();
+
+    let cfg = ConfigurationBuilder::new(true, tmpname.clone(), GLOBAL_APPLICATION_ID)
+        .with_server_endpoint("invalid-test-host")
+        .with_experimentation_id("alpha-beta-gamma-delta".to_string())
+        .build();
+
+    let _t = new_glean(Some(cfg), true);
+
+    // Now reset Glean and disable upload: it should still send a deletion request
+    // ping even though we're just starting.
+    test_reset_glean(
+        ConfigurationBuilder::new(false, tmpname, GLOBAL_APPLICATION_ID)
+            .with_server_endpoint("invalid-test-host")
+            .with_uploader(FakeUploader { sender: s })
+            .with_experimentation_id("alpha-beta-gamma-delta".to_string())
+            .build(),
+        ClientInfoMetrics::unknown(),
+        false,
+    );
+
+    // Wait for the ping to arrive and check the experimentation id matches
+    let url = r.recv().unwrap();
+    let metrics = url.get("metrics").unwrap();
+    let strings = metrics.get("string").unwrap();
+    assert_eq!(
+        "alpha-beta-gamma-delta",
+        strings
+            .get("glean.client.annotation.experimentation_id")
+            .unwrap()
+    );
 }
 
 #[test]
@@ -1024,7 +1118,7 @@ fn flipping_upload_enabled_respects_order_of_events() {
         .build();
 
     // We create a ping and a metric before we initialize Glean
-    let sample_ping = PingType::new("sample-ping-1", true, false, vec![]);
+    let sample_ping = PingType::new("sample-ping-1", true, false, true, vec![]);
     let metric = private::StringMetric::new(CommonMetricData {
         name: "string_metric".into(),
         category: "telemetry".into(),
@@ -1073,7 +1167,7 @@ fn registering_pings_before_init_must_work() {
     }
 
     // Create a custom ping and attempt its registration.
-    let sample_ping = PingType::new("pre-register", true, true, vec![]);
+    let sample_ping = PingType::new("pre-register", true, true, true, vec![]);
 
     // Create a custom configuration to use a fake uploader.
     let dir = tempfile::tempdir().unwrap();
@@ -1130,7 +1224,7 @@ fn test_a_ping_before_submission() {
     let _t = new_glean(Some(cfg), true);
 
     // Create a custom ping and register it.
-    let sample_ping = PingType::new("custom1", true, true, vec![]);
+    let sample_ping = PingType::new("custom1", true, true, true, vec![]);
 
     let metric = CounterMetric::new(CommonMetricData {
         name: "counter_metric".into(),
@@ -1252,7 +1346,7 @@ fn signaling_done() {
 
     // Define a new ping and submit it.
     const PING_NAME: &str = "test-ping";
-    let custom_ping = private::PingType::new(PING_NAME, true, true, vec![]);
+    let custom_ping = private::PingType::new(PING_NAME, true, true, true, vec![]);
     custom_ping.submit(None);
     custom_ping.submit(None);
 
@@ -1328,7 +1422,7 @@ fn configure_ping_throttling() {
 
     // Define a new ping.
     const PING_NAME: &str = "test-ping";
-    let custom_ping = private::PingType::new(PING_NAME, true, true, vec![]);
+    let custom_ping = private::PingType::new(PING_NAME, true, true, true, vec![]);
 
     // Submit and receive it `pings_per_interval` times.
     for _ in 0..pings_per_interval {
