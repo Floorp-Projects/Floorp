@@ -10,7 +10,6 @@ import android.util.Log
 import android.widget.RelativeLayout
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
-import androidx.test.espresso.action.ViewActions.scrollTo
 import androidx.test.espresso.assertion.ViewAssertions.matches
 import androidx.test.espresso.matcher.RootMatchers.isDialog
 import androidx.test.espresso.matcher.ViewMatchers.Visibility
@@ -26,20 +25,19 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withParent
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.uiautomator.By
+import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.CoreMatchers.containsString
 import org.hamcrest.CoreMatchers.instanceOf
-import org.hamcrest.CoreMatchers.not
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.Constants.RETRY_COUNT
+import org.mozilla.fenix.helpers.Constants.TAG
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeLong
-import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
 import org.mozilla.fenix.helpers.TestHelper.appName
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
@@ -56,15 +54,11 @@ class SettingsSubMenuAddonsManagerRobot {
     fun verifyAddonsListIsDisplayed(shouldBeDisplayed: Boolean) {
         if (shouldBeDisplayed) {
             assertTrue(
-                mDevice.findObject(
-                    UiSelector().resourceId("$packageName:id/add_ons_list"),
-                ).waitForExists(waitingTime),
+                addonsList().waitForExists(waitingTime),
             )
         } else {
             assertTrue(
-                mDevice.findObject(
-                    UiSelector().resourceId("$packageName:id/add_ons_list"),
-                ).waitUntilGone(waitingTime),
+                addonsList().waitUntilGone(waitingTime),
             )
         }
     }
@@ -85,38 +79,42 @@ class SettingsSubMenuAddonsManagerRobot {
     }
 
     fun clickInstallAddon(addonName: String) {
-        mDevice.findObject(
-            UiSelector().resourceId("$packageName:id/add_ons_list"),
-        ).waitForExists(waitingTime)
-
-        installButtonForAddon(addonName)
-            .perform(scrollTo())
-            .check(matches(isCompletelyDisplayed()))
-            .perform(click())
-        Log.e("TestLog", "Clicked Install $addonName button")
+        Log.i(TAG, "clickInstallAddon: Looking for $addonName install button")
+        addonsList().waitForExists(waitingTime)
+        addonsList().scrollIntoView(
+            mDevice.findObject(
+                UiSelector()
+                    .resourceId("$packageName:id/details_container")
+                    .childSelector(UiSelector().text(addonName)),
+            ),
+        )
+        addonsList().ensureFullyVisible(
+            mDevice.findObject(
+                UiSelector()
+                    .resourceId("$packageName:id/details_container")
+                    .childSelector(UiSelector().text(addonName)),
+            ),
+        )
+        Log.i(TAG, "clickInstallAddon: Found $addonName install button")
+        installButtonForAddon(addonName).click()
+        Log.i(TAG, "clickInstallAddon: Clicked Install $addonName button")
     }
 
     fun verifyAddonInstallCompleted(addonName: String, activityTestRule: HomeActivityIntentTestRule) {
         for (i in 1..RETRY_COUNT) {
             try {
-                assertFalse(
-                    "$addonName failed to install",
-                    mDevice.findObject(UiSelector().text("Failed to install $addonName"))
-                        .waitForExists(waitingTimeShort),
-                )
-
                 assertTrue(
                     "$addonName failed to install",
                     mDevice.findObject(UiSelector().text("Okay, Got it"))
                         .waitForExists(waitingTimeLong),
                 )
-                Log.e("TestLog", "$addonName installed successfully.")
+                Log.i(TAG, "verifyAddonInstallCompleted: $addonName installed successfully.")
                 break
             } catch (e: AssertionError) {
                 if (i == RETRY_COUNT) {
                     throw e
                 } else {
-                    Log.e("TestLog", "$addonName failed to install on try #$i")
+                    Log.i(TAG, "verifyAddonInstallCompleted: $addonName failed to install on try #$i")
                     restartApp(activityTestRule)
                     homeScreen {
                     }.openThreeDotMenu {
@@ -225,11 +223,6 @@ class SettingsSubMenuAddonsManagerRobot {
             ),
         )
 
-    private fun assertAddonIsEnabled(addonName: String) {
-        installButtonForAddon(addonName)
-            .check(matches(not(isCompletelyDisplayed())))
-    }
-
     private fun assertAddonIsInstalled(addonName: String) {
         onView(
             allOf(
@@ -312,3 +305,6 @@ fun addonsMenu(interact: SettingsSubMenuAddonsManagerRobot.() -> Unit): Settings
     SettingsSubMenuAddonsManagerRobot().interact()
     return SettingsSubMenuAddonsManagerRobot.Transition()
 }
+
+private fun addonsList() =
+    UiScrollable(UiSelector().resourceId("$packageName:id/add_ons_list")).setAsVerticalList()
