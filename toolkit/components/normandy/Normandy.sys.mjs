@@ -23,7 +23,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
     "resource://nimbus/lib/RemoteSettingsExperimentLoader.sys.mjs",
   ShieldPreferences: "resource://normandy/lib/ShieldPreferences.sys.mjs",
   TelemetryEvents: "resource://normandy/lib/TelemetryEvents.sys.mjs",
-  TelemetryUtils: "resource://gre/modules/TelemetryUtils.sys.mjs",
 });
 
 const UI_AVAILABLE_NOTIFICATION = "sessionstore-windows-restored";
@@ -50,12 +49,6 @@ export var Normandy = {
     // It is important to register the listener for the UI before the first
     // await, to avoid missing it.
     Services.obs.addObserver(this, UI_AVAILABLE_NOTIFICATION);
-
-    // Listen for when Telemetry is disabled or re-enabled.
-    Services.obs.addObserver(
-      this,
-      lazy.TelemetryUtils.TELEMETRY_UPLOAD_DISABLED_TOPIC
-    );
 
     // It is important this happens before the first `await`. Note that this
     // also happens before migrations are applied.
@@ -90,15 +83,6 @@ export var Normandy = {
     if (topic === UI_AVAILABLE_NOTIFICATION) {
       Services.obs.removeObserver(this, UI_AVAILABLE_NOTIFICATION);
       this.uiAvailableNotificationObserved.resolve();
-    } else if (topic === lazy.TelemetryUtils.TELEMETRY_UPLOAD_DISABLED_TOPIC) {
-      await Promise.all(
-        [
-          lazy.PreferenceExperiments,
-          lazy.PreferenceRollouts,
-          lazy.AddonStudies,
-          lazy.AddonRollouts,
-        ].map(service => service.onTelemetryDisabled())
-      );
     }
   },
 
@@ -182,15 +166,11 @@ export var Normandy = {
       PREF_LOGGING_LEVEL,
       lazy.LogManager.configure
     );
-    for (const topic of [
-      lazy.TelemetryUtils.TELEMETRY_UPLOAD_DISABLED_TOPIC,
-      UI_AVAILABLE_NOTIFICATION,
-    ]) {
-      try {
-        Services.obs.removeObserver(this, topic);
-      } catch (e) {
-        // topic must have already been removed or never added
-      }
+
+    try {
+      Services.obs.removeObserver(this, UI_AVAILABLE_NOTIFICATION);
+    } catch (e) {
+      // topic must have already been removed or never added
     }
   },
 

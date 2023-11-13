@@ -333,7 +333,6 @@ decorate_task(
           addonId: FIXTURE_ADDON_ID,
           addonVersion: "2.0",
           branch: "a",
-          enrollmentId: study.enrollmentId,
         },
       ],
     ]);
@@ -397,7 +396,6 @@ decorate_task(
         {
           reason: "addon-id-mismatch",
           branch: "a",
-          enrollmentId: study.enrollmentId,
         },
       ],
     ]);
@@ -450,7 +448,6 @@ decorate_task(
         {
           reason: "addon-does-not-exist",
           branch: "a",
-          enrollmentId: study.enrollmentId,
         },
       ],
     ]);
@@ -508,7 +505,6 @@ decorate_task(
           branch: "a",
           reason: "download-failure",
           detail: "ERROR_NETWORK_FAILURE",
-          enrollmentId: study.enrollmentId,
         },
       ],
     ]);
@@ -564,7 +560,6 @@ decorate_task(
           branch: "a",
           reason: "download-failure",
           detail: "ERROR_INCORRECT_HASH",
-          enrollmentId: study.enrollmentId,
         },
       ],
     ]);
@@ -619,7 +614,6 @@ decorate_task(
         {
           reason: "no-downgrade",
           branch: "a",
-          enrollmentId: study.enrollmentId,
         },
       ],
     ]);
@@ -677,7 +671,6 @@ decorate_task(
         {
           branch: "a",
           reason: "metadata-mismatch",
-          enrollmentId: study.enrollmentId,
         },
       ],
     ]);
@@ -775,7 +768,6 @@ decorate_task(
           addonId,
           addonVersion: study.addonVersion,
           reason: "test-reason",
-          enrollmentId: study.enrollmentId,
         },
       ],
     ]);
@@ -816,7 +808,6 @@ decorate_task(
           addonId: study.addonId,
           addonVersion: study.addonVersion,
           reason: "unknown",
-          enrollmentId: study.enrollmentId,
         },
       ],
     ]);
@@ -945,7 +936,6 @@ decorate_task(
         {
           addonId: FIXTURE_ADDON_ID,
           addonVersion: "2.0",
-          enrollmentId: study.enrollmentId,
         },
       ],
     ]);
@@ -1056,20 +1046,13 @@ const successEnrollBranchedTest = decorate(
           addonId,
           addonVersion: "1.0",
           branch,
-          enrollmentId: study.enrollmentId,
         },
       ],
     ]);
 
     Assert.deepEqual(
       setExperimentActiveStub.args,
-      [
-        [
-          recipe.arguments.slug,
-          branch,
-          { type: "normandy-addonstudy", enrollmentId: study.enrollmentId },
-        ],
-      ],
+      [[recipe.arguments.slug, branch, { type: "normandy-addonstudy" }]],
       "setExperimentActive should be called"
     );
 
@@ -1098,7 +1081,6 @@ const successEnrollBranchedTest = decorate(
         extensionApiId: extensionDetails.id,
         extensionHash: extensionDetails.hash,
         extensionHashAlgorithm: extensionDetails.hash_algorithm,
-        enrollmentId: study.enrollmentId,
         temporaryErrorDeadline: null,
       },
       "the correct study data should be stored"
@@ -1173,7 +1155,6 @@ decorate_task(
           addonVersion: study.addonVersion,
           reason: "branch-removed",
           branch: "a", // the original study branch
-          enrollmentId: study.enrollmentId,
         },
       ],
     ]);
@@ -1225,7 +1206,6 @@ decorate_task(
           addonId: AddonStudies.NO_ADDON_MARKER,
           addonVersion: AddonStudies.NO_ADDON_MARKER,
           branch: "a",
-          enrollmentId: study.enrollmentId,
         },
       ],
     ]);
@@ -1253,13 +1233,11 @@ decorate_task(
         extensionApiId: null,
         extensionHash: null,
         extensionHashAlgorithm: null,
-        enrollmentId: study.enrollmentId,
         temporaryErrorDeadline: null,
       },
       "the correct study data should be stored"
     );
     ok(study.studyStartDate, "studyStartDate should have a value");
-    NormandyTestUtils.isUuid(study.enrollmentId);
 
     // Now unenroll
     action = new BranchedAddonStudyAction();
@@ -1276,7 +1254,6 @@ decorate_task(
           addonId: AddonStudies.NO_ADDON_MARKER,
           addonVersion: AddonStudies.NO_ADDON_MARKER,
           branch: "a",
-          enrollmentId: study.enrollmentId,
         },
       ],
       // And a new unenroll event
@@ -1288,7 +1265,6 @@ decorate_task(
           addonId: AddonStudies.NO_ADDON_MARKER,
           addonVersion: AddonStudies.NO_ADDON_MARKER,
           branch: "a",
-          enrollmentId: study.enrollmentId,
         },
       ],
     ]);
@@ -1317,14 +1293,12 @@ decorate_task(
         extensionApiId: null,
         extensionHash: null,
         extensionHashAlgorithm: null,
-        enrollmentId: study.enrollmentId,
         temporaryErrorDeadline: null,
       },
       "the correct study data should be stored"
     );
     ok(study.studyStartDate, "studyStartDate should have a value");
     ok(study.studyEndDate, "studyEndDate should have a value");
-    NormandyTestUtils.isUuid(study.enrollmentId);
   }
 );
 

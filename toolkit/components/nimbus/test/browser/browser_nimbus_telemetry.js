@@ -53,7 +53,6 @@ add_task(async function test_experiment_enroll_unenroll_Telemetry() {
         extra: {
           experimentType: EXPERIMENT_TYPE,
           branch: experiment.branch.slug,
-          enrollmentId: experiment.enrollmentId,
         },
       },
     ],
@@ -71,7 +70,6 @@ add_task(async function test_experiment_enroll_unenroll_Telemetry() {
         extra: {
           reason: "cleanup",
           branch: experiment.branch.slug,
-          enrollmentId: experiment.enrollmentId,
         },
       },
     ],

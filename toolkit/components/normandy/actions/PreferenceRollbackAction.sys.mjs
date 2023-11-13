@@ -30,9 +30,6 @@ export class PreferenceRollbackAction extends BaseAction {
         rolloutSlug,
         {
           reason: "in-graduation-set",
-          enrollmentId:
-            rollout?.enrollmentId ??
-            lazy.TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
         }
       );
       throw new Error(
@@ -61,9 +58,6 @@ export class PreferenceRollbackAction extends BaseAction {
           rolloutSlug,
           {
             reason: "rollback",
-            enrollmentId:
-              rollout.enrollmentId ||
-              lazy.TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
           }
         );
         lazy.TelemetryEnvironment.setExperimentInactive(rolloutSlug);
@@ -81,9 +75,6 @@ export class PreferenceRollbackAction extends BaseAction {
           rolloutSlug,
           {
             reason: "graduated",
-            enrollmentId:
-              rollout.enrollmentId ||
-              lazy.TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
           }
         );
         throw new Error(

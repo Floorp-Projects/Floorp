@@ -87,14 +87,9 @@ decorate_task(
           xpiUrl: FIXTURE_ADDON_DETAILS["normandydriver-a-1.0"].url,
           xpiHash: FIXTURE_ADDON_DETAILS["normandydriver-a-1.0"].hash,
           xpiHashAlgorithm: "sha256",
-          enrollmentId: rollouts[0].enrollmentId,
         },
       ],
       "Rollback should be stored in db"
-    );
-    ok(
-      NormandyTestUtils.isUuid(rollouts[0].enrollmentId),
-      "enrollmentId should be a UUID"
     );
 
     sendEventSpy.assertEvents([
@@ -175,14 +170,9 @@ decorate_task(
           xpiUrl: FIXTURE_ADDON_DETAILS["normandydriver-a-1.0"].url,
           xpiHash: FIXTURE_ADDON_DETAILS["normandydriver-a-1.0"].hash,
           xpiHashAlgorithm: "sha256",
-          enrollmentId: rollouts[0].enrollmentId,
         },
       ],
       "Rollback should be stored in db"
-    );
-    ok(
-      NormandyTestUtils.isUuid(rollouts[0].enrollmentId),
-      "enrollment ID should be a UUID"
     );
 
     sendEventSpy.assertEvents([

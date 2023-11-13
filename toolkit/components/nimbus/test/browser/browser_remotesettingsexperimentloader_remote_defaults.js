@@ -185,7 +185,6 @@ add_task(async function test_remote_fetch_and_ready() {
       REMOTE_CONFIGURATION_FOO.branches[0].slug,
       {
         type: "nimbus-rollout",
-        enrollmentId: sinon.match.string,
       }
     ),
     "should call setExperimentActive with `foo` feature"
@@ -196,7 +195,6 @@ add_task(async function test_remote_fetch_and_ready() {
       REMOTE_CONFIGURATION_BAR.branches[0].slug,
       {
         type: "nimbus-rollout",
-        enrollmentId: sinon.match.string,
       }
     ),
     "should call setExperimentActive with `bar` feature"

@@ -32,7 +32,6 @@ decorate_task(
       slug: "test-rollout",
       state: PreferenceRollouts.STATE_ACTIVE,
       preferences: [],
-      enrollmentId: "test-enrollment-id",
     };
     await PreferenceRollouts.add(rollout);
     let storedRollout = await PreferenceRollouts.get(rollout.slug);
@@ -77,12 +76,10 @@ decorate_task(PreferenceRollouts.withTestMock(), async function testGetAll() {
   const rollout1 = {
     slug: "test-rollout-1",
     preference: [],
-    enrollmentId: "test-enrollment-id-1",
   };
   const rollout2 = {
     slug: "test-rollout-2",
     preference: [],
-    enrollmentId: "test-enrollment-id-2",
   };
   await PreferenceRollouts.add(rollout1);
   await PreferenceRollouts.add(rollout2);
@@ -101,17 +98,14 @@ decorate_task(
     const rollout1 = {
       slug: "test-rollout-1",
       state: PreferenceRollouts.STATE_ACTIVE,
-      enrollmentId: "test-enrollment-1",
     };
     const rollout2 = {
       slug: "test-rollout-2",
       state: PreferenceRollouts.STATE_GRADUATED,
-      enrollmentId: "test-enrollment-2",
     };
     const rollout3 = {
       slug: "test-rollout-3",
       state: PreferenceRollouts.STATE_ROLLED_BACK,
-      enrollmentId: "test-enrollment-3",
     };
     await PreferenceRollouts.add(rollout1);
     await PreferenceRollouts.add(rollout2);
@@ -130,7 +124,6 @@ decorate_task(PreferenceRollouts.withTestMock(), async function testHas() {
   const rollout = {
     slug: "test-rollout",
     preferences: [],
-    enrollmentId: "test-enrollment",
   };
   await PreferenceRollouts.add(rollout);
   ok(
@@ -153,7 +146,6 @@ decorate_task(
       preferences: [
         { preferenceName: "test.pref", value: 2, previousValue: null },
       ],
-      enrollmentId: "test-enrollment",
     });
 
     await PreferenceRollouts.recordOriginalValues({ "test.pref": 1 });
@@ -167,7 +159,6 @@ decorate_task(
           preferences: [
             { preferenceName: "test.pref", value: 2, previousValue: 1 },
           ],
-          enrollmentId: "test-enrollment",
         },
       ],
       "rollout in database should be updated"
@@ -187,7 +178,6 @@ decorate_task(
         { preferenceName: "test.pref1", value: 2, previousValue: null },
         { preferenceName: "test.pref2", value: 2, previousValue: null },
       ],
-      enrollmentId: "test-enrollment-id",
     });
 
     // one pref being the same isn't enough to graduate
@@ -217,12 +207,7 @@ decorate_task(
     );
 
     sendEventSpy.assertEvents([
-      [
-        "graduate",
-        "preference_rollout",
-        "test-rollout",
-        { enrollmentId: "test-enrollment-id" },
-      ],
+      ["graduate", "preference_rollout", "test-rollout", {}],
     ]);
   }
 );
@@ -235,22 +220,18 @@ decorate_task(
     await PreferenceRollouts.add({
       slug: "test-rollout-active-1",
       state: PreferenceRollouts.STATE_ACTIVE,
-      enrollmentId: "test-enrollment-1",
     });
     await PreferenceRollouts.add({
       slug: "test-rollout-active-2",
       state: PreferenceRollouts.STATE_ACTIVE,
-      enrollmentId: "test-enrollment-2",
     });
     await PreferenceRollouts.add({
       slug: "test-rollout-rolled-back",
       state: PreferenceRollouts.STATE_ROLLED_BACK,
-      enrollmentId: "test-enrollment-3",
     });
     await PreferenceRollouts.add({
       slug: "test-rollout-graduated",
       state: PreferenceRollouts.STATE_GRADUATED,
-      enrollmentId: "test-enrollment-4",
     });
 
     await PreferenceRollouts.init();
@@ -258,16 +239,8 @@ decorate_task(
     Assert.deepEqual(
       setExperimentActiveStub.args,
       [
-        [
-          "test-rollout-active-1",
-          "active",
-          { type: "normandy-prefrollout", enrollmentId: "test-enrollment-1" },
-        ],
-        [
-          "test-rollout-active-2",
-          "active",
-          { type: "normandy-prefrollout", enrollmentId: "test-enrollment-2" },
-        ],
+        ["test-rollout-active-1", "active", { type: "normandy-prefrollout" }],
+        ["test-rollout-active-2", "active", { type: "normandy-prefrollout" }],
       ],
       "init should set activate a telemetry experiment for active preferences"
     );
@@ -284,7 +257,6 @@ decorate_task(
       preferenceRolloutFactory({
         slug: "test-rollout",
         state: PreferenceRollouts.STATE_ACTIVE,
-        enrollmentId: "test-enrollment-id",
       }),
     ],
   }),
@@ -309,7 +281,7 @@ decorate_task(
         "graduate",
         "preference_rollout",
         "test-rollout",
-        { enrollmentId: "test-enrollment-id", reason: "in-graduation-set" },
+        { reason: "in-graduation-set" },
       ],
     ]);
   }

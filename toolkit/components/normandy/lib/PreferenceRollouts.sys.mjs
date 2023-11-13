@@ -28,10 +28,6 @@ const log = LogManager.getLogger("recipe-runner");
  *   rollout value, and so Normandy is no longer managing the preference.
  * @property {Array<PreferenceSpec>} preferences
  *   An array of preferences specifications involved in the rollout.
- * @property {string} enrollmentId
- *   A random ID generated at time of enrollment. It should be included on all
- *   telemetry related to this rollout. It should not be re-used by other
- *   rollouts, or any other purpose. May be null on old rollouts.
  */
 
 /**
@@ -171,21 +167,9 @@ export var PreferenceRollouts = {
         rollout.state,
         {
           type: "normandy-prefrollout",
-          enrollmentId:
-            rollout.enrollmentId ||
-            lazy.TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
         }
       );
     }
-  },
-
-  /** When Telemetry is disabled, clear all identifiers from the stored rollouts.  */
-  async onTelemetryDisabled() {
-    const rollouts = await this.getAll();
-    for (const rollout of rollouts) {
-      rollout.enrollmentId = lazy.TelemetryEvents.NO_ENROLLMENT_ID_MARKER;
-    }
-    await this.updateMany(rollouts);
   },
 
   /**
@@ -223,9 +207,6 @@ export var PreferenceRollouts = {
    * @param {PreferenceRollout} rollout
    */
   async add(rollout) {
-    if (!rollout.enrollmentId) {
-      throw new Error("Rollout must have an enrollment ID");
-    }
     const db = await getDatabase();
     return getStore(db, "readwrite").add(rollout);
   },
@@ -342,8 +323,6 @@ export var PreferenceRollouts = {
       rollout.slug,
       {
         reason,
-        enrollmentId:
-          rollout.enrollmentId || lazy.TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
       }
     );
   },

@@ -5,8 +5,6 @@
 const TELEMETRY_CATEGORY = "normandy";
 
 export const TelemetryEvents = {
-  NO_ENROLLMENT_ID_MARKER: "__NO_ENROLLMENT_ID__",
-
   init() {
     Services.telemetry.setEventRecordingEnabled(TELEMETRY_CATEGORY, true);
   },
