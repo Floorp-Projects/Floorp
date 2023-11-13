@@ -36,6 +36,17 @@ static PRLibrary* MozAVLink(nsIFile* aFile) {
   lspec.type = PR_LibSpec_PathnameU;
   lspec.value.pathname_u = path.get();
 #else
+#  if defined(XP_OPENBSD)
+  /* on OpenBSD, libmozavcodec.so and libmozavutil.so are preloaded before
+   * sandboxing so make sure only the filename is passed to
+   * PR_LoadLibraryWithFlags(), dlopen() will return the preloaded library
+   * handle instead of failing to find it due to sandboxing */
+  nsAutoCString leaf;
+  nsresult rv = aFile->GetNativeLeafName(leaf);
+  if (NS_SUCCEEDED(rv)) {
+    path = PathString(leaf);
+  }
+#  endif  // defined(XP_OPENBSD)
   lspec.type = PR_LibSpec_Pathname;
   lspec.value.pathname = path.get();
 #endif
