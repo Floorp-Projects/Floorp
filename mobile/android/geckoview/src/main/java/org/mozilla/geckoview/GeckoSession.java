@@ -684,7 +684,11 @@ public class GeckoSession {
               final GeckoBundle[] perms = message.getBundleArray("permissions");
               final List<PermissionDelegate.ContentPermission> permList =
                   PermissionDelegate.ContentPermission.fromBundleArray(perms);
-              delegate.onLocationChange(GeckoSession.this, message.getString("uri"), permList);
+              delegate.onLocationChange(
+                  GeckoSession.this,
+                  message.getString("uri"),
+                  permList,
+                  message.getBoolean("hasUserGesture"));
             }
             delegate.onCanGoBack(GeckoSession.this, message.getBoolean("canGoBack"));
             delegate.onCanGoForward(GeckoSession.this, message.getBoolean("canGoForward"));
@@ -4831,10 +4835,28 @@ public class GeckoSession {
      * @param perms The permissions currently associated with this url.
      */
     @UiThread
+    @Deprecated
+    @DeprecationSchedule(id = "geckoview-onlocationchange", version = 123)
     default void onLocationChange(
         @NonNull GeckoSession session,
         @Nullable String url,
         final @NonNull List<PermissionDelegate.ContentPermission> perms) {}
+
+    /**
+     * A view has started loading content from the network.
+     *
+     * @param session The GeckoSession that initiated the callback.
+     * @param url The resource being loaded.
+     * @param perms The permissions currently associated with this url.
+     * @param hasUserGesture Whether or not there was an active user gesture when the location
+     *     change was requested.
+     */
+    @UiThread
+    default void onLocationChange(
+        @NonNull GeckoSession session,
+        @Nullable String url,
+        final @NonNull List<PermissionDelegate.ContentPermission> perms,
+        final @NonNull Boolean hasUserGesture) {}
 
     /**
      * The view's ability to go back has changed.

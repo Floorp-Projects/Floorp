@@ -2493,7 +2493,10 @@ public class GeckoViewActivity extends AppCompatActivity
   private class ExampleNavigationDelegate implements GeckoSession.NavigationDelegate {
     @Override
     public void onLocationChange(
-        GeckoSession session, final String url, final List<ContentPermission> perms) {
+        GeckoSession session,
+        final String url,
+        final List<ContentPermission> perms,
+        Boolean hasUserGesture) {
       mToolbarView.getLocationView().setText(url);
       TabSession tabSession = mTabSessionManager.getSession(session);
       if (tabSession != null) {

@@ -36,7 +36,8 @@ public class TrackingPermissionService extends TestRuntimeService {
           public void onLocationChange(
               final @NonNull GeckoSession session,
               final @Nullable String url,
-              final @NonNull List<ContentPermission> perms) {
+              final @NonNull List<ContentPermission> perms,
+              final @NonNull Boolean hasUserGesture) {
             for (ContentPermission perm : perms) {
               if (perm.permission == PermissionDelegate.PERMISSION_TRACKING) {
                 mContentPermission = perm;
