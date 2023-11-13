@@ -1265,20 +1265,20 @@ void nsTableFrame::SetColumnDimensions(nscoord aBSize, WritingMode aWM,
     // first we need to figure out the size of the colgroup
     int32_t groupFirstCol = colIdx;
     nscoord colGroupISize = 0;
-    nscoord cellSpacingI = 0;
+    nscoord colSpacing = 0;
     const nsFrameList& columnList = colGroupFrame->PrincipalChildList();
     for (nsIFrame* colFrame : columnList) {
       if (mozilla::StyleDisplay::TableColumn ==
           colFrame->StyleDisplay()->mDisplay) {
         NS_ASSERTION(colIdx < GetColCount(), "invalid number of columns");
-        cellSpacingI = GetColSpacing(colIdx);
+        colSpacing = GetColSpacing(colIdx);
         colGroupISize +=
-            fif->GetColumnISizeFromFirstInFlow(colIdx) + cellSpacingI;
+            fif->GetColumnISizeFromFirstInFlow(colIdx) + colSpacing;
         ++colIdx;
       }
     }
     if (colGroupISize) {
-      colGroupISize -= cellSpacingI;
+      colGroupISize -= colSpacing;
     }
 
     LogicalRect colGroupRect(aWM, colGroupOrigin.I(aWM), colGroupOrigin.B(aWM),
@@ -1296,13 +1296,13 @@ void nsTableFrame::SetColumnDimensions(nscoord aBSize, WritingMode aWM,
         LogicalRect colRect(aWM, colOrigin.I(aWM), colOrigin.B(aWM), colISize,
                             colBSize);
         colFrame->SetRect(aWM, colRect, colGroupSize);
-        cellSpacingI = GetColSpacing(colIdx);
-        colOrigin.I(aWM) += colISize + cellSpacingI;
+        colSpacing = GetColSpacing(colIdx);
+        colOrigin.I(aWM) += colISize + colSpacing;
         ++colIdx;
       }
     }
 
-    colGroupOrigin.I(aWM) += colGroupISize + cellSpacingI;
+    colGroupOrigin.I(aWM) += colGroupISize + colSpacing;
   }
 }
 
@@ -2790,7 +2790,7 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
   bool allowRepeatedFooter = false;
   for (size_t childX = 0; childX < rowGroups.Length(); childX++) {
     nsTableRowGroupFrame* kidFrame = rowGroups[childX];
-    const nscoord cellSpacingB =
+    const nscoord rowSpacing =
         GetRowSpacing(kidFrame->GetStartRowIndex() + kidFrame->GetRowCount());
     // Get the frame state bits
     // See if we should only reflow the dirty child frames
@@ -2818,9 +2818,9 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
           // the child is a tbody and there is a repeatable footer
           NS_ASSERTION(tfoot == rowGroups[rowGroups.Length() - 1],
                        "Missing footer!");
-          if (footerHeight + cellSpacingB < kidAvailSize.BSize(wm)) {
+          if (footerHeight + rowSpacing < kidAvailSize.BSize(wm)) {
             allowRepeatedFooter = true;
-            kidAvailSize.BSize(wm) -= footerHeight + cellSpacingB;
+            kidAvailSize.BSize(wm) -= footerHeight + rowSpacing;
           }
         }
       }
@@ -2844,8 +2844,8 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
           (rowGroups[childX - 1]->GetNormalRect().YMost() > 0)) {
         kidReflowInput.mFlags.mIsTopOfPage = false;
       }
-      aReflowInput.mBCoord += cellSpacingB;
-      aReflowInput.ReduceAvailableBSizeBy(wm, cellSpacingB);
+      aReflowInput.mBCoord += rowSpacing;
+      aReflowInput.ReduceAvailableBSizeBy(wm, rowSpacing);
       // record the presence of a next in flow, it might get destroyed so we
       // need to reorder the row group array
       const bool reorder = kidFrame->GetNextInFlow();
@@ -2988,7 +2988,7 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
         break;
       }
     } else {  // it isn't being reflowed
-      aReflowInput.mBCoord += cellSpacingB;
+      aReflowInput.mBCoord += rowSpacing;
       const LogicalRect kidRect =
           kidFrame->GetLogicalNormalRect(wm, containerSize);
       if (kidRect.BStart(wm) != aReflowInput.mBCoord) {
@@ -3003,7 +3003,7 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
       }
       aReflowInput.mBCoord += kidRect.BSize(wm);
 
-      aReflowInput.ReduceAvailableBSizeBy(wm, cellSpacingB + kidRect.BSize(wm));
+      aReflowInput.ReduceAvailableBSizeBy(wm, rowSpacing + kidRect.BSize(wm));
     }
   }
 
@@ -3189,7 +3189,7 @@ void nsTableFrame::DistributeBSizeToRows(const ReflowInput& aReflowInput,
         const nsSize dummyContainerSize;
         const LogicalRect rowNormalRect =
             rowFrame->GetLogicalNormalRect(wm, dummyContainerSize);
-        nscoord cellSpacingB = GetRowSpacing(rowFrame->GetRowIndex());
+        const nscoord rowSpacing = GetRowSpacing(rowFrame->GetRowIndex());
         if ((amountUsed < aAmount) && rowFrame->HasPctBSize()) {
           nscoord pctBSize = rowFrame->GetInitialBSize(pctBasis);
           nscoord amountForRow = std::min(aAmount - amountUsed,
@@ -3200,8 +3200,8 @@ void nsTableFrame::DistributeBSizeToRows(const ReflowInput& aReflowInput,
             nscoord newRowBSize = rowNormalRect.BSize(wm) + amountForRow;
             rowFrame->SetSize(
                 wm, LogicalSize(wm, rowNormalRect.ISize(wm), newRowBSize));
-            bOriginRow += newRowBSize + cellSpacingB;
-            bEndRG += newRowBSize + cellSpacingB;
+            bOriginRow += newRowBSize + rowSpacing;
+            bEndRG += newRowBSize + rowSpacing;
             amountUsed += amountForRow;
             amountUsedByRG += amountForRow;
             // rowFrame->DidResize();
@@ -3219,8 +3219,8 @@ void nsTableFrame::DistributeBSizeToRows(const ReflowInput& aReflowInput,
             nsTableFrame::RePositionViews(rowFrame);
             rowFrame->InvalidateFrameSubtree();
           }
-          bOriginRow += rowNormalRect.BSize(wm) + cellSpacingB;
-          bEndRG += rowNormalRect.BSize(wm) + cellSpacingB;
+          bOriginRow += rowNormalRect.BSize(wm) + rowSpacing;
+          bEndRG += rowNormalRect.BSize(wm) + rowSpacing;
         }
         rowFrame = rowFrame->GetNextRow();
       }
@@ -3329,7 +3329,7 @@ void nsTableFrame::DistributeBSizeToRows(const ReflowInput& aReflowInput,
     if (!firstUnStyledRG || !rgFrame->HasStyleBSize() || !eligibleRows) {
       for (nsTableRowFrame* rowFrame = rgFrame->GetFirstRow(); rowFrame;
            rowFrame = rowFrame->GetNextRow()) {
-        nscoord cellSpacingB = GetRowSpacing(rowFrame->GetRowIndex());
+        const nscoord rowSpacing = GetRowSpacing(rowFrame->GetRowIndex());
         // We don't know the final width of the rowGroupFrame yet, so use 0,0
         // as a dummy containerSize here; we'll adjust the row positions at
         // the end, after the rowGroup size is finalized.
@@ -3373,8 +3373,8 @@ void nsTableFrame::DistributeBSizeToRows(const ReflowInput& aReflowInput,
           rowFrame->SetSize(
               wm, LogicalSize(wm, rowNormalRect.ISize(wm), newRowBSize));
 
-          bOriginRow += newRowBSize + cellSpacingB;
-          bEndRG += newRowBSize + cellSpacingB;
+          bOriginRow += newRowBSize + rowSpacing;
+          bEndRG += newRowBSize + rowSpacing;
 
           amountUsed += amountForRow;
           amountUsedByRG += amountForRow;
@@ -3392,8 +3392,8 @@ void nsTableFrame::DistributeBSizeToRows(const ReflowInput& aReflowInput,
             nsTableFrame::RePositionViews(rowFrame);
             rowFrame->InvalidateFrameSubtree();
           }
-          bOriginRow += rowNormalRect.BSize(wm) + cellSpacingB;
-          bEndRG += rowNormalRect.BSize(wm) + cellSpacingB;
+          bOriginRow += rowNormalRect.BSize(wm) + rowSpacing;
+          bEndRG += rowNormalRect.BSize(wm) + rowSpacing;
         }
       }
 
