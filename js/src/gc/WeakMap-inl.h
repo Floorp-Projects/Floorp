@@ -419,6 +419,12 @@ bool WeakMap<K, V>::checkMarking() const {
 }
 #endif
 
+inline HashNumber GetHash(JS::Symbol* sym) { return sym->hash(); }
+
+inline bool HashMatch(JS::Symbol* key, JS::Symbol* lookup) {
+  return key->hash() == lookup->hash();
+}
+
 }  // namespace js
 
 #endif /* gc_WeakMap_inl_h */
