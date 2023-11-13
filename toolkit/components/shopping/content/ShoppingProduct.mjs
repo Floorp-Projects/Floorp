@@ -534,11 +534,15 @@ export class ShoppingProduct {
         ]),
         onStartRequest(request) {
           this._headers = {};
-          request
-            .QueryInterface(Ci.nsIHttpChannel)
-            .visitResponseHeaders((header, value) => {
-              this._headers[header.toLowerCase()] = value;
-            });
+          try {
+            request
+              .QueryInterface(Ci.nsIHttpChannel)
+              .visitResponseHeaders((header, value) => {
+                this._headers[header.toLowerCase()] = value;
+              });
+          } catch (error) {
+            this._headers = null;
+          }
         },
         onDataAvailable(request, stream, offset, count) {
           this._buffer.push(readFromStream(stream, count));
@@ -546,23 +550,42 @@ export class ShoppingProduct {
         onStopRequest(request, requestStatus) {
           signal.removeEventListener("abort", abortHandler);
           let result = this._buffer;
-          let httpStatus = request.QueryInterface(
-            Ci.nsIHttpChannel
-          ).responseStatus;
-          resolve({
-            ok: requestStatus == Cr.NS_OK && httpStatus == 200,
-            status: httpStatus,
-            headers: this._headers,
-            json() {
-              let decodedBuffer = result.reduce((accumulator, currVal) => {
-                return accumulator + lazy.decoder.decode(currVal);
-              }, "");
-              return JSON.parse(decodedBuffer);
-            },
-            blob() {
-              return new Blob(result, { type: "image/jpeg" });
-            },
-          });
+          try {
+            let ohttpStatus = request.QueryInterface(Ci.nsIObliviousHttpChannel)
+              .relayChannel.responseStatus;
+            if (ohttpStatus == 200) {
+              let httpStatus = request.QueryInterface(
+                Ci.nsIHttpChannel
+              ).responseStatus;
+              resolve({
+                ok: requestStatus == Cr.NS_OK && httpStatus == 200,
+                status: httpStatus,
+                headers: this._headers,
+                json() {
+                  let decodedBuffer = result.reduce((accumulator, currVal) => {
+                    return accumulator + lazy.decoder.decode(currVal);
+                  }, "");
+                  return JSON.parse(decodedBuffer);
+                },
+                blob() {
+                  return new Blob(result, { type: "image/jpeg" });
+                },
+              });
+            } else {
+              resolve({
+                ok: false,
+                status: ohttpStatus,
+                json() {
+                  return null;
+                },
+                blob() {
+                  return null;
+                },
+              });
+            }
+          } catch (error) {
+            reject(error);
+          }
         },
       };
       obliviousHttpChannel.asyncOpen(listener);
