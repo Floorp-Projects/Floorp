@@ -131,7 +131,10 @@ void IPCFuzzController::InitializeIPCTypes() {
       }
     }
 
-    validMsgTypes[(ProtocolId)start] = i - ((start << 16) + 1);
+    uint32_t msgCount = i - ((start << 16) + 1);
+    if (msgCount) {
+      validMsgTypes[(ProtocolId)start] = msgCount;
+    }
   }
 }
 
