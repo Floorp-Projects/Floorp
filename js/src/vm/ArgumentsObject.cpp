@@ -86,7 +86,8 @@ void ArgumentsObject::MaybeForwardToCallObject(AbstractFramePtr frame,
     obj->initFixedSlot(MAYBE_CALL_SLOT, ObjectValue(frame.callObj()));
     for (PositionalFormalParameterIter fi(script); fi; fi++) {
       if (fi.closedOver()) {
-        data->args[fi.argumentSlot()] = MagicEnvSlotValue(fi.location().slot());
+        data->args.setElement(obj, fi.argumentSlot(),
+                              MagicEnvSlotValue(fi.location().slot()));
         obj->markArgumentForwarded();
       }
     }
@@ -104,7 +105,8 @@ void ArgumentsObject::MaybeForwardToCallObject(JSFunction* callee,
     obj->initFixedSlot(MAYBE_CALL_SLOT, ObjectValue(*callObj));
     for (PositionalFormalParameterIter fi(script); fi; fi++) {
       if (fi.closedOver()) {
-        data->args[fi.argumentSlot()] = MagicEnvSlotValue(fi.location().slot());
+        data->args.setElement(obj, fi.argumentSlot(),
+                              MagicEnvSlotValue(fi.location().slot()));
         obj->markArgumentForwarded();
       }
     }
@@ -116,16 +118,20 @@ struct CopyFrameArgs {
 
   explicit CopyFrameArgs(AbstractFramePtr frame) : frame_(frame) {}
 
-  void copyActualArgs(GCPtr<Value>* dst, unsigned numActuals) const {
+  void copyActualArgs(ArgumentsObject* owner, GCOwnedArray<Value>& args,
+                      unsigned numActuals) const {
     MOZ_ASSERT_IF(frame_.isInterpreterFrame(),
                   !frame_.asInterpreterFrame()->runningInJit());
 
     // Copy arguments.
     Value* src = frame_.argv();
     Value* end = src + numActuals;
-    while (src != end) {
-      (dst++)->init(*src++);
-    }
+    args.withOwner(owner, [&](auto& args) {
+      auto* dst = args.begin();
+      while (src != end) {
+        (dst++)->init(*src++);
+      }
+    });
   }
 
   /*
@@ -144,14 +150,18 @@ struct CopyJitFrameArgs {
   CopyJitFrameArgs(jit::JitFrameLayout* frame, HandleObject callObj)
       : frame_(frame), callObj_(callObj) {}
 
-  void copyActualArgs(GCPtr<Value>* dst, unsigned numActuals) const {
+  void copyActualArgs(ArgumentsObject* owner, GCOwnedArray<Value>& args,
+                      unsigned numActuals) const {
     MOZ_ASSERT(frame_->numActualArgs() == numActuals);
 
     Value* src = frame_->actualArgs();
     Value* end = src + numActuals;
-    while (src != end) {
-      (dst++)->init(*src++);
-    }
+    args.withOwner(owner, [&](auto& args) {
+      auto* dst = args.begin();
+      while (src != end) {
+        (dst++)->init(*src++);
+      }
+    });
   }
 
   /*
@@ -186,12 +196,16 @@ struct CopyScriptFrameIterArgs {
     return true;
   }
 
-  void copyActualArgs(GCPtr<Value>* dst, unsigned numActuals) const {
+  void copyActualArgs(ArgumentsObject* owner, GCOwnedArray<Value>& args,
+                      unsigned numActuals) const {
     MOZ_ASSERT(actualArgs_.length() == numActuals);
 
-    for (Value v : actualArgs_) {
-      (dst++)->init(v);
-    }
+    args.withOwner(owner, [&](auto& args) {
+      auto* dst = args.begin();
+      for (Value v : actualArgs_) {
+        (dst++)->init(v);
+      }
+    });
   }
 
   /*
@@ -215,12 +229,16 @@ struct CopyInlinedArgs {
                   HandleFunction callee)
       : args_(args), callObj_(callObj), callee_(callee) {}
 
-  void copyActualArgs(GCPtr<Value>* dst, unsigned numActuals) const {
+  void copyActualArgs(ArgumentsObject* owner, GCOwnedArray<Value>& args,
+                      unsigned numActuals) const {
     MOZ_ASSERT(numActuals <= args_.length());
 
-    for (uint32_t i = 0; i < numActuals; i++) {
-      (dst++)->init(args_[i]);
-    }
+    args.withOwner(owner, [&](auto& args) {
+      auto* dst = args.begin();
+      for (uint32_t i = 0; i < numActuals; i++) {
+        (dst++)->init(args_[i]);
+      }
+    });
   }
 
   /*
@@ -328,13 +346,14 @@ ArgumentsObject* ArgumentsObject::create(JSContext* cx, HandleFunction callee,
                      Int32Value(numActuals << PACKED_BITS_COUNT));
 
   // Copy [0, numActuals) into data->args.
-  GCPtr<Value>* args = data->begin();
-  copy.copyActualArgs(args, numActuals);
+  copy.copyActualArgs(obj, data->args, numActuals);
 
   // Fill in missing arguments with |undefined|.
-  for (size_t i = numActuals; i < numArgs; i++) {
-    args[i].init(UndefinedValue());
-  }
+  data->args.withOwner(obj, [&](auto& args) {
+    for (size_t i = numActuals; i < numArgs; i++) {
+      args[i].init(UndefinedValue());
+    }
+  });
 
   copy.maybeForwardToCallObject(obj, data);
 
@@ -438,13 +457,14 @@ ArgumentsObject* ArgumentsObject::finishPure(
   obj->initFixedSlot(MAYBE_CALL_SLOT, UndefinedValue());
   obj->initFixedSlot(CALLEE_SLOT, ObjectValue(*callee));
 
-  GCPtr<Value>* args = data->begin();
-  copy.copyActualArgs(args, numActuals);
+  copy.copyActualArgs(obj, data->args, numActuals);
 
   // Fill in missing arguments with |undefined|.
-  for (size_t i = numActuals; i < numArgs; i++) {
-    args[i].init(UndefinedValue());
-  }
+  data->args.withOwner(obj, [&](auto& args) {
+    for (size_t i = numActuals; i < numArgs; i++) {
+      args[i].init(UndefinedValue());
+    }
+  });
 
   if (callObj && callee->needsCallObject()) {
     copy.maybeForwardToCallObject(obj, data);
@@ -1044,8 +1064,8 @@ void ArgumentsObject::finalize(JS::GCContext* gcx, JSObject* obj) {
 
 void ArgumentsObject::trace(JSTracer* trc, JSObject* obj) {
   ArgumentsObject& argsobj = obj->as<ArgumentsObject>();
-  if (ArgumentsData* data =
-          argsobj.data()) {  // Template objects have no ArgumentsData.
+  // Template objects have no ArgumentsData.
+  if (ArgumentsData* data = argsobj.data()) {
     data->args.trace(trc);
   }
 }

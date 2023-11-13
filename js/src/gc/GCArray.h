@@ -62,6 +62,59 @@ class GCArray {
   }
 };
 
+/*
+ * A fixed size array of GC things owned by a GC thing.
+ *
+ * Uses the appropriate barriers depending on whether the owner is in the
+ * nursery or the tenured heap. If the owner cannot be allocated in the nursery
+ * then this class is not required.
+ */
+template <typename T>
+class GCOwnedArray {
+  using StorageType = GCArray<PreAndPostBarrierWrapper<T>>;
+  using TenuredInterface = StorageType;
+  using NurseryInterface = GCArray<PreBarrierWrapper<T>>;
+
+  StorageType array;
+
+ public:
+  explicit GCOwnedArray(uint32_t size) : array(size) {}
+
+  uint32_t size() const { return array.size(); }
+  const T& operator[](uint32_t i) const { return array[i].get(); }
+
+  // Apply |f| to a view of the data with appropriate barriers given |owner|.
+  template <typename F>
+  void withOwner(gc::Cell* owner, F&& f) {
+    if (gc::IsInsideNursery(owner)) {
+      f(nurseryOwned());
+    } else {
+      f(tenuredOwned());
+    }
+  }
+
+  // For convenience, special case setElement.
+  void setElement(gc::Cell* owner, uint32_t i, const T& newValue) {
+    withOwner(owner, [&](auto& self) { self[i] = newValue; });
+  }
+
+  void trace(JSTracer* trc) { array.trace(trc); }
+
+  static constexpr ptrdiff_t offsetOfElements() {
+    return offsetof(GCOwnedArray, array) + StorageType::offsetOfElements();
+  }
+
+  static size_t bytesRequired(size_t size) {
+    return offsetof(GCOwnedArray, array) + StorageType::bytesRequired(size);
+  }
+
+ private:
+  TenuredInterface& tenuredOwned() { return array; }
+  NurseryInterface& nurseryOwned() {
+    return reinterpret_cast<NurseryInterface&>(array);
+  }
+};
+
 }  // namespace js
 
 #endif  // js_GCArray_h
