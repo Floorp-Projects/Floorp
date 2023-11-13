@@ -65,15 +65,14 @@ LargestContentfulPaint::LargestContentfulPaint(
       mShouldExposeRenderTime(aShouldExposeRenderTime),
       mSize(aSize),
       mURI(aURI),
+      mElement(aElement),
       mLCPImageEntryKey(aLCPImageEntryKey) {
   MOZ_ASSERT(mPerformance);
-  MOZ_ASSERT(aElement);
+  MOZ_ASSERT(mElement);
   // The element could be a pseudo-element
-  if (aElement->ChromeOnlyAccess()) {
-    mElement = do_GetWeakReference(Element::FromNodeOrNull(
-        aElement->FindFirstNonChromeOnlyAccessContent()));
-  } else {
-    mElement = do_GetWeakReference(aElement);
+  if (mElement->ChromeOnlyAccess()) {
+    mElement = Element::FromNodeOrNull(
+        aElement->FindFirstNonChromeOnlyAccessContent());
   }
 
   if (const Element* element = GetElement()) {
@@ -87,14 +86,12 @@ JSObject* LargestContentfulPaint::WrapObject(
 }
 
 Element* LargestContentfulPaint::GetElement() const {
-  nsCOMPtr<Element> element = do_QueryReferent(mElement);
-  return element ? nsContentUtils::GetAnElementForTiming(
-                       element, element->GetComposedDoc(), nullptr)
-                 : nullptr;
+  return mElement ? nsContentUtils::GetAnElementForTiming(
+                        mElement, mElement->GetComposedDoc(), nullptr)
+                  : nullptr;
 }
 
 void LargestContentfulPaint::BufferEntryIfNeeded() {
-  MOZ_ASSERT(mLCPImageEntryKey.isNothing());
   mPerformance->BufferLargestContentfulPaintEntryIfNeeded(this);
 }
 
@@ -523,12 +520,7 @@ void LCPHelpers::FinalizeLCPEntryForText(
 }
 
 void LargestContentfulPaint::ReportLCPToNavigationTimings() {
-  nsCOMPtr<Element> element = do_QueryReferent(mElement);
-  if (!element) {
-    return;
-  }
-
-  const Document* document = element->OwnerDoc();
+  const Document* document = mElement->OwnerDoc();
 
   MOZ_ASSERT(document);
 
