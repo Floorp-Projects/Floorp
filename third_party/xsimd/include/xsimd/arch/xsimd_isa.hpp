@@ -80,6 +80,10 @@
 #include "./xsimd_sve.hpp"
 #endif
 
+#if XSIMD_WITH_WASM
+#include "./xsimd_wasm.hpp"
+#endif
+
 // Must come last to have access to all conversion specializations.
 #include "./xsimd_generic.hpp"
 

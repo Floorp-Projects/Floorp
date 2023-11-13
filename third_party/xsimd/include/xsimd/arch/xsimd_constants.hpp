@@ -346,7 +346,7 @@ namespace xsimd
             template <>
             struct minvalue_impl<float>
             {
-                static float get_value() noexcept
+                inline static float get_value() noexcept
                 {
                     return bit_cast<float>((uint32_t)0xff7fffff);
                 }
@@ -355,7 +355,7 @@ namespace xsimd
             template <>
             struct minvalue_impl<double>
             {
-                static double get_value() noexcept
+                inline static double get_value() noexcept
                 {
                     return bit_cast<double>((uint64_t)0xffefffffffffffff);
                 }
@@ -363,7 +363,7 @@ namespace xsimd
         }
 
         template <class T>
-        inline constexpr T minvalue() noexcept
+        constexpr T minvalue() noexcept
         {
             return T(detail::minvalue_impl<typename T::value_type>::get_value());
         }
@@ -373,7 +373,7 @@ namespace xsimd
          ***************************/
 
         template <class T>
-        inline constexpr T maxvalue() noexcept
+        constexpr T maxvalue() noexcept
         {
             return T(std::numeric_limits<typename T::value_type>::max());
         }
