@@ -48,6 +48,12 @@ RareArgumentsData* RareArgumentsData::create(JSContext* cx,
   return new (data) RareArgumentsData();
 }
 
+ArgumentsData::ArgumentsData(uint32_t numArgs) : args(numArgs) {
+  // |args| must be the last field.
+  static_assert(offsetof(ArgumentsData, args) + sizeof(args) ==
+                sizeof(ArgumentsData));
+}
+
 bool ArgumentsObject::createRareData(JSContext* cx) {
   MOZ_ASSERT(!data()->rareData);
 
@@ -314,8 +320,7 @@ ArgumentsObject* ArgumentsObject::create(JSContext* cx, HandleFunction callee,
     return nullptr;
   }
 
-  data->numArgs = numArgs;
-  data->rareData = nullptr;
+  new (data) ArgumentsData(numArgs);
 
   InitReservedSlot(obj, DATA_SLOT, data, numBytes, MemoryUse::ArgumentsData);
   obj->initFixedSlot(CALLEE_SLOT, ObjectValue(*callee));
@@ -323,7 +328,7 @@ ArgumentsObject* ArgumentsObject::create(JSContext* cx, HandleFunction callee,
                      Int32Value(numActuals << PACKED_BITS_COUNT));
 
   // Copy [0, numActuals) into data->args.
-  GCPtr<Value>* args = data->args;
+  GCPtr<Value>* args = data->begin();
   copy.copyActualArgs(args, numActuals);
 
   // Fill in missing arguments with |undefined|.
@@ -424,8 +429,7 @@ ArgumentsObject* ArgumentsObject::finishPure(
     return nullptr;
   }
 
-  data->numArgs = numArgs;
-  data->rareData = nullptr;
+  new (data) ArgumentsData(numArgs);
 
   obj->initFixedSlot(INITIAL_LENGTH_SLOT,
                      Int32Value(numActuals << PACKED_BITS_COUNT));
@@ -434,7 +438,7 @@ ArgumentsObject* ArgumentsObject::finishPure(
   obj->initFixedSlot(MAYBE_CALL_SLOT, UndefinedValue());
   obj->initFixedSlot(CALLEE_SLOT, ObjectValue(*callee));
 
-  GCPtr<Value>* args = data->args;
+  GCPtr<Value>* args = data->begin();
   copy.copyActualArgs(args, numActuals);
 
   // Fill in missing arguments with |undefined|.
@@ -1033,7 +1037,7 @@ void ArgumentsObject::finalize(JS::GCContext* gcx, JSObject* obj) {
                RareArgumentsData::bytesRequired(argsobj.initialLength()),
                MemoryUse::RareArgumentsData);
     gcx->free_(&argsobj, argsobj.data(),
-               ArgumentsData::bytesRequired(argsobj.data()->numArgs),
+               ArgumentsData::bytesRequired(argsobj.data()->numArgs()),
                MemoryUse::ArgumentsData);
   }
 }
@@ -1042,7 +1046,7 @@ void ArgumentsObject::trace(JSTracer* trc, JSObject* obj) {
   ArgumentsObject& argsobj = obj->as<ArgumentsObject>();
   if (ArgumentsData* data =
           argsobj.data()) {  // Template objects have no ArgumentsData.
-    TraceRange(trc, data->numArgs, data->begin(), "arguments");
+    data->args.trace(trc);
   }
 }
 
@@ -1061,7 +1065,7 @@ size_t ArgumentsObject::objectMoved(JSObject* dst, JSObject* src) {
   size_t nbytesTotal = 0;
 
   ArgumentsData* data = nsrc->data();
-  uint32_t nDataBytes = ArgumentsData::bytesRequired(nsrc->data()->numArgs);
+  uint32_t nDataBytes = ArgumentsData::bytesRequired(nsrc->data()->numArgs());
   Nursery::WasBufferMoved result = nursery.maybeMoveBufferOnPromotion(
       &data, dst, nDataBytes, MemoryUse::ArgumentsData);
   if (result == Nursery::BufferMoved) {
