@@ -33,6 +33,25 @@ let received = false;
 let server;
 let server_addr;
 
+const tasks = [
+  {
+    // this is testing task 1
+    id: "QjMD4n8l_MHBoLrbCfLTFi8hC264fC59SKHPviPF0q8",
+    leader_endpoint: null,
+    helper_endpoint: null,
+    time_precision: 300,
+    measurement_type: "u8",
+  },
+  {
+    // this is testing task 2
+    id: "DSZGMFh26hBYXNaKvhL_N4AHA3P5lDn19on1vFPBxJM",
+    leader_endpoint: null,
+    helper_endpoint: null,
+    time_precision: 300,
+    measurement_type: "vecu8",
+  },
+];
+
 function hpkeConfigHandler(request, response) {
   if (
     request.queryString ==
@@ -57,7 +76,7 @@ function hpkeConfigHandler(request, response) {
     let bos = new BinaryOutputStream(response.bodyOutputStream);
     bos.writeByteArray(config_bytes);
   } else {
-    Assert.ok(false, "Unknown query string.");
+    Assert.ok(false, `Unknown query string: ${request.queryString}`);
   }
 }
 
@@ -72,7 +91,7 @@ function uploadHandler(request, response) {
   console.log(body.available());
   Assert.equal(
     true,
-    body.available() == 410 || body.available() == 20698,
+    body.available() == 410 || body.available() == 3930,
     "Wrong request body size."
   );
   received = true;
@@ -109,7 +128,7 @@ add_setup(async function () {
 add_task(async function testVerificationTask() {
   Services.fog.testResetFOG();
   let before = Glean.dap.uploadStatus.success.testGetValue() ?? 0;
-  await lazy.DAPTelemetrySender.sendTestReports();
+  await lazy.DAPTelemetrySender.sendTestReports(tasks);
   let after = Glean.dap.uploadStatus.success.testGetValue() ?? 0;
 
   Assert.equal(before + 2, after, "Successful submissions should be counted.");
@@ -120,7 +139,7 @@ add_task(async function testNetworkError() {
   Services.fog.testResetFOG();
   let before = Glean.dap.reportGenerationStatus.failure.testGetValue() ?? 0;
   Services.prefs.setStringPref(PREF_LEADER, server_addr + "/invalid-endpoint");
-  await lazy.DAPTelemetrySender.sendTestReports();
+  await lazy.DAPTelemetrySender.sendTestReports(tasks);
   let after = Glean.dap.reportGenerationStatus.failure.testGetValue() ?? 0;
   Assert.equal(
     before + 2,

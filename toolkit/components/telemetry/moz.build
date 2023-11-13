@@ -114,6 +114,7 @@ EXTRA_JS_MODULES += [
     "app/TelemetryTimestamps.sys.mjs",
     "app/TelemetryUtils.sys.mjs",
     "dap/DAPTelemetrySender.sys.mjs",
+    "dap/DAPVisitCounter.sys.mjs",
     "pings/CoveragePing.sys.mjs",
     "pings/EventPing.sys.mjs",
     "pings/HealthPing.sys.mjs",
