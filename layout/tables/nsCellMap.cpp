@@ -55,8 +55,7 @@ nsTableCellMap::nsTableCellMap(nsTableFrame& aTableFrame, bool aBorderCollapse)
     : mTableFrame(aTableFrame), mFirstMap(nullptr), mBCInfo(nullptr) {
   MOZ_COUNT_CTOR(nsTableCellMap);
 
-  nsTableFrame::RowGroupArray orderedRowGroups;
-  aTableFrame.OrderRowGroups(orderedRowGroups);
+  nsTableFrame::RowGroupArray orderedRowGroups = aTableFrame.OrderedRowGroups();
 
   nsTableRowGroupFrame* prior = nullptr;
   for (uint32_t rgX = 0; rgX < orderedRowGroups.Length(); rgX++) {
@@ -235,10 +234,10 @@ nsCellMap* nsTableCellMap::GetMapFor(const nsTableRowGroupFrame* aRowGroup,
 }
 
 void nsTableCellMap::Synchronize(nsTableFrame* aTableFrame) {
-  nsTableFrame::RowGroupArray orderedRowGroups;
   AutoTArray<nsCellMap*, 8> maps;
 
-  aTableFrame->OrderRowGroups(orderedRowGroups);
+  nsTableFrame::RowGroupArray orderedRowGroups =
+      aTableFrame->OrderedRowGroups();
   if (!orderedRowGroups.Length()) {
     return;
   }

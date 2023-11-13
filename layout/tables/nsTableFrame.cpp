@@ -466,8 +466,7 @@ bool nsTableFrame::HasMoreThanOneCell(int32_t aRowIndex) const {
 void nsTableFrame::AdjustRowIndices(int32_t aRowIndex, int32_t aAdjustment) {
   // Iterate over the row groups and adjust the row indices of all rows
   // whose index is >= aRowIndex.
-  RowGroupArray rowGroups;
-  OrderRowGroups(rowGroups);
+  RowGroupArray rowGroups = OrderedRowGroups();
 
   for (uint32_t rgIdx = 0; rgIdx < rowGroups.Length(); rgIdx++) {
     rowGroups[rgIdx]->AdjustRowIndices(aRowIndex, aAdjustment);
@@ -480,8 +479,7 @@ void nsTableFrame::ResetRowIndices(
   // omit the rowgroups that will be inserted later
   mDeletedRowIndexRanges.clear();
 
-  RowGroupArray rowGroups;
-  OrderRowGroups(rowGroups);
+  RowGroupArray rowGroups = OrderedRowGroups();
 
   nsTHashSet<nsTableRowGroupFrame*> excludeRowGroups;
   for (nsIFrame* excludeRowGroup : aRowGroupsToExclude) {
@@ -810,8 +808,7 @@ void nsTableFrame::RemoveCell(nsTableCellFrame* aCellFrame, int32_t aRowIndex) {
 
 int32_t nsTableFrame::GetStartRowIndex(
     const nsTableRowGroupFrame* aRowGroupFrame) const {
-  RowGroupArray orderedRowGroups;
-  OrderRowGroups(orderedRowGroups);
+  RowGroupArray orderedRowGroups = OrderedRowGroups();
 
   int32_t rowIndex = 0;
   for (uint32_t rgIndex = 0; rgIndex < orderedRowGroups.Length(); rgIndex++) {
@@ -1039,12 +1036,11 @@ void nsTableFrame::InsertRowGroups(const nsFrameList::Slice& aRowGroups) {
 #endif
   nsTableCellMap* cellMap = GetCellMap();
   if (cellMap) {
-    RowGroupArray orderedRowGroups;
-    OrderRowGroups(orderedRowGroups);
+    RowGroupArray orderedRowGroups = OrderedRowGroups();
 
     AutoTArray<nsTableRowFrame*, 8> rows;
     // Loop over the rowgroups and check if some of them are new, if they are
-    // insert cellmaps in the order that is predefined by OrderRowGroups,
+    // insert cellmaps in the order that is predefined by OrderedRowGroups.
     // XXXbz this code is O(N*M) where N is number of new rowgroups
     // and M is number of rowgroups we have!
     uint32_t rgIndex;
@@ -1143,8 +1139,7 @@ void nsTableFrame::CalcHasBCBorders() {
   }
 
   // check row group, row and cell has borders.
-  RowGroupArray rowGroups;
-  OrderRowGroups(rowGroups);
+  RowGroupArray rowGroups = OrderedRowGroups();
   for (nsTableRowGroupFrame* rowGroup : rowGroups) {
     if (FrameHasBorder(rowGroup)) {
       SetHasBCBorders(true);
@@ -1318,8 +1313,7 @@ void nsTableFrame::SetColumnDimensions(nscoord aBSize, WritingMode aWM,
 // the table bsize, but first we need to scrutinize every Invalidate
 void nsTableFrame::ProcessRowInserted(nscoord aNewBSize) {
   SetRowInserted(false);  // reset the bit that got us here
-  nsTableFrame::RowGroupArray rowGroups;
-  OrderRowGroups(rowGroups);
+  RowGroupArray rowGroups = OrderedRowGroups();
   // find the row group containing the inserted row
   for (uint32_t rgIdx = 0; rgIdx < rowGroups.Length(); rgIdx++) {
     nsTableRowGroupFrame* rgFrame = rowGroups[rgIdx];
@@ -2028,8 +2022,7 @@ void nsTableFrame::AdjustForCollapsingRowsCols(
 
   // collapse the rows and/or row groups as necessary
   // Get the ordered children
-  RowGroupArray rowGroups;
-  OrderRowGroups(rowGroups);
+  RowGroupArray rowGroups = OrderedRowGroups();
 
   nsTableFrame* firstInFlow = static_cast<nsTableFrame*>(FirstInFlow());
   nscoord iSize = firstInFlow->GetCollapsedISize(aWM, aBorderPadding);
@@ -2588,36 +2581,34 @@ void nsTableFrame::PlaceChild(TableReflowInput& aReflowInput,
   aReflowInput.ReduceAvailableBSizeBy(wm, aKidDesiredSize.BSize(wm));
 }
 
-void nsTableFrame::OrderRowGroups(RowGroupArray& aChildren,
-                                  nsTableRowGroupFrame** aHead,
-                                  nsTableRowGroupFrame** aFoot) const {
-  aChildren.Clear();
+nsTableFrame::RowGroupArray nsTableFrame::OrderedRowGroups(
+    nsTableRowGroupFrame** aHead, nsTableRowGroupFrame** aFoot) const {
+  RowGroupArray children;
   nsTableRowGroupFrame* head = nullptr;
   nsTableRowGroupFrame* foot = nullptr;
 
   nsIFrame* kidFrame = mFrames.FirstChild();
   while (kidFrame) {
     const nsStyleDisplay* kidDisplay = kidFrame->StyleDisplay();
-    nsTableRowGroupFrame* rowGroup =
-        static_cast<nsTableRowGroupFrame*>(kidFrame);
+    auto* rowGroup = static_cast<nsTableRowGroupFrame*>(kidFrame);
 
     switch (kidDisplay->DisplayInside()) {
       case StyleDisplayInside::TableHeaderGroup:
         if (head) {  // treat additional thead like tbody
-          aChildren.AppendElement(rowGroup);
+          children.AppendElement(rowGroup);
         } else {
           head = rowGroup;
         }
         break;
       case StyleDisplayInside::TableFooterGroup:
         if (foot) {  // treat additional tfoot like tbody
-          aChildren.AppendElement(rowGroup);
+          children.AppendElement(rowGroup);
         } else {
           foot = rowGroup;
         }
         break;
       case StyleDisplayInside::TableRowGroup:
-        aChildren.AppendElement(rowGroup);
+        children.AppendElement(rowGroup);
         break;
       default:
         MOZ_ASSERT_UNREACHABLE("How did this produce an nsTableRowGroupFrame?");
@@ -2629,20 +2620,28 @@ void nsTableFrame::OrderRowGroups(RowGroupArray& aChildren,
     while (kidFrame) {
       nsIFrame* nif = kidFrame->GetNextInFlow();
       kidFrame = kidFrame->GetNextSibling();
-      if (kidFrame != nif) break;
+      if (kidFrame != nif) {
+        break;
+      }
     }
   }
 
   // put the thead first
   if (head) {
-    aChildren.InsertElementAt(0, head);
+    children.InsertElementAt(0, head);
   }
-  if (aHead) *aHead = head;
+  if (aHead) {
+    *aHead = head;
+  }
   // put the tfoot after the last tbody
   if (foot) {
-    aChildren.AppendElement(foot);
+    children.AppendElement(foot);
   }
-  if (aFoot) *aFoot = foot;
+  if (aFoot) {
+    *aFoot = foot;
+  }
+
+  return children;
 }
 
 static bool IsRepeatable(nscoord aFrameHeight, nscoord aPageHeight) {
@@ -2757,9 +2756,9 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
                        mBits.mResizedColumns || IsGeometryDirty() ||
                        NeedToCollapse();
 
-  RowGroupArray rowGroups;
-  nsTableRowGroupFrame *thead, *tfoot;
-  OrderRowGroups(rowGroups, &thead, &tfoot);
+  nsTableRowGroupFrame* thead = nullptr;
+  nsTableRowGroupFrame* tfoot = nullptr;
+  RowGroupArray rowGroups = OrderedRowGroups(&thead, &tfoot);
   bool pageBreak = false;
   nscoord footerHeight = 0;
 
@@ -2783,7 +2782,7 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
     }
     if (reorder) {
       // Reorder row groups - the reflow may have changed the nextinflows.
-      OrderRowGroups(rowGroups, &thead, &tfoot);
+      rowGroups = OrderedRowGroups(&thead, &tfoot);
     }
   }
   // if the child is a tbody in paginated mode reduce the height by a repeated
@@ -2859,7 +2858,7 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
 
       if (reorder) {
         // Reorder row groups - the reflow may have changed the nextinflows.
-        OrderRowGroups(rowGroups, &thead, &tfoot);
+        rowGroups = OrderedRowGroups(&thead, &tfoot);
         childX = rowGroups.IndexOf(kidFrame);
         if (childX == RowGroupArray::NoIndex) {
           // XXXbz can this happen?
@@ -2966,10 +2965,10 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
           rowGroups.InsertElementAt(
               childX + 1, static_cast<nsTableRowGroupFrame*>(kidNextInFlow));
         } else if (kidNextInFlow == kidFrame->GetNextSibling()) {
-          // OrderRowGroups excludes NIFs in the child list from 'rowGroups'
+          // OrderedRowGroups excludes NIFs in the child list from 'rowGroups'
           // so we deal with that here to make sure they get pushed.
           MOZ_ASSERT(!rowGroups.Contains(kidNextInFlow),
-                     "OrderRowGroups must not put our NIF in 'rowGroups'");
+                     "OrderedRowGroups must not put our NIF in 'rowGroups'");
           rowGroups.InsertElementAt(
               childX + 1, static_cast<nsTableRowGroupFrame*>(kidNextInFlow));
         }
@@ -3081,8 +3080,7 @@ void nsTableFrame::CalcDesiredBSize(const ReflowInput& aReflowInput,
   LogicalMargin borderPadding = aReflowInput.ComputedLogicalBorderPadding(wm);
 
   // get the natural bsize based on the last child's (row group) rect
-  RowGroupArray rowGroups;
-  OrderRowGroups(rowGroups);
+  RowGroupArray rowGroups = OrderedRowGroups();
   nscoord desiredBSize = borderPadding.BStartEnd(wm);
   if (rowGroups.IsEmpty()) {
     if (eCompatibility_NavQuirks == PresContext()->CompatibilityMode()) {
@@ -3131,8 +3129,7 @@ void nsTableFrame::CalcDesiredBSize(const ReflowInput& aReflowInput,
 }
 
 static void ResizeCells(nsTableFrame& aTableFrame) {
-  nsTableFrame::RowGroupArray rowGroups;
-  aTableFrame.OrderRowGroups(rowGroups);
+  nsTableFrame::RowGroupArray rowGroups = aTableFrame.OrderedRowGroups();
   WritingMode wm = aTableFrame.GetWritingMode();
   ReflowOutput tableDesiredSize(wm);
   tableDesiredSize.SetSize(wm, aTableFrame.GetLogicalSize(wm));
@@ -3165,8 +3162,7 @@ void nsTableFrame::DistributeBSizeToRows(const ReflowInput& aReflowInput,
 
   nsSize containerSize = aReflowInput.ComputedSizeAsContainerIfConstrained();
 
-  RowGroupArray rowGroups;
-  OrderRowGroups(rowGroups);
+  RowGroupArray rowGroups = OrderedRowGroups();
 
   nscoord amountUsed = 0;
   // distribute space to each pct bsize row whose row group doesn't have a
@@ -3527,8 +3523,7 @@ Maybe<nscoord> nsTableFrame::GetNaturalBaselineBOffset(
     return Nothing{};
   }
 
-  RowGroupArray orderedRowGroups;
-  OrderRowGroups(orderedRowGroups);
+  RowGroupArray orderedRowGroups = OrderedRowGroups();
   // XXX not sure if this should be the size of the containing block instead.
   nsSize containerSize = mRect.Size();
   auto TableBaseline = [aWM, containerSize](
@@ -4084,6 +4079,7 @@ BCMapCellIterator::BCMapCellIterator(nsTableFrame* aTableFrame,
       mRowGroupEnd(0),
       mCellMap(nullptr),
       mTableFrame(aTableFrame),
+      mRowGroups(aTableFrame->OrderedRowGroups()),
       mRowGroup(nullptr),
       mPrevRow(nullptr),
       mIsNewRow(false) {
@@ -4100,9 +4096,6 @@ BCMapCellIterator::BCMapCellIterator(nsTableFrame* aTableFrame,
   mNumTableCols = mTableFrame->GetColCount();
   mColIndex = 0;
   mRowGroupIndex = -1;
-
-  // Get the ordered row groups
-  aTableFrame->OrderRowGroups(mRowGroups);
 
   mAtEnd = true;  // gets reset when First() is called
 }
@@ -4856,8 +4849,7 @@ void nsTableFrame::ExpandBCDamageArea(TableArea& aArea) const {
     nsTableCellMap* tableCellMap = GetCellMap();
     if (!tableCellMap) ABORT0();
     // Get the ordered row groups
-    RowGroupArray rowGroups;
-    OrderRowGroups(rowGroups);
+    RowGroupArray rowGroups = OrderedRowGroups();
 
     // Scope outside loop to be used as hint.
     nsCellMap* cellMap = nullptr;
@@ -6060,6 +6052,7 @@ BCPaintBorderIterator::BCPaintBorderIterator(nsTableFrame* aTable)
       mTableCellMap(aTable->GetCellMap()),
       mCellMap(nullptr),
       mTableWM(aTable->Style()),
+      mRowGroups(aTable->OrderedRowGroups()),
       mPrevRg(nullptr),
       mRg(nullptr),
       mIsRepeatedHeader(false),
@@ -6093,8 +6086,6 @@ BCPaintBorderIterator::BCPaintBorderIterator(nsTableFrame* aTable)
   mNumTableRows = mTable->GetRowCount();
   mNumTableCols = mTable->GetColCount();
 
-  // Get the ordered row groups
-  mTable->OrderRowGroups(mRowGroups);
   // initialize to a non existing index
   mRepeatedHeaderRowIndex = -99;
 }
