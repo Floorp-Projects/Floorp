@@ -42,11 +42,8 @@ NS_IMPL_ISUPPORTS(WebAuthnRegisterResult, nsIWebAuthnRegisterResult)
 
 NS_IMETHODIMP
 WebAuthnRegisterResult::GetClientDataJSON(nsACString& aClientDataJSON) {
-  if (mClientDataJSON.isSome()) {
-    aClientDataJSON = *mClientDataJSON;
-    return NS_OK;
-  }
-  return NS_ERROR_NOT_AVAILABLE;
+  aClientDataJSON = mClientDataJSON;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -127,11 +124,8 @@ NS_IMPL_ISUPPORTS(WebAuthnSignResult, nsIWebAuthnSignResult)
 
 NS_IMETHODIMP
 WebAuthnSignResult::GetClientDataJSON(nsACString& aClientDataJSON) {
-  if (mClientDataJSON.isSome()) {
-    aClientDataJSON = *mClientDataJSON;
-    return NS_OK;
-  }
-  return NS_ERROR_NOT_AVAILABLE;
+  aClientDataJSON = mClientDataJSON;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
