@@ -272,6 +272,8 @@ class ClassificationProvider:
                 },
                 "suites": [Suites.RAPTOR.value],
                 "tasks": [],
+                "description": "Run all the pageload tests in warm, and cold. Used to determine\n"
+                "if your patch has a direct impact on pageload performance.",
             },
             "Speedometer 3": {
                 "query": {
@@ -281,6 +283,7 @@ class ClassificationProvider:
                 "suites": [Suites.RAPTOR.value],
                 "app-restrictions": {},
                 "tasks": [],
+                "description": "",
             },
             "Responsiveness": {
                 "query": {
@@ -298,6 +301,7 @@ class ClassificationProvider:
                     ],
                 },
                 "tasks": [],
+                "description": "",
             },
             "Benchmarks": {
                 "query": {
@@ -306,6 +310,7 @@ class ClassificationProvider:
                 "suites": [Suites.RAPTOR.value],
                 "variant-restrictions": {Suites.RAPTOR.value: []},
                 "tasks": [],
+                "description": "",
             },
             "DAMP (Devtools)": {
                 "query": {
@@ -313,6 +318,7 @@ class ClassificationProvider:
                 },
                 "suites": [Suites.TALOS.value],
                 "tasks": [],
+                "description": "",
             },
             "Talos PerfTests": {
                 "query": {
@@ -320,6 +326,7 @@ class ClassificationProvider:
                 },
                 "suites": [Suites.TALOS.value],
                 "tasks": [],
+                "description": "",
             },
             "Resource Usage": {
                 "query": {
@@ -338,6 +345,7 @@ class ClassificationProvider:
                     Suites.TALOS.value: [Apps.FIREFOX.value],
                 },
                 "tasks": [],
+                "description": "",
             },
             "Graphics, & Media Playback": {
                 "query": {
@@ -357,5 +365,6 @@ class ClassificationProvider:
                     ],
                 },
                 "tasks": [],
+                "description": "",
             },
         }
