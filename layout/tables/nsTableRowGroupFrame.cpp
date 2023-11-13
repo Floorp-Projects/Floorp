@@ -345,7 +345,8 @@ void nsTableRowGroupFrame::ReflowChildren(
   nsIFrame* prevKidFrame = nullptr;
   for (nsTableRowFrame* kidFrame = GetFirstRow(); kidFrame;
        prevKidFrame = kidFrame, kidFrame = kidFrame->GetNextRow()) {
-    nscoord cellSpacingB = tableFrame->GetRowSpacing(kidFrame->GetRowIndex());
+    const nscoord rowSpacing =
+        tableFrame->GetRowSpacing(kidFrame->GetRowIndex());
 
     // Reflow the row frame
     if (reflowAllKids || kidFrame->IsSubtreeDirty() ||
@@ -390,7 +391,7 @@ void nsTableRowGroupFrame::ReflowChildren(
                  kidPosition, containerSize, kidDesiredSize,
                  oldKidRect.GetPhysicalRect(wm, containerSize),
                  oldKidInkOverflow);
-      aReflowInput.mBCoord += cellSpacingB;
+      aReflowInput.mBCoord += rowSpacing;
 
       if (!reflowAllKids) {
         if (IsSimpleRowFrame(tableFrame, kidFrame)) {
@@ -433,7 +434,7 @@ void nsTableRowGroupFrame::ReflowChildren(
 
       // Adjust the running b-offset so we know where the next row should be
       // placed
-      nscoord bSize = kidFrame->BSize(wm) + cellSpacingB;
+      nscoord bSize = kidFrame->BSize(wm) + rowSpacing;
       aReflowInput.mBCoord += bSize;
 
       if (NS_UNCONSTRAINEDSIZE != aReflowInput.mAvailSize.BSize(wm)) {
@@ -620,7 +621,7 @@ void nsTableRowGroupFrame::CalculateRowBSizes(nsPresContext* aPresContext,
         nsTableCellFrame* cellFrame = rowFrame->GetFirstCell();
         // iteratate the row's cell frames
         while (cellFrame) {
-          nscoord cellSpacingB =
+          const nscoord rowSpacing =
               tableFrame->GetRowSpacing(startRowIndex + rowIndex);
           int32_t rowSpan = tableFrame->GetEffectiveRowSpan(
               rowIndex + startRowIndex, *cellFrame);
@@ -641,7 +642,7 @@ void nsTableRowGroupFrame::CalculateRowBSizes(nsPresContext* aPresContext,
                 bsizeOfUnStyledRowsSpanned += rowInfo[rowIndex + spanX].bSize;
               }
               if (0 != spanX) {
-                cellSpacingTotal += cellSpacingB;
+                cellSpacingTotal += rowSpacing;
               }
               if (rowInfo[rowIndex + spanX].isSpecial) {
                 numSpecialRowsSpanned++;
@@ -1077,7 +1078,8 @@ void nsTableRowGroupFrame::SplitRowGroup(nsPresContext* aPresContext,
   for (nsTableRowFrame* rowFrame = firstRowThisPage; rowFrame;
        rowFrame = rowFrame->GetNextRow()) {
     bool rowIsOnPage = true;
-    nscoord cellSpacingB = aTableFrame->GetRowSpacing(rowFrame->GetRowIndex());
+    const nscoord rowSpacing =
+        aTableFrame->GetRowSpacing(rowFrame->GetRowIndex());
     const LogicalRect rowRect =
         rowFrame->GetLogicalNormalRect(wm, containerSize);
     // See if the row fits on this page
@@ -1146,7 +1148,7 @@ void nsTableRowGroupFrame::SplitRowGroup(nsPresContext* aPresContext,
             contRow = CreateContinuingRowFrame(rowFrame);
             aDesiredSize.BSize(wm) += rowMetrics.BSize(wm);
             if (prevRowFrame) {
-              aDesiredSize.BSize(wm) += cellSpacingB;
+              aDesiredSize.BSize(wm) += rowSpacing;
             }
           } else {
             // Put the row on the next page to give it more block-size.
@@ -1172,7 +1174,7 @@ void nsTableRowGroupFrame::SplitRowGroup(nsPresContext* aPresContext,
               }
               aDesiredSize.BSize(wm) += rowMetrics.BSize(wm);
               if (prevRowFrame) {
-                aDesiredSize.BSize(wm) += cellSpacingB;
+                aDesiredSize.BSize(wm) += rowSpacing;
               }
               NS_WARNING(
                   "Data loss - complete row needed more block-size than "
