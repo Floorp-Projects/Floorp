@@ -13,6 +13,7 @@ import mozcrash
 import psutil
 import six
 from mozlog import get_proxy_logger
+from mozscreenshot import dump_screen
 
 from talos.utils import TalosError
 
@@ -108,6 +109,7 @@ def run_browser(
     debug=None,
     debugger=None,
     debugger_args=None,
+    utility_path=None,
     **kwargs
 ):
     """
@@ -174,6 +176,7 @@ def run_browser(
             if timed_out:
                 LOG.info("Timeout waiting for test completion; killing browser...")
                 # try to extract the minidump stack if the browser hangs
+                dump_screen_on_failure(utility_path)
                 kill_and_get_minidump(context, minidump_dir)
                 raise TalosError("timeout")
                 break
@@ -185,14 +188,17 @@ def run_browser(
                     "Browser shutdown timed out after {0} seconds, killing"
                     " process.".format(wait_for_quit_timeout)
                 )
+                dump_screen_on_failure(utility_path)
                 kill_and_get_minidump(context, minidump_dir)
                 raise TalosError(
                     "Browser shutdown timed out after {0} seconds, killed"
                     " process.".format(wait_for_quit_timeout)
                 )
         elif reader.got_timeout:
+            dump_screen_on_failure(utility_path)
             raise TalosError("TIMEOUT: %s" % reader.timeout_message)
         elif reader.got_error:
+            dump_screen_on_failure(utility_path)
             raise TalosError("unexpected error")
     finally:
         # this also handle KeyboardInterrupt
@@ -281,3 +287,8 @@ def kill_and_get_minidump(context, minidump_dir):
             proc = kids[0]
     LOG.debug("Killing %s and writing a minidump file" % proc)
     mozcrash.kill_and_get_minidump(proc.pid, minidump_dir)
+
+
+def dump_screen_on_failure(utility_path):
+    if utility_path is not None:
+        dump_screen(utility_path, LOG)

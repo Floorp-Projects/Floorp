@@ -44,7 +44,7 @@ class TTest(object):
         if found:
             raise TalosCrash("Found crashes after test run, terminating test")
 
-    def runTest(self, browser_config, test_config):
+    def runTest(self, browser_config, test_config, utility_path=None):
         """
             Runs an url based test on the browser as specified in the
             browser_config dictionary
@@ -58,7 +58,9 @@ class TTest(object):
         """
 
         with FFSetup(browser_config, test_config) as setup:
-            return self._runTest(browser_config, test_config, setup)
+            return self._runTest(
+                browser_config, test_config, setup, utility_path=utility_path
+            )
 
     @staticmethod
     def _get_counter_prefix():
@@ -80,7 +82,7 @@ class TTest(object):
         elif platform.system() == "Darwin":
             return "mac"
 
-    def _runTest(self, browser_config, test_config, setup):
+    def _runTest(self, browser_config, test_config, setup, utility_path=None):
         minidump_dir = os.path.join(setup.profile_dir, "minidumps")
         counters = test_config.get("%s_counters" % self._get_counter_prefix(), [])
         resolution = test_config["resolution"]
@@ -200,6 +202,7 @@ class TTest(object):
                     debug=browser_config["debug"],
                     debugger=browser_config["debugger"],
                     debugger_args=browser_config["debugger_args"],
+                    utility_path=utility_path,
                 )
             except Exception:
                 self.check_for_crashes(

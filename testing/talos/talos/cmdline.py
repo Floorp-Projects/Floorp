@@ -323,6 +323,13 @@ def create_parser(mach_interface=False):
         help="The project branch we're running tests on. Used for "
         "disabling/skipping tests.",
     )
+    add_arg(
+        "--screenshot-on-failure",
+        action="store_true",
+        dest="screenshot_on_failure",
+        default=False,
+        help="Take a screenshot when the test fails.",
+    )
 
     add_logging_group(parser)
     return parser

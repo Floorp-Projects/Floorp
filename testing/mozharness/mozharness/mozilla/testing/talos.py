@@ -271,6 +271,15 @@ class Talos(
                     "help": "skip preflight commands to prepare machine.",
                 },
             ],
+            [
+                ["--screenshot-on-failure"],
+                {
+                    "action": "store_true",
+                    "dest": "screenshot_on_failure",
+                    "default": False,
+                    "help": "Take a screenshot when the test fails.",
+                },
+            ],
         ]
         + testing_config_options
         + copy.deepcopy(code_coverage_config_options)
@@ -567,6 +576,11 @@ class Talos(
             options += self.config["talos_extra_options"]
         if self.config.get("code_coverage", False):
             options.extend(["--code-coverage"])
+        if (
+            self.config.get("--screenshot-on-failure", False)
+            or os.environ.get("MOZ_AUTOMATION", None) is not None
+        ):
+            options.extend(["--screenshot-on-failure"])
 
         # Add extra_prefs defined by individual test suites in talos.json
         extra_prefs = self.query_suite_extra_prefs()
