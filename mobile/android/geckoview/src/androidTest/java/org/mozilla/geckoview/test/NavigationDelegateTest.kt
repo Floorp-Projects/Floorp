@@ -127,7 +127,6 @@ class NavigationDelegateTest : BaseSessionTest() {
                     session: GeckoSession,
                     url: String?,
                     perms: MutableList<PermissionDelegate.ContentPermission>,
-                    hasUserGesture: Boolean,
                 ) {
                     assertThat("URL should match", url, equalTo(testLoader.getUri()))
                 }
@@ -598,7 +597,6 @@ class NavigationDelegateTest : BaseSessionTest() {
                 session: GeckoSession,
                 url: String?,
                 perms: MutableList<PermissionDelegate.ContentPermission>,
-                hasUserGesture: Boolean,
             ) {
                 assertThat("URL should match", url, equalTo(httpsUri))
             }
@@ -1480,12 +1478,10 @@ class NavigationDelegateTest : BaseSessionTest() {
                 session: GeckoSession,
                 url: String?,
                 perms: MutableList<PermissionDelegate.ContentPermission>,
-                hasUserGesture: Boolean,
             ) {
                 assertThat("Session should not be null", session, notNullValue())
                 assertThat("URL should not be null", url, notNullValue())
                 assertThat("URL should match", url, endsWith(HELLO_HTML_PATH))
-                assertThat("Should not have user gesture", hasUserGesture, equalTo(false))
             }
 
             @AssertCalled(count = 1, order = [2])
@@ -1518,7 +1514,6 @@ class NavigationDelegateTest : BaseSessionTest() {
                 session: GeckoSession,
                 url: String?,
                 perms: MutableList<PermissionDelegate.ContentPermission>,
-                hasUserGesture: Boolean,
             ) {
                 assertThat("URL should match the provided data URL", url, equalTo(dataUrl))
             }
@@ -1551,7 +1546,6 @@ class NavigationDelegateTest : BaseSessionTest() {
                 session: GeckoSession,
                 url: String?,
                 perms: MutableList<PermissionDelegate.ContentPermission>,
-                hasUserGesture: Boolean,
             ) {
                 onLocationCount++
             }
@@ -1593,7 +1587,6 @@ class NavigationDelegateTest : BaseSessionTest() {
                 session: GeckoSession,
                 url: String?,
                 perms: MutableList<PermissionDelegate.ContentPermission>,
-                hasUserGesture: Boolean,
             ) {
                 assertThat(
                     "URL should be a data URL",
@@ -1619,7 +1612,6 @@ class NavigationDelegateTest : BaseSessionTest() {
                 session: GeckoSession,
                 url: String?,
                 perms: MutableList<PermissionDelegate.ContentPermission>,
-                hasUserGesture: Boolean,
             ) {
                 assertThat("URL should be a data URL", url, startsWith("data:"))
             }
@@ -1649,7 +1641,6 @@ class NavigationDelegateTest : BaseSessionTest() {
                 session: GeckoSession,
                 url: String?,
                 perms: MutableList<PermissionDelegate.ContentPermission>,
-                hasUserGesture: Boolean,
             ) {
                 assertThat("URL should match", url, equalTo(createDataUri(bytes, "text/html")))
             }
@@ -1692,7 +1683,6 @@ class NavigationDelegateTest : BaseSessionTest() {
                 session: GeckoSession,
                 url: String?,
                 perms: MutableList<PermissionDelegate.ContentPermission>,
-                hasUserGesture: Boolean,
             ) {
                 assertThat("URL should match", url, equalTo(createDataUri(bytes, mimeType)))
             }
@@ -1750,7 +1740,6 @@ class NavigationDelegateTest : BaseSessionTest() {
                 session: GeckoSession,
                 url: String?,
                 perms: MutableList<PermissionDelegate.ContentPermission>,
-                hasUserGesture: Boolean,
             ) {
                 assertThat("URL should match", url, endsWith(HELLO_HTML_PATH))
             }
@@ -1785,7 +1774,6 @@ class NavigationDelegateTest : BaseSessionTest() {
                 session: GeckoSession,
                 url: String?,
                 perms: MutableList<PermissionDelegate.ContentPermission>,
-                hasUserGesture: Boolean,
             ) {
                 assertThat("URL should match", url, endsWith(HELLO2_HTML_PATH))
             }
@@ -1814,7 +1802,6 @@ class NavigationDelegateTest : BaseSessionTest() {
                 session: GeckoSession,
                 url: String?,
                 perms: MutableList<PermissionDelegate.ContentPermission>,
-                hasUserGesture: Boolean,
             ) {
                 assertThat("URL should match", url, endsWith(HELLO_HTML_PATH))
             }
@@ -1858,7 +1845,6 @@ class NavigationDelegateTest : BaseSessionTest() {
                 session: GeckoSession,
                 url: String?,
                 perms: MutableList<PermissionDelegate.ContentPermission>,
-                hasUserGesture: Boolean,
             ) {
                 assertThat("URL should match", url, endsWith(HELLO2_HTML_PATH))
             }
@@ -2632,7 +2618,6 @@ class NavigationDelegateTest : BaseSessionTest() {
                 session: GeckoSession,
                 url: String?,
                 perms: MutableList<PermissionDelegate.ContentPermission>,
-                hasUserGesture: Boolean,
             ) {
                 currentUrl = url
             }
@@ -2729,7 +2714,6 @@ class NavigationDelegateTest : BaseSessionTest() {
                 session: GeckoSession,
                 url: String?,
                 perms: MutableList<PermissionDelegate.ContentPermission>,
-                hasUserGesture: Boolean,
             ) {
                 assertThat("URI should match", url, endsWith("#test1"))
             }
@@ -2752,7 +2736,6 @@ class NavigationDelegateTest : BaseSessionTest() {
                 session: GeckoSession,
                 url: String?,
                 perms: MutableList<PermissionDelegate.ContentPermission>,
-                hasUserGesture: Boolean,
             ) {
                 assertThat("URI should match", url, endsWith("#test2"))
             }
@@ -2840,32 +2823,6 @@ class NavigationDelegateTest : BaseSessionTest() {
                     equalTo(false),
                 )
                 return GeckoResult.allow()
-            }
-        })
-    }
-
-    @WithDisplay(width = 100, height = 100)
-    @Test
-    fun locationReplaceOnUserGesture() {
-        mainSession.loadUri("$TEST_ENDPOINT$CLICK_TO_REPLACE_HTML_PATH")
-        mainSession.waitForPageStop()
-
-        mainSession.synthesizeTap(50, 50)
-
-        sessionRule.waitUntilCalled(object : NavigationDelegate {
-            @AssertCalled(count = 1)
-            override fun onLocationChange(
-                session: GeckoSession,
-                url: String?,
-                perms: MutableList<PermissionDelegate.ContentPermission>,
-                hasUserGesture: Boolean,
-            ) {
-                assertThat("Should have a user gesture", hasUserGesture, equalTo(true))
-                assertThat(
-                    "Location should be replaced to replacedUrl",
-                    url,
-                    equalTo("replacedUrl"),
-                )
             }
         })
     }
@@ -3163,7 +3120,6 @@ class NavigationDelegateTest : BaseSessionTest() {
                 session: GeckoSession,
                 url: String?,
                 perms: MutableList<PermissionDelegate.ContentPermission>,
-                hasUserGesture: Boolean,
             ) {
                 assertThat("URL should match", url, endsWith(HELLO_HTML_PATH))
             }
