@@ -408,19 +408,14 @@ export class GeckoViewContent extends GeckoViewModule {
   }
 
   async _sendAttributionEvent(aEvent, aData, aCallback) {
-    // TODO (bug1859055): remove product object once sendAttributionEvent() is static
-    const product = new lazy.ShoppingProduct(
-      "http://example.com/dp/ABCDEFG123"
-    );
     let result;
     if (Services.prefs.getBoolPref("geckoview.shopping.test_response", true)) {
       result = { TEST_AID: "TEST_AID_RESPONSE" };
     } else {
-      // TODO (bug 1860897): source will be changed to geckoview_android
-      result = await product.sendAttributionEvent(
+      result = await lazy.ShoppingProduct.sendAttributionEvent(
         aEvent,
         aData.aid,
-        "firefox_android"
+        "geckoview_android"
       );
     }
     if (!result || !(aData.aid in result) || !result[aData.aid]) {

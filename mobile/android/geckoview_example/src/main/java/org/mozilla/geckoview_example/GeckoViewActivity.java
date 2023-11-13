@@ -2425,7 +2425,7 @@ public class GeckoViewActivity extends AppCompatActivity
     GeckoResult<String> result = session.requestCreateAnalysis(url);
     result.map(
         status -> {
-          Log.d(LOGTAG, "Started analysis, status: " + status);
+          Log.d(LOGTAG, "Started shopping analysis, status: " + status);
           return status;
         });
   }
@@ -2461,14 +2461,15 @@ public class GeckoViewActivity extends AppCompatActivity
             aids.add(recs.get(i).aid);
           }
           if (aids.size() >= 1) {
-            Log.d(LOGTAG, "Sending attribution events to first AID: " + aids.get(0));
+            Log.d(LOGTAG, "Sending shopping attribution events to first AID: " + aids.get(0));
             session
                 .sendClickAttributionEvent(aids.get(0))
                 .then(
                     new GeckoResult.OnValueListener<Boolean, Void>() {
                       @Override
                       public GeckoResult<Void> onValue(final Boolean isSuccessful) {
-                        Log.d(LOGTAG, "Success of click attribution event: " + isSuccessful);
+                        Log.d(
+                            LOGTAG, "Success of shopping click attribution event: " + isSuccessful);
                         return null;
                       }
                     });
@@ -2479,7 +2480,9 @@ public class GeckoViewActivity extends AppCompatActivity
                     new GeckoResult.OnValueListener<Boolean, Void>() {
                       @Override
                       public GeckoResult<Void> onValue(final Boolean isSuccessful) {
-                        Log.d(LOGTAG, "Success of impression attribution event: " + isSuccessful);
+                        Log.d(
+                            LOGTAG,
+                            "Success of shopping impression attribution event: " + isSuccessful);
                         return null;
                       }
                     });
