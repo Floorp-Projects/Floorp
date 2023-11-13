@@ -2,7 +2,6 @@
 
 ["test_pdf_file_in_iframe.html"]
 skip-if = [
-    "os == 'android' && !nightly_build",
-    "os == 'android' && xorigin", # bug 1863088
+    "os == 'android' && !nightly_build"
 ]
 support-files = ["file_pdfjs_test.pdf"]
