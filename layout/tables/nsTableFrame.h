@@ -25,7 +25,6 @@ class nsTableColGroupFrame;
 class nsITableLayoutStrategy;
 
 namespace mozilla {
-
 class LogicalMargin;
 class PresShell;
 class WritingMode;
@@ -133,7 +132,6 @@ class nsTableFrame : public nsContainerFrame {
   typedef mozilla::image::ImgDrawResult ImgDrawResult;
   typedef mozilla::WritingMode WritingMode;
   typedef mozilla::LogicalMargin LogicalMargin;
-  typedef mozilla::TableReflowInput TableReflowInput;
 
  public:
   NS_DECL_FRAMEARENA_HELPERS(nsTableFrame)
@@ -576,11 +574,11 @@ class nsTableFrame : public nsContainerFrame {
   // A helper function to reflow a header or footer with unconstrained
   // block-size to see if it should be made repeatable.
   // @return the desired block-size for a header or footer.
-  nscoord SetupHeaderFooterChild(const TableReflowInput& aReflowInput,
+  nscoord SetupHeaderFooterChild(const mozilla::TableReflowInput& aReflowInput,
                                  nsTableRowGroupFrame* aFrame);
 
-  void ReflowChildren(TableReflowInput& aReflowInput, nsReflowStatus& aStatus,
-                      nsIFrame*& aLastChildReflowed,
+  void ReflowChildren(mozilla::TableReflowInput& aReflowInput,
+                      nsReflowStatus& aStatus, nsIFrame*& aLastChildReflowed,
                       mozilla::OverflowAreas& aOverflowAreas);
 
   // This calls the col group and column reflow methods, which do two things:
@@ -647,13 +645,13 @@ class nsTableFrame : public nsContainerFrame {
   // The following is a helper for CalcDesiredBSize
   void DistributeBSizeToRows(const ReflowInput& aReflowInput, nscoord aAmount);
 
-  void PlaceChild(TableReflowInput& aReflowInput, nsIFrame* aKidFrame,
+  void PlaceChild(mozilla::TableReflowInput& aReflowInput, nsIFrame* aKidFrame,
                   const ReflowInput& aKidReflowInput,
                   const mozilla::LogicalPoint& aKidPosition,
                   const nsSize& aContainerSize, ReflowOutput& aKidDesiredSize,
                   const nsRect& aOriginalKidRect,
                   const nsRect& aOriginalKidInkOverflow);
-  void PlaceRepeatedFooter(TableReflowInput& aReflowInput,
+  void PlaceRepeatedFooter(mozilla::TableReflowInput& aReflowInput,
                            nsTableRowGroupFrame* aTfoot, nscoord aFooterBSize);
 
  public:
