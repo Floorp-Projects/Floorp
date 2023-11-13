@@ -16371,7 +16371,13 @@ void Document::RecordCanvasUsage(CanvasUsage& aUsage) {
   mCanvasUsage.AppendElement(aUsage);
   mLastCanvasUsage = now;
 
-  nsRFPService::MaybeReportCanvasFingerprinter(mCanvasUsage);
+  nsCString originNoSuffix;
+  if (NS_FAILED(NodePrincipal()->GetOriginNoSuffix(originNoSuffix))) {
+    return;
+  }
+
+  nsRFPService::MaybeReportCanvasFingerprinter(mCanvasUsage, GetChannel(),
+                                               originNoSuffix);
 }
 
 WindowContext* Document::GetWindowContextForPageUseCounters() const {

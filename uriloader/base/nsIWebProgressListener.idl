@@ -340,6 +340,9 @@ interface nsIWebProgressListener : nsISupports
    *
    * STATE_LOADED_EMAILTRACKING_LEVEL_2_CONTENT
    *   EmailTracking content from the Disconnect level 2 has been loaded.
+   *
+   * STATE_ALLOWED_CANVAS_FINGERPRINTING
+   *   A potential attempt to fingerprint using the canvas API was observed.
    */
   const unsigned long STATE_BLOCKED_TRACKING_CONTENT             = 0x00001000;
   const unsigned long STATE_LOADED_LEVEL_1_TRACKING_CONTENT      = 0x00002000;
@@ -367,6 +370,7 @@ interface nsIWebProgressListener : nsISupports
   const unsigned long STATE_BLOCKED_EMAILTRACKING_CONTENT        = 0x00400000;
   const unsigned long STATE_LOADED_EMAILTRACKING_LEVEL_1_CONTENT = 0x00800000;
   const unsigned long STATE_LOADED_EMAILTRACKING_LEVEL_2_CONTENT = 0x00000100;
+  const unsigned long STATE_ALLOWED_CANVAS_FINGERPRINTING        = 0x02000000;
 
   /**
    * Flags for HTTPS-Only and HTTPS-First Mode upgrades

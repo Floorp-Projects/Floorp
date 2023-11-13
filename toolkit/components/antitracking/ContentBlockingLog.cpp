@@ -49,7 +49,10 @@ Maybe<uint32_t> ContentBlockingLog::RecordLogParent(
     const nsACString& aOrigin, uint32_t aType, bool aBlocked,
     const Maybe<ContentBlockingNotifier::StorageAccessPermissionGrantedReason>&
         aReason,
-    const nsTArray<nsCString>& aTrackingFullHashes) {
+    const nsTArray<nsCString>& aTrackingFullHashes,
+    const Maybe<ContentBlockingNotifier::CanvasFingerprinter>&
+        aCanvasFingerprinter,
+    const Maybe<bool> aCanvasFingerprinterKnownText) {
   MOZ_ASSERT(XRE_IsParentProcess());
 
   uint32_t events = GetContentBlockingEventsInLog();
@@ -110,6 +113,11 @@ Maybe<uint32_t> ContentBlockingLog::RecordLogParent(
       RecordLogInternal(aOrigin, aType, blockedValue);
       break;
 
+    case nsIWebProgressListener::STATE_ALLOWED_CANVAS_FINGERPRINTING:
+      RecordLogInternal(aOrigin, aType, blockedValue, Nothing(), {},
+                        aCanvasFingerprinter, aCanvasFingerprinterKnownText);
+      break;
+
     default:
       // Ignore nsIWebProgressListener::STATE_BLOCKED_UNSAFE_CONTENT;
       break;
@@ -165,6 +173,58 @@ void ContentBlockingLog::ReportLog(nsIPrincipal* aFirstPartyPrincipal) {
   }
 
   trackingDBService->RecordContentBlockingLog(Stringify());
+}
+
+void ContentBlockingLog::ReportCanvasFingerprintingLog(
+    nsIPrincipal* aFirstPartyPrincipal) {
+  MOZ_ASSERT(XRE_IsParentProcess());
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aFirstPartyPrincipal);
+
+  // We don't need to report if the first party is not a content.
+  if (!BasePrincipal::Cast(aFirstPartyPrincipal)->IsContentPrincipal()) {
+    return;
+  }
+
+  bool hasCanvasFingerprinter = false;
+  bool canvasFingerprinterKnownText = false;
+  Maybe<ContentBlockingNotifier::CanvasFingerprinter> canvasFingerprinter;
+  for (const auto& originEntry : mLog) {
+    if (!originEntry.mData) {
+      continue;
+    }
+
+    for (const auto& logEntry : Reversed(originEntry.mData->mLogs)) {
+      if (logEntry.mType !=
+          nsIWebProgressListener::STATE_ALLOWED_CANVAS_FINGERPRINTING) {
+        continue;
+      }
+
+      // Select the log entry with the highest fingerprinting likelihood,
+      // that primarily means preferring those with a FingerprinterKnownText.
+      if (!hasCanvasFingerprinter ||
+          (!canvasFingerprinterKnownText &&
+           *logEntry.mCanvasFingerprinterKnownText) ||
+          (!canvasFingerprinterKnownText && canvasFingerprinter.isNothing() &&
+           logEntry.mCanvasFingerprinter.isSome())) {
+        hasCanvasFingerprinter = true;
+        canvasFingerprinterKnownText = *logEntry.mCanvasFingerprinterKnownText;
+        canvasFingerprinter = logEntry.mCanvasFingerprinter;
+      }
+    }
+  }
+
+  if (!hasCanvasFingerprinter) {
+    Telemetry::Accumulate(Telemetry::CANVAS_FINGERPRINTING_PER_TAB,
+                          "unknown"_ns, 0);
+  } else {
+    int32_t fingerprinter =
+        canvasFingerprinter.isSome() ? (*canvasFingerprinter + 1) : 0;
+    Telemetry::Accumulate(
+        Telemetry::CANVAS_FINGERPRINTING_PER_TAB,
+        canvasFingerprinterKnownText ? "known_text"_ns : "unknown"_ns,
+        fingerprinter);
+  }
 }
 
 void ContentBlockingLog::ReportEmailTrackingLog(
