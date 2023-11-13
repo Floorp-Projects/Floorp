@@ -630,24 +630,21 @@ class nsTableFrame : public nsContainerFrame {
      new height of the table after reflow. */
   void ProcessRowInserted(nscoord aNewHeight);
 
-  // WIDTH AND HEIGHT CALCULATION
-
- public:
-  // calculate the computed block-size of aFrame including its border and
-  // padding given its reflow input.
+ protected:
+  // Calculate the border-box block-size of this table, with the min-block-size,
+  // max-block-size, and intrinsic border-box block considered.
   nscoord CalcBorderBoxBSize(const ReflowInput& aReflowInput,
                              const LogicalMargin& aBorderPadding,
                              nscoord aIntrinsicBorderBoxBSize);
 
- protected:
-  // update the  desired block-size of this table taking into account the
-  // current reflow input, the table attributes and the content driven rowgroup
-  // bsizes this function can change the overflow area
-  void CalcDesiredBSize(const ReflowInput& aReflowInput,
-                        ReflowOutput& aDesiredSize);
+  // Calculate the desired block-size of this table.
+  //
+  // Note: this method is accurate after the children are reflowed. It might
+  // distribute extra block-size to table rows if the table has a specified
+  // block-size larger than the intrinsic block-size.
+  nscoord CalcDesiredBSize(const ReflowInput& aReflowInput);
 
   // The following is a helper for CalcDesiredBSize
-
   void DistributeBSizeToRows(const ReflowInput& aReflowInput, nscoord aAmount);
 
   void PlaceChild(TableReflowInput& aReflowInput, nsIFrame* aKidFrame,

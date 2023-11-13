@@ -1751,7 +1751,7 @@ void nsTableFrame::Reflow(nsPresContext* aPresContext,
       ReflowInput& mutable_rs = const_cast<ReflowInput&>(aReflowInput);
 
       // distribute extra block-direction space to rows
-      CalcDesiredBSize(aReflowInput, aDesiredSize);
+      aDesiredSize.BSize(wm) = CalcDesiredBSize(aReflowInput);
       mutable_rs.mFlags.mSpecialBSizeReflow = true;
 
       ReflowTable(aDesiredSize, aReflowInput, aReflowInput.AvailableBSize(),
@@ -1776,7 +1776,7 @@ void nsTableFrame::Reflow(nsPresContext* aPresContext,
       aReflowInput.ComputedISize() +
       aReflowInput.ComputedLogicalBorderPadding(wm).IStartEnd(wm);
   if (!haveDesiredBSize) {
-    CalcDesiredBSize(aReflowInput, aDesiredSize);
+    aDesiredSize.BSize(wm) = CalcDesiredBSize(aReflowInput);
   }
   if (IsRowInserted()) {
     ProcessRowInserted(aDesiredSize.BSize(wm));
@@ -3017,32 +3017,26 @@ void nsTableFrame::ReflowColGroups(gfxContext* aRenderingContext) {
   }
 }
 
-void nsTableFrame::CalcDesiredBSize(const ReflowInput& aReflowInput,
-                                    ReflowOutput& aDesiredSize) {
+nscoord nsTableFrame::CalcDesiredBSize(const ReflowInput& aReflowInput) {
   WritingMode wm = aReflowInput.GetWritingMode();
-  nsTableCellMap* cellMap = GetCellMap();
-  if (!cellMap) {
-    NS_ERROR("never ever call me until the cell map is built!");
-    aDesiredSize.BSize(wm) = 0;
-    return;
-  }
   LogicalMargin borderPadding = aReflowInput.ComputedLogicalBorderPadding(wm);
 
   // get the natural bsize based on the last child's (row group) rect
   RowGroupArray rowGroups = OrderedRowGroups();
-  nscoord desiredBSize = borderPadding.BStartEnd(wm);
   if (rowGroups.IsEmpty()) {
     if (eCompatibility_NavQuirks == PresContext()->CompatibilityMode()) {
       // empty tables should not have a size in quirks mode
-      aDesiredSize.BSize(wm) = 0;
-    } else {
-      aDesiredSize.BSize(wm) =
-          CalcBorderBoxBSize(aReflowInput, borderPadding, desiredBSize);
+      return 0;
     }
-    return;
+    return CalcBorderBoxBSize(aReflowInput, borderPadding,
+                              borderPadding.BStartEnd(wm));
   }
+
+  nsTableCellMap* cellMap = GetCellMap();
+  MOZ_ASSERT(cellMap);
   int32_t rowCount = cellMap->GetRowCount();
   int32_t colCount = cellMap->GetColCount();
+  nscoord desiredBSize = borderPadding.BStartEnd(wm);
   if (rowCount > 0 && colCount > 0) {
     desiredBSize += GetRowSpacing(-1);
     for (uint32_t rgIdx = 0; rgIdx < rowGroups.Length(); rgIdx++) {
@@ -3060,21 +3054,15 @@ void nsTableFrame::CalcDesiredBSize(const ReflowInput& aReflowInput,
       // proportionately distribute the excess bsize to unconstrained rows in
       // each unconstrained row group.
       DistributeBSizeToRows(aReflowInput, bSize - desiredBSize);
-      // this might have changed the overflow area incorporate the childframe
-      // overflow area.
-      for (nsIFrame* kidFrame : mFrames) {
-        ConsiderChildOverflow(aDesiredSize.mOverflowAreas, kidFrame);
-      }
-      aDesiredSize.BSize(wm) = bSize;
-    } else {
-      // Tables don't shrink below their intrinsic size, apparently, even when
-      // constrained by stuff like flex / grid or what not.
-      aDesiredSize.BSize(wm) = desiredBSize;
+      return bSize;
     }
-  } else {
-    // FIXME(emilio): Is this right? This only affects fragmented tables...
-    aDesiredSize.BSize(wm) = desiredBSize;
+    // Tables don't shrink below their intrinsic size, apparently, even when
+    // constrained by stuff like flex / grid or what not.
+    return desiredBSize;
   }
+
+  // FIXME(emilio): Is this right? This only affects fragmented tables...
+  return desiredBSize;
 }
 
 static void ResizeCells(nsTableFrame& aTableFrame) {
