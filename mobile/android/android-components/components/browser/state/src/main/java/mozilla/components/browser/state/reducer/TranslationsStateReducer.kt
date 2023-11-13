@@ -12,6 +12,37 @@ import mozilla.components.concept.engine.translate.TranslationOperation
 internal object TranslationsStateReducer {
 
     fun reduce(state: BrowserState, action: TranslationsAction): BrowserState = when (action) {
+        is TranslationsAction.TranslateExpectedAction -> {
+            state.copyWithTranslationsState(action.tabId) {
+                it.copy(
+                    isExpectedTranslate = true,
+                )
+            }
+        }
+
+        is TranslationsAction.TranslateOfferAction -> {
+            state.copyWithTranslationsState(action.tabId) {
+                it.copy(
+                    isOfferTranslate = true,
+                )
+            }
+        }
+
+        is TranslationsAction.TranslateStateChangeAction -> {
+            if (action.translationEngineState.requestedTranslationPair != null) {
+                state.copyWithTranslationsState(action.tabId) {
+                    it.copy(
+                        isTranslated = true,
+                    )
+                }
+            }
+            state.copyWithTranslationsState(action.tabId) {
+                it.copy(
+                    translationEngineState = action.translationEngineState,
+                )
+            }
+        }
+
         is TranslationsAction.TranslateAction ->
             state.copyWithTranslationsState(action.tabId) {
                 it.copy(isTranslateProcessing = true)

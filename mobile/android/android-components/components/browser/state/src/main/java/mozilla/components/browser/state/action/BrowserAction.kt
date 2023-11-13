@@ -45,6 +45,7 @@ import mozilla.components.concept.engine.mediasession.MediaSession
 import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.concept.engine.prompt.PromptRequest
 import mozilla.components.concept.engine.search.SearchRequest
+import mozilla.components.concept.engine.translate.TranslationEngineState
 import mozilla.components.concept.engine.translate.TranslationOperation
 import mozilla.components.concept.engine.translate.TranslationOptions
 import mozilla.components.concept.engine.webextension.WebExtensionBrowserAction
@@ -843,6 +844,46 @@ sealed class ContentAction : BrowserAction() {
  * [BrowserAction] implementations related to translating a web content page.
  */
 sealed class TranslationsAction : BrowserAction() {
+    /**
+     * Indicates that the translations engine expects the user may want to translate the page on
+     * the given [tabId].
+     *
+     * For example, could be used to show toolbar UI that translations are an option.
+     *
+     * @property tabId The ID of the tab the [EngineSession] should be linked to.
+     */
+    data class TranslateExpectedAction(
+        override val tabId: String,
+    ) : TranslationsAction(), ActionWithTab
+
+    /**
+     * Indicates that the translations engine suggests the user should be notified of the ability to
+     * translate on the given [tabId].
+     *
+     * For example, could be used to show a reminder UI popup or a star beside the toolbar UI to strongly signal that
+     * translations are an option.
+     *
+     * @property tabId The ID of the tab the [EngineSession] should be linked to.
+     */
+    data class TranslateOfferAction(
+        override val tabId: String,
+    ) : TranslationsAction(), ActionWithTab
+
+    /**
+     * Indicates the translation state on the given [tabId].
+     *
+     * This provides the translations engine state.  Not to be confused with
+     * the browser engine state of the translations component.
+     *
+     * @property tabId The ID of the tab the [EngineSession] should be linked to.
+     * @property translationEngineState The state of the translation engine for the
+     * page.
+     */
+    data class TranslateStateChangeAction(
+        override val tabId: String,
+        val translationEngineState: TranslationEngineState,
+    ) : TranslationsAction(), ActionWithTab
+
     /**
      * Used to translate the page for a given [tabId].
      *

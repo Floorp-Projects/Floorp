@@ -11,6 +11,7 @@ import mozilla.components.browser.state.state.createTab
 import mozilla.components.browser.state.store.BrowserStore
 import mozilla.components.concept.engine.translate.TranslationOperation
 import mozilla.components.support.test.ext.joinBlocking
+import mozilla.components.support.test.mock
 import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
@@ -32,6 +33,36 @@ class TranslationsActionTest {
     }
 
     private fun tabState(): TabSessionState = store.state.findTab(tab.id)!!
+
+    @Test
+    fun `WHEN a TranslateExpectedAction is dispatched THEN update translation expected status`() {
+        assertEquals(false, tabState().translationsState.isExpectedTranslate)
+
+        store.dispatch(TranslationsAction.TranslateExpectedAction(tabId = tab.id))
+            .joinBlocking()
+
+        assertEquals(true, tabState().translationsState.isExpectedTranslate)
+    }
+
+    @Test
+    fun `WHEN a TranslateOfferAction is dispatched THEN update translation expected status`() {
+        assertEquals(false, tabState().translationsState.isOfferTranslate)
+
+        store.dispatch(TranslationsAction.TranslateOfferAction(tabId = tab.id))
+            .joinBlocking()
+
+        assertEquals(true, tabState().translationsState.isOfferTranslate)
+    }
+
+    @Test
+    fun `WHEN a TranslateStateChangeAction is dispatched THEN update translation expected status`() {
+        assertEquals(null, tabState().translationsState.translationEngineState)
+
+        store.dispatch(TranslationsAction.TranslateStateChangeAction(tabId = tab.id, mock()))
+            .joinBlocking()
+
+        assertEquals(true, tabState().translationsState.translationEngineState != null)
+    }
 
     @Test
     fun `WHEN a TranslateAction is dispatched AND successful THEN update translation processing status`() {

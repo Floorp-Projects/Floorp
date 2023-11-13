@@ -33,6 +33,7 @@ import mozilla.components.concept.engine.media.RecordingDevice
 import mozilla.components.concept.engine.mediasession.MediaSession
 import mozilla.components.concept.engine.permission.PermissionRequest
 import mozilla.components.concept.engine.prompt.PromptRequest
+import mozilla.components.concept.engine.translate.TranslationEngineState
 import mozilla.components.concept.engine.translate.TranslationOperation
 import mozilla.components.concept.engine.window.WindowRequest
 import mozilla.components.concept.fetch.Response
@@ -465,6 +466,18 @@ internal class EngineObserver(
 
     override fun onCheckForFormDataException(throwable: Throwable) {
         store.dispatch(ContentAction.CheckForFormDataExceptionAction(tabId, throwable))
+    }
+
+    override fun onTranslateExpected() {
+        store.dispatch(TranslationsAction.TranslateExpectedAction(tabId))
+    }
+
+    override fun onTranslateOffer() {
+        store.dispatch(TranslationsAction.TranslateOfferAction(tabId))
+    }
+
+    override fun onTranslateStateChange(state: TranslationEngineState) {
+        store.dispatch(TranslationsAction.TranslateStateChangeAction(tabId, state))
     }
 
     override fun onTranslateComplete(operation: TranslationOperation) {

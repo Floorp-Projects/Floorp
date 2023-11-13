@@ -316,9 +316,21 @@ open class DefaultComponents(private val applicationContext: Context) {
             SimpleBrowserMenuItem("Save to PDF") {
                 sessionUseCases.saveToPdf.invoke()
             },
-            SimpleBrowserMenuItem("Translate Spanish to English") {
-                // Will update to translate based on best defaults when APIs are available.
-                sessionUseCases.translate.invoke(fromLanguage = "es", toLanguage = "en", options = null)
+
+            SimpleBrowserMenuItem("Translate (auto)") {
+                var detectedFrom =
+                    store.state.selectedTab?.translationsState?.translationEngineState
+                        ?.detectedLanguages?.documentLangTag
+                        ?: "en"
+                var detectedTo =
+                    store.state.selectedTab?.translationsState?.translationEngineState
+                        ?.detectedLanguages?.userPreferredLangTag
+                        ?: "en"
+                sessionUseCases.translate.invoke(
+                    fromLanguage = detectedFrom,
+                    toLanguage = detectedTo,
+                    options = null,
+                )
             },
             SimpleBrowserMenuItem("Print") {
                 sessionUseCases.printContent.invoke()
