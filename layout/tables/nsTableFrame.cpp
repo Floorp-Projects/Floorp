@@ -1935,50 +1935,13 @@ void nsTableFrame::ReflowTable(ReflowOutput& aDesiredSize,
   ReflowColGroups(aReflowInput.mRenderingContext);
 }
 
-nsIFrame* nsTableFrame::GetFirstBodyRowGroupFrame() {
-  nsIFrame* headerFrame = nullptr;
-  nsIFrame* footerFrame = nullptr;
-
-  for (nsIFrame* kidFrame : mFrames) {
-    const nsStyleDisplay* childDisplay = kidFrame->StyleDisplay();
-
-    // We expect the header and footer row group frames to be first, and we only
-    // allow one header and one footer
-    if (mozilla::StyleDisplay::TableHeaderGroup == childDisplay->mDisplay) {
-      if (headerFrame) {
-        // We already have a header frame and so this header frame is treated
-        // like an ordinary body row group frame
-        return kidFrame;
-      }
-      headerFrame = kidFrame;
-
-    } else if (mozilla::StyleDisplay::TableFooterGroup ==
-               childDisplay->mDisplay) {
-      if (footerFrame) {
-        // We already have a footer frame and so this footer frame is treated
-        // like an ordinary body row group frame
-        return kidFrame;
-      }
-      footerFrame = kidFrame;
-
-    } else if (mozilla::StyleDisplay::TableRowGroup == childDisplay->mDisplay) {
-      return kidFrame;
-    }
-  }
-
-  return nullptr;
-}
-
-// Table specific version that takes into account repeated header and footer
-// frames when continuing table frames
-void nsTableFrame::PushChildren(const RowGroupArray& aRowGroups,
-                                int32_t aPushFrom) {
+void nsTableFrame::PushChildrenToOverflow(const RowGroupArray& aRowGroups,
+                                          size_t aPushFrom) {
   MOZ_ASSERT(aPushFrom > 0, "pushing first child");
 
-  // extract the frames from the array into a sibling list
+  // Extract the frames from the array into a frame list.
   nsFrameList frames;
-  uint32_t childX;
-  for (childX = aPushFrom; childX < aRowGroups.Length(); ++childX) {
+  for (size_t childX = aPushFrom; childX < aRowGroups.Length(); ++childX) {
     nsTableRowGroupFrame* rgFrame = aRowGroups[childX];
     if (!rgFrame->IsRepeatable()) {
       mFrames.RemoveFrame(rgFrame);
@@ -1990,23 +1953,8 @@ void nsTableFrame::PushChildren(const RowGroupArray& aRowGroups,
     return;
   }
 
-  nsTableFrame* nextInFlow = static_cast<nsTableFrame*>(GetNextInFlow());
-  if (nextInFlow) {
-    // Insert the frames after any repeated header and footer frames.
-    nsIFrame* firstBodyFrame = nextInFlow->GetFirstBodyRowGroupFrame();
-    nsIFrame* prevSibling = nullptr;
-    if (firstBodyFrame) {
-      prevSibling = firstBodyFrame->GetPrevSibling();
-    }
-    // When pushing and pulling frames we need to check for whether any
-    // views need to be reparented.
-    ReparentFrameViewList(frames, this, nextInFlow);
-    nextInFlow->mFrames.InsertFrames(nextInFlow, prevSibling,
-                                     std::move(frames));
-  } else {
-    // Add the frames to our overflow list.
-    SetOverflowFrames(std::move(frames));
-  }
+  // Add the frames to our overflow list.
+  SetOverflowFrames(std::move(frames));
 }
 
 // collapsing row groups, rows, col groups and cols are accounted for after both
@@ -2804,7 +2752,7 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
         } else if (tfoot && tfoot->IsRepeatable()) {
           tfoot->SetRepeatable(false);
         }
-        PushChildren(rowGroups, childX);
+        PushChildrenToOverflow(rowGroups, childX);
         aStatus.Reset();
         aStatus.SetIncomplete();
         break;
@@ -2896,7 +2844,7 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
               }
               aStatus.Reset();
               aStatus.SetIncomplete();
-              PushChildren(rowGroups, childX + 1);
+              PushChildrenToOverflow(rowGroups, childX + 1);
               aLastChildReflowed = kidFrame;
               break;
             }
@@ -2910,7 +2858,7 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
             }
             aStatus.Reset();
             aStatus.SetIncomplete();
-            PushChildren(rowGroups, childX);
+            PushChildrenToOverflow(rowGroups, childX);
             aLastChildReflowed = prevKidFrame;
             break;
           } else {  // we can't push so lets make clear how much space we need
@@ -2983,7 +2931,7 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
 
         nsIFrame* nextSibling = kidFrame->GetNextSibling();
         if (nextSibling) {
-          PushChildren(rowGroups, childX + 1);
+          PushChildrenToOverflow(rowGroups, childX + 1);
         }
         break;
       }

@@ -660,18 +660,17 @@ class nsTableFrame : public nsContainerFrame {
   void PlaceRepeatedFooter(TableReflowInput& aReflowInput,
                            nsTableRowGroupFrame* aTfoot, nscoord aFooterHeight);
 
-  nsIFrame* GetFirstBodyRowGroupFrame();
-
  public:
   using RowGroupArray = AutoTArray<nsTableRowGroupFrame*, 8>;
 
  protected:
-  /**
-   * Push all our child frames from the aRowGroups array, in order, starting
-   * from the frame at aPushFrom to the end of the array. The frames are put on
-   * our overflow list or moved directly to our next-in-flow if one exists.
-   */
-  void PushChildren(const RowGroupArray& aRowGroups, int32_t aPushFrom);
+  // Push all our non-repeatable child frames from the aRowGroups array, in
+  // order, starting from the frame at aPushFrom to the end of the array. The
+  // pushed frames are put on our overflow list. This is a table specific
+  // version that takes into account repeated header and footer frames when
+  // continuing table frames.
+  void PushChildrenToOverflow(const RowGroupArray& aRowGroups,
+                              size_t aPushFrom);
 
  public:
   // Return the children frames in the display order (e.g. thead before tbodies
