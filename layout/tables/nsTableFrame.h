@@ -573,10 +573,9 @@ class nsTableFrame : public nsContainerFrame {
   void SetRowInserted(bool aValue);
 
  protected:
-  // A helper function to reflow a header or footer with unconstrained height
-  // to see if it should be made repeatable.
-  // @return the desired height for a header or footer.
-  // XXX: This helper should be converted to logic coordinates.
+  // A helper function to reflow a header or footer with unconstrained
+  // block-size to see if it should be made repeatable.
+  // @return the desired block-size for a header or footer.
   nscoord SetupHeaderFooterChild(const TableReflowInput& aReflowInput,
                                  nsTableRowGroupFrame* aFrame);
 
@@ -658,7 +657,7 @@ class nsTableFrame : public nsContainerFrame {
                   const nsRect& aOriginalKidRect,
                   const nsRect& aOriginalKidInkOverflow);
   void PlaceRepeatedFooter(TableReflowInput& aReflowInput,
-                           nsTableRowGroupFrame* aTfoot, nscoord aFooterHeight);
+                           nsTableRowGroupFrame* aTfoot, nscoord aFooterBSize);
 
  public:
   using RowGroupArray = AutoTArray<nsTableRowGroupFrame*, 8>;

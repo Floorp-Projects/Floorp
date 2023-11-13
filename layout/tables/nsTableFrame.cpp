@@ -1732,9 +1732,10 @@ void nsTableFrame::Reflow(nsPresContext* aPresContext,
     // Note that vertical-lr, unlike vertical-rl, doesn't need to take special
     // care of this situation, because they're positioned relative to the
     // left-hand edge.
+    const nsSize containerSize =
+        aReflowInput.ComputedSizeAsContainerIfConstrained();
     if (wm.IsVerticalRL()) {
-      tentativeContainerWidth =
-          aReflowInput.ComputedSizeAsContainerIfConstrained().width;
+      tentativeContainerWidth = containerSize.width;
       mayAdjustXForAllChildren = true;
     }
 
@@ -1763,8 +1764,7 @@ void nsTableFrame::Reflow(nsPresContext* aPresContext,
             aReflowInput.ComputedLogicalBorderPadding(wm);
         aDesiredSize.BSize(wm) =
             borderPadding.BEnd(wm) + GetRowSpacing(GetRowCount()) +
-            lastChildReflowed->GetNormalRect()
-                .YMost();  // XXX YMost should be B-flavored
+            lastChildReflowed->GetLogicalNormalRect(wm, containerSize).BEnd(wm);
       }
       haveDesiredBSize = true;
 
@@ -2592,23 +2592,23 @@ nsTableFrame::RowGroupArray nsTableFrame::OrderedRowGroups(
   return children;
 }
 
-static bool IsRepeatable(nscoord aFrameHeight, nscoord aPageHeight) {
-  return aFrameHeight < (aPageHeight / 4);
+static bool IsRepeatable(nscoord aFrameBSize, nscoord aPageBSize) {
+  return aFrameBSize < (aPageBSize / 4);
 }
 
 nscoord nsTableFrame::SetupHeaderFooterChild(
     const TableReflowInput& aReflowInput, nsTableRowGroupFrame* aFrame) {
   nsPresContext* presContext = PresContext();
-  nscoord pageHeight = presContext->GetPageSize().height;
-
-  // Reflow the child with unconstrained height
   WritingMode wm = aFrame->GetWritingMode();
-  LogicalSize availSize = aReflowInput.mReflowInput.AvailableSize(wm);
+  const nscoord pageBSize =
+      LogicalSize(wm, presContext->GetPageSize()).BSize(wm);
 
-  nsSize containerSize = availSize.GetPhysicalSize(wm);
-  // XXX check for containerSize.* == NS_UNCONSTRAINEDSIZE
-
+  // Reflow the child with unconstrained block-size.
+  LogicalSize availSize = aReflowInput.mAvailSize;
   availSize.BSize(wm) = NS_UNCONSTRAINEDSIZE;
+
+  const nsSize containerSize =
+      aReflowInput.mReflowInput.ComputedSizeAsContainerIfConstrained();
   ReflowInput kidReflowInput(presContext, aReflowInput.mReflowInput, aFrame,
                              availSize, Nothing(),
                              ReflowInput::InitFlag::CallerWillInit);
@@ -2621,21 +2621,20 @@ nscoord nsTableFrame::SetupHeaderFooterChild(
               containerSize, ReflowChildFlags::Default, status);
   // The child will be reflowed again "for real" so no need to place it now
 
-  aFrame->SetRepeatable(IsRepeatable(desiredSize.Height(), pageHeight));
-  return desiredSize.Height();
+  aFrame->SetRepeatable(IsRepeatable(desiredSize.BSize(wm), pageBSize));
+  return desiredSize.BSize(wm);
 }
 
 void nsTableFrame::PlaceRepeatedFooter(TableReflowInput& aReflowInput,
                                        nsTableRowGroupFrame* aTfoot,
-                                       nscoord aFooterHeight) {
+                                       nscoord aFooterBSize) {
   nsPresContext* presContext = PresContext();
   WritingMode wm = aTfoot->GetWritingMode();
   LogicalSize kidAvailSize = aReflowInput.mAvailSize;
+  kidAvailSize.BSize(wm) = aFooterBSize;
 
-  nsSize containerSize = kidAvailSize.GetPhysicalSize(wm);
-  // XXX check for containerSize.* == NS_UNCONSTRAINEDSIZE
-
-  kidAvailSize.BSize(wm) = aFooterHeight;
+  const nsSize containerSize =
+      aReflowInput.mReflowInput.ComputedSizeAsContainerIfConstrained();
   ReflowInput footerReflowInput(presContext, aReflowInput.mReflowInput, aTfoot,
                                 kidAvailSize, Nothing(),
                                 ReflowInput::InitFlag::CallerWillInit);
@@ -2708,7 +2707,7 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
   nsTableRowGroupFrame* tfoot = nullptr;
   RowGroupArray rowGroups = OrderedRowGroups(&thead, &tfoot);
   bool pageBreak = false;
-  nscoord footerHeight = 0;
+  nscoord footerBSize = 0;
 
   // Determine the repeatablility of headers and footers, and also the desired
   // height of any repeatable footer.
@@ -2726,15 +2725,15 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
     }
     if (tfoot) {
       reorder = reorder || tfoot->GetNextInFlow();
-      footerHeight = SetupHeaderFooterChild(aReflowInput, tfoot);
+      footerBSize = SetupHeaderFooterChild(aReflowInput, tfoot);
     }
     if (reorder) {
       // Reorder row groups - the reflow may have changed the nextinflows.
       rowGroups = OrderedRowGroups(&thead, &tfoot);
     }
   }
-  // if the child is a tbody in paginated mode reduce the height by a repeated
-  // footer
+  // If the child is a tbody in paginated mode, reduce the available block-size
+  // by a repeated footer.
   bool allowRepeatedFooter = false;
   for (size_t childX = 0; childX < rowGroups.Length(); childX++) {
     nsTableRowGroupFrame* kidFrame = rowGroups[childX];
@@ -2748,7 +2747,7 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
           kidFrame->HasAnyStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE)))) {
       if (pageBreak) {
         if (allowRepeatedFooter) {
-          PlaceRepeatedFooter(aReflowInput, tfoot, footerHeight);
+          PlaceRepeatedFooter(aReflowInput, tfoot, footerBSize);
         } else if (tfoot && tfoot->IsRepeatable()) {
           tfoot->SetRepeatable(false);
         }
@@ -2766,9 +2765,9 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
           // the child is a tbody and there is a repeatable footer
           NS_ASSERTION(tfoot == rowGroups[rowGroups.Length() - 1],
                        "Missing footer!");
-          if (footerHeight + rowSpacing < kidAvailSize.BSize(wm)) {
+          if (footerBSize + rowSpacing < kidAvailSize.BSize(wm)) {
             allowRepeatedFooter = true;
-            kidAvailSize.BSize(wm) -= footerHeight + rowSpacing;
+            kidAvailSize.BSize(wm) -= footerBSize + rowSpacing;
           }
         }
       }
@@ -2785,11 +2784,13 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
       InitChildReflowInput(kidReflowInput);
 
       // If this isn't the first row group, and the previous row group has a
-      // nonzero YMost, then we can't be at the top of the page.
+      // nonzero BEnd, then we can't be at the top of the page.
       // We ignore a repeated head row group in this check to avoid causing
       // infinite loops in some circumstances - see bug 344883.
       if (childX > ((thead && IsRepeatedFrame(thead)) ? 1u : 0u) &&
-          (rowGroups[childX - 1]->GetNormalRect().YMost() > 0)) {
+          (rowGroups[childX - 1]
+               ->GetLogicalNormalRect(wm, containerSize)
+               .BEnd(wm) > 0)) {
         kidReflowInput.mFlags.mIsTopOfPage = false;
       }
       aReflowInput.mBCoord += rowSpacing;
@@ -2823,8 +2824,8 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
       if (isPaginated &&
           (aStatus.IsInlineBreakBefore() ||
            (aStatus.IsComplete() &&
-            (NS_UNCONSTRAINEDSIZE != kidReflowInput.AvailableHeight()) &&
-            kidReflowInput.AvailableHeight() < desiredSize.Height()))) {
+            (kidReflowInput.AvailableBSize() != NS_UNCONSTRAINEDSIZE) &&
+            kidReflowInput.AvailableBSize() < desiredSize.BSize(wm)))) {
         if (ShouldAvoidBreakInside(aReflowInput.mReflowInput)) {
           aStatus.SetInlineLineBreakBeforeAndReset();
           break;
@@ -2838,7 +2839,7 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
                          containerSize, desiredSize, oldKidRect,
                          oldKidInkOverflow);
               if (allowRepeatedFooter) {
-                PlaceRepeatedFooter(aReflowInput, tfoot, footerHeight);
+                PlaceRepeatedFooter(aReflowInput, tfoot, footerBSize);
               } else if (tfoot && tfoot->IsRepeatable()) {
                 tfoot->SetRepeatable(false);
               }
@@ -2852,7 +2853,7 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
         } else {  // we are not on top, push this rowgroup onto the next page
           if (prevKidFrame) {  // we had a rowgroup before so push this
             if (allowRepeatedFooter) {
-              PlaceRepeatedFooter(aReflowInput, tfoot, footerHeight);
+              PlaceRepeatedFooter(aReflowInput, tfoot, footerBSize);
             } else if (tfoot && tfoot->IsRepeatable()) {
               tfoot->SetRepeatable(false);
             }
@@ -2867,7 +2868,7 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
                        oldKidInkOverflow);
             aLastChildReflowed = kidFrame;
             if (allowRepeatedFooter) {
-              PlaceRepeatedFooter(aReflowInput, tfoot, footerHeight);
+              PlaceRepeatedFooter(aReflowInput, tfoot, footerBSize);
               aLastChildReflowed = tfoot;
             }
             break;
@@ -2881,7 +2882,7 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
       // see if there is a page break after this row group or before the next
       // one
       if (aStatus.IsComplete() && isPaginated &&
-          (NS_UNCONSTRAINEDSIZE != kidReflowInput.AvailableHeight())) {
+          (kidReflowInput.AvailableBSize() != NS_UNCONSTRAINEDSIZE)) {
         nsIFrame* nextKid =
             (childX + 1 < rowGroups.Length()) ? rowGroups[childX + 1] : nullptr;
         pageBreak = PageBreakAfter(kidFrame, nextKid);
@@ -2924,7 +2925,7 @@ void nsTableFrame::ReflowChildren(TableReflowInput& aReflowInput,
         // We've used up all of our available space so push the remaining
         // children.
         if (allowRepeatedFooter) {
-          PlaceRepeatedFooter(aReflowInput, tfoot, footerHeight);
+          PlaceRepeatedFooter(aReflowInput, tfoot, footerBSize);
         } else if (tfoot && tfoot->IsRepeatable()) {
           tfoot->SetRepeatable(false);
         }
