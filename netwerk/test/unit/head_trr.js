@@ -421,21 +421,16 @@ class TRRProxyCode {
     });
   }
 
-  static proxySessionCount() {
-    if (!global.proxy) {
-      return 0;
-    }
-    return global.proxy.proxy_session_count;
+  static proxyRequestCount() {
+    return global.proxy_stream_count;
   }
 
   static setupProxy() {
     if (!global.proxy) {
       throw new Error("proxy is null");
     }
-    global.proxy.proxy_session_count = 0;
-    global.proxy.on("session", () => {
-      ++global.proxy.proxy_session_count;
-    });
+
+    global.proxy_stream_count = 0;
 
     // We need to track active connections so we can forcefully close keep-alive
     // connections when shutting down the proxy.
@@ -461,7 +456,7 @@ class TRRProxyCode {
         stream.end();
         return;
       }
-
+      global.proxy_stream_count++;
       const net = require("net");
       const socket = net.connect(global.endServerPort, "127.0.0.1", () => {
         try {
@@ -491,7 +486,6 @@ class TRRProxy {
     await this.execute(TRRProxyCode);
     this.port = await this.execute(`TRRProxyCode.startServer(${port})`);
     Assert.notEqual(this.port, null);
-    this.initial_session_count = 0;
   }
 
   // Executes a command in the context of the node server
@@ -507,11 +501,11 @@ class TRRProxy {
     }
   }
 
-  async proxy_session_counter() {
+  async request_count() {
     let data = await NodeServer.execute(
       this.processId,
-      `TRRProxyCode.proxySessionCount()`
+      `TRRProxyCode.proxyRequestCount()`
     );
-    return parseInt(data) - this.initial_session_count;
+    return parseInt(data);
   }
 }
