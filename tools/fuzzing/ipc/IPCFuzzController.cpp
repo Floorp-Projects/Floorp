@@ -39,11 +39,11 @@ using namespace mozilla::ipc;
 // fuzzing runtime for some reason.
 // #define MOZ_FUZZ_IPC_SYNC_INJECT 1
 
-// For debugging purposes, it can be helpful to synchronize after each message
-// rather than after each iteration, to see which messages are particularly
-// slow or cause a hang. Without this, synchronization will occur at the end
-// of each iteration as well as after each constructor message.
-// #define MOZ_FUZZ_IPC_SYNC_AFTER_EACH_MSG
+// Synchronize after each message rather than just after every constructor
+// or at the end of the iteration. Doing so costs us some performance because
+// we have to wait for each packet and process events on the main thread,
+// but it is necessary when using `OnMessageError` to release on early errors.
+#define MOZ_FUZZ_IPC_SYNC_AFTER_EACH_MSG 1
 
 namespace mozilla {
 namespace fuzzing {
@@ -480,9 +480,43 @@ void IPCFuzzController::OnMessageError(
     return;
   }
 
-#if 0
-  Nyx::instance().release(IPCFuzzController::instance().getMessageStopCount());
+  switch (code) {
+    case ipc::HasResultCodes::MsgNotKnown:
+      // Seeing this error should be rare - one potential reason is if a sync
+      // message is sent as async and vice versa. Other than that, we shouldn't
+      // be generating this error at all.
+      Nyx::instance().handle_event("MOZ_IPC_UNKNOWN_TYPE", nullptr, 0, nullptr);
+#ifdef FUZZ_DEBUG
+      MOZ_FUZZING_NYX_PRINTF(
+          "WARNING: MOZ_IPC_UNKNOWN_TYPE for message type %s (%u) routed to "
+          "actor %d (sync %d)\n",
+          IPC::StringFromIPCMessageType(aMsg.type()), aMsg.type(),
+          aMsg.routing_id(), aMsg.is_sync());
 #endif
+      break;
+    case ipc::HasResultCodes::MsgNotAllowed:
+      Nyx::instance().handle_event("MOZ_IPC_NOTALLOWED_ERROR", nullptr, 0,
+                                   nullptr);
+      break;
+    case ipc::HasResultCodes::MsgPayloadError:
+    case ipc::HasResultCodes::MsgValueError:
+      Nyx::instance().handle_event("MOZ_IPC_DESERIALIZE_ERROR", nullptr, 0,
+                                   nullptr);
+      break;
+    case ipc::HasResultCodes::MsgProcessingError:
+      Nyx::instance().handle_event("MOZ_IPC_PROCESS_ERROR", nullptr, 0,
+                                   nullptr);
+      break;
+    case ipc::HasResultCodes::MsgRouteError:
+      Nyx::instance().handle_event("MOZ_IPC_ROUTE_ERROR", nullptr, 0, nullptr);
+      break;
+    default:
+      MOZ_FUZZING_NYX_ABORT("unknown Result code");
+  }
+
+  // Count this message as one iteration as well.
+  Nyx::instance().release(IPCFuzzController::instance().getMessageStopCount() +
+                          1);
 }
 
 bool IPCFuzzController::MakeTargetDecision(
@@ -973,6 +1007,15 @@ NS_IMETHODIMP IPCFuzzController::IPCFuzzLoop::Run() {
     MOZ_FUZZING_NYX_DEBUG("DEBUG: Synchronizing after message...\n");
     IPCFuzzController::instance().SynchronizeOnMessageExecution(
         expected_messages);
+
+    SyncRunnable::DispatchToThread(
+        GetMainThreadSerialEventTarget(),
+        NS_NewRunnableFunction(
+            "IPCFuzzController::StartFuzzing", [&]() -> void {
+              MOZ_FUZZING_NYX_DEBUG("DEBUG: Main thread runnable start.\n");
+              NS_ProcessPendingEvents(NS_GetCurrentThread());
+              MOZ_FUZZING_NYX_DEBUG("DEBUG: Main thread runnable done.\n");
+            }));
 #else
 
     if (isConstructor) {
@@ -984,6 +1027,7 @@ NS_IMETHODIMP IPCFuzzController::IPCFuzzLoop::Run() {
 #endif
   }
 
+#ifndef MOZ_FUZZ_IPC_SYNC_AFTER_EACH_MSG
   MOZ_FUZZING_NYX_DEBUG("DEBUG: Synchronizing due to end of iteration...\n");
   IPCFuzzController::instance().SynchronizeOnMessageExecution(
       expected_messages);
@@ -995,6 +1039,7 @@ NS_IMETHODIMP IPCFuzzController::IPCFuzzLoop::Run() {
         NS_ProcessPendingEvents(NS_GetCurrentThread());
         MOZ_FUZZING_NYX_DEBUG("DEBUG: Main thread runnable done.\n");
       }));
+#endif
 
   MOZ_FUZZING_NYX_DEBUG(
       "DEBUG: ======== END OF ITERATION (RELEASE) ========\n");
