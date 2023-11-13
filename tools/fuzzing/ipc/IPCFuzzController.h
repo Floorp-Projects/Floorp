@@ -123,6 +123,10 @@ class IPCFuzzController {
   std::unordered_map<mojo::core::ports::PortName, mojo::core::ports::NodeName>
       portNodeName;
 
+  // This is a mapping from port name to protocol name, purely for debugging.
+  std::unordered_map<mojo::core::ports::PortName, std::string>
+      portNameToProtocolName;
+
   // This maps each ProtocolId (IPCMessageStart) to the number of valid
   // messages for that particular type.
   std::unordered_map<mozilla::ipc::ProtocolId, uint32_t> validMsgTypes;

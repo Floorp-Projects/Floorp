@@ -229,6 +229,7 @@ void IPCFuzzController::AddToplevelActor(PortName name, ProtocolId protocolId) {
   }
   uint8_t portIndex = result->second;
   portNames[portIndex].push_back(name);
+  portNameToProtocolName[name] = std::string(protocolName);
 }
 
 bool IPCFuzzController::ObserveIPCMessage(mozilla::ipc::NodeChannel* channel,
@@ -506,11 +507,12 @@ bool IPCFuzzController::MakeTargetDecision(
     *is_cons = true;
   }
 
-#ifdef FUZZ_DEBUG
   MOZ_FUZZING_NYX_PRINTF(
-      "DEBUG: MakeTargetDecision: Protocol: %s msgType: %s\n",
-      ProtocolIdToName(ids.second), IPC::StringFromIPCMessageType(*type));
-#endif
+      "DEBUG: MakeTargetDecision: Top-Level Protocol: %s Protocol: %s msgType: "
+      "%s (%u %u %d)\n",
+      portNameToProtocolName[*name].c_str(), ProtocolIdToName(ids.second),
+      IPC::StringFromIPCMessageType(*type), actorIndex, actors.size(),
+      *actorId);
 
   return true;
 }
