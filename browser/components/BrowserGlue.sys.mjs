@@ -790,10 +790,10 @@ let JSWINDOWACTORS = {
   // Floorp Injections
   SiteSpecificBrowser: {
     parent: {
-      moduleURI: "resource:///actors/SiteSpecificBrowserParent.jsm",
+      esModuleURI: "resource:///actors/SiteSpecificBrowserParent.sys.mjs",
     },
     child: {
-      moduleURI: "resource:///actors/SiteSpecificBrowserChild.jsm",
+      esModuleURI: "resource:///actors/SiteSpecificBrowserChild.sys.mjs",
     },
 
     allFrames: true,
