@@ -663,25 +663,25 @@ class nsTableFrame : public nsContainerFrame {
   nsIFrame* GetFirstBodyRowGroupFrame();
 
  public:
-  typedef AutoTArray<nsTableRowGroupFrame*, 8> RowGroupArray;
+  using RowGroupArray = AutoTArray<nsTableRowGroupFrame*, 8>;
+
+ protected:
   /**
    * Push all our child frames from the aRowGroups array, in order, starting
    * from the frame at aPushFrom to the end of the array. The frames are put on
    * our overflow list or moved directly to our next-in-flow if one exists.
    */
- protected:
   void PushChildren(const RowGroupArray& aRowGroups, int32_t aPushFrom);
 
  public:
-  // put the children frames in the display order (e.g. thead before tbodies
-  // before tfoot). This will handle calling GetRowGroupFrame() on the
-  // children, and not append nulls, so the array is guaranteed to contain
-  // nsTableRowGroupFrames.  If there are multiple theads or tfoots, all but
-  // the first one are treated as tbodies instead.
-
-  void OrderRowGroups(RowGroupArray& aChildren,
-                      nsTableRowGroupFrame** aHead = nullptr,
-                      nsTableRowGroupFrame** aFoot = nullptr) const;
+  // Return the children frames in the display order (e.g. thead before tbodies
+  // before tfoot). If there are multiple theads or tfoots, all but the first
+  // one are treated as tbodies instead.
+  //
+  // @param aHead Outparam for the first thead if there is any.
+  // @param aFoot Outparam for the first tfoot if there is any.
+  RowGroupArray OrderedRowGroups(nsTableRowGroupFrame** aHead = nullptr,
+                                 nsTableRowGroupFrame** aFoot = nullptr) const;
 
   // Returns true if there are any cells above the row at
   // aRowIndex and spanning into the row at aRowIndex, the number of
