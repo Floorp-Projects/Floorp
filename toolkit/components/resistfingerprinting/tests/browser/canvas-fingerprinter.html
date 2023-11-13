@@ -1,0 +1,22 @@
+<!doctype html>
+<html>
+<head>
+  <title>A page containing a canvas fingerprinter</title>
+</head>
+<body>
+  <canvas width=200 height=200>
+  </canvas>
+  <script>
+    var canvas = document.querySelector("canvas");
+    var context = canvas.getContext("2d");
+
+    context.fillStyle = "rgb(100, 210, 0)";
+    context.fillRect(100, 10, 50, 50);
+    context.fillStyle = "#f65";
+    context.font = "16pt Arial";
+    context.fillText("<@nv45. F1n63r,Pr1n71n6!", 20, 40);
+
+    var data = canvas.toDataURL();
+  </script>
+</body>
+</html>
