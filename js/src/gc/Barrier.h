@@ -361,6 +361,32 @@ struct InternalBarrierMethods<T*> {
 #endif
 };
 
+namespace gc {
+MOZ_ALWAYS_INLINE void ValuePostWriteBarrier(Value* vp, const Value& prev,
+                                             const Value& next) {
+  MOZ_ASSERT(!CurrentThreadIsIonCompiling());
+  MOZ_ASSERT(vp);
+
+  // If the target needs an entry, add it.
+  js::gc::StoreBuffer* sb;
+  if (next.isGCThing() && (sb = next.toGCThing()->storeBuffer())) {
+    // If we know that the prev has already inserted an entry, we can
+    // skip doing the lookup to add the new entry. Note that we cannot
+    // safely assert the presence of the entry because it may have been
+    // added via a different store buffer.
+    if (prev.isGCThing() && prev.toGCThing()->storeBuffer()) {
+      return;
+    }
+    sb->putValue(vp);
+    return;
+  }
+  // Remove the prev entry if the new value does not need it.
+  if (prev.isGCThing() && (sb = prev.toGCThing()->storeBuffer())) {
+    sb->unputValue(vp);
+  }
+}
+}  // namespace gc
+
 template <>
 struct InternalBarrierMethods<Value> {
   static bool isMarkable(const Value& v) { return v.isGCThing(); }
@@ -373,26 +399,7 @@ struct InternalBarrierMethods<Value> {
 
   static MOZ_ALWAYS_INLINE void postBarrier(Value* vp, const Value& prev,
                                             const Value& next) {
-    MOZ_ASSERT(!CurrentThreadIsIonCompiling());
-    MOZ_ASSERT(vp);
-
-    // If the target needs an entry, add it.
-    js::gc::StoreBuffer* sb;
-    if (next.isGCThing() && (sb = next.toGCThing()->storeBuffer())) {
-      // If we know that the prev has already inserted an entry, we can
-      // skip doing the lookup to add the new entry. Note that we cannot
-      // safely assert the presence of the entry because it may have been
-      // added via a different store buffer.
-      if (prev.isGCThing() && prev.toGCThing()->storeBuffer()) {
-        return;
-      }
-      sb->putValue(vp);
-      return;
-    }
-    // Remove the prev entry if the new value does not need it.
-    if (prev.isGCThing() && (sb = prev.toGCThing()->storeBuffer())) {
-      sb->unputValue(vp);
-    }
+    gc::ValuePostWriteBarrier(vp, prev, next);
   }
 
   static void readBarrier(const Value& v) {
@@ -1228,6 +1235,12 @@ struct UnsafeBarePtrHasher {
   static bool match(const Key& k, Lookup l) { return k.get() == l; }
   static void rekey(Key& k, const Key& newKey) { k.set(newKey.get()); }
 };
+
+// Set up descriptive type aliases.
+template <class T>
+using PreBarrierWrapper = PreBarriered<T>;
+template <class T>
+using PreAndPostBarrierWrapper = GCPtr<T>;
 
 }  // namespace js
 

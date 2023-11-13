@@ -66,7 +66,7 @@ struct ArgumentsData {
    * canonical value so any element access to the arguments object should load
    * the value out of the CallObject (which is pointed to by MAYBE_CALL_SLOT).
    */
-  GCArray<GCPtr<Value>> args;
+  GCOwnedArray<Value> args;
 
   /*
    * numArgs = std::max(numFormalArgs, numActualArgs)
@@ -76,21 +76,15 @@ struct ArgumentsData {
 
   uint32_t numArgs() const { return args.size(); }
 
-  /* Iterate args. */
-  GCPtr<Value>* begin() { return args.begin(); }
-  const GCPtr<Value>* begin() const { return args.begin(); }
-  GCPtr<Value>* end() { return args.end(); }
-  const GCPtr<Value>* end() const { return args.end(); }
-
   /* For jit use: */
   static constexpr ptrdiff_t offsetOfArgs() {
     return offsetof(ArgumentsData, args) +
-           GCArray<GCPtr<Value>>::offsetOfElements();
+           GCOwnedArray<Value>::offsetOfElements();
   }
 
   static size_t bytesRequired(size_t numArgs) {
     return offsetof(ArgumentsData, args) +
-           GCArray<GCPtr<Value>>::bytesRequired(numArgs);
+           GCOwnedArray<Value>::bytesRequired(numArgs);
   }
 };
 
@@ -400,9 +394,8 @@ class ArgumentsObject : public NativeObject {
 
   void setArg(unsigned i, const Value& v) {
     MOZ_ASSERT(i < data()->numArgs());
-    GCPtr<Value>& lhs = data()->args[i];
-    MOZ_ASSERT(!lhs.isMagic());
-    lhs = v;
+    MOZ_ASSERT(!data()->args[i].isMagic());
+    data()->args.setElement(this, i, v);
   }
 
   /*
