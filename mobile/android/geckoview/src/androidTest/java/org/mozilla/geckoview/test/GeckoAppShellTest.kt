@@ -90,7 +90,6 @@ class GeckoAppShellTest : BaseSessionTest() {
                     session: GeckoSession,
                     url: String?,
                     perms: MutableList<GeckoSession.PermissionDelegate.ContentPermission>,
-                    hasUserGesture: Boolean,
                 ) {
                     // Result of first clock settings change
                     if (onLoadRequestCount == 0) {
