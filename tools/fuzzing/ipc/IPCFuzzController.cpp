@@ -1024,12 +1024,30 @@ UniquePtr<IPC::Message> IPCFuzzController::replaceIPCMessage(
     return aMsg;
   }
 
+  static bool dumpFilterInitialized = false;
+  static std::string dumpFilter;
+  if (!dumpFilterInitialized) {
+    const char* dumpFilterStr = getenv("MOZ_FUZZ_DUMP_FILTER");
+    if (dumpFilterStr) {
+      dumpFilter = std::string(dumpFilterStr);
+    }
+    dumpFilterInitialized = true;
+  }
+
   if (aMsg->type() != mIPCTriggerMsg) {
     if ((mIPCDumpMsg && aMsg->type() == mIPCDumpMsg.value()) ||
         (mIPCDumpAllMsgsSize.isSome() &&
          aMsg->Buffers().Size() >= mIPCDumpAllMsgsSize.value())) {
-      dumpIPCMessageToFile(aMsg, mIPCDumpCount);
-      mIPCDumpCount++;
+      if (!dumpFilter.empty()) {
+        std::string msgName(IPC::StringFromIPCMessageType(aMsg->type()));
+        if (msgName.find(dumpFilter) != std::string::npos) {
+          dumpIPCMessageToFile(aMsg, mIPCDumpCount);
+          mIPCDumpCount++;
+        }
+      } else {
+        dumpIPCMessageToFile(aMsg, mIPCDumpCount);
+        mIPCDumpCount++;
+      }
     }
 
     // Not the trigger message. Output additional information here for
