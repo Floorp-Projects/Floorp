@@ -1128,8 +1128,7 @@ bool GCRuntime::isPointerWithinTenuredCell(void* ptr, JS::TraceKind traceKind) {
         return false;
       }
 
-      return traceKind == JS::TraceKind::Null ||
-             MapAllocToTraceKind(arena->getAllocKind()) == traceKind;
+      return MapAllocToTraceKind(arena->getAllocKind()) == traceKind;
     }
   }
 
