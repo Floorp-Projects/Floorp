@@ -66,14 +66,9 @@ decorate_task(
           xpiUrl: FIXTURE_ADDON_DETAILS["normandydriver-a-1.0"].url,
           xpiHash: FIXTURE_ADDON_DETAILS["normandydriver-a-1.0"].hash,
           xpiHashAlgorithm: "sha256",
-          enrollmentId: rollouts[0].enrollmentId,
         },
       ],
       "Rollout should be stored in db"
-    );
-    ok(
-      NormandyTestUtils.isUuid(rollouts[0].enrollmentId),
-      "enrollmentId should be a UUID"
     );
 
     sendEventSpy.assertEvents([
@@ -161,14 +156,9 @@ decorate_task(
           xpiUrl: FIXTURE_ADDON_DETAILS["normandydriver-a-2.0"].url,
           xpiHash: FIXTURE_ADDON_DETAILS["normandydriver-a-2.0"].hash,
           xpiHashAlgorithm: "sha256",
-          enrollmentId: rollouts[0].enrollmentId,
         },
       ],
       "Rollout should be stored in db"
-    );
-    ok(
-      NormandyTestUtils.isUuid(rollouts[0].enrollmentId),
-      "enrollmentId should be a UUID"
     );
 
     sendEventSpy.assertEvents([
@@ -239,14 +229,9 @@ decorate_task(
           xpiUrl: FIXTURE_ADDON_DETAILS["normandydriver-a-1.0"].url,
           xpiHash: FIXTURE_ADDON_DETAILS["normandydriver-a-1.0"].hash,
           xpiHashAlgorithm: "sha256",
-          enrollmentId: rollouts[0].enrollmentId,
         },
       ],
       "Rollout should be stored in db"
-    );
-    ok(
-      NormandyTestUtils.isUuid(rollouts[0].enrollmentId),
-      "Enrollment ID should be a UUID"
     );
 
     sendEventSpy.assertEvents([["enroll", "addon_rollout", "test-rollout"]]);
@@ -324,25 +309,23 @@ decorate_task(
           xpiUrl: FIXTURE_ADDON_DETAILS["normandydriver-a-1.0"].url,
           xpiHash: FIXTURE_ADDON_DETAILS["normandydriver-a-1.0"].hash,
           xpiHashAlgorithm: "sha256",
-          enrollmentId: rollouts[0].enrollmentId,
         },
       ],
       "Rollout should be stored in db"
     );
-    ok(NormandyTestUtils.isUuid(rollouts[0].enrollmentId));
 
     sendEventSpy.assertEvents([
       [
         "enroll",
         "addon_rollout",
         "test-rollout",
-        { addonId: FIXTURE_ADDON_ID, enrollmentId: rollouts[0].enrollmentId },
+        { addonId: FIXTURE_ADDON_ID },
       ],
       [
         "enrollFailed",
         "addon_rollout",
         "test-conflict",
-        { enrollmentId: rollouts[0].enrollmentId, reason: "conflict" },
+        { reason: "conflict" },
       ],
     ]);
 
@@ -420,14 +403,9 @@ decorate_task(
           xpiUrl: FIXTURE_ADDON_DETAILS["normandydriver-a-1.0"].url,
           xpiHash: FIXTURE_ADDON_DETAILS["normandydriver-a-1.0"].hash,
           xpiHashAlgorithm: "sha256",
-          enrollmentId: rollouts[0].enrollmentId,
         },
       ],
       "Rollout should be stored in db"
-    );
-    ok(
-      NormandyTestUtils.isUuid(rollouts[0].enrollmentId),
-      "enrollment ID should be a UUID"
     );
 
     sendEventSpy.assertEvents([
@@ -513,14 +491,9 @@ decorate_task(
           xpiUrl: FIXTURE_ADDON_DETAILS["normandydriver-a-2.0"].url,
           xpiHash: FIXTURE_ADDON_DETAILS["normandydriver-a-2.0"].hash,
           xpiHashAlgorithm: "sha256",
-          enrollmentId: rollouts[0].enrollmentId,
         },
       ],
       "Rollout should be stored in db"
-    );
-    ok(
-      NormandyTestUtils.isUuid(rollouts[0].enrollmentId),
-      "enrollment ID should be a UUID"
     );
 
     sendEventSpy.assertEvents([

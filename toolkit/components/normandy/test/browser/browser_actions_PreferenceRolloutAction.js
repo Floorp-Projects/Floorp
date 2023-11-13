@@ -90,28 +90,17 @@ decorate_task(
               previousValue: null,
             },
           ],
-          enrollmentId: rollouts[0].enrollmentId,
         },
       ],
       "Rollout should be stored in db"
     );
-    ok(
-      NormandyTestUtils.isUuid(rollouts[0].enrollmentId),
-      "Rollout should have a UUID enrollmentId"
-    );
 
     sendEventSpy.assertEvents([
-      [
-        "enroll",
-        "preference_rollout",
-        recipe.arguments.slug,
-        { enrollmentId: rollouts[0].enrollmentId },
-      ],
+      ["enroll", "preference_rollout", recipe.arguments.slug, {}],
     ]);
     ok(
       setExperimentActiveStub.calledWithExactly("test-rollout", "active", {
         type: "normandy-prefrollout",
-        enrollmentId: rollouts[0].enrollmentId,
       }),
       "a telemetry experiment should be activated"
     );
@@ -215,17 +204,12 @@ decorate_task(
     );
 
     sendEventSpy.assertEvents([
-      [
-        "enroll",
-        "preference_rollout",
-        "test-rollout",
-        { enrollmentId: rollouts[0].enrollmentId },
-      ],
+      ["enroll", "preference_rollout", "test-rollout", {}],
       [
         "update",
         "preference_rollout",
         "test-rollout",
-        { previousState: "active", enrollmentId: rollouts[0].enrollmentId },
+        { previousState: "active" },
       ],
     ]);
 
@@ -248,7 +232,6 @@ decorate_task(
       preferences: [
         { preferenceName: "test.pref", value: 1, previousValue: 1 },
       ],
-      enrollmentId: "test-enrollment-id",
     });
 
     let recipe = {
@@ -292,7 +275,7 @@ decorate_task(
         "update",
         "preference_rollout",
         "test-rollout",
-        { previousState: "graduated", enrollmentId: "test-enrollment-id" },
+        { previousState: "graduated" },
       ],
     ]);
 
@@ -385,7 +368,6 @@ decorate_task(
             { preferenceName: "test.pref1", value: 1, previousValue: null },
             { preferenceName: "test.pref2", value: 1, previousValue: null },
           ],
-          enrollmentId: rollouts[0].enrollmentId,
         },
       ],
       "Only recipe1's rollout should be stored in db"
@@ -509,7 +491,6 @@ decorate_task(
               previousValue: "builtin value",
             },
           ],
-          enrollmentId: rollouts[0].enrollmentId,
         },
       ],
       "the rollout is added to the db with the correct previous value"
@@ -599,19 +580,13 @@ decorate_task(
           preferences: [
             { preferenceName: "test.pref", value: 1, previousValue: null },
           ],
-          enrollmentId: rollouts[0].enrollmentId,
         },
       ],
       "the DB should have the correct value stored for previousValue"
     );
 
     sendEventSpy.assertEvents([
-      [
-        "enroll",
-        "preference_rollout",
-        "test-rollout",
-        { enrollmentId: rollouts[0].enrollmentId },
-      ],
+      ["enroll", "preference_rollout", "test-rollout", {}],
     ]);
   }
 );

@@ -25,9 +25,6 @@ nimbus_events:
       branch:
         type: string
         description: The branch slug/identifier that was randomly chosen
-      enrollment_id:
-        type: string
-        description: A unique identifier generated at enrollment time
       experiment_type:
         type: string
         description: Indicates whether this is an experiemnt or rollout
@@ -88,9 +85,6 @@ nimbus_events:
       branch:
         type: string
         description: The branch slug/identifier that was randomly chosen
-      enrollment_id:
-        type: string
-        description: A unique identifier generated at enrollment time
       reason:
         type: string
         description: The reason for the unenrollment

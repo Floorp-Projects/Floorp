@@ -1,8 +1,5 @@
 "use strict";
 
-const { NormandyTestUtils } = ChromeUtils.importESModule(
-  "resource://testing-common/NormandyTestUtils.sys.mjs"
-);
 const { Sampling } = ChromeUtils.importESModule(
   "resource://gre/modules/components-utils/Sampling.sys.mjs"
 );
@@ -63,10 +60,6 @@ add_task(async function test_add_to_store() {
     "should choose a branch from the recipe.branches"
   );
   Assert.equal(experiment.active, true, "should set .active = true");
-  Assert.ok(
-    NormandyTestUtils.isUuid(experiment.enrollmentId),
-    "should add a valid enrollmentId"
-  );
 
   manager.unenroll("foo", "test-cleanup");
 
@@ -186,11 +179,6 @@ add_task(
       enrollmentEvents[0].extra.experiment_type,
       "Glean.nimbusEvents.enrollment recorded with correct experiment type"
     );
-    Assert.equal(
-      experiment.enrollmentId,
-      enrollmentEvents[0].extra.enrollment_id,
-      "Glean.nimbusEvents.enrollment recorded with correct enrollment id"
-    );
 
     manager.unenroll("foo", "test-cleanup");
 
@@ -277,7 +265,6 @@ add_task(async function test_setRolloutActive_sendEnrollmentTelemetry_called() {
       {
         experimentType: "rollout",
         branch: enrollment.branch.slug,
-        enrollmentId: enrollment.enrollmentId,
       }
     ),
     "Should send telemetry with expected values"
@@ -309,11 +296,6 @@ add_task(async function test_setRolloutActive_sendEnrollmentTelemetry_called() {
     enrollment.experimentType,
     enrollmentEvents[0].extra.experiment_type,
     "Glean.nimbusEvents.enrollment recorded with correct experiment type"
-  );
-  Assert.equal(
-    enrollment.enrollmentId,
-    enrollmentEvents[0].extra.enrollment_id,
-    "Glean.nimbusEvents.enrollment recorded with correct enrollment id"
   );
 
   manager.unenroll("rollout", "test-cleanup");

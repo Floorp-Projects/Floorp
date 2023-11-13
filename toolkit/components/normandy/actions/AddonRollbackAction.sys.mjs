@@ -46,9 +46,6 @@ export class AddonRollbackAction extends BaseAction {
               rolloutSlug,
               {
                 reason: "uninstall-failed",
-                enrollmentId:
-                  rollout.enrollmentId ||
-                  lazy.TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
               }
             );
             throw err;
@@ -65,9 +62,6 @@ export class AddonRollbackAction extends BaseAction {
           rolloutSlug,
           {
             reason: "rollback",
-            enrollmentId:
-              rollout.enrollmentId ||
-              lazy.TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
           }
         );
         lazy.TelemetryEnvironment.setExperimentInactive(rolloutSlug);

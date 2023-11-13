@@ -85,10 +85,9 @@ add_task(async function test_unenroll_opt_out() {
       {
         reason: "studies-opt-out",
         branch: experiment.branch.slug,
-        enrollmentId: experiment.enrollmentId,
       },
     ],
-    "should send an unenrollment ping with the slug, reason, branch slug, and enrollmentId"
+    "should send an unenrollment ping with the slug, reason, and branch slug"
   );
 
   // Check that the Glean unenrollment event was recorded.
@@ -110,11 +109,6 @@ add_task(async function test_unenroll_opt_out() {
     "studies-opt-out",
     unenrollmentEvents[0].extra.reason,
     "Glean.nimbusEvents.unenrollment recorded with correct reason"
-  );
-  Assert.equal(
-    experiment.enrollmentId,
-    unenrollmentEvents[0].extra.enrollment_id,
-    "Glean.nimbusEvents.unenrollment recorded with correct enrollment id"
   );
 
   // reset pref
@@ -158,10 +152,9 @@ add_task(async function test_unenroll_rollout_opt_out() {
       {
         reason: "studies-opt-out",
         branch: rollout.branch.slug,
-        enrollmentId: rollout.enrollmentId,
       },
     ],
-    "should send an unenrollment ping with the slug, reason, branch slug, and enrollmentId"
+    "should send an unenrollment ping with the slug, reason, and branch slug"
   );
 
   // Check that the Glean unenrollment event was recorded.
@@ -183,11 +176,6 @@ add_task(async function test_unenroll_rollout_opt_out() {
     "studies-opt-out",
     unenrollmentEvents[0].extra.reason,
     "Glean.nimbusEvents.unenrollment recorded with correct reason"
-  );
-  Assert.equal(
-    rollout.enrollmentId,
-    unenrollmentEvents[0].extra.enrollment_id,
-    "Glean.nimbusEvents.unenrollment recorded with correct enrollment id"
   );
 
   // reset pref
@@ -291,10 +279,9 @@ add_task(async function test_send_unenroll_event() {
       {
         reason: "some-reason",
         branch: experiment.branch.slug,
-        enrollmentId: experiment.enrollmentId,
       },
     ],
-    "should send an unenrollment ping with the slug, reason, branch slug, and enrollmentId"
+    "should send an unenrollment ping with the slug, reason, and branch slug"
   );
 
   // Check that the Glean unenrollment event was recorded.
@@ -316,11 +303,6 @@ add_task(async function test_send_unenroll_event() {
     "some-reason",
     unenrollmentEvents[0].extra.reason,
     "Glean.nimbusEvents.unenrollment recorded with correct reason"
-  );
-  Assert.equal(
-    experiment.enrollmentId,
-    unenrollmentEvents[0].extra.enrollment_id,
-    "Glean.nimbusEvents.unenrollment recorded with correct enrollment id"
   );
 });
 
@@ -503,11 +485,5 @@ add_task(async function test_rollout_telemetry_events() {
     unenrollmentEvents[0].extra.reason,
     "Glean.nimbusEvents.unenrollment recorded with correct reason"
   );
-  Assert.equal(
-    rollout.enrollmentId,
-    unenrollmentEvents[0].extra.enrollment_id,
-    "Glean.nimbusEvents.unenrollment recorded with correct enrollment id"
-  );
-
   globalSandbox.restore();
 });

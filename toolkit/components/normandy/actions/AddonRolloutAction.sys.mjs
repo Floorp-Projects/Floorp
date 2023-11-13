@@ -11,7 +11,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   AddonRollouts: "resource://normandy/lib/AddonRollouts.sys.mjs",
   NormandyAddonManager: "resource://normandy/lib/NormandyAddonManager.sys.mjs",
   NormandyApi: "resource://normandy/lib/NormandyApi.sys.mjs",
-  NormandyUtils: "resource://normandy/lib/NormandyUtils.sys.mjs",
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.sys.mjs",
   TelemetryEvents: "resource://normandy/lib/TelemetryEvents.sys.mjs",
 });
@@ -73,9 +72,6 @@ export class AddonRolloutAction extends BaseAction {
     const extensionDetails = await lazy.NormandyApi.fetchExtensionDetails(
       extensionApiId
     );
-    let enrollmentId = existingRollout
-      ? existingRollout.enrollmentId
-      : undefined;
 
     // Check if the existing rollout matches the current rollout
     if (
@@ -92,7 +88,7 @@ export class AddonRolloutAction extends BaseAction {
       }
     }
 
-    const createError = (reason, extra) => {
+    const createError = (reason, extra = {}) => {
       return new AddonRolloutError(slug, {
         ...extra,
         reason,
@@ -110,9 +106,6 @@ export class AddonRolloutAction extends BaseAction {
       const conflictError = createError("conflict", {
         addonId: conflictingRollout.addonId,
         conflictingSlug: conflictingRollout.slug,
-        enrollmentId:
-          conflictingRollout.enrollmentId ||
-          lazy.TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
       });
       this.reportError(conflictError, "enrollFailed");
       throw conflictError;
@@ -122,12 +115,7 @@ export class AddonRolloutAction extends BaseAction {
       const existingAddon = install.existingAddon;
 
       if (existingRollout && existingRollout.addonId !== install.addon.id) {
-        installDeferred.reject(
-          createError("addon-id-changed", {
-            enrollmentId:
-              enrollmentId || lazy.TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
-          })
-        );
+        installDeferred.reject(createError("addon-id-changed"));
         return false; // cancel the upgrade, the add-on ID has changed
       }
 
@@ -135,12 +123,7 @@ export class AddonRolloutAction extends BaseAction {
         existingAddon &&
         Services.vc.compare(existingAddon.version, install.addon.version) > 0
       ) {
-        installDeferred.reject(
-          createError("upgrade-required", {
-            enrollmentId:
-              enrollmentId || lazy.TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
-          })
-        );
+        installDeferred.reject(createError("upgrade-required"));
         return false; // cancel the installation, must be an upgrade
       }
 
@@ -163,13 +146,10 @@ export class AddonRolloutAction extends BaseAction {
           ...details,
         });
       } else {
-        enrollmentId = lazy.NormandyUtils.generateUuid();
         await lazy.AddonRollouts.add({
           recipeId: recipe.id,
           state: lazy.AddonRollouts.STATE_ACTIVE,
           slug,
-          enrollmentId:
-            enrollmentId || lazy.TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
           ...details,
         });
       }
@@ -210,8 +190,6 @@ export class AddonRolloutAction extends BaseAction {
     lazy.TelemetryEvents.sendEvent(eventName, "addon_rollout", slug, {
       addonId: installedId,
       addonVersion: installedVersion,
-      enrollmentId:
-        enrollmentId || lazy.TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
     });
   }
 

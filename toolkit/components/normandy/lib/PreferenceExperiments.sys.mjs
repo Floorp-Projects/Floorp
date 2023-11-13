@@ -46,10 +46,6 @@
  *   Preference Objects, about which see below.
  * @property {string} experimentType
  *   The type to report to Telemetry's experiment marker API.
- * @property {string} enrollmentId
- *   A random ID generated at time of enrollment. It should be included on all
- *   telemetry related to this experiment. It should not be re-used by other
- *   studies, or any other purpose. May be null on old experiments.
  * @property {string} actionName
  *   The action who knows about this experiment and is responsible for cleaning
  *   it up. This should correspond to the `name` of some BaseAction subclass.
@@ -83,7 +79,6 @@ import { LogManager } from "resource://normandy/lib/LogManager.sys.mjs";
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   JSONFile: "resource://gre/modules/JSONFile.sys.mjs",
-  NormandyUtils: "resource://normandy/lib/NormandyUtils.sys.mjs",
   PrefUtils: "resource://normandy/lib/PrefUtils.sys.mjs",
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.sys.mjs",
   TelemetryEvents: "resource://normandy/lib/TelemetryEvents.sys.mjs",
@@ -214,9 +209,6 @@ export var PreferenceExperiments = {
         experiment.branch,
         {
           type: EXPERIMENT_TYPE_PREFIX + experiment.experimentType,
-          enrollmentId:
-            experiment.enrollmentId ||
-            lazy.TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
         }
       );
 
@@ -311,15 +303,6 @@ export var PreferenceExperiments = {
         }
       };
     };
-  },
-
-  /** When Telemetry is disabled, clear all identifiers from the stored experiments.  */
-  async onTelemetryDisabled() {
-    const store = await ensureStorage();
-    for (const experiment of Object.values(store.data.experiments)) {
-      experiment.enrollmentId = lazy.TelemetryEvents.NO_ENROLLMENT_ID_MARKER;
-    }
-    store.saveSoon();
   },
 
   /**
@@ -504,8 +487,6 @@ export var PreferenceExperiments = {
     }
     PreferenceExperiments.startObserver(slug, preferences);
 
-    const enrollmentId = lazy.NormandyUtils.generateUuid();
-
     /** @type {Experiment} */
     const experiment = {
       slug,
@@ -517,7 +498,6 @@ export var PreferenceExperiments = {
       experimentType,
       userFacingName,
       userFacingDescription,
-      enrollmentId,
     };
 
     store.data.experiments[slug] = experiment;
@@ -526,14 +506,10 @@ export var PreferenceExperiments = {
     // Record telemetry that the experiment started
     lazy.TelemetryEnvironment.setExperimentActive(slug, branch, {
       type: EXPERIMENT_TYPE_PREFIX + experimentType,
-      enrollmentId:
-        enrollmentId || lazy.TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
     });
     lazy.TelemetryEvents.sendEvent("enroll", "preference_study", slug, {
       experimentType,
       branch,
-      enrollmentId:
-        enrollmentId || lazy.TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
     });
 
     // Send events for any default branch preferences set that already had user
@@ -705,9 +681,6 @@ export var PreferenceExperiments = {
       {
         preferenceName,
         reason,
-        enrollmentId:
-          experiment.enrollmentId ||
-          lazy.TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
       }
     );
   },
@@ -760,9 +733,6 @@ export var PreferenceExperiments = {
       const extra = {
         reason: "already-unenrolled",
         originalReason: reason,
-        enrollmentId:
-          experiment.enrollmentId ||
-          lazy.TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
       };
       if (changedPref) {
         extra.changedPref = changedPref;
@@ -833,9 +803,6 @@ export var PreferenceExperiments = {
         didResetValue: resetValue ? "true" : "false",
         branch: experiment.branch,
         reason,
-        enrollmentId:
-          experiment.enrollmentId ||
-          lazy.TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
         ...(changedPref ? { changedPref } : {}),
       }
     );

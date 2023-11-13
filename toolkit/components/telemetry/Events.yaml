@@ -770,7 +770,6 @@ normandy:
         The slug of the branch that was chosen for this client.
       addonId: For addon_study recipes, the ID of the addon that was installed.
       addonVersion: For addon_study recipes, the version of the addon that was installed.
-      enrollmentId: A unique ID for this enrollment that will be included in all related Telemetry.
     bug_numbers: [1443560]
     notification_emails: ["normandy-notifications@mozilla.com"]
     products:

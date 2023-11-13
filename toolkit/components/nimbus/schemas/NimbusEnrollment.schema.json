@@ -140,10 +140,6 @@
           "type": "string",
           "description": "What kind of experiment this enrollment corresponds to."
         },
-        "enrollmentId": {
-          "type": "string",
-          "description": "A unique identifier for the enrollment."
-        },
         "active": {
           "type": "boolean",
           "description": "Whether or not the enrollment is active."
@@ -214,7 +210,6 @@
         "userFacingName",
         "userFacingDescription",
         "branch",
-        "enrollmentId",
         "active",
         "lastSeen"
       ],

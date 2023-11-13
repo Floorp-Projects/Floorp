@@ -382,7 +382,6 @@ export const ExperimentFakes = {
     return {
       slug,
       active: true,
-      enrollmentId: lazy.NormandyUtils.generateUuid(),
       branch: {
         slug: "treatment",
         features: [
@@ -409,7 +408,6 @@ export const ExperimentFakes = {
     return {
       slug,
       active: true,
-      enrollmentId: lazy.NormandyUtils.generateUuid(),
       isRollout: true,
       branch: {
         slug: "treatment",

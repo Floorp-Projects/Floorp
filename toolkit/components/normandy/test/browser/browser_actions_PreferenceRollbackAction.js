@@ -37,7 +37,6 @@ decorate_task(
         },
         { preferenceName: "test.pref3", value: true, previousValue: false },
       ],
-      enrollmentId: "test-enrollment-id",
     });
 
     const recipe = { id: 1, arguments: { rolloutSlug: "test-rollout" } };
@@ -98,7 +97,6 @@ decorate_task(
             },
             { preferenceName: "test.pref3", value: true, previousValue: false },
           ],
-          enrollmentId: rollouts[0].enrollmentId,
         },
       ],
       "Rollout should be updated in db"
@@ -138,7 +136,6 @@ decorate_task(
       preferences: [
         { preferenceName: "test.pref", value: 1, previousValue: 1 },
       ],
-      enrollmentId: "test-enrollment-id",
     });
 
     let recipe = { id: 1, arguments: { rolloutSlug: "graduated-rollout" } };
@@ -165,7 +162,6 @@ decorate_task(
           preferences: [
             { preferenceName: "test.pref", value: 1, previousValue: 1 },
           ],
-          enrollmentId: "test-enrollment-id",
         },
       ],
       "Rollout should not change in db"
@@ -176,7 +172,7 @@ decorate_task(
         "unenrollFailed",
         "preference_rollback",
         "graduated-rollout",
-        { reason: "graduated", enrollmentId: "test-enrollment-id" },
+        { reason: "graduated" },
       ],
     ]);
 
@@ -225,7 +221,6 @@ decorate_task(
       preferences: [
         { preferenceName: "test.pref", value: 2, previousValue: 1 },
       ],
-      enrollmentId: "test-rollout-id",
     };
     await PreferenceRollouts.add(rollout);
 
@@ -280,7 +275,6 @@ decorate_task(
           previousValue: "builtin value",
         },
       ],
-      enrollmentId: "test-enrollment-id",
     });
 
     const recipe = { id: 1, arguments: { rolloutSlug: "test-rollout" } };
@@ -344,7 +338,6 @@ decorate_task(
         "graduated-rollout",
         {
           reason: "in-graduation-set",
-          enrollmentId: TelemetryEvents.NO_ENROLLMENT_ID,
         },
       ],
     ]);

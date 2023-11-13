@@ -236,13 +236,11 @@ decorate_task(PreferenceRollouts.withTestMock(), async function testRollouts() {
   const prefRollout = {
     slug: "test-rollout",
     preference: [],
-    enrollmentId: "test-enrollment-id-1",
   };
   await PreferenceRollouts.add(prefRollout);
   const addonRollout = {
     slug: "test-rollout-1",
     extension: {},
-    enrollmentId: "test-enrollment-id-2",
   };
   await AddonRollouts.add(addonRollout);
 
@@ -259,13 +257,13 @@ decorate_task(PreferenceRollouts.withTestMock(), async function testRollouts() {
     "addon and preference rollouts should be accessible"
   );
   is(
-    (await ClientEnvironment.rollouts).pref[prefRollout.slug].enrollmentId,
-    "test-enrollment-id-1",
+    (await ClientEnvironment.rollouts).pref[prefRollout.slug].slug,
+    prefRollout.slug,
     "A specific preference rollout field should be accessible in the context"
   );
   is(
-    (await ClientEnvironment.rollouts).addon[addonRollout.slug].enrollmentId,
-    "test-enrollment-id-2",
+    (await ClientEnvironment.rollouts).addon[addonRollout.slug].slug,
+    addonRollout.slug,
     "A specific addon rollout field should be accessible in the context"
   );
 

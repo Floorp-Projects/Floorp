@@ -37,10 +37,6 @@
  *   Date of when temporary errors with this experiment should no longer be
  *   considered temporary. After this point, further errors will result in
  *   unenrollment.
- * @property {string} enrollmentId
- *   A random ID generated at time of enrollment. It should be included on all
- *   telemetry related to this study. It should not be re-used by other studies,
- *   or any other purpose. May be null on old study.
  */
 
 import { LogManager } from "resource://normandy/lib/LogManager.sys.mjs";
@@ -155,8 +151,6 @@ export var AddonStudies = {
       // Otherwise mark that study as active in Telemetry
       lazy.TelemetryEnvironment.setExperimentActive(study.slug, study.branch, {
         type: "normandy-addonstudy",
-        enrollmentId:
-          study.enrollmentId || lazy.TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
       });
     }
 
@@ -165,15 +159,6 @@ export var AddonStudies = {
     lazy.CleanupManager.addCleanupHandler(() => {
       lazy.AddonManager.removeAddonListener(this);
     });
-  },
-
-  /** When Telemetry is disabled, clear all identifiers from the stored studies.  */
-  async onTelemetryDisabled() {
-    const studies = await this.getAll();
-    for (const study of studies) {
-      study.enrollmentId = lazy.TelemetryEvents.NO_ENROLLMENT_ID_MARKER;
-    }
-    await this.updateMany(studies);
   },
 
   /**
@@ -411,8 +396,6 @@ export var AddonStudies = {
       addonVersion: study.addonVersion || AddonStudies.NO_ADDON_MARKER,
       reason,
       branch: study.branch,
-      enrollmentId:
-        study.enrollmentId || lazy.TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
     });
     lazy.TelemetryEnvironment.setExperimentInactive(study.slug);
 

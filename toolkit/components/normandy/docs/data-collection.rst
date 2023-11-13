@@ -135,23 +135,6 @@ records that data using :ref:`Telemetry Events <eventtelemetry>`. All data is st
 ``normandy`` category.
 
 
-Enrollment IDs
-^^^^^^^^^^^^^^
-
-Most Normandy telemetry carries an *enrollment ID*. These IDs are generated
-when Normandy enrolls the client in a change, be it a study, rollout, or
-something else. These enrollment IDs are used for the lifetime of that
-change, and are only used for that change (not shared between similar
-changes). Once a change ends (either via unenrollment, graduation, or another
-method) the enrollment ID should not be used again.
-
-When Telemetry upload is disabled, we must clear these enrollment IDs. This
-is done by replacing existing enrollment IDs with a filler value. New changes
-continue to receive a enrollment IDs as normal. The only thing that
-enrollment IDs are used for Telemetry, and so generated them while Telemetry
-is disabled is fine. They don't correlate to anything else, and won't be sent
-anywhere.
-
 Preference Studies
 ^^^^^^^^^^^^^^^^^^
 Enrollment
@@ -169,10 +152,6 @@ Enrollment
          The type of preference experiment. Currently this can take
          values "exp" and "exp-highpop", the latter being for
          experiments targeting large numbers of users.
-      enrollmentId
-         A UUID that is unique to this users enrollment in this study. It
-         will be included in all future telemetry for this user in this
-         study.
 
 Enrollment Failed
    method
@@ -214,8 +193,6 @@ Unenrollment
            filter.
          * ``"unknown"``: A reason was not specified. This should be
            considered a bug.
-      enrollmentId
-         The ID that was generated at enrollment.
 
 Unenroll Failed
    method
@@ -225,8 +202,6 @@ Unenroll Failed
    value
       The name of the study (``recipe.arguments.slug``)
    extra
-      enrollmentId
-         The ID that was generated at enrollment.
       reason
          A code describing the reason the unenroll failed. Possible values are:
 
@@ -247,8 +222,6 @@ Experimental Preference Changed
    value
       The name of the study (``recipe.arguments.slug``)
    extra
-      enrollmentId
-         The ID that was generated at enrollment.
       preferenceName
          The name of the preference that changed. Note that the value of the
          preference (old or new) is not given.
@@ -274,11 +247,6 @@ Enrollment
       The string ``"preference_rollout"``
    value
       The slug of the rollout (``recipe.arguments.slug``)
-   extra
-      enrollmentId
-         A UUID that is unique to this user's enrollment in this rollout. It
-         will be included in all future telemetry for this user in this
-         rollout.
 
 Enroll Failed
    Sent when a user attempts to enroll in a rollout, but the enrollment process fails.
@@ -318,8 +286,6 @@ Update
    extra
       previousState
          The state the rollout was in before this update (such as ``"active"`` or ``"graduated"``).
-      enrollmentId
-         The ID that was generated at enrollment.
 
 Graduation
    Sent when Normandy determines that further intervention is no longer
@@ -344,8 +310,6 @@ Graduation
            should be graduated regardless of the built-in preference values.
            This behavior is controlled by the constant
            ``PreferenceRollouts.GRADUATION_SET``.
-      enrollmentId
-         The ID that was generated at enrollment.
 
 Add-on Studies
 ^^^^^^^^^^^^^^
@@ -361,10 +325,6 @@ Enrollment
          The add-on's ID (example: ``"feature-study@shield.mozilla.com"``).
       addonVersion
          The add-on's version (example: ``"1.2.3"``).
-      enrollmentId
-         A UUID that is unique to this users enrollment in this study. It
-         will be included in all future telemetry for this user in this
-         study.
 
 Enroll Failure
    method
@@ -391,8 +351,6 @@ Update
          The add-on's ID (example: ``"feature-study@shield.mozilla.com"``).
       addonVersion
          The add-on's version (example: ``"1.2.3"``).
-      enrollmentId
-         The ID that was generated at enrollment.
 
 Update Failure
    method
@@ -407,8 +365,6 @@ Update Failure
          that failed, and the name of the error thrown. This information
          is purposely limited to avoid leaking personally identifiable
          information. This should be considered a bug.
-      enrollmentId
-         The ID that was generated at enrollment.
 
 Unenrollment
    method
@@ -443,5 +399,3 @@ Unenrollment
            from a profile.
          * ``"unknown"``: A reason was not specified. This should be
            considered a bug.
-      enrollmentId
-         The ID that was generated at enrollment.

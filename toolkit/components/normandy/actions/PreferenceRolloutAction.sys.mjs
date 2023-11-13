@@ -7,7 +7,6 @@ import { BaseAction } from "resource://normandy/actions/BaseAction.sys.mjs";
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   ActionSchemas: "resource://normandy/actions/schemas/index.sys.mjs",
-  NormandyUtils: "resource://normandy/lib/NormandyUtils.sys.mjs",
   PrefUtils: "resource://normandy/lib/PrefUtils.sys.mjs",
   PreferenceRollouts: "resource://normandy/lib/PreferenceRollouts.sys.mjs",
   TelemetryEnvironment: "resource://gre/modules/TelemetryEnvironment.sys.mjs",
@@ -68,9 +67,6 @@ export class PreferenceRolloutAction extends BaseAction {
           args.slug,
           {
             previousState: existingRollout.state,
-            enrollmentId:
-              existingRollout.enrollmentId ||
-              lazy.TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
           }
         );
 
@@ -119,9 +115,6 @@ export class PreferenceRolloutAction extends BaseAction {
         );
       }
 
-      let enrollmentId = lazy.NormandyUtils.generateUuid();
-      newRollout.enrollmentId = enrollmentId;
-
       await lazy.PreferenceRollouts.add(newRollout);
 
       for (const { preferenceName, value } of args.preferences) {
@@ -134,18 +127,13 @@ export class PreferenceRolloutAction extends BaseAction {
         newRollout.state,
         {
           type: "normandy-prefrollout",
-          enrollmentId:
-            enrollmentId || lazy.TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
         }
       );
       lazy.TelemetryEvents.sendEvent(
         "enroll",
         "preference_rollout",
         args.slug,
-        {
-          enrollmentId:
-            enrollmentId || lazy.TelemetryEvents.NO_ENROLLMENT_ID_MARKER,
-        }
+        {}
       );
     }
   }
