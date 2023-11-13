@@ -1412,33 +1412,6 @@ void nsContainerFrame::PushChildrenToOverflow(nsIFrame* aFromChild,
   SetOverflowFrames(mFrames.TakeFramesAfter(aPrevSibling));
 }
 
-void nsContainerFrame::PushChildren(nsIFrame* aFromChild,
-                                    nsIFrame* aPrevSibling) {
-  MOZ_ASSERT(aFromChild, "null pointer");
-  MOZ_ASSERT(aPrevSibling, "pushing first child");
-  MOZ_ASSERT(aPrevSibling->GetNextSibling() == aFromChild, "bad prev sibling");
-
-  // Disconnect aFromChild from its previous sibling
-  nsFrameList tail = mFrames.TakeFramesAfter(aPrevSibling);
-
-  nsContainerFrame* nextInFlow =
-      static_cast<nsContainerFrame*>(GetNextInFlow());
-  if (nextInFlow) {
-    // XXX This is not a very good thing to do. If it gets removed
-    // then remove the copy of this routine that doesn't do this from
-    // nsInlineFrame.
-    // When pushing and pulling frames we need to check for whether any
-    // views need to be reparented.
-    for (nsIFrame* f = aFromChild; f; f = f->GetNextSibling()) {
-      nsContainerFrame::ReparentFrameView(f, this, nextInFlow);
-    }
-    nextInFlow->mFrames.InsertFrames(nextInFlow, nullptr, std::move(tail));
-  } else {
-    // Add the frames to our overflow list
-    SetOverflowFrames(std::move(tail));
-  }
-}
-
 bool nsContainerFrame::PushIncompleteChildren(
     const FrameHashtable& aPushedItems, const FrameHashtable& aIncompleteItems,
     const FrameHashtable& aOverflowIncompleteItems) {

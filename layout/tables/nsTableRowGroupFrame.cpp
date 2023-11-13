@@ -1283,7 +1283,7 @@ void nsTableRowGroupFrame::SplitRowGroup(nsPresContext* aPresContext,
       }
       if (aStatus.IsIncomplete() && !contRow) {
         if (nsTableRowFrame* nextRow = lastRowThisPage->GetNextRow()) {
-          PushChildren(nextRow, lastRowThisPage);
+          PushChildrenToOverflow(nextRow, lastRowThisPage);
         }
       } else if (aStatus.IsComplete() && lastRowThisPage) {
         // Our size from the unconstrained reflow exceeded the constrained
@@ -1293,7 +1293,7 @@ void nsTableRowGroupFrame::SplitRowGroup(nsPresContext* aPresContext,
         if (nsTableRowFrame* nextRow = lastRowThisPage->GetNextRow()) {
           aStatus.Reset();
           aStatus.SetIncomplete();
-          PushChildren(nextRow, lastRowThisPage);
+          PushChildrenToOverflow(nextRow, lastRowThisPage);
         }
       }
       break;
@@ -1303,7 +1303,7 @@ void nsTableRowGroupFrame::SplitRowGroup(nsPresContext* aPresContext,
     // see if there is a page break after the row
     nsTableRowFrame* nextRow = rowFrame->GetNextRow();
     if (nextRow && nsTableFrame::PageBreakAfter(rowFrame, nextRow)) {
-      PushChildren(nextRow, rowFrame);
+      PushChildrenToOverflow(nextRow, rowFrame);
       aStatus.Reset();
       aStatus.SetIncomplete();
       break;

@@ -738,16 +738,6 @@ class nsContainerFrame : public nsSplittableFrame {
   void PushChildrenToOverflow(nsIFrame* aFromChild, nsIFrame* aPrevSibling);
 
   /**
-   * Same as above, except that this pushes frames to the next-in-flow
-   * frame and changes the geometric parent of the pushed frames when
-   * there is a next-in-flow frame.
-   *
-   * Updates the next-in-flow's child count. Does <b>not</b> update the
-   * pusher's child count.
-   */
-  void PushChildren(nsIFrame* aFromChild, nsIFrame* aPrevSibling);
-
-  /**
    * Iterate our children in our principal child list in the normal document
    * order, and append them (or their next-in-flows) to either our overflow list
    * or excess overflow container list according to their presence in
