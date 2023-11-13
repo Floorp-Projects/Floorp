@@ -11,9 +11,9 @@
 
 [package]
 edition = "2021"
-rust-version = "1.62"
+rust-version = "1.63"
 name = "glean-core"
-version = "54.0.0"
+version = "55.0.0"
 authors = [
     "Jan-Erik Rediger <jrediger@mozilla.com>",
     "The Glean Team <glean-team@mozilla.com>",
@@ -35,7 +35,7 @@ license = "MPL-2.0"
 repository = "https://github.com/mozilla/glean"
 
 [package.metadata.glean]
-glean-parser = "8.1.0"
+glean-parser = "10.0.0"
 
 [dependencies.bincode]
 version = "1.2.1"
@@ -95,17 +95,14 @@ version = "0.2.2"
 
 [dev-dependencies.env_logger]
 version = "0.10.0"
-features = [
-    "auto-color",
-    "humantime",
-]
+features = ["humantime"]
 default-features = false
 
 [dev-dependencies.iso8601]
 version = "0.4"
 
 [dev-dependencies.tempfile]
-version = "3.1.0"
+version = "3.8.0"
 
 [build-dependencies.uniffi]
 version = "0.24.1"

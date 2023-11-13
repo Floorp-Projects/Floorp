@@ -44,7 +44,7 @@ impl ExtraKeys for {{ obj.name|Camelize }}{{ suffix }} {
 /// {{ obj.description|wordwrap() | replace('\n', '\n/// ') }}
 #[rustfmt::skip]
 pub static {{ obj.name|snake_case }}: ::glean::private::__export::Lazy<::glean::private::PingType> =
-    ::glean::private::__export::Lazy::new(|| ::glean::private::PingType::new("{{ obj.name }}", {{ obj.include_client_id|rust }}, {{ obj.send_if_empty|rust }}, {{ obj.reason_codes|rust }}));
+    ::glean::private::__export::Lazy::new(|| ::glean::private::PingType::new("{{ obj.name }}", {{ obj.include_client_id|rust }}, {{ obj.send_if_empty|rust }}, {{ obj.precise_timestamps|rust }}, {{ obj.reason_codes|rust }}));
 {% endfor %}
 {% else %}
 pub mod {{ category.name|snake_case }} {

@@ -37,39 +37,11 @@ user-login = "Amanieu"
 user-name = "Amanieu d'Antras"
 
 [[publisher.audio_thread_priority]]
-version = "0.26.1"
-when = "2022-03-22"
-user-id = 1258
-user-login = "padenot"
-user-name = "Paul Adenot"
-
-[[publisher.audio_thread_priority]]
 version = "0.30.0"
 when = "2023-11-06"
 user-id = 1258
 user-login = "padenot"
 user-name = "Paul Adenot"
-
-[[publisher.authenticator]]
-version = "0.4.0-alpha.20"
-when = "2023-08-24"
-user-id = 175410
-user-login = "jschanck"
-user-name = "John Schanck"
-
-[[publisher.authenticator]]
-version = "0.4.0-alpha.21"
-when = "2023-09-11"
-user-id = 175410
-user-login = "jschanck"
-user-name = "John Schanck"
-
-[[publisher.authenticator]]
-version = "0.4.0-alpha.22"
-when = "2023-09-19"
-user-id = 175410
-user-login = "jschanck"
-user-name = "John Schanck"
 
 [[publisher.authenticator]]
 version = "0.4.0-alpha.23"
@@ -107,13 +79,6 @@ user-login = "emilio"
 user-name = "Emilio Cobos Álvarez"
 
 [[publisher.clap]]
-version = "4.1.14"
-when = "2023-03-28"
-user-id = 6743
-user-login = "epage"
-user-name = "Ed Page"
-
-[[publisher.clap]]
 version = "4.4.5"
 when = "2023-09-25"
 user-id = 6743
@@ -121,22 +86,8 @@ user-login = "epage"
 user-name = "Ed Page"
 
 [[publisher.clap_builder]]
-version = "4.1.14"
-when = "2023-03-28"
-user-id = 6743
-user-login = "epage"
-user-name = "Ed Page"
-
-[[publisher.clap_builder]]
 version = "4.4.5"
 when = "2023-09-25"
-user-id = 6743
-user-login = "epage"
-user-name = "Ed Page"
-
-[[publisher.clap_derive]]
-version = "4.1.14"
-when = "2023-03-28"
 user-id = 6743
 user-login = "epage"
 user-name = "Ed Page"
@@ -144,13 +95,6 @@ user-name = "Ed Page"
 [[publisher.clap_derive]]
 version = "4.4.2"
 when = "2023-08-31"
-user-id = 6743
-user-login = "epage"
-user-name = "Ed Page"
-
-[[publisher.clap_lex]]
-version = "0.4.1"
-when = "2023-03-28"
 user-id = 6743
 user-login = "epage"
 user-name = "Ed Page"
@@ -240,13 +184,6 @@ user-login = "nical"
 user-name = "Nicolas Silva"
 
 [[publisher.flate2]]
-version = "1.0.24"
-when = "2022-05-28"
-user-id = 4333
-user-login = "joshtriplett"
-user-name = "Josh Triplett"
-
-[[publisher.flate2]]
 version = "1.0.26"
 when = "2023-04-28"
 user-id = 4333
@@ -268,15 +205,15 @@ user-login = "jrmuizel"
 user-name = "Jeff Muizelaar"
 
 [[publisher.glean]]
-version = "54.0.0"
-when = "2023-09-13"
+version = "55.0.0"
+when = "2023-10-23"
 user-id = 48
 user-login = "badboy"
 user-name = "Jan-Erik Rediger"
 
 [[publisher.glean-core]]
-version = "54.0.0"
-when = "2023-09-13"
+version = "55.0.0"
+when = "2023-10-23"
 user-id = 48
 user-login = "badboy"
 user-name = "Jan-Erik Rediger"
@@ -336,13 +273,6 @@ when = "2022-09-23"
 user-id = 1
 user-login = "alexcrichton"
 user-name = "Alex Crichton"
-
-[[publisher.libc]]
-version = "0.2.132"
-when = "2022-08-16"
-user-id = 2915
-user-login = "Amanieu"
-user-name = "Amanieu d'Antras"
 
 [[publisher.libc]]
 version = "0.2.146"
@@ -568,13 +498,6 @@ user-login = "dtolnay"
 user-name = "David Tolnay"
 
 [[publisher.smallvec]]
-version = "1.10.0"
-when = "2022-10-02"
-user-id = 2017
-user-login = "mbrubeck"
-user-name = "Matt Brubeck"
-
-[[publisher.smallvec]]
 version = "1.11.1"
 when = "2023-09-20"
 user-id = 2017
@@ -736,22 +659,8 @@ user-login = "alexcrichton"
 user-name = "Alex Crichton"
 
 [[publisher.wasm-encoder]]
-version = "0.31.0"
-when = "2023-07-17"
-user-id = 1
-user-login = "alexcrichton"
-user-name = "Alex Crichton"
-
-[[publisher.wasm-encoder]]
 version = "0.33.1"
 when = "2023-09-18"
-user-id = 1
-user-login = "alexcrichton"
-user-name = "Alex Crichton"
-
-[[publisher.wasm-smith]]
-version = "0.12.12"
-when = "2023-07-17"
 user-id = 1
 user-login = "alexcrichton"
 user-name = "Alex Crichton"
@@ -764,22 +673,8 @@ user-login = "alexcrichton"
 user-name = "Alex Crichton"
 
 [[publisher.wasmparser]]
-version = "0.109.0"
-when = "2023-07-17"
-user-id = 1
-user-login = "alexcrichton"
-user-name = "Alex Crichton"
-
-[[publisher.wasmparser]]
 version = "0.113.1"
 when = "2023-09-18"
-user-id = 1
-user-login = "alexcrichton"
-user-name = "Alex Crichton"
-
-[[publisher.wast]]
-version = "62.0.0"
-when = "2023-07-17"
 user-id = 1
 user-login = "alexcrichton"
 user-name = "Alex Crichton"

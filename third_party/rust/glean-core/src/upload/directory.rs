@@ -303,7 +303,7 @@ mod test {
         let (mut glean, dir) = new_glean(None);
 
         // Register a ping for testing
-        let ping_type = PingType::new("test", true, true, vec![]);
+        let ping_type = PingType::new("test", true, true, true, vec![]);
         glean.register_ping_type(&ping_type);
 
         // Submit the ping to populate the pending_pings directory
@@ -329,7 +329,7 @@ mod test {
         let (mut glean, dir) = new_glean(None);
 
         // Register a ping for testing
-        let ping_type = PingType::new("test", true, true, vec![]);
+        let ping_type = PingType::new("test", true, true, true, vec![]);
         glean.register_ping_type(&ping_type);
 
         // Submit the ping to populate the pending_pings directory
@@ -364,7 +364,7 @@ mod test {
         let (mut glean, dir) = new_glean(None);
 
         // Register a ping for testing
-        let ping_type = PingType::new("test", true, true, vec![]);
+        let ping_type = PingType::new("test", true, true, true, vec![]);
         glean.register_ping_type(&ping_type);
 
         // Submit the ping to populate the pending_pings directory

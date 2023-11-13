@@ -185,5 +185,6 @@ interface nsIFOG : nsISupports
   uint32_t testRegisterRuntimePing(in ACString aName,
                                    in boolean aIncludeClientId,
                                    in boolean aSendIfEmpty,
+                                   in boolean aPreciseTimestamps,
                                    in Array<ACString> aReasonCodes);
 };

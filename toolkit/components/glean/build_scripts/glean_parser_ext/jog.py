@@ -54,6 +54,7 @@ known_ping_args = [
     "name",
     "include_client_id",
     "send_if_empty",
+    "precise_timestamps",
     "reason_codes",
 ]
 

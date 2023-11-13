@@ -137,6 +137,7 @@ pub extern "C" fn jog_test_register_ping(
     name: &nsACString,
     include_client_id: bool,
     send_if_empty: bool,
+    precise_timestamps: bool,
     reason_codes: &ThinVec<nsCString>,
 ) -> u32 {
     let ping_name = name.to_string();
@@ -144,7 +145,7 @@ pub extern "C" fn jog_test_register_ping(
         .iter()
         .map(|reason| reason.to_string())
         .collect();
-    create_and_register_ping(ping_name, include_client_id, send_if_empty, reason_codes)
+    create_and_register_ping(ping_name, include_client_id, send_if_empty, precise_timestamps, reason_codes)
         .expect("Creation or registration of ping failed.") // permitted to panic in test-only method.
 }
 
@@ -152,6 +153,7 @@ fn create_and_register_ping(
     ping_name: String,
     include_client_id: bool,
     send_if_empty: bool,
+    precise_timestamps: bool,
     reason_codes: Vec<String>,
 ) -> Result<u32, Box<dyn std::error::Error>> {
     let ns_name = nsCString::from(&ping_name);
@@ -159,6 +161,7 @@ fn create_and_register_ping(
         ping_name,
         include_client_id,
         send_if_empty,
+        precise_timestamps,
         reason_codes,
     );
     extern "C" {
@@ -204,6 +207,7 @@ struct PingDefinitionData {
     name: String,
     include_client_id: bool,
     send_if_empty: bool,
+    precise_timestamps: bool,
     reason_codes: Option<Vec<String>>,
 }
 
@@ -249,6 +253,7 @@ pub extern "C" fn jog_load_jogfile(jogfile_path: &nsAString) -> bool {
             ping.name,
             ping.include_client_id,
             ping.send_if_empty,
+            ping.precise_timestamps,
             ping.reason_codes.unwrap_or_else(Vec::new),
         );
     }

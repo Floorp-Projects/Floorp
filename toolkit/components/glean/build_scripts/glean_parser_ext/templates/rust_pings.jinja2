@@ -19,6 +19,7 @@ pub static {{ obj.name|snake_case }}: Lazy<Ping> = Lazy::new(|| {
         "{{ obj.name }}",
         {{ obj.include_client_id|rust }},
         {{ obj.send_if_empty|rust }},
+        {{ obj.precise_timestamps|rust }},
         {{ obj.reason_codes|rust }},
     )
 });

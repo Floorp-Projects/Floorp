@@ -99,6 +99,11 @@ impl StorageManager {
         storage.iter_store_from(Lifetime::Application, store_name, None, &mut snapshotter);
         storage.iter_store_from(Lifetime::User, store_name, None, &mut snapshotter);
 
+        // Add send in all pings client.annotations
+        if store_name != "glean_client_info" {
+            storage.iter_store_from(Lifetime::Application, "all-pings", None, snapshotter);
+        }
+
         if clear_store {
             if let Err(e) = storage.clear_ping_lifetime_storage(store_name) {
                 log::warn!("Failed to clear lifetime storage: {:?}", e);

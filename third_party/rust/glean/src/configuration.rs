@@ -42,6 +42,10 @@ pub struct Configuration {
     pub rate_limit: Option<crate::PingRateLimit>,
     /// (Experimental) Whether to add a wallclock timestamp to all events.
     pub enable_event_timestamps: bool,
+    /// An experimentation identifier derived by the application to be sent with all pings, it should
+    /// be noted that this has an underlying StringMetric and so should conform to the limitations that
+    /// StringMetric places on length, etc.
+    pub experimentation_id: Option<String>,
 }
 
 /// Configuration builder.
@@ -84,6 +88,10 @@ pub struct Builder {
     pub rate_limit: Option<crate::PingRateLimit>,
     /// (Experimental) Whether to add a wallclock timestamp to all events.
     pub enable_event_timestamps: bool,
+    /// An experimentation identifier derived by the application to be sent with all pings, it should
+    /// be noted that this has an underlying StringMetric and so should conform to the limitations that
+    /// StringMetric places on length, etc.
+    pub experimentation_id: Option<String>,
 }
 
 impl Builder {
@@ -106,6 +114,7 @@ impl Builder {
             log_level: None,
             rate_limit: None,
             enable_event_timestamps: false,
+            experimentation_id: None,
         }
     }
 
@@ -124,6 +133,7 @@ impl Builder {
             log_level: self.log_level,
             rate_limit: self.rate_limit,
             enable_event_timestamps: self.enable_event_timestamps,
+            experimentation_id: self.experimentation_id,
         }
     }
 
@@ -166,6 +176,12 @@ impl Builder {
     /// Set whether to add a wallclock timestamp to all events (experimental).
     pub fn with_event_timestamps(mut self, value: bool) -> Self {
         self.enable_event_timestamps = value;
+        self
+    }
+
+    /// Set whether to add a wallclock timestamp to all events (experimental).
+    pub fn with_experimentation_id(mut self, value: String) -> Self {
+        self.experimentation_id = Some(value);
         self
     }
 }
