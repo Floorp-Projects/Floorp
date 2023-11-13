@@ -531,6 +531,7 @@ function toggleExpandedBtn(button, toggle, view = null) {
 }
 
 ;// CONCATENATED MODULE: ./web/pdfjs.js
+;
 const {
   AbortException,
   AnnotationEditorLayer,
@@ -4968,7 +4969,7 @@ class PDFViewer {
   #scaleTimeoutId = null;
   #textLayerMode = TextLayerMode.ENABLE;
   constructor(options) {
-    const viewerVersion = '4.0.189';
+    const viewerVersion = '4.0.223';
     if (version !== viewerVersion) {
       throw new Error(`The API version "${version}" does not match the Viewer version "${viewerVersion}".`);
     }
@@ -9201,8 +9202,8 @@ PDFPrintServiceFactory.instance = {
 
 
 
-const pdfjsVersion = '4.0.189';
-const pdfjsBuild = '50f52b43a';
+const pdfjsVersion = '4.0.223';
+const pdfjsBuild = '788411997';
 const AppConstants = null;
 window.PDFViewerApplication = PDFViewerApplication;
 window.PDFViewerApplicationConstants = AppConstants;
