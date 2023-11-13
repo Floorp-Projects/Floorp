@@ -12,7 +12,10 @@ add_setup(async function () {
 
   // Enable the pref to once execute cookie banner handling once per domain.
   await SpecialPowers.pushPrefEnv({
-    set: [["cookiebanners.bannerClicking.executeOnce", true]],
+    set: [
+      ["cookiebanners.bannerClicking.executeOnce", true],
+      ["cookiebanners.service.mode", Ci.nsICookieBannerService.MODE_REJECT],
+    ],
   });
 
   // Clean the records.

@@ -49,11 +49,11 @@ async function testSetup() {
     if (Services.cookieBanners.isEnabled) {
       // Restore original rules.
       Services.cookieBanners.resetRules(true);
-    }
 
-    // Clear executed records.
-    Services.cookieBanners.removeAllExecutedRecords(false);
-    Services.cookieBanners.removeAllExecutedRecords(true);
+      // Clear executed records.
+      Services.cookieBanners.removeAllExecutedRecords(false);
+      Services.cookieBanners.removeAllExecutedRecords(true);
+    }
   });
 }
 
