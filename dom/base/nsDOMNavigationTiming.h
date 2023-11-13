@@ -12,6 +12,7 @@
 #include "mozilla/WeakPtr.h"
 #include "mozilla/RelativeTimeline.h"
 #include "mozilla/TimeStamp.h"
+#include "mozilla/BaseProfilerMarkersPrerequisites.h"
 #include "nsITimer.h"
 
 class nsDocShell;
@@ -183,6 +184,8 @@ class nsDOMNavigationTiming final : public mozilla::RelativeTimeline {
       const DOMHighResTimeStamp& aRenderTime);
   void NotifyDOMContentFlushedForRootContentDocument();
   void NotifyDocShellStateChanged(DocShellState aDocShellState);
+
+  void MaybeAddLCPProfilerMarker(mozilla::MarkerInnerWindowId aInnerWindowID);
 
   DOMTimeMilliSec TimeStampToDOM(mozilla::TimeStamp aStamp) const;
 

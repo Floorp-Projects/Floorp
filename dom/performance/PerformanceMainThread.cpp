@@ -109,9 +109,38 @@ PerformanceMainThread::PerformanceMainThread(nsPIDOMWindowInner* aWindow,
     mEventCounts = new class EventCounts(GetParentObject());
   }
   CreateNavigationTimingEntry();
+
+  if (StaticPrefs::dom_enable_largest_contentful_paint()) {
+    nsCOMPtr<nsPIDOMWindowInner> owner = GetOwner();
+    MarkerInnerWindowId innerWindowID =
+        owner ? MarkerInnerWindowId(owner->WindowID())
+              : MarkerInnerWindowId::NoId();
+    // There might be multiple LCP entries and we only care about the latest one
+    // which is also the biggest value. That's why we need to record these
+    // markers in two different places:
+    // - During the Document unload, so we can record the closed pages.
+    // - During the profile capture, so we can record the open pages.
+    // We are capturing the second one here.
+    // Our static analysis doesn't allow capturing ref-counted pointers in
+    // lambdas, so we need to hide it in a uintptr_t. This is safe because this
+    // lambda will be destroyed in ~PerformanceMainThread().
+    uintptr_t self = reinterpret_cast<uintptr_t>(this);
+    profiler_add_state_change_callback(
+        // Using the "Pausing" state as "GeneratingProfile" profile happens too
+        // late; we can not record markers if the profiler is already paused.
+        ProfilingState::Pausing,
+        [self, innerWindowID](ProfilingState aProfilingState) {
+          const PerformanceMainThread* selfPtr =
+              reinterpret_cast<const PerformanceMainThread*>(self);
+
+          selfPtr->GetDOMTiming()->MaybeAddLCPProfilerMarker(innerWindowID);
+        },
+        self);
+  }
 }
 
 PerformanceMainThread::~PerformanceMainThread() {
+  profiler_remove_state_change_callback(reinterpret_cast<uintptr_t>(this));
   mozilla::DropJSObjects(this);
 }
 
