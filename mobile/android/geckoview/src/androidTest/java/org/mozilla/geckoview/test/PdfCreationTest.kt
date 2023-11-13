@@ -158,20 +158,4 @@ class PdfCreationTest : BaseSessionTest() {
             }
         }
     }
-
-    @NullDelegate(Autofill.Delegate::class)
-    @Test
-    fun saveAContentPdfDocument() {
-        activityRule.scenario.onActivity {
-            val originalBytes = getTestBytes(HELLO_PDF_WORLD_PDF_PATH)
-            TestContentProvider.setTestData(originalBytes, "application/pdf")
-            mainSession.loadUri("content://org.mozilla.geckoview.test.provider/pdf")
-            mainSession.waitForPageStop()
-
-            val response = mainSession.pdfFileSaver.save()
-            sessionRule.waitForResult(response).let {
-                assertThat("The PDF File must the same as the original one.", it.body?.readBytes(), equalTo(originalBytes))
-            }
-        }
-    }
 }

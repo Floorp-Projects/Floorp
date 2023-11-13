@@ -79,8 +79,7 @@ public final class SessionPdfFileSaver {
                 public GeckoResult<WebResponse> onValue(final WebResponse response) {
                   final int statusCode = response.statusCode != 0 ? response.statusCode : 200;
                   return GeckoResult.fromValue(
-                      new WebResponse.Builder(
-                              originalUrl.startsWith("content://") ? url : originalUrl)
+                      new WebResponse.Builder(originalUrl)
                           .statusCode(statusCode)
                           .body(response.body)
                           .skipConfirmation(skipConfirmation)
