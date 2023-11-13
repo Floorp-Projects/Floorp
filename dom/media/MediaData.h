@@ -571,6 +571,8 @@ enum class CryptoScheme : uint8_t {
   Cbcs,
 };
 
+const char* CryptoSchemeToString(const CryptoScheme& aScheme);
+
 class CryptoTrack {
  public:
   CryptoTrack()
