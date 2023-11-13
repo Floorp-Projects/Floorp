@@ -686,15 +686,16 @@ void PerformanceMainThread::FinalizeLCPEntriesForText() {
 
   bool canFinalize = StaticPrefs::dom_enable_largest_contentful_paint() &&
                      !presContext->HasStoppedGeneratingLCP();
+  nsTHashMap<nsRefPtrHashKey<Element>, nsRect> textFrameUnion =
+      std::move(GetTextFrameUnions());
   if (canFinalize) {
-    for (const auto& textFrameUnion : GetTextFrameUnions()) {
+    for (const auto& textFrameUnion : textFrameUnion) {
       LCPHelpers::FinalizeLCPEntryForText(
           this, renderTime, textFrameUnion.GetKey(), textFrameUnion.GetData(),
           presContext);
     }
   }
-
-  ClearTextFrameUnions();
+  MOZ_ASSERT(GetTextFrameUnions().IsEmpty());
 }
 
 void PerformanceMainThread::StoreImageLCPEntry(
@@ -715,10 +716,11 @@ PerformanceMainThread::GetImageLCPEntry(Element* aElement,
   Document* doc = aElement->GetComposedDoc();
   MOZ_ASSERT(doc, "Element should be connected when it's painted");
 
-  const Maybe<const LCPImageEntryKey>& contentIdentifier =
+  Maybe<LCPImageEntryKey>& contentIdentifier =
       entry.value()->GetLCPImageEntryKey();
   if (contentIdentifier.isSome()) {
     doc->ContentIdentifiersForLCP().EnsureRemoved(contentIdentifier.value());
+    contentIdentifier.reset();
   }
 
   return entry.value().forget();
@@ -739,14 +741,21 @@ void PerformanceMainThread::SetHasDispatchedScrollEvent() {
 
 void PerformanceMainThread::SetHasDispatchedInputEvent() {
   mHasDispatchedInputEvent = true;
-  mImageLCPEntryMap.Clear();
   ClearGeneratedTempDataForLCP();
 }
 
-void PerformanceMainThread::ClearTextFrameUnions() { mTextFrameUnions.Clear(); }
-
 void PerformanceMainThread::ClearGeneratedTempDataForLCP() {
-  ClearTextFrameUnions();
+  mTextFrameUnions.Clear();
   mImageLCPEntryMap.Clear();
+  mImagesPendingRendering.Clear();
+
+  nsIGlobalObject* ownerGlobal = GetOwnerGlobal();
+  if (!ownerGlobal) {
+    return;
+  }
+
+  if (Document* document = ownerGlobal->GetAsInnerWindow()->GetExtantDoc()) {
+    document->ContentIdentifiersForLCP().Clear();
+  }
 }
 }  // namespace mozilla::dom
