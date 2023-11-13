@@ -25,6 +25,7 @@ const SEARCH_DATA_TRANSFERRED_SCALAR = "browser.search.data_transferred";
 const SEARCH_TELEMETRY_PRIVATE_BROWSING_KEY_SUFFIX = "pb";
 
 // Exported for tests.
+export const ADLINK_CHECK_TIMEOUT_MS = 1000;
 export const TELEMETRY_SETTINGS_KEY = "search-telemetry-v2";
 export const TELEMETRY_CATEGORIZATION_KEY = "search-categorization";
 export const TELEMETRY_CATEGORIZATION_DOWNLOAD_SETTINGS = {
@@ -33,6 +34,11 @@ export const TELEMETRY_CATEGORIZATION_DOWNLOAD_SETTINGS = {
   minAdjust: 60000,
   maxAdjust: 600000,
   maxTriesPerSession: 2,
+};
+
+export const SEARCH_TELEMETRY_SHARED = {
+  PROVIDER_INFO: "SearchTelemetry:ProviderInfo",
+  LOAD_TIMEOUT: "SearchTelemetry:LoadTimeout",
 };
 
 const impressionIdsWithoutEngagementsSet = new Set();
@@ -116,6 +122,9 @@ class TelemetryHandler {
   // An instance of remote settings that is used to access the provider info.
   _telemetrySettings;
 
+  // Callback used when syncing telemetry settings.
+  #telemetrySettingsSync;
+
   // _browserInfoByURL is a map of tracked search urls to objects containing:
   // * {object} info
   //   the search provider information associated with the url.
@@ -190,6 +199,9 @@ class TelemetryHandler {
       lazy.logConsole.error("Could not get settings:", ex);
     }
 
+    this.#telemetrySettingsSync = event => this.#onSettingsSync(event);
+    this._telemetrySettings.on("sync", this.#telemetrySettingsSync);
+
     // Send the provider info to the child handler.
     this._contentHandler.init(rawProviderInfo);
     this._originalProviderInfo = rawProviderInfo;
@@ -203,6 +215,27 @@ class TelemetryHandler {
     Services.wm.addListener(this);
 
     this._initialized = true;
+  }
+
+  async #onSettingsSync(event) {
+    let current = event.data?.current;
+    if (current) {
+      lazy.logConsole.debug(
+        "Update provider info due to Remote Settings sync."
+      );
+      this._originalProviderInfo = current;
+      this._setSearchProviderInfo(current);
+      Services.ppmm.sharedData.set(
+        SEARCH_TELEMETRY_SHARED.PROVIDER_INFO,
+        current
+      );
+      Services.ppmm.sharedData.flush();
+    } else {
+      lazy.logConsole.debug(
+        "Ignoring Remote Settings sync data due to missing records."
+      );
+    }
+    Services.obs.notifyObservers(null, "search-telemetry-v2-synced");
   }
 
   /**
@@ -219,6 +252,17 @@ class TelemetryHandler {
       this._unregisterWindow(win);
     }
     Services.wm.removeListener(this);
+
+    try {
+      this._telemetrySettings.off("sync", this.#telemetrySettingsSync);
+    } catch (ex) {
+      lazy.logConsole.error(
+        "Failed to shutdown SearchSERPTelemetry Remote Settings.",
+        ex
+      );
+    }
+    this._telemetrySettings = null;
+    this.#telemetrySettingsSync = null;
 
     this._initialized = false;
   }
@@ -861,7 +905,14 @@ class ContentHandler {
    *  The provider information for the search telemetry to record.
    */
   init(providerInfo) {
-    Services.ppmm.sharedData.set("SearchTelemetry:ProviderInfo", providerInfo);
+    Services.ppmm.sharedData.set(
+      SEARCH_TELEMETRY_SHARED.PROVIDER_INFO,
+      providerInfo
+    );
+    Services.ppmm.sharedData.set(
+      SEARCH_TELEMETRY_SHARED.LOAD_TIMEOUT,
+      ADLINK_CHECK_TIMEOUT_MS
+    );
 
     Services.obs.addObserver(this, "http-on-examine-response");
     Services.obs.addObserver(this, "http-on-examine-cached-response");

@@ -25,8 +25,12 @@ XPCOMUtils.defineLazyPreferenceGetter(
   false
 );
 
-const SHARED_DATA_KEY = "SearchTelemetry:ProviderInfo";
-export const ADLINK_CHECK_TIMEOUT_MS = 1000;
+// Duplicated from SearchSERPTelemetry to avoid loading the module on content
+// startup.
+const SEARCH_TELEMETRY_SHARED = {
+  PROVIDER_INFO: "SearchTelemetry:ProviderInfo",
+  LOAD_TIMEOUT: "SearchTelemetry:LoadTimeout",
+};
 
 /**
  * SearchProviders looks after keeping track of the search provider information
@@ -52,7 +56,9 @@ class SearchProviders {
       return this._searchProviderInfo;
     }
 
-    this._searchProviderInfo = Services.cpmm.sharedData.get(SHARED_DATA_KEY);
+    this._searchProviderInfo = Services.cpmm.sharedData.get(
+      SEARCH_TELEMETRY_SHARED.PROVIDER_INFO
+    );
 
     if (!this._searchProviderInfo) {
       return null;
@@ -88,7 +94,7 @@ class SearchProviders {
   handleEvent(event) {
     switch (event.type) {
       case "change": {
-        if (event.changedKeys.includes(SHARED_DATA_KEY)) {
+        if (event.changedKeys.includes(SEARCH_TELEMETRY_SHARED.PROVIDER_INFO)) {
           // Just null out the provider information for now, we'll fetch it next
           // time we need it.
           this._searchProviderInfo = null;
@@ -1019,6 +1025,13 @@ const documentToEventCallbackMap = new WeakMap();
  */
 export class SearchSERPTelemetryChild extends JSWindowActorChild {
   /**
+   * Amount of time to wait after a page event before examining the page
+   * for ads.
+   *
+   * @type {number | null}
+   */
+  #adTimeout;
+  /**
    * Determines if there is a provider that matches the supplied URL and returns
    * the information associated with that provider.
    *
@@ -1248,9 +1261,14 @@ export class SearchSERPTelemetryChild extends JSWindowActorChild {
   }
 
   #check(eventType) {
+    if (!this.#adTimeout) {
+      this.#adTimeout = Services.cpmm.sharedData.get(
+        SEARCH_TELEMETRY_SHARED.LOAD_TIMEOUT
+      );
+    }
     this.#cancelCheck();
     this._waitForContentTimeout = lazy.setTimeout(() => {
       this._checkForAdLink(eventType);
-    }, ADLINK_CHECK_TIMEOUT_MS);
+    }, this.#adTimeout);
   }
 }
