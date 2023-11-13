@@ -398,6 +398,7 @@ features:
       - channel: developer
         value:
           enabled: true
+          product-recommendations: true
 
   print:
     description: A feature for printing from the share or browser menu.
