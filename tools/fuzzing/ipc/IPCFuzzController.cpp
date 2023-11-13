@@ -142,6 +142,11 @@ bool IPCFuzzController::GetRandomIPCMessageType(ProtocolId pId,
 
   *type =
       ((uint32_t)pIdEntry->first << 16) + 1 + (typeOffset % pIdEntry->second);
+
+  if (strstr(IPC::StringFromIPCMessageType(*type), "::Reply_")) {
+    *type = *type - 1;
+  }
+
   return true;
 }
 
