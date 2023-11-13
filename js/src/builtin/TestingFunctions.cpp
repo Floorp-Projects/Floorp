@@ -7171,7 +7171,7 @@ static bool EvalStencil(JSContext* cx, uint32_t argc, Value* vp) {
     return false;
   }
   Rooted<js::StencilObject*> stencilObj(
-      cx, args[0].toObject().maybeUnwrapAs<js::StencilObject>());
+      cx, args[0].toObject().maybeUnwrapIf<js::StencilObject>());
   if (!stencilObj) {
     JS_ReportErrorASCII(cx, "evalStencil: Stencil expected");
     return false;
