@@ -107,4 +107,34 @@ add_task(async function test() {
     true,
     pb_about_pb_title
   );
+
+  await SpecialPowers.pushPrefEnv({
+    set: [["privacy.exposeContentTitleInWindow.pbm", false]],
+  });
+  await testTabTitle(await openWin(false), testPageURL, false, page_with_title);
+  await testTabTitle(
+    await openWin(true),
+    testPageURL,
+    true,
+    pb_page_without_title
+  );
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["privacy.exposeContentTitleInWindow", false],
+      ["privacy.exposeContentTitleInWindow.pbm", true],
+    ],
+  });
+  await testTabTitle(
+    await openWin(false),
+    testPageURL,
+    false,
+    page_without_title
+  );
+  // The generic preference set to false is intended to override the PBM one
+  await testTabTitle(
+    await openWin(true),
+    testPageURL,
+    true,
+    pb_page_without_title
+  );
 });
