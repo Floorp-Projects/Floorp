@@ -141,6 +141,30 @@ web-platform-tests-backlog:
             - --backlog
             - --exclude-tag=webgpu
 
+web-platform-tests-privatebrowsing:
+    description: "Web platform privatebrowsing test run"
+    suite: web-platform-tests
+    treeherder-symbol: W(pb)
+    virtualization: virtual
+    tier: default
+    chunks: 1
+    max-run-time: 1800
+    variants: []  # We don't need sw or nofis testing.
+    run-on-projects:
+        by-test-platform:
+            android.*: []
+            macos.*: []
+            .*-(wayland).*/.*: []
+            default: built-projects
+    mozharness:
+        chunked: true
+        extra-options:
+            - --test-type=testharness
+            - --default-exclude
+            - --setpref=browser.privatebrowsing.autostart=true
+            - --setpref=dom.cache.privateBrowsing.enabled=true
+            - --tag=privatebrowsing
+
 web-platform-tests-reftest:
     description: "Web platform reftest run"
     schedules-component: web-platform-tests-reftest

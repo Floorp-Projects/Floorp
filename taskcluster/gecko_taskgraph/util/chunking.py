@@ -124,7 +124,7 @@ def guess_mozinfo_from_task(task, repo=""):
         info[tag] = value
 
     # wpt has canvas and webgpu as tags, lets find those
-    for tag in ["canvas", "webgpu"]:
+    for tag in ["canvas", "webgpu", "privatebrowsing"]:
         if tag in task["test-name"]:
             info[tag] = True
         else:
@@ -249,6 +249,9 @@ class DefaultLoader(BaseManifestLoader):
                         manifests.add(t["manifest"])
                 elif mozinfo["webgpu"]:
                     if "_mozilla/webgpu" in t["manifest"]:
+                        manifests.add(t["manifest"])
+                elif mozinfo["privatebrowsing"]:
+                    if "/service-workers/cache-storage" in t["manifest"]:
                         manifests.add(t["manifest"])
                 else:
                     manifests.add(t["manifest"])
