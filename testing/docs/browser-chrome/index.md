@@ -22,7 +22,7 @@ You can run individual tests locally using the standard `./mach test` command:
 is unique. You can also run entire directories, or specific test manifests:
 
 ```
-./mach test path/to/browser.ini
+./mach test path/to/browser.toml
 ```
 
 You can also use the more specific `./mach mochitest` command in the same way.
@@ -57,7 +57,7 @@ the right template for you, and adds it to the manifest.
 If there are no tests in the directory yet (for example, for an entirely new
 feature and directory) you will need to:
 
-1. create an empty `browser.ini` file
+1. create an empty `browser.toml` file
 2. add it to `BROWSER_CHROME_MANIFESTS` collection from a `moz.build` file.
 3. then run the `./mach addtest` command as before.
 

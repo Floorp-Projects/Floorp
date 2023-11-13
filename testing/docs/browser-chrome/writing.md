@@ -127,13 +127,14 @@ More details on how to do mocking are available on the Sinon website.
 ## Additional files
 
 You can use extra files (e.g. webpages to load) by adding them to a `support-files`
-property using the `browser.ini` file:
+property using the `browser.toml` file:
 
-```ini
-[browser_foo.js]
-support-files =
-  bar.html
-  baz.js
+```toml
+["browser_foo.js"]
+support-files = [
+  "bar.html",
+  "baz.js",
+]
 ```
 
 ## Reusing code across tests
