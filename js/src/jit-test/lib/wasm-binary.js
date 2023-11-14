@@ -164,6 +164,8 @@ const definedOpcodes =
      0x10, 0x11,
      ...(wasmTailCallsEnabled() ? [0x12, 0x13] : []),
      ...(wasmFunctionReferencesEnabled() ? [0x14] : []),
+     ...(wasmTailCallsEnabled() &&
+         wasmFunctionReferencesEnabled() ? [0x15] : []),
      ...(wasmExceptionsEnabled() ? [0x18, 0x19] : []),
      0x1a, 0x1b, 0x1c,
      0x20, 0x21, 0x22, 0x23, 0x24, 0x25, 0x26,

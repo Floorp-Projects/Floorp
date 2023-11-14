@@ -7634,7 +7634,7 @@
 #if defined(ENABLE_WASM_TAIL_CALLS)
 -   name: javascript.options.wasm_tail_calls
     type: bool
-    value: @IS_NIGHTLY_BUILD@
+    value: true
     mirror: always
 #endif  // defined(ENABLE_WASM_TAIL_CALLS)
 

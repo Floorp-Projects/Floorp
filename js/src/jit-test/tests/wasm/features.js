@@ -27,11 +27,6 @@ let nightly = !release_or_beta;
 
 let nightlyOnlyFeatures = [
   [
-    'tail-calls',
-    wasmTailCallsEnabled(),
-    `(module (func (return_call 0)))`
-  ],
-  [
     'relaxed-simd',
     wasmRelaxedSimdEnabled(),
     `(module (func (result v128)
@@ -87,6 +82,11 @@ let releasedFeatures = [
         i32.add
       )
     )`
+  ],
+  [
+    'tail-calls',
+    wasmTailCallsEnabled(),
+    `(module (func) (func (return_call 0)))`
   ],
 ];
 
