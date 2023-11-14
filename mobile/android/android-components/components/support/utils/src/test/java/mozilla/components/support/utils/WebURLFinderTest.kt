@@ -5,7 +5,7 @@
 package mozilla.components.support.utils
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import mozilla.components.support.utils.WebURLFinder.Companion.isWebURL
+import mozilla.components.support.utils.WebURLFinder.Companion.isValidWebURL
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -100,12 +100,22 @@ class WebURLFinderTest {
     }
 
     @Test
-    fun testIsWebURL() {
-        assertTrue(isWebURL("http://test.com"))
-        assertFalse(isWebURL("#http#://test.com"))
-        assertFalse(isWebURL("file:///sdcard/download"))
-        assertFalse(isWebURL("filE:///sdcard/Download"))
-        assertFalse(isWebURL("javascript:alert('Hi')"))
-        assertFalse(isWebURL("JAVascript:alert('Hi')"))
+    fun testIsValidWebURL() {
+        assertTrue("http://test.com".isValidWebURL())
+        assertTrue("hTTp://test.com".isValidWebURL())
+        assertTrue("https://test.com".isValidWebURL())
+        assertTrue("htTPs://test.com".isValidWebURL())
+        assertTrue("about://test.com".isValidWebURL())
+        assertTrue("abOUTt://test.com".isValidWebURL())
+        assertTrue("data://test.com".isValidWebURL())
+        assertTrue("daAtA://test.com".isValidWebURL())
+        assertFalse("#http#://test.com".isValidWebURL())
+        assertFalse("file:///sdcard/download".isValidWebURL())
+        assertFalse("filE:///sdcard/Download".isValidWebURL())
+        assertFalse("javascript:alert('Hi')".isValidWebURL())
+        assertFalse("JAVascript:alert('Hi')".isValidWebURL())
+        assertFalse("JAVascript:alert('Hi')".isValidWebURL())
+        assertFalse("content://com.test.app/test".isValidWebURL())
+        assertFalse("coNTent://com.test.app/test".isValidWebURL())
     }
 }
