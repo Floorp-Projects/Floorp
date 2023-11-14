@@ -165,7 +165,7 @@ function checkRuleViewContent(view, expectedRules) {
 
     const ruleInView = rulesInView[i];
     const selector = ruleInView.querySelector(
-      ".ruleview-selectorcontainer"
+      ".ruleview-selectors-container"
     ).innerText;
     is(selector, expectedRule.selector, `Expected selector for ${selector}`);
 

@@ -123,9 +123,7 @@ function assertSelectors(view, ruleIndex, expectedSelectors) {
   const ruleSelectors = getRuleViewRuleEditor(
     view,
     ruleIndex
-  ).selectorText.querySelectorAll(
-    ".ruleview-selector-matched, .ruleview-selector-unmatched"
-  );
+  ).selectorText.querySelectorAll(".ruleview-selector");
 
   is(
     ruleSelectors.length,
@@ -140,10 +138,9 @@ function assertSelectors(view, ruleIndex, expectedSelectors) {
       `Got expected text for the selector element #${i} on rule #${ruleIndex}`
     );
     is(
-      [...ruleSelectors[i].classList].join(),
-      expectedSelectors[i].matches
-        ? "ruleview-selector-matched"
-        : "ruleview-selector-unmatched",
+      [...ruleSelectors[i].classList].join(","),
+      "ruleview-selector," +
+        (expectedSelectors[i].matches ? "matched" : "unmatched"),
       `Got expected css class on the selector element #${i} ("${ruleSelectors[i].textContent}") on rule #${ruleIndex}`
     );
   }

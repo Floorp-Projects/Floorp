@@ -52,7 +52,7 @@ add_task(async function () {
 
 function checkRuleViewContent(view, expectedSelectors) {
   const selectors = view.styleDocument.querySelectorAll(
-    ".ruleview-selectorcontainer"
+    ".ruleview-selectors-container"
   );
 
   is(

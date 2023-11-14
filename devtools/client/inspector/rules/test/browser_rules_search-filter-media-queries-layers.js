@@ -168,7 +168,7 @@ async function checkRuleView(view, { rules }) {
   for (let i = 0; i < rulesInView.length; i++) {
     const rule = rulesInView[i];
     const selector = rule.querySelector(
-      ".ruleview-selectorcontainer"
+      ".ruleview-selectors-container"
     ).innerText;
     is(selector, rules[i]?.selector, `Expected selector at index ${i}`);
 

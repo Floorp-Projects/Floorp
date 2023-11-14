@@ -287,7 +287,7 @@ RuleEditor.prototype = {
     });
 
     this.selectorText = createChild(header, "span", {
-      class: "ruleview-selectorcontainer",
+      class: "ruleview-selectors-container",
       tabindex: this.isSelectorEditable ? "0" : "-1",
     });
 
@@ -563,11 +563,11 @@ RuleEditor.prototype = {
         }
 
         const desugaredSelector = desugaredSelectors[i];
-        const containerClass = this.rule.matchedDesugaredSelectors.includes(
-          desugaredSelector
-        )
-          ? "ruleview-selector-matched"
-          : "ruleview-selector-unmatched";
+        const matchedSelector =
+          this.rule.matchedDesugaredSelectors.includes(desugaredSelector);
+        const containerClass =
+          "ruleview-selector " + (matchedSelector ? "matched" : "unmatched");
+
         const selectorContainer = createChild(this.selectorText, "span", {
           class: containerClass,
         });
@@ -582,7 +582,7 @@ RuleEditor.prototype = {
               selectorClass = "ruleview-selector-attribute";
               break;
             case SELECTOR_ELEMENT:
-              selectorClass = "ruleview-selector";
+              selectorClass = "ruleview-selector-element";
               break;
             case SELECTOR_PSEUDO_CLASS:
               selectorClass = PSEUDO_CLASSES.some(

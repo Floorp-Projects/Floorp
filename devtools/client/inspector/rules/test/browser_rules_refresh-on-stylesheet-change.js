@@ -100,6 +100,6 @@ function checkRulesViewSelectors(view, expectedSelectors) {
 
 function getRuleSelectors(view) {
   return Array.from(
-    view.styleDocument.querySelectorAll(".ruleview-selectorcontainer")
+    view.styleDocument.querySelectorAll(".ruleview-selectors-container")
   ).map(el => el.textContent);
 }

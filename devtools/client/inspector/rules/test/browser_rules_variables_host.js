@@ -35,7 +35,7 @@ add_task(async function () {
   await selectNode("#host", inspector);
   let selector = getRuleViewRuleEditor(view, 1).selectorText;
   is(
-    selector.querySelector(".ruleview-selector-matched").textContent,
+    selector.querySelector(".matched").textContent,
     ":host",
     ":host should be matched."
   );
@@ -50,7 +50,7 @@ add_task(async function () {
 
   selector = getRuleViewRuleEditor(view, 3).selectorText;
   is(
-    selector.querySelector(".ruleview-selector-matched").textContent,
+    selector.querySelector(".matched").textContent,
     ":host",
     ":host should be matched."
   );
