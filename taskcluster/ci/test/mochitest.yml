@@ -306,6 +306,7 @@ mochitest-browser-chrome:
     instance-size:
         by-test-platform:
             linux.*64-tsan-qr/opt: xlarge  # runs out of memory using 8GB
+            linux.*64-asan-qr/opt: xlarge  # runs out of memory using 8GB
             default: default
     allow-software-gl-layers: false
 
