@@ -122,7 +122,7 @@ impl FromStr for Version {
 
     fn from_str(version_string: &str) -> VersionResult<Version> {
         let mut version: Version = Default::default();
-        let version_re = Regex::new(r"^(?P<major>[[:digit:]]+)\.(?P<minor>[[:digit:]]+)(?:\.(?P<patch>[[:digit:]]+))?(?:(?P<esr>esr)|(?P<pre0>[a-z]+)(?P<pre1>[[:digit:]]*))?$").unwrap();
+        let version_re = Regex::new(r"^(?P<major>[[:digit:]]+)\.(?P<minor>[[:digit:]]+)(?:\.(?P<patch>[[:digit:]]+))?(?:(?P<esr>esr)|(?P<pre0>\-|[a-z]+)(?P<pre1>[[:digit:]]*))?$").unwrap();
         if let Some(captures) = version_re.captures(version_string) {
             match captures
                 .name("major")
@@ -256,7 +256,7 @@ pub fn firefox_binary_version(binary: &Path) -> VersionResult<Version> {
 }
 
 fn parse_binary_version(version_str: &str) -> VersionResult<Version> {
-    let version_regexp = Regex::new(r#"Mozilla Firefox[[:space:]]+(?P<version>.+)"#)
+    let version_regexp = Regex::new(r#"Firefox[[:space:]]+(?P<version>.+)"#)
         .expect("Error parsing version regexp");
 
     let version_match = version_regexp
@@ -421,6 +421,12 @@ mod test {
                 .unwrap()
                 .to_string()
                 == "78.0"
+        );
+        assert!(
+            parse_binary_version("Foo Firefox 113.0.2-1")
+                .unwrap()
+                .to_string()
+                == "113.0.2-1"
         );
     }
 }
