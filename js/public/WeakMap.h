@@ -19,16 +19,14 @@ extern JS_PUBLIC_API JSObject* NewWeakMapObject(JSContext* cx);
 
 extern JS_PUBLIC_API bool IsWeakMapObject(JSObject* obj);
 
-// TODO: Bug 1860655: Update JS_Set|GetWeakMapKey to use Value as keys.
-// Although internally Symbols can be used as WeakMap keys.
 extern JS_PUBLIC_API bool GetWeakMapEntry(JSContext* cx,
                                           JS::HandleObject mapObj,
-                                          JS::HandleObject key,
+                                          JS::HandleValue key,
                                           JS::MutableHandleValue val);
 
 extern JS_PUBLIC_API bool SetWeakMapEntry(JSContext* cx,
                                           JS::HandleObject mapObj,
-                                          JS::HandleObject key,
+                                          JS::HandleValue key,
                                           JS::HandleValue val);
 
 }  // namespace JS

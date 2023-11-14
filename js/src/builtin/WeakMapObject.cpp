@@ -209,18 +209,22 @@ JS_PUBLIC_API bool JS::IsWeakMapObject(JSObject* obj) {
 }
 
 JS_PUBLIC_API bool JS::GetWeakMapEntry(JSContext* cx, HandleObject mapObj,
-                                       HandleObject key,
+                                       HandleValue key,
                                        MutableHandleValue rval) {
   CHECK_THREAD(cx);
   cx->check(key);
   rval.setUndefined();
+
+  if (!CanBeHeldWeakly(cx, key)) {
+    return true;
+  }
+
   ValueValueWeakMap* map = mapObj->as<WeakMapObject>().getMap();
   if (!map) {
     return true;
   }
 
-  Rooted<Value> keyValue(cx, ObjectValue(*key));
-  if (ValueValueWeakMap::Ptr ptr = map->lookup(keyValue)) {
+  if (ValueValueWeakMap::Ptr ptr = map->lookup(key)) {
     // Read barrier to prevent an incorrectly gray value from escaping the
     // weak map. See the comment before UnmarkGrayChildren in gc/Marking.cpp
     ExposeValueToActiveJS(ptr->value().get());
@@ -230,13 +234,18 @@ JS_PUBLIC_API bool JS::GetWeakMapEntry(JSContext* cx, HandleObject mapObj,
 }
 
 JS_PUBLIC_API bool JS::SetWeakMapEntry(JSContext* cx, HandleObject mapObj,
-                                       HandleObject key, HandleValue val) {
+                                       HandleValue key, HandleValue val) {
   CHECK_THREAD(cx);
   cx->check(key, val);
+  if (!CanBeHeldWeakly(cx, key)) {
+    ReportValueError(cx, JSMSG_WEAKMAP_KEY_CANT_BE_HELD_WEAKLY,
+                     JSDVG_IGNORE_STACK, key, nullptr);
+    return false;
+  }
+
   Handle<WeakMapObject*> rootedMap = mapObj.as<WeakMapObject>();
 
-  RootedValue keyVal(cx, ObjectValue(*key));
-  return WeakCollectionPutEntryInternal(cx, rootedMap, keyVal, val);
+  return WeakCollectionPutEntryInternal(cx, rootedMap, key, val);
 }
 
 /* static */

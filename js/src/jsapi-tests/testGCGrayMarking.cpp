@@ -329,8 +329,9 @@ bool CreateJSWeakMapObjects(JSObject** weakMapOut, JSObject** keyOut,
   RootedObject weakMap(cx, JS::NewWeakMapObject(cx));
   CHECK(weakMap);
 
+  JS::RootedValue keyValue(cx, ObjectValue(*key));
   JS::RootedValue valueValue(cx, ObjectValue(*value));
-  CHECK(SetWeakMapEntry(cx, weakMap, key, valueValue));
+  CHECK(SetWeakMapEntry(cx, weakMap, keyValue, valueValue));
 
   *weakMapOut = weakMap;
   *keyOut = key;
