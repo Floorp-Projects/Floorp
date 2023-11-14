@@ -89,7 +89,6 @@ export const UIPhases = {
 export var ScreenshotsUtils = {
   browserToScreenshotsState: new WeakMap(),
   initialized: false,
-  methodsUsed: {},
 
   /**
    * Figures out which of various states the screenshots UI is in, for the given browser.
@@ -111,10 +110,6 @@ export var ScreenshotsUtils = {
     return UIPhases.CLOSED;
   },
 
-  resetMethodsUsed() {
-    this.methodsUsed = { fullpage: 0, visible: 0 };
-  },
-
   initialize() {
     if (!this.initialized) {
       if (
@@ -125,9 +120,9 @@ export var ScreenshotsUtils = {
       ) {
         return;
       }
-      this.resetMethodsUsed();
       Services.telemetry.setEventRecordingEnabled("screenshots", true);
       Services.obs.addObserver(this, "menuitem-screenshot");
+      Services.obs.addObserver(this, "screenshots-take-screenshot");
       this.initialized = true;
       if (Cu.isInAutomation) {
         Services.obs.notifyObservers(null, "screenshots-component-initialized");
@@ -138,6 +133,7 @@ export var ScreenshotsUtils = {
   uninitialize() {
     if (this.initialized) {
       Services.obs.removeObserver(this, "menuitem-screenshot");
+      Services.obs.removeObserver(this, "screenshots-take-screenshot");
       this.initialized = false;
     }
   },
@@ -163,6 +159,16 @@ export var ScreenshotsUtils = {
           return;
         }
         this.start(browser, data);
+        break;
+      }
+      case "screenshots-take-screenshot": {
+        this.closePanel(browser);
+        this.closeOverlay(browser);
+
+        // init UI as a tab dialog box
+        this.openPreviewDialog(browser).then(dialog => {
+          this.doScreenshot(browser, dialog, data);
+        });
         break;
       }
     }
@@ -228,7 +234,6 @@ export var ScreenshotsUtils = {
     this.closeDialogBox(browser);
     this.closePanel(browser);
     this.closeOverlay(browser);
-    this.resetMethodsUsed();
     this.browserToScreenshotsState.delete(browser);
     if (Cu.isInAutomation) {
       Services.obs.notifyObservers(null, "screenshots-exit");
@@ -385,9 +390,9 @@ export var ScreenshotsUtils = {
    * The overlay lives in the child document; so although closing is actually async, we assume success.
    * @param browser The current browser.
    */
-  closeOverlay(browser, options = {}) {
+  closeOverlay(browser) {
     let actor = this.getActor(browser);
-    actor?.sendAsyncMessage("Screenshots:HideOverlay", options);
+    actor?.sendAsyncMessage("Screenshots:HideOverlay");
 
     if (this.browserToScreenshotsState.has(browser)) {
       this.setPerBrowserState(browser, {
@@ -555,27 +560,23 @@ export var ScreenshotsUtils = {
   },
 
   /**
-   * Open and add screenshot-ui to the dialog box and then take the screenshot
+   * Add screenshot-ui to the dialog box and then take the screenshot
    * @param browser The current browser.
+   * @param dialog The dialog box to show the screenshot preview.
    * @param type The type of screenshot taken.
    */
-  async doScreenshot(browser, type) {
-    this.closePanel(browser);
-    this.closeOverlay(browser, { doNotResetMethods: true });
-
-    let dialog = await this.openPreviewDialog(browser);
+  async doScreenshot(browser, dialog, type) {
     await dialog._dialogReady;
     let screenshotsUI =
       dialog._frame.contentDocument.createElement("screenshots-ui");
     dialog._frame.contentDocument.body.appendChild(screenshotsUI);
 
     let rect;
-    if (type === "full_page") {
+    if (type === "full-page") {
       rect = await this.fetchFullPageBounds(browser);
-      this.methodsUsed.fullpage += 1;
+      type = "full_page";
     } else {
       rect = await this.fetchVisibleBounds(browser);
-      this.methodsUsed.visible += 1;
     }
     this.recordTelemetryEvent("selected", type, {});
     return this.takeScreenshot(browser, dialog, rect);
@@ -677,19 +678,17 @@ export var ScreenshotsUtils = {
     let canvas = await this.createCanvas(region, browser);
     let url = canvas.toDataURL();
 
-    await this.copyScreenshot(url, browser, {
-      object: "overlay_copy",
-    });
+    this.copyScreenshot(url, browser);
+
+    this.recordTelemetryEvent("copy", "overlay_copy", {});
   },
 
   /**
    * Copy the image to the clipboard
-   * This is called from the preview dialog
    * @param dataUrl The image data
    * @param browser The current browser
-   * @param data Telemetry data
    */
-  async copyScreenshot(dataUrl, browser, data) {
+  copyScreenshot(dataUrl, browser) {
     // Guard against missing image data.
     if (!dataUrl) {
       return;
@@ -722,15 +721,6 @@ export var ScreenshotsUtils = {
     );
 
     this.showCopiedConfirmationHint(browser);
-
-    let extra = await this.getActor(browser).sendQuery(
-      "Screenshots:GetMethodsUsed"
-    );
-    this.recordTelemetryEvent("copy", data.object, {
-      ...extra,
-      ...this.methodsUsed,
-    });
-    this.resetMethodsUsed();
   },
 
   /**
@@ -743,20 +733,18 @@ export var ScreenshotsUtils = {
     let canvas = await this.createCanvas(region, browser);
     let dataUrl = canvas.toDataURL();
 
-    await this.downloadScreenshot(title, dataUrl, browser, {
-      object: "overlay_download",
-    });
+    await this.downloadScreenshot(title, dataUrl, browser);
+
+    this.recordTelemetryEvent("download", "overlay_download", {});
   },
 
   /**
    * Download the screenshot
-   * This is called from the preview dialog
    * @param title The title of the current page or null and getFilename will get the title
    * @param dataUrl The image data
    * @param browser The current browser
-   * @param data Telemetry data
    */
-  async downloadScreenshot(title, dataUrl, browser, data) {
+  async downloadScreenshot(title, dataUrl, browser) {
     // Guard against missing image data.
     if (!dataUrl) {
       return;
@@ -785,23 +773,9 @@ export var ScreenshotsUtils = {
       // Await successful completion of the save via the download manager
       await download.start();
     } catch (ex) {}
-
-    let extra = await this.getActor(browser).sendQuery(
-      "Screenshots:GetMethodsUsed"
-    );
-    this.recordTelemetryEvent("download", data.object, {
-      ...extra,
-      ...this.methodsUsed,
-    });
-    this.resetMethodsUsed();
   },
 
   recordTelemetryEvent(type, object, args) {
-    if (args) {
-      for (let key of Object.keys(args)) {
-        args[key] = args[key].toString();
-      }
-    }
     Services.telemetry.recordEvent("screenshots", type, object, null, args);
   },
 };

@@ -24,7 +24,7 @@ export class ScreenshotsComponentChild extends JSWindowActorChild {
       case "Screenshots:ShowOverlay":
         return this.startScreenshotsOverlay();
       case "Screenshots:HideOverlay":
-        return this.endScreenshotsOverlay(message.data);
+        return this.endScreenshotsOverlay();
       case "Screenshots:isOverlayShowing":
         return this.overlay?.initialized;
       case "Screenshots:getFullPageBounds":
@@ -33,8 +33,6 @@ export class ScreenshotsComponentChild extends JSWindowActorChild {
         return this.getVisibleBounds();
       case "Screenshots:getDocumentTitle":
         return this.getDocumentTitle();
-      case "Screenshots:GetMethodsUsed":
-        return this.getMethodsUsed();
     }
     return null;
   }
@@ -117,7 +115,7 @@ export class ScreenshotsComponentChild extends JSWindowActorChild {
   requestCopyScreenshot(region) {
     region.devicePixelRatio = this.contentWindow.devicePixelRatio;
     this.sendAsyncMessage("Screenshots:CopyScreenshot", { region });
-    this.endScreenshotsOverlay({ doNotResetMethods: true });
+    this.endScreenshotsOverlay();
   }
 
   /**
@@ -130,7 +128,7 @@ export class ScreenshotsComponentChild extends JSWindowActorChild {
       title: this.getDocumentTitle(),
       region,
     });
-    this.endScreenshotsOverlay({ doNotResetMethods: true });
+    this.endScreenshotsOverlay();
   }
 
   showPanel() {
@@ -147,12 +145,6 @@ export class ScreenshotsComponentChild extends JSWindowActorChild {
 
   sendOverlaySelection(data) {
     this.sendAsyncMessage("Screenshots:OverlaySelection", data);
-  }
-
-  getMethodsUsed() {
-    let methodsUsed = this.#overlay.methodsUsed;
-    this.#overlay.resetMethodsUsed();
-    return methodsUsed;
   }
 
   /**
@@ -220,13 +212,13 @@ export class ScreenshotsComponentChild extends JSWindowActorChild {
   /**
    * Removes event listeners and the screenshots overlay.
    */
-  endScreenshotsOverlay(options = {}) {
+  endScreenshotsOverlay() {
     this.document.removeEventListener("keydown", this);
     this.document.ownerGlobal.removeEventListener("beforeunload", this);
     this.contentWindow.removeEventListener("resize", this);
     this.contentWindow.removeEventListener("scroll", this);
     this.contentWindow.removeEventListener("visibilitychange", this);
-    this.overlay?.tearDown(options);
+    this.overlay?.tearDown();
     this.#resizeTask?.disarm();
     this.#scrollTask?.disarm();
   }

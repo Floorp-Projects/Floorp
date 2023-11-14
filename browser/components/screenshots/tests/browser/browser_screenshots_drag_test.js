@@ -16,9 +16,6 @@ add_task(async function dragTest() {
       let helper = new ScreenshotsHelper(browser);
       let contentInfo = await helper.getContentDimensions();
       ok(contentInfo, "Got dimensions back from the content");
-      let expected = Math.floor(
-        490 * (await getContentDevicePixelRatio(browser))
-      );
 
       helper.triggerUIFromToolbar();
 
@@ -26,17 +23,20 @@ add_task(async function dragTest() {
 
       await helper.dragOverlay(10, 10, 500, 500);
 
-      let clipboardChanged = helper.waitForRawClipboardChange(
-        expected,
-        expected
-      );
+      let clipboardChanged = helper.waitForRawClipboardChange();
 
-      await helper.clickCopyButton();
+      helper.clickCopyButton();
 
       info("Waiting for clipboard change");
-      let result = await clipboardChanged;
+      await clipboardChanged;
+
+      let result = await helper.getImageSizeAndColorFromClipboard();
 
       info("result: " + JSON.stringify(result, null, 2));
+
+      let expected = Math.floor(
+        490 * (await getContentDevicePixelRatio(browser))
+      );
 
       Assert.equal(
         result.width,
@@ -68,9 +68,6 @@ add_task(async function dragTest1Point5Zoom() {
 
       let contentInfo = await helper.getContentDimensions();
       ok(contentInfo, "Got dimensions back from the content");
-      let expected = Math.floor(
-        50 * (await getContentDevicePixelRatio(browser))
-      );
 
       helper.triggerUIFromToolbar();
 
@@ -78,16 +75,14 @@ add_task(async function dragTest1Point5Zoom() {
 
       await helper.dragOverlay(300, 100, 350, 150);
 
-      let clipboardChanged = helper.waitForRawClipboardChange(
-        expected,
-        expected
-      );
+      let clipboardChanged = helper.waitForRawClipboardChange();
 
-      await helper.clickCopyButton();
+      helper.clickCopyButton();
 
       info("Waiting for clipboard change");
-      let result = await clipboardChanged;
+      await clipboardChanged;
 
+      let result = await helper.getImageSizeAndColorFromClipboard();
       result.zoom = zoom;
       result.devicePixelRatio = window.devicePixelRatio;
       result.contentDevicePixelRatio = await getContentDevicePixelRatio(
@@ -95,6 +90,10 @@ add_task(async function dragTest1Point5Zoom() {
       );
 
       info("result: " + JSON.stringify(result, null, 2));
+
+      let expected = Math.floor(
+        50 * (await getContentDevicePixelRatio(browser))
+      );
 
       Assert.equal(
         result.width,
@@ -164,7 +163,7 @@ add_task(async function overlayCancelButton() {
 
       await helper.dragOverlay(10, 10, 300, 300);
 
-      await helper.clickCancelButton();
+      helper.clickCancelButton();
 
       await helper.waitForOverlayClosed();
 
@@ -188,9 +187,6 @@ add_task(async function preserveBoxSizeWhenMovingOutOfWindowBounds() {
 
       let contentInfo = await helper.getContentDimensions();
       ok(contentInfo, "Got dimensions back from the content");
-      let expected = Math.floor(
-        490 * (await getContentDevicePixelRatio(browser))
-      );
 
       helper.triggerUIFromToolbar();
 
@@ -221,17 +217,20 @@ add_task(async function preserveBoxSizeWhenMovingOutOfWindowBounds() {
         Math.floor((endY - startY) / 2)
       );
 
-      let clipboardChanged = helper.waitForRawClipboardChange(
-        expected,
-        expected
-      );
+      let clipboardChanged = helper.waitForRawClipboardChange();
 
-      await helper.clickCopyButton();
+      helper.clickCopyButton();
 
       info("Waiting for clipboard change");
-      let result = await clipboardChanged;
+      await clipboardChanged;
+
+      let result = await helper.getImageSizeAndColorFromClipboard();
 
       info("result: " + JSON.stringify(result, null, 2));
+
+      let expected = Math.floor(
+        490 * (await getContentDevicePixelRatio(browser))
+      );
 
       Assert.equal(
         result.width,
@@ -262,9 +261,6 @@ add_task(async function resizeAllEdges() {
 
       let contentInfo = await helper.getContentDimensions();
       ok(contentInfo, "Got dimensions back from the content");
-      let expected = Math.floor(
-        300 * (await getContentDevicePixelRatio(browser))
-      );
 
       helper.triggerUIFromToolbar();
 
@@ -336,20 +332,23 @@ add_task(async function resizeAllEdges() {
       state = await helper.getOverlayState();
       Assert.equal(state, "selected", "The overlay is in the selected state");
 
-      let clipboardChanged = helper.waitForRawClipboardChange(
-        expected,
-        expected
-      );
+      let clipboardChanged = helper.waitForRawClipboardChange();
 
       helper.endX = 400;
       helper.endY = 400;
 
-      await helper.clickCopyButton();
+      helper.clickCopyButton();
 
       info("Waiting for clipboard change");
-      let result = await clipboardChanged;
+      await clipboardChanged;
+
+      let result = await helper.getImageSizeAndColorFromClipboard();
 
       info("result: " + JSON.stringify(result, null, 2));
+
+      let expected = Math.floor(
+        300 * (await getContentDevicePixelRatio(browser))
+      );
 
       Assert.equal(
         result.width,
@@ -380,9 +379,6 @@ add_task(async function resizeAllCorners() {
 
       let contentInfo = await helper.getContentDimensions();
       ok(contentInfo, "Got dimensions back from the content");
-      let expected = Math.floor(
-        300 * (await getContentDevicePixelRatio(browser))
-      );
 
       helper.triggerUIFromToolbar();
 
@@ -446,20 +442,23 @@ add_task(async function resizeAllCorners() {
       state = await helper.getOverlayState();
       Assert.equal(state, "selected", "The overlay is in the selected state");
 
-      let clipboardChanged = helper.waitForRawClipboardChange(
-        expected,
-        expected
-      );
+      let clipboardChanged = helper.waitForRawClipboardChange();
 
       helper.endX = 400;
       helper.endY = 400;
 
-      await helper.clickCopyButton();
+      helper.clickCopyButton();
 
       info("Waiting for clipboard change");
-      let result = await clipboardChanged;
+      await clipboardChanged;
+
+      let result = await helper.getImageSizeAndColorFromClipboard();
 
       info("result: " + JSON.stringify(result, null, 2));
+
+      let expected = Math.floor(
+        300 * (await getContentDevicePixelRatio(browser))
+      );
 
       Assert.equal(
         result.width,
