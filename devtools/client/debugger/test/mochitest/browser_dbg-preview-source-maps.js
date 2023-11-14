@@ -17,8 +17,7 @@ add_task(async function () {
   await addBreakpoint(dbg, "times2.js", 2);
 
   invokeInTab("keepMeAlive");
-  await waitForPaused(dbg);
-  await waitForSelectedSource(dbg, "times2.js");
+  await waitForPausedInOriginalFileAndToggleMapScopes(dbg, "times2.js");
 
   info("Test previewing in the original location");
   await assertPreviews(dbg, [

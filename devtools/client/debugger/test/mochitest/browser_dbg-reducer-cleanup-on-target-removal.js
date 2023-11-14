@@ -20,7 +20,7 @@ add_task(async function () {
     ok(true, "This test is disabled without EFT");
     return;
   }
-
+  await pushPref("devtools.debugger.map-scopes-enabled", true);
   const dbg = await initDebuggerWithAbsoluteURL(TEST_URI);
 
   const frameBC = await SpecialPowers.spawn(
