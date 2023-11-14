@@ -253,6 +253,57 @@ already_AddRefed<gfx::SourceSurface> D3D9SurfaceImage::GetAsSourceSurface() {
   return surface.forget();
 }
 
+nsresult D3D9SurfaceImage::BuildSurfaceDescriptorBuffer(
+    SurfaceDescriptorBuffer& aSdBuffer, BuildSdbFlags aFlags,
+    const std::function<MemoryOrShmem(uint32_t)>& aAllocate) {
+  if (!mTexture) {
+    return NS_ERROR_FAILURE;
+  }
+
+  auto format = gfx::SurfaceFormat::B8G8R8X8;
+  uint8_t* buffer = nullptr;
+  int32_t stride = 0;
+  nsresult rv = AllocateSurfaceDescriptorBufferRgb(
+      mSize, format, buffer, aSdBuffer, stride, aAllocate);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // Readback the texture from GPU memory into system memory, so that
+  // we can copy it into the Cairo image. This is expensive.
+  RefPtr<IDirect3DSurface9> textureSurface = GetD3D9Surface();
+  if (!textureSurface) {
+    return NS_ERROR_FAILURE;
+  }
+
+  RefPtr<IDirect3DDevice9> device;
+  HRESULT hr = textureSurface->GetDevice(getter_AddRefs(device));
+  NS_ENSURE_TRUE(SUCCEEDED(hr), NS_ERROR_FAILURE);
+
+  RefPtr<IDirect3DSurface9> systemMemorySurface;
+  hr = device->CreateOffscreenPlainSurface(
+      mSize.width, mSize.height, D3DFMT_A8R8G8B8, D3DPOOL_SYSTEMMEM,
+      getter_AddRefs(systemMemorySurface), 0);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), NS_ERROR_FAILURE);
+
+  hr = device->GetRenderTargetData(textureSurface, systemMemorySurface);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), NS_ERROR_FAILURE);
+
+  D3DLOCKED_RECT rect;
+  hr = systemMemorySurface->LockRect(&rect, nullptr, 0);
+  NS_ENSURE_TRUE(SUCCEEDED(hr), NS_ERROR_FAILURE);
+
+  const unsigned char* src = (const unsigned char*)(rect.pBits);
+  const unsigned srcPitch = rect.Pitch;
+  for (int y = 0; y < mSize.height; y++) {
+    memcpy(buffer + stride * y, (unsigned char*)(src) + srcPitch * y,
+           mSize.width * 4);
+  }
+
+  systemMemorySurface->UnlockRect();
+  return NS_OK;
+}
+
 already_AddRefed<TextureClient> D3D9RecycleAllocator::Allocate(
     gfx::SurfaceFormat aFormat, gfx::IntSize aSize, BackendSelector aSelector,
     TextureFlags aTextureFlags, TextureAllocationFlags aAllocFlags) {

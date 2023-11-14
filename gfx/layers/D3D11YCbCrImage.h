@@ -66,6 +66,10 @@ class D3D11YCbCrImage : public Image {
 
   already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override;
 
+  nsresult BuildSurfaceDescriptorBuffer(
+      SurfaceDescriptorBuffer& aSdBuffer, BuildSdbFlags aFlags,
+      const std::function<MemoryOrShmem(uint32_t)>& aAllocate) override;
+
   TextureClient* GetTextureClient(KnowsCompositor* aKnowsCompositor) override;
 
   gfx::IntRect GetPictureRect() const override { return mPictureRect; }
@@ -78,6 +82,10 @@ class D3D11YCbCrImage : public Image {
   }
 
  private:
+  nsresult ReadIntoBuffer(
+      const std::function<nsresult(const PlanarYCbCrData&, const gfx::IntSize&,
+                                   gfx::SurfaceFormat)>& aCopy);
+
   const DXGIYCbCrTextureData* GetData() const;
 
   gfx::IntRect mPictureRect;
