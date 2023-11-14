@@ -940,3 +940,18 @@ strong {
   margin-left: 5px;
   padding: 3px;
 }
+
+/* Tooltip: Selector warning */
+.devtools-tooltip-selector-warnings {
+  margin: 0;
+  padding: 10px;
+  list-style: none;
+
+  & > li {
+    padding: 0;
+
+    & + li {
+      border-block-start: 1px solid var(--theme-splitter-color);
+    }
+  }
+}

@@ -352,6 +352,12 @@ class StyleRuleActor extends Actor {
     switch (this.type) {
       case CSSRule.STYLE_RULE:
         form.selectors = CssLogic.getSelectors(this.rawRule);
+
+        // Only add the property when there are elements in the array to save up on serialization.
+        const selectorWarnings = this.rawRule.getSelectorWarnings();
+        if (selectorWarnings.length) {
+          form.selectorWarnings = selectorWarnings;
+        }
         if (computeDesugaredSelector) {
           form.desugaredSelectors = this.getDesugaredSelectors();
         }
@@ -511,10 +517,18 @@ class StyleRuleActor extends Actor {
         // All the previous cases where about at-rules; this one is for regular rule
         // that are ancestors because CSS nesting was used.
         // In such case, we want to return the selectorText so it can be displayed in the UI.
-        ancestorData.push({
+        const ancestor = {
           type,
           selectors: CssLogic.getSelectors(rawRule),
-        });
+        };
+
+        // Only add the property when there are elements in the array to save up on serialization.
+        const selectorWarnings = rawRule.getSelectorWarnings();
+        if (selectorWarnings.length) {
+          ancestor.selectorWarnings = selectorWarnings;
+        }
+
+        ancestorData.push(ancestor);
         computeDesugaredSelector = true;
       }
     }
