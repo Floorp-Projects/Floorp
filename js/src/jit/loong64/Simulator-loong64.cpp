@@ -2257,6 +2257,8 @@ typedef int64_t (*Prototype_General_GeneralInt32Int32GeneralInt32)(
     int64_t, int32_t, int32_t, int64_t, int32_t);
 typedef int32_t (*Prototype_Int32_GeneralGeneralInt32GeneralInt32Int32Int32)(
     int64_t, int64_t, int32_t, int64_t, int32_t, int32_t, int32_t);
+typedef int32_t (*Prototype_Int32_GeneralGeneralInt32Int32Int32GeneralInt32)(
+    int64_t, int64_t, int32_t, int32_t, int32_t, int64_t, int32_t);
 typedef int32_t (*Prototype_Int32_GeneralGeneralInt32General)(int64_t, int64_t,
                                                               int32_t, int64_t);
 typedef int64_t (*Prototype_Int64_General)(int64_t);
@@ -2893,6 +2895,15 @@ void Simulator::softwareInterrupt(SimInstruction* instr) {
         int32_t ret = reinterpret_cast<
             Prototype_Int32_GeneralGeneralInt32GeneralInt32Int32Int32>(
             nativeFn)(arg0, arg1, I32(arg2), arg3, I32(arg4), I32(arg5),
+                      I32(arg6));
+        setRegister(a0, I64(ret));
+        break;
+      }
+      case js::jit::Args_Int32_GeneralGeneralInt32Int32Int32GeneralInt32: {
+        int64_t arg6 = getRegister(a6);
+        int32_t ret = reinterpret_cast<
+            Prototype_Int32_GeneralGeneralInt32Int32Int32GeneralInt32>(
+            nativeFn)(arg0, arg1, I32(arg2), I32(arg3), I32(arg4), arg5,
                       I32(arg6));
         setRegister(a0, I64(ret));
         break;
