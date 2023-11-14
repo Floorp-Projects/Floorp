@@ -15,13 +15,16 @@
 #include "BufferReader.h"
 #include "VideoUtils.h"
 #include "TimeUnits.h"
+#include "mozilla/Logging.h"
 
 using mozilla::media::TimeIntervals;
 using mozilla::media::TimeUnit;
 
+extern mozilla::LazyLogModule gMediaDemuxerLog;
 namespace mozilla {
 
-// WAVDemuxer
+#define LOG(msg, ...) \
+  MOZ_LOG(gMediaDemuxerLog, LogLevel::Debug, msg, ##__VA_ARGS__)
 
 WAVDemuxer::WAVDemuxer(MediaResource* aSource) : mSource(aSource) {
   DDLINKCHILD("source", aSource);
@@ -161,6 +164,8 @@ bool WAVTrackDemuxer::Init() {
   mInfo->mMimeType.AppendInt(mFmtChunk.WaveFormat());
   mInfo->mDuration = Duration();
   mInfo->mChannelMap = mFmtChunk.ChannelMap();
+
+  LOG(("WavDemuxer initialized: %s", mInfo->ToString().get()));
 
   return mInfo->mDuration.IsPositive();
 }
