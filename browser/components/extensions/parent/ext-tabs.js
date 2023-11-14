@@ -397,7 +397,10 @@ this.tabs = class extends ExtensionAPIPersistent {
       let listener = event => {
         // Ignore any events prior to TabOpen
         // and events that are triggered while tabs are swapped between windows.
-        if (event.originalTarget.initializingTab) {
+        if (
+          event.originalTarget.initializingTab ||
+          event.originalTarget.ownerGlobal.gBrowserInit?.isAdoptingTab()
+        ) {
           return;
         }
         if (!extension.canAccessWindow(event.originalTarget.ownerGlobal)) {
