@@ -2615,6 +2615,23 @@ describe("DiscoveryStreamFeed", () => {
     });
   });
 
+  describe("#enable", () => {
+    it("should pass along proper options to refreshAll from enable", async () => {
+      sandbox.stub(feed, "refreshAll");
+      await feed.enable();
+      assert.calledWith(feed.refreshAll, {});
+      await feed.enable({ updateOpenTabs: true });
+      assert.calledWith(feed.refreshAll, { updateOpenTabs: true });
+      await feed.enable({ isStartup: true });
+      assert.calledWith(feed.refreshAll, { isStartup: true });
+      await feed.enable({ updateOpenTabs: true, isStartup: true });
+      assert.calledWith(feed.refreshAll, {
+        updateOpenTabs: true,
+        isStartup: true,
+      });
+    });
+  });
+
   describe("#onPrefChange", () => {
     it("should call loadLayout when Pocket config changes", async () => {
       sandbox.stub(feed, "loadLayout");
@@ -2623,6 +2640,14 @@ describe("DiscoveryStreamFeed", () => {
       };
       await feed.onPrefChange();
       assert.calledOnce(feed.loadLayout);
+    });
+    it("should update open tabs but not startup with onPrefChange", async () => {
+      sandbox.stub(feed, "refreshAll");
+      feed._prefCache.config = {
+        enabled: true,
+      };
+      await feed.onPrefChange();
+      assert.calledWith(feed.refreshAll, { updateOpenTabs: true });
     });
   });
 
