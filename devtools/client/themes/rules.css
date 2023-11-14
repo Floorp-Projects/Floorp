@@ -7,10 +7,6 @@
   --rule-highlight-background-color: var(--theme-highlight-yellow);
   --rule-header-background-color: var(--theme-toolbar-background);
   --rule-pseudo-class-text-color: var(--yellow-70) ;
-  --rule-unused-name-text-color: var(--grey-50);
-  --rule-unused-value-text-color: var(--grey-45);
-  --rule-overridden-name-text-color: var(--grey-50);
-  --rule-overridden-value-text-color: var(--grey-45);
   --rule-computed-margin-inline-start: 35px;
   --rule-enableproperty-size: 12px;
   --rule-enableproperty-margin-inline-start: 3px;
@@ -28,11 +24,6 @@
   --rule-highlight-background-color: #521C76;
   --rule-header-background-color: #222225;
   --rule-pseudo-class-text-color: var(--yellow-50);
-
-  --rule-unused-name-text-color: var(--grey-45);
-  --rule-unused-value-text-color: #787878;
-  --rule-overridden-name-text-color: var(--grey-45);
-  --rule-overridden-value-text-color: #787878;
 }
 
 /* Rule View Tabpanel */
@@ -342,14 +333,6 @@
 .ruleview-rule[uneditable=true] .ruleview-propertyvaluecontainer >
 .ruleview-propertyvalue {
   border-bottom-color: transparent;
-}
-
-.ruleview-property.unused .ruleview-propertyname {
-  color: var(--rule-unused-name-text-color);
-}
-
-.ruleview-property.unused .ruleview-propertyvalue {
-  color: var(--rule-unused-value-text-color);
 }
 
 .ruleview-overridden-rule-filter {
@@ -692,14 +675,6 @@
   text-decoration: line-through solid var(--theme-text-color-alt);
 }
 
-.ruleview-property.ruleview-overridden .ruleview-propertyname {
-  color: var(--rule-overridden-name-text-color);
-}
-
-.ruleview-property.ruleview-overridden .ruleview-propertyvalue {
-  color: var(--rule-overridden-value-text-color);
-}
-
 /**
  * Hide swatches (tool icons) from properties that are overwritten by higher specificity * rules.
  * .ruleview-swatch is a base class for many tool swatches (shapes, color, bezier curves)
@@ -806,8 +781,9 @@
 
 .ruleview-selector-separator,
 .ruleview-selector.unmatched,
-.ruleview-unmatched-variable {
-  color: #888;
+.ruleview-unmatched-variable,
+.ruleview-property:is(.unused, .ruleview-overridden) :is(.ruleview-propertyname,.ruleview-propertyvalue) {
+  color: var(--theme-text-color-alt);
 }
 
 .ruleview-selector.matched > .ruleview-selector-attribute {
