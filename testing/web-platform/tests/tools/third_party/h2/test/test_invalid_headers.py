@@ -162,9 +162,9 @@ class TestInvalidFrameSequences(object):
         request_event = events[0]
         assert request_event.headers == headers
 
-    def test_te_trailers_is_valid(self, frame_factory):
+    def test_transfer_encoding_trailers_is_valid(self, frame_factory):
         """
-        `te: trailers` is allowed by the filter.
+        Transfer-Encoding trailers is allowed by the filter.
         """
         headers = (
             self.base_request_headers + [('te', 'trailers')]
@@ -470,39 +470,39 @@ class TestFilter(object):
     invalid_request_header_blocks_unicode = (
         # First, missing :method
         (
-            (':authority', 'google.com'),
-            (':path', '/'),
-            (':scheme', 'https'),
+            (u':authority', u'google.com'),
+            (u':path', u'/'),
+            (u':scheme', u'https'),
         ),
         # Next, missing :path
         (
-            (':authority', 'google.com'),
-            (':method', 'GET'),
-            (':scheme', 'https'),
+            (u':authority', u'google.com'),
+            (u':method', u'GET'),
+            (u':scheme', u'https'),
         ),
         # Next, missing :scheme
         (
-            (':authority', 'google.com'),
-            (':method', 'GET'),
-            (':path', '/'),
+            (u':authority', u'google.com'),
+            (u':method', u'GET'),
+            (u':path', u'/'),
         ),
         # Finally, path present but empty.
         (
-            (':authority', 'google.com'),
-            (':method', 'GET'),
-            (':scheme', 'https'),
-            (':path', ''),
+            (u':authority', u'google.com'),
+            (u':method', u'GET'),
+            (u':scheme', u'https'),
+            (u':path', u''),
         ),
     )
 
     # All headers that are forbidden from either request or response blocks.
     forbidden_request_headers_bytes = (b':status',)
-    forbidden_request_headers_unicode = (':status',)
+    forbidden_request_headers_unicode = (u':status',)
     forbidden_response_headers_bytes = (
         b':path', b':scheme', b':authority', b':method'
     )
     forbidden_response_headers_unicode = (
-        ':path', ':scheme', ':authority', ':method'
+        u':path', u':scheme', u':authority', u':method'
     )
 
     @pytest.mark.parametrize('validation_function', validation_functions)
@@ -687,24 +687,6 @@ class TestFilter(object):
         headers.append((invalid_header, b'some value'))
         with pytest.raises(h2.exceptions.ProtocolError):
             list(h2.utilities.validate_headers(headers, hdr_validation_flags))
-
-    @pytest.mark.parametrize('hdr_validation_flags', hdr_validation_combos)
-    def test_inbound_header_name_length(self, hdr_validation_flags):
-        with pytest.raises(h2.exceptions.ProtocolError):
-            list(h2.utilities.validate_headers([(b'', b'foobar')], hdr_validation_flags))
-
-    def test_inbound_header_name_length_full_frame_decode(self, frame_factory):
-        f = frame_factory.build_headers_frame([])
-        f.data = b"\x00\x00\x05\x00\x00\x00\x00\x04"
-        data = f.serialize()
-
-        c = h2.connection.H2Connection(config=h2.config.H2Configuration(client_side=False))
-        c.initiate_connection()
-        c.receive_data(frame_factory.preamble())
-        c.clear_outbound_data_buffer()
-
-        with pytest.raises(h2.exceptions.ProtocolError, match="Received header name with zero length."):
-            c.receive_data(data)
 
 
 class TestOversizedHeaders(object):

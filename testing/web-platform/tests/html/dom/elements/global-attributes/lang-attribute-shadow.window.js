@@ -45,13 +45,13 @@ const TESTS = [
     `,
   },
   {
-    title: "lang on slot inherits from parent",
+    title: "lang on slot inherits from shadow host",
     light_tree: `
       <div id="host" lang="en-GB" data-expected="en-GB"><span lang="en-US" data-expected="en-US"></span></div>
     `,
     shadow_tree: `
       <div lang="en-CA" data-expected="en-CA">
-        <slot data-expected="en-CA"></slot>
+        <slot data-expected="en-GB"></slot>
       </div>
     `,
   },

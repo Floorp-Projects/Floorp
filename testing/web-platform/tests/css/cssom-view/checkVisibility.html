@@ -68,9 +68,6 @@ test(() => {
   assert_false(visibilityhidden.checkVisibility({
     checkVisibilityCSS: true
   }), 'checkVisibilityCSS:true');
-  assert_false(visibilityhidden.checkVisibility({
-    visibilityProperty: true
-  }), 'visibilityProperty:true');
   assert_true(visibilityhidden.checkVisibility({
     checkVisibilityCSS: false
   }), 'checkVisibilityCSS:false');
@@ -84,23 +81,12 @@ test(() => {
   assert_false(slottedincvhidden.checkVisibility());
 }, 'checkVisibility on element slotted in content-visibility: hidden shadow host.');
 
-promise_test(async () => {
-  await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
-  assert_true(cvauto.checkVisibility({
-    contentVisibilityAuto: false
-  }), 'contentVisibilityAuto: false');
-  assert_true(cvauto.checkVisibility({
-    contentVisibilityAuto: true
-  }), 'contentVisibilityAuto: true');
+test(() => {
+  assert_true(cvauto.checkVisibility());
 }, 'checkVisibility on content-visibility:auto element.');
 
 test(() => {
-  assert_true(cvautooffscreen.checkVisibility({
-    contentVisibilityAuto: false
-  }), 'contentVisibilityAuto: false');
-  assert_false(cvautooffscreen.checkVisibility({
-    contentVisibilityAuto: true
-  }), 'contentVisibilityAuto: true');
+  assert_true(cvautooffscreen.checkVisibility());
 }, 'checkVisibility on content-visibility:auto element which is outside the viewport.');
 
 test(() => {
@@ -120,9 +106,6 @@ test(() => {
   assert_false(opacityzero.checkVisibility({
     checkOpacity: true
   }), 'checkOpacity:true');
-  assert_false(opacityzero.checkVisibility({
-    opacityProperty: true
-  }), 'opacityProperty:true');
   assert_true(opacityzero.checkVisibility({
     checkOpacity: false
   }), 'checkOpacity:false');
@@ -141,12 +124,8 @@ test(() => {
   cvautocontainer.style.contentVisibility = 'auto';
   cvautochild.style.visibility = 'hidden';
   assert_false(cvautochild.checkVisibility({checkVisibilityCSS: true}));
-  assert_false(cvautochild.checkVisibility({contentVisibilityAuto: true}));
-  assert_true(cvautochild.checkVisibility());
   cvautochild.style.visibility = 'visible';
   assert_true(cvautochild.checkVisibility({checkVisibilityCSS: true}));
-  assert_false(cvautochild.checkVisibility({contentVisibilityAuto: true}));
-  assert_true(cvautochild.checkVisibility());
 }, 'checkVisibility on content-visibility:auto with visibility:hidden inside.');
 
 test(() => {
@@ -162,10 +141,4 @@ test(() => {
   cvhiddenwithupdate.getBoundingClientRect();
   assert_true(cvhiddenwithupdate.checkVisibility());
 }, 'checkVisibility on content-visibility:hidden element after forced layout update.');
-
-test(() => {
-  document.documentElement.style.contentVisibility = "hidden";
-  assert_true(document.documentElement.checkVisibility());
-  document.documentElement.style.removeProperty("content-visibility");
-}, 'checkVisibility on root element with content-visibility: hidden returns true.');
 </script>

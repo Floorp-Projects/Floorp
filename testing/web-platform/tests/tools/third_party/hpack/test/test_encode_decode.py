@@ -7,11 +7,11 @@ import pytest
 from hypothesis import given
 from hypothesis.strategies import integers, binary, one_of
 
-from hpack import HPACKDecodingError
 from hpack.hpack import encode_integer, decode_integer
+from hpack.exceptions import HPACKDecodingError
 
 
-class TestIntegerEncoding:
+class TestIntegerEncoding(object):
     # These tests are stolen from the HPACK spec.
     def test_encoding_10_with_5_bit_prefix(self):
         val = encode_integer(10, 5)
@@ -29,7 +29,7 @@ class TestIntegerEncoding:
         assert val == bytearray(b'\x2a')
 
 
-class TestIntegerDecoding:
+class TestIntegerDecoding(object):
     # These tests are stolen from the HPACK spec.
     def test_decoding_10_with_5_bit_prefix(self):
         val = decode_integer(b'\x0a', 5)
@@ -52,7 +52,7 @@ class TestIntegerDecoding:
             decode_integer(b'\x1f', 5)
 
 
-class TestEncodingProperties:
+class TestEncodingProperties(object):
     """
     Property-based tests for our integer encoder and decoder.
     """

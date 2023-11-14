@@ -1,17 +1,20 @@
 # -*- coding: utf-8 -*-
-import pytest
-
-from hpack import InvalidTableIndex
 from hpack.table import HeaderTable, table_entry_size
+from hpack.exceptions import InvalidTableIndex
+import pytest
+import sys
+_ver = sys.version_info
+is_py2 = _ver[0] == 2
+is_py3 = _ver[0] == 3
 
 
-class TestPackageFunctions:
+class TestPackageFunctions(object):
     def test_table_entry_size(self):
         res = table_entry_size(b'TestName', b'TestValue')
         assert res == 49
 
 
-class TestHeaderTable:
+class TestHeaderTable(object):
     def test_get_by_index_dynamic_table(self):
         tbl = HeaderTable()
         off = len(HeaderTable.STATIC_TABLE)
@@ -43,7 +46,7 @@ class TestHeaderTable:
             tbl.get_by_index(off + 2)
 
         assert (
-            "Invalid table index %d" % (off + 2) in str(e.value)
+            "InvalidTableIndex: Invalid table index %d" % (off + 2) in str(e)
         )
 
     def test_repr(self):
@@ -51,13 +54,24 @@ class TestHeaderTable:
         tbl.add(b'TestName1', b'TestValue1')
         tbl.add(b'TestName2', b'TestValue2')
         tbl.add(b'TestName2', b'TestValue2')
-        exp = (
-            "HeaderTable(4096, False, deque(["
-            "(b'TestName2', b'TestValue2'), "
-            "(b'TestName2', b'TestValue2'), "
-            "(b'TestName1', b'TestValue1')"
-            "]))"
-        )
+        # Meh, I hate that I have to do this to test
+        # repr
+        if is_py3:
+            exp = (
+                "HeaderTable(4096, False, deque(["
+                "(b'TestName2', b'TestValue2'), "
+                "(b'TestName2', b'TestValue2'), "
+                "(b'TestName1', b'TestValue1')"
+                "]))"
+            )
+        else:
+            exp = (
+                "HeaderTable(4096, False, deque(["
+                "('TestName2', 'TestValue2'), "
+                "('TestName2', 'TestValue2'), "
+                "('TestName1', 'TestValue1')"
+                "]))"
+            )
         res = repr(tbl)
         assert res == exp
 

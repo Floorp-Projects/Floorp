@@ -1,10 +1,11 @@
 from setuptools import setup
 
-PACKAGE_VERSION = '4.0'
+PACKAGE_VERSION = '3.0'
+deps = ["h2>=3.0.1"]
 
 setup(name='wptserve',
       version=PACKAGE_VERSION,
-      description="Python web server intended for in web browser testing",
+      description="Python webserver intended for in web browser testing",
       long_description=open("README.md").read(),
       # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
       classifiers=["Development Status :: 5 - Production/Stable",
@@ -17,5 +18,6 @@ setup(name='wptserve',
       license='BSD',
       packages=['wptserve', 'wptserve.sslutils'],
       include_package_data=True,
-      zip_safe=False
+      zip_safe=False,
+      install_requires=deps
       )

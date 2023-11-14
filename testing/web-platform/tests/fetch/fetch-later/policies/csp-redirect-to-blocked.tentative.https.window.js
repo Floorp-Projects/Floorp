@@ -4,8 +4,6 @@
 // META: script=/common/utils.js
 // META: script=/common/get-host-info.sub.js
 // META: script=/pending-beacon/resources/pending_beacon-helper.js
-// META: timeout=long
-
 'use strict';
 
 const {

@@ -4,14 +4,17 @@
 
 let executorStartEvent = null;
 
-function requestExecutor(uuid, startOn) {
+function requestExecutor() {
+  const params = new URLSearchParams(location.search);
+  const startOn = params.get('startOn');
+
   if (startOn) {
     addEventListener(startOn, (e) => {
       executorStartEvent = e;
-      startExecutor(uuid);
+      startExecutor();
     });
   } else {
-    startExecutor(uuid);
+    startExecutor();
   }
 }
 
