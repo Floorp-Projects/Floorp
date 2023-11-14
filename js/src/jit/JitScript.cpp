@@ -433,36 +433,17 @@ void ICScript::purgeOptimizedStubs(Zone* zone) {
       lastStub = lastStub->toCacheIRStub()->next();
     }
 
-    // Unlink all stubs allocated in the optimized space.
+    // Unlink all stubs.
     ICStub* stub = entry.firstStub();
-    ICCacheIRStub* prev = nullptr;
-
     while (stub != lastStub) {
-      if (!stub->toCacheIRStub()->allocatedInFallbackSpace()) {
-        lastStub->toFallbackStub()->unlinkStub(zone, &entry, prev,
-                                               stub->toCacheIRStub());
-        stub = stub->toCacheIRStub()->next();
-        continue;
-      }
-
-      prev = stub->toCacheIRStub();
+      lastStub->toFallbackStub()->unlinkStub(zone, &entry, /* prev = */ nullptr,
+                                             stub->toCacheIRStub());
       stub = stub->toCacheIRStub()->next();
     }
 
+    MOZ_ASSERT(lastStub->toFallbackStub()->numOptimizedStubs() == 0);
     lastStub->toFallbackStub()->clearMayHaveFoldedStub();
   }
-
-#ifdef DEBUG
-  // All remaining stubs must be allocated in the fallback space.
-  for (size_t i = 0; i < numICEntries(); i++) {
-    ICEntry& entry = icEntry(i);
-    ICStub* stub = entry.firstStub();
-    while (!stub->isFallback()) {
-      MOZ_ASSERT(stub->toCacheIRStub()->allocatedInFallbackSpace());
-      stub = stub->toCacheIRStub()->next();
-    }
-  }
-#endif
 }
 
 bool JitScript::ensureHasCachedBaselineJitData(JSContext* cx,
@@ -619,14 +600,24 @@ void jit::JitSpewBaselineICStats(JSScript* script, const char* dumpReason) {
 }
 #endif
 
-static void MarkActiveJitScripts(JSContext* cx,
-                                 const JitActivationIterator& activation) {
+static void MarkActiveJitScriptsAndCopyStubs(
+    JSContext* cx, const JitActivationIterator& activation,
+    OptimizedICStubSpace& newStubSpace) {
   for (OnlyJSJitFrameIter iter(activation); !iter.done(); ++iter) {
     const JSJitFrameIter& frame = iter.frame();
     switch (frame.type()) {
       case FrameType::BaselineJS:
         frame.script()->jitScript()->setActive();
         break;
+      case FrameType::BaselineStub: {
+        auto* layout = reinterpret_cast<BaselineStubFrameLayout*>(frame.fp());
+        if (layout->maybeStubPtr() && !layout->maybeStubPtr()->isFallback()) {
+          ICCacheIRStub* stub = layout->maybeStubPtr()->toCacheIRStub();
+          ICCacheIRStub* newStub = stub->clone(cx, newStubSpace);
+          layout->setStubPtr(newStub);
+        }
+        break;
+      }
       case FrameType::Exit:
         if (frame.exitFrame()->is<LazyLinkExitFrameLayout>()) {
           LazyLinkExitFrameLayout* ll =
@@ -652,14 +643,15 @@ static void MarkActiveJitScripts(JSContext* cx,
   }
 }
 
-void jit::MarkActiveJitScripts(Zone* zone) {
+void jit::MarkActiveJitScriptsAndCopyStubs(Zone* zone,
+                                           OptimizedICStubSpace& newStubSpace) {
   if (zone->isAtomsZone()) {
     return;
   }
   JSContext* cx = TlsContext.get();
   for (JitActivationIterator iter(cx); !iter.done(); ++iter) {
     if (iter->compartment()->zone() == zone) {
-      MarkActiveJitScripts(cx, iter);
+      MarkActiveJitScriptsAndCopyStubs(cx, iter, newStubSpace);
     }
   }
 }
@@ -723,13 +715,6 @@ bool JitScript::resetAllocSites(bool resetNurserySites,
   }
 
   return anyReset;
-}
-
-JitScriptICStubSpace* ICScript::jitScriptStubSpace() {
-  if (isInlined()) {
-    return inliningRoot_->jitScriptStubSpace();
-  }
-  return outerJitScript()->jitScriptStubSpace();
 }
 
 JitScript* ICScript::outerJitScript() {

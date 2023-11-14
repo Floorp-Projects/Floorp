@@ -725,9 +725,14 @@ class BaselineStubFrameLayout : public CommonFrameLayout {
 
   static inline size_t Size() { return sizeof(BaselineStubFrameLayout); }
 
-  inline ICStub* maybeStubPtr() {
+  ICStub* maybeStubPtr() {
     uint8_t* fp = reinterpret_cast<uint8_t*>(this);
     return *reinterpret_cast<ICStub**>(fp - ICStubOffset);
+  }
+  void setStubPtr(ICStub* stub) {
+    MOZ_ASSERT(stub);
+    uint8_t* fp = reinterpret_cast<uint8_t*>(this);
+    *reinterpret_cast<ICStub**>(fp - ICStubOffset) = stub;
   }
 
   inline Value* locallyTracedValuePtr(size_t index) {

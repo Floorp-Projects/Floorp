@@ -404,14 +404,19 @@ void Zone::forceDiscardJitCode(JS::GCContext* gcx,
     lastDiscardedCodeTime_ = mozilla::TimeStamp::Now();
   }
 
+  // Copy Baseline IC stubs that are active on the stack to a new LifoAlloc.
+  // After freeing stub memory, these chunks are then transferred to the
+  // zone-wide allocator.
+  jit::OptimizedICStubSpace newStubSpace;
+
 #ifdef DEBUG
   // Assert no JitScripts are marked as active.
   jitZone()->forEachJitScript(
       [](jit::JitScript* jitScript) { MOZ_ASSERT(!jitScript->active()); });
 #endif
 
-  // Mark JitScripts on the stack as active.
-  jit::MarkActiveJitScripts(this);
+  // Mark JitScripts on the stack as active and copy active Baseline stubs.
+  jit::MarkActiveJitScriptsAndCopyStubs(this, newStubSpace);
 
   // Invalidate all Ion code in this zone.
   jit::InvalidateAll(gcx, this);
@@ -486,6 +491,7 @@ void Zone::forceDiscardJitCode(JS::GCContext* gcx,
    * Defer freeing any allocated blocks until after the next minor GC.
    */
   jitZone()->optimizedStubSpace()->freeAllAfterMinorGC(this);
+  jitZone()->optimizedStubSpace()->transferFrom(newStubSpace);
   jitZone()->purgeIonCacheIRStubInfo();
 
   // Generate a profile marker

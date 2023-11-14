@@ -33,6 +33,7 @@
 #include "js/friend/DOMProxy.h"     // JS::ExpandoAndGeneration
 #include "js/friend/XrayJitInfo.h"  // js::jit::GetXrayJitInfo
 #include "js/ScalarType.h"          // js::Scalar::Type
+#include "js/SweepingAPI.h"
 #include "proxy/DOMProxy.h"
 #include "proxy/Proxy.h"
 #include "proxy/ScriptedProxyHandler.h"
@@ -1195,6 +1196,53 @@ void CacheIRWriter::copyStubData(uint8_t* dest) const {
       dest += sizeof(uint64_t);
     }
   }
+}
+
+ICCacheIRStub* ICCacheIRStub::clone(JSContext* cx,
+                                    OptimizedICStubSpace& newSpace) {
+  const CacheIRStubInfo* info = stubInfo();
+  MOZ_ASSERT(info->makesGCCalls());
+
+  size_t bytesNeeded = info->stubDataOffset() + info->stubDataSize();
+
+  AutoEnterOOMUnsafeRegion oomUnsafe;
+  void* newStubMem = newSpace.alloc(bytesNeeded);
+  if (!newStubMem) {
+    oomUnsafe.crash("ICCacheIRStub::clone");
+  }
+
+  ICCacheIRStub* newStub = new (newStubMem) ICCacheIRStub(*this);
+
+  const uint8_t* src = this->stubDataStart();
+  uint8_t* dest = newStub->stubDataStart();
+
+  // Because this can be called during sweeping when discarding JIT code, we
+  // have to lock the store buffer
+  gc::AutoLockStoreBuffer lock(&cx->runtime()->gc.storeBuffer());
+
+  uint32_t field = 0;
+  while (true) {
+    StubField::Type type = info->fieldType(field);
+    if (type == StubField::Type::Limit) {
+      break;  // Done.
+    }
+
+    if (StubField::sizeIsWord(type)) {
+      const uintptr_t* srcField = reinterpret_cast<const uintptr_t*>(src);
+      InitWordStubField(type, dest, *srcField);
+      src += sizeof(uintptr_t);
+      dest += sizeof(uintptr_t);
+    } else {
+      const uint64_t* srcField = reinterpret_cast<const uint64_t*>(src);
+      InitInt64StubField(type, dest, *srcField);
+      src += sizeof(uint64_t);
+      dest += sizeof(uint64_t);
+    }
+
+    field++;
+  }
+
+  return newStub;
 }
 
 template <typename T>
