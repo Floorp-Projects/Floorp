@@ -91,10 +91,10 @@
                 array[analyser.binIndexForFrequency(10000)] > 200);
       });
     } finally {
+      await ac.close();
       for (let t of stream.getTracks()) {
         t.stop();
       }
-      ac.close();
     }
   });
 })();
