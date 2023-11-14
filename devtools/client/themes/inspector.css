@@ -4,6 +4,11 @@
 
 :root {
   --min-container-width: 300px;
+  --pseudo-class-text-color: var(--yellow-75);
+
+  &.theme-dark {
+    --pseudo-class-text-color: var(--yellow-50);
+  }
 }
 
 * {
