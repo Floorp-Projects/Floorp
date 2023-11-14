@@ -59,11 +59,12 @@ class FullScreenNotificationDialog(@LayoutRes val layout: Int) :
                 window.setGravity(Gravity.BOTTOM)
                 window.clearFlags(WindowManager.LayoutParams.FLAG_DIM_BEHIND)
             }
+        }
 
-            lifecycleScope.launch {
-                delay(SNACKBAR_DURATION_LONG_MS)
-                dismiss()
-            }
+        // Attempt to automatically dismiss the dialog after the given duration.
+        lifecycleScope.launch {
+            delay(SNACKBAR_DURATION_LONG_MS)
+            dialog?.dismiss()
         }
     }
 }
