@@ -3,6 +3,7 @@
  * file, You can obtain one at <http://mozilla.org/MPL/2.0/>. */
 
 .source-header {
+  grid-area: editor-header;
   display: flex;
   width: 100%;
   height: var(--editor-header-height);
