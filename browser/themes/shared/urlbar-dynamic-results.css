@@ -20,7 +20,7 @@
         min-width: 32px;
         height: 32px;
         padding: 16px;
-        margin-inline: 0 .7em;
+        margin-inline-start: 0;
       }
     }
   }
@@ -46,10 +46,6 @@
   white-space: normal;
 }
 
-.urlbarView-dynamic-quickSuggestContextualOptIn-title {
-  font-weight: var(--font-weight-bold);
-}
-
 .urlbarView-dynamic-quickSuggestContextualOptIn-description {
   margin-block-start: 2px;
   color: var(--urlbarView-secondary-text-color);
@@ -64,13 +60,6 @@
     outline: var(--focus-outline);
     outline-offset: var(--focus-outline-offset);
   }
-}
-
-.urlbarView-quickSuggestContextualOptIn-one-off-container {
-  border-top: 1px solid var(--urlbarView-separator-color);
-  margin-top: 10px;
-  padding-top: 5px;
-  width: 100%;
 }
 
 /**
