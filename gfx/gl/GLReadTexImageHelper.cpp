@@ -15,6 +15,7 @@
 #include "gfxColor.h"
 #include "gfxTypes.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/Swizzle.h"
 
 namespace mozilla {
 namespace gl {
@@ -253,19 +254,20 @@ static int GuessAlignment(int width, int pixelSize, int rowStride) {
   return alignment;
 }
 
-void ReadPixelsIntoDataSurface(GLContext* gl, DataSourceSurface* dest) {
+void ReadPixelsIntoBuffer(GLContext* gl, uint8_t* aData, int32_t aStride,
+                          const IntSize& aSize, SurfaceFormat aFormat) {
   gl->MakeCurrent();
-  MOZ_ASSERT(dest->GetSize().width != 0);
-  MOZ_ASSERT(dest->GetSize().height != 0);
+  MOZ_ASSERT(aSize.width != 0);
+  MOZ_ASSERT(aSize.height != 0);
 
-  bool hasAlpha = dest->GetFormat() == SurfaceFormat::B8G8R8A8 ||
-                  dest->GetFormat() == SurfaceFormat::R8G8B8A8;
+  bool hasAlpha =
+      aFormat == SurfaceFormat::B8G8R8A8 || aFormat == SurfaceFormat::R8G8B8A8;
 
   int destPixelSize;
   GLenum destFormat;
   GLenum destType;
 
-  switch (dest->GetFormat()) {
+  switch (aFormat) {
     case SurfaceFormat::B8G8R8A8:
     case SurfaceFormat::B8G8R8X8:
       // Needs host (little) endian ARGB.
@@ -285,12 +287,9 @@ void ReadPixelsIntoDataSurface(GLContext* gl, DataSourceSurface* dest) {
     default:
       MOZ_CRASH("GFX: Bad format, read pixels.");
   }
-  destPixelSize = BytesPerPixel(dest->GetFormat());
+  destPixelSize = BytesPerPixel(aFormat);
 
-  Maybe<DataSourceSurface::ScopedMap> map;
-  map.emplace(dest, DataSourceSurface::READ_WRITE);
-
-  MOZ_ASSERT(dest->GetSize().width * destPixelSize <= map->GetStride());
+  MOZ_ASSERT(aSize.width * destPixelSize <= aStride);
 
   GLenum readFormat = destFormat;
   GLenum readType = destType;
@@ -298,9 +297,11 @@ void ReadPixelsIntoDataSurface(GLContext* gl, DataSourceSurface* dest) {
       !GetActualReadFormats(gl, destFormat, destType, &readFormat, &readType);
 
   RefPtr<DataSourceSurface> tempSurf;
-  DataSourceSurface* readSurf = dest;
-  int readAlignment =
-      GuessAlignment(dest->GetSize().width, destPixelSize, map->GetStride());
+  Maybe<DataSourceSurface::ScopedMap> tempMap;
+  uint8_t* data = aData;
+  SurfaceFormat readFormatGFX;
+
+  int readAlignment = GuessAlignment(aSize.width, destPixelSize, aStride);
   if (!readAlignment) {
     needsTempSurf = true;
   }
@@ -309,7 +310,6 @@ void ReadPixelsIntoDataSurface(GLContext* gl, DataSourceSurface* dest) {
       NS_WARNING(
           "Needing intermediary surface for ReadPixels. This will be slow!");
     }
-    SurfaceFormat readFormatGFX;
 
     switch (readFormat) {
       case LOCAL_GL_RGBA: {
@@ -354,36 +354,46 @@ void ReadPixelsIntoDataSurface(GLContext* gl, DataSourceSurface* dest) {
       }
     }
 
-    int32_t stride = dest->GetSize().width * BytesPerPixel(readFormatGFX);
-    tempSurf = Factory::CreateDataSourceSurfaceWithStride(
-        dest->GetSize(), readFormatGFX, stride);
+    int32_t stride = aSize.width * BytesPerPixel(readFormatGFX);
+    tempSurf = Factory::CreateDataSourceSurfaceWithStride(aSize, readFormatGFX,
+                                                          stride);
     if (NS_WARN_IF(!tempSurf)) {
       return;
     }
 
-    readSurf = tempSurf;
-    map = Nothing();
-    map.emplace(readSurf, DataSourceSurface::READ_WRITE);
+    tempMap.emplace(tempSurf, DataSourceSurface::READ_WRITE);
+    if (NS_WARN_IF(!tempMap->IsMapped())) {
+      return;
+    }
+
+    data = tempMap->GetData();
   }
 
   MOZ_ASSERT(readAlignment);
-  MOZ_ASSERT(reinterpret_cast<uintptr_t>(map->GetData()) % readAlignment == 0);
+  MOZ_ASSERT(reinterpret_cast<uintptr_t>(data) % readAlignment == 0);
 
-  GLsizei width = dest->GetSize().width;
-  GLsizei height = dest->GetSize().height;
+  GLsizei width = aSize.width;
+  GLsizei height = aSize.height;
 
   {
     ScopedPackState safePackState(gl);
     gl->fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, readAlignment);
 
-    gl->fReadPixels(0, 0, width, height, readFormat, readType, map->GetData());
+    gl->fReadPixels(0, 0, width, height, readFormat, readType, data);
   }
 
-  map = Nothing();
-
-  if (readSurf != dest) {
-    gfx::Factory::CopyDataSourceSurface(readSurf, dest);
+  if (tempMap) {
+    SwizzleData(tempMap->GetData(), tempMap->GetStride(), readFormatGFX, aData,
+                aStride, aFormat, aSize);
   }
+}
+
+void ReadPixelsIntoDataSurface(GLContext* gl, DataSourceSurface* dest) {
+  gl->MakeCurrent();
+
+  DataSourceSurface::ScopedMap map(dest, DataSourceSurface::WRITE);
+  ReadPixelsIntoBuffer(gl, map.GetData(), map.GetStride(), dest->GetSize(),
+                       dest->GetFormat());
 }
 
 already_AddRefed<gfx::DataSourceSurface> YInvertImageSurface(
