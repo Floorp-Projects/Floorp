@@ -96,6 +96,20 @@ D3D11TextureIMFSampleImage::GetAsSourceSurface() {
   return sourceSurface.forget();
 }
 
+nsresult D3D11TextureIMFSampleImage::BuildSurfaceDescriptorBuffer(
+    SurfaceDescriptorBuffer& aSdBuffer, BuildSdbFlags aFlags,
+    const std::function<MemoryOrShmem(uint32_t)>& aAllocate) {
+  RefPtr<ID3D11Texture2D> src = GetTexture();
+  if (!src) {
+    gfxWarning() << "Cannot readback from shared texture because no texture is "
+                    "available.";
+    return NS_ERROR_FAILURE;
+  }
+
+  return gfx::Factory::CreateSdbForD3D11Texture(src, mSize, aSdBuffer,
+                                                aAllocate);
+}
+
 ID3D11Texture2D* D3D11TextureIMFSampleImage::GetTexture() const {
   return mTexture;
 }

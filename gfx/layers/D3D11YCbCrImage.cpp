@@ -112,11 +112,13 @@ const DXGIYCbCrTextureData* D3D11YCbCrImage::GetData() const {
   return mTextureClient->GetInternalData()->AsDXGIYCbCrTextureData();
 }
 
-already_AddRefed<SourceSurface> D3D11YCbCrImage::GetAsSourceSurface() {
+nsresult D3D11YCbCrImage::ReadIntoBuffer(
+    const std::function<nsresult(const PlanarYCbCrData&, const IntSize&,
+                                 SurfaceFormat)>& aCopy) {
   if (!mTextureClient) {
     gfxWarning()
         << "GetAsSourceSurface() called on uninitialized D3D11YCbCrImage.";
-    return nullptr;
+    return NS_ERROR_FAILURE;
   }
 
   gfx::IntSize size(mPictureRect.Size());
@@ -131,7 +133,7 @@ already_AddRefed<SourceSurface> D3D11YCbCrImage::GetAsSourceSurface() {
 
   if (!dxgiData) {
     gfxCriticalError() << "Failed to get texture client internal data.";
-    return nullptr;
+    return NS_ERROR_FAILURE;
   }
 
   RefPtr<ID3D11Texture2D> texY = dxgiData->GetD3D11Texture(0);
@@ -145,7 +147,7 @@ already_AddRefed<SourceSurface> D3D11YCbCrImage::GetAsSourceSurface() {
 
   if (!dev || dev != gfx::DeviceManagerDx::Get()->GetImageDevice()) {
     gfxCriticalError() << "D3D11Device is obsoleted";
-    return nullptr;
+    return NS_ERROR_FAILURE;
   }
 
   RefPtr<ID3D10Multithread> mt;
@@ -153,12 +155,12 @@ already_AddRefed<SourceSurface> D3D11YCbCrImage::GetAsSourceSurface() {
 
   if (FAILED(hr) || !mt) {
     gfxCriticalError() << "Multithread safety interface not supported.";
-    return nullptr;
+    return NS_ERROR_FAILURE;
   }
 
   if (!mt->GetMultithreadProtected()) {
     gfxCriticalError() << "Device used not marked as multithread-safe.";
-    return nullptr;
+    return NS_ERROR_FAILURE;
   }
 
   D3D11MTAutoEnter mtAutoEnter(mt.forget());
@@ -172,7 +174,7 @@ already_AddRefed<SourceSurface> D3D11YCbCrImage::GetAsSourceSurface() {
   dev->CreateTexture2D(&desc, nullptr, getter_AddRefs(softTexY));
   if (!softTexY) {
     gfxCriticalNote << "Failed to allocate softTexY";
-    return nullptr;
+    return NS_ERROR_FAILURE;
   }
 
   texCb->GetDesc(&desc);
@@ -184,7 +186,7 @@ already_AddRefed<SourceSurface> D3D11YCbCrImage::GetAsSourceSurface() {
   dev->CreateTexture2D(&desc, nullptr, getter_AddRefs(softTexCb));
   if (!softTexCb) {
     gfxCriticalNote << "Failed to allocate softTexCb";
-    return nullptr;
+    return NS_ERROR_FAILURE;
   }
 
   texCr->GetDesc(&desc);
@@ -196,14 +198,14 @@ already_AddRefed<SourceSurface> D3D11YCbCrImage::GetAsSourceSurface() {
   dev->CreateTexture2D(&desc, nullptr, getter_AddRefs(softTexCr));
   if (!softTexCr) {
     gfxCriticalNote << "Failed to allocate softTexCr";
-    return nullptr;
+    return NS_ERROR_FAILURE;
   }
 
   RefPtr<ID3D11DeviceContext> ctx;
   dev->GetImmediateContext(getter_AddRefs(ctx));
   if (!ctx) {
     gfxCriticalError() << "Failed to get immediate context.";
-    return nullptr;
+    return NS_ERROR_FAILURE;
   }
 
   {
@@ -216,23 +218,22 @@ already_AddRefed<SourceSurface> D3D11YCbCrImage::GetAsSourceSurface() {
   }
 
   D3D11_MAPPED_SUBRESOURCE mapY, mapCb, mapCr;
-  RefPtr<gfx::DataSourceSurface> surface;
   mapY.pData = mapCb.pData = mapCr.pData = nullptr;
 
   hr = ctx->Map(softTexY, 0, D3D11_MAP_READ, 0, &mapY);
   if (FAILED(hr)) {
     gfxCriticalError() << "Failed to map Y plane (" << hr << ")";
-    return nullptr;
+    return NS_ERROR_FAILURE;
   }
   hr = ctx->Map(softTexCb, 0, D3D11_MAP_READ, 0, &mapCb);
   if (FAILED(hr)) {
     gfxCriticalError() << "Failed to map Y plane (" << hr << ")";
-    return nullptr;
+    return NS_ERROR_FAILURE;
   }
   hr = ctx->Map(softTexCr, 0, D3D11_MAP_READ, 0, &mapCr);
   if (FAILED(hr)) {
     gfxCriticalError() << "Failed to map Y plane (" << hr << ")";
-    return nullptr;
+    return NS_ERROR_FAILURE;
   }
 
   MOZ_ASSERT(mapCb.RowPitch == mapCr.RowPitch);
@@ -254,30 +255,68 @@ already_AddRefed<SourceSurface> D3D11YCbCrImage::GetAsSourceSurface() {
   if (size.width > PlanarYCbCrImage::MAX_DIMENSION ||
       size.height > PlanarYCbCrImage::MAX_DIMENSION) {
     gfxCriticalError() << "Illegal image dest width or height";
-    return nullptr;
+    return NS_ERROR_FAILURE;
   }
 
-  surface = gfx::Factory::CreateDataSourceSurface(size, format);
-  if (!surface) {
-    gfxCriticalError() << "Failed to create DataSourceSurface for image: "
-                       << size << " " << format;
-    return nullptr;
-  }
-
-  DataSourceSurface::ScopedMap mapping(surface, DataSourceSurface::WRITE);
-  if (!mapping.IsMapped()) {
-    gfxCriticalError() << "Failed to map DataSourceSurface for D3D11YCbCrImage";
-    return nullptr;
-  }
-
-  gfx::ConvertYCbCrToRGB(data, format, size, mapping.GetData(),
-                         mapping.GetStride());
+  nsresult rv = aCopy(data, size, format);
 
   ctx->Unmap(softTexY, 0);
   ctx->Unmap(softTexCb, 0);
   ctx->Unmap(softTexCr, 0);
 
+  return rv;
+}
+
+already_AddRefed<SourceSurface> D3D11YCbCrImage::GetAsSourceSurface() {
+  RefPtr<gfx::DataSourceSurface> surface;
+
+  nsresult rv =
+      ReadIntoBuffer([&](const PlanarYCbCrData& aData, const IntSize& aSize,
+                         SurfaceFormat aFormat) -> nsresult {
+        surface = gfx::Factory::CreateDataSourceSurface(aSize, aFormat);
+        if (!surface) {
+          gfxCriticalError()
+              << "Failed to create DataSourceSurface for image: " << aSize
+              << " " << aFormat;
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
+
+        DataSourceSurface::ScopedMap mapping(surface, DataSourceSurface::WRITE);
+        if (!mapping.IsMapped()) {
+          gfxCriticalError()
+              << "Failed to map DataSourceSurface for D3D11YCbCrImage";
+          return NS_ERROR_FAILURE;
+        }
+
+        gfx::ConvertYCbCrToRGB(aData, aFormat, aSize, mapping.GetData(),
+                               mapping.GetStride());
+        return NS_OK;
+      });
+
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return nullptr;
+  }
+
+  MOZ_ASSERT(surface);
   return surface.forget();
+}
+
+nsresult D3D11YCbCrImage::BuildSurfaceDescriptorBuffer(
+    SurfaceDescriptorBuffer& aSdBuffer, BuildSdbFlags aFlags,
+    const std::function<MemoryOrShmem(uint32_t)>& aAllocate) {
+  return ReadIntoBuffer([&](const PlanarYCbCrData& aData, const IntSize& aSize,
+                            SurfaceFormat aFormat) -> nsresult {
+    uint8_t* buffer = nullptr;
+    int32_t stride = 0;
+    nsresult rv = AllocateSurfaceDescriptorBufferRgb(
+        aSize, aFormat, buffer, aSdBuffer, stride, aAllocate);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    gfx::ConvertYCbCrToRGB(aData, aFormat, aSize, buffer, stride);
+    return NS_OK;
+  });
 }
 
 class AutoCheckLockD3D11Texture final {
