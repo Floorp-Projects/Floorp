@@ -24,6 +24,9 @@ class DMABUFSurfaceImage : public Image {
   DMABufSurface* GetSurface() { return mSurface; }
   gfx::IntSize GetSize() const override;
   already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override;
+  nsresult BuildSurfaceDescriptorBuffer(
+      SurfaceDescriptorBuffer& aSdBuffer, BuildSdbFlags aFlags,
+      const std::function<MemoryOrShmem(uint32_t)>& aAllocate) override;
   TextureClient* GetTextureClient(KnowsCompositor* aKnowsCompositor) override;
 
  private:

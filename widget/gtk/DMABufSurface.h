@@ -7,9 +7,11 @@
 #ifndef DMABufSurface_h__
 #define DMABufSurface_h__
 
+#include <functional>
 #include <stdint.h>
 #include "mozilla/widget/va_drmcommon.h"
 #include "GLTypes.h"
+#include "ImageContainer.h"
 #include "nsISupportsImpl.h"
 #include "mozilla/gfx/Types.h"
 #include "mozilla/Mutex.h"
@@ -34,7 +36,9 @@ namespace gfx {
 class DataSourceSurface;
 }
 namespace layers {
+class MemoryOrShmem;
 class SurfaceDescriptor;
+class SurfaceDescriptorBuffer;
 class SurfaceDescriptorDMABuf;
 }  // namespace layers
 namespace gl {
@@ -105,6 +109,11 @@ class DMABufSurface {
   GetAsSourceSurface() {
     return nullptr;
   }
+
+  virtual nsresult BuildSurfaceDescriptorBuffer(
+      mozilla::layers::SurfaceDescriptorBuffer& aSdBuffer,
+      mozilla::layers::Image::BuildSdbFlags aFlags,
+      const std::function<mozilla::layers::MemoryOrShmem(uint32_t)>& aAllocate);
 
   virtual mozilla::gfx::YUVColorSpace GetYUVColorSpace() {
     return mozilla::gfx::YUVColorSpace::Default;
@@ -316,6 +325,12 @@ class DMABufSurfaceYUV final : public DMABufSurface {
   already_AddRefed<mozilla::gfx::DataSourceSurface> GetAsSourceSurface()
       override;
 
+  nsresult BuildSurfaceDescriptorBuffer(
+      mozilla::layers::SurfaceDescriptorBuffer& aSdBuffer,
+      mozilla::layers::Image::BuildSdbFlags aFlags,
+      const std::function<mozilla::layers::MemoryOrShmem(uint32_t)>& aAllocate)
+      override;
+
   int GetWidth(int aPlane = 0) override { return mWidth[aPlane]; }
   int GetHeight(int aPlane = 0) override { return mHeight[aPlane]; }
   mozilla::gfx::SurfaceFormat GetFormat() override;
@@ -377,6 +392,10 @@ class DMABufSurfaceYUV final : public DMABufSurface {
 
   bool CreateEGLImage(mozilla::gl::GLContext* aGLContext, int aPlane);
   void ReleaseEGLImages(mozilla::gl::GLContext* aGLContext);
+
+  nsresult ReadIntoBuffer(uint8_t* aData, int32_t aStride,
+                          const mozilla::gfx::IntSize& aSize,
+                          mozilla::gfx::SurfaceFormat aFormat);
 
   int mWidth[DMABUF_BUFFER_PLANES];
   int mHeight[DMABUF_BUFFER_PLANES];
