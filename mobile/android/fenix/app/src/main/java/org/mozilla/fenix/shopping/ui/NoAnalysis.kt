@@ -50,6 +50,7 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * recommendations toggle state.
  * @param onSettingsExpandToggleClick Invoked when the user expands or collapses the settings card.
  * @param onInfoExpandToggleClick Invoked when the user expands or collapses the info card.
+ * @param onFooterLinkClick Invoked when the user clicks on the footer link.
  * @param modifier Modifier to be applied to the composable.
  */
 @Suppress("LongParameterList")
@@ -66,6 +67,7 @@ fun NoAnalysis(
     onProductRecommendationsEnabledStateChange: (Boolean) -> Unit,
     onSettingsExpandToggleClick: () -> Unit,
     onInfoExpandToggleClick: () -> Unit,
+    onFooterLinkClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -88,6 +90,10 @@ fun NoAnalysis(
             onTurnOffReviewQualityCheckClick = onOptOutClick,
             onExpandToggleClick = onSettingsExpandToggleClick,
             modifier = Modifier.fillMaxWidth(),
+        )
+
+        ReviewQualityCheckFooter(
+            onLinkClick = onFooterLinkClick,
         )
     }
 }
@@ -202,6 +208,7 @@ private fun NoAnalysisPreview() {
                 onProductRecommendationsEnabledStateChange = { productRecommendationsEnabled = it },
                 onSettingsExpandToggleClick = { isSettingsExpanded = !isSettingsExpanded },
                 onInfoExpandToggleClick = { isInfoExpanded = !isInfoExpanded },
+                onFooterLinkClick = {},
                 modifier = Modifier.fillMaxWidth(),
             )
         }

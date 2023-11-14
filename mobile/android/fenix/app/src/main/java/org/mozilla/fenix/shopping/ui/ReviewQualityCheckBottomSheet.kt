@@ -207,6 +207,7 @@ private fun ProductReview(
                     onProductRecommendationsEnabledStateChange = onProductRecommendationsEnabledStateChange,
                     onSettingsExpandToggleClick = onSettingsExpandToggleClick,
                     onInfoExpandToggleClick = onInfoExpandToggleClick,
+                    onFooterLinkClick = onFooterLinkClick,
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
