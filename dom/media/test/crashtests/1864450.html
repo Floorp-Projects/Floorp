@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<script>
+  const ac = new OfflineAudioContext({length: 136, sampleRate: 48000});
+  const filterNode = new BiquadFilterNode(ac);
+  filterNode.frequency.setValueCurveAtTime([0.2, 0.3], 0, 1);
+  filterNode.frequency.linearRampToValueAtTime(0.8, 1);
+  ac.startRendering().then(() => {
+    filterNode.frequency.value;
+    document.documentElement.removeAttribute("class");
+  });
+</script>
