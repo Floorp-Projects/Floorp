@@ -544,4 +544,18 @@ void MediaRawDataWriter::PopFront(size_t aSize) {
   mTarget->mBuffer.PopFront(aSize);
 }
 
+const char* CryptoSchemeToString(const CryptoScheme& aScheme) {
+  switch (aScheme) {
+    case CryptoScheme::None:
+      return "None";
+    case CryptoScheme::Cenc:
+      return "Cenc";
+    case CryptoScheme::Cbcs:
+      return "Cbcs";
+    default:
+      MOZ_ASSERT_UNREACHABLE();
+      return "";
+  }
+}
+
 }  // namespace mozilla

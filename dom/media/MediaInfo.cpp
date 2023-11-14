@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MediaInfo.h"
+#include "MediaData.h"
 
 namespace mozilla {
 
@@ -38,6 +39,30 @@ bool TrackInfo::IsEqualTo(const TrackInfo& rhs) const {
       mIsRenderedExternally == rhs.mIsRenderedExternally && mType == rhs.mType);
 }
 
+nsCString TrackInfo::ToString() const {
+  nsCString rv;
+
+  rv.AppendPrintf(
+      "TrackInfo: id:%s kind:%s label:%s language:%s enabled:%s trackid: %d "
+      "mimetype:%s duration:%s media time:%s crypto:%s rendered externaly: %s "
+      "type:%s",
+      NS_ConvertUTF16toUTF8(mId).get(), NS_ConvertUTF16toUTF8(mKind).get(),
+      NS_ConvertUTF16toUTF8(mLabel).get(),
+      NS_ConvertUTF16toUTF8(mLanguage).get(), mEnabled ? "true" : "false",
+      mTrackId, mMimeType.get(), mDuration.ToString().get(),
+      mMediaTime.ToString().get(), CryptoSchemeToString(mCrypto.mCryptoScheme),
+      mIsRenderedExternally ? "true" : "false", TrackTypeToStr(mType));
+
+  if (!mTags.IsEmpty()) {
+    rv.AppendPrintf("\n");
+    for (const auto& tag : mTags) {
+      rv.AppendPrintf("%s:%s", tag.mKey.get(), tag.mValue.get());
+    }
+  }
+
+  return rv;
+}
+
 bool VideoInfo::operator==(const VideoInfo& rhs) const {
   return (TrackInfo::IsEqualTo(rhs) && mDisplay == rhs.mDisplay &&
           mStereoMode == rhs.mStereoMode && mImage == rhs.mImage &&
@@ -53,6 +78,20 @@ bool AudioInfo::operator==(const AudioInfo& rhs) const {
           mBitDepth == rhs.mBitDepth && mProfile == rhs.mProfile &&
           mExtendedProfile == rhs.mExtendedProfile &&
           mCodecSpecificConfig == rhs.mCodecSpecificConfig);
+}
+
+nsCString AudioInfo::ToString() const {
+  nsCString rv;
+
+  rv.AppendPrintf(
+      "AudioInfo: %" PRIu32 "Hz, %" PRIu32 "ch (%s) %" PRIu32
+      "-bits profile: %" PRIu8 " extended profile: %" PRIu8 ", %s extradata",
+      mRate, mChannels,
+      AudioConfig::ChannelLayout::ChannelMapToString(mChannelMap).get(),
+      mBitDepth, mProfile, mExtendedProfile,
+      mCodecSpecificConfig.is<NoCodecSpecificData>() ? "no" : "with");
+
+  return rv;
 }
 
 }  // namespace mozilla
