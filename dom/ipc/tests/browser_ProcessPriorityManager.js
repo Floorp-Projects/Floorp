@@ -48,8 +48,9 @@ class TabPriorityWatcher {
     this.priorityMap = new Map();
 
     // The keys in this map are childIDs we're not expecting to change.
-    // Each value is either null (if no change has been seen) or the
-    // priority that the process changed to.
+    // Each value is an array of priorities we've seen the childID changed
+    // to since it was added to the map. If the array is empty, there
+    // have been no changes.
     this.noChangeChildIDs = new Map();
 
     Services.obs.addObserver(this, PRIORITY_SET_TOPIC);
@@ -106,14 +107,14 @@ class TabPriorityWatcher {
    *   Once the WAIT_FOR_CHANGE_TIME_MS duration has passed.
    */
   async ensureNoPriorityChange(childID) {
-    this.noChangeChildIDs.set(childID, null);
+    this.noChangeChildIDs.set(childID, []);
     // eslint-disable-next-line mozilla/no-arbitrary-setTimeout
     await new Promise(resolve => setTimeout(resolve, WAIT_FOR_CHANGE_TIME_MS));
-    let priority = this.noChangeChildIDs.get(childID);
-    Assert.equal(
-      priority,
-      null,
-      `Should have seen no process priority change for child ID ${childID}`
+    let priorities = this.noChangeChildIDs.get(childID);
+    Assert.deepEqual(
+      priorities,
+      [],
+      `Should have seen no process priority changes for child ID ${childID}`
     );
     this.noChangeChildIDs.delete(childID);
   }
@@ -199,7 +200,7 @@ class TabPriorityWatcher {
 
     let { childID, priority } = this.parsePPMData(data);
     if (this.noChangeChildIDs.has(childID)) {
-      this.noChangeChildIDs.set(childID, priority);
+      this.noChangeChildIDs.get(childID).push(priority);
     }
     this.priorityMap.set(childID, priority);
   }
