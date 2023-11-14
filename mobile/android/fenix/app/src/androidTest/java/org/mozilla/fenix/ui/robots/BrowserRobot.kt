@@ -46,9 +46,12 @@ import org.mozilla.fenix.helpers.Constants.TAG
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
 import org.mozilla.fenix.helpers.HomeActivityComposeTestRule
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextExists
+import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextIsGone
+import org.mozilla.fenix.helpers.MatcherHelper.assertItemTextEquals
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithDescriptionExists
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdAndTextExists
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdExists
+import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdIsGone
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithDescription
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
@@ -71,10 +74,7 @@ import java.time.LocalDate
 class BrowserRobot {
     private lateinit var sessionLoadedIdlingResource: SessionLoadedIdlingResource
 
-    fun waitForPageToLoad() {
-        progressBar().waitUntilGone(waitingTime)
-        Log.i(TAG, "waitForPageToLoad: The page was loaded, the progress bar is gone")
-    }
+    fun waitForPageToLoad() = assertItemWithResIdIsGone(progressBar())
 
     fun verifyCurrentPrivateSession(context: Context) {
         val selectedTab = context.components.core.store.state.selectedTab
@@ -236,8 +236,7 @@ class BrowserRobot {
         )
     }
 
-    fun verifyNavURLBarHidden() =
-        assertTrue(navURLBar().waitUntilGone(waitingTime))
+    fun verifyNavURLBarHidden() = assertItemWithResIdIsGone(navURLBar())
 
     fun verifySecureConnectionLockIcon() =
         onView(withId(R.id.mozac_browser_toolbar_security_indicator))
@@ -296,7 +295,7 @@ class BrowserRobot {
         )
     fun clickSubmitLoginButton() {
         clickPageObject(itemWithResId("submit"))
-        itemWithResId("submit").waitUntilGone(waitingTime)
+        assertItemWithResIdIsGone(itemWithResId("submit"))
         mDevice.waitForIdle(waitingTimeLong)
     }
 
@@ -304,7 +303,7 @@ class BrowserRobot {
         clickPageObject(itemWithResId("password"))
         setPageObjectText(itemWithResId("password"), password)
 
-        assertTrue(mDevice.findObject(UiSelector().text(password)).waitUntilGone(waitingTime))
+        assertItemContainingTextIsGone(itemWithText(password))
     }
 
     /**
@@ -340,10 +339,10 @@ class BrowserRobot {
         // failing to swipe on Firebase sometimes, so it tries again
         try {
             navURLBar().swipeRight(2)
-            assertTrue(mDevice.findObject(UiSelector().text(tabUrl)).waitUntilGone(waitingTime))
+            assertItemContainingTextIsGone(itemWithText(tabUrl))
         } catch (e: AssertionError) {
             navURLBar().swipeRight(2)
-            assertTrue(mDevice.findObject(UiSelector().text(tabUrl)).waitUntilGone(waitingTime))
+            assertItemContainingTextIsGone(itemWithText(tabUrl))
         }
     }
 
@@ -351,10 +350,10 @@ class BrowserRobot {
         // failing to swipe on Firebase sometimes, so it tries again
         try {
             navURLBar().swipeLeft(2)
-            assertTrue(mDevice.findObject(UiSelector().text(tabUrl)).waitUntilGone(waitingTime))
+            assertItemContainingTextIsGone(itemWithText(tabUrl))
         } catch (e: AssertionError) {
             navURLBar().swipeLeft(2)
-            assertTrue(mDevice.findObject(UiSelector().text(tabUrl)).waitUntilGone(waitingTime))
+            assertItemContainingTextIsGone(itemWithText(tabUrl))
         }
     }
 
@@ -465,19 +464,10 @@ class BrowserRobot {
         // Sometimes the assertion of the pre-filled logins fails so we are re-trying after refreshing the page
         for (i in 1..RETRY_COUNT) {
             try {
-                if (credentialsArePrefilled) {
-                    mDevice.waitForObjects(itemWithResId("username"))
-                    assertTrue(itemWithResId("username").text.equals(userName))
-
-                    mDevice.waitForObjects(itemWithResId("password"))
-                    assertTrue(itemWithResId("password").text.equals(password))
-                } else {
-                    mDevice.waitForObjects(itemWithResId("username"))
-                    assertFalse(itemWithResId("username").text.equals(userName))
-
-                    mDevice.waitForObjects(itemWithResId("password"))
-                    assertFalse(itemWithResId("password").text.equals(password))
-                }
+                mDevice.waitForObjects(itemWithResId("username"))
+                assertItemTextEquals(itemWithResId("username"), expectedText = userName, isEqual = credentialsArePrefilled)
+                mDevice.waitForObjects(itemWithResId("password"))
+                assertItemTextEquals(itemWithResId("password"), expectedText = password, isEqual = credentialsArePrefilled)
 
                 break
             } catch (e: AssertionError) {
@@ -521,7 +511,7 @@ class BrowserRobot {
             try {
                 assertItemWithResIdExists(itemWithResId("submit"))
                 itemWithResId("submit").click()
-                assertTrue(itemWithResId("username").text.equals(userName))
+                assertItemTextEquals(itemWithResId("username"), expectedText = userName)
                 break
             } catch (e: AssertionError) {
                 addToHomeScreen {
@@ -821,16 +811,8 @@ class BrowserRobot {
 
     fun verifySurveyButton() = assertItemContainingTextExists(itemContainingText(getStringResource(R.string.preferences_take_survey)))
 
-    fun verifySurveyButtonDoesNotExist() {
-        val button = mDevice.findObject(
-            UiSelector().text(
-                getStringResource(
-                    R.string.preferences_take_survey,
-                ),
-            ),
-        )
-        assertTrue(button.waitUntilGone(waitingTime))
-    }
+    fun verifySurveyButtonDoesNotExist() =
+        assertItemContainingTextIsGone(itemWithText(getStringResource(R.string.preferences_take_survey)))
 
     fun verifySurveyNoThanksButton() =
         assertItemContainingTextExists(

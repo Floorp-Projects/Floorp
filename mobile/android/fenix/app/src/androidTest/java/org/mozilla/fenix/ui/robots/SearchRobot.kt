@@ -39,8 +39,11 @@ import org.mozilla.fenix.helpers.Constants.RETRY_COUNT
 import org.mozilla.fenix.helpers.Constants.SPEECH_RECOGNITION
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextExists
+import org.mozilla.fenix.helpers.MatcherHelper.assertItemTextContains
+import org.mozilla.fenix.helpers.MatcherHelper.assertItemTextEquals
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithDescriptionExists
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdExists
+import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdIsGone
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithDescription
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
@@ -169,9 +172,7 @@ class SearchRobot {
 
     fun verifySearchBarPlaceholder(text: String) {
         browserToolbarEditView().waitForExists(waitingTime)
-        assertTrue(
-            browserToolbarEditView().text == text,
-        )
+        assertItemTextEquals(browserToolbarEditView(), expectedText = text)
     }
 
     fun verifySearchShortcutListContains(vararg searchEngineName: String, shouldExist: Boolean = true) {
@@ -181,10 +182,7 @@ class SearchRobot {
                     searchShortcutList.getChild(UiSelector().text(it)),
                 )
             } else {
-                assertTrue(
-                    searchShortcutList.getChild(UiSelector().text(it))
-                        .waitUntilGone(waitingTimeShort),
-                )
+                assertItemWithResIdIsGone(searchShortcutList.getChild(UiSelector().text(it)))
             }
         }
     }
@@ -264,7 +262,7 @@ class SearchRobot {
     }
 
     fun verifyTranslatedFocusedNavigationToolbar(toolbarHintString: String) =
-        assertTrue(browserToolbarEditView().text.contains(toolbarHintString))
+        assertItemTextContains(browserToolbarEditView(), itemText = toolbarHintString)
 
     fun verifyTypedToolbarText(expectedText: String) {
         mDevice.findObject(UiSelector().resourceId("$packageName:id/toolbar"))
@@ -297,10 +295,10 @@ class SearchRobot {
             try {
                 searchWrapper().waitForExists(waitingTime)
                 mDevice.pressBack()
-                assertTrue(searchWrapper().waitUntilGone(waitingTimeShort))
+                assertItemWithResIdIsGone(searchWrapper())
             } catch (e: AssertionError) {
                 mDevice.pressBack()
-                assertTrue(searchWrapper().waitUntilGone(waitingTimeShort))
+                assertItemWithResIdIsGone(searchWrapper())
             }
 
             HomeScreenRobot().interact()

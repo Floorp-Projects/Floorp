@@ -20,15 +20,17 @@ import androidx.test.uiautomator.By
 import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
-import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextExists
+import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextIsGone
+import org.mozilla.fenix.helpers.MatcherHelper.assertItemTextEquals
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithDescriptionExists
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdExists
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithDescription
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
 import org.mozilla.fenix.helpers.TestHelper.mDevice
@@ -59,13 +61,12 @@ class CollectionRobot {
     }
 
     fun verifyTabsSelectedCounterText(numOfTabs: Int) {
-        mDevice.findObject(UiSelector().text("Select tabs to save"))
-            .waitUntilGone(waitingTime)
+        itemWithText("Select tabs to save").waitUntilGone(waitingTime)
 
         val tabsCounter = mDevice.findObject(UiSelector().resourceId("$packageName:id/bottom_bar_text"))
         when (numOfTabs) {
-            1 -> assertTrue(tabsCounter.text.equals("$numOfTabs tab selected"))
-            2 -> assertTrue(tabsCounter.text.equals("$numOfTabs tabs selected"))
+            1 -> assertItemTextEquals(tabsCounter, expectedText = "$numOfTabs tab selected")
+            2 -> assertItemTextEquals(tabsCounter, expectedText = "$numOfTabs tabs selected")
         }
     }
 
@@ -78,9 +79,7 @@ class CollectionRobot {
             scrollToElementByText(title)
             assertItemContainingTextExists(collectionListItem(title))
         } else {
-            assertTrue(
-                collectionListItem(title).waitUntilGone(waitingTime),
-            )
+            assertItemContainingTextIsGone(collectionListItem(title))
         }
     }
 

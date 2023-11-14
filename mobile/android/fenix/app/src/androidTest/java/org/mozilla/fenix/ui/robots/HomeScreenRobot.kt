@@ -48,7 +48,6 @@ import org.hamcrest.CoreMatchers.containsString
 import org.hamcrest.CoreMatchers.instanceOf
 import org.hamcrest.Matchers
 import org.junit.Assert
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.Constants.LISTS_MAXSWIPES
@@ -57,13 +56,18 @@ import org.mozilla.fenix.helpers.Constants.TAG
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
 import org.mozilla.fenix.helpers.HomeActivityComposeTestRule
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextExists
+import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextIsGone
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithDescriptionExists
+import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithIndexExists
+import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdAndIndexExists
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdAndTextExists
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdExists
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithDescription
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithIndex
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdAndDescription
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdAndIndex
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdAndText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdContainingText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
@@ -221,15 +225,13 @@ class HomeScreenRobot {
     fun verifyExistingTopSitesList() = assertExistingTopSitesList()
     fun verifyNotExistingTopSitesList(title: String) = assertNotExistingTopSitesList(title)
     fun verifySponsoredShortcutDoesNotExist(sponsoredShortcutTitle: String, position: Int) =
-        assertFalse(
-            mDevice.findObject(
-                UiSelector()
-                    .resourceId("$packageName:id/top_site_item")
-                    .index(position - 1),
-            ).getChild(
-                UiSelector()
-                    .textContains(sponsoredShortcutTitle),
-            ).waitForExists(waitingTimeShort),
+        assertItemWithResIdAndIndexExists(
+            itemWithResIdAndIndex("$packageName:id/top_site_item", index = position - 1)
+                .getChild(
+                    UiSelector()
+                        .textContains(sponsoredShortcutTitle),
+                ),
+            exists = false,
         )
     fun verifyNotExistingSponsoredTopSitesList() = assertSponsoredTopSitesNotDisplayed()
     fun verifyExistingTopSitesTabs(title: String) {
@@ -267,10 +269,9 @@ class HomeScreenRobot {
                     .getFromParent(UiSelector().text("$groupSize sites")),
             )
         } else {
-            assertTrue(
-                mDevice.findObject(UiSelector().text(searchTerm))
-                    .getFromParent(UiSelector().text("$groupSize sites"))
-                    .waitUntilGone(waitingTimeShort),
+            assertItemContainingTextIsGone(
+                itemContainingText(searchTerm)
+                    .getFromParent(UiSelector().text("$groupSize sites")),
             )
         }
     }
@@ -280,7 +281,7 @@ class HomeScreenRobot {
         if (collectionExists) {
             assertItemContainingTextExists(itemContainingText(title))
         } else {
-            assertTrue(mDevice.findObject(UiSelector().text(title)).waitUntilGone(waitingTime))
+            assertItemContainingTextIsGone(itemWithText(title))
         }
     }
 
@@ -320,12 +321,7 @@ class HomeScreenRobot {
         for (position in 0..8) {
             pocketStoriesList
                 .scrollIntoView(UiSelector().index(position))
-
-            assertTrue(
-                "Pocket story item at position $position not found.",
-                mDevice.findObject(UiSelector().index(position))
-                    .waitForExists(waitingTimeShort),
-            )
+            assertItemWithIndexExists(itemWithIndex(position))
         }
     }
 
@@ -870,39 +866,30 @@ private fun assertExistingTopSitesTabs(title: String) {
 }
 
 private fun assertSponsoredShortcutLogoIsDisplayed(position: Int) =
-    assertTrue(
-        mDevice.findObject(
-            UiSelector()
-                .resourceId("$packageName:id/top_site_item")
-                .index(position - 1),
-        ).getChild(
-            UiSelector()
-                .resourceId("$packageName:id/favicon_card"),
-        ).waitForExists(waitingTime),
+    assertItemWithResIdAndIndexExists(
+        itemWithResIdAndIndex(resourceId = "$packageName:id/top_site_item", index = position - 1)
+            .getChild(
+                UiSelector()
+                    .resourceId("$packageName:id/favicon_card"),
+            ),
     )
 
 private fun assertSponsoredSubtitleIsDisplayed(position: Int) =
-    assertTrue(
-        mDevice.findObject(
-            UiSelector()
-                .resourceId("$packageName:id/top_site_item")
-                .index(position - 1),
-        ).getChild(
-            UiSelector()
-                .resourceId("$packageName:id/top_site_subtitle"),
-        ).waitForExists(waitingTime),
+    assertItemWithResIdAndIndexExists(
+        itemWithResIdAndIndex(resourceId = "$packageName:id/top_site_item", index = position - 1)
+            .getChild(
+                UiSelector()
+                    .resourceId("$packageName:id/top_site_subtitle"),
+            ),
     )
 
 private fun assertSponsoredShortcutTitle(sponsoredShortcutTitle: String, position: Int) =
-    assertTrue(
-        mDevice.findObject(
-            UiSelector()
-                .resourceId("$packageName:id/top_site_item")
-                .index(position - 1),
-        ).getChild(
-            UiSelector()
-                .textContains(sponsoredShortcutTitle),
-        ).waitForExists(waitingTime),
+    assertItemWithResIdAndIndexExists(
+        itemWithResIdAndIndex(resourceId = "$packageName:id/top_site_item", index = position - 1)
+            .getChild(
+                UiSelector()
+                    .textContains(sponsoredShortcutTitle),
+            ),
     )
 
 private fun assertNotExistingTopSitesList(title: String) {

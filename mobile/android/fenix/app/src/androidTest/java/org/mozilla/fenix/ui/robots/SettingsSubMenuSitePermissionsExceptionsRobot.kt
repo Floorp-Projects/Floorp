@@ -14,9 +14,10 @@ import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.uiautomator.UiSelector
 import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.CoreMatchers.containsString
-import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
+import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextIsGone
+import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
@@ -37,9 +38,7 @@ class SettingsSubMenuSitePermissionsExceptionsRobot {
             exceptionsList.waitForExists(waitingTime)
             onView(withText(containsString(url))).check(matches(isDisplayed()))
         } else {
-            assertTrue(
-                mDevice.findObject(UiSelector().textContains(url)).waitUntilGone(waitingTime),
-            )
+            assertItemContainingTextIsGone(itemContainingText(url))
         }
     }
 

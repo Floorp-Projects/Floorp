@@ -38,6 +38,7 @@ import org.mozilla.fenix.helpers.Constants.LONG_CLICK_DURATION
 import org.mozilla.fenix.helpers.Constants.TAG
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
 import org.mozilla.fenix.helpers.HomeActivityComposeTestRule
+import org.mozilla.fenix.helpers.MatcherHelper.assertItemTextEquals
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdAndTextExists
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdExists
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
@@ -117,9 +118,7 @@ class NavigationToolbarRobot {
     // New unified search UI selector
     fun verifySearchBarPlaceholder(text: String) {
         urlBar().waitForExists(waitingTime)
-        assertTrue(
-            urlBar().text == text,
-        )
+        assertItemTextEquals(urlBar(), expectedText = text)
     }
 
     // New unified search UI selector

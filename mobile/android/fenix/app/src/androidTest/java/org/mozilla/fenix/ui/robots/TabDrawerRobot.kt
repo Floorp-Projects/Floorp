@@ -31,7 +31,6 @@ import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import androidx.test.uiautomator.Until.findObject
 import com.google.android.material.bottomsheet.BottomSheetBehavior
-import junit.framework.TestCase.assertTrue
 import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.CoreMatchers.anyOf
 import org.hamcrest.CoreMatchers.containsString
@@ -43,8 +42,10 @@ import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextExists
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithDescriptionExists
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdAndTextExists
+import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdAndTextIsGone
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdExists
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithDescription
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdAndDescription
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdContainingText
@@ -161,12 +162,11 @@ class TabDrawerRobot {
                     ),
                 ).perform(swipeRight())
                 Log.i("MozTestLog", "Tab $title swiped right from tabs tray. Retry # $i")
-                assertTrue(
-                    "Tab $title swipe right was unsuccessful.",
+                assertItemWithResIdAndTextIsGone(
                     itemWithResIdContainingText(
                         "$packageName:id/mozac_browser_tabstray_title",
                         title,
-                    ).waitUntilGone(waitingTimeShort),
+                    ),
                 )
 
                 break
@@ -193,12 +193,11 @@ class TabDrawerRobot {
                     ),
                 ).perform(swipeLeft())
                 Log.i("MozTestLog", "Tab $title swiped left from tabs tray. Retry # $i")
-                assertTrue(
-                    "Tab $title swipe left was unsuccessful.",
+                assertItemWithResIdAndTextIsGone(
                     itemWithResIdContainingText(
                         "$packageName:id/mozac_browser_tabstray_title",
                         title,
-                    ).waitUntilGone(waitingTimeShort),
+                    ),
                 )
 
                 break
@@ -483,12 +482,8 @@ private fun closeTabButton() =
     mDevice.findObject(UiSelector().descriptionContains("Close tab"))
 
 private fun assertCloseTabsButton(title: String) =
-    assertTrue(
-        mDevice.findObject(
-            UiSelector()
-                .descriptionContains("Close tab"),
-        ).getFromParent(UiSelector().textContains(title))
-            .waitForExists(waitingTime),
+    assertItemWithDescriptionExists(
+        itemWithDescription("Close tab").getFromParent(UiSelector().textContains(title)),
     )
 
 private fun normalBrowsingButton() = onView(
@@ -512,11 +507,7 @@ private fun assertExistingOpenTabs(vararg tabTitles: String) {
         while (!tabItem(title).waitForExists(waitingTime) && retries++ < 3) {
             tabsList
                 .getChildByText(UiSelector().text(title), title, true)
-            assertTrue(
-                "Tab $title not found",
-                tabItem(title).waitForExists(waitingTimeLong),
-            )
-            Log.i("MozTestLog", "Tab $title found in tabs tray.")
+            assertItemContainingTextExists(tabItem(title), waitingTime = waitingTimeLong)
         }
     }
 }

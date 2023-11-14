@@ -15,10 +15,10 @@ import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.uiautomator.UiSelector
 import org.hamcrest.CoreMatchers.allOf
-import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextExists
-import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
+import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextIsGone
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
 import org.mozilla.fenix.helpers.TestHelper.appName
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.assertIsChecked
@@ -194,13 +194,7 @@ private fun assertOpenTabsDescription(tabNumber: String) =
 private fun assertBrowsingHistoryDescription(addresses: String) =
     assertItemContainingTextExists(browsingHistoryDescription(addresses))
 
-private fun assertDeleteBrowsingDataSnackbar() {
-    assertTrue(
-        mDevice.findObject(
-            UiSelector().text("Browsing data deleted"),
-        ).waitUntilGone(waitingTime),
-    )
-}
+private fun assertDeleteBrowsingDataSnackbar() = assertItemContainingTextIsGone(itemWithText("Browsing data deleted"))
 
 private fun clickOpenTabsCheckBox() = openTabsCheckBox().click()
 private fun assertOpenTabsCheckBox(status: Boolean) = openTabsCheckBox().assertIsChecked(status)

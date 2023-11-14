@@ -21,15 +21,17 @@ import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import org.hamcrest.CoreMatchers
 import org.hamcrest.CoreMatchers.containsString
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
+import org.mozilla.fenix.helpers.MatcherHelper.assertCheckedItemWithResIdExists
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextExists
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemIsEnabledAndVisible
+import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithClassNameAndIndexExists
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdExists
+import org.mozilla.fenix.helpers.MatcherHelper.checkedItemWithResId
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithClassNameAndIndex
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
@@ -109,16 +111,13 @@ class SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot {
         itemContainingText(getStringResource(R.string.saved_logins_sort_strategy_last_used)).click()
 
     fun verifySortedLogin(position: Int, loginTitle: String) =
-        assertTrue(
-            mDevice.findObject(
-                UiSelector()
-                    .className("android.view.ViewGroup")
-                    .index(position),
-            ).getChild(
-                UiSelector()
-                    .resourceId("$packageName:id/webAddressView")
-                    .textContains(loginTitle),
-            ).waitForExists(waitingTime),
+        assertItemWithClassNameAndIndexExists(
+            itemWithClassNameAndIndex(className = "android.view.ViewGroup", index = position)
+                .getChild(
+                    UiSelector()
+                        .resourceId("$packageName:id/webAddressView")
+                        .textContains(loginTitle),
+                ),
         )
 
     fun searchLogin(searchTerm: String) =
@@ -163,13 +162,11 @@ class SettingsSubMenuLoginsAndPasswordsSavedLoginsRobot {
 
     fun saveEditedLogin() = itemWithResId("$packageName:id/save_login_button").click()
 
-    fun verifySaveLoginButtonIsEnabled(isEnabled: Boolean) {
-        if (isEnabled) {
-            assertTrue(itemWithResId("$packageName:id/save_login_button").isChecked)
-        } else {
-            assertFalse(itemWithResId("$packageName:id/save_login_button").isChecked)
-        }
-    }
+    fun verifySaveLoginButtonIsEnabled(isEnabled: Boolean) =
+        assertCheckedItemWithResIdExists(
+            checkedItemWithResId("$packageName:id/save_login_button", isChecked = true),
+            exists = isEnabled,
+        )
 
     fun revealPassword() = onView(withId(R.id.revealPasswordButton)).click()
 

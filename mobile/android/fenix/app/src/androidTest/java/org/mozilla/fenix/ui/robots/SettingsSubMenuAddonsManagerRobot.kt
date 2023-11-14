@@ -31,12 +31,13 @@ import androidx.test.uiautomator.Until
 import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.CoreMatchers.containsString
 import org.hamcrest.CoreMatchers.instanceOf
-import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.Constants.RETRY_COUNT
 import org.mozilla.fenix.helpers.Constants.TAG
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
+import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextExists
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdExists
+import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeLong
 import org.mozilla.fenix.helpers.TestHelper.appName
@@ -95,12 +96,8 @@ class SettingsSubMenuAddonsManagerRobot {
     fun verifyAddonInstallCompleted(addonName: String, activityTestRule: HomeActivityIntentTestRule) {
         for (i in 1..RETRY_COUNT) {
             try {
-                assertTrue(
-                    "$addonName failed to install",
-                    mDevice.findObject(UiSelector().text("Okay, Got it"))
-                        .waitForExists(waitingTimeLong),
-                )
-                Log.i(TAG, "verifyAddonInstallCompleted: $addonName installed successfully.")
+                assertItemContainingTextExists(itemWithText("Okay, Got it"), waitingTime = waitingTimeLong)
+
                 break
             } catch (e: AssertionError) {
                 if (i == RETRY_COUNT) {
@@ -154,11 +151,7 @@ class SettingsSubMenuAddonsManagerRobot {
     fun verifyAddonCanBeInstalled(addonName: String) = assertAddonCanBeInstalled(addonName)
 
     fun selectAllowInPrivateBrowsing() {
-        assertTrue(
-            "Addon install confirmation prompt not displayed",
-            mDevice.findObject(UiSelector().text("Allow in private browsing"))
-                .waitForExists(waitingTimeLong),
-        )
+        assertItemContainingTextExists(itemWithText("Allow in private browsing"), waitingTime = waitingTimeLong)
         onView(withId(R.id.allow_in_private_browsing)).click()
     }
 
