@@ -75,6 +75,7 @@
 
     const constraints = {audio: {mediaSource: "audioCapture"}};
 
+    DISABLE_LOOPBACK_TONE = true;
     const stream = await getUserMedia(constraints);
     try {
       const analyser = new AudioStreamAnalyser(ac, stream);
@@ -83,7 +84,7 @@
         // We want to find three frequency components here, around 1000, 5000
         // and 10000Hz. Frequency are logarithmic. Also make sure we have low
         // energy in between, not just a flat white noise.
-        return (array[analyser.binIndexForFrequency(50)]    < 50 &&
+        return (array[analyser.binIndexForFrequency(500)]   < 50 &&
                 array[analyser.binIndexForFrequency(1000)]  > 200 &&
                 array[analyser.binIndexForFrequency(2500)]  < 50 &&
                 array[analyser.binIndexForFrequency(5000)]  > 200 &&

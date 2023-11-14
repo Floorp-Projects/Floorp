@@ -21,7 +21,7 @@ runNetworkTest(async () => {
     ["media.getusermedia.microphone.stop_on_disable.enabled", true],
     ["media.getusermedia.microphone.stop_on_disable.delay_ms", 0],
     // Always use fake tracks since we depend on video to be somewhat green and
-    // audio to have a large 1000Hz component (or 440Hz if using fake devices).
+    // audio to have a large 1000Hz component.
     ['media.audio_loopback_dev', ''],
     ['media.video_loopback_dev', ''],
     ['media.navigator.streams.fake', true]);

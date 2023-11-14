@@ -123,8 +123,7 @@
 
         var sourceNode = test.audioCtx.createOscillator();
         sourceNode.type = 'sine';
-        // We need a frequency not too close to the fake audio track
-        // (440Hz for loopback devices, 1kHz for fake tracks).
+        // We need a frequency not too close to the fake audio track (1kHz).
         sourceNode.frequency.value = 2000;
         sourceNode.start();
 
