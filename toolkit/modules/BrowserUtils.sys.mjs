@@ -503,14 +503,30 @@ let PromoInfo = {
     lazyStringSetPrefs: {
       supportedRegions: {
         name: "browser.contentblocking.report.vpn_regions",
-        default: "us,ca,nz,sg,my,gb,de,fr",
+        default:
+          "ca,my,nz,sg,gb,gg,im,io,je,uk,vg,as,mp,pr,um,us,vi,de,fr,at,be,ch,es,it,ie,nl,se,fi,bg,cy,cz,dk,ee,hr,hu,lt,lu,lv,mt,pl,pt,ro,si,sk",
       },
       disallowedRegions: {
         name: "browser.vpn_promo.disallowed_regions",
         default: "ae,by,cn,cu,iq,ir,kp,om,ru,sd,sy,tm,tr,ua",
       },
     },
-    illegalRegions: ["cn", "kp", "tm"],
+    //See https://github.com/search?q=repo%3Amozilla%2Fbedrock+VPN_EXCLUDED_COUNTRY_CODES&type=code
+    illegalRegions: [
+      "ae",
+      "by",
+      "cn",
+      "cu",
+      "iq",
+      "ir",
+      "kp",
+      "om",
+      "ru",
+      "sd",
+      "sy",
+      "tm",
+      "tr",
+    ],
   },
   [BrowserUtils.PromoType.FOCUS]: {
     enabledPref: "browser.promo.focus.enabled",
