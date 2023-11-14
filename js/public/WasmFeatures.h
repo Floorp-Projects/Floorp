@@ -200,7 +200,7 @@ enum class WasmFeatureStage {
   FEATURE(                                                              \
     /* capitalized name   */ TailCalls,                                 \
     /* lower case name    */ tailCalls,                                 \
-    /* stage              */ WasmFeatureStage::Experimental,            \
+    /* stage              */ WasmFeatureStage::Tentative,            \
     /* compile predicate  */ WASM_TAIL_CALLS_ENABLED,                   \
     /* compiler predicate */ AnyCompilerAvailable(cx),                  \
     /* flag predicate     */ true,                                      \
