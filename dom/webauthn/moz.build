@@ -69,6 +69,14 @@ if CONFIG["MOZ_WIDGET_TOOLKIT"] == "android":
         "AndroidWebAuthnService.cpp",
     ]
 
+if CONFIG["OS_ARCH"] == "Darwin":
+    UNIFIED_SOURCES += [
+        "MacOSWebAuthnService.mm",
+    ]
+    OS_LIBS += [
+        "-framework AuthenticationServices",
+    ]
+
 if CONFIG["OS_ARCH"] == "WINNT":
     OS_LIBS += [
         "hid",
