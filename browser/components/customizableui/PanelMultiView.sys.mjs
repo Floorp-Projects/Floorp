@@ -731,24 +731,21 @@ export var PanelMultiView = class extends AssociatedToNode {
       // The main view of a panel can be a subview in another one. Make sure to
       // reset all the properties that may be set on a subview.
       nextPanelView.mainview = false;
-      // The header may change based on how the subview was opened.
-      let title =
-        viewNode.getAttribute("title") || anchor?.getAttribute("label");
-      if (!title) {
-        const l10nId = viewNode.getAttribute("data-l10n-id");
-        if (l10nId) {
-          // The view's title is not yet set by DOM localization.
-          const [msg] = await viewNode.ownerDocument.l10n.formatMessages([
-            l10nId,
-          ]);
-          for (let { name, value } of msg.attributes) {
-            if (name === "title") {
-              title = value;
-              viewNode.setAttribute("title", value);
-            }
-          }
-        }
+      // The header may be set by a Fluent message with a title attribute
+      // that has changed immediately before showing the panelview,
+      // and so is not reflected in the DOM yet.
+      let title;
+      const l10nId = viewNode.getAttribute("data-l10n-id");
+      if (l10nId) {
+        const l10nArgs = viewNode.getAttribute("data-l10n-args");
+        const args = l10nArgs ? JSON.parse(l10nArgs) : undefined;
+        const [msg] = await viewNode.ownerDocument.l10n.formatMessages([
+          { id: l10nId, args },
+        ]);
+        title = msg.attributes.find(a => a.name === "title")?.value;
       }
+      // If not set by Fluent, the header may change based on how the subview was opened.
+      title ??= viewNode.getAttribute("title") || anchor?.getAttribute("label");
       nextPanelView.headerText = title;
       // The constrained width of subviews may also vary between panels.
       nextPanelView.minMaxWidth = prevPanelView.knownWidth;
