@@ -39,6 +39,7 @@ const HISTOGRAM_EVENTPAGE_IDLE_RESULT_CATEGORIES = [
   "reset_listeners",
   "reset_nativeapp",
   "reset_streamfilter",
+  "reset_parentapicall",
 ];
 
 const GLEAN_EVENTPAGE_IDLE_RESULT_CATEGORIES = [
