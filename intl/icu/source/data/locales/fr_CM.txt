@@ -12,6 +12,10 @@ fr_CM{
                 "mat.",
                 "soir",
             }
+            AmPmMarkersNarrow{
+                "mat.",
+                "soir",
+            }
             availableFormats{
                 Ehm{"E h:mm"}
                 Ehms{"E h:mm:ss"}
@@ -23,6 +27,14 @@ fr_CM{
             }
             dayPeriod{
                 stand-alone{
+                    abbreviated{
+                        am{"mat."}
+                        pm{"soir"}
+                    }
+                    narrow{
+                        am{"mat."}
+                        pm{"soir"}
+                    }
                     wide{
                         am{"matin"}
                         pm{"soir"}

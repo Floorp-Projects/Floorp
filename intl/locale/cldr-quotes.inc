@@ -9,7 +9,7 @@
  */
 
 /*
- * Created on Fri Nov  3 15:11:50 2023 from CLDR data file /tmp/cldr-common-44.0.zip.
+ * Created on Wed Oct 26 05:55:58 2022 from CLDR data file cldr-common-42.0.zip.
  *
  * * * * * This file contains MACHINE-GENERATED DATA, do not edit! * * * * *
  *
@@ -18,16 +18,16 @@
 
 static const LangQuotesRec sLangQuotes[] = {
   // clang-format off
+  { "af\0ak\0as\0asa\0az\0bem\0bez\0bn\0brx\0ccp\0ceb\0cgg\0chr\0cy\0da\0dav\0dje\0doi\0dz\0ebu\0ee\0en\0es-419\0ff-Adlm\0fil\0fo\0gd\0gl\0gu\0guz\0hi\0id\0jmc\0jv\0kam\0kde\0kea\0khq\0ki\0kln\0km\0kn\0ko\0kok\0ksb\0ku\0lg\0ln\0lo\0lrc\0lu\0luo\0lv\0mas\0mer\0mfe\0mgo\0mi\0ml\0mn\0mr\0ms\0mt\0my\0naq\0nd\0ne\0nus\0nyn\0or\0pa\0pcm\0pis\0rof\0rwk\0saq\0sat\0sbp\0sd\0seh\0ses\0si\0sw\0ta\0te\0teo\0th\0to\0tr\0tt\0twq\0tzm\0uz-Cyrl\0vai\0vi\0vun\0wo\0xh\0xog\0yo\0yue-Hans\0zh\0zu\0", { { 0x201c, 0x201d, 0x2018, 0x2019 } } },
   { "agq\0ff\0", { { 0x201e, 0x201d, 0x201a, 0x2019 } } },
-  { "am\0az-Arab\0az-Cyrl\0fa\0fr-CH\0gsw\0jgo\0kkj\0mzn\0sdh\0", { { 0xab, 0xbb, 0x2039, 0x203a } } },
-  { "ar\0ms-Arab\0syr\0ur\0", { { 0x201d, 0x201c, 0x2019, 0x2018 } } },
-  { "ast\0blo\0bm\0br\0ca\0dyo\0el\0es-US\0eu\0ewo\0it\0kab\0kk\0lij\0mg\0mua\0nnh\0pt-PT\0sc\0sg\0sq\0ti\0", { { 0xab, 0xbb, 0x201c, 0x201d } } },
+  { "am\0az-Cyrl\0fa\0fr-CH\0gsw\0jgo\0kkj\0mzn\0", { { 0xab, 0xbb, 0x2039, 0x203a } } },
+  { "ar\0ur\0", { { 0x201d, 0x201c, 0x2019, 0x2018 } } },
+  { "ast\0bm\0br\0ca\0dyo\0el\0es\0eu\0ewo\0it\0kab\0kk\0mg\0mua\0nnh\0pt-PT\0sc\0sg\0sq\0ti\0", { { 0xab, 0xbb, 0x201c, 0x201d } } },
   { "bas\0be\0cv\0ky\0ru\0sah\0uk\0", { { 0xab, 0xbb, 0x201e, 0x201c } } },
   { "bg\0lt\0", { { 0x201e, 0x201c, 0x201e, 0x201c } } },
   { "bs-Cyrl\0cs\0de\0dsb\0et\0hr\0hsb\0is\0lb\0luy\0mk\0sk\0sl\0", { { 0x201e, 0x201c, 0x201a, 0x2018 } } },
   { "bs\0", { { 0x201e, 0x201d, 0x2018, 0x2019 } } },
-  { "dua\0el-POLYTON\0ksf\0no\0rw\0", { { 0xab, 0xbb, 0x2018, 0x2019 } } },
-  { "en\0", { { 0x201c, 0x201d, 0x2018, 0x2019 } } },
+  { "dua\0ksf\0no\0rw\0", { { 0xab, 0xbb, 0x2018, 0x2019 } } },
   { "fi\0he\0lag\0rn\0sn\0sv\0", { { 0x201d, 0x201d, 0x2019, 0x2019 } } },
   { "fr-CA\0", { { 0xab, 0xbb, 0x201d, 0x201c } } },
   { "fr\0hy\0yav\0", { { 0xab, 0xbb, 0xab, 0xbb } } },
@@ -39,7 +39,6 @@ static const LangQuotesRec sLangQuotes[] = {
   { "nmg\0pl\0ro\0", { { 0x201e, 0x201d, 0xab, 0xbb } } },
   { "shi\0zgh\0", { { 0xab, 0xbb, 0x201e, 0x201d } } },
   { "sr\0", { { 0x201e, 0x201c, 0x2018, 0x2018 } } },
-  { "tg\0", { { 0xbb, 0xab, 0x2018, 0x2019 } } },
   { "tk\0", { { 0x201c, 0x201d, 0x201c, 0x201d } } },
   { "uz\0", { { 0x201c, 0x201d, 0x2019, 0x2018 } } },
   // clang-format on

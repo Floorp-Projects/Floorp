@@ -168,13 +168,9 @@ vai_Latn{
             "SHP",
             "Siŋ Hɛlina Pɔɔ̃",
         }
-        SLE{
-            "SLE",
-            "Liyɔɔ̀",
-        }
         SLL{
             "SLL",
-            "Liyɔɔ̀ (1964—2022)",
+            "Liyɔɔ̀",
         }
         SOS{
             "SOS",

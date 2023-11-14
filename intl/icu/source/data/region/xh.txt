@@ -298,9 +298,6 @@ xh{
         ZW{"EZimbabwe"}
         ZZ{"Ingingqi Engaziwayo"}
     }
-    Countries%chagos{
-        IO{"EChagos Archipelago"}
-    }
     Countries%short{
         GB{"E-UK"}
         HK{"EHong Kong"}

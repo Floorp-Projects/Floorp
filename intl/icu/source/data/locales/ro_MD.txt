@@ -15,6 +15,15 @@ ro_MD{
                         "Vin",
                         "Sâm",
                     }
+                    narrow{
+                        "D",
+                        "L",
+                        "Ma",
+                        "Mi",
+                        "J",
+                        "V",
+                        "S",
+                    }
                     short{
                         "Du",
                         "Lu",
@@ -26,6 +35,15 @@ ro_MD{
                     }
                 }
                 stand-alone{
+                    abbreviated{
+                        "Dum",
+                        "Lun",
+                        "Mar",
+                        "Mie",
+                        "Joi",
+                        "Vin",
+                        "Sâm",
+                    }
                     narrow{
                         "D",
                         "L",
@@ -34,6 +52,15 @@ ro_MD{
                         "J",
                         "V",
                         "S",
+                    }
+                    short{
+                        "Du",
+                        "Lu",
+                        "Ma",
+                        "Mi",
+                        "Jo",
+                        "Vi",
+                        "Sâ",
                     }
                 }
             }

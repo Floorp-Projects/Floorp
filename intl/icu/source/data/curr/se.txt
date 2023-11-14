@@ -15,6 +15,22 @@ se{
             "FIM",
             "suoma márkki",
         }
+        HKD{
+            "HK$",
+            "HKD",
+        }
+        INR{
+            "₹",
+            "INR",
+        }
+        JPY{
+            "JP¥",
+            "JPY",
+        }
+        MXN{
+            "MX$",
+            "MXN",
+        }
         NOK{
             "kr",
             "norgga kruvdno",
@@ -34,6 +50,23 @@ se{
         XAU{
             "XAU",
             "uns golli",
+        }
+    }
+    CurrencyPlurals{
+        EUR{
+            one{"euro"}
+            other{"euro"}
+            two{"euro"}
+        }
+        NOK{
+            one{"norgga kruvdno"}
+            other{"norgga kruvdno"}
+            two{"norgga kruvdno"}
+        }
+        SEK{
+            one{"ruoŧŧa kruvdno"}
+            other{"ruoŧŧa kruvdno"}
+            two{"ruoŧŧa kruvdno"}
         }
     }
     CurrencyUnitPatterns{

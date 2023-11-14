@@ -63,6 +63,21 @@ gsw{
         "America:Port_of_Spain"{
             ec{"Port-of-Spain"}
         }
+        "America:Scoresbysund"{
+            ec{"Ittoqqortoormiit"}
+        }
+        "America:St_Kitts"{
+            ec{"St. Kitts"}
+        }
+        "America:St_Lucia"{
+            ec{"St. Lucia"}
+        }
+        "America:St_Thomas"{
+            ec{"St. Thomas"}
+        }
+        "America:St_Vincent"{
+            ec{"St. Vincent"}
+        }
         "Antarctica:DumontDUrville"{
             ec{"Dumont D’Urville"}
         }
@@ -92,6 +107,9 @@ gsw{
         }
         "Asia:Krasnoyarsk"{
             ec{"Krasnojarsk"}
+        }
+        "Asia:Macau"{
+            ec{"Macao"}
         }
         "Asia:Muscat"{
             ec{"Muschkat"}
@@ -164,6 +182,9 @@ gsw{
         }
         "Atlantic:South_Georgia"{
             ec{"Süüd-Georgie"}
+        }
+        "Atlantic:St_Helena"{
+            ec{"St. Helena"}
         }
         "Etc:Unknown"{
             ec{"Unbekannt"}
@@ -308,5 +329,8 @@ gsw{
             lg{"Moskauer Ziit"}
             ls{"Moskauer Schtandardziit"}
         }
+        fallbackFormat{"{1} ({0})"}
+        gmtFormat{"GMT{0}"}
+        hourFormat{"+HH:mm;-HH:mm"}
     }
 }

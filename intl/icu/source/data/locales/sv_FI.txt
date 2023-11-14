@@ -8,6 +8,11 @@ sv_FI{
                 timeSeparator{"."}
             }
         }
+        olck{
+            symbols{
+                timeSeparator{"."}
+            }
+        }
     }
     calendar{
         gregorian{
@@ -36,6 +41,14 @@ sv_FI{
             }
             quarters{
                 format{
+                    abbreviated{
+                        "Q1",
+                        "Q2",
+                        "Q3",
+                        "Q4",
+                    }
+                }
+                stand-alone{
                     abbreviated{
                         "Q1",
                         "Q2",

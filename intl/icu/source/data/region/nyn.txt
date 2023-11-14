@@ -93,6 +93,7 @@ nyn{
         IE{"Irerandi"}
         IL{"Isirairi"}
         IN{"Indiya"}
+        IO{"Ebizinga bya Indian ebya Bungyereza"}
         IQ{"Iraaka"}
         IR{"Iraani"}
         IS{"Aisilandi"}

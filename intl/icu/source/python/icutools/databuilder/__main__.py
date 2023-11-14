@@ -159,6 +159,23 @@ class Config(object):
         if "usePoolBundle" in self.filters_json_data:
             self.use_pool_bundle = self.filters_json_data["usePoolBundle"]
 
+        # By default, exclude collation data that mimics the order of some large legacy charsets.
+        # We do this in "subtractive" strategy by inserting a resourceFilter.
+        # Later rules from an explicit filter file may override this default behavior.
+        # (In "additive" strategy this is unnecessary.)
+        if self.strategy == "subtractive":
+            filters = self.filters_json_data.setdefault("resourceFilters", [])
+            omit_charset_collations = {
+                "categories": [
+                    "coll_tree"
+                ],
+                "rules": [
+                    "-/collations/big5han",
+                    "-/collations/gb2312han"
+                ]
+            }
+            filters.insert(0, omit_charset_collations)
+
     def _parse_filter_file(self, f):
         # Use the Hjson parser if it is available; otherwise, use vanilla JSON.
         try:
@@ -271,7 +288,7 @@ def main(argv):
             "IN_DIR": "$(srcdir)",
             "INDEX_NAME": "res_index"
         }
-        makefile_env = ["ICUDATA_CHAR", "OUT_DIR", "TMP_DIR", "LIBRARY_DATA_DIR"]
+        makefile_env = ["ICUDATA_CHAR", "OUT_DIR", "TMP_DIR"]
         common = {
             key: "$(%s)" % key
             for key in list(makefile_vars.keys()) + makefile_env
@@ -289,8 +306,7 @@ def main(argv):
             "CWD_DIR": os.getcwd(),
             "INDEX_NAME": "res_index",
             # TODO: Pull this from configure script:
-            "ICUDATA_CHAR": "l",
-            "LIBRARY_DATA_DIR": os.path.join(args.out_dir, "build"),
+            "ICUDATA_CHAR": "l"
         }
 
     # Automatically load BUILDRULES from the src_dir

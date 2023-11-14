@@ -225,7 +225,7 @@ it{
         }
         CNY{
             "CN¥",
-            "yuan cinese",
+            "renminbi cinese",
         }
         COP{
             "COP",
@@ -816,13 +816,9 @@ it{
             "SKK",
             "corona slovacca",
         }
-        SLE{
-            "SLE",
-            "leone della Sierra Leone",
-        }
         SLL{
             "SLL",
-            "leone della Sierra Leone (1964–2022)",
+            "leone della Sierra Leone",
         }
         SOS{
             "SOS",
@@ -862,7 +858,7 @@ it{
         }
         SZL{
             "SZL",
-            "lilangeni",
+            "lilangeni dello Swaziland",
         }
         THB{
             "฿",
@@ -1110,15 +1106,111 @@ it{
         }
     }
     Currencies%narrow{
+        AOA{"Kz"}
+        ARS{"$"}
+        AUD{"$"}
+        BAM{"KM"}
+        BBD{"$"}
+        BDT{"৳"}
+        BMD{"$"}
+        BND{"$"}
+        BOB{"Bs"}
+        BRL{"R$"}
+        BSD{"$"}
+        BWP{"P"}
         BYN{"Br"}
+        BZD{"$"}
+        CAD{"$"}
+        CLP{"$"}
+        CNY{"¥"}
+        COP{"$"}
+        CRC{"₡"}
+        CUC{"$"}
+        CUP{"$"}
+        CZK{"Kč"}
+        DKK{"kr"}
+        DOP{"$"}
         EGP{"£E"}
+        EUR{"€"}
+        FJD{"$"}
+        FKP{"£"}
+        GBP{"£"}
+        GEL{"₾"}
+        GIP{"£"}
+        GNF{"FG"}
+        GTQ{"Q"}
+        GYD{"$"}
+        HKD{"$"}
+        HNL{"L"}
+        HRK{"kn"}
+        HUF{"Ft"}
+        IDR{"Rp"}
+        ILS{"₪"}
+        INR{"₹"}
+        ISK{"kr"}
+        JMD{"$"}
+        JPY{"¥"}
+        KHR{"៛"}
+        KMF{"CF"}
+        KPW{"₩"}
+        KRW{"₩"}
+        KYD{"$"}
+        KZT{"₸"}
+        LAK{"₭"}
+        LBP{"L£"}
+        LKR{"Rs"}
+        LRD{"$"}
+        MGA{"Ar"}
+        MMK{"K"}
+        MNT{"₮"}
+        MUR{"Rs"}
+        MXN{"$"}
+        MYR{"RM"}
+        NAD{"$"}
+        NIO{"C$"}
         NOK{"NKr"}
+        NPR{"Rs"}
+        NZD{"$"}
+        PHP{"₱"}
+        PKR{"Rs"}
+        PLN{"zł"}
+        PYG{"₲"}
+        RON{"lei"}
+        RUB{"₽"}
+        RWF{"RF"}
+        SBD{"$"}
+        SEK{"kr"}
+        SGD{"$"}
+        SHP{"£"}
+        SRD{"$"}
+        SSP{"£"}
+        STN{"Db"}
+        SYP{"£"}
+        THB{"฿"}
+        TOP{"T$"}
+        TRY{"₺"}
+        TTD{"$"}
         TWD{"NT$"}
+        UAH{"₴"}
+        USD{"$"}
+        UYU{"$"}
+        VEF{"Bs"}
+        VND{"₫"}
+        XCD{"$"}
+        ZAR{"R"}
+        ZMW{"ZK"}
+    }
+    Currencies%variant{
+        TRY{"TL"}
     }
     CurrencyPlurals{
         AED{
             one{"dirham degli EAU"}
             other{"dirham degli EAU"}
+        }
+        AFN{
+            one{"afghani"}
+            other{"afghani"}
         }
         ALL{
             one{"lek albanese"}
@@ -1204,6 +1296,10 @@ it{
             one{"ngultrum bhutanese"}
             other{"ngultrum bhutanesi"}
         }
+        BWP{
+            one{"pula del Botswana"}
+            other{"pula del Botswana"}
+        }
         BYN{
             one{"rublo bielorusso"}
             other{"rubli bielorussi"}
@@ -1237,8 +1333,8 @@ it{
             other{"renmimbi cinesi offshore"}
         }
         CNY{
-            one{"yuan cinese"}
-            other{"yuan cinesi"}
+            one{"renmimbi cinese"}
+            other{"renmimbi cinesi"}
         }
         COP{
             one{"peso colombiano"}
@@ -1291,6 +1387,10 @@ it{
         ETB{
             one{"birr etiope"}
             other{"birr etiopi"}
+        }
+        EUR{
+            one{"euro"}
+            other{"euro"}
         }
         FJD{
             one{"dollaro delle Figi"}
@@ -1480,6 +1580,10 @@ it{
             one{"dinaro macedone (1992–1993)"}
             other{"dinari macedoni (1992–1993)"}
         }
+        MMK{
+            one{"kyat di Myanmar"}
+            other{"kyat di Myanmar"}
+        }
         MNT{
             one{"tugrik mongolo"}
             other{"tugrik mongoli"}
@@ -1488,9 +1592,21 @@ it{
             one{"pataca di Macao"}
             other{"patacas di Macao"}
         }
+        MRO{
+            one{"ouguiya della Mauritania (1973–2017)"}
+            other{"ouguiya della Mauritania (1973–2017)"}
+        }
+        MRU{
+            one{"ouguiya della Mauritania"}
+            other{"ouguiya della Mauritania"}
+        }
         MUR{
             one{"rupia mauriziana"}
             other{"rupie mauriziane"}
+        }
+        MVR{
+            one{"rufiyaa delle Maldive"}
+            other{"rufiyaa delle Maldive"}
         }
         MWK{
             one{"kwacha malawiano"}
@@ -1515,6 +1631,10 @@ it{
         NGN{
             one{"naira nigeriana"}
             other{"naire nigeriane"}
+        }
+        NIC{
+            one{"cordoba nicaraguense"}
+            other{"cordoba nicaraguense"}
         }
         NIO{
             one{"córdoba nicaraguense"}
@@ -1616,13 +1736,9 @@ it{
             one{"sterlina di Sant’Elena"}
             other{"sterline di Sant’Elena"}
         }
-        SLE{
+        SLL{
             one{"leone della Sierra Leone"}
             other{"leoni della Sierra Leone"}
-        }
-        SLL{
-            one{"leone della Sierra Leone (1964–2022)"}
-            other{"leoni della Sierra Leone (1964–2022)"}
         }
         SOS{
             one{"scellino somalo"}
@@ -1636,13 +1752,21 @@ it{
             one{"sterlina sud-sudanese"}
             other{"sterline sud-sudanesi"}
         }
+        STD{
+            one{"dobra di Sao Tomé e Principe (1977–2017)"}
+            other{"dobra di Sao Tomé e Principe (1977–2017)"}
+        }
+        STN{
+            one{"dobra di Sao Tomé e Príncipe"}
+            other{"dobra di Sao Tomé e Príncipe"}
+        }
         SYP{
             one{"lira siriana"}
             other{"lire siriane"}
         }
         SZL{
-            one{"lilangeni"}
-            other{"emalangeni"}
+            one{"lilangeni dello Swaziland"}
+            other{"lilangeni dello Swaziland"}
         }
         THB{
             one{"baht thailandese"}
@@ -1719,6 +1843,10 @@ it{
         VND{
             one{"dong vietnamita"}
             other{"dong vietnamiti"}
+        }
+        VUV{
+            one{"vatu di Vanuatu"}
+            other{"vatu di Vanuatu"}
         }
         WST{
             one{"tala samoano"}

@@ -176,13 +176,9 @@ shi_Latn{
             "SHP",
             "ajnih n santilin",
         }
-        SLE{
-            "SLE",
-            "liyun",
-        }
         SLL{
             "SLL",
-            "liyun (1964—2022)",
+            "liyun",
         }
         SOS{
             "SOS",

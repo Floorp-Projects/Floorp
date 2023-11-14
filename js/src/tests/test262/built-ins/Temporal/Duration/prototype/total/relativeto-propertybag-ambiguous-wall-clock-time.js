@@ -48,28 +48,27 @@ const expected = [
   "has calendar.year",
   "has calendar.yearMonthFromFields",
   "has calendar.yearOfWeek",
-  // lookup
-  "get calendar.dateFromFields",
-  "get calendar.fields",
   // CalendarFields
+  "get calendar.fields",
   "call calendar.fields",
   // InterpretTemporalDateTimeFields
+  "get calendar.dateFromFields",
   "call calendar.dateFromFields",
   // ToTemporalTimeZoneSlotValue
   "has timeZone.getOffsetNanosecondsFor",
   "has timeZone.getPossibleInstantsFor",
   "has timeZone.id",
-  // lookup
-  "get timeZone.getOffsetNanosecondsFor",
-  "get timeZone.getPossibleInstantsFor",
-  // InterpretISODateTimeOffset
-  "call timeZone.getPossibleInstantsFor",
 ];
 
 const expectedSpringForward = expected.concat([
+  // InterpretISODateTimeOffset
+  "get timeZone.getPossibleInstantsFor",
+  "call timeZone.getPossibleInstantsFor",
   // DisambiguatePossibleInstants
+  "get timeZone.getOffsetNanosecondsFor",
   "call timeZone.getOffsetNanosecondsFor",
   "call timeZone.getOffsetNanosecondsFor",
+  "get timeZone.getPossibleInstantsFor",
   "call timeZone.getPossibleInstantsFor",
 ]);
 assert.compareArray(
@@ -82,9 +81,14 @@ actual.splice(0); // clear
 relativeTo = { year: 2000, month: 10, day: 29, hour: 1, minute: 30, timeZone: dstTimeZoneObserver, calendar };
 instance.total({ unit: "days", relativeTo });
 
+const expectedFallBack = expected.concat([
+  // InterpretISODateTimeOffset
+  "get timeZone.getPossibleInstantsFor",
+  "call timeZone.getPossibleInstantsFor",
+]);
 assert.compareArray(
-  actual.slice(0, expected.length), // ignore operations after ToRelativeTemporalObject
-  expected,
+  actual.slice(0, expectedFallBack.length), // ignore operations after ToRelativeTemporalObject
+  expectedFallBack,
   "order of operations converting property bag at repeated wall-clock time"
 );
 actual.splice(0); // clear

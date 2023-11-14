@@ -20,8 +20,6 @@
 #include "unicode/utf16.h"
 #include "utracimp.h"
 #include "ucol_imp.h"
-#include "ulocimp.h"
-#include "bytesinkutil.h"
 #include "cmemory.h"
 #include "cstring.h"
 #include "uresimp.h"
@@ -88,6 +86,7 @@ static const char providerKeyword[]  = "@sp=";
 static const int32_t locElementCount = UCOL_SIT_LOCELEMENT_MAX+1;
 static const int32_t locElementCapacity = 32;
 static const int32_t loc3066Capacity = 256;
+static const int32_t internalBufferSize = 512;
 
 /* structure containing specification of a collator. Initialized
  * from a short string. Also used to construct a short string from a
@@ -451,37 +450,38 @@ ucol_prepareShortStringOpen( const char *definition,
     ucol_sit_readSpecs(&s, definition, parseError, status);
     ucol_sit_calculateWholeLocale(&s, *status);
 
-    CharString buffer;
-    {
-        CharStringByteSink sink(&buffer);
-        ulocimp_canonicalize(s.locale.data(), sink, status);
-    }
+    char buffer[internalBufferSize];
+    uprv_memset(buffer, 0, internalBufferSize);
+    uloc_canonicalize(s.locale.data(), buffer, internalBufferSize, status);
 
-    UResourceBundle *b = ures_open(U_ICUDATA_COLL, buffer.data(), status);
+    UResourceBundle *b = ures_open(U_ICUDATA_COLL, buffer, status);
     /* we try to find stuff from keyword */
     UResourceBundle *collations = ures_getByKey(b, "collations", nullptr, status);
     UResourceBundle *collElem = nullptr;
-    CharString keyBuffer;
-    {
-        // if there is a keyword, we pick it up and try to get elements
-        CharStringByteSink sink(&keyBuffer);
-        ulocimp_getKeywordValue(buffer.data(), "collation", sink, status);
+    char keyBuffer[256];
+    // if there is a keyword, we pick it up and try to get elements
+    int32_t keyLen = uloc_getKeywordValue(buffer, "collation", keyBuffer, sizeof(keyBuffer), status);
+    // Treat too long a value as no keyword.
+    if(keyLen >= (int32_t)sizeof(keyBuffer)) {
+      keyLen = 0;
+      *status = U_ZERO_ERROR;
     }
-    if(keyBuffer.isEmpty()) {
+    if(keyLen == 0) {
       // no keyword
       // we try to find the default setting, which will give us the keyword value
       UResourceBundle *defaultColl = ures_getByKeyWithFallback(collations, "default", nullptr, status);
       if(U_SUCCESS(*status)) {
         int32_t defaultKeyLen = 0;
         const char16_t *defaultKey = ures_getString(defaultColl, &defaultKeyLen, status);
-        keyBuffer.appendInvariantChars(defaultKey, defaultKeyLen, *status);
+        u_UCharsToChars(defaultKey, keyBuffer, defaultKeyLen);
+        keyBuffer[defaultKeyLen] = 0;
       } else {
         *status = U_INTERNAL_PROGRAM_ERROR;
         return;
       }
       ures_close(defaultColl);
     }
-    collElem = ures_getByKeyWithFallback(collations, keyBuffer.data(), collElem, status);
+    collElem = ures_getByKeyWithFallback(collations, keyBuffer, collElem, status);
     ures_close(collElem);
     ures_close(collations);
     ures_close(b);
@@ -520,16 +520,14 @@ ucol_openFromShortString( const char *definition,
     string = ucol_sit_readSpecs(&s, definition, parseError, status);
     ucol_sit_calculateWholeLocale(&s, *status);
 
+    char buffer[internalBufferSize];
+    uprv_memset(buffer, 0, internalBufferSize);
 #ifdef UCOL_TRACE_SIT
     fprintf(stderr, "DEF %s, DATA %s, ERR %s\n", definition, s.locale.data(), u_errorName(*status));
 #endif
-    CharString buffer;
-    {
-        CharStringByteSink sink(&buffer);
-        ulocimp_canonicalize(s.locale.data(), sink, status);
-    }
+    uloc_canonicalize(s.locale.data(), buffer, internalBufferSize, status);
 
-    UCollator *result = ucol_open(buffer.data(), status);
+    UCollator *result = ucol_open(buffer, status);
     int32_t i = 0;
 
     for(i = 0; i < UCOL_ATTRIBUTE_COUNT; i++) {

@@ -2,16 +2,10 @@
 // License & terms of use: http://www.unicode.org/copyright.html
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 root{
-    Version{"44"}
+    Version{"43"}
     zoneStrings{
         "Africa:Asmera"{
             ec{"Asmara"}
-        }
-        "Africa:Sao_Tome"{
-            ec{"São Tomé"}
-        }
-        "America:Asuncion"{
-            ec{"Asunción"}
         }
         "America:Bahia_Banderas"{
             ec{"Bahía de Banderas"}
@@ -24,9 +18,6 @@ root{
         }
         "America:Coral_Harbour"{
             ec{"Atikokan"}
-        }
-        "America:Curacao"{
-            ec{"Curaçao"}
         }
         "America:Godthab"{
             ec{"Nuuk"}
@@ -74,7 +65,7 @@ root{
             ec{"Ittoqqortoormiit"}
         }
         "America:St_Barthelemy"{
-            ec{"St. Barthélemy"}
+            ec{"St. Barthelemy"}
         }
         "America:St_Johns"{
             ec{"St. John’s"}
@@ -123,9 +114,6 @@ root{
         }
         "Europe:Kiev"{
             ec{"Kyiv"}
-        }
-        "Indian:Reunion"{
-            ec{"Réunion"}
         }
         "Pacific:Ponape"{
             ec{"Pohnpei"}

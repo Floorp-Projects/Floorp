@@ -175,13 +175,9 @@ ewo{
             "SHP",
             "Lívələ yá Ǹfúfúb Elɛ́n",
         }
-        SLE{
-            "SLE",
-            "Leóne yá Sierá-leónə",
-        }
         SLL{
             "SLL",
-            "Leóne yá Sierá-leónə (1964—2022)",
+            "Leóne yá Sierá-leónə",
         }
         SOS{
             "SOS",

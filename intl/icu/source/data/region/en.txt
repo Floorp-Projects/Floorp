@@ -299,9 +299,6 @@ en{
         ZW{"Zimbabwe"}
         ZZ{"Unknown Region"}
     }
-    Countries%chagos{
-        IO{"Chagos Archipelago"}
-    }
     Countries%short{
         BA{"Bosnia"}
         GB{"UK"}

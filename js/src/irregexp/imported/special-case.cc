@@ -84,6 +84,11 @@ const icu::UnicodeSet& RegExpCaseFolding::SpecialAddSet() {
 
 icu::UnicodeSet BuildUnicodeNonSimpleCloseOverSet() {
   icu::UnicodeSet set;
+  set.add(0x390);
+  set.add(0x3b0);
+  set.add(0x1fd3);
+  set.add(0x1fe3);
+  set.add(0xfb05, 0xfb06);
   set.freeze();
   return set;
 }

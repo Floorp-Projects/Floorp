@@ -41,12 +41,8 @@ const expected = [
   "get fields.years",
   "get fields.years.valueOf",
   "call fields.years.valueOf",
-  // lookup
-  "get this.calendar.dateAdd",
-  "get this.calendar.dateFromFields",
-  "get this.calendar.fields",
-  "get this.calendar.yearMonthFromFields",
   // CalendarFields
+  "get this.calendar.fields",
   "call this.calendar.fields",
   // PrepareTemporalFields on receiver
   "get this.calendar.monthCode",
@@ -54,7 +50,9 @@ const expected = [
   "get this.calendar.year",
   "call this.calendar.year",
   // CalendarDateFromFields
+  "get this.calendar.dateFromFields",
   "call this.calendar.dateFromFields",
+  "get this.calendar.dateAdd",
   // CopyDataProperties
   "ownKeys options",
   "getOwnPropertyDescriptor options.overflow",
@@ -71,6 +69,7 @@ const expected = [
   "get this.calendar.year",
   "call this.calendar.year",
   // CalendarYearMonthFromFields
+  "get this.calendar.yearMonthFromFields",
   "call this.calendar.yearMonthFromFields",
   // inside Calendar.p.yearMonthFromFields
   "get options.overflow.toString",
@@ -129,11 +128,8 @@ const noCalendarExpected = [
   "call fields.seconds.valueOf",
   "get fields.weeks",
   "get fields.years",
-  // lookup
-  "get this.calendar.dateFromFields",
-  "get this.calendar.fields",
-  "get this.calendar.yearMonthFromFields",
   // CalendarFields
+  "get this.calendar.fields",
   "call this.calendar.fields",
   // PrepareTemporalFields on receiver
   "get this.calendar.monthCode",
@@ -141,7 +137,9 @@ const noCalendarExpected = [
   "get this.calendar.year",
   "call this.calendar.year",
   // CalendarDateFromFields
+  "get this.calendar.dateFromFields",
   "call this.calendar.dateFromFields",
+  "get this.calendar.dateAdd",
   // SnapshotOwnProperties
   "ownKeys options",
   "getOwnPropertyDescriptor options.overflow",
@@ -156,6 +154,7 @@ const noCalendarExpected = [
   "get this.calendar.year",
   "call this.calendar.year",
   // CalendarYearMonthFromFields
+  "get this.calendar.yearMonthFromFields",
   "call this.calendar.yearMonthFromFields",
   // inside Calendar.p.yearMonthFromFields
   "get options.overflow.toString",

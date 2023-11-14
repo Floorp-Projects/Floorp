@@ -146,6 +146,7 @@ bs{
         IL{"Izrael"}
         IM{"Ostrvo Man"}
         IN{"Indija"}
+        IO{"Britanska Teritorija u Indijskom Okeanu"}
         IQ{"Irak"}
         IR{"Iran"}
         IS{"Island"}
@@ -185,7 +186,7 @@ bs{
         MH{"Maršalova ostrva"}
         MK{"Sjeverna Makedonija"}
         ML{"Mali"}
-        MM{"Mijanmar"}
+        MM{"Mjanmar"}
         MN{"Mongolija"}
         MO{"Makao (SAR Kina)"}
         MP{"Sjeverna Marijanska ostrva"}
@@ -205,7 +206,7 @@ bs{
         NF{"Ostrvo Norfolk"}
         NG{"Nigerija"}
         NI{"Nikaragva"}
-        NL{"Nizozemska"}
+        NL{"Holandija"}
         NO{"Norveška"}
         NP{"Nepal"}
         NR{"Nauru"}
@@ -241,7 +242,7 @@ bs{
         SG{"Singapur"}
         SH{"Sveta Helena"}
         SI{"Slovenija"}
-        SJ{"Svalbard i Jan Mayen"}
+        SJ{"Svalbard i Jan Majen"}
         SK{"Slovačka"}
         SL{"Sijera Leone"}
         SM{"San Marino"}
@@ -296,9 +297,6 @@ bs{
         ZM{"Zambija"}
         ZW{"Zimbabve"}
         ZZ{"Nepoznata oblast"}
-    }
-    Countries%chagos{
-        IO{"arhipelag Chagos"}
     }
     Countries%short{
         GB{"UK"}

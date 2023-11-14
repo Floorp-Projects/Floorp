@@ -4,8 +4,8 @@
 mas{
     AuxExemplarCharacters{"[f q v x z]"}
     ExemplarCharacters{
-        "[aáàâā b c d eéèêē ɛ g h iíìîī ɨ j k l m n {ny} ŋ oóòôō ɔ p r {rr} s {sh} t "
-        "uúùûū ʉ{ʉ́} w {wu} y {yi}]"
+        "[a á à â ā b c d e é è ê ē ɛ g h i í ì î ī ɨ j k l m n {ny} ŋ o ó ò ô ō ɔ p "
+        "r {rr} s {sh} t u ú ù û ū ʉ {ʉ\u0301} w {wu} y {yi}]"
     }
     ExemplarCharactersIndex{"[A B C D E Ɛ G H I Ɨ J K L M N Ŋ O Ɔ P R S T U Ʉ W Y]"}
     NumberElements{
@@ -33,12 +33,30 @@ mas{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMMMd",
+                "GGGGGyMMdd",
+            }
             availableFormats{
+                Hm{"HH:mm"}
+                Hms{"HH:mm:ss"}
+                M{"L"}
                 MEd{"E, M/d"}
+                MMM{"LLL"}
                 MMMEd{"E, MMM d"}
                 MMMMEd{"E, MMMM d"}
+                MMMMd{"MMMM d"}
+                MMMd{"MMM d"}
                 Md{"M/d"}
+                d{"d"}
                 hm{"h:mm a"}
+                ms{"mm:ss"}
                 y{"y"}
                 yM{"M/y"}
                 yMEd{"E, M/d/y"}
@@ -50,6 +68,10 @@ mas{
             }
         }
         gregorian{
+            AmPmMarkers{
+                "Ɛnkakɛnyá",
+                "Ɛndámâ",
+            }
             AmPmMarkersAbbr{
                 "Ɛnkakɛnyá",
                 "Ɛndámâ",
@@ -69,12 +91,31 @@ mas{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimeSkeletons{
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
+                "yMMMMEEEEd",
+                "yMMMMd",
+                "yMMMd",
+                "yMMdd",
+            }
             availableFormats{
+                Hm{"HH:mm"}
+                Hms{"HH:mm:ss"}
+                M{"L"}
                 MEd{"E, M/d"}
+                MMM{"LLL"}
                 MMMEd{"E, MMM d"}
                 MMMMEd{"E, MMMM d"}
+                MMMMd{"MMMM d"}
+                MMMd{"MMM d"}
                 Md{"M/d"}
+                d{"d"}
                 hm{"h:mm a"}
+                ms{"mm:ss"}
+                y{"y"}
                 yM{"M/y"}
                 yMEd{"E, M/d/y"}
                 yMMM{"MMM y"}
@@ -176,6 +217,12 @@ mas{
             }
         }
     }
+    delimiters{
+        alternateQuotationEnd{"’"}
+        alternateQuotationStart{"‘"}
+        quotationEnd{"”"}
+        quotationStart{"“"}
+    }
     fields{
         day{
             dn{"Ɛnkɔlɔ́ŋ"}
@@ -215,5 +262,8 @@ mas{
         zone{
             dn{"Ɛ́sáâ o inkuapí"}
         }
+    }
+    measurementSystemNames{
+        metric{"Metric"}
     }
 }

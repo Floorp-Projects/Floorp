@@ -3,20 +3,150 @@
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 mi{
     AuxExemplarCharacters{"[b c d f g j l q s v x y z]"}
-    ExemplarCharacters{"[aā eē h iī k m n {ng} oō p r t uū w {wh}]"}
+    ExemplarCharacters{"[a ā e ē h i ī k m n {ng} o ō p r t u ū w {wh}]"}
     ExemplarCharactersIndex{"[A E H I K M N O P R T U W]"}
     NumberElements{
         latn{
             miscPatterns{
                 atLeast{"⩾{0}"}
+                range{"{0}–{1}"}
             }
-        }
-        minimalPairs{
-            ordinal{
-                other{"Kōwhiria te tua{0} ki te matau."}
+            patterns{
+                accountingFormat{"¤ #,##0.00"}
+                accountingFormat%noCurrency{"#,##0.00"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
+                scientificFormat{"#E0"}
             }
-            plural{
-                other{"{0} rā"}
+            patternsLong{
+                decimalFormat{
+                    1000{
+                        other{"0K"}
+                    }
+                    10000{
+                        other{"00K"}
+                    }
+                    100000{
+                        other{"000K"}
+                    }
+                    1000000{
+                        other{"0M"}
+                    }
+                    10000000{
+                        other{"00M"}
+                    }
+                    100000000{
+                        other{"000M"}
+                    }
+                    1000000000{
+                        other{"0G"}
+                    }
+                    10000000000{
+                        other{"00G"}
+                    }
+                    100000000000{
+                        other{"000G"}
+                    }
+                    1000000000000{
+                        other{"0T"}
+                    }
+                    10000000000000{
+                        other{"00T"}
+                    }
+                    100000000000000{
+                        other{"000T"}
+                    }
+                }
+            }
+            patternsShort{
+                currencyFormat{
+                    1000{
+                        other{"¤ 0K"}
+                    }
+                    10000{
+                        other{"¤ 00K"}
+                    }
+                    100000{
+                        other{"¤ 000K"}
+                    }
+                    1000000{
+                        other{"¤ 0M"}
+                    }
+                    10000000{
+                        other{"¤ 00M"}
+                    }
+                    100000000{
+                        other{"¤ 000M"}
+                    }
+                    1000000000{
+                        other{"¤ 0G"}
+                    }
+                    10000000000{
+                        other{"¤ 00G"}
+                    }
+                    100000000000{
+                        other{"¤ 000G"}
+                    }
+                    1000000000000{
+                        other{"¤ 0T"}
+                    }
+                    10000000000000{
+                        other{"¤ 00T"}
+                    }
+                    100000000000000{
+                        other{"¤ 000T"}
+                    }
+                }
+                decimalFormat{
+                    1000{
+                        other{"0K"}
+                    }
+                    10000{
+                        other{"00K"}
+                    }
+                    100000{
+                        other{"000K"}
+                    }
+                    1000000{
+                        other{"0M"}
+                    }
+                    10000000{
+                        other{"00M"}
+                    }
+                    100000000{
+                        other{"000M"}
+                    }
+                    1000000000{
+                        other{"0G"}
+                    }
+                    10000000000{
+                        other{"00G"}
+                    }
+                    100000000000{
+                        other{"000G"}
+                    }
+                    1000000000000{
+                        other{"0T"}
+                    }
+                    10000000000000{
+                        other{"00T"}
+                    }
+                    100000000000000{
+                        other{"000T"}
+                    }
+                }
+            }
+            symbols{
+                decimal{"."}
+                exponential{"E"}
+                group{","}
+                infinity{"∞"}
+                minusSign{"-"}
+                nan{"NaN"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
             }
         }
     }
@@ -37,10 +167,32 @@ mi{
                 "{1} {0}",
                 "{1} {0}",
             }
+            DateTimePatterns%atTime{
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "GyMMMMEEEEd",
+                "GyMMMMd",
+                "GyMMMd",
+                "GGGGGyMMdd",
+            }
             intervalFormats{
+                M{
+                    M{"MM–MM"}
+                }
                 MEd{
                     M{"MM-dd, E – MM-dd, E"}
                     d{"MM-dd, E – MM-dd, E"}
+                }
+                MMM{
+                    M{"LLL–LLL"}
                 }
                 MMMEd{
                     M{"MMM d, E – MMM d, E"}
@@ -48,12 +200,19 @@ mi{
                 }
                 MMMd{
                     M{"MMM d – MMM d"}
+                    d{"MMM d–d"}
                 }
                 Md{
                     M{"MM-dd – MM-dd"}
                     d{"MM-dd – MM-dd"}
                 }
+                d{
+                    d{"d–d"}
+                }
                 fallback{"{0} ki te {1}"}
+                y{
+                    y{"G y–y"}
+                }
                 yM{
                     M{"GGGGG y-MM – y-MM"}
                     y{"GGGGG y-MM – y-MM"}
@@ -64,6 +223,7 @@ mi{
                     y{"GGGGG y-MM-dd, E – y-MM-dd, E"}
                 }
                 yMMM{
+                    M{"G y MMM–MMM"}
                     y{"G y MMM – y MMM"}
                 }
                 yMMMEd{
@@ -72,10 +232,12 @@ mi{
                     y{"G y MMM d, E – y MMM d, E"}
                 }
                 yMMMM{
+                    M{"G y MMMM–MMMM"}
                     y{"G y MMMM – y MMMM"}
                 }
                 yMMMd{
                     M{"G y MMM d – MMM d"}
+                    d{"G y MMM d–d"}
                     y{"G y MMM d – y MMM d"}
                 }
                 yMd{
@@ -86,6 +248,18 @@ mi{
             }
         }
         gregorian{
+            AmPmMarkers{
+                "AM",
+                "PM",
+            }
+            AmPmMarkersAbbr{
+                "AM",
+                "PM",
+            }
+            AmPmMarkersNarrow{
+                "AM",
+                "PM",
+            }
             DateTimePatterns{
                 "h:mm:ss a zzzz",
                 "h:mm:ss a z",
@@ -96,6 +270,12 @@ mi{
                 "d MMM y",
                 "dd-MM-y",
                 "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+                "{1} {0}",
+            }
+            DateTimePatterns%atTime{
                 "{1} {0}",
                 "{1} {0}",
                 "{1} {0}",
@@ -112,6 +292,14 @@ mi{
                 "yMMdd",
             }
             availableFormats{
+                Bh{"h B"}
+                Bhm{"h:mm B"}
+                Bhms{"h:mm:ss B"}
+                E{"ccc"}
+                EBhm{"E h:mm B"}
+                EBhms{"E h:mm:ss B"}
+                EHm{"E HH:mm"}
+                EHms{"E HH:mm:ss"}
                 Ed{"E, d"}
                 Ehm{"E h:mm a"}
                 Ehms{"E h:mm:ss a"}
@@ -119,7 +307,14 @@ mi{
                 GyMMM{"MMM y G"}
                 GyMMMEd{"E, d MMM y G"}
                 GyMMMd{"d MMM y G"}
+                H{"HH"}
+                Hm{"HH:mm"}
+                Hms{"HH:mm:ss"}
+                Hmsv{"HH:mm:ss v"}
+                Hmv{"HH:mm v"}
+                M{"L"}
                 MEd{"E, dd-MM"}
+                MMM{"LLL"}
                 MMMEd{"E, d MMM"}
                 MMMMW{
                     other{"'wiki' W 'o' MMMM"}
@@ -127,11 +322,14 @@ mi{
                 MMMMd{"d MMMM"}
                 MMMd{"d MMM"}
                 Md{"dd-MM"}
+                d{"d"}
                 h{"h a"}
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
                 hmsv{"h:mm:ss a v"}
                 hmv{"h:mm a v"}
+                ms{"mm:ss"}
+                y{"y"}
                 yM{"MM-y"}
                 yMEd{"E, dd-MM-y"}
                 yMMM{"MMM y"}
@@ -149,12 +347,21 @@ mi{
                 format{
                     abbreviated{
                         "Rāt",
-                        "Man",
+                        "Mane",
                         "Tūr",
-                        "Wen",
-                        "Tāi",
+                        "Wene",
+                        "Tāit",
                         "Par",
                         "Rāh",
+                    }
+                    narrow{
+                        "Rt",
+                        "M",
+                        "T",
+                        "E",
+                        "T",
+                        "P",
+                        "Rh",
                     }
                     short{
                         "Rāt",
@@ -176,6 +383,15 @@ mi{
                     }
                 }
                 stand-alone{
+                    abbreviated{
+                        "Rāt",
+                        "Mane",
+                        "Tūr",
+                        "Wene",
+                        "Tāit",
+                        "Par",
+                        "Rāh",
+                    }
                     narrow{
                         "Rt",
                         "M",
@@ -185,13 +401,57 @@ mi{
                         "P",
                         "Rh",
                     }
+                    short{
+                        "Rāt",
+                        "Man",
+                        "Tū",
+                        "Wen",
+                        "Tāi",
+                        "Par",
+                        "Rāh",
+                    }
+                    wide{
+                        "Rātapu",
+                        "Mane",
+                        "Tūrei",
+                        "Wenerei",
+                        "Tāite",
+                        "Paraire",
+                        "Rāhoroi",
+                    }
+                }
+            }
+            dayPeriod{
+                stand-alone{
+                    abbreviated{
+                        am{"AM"}
+                        pm{"PM"}
+                    }
+                    narrow{
+                        am{"AM"}
+                        pm{"PM"}
+                    }
+                    wide{
+                        am{"AM"}
+                        pm{"PM"}
+                    }
+                }
+            }
+            eras{
+                abbreviated{
+                    "BCE",
+                    "CE",
+                }
+                wide{
+                    "BCE",
+                    "CE",
+                }
+                wide%variant{
+                    "BCE",
+                    "CE",
                 }
             }
             intervalFormats{
-                Gy{
-                    G{"y G – y G"}
-                    y{"y–y G"}
-                }
                 fallback{"{0} ki te {1}"}
             }
             monthNames{
@@ -202,30 +462,14 @@ mi{
                         "Māe",
                         "Āpe",
                         "Mei",
-                        "Hun",
+                        "Hune",
                         "Hūr",
                         "Āku",
                         "Hep",
                         "Oke",
-                        "Noe",
-                        "Tīh",
+                        "Noem",
+                        "Tīhe",
                     }
-                    wide{
-                        "Hānuere",
-                        "Pēpuere",
-                        "Māehe",
-                        "Āpereira",
-                        "Mei",
-                        "Hune",
-                        "Hūrae",
-                        "Ākuhata",
-                        "Hepetema",
-                        "Oketopa",
-                        "Noema",
-                        "Tīhema",
-                    }
-                }
-                stand-alone{
                     narrow{
                         "H",
                         "P",
@@ -244,7 +488,51 @@ mi{
                         "Hānuere",
                         "Pēpuere",
                         "Māehe",
-                        "Āperira",
+                        "Āpereira",
+                        "Mei",
+                        "Hune",
+                        "Hūrae",
+                        "Ākuhata",
+                        "Hepetema",
+                        "Oketopa",
+                        "Noema",
+                        "Tīhema",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "Hān",
+                        "Pēp",
+                        "Māe",
+                        "Āpe",
+                        "Mei",
+                        "Hune",
+                        "Hūr",
+                        "Āku",
+                        "Hep",
+                        "Oke",
+                        "Noem",
+                        "Tīhe",
+                    }
+                    narrow{
+                        "H",
+                        "P",
+                        "M",
+                        "Ā",
+                        "M",
+                        "H",
+                        "H",
+                        "Ā",
+                        "H",
+                        "O",
+                        "N",
+                        "T",
+                    }
+                    wide{
+                        "Hānuere",
+                        "Pēpuere",
+                        "Māehe",
+                        "Āpereira",
                         "Mei",
                         "Hune",
                         "Hūrae",
@@ -263,6 +551,32 @@ mi{
                         "HW2",
                         "HW3",
                         "HW4",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                    }
+                    wide{
+                        "Hauwhā tuatahi",
+                        "Hauwhā tuarua",
+                        "Hauwhā tuatoru",
+                        "Hauwhā tuawhā",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "HW1",
+                        "HW2",
+                        "HW3",
+                        "HW4",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
                     }
                     wide{
                         "Hauwhā tuatahi",
@@ -362,6 +676,12 @@ mi{
         western_asian_scripts{"tuhinga Āhia ki te Uru"}
         whitespace{"tohu mokowā"}
     }
+    delimiters{
+        alternateQuotationEnd{"’"}
+        alternateQuotationStart{"‘"}
+        quotationEnd{"”"}
+        quotationStart{"“"}
+    }
     fields{
         day{
             dn{"rā"}
@@ -372,15 +692,20 @@ mi{
             }
             relativeTime{
                 future{
-                    other{"+{0} rā"}
+                    other{"+{0} r."}
                 }
                 past{
-                    other{"-{0} rā i mua"}
+                    other{"-{0} r."}
                 }
             }
         }
         day-narrow{
             dn{"rā"}
+            relative{
+                "-1"{"inanahi"}
+                "0"{"i tēnei rā"}
+                "1"{"āpōpō"}
+            }
             relativeTime{
                 future{
                     other{"+{0} r"}
@@ -392,9 +717,17 @@ mi{
         }
         day-short{
             dn{"rā."}
+            relative{
+                "-1"{"inanahi"}
+                "0"{"i tēnei rā"}
+                "1"{"āpōpō"}
+            }
             relativeTime{
+                future{
+                    other{"+{0} r"}
+                }
                 past{
-                    other{"-{0} rā"}
+                    other{"-{0} r."}
                 }
             }
         }
@@ -436,7 +769,7 @@ mi{
                     other{"+{0} Paraire"}
                 }
                 past{
-                    other{"-{0} Paraire i mua"}
+                    other{"-{0} Paraire"}
                 }
             }
         }
@@ -473,25 +806,17 @@ mi{
         hour{
             dn{"hāora"}
             relative{
-                "0"{"i tēnei haora"}
-            }
-            relativeTime{
-                future{
-                    other{"+{0} haora"}
-                }
-                past{
-                    other{"-{0} haora i mua"}
-                }
+                "0"{"i tēnei hāora"}
             }
         }
         hour-narrow{
             dn{"hr"}
             relativeTime{
                 future{
-                    other{"+{0} h"}
+                    other{"+{0} h."}
                 }
                 past{
-                    other{"-{0} h"}
+                    other{"-{0} h."}
                 }
             }
         }
@@ -513,10 +838,10 @@ mi{
             }
             relativeTime{
                 future{
-                    other{"+{0} meneti"}
+                    other{"+{0} men"}
                 }
                 past{
-                    other{"-{0} meneti i mua"}
+                    other{"-{0} men"}
                 }
             }
         }
@@ -553,7 +878,7 @@ mi{
                     other{"+{0} Mane"}
                 }
                 past{
-                    other{"-{0} Mane i mua"}
+                    other{"-{0} Mane"}
                 }
             }
         }
@@ -594,17 +919,22 @@ mi{
                 "0"{"i tēnei marama"}
                 "1"{"ā tērā marama"}
             }
-            relativeTime{
-                future{
-                    other{"+{0} marama"}
-                }
-                past{
-                    other{"-{0} marama i mua"}
-                }
-            }
         }
         month-narrow{
             dn{"m"}
+            relative{
+                "-1"{"i tērā m."}
+                "0"{"i tēnei m."}
+                "1"{"ā tērā m."}
+            }
+            relativeTime{
+                future{
+                    other{"+{0} m."}
+                }
+                past{
+                    other{"-{0} m."}
+                }
+            }
         }
         month-short{
             dn{"m."}
@@ -631,10 +961,10 @@ mi{
             }
             relativeTime{
                 future{
-                    other{"+{0} hauwhā"}
+                    other{"+{0} hwh"}
                 }
                 past{
-                    other{"-{0} hauwhā i mua"}
+                    other{"-{0} hwh"}
                 }
             }
         }
@@ -671,7 +1001,7 @@ mi{
                     other{"+{0} Rāhoroi"}
                 }
                 past{
-                    other{"-{0} Rāhoroi i mua"}
+                    other{"-{0} Rāhoroi"}
                 }
             }
         }
@@ -712,14 +1042,15 @@ mi{
             }
             relativeTime{
                 future{
-                    other{"+{0} hēkona"}
+                    other{"+{0} h"}
                 }
                 past{
-                    other{"-{0} hēkona i mua"}
+                    other{"-{0} h"}
                 }
             }
         }
         second-narrow{
+            dn{"hēk"}
             relativeTime{
                 future{
                     other{"+{0} h"}
@@ -751,7 +1082,7 @@ mi{
                     other{"+{0} Rātapu"}
                 }
                 past{
-                    other{"-{0} Rātapu i mua"}
+                    other{"-{0} Rātapu"}
                 }
             }
         }
@@ -787,46 +1118,46 @@ mi{
         }
         thu{
             relative{
-                "-1"{"i tērā Tāite"}
-                "0"{"i tēnei Tāite"}
-                "1"{"ā tērā Tāite"}
+                "-1"{"i tērā Taite"}
+                "0"{"i tēnei Taite"}
+                "1"{"ā tērā Taite"}
             }
             relativeTime{
                 future{
-                    other{"+{0} Tāite"}
+                    other{"+{0} Taite"}
                 }
                 past{
-                    other{"-{0} Tāite i mua"}
+                    other{"-{0} Taite"}
                 }
             }
         }
         thu-narrow{
             relative{
-                "-1"{"i tērā Tāit"}
-                "0"{"i tēnei Tāit"}
-                "1"{"ā tērā Tāit"}
+                "-1"{"i tērā Tait"}
+                "0"{"i tēnei Tait"}
+                "1"{"ā tērā Tait"}
             }
             relativeTime{
                 future{
-                    other{"+{0} Tāit"}
+                    other{"+{0} Tait"}
                 }
                 past{
-                    other{"-{0} Tāit"}
+                    other{"-{0} Tait"}
                 }
             }
         }
         thu-short{
             relative{
-                "-1"{"i tērā Tāit."}
-                "0"{"i tēnei Tāit."}
-                "1"{"ā tērā Tāit."}
+                "-1"{"i tērā Tait."}
+                "0"{"i tēnei Tait."}
+                "1"{"ā tērā Tait."}
             }
             relativeTime{
                 future{
-                    other{"+{0} Tāit."}
+                    other{"+{0} Tait."}
                 }
                 past{
-                    other{"-{0} Tāit."}
+                    other{"-{0} Tait."}
                 }
             }
         }
@@ -841,7 +1172,7 @@ mi{
                     other{"+{0} Tūrei"}
                 }
                 past{
-                    other{"-{0} Tūrei i mua"}
+                    other{"-{0} Tūrei"}
                 }
             }
         }
@@ -886,7 +1217,7 @@ mi{
                     other{"+{0} Wenerei"}
                 }
                 past{
-                    other{"-{0} Wenerei i mua"}
+                    other{"-{0} Wenerei"}
                 }
             }
         }
@@ -928,17 +1259,23 @@ mi{
                 "1"{"ā tērā wiki"}
             }
             relativePeriod{"te wiki o {0}"}
-            relativeTime{
-                future{
-                    other{"+{0} wiki"}
-                }
-                past{
-                    other{"-{0} wiki i mua"}
-                }
-            }
         }
         week-narrow{
             dn{"w"}
+            relative{
+                "-1"{"i tērā w."}
+                "0"{"i tēnei w."}
+                "1"{"ā tērā w."}
+            }
+            relativePeriod{"t w o {0}"}
+            relativeTime{
+                future{
+                    other{"+{0} w"}
+                }
+                past{
+                    other{"-{0} w"}
+                }
+            }
         }
         week-short{
             dn{"w."}
@@ -996,13 +1333,21 @@ mi{
                     other{"ā te {0} tau"}
                 }
                 past{
-                    other{"i te {0} tau i mua"}
+                    other{"i te {0} tau"}
                 }
             }
         }
         year-narrow{
             dn{"t"}
+            relative{
+                "-1"{"i tērā tau"}
+                "0"{"i tēnei tau"}
+                "1"{"ā tērā tau"}
+            }
             relativeTime{
+                future{
+                    other{"ā te {0} tau"}
+                }
                 past{
                     other{"i te {0} tau"}
                 }
@@ -1010,7 +1355,15 @@ mi{
         }
         year-short{
             dn{"t."}
+            relative{
+                "-1"{"i tērā tau"}
+                "0"{"i tēnei tau"}
+                "1"{"ā tērā tau"}
+            }
             relativeTime{
+                future{
+                    other{"ā te {0} tau"}
+                }
                 past{
                     other{"i te {0} tau"}
                 }
@@ -1027,26 +1380,16 @@ mi{
         }
     }
     listPattern{
-        or{
-            2{"{0} {1} rānei"}
-            end{"{0}, {1} rānei"}
-        }
-        standard-narrow{
+        standard{
             2{"{0}, {1}"}
             end{"{0}, {1}"}
-        }
-        standard-short{
-            2{"{0} & {1}"}
-            end{"{0}, & {1}"}
-        }
-        unit-narrow{
-            2{"{0} {1}"}
-            end{"{0} {1}"}
-            middle{"{0} {1}"}
-            start{"{0} {1}"}
+            middle{"{0}, {1}"}
+            start{"{0}, {1}"}
         }
     }
     measurementSystemNames{
+        UK{"UK"}
+        US{"US"}
         metric{"Ngahuru"}
     }
     personNames{
@@ -1054,6 +1397,13 @@ mi{
             givenFirst{
                 "und",
                 "mi",
+            }
+            surnameFirst{
+                "ja",
+                "ko",
+                "vi",
+                "yue",
+                "zh",
             }
         }
     }

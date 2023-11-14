@@ -308,7 +308,9 @@ zh_Hans_SG{
                 "GyyMd",
             }
             availableFormats{
+                MEd{"M-dE"}
                 MMM{"M月"}
+                Md{"M-d"}
             }
         }
     }

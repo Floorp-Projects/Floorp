@@ -58,10 +58,12 @@ for patch in \
  bug-1636984-append-item-dayperiod-fractional-seconds.diff \
  bug-1706949-wasi-workaround.diff \
  bug-1790071-ICU-22132-standardize-vtzone-output.diff \
+ bug-1838173-ICU-22412-start-time-iso8601.diff \
+ bug-1814862-ICU-22260.diff \
  double-conversion.diff \
+ bug-1856428-ICU-22541.diff \
  bug-1856290-ICU-20548-dateinterval-timezone.diff \
- bug-1859752-ICU-22545-pseudo-locales.diff \
- bug-1859752-ICU-22547-language-subtags.diff \
+ bug-1856291-ICU-22526-calendar-timezone-offset-limit.diff \
 ; do
   echo "Applying local patch $patch"
   patch -d ${icu_dir}/../../ -p1 --no-backup-if-mismatch < ${icu_dir}/../icu-patches/$patch

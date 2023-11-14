@@ -175,13 +175,9 @@ ak{
             "SHP",
             "St Helena Pɔn",
         }
-        SLE{
-            "SLE",
-            "Leone",
-        }
         SLL{
             "SLL",
-            "Leone (1964—2022)",
+            "Leone",
         }
         SOS{
             "SOS",

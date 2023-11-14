@@ -1119,7 +1119,7 @@ root{
             symbols:alias{"/LOCALE/NumberElements/latn/symbols"}
         }
     }
-    Version{"44"}
+    Version{"43"}
     calendar{
         buddhist{
             AmPmMarkers:alias{"/LOCALE/calendar/gregorian/AmPmMarkers"}
@@ -3594,32 +3594,32 @@ root{
     parse{
         date{
             lenient{
-                "[\\- ‑ . /]",
-                "[\\:：﹕︓ ∶]",
+                "[\\--/]",
+                "[\\:∶︓﹕：]",
             }
         }
         general{
             lenient{
-                "[.．․﹒ 。｡︒]",
-                "['＇’ ՚ ᾽᾿ ʼ]",
-                "[%％﹪ ٪]",
-                "[‰ ؉]",
-                "[\$＄﹩]",
-                "[£￡ ₤]",
+                "[.․。︒﹒．｡]",
+                "['ʼ՚᾽᾿’＇]",
+                "[%٪﹪％]",
+                "[؉‰]",
+                "[\$﹩＄]",
+                "[£₤￡]",
                 "[¥￥]",
                 "[₩￦]",
-                "[₹ ₨ {Rp} {Rs}]",
+                "[₨₹{Rp}{Rs}]",
             }
         }
         number{
             lenient{
-                "[\\-－﹣ ‐‑ ‒ – −⁻₋ ➖]",
-                "[,，﹐︐ ⹁ ، ٫ 、﹑､︑]",
-                "[+＋﬩﹢⁺₊ ➕]",
+                "[\\-‐‒–⁻₋−➖﹣－]",
+                "[,،٫⹁、︐︑﹐﹑，､]",
+                "[+⁺₊➕﬩﹢＋]",
             }
             stricter{
-                "[,，﹐︐ ⹁ ٫]",
-                "[.．․﹒ ｡]",
+                "[,٫⹁︐﹐，]",
+                "[.․﹒．｡]",
             }
         }
     }
@@ -3688,11 +3688,6 @@ root{
             surnameFirst-short-monogram-informal:alias{"/LOCALE/personNames/namePattern/surnameFirst-long-monogram-formal"}
             surnameFirst-short-referring-formal:alias{"/LOCALE/personNames/namePattern/surnameFirst-long-referring-formal"}
             surnameFirst-short-referring-informal:alias{"/LOCALE/personNames/namePattern/surnameFirst-long-referring-formal"}
-        }
-        nativeSpaceReplacement{" "}
-        parameterDefault{
-            formality{"formal"}
-            length{"medium"}
         }
     }
 }

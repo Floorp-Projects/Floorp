@@ -298,9 +298,6 @@ eu{
         ZW{"Zimbabwe"}
         ZZ{"Eskualde ezezaguna"}
     }
-    Countries%chagos{
-        IO{"Chagos uhartedia"}
-    }
     Countries%short{
         GB{"EB"}
         HK{"Hong Kong"}

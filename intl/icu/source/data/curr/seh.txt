@@ -179,13 +179,9 @@ seh{
             "SHP",
             "Libra de Santa Helena",
         }
-        SLE{
-            "SLE",
-            "Leone de Serra Leoa",
-        }
         SLL{
             "SLL",
-            "Leone de Serra Leoa (1964—2022)",
+            "Leone de Serra Leoa",
         }
         SOS{
             "SOS",

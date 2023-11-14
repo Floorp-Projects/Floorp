@@ -299,9 +299,6 @@ sr_Latn{
         ZW{"Zimbabve"}
         ZZ{"Nepoznat region"}
     }
-    Countries%chagos{
-        IO{"arhipelag Čagos"}
-    }
     Countries%short{
         GB{"UK"}
         HK{"Hongkong"}

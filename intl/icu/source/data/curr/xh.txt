@@ -499,13 +499,9 @@ xh{
             "SHP",
             "IPonti yaseSt. Helena",
         }
-        SLE{
-            "SLE",
-            "I-Loeone yaseSierra Leone",
-        }
         SLL{
             "SLL",
-            "I-Loeone yaseSierra Leone (1964—2022)",
+            "I-Loeone yaseSierra Leone",
         }
         SOS{
             "SOS",
@@ -635,6 +631,107 @@ xh{
             "ZMW",
             "I-Kwacha yaseZambi",
         }
+    }
+    Currencies%narrow{
+        AFN{"؋"}
+        AMD{"֏"}
+        AOA{"Kz"}
+        ARS{"$"}
+        AUD{"$"}
+        AZN{"₼"}
+        BAM{"KM"}
+        BBD{"$"}
+        BDT{"৳"}
+        BMD{"$"}
+        BND{"$"}
+        BOB{"Bs"}
+        BRL{"R$"}
+        BSD{"$"}
+        BWP{"P"}
+        BZD{"$"}
+        CAD{"$"}
+        CLP{"$"}
+        CNY{"¥"}
+        COP{"$"}
+        CRC{"₡"}
+        CUC{"$"}
+        CUP{"$"}
+        CZK{"Kč"}
+        DKK{"kr"}
+        DOP{"$"}
+        EGP{"E£"}
+        EUR{"€"}
+        FJD{"$"}
+        FKP{"£"}
+        GBP{"£"}
+        GEL{"₾"}
+        GHS{"GH₵"}
+        GIP{"£"}
+        GNF{"FG"}
+        GTQ{"Q"}
+        GYD{"$"}
+        HKD{"$"}
+        HNL{"L"}
+        HRK{"kn"}
+        HUF{"Ft"}
+        IDR{"Rp"}
+        ILS{"₪"}
+        INR{"₹"}
+        ISK{"kr"}
+        JMD{"$"}
+        JPY{"¥"}
+        KHR{"៛"}
+        KMF{"CF"}
+        KPW{"₩"}
+        KRW{"₩"}
+        KYD{"$"}
+        KZT{"₸"}
+        LAK{"₭"}
+        LBP{"L£"}
+        LKR{"Rs"}
+        LRD{"$"}
+        MGA{"Ar"}
+        MMK{"K"}
+        MNT{"₮"}
+        MUR{"Rs"}
+        MXN{"$"}
+        MYR{"RM"}
+        NAD{"$"}
+        NGN{"₦"}
+        NIO{"C$"}
+        NOK{"kr"}
+        NPR{"Rs"}
+        NZD{"$"}
+        PHP{"₱"}
+        PKR{"Rs"}
+        PLN{"zł"}
+        PYG{"₲"}
+        RON{"lei"}
+        RUB{"₽"}
+        RWF{"RF"}
+        SBD{"$"}
+        SEK{"kr"}
+        SGD{"$"}
+        SHP{"£"}
+        SRD{"$"}
+        SSP{"£"}
+        STN{"Db"}
+        SYP{"£"}
+        THB{"฿"}
+        TOP{"T$"}
+        TRY{"₺"}
+        TTD{"$"}
+        TWD{"$"}
+        UAH{"₴"}
+        USD{"$"}
+        UYU{"$"}
+        VND{"₫"}
+        XCD{"$"}
+        ZAR{"R"}
+        ZMW{"ZK"}
+    }
+    Currencies%variant{
+        TRY{"TL"}
     }
     CurrencyPlurals{
         AED{
@@ -1133,13 +1230,9 @@ xh{
             one{"Iponti yaseSt. Helena"}
             other{"Iiponti zaseSt. Helena"}
         }
-        SLE{
+        SLL{
             one{"I-leone yaseSierra Leone"}
             other{"Ii-leones zaseSierra Leone"}
-        }
-        SLL{
-            one{"I-leone yaseSierra Leone (1964—2022)"}
-            other{"Ii-leones zaseSierra Leone (1964—2022)"}
         }
         SOS{
             one{"I-shilling yaseSomalia"}
@@ -1254,8 +1347,8 @@ xh{
             other{"Ii-franc zaseCFP"}
         }
         XXX{
-            one{"(ikharensi exabiso lingaziwayo)"}
-            other{"(ikharensi engaziwayo)"}
+            one{"Ikharensi Engaziwayo"}
+            other{"Ikharensi Engaziwayo"}
         }
         YER{
             one{"I-rial yaseYemen"}

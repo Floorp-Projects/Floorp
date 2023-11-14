@@ -38,10 +38,8 @@ const expected = [
   "has fields.calendar.year",
   "has fields.calendar.yearMonthFromFields",
   "has fields.calendar.yearOfWeek",
-  // lookup
-  "get fields.calendar.fields",
-  "get fields.calendar.monthDayFromFields",
   // CalendarFields
+  "get fields.calendar.fields",
   "call fields.calendar.fields",
   // PrepareTemporalFields
   "get fields.day",
@@ -57,6 +55,7 @@ const expected = [
   "get fields.year.valueOf",
   "call fields.year.valueOf",
   // CalendarMonthDayFromFields
+  "get fields.calendar.monthDayFromFields",
   "call fields.calendar.monthDayFromFields",
   // inside Calendar.p.monthDayFromFields
   "get options.overflow.toString",

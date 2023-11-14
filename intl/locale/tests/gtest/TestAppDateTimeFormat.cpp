@@ -276,7 +276,7 @@ TEST(AppDateTimeFormat, DateFormatSelectorsForeign)
     nsresult rv =
         AppDateTimeFormat::Format(components, &prExplodedTime, formattedTime);
     ASSERT_NS_SUCCEEDED(rv);
-    ASSERT_STREQ("Do.", NS_ConvertUTF16toUTF8(formattedTime).get());
+    ASSERT_STREQ("Do", NS_ConvertUTF16toUTF8(formattedTime).get());
   }
   {
     ComponentsBag components{};
@@ -303,7 +303,7 @@ TEST(AppDateTimeFormat, DateFormatSelectorsForeign)
     nsresult rv =
         AppDateTimeFormat::Format(components, &prExplodedTime, formattedTime);
     ASSERT_NS_SUCCEEDED(rv);
-    ASSERT_STREQ("Do.", NS_ConvertUTF16toUTF8(formattedTime).get());
+    ASSERT_STREQ("Do", NS_ConvertUTF16toUTF8(formattedTime).get());
   }
 }
 

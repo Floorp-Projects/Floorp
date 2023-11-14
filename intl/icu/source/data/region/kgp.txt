@@ -146,6 +146,7 @@ kgp{
         IL{"Isihaé"}
         IM{"Mỹn Goj-vẽso"}
         IN{"Ĩnija"}
+        IO{"Osiỹno Ĩniko tỹ Tehitórijo Mritỹnĩku"}
         IQ{"Iraki"}
         IR{"Irỹ"}
         IS{"Inhrỹnija"}

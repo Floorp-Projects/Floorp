@@ -93,6 +93,7 @@ kab{
         IE{"Lirlund"}
         IL{"Izrayil"}
         IN{"Lhend"}
+        IO{"Akal Aglizi deg Ugaraw Ahendi"}
         IQ{"Lɛiraq"}
         IR{"Iran"}
         IS{"Island"}

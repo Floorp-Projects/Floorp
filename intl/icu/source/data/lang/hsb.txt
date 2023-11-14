@@ -49,7 +49,6 @@ hsb{
         bem{"bemba"}
         bez{"bena"}
         bg{"bołharšćina"}
-        bgc{"haryanvi"}
         bho{"bhojpurišćina"}
         bi{"bislamšćina"}
         bin{"binišćina"}
@@ -335,7 +334,6 @@ hsb{
         pt_PT{"europska portugalšćina"}
         qu{"kečua"}
         quc{"kʼicheʼ"}
-        raj{"rajasthani"}
         rap{"rapanuišćina"}
         rar{"rarotonganšćina"}
         rhg{"rohingyašćina"}
@@ -624,11 +622,10 @@ hsb{
     }
     characterLabelPattern{
         all{"{0} — wšitke"}
+        category-list{"{0}: {1}"}
         compatibility{"{0} — kompatibelnosć"}
         enclosed{"{0} — zakašćikowane"}
         extended{"{0} — rozšěrjene"}
-        facing-left{"{0} dolěwa"}
-        facing-right{"{0} doprawa"}
         historic{"{0} — historisce"}
         miscellaneous{"{0} — rozdźělne"}
         other{"{0} — druhe"}
@@ -646,5 +643,10 @@ hsb{
         language{"rěč: {0}"}
         script{"pismo: {0}"}
         territory{"region: {0}"}
+    }
+    localeDisplayPattern{
+        keyTypePattern{"{0}: {1}"}
+        pattern{"{0} ({1})"}
+        separator{"{0}, {1}"}
     }
 }

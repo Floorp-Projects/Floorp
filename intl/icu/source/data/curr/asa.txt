@@ -175,13 +175,9 @@ asa{
             "SHP",
             "pauni ya Thantahelena",
         }
-        SLE{
-            "SLE",
-            "leoni",
-        }
         SLL{
             "SLL",
-            "leoni (1964—2022)",
+            "leoni",
         }
         SOS{
             "SOS",

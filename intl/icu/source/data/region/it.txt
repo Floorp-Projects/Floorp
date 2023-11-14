@@ -254,7 +254,7 @@ it{
         SV{"El Salvador"}
         SX{"Sint Maarten"}
         SY{"Siria"}
-        SZ{"Eswatini"}
+        SZ{"eSwatini"}
         TA{"Tristan da Cunha"}
         TC{"Isole Turks e Caicos"}
         TD{"Ciad"}
@@ -298,9 +298,6 @@ it{
         ZW{"Zimbabwe"}
         ZZ{"Regione sconosciuta"}
     }
-    Countries%chagos{
-        IO{"Arcipelago Chagos"}
-    }
     Countries%short{
         GB{"UK"}
         HK{"Hong Kong"}
@@ -316,7 +313,7 @@ it{
         CZ{"Repubblica Ceca"}
         FK{"Isole Falkland (Isole Malvine)"}
         NZ{"Nuova Zelanda (Aotearoa)"}
-        SZ{"Regno di Eswatini"}
+        SZ{"Regno di eSwatini"}
         TL{"Timor Leste"}
         TR{"Türkiye"}
     }

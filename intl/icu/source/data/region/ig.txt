@@ -298,9 +298,6 @@ ig{
         ZW{"Zimbabwe"}
         ZZ{"Mpaghara Amaghị"}
     }
-    Countries%chagos{
-        IO{"Chagos Archipelago"}
-    }
     Countries%short{
         GB{"UK"}
         MO{"Macao"}

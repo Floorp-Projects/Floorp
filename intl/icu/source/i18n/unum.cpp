@@ -28,19 +28,17 @@
 #include "unicode/dcfmtsym.h"
 #include "unicode/curramt.h"
 #include "unicode/localpointer.h"
-#include "unicode/measfmt.h"
 #include "unicode/udisplaycontext.h"
 #include "uassert.h"
 #include "cpputils.h"
 #include "cstring.h"
-#include "putilimp.h"
 
 
 U_NAMESPACE_USE
 
 
 U_CAPI UNumberFormat* U_EXPORT2
-unum_open(  UNumberFormatStyle    style,
+unum_open(  UNumberFormatStyle    style,  
             const    char16_t*    pattern,
             int32_t            patternLength,
             const    char*     locale,
@@ -673,7 +671,6 @@ unum_getTextAttribute(const UNumberFormat*  fmt,
 
     const NumberFormat* nf = reinterpret_cast<const NumberFormat*>(fmt);
     const DecimalFormat* df = dynamic_cast<const DecimalFormat*>(nf);
-    const RuleBasedNumberFormat* rbnf = nullptr;    // cast is below for performance
     if (df != nullptr) {
         switch(tag) {
         case UNUM_POSITIVE_PREFIX:
@@ -704,7 +701,8 @@ unum_getTextAttribute(const UNumberFormat*  fmt,
             *status = U_UNSUPPORTED_ERROR;
             return -1;
         }
-    } else  if ((rbnf = dynamic_cast<const RuleBasedNumberFormat*>(nf)) != nullptr) {
+    } else {
+        const RuleBasedNumberFormat* rbnf = dynamic_cast<const RuleBasedNumberFormat*>(nf);
         U_ASSERT(rbnf != nullptr);
         if (tag == UNUM_DEFAULT_RULESET) {
             res = rbnf->getDefaultRuleSetName();
@@ -718,9 +716,6 @@ unum_getTextAttribute(const UNumberFormat*  fmt,
             *status = U_UNSUPPORTED_ERROR;
             return -1;
         }
-    } else {
-        *status = U_UNSUPPORTED_ERROR;
-        return -1;
     }
 
     return res.extract(result, resultLength, *status);
@@ -799,16 +794,15 @@ unum_toPattern(    const    UNumberFormat*          fmt,
 
     const NumberFormat* nf = reinterpret_cast<const NumberFormat*>(fmt);
     const DecimalFormat* df = dynamic_cast<const DecimalFormat*>(nf);
-    const RuleBasedNumberFormat* rbnf = nullptr;    // cast is below for performance
     if (df != nullptr) {
       if(isPatternLocalized)
         df->toLocalizedPattern(pat);
       else
         df->toPattern(pat);
-    } else if ((rbnf = dynamic_cast<const RuleBasedNumberFormat*>(nf)) != nullptr) {
-        pat = rbnf->getRules();
     } else {
-        // leave `pat` empty
+      const RuleBasedNumberFormat* rbnf = dynamic_cast<const RuleBasedNumberFormat*>(nf);
+      U_ASSERT(rbnf != nullptr);
+      pat = rbnf->getRules();
     }
     return pat.extract(result, resultLength, *status);
 }

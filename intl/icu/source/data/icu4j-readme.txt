@@ -71,8 +71,12 @@ icutzdata.jar in $icu4j_root/main/shared/data.
 
 *Java*
 
-3. After the ICU4C-side steps above, build the ICU4J artifacts and run
-        the tests locally to make sure they pass:
+3. After the ICU4C-side steps above, build the main target of the
+        ICU4J ant build to unpack the jar files with the following commands:
 
         cd $icu4j_root
-        mvn verify
+        ant main
+
+   Run the tests locally and make sure they pass:
+   
+        ant check

@@ -4,6 +4,5 @@
 ar_EG{
     NumberElements{
         default{"arab"}
-        default_latn{"latn"}
     }
 }

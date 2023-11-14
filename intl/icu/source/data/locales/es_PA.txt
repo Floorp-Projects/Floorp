@@ -14,11 +14,11 @@ es_PA{
                 "d 'de' MMMM 'de' y G",
                 "MM/dd/y G",
                 "MM/dd/yy GGGGG",
+                "{1} {0}",
                 "{1}, {0}",
                 "{1}, {0}",
-                "{1}, {0}",
-                "{1}, {0}",
-                "{1}, {0}",
+                "{1} {0}",
+                "{1} {0}",
             }
             DateTimeSkeletons{
                 "ahmmsszzzz",
@@ -66,14 +66,6 @@ es_PA{
             }
         }
         gregorian{
-            AmPmMarkers{
-                "a. m.",
-                "p. m.",
-            }
-            AmPmMarkersAbbr{
-                "a. m.",
-                "p. m.",
-            }
             DateTimePatterns{
                 "h:mm:ss a zzzz",
                 "h:mm:ss a z",
@@ -83,10 +75,10 @@ es_PA{
                 "d 'de' MMMM 'de' y",
                 "MM/dd/y",
                 "MM/dd/yy",
+                "{1} {0}",
                 "{1}, {0}",
                 "{1}, {0}",
-                "{1}, {0}",
-                "{1}, {0}",
+                "{1} {0}",
                 "{1}, {0}",
             }
             DateTimeSkeletons{
@@ -115,19 +107,12 @@ es_PA{
                         night1{"de la noche"}
                         noon{"mediodía"}
                     }
-                }
-                stand-alone{
-                    abbreviated{
-                        am{"a. m."}
-                        pm{"p. m."}
-                    }
-                    narrow{
-                        am{"a. m."}
-                        pm{"p. m."}
-                    }
                     wide{
-                        am{"a. m."}
-                        pm{"p. m."}
+                        evening1{"de la tarde"}
+                        morning1{"de la madrugada"}
+                        morning2{"de la mañana"}
+                        night1{"de la noche"}
+                        noon{"mediodía"}
                     }
                 }
             }

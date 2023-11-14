@@ -93,6 +93,7 @@ xog{
         IE{"Ayalandi"}
         IL{"Yisirayeri"}
         IN{"Buyindi"}
+        IO{"Ebizinga bya Cago"}
         IQ{"Yiraaka"}
         IR{"Yiraani"}
         IS{"Ayisirandi"}

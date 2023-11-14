@@ -48,21 +48,16 @@ const expectedOne = [
   "has one.calendar.year",
   "has one.calendar.yearMonthFromFields",
   "has one.calendar.yearOfWeek",
-  // lookup
-  "get one.calendar.dateFromFields",
-  "get one.calendar.fields",
   // CalendarFields
+  "get one.calendar.fields",
   "call one.calendar.fields",
   // ToTemporalTimeZoneSlotValue
   "has one.timeZone.getOffsetNanosecondsFor",
   "has one.timeZone.getPossibleInstantsFor",
   "has one.timeZone.id",
   // InterpretTemporalDateTimeFields
+  "get one.calendar.dateFromFields",
   "call one.calendar.dateFromFields",
-  // lookup
-  "get one.timeZone.getPossibleInstantsFor",
-  // InterpretISODateTimeOffset
-  "call one.timeZone.getPossibleInstantsFor",
 ];
 
 const expectedTwo = [
@@ -88,21 +83,16 @@ const expectedTwo = [
   "has two.calendar.year",
   "has two.calendar.yearMonthFromFields",
   "has two.calendar.yearOfWeek",
-  // lookup
-  "get two.calendar.dateFromFields",
-  "get two.calendar.fields",
   // CalendarFields
+  "get two.calendar.fields",
   "call two.calendar.fields",
   // ToTemporalTimeZoneSlotValue
   "has two.timeZone.getOffsetNanosecondsFor",
   "has two.timeZone.getPossibleInstantsFor",
   "has two.timeZone.id",
   // InterpretTemporalDateTimeFields
+  "get two.calendar.dateFromFields",
   "call two.calendar.dateFromFields",
-  // lookup
-  "get two.timeZone.getPossibleInstantsFor",
-  // InterpretISODateTimeOffset
-  "call two.timeZone.getPossibleInstantsFor",
 ];
 
 Temporal.ZonedDateTime.compare(
@@ -111,16 +101,24 @@ Temporal.ZonedDateTime.compare(
 );
 
 const expectedSpringForward = expectedOne.concat([
+  // InterpretISODateTimeOffset
+  "get one.timeZone.getPossibleInstantsFor",
+  "call one.timeZone.getPossibleInstantsFor",
   // DisambiguatePossibleInstants
   "get one.timeZone.getOffsetNanosecondsFor",
   "call one.timeZone.getOffsetNanosecondsFor",
   "call one.timeZone.getOffsetNanosecondsFor",
+  "get one.timeZone.getPossibleInstantsFor",
   "call one.timeZone.getPossibleInstantsFor",
 ], expectedTwo, [
+  // InterpretISODateTimeOffset
+  "get two.timeZone.getPossibleInstantsFor",
+  "call two.timeZone.getPossibleInstantsFor",
   // DisambiguatePossibleInstants
   "get two.timeZone.getOffsetNanosecondsFor",
   "call two.timeZone.getOffsetNanosecondsFor",
   "call two.timeZone.getOffsetNanosecondsFor",
+  "get two.timeZone.getPossibleInstantsFor",
   "call two.timeZone.getPossibleInstantsFor",
 ]);
 assert.compareArray(actual, expectedSpringForward, "order of operations converting property bags at skipped wall-clock time");
@@ -131,7 +129,15 @@ Temporal.ZonedDateTime.compare(
   { year: 2000, month: 10, day: 29, hour: 1, minute: 30, timeZone: timeZone2, calendar: calendar2 },
 );
 
-const expectedFallBack = expectedOne.concat(expectedTwo);
+const expectedFallBack = expectedOne.concat([
+  // InterpretISODateTimeOffset
+  "get one.timeZone.getPossibleInstantsFor",
+  "call one.timeZone.getPossibleInstantsFor",
+], expectedTwo, [
+  // InterpretISODateTimeOffset
+  "get two.timeZone.getPossibleInstantsFor",
+  "call two.timeZone.getPossibleInstantsFor",
+]);
 assert.compareArray(actual, expectedFallBack, "order of operations converting property bags at repeated wall-clock time");
 actual.splice(0); // clear
 

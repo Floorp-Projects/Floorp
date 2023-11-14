@@ -298,9 +298,6 @@ is{
         ZW{"Simbabve"}
         ZZ{"Óþekkt svæði"}
     }
-    Countries%chagos{
-        IO{"Chagos-eyjaklasinn"}
-    }
     Countries%short{
         HK{"Hong Kong"}
         MO{"Makaó"}

@@ -298,9 +298,6 @@ fr{
         ZW{"Zimbabwe"}
         ZZ{"région indéterminée"}
     }
-    Countries%chagos{
-        IO{"Archipel des Chagos"}
-    }
     Countries%short{
         GB{"R.-U."}
         HK{"Hong Kong"}

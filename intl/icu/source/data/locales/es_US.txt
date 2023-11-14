@@ -137,18 +137,6 @@ es_US{
                 yMMMEd{"EEE, d 'de' MMM 'de' y"}
                 yQQQ{"QQQ y"}
             }
-            dayPeriod{
-                stand-alone{
-                    abbreviated{
-                        am{"a. m."}
-                        pm{"p. m."}
-                    }
-                    narrow{
-                        am{"a. m."}
-                        pm{"p. m."}
-                    }
-                }
-            }
             intervalFormats{
                 H{
                     H{"HH–HH"}
@@ -171,6 +159,7 @@ es_US{
                 MMMd{
                     d{"d–d 'de' MMM"}
                 }
+                fallback{"{0} – {1}"}
                 h{
                     a{"h a – h a"}
                 }
@@ -292,6 +281,14 @@ es_US{
                 future{
                     one{"dentro de {0} domingo"}
                     other{"dentro de {0} domingos"}
+                }
+            }
+        }
+        tue{
+            relativeTime{
+                future{
+                    one{"dentro de {0} martes"}
+                    other{"dentro de {0} martes"}
                 }
             }
         }

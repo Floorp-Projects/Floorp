@@ -175,13 +175,9 @@ ln{
             "SHP",
             "Paunɛ ya Sántu elena",
         }
-        SLE{
-            "SLE",
-            "Leonɛ",
-        }
         SLL{
             "SLL",
-            "Leonɛ (1964—2022)",
+            "Leonɛ",
         }
         SOS{
             "SOS",

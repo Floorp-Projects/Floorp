@@ -41,7 +41,6 @@ class U_I18N_API ConversionRateInfo : public UMemory {
     CharString baseUnit;
     CharString factor;
     CharString offset;
-    CharString systems;
 };
 
 } // namespace units

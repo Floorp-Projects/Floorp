@@ -19,11 +19,8 @@ const expected = [
   "get options.overflow",
   "getOwnPropertyDescriptor options.extra",
   "get options.extra",
-  // lookup
-  "get this.calendar.fields",
-  "get this.calendar.mergeFields",
-  "get this.calendar.monthDayFromFields",
   // CalendarFields
+  "get this.calendar.fields",
   "call this.calendar.fields",
   // PrepareTemporalFields on receiver
   "get this.calendar.day",
@@ -44,8 +41,10 @@ const expected = [
   "get fields.year.valueOf",
   "call fields.year.valueOf",
   // CalendarMergeFields
+  "get this.calendar.mergeFields",
   "call this.calendar.mergeFields",
   // CalendarMonthDayFromFields
+  "get this.calendar.monthDayFromFields",
   "call this.calendar.monthDayFromFields",
   // inside Calendar.p.monthDayFromFields
   "get options.overflow.toString",

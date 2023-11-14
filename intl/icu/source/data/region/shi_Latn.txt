@@ -94,6 +94,7 @@ shi_Latn{
         IE{"irlanda"}
         IL{"israyil"}
         IN{"lhind"}
+        IO{"tamnaḍt tanglizit n ugaru ahindi"}
         IQ{"lɛiraq"}
         IR{"iran"}
         IS{"island"}
