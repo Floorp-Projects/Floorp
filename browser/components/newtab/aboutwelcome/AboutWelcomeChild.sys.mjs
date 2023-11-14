@@ -188,6 +188,8 @@ export class AboutWelcomeChild extends JSWindowActorChild {
     );
 
     let featureConfig = lazy.NimbusFeatures.aboutwelcome.getAllVariables();
+    featureConfig.needDefault = await this.sendQuery("AWPage:NEED_DEFAULT");
+    featureConfig.needPin = await this.sendQuery("AWPage:DOES_APP_NEED_PIN");
     if (featureConfig.languageMismatchEnabled) {
       featureConfig.appAndSystemLocaleInfo = await this.sendQuery(
         "AWPage:GET_APP_AND_SYSTEM_LOCALE_INFO"

@@ -12,6 +12,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
   BuiltInThemes: "resource:///modules/BuiltInThemes.sys.mjs",
   FxAccounts: "resource://gre/modules/FxAccounts.sys.mjs",
   LangPackMatcher: "resource://gre/modules/LangPackMatcher.sys.mjs",
+  ShellService: "resource:///modules/ShellService.sys.mjs",
   SpecialMessageActions:
     "resource://messaging-system/lib/SpecialMessageActions.sys.mjs",
 });
@@ -127,6 +128,16 @@ export class AboutWelcomeParent extends JSWindowActorParent {
     this.AboutWelcomeObserver = new AboutWelcomeObserver();
   }
 
+  // Static methods that calls into ShellService to check
+  // if Firefox is pinned or already default
+  static doesAppNeedPin() {
+    return lazy.ShellService.doesAppNeedPin();
+  }
+
+  static isDefaultBrowser() {
+    return lazy.ShellService.isDefaultBrowser();
+  }
+
   didDestroy() {
     if (this.AboutWelcomeObserver) {
       this.AboutWelcomeObserver.stop();
@@ -201,6 +212,14 @@ export class AboutWelcomeParent extends JSWindowActorParent {
           key => LIGHT_WEIGHT_THEMES[key] === activeTheme?.id
         );
         return themeShortName?.toLowerCase();
+      case "AWPage:DOES_APP_NEED_PIN":
+        return AboutWelcomeParent.doesAppNeedPin();
+      case "AWPage:NEED_DEFAULT":
+        // Only need to set default if we're supposed to check and not default.
+        return (
+          Services.prefs.getBoolPref("browser.shell.checkDefaultBrowser") &&
+          !AboutWelcomeParent.isDefaultBrowser()
+        );
       case "AWPage:WAIT_FOR_MIGRATION_CLOSE":
         // Support multiples types of migration: 1) content modal 2) old
         // migration modal 3) standalone content modal
