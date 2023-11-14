@@ -137,6 +137,7 @@ gsw{
         IL{"Israel"}
         IM{"Insle vo Män"}
         IN{"Indie"}
+        IO{"Britischs Territoorium im Indische Oozean"}
         IQ{"Iraak"}
         IR{"Iraan"}
         IS{"Iisland"}

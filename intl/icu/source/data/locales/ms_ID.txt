@@ -3,6 +3,26 @@
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 ms_ID{
     NumberElements{
+        adlm{
+            symbols{
+                timeSeparator{"."}
+            }
+        }
+        bali{
+            symbols{
+                timeSeparator{"."}
+            }
+        }
+        beng{
+            symbols{
+                timeSeparator{"."}
+            }
+        }
+        brah{
+            symbols{
+                timeSeparator{"."}
+            }
+        }
         latn{
             patterns{
                 accountingFormat{"¤#,##0.00"}
@@ -10,6 +30,16 @@ ms_ID{
             symbols{
                 decimal{","}
                 group{"."}
+                timeSeparator{"."}
+            }
+        }
+        olck{
+            symbols{
+                decimal{","}
+            }
+        }
+        sora{
+            symbols{
                 timeSeparator{"."}
             }
         }

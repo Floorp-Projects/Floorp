@@ -10,12 +10,11 @@ features: [Temporal]
 ---*/
 
 const expected = [
-  // lookup
-  "get this.timeZone.getOffsetNanosecondsFor",
-  "get this.timeZone.getPossibleInstantsFor",
   // GetPlainDateTimeFor
+  "get this.timeZone.getOffsetNanosecondsFor",
   "call this.timeZone.getOffsetNanosecondsFor",
   // GetInstantFor on preceding midnight
+  "get this.timeZone.getPossibleInstantsFor",
   "call this.timeZone.getPossibleInstantsFor",
 ];
 const actual = [];
@@ -60,8 +59,10 @@ actual.splice(0); // clear
 springForwardInstance.startOfDay();
 assert.compareArray(actual, expected.concat([
   // DisambiguatePossibleInstants
+  "get this.timeZone.getOffsetNanosecondsFor",
   "call this.timeZone.getOffsetNanosecondsFor",
   "call this.timeZone.getOffsetNanosecondsFor",
+  "get this.timeZone.getPossibleInstantsFor",
   "call this.timeZone.getPossibleInstantsFor",
 ]), "order of operations with preceding midnight at skipped wall-clock time");
 actual.splice(0); // clear

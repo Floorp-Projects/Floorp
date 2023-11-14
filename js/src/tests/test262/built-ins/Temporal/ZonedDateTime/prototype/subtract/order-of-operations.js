@@ -41,18 +41,17 @@ const expected = [
   "get duration.years",
   "get duration.years.valueOf",
   "call duration.years.valueOf",
-  // lookup
-  "get this.timeZone.getOffsetNanosecondsFor",
-  "get this.timeZone.getPossibleInstantsFor",
-  "get this.calendar.dateAdd",
   // AddZonedDateTime
+  "get this.timeZone.getOffsetNanosecondsFor",
   "call this.timeZone.getOffsetNanosecondsFor",
+  "get this.calendar.dateAdd",
   "call this.calendar.dateAdd",
   // ... inside Calendar.p.dateAdd
   "get options.overflow",
   "get options.overflow.toString",
   "call options.overflow.toString",
   // AddZonedDateTime again
+  "get this.timeZone.getPossibleInstantsFor",
   "call this.timeZone.getPossibleInstantsFor",
 ];
 const actual = [];

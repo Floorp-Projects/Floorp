@@ -518,20 +518,20 @@ public:
      * If this Locale is already in the maximal form, or not valid, or there is
      * no data available for maximization, the Locale will be unchanged.
      *
-     * For example, "sh" cannot be maximized, since there is no
+     * For example, "und-Zzzz" cannot be maximized, since there is no
      * reasonable maximization.
      *
      * Examples:
      *
-     * "und_Zzzz" maximizes to "en_Latn_US"
-     *
      * "en" maximizes to "en_Latn_US"
      *
-     * "de" maximizes to "de_Latn_DE"
+     * "de" maximizes to "de_Latn_US"
      *
      * "sr" maximizes to "sr_Cyrl_RS"
      *
-     * "zh_Hani" maximizes to "zh_Hani_CN"
+     * "sh" maximizes to "sr_Latn_RS" (Note this will not reverse.)
+     *
+     * "zh_Hani" maximizes to "zh_Hans_CN" (Note this will not reverse.)
      *
      * @param status  error information if maximizing this Locale failed.
      *                If this Locale is not well-formed, the error code is
@@ -984,10 +984,7 @@ public:
     static const char* const* U_EXPORT2 getISOCountries();
 
     /**
-     * Returns a list of all unique language codes defined in ISO 639.
-     * They can be 2 or 3 letter codes, as defined by
-     * <a href="https://www.ietf.org/rfc/bcp/bcp47.html#section-2.2.1">
-     * BCP 47, section 2.2.1</a>. This is a pointer
+     * Gets a list of all available language codes defined in ISO 639.  This is a pointer
      * to an array of pointers to arrays of char.  All of these pointers are owned
      * by ICU-- do not delete them, and do not write through them.  The array is
      * terminated with a null pointer.
@@ -1113,15 +1110,6 @@ protected: /* only protected for testing purposes. DO NOT USE. */
      * @internal
      */
     void setFromPOSIXID(const char *posixID);
-    /**
-     * Minimize the subtags for this Locale, per the algorithm described
-     * @param favorScript favor to keep script if true, to keep region if false.
-     * @param status  error information if maximizing this Locale failed.
-     *                If this Locale is not well-formed, the error code is
-     *                U_ILLEGAL_ARGUMENT_ERROR.
-     * @internal
-     */
-    void minimizeSubtags(bool favorScript, UErrorCode& status);
 #endif  /* U_HIDE_INTERNAL_API */
 
 private:

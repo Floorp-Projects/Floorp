@@ -45,7 +45,7 @@ ca{
         AO{"Angola"}
         AQ{"Antàrtida"}
         AR{"Argentina"}
-        AS{"Samoa Americana"}
+        AS{"Samoa Nord-americana"}
         AT{"Àustria"}
         AU{"Austràlia"}
         AW{"Aruba"}
@@ -68,12 +68,12 @@ ca{
         BR{"Brasil"}
         BS{"Bahames"}
         BT{"Bhutan"}
-        BV{"Illa Bouvet"}
+        BV{"Bouvet"}
         BW{"Botswana"}
         BY{"Belarús"}
         BZ{"Belize"}
         CA{"Canadà"}
-        CC{"Illes Cocos (Keeling)"}
+        CC{"Illes Cocos"}
         CD{"Congo - Kinshasa"}
         CF{"República Centreafricana"}
         CG{"Congo - Brazzaville"}
@@ -135,7 +135,7 @@ ca{
         GW{"Guinea Bissau"}
         GY{"Guyana"}
         HK{"Hong Kong (RAE Xina)"}
-        HM{"Illes Heard i McDonald"}
+        HM{"Illa Heard i Illes McDonald"}
         HN{"Hondures"}
         HR{"Croàcia"}
         HT{"Haití"}
@@ -189,7 +189,7 @@ ca{
         MM{"Myanmar (Birmània)"}
         MN{"Mongòlia"}
         MO{"Macau (RAE Xina)"}
-        MP{"Illes Marianes del Nord"}
+        MP{"Illes Mariannes Septentrionals"}
         MQ{"Martinica"}
         MR{"Mauritània"}
         MS{"Montserrat"}
@@ -234,7 +234,7 @@ ca{
         RS{"Sèrbia"}
         RU{"Rússia"}
         RW{"Ruanda"}
-        SA{"Aràbia Saudí"}
+        SA{"Aràbia Saudita"}
         SB{"Illes Salomó"}
         SC{"Seychelles"}
         SD{"Sudan"}
@@ -297,9 +297,6 @@ ca{
         ZM{"Zàmbia"}
         ZW{"Zimbàbue"}
         ZZ{"regió desconeguda"}
-    }
-    Countries%chagos{
-        IO{"Arxipèlag de Chagos"}
     }
     Countries%short{
         GB{"RU"}

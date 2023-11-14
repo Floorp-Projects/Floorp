@@ -171,13 +171,9 @@ luy{
             "SHP",
             "Pauni ya Santahelena",
         }
-        SLE{
-            "SLE",
-            "Leoni",
-        }
         SLL{
             "SLL",
-            "Leoni (1964—2022)",
+            "Leoni",
         }
         SOS{
             "SOS",

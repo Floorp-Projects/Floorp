@@ -39,7 +39,4 @@ sr_Cyrl_BA{
             mymr{"мјанмарске цифре"}
         }
     }
-    characterLabelPattern{
-        facing-left{"{0} гледа улијево"}
-    }
 }

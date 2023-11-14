@@ -21,11 +21,11 @@ es_DO{
                 "d 'de' MMMM 'de' y G",
                 "dd/MM/y G",
                 "d/M/y GGGGG",
+                "{1} {0}",
                 "{1}, {0}",
                 "{1}, {0}",
-                "{1}, {0}",
-                "{1}, {0}",
-                "{1}, {0}",
+                "{1} {0}",
+                "{1} {0}",
             }
             DateTimeSkeletons{
                 "ahmmsszzzz",
@@ -39,13 +39,30 @@ es_DO{
             }
         }
         gregorian{
-            AmPmMarkers{
-                "a. m.",
-                "p. m.",
+            DateTimePatterns{
+                "h:mm:ss a zzzz",
+                "h:mm:ss a z",
+                "h:mm:ss a",
+                "h:mm a",
+                "EEEE, d 'de' MMMM 'de' y",
+                "d 'de' MMMM 'de' y",
+                "d MMM y",
+                "d/M/yy",
+                "{1} {0}",
+                "{1}, {0}",
+                "{1}, {0}",
+                "{1} {0}",
+                "{1}, {0}",
             }
-            AmPmMarkersAbbr{
-                "a. m.",
-                "p. m.",
+            DateTimeSkeletons{
+                "ahmmsszzzz",
+                "ahmmssz",
+                "ahmmss",
+                "ahmm",
+                "yMMMMEEEEd",
+                "yMMMMd",
+                "yMMMd",
+                "yyMd",
             }
             availableFormats{
                 yMMMd{"d MMM 'de' y"}
@@ -61,18 +78,8 @@ es_DO{
                     }
                 }
                 stand-alone{
-                    abbreviated{
-                        am{"a. m."}
-                        pm{"p. m."}
-                    }
                     narrow{
-                        am{"a. m."}
                         noon{"m."}
-                        pm{"p. m."}
-                    }
-                    wide{
-                        am{"a. m."}
-                        pm{"p. m."}
                     }
                 }
             }
@@ -84,6 +91,14 @@ es_DO{
             }
             quarters{
                 format{
+                    abbreviated{
+                        "Q1",
+                        "Q2",
+                        "Q3",
+                        "Q4",
+                    }
+                }
+                stand-alone{
                     abbreviated{
                         "Q1",
                         "Q2",

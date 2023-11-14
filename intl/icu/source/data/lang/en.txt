@@ -111,7 +111,6 @@ en{
         bjn{"Banjar"}
         bkm{"Kom"}
         bla{"Siksiká"}
-        blo{"Anii"}
         blt{"Tai Dam"}
         bm{"Bambara"}
         bn{"Bangla"}
@@ -367,7 +366,6 @@ en{
         kv{"Komi"}
         kw{"Cornish"}
         kwk{"Kwakʼwala"}
-        kxv{"Kuvi"}
         ky{"Kyrgyz"}
         la{"Latin"}
         lad{"Ladino"}
@@ -422,7 +420,7 @@ en{
         mgo{"Metaʼ"}
         mh{"Marshallese"}
         mi{"Māori"}
-        mic{"Mi'kmaw"}
+        mic{"Mi'kmaq"}
         min{"Minangkabau"}
         mk{"Macedonian"}
         ml{"Malayalam"}
@@ -667,7 +665,6 @@ en{
         vi{"Vietnamese"}
         vls{"West Flemish"}
         vmf{"Main-Franconian"}
-        vmw{"Makhuwa"}
         vo{"Volapük"}
         vot{"Votic"}
         vro{"Võro"}
@@ -683,7 +680,6 @@ en{
         xal{"Kalmyk"}
         xh{"Xhosa"}
         xmf{"Mingrelian"}
-        xnr{"Kangri"}
         xog{"Soga"}
         yao{"Yao"}
         yap{"Yapese"}
@@ -963,11 +959,11 @@ en{
             gregorian{"Gregorian Calendar"}
             hebrew{"Hebrew Calendar"}
             indian{"Indian National Calendar"}
-            islamic{"Hijri Calendar"}
-            islamic-civil{"Hijri Calendar (tabular, civil epoch)"}
-            islamic-rgsa{"Hijri Calendar (Saudi Arabia, sighting)"}
-            islamic-tbla{"Hijri Calendar (tabular, astronomical epoch)"}
-            islamic-umalqura{"Hijri Calendar (Umm al-Qura)"}
+            islamic{"Islamic Calendar"}
+            islamic-civil{"Islamic Calendar (tabular, civil epoch)"}
+            islamic-rgsa{"Islamic Calendar (Saudi Arabia, sighting)"}
+            islamic-tbla{"Islamic Calendar (tabular, astronomical epoch)"}
+            islamic-umalqura{"Islamic Calendar (Umm al-Qura)"}
             iso8601{"ISO-8601 Calendar"}
             japanese{"Japanese Calendar"}
             persian{"Persian Calendar"}
@@ -1366,8 +1362,6 @@ en{
         compatibility{"{0} — compatibility"}
         enclosed{"{0} — enclosed"}
         extended{"{0} — extended"}
-        facing-left{"{0} facing left"}
-        facing-right{"{0} facing right"}
         historic{"{0} — historic"}
         miscellaneous{"{0} — miscellaneous"}
         other{"{0} — other"}

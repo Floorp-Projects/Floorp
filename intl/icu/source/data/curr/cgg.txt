@@ -175,13 +175,9 @@ cgg{
             "SHP",
             "Paundi ya Senti Herena",
         }
-        SLE{
-            "SLE",
-            "Leone",
-        }
         SLL{
             "SLL",
-            "Leone (1964—2022)",
+            "Leone",
         }
         SOS{
             "SOS",

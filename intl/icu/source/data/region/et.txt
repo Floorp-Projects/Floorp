@@ -64,7 +64,7 @@ et{
         BM{"Bermuda"}
         BN{"Brunei"}
         BO{"Boliivia"}
-        BQ{"Kariibi Madalmaad"}
+        BQ{"Hollandi Kariibi mere saared"}
         BR{"Brasiilia"}
         BS{"Bahama"}
         BT{"Bhutan"}
@@ -78,14 +78,13 @@ et{
         CF{"Kesk-Aafrika Vabariik"}
         CG{"Kongo Vabariik"}
         CH{"Šveits"}
-        CI{"Elevandiluurannik"}
+        CI{"Côte d’Ivoire"}
         CK{"Cooki saared"}
         CL{"Tšiili"}
         CM{"Kamerun"}
         CN{"Hiina"}
         CO{"Colombia"}
         CP{"Clippertoni saar"}
-        CQ{"Sark"}
         CR{"Costa Rica"}
         CU{"Kuuba"}
         CV{"Roheneemesaared"}
@@ -299,9 +298,6 @@ et{
         ZW{"Zimbabwe"}
         ZZ{"tundmatu piirkond"}
     }
-    Countries%chagos{
-        IO{"Chagose saared"}
-    }
     Countries%short{
         GB{"ÜK"}
         HK{"Hongkong"}
@@ -313,7 +309,7 @@ et{
     Countries%variant{
         CD{"Kongo-Kinshasa"}
         CG{"Kongo-Brazzaville"}
-        CI{"Côte d’Ivoire"}
+        CI{"Elevandiluurannik"}
         CZ{"Tšehhi Vabariik"}
         FK{"Falklandi saared (Malviini saared)"}
         NZ{"Aotearoa Uus-Meremaa"}

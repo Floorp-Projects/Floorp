@@ -203,13 +203,9 @@ sw_KE{
             "SGD",
             "Dola ya Singapoo",
         }
-        SLE{
-            "SLE",
-            "Leoni ya Siera Leoni",
-        }
         SLL{
             "SLL",
-            "Leoni ya Siera Leoni (1964—2022)",
+            "Leoni ya Siera Leoni",
         }
         SSP{
             "SSP",
@@ -462,7 +458,7 @@ sw_KE{
             other{"riali za Omani"}
         }
         PAB{
-            one{"balboa za Panama"}
+            one{"balboa ya Panama"}
             other{"balboa za Panama"}
         }
         PKR{
@@ -497,13 +493,9 @@ sw_KE{
             one{"dola ya Singapoo"}
             other{"dola za Singapoo"}
         }
-        SLE{
+        SLL{
             one{"leoni ya Siera Leoni"}
             other{"leoni za Siera Leoni"}
-        }
-        SLL{
-            one{"leoni ya Siera Leoni (1964—2022)"}
-            other{"leoni za Siera Leoni (1964—2022)"}
         }
         SSP{
             one{"pauni ya Sudani Kusini"}

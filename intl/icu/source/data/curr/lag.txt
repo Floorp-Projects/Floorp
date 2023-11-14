@@ -171,13 +171,9 @@ lag{
             "SHP",
             "Páundi ya Mʉtakatíifu Heléena",
         }
-        SLE{
-            "SLE",
-            "Leóoni",
-        }
         SLL{
             "SLL",
-            "Leóoni (1964—2022)",
+            "Leóoni",
         }
         SOS{
             "SOS",

@@ -61,6 +61,21 @@ es_GT{
                 dnam{"hora"}
             }
         }
+        electric{
+            volt{
+                dnam{"voltios"}
+            }
+        }
+        power{
+            watt{
+                dnam{"vatios"}
+            }
+        }
+        volume{
+            acre-foot{
+                dnam{"acre pie"}
+            }
+        }
     }
     unitsShort{
         electric{

@@ -70,7 +70,7 @@ sv{
         BT{"Bhutan"}
         BV{"Bouvetön"}
         BW{"Botswana"}
-        BY{"Belarus"}
+        BY{"Vitryssland"}
         BZ{"Belize"}
         CA{"Kanada"}
         CC{"Kokosöarna"}
@@ -78,7 +78,7 @@ sv{
         CF{"Centralafrikanska republiken"}
         CG{"Kongo-Brazzaville"}
         CH{"Schweiz"}
-        CI{"Elfenbenskusten"}
+        CI{"Côte d’Ivoire"}
         CK{"Cooköarna"}
         CL{"Chile"}
         CM{"Kamerun"}
@@ -298,9 +298,6 @@ sv{
         ZW{"Zimbabwe"}
         ZZ{"okänd region"}
     }
-    Countries%chagos{
-        IO{"Chagosöarna"}
-    }
     Countries%short{
         HK{"Hongkong"}
         MO{"Macao"}
@@ -310,7 +307,6 @@ sv{
     Countries%variant{
         CD{"Demokratiska republiken Kongo"}
         CG{"Republiken Kongo"}
-        CI{"Côte d’Ivoire"}
         NZ{"Aotearoa Nya Zeeland"}
         TL{"Timor-Leste"}
     }

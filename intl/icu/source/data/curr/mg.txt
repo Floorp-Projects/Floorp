@@ -175,13 +175,9 @@ mg{
             "SHP",
             "livre de Sainte-Hélène",
         }
-        SLE{
-            "SLE",
-            "Leone",
-        }
         SLL{
             "SLL",
-            "Leone (1964—2022)",
+            "Leone",
         }
         SOS{
             "SOS",

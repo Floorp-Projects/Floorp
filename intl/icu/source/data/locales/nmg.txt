@@ -4,8 +4,9 @@
 nmg{
     AuxExemplarCharacters{"[q x z]"}
     ExemplarCharacters{
-        "[aáâǎäā b ɓ c d eéêěē ǝ{ǝ́}{ǝ̂}{ǝ̌}{ǝ̄} ɛ{ɛ́}{ɛ̂}{ɛ̌}{ɛ̄} f g h iíîǐïī j k l"
-        " m nń ŋ oóôǒöō ɔ{ɔ́}{ɔ̂}{ɔ̌}{ɔ̄} p rŕ s t uúûǔū v w y]"
+        "[a á â ǎ ä ā b ɓ c d e é ê ě ē ǝ {ǝ\u0301} {ǝ\u0302} {ǝ\u030C} {ǝ\u0304} ɛ {"
+        "ɛ\u0301} {ɛ\u0302} {ɛ\u030C} {ɛ\u0304} f g h i í î ǐ ï ī j k l m n ń ŋ o ó ô"
+        " ǒ ö ō ɔ {ɔ\u0301} {ɔ\u0302} {ɔ\u030C} {ɔ\u0304} p r ŕ s t u ú û ǔ ū v w y]"
     }
     ExemplarCharactersIndex{"[A B Ɓ C D E Ǝ Ɛ F G H I J K L M N Ŋ O Ɔ P R S T U V W Y]"}
     ExemplarCharactersNumbers{"[  \\- ‑ , % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
@@ -13,6 +14,8 @@ nmg{
         latn{
             patterns{
                 currencyFormat{"#,##0.00 ¤"}
+                decimalFormat{"#,##0.###"}
+                percentFormat{"#,##0%"}
             }
             symbols{
                 decimal{","}
@@ -49,10 +52,15 @@ nmg{
             }
             availableFormats{
                 Ed{"E d"}
+                Hm{"HH:mm"}
+                Hms{"HH:mm:ss"}
+                M{"L"}
                 MEd{"E d/M"}
+                MMM{"LLL"}
                 MMMEd{"E d MMM"}
                 MMMd{"d MMM"}
                 Md{"d/M"}
+                d{"d"}
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
                 ms{"m:ss"}
@@ -68,6 +76,10 @@ nmg{
             }
         }
         gregorian{
+            AmPmMarkers{
+                "maná",
+                "kugú",
+            }
             AmPmMarkersAbbr{
                 "maná",
                 "kugú",
@@ -99,13 +111,19 @@ nmg{
             }
             availableFormats{
                 Ed{"E d"}
+                Hm{"HH:mm"}
+                Hms{"HH:mm:ss"}
+                M{"L"}
                 MEd{"E d/M"}
+                MMM{"LLL"}
                 MMMEd{"E d MMM"}
                 MMMd{"d MMM"}
                 Md{"d/M"}
+                d{"d"}
                 hm{"h:mm a"}
                 hms{"h:mm:ss a"}
                 ms{"m:ss"}
+                y{"y"}
                 yM{"M/y"}
                 yMEd{"E d/M/y"}
                 yMMM{"MMM y"}
@@ -211,6 +229,7 @@ nmg{
     delimiters{
         alternateQuotationEnd{"»"}
         alternateQuotationStart{"«"}
+        quotationEnd{"”"}
         quotationStart{"„"}
     }
     fields{

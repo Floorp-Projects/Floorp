@@ -33,10 +33,8 @@ const expected = [
   "has date.calendar.year",
   "has date.calendar.yearMonthFromFields",
   "has date.calendar.yearOfWeek",
-  // lookup
-  "get date.calendar.dateFromFields",
-  "get date.calendar.fields",
   // ToTemporalDate → CalendarFields
+  "get date.calendar.fields",
   "call date.calendar.fields",
   // ToTemporalDate → PrepareTemporalFields
   "get date.day",
@@ -52,6 +50,7 @@ const expected = [
   "get date.year.valueOf",
   "call date.year.valueOf",
   // ToTemporalDate → CalendarDateFromFields
+  "get date.calendar.dateFromFields",
   "call date.calendar.dateFromFields",
   // ToTemporalDuration
   "get duration.days",

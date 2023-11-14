@@ -171,13 +171,9 @@ sbp{
             "SHP",
             "Ihela ya Santahelena",
         }
-        SLE{
-            "SLE",
-            "Ihela ya Siela Liyoni",
-        }
         SLL{
             "SLL",
-            "Ihela ya Siela Liyoni (1964—2022)",
+            "Ihela ya Siela Liyoni",
         }
         SOS{
             "SOS",

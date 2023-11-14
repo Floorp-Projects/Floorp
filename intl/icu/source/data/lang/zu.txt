@@ -59,7 +59,6 @@ zu{
         bem{"isi-Bemba"}
         bez{"isi-Bena"}
         bg{"isi-Bulgari"}
-        bgc{"isi-Haryanvi"}
         bgn{"isi-Western Balochi"}
         bho{"isi-Bhojpuri"}
         bi{"isi-Bislama"}
@@ -351,7 +350,6 @@ zu{
         pt_PT{"isi-European Portuguese"}
         qu{"isi-Quechua"}
         quc{"isi-Kʼicheʼ"}
-        raj{"isi-Rajasthani"}
         rap{"isi-Rapanui"}
         rar{"isi-Rarotongan"}
         rhg{"Rohingya"}
@@ -681,9 +679,11 @@ zu{
             gregorian{"ikhalenda lesi-Gregorian"}
             hebrew{"Ikhalenda lesi-Hebrew"}
             indian{"i-Indian National Calender"}
-            islamic{"Ikhalenda lesi-Hijri"}
-            islamic-civil{"Ikhalenda lesiHijri (tabular, civil epoch)"}
-            islamic-umalqura{"Ikhalenda lesiHijri (Umm al-Qura))"}
+            islamic{"Ikhalenda lesi-Islamic"}
+            islamic-civil{"i-Islamic-Civil Calendar"}
+            islamic-rgsa{"Ikhalenda yesi-Islamic (Saudi Arabia, sighting)"}
+            islamic-tbla{"Ikhalenda yesi-Islamic (tabular, astronomical epoch)"}
+            islamic-umalqura{"Ikhalenda yesi-Islamic (Umm al-Qura)"}
             iso8601{"Ikhalenda le-ISO-8601"}
             japanese{"Ikhalenda lesi-Japanese"}
             persian{"Ikhalenda lesi-Persian"}
@@ -963,6 +963,7 @@ zu{
     }
     characterLabelPattern{
         all{"{0} — All"}
+        category-list{"{0}: {1}"}
         compatibility{"{0} — Kungasebenziswa"}
         enclosed{"{0} — kakiwe"}
         extended{"{0} — nwetshiwe"}
@@ -979,5 +980,10 @@ zu{
         language{"Ulimi: {0}"}
         script{"Umbhalo: {0}"}
         territory{"Isiyingi: {0}"}
+    }
+    localeDisplayPattern{
+        keyTypePattern{"{0}: {1}"}
+        pattern{"{0} ({1})"}
+        separator{"{0}, {1}"}
     }
 }

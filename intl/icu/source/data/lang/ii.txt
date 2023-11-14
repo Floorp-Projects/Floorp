@@ -28,6 +28,7 @@ ii{
     Types{
         calendar{
             gregorian{"ꄉꉻꃅꑍ"}
+            islamic{"ꑳꌦꇂꑍꉖ"}
         }
     }
     codePatterns{

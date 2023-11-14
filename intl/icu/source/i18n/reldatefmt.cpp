@@ -701,7 +701,7 @@ static UBool getDateTimePattern(
     return getStringByIndex(topLevel.getAlias(), dateTimeFormatOffset, result, status);
 }
 
-template<>
+template<> 
 const RelativeDateTimeCacheData *LocaleCacheKey<RelativeDateTimeCacheData>::createObject(const void * /*unused*/, UErrorCode &status) const {
     const char *localeId = fLoc.getName();
     LocalUResourceBundlePointer topLevel(ures_open(nullptr, localeId, &status));
@@ -803,10 +803,6 @@ RelativeDateTimeFormatter::RelativeDateTimeFormatter(
         fOptBreakIterator(nullptr),
         fLocale(locale) {
     if (U_FAILURE(status)) {
-        return;
-    }
-    if (styl < 0 || UDAT_STYLE_COUNT <= styl) {
-        status = U_ILLEGAL_ARGUMENT_ERROR;
         return;
     }
     if ((capitalizationContext >> 8) != UDISPCTX_TYPE_CAPITALIZATION) {
@@ -1031,10 +1027,6 @@ void RelativeDateTimeFormatter::formatNumericImpl(
     if (U_FAILURE(status)) {
         return;
     }
-    if (unit < 0 || UDAT_REL_UNIT_COUNT <= unit) {
-        status = U_ILLEGAL_ARGUMENT_ERROR;
-        return;
-    }
     UDateDirection direction = UDAT_DIRECTION_NEXT;
     if (std::signbit(offset)) { // needed to handle -0.0
         direction = UDAT_DIRECTION_LAST;
@@ -1103,9 +1095,7 @@ void RelativeDateTimeFormatter::formatAbsoluteImpl(
     if (U_FAILURE(status)) {
         return;
     }
-    if ((unit < 0 || UDAT_ABSOLUTE_UNIT_COUNT <= unit) ||
-        (direction < 0 || UDAT_DIRECTION_COUNT <= direction) ||
-        (unit == UDAT_ABSOLUTE_NOW && direction != UDAT_DIRECTION_PLAIN)) {
+    if (unit == UDAT_ABSOLUTE_NOW && direction != UDAT_DIRECTION_PLAIN) {
         status = U_ILLEGAL_ARGUMENT_ERROR;
         return;
     }

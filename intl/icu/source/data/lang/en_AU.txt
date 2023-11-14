@@ -28,4 +28,7 @@ en_AU{
             ethiopic{"Ethiopian Calendar"}
         }
     }
+    Variants{
+        SIMPLE{"SIMPLE"}
+    }
 }

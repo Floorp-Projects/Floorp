@@ -298,9 +298,6 @@ az{
         ZW{"Zimbabve"}
         ZZ{"Naməlum Region"}
     }
-    Countries%chagos{
-        IO{"Çaqos arxipelaqı"}
-    }
     Countries%short{
         GB{"BK"}
         HK{"Honq Konq"}

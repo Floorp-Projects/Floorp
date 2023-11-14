@@ -2,22 +2,40 @@
 // License & terms of use: http://www.unicode.org/copyright.html
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 xh{
+    durationUnits{
+        hm{"h:mm"}
+        hms{"h:mm:ss"}
+        ms{"m:ss"}
+    }
     units{
+        compound{
+            per{"{0}/{1}"}
+            times{"{0}⋅{1}"}
+        }
         coordinate{
-            dnam{"cardinal direction"}
-            east{"{0} east"}
-            north{"{0} north"}
-            south{"{0} south"}
+            dnam{"direction"}
+            east{"{0}E"}
+            north{"{0}N"}
+            south{"{0}S"}
+            west{"{0}W"}
         }
     }
     unitsNarrow{
+        compound{
+            per{"{0}/{1}"}
+            times{"{0}⋅{1}"}
+        }
         coordinate{
+            dnam{"direction"}
+            east{"{0}E"}
+            north{"{0}N"}
             south{"{0}S"}
+            west{"{0}W"}
         }
     }
     unitsShort{
         coordinate{
-            south{"{0} S"}
+            dnam{"direction"}
         }
     }
 }

@@ -93,6 +93,7 @@ agq{
         IE{"Aelɨ̀lân"}
         IL{"Ezɨ̀lɛ̂"}
         IN{"Endìa"}
+        IO{"Dɨŋò kɨ dzughùnstòʔ kɨ Endìa kɨ Bɨ̀letì kò"}
         IQ{"Èlâkɨ̀"}
         IR{"Èlân"}
         IS{"Aesɨ̀lân"}

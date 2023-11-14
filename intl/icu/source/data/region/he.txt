@@ -298,9 +298,6 @@ he{
         ZW{"זימבבואה"}
         ZZ{"אזור לא ידוע"}
     }
-    Countries%chagos{
-        IO{"ארכיפלג צ׳גוס"}
-    }
     Countries%short{
         HK{"הונג קונג"}
         MO{"מקאו"}

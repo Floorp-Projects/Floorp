@@ -3,4 +3,9 @@
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 en_GB{
     %%Parent{"en_001"}
+    durationUnits{
+        hm{"h:mm"}
+        hms{"h:mm:ss"}
+        ms{"m:ss"}
+    }
 }

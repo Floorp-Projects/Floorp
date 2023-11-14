@@ -194,7 +194,6 @@ const allUnits = [
     "pressure-millimeter-ofhg",
     "pressure-pascal",
     "pressure-pound-force-per-square-inch",
-    "speed-beaufort",
     "speed-kilometer-per-hour",
     "speed-knot",
     "speed-meter-per-second",

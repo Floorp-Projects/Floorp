@@ -745,15 +745,6 @@ enum class LikelySubtags : bool { Add, Remove };
 
 // Return true iff the locale is already maximized resp. minimized.
 static bool HasLikelySubtags(LikelySubtags aLikelySubtags, const Locale& aTag) {
-  // ICU/CLDR doesn't have any likely subtags data for locales whose language
-  // subtag has more than three characters, so we can return early here.
-  //
-  // This early return also avoids hitting the following ICU bug:
-  // https://unicode-org.atlassian.net/browse/ICU-22547
-  if (aTag.Language().Length() > 3) {
-    return true;
-  }
-
   // The locale is already maximized if the language, script, and region
   // subtags are present and no placeholder subtags ("und", "Zzzz", "ZZ") are
   // used.

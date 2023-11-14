@@ -298,9 +298,6 @@ ms{
         ZW{"Zimbabwe"}
         ZZ{"Wilayah Tidak Diketahui"}
     }
-    Countries%chagos{
-        IO{"Kepulauan Chagos"}
-    }
     Countries%short{
         GB{"UK"}
         HK{"Hong Kong"}

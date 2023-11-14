@@ -18,19 +18,19 @@ eo{
         bn{"bengala"}
         bo{"tibeta"}
         br{"bretona"}
-        bs{"bosna"}
+        bs{"bosnia"}
         ca{"kataluna"}
         co{"korsika"}
         cs{"ĉeĥa"}
         cy{"kimra"}
         da{"dana"}
         de{"germana"}
-        dv{"maldiva"}
+        dv{"mahla"}
         dz{"dzonko"}
         efi{"ibibioefika"}
         el{"greka"}
         en{"angla"}
-        eo{"Esperanto"}
+        eo{"esperanto"}
         es{"hispana"}
         et{"estona"}
         eu{"eŭska"}
@@ -40,10 +40,9 @@ eo{
         fj{"fiĝia"}
         fo{"feroa"}
         fr{"franca"}
-        fy{"okcident-frisa"}
+        fy{"frisa"}
         ga{"irlanda"}
-        gaa{"gaa"}
-        gd{"skot-gaela"}
+        gd{"gaela"}
         gl{"galega"}
         gn{"gvarania"}
         gu{"guĝarata"}
@@ -55,9 +54,9 @@ eo{
         ht{"haitia kreola"}
         hu{"hungara"}
         hy{"armena"}
-        ia{"Interlingvao"}
+        ia{"interlingvao"}
         id{"indonezia"}
-        ie{"Interlingveo"}
+        ie{"okcidentalo"}
         ik{"eskima"}
         is{"islanda"}
         it{"itala"}
@@ -99,10 +98,10 @@ eo{
         or{"orijo"}
         pa{"panĝaba"}
         pl{"pola"}
-        ps{"paŝtua"}
+        ps{"paŝtoa"}
         pt{"portugala"}
-        pt_BR{"portugala brazila"}
-        pt_PT{"portugala eŭropa"}
+        pt_BR{"brazilportugala"}
+        pt_PT{"eŭropportugala"}
         qu{"keĉua"}
         rm{"romanĉa"}
         rn{"burunda"}
@@ -135,7 +134,7 @@ eo{
         tl{"tagaloga"}
         tlh{"klingona"}
         tn{"cvana"}
-        to{"tongana"}
+        to{"tongaa"}
         tr{"turka"}
         ts{"conga"}
         tt{"tatara"}
@@ -145,7 +144,7 @@ eo{
         ur{"urduo"}
         uz{"uzbeka"}
         vi{"vjetnama"}
-        vo{"Volapuko"}
+        vo{"volapuko"}
         wo{"volofa"}
         xh{"ksosa"}
         yi{"jida"}
@@ -156,13 +155,5 @@ eo{
         zh_Hant{"ĉina tradicia"}
         zu{"zulua"}
         zxx{"nelingvaĵo"}
-    }
-    Scripts{
-        Latn{"latina"}
-    }
-    codePatterns{
-        language{"Lingvo: {0}"}
-        script{"Skribsistemo: {0}"}
-        territory{"Regiono: {0}"}
     }
 }

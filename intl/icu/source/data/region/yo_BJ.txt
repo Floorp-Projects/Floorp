@@ -33,7 +33,7 @@ yo_BJ{
         BL{"Ìlú Bátílɛ́mì"}
         BN{"Búrúnɛ́lì"}
         BO{"Bɔ̀lífíyà"}
-        BQ{"Kàríbíánì ti Nɛ́dálándì"}
+        BQ{"Káríbíánì ti Nɛ́dálándì"}
         BW{"Bɔ̀tìsúwánà"}
         BZ{"Bèlísɛ̀"}
         CH{"switishilandi"}
@@ -107,16 +107,14 @@ yo_BJ{
         ZW{"Shimibabe"}
         ZZ{"Àgbègbè àìmɔ̀"}
     }
-    Countries%biot{
-        IO{"Àlà-ilɛ̀ Bírítéènì ní Etíkun Índíà"}
-    }
-    Countries%chagos{
-        IO{"Àkójɔpɔ̀ Àwɔn Erékùshù Shágòsì"}
-    }
     Countries%short{
+        GB{"Gɛ̀ɛ́sì"}
         PS{"Palɛsítínì"}
+        US{"Amɛrikà"}
     }
     Countries%variant{
+        CZ{"Shɛ́ɛ́kì"}
         TL{"Ìlà Òòrùn Tímɔ̀"}
+        TR{"Tɔɔki"}
     }
 }

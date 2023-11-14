@@ -175,13 +175,9 @@ bas{
             "SHP",
             "Paùnd hèlenà",
         }
-        SLE{
-            "SLE",
-            "Lèonɛ̀",
-        }
         SLL{
             "SLL",
-            "Lèonɛ̀ (1964—2022)",
+            "Lèonɛ̀",
         }
         SOS{
             "SOS",

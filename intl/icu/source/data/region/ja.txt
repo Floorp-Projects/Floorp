@@ -298,9 +298,6 @@ ja{
         ZW{"ジンバブエ"}
         ZZ{"不明な地域"}
     }
-    Countries%chagos{
-        IO{"チャゴス諸島"}
-    }
     Countries%short{
         GB{"英国"}
         HK{"香港"}

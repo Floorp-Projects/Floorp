@@ -56,11 +56,11 @@ static const int32_t gOffsets[] = {
     429,
     430,
     436,
-    447,
-    452,
-    456,
-    458,
-    492
+    446,
+    451,
+    455,
+    457,
+    491
 };
 
 static const int32_t kCurrencyOffset = 5;
@@ -532,7 +532,6 @@ static const char * const gSubTypes[] = {
     "watt",
     "atmosphere",
     "bar",
-    "gasoline-energy-density",
     "hectopascal",
     "inch-ofhg",
     "kilopascal",
@@ -1688,76 +1687,68 @@ MeasureUnit MeasureUnit::getBar() {
     return MeasureUnit(18, 1);
 }
 
-MeasureUnit *MeasureUnit::createGasolineEnergyDensity(UErrorCode &status) {
+MeasureUnit *MeasureUnit::createHectopascal(UErrorCode &status) {
     return MeasureUnit::create(18, 2, status);
 }
 
-MeasureUnit MeasureUnit::getGasolineEnergyDensity() {
+MeasureUnit MeasureUnit::getHectopascal() {
     return MeasureUnit(18, 2);
 }
 
-MeasureUnit *MeasureUnit::createHectopascal(UErrorCode &status) {
+MeasureUnit *MeasureUnit::createInchHg(UErrorCode &status) {
     return MeasureUnit::create(18, 3, status);
 }
 
-MeasureUnit MeasureUnit::getHectopascal() {
+MeasureUnit MeasureUnit::getInchHg() {
     return MeasureUnit(18, 3);
 }
 
-MeasureUnit *MeasureUnit::createInchHg(UErrorCode &status) {
+MeasureUnit *MeasureUnit::createKilopascal(UErrorCode &status) {
     return MeasureUnit::create(18, 4, status);
 }
 
-MeasureUnit MeasureUnit::getInchHg() {
+MeasureUnit MeasureUnit::getKilopascal() {
     return MeasureUnit(18, 4);
 }
 
-MeasureUnit *MeasureUnit::createKilopascal(UErrorCode &status) {
+MeasureUnit *MeasureUnit::createMegapascal(UErrorCode &status) {
     return MeasureUnit::create(18, 5, status);
 }
 
-MeasureUnit MeasureUnit::getKilopascal() {
+MeasureUnit MeasureUnit::getMegapascal() {
     return MeasureUnit(18, 5);
 }
 
-MeasureUnit *MeasureUnit::createMegapascal(UErrorCode &status) {
+MeasureUnit *MeasureUnit::createMillibar(UErrorCode &status) {
     return MeasureUnit::create(18, 6, status);
 }
 
-MeasureUnit MeasureUnit::getMegapascal() {
+MeasureUnit MeasureUnit::getMillibar() {
     return MeasureUnit(18, 6);
 }
 
-MeasureUnit *MeasureUnit::createMillibar(UErrorCode &status) {
+MeasureUnit *MeasureUnit::createMillimeterOfMercury(UErrorCode &status) {
     return MeasureUnit::create(18, 7, status);
 }
 
-MeasureUnit MeasureUnit::getMillibar() {
+MeasureUnit MeasureUnit::getMillimeterOfMercury() {
     return MeasureUnit(18, 7);
 }
 
-MeasureUnit *MeasureUnit::createMillimeterOfMercury(UErrorCode &status) {
+MeasureUnit *MeasureUnit::createPascal(UErrorCode &status) {
     return MeasureUnit::create(18, 8, status);
 }
 
-MeasureUnit MeasureUnit::getMillimeterOfMercury() {
+MeasureUnit MeasureUnit::getPascal() {
     return MeasureUnit(18, 8);
 }
 
-MeasureUnit *MeasureUnit::createPascal(UErrorCode &status) {
+MeasureUnit *MeasureUnit::createPoundPerSquareInch(UErrorCode &status) {
     return MeasureUnit::create(18, 9, status);
 }
 
-MeasureUnit MeasureUnit::getPascal() {
-    return MeasureUnit(18, 9);
-}
-
-MeasureUnit *MeasureUnit::createPoundPerSquareInch(UErrorCode &status) {
-    return MeasureUnit::create(18, 10, status);
-}
-
 MeasureUnit MeasureUnit::getPoundPerSquareInch() {
-    return MeasureUnit(18, 10);
+    return MeasureUnit(18, 9);
 }
 
 MeasureUnit *MeasureUnit::createBeaufort(UErrorCode &status) {

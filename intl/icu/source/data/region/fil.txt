@@ -146,7 +146,7 @@ fil{
         IL{"Israel"}
         IM{"Isle of Man"}
         IN{"India"}
-        IO{"Teritoryo sa Karagatan ng British Indian"}
+        IO{"British Indian Ocean Territory"}
         IQ{"Iraq"}
         IR{"Iran"}
         IS{"Iceland"}
@@ -297,9 +297,6 @@ fil{
         ZM{"Zambia"}
         ZW{"Zimbabwe"}
         ZZ{"Hindi Kilalang Rehiyon"}
-    }
-    Countries%chagos{
-        IO{"Chagos Archipelago"}
     }
     Countries%short{
         GB{"U.K."}

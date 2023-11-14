@@ -21,7 +21,7 @@ sk{
                 "&Y<ý<<<Ý"
                 "&Z<ž<<<Ž"
             }
-            Version{"44"}
+            Version{"43"}
         }
         standard{
             Sequence{
@@ -33,7 +33,7 @@ sk{
                 "&S<š<<<Š"
                 "&Z<ž<<<Ž"
             }
-            Version{"44"}
+            Version{"43"}
         }
     }
 }

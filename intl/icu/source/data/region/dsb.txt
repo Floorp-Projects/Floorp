@@ -298,9 +298,6 @@ dsb{
         ZW{"Simbabwe"}
         ZZ{"njeznaty region"}
     }
-    Countries%chagos{
-        IO{"Chagoske kupy"}
-    }
     Countries%short{
         GB{"UK"}
         HK{"Hongkong"}

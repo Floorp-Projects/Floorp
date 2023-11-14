@@ -4,6 +4,5 @@
 ar_EH{
     NumberElements{
         default{"latn"}
-        default_latn{"latn"}
     }
 }

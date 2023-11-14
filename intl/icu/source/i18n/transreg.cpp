@@ -11,7 +11,6 @@
 */
 
 #include "unicode/utypes.h"
-#include "unicode/rep.h"
 
 #if !UCONFIG_NO_TRANSLITERATION
 
@@ -532,7 +531,7 @@ TransliteratorRegistry::TransliteratorRegistry(UErrorCode& status) :
     registry(true, status),
     specDAG(true, SPECDAG_INIT_SIZE, status),
     variantList(VARIANT_LIST_INIT_SIZE, status),
-    availableIDs(true, AVAILABLE_IDS_INIT_SIZE, status)
+    availableIDs(AVAILABLE_IDS_INIT_SIZE, status)
 {
     registry.setValueDeleter(deleteEntry);
     variantList.setDeleter(uprv_deleteUObject);
@@ -541,6 +540,8 @@ TransliteratorRegistry::TransliteratorRegistry(UErrorCode& status) :
     if (emptyString != nullptr) {
         variantList.adoptElement(emptyString, status);
     }
+    availableIDs.setDeleter(uprv_deleteUObject);
+    availableIDs.setComparer(uhash_compareCaselessUnicodeString);
     specDAG.setValueDeleter(uhash_deleteHashtable);
 }
 
@@ -713,7 +714,7 @@ void TransliteratorRegistry::remove(const UnicodeString& ID) {
     TransliteratorIDParser::STVtoID(source, target, variant, id);
     registry.remove(id);
     removeSTV(source, target, variant);
-    availableIDs.remove(id);
+    availableIDs.removeElement((void*) &id);
 }
 
 //----------------------------------------------------------------------
@@ -727,7 +728,7 @@ void TransliteratorRegistry::remove(const UnicodeString& ID) {
  * i from 0 to countAvailableIDs() - 1.
  */
 int32_t TransliteratorRegistry::countAvailableIDs() const {
-    return availableIDs.count();
+    return availableIDs.size();
 }
 
 /**
@@ -737,27 +738,10 @@ int32_t TransliteratorRegistry::countAvailableIDs() const {
  * range, the result of getAvailableID(0) is returned.
  */
 const UnicodeString& TransliteratorRegistry::getAvailableID(int32_t index) const {
-    if (index < 0 || index >= availableIDs.count()) {
+    if (index < 0 || index >= availableIDs.size()) {
         index = 0;
     }
-
-    int32_t pos = UHASH_FIRST;
-    const UHashElement *e = nullptr;
-    while (index-- >= 0) {
-        e = availableIDs.nextElement(pos);
-        if (e == nullptr) {
-            break;
-        }
-    }
-
-    if (e != nullptr) {
-        return *(UnicodeString*) e->key.pointer;
-    }
-
-    // If the code reaches here, the hash table was likely modified during iteration.
-    // Return an statically initialized empty string due to reference return type.
-    static UnicodeString empty;
-    return empty;
+    return *(const UnicodeString*) availableIDs[index];
 }
 
 StringEnumeration* TransliteratorRegistry::getAvailableIDs() const {
@@ -868,14 +852,14 @@ UnicodeString& TransliteratorRegistry::getAvailableVariant(int32_t index,
 //----------------------------------------------------------------------
 
 TransliteratorRegistry::Enumeration::Enumeration(const TransliteratorRegistry& _reg) :
-    pos(UHASH_FIRST), size(_reg.availableIDs.count()), reg(_reg) {
+    index(0), reg(_reg) {
 }
 
 TransliteratorRegistry::Enumeration::~Enumeration() {
 }
 
 int32_t TransliteratorRegistry::Enumeration::count(UErrorCode& /*status*/) const {
-    return size;
+    return reg.availableIDs.size();
 }
 
 const UnicodeString* TransliteratorRegistry::Enumeration::snext(UErrorCode& status) {
@@ -891,27 +875,22 @@ const UnicodeString* TransliteratorRegistry::Enumeration::snext(UErrorCode& stat
     if (U_FAILURE(status)) {
         return nullptr;
     }
-    int32_t n = reg.availableIDs.count();
-    if (n != size) {
+    int32_t n = reg.availableIDs.size();
+    if (index > n) {
         status = U_ENUM_OUT_OF_SYNC_ERROR;
+    }
+    // index == n is okay -- this means we've reached the end
+    if (index < n) {
+        // Copy the string! This avoids lifetime problems.
+        unistr = *(const UnicodeString*)reg.availableIDs[index++];
+        return &unistr;
+    } else {
         return nullptr;
     }
-
-    const UHashElement* element = reg.availableIDs.nextElement(pos);
-    if (element == nullptr) {
-        // If the code reaches this point, it means that it's out of sync
-        // or the caller keeps asking for snext().
-        return nullptr;
-    }
-
-    // Copy the string! This avoids lifetime problems.
-    unistr = *(const UnicodeString*) element->key.pointer;
-    return &unistr;
 }
 
 void TransliteratorRegistry::Enumeration::reset(UErrorCode& /*status*/) {
-    pos = UHASH_FIRST;
-    size = reg.availableIDs.count();
+    index = 0;
 }
 
 UOBJECT_DEFINE_RTTI_IMPLEMENTATION(TransliteratorRegistry::Enumeration)
@@ -966,12 +945,18 @@ void TransliteratorRegistry::registerEntry(const UnicodeString& ID,
     registry.put(ID, adopted, status);
     if (visible) {
         registerSTV(source, target, variant);
-        if (!availableIDs.containsKey(ID)) {
-            availableIDs.puti(ID, /* unused value */ 1, status);
+        if (!availableIDs.contains((void*) &ID)) {
+            UnicodeString *newID = ID.clone();
+            // Check to make sure newID was created.
+            if (newID != nullptr) {
+                // NUL-terminate the ID string
+                newID->getTerminatedBuffer();
+                availableIDs.adoptElement(newID, status);
+            }
         }
     } else {
         removeSTV(source, target, variant);
-        availableIDs.remove(ID);
+        availableIDs.removeElement((void*) &ID);
     }
 }
 

@@ -556,13 +556,9 @@ pt_PT{
             "SHP",
             "libra santa-helenense",
         }
-        SLE{
-            "SLE",
-            "leone de Serra Leoa",
-        }
         SLL{
             "SLL",
-            "leone de Serra Leoa (1964—2022)",
+            "leone de Serra Leoa",
         }
         SOS{
             "SOS",
@@ -1225,13 +1221,9 @@ pt_PT{
             one{"libra santa-helenense"}
             other{"libras santa-helenenses"}
         }
-        SLE{
+        SLL{
             one{"leone de Serra Leoa"}
             other{"leones de Serra Leoa"}
-        }
-        SLL{
-            one{"leone de Serra Leoa (1964—2022)"}
-            other{"leones de Serra Leoa (1964—2022)"}
         }
         SOS{
             one{"xelim somali"}

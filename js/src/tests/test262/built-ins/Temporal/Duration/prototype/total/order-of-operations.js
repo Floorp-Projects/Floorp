@@ -58,7 +58,6 @@ const expectedOpsForPlainRelativeTo = [
   "has options.relativeTo.calendar.year",
   "has options.relativeTo.calendar.yearMonthFromFields",
   "has options.relativeTo.calendar.yearOfWeek",
-  "get options.relativeTo.calendar.dateFromFields",
   "get options.relativeTo.calendar.fields",
   "call options.relativeTo.calendar.fields",
   "get options.relativeTo.day",
@@ -81,6 +80,7 @@ const expectedOpsForPlainRelativeTo = [
   "get options.relativeTo.year",
   "get options.relativeTo.year.valueOf",
   "call options.relativeTo.year.valueOf",
+  "get options.relativeTo.calendar.dateFromFields",
   "call options.relativeTo.calendar.dateFromFields",
   // GetTemporalUnit
   "get options.unit",
@@ -103,10 +103,9 @@ actual.splice(0); // clear
 
 // code path through RoundDuration that rounds to the nearest year with minimal calendar calls:
 const expectedOpsForMinimalYearRounding = expectedOpsForPlainRelativeTo.concat([
-  // lookup
-  "get options.relativeTo.calendar.dateAdd",
-  "get options.relativeTo.calendar.dateUntil",
+  "get options.relativeTo.calendar.dateAdd",     // 7.c
   // 7.e and 7.g not called because years, months, weeks are 0
+  "get options.relativeTo.calendar.dateUntil",   // 7.o
   "call options.relativeTo.calendar.dateUntil",  // 7.o
   // 7.s not called because years, months, weeks are 0
   "call options.relativeTo.calendar.dateAdd",    // 7.y MoveRelativeDate
@@ -117,10 +116,10 @@ actual.splice(0); // clear
 
 // code path through RoundDuration that rounds to the nearest year:
 const expectedOpsForYearRounding = expectedOpsForPlainRelativeTo.concat([
-  "get options.relativeTo.calendar.dateAdd",
-  "get options.relativeTo.calendar.dateUntil",
+  "get options.relativeTo.calendar.dateAdd",     // 7.c
   "call options.relativeTo.calendar.dateAdd",    // 7.d
   "call options.relativeTo.calendar.dateAdd",    // 7.f
+  "get options.relativeTo.calendar.dateUntil",   // 7.n
   "call options.relativeTo.calendar.dateUntil",  // 7.n
   "call options.relativeTo.calendar.dateAdd",    // 7.s
   "call options.relativeTo.calendar.dateAdd",    // 7.x MoveRelativeDate
@@ -132,12 +131,13 @@ actual.splice(0); // clear
 
 // code path through Duration.prototype.total that rounds to the nearest month:
 const expectedOpsForMonthRounding = expectedOpsForPlainRelativeTo.concat([
-  "get options.relativeTo.calendar.dateAdd",
-  "get options.relativeTo.calendar.dateUntil",
   // UnbalanceDurationRelative
+  "get options.relativeTo.calendar.dateAdd",     // 9.b
+  "get options.relativeTo.calendar.dateUntil",   // 9.c
   "call options.relativeTo.calendar.dateAdd",    // 9.d.i
   "call options.relativeTo.calendar.dateUntil",  // 9.d.iv
   // RoundDuration
+  "get options.relativeTo.calendar.dateAdd",     // 10.b
   "call options.relativeTo.calendar.dateAdd",    // 10.c
   "call options.relativeTo.calendar.dateAdd",    // 10.e
   "call options.relativeTo.calendar.dateAdd",    // 10.k MoveRelativeDate
@@ -149,11 +149,12 @@ actual.splice(0); // clear
 
 // code path through Duration.prototype.total that rounds to the nearest week:
 const expectedOpsForWeekRounding = expectedOpsForPlainRelativeTo.concat([
-  "get options.relativeTo.calendar.dateAdd",
   // UnbalanceDurationRelative
+  "get options.relativeTo.calendar.dateAdd",   // 10.b
   "call options.relativeTo.calendar.dateAdd",  // 10.c.i MoveRelativeDate
   "call options.relativeTo.calendar.dateAdd",  // 10.d.i MoveRelativeDate
   // RoundDuration
+  "get options.relativeTo.calendar.dateAdd",   // 11.c
   "call options.relativeTo.calendar.dateAdd",  // 11.d MoveRelativeDate
 ], Array(58).fill("call options.relativeTo.calendar.dateAdd"));  // 58× 11.g.iii MoveRelativeDate (52 + 4 + 2)
 const instance3 = new Temporal.Duration(1, 1, 0, 15);
@@ -163,7 +164,7 @@ actual.splice(0); // clear
 
 // code path through UnbalanceDurationRelative that rounds to the nearest day:
 const expectedOpsForDayRounding = expectedOpsForPlainRelativeTo.concat([
-  "get options.relativeTo.calendar.dateAdd",
+  "get options.relativeTo.calendar.dateAdd",   // 11.a.ii
   "call options.relativeTo.calendar.dateAdd",  // 11.a.iii.1 MoveRelativeDate
   "call options.relativeTo.calendar.dateAdd",  // 11.a.iv.1 MoveRelativeDate
   "call options.relativeTo.calendar.dateAdd",  // 11.a.v.1 MoveRelativeDate
@@ -198,7 +199,6 @@ const expectedOpsForZonedRelativeTo = [
   "has options.relativeTo.calendar.year",
   "has options.relativeTo.calendar.yearMonthFromFields",
   "has options.relativeTo.calendar.yearOfWeek",
-  "get options.relativeTo.calendar.dateFromFields",
   "get options.relativeTo.calendar.fields",
   "call options.relativeTo.calendar.fields",
   "get options.relativeTo.day",
@@ -235,14 +235,15 @@ const expectedOpsForZonedRelativeTo = [
   "get options.relativeTo.year",
   "get options.relativeTo.year.valueOf",
   "call options.relativeTo.year.valueOf",
+  "get options.relativeTo.calendar.dateFromFields",
   "call options.relativeTo.calendar.dateFromFields",
   "has options.relativeTo.timeZone.getOffsetNanosecondsFor",
   "has options.relativeTo.timeZone.getPossibleInstantsFor",
   "has options.relativeTo.timeZone.id",
-  "get options.relativeTo.timeZone.getOffsetNanosecondsFor",
-  "get options.relativeTo.timeZone.getPossibleInstantsFor",
   // InterpretISODateTimeOffset
+  "get options.relativeTo.timeZone.getPossibleInstantsFor",
   "call options.relativeTo.timeZone.getPossibleInstantsFor",
+  "get options.relativeTo.timeZone.getOffsetNanosecondsFor",
   "call options.relativeTo.timeZone.getOffsetNanosecondsFor",
   // GetTemporalUnit
   "get options.unit",
@@ -274,21 +275,27 @@ actual.splice(0); // clear
 // code path through RoundDuration that rounds to the nearest year with minimal calendar operations:
 const expectedOpsForMinimalYearRoundingZoned = expectedOpsForZonedRelativeTo.concat([
   // ToTemporalDate
+  "get options.relativeTo.timeZone.getOffsetNanosecondsFor",
   "call options.relativeTo.timeZone.getOffsetNanosecondsFor",
-  "get options.relativeTo.calendar.dateAdd",  // lookup
-  "get options.relativeTo.calendar.dateUntil",
   // BalancePossiblyInfiniteDuration → NanosecondsToDays
-  "call options.relativeTo.timeZone.getOffsetNanosecondsFor",  // 7. GetPlainDateTimeFor
-  "call options.relativeTo.timeZone.getOffsetNanosecondsFor",  // 11. GetPlainDateTimeFor
+  "get options.relativeTo.timeZone.getOffsetNanosecondsFor",  // 7. GetPlainDateTimeFor
+  "call options.relativeTo.timeZone.getOffsetNanosecondsFor",
+  "get options.relativeTo.timeZone.getOffsetNanosecondsFor",  // 11. GetPlainDateTimeFor
+  "call options.relativeTo.timeZone.getOffsetNanosecondsFor",
   // BalancePossiblyInfiniteDuration → NanosecondsToDays → AddDaysToZonedDateTime
+  "get options.relativeTo.timeZone.getPossibleInstantsFor",
   "call options.relativeTo.timeZone.getPossibleInstantsFor",
   // BalancePossiblyInfiniteDuration → NanosecondsToDays → AddDaysToZonedDateTime
+  "get options.relativeTo.timeZone.getPossibleInstantsFor",
   "call options.relativeTo.timeZone.getPossibleInstantsFor",
 ], [
   // code path through RoundDuration that rounds to the nearest year:
   // MoveRelativeZonedDateTime → AddDaysToZonedDateTime
+  "get options.relativeTo.timeZone.getPossibleInstantsFor",
   "call options.relativeTo.timeZone.getPossibleInstantsFor",
+  "get options.relativeTo.calendar.dateAdd",     // 7.c
   // 7.e and 7.g not called because years, months, weeks are 0
+  "get options.relativeTo.calendar.dateUntil",   // 7.o
   "call options.relativeTo.calendar.dateUntil",  // 7.o
   // 7.s not called because years, months, weeks are 0
   "call options.relativeTo.calendar.dateAdd",    // 7.y MoveRelativeDate
@@ -304,26 +311,34 @@ actual.splice(0); // clear
 // code path through RoundDuration that rounds to the nearest year:
 const expectedOpsForYearRoundingZoned = expectedOpsForZonedRelativeTo.concat([
   // ToTemporalDate
+  "get options.relativeTo.timeZone.getOffsetNanosecondsFor",
   "call options.relativeTo.timeZone.getOffsetNanosecondsFor",
-  // lookup
-  "get options.relativeTo.calendar.dateAdd",
-  "get options.relativeTo.calendar.dateUntil",
   // MoveRelativeZonedDateTime → AddZonedDateTime
+  "get options.relativeTo.calendar.dateAdd",
   "call options.relativeTo.calendar.dateAdd",
+  "get options.relativeTo.timeZone.getPossibleInstantsFor",
   "call options.relativeTo.timeZone.getPossibleInstantsFor",
   // BalancePossiblyInfiniteTimeDurationRelative → NanosecondsToDays
-  "call options.relativeTo.timeZone.getOffsetNanosecondsFor",  // 8. GetPlainDateTimeFor
-  "call options.relativeTo.timeZone.getOffsetNanosecondsFor",  // 9. GetPlainDateTimeFor
+  "get options.relativeTo.timeZone.getOffsetNanosecondsFor",  // 7. GetPlainDateTimeFor
+  "call options.relativeTo.timeZone.getOffsetNanosecondsFor",
+  "get options.relativeTo.timeZone.getOffsetNanosecondsFor",  // 11. GetPlainDateTimeFor
+  "call options.relativeTo.timeZone.getOffsetNanosecondsFor",
   // BalancePossiblyInfiniteTimeDurationRelative → NanosecondsToDays → AddDaysToZonedDateTime
+  "get options.relativeTo.timeZone.getPossibleInstantsFor",
   "call options.relativeTo.timeZone.getPossibleInstantsFor",
   // BalancePossiblyInfiniteTimeDurationRelative → NanosecondsToDays → AddDaysToZonedDateTime
+  "get options.relativeTo.timeZone.getPossibleInstantsFor",
   "call options.relativeTo.timeZone.getPossibleInstantsFor",
   // RoundDuration → MoveRelativeZonedDateTime → AddZonedDateTime
+  "get options.relativeTo.calendar.dateAdd",
   "call options.relativeTo.calendar.dateAdd",
+  "get options.relativeTo.timeZone.getPossibleInstantsFor",
   "call options.relativeTo.timeZone.getPossibleInstantsFor",
   // RoundDuration
+  "get options.relativeTo.calendar.dateAdd",     // 7.c
   "call options.relativeTo.calendar.dateAdd",    // 7.e
   "call options.relativeTo.calendar.dateAdd",    // 7.g
+  "get options.relativeTo.calendar.dateUntil",   // 7.o
   "call options.relativeTo.calendar.dateUntil",  // 7.o
   "call options.relativeTo.calendar.dateAdd",    // 7.s MoveRelativeDate
   "call options.relativeTo.calendar.dateAdd",    // 7.y MoveRelativeDate
@@ -339,17 +354,21 @@ actual.splice(0); // clear
 // code path that hits UnbalanceDateDurationRelative and RoundDuration
 const expectedOpsForUnbalanceRound = expectedOpsForZonedRelativeTo.concat([
   // ToTemporalDate
+  "get options.relativeTo.timeZone.getOffsetNanosecondsFor",
   "call options.relativeTo.timeZone.getOffsetNanosecondsFor",
-  // lookup
-  "get options.relativeTo.calendar.dateAdd",
   // No user code calls in UnbalanceDateDurationRelative
   // MoveRelativeZonedDateTime → AddZonedDateTime
+  "get options.relativeTo.calendar.dateAdd",                  // 8.
   "call options.relativeTo.calendar.dateAdd",
-  "call options.relativeTo.timeZone.getPossibleInstantsFor",   // 13. GetInstantFor
+  "get options.relativeTo.timeZone.getPossibleInstantsFor",   // 10. GetInstantFor
+  "call options.relativeTo.timeZone.getPossibleInstantsFor",
   // RoundDuration → MoveRelativeZonedDateTime → AddZonedDateTime
+  "get options.relativeTo.calendar.dateAdd",                  // 8.
   "call options.relativeTo.calendar.dateAdd",
-  "call options.relativeTo.timeZone.getPossibleInstantsFor",   // 13. GetInstantFor
+  "get options.relativeTo.timeZone.getPossibleInstantsFor",   // 10. GetInstantFor
+  "call options.relativeTo.timeZone.getPossibleInstantsFor",
   // RoundDuration
+  "get options.relativeTo.calendar.dateAdd",   // 7.d.i
   "call options.relativeTo.calendar.dateAdd",  // 7.f
   "call options.relativeTo.calendar.dateAdd",  // 7.h
   "call options.relativeTo.calendar.dateAdd",  // 7.n MoveRelativeDate
@@ -365,20 +384,26 @@ actual.splice(0); // clear
 // code path that avoids converting Zoned twice in BalanceTimeDurationRelative
 const expectedOpsForBalanceRound = expectedOpsForZonedRelativeTo.concat([
   // ToTemporalDate
+  "get options.relativeTo.timeZone.getOffsetNanosecondsFor",
   "call options.relativeTo.timeZone.getOffsetNanosecondsFor",
-  // lookup
-  "get options.relativeTo.calendar.dateAdd",
   // No user code calls in UnbalanceDateDurationRelative
   // No user code calls in AddZonedDateTime (years, months, weeks = 0)
   // BalanceTimeDurationRelative
+  "get options.relativeTo.timeZone.getOffsetNanosecondsFor",
   "call options.relativeTo.timeZone.getOffsetNanosecondsFor",  // 4.a
+  "get options.relativeTo.timeZone.getPossibleInstantsFor",
   "call options.relativeTo.timeZone.getPossibleInstantsFor",   // 4.b
+  "get options.relativeTo.timeZone.getOffsetNanosecondsFor",
   "call options.relativeTo.timeZone.getOffsetNanosecondsFor",  // NanosecondsToDays 9
+  "get options.relativeTo.timeZone.getPossibleInstantsFor",
   "call options.relativeTo.timeZone.getPossibleInstantsFor",   // NanosecondsToDays 26
+  "get options.relativeTo.timeZone.getPossibleInstantsFor",
   "call options.relativeTo.timeZone.getPossibleInstantsFor",   // NanosecondsToDays 31.a
   // RoundDuration → MoveRelativeZonedDateTime → AddZonedDateTime
-  "call options.relativeTo.timeZone.getPossibleInstantsFor",  // 10. GetInstantFor
+  "get options.relativeTo.timeZone.getPossibleInstantsFor",   // 10. GetInstantFor
+  "call options.relativeTo.timeZone.getPossibleInstantsFor",
   // RoundDuration
+  "get options.relativeTo.calendar.dateAdd",   // 10.d.i
   "call options.relativeTo.calendar.dateAdd",  // 10.f
   "call options.relativeTo.calendar.dateAdd",  // 10.i.iii
 ]);

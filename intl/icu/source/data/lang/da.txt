@@ -39,7 +39,7 @@ da{
         ale{"aleutisk"}
         alt{"sydaltaisk"}
         am{"amharisk"}
-        an{"aragonsk"}
+        an{"aragonesisk"}
         ang{"oldengelsk"}
         ann{"obolo"}
         anp{"angika"}
@@ -70,7 +70,6 @@ da{
         bez{"bena"}
         bfd{"bafut"}
         bg{"bulgarsk"}
-        bgc{"harianvi"}
         bgn{"vestbaluchi"}
         bho{"bhojpuri"}
         bi{"bislama"}
@@ -127,7 +126,7 @@ da{
         csb{"kasjubisk"}
         csw{"swampy cree"}
         cu{"kirkeslavisk"}
-        cv{"tjuvasjisk"}
+        cv{"chuvash"}
         cy{"walisisk"}
         da{"dansk"}
         dak{"dakota"}
@@ -258,7 +257,7 @@ da{
         jv{"javanesisk"}
         ka{"georgisk"}
         kaa{"karakalpakisk"}
-        kab{"kabylsk"}
+        kab{"kabylisk"}
         kac{"kachin"}
         kaj{"jju"}
         kam{"kamba"}
@@ -391,7 +390,7 @@ da{
         no{"norsk"}
         nog{"nogai"}
         non{"oldislandsk"}
-        nqo{"n’ko"}
+        nqo{"n-ko"}
         nr{"sydndebele"}
         nso{"nordsotho"}
         nus{"nuer"}
@@ -504,7 +503,7 @@ da{
         sv{"svensk"}
         sw{"swahili"}
         sw_CD{"congolesisk swahili"}
-        swb{"comorisk"}
+        swb{"shimaore"}
         syc{"klassisk syrisk"}
         syr{"syrisk"}
         ta{"tamil"}
@@ -791,9 +790,11 @@ da{
             gregorian{"gregoriansk kalender"}
             hebrew{"jødisk kalender"}
             indian{"indisk nationalkalender"}
-            islamic{"hijri-kalender"}
-            islamic-civil{"verdslig hijri-kalender"}
-            islamic-umalqura{"hijri-kalender (Umm al-Qura)"}
+            islamic{"islamisk kalender"}
+            islamic-civil{"verdslig islamisk kalender"}
+            islamic-rgsa{"islamisk kalender (Saudi-Arabien, observation)"}
+            islamic-tbla{"islamisk kalender (tabellarisk, astronomisk epoke)"}
+            islamic-umalqura{"islamisk kalender (Umm al-Qura)"}
             iso8601{"ISO-8601-kalender"}
             japanese{"japansk kalender"}
             persian{"persisk kalender"}
@@ -1005,11 +1006,10 @@ da{
     }
     characterLabelPattern{
         all{"{0} – alle"}
+        category-list{"{0}: {1}"}
         compatibility{"{0} – kompatibilitet"}
         enclosed{"{0} – lukket"}
         extended{"{0} – udvidet"}
-        facing-left{"{0} mod venstre"}
-        facing-right{"{0} mod højre"}
         historic{"{0} – historisk"}
         miscellaneous{"{0} – diverse"}
         other{"{0} – andet"}
@@ -1025,5 +1025,10 @@ da{
         language{"Sprog: {0}"}
         script{"Skrift: {0}"}
         territory{"Område: {0}"}
+    }
+    localeDisplayPattern{
+        keyTypePattern{"{0}: {1}"}
+        pattern{"{0} ({1})"}
+        separator{"{0}, {1}"}
     }
 }

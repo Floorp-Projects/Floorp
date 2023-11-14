@@ -171,13 +171,9 @@ rn{
             "SHP",
             "Ipawundi rya Sente Helena",
         }
-        SLE{
-            "SLE",
-            "Ilewone",
-        }
         SLL{
             "SLL",
-            "Ilewone (1964—2022)",
+            "Ilewone",
         }
         SOS{
             "SOS",

@@ -17,25 +17,25 @@ es_CL{
     calendar{
         generic{
             DateTimePatterns{
-                "h:mm:ss a zzzz",
-                "h:mm:ss a z",
-                "h:mm:ss a",
-                "h:mm a",
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
                 "EEEE, d 'de' MMMM 'de' y G",
                 "d 'de' MMMM 'de' y G",
                 "dd-MM-y G",
                 "dd-MM-y GGGGG",
+                "{1} {0}",
                 "{1}, {0}",
                 "{1}, {0}",
-                "{1}, {0}",
-                "{1}, {0}",
-                "{1}, {0}",
+                "{1} {0}",
+                "{1} {0}",
             }
             DateTimeSkeletons{
-                "ahmmsszzzz",
-                "ahmmssz",
-                "ahmmss",
-                "ahmm",
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
                 "GyMMMMEEEEd",
                 "GyMMMMd",
                 "GyMMdd",
@@ -94,34 +94,26 @@ es_CL{
             }
         }
         gregorian{
-            AmPmMarkers{
-                "a. m.",
-                "p. m.",
-            }
-            AmPmMarkersAbbr{
-                "a. m.",
-                "p. m.",
-            }
             DateTimePatterns{
-                "h:mm:ss a zzzz",
-                "h:mm:ss a z",
-                "h:mm:ss a",
-                "h:mm a",
+                "HH:mm:ss zzzz",
+                "HH:mm:ss z",
+                "HH:mm:ss",
+                "HH:mm",
                 "EEEE, d 'de' MMMM 'de' y",
                 "d 'de' MMMM 'de' y",
                 "dd-MM-y",
                 "dd-MM-yy",
+                "{1} {0}",
                 "{1}, {0}",
                 "{1}, {0}",
-                "{1}, {0}",
-                "{1}, {0}",
+                "{1} {0}",
                 "{1}, {0}",
             }
             DateTimeSkeletons{
-                "ahmmsszzzz",
-                "ahmmssz",
-                "ahmmss",
-                "ahmm",
+                "HHmmsszzzz",
+                "HHmmssz",
+                "HHmmss",
+                "HHmm",
                 "yMMMMEEEEd",
                 "yMMMMd",
                 "yMMdd",
@@ -145,22 +137,6 @@ es_CL{
                         "ju",
                         "vi",
                         "sá",
-                    }
-                }
-            }
-            dayPeriod{
-                stand-alone{
-                    abbreviated{
-                        am{"a. m."}
-                        pm{"p. m."}
-                    }
-                    narrow{
-                        am{"a. m."}
-                        pm{"p. m."}
-                    }
-                    wide{
-                        am{"a. m."}
-                        pm{"p. m."}
                     }
                 }
             }

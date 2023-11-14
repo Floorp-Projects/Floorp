@@ -171,13 +171,9 @@ ff{
             "SHP",
             "Liibar Sent Helen",
         }
-        SLE{
-            "SLE",
-            "Lewoon Seraa Liyon",
-        }
         SLL{
             "SLL",
-            "Lewoon Seraa Liyon (1964—2022)",
+            "Lewoon Seraa Liyon",
         }
         SOS{
             "SOS",

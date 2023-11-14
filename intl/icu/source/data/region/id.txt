@@ -298,9 +298,6 @@ id{
         ZW{"Zimbabwe"}
         ZZ{"Wilayah Tidak Dikenal"}
     }
-    Countries%chagos{
-        IO{"Kepulauan Chagos"}
-    }
     Countries%short{
         GB{"UK"}
         HK{"Hong Kong"}
@@ -312,12 +309,9 @@ id{
     Countries%variant{
         CD{"Kongo (RDK)"}
         CG{"Kongo (Republik)"}
-        CI{"Pantai Gading"}
         CZ{"Republik Ceko"}
         FK{"Kepulauan Falkland (Malvinas)"}
         NZ{"Aotearoa (Selandia Baru)"}
-        SZ{"Eswatini"}
         TL{"Timor Timur"}
-        TR{"Turkiye"}
     }
 }

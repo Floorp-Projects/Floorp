@@ -175,13 +175,9 @@ ksb{
             "SHP",
             "pauni ya Santahelena",
         }
-        SLE{
-            "SLE",
-            "leoni",
-        }
         SLL{
             "SLL",
-            "leoni (1964—2022)",
+            "leoni",
         }
         SOS{
             "SOS",

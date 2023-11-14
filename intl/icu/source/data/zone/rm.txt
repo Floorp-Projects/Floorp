@@ -9,6 +9,9 @@ rm{
         "Africa:Algiers"{
             ec{"Algier"}
         }
+        "Africa:Asmera"{
+            ec{"Asmara"}
+        }
         "Africa:Dar_es_Salaam"{
             ec{"Daressalam"}
         }
@@ -59,6 +62,9 @@ rm{
         }
         "America:Belize"{
             ec{"Belmopan"}
+        }
+        "America:Cancun"{
+            ec{"Cancún"}
         }
         "America:Cayman"{
             ec{"Inslas Cayman"}
@@ -120,6 +126,9 @@ rm{
         "America:Mazatlan"{
             ec{"Mazatlán"}
         }
+        "America:Merida"{
+            ec{"Mérida"}
+        }
         "America:Mexico_City"{
             ec{"Citad da Mexico"}
         }
@@ -159,6 +168,9 @@ rm{
         "America:Tortola"{
             ec{"Road Town"}
         }
+        "Antarctica:DumontDUrville"{
+            ec{"Dumont d’Urville"}
+        }
         "Antarctica:McMurdo"{
             ec{"Mac Murdo"}
         }
@@ -197,6 +209,9 @@ rm{
         }
         "Asia:Krasnoyarsk"{
             ec{"Krasnojarsk"}
+        }
+        "Asia:Macau"{
+            ec{"Macao"}
         }
         "Asia:Makassar"{
             ec{"Macassar"}
@@ -434,6 +449,9 @@ rm{
         "meta:GMT"{
             ls{"Temp Greenwich"}
         }
+        fallbackFormat{"{1} ({0})"}
+        gmtFormat{"GMT{0}"}
+        hourFormat{"+HH:mm;-HH:mm"}
         regionFormat{"temp: {0}"}
         regionFormatDaylight{"temp da stad: {0}"}
         regionFormatStandard{"temp normal: {0}"}

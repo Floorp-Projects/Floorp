@@ -298,9 +298,6 @@ pa{
         ZW{"ਜ਼ਿੰਬਾਬਵੇ"}
         ZZ{"ਅਣਪਛਾਤਾ ਇਲਾਕਾ"}
     }
-    Countries%chagos{
-        IO{"ਚਗੋਸ ਟਾਪੂ"}
-    }
     Countries%short{
         GB{"ਯੂ.ਕੇ."}
         HK{"ਹਾਂਗ ਕਾਂਗ"}

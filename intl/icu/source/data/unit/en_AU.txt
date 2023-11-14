@@ -3,6 +3,11 @@
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 en_AU{
     %%Parent{"en_001"}
+    durationUnits{
+        hm{"h:mm"}
+        hms{"h:mm:ss"}
+        ms{"m:ss"}
+    }
     units{
         concentr{
             permille{
@@ -26,6 +31,12 @@ en_AU{
                 dnam{"micrometres"}
             }
         }
+        mass{
+            tonne{
+                one{"tonne"}
+                other{"{0} tonnes"}
+            }
+        }
         pressure{
             pound-force-per-square-inch{
                 dnam{"pounds per square inch"}
@@ -41,6 +52,11 @@ en_AU{
             }
         }
         volume{
+            fluid-ounce{
+                dnam{"fluid ounces"}
+                one{"{0} fluid ounce"}
+                other{"{0} fluid ounces"}
+            }
             fluid-ounce-imperial{
                 dnam{"Imp. fluid ounces"}
                 one{"{0} Imp. fluid ounce"}
@@ -49,6 +65,9 @@ en_AU{
         }
     }
     unitsNarrow{
+        compound{
+            per{"{0}/{1}"}
+        }
         concentr{
             milligram-ofglucose-per-deciliter{
                 dnam{"mg/dL"}
@@ -85,6 +104,12 @@ en_AU{
             millisecond{
                 dnam{"msec."}
             }
+            minute{
+                dnam{"min."}
+                one{"{0}min."}
+                other{"{0}min."}
+                per{"{0}/min."}
+            }
             second{
                 dnam{"sec."}
                 one{"{0}s."}
@@ -102,6 +127,9 @@ en_AU{
             celsius{
                 one{"{0}°C"}
                 other{"{0}°C"}
+            }
+            generic{
+                dnam{"°"}
             }
         }
         volume{
@@ -128,6 +156,11 @@ en_AU{
                 dnam{"dsp Imp"}
                 one{"{0}dsp-Imp"}
                 other{"{0}dsp-Imp"}
+            }
+            fluid-ounce{
+                dnam{"fl oz"}
+                one{"{0}fl oz"}
+                other{"{0}fl oz"}
             }
             fluid-ounce-imperial{
                 dnam{"Imp fl oz"}
@@ -232,6 +265,12 @@ en_AU{
             millisecond{
                 dnam{"millisec."}
             }
+            minute{
+                dnam{"min."}
+                one{"{0} min."}
+                other{"{0} mins"}
+                per{"{0}/min."}
+            }
             nanosecond{
                 dnam{"nanosec."}
             }
@@ -296,6 +335,8 @@ en_AU{
             }
             generic{
                 dnam{"deg."}
+                one{"{0}°"}
+                other{"{0}°"}
             }
         }
         volume{
@@ -312,6 +353,11 @@ en_AU{
                 dnam{"dL"}
                 one{"{0} dL"}
                 other{"{0} dL"}
+            }
+            fluid-ounce{
+                dnam{"fl oz"}
+                one{"{0} fl oz"}
+                other{"{0} fl oz"}
             }
             fluid-ounce-imperial{
                 dnam{"Imp. fl oz"}

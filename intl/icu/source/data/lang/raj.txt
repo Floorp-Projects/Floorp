@@ -9,4 +9,7 @@ raj{
     Scripts{
         Deva{"देवनागरी"}
     }
+    codePatterns{
+        territory{"{0}"}
+    }
 }

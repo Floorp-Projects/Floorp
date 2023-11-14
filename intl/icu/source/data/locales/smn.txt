@@ -2,7 +2,7 @@
 // License & terms of use: http://www.unicode.org/copyright.html
 // Generated using tools/cldr/cldr-to-icu/build-icu-data.xml
 smn{
-    AuxExemplarCharacters{"[à ç éè í ñń óò q úü w x æ ø å ã ö]"}
+    AuxExemplarCharacters{"[à ç é è í ñ ń ó ò q ú ü w x æ ø å ã ö]"}
     ExemplarCharacters{"[a â b c č d đ e f g h i j k l m n ŋ o p r s š t u v y z ž ä á]"}
     ExemplarCharactersIndex{"[A Â B C Č D Đ E F G H I J K L M N Ŋ O P R S Š T U V Y Z Ž Ä Á]"}
     ExemplarCharactersNumbers{"[  \\- ‑ , % ‰ + 0 1 2 3 4 5 6 7 8 9]"}
@@ -10,10 +10,14 @@ smn{
         latn{
             miscPatterns{
                 atLeast{"ucemustáá {0}"}
+                range{"{0}–{1}"}
             }
             patterns{
+                accountingFormat{"#,##0.00 ¤"}
                 currencyFormat{"#,##0.00 ¤"}
+                decimalFormat{"#,##0.###"}
                 percentFormat{"#,##0 %"}
+                scientificFormat{"#E0"}
             }
             patternsLong{
                 decimalFormat{
@@ -81,11 +85,19 @@ smn{
             }
             symbols{
                 decimal{","}
+                exponential{"E"}
                 group{" "}
+                infinity{"∞"}
+                minusSign{"-"}
                 nan{"epiloho"}
+                perMille{"‰"}
+                percentSign{"%"}
+                plusSign{"+"}
+                superscriptingExponent{"×"}
                 timeSeparator{"."}
             }
         }
+        minimumGroupingDigits{"1"}
     }
     calendar{
         generic{
@@ -121,16 +133,20 @@ smn{
                 "GGGGGyMd",
             }
             availableFormats{
+                E{"ccc"}
                 Ed{"E d."}
                 Gy{"y G"}
                 GyMMM{"LLL y G"}
                 GyMMMEd{"E MMM d. y G"}
                 GyMMMd{"MMM d. y G"}
+                M{"L"}
                 MEd{"E d.M."}
+                MMM{"LLL"}
                 MMMEd{"ccc MMM d."}
                 MMMMd{"d. MMMM"}
                 MMMd{"MMM d."}
                 Md{"d.M."}
+                d{"d"}
                 y{"y G"}
                 yyyy{"y G"}
                 yyyyM{"L.y G"}
@@ -169,6 +185,7 @@ smn{
                 d{
                     d{"d.–d."}
                 }
+                fallback{"{0} – {1}"}
                 y{
                     y{"y–y G"}
                 }
@@ -207,7 +224,15 @@ smn{
             }
         }
         gregorian{
+            AmPmMarkers{
+                "ip.",
+                "ep.",
+            }
             AmPmMarkersAbbr{
+                "ip.",
+                "ep.",
+            }
+            AmPmMarkersNarrow{
                 "ip.",
                 "ep.",
             }
@@ -242,7 +267,11 @@ smn{
                 "yMMMd",
                 "yMd",
             }
+            appendItems{
+                Timezone{"{0} {1}"}
+            }
             availableFormats{
+                E{"ccc"}
                 EHm{"E H.mm"}
                 EHms{"E H.mm.ss"}
                 Ed{"E d."}
@@ -257,7 +286,9 @@ smn{
                 Hms{"H.mm.ss"}
                 Hmsv{"H.mm.ss v"}
                 Hmv{"H.mm v"}
+                M{"L"}
                 MEd{"E d.M."}
+                MMM{"LLL"}
                 MMMEd{"E, MMM d."}
                 MMMMW{
                     one{"'okko' W, MMMM"}
@@ -267,12 +298,14 @@ smn{
                 MMMMd{"MMMM d."}
                 MMMd{"MMM d."}
                 Md{"d.M."}
+                d{"d"}
                 h{"h a"}
                 hm{"h.mm a"}
                 hms{"h.mm.ss a"}
                 hmsv{"h.mm.ss a v"}
                 hmv{"h.mm a v"}
                 ms{"m.ss."}
+                y{"y"}
                 yM{"L.y"}
                 yMEd{"E d.M.y"}
                 yMMM{"LLL y"}
@@ -328,6 +361,33 @@ smn{
                     }
                 }
                 stand-alone{
+                    abbreviated{
+                        "pas",
+                        "vuo",
+                        "maj",
+                        "kos",
+                        "tuo",
+                        "vás",
+                        "láv",
+                    }
+                    narrow{
+                        "S",
+                        "M",
+                        "T",
+                        "W",
+                        "T",
+                        "F",
+                        "S",
+                    }
+                    short{
+                        "pa",
+                        "vu",
+                        "ma",
+                        "ko",
+                        "tu",
+                        "vá",
+                        "lá",
+                    }
                     wide{
                         "pasepeivi",
                         "vuossargâ",
@@ -336,6 +396,22 @@ smn{
                         "tuorâstâh",
                         "vástuppeivi",
                         "lávurdâh",
+                    }
+                }
+            }
+            dayPeriod{
+                stand-alone{
+                    abbreviated{
+                        am{"ip."}
+                        pm{"ep."}
+                    }
+                    narrow{
+                        am{"ip."}
+                        pm{"ep."}
+                    }
+                    wide{
+                        am{"ip."}
+                        pm{"ep."}
                     }
                 }
             }
@@ -416,6 +492,9 @@ smn{
                     a{"h a – h a v"}
                     h{"h–h a v"}
                 }
+                y{
+                    y{"y–y"}
+                }
                 yM{
                     M{"LLL–LLLL y"}
                     y{"LLLL y – LLLL y"}
@@ -465,6 +544,20 @@ smn{
                         "skammâ",
                         "juovlâ",
                     }
+                    narrow{
+                        "U",
+                        "K",
+                        "NJ",
+                        "C",
+                        "V",
+                        "K",
+                        "S",
+                        "P",
+                        "Č",
+                        "R",
+                        "S",
+                        "J",
+                    }
                     wide{
                         "uđđâivemáánu",
                         "kuovâmáánu",
@@ -481,6 +574,20 @@ smn{
                     }
                 }
                 stand-alone{
+                    abbreviated{
+                        "uđiv",
+                        "kuovâ",
+                        "njuhčâ",
+                        "cuáŋui",
+                        "vyesi",
+                        "kesi",
+                        "syeini",
+                        "porge",
+                        "čohčâ",
+                        "roovvâd",
+                        "skammâ",
+                        "juovlâ",
+                    }
                     narrow{
                         "U",
                         "K",
@@ -495,6 +602,20 @@ smn{
                         "S",
                         "J",
                     }
+                    wide{
+                        "uđđâivemáánu",
+                        "kuovâmáánu",
+                        "njuhčâmáánu",
+                        "cuáŋuimáánu",
+                        "vyesimáánu",
+                        "kesimáánu",
+                        "syeinimáánu",
+                        "porgemáánu",
+                        "čohčâmáánu",
+                        "roovvâdmáánu",
+                        "skammâmáánu",
+                        "juovlâmáánu",
+                    }
                 }
             }
             quarters{
@@ -505,6 +626,32 @@ smn{
                         "3. niälj.",
                         "4. niälj.",
                     }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                    }
+                    wide{
+                        "1. niäljádâs",
+                        "2. niäljádâs",
+                        "3. niäljádâs",
+                        "4. niäljádâs",
+                    }
+                }
+                stand-alone{
+                    abbreviated{
+                        "1. niälj.",
+                        "2. niälj.",
+                        "3. niälj.",
+                        "4. niälj.",
+                    }
+                    narrow{
+                        "1",
+                        "2",
+                        "3",
+                        "4",
+                    }
                     wide{
                         "1. niäljádâs",
                         "2. niäljádâs",
@@ -514,6 +661,10 @@ smn{
                 }
             }
         }
+    }
+    layout{
+        characters{"left-to-right"}
+        lines{"top-to-bottom"}
     }
     measurementSystemNames{
         UK{"brittilâš"}

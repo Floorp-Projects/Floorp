@@ -175,13 +175,9 @@ sn{
             "SHP",
             "Paundi re Senti Helena",
         }
-        SLE{
-            "SLE",
-            "Leoni",
-        }
         SLL{
             "SLL",
-            "Leoni (1964—2022)",
+            "Leoni",
         }
         SOS{
             "SOS",
