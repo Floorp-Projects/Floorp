@@ -157,8 +157,18 @@ function waitForThreadCount(dbg, count) {
   return waitForState(dbg, threadCount, `has source ${count} threads`);
 }
 
-async function waitForPaused(dbg) {
-  const onLoadedScope = waitForLoadedScopes(dbg);
+async function waitForPaused(
+  dbg,
+  pauseOptions = { shouldWaitForLoadedScopes: true }
+) {
+  const promises = [];
+
+  // If original variable mapping is disabled the scopes for
+  // original sources are not loaded by default so lets not
+  // wait for any scopes.
+  if (pauseOptions.shouldWaitForLoadedScopes) {
+    promises.push(waitForLoadedScopes(dbg));
+  }
   const {
     selectors: { getSelectedScope, getIsPaused, getCurrentThread },
   } = dbg;
@@ -166,7 +176,8 @@ async function waitForPaused(dbg) {
     const thread = getCurrentThread(state);
     return getSelectedScope(state, thread) && getIsPaused(state, thread);
   });
-  return Promise.all([onLoadedScope, onStateChange]);
+  promises.push(onStateChange);
+  return Promise.all(promises);
 }
 exports.waitForPaused = waitForPaused;
 
@@ -190,6 +201,22 @@ async function waitForLoadedScopes(dbg) {
   // with the aria-level attribute equal to "2".
   const element = '.scopes-list .tree-node[aria-level="2"]';
   return waitForElement(dbg, element);
+}
+
+function clickElement(dbg, selector) {
+  const clickEvent = new dbg.win.MouseEvent("click", {
+    bubbles: true,
+    cancelable: true,
+    view: dbg.win,
+  });
+  dbg.win.document.querySelector(selector).dispatchEvent(clickEvent);
+}
+
+async function toggleOriginalScopes(dbg) {
+  const scopesLoaded = waitForLoadedScopes(dbg);
+  const onDispatch = waitForDispatch(dbg, "TOGGLE_MAP_SCOPES");
+  clickElement(dbg, ".map-scopes-header input");
+  return Promise.all([onDispatch, scopesLoaded]);
 }
 
 function createContext(panel) {
@@ -325,10 +352,33 @@ async function removeBreakpoints(dbg) {
 }
 exports.removeBreakpoints = removeBreakpoints;
 
-async function pauseDebugger(dbg, tab, testFunction, { line, file }) {
+async function pauseDebugger(
+  dbg,
+  tab,
+  testFunction,
+  { line, file },
+  pauseOptions
+) {
+  const { getSelectedLocation, isMapScopesEnabled } = dbg.selectors;
+
+  const state = dbg.store.getState();
+  const selectedSource = getSelectedLocation(state).source;
+
   await addBreakpoint(dbg, line, file);
-  const onPaused = waitForPaused(dbg);
+  const shouldEnableOriginalScopes =
+    selectedSource.isOriginal &&
+    !selectedSource.isPrettyPrinted &&
+    !isMapScopesEnabled(state);
+
+  const onPaused = waitForPaused(dbg, {
+    shouldWaitForLoadedScopes: !shouldEnableOriginalScopes,
+  });
   await evalInFrame(tab, testFunction);
+
+  if (shouldEnableOriginalScopes) {
+    await onPaused;
+    await toggleOriginalScopes(dbg);
+  }
   return onPaused;
 }
 exports.pauseDebugger = pauseDebugger;

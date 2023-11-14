@@ -5,8 +5,8 @@
 "use strict";
 
 add_task(async function () {
+  await pushPref("devtools.debugger.map-scopes-enabled", true);
   const dbg = await initDebugger("doc-react.html", "App.js");
-  dbg.actions.toggleMapScopes();
 
   await selectSource(dbg, "App.js");
   await addBreakpoint(dbg, "App.js", 11);
