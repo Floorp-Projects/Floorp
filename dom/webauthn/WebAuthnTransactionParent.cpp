@@ -386,12 +386,16 @@ void WebAuthnTransactionParent::ActorDestroy(ActorDestroyReason aWhy) {
     mRegisterPromiseRequest.DisconnectIfExists();
     mSignPromiseRequest.DisconnectIfExists();
     mTransactionId.reset();
+  }
 
-    nsCOMPtr<nsIWebAuthnService> webauthnService(
-        do_GetService("@mozilla.org/webauthn/service;1"));
-    if (webauthnService) {
-      webauthnService->Reset();
-    }
+  // We should only have to call Reset() on the nsIWebAuthnService if there's an
+  // ongoing transaction. However, we need to do it unconditionally to work
+  // around a Bug 1864526. Once that bug is resolved we can move this into the
+  // mTransactionId.isSome() block above.
+  nsCOMPtr<nsIWebAuthnService> webauthnService(
+      do_GetService("@mozilla.org/webauthn/service;1"));
+  if (webauthnService) {
+    webauthnService->Reset();
   }
 }
 
