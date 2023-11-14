@@ -3,7 +3,7 @@
 
 "use strict";
 
-// Tests that the unanalyzed card is the card that is shown on the initial page load.
+// Tests that the unanalyzed card is shown when not_enough_reviews is not present.
 
 add_task(async function test_show_unanalyzed_on_initial_load() {
   await BrowserTestUtils.withNewTab(
@@ -14,7 +14,7 @@ add_task(async function test_show_unanalyzed_on_initial_load() {
     async browser => {
       let shoppingContainer = await getAnalysisDetails(
         browser,
-        MOCK_NOT_ENOUGH_REVIEWS_PRODUCT_RESPONSE
+        MOCK_UNANALYZED_PRODUCT_RESPONSE
       );
       ok(
         shoppingContainer.unanalyzedProductEl,
@@ -27,7 +27,9 @@ add_task(async function test_show_unanalyzed_on_initial_load() {
   );
 });
 
-add_task(async function test_show_not_enough_reviews_after_analysis() {
+// Tests that the not enough reviews card is shown when not_enough_reviews is true.
+
+add_task(async function test_show_not_enough_reviews() {
   await BrowserTestUtils.withNewTab(
     {
       url: "about:shoppingsidebar",
@@ -45,8 +47,6 @@ add_task(async function test_show_not_enough_reviews_after_analysis() {
             ).wrappedJSObject;
 
           shoppingContainer.data = Cu.cloneInto(mockData, content);
-          // Tell shopping container this is not the initial analysis.
-          shoppingContainer.firstAnalysis = false;
 
           let messageBarVisiblePromise = ContentTaskUtils.waitForCondition(
             () => {

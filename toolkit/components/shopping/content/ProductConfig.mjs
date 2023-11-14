@@ -53,7 +53,7 @@ XPCOMUtils.defineLazyPreferenceGetter(
 // prettier-ignore
 const Environments = {
   prod: {
-    ANALYSIS_API:        "https://trustwerty.com/api/v1/fx/analysis",
+    ANALYSIS_API:        "https://trustwerty.com/api/v2/fx/analysis",
     ANALYSIS_STATUS_API: "https://trustwerty.com/api/v1/fx/analysis_status",
     ANALYZE_API:         "https://trustwerty.com/api/v1/fx/analyze",
     ATTRIBUTION_API:     "https://pe.fakespot.com/api/v1/fx/events",
@@ -61,7 +61,7 @@ const Environments = {
     REPORTING_API:       "https://trustwerty.com/api/v1/fx/report",
   },
   stage: {
-    ANALYSIS_API:        "https://staging.trustwerty.com/api/v1/fx/analysis",
+    ANALYSIS_API:        "https://staging.trustwerty.com/api/v2/fx/analysis",
     ANALYSIS_STATUS_API: "https://staging.trustwerty.com/api/v1/fx/analysis_status",
     ANALYZE_API:         "https://staging.trustwerty.com/api/v1/fx/analyze",
     ATTRIBUTION_API:     "https://staging-partner-ads.fakespot.io/api/v1/fx/events",

@@ -49,6 +49,10 @@
       "description": "Boolean indicating if current product page is supported or not.",
       "type": "boolean"
     },
+    "not_enough_reviews": {
+      "description": "Boolean indicating if the product has enough reviews to analyze.",
+      "type": "boolean"
+    },
     "last_analysis_time": {
       "description": "Integer indicating last analysis time since 1970-01-01 00:00:00 +0000",
       "type": "number"

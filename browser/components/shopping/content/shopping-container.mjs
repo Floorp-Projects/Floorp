@@ -92,9 +92,6 @@ export class ShoppingContainer extends MozLitElement {
     // If we're not opted in or there's no shopping URL in the main browser,
     // the actor will pass `null`, which means this will clear out any existing
     // content in the sidebar.
-    if (!this.productUrl && productUrl && data) {
-      this.firstAnalysis = true;
-    }
     this.data = data;
     this.showOnboarding = showOnboarding;
     this.productUrl = productUrl;
@@ -117,7 +114,6 @@ export class ShoppingContainer extends MozLitElement {
       case "NewAnalysisRequested":
       case "ReanalysisRequested":
         this.isAnalysisInProgress = true;
-        this.firstAnalysis = false;
         this.analysisEvent = {
           type: event.type,
           productUrl: this.productUrl,
@@ -206,22 +202,13 @@ export class ShoppingContainer extends MozLitElement {
     }
 
     if (this.data.needs_analysis) {
-      let notEnoughReviews = !this.data.grade || !this.data.adjusted_rating;
-      if (!this.data.product_id || (this.firstAnalysis && notEnoughReviews)) {
-        // Product is either new to us or (bug 1848695) it's the initial page load of a product
-        // with not enough reviews.
+      if (!this.data.product_id) {
+        // Product is new to us.
         return html`<unanalyzed-product-card
           productUrl=${ifDefined(this.productUrl)}
         ></unanalyzed-product-card>`;
       }
 
-      if (notEnoughReviews) {
-        // We already saw and tried to analyze this product before, but there are not enough reviews
-        // to make a detailed analysis.
-        return html`<shopping-message-bar
-          type="not-enough-reviews"
-        ></shopping-message-bar>`;
-      }
       // We successfully analyzed the product before, but the current analysis is outdated and can be updated
       // via a re-analysis.
       return html`
@@ -231,6 +218,14 @@ export class ShoppingContainer extends MozLitElement {
         ></shopping-message-bar>
         ${this.getAnalysisDetailsTemplate()}
       `;
+    }
+
+    if (this.data.not_enough_reviews) {
+      // We already saw and tried to analyze this product before, but there are not enough reviews
+      // to make a detailed analysis.
+      return html`<shopping-message-bar
+        type="not-enough-reviews"
+      ></shopping-message-bar>`;
     }
 
     return this.getAnalysisDetailsTemplate();
