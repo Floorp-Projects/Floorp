@@ -3647,6 +3647,9 @@ public class GeckoSession {
     /** Boolean indicating if the page is not supported. */
     public final boolean pageNotSupported;
 
+    /** Boolean indicating if there are not enough reviews. */
+    public final boolean notEnoughReviews;
+
     /** Object containing highlights for product. */
     @Nullable public final Highlight highlights;
 
@@ -3666,6 +3669,7 @@ public class GeckoSession {
       adjustedRating = message.getDoubleObject("adjusted_rating");
       needsAnalysis = message.getBoolean("needs_analysis");
       pageNotSupported = message.getBoolean("page_not_supported");
+      notEnoughReviews = message.getBoolean("not_enough_reviews");
       if (message.getBundle("highlights") == null) {
         highlights = null;
       } else {
@@ -3688,6 +3692,7 @@ public class GeckoSession {
       grade = builder.mGrade;
       needsAnalysis = builder.mNeedsAnalysis;
       pageNotSupported = builder.mPageNotSupported;
+      notEnoughReviews = builder.mNotEnoughReviews;
       highlights = builder.mHighlights;
       lastAnalysisTime = builder.mLastAnalysisTime;
       deletedProduct = builder.mDeletedProduct;
@@ -3702,6 +3707,7 @@ public class GeckoSession {
       /* package */ Double mAdjustedRating = 0.0;
       /* package */ Boolean mNeedsAnalysis = false;
       /* package */ Boolean mPageNotSupported = false;
+      /* package */ Boolean mNotEnoughReviews = false;
       /* package */ Highlight mHighlights = new Highlight();
       /* package */ long mLastAnalysisTime = 0;
       /* package */ Boolean mDeletedProductReported = false;
@@ -3786,6 +3792,19 @@ public class GeckoSession {
       public @NonNull ReviewAnalysis.Builder pageNotSupported(
           final @NonNull Boolean pageNotSupported) {
         mPageNotSupported = pageNotSupported;
+        return this;
+      }
+
+      /**
+       * Set the flag that indicates whether there are not enough reviews
+       *
+       * @param notEnoughReviews indicates whether there are not enough reviews
+       * @return This Builder instance.
+       */
+      @AnyThread
+      public @NonNull ReviewAnalysis.Builder notEnoughReviews(
+          final @NonNull Boolean notEnoughReviews) {
+        mNotEnoughReviews = notEnoughReviews;
         return this;
       }
 
