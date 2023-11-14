@@ -9,7 +9,6 @@
   --rule-highlight-propertyvalue: var(--magenta-70);
   --rule-highlight-unmatched-unused-color: var(--grey-55);
   --rule-header-background-color: var(--theme-toolbar-background);
-  --rule-pseudo-class-text-color: var(--yellow-70) ;
   --rule-computed-margin-inline-start: 35px;
   --rule-enableproperty-size: 12px;
   --rule-enableproperty-margin-inline-start: 3px;
@@ -29,7 +28,6 @@
   --rule-highlight-propertyvalue: var(--theme-highlight-red);
   --rule-highlight-unmatched-unused-color: var(--grey-40);
   --rule-header-background-color: #222225;
-  --rule-pseudo-class-text-color: var(--yellow-50);
 }
 
 /* Rule View Tabpanel */
@@ -830,7 +828,7 @@
 }
 
 .ruleview-selector.matched > .ruleview-selector-pseudo-class-lock {
-  color: var(--rule-pseudo-class-text-color);
+  color: var(--pseudo-class-text-color);
 }
 
 .ruleview-selector-warnings {

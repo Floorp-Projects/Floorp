@@ -80,6 +80,8 @@
   --yellow-60: #d7b600;
   --yellow-65: #be9b00;
   --yellow-70: #a47f00;
+  /* interpolated from yellow-70 and yellow-80 */
+  --yellow-75: #8b6801;
   --yellow-80: #715100;
 
   --red-05: #ffe6e8;
