@@ -138,7 +138,6 @@ var supported_properties = {
                    test_path_function ],
     "color": [ test_color_transition,
                test_currentcolor_transition ],
-    "content-visibility": [test_content_visibility_transition],
     "d": [ test_path_function ],
     "fill": [ test_color_transition,
               test_currentcolor_transition ],
@@ -371,6 +370,10 @@ if (IsCSSPropertyPrefEnabled("layout.css.individual-transform.enabled")) {
 if (IsCSSPropertyPrefEnabled("layout.css.contain-intrinsic-size.enabled")) {
   supported_properties["contain-intrinsic-width"] = [ test_length_transition, test_auto_with_length_transition ];
   supported_properties["contain-intrinsic-height"] = supported_properties["contain-intrinsic-width"];
+}
+
+if (IsCSSPropertyPrefEnabled("layout.css.content-visibility.enabled")) {
+  supported_properties["content-visibility"] = [test_content_visibility_transition];
 }
 
 if (IsCSSPropertyPrefEnabled("layout.css.zoom.enabled")) {
