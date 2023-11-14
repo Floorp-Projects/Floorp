@@ -77,6 +77,40 @@ system_default:
     send_in_pings:
       - default-agent
 
+  pdf_handler:
+    type: string
+    description: >
+      Which pdf handler is currently set as the system default handler. This is
+      simply a string with the name of the handler binned to a fixed set of
+      known handlers.
+
+      Possible values currently include the following (from
+      [DefaultPDF.cpp](https://searchfox.org/mozilla-central/source/toolkit/mozapps/defaultagent/DefaultPDF.cpp)):
+      * "Error"
+      * "" (unknown)
+      * "Firefox"
+      * "Microsoft Edge"
+      * "Google Chrome"
+      * "Adobe Acrobat"
+      * "WPS"
+      * "Nitro"
+      * "Foxit"
+      * "PDF-XChange"
+      * "Avast"
+      * "Sumatra"
+    lifetime: application
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1756900
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1756900
+    data_sensitivity:
+      - technical
+    notification_emails:
+      - install-update@mozilla.com
+    expires: never
+    send_in_pings:
+      - default-agent
+
 notification:
   show_success:
     type: boolean
