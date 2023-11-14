@@ -5,13 +5,19 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 SOURCES += [
+    "GeckoViewContentChannel.cpp",
+    "GeckoViewContentProtocolHandler.cpp",
     "GeckoViewExternalAppService.cpp",
+    "GeckoViewInputStream.cpp",
     "GeckoViewOutputStream.cpp",
     "GeckoViewStreamListener.cpp",
 ]
 
 EXPORTS += [
+    "GeckoViewContentChannel.h",
+    "GeckoViewContentProtocolHandler.h",
     "GeckoViewExternalAppService.h",
+    "GeckoViewInputStream.h",
     "GeckoViewOutputStream.h",
     "GeckoViewStreamListener.h",
 ]

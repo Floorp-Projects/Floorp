@@ -15,6 +15,7 @@ import androidx.test.filters.LargeTest
 import org.hamcrest.Matchers.equalTo
 import org.junit.After
 import org.junit.Assert.assertTrue
+import org.junit.Assume.assumeThat
 import org.junit.Before
 import org.junit.Ignore
 import org.junit.Rule
@@ -155,6 +156,24 @@ class PdfCreationTest : BaseSessionTest() {
             val originalBytes = getTestBytes(HELLO_PDF_WORLD_PDF_PATH)
             sessionRule.waitForResult(pdfInputStream).let {
                 assertThat("The PDF File must the same as the original one.", it!!.readBytes(), equalTo(originalBytes))
+            }
+        }
+    }
+
+    @NullDelegate(Autofill.Delegate::class)
+    @Test
+    fun saveAContentPdfDocument() {
+        // Bug 1864622.
+        assumeThat(sessionRule.env.isIsolatedProcess, equalTo(false))
+        activityRule.scenario.onActivity {
+            val originalBytes = getTestBytes(HELLO_PDF_WORLD_PDF_PATH)
+            TestContentProvider.setTestData(originalBytes, "application/pdf")
+            mainSession.loadUri("content://org.mozilla.geckoview.test.provider/pdf")
+            mainSession.waitForPageStop()
+
+            val response = mainSession.pdfFileSaver.save()
+            sessionRule.waitForResult(response).let {
+                assertThat("The PDF File must the same as the original one.", it.body?.readBytes(), equalTo(originalBytes))
             }
         }
     }
