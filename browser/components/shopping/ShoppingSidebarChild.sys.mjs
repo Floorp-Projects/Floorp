@@ -298,6 +298,9 @@ export class ShoppingSidebarChild extends RemotePageChild {
           case "page_not_supported":
             data = { page_not_supported: true };
             break;
+          case "not_enough_reviews":
+            data = { not_enough_reviews: true };
+            break;
           case "unprocessable":
           case "stale":
             throw new Error(analysisStatus, { cause: analysisStatus });
