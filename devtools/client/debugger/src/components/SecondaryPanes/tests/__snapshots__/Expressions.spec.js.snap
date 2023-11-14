@@ -1,7 +1,9 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Expressions should always have unique keys 1`] = `
-<Fragment>
+<div
+  className="pane"
+>
   <ul
     className="pane expressions-list"
   >
@@ -96,11 +98,13 @@ exports[`Expressions should always have unique keys 1`] = `
       </div>
     </li>
   </ul>
-</Fragment>
+</div>
 `;
 
 exports[`Expressions should render 1`] = `
-<Fragment>
+<div
+  className="pane"
+>
   <ul
     className="pane expressions-list"
   >
@@ -195,5 +199,5 @@ exports[`Expressions should render 1`] = `
       </div>
     </li>
   </ul>
-</Fragment>
+</div>
 `;
