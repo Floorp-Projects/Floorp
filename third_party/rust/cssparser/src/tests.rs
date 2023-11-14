@@ -466,7 +466,7 @@ fn serializer(preserve_comments: bool) {
             }
             let mut serialized = String::new();
             write_to(
-                TokenSerializationType::nothing(),
+                TokenSerializationType::Nothing,
                 input,
                 &mut serialized,
                 preserve_comments,

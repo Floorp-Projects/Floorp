@@ -23,8 +23,8 @@ repository = "https://github.com/servo/rust-cssparser"
 path = "lib.rs"
 proc-macro = true
 
-[dependencies.quote]
-version = "1"
+[dependencies]
+quote = "1"
 
 [dependencies.syn]
 version = "2"
