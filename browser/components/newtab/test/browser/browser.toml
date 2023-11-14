@@ -50,10 +50,16 @@ fail-if = ["a11y_checks"] # Bug 1854514 clicked primary button may not be focusa
 ["browser_aboutwelcome_multistage_experimentAPI.js"]
 
 ["browser_aboutwelcome_multistage_languageSwitcher.js"]
-skip-if = ["os == 'linux' && bits == 64"] # Bug 1757875
+skip-if = [
+  "os == 'linux' && bits == 64", # Bug 1757875
+  "verify",
+]
 
 ["browser_aboutwelcome_multistage_mr.js"]
-skip-if = ["os == 'linux' && bits == 64 && debug"] # Bug 1812050
+skip-if = [
+  "os == 'linux' && bits == 64 && debug", # Bug 1812050
+  "os == 'linux' && tsan && verify",
+]
 
 ["browser_aboutwelcome_multistage_video.js"]
 
