@@ -2103,14 +2103,6 @@ static void ResetEnteredCounts(const ICEntry* icEntry) {
   }
 }
 
-static ICStubSpace* StubSpaceForStub(bool makesGCCalls, JSScript* script,
-                                     ICScript* icScript) {
-  if (makesGCCalls) {
-    return icScript->jitScriptStubSpace();
-  }
-  return script->zone()->jitZone()->optimizedStubSpace();
-}
-
 static const uint32_t MaxFoldedShapes = 16;
 
 const JSClass ShapeListObject::class_ = {"JIT ShapeList", 0, &classOps_};
@@ -2632,9 +2624,7 @@ ICAttachResult js::jit::AttachBaselineCacheIRStub(
 
   size_t bytesNeeded = stubInfo->stubDataOffset() + stubInfo->stubDataSize();
 
-  ICStubSpace* stubSpace =
-      StubSpaceForStub(stubInfo->makesGCCalls(), outerScript, icScript);
-  void* newStubMem = stubSpace->alloc(bytesNeeded);
+  void* newStubMem = jitZone->optimizedStubSpace()->alloc(bytesNeeded);
   if (!newStubMem) {
     return ICAttachResult::OOM;
   }

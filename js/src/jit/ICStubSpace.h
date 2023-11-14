@@ -35,6 +35,10 @@ class ICStubSpace {
 
   void freeAllAfterMinorGC(JS::Zone* zone);
 
+  void transferFrom(ICStubSpace& other) {
+    allocator_.transferFrom(&other.allocator_);
+  }
+
 #ifdef DEBUG
   bool isEmpty() const { return allocator_.isEmpty(); }
 #endif

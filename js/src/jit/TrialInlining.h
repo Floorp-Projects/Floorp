@@ -18,7 +18,6 @@
 
 #include "gc/Barrier.h"
 #include "jit/CacheIR.h"
-#include "jit/ICStubSpace.h"
 #include "js/RootingAPI.h"
 #include "js/TypeDecls.h"
 #include "js/UniquePtr.h"
@@ -80,8 +79,6 @@ class InliningRoot {
         inlinedScripts_(cx),
         totalBytecodeSize_(owningScript->length()) {}
 
-  JitScriptICStubSpace* jitScriptStubSpace() { return &jitScriptStubSpace_; }
-
   void trace(JSTracer* trc);
   bool traceWeak(JSTracer* trc);
 
@@ -99,7 +96,6 @@ class InliningRoot {
   void addToTotalBytecodeSize(size_t size) { totalBytecodeSize_ += size; }
 
  private:
-  JitScriptICStubSpace jitScriptStubSpace_ = {};
   HeapPtr<JSScript*> owningScript_;
   js::Vector<js::UniquePtr<ICScript>> inlinedScripts_;
 
