@@ -1040,8 +1040,8 @@ size_t CacheIRStubInfo::stubDataSize() const {
 }
 
 template <typename T>
-static GCPtr<T>* AsGCPtr(uintptr_t* ptr) {
-  return reinterpret_cast<GCPtr<T>*>(ptr);
+static GCPtr<T>* AsGCPtr(void* ptr) {
+  return static_cast<GCPtr<T>*>(ptr);
 }
 
 void CacheIRStubInfo::replaceStubRawWord(uint8_t* stubData, uint32_t offset,
@@ -1091,76 +1091,109 @@ template gc::AllocSite* CacheIRStubInfo::getPtrStubField(ICCacheIRStub* stub,
                                                          uint32_t offset) const;
 
 template <StubField::Type type, typename V>
-static void InitWrappedPtr(uintptr_t* ptr, V val) {
+static void InitWrappedPtr(void* ptr, V val) {
   using RawType = typename MapStubFieldToType<type>::RawType;
   using WrappedType = typename MapStubFieldToType<type>::WrappedType;
-  auto* wrapped = reinterpret_cast<WrappedType*>(ptr);
+  auto* wrapped = static_cast<WrappedType*>(ptr);
   new (wrapped) WrappedType(mozilla::BitwiseCast<RawType>(val));
+}
+
+static void InitWordStubField(StubField::Type type, void* dest,
+                              uintptr_t value) {
+  MOZ_ASSERT(StubField::sizeIsWord(type));
+  MOZ_ASSERT((uintptr_t(dest) % sizeof(uintptr_t)) == 0,
+             "Unaligned stub field");
+
+  switch (type) {
+    case StubField::Type::RawInt32:
+    case StubField::Type::RawPointer:
+    case StubField::Type::AllocSite:
+      *static_cast<uintptr_t*>(dest) = value;
+      break;
+    case StubField::Type::Shape:
+      InitWrappedPtr<StubField::Type::Shape>(dest, value);
+      break;
+    case StubField::Type::WeakShape:
+      // No read barrier required to copy weak pointer.
+      InitWrappedPtr<StubField::Type::WeakShape>(dest, value);
+      break;
+    case StubField::Type::WeakGetterSetter:
+      // No read barrier required to copy weak pointer.
+      InitWrappedPtr<StubField::Type::WeakGetterSetter>(dest, value);
+      break;
+    case StubField::Type::JSObject:
+      InitWrappedPtr<StubField::Type::JSObject>(dest, value);
+      break;
+    case StubField::Type::WeakObject:
+      // No read barrier required to copy weak pointer.
+      InitWrappedPtr<StubField::Type::WeakObject>(dest, value);
+      break;
+    case StubField::Type::Symbol:
+      InitWrappedPtr<StubField::Type::Symbol>(dest, value);
+      break;
+    case StubField::Type::String:
+      InitWrappedPtr<StubField::Type::String>(dest, value);
+      break;
+    case StubField::Type::WeakBaseScript:
+      // No read barrier required to copy weak pointer.
+      InitWrappedPtr<StubField::Type::WeakBaseScript>(dest, value);
+      break;
+    case StubField::Type::JitCode:
+      InitWrappedPtr<StubField::Type::JitCode>(dest, value);
+      break;
+    case StubField::Type::Id:
+      AsGCPtr<jsid>(dest)->init(jsid::fromRawBits(value));
+      break;
+    case StubField::Type::RawInt64:
+    case StubField::Type::Double:
+    case StubField::Type::Value:
+    case StubField::Type::Limit:
+      MOZ_CRASH("Invalid type");
+  }
+}
+
+static void InitInt64StubField(StubField::Type type, void* dest,
+                               uint64_t value) {
+  MOZ_ASSERT(StubField::sizeIsInt64(type));
+  MOZ_ASSERT((uintptr_t(dest) % sizeof(uint64_t)) == 0, "Unaligned stub field");
+
+  switch (type) {
+    case StubField::Type::RawInt64:
+    case StubField::Type::Double:
+      *static_cast<uint64_t*>(dest) = value;
+      break;
+    case StubField::Type::Value:
+      AsGCPtr<Value>(dest)->init(Value::fromRawBits(value));
+      break;
+    case StubField::Type::RawInt32:
+    case StubField::Type::RawPointer:
+    case StubField::Type::AllocSite:
+    case StubField::Type::Shape:
+    case StubField::Type::WeakShape:
+    case StubField::Type::WeakGetterSetter:
+    case StubField::Type::JSObject:
+    case StubField::Type::WeakObject:
+    case StubField::Type::Symbol:
+    case StubField::Type::String:
+    case StubField::Type::WeakBaseScript:
+    case StubField::Type::JitCode:
+    case StubField::Type::Id:
+    case StubField::Type::Limit:
+      MOZ_CRASH("Invalid type");
+  }
 }
 
 void CacheIRWriter::copyStubData(uint8_t* dest) const {
   MOZ_ASSERT(!failed());
 
-  uintptr_t* destWords = reinterpret_cast<uintptr_t*>(dest);
-
   for (const StubField& field : stubFields_) {
-    MOZ_ASSERT((uintptr_t(destWords) % field.sizeInBytes()) == 0,
-               "Unaligned stub field");
-
-    switch (field.type()) {
-      case StubField::Type::RawInt32:
-      case StubField::Type::RawPointer:
-      case StubField::Type::AllocSite:
-        *destWords = field.asWord();
-        break;
-      case StubField::Type::Shape:
-        InitWrappedPtr<StubField::Type::Shape>(destWords, field.asWord());
-        break;
-      case StubField::Type::WeakShape:
-        // No read barrier required to copy weak pointer.
-        InitWrappedPtr<StubField::Type::WeakShape>(destWords, field.asWord());
-        break;
-      case StubField::Type::WeakGetterSetter:
-        // No read barrier required to copy weak pointer.
-        InitWrappedPtr<StubField::Type::WeakGetterSetter>(destWords,
-                                                          field.asWord());
-        break;
-      case StubField::Type::JSObject:
-        InitWrappedPtr<StubField::Type::JSObject>(destWords, field.asWord());
-        break;
-      case StubField::Type::WeakObject:
-        // No read barrier required to copy weak pointer.
-        InitWrappedPtr<StubField::Type::WeakObject>(destWords, field.asWord());
-        break;
-      case StubField::Type::Symbol:
-        InitWrappedPtr<StubField::Type::Symbol>(destWords, field.asWord());
-        break;
-      case StubField::Type::String:
-        InitWrappedPtr<StubField::Type::String>(destWords, field.asWord());
-        break;
-      case StubField::Type::WeakBaseScript:
-        // No read barrier required to copy weak pointer.
-        InitWrappedPtr<StubField::Type::WeakBaseScript>(destWords,
-                                                        field.asWord());
-        break;
-      case StubField::Type::JitCode:
-        InitWrappedPtr<StubField::Type::JitCode>(destWords, field.asWord());
-        break;
-      case StubField::Type::Id:
-        AsGCPtr<jsid>(destWords)->init(jsid::fromRawBits(field.asWord()));
-        break;
-      case StubField::Type::RawInt64:
-      case StubField::Type::Double:
-        *reinterpret_cast<uint64_t*>(destWords) = field.asInt64();
-        break;
-      case StubField::Type::Value:
-        AsGCPtr<Value>(destWords)->init(
-            Value::fromRawBits(uint64_t(field.asInt64())));
-        break;
-      case StubField::Type::Limit:
-        MOZ_CRASH("Invalid type");
+    if (field.sizeIsWord()) {
+      InitWordStubField(field.type(), dest, field.asWord());
+      dest += sizeof(uintptr_t);
+    } else {
+      InitInt64StubField(field.type(), dest, field.asInt64());
+      dest += sizeof(uint64_t);
     }
-    destWords += StubField::sizeInBytes(field.type()) / sizeof(uintptr_t);
   }
 }
 
