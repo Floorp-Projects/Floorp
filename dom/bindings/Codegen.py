@@ -15194,7 +15194,7 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
                 if (IsArrayIndex(index)) {
                   $*{cxDecl}
                   *done = true;
-                  // https://heycam.github.io/webidl/#legacy-platform-object-defineownproperty
+                  // https://webidl.spec.whatwg.org/#legacy-platform-object-defineownproperty
                   // Step 1.1.  The no-indexed-setter case is handled by step 1.2.
                   if (!desc.isDataDescriptor()) {
                     return opresult.failNotDataDescriptor();
@@ -15246,6 +15246,16 @@ class CGDOMJSProxyHandler_defineProperty(ClassMethod):
                     "that has unforgeables.  Figure out how that "
                     "should work!"
                 )
+            set += dedent(
+                """
+                // https://webidl.spec.whatwg.org/#legacy-platform-object-defineownproperty
+                // Step 2.2.2.1.
+                if (!desc.isDataDescriptor()) {
+                  *done = true;
+                  return opresult.failNotDataDescriptor();
+                }
+                """
+            )
             tailCode = dedent(
                 """
                 *done = true;

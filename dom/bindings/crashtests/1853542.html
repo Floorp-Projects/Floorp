@@ -1,0 +1,13 @@
+<script>
+let v = "";
+Object.defineProperty(localStorage, "a", {
+  get() {
+    return v;
+  },
+  set(newValue) {
+    v = newValue;
+  },
+  enumerable: true,
+  configurable: true,
+});
+</script>
