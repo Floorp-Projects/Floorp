@@ -384,13 +384,12 @@
 .urlbarView-button:not(:empty) {
   &:not(.urlbarView-button-menu) {
     border-radius: var(--toolbarbutton-border-radius);
-    padding: .5em 1em;
-    margin-inline-end: 1.4em;
+    padding: 7px;
     font-size: 0.93em;
-    font-weight: var(--font-weight-bold);
+    font-weight: 600;
     background-clip: padding-box;
     min-height: 16px;
-    min-width: 6em;
+    min-width: 8.75em;
     text-align: center;
     flex-basis: initial;
     flex-shrink: 0;
@@ -413,6 +412,16 @@
         background-color: var(--button-primary-active-bgcolor);
       }
     }
+
+    &:last-child {
+      /* Add space between a labeled button and the trailing edge of the panel. */
+      margin-inline-end: 1.8em;
+    }
+  }
+
+  + .urlbarView-button:empty {
+    /* Add space between a labeled button followed by an unlabeled button. */
+    margin-inline-start: 1.8em;
   }
 }
 

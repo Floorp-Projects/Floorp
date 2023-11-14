@@ -8,7 +8,6 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   UrlbarPrefs: "resource:///modules/UrlbarPrefs.sys.mjs",
-  UrlbarProvidersManager: "resource:///modules/UrlbarProvidersManager.sys.mjs",
   UrlbarUtils: "resource:///modules/UrlbarUtils.sys.mjs",
 });
 
@@ -30,7 +29,6 @@ export class UrlbarSearchOneOffs extends SearchOneOffs {
     // Override the SearchOneOffs.jsm value for the Address Bar.
     this.disableOneOffsHorizontalKeyNavigation = true;
     this._webEngines = [];
-    this.container.addEventListener("rebuild", this);
   }
 
   /**
@@ -87,100 +85,6 @@ export class UrlbarSearchOneOffs extends SearchOneOffs {
     this._on_popupshowing();
   }
 
-  onQueryStarted(queryContext) {
-    this.queryContext = queryContext;
-  }
-
-  onQueryFinished(queryContext) {
-    this.#buildQuickSuggestOptIn(queryContext);
-  }
-
-  #buildQuickSuggestOptIn(queryContext) {
-    let provider = lazy.UrlbarProvidersManager.getProvider(
-      "UrlbarProviderQuickSuggestContextualOptIn"
-    );
-    if (
-      !provider.shouldDisplayContextualOptIn(queryContext) ||
-      provider.isActive(queryContext)
-    ) {
-      if (this._quickSuggestOptInContainer) {
-        this._quickSuggestOptInContainer.hidden = true;
-      }
-      return;
-    }
-
-    if (this._quickSuggestOptInContainer) {
-      this._quickSuggestOptInContainer.hidden = false;
-      this.#udpateQuickSuggestOptInCopy();
-      return;
-    }
-
-    // The following is basically a copy of what UrlbarView generates for
-    // ProviderQuickSuggestContextualOptIn's view template. Gross but good
-    // enough for the experiment. Ultimately, if we decide to keep this UI at
-    // the bottom, and when we replace the one-off buttons footer with a better
-    // UI (e.g. search button), this can become a proper result again.
-    let parser = new DOMParser();
-    let doc = parser.parseFromString(
-      `
-<div xmlns="http://www.w3.org/1999/xhtml" class="urlbarView-quickSuggestContextualOptIn-one-off-container">
-  <div class="urlbarView-row" role="presentation" type="dynamic">
-    <span class="urlbarView-row-inner">
-      <span class="urlbarView-dynamic-quickSuggestContextualOptIn-no-wrap urlbarView-no-wrap">
-        <img class="urlbarView-dynamic-quickSuggestContextualOptIn-icon urlbarView-favicon" src="chrome://branding/content/icon32.png" />
-        <span class="urlbarView-dynamic-quickSuggestContextualOptIn-text-container">
-          <strong class="urlbarView-dynamic-quickSuggestContextualOptIn-title urlbarView-title"></strong>
-          <span class="urlbarView-dynamic-quickSuggestContextualOptIn-description">
-            <a class="urlbarView-dynamic-quickSuggestContextualOptIn-learn-more" data-l10n-name="learn-more-link" selectable="" name="learn-more" id="urlbarView-footer-quickSuggestContextualOptIn-learn-more">Learn more</a>
-          </span>
-        </span>
-      </span>
-    </span>
-    <span primary="" name="allow" class="urlbarView-button urlbarView-button-0" role="button" data-l10n-id="urlbar-firefox-suggest-contextual-opt-in-allow" id="urlbarView-footer-quickSuggestContextualOptIn-allow"></span>
-    <span name="dismiss" class="urlbarView-button urlbarView-button-1" role="button" data-l10n-id="urlbar-firefox-suggest-contextual-opt-in-dismiss" id="urlbarView-footer-quickSuggestContextualOptIn-dismiss"></span>
-  </div>
-</div>
-      `,
-      "text/html"
-    );
-    this._quickSuggestOptInContainer = this.document.importNode(
-      doc.body.firstElementChild,
-      true
-    );
-
-    // DOMParser normalizes attributes to lowercase, so need to set this one after the fact.
-    this._quickSuggestOptInContainer.firstElementChild.setAttribute(
-      "dynamicType",
-      "quickSuggestContextualOptIn"
-    );
-
-    this.container.appendChild(this._quickSuggestOptInContainer);
-    this._quickSuggestOptInContainer.addEventListener("keydown", this);
-    this.#udpateQuickSuggestOptInCopy();
-  }
-
-  #udpateQuickSuggestOptInCopy() {
-    let alternativeCopy = lazy.UrlbarPrefs.get(
-      "quicksuggest.contextualOptIn.sayHello"
-    );
-    this.document.l10n.setAttributes(
-      this._quickSuggestOptInContainer.querySelector(
-        ".urlbarView-dynamic-quickSuggestContextualOptIn-title"
-      ),
-      alternativeCopy
-        ? "urlbar-firefox-suggest-contextual-opt-in-title-2"
-        : "urlbar-firefox-suggest-contextual-opt-in-title-1"
-    );
-    this.document.l10n.setAttributes(
-      this._quickSuggestOptInContainer.querySelector(
-        ".urlbarView-dynamic-quickSuggestContextualOptIn-description"
-      ),
-      alternativeCopy
-        ? "urlbar-firefox-suggest-contextual-opt-in-description-2"
-        : "urlbar-firefox-suggest-contextual-opt-in-description-1"
-    );
-  }
-
   /**
    * Query listener method.  Delegates to the superclass.
    */
@@ -208,7 +112,7 @@ export class UrlbarSearchOneOffs extends SearchOneOffs {
   }
 
   /**
-   * The selected one-off including the search-settings button.
+   * The selected one-off, a xul:button, including the search-settings button.
    *
    * @param {DOMElement|null} button
    *   The selected one-off button. Null if no one-off is selected.
@@ -239,24 +143,6 @@ export class UrlbarSearchOneOffs extends SearchOneOffs {
     return super.selectedButton;
   }
 
-  getSelectableButtons(aIncludeNonEngineButtons) {
-    const buttons = super.getSelectableButtons(aIncludeNonEngineButtons);
-
-    if (
-      aIncludeNonEngineButtons &&
-      this._quickSuggestOptInContainer &&
-      !this._quickSuggestOptInContainer.hidden
-    ) {
-      buttons.push(
-        ...this._quickSuggestOptInContainer.querySelectorAll(
-          "[role=button], [selectable]"
-        )
-      );
-    }
-
-    return buttons;
-  }
-
   /**
    * The selected index in the view or -1 if there is no selection.
    *
@@ -279,7 +165,8 @@ export class UrlbarSearchOneOffs extends SearchOneOffs {
   }
 
   /**
-   * Called when a one-off is clicked.
+   * Called when a one-off is clicked. This is not called for the settings
+   * button.
    *
    * @param {event} event
    *   The event that triggered the pick.
@@ -291,14 +178,12 @@ export class UrlbarSearchOneOffs extends SearchOneOffs {
     // The settings button and adding engines are a special case and executed
     // immediately.
     if (
-      !this.selectedButton.parentNode.classList.contains(
-        "search-panel-one-offs"
+      this.selectedButton == this.view.oneOffSearchButtons.settingsButton ||
+      this.selectedButton.classList.contains(
+        "searchbar-engine-one-off-add-engine"
       )
     ) {
       this.input.controller.engagementEvent.discard();
-      if (this._handleQuickSuggestOptInCommand(this.selectedButton)) {
-        return;
-      }
       this.selectedButton.doCommand();
       this.selectedButton = null;
       return;
@@ -474,26 +359,6 @@ export class UrlbarSearchOneOffs extends SearchOneOffs {
     }
   }
 
-  _handleQuickSuggestOptInCommand(element) {
-    if (
-      this._quickSuggestOptInContainer &&
-      element.compareDocumentPosition(this._quickSuggestOptInContainer) &
-        Node.DOCUMENT_POSITION_CONTAINS
-    ) {
-      let provider = lazy.UrlbarProvidersManager.getProvider(
-        "UrlbarProviderQuickSuggestContextualOptIn"
-      );
-      provider.handleCommand(
-        element,
-        this.view.controller,
-        null,
-        this._quickSuggestOptInContainer
-      );
-      return true;
-    }
-    return false;
-  }
-
   /**
    * Overrides the superclass's click listener to handle clicks on local
    * one-offs in addition to engine one-offs.
@@ -508,10 +373,6 @@ export class UrlbarSearchOneOffs extends SearchOneOffs {
     }
 
     let button = event.originalTarget;
-
-    if (this._handleQuickSuggestOptInCommand(button)) {
-      return;
-    }
 
     if (!button.engine && !button.source) {
       return;
@@ -534,11 +395,5 @@ export class UrlbarSearchOneOffs extends SearchOneOffs {
   _on_contextmenu(event) {
     // Prevent the context menu from appearing.
     event.preventDefault();
-  }
-
-  _on_rebuild() {
-    if (this.queryContext) {
-      this.#buildQuickSuggestOptIn(this.queryContext);
-    }
   }
 }
