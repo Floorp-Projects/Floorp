@@ -1,15 +1,31 @@
-<html>
+<html class="reftest-wait">
   <body>
     <script>
+      let o1;
+      let p1, p2;
+      window.addEventListener("MozReftestInvalidate", finish);
       try { o1 = window.open("") } catch(e) { }
       try { o1.location.reload() } catch(e) { }
       try { o2 = o1.navigator } catch(e) { }
       try { o3 = o2.mediaDevices } catch(e) { }
       try { o4 = new XMLHttpRequest() } catch(e) { }
-      try { o3.getUserMedia({video: true, fake: true }).then((stream) => {}).catch((error) => {}) } catch (e) {}
+      try { p1 = o3.getUserMedia({video: true, fake: true }).then((stream) => {}).catch((error) => {}) } catch (e) {}
       try { o4.open("T", "aa", false) } catch(e) { }
       try { o4.send() } catch(e) { }
-      try { o3.getUserMedia({video: true}).then((stream) => {}).catch((error) => {}) } catch (e) {}
+      try { p2 = o3.getUserMedia({video: true}).then((stream) => {}).catch((error) => {}) } catch (e) {}
+
+      async function finish() {
+        try {
+          await p1;
+        } catch (e) {}
+        try {
+          await p2;
+        } catch (e) {}
+        try {
+          o1.close();
+        } catch (e) {}
+        document.documentElement.className = "";
+      }
     </script>
   </body>
 </html>

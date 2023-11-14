@@ -1,13 +1,29 @@
-<html>
+<html class="reftest-wait">
   <body>
     <script>
+      let o1;
+      let p1, p2;
+      window.addEventListener("MozReftestInvalidate", finish);
       try { o1 = window.open("") } catch (e) {}
       try { o1.location.reload() } catch (e) {}
       try { o2 = new RTCPeerConnection({iceServers: [{"url": "stun:d"}]}) } catch (e) {}
-      try { o1.navigator.mediaDevices.getUserMedia({video: true, fake: true}).catch((error) => {}) } catch (e) {}
+      try { p1 = o1.navigator.mediaDevices.getUserMedia({video: true, fake: true}).catch((error) => {}) } catch (e) {}
       try { o2.createOffer({offerToReceiveVideo: true}).then((offer) => {
-        try { o1.navigator.mediaDevices.getUserMedia({video: true}) } catch (e) {};
+        try { p2 = o1.navigator.mediaDevices.getUserMedia({video: true}) } catch (e) {};
       }) } catch (e) {}
+
+      async function finish() {
+        try {
+          await p1;
+        } catch (e) {}
+        try {
+          await p2;
+        } catch (e) {}
+        try {
+          o1.close();
+        } catch (e) {}
+        document.documentElement.className = "";
+      }
     </script>
   </body>
 </html>

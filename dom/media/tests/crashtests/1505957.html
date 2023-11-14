@@ -1,10 +1,12 @@
-<html id='a'>
+<html id='a' class="reftest-wait">
 <script>
+let w;
+window.addEventListener("MozReftestInvalidate", finish);
 window.onload=function() {
     b.src=document.getElementById('c').innerHTML;
     b.setAttribute('src', 'video-crash.webm');
     document.documentElement.style.display='none';
-    window.top.open('');
+    w = window.top.open('');
     var o = window.frames[0].document.body.childNodes[0];
     document.getElementById('d').appendChild(o.parentNode.removeChild(o));
     o = document.getElementById('a');
@@ -15,6 +17,12 @@ window.onload=function() {
     o.setAttribute('style', 0)
     p.removeChild(o);
     p.appendChild(o);
+}
+function finish() {
+    try {
+        w.close();
+    } catch (e) {}
+    document.documentElement.className = "";
 }
 </script>
 <iframe id='b'></iframe>
