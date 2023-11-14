@@ -33,7 +33,7 @@ ChromeUtils.defineESModuleGetters(lazy, {
 const API_RETRIES = 3;
 const API_RETRY_TIMEOUT = 100;
 const API_POLL_ATTEMPTS = 260;
-const API_POLL_INITIAL_WAIT = 20000;
+const API_POLL_INITIAL_WAIT = 1000;
 const API_POLL_WAIT = 1000;
 
 XPCOMUtils.defineLazyServiceGetters(lazy, {
