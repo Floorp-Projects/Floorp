@@ -8,7 +8,7 @@
 #define _CacheConstants_h_
 
 #include "nsGkAtoms.h"
-#include "RelationType.h"
+#include "mozilla/a11y/RelationType.h"
 
 namespace mozilla {
 namespace a11y {
