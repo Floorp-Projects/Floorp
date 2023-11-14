@@ -19,6 +19,11 @@ class StateKtTest {
                     is Event.Account.BeginPairingFlow -> State.Active(ProgressState.BeginningAuthentication)
                     else -> null
                 }
+                is AccountState.Authenticating -> when (event) {
+                    Event.Progress.CancelAuth -> State.Idle(AccountState.NotAuthenticated)
+                    is Event.Progress.AuthData -> State.Active(ProgressState.CompletingAuthentication)
+                    else -> null
+                }
                 AccountState.Authenticated -> when (event) {
                     is Event.Account.AuthenticationError -> State.Active(ProgressState.RecoveringFromAuthProblem)
                     Event.Account.AccessTokenKeyError -> State.Idle(AccountState.AuthenticationProblem)
@@ -39,8 +44,7 @@ class StateKtTest {
                 }
                 ProgressState.BeginningAuthentication -> when (event) {
                     Event.Progress.FailedToBeginAuth -> State.Idle(AccountState.NotAuthenticated)
-                    Event.Progress.CancelAuth -> State.Idle(AccountState.NotAuthenticated)
-                    is Event.Progress.AuthData -> State.Active(ProgressState.CompletingAuthentication)
+                    is Event.Progress.StartedOAuthFlow -> State.Idle(AccountState.Authenticating(event.oAuthUrl))
                     else -> null
                 }
                 ProgressState.CompletingAuthentication -> when (event) {
@@ -64,12 +68,25 @@ class StateKtTest {
         assertEquals(expectedNextState, nextState)
     }
 
+    private fun instantiateAccountState(simpleName: String): AccountState {
+        return when (simpleName) {
+            "NotAuthenticated" -> AccountState.NotAuthenticated
+            "Authenticating" -> AccountState.Authenticating("https://example.com/oauth-start")
+            "Authenticated" -> AccountState.Authenticated
+            "AuthenticationProblem" -> AccountState.AuthenticationProblem
+            else -> {
+                throw AssertionError("Unknown AccountState: $simpleName")
+            }
+        }
+    }
+
     private fun instantiateEvent(eventClassSimpleName: String): Event {
         return when (eventClassSimpleName) {
             "Start" -> Event.Account.Start
             "BeginPairingFlow" -> Event.Account.BeginPairingFlow("http://some.pairing.url.com", mock())
             "BeginEmailFlow" -> Event.Account.BeginEmailFlow(mock())
             "CancelAuth" -> Event.Progress.CancelAuth
+            "StartedOAuthFlow" -> Event.Progress.StartedOAuthFlow("https://example.com/oauth-start")
             "AuthenticationError" -> Event.Account.AuthenticationError("fxa op")
             "AccessTokenKeyError" -> Event.Account.AccessTokenKeyError
             "Logout" -> Event.Account.Logout
@@ -103,7 +120,7 @@ class StateKtTest {
             }
         }
 
-        AccountState.values().forEach { state ->
+        AccountState::class.sealedSubclasses.map { instantiateAccountState(it.simpleName!!) }.forEach { state ->
             Event.Account::class.sealedSubclasses.map { instantiateEvent(it.simpleName!!) }.forEach {
                 val ss = State.Idle(state)
                 assertNextStateForStateEventPair(

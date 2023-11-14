@@ -589,7 +589,6 @@ class FxaWebChannelFeatureTest {
         val port: Port = mock()
         val messageHandler = argumentCaptor<MessageHandler>()
 
-        whenever(accountManager.finishAuthentication(any())).thenReturn(false)
         WebExtensionController.installedExtensions[FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID] = ext
 
         val webchannelFeature = prepareFeatureForTest(ext, port, engineSession, null, emptySet(), accountManager)
@@ -622,7 +621,6 @@ class FxaWebChannelFeatureTest {
         val port: Port = mock()
         val messageHandler = argumentCaptor<MessageHandler>()
 
-        whenever(accountManager.finishAuthentication(any())).thenReturn(false)
         WebExtensionController.installedExtensions[FxaWebChannelFeature.WEB_CHANNEL_EXTENSION_ID] = ext
 
         val webchannelFeature = prepareFeatureForTest(ext, port, engineSession, null, emptySet(), accountManager)
