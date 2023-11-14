@@ -419,6 +419,7 @@ opaque-types = [
     "mozilla::detail::GkAtoms", # https://bugzilla.mozilla.org/show_bug.cgi?id=1517685
     "mozilla::detail::ThreadLocal.*",
     "std::make_signed_t",
+    "mozilla::ProfileChunkedBuffer",
 ]
 
 # All cbindgen-types are in mod "structs::root::mozilla".
