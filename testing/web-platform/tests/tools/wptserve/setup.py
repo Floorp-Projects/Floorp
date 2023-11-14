@@ -1,7 +1,6 @@
 from setuptools import setup
 
 PACKAGE_VERSION = '4.0'
-deps = ["h2>=4.1.0"]
 
 setup(name='wptserve',
       version=PACKAGE_VERSION,
@@ -18,6 +17,5 @@ setup(name='wptserve',
       license='BSD',
       packages=['wptserve', 'wptserve.sslutils'],
       include_package_data=True,
-      zip_safe=False,
-      install_requires=deps
+      zip_safe=False
       )
