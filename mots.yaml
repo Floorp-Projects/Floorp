@@ -8,7 +8,7 @@
 # documentation and how to modify this file.
 repo: mozilla-central
 created_at: '2021-10-14T12:50:40.073465'
-updated_at: '2023-11-07T14:09:31.961357'
+updated_at: '2023-11-13T15:42:20.328157'
 export:
   path: ./docs/mots/index.rst
   format: rst
@@ -955,10 +955,6 @@ people:
     bmo_id: 164722
     name: Tantek Çelik
     nick: tantek
-  - &tanvi
-    bmo_id: 430652
-    name: Tanvi Vyas
-    nick: tanvi
   - &tcampbell
     bmo_id: 586681
     name: Ted Campbell
@@ -1336,16 +1332,17 @@ modules:
         - Jonathan Kingston
         - Thomas Nguyen
         - François Marier
+        - Tanvi Vyas
+        - Andrea Marchesini
       group: dev-security
       components:
         - 'Core::DOM: Security'
     owners:
       - *ckerschb
     peers:
-      - *tanvi
       - *dveditz
-      - *baku
       - *freddy
+      - *tschuster
     machine_name: core_content_security
 
   - name: 'Core: Cookies'
@@ -4248,5 +4245,5 @@ modules:
         - Ryan Tilder
       group: dev-platform
 hashes:
-  config: e50c5804c707f1bb9672613069dce9afdd5339cc
-  export: afeef31384cadb7f29198b7e67d0fa9665d8ce6a
+  config: 892084f03482d22fe31b38b655eaebe0cc1defa8
+  export: 7478096ce9340e5c5c0b828e2f062dcf6521e5e2
