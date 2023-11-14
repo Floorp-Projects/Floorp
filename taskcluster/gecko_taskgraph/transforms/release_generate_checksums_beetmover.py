@@ -6,9 +6,10 @@ Transform the `release-generate-checksums-beetmover` task to also append `build`
 """
 
 from taskgraph.transforms.base import TransformSequence
+from taskgraph.util.dependencies import get_primary_dependency
+from taskgraph.util.schema import Schema
 from voluptuous import Optional
 
-from gecko_taskgraph.loader.single_dep import schema
 from gecko_taskgraph.transforms.beetmover import craft_release_properties
 from gecko_taskgraph.transforms.task import task_description_schema
 from gecko_taskgraph.util.attributes import copy_attributes_from_dependent_job
@@ -22,7 +23,7 @@ from gecko_taskgraph.util.scriptworker import (
 transforms = TransformSequence()
 
 
-release_generate_checksums_beetmover_schema = schema.extend(
+release_generate_checksums_beetmover_schema = Schema(
     {
         # unique label to describe this beetmover task, defaults to {dep.label}-beetmover
         Optional("label"): str,
@@ -33,17 +34,31 @@ release_generate_checksums_beetmover_schema = schema.extend(
         Optional("shipping-phase"): task_description_schema["shipping-phase"],
         Optional("shipping-product"): task_description_schema["shipping-product"],
         Optional("attributes"): task_description_schema["attributes"],
+        Optional("job-from"): task_description_schema["job-from"],
+        Optional("dependencies"): task_description_schema["dependencies"],
     }
 )
 
 transforms = TransformSequence()
+
+
+@transforms.add
+def remove_name(config, jobs):
+    for job in jobs:
+        if "name" in job:
+            del job["name"]
+        yield job
+
+
 transforms.add_validate(release_generate_checksums_beetmover_schema)
 
 
 @transforms.add
 def make_task_description(config, jobs):
     for job in jobs:
-        dep_job = job["primary-dependency"]
+        dep_job = get_primary_dependency(config, job)
+        assert dep_job
+
         attributes = copy_attributes_from_dependent_job(dep_job)
         attributes.update(job.get("attributes", {}))
 
