@@ -809,6 +809,18 @@
   color: var(--theme-text-color-alt);
 }
 
+/* We use a dimmer color for those unmatching element, but we can't convey state change
+    only with colors, so let's add a line-through line */
+:is(
+  .ruleview-selector.unmatched,
+  .ruleview-unmatched-variable
+):not(
+  /* don't show the strike through when the element is hovered so it's more legible */
+  :hover
+) {
+  text-decoration: line-through solid currentColor;
+}
+
 .ruleview-selector.matched > .ruleview-selector-attribute {
   /* TODO: Bug 1178535 Awaiting UX feedback on highlight colors */
 }
