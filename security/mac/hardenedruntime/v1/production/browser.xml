@@ -25,5 +25,12 @@
 
     <!-- For SmartCardServices(7) -->
     <key>com.apple.security.smartcard</key><true/>
+
+    <!-- Required for com.apple.developer.web-browser.public-key-credential -->
+    <key>com.apple.application-identifier</key>
+    <string>43AQ936H96.org.mozilla.*</string>
+
+    <!-- For platform passkey (webauthn) support -->
+    <key>com.apple.developer.web-browser.public-key-credential</key><true/>
   </dict>
 </plist>

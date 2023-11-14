@@ -13813,6 +13813,12 @@
   value: false
   mirror: always
 
+# Dispatch WebAuthn requests to the macOS platform API
+- name: security.webauthn.enable_macos_passkeys
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 # Dispatch WebAuthn requests to authenticator-rs
 - name: security.webauth.webauthn_enable_usbtoken
   type: RelaxedAtomicBool
