@@ -376,8 +376,8 @@ void AudioNodeTrack::UpMixDownMixChunk(const AudioBlock* aChunk,
         outputChannels[j] = &aDownmixBuffer[j * WEBAUDIO_BLOCK_SIZE];
       }
 
-      AudioChannelsDownMix<float>(aOutputChannels, outputChannels,
-                                  WEBAUDIO_BLOCK_SIZE);
+      AudioChannelsDownMix<float, float>(aOutputChannels, outputChannels,
+                                         WEBAUDIO_BLOCK_SIZE);
 
       aOutputChannels.SetLength(aOutputChannelCount);
       for (uint32_t j = 0; j < aOutputChannels.Length(); ++j) {
