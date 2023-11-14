@@ -1980,7 +1980,7 @@ class JSScript : public js::BaseScript {
 
   void addSizeOfJitScript(mozilla::MallocSizeOf mallocSizeOf,
                           size_t* sizeOfJitScript,
-                          size_t* sizeOfBaselineFallbackStubs) const;
+                          size_t* sizeOfAllocSites) const;
 
   mozilla::Span<const js::TryNote> trynotes() const {
     return immutableScriptData()->tryNotes();

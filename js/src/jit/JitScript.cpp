@@ -57,9 +57,9 @@ JitScript::JitScript(JSScript* script, Offset fallbackStubsOffset,
 
 #ifdef DEBUG
 JitScript::~JitScript() {
-  // The contents of the stub space are removed and freed separately after the
-  // next minor GC. See prepareForDestruction.
-  MOZ_ASSERT(jitScriptStubSpace_.isEmpty());
+  // The contents of the AllocSite LifoAlloc are removed and freed separately
+  // after the next minor GC. See prepareForDestruction.
+  MOZ_ASSERT(allocSitesSpace_.isEmpty());
 
   // BaselineScript and IonScript must have been destroyed at this point.
   MOZ_ASSERT(!hasBaselineScript());
@@ -318,13 +318,10 @@ void JitScript::Destroy(Zone* zone, JitScript* script) {
 }
 
 void JitScript::prepareForDestruction(Zone* zone) {
-  // When the script contains pointers to nursery things, the store buffer can
-  // contain entries that point into the fallback stub space. Since we can
-  // destroy scripts outside the context of a GC, this situation could result
-  // in us trying to mark invalid store buffer entries.
-  //
-  // Defer freeing any allocated blocks until after the next minor GC.
-  jitScriptStubSpace_.freeAllAfterMinorGC(zone);
+  // Defer freeing AllocSite memory until after the next minor GC, because the
+  // nursery can point to these alloc sites.
+  JSRuntime* rt = zone->runtimeFromMainThread();
+  rt->gc.queueAllLifoBlocksForFreeAfterMinorGC(&allocSitesSpace_);
 
   // Trigger write barriers.
   owningScript_ = nullptr;
@@ -670,14 +667,11 @@ gc::AllocSite* JitScript::createAllocSite(JSScript* script) {
     return nullptr;
   }
 
-  ICStubSpace* stubSpace = jitScriptStubSpace();
-  auto* site =
-      static_cast<gc::AllocSite*>(stubSpace->alloc(sizeof(gc::AllocSite)));
+  auto* site = allocSitesSpace_.new_<gc::AllocSite>(script->zone(), script,
+                                                    JS::TraceKind::Object);
   if (!site) {
     return nullptr;
   }
-
-  new (site) gc::AllocSite(script->zone(), script, JS::TraceKind::Object);
 
   allocSites_.infallibleAppend(site);
 
