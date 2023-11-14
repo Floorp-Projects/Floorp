@@ -14,6 +14,7 @@
   // We match the format member against the sdp to figure out the payload type,
   // So all other present codecs can be removed.
   const codecs = [ "opus", "G722", "PCMU", "PCMA" ];
+  const audioContext = new AudioContext();
 
   async function testAudioCodec(options = {}, codec) {
     // sdputils checks for opus as part of its sdp sanity test
@@ -53,7 +54,7 @@
     test.chain.append([
       async function CHECK_AUDIO_FLOW() {
         try {
-          await test.pcRemote.checkReceivingToneFrom(new AudioContext(), test.pcLocal);
+          await test.pcRemote.checkReceivingToneFrom(audioContext, test.pcLocal);
           ok(true, "input and output audio data matches");
         } catch(e) {
           ok(false, `No audio flow: ${e}`);
@@ -65,6 +66,12 @@
   }
 
   runNetworkTest(async (options) => {
+    // Start a tone so that the gUM call will record something even with
+    // --use-test-media-devices.  TEST_AUDIO_FREQ matches the frequency of the
+    // tone in fake microphone devices.
+    const tone = new LoopbackTone(audioContext, TEST_AUDIO_FREQ);
+    tone.start();
+
     for (let codec of codecs) {
       info(`Testing audio for codec ${codec}`);
       try {
@@ -74,6 +81,8 @@
       }
       info(`Tested audio for codec ${codec}`);
     }
+
+    tone.stop();
   });
 </script>
 </pre>

@@ -75,7 +75,6 @@
 
     const constraints = {audio: {mediaSource: "audioCapture"}};
 
-    DISABLE_LOOPBACK_TONE = true;
     const stream = await getUserMedia(constraints);
     try {
       const analyser = new AudioStreamAnalyser(ac, stream);

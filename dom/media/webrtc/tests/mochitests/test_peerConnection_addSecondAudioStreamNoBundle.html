@@ -33,12 +33,18 @@
           // We test both tracks to avoid an ordering problem
           is(test.pcRemote._pc.getReceivers().length, 2,
              "pcRemote should have two receivers");
+          const audioContext = new AudioContext();
+          // Start a tone so that the gUM call will record something even
+          // with --use-test-media-devices.
+          const tone = new LoopbackTone(audioContext, TEST_AUDIO_FREQ);
+          tone.start();
           return Promise.all(test.pcRemote._pc.getReceivers().map(r => {
             const analyser = new AudioStreamAnalyser(
                 new AudioContext(), new MediaStream([r.track]));
             const freq = analyser.binIndexForFrequency(TEST_AUDIO_FREQ);
             return analyser.waitForAnalysisSuccess(arr => arr[freq] > 200);
-          }));
+          }))
+            .finally(() => tone.stop());
         },
       ]
     );

@@ -29,10 +29,6 @@
   }
 
   runTest(async () => {
-    // We do not need LoopbackTone because it is not used
-    // and creates extra streams that affect the result
-    DISABLE_LOOPBACK_TONE = true;
-
     let gUMStream = await getUserMedia({video: true});
     info("Testing GC of track-array constructor with cloned tracks");
     await testGC(gUMStream, 10, s => new MediaStream(s.getTracks().map(t => t.clone())));

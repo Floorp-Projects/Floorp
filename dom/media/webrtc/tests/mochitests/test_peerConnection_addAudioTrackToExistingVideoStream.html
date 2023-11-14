@@ -13,6 +13,14 @@
 
   runNetworkTest(function (options) {
     SimpleTest.requestCompleteLog();
+
+    const audioContext = new AudioContext();
+    // Start a tone so that the gUM call will record something even with
+    // --use-test-media-devices.  TEST_AUDIO_FREQ matches the frequency of the
+    // tone in fake microphone devices.
+    const tone = new LoopbackTone(audioContext, TEST_AUDIO_FREQ);
+    tone.start();
+
     const test = new PeerConnectionTest(options);
     test.chain.replace("PC_LOCAL_GUM",
       [
@@ -42,12 +50,13 @@
       ],
       [
         function PC_CHECK_REMOTE_AUDIO_FLOW(test) {
-          return test.pcRemote.checkReceivingToneFrom(new AudioContext(), test.pcLocal);
+          return test.pcRemote.checkReceivingToneFrom(audioContext, test.pcLocal);
         }
       ]
     );
 
-    return test.run();
+    return test.run()
+      .finally(() => tone.stop());
   });
 </script>
 </pre>

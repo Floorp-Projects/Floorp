@@ -22,14 +22,17 @@
       return;
     }
 
-    // At this point DefaultLoopbackTone has been instantiated
-    // automatically on frequency TEST_AUDIO_FREQ (1 kHz). Verify
-    // that a tone is detected on that frequency.
+    // Start a tone so that the gUM call will record something.
+    const audioContext = new AudioContext();
+    let tone = new LoopbackTone(audioContext, TEST_AUDIO_FREQ);
+    tone.start();
+    // At this point a tone has been instantiated on frequency
+    // TEST_AUDIO_FREQ (1 kHz). Verify that a tone is detected on that
+    // frequency.
     info("Capturing at default frequency");
     const stream = await getUserMedia({audio: true});
 
     try {
-      const audioContext = new AudioContext();
       const analyser = new AudioStreamAnalyser(audioContext, stream);
       analyser.enableDebugCanvas();
       await analyser.waitForAnalysisSuccess(array => {
@@ -43,10 +46,10 @@
         return freg_50Hz < 50 && freq > 200 && freq_2000Hz < 50;
       });
 
-      // Use the LoopbackTone API to change the frequency of the default tone.
+      // Use the LoopbackTone API to change the frequency of the tone.
       // Verify that a tone is detected on the new frequency (800 Hz).
       info("Change loopback tone frequency");
-      DefaultLoopbackTone.changeFrequency(800);
+      tone.changeFrequency(800);
       await analyser.waitForAnalysisSuccess(array => {
         const freg_50Hz   = array[analyser.binIndexForFrequency(50)];
         const freq        = array[analyser.binIndexForFrequency(800)];
@@ -60,7 +63,7 @@
       // Create a second tone at a different frequency.
       // Verify that both tones are detected.
       info("Multiple loopback tones");
-      DefaultLoopbackTone.changeFrequency(TEST_AUDIO_FREQ);
+      tone.changeFrequency(TEST_AUDIO_FREQ);
       const second_tone = new LoopbackTone(audioContext, 2000);
       second_tone.start();
       await analyser.waitForAnalysisSuccess(array => {
@@ -76,7 +79,7 @@
 
       // Stop all tones and verify that there is no audio on the given frequencies.
       info("Stop all loopback tones");
-      DefaultLoopbackTone.stop();
+      tone.stop();
       second_tone.stop()
       await analyser.waitForAnalysisSuccess(array => {
         const freg_50Hz   = array[analyser.binIndexForFrequency(50)];

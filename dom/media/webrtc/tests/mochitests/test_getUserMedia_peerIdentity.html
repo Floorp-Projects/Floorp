@@ -38,9 +38,19 @@ async function theTest() {
     stream.getTracks().forEach(t => t.stop());
   };
 
-  // both without and with the constraint
-  await testPeerIdentityConstraint(false);
-  await testPeerIdentityConstraint(true);
+  // Start a tone so that the gUM call will record something even
+  // with --use-test-media-devices.
+  const audioContext = new AudioContext();
+  const tone = new LoopbackTone(audioContext, TEST_AUDIO_FREQ);
+  tone.start();
+
+  try {
+    // both without and with the constraint
+    await testPeerIdentityConstraint(false);
+    await testPeerIdentityConstraint(true);
+  } finally {
+    tone.stop();
+  }
 }
 
 runTest(theTest);

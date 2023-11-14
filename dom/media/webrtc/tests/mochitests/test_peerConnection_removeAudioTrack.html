@@ -13,6 +13,11 @@
 
   runNetworkTest(function (options) {
     const test = new PeerConnectionTest(options);
+    const audioContext = new AudioContext();
+     // Start a tone so that the gUM call will record something even with
+    // --use-test-media-devices.
+    const tone = new LoopbackTone(audioContext, TEST_AUDIO_FREQ);
+    tone.start();
     let receivedTrack, analyser, freq;
     addRenegotiation(test.chain,
       [
@@ -25,7 +30,7 @@
              "The received track should be live");
 
           analyser = new AudioStreamAnalyser(
-              new AudioContext(), new MediaStream([receivedTrack]));
+              audioContext, new MediaStream([receivedTrack]));
           freq = analyser.binIndexForFrequency(TEST_AUDIO_FREQ);
 
           return analyser.waitForAnalysisSuccess(arr => arr[freq] > 200);
@@ -49,7 +54,8 @@
     );
 
     test.setMediaConstraints([{audio: true}], [{audio: true}]);
-    return test.run();
+    return test.run()
+      .finally(() => tone.stop());
   });
 </script>
 </pre>
