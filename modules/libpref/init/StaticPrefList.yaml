@@ -2177,7 +2177,7 @@
 # main thread.
 - name: dom.animations.mainthread-synchronization-with-geometric-animations
   type: bool
-  value: @IS_NOT_NIGHTLY_BUILD@
+  value: false
   mirror: always
 
 # Is support for Navigator.getBattery enabled?
