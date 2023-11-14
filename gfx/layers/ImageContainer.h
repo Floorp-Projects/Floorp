@@ -22,10 +22,10 @@
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/mozalloc.h"  // for operator delete, etc
 #include "mozilla/TypedEnumBits.h"
-#include "nsDebug.h"           // for NS_ASSERTION
-#include "nsISupportsImpl.h"   // for Image::Release, etc
-#include "nsTArray.h"          // for nsTArray
-#include "nsThreadUtils.h"     // for NS_IsMainThread
+#include "nsDebug.h"          // for NS_ASSERTION
+#include "nsISupportsImpl.h"  // for Image::Release, etc
+#include "nsTArray.h"         // for nsTArray
+#include "nsThreadUtils.h"    // for NS_IsMainThread
 #include "mozilla/Atomics.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/EnumeratedArray.h"
