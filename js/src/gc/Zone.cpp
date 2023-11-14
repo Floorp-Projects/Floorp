@@ -400,20 +400,18 @@ void Zone::forceDiscardJitCode(JS::GCContext* gcx,
     return;
   }
 
-  if (options.discardJitScripts && options.discardBaselineCode) {
+  if (options.discardJitScripts) {
     lastDiscardedCodeTime_ = mozilla::TimeStamp::Now();
   }
 
-  if (options.discardBaselineCode || options.discardJitScripts) {
 #ifdef DEBUG
-    // Assert no JitScripts are marked as active.
-    jitZone()->forEachJitScript(
-        [](jit::JitScript* jitScript) { MOZ_ASSERT(!jitScript->active()); });
+  // Assert no JitScripts are marked as active.
+  jitZone()->forEachJitScript(
+      [](jit::JitScript* jitScript) { MOZ_ASSERT(!jitScript->active()); });
 #endif
 
-    // Mark JitScripts on the stack as active.
-    jit::MarkActiveJitScripts(this);
-  }
+  // Mark JitScripts on the stack as active.
+  jit::MarkActiveJitScripts(this);
 
   // Invalidate all Ion code in this zone.
   jit::InvalidateAll(gcx, this);
@@ -424,10 +422,8 @@ void Zone::forceDiscardJitCode(JS::GCContext* gcx,
         jit::FinishInvalidation(gcx, script);
 
         // Discard baseline script if it's not marked as active.
-        if (options.discardBaselineCode) {
-          if (jitScript->hasBaselineScript() && !jitScript->active()) {
-            jit::FinishDiscardBaselineScript(gcx, script);
-          }
+        if (jitScript->hasBaselineScript() && !jitScript->active()) {
+          jit::FinishDiscardBaselineScript(gcx, script);
         }
 
 #ifdef JS_CACHEIR_SPEW
@@ -457,9 +453,7 @@ void Zone::forceDiscardJitCode(JS::GCContext* gcx,
 
         // If we did not release the JitScript, we need to purge optimized IC
         // stubs because the optimizedStubSpace will be purged below.
-        if (options.discardBaselineCode) {
-          jitScript->purgeOptimizedStubs(script);
-        }
+        jitScript->purgeOptimizedStubs(script);
 
         if (options.resetNurseryAllocSites ||
             options.resetPretenuredAllocSites) {
@@ -484,22 +478,20 @@ void Zone::forceDiscardJitCode(JS::GCContext* gcx,
   }
 
   /*
-   * When scripts contains pointers to nursery things, the store buffer
+   * When scripts contain pointers to nursery things, the store buffer
    * can contain entries that point into the optimized stub space. Since
    * this method can be called outside the context of a GC, this situation
    * could result in us trying to mark invalid store buffer entries.
    *
    * Defer freeing any allocated blocks until after the next minor GC.
    */
-  if (options.discardBaselineCode) {
-    jitZone()->optimizedStubSpace()->freeAllAfterMinorGC(this);
-    jitZone()->purgeIonCacheIRStubInfo();
-  }
+  jitZone()->optimizedStubSpace()->freeAllAfterMinorGC(this);
+  jitZone()->purgeIonCacheIRStubInfo();
 
   // Generate a profile marker
   if (gcx->runtime()->geckoProfiler().enabled()) {
     char discardingJitScript = options.discardJitScripts ? 'Y' : 'N';
-    char discardingBaseline = options.discardBaselineCode ? 'Y' : 'N';
+    char discardingBaseline = 'Y';
     char discardingIon = 'Y';
 
     char discardingRegExp = 'Y';

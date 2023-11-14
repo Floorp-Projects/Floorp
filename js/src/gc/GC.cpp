@@ -2520,7 +2520,6 @@ void GCRuntime::discardJITCodeForGC() {
 
     if (!zone->isPreservingCode()) {
       Zone::DiscardOptions options;
-      options.discardBaselineCode = true;
       options.discardJitScripts = true;
       options.resetNurseryAllocSites = resetNurserySites;
       options.resetPretenuredAllocSites = resetPretenuredSites;
