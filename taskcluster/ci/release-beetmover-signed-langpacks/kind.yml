@@ -2,12 +2,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: gecko_taskgraph.loader.single_dep:loader
+loader: gecko_taskgraph.loader.transform:loader
 
 transforms:
-    - gecko_taskgraph.transforms.name_sanity:transforms
-    - gecko_taskgraph.transforms.release_beetmover_signed_addons:transforms
-    - gecko_taskgraph.transforms.task:transforms
+    - taskgraph.transforms.from_deps
+    - gecko_taskgraph.transforms.name_sanity
+    - gecko_taskgraph.transforms.release_beetmover_signed_addons
+    - gecko_taskgraph.transforms.task
 
 kind-dependencies:
     - build-signing
@@ -21,16 +22,19 @@ only-for-build-platforms:
     - linux64-shippable/opt
     - linux64-devedition/opt
 
-job-template:
-    description: Beetmover submission for platform-independent langpacks {locales} in {platform} directory
-    worker-type:
-        by-release-level:
-            production: scriptworker-k8s/gecko-3-beetmover
-            staging: scriptworker-k8s/gecko-1-beetmover
-    run-on-projects: []
-    shipping-phase: promote
-    attributes:
-        artifact_map:
-            by-release-type:
-                beta|release.*|esr.*: taskcluster/gecko_taskgraph/manifests/firefox_candidates.yml
-                default: taskcluster/gecko_taskgraph/manifests/firefox_nightly.yml
+jobs:
+    release-beetmover-signed-langpacks:
+        description: Beetmover submission for platform-independent langpacks {locales} in {platform} directory
+        from-deps:
+            group-by: single-with-filters
+        worker-type:
+            by-release-level:
+                production: scriptworker-k8s/gecko-3-beetmover
+                staging: scriptworker-k8s/gecko-1-beetmover
+        run-on-projects: []
+        shipping-phase: promote
+        attributes:
+            artifact_map:
+                by-release-type:
+                    beta|release.*|esr.*: taskcluster/gecko_taskgraph/manifests/firefox_candidates.yml
+                    default: taskcluster/gecko_taskgraph/manifests/firefox_nightly.yml
