@@ -6,6 +6,7 @@
 
 add_task(async function () {
   await pushPref("apz.scrollend-event.content.enabled", true);
+  await pushPref("dom.element.invokers.enabled", true);
 
   const dbg = await initDebugger(
     "doc-event-breakpoints.html",
@@ -72,6 +73,12 @@ add_task(async function () {
   // focus breakpoints to fire.
   await toggleEventBreakpoint(dbg, "Control", "event.control.focusin");
   await toggleEventBreakpoint(dbg, "Control", "event.control.focusout");
+
+  await toggleEventBreakpoint(dbg, "Control", "event.control.invoke");
+  invokeOnElement("#invoker", "click");
+  await waitForPaused(dbg);
+  assertPausedAtSourceAndLine(dbg, eventBreakpointsSource.id, 73);
+  await resume(dbg);
 
   await toggleEventBreakpoint(
     dbg,
