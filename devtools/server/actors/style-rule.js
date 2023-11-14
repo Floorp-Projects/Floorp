@@ -513,7 +513,7 @@ class StyleRuleActor extends Actor {
         // In such case, we want to return the selectorText so it can be displayed in the UI.
         ancestorData.push({
           type,
-          selectorText: rawRule.selectorText,
+          selectors: CssLogic.getSelectors(rawRule),
         });
         computeDesugaredSelector = true;
       }
