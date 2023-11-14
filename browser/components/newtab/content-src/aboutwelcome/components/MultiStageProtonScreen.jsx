@@ -5,6 +5,7 @@
 import React, { useEffect, useState } from "react";
 import { Localized } from "./MSLocalized";
 import { AboutWelcomeUtils } from "../../lib/aboutwelcome-utils";
+import { Colorways } from "./MRColorways";
 import { MobileDownloads } from "./MobileDownloads";
 import { MultiSelect } from "./MultiSelect";
 import { Themes } from "./Themes";
@@ -272,6 +273,15 @@ export class ProtonScreen extends React.PureComponent {
           <AddonsPicker
             content={content}
             message_id={this.props.messageId}
+            handleAction={this.props.handleAction}
+          />
+        ) : null}
+        {content.tiles &&
+        content.tiles.type === "colorway" &&
+        content.tiles.colorways ? (
+          <Colorways
+            content={content}
+            activeTheme={this.props.activeTheme}
             handleAction={this.props.handleAction}
           />
         ) : null}
