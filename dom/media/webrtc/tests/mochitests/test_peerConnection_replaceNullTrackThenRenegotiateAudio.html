@@ -43,7 +43,7 @@
     await offerer.setRemoteDescription(answerer.localDescription);
 
     const remoteStream = await remoteStreamAvailable;
-    const h = new AudioStreamHelper();
+    const h = new AudioStreamFlowingHelper();
     await h.checkAudioFlowing(remoteStream);
   });
 

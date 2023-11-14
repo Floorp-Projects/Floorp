@@ -13,6 +13,11 @@
 
   runNetworkTest(function (options) {
     const test = new PeerConnectionTest(options);
+    const audioContext = new AudioContext();
+     // Start a tone so that the gUM call will record something even with
+    // --use-test-media-devices.
+    const tone = new LoopbackTone(audioContext, TEST_AUDIO_FREQ);
+    tone.start();
     let originalTrack;
     let haveMuteEvent = new Promise(() => {});
     let haveUnmuteEvent = new Promise(() => {});
@@ -44,7 +49,7 @@
           const track = test.pcRemote._pc.getTransceivers()[1].receiver.track;
 
           const analyser = new AudioStreamAnalyser(
-              new AudioContext(), new MediaStream([track]));
+              audioContext, new MediaStream([track]));
           const freq = analyser.binIndexForFrequency(TEST_AUDIO_FREQ);
           return analyser.waitForAnalysisSuccess(arr => arr[freq] > 200);
         },
@@ -57,7 +62,7 @@
           const track = test.pcRemote._pc.getTransceivers()[0].receiver.track;
 
           const analyser = new AudioStreamAnalyser(
-              new AudioContext(), new MediaStream([track]));
+              audioContext, new MediaStream([track]));
           const freq = analyser.binIndexForFrequency(TEST_AUDIO_FREQ);
           return analyser.waitForAnalysisSuccess(arr => arr[freq] < 50);
         }
@@ -79,7 +84,8 @@
     ], false, 1);
 
     test.setMediaConstraints([{audio: true}], [{audio: true}]);
-    return test.run();
+    return test.run()
+      .finally(() => tone.stop());
   });
 </script>
 </pre>

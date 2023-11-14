@@ -33,7 +33,7 @@
     await pc1.setRemoteDescription(pc2.localDescription);
     await wait(100);
     await tc1.sender.replaceTrack(track);
-    const h = new AudioStreamHelper();
+    const h = new AudioStreamFlowingHelper();
     await h.checkAudioFlowing(remoteStream);
     pc1.close();
     pc2.close();

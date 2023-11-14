@@ -16,8 +16,6 @@
    * with non default rate the connection fails. (gUM is always on default rate).
    */
   runTest(async () => {
-    // Since we do not examine the stream we do not need loopback.
-    DISABLE_LOOPBACK_TONE = true;
     const stream = await getUserMedia({audio: true});
     const nonDefaultRate = 32000;
     const ac = new AudioContext({sampleRate: nonDefaultRate});

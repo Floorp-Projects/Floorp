@@ -13,7 +13,7 @@
   });
 
   runNetworkTest(function (options) {
-    const helper = new AudioStreamHelper();
+    const helper = new AudioStreamFlowingHelper();
 
     const test = new PeerConnectionTest(options);
     test.setMediaConstraints([{audio: true}], []);

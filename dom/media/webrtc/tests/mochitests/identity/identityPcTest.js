@@ -5,6 +5,13 @@ function identityPcTest(remoteOptions) {
   var id1 = user + "@" + domain1;
   var id2 = user + "@" + domain2;
 
+  const audioContext = new AudioContext();
+  // Start a tone so that the gUM call will record something even with
+  // --use-test-media-devices.  TEST_AUDIO_FREQ matches the frequency of the
+  // tone in fake microphone devices.
+  const tone = new LoopbackTone(audioContext, TEST_AUDIO_FREQ);
+  tone.start();
+
   test = new PeerConnectionTest({
     config_local: {
       peerIdentity: id2,
@@ -75,5 +82,5 @@ function identityPcTest(remoteOptions) {
       ]);
     },
   ]);
-  return test.run();
+  return test.run().finally(() => tone.stop());
 }

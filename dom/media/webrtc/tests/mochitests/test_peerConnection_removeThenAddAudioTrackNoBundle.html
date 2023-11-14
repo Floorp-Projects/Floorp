@@ -15,6 +15,11 @@
     options = options || { };
     options.bundle = false;
     const test = new PeerConnectionTest(options);
+    const audioContext = new AudioContext();
+     // Start a tone so that the gUM call will record something even with
+    // --use-test-media-devices.
+    const tone = new LoopbackTone(audioContext, TEST_AUDIO_FREQ);
+    tone.start();
     let originalTrack;
     addRenegotiation(test.chain,
       [
@@ -68,7 +73,8 @@
                                PC_LOCAL_REMOVE_BUNDLE_FROM_OFFER);
 
     test.setMediaConstraints([{audio: true}], [{audio: true}]);
-    return test.run();
+    return test.run()
+      .finally(() => tone.stop());
   });
 </script>
 </pre>

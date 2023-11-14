@@ -29,9 +29,6 @@ runTest(async () => {
 
   // Mute the tab
   await SpecialPowers.toggleMuteState(true, window.top);
-  // Don't use a loopback tone, the loopback device is here to check that
-  // nothing is output because the tab is muted.
-  DISABLE_LOOPBACK_TONE = true;
 
   const stream = await getUserMedia({audio: {
       noiseSuppression: false,

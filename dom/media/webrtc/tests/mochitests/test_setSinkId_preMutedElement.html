@@ -65,8 +65,6 @@ runTest(async () => {
   // Implicitly expose the loopback device sink by opening the source in the
   // same group.
   const verifyStream = await getUserMedia({audio: true});
-  // We gonna test our tone, stop the auto created one.
-  DefaultLoopbackTone.stop();
 
   let sinkId = await getOutputDeviceId();
   isnot(sinkId, "", "SinkId is not null");
