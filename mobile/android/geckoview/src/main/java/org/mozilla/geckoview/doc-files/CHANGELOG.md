@@ -21,6 +21,8 @@ exclude: true
 - Added support for controlling `privacy.query_stripping.enabled` and `privacy.query_stripping.enabled.pbmode` via [`GeckoSession.ContentDelegate.queryParameterStrippingEnabled`][121.6] and [`GeckoSession.ContentDelegate.queryParameterStrippingPrivateBrowsingEnabled`][121.7].
 - Added support for controlling `privacy.query_stripping.allow_list` and `privacy.query_stripping.strip_list` via [`GeckoSession.ContentDelegate.queryParameterStrippingAllowList`][121.8] and [`GeckoSession.ContentDelegate.queryParameterStrippingStripList`][121.9].
 - Add [`WebExtensionController.AddonManagerDelegate.onReady`][121.10] ([bug 1859585]({{bugzilla}}1859585).
+- ⚠️  `WebExtensionController.install` method will not be implicitly awaiting for the installed extension to be fully started anymore, callers of the install method should now expect the `WebExtension.MetaData` properties `baseUrl` and `optionsPageUrl` to be not be
+  defined yet until the `WebExtensionController.AddonManagerDelegate.onReady` delegated method has been called ([bug 1859585]({{bugzilla}}1859585).
 
 [121.1]: {{javadoc_uri}}/TranslationsController.RuntimeTranslation.html
 [121.2]: {{javadoc_uri}}/ContentBlocking.Settings.Builder.html#cookieBannerGlobalRulesEnabled(boolean)

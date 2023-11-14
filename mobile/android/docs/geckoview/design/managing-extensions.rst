@@ -47,6 +47,14 @@ bookmarks, “sessions” gives access to recently closed sessions. The full lis
 of permissions that are currently shown to the UI in Firefox Desktop is
 available at: ``chrome/browser/browser.properties``
 
+``WebExtension.MetaData`` properties expected to be set to absolute moz-extension urls
+(e.g. ``baseUrl`` and ``optionsPageUrl``) are not available yet right after installing
+a new extension. Once the extension has been fully started, the delegate method
+``WebExtensionController.AddonManagerDelegate.onReady`` will be providing to the
+embedder app a new instance of the `MetaData` object where ``baseUrl`` is expected
+to be set to a ``"moz-extension://..."`` url (and ``optionsPageUrl`` as well if an
+options page was declared in the extension manifest.json file).
+
 Updating
 ^^^^^^^^
 
@@ -193,6 +201,7 @@ rename ``ActionIcon`` to Icon to represent its generic use as the
       final String creatorName;
       final String creatorUrl;
       final String homepageUrl;
+      final String baseUrl;
       final String optionsPageUrl;
       final boolean openOptionsPageInTab;
       final boolean isRecommended;
