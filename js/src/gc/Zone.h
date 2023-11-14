@@ -347,7 +347,6 @@ class Zone : public js::ZoneAllocator, public js::gc::GraphNodeBase<JS::Zone> {
 
   struct DiscardOptions {
     DiscardOptions() {}
-    bool discardBaselineCode = true;
     bool discardJitScripts = false;
     bool resetNurseryAllocSites = false;
     bool resetPretenuredAllocSites = false;
