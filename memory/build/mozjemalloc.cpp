@@ -2907,10 +2907,7 @@ void arena_t::Purge(size_t aMaxDirty) {
 #ifdef MALLOC_DECOMMIT
         pages_decommit((void*)(uintptr_t(chunk) + (i << gPageSize2Pow)),
                        (npages << gPageSize2Pow));
-#endif
-        mStats.committed -= npages;
-
-#ifndef MALLOC_DECOMMIT
+#else
 #  ifdef XP_SOLARIS
         posix_madvise((void*)(uintptr_t(chunk) + (i << gPageSize2Pow)),
                       (npages << gPageSize2Pow), MADV_FREE);
@@ -2922,6 +2919,8 @@ void arena_t::Purge(size_t aMaxDirty) {
         madvised = true;
 #  endif
 #endif
+        mStats.committed -= npages;
+
         if (mNumDirty <= (aMaxDirty >> 1)) {
           break;
         }
