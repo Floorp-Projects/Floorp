@@ -9,6 +9,9 @@ function addScripts(urls) {
   return Promise.all(urls.map(addScript));
 }
 
-function startExecutor(uuid) {
+function startExecutor() {
+  const params = new URLSearchParams(location.search);
+  addScripts(params.getAll('script'));
+  const uuid = params.get('uuid');
   executor = new Executor(uuid);
 }

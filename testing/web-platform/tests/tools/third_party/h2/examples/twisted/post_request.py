@@ -174,6 +174,7 @@ class H2Protocol(Protocol):
             (':authority', AUTHORITY),
             (':scheme', 'https'),
             (':path', PATH),
+            ('user-agent', 'hyper-h2/1.0.0'),
             ('content-length', str(self.file_size)),
         ]
 

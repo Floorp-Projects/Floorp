@@ -20,7 +20,6 @@ async def test_other_context(
     add_intercept,
     fetch,
     setup_network_test,
-    phase,
 ):
     # Subscribe to network events only in top_context
     await setup_network_test(
@@ -41,7 +40,7 @@ async def test_other_context(
     # Add an intercept.
     text_url = url(PAGE_EMPTY_TEXT)
     await add_intercept(
-        phases=[phase],
+        phases=["beforeRequestSent"],
         url_patterns=[{"type": "string", "pattern": text_url}],
     )
 

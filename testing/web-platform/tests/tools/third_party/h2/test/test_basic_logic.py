@@ -6,6 +6,7 @@ test_basic_logic
 Test the basic logic of the h2 state machines.
 """
 import random
+import sys
 
 import hyperframe
 import pytest
@@ -19,10 +20,13 @@ import h2.frame_buffer
 import h2.settings
 import h2.stream
 
-from . import helpers
+import helpers
 
-from hypothesis import given, settings, HealthCheck
+from hypothesis import given
 from hypothesis.strategies import integers
+
+
+IS_PYTHON3 = sys.version_info >= (3, 0)
 
 
 class TestBasicClient(object):
@@ -496,7 +500,9 @@ class TestBasicClient(object):
         Sending headers that are oversized generates a stream of CONTINUATION
         frames.
         """
-        all_bytes = [chr(x).encode('latin1') for x in range(0, 256)]
+        all_bytes = [chr(x) for x in range(0, 256)]
+        if IS_PYTHON3:
+            all_bytes = [x.encode('latin1') for x in all_bytes]
 
         large_binary_string = b''.join(
             random.choice(all_bytes) for _ in range(0, 256)
@@ -790,7 +796,6 @@ class TestBasicClient(object):
         assert c.data_to_send() == expected_frame.serialize()
 
     @given(frame_size=integers(min_value=2**14, max_value=(2**24 - 1)))
-    @settings(suppress_health_check=[HealthCheck.function_scoped_fixture])
     def test_changing_max_frame_size(self, frame_factory, frame_size):
         """
         When the user changes the max frame size and the change is ACKed, the
@@ -1357,6 +1362,7 @@ class TestBasicServer(object):
         event = events[0]
 
         assert isinstance(event, h2.events.PingAckReceived)
+        assert isinstance(event, h2.events.PingAcknowledged)  # deprecated
         assert event.ping_data == ping_data
 
     def test_stream_ended_remotely(self, frame_factory):

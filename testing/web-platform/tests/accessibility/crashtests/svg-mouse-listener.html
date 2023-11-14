@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-<html class="test-wait">
 <script src="/resources/testdriver.js"></script>
 <script src="/resources/testdriver-vendor.js"></script>
 <script src="/resources/testdriver-actions.js"></script>
@@ -8,12 +7,7 @@
 </svg>
 
 <script>
-window.onload = async () => {
-  document.getElementById("target").addEventListener("click", () => {},
-                                                     { once: true });
-  await test_driver.click(document.body);
-  document.documentElement.classList.remove('test-wait');
-};
+document.getElementById("target").addEventListener("click", () => {}, { once: true });
 
+test_driver.click(document.body);
 </script>
-</html>

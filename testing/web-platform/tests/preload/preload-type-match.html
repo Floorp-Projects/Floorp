@@ -13,8 +13,7 @@ const hrefs = {
     ttf: '/fonts/Ahem.ttf',
     script: 'resources/dummy.js',
     css: 'resources/dummy.css',
-    track: '/media/foo.vtt',
-    json: '/common/dummy.json',
+    track: '/media/foo.vtt'
 }
 
 function test_type_with_destination(type, as, resourceType, expect) {
@@ -68,11 +67,5 @@ test_type_with_destination('text/plain', 'style', 'css', 'timeout');
 test_type_with_destination('text/vtt', 'track', 'track', 'load');
 test_type_with_destination('text/plain', 'track', 'track', 'timeout');
 test_type_with_destination('not-a-mime', 'track', 'track', 'timeout');
-
-test_type_with_destination('application/json', 'json', 'json', 'load');
-test_type_with_destination('text/json', 'json', 'json', 'load');
-test_type_with_destination('application/geo+json', 'json', 'json', 'load');
-test_type_with_destination('text/plain', 'json', 'json', 'timeout');
-test_type_with_destination('application/javascript', 'json', 'json', 'timeout');
 
 </script>

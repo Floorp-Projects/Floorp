@@ -26,35 +26,6 @@
         }
         break;
       }
-      case "indexedDB": {
-        const dbs = await handle.indexedDB.databases();
-        if (dbs.length != 0) {
-          message = "Cross-site first-party IndexedDB should be empty";
-        }
-        break;
-      }
-      case "locks": {
-        const state = await handle.locks.query();
-        if (state.held.length != 0) {
-          message = "Cross-site first-party Web Locks should be empty";
-        }
-        break;
-      }
-      case "caches": {
-        const has = await handle.caches.has(id);
-        if (has) {
-          message = "Cross-site first-party Cache Storage should be empty";
-        }
-        break;
-      }
-      case "getDirectory": {
-        const root = await handle.getDirectory();
-        let has = await root.getFileHandle(id).then(() => true, () => false);;
-        if (has) {
-          message = "Cross-site first-party Origin Private File System should be empty";
-        }
-        break;
-      }
       default: {
         message = "Unexpected type " + type;
         break;

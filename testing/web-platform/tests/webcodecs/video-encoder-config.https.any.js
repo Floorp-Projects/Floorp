@@ -189,23 +189,20 @@ validButUnsupportedConfigs.forEach(entry => {
 });
 
 validButUnsupportedConfigs.forEach(entry => {
-  promise_test(
+  async_test(
       t => {
-        let isErrorCallbackCalled = false;
         let codec = new VideoEncoder({
           output: t.unreached_func('unexpected output'),
           error: t.step_func_done(e => {
-            isErrorCallbackCalled = true;
             assert_true(e instanceof DOMException);
             assert_equals(e.name, 'NotSupportedError');
             assert_equals(codec.state, 'closed', 'state');
           })
         });
         codec.configure(entry.config);
-        return codec.flush()
+        codec.flush()
             .then(t.unreached_func('flush succeeded unexpectedly'))
             .catch(t.step_func(e => {
-              assert_true(isErrorCallbackCalled, "isErrorCallbackCalled");
               assert_true(e instanceof DOMException);
               assert_equals(e.name, 'NotSupportedError');
               assert_equals(codec.state, 'closed', 'state');

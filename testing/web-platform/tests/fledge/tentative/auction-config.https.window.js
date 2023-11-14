@@ -7,8 +7,7 @@
 // META: variant=?6-10
 // META: variant=?11-15
 // META: variant=?16-20
-// META: variant=?21-25
-// META: variant=?26-last
+// META: variant=?21-last
 
 "use strict;"
 
@@ -276,32 +275,4 @@ makeTest({
       },
     ],
   },
-});
-
-makeTest({
-  name: 'perBuyerCurrencies with invalid currency',
-  expect: EXPECT_PROMISE_ERROR,
-  expectPromiseError: EXPECT_EXCEPTION(TypeError),
-  auctionConfigOverrides: {perBuyerCurrencies: {'*': 'Dollars'}}
-});
-
-makeTest({
-  name: 'perBuyerCurrencies with invalid currency map key',
-  expect: EXPECT_PROMISE_ERROR,
-  expectPromiseError: EXPECT_EXCEPTION(TypeError),
-  auctionConfigOverrides: {perBuyerCurrencies: {'example': 'USD'}}
-});
-
-makeTest({
-  name: 'perBuyerCurrencies with non-https currency map key',
-  expect: EXPECT_PROMISE_ERROR,
-  expectPromiseError: EXPECT_EXCEPTION(TypeError),
-  auctionConfigOverrides: {perBuyerCurrencies: {'http://example.org/': 'USD'}}
-});
-
-makeTest({
-  name: 'perBuyerCurrencies not convertible to dictionary',
-  expect: EXPECT_PROMISE_ERROR,
-  expectPromiseError: EXPECT_EXCEPTION(TypeError),
-  auctionConfigOverrides: {perBuyerCurrencies: 123}
 });

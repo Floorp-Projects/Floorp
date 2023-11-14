@@ -1,26 +1,7 @@
 // Define a universal message passing API. It works cross-origin and across
 // browsing context groups.
 const dispatcher_path = "/common/dispatcher/dispatcher.py";
-
-// Finds the nearest ancestor window that has a non srcdoc location. This should
-// give us a usable location for constructing further URLs.
-function findLocationFromAncestors(w) {
-  if (w.location.href == 'about:srcdoc') {
-    return findLocationFromAncestors(w.parent);
-  }
-  return w.location;
-}
-
-// Handles differences between workers vs frames (src vs srcdoc).
-function findLocation() {
-  if (location.href == 'about:srcdoc') {
-    return findLocationFromAncestors(window.parent);
-  }
-  return location;
-}
-
-const dispatcherLocation = findLocation();
-const dispatcher_url = new URL(dispatcher_path, dispatcherLocation).href;
+const dispatcher_url = new URL(dispatcher_path, location.href).href;
 
 // Return a promise, limiting the number of concurrent accesses to a shared
 // resources to |max_concurrent_access|.
@@ -157,7 +138,7 @@ const cacheableShowRequestHeaders = function(origin, uuid) {
 //   protocol: (optional) Sets the returned URL's `protocol` property.
 // }
 function remoteExecutorUrl(uuid, options) {
-  const url = new URL("/common/dispatcher/remote-executor.html", dispatcherLocation);
+  const url = new URL("/common/dispatcher/remote-executor.html", location);
   url.searchParams.set("uuid", uuid);
 
   if (options?.host) {

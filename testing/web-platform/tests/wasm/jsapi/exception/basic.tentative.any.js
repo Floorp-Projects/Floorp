@@ -11,7 +11,8 @@ function assert_throws_wasm(fn, message) {
 }
 
 promise_test(async () => {
-  const kSig_v_r = makeSig([kWasmExternRef], []);
+  const kWasmAnyRef = 0x6f;
+  const kSig_v_r = makeSig([kWasmAnyRef], []);
   const builder = new WasmModuleBuilder();
   const tagIndex = builder.addTag(kSig_v_r);
   builder.addFunction("throw_param", kSig_v_r)
@@ -47,7 +48,7 @@ promise_test(async () => {
   const tagIndex = builder.addTag(kSig_v_a);
   builder.addFunction("throw_null", kSig_v_v)
     .addBody([
-      kExprRefNull, kAnyFuncCode,
+      kExprRefNull, kWasmAnyFunc,
       kExprThrow, tagIndex,
     ])
     .exportFunc();
@@ -81,7 +82,7 @@ promise_test(async () => {
       kExprCatch, tagIndex,
         kExprReturn,
       kExprEnd,
-      kExprRefNull, kExternRefCode,
+      kExprRefNull, kWasmAnyRef,
     ])
     .exportFunc();
 
@@ -105,7 +106,7 @@ promise_test(async () => {
       kExprCatchAll,
         kExprRethrow, 0x00,
       kExprEnd,
-      kExprRefNull, kExternRefCode,
+      kExprRefNull, kWasmAnyRef,
     ])
     .exportFunc();
 

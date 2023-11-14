@@ -31,7 +31,6 @@ const OTHER_ORIGIN7 = 'https://{{hosts[alt][www]}}:{{ports[https][1]}}';
 // `dispatch` affects what the tracker script does.
 // `id` can be used to uniquely identify tracked requests. It has no effect
 //     on behavior of the script; it only serves to make the URL unique.
-// `id` will always be the last query parameter.
 function createTrackerURL(origin, uuid, dispatch, id = null) {
   let url = new URL(`${origin}${BASE_PATH}resources/request-tracker.py`);
   url.searchParams.append('uuid', uuid);
@@ -51,7 +50,6 @@ function createCleanupURL(uuid) {
 // Create tracked bidder/seller URLs. The only difference is the prefix added
 // to the `id` passed to createTrackerURL. The optional `id` field allows
 // multiple bidder/seller report URLs to be distinguishable from each other.
-// `id` will always be the last query parameter.
 function createBidderReportURL(uuid, id = '1', origin = window.location.origin) {
   return createTrackerURL(origin, uuid, `track_get`, `bidder_report_${id}`);
 }
@@ -82,31 +80,7 @@ function generateUuid(test) {
   return uuid;
 }
 
-// Helper to fetch "tracked_data" URL to fetch all data recorded by the
-// tracker URL associated with "uuid". Throws on error, including if
-// the retrieved object's errors field is non-empty.
-async function fetchTrackedData(uuid) {
-  let trackedRequestsURL = createTrackerURL(window.location.origin, uuid,
-                                            'tracked_data');
-  let response = await fetch(trackedRequestsURL,
-                             {credentials: 'omit', mode: 'cors'});
-  let trackedData = await response.json();
-
-  // Fail on fetch error.
-  if (trackedData.error) {
-    throw trackedRequestsURL + ' fetch failed:' + JSON.stringify(trackedData);
-  }
-
-  // Fail on errors reported by the tracker script.
-  if (trackedData.errors.length > 0) {
-    throw 'Errors reported by request-tracker.py:' +
-        JSON.stringify(trackedData.errors);
-  }
-
-  return trackedData;
-}
-
-// Repeatedly requests "tracked_data" URL until exactly the entries in
+// Repeatedly requests "request_list" URL until exactly the entries in
 // "expectedRequests" have been observed by the request tracker script (in
 // any order, since report URLs are not guaranteed to be sent in any order).
 //
@@ -116,21 +90,36 @@ async function fetchTrackedData(uuid) {
 // If any other strings are received from the tracking script, or the tracker
 // script reports an error, fails the test.
 async function waitForObservedRequests(uuid, expectedRequests) {
-  // Sort array for easier comparison, as observed request order does not
-  // matter, and replace UUID to print consistent errors on failure.
-  expectedRequests = expectedRequests.sort().map((url) => url.replace(uuid, '<uuid>'));
-
+  let trackedRequestsURL = createTrackerURL(window.location.origin, uuid,
+                                            'request_list');
+  // Sort array for easier comparison, since order doesn't matter.
+  expectedRequests.sort();
   while (true) {
-    let trackedData = await fetchTrackedData(uuid);
+    let response = await fetch(trackedRequestsURL,
+                               {credentials: 'omit', mode: 'cors'});
+    let trackerData = await response.json();
 
-    // Clean up "trackedRequests" in same manner as "expectedRequests".
-    let trackedRequests = trackedData.trackedRequests.sort().map(
-                              (url) => url.replace(uuid, '<uuid>'));
+    // Fail on fetch error.
+    if (trackerData.error) {
+      throw trackedRequestsURL + ' fetch failed:' +
+          JSON.stringify(trackerData);
+    }
+
+    // Fail on errors reported by the tracker script.
+    if (trackerData.errors.length > 0) {
+      throw 'Errors reported by request-tracker.py:' +
+          JSON.stringify(trackerData.errors);
+    }
 
     // If expected number of requests have been observed, compare with list of
     // all expected requests and exit.
+    let trackedRequests = trackerData.trackedRequests;
     if (trackedRequests.length == expectedRequests.length) {
-      assert_array_equals(trackedRequests, expectedRequests);
+      // Hide the uuid content in order to have a static expected file.
+      assert_array_equals(trackedRequests.sort().map((url) =>
+                            url.replace(uuid, '<uuid>')),
+                            expectedRequests.map((url) =>
+                            url.replace(uuid, '<uuid>')));
       break;
     }
 
@@ -138,7 +127,9 @@ async function waitForObservedRequests(uuid, expectedRequests) {
     // compare what's been received so far, to have a greater chance to fail
     // rather than hang on error.
     for (const trackedRequest of trackedRequests) {
-      assert_in_array(trackedRequest, expectedRequests);
+      assert_in_array(trackedRequest.replace(uuid, '<uuid>'),
+                      expectedRequests.sort().map((url) =>
+                      url.replace(uuid, '<uuid>')));
     }
   }
 }
@@ -160,17 +151,9 @@ function createBiddingScriptURL(params = {}) {
     url.searchParams.append('error', params.error);
   if (params.bid)
     url.searchParams.append('bid', params.bid);
-  if (params.bidCurrency)
-    url.searchParams.append('bidCurrency', params.bidCurrency);
   if (params.allowComponentAuction !== undefined)
     url.searchParams.append('allowComponentAuction', JSON.stringify(params.allowComponentAuction))
   return url.toString();
-}
-
-// TODO: Make this return a valid WASM URL.
-function createBiddingWasmHelperURL(params = {}) {
-  let origin = params.origin ? params.origin : new URL(BASE_URL).origin;
-  return `${origin}${RESOURCE_PATH}bidding-wasmlogic.wasm`;
 }
 
 // Creates a decision script with the provided code in the method bodies. The
@@ -280,27 +263,14 @@ async function runBasicFledgeAuction(test, uuid, auctionConfigOverrides = {}) {
   return await navigator.runAdAuction(auctionConfig);
 }
 
-// Checks that await'ed return value of runAdAuction() denotes a successful
-// auction with a winner.
-function expectSuccess(config) {
-  assert_true(config !== null, `Auction unexpectedly had no winner`);
-  assert_true(
-      config instanceof FencedFrameConfig,
-      `Wrong value type returned from auction: ${config.constructor.type}`);
-}
-
-// Checks that await'ed return value of runAdAuction() denotes an auction
-// without a winner (but no fatal error).
-function expectNoWinner(result) {
-  assert_true(result === null, 'Auction unexpectedly had a winner');
-}
-
 // Wrapper around runBasicFledgeAuction() that runs an auction with the specified
 // arguments, expecting the auction to have a winner. Returns the FencedFrameConfig
 // from the auction.
 async function runBasicFledgeTestExpectingWinner(test, uuid, auctionConfigOverrides = {}) {
   let config = await runBasicFledgeAuction(test, uuid, auctionConfigOverrides);
-  expectSuccess(config);
+  assert_true(config !== null, `Auction unexpectedly had no winner`);
+  assert_true(config instanceof FencedFrameConfig,
+      `Wrong value type returned from auction: ${config.constructor.type}`);
   return config;
 }
 
@@ -309,7 +279,7 @@ async function runBasicFledgeTestExpectingWinner(test, uuid, auctionConfigOverri
 async function runBasicFledgeTestExpectingNoWinner(
     test, uuid, auctionConfigOverrides = {}) {
   let result = await runBasicFledgeAuction(test, uuid, auctionConfigOverrides);
-  expectNoWinner(result);
+  assert_true(result === null, 'Auction unexpectedly had a winner');
 }
 
 // Creates a fenced frame and applies fencedFrameConfig to it. Also adds a cleanup
@@ -408,7 +378,7 @@ async function runReportTest(test, uuid, codeToInsert, expectedReportURLs,
 
   if (reportWinSuccessCondition) {
     reportWin = `if (!(${reportWinSuccessCondition})) {
-                   sendReportTo('${createBidderReportURL(uuid, 'error')}');
+                   sendReportTo('${createSellerReportURL(uuid, 'error')}');
                    return false;
                  }
                  ${reportWin}`;

@@ -22,7 +22,7 @@ components:
       test-type: testharness
 
   wpt-reftest:
-    chunks: 6
+    chunks: 5
     vars:
       test-type: reftest
 
@@ -293,6 +293,12 @@ tasks:
             - vars:
                 browser: chrome
                 channel: stable
+              use:
+                - trigger-daily
+                - trigger-push
+            - vars:
+                browser: firefox_android
+                channel: nightly
               use:
                 - trigger-daily
                 - trigger-push

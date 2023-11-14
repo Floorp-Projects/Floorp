@@ -1,4 +1,4 @@
-export const manifest_origin = "https://{{host}}:{{ports[https][0]}}";
+const manifest_origin = "https://{{host}}:{{ports[https][0]}}";
 export const alt_manifest_origin = 'https://{{hosts[alt][]}}:{{ports[https][0]}}';
 
 export function open_and_wait_for_popup(origin, path) {
@@ -96,7 +96,7 @@ export function request_options_with_context(manifest_filename, context) {
   if (manifest_filename === undefined) {
     manifest_filename = "manifest.py";
   }
-  const manifest_path = `${manifest_origin}/\
+  const manifest_path = `https://{{host}}:{{ports[https][0]}}/\
 credential-management/support/fedcm/${manifest_filename}`;
   return {
     identity: {
@@ -152,9 +152,9 @@ export function request_options_with_login_hint(manifest_filename, login_hint) {
   return options;
 }
 
-export function request_options_with_domain_hint(manifest_filename, domain_hint) {
+export function request_options_with_hosted_domain(manifest_filename, hosted_domain) {
   let options = request_options_with_mediation_required(manifest_filename);
-  options.identity.providers[0].domainHint = domain_hint;
+  options.identity.providers[0].hostedDomain = hosted_domain;
 
   return options;
 }
@@ -211,17 +211,4 @@ export function fedcm_get_and_select_first_account(t, options) {
   const credentialPromise = navigator.credentials.get(options);
   fedcm_select_account_promise(t, 0);
   return credentialPromise;
-}
-
-export function revoke_options(accountHint, manifest_filename) {
-  if (manifest_filename === undefined) {
-    manifest_filename = "manifest.py";
-  }
-  const manifest_path = `${manifest_origin}/\
-credential-management/support/fedcm/${manifest_filename}`;
-  return {
-      configURL: manifest_path,
-      clientId: '1',
-      accountHint: accountHint
-      };
 }

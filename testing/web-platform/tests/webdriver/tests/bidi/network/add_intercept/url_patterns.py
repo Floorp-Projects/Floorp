@@ -1,6 +1,7 @@
 import asyncio
 
 import pytest
+import pytest_asyncio
 
 from .. import assert_before_request_sent_event
 
@@ -58,15 +59,18 @@ def substitute_host(server_config):
 )
 async def test_pattern_patterns_matching(
     wait_for_event,
-    subscribe_events,
-    top_context,
+    setup_network_test,
     add_intercept,
     fetch,
     substitute_host,
     patterns,
     url_template,
 ):
-    await subscribe_events(events=["network.beforeRequestSent"],  contexts=[top_context["context"]])
+    await setup_network_test(
+        events=[
+            "network.beforeRequestSent",
+        ]
+    )
 
     for pattern in patterns:
         for key in pattern:
@@ -104,15 +108,18 @@ async def test_pattern_patterns_matching(
 )
 async def test_pattern_patterns_not_matching(
     wait_for_event,
-    subscribe_events,
-    top_context,
+    setup_network_test,
     add_intercept,
     fetch,
     substitute_host,
     pattern,
     url_template,
 ):
-    await subscribe_events(events=["network.beforeRequestSent"],  contexts=[top_context["context"]])
+    await setup_network_test(
+        events=[
+            "network.beforeRequestSent",
+        ]
+    )
 
     for key in pattern:
         pattern[key] = substitute_host(pattern[key])
@@ -153,15 +160,18 @@ async def test_pattern_patterns_not_matching(
 )
 async def test_string_patterns_matching(
     wait_for_event,
-    subscribe_events,
-    top_context,
+    setup_network_test,
     add_intercept,
     fetch,
     substitute_host,
     pattern,
     url_template,
 ):
-    await subscribe_events(events=["network.beforeRequestSent"],  contexts=[top_context["context"]])
+    await setup_network_test(
+        events=[
+            "network.beforeRequestSent",
+        ]
+    )
 
     intercept = await add_intercept(
         phases=["beforeRequestSent"],
@@ -194,15 +204,18 @@ async def test_string_patterns_matching(
 )
 async def test_string_patterns_not_matching(
     wait_for_event,
-    subscribe_events,
-    top_context,
+    setup_network_test,
     add_intercept,
     fetch,
     substitute_host,
     pattern,
     url_template,
 ):
-    await subscribe_events(events=["network.beforeRequestSent"],  contexts=[top_context["context"]])
+    await setup_network_test(
+        events=[
+            "network.beforeRequestSent",
+        ]
+    )
 
     await add_intercept(
         phases=["beforeRequestSent"],
