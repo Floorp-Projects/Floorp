@@ -7,6 +7,8 @@
 #ifndef GFX_MACIOSURFACEHELPERS_H
 #define GFX_MACIOSURFACEHELPERS_H
 
+#include "ImageContainer.h"
+
 class MacIOSurface;
 template <class T>
 struct already_AddRefed;
@@ -23,6 +25,11 @@ namespace layers {
 // with multiple planes and does YCbCr to RGB conversion, if necessary.
 already_AddRefed<gfx::SourceSurface> CreateSourceSurfaceFromMacIOSurface(
     MacIOSurface* aSurface);
+
+nsresult CreateSurfaceDescriptorBufferFromMacIOSurface(
+    MacIOSurface* aSurface, SurfaceDescriptorBuffer& aSdBuffer,
+    Image::BuildSdbFlags aFlags,
+    const std::function<MemoryOrShmem(uint32_t)>& aAllocate);
 
 }  // namespace layers
 }  // namespace mozilla
