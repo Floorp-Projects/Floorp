@@ -1576,6 +1576,10 @@ class ImportSymmetricKeyTask : public ImportKeyTask {
       return NS_ERROR_DOM_NOT_SUPPORTED_ERR;
     }
 
+    if (!mKey->HasAnyUsage()) {
+      return NS_ERROR_DOM_SYNTAX_ERR;
+    }
+
     if (NS_FAILED(mKey->SetSymKey(mKeyData))) {
       return NS_ERROR_DOM_OPERATION_ERR;
     }
@@ -1743,6 +1747,10 @@ class ImportRsaKeyTask : public ImportKeyTask {
            mKey->HasUsageOtherThan(CryptoKey::SIGN))) {
         return NS_ERROR_DOM_DATA_ERR;
       }
+    }
+
+    if (mKey->GetKeyType() == CryptoKey::PRIVATE && !mKey->HasAnyUsage()) {
+      return NS_ERROR_DOM_SYNTAX_ERR;
     }
 
     // Set an appropriate KeyAlgorithm
@@ -1919,6 +1927,10 @@ class ImportEcKeyTask : public ImportKeyTask {
         (mKey->GetKeyType() == CryptoKey::PUBLIC &&
          mKey->HasUsageOtherThan(publicAllowedUsages))) {
       return NS_ERROR_DOM_DATA_ERR;
+    }
+
+    if (mKey->GetKeyType() == CryptoKey::PRIVATE && !mKey->HasAnyUsage()) {
+      return NS_ERROR_DOM_SYNTAX_ERR;
     }
 
     mKey->Algorithm().MakeEc(mAlgName, mNamedCurve);
