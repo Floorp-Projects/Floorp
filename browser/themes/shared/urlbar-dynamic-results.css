@@ -62,6 +62,13 @@
   }
 }
 
+.urlbarView-quickSuggestContextualOptIn-one-off-container {
+  border-top: 1px solid var(--urlbarView-separator-color);
+  margin-top: 10px;
+  padding-top: 5px;
+  width: 100%;
+}
+
 /**
  * Tab To Search onboarding
  */
