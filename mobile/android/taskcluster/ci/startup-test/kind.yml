@@ -30,6 +30,29 @@ task-defaults:
     run-on-tasks-for: []
 
 tasks:
+    fenix-arm-nightly-robo-opt:
+        attributes:
+            build-type: fenix-nightly
+            shipping-product: fenix
+        description: Fenix Nightly Opt Robo Test (ARM)
+        dependencies:
+            signing: signing-apk-fenix-nightly
+        run:
+            secrets:
+                - name: project/mobile/firefox-android/fenix/firebase
+                  key: firebaseToken
+                  path: .firebase_token.json
+                  json: true
+            pre-commands:
+                - ["cd", "fenix"]
+            commands:
+                - [wget, {artifact-reference: '<signing/public/build/target.arm64-v8a.apk>'}, '-O', app.apk ]
+                - [automation/taskcluster/androidTest/robo-test.sh, arm-start-test-robo, app.apk]
+        treeherder:
+            symbol: fenix-nightly(startup-arm-robo-opt)
+        worker:
+            env:
+                GOOGLE_PROJECT: moz-fenix
     fenix-arm-nightly:
         attributes:
             build-type: fenix-nightly-firebase
@@ -75,6 +98,29 @@ tasks:
                 - [automation/taskcluster/androidTest/ui-test.sh, arm-start-test, app.apk, android-test.apk, '1']
         treeherder:
             symbol: focus-nightly(startup-arm)
+        worker:
+            env:
+                GOOGLE_PROJECT: moz-focus-android
+    focus-arm-nightly-robo-opt:
+        attributes:
+            build-type: focus-nightly
+            shipping-product: focus
+        description: Focus Nightly Opt Robo Test (ARM)
+        dependencies:
+            signing: signing-apk-focus-nightly
+        run:
+            secrets:
+                - name: project/mobile/firefox-android/focus-android/firebase
+                  key: firebaseToken
+                  path: .firebase_token.json
+                  json: true
+            pre-commands:
+                - ["cd", "focus-android"]
+            commands:
+                - [wget, {artifact-reference: '<signing/public/build/target.arm64-v8a.apk>'}, '-O', app.apk]
+                - [automation/taskcluster/androidTest/robo-test.sh, arm-start-test-robo, app.apk]
+        treeherder:
+            symbol: focus-nightly(startup-arm-robo-opt)
         worker:
             env:
                 GOOGLE_PROJECT: moz-focus-android

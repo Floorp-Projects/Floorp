@@ -1,0 +1,27 @@
+# Google Cloud Documentation: https://cloud.google.com/sdk/gcloud/reference/firebase/test/android/run
+# Flank Documentation: https://flank.github.io/flank/
+gcloud:
+  results-bucket: fenix_test_artifacts
+  record-video: false
+  timeout: 5m
+  async: false
+
+  app: /app/path
+
+  auto-google-login: false
+  use-orchestrator: true
+  environment-variables:
+    clearPackageData: true
+
+  device:
+    - model: MediumPhone.arm
+      version: 30
+      locale: en_US
+
+  type: robo
+
+flank:
+  project: GOOGLE_PROJECT
+  num-test-runs: 1
+  output-style: compact
+  full-junit-result: true
