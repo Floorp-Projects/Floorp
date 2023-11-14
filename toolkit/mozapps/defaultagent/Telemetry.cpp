@@ -29,7 +29,6 @@
 #include "mozilla/glean/GleanPings.h"
 #include "mozilla/HelperMacros.h"
 #include "mozilla/UniquePtr.h"
-#include "mozilla/Unused.h"
 #include "mozilla/WinHeaderOnlyUtils.h"
 #include "nsStringFwd.h"
 
@@ -423,7 +422,8 @@ HRESULT SendDefaultAgentPing(
     const NotificationActivities& activitiesPerformed) {
   std::string currentDefaultBrowser =
       GetStringForBrowser(browserInfo.currentDefaultBrowser);
-  std::string currentDefaultPdf = pdfInfo.currentDefaultPdf;
+  std::string currentDefaultPdf =
+      GetStringForPDFHandler(pdfInfo.currentDefaultPdf);
   std::string notificationType =
       GetStringForNotificationType(activitiesPerformed.type);
   std::string notificationShown =
@@ -517,6 +517,8 @@ HRESULT SendDefaultAgentPing(
         nsDependentCString(currentDefaultBrowser.c_str()));
     mozilla::glean::system_default::previous_browser.Set(
         nsDependentCString(previousDefaultBrowser.c_str()));
+    mozilla::glean::system_default::pdf_handler.Set(
+        nsDependentCString(currentDefaultPdf.c_str()));
 
     return SendDesktopTelemetryPing(
                currentDefaultBrowser, previousDefaultBrowser, currentDefaultPdf,

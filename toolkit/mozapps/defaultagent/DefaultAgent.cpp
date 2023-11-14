@@ -341,7 +341,7 @@ DefaultAgent::DoTask(const nsAString& aUniqueToken, const bool aForce) {
   if (defaultPdfResult.isOk()) {
     pdfInfo = defaultPdfResult.unwrap();
   } else {
-    pdfInfo.currentDefaultPdf = "error";
+    pdfInfo.currentDefaultPdf = PDFHandler::Error;
   }
 
   NotificationActivities activitiesPerformed;
