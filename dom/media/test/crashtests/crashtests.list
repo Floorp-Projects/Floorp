@@ -177,3 +177,4 @@ load 1850453.html
 test-pref(media.wmf.hevc.enabled,1) load 1859384.mp4
 test-pref(media.wmf.hevc.enabled,1) load 1859600.mp4
 test-pref(media.wmf.hevc.enabled,1) load 1860840.mp4
+load 1864450.html
