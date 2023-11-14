@@ -235,7 +235,7 @@ class ICFallbackStub final : public ICStub {
   // Add a new stub to the IC chain terminated by this fallback stub.
   inline void addNewStub(ICEntry* icEntry, ICCacheIRStub* stub);
 
-  void discardStubs(JSContext* cx, ICEntry* icEntry);
+  void discardStubs(Zone* zone, ICEntry* icEntry);
 
   void clearUsedByTranspiler() { state_.clearUsedByTranspiler(); }
   void setUsedByTranspiler() { state_.setUsedByTranspiler(); }

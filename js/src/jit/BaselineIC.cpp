@@ -480,7 +480,7 @@ static void MaybeTransition(JSContext* cx, BaselineFrame* frame,
                               SpewContext::Transition);
       }
 #endif
-      stub->discardStubs(cx, icEntry);
+      stub->discardStubs(cx->zone(), icEntry);
     }
   }
 }
@@ -554,11 +554,10 @@ void ICFallbackStub::unlinkStubUnbarriered(ICEntry* icEntry,
 #endif
 }
 
-void ICFallbackStub::discardStubs(JSContext* cx, ICEntry* icEntry) {
+void ICFallbackStub::discardStubs(Zone* zone, ICEntry* icEntry) {
   ICStub* stub = icEntry->firstStub();
   while (stub != this) {
-    unlinkStub(cx->zone(), icEntry, /* prev = */ nullptr,
-               stub->toCacheIRStub());
+    unlinkStub(zone, icEntry, /* prev = */ nullptr, stub->toCacheIRStub());
     stub = stub->toCacheIRStub()->next();
   }
   clearMayHaveFoldedStub();
