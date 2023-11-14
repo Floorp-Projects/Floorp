@@ -16,15 +16,18 @@
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Unused.h"
+#include "mozilla/Try.h"
 #include "mozilla/WinHeaderOnlyUtils.h"
 
 namespace mozilla::default_agent {
 
 using BrowserResult = mozilla::WindowsErrorResult<Browser>;
 
+constexpr std::string_view kUnknownBrowserString = "";
+
 constexpr std::pair<std::string_view, Browser> kStringBrowserMap[]{
     {"error", Browser::Error},
-    {"", Browser::Unknown},
+    {kUnknownBrowserString, Browser::Unknown},
     {"firefox", Browser::Firefox},
     {"chrome", Browser::Chrome},
     {"edge", Browser::EdgeWithEdgeHTML},
@@ -48,7 +51,7 @@ std::string GetStringForBrowser(Browser browser) {
     }
   }
 
-  return std::string("");
+  return std::string(kUnknownBrowserString);
 }
 
 Browser GetBrowserFromString(const std::string& browserString) {
@@ -179,18 +182,9 @@ static BrowserResult GetPreviousDefaultBrowser(Browser currentDefault) {
 DefaultBrowserResult GetDefaultBrowserInfo() {
   DefaultBrowserInfo browserInfo;
 
-  BrowserResult defaultBrowserResult = GetDefaultBrowser();
-  if (defaultBrowserResult.isErr()) {
-    return DefaultBrowserResult(defaultBrowserResult.unwrapErr());
-  }
-  browserInfo.currentDefaultBrowser = defaultBrowserResult.unwrap();
-
-  BrowserResult previousDefaultBrowserResult =
-      GetPreviousDefaultBrowser(browserInfo.currentDefaultBrowser);
-  if (previousDefaultBrowserResult.isErr()) {
-    return DefaultBrowserResult(previousDefaultBrowserResult.unwrapErr());
-  }
-  browserInfo.previousDefaultBrowser = previousDefaultBrowserResult.unwrap();
+  MOZ_TRY_VAR(browserInfo.currentDefaultBrowser, GetDefaultBrowser());
+  MOZ_TRY_VAR(browserInfo.previousDefaultBrowser,
+              GetPreviousDefaultBrowser(browserInfo.currentDefaultBrowser));
 
   return browserInfo;
 }
