@@ -265,6 +265,10 @@
 .notification-message {
   padding-block: 8px;
   margin-inline-end: 20px;
+  /* Prevent misalignment issue in the infobar on Linux  */
+  @media (-moz-platform: linux) {
+    padding-block-start: 6px;
+  }
 }
 
 .notification-button-container,
@@ -275,7 +279,7 @@
 
 .container.infobar > .notification-content > .notification-message img.inline-icon {
   /* Align inline icon images in the message content */
-  vertical-align: bottom;
+  vertical-align: middle;
   /* Ensure they get the right fill color. */
   -moz-context-properties: fill;
   fill: currentColor;
