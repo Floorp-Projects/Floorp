@@ -5,6 +5,12 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 GeneratedFile(
+    "RelationType.h",
+    script="/accessible/base/RelationTypeGen.py",
+    entry_point="generate",
+    inputs=["/accessible/interfaces/nsIAccessibleRelation.idl"],
+)
+GeneratedFile(
     "Role.h",
     script="/accessible/base/RoleHGen.py",
     entry_point="generate",
@@ -14,6 +20,7 @@ GeneratedFile(
 EXPORTS += ["AccEvent.h", "nsAccessibilityService.h"]
 
 EXPORTS.mozilla.a11y += [
+    "!RelationType.h",
     "!Role.h",
     "AccAttributes.h",
     "AccGroupInfo.h",
@@ -23,7 +30,6 @@ EXPORTS.mozilla.a11y += [
     "FocusManager.h",
     "IDSet.h",
     "Platform.h",
-    "RelationType.h",
     "SelectionManager.h",
     "States.h",
 ]
