@@ -879,14 +879,15 @@ function countTabs(dbg) {
  *
  * @memberof mochitest/actions
  * @param {Object} dbg
+ * @param {Object} pauseOptions
  * @return {Promise}
  * @static
  */
-async function stepOver(dbg) {
+async function stepOver(dbg, pauseOptions) {
   const pauseLine = getVisibleSelectedFrameLine(dbg);
   info(`Stepping over from ${pauseLine}`);
   await dbg.actions.stepOver();
-  return waitForPaused(dbg);
+  return waitForPaused(dbg, null, pauseOptions);
 }
 
 /**
@@ -2429,6 +2430,16 @@ function getTokenElAtLine(dbg, expression, line, column = 0) {
     }
     return childText === expression;
   });
+}
+
+/**
+ * Wait for a few ms and assert that a tooltip preview was not displayed.
+ * @param {*} dbg
+ */
+async function assertNoTooltip(dbg) {
+  await wait(200);
+  const el = findElement(dbg, "previewPopup");
+  is(el, null, "Tooltip should not exist");
 }
 
 /**
