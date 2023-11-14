@@ -193,12 +193,13 @@ fog.validation:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1858954
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1858954#c1
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1862546#c3
     data_sensitivity:
       - technical
     notification_emails:
       - pmcmanis@mozilla.com
       - glean-team@mozilla.com
-    expires: 122
+    expires: 123
 
   gvsv_primary_width:
     type: quantity
@@ -210,12 +211,13 @@ fog.validation:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1858954
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1858954#c1
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1862546#c3
     data_sensitivity:
       - technical
     notification_emails:
       - pmcmanis@mozilla.com
       - glean-team@mozilla.com
-    expires: 122
+    expires: 123
 
   gvsv_audio_stream_init:
     type: labeled_counter
@@ -229,12 +231,13 @@ fog.validation:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1858954
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1858954#c1
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1862546#c3
     data_sensitivity:
       - technical
     notification_emails:
       - pmcmanis@mozilla.com
       - glean-team@mozilla.com
-    expires: 122
+    expires: 123
 
   gvsv_number_of_unique_site_origins_all_tabs:
     type: custom_distribution
@@ -253,9 +256,10 @@ fog.validation:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1858954
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1858954#c1
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1862546#c3
     notification_emails:
       - pmcmanis@mozilla.com
-    expires: 122
+    expires: 123
 
   gvsv_composite_time:
     type: timing_distribution
@@ -271,6 +275,7 @@ fog.validation:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1858954
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1858954#c1
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1862546#c3
     notification_emails:
       - pmcmanis@mozilla.com
-    expires: 122
+    expires: 123
