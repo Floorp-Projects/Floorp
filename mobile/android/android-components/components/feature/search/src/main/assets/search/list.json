@@ -481,7 +481,7 @@
     "ja": {
       "default": {
         "visibleDefaultEngines": [
-          "google-b-m", "amazon-jp", "bing", "ddg", "wikipedia-ja", "yahoo-jp"
+          "google-b-m", "amazon-jp", "bing", "ddg", "rakuten", "wikipedia-ja", "yahoo-jp", "yahoo-jp-auctions"
         ]
       }
     },

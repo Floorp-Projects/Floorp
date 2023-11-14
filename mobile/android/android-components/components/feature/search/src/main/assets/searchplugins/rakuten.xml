@@ -1,0 +1,16 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<SearchPlugin xmlns="http://www.mozilla.org/2006/browser/search/">
+    <ShortName>楽天市場</ShortName>
+    <Description>楽天市場 商品検索</Description>
+    <InputEncoding>UTF-8</InputEncoding>
+    <Image height="16" width="16">data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAMAAABEpIrGAAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAJMUExURQAAALA6J7IzHbIxHbMxHrIyHbMyHbIxHrIxHrIyHrIyHrMzHH8AAK8vH7IyHbIyHbQxHr8/ALMyHbIyHrIyHrQzHrIzIrIxHbMyHqoqKrIzH7MyHbkuF7YtG7MyHbMxHcwzM7IyHrIzHbIyHrIwHK80GrMxHbMzH6oqFbIyHrEzHbMyHbYwGLMyHbIyHrMzH7IyHbMxHbMxHrIyHbMyHrMxHbMyHrMzHbMxHrQwHrIwHLMyHrMyHrIxHbQyHrMyHbMwHrIxHbYzHbEyHbYkJLMxHrIxHrIxHbIxHbMxH7MxHbIxHrA0ILMyH7IxHrMxHbEyH7czHrIwH7MxHbIxHrMyHrIyHrMyHbY2JLMyHrMzH7EuGa4lEK8mEbEsGLEsF8JbS+Cro9+ooNOKfr1NPK8nErIwHM97b/////z29dmXjbEtGM13at2jmq8oE/vz8uOzq+KwqOW6s/rx8MViU7ApFfLd2rAoE60jDq0kD71OPPXl4uKzrPPf3LQ0IK0hC9WNgvHY1bIxHa4jDtCBdPLc2K4kD60jDbMxHu3Py+jBuq8pFPjr6tGEeNCAdNOJfe7Szs15bO3Qy7MxHf/+/urIwrlCMLAsF/37+vXj4Prz8v7+/spyZKwgCvPg3bU3I71OPffp6Pfp57pEMrArF60iDchrXejCvLAqFq4lD9yhmNSMgbIvGu/Tz/z4+MFZSc56bvbn5b5RQPv19PXk4rc+K7IuGrEuGrxLOc98cMpwY7AqFcRfUM99cM58b9CBdb1MO7ApFLArFrIvG0f5g2cAAABZdFJOUwANRoKwz9/dyaZ1NgIgieBtBHru2VUevpcGKLYLHN6zBcF4/j8d8koM5EXvFYOxc9CRn53Ki6hpdjo15dSaM6xU8SNgB7mGtIxix6onUeObOBlJlKCNaz0ObmhQwgAAAAFiS0dEaMts9CIAAAAHdElNRQfnCw0VEQ11qlZgAAAB1klEQVQ4y2NggANGJmYWVjZ2Dk4ubh4GTMDLxx8JB6wCjGjSgkLCkShARBRFXkw8EgNISCLkpdgjsQBpGZi8rFwkViAvCJFXUARzo6JjwCA2Dq6CD6JACcKLT0gEgaTklNQ0qAJlFZC8qhqEF5ueAQGZWdkwFRygAOGDclJzMmAgNw9miToDg4YmkoL8gsKiYqCKklKoIAsDg1YkkoKy8orKquqMjJpUqKC2DoMusoLaurTI+oaMjMYmmCuYGPTQFTS3ZGS0RsEU6DMYoFrR1t7RmZHR1Q0TNWTgR1bQ09vXPwHoyIkwN0QaMcghK4CCSZNhNkQaM5hgKJgyddp0eGibMpghK5gxc1ZGxuw5c6PgCswZLJAVzJu/YGFGxqLFS+AKLBmsULwZuXTZlIyM5StgbrDWYBC0QQ2HlauAzljdBhW0BUaWAKqCNU1rMzLWrYdEl7IdKLVDQyJ2Q0bGRmBIdm/anJGxZes2kJg9OME4QBRs37Fz566oyZGRu/fs3bf/wHagkKMTJEnZQpLcttTUg2DWodTU1MMgnzpDE62LK/ZE64bIdO745YEZywNDWtsTNe9peaHKe/ugZ14eXz1tmKyffwADNhAYxBUcYhQaFh6BJAgAIIcuyjSYZL4AAAAldEVYdGRhdGU6Y3JlYXRlADIwMjMtMTEtMTNUMjE6MTc6MTMrMDA6MDDL58yPAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDIzLTExLTEzVDIxOjE3OjEzKzAwOjAwurp0MwAAACh0RVh0ZGF0ZTp0aW1lc3RhbXAAMjAyMy0xMS0xM1QyMToxNzoxMyswMDowMO2vVewAAAAASUVORK5CYII=</Image>
+    <Url method="GET" template="https://pt.afl.rakuten.co.jp/c/013ca98b.cd7c5f0c/" type="text/html">
+        <Param name="sv" value="2" />
+        <Param name="p" value="0" />
+        <Param name="sitem" value="{searchTerms}" />
+    </Url>
+    <SearchForm>https://www.rakuten.co.jp/</SearchForm>
+</SearchPlugin>
