@@ -2613,13 +2613,13 @@ void JSScript::assertValidJumpTargets() const {
 
 void JSScript::addSizeOfJitScript(mozilla::MallocSizeOf mallocSizeOf,
                                   size_t* sizeOfJitScript,
-                                  size_t* sizeOfBaselineFallbackStubs) const {
+                                  size_t* sizeOfAllocSites) const {
   if (!hasJitScript()) {
     return;
   }
 
   jitScript()->addSizeOfIncludingThis(mallocSizeOf, sizeOfJitScript,
-                                      sizeOfBaselineFallbackStubs);
+                                      sizeOfAllocSites);
 }
 
 js::GlobalObject& JSScript::uninlinedGlobal() const { return global(); }
@@ -3705,10 +3705,10 @@ JS::ubi::Base::Size JS::ubi::Concrete<BaseScript>::size(
     JSScript* script = base->asJSScript();
 
     size_t jitScriptSize = 0;
-    size_t fallbackStubSize = 0;
-    script->addSizeOfJitScript(mallocSizeOf, &jitScriptSize, &fallbackStubSize);
+    size_t allocSitesSize = 0;
+    script->addSizeOfJitScript(mallocSizeOf, &jitScriptSize, &allocSitesSize);
     size += jitScriptSize;
-    size += fallbackStubSize;
+    size += allocSitesSize;
 
     size_t baselineSize = 0;
     jit::AddSizeOfBaselineData(script, mallocSizeOf, &baselineSize);

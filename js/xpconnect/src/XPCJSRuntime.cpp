@@ -1804,9 +1804,8 @@ static void ReportRealmStats(const JS::RealmStats& realmStats,
                  realmStats.baselineData,
                  "The Baseline JIT's compilation data (BaselineScripts).");
 
-  ZRREPORT_BYTES(realmJSPathPrefix + "baseline/fallback-stubs"_ns,
-                 realmStats.baselineStubsFallback,
-                 "The Baseline JIT's fallback IC stubs (excluding code).");
+  ZRREPORT_BYTES(realmJSPathPrefix + "alloc-sites"_ns, realmStats.allocSites,
+                 "GC allocation site data associated with IC stubs.");
 
   ZRREPORT_BYTES(realmJSPathPrefix + "ion-data"_ns, realmStats.ionData,
                  "The IonMonkey JIT's compilation data (IonScripts).");

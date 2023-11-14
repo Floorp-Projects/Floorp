@@ -21,9 +21,9 @@
 #include "jstypes.h"
 #include "NamespaceImports.h"
 
+#include "ds/LifoAlloc.h"
 #include "gc/Barrier.h"
 #include "jit/BaselineIC.h"
-#include "jit/ICStubSpace.h"
 #include "js/TypeDecls.h"
 #include "js/UniquePtr.h"
 #include "js/Vector.h"
@@ -53,6 +53,7 @@ class InliningRoot;
 class IonScript;
 class JitScript;
 class JitZone;
+struct OptimizedICStubSpace;
 
 // Magic BaselineScript value indicating Baseline compilation has been disabled.
 static constexpr uintptr_t BaselineDisabledScript = 0x1;
@@ -281,9 +282,6 @@ class alignas(uintptr_t) JitScript final
       public TrailingArray {
   friend class ::JSScript;
 
-  // Allocated space for Can-GC CacheIR stubs.
-  JitScriptICStubSpace jitScriptStubSpace_ = {};
-
   // Profile string used by the profiler for Baseline Interpreter frames.
   const char* profileString_ = nullptr;
 
@@ -335,6 +333,8 @@ class alignas(uintptr_t) JitScript final
 #endif
 
   // List of allocation sites referred to by ICs in this script.
+  static constexpr size_t AllocSiteChunkSize = 256;
+  LifoAlloc allocSitesSpace_{AllocSiteChunkSize};
   Vector<gc::AllocSite*, 0, SystemAllocPolicy> allocSites_;
 
   ICScript icScript_;
@@ -393,15 +393,14 @@ class alignas(uintptr_t) JitScript final
 
   void prepareForDestruction(Zone* zone);
 
-  JitScriptICStubSpace* jitScriptStubSpace() { return &jitScriptStubSpace_; }
-
   void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, size_t* data,
-                              size_t* fallbackStubs) const {
+                              size_t* allocSites) const {
     *data += mallocSizeOf(this);
 
-    // |data| already includes the ICStubSpace itself, so use
+    // |data| already includes the LifoAlloc and Vector, so use
     // sizeOfExcludingThis.
-    *fallbackStubs += jitScriptStubSpace_.sizeOfExcludingThis(mallocSizeOf);
+    *allocSites += allocSitesSpace_.sizeOfExcludingThis(mallocSizeOf);
+    *allocSites += allocSites_.sizeOfExcludingThis(mallocSizeOf);
   }
 
   ICEntry& icEntry(size_t index) { return icScript_.icEntry(index); }
