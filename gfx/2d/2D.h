@@ -88,7 +88,7 @@ namespace layers {
 class MemoryOrShmem;
 class SurfaceDescriptorBuffer;
 class TextureData;
-}
+}  // namespace layers
 
 namespace wr {
 struct FontInstanceOptions;
