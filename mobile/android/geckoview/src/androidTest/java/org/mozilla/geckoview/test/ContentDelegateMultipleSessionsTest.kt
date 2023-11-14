@@ -8,7 +8,6 @@ import androidx.annotation.AnyThread
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.filters.MediumTest
 import org.hamcrest.Matchers.* // ktlint-disable no-wildcard-imports
-import org.junit.Assume.assumeThat
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -93,9 +92,8 @@ class ContentDelegateMultipleSessionsTest : BaseSessionTest() {
     @IgnoreCrash
     @Test
     fun crashContentMultipleSessions() {
-        // TODO: Bug 1673952
-        assumeThat(sessionRule.env.isFission, equalTo(false))
-
+        // We need to make sure all sessions in a given content process receive onCrash
+        // or onKill. To test this, we need to make sure we have two tabs sharing the same process.
         val newSession = getSecondGeckoSession()
 
         // We can inadvertently catch the `onCrash` call for the cached session if we don't specify
@@ -125,9 +123,6 @@ class ContentDelegateMultipleSessionsTest : BaseSessionTest() {
                 reportCrash(session)
             }
         })
-
-        newSession.loadTestPath(HELLO_HTML_PATH)
-        newSession.waitForPageStop()
 
         mainSession.loadUri(CONTENT_CRASH_URL)
 
