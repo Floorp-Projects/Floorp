@@ -2760,7 +2760,7 @@ void arena_t::InitChunk(arena_chunk_t* aChunk, bool aZeroed) {
                  gPageSize);
 #endif
 
-  mStats.committed += gChunkHeaderNumPages;
+  mStats.committed += gChunkHeaderNumPages - 1;
 
   // Insert the run into the tree of available runs.
   mRunsAvail.Insert(&aChunk->map[gChunkHeaderNumPages]);
@@ -2785,7 +2785,7 @@ arena_chunk_t* arena_t::DeallocChunk(arena_chunk_t* aChunk) {
 #endif
 
     mStats.mapped -= kChunkSize;
-    mStats.committed -= gChunkHeaderNumPages;
+    mStats.committed -= gChunkHeaderNumPages - 1;
   }
 
   // Remove run from the tree of available runs, so that the arena does not use
@@ -4830,7 +4830,7 @@ inline void MozJemalloc::jemalloc_stats_internal(
 
   // Account for arena chunk headers in bookkeeping rather than waste.
   chunk_header_size =
-      ((aStats->mapped / aStats->chunksize) * gChunkHeaderNumPages)
+      ((aStats->mapped / aStats->chunksize) * (gChunkHeaderNumPages - 1))
       << gPageSize2Pow;
 
   aStats->mapped += non_arena_mapped;
