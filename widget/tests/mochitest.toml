@@ -24,6 +24,10 @@ skip-if = [
 ]
 support-files = ["file_test_clipboard.js"]
 
+["test_clipboard_asyncGetData.html"]
+skip-if = ["display == 'wayland'"] # Bug 1864211
+support-files = ["file_test_clipboard_asyncGetData.js"]
+
 ["test_clipboard_asyncSetData.html"]
 support-files = ["file_test_clipboard_asyncSetData.js"]
 

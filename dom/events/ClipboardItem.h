@@ -12,6 +12,7 @@
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/MozPromise.h"
 
+#include "nsIClipboard.h"
 #include "nsWrapperCache.h"
 
 class nsITransferable;
@@ -25,13 +26,15 @@ class Promise;
 
 class ClipboardItem final : public nsWrapperCache {
  public:
-  class ItemEntry final : public PromiseNativeHandler {
+  class ItemEntry final : public PromiseNativeHandler,
+                          public nsIAsyncClipboardRequestCallback {
    public:
     using GetDataPromise =
         MozPromise<OwningStringOrBlob, nsresult, /* IsExclusive = */ true>;
 
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
-    NS_DECL_CYCLE_COLLECTION_CLASS(ItemEntry)
+    NS_DECL_NSIASYNCCLIPBOARDREQUESTCALLBACK
+    NS_DECL_CYCLE_COLLECTION_CLASS_AMBIGUOUS(ItemEntry, PromiseNativeHandler)
 
     explicit ItemEntry(nsIGlobalObject* aGlobal, const nsAString& aType)
         : mGlobal(aGlobal), mType(aType) {
@@ -54,7 +57,7 @@ class ClipboardItem final : public nsWrapperCache {
     RefPtr<GetDataPromise> GetData();
 
     //  Load data from system clipboard.
-    void LoadDataFromSystemClipboard(nsITransferable& aTransferable);
+    void LoadDataFromSystemClipboard(nsIAsyncGetClipboardData* aDataGetter);
     void LoadDataFromDataPromise(Promise& aDataPromise);
 
     // If clipboard data is in the process of loading from either system
@@ -65,7 +68,6 @@ class ClipboardItem final : public nsWrapperCache {
 
    private:
     ~ItemEntry() {
-      mLoadingPromise.DisconnectIfExists();
       if (!mPendingGetDataRequests.IsEmpty()) {
         RejectPendingPromises(NS_ERROR_FAILURE);
       }
@@ -87,7 +89,7 @@ class ClipboardItem final : public nsWrapperCache {
 
     // Indicates if the data is still being loaded.
     bool mIsLoadingData = false;
-    MozPromiseRequestHolder<GenericPromise> mLoadingPromise;
+    nsCOMPtr<nsITransferable> mTransferable;
 
     // Pending promises for data retrieval requests.
     nsTArray<MozPromiseHolder<GetDataPromise>> mPendingGetDataRequests;
