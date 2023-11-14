@@ -905,6 +905,9 @@ class NVImage final : public Image {
   gfx::IntSize GetSize() const override;
   gfx::IntRect GetPictureRect() const override;
   already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override;
+  nsresult BuildSurfaceDescriptorBuffer(
+      SurfaceDescriptorBuffer& aSdBuffer, BuildSdbFlags aFlags,
+      const std::function<MemoryOrShmem(uint32_t)>& aAllocate) override;
   bool IsValid() const override;
   NVImage* AsNVImage() override;
 
@@ -923,7 +926,7 @@ class NVImage final : public Image {
   uint32_t mBufferSize;
   gfx::IntSize mSize;
   Data mData;
-  RefPtr<gfx::SourceSurface> mSourceSurface;
+  RefPtr<gfx::DataSourceSurface> mSourceSurface;
 };
 
 /**

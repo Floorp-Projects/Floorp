@@ -960,6 +960,83 @@ already_AddRefed<SourceSurface> NVImage::GetAsSourceSurface() {
   return surface.forget();
 }
 
+nsresult NVImage::BuildSurfaceDescriptorBuffer(
+    SurfaceDescriptorBuffer& aSdBuffer, BuildSdbFlags aFlags,
+    const std::function<MemoryOrShmem(uint32_t)>& aAllocate) {
+  // Convert the current NV12 or NV21 data to YUV420P so that we can follow the
+  // logics in PlanarYCbCrImage::GetAsSourceSurface().
+  auto ySize = mData.YDataSize();
+  auto cbcrSize = mData.CbCrDataSize();
+
+  Data aData = mData;
+  aData.mCbCrStride = cbcrSize.width;
+  aData.mCbSkip = 0;
+  aData.mCrSkip = 0;
+  aData.mCbChannel = aData.mYChannel + ySize.height * aData.mYStride;
+  aData.mCrChannel = aData.mCbChannel + cbcrSize.height * aData.mCbCrStride;
+
+  UniquePtr<uint8_t[]> buffer;
+
+  if (!mSourceSurface) {
+    const int bufferLength =
+        ySize.height * mData.mYStride + cbcrSize.height * cbcrSize.width * 2;
+    buffer = MakeUnique<uint8_t[]>(bufferLength);
+    aData.mYChannel = buffer.get();
+
+    if (mData.mCbChannel < mData.mCrChannel) {  // NV12
+      libyuv::NV12ToI420(mData.mYChannel, mData.mYStride, mData.mCbChannel,
+                         mData.mCbCrStride, aData.mYChannel, aData.mYStride,
+                         aData.mCbChannel, aData.mCbCrStride, aData.mCrChannel,
+                         aData.mCbCrStride, ySize.width, ySize.height);
+    } else {  // NV21
+      libyuv::NV21ToI420(mData.mYChannel, mData.mYStride, mData.mCrChannel,
+                         mData.mCbCrStride, aData.mYChannel, aData.mYStride,
+                         aData.mCbChannel, aData.mCbCrStride, aData.mCrChannel,
+                         aData.mCbCrStride, ySize.width, ySize.height);
+    }
+  }
+
+  // The logics in PlanarYCbCrImage::GetAsSourceSurface().
+  gfx::IntSize size(mSize);
+  gfx::SurfaceFormat format = gfx::ImageFormatToSurfaceFormat(
+      gfxPlatform::GetPlatform()->GetOffscreenFormat());
+  gfx::GetYCbCrToRGBDestFormatAndSize(aData, format, size);
+  if (mSize.width > PlanarYCbCrImage::MAX_DIMENSION ||
+      mSize.height > PlanarYCbCrImage::MAX_DIMENSION) {
+    NS_ERROR("Illegal image dest width or height");
+    return NS_ERROR_FAILURE;
+  }
+
+  if (mSourceSurface && mSourceSurface->GetSize() != size) {
+    return NS_ERROR_NOT_IMPLEMENTED;
+  }
+
+  uint8_t* output = nullptr;
+  int32_t stride = 0;
+  nsresult rv = AllocateSurfaceDescriptorBufferRgb(
+      size, format, output, aSdBuffer, stride, aAllocate);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (!mSourceSurface) {
+    gfx::ConvertYCbCrToRGB(aData, format, size, output, stride);
+    return NS_OK;
+  }
+
+  DataSourceSurface::ScopedMap map(mSourceSurface, DataSourceSurface::WRITE);
+  if (NS_WARN_IF(!map.IsMapped())) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (!SwizzleData(map.GetData(), map.GetStride(), mSourceSurface->GetFormat(),
+                   output, stride, format, size)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return NS_OK;
+}
+
 bool NVImage::IsValid() const { return !!mBufferSize; }
 
 uint32_t NVImage::GetBufferSize() const { return mBufferSize; }
