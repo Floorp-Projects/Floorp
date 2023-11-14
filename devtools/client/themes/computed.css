@@ -202,11 +202,11 @@
   border-bottom-width: 1px;
 }
 
-.matched {
+.rule-text.matched {
   text-decoration: line-through;
 }
 
-.parentmatch {
+.rule-text.parentmatch {
   opacity: 0.5;
 }
 

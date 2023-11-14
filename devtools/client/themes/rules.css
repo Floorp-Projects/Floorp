@@ -799,26 +799,26 @@
   margin-inline: 1ch 0;
 }
 
-.ruleview-selectorcontainer {
+.ruleview-selectors-container {
   word-wrap: break-word;
   cursor: text;
 }
 
 .ruleview-selector-separator,
-.ruleview-selector-unmatched,
+.ruleview-selector.unmatched,
 .ruleview-unmatched-variable {
   color: #888;
 }
 
-.ruleview-selector-matched > .ruleview-selector-attribute {
+.ruleview-selector.matched > .ruleview-selector-attribute {
   /* TODO: Bug 1178535 Awaiting UX feedback on highlight colors */
 }
 
-.ruleview-selector-matched > .ruleview-selector-pseudo-class {
+.ruleview-selector.matched > .ruleview-selector-pseudo-class {
   /* TODO: Bug 1178535 Awaiting UX feedback on highlight colors */
 }
 
-.ruleview-selector-matched > .ruleview-selector-pseudo-class-lock {
+.ruleview-selector.matched > .ruleview-selector-pseudo-class-lock {
   color: var(--rule-pseudo-class-text-color);
 }
 

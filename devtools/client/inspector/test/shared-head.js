@@ -589,7 +589,7 @@ function getRuleViewRule(view, selectorText, index = 0) {
   let pos = 0;
   for (const r of view.styleDocument.querySelectorAll(".ruleview-rule")) {
     const selector = r.querySelector(
-      ".ruleview-selectorcontainer, " + ".ruleview-selector-matched"
+      ".ruleview-selectors-container, .ruleview-selector.matched"
     );
     if (selector && selector.textContent === selectorText) {
       if (index == pos) {
@@ -676,7 +676,9 @@ function getRuleViewPropertyValue(view, selectorText, propertyName) {
  */
 function getRuleViewSelector(view, selectorText) {
   const rule = getRuleViewRule(view, selectorText);
-  return rule.querySelector(".ruleview-selector, .ruleview-selector-matched");
+  return rule.querySelector(
+    ".ruleview-selectors-container, .ruleview-selector.matched"
+  );
 }
 
 /**

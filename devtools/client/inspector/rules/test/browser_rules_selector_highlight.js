@@ -30,7 +30,7 @@ const TEST_URI = [
 ].join("\n");
 
 const SELECTOR_ATTRIBUTE = "ruleview-selector-attribute";
-const SELECTOR_ELEMENT = "ruleview-selector";
+const SELECTOR_ELEMENT = "ruleview-selector-element";
 const SELECTOR_PSEUDO_CLASS = "ruleview-selector-pseudo-class";
 const SELECTOR_PSEUDO_CLASS_LOCK = "ruleview-selector-pseudo-class-lock";
 

@@ -180,10 +180,9 @@ function getNodeInfo(node, elementStyle) {
       textProperty: declaration,
     };
   } else if (
-    classList.contains("ruleview-selector-unmatched") ||
-    classList.contains("ruleview-selector-matched") ||
-    classList.contains("ruleview-selectorcontainer") ||
+    classList.contains("ruleview-selectors-container") ||
     classList.contains("ruleview-selector") ||
+    classList.contains("ruleview-selector-element") ||
     classList.contains("ruleview-selector-attribute") ||
     classList.contains("ruleview-selector-pseudo-class") ||
     classList.contains("ruleview-selector-pseudo-class-lock")

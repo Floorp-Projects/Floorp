@@ -64,7 +64,7 @@ add_task(async function () {
     info(`Checking rule #${i}: ${expectedRule.selector}`);
 
     const selector = rulesInView[i].querySelector(
-      ".ruleview-selectorcontainer"
+      ".ruleview-selectors-container"
     ).innerText;
     is(selector, expectedRule.selector, `Expected selector for ${selector}`);
 
