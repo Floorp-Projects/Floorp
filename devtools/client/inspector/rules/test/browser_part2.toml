@@ -66,6 +66,7 @@ skip-if = [
 skip-if = ["a11y_checks"] # Bugs 1858041 and 1849028 for intermittent a11y_checks results
 
 ["browser_rules_css-compatibility-toggle-rules.js"]
+fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and/or labeled
 
 ["browser_rules_css-compatibility-tooltip-telemetry.js"]
 
