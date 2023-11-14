@@ -281,7 +281,8 @@ TimerKeys* Timers::Get(JSContext* aCx, const nsAString& aHistogram,
 
   RefPtr<TimerKeys> keys;
   JS::Rooted<JS::Value> keysObj(aCx);
-  if (!JS::GetWeakMapEntry(aCx, objs, obj, &keysObj)) {
+  JS::Rooted<JS::Value> objVal(aCx, JS::ObjectValue(*obj));
+  if (!JS::GetWeakMapEntry(aCx, objs, objVal, &keysObj)) {
     return nullptr;
   }
   if (!keysObj.isObject()) {
@@ -289,7 +290,8 @@ TimerKeys* Timers::Get(JSContext* aCx, const nsAString& aHistogram,
       keys = new TimerKeys();
       Unused << nsContentUtils::WrapNative(aCx, keys, &keysObj);
     }
-    if (!keysObj.isObject() || !JS::SetWeakMapEntry(aCx, objs, obj, keysObj)) {
+    if (!keysObj.isObject() ||
+        !JS::SetWeakMapEntry(aCx, objs, objVal, keysObj)) {
       return nullptr;
     }
   }

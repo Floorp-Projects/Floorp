@@ -296,7 +296,8 @@ bool MaybeCrossOriginObjectMixins::EnsureHolder(
       return false;
     }
 
-    if (!JS::GetWeakMapEntry(cx, map, key, &holderVal)) {
+    JS::Rooted<JS::Value> keyVal(cx, JS::ObjectValue(*key));
+    if (!JS::GetWeakMapEntry(cx, map, keyVal, &holderVal)) {
       return false;
     }
   }
@@ -341,7 +342,8 @@ bool MaybeCrossOriginObjectMixins::EnsureHolder(
       return false;
     }
 
-    if (!JS::SetWeakMapEntry(cx, map, key, holderVal)) {
+    JS::Rooted<JS::Value> keyVal(cx, JS::ObjectValue(*key));
+    if (!JS::SetWeakMapEntry(cx, map, keyVal, holderVal)) {
       return false;
     }
   }
