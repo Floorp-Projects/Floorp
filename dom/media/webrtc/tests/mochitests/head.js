@@ -224,11 +224,8 @@ AudioStreamAnalyser.prototype = {
    * @returns {integer} the index of the bin in the FFT array.
    */
   binIndexForFrequency(frequency) {
-    return (
-      1 +
-      Math.round(
-        (frequency * this.analyser.fftSize) / this.audioContext.sampleRate
-      )
+    return Math.round(
+      (frequency * this.analyser.fftSize) / this.audioContext.sampleRate
     );
   },
 
@@ -239,7 +236,7 @@ AudioStreamAnalyser.prototype = {
    * @returns {double} the frequency for this bin
    */
   frequencyForBinIndex(index) {
-    return ((index - 1) * this.audioContext.sampleRate) / this.analyser.fftSize;
+    return (index * this.audioContext.sampleRate) / this.analyser.fftSize;
   },
 };
 
