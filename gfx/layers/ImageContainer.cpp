@@ -20,6 +20,7 @@
 #include "mozilla/StaticPrefs_layers.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/gfxVars.h"
+#include "mozilla/gfx/Swizzle.h"
 #include "mozilla/ipc/CrossProcessMutex.h"  // for CrossProcessMutex, etc
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/layers/ImageBridgeChild.h"     // for ImageBridgeChild
@@ -212,6 +213,42 @@ ImageContainer::~ImageContainer() {
       imageBridge->ForgetImageContainer(mAsyncContainerHandle);
     }
   }
+}
+
+/* static */ nsresult Image::AllocateSurfaceDescriptorBufferRgb(
+    const gfx::IntSize& aSize, gfx::SurfaceFormat aFormat, uint8_t*& aOutBuffer,
+    SurfaceDescriptorBuffer& aSdBuffer, int32_t& aStride,
+    const std::function<layers::MemoryOrShmem(uint32_t)>& aAllocate) {
+  aStride = ImageDataSerializer::ComputeRGBStride(aFormat, aSize.width);
+  size_t length = ImageDataSerializer::ComputeRGBBufferSize(aSize, aFormat);
+
+  if (aStride <= 0 || length == 0) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  aSdBuffer.desc() = RGBDescriptor(aSize, aFormat);
+  aSdBuffer.data() = aAllocate(length);
+
+  const layers::MemoryOrShmem& memOrShmem = aSdBuffer.data();
+  switch (memOrShmem.type()) {
+    case layers::MemoryOrShmem::Tuintptr_t:
+      aOutBuffer = reinterpret_cast<uint8_t*>(memOrShmem.get_uintptr_t());
+      break;
+    case layers::MemoryOrShmem::TShmem:
+      aOutBuffer = memOrShmem.get_Shmem().get<uint8_t>();
+      break;
+    default:
+      return NS_ERROR_OUT_OF_MEMORY;
+  }
+
+  MOZ_ASSERT(aOutBuffer);
+  return NS_OK;
+}
+
+nsresult Image::BuildSurfaceDescriptorBuffer(
+    SurfaceDescriptorBuffer& aSdBuffer, BuildSdbFlags aFlags,
+    const std::function<MemoryOrShmem(uint32_t)>& aAllocate) {
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 Maybe<SurfaceDescriptor> Image::GetDesc() { return GetDescFromTexClient(); }
@@ -619,12 +656,40 @@ PlanarYCbCrImage::PlanarYCbCrImage()
       mBufferSize(0) {}
 
 nsresult PlanarYCbCrImage::BuildSurfaceDescriptorBuffer(
-    SurfaceDescriptorBuffer& aSdBuffer,
+    SurfaceDescriptorBuffer& aSdBuffer, BuildSdbFlags aFlags,
     const std::function<MemoryOrShmem(uint32_t)>& aAllocate) {
   const PlanarYCbCrData* pdata = GetData();
   MOZ_ASSERT(pdata, "must have PlanarYCbCrData");
   MOZ_ASSERT(pdata->mYSkip == 0 && pdata->mCbSkip == 0 && pdata->mCrSkip == 0,
              "YCbCrDescriptor doesn't hold skip values");
+
+  if (aFlags & BuildSdbFlags::RgbOnly) {
+    gfx::IntSize size(mSize);
+    auto format = gfx::ImageFormatToSurfaceFormat(GetOffscreenFormat());
+    gfx::GetYCbCrToRGBDestFormatAndSize(mData, format, size);
+
+    uint8_t* buffer = nullptr;
+    int32_t stride = 0;
+    nsresult rv = AllocateSurfaceDescriptorBufferRgb(
+        size, format, buffer, aSdBuffer, stride, aAllocate);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    // If we can copy directly from the surface, let's do that to avoid the YUV
+    // to RGB conversion.
+    if (mSourceSurface && mSourceSurface->GetSize() == size) {
+      DataSourceSurface::ScopedMap map(mSourceSurface, DataSourceSurface::READ);
+      if (map.IsMapped() && SwizzleData(map.GetData(), map.GetStride(),
+                                        mSourceSurface->GetFormat(), buffer,
+                                        stride, format, size)) {
+        return NS_OK;
+      }
+    }
+
+    gfx::ConvertYCbCrToRGB(mData, format, size, buffer, stride);
+    return NS_OK;
+  }
 
   auto ySize = pdata->YDataSize();
   auto cbcrSize = pdata->CbCrDataSize();

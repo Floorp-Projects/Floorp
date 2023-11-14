@@ -21,6 +21,7 @@
 #include "mozilla/layers/LayersTypes.h"  // for LayersBackend, etc
 #include "mozilla/layers/CompositorTypes.h"
 #include "mozilla/mozalloc.h"  // for operator delete, etc
+#include "mozilla/TypedEnumBits.h"
 #include "nsDebug.h"           // for NS_ASSERTION
 #include "nsISupportsImpl.h"   // for Image::Release, etc
 #include "nsTArray.h"          // for nsTArray
@@ -129,6 +130,15 @@ class Image {
 
   virtual already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() = 0;
 
+  enum class BuildSdbFlags : uint8_t {
+    Default = 0,
+    RgbOnly = 1 << 0,
+  };
+
+  virtual nsresult BuildSurfaceDescriptorBuffer(
+      SurfaceDescriptorBuffer& aSdBuffer, BuildSdbFlags aFlags,
+      const std::function<MemoryOrShmem(uint32_t)>& aAllocate);
+
   virtual bool IsValid() const { return true; }
 
   /**
@@ -157,6 +167,12 @@ class Image {
 
   virtual Maybe<SurfaceDescriptor> GetDesc();
 
+  static nsresult AllocateSurfaceDescriptorBufferRgb(
+      const gfx::IntSize& aSize, gfx::SurfaceFormat aFormat,
+      uint8_t*& aOutBuffer, SurfaceDescriptorBuffer& aSdBuffer,
+      int32_t& aStride,
+      const std::function<layers::MemoryOrShmem(uint32_t)>& aAllocate);
+
  protected:
   Maybe<SurfaceDescriptor> GetDescFromTexClient(
       TextureClient* tcOverride = nullptr);
@@ -182,6 +198,8 @@ class Image {
 
   static mozilla::Atomic<int32_t> sSerialCounter;
 };
+
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(Image::BuildSdbFlags)
 
 /**
  * A RecycleBin is owned by an ImageContainer. We store buffers in it that we
@@ -829,9 +847,9 @@ class PlanarYCbCrImage : public Image {
    * Build a SurfaceDescriptorBuffer with this image.  A function to allocate
    * a MemoryOrShmem with the given capacity must be provided.
    */
-  virtual nsresult BuildSurfaceDescriptorBuffer(
-      SurfaceDescriptorBuffer& aSdBuffer,
-      const std::function<MemoryOrShmem(uint32_t)>& aAllocate);
+  nsresult BuildSurfaceDescriptorBuffer(
+      SurfaceDescriptorBuffer& aSdBuffer, BuildSdbFlags aFlags,
+      const std::function<MemoryOrShmem(uint32_t)>& aAllocate) override;
 
  protected:
   already_AddRefed<gfx::SourceSurface> GetAsSourceSurface() override;
@@ -845,7 +863,7 @@ class PlanarYCbCrImage : public Image {
   gfx::IntPoint mOrigin;
   gfx::IntSize mSize;
   gfxImageFormat mOffscreenFormat;
-  RefPtr<gfx::SourceSurface> mSourceSurface;
+  RefPtr<gfx::DataSourceSurface> mSourceSurface;
   uint32_t mBufferSize;
 };
 
