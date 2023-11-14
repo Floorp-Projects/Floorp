@@ -5,6 +5,9 @@
 /* CSS Variables specific to this panel that aren't defined by the themes */
 :root {
   --rule-highlight-background-color: var(--theme-highlight-yellow);
+  --rule-highlight-propertyname: var(--blue-60);
+  --rule-highlight-propertyvalue: var(--magenta-70);
+  --rule-highlight-unmatched-unused-color: var(--grey-55);
   --rule-header-background-color: var(--theme-toolbar-background);
   --rule-pseudo-class-text-color: var(--yellow-70) ;
   --rule-computed-margin-inline-start: 35px;
@@ -22,6 +25,9 @@
 
 :root.theme-dark {
   --rule-highlight-background-color: #521C76;
+  --rule-highlight-propertyname: var(--theme-highlight-blue);
+  --rule-highlight-propertyvalue: var(--theme-highlight-red);
+  --rule-highlight-unmatched-unused-color: var(--grey-40);
   --rule-header-background-color: #222225;
   --rule-pseudo-class-text-color: var(--yellow-50);
 }
@@ -733,6 +739,23 @@
   background-color: var(--rule-highlight-background-color);
   /* Put the box-shadow inside the element so it's still visible when sibling elements are highlighted  */
   box-shadow: inset 0px -1px 0px 0px var(--theme-contrast-border);
+
+
+  /* property name and value and unmatched/inactive colors need to be adjusted
+     in order to have enough contrast against the highlighted background */
+  & .ruleview-propertyname {
+    color: var(--rule-highlight-propertyname);
+  }
+
+  & .ruleview-propertyvalue {
+    color: var(--rule-highlight-propertyvalue);
+  }
+
+  &.ruleview-selector.unmatched,
+  & .ruleview-unmatched-variable,
+  .ruleview-property:is(.unused, .ruleview-overridden) & :is(.ruleview-propertyname, .ruleview-propertyvalue) {
+    color: var(--rule-highlight-unmatched-unused-color);
+  }
 }
 
 .ruleview-namecontainer > .ruleview-propertyname,
