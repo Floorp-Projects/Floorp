@@ -84,7 +84,7 @@ add_task(async function test_download_without_filepicker() {
       await helper.waitForOverlay();
       await helper.dragOverlay(10, 10, 500, 500);
 
-      helper.clickDownloadButton();
+      await helper.clickDownloadButton();
 
       info("wait for download to finish");
       let download = await downloadFinishedPromise;
@@ -170,7 +170,7 @@ add_task(async function test_download_with_filepicker() {
 
       let filePicker = waitForFilePicker();
       let screenshotExit = TestUtils.topicObserved("screenshots-exit");
-      helper.clickDownloadButton();
+      await helper.clickDownloadButton();
 
       await filePicker;
       ok(true, "Export file picker opened");

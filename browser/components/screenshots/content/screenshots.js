@@ -6,8 +6,6 @@
 "use strict";
 
 ChromeUtils.defineESModuleGetters(this, {
-  Downloads: "resource://gre/modules/Downloads.sys.mjs",
-  FileUtils: "resource://gre/modules/FileUtils.sys.mjs",
   ScreenshotsUtils: "resource:///modules/ScreenshotsUtils.sys.mjs",
 });
 
@@ -78,15 +76,16 @@ class ScreenshotsUI extends HTMLElement {
     await ScreenshotsUtils.downloadScreenshot(
       null,
       dataUrl,
-      this.openerBrowser
+      this.openerBrowser,
+      { object: "preview_download" }
     );
-    ScreenshotsUtils.recordTelemetryEvent("download", "preview_download", {});
     this.close();
   }
 
-  saveToClipboard(dataUrl) {
-    ScreenshotsUtils.copyScreenshot(dataUrl, this.openerBrowser);
-    ScreenshotsUtils.recordTelemetryEvent("copy", "preview_copy", {});
+  async saveToClipboard(dataUrl) {
+    await ScreenshotsUtils.copyScreenshot(dataUrl, this.openerBrowser, {
+      object: "preview_copy",
+    });
     this.close();
   }
 }

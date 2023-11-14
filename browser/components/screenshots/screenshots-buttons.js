@@ -8,6 +8,10 @@
 // This is loaded into chrome windows with the subscript loader. Wrap in
 // a block to prevent accidentally leaking globals onto `window`.
 {
+  ChromeUtils.defineESModuleGetters(this, {
+    ScreenshotsUtils: "resource:///modules/ScreenshotsUtils.sys.mjs",
+  });
+
   class ScreenshotsButtons extends MozXULElement {
     static get markup() {
       return `
@@ -25,22 +29,14 @@
       let fragment = MozXULElement.parseXULToFragment(this.constructor.markup);
       this.shadowRoot.append(fragment);
 
-      let button1 = shadowRoot.querySelector(".visible-page");
-      button1.onclick = function () {
-        Services.obs.notifyObservers(
-          gBrowser.ownerGlobal,
-          "screenshots-take-screenshot",
-          "visible"
-        );
+      let visibleButton = shadowRoot.querySelector(".visible-page");
+      visibleButton.onclick = function () {
+        ScreenshotsUtils.doScreenshot(gBrowser.selectedBrowser, "visible");
       };
 
-      let button2 = shadowRoot.querySelector(".full-page");
-      button2.onclick = function () {
-        Services.obs.notifyObservers(
-          gBrowser.ownerGlobal,
-          "screenshots-take-screenshot",
-          "full-page"
-        );
+      let fullpageButton = shadowRoot.querySelector(".full-page");
+      fullpageButton.onclick = function () {
+        ScreenshotsUtils.doScreenshot(gBrowser.selectedBrowser, "full_page");
       };
     }
 
