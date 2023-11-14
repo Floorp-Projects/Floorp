@@ -34,6 +34,12 @@
 
     <!-- The text shown inside the advanced button used to expand the advanced options. It's only shown when a website has an invalid SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_advanced">ئالىي…</string>
+    <!-- The advanced certificate information shown when a website sends has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
+    <string name="mozac_browser_errorpages_security_bad_cert_techInfo"><![CDATA[
+        <label>بەزىلەر تور بېكەتنى تەقلىد قىلىشقا ئۇرۇنغان بولۇشى مۇمكىن، سىز داۋاملاشتۇرماسلىقىڭىز كېرەك.</label>
+        <br> <br>
+        <label> تور بېكەتلەر گۇۋاھنامە ئارقىلىق ئۆزىنىڭ كىملىكىنى ئىسپاتلايدۇ. %1$s <b>%2$s</b> غا ئىشەنمەيدۇ ، چۈنكى ئۇنىڭ گۇۋاھنامىسىنى تارقاتقۇچى نامەلۇم، گۇۋاھنامىگە ئۆزى ئىمزا قويغان ياكى مۇلازىمېتىر توغرا بولغان ئارىلىق گۇۋاھنامىنى ئەۋەتمىگەن. </label>
+            ]]></string>
     <!-- The text shown inside the advanced options button used to go back. It's only shown if the user has expanded the advanced options. -->
     <string name="mozac_browser_errorpages_security_bad_cert_back">قايتىش (تەۋسىيە)</string>
 
@@ -127,6 +133,9 @@
 
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title">ئىناۋەتسىز ئادرېس</string>
+    <string name="mozac_browser_errorpages_malformed_uri_message"><![CDATA[
+      <p>تەمىنلەنگەن ئادرېس تونۇيالايدىغان پىچىمدا ئەمەس. ئورۇن بالداقتىن خاتالىقنى تەكشۈرۈپ ئاندىن قايتا سىناڭ.</p>
+    ]]></string>
     <!-- The document title and heading of an error page. -->
     <string name="mozac_browser_errorpages_malformed_uri_title_alternative">ئادرېس ئىناۋەتسىز</string>
 
