@@ -351,8 +351,6 @@ class EnhancedTrackingProtectionTest {
         enhancedTrackingProtection {
         }.openEnhancedTrackingProtectionSheet {
         }.openDetails {
-            verifyCrossSiteCookiesBlocked(true)
-            navigateBackToDetails()
             verifyCryptominersBlocked(true)
             navigateBackToDetails()
             verifyFingerprintersBlocked(true)

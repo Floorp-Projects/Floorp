@@ -662,7 +662,7 @@ abstract class EngineSession(
             useForRegularSessions = false,
             cookiePolicy = cookiePolicy,
             cookiePolicyPrivateMode = cookiePolicyPrivateMode,
-            strictSocialTrackingProtection = strictSocialTrackingProtection,
+            strictSocialTrackingProtection = false,
             cookiePurging = cookiePurging,
         )
 

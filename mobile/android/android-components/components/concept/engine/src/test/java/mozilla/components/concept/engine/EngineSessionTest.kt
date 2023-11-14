@@ -902,10 +902,15 @@ class EngineSessionTest {
     fun `TrackingSessionPolicies retain all expected fields during privacy transformations`() {
         val strict = TrackingProtectionPolicy.strict()
         val default = TrackingProtectionPolicy.recommended()
-        val custom = TrackingProtectionPolicy.select(
+        val customNormal = TrackingProtectionPolicy.select(
             trackingCategories = emptyArray(),
             cookiePolicy = CookiePolicy.ACCEPT_ONLY_FIRST_PARTY,
             strictSocialTrackingProtection = true,
+        )
+        val customPrivate = TrackingProtectionPolicy.select(
+            trackingCategories = emptyArray(),
+            cookiePolicy = CookiePolicy.ACCEPT_ONLY_FIRST_PARTY,
+            strictSocialTrackingProtection = false,
         )
         val changedFields = listOf("useForPrivateSessions", "useForRegularSessions")
 
@@ -923,11 +928,12 @@ class EngineSessionTest {
         listOf(
             strict,
             default,
-            custom,
+            customNormal,
         ).forEach {
-            checkSavedFields(it, it.forPrivateSessionsOnly())
             checkSavedFields(it, it.forRegularSessionsOnly())
         }
+
+        checkSavedFields(customPrivate, customPrivate.forPrivateSessionsOnly())
     }
 
     @Test

@@ -54,6 +54,7 @@ class TrackingProtectionPolicyFactory(
             cookiePolicy = getCustomCookiePolicy(),
             trackingCategories = getCustomTrackingCategories(),
             cookiePurging = getCustomCookiePurgingPolicy(),
+            strictSocialTrackingProtection = settings.blockTrackingContentInCustomTrackingProtection,
         ).let {
             if (settings.blockTrackingContentSelectionInCustomTrackingProtection == "private") {
                 it.forPrivateSessionsOnly()

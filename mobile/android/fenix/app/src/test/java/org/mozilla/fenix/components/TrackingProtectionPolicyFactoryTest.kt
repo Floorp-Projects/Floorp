@@ -91,8 +91,9 @@ class TrackingProtectionPolicyFactoryTest {
     @Test
     fun `GIVEN custom policy WHEN should not block cookies THEN tracking policy should not block cookies`() {
         val expected = TrackingProtectionPolicy.select(
-            cookiePolicy = TrackingProtectionPolicy.CookiePolicy.ACCEPT_ALL,
+            cookiePolicy = CookiePolicy.ACCEPT_ALL,
             trackingCategories = allTrackingCategories,
+            strictSocialTrackingProtection = true,
         )
 
         val factory = TrackingProtectionPolicyFactory(
@@ -114,8 +115,9 @@ class TrackingProtectionPolicyFactoryTest {
     @Test
     fun `GIVEN custom policy WHEN cookie policy block all THEN tracking policy should have cookie policy allow none`() {
         val expected = TrackingProtectionPolicy.select(
-            cookiePolicy = TrackingProtectionPolicy.CookiePolicy.ACCEPT_NONE,
+            cookiePolicy = CookiePolicy.ACCEPT_NONE,
             trackingCategories = allTrackingCategories,
+            strictSocialTrackingProtection = true,
         )
 
         val factory = TrackingProtectionPolicyFactory(
@@ -180,8 +182,9 @@ class TrackingProtectionPolicyFactoryTest {
     @Test
     fun `GIVEN custom policy WHEN cookie policy social THEN tracking policy should have cookie policy allow non-trackers`() {
         val expected = TrackingProtectionPolicy.select(
-            cookiePolicy = TrackingProtectionPolicy.CookiePolicy.ACCEPT_NON_TRACKERS,
+            cookiePolicy = CookiePolicy.ACCEPT_NON_TRACKERS,
             trackingCategories = allTrackingCategories,
+            strictSocialTrackingProtection = true,
         )
 
         val factory = TrackingProtectionPolicyFactory(
@@ -206,8 +209,9 @@ class TrackingProtectionPolicyFactoryTest {
     @Test
     fun `GIVEN custom policy WHEN cookie policy accept visited THEN tracking policy should have cookie policy allow visited`() {
         val expected = TrackingProtectionPolicy.select(
-            cookiePolicy = TrackingProtectionPolicy.CookiePolicy.ACCEPT_VISITED,
+            cookiePolicy = CookiePolicy.ACCEPT_VISITED,
             trackingCategories = allTrackingCategories,
+            strictSocialTrackingProtection = true,
         )
 
         val factory = TrackingProtectionPolicyFactory(
@@ -230,10 +234,43 @@ class TrackingProtectionPolicyFactoryTest {
     }
 
     @Test
+    fun `GIVEN custom policy WHEN blockTrackingContentInCustom in private windows only THEN strict social tracking protection should be false`() {
+        val privateFactory = TrackingProtectionPolicyFactory(
+            settingsForCustom(
+                shouldBlockCookiesInCustom = false,
+                blockTrackingContentInCustom = private,
+            ),
+            testContext.resources,
+        )
+
+        val privateOnly =
+            privateFactory.createTrackingProtectionPolicy(normalMode = false, privateMode = true)
+
+        assertFalse(privateOnly.strictSocialTrackingProtection!!)
+    }
+
+    @Test
+    fun `GIVEN custom policy WHEN blockTrackingContentInCustom in all windows THEN strict social tracking protection should be true`() {
+        val privateFactory = TrackingProtectionPolicyFactory(
+            settingsForCustom(
+                shouldBlockCookiesInCustom = false,
+                blockTrackingContentInCustom = all,
+            ),
+            testContext.resources,
+        )
+
+        val privateOnly =
+            privateFactory.createTrackingProtectionPolicy(normalMode = false, privateMode = true)
+
+        assertTrue(privateOnly.strictSocialTrackingProtection!!)
+    }
+
+    @Test
     fun `GIVEN custom policy WHEN cookie policy block third party THEN tracking policy should have cookie policy allow first party`() {
         val expected = TrackingProtectionPolicy.select(
-            cookiePolicy = TrackingProtectionPolicy.CookiePolicy.ACCEPT_ONLY_FIRST_PARTY,
+            cookiePolicy = CookiePolicy.ACCEPT_ONLY_FIRST_PARTY,
             trackingCategories = allTrackingCategories,
+            strictSocialTrackingProtection = true,
         )
 
         val factory = TrackingProtectionPolicyFactory(
@@ -258,8 +295,9 @@ class TrackingProtectionPolicyFactoryTest {
     @Test
     fun `GIVEN custom policy WHEN cookie policy is total protection THEN tracking policy should have cookie policy to block cross-site cookies`() {
         val expected = TrackingProtectionPolicy.select(
-            cookiePolicy = TrackingProtectionPolicy.CookiePolicy.ACCEPT_FIRST_PARTY_AND_ISOLATE_OTHERS,
+            cookiePolicy = CookiePolicy.ACCEPT_FIRST_PARTY_AND_ISOLATE_OTHERS,
             trackingCategories = allTrackingCategories,
+            strictSocialTrackingProtection = true,
         )
 
         val factory = TrackingProtectionPolicyFactory(
@@ -284,8 +322,9 @@ class TrackingProtectionPolicyFactoryTest {
     @Test
     fun `GIVEN custom policy WHEN cookie policy unrecognized THEN tracking policy should have cookie policy block all`() {
         val expected = TrackingProtectionPolicy.select(
-            cookiePolicy = TrackingProtectionPolicy.CookiePolicy.ACCEPT_NONE,
+            cookiePolicy = CookiePolicy.ACCEPT_NONE,
             trackingCategories = allTrackingCategories,
+            strictSocialTrackingProtection = true,
         )
 
         val factory = TrackingProtectionPolicyFactory(
@@ -481,8 +520,9 @@ class TrackingProtectionPolicyFactoryTest {
         )
 
         val expected = TrackingProtectionPolicy.select(
-            cookiePolicy = TrackingProtectionPolicy.CookiePolicy.ACCEPT_NONE,
+            cookiePolicy = CookiePolicy.ACCEPT_NONE,
             trackingCategories = defaultTrackingCategories,
+            strictSocialTrackingProtection = false,
         )
 
         val factory = TrackingProtectionPolicyFactory(
@@ -502,8 +542,9 @@ class TrackingProtectionPolicyFactoryTest {
     @Test
     fun `GIVEN custom policy WHEN all tracking policies THEN tracking policies should match all`() {
         val expected = TrackingProtectionPolicy.select(
-            cookiePolicy = TrackingProtectionPolicy.CookiePolicy.ACCEPT_NONE,
+            cookiePolicy = CookiePolicy.ACCEPT_NONE,
             trackingCategories = allTrackingCategories,
+            strictSocialTrackingProtection = true,
         )
 
         val factory = TrackingProtectionPolicyFactory(
@@ -531,8 +572,9 @@ class TrackingProtectionPolicyFactoryTest {
         )
 
         val expected = TrackingProtectionPolicy.select(
-            cookiePolicy = TrackingProtectionPolicy.CookiePolicy.ACCEPT_NONE,
+            cookiePolicy = CookiePolicy.ACCEPT_NONE,
             trackingCategories = someTrackingCategories,
+            strictSocialTrackingProtection = false,
         )
 
         val factory = TrackingProtectionPolicyFactory(
@@ -553,9 +595,10 @@ class TrackingProtectionPolicyFactoryTest {
     @Test
     fun `GIVEN custom policy WHEN some tracking policies THEN purge cookies`() {
         val expected = TrackingProtectionPolicy.select(
-            cookiePolicy = TrackingProtectionPolicy.CookiePolicy.ACCEPT_NONE,
+            cookiePolicy = CookiePolicy.ACCEPT_NONE,
             trackingCategories = allTrackingCategories,
             cookiePurging = true,
+            strictSocialTrackingProtection = true,
         )
 
         val factory = TrackingProtectionPolicyFactory(
@@ -657,7 +700,13 @@ class TrackingProtectionPolicyFactoryTest {
         checkPrivacy: Boolean,
     ) {
         assertEquals(this.cookiePolicy, actual.cookiePolicy)
-        assertEquals(this.strictSocialTrackingProtection, actual.strictSocialTrackingProtection)
+        val strictSocialTrackingProtection =
+            if (actual.useForPrivateSessions && !actual.useForRegularSessions) {
+                false
+            } else {
+                this.strictSocialTrackingProtection
+            }
+        assertEquals(strictSocialTrackingProtection, actual.strictSocialTrackingProtection)
         // E.g., atm, RECOMMENDED == AD + ANALYTICS + SOCIAL + TEST + MOZILLA_SOCIAL + CRYPTOMINING.
         // If all of these are set manually, the equality check should not fail
         if (this.trackingCategories.toInt() != actual.trackingCategories.toInt()) {
