@@ -5217,13 +5217,7 @@ bool nsDisplayOwnLayer::HasDynamicToolbar() const {
 
 bool nsDisplayOwnLayer::ShouldFixedAndStickyContentGetAnimationIds() const {
 #if defined(MOZ_WIDGET_ANDROID)
-  // Ensure that we have an animation id for position:fixed or sticky elements
-  // where the element is fixed or stuck to the root scroll container of the top
-  // level content document.
-  return mFrame->PresContext()->IsRootContentDocumentCrossProcess() &&
-         GetActiveScrolledRoot() &&
-         nsLayoutUtils::ScrollIdForRootScrollFrame(mFrame->PresContext()) ==
-             GetActiveScrolledRoot()->GetViewId();
+  return mFrame->PresContext()->IsRootContentDocumentCrossProcess();
 #else
   return false;
 #endif
