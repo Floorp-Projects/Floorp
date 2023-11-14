@@ -55,6 +55,32 @@
                      key="key_privatebrowsing"
                      command="Tools:PrivateBrowsing"/>
       <toolbarseparator/>
+<!-- Floorp Injections +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+      <toolbarbutton id="appMenu-ssb-button"
+                     class="subviewbutton subviewbutton-nav"
+                     label="Web apps"
+                     closemenu="none"
+                     oncommand="gSsbChromeManager.functions.showSsbPanelSubView();"/>
+      <panelview id="PanelUI-ssb">
+        <vbox class="panel-subview-body">
+          <toolbarbutton id="appmenu-install-current-page-button"
+                         class="subviewbutton"
+                         data-l10n-id="appmenuitem-install-current-page"
+                         oncommand="gSsbChromeManager.functions.installOrRunCurrentPageAsSsb(false);"/>
+          <toolbarseparator/>
+          <html:h2 id="panelMenu_openInstalledApps"
+                   data-l10n-id="appmenu-open-installed-apps-subheader"
+                   class="subview-subheader"/>
+        </vbox>
+        <toolbarseparator/>
+        <toolbarbutton id="PanelUI-openManageSsbPage"
+                       class="subviewbutton panel-subview-footer-button"
+                       data-l10n-id="floorp-open-manage-ssb-page"
+                       oncommand=""/>
+      </panelview>
+
+<!-- Floorp Injections +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ -->
+
       <toolbarbutton id="appMenu-bookmarks-button"
                      class="subviewbutton subviewbutton-nav"
                      data-l10n-id="library-bookmarks-menu"
