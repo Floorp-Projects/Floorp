@@ -22,7 +22,7 @@
 #include "nsTextEquivUtils.h"
 #include "Pivot.h"
 #include "Relation.h"
-#include "RelationType.h"
+#include "mozilla/a11y/RelationType.h"
 #include "xpcAccessibleDocument.h"
 
 #ifdef A11Y_LOG
