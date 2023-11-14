@@ -31,8 +31,16 @@ public class GeckoServiceChildProcess extends Service {
   private static String sOwnerProcessId;
   private final MemoryController mMemoryController = new MemoryController();
 
-  // Makes sure we don't reuse this process
-  private static boolean sCreateCalled;
+  private enum ProcessState {
+    NEW,
+    CREATED,
+    BOUND,
+    STARTED,
+    DESTROYED,
+  }
+
+  // Keep track of the process state to ensure we don't reuse the process
+  private static ProcessState sState = ProcessState.NEW;
 
   @WrapForJNI(calledFrom = "gecko")
   private static void getEditableParent(
@@ -49,12 +57,13 @@ public class GeckoServiceChildProcess extends Service {
     super.onCreate();
     Log.i(LOGTAG, "onCreate");
 
-    if (sCreateCalled) {
+    if (sState != ProcessState.NEW) {
       // We don't support reusing processes, and this could get us in a really weird state,
       // so let's throw here.
-      throw new RuntimeException("Cannot reuse process.");
+      throw new RuntimeException(
+          String.format("Cannot reuse process %s: %s", getClass().getSimpleName(), sState));
     }
-    sCreateCalled = true;
+    sState = ProcessState.CREATED;
 
     GeckoAppShell.setApplicationContext(getApplicationContext());
     GeckoThread.launch(); // Preload Gecko.
@@ -144,6 +153,7 @@ public class GeckoServiceChildProcess extends Service {
               }
             }
           });
+      sState = ProcessState.STARTED;
       return IChildProcess.STARTED_OK;
     }
 
@@ -177,6 +187,7 @@ public class GeckoServiceChildProcess extends Service {
   @Override
   public void onDestroy() {
     Log.i(LOGTAG, "Destroying GeckoServiceChildProcess");
+    sState = ProcessState.DESTROYED;
     System.exit(0);
   }
 
@@ -184,6 +195,7 @@ public class GeckoServiceChildProcess extends Service {
   public IBinder onBind(final Intent intent) {
     // Calling stopSelf ensures that whenever the client unbinds the process dies immediately.
     stopSelf();
+    sState = ProcessState.BOUND;
     return mBinder;
   }
 
