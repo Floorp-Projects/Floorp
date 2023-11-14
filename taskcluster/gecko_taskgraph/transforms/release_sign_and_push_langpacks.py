@@ -6,11 +6,11 @@ Transform the release-sign-and-push task into an actual task description.
 """
 
 from taskgraph.transforms.base import TransformSequence
-from taskgraph.util.schema import optionally_keyed_by, resolve_keyed_by
+from taskgraph.util.dependencies import get_primary_dependency
+from taskgraph.util.schema import Schema, optionally_keyed_by, resolve_keyed_by
 from taskgraph.util.treeherder import inherit_treeherder_from_dep
-from voluptuous import Any, Required
+from voluptuous import Any, Optional, Required
 
-from gecko_taskgraph.loader.single_dep import schema
 from gecko_taskgraph.transforms.task import task_description_schema
 from gecko_taskgraph.util.attributes import (
     copy_attributes_from_dependent_job,
@@ -19,7 +19,7 @@ from gecko_taskgraph.util.attributes import (
 
 transforms = TransformSequence()
 
-langpack_sign_push_description_schema = schema.extend(
+langpack_sign_push_description_schema = Schema(
     {
         Required("label"): str,
         Required("description"): str,
@@ -33,7 +33,9 @@ langpack_sign_push_description_schema = schema.extend(
         Required("run-on-projects"): [],
         Required("scopes"): optionally_keyed_by("release-level", [str]),
         Required("shipping-phase"): task_description_schema["shipping-phase"],
-        Required("shipping-product"): task_description_schema["shipping-product"],
+        Optional("job-from"): task_description_schema["job-from"],
+        Optional("attributes"): task_description_schema["attributes"],
+        Optional("dependencies"): task_description_schema["dependencies"],
     }
 )
 
@@ -41,8 +43,13 @@ langpack_sign_push_description_schema = schema.extend(
 @transforms.add
 def set_label(config, jobs):
     for job in jobs:
-        label = "push-langpacks-{}".format(job["primary-dependency"].label)
-        job["label"] = label
+        dep_job = get_primary_dependency(config, job)
+        assert dep_job
+
+        job["label"] = f"push-langpacks-{dep_job.label}"
+
+        if "name" in job:
+            del job["name"]
 
         yield job
 
@@ -53,6 +60,9 @@ transforms.add_validate(langpack_sign_push_description_schema)
 @transforms.add
 def resolve_keys(config, jobs):
     for job in jobs:
+        dep_job = get_primary_dependency(config, job)
+        assert dep_job
+
         resolve_keyed_by(
             job,
             "worker-type",
@@ -70,7 +80,7 @@ def resolve_keys(config, jobs):
             "worker.channel",
             item_name=job["label"],
             project=config.params["project"],
-            platform=job["primary-dependency"].attributes["build_platform"],
+            platform=dep_job.attributes["build_platform"],
         )
 
         yield job
@@ -79,8 +89,12 @@ def resolve_keys(config, jobs):
 @transforms.add
 def copy_attributes(config, jobs):
     for job in jobs:
-        dep_job = job["primary-dependency"]
-        job["attributes"] = copy_attributes_from_dependent_job(dep_job)
+        dep_job = get_primary_dependency(config, job)
+        assert dep_job
+
+        job.setdefault("attributes", {}).update(
+            copy_attributes_from_dependent_job(dep_job)
+        )
         job["attributes"]["chunk_locales"] = dep_job.attributes.get(
             "chunk_locales", ["en-US"]
         )
@@ -91,7 +105,10 @@ def copy_attributes(config, jobs):
 @transforms.add
 def filter_out_macos_jobs_but_mac_only_locales(config, jobs):
     for job in jobs:
-        build_platform = job["primary-dependency"].attributes.get("build_platform")
+        dep_job = get_primary_dependency(config, job)
+        assert dep_job
+
+        build_platform = dep_job.attributes.get("build_platform")
 
         if build_platform in ("linux64-devedition", "linux64-shippable"):
             yield job
@@ -112,7 +129,8 @@ def filter_out_macos_jobs_but_mac_only_locales(config, jobs):
 @transforms.add
 def make_task_description(config, jobs):
     for job in jobs:
-        dep_job = job["primary-dependency"]
+        dep_job = get_primary_dependency(config, job)
+        assert dep_job
 
         treeherder = inherit_treeherder_from_dep(job, dep_job)
         treeherder.setdefault(
@@ -170,11 +188,3 @@ def get_upstream_task_ref(job, expected_kinds):
         raise Exception("Only one dependency expected")
 
     return f"<{upstream_tasks[0]}>"
-
-
-@transforms.add
-def strip_unused_data(config, jobs):
-    for job in jobs:
-        del job["primary-dependency"]
-
-        yield job
