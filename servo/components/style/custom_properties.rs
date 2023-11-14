@@ -390,6 +390,23 @@ impl VariableValue {
         }
     }
 
+    /// Create a new custom property without parsing if the CSS is known to be valid and contain no
+    /// references.
+    pub fn new(
+        css: String,
+        url_data: &UrlExtraData,
+        first_token_type: TokenSerializationType,
+        last_token_type: TokenSerializationType,
+    ) -> Self {
+        Self {
+            css,
+            url_data: url_data.clone(),
+            first_token_type,
+            last_token_type,
+            references: Default::default(),
+        }
+    }
+
     fn push<'i>(
         &mut self,
         input: &Parser<'i, '_>,

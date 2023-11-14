@@ -19,7 +19,7 @@ use crate::values::{
     computed::{self, ToComputedValue},
     specified, CustomIdent,
 };
-use cssparser::{BasicParseErrorKind, ParseErrorKind, Parser as CSSParser, ParserInput};
+use cssparser::{BasicParseErrorKind, ParseErrorKind, Parser as CSSParser, TokenSerializationType};
 use selectors::matching::QuirksMode;
 use servo_arc::{Arc, ThinArc};
 use smallvec::SmallVec;
@@ -63,6 +63,31 @@ pub type SpecifiedValueComponent = GenericValueComponent<
     specified::Transform,
     SpecifiedValueComponentList,
 >;
+
+impl SpecifiedValueComponent {
+    fn serialization_types(&self) -> (TokenSerializationType, TokenSerializationType) {
+        let first_token_type = match self {
+            Self::Length(_) | Self::Angle(_) | Self::Time(_) | Self::Resolution(_) => {
+                TokenSerializationType::Dimension
+            },
+            Self::Number(_) | Self::Integer(_) => TokenSerializationType::Number,
+            Self::Percentage(_) | Self::LengthPercentage(_) => TokenSerializationType::Percentage,
+            Self::Color(_) |
+            Self::Image(_) |
+            Self::Url(_) |
+            Self::TransformFunction(_) |
+            Self::TransformList(_) => TokenSerializationType::Function,
+            Self::CustomIdent(_) => TokenSerializationType::Ident,
+            Self::String(_) => TokenSerializationType::Other,
+        };
+        let last_token_type = if first_token_type == TokenSerializationType::Function {
+            TokenSerializationType::Other
+        } else {
+            first_token_type
+        };
+        (first_token_type, last_token_type)
+    }
+}
 
 /// A generic enum used for both specified value components and computed value components.
 #[derive(Clone, ToCss)]
@@ -292,6 +317,15 @@ impl SpecifiedValueComponentList {
     {
         Self(ThinArc::from_header_and_iter(multiplier, values))
     }
+
+    fn serialization_types(&self) -> (TokenSerializationType, TokenSerializationType) {
+        if let Some(first) = self.0.slice().first() {
+            // Each element has the same serialization types, so we can use only the first element.
+            first.serialization_types()
+        } else {
+            Default::default()
+        }
+    }
 }
 
 /// A list of computed component values, including the list's unchanged multiplier.
@@ -365,19 +399,8 @@ impl SpecifiedValue {
         // TODO(zrhoffman, bug 1856522): All font-* properties should already be applied before
         // computing the value of the registered custom property.
         let value = value.to_computed_value(context);
-        let value = SpecifiedValue::from_computed_value(&value).to_css_string();
-
-        let result = {
-            let mut input = ParserInput::new(&value);
-            let mut input = CSSParser::new(&mut input);
-            // TODO(zrhoffman, bug 1858305): Get the variable without parsing
-            ComputedPropertyValue::parse(&mut input, &registration.url_data)
-        };
-        if let Ok(value) = result {
-            Ok(value)
-        } else {
-            Err(())
-        }
+        let value = SpecifiedValue::from_computed_value(&value);
+        Ok(value.to_var(&registration.url_data))
     }
 
     /// Parse and validate a registered custom property value according to its syntax descriptor,
@@ -407,6 +430,29 @@ impl SpecifiedValue {
             Self::Component(values[0].clone())
         };
         Ok(computed_value)
+    }
+
+    fn serialization_types(&self) -> (TokenSerializationType, TokenSerializationType) {
+        match self {
+            Self::Component(component) => component.serialization_types(),
+            Self::Universal(_) => unreachable!(),
+            Self::List(list) => list.serialization_types(),
+        }
+    }
+
+    fn to_var(&self, url_data: &UrlExtraData) -> Arc<ComputedPropertyValue> {
+        if let Self::Universal(var) = self {
+            return var.clone();
+        }
+        let serialization_types = self.serialization_types();
+        Arc::new(ComputedPropertyValue::new(
+            // TODO(zrhoffman, 1864736): Preserve the computed type instead of converting back to a
+            // string.
+            self.to_css_string(),
+            url_data,
+            serialization_types.0,
+            serialization_types.1,
+        ))
     }
 }
 
