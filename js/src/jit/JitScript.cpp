@@ -428,21 +428,8 @@ void JitScript::purgeOptimizedStubs(JSScript* script) {
 void ICScript::purgeOptimizedStubs(Zone* zone) {
   for (size_t i = 0; i < numICEntries(); i++) {
     ICEntry& entry = icEntry(i);
-    ICStub* lastStub = entry.firstStub();
-    while (!lastStub->isFallback()) {
-      lastStub = lastStub->toCacheIRStub()->next();
-    }
-
-    // Unlink all stubs.
-    ICStub* stub = entry.firstStub();
-    while (stub != lastStub) {
-      lastStub->toFallbackStub()->unlinkStub(zone, &entry, /* prev = */ nullptr,
-                                             stub->toCacheIRStub());
-      stub = stub->toCacheIRStub()->next();
-    }
-
-    MOZ_ASSERT(lastStub->toFallbackStub()->numOptimizedStubs() == 0);
-    lastStub->toFallbackStub()->clearMayHaveFoldedStub();
+    ICFallbackStub* fallback = fallbackStub(i);
+    fallback->discardStubs(zone, &entry);
   }
 }
 
