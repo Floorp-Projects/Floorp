@@ -260,6 +260,7 @@ legacy_ids:
     expires: never
     no_lint:
       - BASELINE_PING
+      - METRIC_ON_EVENTS_LIFETIME
 
 browser.search:
   with_ads:
