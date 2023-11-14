@@ -46,6 +46,7 @@ Before you connect:
 2. Enable USB debugging in the Android Developer settings.
 3. Enable **Remote Debugging via USB** in the Advanced Settings in Firefox on the Android device.
 4. Connect the Android device to your computer using a USB cable.
+   If a USB cable is not available, :ref:`connect to Android over Wi-Fi <about-colon-debugging-connecting-to-android-over-wi-fi>`.
 
 
 If your device doesn't appear in the lefthand side of the about:debugging page, try clicking the **Refresh devices** button.
@@ -94,8 +95,45 @@ Above the usual list of tools, you can see information about the device you are 
 Starting in Firefox 78, the URL bar is editable, so that you can change the URL used by the browser on the remote device, by typing in Firefox for Desktop. You can also reload the page by clicking the **Reload** button next to the URL bar, and (starting 79), navigate backward or forward in the browsing history with the **Back** and **Forward** buttons.
 
 
+.. _about-colon-debugging-connecting-to-android-over-wi-fi:
+
+Connecting to Android over Wi-Fi
+--------------------------------
+
+Firefox can debug Firefox for Android through `adb` and the `"Wireless debugging" feature <https://developer.android.com/tools/adb#connect-to-a-device-over-wi-fi>`_ of Android 11+, without requiring any USB cable.
+
+Prerequisites:
+
+- Device must run Android 11 or later.
+- The `adb <https://developer.android.com/tools/adb>`_ program is available. You do not need Android Studio nor the full Android SDK.
+- The Android device and the computer with ``about:debugging`` are in the same network.
+
+Steps to connect wirelessly with the Android device:
+
+1. Determine the IP address of your Android device on your local network. For example by locating the Internet/Wi-Fi setting and viewing details of the current (Wi-Fi) network.
+2. `Enable Developer options <https://developer.android.com/studio/debug/dev-options#enable>`_ on your Android device.
+3. Enable Wireless debugging by tapping on the toggle at the "Wireless debugging" bar at the Developer options, then tap on the "Wireless debugging" bar (before the toggle) to open the "Wireless debugging" screen.
+
+   1. An alternative to the previous step is to open "Quick settings developer tiles" at Developer options, and enabling the "Wireless debugging" tile. After this, you can long-press the "Wireless debugging" tile from the Quick Settings panel to launch the "Wireless debugging" screen.
+
+4. Tap on "Pair device with pairing code" in the "Wireless debugging" screen. This displays a six-digit code and an IP address and port. The port is unique to the pairing setup.
+5. From the terminal, run ``adb pair [ip address from step 1]:[port from step 4]`` and enter the six-digit code from step 4.
+6. To finally connect wirelessly, look up the (random) port at the "IP address & Port" section of the "Wireless debugging" screen. The port is distinct from step 4. Run ``adb connect [ip address from step 1]:[port from step 6]`` to connect.
+
+Now, the adb server on your computer is connected with the adb daemon on the Android device. All Firefox apps with the "Remote Debugging via USB" setting enabled will now appear in ``about:debugging``.
+
+If you do not see any Firefox for Android debugging target:
+
+- Confirm that adb is connected by running ``adb devices``.
+- Confirm that the Firefox app is running and that the "Remote Debugging via USB" setting is checked.
+
+
 Connecting over the Network
 ---------------------------
+
+.. note::
+   The steps below do not work for Android. Follow the instructions at :ref:`Connecting to Android over Wi-Fi <about-colon-debugging-connecting-to-android-over-wi-fi>` instead.
+
 
 You can connect to a Firefox Debug server on your network, or on your debugging machine using the **Network Location** settings of the about:debugging page.
 

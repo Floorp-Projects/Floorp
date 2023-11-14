@@ -78,6 +78,8 @@ Alternatives
 
 Remote debugging is available in about:debugging as of Firefox 68. Features not ported to about:debugging are: WiFi debugging for Firefox for Android, application development. Features that are planned but not ported yet: remote browser screenshots and edit remote browser configuration. More details on the `mailing-list thread <https://groups.google.com/forum/#!topic/mozilla.dev.developer-tools/aWA7JJ-TpRw>`_.
 
+Wireless debugging over Wi-Fi is possible and documented at :ref:`about-colon-debugging-connecting-to-android-over-wi-fi`.
+
 
 Canvas debugger
 ***************
