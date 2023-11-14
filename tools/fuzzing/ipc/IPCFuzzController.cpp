@@ -51,7 +51,10 @@ namespace fuzzing {
 const uint32_t ipcDefaultTriggerMsg = dom::PContent::Msg_SignalFuzzingReady__ID;
 
 IPCFuzzController::IPCFuzzController()
-    : mMutex("IPCFuzzController"), mIPCTriggerMsg(ipcDefaultTriggerMsg) {
+    : useLastPortName(false),
+      useLastActor(0),
+      mMutex("IPCFuzzController"),
+      mIPCTriggerMsg(ipcDefaultTriggerMsg) {
   InitializeIPCTypes();
 
   // We use 6 bits for port index selection without wrapping, so we just
@@ -576,8 +579,27 @@ bool IPCFuzzController::MakeTargetDecision(
   *seqno = seqNos.first - 1;
   *fseqno = seqNos.second + 1;
 
+  // If a type is already specified, we must be in preserveHeaderMode.
+  bool isPreserveHeader = *type;
+
   if (useLastActor) {
     actorIndex = actors.size() - 1;
+  } else if (isPreserveHeader) {
+    // In preserveHeaderMode, we need to find an actor that matches the
+    // requested message type instead of any random actor.
+    ProtocolId wantedProtocolId = static_cast<ProtocolId>(*type >> 16);
+    std::vector<uint32_t> allowedIndices;
+    for (uint32_t i = 0; i < actors.size(); ++i) {
+      if (actors[i].second == wantedProtocolId) {
+        allowedIndices.push_back(i);
+      }
+    }
+
+    if (allowedIndices.empty()) {
+      return false;
+    }
+
+    actorIndex = allowedIndices[actorIndex % allowedIndices.size()];
   } else {
     actorIndex %= actors.size();
   }
@@ -591,22 +613,25 @@ bool IPCFuzzController::MakeTargetDecision(
     *actorId = MSG_ROUTING_CONTROL;
   }
 
-  if (!this->GetRandomIPCMessageType(ids.second, typeOffset, type)) {
-    MOZ_FUZZING_NYX_PRINT("ERROR: GetRandomIPCMessageType failed?!\n");
-    return false;
-  }
+  if (!isPreserveHeader) {
+    // If msgType is already set, then we are in preserveHeaderMode
+    if (!this->GetRandomIPCMessageType(ids.second, typeOffset, type)) {
+      MOZ_FUZZING_NYX_PRINT("ERROR: GetRandomIPCMessageType failed?!\n");
+      return false;
+    }
 
-  *is_cons = false;
-  if (constructorTypes.find(*type) != constructorTypes.end()) {
-    *is_cons = true;
+    *is_cons = false;
+    if (constructorTypes.find(*type) != constructorTypes.end()) {
+      *is_cons = true;
+    }
   }
 
   MOZ_FUZZING_NYX_PRINTF(
       "DEBUG: MakeTargetDecision: Top-Level Protocol: %s Protocol: %s msgType: "
-      "%s (%u %zu %d)\n",
+      "%s (%u), Actor Instance %u of %zu, actor ID: %d, PreservedHeader: %d\n",
       portNameToProtocolName[*name].c_str(), ProtocolIdToName(ids.second),
-      IPC::StringFromIPCMessageType(*type), actorIndex, actors.size(),
-      *actorId);
+      IPC::StringFromIPCMessageType(*type), *type, actorIndex, actors.size(),
+      *actorId, isPreserveHeader);
 
   if (update) {
     portSeqNos.insert_or_assign(*name,
@@ -803,14 +828,11 @@ NS_IMETHODIMP IPCFuzzController::IPCFuzzLoop::Run() {
 
   uint32_t expected_messages = 0;
 
-  IPCFuzzController::instance().useLastActor = 0;
-  IPCFuzzController::instance().useLastPortName = false;
-
   if (!buffer.initLengthUninitialized(maxMsgSize)) {
     MOZ_FUZZING_NYX_ABORT("ERROR: Failed to initialize buffer!\n");
   }
 
-  for (int i = 0; i < 16; ++i) {
+  for (int i = 0; i < 3; ++i) {
     // Grab enough data to potentially fill our everything except the footer.
     uint32_t bufsize =
         Nyx::instance().get_data((uint8_t*)buffer.begin(), buffer.length());
@@ -835,9 +857,13 @@ NS_IMETHODIMP IPCFuzzController::IPCFuzzLoop::Run() {
     char* ipcMsgData = buffer.begin() + controlLen;
     size_t ipcMsgLen = bufsize - controlLen;
 
-    // Copy the header of the original message
-    memcpy(ipcMsgData, IPCFuzzController::instance().sampleHeader.begin(),
-           sizeof(IPC::Message::Header));
+    bool preserveHeader = controlData[15] == 0xFF;
+
+    if (!preserveHeader) {
+      // Copy the header of the original message
+      memcpy(ipcMsgData, IPCFuzzController::instance().sampleHeader.begin(),
+             sizeof(IPC::Message::Header));
+    }
 
     IPC::Message::Header* ipchdr = (IPC::Message::Header*)ipcMsgData;
 
@@ -848,8 +874,8 @@ NS_IMETHODIMP IPCFuzzController::IPCFuzzLoop::Run() {
     uint64_t new_fseqno;
 
     int32_t actorId;
-    uint32_t msgType;
-    bool isConstructor;
+    uint32_t msgType = 0;
+    bool isConstructor = false;
     // Control Data Layout (16 byte)
     // Byte  0 - Port Index (selects out of the valid ports seen)
     // Byte  1 - Actor Index (selects one of the actors for that port)
@@ -859,12 +885,32 @@ NS_IMETHODIMP IPCFuzzController::IPCFuzzLoop::Run() {
     // Byte  5 - Optionally select a particular instance of the selected
     //           port type. Some toplevel protocols can have multiple
     //           instances running at the same time.
+    //
+    // Byte 15 - If set to 0xFF, skip overwriting the header, leave fields
+    //           like message type intact and only set target actor and
+    //           other fields that are dynamic.
 
     uint8_t portIndex = controlData[0];
     uint8_t actorIndex = controlData[1];
     uint16_t typeOffset = *(uint16_t*)(&controlData[2]);
     bool isSync = controlData[4] > 127;
     uint8_t portInstanceIndex = controlData[5];
+
+    UniquePtr<IPC::Message> msg(new IPC::Message(ipcMsgData, ipcMsgLen));
+
+    if (preserveHeader) {
+      isConstructor = msg->is_constructor();
+      isSync = msg->is_sync();
+      msgType = msg->header()->type;
+
+      if (!msgType) {
+        // msgType == 0 is used to indicate to MakeTargetDecision that we are
+        // not in preserve header mode. It's not a valid message type in any
+        // case and we can error out early.
+        Nyx::instance().release(
+            IPCFuzzController::instance().getMessageStopCount());
+      }
+    }
 
     if (!IPCFuzzController::instance().MakeTargetDecision(
             portIndex, portInstanceIndex, actorIndex, typeOffset,
@@ -888,8 +934,6 @@ NS_IMETHODIMP IPCFuzzController::IPCFuzzLoop::Run() {
       MOZ_FUZZING_NYX_PRINT("\n");
     }
 
-    UniquePtr<IPC::Message> msg(new IPC::Message(ipcMsgData, ipcMsgLen));
-
     if (isConstructor) {
       MOZ_FUZZING_NYX_DEBUG("DEBUG: Sending constructor message...\n");
       msg->header()->flags.SetConstructor();
@@ -903,8 +947,10 @@ NS_IMETHODIMP IPCFuzzController::IPCFuzzLoop::Run() {
     msg->set_seqno(new_seqno);
     msg->set_routing_id(actorId);
 
-    // TODO: There is no setter for this.
-    msg->header()->type = msgType;
+    if (!preserveHeader) {
+      // TODO: There is no setter for this.
+      msg->header()->type = msgType;
+    }
 
     // Create the footer
     auto messageEvent = MakeUnique<UserMessageEvent>(0);
