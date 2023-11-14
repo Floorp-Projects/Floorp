@@ -9,11 +9,11 @@ from collections import defaultdict
 from copy import deepcopy
 
 from taskgraph.transforms.base import TransformSequence
-from taskgraph.util.schema import optionally_keyed_by, resolve_keyed_by
+from taskgraph.util.dependencies import get_primary_dependency
+from taskgraph.util.schema import Schema, optionally_keyed_by, resolve_keyed_by
 from taskgraph.util.taskcluster import get_artifact_prefix
 from voluptuous import Any, Optional, Required
 
-from gecko_taskgraph.loader.single_dep import schema
 from gecko_taskgraph.transforms.beetmover import craft_release_properties
 from gecko_taskgraph.transforms.task import task_description_schema
 from gecko_taskgraph.util.attributes import (
@@ -29,7 +29,7 @@ from gecko_taskgraph.util.scriptworker import (
     get_beetmover_bucket_scope,
 )
 
-beetmover_description_schema = schema.extend(
+beetmover_description_schema = Schema(
     {
         # depname is used in taskref's to identify the taskID of the unsigned things
         Required("depname", default="build"): str,
@@ -68,11 +68,12 @@ def split_public_and_private(config, jobs):
     # in a single task. Only use a single task for each type though.
     partner_config = get_partner_config_by_kind(config, config.kind)
     for job in jobs:
-        upstream_artifacts = job["primary-dependency"].attributes.get(
-            "release_artifacts"
-        )
-        attribution_task_ref = "<{}>".format(job["primary-dependency"].label)
-        prefix = get_artifact_prefix(job["primary-dependency"])
+        dep_job = get_primary_dependency(config, job)
+        assert dep_job
+
+        upstream_artifacts = dep_job.attributes["release_artifacts"]
+        attribution_task_ref = "<{}>".format(dep_job.label)
+        prefix = get_artifact_prefix(dep_job)
         artifacts = defaultdict(list)
         for artifact in upstream_artifacts:
             partner, sub_partner, platform, locale, _ = artifact.replace(
@@ -128,7 +129,8 @@ def split_public_and_private(config, jobs):
 @transforms.add
 def make_task_description(config, jobs):
     for job in jobs:
-        dep_job = job["primary-dependency"]
+        dep_job = get_primary_dependency(config, job)
+        assert dep_job
 
         attributes = dep_job.attributes
         build_platform = attributes.get("build_platform")
