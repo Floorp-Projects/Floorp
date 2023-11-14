@@ -99,11 +99,12 @@ async function testEventPageWakeup({
   let contentPage = await ExtensionTestUtils.loadContentPage(url);
   info("Waiting for event page to be awakened by event");
   await extension.awaitMessage("TRIGGER_TEST_DONE");
-  await contentPage.close();
+  // Unload test extensions first to avoid an issue on Windows platforms.
   await extension.unload();
   if (triggerFromOtherExtension) {
     await extension2.unload();
   }
+  await contentPage.close();
 }
 
 add_task(async function test_sendMessage_without_onMessage() {
