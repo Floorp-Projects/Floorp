@@ -129,19 +129,21 @@ const AVAILABLE_BREAKPOINTS = [
   {
     name: "Control",
     items: [
+      generalEvent("control", "blur"),
+      generalEvent("control", "change"),
+      generalEvent("control", "focus"),
+      generalEvent("control", "focusin"),
+      generalEvent("control", "focusout"),
+      // The condition should be removed when "dom.element.invokers.enabled" is removed
+      generalEvent("control", "invoke", win => "InvokeEvent" in win),
+      generalEvent("control", "reset"),
       generalEvent("control", "resize"),
       generalEvent("control", "scroll"),
       // The condition should be removed when "apz.scrollend-event.content.enabled" is removed
       generalEvent("control", "scrollend", win => "onscrollend" in win),
-      generalEvent("control", "zoom"),
-      generalEvent("control", "focus"),
-      generalEvent("control", "focusin"),
-      generalEvent("control", "focusout"),
-      generalEvent("control", "blur"),
       generalEvent("control", "select"),
-      generalEvent("control", "change"),
       generalEvent("control", "submit"),
-      generalEvent("control", "reset"),
+      generalEvent("control", "zoom"),
     ],
   },
   {

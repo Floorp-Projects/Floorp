@@ -67,3 +67,8 @@ document.addEventListener("scrollend", onScrollEnd);
 function onScrollEnd() {
   console.log("scroll end");
 }
+
+document.getElementById("invokee").addEventListener("invoke", onInvoke);
+function onInvoke(event) {
+  console.log(event);
+}
