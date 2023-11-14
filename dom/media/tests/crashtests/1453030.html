@@ -1,9 +1,11 @@
 <html class="reftest-wait">
   <head>
     <script>
+      let o3;
       function getDTMF () {
         try { o4 = o2.dtmf } catch(e) { }
         try { o4.insertDTMF("1BC1D55", new Uint32Array([3538134876])[0], new Uint32Array([666182017])[0]) } catch (e) { }
+        try { o3.close(); } catch (e) {}
         document.documentElement.removeAttribute("class");
       }
 
