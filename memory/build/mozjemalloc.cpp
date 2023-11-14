@@ -4818,6 +4818,8 @@ inline void MozJemalloc::jemalloc_stats_internal(
     // allocated.  If you change this definition please update
     // memory/replace/logalloc/replay/Replay.cpp's jemalloc_stats calculation of
     // committed.
+    MOZ_ASSERT(arena_committed >=
+               (arena_allocated + arena_dirty + arena_unused + arena_headers));
     aStats->waste += arena_committed - arena_allocated - arena_dirty -
                      arena_unused - arena_headers;
     aStats->bin_unused += arena_unused;
