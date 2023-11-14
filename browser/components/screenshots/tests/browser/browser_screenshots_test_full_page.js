@@ -17,14 +17,6 @@ add_task(async function test_fullpageScreenshot() {
       let helper = new ScreenshotsHelper(browser);
       let contentInfo = await helper.getContentDimensions();
       ok(contentInfo, "Got dimensions back from the content");
-      let devicePixelRatio = await getContentDevicePixelRatio(browser);
-
-      let expectedWidth = Math.floor(
-        devicePixelRatio * contentInfo.scrollWidth
-      );
-      let expectedHeight = Math.floor(
-        devicePixelRatio * contentInfo.scrollHeight
-      );
 
       // click toolbar button so panel shows
       helper.triggerUIFromToolbar();
@@ -48,22 +40,29 @@ add_task(async function test_fullpageScreenshot() {
       let copyButton = dialog._frame.contentDocument.getElementById("copy");
       ok(copyButton, "Got the copy button");
 
-      let clipboardChanged = helper.waitForRawClipboardChange(
-        expectedWidth,
-        expectedHeight
-      );
+      let clipboardChanged = helper.waitForRawClipboardChange();
 
       // click copy button on dialog box
       copyButton.click();
 
       info("Waiting for clipboard change");
-      let result = await clipboardChanged;
+      await clipboardChanged;
 
+      let result = await helper.getImageSizeAndColorFromClipboard();
       info("result: " + JSON.stringify(result, null, 2));
       info("contentInfo: " + JSON.stringify(contentInfo, null, 2));
 
-      Assert.equal(result.width, expectedWidth, "Widths should be equal");
-      Assert.equal(result.height, expectedHeight, "Heights should be equal");
+      Assert.equal(
+        contentInfo.scrollWidth,
+        result.width,
+        "Widths should be equal"
+      );
+
+      Assert.equal(
+        contentInfo.scrollHeight,
+        result.height,
+        "Heights should be equal"
+      );
 
       // top left
       assertRange(result.color.topLeft[0], 110, 111, "R color value");
@@ -102,14 +101,6 @@ add_task(async function test_fullpageScreenshotScrolled() {
       });
       let contentInfo = await helper.getContentDimensions();
       ok(contentInfo, "Got dimensions back from the content");
-      let devicePixelRatio = await getContentDevicePixelRatio(browser);
-
-      let expectedWidth = Math.floor(
-        devicePixelRatio * contentInfo.scrollWidth
-      );
-      let expectedHeight = Math.floor(
-        devicePixelRatio * contentInfo.scrollHeight
-      );
 
       // click toolbar button so panel shows
       helper.triggerUIFromToolbar();
@@ -134,22 +125,29 @@ add_task(async function test_fullpageScreenshotScrolled() {
       let copyButton = dialog._frame.contentDocument.getElementById("copy");
       ok(copyButton, "Got the copy button");
 
-      let clipboardChanged = helper.waitForRawClipboardChange(
-        expectedWidth,
-        expectedHeight
-      );
+      let clipboardChanged = helper.waitForRawClipboardChange();
 
       // click copy button on dialog box
       copyButton.click();
 
       info("Waiting for clipboard change");
-      let result = await clipboardChanged;
+      await clipboardChanged;
 
+      let result = await helper.getImageSizeAndColorFromClipboard();
       info("result: " + JSON.stringify(result, null, 2));
       info("contentInfo: " + JSON.stringify(contentInfo, null, 2));
 
-      Assert.equal(result.width, expectedWidth, "Widths should be equal");
-      Assert.equal(result.height, expectedHeight, "Heights should be equal");
+      Assert.equal(
+        contentInfo.scrollWidth,
+        result.width,
+        "Widths should be equal"
+      );
+
+      Assert.equal(
+        contentInfo.scrollHeight,
+        result.height,
+        "Heights should be equal"
+      );
 
       // top left
       assertRange(result.color.topLeft[0], 110, 111, "R color value");
