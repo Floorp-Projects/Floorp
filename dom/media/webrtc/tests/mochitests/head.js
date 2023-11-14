@@ -383,7 +383,6 @@ function getUserMedia(constraints) {
   ) {
     // Loopback device is configured, start the default loopback tone
     if (!DefaultLoopbackTone) {
-      TEST_AUDIO_FREQ = 440;
       DefaultLoopbackTone = new LoopbackTone(
         new AudioContext(),
         TEST_AUDIO_FREQ
@@ -399,9 +398,6 @@ function getUserMedia(constraints) {
       { noiseSuppression: false },
       constraints.audio
     );
-  } else {
-    // Fake device configured, ensure our test freq is correct.
-    TEST_AUDIO_FREQ = 1000;
   }
   info("Call getUserMedia for " + JSON.stringify(constraints));
   return navigator.mediaDevices
