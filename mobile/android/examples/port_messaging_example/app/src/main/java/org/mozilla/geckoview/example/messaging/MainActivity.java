@@ -12,11 +12,26 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.geckoview.GeckoRuntime;
 import org.mozilla.geckoview.GeckoRuntimeSettings;
 import org.mozilla.geckoview.GeckoSession;
 import org.mozilla.geckoview.GeckoView;
 import org.mozilla.geckoview.WebExtension;
+
+//
+// The apk file for this example can be build using the following mach command:
+//
+//     mach gradle port_messaging_example:build
+//
+// Formatting error reported by Spotless as part of the build can be autofixed
+// can be fixed using the mach command:
+//
+//     mach gradle port_messaging_example:spotlessApply
+//
+// After the gradle task messaging_example:build runs successfully, an apk
+// file will be stored in the OBJDIR/gradle/build/mobile/android/examples/port_messaging_example.
+// subdirectories
 
 public class MainActivity extends AppCompatActivity {
   private static GeckoRuntime sRuntime;
@@ -69,7 +84,14 @@ public class MainActivity extends AppCompatActivity {
         .ensureBuiltIn("resource://android/assets/messaging/", "messaging@example.com")
         .accept(
             // Register message delegate for background script
-            extension -> extension.setMessageDelegate(messageDelegate, "browser"),
+            extension ->
+                ThreadUtils.runOnUiThread(
+                    new Runnable() {
+                      @Override
+                      public void run() {
+                        extension.setMessageDelegate(messageDelegate, "browser");
+                      }
+                    }),
             e -> Log.e("MessageDelegate", "Error registering WebExtension", e));
 
     session.open(sRuntime);
