@@ -6,24 +6,37 @@ Transform the repackage signing task into an actual task description.
 """
 
 from taskgraph.transforms.base import TransformSequence
+from taskgraph.util.dependencies import get_primary_dependency
+from taskgraph.util.schema import Schema
 from taskgraph.util.treeherder import inherit_treeherder_from_dep
 from voluptuous import Optional
 
-from gecko_taskgraph.loader.single_dep import schema
 from gecko_taskgraph.transforms.task import task_description_schema
 from gecko_taskgraph.util.attributes import copy_attributes_from_dependent_job
 from gecko_taskgraph.util.scriptworker import get_signing_cert_scope_per_platform
 
 transforms = TransformSequence()
 
-signing_description_schema = schema.extend(
+signing_description_schema = Schema(
     {
         Optional("label"): str,
         Optional("extra"): object,
         Optional("shipping-product"): task_description_schema["shipping-product"],
         Optional("shipping-phase"): task_description_schema["shipping-phase"],
+        Optional("attributes"): task_description_schema["attributes"],
+        Optional("dependencies"): task_description_schema["dependencies"],
+        Optional("job-from"): task_description_schema["job-from"],
     }
 )
+
+
+@transforms.add
+def remove_name(config, jobs):
+    for job in jobs:
+        if "name" in job:
+            del job["name"]
+        yield job
+
 
 transforms.add_validate(signing_description_schema)
 
@@ -31,7 +44,9 @@ transforms.add_validate(signing_description_schema)
 @transforms.add
 def make_signing_description(config, jobs):
     for job in jobs:
-        dep_job = job["primary-dependency"]
+        dep_job = get_primary_dependency(config, job)
+        assert dep_job
+
         attributes = dep_job.attributes
         build_platform = dep_job.attributes.get("build_platform")
         is_nightly = True  # cert_scope_per_platform uses this to choose the right cert
@@ -66,7 +81,6 @@ def make_signing_description(config, jobs):
         }
 
         if "win" in build_platform:
-            # job['primary-dependency'].task['payload']['command']
             upstream_artifact["formats"] = ["autograph_authenticode_sha2"]
         elif "mac" in build_platform:
             upstream_artifact["formats"] = ["mac_single_file"]

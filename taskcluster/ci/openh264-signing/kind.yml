@@ -2,12 +2,18 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 ---
-loader: gecko_taskgraph.loader.single_dep:loader
+loader: gecko_taskgraph.loader.transform:loader
 
 transforms:
-    - gecko_taskgraph.transforms.name_sanity:transforms
-    - gecko_taskgraph.transforms.openh264_signing:transforms
-    - gecko_taskgraph.transforms.task:transforms
+    - taskgraph.transforms.from_deps
+    - gecko_taskgraph.transforms.name_sanity
+    - gecko_taskgraph.transforms.openh264_signing
+    - gecko_taskgraph.transforms.task
 
 kind-dependencies:
     - openh264-plugin
+
+jobs:
+    openh264-signing:
+        from-deps:
+            group-by: single-with-filters
