@@ -446,8 +446,6 @@ def generate_beetmover_upstream_artifacts(
     if not dependencies:
         if job.get("dependencies"):
             dependencies = job["dependencies"].keys()
-        elif job.get("primary-dependency"):
-            dependencies = [job["primary-dependency"].kind]
         else:
             raise Exception(f"Unsupported type of dependency. Got job: {job}")
 

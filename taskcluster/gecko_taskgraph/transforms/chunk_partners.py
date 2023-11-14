@@ -24,12 +24,8 @@ transforms.add(apply_partner_priority)
 @transforms.add
 def chunk_partners(config, jobs):
     for job in jobs:
-        # We need to support both the `multi_dep` and `from_deps` approach for now.
-        if "primary-dependency" in job:
-            dep_job = job["primary-dependency"]
-        else:
-            dep_job = get_primary_dependency(config, job)
-            assert dep_job
+        dep_job = get_primary_dependency(config, job)
+        assert dep_job
 
         build_platform = dep_job.attributes["build_platform"]
         repack_id = dep_job.task.get("extra", {}).get("repack_id")

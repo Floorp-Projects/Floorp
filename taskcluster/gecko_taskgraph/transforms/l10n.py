@@ -108,7 +108,7 @@ l10n_description_schema = Schema(
         Optional("env"): _by_platform({str: taskref_or_string}),
         # Max number locales per chunk
         Optional("locales-per-chunk"): _by_platform(int),
-        # Task deps to chain this task with, added in transforms from primary-dependency
+        # Task deps to chain this task with, added in transforms from primary dependency
         # if this is a shippable-style build
         Optional("dependencies"): {str: str},
         # Run the task when the listed files change (if present).
