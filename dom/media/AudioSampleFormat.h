@@ -198,6 +198,15 @@ inline void ConvertAudioSamplesWithScale(const int16_t* aFrom, int16_t* aTo,
   }
 }
 
+template <typename From, typename To>
+inline void AddAudioSamplesWithScale(const From* aFrom, To* aTo, int aCount,
+                                     float aScale) {
+  for (int i = 0; i < aCount; ++i) {
+    aTo[i] = FloatToAudioSample<To>(AudioSampleToFloat(aTo[i]) +
+                                    AudioSampleToFloat(aFrom[i]) * aScale);
+  }
+}
+
 // In place audio sample scaling.
 inline void ScaleAudioSamples(float* aBuffer, int aCount, float aScale) {
   for (int32_t i = 0; i < aCount; ++i) {
