@@ -387,16 +387,10 @@ async function doEngagementWithoutAddingResultToView(
   // Set the timeout of the chunk timer to a really high value so that it will
   // not fire. The view updates when the timer fires, which we specifically want
   // to avoid here.
-  let originalHeuristicTimeout =
-    UrlbarProvidersManager.CHUNK_HEURISTIC_RESULTS_DELAY_MS;
-  UrlbarProvidersManager.CHUNK_HEURISTIC_RESULTS_DELAY_MS = 30000;
-  let originalOtherTimeout =
-    UrlbarProvidersManager.CHUNK_OTHER_RESULTS_DELAY_MS;
-  UrlbarProvidersManager.CHUNK_OTHER_RESULTS_DELAY_MS = 30000;
+  let originalChunkTimeout = UrlbarProvidersManager.CHUNK_RESULTS_DELAY_MS;
+  UrlbarProvidersManager.CHUNK_RESULTS_DELAY_MS = 30000;
   const cleanup = () => {
-    UrlbarProvidersManager.CHUNK_HEURISTIC_RESULTS_DELAY_MS =
-      originalHeuristicTimeout;
-    UrlbarProvidersManager.CHUNK_OTHER_RESULTS_DELAY_MS = originalOtherTimeout;
+    UrlbarProvidersManager.CHUNK_RESULTS_DELAY_MS = originalChunkTimeout;
   };
   registerCleanupFunction(cleanup);
 

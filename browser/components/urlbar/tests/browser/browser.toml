@@ -550,6 +550,8 @@ support-files = [
 ]
 fail-if = ["a11y_checks"] # Bug 1854660 clicked element may not be focusable and/or labeled
 
+["browser_slow_heuristic.js"]
+
 ["browser_speculative_connect.js"]
 support-files = [
   "searchSuggestionEngine2.xml",
