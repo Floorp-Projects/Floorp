@@ -399,7 +399,7 @@ ICEntry* ICScript::interpreterICEntryFromPCOffset(uint32_t pcOffset) {
   return nullptr;
 }
 
-void JitScript::purgeOptimizedStubs(JSScript* script) {
+void JitScript::purgeStubs(JSScript* script) {
   MOZ_ASSERT(script->jitScript() == this);
 
   Zone* zone = script->zone();
@@ -414,15 +414,15 @@ void JitScript::purgeOptimizedStubs(JSScript* script) {
 
   JitSpew(JitSpew_BaselineIC, "Purging optimized stubs");
 
-  icScript()->purgeOptimizedStubs(zone);
+  icScript()->purgeStubs(zone);
   if (hasInliningRoot()) {
-    inliningRoot()->purgeOptimizedStubs(zone);
+    inliningRoot()->purgeStubs(zone);
   }
 
   notePurgedStubs();
 }
 
-void ICScript::purgeOptimizedStubs(Zone* zone) {
+void ICScript::purgeStubs(Zone* zone) {
   for (size_t i = 0; i < numICEntries(); i++) {
     ICEntry& entry = icEntry(i);
     ICFallbackStub* fallback = fallbackStub(i);
@@ -586,7 +586,7 @@ void jit::JitSpewBaselineICStats(JSScript* script, const char* dumpReason) {
 
 static void MarkActiveJitScriptsAndCopyStubs(
     JSContext* cx, const JitActivationIterator& activation,
-    OptimizedICStubSpace& newStubSpace) {
+    ICStubSpace& newStubSpace) {
   for (OnlyJSJitFrameIter iter(activation); !iter.done(); ++iter) {
     const JSJitFrameIter& frame = iter.frame();
     switch (frame.type()) {
@@ -628,7 +628,7 @@ static void MarkActiveJitScriptsAndCopyStubs(
 }
 
 void jit::MarkActiveJitScriptsAndCopyStubs(Zone* zone,
-                                           OptimizedICStubSpace& newStubSpace) {
+                                           ICStubSpace& newStubSpace) {
   if (zone->isAtomsZone()) {
     return;
   }

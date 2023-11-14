@@ -407,7 +407,7 @@ void Zone::forceDiscardJitCode(JS::GCContext* gcx,
   // Copy Baseline IC stubs that are active on the stack to a new LifoAlloc.
   // After freeing stub memory, these chunks are then transferred to the
   // zone-wide allocator.
-  jit::OptimizedICStubSpace newStubSpace;
+  jit::ICStubSpace newStubSpace;
 
 #ifdef DEBUG
   // Assert no JitScripts are marked as active.
@@ -456,9 +456,9 @@ void Zone::forceDiscardJitCode(JS::GCContext* gcx,
           }
         }
 
-        // If we did not release the JitScript, we need to purge optimized IC
-        // stubs because the optimizedStubSpace will be purged below.
-        jitScript->purgeOptimizedStubs(script);
+        // If we did not release the JitScript, we need to purge IC stubs
+        // because the ICStubSpace will be purged below.
+        jitScript->purgeStubs(script);
 
         if (options.resetNurseryAllocSites ||
             options.resetPretenuredAllocSites) {
@@ -490,8 +490,8 @@ void Zone::forceDiscardJitCode(JS::GCContext* gcx,
    *
    * Defer freeing any allocated blocks until after the next minor GC.
    */
-  jitZone()->optimizedStubSpace()->freeAllAfterMinorGC(this);
-  jitZone()->optimizedStubSpace()->transferFrom(newStubSpace);
+  jitZone()->stubSpace()->freeAllAfterMinorGC(this);
+  jitZone()->stubSpace()->transferFrom(newStubSpace);
   jitZone()->purgeIonCacheIRStubInfo();
 
   // Generate a profile marker
@@ -636,14 +636,13 @@ void Zone::purgeAtomCache() {
 
 void Zone::addSizeOfIncludingThis(
     mozilla::MallocSizeOf mallocSizeOf, JS::CodeSizes* code, size_t* regexpZone,
-    size_t* jitZone, size_t* baselineStubsOptimized, size_t* uniqueIdMap,
+    size_t* jitZone, size_t* cacheIRStubs, size_t* uniqueIdMap,
     size_t* initialPropMapTable, size_t* shapeTables, size_t* atomsMarkBitmaps,
     size_t* compartmentObjects, size_t* crossCompartmentWrappersTables,
     size_t* compartmentsPrivateData, size_t* scriptCountsMapArg) {
   *regexpZone += regExps().sizeOfIncludingThis(mallocSizeOf);
   if (jitZone_) {
-    jitZone_->addSizeOfIncludingThis(mallocSizeOf, code, jitZone,
-                                     baselineStubsOptimized);
+    jitZone_->addSizeOfIncludingThis(mallocSizeOf, code, jitZone, cacheIRStubs);
   }
   *uniqueIdMap += uniqueIds().shallowSizeOfExcludingThis(mallocSizeOf);
   shapeZone().addSizeOfExcludingThis(mallocSizeOf, initialPropMapTable,
