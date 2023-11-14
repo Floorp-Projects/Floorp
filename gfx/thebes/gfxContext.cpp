@@ -51,15 +51,14 @@ PatternFromState::operator Pattern&() {
 }
 
 /* static */
-UniquePtr<gfxContext> gfxContext::CreateOrNull(DrawTarget* aTarget,
-                                               const Point& aDeviceOffset) {
+UniquePtr<gfxContext> gfxContext::CreateOrNull(DrawTarget* aTarget) {
   if (!aTarget || !aTarget->IsValid()) {
     gfxCriticalNote << "Invalid target in gfxContext::CreateOrNull "
                     << hexa(aTarget);
     return nullptr;
   }
 
-  return MakeUnique<gfxContext>(aTarget, aDeviceOffset);
+  return MakeUnique<gfxContext>(aTarget);
 }
 
 gfxContext::~gfxContext() {
