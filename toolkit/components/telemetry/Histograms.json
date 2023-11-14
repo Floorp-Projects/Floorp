@@ -18162,7 +18162,7 @@
   "GVSV_AUDIO_STREAM_INITS": {
     "bug_numbers": [1858954],
     "description": "Incremented when an audio stream is initialized. For use as part of the GeckoView Streaming Validation.",
-    "expires_in_version": "122",
+    "expires_in_version": "123",
     "kind": "categorical",
     "alert_emails": ["pmcmanis@mozilla.com"],
     "products": ["firefox", "geckoview_streaming"],
