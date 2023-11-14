@@ -31,6 +31,7 @@ bool RDDProcessImpl::Init(int aArgc, char* aArgv[]) {
 #elif defined(__OpenBSD__) && defined(MOZ_SANDBOX)
   PR_LoadLibrary("libmozavcodec.so");
   PR_LoadLibrary("libmozavutil.so");
+  PR_LoadLibrary("libavcodec.so");
   StartOpenBSDSandbox(GeckoProcessType_RDD);
 #endif
   Maybe<const char*> parentBuildID =
