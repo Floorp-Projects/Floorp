@@ -702,6 +702,7 @@ class ContentDelegateTest : BaseSessionTest() {
             .analysisUrl(analysisURL)
             .needsAnalysis(true)
             .pageNotSupported(false)
+            .notEnoughReviews(false)
             .highlights(null)
             .lastAnalysisTime(lastAnalysisTime)
             .deletedProductReported(true)
@@ -715,13 +716,14 @@ class ContentDelegateTest : BaseSessionTest() {
         assertThat("Analysis URL should match", analysisObject.analysisURL, equalTo(analysisURL))
         assertTrue("NeedsAnalysis should match", analysisObject.needsAnalysis)
         assertFalse("PageNotSupported should match", analysisObject.pageNotSupported)
+        assertFalse("NotEnoughReviews should match", analysisObject.notEnoughReviews)
         assertNull("Highlights should match", analysisObject.highlights)
         assertThat("Last analysis time should match", analysisObject.lastAnalysisTime, equalTo(lastAnalysisTime))
 
         // TODO: bug1845760 replace with static example.com product page and enable in automation
         if (!sessionRule.env.isAutomation) {
             // verify a non product page
-            val nonProductPageResult = mainSession.requestAnalysis("https://www.amazon.com/").accept {
+            val nonProductPageResult = mainSession.requestAnalysis("https://www.example.com/").accept {
                 assertTrue("Should not return analysis", false)
             }
             try {
@@ -738,6 +740,7 @@ class ContentDelegateTest : BaseSessionTest() {
                 assertThat("Product adjusted rating should match", it.adjustedRating, equalTo(null))
                 assertThat("Product highlights should match", it.highlights, equalTo(null))
                 assertThat("Product pageNotSupported should match", it.pageNotSupported, equalTo(false))
+                assertThat("Product notEnoughReviews should match", it.notEnoughReviews, equalTo(false))
             }
 
             // verify product with integer adjusted rating
