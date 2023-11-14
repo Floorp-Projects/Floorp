@@ -6,31 +6,47 @@ Transform release-beetmover-source-checksums into an actual task description.
 """
 
 from taskgraph.transforms.base import TransformSequence
+from taskgraph.util.dependencies import get_primary_dependency
+from taskgraph.util.schema import Schema
 from voluptuous import Optional
 
-from gecko_taskgraph.loader.single_dep import schema
 from gecko_taskgraph.transforms.beetmover import craft_release_properties
 from gecko_taskgraph.transforms.task import task_description_schema
 from gecko_taskgraph.util.attributes import copy_attributes_from_dependent_job
 
-beetmover_checksums_description_schema = schema.extend(
+beetmover_checksums_description_schema = Schema(
     {
         Optional("label"): str,
         Optional("extra"): object,
         Optional("shipping-phase"): task_description_schema["shipping-phase"],
         Optional("shipping-product"): task_description_schema["shipping-product"],
+        Optional("job-from"): task_description_schema["job-from"],
+        Optional("attributes"): task_description_schema["attributes"],
+        Optional("dependencies"): task_description_schema["dependencies"],
     }
 )
 
 
 transforms = TransformSequence()
+
+
+@transforms.add
+def remove_name(config, jobs):
+    for job in jobs:
+        if "name" in job:
+            del job["name"]
+        yield job
+
+
 transforms.add_validate(beetmover_checksums_description_schema)
 
 
 @transforms.add
 def make_beetmover_checksums_description(config, jobs):
     for job in jobs:
-        dep_job = job["primary-dependency"]
+        dep_job = get_primary_dependency(config, job)
+        assert dep_job
+
         attributes = dep_job.attributes
         build_platform = attributes.get("build_platform")
         if not build_platform:
