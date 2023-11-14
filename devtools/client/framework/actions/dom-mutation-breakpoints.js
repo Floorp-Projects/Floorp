@@ -14,6 +14,21 @@ function registerWalkerListeners(store, walker) {
   walker.on("mutations", mutations => handleWalkerMutations(mutations, store));
 }
 
+/**
+ * Called when a target is destroyed. This will allow the reducer to remove breakpoints on
+ * nodeFront associated with the passed target
+ *
+ * @param {ToolboxStore} store: The toolbox redux store
+ * @param {TargetFront} targetFront
+ */
+function removeTarget(store, targetFront) {
+  store.dispatch({
+    type: "REMOVE_TARGET",
+    targetFront,
+  });
+}
+exports.removeTarget = removeTarget;
+
 function handleWalkerMutations(mutations, store) {
   // If we got BP updates for detach/unload, we want to drop those nodes from
   // the list of active DOM mutation breakpoints. We explicitly check these

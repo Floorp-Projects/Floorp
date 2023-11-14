@@ -67,7 +67,7 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   this,
-  ["registerWalkerListeners"],
+  ["registerWalkerListeners", "removeTarget"],
   "resource://devtools/client/framework/actions/index.js",
   true
 );
@@ -763,6 +763,8 @@ Toolbox.prototype = {
   },
 
   _onTargetDestroyed({ targetFront }) {
+    removeTarget(this.store, targetFront);
+
     if (targetFront.isTopLevel) {
       const consoleFront = targetFront.getCachedFront("console");
       // If the target has already been destroyed, its console front will

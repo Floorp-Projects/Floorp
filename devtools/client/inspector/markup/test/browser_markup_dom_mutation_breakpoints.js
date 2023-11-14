@@ -17,6 +17,29 @@ function toggleMutationBreakpoint(inspector) {
   attributeMenuItem.click();
 }
 
+function getToolboxStoreMutationBreakpointsChanged(inspector) {
+  const toolboxStore = inspector.toolbox.store;
+
+  const breakpoints = getToolboxStoreDomMutationBreakpointsCount(toolboxStore);
+  return new Promise(resolve => {
+    const _unsubscribeFromToolboxStore = inspector.toolbox.store.subscribe(
+      () => {
+        if (
+          getToolboxStoreDomMutationBreakpointsCount(toolboxStore) !==
+          breakpoints
+        ) {
+          resolve();
+          _unsubscribeFromToolboxStore();
+        }
+      }
+    );
+  });
+}
+
+function getToolboxStoreDomMutationBreakpointsCount(toolboxStore) {
+  return toolboxStore.getState().domMutationBreakpoints.breakpoints.length;
+}
+
 // Test inspector markup view handling DOM mutation breakpoints icons
 // The icon should display when a breakpoint exists for a given node
 add_task(async function () {
@@ -193,4 +216,53 @@ add_task(async function () {
     true,
     "has-mutation class is present, mutation-breakpoint-disabled is not present"
   );
+});
+
+// Test inspector markup view handling DOM mutation breakpoints after reload
+add_task(async function () {
+  const { inspector } = await openInspectorForURL(
+    "data:text/html;charset=utf-8,<h1>foo</h1>"
+  );
+
+  await selectNode("h1", inspector);
+
+  info("Add a mutation breakpoint on the h1");
+  toggleMutationBreakpoint(inspector);
+
+  let h1 = await getContainerForSelector("h1", inspector);
+  let mutationMarker = h1.tagLine.querySelector(".markup-tag-mutation-marker");
+  ok(
+    mutationMarker.classList.contains("has-mutations"),
+    "has-mutations class is present"
+  );
+
+  info("Reload the page");
+  const onBreakpointsListChanged =
+    getToolboxStoreMutationBreakpointsChanged(inspector);
+  await reload();
+  await onBreakpointsListChanged;
+  ok(true, "Reloading impacted the number of DOM breakpoints");
+
+  h1 = await getContainerForSelector("h1", inspector);
+  mutationMarker = h1.tagLine.querySelector(".markup-tag-mutation-marker");
+  ok(
+    !mutationMarker.classList.contains("has-mutations"),
+    "has-mutations class is not present after reload"
+  );
+
+  info("Add a mutation breakpoint on the h1, after reload");
+  toggleMutationBreakpoint(inspector);
+  await waitFor(() => mutationMarker.classList.contains("has-mutations"));
+  ok(true, "has-mutations class was successfuly added");
+
+  info("Remove the mutation breakpoint on the h1");
+  // We need to wait until the mutation breakpoint was set on the nodeFront, otherwise
+  // the inspector code won't call the "remove" codepath. (waiting for the toolbox
+  // store change is not enough)
+  await waitFor(
+    () => inspector.selection.nodeFront.mutationBreakpoints.attribute
+  );
+  toggleMutationBreakpoint(inspector);
+  await waitFor(() => !mutationMarker.classList.contains("has-mutations"));
+  ok(true, "has-mutations class was removed");
 });
