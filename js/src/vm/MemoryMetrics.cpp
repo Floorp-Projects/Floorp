@@ -212,11 +212,10 @@ static void StatsZoneCallback(JSRuntime* rt, void* data, Zone* zone,
 
   zone->addSizeOfIncludingThis(
       rtStats->mallocSizeOf_, &zStats.code, &zStats.regexpZone, &zStats.jitZone,
-      &zStats.baselineStubsOptimized, &zStats.uniqueIdMap,
-      &zStats.initialPropMapTable, &zStats.shapeTables,
-      &rtStats->runtime.atomsMarkBitmaps, &zStats.compartmentObjects,
-      &zStats.crossCompartmentWrappersTables, &zStats.compartmentsPrivateData,
-      &zStats.scriptCountsMap);
+      &zStats.cacheIRStubs, &zStats.uniqueIdMap, &zStats.initialPropMapTable,
+      &zStats.shapeTables, &rtStats->runtime.atomsMarkBitmaps,
+      &zStats.compartmentObjects, &zStats.crossCompartmentWrappersTables,
+      &zStats.compartmentsPrivateData, &zStats.scriptCountsMap);
 }
 
 static void StatsRealmCallback(JSContext* cx, void* data, Realm* realm,

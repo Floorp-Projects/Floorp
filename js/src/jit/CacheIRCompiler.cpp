@@ -1198,8 +1198,7 @@ void CacheIRWriter::copyStubData(uint8_t* dest) const {
   }
 }
 
-ICCacheIRStub* ICCacheIRStub::clone(JSContext* cx,
-                                    OptimizedICStubSpace& newSpace) {
+ICCacheIRStub* ICCacheIRStub::clone(JSContext* cx, ICStubSpace& newSpace) {
   const CacheIRStubInfo* info = stubInfo();
   MOZ_ASSERT(info->makesGCCalls());
 

@@ -89,8 +89,8 @@ struct BaselineCacheIRStubCodeMapGCPolicy {
 enum JitScriptFilter : bool { SkipDyingScripts, IncludeDyingScripts };
 
 class JitZone {
-  // Allocated space for optimized baseline stubs.
-  OptimizedICStubSpace optimizedStubSpace_;
+  // Allocated space for CacheIR stubs.
+  ICStubSpace stubSpace_;
 
   // Set of CacheIRStubInfo instances used by Ion stubs in this Zone.
   using IonCacheIRStubInfoSet =
@@ -175,9 +175,9 @@ class JitZone {
 
   void addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                               JS::CodeSizes* code, size_t* jitZone,
-                              size_t* baselineStubsOptimized) const;
+                              size_t* cacheIRStubs) const;
 
-  OptimizedICStubSpace* optimizedStubSpace() { return &optimizedStubSpace_; }
+  ICStubSpace* stubSpace() { return &stubSpace_; }
 
   JitCode* getBaselineCacheIRStubCode(const CacheIRStubKey::Lookup& key,
                                       CacheIRStubInfo** stubInfo) {

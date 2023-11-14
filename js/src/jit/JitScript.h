@@ -49,11 +49,11 @@ class AllocSite;
 namespace jit {
 
 class BaselineScript;
+class ICStubSpace;
 class InliningRoot;
 class IonScript;
 class JitScript;
 class JitZone;
-struct OptimizedICStubSpace;
 
 // Magic BaselineScript value indicating Baseline compilation has been disabled.
 static constexpr uintptr_t BaselineDisabledScript = 0x1;
@@ -169,7 +169,7 @@ class alignas(uintptr_t) ICScript final : public TrailingArray {
   void removeInlinedChild(uint32_t pcOffset);
   bool hasInlinedChild(uint32_t pcOffset);
 
-  void purgeOptimizedStubs(Zone* zone);
+  void purgeStubs(Zone* zone);
 
   void trace(JSTracer* trc);
   bool traceWeak(JSTracer* trc);
@@ -247,11 +247,6 @@ class alignas(uintptr_t) ICScript final : public TrailingArray {
 // the Baseline Interpreter and Baseline JIT. It also simplifies debug mode OSR
 // because the JitScript can be reused when we have to recompile the
 // BaselineScript.
-//
-// The JitScript contains a stub space. This stores the "can GC" CacheIR stubs.
-// These stubs are never purged before destroying the JitScript. Other stubs are
-// stored in the optimized stub space stored in JitZone and can be purged more
-// eagerly. See JitScript::purgeOptimizedStubs.
 //
 // An ICScript contains a list of IC entries and a list of fallback stubs.
 // There's one ICEntry and ICFallbackStub for each JOF_IC bytecode op.
@@ -418,7 +413,7 @@ class alignas(uintptr_t) JitScript final
 
   void trace(JSTracer* trc);
   void traceWeak(JSTracer* trc);
-  void purgeOptimizedStubs(JSScript* script);
+  void purgeStubs(JSScript* script);
 
   ICEntry& icEntryFromPCOffset(uint32_t pcOffset) {
     return icScript_.icEntryFromPCOffset(pcOffset);
@@ -548,8 +543,7 @@ class MOZ_RAII AutoKeepJitScripts {
 
 // Mark JitScripts on the stack as active, so that they are not discarded
 // during GC, and copy active Baseline IC stubs to the new stub space.
-void MarkActiveJitScriptsAndCopyStubs(Zone* zone,
-                                      OptimizedICStubSpace& newStubSpace);
+void MarkActiveJitScriptsAndCopyStubs(Zone* zone, ICStubSpace& newStubSpace);
 
 #ifdef JS_STRUCTURED_SPEW
 void JitSpewBaselineICStats(JSScript* script, const char* dumpReason);

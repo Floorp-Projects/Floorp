@@ -32,7 +32,7 @@ namespace jit {
 class BaselineFrame;
 class CacheIRStubInfo;
 class ICScript;
-struct OptimizedICStubSpace;
+class ICStubSpace;
 
 enum class VMFunctionId;
 
@@ -291,7 +291,7 @@ class ICCacheIRStub final : public ICStub {
   void trace(JSTracer* trc);
   bool traceWeak(JSTracer* trc);
 
-  ICCacheIRStub* clone(JSContext* cx, OptimizedICStubSpace& newSpace);
+  ICCacheIRStub* clone(JSContext* cx, ICStubSpace& newSpace);
 
   // Returns true if this stub can call JS or VM code that can trigger a GC.
   bool makesGCCalls() const;

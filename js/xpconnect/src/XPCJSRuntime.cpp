@@ -1459,9 +1459,8 @@ static void ReportZoneStats(const JS::ZoneStats& zStats,
 
   ZRREPORT_BYTES(pathPrefix + "jit-zone"_ns, zStats.jitZone, "The JIT zone.");
 
-  ZRREPORT_BYTES(pathPrefix + "baseline/optimized-stubs"_ns,
-                 zStats.baselineStubsOptimized,
-                 "The Baseline JIT's optimized IC stubs (excluding code).");
+  ZRREPORT_BYTES(pathPrefix + "cacheir-stubs"_ns, zStats.cacheIRStubs,
+                 "The JIT's IC stubs (excluding code).");
 
   ZRREPORT_BYTES(pathPrefix + "script-counts-map"_ns, zStats.scriptCountsMap,
                  "Profiling-related information for scripts.");
