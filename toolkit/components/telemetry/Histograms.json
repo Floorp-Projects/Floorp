@@ -16584,7 +16584,8 @@
       "reset_event",
       "reset_listeners",
       "reset_nativeapp",
-      "reset_streamfilter"
+      "reset_streamfilter",
+      "reset_parentapicall"
     ],
     "releaseChannelCollection": "opt-out",
     "description": "The number of times an event page hit the idle timeout and results in one of the categories, keyed by addon id."
@@ -16602,7 +16603,8 @@
       "reset_event",
       "reset_listeners",
       "reset_nativeapp",
-      "reset_streamfilter"
+      "reset_streamfilter",
+      "reset_parentapicall"
     ],
     "releaseChannelCollection": "opt-out",
     "description": "The number of times an event page hit the idle timeout and results in one of the categories, keyed by addon id.",
