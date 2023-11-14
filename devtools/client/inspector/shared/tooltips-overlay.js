@@ -12,6 +12,7 @@
 const flags = require("resource://devtools/shared/flags.js");
 const {
   VIEW_NODE_CSS_QUERY_CONTAINER,
+  VIEW_NODE_CSS_SELECTOR_WARNINGS,
   VIEW_NODE_FONT_TYPE,
   VIEW_NODE_IMAGE_URL_TYPE,
   VIEW_NODE_INACTIVE_CSS,
@@ -61,12 +62,19 @@ loader.lazyRequireGetter(
   "resource://devtools/client/shared/widgets/tooltip/css-query-container-tooltip-helper.js",
   false
 );
+loader.lazyRequireGetter(
+  this,
+  "CssSelectorWarningsTooltipHelper",
+  "resource://devtools/client/shared/widgets/tooltip/css-selector-warnings-tooltip-helper.js",
+  false
+);
 
 const PREF_IMAGE_TOOLTIP_SIZE = "devtools.inspector.imagePreviewTooltipSize";
 
 // Types of existing tooltips
 const TOOLTIP_CSS_COMPATIBILITY = "css-compatibility";
 const TOOLTIP_CSS_QUERY_CONTAINER = "css-query-info";
+const TOOLTIP_CSS_SELECTOR_WARNINGS = "css-selector-warnings";
 const TOOLTIP_FONTFAMILY_TYPE = "font-family";
 const TOOLTIP_IMAGE_TYPE = "image";
 const TOOLTIP_INACTIVE_CSS = "inactive-css";
@@ -115,6 +123,8 @@ TooltipsOverlay.prototype = {
     this.inactiveCssTooltipHelper = new InactiveCssTooltipHelper();
     this.compatibilityTooltipHelper = new CssCompatibilityTooltipHelper();
     this.cssQueryContainerTooltipHelper = new CssQueryContainerTooltipHelper();
+    this.cssSelectorWarningsTooltipHelper =
+      new CssSelectorWarningsTooltipHelper();
 
     // Instantiate the interactiveTooltip and preview tooltip when the
     // rule/computed view is hovered over in order to call
@@ -256,6 +266,11 @@ TooltipsOverlay.prototype = {
     // Container info tooltip
     if (type === VIEW_NODE_CSS_QUERY_CONTAINER) {
       tooltipType = TOOLTIP_CSS_QUERY_CONTAINER;
+    }
+
+    // Selector warnings info tooltip
+    if (type === VIEW_NODE_CSS_SELECTOR_WARNINGS) {
+      tooltipType = TOOLTIP_CSS_SELECTOR_WARNINGS;
     }
 
     return tooltipType;
@@ -408,6 +423,17 @@ TooltipsOverlay.prototype = {
       }
 
       await this.cssQueryContainerTooltipHelper.setContent(
+        nodeInfo.value,
+        this.getTooltip("interactiveTooltip")
+      );
+
+      this.sendOpenScalarToTelemetry(type);
+
+      return true;
+    }
+
+    if (type === TOOLTIP_CSS_SELECTOR_WARNINGS) {
+      await this.cssSelectorWarningsTooltipHelper.setContent(
         nodeInfo.value,
         this.getTooltip("interactiveTooltip")
       );

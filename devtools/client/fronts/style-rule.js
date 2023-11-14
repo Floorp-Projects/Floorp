@@ -110,6 +110,10 @@ class StyleRuleFront extends FrontClassWithSpec(styleRuleSpec) {
     return this._form.desugaredSelectors || this._form.selectors;
   }
 
+  get selectorWarnings() {
+    return this._form.selectorWarnings;
+  }
+
   get parentStyleSheet() {
     const resourceCommand = this.targetFront.commands.resourceCommand;
     return resourceCommand.getResourceById(

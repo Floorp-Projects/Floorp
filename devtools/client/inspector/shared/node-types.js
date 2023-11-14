@@ -9,6 +9,7 @@
  */
 
 exports.VIEW_NODE_CSS_QUERY_CONTAINER = "css-query-container";
+exports.VIEW_NODE_CSS_SELECTOR_WARNINGS = "css-selector-warnings";
 exports.VIEW_NODE_FONT_TYPE = "font-type";
 exports.VIEW_NODE_IMAGE_URL_TYPE = "image-url-type";
 exports.VIEW_NODE_INACTIVE_CSS = "inactive-css";

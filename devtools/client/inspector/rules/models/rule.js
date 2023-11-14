@@ -104,6 +104,7 @@ class Rule {
       getUniqueSelector: this.getUniqueSelector,
       matchedDesugaredSelectors: this.matchedDesugaredSelectors,
       selectors: this.domRule.selectors,
+      selectorWarnings: this.domRule.selectors,
       selectorText: this.keyframes ? this.domRule.keyText : this.selectorText,
     };
   }

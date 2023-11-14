@@ -355,6 +355,8 @@ fail-if = ["a11y_checks"] # Bug 1849028 clicked element may not be focusable and
 
 ["browser_rules_selector_highlight.js"]
 
+["browser_rules_selector_warnings.js"]
+
 ["browser_rules_shadowdom_slot_rules.js"]
 
 ["browser_rules_shapes-toggle_01.js"]

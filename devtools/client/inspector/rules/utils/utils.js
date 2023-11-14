@@ -6,6 +6,7 @@
 
 const {
   VIEW_NODE_CSS_QUERY_CONTAINER,
+  VIEW_NODE_CSS_SELECTOR_WARNINGS,
   VIEW_NODE_FONT_TYPE,
   VIEW_NODE_IMAGE_URL_TYPE,
   VIEW_NODE_INACTIVE_CSS,
@@ -140,6 +141,9 @@ function getNodeInfo(node, elementStyle) {
       ancestorIndex: containerQueryEl.getAttribute("data-ancestor-index"),
       rule,
     };
+  } else if (node.classList.contains("ruleview-selector-warnings")) {
+    type = VIEW_NODE_CSS_SELECTOR_WARNINGS;
+    value = node.getAttribute("data-selector-warning-kind").split(",");
   } else if (declaration && classList.contains("ruleview-shapeswatch")) {
     type = VIEW_NODE_SHAPE_SWATCH;
     value = {

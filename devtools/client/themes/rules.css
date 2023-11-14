@@ -822,6 +822,43 @@
   color: var(--rule-pseudo-class-text-color);
 }
 
+.ruleview-selector-warnings {
+  display: inline-block;
+  width: 16px;
+  height: 12px;
+  margin-inline-start: 2px;
+  vertical-align: text-top;
+  border-radius: 2px;
+
+  border: 1px solid var(--theme-warning-border);
+  background-color: var(--theme-warning-background);
+  background-repeat: no-repeat;
+  background-position: center;
+  fill: var(--theme-warning-color);
+  -moz-context-properties: fill;
+
+  /* Default warning icon */
+  background-image: url(chrome://devtools/skin/images/alert-small.svg);
+  background-size: 10px;
+
+  &.slow {
+    background-image: url(chrome://devtools/content/netmonitor/src/assets/icons/turtle.svg);
+    background-size: 12px;
+  }
+}
+
+/* When hovering the selector warnings icon, highlight the selector it applies to */
+.ruleview-selector:has(.ruleview-selector-warnings:hover) {
+  background-color: var(--theme-warning-background);
+  /* We're not using --theme-warning-border to make it more visible */
+  outline: 1px solid var(--theme-warning-color);
+
+  & .ruleview-selector-warnings {
+    /* In such case, hide the icon border to make it cleaner */
+    border-color: transparent;
+  }
+}
+
 .ruleview-selectorhighlighter {
   display: inline-block;
   vertical-align: top;
