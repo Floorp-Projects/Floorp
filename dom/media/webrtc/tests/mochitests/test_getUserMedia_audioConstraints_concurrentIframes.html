@@ -98,11 +98,6 @@ runTest(async function() {
       // Wait for all iframes to be loaded
       await Promise.all(testCases.map(tc => tc.iframeLoadedPromise));
 
-      // Start a tone at our top level page so the gUM calls will record something
-      // should we wish to verify their recording in future.
-      let tone = new LoopbackTone(new AudioContext, TEST_AUDIO_FREQ);
-      tone.start();
-
       // One by one see if we can grab a gUM stream per iframe
       for (let testCase of testCases) {
         // Use normal gUM rather than our test helper as the test harness was
@@ -145,8 +140,6 @@ runTest(async function() {
         testCase.gumStream.getTracks().map(t => t.stop());
         document.body.removeChild(testCase.iframe);
       }
-
-      tone.stop();
     }
     await new Promise(r => SpecialPowers.exactGC(r));
   }
