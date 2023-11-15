@@ -184,21 +184,17 @@ nsRect HTMLAreaAccessible::RelativeBounds(nsIFrame** aBoundingFrame) const {
 nsRect HTMLAreaAccessible::ParentRelativeBounds() {
   nsIFrame* boundingFrame = nullptr;
   nsRect relativeBoundsRect = RelativeBounds(&boundingFrame);
-
-  nsIFrame* parentBoundingFrame = nullptr;
-  if (mParent) {
-    parentBoundingFrame = mParent->GetFrame();
+  if (MOZ_UNLIKELY(!boundingFrame)) {
+    // Area is not attached to an image map?
+    return nsRect();
   }
 
-  if (!parentBoundingFrame) {
-    // if we can't get the bounding frame, use the pres shell root for the
-    // bounding frame RelativeBounds returned
-    parentBoundingFrame =
-        nsLayoutUtils::GetContainingBlockForClientRect(boundingFrame);
-  }
-
-  nsLayoutUtils::TransformRect(boundingFrame, parentBoundingFrame,
-                               relativeBoundsRect);
-
+  // The relative bounds returned above are relative to this area's
+  // image map, which is technically already "parent relative".
+  // Because area elements are `display:none` to layout, they can't
+  // have transforms or other styling applied directly, and so we
+  // don't apply any additional transforms here. Any transform
+  // at the image map layer will be taken care of when computing bounds
+  // in the parent process.
   return relativeBoundsRect;
 }
