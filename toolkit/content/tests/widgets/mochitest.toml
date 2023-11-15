@@ -93,9 +93,6 @@ skip-if = [
 ["test_videocontrols_scrubber_position.html"]
 
 ["test_videocontrols_scrubber_position_nopreload.html"]
-skip-if = [
-  "os == 'android' && xorigin", # bug 1855534
-]
 
 ["test_videocontrols_size.html"]
 

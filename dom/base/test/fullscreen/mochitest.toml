@@ -43,9 +43,6 @@ skip-if = [
 ]
 
 ["test_fullscreen-api-rapid-cycle.html"]
-skip-if = [
-  "os == 'android' && xorigin", # bug 1855866
-]
 
 ["test_fullscreen-api.html"]
 allow_xul_xbl = true  # XUL is used in file_fullscreen-api.html
@@ -64,5 +61,4 @@ skip-if = [
   "display == 'wayland' && os_version == '22.04'",  # Bug 1857240
   "http3",
   "http2",
-  "os == 'android' && xorigin", # bug 1855527
 ]
