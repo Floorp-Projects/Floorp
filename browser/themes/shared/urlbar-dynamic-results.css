@@ -20,7 +20,7 @@
         min-width: 32px;
         height: 32px;
         padding: 16px;
-        margin-inline-start: 0;
+        margin-inline: 0 .7em;
       }
     }
   }
@@ -44,6 +44,10 @@
   display: flex;
   flex-direction: column;
   white-space: normal;
+}
+
+.urlbarView-dynamic-quickSuggestContextualOptIn-title {
+  font-weight: var(--font-weight-bold);
 }
 
 .urlbarView-dynamic-quickSuggestContextualOptIn-description {
