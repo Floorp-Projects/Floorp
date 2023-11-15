@@ -131,6 +131,39 @@ export class GeckoViewContent extends GeckoViewModule {
     }
   }
 
+  #sendDOMFullScreenEventToAllChildren(aEvent) {
+    let { browsingContext } = this.actor;
+
+    while (browsingContext) {
+      if (!browsingContext.currentWindowGlobal) {
+        break;
+      }
+
+      const currentPid = browsingContext.currentWindowGlobal.osPid;
+      const parentPid = browsingContext.parent?.currentWindowGlobal.osPid;
+
+      if (currentPid != parentPid) {
+        if (!browsingContext.parent) {
+          // Top level browsing context. Use origin actor (Bug 1505916).
+          const chromeBC = browsingContext.topChromeWindow?.browsingContext;
+          const requestOrigin = chromeBC?.fullscreenRequestOrigin?.get();
+          if (requestOrigin) {
+            requestOrigin.browsingContext.currentWindowGlobal
+              .getActor("GeckoViewContent")
+              .sendAsyncMessage(aEvent, {});
+            delete chromeBC.fullscreenRequestOrigin;
+            return;
+          }
+        }
+        const actor =
+          browsingContext.currentWindowGlobal.getActor("GeckoViewContent");
+        actor.sendAsyncMessage(aEvent, {});
+      }
+
+      browsingContext = browsingContext.parent;
+    }
+  }
+
   // Bundle event handler.
   onEvent(aEvent, aData, aCallback) {
     debug`onEvent: event=${aEvent}, data=${aData}`;
@@ -252,11 +285,15 @@ export class GeckoViewContent extends GeckoViewModule {
       case "MozDOMFullscreen:Entered":
         if (this.browser == aEvent.target) {
           // Remote browser; dispatch to content process.
-          this.sendToAllChildren("GeckoView:DOMFullscreenEntered");
+          this.#sendDOMFullScreenEventToAllChildren(
+            "GeckoView:DOMFullscreenEntered"
+          );
         }
         break;
       case "MozDOMFullscreen:Exited":
-        this.sendToAllChildren("GeckoView:DOMFullscreenExited");
+        this.#sendDOMFullScreenEventToAllChildren(
+          "GeckoView:DOMFullscreenExited"
+        );
         break;
       case "pagetitlechanged":
         this.eventDispatcher.sendRequest({
