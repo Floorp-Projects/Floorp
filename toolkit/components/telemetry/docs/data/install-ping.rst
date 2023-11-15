@@ -181,7 +181,7 @@ sig_unexpected (stub)
   True if the installation failed because the signature on the downloaded file didn't have the expected subject and issuer names
 
 install_timeout (stub)
-  True if the installation failed because running the full installer timed out. Currently that means it ran for more than 150 seconds for a new installation, or 165 seconds for a paveover installation.
+  True if the installation failed because running the full installer timed out. Currently that means it ran for more than 200 seconds for a new installation, or 215 seconds for a paveover installation.
 
 new_launched (both)
   True if the installation succeeded and tried to launch the newly installed application.
