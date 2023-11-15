@@ -1,0 +1,55 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Adding a new metric? We have docs for that!
+
+# https://firefox-source-docs.mozilla.org/toolkit/components/glean/user/new_definitions_file.html
+
+---
+$schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
+$tags:
+  - 'Firefox :: General'
+
+protocolhandler.mailto:
+  prompt_clicked:
+    type: labeled_counter
+    description: >
+      User clicked on a button to approve setting the current site as default
+      web mail site. The sum of all counters is the total amount of user
+      interactions and dismissing the same dialog often could be a sign of
+      a bug.
+    bugs:
+      - https://bugzilla.mozilla.org/1864216
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1864216#c8
+    notification_emails:
+      - install-update@mozilla.com
+    expires: never
+    labels:
+      - set_os_default
+      - dismiss_os_default
+      - set_local_default
+      - dismiss_local_default
+    send_in_pings:
+      - active
+      - metrics
+
+  handler_prompt_shown:
+    type: labeled_counter
+    description: >
+      A website was visited, which called registerProtocolHandler
+      for mailto://
+    bugs:
+      - https://bugzilla.mozilla.org/1864216
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1864216#c8
+    notification_emails:
+      - install-update@mozilla.com
+    expires: never
+    labels:
+      - os_default
+      - fx_default
+    send_in_pings:
+      - active
+      - metrics
