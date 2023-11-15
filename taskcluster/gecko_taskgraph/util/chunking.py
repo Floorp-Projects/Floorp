@@ -244,14 +244,14 @@ class DefaultLoader(BaseManifestLoader):
         if "web-platform-tests" in suite:
             manifests = set()
             for t in tests:
-                if mozinfo["canvas"]:
-                    if "html/canvas" in t["manifest"]:
+                if "html/canvas" in t["manifest"]:
+                    if mozinfo["canvas"]:
                         manifests.add(t["manifest"])
-                elif mozinfo["webgpu"]:
-                    if "_mozilla/webgpu" in t["manifest"]:
+                elif "_mozilla/webgpu" in t["manifest"]:
+                    if mozinfo["webgpu"]:
                         manifests.add(t["manifest"])
-                elif mozinfo["privatebrowsing"]:
-                    if "/service-workers/cache-storage" in t["manifest"]:
+                elif "/service-workers/cache-storage" in t["manifest"]:
+                    if mozinfo["privatebrowsing"]:
                         manifests.add(t["manifest"])
                 else:
                     manifests.add(t["manifest"])
