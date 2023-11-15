@@ -395,7 +395,10 @@ class BrowserToolbarCFRPresenter(
                             )
                             Spacer(modifier = Modifier.width(8.dp))
                             Text(
-                                text = context.getString(R.string.cookie_banner_cfr_title),
+                                text = context.getString(
+                                    R.string.cookie_banner_cfr_title,
+                                    context.getString(R.string.firefox),
+                                ),
                                 color = FirefoxTheme.colors.textOnColorPrimary,
                                 style = FirefoxTheme.typography.subtitle2,
                             )
