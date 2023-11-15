@@ -60,11 +60,13 @@ const EXCLUDED_TAGS = new Set([
   "APPLET",
 
   // The following are embedded elements, and are not supported (yet).
-  "SVG",
   "MATH",
   "EMBED",
   "OBJECT",
   "IFRAME",
+
+  // This is an SVG tag that can contain arbitrary XML, ignore it.
+  "METADATA",
 
   // These are elements that are treated as opaque by Firefox which causes their
   // innerHTML property to be just the raw text node behind it. Any text that is sent as
@@ -541,7 +543,12 @@ export class TranslationsDocument {
 
     const { nodeName } = node;
 
-    if (EXCLUDED_TAGS.has(nodeName)) {
+    if (
+      EXCLUDED_TAGS.has(
+        // SVG tags can be lowercased, so ensure everything is uppercased.
+        nodeName.toUpperCase()
+      )
+    ) {
       // This is an excluded tag.
       return true;
     }
