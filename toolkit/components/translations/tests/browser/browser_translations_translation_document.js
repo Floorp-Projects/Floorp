@@ -832,6 +832,82 @@ add_task(async function test_mutations() {
   cleanup();
 });
 
+add_task(async function test_svgs() {
+  const { translate, htmlMatches, cleanup } = await createDoc(/* html */ `
+    <div>
+      <div>Text before is translated</div>
+      <svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
+        <style>.myText { font-family: sans-serif; }</style>
+        <rect x="10" y="10" width="80" height="60" class="myRect" />
+        <circle cx="150" cy="50" r="30" class="myCircle" />
+        <text x="50%" y="50%" text-anchor="middle" alignment-baseline="middle" class="myText">
+          Text inside of the SVG is untranslated.
+        </text>
+      </svg>
+      <div>Text after is translated</div>
+    </div>
+  `);
+
+  translate();
+
+  await htmlMatches(
+    "SVG text gets translated, and style elements are left alone.",
+    /* html */ `
+    <div>
+      <div>
+        TEXT BEFORE IS TRANSLATED
+      </div>
+      <svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
+        <style>
+          .myText { font-family: sans-serif; }
+        </style>
+        <rect x="10" y="10" width="80" height="60" class="myRect">
+        </rect>
+        <circle cx="150" cy="50" r="30" class="myCircle">
+        </circle>
+        <text x="50%" y="50%" text-anchor="middle" alignment-baseline="middle" class="myText">
+          TEXT INSIDE OF THE SVG IS UNTRANSLATED.
+        </text>
+      </svg>
+      <div>
+        TEXT AFTER IS TRANSLATED
+      </div>
+    </div>
+    `
+  );
+
+  await cleanup();
+});
+
+add_task(async function test_svgs_more() {
+  const { translate, htmlMatches, cleanup } = await createDoc(/* html */ `
+    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <foreignObject x="20" y="20" width="160" height="160">
+        <div xmlns="http://www.w3.org/1999/xhtml">
+          This is a div inside of an SVG.
+        </div>
+      </foreignObject>
+    </svg>
+  `);
+
+  translate();
+
+  await htmlMatches(
+    "Foreign objects get translated",
+    /* html */ `
+    <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+      <foreignObject x="20" y="20" width="160" height="160">
+        <div xmlns="http://www.w3.org/1999/xhtml">
+          THIS IS A DIV INSIDE OF AN SVG.
+        </div>
+      </foreignObject>
+    </svg>
+    `
+  );
+
+  await cleanup();
+});
+
 add_task(async function test_tables() {
   const { translate, htmlMatches, cleanup } = await createDoc(/* html */ `
     <table>
