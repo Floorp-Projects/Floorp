@@ -313,6 +313,20 @@ export class TranslationsParent extends JSWindowActorParent {
   static testAutomaticPopup = false;
 
   /**
+   * Gecko preference for always translating a language.
+   *
+   * @type {string}
+   */
+  static ALWAYS_TRANSLATE_LANGS_PREF = ALWAYS_TRANSLATE_LANGS_PREF;
+
+  /**
+   * Gecko preference for never translating a language.
+   *
+   * @type {string}
+   */
+  static NEVER_TRANSLATE_LANGS_PREF = NEVER_TRANSLATE_LANGS_PREF;
+
+  /**
    * Telemetry functions for Translations
    * @returns {TranslationsTelemetry}
    */
@@ -2255,7 +2269,7 @@ export class TranslationsParent extends JSWindowActorParent {
    * @param {string} langTag - A BCP-47 language tag
    * @param {string} prefName - The pref name
    */
-  static #removeLangTagFromPref(langTag, prefName) {
+  static removeLangTagFromPref(langTag, prefName) {
     const langTags =
       prefName === ALWAYS_TRANSLATE_LANGS_PREF
         ? lazy.alwaysTranslateLangTags
@@ -2270,7 +2284,7 @@ export class TranslationsParent extends JSWindowActorParent {
    * @param {string} langTag - A BCP-47 language tag
    * @param {string} prefName - The pref name
    */
-  static #addLangTagToPref(langTag, prefName) {
+  static addLangTagToPref(langTag, prefName) {
     const langTags =
       prefName === ALWAYS_TRANSLATE_LANGS_PREF
         ? lazy.alwaysTranslateLangTags
@@ -2296,19 +2310,19 @@ export class TranslationsParent extends JSWindowActorParent {
     if (appLangTag === docLangTag) {
       // In case somehow the user attempts to toggle this when the app and doc language
       // are the same, just remove the lang tag.
-      this.#removeLangTagFromPref(appLangTag, ALWAYS_TRANSLATE_LANGS_PREF);
+      this.removeLangTagFromPref(appLangTag, ALWAYS_TRANSLATE_LANGS_PREF);
       return false;
     }
 
     if (TranslationsParent.shouldAlwaysTranslateLanguage(langTags)) {
       // The pref was toggled off for this langTag
-      this.#removeLangTagFromPref(docLangTag, ALWAYS_TRANSLATE_LANGS_PREF);
+      this.removeLangTagFromPref(docLangTag, ALWAYS_TRANSLATE_LANGS_PREF);
       return false;
     }
 
     // The pref was toggled on for this langTag
-    this.#addLangTagToPref(docLangTag, ALWAYS_TRANSLATE_LANGS_PREF);
-    this.#removeLangTagFromPref(docLangTag, NEVER_TRANSLATE_LANGS_PREF);
+    this.addLangTagToPref(docLangTag, ALWAYS_TRANSLATE_LANGS_PREF);
+    this.removeLangTagFromPref(docLangTag, NEVER_TRANSLATE_LANGS_PREF);
     return true;
   }
 
@@ -2341,13 +2355,13 @@ export class TranslationsParent extends JSWindowActorParent {
   static toggleNeverTranslateLanguagePref(langTag) {
     if (TranslationsParent.shouldNeverTranslateLanguage(langTag)) {
       // The pref was toggled off for this langTag
-      this.#removeLangTagFromPref(langTag, NEVER_TRANSLATE_LANGS_PREF);
+      this.removeLangTagFromPref(langTag, NEVER_TRANSLATE_LANGS_PREF);
       return false;
     }
 
     // The pref was toggled on for this langTag
-    this.#addLangTagToPref(langTag, NEVER_TRANSLATE_LANGS_PREF);
-    this.#removeLangTagFromPref(langTag, ALWAYS_TRANSLATE_LANGS_PREF);
+    this.addLangTagToPref(langTag, NEVER_TRANSLATE_LANGS_PREF);
+    this.removeLangTagFromPref(langTag, ALWAYS_TRANSLATE_LANGS_PREF);
     return true;
   }
 
@@ -2360,10 +2374,27 @@ export class TranslationsParent extends JSWindowActorParent {
    *  False if never-translate was disabled for this site.
    */
   toggleNeverTranslateSitePermissions() {
+    if (this.shouldNeverTranslateSite()) {
+      return this.setNeverTranslateSitePermissions(false);
+    }
+
+    return this.setNeverTranslateSitePermissions(true);
+  }
+
+  /**
+   * Sets the never-translate site permissions by adding DENY_ACTION to
+   * the site principal.
+   *
+   * @param {string} neverTranslate - The never translate setting.
+   * @returns {boolean}
+   *  True if never-translate was enabled for this site.
+   *  False if never-translate was disabled for this site.
+   */
+  setNeverTranslateSitePermissions(neverTranslate) {
     const perms = Services.perms;
     const { documentPrincipal } = this.browsingContext.currentWindowGlobal;
 
-    if (this.shouldNeverTranslateSite()) {
+    if (!neverTranslate) {
       perms.removeFromPrincipal(documentPrincipal, TRANSLATIONS_PERMISSION);
       return false;
     }

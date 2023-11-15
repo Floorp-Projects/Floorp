@@ -225,6 +225,9 @@ export class GeckoViewStartup {
             "GeckoView:Translations:ManageModel",
             "GeckoView:Translations:TranslationInformation",
             "GeckoView:Translations:ModelInformation",
+            "GeckoView:Translations:GetLanguageSetting",
+            "GeckoView:Translations:GetLanguageSettings",
+            "GeckoView:Translations:SetLanguageSettings",
           ],
         });
 
