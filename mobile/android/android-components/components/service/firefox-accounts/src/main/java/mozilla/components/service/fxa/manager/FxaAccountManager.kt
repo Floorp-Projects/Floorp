@@ -422,6 +422,7 @@ open class FxaAccountManager(
                 false
             }
             authData.state == latestAuthState -> {
+                authData.declinedEngines?.let { persistDeclinedEngines(it) }
                 processQueue(Event.Progress.AuthData(authData))
                 true
             }
@@ -506,12 +507,15 @@ open class FxaAccountManager(
     private suspend fun accountStateSideEffects(forState: State.Idle, via: Event): Unit = when (forState.accountState) {
         AccountState.NotAuthenticated -> when (via) {
             Event.Progress.LoggedOut -> {
+                resetAccount()
                 notifyObservers { onLoggedOut() }
             }
             Event.Progress.FailedToBeginAuth -> {
+                resetAccount()
                 notifyObservers { onFlowError(AuthFlowError.FailedToBeginAuth) }
             }
             Event.Progress.FailedToCompleteAuth -> {
+                resetAccount()
                 notifyObservers { onFlowError(AuthFlowError.FailedToCompleteAuth) }
             }
             Event.Progress.FailedToRecoverFromAuthenticationProblem -> {
@@ -527,6 +531,9 @@ open class FxaAccountManager(
             }
             Event.Progress.RecoveredFromAuthenticationProblem -> {
                 finishedAuthRecovery()
+                // Clear our access token cache; it'll be re-populated as part of the
+                // regular state machine flow.
+                SyncAuthInfoCache(context).clear()
                 notifyObservers { onAuthenticated(account, AuthType.Recovered) }
                 refreshProfile(ignoreCache = true)
                 Unit
@@ -534,6 +541,7 @@ open class FxaAccountManager(
             else -> Unit
         }
         AccountState.AuthenticationProblem -> {
+            SyncAuthInfoCache(context).clear()
             notifyObservers { onAuthenticationProblems() }
         }
     }
@@ -559,7 +567,6 @@ open class FxaAccountManager(
             }
         }
         ProgressState.LoggingOut -> {
-            resetAccount()
             Event.Progress.LoggedOut
         }
         ProgressState.BeginningAuthentication -> when (via) {
@@ -589,7 +596,6 @@ open class FxaAccountManager(
                         null
                     }
                     Result.Failure -> {
-                        resetAccount()
                         oauthObservers.notifyObservers { onError() }
                         Event.Progress.FailedToBeginAuth
                     }
@@ -638,10 +644,8 @@ open class FxaAccountManager(
                 }
                 // If we can't 'complete', we won't run 'finalize' due to short-circuiting.
                 if (completeAuth() is Result.Failure || finalize() !is ServiceResult.Ok) {
-                    resetAccount()
                     Event.Progress.FailedToCompleteAuth
                 } else {
-                    via.authData.declinedEngines?.let { persistDeclinedEngines(it) }
                     if (authenticationSideEffects("CompletingAuthentication:AuthData")) {
                         Event.Progress.CompletedAuthentication(via.authData.authType)
                     } else {
@@ -666,10 +670,6 @@ open class FxaAccountManager(
 
             // Ensure we clear any auth-relevant internal state, such as access tokens.
             account.authErrorDetected()
-
-            // Clear our access token cache; it'll be re-populated as part of the
-            // regular state machine flow if we manage to recover.
-            SyncAuthInfoCache(context).clear()
 
             // Circuit-breaker logic to protect ourselves from getting into endless authorization
             // check loops. If we determine that application is trying to check auth status too
