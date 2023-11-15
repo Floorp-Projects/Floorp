@@ -629,6 +629,17 @@ skip script test262/intl402/NumberFormat/prototype/resolvedOptions/return-keys-o
 skip script test262/intl402/PluralRules/constructor-option-read-order.js
 skip script test262/intl402/PluralRules/prototype/resolvedOptions/return-keys-order-default.js
 
+# Requires Unicode 15.1
+# https://github.com/tc39/test262/pull/3947
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1859752
+skip script test262/built-ins/RegExp/unicode_full_case_folding.js
+
+# Requires CLDR 44
+# https://github.com/tc39/test262/pull/3946
+# https://bugzilla.mozilla.org/show_bug.cgi?id=1859752
+skip script test262/intl402/Locale/likely-subtags.js
+skip script test262/intl402/Locale/prototype/minimize/removing-likely-subtags-first-adds-likely-subtags.js
+
 
 ###########################################################
 # Tests disabled due to issues in test262 importer script #
@@ -654,14 +665,7 @@ skip-if(!xulRuntime.shell) script test262/language/module-code/top-level-await/a
 # Tests disabled due to invalid test expectations  #
 ####################################################
 
-# The test exposes a potential spec issue in InitializeDateTimeFormat:
-# Let's assume the locale is "en", adding likely subtags results in "en-Latn-US".
-# Consulting CLDR's supplementalData.xml shows for the "US" region:
-#   <hours preferred="h" allowed="h hb H hB" regions="[...] US [...]"/>
-# So preferred is "h" (= hour-cycle "h12") and additionally allowed is "H" (=hc "h23").
-# But InitializeDateTimeFormat defaults for hour12=false and hcDefault="h12" the
-# hour-cycle to "h24", which isn't allowed per the above CLDR data.
-# https://github.com/tc39/ecma402/issues/402
+# https://github.com/tc39/test262/pull/3958
 skip script test262/intl402/DateTimeFormat/prototype/resolvedOptions/hourCycle-default.js
 
 # Array.prototype.concat currently doesn't support spreading tuples. The spec
@@ -669,28 +673,13 @@ skip script test262/intl402/DateTimeFormat/prototype/resolvedOptions/hourCycle-d
 # test for now.
 skip script non262/Tuple/prototype/concat/concat-with-array.js
 
-# Test262 still requires double construction, which will be fixed in
-# https://github.com/tc39/proposal-array-from-async/pull/41
-skip script test262/built-ins/Array/fromAsync/this-constructor.js
-skip script test262/built-ins/Array/fromAsync/this-constructor-operations.js
-
 # Time zone offsets with sub-minute precision no longer allowed.
 skip script test262/staging/Temporal/Regex/old/instant.js
 skip script test262/staging/Temporal/Regex/old/timezone.js
 
-# https://github.com/tc39/test262/pull/3929
-skip script test262/harness/verifyProperty-value-error.js
-skip script test262/harness/verifyProperty-desc-is-not-object.js
-
 # These tests seem incorrect, see https://github.com/tc39/test262/pull/3907
 skip script test262/language/statements/class/decorator/syntax/class-valid/decorator-member-expr-private-identifier.js
 skip script test262/language/expressions/class/decorator/syntax/class-valid/decorator-member-expr-private-identifier.js
-
-# https://github.com/tc39/test262/pull/3899
-skip script test262/built-ins/Temporal/PlainMonthDay/from/fields-missing-properties.js
-skip script test262/built-ins/Temporal/PlainMonthDay/prototype/with/basic.js
-skip script test262/built-ins/Temporal/Calendar/prototype/monthDayFromFields/missing-properties.js
-skip script test262/built-ins/Temporal/Calendar/prototype/monthDayFromFields/fields-missing-properties.js
 
 
 ##############################################
@@ -1059,7 +1048,11 @@ shell-option(--enable-iterator-helpers) script non262/Iterator/prototype/take/ta
 # Temporal tests                             #
 ##############################################
 
+skip script test262/built-ins/Temporal/Calendar/prototype/dateAdd/order-of-operations.js
+skip script test262/built-ins/Temporal/Calendar/prototype/dateUntil/order-of-operations.js
 skip script test262/built-ins/Temporal/TimeZone/prototype/getInstantFor/getpossibleinstantsfor-called-with-iso8601-calendar.js
+skip script test262/built-ins/Temporal/TimeZone/prototype/getInstantFor/order-of-operations.js
+skip script test262/built-ins/Temporal/PlainDate/from/order-of-operations.js
 skip script test262/built-ins/Temporal/PlainDate/prototype/toZonedDateTime/getpossibleinstantsfor-called-with-iso8601-calendar.js
 skip script test262/built-ins/Temporal/PlainDate/prototype/toZonedDateTime/order-of-operations.js
 skip script test262/built-ins/Temporal/PlainDate/prototype/subtract/order-of-operations.js
@@ -1068,6 +1061,8 @@ skip script test262/built-ins/Temporal/PlainDate/prototype/until/calendar-dateun
 skip script test262/built-ins/Temporal/PlainDate/prototype/until/order-of-operations.js
 skip script test262/built-ins/Temporal/PlainDate/prototype/since/calendar-dateuntil-called-with-singular-largestunit.js
 skip script test262/built-ins/Temporal/PlainDate/prototype/since/order-of-operations.js
+skip script test262/built-ins/Temporal/PlainDate/prototype/with/order-of-operations.js
+skip script test262/built-ins/Temporal/PlainDateTime/from/order-of-operations.js
 skip script test262/built-ins/Temporal/PlainDateTime/prototype/toZonedDateTime/getpossibleinstantsfor-called-with-iso8601-calendar.js
 skip script test262/built-ins/Temporal/PlainDateTime/prototype/toZonedDateTime/order-of-operations.js
 skip script test262/built-ins/Temporal/PlainDateTime/prototype/subtract/order-of-operations.js
@@ -1076,10 +1071,17 @@ skip script test262/built-ins/Temporal/PlainDateTime/prototype/until/calendar-da
 skip script test262/built-ins/Temporal/PlainDateTime/prototype/until/order-of-operations.js
 skip script test262/built-ins/Temporal/PlainDateTime/prototype/since/calendar-dateuntil-called-with-singular-largestunit.js
 skip script test262/built-ins/Temporal/PlainDateTime/prototype/since/order-of-operations.js
+skip script test262/built-ins/Temporal/PlainDateTime/prototype/with/order-of-operations.js
+skip script test262/built-ins/Temporal/PlainMonthDay/from/order-of-operations.js
+skip script test262/built-ins/Temporal/PlainMonthDay/prototype/with/order-of-operations.js
 skip script test262/built-ins/Temporal/PlainTime/prototype/toZonedDateTime/getpossibleinstantsfor-called-with-iso8601-calendar.js
 skip script test262/built-ins/Temporal/PlainTime/prototype/toZonedDateTime/order-of-operations.js
+skip script test262/built-ins/Temporal/PlainYearMonth/from/order-of-operations.js
+skip script test262/built-ins/Temporal/PlainYearMonth/prototype/with/order-of-operations.js
 skip script test262/built-ins/Temporal/ZonedDateTime/compare/argument-propertybag-ambiguous-wall-clock-time.js
+skip script test262/built-ins/Temporal/ZonedDateTime/compare/order-of-operations.js
 skip script test262/built-ins/Temporal/ZonedDateTime/from/argument-propertybag-ambiguous-wall-clock-time.js
+skip script test262/built-ins/Temporal/ZonedDateTime/from/order-of-operations.js
 skip script test262/built-ins/Temporal/ZonedDateTime/prototype/round/getpossibleinstantsfor-called-with-iso8601-calendar.js
 skip script test262/built-ins/Temporal/ZonedDateTime/prototype/round/order-of-operations.js
 skip script test262/built-ins/Temporal/ZonedDateTime/prototype/startOfDay/getpossibleinstantsfor-called-with-iso8601-calendar.js
@@ -1089,6 +1091,7 @@ skip script test262/built-ins/Temporal/ZonedDateTime/prototype/withPlainTime/get
 skip script test262/built-ins/Temporal/ZonedDateTime/prototype/withPlainTime/order-of-operations.js
 skip script test262/built-ins/Temporal/ZonedDateTime/prototype/with/order-of-operations.js
 skip script test262/built-ins/Temporal/ZonedDateTime/prototype/equals/argument-propertybag-ambiguous-wall-clock-time.js
+skip script test262/built-ins/Temporal/ZonedDateTime/prototype/equals/order-of-operations.js
 skip script test262/built-ins/Temporal/ZonedDateTime/prototype/withPlainDate/getpossibleinstantsfor-called-with-iso8601-calendar.js
 skip script test262/built-ins/Temporal/ZonedDateTime/prototype/withPlainDate/order-of-operations.js
 skip script test262/built-ins/Temporal/ZonedDateTime/prototype/until/argument-propertybag-ambiguous-wall-clock-time.js
@@ -1101,6 +1104,10 @@ skip script test262/built-ins/Temporal/ZonedDateTime/prototype/since/calendar-da
 skip script test262/built-ins/Temporal/ZonedDateTime/prototype/since/calendar-dateuntil-called-with-singular-largestunit.js
 skip script test262/built-ins/Temporal/ZonedDateTime/prototype/since/order-of-operations.js
 skip script test262/built-ins/Temporal/ZonedDateTime/prototype/since/calendar-dateadd-called-with-options-undefined.js
+skip script test262/built-ins/Temporal/ZonedDateTime/prototype/add/order-of-operations.js
+skip script test262/built-ins/Temporal/ZonedDateTime/prototype/subtract/order-of-operations.js
+skip script test262/built-ins/Temporal/ZonedDateTime/prototype/toPlainMonthDay/order-of-operations.js
+skip script test262/built-ins/Temporal/ZonedDateTime/prototype/toPlainYearMonth/order-of-operations.js
 skip script test262/built-ins/Temporal/Duration/compare/relativeto-propertybag-getpossibleinstantsfor-called-with-iso8601-calendar.js
 skip script test262/built-ins/Temporal/Duration/compare/order-of-operations.js
 skip script test262/built-ins/Temporal/Duration/compare/relativeto-propertybag-ambiguous-wall-clock-time.js
