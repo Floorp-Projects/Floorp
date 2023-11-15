@@ -247,11 +247,6 @@ Connection::SetGrowthIncrement(int32_t aIncrement,
 }
 
 NS_IMETHODIMP
-Connection::LoadExtension(const nsACString& aExtensionName,
-                          mozIStorageCompletionCallback* aCallback) {
-  return mBase->LoadExtension(aExtensionName, aCallback);
-}
-NS_IMETHODIMP
 Connection::EnableModule(const nsACString& aModule) {
   return mBase->EnableModule(aModule);
 }

@@ -282,41 +282,6 @@ interface mozIStorageAsyncConnection : nsISupports {
     in AUTF8String aSQLStatement,
     [optional] in mozIStorageStatementCallback aCallback);
 
-
-  /**
-   * Loads a Sqlite Run-Time Loadable Extension as defined at
-   * https://www.sqlite.org/loadext.html.
-   * Only a predetermined list of extensions can be loaded, that are statically
-   * linked in the shared library containing SQLite. The currently supported
-   * extensions are:
-   *   - fts5
-   *     A Full-Text search module, see https://www.sqlite.org/fts5.html
-   *
-   * New extensions can be added to the third_party/sqlite3/ext/ folder and then
-   * to this list, after a Storage peer has reviewed the request by verifying
-   * licensing, and code reliability.
-   * Extensions that must be loaded for all the connections should instead use
-   * sqlite3_auto_extension() (this must happen after sqlite3_config(), as it
-   * implicitly calls sqlite3_initialize()).
-   *
-   * @param aExtensionName
-   *        The extension to load, see the above list for supported values.
-   * @param aCallback
-   *        A callback that will be notified when the operation is complete,
-   *        with the following arguments:
-   *        - status: the status of the operation, use this to check if loading
-   *          the extension was successful as it may be partly asynchronous.
-   *        - value: unused.
-   * @throws NS_ERROR_INVALID_ARG
-   *         For unsupported extension names.
-   * @throws NS_ERROR_NOT_INITIALIZED
-   *         If the connection is not open.
-   * @throws NS_ERROR_UEXPECTED
-   *         If it was not possible to enable extensions loading.
-   */
-  void loadExtension(in AUTF8String aExtensionName,
-                     [optional] in mozIStorageCompletionCallback aCallback);
-
   //////////////////////////////////////////////////////////////////////////////
   //// Functions
 
