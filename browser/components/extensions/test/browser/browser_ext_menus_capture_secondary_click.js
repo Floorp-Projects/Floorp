@@ -118,7 +118,14 @@ add_task(async function test_disabled_item() {
   for (let button of [0, 1, 2]) {
     const menu = await openContextMenu();
     const items = menu.getElementsByAttribute("label", "disabled_item");
+    // We intentionally turn off this a11y check, because the following click
+    // is targeting a disabled control to confirm the click event won't come through.
+    // It is not meant to be interactive and is not expected to be accessible:
+    AccessibilityUtils.setEnv({
+      mustBeEnabled: false,
+    });
     await EventUtils.synthesizeMouseAtCenter(items[0], { button });
+    AccessibilityUtils.resetEnv();
     await closeContextMenu();
     await extension.awaitMessage("onHidden");
   }

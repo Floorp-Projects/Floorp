@@ -244,11 +244,18 @@ add_task(async function testBrowserActionDisabled() {
     }
   );
 
+  // We intentionally turn off a11y_checks, because the following click
+  // is targeting a disabled control to confirm the click event won't come through.
+  // It is not meant to be interactive and is not expected to be accessible:
+  AccessibilityUtils.setEnv({
+    mustBeEnabled: false,
+  });
   EventUtils.synthesizeMouseAtCenter(
     widget.node,
     { type: "mouseup", button: 0 },
     window
   );
+  AccessibilityUtils.resetEnv();
 
   await mouseUpPromise;
 
