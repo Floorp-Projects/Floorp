@@ -760,7 +760,7 @@ function createRecordsForLanguagePair(fromLang, toLang) {
       fromLang,
       toLang,
       fileType,
-      version: "1.0",
+      version: TranslationsParent.LANGUAGE_MODEL_MAJOR_VERSION + ".0",
       last_modified: Date.now(),
       schema: Date.now(),
     });
@@ -820,7 +820,7 @@ async function createTranslationsWasmRemoteClient(
   const records = ["bergamot-translator"].map(name => ({
     id: crypto.randomUUID(),
     name,
-    version: "1.0",
+    version: TranslationsParent.BERGAMOT_MAJOR_VERSION + ".0",
     last_modified: Date.now(),
     schema: Date.now(),
   }));

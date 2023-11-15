@@ -153,6 +153,21 @@ const VERIFY_SIGNATURES_FROM_FS = false;
  */
 export class TranslationsParent extends JSWindowActorParent {
   /**
+   * The following constants control the major version for assets downloaded from
+   * Remote Settings. When a breaking change is introduced, Nightly will have these
+   * numbers incremented by one, but Beta and Release will still be on the previous
+   * version. Remote Settings will ship both versions of the records, and the latest
+   * asset released in that version will be used. For instance, with a major version
+   * of "1", assets can be downloaded for "1.0", "1.2", "1.3beta", but assets marked
+   * as "2.0", "2.1", etc will not be downloaded.
+   *
+   * Release docs:
+   * https://firefox-source-docs.mozilla.org/toolkit/components/translations/resources/03_bergamot.html
+   */
+  static BERGAMOT_MAJOR_VERSION = 1;
+  static LANGUAGE_MODEL_MAJOR_VERSION = 1;
+
+  /**
    * Contains the state that would affect UI. Anytime this state is changed, a dispatch
    * event is sent so that UI can react to it. The actor is inside of /toolkit and
    * needs a way of notifying /browser code (or other users) of when the state changes.
@@ -1121,7 +1136,7 @@ export class TranslationsParent extends JSWindowActorParent {
   }
 
   /**
-   * Retrieves the maximum version of each record in the RemoteSettingsClient.
+   * Retrieves the maximum major version of each record in the RemoteSettingsClient.
    *
    * If the client contains two different-version copies of the same record (e.g. 1.0 and 1.1)
    * then only the 1.1-version record will be returned in the resulting collection.
@@ -1142,8 +1157,11 @@ export class TranslationsParent extends JSWindowActorParent {
    */
   static async getMaxVersionRecords(
     remoteSettingsClient,
-    { filters = {}, lookupKey = record => record.name } = {}
+    { filters = {}, majorVersion, lookupKey = record => record.name } = {}
   ) {
+    if (!majorVersion) {
+      throw new Error("Expected the records to have a major version.");
+    }
     try {
       await chaosMode(1 / 4);
     } catch (_error) {
@@ -1172,20 +1190,47 @@ export class TranslationsParent extends JSWindowActorParent {
 
     // Create a mapping to only the max version of each record discriminated by
     // the result of the lookupKey() function.
-    const maxVersionRecordMap = retrievedRecords.reduce((records, record) => {
-      const key = lookupKey(record);
-      const existing = records.get(key);
-      if (
-        !existing ||
-        // existing version less than record version
-        Services.vc.compare(existing.version, record.version) < 0
-      ) {
-        records.set(key, record);
-      }
-      return records;
-    }, new Map());
+    const keyToRecord = new Map();
 
-    return Array.from(maxVersionRecordMap.values());
+    for (const record of retrievedRecords) {
+      const key = lookupKey(record);
+      const existing = keyToRecord.get(key);
+
+      if (!record.version) {
+        lazy.console.error(record);
+        throw new Error("Expected the record to have a version.");
+      }
+      if (
+        TranslationsParent.isBetterRecordVersion(
+          majorVersion,
+          record.version,
+          existing?.version
+        )
+      ) {
+        keyToRecord.set(key, record);
+      }
+    }
+
+    return Array.from(keyToRecord.values());
+  }
+
+  /**
+   * Applies the constraint of matching for the best matching major version.
+   *
+   * @param {number} majorVersion
+   * @param {string} nextVersion
+   * @param {string} [existingVersion]
+   *
+   */
+  static isBetterRecordVersion(majorVersion, nextVersion, existingVersion) {
+    return (
+      // Check that this is a major version record we can support.
+      Services.vc.compare(`${majorVersion}.0a`, nextVersion) <= 0 &&
+      Services.vc.compare(`${majorVersion + 1}.0a`, nextVersion) > 0 &&
+      // Check that the new record is bigger version number
+      (!existingVersion ||
+        Services.vc.compare(existingVersion, nextVersion) < 0)
+    );
   }
 
   /**
@@ -1209,6 +1254,7 @@ export class TranslationsParent extends JSWindowActorParent {
         /** @type {TranslationModelRecord[]} */
         const translationModelRecords =
           await TranslationsParent.getMaxVersionRecords(client, {
+            majorVersion: TranslationsParent.LANGUAGE_MODEL_MAJOR_VERSION,
             // Names in this collection are not unique, so we are appending the languagePairKey
             // to guarantee uniqueness.
             lookupKey: record =>
@@ -1391,6 +1437,7 @@ export class TranslationsParent extends JSWindowActorParent {
           client,
           {
             filters: { name: "bergamot-translator" },
+            majorVersion: TranslationsParent.BERGAMOT_MAJOR_VERSION,
           }
         );
 
@@ -1410,7 +1457,12 @@ export class TranslationsParent extends JSWindowActorParent {
             wasmRecords
           );
         }
-        return wasmRecords[0];
+        const [record] = wasmRecords;
+        lazy.console.log(
+          `Using ${record.name}@${record.release} release version ${record.version} first released on Fx${record.fx_release}`,
+          record
+        );
+        return record;
       })();
     }
     // Unlike the models, greedily download the wasm. It will pull it from a locale
