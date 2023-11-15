@@ -160,11 +160,7 @@ See [Development](https://github.com/Floorp-Projects/Floorp/wiki/developers-gett
 
 ### 📝 Translating
 
-- We want to support as many languages as possible. If you want to translate Floorp Browser, please clone the [l10n-central](https://github.com/Floorp-Projects/l10n-Central) repository.
-
-- English is the main language. If you want to translate Floorp Browser, please translate from English (en-US)
-
-- Floorp's English file is located in the [Floorp-Strings](https://github.com/Floorp-Projects/Floorp-Strings) repository.
+- We want to support as many languages as possible. If you want to translate Floorp Browser, please visit the [Unified-l10n-central](https://github.com/Floorp-Projects/Unified-l10n-Central) repository. In there, you can get some informations.
 
 ### 🐛 Reporting Bugs
 
