@@ -2784,12 +2784,21 @@ Cell* js::gc::UninlinedForwarded(const Cell* cell) { return Forwarded(cell); }
 
 namespace js::debug {
 
-MarkInfo GetMarkInfo(Cell* rawCell) {
-  if (!rawCell->isTenured()) {
+MarkInfo GetMarkInfo(void* vp) {
+  GCRuntime& gc = TlsGCContext.get()->runtime()->gc;
+  if (gc.nursery().isInside(vp)) {
     return MarkInfo::NURSERY;
   }
 
-  TenuredCell* cell = &rawCell->asTenured();
+  if (!gc.isPointerWithinTenuredCell(vp)) {
+    return MarkInfo::UNKNOWN;
+  }
+
+  if (!IsCellPointerValid(vp)) {
+    return MarkInfo::UNKNOWN;
+  }
+
+  TenuredCell* cell = reinterpret_cast<TenuredCell*>(vp);
   if (cell->isMarkedGray()) {
     return MarkInfo::GRAY;
   }
