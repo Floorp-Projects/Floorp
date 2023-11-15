@@ -411,6 +411,52 @@ SectionEnd
 ################################################################################
 # Uninstall Sections
 
+/**
+ * Deletes the registry keys for a protocol handler but only if those registry
+ * keys were pointed to the installation being uninstalled.
+ * Does this with both the HKLM and the HKCU registry entries.
+ *
+ * @param   _PROTOCOL
+ *          The protocol to delete the registry keys for
+ */
+!macro DeleteProtocolRegistryIfSetToInstallation _PROTOCOL
+  Push $0
+
+  ; Check if there is a protocol handler registered by fetching the DefaultIcon value
+  ; in the registry.
+  ; If there is something registered for the icon, it will be the path to the executable,
+  ; plus a comma and a number for the id of the resource for the icon.
+  ; Use StrCpy with -2 to remove the comma and the resource id so that
+  ; the whole path to the executable can be compared against what's being
+  ; uninstalled.
+
+  ; Do all of that twice, once for the local machine and once for the current user
+
+  ; Remove protocol handlers
+  ClearErrors
+  ReadRegStr $0 HKLM "Software\Classes\${_PROTOCOL}\DefaultIcon" ""
+  ${If} $0 != ""
+    StrCpy $0 $0 -2
+    ${If} $0 == "$INSTDIR\${FileMainEXE}"
+      DeleteRegKey HKLM "Software\Classes\${_PROTOCOL}"
+    ${EndIf}
+  ${EndIf}
+
+  ClearErrors
+  ReadRegStr $0 HKCU "Software\Classes\${_PROTOCOL}\DefaultIcon" ""
+  ${If} $0 != ""
+    StrCpy $0 $0 -2
+    ${If} $0 == "$INSTDIR\${FileMainEXE}"
+      DeleteRegKey HKCU "Software\Classes\${_PROTOCOL}"
+    ${EndIf}
+  ${EndIf}
+
+  ClearErrors
+
+  Pop $0
+!macroend
+!define DeleteProtocolRegistryIfSetToInstallation '!insertmacro DeleteProtocolRegistryIfSetToInstallation'
+
 Section "Uninstall"
   SetDetailsPrint textonly
   DetailPrint $(STATUS_UNINSTALL_MAIN)
@@ -522,6 +568,11 @@ Section "Uninstall"
 
   ; Clean up "launch on login" registry key for this installation.
   DeleteRegValue HKCU "Software\Microsoft\Windows\CurrentVersion\Run" "Mozilla-${AppName}-$AppUserModelID"
+
+  ; Remove dual browser extension protocol handlers
+  ${DeleteProtocolRegistryIfSetToInstallation} "firefox"
+  ${DeleteProtocolRegistryIfSetToInstallation} "firefox-private"
+
   ; Remove old protocol handler and StartMenuInternet keys without install path
   ; hashes, but only if they're for this installation.  We've never supported
   ; bare FirefoxPDF.
