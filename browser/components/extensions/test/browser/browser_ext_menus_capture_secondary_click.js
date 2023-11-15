@@ -72,8 +72,13 @@ add_task(async function test_submenu() {
     const parentItem = menu.getElementsByAttribute("label", "parent")[0];
     const submenu = await openSubmenu(parentItem);
     const childItem = submenu.firstElementChild;
-    // This should not trigger a click event.
+    // This should not trigger a click event, thus we intentionally turn off
+    // this a11y check as <menu> containers are not expected to be interactive.
+    AccessibilityUtils.setEnv({
+      mustHaveAccessibleRule: false,
+    });
     await EventUtils.synthesizeMouseAtCenter(parentItem, { button });
+    AccessibilityUtils.resetEnv();
     await closeExtensionContextMenu(childItem, { button });
     is(
       await extension.awaitMessage("clicked_button"),
