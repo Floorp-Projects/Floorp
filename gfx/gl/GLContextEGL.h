@@ -148,8 +148,8 @@ class GLContextEGL final : public GLContext {
       gfx::IntSize& pbsize);
 
 #ifdef MOZ_WAYLAND
-  static EGLSurface CreateWaylandBufferSurface(EglDisplay&, EGLConfig,
-                                               gfx::IntSize& pbsize);
+  static EGLSurface CreateWaylandOffscreenSurface(EglDisplay&, EGLConfig,
+                                                  gfx::IntSize& pbsize);
 #endif
 
  public:
