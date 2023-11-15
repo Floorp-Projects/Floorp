@@ -464,7 +464,8 @@ void SVGPathSegUtils::TraversePathSegment(const StylePathCommand& aCommand,
       break;
     }
     case StylePathCommand::Tag::QuadBezierCurveTo: {
-      const bool isRelative = aCommand.curve_to.absolute == StyleIsAbsolute::No;
+      const bool isRelative =
+          aCommand.quad_bezier_curve_to.absolute == StyleIsAbsolute::No;
       Point to =
           isRelative
               ? aState.pos +
@@ -556,10 +557,11 @@ void SVGPathSegUtils::TraversePathSegment(const StylePathCommand& aCommand,
       break;
     }
     case StylePathCommand::Tag::SmoothQuadBezierCurveTo: {
-      Point to = aCommand.smooth_curve_to.absolute == StyleIsAbsolute::Yes
-                     ? aCommand.smooth_curve_to.point.ConvertsToGfxPoint()
-                     : aState.pos +
-                           aCommand.smooth_curve_to.point.ConvertsToGfxPoint();
+      Point to =
+          aCommand.smooth_quad_bezier_curve_to.absolute == StyleIsAbsolute::Yes
+              ? aCommand.smooth_quad_bezier_curve_to.point.ConvertsToGfxPoint()
+              : aState.pos + aCommand.smooth_quad_bezier_curve_to.point
+                                 .ConvertsToGfxPoint();
       if (aState.ShouldUpdateLengthAndControlPoints()) {
         Point cp = aState.pos - (aState.cp1 - aState.pos);
         aState.length += (float)CalcLengthOfQuadraticBezier(aState.pos, cp, to);
