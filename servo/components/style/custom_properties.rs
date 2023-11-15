@@ -917,7 +917,15 @@ impl<'a, 'b: 'a> CustomPropertiesBuilder<'a, 'b> {
                         ) {
                             map.insert(custom_registration, name.clone(), value);
                         } else {
-                            map.remove(custom_registration, name);
+                            let inherited = self.computed_context.inherited_custom_properties();
+                            let is_root_element = self.computed_context.is_root_element();
+                            handle_invalid_at_computed_value_time(
+                                name,
+                                map,
+                                inherited,
+                                self.stylist,
+                                is_root_element,
+                            );
                         }
                         return;
                     }
