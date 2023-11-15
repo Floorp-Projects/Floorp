@@ -27,7 +27,6 @@ support-files = [
   "!/dom/canvas/test/webgl-mochitest/webgl-util.js",
   "!/dom/media/test/manifest.js",
   "!/dom/media/test/seek.webm",
-  "!/dom/media/test/sin-441-1s-44100.flac",
   "!/dom/media/test/gizmo.mp4",
   "!/docshell/test/navigation/blank.html",
 ]
