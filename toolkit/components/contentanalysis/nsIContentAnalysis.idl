@@ -5,6 +5,8 @@
 
 #include "nsISupports.idl"
 
+webidl WindowGlobalParent;
+
 [scriptable, uuid(06e6a60f-3a2b-41fa-a63b-fea7a7f71649)]
 interface nsIContentAnalysisAcknowledgement : nsISupports
 {
@@ -48,12 +50,15 @@ interface nsIContentAnalysisResponse : nsISupports
   [infallible] readonly attribute unsigned long action;
   [infallible] readonly attribute boolean shouldAllowContent;
 
+  // Identifier for the corresponding nsIContentAnalysisRequest
+  readonly attribute ACString requestToken;
+
   /**
    * Acknowledge receipt of an analysis response.
    * Should always be called after successful resolution of the promise
    * from AnalyzeContentRequest.
    */
-  void Acknowledge(in nsIContentAnalysisAcknowledgement aCaa);
+  void acknowledge(in nsIContentAnalysisAcknowledgement aCaa);
 };
 
 [scriptable, uuid(48d31df1-204d-42ce-a57f-f156bb870d89)]
@@ -104,6 +109,13 @@ interface nsIContentAnalysisRequest : nsISupports
 
   readonly attribute unsigned long analysisType;
 
+  // Enumeration of what operation is happening, to be displayed to the user
+  const unsigned long OPERATION_CUSTOMDISPLAYSTRING = 0;
+  const unsigned long OPERATION_CLIPBOARD = 1;
+  const unsigned long OPERATION_DROPPEDTEXT = 2;
+  readonly attribute unsigned long operationTypeForDisplay;
+  readonly attribute AString operationDisplayString;
+
   // Text content to analyze.  Only one of textContent or filePath is defined.
   readonly attribute AString textContent;
 
@@ -122,6 +134,12 @@ interface nsIContentAnalysisRequest : nsISupports
 
   // Email address of user.
   readonly attribute AString email;
+
+  // Unique identifier for this request
+  readonly attribute ACString requestToken;
+
+  // The window associated with this request
+  readonly attribute WindowGlobalParent windowGlobalParent;
 };
 
 [scriptable, builtinclass, uuid(9679545f-4256-4c90-9654-90292c355d25)]
@@ -169,11 +187,11 @@ interface nsIContentAnalysis : nsISupports
    * See @nsIContentAnalysisResponse.
    */
   [implicit_jscontext]
-  Promise AnalyzeContentRequest(in nsIContentAnalysisRequest aCar);
+  Promise analyzeContentRequest(in nsIContentAnalysisRequest aCar);
 
   /**
    * Same functionality as AnalyzeContentRequest(), but more convenient to call
    * from C++ since it takes a callback instead of returning a Promise.
    */
-  void AnalyzeContentRequestCallback(in nsIContentAnalysisRequest aCar, in nsIContentAnalysisCallback callback);
+  void analyzeContentRequestCallback(in nsIContentAnalysisRequest aCar, in nsIContentAnalysisCallback callback);
 };

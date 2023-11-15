@@ -12,9 +12,15 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/Logging.h"
 #include "mozilla/ScopeExit.h"
+#include "mozilla/Services.h"
 #include "mozilla/StaticPrefs_browser.h"
 #include "nsAppRunner.h"
+#include "nsComponentManagerUtils.h"
+#include "nsIClassInfoImpl.h"
+#include "nsIFile.h"
 #include "nsIGlobalObject.h"
+#include "nsIObserverService.h"
+#include "ScopedNSSTypes.h"
 #include "xpcpublic.h"
 
 #include <algorithm>
@@ -47,12 +53,19 @@ nsresult MakePromise(JSContext* aCx, RefPtr<mozilla::dom::Promise>* aPromise) {
   return NS_OK;
 }
 
-std::string GenerateRequestToken() {
-  static std::atomic<uint32_t> count = 0;
-  uint32_t tokenValue = count.fetch_add(1, std::memory_order_relaxed);
-  std::stringstream stm;
-  stm << std::hex << base::GetCurrentProcId() << "-" << tokenValue;
-  return stm.str();
+nsCString GenerateRequestToken() {
+  nsID id = nsID::GenerateUUID();
+  return nsCString(id.ToString().get());
+}
+
+static nsresult GetFileDisplayName(const nsString& aFilePath,
+                                   nsString& aFileDisplayName) {
+  nsresult rv;
+  nsCOMPtr<nsIFile> file = do_CreateInstance("@mozilla.org/file/local;1", &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = file->InitWithPath(aFilePath);
+  NS_ENSURE_SUCCESS(rv, rv);
+  return file->GetDisplayName(aFileDisplayName);
 }
 
 }  // anonymous namespace
@@ -105,6 +118,32 @@ ContentAnalysisRequest::GetResources(
   return NS_OK;
 }
 
+NS_IMETHODIMP
+ContentAnalysisRequest::GetRequestToken(nsACString& aRequestToken) {
+  aRequestToken = mRequestToken;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ContentAnalysisRequest::GetOperationTypeForDisplay(uint32_t* aOperationType) {
+  *aOperationType = mOperationTypeForDisplay;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ContentAnalysisRequest::GetOperationDisplayString(
+    nsAString& aOperationDisplayString) {
+  aOperationDisplayString = mOperationDisplayString;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+ContentAnalysisRequest::GetWindowGlobalParent(
+    dom::WindowGlobalParent** aWindowGlobalParent) {
+  NS_IF_ADDREF(*aWindowGlobalParent = mWindowGlobalParent);
+  return NS_OK;
+}
+
 /* static */
 StaticDataMutex<UniquePtr<content_analysis::sdk::Client>>
     ContentAnalysis::sCaClient("ContentAnalysisClient");
@@ -126,19 +165,29 @@ nsresult ContentAnalysis::EnsureContentAnalysisClient() {
   return caClient ? NS_OK : NS_ERROR_NOT_AVAILABLE;
 }
 
-ContentAnalysisRequest::ContentAnalysisRequest(unsigned long aAnalysisType,
-                                               nsString&& aString,
-                                               bool aStringIsFilePath,
-                                               nsCString&& aSha256Digest,
-                                               nsString&& aUrl)
+ContentAnalysisRequest::ContentAnalysisRequest(
+    unsigned long aAnalysisType, nsString&& aString, bool aStringIsFilePath,
+    nsCString&& aSha256Digest, nsString&& aUrl, unsigned long aResourceNameType,
+    dom::WindowGlobalParent* aWindowGlobalParent)
     : mAnalysisType(aAnalysisType),
       mUrl(std::move(aUrl)),
-      mSha256Digest(std::move(aSha256Digest)) {
+      mSha256Digest(std::move(aSha256Digest)),
+      mWindowGlobalParent(aWindowGlobalParent) {
   if (aStringIsFilePath) {
     mFilePath = std::move(aString);
   } else {
     mTextContent = std::move(aString);
   }
+  mOperationTypeForDisplay = aResourceNameType;
+  if (mOperationTypeForDisplay == OPERATION_CUSTOMDISPLAYSTRING) {
+    MOZ_ASSERT(aStringIsFilePath);
+    nsresult rv = GetFileDisplayName(mFilePath, mOperationDisplayString);
+    if (NS_FAILED(rv)) {
+      mOperationDisplayString = u"file";
+    }
+  }
+
+  mRequestToken = GenerateRequestToken();
 }
 
 static nsresult ConvertToProtobuf(
@@ -171,8 +220,10 @@ static nsresult ConvertToProtobuf(
       static_cast<content_analysis::sdk::AnalysisConnector>(analysisType);
   aOut->set_analysis_connector(connector);
 
-  std::string requestToken = GenerateRequestToken();
-  aOut->set_request_token(requestToken);
+  nsCString requestToken;
+  rv = aIn->GetRequestToken(requestToken);
+  NS_ENSURE_SUCCESS(rv, rv);
+  aOut->set_request_token(requestToken.get(), requestToken.Length());
 
   const std::string tag = "dlp";  // TODO:
   *aOut->add_tags() = tag;
@@ -338,8 +389,13 @@ ContentAnalysisResponse::ContentAnalysisResponse(
     mAction = nsIContentAnalysisResponse::ALLOW;
   }
 
-  mRequestToken = aResponse.request_token();
+  const auto& requestToken = aResponse.request_token();
+  mRequestToken.Assign(requestToken.data(), requestToken.size());
 }
+
+ContentAnalysisResponse::ContentAnalysisResponse(
+    unsigned long aAction, const nsACString& aRequestToken)
+    : mAction(aAction), mRequestToken(aRequestToken) {}
 
 /* static */
 already_AddRefed<ContentAnalysisResponse> ContentAnalysisResponse::FromProtobuf(
@@ -355,6 +411,22 @@ already_AddRefed<ContentAnalysisResponse> ContentAnalysisResponse::FromProtobuf(
   }
 
   return ret.forget();
+}
+
+/* static */
+RefPtr<ContentAnalysisResponse> ContentAnalysisResponse::FromAction(
+    unsigned long aAction, const nsACString& aRequestToken) {
+  if (aAction == nsIContentAnalysisResponse::ACTION_UNSPECIFIED) {
+    return nullptr;
+  }
+  return RefPtr<ContentAnalysisResponse>(
+      new ContentAnalysisResponse(aAction, aRequestToken));
+}
+
+NS_IMETHODIMP
+ContentAnalysisResponse::GetRequestToken(nsACString& aRequestToken) {
+  aRequestToken = mRequestToken;
+  return NS_OK;
 }
 
 static void LogResponse(
@@ -398,9 +470,9 @@ static void LogResponse(
 }
 
 static nsresult ConvertToProtobuf(
-    nsIContentAnalysisAcknowledgement* aIn, const std::string& aRequestToken,
+    nsIContentAnalysisAcknowledgement* aIn, const nsACString& aRequestToken,
     content_analysis::sdk::ContentAnalysisAcknowledgement* aOut) {
-  aOut->set_request_token(aRequestToken);
+  aOut->set_request_token(aRequestToken.Data(), aRequestToken.Length());
 
   uint32_t result;
   nsresult rv = aIn->GetResult(&result);
@@ -484,8 +556,10 @@ NS_IMETHODIMP ContentAnalysisResult::GetShouldAllowContent(
   return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS(ContentAnalysisRequest, nsIContentAnalysisRequest);
-NS_IMPL_ISUPPORTS(ContentAnalysisResponse, nsIContentAnalysisResponse);
+NS_IMPL_CLASSINFO(ContentAnalysisRequest, nullptr, 0, {0});
+NS_IMPL_ISUPPORTS_CI(ContentAnalysisRequest, nsIContentAnalysisRequest);
+NS_IMPL_CLASSINFO(ContentAnalysisResponse, nullptr, 0, {0});
+NS_IMPL_ISUPPORTS_CI(ContentAnalysisResponse, nsIContentAnalysisResponse);
 NS_IMPL_ISUPPORTS(ContentAnalysisCallback, nsIContentAnalysisCallback);
 NS_IMPL_ISUPPORTS(ContentAnalysisResult, nsIContentAnalysisResult);
 NS_IMPL_ISUPPORTS(ContentAnalysis, nsIContentAnalysis);
@@ -545,12 +619,16 @@ nsresult ContentAnalysis::RunAnalyzeRequestTask(
   LOGD("Issuing ContentAnalysisRequest");
   LogRequest(&pbRequest);
 
+  nsCString requestToken;
+  rv = aRequest->GetRequestToken(requestToken);
+  NS_ENSURE_SUCCESS(rv, rv);
+
   // The content analysis connection is synchronous so run in the background.
   rv = NS_DispatchBackgroundTask(
       NS_NewRunnableFunction(
           "RunAnalyzeRequestTask",
           [pbRequest = std::move(pbRequest), aCallback = std::move(aCallback),
-           owner] {
+           requestToken = std::move(requestToken), owner] {
             nsresult rv = NS_ERROR_FAILURE;
             content_analysis::sdk::ContentAnalysisResponse pbResponse;
 
@@ -558,14 +636,21 @@ nsresult ContentAnalysis::RunAnalyzeRequestTask(
               NS_DispatchToMainThread(NS_NewRunnableFunction(
                   "ResolveOnMainThread",
                   [rv, owner, aCallback = std::move(aCallback),
-                   pbResponse = std::move(pbResponse)]() mutable {
+                   pbResponse = std::move(pbResponse), requestToken]() mutable {
                     if (NS_SUCCEEDED(rv)) {
-                      LOGD("Content analysis resolving response promise");
+                      LOGD(
+                          "Content analysis resolving response promise for "
+                          "token %s",
+                          requestToken.get());
                       RefPtr<ContentAnalysisResponse> response =
                           ContentAnalysisResponse::FromProtobuf(
                               std::move(pbResponse));
                       if (response) {
                         response->SetOwner(owner);
+                        nsCOMPtr<nsIObserverService> obsServ =
+                            mozilla::services::GetObserverService();
+                        obsServ->NotifyObservers(response, "dlp-response",
+                                                 nullptr);
                         aCallback->ContentResult(response);
                       } else {
                         aCallback->Error(NS_ERROR_FAILURE);
@@ -629,8 +714,11 @@ ContentAnalysis::AnalyzeContentRequestCallback(
     return NS_ERROR_NOT_AVAILABLE;
   }
 
-  rv = RunAnalyzeRequestTask(aRequest, aCallback);
+  nsCOMPtr<nsIObserverService> obsServ =
+      mozilla::services::GetObserverService();
+  obsServ->NotifyObservers(aRequest, "dlp-request-made", nullptr);
 
+  rv = RunAnalyzeRequestTask(aRequest, aCallback);
   return rv;
 }
 
@@ -643,7 +731,7 @@ ContentAnalysisResponse::Acknowledge(
 
 nsresult ContentAnalysis::RunAcknowledgeTask(
     nsIContentAnalysisAcknowledgement* aAcknowledgement,
-    const std::string& aRequestToken) {
+    const nsACString& aRequestToken) {
   bool isActive;
   nsresult rv = GetIsActive(&isActive);
   NS_ENSURE_SUCCESS(rv, rv);
