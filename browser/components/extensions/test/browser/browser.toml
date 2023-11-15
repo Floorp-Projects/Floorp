@@ -83,7 +83,6 @@ skip-if = [
 skip-if = ["os == 'linux'"] # bug 1369197
 
 ["browser_ext_browserAction_disabled.js"]
-fail-if = ["a11y_checks"] # Bug 1854460 clicked unified-extensions-item-action-button(s) may not be accessible
 
 ["browser_ext_browserAction_experiment.js"]
 
@@ -102,7 +101,6 @@ fail-if = ["a11y_checks"] # Bug 1854460 clicked unified-extensions-item-action-b
 ["browser_ext_browserAction_popup_port.js"]
 
 ["browser_ext_browserAction_popup_preload.js"]
-fail-if = ["a11y_checks"] # Bug 1854460 clicked body and unified-extensions-item-action-button may not be accessible
 skip-if = [
   "os == 'win' && !debug",
   "verify && debug && os == 'mac'", # bug 1352668
@@ -262,7 +260,6 @@ https_first_disabled = true
 ["browser_ext_menus_activeTab.js"]
 
 ["browser_ext_menus_capture_secondary_click.js"]
-fail-if = ["a11y_checks"] # Bug 1854460 clicked menuitem(s) may not be accessible
 
 ["browser_ext_menus_errors.js"]
 
