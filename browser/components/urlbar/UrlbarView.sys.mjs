@@ -1815,17 +1815,6 @@ export class UrlbarView {
             });
           };
           title.toggleAttribute("is-url", true);
-
-          let label = { id: "urlbar-result-action-visit-from-clipboard" };
-          this.#l10nCache.ensure(label).then(() => {
-            let { value } = this.#l10nCache.get(label);
-
-            // We don't have to unset these attributes because, excluding heuristic results,
-            // we never reuse results from different providers. Thus clipboard results can
-            // only be reused by other clipboard results.
-            title.setAttribute("aria-label", `${value}, ${title.innerText}`);
-            action.setAttribute("aria-hidden", "true");
-          });
           break;
         }
       // fall-through
