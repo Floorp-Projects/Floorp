@@ -17,6 +17,8 @@
   });
 
   await runTestWhenReady(async () => {
+    // Reduce noise for when --use-test-media-devices is not in use.
+    await SpecialPowers.pushPrefEnv({ set: [[ "media.volume_scale", "0.0" ]] });
     /**
      * Get two HTMLMediaElements:
      * - One playing a sine tone from a blob (of an opus file created on the fly)
@@ -34,48 +36,68 @@
      * can check that the spectrum of the capture stream contains three
      * components with a high magnitude.
      */
-    const wavtone = createMediaElement("audio", "WaveTone");
+    const decodedTone = createMediaElement("audio", "decodedTone");
+    decodedTone.muted = false;
+    const decodedToneMuted = createMediaElement("audio", "decodedToneMuted");
     const acTone = createMediaElement("audio", "audioContextTone");
+    acTone.muted = false;
+    const acToneMuted = createMediaElement("audio", "audioContextToneMuted");
     const ac = new AudioContext();
     const constraints = {audio: {mediaSource: "audioCapture"}};
     const stream = await getUserMedia(constraints);
     const analyser = new AudioStreamAnalyser(ac, stream);
 
-    const oscThroughMediaElement = ac.createOscillator();
-    oscThroughMediaElement.frequency.value = analyser.frequencyForBinIndex(200);
+    const osc200 = ac.createOscillator();
+    osc200.frequency.value = analyser.frequencyForBinIndex(200);
+    const osc250 = ac.createOscillator();
+    osc250.frequency.value = analyser.frequencyForBinIndex(250);
     const oscThroughAudioDestinationNode = ac.createOscillator();
     oscThroughAudioDestinationNode.frequency.value =
       analyser.frequencyForBinIndex(100);
-    const msDest = ac.createMediaStreamDestination();
+    const msDest200 = ac.createMediaStreamDestination();
+    const msDest250 = ac.createMediaStreamDestination();
 
-    oscThroughMediaElement.connect(msDest);
+    osc200.connect(msDest200);
+    osc250.connect(msDest250);
     oscThroughAudioDestinationNode.connect(ac.destination);
 
-    acTone.srcObject = msDest.stream;
+    acTone.srcObject = msDest200.stream;
+    acToneMuted.srcObject = msDest250.stream;
 
-    wavtone.src = "/tests/dom/media/test/sin-441-1s-44100.flac";
-    wavtone.preservesPitch = false;
-    wavtone.playbackRate = analyser.frequencyForBinIndex(20) / 441;
-    ok(wavtone.playbackRate >= 1/16, "within firefox min playback rate");
-    ok(wavtone.playbackRate <= 16, "within firefox max playback rate");
-    oscThroughMediaElement.start();
+    decodedTone.src = "/tests/dom/media/test/sin-441-1s-44100.flac";
+    decodedToneMuted.src = "/tests/dom/media/test/sin-441-1s-44100.flac";
+    decodedTone.preservesPitch = false;
+    decodedToneMuted.preservesPitch = false;
+    decodedTone.playbackRate = analyser.frequencyForBinIndex(20) / 441;
+    ok(decodedTone.playbackRate >= 1/16, "within firefox min playback rate");
+    decodedToneMuted.playbackRate = analyser.frequencyForBinIndex(40) / 441;
+    ok(decodedToneMuted.playbackRate <= 16, "within firefox max playback rate");
+    osc200.start();
+    osc250.start();
     oscThroughAudioDestinationNode.start();
-    wavtone.loop = true;
-    wavtone.play();
+    decodedTone.loop = true;
+    decodedToneMuted.loop = true;
+    decodedTone.play();
+    decodedToneMuted.play();
     acTone.play();
+    acToneMuted.play();
 
+    let frequencyBytes;
     try {
       analyser.enableDebugCanvas();
       await analyser.waitForAnalysisSuccess(array => {
         // We want to find three frequency components here.
         // Frequencies are logarithmic. Also make sure we have low
         // energy in between, not just a flat white noise.
-        return (array[10]  == 0 &&
-                array[20]  == 255 &&
-                array[50]  == 0 &&
-                array[100] == 255 &&
-                array[150] == 0 &&
-                array[200] == 255);
+        if (array[10]  == 0 &&
+            array[20]  == 255 &&
+            array[70]  == 0 &&
+            array[100] == 255 &&
+            array[150] == 0 &&
+            array[200] == 255) {
+          frequencyBytes = new Uint8Array(array);
+          return true;
+        }
       });
     } finally {
       await ac.close();
@@ -83,6 +105,8 @@
         t.stop();
       }
     }
+    todo(frequencyBytes[40] < 50, "muted decoded resource");
+    todo(frequencyBytes[250] < 50, "muted MediaStream srcObject - bug 1864067");
   });
 })();
 </script>
