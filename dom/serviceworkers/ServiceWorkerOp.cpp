@@ -20,6 +20,7 @@
 #include "nsIPushErrorReporter.h"
 #include "nsISupportsImpl.h"
 #include "nsITimer.h"
+#include "nsIURI.h"
 #include "nsServiceManagerUtils.h"
 #include "nsTArray.h"
 #include "nsThreadUtils.h"
@@ -62,7 +63,6 @@
 #include "mozilla/dom/WorkerScope.h"
 #include "mozilla/extensions/ExtensionBrowser.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
-#include "mozilla/net/MozURL.h"
 
 namespace mozilla::dom {
 
@@ -669,7 +669,7 @@ class PushEventOp final : public ExtendableEventOp {
     RootedDictionary<PushEventInit> pushEventInit(aCx);
 
     if (args.data().type() != OptionalPushData::Tvoid_t) {
-      auto& bytes = args.data().get_ArrayOfuint8_t();
+      const auto& bytes = args.data().get_ArrayOfuint8_t();
       JSObject* data = Uint8Array::Create(aCx, bytes, result);
 
       if (result.Failed()) {
@@ -999,9 +999,9 @@ class MessageEventOp final : public ExtendableEventOp {
       init.mPorts = std::move(ports);
     }
 
-    RefPtr<net::MozURL> mozUrl;
-    nsresult result = net::MozURL::Init(
-        getter_AddRefs(mozUrl), mArgs.get_ServiceWorkerMessageEventOpArgs()
+    nsCOMPtr<nsIURI> url;
+    nsresult result = NS_NewURI(getter_AddRefs(url),
+                                mArgs.get_ServiceWorkerMessageEventOpArgs()
                                     .clientInfoAndState()
                                     .info()
                                     .url());
@@ -1011,8 +1011,20 @@ class MessageEventOp final : public ExtendableEventOp {
       return false;
     }
 
+    OriginAttributes attrs;
+    nsCOMPtr<nsIPrincipal> principal =
+        BasePrincipal::CreateContentPrincipal(url, attrs);
+    if (!principal) {
+      return false;
+    }
+
     nsCString origin;
-    mozUrl->Origin(origin);
+    result = principal->GetOriginNoSuffix(origin);
+    if (NS_WARN_IF(NS_FAILED(result))) {
+      RejectAll(result);
+      rv.SuppressException();
+      return false;
+    }
 
     CopyUTF8toUTF16(origin, init.mOrigin);
 
