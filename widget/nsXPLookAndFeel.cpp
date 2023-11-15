@@ -274,13 +274,6 @@ static const char sColorPrefs[][41] = {
     "ui.-moz-mac-defaultbuttontext",
     "ui.-moz-mac-focusring",
     "ui.-moz_mac_disabledtoolbartext",
-    "ui.-moz-mac-menupopup",
-    "ui.-moz-mac-menuitem",
-    "ui.-moz-mac-active-menuitem",
-    "ui.-moz-mac-source-list",
-    "ui.-moz-mac-source-list-selection",
-    "ui.-moz-mac-active-source-list-selection",
-    "ui.-moz-mac-tooltip",
     "ui.accentcolor",
     "ui.accentcolortext",
     "ui.-moz-autofill-background",
@@ -685,13 +678,6 @@ nscolor nsXPLookAndFeel::GetStandinForNativeColor(ColorID aID,
       COLOR(MozOddtreerow, 0xFF, 0xFF, 0xFF)
       COLOR(MozMacFocusring, 0x60, 0x9D, 0xD7)
       COLOR(MozMacDisabledtoolbartext, 0x3F, 0x3F, 0x3F)
-      COLOR(MozMacMenupopup, 0xe6, 0xe6, 0xe6)
-      COLOR(MozMacMenuitem, 0xe6, 0xe6, 0xe6)
-      COLOR(MozMacActiveMenuitem, 0x0a, 0x64, 0xdc)
-      COLOR(MozMacSourceList, 0xf7, 0xf7, 0xf7)
-      COLOR(MozMacSourceListSelection, 0xc8, 0xc8, 0xc8)
-      COLOR(MozMacActiveSourceListSelection, 0x0a, 0x64, 0xdc)
-      COLOR(MozMacTooltip, 0xf7, 0xf7, 0xf7)
       // Seems to be the default color (hardcoded because of bug 1065998)
       COLOR(MozNativehyperlinktext, 0x00, 0x66, 0xCC)
       COLOR(MozNativevisitedhyperlinktext, 0x55, 0x1A, 0x8B)
