@@ -4681,10 +4681,17 @@ void WorkerPrivate::ReportUseCounters() {
 
 void WorkerPrivate::StopSyncLoop(nsIEventTarget* aSyncLoopTarget,
                                  nsresult aResult) {
-  AssertIsOnWorkerThread();
   AssertValidSyncLoop(aSyncLoopTarget);
 
-  MOZ_ASSERT(!mSyncLoopStack.IsEmpty());
+  if (!MaybeStopSyncLoop(aSyncLoopTarget, aResult)) {
+    // TODO: I wonder if we should really ever crash here given the assert.
+    MOZ_CRASH("Unknown sync loop!");
+  }
+}
+
+bool WorkerPrivate::MaybeStopSyncLoop(nsIEventTarget* aSyncLoopTarget,
+                                      nsresult aResult) {
+  AssertIsOnWorkerThread();
 
   for (uint32_t index = mSyncLoopStack.Length(); index > 0; index--) {
     const auto& loopInfo = mSyncLoopStack[index - 1];
@@ -4701,13 +4708,13 @@ void WorkerPrivate::StopSyncLoop(nsIEventTarget* aSyncLoopTarget,
 
       loopInfo->mEventTarget->Disable();
 
-      return;
+      return true;
     }
 
     MOZ_ASSERT(!SameCOMIdentity(loopInfo->mEventTarget, aSyncLoopTarget));
   }
 
-  MOZ_CRASH("Unknown sync loop!");
+  return false;
 }
 
 #ifdef DEBUG

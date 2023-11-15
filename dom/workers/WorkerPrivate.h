@@ -524,6 +524,8 @@ class WorkerPrivate final
 
   void StopSyncLoop(nsIEventTarget* aSyncLoopTarget, nsresult aResult);
 
+  bool MaybeStopSyncLoop(nsIEventTarget* aSyncLoopTarget, nsresult aResult);
+
   void ShutdownModuleLoader();
 
   void ClearPreStartRunnables();

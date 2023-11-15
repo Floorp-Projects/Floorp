@@ -188,10 +188,11 @@ class WorkerScriptLoader : public JS::loader::ScriptLoaderInterface,
  public:
   NS_DECL_THREADSAFE_ISUPPORTS
 
-  WorkerScriptLoader(WorkerPrivate* aWorkerPrivate,
-                     UniquePtr<SerializedStackHolder> aOriginStack,
-                     nsISerialEventTarget* aSyncLoopTarget,
-                     WorkerScriptType aWorkerScriptType, ErrorResult& aRv);
+  static already_AddRefed<WorkerScriptLoader> Create(
+      WorkerPrivate* aWorkerPrivate,
+      UniquePtr<SerializedStackHolder> aOriginStack,
+      nsISerialEventTarget* aSyncLoopTarget, WorkerScriptType aWorkerScriptType,
+      ErrorResult& aRv);
 
   bool CreateScriptRequests(const nsTArray<nsString>& aScriptURLs,
                             const mozilla::Encoding* aDocumentEncoding,
@@ -241,6 +242,10 @@ class WorkerScriptLoader : public JS::loader::ScriptLoaderInterface,
   void ShutdownScriptLoader(bool aResult, bool aMutedError);
 
  private:
+  WorkerScriptLoader(UniquePtr<SerializedStackHolder> aOriginStack,
+                     nsISerialEventTarget* aSyncLoopTarget,
+                     WorkerScriptType aWorkerScriptType, ErrorResult& aRv);
+
   ~WorkerScriptLoader() = default;
 
   NS_IMETHOD

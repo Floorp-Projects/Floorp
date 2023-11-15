@@ -225,8 +225,9 @@ void LoadAllScripts(WorkerPrivate* aWorkerPrivate,
   }
 
   RefPtr<loader::WorkerScriptLoader> loader =
-      new loader::WorkerScriptLoader(aWorkerPrivate, std::move(aOriginStack),
-                                     syncLoopTarget, aWorkerScriptType, aRv);
+      loader::WorkerScriptLoader::Create(
+          aWorkerPrivate, std::move(aOriginStack), syncLoopTarget,
+          aWorkerScriptType, aRv);
 
   if (NS_WARN_IF(aRv.Failed())) {
     return;
@@ -471,7 +472,6 @@ static bool EvaluateSourceBuffer(JSContext* aCx, JS::Handle<JSScript*> aScript,
 }
 
 WorkerScriptLoader::WorkerScriptLoader(
-    WorkerPrivate* aWorkerPrivate,
     UniquePtr<SerializedStackHolder> aOriginStack,
     nsISerialEventTarget* aSyncLoopTarget, WorkerScriptType aWorkerScriptType,
     ErrorResult& aRv)
@@ -481,30 +481,47 @@ WorkerScriptLoader::WorkerScriptLoader(
       mRv(aRv),
       mLoadingModuleRequestCount(0),
       mCleanedUp(false),
-      mCleanUpLock("cleanUpLock") {
+      mCleanUpLock("cleanUpLock") {}
+
+already_AddRefed<WorkerScriptLoader> WorkerScriptLoader::Create(
+    WorkerPrivate* aWorkerPrivate,
+    UniquePtr<SerializedStackHolder> aOriginStack,
+    nsISerialEventTarget* aSyncLoopTarget, WorkerScriptType aWorkerScriptType,
+    ErrorResult& aRv) {
   aWorkerPrivate->AssertIsOnWorkerThread();
 
-  RefPtr<StrongWorkerRef> workerRef =
-      StrongWorkerRef::Create(aWorkerPrivate, "ScriptLoader");
+  RefPtr<WorkerScriptLoader> self = new WorkerScriptLoader(
+      std::move(aOriginStack), aSyncLoopTarget, aWorkerScriptType, aRv);
+
+  RefPtr<StrongWorkerRef> workerRef = StrongWorkerRef::Create(
+      aWorkerPrivate, "WorkerScriptLoader::Create", [self]() {
+        // Requests that are in flight are covered by the worker references
+        // in DispatchLoadScript(s), so we do not need to do additional
+        // cleanup, but just in case we are ready/aborted we can try to
+        // shutdown here, too.
+        self->TryShutdown();
+      });
 
   if (workerRef) {
-    mWorkerRef = new ThreadSafeWorkerRef(workerRef);
+    self->mWorkerRef = new ThreadSafeWorkerRef(workerRef);
   } else {
-    mRv.Throw(NS_ERROR_FAILURE);
-    return;
+    self->mRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
   }
 
-  nsIGlobalObject* global = GetGlobal();
-  mController = global->GetController();
+  nsIGlobalObject* global = self->GetGlobal();
+  self->mController = global->GetController();
 
   if (!StaticPrefs::dom_workers_modules_enabled()) {
-    return;
+    return self.forget();
   }
 
   // Set up the module loader, if it has not been initialzied yet.
   if (!aWorkerPrivate->IsServiceWorker()) {
-    InitModuleLoader();
+    self->InitModuleLoader();
   }
+
+  return self.forget();
 }
 
 ScriptLoadRequest* WorkerScriptLoader::GetMainScript() {
@@ -728,7 +745,8 @@ bool WorkerScriptLoader::DispatchLoadScript(ScriptLoadRequest* aRequest) {
       new ScriptLoaderRunnable(this, std::move(scriptLoadList));
 
   RefPtr<StrongWorkerRef> workerRef = StrongWorkerRef::Create(
-      mWorkerRef->Private(), "ScriptLoader", [runnable]() {
+      mWorkerRef->Private(), "WorkerScriptLoader::DispatchLoadScript",
+      [runnable]() {
         NS_DispatchToMainThread(NewRunnableMethod(
             "ScriptLoaderRunnable::CancelMainThreadWithBindingAborted",
             runnable,
@@ -752,7 +770,8 @@ bool WorkerScriptLoader::DispatchLoadScripts() {
       new ScriptLoaderRunnable(this, std::move(scriptLoadList));
 
   RefPtr<StrongWorkerRef> workerRef = StrongWorkerRef::Create(
-      mWorkerRef->Private(), "ScriptLoader", [runnable]() {
+      mWorkerRef->Private(), "WorkerScriptLoader::DispatchLoadScripts",
+      [runnable]() {
         NS_DispatchToMainThread(NewRunnableMethod(
             "ScriptLoaderRunnable::CancelMainThreadWithBindingAborted",
             runnable,
@@ -857,9 +876,7 @@ bool WorkerScriptLoader::ProcessPendingRequests(JSContext* aCx) {
   MOZ_ASSERT(global);
 
   while (!mLoadedRequests.isEmpty()) {
-    // Take a reference, but do not remove it from the list yet. There is a
-    // possibility that this will need to be cancelled.
-    RefPtr<ScriptLoadRequest> req = mLoadedRequests.getFirst();
+    RefPtr<ScriptLoadRequest> req = mLoadedRequests.StealFirst();
     // We don't have a ProcessRequest method (like we do on the DOM), as there
     // isn't much processing that we need to do per request that isn't related
     // to evaluation (the processsing done for the DOM is handled in
@@ -867,14 +884,13 @@ bool WorkerScriptLoader::ProcessPendingRequests(JSContext* aCx) {
     // So, this inner loop calls EvaluateScript directly. This will change
     // once modules are introduced as we will have some extra work to do.
     if (!EvaluateScript(aCx, req)) {
+      req->Cancel();
       mExecutionAborted = true;
       WorkerLoadContext* loadContext = req->GetWorkerLoadContext();
       mMutedErrorFlag = loadContext->mMutedErrorFlag.valueOr(true);
       mLoadedRequests.CancelRequestsAndClear();
       break;
     }
-    // remove the element from the list.
-    mLoadedRequests.Remove(req);
   }
 
   TryShutdown();
@@ -1327,8 +1343,9 @@ void WorkerScriptLoader::ShutdownScriptLoader(bool aResult, bool aMutedError) {
     mWorkerRef->Private()->AssertIsOnWorkerThread();
     // Module loader doesn't use sync loop for dynamic import
     if (mSyncLoopTarget) {
-      mWorkerRef->Private()->StopSyncLoop(mSyncLoopTarget,
-                                          aResult ? NS_OK : NS_ERROR_FAILURE);
+      mWorkerRef->Private()->MaybeStopSyncLoop(
+          mSyncLoopTarget, aResult ? NS_OK : NS_ERROR_FAILURE);
+      mSyncLoopTarget = nullptr;
     }
 
     // Signal cleanup
