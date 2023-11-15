@@ -15,7 +15,7 @@ NSS 3.57 release notes
 
    -  Khem Raj
 
-.. _distribution_information:
+
 
 `Distribution Information <#distribution_information>`__
 --------------------------------------------------------

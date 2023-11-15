@@ -10,7 +10,7 @@ NSS 3.27.1 release notes
 
    Network Security Services (NSS) 3.27.1 is a patch release for NSS 3.27.
 
-.. _distribution_information:
+
 
 `Distribution Information <#distribution_information>`__
 --------------------------------------------------------

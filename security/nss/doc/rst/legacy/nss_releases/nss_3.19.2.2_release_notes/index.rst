@@ -15,7 +15,7 @@ NSS 3.19.2.2 release notes
    :ref:`mozilla_projects_nss_nss_3_20_2_release_notes`,
    :ref:`mozilla_projects_nss_nss_3_21_release_notes`, or a later release.)
 
-.. _distribution_information:
+
 
 `Distribution Information <#distribution_information>`__
 --------------------------------------------------------

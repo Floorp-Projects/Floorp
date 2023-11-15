@@ -11,7 +11,7 @@ NSS 3.29.2 release notes
    Network Security Services (NSS) 3.29.2 is a patch release for NSS 3.29. The bug fixes in NSS
    3.29.2 are described in the "Bugs Fixed" section below.
 
-.. _distribution_information:
+
 
 `Distribution Information <#distribution_information>`__
 --------------------------------------------------------

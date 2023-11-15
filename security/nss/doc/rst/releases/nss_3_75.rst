@@ -11,7 +11,7 @@ NSS 3.75 release notes
    Network Security Services (NSS) 3.75 was released on **3 February 2022**.
 
 
-.. _distribution_information:
+
 
 `Distribution Information <#distribution_information>`__
 --------------------------------------------------------

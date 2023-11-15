@@ -11,7 +11,7 @@ NSS 3.89.1 release notes
    Network Security Services (NSS) 3.89.1 was released on *5th May 2023**.
 
 
-.. _distribution_information:
+
 
 `Distribution Information <#distribution_information>`__
 --------------------------------------------------------

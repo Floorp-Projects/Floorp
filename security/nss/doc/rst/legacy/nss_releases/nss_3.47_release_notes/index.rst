@@ -17,7 +17,7 @@ NSS 3.47 release notes
    -  Deian Stefan
    -  Jenine
 
-.. _distribution_information:
+
 
 `Distribution Information <#distribution_information>`__
 --------------------------------------------------------

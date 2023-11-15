@@ -10,8 +10,6 @@ NSS 3.65 release notes
 
    Network Security Services (NSS) 3.65 was released on **13 May 2021**.
 
-.. _distribution_information:
-
 `Distribution Information <#distribution_information>`__
 --------------------------------------------------------
 

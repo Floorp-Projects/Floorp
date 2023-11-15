@@ -15,7 +15,7 @@ NSS 3.60 release notes
 
    -  yogesh
 
-.. _distribution_information:
+
 
 `Distribution Information <#distribution_information>`__
 --------------------------------------------------------

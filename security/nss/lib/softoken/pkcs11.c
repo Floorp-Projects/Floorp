@@ -60,6 +60,11 @@ PRBool usePthread_atfork;
 
 #endif
 
+#ifdef XP_UNIX
+#define LIB_PARAM_DEFAULT_FILE_LOCATION "/etc/nss/params.config"
+#endif
+
+#define LIB_PARAM_DEFAULT " configdir='' certPrefix='' keyPrefix='' secmod='' flags=noCertDB,noModDB "
 /*
  * ******************** Static data *******************************
  */
@@ -1920,8 +1925,8 @@ sftk_GetPubKey(SFTKObject *object, CK_KEY_TYPE key_type,
                 /* Handle the non-DER encoded case.
                  * Some curves are always pressumed to be non-DER.
                  */
-                if (pubKey->u.ec.publicValue.len == keyLen &&
-                    (pubKey->u.ec.ecParams.fieldID.type == ec_field_plain ||
+                if (pubKey->u.ec.ecParams.type != ec_params_named ||
+                    (pubKey->u.ec.publicValue.len == keyLen &&
                      pubKey->u.ec.publicValue.data[0] == EC_POINT_FORM_UNCOMPRESSED)) {
                     break; /* key was not DER encoded, no need to unwrap */
                 }
@@ -1941,8 +1946,7 @@ sftk_GetPubKey(SFTKObject *object, CK_KEY_TYPE key_type,
                         break;
                     }
                     /* we don't handle compressed points except in the case of ECCurve25519 */
-                    if ((pubKey->u.ec.ecParams.fieldID.type != ec_field_plain) &&
-                        (publicValue.data[0] != EC_POINT_FORM_UNCOMPRESSED)) {
+                    if (publicValue.data[0] != EC_POINT_FORM_UNCOMPRESSED) {
                         crv = CKR_ATTRIBUTE_VALUE_INVALID;
                         break;
                     }
@@ -3301,6 +3305,81 @@ sftk_closePeer(PRBool isFIPS)
 extern void sftk_PBELockInit(void);
 extern void sftk_PBELockShutdown(void);
 
+/* Parse the library parameters from the first occurance in the following src.:
+ * 1. C_INITIALIZED_ARGS - lib params are included in LibraryParameters field
+ * 2. NSS_LIB_PARAMS - env. var. containing the lib. params.
+ * 3. NSS_LIB_PARAMS_FILE - env. var. pointion to a file with lib. params.
+ * 4. /etc/nss/params.config - default lib. param. file location [Linux only]
+ * 5. LIB_PARAM_DEFAULT - string ensureing the pressence at all times
+ *    "configdir='' certPrefix='' keyPrefix='' secmod='' flags=noCertDB,noModDB"
+ */
+static CK_RV
+sftk_getParameters(CK_C_INITIALIZE_ARGS *init_args, PRBool isFIPS,
+                   sftk_parameters *paramStrings)
+{
+    CK_RV crv;
+    char *libParams;
+    const char *filename;
+    PRFileDesc *file_dc;
+    PRBool free_mem = PR_FALSE;
+
+    if (!init_args || !init_args->LibraryParameters) {
+        /* Library parameters were not provided via C_Initialize_args*/
+
+        /* Enviromental value has precedence to configuration filename */
+        libParams = PR_GetEnvSecure("NSS_LIB_PARAMS");
+
+        if (!libParams) {
+            /* Load from config filename or use default */
+            filename = PR_GetEnvSecure("NSS_LIB_PARAMS_FILE");
+#ifdef XP_UNIX
+            /* Use default configuration file for Linux only */
+            if (!filename)
+                filename = LIB_PARAM_DEFAULT_FILE_LOCATION;
+#endif
+            if (filename) {
+                file_dc = PR_OpenFile(filename, PR_RDONLY, 444);
+                if (file_dc) {
+                    /* file opened */
+                    PRInt32 len = PR_Available(file_dc);
+                    libParams = PORT_NewArray(char, len + 1);
+                    if (libParams) {
+                        /* memory allocated */
+                        if (PR_Read(file_dc, libParams, len) == -1) {
+                            PR_Free(libParams);
+                        } else {
+                            free_mem = PR_TRUE;
+                            libParams[len] = '\0';
+                        }
+                    }
+
+                    PR_Close(file_dc);
+                }
+            }
+        }
+
+        if (!libParams)
+            libParams = LIB_PARAM_DEFAULT;
+
+    } else {
+        /* Use parameters provided with C_Initialize_args */
+        libParams = (char *)init_args->LibraryParameters;
+    }
+
+    crv = sftk_parseParameters(libParams, paramStrings, isFIPS);
+    if (crv != CKR_OK) {
+        crv = CKR_ARGUMENTS_BAD;
+        goto loser;
+    }
+
+    crv = CKR_OK;
+loser:
+    if (free_mem)
+        PR_Free(libParams);
+
+    return crv;
+}
+
 /* NSC_Initialize initializes the Cryptoki library. */
 CK_RV
 nsc_CommonInitialize(CK_VOID_PTR pReserved, PRBool isFIPS)
@@ -3362,53 +3441,56 @@ nsc_CommonInitialize(CK_VOID_PTR pReserved, PRBool isFIPS)
             return crv;
         }
     }
-    crv = CKR_ARGUMENTS_BAD;
-    if ((init_args && init_args->LibraryParameters)) {
-        sftk_parameters paramStrings;
 
-        crv = sftk_parseParameters((char *)init_args->LibraryParameters, &paramStrings, isFIPS);
-        if (crv != CKR_OK) {
-            return crv;
-        }
-        crv = sftk_configure(paramStrings.man, paramStrings.libdes);
-        if (crv != CKR_OK) {
-            goto loser;
-        }
+    sftk_parameters paramStrings;
 
-        /* if we have a peer already open, have him close his DB's so we
-         * don't clobber each other. */
-        if ((isFIPS && nsc_init) || (!isFIPS && nsf_init)) {
-            sftk_closePeer(isFIPS);
-            if (sftk_audit_enabled) {
-                if (isFIPS && nsc_init) {
-                    sftk_LogAuditMessage(NSS_AUDIT_INFO, NSS_AUDIT_FIPS_STATE,
-                                         "enabled FIPS mode");
-                } else {
-                    sftk_LogAuditMessage(NSS_AUDIT_INFO, NSS_AUDIT_FIPS_STATE,
-                                         "disabled FIPS mode");
-                }
-            }
-            /* if we have a peer open, we don't want to destroy the freelist
-             * from under the peer if we fail, the free list will be
-             * destroyed in that case when the C_Finalize is called for
-             * the peer */
-            destroy_freelist_on_error = PR_FALSE;
-        }
-        /* allow us to create objects in SFTK_SlotInit */
-        sftk_InitFreeLists();
-
-        for (i = 0; i < paramStrings.token_count; i++) {
-            crv = SFTK_SlotInit(paramStrings.configdir,
-                                paramStrings.updatedir, paramStrings.updateID,
-                                &paramStrings.tokens[i], moduleIndex);
-            if (crv != CKR_OK) {
-                nscFreeAllSlots(moduleIndex);
-                break;
-            }
-        }
-    loser:
-        sftk_freeParams(&paramStrings);
+    /* load and parse the library parameters */
+    crv = sftk_getParameters(init_args, isFIPS, &paramStrings);
+    if (crv != CKR_OK) {
+        goto loser;
     }
+
+    crv = sftk_configure(paramStrings.man, paramStrings.libdes);
+    if (crv != CKR_OK) {
+        goto loser;
+    }
+
+    /* if we have a peer already open, have him close his DB's so we
+     * don't clobber each other. */
+    if ((isFIPS && nsc_init) || (!isFIPS && nsf_init)) {
+        sftk_closePeer(isFIPS);
+        if (sftk_audit_enabled) {
+            if (isFIPS && nsc_init) {
+                sftk_LogAuditMessage(NSS_AUDIT_INFO, NSS_AUDIT_FIPS_STATE,
+                                     "enabled FIPS mode");
+            } else {
+                sftk_LogAuditMessage(NSS_AUDIT_INFO, NSS_AUDIT_FIPS_STATE,
+                                     "disabled FIPS mode");
+            }
+        }
+        /* if we have a peer open, we don't want to destroy the freelist
+         * from under the peer if we fail, the free list will be
+         * destroyed in that case when the C_Finalize is called for
+         * the peer */
+        destroy_freelist_on_error = PR_FALSE;
+    }
+    /* allow us to create objects in SFTK_SlotInit */
+    sftk_InitFreeLists();
+
+    for (i = 0; i < paramStrings.token_count; i++) {
+        crv = SFTK_SlotInit(paramStrings.configdir,
+                            paramStrings.updatedir, paramStrings.updateID,
+                            &paramStrings.tokens[i], moduleIndex);
+        if (crv != CKR_OK) {
+            nscFreeAllSlots(moduleIndex);
+            break;
+        }
+    }
+
+loser:
+
+    sftk_freeParams(&paramStrings);
+
     if (destroy_freelist_on_error && (CKR_OK != crv)) {
         /* idempotent. If the list are already freed, this is a noop */
         sftk_CleanupFreeLists();

@@ -11,7 +11,7 @@ NSS 3.40.1 release notes
    The NSS team has released Network Security Services (NSS) 3.40.1, which is a patch release for
    NSS 3.40
 
-.. _distribution_information:
+
 
 `Distribution Information <#distribution_information>`__
 --------------------------------------------------------

@@ -11,7 +11,7 @@ NSS 3.92 release notes
    Network Security Services (NSS) 3.92 was released on *27 July 2023**.
 
 
-.. _distribution_information:
+
 
 `Distribution Information <#distribution_information>`__
 --------------------------------------------------------
@@ -39,7 +39,7 @@ NSS 3.92 release notes
  - Bug 1839992 - Add 4 SSL.com Root CA certificates.
  - Bug 1840429 - Add Sectigo E46 and R46 Root CA certificates.
  - Bug 1840437 - Add LAWtrust Root CA2 (4096).
- - Bug 1822936 - Remove E-Tugra Certification Authority root. 
+ - Bug 1822936 - Remove E-Tugra Certification Authority root.
  - Bug 1827224 - Remove Camerfirma Chambers of Commerce Root.
  - Bug 1840505 - Remove Hongkong Post Root CA 1.
  - Bug 1842928 - Remove E-Tugra Global Root CA ECC v3 and RSA v3.

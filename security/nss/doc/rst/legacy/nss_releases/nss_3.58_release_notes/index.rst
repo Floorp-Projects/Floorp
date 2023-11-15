@@ -15,7 +15,7 @@ NSS 3.58 release notes
 
    -  Ricky Stewart
 
-.. _distribution_information:
+
 
 `Distribution Information <#distribution_information>`__
 --------------------------------------------------------

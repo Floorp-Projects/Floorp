@@ -10,7 +10,7 @@ NSS 3.37.3 release notes
 
    Network Security Services (NSS) 3.37.3 is a patch release for NSS 3.37.
 
-.. _distribution_information:
+
 
 `Distribution Information <#distribution_information>`__
 --------------------------------------------------------

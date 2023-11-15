@@ -11,7 +11,7 @@ NSS 3.28.4 release notes
    Network Security Services (NSS) 3.28.4 is a security patch release for NSS 3.28. The bug fixes in
    NSS 3.28.4 are described in the "Bugs Fixed" section below.
 
-.. _distribution_information:
+
 
 `Distribution Information <#distribution_information>`__
 --------------------------------------------------------

@@ -13,7 +13,7 @@ NSS 3.14.1 release notes
 
    NSS 3.14.1 is licensed under the MPL 2.0.
 
-.. _distribution_information:
+
 
 `Distribution Information <#distribution_information>`__
 --------------------------------------------------------

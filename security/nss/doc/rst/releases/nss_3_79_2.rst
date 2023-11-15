@@ -11,7 +11,7 @@ NSS 3.79.2 release notes
    Network Security Services (NSS) 3.79.2 was released on **25 October 2022**.
 
 
-.. _distribution_information:
+
 
 `Distribution Information <#distribution_information>`__
 --------------------------------------------------------

@@ -15,7 +15,7 @@ NSS 3.52 release notes
    -  zhujianwei7
    -  Hans Petter Jansson
 
-.. _distribution_information:
+
 
 `Distribution Information <#distribution_information>`__
 --------------------------------------------------------

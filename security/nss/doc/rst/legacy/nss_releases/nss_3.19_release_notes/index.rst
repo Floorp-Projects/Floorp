@@ -11,7 +11,7 @@ NSS 3.19 release notes
    The NSS team has released Network Security Services (NSS) 3.19, which is a minor
    security release.
 
-.. _distribution_information:
+
 
 `Distribution Information <#distribution_information>`__
 --------------------------------------------------------
