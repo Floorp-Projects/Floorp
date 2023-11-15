@@ -15,7 +15,6 @@
 #include "nsIInterfaceRequestor.h"
 
 #include "nsTHashMap.h"
-#include "nsTHashSet.h"
 #include "mozIStorageProgressHandler.h"
 #include "SQLiteMutex.h"
 #include "mozIStorageConnection.h"
@@ -167,7 +166,6 @@ class Connection final : public mozIStorageConnection,
    *  - Connection.mAsyncExecutionThreadShuttingDown
    *  - Connection.mConnectionClosed
    *  - AsyncExecuteStatements.mCancelRequested
-   *  - Connection.mLoadedExtensions
    */
   Mutex sharedAsyncExecutionMutex MOZ_UNANNOTATED;
 
@@ -508,14 +506,6 @@ class Connection final : public mozIStorageConnection,
    * Stores the growth increment chunk size, set through SetGrowthIncrement().
    */
   Atomic<int32_t> mGrowthChunkSize;
-
-  /**
-   * Stores a list of the SQLite extensions loaded for this connections.
-   * This is used to properly clone the connection.
-   * @note Hold sharedAsyncExecutionMutex while using this.
-   */
-  nsTHashSet<nsCString> mLoadedExtensions
-      MOZ_GUARDED_BY(sharedAsyncExecutionMutex);
 };
 
 /**

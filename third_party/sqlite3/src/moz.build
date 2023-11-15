@@ -19,16 +19,13 @@ else:
     # The final library is in config/external/sqlite
     FINAL_LIBRARY = 'sqlite'
 
-DIRS += [
-    '../ext'
-]
-
 SOURCES += [
     'sqlite3.c',
 ]
 
 # -DSQLITE_SECURE_DELETE=1 will cause SQLITE to 0-fill delete data so we
 # don't have to vacuum to make sure the data is not visible in the file.
+# -DSQLITE_CORE=1 statically links that module into the SQLite library.
 # -DSQLITE_DEFAULT_PAGE_SIZE=32768 and SQLITE_MAX_DEFAULT_PAGE_SIZE=32768
 # increases the page size from 1k, see bug 416330.  It must be kept in sync with
 # the value of PREF_TS_PAGESIZE_DEFAULT in mozStorageService.cpp.  The value can
@@ -36,7 +33,7 @@ SOURCES += [
 # hidden preference.  If that preference is missing or invalid then this value
 # will be used.
 # Note: Be sure to update the configure.in checks when these change!
-for var in ('SQLITE_SECURE_DELETE', 'SQLITE_THREADSAFE',
+for var in ('SQLITE_SECURE_DELETE', 'SQLITE_THREADSAFE', 'SQLITE_CORE',
             'SQLITE_ENABLE_UNLOCK_NOTIFY', 'SQLITE_ENABLE_DBSTAT_VTAB'):
     DEFINES[var] = 1
 

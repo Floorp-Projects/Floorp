@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "BaseVFS.h"
-#include "ErrorList.h"
 #include "nsError.h"
 #include "nsThreadUtils.h"
 #include "nsIFile.h"
@@ -1870,17 +1869,6 @@ nsresult Connection::initializeClone(Connection* aClone, bool aReadOnly) {
     }
   }
 
-  // Load SQLite extensions that were on this connection.
-  // Copy into an array rather than holding the mutex while we load extensions.
-  nsTArray<nsCString> loadedExtensions;
-  {
-    MutexAutoLock lockedScope(sharedAsyncExecutionMutex);
-    AppendToArray(loadedExtensions, mLoadedExtensions);
-  }
-  for (const auto& extension : loadedExtensions) {
-    (void)aClone->LoadExtension(extension, nullptr);
-  }
-
   guard.release();
   return NS_OK;
 }
@@ -2551,103 +2539,6 @@ int32_t Connection::RemovablePagesInFreeList(const nsACString& aSchemaName) {
     }
   }
   return std::max(0, freeListPagesCount - (mGrowthChunkSize / pageSize));
-}
-
-NS_IMETHODIMP
-Connection::LoadExtension(const nsACString& aExtensionName,
-                          mozIStorageCompletionCallback* aCallback) {
-  AUTO_PROFILER_LABEL("Connection::LoadExtension", OTHER);
-
-  // This is a static list of extensions we can load.
-  // Please use lowercase ASCII names and keep this list alphabetically ordered.
-  static constexpr nsLiteralCString sSupportedExtensions[] = {
-      // clang-format off
-      "fts5"_ns,
-      // clang-format on
-  };
-  if (std::find(std::begin(sSupportedExtensions),
-                std::end(sSupportedExtensions),
-                aExtensionName) == std::end(sSupportedExtensions)) {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  if (!connectionReady()) {
-    return NS_ERROR_NOT_INITIALIZED;
-  }
-
-  int srv = ::sqlite3_db_config(mDBConn, SQLITE_DBCONFIG_ENABLE_LOAD_EXTENSION,
-                                1, nullptr);
-  if (srv != SQLITE_OK) {
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  // Track the loaded extension for later connection cloning operations.
-  {
-    MutexAutoLock lockedScope(sharedAsyncExecutionMutex);
-    if (!mLoadedExtensions.EnsureInserted(aExtensionName)) {
-      // Already loaded, bail out but issue a warning.
-      NS_WARNING(nsPrintfCString(
-                     "Tried to register '%s' SQLite extension multiple times!",
-                     PromiseFlatCString(aExtensionName).get())
-                     .get());
-      return NS_OK;
-    }
-  }
-
-  nsAutoCString entryPoint("sqlite3_");
-  entryPoint.Append(aExtensionName);
-  entryPoint.AppendLiteral("_init");
-
-  RefPtr<Runnable> loadTask = NS_NewRunnableFunction(
-      "mozStorageConnection::LoadExtension",
-      [this, self = RefPtr(this), entryPoint,
-       callback = RefPtr(aCallback)]() mutable {
-        MOZ_ASSERT(
-            !NS_IsMainThread() ||
-                (operationSupported(Connection::SYNCHRONOUS) &&
-                 eventTargetOpenedOn == GetMainThreadSerialEventTarget()),
-            "Should happen on main-thread only for synchronous connections "
-            "opened on the main thread");
-#ifdef MOZ_FOLD_LIBS
-        int srv = ::sqlite3_load_extension(mDBConn,
-                                           MOZ_DLL_PREFIX "nss3" MOZ_DLL_SUFFIX,
-                                           entryPoint.get(), nullptr);
-#else
-        int srv = ::sqlite3_load_extension(
-            mDBConn, MOZ_DLL_PREFIX "mozsqlite3" MOZ_DLL_SUFFIX,
-            entryPoint.get(), nullptr);
-#endif
-        if (!callback) {
-          return;
-        };
-        RefPtr<Runnable> callbackTask = NS_NewRunnableFunction(
-            "mozStorageConnection::LoadExtension_callback",
-            [callback = std::move(callback), srv]() {
-              (void)callback->Complete(convertResultCode(srv), nullptr);
-            });
-        if (IsOnCurrentSerialEventTarget(eventTargetOpenedOn)) {
-          MOZ_ALWAYS_SUCCEEDS(callbackTask->Run());
-        } else {
-          // Redispatch the callback to the calling thread.
-          MOZ_ALWAYS_SUCCEEDS(eventTargetOpenedOn->Dispatch(
-              callbackTask.forget(), NS_DISPATCH_NORMAL));
-        }
-      });
-
-  if (NS_IsMainThread() && !operationSupported(Connection::SYNCHRONOUS)) {
-    // This is a main-thread call to an async-only connection, thus we should
-    // load the library in the helper thread.
-    nsIEventTarget* helperThread = getAsyncExecutionTarget();
-    if (!helperThread) {
-      return NS_ERROR_NOT_INITIALIZED;
-    }
-    MOZ_ALWAYS_SUCCEEDS(
-        helperThread->Dispatch(loadTask.forget(), NS_DISPATCH_NORMAL));
-  } else {
-    // In any other case we just load the extension on the current thread.
-    MOZ_ALWAYS_SUCCEEDS(loadTask->Run());
-  }
-  return NS_OK;
 }
 
 NS_IMETHODIMP
