@@ -63,6 +63,8 @@
   <div id='div-keydown' onkeydown="document.getElementById('by-button').click();" tabindex='1'>foo</div>
   <a id='link-click' href="javascript:document.getElementById('by-button').click();" tabindex='1'>foo</a>
   <input id='show-picker' type='file'>
+  <input id='invokee' type='file'>
+  <button id='invoker' invoketarget="invokee" invokeaction="showpicker">foo</button>
 </div>
 <pre id="test">
 <script type="application/javascript">
@@ -137,6 +139,7 @@ var testData = [["a", 1, MockFilePicker.filterImages, 1],
                 ["div-keydown", 0, undefined, 0],
                 ["link-click", 0, undefined, 0],
                 ["show-picker", 0, undefined, 0],
+                ["invoker", 0, undefined, 0]
                ];
 
 var currentTest = 0;
@@ -200,7 +203,8 @@ function launchNextTest() {
              testData[currentTest][0] == 'button-up' ||
              testData[currentTest][0] == 'div-click' ||
              testData[currentTest][0] == 'div-click-on-demand' ||
-             testData[currentTest][0] == 'link-click') {
+             testData[currentTest][0] == 'link-click' ||
+             testData[currentTest][0] == 'invoker') {
     synthesizeMouseAtCenter(document.getElementById(testData[currentTest][0]), {});
   } else if (testData[currentTest][0] == 'div-keydown') {
     sendString("a");

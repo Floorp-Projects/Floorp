@@ -869,6 +869,8 @@ class HTMLInputElement final : public TextControlElement,
   // Parse a simple (hex) color.
   static mozilla::Maybe<nscolor> ParseSimpleColor(const nsAString& aColor);
 
+  void HandleInvokeInternal(nsAtom* aAction, ErrorResult& aRv) override;
+
  protected:
   MOZ_CAN_RUN_SCRIPT_BOUNDARY virtual ~HTMLInputElement();
 
@@ -1640,6 +1642,8 @@ class HTMLInputElement final : public TextControlElement,
    * This allows the element to only access a container it has been added to.
    */
   RadioGroupContainer* mRadioGroupContainer;
+
+  void ShowThePickerIfApplicable();
 
   struct nsFilePickerFilter {
     nsFilePickerFilter() : mFilterMask(0) {}
