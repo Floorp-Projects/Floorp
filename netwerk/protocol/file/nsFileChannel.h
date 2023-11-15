@@ -44,6 +44,7 @@ class nsFileChannel : public nsBaseChannel,
 
  private:
   nsresult FixupContentLength(bool async);
+  nsresult MaybeSendFileOpenNotification();
 
   nsCOMPtr<nsIInputStream> mUploadStream;
   int64_t mUploadLength;
