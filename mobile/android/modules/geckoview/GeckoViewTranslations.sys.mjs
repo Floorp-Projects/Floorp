@@ -16,6 +16,8 @@ export class GeckoViewTranslations extends GeckoViewModule {
     this.registerListener([
       "GeckoView:Translations:Translate",
       "GeckoView:Translations:RestorePage",
+      "GeckoView:Translations:GetNeverTranslateSite",
+      "GeckoView:Translations:SetNeverTranslateSite",
     ]);
   }
 
@@ -56,6 +58,26 @@ export class GeckoViewTranslations extends GeckoViewModule {
           aCallback.onError(`Could not restore page: ${error}`);
         }
         break;
+
+      case "GeckoView:Translations:GetNeverTranslateSite":
+        try {
+          var value = this.getActor("Translations").shouldNeverTranslateSite();
+          aCallback.onSuccess(value);
+        } catch (error) {
+          aCallback.onError(`Could not set site setting: ${error}`);
+        }
+        break;
+
+      case "GeckoView:Translations:SetNeverTranslateSite":
+        try {
+          this.getActor("Translations").setNeverTranslateSitePermissions(
+            aData.neverTranslate
+          );
+          aCallback.onSuccess();
+        } catch (error) {
+          aCallback.onError(`Could not set site setting: ${error}`);
+        }
+        break;
     }
   }
 
@@ -79,6 +101,33 @@ export class GeckoViewTranslations extends GeckoViewModule {
 
 // Runtime functionality
 export const GeckoViewTranslationsSettings = {
+  // Helper method for retrieving language setting state and corresponding string name.
+  _getLanguageSettingName(langTag) {
+    const isAlways = lazy.TranslationsParent.shouldAlwaysTranslateLanguage({
+      docLangTag: langTag,
+      userLangTag: new Intl.Locale(Services.locale.appLocaleAsBCP47).language,
+    });
+    const isNever =
+      lazy.TranslationsParent.shouldNeverTranslateLanguage(langTag);
+    // Default setting is offer.
+    var setting = "offer";
+
+    if (isAlways & !isNever) {
+      setting = "always";
+    }
+
+    if (isNever & !isAlways) {
+      setting = "never";
+    }
+    return setting;
+  },
+
+  // Helper method to validate BCP 47 tags and reduced to only the language portion. For example, en-US will be reduced to en.
+  _checkValidLanguageTagAndMinimize(langTag) {
+    // Formats the langTag into a locale, may throw an error
+    var canonicalTag = new Intl.Locale(Intl.getCanonicalLocales(langTag)[0]);
+    return canonicalTag.minimize().toString();
+  },
   /* eslint-disable complexity */
   async onEvent(aEvent, aData, aCallback) {
     debug`onEvent ${aEvent} ${aData}`;
@@ -309,6 +358,126 @@ export const GeckoViewTranslationsSettings = {
             );
           }
         );
+        break;
+      }
+
+      case "GeckoView:Translations:GetLanguageSetting": {
+        if (
+          Cu.isInAutomation &&
+          Services.prefs.getBoolPref(
+            "browser.translations.geckoview.enableAllTestMocks",
+            false
+          )
+        ) {
+          aCallback.onSuccess("always");
+          return;
+        }
+
+        try {
+          var setting = this._getLanguageSettingName(aData.language);
+          aCallback.onSuccess(setting);
+        } catch (error) {
+          aCallback.onError(`Could not get language setting: ${error}`);
+        }
+        break;
+      }
+
+      case "GeckoView:Translations:GetLanguageSettings": {
+        if (
+          Cu.isInAutomation &&
+          Services.prefs.getBoolPref(
+            "browser.translations.geckoview.enableAllTestMocks",
+            false
+          )
+        ) {
+          const mockResult = {
+            settings: [
+              { langTag: "fr", displayName: "French", setting: "always" },
+              { langTag: "de", displayName: "German", setting: "offer" },
+              { langTag: "es", displayName: "Spanish", setting: "never" },
+            ],
+          };
+          aCallback.onSuccess(mockResult);
+          return;
+        }
+
+        lazy.TranslationsParent.getSupportedLanguages().then(
+          function (supportedLanguages) {
+            const languageList =
+              lazy.TranslationsParent.getLanguageList(supportedLanguages);
+
+            languageList.forEach(language => {
+              language.setting = this._getLanguageSettingName(language.langTag);
+            });
+
+            aCallback.onSuccess({ settings: languageList });
+          }.bind(this),
+          function (error) {
+            aCallback.onError(
+              `Could not retrieve language setting information: ${error}`
+            );
+          }
+        );
+        break;
+      }
+
+      case "GeckoView:Translations:SetLanguageSettings": {
+        var { language, languageSetting } = aData;
+        languageSetting = languageSetting.toLowerCase();
+
+        try {
+          language = this._checkValidLanguageTagAndMinimize(language);
+        } catch (error) {
+          aCallback.onError(
+            `The language tag ${language} is not valid: ${error}`
+          );
+          return;
+        }
+
+        const ALWAYS = lazy.TranslationsParent.ALWAYS_TRANSLATE_LANGS_PREF;
+        const NEVER = lazy.TranslationsParent.NEVER_TRANSLATE_LANGS_PREF;
+
+        switch (languageSetting) {
+          case "always": {
+            try {
+              lazy.TranslationsParent.removeLangTagFromPref(language, NEVER);
+              lazy.TranslationsParent.addLangTagToPref(language, ALWAYS);
+              aCallback.onSuccess();
+            } catch (error) {
+              aCallback.onError(
+                `Could not set language preference to always: ${error}`
+              );
+            }
+            break;
+          }
+
+          case "never": {
+            try {
+              lazy.TranslationsParent.removeLangTagFromPref(language, ALWAYS);
+              lazy.TranslationsParent.addLangTagToPref(language, NEVER);
+              aCallback.onSuccess();
+            } catch (error) {
+              aCallback.onError(
+                `Could not set language preference to never: ${error}`
+              );
+            }
+            break;
+          }
+
+          case "offer": {
+            try {
+              // Reverting to default settings, so ensure nothing is set.
+              lazy.TranslationsParent.removeLangTagFromPref(language, NEVER);
+              lazy.TranslationsParent.removeLangTagFromPref(language, ALWAYS);
+              aCallback.onSuccess();
+            } catch (error) {
+              aCallback.onError(
+                `Could not set language preference to offer: ${error}`
+              );
+            }
+            break;
+          }
+        }
         break;
       }
     }

@@ -329,6 +329,17 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
     }
 
     /**
+     * Set whether a candidate page should automatically offer a translation via a popup.
+     *
+     * @param enabled A flag determining whether the translations offer popup should be enabled.
+     * @return The builder instance.
+     */
+    public @NonNull Builder translationsOfferPopup(final boolean enabled) {
+      getSettings().setTranslationsOfferPopup(enabled);
+      return this;
+    }
+
+    /**
      * When set, the specified {@link android.app.Service} will be started by an {@link
      * android.content.Intent} with action {@link GeckoRuntime#ACTION_CRASHED} when a crash is
      * encountered. Crash details can be found in the Intent extras, such as {@link
@@ -560,6 +571,8 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
       new Pref<>("browser.ui.zoom.force-user-scalable", false);
   /* package */ final Pref<Boolean> mAutofillLogins =
       new Pref<Boolean>("signon.autofillForms", true);
+  /* package */ final Pref<Boolean> mAutomaticallyOfferPopup =
+      new Pref<Boolean>("browser.translations.automaticallyPopup", true);
   /* package */ final Pref<Boolean> mHttpsOnly =
       new Pref<Boolean>("dom.security.https_only_mode", false);
   /* package */ final Pref<Boolean> mHttpsOnlyPrivateMode =
@@ -1334,6 +1347,27 @@ public final class GeckoRuntimeSettings extends RuntimeSettings {
    */
   public boolean getLoginAutofillEnabled() {
     return mAutofillLogins.get();
+  }
+
+  /**
+   * Set whether automatic popups should appear for offering translations on candidate pages.
+   *
+   * @param enabled A flag determining whether automatic offer popups should be enabled for
+   *     translations.
+   * @return The builder instance.
+   */
+  public @NonNull GeckoRuntimeSettings setTranslationsOfferPopup(final boolean enabled) {
+    mAutomaticallyOfferPopup.commit(enabled);
+    return this;
+  }
+
+  /**
+   * Get whether automatic popups for translations is enabled.
+   *
+   * @return True if login automatic popups for translations are enabled.
+   */
+  public boolean getTranslationsOfferPopup() {
+    return mAutomaticallyOfferPopup.get();
   }
 
   /**

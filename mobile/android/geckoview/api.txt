@@ -876,6 +876,7 @@ package org.mozilla.geckoview {
     method @Nullable public GeckoRuntime getRuntime();
     method @Nullable public Rect getScreenSizeOverride();
     method @Nullable public RuntimeTelemetry.Delegate getTelemetryDelegate();
+    method public boolean getTranslationsOfferPopup();
     method public boolean getUseMaxScreenDepth();
     method public boolean getWebFontsEnabled();
     method public boolean getWebManifestEnabled();
@@ -900,6 +901,7 @@ package org.mozilla.geckoview {
     method @NonNull public GeckoRuntimeSettings setLoginAutofillEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings setPreferredColorScheme(int);
     method @NonNull public GeckoRuntimeSettings setRemoteDebuggingEnabled(boolean);
+    method @NonNull public GeckoRuntimeSettings setTranslationsOfferPopup(boolean);
     method @NonNull public GeckoRuntimeSettings setWebFontsEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings setWebManifestEnabled(boolean);
     field public static final int ALLOW_ALL = 0;
@@ -945,6 +947,7 @@ package org.mozilla.geckoview {
     method @NonNull public GeckoRuntimeSettings.Builder remoteDebuggingEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings.Builder screenSizeOverride(int, int);
     method @NonNull public GeckoRuntimeSettings.Builder telemetryDelegate(@NonNull RuntimeTelemetry.Delegate);
+    method @NonNull public GeckoRuntimeSettings.Builder translationsOfferPopup(boolean);
     method @NonNull public GeckoRuntimeSettings.Builder useMaxScreenDepth(boolean);
     method @NonNull public GeckoRuntimeSettings.Builder webFontsEnabled(boolean);
     method @NonNull public GeckoRuntimeSettings.Builder webManifest(boolean);
@@ -2251,16 +2254,22 @@ package org.mozilla.geckoview {
     ctor public RuntimeTranslation();
     method @AnyThread @NonNull public static GeckoResult<Long> checkPairDownloadSize(@NonNull String, @NonNull String);
     method @AnyThread @NonNull public static GeckoResult<Long> checkPairDownloadSize(@NonNull TranslationsController.SessionTranslation.TranslationPair);
+    method @AnyThread @NonNull public static GeckoResult<String> getLanguageSetting(@NonNull String);
+    method @AnyThread @NonNull public static GeckoResult<Map<String,String>> getLanguageSettings();
     method @AnyThread @NonNull public static GeckoResult<Boolean> isTranslationsEngineSupported();
     method @AnyThread @NonNull public static GeckoResult<List<TranslationsController.RuntimeTranslation.LanguageModel>> listModelDownloadStates();
     method @AnyThread @NonNull public static GeckoResult<TranslationsController.RuntimeTranslation.TranslationSupport> listSupportedLanguages();
     method @AnyThread @NonNull public static GeckoResult<Void> manageLanguageModel(@NonNull TranslationsController.RuntimeTranslation.ModelManagementOptions);
     method @AnyThread @NonNull public static GeckoResult<List<String>> preferredLanguages();
+    method @AnyThread @NonNull public static GeckoResult<Void> setLanguageSettings(@NonNull String, @NonNull String);
     field public static final String ALL = "all";
+    field public static final String ALWAYS = "always";
     field public static final String CACHE = "cache";
     field public static final String DELETE = "delete";
     field public static final String DOWNLOAD = "download";
     field public static final String LANGUAGE = "language";
+    field public static final String NEVER = "never";
+    field public static final String OFFER = "offer";
   }
 
   public static class TranslationsController.RuntimeTranslation.LanguageModel {
@@ -2268,6 +2277,9 @@ package org.mozilla.geckoview {
     field @NonNull public final Boolean isDownloaded;
     field @Nullable public final TranslationsController.Language language;
     field public final long size;
+  }
+
+  @Retention(value=RetentionPolicy.SOURCE) public static interface TranslationsController.RuntimeTranslation.LanguageSetting {
   }
 
   @AnyThread public static class TranslationsController.RuntimeTranslation.ModelManagementOptions {
@@ -2300,7 +2312,9 @@ package org.mozilla.geckoview {
   public static class TranslationsController.SessionTranslation {
     ctor public SessionTranslation(GeckoSession);
     method @AnyThread @NonNull public TranslationsController.SessionTranslation.Handler getHandler();
+    method @AnyThread @NonNull public GeckoResult<Boolean> getNeverTranslateSiteSetting();
     method @AnyThread @NonNull public GeckoResult<Void> restoreOriginalPage();
+    method @AnyThread @NonNull public GeckoResult<Void> setNeverTranslateSiteSetting(@NonNull Boolean);
     method @AnyThread @NonNull public GeckoResult<Void> translate(@NonNull String, @NonNull String, @Nullable TranslationsController.SessionTranslation.TranslationOptions);
     method @AnyThread @NonNull public GeckoResult<Void> translate(@NonNull TranslationsController.SessionTranslation.TranslationPair, @Nullable TranslationsController.SessionTranslation.TranslationOptions);
   }

@@ -15,7 +15,9 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import org.mozilla.gecko.EventDispatcher;
 import org.mozilla.gecko.util.EventCallback;
@@ -50,6 +52,15 @@ public class TranslationsController {
     private static final String TRANSLATION_INFORMATION_EVENT =
         "GeckoView:Translations:TranslationInformation";
     private static final String MODEL_INFORMATION_EVENT = "GeckoView:Translations:ModelInformation";
+
+    private static final String GET_LANGUAGE_SETTING_EVENT =
+        "GeckoView:Translations:GetLanguageSetting";
+
+    private static final String GET_LANGUAGE_SETTINGS_EVENT =
+        "GeckoView:Translations:GetLanguageSettings";
+
+    private static final String SET_LANGUAGE_SETTINGS_EVENT =
+        "GeckoView:Translations:SetLanguageSettings";
 
     /**
      * Checks if the device can use the supplied model binary files for translations.
@@ -198,6 +209,83 @@ public class TranslationsController {
                 }
                 return null;
               });
+    }
+
+    /**
+     * Returns the given language setting for the corresponding language.
+     *
+     * @param languageCode The BCP 47 language portion of the code to check the settings for. For
+     *     example, es, en, de, etc.
+     * @return The {@link LanguageSetting} string for the language.
+     */
+    @AnyThread
+    public static @NonNull GeckoResult<String> getLanguageSetting(
+        @NonNull final String languageCode) {
+      if (DEBUG) {
+        Log.d(LOGTAG, "Requesting language setting for " + languageCode + ".");
+      }
+      final GeckoBundle bundle = new GeckoBundle(1);
+      bundle.putString("language", languageCode);
+      return EventDispatcher.getInstance().queryString(GET_LANGUAGE_SETTING_EVENT, bundle);
+    }
+
+    /**
+     * Creates a map of known language codes with their corresponding language setting.
+     *
+     * @return A GeckoResult with a map of each BCP 47 language portion of the code (key) and its
+     *     corresponding {@link LanguageSetting} string (value).
+     */
+    @AnyThread
+    public static @NonNull GeckoResult<Map<String, String>> getLanguageSettings() {
+      if (DEBUG) {
+        Log.d(LOGTAG, "Requesting language settings.");
+      }
+      return EventDispatcher.getInstance()
+          .queryBundle(GET_LANGUAGE_SETTINGS_EVENT)
+          .map(
+              bundle -> {
+                final Map<String, String> languageSettings = new HashMap<>();
+                try {
+                  final GeckoBundle[] fromBundle = bundle.getBundleArray("settings");
+                  for (final var item : fromBundle) {
+                    final var languageCode = item.getString("langTag");
+                    final @LanguageSetting String setting = item.getString("setting", "offer");
+                    if (languageCode != null) {
+                      languageSettings.put(languageCode, setting);
+                    }
+                  }
+                  return languageSettings;
+
+                } catch (final Exception e) {
+                  Log.w(
+                      LOGTAG,
+                      "An issue occurred while deserializing translation language settings: " + e);
+                }
+                return null;
+              });
+    }
+
+    /**
+     * Sets the language state for a given language.
+     *
+     * @param languageCode - The specified BCP 47 language portion of the code to update. For
+     *     example, es, en, de, etc.
+     * @param languageSetting - The specified setting for a given language.
+     * @return A GeckoResult that will return void if successful or else will complete
+     *     exceptionally.
+     */
+    @AnyThread
+    public static @NonNull GeckoResult<Void> setLanguageSettings(
+        final @NonNull String languageCode,
+        final @NonNull @LanguageSetting String languageSetting) {
+      if (DEBUG) {
+        Log.d(LOGTAG, "Requesting setting language setting.");
+      }
+
+      final GeckoBundle bundle = new GeckoBundle(2);
+      bundle.putString("language", languageCode);
+      bundle.putString("languageSetting", String.valueOf(languageSetting));
+      return EventDispatcher.getInstance().queryVoid(SET_LANGUAGE_SETTINGS_EVENT, bundle);
     }
 
     /** Options for managing the translation language models. */
@@ -454,6 +542,29 @@ public class TranslationsController {
         }
       }
     }
+
+    /**
+     * The runtime language settings a given language may have that dictates the app's translation
+     * offering behavior.
+     */
+    @Retention(RetentionPolicy.SOURCE)
+    @StringDef(value = {ALWAYS, OFFER, NEVER})
+    public @interface LanguageSetting {}
+
+    /**
+     * The translations engine should always expect this language to be translated and automatically
+     * translate on page load.
+     */
+    public static final String ALWAYS = "always";
+
+    /**
+     * The translations engine should offer this language to be translated. This is the default
+     * state, i.e., no user selection was made.
+     */
+    public static final String OFFER = "offer";
+
+    /** The translations engine should never offer to translate this language. */
+    public static final String NEVER = "never";
   }
 
   /**
@@ -467,6 +578,12 @@ public class TranslationsController {
     // Events Dispatched to Toolkit Translations
     private static final String TRANSLATE_EVENT = "GeckoView:Translations:Translate";
     private static final String RESTORE_PAGE_EVENT = "GeckoView:Translations:RestorePage";
+
+    private static final String GET_NEVER_TRANSLATE_SITE =
+        "GeckoView:Translations:GetNeverTranslateSite";
+
+    private static final String SET_NEVER_TRANSLATE_SITE =
+        "GeckoView:Translations:SetNeverTranslateSite";
 
     // Events Dispatched from Toolkit Translations
     private static final String ON_OFFER_EVENT = "GeckoView:Translations:Offer";
@@ -559,6 +676,38 @@ public class TranslationsController {
         Log.d(LOGTAG, "Restore translated page requested");
       }
       return mSession.getEventDispatcher().queryVoid(RESTORE_PAGE_EVENT);
+    }
+
+    /**
+     * Gets the setting of the site for whether it should be translated or not.
+     *
+     * @return The site setting for the page or exceptionally if an issue occurs.
+     */
+    @AnyThread
+    public @NonNull GeckoResult<Boolean> getNeverTranslateSiteSetting() {
+      if (DEBUG) {
+        Log.d(LOGTAG, "Retrieving never translate site setting.");
+      }
+      return mSession.getEventDispatcher().queryBoolean(GET_NEVER_TRANSLATE_SITE);
+    }
+
+    /**
+     * Sets whether the site should be translated or not.
+     *
+     * @param neverTranslate Should be set to true if the site should never be translated or false
+     *     if it should be translated.
+     * @return Void if the operation to set the value completed or exceptionally if an issue
+     *     occurred.
+     */
+    @AnyThread
+    public @NonNull GeckoResult<Void> setNeverTranslateSiteSetting(
+        final @NonNull Boolean neverTranslate) {
+      if (DEBUG) {
+        Log.d(LOGTAG, "Setting never translate site.");
+      }
+      final GeckoBundle bundle = new GeckoBundle(2);
+      bundle.putBoolean("neverTranslate", neverTranslate);
+      return mSession.getEventDispatcher().queryVoid(SET_NEVER_TRANSLATE_SITE, bundle);
     }
 
     /**
