@@ -22,7 +22,6 @@ add_task(
         { fromLang: "en", toLang: "es" },
         { fromLang: "es", toLang: "en" },
       ],
-      prefs: [["browser.translations.alwaysTranslateLanguages", ""]],
     });
 
     await assertTranslationsButton(

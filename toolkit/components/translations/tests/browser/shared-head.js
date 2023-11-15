@@ -469,7 +469,7 @@ async function loadTestPage({
   page,
   prefs,
   autoOffer,
-  permissionsUrls = [],
+  permissionsUrls,
 }) {
   info(`Loading test page starting at url: ${page}`);
   // Ensure no engine is being carried over from a previous test.
@@ -482,11 +482,21 @@ async function loadTestPage({
       ["browser.translations.logLevel", "All"],
       ["browser.translations.panelShown", true],
       ["browser.translations.automaticallyPopup", true],
+      ["browser.translations.alwaysTranslateLanguages", ""],
+      ["browser.translations.neverTranslateLanguages", ""],
       ...(prefs ?? []),
     ],
   });
   await SpecialPowers.pushPermissions(
-    permissionsUrls.map(url => ({
+    [
+      ENGLISH_PAGE_URL,
+      FRENCH_PAGE_URL,
+      NO_LANGUAGE_URL,
+      SPANISH_PAGE_URL,
+      SPANISH_PAGE_URL_2,
+      SPANISH_PAGE_URL_DOT_ORG,
+      ...(permissionsUrls || []),
+    ].map(url => ({
       type: TRANSLATIONS_PERMISSION,
       allow: true,
       context: url,

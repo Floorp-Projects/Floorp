@@ -12,7 +12,6 @@ add_task(async function test_toggle_never_translate_language_menuitem() {
   const { cleanup, runInPage } = await loadTestPage({
     page: SPANISH_PAGE_URL,
     languagePairs: LANGUAGE_PAIRS,
-    prefs: [["browser.translations.neverTranslateLanguages", "pl,fr"]],
   });
 
   await assertTranslationsButton(
@@ -55,7 +54,6 @@ add_task(
     const { cleanup, resolveDownloads, runInPage } = await loadTestPage({
       page: SPANISH_PAGE_URL,
       languagePairs: LANGUAGE_PAIRS,
-      prefs: [["browser.translations.neverTranslateLanguages", "pl,fr"]],
     });
 
     await assertTranslationsButton(
@@ -102,10 +100,6 @@ add_task(
     const { cleanup, resolveDownloads, runInPage } = await loadTestPage({
       page: SPANISH_PAGE_URL,
       languagePairs: LANGUAGE_PAIRS,
-      prefs: [
-        ["browser.translations.alwaysTranslateLanguages", "uk,it"],
-        ["browser.translations.neverTranslateLanguages", "pl,fr"],
-      ],
     });
 
     await assertTranslationsButton(

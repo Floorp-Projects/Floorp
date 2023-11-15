@@ -13,7 +13,6 @@ add_task(async function test_toggle_never_translate_site_menuitem() {
   const { cleanup, runInPage } = await loadTestPage({
     page: SPANISH_PAGE_URL,
     languagePairs: LANGUAGE_PAIRS,
-    permissionsUrls: [SPANISH_PAGE_URL],
   });
 
   await assertTranslationsButton(
