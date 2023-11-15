@@ -404,7 +404,7 @@ fn adjust_hue(left: &mut f32, right: &mut f32, hue_interpolation: HueInterpolati
             let delta = *right - *left;
             if 0. < delta && delta < 180. {
                 *left += 360.;
-            } else if -180. < delta && delta < 0. {
+            } else if -180. < delta && delta <= 0. {
                 *right += 360.;
             }
         },
