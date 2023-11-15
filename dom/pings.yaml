@@ -23,3 +23,23 @@ pageload:
   notification_emails:
     - perf-telemetry-alerts@mozilla.com
     - dpalmeiro@mozilla.com
+
+use-counters:
+  description: |
+    Collects counts of uses of web platform features.
+    See [Use Counters Documentation](https://firefox-source-docs.mozilla.org/dom/use-counters.html)
+    for more information.
+  reasons:
+    app_shutdown_confirmed: |
+      Submitted when we reach `ShutdownPhase::AppShutdownConfirmed`.
+      (Any later and the network might have been torn down.)
+  include_client_id: true
+  send_if_empty: false
+  bugs:
+    - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+  data_reviews:
+    - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+  notification_emails:
+    - dom-core@mozilla.com
+    - chutten@mozilla.com
+    - emilio@mozilla.com
