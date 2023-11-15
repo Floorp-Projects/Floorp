@@ -17,6 +17,8 @@ ChromeUtils.defineESModuleGetters(this, {
   SearchEngineSelector: "resource://gre/modules/SearchEngineSelector.sys.mjs",
   SearchTestUtils: "resource://testing-common/SearchTestUtils.sys.mjs",
   SearchUtils: "resource://gre/modules/SearchUtils.sys.mjs",
+  SearchEngineSelectorOld:
+    "resource://gre/modules/SearchEngineSelectorOld.sys.mjs",
   sinon: "resource://testing-common/Sinon.sys.mjs",
   updateAppInfo: "resource://testing-common/AppInfo.sys.mjs",
 });
@@ -153,7 +155,9 @@ class SearchConfigTest {
     // configuration once - after that, it tries to access the network.
     engineSelector =
       Services.search.wrappedJSObject._engineSelector ||
-      new SearchEngineSelector();
+      SearchUtils.newSearchConfigEnabled
+        ? new SearchEngineSelector()
+        : new SearchEngineSelectorOld();
 
     // Note: we don't use the helper function here, so that we have at least
     // one message output per process.

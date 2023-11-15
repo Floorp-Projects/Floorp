@@ -4,7 +4,6 @@
 "use strict";
 
 ChromeUtils.defineESModuleGetters(this, {
-  SearchEngineSelector: "resource://gre/modules/SearchEngineSelector.sys.mjs",
   SearchService: "resource://gre/modules/SearchService.sys.mjs",
 });
 
@@ -395,7 +394,9 @@ function hasEnginesFirst(engines, expectedEngines) {
   }
 }
 
-engineSelector = new SearchEngineSelector();
+engineSelector = SearchUtils.newSearchConfigEnabled
+  ? new SearchEngineSelector()
+  : new SearchEngineSelectorOld();
 
 add_setup(async function () {
   if (!SearchUtils.newSearchConfigEnabled) {
