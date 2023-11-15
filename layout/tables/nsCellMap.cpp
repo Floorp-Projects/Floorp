@@ -208,7 +208,16 @@ nsCellMap* nsTableCellMap::GetMapFor(const nsTableRowGroupFrame* aRowGroup,
 
   // If aRowGroup is a repeated header or footer find the header or footer it
   // was repeated from.
-  if (aRowGroup->IsRepeatable()) {
+  // Bug 1442018: we also need this search for header/footer frames that are
+  // not marked as _repeatable_ because they have a next-in-flow, as they may
+  // nevertheless have been _repeated_ from an earlier fragment.
+  auto isTableHeaderFooterGroup = [](const nsTableRowGroupFrame* aRG) -> bool {
+    const auto display = aRG->StyleDisplay()->mDisplay;
+    return display == StyleDisplay::TableHeaderGroup ||
+           display == StyleDisplay::TableFooterGroup;
+  };
+  if (aRowGroup->IsRepeatable() ||
+      (aRowGroup->GetNextInFlow() && isTableHeaderFooterGroup(aRowGroup))) {
     auto findOtherRowGroupOfType =
         [aRowGroup](nsTableFrame* aTable) -> nsTableRowGroupFrame* {
       const auto display = aRowGroup->StyleDisplay()->mDisplay;
