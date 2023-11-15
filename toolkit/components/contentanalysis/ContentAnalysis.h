@@ -7,6 +7,8 @@
 #define mozilla_contentanalysis_h
 
 #include "mozilla/DataMutex.h"
+#include "mozilla/dom/WindowGlobalParent.h"
+#include "mozilla/Mutex.h"
 #include "nsIContentAnalysis.h"
 #include "nsProxyRelease.h"
 #include "nsString.h"
@@ -22,12 +24,13 @@ namespace mozilla::contentanalysis {
 
 class ContentAnalysisRequest final : public nsIContentAnalysisRequest {
  public:
-  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_ISUPPORTS
   NS_DECL_NSICONTENTANALYSISREQUEST
 
   ContentAnalysisRequest(unsigned long aAnalysisType, nsString&& aString,
                          bool aStringIsFilePath, nsCString&& aSha256Digest,
-                         nsString&& aUrl);
+                         nsString&& aUrl, unsigned long aResourceNameType,
+                         dom::WindowGlobalParent* aWindowGlobalParent);
 
  private:
   ~ContentAnalysisRequest() = default;
@@ -56,6 +59,18 @@ class ContentAnalysisRequest final : public nsIContentAnalysisRequest {
 
   // Email address of user.
   nsString mEmail;
+
+  // Unique identifier for this request
+  nsCString mRequestToken;
+
+  // Type of text to display, see nsIContentAnalysisRequest for values
+  unsigned long mOperationTypeForDisplay;
+
+  // String to display if mOperationTypeForDisplay is
+  // OPERATION_CUSTOMDISPLAYSTRING
+  nsString mOperationDisplayString;
+
+  RefPtr<dom::WindowGlobalParent> mWindowGlobalParent;
 };
 
 class ContentAnalysisResponse;
@@ -76,7 +91,7 @@ class ContentAnalysis final : public nsIContentAnalysis {
                                  RefPtr<nsIContentAnalysisCallback> aCallback);
   nsresult RunAcknowledgeTask(
       nsIContentAnalysisAcknowledgement* aAcknowledgement,
-      const std::string& aRequestToken);
+      const nsACString& aRequestToken);
 
   static StaticDataMutex<UniquePtr<content_analysis::sdk::Client>> sCaClient;
   friend class ContentAnalysisResponse;
@@ -84,8 +99,11 @@ class ContentAnalysis final : public nsIContentAnalysis {
 
 class ContentAnalysisResponse final : public nsIContentAnalysisResponse {
  public:
-  NS_DECL_THREADSAFE_ISUPPORTS
+  NS_DECL_ISUPPORTS
   NS_DECL_NSICONTENTANALYSISRESPONSE
+
+  static RefPtr<ContentAnalysisResponse> FromAction(
+      unsigned long aAction, const nsACString& aRequestToken);
 
   void SetOwner(RefPtr<ContentAnalysis> aOwner);
 
@@ -96,13 +114,16 @@ class ContentAnalysisResponse final : public nsIContentAnalysisResponse {
   ContentAnalysisResponse& operator=(ContentAnalysisResponse&) = delete;
   explicit ContentAnalysisResponse(
       content_analysis::sdk::ContentAnalysisResponse&& aResponse);
+  ContentAnalysisResponse(unsigned long aAction,
+                          const nsACString& aRequestToken);
   static already_AddRefed<ContentAnalysisResponse> FromProtobuf(
       content_analysis::sdk::ContentAnalysisResponse&& aResponse);
 
   // See nsIContentAnalysisResponse for values
   uint32_t mAction;
 
-  std::string mRequestToken;
+  // Identifier for the corresponding nsIContentAnalysisRequest
+  nsCString mRequestToken;
 
   // ContentAnalysis (or, more precisely, it's Client object) must outlive
   // the transaction.

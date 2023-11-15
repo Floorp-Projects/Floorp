@@ -1145,6 +1145,12 @@
   value: "path_user"
   mirror: never
 
+# Should CA ignore the system setting and use silent notifications?
+- name: browser.contentanalysis.silent_notifications
+  type: bool
+  value: false
+  mirror: always
+
 # Content blocking for Enhanced Tracking Protection
 - name: browser.contentblocking.database.enabled
   type: bool

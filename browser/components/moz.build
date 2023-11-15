@@ -30,6 +30,7 @@ DIRS += [
     "about",
     "aboutlogins",
     "attribution",
+    "contentanalysis",
     "contextualidentity",
     "customizableui",
     "doh",
