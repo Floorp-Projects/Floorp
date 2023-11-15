@@ -484,6 +484,10 @@ pref("browser.urlbar.quicksuggest.contextualOptIn", false);
 // contextual opt-in result.
 pref("browser.urlbar.quicksuggest.contextualOptIn.sayHello", false);
 
+// Controls whether the Firefox Suggest contextual opt-in result appears at
+// the top of results or at the bottom, after one-off buttons.
+pref("browser.urlbar.quicksuggest.contextualOptIn.topPosition", true);
+
 // Whether the quick suggest feature in the urlbar is enabled.
 pref("browser.urlbar.quicksuggest.enabled", false);
 
