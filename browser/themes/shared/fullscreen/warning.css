@@ -36,7 +36,6 @@ html|*.pointerlockfswarning[data-identity="unknownIdentity"]::before {
 html|*.pointerlockfswarning-domain-text,
 html|*.pointerlockfswarning-generic-text {
   font-size: 21px;
-  font-weight: lighter;
   margin: 0 16px;
 }
 
