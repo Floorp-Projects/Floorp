@@ -414,6 +414,46 @@ void nsMenuBarX::SetSystemHelpMenu() {
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
+// macOS is adding some (currently 3) hidden menu items every time that
+// `NSApp.mainMenu` is set, but never removes them. This ultimately causes a
+// significant slowdown when switching between windows because the number of
+// items in `NSApp.mainMenu` is growing without bounds.
+//
+// The known hidden, problematic menu items are associated with the following
+// menus:
+//   - Start Dictation...
+//   - Emoji & Symbols
+//
+// Removing these items before setting `NSApp.mainMenu` prevents this slowdown.
+// See bug 1808223.
+static bool RemoveProblematicMenuItems(NSMenu* aMenu) {
+  uint8_t problematicMenuItemCount = 3;
+  NSMutableArray* itemsToRemove =
+      [NSMutableArray arrayWithCapacity:problematicMenuItemCount];
+
+  for (NSInteger i = 0; i < aMenu.numberOfItems; i++) {
+    NSMenuItem* item = [aMenu itemAtIndex:i];
+
+    if (item.hidden &&
+        (item.action == @selector(startDictation:) ||
+         item.action == @selector(orderFrontCharacterPalette:))) {
+      [itemsToRemove addObject:@(i)];
+    }
+
+    if (item.hasSubmenu && RemoveProblematicMenuItems(item.submenu)) {
+      return true;
+    }
+  }
+
+  bool didRemoveItems = false;
+  for (NSNumber* index in [itemsToRemove reverseObjectEnumerator]) {
+    [aMenu removeItemAtIndex:index.integerValue];
+    didRemoveItems = true;
+  }
+
+  return didRemoveItems;
+}
+
 nsresult nsMenuBarX::Paint() {
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
@@ -432,6 +472,8 @@ nsresult nsMenuBarX::Paint() {
   [outgoingMenu removeItemAtIndex:0];
   [mNativeMenu insertItem:appMenuItem atIndex:0];
   [appMenuItem release];
+
+  RemoveProblematicMenuItems(mNativeMenu);
 
   // Set menu bar and event target.
   NSApp.mainMenu = mNativeMenu;
