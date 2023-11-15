@@ -1963,3 +1963,26 @@ phc:
       description: Whether to enable PHC
       type: boolean
       setPref: memory.phc.enabled
+
+mailto:
+  description: Prefs to control aspects of the mailto handler
+  owner: install-update@mozilla.com
+  hasExposure: true
+  exposureDescription: >-
+    The exposure event is sent when a webmail site calls the
+    registerProtocolHandler function and when users use mailto links in Firefox.
+  isEarlyStartup: false
+  variables:
+    dualPrompt:
+      type: boolean
+      description: >-
+        Can be used to toggle the entire feature on and off.
+      fallbackPref: browser.mailto.dualPrompt
+    dualPrompt.os:
+      type: boolean
+      description: >-
+        Make webmail sites display prompts to set Firefox as default OS mailto
+        application and another prompt to set the current site as default
+        webmail site in Firefox.
+      fallbackPref: browser.mailto.dualPrompt.os
+

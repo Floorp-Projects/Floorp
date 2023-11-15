@@ -65,6 +65,12 @@ export class nsContentDispatchChooser {
       aHandler.alwaysAskBeforeHandling = true;
     }
 
+    if ("mailto" === aURI.scheme) {
+      Glean.protocolhandlerMailto.visit.record({
+        triggered_externally: aTriggeredExternally,
+      });
+    }
+
     // Skip the dialog if a preferred application is set and the caller has
     // permission.
     if (

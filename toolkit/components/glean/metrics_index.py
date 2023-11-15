@@ -34,6 +34,7 @@ gecko_metrics = [
     "toolkit/components/resistfingerprinting/metrics.yaml",
     "toolkit/components/translations/metrics.yaml",
     "toolkit/mozapps/extensions/metrics.yaml",
+    "toolkit/mozapps/handling/metrics.yaml",
     "xpcom/metrics.yaml",
 ]
 
@@ -46,6 +47,7 @@ firefox_desktop_metrics = [
     "browser/components/pocket/metrics.yaml",
     "browser/components/preferences/metrics.yaml",
     "browser/components/privatebrowsing/metrics.yaml",
+    "browser/components/protocolhandler/metrics.yaml",
     "browser/components/search/metrics.yaml",
     "browser/components/shopping/metrics.yaml",
     "browser/components/urlbar/metrics.yaml",

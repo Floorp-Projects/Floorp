@@ -1,0 +1,38 @@
+
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Adding a new metric? We have docs for that!
+
+# https://firefox-source-docs.mozilla.org/toolkit/components/glean/user/new_definitions_file.html
+
+---
+$schema: moz://mozilla.org/schemas/glean/metrics/2-0-0
+$tags:
+  - 'Firefox :: General'
+
+protocolhandler.mailto:
+  visit:
+    type: event
+    description: >
+      a URI of type mailto was visited. Furthermore we want to know if from
+      within the browser.
+    bugs:
+      - https://bugzilla.mozilla.org/1864216
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1864216#c8
+    notification_emails:
+      - install-update@mozilla.com
+    expires: never
+    extra_keys:
+      triggered_externally:
+        description: >
+          If Firefox was invoked to handle the link this value is true and if
+          the callee comes from within Firefox, this value is false
+        type: boolean
+    send_in_pings:
+      - active
+      - events
+      - metrics
+

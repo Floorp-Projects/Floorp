@@ -2908,3 +2908,11 @@ pref("browser.privatebrowsing.resetPBM.showConfirmationDialog", true);
 #ifdef XP_MACOSX
   pref("browser.attribution.macos.enabled", false);
 #endif
+
+// the preferences related to the Nimbus experiment, to activate and deactivate
+// the the entire rollout or deactivate only the OS prompt (see: bug 1864216)
+pref("browser.mailto.dualPrompt", false);
+pref("browser.mailto.dualPrompt.os", false);
+// When visiting a site which uses registerProtocolHandler: Ask the user to set Firefox as
+// default mailto handler.
+pref("browser.mailto.prompt.os", true);
