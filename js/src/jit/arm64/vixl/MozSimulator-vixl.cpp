@@ -665,13 +665,12 @@ typedef int32_t (*Prototype_Int32_GeneralInt64Int64General)(int64_t, int64_t,
 typedef int32_t (*Prototype_Int32_GeneralInt64Int64Int64General)(int64_t, int64_t,
                                                                  int64_t, int64_t,
                                                                  int64_t);
-typedef int32_t (*Prototype_Int32_GeneralInt64Int64Int64GeneralGeneral)(
-    int64_t,
-    int64_t,
-    int64_t,
-    int64_t,
-    int64_t,
-    int64_t);
+typedef int32_t (*Prototype_Int32_GeneralInt64Int64Int64Int32Int32)(int64_t,
+                                                                    int64_t,
+                                                                    int64_t,
+                                                                    int64_t,
+                                                                    int32_t,
+                                                                    int32_t);
 typedef int64_t (*Prototype_General_GeneralInt32)(int64_t, int32_t);
 typedef int64_t (*Prototype_General_GeneralInt32Int32)(int64_t,
                                                        int32_t,
@@ -1094,10 +1093,10 @@ Simulator::VisitCallRedirection(const Instruction* instr)
       setGPR32Result(ret);
       break;
     }
-    case js::jit::Args_Int32_GeneralInt64Int64Int64GeneralGeneral: {
-      int32_t ret = reinterpret_cast<
-          Prototype_Int32_GeneralInt64Int64Int64GeneralGeneral>(nativeFn)(
-          x0, x1, x2, x3, x4, x5);
+    case js::jit::Args_Int32_GeneralInt64Int64Int64Int32Int32: {
+      int32_t ret =
+          reinterpret_cast<Prototype_Int32_GeneralInt64Int64Int64Int32Int32>(
+              nativeFn)(x0, x1, x2, x3, x4, x5);
       setGPR32Result(ret);
       break;
     }

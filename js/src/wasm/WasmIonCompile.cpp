@@ -6076,13 +6076,22 @@ static bool EmitMemCopyCall(FunctionCompiler& f, uint32_t dstMemIndex,
   IndexType srcIndexType = f.moduleEnv().memories[srcMemIndex].indexType();
 
   if (dstIndexType == IndexType::I32) {
-    dst = MExtendInt32ToInt64::New(f.alloc(), dst, true);
+    dst = f.extendI32(dst, /*isUnsigned=*/true);
+    if (!dst) {
+      return false;
+    }
   }
   if (srcIndexType == IndexType::I32) {
-    src = MExtendInt32ToInt64::New(f.alloc(), src, true);
+    src = f.extendI32(src, /*isUnsigned=*/true);
+    if (!src) {
+      return false;
+    }
   }
   if (dstIndexType == IndexType::I32 || srcIndexType == IndexType::I32) {
-    len = MExtendInt32ToInt64::New(f.alloc(), len, true);
+    len = f.extendI32(len, /*isUnsigned=*/true);
+    if (!len) {
+      return false;
+    }
   }
 
   MDefinition* dstMemIndexValue = f.constantI32(int32_t(dstMemIndex));

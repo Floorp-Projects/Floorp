@@ -1,0 +1,2 @@
+|jit-test| --wasm-multi-memory; test-also=--wasm-compiler=optimizing; test-also=--wasm-compiler=baseline; include:wasm.js; skip-if: !wasmMultiMemoryEnabled()
+
