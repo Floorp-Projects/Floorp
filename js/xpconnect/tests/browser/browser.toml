@@ -9,6 +9,8 @@ support-files = [
   "browser_promise_userInteractionHandling.html"
 ]
 
+["browser_date_telemetry.js"]
+
 ["browser_dead_object.js"]
 
 ["browser_exception_leak.js"]
