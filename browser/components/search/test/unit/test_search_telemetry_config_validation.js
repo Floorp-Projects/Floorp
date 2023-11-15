@@ -7,6 +7,7 @@ ChromeUtils.defineESModuleGetters(this, {
   RemoteSettings: "resource://services-settings/remote-settings.sys.mjs",
   TELEMETRY_SETTINGS_KEY: "resource:///modules/SearchSERPTelemetry.sys.mjs",
   JsonSchema: "resource://gre/modules/JsonSchema.sys.mjs",
+  SearchEngineSelector: "resource://gre/modules/SearchEngineSelector.sys.mjs",
 });
 
 /**
@@ -42,7 +43,7 @@ function disallowAdditionalProperties(section) {
   }
 }
 
-add_task(async function test_search_config_validates_to_schema() {
+add_task(async function test_search_telemetry_validates_to_schema() {
   let schema = await IOUtils.readJSON(
     PathUtils.join(do_get_cwd().path, "search-telemetry-schema.json")
   );
@@ -66,5 +67,59 @@ add_task(async function test_search_config_validates_to_schema() {
       message += `:\n${JSON.stringify(result.errors, null, 2)}`;
     }
     Assert.ok(result.valid, message);
+  }
+});
+
+add_task(async function test_search_config_codes_in_search_telemetry() {
+  let searchTelemetry = await RemoteSettings(TELEMETRY_SETTINGS_KEY).get();
+
+  let selector = new SearchEngineSelector(() => {});
+  let searchConfig = await selector.getEngineConfiguration();
+
+  const telemetryIdToSearchEngineIdMap = new Map([["duckduckgo", "ddg"]]);
+
+  for (let telemetryEntry of searchTelemetry) {
+    info(`Checking: ${telemetryEntry.telemetryId}`);
+    let engine;
+    for (let entry of searchConfig) {
+      if (entry.recordType != "engine") {
+        continue;
+      }
+      if (
+        entry.identifier == telemetryEntry.telemetryId ||
+        entry.identifier ==
+          telemetryIdToSearchEngineIdMap.get(telemetryEntry.telemetryId)
+      ) {
+        engine = entry;
+      }
+    }
+    Assert.ok(
+      !!engine,
+      `Should have associated engine data for telemetry id ${telemetryEntry.telemetryId}`
+    );
+
+    if (engine.base.partnerCode) {
+      Assert.ok(
+        telemetryEntry.taggedCodes.includes(engine.base.partnerCode),
+        `Should have the base partner code ${engine.base.partnerCode} listed in the search telemetry 'taggedCodes'`
+      );
+    } else {
+      Assert.equal(
+        telemetryEntry.telemetryId,
+        "baidu",
+        "Should only not have a base partner code for Baidu"
+      );
+    }
+
+    if (engine.variants) {
+      for (let variant of engine.variants) {
+        if ("partnerCode" in variant) {
+          Assert.ok(
+            telemetryEntry.taggedCodes.includes(variant.partnerCode),
+            `Should have the partner code ${variant.partnerCode} listed in the search telemetry 'taggedCodes'`
+          );
+        }
+      }
+    }
   }
 });
