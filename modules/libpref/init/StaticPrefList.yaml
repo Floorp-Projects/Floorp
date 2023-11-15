@@ -2014,7 +2014,7 @@
 # selectors for every page.
 - name: cookiebanners.service.enableGlobalRules
   type: bool
-  value: false
+  value: true
   mirror: always
 
 # Whether global rules are allowed to run in sub-frames. Running query selectors
