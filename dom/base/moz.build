@@ -283,6 +283,7 @@ EXPORTS.mozilla.dom += [
     "TreeOrderedArrayInlines.h",
     "TreeWalker.h",
     "UIDirectionManager.h",
+    "UseCounterMetrics.h",
     "UserActivation.h",
     "ViewportMetaData.h",
     "VisualViewport.h",
@@ -307,6 +308,7 @@ if CONFIG["COMPILE_ENVIRONMENT"]:
     )
 
 UNIFIED_SOURCES += [
+    "!UseCounterMetrics.cpp",
     "AbstractRange.cpp",
     "AnchorAreaFormRelValues.cpp",
     "AnimationFrameProvider.cpp",
@@ -616,4 +618,17 @@ GeneratedFile(
     script="gen-usecounters.py",
     entry_point="use_counter_list",
     inputs=["UseCountersWorker.conf"],
+)
+
+GeneratedFile(
+    "UseCounterMetrics.cpp",
+    script="usecounters.py",
+    entry_point="metric_map",
+    inputs=[
+        "UseCounters.conf",
+        "UseCountersWorker.conf",
+        "nsDeprecatedOperationList.h",
+        "!/layout/style/ServoCSSPropList.py",
+        "/servo/components/style/properties/counted_unknown_properties.py",
+    ],
 )
