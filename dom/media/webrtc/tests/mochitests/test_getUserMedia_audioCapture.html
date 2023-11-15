@@ -9,22 +9,6 @@
 <script>
 
 (async () => {
-  // Get an opus file containing a sine wave at maximum amplitude, of duration
-  // `lengthSeconds`, and of frequency `frequency`.
-  async function getSineWaveFile(frequency, lengthSeconds) {
-    const off = new OfflineAudioContext(1, lengthSeconds * 48000, 48000);
-    const osc = off.createOscillator();
-    const rec = new MediaRecorder(off.destination,
-                                  {mimeType: "audio/ogg; codecs=opus"});
-    osc.frequency.value = frequency;
-    osc.connect(off.destination);
-    osc.start();
-    rec.start();
-    off.startRendering();
-    const {data} = await new Promise(r => rec.ondataavailable = r);
-    return data;
-  }
-
   await createHTML({
     bug: "1156472",
     title: "Test AudioCapture with regular HTMLMediaElement, AudioContext, " +
@@ -58,7 +42,7 @@
     const analyser = new AudioStreamAnalyser(ac, stream);
 
     const oscThroughMediaElement = ac.createOscillator();
-    oscThroughMediaElement.frequency.value = analyser.frequencyForBinIndex(20);
+    oscThroughMediaElement.frequency.value = analyser.frequencyForBinIndex(200);
     const oscThroughAudioDestinationNode = ac.createOscillator();
     oscThroughAudioDestinationNode.frequency.value =
       analyser.frequencyForBinIndex(100);
@@ -69,8 +53,11 @@
 
     acTone.srcObject = msDest.stream;
 
-    const blob = await getSineWaveFile(analyser.frequencyForBinIndex(200), 10);
-    wavtone.src = URL.createObjectURL(blob);
+    wavtone.src = "/tests/dom/media/test/sin-441-1s-44100.flac";
+    wavtone.preservesPitch = false;
+    wavtone.playbackRate = analyser.frequencyForBinIndex(20) / 441;
+    ok(wavtone.playbackRate >= 1/16, "within firefox min playback rate");
+    ok(wavtone.playbackRate <= 16, "within firefox max playback rate");
     oscThroughMediaElement.start();
     oscThroughAudioDestinationNode.start();
     wavtone.loop = true;
