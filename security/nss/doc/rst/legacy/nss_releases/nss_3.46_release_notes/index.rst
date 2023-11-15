@@ -18,7 +18,7 @@ NSS 3.46 release notes
    -  Mike Kaganski
    -  xhimanshuz
 
-.. _distribution_information:
+
 
 `Distribution Information <#distribution_information>`__
 --------------------------------------------------------

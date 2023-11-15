@@ -11,7 +11,7 @@ NSS 3.82 release notes
    Network Security Services (NSS) 3.82 was released on **18 August 2022**.
 
 
-.. _distribution_information:
+
 
 `Distribution Information <#distribution_information>`__
 --------------------------------------------------------

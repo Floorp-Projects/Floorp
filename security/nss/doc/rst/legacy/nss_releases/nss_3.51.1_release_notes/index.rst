@@ -11,7 +11,7 @@ NSS 3.51.1 release notes
    The NSS team has released Network Security Services (NSS) 3.51.1 on **3 April 2020**. This is  a
    minor release focusing on functional bug fixes and low-risk patches only.
 
-.. _distribution_information:
+
 
 `Distribution Information <#distribution_information>`__
 --------------------------------------------------------

@@ -11,7 +11,7 @@ NSS 3.16.2.3 release notes
    Network Security Services (NSS) 3.16.2.3 is a patch release for NSS 3.16. The bug fixes in NSS
    3.16.2.3 are described in the "Bugs Fixed" section below.
 
-.. _distribution_information:
+
 
 `Distribution Information <#distribution_information>`__
 --------------------------------------------------------

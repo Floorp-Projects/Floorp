@@ -16,7 +16,7 @@ NSS 3.51 release notes
    -  Dmitry Baryshkov
    -  Victor Tapia
 
-.. _distribution_information:
+
 
 `Distribution Information <#distribution_information>`__
 --------------------------------------------------------

@@ -16,7 +16,7 @@ NSS 3.53 release notes
    -  Jan-Marek Glogowski
    -  Jeff Walden
 
-.. _distribution_information:
+
 
 `Distribution Information <#distribution_information>`__
 --------------------------------------------------------

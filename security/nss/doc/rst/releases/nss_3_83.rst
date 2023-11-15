@@ -11,7 +11,7 @@ NSS 3.83 release notes
    Network Security Services (NSS) 3.83 was released on **15 September 2022**.
 
 
-.. _distribution_information:
+
 
 `Distribution Information <#distribution_information>`__
 --------------------------------------------------------

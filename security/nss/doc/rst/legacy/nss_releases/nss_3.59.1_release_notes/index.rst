@@ -11,7 +11,7 @@ NSS 3.59.1 release notes
    The NSS team has released Network Security Services (NSS) 3.59.1 on **18 December 2020**, which
    is a patch release for NSS 3.59.
 
-.. _distribution_information:
+
 
 `Distribution Information <#distribution_information>`__
 --------------------------------------------------------

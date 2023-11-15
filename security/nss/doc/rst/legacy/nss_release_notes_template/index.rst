@@ -20,7 +20,7 @@ NSS release notes template
    | Network Security Services (NSS) 3.XX.y is a patch release for NSS 3.XX. The bug fixes in NSS
      3.XX.y are described in the "Bugs Fixed" section below.
 
-.. _distribution_information:
+
 
 `Distribution Information <#distribution_information>`__
 --------------------------------------------------------

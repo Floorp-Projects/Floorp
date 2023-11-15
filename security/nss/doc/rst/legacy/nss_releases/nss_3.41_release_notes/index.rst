@@ -11,7 +11,7 @@ NSS 3.41 release notes
    The NSS team has released Network Security Services (NSS) 3.41 on 7 December 2018, which is a
    minor release.
 
-.. _distribution_information:
+
 
 `Distribution Information <#distribution_information>`__
 --------------------------------------------------------

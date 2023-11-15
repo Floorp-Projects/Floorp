@@ -11,7 +11,7 @@ NSS 3.19.2 release notes
    Network Security Services (NSS) 3.19.2 is a patch release for NSS 3.19 that addresses
    compatibility issues in NSS 3.19.1.
 
-.. _distribution_information:
+
 
 `Distribution Information <#distribution_information>`__
 --------------------------------------------------------

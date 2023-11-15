@@ -15,7 +15,7 @@ NSS 3.49 release notes
 
    -  Alex Henrie
 
-.. _distribution_information:
+
 
 `Distribution Information <#distribution_information>`__
 --------------------------------------------------------
