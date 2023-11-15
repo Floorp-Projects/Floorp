@@ -62,7 +62,7 @@
                      closemenu="none"
                      oncommand="gSsbChromeManager.functions.showSsbPanelSubView();"/>
       <panelview id="PanelUI-ssb">
-        <vbox class="panel-subview-body">
+        <vbox id="ssb-subview-body" class="panel-subview-body">
           <toolbarbutton id="appmenu-install-current-page-button"
                          class="subviewbutton"
                          data-l10n-id="appmenuitem-install-current-page"
@@ -71,6 +71,16 @@
           <html:h2 id="panelMenu_openInstalledApps"
                    data-l10n-id="appmenu-open-installed-apps-subheader"
                    class="subview-subheader"/>
+          <toolbaritem id="panelMenu_installedSsbMenu"
+                   orient="vertical"
+                   smoothscroll="false"
+                   flatList="true"
+                   tooltip="bhTooltip"
+                   role="group"
+                   context="ssbInstalledAppMenu-context" 
+                   aria-labelledby="panelMenu_openInstalledApps">
+            <!-- SSB menu items will go here -->
+          </toolbaritem>
         </vbox>
         <toolbarseparator/>
         <toolbarbutton id="PanelUI-openManageSsbPage"

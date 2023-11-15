@@ -2405,7 +2405,7 @@ var gBrowserInit = {
         );
 
         try {
-          SiteSpecificBrowserIdUtils.runSSBWithId(id);
+          SiteSpecificBrowserIdUtils.runSsbById(id);
           Services.prefs.clearUserPref(SsbPrefName);
         } catch (e) {
           console.error(e);
