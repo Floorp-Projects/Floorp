@@ -86,6 +86,9 @@ bool js::ParseCompileOptions(JSContext* cx, JS::CompileOptions& options,
     if (!JS::ToInt32(cx, v, &c)) {
       return false;
     }
+    if (c < 0) {
+      c = 0;
+    }
     options.setColumn(JS::ColumnNumberOneOrigin::fromZeroOrigin(c));
   }
 

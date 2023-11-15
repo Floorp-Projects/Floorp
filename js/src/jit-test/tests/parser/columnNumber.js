@@ -6,18 +6,16 @@ assertEq(evaluate("saveStack().column"), 1);
 assertEq(evaluate("saveStack().column", { columnNumber: 1729 }), 1730);
 assertEq(evaluate("\nsaveStack().column", { columnNumber: 1729 }), 1);
 assertEq(evaluate("saveStack().column", { columnNumber: "42" }), 43);
-assertThrowsInstanceOf(() => evaluate("saveStack().column", { columnNumber: -10 }),
-                       RangeError);
+// columnNumber < 1 is fixed to 1.
+assertEq(evaluate("saveStack().column", { columnNumber: -10 }), 1);
 assertThrowsInstanceOf(() => evaluate("saveStack().column", { columnNumber: Math.pow(2,30) }),
                        RangeError);
 
 if (helperThreadCount() > 0) {
   print("offThreadCompileToStencil 1");
   offThreadCompileToStencil("saveStack().column", { columnNumber: -10 });
-  assertThrowsInstanceOf(() => {
-    var stencil = finishOffThreadStencil();
-    evalStencil(stencil);
-  }, RangeError);
+  var stencil = finishOffThreadStencil();
+  assertEq(evalStencil(stencil), 1);
 
   print("offThreadCompileToStencil 2");
   offThreadCompileToStencil("saveStack().column", { columnNumber: Math.pow(2,30) });
