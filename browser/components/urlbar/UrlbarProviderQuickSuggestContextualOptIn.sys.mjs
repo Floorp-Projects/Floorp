@@ -89,7 +89,7 @@ class ProviderQuickSuggestContextualOptIn extends UrlbarProvider {
     return UrlbarUtils.PROVIDER_TYPE.HEURISTIC;
   }
 
-  isActive(queryContext) {
+  shouldDisplayContextualOptIn(queryContext) {
     if (
       queryContext.isPrivate ||
       queryContext.restrictSource ||
@@ -122,6 +122,13 @@ class ProviderQuickSuggestContextualOptIn extends UrlbarProvider {
     return true;
   }
 
+  isActive(queryContext) {
+    return (
+      this.shouldDisplayContextualOptIn(queryContext) &&
+      lazy.UrlbarPrefs.get("quicksuggest.contextualOptIn.topPosition")
+    );
+  }
+
   getPriority(queryContext) {
     return lazy.UrlbarProviderTopSites.PRIORITY;
   }
@@ -144,7 +151,7 @@ class ProviderQuickSuggestContextualOptIn extends UrlbarProvider {
     return {
       icon: {
         attributes: {
-          src: result.payload.icon,
+          src: "chrome://branding/content/icon32.png",
         },
       },
       title: {
@@ -169,20 +176,36 @@ class ProviderQuickSuggestContextualOptIn extends UrlbarProvider {
     if (result?.providerName != this.name) {
       return;
     }
-    switch (details.element?.getAttribute("name")) {
+    this.handleCommand(details.element, controller, result);
+  }
+
+  handleCommand(element, controller, result, container) {
+    switch (element?.getAttribute("name")) {
       case "learn-more":
         controller.browserWindow.openHelpLink("firefox-suggest");
         break;
       case "allow":
         lazy.UrlbarPrefs.set("quicksuggest.dataCollection.enabled", true);
-        controller.removeResult(result);
+        if (result) {
+          controller.removeResult(result);
+        } else {
+          // This is for when the UI is outside of standard results, after
+          // one-off search buttons.
+          container.hidden = true;
+        }
         break;
       case "dismiss":
         lazy.UrlbarPrefs.set(
           "quicksuggest.contextualOptIn.lastDismissed",
           new Date().toISOString()
         );
-        controller.removeResult(result);
+        if (result) {
+          controller.removeResult(result);
+        } else {
+          // This is for when the UI is outside of standard results, after
+          // one-off search buttons.
+          container.hidden = true;
+        }
         break;
     }
   }
@@ -214,7 +237,6 @@ class ProviderQuickSuggestContextualOptIn extends UrlbarProvider {
             attributes: { name: "dismiss" },
           },
         ],
-        icon: "chrome://branding/content/icon32.png",
         dynamicType: DYNAMIC_RESULT_TYPE,
       }
     );
