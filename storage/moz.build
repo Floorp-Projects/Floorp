@@ -106,4 +106,7 @@ LOCAL_INCLUDES += [
     "/third_party/sqlite3/src",
 ]
 
+if CONFIG["MOZ_FOLD_LIBS"]:
+    DEFINES["MOZ_FOLD_LIBS"] = True
+
 CXXFLAGS += CONFIG["SQLITE_CFLAGS"]
