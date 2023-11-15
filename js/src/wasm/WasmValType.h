@@ -88,9 +88,17 @@ union PackedTypeCode {
     MOZ_ASSERT(uint32_t(tc) <= ((1 << TypeCodeBits) - 1));
     MOZ_ASSERT_IF(tc != AbstractTypeRefCode, typeDef == nullptr);
     MOZ_ASSERT_IF(tc == AbstractTypeRefCode, typeDef != nullptr);
-    // Double check that the type definition was allocated within 48-bits, as
-    // noted above.
-    MOZ_ASSERT((uint64_t)typeDef <= ((uint64_t)1 << TypeDefBits) - 1);
+#if defined(JS_64BIT) && defined(DEBUG)
+    // Double check that `typeDef` points inside the "canonical" 48-bit
+    // address space by checking that the lower 48 bits sign extend back to
+    // the original.  This is necessary since we will only store the lowest 48
+    // bits of it, as noted above.  There's no equivalent check on 32 bit
+    // targets since we can store the whole pointer.
+    int64_t w = int64_t(typeDef);
+    w <<= (64 - TypeDefBits);
+    w >>= (64 - TypeDefBits);
+    MOZ_ASSERT(w == int64_t(typeDef));
+#endif
     PackedTypeCode ptc = {};
     ptc.typeCode_ = PackedRepr(tc);
     ptc.typeDef_ = (uintptr_t)typeDef;
@@ -141,7 +149,17 @@ union PackedTypeCode {
 
   const TypeDef* typeDef() const {
     MOZ_ASSERT(isValid());
+#if defined(JS_64BIT)
+    // Reconstitute the pointer by sign-extending the lowest TypeDefBits bits.
+    static_assert(sizeof(int64_t) == sizeof(uintptr_t));
+    int64_t w = int64_t(typeDef_);
+    w <<= (64 - TypeDefBits);
+    w >>= (64 - TypeDefBits);
+    return (const TypeDef*)(uintptr_t)w;
+#else
+    // The pointer is stored exactly in the lowest 32 bits of `typeDef_`.
     return (const TypeDef*)(uintptr_t)typeDef_;
+#endif
   }
 
   bool isNullable() const {
