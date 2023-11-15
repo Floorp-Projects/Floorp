@@ -6,7 +6,6 @@
  hg clone https://hg.mozilla.org/l10n-central/en-GB
  hg clone https://hg.mozilla.org/l10n-central/en-US
  hg clone https://hg.mozilla.org/l10n-central/es-ES
- hg clone https://hg.mozilla.org/l10n-central/es-MX
  hg clone https://hg.mozilla.org/l10n-central/fr
  hg clone https://hg.mozilla.org/l10n-central/hu
  hg clone https://hg.mozilla.org/l10n-central/id
