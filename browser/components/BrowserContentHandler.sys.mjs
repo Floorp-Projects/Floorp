@@ -61,6 +61,25 @@ function shouldLoadURI(aURI) {
 }
 
 function resolveURIInternal(aCmdLine, aArgument) {
+  // If using Firefox protocol handler remove it from URI
+  // at this stage. This is before we would otherwise
+  // record telemetry so do that here.
+  if (aArgument.startsWith("firefox:")) {
+    aArgument = aArgument.substring("firefox:".length);
+    Services.telemetry.keyedScalarAdd(
+      "os.environment.launched_to_handle",
+      "firefox",
+      1
+    );
+  }
+  if (aArgument.startsWith("firefox-private:")) {
+    aArgument = aArgument.substring("firefox-private:".length);
+    Services.telemetry.keyedScalarAdd(
+      "os.environment.launched_to_handle",
+      "firefox-private",
+      1
+    );
+  }
   var uri = aCmdLine.resolveURI(aArgument);
   var uriFixup = Services.uriFixup;
 

@@ -2609,6 +2609,130 @@ BrowserGlue.prototype = {
         },
       },
 
+      {
+        name: "dualBrowserProtocolHandler",
+        condition:
+          AppConstants.platform == "win" &&
+          !Services.prefs.getBoolPref(
+            "browser.shell.customProtocolsRegistered"
+          ),
+        task: async () => {
+          const FIREFOX_HANDLER_NAME = "firefox";
+          const FIREFOX_PRIVATE_HANDLER_NAME = "firefox-private";
+          const path = Services.dirsvc.get("XREExeF", Ci.nsIFile).path;
+          let wrk = Cc["@mozilla.org/windows-registry-key;1"].createInstance(
+            Ci.nsIWindowsRegKey
+          );
+          try {
+            wrk.open(wrk.ROOT_KEY_CLASSES_ROOT, "", wrk.ACCESS_READ);
+            let FxSet = wrk.hasChild(FIREFOX_HANDLER_NAME);
+            let FxPrivateSet = wrk.hasChild(FIREFOX_PRIVATE_HANDLER_NAME);
+            wrk.close();
+            if (FxSet && FxPrivateSet) {
+              return;
+            }
+            wrk.open(
+              wrk.ROOT_KEY_CURRENT_USER,
+              "Software\\Classes",
+              wrk.ACCESS_ALL
+            );
+            const maybeUpdateRegistry = (
+              isSetAlready,
+              handler,
+              protocolName
+            ) => {
+              let retVal = false;
+              if (isSetAlready) {
+                return true;
+              }
+              let FxKey = wrk.createChild(handler, wrk.ACCESS_ALL);
+              try {
+                // Write URL protocol key
+                FxKey.writeStringValue("", protocolName);
+                FxKey.writeStringValue("URL Protocol", "");
+                FxKey.close();
+                // Write defaultIcon key
+                FxKey.create(
+                  FxKey.ROOT_KEY_CURRENT_USER,
+                  "Software\\Classes\\" + handler + "\\DefaultIcon",
+                  FxKey.ACCESS_ALL
+                );
+                FxKey.open(
+                  FxKey.ROOT_KEY_CURRENT_USER,
+                  "Software\\Classes\\" + handler + "\\DefaultIcon",
+                  FxKey.ACCESS_ALL
+                );
+                FxKey.writeStringValue("", `\"${path}\",1`);
+                FxKey.close();
+                // Write shell\\open\\command key
+                FxKey.create(
+                  FxKey.ROOT_KEY_CURRENT_USER,
+                  "Software\\Classes\\" + handler + "\\shell",
+                  FxKey.ACCESS_ALL
+                );
+                FxKey.create(
+                  FxKey.ROOT_KEY_CURRENT_USER,
+                  "Software\\Classes\\" + handler + "\\shell\\open",
+                  FxKey.ACCESS_ALL
+                );
+                FxKey.create(
+                  FxKey.ROOT_KEY_CURRENT_USER,
+                  "Software\\Classes\\" + handler + "\\shell\\open\\command",
+                  FxKey.ACCESS_ALL
+                );
+                FxKey.open(
+                  FxKey.ROOT_KEY_CURRENT_USER,
+                  "Software\\Classes\\" + handler + "\\shell\\open\\command",
+                  FxKey.ACCESS_ALL
+                );
+                if (handler == FIREFOX_PRIVATE_HANDLER_NAME) {
+                  FxKey.writeStringValue(
+                    "",
+                    `\"${path}\" -osint -private-window \"%1\"`
+                  );
+                } else {
+                  FxKey.writeStringValue("", `\"${path}\" -osint -url \"%1\"`);
+                }
+                retVal = true;
+              } catch (ex) {
+                retVal = false;
+                console.log(ex);
+              } finally {
+                FxKey.close();
+              }
+              return retVal;
+            };
+            try {
+              FxSet = maybeUpdateRegistry(
+                FxSet,
+                FIREFOX_HANDLER_NAME,
+                "URL:Firefox Protocol"
+              );
+            } catch (ex) {
+              console.log(ex);
+            }
+            try {
+              FxPrivateSet = maybeUpdateRegistry(
+                FxPrivateSet,
+                FIREFOX_PRIVATE_HANDLER_NAME,
+                "URL:Firefox Private Browsing Protocol"
+              );
+            } catch (ex) {
+              console.log(ex);
+            }
+            Services.prefs.setBoolPref(
+              "browser.shell.customProtocolsRegistered",
+              FxSet && FxPrivateSet
+            );
+          } catch (ex) {
+            console.log(ex);
+          } finally {
+            wrk.close();
+          }
+        },
+        timeout: 5000,
+      },
+
       // Ensure a Private Browsing Shortcut exists. This is needed in case
       // a user tries to use Windows functionality to pin our Private Browsing
       // mode icon to the Taskbar (eg: the "Pin to Taskbar" context menu item).

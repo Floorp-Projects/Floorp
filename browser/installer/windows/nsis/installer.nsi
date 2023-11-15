@@ -474,6 +474,25 @@ Section "-Application" APP_IDX
   ${AddDisabledDDEHandlerValues} "FirefoxURL-$AppUserModelID" "$2" "$8,${IDI_DOCUMENT_ZERO_BASED}" \
                                  "${AppRegName} URL" "true"
 
+  ; Create protocol registry keys for dual browser extensions - only if not already set
+  SetShellVarContext current  ; Set SHCTX to HKCU
+  !define FIREFOX_PROTOCOL "firefox"
+  ClearErrors
+  ReadRegStr $0 SHCTX "Software\Classes\${FIREFOX_PROTOCOL}" ""
+  ${If} $0 == ""
+    ${AddDisabledDDEHandlerValues} "${FIREFOX_PROTOCOL}" "$\"$INSTDIR\${FileMainEXE}$\" -osint -url $\"%1$\"" \
+                                   "$8,${IDI_APPICON_ZERO_BASED}" "Firefox Browsing Protocol" "true"
+  ${EndIf}
+
+  !define FIREFOX_PRIVATE_PROTOCOL "firefox-private"
+  ClearErrors
+  ReadRegStr $0 SHCTX "Software\Classes\${FIREFOX_PRIVATE_PROTOCOL}" ""
+  ${If} $0 == ""
+    ${AddDisabledDDEHandlerValues} "${FIREFOX_PRIVATE_PROTOCOL}" "$\"$INSTDIR\${FileMainEXE}$\" -osint -private-window $\"%1$\"" \
+                                   "$8,${IDI_PBICON_PB_EXE_ZERO_BASED}" "Firefox Private Browsing Protocol" "true"
+  ${EndIf}
+  SetShellVarContext all  ; Set SHCTX to HKLM
+
   ; The keys below can be set in HKCU if needed.
   ${If} $TmpVal == "HKLM"
     ; Set the Start Menu Internet and Registered App HKLM registry keys.
