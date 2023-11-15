@@ -123,7 +123,10 @@ VideoCaptureAvFoundation::~VideoCaptureAvFoundation() {
 rtc::scoped_refptr<VideoCaptureModule> VideoCaptureAvFoundation::Create(
     const char* _Nullable aDeviceUniqueIdUTF8) {
   std::string uniqueId(aDeviceUniqueIdUTF8);
-  for (AVCaptureDevice* device in [RTCCameraVideoCapturer captureDevices]) {
+
+  for (AVCaptureDevice* device in [RTCCameraVideoCapturer
+           captureDevicesWithDeviceTypes:[RTCCameraVideoCapturer
+                                             defaultCaptureDeviceTypes]]) {
     if ([NSString stdStringForString:device.uniqueID] == uniqueId) {
       rtc::scoped_refptr<VideoCaptureModule> module(
           new rtc::RefCountedObject<VideoCaptureAvFoundation>(device));
