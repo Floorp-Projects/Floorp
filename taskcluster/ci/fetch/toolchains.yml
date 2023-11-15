@@ -167,9 +167,6 @@ zlib-1.3:
         url: https://zlib.net/fossils/zlib-1.3.tar.gz
         sha256: ff0ba4c292013dbc27530b3a81e1f9a813cd39de01ca5e0f8bf355702efa593e
         size: 1495873
-        gpg-signature:
-            sig-url: "{url}.asc"
-            key-path: build/unix/build-gcc/5ED46A6721D365587791E2AA783FCD8E58BCAFBA.key
 
 nsis-3.07:
     description: nsis 3.07 source code
