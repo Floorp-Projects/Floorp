@@ -2431,7 +2431,7 @@ typedef int32_t (*Prototype_Int32_GeneralInt64Int64General)(int32_t, int64_t,
                                                             int64_t, int32_t);
 typedef int32_t (*Prototype_Int32_GeneralInt64Int64Int64General)(
     int32_t, int64_t, int64_t, int64_t, int32_t);
-typedef int32_t (*Prototype_Int32_GeneralInt64Int64Int64GeneralGeneral)(
+typedef int32_t (*Prototype_Int32_GeneralInt64Int64Int64Int32Int32)(
     int32_t, int64_t, int64_t, int64_t, int32_t, int32_t);
 typedef int32_t (*Prototype_General_GeneralInt32)(int32_t, int32_t);
 typedef int32_t (*Prototype_General_GeneralInt32Int32)(int32_t, int32_t,
@@ -3160,11 +3160,10 @@ void Simulator::softwareInterrupt(SimInstruction* instr) {
           setCallResult(result);
           break;
         }
-        case Args_Int32_GeneralInt64Int64Int64GeneralGeneral: {
-          Prototype_Int32_GeneralInt64Int64Int64GeneralGeneral target =
+        case Args_Int32_GeneralInt64Int64Int64Int32Int32: {
+          Prototype_Int32_GeneralInt64Int64Int64Int32Int32 target =
               reinterpret_cast<
-                  Prototype_Int32_GeneralInt64Int64Int64GeneralGeneral>(
-                  external);
+                  Prototype_Int32_GeneralInt64Int64Int64Int32Int32>(external);
           int64_t result =
               target(arg0, MakeInt64(arg2, arg3), MakeInt64(arg4, arg5),
                      MakeInt64(arg6, arg7), arg8, arg9);

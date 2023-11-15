@@ -1212,7 +1212,7 @@ RegI64 BaseCompiler::popIndexToInt64(IndexType indexType) {
   RegI32 lowPart = popI32();
   RegI32 highPart = needI32();
   masm.xor32(highPart, highPart);
-  return RegI64(Register64(lowPart, highPart));
+  return RegI64(Register64(highPart, lowPart));
 #endif
 }
 
