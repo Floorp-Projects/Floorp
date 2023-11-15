@@ -12,7 +12,6 @@ add_task(async function test_uncheck_never_translate_site_shows_button() {
   const { cleanup, runInPage } = await loadTestPage({
     page: SPANISH_PAGE_URL,
     languagePairs: LANGUAGE_PAIRS,
-    permissionsUrls: [SPANISH_PAGE_URL],
   });
 
   await assertPageIsUntranslated(runInPage);
@@ -53,7 +52,6 @@ add_task(
     const { cleanup, runInPage, resolveDownloads } = await loadTestPage({
       page: BLANK_PAGE,
       languagePairs: LANGUAGE_PAIRS,
-      permissionsUrls: [SPANISH_PAGE_URL],
       prefs: [["browser.translations.alwaysTranslateLanguages", "es"]],
     });
 

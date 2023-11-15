@@ -8,9 +8,7 @@ add_task(
     const {
       cleanup,
       elements: { settingsButton },
-    } = await setupAboutPreferences(LANGUAGE_PAIRS, {
-      prefs: [["browser.translations.neverTranslateLanguages", ""]],
-    });
+    } = await setupAboutPreferences(LANGUAGE_PAIRS);
 
     info("Ensuring the list of never-translate languages is empty");
     is(

@@ -19,7 +19,6 @@ add_task(async function test_unsupported_language_settings_menu_checkboxes() {
       { fromLang: "en", toLang: "es" },
       { fromLang: "es", toLang: "en" },
     ],
-    prefs: [["browser.translations.alwaysTranslateLanguages", ""]],
   });
 
   await assertTranslationsButton(

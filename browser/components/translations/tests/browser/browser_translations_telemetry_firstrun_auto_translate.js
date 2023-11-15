@@ -11,10 +11,7 @@ add_task(async function test_translations_telemetry_firstrun_auto_translate() {
   const { cleanup, resolveDownloads, runInPage } = await loadTestPage({
     page: SPANISH_PAGE_URL,
     languagePairs: LANGUAGE_PAIRS,
-    prefs: [
-      ["browser.translations.panelShown", false],
-      ["browser.translations.alwaysTranslateLanguages", ""],
-    ],
+    prefs: [["browser.translations.panelShown", false]],
   });
 
   await assertTranslationsButton({ button: true }, "The button is available.");

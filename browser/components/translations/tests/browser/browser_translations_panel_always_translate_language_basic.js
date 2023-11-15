@@ -12,7 +12,6 @@ add_task(async function test_toggle_always_translate_language_menuitem() {
   const { cleanup, resolveDownloads, runInPage } = await loadTestPage({
     page: SPANISH_PAGE_URL,
     languagePairs: LANGUAGE_PAIRS,
-    prefs: [["browser.translations.alwaysTranslateLanguages", "pl,fr"]],
   });
 
   await assertTranslationsButton(

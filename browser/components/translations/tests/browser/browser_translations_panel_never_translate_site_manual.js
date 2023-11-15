@@ -15,7 +15,6 @@ add_task(
     const { cleanup, resolveDownloads, runInPage } = await loadTestPage({
       page: SPANISH_PAGE_URL,
       languagePairs: LANGUAGE_PAIRS,
-      permissionsUrls: [SPANISH_PAGE_URL],
     });
 
     await assertTranslationsButton(
