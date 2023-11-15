@@ -326,8 +326,6 @@ class HTMLSelectElement final : public nsGenericHTMLFormControlElementWithState,
   void GetPreviewValue(nsAString& aValue) { aValue = mPreviewValue; }
   void SetPreviewValue(const nsAString& aValue);
 
-  void HandleInvokeInternal(nsAtom* aAction, ErrorResult& aRv) override;
-
  protected:
   virtual ~HTMLSelectElement() = default;
 

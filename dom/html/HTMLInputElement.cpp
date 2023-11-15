@@ -5755,22 +5755,10 @@ void HTMLInputElement::ShowPicker(ErrorResult& aRv) {
   //
   // https://html.spec.whatwg.org/multipage/input.html#show-the-picker,-if-applicable
   // To show the picker, if applicable for an input element element:
-  ShowThePickerIfApplicable();
-}
-
-void HTMLInputElement::ShowThePickerIfApplicable() {
-  // https://html.spec.whatwg.org/multipage/input.html#show-the-picker,-if-applicable
-  // To show the picker, if applicable for an input element element:
 
   // Step 1. Assert: element's relevant global object has transient activation.
-  if (!OwnerDoc()->HasValidTransientUserGestureActivation()) {
-    return;
-  }
-
   // Step 2. If element is not mutable, then return.
-  if (!IsMutable()) {
-    return;
-  }
+  // (See above.)
 
   // Step 3. If element's type attribute is in the File Upload state, then run
   // these steps in parallel:
@@ -7334,23 +7322,6 @@ void HTMLInputElement::MaybeFireInputPasswordRemoved() {
   AsyncEventDispatcher::RunDOMEventWhenSafe(
       *this, u"DOMInputPasswordRemoved"_ns, CanBubble::eNo,
       ChromeOnlyDispatch::eYes);
-}
-
-void HTMLInputElement::HandleInvokeInternal(nsAtom* aAction, ErrorResult& aRv) {
-  // If this's relevant settings object's origin is not same origin with
-  // this's relevant settings object's top-level origin, [...], then return.
-  nsPIDOMWindowInner* window = OwnerDoc()->GetInnerWindow();
-  WindowGlobalChild* windowGlobalChild =
-      window ? window->GetWindowGlobalChild() : nullptr;
-  if (!windowGlobalChild || !windowGlobalChild->SameOriginWithTop()) {
-    return;
-  }
-
-  // If action is an ASCII case-insensitive match for "showPicker"
-  // then show the picker, if applicable for this.
-  if (nsContentUtils::EqualsIgnoreASCIICase(aAction, nsGkAtoms::showPicker)) {
-    ShowThePickerIfApplicable();
-  }
 }
 
 }  // namespace mozilla::dom

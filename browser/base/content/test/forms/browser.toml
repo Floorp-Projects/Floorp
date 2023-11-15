@@ -1,5 +1,5 @@
 [DEFAULT]
-prefs = ["gfx.font_loader.delay=0", "dom.select.showPicker.enabled=true", "dom.element.invokers.enabled=true"]
+prefs = ["gfx.font_loader.delay=0", "dom.select.showPicker.enabled=true"]
 support-files = ["head.js"]
 
 ["browser_selectpopup.js"]
@@ -13,8 +13,6 @@ skip-if = [
 skip-if = ["os == 'linux'"] # Bug 1329991 - test fails intermittently on Linux builds
 
 ["browser_selectpopup_dir.js"]
-
-["browser_selectpopup_invoke.js"]
 
 ["browser_selectpopup_large.js"]
 fail-if = ["a11y_checks"] # Bug 1854233 ContentSelectDropdown menulist may not be labeled
