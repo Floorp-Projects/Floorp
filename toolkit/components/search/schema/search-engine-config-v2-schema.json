@@ -391,7 +391,7 @@
           },
           "specificDefaults": {
             "title": "Filters",
-            "description": "The specific environment filters to set a different default engine.",
+            "description": "The specific environment filters to set a different default engine. The array is ordered, when multiple entries match on environments, the later entry will override earlier entries.",
             "type": "array",
             "items": {
               "type": "object",
@@ -449,6 +449,7 @@
           "recordType": { "$ref": "#/definitions/recordType" },
           "orders": {
             "title": "Orders",
+            "description": "When a user's instance matches the defined environments, the associated engine order will be applied. The array is ordered, when multiple entries match on environments, the later entry will override earlier entries.",
             "type": "array",
             "items": {
               "type": "object",
