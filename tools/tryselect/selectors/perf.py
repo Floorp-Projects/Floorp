@@ -1410,6 +1410,10 @@ class PerfParser(CompareParser):
             base_cmd[preview_option] + f' -d "{description_file}" -l "{{}}"'
         )
 
+        for idx, cmd in enumerate(base_cmd):
+            if "--preview-window" in cmd:
+                base_cmd[idx] += ":wrap"
+
 
 def get_compare_url(revisions, perfcompare_beta=False):
     """Setup the comparison link."""

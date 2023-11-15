@@ -272,7 +272,7 @@ class ClassificationProvider:
                 },
                 "suites": [Suites.RAPTOR.value],
                 "tasks": [],
-                "description": "Run all the pageload tests in warm, and cold. Used to determine\n"
+                "description": "Run all the pageload tests in warm, and cold. Used to determine "
                 "if your patch has a direct impact on pageload performance.",
             },
             "Speedometer 3": {
