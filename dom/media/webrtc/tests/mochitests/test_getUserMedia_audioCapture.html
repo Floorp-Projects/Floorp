@@ -42,6 +42,8 @@
     const acTone = createMediaElement("audio", "audioContextTone");
     acTone.muted = false;
     const acToneMuted = createMediaElement("audio", "audioContextToneMuted");
+    const micTone = createMediaElement("audio", "audioContextTone");
+    micTone.muted = false;
     const ac = new AudioContext();
     const constraints = {audio: {mediaSource: "audioCapture"}};
     const stream = await getUserMedia(constraints);
@@ -63,6 +65,18 @@
 
     acTone.srcObject = msDest200.stream;
     acToneMuted.srcObject = msDest250.stream;
+
+    // The fake microphone uses signed 16-bit audio data:
+    await SpecialPowers.pushPrefEnv({ set: [
+      [
+        "media.navigator.audio.fake_frequency",
+        analyser.frequencyForBinIndex(300)
+      ]
+    ]});
+    const micStream = await navigator.mediaDevices.getUserMedia({
+      'audio': true, 'fake': true
+    });
+    micTone.srcObject = micStream;
 
     decodedTone.src = "/tests/dom/media/test/sin-441-1s-44100.flac";
     decodedToneMuted.src = "/tests/dom/media/test/sin-441-1s-44100.flac";
@@ -91,21 +105,22 @@
         // energy in between, not just a flat white noise.
         if (array[10]  == 0 &&
             array[20]  == 255 &&
+            array[40]  == 0 &&
             array[70]  == 0 &&
             array[100] == 255 &&
             array[150] == 0 &&
-            array[200] == 255) {
+            array[200] == 255 &&
+            array[300] >  240) {
           frequencyBytes = new Uint8Array(array);
           return true;
         }
       });
     } finally {
       await ac.close();
-      for (let t of stream.getTracks()) {
+      for (let t of [...stream.getTracks(), ...micStream.getTracks()]) {
         t.stop();
       }
     }
-    todo(frequencyBytes[40] < 50, "muted decoded resource");
     todo(frequencyBytes[250] < 50, "muted MediaStream srcObject - bug 1864067");
   });
 })();
