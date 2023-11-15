@@ -104,9 +104,7 @@ $tags:
 
 """
 
-# TODO: What are good notification emails?
-# TODO: What's good info to include in these descriptions?
-DENOMINATOR_METRICS = """\
+BASE_METRICS = """\
 use.counter:
   content_documents_destroyed:
     type: counter
@@ -124,6 +122,7 @@ use.counter:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1569672
     notification_emails:
       - dom-core@mozilla.com
+      - emilio@mozilla.com
     expires: never
     send_in_pings:
       - use-counters
@@ -144,6 +143,7 @@ use.counter:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1569672
     notification_emails:
       - dom-core@mozilla.com
+      - emilio@mozilla.com
     expires: never
     send_in_pings:
       - use-counters
@@ -156,10 +156,12 @@ use.counter:
       Excludes chrome workers.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1202706
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1202706
     notification_emails:
       - dom-core@mozilla.com
+      - emilio@mozilla.com
     expires: never
     send_in_pings:
       - use-counters
@@ -172,10 +174,12 @@ use.counter:
       Excludes chrome workers.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1202706
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1202706
     notification_emails:
       - dom-core@mozilla.com
+      - emilio@mozilla.com
     expires: never
     send_in_pings:
       - use-counters
@@ -188,10 +192,36 @@ use.counter:
       Excludes chrome workers.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1202706
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1202706
     notification_emails:
       - dom-core@mozilla.com
+      - emilio@mozilla.com
+    expires: never
+    send_in_pings:
+      - use-counters
+
+use.counter.error:
+  unknown_counter:
+    type: labeled_counter
+    description: >
+      How many times did we try to increment a use counter we couldn't find?
+      Labeled by what kind of use counter it is.
+    labels:
+      - page
+      - doc
+      - dedicated
+      - shared
+      - service
+    bugs:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    data_reviews:
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
+    notification_emails:
+      - dom-core@mozilla.com
+      - chutten@mozilla.com
+      - emilio@mozilla.com
     expires: never
     send_in_pings:
       - use-counters
@@ -211,6 +241,7 @@ USE_COUNTER_TEMPLATE = """\
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1852098
     notification_emails:
       - dom-core@mozilla.com
+      - emilio@mozilla.com
     expires: never
     send_in_pings:
       - use-counters
@@ -234,6 +265,165 @@ def gen_use_counter_metrics():
 
     Returns 0 on success.
     """
+    (
+        page,
+        doc,
+        dedicated,
+        shared,
+        service,
+        ops_page,
+        ops_doc,
+        css_page,
+        css_doc,
+    ) = parse_use_counters()
+    import os
+
+    import buildconfig
+    from mozbuild.util import FileAvoidWrite
+
+    yaml_path = os.path.join(
+        buildconfig.topsrcdir, "dom", "base", "use_counter_metrics.yaml"
+    )
+    with FileAvoidWrite(yaml_path) as f:
+        f.write(YAML_HEADER)
+        f.write(BASE_METRICS)
+
+        total = (
+            len(page)
+            + len(doc)
+            + len(dedicated)
+            + len(shared)
+            + len(service)
+            + len(ops_page)
+            + len(ops_doc)
+            + len(css_page)
+            + len(css_doc)
+        )
+        f.write(f"# Total of {total} use counter metrics (excludes denominators).\n")
+        f.write(f"# Total of {len(page)} 'page' use counters.\n")
+        f.write("use.counter.page:\n")
+        for [_, name, desc] in page:
+            f.write(
+                USE_COUNTER_TEMPLATE.format(
+                    name=name,
+                    desc=desc,
+                    denominator="use.counter.top_level_content_documents_destroyed",
+                )
+            )
+
+        f.write(f"# Total of {len(doc)} 'document' use counters.\n")
+        f.write("use.counter.doc:\n")
+        for [_, name, desc] in doc:
+            f.write(
+                USE_COUNTER_TEMPLATE.format(
+                    name=name,
+                    desc=desc,
+                    denominator="use.counter.content_documents_destroyed",
+                )
+            )
+
+        f.write(f"# Total of {len(dedicated)} 'dedicated worker' use counters.\n")
+        f.write("use.counter.worker.dedicated:\n")
+        for [_, name, desc] in dedicated:
+            f.write(
+                USE_COUNTER_TEMPLATE.format(
+                    name=name,
+                    desc=desc,
+                    denominator="use.counter.dedicated_workers_destroyed",
+                )
+            )
+
+        f.write(f"# Total of {len(shared)} 'shared worker' use counters.\n")
+        f.write("use.counter.worker.shared:\n")
+        for [_, name, desc] in shared:
+            f.write(
+                USE_COUNTER_TEMPLATE.format(
+                    name=name,
+                    desc=desc,
+                    denominator="use.counter.shared_workers_destroyed",
+                )
+            )
+
+        f.write(f"# Total of {len(service)} 'service worker' use counters.\n")
+        f.write("use.counter.worker.service:\n")
+        for [_, name, desc] in service:
+            f.write(
+                USE_COUNTER_TEMPLATE.format(
+                    name=name,
+                    desc=desc,
+                    denominator="use.counter.service_workers_destroyed",
+                )
+            )
+
+        f.write(
+            f"# Total of {len(ops_page)} 'deprecated operations (page)' use counters.\n"
+        )
+        f.write("use.counter.deprecated_ops.page:\n")
+        for [_, name, desc] in ops_page:
+            f.write(
+                USE_COUNTER_TEMPLATE.format(
+                    name=name,
+                    desc=desc,
+                    denominator="use.counter.top_level_content_documents_destroyed",
+                )
+            )
+
+        f.write(
+            f"# Total of {len(ops_doc)} 'deprecated operations (document)' use counters.\n"
+        )
+        f.write("use.counter.deprecated_ops.doc:\n")
+        for [_, name, desc] in ops_doc:
+            f.write(
+                USE_COUNTER_TEMPLATE.format(
+                    name=name,
+                    desc=desc,
+                    denominator="use.counter.content_documents_destroyed",
+                )
+            )
+
+        f.write(f"# Total of {len(css_page)} 'CSS (page)' use counters.\n")
+        f.write("use.counter.css.page:\n")
+        for [_, name, desc] in css_page:
+            f.write(
+                USE_COUNTER_TEMPLATE.format(
+                    name=name,
+                    desc=desc,
+                    denominator="use.counter.top_level_content_documents_destroyed",
+                )
+            )
+
+        f.write(f"# Total of {len(css_doc)} 'CSS (document)' use counters.\n")
+        f.write("use.counter.css.doc:\n")
+        for [_, name, desc] in css_doc:
+            f.write(
+                USE_COUNTER_TEMPLATE.format(
+                    name=name,
+                    desc=desc,
+                    denominator="use.counter.content_documents_destroyed",
+                )
+            )
+
+    return 0
+
+
+def parse_use_counters():
+    """
+    Finds use counters in:
+      * dom/base/UseCounters.conf
+      * dom/base/UseCountersWorker.conf
+      * dom/base/nsDeprecatedOperationsList.h
+      * !/layout/style/ServoCSSPropList.py
+      * servo/components/style/properties/counted_unknown_properties.py
+    and returns them as a tuple of lists of tuples of the form:
+    (page, doc, dedicated, shared, service, ops_page, ops_doc, css_page, css_doc)
+    where each of the items is a List<Tuple<enum_name, glean_name, description>>
+    where `enum_name` is the name of the enum variant from UseCounter.h
+    (like `eUseCounter_custom_CustomizedBuiltin`), and
+    where `glean_name` is the name conjugated to Glean metric name safety.
+    """
+
+    # Note, this function contains a duplication of enum naming logic from UseCounter.h.
+    # If you change the enum name format, you'll need to do it twice.
 
     # There are 3 kinds of Use Counters in conf files: method, attribute, custom.
     # `method` and `attribute` are presumed label-safe and are taken as-is.
@@ -247,23 +437,51 @@ def gen_use_counter_metrics():
     doc = []
     for counter in read_conf(uc_path):
         if counter["type"] == "method":
-            name = f"{counter['interface_name']}_{counter['method_name']}".lower()
+            enum_name = (
+                f"eUseCounter_{counter['interface_name']}_{counter['method_name']}"
+            )
+            glean_name = f"{counter['interface_name']}_{counter['method_name']}".lower()
             method = f"called {counter['interface_name']}.{counter['method_name']}"
-            page.append((name, f"Whether a page called {method}."))
-            doc.append((name, f"Whether a document called {method}."))
+            page.append((enum_name, glean_name, f"Whether a page called {method}."))
+            doc.append((enum_name, glean_name, f"Whether a document called {method}."))
         elif counter["type"] == "attribute":
+            enum_root = (
+                f"eUseCounter_{counter['interface_name']}_{counter['attribute_name']}"
+            )
             name = f"{counter['interface_name']}_{counter['attribute_name']}".lower()
             attr = f"{counter['interface_name']}.{counter['attribute_name']}"
-            page.append((f"{name}_getter", f"Whether a page got {attr}."))
-            page.append((f"{name}_setter", f"Whether a page set {attr}."))
-            doc.append((f"{name}_getter", f"Whether a document got {attr}."))
-            doc.append((f"{name}_setter", f"Whether a document set {attr}."))
-        elif counter["type"] == "custom":
             page.append(
-                (to_snake_case(counter["name"]), f"Whether a page {counter['desc']}.")
+                (f"{enum_root}_getter", f"{name}_getter", f"Whether a page got {attr}.")
+            )
+            page.append(
+                (f"{enum_root}_setter", f"{name}_setter", f"Whether a page set {attr}.")
             )
             doc.append(
                 (
+                    f"{enum_root}_getter",
+                    f"{name}_getter",
+                    f"Whether a document got {attr}.",
+                )
+            )
+            doc.append(
+                (
+                    f"{enum_root}_setter",
+                    f"{name}_setter",
+                    f"Whether a document set {attr}.",
+                )
+            )
+        elif counter["type"] == "custom":
+            enum_name = f"eUseCounter_custom_{counter['name']}"
+            page.append(
+                (
+                    enum_name,
+                    to_snake_case(counter["name"]),
+                    f"Whether a page {counter['desc']}.",
+                )
+            )
+            doc.append(
+                (
+                    enum_name,
                     to_snake_case(counter["name"]),
                     f"Whether a document {counter['desc']}.",
                 )
@@ -280,35 +498,83 @@ def gen_use_counter_metrics():
     service = []
     for counter in read_conf(worker_uc_path):
         if counter["type"] == "method":
+            enum_name = f"{counter['interface_name']}_{counter['method_name']}"
             name = f"{counter['interface_name']}_{counter['method_name']}".lower()
             method = f"called {counter['interface_name']}.{counter['method_name']}"
-            dedicated.append((name, f"Whether a dedicated worker called {method}."))
-            shared.append((name, f"Whether a shared worker called {method}."))
-            service.append((name, f"Whether a service worker called {method}."))
+            dedicated.append(
+                (enum_name, name, f"Whether a dedicated worker called {method}.")
+            )
+            shared.append(
+                (enum_name, name, f"Whether a shared worker called {method}.")
+            )
+            service.append(
+                (enum_name, name, f"Whether a service worker called {method}.")
+            )
         elif counter["type"] == "attribute":
+            enum_root = f"{counter['interface_name']}_{counter['attribute_name']}"
             name = f"{counter['interface_name']}_{counter['attribute_name']}".lower()
             attr = f"{counter['interface_name']}.{counter['attribute_name']}"
-            dedicated.append((name, f"Whether a dedicated worker got {attr}."))
-            dedicated.append((name, f"Whether a dedicated worker set {attr}."))
-            shared.append((name, f"Whether a shared worker got {attr}."))
-            shared.append((name, f"Whether a shared worker set {attr}."))
-            service.append((name, f"Whether a service worker got {attr}."))
-            service.append((name, f"Whether a service worker set {attr}."))
-        elif counter["type"] == "custom":
             dedicated.append(
                 (
+                    f"{enum_root}_getter",
+                    f"{name}_getter",
+                    f"Whether a dedicated worker got {attr}.",
+                )
+            )
+            dedicated.append(
+                (
+                    f"{enum_root}_setter",
+                    f"{name}_setter",
+                    f"Whether a dedicated worker set {attr}.",
+                )
+            )
+            shared.append(
+                (
+                    f"{enum_root}_getter",
+                    f"{name}_getter",
+                    f"Whether a shared worker got {attr}.",
+                )
+            )
+            shared.append(
+                (
+                    f"{enum_root}_setter",
+                    f"{name}_setter",
+                    f"Whether a shared worker set {attr}.",
+                )
+            )
+            service.append(
+                (
+                    f"{enum_root}_getter",
+                    f"{name}_getter",
+                    f"Whether a service worker got {attr}.",
+                )
+            )
+            service.append(
+                (
+                    f"{enum_root}_setter",
+                    f"{name}_setter",
+                    f"Whether a service worker set {attr}.",
+                )
+            )
+        elif counter["type"] == "custom":
+            enum_name = f"Custom_{counter['name']}"
+            dedicated.append(
+                (
+                    enum_name,
                     to_snake_case(counter["name"]),
                     f"Whether a dedicated worker {counter['desc']}.",
                 )
             )
             shared.append(
                 (
+                    enum_name,
                     to_snake_case(counter["name"]),
                     f"Whether a shared worker {counter['desc']}.",
                 )
             )
             service.append(
                 (
+                    enum_name,
                     to_snake_case(counter["name"]),
                     f"Whether a service worker {counter['desc']}.",
                 )
@@ -335,10 +601,11 @@ def gen_use_counter_metrics():
 
             op = match.group(1)
             op_name = to_snake_case(op)
-            ops_page.append((op_name, f"Whether a page used {op}."))
-            ops_doc.append((op_name, f"Whether a document used {op}."))
+            enum_name = f"eUseCounter_{op}"
+            ops_page.append((enum_name, op_name, f"Whether a page used {op}."))
+            ops_doc.append((enum_name, op_name, f"Whether a document used {op}."))
 
-    # TODO: Theoretically, we could do this without a completed build
+    # Theoretically, we could do this without a completed build
     # (ie, without the generated ServoCSSPropList.py) by sourcing direct from
     # servo/components/style/properties/data.py:PropertiesData(engine=gecko).
     #
@@ -356,11 +623,23 @@ def gen_use_counter_metrics():
         # We prefix `prop_name` with `css_` to avoid colliding with C++ keywords
         # like `float`.
         prop_name = "css_" + to_snake_case(prop.name)
+
+        # Dependency keywords: CSS_PROP_PUBLIC_OR_PRIVATE, GenerateServoCSSPropList.py.
+        method = "Float" if prop.method == "CssFloat" else prop.method
+        # Dependency keywords: CSS_PROP_DOMPROP_PREFIXED, GenerateServoCSSPropList.py.
+        if method.startswith("Moz") and prop.type() != "alias":
+            method = method[3:]  # remove the moz prefix
+
+        enum_name = f"eUseCounter_property_{method}"
         css_page.append(
-            (prop_name, f"Whether a page used the CSS property {prop.name}.")
+            (enum_name, prop_name, f"Whether a page used the CSS property {prop.name}.")
         )
         css_doc.append(
-            (prop_name, f"Whether a document used the CSS property {prop.name}.")
+            (
+                enum_name,
+                prop_name,
+                f"Whether a document used the CSS property {prop.name}.",
+            )
         )
 
     # Counted unknown properties: AKA - stuff that doesn't exist, but we want
@@ -368,6 +647,11 @@ def gen_use_counter_metrics():
     # We _might_ decide to implement these in the future, though, so we just add
     # them to the css_page, css_doc lists directly for continuity.
     # (We do give them a different description, though)
+
+    import sys
+
+    sys.path.append(os.path.join(buildconfig.topsrcdir, "layout", "style"))
+    from GenerateCountedUnknownProperties import to_camel_case
 
     unknown_proplist_path = os.path.join(
         buildconfig.topsrcdir,
@@ -381,147 +665,24 @@ def gen_use_counter_metrics():
         "COUNTED_UNKNOWN_PROPERTIES"
     ]
     for prop in unknown_properties:
+        enum_name = f"eUseCounter_unknown_property_{to_camel_case(prop)}"
         prop_name = to_snake_case(prop)
         css_page.append(
             (
+                enum_name,
                 prop_name,
                 f"Whether a page used the (unknown, counted) CSS property {prop}.",
             )
         )
         css_doc.append(
             (
+                enum_name,
                 prop_name,
                 f"Whether a document used the (unknown, counted) CSS property {prop}.",
             )
         )
 
-    from mozbuild.util import FileAvoidWrite
-
-    # TODO: Up for discussion: organization.
-    # Especially e.g. use.counter.css.page.css_float, but also: perhaps suffixes are preferred over categories?
-    yaml_path = os.path.join(
-        buildconfig.topsrcdir, "dom", "base", "use_counter_metrics.yaml"
-    )
-    with FileAvoidWrite(yaml_path) as f:
-        f.write(YAML_HEADER)
-        f.write(DENOMINATOR_METRICS)
-
-        total = (
-            len(page)
-            + len(doc)
-            + len(dedicated)
-            + len(shared)
-            + len(service)
-            + len(ops_page)
-            + len(ops_doc)
-            + len(css_page)
-            + len(css_doc)
-        )
-        f.write(f"# Total of {total} use counter metrics (excludes denominators).\n")
-        f.write(f"# Total of {len(page)} 'page' use counters.\n")
-        f.write("use.counter.page:\n")
-        for uc in page:
-            f.write(
-                USE_COUNTER_TEMPLATE.format(
-                    name=uc[0],
-                    desc=uc[1],
-                    denominator="use.counter.top_level_content_documents_destroyed",
-                )
-            )
-
-        f.write(f"# Total of {len(doc)} 'document' use counters.\n")
-        f.write("use.counter.doc:\n")
-        for uc in doc:
-            f.write(
-                USE_COUNTER_TEMPLATE.format(
-                    name=uc[0],
-                    desc=uc[1],
-                    denominator="use.counter.content_documents_destroyed",
-                )
-            )
-
-        f.write(f"# Total of {len(dedicated)} 'dedicated worker' use counters.\n")
-        f.write("use.counter.worker.dedicated:\n")
-        for uc in dedicated:
-            f.write(
-                USE_COUNTER_TEMPLATE.format(
-                    name=uc[0],
-                    desc=uc[1],
-                    denominator="use.counter.dedicated_workers_destroyed",
-                )
-            )
-
-        f.write(f"# Total of {len(shared)} 'shared worker' use counters.\n")
-        f.write("use.counter.worker.shared:\n")
-        for uc in shared:
-            f.write(
-                USE_COUNTER_TEMPLATE.format(
-                    name=uc[0],
-                    desc=uc[1],
-                    denominator="use.counter.shared_workers_destroyed",
-                )
-            )
-
-        f.write(f"# Total of {len(service)} 'service worker' use counters.\n")
-        f.write("use.counter.worker.service:\n")
-        for uc in service:
-            f.write(
-                USE_COUNTER_TEMPLATE.format(
-                    name=uc[0],
-                    desc=uc[1],
-                    denominator="use.counter.service_workers_destroyed",
-                )
-            )
-
-        f.write(
-            f"# Total of {len(ops_page)} 'deprecated operations (page)' use counters.\n"
-        )
-        f.write("use.counter.deprecated_ops.page:\n")
-        for uc in ops_page:
-            f.write(
-                USE_COUNTER_TEMPLATE.format(
-                    name=uc[0],
-                    desc=uc[1],
-                    denominator="use.counter.top_level_content_documents_destroyed",
-                )
-            )
-
-        f.write(
-            f"# Total of {len(ops_doc)} 'deprecated operations (document)' use counters.\n"
-        )
-        f.write("use.counter.deprecated_ops.doc:\n")
-        for uc in ops_doc:
-            f.write(
-                USE_COUNTER_TEMPLATE.format(
-                    name=uc[0],
-                    desc=uc[1],
-                    denominator="use.counter.content_documents_destroyed",
-                )
-            )
-
-        f.write(f"# Total of {len(css_page)} 'CSS (page)' use counters.\n")
-        f.write("use.counter.css.page:\n")
-        for uc in css_page:
-            f.write(
-                USE_COUNTER_TEMPLATE.format(
-                    name=uc[0],
-                    desc=uc[1],
-                    denominator="use.counter.top_level_content_documents_destroyed",
-                )
-            )
-
-        f.write(f"# Total of {len(css_doc)} 'CSS (document)' use counters.\n")
-        f.write("use.counter.css.doc:\n")
-        for uc in css_doc:
-            f.write(
-                USE_COUNTER_TEMPLATE.format(
-                    name=uc[0],
-                    desc=uc[1],
-                    denominator="use.counter.content_documents_destroyed",
-                )
-            )
-
-    return 0
+    return (page, doc, dedicated, shared, service, ops_page, ops_doc, css_page, css_doc)
 
 
 def to_snake_case(kebab_or_pascal):
@@ -531,4 +692,193 @@ def to_snake_case(kebab_or_pascal):
     """
     return (
         re.sub("([A-Z]+)", r"_\1", kebab_or_pascal).replace("-", "_").lower().strip("_")
+    )
+
+
+def metric_map(f, *inputs):
+    """
+    Parses all use counters and outputs UseCounter.cpp which contains implementations
+    for two functions defined in UseCounter.h:
+      * void IncrementUseCounter(UseCounter aUseCounter, bool aIsPage)
+      * void IncrementWorkerUseCounter(UseCounterWorker aUseCounter, dom::WorkerKind aKind)
+
+    (Basically big switch statements mapping from enums to glean metrics, calling Add())
+    """
+
+    (
+        page,
+        doc,
+        dedicated,
+        shared,
+        service,
+        ops_page,
+        ops_doc,
+        css_page,
+        css_doc,
+    ) = parse_use_counters()
+
+    f.write(
+        """\
+/* AUTOGENERATED by usecounters.py. DO NOT EDIT */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "mozilla/dom/UseCounterMetrics.h"
+
+#include "mozilla/dom/WorkerPrivate.h"
+#include "mozilla/glean/GleanMetrics.h"
+
+namespace mozilla::dom {
+
+void IncrementUseCounter(UseCounter aUseCounter, bool aIsPage) {
+  if (aIsPage) {
+    switch (aUseCounter) {
+"""
+    )
+    for uc in page:
+        f.write(
+            f"""\
+      case UseCounter::{uc[0]}:
+        glean::use_counter_page::{uc[1]}.Add();
+        break;
+"""
+        )
+
+    for uc in ops_page:
+        f.write(
+            f"""\
+      case UseCounter::{uc[0]}:
+        glean::use_counter_deprecated_ops_page::{uc[1]}.Add();
+        break;
+"""
+        )
+
+    for uc in css_page:
+        f.write(
+            f"""\
+      case UseCounter::{uc[0]}:
+        glean::use_counter_css_page::{uc[1]}.Add();
+        break;
+"""
+        )
+
+    f.write(
+        """\
+      default:
+        MOZ_ASSERT_UNREACHABLE("Unknown page usecounter.");
+        glean::use_counter_error::unknown_counter.Get("page"_ns).Add();
+        break;
+    }
+  } else {
+    switch (aUseCounter) {
+"""
+    )
+    for uc in doc:
+        f.write(
+            f"""\
+      case UseCounter::{uc[0]}:
+        glean::use_counter_doc::{uc[1]}.Add();
+        break;
+"""
+        )
+
+    for uc in ops_doc:
+        f.write(
+            f"""\
+      case UseCounter::{uc[0]}:
+        glean::use_counter_deprecated_ops_doc::{uc[1]}.Add();
+        break;
+"""
+        )
+
+    for uc in css_doc:
+        f.write(
+            f"""\
+      case UseCounter::{uc[0]}:
+        glean::use_counter_css_doc::{uc[1]}.Add();
+        break;
+"""
+        )
+
+    f.write(
+        """\
+      default:
+        MOZ_ASSERT_UNREACHABLE("Unknown document usecounter.");
+        glean::use_counter_error::unknown_counter.Get("doc"_ns).Add();
+        break;
+    }
+  }
+}
+
+void IncrementWorkerUseCounter(UseCounterWorker aUseCounter, WorkerKind aKind) {
+  switch(aKind) {
+    case WorkerKind::WorkerKindDedicated:
+      switch (aUseCounter) {
+"""
+    )
+    for uc in dedicated:
+        f.write(
+            f"""\
+        case UseCounterWorker::{uc[0]}:
+          glean::use_counter_worker_dedicated::{uc[1]}.Add();
+          break;
+"""
+        )
+
+    f.write(
+        """\
+        default:
+          MOZ_ASSERT_UNREACHABLE("Unknown dedicated worker usecounter.");
+          glean::use_counter_error::unknown_counter.Get("dedicated"_ns).Add();
+          break;
+      }
+      break;
+    case WorkerKind::WorkerKindShared:
+      switch (aUseCounter) {
+"""
+    )
+    for uc in shared:
+        f.write(
+            f"""\
+        case UseCounterWorker::{uc[0]}:
+          glean::use_counter_worker_shared::{uc[1]}.Add();
+          break;
+"""
+        )
+
+    f.write(
+        """\
+        default:
+          MOZ_ASSERT_UNREACHABLE("Unknown shared worker usecounter.");
+          glean::use_counter_error::unknown_counter.Get("shared"_ns).Add();
+          break;
+      }
+      break;
+    case WorkerKind::WorkerKindService:
+      switch (aUseCounter) {
+"""
+    )
+    for uc in service:
+        f.write(
+            f"""\
+        case UseCounterWorker::{uc[0]}:
+          glean::use_counter_worker_service::{uc[1]}.Add();
+          break;
+"""
+        )
+
+    f.write(
+        """\
+        default:
+          MOZ_ASSERT_UNREACHABLE("Unknown service worker usecounter.");
+          glean::use_counter_error::unknown_counter.Get("service"_ns).Add();
+          break;
+      }
+      break;
+  }
+}
+
+}  // namespace mozilla
+"""
     )
