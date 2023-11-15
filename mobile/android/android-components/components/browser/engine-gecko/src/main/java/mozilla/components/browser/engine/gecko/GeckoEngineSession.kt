@@ -1755,7 +1755,7 @@ class GeckoEngineSession(
         internal const val ABOUT_BLANK = "about:blank"
         internal const val JS_SCHEME = "javascript"
         internal val BLOCKED_SCHEMES =
-            listOf("content", "file", "resource", JS_SCHEME) // See 1684761 and 1684947
+            listOf("file", "resource", JS_SCHEME) // See 1684761 and 1684947
 
         /**
          * Provides an ErrorType corresponding to the error code provided.
