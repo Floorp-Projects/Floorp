@@ -598,6 +598,8 @@ static sandbox::MitigationFlags DynamicCodeFlagForSystemMediaLibraries() {
   return dynamicCodeFlag;
 }
 
+// Process fails to start in LPAC with ASan build
+#if !defined(MOZ_ASAN)
 static void HexEncode(const Span<const uint8_t>& aBytes, nsACString& aEncoded) {
   static const char kHexChars[] = "0123456789abcdef";
 
@@ -785,6 +787,7 @@ static sandbox::ResultCode AddAndConfigureAppContainerProfile(
 
   return sandbox::SBOX_ALL_OK;
 }
+#endif
 
 void SandboxBroker::SetSecurityLevelForContentProcess(int32_t aSandboxLevel,
                                                       bool aIsFileProcess) {
@@ -1644,6 +1647,8 @@ bool BuildUtilitySandbox(sandbox::TargetPolicy* policy,
     SANDBOX_ENSURE_SUCCESS(result, "Failed to initialize signed policy rules.");
   }
 
+  // Process fails to start in LPAC with ASan build
+#if !defined(MOZ_ASAN)
   if (!us.mPackagePrefix.IsEmpty()) {
     MOZ_ASSERT(us.mInitialIntegrityLevel == sandbox::INTEGRITY_LEVEL_LAST,
                "Initial integrity level cannot be specified if using an LPAC.");
@@ -1653,6 +1658,8 @@ bool BuildUtilitySandbox(sandbox::TargetPolicy* policy,
                                                 us.mNamedCapabilites);
     SANDBOX_ENSURE_SUCCESS(result, "Failed to configure AppContainer profile.");
   }
+#endif
+
   // Add the policy for the client side of a pipe. It is just a file
   // in the \pipe\ namespace. We restrict it to pipes that start with
   // "chrome." so the sandboxed process cannot connect to system services.
