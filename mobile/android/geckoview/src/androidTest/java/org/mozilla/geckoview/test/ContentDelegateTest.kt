@@ -665,15 +665,26 @@ class ContentDelegateTest : BaseSessionTest() {
 
     @Test
     fun onProductUrl() {
-        mainSession.loadUri("https://example.com")
+        mainSession.loadUri("example.com")
         sessionRule.waitForPageStop()
 
-        mainSession.forCallbacksDuringWait(object : ContentDelegate {
-            @AssertCalled(count = 0)
+        mainSession.loadUri("example.com/dp/ABCDEFG")
+        sessionRule.waitForPageStop()
+
+        // test below working product urls
+        mainSession.loadUri("example.com/dp/ABCDEFG123")
+        sessionRule.waitForPageStop()
+
+        mainSession.loadUri("example.com/dp/HIJKLMN456")
+        sessionRule.waitForPageStop()
+
+        mainSession.loadUri("example.com/dp/OPQRSTU789")
+        sessionRule.waitForPageStop()
+
+        mainSession.delegateUntilTestEnd(object : ContentDelegate {
+            @AssertCalled(count = 3)
             override fun onProductUrl(session: GeckoSession) {}
         })
-
-        // TODO: bug1845760 when toolkit example.com product page is available, verify onProductUrl is called
     }
 
     @Test
