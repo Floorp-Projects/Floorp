@@ -17,13 +17,15 @@ translations:
       The count of translation requests.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1836436
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1836436
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
     data_sensitivity:
       - technical
     notification_emails:
       - translations-telemetry-alerts@mozilla.com
-    expires: 122
+    expires: never
 
   error_rate:
     type: rate
@@ -32,13 +34,15 @@ translations:
     denominator_metric: translations.requests_count
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1836436
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1836436
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
     data_sensitivity:
       - technical
     notification_emails:
       - translations-telemetry-alerts@mozilla.com
-    expires: 122
+    expires: never
 
   error:
     type: event
@@ -60,15 +64,17 @@ translations:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1836436
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1841366
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1836436#c4
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1841366#c11
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
     data_sensitivity:
       - technical
     notification_emails:
       - translations-telemetry-alerts@mozilla.com
-    expires: 122
+    expires: never
 
   translation_request:
     type: event
@@ -100,16 +106,18 @@ translations:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1841366
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1847150
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1836381#c4
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1841366#c11
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428#c16
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1847150#c4
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
     data_sensitivity:
       - interaction
     notification_emails:
       - translations-telemetry-alerts@mozilla.com
-    expires: 122
+    expires: never
 
   restore_page:
     type: event
@@ -120,13 +128,15 @@ translations:
       first_interaction: *first_interaction
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
     data_sensitivity:
       - interaction
     notification_emails:
       - translations-telemetry-alerts@mozilla.com
-    expires: 122
+    expires: never
 
 translations.panel:
   open:
@@ -153,16 +163,18 @@ translations.panel:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1841366
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1847150
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1835502#c7
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1841366#c11
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428#c16
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1847150#c4
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
     data_sensitivity:
       - interaction
     notification_emails:
       - translations-telemetry-alerts@mozilla.com
-    expires: 122
+    expires: never
 
   close:
     type: event
@@ -173,13 +185,15 @@ translations.panel:
       first_interaction: *first_interaction
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
     data_sensitivity:
       - interaction
     notification_emails:
       - translations-telemetry-alerts@mozilla.com
-    expires: 122
+    expires: never
 
   open_from_language_menu:
     type: event
@@ -190,13 +204,15 @@ translations.panel:
       first_interaction: *first_interaction
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
     data_sensitivity:
       - interaction
     notification_emails:
       - translations-telemetry-alerts@mozilla.com
-    expires: 122
+    expires: never
 
   change_from_language:
     type: event
@@ -211,13 +227,15 @@ translations.panel:
           - The BCP47 language tag.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
     data_sensitivity:
       - interaction
     notification_emails:
       - translations-telemetry-alerts@mozilla.com
-    expires: 122
+    expires: never
 
   close_from_language_menu:
     type: event
@@ -228,13 +246,15 @@ translations.panel:
       first_interaction: *first_interaction
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
     data_sensitivity:
       - interaction
     notification_emails:
       - translations-telemetry-alerts@mozilla.com
-    expires: 122
+    expires: never
 
   open_to_language_menu:
     type: event
@@ -245,13 +265,15 @@ translations.panel:
       first_interaction: *first_interaction
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
     data_sensitivity:
       - interaction
     notification_emails:
       - translations-telemetry-alerts@mozilla.com
-    expires: 122
+    expires: never
 
   change_to_language:
     type: event
@@ -266,13 +288,15 @@ translations.panel:
           - The BCP47 language tag.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
     data_sensitivity:
       - interaction
     notification_emails:
       - translations-telemetry-alerts@mozilla.com
-    expires: 122
+    expires: never
 
   close_to_language_menu:
     type: event
@@ -283,13 +307,15 @@ translations.panel:
       first_interaction: *first_interaction
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
     data_sensitivity:
       - interaction
     notification_emails:
       - translations-telemetry-alerts@mozilla.com
-    expires: 122
+    expires: never
 
   open_settings_menu:
     type: event
@@ -300,13 +326,15 @@ translations.panel:
       first_interaction: *first_interaction
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
     data_sensitivity:
       - interaction
     notification_emails:
       - translations-telemetry-alerts@mozilla.com
-    expires: 122
+    expires: never
 
   close_settings_menu:
     type: event
@@ -317,13 +345,15 @@ translations.panel:
       first_interaction: *first_interaction
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
     data_sensitivity:
       - interaction
     notification_emails:
       - translations-telemetry-alerts@mozilla.com
-    expires: 122
+    expires: never
 
   cancel_button:
     type: event
@@ -334,13 +364,15 @@ translations.panel:
       first_interaction: *first_interaction
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
     data_sensitivity:
       - interaction
     notification_emails:
       - translations-telemetry-alerts@mozilla.com
-    expires: 122
+    expires: never
 
   change_source_language_button:
     type: event
@@ -351,13 +383,15 @@ translations.panel:
       first_interaction: *first_interaction
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
     data_sensitivity:
       - interaction
     notification_emails:
       - translations-telemetry-alerts@mozilla.com
-    expires: 122
+    expires: never
 
   dismiss_error_button:
     type: event
@@ -368,13 +402,15 @@ translations.panel:
       first_interaction: *first_interaction
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
     data_sensitivity:
       - interaction
     notification_emails:
       - translations-telemetry-alerts@mozilla.com
-    expires: 122
+    expires: never
 
   restore_page_button:
     type: event
@@ -385,13 +421,15 @@ translations.panel:
       first_interaction: *first_interaction
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
     data_sensitivity:
       - interaction
     notification_emails:
       - translations-telemetry-alerts@mozilla.com
-    expires: 122
+    expires: never
 
   translate_button:
     type: event
@@ -402,13 +440,15 @@ translations.panel:
       first_interaction: *first_interaction
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
     data_sensitivity:
       - interaction
     notification_emails:
       - translations-telemetry-alerts@mozilla.com
-    expires: 122
+    expires: never
 
   always_offer_translations:
     type: event
@@ -423,13 +463,15 @@ translations.panel:
           - Whether the setting was toggled on or off.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1842646
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1842646
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
     data_sensitivity:
       - interaction
     notification_emails:
       - translations-telemetry-alerts@mozilla.com
-    expires: 122
+    expires: never
 
   always_translate_language:
     type: event
@@ -448,13 +490,15 @@ translations.panel:
           - Whether the setting was toggled on or off for this language.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
     data_sensitivity:
       - interaction
     notification_emails:
       - translations-telemetry-alerts@mozilla.com
-    expires: 122
+    expires: never
 
   never_translate_language:
     type: event
@@ -473,13 +517,15 @@ translations.panel:
           - Whether the setting was toggled on or off for this language.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
     data_sensitivity:
       - interaction
     notification_emails:
       - translations-telemetry-alerts@mozilla.com
-    expires: 122
+    expires: never
 
   never_translate_site:
     type: event
@@ -494,13 +540,15 @@ translations.panel:
           - Whether the setting was toggled on or off for this site.
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
     data_sensitivity:
       - interaction
     notification_emails:
       - translations-telemetry-alerts@mozilla.com
-    expires: 122
+    expires: never
 
   manage_languages:
     type: event
@@ -511,13 +559,15 @@ translations.panel:
       first_interaction: *first_interaction
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
     data_sensitivity:
       - interaction
     notification_emails:
       - translations-telemetry-alerts@mozilla.com
-    expires: 122
+    expires: never
 
   about_translations:
     type: event
@@ -528,13 +578,15 @@ translations.panel:
       first_interaction: *first_interaction
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
     data_sensitivity:
       - interaction
     notification_emails:
       - translations-telemetry-alerts@mozilla.com
-    expires: 122
+    expires: never
 
   learn_more:
     type: event
@@ -545,10 +597,12 @@ translations.panel:
       first_interaction: *first_interaction
     bugs:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
     data_reviews:
       - https://bugzilla.mozilla.org/show_bug.cgi?id=1845428
+      - https://bugzilla.mozilla.org/show_bug.cgi?id=1861319
     data_sensitivity:
       - interaction
     notification_emails:
       - translations-telemetry-alerts@mozilla.com
-    expires: 122
+    expires: never
