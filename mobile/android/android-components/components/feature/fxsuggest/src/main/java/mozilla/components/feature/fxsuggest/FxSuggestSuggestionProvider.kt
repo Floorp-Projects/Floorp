@@ -48,10 +48,14 @@ class FxSuggestSuggestionProvider(
             emptyList()
         } else {
             val providers = buildList() {
-                if (includeSponsoredSuggestions) {
+                val availableSuggestionTypes = FxSuggestNimbus.features
+                    .awesomebarSuggestionProvider
+                    .value()
+                    .availableSuggestionTypes
+                if (includeSponsoredSuggestions && availableSuggestionTypes[SuggestionType.AMP] == true) {
                     add(SuggestionProvider.AMP)
                 }
-                if (includeNonSponsoredSuggestions) {
+                if (includeNonSponsoredSuggestions && availableSuggestionTypes[SuggestionType.WIKIPEDIA] == true) {
                     add(SuggestionProvider.WIKIPEDIA)
                 }
             }

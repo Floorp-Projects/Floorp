@@ -33,11 +33,19 @@ class FxSuggestSuggestionProviderTest {
     @Before
     fun setUp() {
         storage = mock()
+        val suggestionProviderConfig = AwesomebarSuggestionProvider(
+            availableSuggestionTypes = mapOf(
+                SuggestionType.AMP to true,
+                SuggestionType.WIKIPEDIA to true,
+            ),
+        )
+        FxSuggestNimbus.features.awesomebarSuggestionProvider.withCachedValue(suggestionProviderConfig)
         GlobalFxSuggestDependencyProvider.storage = storage
     }
 
     @After
     fun tearDown() {
+        FxSuggestNimbus.features.awesomebarSuggestionProvider.withCachedValue(null)
         GlobalFxSuggestDependencyProvider.storage = null
     }
 
@@ -252,5 +260,61 @@ class FxSuggestSuggestionProviderTest {
             assertEquals("8 - Food & Drink", impressionInfo.iabCategory)
             assertEquals("c303282d-f2e6-46ca-a04a-35d3d873712d", impressionInfo.contextId)
         }
+    }
+
+    @Test
+    fun includeSponsoredSuggestionsOnlyWhenAmpUnavailable() = runTest {
+        FxSuggestNimbus.features.awesomebarSuggestionProvider.withCachedValue(
+            AwesomebarSuggestionProvider(availableSuggestionTypes = emptyMap()),
+        )
+        whenever(storage.query(any())).thenReturn(emptyList())
+
+        val provider = FxSuggestSuggestionProvider(
+            resources = testContext.resources,
+            loadUrlUseCase = mock(),
+            includeNonSponsoredSuggestions = false,
+            includeSponsoredSuggestions = true,
+            contextId = "c303282d-f2e6-46ca-a04a-35d3d873712d",
+        )
+
+        val suggestions = provider.onInputChanged("la")
+
+        verify(storage).query(
+            eq(
+                SuggestionQuery(
+                    keyword = "la",
+                    providers = emptyList(),
+                ),
+            ),
+        )
+        assertTrue(suggestions.isEmpty())
+    }
+
+    @Test
+    fun includeNonSponsoredSuggestionsOnlyWhenWikipediaUnavailable() = runTest {
+        FxSuggestNimbus.features.awesomebarSuggestionProvider.withCachedValue(
+            AwesomebarSuggestionProvider(availableSuggestionTypes = emptyMap()),
+        )
+        whenever(storage.query(any())).thenReturn(emptyList())
+
+        val provider = FxSuggestSuggestionProvider(
+            resources = testContext.resources,
+            loadUrlUseCase = mock(),
+            includeNonSponsoredSuggestions = true,
+            includeSponsoredSuggestions = false,
+            contextId = "c303282d-f2e6-46ca-a04a-35d3d873712d",
+        )
+
+        val suggestions = provider.onInputChanged("la")
+
+        verify(storage).query(
+            eq(
+                SuggestionQuery(
+                    keyword = "la",
+                    providers = emptyList(),
+                ),
+            ),
+        )
+        assertTrue(suggestions.isEmpty())
     }
 }

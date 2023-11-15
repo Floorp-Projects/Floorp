@@ -141,6 +141,15 @@ import:
           download-button: true,
           open-in-app-button: true
         }
+  - path: ../../android-components/components/feature/fxsuggest/fxsuggest.fml.yaml
+    channel: release
+    features:
+      awesomebar-suggestion-provider:
+        - value:
+            available-suggestion-types: {
+              "amp": true,
+              "wikipedia": true,
+            }
 
 features:
   toolbar:

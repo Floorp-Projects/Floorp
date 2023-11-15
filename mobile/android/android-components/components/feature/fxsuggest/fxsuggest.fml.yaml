@@ -1,0 +1,33 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+about:
+  description: Nimbus Feature Manifest for the Firefox Suggest feature.
+  android:
+    package: mozilla.components.feature.fxsuggest
+    class: .FxSuggestNimbus
+channels:
+  - debug
+  - release
+features:
+  awesomebar-suggestion-provider:
+    description: Configuration for the Firefox Suggest awesomebar suggestion provider.
+    variables:
+      available-suggestion-types:
+        description: >
+          A map of suggestion types to booleans that indicate whether or not the provider should
+          return suggestions of those types.
+        type: Map<SuggestionType, Boolean>
+        default: {
+          "amp": false,
+          "wikipedia": true,
+        }
+enums:
+  SuggestionType:
+    description: The type of a Firefox Suggest search suggestion.
+    variants:
+      amp:
+        description: A Firefox Suggestion from adMarketplace.
+      wikipedia:
+        description: A Firefox Suggestion for a Wikipedia page.

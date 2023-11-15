@@ -4,6 +4,22 @@
 
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
+buildscript {
+    repositories {
+        maven {
+            url "https://maven.mozilla.org/maven2"
+        }
+    }
+
+    dependencies {
+        classpath "${ApplicationServicesConfig.groupId}:tooling-nimbus-gradle:${ApplicationServicesConfig.version}"
+    }
+}
+
+plugins {
+    id "com.jetbrains.python.envs" version "$python_envs_plugin"
+}
+
 apply plugin: 'com.android.library'
 apply plugin: 'kotlin-android'
 
@@ -36,6 +52,7 @@ dependencies {
     implementation project(':concept-awesomebar')
     implementation project(':concept-engine')
     implementation project(':feature-session')
+    implementation project(':service-nimbus')
     implementation project(':support-base')
     implementation project(':support-ktx')
 
@@ -54,4 +71,17 @@ dependencies {
 
 apply from: '../../../android-lint.gradle'
 apply from: '../../../publish.gradle'
+apply plugin: "org.mozilla.appservices.nimbus-gradle-plugin"
+nimbus {
+    // The path to the Nimbus feature manifest file
+    manifestFile = "fxsuggest.fml.yaml"
+
+    channels = [
+        debug: "debug",
+        release: "release",
+    ]
+
+    applicationServicesDir = gradle.hasProperty('localProperties.autoPublish.application-services.dir')
+        ? gradle.getProperty('localProperties.autoPublish.application-services.dir') : null
+}
 ext.configurePublish(config.componentsGroupId, archivesBaseName, project.ext.description)

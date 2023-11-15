@@ -818,8 +818,10 @@ projects:
     - feature-session
     - lib-publicsuffixlist
     - lib-state
+    - service-nimbus
     - support-base
     - support-ktx
+    - support-locale
     - support-test
     - support-utils
     - tooling-lint
