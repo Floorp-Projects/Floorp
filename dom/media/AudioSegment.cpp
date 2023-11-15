@@ -130,12 +130,33 @@ static AudioDataValue* PointerForOffsetInChannel(AudioDataValue* aData,
   return aData + beginningOfChannel + aOffsetSamples;
 }
 
+template <typename SrcT>
+static void DownMixChunk(const AudioChunk& aChunk,
+                         Span<AudioDataValue* const> aOutputChannels) {
+  Span<const SrcT* const> channelData = aChunk.ChannelData<SrcT>();
+  uint32_t frameCount = aChunk.mDuration;
+  if (channelData.Length() > aOutputChannels.Length()) {
+    // Down mix.
+    AudioChannelsDownMix(channelData, aOutputChannels, frameCount);
+    for (AudioDataValue* outChannel : aOutputChannels) {
+      ScaleAudioSamples(outChannel, frameCount, aChunk.mVolume);
+    }
+  } else {
+    // The channel count is already what we want.
+    for (uint32_t channel = 0; channel < aOutputChannels.Length(); channel++) {
+      ConvertAudioSamplesWithScale(channelData[channel],
+                                   aOutputChannels[channel], frameCount,
+                                   aChunk.mVolume);
+    }
+  }
+}
+
 void AudioSegment::Mix(AudioMixer& aMixer, uint32_t aOutputChannels,
                        uint32_t aSampleRate) {
   AutoTArray<AudioDataValue,
              SilentChannel::AUDIO_PROCESSING_FRAMES * GUESS_AUDIO_CHANNELS>
       buf;
-  AutoTArray<const AudioDataValue*, GUESS_AUDIO_CHANNELS> channelData;
+  AudioChunk upMixChunk;
   uint32_t offsetSamples = 0;
   uint32_t duration = GetDuration();
 
@@ -147,64 +168,51 @@ void AudioSegment::Mix(AudioMixer& aMixer, uint32_t aOutputChannels,
   uint32_t outBufferLength = duration * aOutputChannels;
   buf.SetLength(outBufferLength);
 
-  for (ChunkIterator ci(*this); !ci.IsEnded(); ci.Next()) {
-    AudioChunk& c = *ci;
-    uint32_t frames = c.mDuration;
+  AutoTArray<AudioDataValue*, GUESS_AUDIO_CHANNELS> outChannelPtrs;
+  outChannelPtrs.SetLength(aOutputChannels);
+
+  uint32_t frames;
+  for (ChunkIterator ci(*this); !ci.IsEnded();
+       ci.Next(), offsetSamples += frames) {
+    const AudioChunk& c = *ci;
+    frames = c.mDuration;
+    for (uint32_t channel = 0; channel < aOutputChannels; channel++) {
+      outChannelPtrs[channel] =
+          PointerForOffsetInChannel(buf.Elements(), outBufferLength,
+                                    aOutputChannels, channel, offsetSamples);
+    }
 
     // If the chunk is silent, simply write the right number of silence in the
     // buffers.
     if (c.mBufferFormat == AUDIO_FORMAT_SILENCE) {
-      for (uint32_t channel = 0; channel < aOutputChannels; channel++) {
-        AudioDataValue* ptr =
-            PointerForOffsetInChannel(buf.Elements(), outBufferLength,
-                                      aOutputChannels, channel, offsetSamples);
-        PodZero(ptr, frames);
+      for (AudioDataValue* outChannel : outChannelPtrs) {
+        PodZero(outChannel, frames);
       }
-    } else {
-      // Othewise, we need to upmix or downmix appropriately, depending on the
-      // desired input and output channels.
-      channelData.SetLength(c.mChannelData.Length());
-      for (uint32_t i = 0; i < channelData.Length(); ++i) {
-        channelData[i] = static_cast<const AudioDataValue*>(c.mChannelData[i]);
-      }
-      if (channelData.Length() < aOutputChannels) {
-        // Up-mix.
-        AudioChannelsUpMix(&channelData, aOutputChannels,
-                           SilentChannel::ZeroChannel<AudioDataValue>());
-        for (uint32_t channel = 0; channel < aOutputChannels; channel++) {
-          AudioDataValue* ptr = PointerForOffsetInChannel(
-              buf.Elements(), outBufferLength, aOutputChannels, channel,
-              offsetSamples);
-          PodCopy(ptr,
-                  reinterpret_cast<const AudioDataValue*>(channelData[channel]),
-                  frames);
-        }
-        MOZ_ASSERT(channelData.Length() == aOutputChannels);
-      } else if (channelData.Length() > aOutputChannels) {
-        // Down mix.
-        AutoTArray<AudioDataValue*, GUESS_AUDIO_CHANNELS> outChannelPtrs;
-        outChannelPtrs.SetLength(aOutputChannels);
-        uint32_t offsetSamples = 0;
-        for (uint32_t channel = 0; channel < aOutputChannels; channel++) {
-          outChannelPtrs[channel] = PointerForOffsetInChannel(
-              buf.Elements(), outBufferLength, aOutputChannels, channel,
-              offsetSamples);
-        }
-        AudioChannelsDownMix<AudioDataValue, AudioDataValue>(
-            channelData, outChannelPtrs, frames);
-      } else {
-        // The channel count is already what we want, just copy it over.
-        for (uint32_t channel = 0; channel < aOutputChannels; channel++) {
-          AudioDataValue* ptr = PointerForOffsetInChannel(
-              buf.Elements(), outBufferLength, aOutputChannels, channel,
-              offsetSamples);
-          PodCopy(ptr,
-                  reinterpret_cast<const AudioDataValue*>(channelData[channel]),
-                  frames);
-        }
-      }
+      continue;
     }
-    offsetSamples += frames;
+    // We need to upmix and downmix appropriately, depending on the
+    // desired input and output channels.
+    const AudioChunk* downMixInput = &c;
+    if (c.ChannelCount() < aOutputChannels) {
+      // Up-mix.
+      upMixChunk = c;
+      AudioChannelsUpMix<void>(&upMixChunk.mChannelData, aOutputChannels,
+                               SilentChannel::gZeroChannel);
+      downMixInput = &upMixChunk;
+    }
+    switch (c.mBufferFormat) {
+      case AUDIO_FORMAT_FLOAT32:
+        DownMixChunk<float>(*downMixInput, outChannelPtrs);
+        continue;
+      case AUDIO_FORMAT_S16:
+        DownMixChunk<int16_t>(*downMixInput, outChannelPtrs);
+        continue;
+      case AUDIO_FORMAT_SILENCE:
+        break;
+        // Avoid `default:` so that `-Wswitch` catches missing enumerators at
+        // compile time.
+    }
+    MOZ_ASSERT_UNREACHABLE("buffer format");
   }
 
   if (offsetSamples) {
