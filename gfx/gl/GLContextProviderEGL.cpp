@@ -149,17 +149,6 @@ static bool is_power_of_two(int v) {
   return (v & (v - 1)) == 0;
 }
 
-static void DestroySurface(EglDisplay& egl, const EGLSurface oldSurface) {
-  if (oldSurface != EGL_NO_SURFACE) {
-    // TODO: This breaks TLS MakeCurrent caching.
-    egl.fMakeCurrent(EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
-    egl.fDestroySurface(oldSurface);
-#if defined(MOZ_WAYLAND)
-    DeleteSavedGLSurface(oldSurface);
-#endif
-  }
-}
-
 static EGLSurface CreateFallbackSurface(EglDisplay& egl,
                                         const EGLConfig& config) {
   if (egl.IsExtensionSupported(EGLExtension::KHR_surfaceless_context)) {
@@ -295,7 +284,7 @@ already_AddRefed<GLContext> GLContextEGLFactory::CreateImpl(
   if (!gl) {
     const auto err = egl->mLib->fGetError();
     gfxCriticalNote << "Failed to create EGLContext!: " << gfx::hexa(err);
-    mozilla::gl::DestroySurface(*egl, surface);
+    GLContextEGL::DestroySurface(*egl, surface);
     return nullptr;
   }
 
@@ -404,8 +393,8 @@ GLContextEGL::~GLContextEGL() {
 
   mEgl->fDestroyContext(mContext);
 
-  mozilla::gl::DestroySurface(*mEgl, mSurface);
-  mozilla::gl::DestroySurface(*mEgl, mFallbackSurface);
+  DestroySurface(*mEgl, mSurface);
+  DestroySurface(*mEgl, mFallbackSurface);
 }
 
 bool GLContextEGL::Init() {
@@ -527,7 +516,7 @@ bool GLContextEGL::RenewSurface(CompositorWidget* aWidget) {
 
 void GLContextEGL::ReleaseSurface() {
   if (mOwnsContext) {
-    mozilla::gl::DestroySurface(*mEgl, mSurface);
+    DestroySurface(*mEgl, mSurface);
   }
   if (mSurface == mSurfaceOverride) {
     mSurfaceOverride = EGL_NO_SURFACE;
@@ -1202,6 +1191,24 @@ RefPtr<GLContextEGL> GLContextEGL::CreateWithoutSurface(
   }
 #endif  // !defined(MOZ_WIDGET_ANDROID)
   return gl;
+}
+
+/*static*/
+void GLContextEGL::DestroySurface(EglDisplay& aEgl, const EGLSurface aSurface) {
+  if (aSurface != EGL_NO_SURFACE) {
+    // TODO: This breaks TLS MakeCurrent caching.
+    if (!aEgl.fMakeCurrent(EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT)) {
+      const EGLint err = aEgl.mLib->fGetError();
+      gfxCriticalNote << "Error in eglMakeCurrent: " << gfx::hexa(err);
+    }
+    if (!aEgl.fDestroySurface(aSurface)) {
+      const EGLint err = aEgl.mLib->fGetError();
+      gfxCriticalNote << "Error in eglDestroySurface: " << gfx::hexa(err);
+    }
+#if defined(MOZ_WAYLAND)
+    DeleteSavedGLSurface(aSurface);
+#endif
+  }
 }
 
 /*static*/
