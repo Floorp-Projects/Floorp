@@ -9,6 +9,22 @@
 <script>
 
 (async () => {
+  // Get an opus file containing a sine wave at maximum amplitude, of duration
+  // `lengthSeconds`, and of frequency `frequency`.
+  async function getSineWaveFile(frequency, lengthSeconds) {
+    const off = new OfflineAudioContext(1, lengthSeconds * 48000, 48000);
+    const osc = off.createOscillator();
+    const rec = new MediaRecorder(off.destination,
+                                  {mimeType: "audio/ogg; codecs=opus"});
+    osc.frequency.value = frequency;
+    osc.connect(off.destination);
+    osc.start();
+    rec.start();
+    off.startRendering();
+    const {data} = await new Promise(r => rec.ondataavailable = r);
+    return data;
+  }
+
   await createHTML({
     bug: "1156472",
     title: "Test AudioCapture with regular HTMLMediaElement, AudioContext, " +
@@ -17,8 +33,6 @@
   });
 
   await runTestWhenReady(async () => {
-    // Reduce noise for when --use-test-media-devices is not in use.
-    await SpecialPowers.pushPrefEnv({ set: [[ "media.volume_scale", "0.0" ]] });
     /**
      * Get two HTMLMediaElements:
      * - One playing a sine tone from a blob (of an opus file created on the fly)
@@ -36,68 +50,45 @@
      * can check that the spectrum of the capture stream contains three
      * components with a high magnitude.
      */
-    const decodedTone = createMediaElement("audio", "decodedTone");
-    decodedTone.muted = false;
-    const decodedToneMuted = createMediaElement("audio", "decodedToneMuted");
+    const wavtone = createMediaElement("audio", "WaveTone");
     const acTone = createMediaElement("audio", "audioContextTone");
-    acTone.muted = false;
-    const acToneMuted = createMediaElement("audio", "audioContextToneMuted");
     const ac = new AudioContext();
-    const constraints = {audio: {mediaSource: "audioCapture"}};
-    const stream = await getUserMedia(constraints);
-    const analyser = new AudioStreamAnalyser(ac, stream);
 
-    const osc200 = ac.createOscillator();
-    osc200.frequency.value = analyser.frequencyForBinIndex(200);
-    const osc250 = ac.createOscillator();
-    osc250.frequency.value = analyser.frequencyForBinIndex(250);
+    const oscThroughMediaElement = ac.createOscillator();
+    oscThroughMediaElement.frequency.value = 1000;
     const oscThroughAudioDestinationNode = ac.createOscillator();
-    oscThroughAudioDestinationNode.frequency.value =
-      analyser.frequencyForBinIndex(100);
-    const msDest200 = ac.createMediaStreamDestination();
-    const msDest250 = ac.createMediaStreamDestination();
+    oscThroughAudioDestinationNode.frequency.value = 5000;
+    const msDest = ac.createMediaStreamDestination();
 
-    osc200.connect(msDest200);
-    osc250.connect(msDest250);
+    oscThroughMediaElement.connect(msDest);
     oscThroughAudioDestinationNode.connect(ac.destination);
 
-    acTone.srcObject = msDest200.stream;
-    acToneMuted.srcObject = msDest250.stream;
+    acTone.srcObject = msDest.stream;
 
-    decodedTone.src = "/tests/dom/media/test/sin-441-1s-44100.flac";
-    decodedToneMuted.src = "/tests/dom/media/test/sin-441-1s-44100.flac";
-    decodedTone.preservesPitch = false;
-    decodedToneMuted.preservesPitch = false;
-    decodedTone.playbackRate = analyser.frequencyForBinIndex(20) / 441;
-    ok(decodedTone.playbackRate >= 1/16, "within firefox min playback rate");
-    decodedToneMuted.playbackRate = analyser.frequencyForBinIndex(40) / 441;
-    ok(decodedToneMuted.playbackRate <= 16, "within firefox max playback rate");
-    osc200.start();
-    osc250.start();
+    const blob = await getSineWaveFile(10000, 10);
+    wavtone.src = URL.createObjectURL(blob);
+    oscThroughMediaElement.start();
     oscThroughAudioDestinationNode.start();
-    decodedTone.loop = true;
-    decodedToneMuted.loop = true;
-    decodedTone.play();
-    decodedToneMuted.play();
+    wavtone.loop = true;
+    wavtone.play();
     acTone.play();
-    acToneMuted.play();
 
-    let frequencyBytes;
+    const constraints = {audio: {mediaSource: "audioCapture"}};
+
+    const stream = await getUserMedia(constraints);
     try {
+      const analyser = new AudioStreamAnalyser(ac, stream);
       analyser.enableDebugCanvas();
       await analyser.waitForAnalysisSuccess(array => {
-        // We want to find three frequency components here.
-        // Frequencies are logarithmic. Also make sure we have low
+        // We want to find three frequency components here, around 1000, 5000
+        // and 10000Hz. Frequency are logarithmic. Also make sure we have low
         // energy in between, not just a flat white noise.
-        if (array[10]  == 0 &&
-            array[20]  == 255 &&
-            array[70]  == 0 &&
-            array[100] == 255 &&
-            array[150] == 0 &&
-            array[200] == 255) {
-          frequencyBytes = new Uint8Array(array);
-          return true;
-        }
+        return (array[analyser.binIndexForFrequency(500)]   < 50 &&
+                array[analyser.binIndexForFrequency(1000)]  > 200 &&
+                array[analyser.binIndexForFrequency(2500)]  < 50 &&
+                array[analyser.binIndexForFrequency(5000)]  > 200 &&
+                array[analyser.binIndexForFrequency(7500)]  < 50 &&
+                array[analyser.binIndexForFrequency(10000)] > 200);
       });
     } finally {
       await ac.close();
@@ -105,8 +96,6 @@
         t.stop();
       }
     }
-    todo(frequencyBytes[40] < 50, "muted decoded resource");
-    todo(frequencyBytes[250] < 50, "muted MediaStream srcObject - bug 1864067");
   });
 })();
 </script>
