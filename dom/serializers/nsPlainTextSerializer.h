@@ -14,9 +14,7 @@
 #ifndef nsPlainTextSerializer_h__
 #define nsPlainTextSerializer_h__
 
-#include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
-#include "nsCOMPtr.h"
 #include "nsAtom.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIContentSerializer.h"
@@ -244,13 +242,17 @@ class nsPlainTextSerializer final : public nsIContentSerializer {
     uint32_t DeterminePrefixWidth() const {
       // XXX: Should calculate prefixwidth with GetUnicharStringWidth
       return (mCiteQuoteLevel > 0 ? mCiteQuoteLevel + 1 : 0) +
-             mIndentation.mLength;
+             mIndentation.mLength + uint32_t(mSpaceStuffed);
     }
 
     Indentation mIndentation;
 
     // The number of '>' characters.
     int32_t mCiteQuoteLevel = 0;
+
+    // Whether this line is getting space-stuffed, see
+    // https://datatracker.ietf.org/doc/html/rfc2646#section-4.4
+    bool mSpaceStuffed = false;
 
     // Excludes indentation and quotes.
     nsString mContent;

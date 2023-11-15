@@ -50,6 +50,36 @@ TEST(PlainTextSerializer, ASCIIWithFlowedDelSp)
   << "Wrong HTML to ASCII text serialization with format=flowed; delsp=yes";
 }
 
+TEST(PlainTextSerializer, Bug1864820)
+{
+  nsString test(
+      uR"#(
+<html><body>
+&gt;&nbsp;&nbsp;label=master&amp;label=experimental&amp;product=chrome&amp;product=firefox&amp;product=safari&amp;aligned&amp;view=interop&amp;q=label%3Ainterop-2023-property
+<blockquote>
+&gt;&nbsp;&nbsp;label=master&amp;label=experimental&amp;product=chrome&amp;product=firefox&amp;product=safari&amp;aligned&amp;view=interop&amp;q=label%3Ainterop-2023-property
+</blockquote>
+</body></html>
+)#");
+
+  ConvertBufToPlainText(test,
+                        nsIDocumentEncoder::OutputFormatted |
+                            nsIDocumentEncoder::OutputPersistNBSP |
+                            nsIDocumentEncoder::OutputFormatFlowed,
+                        kDefaultWrapColumn);
+
+  nsString result(
+      uR"#(
+ >  label=master&label=experimental&product=chrome&product=firefox&product=safari&aligned&view=interop&q=label%3Ainterop-2023-property
+
+     >  label=master&label=experimental&product=chrome&product=firefox&product=safari&aligned&view=interop&q=label%3Ainterop-2023-property
+)#");
+  result.Trim(" \n");
+  test.Trim(" \n");
+  ASSERT_TRUE(test.Equals(result))
+  << "Shouldn't hang with format=flowed: " << NS_ConvertUTF16toUTF8(test).get();
+}
+
 // Test for CJK with format=flowed; delsp=yes
 TEST(PlainTextSerializer, CJKWithFlowedDelSp)
 {

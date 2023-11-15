@@ -1227,16 +1227,14 @@ void nsPlainTextSerializer::MaybeWrapAndOutputCompleteLines() {
     return;
   }
 
-  const uint32_t prefixwidth = mCurrentLine.DeterminePrefixWidth();
-
   // Yes, wrap!
   // The "+4" is to avoid wrap lines that only would be a couple
   // of letters too long. We give this bonus only if the
   // wrapcolumn is more than 20.
   const uint32_t wrapColumn = mSettings.GetWrapColumn();
   uint32_t bonuswidth = (wrapColumn > 20) ? 4 : 0;
-
   while (!mCurrentLine.mContent.IsEmpty()) {
+    const uint32_t prefixwidth = mCurrentLine.DeterminePrefixWidth();
     // The width of the line as it will appear on the screen (approx.).
     const uint32_t currentLineContentWidth =
         GetUnicharStringWidth(mCurrentLine.mContent);
@@ -1248,41 +1246,34 @@ void nsPlainTextSerializer::MaybeWrapAndOutputCompleteLines() {
         mCurrentLine.FindWrapIndexForContent(wrapColumn, mUseLineBreaker);
 
     const int32_t contentLength = mCurrentLine.mContent.Length();
-    if ((goodSpace < contentLength) && (goodSpace > 0)) {
-      // Found a place to break
-
-      // -1 (trim a char at the break position)
-      // only if the line break was a space.
-      nsAutoString restOfContent;
-      if (nsCRT::IsAsciiSpace(mCurrentLine.mContent.CharAt(goodSpace))) {
-        mCurrentLine.mContent.Right(restOfContent,
-                                    contentLength - goodSpace - 1);
-      } else {
-        mCurrentLine.mContent.Right(restOfContent, contentLength - goodSpace);
-      }
-      // if breaker was U+0020, it has to consider for delsp=yes support
-      const bool breakBySpace = mCurrentLine.mContent.CharAt(goodSpace) == ' ';
-      mCurrentLine.mContent.Truncate(goodSpace);
-      EndLine(true, breakBySpace);
-      mCurrentLine.mContent.Truncate();
-      // Space stuff new line?
-      if (mSettings.HasFlag(nsIDocumentEncoder::OutputFormatFlowed)) {
-        if (!restOfContent.IsEmpty() && IsSpaceStuffable(restOfContent.get()) &&
-            mCurrentLine.mCiteQuoteLevel ==
-                0  // We space-stuff quoted lines anyway
-        ) {
-          // Space stuffing a la RFC 2646 (format=flowed).
-          mCurrentLine.mContent.Append(char16_t(' '));
-          // XXX doesn't seem to work correctly for ' '
-        }
-      }
-      mCurrentLine.mContent.Append(restOfContent);
-      mEmptyLines = -1;
-    } else {
-      // Nothing to do. Hopefully we get more data later
-      // to use for a place to break line
+    if (goodSpace <= 0 || goodSpace >= contentLength) {
+      // Nothing to do. Hopefully we get more data later to use for a place to
+      // break line.
       break;
     }
+    // Found a place to break
+    // -1 (trim a char at the break position) only if the line break was a
+    // space.
+    nsAutoString restOfContent;
+    if (nsCRT::IsAsciiSpace(mCurrentLine.mContent.CharAt(goodSpace))) {
+      mCurrentLine.mContent.Right(restOfContent, contentLength - goodSpace - 1);
+    } else {
+      mCurrentLine.mContent.Right(restOfContent, contentLength - goodSpace);
+    }
+    // if breaker was U+0020, it has to consider for delsp=yes support
+    const bool breakBySpace = mCurrentLine.mContent.CharAt(goodSpace) == ' ';
+    mCurrentLine.mContent.Truncate(goodSpace);
+    EndLine(true, breakBySpace);
+    mCurrentLine.mContent.Truncate();
+    // Space stuffing a la RFC 2646 (format=flowed)
+    if (mSettings.HasFlag(nsIDocumentEncoder::OutputFormatFlowed)) {
+      mCurrentLine.mSpaceStuffed = !restOfContent.IsEmpty() &&
+                                   IsSpaceStuffable(restOfContent.get()) &&
+                                   // We space-stuff quoted lines anyway
+                                   mCurrentLine.mCiteQuoteLevel == 0;
+    }
+    mCurrentLine.mContent.Append(restOfContent);
+    mEmptyLines = -1;
   }
 }
 
@@ -1302,13 +1293,10 @@ void nsPlainTextSerializer::AddToLine(const char16_t* aLineFragment,
     }
 
     if (mSettings.HasFlag(nsIDocumentEncoder::OutputFormatFlowed)) {
-      if (IsSpaceStuffable(aLineFragment) &&
-          mCurrentLine.mCiteQuoteLevel ==
-              0  // We space-stuff quoted lines anyway
-      ) {
-        // Space stuffing a la RFC 2646 (format=flowed).
-        mCurrentLine.mContent.Append(char16_t(' '));
-      }
+      // Space stuffing a la RFC 2646 (format=flowed).
+      // We space-stuff quoted lines anyway
+      mCurrentLine.mSpaceStuffed =
+          IsSpaceStuffable(aLineFragment) && mCurrentLine.mCiteQuoteLevel == 0;
     }
     mEmptyLines = -1;
   }
@@ -1354,7 +1342,7 @@ void nsPlainTextSerializer::EndLine(bool aSoftLineBreak, bool aBreakBySpace) {
 
   if (aSoftLineBreak &&
       mSettings.HasFlag(nsIDocumentEncoder::OutputFormatFlowed) &&
-      (mCurrentLine.mIndentation.mLength == 0)) {
+      !mCurrentLine.mIndentation.mLength) {
     // Add the soft part of the soft linebreak (RFC 2646 4.1)
     // We only do this when there is no indentation since format=flowed
     // lines and indentation doesn't work well together.
@@ -1420,11 +1408,16 @@ void nsPlainTextSerializer::CurrentLine::CreateQuotesAndIndent(
 
   // Indent if necessary
   int32_t indentwidth = mIndentation.mLength - mIndentation.mHeader.Length();
-  if (indentwidth > 0 && HasContentOrIndentationHeader()
-      // Don't make empty lines look flowed
-  ) {
+  if (mSpaceStuffed) {
+    indentwidth += 1;
+  }
+
+  // Don't make empty lines look flowed
+  if (indentwidth > 0 && HasContentOrIndentationHeader()) {
     nsAutoString spaces;
-    for (int i = 0; i < indentwidth; ++i) spaces.Append(char16_t(' '));
+    for (int i = 0; i < indentwidth; ++i) {
+      spaces.Append(char16_t(' '));
+    }
     aResult += spaces;
   }
 
@@ -1515,9 +1508,8 @@ void nsPlainTextSerializer::ConvertToLinesAndOutput(const nsAString& aString) {
           !IsQuotedLine(stringpart) && !IsSignatureSeparator(stringpart)) {
         stringpart.Trim(" ", false, true, true);
       }
-      if (IsSpaceStuffable(stringpart.get()) && !IsQuotedLine(stringpart)) {
-        mCurrentLine.mContent.Append(char16_t(' '));
-      }
+      mCurrentLine.mSpaceStuffed =
+          IsSpaceStuffable(stringpart.get()) && !IsQuotedLine(stringpart);
     }
     mCurrentLine.mContent.Append(stringpart);
 
