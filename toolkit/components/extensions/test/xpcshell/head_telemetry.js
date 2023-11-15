@@ -284,6 +284,7 @@ function assertGleanLabeledCounter({
   gleanMetricLabels,
   expectedLabelsValue,
   ignoreNonExpectedLabels,
+  ignoreUnknownLabels,
   message,
 }) {
   const { GleanLabeled } = globalThis;
@@ -313,6 +314,14 @@ function assertGleanLabeledCounter({
       }`
     );
   }
+
+  if (!ignoreUnknownLabels) {
+    Assert.deepEqual(
+      gleanMetric["__other__"].testGetValue(), // eslint-disable-line dot-notation
+      undefined,
+      `Expect Glean "${metricId}" metric label "__other__" to be empty.`
+    );
+  }
 }
 
 function assertGleanLabeledCounterEmpty({
@@ -336,6 +345,7 @@ function assertGleanLabeledCounterNotEmpty({
   metricId,
   gleanMetric,
   expectedNotEmptyLabels,
+  ignoreUnknownLabels,
   message,
 }) {
   const { GleanLabeled } = globalThis;
@@ -360,6 +370,14 @@ function assertGleanLabeledCounterNotEmpty({
       gleanMetric[label].testGetValue(),
       undefined,
       `Expect Glean "${metricId}" metric label "${label}" to not be empty`
+    );
+  }
+
+  if (!ignoreUnknownLabels) {
+    Assert.deepEqual(
+      gleanMetric["__other__"].testGetValue(), // eslint-disable-line dot-notation
+      undefined,
+      `Expect Glean "${metricId}" metric label "__other__" to be empty.`
     );
   }
 }
