@@ -3444,6 +3444,7 @@ Result<OriginMetadata, nsresult> QuotaManager::GetOriginMetadata(
       const auto& leafName,
       MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(nsAutoString, aDirectory, GetLeafName));
 
+  // XXX Consider using QuotaManager::ParseOrigin here.
   nsCString spec;
   OriginAttributes attrs;
   nsCString originalSuffix;
@@ -6046,19 +6047,32 @@ Result<PrincipalInfo, nsresult> QuotaManager::ParseOrigin(
   // ContentPrincipalInfo, see
   // QuotaManager::GetOriginFromValidatedPrincipalInfo.
 
-  if (aOrigin.Equals(kChromeOrigin)) {
-    return PrincipalInfo{SystemPrincipalInfo{}};
-  }
-
-  ContentPrincipalInfo contentPrincipalInfo;
-
+  nsCString spec;
+  OriginAttributes attrs;
   nsCString originalSuffix;
   const OriginParser::ResultType result = OriginParser::ParseOrigin(
-      MakeSanitizedOriginCString(aOrigin), contentPrincipalInfo.spec(),
-      &contentPrincipalInfo.attrs(), originalSuffix);
-  QM_TRY(OkIf(result == OriginParser::ValidOrigin), Err(NS_ERROR_FAILURE));
+      MakeSanitizedOriginCString(aOrigin), spec, &attrs, originalSuffix);
+  QM_TRY(MOZ_TO_RESULT(result == OriginParser::ValidOrigin));
 
-  return PrincipalInfo{std::move(contentPrincipalInfo)};
+  QM_TRY_INSPECT(
+      const auto& principal,
+      ([&spec, &attrs]() -> Result<nsCOMPtr<nsIPrincipal>, nsresult> {
+        if (spec.EqualsLiteral(kChromeOrigin)) {
+          return nsCOMPtr<nsIPrincipal>(SystemPrincipal::Get());
+        }
+
+        nsCOMPtr<nsIURI> uri;
+        QM_TRY(MOZ_TO_RESULT(NS_NewURI(getter_AddRefs(uri), spec)));
+
+        return nsCOMPtr<nsIPrincipal>(
+            BasePrincipal::CreateContentPrincipal(uri, attrs));
+      }()));
+  QM_TRY(MOZ_TO_RESULT(principal));
+
+  PrincipalInfo principalInfo;
+  QM_TRY(MOZ_TO_RESULT(PrincipalToPrincipalInfo(principal, &principalInfo)));
+
+  return std::move(principalInfo);
 }
 
 // static
@@ -7029,6 +7043,7 @@ nsresult StorageOperationBase::OriginProps::Init(
                  MOZ_TO_RESULT_INVOKE_MEMBER_TYPED(nsAutoString, *mDirectory,
                                                    GetLeafName));
 
+  // XXX Consider using QuotaManager::ParseOrigin here.
   nsCString spec;
   OriginAttributes attrs;
   nsCString originalSuffix;
