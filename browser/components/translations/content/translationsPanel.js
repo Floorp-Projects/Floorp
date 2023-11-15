@@ -1245,17 +1245,6 @@ var TranslationsPanel = new (class {
   }
 
   /**
-   * Removes the translations button.
-   */
-  #hideTranslationsButton() {
-    const { button, buttonLocale, buttonCircleArrows } = this.buttonElements;
-    button.hidden = true;
-    buttonLocale.hidden = true;
-    buttonCircleArrows.hidden = true;
-    button.removeAttribute("translationsactive");
-  }
-
-  /**
    * Returns true if translations is currently active, otherwise false.
    *
    * @returns {boolean}
@@ -1446,7 +1435,7 @@ var TranslationsPanel = new (class {
   onLocationChange(browser) {
     if (browser.currentURI.spec.startsWith("about:reader")) {
       // Hide the translations button when entering reader mode.
-      TranslationsPanel.#hideTranslationsButton();
+      this.buttonElements.button.hidden = true;
     }
   }
 
@@ -1543,6 +1532,9 @@ var TranslationsPanel = new (class {
           (hasSupportedLanguage &&
             (await TranslationsParent.getIsTranslationsEngineSupported()))
         ) {
+          // Keep track if the button was originally hidden, because it will be shown now.
+          const wasButtonHidden = button.hidden;
+
           button.hidden = false;
           if (requestedTranslationPair) {
             // The translation is active, update the urlbar button.
@@ -1602,11 +1594,13 @@ var TranslationsPanel = new (class {
             }
           }
 
-          if (!button.hidden) {
+          // The button was hidden, but now it is shown.
+          if (wasButtonHidden) {
             PageActions.sendPlacedInUrlbarTrigger(button);
           }
-        } else {
-          this.#hideTranslationsButton();
+        } else if (!button.hidden) {
+          // There are no translations visible, hide the button.
+          button.hidden = true;
         }
 
         switch (error) {
