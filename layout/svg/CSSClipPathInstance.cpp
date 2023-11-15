@@ -86,10 +86,6 @@ Maybe<Rect> CSSClipPathInstance::GetBoundingRectForBasicShapeOrPathClip(
 
 already_AddRefed<Path> CSSClipPathInstance::CreateClipPath(
     DrawTarget* aDrawTarget, const gfxMatrix& aTransform) {
-  if (mClipPathStyle.IsShape() && mClipPathStyle.AsShape()._0->IsPath()) {
-    return CreateClipPathPath(aDrawTarget);
-  }
-
   nscoord appUnitsPerDevPixel =
       mTargetFrame->PresContext()->AppUnitsPerDevPixel();
 
@@ -125,6 +121,8 @@ already_AddRefed<Path> CSSClipPathInstance::CreateClipPath(
       return CreateClipPathPolygon(aDrawTarget, r);
     case StyleBasicShape::Tag::Rect:
       return CreateClipPathInset(aDrawTarget, r);
+    case StyleBasicShape::Tag::Path:
+      return CreateClipPathPath(aDrawTarget, r);
     default:
       MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE("Unexpected shape type");
   }
@@ -176,16 +174,19 @@ already_AddRefed<Path> CSSClipPathInstance::CreateClipPathInset(
 }
 
 already_AddRefed<Path> CSSClipPathInstance::CreateClipPathPath(
-    DrawTarget* aDrawTarget) {
+    DrawTarget* aDrawTarget, const nsRect& aRefBox) {
   const auto& path = mClipPathStyle.AsShape()._0->AsPath();
 
   RefPtr<PathBuilder> builder = aDrawTarget->CreatePathBuilder(
       path.fill == StyleFillRule::Nonzero ? FillRule::FILL_WINDING
                                           : FillRule::FILL_EVEN_ODD);
-  float scale = float(AppUnitsPerCSSPixel()) /
-                mTargetFrame->PresContext()->AppUnitsPerDevPixel();
+  nscoord appUnitsPerDevPixel =
+      mTargetFrame->PresContext()->AppUnitsPerDevPixel();
+  float scale = float(AppUnitsPerCSSPixel()) / appUnitsPerDevPixel;
+  Point offset = Point(aRefBox.x, aRefBox.y) / appUnitsPerDevPixel;
+
   return SVGPathData::BuildPath(path.path._0.AsSpan(), builder,
-                                StyleStrokeLinecap::Butt, 0.0, scale);
+                                StyleStrokeLinecap::Butt, 0.0, offset, scale);
 }
 
 }  // namespace mozilla
