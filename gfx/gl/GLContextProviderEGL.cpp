@@ -94,21 +94,22 @@ namespace gl {
 using namespace mozilla::widget;
 
 #if defined(MOZ_WAYLAND)
-class SavedGLSurface {
+class WaylandOffscreenGLSurface {
  public:
-  SavedGLSurface(struct wl_surface* aWaylandSurface,
-                 struct wl_egl_window* aEGLWindow);
-  ~SavedGLSurface();
+  WaylandOffscreenGLSurface(struct wl_surface* aWaylandSurface,
+                            struct wl_egl_window* aEGLWindow);
+  ~WaylandOffscreenGLSurface();
 
  private:
   struct wl_surface* mWaylandSurface = nullptr;
   struct wl_egl_window* mEGLWindow = nullptr;
 };
 
-static nsTHashMap<nsPtrHashKey<void>, SavedGLSurface*> sSavedGLSurfaces;
+static nsTHashMap<nsPtrHashKey<void>, WaylandOffscreenGLSurface*>
+    sWaylandOffscreenGLSurfaces;
 
-void DeleteSavedGLSurface(EGLSurface surface) {
-  auto entry = sSavedGLSurfaces.Lookup(surface);
+void DeleteWaylandOffscreenGLSurface(EGLSurface surface) {
+  auto entry = sWaylandOffscreenGLSurfaces.Lookup(surface);
   if (entry) {
     delete entry.Data();
     entry.Remove();
@@ -344,7 +345,7 @@ EGLSurface GLContextEGL::CreateEGLSurfaceForCompositorWidget(
   // aCompositorWidget becomes visible.
   if (widget::GdkIsWaylandDisplay() && aCompositorWidget->IsHidden()) {
     mozilla::gfx::IntSize pbSize(16, 16);
-    return CreateWaylandBufferSurface(*egl, aConfig, pbSize);
+    return CreateWaylandOffscreenSurface(*egl, aConfig, pbSize);
   }
 #endif
   EGLNativeWindowType window =
@@ -814,11 +815,11 @@ TRY_AGAIN_POWER_OF_TWO:
 }
 
 #if defined(MOZ_WAYLAND)
-SavedGLSurface::SavedGLSurface(struct wl_surface* aWaylandSurface,
-                               struct wl_egl_window* aEGLWindow)
+WaylandOffscreenGLSurface::WaylandOffscreenGLSurface(
+    struct wl_surface* aWaylandSurface, struct wl_egl_window* aEGLWindow)
     : mWaylandSurface(aWaylandSurface), mEGLWindow(aEGLWindow) {}
 
-SavedGLSurface::~SavedGLSurface() {
+WaylandOffscreenGLSurface::~WaylandOffscreenGLSurface() {
   if (mEGLWindow) {
     wl_egl_window_destroy(mEGLWindow);
   }
@@ -828,7 +829,7 @@ SavedGLSurface::~SavedGLSurface() {
 }
 
 // static
-EGLSurface GLContextEGL::CreateWaylandBufferSurface(
+EGLSurface GLContextEGL::CreateWaylandOffscreenSurface(
     EglDisplay& egl, EGLConfig config, mozilla::gfx::IntSize& pbsize) {
   wl_egl_window* eglwindow = nullptr;
 
@@ -841,9 +842,9 @@ EGLSurface GLContextEGL::CreateWaylandBufferSurface(
   const auto surface = egl.fCreateWindowSurface(
       config, reinterpret_cast<EGLNativeWindowType>(eglwindow), 0);
   if (surface) {
-    MOZ_ASSERT(!sSavedGLSurfaces.Contains(surface));
-    sSavedGLSurfaces.LookupOrInsert(surface,
-                                    new SavedGLSurface(wlsurface, eglwindow));
+    MOZ_DIAGNOSTIC_ASSERT(!sWaylandOffscreenGLSurfaces.Contains(surface));
+    sWaylandOffscreenGLSurfaces.LookupOrInsert(
+        surface, new WaylandOffscreenGLSurface(wlsurface, eglwindow));
   }
   return surface;
 }
@@ -1147,8 +1148,8 @@ RefPtr<GLContextEGL> GLContextEGL::CreateWithoutSurface(
     EGLSurface surface = nullptr;
 #ifdef MOZ_WAYLAND
     if (GdkIsWaylandDisplay()) {
-      surface = GLContextEGL::CreateWaylandBufferSurface(*egl, surfaceConfig,
-                                                         dummySize);
+      surface = GLContextEGL::CreateWaylandOffscreenSurface(*egl, surfaceConfig,
+                                                            dummySize);
     } else
 #endif
     {
@@ -1170,7 +1171,7 @@ RefPtr<GLContextEGL> GLContextEGL::CreateWithoutSurface(
       NS_WARNING("Failed to create GLContext from PBuffer");
       egl->fDestroySurface(surface);
 #if defined(MOZ_WAYLAND)
-      DeleteSavedGLSurface(surface);
+      DeleteWaylandOffscreenGLSurface(surface);
 #endif
       return nullptr;
     }
@@ -1206,7 +1207,7 @@ void GLContextEGL::DestroySurface(EglDisplay& aEgl, const EGLSurface aSurface) {
       gfxCriticalNote << "Error in eglDestroySurface: " << gfx::hexa(err);
     }
 #if defined(MOZ_WAYLAND)
-    DeleteSavedGLSurface(aSurface);
+    DeleteWaylandOffscreenGLSurface(aSurface);
 #endif
   }
 }
