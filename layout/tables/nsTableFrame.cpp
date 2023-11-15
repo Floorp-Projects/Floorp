@@ -6259,6 +6259,13 @@ void BCPaintBorderIterator::SetNewData(int32_t aY, int32_t aX) {
     mCellData = nullptr;
     mBCData = &mTableCellMap->mBCInfo->mBEndBorders.ElementAt(aX);
   } else {
+    // We should have set mCellMap during SetNewRowGroup, but if we failed to
+    // find the appropriate map there, let's just give up.
+    // Bailing out here may leave us with some missing borders, but seems
+    // preferable to crashing. (Bug 1442018)
+    if (MOZ_UNLIKELY(!mCellMap)) {
+      ABORT0();
+    }
     if (uint32_t(mRowIndex - mFifRgFirstRowIndex) < mCellMap->mRows.Length()) {
       mBCData = nullptr;
       mCellData = (BCCellData*)mCellMap->mRows[mRowIndex - mFifRgFirstRowIndex]
