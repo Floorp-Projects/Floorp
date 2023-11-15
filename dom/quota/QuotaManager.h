@@ -526,6 +526,8 @@ class QuotaManager final : public BackgroundThreadObject {
   static bool AreOriginsEqualOnDisk(const nsACString& aOrigin1,
                                     const nsACString& aOrigin2);
 
+  // XXX This method currently expects the original origin string (not yet
+  // sanitized).
   static Result<PrincipalInfo, nsresult> ParseOrigin(const nsACString& aOrigin);
 
   static void InvalidateQuotaCache();
