@@ -52,10 +52,11 @@ import mozilla.components.service.fxa.FxaAuthData
  * State transitions are described by a transition matrix, which is described in [State.next].
  */
 
-internal enum class AccountState {
-    NotAuthenticated,
-    Authenticated,
-    AuthenticationProblem,
+internal sealed class AccountState {
+    object Authenticated : AccountState()
+    data class Authenticating(val oAuthUrl: String) : AccountState()
+    object AuthenticationProblem : AccountState()
+    object NotAuthenticated : AccountState()
 }
 
 internal enum class ProgressState {
@@ -98,6 +99,7 @@ internal sealed class Event {
 
         object LoggedOut : Progress()
 
+        data class StartedOAuthFlow(val oAuthUrl: String) : Progress()
         data class CompletedAuthentication(val authType: AuthType) : Progress()
     }
 }
@@ -114,6 +116,11 @@ internal fun State.next(event: Event): State? = when (this) {
             Event.Account.Start -> State.Active(ProgressState.Initializing)
             is Event.Account.BeginEmailFlow -> State.Active(ProgressState.BeginningAuthentication)
             is Event.Account.BeginPairingFlow -> State.Active(ProgressState.BeginningAuthentication)
+            else -> null
+        }
+        is AccountState.Authenticating -> when (event) {
+            is Event.Progress.AuthData -> State.Active(ProgressState.CompletingAuthentication)
+            Event.Progress.CancelAuth -> State.Idle(AccountState.NotAuthenticated)
             else -> null
         }
         AccountState.Authenticated -> when (event) {
@@ -136,9 +143,8 @@ internal fun State.next(event: Event): State? = when (this) {
             else -> null
         }
         ProgressState.BeginningAuthentication -> when (event) {
-            is Event.Progress.AuthData -> State.Active(ProgressState.CompletingAuthentication)
             Event.Progress.FailedToBeginAuth -> State.Idle(AccountState.NotAuthenticated)
-            Event.Progress.CancelAuth -> State.Idle(AccountState.NotAuthenticated)
+            is Event.Progress.StartedOAuthFlow -> State.Idle(AccountState.Authenticating(event.oAuthUrl))
             else -> null
         }
         ProgressState.CompletingAuthentication -> when (event) {
