@@ -5660,7 +5660,7 @@ NSC_GenerateKeyPair(CK_SESSION_HANDLE hSession,
             }
 
             if (PR_GetEnvSecure("NSS_USE_DECODED_CKA_EC_POINT") ||
-                ecParams->fieldID.type == ec_field_plain) {
+                ecParams->type != ec_params_named) {
                 PORT_FreeArena(ecParams->arena, PR_TRUE);
                 crv = sftk_AddAttributeType(publicKey, CKA_EC_POINT,
                                             sftk_item_expand(&ecPriv->publicValue));

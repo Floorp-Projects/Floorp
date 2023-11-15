@@ -46,6 +46,35 @@ ec_secp256r1_pt_validate(const SECItem *pt)
 }
 
 /*
+ * Scalar Validation for P-256.
+ */
+
+SECStatus
+ec_secp256r1_scalar_validate(const SECItem *scalar)
+{
+    SECStatus res = SECSuccess;
+    if (!scalar || !scalar->data) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        res = SECFailure;
+        return res;
+    }
+
+    if (scalar->len != 32) {
+        PORT_SetError(SEC_ERROR_BAD_KEY);
+        res = SECFailure;
+        return res;
+    }
+
+    bool b = Hacl_P256_validate_private_key(scalar->data);
+
+    if (!b) {
+        PORT_SetError(SEC_ERROR_BAD_KEY);
+        res = SECFailure;
+    }
+    return res;
+}
+
+/*
  * Scalar multiplication for P-256.
  * If P == NULL, the base point is used.
  * Returns X = k*P
