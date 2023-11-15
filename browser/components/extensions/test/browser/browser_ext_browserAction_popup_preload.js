@@ -70,11 +70,19 @@ add_task(async function testBrowserActionClickCanceled() {
     "Active tab was granted permission"
   );
 
+  // We intentionally turn off this a11y check, because the following click
+  // is send on the <body> to dismiss the pending popup using an alternative way
+  // of the popup dismissal, where the other way like `Esc` key is available,
+  // therefore this test can be ignored.
+  AccessibilityUtils.setEnv({
+    mustHaveAccessibleRule: false,
+  });
   EventUtils.synthesizeMouseAtCenter(
     document.documentElement,
     { type: "mouseup", button: 0 },
     window
   );
+  AccessibilityUtils.resetEnv();
 
   is(browserAction.pendingPopup, null, "Pending popup was cleared");
   is(browserAction.pendingPopupTimeout, null, "Have no pending popup timeout");
@@ -207,11 +215,19 @@ add_task(async function testBrowserActionDisabled() {
   is(browserAction.pendingPopup, null, "Have no pending popup");
   is(browserAction.pendingPopupTimeout, null, "Have no pending popup timeout");
 
+  // We intentionally turn off this a11y check, because the following click
+  // is send on the <body> to dismiss the pending popup using an alternative way
+  // of the popup dismissal, where the other way like `Esc` key is available,
+  // therefore this test can be ignored.
+  AccessibilityUtils.setEnv({
+    mustHaveAccessibleRule: false,
+  });
   EventUtils.synthesizeMouseAtCenter(
     document.documentElement,
     { type: "mouseup", button: 0 },
     window
   );
+  AccessibilityUtils.resetEnv();
 
   is(browserAction.pendingPopup, null, "Have no pending popup");
   is(browserAction.pendingPopupTimeout, null, "Have no pending popup timeout");
