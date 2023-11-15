@@ -308,14 +308,6 @@ pub enum SystemColor {
     /// Text color of disabled text on toolbars.
     MozMacDisabledtoolbartext,
 
-    MozMacMenupopup,
-    MozMacMenuitem,
-    MozMacActiveMenuitem,
-    MozMacSourceList,
-    MozMacSourceListSelection,
-    MozMacActiveSourceListSelection,
-    MozMacTooltip,
-
     /// Theme accent color.
     /// https://drafts.csswg.org/css-color-4/#valdef-system-color-accentcolor
     Accentcolor,
