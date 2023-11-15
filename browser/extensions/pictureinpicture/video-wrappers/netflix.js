@@ -74,6 +74,18 @@ class PictureInPictureVideoWrapper {
   setCurrentTime(video, position) {
     this.player.seek(position * 1000);
   }
+  setVolume(video, volume) {
+    this.player.setVolume(volume);
+  }
+  getVolume() {
+    return this.player.getVolume();
+  }
+  setMuted(video, shouldMute) {
+    this.player.setMuted(shouldMute);
+  }
+  isMuted() {
+    return this.player.isMuted();
+  }
 }
 
 this.PictureInPictureVideoWrapper = PictureInPictureVideoWrapper;

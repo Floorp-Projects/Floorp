@@ -17,5 +17,6 @@ XPCOM_MANIFESTS += [
 FINAL_LIBRARY = "xul"
 
 FINAL_TARGET_FILES.defaults.autoconfig += [
+    "legacy_component.js",
     "prefcalls.js",
 ]

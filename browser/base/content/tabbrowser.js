@@ -3150,12 +3150,18 @@
       // together. This prevents synch reflow for each tab
       // insertion.
       for (var i = 0; i < tabDataList.length; i++) {
+
         let tabData = tabDataList[i];
 
         let userContextId = tabData.userContextId;
         let select = i == selectTab - 1;
         let tab;
         let tabWasReused = false;
+        let floorpWorkspace = tabData.floorpWorkspace ? tabData.floorpWorkspace : Services.prefs.getStringPref("floorp.browser.workspace.all").split(",")[0];
+        let floorpSSB = tabData.floorpSSB;
+        if (floorpSSB) {
+          window.close();
+        }
 
         // Re-use existing selected tab if possible to avoid the overhead of
         // selecting a new tab.
@@ -3166,6 +3172,12 @@
         ) {
           tabWasReused = true;
           tab = this.selectedTab;
+          tab.setAttribute("floorpWorkspace", floorpWorkspace);
+
+          if (floorpSSB) {
+            tab.setAttribute("floorpSSB", floorpSSB);
+          }
+
           if (!tabData.pinned) {
             this.unpinTab(tab);
           } else {
@@ -3214,6 +3226,8 @@
             skipLoad: true,
             preferredRemoteType,
           });
+
+          tab.setAttribute("floorpWorkspace", floorpWorkspace);
 
           if (select) {
             tabToSelect = tab;
@@ -3931,6 +3945,7 @@
         prewarmed,
       } = {}
     ) {
+
       if (UserInteraction.running("browser.tabs.opening", window)) {
         UserInteraction.finish("browser.tabs.opening", window);
       }
@@ -4021,13 +4036,20 @@
               false,
               "Giving up waiting for the tab closing animation to finish (bug 608589)"
             );
-            tabbrowser._endRemoveTab(tab);
           }
         },
         3000,
         aTab,
         this
       );
+
+      // Floorp Injections
+      // Force to close & Make do not save history of the tab.
+      try {
+        this._endRemoveTab(aTab)
+      } catch (e) {
+        console.warn(e)
+      }
     },
 
     _hasBeforeUnload(aTab) {
@@ -5922,8 +5944,6 @@
 
         let filter = this._tabFilters.get(tab);
         if (filter) {
-          browser.webProgress.removeProgressListener(filter);
-
           let listener = this._tabListeners.get(tab);
           if (listener) {
             filter.removeProgressListener(listener);

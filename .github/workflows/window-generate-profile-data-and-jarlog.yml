@@ -1,0 +1,75 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# Please write our copyright if you use this file.
+# © 2023 Floorp Projects & Contributors
+
+on:
+    workflow_call:
+      inputs:
+        browser-artifact-name:
+          description: 'Artifact to download'
+          required: true
+          default: 'floorp-windows-x86_64-build-with-profgen-zstd'
+          type: string
+        arch:
+          description: 'Architecture to output'
+          required: true
+          default: 'x86_64'
+          type: string
+    workflow_dispatch:
+     inputs:
+        browser-artifact:
+          description: 'Artifact to download'
+          required: true
+          default: 'floorp-windows-x86_64-build-with-profgen-zstd'
+          type: string
+        arch:
+          description: 'Architecture to output'
+          required: true
+          default: 'x86_64'
+          type: string
+jobs:
+   Generate-Profile-data-and-jarlog:
+    runs-on: windows-latest
+    steps:
+        - uses: actions/download-artifact@v3
+          name: Download artifact 📥
+          with:
+            name: ${{ inputs.browser-artifact-name }}
+            path: C:\artifact
+
+        - name:  Unpack artifact
+          run: |
+            cd C:\artifact
+            zstd -d floorp-*.tar.zst
+            7z x floorp-*.tar
+
+        - uses: actions/checkout@v3
+          name: Clone 🧬
+          with:
+            submodules: 'recursive'    
+        
+        - name: Setup 🪛
+          run: |
+            (New-Object System.Net.WebClient).DownloadFile("https://ftp.mozilla.org/pub/mozilla/libraries/win32/MozillaBuildSetup-Latest.exe","C:\MozillaBuildSetup-Latest.exe")
+            C:\MozillaBuildSetup-Latest.exe /S | out-null
+
+        - name: Generate 🔄
+          run: |
+            $workspace_dir = [regex]::replace($env:GITHUB_WORKSPACE, "^([A-Z]):", { "/" + $args.value.Substring(0, 1).toLower() }) -replace "\\","/"
+      
+            echo "cd $workspace_dir" '' >> mozilla-build-run.sh
+            echo 'export PATH=/c/mozilla-build/msys2/usr/bin:$PATH' '' >> mozilla-build-run.sh
+            echo './mach --no-interactive bootstrap --application-choice browser' '' >> mozilla-build-run.sh
+            echo 'LLVM_PROFDATA=/c/Users/runneradmin/.mozbuild/clang/bin/llvm-profdata.exe JARLOG_FILE=en-US.log ./mach python build/pgo/profileserver.py --binary /c/artifact/floorp/floorp.exe' '' >> mozilla-build-run.sh
+            C:\mozilla-build\start-shell.bat $workspace_dir\mozilla-build-run.sh
+
+        - name: Publish 🎁
+          uses: actions/upload-artifact@v3
+          with:
+            name: floorp-windows-${{ inputs.arch }}-profdata-and-jarlog
+            path: |
+              merged.profdata
+              en-US.log
