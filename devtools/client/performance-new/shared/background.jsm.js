@@ -65,7 +65,7 @@ const PREF_PREFIX = "devtools.performance.recording.";
 // capabilities of the WebChannel. The front-end can handle old WebChannel
 // versions and has a full list of versions and capabilities here:
 // https://github.com/firefox-devtools/profiler/blob/main/src/app-logic/web-channel.js
-const CURRENT_WEBCHANNEL_VERSION = 1;
+const CURRENT_WEBCHANNEL_VERSION = 2;
 
 const lazyRequire = {};
 // eslint-disable-next-line mozilla/lazy-getter-object-name
@@ -791,6 +791,20 @@ async function getResponseForMessage(request, browser) {
       const { path, requestJson } = request;
       const symbolicationService = getSymbolicationServiceForBrowser(browser);
       return symbolicationService.querySymbolicationApi(path, requestJson);
+    }
+    case "GET_EXTERNAL_POWER_TRACKS": {
+      const { startTime, endTime } = request;
+      const externalPowerUrl = Services.prefs.getCharPref(
+        "devtools.performance.recording.power.external-url",
+        ""
+      );
+      if (externalPowerUrl) {
+        const response = await fetch(
+          `${externalPowerUrl}?start=${startTime}&end=${endTime}`
+        );
+        return response.json();
+      }
+      return [];
     }
     default:
       console.error(
