@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<application>
-  <id type="desktop">org.mozilla.firefox</id>
+<component type="desktop-application">
+  <id>org.mozilla.firefox</id>
   <launchable type="desktop-id">org.mozilla.firefox.desktop</launchable>
   <name>Firefox</name>
   <developer_name>Mozilla</developer_name>
@@ -26,12 +26,20 @@
   <url type="translate">https://wiki.mozilla.org/L10n:Starting_a_localization</url>
 
   <screenshots>
-	<screenshot type="default">https://raw.githubusercontent.com/mozilla-releng/scriptworker-scripts/master/pushflatpakscript/media/screenshots/image1.png</screenshot>
-	<screenshot>https://raw.githubusercontent.com/mozilla-releng/scriptworker-scripts/master/pushflatpakscript/media/screenshots/image2.png</screenshot>
-	<screenshot>https://raw.githubusercontent.com/mozilla-releng/scriptworker-scripts/master/pushflatpakscript/media/screenshots/image3.png</screenshot>
+    <screenshot type="default">
+      <image type="source">https://raw.githubusercontent.com/mozilla-releng/scriptworker-scripts/master/pushflatpakscript/media/screenshots/image1.png</image>
+      <caption>The “New Tab” page</caption>
+    </screenshot>
+    <screenshot>
+      <image type="source">https://raw.githubusercontent.com/mozilla-releng/scriptworker-scripts/master/pushflatpakscript/media/screenshots/image2.png</image>
+      <caption>A Wikipedia article displayed in Firefox</caption>
+    </screenshot>
+    <screenshot>
+      <image type="source">https://raw.githubusercontent.com/mozilla-releng/scriptworker-scripts/master/pushflatpakscript/media/screenshots/image3.png</image>
+      <caption>The “Welcome to Firefox” page: “Open up an amazing internet”</caption>
+    </screenshot>
   </screenshots>
   <custom>
     <value key="flathub::manifest">https://hg.mozilla.org/mozilla-central/file/tip/taskcluster/docker/firefox-flatpak/runme.sh</value>
   </custom>
-
-</application>
+</component>
