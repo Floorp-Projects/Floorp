@@ -232,6 +232,22 @@
 				<string>file</string>
 			</array>
 		</dict>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>Firefox Protocol</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>firefox</string>
+			</array>
+		</dict>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>Firefox Private Browsing Protocol</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>firefox-private</string>
+			</array>
+		</dict>
 	</array>
 	<key>CFBundleVersion</key>
 	<string>@MAC_BUNDLE_VERSION@</string>
