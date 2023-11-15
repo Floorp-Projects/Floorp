@@ -471,6 +471,8 @@ The following is a partial list of `collected preferences <https://searchfox.org
 
 - ``dom.popup_allowed_events``: Which events should allow popups. Only exposed with about:config.
 
+- ``intl.ime.use_composition_events_for_insert_text``: Whether a set of composition events is fired when user inserts text without keyboard events nor composing state of a composition (only on Linux and macOS).
+
 attribution
 ~~~~~~~~~~~
 

@@ -363,6 +363,13 @@ const DEFAULT_ENVIRONMENT_PREFS = new Map([
   ["nimbus.debug", { what: RECORD_PREF_VALUE }],
 ]);
 
+if (AppConstants.platform == "linux" || AppConstants.platform == "macosx") {
+  DEFAULT_ENVIRONMENT_PREFS.set(
+    "intl.ime.use_composition_events_for_insert_text",
+    { what: RECORD_PREF_VALUE }
+  );
+}
+
 const LOGGER_NAME = "Toolkit.Telemetry";
 
 const PREF_BLOCKLIST_ENABLED = "extensions.blocklist.enabled";
