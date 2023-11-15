@@ -33,6 +33,17 @@ function grabHistogramsFromContent(
   }).then(gather, gather);
 }
 
+function unscream(s) {
+  // Takes SCREAMINGCASE `s` and returns "Screamingcase".
+  return s.charAt(0) + s.slice(1).toLowerCase();
+}
+
+function screamToCamel(s) {
+  // Takes SCREAMING_CASE `s` and returns "screamingCase".
+  const pascal = s.split("_").map(unscream).join("");
+  return pascal.charAt(0).toLowerCase() + pascal.slice(1);
+}
+
 var check_use_counter_worker = async function (
   use_counter_name,
   worker_type,
@@ -50,6 +61,15 @@ var check_use_counter_worker = async function (
     use_counter_name,
     worker_type
   );
+  await Services.fog.testFlushAllChildren();
+  let glean_before =
+    Glean[`useCounterWorker${unscream(worker_type)}`][
+      screamToCamel(use_counter_name)
+    ].testGetValue();
+  let glean_destructions_before =
+    Glean.useCounter[
+      `${worker_type.toLowerCase()}WorkersDestroyed`
+    ].testGetValue();
 
   BrowserTestUtils.startLoadingURIString(
     gBrowser.selectedBrowser,
@@ -69,17 +89,35 @@ var check_use_counter_worker = async function (
     worker_type,
     histogram_before
   );
+  await Services.fog.testFlushAllChildren();
+  let glean_after =
+    Glean[`useCounterWorker${unscream(worker_type)}`][
+      screamToCamel(use_counter_name)
+    ].testGetValue();
+  let glean_destructions_after =
+    Glean.useCounter[
+      `${worker_type.toLowerCase()}WorkersDestroyed`
+    ].testGetValue();
 
   is(
     histogram_after,
     histogram_before + 1,
     `histogram ${use_counter_name} counts for ${worker_type} worker are correct`
   );
+  is(
+    glean_after,
+    glean_before + 1,
+    `Glean counter ${use_counter_name} for ${worker_type} worker is correct.`
+  );
   // There might be other workers created by prior tests get destroyed during
   // this tests.
   ok(
     destructions_after > destructions_before,
     `${worker_type} worker counts are correct`
+  );
+  ok(
+    glean_destructions_after > glean_destructions_before,
+    `Glean ${worker_type} worker counts are correct`
   );
 };
 
