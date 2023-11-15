@@ -111,6 +111,8 @@ class GLContextEGL final : public GLContext {
   static EGLSurface CreateEGLSurfaceForCompositorWidget(
       widget::CompositorWidget* aCompositorWidget, const EGLConfig aConfig);
 
+  static void DestroySurface(EglDisplay&, const EGLSurface aSurface);
+
 #ifdef MOZ_X11
   static bool FindVisual(int* const out_visualId);
 #endif
