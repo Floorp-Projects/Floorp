@@ -1147,7 +1147,9 @@ BasePrincipal::GetIsLoopbackHost(bool* aRes) {
   nsAutoCString host;
   nsresult rv = GetHost(host);
   // Swallow potential failure as this method is infallible.
-  NS_ENSURE_SUCCESS(rv, NS_OK);
+  if (NS_FAILED(rv)) {
+    return NS_OK;
+  }
 
   *aRes = nsMixedContentBlocker::IsPotentiallyTrustworthyLoopbackHost(host);
   return NS_OK;
