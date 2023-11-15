@@ -39,6 +39,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=885996
     { id: 'button-up', result: true },
     { id: 'div-click', result: true },
     { id: 'div-click-on-demand', result: true },
+    { id: 'invoker', result: true },
   ];
 
   SimpleTest.waitForFocus(function() {
@@ -137,6 +138,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=885996
   <button id='button-up' onclick="document.getElementById('by-button').click();">click</button>
   <div id='div-click' onclick="document.getElementById('by-button').click();">click</div>
   <div id='div-click-on-demand' onclick="var i=document.createElement('input'); i.type='color'; i.click();">click</div>
+  <button id="invoker" invoketarget="normal" invokeaction="showpicker">invoke</button>
 </div>
 <pre id="test">
 </pre>

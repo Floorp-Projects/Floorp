@@ -1640,4 +1640,38 @@ JSObject* HTMLSelectElement::WrapNode(JSContext* aCx,
   return HTMLSelectElement_Binding::Wrap(aCx, this, aGivenProto);
 }
 
+void HTMLSelectElement::HandleInvokeInternal(nsAtom* aAction,
+                                             ErrorResult& aRv) {
+  // If this's relevant settings object's origin is not same origin with
+  // this's relevant settings object's top-level origin, [...], then return.
+  nsPIDOMWindowInner* window = OwnerDoc()->GetInnerWindow();
+  WindowGlobalChild* windowGlobalChild =
+      window ? window->GetWindowGlobalChild() : nullptr;
+  if (!windowGlobalChild || !windowGlobalChild->SameOriginWithTop()) {
+    return;
+  }
+
+  // If this is not mutable, then return.
+  if (IsDisabled()) {
+    return;
+  }
+
+  // If this's relevant global object does not have transient
+  // activation, then return.
+  if (!OwnerDoc()->HasValidTransientUserGestureActivation()) {
+    return;
+  }
+
+  // If action is an ASCII case-insensitive match for "showPicker",
+  // then show the picker, if applicable, for this.
+  if (nsContentUtils::EqualsIgnoreASCIICase(aAction, nsGkAtoms::showPicker)) {
+    if (IsCombobox() && !OpenInParentProcess()) {
+      RefPtr<Document> doc = OwnerDoc();
+      RefPtr<Element> select = this;
+      nsContentUtils::DispatchChromeEvent(doc, select, u"mozshowdropdown"_ns,
+                                          CanBubble::eYes, Cancelable::eNo);
+    }
+  }
+}
+
 }  // namespace mozilla::dom
