@@ -78,10 +78,31 @@ const sLetsEncryptBase64 =
   "6q78OMSdn875bNjdBYAqxUp2/LEIHfDBkLoQz0hFJmwAbYahqKaLn73PAAm1X2kj" +
   "f1w8DdnkabOLGeOVcj9LQ+s67vBykx4anTjURkbqZslUEUsn2k5xeua2zUk=";
 
+// This is a certificate that (currently) ships with the platform.
+// It should be considered a built-in root.
+const sSectigoBase64 =
+  "" +
+  "MIICOjCCAcGgAwIBAgIQQvLM2htpN0RfFf51KBC49DAKBggqhkjOPQQDAzBfMQsw" +
+  "CQYDVQQGEwJHQjEYMBYGA1UEChMPU2VjdGlnbyBMaW1pdGVkMTYwNAYDVQQDEy1T" +
+  "ZWN0aWdvIFB1YmxpYyBTZXJ2ZXIgQXV0aGVudGljYXRpb24gUm9vdCBFNDYwHhcN" +
+  "MjEwMzIyMDAwMDAwWhcNNDYwMzIxMjM1OTU5WjBfMQswCQYDVQQGEwJHQjEYMBYG" +
+  "A1UEChMPU2VjdGlnbyBMaW1pdGVkMTYwNAYDVQQDEy1TZWN0aWdvIFB1YmxpYyBT" +
+  "ZXJ2ZXIgQXV0aGVudGljYXRpb24gUm9vdCBFNDYwdjAQBgcqhkjOPQIBBgUrgQQA" +
+  "IgNiAAR2+pmpbiDt+dd34wc7qNs9Xzjoq1WmVk/WSOrsfy2qw7LFeeyZYX8QeccC" +
+  "WvkEN/U0NSt3zn8gj1KjAIns1aeibVvjS5KToID1AZTc8GgHHs3u/iVStSBDHBv+" +
+  "6xnOQ6OjQjBAMB0GA1UdDgQWBBTRItpMWfFLXyY4qp3W7usNw/upYTAOBgNVHQ8B" +
+  "Af8EBAMCAYYwDwYDVR0TAQH/BAUwAwEB/zAKBggqhkjOPQQDAwNnADBkAjAn7qRa" +
+  "qCG76UeXlImldCBteU/IvZNeWBj7LRoAasm4PdCkT0RHlAFWovgzJQxC36oCMB3q" +
+  "4S6ILuH5px0CMk7yn2xVdOOurvulGu7t0vzCAxHrRVxgED1cf5kDW21USAGKcw==";
+
 function run_test() {
   let builtInCert = certdb.constructX509FromBase64(sNaverBase64);
   ok(builtInCert, "should be able to decode base-64 of built-in cert");
   ok(builtInCert.isBuiltInRoot, "cert should be considered built-in");
+
+  let otherbuiltInCert = certdb.constructX509FromBase64(sSectigoBase64);
+  ok(otherbuiltInCert, "should be able to decode base-64 of built-in cert");
+  ok(otherbuiltInCert.isBuiltInRoot, "cert should be considered built-in");
 
   let notBuiltInCert = certdb.constructX509FromBase64(sLetsEncryptBase64);
   ok(notBuiltInCert, "should be able to decode base-64 of built-in cert");
