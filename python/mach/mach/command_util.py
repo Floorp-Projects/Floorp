@@ -103,7 +103,6 @@ MACH_COMMANDS = {
     "geckoview-junit": MachCommandReference(
         "testing/mochitest/mach_commands.py", ["test"]
     ),
-    "gen-use-counter-metrics": MachCommandReference("dom/base/mach_commands.py"),
     "generate-test-certs": MachCommandReference(
         "security/manager/tools/mach_commands.py"
     ),
