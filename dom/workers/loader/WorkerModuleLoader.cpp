@@ -69,7 +69,7 @@ bool WorkerModuleLoader::CreateDynamicImportLoader() {
   workerPrivate->AssertIsOnWorkerThread();
 
   IgnoredErrorResult rv;
-  RefPtr<WorkerScriptLoader> loader = new loader::WorkerScriptLoader(
+  RefPtr<WorkerScriptLoader> loader = loader::WorkerScriptLoader::Create(
       workerPrivate, nullptr, nullptr,
       GetCurrentScriptLoader()->GetWorkerScriptType(), rv);
   if (NS_WARN_IF(rv.Failed())) {
