@@ -18,7 +18,6 @@ The current data collection possibilities include:
 * :doc:`events` can record richer data on individual occurrences of specific actions
 * :doc:`Measuring elapsed time <measuring-time>`
 * :doc:`Custom pings <custom-pings>`
-* :doc:`Use counters <use-counters>` measure the usage of web platform features
 * :doc:`Experiment annotations <experiments>`
 * :doc:`Remote content uptake <uptake>`
 * :doc:`WebExtension API <webextension-api>` can be used in privileged webextensions
