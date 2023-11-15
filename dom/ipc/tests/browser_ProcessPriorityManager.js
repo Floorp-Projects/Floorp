@@ -414,6 +414,57 @@ async function loadKeepAliveTab(host) {
   return { tab, childID };
 }
 
+const AUDIO_WAKELOCK_NAME = "audio-playing";
+const VIDEO_WAKELOCK_NAME = "video-playing";
+
+// This function was copied from toolkit/content/tests/browser/head.js
+function wakeLockObserved(powerManager, observeTopic, checkFn) {
+  return new Promise(resolve => {
+    function wakeLockListener() {}
+    wakeLockListener.prototype = {
+      QueryInterface: ChromeUtils.generateQI(["nsIDOMMozWakeLockListener"]),
+      callback(topic, state) {
+        if (topic == observeTopic && checkFn(state)) {
+          powerManager.removeWakeLockListener(wakeLockListener.prototype);
+          resolve();
+        }
+      },
+    };
+    powerManager.addWakeLockListener(wakeLockListener.prototype);
+  });
+}
+
+// This function was copied from toolkit/content/tests/browser/head.js
+async function waitForExpectedWakeLockState(
+  topic,
+  { needLock, isForegroundLock }
+) {
+  const powerManagerService = Cc["@mozilla.org/power/powermanagerservice;1"];
+  const powerManager = powerManagerService.getService(
+    Ci.nsIPowerManagerService
+  );
+  const wakelockState = powerManager.getWakeLockState(topic);
+  let expectedLockState = "unlocked";
+  if (needLock) {
+    expectedLockState = isForegroundLock
+      ? "locked-foreground"
+      : "locked-background";
+  }
+  if (wakelockState != expectedLockState) {
+    info(`wait until wakelock becomes ${expectedLockState}`);
+    await wakeLockObserved(
+      powerManager,
+      topic,
+      state => state == expectedLockState
+    );
+  }
+  is(
+    powerManager.getWakeLockState(topic),
+    expectedLockState,
+    `the wakelock state for '${topic}' is equal to '${expectedLockState}'`
+  );
+}
+
 /**
  * If an iframe in a foreground tab is navigated to a new page for
  * a different site, then the process of the new iframe page should
@@ -655,7 +706,8 @@ add_task(async function test_video_background_tab() {
 
   await BrowserTestUtils.withNewTab("https://example.com", async browser => {
     // Let's load up a video in the tab, but mute it, so that this tab should
-    // reach PROCESS_PRIORITY_BACKGROUND_PERCEIVABLE.
+    // reach PROCESS_PRIORITY_BACKGROUND_PERCEIVABLE. We need to wait for the
+    // wakelock changes from the unmuting to get back up to the parent.
     await SpecialPowers.spawn(browser, [], async () => {
       let video = content.document.createElement("video");
       video.src = "https://example.net/browser/dom/ipc/tests/short.mp4";
@@ -665,6 +717,15 @@ add_task(async function test_video_background_tab() {
       video.loop = true;
       await video.play();
     });
+    await Promise.all([
+      waitForExpectedWakeLockState(AUDIO_WAKELOCK_NAME, {
+        needLock: false,
+      }),
+      waitForExpectedWakeLockState(VIDEO_WAKELOCK_NAME, {
+        needLock: true,
+        isForegroundLock: true,
+      }),
+    ]);
 
     let tab = gBrowser.getTabForBrowser(browser);
 
@@ -684,11 +745,18 @@ add_task(async function test_video_background_tab() {
       fromTabExpectedPriority: PROCESS_PRIORITY_BACKGROUND,
     });
 
-    // Let's unmute the video now.
-    await SpecialPowers.spawn(browser, [], async () => {
-      let video = content.document.querySelector("video");
-      video.muted = false;
-    });
+    // Let's unmute the video now. We need to wait for the wakelock change from
+    // the unmuting to get back up to the parent.
+    await Promise.all([
+      waitForExpectedWakeLockState(AUDIO_WAKELOCK_NAME, {
+        needLock: true,
+        isForegroundLock: true,
+      }),
+      SpecialPowers.spawn(browser, [], async () => {
+        let video = content.document.querySelector("video");
+        video.muted = false;
+      }),
+    ]);
 
     // The tab with the unmuted video should stay at
     // PROCESS_PRIORITY_FOREGROUND when backgrounded.
