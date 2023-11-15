@@ -20,6 +20,7 @@
 #include "nsProxyRelease.h"
 #include "nsIContentPolicy.h"
 #include "nsContentUtils.h"
+#include "mozilla/dom/ContentParent.h"
 
 #include "nsIFileURL.h"
 #include "nsIURIMutator.h"
@@ -406,6 +407,9 @@ nsresult nsFileChannel::OpenContentStream(bool async, nsIInputStream** result,
     }
   }
 
+  // notify "file-channel-opened" observers
+  MaybeSendFileOpenNotification();
+
   *result = nullptr;
   stream.swap(*result);
   return NS_OK;
@@ -479,6 +483,38 @@ nsFileChannel::GetFile(nsIFile** file) {
 
   // This returns a cloned nsIFile
   return fileURL->GetFile(file);
+}
+
+nsresult nsFileChannel::MaybeSendFileOpenNotification() {
+  nsCOMPtr<nsIObserverService> obsService = services::GetObserverService();
+  if (!obsService) {
+    return NS_OK;
+  }
+
+  nsCOMPtr<nsILoadInfo> loadInfo;
+  nsresult rv = GetLoadInfo(getter_AddRefs(loadInfo));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  bool isTopLevel;
+  rv = loadInfo->GetIsTopLevelLoad(&isTopLevel);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  uint64_t browsingContextID;
+  rv = loadInfo->GetBrowsingContextID(&browsingContextID);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  if ((browsingContextID != 0 && isTopLevel) ||
+      !loadInfo->TriggeringPrincipal()->IsSystemPrincipal()) {
+    obsService->NotifyObservers(static_cast<nsIChannel*>(this),
+                                "file-channel-opened", nullptr);
+  }
+  return NS_OK;
 }
 
 //-----------------------------------------------------------------------------
