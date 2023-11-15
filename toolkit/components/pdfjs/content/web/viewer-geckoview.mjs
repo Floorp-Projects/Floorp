@@ -545,6 +545,7 @@ const {
   createValidAbsoluteUrl,
   DOMSVGFactory,
   FeatureTest,
+  fetchData,
   getDocument,
   getFilenameFromUrl,
   getPdfFilenameFromUrl,
@@ -4969,7 +4970,7 @@ class PDFViewer {
   #scaleTimeoutId = null;
   #textLayerMode = TextLayerMode.ENABLE;
   constructor(options) {
-    const viewerVersion = '4.0.223';
+    const viewerVersion = '4.0.240';
     if (version !== viewerVersion) {
       throw new Error(`The API version "${version}" does not match the Viewer version "${viewerVersion}".`);
     }
@@ -5373,7 +5374,7 @@ class PDFViewer {
       });
       this.viewer.style.setProperty("--scale-factor", viewport.scale);
       if (this.pageColors?.foreground === "CanvasText" || this.pageColors?.background === "Canvas") {
-        this.viewer.style.setProperty("--hcm-highligh-filter", pdfDocument.filterFactory.addHighlightHCMFilter("CanvasText", "Canvas", "HighlightText", "Highlight"));
+        this.viewer.style.setProperty("--hcm-highlight-filter", pdfDocument.filterFactory.addHighlightHCMFilter("CanvasText", "Canvas", "HighlightText", "Highlight"));
       }
       for (let pageNum = 1; pageNum <= pagesCount; ++pageNum) {
         const pageView = new PDFPageView({
@@ -8687,23 +8688,24 @@ class L10n {
     this.#l10n.resumeObserving();
   }
   static #fixupLangCode(langCode) {
+    langCode = langCode?.toLowerCase() || "en-us";
     const PARTIAL_LANG_CODES = {
-      en: "en-US",
-      es: "es-ES",
-      fy: "fy-NL",
-      ga: "ga-IE",
-      gu: "gu-IN",
-      hi: "hi-IN",
-      hy: "hy-AM",
-      nb: "nb-NO",
-      ne: "ne-NP",
-      nn: "nn-NO",
-      pa: "pa-IN",
-      pt: "pt-PT",
-      sv: "sv-SE",
-      zh: "zh-CN"
+      en: "en-us",
+      es: "es-es",
+      fy: "fy-nl",
+      ga: "ga-ie",
+      gu: "gu-in",
+      hi: "hi-in",
+      hy: "hy-am",
+      nb: "nb-no",
+      ne: "ne-np",
+      nn: "nn-no",
+      pa: "pa-in",
+      pt: "pt-pt",
+      sv: "sv-se",
+      zh: "zh-cn"
     };
-    return PARTIAL_LANG_CODES[langCode?.toLowerCase()] || langCode;
+    return PARTIAL_LANG_CODES[langCode] || langCode;
   }
   static #isRTL(lang) {
     const shortCode = lang.split("-", 1)[0];
@@ -9202,8 +9204,8 @@ PDFPrintServiceFactory.instance = {
 
 
 
-const pdfjsVersion = '4.0.223';
-const pdfjsBuild = '788411997';
+const pdfjsVersion = '4.0.240';
+const pdfjsBuild = 'ffbfd680e';
 const AppConstants = null;
 window.PDFViewerApplication = PDFViewerApplication;
 window.PDFViewerApplicationConstants = AppConstants;
