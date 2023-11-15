@@ -392,9 +392,7 @@ typedef struct DHPrivateKeyStr DHPrivateKey;
 */
 
 typedef enum { ec_params_explicit,
-               ec_params_named,
-               ec_params_edwards_named,
-               ec_params_montgomery_named,
+               ec_params_named
 } ECParamsType;
 
 typedef enum { ec_field_GFp = 1,
