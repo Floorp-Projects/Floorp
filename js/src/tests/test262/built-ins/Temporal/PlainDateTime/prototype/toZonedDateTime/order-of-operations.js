@@ -52,7 +52,6 @@ assert.compareArray(actual, expected.concat([
   "get timeZone.getOffsetNanosecondsFor",
   "call timeZone.getOffsetNanosecondsFor",
   "call timeZone.getOffsetNanosecondsFor",
-  "get timeZone.getPossibleInstantsFor",
   "call timeZone.getPossibleInstantsFor",
 ]), "order of operations at skipped wall-clock time");
 actual.splice(0); // clear

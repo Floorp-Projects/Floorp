@@ -34,6 +34,7 @@ const expected = [
   "has item.plainDate.calendar.year",
   "has item.plainDate.calendar.yearMonthFromFields",
   "has item.plainDate.calendar.yearOfWeek",
+  "get item.plainDate.calendar.dateFromFields",
   "get item.plainDate.calendar.fields",
   "call item.plainDate.calendar.fields",
   "get item.plainDate.day",
@@ -48,7 +49,6 @@ const expected = [
   "get item.plainDate.year",
   "get item.plainDate.year.valueOf",
   "call item.plainDate.year.valueOf",
-  "get item.plainDate.calendar.dateFromFields",
   "call item.plainDate.calendar.dateFromFields",
   "get item.timeZone",
   "has item.timeZone.getOffsetNanosecondsFor",
@@ -111,7 +111,6 @@ assert.compareArray(actual, expected.concat([
   "get item.timeZone.getOffsetNanosecondsFor",
   "call item.timeZone.getOffsetNanosecondsFor",
   "call item.timeZone.getOffsetNanosecondsFor",
-  "get item.timeZone.getPossibleInstantsFor",
   "call item.timeZone.getPossibleInstantsFor",
 ]), "order of operations at skipped wall-clock time");
 actual.splice(0); // clear
