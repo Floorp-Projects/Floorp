@@ -94,6 +94,7 @@ function templateHTML(options) {
       options.noscripts ? "" : scriptRender
     }
     <script
+      async
       type="module"
       src="chrome://global/content/elements/moz-toggle.mjs"
     ></script>
