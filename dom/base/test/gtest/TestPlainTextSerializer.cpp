@@ -65,6 +65,7 @@ TEST(PlainTextSerializer, Bug1864820)
   ConvertBufToPlainText(test,
                         nsIDocumentEncoder::OutputFormatted |
                             nsIDocumentEncoder::OutputPersistNBSP |
+                            nsIDocumentEncoder::OutputLFLineBreak |
                             nsIDocumentEncoder::OutputFormatFlowed,
                         kDefaultWrapColumn);
 
