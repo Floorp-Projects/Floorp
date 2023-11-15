@@ -91,8 +91,6 @@ class nsFrameIterator : public nsIFrameEnumerator {
   nsIFrame* GetPlaceholderFrame(nsIFrame* aFrame);
   bool IsPopupFrame(nsIFrame* aFrame);
 
-  bool IsInvokerOpenPopoverFrame(nsIFrame* aFrame);
-
   nsPresContext* const mPresContext;
   const bool mLockScroll;
   const bool mFollowOOFs;
@@ -355,11 +353,8 @@ nsIFrame* nsFrameIterator::GetFirstChild(nsIFrame* aFrame) {
   if (result && mFollowOOFs) {
     result = nsPlaceholderFrame::GetRealFrameFor(result);
 
-    if (IsPopupFrame(result) || IsInvokerOpenPopoverFrame(result)) {
-      result = GetNextSibling(result);
-    }
+    if (IsPopupFrame(result)) result = GetNextSibling(result);
   }
-
   return result;
 }
 
@@ -369,11 +364,8 @@ nsIFrame* nsFrameIterator::GetLastChild(nsIFrame* aFrame) {
   if (result && mFollowOOFs) {
     result = nsPlaceholderFrame::GetRealFrameFor(result);
 
-    if (IsPopupFrame(result) || IsInvokerOpenPopoverFrame(result)) {
-      result = GetPrevSibling(result);
-    }
+    if (IsPopupFrame(result)) result = GetPrevSibling(result);
   }
-
   return result;
 }
 
@@ -383,13 +375,11 @@ nsIFrame* nsFrameIterator::GetNextSibling(nsIFrame* aFrame) {
   if (aFrame == mLimiter) return nullptr;
   if (aFrame) {
     result = GetNextSiblingInner(aFrame);
-    if (result && mFollowOOFs) {
+    if (result && mFollowOOFs)
       result = nsPlaceholderFrame::GetRealFrameFor(result);
-      if (IsPopupFrame(result) || IsInvokerOpenPopoverFrame(result)) {
-        result = GetNextSibling(result);
-      }
-    }
   }
+
+  if (mFollowOOFs && IsPopupFrame(result)) result = GetNextSibling(result);
 
   return result;
 }
@@ -400,13 +390,11 @@ nsIFrame* nsFrameIterator::GetPrevSibling(nsIFrame* aFrame) {
   if (aFrame == mLimiter) return nullptr;
   if (aFrame) {
     result = GetPrevSiblingInner(aFrame);
-    if (result && mFollowOOFs) {
+    if (result && mFollowOOFs)
       result = nsPlaceholderFrame::GetRealFrameFor(result);
-      if (IsPopupFrame(result) || IsInvokerOpenPopoverFrame(result)) {
-        result = GetPrevSibling(result);
-      }
-    }
   }
+
+  if (mFollowOOFs && IsPopupFrame(result)) result = GetPrevSibling(result);
 
   return result;
 }
@@ -441,16 +429,6 @@ bool nsFrameIterator::IsPopupFrame(nsIFrame* aFrame) {
     return false;
   }
   return aFrame && aFrame->IsMenuPopupFrame();
-}
-
-bool nsFrameIterator::IsInvokerOpenPopoverFrame(nsIFrame* aFrame) {
-  if (const nsIContent* currentContent = aFrame->GetContent()) {
-    if (const auto* popover = mozilla::dom::Element::FromNode(currentContent)) {
-      return popover && popover->IsPopoverOpen() &&
-             popover->GetPopoverData()->GetInvoker();
-    }
-  }
-  return false;
 }
 
 // nsVisualIterator implementation
