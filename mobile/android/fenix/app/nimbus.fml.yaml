@@ -272,7 +272,7 @@ features:
         type: Map<CookieBannersSection, Int>
         default:
           {
-            "feature-ui": 1,
+            "feature-ui": 0,
             "feature-setting-value": 0,
             "feature-setting-value-pbm": 0,
             "feature-setting-detect-only": 0,
@@ -285,7 +285,7 @@ features:
           "sections-enabled": {
             "feature-ui": 1,
             "feature-setting-value": 0,
-            "feature-setting-value-pbm": 0,
+            "feature-setting-value-pbm": 1,
             "feature-setting-detect-only": 0,
             "feature-setting-global-rules": 0,
             "feature-setting-global-rules-sub-frames": 0,
@@ -296,7 +296,18 @@ features:
           "sections-enabled": {
             "feature-ui": 1,
             "feature-setting-value": 0,
-            "feature-setting-value-pbm": 0,
+            "feature-setting-value-pbm": 1,
+            "feature-setting-detect-only": 0,
+            "feature-setting-global-rules": 0,
+            "feature-setting-global-rules-sub-frames": 0,
+          }
+        }
+      - channel: beta
+        value: {
+          "sections-enabled": {
+            "feature-ui": 1,
+            "feature-setting-value": 0,
+            "feature-setting-value-pbm": 1,
             "feature-setting-detect-only": 0,
             "feature-setting-global-rules": 0,
             "feature-setting-global-rules-sub-frames": 0,

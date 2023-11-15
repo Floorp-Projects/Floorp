@@ -102,8 +102,7 @@
             app:iconSpaceReserved="false"
             android:title="@string/preferences_https_only_title" />
 
-        <androidx.preference.SwitchPreference
-            android:defaultValue="false"
+        <org.mozilla.fenix.settings.cookiebannerhandling.CustomCBHSwitchPreference
             android:key="@string/pref_key_cookie_banner_private_mode"
             app:iconSpaceReserved="false"
             app:isPreferenceVisible="false"

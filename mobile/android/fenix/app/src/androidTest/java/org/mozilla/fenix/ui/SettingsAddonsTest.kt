@@ -17,6 +17,7 @@ import org.mozilla.fenix.helpers.AppAndSystemHelper.registerAndCleanupIdlingReso
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.RecyclerViewIdlingResource
 import org.mozilla.fenix.helpers.TestAssetHelper.getEnhancedTrackingProtectionAsset
+import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.helpers.TestHelper.verifySnackBarText
 import org.mozilla.fenix.helpers.TestHelper.waitUntilSnackbarGone
 import org.mozilla.fenix.ui.robots.addonsMenu
@@ -148,6 +149,7 @@ class SettingsAddonsTest {
     @SmokeTest
     @Test
     fun verifyUBlockWorksInPrivateModeTest() {
+        TestHelper.appContext.settings().shouldShowCookieBannersCFR = false
         val addonName = "uBlock Origin"
 
         addonsMenu {

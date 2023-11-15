@@ -13,12 +13,14 @@ import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.customannotations.SmokeTest
+import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.helpers.AndroidAssetDispatcher
 import org.mozilla.fenix.helpers.AppAndSystemHelper.assertYoutubeAppOpens
 import org.mozilla.fenix.helpers.HomeActivityIntentTestRule
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdAndText
 import org.mozilla.fenix.helpers.TestAssetHelper
+import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.helpers.TestHelper.exitMenu
 import org.mozilla.fenix.ui.robots.clickPageObject
 import org.mozilla.fenix.ui.robots.homeScreen
@@ -201,6 +203,7 @@ class SettingsAdvancedTest {
     // Assumes Youtube is installed and enabled
     @Test
     fun privateBrowsingAskBeforeOpeningLinkInAppCancelTest() {
+        TestHelper.appContext.settings().shouldShowCookieBannersCFR = false
         val externalLinksPage = TestAssetHelper.getExternalLinksAsset(mockWebServer)
 
         homeScreen {
