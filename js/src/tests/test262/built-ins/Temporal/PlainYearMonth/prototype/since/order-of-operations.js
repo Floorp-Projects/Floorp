@@ -34,6 +34,7 @@ const expectedMinimal = [
   "has other.calendar.yearMonthFromFields",
   "has other.calendar.yearOfWeek",
   "get other.calendar.fields",
+  "get other.calendar.yearMonthFromFields",
   "call other.calendar.fields",
   "get other.month",
   "get other.month.valueOf",
@@ -44,7 +45,6 @@ const expectedMinimal = [
   "get other.year",
   "get other.year.valueOf",
   "call other.year.valueOf",
-  "get other.calendar.yearMonthFromFields",
   "call other.calendar.yearMonthFromFields",
   // CalendarEquals
   "get this.calendar.id",
@@ -73,25 +73,26 @@ const expectedMinimal = [
 ];
 
 const expected = expectedMinimal.concat([
-  // CalendarFields
+  // lookup
+  "get this.calendar.dateAdd",
+  "get this.calendar.dateFromFields",
+  "get this.calendar.dateUntil",
   "get this.calendar.fields",
+  // CalendarFields
   "call this.calendar.fields",
   // PrepareTemporalFields / CalendarDateFromFields (receiver)
   "get this.calendar.monthCode",
   "call this.calendar.monthCode",
   "get this.calendar.year",
   "call this.calendar.year",
-  "get this.calendar.dateFromFields",
   "call this.calendar.dateFromFields",
   // PrepareTemporalFields / CalendarDateFromFields (argument)
   "get other.calendar.monthCode",
   "call other.calendar.monthCode",
   "get other.calendar.year",
   "call other.calendar.year",
-  "get this.calendar.dateFromFields",
   "call this.calendar.dateFromFields",
   // CalendarDateUntil
-  "get this.calendar.dateUntil",
   "call this.calendar.dateUntil",
 ]);
 const actual = [];
@@ -123,7 +124,28 @@ actual.splice(0);
 
 // code path that skips RoundDuration:
 instance.since(otherYearMonthPropertyBag, createOptionsObserver({ smallestUnit: "months", roundingIncrement: 1 }));
-assert.compareArray(actual, expected, "order of operations with no rounding");
+assert.compareArray(actual, expectedMinimal.concat([
+  // lookup
+  "get this.calendar.dateFromFields",
+  "get this.calendar.dateUntil",
+  "get this.calendar.fields",
+  // CalendarFields
+  "call this.calendar.fields",
+  // PrepareTemporalFields / CalendarDateFromFields (receiver)
+  "get this.calendar.monthCode",
+  "call this.calendar.monthCode",
+  "get this.calendar.year",
+  "call this.calendar.year",
+  "call this.calendar.dateFromFields",
+  // PrepareTemporalFields / CalendarDateFromFields (argument)
+  "get other.calendar.monthCode",
+  "call other.calendar.monthCode",
+  "get other.calendar.year",
+  "call other.calendar.year",
+  "call this.calendar.dateFromFields",
+  // CalendarDateUntil
+  "call this.calendar.dateUntil",
+]), "order of operations with no rounding");
 actual.splice(0); // clear
 
 // short-circuit for identical objects:
@@ -140,10 +162,8 @@ actual.splice(0); // clear
 
 // code path through RoundDuration that rounds to the nearest year:
 const expectedOpsForYearRounding = expected.concat([
-  "get this.calendar.dateAdd",     // 7.c.i
   "call this.calendar.dateAdd",    // 7.e
   "call this.calendar.dateAdd",    // 7.g
-  "get this.calendar.dateUntil",   // 7.o
   "call this.calendar.dateUntil",  // 7.o
   "call this.calendar.dateAdd",    // 7.y MoveRelativeDate
 ]);  // (7.s not called because other units can't add up to >1 year at this point)
@@ -159,7 +179,6 @@ const otherYearMonthPropertyBagSameMonth = TemporalHelpers.propertyBagObserver(a
   calendar: TemporalHelpers.calendarObserver(actual, "other.calendar"),
 }, "other");
 const expectedOpsForYearRoundingSameMonth = expected.concat([
-  "get this.calendar.dateAdd",     // 7.c.i
   "call this.calendar.dateAdd",    // 7.e
   "call this.calendar.dateAdd",    // 7.g
   "call this.calendar.dateAdd",    // 7.y MoveRelativeDate
@@ -170,7 +189,6 @@ actual.splice(0); // clear
 
 // code path through RoundDuration that rounds to the nearest month:
 const expectedOpsForMonthRounding = expected.concat([
-  "get this.calendar.dateAdd",     // 10.b
   "call this.calendar.dateAdd",    // 10.c
   "call this.calendar.dateAdd",    // 10.e
   "call this.calendar.dateAdd",    // 10.k MoveRelativeDate

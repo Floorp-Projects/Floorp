@@ -43,15 +43,16 @@ const expected = [
   "has calendar.year",
   "has calendar.yearMonthFromFields",
   "has calendar.yearOfWeek",
-  // CalendarFields
+  // lookup
+  "get calendar.dateFromFields",
   "get calendar.fields",
+  // CalendarFields
   "call calendar.fields",
   // ToTemporalTimeZoneSlotValue
   "has timeZone.getOffsetNanosecondsFor",
   "has timeZone.getPossibleInstantsFor",
   "has timeZone.id",
   // InterpretTemporalDateTimeFields
-  "get calendar.dateFromFields",
   "call calendar.dateFromFields",
 ];
 
@@ -67,14 +68,14 @@ Temporal.ZonedDateTime.from(
   { offset: "ignore" }
 );
 assert.compareArray(actual, expected.concat([
-  // InterpretISODateTimeOffset
+  // lookup
   "get timeZone.getPossibleInstantsFor",
+  // InterpretISODateTimeOffset
   "call timeZone.getPossibleInstantsFor",
   // DisambiguatePossibleInstants
   "get timeZone.getOffsetNanosecondsFor",
   "call timeZone.getOffsetNanosecondsFor",
   "call timeZone.getOffsetNanosecondsFor",
-  "get timeZone.getPossibleInstantsFor",
   "call timeZone.getPossibleInstantsFor",
 ]), "order of operations converting property bag at skipped wall-clock time with offset: ignore");
 actual.splice(0); // clear
@@ -84,14 +85,14 @@ Temporal.ZonedDateTime.from(
   { offset: "prefer" }
 );
 assert.compareArray(actual, expected.concat([
-  // InterpretISODateTimeOffset
+  // lookup
   "get timeZone.getPossibleInstantsFor",
+  // InterpretISODateTimeOffset
   "call timeZone.getPossibleInstantsFor",
   // DisambiguatePossibleInstants
   "get timeZone.getOffsetNanosecondsFor",
   "call timeZone.getOffsetNanosecondsFor",
   "call timeZone.getOffsetNanosecondsFor",
-  "get timeZone.getPossibleInstantsFor",
   "call timeZone.getPossibleInstantsFor",
 ]), "order of operations converting property bag at skipped wall-clock time with offset: prefer");
 actual.splice(0); // clear
@@ -108,8 +109,9 @@ Temporal.ZonedDateTime.from(
   { offset: "ignore" }
 );
 assert.compareArray(actual, expected.concat([
-  // InterpretISODateTimeOffset
+  // lookup
   "get timeZone.getPossibleInstantsFor",
+  // InterpretISODateTimeOffset
   "call timeZone.getPossibleInstantsFor",
 ]), "order of operations converting property bag at repeated wall-clock time with offset: ignore");
 actual.splice(0); // clear
@@ -119,8 +121,9 @@ Temporal.ZonedDateTime.from(
   { offset: "prefer" }
 );
 assert.compareArray(actual, expected.concat([
-  // InterpretISODateTimeOffset
+  // lookup
   "get timeZone.getPossibleInstantsFor",
+  // InterpretISODateTimeOffset
   "call timeZone.getPossibleInstantsFor",
   "get timeZone.getOffsetNanosecondsFor",
   "call timeZone.getOffsetNanosecondsFor",
@@ -133,8 +136,9 @@ Temporal.ZonedDateTime.from(
   { offset: "reject" }
 );
 assert.compareArray(actual, expected.concat([
-  // InterpretISODateTimeOffset
+  // lookup
   "get timeZone.getPossibleInstantsFor",
+  // InterpretISODateTimeOffset
   "call timeZone.getPossibleInstantsFor",
   "get timeZone.getOffsetNanosecondsFor",
   "call timeZone.getOffsetNanosecondsFor",

@@ -33,8 +33,10 @@ const expected = [
   "has one.calendar.year",
   "has one.calendar.yearMonthFromFields",
   "has one.calendar.yearOfWeek",
-  // ToTemporalDate 1 → CalendarFields
+  // lookup
+  "get one.calendar.dateFromFields",
   "get one.calendar.fields",
+  // ToTemporalDate 1 → CalendarFields
   "call one.calendar.fields",
   // ToTemporalDate 1 → PrepareTemporalFields
   "get one.day",
@@ -50,7 +52,6 @@ const expected = [
   "get one.year.valueOf",
   "call one.year.valueOf",
   // ToTemporalDate 1 → CalendarDateFromFields
-  "get one.calendar.dateFromFields",
   "call one.calendar.dateFromFields",
   // ToTemporalDate 2 → GetTemporalCalendarSlotValueWithISODefault
   "get two.calendar",
@@ -75,8 +76,10 @@ const expected = [
   "has two.calendar.year",
   "has two.calendar.yearMonthFromFields",
   "has two.calendar.yearOfWeek",
-  // ToTemporalDate 2 → CalendarFields
+  // lookup
+  "get two.calendar.dateFromFields",
   "get two.calendar.fields",
+  // ToTemporalDate 2 → CalendarFields
   "call two.calendar.fields",
   // ToTemporalDate 2 → PrepareTemporalFields
   "get two.day",
@@ -92,7 +95,6 @@ const expected = [
   "get two.year.valueOf",
   "call two.year.valueOf",
   // ToTemporalDate 2 → CalendarDateFromFields
-  "get two.calendar.dateFromFields",
   "call two.calendar.dateFromFields",
   // GetTemporalUnit
   "get options.largestUnit",
