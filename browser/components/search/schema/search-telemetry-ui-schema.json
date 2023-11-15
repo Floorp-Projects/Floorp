@@ -2,6 +2,7 @@
   "ui:order": [
     "telemetryId",
     "searchPageRegexp",
+    "queryParamNames",
     "queryParamName",
     "codeParamName",
     "taggedCodes",

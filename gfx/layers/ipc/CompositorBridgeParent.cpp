@@ -1674,25 +1674,28 @@ bool CompositorBridgeParent::CallWithIndirectShadowTree(
 
 static CompositorBridgeParent::LayerTreeState* GetStateForRoot(
     LayersId aContentLayersId, const MonitorAutoLock& aProofOfLock) {
-  CompositorBridgeParent::LayerTreeState* state = nullptr;
+  CompositorBridgeParent::LayerTreeState* contentState = nullptr;
   LayerTreeMap::iterator itr = sIndirectLayerTrees.find(aContentLayersId);
   if (sIndirectLayerTrees.end() != itr) {
-    state = &itr->second;
+    contentState = &itr->second;
   }
 
-  // |state| is the state for the content process, but we want the APZCTMParent
-  // for the parent process owning that content process. So we have to jump to
-  // the LayerTreeState for the root layer tree id for that layer tree, and use
-  // the mApzcTreeManagerParent from that. This should also work with nested
-  // content processes, because RootLayerTreeId() will bypass any intermediate
-  // processes' ids and go straight to the root.
-  if (state && state->mParent) {
-    LayersId rootLayersId = state->mParent->RootLayerTreeId();
+  // |contentState| is the state for the content process, but we want the
+  // APZCTMParent for the parent process owning that content process. So we have
+  // to jump to the LayerTreeState for the root layer tree id for that layer
+  // tree, and use the mApzcTreeManagerParent from that. This should also work
+  // with nested content processes, because RootLayerTreeId() will bypass any
+  // intermediate processes' ids and go straight to the root.
+  if (contentState && contentState->mParent) {
+    LayersId rootLayersId = contentState->mParent->RootLayerTreeId();
     itr = sIndirectLayerTrees.find(rootLayersId);
-    state = (sIndirectLayerTrees.end() != itr) ? &itr->second : nullptr;
+    CompositorBridgeParent::LayerTreeState* rootState =
+        (sIndirectLayerTrees.end() != itr) ? &itr->second : nullptr;
+    return rootState;
   }
 
-  return state;
+  // Don't return contentState, that would be a lie!
+  return nullptr;
 }
 
 /* static */

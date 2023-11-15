@@ -2,6 +2,94 @@
   "data": [
     {
       "stash": {
+        "blocked": [
+          "{f350fb55-0f0f-456b-a220-84ecd8e9c1c7}:1.0.0",
+          "{f350fb55-0f0f-456b-a220-84ecd8e9c0c7}:1.0.0",
+          "Eternl@testspeed.com:1.0.0",
+          "perra@testspeed.com:1.0.0",
+          "{74183547-c9a5-44cd-aaf8-be8c2d3bd183}:1.0.0"
+        ],
+        "unblocked": []
+      },
+      "schema": 1698842179323,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1699274111487,
+      "id": "e87cbfe2-9e99-4052-9992-691a1b95216e",
+      "last_modified": 1699274180497
+    },
+    {
+      "stash": {
+        "blocked": [
+          "{1c9c86f0-f78e-4dad-93b8-acdc1c562cdc}:1.2",
+          "{1c9c86f0-f78e-4dad-93b8-acdc1c562cdc}:1.0"
+        ],
+        "unblocked": []
+      },
+      "schema": 1698410186722,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1698842110267,
+      "id": "3d897432-fedb-4c5c-91a3-230cea844cb7",
+      "last_modified": 1698842179125
+    },
+    {
+      "stash": {
+        "blocked": [
+          "{84239464-dbc0-48f4-a88c-8e0045e85fde}:0.0.0.1",
+          "{2f536ac3-2f1e-40ab-849d-431d9f7cf5ce}:4.65.1945",
+          "{84239464-dbc0-48f4-a88c-8e0045e85fde}:0.0.0.2",
+          "{2f536ac3-2f1e-40ab-849d-431d9f7cf5ce}:4.65.1946"
+        ],
+        "unblocked": []
+      },
+      "schema": 1698333341043,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1698410111146,
+      "id": "32190872-b782-4a10-8616-6f31f32e2987",
+      "last_modified": 1698410186530
+    },
+    {
+      "stash": {
+        "blocked": [
+          "assinador@quicksoft.com.br:0.4.3",
+          "assinador@quicksoft.com.br:0.4.0",
+          "addonY143@manualslibrary.co:1.23.918",
+          "{df235bcf-c888-4cd8-948c-368ad1f21f31}:4.1.57",
+          "assinador@quicksoft.com.br:0.4.4",
+          "{bff3f372-c165-41d9-bf56-7e2c03f8d3ac}:0.8",
+          "{bff3f372-c165-41d9-bf56-7e2c03f8d3ac}:0.9",
+          "{93f2cbe2-9794-400a-a5d9-3ca61c1a7245}:1.65.0",
+          "{be27f84b-b03d-48e4-9a1c-36fbd0d2c800}:1.0.5",
+          "{4f4437b3-9602-48be-94f8-5d4260eedac2}:5.2",
+          "{4f4437b3-9602-48be-94f8-5d4260eedac2}:5.1",
+          "{4f4437b3-9602-48be-94f8-5d4260eedac2}:5.3",
+          "assinador@quicksoft.com.br:0.4.1",
+          "{4f4437b3-9602-48be-94f8-5d4260eedac2}:5.3.1",
+          "assinador@quicksoft.com.br:0.4.2"
+        ],
+        "unblocked": []
+      },
+      "schema": 1697632578853,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1698150908561,
+      "id": "565e0e99-b036-4bd6-88fc-7c51b312fe0b",
+      "last_modified": 1698150973785
+    },
+    {
+      "stash": {
+        "blocked": [
+          "adguard-vpn@adguard.com:0.6.20",
+          "adguard-vpn@adguard.com:0.8.21"
+        ],
+        "unblocked": []
+      },
+      "schema": 1697587204135,
+      "key_format": "{guid}:{version}",
+      "stash_time": 1697632509817,
+      "id": "8da35b94-6488-4b30-bf6d-53ba1f2ff26a",
+      "last_modified": 1697632578677
+    },
+    {
+      "stash": {
         "blocked": [],
         "unblocked": [
           "{a3928358-883e-4730-858a-5e39aacea6cc}:1.3.1",
@@ -2545,5 +2633,5 @@
       "last_modified": 1690223886167
     }
   ],
-  "timestamp": 1696941372538
+  "timestamp": 1699274180497
 }

@@ -3329,6 +3329,13 @@ void AutoCopyListener::OnSelectionChange(Document* aDocument,
                                          int16_t aReason) {
   MOZ_ASSERT(IsValidClipboardID(sClipboardID));
 
+  // For now, we should prevent any updates caused by a call of Selection API.
+  // We should allow this in some cases later, though. See the valid usage in
+  // bug 1567160.
+  if (aReason & nsISelectionListener::JS_REASON) {
+    return;
+  }
+
   if (sClipboardID == nsIClipboard::kSelectionCache) {
     // Do nothing if this isn't in the active window and,
     // in the case of Web content, in the frontmost tab.

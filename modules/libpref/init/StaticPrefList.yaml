@@ -6221,6 +6221,12 @@
   value: false
   mirror: always
 
+# whether to do font fallback for codepoints with General Category = Unassigned
+- name: gfx.font_rendering.fallback.unassigned_chars
+  type: RelaxedAtomicBool
+  value: false
+  mirror: always
+
 #ifdef MOZ_WIDGET_GTK
 -   name: gfx.font_rendering.fontconfig.max_generic_substitutions
     type: RelaxedAtomicUint32
@@ -13031,6 +13037,12 @@
   value: true
   mirror: always
 
+# Disabling this will no-op window.print()
+- name: print.enabled
+  type: RelaxedAtomicBool
+  value: true
+  mirror: always
+
 # The maximum amount of time CUPS should spend enumerating print destinations
 # (in milliseconds).
 # The default value chosen here is completely arbitrary.
@@ -15096,6 +15108,15 @@
 - name: webgl.force-index-validation
   type: RelaxedAtomicInt32
   value: 0
+  mirror: always
+
+- name: webgl.gl_khr_no_error
+  type: RelaxedAtomicBool
+#ifdef XP_WIN
+  value: false
+#else
+  value: true
+#endif
   mirror: always
 
 - name: webgl.lose-context-on-memory-pressure

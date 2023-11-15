@@ -6,6 +6,8 @@
 // This file is loaded into the browser window scope.
 /* eslint-env mozilla/browser-window */
 
+const FS_PERM_PROMPT_TIME_SHOWN_OFFSET_MS = 2000;
+
 var PointerlockFsWarning = {
   _element: null,
   _origin: null,
@@ -466,6 +468,11 @@ var FullScreen = {
         this._permissionNotificationIDs
       ).filter(n => !n.dismissed).length
     ) {
+      if (PopupNotifications.panel.firstChild) {
+        PopupNotifications.panel.firstChild.notification.timeShown +=
+          FS_PERM_PROMPT_TIME_SHOWN_OFFSET_MS;
+      }
+
       this.exitDomFullScreen();
       this._logWarningPermissionPromptFS("fullScreenCanceled");
     }

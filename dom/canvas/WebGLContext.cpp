@@ -280,10 +280,11 @@ bool WebGLContext::CreateAndInitGL(
     }
   }
 
-  gl::CreateContextFlags flags = (gl::CreateContextFlags::NO_VALIDATION |
-                                  gl::CreateContextFlags::PREFER_ROBUSTNESS);
-  bool tryNativeGL = true;
-  bool tryANGLE = false;
+  auto flags = gl::CreateContextFlags::PREFER_ROBUSTNESS;
+
+  if (StaticPrefs::webgl_gl_khr_no_error()) {
+    flags |= gl::CreateContextFlags::NO_VALIDATION;
+  }
 
   // -
 
@@ -352,6 +353,9 @@ bool WebGLContext::CreateAndInitGL(
   // --
 
   const bool useEGL = PR_GetEnv("MOZ_WEBGL_FORCE_EGL");
+
+  bool tryNativeGL = true;
+  bool tryANGLE = false;
 
 #ifdef XP_WIN
   tryNativeGL = false;

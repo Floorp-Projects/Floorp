@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "chrome/common/ipc_channel.h"
 #include "mozilla/a11y/DocAccessibleChildBase.h"
 #include "mozilla/a11y/CacheConstants.h"
 #include "mozilla/a11y/RemoteAccessible.h"
@@ -35,71 +36,76 @@ void DocAccessibleChildBase::FlattenTree(LocalAccessible* aRoot,
 }
 
 /* static */
-void DocAccessibleChildBase::SerializeTree(nsTArray<LocalAccessible*>& aTree,
-                                           nsTArray<AccessibleData>& aData) {
-  for (LocalAccessible* acc : aTree) {
-    uint64_t id = reinterpret_cast<uint64_t>(acc->UniqueID());
-    a11y::role role = acc->Role();
-    uint32_t childCount = acc->IsOuterDoc() ? 0 : acc->ChildCount();
-
-    uint32_t genericTypes = acc->mGenericTypes;
-    if (acc->ARIAHasNumericValue()) {
-      // XXX: We need to do this because this requires a state check.
-      genericTypes |= eNumericValue;
-    }
-    if (acc->IsTextLeaf() || acc->IsImage()) {
-      // Ideally, we'd set eActionable for any Accessible with an ancedstor
-      // action. However, that requires an ancestor walk which is too expensive
-      // here. eActionable is only used by ATK. For now, we only expose ancestor
-      // actions on text leaf and image Accessibles. This means that we don't
-      // support "click ancestor" for ATK.
-      if (acc->ActionCount()) {
-        genericTypes |= eActionable;
-      }
-    } else if (acc->HasPrimaryAction()) {
+AccessibleData DocAccessibleChildBase::SerializeAcc(LocalAccessible* aAcc) {
+  uint32_t genericTypes = aAcc->mGenericTypes;
+  if (aAcc->ARIAHasNumericValue()) {
+    // XXX: We need to do this because this requires a state check.
+    genericTypes |= eNumericValue;
+  }
+  if (aAcc->IsTextLeaf() || aAcc->IsImage()) {
+    // Ideally, we'd set eActionable for any Accessible with an ancedstor
+    // action. However, that requires an ancestor walk which is too expensive
+    // here. eActionable is only used by ATK. For now, we only expose ancestor
+    // actions on text leaf and image Accessibles. This means that we don't
+    // support "click ancestor" for ATK.
+    if (aAcc->ActionCount()) {
       genericTypes |= eActionable;
     }
-
-    RefPtr<AccAttributes> fields;
-    // Even though we send moves as a hide and a show, we don't want to
-    // push the cache again for moves.
-    if (!acc->Document()->IsAccessibleBeingMoved(acc)) {
-      fields =
-          acc->BundleFieldsForCache(CacheDomain::All, CacheUpdateType::Initial);
-      if (fields->Count() == 0) {
-        fields = nullptr;
-      }
-    }
-
-    aData.AppendElement(
-        AccessibleData(id, role, childCount, static_cast<AccType>(acc->mType),
-                       static_cast<AccGenericType>(genericTypes),
-                       acc->mRoleMapEntryIndex, fields));
+  } else if (aAcc->HasPrimaryAction()) {
+    genericTypes |= eActionable;
   }
+
+  RefPtr<AccAttributes> fields;
+  // Even though we send moves as a hide and a show, we don't want to
+  // push the cache again for moves.
+  if (!aAcc->Document()->IsAccessibleBeingMoved(aAcc)) {
+    fields =
+        aAcc->BundleFieldsForCache(CacheDomain::All, CacheUpdateType::Initial);
+    if (fields->Count() == 0) {
+      fields = nullptr;
+    }
+  }
+
+  return AccessibleData(aAcc->ID(), aAcc->Role(), aAcc->LocalParent()->ID(),
+                        static_cast<int32_t>(aAcc->IndexInParent()),
+                        static_cast<AccType>(aAcc->mType),
+                        static_cast<AccGenericType>(genericTypes),
+                        aAcc->mRoleMapEntryIndex, fields);
 }
 
-void DocAccessibleChildBase::InsertIntoIpcTree(LocalAccessible* aParent,
-                                               LocalAccessible* aChild,
-                                               uint32_t aIdxInParent,
+void DocAccessibleChildBase::InsertIntoIpcTree(LocalAccessible* aChild,
                                                bool aSuppressShowEvent) {
-  uint64_t parentID =
-      aParent->IsDoc() ? 0 : reinterpret_cast<uint64_t>(aParent->UniqueID());
   nsTArray<LocalAccessible*> shownTree;
   FlattenTree(aChild, shownTree);
-  ShowEventData data(parentID, aIdxInParent,
-                     nsTArray<AccessibleData>(shownTree.Length()),
-                     aSuppressShowEvent);
-  SerializeTree(shownTree, data.NewTree());
+  uint32_t totalAccs = shownTree.Length();
+  // Exceeding the IPDL maximum message size will cause a crash. Try to avoid
+  // this by only including kMaxAccsPerMessage Accessibels in a single IPDL
+  // call. If there are Accessibles beyond this, they will be split across
+  // multiple calls.
+  constexpr uint32_t kMaxAccsPerMessage =
+      IPC::Channel::kMaximumMessageSize / (2 * 1024);
+  nsTArray<AccessibleData> data(std::min(kMaxAccsPerMessage, totalAccs));
+  for (LocalAccessible* child : shownTree) {
+    if (data.Length() == kMaxAccsPerMessage) {
+      if (ipc::ProcessChild::ExpectingShutdown()) {
+        return;
+      }
+      SendShowEvent(data, aSuppressShowEvent, false, false);
+      data.ClearAndRetainStorage();
+    }
+    data.AppendElement(SerializeAcc(child));
+  }
   if (ipc::ProcessChild::ExpectingShutdown()) {
     return;
   }
-  MaybeSendShowEvent(data, false);
+  if (!data.IsEmpty()) {
+    SendShowEvent(data, aSuppressShowEvent, true, false);
+  }
 }
 
 void DocAccessibleChildBase::ShowEvent(AccShowEvent* aShowEvent) {
   LocalAccessible* child = aShowEvent->GetAccessible();
-  InsertIntoIpcTree(aShowEvent->LocalParent(), child, child->IndexInParent(),
-                    false);
+  InsertIntoIpcTree(child, false);
 }
 
 mozilla::ipc::IPCResult DocAccessibleChildBase::RecvTakeFocus(

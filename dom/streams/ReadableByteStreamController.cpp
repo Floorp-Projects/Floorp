@@ -43,30 +43,157 @@ namespace mozilla::dom {
 
 using namespace streams_abstract;
 
+// https://streams.spec.whatwg.org/#readable-byte-stream-queue-entry
+struct ReadableByteStreamQueueEntry
+    : LinkedListElement<RefPtr<ReadableByteStreamQueueEntry>> {
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(
+      ReadableByteStreamQueueEntry)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(
+      ReadableByteStreamQueueEntry)
+
+  ReadableByteStreamQueueEntry(JS::Handle<JSObject*> aBuffer,
+                               size_t aByteOffset, size_t aByteLength)
+      : mBuffer(aBuffer), mByteOffset(aByteOffset), mByteLength(aByteLength) {
+    mozilla::HoldJSObjects(this);
+  }
+
+  JSObject* Buffer() const { return mBuffer; }
+  void SetBuffer(JS::Handle<JSObject*> aBuffer) { mBuffer = aBuffer; }
+
+  size_t ByteOffset() const { return mByteOffset; }
+  void SetByteOffset(size_t aByteOffset) { mByteOffset = aByteOffset; }
+
+  size_t ByteLength() const { return mByteLength; }
+  void SetByteLength(size_t aByteLength) { mByteLength = aByteLength; }
+
+  void ClearBuffer() { mBuffer = nullptr; }
+
+ private:
+  // An ArrayBuffer, which will be a transferred version of the one originally
+  // supplied by the underlying byte source.
+  JS::Heap<JSObject*> mBuffer;
+
+  // A nonnegative integer number giving the byte offset derived from the view
+  // originally supplied by the underlying byte source
+  size_t mByteOffset = 0;
+
+  // A nonnegative integer number giving the byte length derived from the view
+  // originally supplied by the underlying byte source
+  size_t mByteLength = 0;
+
+  ~ReadableByteStreamQueueEntry() { mozilla::DropJSObjects(this); }
+};
+
+NS_IMPL_CYCLE_COLLECTION_WITH_JS_MEMBERS(ReadableByteStreamQueueEntry, (),
+                                         (mBuffer));
+
+struct PullIntoDescriptor final
+    : LinkedListElement<RefPtr<PullIntoDescriptor>> {
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(PullIntoDescriptor)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(PullIntoDescriptor)
+
+  enum Constructor {
+    DataView,
+#define DEFINE_TYPED_CONSTRUCTOR_ENUM_NAMES(ExternalT, NativeT, Name) Name,
+    JS_FOR_EACH_TYPED_ARRAY(DEFINE_TYPED_CONSTRUCTOR_ENUM_NAMES)
+#undef DEFINE_TYPED_CONSTRUCTOR_ENUM_NAMES
+  };
+
+  static Constructor constructorFromScalar(JS::Scalar::Type type) {
+    switch (type) {
+#define REMAP_PULL_INTO_DESCRIPTOR_TYPE(ExternalT, NativeT, Name) \
+  case JS::Scalar::Name:                                          \
+    return Constructor::Name;
+      JS_FOR_EACH_TYPED_ARRAY(REMAP_PULL_INTO_DESCRIPTOR_TYPE)
+#undef REMAP
+
+      case JS::Scalar::Int64:
+      case JS::Scalar::Simd128:
+      case JS::Scalar::MaxTypedArrayViewType:
+        break;
+    }
+    MOZ_CRASH("Unexpected Scalar::Type");
+  }
+
+  PullIntoDescriptor(JS::Handle<JSObject*> aBuffer, uint64_t aBufferByteLength,
+                     uint64_t aByteOffset, uint64_t aByteLength,
+                     uint64_t aBytesFilled, uint64_t aElementSize,
+                     Constructor aViewConstructor, ReaderType aReaderType)
+      : mBuffer(aBuffer),
+        mBufferByteLength(aBufferByteLength),
+        mByteOffset(aByteOffset),
+        mByteLength(aByteLength),
+        mBytesFilled(aBytesFilled),
+        mElementSize(aElementSize),
+        mViewConstructor(aViewConstructor),
+        mReaderType(aReaderType) {
+    mozilla::HoldJSObjects(this);
+  }
+
+  JSObject* Buffer() const { return mBuffer; }
+  void SetBuffer(JS::Handle<JSObject*> aBuffer) { mBuffer = aBuffer; }
+
+  uint64_t BufferByteLength() const { return mBufferByteLength; }
+  void SetBufferByteLength(const uint64_t aBufferByteLength) {
+    mBufferByteLength = aBufferByteLength;
+  }
+
+  uint64_t ByteOffset() const { return mByteOffset; }
+  void SetByteOffset(const uint64_t aByteOffset) { mByteOffset = aByteOffset; }
+
+  uint64_t ByteLength() const { return mByteLength; }
+  void SetByteLength(const uint64_t aByteLength) { mByteLength = aByteLength; }
+
+  uint64_t BytesFilled() const { return mBytesFilled; }
+  void SetBytesFilled(const uint64_t aBytesFilled) {
+    mBytesFilled = aBytesFilled;
+  }
+
+  uint64_t ElementSize() const { return mElementSize; }
+  void SetElementSize(const uint64_t aElementSize) {
+    mElementSize = aElementSize;
+  }
+
+  Constructor ViewConstructor() const { return mViewConstructor; }
+
+  // Note: Named GetReaderType to avoid name conflict with type.
+  ReaderType GetReaderType() const { return mReaderType; }
+  void SetReaderType(const ReaderType aReaderType) {
+    mReaderType = aReaderType;
+  }
+
+  void ClearBuffer() { mBuffer = nullptr; }
+
+ private:
+  JS::Heap<JSObject*> mBuffer;
+  uint64_t mBufferByteLength = 0;
+  uint64_t mByteOffset = 0;
+  uint64_t mByteLength = 0;
+  uint64_t mBytesFilled = 0;
+  uint64_t mElementSize = 0;
+  Constructor mViewConstructor;
+  ReaderType mReaderType;
+
+  ~PullIntoDescriptor() { mozilla::DropJSObjects(this); }
+};
+
+NS_IMPL_CYCLE_COLLECTION_WITH_JS_MEMBERS(PullIntoDescriptor, (), (mBuffer));
+
 NS_IMPL_CYCLE_COLLECTION_CLASS(ReadableByteStreamController)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(ReadableByteStreamController,
                                                 ReadableStreamController)
-  NS_IMPL_CYCLE_COLLECTION_UNLINK(mByobRequest)
-  tmp->ClearPendingPullIntos();
-  tmp->ClearQueue();
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mByobRequest, mQueue, mPendingPullIntos)
   NS_IMPL_CYCLE_COLLECTION_UNLINK_PRESERVED_WRAPPER
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(ReadableByteStreamController,
                                                   ReadableStreamController)
-  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mByobRequest)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mByobRequest, mQueue, mPendingPullIntos)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(ReadableByteStreamController,
                                                ReadableStreamController)
   NS_IMPL_CYCLE_COLLECTION_TRACE_PRESERVED_WRAPPER
-  // Trace the associated queue + list
-  for (const auto& queueEntry : tmp->mQueue) {
-    aCallbacks.Trace(&queueEntry->mBuffer, "mQueue.mBuffer", aClosure);
-  }
-  for (const auto& pullInto : tmp->mPendingPullIntos) {
-    aCallbacks.Trace(&pullInto->mBuffer, "mPendingPullIntos.mBuffer", aClosure);
-  }
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_ADDREF_INHERITED(ReadableByteStreamController, ReadableStreamController)
@@ -78,14 +205,11 @@ NS_INTERFACE_MAP_END_INHERITING(ReadableStreamController)
 
 ReadableByteStreamController::ReadableByteStreamController(
     nsIGlobalObject* aGlobal)
-    : ReadableStreamController(aGlobal) {
-  mozilla::HoldJSObjects(this);
-}
+    : ReadableStreamController(aGlobal) {}
 
 ReadableByteStreamController::~ReadableByteStreamController() {
   ClearPendingPullIntos();
   ClearQueue();
-  mozilla::DropJSObjects(this);
 }
 
 void ReadableByteStreamController::ClearQueue() {

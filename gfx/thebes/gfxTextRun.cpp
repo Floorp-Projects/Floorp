@@ -3336,9 +3336,10 @@ already_AddRefed<gfxFont> gfxFontGroup::FindFontForChar(
   // fallback has already noted a failure.
   FontVisibility level =
       mPresContext ? mPresContext->GetFontVisibility() : FontVisibility::User;
-  if (gfxPlatformFontList::PlatformFontList()->SkipFontFallbackForChar(level,
-                                                                       aCh) ||
-      GetGeneralCategory(aCh) == HB_UNICODE_GENERAL_CATEGORY_UNASSIGNED) {
+  auto* pfl = gfxPlatformFontList::PlatformFontList();
+  if (pfl->SkipFontFallbackForChar(level, aCh) ||
+      (!StaticPrefs::gfx_font_rendering_fallback_unassigned_chars() &&
+       GetGeneralCategory(aCh) == HB_UNICODE_GENERAL_CATEGORY_UNASSIGNED)) {
     if (candidateFont) {
       *aMatchType = candidateMatchType;
     }
@@ -3348,8 +3349,7 @@ already_AddRefed<gfxFont> gfxFontGroup::FindFontForChar(
   // 2. search pref fonts
   RefPtr<gfxFont> font = WhichPrefFontSupportsChar(aCh, aNextCh, presentation);
   if (font) {
-    if (PrefersColor(presentation) &&
-        gfxPlatformFontList::PlatformFontList()->EmojiPrefHasUserValue()) {
+    if (PrefersColor(presentation) && pfl->EmojiPrefHasUserValue()) {
       // For emoji, always accept the font from preferences if it's explicitly
       // user-set, even if it isn't actually a color-emoji font, as some users
       // may want to set their emoji font preference to a monochrome font like

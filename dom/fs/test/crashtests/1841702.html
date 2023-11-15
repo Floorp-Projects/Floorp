@@ -1,0 +1,16 @@
+<script id="worker1" type="javascript/worker">
+self.onmessage = async function(e) {
+    let a = await e.data[0].getFileHandle("c21deba4-fb73-4407-94f8-2e3782bf3f23", {"create": true})
+    self.close()
+    await a.createWritable({})
+}
+</script>
+
+<script>
+window.addEventListener("load", async () => {
+    let a = await self.clientInformation.storage.getDirectory()
+    const blob = new Blob([document.querySelector('#worker1').textContent], { type: "text/javascript" })
+    let worker = new Worker(window.URL.createObjectURL(blob))
+    worker.postMessage([a], [])
+})
+</script>

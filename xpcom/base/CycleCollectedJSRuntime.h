@@ -301,8 +301,16 @@ class CycleCollectedJSRuntime {
                       js::SliceBudget& aBudget);
 
  public:
-  void FinalizeDeferredThings(
-      CycleCollectedJSContext::DeferredFinalizeType aType);
+  enum DeferredFinalizeType {
+    // Never finalize immediately, because it would be unsafe.
+    FinalizeLater,
+    // Finalize later if we can, but it is okay to do it immediately.
+    FinalizeIncrementally,
+    // Finalize immediately, for shutdown or testing purposes.
+    FinalizeNow,
+  };
+
+  void FinalizeDeferredThings(DeferredFinalizeType aType);
 
   virtual void PrepareForForgetSkippable() = 0;
   virtual void BeginCycleCollectionCallback(mozilla::CCReason aReason) = 0;

@@ -17,9 +17,6 @@ const TEST_PROVIDER_INFO = [
     telemetryId: "example",
     searchPageRegexp:
       /^https:\/\/example.org\/browser\/browser\/components\/search\/test\/browser\/searchTelemetryAd_searchbox_with_content.html/,
-    extraPageRegexps: [
-      /^https:\/\/example.org\/browser\/browser\/components\/search\/test\/browser\/searchTelemetryAd_searchbox.html/,
-    ],
     queryParamName: "s",
     codeParamName: "abc",
     taggedCodes: ["ff"],
@@ -215,51 +212,6 @@ add_task(async function test_click_shopping() {
         is_shopping_page: "true",
         shopping_tab_displayed: "true",
       },
-    },
-  ]);
-
-  BrowserTestUtils.removeTab(tab);
-});
-
-// Tests adding another regular expression to extraPageRegexps correctly
-// categorizes the page.
-add_task(async function test_click_extra_page() {
-  resetTelemetry();
-  let url = getSERPUrl("searchTelemetryAd_searchbox_with_content.html");
-  let tab = await BrowserTestUtils.openNewForegroundTab(gBrowser, url);
-  await waitForPageWithAdImpressions();
-
-  let pageLoadPromise = BrowserTestUtils.waitForLocationChange(gBrowser);
-  await BrowserTestUtils.synthesizeMouseAtCenter(
-    "#extra",
-    {},
-    tab.linkedBrowser
-  );
-  await pageLoadPromise;
-
-  // This should only have one impression because the subsequent page is not
-  // a search page matching the SERP Regexp, but it is another search page that
-  // consumes the search term (e.g. Flights, Maps)
-  await TestUtils.waitForCondition(() => {
-    return Glean.serp.impression?.testGetValue()?.length == 1;
-  }, "Should have one impression.");
-
-  assertImpressionEvents([
-    {
-      impression: {
-        provider: "example",
-        tagged: "true",
-        partner_code: "ff",
-        source: "unknown",
-        is_shopping_page: "false",
-        shopping_tab_displayed: "true",
-      },
-      engagements: [
-        {
-          action: SearchSERPTelemetryUtils.ACTIONS.CLICKED,
-          target: SearchSERPTelemetryUtils.COMPONENTS.NON_ADS_LINK,
-        },
-      ],
     },
   ]);
 
