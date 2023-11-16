@@ -1,6 +1,96 @@
 {
   "data": [
     {
+      "schema": 1700059676066,
+      "derHash": "drJ7gKWAJ9w88dpo2sFwEO2TmX0LYD4vrb6FASSTtac=",
+      "subject": "CN=GTS Root R4,O=Google Trust Services LLC,C=US",
+      "subjectDN": "MEcxCzAJBgNVBAYTAlVTMSIwIAYDVQQKExlHb29nbGUgVHJ1c3QgU2VydmljZXMgTExDMRQwEgYDVQQDEwtHVFMgUm9vdCBSNA==",
+      "whitelist": false,
+      "attachment": {
+        "hash": "96c81d6de46d0742f372c8cbf2f2353fe3629988e8d65e26d3ab17a49b031a7e",
+        "size": 1264,
+        "filename": "mEflZT5enoR1FuXLgYYGqnVEoZvmf9c2bVBpiOjYQ0c=.pem",
+        "location": "security-state-staging/intermediates/65b14f50-6a3d-4b8e-937f-6be9603d8be5.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "mEflZT5enoR1FuXLgYYGqnVEoZvmf9c2bVBpiOjYQ0c=",
+      "crlite_enrolled": false,
+      "id": "d8d4a791-3336-422c-aa11-2915c1f0cf26",
+      "last_modified": 1700060223205
+    },
+    {
+      "schema": 1699976884812,
+      "derHash": "rCWGO6Q7lq6oZLoqolYCKvnTjck+l0N/PeYDzEhzBss=",
+      "subject": "CN=SSL.com TLS ECC Root CA 2022,O=SSL Corporation,C=US",
+      "subjectDN": "ME4xCzAJBgNVBAYTAlVTMRgwFgYDVQQKDA9TU0wgQ29ycG9yYXRpb24xJTAjBgNVBAMMHFNTTC5jb20gVExTIEVDQyBSb290IENBIDIwMjI=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "8d3a201dad112e4871960af5b7adb823efb7671b60479d17a18ec34364c6eac3",
+        "size": 1223,
+        "filename": "G_ANXI8TwJTdF-AFBM8IiIUPEv0Gf6H5LA_b9guG4yE=.pem",
+        "location": "security-state-staging/intermediates/484d2121-85a4-4993-a8c2-21df8d848fd0.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "G/ANXI8TwJTdF+AFBM8IiIUPEv0Gf6H5LA/b9guG4yE=",
+      "crlite_enrolled": false,
+      "id": "cb19b337-a3fb-43c0-9b35-2ebc139f80fe",
+      "last_modified": 1699977423180
+    },
+    {
+      "schema": 1699976885666,
+      "derHash": "a8sUfUHptXf0AAKlxLoIhGc3gFqv6FVN0OciBPYAe6c=",
+      "subject": "CN=SSL.com TLS RSA Root CA 2022,O=SSL Corporation,C=US",
+      "subjectDN": "ME4xCzAJBgNVBAYTAlVTMRgwFgYDVQQKDA9TU0wgQ29ycG9yYXRpb24xJTAjBgNVBAMMHFNTTC5jb20gVExTIFJTQSBSb290IENBIDIwMjI=",
+      "whitelist": false,
+      "attachment": {
+        "hash": "7d4076e583d0c3f435a11e516b62cf496a5004671429c33f2f357f6d15c92f27",
+        "size": 2377,
+        "filename": "K89VOmb1cJAN3TK6bf4ezAbJGC1mLcG2Dh97dnwr3VQ=.pem",
+        "location": "security-state-staging/intermediates/aaa729fd-6eb1-4f1e-bdd4-46e7709a02ff.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "K89VOmb1cJAN3TK6bf4ezAbJGC1mLcG2Dh97dnwr3VQ=",
+      "crlite_enrolled": false,
+      "id": "fda4fe85-c112-4330-bf7a-944c38636f92",
+      "last_modified": 1699977423177
+    },
+    {
+      "schema": 1699976885977,
+      "derHash": "y4m0tQXdL/Xt/OYYNZ/W4oiteQXCSGED/1b80dXeGFc=",
+      "subject": "CN=Cloudflare TLS Issuing RSA CA 1,O=CLOUDFLARE\\, INC.,C=US",
+      "subjectDN": "MFIxCzAJBgNVBAYTAlVTMRkwFwYDVQQKDBBDTE9VREZMQVJFLCBJTkMuMSgwJgYDVQQDDB9DbG91ZGZsYXJlIFRMUyBJc3N1aW5nIFJTQSBDQSAx",
+      "whitelist": false,
+      "attachment": {
+        "hash": "82c8afa86811c60cebea2655d5bc999c304f233d9e22ea76ba62f0d44cb33071",
+        "size": 1902,
+        "filename": "_mAMmbFbay0ESJ5nqjDg1sYjWZhtK5luMbycyTrFyUs=.pem",
+        "location": "security-state-staging/intermediates/b7f975e0-3287-4a8a-b4cf-e1fc67df1a0c.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "/mAMmbFbay0ESJ5nqjDg1sYjWZhtK5luMbycyTrFyUs=",
+      "crlite_enrolled": false,
+      "id": "54c765bd-67f4-41b9-9f3d-678e5940c31a",
+      "last_modified": 1699977423174
+    },
+    {
+      "schema": 1699976885370,
+      "derHash": "KWT9MhDqaPqitKhJs2JD0z90Qp0bQ84BnnsVTqx3Wbo=",
+      "subject": "CN=Cloudflare TLS Issuing ECC CA 1,O=CLOUDFLARE\\, INC.,C=US",
+      "subjectDN": "MFIxCzAJBgNVBAYTAlVTMRkwFwYDVQQKDBBDTE9VREZMQVJFLCBJTkMuMSgwJgYDVQQDDB9DbG91ZGZsYXJlIFRMUyBJc3N1aW5nIEVDQyBDQSAx",
+      "whitelist": false,
+      "attachment": {
+        "hash": "979c3cd0f714e6bcb3fb19bb59b91ee35e900864ab480f5f7729b9e8d57d1d23",
+        "size": 1061,
+        "filename": "Kt2bkYM55rPaGBFYxTLlq8AIJqapRcc1eKjai8GUPO0=.pem",
+        "location": "security-state-staging/intermediates/76961b66-d172-454b-b159-81bc0e44fbbf.pem",
+        "mimetype": "application/x-pem-file"
+      },
+      "pubKeyHash": "Kt2bkYM55rPaGBFYxTLlq8AIJqapRcc1eKjai8GUPO0=",
+      "crlite_enrolled": false,
+      "id": "a74b6bfb-1ab6-4487-9af4-8e3632e1ab27",
+      "last_modified": 1699977423171
+    },
+    {
       "schema": 1699393717540,
       "derHash": "fgqMmETQ+Z7IQwdIPy4zGYB0n4inGFZJ1Nmfo8NYnlI=",
       "subject": "CN=Nya Labs CA,O=NYA LABS LLC,C=US",
@@ -28981,5 +29071,5 @@
       "last_modified": 1559865884636
     }
   ],
-  "timestamp": 1699394223213
+  "timestamp": 1700060223205
 }
