@@ -163,7 +163,7 @@ impl Shardable for ThinVec<u16> {
 /// Pre-fill the info part of the HPKE sealing with the constants from the standard.
 fn make_base_info() -> Vec<u8> {
     let mut info = Vec::<u8>::new();
-    const START: &[u8] = "dap-07 input share".as_bytes();
+    const START: &[u8] = "dap-04 input share".as_bytes();
     info.extend(START);
     const FIXED: u8 = 1;
     info.push(FIXED);
@@ -246,8 +246,7 @@ fn get_dap_report_internal<T: Shardable>(
     Ok(Report {
         metadata,
         public_share: encoded_public_share,
-        leader_encrypted_input_share: leader_payload,
-        helper_encrypted_input_share: helper_payload,
+        encrypted_input_shares: vec![leader_payload, helper_payload],
     })
 }
 
