@@ -350,11 +350,10 @@ class DiscoveryStreamFeed {
 
     try {
       // Make sure the requested endpoint is allowed
-      const endpoints =
-        this.store.getState().Prefs.values?.pocketConfig
-          ?.spocsEndpointAllowlist;
-      const allowed = endpoints?.split(",");
-      if (allowed && !allowed.some(prefix => endpoint.startsWith(prefix))) {
+      const allowed = this.store
+        .getState()
+        .Prefs.values[PREF_ENDPOINTS].split(",");
+      if (!allowed.some(prefix => endpoint.startsWith(prefix))) {
         throw new Error(`Not one of allowed prefixes (${allowed})`);
       }
 
@@ -1072,7 +1071,7 @@ class DiscoveryStreamFeed {
 
   async clearSpocs() {
     const endpoint =
-      this.store.getState().Prefs.values?.pocketConfig?.spocsClearEndpoint;
+      this.store.getState().Prefs.values[PREF_SPOCS_CLEAR_ENDPOINT];
     if (!endpoint) {
       return;
     }
@@ -1698,8 +1697,6 @@ class DiscoveryStreamFeed {
       case PREF_HARDCODED_BASIC_LAYOUT:
       case PREF_SPOCS_ENDPOINT:
       case PREF_SPOCS_ENDPOINT_QUERY:
-      case PREF_SPOCS_CLEAR_ENDPOINT:
-      case PREF_ENDPOINTS:
         // This is a config reset directly related to Discovery Stream pref.
         this.configReset();
         break;
