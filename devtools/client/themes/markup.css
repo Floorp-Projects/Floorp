@@ -345,6 +345,32 @@ ul.children + .tag-line::before {
   text-decoration: underline;
 }
 
+.attr-value button.select-node {
+  display: inline-block;
+  vertical-align: middle;
+  height: 15px;
+  width: 15px;
+  /* small spacing between attribute name and the icon */
+  margin-inline-start: 2px;
+  /* prevent the icon from impacting node height */
+  margin-block-start: -2px;
+  padding: 0;
+  border: none;
+  background: url("chrome://devtools/content/shared/components/reps/images/open-inspector.svg") no-repeat;
+  fill: var(--theme-icon-color);
+  -moz-context-properties: fill;
+  /* consistenty with the other buttons in the markup view */
+  cursor: pointer;
+
+  &:is(:hover, :focus) {
+    fill: var(--theme-icon-checked-color);
+  }
+
+  [role="treeitem"][aria-selected="true"] & {
+    fill: var(--theme-selection-color);
+  }
+}
+
 .newattr:focus {
   margin-right: 0;
 }

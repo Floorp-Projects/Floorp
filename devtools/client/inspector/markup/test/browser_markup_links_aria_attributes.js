@@ -11,136 +11,47 @@ const TEST_URL = URL_ROOT + "doc_markup_links_aria_attributes.html";
 // The test case array contains objects with the following properties:
 // - selector: css selector for the node to select in the inspector
 // - attributeName: name of the attribute to test
-// - popupNodeSelector: css selector for the element inside the attribute
-//   element to use as the contextual menu anchor
-// - linkFollowItemLabel: the expected label of the follow-link item
-// - linkCopyItemLabel: the expected label of the copy-link item
+// - links: an array of id strings that are expected to be in the attribute
 const TEST_DATA = [
   {
     selector: "#aria-activedescendant",
     attributeName: "aria-activedescendant",
-    popupNodeSelector: ".link",
-    linkFollowItemLabel: INSPECTOR_L10N.getFormatStr(
-      "inspector.menu.selectElement.label",
-      "activedescendant01"
-    ),
+    links: ["activedescendant01"],
   },
   {
     selector: "#aria-controls",
     attributeName: "aria-controls",
-    popupNodeSelector: ".link",
-    linkFollowItemLabel: INSPECTOR_L10N.getFormatStr(
-      "inspector.menu.selectElement.label",
-      "controls01"
-    ),
-  },
-  {
-    selector: "#aria-controls",
-    attributeName: "aria-controls",
-    popupNodeSelector: ".link:nth-of-type(2)",
-    linkFollowItemLabel: INSPECTOR_L10N.getFormatStr(
-      "inspector.menu.selectElement.label",
-      "controls02"
-    ),
+    links: ["controls01", "controls02"],
   },
   {
     selector: "#aria-describedby",
     attributeName: "aria-describedby",
-    popupNodeSelector: ".link",
-    linkFollowItemLabel: INSPECTOR_L10N.getFormatStr(
-      "inspector.menu.selectElement.label",
-      "describedby01"
-    ),
-  },
-  {
-    selector: "#aria-describedby",
-    attributeName: "aria-describedby",
-    popupNodeSelector: ".link:nth-of-type(2)",
-    linkFollowItemLabel: INSPECTOR_L10N.getFormatStr(
-      "inspector.menu.selectElement.label",
-      "describedby02"
-    ),
+    links: ["describedby01", "describedby02"],
   },
   {
     selector: "#aria-details",
     attributeName: "aria-details",
-    popupNodeSelector: ".link",
-    linkFollowItemLabel: INSPECTOR_L10N.getFormatStr(
-      "inspector.menu.selectElement.label",
-      "details01"
-    ),
-  },
-  {
-    selector: "#aria-details",
-    attributeName: "aria-details",
-    popupNodeSelector: ".link:nth-of-type(2)",
-    linkFollowItemLabel: INSPECTOR_L10N.getFormatStr(
-      "inspector.menu.selectElement.label",
-      "details02"
-    ),
+    links: ["details01", "details02"],
   },
   {
     selector: "#aria-errormessage",
     attributeName: "aria-errormessage",
-    popupNodeSelector: ".link",
-    linkFollowItemLabel: INSPECTOR_L10N.getFormatStr(
-      "inspector.menu.selectElement.label",
-      "errormessage01"
-    ),
+    links: ["errormessage01"],
   },
   {
     selector: "#aria-flowto",
     attributeName: "aria-flowto",
-    popupNodeSelector: ".link",
-    linkFollowItemLabel: INSPECTOR_L10N.getFormatStr(
-      "inspector.menu.selectElement.label",
-      "flowto01"
-    ),
-  },
-  {
-    selector: "#aria-flowto",
-    attributeName: "aria-flowto",
-    popupNodeSelector: ".link:nth-of-type(2)",
-    linkFollowItemLabel: INSPECTOR_L10N.getFormatStr(
-      "inspector.menu.selectElement.label",
-      "flowto02"
-    ),
+    links: ["flowto01", "flowto02"],
   },
   {
     selector: "#aria-labelledby",
     attributeName: "aria-labelledby",
-    popupNodeSelector: ".link",
-    linkFollowItemLabel: INSPECTOR_L10N.getFormatStr(
-      "inspector.menu.selectElement.label",
-      "labelledby01"
-    ),
-  },
-  {
-    selector: "#aria-labelledby",
-    attributeName: "aria-labelledby",
-    popupNodeSelector: ".link:nth-of-type(2)",
-    linkFollowItemLabel: INSPECTOR_L10N.getFormatStr(
-      "inspector.menu.selectElement.label",
-      "labelledby02"
-    ),
+    links: ["labelledby01", "labelledby02"],
   },
   {
     selector: "#aria-owns",
     attributeName: "aria-owns",
-    popupNodeSelector: ".link",
-    linkFollowItemLabel: INSPECTOR_L10N.getFormatStr(
-      "inspector.menu.selectElement.label",
-      "owns01"
-    ),
-  },
-  {
-    selector: "#aria-owns",
-    attributeName: "aria-owns",
-    popupNodeSelector: ".link:nth-of-type(2)",
-    linkFollowItemLabel: INSPECTOR_L10N.getFormatStr(
-      "inspector.menu.selectElement.label",
-      "owns02"
-    ),
+    links: ["owns01", "owns02"],
   },
 ];
 
@@ -153,25 +64,66 @@ add_task(async function () {
 
     info("Finding the popupNode to anchor the context-menu to");
     const { editor } = await getContainerForSelector(test.selector, inspector);
-    const popupNode = editor.attrElements
-      .get(test.attributeName)
-      .querySelector(test.popupNodeSelector);
-    ok(popupNode, "Found the popupNode in attribute " + test.attributeName);
+    const attributeEl = editor.attrElements.get(test.attributeName);
+    const linksEl = attributeEl.querySelectorAll(".link");
 
-    info("Simulating a context click on the popupNode");
-    const allMenuItems = openContextMenuAndGetAllItems(inspector, {
-      target: popupNode,
-    });
-
-    const linkFollow = allMenuItems.find(i => i.id === "node-menu-link-follow");
-    const linkCopy = allMenuItems.find(i => i.id === "node-menu-link-copy");
-
-    is(linkFollow.visible, true, "The follow-link item is visible");
-    is(linkCopy.visible, false, "The copy-link item is not visible");
     is(
-      linkFollow.label,
-      test.linkFollowItemLabel,
-      "the follow-link label is correct"
+      linksEl.length,
+      test.links.length,
+      "We have the expected number of links in attribute " + test.attributeName
     );
+
+    for (let i = 0; i < test.links.length; i++) {
+      info(`Checking link # ${i} for attribute "${test.attributeName}"`);
+
+      const linkEl = linksEl[i];
+      ok(linkEl, "Found the link");
+
+      const expectedReferencedNodeId = test.links[i];
+
+      info("Simulating a context click on the link");
+      const allMenuItems = openContextMenuAndGetAllItems(inspector, {
+        target: linkEl,
+      });
+
+      const linkFollow = allMenuItems.find(
+        ({ id }) => id === "node-menu-link-follow"
+      );
+      const linkCopy = allMenuItems.find(
+        ({ id }) => id === "node-menu-link-copy"
+      );
+
+      is(linkFollow.visible, true, "The follow-link item is visible");
+      is(linkCopy.visible, false, "The copy-link item is not visible");
+      const linkFollowItemLabel = INSPECTOR_L10N.getFormatStr(
+        "inspector.menu.selectElement.label",
+        expectedReferencedNodeId
+      );
+      is(
+        linkFollow.label,
+        linkFollowItemLabel,
+        "the follow-link label is correct"
+      );
+
+      info("Check that select node button is displayed");
+      const buttonEl = linkEl.querySelector("button.select-node");
+      ok(buttonEl, "Found the select node button");
+      is(
+        buttonEl.getAttribute("title"),
+        linkFollowItemLabel,
+        "Button has expected title"
+      );
+
+      info("Check that clicking on button selects the associated node");
+      const onSelection = inspector.selection.once("new-node-front");
+      buttonEl.click();
+      await onSelection;
+
+      is(
+        inspector.selection.nodeFront.id,
+        expectedReferencedNodeId,
+        "The expected new node was selected"
+      );
+    }
   }
 });
