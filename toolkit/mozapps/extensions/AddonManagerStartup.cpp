@@ -550,10 +550,12 @@ nsresult AddonManagerStartup::EncodeBlob(JS::Handle<JS::Value> value,
 
   nsAutoCString scData;
 
-  holder.Data().ForEachDataChunk([&](const char* aData, size_t aSize) {
-    scData.Append(nsDependentCSubstring(aData, aSize));
-    return true;
-  });
+  bool ok =
+      holder.Data().ForEachDataChunk([&](const char* aData, size_t aSize) {
+        return scData.Append(nsDependentCSubstring(aData, aSize),
+                             mozilla::fallible);
+      });
+  NS_ENSURE_TRUE(ok, NS_ERROR_OUT_OF_MEMORY);
 
   nsCString lz4;
   MOZ_TRY_VAR(lz4, EncodeLZ4(scData, STRUCTURED_CLONE_MAGIC));
@@ -597,7 +599,6 @@ nsresult AddonManagerStartup::DecodeBlob(JS::Handle<JS::Value> value,
   ErrorResult rv;
   holder.Read(cx, result, rv);
   return rv.StealNSResult();
-  ;
 }
 
 static nsresult EnumerateZip(nsIZipReader* zip, const nsACString& pattern,
