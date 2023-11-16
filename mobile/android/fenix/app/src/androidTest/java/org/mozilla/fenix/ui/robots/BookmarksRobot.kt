@@ -33,9 +33,7 @@ import org.hamcrest.Matchers.containsString
 import org.junit.Assert.assertEquals
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
-import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextExists
-import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithDescriptionExists
-import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdExists
+import org.mozilla.fenix.helpers.MatcherHelper.assertUIObjectExists
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithDescription
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
@@ -101,17 +99,16 @@ class BookmarksRobot {
 
     fun verifyCopySnackBarText() = assertSnackBarText("URL copied")
 
-    fun verifyEditBookmarksView() {
-        assertItemWithDescriptionExists(itemWithDescription("Navigate up"))
-        assertItemContainingTextExists(itemWithText(getStringResource(R.string.edit_bookmark_fragment_title)))
-        assertItemWithResIdExists(
+    fun verifyEditBookmarksView() =
+        assertUIObjectExists(
+            itemWithDescription("Navigate up"),
+            itemWithText(getStringResource(R.string.edit_bookmark_fragment_title)),
             itemWithResId("$packageName:id/delete_bookmark_button"),
             itemWithResId("$packageName:id/save_bookmark_button"),
             itemWithResId("$packageName:id/bookmarkNameEdit"),
             itemWithResId("$packageName:id/bookmarkUrlEdit"),
             itemWithResId("$packageName:id/bookmarkParentFolderSelector"),
         )
-    }
 
     fun verifyKeyboardHidden() = assertKeyboardVisibility(isExpectedToBeVisible = false)
 
@@ -260,7 +257,7 @@ class BookmarksRobot {
     }
 
     fun verifySearchedBookmarkExists(bookmarkUrl: String, exists: Boolean = true) =
-        assertItemContainingTextExists(itemContainingText(bookmarkUrl), exists = exists)
+        assertUIObjectExists(itemContainingText(bookmarkUrl), exists = exists)
 
     fun dismissBookmarksSearchBar() = mDevice.pressBack()
 
@@ -403,7 +400,7 @@ private fun assertBookmarkFolderIsNotCreated(title: String) {
             .resourceId("$packageName:id/bookmarks_wrapper"),
     ).waitForExists(waitingTime)
 
-    assertItemContainingTextExists(itemContainingText(title), exists = false)
+    assertUIObjectExists(itemContainingText(title), exists = false)
 }
 
 private fun assertBookmarkFavicon(forUrl: Uri) = bookmarkFavicon(forUrl.toString()).check(
@@ -429,7 +426,7 @@ private fun assertBookmarkIsDeleted(expectedTitle: String) {
             .resourceId("$packageName:id/bookmarks_wrapper"),
     ).waitForExists(waitingTime)
 
-    assertItemContainingTextExists(
+    assertUIObjectExists(
         itemWithResIdContainingText(
             "$packageName:id/title",
             expectedTitle,

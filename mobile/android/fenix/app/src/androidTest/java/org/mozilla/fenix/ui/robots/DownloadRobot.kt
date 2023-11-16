@@ -30,9 +30,7 @@ import org.mozilla.fenix.helpers.AppAndSystemHelper.getPermissionAllowID
 import org.mozilla.fenix.helpers.Constants.PackageName.GOOGLE_APPS_PHOTOS
 import org.mozilla.fenix.helpers.Constants.TAG
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
-import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextExists
-import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdAndTextExists
-import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdExists
+import org.mozilla.fenix.helpers.MatcherHelper.assertUIObjectExists
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithDescription
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
@@ -56,8 +54,10 @@ class DownloadRobot {
             Log.i(TAG, "verifyDownloadPrompt: While loop currentTries = $currentTries")
             try {
                 Log.i(TAG, "verifyDownloadPrompt: Try block")
-                assertItemWithResIdExists(itemWithResId("$packageName:id/download_button"))
-                assertItemContainingTextExists(itemContainingText(fileName))
+                assertUIObjectExists(
+                    itemWithResId("$packageName:id/download_button"),
+                    itemContainingText(fileName),
+                )
 
                 break
             } catch (e: AssertionError) {
@@ -71,17 +71,16 @@ class DownloadRobot {
         }
     }
 
-    fun verifyDownloadCompleteNotificationPopup() {
-        assertItemContainingTextExists(
+    fun verifyDownloadCompleteNotificationPopup() =
+        assertUIObjectExists(
             itemContainingText(getStringResource(R.string.mozac_feature_downloads_button_open)),
             itemContainingText(getStringResource(R.string.mozac_feature_downloads_completed_notification_text2)),
+            itemWithResId("$packageName:id/download_dialog_filename"),
         )
-        assertItemWithResIdExists(itemWithResId("$packageName:id/download_dialog_filename"))
-    }
 
-    fun verifyDownloadFailedPrompt(fileName: String) {
-        assertItemWithResIdExists(itemWithResId("$packageName:id/download_dialog_icon"))
-        assertItemWithResIdAndTextExists(
+    fun verifyDownloadFailedPrompt(fileName: String) =
+        assertUIObjectExists(
+            itemWithResId("$packageName:id/download_dialog_icon"),
             itemWithResIdContainingText(
                 "$packageName:id/download_dialog_title",
                 getStringResource(R.string.mozac_feature_downloads_failed_notification_text2),
@@ -95,7 +94,6 @@ class DownloadRobot {
                 getStringResource(R.string.mozac_feature_downloads_button_try_again),
             ),
         )
-    }
 
     fun clickTryAgainButton() {
         itemWithResIdAndText(
@@ -108,9 +106,9 @@ class DownloadRobot {
     fun verifyPhotosAppOpens() = assertExternalAppOpens(GOOGLE_APPS_PHOTOS)
 
     fun verifyDownloadedFileName(fileName: String) =
-        assertItemContainingTextExists(itemContainingText(fileName))
+        assertUIObjectExists(itemContainingText(fileName))
 
-    fun verifyDownloadedFileIcon() = assertItemWithResIdExists(itemWithResId("$packageName:id/favicon"))
+    fun verifyDownloadedFileIcon() = assertUIObjectExists(itemWithResId("$packageName:id/favicon"))
 
     fun verifyEmptyDownloadsList() {
         Log.i(TAG, "verifyEmptyDownloadsList: Looking for empty download list")
@@ -121,7 +119,7 @@ class DownloadRobot {
     }
 
     fun waitForDownloadsListToExist() =
-        assertItemWithResIdExists(itemWithResId("$packageName:id/download_list"))
+        assertUIObjectExists(itemWithResId("$packageName:id/download_list"))
 
     fun openDownloadedFile(fileName: String) {
         downloadedFile(fileName)

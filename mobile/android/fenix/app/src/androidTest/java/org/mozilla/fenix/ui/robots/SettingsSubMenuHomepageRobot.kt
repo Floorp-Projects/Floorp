@@ -21,7 +21,7 @@ import org.hamcrest.CoreMatchers
 import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.Matchers
 import org.mozilla.fenix.R
-import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextExists
+import org.mozilla.fenix.helpers.MatcherHelper.assertUIObjectExists
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
 import org.mozilla.fenix.helpers.TestHelper
@@ -99,7 +99,7 @@ class SettingsSubMenuHomepageRobot {
         mDevice.findObject(UiSelector().description(wallpaperName)).click()
 
     fun verifySnackBarText(expectedText: String) =
-        assertItemContainingTextExists(
+        assertUIObjectExists(
             itemContainingText(expectedText),
         )
 

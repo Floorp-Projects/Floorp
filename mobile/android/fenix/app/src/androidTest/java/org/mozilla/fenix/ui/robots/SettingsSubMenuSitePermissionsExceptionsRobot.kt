@@ -16,7 +16,7 @@ import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.CoreMatchers.containsString
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
-import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextIsGone
+import org.mozilla.fenix.helpers.MatcherHelper.assertUIObjectIsGone
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestHelper.mDevice
@@ -38,7 +38,7 @@ class SettingsSubMenuSitePermissionsExceptionsRobot {
             exceptionsList.waitForExists(waitingTime)
             onView(withText(containsString(url))).check(matches(isDisplayed()))
         } else {
-            assertItemContainingTextIsGone(itemContainingText(url))
+            assertUIObjectIsGone(itemContainingText(url))
         }
     }
 

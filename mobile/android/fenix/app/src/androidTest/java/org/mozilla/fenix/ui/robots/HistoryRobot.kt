@@ -23,8 +23,7 @@ import org.hamcrest.Matchers
 import org.hamcrest.Matchers.allOf
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
-import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextExists
-import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdAndTextExists
+import org.mozilla.fenix.helpers.MatcherHelper.assertUIObjectExists
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdContainingText
@@ -62,7 +61,7 @@ class HistoryRobot {
     }
 
     fun verifyHistoryItemExists(shouldExist: Boolean, item: String) =
-        assertItemContainingTextExists(itemContainingText(item), exists = shouldExist)
+        assertUIObjectExists(itemContainingText(item), exists = shouldExist)
 
     fun verifyFirstTestPageTitle(title: String) = assertTestPageTitle(title)
 
@@ -109,7 +108,7 @@ class HistoryRobot {
 
     fun verifySearchGroupDisplayed(shouldBeDisplayed: Boolean, searchTerm: String, groupSize: Int) =
         // checks if the search group exists in the Recently visited section
-        assertItemContainingTextExists(
+        assertUIObjectExists(
             itemContainingText(searchTerm)
                 .getFromParent(
                     UiSelector().text("$groupSize sites"),
@@ -198,7 +197,7 @@ private fun assertTestPageTitle(title: String) = testPageTitle()
     .check(matches(withText(title)))
 
 private fun assertDeleteConfirmationMessage() =
-    assertItemWithResIdAndTextExists(
+    assertUIObjectExists(
         itemWithResIdContainingText("$packageName:id/title", getStringResource(R.string.delete_history_prompt_title)),
         itemWithResIdContainingText("$packageName:id/body", getStringResource(R.string.delete_history_prompt_body_2)),
     )

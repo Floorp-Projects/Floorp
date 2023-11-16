@@ -18,9 +18,7 @@ import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.CoreMatchers.endsWith
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
-import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextExists
-import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithDescriptionExists
-import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdExists
+import org.mozilla.fenix.helpers.MatcherHelper.assertUIObjectExists
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithDescription
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
@@ -38,19 +36,19 @@ class SettingsSubMenuDataCollectionRobot {
         isMarketingDataEnabled: Boolean,
         studiesSummary: String,
     ) {
-        assertItemWithDescriptionExists(goBackButton())
-        assertItemContainingTextExists(
+        assertUIObjectExists(
+            goBackButton(),
             itemContainingText(getStringResource(R.string.preferences_data_collection)),
             itemContainingText(getStringResource(R.string.preference_usage_data)),
             itemContainingText(getStringResource(R.string.preferences_usage_data_description)),
         )
         verifyUsageAndTechnicalDataToggle(isUsageAndTechnicalDataEnabled)
-        assertItemContainingTextExists(
+        assertUIObjectExists(
             itemContainingText(getStringResource(R.string.preferences_marketing_data)),
             itemContainingText(getStringResource(R.string.preferences_marketing_data_description2)),
         )
         verifyMarketingDataToggle(isMarketingDataEnabled)
-        assertItemContainingTextExists(
+        assertUIObjectExists(
             itemContainingText(getStringResource(R.string.preference_experiments_2)),
             itemContainingText(studiesSummary),
         )
@@ -115,8 +113,8 @@ class SettingsSubMenuDataCollectionRobot {
         itemWithResId("$packageName:id/studies_switch").click()
 
     fun verifyStudiesDialog() {
-        assertItemWithResIdExists(itemWithResId("$packageName:id/alertTitle"))
-        assertItemContainingTextExists(
+        assertUIObjectExists(
+            itemWithResId("$packageName:id/alertTitle"),
             itemContainingText(getStringResource(R.string.studies_restart_app)),
         )
         studiesDialogOkButton.check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))

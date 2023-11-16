@@ -11,9 +11,7 @@ import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
 import org.mozilla.fenix.helpers.Constants.RETRY_COUNT
 import org.mozilla.fenix.helpers.Constants.TAG
-import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextExists
-import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdAndDescriptionExists
-import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdAndTextExists
+import org.mozilla.fenix.helpers.MatcherHelper.assertUIObjectExists
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
@@ -37,7 +35,7 @@ class NotificationRobot {
             notificationFound = mDevice.findObject(notification).waitForExists(waitingTime)
         }
 
-        assertItemContainingTextExists(itemWithText(notificationMessage))
+        assertUIObjectExists(itemWithText(notificationMessage))
     }
 
     fun clearNotifications() {
@@ -67,7 +65,7 @@ class NotificationRobot {
     fun verifySystemNotificationDoesNotExist(notificationMessage: String) {
         Log.i(TAG, "verifySystemNotificationDoesNotExist: Waiting for $notificationMessage notification to be gone")
         mDevice.findObject(UiSelector().textContains(notificationMessage)).waitUntilGone(waitingTime)
-        assertItemContainingTextExists(itemContainingText(notificationMessage), exists = false)
+        assertUIObjectExists(itemContainingText(notificationMessage), exists = false)
         Log.i(TAG, "verifySystemNotificationDoesNotExist: Verified that $notificationMessage notification does not exist")
     }
 
@@ -85,10 +83,10 @@ class NotificationRobot {
         for (i in 1..RETRY_COUNT) {
             Log.i(TAG, "clickPageObject: For loop i = $i")
             try {
-                assertItemWithResIdAndTextExists(downloadSystemNotificationButton(action))
+                assertUIObjectExists(downloadSystemNotificationButton(action))
                 downloadSystemNotificationButton(action).clickAndWaitForNewWindow(waitingTimeShort)
                 Log.i(TAG, "clickDownloadNotificationControlButton: Clicked app notification $action button and waits for a new window for $waitingTimeShort ms")
-                assertItemWithResIdAndTextExists(
+                assertUIObjectExists(
                     downloadSystemNotificationButton(action),
                     exists = false,
                 )
@@ -106,7 +104,7 @@ class NotificationRobot {
     }
 
     fun verifyMediaSystemNotificationButtonState(action: String) =
-        assertItemWithResIdAndDescriptionExists(mediaSystemNotificationButton(action))
+        assertUIObjectExists(mediaSystemNotificationButton(action))
 
     fun expandNotificationMessage() {
         while (!notificationHeader.exists()) {
@@ -164,9 +162,9 @@ class NotificationRobot {
                 }
                 // Not all download related system notifications can be dismissed
                 if (shouldDismissNotification) {
-                    assertItemContainingTextExists(itemContainingText(appName), exists = false)
+                    assertUIObjectExists(itemContainingText(appName), exists = false)
                 } else {
-                    assertItemContainingTextExists(itemContainingText(appName))
+                    assertUIObjectExists(itemContainingText(appName))
                     Log.i(TAG, "swipeDownloadNotification: Verified that $appName notification exist")
                 }
 
@@ -206,7 +204,7 @@ class NotificationRobot {
 
         fun clickClosePrivateTabsNotification(interact: HomeScreenRobot.() -> Unit): HomeScreenRobot.Transition {
             try {
-                assertItemContainingTextExists(closePrivateTabsNotification())
+                assertUIObjectExists(closePrivateTabsNotification())
             } catch (e: AssertionError) {
                 notificationTray().flingToEnd(1)
             }

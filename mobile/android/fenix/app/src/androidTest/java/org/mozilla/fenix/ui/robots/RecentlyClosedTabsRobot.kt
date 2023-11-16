@@ -18,7 +18,7 @@ import org.hamcrest.Matchers
 import org.hamcrest.Matchers.allOf
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.HomeActivityComposeTestRule
-import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdAndTextExists
+import org.mozilla.fenix.helpers.MatcherHelper.assertUIObjectExists
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResIdContainingText
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
@@ -57,7 +57,7 @@ class RecentlyClosedTabsRobot {
     }
 
     fun verifyRecentlyClosedTabsPageTitle(title: String) =
-        assertItemWithResIdAndTextExists(
+        assertUIObjectExists(
             recentlyClosedTabsPageTitle(title),
         )
 

@@ -16,8 +16,8 @@ import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.uiautomator.UiSelector
 import org.hamcrest.CoreMatchers.allOf
 import org.mozilla.fenix.R
-import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextExists
-import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextIsGone
+import org.mozilla.fenix.helpers.MatcherHelper.assertUIObjectExists
+import org.mozilla.fenix.helpers.MatcherHelper.assertUIObjectIsGone
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
 import org.mozilla.fenix.helpers.TestHelper.appName
 import org.mozilla.fenix.helpers.TestHelper.mDevice
@@ -192,9 +192,9 @@ private fun assertOpenTabsDescription(tabNumber: String) =
     openTabsDescription(tabNumber).check(matches(withEffectiveVisibility(Visibility.VISIBLE)))
 
 private fun assertBrowsingHistoryDescription(addresses: String) =
-    assertItemContainingTextExists(browsingHistoryDescription(addresses))
+    assertUIObjectExists(browsingHistoryDescription(addresses))
 
-private fun assertDeleteBrowsingDataSnackbar() = assertItemContainingTextIsGone(itemWithText("Browsing data deleted"))
+private fun assertDeleteBrowsingDataSnackbar() = assertUIObjectIsGone(itemWithText("Browsing data deleted"))
 
 private fun clickOpenTabsCheckBox() = openTabsCheckBox().click()
 private fun assertOpenTabsCheckBox(status: Boolean) = openTabsCheckBox().assertIsChecked(status)

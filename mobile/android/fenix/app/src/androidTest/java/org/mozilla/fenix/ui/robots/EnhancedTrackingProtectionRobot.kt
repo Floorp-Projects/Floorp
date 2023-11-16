@@ -22,8 +22,7 @@ import org.hamcrest.Matchers.containsString
 import org.hamcrest.Matchers.not
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
-import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextExists
-import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdExists
+import org.mozilla.fenix.helpers.MatcherHelper.assertUIObjectExists
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
@@ -43,7 +42,7 @@ class EnhancedTrackingProtectionRobot {
     fun verifyETPSwitchVisibility(visible: Boolean) = assertETPSwitchVisibility(visible)
 
     fun verifyCrossSiteCookiesBlocked(isBlocked: Boolean) {
-        assertItemWithResIdExists(itemWithResId("$packageName:id/cross_site_tracking"))
+        assertUIObjectExists(itemWithResId("$packageName:id/cross_site_tracking"))
         crossSiteCookiesBlockListButton.click()
         // Verifies the trackers block/allow list
         onView(withId(R.id.details_blocking_header))
@@ -61,7 +60,7 @@ class EnhancedTrackingProtectionRobot {
     }
 
     fun verifySocialMediaTrackersBlocked(isBlocked: Boolean) {
-        assertItemWithResIdExists(itemWithResId("$packageName:id/social_media_trackers"))
+        assertUIObjectExists(itemWithResId("$packageName:id/social_media_trackers"))
         socialTrackersBlockListButton.click()
         // Verifies the trackers block/allow list
         onView(withId(R.id.details_blocking_header))
@@ -80,7 +79,7 @@ class EnhancedTrackingProtectionRobot {
     }
 
     fun verifyFingerprintersBlocked(isBlocked: Boolean) {
-        assertItemWithResIdExists(itemWithResId("$packageName:id/fingerprinters"))
+        assertUIObjectExists(itemWithResId("$packageName:id/fingerprinters"))
         fingerprintersBlockListButton.click()
         // Verifies the trackers block/allow list
         onView(withId(R.id.details_blocking_header))
@@ -99,7 +98,7 @@ class EnhancedTrackingProtectionRobot {
     }
 
     fun verifyCryptominersBlocked(isBlocked: Boolean) {
-        assertItemWithResIdExists(itemWithResId("$packageName:id/cryptominers"))
+        assertUIObjectExists(itemWithResId("$packageName:id/cryptominers"))
         cryptominersBlockListButton.click()
         // Verifies the trackers block/allow list
         onView(withId(R.id.details_blocking_header))
@@ -118,7 +117,7 @@ class EnhancedTrackingProtectionRobot {
     }
 
     fun verifyTrackingContentBlocked(isBlocked: Boolean) {
-        assertItemContainingTextExists(itemWithText("Tracking Content"))
+        assertUIObjectExists(itemWithText("Tracking Content"))
         trackingContentBlockListButton.click()
         // Verifies the trackers block/allow list
         onView(withId(R.id.details_blocking_header))
@@ -152,7 +151,7 @@ class EnhancedTrackingProtectionRobot {
     }
 
     fun verifyETPSectionIsDisplayedInQuickSettingsSheet(isDisplayed: Boolean) =
-        assertItemWithResIdExists(
+        assertUIObjectExists(
             itemWithResId("$packageName:id/trackingProtectionLayout"),
             exists = isDisplayed,
         )
@@ -290,5 +289,5 @@ private val fingerprintersBlockListButton =
 private fun assertSecuritySheetIsCompletelyDisplayed() {
     mDevice.findObject(UiSelector().description(getStringResource(R.string.quick_settings_sheet)))
         .waitForExists(waitingTime)
-    assertItemWithResIdExists(itemWithResId("$packageName:id/quick_action_sheet"))
+    assertUIObjectExists(itemWithResId("$packageName:id/quick_action_sheet"))
 }

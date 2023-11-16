@@ -29,7 +29,7 @@ import org.hamcrest.CoreMatchers.containsString
 import org.mozilla.fenix.BuildConfig
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.Constants.LISTS_MAXSWIPES
-import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextExists
+import org.mozilla.fenix.helpers.MatcherHelper.assertUIObjectExists
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.TestHelper
 import org.mozilla.fenix.helpers.TestHelper.appName
@@ -155,7 +155,7 @@ private fun assertCrashes() {
         .check(matches(withEffectiveVisibility(ViewMatchers.Visibility.VISIBLE)))
         .perform(click())
 
-    assertItemContainingTextExists(itemContainingText("No crash reports have been submitted."))
+    assertUIObjectExists(itemContainingText("No crash reports have been submitted."))
 
     for (i in 1..3) {
         Espresso.pressBack()

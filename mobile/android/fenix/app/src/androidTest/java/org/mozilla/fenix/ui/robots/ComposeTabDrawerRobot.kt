@@ -44,7 +44,7 @@ import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.Constants
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
 import org.mozilla.fenix.helpers.HomeActivityComposeTestRule
-import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextExists
+import org.mozilla.fenix.helpers.MatcherHelper.assertUIObjectExists
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.TestAssetHelper
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
@@ -86,7 +86,7 @@ class ComposeTabDrawerRobot(private val composeTestRule: HomeActivityComposeTest
 
     fun verifySyncedTabsListWhenUserIsNotSignedIn() {
         verifySyncedTabsList()
-        assertItemContainingTextExists(
+        assertUIObjectExists(
             itemContainingText(getStringResource(R.string.synced_tabs_sign_in_message)),
             itemContainingText(getStringResource(R.string.sync_sign_in)),
             itemContainingText(getStringResource(R.string.tab_drawer_fab_sync)),
@@ -108,7 +108,7 @@ class ComposeTabDrawerRobot(private val composeTestRule: HomeActivityComposeTest
 
     fun verifyNoExistingOpenTabs(vararg titles: String) {
         titles.forEach { title ->
-            assertItemContainingTextExists(
+            assertUIObjectExists(
                 itemContainingText(title),
                 exists = false,
             )

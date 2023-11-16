@@ -22,11 +22,9 @@ import androidx.test.uiautomator.UiSelector
 import androidx.test.uiautomator.Until
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
-import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextExists
-import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextIsGone
 import org.mozilla.fenix.helpers.MatcherHelper.assertItemTextEquals
-import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithDescriptionExists
-import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdExists
+import org.mozilla.fenix.helpers.MatcherHelper.assertUIObjectExists
+import org.mozilla.fenix.helpers.MatcherHelper.assertUIObjectIsGone
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithDescription
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
@@ -41,17 +39,16 @@ import org.mozilla.fenix.helpers.ext.waitNotNull
 
 class CollectionRobot {
 
-    fun verifySelectCollectionScreen() {
-        assertItemContainingTextExists(
+    fun verifySelectCollectionScreen() =
+        assertUIObjectExists(
             itemContainingText("Select collection"),
             itemContainingText("Add new collection"),
+            itemWithResId("$packageName:id/collections_list"),
         )
-        assertItemWithResIdExists(itemWithResId("$packageName:id/collections_list"))
-    }
 
     fun clickAddNewCollection() = addNewCollectionButton().click()
 
-    fun verifyCollectionNameTextField() = assertItemWithResIdExists(mainMenuEditCollectionNameField())
+    fun verifyCollectionNameTextField() = assertUIObjectExists(mainMenuEditCollectionNameField())
 
     // names a collection saved from tab drawer
     fun typeCollectionNameAndSave(collectionName: String) {
@@ -77,17 +74,17 @@ class CollectionRobot {
     fun verifyTabSavedInCollection(title: String, visible: Boolean = true) {
         if (visible) {
             scrollToElementByText(title)
-            assertItemContainingTextExists(collectionListItem(title))
+            assertUIObjectExists(collectionListItem(title))
         } else {
-            assertItemContainingTextIsGone(collectionListItem(title))
+            assertUIObjectIsGone(collectionListItem(title))
         }
     }
 
     fun verifyCollectionTabUrl(visible: Boolean, url: String) =
-        assertItemContainingTextExists(itemContainingText(url), exists = visible)
+        assertUIObjectExists(itemContainingText(url), exists = visible)
 
     fun verifyShareCollectionButtonIsVisible(visible: Boolean) =
-        assertItemWithDescriptionExists(shareCollectionButton(), exists = visible)
+        assertUIObjectExists(shareCollectionButton(), exists = visible)
 
     fun verifyCollectionMenuIsVisible(visible: Boolean, rule: ComposeTestRule) {
         if (visible) {
@@ -134,7 +131,7 @@ class CollectionRobot {
     }
 
     fun verifyCollectionItemRemoveButtonIsVisible(title: String, visible: Boolean) =
-        assertItemContainingTextExists(removeTabFromCollectionButton(title), exists = visible)
+        assertUIObjectExists(removeTabFromCollectionButton(title), exists = visible)
 
     fun removeTabFromCollection(title: String) = removeTabFromCollectionButton(title).click()
 
@@ -166,9 +163,9 @@ class CollectionRobot {
             title: String,
             interact: HomeScreenRobot.() -> Unit,
         ): HomeScreenRobot.Transition {
-            assertItemContainingTextExists(itemContainingText(title))
+            assertUIObjectExists(itemContainingText(title))
             itemContainingText(title).clickAndWaitForNewWindow(waitingTimeShort)
-            assertItemWithDescriptionExists(itemWithDescription(getStringResource(R.string.remove_tab_from_collection)), exists = false)
+            assertUIObjectExists(itemWithDescription(getStringResource(R.string.remove_tab_from_collection)), exists = false)
 
             HomeScreenRobot().interact()
             return HomeScreenRobot.Transition()

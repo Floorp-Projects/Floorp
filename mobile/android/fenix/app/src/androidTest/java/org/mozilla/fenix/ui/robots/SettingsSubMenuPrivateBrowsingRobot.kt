@@ -21,7 +21,7 @@ import androidx.test.uiautomator.Until
 import org.hamcrest.CoreMatchers
 import org.junit.Assert.assertTrue
 import org.mozilla.fenix.R
-import org.mozilla.fenix.helpers.MatcherHelper.assertCheckedItemWithResIdExists
+import org.mozilla.fenix.helpers.MatcherHelper.assertUIObjectExists
 import org.mozilla.fenix.helpers.MatcherHelper.checkedItemWithResId
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestHelper.appName
@@ -138,7 +138,7 @@ private fun assertOpenLinksInPrivateTabEnabled() =
     openLinksInPrivateTabSwitch().check(matches(isEnabled(true)))
 
 private fun assertOpenLinksInPrivateTabOff() {
-    assertCheckedItemWithResIdExists(
+    assertUIObjectExists(
         checkedItemWithResId("android:id/switch_widget", isChecked = true),
         exists = false,
     )

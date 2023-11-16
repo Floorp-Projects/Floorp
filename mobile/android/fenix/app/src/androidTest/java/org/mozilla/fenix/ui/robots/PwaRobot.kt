@@ -7,12 +7,12 @@ package org.mozilla.fenix.ui.robots
 import androidx.test.uiautomator.UiSelector
 import org.junit.Assert.assertTrue
 import org.mozilla.fenix.helpers.AppAndSystemHelper.isExternalAppBrowserActivityInCurrentTask
-import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdExists
+import org.mozilla.fenix.helpers.MatcherHelper.assertUIObjectExists
 import org.mozilla.fenix.helpers.TestHelper.mDevice
 import org.mozilla.fenix.helpers.TestHelper.packageName
 
 class PwaRobot {
-    fun verifyCustomTabToolbarIsNotDisplayed() = assertItemWithResIdExists(customTabToolbar(), exists = false)
+    fun verifyCustomTabToolbarIsNotDisplayed() = assertUIObjectExists(customTabToolbar(), exists = false)
     fun verifyPwaActivityInCurrentTask() = assertTrue(isExternalAppBrowserActivityInCurrentTask())
 
     class Transition

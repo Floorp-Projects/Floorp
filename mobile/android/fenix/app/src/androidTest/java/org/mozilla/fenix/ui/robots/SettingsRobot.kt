@@ -48,7 +48,7 @@ import org.mozilla.fenix.helpers.Constants.PackageName.GOOGLE_PLAY_SERVICES
 import org.mozilla.fenix.helpers.Constants.RETRY_COUNT
 import org.mozilla.fenix.helpers.Constants.TAG
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
-import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextExists
+import org.mozilla.fenix.helpers.MatcherHelper.assertUIObjectExists
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
@@ -77,7 +77,7 @@ class SettingsRobot {
     fun verifyAccessibilityButton() = assertAccessibilityButton()
     fun verifySetAsDefaultBrowserButton() = assertSetAsDefaultBrowserButton()
     fun verifyTabsButton() =
-        assertItemContainingTextExists(itemContainingText(getStringResource(R.string.preferences_tabs)))
+        assertUIObjectExists(itemContainingText(getStringResource(R.string.preferences_tabs)))
     fun verifyHomepageButton() = assertHomepageButton()
     fun verifyAutofillButton() = assertAutofillButton()
     fun verifyLanguageButton() = assertLanguageButton()
@@ -186,8 +186,8 @@ class SettingsRobot {
     // ABOUT SECTION
     fun verifyAboutHeading() = assertAboutHeading()
 
-    fun verifyRateOnGooglePlay() = assertItemContainingTextExists(rateOnGooglePlayHeading())
-    fun verifyAboutFirefoxPreview() = assertItemContainingTextExists(aboutFirefoxHeading())
+    fun verifyRateOnGooglePlay() = assertUIObjectExists(rateOnGooglePlayHeading())
+    fun verifyAboutFirefoxPreview() = assertUIObjectExists(aboutFirefoxHeading())
     fun verifyGooglePlayRedirect() = assertGooglePlayRedirect()
 
     fun verifySettingsOptionSummary(setting: String, summary: String) {
@@ -639,7 +639,7 @@ private fun aboutFirefoxHeading(): UiObject {
     for (i in 1..RETRY_COUNT) {
         try {
             settingsList().scrollToEnd(LISTS_MAXSWIPES)
-            assertItemContainingTextExists(itemWithText("About $appName"))
+            assertUIObjectExists(itemWithText("About $appName"))
 
             break
         } catch (e: AssertionError) {

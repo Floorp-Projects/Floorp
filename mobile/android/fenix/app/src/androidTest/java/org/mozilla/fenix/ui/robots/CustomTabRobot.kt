@@ -15,10 +15,7 @@ import androidx.test.uiautomator.UiSelector
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.Constants.LONG_CLICK_DURATION
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
-import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextExists
-import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithDescriptionExists
-import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdAndTextExists
-import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdExists
+import org.mozilla.fenix.helpers.MatcherHelper.assertUIObjectExists
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithDescription
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
@@ -37,16 +34,16 @@ import org.mozilla.fenix.helpers.click
 class CustomTabRobot {
 
     fun verifyCustomTabsSiteInfoButton() =
-        assertItemWithResIdExists(
+        assertUIObjectExists(
             itemWithResId("$packageName:id/mozac_browser_toolbar_security_indicator"),
         )
 
     fun verifyCustomTabsShareButton() =
-        assertItemWithDescriptionExists(
+        assertUIObjectExists(
             itemWithDescription(getStringResource(R.string.mozac_feature_customtabs_share_link)),
         )
 
-    fun verifyMainMenuButton() = assertItemWithResIdExists(mainMenuButton)
+    fun verifyMainMenuButton() = assertUIObjectExists(mainMenuButton)
 
     fun verifyDesktopSiteButtonExists() {
         desktopSiteButton().check(matches(isDisplayed()))
@@ -57,19 +54,19 @@ class CustomTabRobot {
     }
 
     fun verifyPoweredByTextIsDisplayed() =
-        assertItemContainingTextExists(itemContainingText("POWERED BY $appName"))
+        assertUIObjectExists(itemContainingText("POWERED BY $appName"))
 
     fun verifyOpenInBrowserButtonExists() {
         openInBrowserButton().check(matches(isDisplayed()))
     }
 
-    fun verifyBackButtonExists() = assertItemWithDescriptionExists(itemWithDescription("Back"))
+    fun verifyBackButtonExists() = assertUIObjectExists(itemWithDescription("Back"))
 
-    fun verifyForwardButtonExists() = assertItemWithDescriptionExists(itemWithDescription("Forward"))
+    fun verifyForwardButtonExists() = assertUIObjectExists(itemWithDescription("Forward"))
 
-    fun verifyRefreshButtonExists() = assertItemWithDescriptionExists(itemWithDescription("Refresh"))
+    fun verifyRefreshButtonExists() = assertUIObjectExists(itemWithDescription("Refresh"))
 
-    fun verifyCustomMenuItem(label: String) = assertItemContainingTextExists(itemContainingText(label))
+    fun verifyCustomMenuItem(label: String) = assertUIObjectExists(itemContainingText(label))
 
     fun verifyCustomTabCloseButton() {
         closeButton().check(matches(isDisplayed()))
@@ -90,13 +87,13 @@ class CustomTabRobot {
             waitingTime,
         )
 
-        assertItemWithResIdAndTextExists(
+        assertUIObjectExists(
             itemWithResIdContainingText("$packageName:id/mozac_browser_toolbar_title_view", title),
         )
     }
 
     fun verifyCustomTabUrl(Url: String) {
-        assertItemWithResIdAndTextExists(
+        assertUIObjectExists(
             itemWithResIdContainingText("$packageName:id/mozac_browser_toolbar_url_view", Url.drop(7)),
         )
     }
@@ -126,10 +123,10 @@ class CustomTabRobot {
     fun clickCustomTabCloseButton() = closeButton().click()
 
     fun verifyCustomTabActionButton(customTabActionButtonDescription: String) =
-        assertItemWithDescriptionExists(itemWithDescription(customTabActionButtonDescription))
+        assertUIObjectExists(itemWithDescription(customTabActionButtonDescription))
 
     fun verifyPDFReaderToolbarItems() =
-        assertItemWithResIdAndTextExists(
+        assertUIObjectExists(
             itemWithResIdAndText("download", "Download"),
             itemWithResIdAndText("openInApp", "Open in app"),
         )

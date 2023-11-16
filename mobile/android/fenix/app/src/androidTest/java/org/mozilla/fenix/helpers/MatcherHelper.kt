@@ -89,28 +89,7 @@ object MatcherHelper {
         return mDevice.findObject(UiSelector().resourceId(resourceId).textContains(text))
     }
 
-    fun assertItemWithResIdExists(vararg appItems: UiObject, exists: Boolean = true) {
-        if (exists) {
-            for (appItem in appItems) {
-                assertTrue("${appItem.selector} does not exist", appItem.waitForExists(waitingTime))
-                Log.i(TAG, "assertItemWithResIdExists: Verified ${appItem.selector} exists")
-            }
-        } else {
-            for (appItem in appItems) {
-                assertFalse("${appItem.selector} exists", appItem.waitForExists(waitingTimeShort))
-                Log.i(TAG, "assertItemWithResIdExists: Verified ${appItem.selector} does not exist")
-            }
-        }
-    }
-
-    fun assertItemWithResIdIsGone(vararg appItems: UiObject) {
-        for (appItem in appItems) {
-            assertTrue("${appItem.selector} is not gone", appItem.waitUntilGone(waitingTime))
-            Log.i(TAG, "assertItemWithResIdIsGone: Verified ${appItem.selector} is gone")
-        }
-    }
-
-    fun assertItemContainingTextExists(
+    fun assertUIObjectExists(
         vararg appItems: UiObject,
         exists: Boolean = true,
         waitingTime: Long = TestAssetHelper.waitingTime,
@@ -118,18 +97,18 @@ object MatcherHelper {
         for (appItem in appItems) {
             if (exists) {
                 assertTrue("${appItem.selector} does not exist", appItem.waitForExists(waitingTime))
-                Log.i(TAG, "assertItemContainingTextExists: Verified ${appItem.selector} exists")
+                Log.i(TAG, "assertUIObjectExists: Verified ${appItem.selector} exists")
             } else {
                 assertFalse("${appItem.selector} exists", appItem.waitForExists(waitingTimeShort))
-                Log.i(TAG, "assertItemContainingTextExists: Verified ${appItem.selector} does not exist")
+                Log.i(TAG, "assertUIObjectExists: Verified ${appItem.selector} does not exist")
             }
         }
     }
 
-    fun assertItemContainingTextIsGone(vararg appItems: UiObject) {
+    fun assertUIObjectIsGone(vararg appItems: UiObject) {
         for (appItem in appItems) {
             assertTrue("${appItem.selector} is not gone", appItem.waitUntilGone(waitingTime))
-            Log.i(TAG, "assertItemContainingTextIsGone: Verified ${appItem.selector} is gone")
+            Log.i(TAG, "assertUIObjectIsGone: Verified ${appItem.selector} is gone")
         }
     }
 
@@ -158,119 +137,6 @@ object MatcherHelper {
                 appItem.text.contains(itemText),
             )
             Log.i(TAG, "assertItemTextContains: Verified ${appItem.selector} text contains $itemText")
-        }
-    }
-
-    fun assertItemWithDescriptionExists(vararg appItems: UiObject, exists: Boolean = true) {
-        for (appItem in appItems) {
-            if (exists) {
-                assertTrue("${appItem.selector} does not exist", appItem.waitForExists(waitingTime))
-                Log.i(TAG, "assertItemWithDescriptionExists: Verified ${appItem.selector} exists")
-            } else {
-                assertFalse("${appItem.selector} exists", appItem.waitForExists(waitingTimeShort))
-                Log.i(TAG, "assertItemWithDescriptionExists: Verified ${appItem.selector} does not exist")
-            }
-        }
-    }
-
-    fun assertItemWithIndexExists(vararg appItems: UiObject, exists: Boolean = true) {
-        if (exists) {
-            for (appItem in appItems) {
-                assertTrue("${appItem.selector} does not exist", appItem.waitForExists(waitingTime))
-                Log.i(TAG, "assertItemWithIndexExists: Verified ${appItem.selector} exists")
-            }
-        } else {
-            for (appItem in appItems) {
-                assertFalse("${appItem.selector} exists", appItem.waitForExists(waitingTimeShort))
-                Log.i(TAG, "assertItemWithIndexExists: Verified ${appItem.selector} does not exist")
-            }
-        }
-    }
-
-    fun assertItemWithClassNameExists(vararg appItems: UiObject, exists: Boolean = true) {
-        if (exists) {
-            for (appItem in appItems) {
-                assertTrue("${appItem.selector} does not exist", appItem.waitForExists(waitingTime))
-                Log.i(TAG, "assertItemWithClassNameExists: Verified ${appItem.selector} exists")
-            }
-        } else {
-            for (appItem in appItems) {
-                assertFalse("${appItem.selector} exists", appItem.waitForExists(waitingTimeShort))
-                Log.i(TAG, "assertItemWithClassNameExists: Verified ${appItem.selector} does not exist")
-            }
-        }
-    }
-
-    fun assertItemWithResIdAndIndexExists(vararg appItems: UiObject, exists: Boolean = true) {
-        if (exists) {
-            for (appItem in appItems) {
-                assertTrue("${appItem.selector} does not exist", appItem.waitForExists(waitingTime))
-                Log.i(TAG, "assertItemWithResIdAndIndexExists: Verified ${appItem.selector} exists")
-            }
-        } else {
-            for (appItem in appItems) {
-                assertFalse("${appItem.selector} exists", appItem.waitForExists(waitingTimeShort))
-                Log.i(TAG, "assertItemWithResIdAndIndexExists: Verified ${appItem.selector} does not exist")
-            }
-        }
-    }
-
-    fun assertItemWithClassNameAndIndexExists(vararg appItems: UiObject, exists: Boolean = true) {
-        if (exists) {
-            for (appItem in appItems) {
-                assertTrue("${appItem.selector} does not exist", appItem.waitForExists(waitingTime))
-                Log.i(TAG, "assertItemWithClassNameAndIndexExists: Verified ${appItem.selector} exists")
-            }
-        } else {
-            for (appItem in appItems) {
-                assertFalse("${appItem.selector} exists", appItem.waitForExists(waitingTimeShort))
-                Log.i(TAG, "assertItemWithClassNameAndIndexExists: Verified ${appItem.selector} does not exist")
-            }
-        }
-    }
-
-    fun assertCheckedItemWithResIdExists(vararg appItems: UiObject, exists: Boolean = true) {
-        for (appItem in appItems) {
-            if (exists) {
-                assertTrue("${appItem.selector} does not exist", appItem.waitForExists(waitingTime))
-                Log.i(TAG, "assertCheckedItemWithResIdExists: Verified ${appItem.selector} exists")
-            } else {
-                assertFalse("${appItem.selector} exists", appItem.waitForExists(waitingTimeShort))
-                Log.i(TAG, "assertCheckedItemWithResIdExists: Verified ${appItem.selector} does not exist")
-            }
-        }
-    }
-
-    fun assertCheckedItemWithResIdAndTextExists(vararg appItems: UiObject) {
-        for (appItem in appItems) {
-            assertTrue(appItem.waitForExists(waitingTime))
-            Log.i(TAG, "assertCheckedItemWithResIdAndTextExists: Verified ${appItem.selector} exists")
-        }
-    }
-
-    fun assertItemWithResIdAndDescriptionExists(vararg appItems: UiObject) {
-        for (appItem in appItems) {
-            assertTrue(appItem.waitForExists(waitingTime))
-            Log.i(TAG, "assertItemWithResIdAndDescriptionExists: Verified ${appItem.selector} exists")
-        }
-    }
-
-    fun assertItemWithResIdAndTextExists(vararg appItems: UiObject, exists: Boolean = true) {
-        for (appItem in appItems) {
-            if (exists) {
-                assertTrue("${appItem.selector} does not exist", appItem.waitForExists(waitingTime))
-                Log.i(TAG, "assertItemWithResIdAndTextExists: Verified ${appItem.selector} exists")
-            } else {
-                assertFalse("${appItem.selector} exists", appItem.waitForExists(waitingTimeShort))
-                Log.i(TAG, "assertItemWithResIdAndTextExists: Verified ${appItem.selector} does not exist")
-            }
-        }
-    }
-
-    fun assertItemWithResIdAndTextIsGone(vararg appItems: UiObject) {
-        for (appItem in appItems) {
-            assertTrue("${appItem.selector} is not gone", appItem.waitUntilGone(waitingTime))
-            Log.i(TAG, "assertItemWithResIdAndTextIsGone: Verified ${appItem.selector} is gone")
         }
     }
 

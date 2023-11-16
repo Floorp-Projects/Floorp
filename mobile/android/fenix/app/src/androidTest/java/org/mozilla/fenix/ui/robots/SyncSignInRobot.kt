@@ -13,7 +13,7 @@ import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.uiautomator.UiSelector
 import org.hamcrest.CoreMatchers.allOf
 import org.mozilla.fenix.R
-import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdExists
+import org.mozilla.fenix.helpers.MatcherHelper.assertUIObjectExists
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithResId
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestHelper.mDevice
@@ -28,7 +28,7 @@ class SyncSignInRobot {
     fun verifyAccountSettingsMenuHeader() = assertAccountSettingsMenuHeader()
     fun verifyTurnOnSyncMenu() {
         mDevice.findObject(UiSelector().resourceId("$packageName:id/container")).waitForExists(waitingTime)
-        assertItemWithResIdExists(
+        assertUIObjectExists(
             itemWithResId("$packageName:id/signInScanButton"),
             itemWithResId("$packageName:id/signInEmailButton"),
         )

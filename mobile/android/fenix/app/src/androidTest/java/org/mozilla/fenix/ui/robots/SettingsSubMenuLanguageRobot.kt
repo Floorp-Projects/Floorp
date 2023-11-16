@@ -12,8 +12,7 @@ import androidx.test.uiautomator.UiScrollable
 import androidx.test.uiautomator.UiSelector
 import org.hamcrest.CoreMatchers
 import org.mozilla.fenix.R
-import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextExists
-import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdExists
+import org.mozilla.fenix.helpers.MatcherHelper.assertUIObjectExists
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestHelper.mDevice
@@ -33,11 +32,11 @@ class SettingsSubMenuLanguageRobot {
         language(languageName).click()
     }
 
-    fun verifyLanguageHeaderIsTranslated(translation: String) = assertItemContainingTextExists(itemWithText(translation))
+    fun verifyLanguageHeaderIsTranslated(translation: String) = assertUIObjectExists(itemWithText(translation))
 
     fun verifySelectedLanguage(language: String) {
         languagesList.waitForExists(waitingTime)
-        assertItemWithResIdExists(
+        assertUIObjectExists(
             languagesList
                 .getChildByText(UiSelector().text(language), language, true)
                 .getFromParent(UiSelector().resourceId("$packageName:id/locale_selected_icon")),
@@ -54,13 +53,13 @@ class SettingsSubMenuLanguageRobot {
     }
 
     fun verifySearchResultsContains(languageName: String) =
-        assertItemContainingTextExists(language(languageName))
+        assertUIObjectExists(language(languageName))
 
     fun clearSearchBar() {
         onView(withId(R.id.search_close_btn)).click()
     }
 
-    fun verifyLanguageListIsDisplayed() = assertItemWithResIdExists(languagesList)
+    fun verifyLanguageListIsDisplayed() = assertUIObjectExists(languagesList)
 
     class Transition {
 

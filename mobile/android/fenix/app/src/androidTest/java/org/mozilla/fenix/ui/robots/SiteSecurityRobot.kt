@@ -15,8 +15,7 @@ import androidx.test.uiautomator.UiSelector
 import mozilla.components.support.ktx.kotlin.tryGetHostFromUrl
 import org.mozilla.fenix.R
 import org.mozilla.fenix.helpers.DataGenerationHelper.getStringResource
-import org.mozilla.fenix.helpers.MatcherHelper.assertCheckedItemWithResIdAndTextExists
-import org.mozilla.fenix.helpers.MatcherHelper.assertItemWithResIdExists
+import org.mozilla.fenix.helpers.MatcherHelper.assertUIObjectExists
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTimeShort
 import org.mozilla.fenix.helpers.TestHelper.mDevice
@@ -42,11 +41,9 @@ class SiteSecurityRobot {
 
 private fun assertQuickActionSheet(url: String = "", isConnectionSecure: Boolean) {
     quickActionSheet().waitForExists(waitingTime)
-    assertCheckedItemWithResIdAndTextExists(
+    assertUIObjectExists(
         quickActionSheetUrl(url.tryGetHostFromUrl()),
         quickActionSheetSecurityInfo(isConnectionSecure),
-    )
-    assertItemWithResIdExists(
         quickActionSheetTrackingProtectionSwitch(),
         quickActionSheetClearSiteData(),
     )
@@ -54,19 +51,17 @@ private fun assertQuickActionSheet(url: String = "", isConnectionSecure: Boolean
 
 private fun assertSecureConnectionSubMenu(pageTitle: String = "", url: String = "", isConnectionSecure: Boolean) {
     secureConnectionSubMenu().waitForExists(waitingTime)
-    assertCheckedItemWithResIdAndTextExists(
+    assertUIObjectExists(
         secureConnectionSubMenuPageTitle(pageTitle),
         secureConnectionSubMenuPageUrl(url),
         secureConnectionSubMenuSecurityInfo(isConnectionSecure),
-    )
-    assertItemWithResIdExists(
         secureConnectionSubMenuLockIcon(),
         secureConnectionSubMenuCertificateInfo(),
     )
 }
 
 private fun assertClearSiteDataPrompt(url: String) {
-    assertCheckedItemWithResIdAndTextExists(clearSiteDataPrompt(url))
+    assertUIObjectExists(clearSiteDataPrompt(url))
     cancelClearSiteDataButton.check(matches(isDisplayed()))
     deleteSiteDataButton.check(matches(isDisplayed()))
 }

@@ -17,7 +17,7 @@ import androidx.test.uiautomator.UiSelector
 import org.hamcrest.CoreMatchers.allOf
 import org.hamcrest.CoreMatchers.containsString
 import org.mozilla.fenix.R
-import org.mozilla.fenix.helpers.MatcherHelper.assertItemContainingTextExists
+import org.mozilla.fenix.helpers.MatcherHelper.assertUIObjectExists
 import org.mozilla.fenix.helpers.MatcherHelper.itemContainingText
 import org.mozilla.fenix.helpers.MatcherHelper.itemWithText
 import org.mozilla.fenix.helpers.TestAssetHelper.waitingTime
@@ -33,7 +33,7 @@ class SettingsSubMenuEnhancedTrackingProtectionExceptionsRobot {
     fun verifyNavigationToolBarHeader() = assertNavigationToolBarHeader()
 
     fun verifyTPExceptionsDefaultView() {
-        assertItemContainingTextExists(
+        assertUIObjectExists(
             itemWithText("Exceptions let you disable tracking protection for selected sites."),
         )
         learnMoreLink.check(matches(isDisplayed()))
@@ -48,7 +48,7 @@ class SettingsSubMenuEnhancedTrackingProtectionExceptionsRobot {
 
     fun verifySiteExceptionExists(siteUrl: String, shouldExist: Boolean) {
         exceptionsList.waitForExists(waitingTime)
-        assertItemContainingTextExists(itemContainingText(siteUrl), exists = shouldExist)
+        assertUIObjectExists(itemContainingText(siteUrl), exists = shouldExist)
     }
 
     class Transition {
