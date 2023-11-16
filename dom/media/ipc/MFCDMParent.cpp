@@ -525,7 +525,8 @@ static bool FactorySupports(ComPtr<IMFContentDecryptionModuleFactory>& aFactory,
 
   // PlayReady doesn't implement IsTypeSupported properly, so it requires us to
   // use another way to check the capabilities.
-  if (IsPlayReadyKeySystemAndSupported(aKeySystem)) {
+  if (IsPlayReadyKeySystemAndSupported(aKeySystem) &&
+      StaticPrefs::media_eme_playready_istypesupportedex()) {
     ComPtr<IMFMediaEngineClassFactory> spFactory;
     ComPtr<IMFExtendedDRMTypeSupport> spDrmTypeSupport;
     MFCDM_RETURN_BOOL_IF_FAILED(
