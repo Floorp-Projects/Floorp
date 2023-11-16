@@ -205,6 +205,8 @@
     <string name="browser_menu_library">Գրադարան</string>
     <!-- Browser menu toggle that requests a desktop site -->
     <string name="browser_menu_desktop_site">Դեսքթոփ տարբերակ</string>
+    <!-- Browser menu button that reopens a private tab as a regular tab -->
+    <string name="browser_menu_open_in_regular_tab">Բացել կանոնավոր ներդիրում</string>
     <!-- Browser menu toggle that adds a shortcut to the site on the device home screen. -->
     <string name="browser_menu_add_to_homescreen">Ավելացնել Տնային էկրանին</string>
     <!-- Browser menu toggle that installs a Progressive Web App shortcut to the site on the device home screen. -->
@@ -456,16 +458,20 @@
     <string name="preferences_https_only_title">HTTPS կերպ միայն</string>
 
     <!-- Preference for removing cookie/consent banners from sites automatically. See reduce_cookie_banner_summary for additional context. -->
-    <string name="preferences_cookie_banner_reduction">Թխուկների դրոշակի կրճատում</string>
+    <string name="preferences_cookie_banner_reduction" moz:RemovedIn="121" tools:ignore="UnusedResources">Թխուկների դրոշակի կրճատում</string>
+    <!-- Label for cookie banner section in quick settings panel. -->
+    <string name="cookie_banner_blocker">Թխուկների ազդերիզի արգելափակիչ</string>
+    <!-- Preference for removing cookie/consent banners from sites automatically in private mode. See reduce_cookie_banner_summary for additional context. -->
+    <string name="preferences_cookie_banner_reduction_private_mode">Թխուկների ազդերիզի արգելափակիչ մասնավոր զննարկումում</string>
     <!-- Preference for rejecting or removing as many cookie/consent banners as possible on sites. See reduce_cookie_banner_summary for additional context. -->
-    <string name="reduce_cookie_banner_option">Նվազեցնել թխուկների պաստառները</string>
+    <string name="reduce_cookie_banner_option" moz:RemovedIn="121" tools:ignore="UnusedResources">Նվազեցնել թխուկների պաստառները</string>
     <!-- Summary of cookie banner handling preference if the setting disabled is set to off -->
-    <string name="reduce_cookie_banner_option_off">Անջ.</string>
+    <string name="reduce_cookie_banner_option_off" moz:RemovedIn="121" tools:ignore="UnusedResources">Անջ.</string>
     <!-- Summary of cookie banner handling preference if the setting enabled is set to on -->
-    <string name="reduce_cookie_banner_option_on">Միաց.</string>
+    <string name="reduce_cookie_banner_option_on" moz:RemovedIn="121" tools:ignore="UnusedResources">Միաց.</string>
 
     <!-- Summary for the preference for rejecting all cookies whenever possible. The first parameter is the application name -->
-    <string name="reduce_cookie_banner_summary_1">%1$s-ն ինքնաբար փորձում է մերժել թխուկների հարցումները թխուկների ցուցանակների վրա:</string>
+    <string name="reduce_cookie_banner_summary_1" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s-ն ինքնաբար փորձում է մերժել թխուկների հարցումները թխուկների ցուցանակների վրա:</string>
     <!-- Text for indicating cookie banner handling is off this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_off_for_site">Անջատված է այս կայքի համար</string>
     <!-- Text for cancel button indicating that cookie banner reduction is not supported for the current site, this is shown as part of the cookie banner details view. -->
@@ -483,16 +489,24 @@
     <!-- Text for indicating cookie banner handling is currently not supported for this site, this is shown as part of the protections panel with the tracking protection toggle -->
     <string name="reduce_cookie_banner_unsupported_site">Կայքը ներկայումս չի աջակցվում</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
-    <string name="reduce_cookie_banner_details_panel_title_on_for_site">Միացնե՞լ Cookie Banner կրճատումը %1$s-ի համար:</string>
+    <string name="reduce_cookie_banner_details_panel_title_on_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">Միացնե՞լ Cookie Banner կրճատումը %1$s-ի համար:</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is on this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_on_for_site_1">Միացնե՞լ Թխուկների ազդերիզի արգելափակիչը %1$s-ում:</string>
     <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
-    <string name="reduce_cookie_banner_details_panel_title_off_for_site">Անջատե՞լ Cookie Banner կրճատումը %1$s-ի համար:</string>
+    <string name="reduce_cookie_banner_details_panel_title_off_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">Անջատե՞լ Cookie Banner կրճատումը %1$s-ի համար:</string>
+    <!-- Title text for a detail explanation indicating cookie banner handling is off this site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is a shortened URL of the current site-->
+    <string name="reduce_cookie_banner_details_panel_title_off_for_site_1">Անջատե՞լ Թխուկների ազդերիզի արգելափակիչը %1$s-ում:</string>
     <!-- Title text for a detail explanation indicating cookie banner reducer didn't work for the current site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name-->
     <string name="reduce_cookie_banner_details_panel_title_unsupported_site_request_2">%1$s-ը չի կարող ինքնաշխատ մերժել թխուկների հարցումներն այս կայքում: Դուք կարող եք հարցում ուղարկել այս կայքին ապագայում աջակցելու համար:</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_off_for_site">%1$s-ը կջնջի այս կայքի թխուկները և կթարմացնի էջը: Բոլոր թխուկները մաքրելը կարող է դուրս գրել Ձեզ կամ դատարկել գնումների զամբյուղները:</string>
+    <string name="reduce_cookie_banner_details_panel_description_off_for_site" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s-ը կջնջի այս կայքի թխուկները և կթարմացնի էջը: Բոլոր թխուկները մաքրելը կարող է դուրս գրել Ձեզ կամ դատարկել գնումների զամբյուղները:</string>
 
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is off for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_off_for_site_1">Անջատեք և %1$s-ը կմաքրի թխուկները և կրկին կբեռնի այս կայքը: Դա կարող է ձեզ դուրս գրել կամ դատարկել գնումների զամբյուղը:</string>
     <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
-    <string name="reduce_cookie_banner_details_panel_description_on_for_site_2">%1$s-ը փորձում է ինքնաբար մերժել թխուկների հարցումները աջակցվող կայքերում:</string>
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site_2" moz:RemovedIn="121" tools:ignore="UnusedResources">%1$s-ը փորձում է ինքնաբար մերժել թխուկների հարցումները աջակցվող կայքերում:</string>
+    <!-- Long text for a detail explanation indicating what will happen if cookie banner handling is on for a site, this is shown as part of the cookie banner panel in the toolbar. The first parameter is the application name -->
+    <string name="reduce_cookie_banner_details_panel_description_on_for_site_3">Միացրեք և %1$s-ը ինքնաբար կմերժի թխուկների բոլոր ազդերիզները այս կայքում:</string>
     <!-- Title text for the cookie banner re-engagement dialog. The first parameter is the application name. -->
     <string name="reduce_cookie_banner_dialog_title" moz:RemovedIn="121" tools:ignore="UnusedResources">Թույլատրե՞լ %1$s-ին մերժել թխուկների պաստառները:</string>
     <!-- Body text for the cookie banner re-engagement dialog use. The first parameter is the application name. -->

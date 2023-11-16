@@ -72,8 +72,10 @@
     <string name="mozac_feature_addons_permissions_devtools_description">ᱟᱢᱟᱜ ᱰᱟᱴᱟ ᱠᱷᱩᱞᱟᱹ ᱴᱮᱵᱽ ᱠᱚᱨᱮ ᱟᱹᱛᱩᱨ ᱞᱟᱹᱜᱤᱫ ᱛᱮ ᱵᱟᱲᱦᱟᱣᱟᱜ ᱴᱩᱞ ᱚᱥᱟᱨ ᱢᱮ</string>
     <!-- The version on of add-on. -->
     <string name="mozac_feature_addons_version">ᱟᱨᱩᱯᱷᱮᱨᱟᱣ</string>
+    <!-- The author of an add-on. -->
+    <string name="mozac_feature_addons_author">ᱚᱱᱚᱞᱤᱭᱟᱹ :</string>
     <!-- The authors of an add-on. -->
-    <string name="mozac_feature_addons_authors">ᱚᱱᱚᱞᱤᱭᱟᱹ ᱠᱚ</string>
+    <string name="mozac_feature_addons_authors" moz:removedIn="120" tools:ignore="UnusedResources">ᱚᱱᱚᱞᱤᱭᱟᱹ ᱠᱚ</string>
     <!-- The last date that the add-on was updated. -->
     <string name="mozac_feature_addons_last_updated">ᱢᱩᱪᱟᱹᱫ ᱦᱟᱹᱞᱤᱭᱟᱜ</string>
     <!-- The developer website (Homepage) of the add-on. -->
@@ -82,6 +84,8 @@
     <string name="mozac_feature_addons_learn_more">ᱪᱷᱟᱹᱲ ᱵᱟᱵᱚᱛ ᱡᱟᱹᱥᱛᱤ ᱵᱟᱰᱟᱭ ᱢᱮ</string>
     <!-- The rating of the add-on. -->
     <string name="mozac_feature_addons_rating">ᱫᱚᱨ ᱴᱷᱟᱹᱣᱠᱟᱹ</string>
+    <!-- A link that points to the detail page of the add-on. -->
+    <string name="mozac_feature_addons_more_info_link">ᱱᱚᱶᱟ ᱮᱰᱼᱚᱱ ᱵᱟᱵᱚᱛ ᱰᱷᱮᱨ ᱵᱟᱲᱟᱭ ᱢᱮ</string>
     <!-- The settings of the add-on. -->
     <string name="mozac_feature_addons_settings">ᱥᱟᱡᱟᱣ ᱠᱚ</string>
     <!-- Indicates the add-on is enabled. -->
@@ -114,10 +118,18 @@
     <string name="mozac_feature_addons_remove">ᱚᱪᱚᱜ ᱢᱮ</string>
     <!-- This is the title of a dialog that asks the users if they to install or not an add-on. %1$s is the add-on name. -->
     <string name="mozac_feature_addons_permissions_dialog_title">%1$s ᱥᱮᱞᱮᱫᱽ ᱟᱢ?</string>
+    <!-- This is the title of a dialog that asks the users to grant optional permissions. %1$s is the add-on name. -->
+    <string name="mozac_feature_addons_optional_permissions_dialog_title">%1$s ᱫᱚ ᱟᱨᱦᱚᱸ ᱦᱚᱠ ᱛᱟᱭ ᱫᱚᱨᱠᱟᱨ ᱾</string>
     <!-- This is the subtitle of a dialog that asks the users if they want to install or not an add-on, the subtitle lists the permissions that this add-on requires, the permissions will dynamically be listed after the ":". -->
     <string name="mozac_feature_addons_permissions_dialog_subtitle">ᱱᱚᱶᱟ ᱨᱮ ᱟᱢᱟᱜ ᱚᱱᱩᱢᱚᱛᱤ ᱫᱚᱨᱠᱟᱨ ᱟ:</string>
+    <!-- This is the subtitle of a dialog that asks the users to grant optional permissions, the subtitle lists the permissions that this add-on requests, the permissions will dynamically be listed after the ":". -->
+    <string name="mozac_feature_addons_optional_permissions_dialog_subtitle">ᱫᱚᱠᱟᱨ ᱛᱟᱭ :</string>
     <!-- This is a button to add (install) an add-on . -->
     <string name="mozac_feature_addons_permissions_dialog_add">ᱥᱮᱞᱮᱫᱽ ᱢᱮ</string>
+    <!-- This is a button to allow the optional permissions requested by an add-on . -->
+    <string name="mozac_feature_addons_permissions_dialog_allow">ᱦᱮᱥᱟᱨᱤᱭᱟᱹ</string>
+    <!-- This is a button to deny the optional permissions requested by an add-on . -->
+    <string name="mozac_feature_addons_permissions_dialog_deny">ᱢᱟᱱᱟ</string>
     <!-- This is a button to cancel the add-on installation . -->
     <string name="mozac_feature_addons_permissions_dialog_cancel">ᱵᱟᱹᱰᱨᱟᱹ</string>
     <!-- Accessibility content description to install add-on button. -->
@@ -132,6 +144,8 @@
     <string name="mozac_feature_addons_addons">ᱮᱰ-ᱟᱸᱱᱥ</string>
     <!-- Label for add-ons sub menu item for add-ons manager-->
     <string name="mozac_feature_addons_addons_manager">ᱮᱰᱼᱚᱱᱥ ᱵᱮᱵᱚᱥᱛᱷᱟ</string>
+    <!-- The title of the "crash" notification in the add-ons manager -->
+    <string name="mozac_feature_addons_manager_notification_title_text">ᱮᱰᱼᱚᱱ ᱫᱚ ᱛᱤᱱᱟᱹᱜ ᱜᱷᱟᱹᱬᱤᱡ ᱞᱟᱹᱜᱤᱫ ᱵᱚᱸᱫ ᱠᱟᱱᱟ</string>
     <!-- The label of the allow button, this will be shown to the user when an add-on needs new permissions, with the button the user will indicate that they want to accept the new permissions and update the add-on-->
     <string name="mozac_feature_addons_updater_notification_allow_button">ᱦᱮᱥᱟᱨᱤᱭᱟᱹ</string>
     <!-- The label of the deny button on a notification, this will be shown to the user when an add-on needs new permissions. Indicates the user denies the new permissions and prevents the add-on from be updated-->
@@ -226,4 +240,4 @@
     <string name="mozac_feature_addons_installed_dialog_description">ᱢᱮᱱᱩ ᱨᱮ ᱡᱷᱤᱡᱽ ᱢᱮ</string>
     <!-- Confirmation button text for the dialog when add-on installation is completed. -->
     <string name="mozac_feature_addons_installed_dialog_okay_button">ᱴᱷᱤᱠ, ᱵᱟᱰᱟᱭ ᱠᱮᱜᱼᱟᱹᱧ</string>
-</resources>
+    </resources>

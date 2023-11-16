@@ -1549,7 +1549,7 @@
     <!-- Text shown for settings option for sign with pairing -->
     <string name="sign_in_with_camera">Prihláste sa pomocou fotoaparátu</string>
     <!-- Text shown for settings option for sign with email -->
-    <string name="sign_in_with_email">Použiť radšej e-mailovú adresu</string>
+    <string name="sign_in_with_email">Použiť radšej e‑mailovú adresu</string>
     <!-- Text shown for settings option for create new account text.'Firefox' intentionally hardcoded here.-->
     <string name="sign_in_create_account_text"><![CDATA[Ešte nemáte účet? <u>Vytvorte si ho</u> a synchronizujte svoj Firefox medzi zariadeniami.]]></string>
     <!-- Text shown in confirmation dialog to sign out of account. The first parameter is the name of the app (e.g. Firefox Preview) -->
@@ -1833,7 +1833,7 @@
     <!-- Preference for saving and autofilling addresses -->
     <string name="preferences_addresses_save_and_autofill_addresses">Ukladať a automaticky dopĺňať adresy</string>
     <!-- Preference summary for saving and autofilling address data -->
-    <string name="preferences_addresses_save_and_autofill_addresses_summary">Zahŕňa informácie ako sú čísla, e-mailové adresy a dodacie adresy</string>
+    <string name="preferences_addresses_save_and_autofill_addresses_summary">Zahŕňa informácie ako sú čísla, e‑mailové adresy a dodacie adresy</string>
 
     <!-- Title of the "Add card" screen -->
     <string name="credit_cards_add_card">Pridať kartu</string>
@@ -1913,7 +1913,7 @@
     <!-- The header for the phone number of an address -->
     <string name="addresses_phone">Telefón</string>
     <!-- The header for the email of an address -->
-    <string name="addresses_email">E-mail</string>
+    <string name="addresses_email">E‑mail</string>
     <!-- The text for the "Save" button for saving an address -->
     <string name="addresses_save_button">Uložiť</string>
     <!-- The text for the "Cancel" button for cancelling adding, updating or deleting an address -->
@@ -2151,7 +2151,7 @@
     <string name="other_default_search_engine_suggestion_header">Vyhľadávanie %s</string>
 
     <!-- Default browser experiment -->
-    <string name="default_browser_experiment_card_text">Nastavte si automatické otváranie webových stránok, e-mailov a správ vo Firefoxe.</string>
+    <string name="default_browser_experiment_card_text">Nastavte si automatické otváranie webových stránok, e‑mailov a správ vo Firefoxe.</string>
 
     <!-- Content description for close button in collection placeholder. -->
     <string name="remove_home_collection_placeholder_content_description">Odstrániť</string>
