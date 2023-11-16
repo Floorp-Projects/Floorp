@@ -4,7 +4,7 @@
 
 let knownConfigs = new Map();
 
-export class OHTTPConfigManager {
+export class HPKEConfigManager {
   static async get(aURL, aOptions = {}) {
     try {
       let config = await this.#getInternal(aURL, aOptions);
@@ -32,7 +32,7 @@ export class OHTTPConfigManager {
     let resp = await fetch(aURL);
     if (!resp?.ok) {
       throw new Error(
-        `Fetching OHTTP config from ${aURL} failed with error ${resp.status}`
+        `Fetching HPKE config from ${aURL} failed with error ${resp.status}`
       );
     }
     let config = await resp.blob().then(b => b.arrayBuffer());
