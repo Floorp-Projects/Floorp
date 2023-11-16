@@ -475,7 +475,7 @@ StyleGradient::ColorInterpolationMethod() const {
 
 template <typename Integer>
 inline StyleGenericGridLine<Integer>::StyleGenericGridLine()
-    : ident(do_AddRef(static_cast<nsAtom*>(nsGkAtoms::_empty))),
+    : ident{StyleAtom(do_AddRef(static_cast<nsAtom*>(nsGkAtoms::_empty)))},
       line_num(0),
       is_span(false) {}
 
