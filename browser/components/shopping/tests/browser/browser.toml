@@ -1,5 +1,15 @@
 [DEFAULT]
-support-files = ["head.js"]
+support-files = [
+  "head.js",
+  "!/toolkit/components/shopping/test/mockapis/server_helper.js",
+  "!/toolkit/components/shopping/test/mockapis/analysis_status.sjs",
+  "!/toolkit/components/shopping/test/mockapis/analysis.sjs",
+  "!/toolkit/components/shopping/test/mockapis/analyze.sjs",
+  "!/toolkit/components/shopping/test/mockapis/attribution.sjs",
+  "!/toolkit/components/shopping/test/mockapis/recommendations.sjs",
+  "!/toolkit/components/shopping/test/mockapis/reporting.sjs",
+]
+
 prefs = [
   "browser.shopping.experience2023.enabled=true",
   "browser.shopping.experience2023.optedIn=1",
@@ -28,6 +38,8 @@ prefs = [
 ["browser_page_not_supported.js"]
 
 ["browser_private_mode.js"]
+
+["browser_recommended_ad_test.js"]
 
 ["browser_review_highlights.js"]
 
