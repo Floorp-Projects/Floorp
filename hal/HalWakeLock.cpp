@@ -169,10 +169,12 @@ void EnableWakeLockNotifications() { sActiveListeners++; }
 
 void DisableWakeLockNotifications() { sActiveListeners--; }
 
-void ModifyWakeLock(const nsAString& aTopic, hal::WakeLockControl aLockAdjust,
-                    hal::WakeLockControl aHiddenAdjust, uint64_t aProcessID) {
+void ModifyWakeLockWithChildID(const nsAString& aTopic,
+                               hal::WakeLockControl aLockAdjust,
+                               hal::WakeLockControl aHiddenAdjust,
+                               uint64_t aChildID) {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(aProcessID != CONTENT_PROCESS_ID_UNKNOWN);
+  MOZ_ASSERT(aChildID != CONTENT_PROCESS_ID_UNKNOWN);
 
   if (sIsShuttingDown) {
     return;
@@ -185,7 +187,7 @@ void ModifyWakeLock(const nsAString& aTopic, hal::WakeLockControl aLockAdjust,
         if (!entry) {
           entry.Insert(MakeUnique<ProcessLockTable>());
         } else {
-          Unused << entry.Data()->Get(aProcessID, &processCount);
+          Unused << entry.Data()->Get(aChildID, &processCount);
           CountWakeLocks(entry->get(), &totalCount);
         }
         return entry->get();
@@ -217,9 +219,9 @@ void ModifyWakeLock(const nsAString& aTopic, hal::WakeLockControl aLockAdjust,
   totalCount.numHidden += aHiddenAdjust;
 
   if (processCount.numLocks) {
-    table->InsertOrUpdate(aProcessID, processCount);
+    table->InsertOrUpdate(aChildID, processCount);
   } else {
-    table->Remove(aProcessID);
+    table->Remove(aChildID);
   }
   if (!totalCount.numLocks) {
     sLockTable->Remove(aTopic);
@@ -233,6 +235,12 @@ void ModifyWakeLock(const nsAString& aTopic, hal::WakeLockControl aLockAdjust,
     hal::GetWakeLockInfo(aTopic, &info);
     NotifyWakeLockChange(info);
   }
+}
+
+void ModifyWakeLock(const nsAString& aTopic, hal::WakeLockControl aLockAdjust,
+                    hal::WakeLockControl aHiddenAdjust) {
+  ModifyWakeLockWithChildID(aTopic, aLockAdjust, aHiddenAdjust,
+                            CONTENT_PROCESS_ID_MAIN);
 }
 
 void GetWakeLockInfo(const nsAString& aTopic,

@@ -3,6 +3,8 @@
 
 //! Functions for polynomial interpolation and evaluation
 
+#[cfg(feature = "prio2")]
+use crate::fft::{discrete_fourier_transform, discrete_fourier_transform_inv_finish};
 use crate::field::FftFriendlyFieldElement;
 
 use std::convert::TryFrom;
@@ -147,9 +149,8 @@ fn fft_interpolate_raw<F: FftFriendlyFieldElement>(
     );
     if invert {
         let n_inverse = F::from(F::Integer::try_from(n_points).unwrap()).inv();
-        #[allow(clippy::needless_range_loop)]
-        for i in 0..n_points {
-            out[i] *= n_inverse;
+        for out_val in out[0..n_points].iter_mut() {
+            *out_val *= n_inverse;
         }
     }
 }
@@ -204,14 +205,15 @@ pub fn poly_mul<F: FftFriendlyFieldElement>(p: &[F], q: &[F]) -> Vec<F> {
 }
 
 #[cfg(feature = "prio2")]
+#[inline]
 pub fn poly_interpret_eval<F: FftFriendlyFieldElement>(
     points: &[F],
-    roots: &[F],
     eval_at: F,
     tmp_coeffs: &mut [F],
-    fft_memory: &mut PolyFFTTempMemory<F>,
 ) -> F {
-    poly_fft(tmp_coeffs, points, roots, points.len(), true, fft_memory);
+    let size_inv = F::from(F::Integer::try_from(points.len()).unwrap()).inv();
+    discrete_fourier_transform(tmp_coeffs, points, points.len()).unwrap();
+    discrete_fourier_transform_inv_finish(tmp_coeffs, points.len(), size_inv);
     poly_eval(&tmp_coeffs[..points.len()], eval_at)
 }
 
@@ -255,7 +257,7 @@ mod tests {
 
     #[test]
     fn test_eval() {
-        let mut poly = vec![FieldPrio2::from(0); 4];
+        let mut poly = [FieldPrio2::from(0); 4];
         poly[0] = 2.into();
         poly[1] = 1.into();
         poly[2] = 5.into();
@@ -370,13 +372,12 @@ mod tests {
             &mut mem.fft_memory,
         );
 
-        #[allow(clippy::needless_range_loop)]
-        for i in 0..count {
+        for (poly_coeff, root) in poly[..count].iter().zip(mem.roots_2n[..count].iter()) {
             let mut should_be = FieldPrio2::from(0);
-            for j in 0..count {
-                should_be = mem.roots_2n[i].pow(u32::try_from(j).unwrap()) * points[j] + should_be;
+            for (j, point_j) in points[..count].iter().enumerate() {
+                should_be = root.pow(u32::try_from(j).unwrap()) * *point_j + should_be;
             }
-            assert_eq!(should_be, poly[i]);
+            assert_eq!(should_be, *poly_coeff);
         }
     }
 }

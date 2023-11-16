@@ -4727,7 +4727,13 @@ nsresult nsIFrame::MoveCaretToEventPoint(nsPresContext* aPresContext,
 
   if (aMouseEvent->mButton == MouseButton::eSecondary &&
       !MovingCaretToEventPointAllowedIfSecondaryButtonEvent(
-          *frameselection, *aMouseEvent, *offsets.content)) {
+          *frameselection, *aMouseEvent, *offsets.content,
+          // When we collapse selection in nsFrameSelection::TakeFocus,
+          // we always collapse selection to the start offset.  Therefore,
+          // we can ignore the end offset here.  E.g., when an <img> is clicked,
+          // set the primary offset to after it, but the the secondary offset
+          // may be before it, see OffsetsForSingleFrame for the detail.
+          offsets.StartOffset())) {
     return NS_OK;
   }
 
@@ -4865,30 +4871,40 @@ nsresult nsIFrame::MoveCaretToEventPoint(nsPresContext* aPresContext,
 bool nsIFrame::MovingCaretToEventPointAllowedIfSecondaryButtonEvent(
     const nsFrameSelection& aFrameSelection,
     WidgetMouseEvent& aSecondaryButtonEvent,
-    const nsIContent& aContentAtEventPoint) const {
+    const nsIContent& aContentAtEventPoint, int32_t aOffsetAtEventPoint) const {
   MOZ_ASSERT(aSecondaryButtonEvent.mButton == MouseButton::eSecondary);
 
-  if (StaticPrefs::
-          ui_mouse_right_click_collapse_selection_stop_if_non_collapsed_selection()) {
-    if (Selection* selection =
-            aFrameSelection.GetSelection(SelectionType::eNormal)) {
-      if (selection->IsCollapsed()) {
-        // If selection is collapsed, it may be allowed to move caret, let's
-        // check other things.
-      } else if (nsIContent* ancestorLimiter =
-                     selection->GetAncestorLimiter()) {
-        // If currently selection is limited in an editing host, we should not
-        // collapse selection if the clicked point is in the ancestor limiter.
-        // Otherwise, this mouse click moves focus from the editing host to
-        // different one or blur the editing host.  In this case, we need to
-        // update selection because keeping current selection in the editing
-        // host looks like it's not blurred.
+  if (NS_WARN_IF(aOffsetAtEventPoint < 0)) {
+    return false;
+  }
+
+  Selection* selection = aFrameSelection.GetSelection(SelectionType::eNormal);
+  if (selection && !selection->IsCollapsed()) {
+    // If right click in a selection range, we should not collapse selection.
+    if (nsContentUtils::IsPointInSelection(
+            *selection, aContentAtEventPoint,
+            static_cast<uint32_t>(aOffsetAtEventPoint))) {
+      return false;
+    }
+
+    if (StaticPrefs::
+            ui_mouse_right_click_collapse_selection_stop_if_non_collapsed_selection()) {
+      // If currently selection is limited in an editing host, we should not
+      // collapse selection if the clicked point is in the ancestor limiter.
+      // Otherwise, this mouse click moves focus from the editing host to
+      // different one or blur the editing host.  In this case, we need to
+      // update selection because keeping current selection in the editing
+      // host looks like it's not blurred.
+      // FIXME: If the active editing host is the document element, editor
+      // does not set ancestor limiter properly.  Fix it in the editor side.
+      if (nsIContent* ancestorLimiter = selection->GetAncestorLimiter()) {
+        MOZ_ASSERT(ancestorLimiter->IsEditable());
         return !aContentAtEventPoint.IsInclusiveDescendantOf(ancestorLimiter);
       }
       // If currently selection is not limited in an editing host, we should
-      // collapse selection only when this click moves focus to an editing host
-      // because we need to update selection in this case.
-      else if (!aContentAtEventPoint.IsEditable()) {
+      // collapse selection only when this click moves focus to an editing
+      // host because we need to update selection in this case.
+      if (!aContentAtEventPoint.IsEditable()) {
         return false;
       }
     }

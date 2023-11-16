@@ -74,8 +74,7 @@ parent:
 
     async ModifyWakeLock(nsString aTopic,
                          WakeLockControl aLockAdjust,
-                         WakeLockControl aHiddenAdjust,
-                         uint64_t aProcessID);
+                         WakeLockControl aHiddenAdjust);
     async EnableWakeLockNotifications();
     async DisableWakeLockNotifications();
     sync GetWakeLockInfo(nsString aTopic)

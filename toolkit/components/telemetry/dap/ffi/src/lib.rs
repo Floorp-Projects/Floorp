@@ -53,11 +53,13 @@ pub fn new_prio_u8(num_aggregators: u8, bits: u32) -> Result<Prio3Sum, VdafError
 }
 
 pub fn new_prio_vecu8(num_aggregators: u8, len: usize) -> Result<Prio3SumVec, VdafError> {
-    Prio3::new(num_aggregators, SumVec::new(8, len)?)
+    let chunk_length = prio::vdaf::prio3::optimal_chunk_length(8 * len);
+    Prio3::new(num_aggregators, SumVec::new(8, len, chunk_length)?)
 }
 
 pub fn new_prio_vecu16(num_aggregators: u8, len: usize) -> Result<Prio3SumVec, VdafError> {
-    Prio3::new(num_aggregators, SumVec::new(16, len)?)
+    let chunk_length = prio::vdaf::prio3::optimal_chunk_length(16 * len);
+    Prio3::new(num_aggregators, SumVec::new(16, len, chunk_length)?)
 }
 
 enum Role {
@@ -161,7 +163,7 @@ impl Shardable for ThinVec<u16> {
 /// Pre-fill the info part of the HPKE sealing with the constants from the standard.
 fn make_base_info() -> Vec<u8> {
     let mut info = Vec::<u8>::new();
-    const START: &[u8] = "dap-04 input share".as_bytes();
+    const START: &[u8] = "dap-07 input share".as_bytes();
     info.extend(START);
     const FIXED: u8 = 1;
     info.push(FIXED);
@@ -244,7 +246,8 @@ fn get_dap_report_internal<T: Shardable>(
     Ok(Report {
         metadata,
         public_share: encoded_public_share,
-        encrypted_input_shares: vec![leader_payload, helper_payload],
+        leader_encrypted_input_share: leader_payload,
+        helper_encrypted_input_share: helper_payload,
     })
 }
 

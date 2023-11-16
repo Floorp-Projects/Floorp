@@ -38,6 +38,8 @@
     'ecl/ecp_secp384r1.c',
     'ecl/ecp_secp521r1.c',
     'verified/Hacl_P256.c',
+    'verified/Hacl_P384.c',
+    'verified/Hacl_P521.c',
     'fipsfreebl.c',
     'blinit.c',
     'freeblver.c',

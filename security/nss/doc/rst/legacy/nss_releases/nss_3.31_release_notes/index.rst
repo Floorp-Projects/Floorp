@@ -10,7 +10,7 @@ NSS 3.31 release notes
 
    The Network Security Services (NSS) team has released NSS 3.31, which is a minor release.
 
-.. _distribution_information:
+
 
 `Distribution information <#distribution_information>`__
 --------------------------------------------------------

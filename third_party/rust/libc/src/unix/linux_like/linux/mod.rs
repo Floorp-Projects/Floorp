@@ -14,6 +14,7 @@ pub type nl_item = ::c_int;
 pub type idtype_t = ::c_uint;
 pub type loff_t = ::c_longlong;
 pub type pthread_key_t = ::c_uint;
+pub type pthread_once_t = ::c_int;
 pub type pthread_spinlock_t = ::c_int;
 
 pub type __u8 = ::c_uchar;
@@ -791,6 +792,23 @@ s_no_extra_traits! {
         pub ifr_ifru: ::sockaddr,
     }
 
+    #[cfg(libc_union)]
+    pub union __c_anonymous_ifc_ifcu {
+        pub ifcu_buf: *mut ::c_char,
+        pub ifcu_req: *mut ::ifreq,
+    }
+
+    /*  Structure used in SIOCGIFCONF request.  Used to retrieve interface
+    configuration for machine (useful for programs which must know all
+    networks accessible).  */
+    pub struct ifconf {
+        pub ifc_len: ::c_int,       /* Size of buffer.  */
+        #[cfg(libc_union)]
+        pub ifc_ifcu: __c_anonymous_ifc_ifcu,
+        #[cfg(not(libc_union))]
+        pub ifc_ifcu: *mut ::ifreq,
+    }
+
     pub struct hwtstamp_config {
         pub flags: ::c_int,
         pub tx_type: ::c_int,
@@ -1228,6 +1246,23 @@ cfg_if! {
             }
         }
 
+        #[cfg(libc_union)]
+        impl ::fmt::Debug for __c_anonymous_ifc_ifcu {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                f.debug_struct("ifr_ifru")
+                    .field("ifcu_buf", unsafe { &self.ifcu_buf })
+                    .field("ifcu_req", unsafe { &self.ifcu_req })
+                    .finish()
+            }
+        }
+        impl ::fmt::Debug for ifconf {
+            fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
+                f.debug_struct("ifconf")
+                    .field("ifc_len", &self.ifc_len)
+                    .field("ifc_ifcu", &self.ifc_ifcu)
+                    .finish()
+            }
+        }
         impl ::fmt::Debug for hwtstamp_config {
             fn fmt(&self, f: &mut ::fmt::Formatter) -> ::fmt::Result {
                 f.debug_struct("hwtstamp_config")
@@ -1829,6 +1864,8 @@ pub const IFLA_INFO_SLAVE_DATA: ::c_ushort = 5;
 // linux/if_tun.h
 pub const IFF_TUN: ::c_int = 0x0001;
 pub const IFF_TAP: ::c_int = 0x0002;
+pub const IFF_NAPI: ::c_int = 0x0010;
+pub const IFF_NAPI_FRAGS: ::c_int = 0x0020;
 pub const IFF_NO_PI: ::c_int = 0x1000;
 // Read queue size
 pub const TUN_READQ_SIZE: ::c_short = 500;
@@ -1846,6 +1883,18 @@ pub const IFF_DETACH_QUEUE: ::c_int = 0x0400;
 // read-only flag
 pub const IFF_PERSIST: ::c_int = 0x0800;
 pub const IFF_NOFILTER: ::c_int = 0x1000;
+// Socket options
+pub const TUN_TX_TIMESTAMP: ::c_int = 1;
+// Features for GSO (TUNSETOFFLOAD)
+pub const TUN_F_CSUM: ::c_ushort = 0x01; /* You can hand me unchecksummed packets. */
+pub const TUN_F_TSO4: ::c_ushort = 0x02; /* I can handle TSO for IPv4 packets */
+pub const TUN_F_TSO6: ::c_ushort = 0x04; /* I can handle TSO for IPv6 packets */
+pub const TUN_F_TSO_ECN: ::c_ushort = 0x08; /* I can handle TSO with ECN bits. */
+pub const TUN_F_UFO: ::c_ushort = 0x10; /* I can handle UFO packets */
+// Protocol info prepended to the packets (when IFF_NO_PI is not set)
+pub const TUN_PKT_STRIP: ::c_int = 0x0001;
+// Accept all multicast packets
+pub const TUN_FLT_ALLMULTI: ::c_int = 0x0001;
 
 // Since Linux 3.1
 pub const SEEK_DATA: ::c_int = 3;
@@ -1903,6 +1952,7 @@ align_const! {
         size: [0; __SIZEOF_PTHREAD_RWLOCK_T],
     };
 }
+pub const PTHREAD_ONCE_INIT: pthread_once_t = 0;
 pub const PTHREAD_MUTEX_NORMAL: ::c_int = 0;
 pub const PTHREAD_MUTEX_RECURSIVE: ::c_int = 1;
 pub const PTHREAD_MUTEX_ERRORCHECK: ::c_int = 2;
@@ -2766,6 +2816,7 @@ pub const SIOCGIFMEM: ::c_ulong = 0x0000891F;
 pub const SIOCSIFMEM: ::c_ulong = 0x00008920;
 pub const SIOCGIFMTU: ::c_ulong = 0x00008921;
 pub const SIOCSIFMTU: ::c_ulong = 0x00008922;
+pub const SIOCSIFNAME: ::c_ulong = 0x00008923;
 pub const SIOCSIFHWADDR: ::c_ulong = 0x00008924;
 pub const SIOCGIFENCAP: ::c_ulong = 0x00008925;
 pub const SIOCSIFENCAP: ::c_ulong = 0x00008926;
@@ -3193,6 +3244,8 @@ pub const ALG_SET_IV: ::c_int = 2;
 pub const ALG_SET_OP: ::c_int = 3;
 pub const ALG_SET_AEAD_ASSOCLEN: ::c_int = 4;
 pub const ALG_SET_AEAD_AUTHSIZE: ::c_int = 5;
+pub const ALG_SET_DRBG_ENTROPY: ::c_int = 6;
+pub const ALG_SET_KEY_BY_KEY_SERIAL: ::c_int = 7;
 
 pub const ALG_OP_DECRYPT: ::c_int = 0;
 pub const ALG_OP_ENCRYPT: ::c_int = 1;
@@ -3549,20 +3602,33 @@ pub const UINPUT_MAX_NAME_SIZE: usize = 80;
 // uapi/linux/fanotify.h
 pub const FAN_ACCESS: u64 = 0x0000_0001;
 pub const FAN_MODIFY: u64 = 0x0000_0002;
+pub const FAN_ATTRIB: u64 = 0x0000_0004;
 pub const FAN_CLOSE_WRITE: u64 = 0x0000_0008;
 pub const FAN_CLOSE_NOWRITE: u64 = 0x0000_0010;
 pub const FAN_OPEN: u64 = 0x0000_0020;
+pub const FAN_MOVED_FROM: u64 = 0x0000_0040;
+pub const FAN_MOVED_TO: u64 = 0x0000_0080;
+pub const FAN_CREATE: u64 = 0x0000_0100;
+pub const FAN_DELETE: u64 = 0x0000_0200;
+pub const FAN_DELETE_SELF: u64 = 0x0000_0400;
+pub const FAN_MOVE_SELF: u64 = 0x0000_0800;
+pub const FAN_OPEN_EXEC: u64 = 0x0000_1000;
 
 pub const FAN_Q_OVERFLOW: u64 = 0x0000_4000;
+pub const FAN_FS_ERROR: u64 = 0x0000_8000;
 
 pub const FAN_OPEN_PERM: u64 = 0x0001_0000;
 pub const FAN_ACCESS_PERM: u64 = 0x0002_0000;
-
-pub const FAN_ONDIR: u64 = 0x4000_0000;
+pub const FAN_OPEN_EXEC_PERM: u64 = 0x0004_0000;
 
 pub const FAN_EVENT_ON_CHILD: u64 = 0x0800_0000;
 
+pub const FAN_RENAME: u64 = 0x1000_0000;
+
+pub const FAN_ONDIR: u64 = 0x4000_0000;
+
 pub const FAN_CLOSE: u64 = FAN_CLOSE_WRITE | FAN_CLOSE_NOWRITE;
+pub const FAN_MOVE: u64 = FAN_MOVED_FROM | FAN_MOVED_TO;
 
 pub const FAN_CLOEXEC: ::c_uint = 0x0000_0001;
 pub const FAN_NONBLOCK: ::c_uint = 0x0000_0002;
@@ -3573,6 +3639,18 @@ pub const FAN_CLASS_PRE_CONTENT: ::c_uint = 0x0000_0008;
 
 pub const FAN_UNLIMITED_QUEUE: ::c_uint = 0x0000_0010;
 pub const FAN_UNLIMITED_MARKS: ::c_uint = 0x0000_0020;
+pub const FAN_ENABLE_AUDIT: ::c_uint = 0x0000_0040;
+
+pub const FAN_REPORT_PIDFD: ::c_uint = 0x0000_0080;
+pub const FAN_REPORT_TID: ::c_uint = 0x0000_0100;
+pub const FAN_REPORT_FID: ::c_uint = 0x0000_0200;
+pub const FAN_REPORT_DIR_FID: ::c_uint = 0x0000_0400;
+pub const FAN_REPORT_NAME: ::c_uint = 0x0000_0800;
+pub const FAN_REPORT_TARGET_FID: ::c_uint = 0x0000_1000;
+
+pub const FAN_REPORT_DFID_NAME: ::c_uint = FAN_REPORT_DIR_FID | FAN_REPORT_NAME;
+pub const FAN_REPORT_DFID_NAME_TARGET: ::c_uint =
+    FAN_REPORT_DFID_NAME | FAN_REPORT_FID | FAN_REPORT_TARGET_FID;
 
 pub const FAN_MARK_ADD: ::c_uint = 0x0000_0001;
 pub const FAN_MARK_REMOVE: ::c_uint = 0x0000_0002;
@@ -3581,13 +3659,37 @@ pub const FAN_MARK_ONLYDIR: ::c_uint = 0x0000_0008;
 pub const FAN_MARK_IGNORED_MASK: ::c_uint = 0x0000_0020;
 pub const FAN_MARK_IGNORED_SURV_MODIFY: ::c_uint = 0x0000_0040;
 pub const FAN_MARK_FLUSH: ::c_uint = 0x0000_0080;
+pub const FAN_MARK_EVICTABLE: ::c_uint = 0x0000_0200;
+pub const FAN_MARK_IGNORE: ::c_uint = 0x0000_0100;
+
+pub const FAN_MARK_INODE: ::c_uint = 0x0000_0000;
+pub const FAN_MARK_MOUNT: ::c_uint = 0x0000_0010;
+pub const FAN_MARK_FILESYSTEM: ::c_uint = 0x0000_0100;
+
+pub const FAN_MARK_IGNORE_SURV: ::c_uint = FAN_MARK_IGNORE | FAN_MARK_IGNORED_SURV_MODIFY;
 
 pub const FANOTIFY_METADATA_VERSION: u8 = 3;
 
+pub const FAN_EVENT_INFO_TYPE_FID: u8 = 1;
+pub const FAN_EVENT_INFO_TYPE_DFID_NAME: u8 = 2;
+pub const FAN_EVENT_INFO_TYPE_DFID: u8 = 3;
+pub const FAN_EVENT_INFO_TYPE_PIDFD: u8 = 4;
+pub const FAN_EVENT_INFO_TYPE_ERROR: u8 = 5;
+
+pub const FAN_EVENT_INFO_TYPE_OLD_DFID_NAME: u8 = 10;
+pub const FAN_EVENT_INFO_TYPE_NEW_DFID_NAME: u8 = 12;
+
+pub const FAN_RESPONSE_INFO_NONE: u8 = 0;
+pub const FAN_RESPONSE_INFO_AUDIT_RULE: u8 = 1;
+
 pub const FAN_ALLOW: u32 = 0x01;
 pub const FAN_DENY: u32 = 0x02;
+pub const FAN_AUDIT: u32 = 0x10;
+pub const FAN_INFO: u32 = 0x20;
 
 pub const FAN_NOFD: ::c_int = -1;
+pub const FAN_NOPIDFD: ::c_int = FAN_NOFD;
+pub const FAN_EPIDFD: ::c_int = -2;
 
 pub const FUTEX_WAIT: ::c_int = 0;
 pub const FUTEX_WAKE: ::c_int = 1;
@@ -4581,6 +4683,7 @@ extern "C" {
         attr: *const ::pthread_attr_t,
         guardsize: *mut ::size_t,
     ) -> ::c_int;
+    pub fn pthread_attr_setguardsize(attr: *mut ::pthread_attr_t, guardsize: ::size_t) -> ::c_int;
     pub fn sethostname(name: *const ::c_char, len: ::size_t) -> ::c_int;
     pub fn sched_get_priority_min(policy: ::c_int) -> ::c_int;
     pub fn pthread_condattr_getpshared(
@@ -4769,7 +4872,7 @@ extern "C" {
         newfd: ::c_int,
     ) -> ::c_int;
     pub fn fread_unlocked(
-        ptr: *mut ::c_void,
+        buf: *mut ::c_void,
         size: ::size_t,
         nobj: ::size_t,
         stream: *mut ::FILE,
@@ -4846,6 +4949,8 @@ extern "C" {
         longopts: *const option,
         longindex: *mut ::c_int,
     ) -> ::c_int;
+
+    pub fn pthread_once(control: *mut pthread_once_t, routine: extern "C" fn()) -> ::c_int;
 
     pub fn copy_file_range(
         fd_in: ::c_int,

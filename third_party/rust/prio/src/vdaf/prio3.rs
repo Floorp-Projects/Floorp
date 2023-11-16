@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MPL-2.0
 
-//! Implementation of the Prio3 VDAF [[draft-irtf-cfrg-vdaf-05]].
+//! Implementation of the Prio3 VDAF [[draft-irtf-cfrg-vdaf-07]].
 //!
 //! **WARNING:** This code has not undergone significant security analysis. Use at your own risk.
 //!
@@ -9,7 +9,7 @@
 //! 2019 [[BBCG+19]], that lead to substantial improvements in terms of run time and communication
 //! cost. The security of the construction was analyzed in [[DPRS23]].
 //!
-//! Prio3 is a transformation of a Fully Linear Proof (FLP) system [[draft-irtf-cfrg-vdaf-05]] into
+//! Prio3 is a transformation of a Fully Linear Proof (FLP) system [[draft-irtf-cfrg-vdaf-07]] into
 //! a VDAF. The base type, [`Prio3`], supports a wide variety of aggregation functions, some of
 //! which are instantiated here:
 //!
@@ -20,30 +20,36 @@
 //!
 //! Additional types can be constructed from [`Prio3`] as needed.
 //!
-//! (*) denotes that the type is specified in [[draft-irtf-cfrg-vdaf-05]].
+//! (*) denotes that the type is specified in [[draft-irtf-cfrg-vdaf-07]].
 //!
 //! [BBCG+19]: https://ia.cr/2019/188
 //! [CGB17]: https://crypto.stanford.edu/prio/
 //! [DPRS23]: https://ia.cr/2023/130
-//! [draft-irtf-cfrg-vdaf-05]: https://datatracker.ietf.org/doc/draft-irtf-cfrg-vdaf/05/
+//! [draft-irtf-cfrg-vdaf-07]: https://datatracker.ietf.org/doc/draft-irtf-cfrg-vdaf/07/
 
-use super::prg::PrgSha3;
+use super::xof::XofShake128;
+#[cfg(feature = "experimental")]
+use super::AggregatorWithNoise;
 use crate::codec::{CodecError, Decode, Encode, ParameterizedDecode};
+#[cfg(feature = "experimental")]
+use crate::dp::DifferentialPrivacyStrategy;
 use crate::field::{decode_fieldvec, FftFriendlyFieldElement, FieldElement};
 use crate::field::{Field128, Field64};
 #[cfg(feature = "multithreaded")]
 use crate::flp::gadgets::ParallelSumMultithreaded;
 #[cfg(feature = "experimental")]
 use crate::flp::gadgets::PolyEval;
-use crate::flp::gadgets::{BlindPolyEval, ParallelSum};
+use crate::flp::gadgets::{Mul, ParallelSum};
 #[cfg(feature = "experimental")]
 use crate::flp::types::fixedpoint_l2::{
     compatible_float::CompatibleFloat, FixedPointBoundedL2VecSum,
 };
 use crate::flp::types::{Average, Count, Histogram, Sum, SumVec};
 use crate::flp::Type;
+#[cfg(feature = "experimental")]
+use crate::flp::TypeWithNoise;
 use crate::prng::Prng;
-use crate::vdaf::prg::{Prg, Seed};
+use crate::vdaf::xof::{IntoFieldVec, Seed, Xof};
 use crate::vdaf::{
     Aggregatable, AggregateShare, Aggregator, Client, Collector, OutputShare, PrepareTransition,
     Share, ShareDecodingParameter, Vdaf, VdafError,
@@ -55,6 +61,7 @@ use std::fmt::Debug;
 use std::io::Cursor;
 use std::iter::{self, IntoIterator};
 use std::marker::PhantomData;
+use subtle::{Choice, ConstantTimeEq};
 
 const DST_MEASUREMENT_SHARE: u16 = 1;
 const DST_PROOF_SHARE: u16 = 2;
@@ -65,7 +72,7 @@ const DST_JOINT_RAND_SEED: u16 = 6;
 const DST_JOINT_RAND_PART: u16 = 7;
 
 /// The count type. Each measurement is an integer in `[0,2)` and the aggregate result is the sum.
-pub type Prio3Count = Prio3<Count<Field64>, PrgSha3, 16>;
+pub type Prio3Count = Prio3<Count<Field64>, XofShake128, 16>;
 
 impl Prio3Count {
     /// Construct an instance of Prio3Count with the given number of aggregators.
@@ -77,27 +84,28 @@ impl Prio3Count {
 /// The count-vector type. Each measurement is a vector of integers in `[0,2^bits)` and the
 /// aggregate is the element-wise sum.
 pub type Prio3SumVec =
-    Prio3<SumVec<Field128, ParallelSum<Field128, BlindPolyEval<Field128>>>, PrgSha3, 16>;
+    Prio3<SumVec<Field128, ParallelSum<Field128, Mul<Field128>>>, XofShake128, 16>;
 
 impl Prio3SumVec {
     /// Construct an instance of Prio3SumVec with the given number of aggregators. `bits` defines
     /// the bit width of each summand of the measurement; `len` defines the length of the
     /// measurement vector.
-    pub fn new_sum_vec(num_aggregators: u8, bits: usize, len: usize) -> Result<Self, VdafError> {
-        Prio3::new(num_aggregators, SumVec::new(bits, len)?)
+    pub fn new_sum_vec(
+        num_aggregators: u8,
+        bits: usize,
+        len: usize,
+        chunk_length: usize,
+    ) -> Result<Self, VdafError> {
+        Prio3::new(num_aggregators, SumVec::new(bits, len, chunk_length)?)
     }
 }
 
 /// Like [`Prio3SumVec`] except this type uses multithreading to improve sharding and preparation
-/// time. Note that the improvement is only noticeable for very large input lengths, e.g., 201 and
-/// up. (Your system's mileage may vary.)
+/// time. Note that the improvement is only noticeable for very large input lengths.
 #[cfg(feature = "multithreaded")]
 #[cfg_attr(docsrs, doc(cfg(feature = "multithreaded")))]
-pub type Prio3SumVecMultithreaded = Prio3<
-    SumVec<Field128, ParallelSumMultithreaded<Field128, BlindPolyEval<Field128>>>,
-    PrgSha3,
-    16,
->;
+pub type Prio3SumVecMultithreaded =
+    Prio3<SumVec<Field128, ParallelSumMultithreaded<Field128, Mul<Field128>>>, XofShake128, 16>;
 
 #[cfg(feature = "multithreaded")]
 impl Prio3SumVecMultithreaded {
@@ -108,14 +116,15 @@ impl Prio3SumVecMultithreaded {
         num_aggregators: u8,
         bits: usize,
         len: usize,
+        chunk_length: usize,
     ) -> Result<Self, VdafError> {
-        Prio3::new(num_aggregators, SumVec::new(bits, len)?)
+        Prio3::new(num_aggregators, SumVec::new(bits, len, chunk_length)?)
     }
 }
 
 /// The sum type. Each measurement is an integer in `[0,2^bits)` for some `0 < bits < 64` and the
 /// aggregate is the sum.
-pub type Prio3Sum = Prio3<Sum<Field128>, PrgSha3, 16>;
+pub type Prio3Sum = Prio3<Sum<Field128>, XofShake128, 16>;
 
 impl Prio3Sum {
     /// Construct an instance of Prio3Sum with the given number of aggregators and required bit
@@ -148,16 +157,15 @@ impl Prio3Sum {
 pub type Prio3FixedPointBoundedL2VecSum<Fx> = Prio3<
     FixedPointBoundedL2VecSum<
         Fx,
-        Field128,
         ParallelSum<Field128, PolyEval<Field128>>,
-        ParallelSum<Field128, BlindPolyEval<Field128>>,
+        ParallelSum<Field128, Mul<Field128>>,
     >,
-    PrgSha3,
+    XofShake128,
     16,
 >;
 
 #[cfg(feature = "experimental")]
-impl<Fx: Fixed + CompatibleFloat<Field128>> Prio3FixedPointBoundedL2VecSum<Fx> {
+impl<Fx: Fixed + CompatibleFloat> Prio3FixedPointBoundedL2VecSum<Fx> {
     /// Construct an instance of this VDAF with the given number of aggregators and number of
     /// vector entries.
     pub fn new_fixedpoint_boundedl2_vec_sum(
@@ -180,16 +188,15 @@ impl<Fx: Fixed + CompatibleFloat<Field128>> Prio3FixedPointBoundedL2VecSum<Fx> {
 pub type Prio3FixedPointBoundedL2VecSumMultithreaded<Fx> = Prio3<
     FixedPointBoundedL2VecSum<
         Fx,
-        Field128,
         ParallelSumMultithreaded<Field128, PolyEval<Field128>>,
-        ParallelSumMultithreaded<Field128, BlindPolyEval<Field128>>,
+        ParallelSumMultithreaded<Field128, Mul<Field128>>,
     >,
-    PrgSha3,
+    XofShake128,
     16,
 >;
 
 #[cfg(all(feature = "experimental", feature = "multithreaded"))]
-impl<Fx: Fixed + CompatibleFloat<Field128>> Prio3FixedPointBoundedL2VecSumMultithreaded<Fx> {
+impl<Fx: Fixed + CompatibleFloat> Prio3FixedPointBoundedL2VecSumMultithreaded<Fx> {
     /// Construct an instance of this VDAF with the given number of aggregators and number of
     /// vector entries.
     pub fn new_fixedpoint_boundedl2_vec_sum_multithreaded(
@@ -201,23 +208,46 @@ impl<Fx: Fixed + CompatibleFloat<Field128>> Prio3FixedPointBoundedL2VecSumMultit
     }
 }
 
-/// The histogram type. Each measurement is an unsigned integer and the result is a histogram
-/// representation of the distribution. The bucket boundaries are fixed in advance.
-pub type Prio3Histogram = Prio3<Histogram<Field128>, PrgSha3, 16>;
+/// The histogram type. Each measurement is an integer in `[0, length)` and the result is a
+/// histogram counting the number of occurrences of each measurement.
+pub type Prio3Histogram =
+    Prio3<Histogram<Field128, ParallelSum<Field128, Mul<Field128>>>, XofShake128, 16>;
 
 impl Prio3Histogram {
-    /// Constructs an instance of Prio3Histogram with the given number of aggregators and
-    /// desired histogram bucket boundaries.
-    pub fn new_histogram(num_aggregators: u8, buckets: &[u64]) -> Result<Self, VdafError> {
-        let buckets = buckets.iter().map(|bucket| *bucket as u128).collect();
+    /// Constructs an instance of Prio3Histogram with the given number of aggregators,
+    /// number of buckets, and parallel sum gadget chunk length.
+    pub fn new_histogram(
+        num_aggregators: u8,
+        length: usize,
+        chunk_length: usize,
+    ) -> Result<Self, VdafError> {
+        Prio3::new(num_aggregators, Histogram::new(length, chunk_length)?)
+    }
+}
 
-        Prio3::new(num_aggregators, Histogram::new(buckets)?)
+/// Like [`Prio3Histogram`] except this type uses multithreading to improve sharding and preparation
+/// time. Note that this improvement is only noticeable for very large input lengths.
+#[cfg(feature = "multithreaded")]
+#[cfg_attr(docsrs, doc(cfg(feature = "multithreaded")))]
+pub type Prio3HistogramMultithreaded =
+    Prio3<Histogram<Field128, ParallelSumMultithreaded<Field128, Mul<Field128>>>, XofShake128, 16>;
+
+#[cfg(feature = "multithreaded")]
+impl Prio3HistogramMultithreaded {
+    /// Construct an instance of Prio3HistogramMultithreaded with the given number of aggregators,
+    /// number of buckets, and parallel sum gadget chunk length.
+    pub fn new_histogram_multithreaded(
+        num_aggregators: u8,
+        length: usize,
+        chunk_length: usize,
+    ) -> Result<Self, VdafError> {
+        Prio3::new(num_aggregators, Histogram::new(length, chunk_length)?)
     }
 }
 
 /// The average type. Each measurement is an integer in `[0,2^bits)` for some `0 < bits < 64` and
 /// the aggregate is the arithmetic average.
-pub type Prio3Average = Prio3<Average<Field128>, PrgSha3, 16>;
+pub type Prio3Average = Prio3<Average<Field128>, XofShake128, 16>;
 
 impl Prio3Average {
     /// Construct an instance of Prio3Average with the given number of aggregators and required bit
@@ -243,11 +273,11 @@ impl Prio3Average {
 ///
 /// An instance of Prio3 is determined by:
 ///
-/// - a [`Type`](crate::flp::Type) that defines the set of valid input measurements; and
-/// - a [`Prg`](crate::vdaf::prg::Prg) for deriving vectors of field elements from seeds.
+/// - a [`Type`] that defines the set of valid input measurements; and
+/// - a [`Xof`] for deriving vectors of field elements from seeds.
 ///
 /// New instances can be defined by aliasing the base type. For example, [`Prio3Count`] is an alias
-/// for `Prio3<Count<Field64>, PrgSha3, 16>`.
+/// for `Prio3<Count<Field64>, XofShake128, 16>`.
 ///
 /// ```
 /// use prio::vdaf::{
@@ -283,7 +313,7 @@ impl Prio3Average {
 ///         prep_states.push(state);
 ///         prep_shares.push(share);
 ///     }
-///     let prep_msg = vdaf.prepare_preprocess(prep_shares).unwrap();
+///     let prep_msg = vdaf.prepare_shares_to_prepare_message(&(), prep_shares).unwrap();
 ///
 ///     for (agg_id, state) in prep_states.into_iter().enumerate() {
 ///         let out_share = match vdaf.prepare_step(state, prep_msg.clone()).unwrap() {
@@ -306,7 +336,7 @@ impl Prio3Average {
 pub struct Prio3<T, P, const SEED_SIZE: usize>
 where
     T: Type,
-    P: Prg<SEED_SIZE>,
+    P: Xof<SEED_SIZE>,
 {
     num_aggregators: u8,
     typ: T,
@@ -316,7 +346,7 @@ where
 impl<T, P, const SEED_SIZE: usize> Prio3<T, P, SEED_SIZE>
 where
     T: Type,
-    P: Prg<SEED_SIZE>,
+    P: Xof<SEED_SIZE>,
 {
     /// Construct an instance of this Prio3 VDAF with the given number of aggregators and the
     /// underlying type.
@@ -342,11 +372,14 @@ where
     fn derive_joint_rand_seed<'a>(
         parts: impl Iterator<Item = &'a Seed<SEED_SIZE>>,
     ) -> Seed<SEED_SIZE> {
-        let mut prg = P::init(&[0; SEED_SIZE], &Self::custom(DST_JOINT_RAND_SEED));
+        let mut xof = P::init(
+            &[0; SEED_SIZE],
+            &Self::domain_separation_tag(DST_JOINT_RAND_SEED),
+        );
         for part in parts {
-            prg.update(part.as_ref());
+            xof.update(part.as_ref());
         }
-        prg.into_seed()
+        xof.into_seed()
     }
 
     fn random_size(&self) -> usize {
@@ -367,7 +400,7 @@ where
     }
 
     #[allow(clippy::type_complexity)]
-    fn shard_with_random<const N: usize>(
+    pub(crate) fn shard_with_random<const N: usize>(
         &self,
         measurement: &T::Measurement,
         nonce: &[u8; N],
@@ -405,26 +438,31 @@ where
             let proof_share_seed = random_seeds.next().unwrap().try_into().unwrap();
             let measurement_share_prng: Prng<T::Field, _> = Prng::from_seed_stream(P::seed_stream(
                 &Seed(measurement_share_seed),
-                &Self::custom(DST_MEASUREMENT_SHARE),
+                &Self::domain_separation_tag(DST_MEASUREMENT_SHARE),
                 &[agg_id],
             ));
             let joint_rand_blind =
                 if let Some(helper_joint_rand_parts) = helper_joint_rand_parts.as_mut() {
                     let joint_rand_blind = random_seeds.next().unwrap().try_into().unwrap();
-                    let mut joint_rand_part_prg =
-                        P::init(&joint_rand_blind, &Self::custom(DST_JOINT_RAND_PART));
-                    joint_rand_part_prg.update(&[agg_id]); // Aggregator ID
-                    joint_rand_part_prg.update(nonce);
+                    let mut joint_rand_part_xof = P::init(
+                        &joint_rand_blind,
+                        &Self::domain_separation_tag(DST_JOINT_RAND_PART),
+                    );
+                    joint_rand_part_xof.update(&[agg_id]); // Aggregator ID
+                    joint_rand_part_xof.update(nonce);
 
+                    let mut encoding_buffer = Vec::with_capacity(T::Field::ENCODED_SIZE);
                     for (x, y) in leader_measurement_share
                         .iter_mut()
                         .zip(measurement_share_prng)
                     {
                         *x -= y;
-                        joint_rand_part_prg.update(&y.into());
+                        y.encode(&mut encoding_buffer);
+                        joint_rand_part_xof.update(&encoding_buffer);
+                        encoding_buffer.clear();
                     }
 
-                    helper_joint_rand_parts.push(joint_rand_part_prg.into_seed());
+                    helper_joint_rand_parts.push(joint_rand_part_xof.into_seed());
 
                     Some(joint_rand_blind)
                 } else {
@@ -449,16 +487,21 @@ where
                     let leader_blind_bytes = random_seeds.next().unwrap().try_into().unwrap();
                     let leader_blind = Seed::from_bytes(leader_blind_bytes);
 
-                    let mut joint_rand_part_prg =
-                        P::init(leader_blind.as_ref(), &Self::custom(DST_JOINT_RAND_PART));
-                    joint_rand_part_prg.update(&[0]); // Aggregator ID
-                    joint_rand_part_prg.update(nonce);
+                    let mut joint_rand_part_xof = P::init(
+                        leader_blind.as_ref(),
+                        &Self::domain_separation_tag(DST_JOINT_RAND_PART),
+                    );
+                    joint_rand_part_xof.update(&[0]); // Aggregator ID
+                    joint_rand_part_xof.update(nonce);
+                    let mut encoding_buffer = Vec::with_capacity(T::Field::ENCODED_SIZE);
                     for x in leader_measurement_share.iter() {
-                        joint_rand_part_prg.update(&(*x).into());
+                        x.encode(&mut encoding_buffer);
+                        joint_rand_part_xof.update(&encoding_buffer);
+                        encoding_buffer.clear();
                     }
                     leader_blind_opt = Some(leader_blind);
 
-                    let leader_joint_rand_seed_part = joint_rand_part_prg.into_seed();
+                    let leader_joint_rand_seed_part = joint_rand_part_xof.into_seed();
 
                     let mut vec = Vec::with_capacity(self.num_aggregators());
                     vec.push(leader_joint_rand_seed_part);
@@ -473,24 +516,23 @@ where
             .as_ref()
             .map(|joint_rand_parts| {
                 let joint_rand_seed = Self::derive_joint_rand_seed(joint_rand_parts.iter());
-
-                let prng: Prng<T::Field, _> = Prng::from_seed_stream(P::seed_stream(
+                P::seed_stream(
                     &joint_rand_seed,
-                    &Self::custom(DST_JOINT_RANDOMNESS),
+                    &Self::domain_separation_tag(DST_JOINT_RANDOMNESS),
                     &[],
-                ));
-                prng.take(self.typ.joint_rand_len()).collect()
+                )
+                .into_field_vec(self.typ.joint_rand_len())
             })
             .unwrap_or_default();
 
         // Run the proof-generation algorithm.
         let prove_rand_seed = random_seeds.next().unwrap().try_into().unwrap();
-        let prove_rand_prng: Prng<T::Field, _> = Prng::from_seed_stream(P::seed_stream(
+        let prove_rand = P::seed_stream(
             &Seed::from_bytes(prove_rand_seed),
-            &Self::custom(DST_PROVE_RANDOMNESS),
+            &Self::domain_separation_tag(DST_PROVE_RANDOMNESS),
             &[],
-        ));
-        let prove_rand: Vec<T::Field> = prove_rand_prng.take(self.typ.prove_rand_len()).collect();
+        )
+        .into_field_vec(self.typ.prove_rand_len());
         let mut leader_proof_share =
             self.typ
                 .prove(&encoded_measurement, &prove_rand, &joint_rand)?;
@@ -499,7 +541,7 @@ where
         for (j, helper) in helper_shares.iter_mut().enumerate() {
             let proof_share_prng: Prng<T::Field, _> = Prng::from_seed_stream(P::seed_stream(
                 &helper.proof_share,
-                &Self::custom(DST_PROOF_SHARE),
+                &Self::domain_separation_tag(DST_PROOF_SHARE),
                 &[j as u8 + 1],
             ));
             for (x, y) in leader_proof_share
@@ -530,30 +572,6 @@ where
         Ok((public_share, out))
     }
 
-    /// Shard measurement with constant randomness of repeated bytes.
-    /// This method is not secure. It is used for running test vectors for Prio3.
-    #[cfg(feature = "test-util")]
-    #[doc(hidden)]
-    #[allow(clippy::type_complexity)]
-    pub fn test_vec_shard<const N: usize>(
-        &self,
-        measurement: &T::Measurement,
-        nonce: &[u8; N],
-    ) -> Result<
-        (
-            Prio3PublicShare<SEED_SIZE>,
-            Vec<Prio3InputShare<T::Field, SEED_SIZE>>,
-        ),
-        VdafError,
-    > {
-        let size = self.random_size();
-        let random = iter::repeat(0..=255)
-            .flatten()
-            .take(size)
-            .collect::<Vec<u8>>();
-        self.shard_with_random(measurement, nonce, &random)
-    }
-
     fn role_try_from(&self, agg_id: usize) -> Result<u8, VdafError> {
         if agg_id >= self.num_aggregators as usize {
             return Err(VdafError::Uncategorized("unexpected aggregator id".into()));
@@ -565,7 +583,7 @@ where
 impl<T, P, const SEED_SIZE: usize> Vdaf for Prio3<T, P, SEED_SIZE>
 where
     T: Type,
-    P: Prg<SEED_SIZE>,
+    P: Xof<SEED_SIZE>,
 {
     const ID: u32 = T::ID;
     type Measurement = T::Measurement;
@@ -582,7 +600,7 @@ where
 }
 
 /// Message broadcast by the [`Client`] to every [`Aggregator`] during the Sharding phase.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug)]
 pub struct Prio3PublicShare<const SEED_SIZE: usize> {
     /// Contributions to the joint randomness from every aggregator's share.
     joint_rand_parts: Option<Vec<Seed<SEED_SIZE>>>,
@@ -607,11 +625,29 @@ impl<const SEED_SIZE: usize> Encode for Prio3PublicShare<SEED_SIZE> {
     }
 }
 
+impl<const SEED_SIZE: usize> PartialEq for Prio3PublicShare<SEED_SIZE> {
+    fn eq(&self, other: &Self) -> bool {
+        self.ct_eq(other).into()
+    }
+}
+
+impl<const SEED_SIZE: usize> Eq for Prio3PublicShare<SEED_SIZE> {}
+
+impl<const SEED_SIZE: usize> ConstantTimeEq for Prio3PublicShare<SEED_SIZE> {
+    fn ct_eq(&self, other: &Self) -> Choice {
+        // We allow short-circuiting on the presence or absence of the joint_rand_parts.
+        option_ct_eq(
+            self.joint_rand_parts.as_deref(),
+            other.joint_rand_parts.as_deref(),
+        )
+    }
+}
+
 impl<T, P, const SEED_SIZE: usize> ParameterizedDecode<Prio3<T, P, SEED_SIZE>>
     for Prio3PublicShare<SEED_SIZE>
 where
     T: Type,
-    P: Prg<SEED_SIZE>,
+    P: Xof<SEED_SIZE>,
 {
     fn decode_with_param(
         decoding_parameter: &Prio3<T, P, SEED_SIZE>,
@@ -633,7 +669,7 @@ where
 }
 
 /// Message sent by the [`Client`] to each [`Aggregator`] during the Sharding phase.
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug)]
 pub struct Prio3InputShare<F, const SEED_SIZE: usize> {
     /// The measurement share.
     measurement_share: Share<F, SEED_SIZE>,
@@ -644,6 +680,25 @@ pub struct Prio3InputShare<F, const SEED_SIZE: usize> {
     /// Blinding seed used by the Aggregator to compute the joint randomness. This field is optional
     /// because not every [`Type`] requires joint randomness.
     joint_rand_blind: Option<Seed<SEED_SIZE>>,
+}
+
+impl<F: ConstantTimeEq, const SEED_SIZE: usize> PartialEq for Prio3InputShare<F, SEED_SIZE> {
+    fn eq(&self, other: &Self) -> bool {
+        self.ct_eq(other).into()
+    }
+}
+
+impl<F: ConstantTimeEq, const SEED_SIZE: usize> Eq for Prio3InputShare<F, SEED_SIZE> {}
+
+impl<F: ConstantTimeEq, const SEED_SIZE: usize> ConstantTimeEq for Prio3InputShare<F, SEED_SIZE> {
+    fn ct_eq(&self, other: &Self) -> Choice {
+        // We allow short-circuiting on the presence or absence of the joint_rand_blind.
+        option_ct_eq(
+            self.joint_rand_blind.as_ref(),
+            other.joint_rand_blind.as_ref(),
+        ) & self.measurement_share.ct_eq(&other.measurement_share)
+            & self.proof_share.ct_eq(&other.proof_share)
+    }
 }
 
 impl<F: FftFriendlyFieldElement, const SEED_SIZE: usize> Encode for Prio3InputShare<F, SEED_SIZE> {
@@ -675,7 +730,7 @@ impl<'a, T, P, const SEED_SIZE: usize> ParameterizedDecode<(&'a Prio3<T, P, SEED
     for Prio3InputShare<T::Field, SEED_SIZE>
 where
     T: Type,
-    P: Prg<SEED_SIZE>,
+    P: Xof<SEED_SIZE>,
 {
     fn decode_with_param(
         (prio3, agg_id): &(&'a Prio3<T, P, SEED_SIZE>, usize),
@@ -713,15 +768,32 @@ where
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
-/// Message broadcast by each [`Aggregator`](crate::vdaf::Aggregator) in each round of the
-/// Preparation phase.
+#[derive(Clone, Debug)]
+/// Message broadcast by each [`Aggregator`] in each round of the Preparation phase.
 pub struct Prio3PrepareShare<F, const SEED_SIZE: usize> {
-    /// A share of the FLP verifier message. (See [`Type`](crate::flp::Type).)
+    /// A share of the FLP verifier message. (See [`Type`].)
     verifier: Vec<F>,
 
     /// A part of the joint randomness seed.
     joint_rand_part: Option<Seed<SEED_SIZE>>,
+}
+
+impl<F: ConstantTimeEq, const SEED_SIZE: usize> PartialEq for Prio3PrepareShare<F, SEED_SIZE> {
+    fn eq(&self, other: &Self) -> bool {
+        self.ct_eq(other).into()
+    }
+}
+
+impl<F: ConstantTimeEq, const SEED_SIZE: usize> Eq for Prio3PrepareShare<F, SEED_SIZE> {}
+
+impl<F: ConstantTimeEq, const SEED_SIZE: usize> ConstantTimeEq for Prio3PrepareShare<F, SEED_SIZE> {
+    fn ct_eq(&self, other: &Self) -> Choice {
+        // We allow short-circuiting on the presence or absence of the joint_rand_part.
+        option_ct_eq(
+            self.joint_rand_part.as_ref(),
+            other.joint_rand_part.as_ref(),
+        ) & self.verifier.ct_eq(&other.verifier)
+    }
 }
 
 impl<F: FftFriendlyFieldElement, const SEED_SIZE: usize> Encode
@@ -771,11 +843,29 @@ impl<F: FftFriendlyFieldElement, const SEED_SIZE: usize>
     }
 }
 
-#[derive(Clone, Debug, Eq, PartialEq)]
+#[derive(Clone, Debug)]
 /// Result of combining a round of [`Prio3PrepareShare`] messages.
 pub struct Prio3PrepareMessage<const SEED_SIZE: usize> {
     /// The joint randomness seed computed by the Aggregators.
     joint_rand_seed: Option<Seed<SEED_SIZE>>,
+}
+
+impl<const SEED_SIZE: usize> PartialEq for Prio3PrepareMessage<SEED_SIZE> {
+    fn eq(&self, other: &Self) -> bool {
+        self.ct_eq(other).into()
+    }
+}
+
+impl<const SEED_SIZE: usize> Eq for Prio3PrepareMessage<SEED_SIZE> {}
+
+impl<const SEED_SIZE: usize> ConstantTimeEq for Prio3PrepareMessage<SEED_SIZE> {
+    fn ct_eq(&self, other: &Self) -> Choice {
+        // We allow short-circuiting on the presnce or absence of the joint_rand_seed.
+        option_ct_eq(
+            self.joint_rand_seed.as_ref(),
+            other.joint_rand_seed.as_ref(),
+        )
+    }
 }
 
 impl<const SEED_SIZE: usize> Encode for Prio3PrepareMessage<SEED_SIZE> {
@@ -814,7 +904,7 @@ impl<F: FftFriendlyFieldElement, const SEED_SIZE: usize>
 impl<T, P, const SEED_SIZE: usize> Client<16> for Prio3<T, P, SEED_SIZE>
 where
     T: Type,
-    P: Prg<SEED_SIZE>,
+    P: Xof<SEED_SIZE>,
 {
     #[allow(clippy::type_complexity)]
     fn shard(
@@ -828,13 +918,53 @@ where
     }
 }
 
-/// State of each [`Aggregator`](crate::vdaf::Aggregator) during the Preparation phase.
-#[derive(Clone, Debug, Eq, PartialEq)]
+/// State of each [`Aggregator`] during the Preparation phase.
+#[derive(Clone)]
 pub struct Prio3PrepareState<F, const SEED_SIZE: usize> {
     measurement_share: Share<F, SEED_SIZE>,
     joint_rand_seed: Option<Seed<SEED_SIZE>>,
     agg_id: u8,
     verifier_len: usize,
+}
+
+impl<F: ConstantTimeEq, const SEED_SIZE: usize> PartialEq for Prio3PrepareState<F, SEED_SIZE> {
+    fn eq(&self, other: &Self) -> bool {
+        self.ct_eq(other).into()
+    }
+}
+
+impl<F: ConstantTimeEq, const SEED_SIZE: usize> Eq for Prio3PrepareState<F, SEED_SIZE> {}
+
+impl<F: ConstantTimeEq, const SEED_SIZE: usize> ConstantTimeEq for Prio3PrepareState<F, SEED_SIZE> {
+    fn ct_eq(&self, other: &Self) -> Choice {
+        // We allow short-circuiting on the presence or absence of the joint_rand_seed, as well as
+        // the aggregator ID & verifier length parameters.
+        if self.agg_id != other.agg_id || self.verifier_len != other.verifier_len {
+            return Choice::from(0);
+        }
+
+        option_ct_eq(
+            self.joint_rand_seed.as_ref(),
+            other.joint_rand_seed.as_ref(),
+        ) & self.measurement_share.ct_eq(&other.measurement_share)
+    }
+}
+
+impl<F, const SEED_SIZE: usize> Debug for Prio3PrepareState<F, SEED_SIZE> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Prio3PrepareState")
+            .field("measurement_share", &"[redacted]")
+            .field(
+                "joint_rand_seed",
+                match self.joint_rand_seed {
+                    Some(_) => &"Some([redacted])",
+                    None => &"None",
+                },
+            )
+            .field("agg_id", &self.agg_id)
+            .field("verifier_len", &self.verifier_len)
+            .finish()
+    }
 }
 
 impl<F: FftFriendlyFieldElement, const SEED_SIZE: usize> Encode
@@ -861,7 +991,7 @@ impl<'a, T, P, const SEED_SIZE: usize> ParameterizedDecode<(&'a Prio3<T, P, SEED
     for Prio3PrepareState<T::Field, SEED_SIZE>
 where
     T: Type,
-    P: Prg<SEED_SIZE>,
+    P: Xof<SEED_SIZE>,
 {
     fn decode_with_param(
         (prio3, agg_id): &(&'a Prio3<T, P, SEED_SIZE>, usize),
@@ -896,7 +1026,7 @@ where
 impl<T, P, const SEED_SIZE: usize> Aggregator<SEED_SIZE, 16> for Prio3<T, P, SEED_SIZE>
 where
     T: Type,
-    P: Prg<SEED_SIZE>,
+    P: Xof<SEED_SIZE>,
 {
     type PrepareState = Prio3PrepareState<T::Field, SEED_SIZE>;
     type PrepareShare = Prio3PrepareShare<T::Field, SEED_SIZE>;
@@ -921,21 +1051,26 @@ where
         VdafError,
     > {
         let agg_id = self.role_try_from(agg_id)?;
-        let mut query_rand_prg = P::init(verify_key, &Self::custom(DST_QUERY_RANDOMNESS));
-        query_rand_prg.update(nonce);
-        let query_rand_prng = Prng::from_seed_stream(query_rand_prg.into_seed_stream());
+        let mut query_rand_xof = P::init(
+            verify_key,
+            &Self::domain_separation_tag(DST_QUERY_RANDOMNESS),
+        );
+        query_rand_xof.update(nonce);
+        let query_rand = query_rand_xof
+            .into_seed_stream()
+            .into_field_vec(self.typ.query_rand_len());
 
         // Create a reference to the (expanded) measurement share.
         let expanded_measurement_share: Option<Vec<T::Field>> = match msg.measurement_share {
             Share::Leader(_) => None,
-            Share::Helper(ref seed) => {
-                let measurement_share_prng = Prng::from_seed_stream(P::seed_stream(
+            Share::Helper(ref seed) => Some(
+                P::seed_stream(
                     seed,
-                    &Self::custom(DST_MEASUREMENT_SHARE),
+                    &Self::domain_separation_tag(DST_MEASUREMENT_SHARE),
                     &[agg_id],
-                ));
-                Some(measurement_share_prng.take(self.typ.input_len()).collect())
-            }
+                )
+                .into_field_vec(self.typ.input_len()),
+            ),
         };
         let measurement_share = match msg.measurement_share {
             Share::Leader(ref data) => data,
@@ -945,14 +1080,14 @@ where
         // Create a reference to the (expanded) proof share.
         let expanded_proof_share: Option<Vec<T::Field>> = match msg.proof_share {
             Share::Leader(_) => None,
-            Share::Helper(ref seed) => {
-                let prng = Prng::from_seed_stream(P::seed_stream(
+            Share::Helper(ref seed) => Some(
+                P::seed_stream(
                     seed,
-                    &Self::custom(DST_PROOF_SHARE),
+                    &Self::domain_separation_tag(DST_PROOF_SHARE),
                     &[agg_id],
-                ));
-                Some(prng.take(self.typ.proof_len()).collect())
-            }
+                )
+                .into_field_vec(self.typ.proof_len()),
+            ),
         };
         let proof_share = match msg.proof_share {
             Share::Leader(ref data) => data,
@@ -961,16 +1096,19 @@ where
 
         // Compute the joint randomness.
         let (joint_rand_seed, joint_rand_part, joint_rand) = if self.typ.joint_rand_len() > 0 {
-            let mut joint_rand_part_prg = P::init(
+            let mut joint_rand_part_xof = P::init(
                 msg.joint_rand_blind.as_ref().unwrap().as_ref(),
-                &Self::custom(DST_JOINT_RAND_PART),
+                &Self::domain_separation_tag(DST_JOINT_RAND_PART),
             );
-            joint_rand_part_prg.update(&[agg_id]);
-            joint_rand_part_prg.update(nonce);
+            joint_rand_part_xof.update(&[agg_id]);
+            joint_rand_part_xof.update(nonce);
+            let mut encoding_buffer = Vec::with_capacity(T::Field::ENCODED_SIZE);
             for x in measurement_share {
-                joint_rand_part_prg.update(&(*x).into());
+                x.encode(&mut encoding_buffer);
+                joint_rand_part_xof.update(&encoding_buffer);
+                encoding_buffer.clear();
             }
-            let own_joint_rand_part = joint_rand_part_prg.into_seed();
+            let own_joint_rand_part = joint_rand_part_xof.into_seed();
 
             // Make an iterator over the joint randomness parts, but use this aggregator's
             // contribution, computed from the input share, in lieu of the the corresponding part
@@ -995,22 +1133,16 @@ where
 
             let joint_rand_seed = Self::derive_joint_rand_seed(corrected_joint_rand_parts);
 
-            let joint_rand_prng: Prng<T::Field, _> = Prng::from_seed_stream(P::seed_stream(
+            let joint_rand = P::seed_stream(
                 &joint_rand_seed,
-                &Self::custom(DST_JOINT_RANDOMNESS),
+                &Self::domain_separation_tag(DST_JOINT_RANDOMNESS),
                 &[],
-            ));
-            (
-                Some(joint_rand_seed),
-                Some(own_joint_rand_part),
-                joint_rand_prng.take(self.typ.joint_rand_len()).collect(),
             )
+            .into_field_vec(self.typ.joint_rand_len());
+            (Some(joint_rand_seed), Some(own_joint_rand_part), joint_rand)
         } else {
             (None, None, Vec::new())
         };
-
-        // Compute the query randomness.
-        let query_rand: Vec<T::Field> = query_rand_prng.take(self.typ.query_rand_len()).collect();
 
         // Run the query-generation algorithm.
         let verifier_share = self.typ.query(
@@ -1035,8 +1167,11 @@ where
         ))
     }
 
-    fn prepare_preprocess<M: IntoIterator<Item = Prio3PrepareShare<T::Field, SEED_SIZE>>>(
+    fn prepare_shares_to_prepare_message<
+        M: IntoIterator<Item = Prio3PrepareShare<T::Field, SEED_SIZE>>,
+    >(
         &self,
+        _: &Self::AggregationParam,
         inputs: M,
     ) -> Result<Prio3PrepareMessage<SEED_SIZE>, VdafError> {
         let mut verifier = vec![T::Field::zero(); self.typ.verifier_len()];
@@ -1090,14 +1225,20 @@ where
         Ok(Prio3PrepareMessage { joint_rand_seed })
     }
 
-    fn prepare_step(
+    fn prepare_next(
         &self,
         step: Prio3PrepareState<T::Field, SEED_SIZE>,
         msg: Prio3PrepareMessage<SEED_SIZE>,
     ) -> Result<PrepareTransition<Self, SEED_SIZE, 16>, VdafError> {
         if self.typ.joint_rand_len() > 0 {
             // Check that the joint randomness was correct.
-            if step.joint_rand_seed.as_ref().unwrap() != msg.joint_rand_seed.as_ref().unwrap() {
+            if step
+                .joint_rand_seed
+                .as_ref()
+                .unwrap()
+                .ct_ne(msg.joint_rand_seed.as_ref().unwrap())
+                .into()
+            {
                 return Err(VdafError::Uncategorized(
                     "joint randomness mismatch".to_string(),
                 ));
@@ -1108,9 +1249,8 @@ where
         let measurement_share = match step.measurement_share {
             Share::Leader(data) => data,
             Share::Helper(seed) => {
-                let custom = Self::custom(DST_MEASUREMENT_SHARE);
-                let prng = Prng::from_seed_stream(P::seed_stream(&seed, &custom, &[step.agg_id]));
-                prng.take(self.typ.input_len()).collect()
+                let dst = Self::domain_separation_tag(DST_MEASUREMENT_SHARE);
+                P::seed_stream(&seed, &dst, &[step.agg_id]).into_field_vec(self.typ.input_len())
             }
         };
 
@@ -1139,10 +1279,31 @@ where
     }
 }
 
+#[cfg(feature = "experimental")]
+impl<T, P, S, const SEED_SIZE: usize> AggregatorWithNoise<SEED_SIZE, 16, S>
+    for Prio3<T, P, SEED_SIZE>
+where
+    T: TypeWithNoise<S>,
+    P: Xof<SEED_SIZE>,
+    S: DifferentialPrivacyStrategy,
+{
+    fn add_noise_to_agg_share(
+        &self,
+        dp_strategy: &S,
+        _agg_param: &Self::AggregationParam,
+        agg_share: &mut Self::AggregateShare,
+        num_measurements: usize,
+    ) -> Result<(), VdafError> {
+        self.typ
+            .add_noise_to_result(dp_strategy, &mut agg_share.0, num_measurements)?;
+        Ok(())
+    }
+}
+
 impl<T, P, const SEED_SIZE: usize> Collector for Prio3<T, P, SEED_SIZE>
 where
     T: Type,
-    P: Prg<SEED_SIZE>,
+    P: Xof<SEED_SIZE>,
 {
     /// Combines aggregate shares into the aggregate result.
     fn unshard<It: IntoIterator<Item = AggregateShare<T::Field>>>(
@@ -1200,7 +1361,7 @@ impl<'a, F, T, P, const SEED_SIZE: usize> ParameterizedDecode<(&'a Prio3<T, P, S
 where
     F: FieldElement,
     T: Type,
-    P: Prg<SEED_SIZE>,
+    P: Xof<SEED_SIZE>,
 {
     fn decode_with_param(
         (vdaf, _): &(&'a Prio3<T, P, SEED_SIZE>, &'a ()),
@@ -1215,7 +1376,7 @@ impl<'a, F, T, P, const SEED_SIZE: usize> ParameterizedDecode<(&'a Prio3<T, P, S
 where
     F: FieldElement,
     T: Type,
-    P: Prg<SEED_SIZE>,
+    P: Xof<SEED_SIZE>,
 {
     fn decode_with_param(
         (vdaf, _): &(&'a Prio3<T, P, SEED_SIZE>, &'a ()),
@@ -1225,12 +1386,80 @@ where
     }
 }
 
+// This function determines equality between two optional, constant-time comparable values. It
+// short-circuits on the existence (but not contents) of the values -- a timing side-channel may
+// reveal whether the values match on Some or None.
+#[inline]
+fn option_ct_eq<T>(left: Option<&T>, right: Option<&T>) -> Choice
+where
+    T: ConstantTimeEq + ?Sized,
+{
+    match (left, right) {
+        (Some(left), Some(right)) => left.ct_eq(right),
+        (None, None) => Choice::from(1),
+        _ => Choice::from(0),
+    }
+}
+
+/// This is a polyfill for `usize::ilog2()`, which is only available in Rust 1.67 and later. It is
+/// based on the implementation in the standard library. It can be removed when the MSRV has been
+/// advanced past 1.67.
+///
+/// # Panics
+///
+/// This function will panic if `input` is zero.
+fn ilog2(input: usize) -> u32 {
+    if input == 0 {
+        panic!("Tried to take the logarithm of zero");
+    }
+    (usize::BITS - 1) - input.leading_zeros()
+}
+
+/// Finds the optimal choice of chunk length for [`Prio3Histogram`] or [`Prio3SumVec`], given its
+/// encoded measurement length. For [`Prio3Histogram`], the measurement length is equal to the
+/// length parameter. For [`Prio3SumVec`], the measurement length is equal to the product of the
+/// length and bits parameters.
+pub fn optimal_chunk_length(measurement_length: usize) -> usize {
+    if measurement_length <= 1 {
+        return 1;
+    }
+
+    /// Candidate set of parameter choices for the parallel sum optimization.
+    struct Candidate {
+        gadget_calls: usize,
+        chunk_length: usize,
+    }
+
+    let max_log2 = ilog2(measurement_length + 1);
+    let best_opt = (1..=max_log2)
+        .rev()
+        .map(|log2| {
+            let gadget_calls = (1 << log2) - 1;
+            let chunk_length = (measurement_length + gadget_calls - 1) / gadget_calls;
+            Candidate {
+                gadget_calls,
+                chunk_length,
+            }
+        })
+        .min_by_key(|candidate| {
+            // Compute the proof length, in field elements, for either Prio3Histogram or Prio3SumVec
+            (candidate.chunk_length * 2)
+                + 2 * ((1 + candidate.gadget_calls).next_power_of_two() - 1)
+        });
+    // Unwrap safety: max_log2 must be at least 1, because smaller measurement_length inputs are
+    // dealt with separately. Thus, the range iterator that the search is over will be nonempty,
+    // and min_by_key() will always return Some.
+    best_opt.unwrap().chunk_length
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     #[cfg(feature = "experimental")]
     use crate::flp::gadgets::ParallelSumGadget;
-    use crate::vdaf::{fieldvec_roundtrip_test, run_vdaf, run_vdaf_prepare};
+    use crate::vdaf::{
+        equality_comparison_test, fieldvec_roundtrip_test, run_vdaf, run_vdaf_prepare,
+    };
     use assert_matches::assert_matches;
     #[cfg(feature = "experimental")]
     use fixed::{
@@ -1304,7 +1533,7 @@ mod tests {
 
     #[test]
     fn test_prio3_sum_vec() {
-        let prio3 = Prio3::new_sum_vec(2, 2, 20).unwrap();
+        let prio3 = Prio3::new_sum_vec(2, 2, 20, 4).unwrap();
         assert_eq!(
             run_vdaf(
                 &prio3,
@@ -1323,7 +1552,7 @@ mod tests {
     #[test]
     #[cfg(feature = "multithreaded")]
     fn test_prio3_sum_vec_multithreaded() {
-        let prio3 = Prio3::new_sum_vec_multithreaded(2, 2, 20).unwrap();
+        let prio3 = Prio3::new_sum_vec_multithreaded(2, 2, 20, 4).unwrap();
         assert_eq!(
             run_vdaf(
                 &prio3,
@@ -1367,13 +1596,13 @@ mod tests {
             }
         }
 
-        fn test_fixed_vec<Fx, PE, BPE, const SIZE: usize>(
+        fn test_fixed_vec<Fx, PE, M, const SIZE: usize>(
             fp_0: Fx,
-            prio3: Prio3<FixedPointBoundedL2VecSum<Fx, Field128, PE, BPE>, PrgSha3, 16>,
+            prio3: Prio3<FixedPointBoundedL2VecSum<Fx, PE, M>, XofShake128, 16>,
         ) where
-            Fx: Fixed + CompatibleFloat<Field128> + std::ops::Neg<Output = Fx>,
+            Fx: Fixed + CompatibleFloat + std::ops::Neg<Output = Fx>,
             PE: Eq + ParallelSumGadget<Field128, PolyEval<Field128>> + Clone + 'static,
-            BPE: Eq + ParallelSumGadget<Field128, BlindPolyEval<Field128>> + Clone + 'static,
+            M: Eq + ParallelSumGadget<Field128, Mul<Field128>> + Clone + 'static,
         {
             let fp_vec = vec![fp_0; SIZE];
 
@@ -1457,15 +1686,15 @@ mod tests {
             }
         }
 
-        fn test_fixed<Fx, PE, BPE>(
+        fn test_fixed<Fx, PE, M>(
             fp_4_inv: Fx,
             fp_8_inv: Fx,
             fp_16_inv: Fx,
-            prio3: Prio3<FixedPointBoundedL2VecSum<Fx, Field128, PE, BPE>, PrgSha3, 16>,
+            prio3: Prio3<FixedPointBoundedL2VecSum<Fx, PE, M>, XofShake128, 16>,
         ) where
-            Fx: Fixed + CompatibleFloat<Field128> + std::ops::Neg<Output = Fx>,
+            Fx: Fixed + CompatibleFloat + std::ops::Neg<Output = Fx>,
             PE: Eq + ParallelSumGadget<Field128, PolyEval<Field128>> + Clone + 'static,
-            BPE: Eq + ParallelSumGadget<Field128, BlindPolyEval<Field128>> + Clone + 'static,
+            M: Eq + ParallelSumGadget<Field128, Mul<Field128>> + Clone + 'static,
         {
             let fp_vec1 = vec![fp_4_inv, fp_8_inv, fp_16_inv];
             let fp_vec2 = vec![fp_4_inv, fp_8_inv, fp_16_inv];
@@ -1536,19 +1765,33 @@ mod tests {
 
     #[test]
     fn test_prio3_histogram() {
-        let prio3 = Prio3::new_histogram(2, &[0, 10, 20]).unwrap();
+        let prio3 = Prio3::new_histogram(2, 4, 2).unwrap();
 
         assert_eq!(
-            run_vdaf(&prio3, &(), [0, 10, 20, 9999]).unwrap(),
+            run_vdaf(&prio3, &(), [0, 1, 2, 3]).unwrap(),
             vec![1, 1, 1, 1]
         );
         assert_eq!(run_vdaf(&prio3, &(), [0]).unwrap(), vec![1, 0, 0, 0]);
-        assert_eq!(run_vdaf(&prio3, &(), [5]).unwrap(), vec![0, 1, 0, 0]);
-        assert_eq!(run_vdaf(&prio3, &(), [10]).unwrap(), vec![0, 1, 0, 0]);
-        assert_eq!(run_vdaf(&prio3, &(), [15]).unwrap(), vec![0, 0, 1, 0]);
-        assert_eq!(run_vdaf(&prio3, &(), [20]).unwrap(), vec![0, 0, 1, 0]);
-        assert_eq!(run_vdaf(&prio3, &(), [25]).unwrap(), vec![0, 0, 0, 1]);
-        test_serialization(&prio3, &23, &[0; 16]).unwrap();
+        assert_eq!(run_vdaf(&prio3, &(), [1]).unwrap(), vec![0, 1, 0, 0]);
+        assert_eq!(run_vdaf(&prio3, &(), [2]).unwrap(), vec![0, 0, 1, 0]);
+        assert_eq!(run_vdaf(&prio3, &(), [3]).unwrap(), vec![0, 0, 0, 1]);
+        test_serialization(&prio3, &3, &[0; 16]).unwrap();
+    }
+
+    #[test]
+    #[cfg(feature = "multithreaded")]
+    fn test_prio3_histogram_multithreaded() {
+        let prio3 = Prio3::new_histogram_multithreaded(2, 4, 2).unwrap();
+
+        assert_eq!(
+            run_vdaf(&prio3, &(), [0, 1, 2, 3]).unwrap(),
+            vec![1, 1, 1, 1]
+        );
+        assert_eq!(run_vdaf(&prio3, &(), [0]).unwrap(), vec![1, 0, 0, 0]);
+        assert_eq!(run_vdaf(&prio3, &(), [1]).unwrap(), vec![0, 1, 0, 0]);
+        assert_eq!(run_vdaf(&prio3, &(), [2]).unwrap(), vec![0, 0, 1, 0]);
+        assert_eq!(run_vdaf(&prio3, &(), [3]).unwrap(), vec![0, 0, 0, 1]);
+        test_serialization(&prio3, &3, &[0; 16]).unwrap();
     }
 
     #[test]
@@ -1598,7 +1841,7 @@ mod tests {
     ) -> Result<(), VdafError>
     where
         T: Type,
-        P: Prg<SEED_SIZE>,
+        P: Xof<SEED_SIZE>,
     {
         let mut verify_key = [0; SEED_SIZE];
         thread_rng().fill(&mut verify_key[..]);
@@ -1656,7 +1899,9 @@ mod tests {
             last_prepare_state = Some(prepare_state);
         }
 
-        let prepare_message = prio3.prepare_preprocess(prepare_shares).unwrap();
+        let prepare_message = prio3
+            .prepare_shares_to_prepare_message(&(), prepare_shares)
+            .unwrap();
 
         let encoded_prepare_message = prepare_message.get_encoded();
         let decoded_prepare_message = Prio3PrepareMessage::get_decoded_with_param(
@@ -1681,7 +1926,7 @@ mod tests {
         let vdaf = Prio3::new_sum(2, 17).unwrap();
         fieldvec_roundtrip_test::<Field128, Prio3Sum, OutputShare<Field128>>(&vdaf, &(), 1);
 
-        let vdaf = Prio3::new_histogram(2, &[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]).unwrap();
+        let vdaf = Prio3::new_histogram(2, 12, 3).unwrap();
         fieldvec_roundtrip_test::<Field128, Prio3Histogram, OutputShare<Field128>>(&vdaf, &(), 12);
     }
 
@@ -1693,11 +1938,190 @@ mod tests {
         let vdaf = Prio3::new_sum(2, 17).unwrap();
         fieldvec_roundtrip_test::<Field128, Prio3Sum, AggregateShare<Field128>>(&vdaf, &(), 1);
 
-        let vdaf = Prio3::new_histogram(2, &[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]).unwrap();
+        let vdaf = Prio3::new_histogram(2, 12, 3).unwrap();
         fieldvec_roundtrip_test::<Field128, Prio3Histogram, AggregateShare<Field128>>(
             &vdaf,
             &(),
             12,
         );
+    }
+
+    #[test]
+    fn public_share_equality_test() {
+        equality_comparison_test(&[
+            Prio3PublicShare {
+                joint_rand_parts: Some(Vec::from([Seed([0])])),
+            },
+            Prio3PublicShare {
+                joint_rand_parts: Some(Vec::from([Seed([1])])),
+            },
+            Prio3PublicShare {
+                joint_rand_parts: None,
+            },
+        ])
+    }
+
+    #[test]
+    fn input_share_equality_test() {
+        equality_comparison_test(&[
+            // Default.
+            Prio3InputShare {
+                measurement_share: Share::Leader(Vec::from([0])),
+                proof_share: Share::Leader(Vec::from([1])),
+                joint_rand_blind: Some(Seed([2])),
+            },
+            // Modified measurement share.
+            Prio3InputShare {
+                measurement_share: Share::Leader(Vec::from([100])),
+                proof_share: Share::Leader(Vec::from([1])),
+                joint_rand_blind: Some(Seed([2])),
+            },
+            // Modified proof share.
+            Prio3InputShare {
+                measurement_share: Share::Leader(Vec::from([0])),
+                proof_share: Share::Leader(Vec::from([101])),
+                joint_rand_blind: Some(Seed([2])),
+            },
+            // Modified joint_rand_blind.
+            Prio3InputShare {
+                measurement_share: Share::Leader(Vec::from([0])),
+                proof_share: Share::Leader(Vec::from([1])),
+                joint_rand_blind: Some(Seed([102])),
+            },
+            // Missing joint_rand_blind.
+            Prio3InputShare {
+                measurement_share: Share::Leader(Vec::from([0])),
+                proof_share: Share::Leader(Vec::from([1])),
+                joint_rand_blind: None,
+            },
+        ])
+    }
+
+    #[test]
+    fn prepare_share_equality_test() {
+        equality_comparison_test(&[
+            // Default.
+            Prio3PrepareShare {
+                verifier: Vec::from([0]),
+                joint_rand_part: Some(Seed([1])),
+            },
+            // Modified verifier.
+            Prio3PrepareShare {
+                verifier: Vec::from([100]),
+                joint_rand_part: Some(Seed([1])),
+            },
+            // Modified joint_rand_part.
+            Prio3PrepareShare {
+                verifier: Vec::from([0]),
+                joint_rand_part: Some(Seed([101])),
+            },
+            // Missing joint_rand_part.
+            Prio3PrepareShare {
+                verifier: Vec::from([0]),
+                joint_rand_part: None,
+            },
+        ])
+    }
+
+    #[test]
+    fn prepare_message_equality_test() {
+        equality_comparison_test(&[
+            // Default.
+            Prio3PrepareMessage {
+                joint_rand_seed: Some(Seed([0])),
+            },
+            // Modified joint_rand_seed.
+            Prio3PrepareMessage {
+                joint_rand_seed: Some(Seed([100])),
+            },
+            // Missing joint_rand_seed.
+            Prio3PrepareMessage {
+                joint_rand_seed: None,
+            },
+        ])
+    }
+
+    #[test]
+    fn prepare_state_equality_test() {
+        equality_comparison_test(&[
+            // Default.
+            Prio3PrepareState {
+                measurement_share: Share::Leader(Vec::from([0])),
+                joint_rand_seed: Some(Seed([1])),
+                agg_id: 2,
+                verifier_len: 3,
+            },
+            // Modified measurement share.
+            Prio3PrepareState {
+                measurement_share: Share::Leader(Vec::from([100])),
+                joint_rand_seed: Some(Seed([1])),
+                agg_id: 2,
+                verifier_len: 3,
+            },
+            // Modified joint_rand_seed.
+            Prio3PrepareState {
+                measurement_share: Share::Leader(Vec::from([0])),
+                joint_rand_seed: Some(Seed([101])),
+                agg_id: 2,
+                verifier_len: 3,
+            },
+            // Missing joint_rand_seed.
+            Prio3PrepareState {
+                measurement_share: Share::Leader(Vec::from([0])),
+                joint_rand_seed: None,
+                agg_id: 2,
+                verifier_len: 3,
+            },
+            // Modified agg_id.
+            Prio3PrepareState {
+                measurement_share: Share::Leader(Vec::from([0])),
+                joint_rand_seed: Some(Seed([1])),
+                agg_id: 102,
+                verifier_len: 3,
+            },
+            // Modified verifier_len.
+            Prio3PrepareState {
+                measurement_share: Share::Leader(Vec::from([0])),
+                joint_rand_seed: Some(Seed([1])),
+                agg_id: 2,
+                verifier_len: 103,
+            },
+        ])
+    }
+
+    #[test]
+    fn test_optimal_chunk_length() {
+        // nonsense argument, but make sure it doesn't panic.
+        optimal_chunk_length(0);
+
+        // edge cases on either side of power-of-two jumps
+        assert_eq!(optimal_chunk_length(1), 1);
+        assert_eq!(optimal_chunk_length(2), 2);
+        assert_eq!(optimal_chunk_length(3), 1);
+        assert_eq!(optimal_chunk_length(18), 6);
+        assert_eq!(optimal_chunk_length(19), 3);
+
+        // additional arbitrary test cases
+        assert_eq!(optimal_chunk_length(40), 6);
+        assert_eq!(optimal_chunk_length(10_000), 79);
+        assert_eq!(optimal_chunk_length(100_000), 393);
+
+        // confirm that the chunk lengths are truly optimal
+        for measurement_length in [2, 3, 4, 5, 18, 19, 40] {
+            let optimal_chunk_length = optimal_chunk_length(measurement_length);
+            let optimal_proof_length = Histogram::<Field128, ParallelSum<_, _>>::new(
+                measurement_length,
+                optimal_chunk_length,
+            )
+            .unwrap()
+            .proof_len();
+            for chunk_length in 1..=measurement_length {
+                let proof_length =
+                    Histogram::<Field128, ParallelSum<_, _>>::new(measurement_length, chunk_length)
+                        .unwrap()
+                        .proof_len();
+                assert!(proof_length >= optimal_proof_length);
+            }
+        }
     }
 }

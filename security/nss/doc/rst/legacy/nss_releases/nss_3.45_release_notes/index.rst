@@ -20,7 +20,7 @@ NSS 3.45 release notes
    -  Michael Shigorin
    -  Tomas Mraz
 
-.. _distribution_information:
+
 
 `Distribution Information <#distribution_information>`__
 --------------------------------------------------------

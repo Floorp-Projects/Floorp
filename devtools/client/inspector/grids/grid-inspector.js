@@ -599,28 +599,35 @@ class GridInspector {
       (await asyncStorage.getItem("gridInspectorHostColors")) || {};
 
     for (const grid of grids) {
-      if (grid.nodeFront === node) {
-        if (!customGridColors[hostname]) {
-          customGridColors[hostname] = [];
-        }
-        // Update the custom color for the grid in this position.
-        customGridColors[hostname][grid.id] = color;
-        await asyncStorage.setItem("gridInspectorHostColors", customGridColors);
+      if (grid.nodeFront !== node) {
+        continue;
+      }
 
-        if (!this.isPanelVisible()) {
-          // This call might fail if called asynchrously after the toolbox is finished
-          // closing.
-          return;
-        }
+      if (!customGridColors[hostname]) {
+        customGridColors[hostname] = [];
+      }
+      // Update the custom color for the grid in this position.
+      customGridColors[hostname][grid.id] = color;
+      await asyncStorage.setItem("gridInspectorHostColors", customGridColors);
 
-        // If the grid for which the color was updated currently has a highlighter, update
-        // the color. If the node is not explicitly highlighted, we assume it's the
-        // parent grid for a subgrid.
-        if (this.highlighters.gridHighlighters.has(node)) {
-          this.highlighters.showGridHighlighter(node);
-        } else {
-          this.highlighters.showParentGridHighlighter(node);
-        }
+      if (!this.isPanelVisible()) {
+        // This call might fail if called asynchrously after the toolbox is finished
+        // closing.
+        return;
+      }
+
+      // If the grid for which the color was updated currently has a highlighter, update
+      // the color.
+      if (this.highlighters.gridHighlighters.has(node)) {
+        this.highlighters.showGridHighlighter(node);
+        continue;
+      }
+
+      // If the node is not explicitly highlighted, but is a parent grid which has an
+      // highlighted subgrid, we also want to update the color.
+      const subGrid = grids.find(({ id }) => grid.subgrids.includes(id));
+      if (subGrid?.highlighted) {
+        this.highlighters.showParentGridHighlighter(node);
       }
     }
   }

@@ -34,6 +34,7 @@
 #include "nsCocoaFeatures.h"
 #include "nsIScreenManager.h"
 #include "nsIWidgetListener.h"
+#include "nsXULPopupManager.h"
 #include "VibrancyManager.h"
 #include "nsPresContext.h"
 #include "nsDocShell.h"
@@ -113,13 +114,17 @@ NS_IMPL_ISUPPORTS_INHERITED(nsCocoaWindow, Inherited, nsPIWidgetCocoa)
 
 static void RollUpPopups(nsIRollupListener::AllowAnimations aAllowAnimations =
                              nsIRollupListener::AllowAnimations::Yes) {
-  nsIRollupListener* rollupListener = nsBaseWidget::GetActiveRollupListener();
-  NS_ENSURE_TRUE_VOID(rollupListener);
+  if (RefPtr pm = nsXULPopupManager::GetInstance()) {
+    pm->RollupTooltips();
+  }
 
+  nsIRollupListener* rollupListener = nsBaseWidget::GetActiveRollupListener();
+  if (!rollupListener) {
+    return;
+  }
   if (rollupListener->RollupNativeMenu()) {
     return;
   }
-
   nsCOMPtr<nsIWidget> rollupWidget = rollupListener->GetRollupWidget();
   if (!rollupWidget) {
     return;

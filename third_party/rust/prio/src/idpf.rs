@@ -1,12 +1,13 @@
 //! This module implements the incremental distributed point function (IDPF) described in
-//! [[draft-irtf-cfrg-vdaf-05]].
+//! [[draft-irtf-cfrg-vdaf-07]].
 //!
-//! [draft-irtf-cfrg-vdaf-05]: https://datatracker.ietf.org/doc/draft-irtf-cfrg-vdaf/05/
+//! [draft-irtf-cfrg-vdaf-07]: https://datatracker.ietf.org/doc/draft-irtf-cfrg-vdaf/07/
 
 use crate::{
     codec::{CodecError, Decode, Encode, ParameterizedDecode},
+    field::{FieldElement, FieldElementExt},
     vdaf::{
-        prg::{CoinToss, PrgFixedKeyAes128Key, Seed, SeedStream},
+        xof::{Seed, XofFixedKeyAes128Key},
         VdafError, VERSION,
     },
 };
@@ -18,11 +19,12 @@ use bitvec::{
     vec::BitVec,
     view::BitView,
 };
+use rand_core::RngCore;
 use std::{
     collections::{HashMap, VecDeque},
     fmt::Debug,
     io::{Cursor, Read},
-    ops::{Add, AddAssign, Index, Sub},
+    ops::{Add, AddAssign, ControlFlow, Index, Sub},
 };
 use subtle::{Choice, ConditionallyNegatable, ConditionallySelectable, ConstantTimeEq};
 
@@ -33,7 +35,7 @@ pub enum IdpfError {
     #[error("tried to merge shares from incompatible levels")]
     MismatchedLevel,
 
-    /// Invalid parameter, indicates an invalid input to either [`gen`] or [`eval`].
+    /// Invalid parameter, indicates an invalid input to either [`Idpf::gen`] or [`Idpf::eval`].
     #[error("invalid parameter: {0}")]
     InvalidParameter(String),
 }
@@ -135,22 +137,69 @@ where
 /// Trait for values to be programmed into an IDPF.
 ///
 /// Values must form an Abelian group, so that they can be secret-shared, and the group operation
-/// must be represented by [`Add`]. An implementation of [`CoinToss`] must be provided to randomly
-/// select a value using PRG output. Values must be encodable and decodable, without need for a
-/// decoding parameter.
+/// must be represented by [`Add`]. Values must be encodable and decodable, without need for a
+/// decoding parameter. Values can be pseudorandomly generated, with a uniform probability
+/// distribution, from XOF output.
 pub trait IdpfValue:
     Add<Output = Self>
     + AddAssign
     + Sub<Output = Self>
-    + ConditionallySelectable
     + ConditionallyNegatable
-    + CoinToss
     + Encode
     + Decode
     + Sized
 {
+    /// Any run-time parameters needed to produce a value.
+    type ValueParameter;
+
+    /// Generate a pseudorandom value from a seed stream.
+    fn generate<S>(seed_stream: &mut S, parameter: &Self::ValueParameter) -> Self
+    where
+        S: RngCore;
+
     /// Returns the additive identity.
-    fn zero() -> Self;
+    fn zero(parameter: &Self::ValueParameter) -> Self;
+
+    /// Conditionally select between two values. Implementations must perform this operation in
+    /// constant time.
+    ///
+    /// This is the same as in [`subtle::ConditionallySelectable`], but without the [`Copy`] bound.
+    fn conditional_select(a: &Self, b: &Self, choice: Choice) -> Self;
+}
+
+impl<F> IdpfValue for F
+where
+    F: FieldElement,
+{
+    type ValueParameter = ();
+
+    fn generate<S>(seed_stream: &mut S, _: &()) -> Self
+    where
+        S: RngCore,
+    {
+        // This is analogous to `Prng::get()`, but does not make use of a persistent buffer of
+        // output.
+        let mut buffer = [0u8; 64];
+        assert!(
+            buffer.len() >= F::ENCODED_SIZE,
+            "field is too big for buffer"
+        );
+        loop {
+            seed_stream.fill_bytes(&mut buffer[..F::ENCODED_SIZE]);
+            match F::from_random_rejection(&buffer[..F::ENCODED_SIZE]) {
+                ControlFlow::Break(x) => return x,
+                ControlFlow::Continue(()) => continue,
+            }
+        }
+    }
+
+    fn zero(_: &()) -> Self {
+        <Self as FieldElement>::zero()
+    }
+
+    fn conditional_select(a: &Self, b: &Self, choice: Choice) -> Self {
+        <F as ConditionallySelectable>::conditional_select(a, b, choice)
+    }
 }
 
 /// An output from evaluation of an IDPF at some level and index.
@@ -183,30 +232,34 @@ where
     }
 }
 
-fn extend(seed: &[u8; 16], prg_fixed_key: &PrgFixedKeyAes128Key) -> ([[u8; 16]; 2], [Choice; 2]) {
-    let mut seed_stream = prg_fixed_key.with_seed(seed);
+fn extend(seed: &[u8; 16], xof_fixed_key: &XofFixedKeyAes128Key) -> ([[u8; 16]; 2], [Choice; 2]) {
+    let mut seed_stream = xof_fixed_key.with_seed(seed);
 
     let mut seeds = [[0u8; 16], [0u8; 16]];
-    seed_stream.fill(&mut seeds[0]);
-    seed_stream.fill(&mut seeds[1]);
+    seed_stream.fill_bytes(&mut seeds[0]);
+    seed_stream.fill_bytes(&mut seeds[1]);
 
     let mut byte = [0u8];
-    seed_stream.fill(&mut byte);
+    seed_stream.fill_bytes(&mut byte);
     let control_bits = [(byte[0] & 1).into(), ((byte[0] >> 1) & 1).into()];
 
     (seeds, control_bits)
 }
 
-fn convert<V>(seed: &[u8; 16], prg_fixed_key: &PrgFixedKeyAes128Key) -> ([u8; 16], V)
+fn convert<V>(
+    seed: &[u8; 16],
+    xof_fixed_key: &XofFixedKeyAes128Key,
+    parameter: &V::ValueParameter,
+) -> ([u8; 16], V)
 where
     V: IdpfValue,
 {
-    let mut seed_stream = prg_fixed_key.with_seed(seed);
+    let mut seed_stream = xof_fixed_key.with_seed(seed);
 
     let mut next_seed = [0u8; 16];
-    seed_stream.fill(&mut next_seed);
+    seed_stream.fill_bytes(&mut next_seed);
 
-    (next_seed, V::sample(&mut seed_stream))
+    (next_seed, V::generate(&mut seed_stream, parameter))
 }
 
 /// Helper method to update seeds, update control bits, and output the correction word for one level
@@ -214,17 +267,18 @@ where
 fn generate_correction_word<V>(
     input_bit: Choice,
     value: V,
+    parameter: &V::ValueParameter,
     keys: &mut [[u8; 16]; 2],
     control_bits: &mut [Choice; 2],
-    extend_prg_fixed_key: &PrgFixedKeyAes128Key,
-    convert_prg_fixed_key: &PrgFixedKeyAes128Key,
+    extend_xof_fixed_key: &XofFixedKeyAes128Key,
+    convert_xof_fixed_key: &XofFixedKeyAes128Key,
 ) -> IdpfCorrectionWord<V>
 where
     V: IdpfValue,
 {
     // Expand both keys into two seeds and two control bits each.
-    let (seed_0, control_bits_0) = extend(&keys[0], extend_prg_fixed_key);
-    let (seed_1, control_bits_1) = extend(&keys[1], extend_prg_fixed_key);
+    let (seed_0, control_bits_0) = extend(&keys[0], extend_xof_fixed_key);
+    let (seed_1, control_bits_1) = extend(&keys[1], extend_xof_fixed_key);
 
     let (keep, lose) = (input_bit, !input_bit);
 
@@ -254,8 +308,10 @@ where
         conditional_xor_seeds(&seed_1_keep, &cw_seed, previous_control_bits[1]),
     ];
 
-    let (new_key_0, elements_0) = convert::<V>(&seeds_corrected[0], convert_prg_fixed_key);
-    let (new_key_1, elements_1) = convert::<V>(&seeds_corrected[1], convert_prg_fixed_key);
+    let (new_key_0, elements_0) =
+        convert::<V>(&seeds_corrected[0], convert_xof_fixed_key, parameter);
+    let (new_key_1, elements_1) =
+        convert::<V>(&seeds_corrected[1], convert_xof_fixed_key, parameter);
 
     keys[0] = new_key_0;
     keys[1] = new_key_1;
@@ -272,19 +328,21 @@ where
 
 /// Helper function to evaluate one level of an IDPF. This updates the seed and control bit
 /// arguments that are passed in.
+#[allow(clippy::too_many_arguments)]
 fn eval_next<V>(
     is_leader: bool,
+    parameter: &V::ValueParameter,
     key: &mut [u8; 16],
     control_bit: &mut Choice,
     correction_word: &IdpfCorrectionWord<V>,
     input_bit: Choice,
-    extend_prg_fixed_key: &PrgFixedKeyAes128Key,
-    convert_prg_fixed_key: &PrgFixedKeyAes128Key,
+    extend_xof_fixed_key: &XofFixedKeyAes128Key,
+    convert_xof_fixed_key: &XofFixedKeyAes128Key,
 ) -> V
 where
     V: IdpfValue,
 {
-    let (mut seeds, mut control_bits) = extend(key, extend_prg_fixed_key);
+    let (mut seeds, mut control_bits) = extend(key, extend_xof_fixed_key);
 
     seeds[0] = conditional_xor_seeds(&seeds[0], &correction_word.seed, *control_bit);
     control_bits[0] ^= correction_word.control_bits[0] & *control_bit;
@@ -294,245 +352,278 @@ where
     let seed_corrected = conditional_select_seed(input_bit, &seeds);
     *control_bit = Choice::conditional_select(&control_bits[0], &control_bits[1], input_bit);
 
-    let (new_key, elements) = convert::<V>(&seed_corrected, convert_prg_fixed_key);
+    let (new_key, elements) = convert::<V>(&seed_corrected, convert_xof_fixed_key, parameter);
     *key = new_key;
 
     let mut out =
-        elements + V::conditional_select(&V::zero(), &correction_word.value, *control_bit);
+        elements + V::conditional_select(&V::zero(parameter), &correction_word.value, *control_bit);
     out.conditional_negate(Choice::from((!is_leader) as u8));
     out
 }
 
-pub(crate) fn gen_with_random<VI, VL, M: IntoIterator<Item = VI>>(
-    input: &IdpfInput,
-    inner_values: M,
-    leaf_value: VL,
-    binder: &[u8],
-    random: &[[u8; 16]; 2],
-) -> Result<(IdpfPublicShare<VI, VL>, [Seed<16>; 2]), VdafError>
+/// This defines a family of IDPFs (incremental distributed point functions) with certain types of
+/// values at inner tree nodes and at leaf tree nodes.
+///
+/// IDPF keys can be generated by providing an input and programmed outputs for each tree level to
+/// [`Idpf::gen`].
+pub struct Idpf<VI, VL>
 where
     VI: IdpfValue,
     VL: IdpfValue,
 {
-    let bits = input.len();
+    inner_node_value_parameter: VI::ValueParameter,
+    leaf_node_value_parameter: VL::ValueParameter,
+}
 
-    let initial_keys: [Seed<16>; 2] = [Seed::from_bytes(random[0]), Seed::from_bytes(random[1])];
+impl<VI, VL> Idpf<VI, VL>
+where
+    VI: IdpfValue,
+    VL: IdpfValue,
+{
+    /// Construct an [`Idpf`] instance with the given run-time parameters needed for inner and leaf
+    /// values.
+    pub fn new(
+        inner_node_value_parameter: VI::ValueParameter,
+        leaf_node_value_parameter: VL::ValueParameter,
+    ) -> Self {
+        Self {
+            inner_node_value_parameter,
+            leaf_node_value_parameter,
+        }
+    }
 
-    let extend_custom = [
-        VERSION, 1, /* algorithm class */
-        0, 0, 0, 0, /* algorithm ID */
-        0, 0, /* usage */
-    ];
-    let convert_custom = [
-        VERSION, 1, /* algorithm class */
-        0, 0, 0, 0, /* algorithm ID */
-        0, 1, /* usage */
-    ];
-    let extend_prg_fixed_key = PrgFixedKeyAes128Key::new(&extend_custom, binder);
-    let convert_prg_fixed_key = PrgFixedKeyAes128Key::new(&convert_custom, binder);
+    pub(crate) fn gen_with_random<M: IntoIterator<Item = VI>>(
+        &self,
+        input: &IdpfInput,
+        inner_values: M,
+        leaf_value: VL,
+        binder: &[u8],
+        random: &[[u8; 16]; 2],
+    ) -> Result<(IdpfPublicShare<VI, VL>, [Seed<16>; 2]), VdafError> {
+        let bits = input.len();
 
-    let mut keys = [initial_keys[0].0, initial_keys[1].0];
-    let mut control_bits = [Choice::from(0u8), Choice::from(1u8)];
-    let mut inner_correction_words = Vec::with_capacity(bits - 1);
+        let initial_keys: [Seed<16>; 2] =
+            [Seed::from_bytes(random[0]), Seed::from_bytes(random[1])];
 
-    for (level, value) in inner_values.into_iter().enumerate() {
-        if level >= bits - 1 {
+        let extend_dst = [
+            VERSION, 1, /* algorithm class */
+            0, 0, 0, 0, /* algorithm ID */
+            0, 0, /* usage */
+        ];
+        let convert_dst = [
+            VERSION, 1, /* algorithm class */
+            0, 0, 0, 0, /* algorithm ID */
+            0, 1, /* usage */
+        ];
+        let extend_xof_fixed_key = XofFixedKeyAes128Key::new(&extend_dst, binder);
+        let convert_xof_fixed_key = XofFixedKeyAes128Key::new(&convert_dst, binder);
+
+        let mut keys = [initial_keys[0].0, initial_keys[1].0];
+        let mut control_bits = [Choice::from(0u8), Choice::from(1u8)];
+        let mut inner_correction_words = Vec::with_capacity(bits - 1);
+
+        for (level, value) in inner_values.into_iter().enumerate() {
+            if level >= bits - 1 {
+                return Err(IdpfError::InvalidParameter(
+                    "too many values were supplied".to_string(),
+                )
+                .into());
+            }
+            inner_correction_words.push(generate_correction_word::<VI>(
+                Choice::from(input[level] as u8),
+                value,
+                &self.inner_node_value_parameter,
+                &mut keys,
+                &mut control_bits,
+                &extend_xof_fixed_key,
+                &convert_xof_fixed_key,
+            ));
+        }
+        if inner_correction_words.len() != bits - 1 {
             return Err(
-                IdpfError::InvalidParameter("too many values were supplied".to_string()).into(),
+                IdpfError::InvalidParameter("too few values were supplied".to_string()).into(),
             );
         }
-        inner_correction_words.push(generate_correction_word::<VI>(
-            Choice::from(input[level] as u8),
-            value,
+        let leaf_correction_word = generate_correction_word::<VL>(
+            Choice::from(input[bits - 1] as u8),
+            leaf_value,
+            &self.leaf_node_value_parameter,
             &mut keys,
             &mut control_bits,
-            &extend_prg_fixed_key,
-            &convert_prg_fixed_key,
-        ));
-    }
-    if inner_correction_words.len() != bits - 1 {
-        return Err(IdpfError::InvalidParameter("too few values were supplied".to_string()).into());
-    }
-    let leaf_correction_word = generate_correction_word::<VL>(
-        Choice::from(input[bits - 1] as u8),
-        leaf_value,
-        &mut keys,
-        &mut control_bits,
-        &extend_prg_fixed_key,
-        &convert_prg_fixed_key,
-    );
-    let public_share = IdpfPublicShare {
-        inner_correction_words,
-        leaf_correction_word,
-    };
-
-    Ok((public_share, initial_keys))
-}
-
-/// The IDPF key generation algorithm.
-///
-/// Generate and return a sequence of IDPF shares for `input`. The parameters `inner_values`
-/// and `leaf_value` provide the output values for each successive level of the prefix tree.
-pub fn gen<VI, VL, M>(
-    input: &IdpfInput,
-    inner_values: M,
-    leaf_value: VL,
-    binder: &[u8],
-) -> Result<(IdpfPublicShare<VI, VL>, [Seed<16>; 2]), VdafError>
-where
-    VI: IdpfValue,
-    VL: IdpfValue,
-    M: IntoIterator<Item = VI>,
-{
-    if input.is_empty() {
-        return Err(IdpfError::InvalidParameter("invalid number of bits: 0".to_string()).into());
-    }
-    let mut random = [[0u8; 16]; 2];
-    for random_seed in random.iter_mut() {
-        getrandom::getrandom(random_seed)?;
-    }
-    gen_with_random(input, inner_values, leaf_value, binder, &random)
-}
-
-/// Evaluate an IDPF share on `prefix`, starting from a particular tree level with known
-/// intermediate values.
-#[allow(clippy::too_many_arguments)]
-fn eval_from_node<VI, VL>(
-    is_leader: bool,
-    public_share: &IdpfPublicShare<VI, VL>,
-    start_level: usize,
-    mut key: [u8; 16],
-    mut control_bit: Choice,
-    prefix: &IdpfInput,
-    binder: &[u8],
-    cache: &mut dyn IdpfCache,
-) -> Result<IdpfOutputShare<VI, VL>, IdpfError>
-where
-    VI: IdpfValue,
-    VL: IdpfValue,
-{
-    let bits = public_share.inner_correction_words.len() + 1;
-
-    let extend_custom = [
-        VERSION, 1, /* algorithm class */
-        0, 0, 0, 0, /* algorithm ID */
-        0, 0, /* usage */
-    ];
-    let convert_custom = [
-        VERSION, 1, /* algorithm class */
-        0, 0, 0, 0, /* algorithm ID */
-        0, 1, /* usage */
-    ];
-    let extend_prg_fixed_key = PrgFixedKeyAes128Key::new(&extend_custom, binder);
-    let convert_prg_fixed_key = PrgFixedKeyAes128Key::new(&convert_custom, binder);
-
-    let mut last_inner_output = None;
-    for ((correction_word, input_bit), level) in public_share.inner_correction_words[start_level..]
-        .iter()
-        .zip(prefix[start_level..].iter())
-        .zip(start_level..)
-    {
-        last_inner_output = Some(eval_next(
-            is_leader,
-            &mut key,
-            &mut control_bit,
-            correction_word,
-            Choice::from(*input_bit as u8),
-            &extend_prg_fixed_key,
-            &convert_prg_fixed_key,
-        ));
-        let cache_key = &prefix[..=level];
-        cache.insert(cache_key, &(key, control_bit.unwrap_u8()));
-    }
-
-    if prefix.len() == bits {
-        let leaf_output = eval_next(
-            is_leader,
-            &mut key,
-            &mut control_bit,
-            &public_share.leaf_correction_word,
-            Choice::from(prefix[bits - 1] as u8),
-            &extend_prg_fixed_key,
-            &convert_prg_fixed_key,
+            &extend_xof_fixed_key,
+            &convert_xof_fixed_key,
         );
-        // Note: there's no point caching this node's key, because we will always run the
-        // eval_next() call for the leaf level.
-        Ok(IdpfOutputShare::Leaf(leaf_output))
-    } else {
-        Ok(IdpfOutputShare::Inner(last_inner_output.unwrap()))
-    }
-}
+        let public_share = IdpfPublicShare {
+            inner_correction_words,
+            leaf_correction_word,
+        };
 
-/// The IDPF key evaluation algorithm.
-///
-/// Evaluate an IDPF share on `prefix`.
-pub fn eval<VI, VL>(
-    agg_id: usize,
-    public_share: &IdpfPublicShare<VI, VL>,
-    key: &Seed<16>,
-    prefix: &IdpfInput,
-    binder: &[u8],
-    cache: &mut dyn IdpfCache,
-) -> Result<IdpfOutputShare<VI, VL>, IdpfError>
-where
-    VI: IdpfValue,
-    VL: IdpfValue,
-{
-    let bits = public_share.inner_correction_words.len() + 1;
-    if agg_id > 1 {
-        return Err(IdpfError::InvalidParameter(format!(
-            "invalid aggregator ID {agg_id}"
-        )));
-    }
-    let is_leader = agg_id == 0;
-    if prefix.is_empty() {
-        return Err(IdpfError::InvalidParameter("empty prefix".to_string()));
-    }
-    if prefix.len() > bits {
-        return Err(IdpfError::InvalidParameter(format!(
-            "prefix length ({}) exceeds configured number of bits ({})",
-            prefix.len(),
-            bits,
-        )));
+        Ok((public_share, initial_keys))
     }
 
-    // Check for cached keys first, starting from the end of our desired path down the tree, and
-    // walking back up. If we get a hit, stop there and evaluate the remainder of the tree path
-    // going forward.
-    if prefix.len() > 1 {
-        // Skip checking for `prefix` in the cache, because we don't store field element
-        // values along with keys and control bits. Instead, start looking one node higher
-        // up, so we can recompute everything for the last level of `prefix`.
-        let mut cache_key = &prefix[..prefix.len() - 1];
-        while !cache_key.is_empty() {
-            if let Some((key, control_bit)) = cache.get(cache_key) {
-                // Evaluate the IDPF starting from the cached data at a previously-computed
-                // node, and return the result.
-                return eval_from_node::<VI, VL>(
-                    is_leader,
-                    public_share,
-                    /* start_level */ cache_key.len(),
-                    key,
-                    Choice::from(control_bit),
-                    prefix,
-                    binder,
-                    cache,
-                );
-            }
-            cache_key = &cache_key[..cache_key.len() - 1];
+    /// The IDPF key generation algorithm.
+    ///
+    /// Generate and return a sequence of IDPF shares for `input`. The parameters `inner_values`
+    /// and `leaf_value` provide the output values for each successive level of the prefix tree.
+    pub fn gen<M>(
+        &self,
+        input: &IdpfInput,
+        inner_values: M,
+        leaf_value: VL,
+        binder: &[u8],
+    ) -> Result<(IdpfPublicShare<VI, VL>, [Seed<16>; 2]), VdafError>
+    where
+        M: IntoIterator<Item = VI>,
+    {
+        if input.is_empty() {
+            return Err(
+                IdpfError::InvalidParameter("invalid number of bits: 0".to_string()).into(),
+            );
+        }
+        let mut random = [[0u8; 16]; 2];
+        for random_seed in random.iter_mut() {
+            getrandom::getrandom(random_seed)?;
+        }
+        self.gen_with_random(input, inner_values, leaf_value, binder, &random)
+    }
+
+    /// Evaluate an IDPF share on `prefix`, starting from a particular tree level with known
+    /// intermediate values.
+    #[allow(clippy::too_many_arguments)]
+    fn eval_from_node(
+        &self,
+        is_leader: bool,
+        public_share: &IdpfPublicShare<VI, VL>,
+        start_level: usize,
+        mut key: [u8; 16],
+        mut control_bit: Choice,
+        prefix: &IdpfInput,
+        binder: &[u8],
+        cache: &mut dyn IdpfCache,
+    ) -> Result<IdpfOutputShare<VI, VL>, IdpfError> {
+        let bits = public_share.inner_correction_words.len() + 1;
+
+        let extend_dst = [
+            VERSION, 1, /* algorithm class */
+            0, 0, 0, 0, /* algorithm ID */
+            0, 0, /* usage */
+        ];
+        let convert_dst = [
+            VERSION, 1, /* algorithm class */
+            0, 0, 0, 0, /* algorithm ID */
+            0, 1, /* usage */
+        ];
+        let extend_xof_fixed_key = XofFixedKeyAes128Key::new(&extend_dst, binder);
+        let convert_xof_fixed_key = XofFixedKeyAes128Key::new(&convert_dst, binder);
+
+        let mut last_inner_output = None;
+        for ((correction_word, input_bit), level) in public_share.inner_correction_words
+            [start_level..]
+            .iter()
+            .zip(prefix[start_level..].iter())
+            .zip(start_level..)
+        {
+            last_inner_output = Some(eval_next(
+                is_leader,
+                &self.inner_node_value_parameter,
+                &mut key,
+                &mut control_bit,
+                correction_word,
+                Choice::from(*input_bit as u8),
+                &extend_xof_fixed_key,
+                &convert_xof_fixed_key,
+            ));
+            let cache_key = &prefix[..=level];
+            cache.insert(cache_key, &(key, control_bit.unwrap_u8()));
+        }
+
+        if prefix.len() == bits {
+            let leaf_output = eval_next(
+                is_leader,
+                &self.leaf_node_value_parameter,
+                &mut key,
+                &mut control_bit,
+                &public_share.leaf_correction_word,
+                Choice::from(prefix[bits - 1] as u8),
+                &extend_xof_fixed_key,
+                &convert_xof_fixed_key,
+            );
+            // Note: there's no point caching this node's key, because we will always run the
+            // eval_next() call for the leaf level.
+            Ok(IdpfOutputShare::Leaf(leaf_output))
+        } else {
+            Ok(IdpfOutputShare::Inner(last_inner_output.unwrap()))
         }
     }
-    // Evaluate starting from the root node.
-    eval_from_node::<VI, VL>(
-        is_leader,
-        public_share,
-        /* start_level */ 0,
-        key.0,
-        /* control_bit */ Choice::from((!is_leader) as u8),
-        prefix,
-        binder,
-        cache,
-    )
+
+    /// The IDPF key evaluation algorithm.
+    ///
+    /// Evaluate an IDPF share on `prefix`.
+    pub fn eval(
+        &self,
+        agg_id: usize,
+        public_share: &IdpfPublicShare<VI, VL>,
+        key: &Seed<16>,
+        prefix: &IdpfInput,
+        binder: &[u8],
+        cache: &mut dyn IdpfCache,
+    ) -> Result<IdpfOutputShare<VI, VL>, IdpfError> {
+        let bits = public_share.inner_correction_words.len() + 1;
+        if agg_id > 1 {
+            return Err(IdpfError::InvalidParameter(format!(
+                "invalid aggregator ID {agg_id}"
+            )));
+        }
+        let is_leader = agg_id == 0;
+        if prefix.is_empty() {
+            return Err(IdpfError::InvalidParameter("empty prefix".to_string()));
+        }
+        if prefix.len() > bits {
+            return Err(IdpfError::InvalidParameter(format!(
+                "prefix length ({}) exceeds configured number of bits ({})",
+                prefix.len(),
+                bits,
+            )));
+        }
+
+        // Check for cached keys first, starting from the end of our desired path down the tree, and
+        // walking back up. If we get a hit, stop there and evaluate the remainder of the tree path
+        // going forward.
+        if prefix.len() > 1 {
+            // Skip checking for `prefix` in the cache, because we don't store field element
+            // values along with keys and control bits. Instead, start looking one node higher
+            // up, so we can recompute everything for the last level of `prefix`.
+            let mut cache_key = &prefix[..prefix.len() - 1];
+            while !cache_key.is_empty() {
+                if let Some((key, control_bit)) = cache.get(cache_key) {
+                    // Evaluate the IDPF starting from the cached data at a previously-computed
+                    // node, and return the result.
+                    return self.eval_from_node(
+                        is_leader,
+                        public_share,
+                        /* start_level */ cache_key.len(),
+                        key,
+                        Choice::from(control_bit),
+                        prefix,
+                        binder,
+                        cache,
+                    );
+                }
+                cache_key = &cache_key[..cache_key.len() - 1];
+            }
+        }
+        // Evaluate starting from the root node.
+        self.eval_from_node(
+            is_leader,
+            public_share,
+            /* start_level */ 0,
+            key.0,
+            /* control_bit */ Choice::from((!is_leader) as u8),
+            prefix,
+            binder,
+            cache,
+        )
+    }
 }
 
 /// An IDPF public share. This contains the list of correction words used by all parties when
@@ -620,8 +711,8 @@ where
 
 impl<VI, VL> ParameterizedDecode<usize> for IdpfPublicShare<VI, VL>
 where
-    VI: Decode + Copy,
-    VL: Decode + Copy,
+    VI: Decode,
+    VL: Decode,
 {
     fn decode_with_param(bits: &usize, bytes: &mut Cursor<&[u8]>) -> Result<Self, CodecError> {
         let packed_control_len = (bits + 3) / 4;
@@ -718,7 +809,7 @@ fn or_seeds(left: &[u8; 16], right: &[u8; 16]) -> [u8; 16] {
     seed
 }
 
-/// Take a control bit, and fan it out into a byte array that can be used as a mask for PRG seeds,
+/// Take a control bit, and fan it out into a byte array that can be used as a mask for XOF seeds,
 /// without branching. If the control bit input is 0, all bytes will be equal to 0, and if the
 /// control bit input is 1, all bytes will be equal to 255.
 fn control_bit_to_seed_mask(control: Choice) -> [u8; 16] {
@@ -862,7 +953,7 @@ mod tests {
         collections::HashMap,
         convert::{TryFrom, TryInto},
         io::Cursor,
-        iter,
+        ops::{Add, AddAssign, Sub},
         str::FromStr,
         sync::Mutex,
     };
@@ -874,21 +965,21 @@ mod tests {
         slice::BitSlice,
         vec::BitVec,
     };
-    use hex_literal::hex;
     use num_bigint::BigUint;
     use rand::random;
-    use subtle::Choice;
+    use subtle::{Choice, ConditionallyNegatable, ConditionallySelectable};
 
     use super::{
-        HashMapCache, IdpfCache, IdpfCorrectionWord, IdpfInput, IdpfOutputShare, IdpfPublicShare,
-        NoCache, RingBufferCache,
+        HashMapCache, Idpf, IdpfCache, IdpfCorrectionWord, IdpfInput, IdpfOutputShare,
+        IdpfPublicShare, NoCache, RingBufferCache,
     };
     use crate::{
-        codec::{CodecError, Decode, Encode, ParameterizedDecode},
-        field::{Field255, Field64, FieldElement},
-        idpf,
+        codec::{
+            decode_u32_items, encode_u32_items, CodecError, Decode, Encode, ParameterizedDecode,
+        },
+        field::{Field128, Field255, Field64, FieldElement},
         prng::Prng,
-        vdaf::{poplar1::Poplar1IdpfValue, prg::Seed},
+        vdaf::{poplar1::Poplar1IdpfValue, xof::Seed},
     };
 
     #[test]
@@ -976,13 +1067,15 @@ mod tests {
     fn test_idpf_poplar() {
         let input = bitbox![0, 1, 1, 0, 1].into();
         let nonce: [u8; 16] = random();
-        let (public_share, keys) = idpf::gen(
-            &input,
-            Vec::from([Poplar1IdpfValue::new([Field64::one(), Field64::one()]); 4]),
-            Poplar1IdpfValue::new([Field255::one(), Field255::one()]),
-            &nonce,
-        )
-        .unwrap();
+        let idpf = Idpf::new((), ());
+        let (public_share, keys) = idpf
+            .gen(
+                &input,
+                Vec::from([Poplar1IdpfValue::new([Field64::one(), Field64::one()]); 4]),
+                Poplar1IdpfValue::new([Field255::one(), Field255::one()]),
+                &nonce,
+            )
+            .unwrap();
 
         check_idpf_poplar_evaluation(
             &public_share,
@@ -1094,8 +1187,13 @@ mod tests {
         cache_0: &mut dyn IdpfCache,
         cache_1: &mut dyn IdpfCache,
     ) {
-        let share_0 = idpf::eval(0, public_share, &keys[0], prefix, binder, cache_0).unwrap();
-        let share_1 = idpf::eval(1, public_share, &keys[1], prefix, binder, cache_1).unwrap();
+        let idpf = Idpf::new((), ());
+        let share_0 = idpf
+            .eval(0, public_share, &keys[0], prefix, binder, cache_0)
+            .unwrap();
+        let share_1 = idpf
+            .eval(1, public_share, &keys[1], prefix, binder, cache_1)
+            .unwrap();
         let output = share_0.merge(share_1).unwrap();
         assert_eq!(&output, expected_output);
     }
@@ -1123,8 +1221,10 @@ mod tests {
             Poplar1IdpfValue::new([Field255::one(), Prng::new().unwrap().next().unwrap()]);
 
         let nonce: [u8; 16] = random();
-        let (public_share, keys) =
-            idpf::gen(&input, inner_values.clone(), leaf_values, &nonce).unwrap();
+        let idpf = Idpf::new((), ());
+        let (public_share, keys) = idpf
+            .gen(&input, inner_values.clone(), leaf_values, &nonce)
+            .unwrap();
         let mut cache_0 = RingBufferCache::new(3);
         let mut cache_1 = RingBufferCache::new(3);
 
@@ -1190,8 +1290,10 @@ mod tests {
             Poplar1IdpfValue::new([Field255::one(), Prng::new().unwrap().next().unwrap()]);
 
         let nonce: [u8; 16] = random();
-        let (public_share, keys) =
-            idpf::gen(&input, inner_values.clone(), leaf_values, &nonce).unwrap();
+        let idpf = Idpf::new((), ());
+        let (public_share, keys) = idpf
+            .gen(&input, inner_values.clone(), leaf_values, &nonce)
+            .unwrap();
         let mut cache_0 = SnoopingCache::new(HashMapCache::new());
         let mut cache_1 = HashMapCache::new();
 
@@ -1367,8 +1469,10 @@ mod tests {
             Poplar1IdpfValue::new([Field255::one(), Prng::new().unwrap().next().unwrap()]);
 
         let nonce: [u8; 16] = random();
-        let (public_share, keys) =
-            idpf::gen(&input, inner_values.clone(), leaf_values, &nonce).unwrap();
+        let idpf = Idpf::new((), ());
+        let (public_share, keys) = idpf
+            .gen(&input, inner_values.clone(), leaf_values, &nonce)
+            .unwrap();
         let mut cache_0 = LossyCache::new();
         let mut cache_1 = LossyCache::new();
 
@@ -1397,8 +1501,9 @@ mod tests {
     #[test]
     fn test_idpf_poplar_error_cases() {
         let nonce: [u8; 16] = random();
+        let idpf = Idpf::new((), ());
         // Zero bits does not make sense.
-        idpf::gen(
+        idpf.gen(
             &bitbox![].into(),
             Vec::<Poplar1IdpfValue<Field64>>::new(),
             Poplar1IdpfValue::new([Field255::zero(); 2]),
@@ -1406,23 +1511,24 @@ mod tests {
         )
         .unwrap_err();
 
-        let (public_share, keys) = idpf::gen(
-            &bitbox![0;10].into(),
-            Vec::from([Poplar1IdpfValue::new([Field64::zero(); 2]); 9]),
-            Poplar1IdpfValue::new([Field255::zero(); 2]),
-            &nonce,
-        )
-        .unwrap();
+        let (public_share, keys) = idpf
+            .gen(
+                &bitbox![0;10].into(),
+                Vec::from([Poplar1IdpfValue::new([Field64::zero(); 2]); 9]),
+                Poplar1IdpfValue::new([Field255::zero(); 2]),
+                &nonce,
+            )
+            .unwrap();
 
         // Wrong number of values.
-        idpf::gen(
+        idpf.gen(
             &bitbox![0; 10].into(),
             Vec::from([Poplar1IdpfValue::new([Field64::zero(); 2]); 8]),
             Poplar1IdpfValue::new([Field255::zero(); 2]),
             &nonce,
         )
         .unwrap_err();
-        idpf::gen(
+        idpf.gen(
             &bitbox![0; 10].into(),
             Vec::from([Poplar1IdpfValue::new([Field64::zero(); 2]); 10]),
             Poplar1IdpfValue::new([Field255::zero(); 2]),
@@ -1431,25 +1537,27 @@ mod tests {
         .unwrap_err();
 
         // Evaluating with empty prefix.
-        assert!(idpf::eval(
-            0,
-            &public_share,
-            &keys[0],
-            &bitbox![].into(),
-            &nonce,
-            &mut NoCache::new(),
-        )
-        .is_err());
+        assert!(idpf
+            .eval(
+                0,
+                &public_share,
+                &keys[0],
+                &bitbox![].into(),
+                &nonce,
+                &mut NoCache::new(),
+            )
+            .is_err());
         // Evaluating with too-long prefix.
-        assert!(idpf::eval(
-            0,
-            &public_share,
-            &keys[0],
-            &bitbox![0; 11].into(),
-            &nonce,
-            &mut NoCache::new(),
-        )
-        .is_err());
+        assert!(idpf
+            .eval(
+                0,
+                &public_share,
+                &keys[0],
+                &bitbox![0; 11].into(),
+                &nonce,
+                &mut NoCache::new(),
+            )
+            .is_err());
     }
 
     #[test]
@@ -1696,6 +1804,8 @@ mod tests {
     struct IdpfTestVector {
         /// The number of bits in IDPF inputs.
         bits: usize,
+        /// The binder string used when generating and evaluating keys.
+        binder: Vec<u8>,
         /// The IDPF input provided to the key generation algorithm.
         alpha: IdpfInput,
         /// The IDPF output values, at each inner level, provided to the key generation algorithm.
@@ -1711,7 +1821,7 @@ mod tests {
     /// Load a test vector for Idpf key generation.
     fn load_idpfpoplar_test_vector() -> IdpfTestVector {
         let test_vec: serde_json::Value =
-            serde_json::from_str(include_str!("vdaf/test_vec/05/IdpfPoplar_0.json")).unwrap();
+            serde_json::from_str(include_str!("vdaf/test_vec/07/IdpfPoplar_0.json")).unwrap();
         let test_vec_obj = test_vec.as_object().unwrap();
 
         let bits = test_vec_obj
@@ -1775,8 +1885,12 @@ mod tests {
         let public_share_hex = test_vec_obj.get("public_share").unwrap();
         let public_share = hex::decode(public_share_hex.as_str().unwrap()).unwrap();
 
+        let binder_hex = test_vec_obj.get("binder").unwrap();
+        let binder = hex::decode(binder_hex.as_str().unwrap()).unwrap();
+
         IdpfTestVector {
             bits,
+            binder,
             alpha,
             beta_inner,
             beta_leaf,
@@ -1786,128 +1900,18 @@ mod tests {
     }
 
     #[test]
-    fn idpf_poplar_public_share_deserialize() {
-        let test_vector = load_idpfpoplar_test_vector();
-        let data = test_vector.public_share;
-        let bits = test_vector.bits;
-        let public_share = IdpfPublicShare::<
-            Poplar1IdpfValue<Field64>,
-            Poplar1IdpfValue<Field255>,
-        >::get_decoded_with_param(&bits, &data)
-        .unwrap();
-
-        let expected_public_share = IdpfPublicShare {
-            inner_correction_words: Vec::from([
-                IdpfCorrectionWord {
-                    seed: hex!("5c9c365eb47694346f7e8dfdf5a2c68a"),
-                    control_bits: [Choice::from(1), Choice::from(1)],
-                    value: Poplar1IdpfValue::new([
-                        Field64::from(10987699128695731696u64),
-                        Field64::from(7882672491030813488u64),
-                    ]),
-                },
-                IdpfCorrectionWord {
-                    seed: hex!("39956f720c0fac9746716e45df8acc41"),
-                    control_bits: [Choice::from(1), Choice::from(0)],
-                    value: Poplar1IdpfValue::new([
-                        Field64::from(7134742661878698919u64),
-                        Field64::from(1664298712439481531u64),
-                    ]),
-                },
-                IdpfCorrectionWord {
-                    seed: hex!("3a25a9d03705d041ceb70f244cdfa670"),
-                    control_bits: [Choice::from(1), Choice::from(1)],
-                    value: Poplar1IdpfValue::new([
-                        Field64::from(17513255427535164512u64),
-                        Field64::from(13488093545954052064u64),
-                    ]),
-                },
-                IdpfCorrectionWord {
-                    seed: hex!("d3422e091d39482c4f15d6561f5d587b"),
-                    control_bits: [Choice::from(0), Choice::from(1)],
-                    value: Poplar1IdpfValue::new([
-                        Field64::from(3820730669692388706u64),
-                        Field64::from(7621611875843993489u64),
-                    ]),
-                },
-                IdpfCorrectionWord {
-                    seed: hex!("688885a16cb9e244593224cd6fc2ca61"),
-                    control_bits: [Choice::from(0), Choice::from(1)],
-                    value: Poplar1IdpfValue::new([
-                        Field64::from(14735588265529308818u64),
-                        Field64::from(13808845800240844469u64),
-                    ]),
-                },
-                IdpfCorrectionWord {
-                    seed: hex!("e44fa9899bf9f0e62569064609c6beef"),
-                    control_bits: [Choice::from(1), Choice::from(0)],
-                    value: Poplar1IdpfValue::new([
-                        Field64::from(1515377433922245485u64),
-                        Field64::from(6673083777646964926u64),
-                    ]),
-                },
-                IdpfCorrectionWord {
-                    seed: hex!("93fa72adfbc558a74be3876d88512447"),
-                    control_bits: [Choice::from(1), Choice::from(1)],
-                    value: Poplar1IdpfValue::new([
-                        Field64::from(2323814403333375980u64),
-                        Field64::from(1933042105331055732u64),
-                    ]),
-                },
-                IdpfCorrectionWord {
-                    seed: hex!("956055724e9794b6a0eb2c67f8398ee5"),
-                    control_bits: [Choice::from(1), Choice::from(0)],
-                    value: Poplar1IdpfValue::new([
-                        Field64::from(15657578625572810526u64),
-                        Field64::from(3485179954322771792u64),
-                    ]),
-                },
-                IdpfCorrectionWord {
-                    seed: hex!("1a608ad10163fa06e26295f9e88a35dc"),
-                    control_bits: [Choice::from(0), Choice::from(1)],
-                    value: Poplar1IdpfValue::new([
-                        Field64::from(9408529722335226688u64),
-                        Field64::from(2144060244706691641u64),
-                    ]),
-                },
-            ]),
-            leaf_correction_word: IdpfCorrectionWord {
-                seed: hex!("056e9c3ea587950ebe2c4e8e4bc8f6f7"),
-                control_bits: [Choice::from(0), Choice::from(1)],
-                value: Poplar1IdpfValue::new([
-                    Field255::try_from(
-                        hex!("36bc460e3844de9a5227c1b0f6520c020f0135eb6a7705c63af9bfd2b8601015")
-                            .as_slice(),
-                    )
-                    .unwrap(),
-                    Field255::try_from(
-                        hex!("a4a8c898a9b7eb68c892e4444a8a1ffb3471707ec190c19e94a1e3ffc626a12a")
-                            .as_slice(),
-                    )
-                    .unwrap(),
-                ]),
-            },
-        };
-
-        assert_eq!(public_share, expected_public_share);
-    }
-
-    #[test]
     fn idpf_poplar_generate_test_vector() {
         let test_vector = load_idpfpoplar_test_vector();
-        let random_iter = iter::repeat(0..=255u8).flatten();
-        let mut random = [[0u8; 16]; 2];
-        for (src, dest) in random_iter.zip(random.iter_mut().flat_map(|seed| seed.iter_mut())) {
-            *dest = src;
-        }
-        let (public_share, keys) = idpf::gen_with_random(
-            &test_vector.alpha,
-            test_vector.beta_inner,
-            test_vector.beta_leaf,
-            b"some nonce",
-            &random,
-        )
-        .unwrap();
+        let idpf = Idpf::new((), ());
+        let (public_share, keys) = idpf
+            .gen_with_random(
+                &test_vector.alpha,
+                test_vector.beta_inner,
+                test_vector.beta_leaf,
+                &test_vector.binder,
+                &test_vector.keys,
+            )
+            .unwrap();
 
         assert_eq!(keys[0].0, test_vector.keys[0]);
         assert_eq!(keys[1].0, test_vector.keys[1]);
@@ -1953,5 +1957,244 @@ mod tests {
         assert_eq!(input.to_bytes(), &[254]);
         let input = IdpfInput::from_bools(&[true; 9]);
         assert_eq!(input.to_bytes(), &[255, 128]);
+    }
+
+    /// Demonstrate use of an IDPF with values that need run-time parameters for random generation.
+    #[test]
+    fn idpf_with_value_parameters() {
+        use super::IdpfValue;
+
+        /// A test-only type for use as an [`IdpfValue`].
+        #[derive(Debug, Clone, Copy)]
+        struct MyUnit;
+
+        impl IdpfValue for MyUnit {
+            type ValueParameter = ();
+
+            fn generate<S>(_: &mut S, _: &Self::ValueParameter) -> Self
+            where
+                S: rand_core::RngCore,
+            {
+                MyUnit
+            }
+
+            fn zero(_: &()) -> Self {
+                MyUnit
+            }
+
+            fn conditional_select(_: &Self, _: &Self, _: Choice) -> Self {
+                MyUnit
+            }
+        }
+
+        impl Encode for MyUnit {
+            fn encode(&self, _: &mut Vec<u8>) {}
+        }
+
+        impl Decode for MyUnit {
+            fn decode(_: &mut Cursor<&[u8]>) -> Result<Self, CodecError> {
+                Ok(MyUnit)
+            }
+        }
+
+        impl ConditionallySelectable for MyUnit {
+            fn conditional_select(_: &Self, _: &Self, _: Choice) -> Self {
+                MyUnit
+            }
+        }
+
+        impl ConditionallyNegatable for MyUnit {
+            fn conditional_negate(&mut self, _: Choice) {}
+        }
+
+        impl Add for MyUnit {
+            type Output = Self;
+
+            fn add(self, _: Self) -> Self::Output {
+                MyUnit
+            }
+        }
+
+        impl AddAssign for MyUnit {
+            fn add_assign(&mut self, _: Self) {}
+        }
+
+        impl Sub for MyUnit {
+            type Output = Self;
+
+            fn sub(self, _: Self) -> Self::Output {
+                MyUnit
+            }
+        }
+
+        /// A test-only type for use as an [`IdpfValue`], representing a variable-length vector of
+        /// field elements. The length must be fixed before generating IDPF keys, but we assume it
+        /// is not known at compile time.
+        #[derive(Debug, Clone)]
+        struct MyVector(Vec<Field128>);
+
+        impl IdpfValue for MyVector {
+            type ValueParameter = usize;
+
+            fn generate<S>(seed_stream: &mut S, length: &Self::ValueParameter) -> Self
+            where
+                S: rand_core::RngCore,
+            {
+                let mut output = vec![<Field128 as FieldElement>::zero(); *length];
+                for element in output.iter_mut() {
+                    *element = <Field128 as IdpfValue>::generate(seed_stream, &());
+                }
+                MyVector(output)
+            }
+
+            fn zero(length: &usize) -> Self {
+                MyVector(vec![<Field128 as FieldElement>::zero(); *length])
+            }
+
+            fn conditional_select(a: &Self, b: &Self, choice: Choice) -> Self {
+                debug_assert_eq!(a.0.len(), b.0.len());
+                let mut output = vec![<Field128 as FieldElement>::zero(); a.0.len()];
+                for ((a_elem, b_elem), output_elem) in
+                    a.0.iter().zip(b.0.iter()).zip(output.iter_mut())
+                {
+                    *output_elem = <Field128 as ConditionallySelectable>::conditional_select(
+                        a_elem, b_elem, choice,
+                    );
+                }
+                MyVector(output)
+            }
+        }
+
+        impl Encode for MyVector {
+            fn encode(&self, bytes: &mut Vec<u8>) {
+                encode_u32_items(bytes, &(), &self.0);
+            }
+        }
+
+        impl Decode for MyVector {
+            fn decode(bytes: &mut Cursor<&[u8]>) -> Result<Self, CodecError> {
+                decode_u32_items(&(), bytes).map(MyVector)
+            }
+        }
+
+        impl ConditionallyNegatable for MyVector {
+            fn conditional_negate(&mut self, choice: Choice) {
+                for element in self.0.iter_mut() {
+                    element.conditional_negate(choice);
+                }
+            }
+        }
+
+        impl Add for MyVector {
+            type Output = Self;
+
+            fn add(self, rhs: Self) -> Self::Output {
+                debug_assert_eq!(self.0.len(), rhs.0.len());
+                let mut output = vec![<Field128 as FieldElement>::zero(); self.0.len()];
+                for ((left_elem, right_elem), output_elem) in
+                    self.0.iter().zip(rhs.0.iter()).zip(output.iter_mut())
+                {
+                    *output_elem = left_elem + right_elem;
+                }
+                MyVector(output)
+            }
+        }
+
+        impl AddAssign for MyVector {
+            fn add_assign(&mut self, rhs: Self) {
+                debug_assert_eq!(self.0.len(), rhs.0.len());
+                for (self_elem, right_elem) in self.0.iter_mut().zip(rhs.0.iter()) {
+                    *self_elem += *right_elem;
+                }
+            }
+        }
+
+        impl Sub for MyVector {
+            type Output = Self;
+
+            fn sub(self, rhs: Self) -> Self::Output {
+                debug_assert_eq!(self.0.len(), rhs.0.len());
+                let mut output = vec![<Field128 as FieldElement>::zero(); self.0.len()];
+                for ((left_elem, right_elem), output_elem) in
+                    self.0.iter().zip(rhs.0.iter()).zip(output.iter_mut())
+                {
+                    *output_elem = left_elem - right_elem;
+                }
+                MyVector(output)
+            }
+        }
+
+        // Use a unit type for inner nodes, thus emulating a DPF. Use a newtype around a `Vec` for
+        // the leaf nodes, to test out values that require runtime parameters.
+        let idpf = Idpf::new((), 3);
+        let binder = b"binder";
+        let (public_share, [key_0, key_1]) = idpf
+            .gen(
+                &IdpfInput::from_bytes(b"ae"),
+                [MyUnit; 15],
+                MyVector(Vec::from([
+                    Field128::from(1),
+                    Field128::from(2),
+                    Field128::from(3),
+                ])),
+                binder,
+            )
+            .unwrap();
+
+        let zero_share_0 = idpf
+            .eval(
+                0,
+                &public_share,
+                &key_0,
+                &IdpfInput::from_bytes(b"ou"),
+                binder,
+                &mut NoCache::new(),
+            )
+            .unwrap();
+        let zero_share_1 = idpf
+            .eval(
+                1,
+                &public_share,
+                &key_1,
+                &IdpfInput::from_bytes(b"ou"),
+                binder,
+                &mut NoCache::new(),
+            )
+            .unwrap();
+        let zero_output = zero_share_0.merge(zero_share_1).unwrap();
+        assert_matches!(zero_output, IdpfOutputShare::Leaf(value) => {
+            assert_eq!(value.0.len(), 3);
+            assert_eq!(value.0[0], <Field128 as FieldElement>::zero());
+            assert_eq!(value.0[1], <Field128 as FieldElement>::zero());
+            assert_eq!(value.0[2], <Field128 as FieldElement>::zero());
+        });
+
+        let programmed_share_0 = idpf
+            .eval(
+                0,
+                &public_share,
+                &key_0,
+                &IdpfInput::from_bytes(b"ae"),
+                binder,
+                &mut NoCache::new(),
+            )
+            .unwrap();
+        let programmed_share_1 = idpf
+            .eval(
+                1,
+                &public_share,
+                &key_1,
+                &IdpfInput::from_bytes(b"ae"),
+                binder,
+                &mut NoCache::new(),
+            )
+            .unwrap();
+        let programmed_output = programmed_share_0.merge(programmed_share_1).unwrap();
+        assert_matches!(programmed_output, IdpfOutputShare::Leaf(value) => {
+            assert_eq!(value.0.len(), 3);
+            assert_eq!(value.0[0], Field128::from(1));
+            assert_eq!(value.0[1], Field128::from(2));
+            assert_eq!(value.0[2], Field128::from(3));
+        });
     }
 }

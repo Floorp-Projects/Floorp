@@ -11,9 +11,9 @@
 
 [package]
 edition = "2021"
-rust-version = "1.61"
+rust-version = "1.64"
 name = "prio"
-version = "0.12.1"
+version = "0.15.3"
 authors = [
     "Josh Aas <jaas@kflag.net>",
     "Tim Geoghegan <timg@letsencrypt.org>",
@@ -27,6 +27,9 @@ license = "MPL-2.0"
 repository = "https://github.com/divviup/libprio-rs"
 resolver = "2"
 
+[package.metadata.cargo-all-features]
+skip_optional_dependencies = true
+
 [package.metadata.docs.rs]
 all-features = true
 rustdoc-args = [
@@ -34,17 +37,13 @@ rustdoc-args = [
     "docsrs",
 ]
 
-[package.metadata.cargo-all-features]
-skip_optional_dependencies = true
-
-[[example]]
-name = "sum"
-required-features = ["prio2"]
+[lib]
+bench = false
 
 [[test]]
-name = "backward_compatibility"
-path = "tests/backward_compatibility.rs"
-required-features = ["prio2"]
+name = "discrete_gauss"
+path = "tests/discrete_gauss.rs"
+required-features = ["experimental"]
 
 [[bench]]
 name = "speed_tests"
@@ -55,15 +54,8 @@ name = "cycle_counts"
 harness = false
 
 [dependencies.aes]
-version = "0.8.2"
+version = "0.8.3"
 optional = true
-
-[dependencies.aes-gcm]
-version = "^0.10"
-optional = true
-
-[dependencies.base64]
-version = "0.21.0"
 
 [dependencies.bitvec]
 version = "1.0.1"
@@ -72,16 +64,12 @@ optional = true
 [dependencies.byteorder]
 version = "1.4.3"
 
-[dependencies.cmac]
-version = "0.7.2"
-optional = true
-
 [dependencies.ctr]
 version = "0.9.2"
 optional = true
 
 [dependencies.fiat-crypto]
-version = "0.1.20"
+version = "0.2.1"
 optional = true
 
 [dependencies.fixed]
@@ -89,37 +77,62 @@ version = "1.23"
 optional = true
 
 [dependencies.getrandom]
-version = "0.2.8"
+version = "0.2.10"
 features = ["std"]
+
+[dependencies.hmac]
+version = "0.12.1"
+optional = true
+
+[dependencies.num-bigint]
+version = "0.4.4"
+features = [
+    "rand",
+    "serde",
+]
+optional = true
+
+[dependencies.num-integer]
+version = "0.1.45"
+optional = true
+
+[dependencies.num-iter]
+version = "0.1.43"
+optional = true
+
+[dependencies.num-rational]
+version = "0.4.1"
+features = ["serde"]
+optional = true
+
+[dependencies.num-traits]
+version = "0.2.16"
+optional = true
 
 [dependencies.rand]
 version = "0.8"
 optional = true
 
-[dependencies.rayon]
-version = "1.7.0"
-optional = true
+[dependencies.rand_core]
+version = "0.6.4"
 
-[dependencies.ring]
-version = "0.16.20"
+[dependencies.rayon]
+version = "1.8.0"
 optional = true
 
 [dependencies.serde]
 version = "1.0"
 features = ["derive"]
 
-[dependencies.serde_json]
-version = "1.0"
+[dependencies.sha2]
+version = "0.10.7"
 optional = true
 
 [dependencies.sha3]
-version = "0.10.6"
-
-[dependencies.static_assertions]
-version = "1.1.0"
+version = "0.10.8"
 
 [dependencies.subtle]
-version = "2.4.1"
+version = "2.5.0"
 
 [dependencies.thiserror]
 version = "1.0"
@@ -127,11 +140,14 @@ version = "1.0"
 [dev-dependencies.assert_matches]
 version = "1.5.0"
 
+[dev-dependencies.base64]
+version = "0.21.4"
+
 [dev-dependencies.cfg-if]
 version = "1.0.0"
 
 [dev-dependencies.criterion]
-version = "0.4"
+version = "0.5"
 
 [dev-dependencies.fixed-macro]
 version = "1.2.0"
@@ -147,42 +163,50 @@ version = "0.4.1"
 version = "0.1"
 
 [dev-dependencies.itertools]
-version = "0.10.5"
+version = "0.11.0"
 
 [dev-dependencies.modinverse]
 version = "0.1.0"
 
 [dev-dependencies.num-bigint]
-version = "0.4.3"
+version = "0.4.4"
 
 [dev-dependencies.once_cell]
-version = "1.17.1"
+version = "1.18.0"
+
+[dev-dependencies.rand]
+version = "0.8"
 
 [dev-dependencies.serde_json]
 version = "1.0"
 
+[dev-dependencies.statrs]
+version = "0.16.0"
+
 [dev-dependencies.zipf]
-version = "7.0.0"
+version = "7.0.1"
 
 [features]
 crypto-dependencies = [
     "aes",
     "ctr",
-    "cmac",
 ]
 default = ["crypto-dependencies"]
 experimental = [
     "bitvec",
     "fiat-crypto",
     "fixed",
+    "num-bigint",
+    "num-rational",
+    "num-traits",
+    "num-integer",
+    "num-iter",
+    "rand",
 ]
 multithreaded = ["rayon"]
 prio2 = [
     "crypto-dependencies",
-    "aes-gcm",
-    "ring",
+    "hmac",
+    "sha2",
 ]
-test-util = [
-    "rand",
-    "serde_json",
-]
+test-util = ["rand"]

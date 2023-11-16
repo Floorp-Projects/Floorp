@@ -183,24 +183,14 @@ void DisableWakeLockNotifications();
 MOZ_DEFINE_HAL_OBSERVER(WakeLock);
 
 /**
- * Adjust a wake lock's counts on behalf of a given process.
- *
- * In most cases, you shouldn't need to pass the aProcessID argument; the
- * default of CONTENT_PROCESS_ID_UNKNOWN is probably what you want.
+ * Adjust a wake lock's counts for the current process.
  *
  * @param aTopic        lock topic
  * @param aLockAdjust   to increase or decrease active locks
  * @param aHiddenAdjust to increase or decrease hidden locks
- * @param aProcessID    indicates which process we're modifying the wake lock
- *                      on behalf of.  It is interpreted as
- *
- *                      CONTENT_PROCESS_ID_UNKNOWN: The current process
- *                      CONTENT_PROCESS_ID_MAIN: The root process
- *                      X: The process with ContentChild::GetID() == X
  */
 void ModifyWakeLock(const nsAString& aTopic, hal::WakeLockControl aLockAdjust,
-                    hal::WakeLockControl aHiddenAdjust,
-                    uint64_t aProcessID = hal::CONTENT_PROCESS_ID_UNKNOWN);
+                    hal::WakeLockControl aHiddenAdjust);
 
 /**
  * Query the wake lock numbers of aTopic.

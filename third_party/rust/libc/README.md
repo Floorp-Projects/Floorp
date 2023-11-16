@@ -60,7 +60,7 @@ newer Rust features are only available on newer Rust toolchains:
 
 ## Platform support
 
-[Platform-specific documentation (HEAD)][docs.head].
+You can see the platform(target)-specific docs on [docs.rs], select a platform you want to see.
 
 See
 [`ci/build.sh`](https://github.com/rust-lang/libc/blob/HEAD/ci/build.sh)
@@ -107,4 +107,3 @@ dual licensed as above, without any additional terms or conditions.
 [Documentation]: https://docs.rs/libc/badge.svg
 [docs.rs]: https://docs.rs/libc
 [License]: https://img.shields.io/crates/l/libc.svg
-[docs.head]: https://rust-lang.github.io/libc/#platform-specific-documentation

@@ -49,62 +49,74 @@ class ThrottlingProfile {
   }
 }
 
+const PROFILE_CONSTANTS = {
+  GPRS: "GPRS",
+  REGULAR_2G: "Regular 2G",
+  GOOD_2G: "Good 2G",
+  REGULAR_3G: "Regular 3G",
+  GOOD_3G: "Good 3G",
+  REGULAR_4G_LTE: "Regular 4G / LTE",
+  DSL: "DSL",
+  WIFI: "Wi-Fi",
+  OFFLINE: "Offline",
+};
+
 // Should be synced with devtools/docs/user/network_monitor/throttling/index.rst
 const profiles = [
   {
-    id: "GPRS",
+    id: PROFILE_CONSTANTS.GPRS,
     download: 50 * KBps,
     upload: 20 * KBps,
     latency: 500,
   },
   {
-    id: "Regular 2G",
+    id: PROFILE_CONSTANTS.REGULAR_2G,
     download: 250 * KBps,
     upload: 50 * KBps,
     latency: 300,
   },
   {
-    id: "Good 2G",
+    id: PROFILE_CONSTANTS.GOOD_2G,
     download: 450 * KBps,
     upload: 150 * KBps,
     latency: 150,
   },
   {
-    id: "Regular 3G",
+    id: PROFILE_CONSTANTS.REGULAR_3G,
     download: 750 * KBps,
     upload: 250 * KBps,
     latency: 100,
   },
   {
-    id: "Good 3G",
+    id: PROFILE_CONSTANTS.GOOD_3G,
     download: 1.5 * MBps,
     upload: 750 * KBps,
     latency: 40,
   },
   {
-    id: "Regular 4G / LTE",
+    id: PROFILE_CONSTANTS.REGULAR_4G_LTE,
     download: 4 * MBps,
     upload: 3 * MBps,
     latency: 20,
   },
   {
-    id: "DSL",
+    id: PROFILE_CONSTANTS.DSL,
     download: 2 * MBps,
     upload: 1 * MBps,
     latency: 5,
   },
   {
-    id: "Wi-Fi",
+    id: PROFILE_CONSTANTS.WIFI,
     download: 30 * MBps,
     upload: 15 * MBps,
     latency: 2,
   },
   {
-    id: "Offline",
+    id: PROFILE_CONSTANTS.OFFLINE,
     download: 0,
     upload: 0,
     latency: 5,
   },
 ].map(profile => new ThrottlingProfile(profile));
 
-module.exports = profiles;
+module.exports = { profiles, PROFILE_CONSTANTS };

@@ -26,8 +26,6 @@ class FontPreloader final : public FetchPreloader {
  public:
   FontPreloader();
 
-  static void PrioritizeAsPreload(nsIChannel* aChannel);
-
   static nsresult BuildChannel(
       nsIChannel** aChannel, nsIURI* aURI, const CORSMode aCORSMode,
       const dom::ReferrerPolicy& aReferrerPolicy,

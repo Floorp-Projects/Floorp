@@ -6442,11 +6442,11 @@ void MacroAssembler::convertWasmAnyRefToValue(Register instance, Register src,
   Label isI31, isObjectOrNull, isObject, isWasmValueBox, done;
 
   // Check for if this is an i31 value first
-  branchTest32(Assembler::NonZero, src, Imm32(int32_t(wasm::AnyRefTag::I31)),
-               &isI31);
+  branchTestPtr(Assembler::NonZero, src, Imm32(int32_t(wasm::AnyRefTag::I31)),
+                &isI31);
   // Then check for the object or null tag
-  branchTest32(Assembler::Zero, src, Imm32(wasm::AnyRef::TagMask),
-               &isObjectOrNull);
+  branchTestPtr(Assembler::Zero, src, Imm32(wasm::AnyRef::TagMask),
+                &isObjectOrNull);
 
   // If we're not i31, object, or null, we must be a string
   rshiftPtr(Imm32(wasm::AnyRef::TagShift), src);
@@ -6456,7 +6456,7 @@ void MacroAssembler::convertWasmAnyRefToValue(Register instance, Register src,
 
   // This is an i31 value, convert to an int32 JS value
   bind(&isI31);
-  rshift32Arithmetic(Imm32(1), src);
+  convertWasmI31RefTo32Signed(src, src);
   moveValue(TypedOrValueRegister(MIRType::Int32, AnyRegister(src)), dst);
   jump(&done);
 
@@ -6492,11 +6492,11 @@ void MacroAssembler::convertWasmAnyRefToValue(Register instance, Register src,
   Label isI31, isObjectOrNull, isObject, isWasmValueBox, done;
 
   // Check for if this is an i31 value first
-  branchTest32(Assembler::NonZero, src, Imm32(int32_t(wasm::AnyRefTag::I31)),
-               &isI31);
+  branchTestPtr(Assembler::NonZero, src, Imm32(int32_t(wasm::AnyRefTag::I31)),
+                &isI31);
   // Then check for the object or null tag
-  branchTest32(Assembler::Zero, src, Imm32(wasm::AnyRef::TagMask),
-               &isObjectOrNull);
+  branchTestPtr(Assembler::Zero, src, Imm32(wasm::AnyRef::TagMask),
+                &isObjectOrNull);
 
   // If we're not i31, object, or null, we must be a string
   rshiftPtr(Imm32(wasm::AnyRef::TagShift), src);
@@ -6506,7 +6506,7 @@ void MacroAssembler::convertWasmAnyRefToValue(Register instance, Register src,
 
   // This is an i31 value, convert to an int32 JS value
   bind(&isI31);
-  rshift32Arithmetic(Imm32(1), src);
+  convertWasmI31RefTo32Signed(src, src);
   storeValue(JSVAL_TYPE_INT32, src, dst);
   jump(&done);
 

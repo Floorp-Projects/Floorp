@@ -98,6 +98,10 @@ class ProtectionCategory {
         `protections-popup-${this._id}View-shim-allow-hint`
       )
     );
+
+    ChromeUtils.defineLazyGetter(this, "isWindowPrivate", () =>
+      PrivateBrowsingUtils.isWindowPrivate(window)
+    );
   }
 
   // Child classes may override these to do init / teardown. We expect them to
@@ -324,19 +328,86 @@ class ProtectionCategory {
   }
 }
 
-let Fingerprinting = new ProtectionCategory(
-  "fingerprinters",
-  {
-    prefEnabled: "privacy.trackingprotection.fingerprinting.enabled",
-    reportBreakageLabel: "fingerprinting",
-  },
-  {
-    load: Ci.nsIWebProgressListener.STATE_LOADED_FINGERPRINTING_CONTENT,
-    block: Ci.nsIWebProgressListener.STATE_BLOCKED_FINGERPRINTING_CONTENT,
-    shim: Ci.nsIWebProgressListener.STATE_REPLACED_FINGERPRINTING_CONTENT,
-    allow: Ci.nsIWebProgressListener.STATE_ALLOWED_FINGERPRINTING_CONTENT,
-  }
-);
+let Fingerprinting =
+  new (class FingerprintingProtection extends ProtectionCategory {
+    constructor() {
+      super(
+        "fingerprinters",
+        {
+          prefEnabled: "privacy.trackingprotection.fingerprinting.enabled",
+          reportBreakageLabel: "fingerprinting",
+        },
+        {
+          load: Ci.nsIWebProgressListener.STATE_LOADED_FINGERPRINTING_CONTENT,
+          block: Ci.nsIWebProgressListener.STATE_BLOCKED_FINGERPRINTING_CONTENT,
+          shim: Ci.nsIWebProgressListener.STATE_REPLACED_FINGERPRINTING_CONTENT,
+          allow: Ci.nsIWebProgressListener.STATE_ALLOWED_FINGERPRINTING_CONTENT,
+        }
+      );
+
+      this.prefFPPEnabled = "privacy.fingerprintingProtection";
+      this.prefFPPEnabledInPrivateWindows =
+        "privacy.fingerprintingProtection.pbmode";
+
+      this.enabledFPB = false;
+      this.enabledFPPGlobally = false;
+      this.enabledFPPInPrivateWindows = false;
+    }
+
+    init() {
+      this.updateEnabled();
+
+      Services.prefs.addObserver(this.prefEnabled, this);
+      Services.prefs.addObserver(this.prefFPPEnabled, this);
+      Services.prefs.addObserver(this.prefFPPEnabledInPrivateWindows, this);
+    }
+
+    uninit() {
+      Services.prefs.removeObserver(this.prefEnabled, this);
+      Services.prefs.removeObserver(this.prefFPPEnabled, this);
+      Services.prefs.removeObserver(this.prefFPPEnabledInPrivateWindows, this);
+    }
+
+    updateEnabled() {
+      this.enabledFPB = Services.prefs.getBoolPref(this.prefEnabled);
+      this.enabledFPPGlobally = Services.prefs.getBoolPref(this.prefFPPEnabled);
+      this.enabledFPPInPrivateWindows = Services.prefs.getBoolPref(
+        this.prefFPPEnabledInPrivateWindows
+      );
+    }
+
+    observe() {
+      this.updateEnabled();
+      this.updateCategoryItem();
+    }
+
+    get enabled() {
+      return (
+        this.enabledFPB ||
+        this.enabledFPPGlobally ||
+        (this.isWindowPrivate && this.enabledFPPInPrivateWindows)
+      );
+    }
+
+    isBlocking(state) {
+      let blockFlag = this._flags.block;
+
+      // We only consider the suspicious fingerprinting flag if the
+      // fingerprinting protection is enabled in the context.
+      if (
+        this.enabledFPPGlobally ||
+        (this.isWindowPrivate && this.enabledFPPInPrivateWindows)
+      ) {
+        blockFlag |=
+          Ci.nsIWebProgressListener.STATE_BLOCKED_SUSPICIOUS_FINGERPRINTING;
+      }
+
+      return (state & blockFlag) != 0;
+    }
+
+    // TODO (Bug 1864914): Consider showing suspicious fingerprinting as allowed
+    // when the fingerprinting protection is disabled.
+  })();
 
 let Cryptomining = new ProtectionCategory(
   "cryptominers",
@@ -445,7 +516,7 @@ let TrackingProtection =
       return (
         this.enabledGlobally ||
         this.emailTrackingProtectionEnabledGlobally ||
-        (PrivateBrowsingUtils.isWindowPrivate(window) &&
+        (this.isWindowPrivate &&
           (this.enabledInPrivateWindows ||
             this.emailTrackingProtectionEnabledInPrivateWindows))
       );

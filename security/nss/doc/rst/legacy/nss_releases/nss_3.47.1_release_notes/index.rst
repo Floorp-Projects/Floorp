@@ -15,7 +15,7 @@ NSS 3.47.1 release notes
 
    -  Craig Disselkoen
 
-.. _distribution_information:
+
 
 `Distribution Information <#distribution_information>`__
 --------------------------------------------------------

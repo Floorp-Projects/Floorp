@@ -10,7 +10,7 @@ NSS 3.76.1 release notes
 
    Network Security Services (NSS) 3.76.1 was released on **28 March 2022**.
 
-.. _distribution_information:
+
 
 `Distribution Information <#distribution_information>`__
 --------------------------------------------------------

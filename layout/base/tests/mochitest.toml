@@ -109,7 +109,6 @@ support-files = [
 
 ["test_bug603550.html"]
 fail-if = ["xorigin"]
-skip-if = ["xorigin && os == 'android'"] # Bug 1855869
 
 ["test_bug607529.html"]
 support-files = [

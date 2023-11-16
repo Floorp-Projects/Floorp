@@ -109,18 +109,14 @@ function run_test() {
 
   // This is a built-in root, but not one that was added to the preexisting
   // certificate DB.
-  // Verisign Class 1 Public Primary Certification Authority - G3
-  // Certificate fingerprint (SHA1): 204285DCF7EB764195578E136BD4B7D1E98E46A5
-  // https://crt.sh/?id=8984570
-  const veriSignCertDBKey = `AAAAAAAAAAAAAAARAAAAzQCLW3VWhFSFCwDPrzhI
-    zrGkMIHKMQswCQYDVQQGEwJVUzEXMBUGA1UEChMOVmVyaVNpZ24sIEluYy4xHzAdB
-    gNVBAsTFlZlcmlTaWduIFRydXN0IE5ldHdvcmsxOjA4BgNVBAsTMShjKSAxOTk5IF
-    ZlcmlTaWduLCBJbmMuIC0gRm9yIGF1dGhvcml6ZWQgdXNlIG9ubHkxRTBDBgNVBAM
-    TPFZlcmlTaWduIENsYXNzIDEgUHVibGljIFByaW1hcnkgQ2VydGlmaWNhdGlvbiBB
-    dXRob3JpdHkgLSBHMw==`;
-  let veriSignCert = certdb.findCertByDBKey(veriSignCertDBKey);
-  ok(veriSignCert, "Should be able to find VeriSign root");
-  ok(veriSignCert.isBuiltInRoot, "VeriSign root is a built-in");
+  // Sectigo Public Server Authentication Root E46
+  // Certificate fingerprint (SHA256): C90F26F0FB1B4018B22227519B5CA2B53E2CA5B3BE5CF18EFE1BEF47380C5383
+  const sectigoDBKey = `AAAAAAAAAAAAAAAQAAAAYULyzNobaTdEXxX+dSgQuPQwXzELMAk
+    GA1UEBhMCR0IxGDAWBgNVBAoTD1NlY3RpZ28gTGltaXRlZDE2MDQGA1UEAxMtU2VjdGlnbyBQd
+    WJsaWMgU2VydmVyIEF1dGhlbnRpY2F0aW9uIFJvb3QgRTQ2`;
+  let sectigoCert = certdb.findCertByDBKey(sectigoDBKey);
+  ok(sectigoCert, "Should be able to find Sectigo root");
+  ok(sectigoCert.isBuiltInRoot, "Sectigo root is a built-in");
 
   // This is a built-in root. It was added to the preexisting certificate DB. It
   // should still be considered a built-in.

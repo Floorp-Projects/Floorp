@@ -19,15 +19,14 @@ add_task(async function test_firefox_suggest_with_policy() {
     "about:preferences#privacy",
     async browser => {
       is(
-        browser.contentDocument.getElementById(
-          "firefoxSuggestNonsponsoredToggle"
-        ).pressed,
+        browser.contentDocument.getElementById("firefoxSuggestNonsponsored")
+          .checked,
         false,
         "Web suggestions is disabled"
       );
       is(
-        browser.contentDocument.getElementById("firefoxSuggestSponsoredToggle")
-          .pressed,
+        browser.contentDocument.getElementById("firefoxSuggestSponsored")
+          .checked,
         true,
         "Sponsored suggestions is enabled"
       );
@@ -39,14 +38,13 @@ add_task(async function test_firefox_suggest_with_policy() {
         "Improve suggest is enabled"
       );
       is(
-        browser.contentDocument.getElementById(
-          "firefoxSuggestNonsponsoredToggle"
-        ).disabled,
+        browser.contentDocument.getElementById("firefoxSuggestNonsponsored")
+          .disabled,
         true,
         "Web suggestions is disabled"
       );
       is(
-        browser.contentDocument.getElementById("firefoxSuggestSponsoredToggle")
+        browser.contentDocument.getElementById("firefoxSuggestSponsored")
           .disabled,
         true,
         "Sponsored suggestions is enabled"

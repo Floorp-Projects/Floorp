@@ -520,14 +520,15 @@ class Connector {
       // search the predefined throttle profiles or a profile object
       // as defined in the trottle tests.
       if (typeof profile === "string") {
-        profile = throttlingProfiles.find(({ id }) => id == profile);
+        profile = throttlingProfiles.profiles.find(({ id }) => id == profile);
       }
-      const { download, upload, latency } = profile;
-      if (!download && !upload) {
-        await this.commands.targetConfigurationCommand.updateConfiguration({
-          setTabOffline: !download,
-        });
-      }
+      const { download, upload, latency, id } = profile;
+
+      // The offline profile has download and upload set to false
+      await this.commands.targetConfigurationCommand.updateConfiguration({
+        setTabOffline: id === throttlingProfiles.PROFILE_CONSTANTS.OFFLINE,
+      });
+
       await this.networkFront.setNetworkThrottling({
         downloadThroughput: download,
         uploadThroughput: upload,

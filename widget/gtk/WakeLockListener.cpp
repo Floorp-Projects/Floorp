@@ -151,6 +151,9 @@ class WakeLockTopic {
   ~WakeLockTopic() {
     WAKE_LOCK_LOG("WakeLockTopic::~WakeLockTopic() state %d", mInhibited);
 #ifdef MOZ_ENABLE_DBUS
+    if (mWaitingForDBusUninhibit) {
+      return;
+    }
     g_cancellable_cancel(mCancellable);
 #endif
     if (mInhibited) {

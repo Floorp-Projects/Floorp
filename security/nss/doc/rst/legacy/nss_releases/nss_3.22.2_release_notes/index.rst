@@ -11,7 +11,7 @@ NSS 3.22.2 release notes
    Network Security Services (NSS) 3.22.2 is a security patch release for NSS 3.22. The bug fixes in
    NSS 3.22.2 are described in the "Security Fixes" section below.
 
-.. _distribution_information:
+
 
 `Distribution Information <#distribution_information>`__
 --------------------------------------------------------

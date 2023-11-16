@@ -25,7 +25,7 @@
 </vbox>
 </box>
 <hbox id="customization-footer">
-<checkbox id="customization-titlebar-visibility-checkbox" class="customizationmode-checkbox"
+<checkbox id="customization-titlebar-visibility-checkbox" class="customization-checkbox"
 # NB: because oncommand fires after click, by the time we've fired, the checkbox binding
 #    will already have switched the button's state, so this is correct:
           oncommand="gCustomizeMode.toggleTitlebar(this.checked)" data-l10n-id="customize-mode-titlebar"/>
@@ -85,6 +85,7 @@
 </button>
 <label is="text-link"
        id="customization-lwtheme-link"
+       class="customization-link"
        data-l10n-id="customize-mode-lwthemes-link"
        onclick="gCustomizeMode.openAddonsManagerThemes();" />
 

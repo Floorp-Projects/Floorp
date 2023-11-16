@@ -11,7 +11,7 @@ NSS 3.48.1 release notes
    Network Security Services (NSS) 3.48.1 is a patch release for NSS 3.48. The bug fixes in NSS
    3.48.1 are described in the "Bugs Fixed" section below. It was released on **13 January 2020**.
 
-.. _distribution_information:
+
 
 `Distribution Information <#distribution_information>`__
 --------------------------------------------------------

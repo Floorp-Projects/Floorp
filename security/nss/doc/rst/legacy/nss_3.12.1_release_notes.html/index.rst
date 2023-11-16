@@ -45,7 +45,7 @@ NSS_3.12.1_release_notes.html
 
    --------------
 
-.. _distribution_information:
+
 
 `Distribution Information <#distribution_information>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

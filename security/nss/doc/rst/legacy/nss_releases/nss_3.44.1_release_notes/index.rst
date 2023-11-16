@@ -13,7 +13,7 @@ NSS 3.44.1 release notes
 
    The NSS team would like to recognize first-time contributors: Greg Rubin
 
-.. _distribution_information:
+
 
 `Distribution Information <#distribution_information>`__
 --------------------------------------------------------

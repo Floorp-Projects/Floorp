@@ -35,9 +35,23 @@
 //!
 //! [1]: https://docs.rs/sha3
 //! [2]: https://docs.rs/tiny-keccak
+
 #![no_std]
-#![allow(non_upper_case_globals)]
+#![cfg_attr(docsrs, feature(doc_auto_cfg))]
 #![cfg_attr(feature = "simd", feature(portable_simd))]
+#![doc(
+    html_logo_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg",
+    html_favicon_url = "https://raw.githubusercontent.com/RustCrypto/meta/master/logo.svg"
+)]
+#![allow(non_upper_case_globals)]
+#![warn(
+    clippy::mod_module_files,
+    clippy::unwrap_used,
+    missing_docs,
+    rust_2018_idioms,
+    unused_lifetimes,
+    unused_qualifications
+)]
 
 use core::{
     convert::TryInto,
@@ -92,6 +106,8 @@ const RC: [u64; 24] = [
     0x8000000080008008,
 ];
 
+/// Keccak is a permutation over an array of lanes which comprise the sponge
+/// construction.
 pub trait LaneSize:
     Copy
     + Clone
@@ -104,9 +120,13 @@ pub trait LaneSize:
     + BitXor<Output = Self>
     + Not<Output = Self>
 {
+    /// Number of rounds of the Keccak-f permutation.
     const KECCAK_F_ROUND_COUNT: usize;
 
+    /// Truncate function.
     fn truncate_rc(rc: u64) -> Self;
+
+    /// Rotate left function.
     fn rotate_left(self, n: u32) -> Self;
 }
 
@@ -129,30 +149,45 @@ macro_rules! impl_lanesize {
 impl_lanesize!(u8, 18, |rc: u64| { rc.to_le_bytes()[0] });
 impl_lanesize!(u16, 20, |rc: u64| {
     let tmp = rc.to_le_bytes();
+    #[allow(clippy::unwrap_used)]
     Self::from_le_bytes(tmp[..size_of::<Self>()].try_into().unwrap())
 });
 impl_lanesize!(u32, 22, |rc: u64| {
     let tmp = rc.to_le_bytes();
+    #[allow(clippy::unwrap_used)]
     Self::from_le_bytes(tmp[..size_of::<Self>()].try_into().unwrap())
 });
 impl_lanesize!(u64, 24, |rc: u64| { rc });
 
 macro_rules! impl_keccak {
-    ($name:ident, $type:ty) => {
+    ($pname:ident, $fname:ident, $type:ty) => {
+
+        /// Keccak-p sponge function
+        pub fn $pname(state: &mut [$type; PLEN], round_count: usize) {
+            keccak_p(state, round_count);
+        }
+
         /// Keccak-f sponge function
-        pub fn $name(state: &mut [$type; PLEN]) {
+        pub fn $fname(state: &mut [$type; PLEN]) {
             keccak_p(state, <$type>::KECCAK_F_ROUND_COUNT);
         }
     };
 }
 
-impl_keccak!(f200, u8);
-impl_keccak!(f400, u16);
-impl_keccak!(f800, u32);
+impl_keccak!(p200, f200, u8);
+impl_keccak!(p400, f400, u16);
+impl_keccak!(p800, f800, u32);
 
 #[cfg(not(all(target_arch = "aarch64", feature = "asm")))]
-impl_keccak!(f1600, u64);
+impl_keccak!(p1600, f1600, u64);
 
+/// Keccak-p[1600, rc] permutation.
+#[cfg(all(target_arch = "aarch64", feature = "asm"))]
+pub fn p1600(state: &mut [u64; PLEN], round_count: usize) {
+    keccak_p(state, round_count);
+}
+
+/// Keccak-f[1600] permutation.
 #[cfg(all(target_arch = "aarch64", feature = "asm"))]
 pub fn f1600(state: &mut [u64; PLEN]) {
     if armv8_sha3_intrinsics::get() {
@@ -165,8 +200,8 @@ pub fn f1600(state: &mut [u64; PLEN]) {
 #[cfg(feature = "simd")]
 /// SIMD implementations for Keccak-f1600 sponge function
 pub mod simd {
+    use crate::{keccak_p, LaneSize, PLEN};
     pub use core::simd::{u64x2, u64x4, u64x8};
-    use {keccak_p, LaneSize, PLEN};
 
     macro_rules! impl_lanesize_simd_u64xn {
         ($type:ty) => {
@@ -188,9 +223,9 @@ pub mod simd {
     impl_lanesize_simd_u64xn!(u64x4);
     impl_lanesize_simd_u64xn!(u64x8);
 
-    impl_keccak!(f1600x2, u64x2);
-    impl_keccak!(f1600x4, u64x4);
-    impl_keccak!(f1600x8, u64x8);
+    impl_keccak!(p1600x2, f1600x2, u64x2);
+    impl_keccak!(p1600x4, f1600x4, u64x4);
+    impl_keccak!(p1600x8, f1600x8, u64x8);
 }
 
 #[allow(unused_assignments)]
@@ -254,7 +289,7 @@ pub fn keccak_p<L: LaneSize>(state: &mut [L; PLEN], round_count: usize) {
 
 #[cfg(test)]
 mod tests {
-    use {keccak_p, LaneSize, PLEN};
+    use crate::{keccak_p, LaneSize, PLEN};
 
     fn keccak_f<L: LaneSize>(state_first: [L; PLEN], state_second: [L; PLEN]) {
         let mut state = [L::default(); PLEN];
@@ -384,8 +419,8 @@ mod tests {
 
     #[cfg(feature = "simd")]
     mod simd {
-        use simd::{u64x2, u64x4, u64x8};
-        use tests::keccak_f;
+        use super::keccak_f;
+        use core::simd::{u64x2, u64x4, u64x8};
 
         macro_rules! impl_keccak_f1600xn {
             ($name:ident, $type:ty) => {

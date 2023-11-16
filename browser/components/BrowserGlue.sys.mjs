@@ -2617,6 +2617,10 @@ BrowserGlue.prototype = {
             "browser.shell.customProtocolsRegistered"
           ),
         task: async () => {
+          Services.prefs.setBoolPref(
+            "browser.shell.customProtocolsRegistered",
+            true
+          );
           const FIREFOX_HANDLER_NAME = "firefox";
           const FIREFOX_PRIVATE_HANDLER_NAME = "firefox-private";
           const path = Services.dirsvc.get("XREExeF", Ci.nsIFile).path;
@@ -2641,9 +2645,8 @@ BrowserGlue.prototype = {
               handler,
               protocolName
             ) => {
-              let retVal = false;
               if (isSetAlready) {
-                return true;
+                return;
               }
               let FxKey = wrk.createChild(handler, wrk.ACCESS_ALL);
               try {
@@ -2693,17 +2696,14 @@ BrowserGlue.prototype = {
                 } else {
                   FxKey.writeStringValue("", `\"${path}\" -osint -url \"%1\"`);
                 }
-                retVal = true;
               } catch (ex) {
-                retVal = false;
                 console.log(ex);
               } finally {
                 FxKey.close();
               }
-              return retVal;
             };
             try {
-              FxSet = maybeUpdateRegistry(
+              maybeUpdateRegistry(
                 FxSet,
                 FIREFOX_HANDLER_NAME,
                 "URL:Firefox Protocol"
@@ -2712,7 +2712,7 @@ BrowserGlue.prototype = {
               console.log(ex);
             }
             try {
-              FxPrivateSet = maybeUpdateRegistry(
+              maybeUpdateRegistry(
                 FxPrivateSet,
                 FIREFOX_PRIVATE_HANDLER_NAME,
                 "URL:Firefox Private Browsing Protocol"
@@ -2720,10 +2720,6 @@ BrowserGlue.prototype = {
             } catch (ex) {
               console.log(ex);
             }
-            Services.prefs.setBoolPref(
-              "browser.shell.customProtocolsRegistered",
-              FxSet && FxPrivateSet
-            );
           } catch (ex) {
             console.log(ex);
           } finally {

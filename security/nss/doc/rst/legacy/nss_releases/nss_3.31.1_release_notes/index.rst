@@ -17,7 +17,7 @@ NSS 3.31.1 release notes
    The Network Security Services (NSS) team has released NSS 3.31.1, which is a patch release for
    NSS 3.31.
 
-.. _distribution_information:
+
 
 `Distribution information <#distribution_information>`__
 --------------------------------------------------------

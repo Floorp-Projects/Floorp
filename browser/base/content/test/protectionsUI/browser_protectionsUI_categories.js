@@ -6,6 +6,7 @@ const CM_PREF = "privacy.trackingprotection.cryptomining.enabled";
 const FP_PREF = "privacy.trackingprotection.fingerprinting.enabled";
 const ST_PREF = "privacy.trackingprotection.socialtracking.enabled";
 const STC_PREF = "privacy.socialtracking.block_cookies.enabled";
+const FPP_PREF = "privacy.fingerprintingProtection";
 
 const { CustomizableUITestUtils } = ChromeUtils.importESModule(
   "resource://testing-common/CustomizableUITestUtils.sys.mjs"
@@ -147,6 +148,7 @@ async function waitForClass(item, className, shouldBePresent = true) {
 
 add_task(async function testCategorySections() {
   Services.prefs.setBoolPref(ST_PREF, true);
+  Services.prefs.setBoolPref(FPP_PREF, false);
 
   for (let pref of categoryEnabledPrefs) {
     if (pref == TPC_PREF) {

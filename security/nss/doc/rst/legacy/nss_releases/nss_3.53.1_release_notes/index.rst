@@ -14,7 +14,7 @@ NSS 3.53.1 release notes
    Thank you to Sohaib ul Hassan, Billy Bob Brumley, and the Network and Information Security Group
    (NISEC) at Tampere University for reporting this issue and providing a patch.
 
-.. _distribution_information:
+
 
 `Distribution Information <#distribution_information>`__
 --------------------------------------------------------

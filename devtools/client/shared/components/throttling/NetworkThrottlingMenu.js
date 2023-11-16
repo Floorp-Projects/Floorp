@@ -47,7 +47,7 @@ class NetworkThrottlingMenu extends PureComponent {
   onShowThrottlingMenu(event) {
     const { networkThrottling, onChangeNetworkThrottling } = this.props;
 
-    const menuItems = throttlingProfiles.map(profile => {
+    const menuItems = throttlingProfiles.profiles.map(profile => {
       return {
         label: profile.id,
         type: "checkbox",
@@ -79,7 +79,7 @@ class NetworkThrottlingMenu extends PureComponent {
 
     if (networkThrottling.enabled) {
       const id = networkThrottling.profile;
-      const selectedProfile = throttlingProfiles.find(
+      const selectedProfile = throttlingProfiles.profiles.find(
         profile => profile.id === id
       );
       title = selectedProfile.description;

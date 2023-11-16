@@ -11,7 +11,7 @@ NSS 3.79 release notes
    Network Security Services (NSS) 3.79 was released on **31 May 2022**. NSS 3.79 is an ESR release.
 
 
-.. _distribution_information:
+
 
 `Distribution Information <#distribution_information>`__
 --------------------------------------------------------

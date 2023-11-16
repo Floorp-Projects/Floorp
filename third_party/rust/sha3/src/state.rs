@@ -34,7 +34,7 @@ impl Sha3State {
             *s ^= u64::from_le_bytes(b.try_into().unwrap());
         }
 
-        keccak::keccak_p(&mut self.state, self.round_count);
+        keccak::p1600(&mut self.state, self.round_count);
     }
 
     #[inline(always)]
@@ -46,6 +46,6 @@ impl Sha3State {
 
     #[inline(always)]
     pub(crate) fn permute(&mut self) {
-        keccak::keccak_p(&mut self.state, self.round_count);
+        keccak::p1600(&mut self.state, self.round_count);
     }
 }

@@ -21,6 +21,14 @@ enum WakeLockState {
 WakeLockState ComputeWakeLockState(int aNumLocks, int aNumHidden);
 
 }  // namespace hal
+
+namespace hal_impl {
+void ModifyWakeLockWithChildID(const nsAString& aTopic,
+                               hal::WakeLockControl aLockAdjust,
+                               hal::WakeLockControl aHiddenAdjust,
+                               uint64_t aChildID);
+}  // namespace hal_impl
+
 }  // namespace mozilla
 
 #endif /* __HAL_WAKELOCK_H_ */

@@ -10,7 +10,7 @@ NSS 3.36.2 release notes
 
    Network Security Services (NSS) 3.36.2 is a patch release for NSS 3.36.
 
-.. _distribution_information:
+
 
 `Distribution Information <#distribution_information>`__
 --------------------------------------------------------

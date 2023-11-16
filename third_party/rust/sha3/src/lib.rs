@@ -177,7 +177,6 @@ impl_turbo_shake!(
     TurboShake128Reader,
     U168,
     "TurboSHAKE128",
-    "",
 );
 impl_turbo_shake!(
     TurboShake256Core,
@@ -186,7 +185,6 @@ impl_turbo_shake!(
     TurboShake256Reader,
     U136,
     "TurboSHAKE256",
-    "",
 );
 
 impl_cshake!(
