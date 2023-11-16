@@ -24,6 +24,7 @@ exclude: true
 - ⚠️  `WebExtensionController.install` method will not be implicitly awaiting for the installed extension to be fully started anymore, callers of the install method should now expect the `WebExtension.MetaData` properties `baseUrl` and `optionsPageUrl` to be not be
   defined yet until the `WebExtensionController.AddonManagerDelegate.onReady` delegated method has been called ([bug 1859585]({{bugzilla}}1859585).
 - Added additional support for translation settings such as: `getLanguageSetting`, `setLanguageSetting`, `getNeverTranslateSiteSetting`,`setNeverTranslateSiteSetting`, on the Translations Controller [121.11], and `getTranslationsOfferPopup`, `setTranslationsOfferPopup` on the Runtime Settings [121.12].
+- Added `privacy.trackingprotection.emailtracking.enabled` to strict mode for email tracker blocking in GeckoView. Removed unnecessary string manipulation on STP Pref string. [121.13] ([bug 1856634]({{bugzilla}}1856634).
 
 [121.1]: {{javadoc_uri}}/TranslationsController.RuntimeTranslation.html
 [121.2]: {{javadoc_uri}}/ContentBlocking.Settings.Builder.html#cookieBannerGlobalRulesEnabled(boolean)
@@ -37,6 +38,7 @@ exclude: true
 [121.10]: {{javadoc_uri}}/WebExtensionController.AddonManagerDelegate.html#onReady
 [121.11]: {{javadoc_uri}}/TranslationsController.html
 [121.12]: {{javadoc_uri}}/GeckoRuntimeSettings.html
+[121.13]: {{javadoc_uri}}/Contentblocking.AntiTracking.html#EMAIL
 
 ## v120
 - Added [`disableExtensionProcessSpawning`][120.1] for disabling the extension process spawning. ([bug 1855405]({{bugzilla}}1855405))
@@ -1474,4 +1476,4 @@ to allow adding gecko profiler markers.
 [65.24]: {{javadoc_uri}}/CrashReporter.html#sendCrashReport(android.content.Context,android.os.Bundle,java.lang.String)
 [65.25]: {{javadoc_uri}}/GeckoResult.html
 
-[api-version]: 06d872fa8d0d5c09232fa6b40e47a683986da683
+[api-version]: 28fe00d99fd6e91f9fdada76d88865ec64494bc4

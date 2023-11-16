@@ -13,6 +13,7 @@ import org.hamcrest.Matchers.* // ktlint-disable no-wildcard-imports
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.mozilla.geckoview.ContentBlocking
+import org.mozilla.geckoview.ContentBlocking.AntiTracking
 import org.mozilla.geckoview.ContentBlocking.CookieBannerMode
 import org.mozilla.geckoview.ContentBlockingController
 import org.mozilla.geckoview.GeckoSession
@@ -487,6 +488,32 @@ class ContentBlockingControllerTest : BaseSessionTest() {
             "The value is updated",
             actualPrefs[0] as String,
             equalTo(contentBlocking.queryParameterStrippingStripList.joinToString(",")),
+        )
+    }
+
+    @Test
+    fun toggleEmailTrackingWhenETBAddedToAntiTrackingList() {
+        // check default value
+        val contentBlocking = sessionRule.runtime.settings.contentBlocking
+
+        val originalPref = sessionRule.getPrefs(
+            "privacy.trackingprotection.emailtracking.enabled",
+        )
+        assertThat(
+            "Expect correct default value which is off",
+            originalPref[0] as Boolean,
+            equalTo(false),
+        )
+
+        contentBlocking.setAntiTracking(AntiTracking.EMAIL)
+
+        val updatedPref = sessionRule.getPrefs(
+            "privacy.trackingprotection.emailtracking.enabled",
+        )
+        assertThat(
+            "Expect new value which is on",
+            updatedPref[0] as Boolean,
+            equalTo(true),
         )
     }
 }
