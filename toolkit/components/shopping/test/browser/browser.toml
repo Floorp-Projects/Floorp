@@ -9,16 +9,16 @@ prefs = [
 ]
 support-files = [
   "head.js",
-  "server_helper.js",
-  "analysis.sjs",
-  "recommendations.sjs",
-  "attribution.sjs",
-  "reporting.sjs",
-  "analyze.sjs",
-  "analysis_status.sjs",
+  "../mockapis/server_helper.js",
+  "../mockapis/analysis_status.sjs",
+  "../mockapis/analysis.sjs",
+  "../mockapis/analyze.sjs",
+  "../mockapis/attribution.sjs",
+  "../mockapis/recommendations.sjs",
+  "../mockapis/reporting.sjs",
 ]
 
-["browser_shopping_ads_test.js"]
 ["browser_shopping_ad_not_available.js"]
+["browser_shopping_ads_test.js"]
 ["browser_shopping_integration.js"]
 ["browser_shopping_sidebar_messages.js"]
