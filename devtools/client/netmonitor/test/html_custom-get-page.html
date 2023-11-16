@@ -15,7 +15,7 @@
     <p>Performing a custom number of GETs</p>
 
     <script type="text/javascript">
-      /* exported performRequests */
+      /* exported performRequests hasOfflineEventFired */
       "use strict";
 
       function get(address) {
@@ -41,6 +41,16 @@
         }
         await get(url || "request_" + (count++));
         setTimeout(performRequests.bind(this, --total, url, timeout), timeout);
+      }
+
+      // For testing the offline mode in the netmonitor
+      let isOfflineEventFired = false;
+      window.addEventListener("offline", (event) => {
+        isOfflineEventFired = true
+      }, { once: true });
+
+      function hasOfflineEventFired() {
+        return isOfflineEventFired;
       }
     </script>
   </body>
