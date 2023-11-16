@@ -1,0 +1,8 @@
+---
+root:
+  items:
+    - type: rect
+      bounds: [50, 50, 362, 362]
+      color: green
+    - image: checkerboard(2,16,16)
+      bounds: [100, 100, 262, 262]

@@ -2455,7 +2455,7 @@ impl TileCacheInstance {
         prim_spatial_node_index: SpatialNodeIndex,
         is_root_tile_cache: bool,
         sub_slice_index: usize,
-        is_opaque: bool,
+        surface_kind: CompositorSurfaceKind,
         frame_context: &FrameVisibilityContext,
     ) -> SurfacePromotionResult {
         // Check if this primitive _wants_ to be promoted to a compositor surface.
@@ -2464,7 +2464,7 @@ impl TileCacheInstance {
         }
 
         // For now, only support a small (arbitrary) number of compositor surfaces.
-        if !is_opaque {
+        if surface_kind == CompositorSurfaceKind::Overlay {
             // Non-opaque compositor surfaces require sub-slices, as they are drawn
             // as overlays.
             if sub_slice_index == self.sub_slices.len() - 1 {
@@ -2553,6 +2553,7 @@ impl TileCacheInstance {
             composite_state,
             image_rendering,
             true,
+            CompositorSurfaceKind::Underlay,
         )
     }
 
@@ -2572,6 +2573,7 @@ impl TileCacheInstance {
         gpu_cache: &mut GpuCache,
         image_rendering: ImageRendering,
         is_opaque: bool,
+        surface_kind: CompositorSurfaceKind,
     ) -> bool {
         let mut api_keys = [ImageKey::DUMMY; 3];
         api_keys[0] = api_key;
@@ -2606,6 +2608,7 @@ impl TileCacheInstance {
             composite_state,
             image_rendering,
             is_opaque,
+            surface_kind,
         )
     }
 
@@ -2626,6 +2629,7 @@ impl TileCacheInstance {
         composite_state: &mut CompositeState,
         image_rendering: ImageRendering,
         is_opaque: bool,
+        surface_kind: CompositorSurfaceKind,
     ) -> bool {
         let map_local_to_surface = SpaceMapper::new_with_target(
             self.spatial_node_index,
@@ -2823,20 +2827,24 @@ impl TileCacheInstance {
 
         // If the surface is opaque, we can draw it an an underlay (which avoids
         // additional sub-slice surfaces, and supports clip masks)
-        if is_opaque {
-            self.underlays.push(descriptor);
-        } else {
-            // For compositor surfaces, if we didn't find an earlier sub-slice to add to,
-            // we know we can append to the current slice.
-            assert!(sub_slice_index < self.sub_slices.len() - 1);
-            let sub_slice = &mut self.sub_slices[sub_slice_index];
+        match surface_kind {
+            CompositorSurfaceKind::Underlay => {
+                self.underlays.push(descriptor);
+            }
+            CompositorSurfaceKind::Overlay => {
+                // For compositor surfaces, if we didn't find an earlier sub-slice to add to,
+                // we know we can append to the current slice.
+                assert!(sub_slice_index < self.sub_slices.len() - 1);
+                let sub_slice = &mut self.sub_slices[sub_slice_index];
 
-            // Each compositor surface allocates a unique z-id
-            sub_slice.compositor_surfaces.push(CompositorSurface {
-                prohibited_rect: pic_coverage_rect,
-                is_opaque,
-                descriptor,
-            });
+                // Each compositor surface allocates a unique z-id
+                sub_slice.compositor_surfaces.push(CompositorSurface {
+                    prohibited_rect: pic_coverage_rect,
+                    is_opaque,
+                    descriptor,
+                });
+            }
+            CompositorSurfaceKind::Blit => unreachable!(),
         }
 
         true
@@ -3083,6 +3091,11 @@ impl TileCacheInstance {
             PrimitiveInstanceKind::Image { data_handle, ref mut compositor_surface_kind, .. } => {
                 let image_key = &data_stores.image[data_handle];
                 let image_data = &image_key.kind;
+
+                // For now, assume that for compositor surface purposes, any RGBA image may be
+                // translucent. See the comment in `add_prim` in this source file for more
+                // details. We'll leave the `is_opaque` code branches here, but disabled, as
+                // in future we will want to support this case correctly.
                 let mut is_opaque = false;
 
                 if let Some(image_properties) = resource_cache.get_image_properties(image_data.key) {
@@ -3112,7 +3125,7 @@ impl TileCacheInstance {
                                                   prim_spatial_node_index,
                                                   is_root_tile_cache,
                                                   sub_slice_index,
-                                                  is_opaque,
+                                                  CompositorSurfaceKind::Overlay,
                                                   frame_context) {
                     SurfacePromotionResult::Failed => {
                     }
@@ -3146,17 +3159,14 @@ impl TileCacheInstance {
                         gpu_cache,
                         image_data.image_rendering,
                         is_opaque,
+                        CompositorSurfaceKind::Overlay,
                     );
                 }
 
                 if promote_to_surface {
-                    if is_opaque {
-                        *compositor_surface_kind = CompositorSurfaceKind::Underlay;
-                    } else {
-                        *compositor_surface_kind = CompositorSurfaceKind::Overlay;
-                        prim_instance.vis.state = VisibilityState::Culled;
-                        return;
-                    }
+                    *compositor_surface_kind = CompositorSurfaceKind::Overlay;
+                    prim_instance.vis.state = VisibilityState::Culled;
+                    return;
                 } else {
                     *compositor_surface_kind = CompositorSurfaceKind::Blit;
 
@@ -3174,7 +3184,7 @@ impl TileCacheInstance {
                                             prim_spatial_node_index,
                                             is_root_tile_cache,
                                             sub_slice_index,
-                                            true,
+                                            CompositorSurfaceKind::Underlay,
                                             frame_context) {
                     SurfacePromotionResult::Failed => false,
                     SurfacePromotionResult::Success => true,
