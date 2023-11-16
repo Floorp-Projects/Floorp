@@ -1779,6 +1779,11 @@ who = "Yannis Juglaret <yjuglaret@mozilla.com>"
 criteria = "safe-to-deploy"
 delta = "0.2.8 -> 0.2.9"
 
+[[audits.getrandom]]
+who = "Simon Friedberger <simon@mozilla.com>"
+criteria = "safe-to-deploy"
+delta = "0.2.10 -> 0.2.11"
+
 [[audits.gleam]]
 who = "Jamie Nicol <jnicol@mozilla.com>"
 criteria = "safe-to-deploy"
@@ -4375,7 +4380,7 @@ end = "2024-05-05"
 
 [[trusted.libc]]
 criteria = "safe-to-deploy"
-user-id = 51017
+user-id = 51017 # Yuki Okushi (JohnTitor)
 start = "2020-03-17"
 end = "2024-10-25"
 

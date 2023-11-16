@@ -185,9 +185,9 @@ mod tests {
         ];
 
         let mut state = [0u64; 25];
-        unsafe { keccak_f1600(&mut state) };
+        unsafe { f1600_armv8_sha3_asm(&mut state) };
         assert_eq!(state, state_first);
-        unsafe { keccak_f1600(&mut state) };
+        unsafe { f1600_armv8_sha3_asm(&mut state) };
         assert_eq!(state, state_second);
     }
 }

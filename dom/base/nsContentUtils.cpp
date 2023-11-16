@@ -7287,6 +7287,32 @@ int32_t nsContentUtils::GetAdjustedOffsetInTextControl(nsIFrame* aOffsetFrame,
 }
 
 // static
+bool nsContentUtils::IsPointInSelection(
+    const mozilla::dom::Selection& aSelection, const nsINode& aNode,
+    const uint32_t aOffset) {
+  if (aSelection.IsCollapsed()) {
+    return false;
+  }
+
+  const uint32_t rangeCount = aSelection.RangeCount();
+  for (const uint32_t i : IntegerRange(rangeCount)) {
+    MOZ_ASSERT(aSelection.RangeCount() == rangeCount);
+    RefPtr<const nsRange> range = aSelection.GetRangeAt(i);
+    if (NS_WARN_IF(!range)) {
+      // Don't bail yet, iterate through them all
+      continue;
+    }
+
+    // Done when we find a range that we are in
+    if (range->IsPointInRange(aNode, aOffset, IgnoreErrors())) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+// static
 void nsContentUtils::GetSelectionInTextControl(Selection* aSelection,
                                                Element* aRoot,
                                                uint32_t& aOutStartOffset,

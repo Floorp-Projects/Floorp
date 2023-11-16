@@ -14,7 +14,7 @@ NSS 3.73 release notes
 
    https://www.mozilla.org/en-US/security/advisories/mfsa2021-51/
 
-.. _distribution_information:
+
 
 `Distribution Information <#distribution_information>`__
 --------------------------------------------------------

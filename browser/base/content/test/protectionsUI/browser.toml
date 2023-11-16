@@ -86,6 +86,12 @@ https_first_disabled = true
 ["browser_protectionsUI_subview_shim.js"]
 https_first_disabled = true
 
+["browser_protectionsUI_suspicious_fingerprinters_subview.js"]
+support-files = [
+  "canvas-fingerprinter.html",
+  "font-fingerprinter.html",
+]
+
 ["browser_protectionsUI_telemetry.js"]
 https_first_disabled = true
 

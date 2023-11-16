@@ -81,7 +81,7 @@
          TLS_ECDH_anon_WITH_AES_128_CBC_SHA
          TLS_ECDH_anon_WITH_AES_256_CBC_SHA
 
-.. _distribution_information:
+
 
 `Distribution Information <#distribution_information>`__
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -114,7 +114,7 @@
    -  Source may be viewed with a browser (via the MXR tool) at
       http://mxr.mozilla.org/mozilla/source/security/jss/
    -  The RUN TIME behavior of JSS can be affected by the
-      :ref:`mozilla_projects_nss_reference_nss_environment_variables`. 
+      :ref:`mozilla_projects_nss_reference_nss_environment_variables`.
 
 .. _platform_information:
 
@@ -142,7 +142,7 @@
 
    -  For a list of reported bugs that have not yet been fixed, `click
       here. <http://bugzilla.mozilla.org/buglist.cgi?bug_status=UNCONFIRMED&bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&&product=JSS>`__
-      Note that some bugs may have been fixed since JSS 4.3 was released. 
+      Note that some bugs may have been fixed since JSS 4.3 was released.
 
    --------------
 
@@ -157,7 +157,7 @@
       file must be used with the JSS shared library from the exact same release.
    -  To obtain the version info from the jar file use,
       "System.out.println(org.mozilla.jss.CryptoManager.JAR_JSS_VERSION)" and to check the shared
-      library: strings libjss4.so \| grep -i header  
+      library: strings libjss4.so \| grep -i header
 
    --------------
 

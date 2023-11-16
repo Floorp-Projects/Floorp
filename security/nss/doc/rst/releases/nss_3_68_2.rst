@@ -10,7 +10,7 @@ NSS 3.68.2 (ESR) release notes
 
    Network Security Services (NSS) 3.68.2 (ESR) was released on **15 December 2021**.
 
-.. _distribution_information:
+
 
 `Distribution Information <#distribution_information>`__
 --------------------------------------------------------

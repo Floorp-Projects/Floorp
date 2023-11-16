@@ -11,7 +11,7 @@ NSS 3.62 release notes
    The NSS team released Network Security Services (NSS) 3.62 on **19 February 2021**, which is a
    minor release.
 
-.. _distribution_information:
+
 
 `Distribution Information <#distribution_information>`__
 --------------------------------------------------------

@@ -11,7 +11,7 @@ NSS 3.19.1 release notes
    Network Security Services (NSS) 3.19.1 is a security release for NSS 3.19. The bug fixes in NSS
    3.19.1 are described in the "Bugs Fixed" section below.
 
-.. _distribution_information:
+
 
 `Distribution Information <#distribution_information>`__
 --------------------------------------------------------

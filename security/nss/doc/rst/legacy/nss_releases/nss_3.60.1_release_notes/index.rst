@@ -11,7 +11,7 @@ NSS 3.60.1 release notes
    The NSS team released Network Security Services (NSS) 3.60.1 on **4 January 2021**, which is a
    patch release for NSS 3.60.
 
-.. _distribution_information:
+
 
 `Distribution information <#distribution_information>`__
 --------------------------------------------------------

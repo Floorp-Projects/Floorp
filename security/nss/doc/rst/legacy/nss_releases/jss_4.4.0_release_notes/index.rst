@@ -10,7 +10,7 @@ JSS 4.4.0 Release Notes
 
    The Java Security Services (JSS) team has released JSS 4.4.0, which is a minor release.
 
-.. _distribution_information:
+
 
 `Distribution information <#distribution_information>`__
 --------------------------------------------------------

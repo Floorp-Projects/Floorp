@@ -10,7 +10,7 @@ NSS 3.71 release notes
 
    Network Security Services (NSS) 3.71 was released on **30 September 2021**.
 
-.. _distribution_information:
+
 
 `Distribution Information <#distribution_information>`__
 --------------------------------------------------------

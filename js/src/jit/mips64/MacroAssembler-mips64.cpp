@@ -1058,7 +1058,7 @@ void MacroAssemblerMIPS64Compat::move32(Imm32 imm, Register dest) {
 }
 
 void MacroAssemblerMIPS64Compat::move32(Register src, Register dest) {
-  ma_move(dest, src);
+  ma_sll(dest, src, Imm32(0));
 }
 
 void MacroAssemblerMIPS64Compat::movePtr(Register src, Register dest) {

@@ -8,8 +8,9 @@ use crate::{
     field::{FieldElement, FieldElementVisitor, FieldError},
 };
 use fiat_crypto::curve25519_64::{
-    fiat_25519_add, fiat_25519_carry, fiat_25519_carry_mul, fiat_25519_from_bytes, fiat_25519_opp,
-    fiat_25519_selectznz, fiat_25519_sub, fiat_25519_tight_field_element, fiat_25519_to_bytes,
+    fiat_25519_add, fiat_25519_carry, fiat_25519_carry_mul, fiat_25519_from_bytes,
+    fiat_25519_loose_field_element, fiat_25519_opp, fiat_25519_relax, fiat_25519_selectznz,
+    fiat_25519_sub, fiat_25519_tight_field_element, fiat_25519_to_bytes,
 };
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::{
@@ -71,7 +72,7 @@ impl Field255 {
             return Err(FieldError::ModulusOverflow);
         }
 
-        let mut output = [0; 5];
+        let mut output = fiat_25519_tight_field_element([0; 5]);
         fiat_25519_from_bytes(&mut output, &value);
 
         Ok(Field255(output))
@@ -95,8 +96,8 @@ impl ConstantTimeEq for Field255 {
 impl ConditionallySelectable for Field255 {
     fn conditional_select(a: &Self, b: &Self, choice: Choice) -> Self {
         let mut output = [0; 5];
-        fiat_25519_selectznz(&mut output, choice.unwrap_u8(), &a.0, &b.0);
-        Field255(output)
+        fiat_25519_selectznz(&mut output, choice.unwrap_u8(), &(a.0).0, &(b.0).0);
+        Field255(fiat_25519_tight_field_element(output))
     }
 }
 
@@ -112,9 +113,9 @@ impl Add for Field255 {
     type Output = Field255;
 
     fn add(self, rhs: Self) -> Field255 {
-        let mut loose_output = [0; 5];
+        let mut loose_output = fiat_25519_loose_field_element([0; 5]);
         fiat_25519_add(&mut loose_output, &self.0, &rhs.0);
-        let mut output = [0; 5];
+        let mut output = fiat_25519_tight_field_element([0; 5]);
         fiat_25519_carry(&mut output, &loose_output);
         Field255(output)
     }
@@ -122,7 +123,7 @@ impl Add for Field255 {
 
 impl AddAssign for Field255 {
     fn add_assign(&mut self, rhs: Self) {
-        let mut loose_output = [0; 5];
+        let mut loose_output = fiat_25519_loose_field_element([0; 5]);
         fiat_25519_add(&mut loose_output, &self.0, &rhs.0);
         fiat_25519_carry(&mut self.0, &loose_output);
     }
@@ -132,9 +133,9 @@ impl Sub for Field255 {
     type Output = Field255;
 
     fn sub(self, rhs: Self) -> Field255 {
-        let mut loose_output = [0; 5];
+        let mut loose_output = fiat_25519_loose_field_element([0; 5]);
         fiat_25519_sub(&mut loose_output, &self.0, &rhs.0);
-        let mut output = [0; 5];
+        let mut output = fiat_25519_tight_field_element([0; 5]);
         fiat_25519_carry(&mut output, &loose_output);
         Field255(output)
     }
@@ -142,7 +143,7 @@ impl Sub for Field255 {
 
 impl SubAssign for Field255 {
     fn sub_assign(&mut self, rhs: Self) {
-        let mut loose_output = [0; 5];
+        let mut loose_output = fiat_25519_loose_field_element([0; 5]);
         fiat_25519_sub(&mut loose_output, &self.0, &rhs.0);
         fiat_25519_carry(&mut self.0, &loose_output);
     }
@@ -152,16 +153,23 @@ impl Mul for Field255 {
     type Output = Field255;
 
     fn mul(self, rhs: Self) -> Field255 {
-        let mut output = [0; 5];
-        fiat_25519_carry_mul(&mut output, &self.0, &rhs.0);
+        let mut self_relaxed = fiat_25519_loose_field_element([0; 5]);
+        fiat_25519_relax(&mut self_relaxed, &self.0);
+        let mut rhs_relaxed = fiat_25519_loose_field_element([0; 5]);
+        fiat_25519_relax(&mut rhs_relaxed, &rhs.0);
+        let mut output = fiat_25519_tight_field_element([0; 5]);
+        fiat_25519_carry_mul(&mut output, &self_relaxed, &rhs_relaxed);
         Field255(output)
     }
 }
 
 impl MulAssign for Field255 {
     fn mul_assign(&mut self, rhs: Self) {
-        let self_copy = self.0;
-        fiat_25519_carry_mul(&mut self.0, &self_copy, &rhs.0);
+        let mut self_relaxed = fiat_25519_loose_field_element([0; 5]);
+        fiat_25519_relax(&mut self_relaxed, &self.0);
+        let mut rhs_relaxed = fiat_25519_loose_field_element([0; 5]);
+        fiat_25519_relax(&mut rhs_relaxed, &rhs.0);
+        fiat_25519_carry_mul(&mut self.0, &self_relaxed, &rhs_relaxed);
     }
 }
 
@@ -191,9 +199,9 @@ impl<'a> Neg for &'a Field255 {
     type Output = Field255;
 
     fn neg(self) -> Field255 {
-        let mut loose_output = [0; 5];
+        let mut loose_output = fiat_25519_loose_field_element([0; 5]);
         fiat_25519_opp(&mut loose_output, &self.0);
-        let mut output = [0; 5];
+        let mut output = fiat_25519_tight_field_element([0; 5]);
         fiat_25519_carry(&mut output, &loose_output);
         Field255(output)
     }
@@ -294,11 +302,11 @@ impl FieldElement for Field255 {
     }
 
     fn zero() -> Self {
-        Field255([0, 0, 0, 0, 0])
+        Field255(fiat_25519_tight_field_element([0, 0, 0, 0, 0]))
     }
 
     fn one() -> Self {
-        Field255([1, 0, 0, 0, 0])
+        Field255(fiat_25519_tight_field_element([1, 0, 0, 0, 0]))
     }
 }
 
@@ -337,7 +345,9 @@ mod tests {
         },
     };
     use assert_matches::assert_matches;
-    use fiat_crypto::curve25519_64::{fiat_25519_from_bytes, fiat_25519_to_bytes};
+    use fiat_crypto::curve25519_64::{
+        fiat_25519_from_bytes, fiat_25519_tight_field_element, fiat_25519_to_bytes,
+    };
     use num_bigint::BigUint;
     use once_cell::sync::Lazy;
     use std::convert::{TryFrom, TryInto};
@@ -351,7 +361,7 @@ mod tests {
             let mut le_bytes_array = [0u8; 32];
             le_bytes_array[..le_bytes_vec.len()].copy_from_slice(&le_bytes_vec);
 
-            let mut output = [0; 5];
+            let mut output = fiat_25519_tight_field_element([0; 5]);
             fiat_25519_from_bytes(&mut output, &le_bytes_array);
             Field255(output)
         }

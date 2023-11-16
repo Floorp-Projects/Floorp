@@ -12,7 +12,6 @@ use crate::prng::{Prng, PrngError};
 use crate::{
     codec::{CodecError, Decode, Encode},
     fp::{FP128, FP32, FP64},
-    vdaf::prg::{CoinToss, SeedStream},
 };
 use serde::{
     de::{DeserializeOwned, Visitor},
@@ -25,7 +24,10 @@ use std::{
     hash::{Hash, Hasher},
     io::{Cursor, Read},
     marker::PhantomData,
-    ops::{Add, AddAssign, BitAnd, Div, DivAssign, Mul, MulAssign, Neg, Shl, Shr, Sub, SubAssign},
+    ops::{
+        Add, AddAssign, BitAnd, ControlFlow, Div, DivAssign, Mul, MulAssign, Neg, Shl, Shr, Sub,
+        SubAssign,
+    },
 };
 use subtle::{Choice, ConditionallyNegatable, ConditionallySelectable, ConstantTimeEq};
 
@@ -195,7 +197,7 @@ pub trait FieldElementWithInteger: FieldElement + From<Self::Integer> {
 }
 
 /// Methods common to all `FieldElementWithInteger` implementations that are private to the crate.
-pub(crate) trait FieldElementExt: FieldElementWithInteger {
+pub(crate) trait FieldElementWithIntegerExt: FieldElementWithInteger {
     /// Encode `input` as bitvector of elements of `Self`. Output is written into the `output` slice.
     /// If `output.len()` is smaller than the number of bits required to respresent `input`,
     /// an error is returned.
@@ -290,7 +292,28 @@ pub(crate) trait FieldElementExt: FieldElementWithInteger {
     }
 }
 
-impl<F: FieldElementWithInteger> FieldElementExt for F {}
+impl<F: FieldElementWithInteger> FieldElementWithIntegerExt for F {}
+
+/// Methods common to all `FieldElement` implementations that are private to the crate.
+pub(crate) trait FieldElementExt: FieldElement {
+    /// Try to interpret a slice of [`Self::ENCODED_SIZE`] random bytes as an element in the field. If
+    /// the input represents an integer greater than or equal to the field modulus, then
+    /// [`ControlFlow::Continue`] is returned instead, to indicate that an enclosing rejection sampling
+    /// loop should try again with different random bytes.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `bytes` is not of length [`Self::ENCODED_SIZE`].
+    fn from_random_rejection(bytes: &[u8]) -> ControlFlow<Self, ()> {
+        match Self::try_from_random(bytes) {
+            Ok(x) => ControlFlow::Break(x),
+            Err(FieldError::ModulusOverflow) => ControlFlow::Continue(()),
+            Err(err) => panic!("unexpected error: {err}"),
+        }
+    }
+}
+
+impl<F: FieldElement> FieldElementExt for F {}
 
 /// serde Visitor implementation used to generically deserialize `FieldElement`
 /// values from byte arrays.
@@ -376,9 +399,7 @@ macro_rules! make_field {
             ///
             /// We cannot use `u128::from_le_bytes` or `u128::from_be_bytes` because those functions
             /// expect inputs to be exactly 16 bytes long. Our encoding of most field elements is
-            /// more compact, and does not have to correspond to the size of an integer type. For
-            /// instance,`Field96`'s encoding is 12 bytes, even though it is a 16 byte `u128` in
-            /// memory.
+            /// more compact.
             fn try_from_bytes(bytes: &[u8], mask: u128) -> Result<Self, FieldError> {
                 if Self::ENCODED_SIZE > bytes.len() {
                     return Err(FieldError::ShortRead);
@@ -712,47 +733,6 @@ make_field!(
     8,
 );
 
-/// This nested module is an implementation detail to limit the scope of a module-wide
-/// `allow(deprecated)` attribute. [`Field96`] is marked as deprecated, and deprecation warnings
-/// must be silenced on multiple implementation blocks, and the macro invocation itself that
-/// defines the struct and its implementation.
-mod field96 {
-    #![allow(deprecated)]
-
-    use super::{
-        FftFriendlyFieldElement, FieldElement, FieldElementVisitor, FieldElementWithInteger,
-        FieldError,
-    };
-    use crate::{
-        codec::{CodecError, Decode, Encode},
-        fp::FP96,
-    };
-    use serde::{Deserialize, Deserializer, Serialize, Serializer};
-    use std::{
-        cmp::min,
-        fmt::{Debug, Display, Formatter},
-        hash::{Hash, Hasher},
-        io::{Cursor, Read},
-        marker::PhantomData,
-        ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign},
-    };
-    use subtle::{Choice, ConditionallySelectable, ConstantTimeEq};
-
-    make_field!(
-        #[deprecated]
-        /// `GF(79228148845226978974766202881)`, a 96-bit field.
-        ///
-        /// This is deprecated because it is not currently used by either Prio v2 or any VDAF.
-        Field96,
-        u128,
-        FP96,
-        12,
-    );
-}
-
-#[allow(deprecated)]
-pub use field96::Field96;
-
 make_field!(
     /// `GF(340282366920938462946865773367900766209)`, a 128-bit field.
     Field128,
@@ -815,7 +795,7 @@ pub fn random_vector<F: FieldElement>(len: usize) -> Result<Vec<F>, PrngError> {
 #[inline(always)]
 pub(crate) fn encode_fieldvec<F: FieldElement, T: AsRef<[F]>>(val: T, bytes: &mut Vec<u8>) {
     for elem in val.as_ref() {
-        bytes.append(&mut (*elem).into());
+        elem.encode(bytes);
     }
 }
 
@@ -838,32 +818,6 @@ pub(crate) fn decode_fieldvec<F: FieldElement>(
         );
     }
     Ok(vec)
-}
-
-impl<F> CoinToss for F
-where
-    F: FieldElement,
-{
-    fn sample<S>(seed_stream: &mut S) -> Self
-    where
-        S: SeedStream,
-    {
-        // This is analogous to `Prng::get()`, but does not make use of a persistent buffer of
-        // `SeedStream` output.
-        let mut buffer = [0u8; 64];
-        assert!(
-            buffer.len() >= F::ENCODED_SIZE,
-            "field is too big for buffer"
-        );
-        loop {
-            seed_stream.fill(&mut buffer[..F::ENCODED_SIZE]);
-            match Self::try_from_random(&buffer[..F::ENCODED_SIZE]) {
-                Ok(x) => return x,
-                Err(FieldError::ModulusOverflow) => continue,
-                Err(err) => panic!("unexpected error: {err}"),
-            }
-        }
-    }
 }
 
 #[cfg(test)]
@@ -1204,12 +1158,6 @@ mod tests {
     #[test]
     fn test_field64() {
         field_element_test::<Field64>();
-    }
-
-    #[test]
-    fn test_field96() {
-        #[allow(deprecated)]
-        field_element_test::<Field96>();
     }
 
     #[test]

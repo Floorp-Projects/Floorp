@@ -15,7 +15,7 @@ NSS 3.55 release notes
 
    -  Danh
 
-.. _distribution_information:
+
 
 `Distribution Information <#distribution_information>`__
 --------------------------------------------------------

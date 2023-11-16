@@ -33,6 +33,7 @@ pub(crate) struct FieldParameters {
 
 impl FieldParameters {
     /// Addition. The result will be in [0, p), so long as both x and y are as well.
+    #[inline(always)]
     pub fn add(&self, x: u128, y: u128) -> u128 {
         //   0,x
         // + 0,y
@@ -52,6 +53,7 @@ impl FieldParameters {
     }
 
     /// Subtraction. The result will be in [0, p), so long as both x and y are as well.
+    #[inline(always)]
     pub fn sub(&self, x: u128, y: u128) -> u128 {
         //     0, x
         // -   0, y
@@ -78,6 +80,7 @@ impl FieldParameters {
     /// ```text
     /// assert_eq!(fp.residue(fp.mul(fp.montgomery(23), fp.montgomery(2))), 46);
     /// ```
+    #[inline(always)]
     pub fn mul(&self, x: u128, y: u128) -> u128 {
         let x = [lo64(x), hi64(x)];
         let y = [lo64(y), hi64(y)];
@@ -224,11 +227,13 @@ impl FieldParameters {
 
     /// Modular inversion, i.e., x^-1 (mod p) where `p` is the modulus. Note that the runtime of
     /// this algorithm is linear in the bit length of `p`.
+    #[inline(always)]
     pub fn inv(&self, x: u128) -> u128 {
         self.pow(x, self.p - 2)
     }
 
     /// Negation, i.e., `-x (mod p)` where `p` is the modulus.
+    #[inline(always)]
     pub fn neg(&self, x: u128) -> u128 {
         self.sub(0, x)
     }
@@ -242,6 +247,7 @@ impl FieldParameters {
     /// let elem = fp.montgomery(integer); // Internal representation in the Montgomery domain
     /// assert_eq!(elem, 2564090464);
     /// ```
+    #[inline(always)]
     pub fn montgomery(&self, x: u128) -> u128 {
         modp(self.mul(x, self.r2), self.p)
     }
@@ -261,6 +267,7 @@ impl FieldParameters {
     /// let integer = fp.residue(elem); // Standard integer representation
     /// assert_eq!(integer, 1);
     /// ```
+    #[inline(always)]
     pub fn residue(&self, x: u128) -> u128 {
         modp(self.mul(x, 1), self.p)
     }
@@ -318,14 +325,17 @@ impl FieldParameters {
     }
 }
 
+#[inline(always)]
 fn lo64(x: u128) -> u128 {
     x & ((1 << 64) - 1)
 }
 
+#[inline(always)]
 fn hi64(x: u128) -> u128 {
     x >> 64
 }
 
+#[inline(always)]
 fn modp(x: u128, p: u128) -> u128 {
     let (z, carry) = x.overflowing_sub(p);
     let m = 0u128.wrapping_sub(carry as u128);
@@ -375,38 +385,6 @@ pub(crate) const FP64: FieldParameters = FieldParameters {
         8709441440702798460,
         8611358103550827629,
         8120528636261052110,
-    ],
-};
-
-pub(crate) const FP96: FieldParameters = FieldParameters {
-    p: 79228148845226978974766202881, // 96-bit prime
-    mu: 18446744073709551615,
-    r2: 69162923446439011319006025217,
-    g: 11329412859948499305522312170,
-    num_roots: 64,
-    bit_mask: 79228162514264337593543950335,
-    roots: [
-        10128756682736510015896859,
-        79218020088544242464750306022,
-        9188608122889034248261485869,
-        10170869429050723924726258983,
-        36379376833245035199462139324,
-        20898601228930800484072244511,
-        2845758484723985721473442509,
-        71302585629145191158180162028,
-        76552499132904394167108068662,
-        48651998692455360626769616967,
-        36570983454832589044179852640,
-        72716740645782532591407744342,
-        73296872548531908678227377531,
-        14831293153408122430659535205,
-        61540280632476003580389854060,
-        42256269782069635955059793151,
-        51673352890110285959979141934,
-        43102967204983216507957944322,
-        3990455111079735553382399289,
-        68042997008257313116433801954,
-        44344622755749285146379045633,
     ],
 };
 
@@ -488,12 +466,6 @@ mod tests {
                 expected_p: 18446744069414584321,
                 expected_g: 1753635133440165772,
                 expected_order: 1 << 32,
-            },
-            TestFieldParametersData {
-                fp: FP96,
-                expected_p: 79228148845226978974766202881,
-                expected_g: 34233996298771126927060021012,
-                expected_order: 1 << 64,
             },
             TestFieldParametersData {
                 fp: FP128,

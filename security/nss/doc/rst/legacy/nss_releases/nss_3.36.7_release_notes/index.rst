@@ -11,7 +11,7 @@ NSS 3.36.7 release notes
    Network Security Services (NSS) 3.36.7 is a patch release for NSS 3.36. The bug fixes in NSS
    3.36.7 are described in the "Bugs Fixed" section below. It was released on 19 January 2019.
 
-.. _distribution_information:
+
 
 `Distribution Information <#distribution_information>`__
 --------------------------------------------------------

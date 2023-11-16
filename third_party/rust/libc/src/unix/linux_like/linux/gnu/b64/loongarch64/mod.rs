@@ -264,6 +264,21 @@ align_const! {
         };
 }
 
+pub const HWCAP_CPUCFG: ::c_ulong = 1 << 0;
+pub const HWCAP_LAM: ::c_ulong = 1 << 1;
+pub const HWCAP_UAL: ::c_ulong = 1 << 2;
+pub const HWCAP_FPU: ::c_ulong = 1 << 3;
+pub const HWCAP_LSX: ::c_ulong = 1 << 4;
+pub const HWCAP_LASX: ::c_ulong = 1 << 5;
+pub const HWCAP_CRC32: ::c_ulong = 1 << 6;
+pub const HWCAP_COMPLEX: ::c_ulong = 1 << 7;
+pub const HWCAP_CRYPTO: ::c_ulong = 1 << 8;
+pub const HWCAP_LVZ: ::c_ulong = 1 << 9;
+pub const HWCAP_LBT_X86: ::c_ulong = 1 << 10;
+pub const HWCAP_LBT_ARM: ::c_ulong = 1 << 11;
+pub const HWCAP_LBT_MIPS: ::c_ulong = 1 << 12;
+pub const HWCAP_PTW: ::c_ulong = 1 << 13;
+
 pub const SYS_io_setup: ::c_long = 0;
 pub const SYS_io_destroy: ::c_long = 1;
 pub const SYS_io_submit: ::c_long = 2;

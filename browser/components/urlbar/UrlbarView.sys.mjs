@@ -2217,6 +2217,15 @@ export class UrlbarView {
       return { id: "urlbar-group-best-match" };
     }
 
+    // Show "Shortcuts" if there's another result before that group.
+    if (
+      row.result.providerName == lazy.UrlbarProviderTopSites.name &&
+      this.#queryContext.results[0].providerName !=
+        lazy.UrlbarProviderTopSites.name
+    ) {
+      return { id: "urlbar-group-shortcuts" };
+    }
+
     if (!this.#queryContext?.searchString || row.result.heuristic) {
       return null;
     }

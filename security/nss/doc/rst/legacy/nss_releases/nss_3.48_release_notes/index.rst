@@ -18,7 +18,7 @@ NSS 3.48 release notes
    -  Lauri Kasanen
    -  Tom Prince
 
-.. _distribution_information:
+
 
 `Distribution Information <#distribution_information>`__
 --------------------------------------------------------

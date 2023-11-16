@@ -324,12 +324,6 @@
   margin-block-start: 18px;
 }
 
-.firefoxSuggestOptionBox:first-of-type {
-  /* Similar here: Make the apparent vertical space between the last checkbox
-     and first option box the same as elsewhere. */
-  margin-block-start: 11px;
-}
-
 #firefoxSuggestInfoBox {
   margin-block-start: 16px;
 }

@@ -14,7 +14,7 @@ NSS 3.44.4 release notes
    Thank you to Cesar Pereida Garcia and the Network and Information Security Group (NISEC) at
    Tampere University for reporting this issue.
 
-.. _distribution_information:
+
 
 `Distribution Information <#distribution_information>`__
 --------------------------------------------------------

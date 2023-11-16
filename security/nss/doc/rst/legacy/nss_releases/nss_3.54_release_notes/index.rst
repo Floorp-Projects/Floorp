@@ -11,7 +11,7 @@ NSS 3.54 release notes
    The NSS team has released Network Security Services (NSS) 3.54 on **26 June 2020**, which is a
    minor release.
 
-.. _distribution_information:
+
 
 `Distribution Information <#distribution_information>`__
 --------------------------------------------------------

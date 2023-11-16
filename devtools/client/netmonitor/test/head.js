@@ -1516,3 +1516,22 @@ async function toggleUrlPreview(shouldExpand, monitor) {
   );
   return wait;
 }
+
+/**
+ * Wait for the eager evaluated result from the split console
+ * @param {Object} hud
+ * @param {String} text - expected evaluation result
+ */
+async function waitForEagerEvaluationResult(hud, text) {
+  await waitUntil(() => {
+    const elem = hud.ui.outputNode.querySelector(".eager-evaluation-result");
+    if (elem) {
+      if (text instanceof RegExp) {
+        return text.test(elem.innerText);
+      }
+      return elem.innerText == text;
+    }
+    return false;
+  });
+  ok(true, `Got eager evaluation result ${text}`);
+}

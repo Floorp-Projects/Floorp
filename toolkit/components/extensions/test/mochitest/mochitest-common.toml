@@ -180,7 +180,6 @@ skip-if = [
 skip-if = [
   "os == 'linux' && debug",
   "os == 'android' && debug", # bug 1348241
-  "os == 'android' && xorigin", # bug 1855869
 ]
 fail-if = ["xorigin"] # TypeError: can't access property "staticScripts", ext is undefined - Should not throw any errors
 

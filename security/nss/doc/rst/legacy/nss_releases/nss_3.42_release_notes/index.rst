@@ -11,7 +11,7 @@ NSS 3.42 release notes
    The NSS team has released Network Security Services (NSS) 3.42 on 25 January 2019, which is a
    minor release.
 
-.. _distribution_information:
+
 
 `Distribution Information <#distribution_information>`__
 --------------------------------------------------------
