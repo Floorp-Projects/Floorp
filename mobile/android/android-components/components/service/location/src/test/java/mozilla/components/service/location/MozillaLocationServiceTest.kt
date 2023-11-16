@@ -6,6 +6,7 @@ package mozilla.components.service.location
 
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.currentTime
 import kotlinx.coroutines.test.runTest
 import mozilla.components.concept.fetch.Client
 import mozilla.components.concept.fetch.MutableHeaders
@@ -14,6 +15,7 @@ import mozilla.components.concept.fetch.Response
 import mozilla.components.lib.fetch.httpurlconnection.HttpURLConnectionClient
 import mozilla.components.support.test.any
 import mozilla.components.support.test.argumentCaptor
+import mozilla.components.support.test.fakes.FakeClock
 import mozilla.components.support.test.mock
 import mozilla.components.support.test.robolectric.testContext
 import okhttp3.mockwebserver.MockResponse
@@ -265,6 +267,126 @@ class MozillaLocationServiceTest {
 
             val service = MozillaLocationService(testContext, client, apiKey = "test")
             val region = service.fetchRegion(readFromCache = false)
+
+            assertNotNull(region!!)
+
+            assertEquals("LR", region.countryCode)
+            assertEquals("Liberia", region.countryName)
+
+            verify(client).fetch(any())
+        }
+    }
+
+    @Test
+    fun `WHEN fetching region and the cache is valid THEN request is not sent again`() = runTest {
+        val clock = FakeClock()
+
+        run {
+            val client: Client = mock()
+            val response = Response(
+                url = "http://example.org",
+                status = 200,
+                headers = MutableHeaders(),
+                body = Response.Body("{\"country_name\": \"Nepal\", \"country_code\": \"NP\"}".byteInputStream()),
+            )
+            doReturn(response).`when`(client).fetch(any())
+
+            val service = MozillaLocationService(
+                testContext,
+                client,
+                apiKey = "test",
+                currentTime = clock::time,
+            )
+            val region = service.fetchRegion(readFromCache = true)
+
+            assertNotNull(region!!)
+
+            assertEquals("NP", region.countryCode)
+            assertEquals("Nepal", region.countryName)
+
+            verify(client).fetch(any())
+        }
+
+        // Let's jump 23 hours in the future
+        clock.advanceBy(23 * 60 * 60 * 1000)
+
+        run {
+            val client: Client = mock()
+            val response = Response(
+                url = "http://example.org",
+                status = 200,
+                headers = MutableHeaders(),
+                body = Response.Body("{\"country_name\": \"Liberia\", \"country_code\": \"LR\"}".byteInputStream()),
+            )
+            doReturn(response).`when`(client).fetch(any())
+
+            val service = MozillaLocationService(
+                testContext,
+                client,
+                apiKey = "test",
+                currentTime = clock::time,
+            )
+            val region = service.fetchRegion(readFromCache = true)
+
+            assertNotNull(region!!)
+
+            assertEquals("NP", region.countryCode)
+            assertEquals("Nepal", region.countryName)
+
+            verify(client, never()).fetch(any())
+        }
+    }
+
+    @Test
+    fun `WHEN fetching region and the cache is invalid THEN request is sent again`() = runTest {
+        val clock = FakeClock()
+
+        run {
+            val client: Client = mock()
+            val response = Response(
+                url = "http://example.org",
+                status = 200,
+                headers = MutableHeaders(),
+                body = Response.Body("{\"country_name\": \"Nepal\", \"country_code\": \"NP\"}".byteInputStream()),
+            )
+            doReturn(response).`when`(client).fetch(any())
+
+            val service = MozillaLocationService(
+                testContext,
+                client,
+                apiKey = "test",
+                currentTime = clock::time,
+            )
+            val region = service.fetchRegion(readFromCache = true)
+
+            assertNotNull(region!!)
+
+            assertEquals("NP", region.countryCode)
+            assertEquals("Nepal", region.countryName)
+
+            verify(client).fetch(any())
+        }
+
+        // Let's jump 24 hours in the future
+        clock.advanceBy(24 * 60 * 60 * 1000)
+
+        run {
+            val client: Client = mock()
+            val response = Response(
+                url = "http://example.org",
+                status = 200,
+                headers = MutableHeaders(),
+                body = Response.Body("{\"country_name\": \"Liberia\", \"country_code\": \"LR\"}".byteInputStream()),
+            )
+            doReturn(response).`when`(client).fetch(any())
+
+            val service = MozillaLocationService(
+                testContext,
+                client,
+                apiKey = "test",
+                currentTime = clock::time,
+            )
+            val region = service.fetchRegion(readFromCache = true)
 
             assertNotNull(region!!)
 

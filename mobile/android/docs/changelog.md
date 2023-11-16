@@ -22,6 +22,9 @@ permalink: /changelog/
 * **browser-engine-gecko**:
   * Added support for translating and restoring a translated page on the engine. [Bug 1844523](https://bugzilla.mozilla.org/show_bug.cgi?id=1844523)
 
+* **service-location**
+  * Added a cache lifetime to `MozillaLocationService`. [Bug 1855562](https://bugzilla.mozilla.org/show_bug.cgi?id=1855562)
+
 # 120.0
 * [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v119..releases_v120)
 * [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/releases_v120/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt)

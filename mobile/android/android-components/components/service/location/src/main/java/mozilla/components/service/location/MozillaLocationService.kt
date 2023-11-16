@@ -32,6 +32,10 @@ private const val EMPTY_REQUEST_BODY = "{}"
 private const val CACHE_FILE = "mozac.service.location.region"
 private const val KEY_COUNTRY_CODE = "country_code"
 private const val KEY_COUNTRY_NAME = "country_name"
+private const val KEY_CACHED_AT = "cached_at"
+
+// The amount of time (in seconds) to cache the result of `MozillaLocationService.fetchRegion()`.
+private const val CACHE_LIFETIME_IN_MS = 24 * 60 * 60 * 1000
 
 /**
  * The Mozilla Location Service (MLS) is an open service which lets devices determine their location
@@ -52,6 +56,7 @@ class MozillaLocationService(
     private val client: Client,
     apiKey: String,
     serviceUrl: String = GEOIP_SERVICE_URL,
+    private val currentTime: () -> Long = { System.currentTimeMillis() },
 ) : LocationService {
     private val regionServiceUrl = (serviceUrl + "country?key=%s").format(apiKey)
 
@@ -66,11 +71,13 @@ class MozillaLocationService(
     override suspend fun fetchRegion(
         readFromCache: Boolean,
     ): LocationService.Region? = withContext(Dispatchers.IO) {
-        if (readFromCache) {
+        if (readFromCache && isCacheValid()) {
             context.loadCachedRegion()?.let { return@withContext it }
         }
 
-        client.fetchRegion(regionServiceUrl)?.also { context.cacheRegion(it) }
+        client.fetchRegion(regionServiceUrl)?.also {
+            context.cacheRegion(it)
+        }
     }
 
     /**
@@ -80,6 +87,22 @@ class MozillaLocationService(
      */
     override fun hasRegionCached(): Boolean {
         return context.hasCachedRegion()
+    }
+
+    /**
+     * Check to see if the cache is still valid.
+     */
+    private fun isCacheValid(): Boolean {
+        return currentTime() < context.cachedAt() + CACHE_LIFETIME_IN_MS
+    }
+
+    private fun Context.cacheRegion(region: LocationService.Region) {
+        regionCache()
+            .edit()
+            .putString(KEY_COUNTRY_CODE, region.countryCode)
+            .putString(KEY_COUNTRY_NAME, region.countryName)
+            .putLong(KEY_CACHED_AT, currentTime())
+            .apply()
     }
 }
 
@@ -96,17 +119,14 @@ private fun Context.loadCachedRegion(): LocationService.Region? {
     }
 }
 
+private fun Context.cachedAt(): Long {
+    val cache = regionCache()
+    return cache.getLong(KEY_CACHED_AT, 0L)
+}
+
 private fun Context.hasCachedRegion(): Boolean {
     val cache = regionCache()
     return cache.contains(KEY_COUNTRY_CODE) && cache.contains(KEY_COUNTRY_NAME)
-}
-
-private fun Context.cacheRegion(region: LocationService.Region) {
-    regionCache()
-        .edit()
-        .putString(KEY_COUNTRY_CODE, region.countryCode)
-        .putString(KEY_COUNTRY_NAME, region.countryName)
-        .apply()
 }
 
 @VisibleForTesting(otherwise = NONE)
