@@ -99,12 +99,6 @@ This will take a while; a few minutes to a few hours depending on your hardware.
 
 .. note::
 
-    If you build Firefox often, add `ac_add_options --with-ccache=sccache` to .mozconfig.
-    sccache will significantly speed up your builds by caching compilation results.
-    The Firefox build system will download sccache automatically.
-
-.. note::
-
     The default build is a compiled build with optimizations. Check out the
     :ref:`mozconfig file documentation <Configuring Build Options>`
     to see other build options. If you don't plan to change C++ or Rust code,
