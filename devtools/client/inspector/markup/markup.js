@@ -1227,9 +1227,7 @@ MarkupView.prototype = {
                 this.emit("idref-attribute-link-failed");
                 return;
               }
-              this.inspector.selection.setNodeFront(node, {
-                reason: "markup-attribute-link",
-              });
+              this.inspector.selection.setNodeFront(node);
             });
         })
         .catch(console.error);
