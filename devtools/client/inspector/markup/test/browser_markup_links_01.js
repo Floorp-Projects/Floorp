@@ -141,15 +141,6 @@ const TEST_DATA = [
       },
     ],
   },
-  {
-    selector: "#invoker",
-    attributes: [
-      {
-        attributeName: "invoketarget",
-        links: [{ type: "idref", value: "invokee" }],
-      },
-    ],
-  },
 ];
 
 requestLongerTimeout(2);
@@ -171,22 +162,16 @@ add_task(async function () {
       is(linkEls.length, links.length, "The right number of links were found");
 
       for (let i = 0; i < links.length; i++) {
-        const linkEl = linkEls[i];
-        const type = linkEl.dataset.type;
-
-        is(type, links[i].type, `Link ${i} has the right type`);
-        is(linkEl.textContent, links[i].value, `Link ${i} has the right value`);
-
-        const selectNodeButton = linkEl.querySelector("button.select-node");
-        if (type === "idref" || type === "idreflist") {
-          ok(selectNodeButton, `Link ${i} has an expected Select Node button`);
-        } else {
-          is(
-            selectNodeButton,
-            null,
-            `Link ${i} does not have a Select Node button`
-          );
-        }
+        is(
+          linkEls[i].dataset.type,
+          links[i].type,
+          `Link ${i} has the right type`
+        );
+        is(
+          linkEls[i].textContent,
+          links[i].value,
+          `Link ${i} has the right value`
+        );
       }
     }
   }
