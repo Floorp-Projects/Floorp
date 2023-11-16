@@ -752,6 +752,14 @@ pocketNewtab:
       description: The URL for the spocs endpoint.
       type: string
       setPref: "browser.newtabpage.activity-stream.discoverystream.spocs-endpoint"
+    spocsEndpointAllowlist:
+      description: Comma separated list of allowed endpoints for fetching spocs
+      type: string
+      fallbackPref: "browser.newtabpage.activity-stream.discoverystream.endpoints"
+    spocsClearEndpoint:
+      description: URL for deleting any server data when a user opts out of sponsored content
+      type: string
+      fallbackPref: "browser.newtabpage.activity-stream.discoverystream.endpointSpocsClear"
     regionStoriesConfig:
       description: A comma-separated list of region to get stories for.
       type: string
