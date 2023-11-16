@@ -100,17 +100,17 @@ static inline __attribute__((always_inline)) void do_relocations(
       ptr = (Elf_Addr*)((intptr_t)&__ehdr_start + *entry);
       *ptr += (intptr_t)&__ehdr_start;
     } else {
-      size_t remaining = (8 * sizeof(Elf_Addr) - 1);
+      // This branch is the hotspot. Its loop body is branchless: The compiler
+      // can generate a cmov for it which is in that case faster than an
+      // explicit branching.
+
       Elf_Addr bits = *entry;
-      do {
+      Elf_Addr* end = ptr + 8 * sizeof(Elf_Addr) - 1;
+      while (ptr < end) {
+        ptr += 1;
         bits >>= 1;
-        remaining--;
-        ptr++;
-        if (bits & 1) {
-          *ptr += (intptr_t)&__ehdr_start;
-        }
-      } while (bits);
-      ptr += remaining;
+        *ptr += (bits & 1) ? (intptr_t)&__ehdr_start : 0;
+      }
     }
   }
 }
