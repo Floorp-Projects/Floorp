@@ -260,29 +260,6 @@ const AVAILABLE_INJECTIONS = [
     },
   },
   {
-    id: "bug1731825",
-    platform: "desktop",
-    domain: "Office 365 email handling prompt",
-    bug: "1731825",
-    contentScripts: {
-      matches: [
-        "*://*.live.com/*",
-        "*://*.office.com/*",
-        "*://*.office365.com/*",
-        "*://*.office365.us/*",
-        "*://*.outlook.cn/*",
-        "*://*.outlook.com/*",
-        "*://*.sharepoint.com/*",
-      ],
-      js: [
-        {
-          file: "injections/js/bug1731825-office365-email-handling-prompt-autohide.js",
-        },
-      ],
-      allFrames: true,
-    },
-  },
-  {
     id: "bug1707795",
     platform: "desktop",
     domain: "Office Excel spreadsheets",
@@ -572,15 +549,21 @@ const AVAILABLE_INJECTIONS = [
     bug: "1784199",
     contentScripts: {
       matches: [
+        "*://*.7streetbrownstones.com/*", // #129553
         "*://*.aptsovation.com/*",
         "*://*.avanabayview.com/*", // #118617
         "*://*.breakpointeandcoronado.com/*", // #117735
+        "*://*.courtsatspringmill.com/*", // #128404
+        "*://*.gslbriarcreek.com/*", // #126401
         "*://*.liveatlasathens.com/*", // #111189
         "*://*.liveobserverpark.com/*", // #105244
+        "*://*.liveupark.com/*", // #121083
+        "*://*.metropolisapt.com/*", // #129105
         "*://*.midwayurban.com/*", // #116523
         "*://*.nhcalaska.com/*",
         "*://*.prospectportal.com/*", // #115206
         "*://*.securityproperties.com/*",
+        "*://*.thefoundryat41st.com/*", // #128994
         "*://*.theloftsorlando.com/*",
         "*://*.vanallenapartments.com/*", // #120056
         "*://*.waterfordapartmentstulsa.com/*", // #125870
@@ -590,20 +573,7 @@ const AVAILABLE_INJECTIONS = [
           file: "injections/css/bug1784199-entrata-platform-unsupported.css",
         },
       ],
-    },
-  },
-  {
-    id: "bug1795490",
-    platform: "android",
-    domain: "www.china-airlines.com",
-    bug: "1795490",
-    contentScripts: {
-      matches: ["*://www.china-airlines.com/*"],
-      js: [
-        {
-          file: "injections/js/bug1795490-www.china-airlines.com-undisable-date-fields-on-mobile.js",
-        },
-      ],
+      allFrames: true,
     },
   },
   {
@@ -673,6 +643,8 @@ const AVAILABLE_INJECTIONS = [
         "*://torguard.net/*", // 120113
         "*://*.arcsivr.com/*", // 120716
         "*://drafthouse.com/*", // 126385
+        "*://*.lafoodbank.org/*", // 127006
+        "*://rutamayacoffee.com/*", // 129353
       ],
       js: [
         {
@@ -969,20 +941,6 @@ const AVAILABLE_INJECTIONS = [
     },
   },
   {
-    id: "bug1841991",
-    platform: "all",
-    domain: "wilton.com",
-    bug: "1841991",
-    contentScripts: {
-      matches: ["*://*.wilton.com/*"],
-      css: [
-        {
-          file: "injections/css/bug1841991-wilton.com-flexbox-painting-order.css",
-        },
-      ],
-    },
-  },
-  {
     id: "bug1848711",
     platform: "android",
     domain: "vio.com",
@@ -1106,6 +1064,25 @@ const AVAILABLE_INJECTIONS = [
           file: "injections/js/bug1855071-www.meteoam.it.js",
         },
       ],
+    },
+  },
+  {
+    id: "bug1864564",
+    platform: "all",
+    domain: "Esri breakage",
+    bug: "1864564",
+    contentScripts: {
+      matches: [
+        "*://*.ncep.noaa.gov/*",
+        "*://*.northumberland.gov.uk/*",
+        "*://webmap.gis.gov.mo/*",
+      ],
+      js: [
+        {
+          file: "injections/js/bug1864564-esri-transfrom-names-shim.js",
+        },
+      ],
+      allFrames: true,
     },
   },
 ];

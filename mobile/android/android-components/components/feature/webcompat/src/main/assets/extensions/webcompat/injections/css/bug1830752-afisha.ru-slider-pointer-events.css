@@ -13,14 +13,14 @@
  * Setting the same rule with -moz-range-thumb makes the slider to work.
  */
 
-.gNPvK,
-.y5iHc {
+.XdRPG,
+.gkKBB {
   pointer-events: auto;
 }
-.gNPvK::-moz-range-thumb,
-.y5iHc::-moz-range-thumb {
-  background-color: #0050ff;
-  border-color: #0050ff;
+.XdRPG::-moz-range-thumb,
+.gkKBB::-moz-range-thumb {
+  background-color: #ff3118;
+  border-color: #ff3118;
   border-radius: 50%;
   cursor: pointer;
   pointer-events: auto;
