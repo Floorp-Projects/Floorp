@@ -121,7 +121,10 @@ private fun mapStateForUpdateAction(
             }
         }
 
-        ReviewQualityCheckAction.ReanalyzeProduct, ReviewQualityCheckAction.AnalyzeProduct -> {
+        ReviewQualityCheckAction.ReanalyzeProduct,
+        ReviewQualityCheckAction.AnalyzeProduct,
+        ReviewQualityCheckAction.RestoreReanalysis,
+        -> {
             state.mapIfOptedIn {
                 when (it.productReviewState) {
                     is ProductReviewState.AnalysisPresent -> {

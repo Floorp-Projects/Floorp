@@ -79,7 +79,10 @@ class ReviewQualityCheckNetworkMiddleware(
                     }
                 }
 
-                ReviewQualityCheckAction.ReanalyzeProduct, ReviewQualityCheckAction.AnalyzeProduct -> {
+                ReviewQualityCheckAction.ReanalyzeProduct,
+                ReviewQualityCheckAction.AnalyzeProduct,
+                ReviewQualityCheckAction.RestoreReanalysis,
+                -> {
                     val reanalysis = reviewQualityCheckService.reanalyzeProduct()
 
                     if (reanalysis == null) {
@@ -157,7 +160,7 @@ class ReviewQualityCheckNetworkMiddleware(
             productAnalysis?.needsAnalysis == true &&
             appStore.state.shoppingState.productsInAnalysis.contains(productPageUrl)
         ) {
-            dispatch(ReviewQualityCheckAction.ReanalyzeProduct)
+            dispatch(ReviewQualityCheckAction.RestoreReanalysis)
         }
     }
 

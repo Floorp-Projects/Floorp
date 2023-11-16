@@ -113,6 +113,12 @@ sealed interface ReviewQualityCheckAction : Action {
     object ReanalyzeProduct : NetworkAction, UpdateAction, TelemetryAction
 
     /**
+     * Triggered when the product was previously known to be in reanalysis
+     * process when the sheet was closed and the state should be restored.
+     */
+    object RestoreReanalysis : NetworkAction, UpdateAction
+
+    /**
      * Triggered when the user clicks on the analyze button
      */
     object AnalyzeProduct : NetworkAction, UpdateAction, TelemetryAction
