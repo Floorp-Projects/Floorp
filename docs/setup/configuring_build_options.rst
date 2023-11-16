@@ -219,6 +219,13 @@ supports `distributed compilation
 In order to enable ``sccache`` for Firefox builds, you can use
 ``ac_add_options --with-ccache=sccache``.
 
+From version 0.7.2, sccache local builds are using the ``preprocessor cache mode``
+by default. With a hot cache, it decreases the build time by a factor of 2 to 3
+compared the previous method. This feature works like the `direct mode in ccache
+<https://ccache.dev/manual/3.7.9.html#_the_direct_mode>`__,
+using a similar way to handle caching and dependencies.
+
+
 Optimization
 ^^^^^^^^^^^^
 
