@@ -13,7 +13,6 @@ import { PersistentCache } from "lib/PersistentCache.sys.mjs";
 
 const CONFIG_PREF_NAME = "discoverystream.config";
 const DUMMY_ENDPOINT = "https://getpocket.cdn.mozilla.net/dummy";
-const ENDPOINTS_PREF_NAME = "discoverystream.endpoints";
 const SPOC_IMPRESSION_TRACKING_PREF = "discoverystream.spoc.impressions";
 const REC_IMPRESSION_TRACKING_PREF = "discoverystream.rec.impressions";
 const THIRTY_MINUTES = 30 * 60 * 1000;
@@ -79,7 +78,7 @@ describe("DiscoveryStreamFeed", () => {
           [CONFIG_PREF_NAME]: JSON.stringify({
             enabled: false,
           }),
-          [ENDPOINTS_PREF_NAME]: DUMMY_ENDPOINT,
+          pocketConfig: { spocsEndpointAllowlist: DUMMY_ENDPOINT },
           "discoverystream.enabled": true,
           "feeds.section.topstories": true,
           "feeds.system.topstories": true,
@@ -153,7 +152,11 @@ describe("DiscoveryStreamFeed", () => {
     });
     it("should disallow unexpected endpoints", async () => {
       feed.store.getState = () => ({
-        Prefs: { values: { [ENDPOINTS_PREF_NAME]: "https://other.site" } },
+        Prefs: {
+          values: {
+            pocketConfig: { spocsEndpointAllowlist: "https://other.site" },
+          },
+        },
       });
 
       const response = await feed.fetchFromEndpoint(DUMMY_ENDPOINT);
@@ -164,7 +167,9 @@ describe("DiscoveryStreamFeed", () => {
       feed.store.getState = () => ({
         Prefs: {
           values: {
-            [ENDPOINTS_PREF_NAME]: `https://other.site,${DUMMY_ENDPOINT}`,
+            pocketConfig: {
+              spocsEndpointAllowlist: `https://other.site,${DUMMY_ENDPOINT}`,
+            },
           },
         },
       });
@@ -328,7 +333,7 @@ describe("DiscoveryStreamFeed", () => {
             [CONFIG_PREF_NAME]: JSON.stringify({
               enabled: true,
             }),
-            [ENDPOINTS_PREF_NAME]: DUMMY_ENDPOINT,
+            pocketConfig: { spocsEndpointAllowlist: DUMMY_ENDPOINT },
             "discoverystream.enabled": true,
             "discoverystream.region-basic-layout": true,
             "system.showSponsored": false,
@@ -348,7 +353,7 @@ describe("DiscoveryStreamFeed", () => {
             [CONFIG_PREF_NAME]: JSON.stringify({
               enabled: true,
             }),
-            [ENDPOINTS_PREF_NAME]: DUMMY_ENDPOINT,
+            pocketConfig: { spocsEndpointAllowlist: DUMMY_ENDPOINT },
             "discoverystream.enabled": true,
             "discoverystream.region-basic-layout": false,
             "system.showSponsored": false,
@@ -378,7 +383,7 @@ describe("DiscoveryStreamFeed", () => {
             [CONFIG_PREF_NAME]: JSON.stringify({
               enabled: false,
             }),
-            [ENDPOINTS_PREF_NAME]: DUMMY_ENDPOINT,
+            pocketConfig: { spocsEndpointAllowlist: DUMMY_ENDPOINT },
             "discoverystream.enabled": true,
             "discoverystream.hardcoded-basic-layout": true,
             "system.showSponsored": false,
@@ -402,7 +407,7 @@ describe("DiscoveryStreamFeed", () => {
             [CONFIG_PREF_NAME]: JSON.stringify({
               enabled: false,
             }),
-            [ENDPOINTS_PREF_NAME]: DUMMY_ENDPOINT,
+            pocketConfig: { spocsEndpointAllowlist: DUMMY_ENDPOINT },
             "discoverystream.enabled": true,
             "discoverystream.spocs-endpoint":
               "https://spocs.getpocket.com/spocs2",
@@ -841,9 +846,9 @@ describe("DiscoveryStreamFeed", () => {
     });
     it("should properly transform spocs using placements", async () => {
       sandbox.stub(feed.cache, "get").returns(Promise.resolve());
-      sandbox
-        .stub(feed, "fetchFromEndpoint")
-        .resolves({ spocs: { items: [{ id: "data" }] } });
+      sandbox.stub(feed, "fetchFromEndpoint").resolves({
+        spocs: { items: [{ id: "data" }] },
+      });
       sandbox.stub(feed.cache, "set").returns(Promise.resolve());
 
       await feed.loadSpocs(feed.store.dispatch);
@@ -902,7 +907,8 @@ describe("DiscoveryStreamFeed", () => {
       );
     });
     it("should return expected data if normalizeSpocsItems returns no spoc data", async () => {
-      // We don't need this for just this test, we are setting placements manually.
+      // We don't need this for just this test, we are setting placements
+      // manually.
       feed.getPlacements.restore();
       Object.defineProperty(feed, "showSponsoredStories", {
         get: () => true,
@@ -941,7 +947,8 @@ describe("DiscoveryStreamFeed", () => {
       });
     });
     it("should use title and context on spoc data", async () => {
-      // We don't need this for just this test, we are setting placements manually.
+      // We don't need this for just this test, we are setting placements
+      // manually.
       feed.getPlacements.restore();
       Object.defineProperty(feed, "showSponsoredStories", {
         get: () => true,
@@ -986,7 +993,8 @@ describe("DiscoveryStreamFeed", () => {
         global.NimbusFeatures.pocketNewtab.getVariable
           .withArgs("topSitesContileSovEnabled")
           .returns(true);
-        // We don't need this for just this test, we are setting placements manually.
+        // We don't need this for just this test, we are setting placements
+        // manually.
         feed.getPlacements.restore();
         Object.defineProperty(feed, "showSponsoredStories", {
           get: () => true,
@@ -1381,7 +1389,7 @@ describe("DiscoveryStreamFeed", () => {
     it("should not fail with no endpoint", async () => {
       sandbox.stub(feed.store, "getState").returns({
         Prefs: {
-          values: { "discoverystream.endpointSpocsClear": null },
+          values: { pocketConfig: { spocsClearEndpoint: null } },
         },
       });
       sandbox.stub(feed, "fetchFromEndpoint").resolves(null);
@@ -1394,7 +1402,7 @@ describe("DiscoveryStreamFeed", () => {
       sandbox.stub(feed.store, "getState").returns({
         Prefs: {
           values: {
-            "discoverystream.endpointSpocsClear": "https://spocs/user",
+            pocketConfig: { spocsClearEndpoint: "https://spocs/user" },
           },
         },
       });
@@ -1415,7 +1423,7 @@ describe("DiscoveryStreamFeed", () => {
     });
     it("should properly call clearSpocs when sponsored content is changed", async () => {
       sandbox.stub(feed, "clearSpocs").returns(Promise.resolve());
-      //sandbox.stub(feed, "updatePlacements").returns();
+      // sandbox.stub(feed, "updatePlacements").returns();
       sandbox.stub(feed, "loadSpocs").returns();
 
       await feed.onAction({
@@ -2909,9 +2917,9 @@ describe("DiscoveryStreamFeed", () => {
       });
       it("should not refresh layout on startup if it is under THIRTY_MINUTES", async () => {
         feed.loadLayout.restore();
-        sandbox
-          .stub(feed.cache, "get")
-          .resolves({ layout: { lastUpdated: Date.now(), layout: {} } });
+        sandbox.stub(feed.cache, "get").resolves({
+          layout: { lastUpdated: Date.now(), layout: {} },
+        });
         sandbox.stub(feed, "fetchFromEndpoint").resolves({ layout: {} });
 
         await feed.refreshAll({ isStartup: true });
@@ -2921,9 +2929,9 @@ describe("DiscoveryStreamFeed", () => {
       it("should refresh spocs on startup if it was served from cache", async () => {
         feed.loadSpocs.restore();
         sandbox.stub(feed, "getPlacements").returns([{ name: "spocs" }]);
-        sandbox
-          .stub(feed.cache, "get")
-          .resolves({ spocs: { lastUpdated: Date.now() } });
+        sandbox.stub(feed.cache, "get").resolves({
+          spocs: { lastUpdated: Date.now() },
+        });
         clock.tick(THIRTY_MINUTES + 1);
 
         await feed.refreshAll({ isStartup: true });
@@ -2937,9 +2945,9 @@ describe("DiscoveryStreamFeed", () => {
       });
       it("should not refresh spocs on startup if it is under THIRTY_MINUTES", async () => {
         feed.loadSpocs.restore();
-        sandbox
-          .stub(feed.cache, "get")
-          .resolves({ spocs: { lastUpdated: Date.now() } });
+        sandbox.stub(feed.cache, "get").resolves({
+          spocs: { lastUpdated: Date.now() },
+        });
         sandbox.stub(feed, "fetchFromEndpoint").resolves("data");
 
         await feed.refreshAll({ isStartup: true });
@@ -2984,7 +2992,8 @@ describe("DiscoveryStreamFeed", () => {
         await feed.refreshAll({ isStartup: true });
 
         assert.calledOnce(feed.fetchFromEndpoint);
-        // Once from cache, once to update the feed, once to update that all feeds are done.
+        // Once from cache, once to update the feed, once to update that all
+        // feeds are done.
         assert.calledThrice(feed.store.dispatch);
         assert.equal(
           feed.store.dispatch.secondCall.args[0].type,
