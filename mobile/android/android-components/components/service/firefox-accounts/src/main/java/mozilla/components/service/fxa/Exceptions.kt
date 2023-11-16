@@ -87,6 +87,13 @@ sealed class AccountManagerException(message: String) : Exception(message) {
     class MissingKeyFromSyncScopedAccessToken(operation: String) : AccountManagerException(
         "Encountered an access token without a key: $operation",
     )
+
+    /**
+     * Failure when running side effects to complete the authentication process.
+     */
+    class AuthenticationSideEffectsFailed : AccountManagerException(
+        "Failure when running side effects to complete authentication",
+    )
 }
 
 /**
