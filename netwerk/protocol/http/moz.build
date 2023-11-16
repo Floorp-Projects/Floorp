@@ -208,7 +208,7 @@ if CONFIG["MOZ_AUTH_EXTENSION"]:
     ]
 
 EXTRA_JS_MODULES += [
-    "OHTTPConfigManager.sys.mjs",
+    "HPKEConfigManager.sys.mjs",
     "WellKnownOpportunisticUtils.sys.mjs",
 ]
 

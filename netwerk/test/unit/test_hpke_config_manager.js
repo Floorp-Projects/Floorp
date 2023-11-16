@@ -3,8 +3,8 @@ http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
 
-let { OHTTPConfigManager } = ChromeUtils.importESModule(
-  "resource://gre/modules/OHTTPConfigManager.sys.mjs"
+let { HPKEConfigManager } = ChromeUtils.importESModule(
+  "resource://gre/modules/HPKEConfigManager.sys.mjs"
 );
 
 const { HttpServer } = ChromeUtils.importESModule(
@@ -45,25 +45,25 @@ function getLocalURL(path) {
 }
 
 add_task(async function test_broken_url_returns_null() {
-  Assert.equal(await OHTTPConfigManager.get(getLocalURL("invalid")), null);
+  Assert.equal(await HPKEConfigManager.get(getLocalURL("invalid")), null);
 });
 
 add_task(async function test_working_url_returns_data() {
   Assert.deepEqual(
-    await OHTTPConfigManager.get(getLocalURL("valid")),
+    await HPKEConfigManager.get(getLocalURL("valid")),
     new TextEncoder().encode("1234")
   );
 });
 
 add_task(async function test_we_only_request_once() {
   Assert.deepEqual(
-    await OHTTPConfigManager.get(getLocalURL("valid")),
+    await HPKEConfigManager.get(getLocalURL("valid")),
     new TextEncoder().encode("1234")
   );
   let oldRequestCount = gValidRequestCount;
 
   Assert.deepEqual(
-    await OHTTPConfigManager.get(getLocalURL("valid")),
+    await HPKEConfigManager.get(getLocalURL("valid")),
     new TextEncoder().encode("1234")
   );
   Assert.equal(
@@ -75,13 +75,13 @@ add_task(async function test_we_only_request_once() {
 
 add_task(async function test_maxAge_forces_refresh() {
   Assert.deepEqual(
-    await OHTTPConfigManager.get(getLocalURL("valid")),
+    await HPKEConfigManager.get(getLocalURL("valid")),
     new TextEncoder().encode("1234")
   );
   let oldRequestCount = gValidRequestCount;
 
   Assert.deepEqual(
-    await OHTTPConfigManager.get(getLocalURL("valid"), { maxAge: 0 }),
+    await HPKEConfigManager.get(getLocalURL("valid"), { maxAge: 0 }),
     new TextEncoder().encode("1234")
   );
   Assert.equal(
@@ -93,19 +93,19 @@ add_task(async function test_maxAge_forces_refresh() {
 
 add_task(async function test_maxAge_handling_of_invalid_requests() {
   Assert.deepEqual(
-    await OHTTPConfigManager.get(getLocalURL("fickle")),
+    await HPKEConfigManager.get(getLocalURL("fickle")),
     new TextEncoder().encode("1234")
   );
 
   gFickleIsWorking = false;
 
   Assert.deepEqual(
-    await OHTTPConfigManager.get(getLocalURL("fickle"), { maxAge: 0 }),
+    await HPKEConfigManager.get(getLocalURL("fickle"), { maxAge: 0 }),
     null
   );
 
   Assert.deepEqual(
-    await OHTTPConfigManager.get(getLocalURL("fickle")),
+    await HPKEConfigManager.get(getLocalURL("fickle")),
     new TextEncoder().encode("1234"),
     "Should still have the cached config if no max age is passed."
   );

@@ -25,7 +25,7 @@ let { XPCOMUtils } = ChromeUtils.importESModule(
 
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
-  OHTTPConfigManager: "resource://gre/modules/OHTTPConfigManager.sys.mjs",
+  HPKEConfigManager: "resource://gre/modules/HPKEConfigManager.sys.mjs",
   ProductValidator: "chrome://global/content/shopping/ProductValidator.sys.mjs",
   setTimeout: "resource://gre/modules/Timer.sys.mjs",
 });
@@ -455,7 +455,7 @@ export class ShoppingProduct {
    *   The config bytes.
    */
   static async getOHTTPConfig(gatewayConfigURL) {
-    return lazy.OHTTPConfigManager.get(gatewayConfigURL);
+    return lazy.HPKEConfigManager.get(gatewayConfigURL);
   }
 
   /**
