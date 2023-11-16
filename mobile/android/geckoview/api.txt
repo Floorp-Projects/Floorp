@@ -424,11 +424,12 @@ package org.mozilla.geckoview {
     field public static final int CONTENT = 16;
     field public static final int CRYPTOMINING = 64;
     field public static final int DEFAULT = 46;
+    field public static final int EMAIL = 512;
     field public static final int FINGERPRINTING = 128;
     field public static final int NONE = 0;
     field public static final int SOCIAL = 8;
     field public static final int STP = 256;
-    field public static final int STRICT = 254;
+    field public static final int STRICT = 766;
     field public static final int TEST = 32;
   }
 
@@ -603,6 +604,7 @@ package org.mozilla.geckoview {
     ctor protected Event();
     field public static final int ALLOWED_TRACKING_CONTENT = 32;
     field public static final int BLOCKED_CRYPTOMINING_CONTENT = 2048;
+    field public static final int BLOCKED_EMAILTRACKING_CONTENT = 4194304;
     field public static final int BLOCKED_FINGERPRINTING_CONTENT = 64;
     field public static final int BLOCKED_SOCIALTRACKING_CONTENT = 65536;
     field public static final int BLOCKED_TRACKING_CONTENT = 4096;
@@ -617,6 +619,8 @@ package org.mozilla.geckoview {
     field public static final int COOKIES_LOADED_TRACKER = 262144;
     field public static final int COOKIES_PARTITIONED_FOREIGN = -2147483648;
     field public static final int LOADED_CRYPTOMINING_CONTENT = 2097152;
+    field public static final int LOADED_EMAILTRACKING_LEVEL_1_CONTENT = 8388608;
+    field public static final int LOADED_EMAILTRACKING_LEVEL_2_CONTENT = 256;
     field public static final int LOADED_FINGERPRINTING_CONTENT = 1024;
     field public static final int LOADED_LEVEL_1_TRACKING_CONTENT = 8192;
     field public static final int LOADED_LEVEL_2_TRACKING_CONTENT = 1048576;

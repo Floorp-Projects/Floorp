@@ -349,7 +349,7 @@ public class ContentBlocking {
     /* package */ final Pref<String> mStList =
         new Pref<String>(
             "urlclassifier.features.socialtracking.annotate.blacklistTables",
-            ContentBlocking.catToStListPref(AntiTracking.NONE));
+            ContentBlocking.catToPref(AntiTracking.NONE, AntiTracking.STP, STP));
 
     /* package */ final Pref<Boolean> mSbMalware =
         new Pref<Boolean>("browser.safebrowsing.malware.enabled", true);
@@ -396,6 +396,13 @@ public class ContentBlocking {
 
     /* package */ final Pref<String> mQueryParameterStrippingStripList =
         new Pref<>("privacy.query_stripping.strip_list", "");
+
+    /* package */ final Pref<Boolean> mEtb =
+        new Pref<Boolean>("privacy.trackingprotection.emailtracking.enabled", false);
+    /* package */ final Pref<String> mEtbList =
+        new Pref<String>(
+            "urlclassifier.features.emailtracking.blocklistTables",
+            ContentBlocking.catToPref(AntiTracking.NONE, AntiTracking.EMAIL, EMAIL));
 
     /* package */ final Pref<String> mSafeBrowsingMalwareTable =
         new Pref<>(
@@ -596,7 +603,10 @@ public class ContentBlocking {
       mFpList.commit(ContentBlocking.catToFpListPref(cat));
 
       mSt.commit(ContentBlocking.catToStPref(cat));
-      mStList.commit(ContentBlocking.catToStListPref(cat));
+      mStList.commit(ContentBlocking.catToPref(cat, AntiTracking.STP, STP));
+
+      mEtb.commit(ContentBlocking.catToEtbPref(cat));
+      mEtbList.commit(ContentBlocking.catToPref(cat, AntiTracking.EMAIL, EMAIL));
       return this;
     }
 
@@ -652,7 +662,8 @@ public class ContentBlocking {
       return ContentBlocking.atListToAtCat(mAt.get())
           | ContentBlocking.cmListToAtCat(mCmList.get())
           | ContentBlocking.fpListToAtCat(mFpList.get())
-          | ContentBlocking.stListToAtCat(mStList.get());
+          | ContentBlocking.stListToAtCat(mStList.get())
+          | ContentBlocking.etbListToAtCat(mEtbList.get());
     }
 
     /**
@@ -1435,11 +1446,14 @@ public class ContentBlocking {
     /** Block trackers on the Social Tracking Protection list. */
     public static final int STP = 1 << 8;
 
+    /** Block email trackers */
+    public static final int EMAIL = 1 << 9;
+
     /** Block ad, analytic, social and test trackers. */
     public static final int DEFAULT = AD | ANALYTIC | SOCIAL | TEST;
 
     /** Block all known trackers. May cause issues with some web sites. */
-    public static final int STRICT = DEFAULT | CONTENT | CRYPTOMINING | FINGERPRINTING;
+    public static final int STRICT = DEFAULT | CONTENT | CRYPTOMINING | FINGERPRINTING | EMAIL;
 
     protected AntiTracking() {}
   }
@@ -1458,6 +1472,7 @@ public class ContentBlocking {
         AntiTracking.DEFAULT,
         AntiTracking.STRICT,
         AntiTracking.STP,
+        AntiTracking.EMAIL,
         AntiTracking.NONE
       })
   public @interface CBAntiTracking {}
@@ -1627,7 +1642,8 @@ public class ContentBlocking {
           ContentBlocking.atListToAtCat(matchedList)
               | ContentBlocking.cmListToAtCat(matchedList)
               | ContentBlocking.fpListToAtCat(matchedList)
-              | ContentBlocking.stListToAtCat(matchedList),
+              | ContentBlocking.stListToAtCat(matchedList)
+              | ContentBlocking.etbListToAtCat(matchedList),
           ContentBlocking.errorToSbCat(error),
           ContentBlocking.geckoCatToCbCat(category),
           blocking);
@@ -1673,6 +1689,7 @@ public class ContentBlocking {
   private static final String FINGERPRINTING = "base-fingerprinting-track-digest256";
   private static final String STP =
       "social-tracking-protection-facebook-digest256,social-tracking-protection-linkedin-digest256,social-tracking-protection-twitter-digest256";
+  private static final String EMAIL = "base-email-track-digest256";
 
   /* package */ static @CBSafeBrowsing int sbMalwareToSbCat(final boolean enabled) {
     return enabled
@@ -1758,17 +1775,25 @@ public class ContentBlocking {
     return (cat & AntiTracking.STP) != 0;
   }
 
-  /* package */ static String catToStListPref(@CBAntiTracking final int cat) {
-    final StringBuilder builder = new StringBuilder();
+  /* package */ static boolean catToEtbPref(@CBAntiTracking final int cat) {
+    return (cat & AntiTracking.EMAIL) != 0;
+  }
 
-    if ((cat & AntiTracking.STP) != 0) {
-      builder.append(STP).append(",");
-    }
-    if (builder.length() == 0) {
+  /**
+   * Generic method for converting a category of anti-tracking to a Pref.
+   *
+   * @param cat Int representing the enabled anti-tracking blockers.
+   * @param tbCat Int representing the category mask to check for.
+   * @param catPrefString String to return if [cat] contains [tbCat].
+   * @return Pref string if [cat] contains [tbCat] otherwise empty string.
+   */
+  /* package */ static String catToPref(
+      @CBAntiTracking final int cat, final int tbCat, final String catPrefString) {
+    if ((cat & tbCat) != 0) {
+      return catPrefString;
+    } else {
       return "";
     }
-    // Trim final ','.
-    return builder.substring(0, builder.length() - 1);
   }
 
   /* package */ static @CBAntiTracking int atListToAtCat(final String list) {
@@ -1813,6 +1838,17 @@ public class ContentBlocking {
     }
     if (list.indexOf(STP) != -1) {
       cat |= AntiTracking.STP;
+    }
+    return cat;
+  }
+
+  /* package */ static @CBAntiTracking int etbListToAtCat(final String list) {
+    int cat = AntiTracking.NONE;
+    if (list == null) {
+      return cat;
+    }
+    if (list.indexOf(EMAIL) != -1) {
+      cat |= AntiTracking.EMAIL;
     }
     return cat;
   }
