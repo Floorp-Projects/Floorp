@@ -141,6 +141,15 @@ const TEST_DATA = [
       },
     ],
   },
+  {
+    selector: "#invoker",
+    attributes: [
+      {
+        attributeName: "invoketarget",
+        links: [{ type: "idref", value: "invokee" }],
+      },
+    ],
+  },
 ];
 
 requestLongerTimeout(2);
