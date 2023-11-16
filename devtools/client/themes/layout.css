@@ -58,7 +58,7 @@
   margin-inline-start: -3px;
 }
 
-.layout-content .open-inspector {
+.layout-content button.open-inspector {
   vertical-align: middle;
 }
 
