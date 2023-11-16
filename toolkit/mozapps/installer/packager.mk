@@ -91,6 +91,14 @@ ifdef ENABLE_MOZSEARCH_PLUGIN
           zip -r5D '$(ABS_DIST)/$(PKG_PATH)$(MOZSEARCH_SCIP_INDEX_BASENAME).zip' \
           index.scip
 	rm $(topsrcdir)/.cargo/config
+ifeq ($(MOZ_BUILD_APP),mobile/android)
+	@echo 'Generating mozsearch java/kotlin semanticdb tarball...'
+	$(RM) $(MOZSEARCH_JAVA_INDEX_BASENAME).zip
+	cd $(topsrcdir)/ && \
+          $(PYTHON3) $(topsrcdir)/mach android compile-all && \
+          cd $(topobjdir)/mozsearch_java_index && \
+          zip -r5D '$(ABS_DIST)/$(PKG_PATH)$(MOZSEARCH_JAVA_INDEX_BASENAME).zip' .
+endif # MOZ_BUILD_APP == mobile/android
 endif
 ifeq (Darwin, $(OS_ARCH))
 ifneq (,$(MOZ_ASAN)$(LIBFUZZER)$(MOZ_UBSAN))
