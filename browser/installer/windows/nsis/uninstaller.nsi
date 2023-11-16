@@ -421,7 +421,7 @@ SectionEnd
  */
 !macro DeleteProtocolRegistryIfSetToInstallation _PROTOCOL
   Push $0
-
+  Push $1
   ; Check if there is a protocol handler registered by fetching the DefaultIcon value
   ; in the registry.
   ; If there is something registered for the icon, it will be the path to the executable,
@@ -434,10 +434,11 @@ SectionEnd
 
   ; Remove protocol handlers
   ClearErrors
+  ${un.GetLongPath} "$INSTDIR\${FileMainEXE}" $1
   ReadRegStr $0 HKLM "Software\Classes\${_PROTOCOL}\DefaultIcon" ""
   ${If} $0 != ""
     StrCpy $0 $0 -2
-    ${If} $0 == "$INSTDIR\${FileMainEXE}"
+    ${If} $0 == $1
       DeleteRegKey HKLM "Software\Classes\${_PROTOCOL}"
     ${EndIf}
   ${EndIf}
@@ -446,7 +447,7 @@ SectionEnd
   ReadRegStr $0 HKCU "Software\Classes\${_PROTOCOL}\DefaultIcon" ""
   ${If} $0 != ""
     StrCpy $0 $0 -2
-    ${If} $0 == "$INSTDIR\${FileMainEXE}"
+    ${If} $0 == $1
       DeleteRegKey HKCU "Software\Classes\${_PROTOCOL}"
     ${EndIf}
   ${EndIf}
@@ -454,6 +455,7 @@ SectionEnd
   ClearErrors
 
   Pop $0
+  Pop $1
 !macroend
 !define DeleteProtocolRegistryIfSetToInstallation '!insertmacro DeleteProtocolRegistryIfSetToInstallation'
 

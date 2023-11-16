@@ -480,15 +480,15 @@ Section "-Application" APP_IDX
   ClearErrors
   ReadRegStr $0 SHCTX "Software\Classes\${FIREFOX_PROTOCOL}" ""
   ${If} $0 == ""
-    ${AddDisabledDDEHandlerValues} "${FIREFOX_PROTOCOL}" "$\"$INSTDIR\${FileMainEXE}$\" -osint -url $\"%1$\"" \
-                                   "$8,${IDI_APPICON_ZERO_BASED}" "Firefox Browsing Protocol" "true"
+    ${AddDisabledDDEHandlerValues} "${FIREFOX_PROTOCOL}" "$2" "$8,${IDI_APPICON_ZERO_BASED}" \
+                                   "Firefox Browsing Protocol" "true"
   ${EndIf}
 
   !define FIREFOX_PRIVATE_PROTOCOL "firefox-private"
   ClearErrors
   ReadRegStr $0 SHCTX "Software\Classes\${FIREFOX_PRIVATE_PROTOCOL}" ""
   ${If} $0 == ""
-    ${AddDisabledDDEHandlerValues} "${FIREFOX_PRIVATE_PROTOCOL}" "$\"$INSTDIR\${FileMainEXE}$\" -osint -private-window $\"%1$\"" \
+    ${AddDisabledDDEHandlerValues} "${FIREFOX_PRIVATE_PROTOCOL}" "$\"$8$\" -osint -private-window $\"%1$\"" \
                                    "$8,${IDI_PBICON_PB_EXE_ZERO_BASED}" "Firefox Private Browsing Protocol" "true"
   ${EndIf}
   SetShellVarContext all  ; Set SHCTX to HKLM
