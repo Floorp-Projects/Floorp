@@ -60,11 +60,12 @@
 #customization-footer {
   border-top: 1px solid rgba(0,0,0,.15);
   padding: 10px;
-}
 
-#customization-lwtheme-link {
-  display: flex;
-  align-items: center;
+  > .footer-button,
+  > .customization-checkbox,
+  > .customization-link {
+    margin-block: 0;
+  }
 }
 
 #widget-overflow-fixed-list > toolbarpaletteitem:not([notransition])[place="panel"],
