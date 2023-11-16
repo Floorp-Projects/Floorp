@@ -7,7 +7,9 @@
 
 requestLongerTimeout(2);
 
-const throttlingProfiles = require("resource://devtools/client/shared/components/throttling/profiles.js");
+const {
+  profiles,
+} = require("resource://devtools/client/shared/components/throttling/profiles.js");
 
 const httpServer = createTestHTTPServer();
 httpServer.registerPathHandler(`/`, function (request, response) {
@@ -39,7 +41,7 @@ add_task(async function () {
     "devtools/client/netmonitor/src/selectors/index"
   );
 
-  for (const profile of throttlingProfiles) {
+  for (const profile of profiles) {
     info(`Starting test for throttling profile ${JSON.stringify(profile)}`);
 
     info("sending throttle request");
