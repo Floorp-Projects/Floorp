@@ -7,6 +7,8 @@
 // This is loaded into chrome windows with the subscript loader. Wrap in
 // a block to prevent accidentally leaking globals onto `window`.
 {
+  const SHOPPING_SIDEBAR_WIDTH_PREF =
+    "browser.shopping.experience2023.sidebarWidth";
   class ShoppingSidebar extends MozXULElement {
     #browser;
     #initialized;
@@ -41,10 +43,26 @@
       if (this.#initialized) {
         return;
       }
+      this.resizeObserverFn = this.resizeObserverFn.bind(this);
       this.appendChild(this.constructor.fragment);
       this.#browser = this.querySelector(".shopping-sidebar");
 
+      let previousWidth = Services.prefs.getIntPref(
+        SHOPPING_SIDEBAR_WIDTH_PREF,
+        0
+      );
+      if (previousWidth > 0) {
+        this.style.width = `${previousWidth}px`;
+      }
+
+      this.resizeObserver = new ResizeObserver(this.resizeObserverFn);
+      this.resizeObserver.observe(this);
+
       this.#initialized = true;
+    }
+
+    resizeObserverFn() {
+      Services.prefs.setIntPref(SHOPPING_SIDEBAR_WIDTH_PREF, this.scrollWidth);
     }
   }
 
