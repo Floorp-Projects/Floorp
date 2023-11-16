@@ -27,7 +27,7 @@ use std::{ops, u64, os::raw::c_void};
 /// Which method is being used to draw a requested compositor surface
 #[cfg_attr(feature = "capture", derive(Serialize))]
 #[cfg_attr(feature = "replay", derive(Deserialize))]
-#[derive(Debug, Copy, Clone, MallocSizeOf)]
+#[derive(Debug, Copy, Clone, MallocSizeOf, PartialEq)]
 pub enum CompositorSurfaceKind {
     /// Don't create a native compositor surface, blit it as a regular primitive
     Blit,

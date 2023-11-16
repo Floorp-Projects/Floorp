@@ -1,0 +1,14 @@
+# Verify that an RGBA compositor surface that is translucent, followed
+# by an RGBA compositor surface that is opaque draws correctly.
+---
+root:
+  items:
+    - type: rect
+      bounds: [50, 50, 362, 362]
+      color: green
+    - image: transparent-checkerboard(2,16,16)
+      bounds: [100, 100, 262, 262]
+      prefer-compositor-surface: true
+    - image: checkerboard(2,16,16)
+      bounds: [100, 100, 262, 262]
+      prefer-compositor-surface: true
