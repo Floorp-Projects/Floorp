@@ -1079,8 +1079,8 @@ bool EditorEventListener::CanInsertAtDropPosition(DragEvent* aDragEvent) {
     return false;
   }
 
-  return !EditorUtils::IsPointInSelection(*selection, *dropParentContent,
-                                          dropOffset);
+  return !nsContentUtils::IsPointInSelection(*selection, *dropParentContent,
+                                             dropOffset);
 }
 
 nsresult EditorEventListener::HandleStartComposition(

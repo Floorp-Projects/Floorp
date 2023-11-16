@@ -11,6 +11,7 @@
 <div>Non editable text</div>
 <div contenteditable>Editable text</div>
 <input value="input value" style="width: 100%" />
+<iframe srcdoc="<span>abc</span>"></iframe>
 <script>
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(async () => {
@@ -211,6 +212,54 @@ SimpleTest.waitForFocus(async () => {
       getRangeDescription(getSelection().getRangeAt(0))
     })`
   );
+
+  // If clicking in a selection range, the range should never be collapsed.
+  const iframe = document.querySelector("iframe");
+  const doc = iframe.contentDocument;
+  doc.addEventListener("contextmenu", event => event.preventDefault(), {capture: true});
+
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["ui.mouse.right_click.collapse_selection.stop_if_non_collapsed_selection", false],
+      ["ui.mouse.right_click.collapse_selection.stop_if_non_editable_node", false],
+    ],
+  });
+  iframe.focus();
+  doc.getSelection().selectAllChildren(doc.body);
+  synthesizeMouseAtCenter(doc.body.firstChild, {button: 2}, iframe.contentWindow);
+  ok(
+    !doc.getSelection().isCollapsed,
+    "Right click in a selection range should not cause collapsing selection"
+  );
+  iframe.blur();
+  doc.activeElement?.blur();
+
+  doc.documentElement.setAttribute("contenteditable", "");
+  iframe.focus();
+  doc.getSelection().selectAllChildren(doc.body);
+  synthesizeMouseAtCenter(doc.body.firstChild, {button: 2}, iframe.contentWindow);
+  ok(
+    !doc.getSelection().isCollapsed,
+    "Right click in a selection range in a editable-root-element should not cause collapsing selection"
+  );
+  iframe.blur();
+  doc.activeElement?.blur();
+
+  await SpecialPowers.pushPrefEnv({
+    set: [
+      ["ui.mouse.right_click.collapse_selection.stop_if_non_collapsed_selection", true],
+      ["ui.mouse.right_click.collapse_selection.stop_if_non_editable_node", false],
+    ],
+  });
+  doc.designMode = "on";
+  iframe.focus();
+  doc.getSelection().selectAllChildren(doc.body);
+  synthesizeMouseAtCenter(doc.body.firstChild, {button: 2}, iframe.contentWindow);
+  ok(
+    !doc.getSelection().isCollapsed,
+    "Right click in a selection range in a sub-editable-document should not cause collapsing selection"
+  );
+  doc.designMode = "off";
 
   SimpleTest.finish();
 });

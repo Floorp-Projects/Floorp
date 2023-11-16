@@ -330,8 +330,8 @@ nsresult HTMLEditorEventListener::HandleSecondaryMouseButtonDown(
     return NS_ERROR_FAILURE;
   }
 
-  if (EditorUtils::IsPointInSelection(*selection, *parentContent,
-                                      AssertedCast<uint32_t>(offset))) {
+  if (nsContentUtils::IsPointInSelection(*selection, *parentContent,
+                                         AssertedCast<uint32_t>(offset))) {
     return NS_OK;
   }
 
