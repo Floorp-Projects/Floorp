@@ -8,6 +8,7 @@ Releases
    :glob:
    :hidden:
 
+   nss_3_95.rst
    nss_3_94.rst
    nss_3_93.rst
    nss_3_92.rst
@@ -58,25 +59,30 @@ Releases
 
 .. note::
 
-   **NSS 3.94.0** is the latest version of NSS.
-   Complete release notes are available here: :ref:`mozilla_projects_nss_nss_3_94_0_release_notes`
+   **NSS 3.95.0** is the latest version of NSS.
+   Complete release notes are available here: :ref:`mozilla_projects_nss_nss_3_95_0_release_notes`
 
    **NSS 3.90.1 (ESR)** is the latest version of NSS.
    Complete release notes are available here: :ref:`mozilla_projects_nss_nss_3_90_1_release_notes`
 
 .. container::
 
-   Changes in 3.94 included in this release:
+   Changes in 3.95 included in this release:
 
-   - Bug 1853737 - Updated code and commit ID for HACL*.
-   - Bug 1840510 - update ACVP fuzzed test vector: refuzzed with current NSS
-   - Bug 1827303 - Softoken C_ calls should use system FIPS setting to select NSC_ or FC_ variants.
-   - Bug 1774659 - NSS needs a database tool that can dump the low level representation of the database.
-   - Bug 1852179 - declare string literals using char in pkixnames_tests.cpp.
-   - Bug 1852179 - avoid implicit conversion for ByteString.
-   - Bug 1818766 - update rust version for acvp docker.
-   - Bug 1852011 - Moving the init function of the mpi_ints before clean-up in ec.c
-   - Bug 1615555 - P-256 ECDH and ECDSA from HACL*.
-   - Bug 1840510 - Add ACVP test vectors to the repository
-   - Bug 1849077 - Stop relying on std::basic_string<uint8_t>.
-   - Bug 1847845 - Transpose the PPC_ABI check from Makefile to gyp.
+  - Bug 1842932 - Bump builtins version number.
+  - Bug 1851044: Remove Email trust bit from Autoridad de Certificacion Firmaprofesional CIF A62634068 root cert.
+  - Bug 1855318: Remove 4 DigiCert (Symantec/Verisign) Root Certificates from NSS.
+  - Bug 1851049: Remove 3 TrustCor Root Certificates from NSS.
+  - Bug 1850982 - Remove Camerfirma root certificates from NSS.
+  - Bug 1842935 - Remove old Autoridad de Certificacion Firmaprofesional Certificate.
+  - Bug 1860670 - Add four Commscope root certificates to NSS.
+  - Bug 1850598 - Add TrustAsia Global Root CA G3 and G4 root certificates.
+  - Bug 1863605 - Include P-384 and P-521 Scalar Validation from HACL*
+  - Bug 1861728 - Include P-256 Scalar Validation from HACL*.
+  - Bug 1861265 After the HACL 256 ECC patch, NSS incorrectly encodes 256 ECC without DER wrapping at the softoken level
+  - Bug 1837987:Add means to provide library parameters to C_Initialize
+  - Bug 1573097 - clang format
+  - Bug 1854795 - add OSXSAVE and XCR0 tests to AVX2 detection.
+  - Bug 1858241 - Typo in ssl3_AppendHandshakeNumber
+  - Bug 1858241 - Introducing input check of ssl3_AppendHandshakeNumber
+  - Bug 1573097 - Fix Invalid casts in instance.c

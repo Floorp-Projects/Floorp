@@ -1,0 +1,70 @@
+.. _mozilla_projects_nss_nss_3_95_release_notes:
+
+NSS 3.95 release notes
+======================
+
+`Introduction <#introduction>`__
+--------------------------------
+
+.. container::
+
+   Network Security Services (NSS) 3.95 was released on *16th November 2023**.
+
+`Distribution Information <#distribution_information>`__
+--------------------------------------------------------
+
+.. container::
+
+   The HG tag is NSS_3_95_RTM. NSS 3.95 requires NSPR 4.35 or newer.
+
+   NSS 3.95 source distributions are available on ftp.mozilla.org for secure HTTPS download:
+
+   -  Source tarballs:
+      https://ftp.mozilla.org/pub/mozilla.org/security/nss/releases/NSS_3_95_RTM/src/
+
+   Other releases are available :ref:`mozilla_projects_nss_releases`.
+
+.. _changes_in_nss_3.95:
+
+`Changes in NSS 3.95 <#changes_in_nss_3.95>`__
+----------------------------------------------------
+
+.. container::
+
+  - Bug 1842932 - Bump builtins version number.
+  - Bug 1851044: Remove Email trust bit from Autoridad de Certificacion Firmaprofesional CIF A62634068 root cert.
+  - Bug 1855318: Remove 4 DigiCert (Symantec/Verisign) Root Certificates from NSS.
+  - Bug 1851049: Remove 3 TrustCor Root Certificates from NSS.
+  - Bug 1850982 - Remove Camerfirma root certificates from NSS.
+  - Bug 1842935 - Remove old Autoridad de Certificacion Firmaprofesional Certificate.
+  - Bug 1860670 - Add four Commscope root certificates to NSS.
+  - Bug 1850598 - Add TrustAsia Global Root CA G3 and G4 root certificates.
+  - Bug 1863605 - Include P-384 and P-521 Scalar Validation from HACL*
+  - Bug 1861728 - Include P-256 Scalar Validation from HACL*.
+  - Bug 1861265 After the HACL 256 ECC patch, NSS incorrectly encodes 256 ECC without DER wrapping at the softoken level
+  - Bug 1837987:Add means to provide library parameters to C_Initialize
+  - Bug 1573097 - clang format
+  - Bug 1854795 - add OSXSAVE and XCR0 tests to AVX2 detection.
+  - Bug 1858241 - Typo in ssl3_AppendHandshakeNumber
+  - Bug 1858241 - Introducing input check of ssl3_AppendHandshakeNumber
+  - Bug 1573097 - Fix Invalid casts in instance.c
+
+`Compatibility <#compatibility>`__
+----------------------------------
+
+.. container::
+
+   NSS 3.95 shared libraries are backwards-compatible with all older NSS 3.x shared
+   libraries. A program linked with older NSS 3.x shared libraries will work with
+   this new version of the shared libraries without recompiling or
+   relinking. Furthermore, applications that restrict their use of NSS APIs to the
+   functions listed in NSS Public Functions will remain compatible with future
+   versions of the NSS shared libraries.
+
+`Feedback <#feedback>`__
+------------------------
+
+.. container::
+
+   Bugs discovered should be reported by filing a bug report on
+   `bugzilla.mozilla.org <https://bugzilla.mozilla.org/enter_bug.cgi?product=NSS>`__ (product NSS).
