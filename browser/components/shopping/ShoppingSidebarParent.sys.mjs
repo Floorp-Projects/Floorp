@@ -192,8 +192,10 @@ class ShoppingSidebarManagerClass {
     if (isProduct && this.isActive) {
       if (!sidebar) {
         sidebar = document.createXULElement("shopping-sidebar");
-        sidebar.setAttribute("style", "width: 320px");
         sidebar.hidden = false;
+        let splitter = document.createXULElement("splitter");
+        splitter.classList.add("sidebar-splitter");
+        browserPanel.appendChild(splitter);
         browserPanel.appendChild(sidebar);
       } else {
         actor?.updateProductURL(aLocationURI, aFlags);
