@@ -4569,7 +4569,7 @@ nsresult EditorBase::HandleDropEvent(DragEvent* aDropEvent) {
   // same document, jump through some hoops to determine if mouse is over
   // selection (bail) and whether user wants to copy selection or delete it.
   if (sourceNode && sourceNode->IsEditable() && srcdoc == document) {
-    bool isPointInSelection = EditorUtils::IsPointInSelection(
+    bool isPointInSelection = nsContentUtils::IsPointInSelection(
         SelectionRef(), *droppedAt.GetContainer(), droppedAt.Offset());
     if (isPointInSelection) {
       // If source document and destination document is same and dropping

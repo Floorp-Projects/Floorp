@@ -167,38 +167,6 @@ bool EditorUtils::IsOnlyNewLinePreformatted(const nsIContent& aContent) {
   return elementStyle->StyleText()->mWhiteSpace == StyleWhiteSpace::PreLine;
 }
 
-bool EditorUtils::IsPointInSelection(const Selection& aSelection,
-                                     const nsINode& aParentNode,
-                                     uint32_t aOffset) {
-  if (aSelection.IsCollapsed()) {
-    return false;
-  }
-
-  const uint32_t rangeCount = aSelection.RangeCount();
-  for (const uint32_t i : IntegerRange(rangeCount)) {
-    MOZ_ASSERT(aSelection.RangeCount() == rangeCount);
-    RefPtr<const nsRange> range = aSelection.GetRangeAt(i);
-    if (MOZ_UNLIKELY(NS_WARN_IF(!range))) {
-      // Don't bail yet, iterate through them all
-      continue;
-    }
-
-    IgnoredErrorResult ignoredError;
-    bool nodeIsInSelection =
-        range->IsPointInRange(aParentNode, aOffset, ignoredError) &&
-        !ignoredError.Failed();
-    NS_WARNING_ASSERTION(!ignoredError.Failed(),
-                         "nsRange::IsPointInRange() failed");
-
-    // Done when we find a range that we are in
-    if (nodeIsInSelection) {
-      return true;
-    }
-  }
-
-  return false;
-}
-
 // static
 Result<nsCOMPtr<nsITransferable>, nsresult>
 EditorUtils::CreateTransferableForPlainText(const Document& aDocument) {
