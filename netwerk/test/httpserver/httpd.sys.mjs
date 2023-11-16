@@ -2882,6 +2882,7 @@ ServerHandler.prototype = {
             "ChromeUtils",
             "IOUtils",
             "PathUtils",
+            "TextDecoder",
             "TextEncoder",
             "URLSearchParams",
             "URL",

@@ -23,6 +23,7 @@ module.exports = {
     dump: false,
     IOUtils: false,
     PathUtils: false,
+    TextDecoder: false,
     TextEncoder: false,
     URLSearchParams: false,
     URL: false,
