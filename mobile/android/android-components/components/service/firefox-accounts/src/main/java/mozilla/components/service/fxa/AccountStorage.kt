@@ -7,6 +7,7 @@ package mozilla.components.service.fxa
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.annotation.VisibleForTesting
+import mozilla.appservices.fxaclient.FxaRustAuthState
 import mozilla.components.concept.base.crash.CrashReporting
 import mozilla.components.concept.sync.AccountEvent
 import mozilla.components.concept.sync.AccountEventsObserver
@@ -160,7 +161,16 @@ internal class SharedPrefAccountStorage(
             ?: return null
 
         // May throw a generic FxaException if it fails to process saved JSON.
-        return FirefoxAccount.fromJSONString(savedJSON, crashReporter)
+        val account = FirefoxAccount.fromJSONString(savedJSON, crashReporter)
+        val state = account.getAuthState()
+        if (state != FxaRustAuthState.CONNECTED && crashReporter != null) {
+            crashReporter.submitCaughtException(
+                AbnormalAccountStorageEvent.RestoringNonConnectedAccount(
+                    "Restoring account from an unexpected state: $state",
+                ),
+            )
+        }
+        return account
     }
 
     override fun write(accountState: String) {
@@ -185,11 +195,12 @@ internal class SharedPrefAccountStorage(
 /**
  * A base class for exceptions describing abnormal account storage behaviour.
  */
-internal abstract class AbnormalAccountStorageEvent : Exception() {
+internal abstract class AbnormalAccountStorageEvent(message: String? = null) : Exception(message) {
     /**
      * Account state was expected to be present, but it wasn't.
      */
-    internal class UnexpectedlyMissingAccountState : AbnormalAccountStorageEvent()
+    internal class UnexpectedlyMissingAccountState(message: String? = null) : AbnormalAccountStorageEvent(message)
+    internal class RestoringNonConnectedAccount(message: String? = null) : AbnormalAccountStorageEvent(message)
 }
 
 /**

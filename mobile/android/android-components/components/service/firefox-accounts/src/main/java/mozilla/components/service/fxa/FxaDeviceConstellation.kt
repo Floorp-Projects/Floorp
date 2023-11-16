@@ -29,11 +29,11 @@ import mozilla.components.support.base.log.logger.Logger
 import mozilla.components.support.base.observer.Observable
 import mozilla.components.support.base.observer.ObserverRegistry
 
-internal sealed class FxaDeviceConstellationException : Exception() {
+internal sealed class FxaDeviceConstellationException(message: String? = null) : Exception(message) {
     /**
      * Failure while ensuring device capabilities.
      */
-    class EnsureCapabilitiesFailed : FxaDeviceConstellationException()
+    class EnsureCapabilitiesFailed(message: String? = null) : FxaDeviceConstellationException(message)
 }
 
 /**
@@ -106,7 +106,9 @@ class FxaDeviceConstellation(
                     // actually expected to do any work: everything should have been done by initializeDevice.
                     // So if it did, and failed, let's report this so that we're aware of this!
                     // See https://github.com/mozilla-mobile/android-components/issues/8164
-                    crashReporter?.submitCaughtException(FxaDeviceConstellationException.EnsureCapabilitiesFailed())
+                    crashReporter?.submitCaughtException(
+                        FxaDeviceConstellationException.EnsureCapabilitiesFailed(e.toString()),
+                    )
                     ServiceResult.AuthError
                 } catch (e: FxaException) {
                     ServiceResult.OtherError
