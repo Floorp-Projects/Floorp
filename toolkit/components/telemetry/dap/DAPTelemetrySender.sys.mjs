@@ -3,6 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+import { HPKEConfigManager } from "resource://gre/modules/HPKEConfigManager.sys.mjs";
 
 let lazy = {};
 
@@ -222,15 +223,12 @@ export const DAPTelemetrySender = new (class {
    * @rejects {Error} If an exception is thrown while fetching the configuration.
    */
   async getHpkeConfig(endpoint) {
-    let response = await fetch(endpoint);
-    if (!response.ok) {
-      throw new Error(
-        `Failed to retrieve HPKE config for DAP from: ${endpoint}. Response: ${
-          response.status
-        }: ${await response.text()}.`
-      );
-    }
-    let buffer = await response.arrayBuffer();
+    // Use HPKEConfigManager to cache config for up to 24 hr. This reduces
+    // unecessary requests while limiting how long a stale config can be stuck
+    // if a server change is made ungracefully.
+    let buffer = await HPKEConfigManager.get(endpoint, {
+      maxAge: 24 * 60 * 60 * 1000,
+    });
     let hpke_config_bytes = new Uint8Array(buffer);
     return hpke_config_bytes;
   }
