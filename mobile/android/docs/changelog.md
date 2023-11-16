@@ -25,6 +25,9 @@ permalink: /changelog/
 * **service-location**
   * Added a cache lifetime to `MozillaLocationService`. [Bug 1855562](https://bugzilla.mozilla.org/show_bug.cgi?id=1855562)
 
+* **feature-search**
+  * `RegionManager` now uses the cached result from it's `LocationService`. [Bug 1854988](https://bugzilla.mozilla.org/show_bug.cgi?id=1854988)
+
 # 120.0
 * [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v119..releases_v120)
 * [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/releases_v120/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt)

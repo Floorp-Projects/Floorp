@@ -115,7 +115,7 @@ internal class RegionManager(
 
     private suspend fun fetchRegionWithRetry(): LocationService.Region? = withContext(dispatcher) {
         repeat(MAX_RETRIES) {
-            val region = locationService.fetchRegion(readFromCache = false)
+            val region = locationService.fetchRegion(readFromCache = true)
             if (region != null) {
                 return@withContext region
             }
