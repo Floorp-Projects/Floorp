@@ -152,10 +152,9 @@ http://www.briangrinstead.com/blog/keep-aspect-ratio-with-html-and-css */
   direction: initial;
 }
 
-/* Focus style already exists on input[type="range"]. Remove overlap */
-.spectrum-hue-input:focus,
-.spectrum-alpha-input:focus {
-  outline: none;
+.spectrum-hue-input,
+.spectrum-alpha-input {
+  outline-offset: 4px;
 }
 
 .spectrum-hue-input::-moz-range-thumb,
