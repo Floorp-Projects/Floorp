@@ -281,6 +281,13 @@ user-id = 2915
 user-login = "Amanieu"
 user-name = "Amanieu d'Antras"
 
+[[publisher.libc]]
+version = "0.2.150"
+when = "2023-11-05"
+user-id = 51017
+user-login = "JohnTitor"
+user-name = "Yuki Okushi"
+
 [[publisher.linux-raw-sys]]
 version = "0.4.7"
 when = "2023-09-10"
@@ -370,6 +377,12 @@ version = "0.12.1"
 when = "2023-04-13"
 user-id = 101233
 user-login = "le-automaton"
+
+[[publisher.prio]]
+version = "0.15.3"
+when = "2023-10-03"
+user-id = 213776
+user-login = "divviup-github-automation"
 
 [[publisher.proc-macro2]]
 version = "1.0.66"
@@ -1302,6 +1315,13 @@ user-id = 101233 # le-automaton
 start = "2020-09-28"
 end = "2024-03-23"
 
+[[audits.isrg.wildcard-audits.prio]]
+who = "David Cook <dcook@divviup.org>"
+criteria = "safe-to-deploy"
+user-id = 213776 # divviup-github-automation
+start = "2020-09-28"
+end = "2024-03-23"
+
 [[audits.isrg.audits.base64]]
 who = "Tim Geoghegan <timg@letsencrypt.org>"
 criteria = "safe-to-deploy"
@@ -1322,10 +1342,21 @@ who = "David Cook <dcook@divviup.org>"
 criteria = "safe-to-deploy"
 version = "0.9.0"
 
+[[audits.isrg.audits.getrandom]]
+who = "Tim Geoghegan <timg@letsencrypt.org>"
+criteria = "safe-to-deploy"
+delta = "0.2.9 -> 0.2.10"
+notes = "These changes include some new `unsafe` code for the `emscripten` and `psvita` targets, but all it does is call `libc::getentropy`."
+
 [[audits.isrg.audits.keccak]]
 who = "David Cook <dcook@divviup.org>"
 criteria = "safe-to-deploy"
 version = "0.1.2"
+
+[[audits.isrg.audits.keccak]]
+who = "Brandon Pitman <bran@bran.land>"
+criteria = "safe-to-deploy"
+delta = "0.1.3 -> 0.1.4"
 
 [[audits.isrg.audits.once_cell]]
 who = "Brandon Pitman <bran@bran.land>"
@@ -1366,6 +1397,11 @@ version = "0.10.2"
 who = "David Cook <dcook@divviup.org>"
 criteria = "safe-to-deploy"
 version = "0.10.6"
+
+[[audits.isrg.audits.sha3]]
+who = "Brandon Pitman <bran@bran.land>"
+criteria = "safe-to-deploy"
+delta = "0.10.7 -> 0.10.8"
 
 [[audits.mozilla.wildcard-audits.zeitstempel]]
 who = "Jan-Erik Rediger <jrediger@mozilla.com>"

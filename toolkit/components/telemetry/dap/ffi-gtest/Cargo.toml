@@ -11,7 +11,7 @@ edition = "2021"
 [dependencies]
 dap_ffi = { path = "../ffi" }
 hex = { version = "0.4.3", features = ["serde"] }
-prio = {version = "0.12.1", default-features = false }
+prio = {version = "0.15.3", default-features = false }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0" }
 thin-vec = { version = "0.2.1", features = ["gecko-ffi"] }

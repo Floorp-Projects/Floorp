@@ -1678,6 +1678,12 @@ extern "C" {
 
     pub fn dirname(path: *mut ::c_char) -> *mut ::c_char;
     pub fn basename(path: *mut ::c_char) -> *mut ::c_char;
+    pub fn getmntinfo(mntbufp: *mut *mut ::statfs, flags: ::c_int) -> ::c_int;
+    pub fn getmntvinfo(
+        mntbufp: *mut *mut ::statfs,
+        mntvbufp: *mut *mut ::statvfs,
+        flags: ::c_int,
+    ) -> ::c_int;
 }
 
 #[link(name = "rt")]

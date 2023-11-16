@@ -237,6 +237,8 @@ cfg_if! {
         pub const RLIMIT_NICE: ::__rlimit_resource_t = 13;
         pub const RLIMIT_RTPRIO: ::__rlimit_resource_t = 14;
         pub const RLIMIT_RTTIME: ::__rlimit_resource_t = 15;
+        #[allow(deprecated)]
+        #[deprecated(since = "0.2.64", note = "Not stable across OS versions")]
         pub const RLIMIT_NLIMITS: ::__rlimit_resource_t = RLIM_NLIMITS;
 
     } else if #[cfg(target_env = "musl")] {
@@ -257,7 +259,10 @@ cfg_if! {
         pub const RLIMIT_NICE: ::c_int = 13;
         pub const RLIMIT_RTPRIO: ::c_int = 14;
         pub const RLIMIT_RTTIME: ::c_int = 15;
+        #[deprecated(since = "0.2.64", note = "Not stable across OS versions")]
         pub const RLIM_NLIMITS: ::c_int = 15;
+        #[allow(deprecated)]
+        #[deprecated(since = "0.2.64", note = "Not stable across OS versions")]
         pub const RLIMIT_NLIMITS: ::c_int = RLIM_NLIMITS;
         pub const RLIM_INFINITY: ::rlim_t = !0;
     }
@@ -265,8 +270,10 @@ cfg_if! {
 
 cfg_if! {
     if #[cfg(target_env = "gnu")] {
+        #[deprecated(since = "0.2.64", note = "Not stable across OS versions")]
         pub const RLIM_NLIMITS: ::__rlimit_resource_t = 16;
     } else if #[cfg(target_env = "uclibc")] {
+        #[deprecated(since = "0.2.64", note = "Not stable across OS versions")]
         pub const RLIM_NLIMITS: ::__rlimit_resource_t = 15;
     }
 }

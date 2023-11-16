@@ -1,26 +1,33 @@
 // SPDX-License-Identifier: MPL-2.0
 
-//! Port of the ENPA Prio system to a VDAF. It is backwards compatible with
-//! [`Client`](crate::client::Client) and [`Server`](crate::server::Server).
+//! Backwards-compatible port of the ENPA Prio system to a VDAF.
 
-use super::{AggregateShare, OutputShare};
 use crate::{
-    client as v2_client,
     codec::{CodecError, Decode, Encode, ParameterizedDecode},
-    field::{decode_fieldvec, FftFriendlyFieldElement, FieldElement, FieldPrio2},
+    field::{
+        decode_fieldvec, FftFriendlyFieldElement, FieldElement, FieldElementWithInteger, FieldPrio2,
+    },
     prng::Prng,
-    server as v2_server,
-    util::proof_length,
     vdaf::{
-        prg::Seed, Aggregatable, Aggregator, Client, Collector, PrepareTransition, Share,
-        ShareDecodingParameter, Vdaf, VdafError,
+        prio2::{
+            client::{self as v2_client, proof_length},
+            server as v2_server,
+        },
+        xof::Seed,
+        Aggregatable, AggregateShare, Aggregator, Client, Collector, OutputShare,
+        PrepareTransition, Share, ShareDecodingParameter, Vdaf, VdafError,
     },
 };
-use ring::hmac;
-use std::{
-    convert::{TryFrom, TryInto},
-    io::Cursor,
-};
+use hmac::{Hmac, Mac};
+use rand_core::RngCore;
+use sha2::Sha256;
+use std::{convert::TryFrom, io::Cursor};
+use subtle::{Choice, ConstantTimeEq};
+
+mod client;
+mod server;
+#[cfg(test)]
+mod test_vector;
 
 /// The Prio2 VDAF. It supports the same measurement type as
 /// [`Prio3SumVec`](crate::vdaf::prio3::Prio3SumVec) with `bits == 1` but uses the proof system and
@@ -52,10 +59,9 @@ impl Prio2 {
     /// Prepare an input share for aggregation using the given field element `query_rand` to
     /// compute the verifier share.
     ///
-    /// In the [`Aggregator`](crate::vdaf::Aggregator) trait implementation for [`Prio2`], the
-    /// query randomness is computed jointly by the Aggregators. This method is designed to be used
-    /// in applications, like ENPA, in which the query randomness is instead chosen by a
-    /// third-party.
+    /// In the [`Aggregator`] trait implementation for [`Prio2`], the query randomness is computed
+    /// jointly by the Aggregators. This method is designed to be used in applications, like ENPA,
+    /// in which the query randomness is instead chosen by a third-party.
     pub fn prepare_init_with_query_rand(
         &self,
         query_rand: FieldPrio2,
@@ -74,13 +80,11 @@ impl Prio2 {
             Share::Helper(_) => expanded_data.as_ref().unwrap(),
         };
 
-        let mut mem = v2_server::ValidationMemory::new(self.input_len);
         let verifier_share = v2_server::generate_verification_message(
             self.input_len,
             query_rand,
             data, // Combined input and proof shares
             is_leader,
-            &mut mem,
         )
         .map_err(|e| VdafError::Uncategorized(e.to_string()))?;
 
@@ -88,6 +92,27 @@ impl Prio2 {
             Prio2PrepareState(input_share.truncated(self.input_len)),
             Prio2PrepareShare(verifier_share),
         ))
+    }
+
+    /// Choose a random point for polynomial evaluation.
+    ///
+    /// The point returned is not one of the roots used for polynomial interpolation.
+    pub(crate) fn choose_eval_at<S>(&self, prng: &mut Prng<FieldPrio2, S>) -> FieldPrio2
+    where
+        S: RngCore,
+    {
+        // Make sure the query randomness isn't a root of unity. Evaluating the proof at any of
+        // these points would be a privacy violation, since these points were used by the prover to
+        // construct the wire polynomials.
+        let n = (self.input_len + 1).next_power_of_two();
+        let proof_length = 2 * n;
+        loop {
+            let eval_at: FieldPrio2 = prng.get();
+            // Unwrap safety: the constructor checks that this conversion succeeds.
+            if eval_at.pow(u32::try_from(proof_length).unwrap()) != FieldPrio2::one() {
+                return eval_at;
+            }
+        }
     }
 }
 
@@ -140,9 +165,23 @@ impl Client<16> for Prio2 {
     }
 }
 
-/// State of each [`Aggregator`](crate::vdaf::Aggregator) during the Preparation phase.
-#[derive(Clone, Debug, Eq, PartialEq)]
+/// State of each [`Aggregator`] during the Preparation phase.
+#[derive(Clone, Debug)]
 pub struct Prio2PrepareState(Share<FieldPrio2, 32>);
+
+impl PartialEq for Prio2PrepareState {
+    fn eq(&self, other: &Self) -> bool {
+        self.ct_eq(other).into()
+    }
+}
+
+impl Eq for Prio2PrepareState {}
+
+impl ConstantTimeEq for Prio2PrepareState {
+    fn ct_eq(&self, other: &Self) -> Choice {
+        self.0.ct_eq(&other.0)
+    }
+}
 
 impl Encode for Prio2PrepareState {
     fn encode(&self, bytes: &mut Vec<u8>) {
@@ -169,7 +208,7 @@ impl<'a> ParameterizedDecode<(&'a Prio2, usize)> for Prio2PrepareState {
     }
 }
 
-/// Message emitted by each [`Aggregator`](crate::vdaf::Aggregator) during the Preparation phase.
+/// Message emitted by each [`Aggregator`] during the Preparation phase.
 #[derive(Clone, Debug)]
 pub struct Prio2PrepareShare(v2_server::VerificationMessage<FieldPrio2>);
 
@@ -218,17 +257,20 @@ impl Aggregator<32, 16> for Prio2 {
         // distributed to the Aggregators after they receive their input shares. In a VDAF, shared
         // randomness is derived from a nonce selected by the client. For Prio2 we compute the
         // query using HMAC-SHA256 evaluated over the nonce.
-        let hmac_key = hmac::Key::new(hmac::HMAC_SHA256, agg_key);
-        let hmac_tag = hmac::sign(&hmac_key, nonce);
-        let query_rand = Prng::from_prio2_seed(hmac_tag.as_ref().try_into().unwrap())
-            .next()
-            .unwrap();
+        //
+        // Unwrap safety: new_from_slice() is infallible for Hmac.
+        let mut mac = Hmac::<Sha256>::new_from_slice(agg_key).unwrap();
+        mac.update(nonce);
+        let hmac_tag = mac.finalize();
+        let mut prng = Prng::from_prio2_seed(&hmac_tag.into_bytes().into());
+        let query_rand = self.choose_eval_at(&mut prng);
 
         self.prepare_init_with_query_rand(query_rand, input_share, is_leader)
     }
 
-    fn prepare_preprocess<M: IntoIterator<Item = Prio2PrepareShare>>(
+    fn prepare_shares_to_prepare_message<M: IntoIterator<Item = Prio2PrepareShare>>(
         &self,
+        _: &Self::AggregationParam,
         inputs: M,
     ) -> Result<(), VdafError> {
         let verifier_shares: Vec<v2_server::VerificationMessage<FieldPrio2>> =
@@ -248,7 +290,7 @@ impl Aggregator<32, 16> for Prio2 {
         Ok(())
     }
 
-    fn prepare_step(
+    fn prepare_next(
         &self,
         state: Prio2PrepareState,
         _input: (),
@@ -344,17 +386,12 @@ fn role_try_from(agg_id: usize) -> Result<bool, VdafError> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::{
-        client::encode_simple,
-        encrypt::{decrypt_share, encrypt_share, PrivateKey, PublicKey},
-        field::random_vector,
-        server::Server,
-        vdaf::{fieldvec_roundtrip_test, run_vdaf, run_vdaf_prepare},
+    use crate::vdaf::{
+        equality_comparison_test, fieldvec_roundtrip_test, prio2::test_vector::Priov2TestVector,
+        run_vdaf,
     };
+    use assert_matches::assert_matches;
     use rand::prelude::*;
-
-    const PRIV_KEY1: &str = "BIl6j+J6dYttxALdjISDv6ZI4/VWVEhUzaS05LgrsfswmbLOgNt9HUC2E0w+9RqZx3XMkdEHBHfNuCSMpOwofVSq3TfyKwn0NrftKisKKVSaTOt5seJ67P5QL4hxgPWvxw==";
-    const PRIV_KEY2: &str = "BNNOqoU54GPo+1gTPv+hCgA9U2ZCKd76yOMrWa1xTWgeb4LhFLMQIQoRwDVaW64g/WTdcxT4rDULoycUNFB60LER6hPEHg/ObBnRPV1rwS3nj9Bj0tbjVPPyL9p8QW8B+w==";
 
     #[test]
     fn run_prio2() {
@@ -375,71 +412,6 @@ mod tests {
             .unwrap(),
             vec![1, 3, 2, 0, 2, 1],
         );
-    }
-
-    #[test]
-    fn enpa_client_interop() {
-        let mut rng = thread_rng();
-        let priv_key1 = PrivateKey::from_base64(PRIV_KEY1).unwrap();
-        let priv_key2 = PrivateKey::from_base64(PRIV_KEY2).unwrap();
-        let pub_key1 = PublicKey::from(&priv_key1);
-        let pub_key2 = PublicKey::from(&priv_key2);
-
-        let data: Vec<FieldPrio2> = [0, 0, 1, 1, 0]
-            .iter()
-            .map(|x| FieldPrio2::from(*x))
-            .collect();
-        let (encrypted_input_share1, encrypted_input_share2) =
-            encode_simple(&data, pub_key1, pub_key2).unwrap();
-
-        let input_share1 = decrypt_share(&encrypted_input_share1, &priv_key1).unwrap();
-        let input_share2 = decrypt_share(&encrypted_input_share2, &priv_key2).unwrap();
-
-        let prio2 = Prio2::new(data.len()).unwrap();
-        let input_shares = vec![
-            Share::get_decoded_with_param(&(&prio2, 0), &input_share1).unwrap(),
-            Share::get_decoded_with_param(&(&prio2, 1), &input_share2).unwrap(),
-        ];
-
-        let verify_key = rng.gen::<[u8; 32]>();
-        let nonce = rng.gen::<[u8; 16]>();
-        run_vdaf_prepare(&prio2, &verify_key, &(), &nonce, (), input_shares).unwrap();
-    }
-
-    #[test]
-    fn enpa_server_interop() {
-        let priv_key1 = PrivateKey::from_base64(PRIV_KEY1).unwrap();
-        let priv_key2 = PrivateKey::from_base64(PRIV_KEY2).unwrap();
-        let pub_key1 = PublicKey::from(&priv_key1);
-        let pub_key2 = PublicKey::from(&priv_key2);
-
-        let data = vec![0, 0, 1, 1, 0];
-        let prio2 = Prio2::new(data.len()).unwrap();
-        let ignored_nonce = [0; 16];
-        let (_public_share, input_shares) = prio2.shard(&data, &ignored_nonce).unwrap();
-
-        let encrypted_input_share1 =
-            encrypt_share(&input_shares[0].get_encoded(), &pub_key1).unwrap();
-        let encrypted_input_share2 =
-            encrypt_share(&input_shares[1].get_encoded(), &pub_key2).unwrap();
-
-        let mut server1 = Server::new(data.len(), true, priv_key1).unwrap();
-        let mut server2 = Server::new(data.len(), false, priv_key2).unwrap();
-
-        let eval_at: FieldPrio2 = random_vector(1).unwrap()[0];
-        let verifier1 = server1
-            .generate_verification_message(eval_at, &encrypted_input_share1)
-            .unwrap();
-        let verifier2 = server2
-            .generate_verification_message(eval_at, &encrypted_input_share2)
-            .unwrap();
-
-        server1
-            .aggregate(&encrypted_input_share1, &verifier1, &verifier2)
-            .unwrap();
-        server2
-            .aggregate(&encrypted_input_share2, &verifier1, &verifier2)
-            .unwrap();
     }
 
     #[test]
@@ -498,5 +470,74 @@ mod tests {
     fn roundtrip_aggregate_share() {
         let vdaf = Prio2::new(31).unwrap();
         fieldvec_roundtrip_test::<FieldPrio2, Prio2, AggregateShare<FieldPrio2>>(&vdaf, &(), 31);
+    }
+
+    #[test]
+    fn priov2_backward_compatibility() {
+        let test_vector: Priov2TestVector =
+            serde_json::from_str(include_str!("test_vec/prio2/fieldpriov2.json")).unwrap();
+        let vdaf = Prio2::new(test_vector.dimension).unwrap();
+        let mut leader_output_shares = Vec::new();
+        let mut helper_output_shares = Vec::new();
+        for (server_1_share, server_2_share) in test_vector
+            .server_1_decrypted_shares
+            .iter()
+            .zip(&test_vector.server_2_decrypted_shares)
+        {
+            let input_share_1 = Share::get_decoded_with_param(&(&vdaf, 0), server_1_share).unwrap();
+            let input_share_2 = Share::get_decoded_with_param(&(&vdaf, 1), server_2_share).unwrap();
+            let (prepare_state_1, prepare_share_1) = vdaf
+                .prepare_init(&[0; 32], 0, &(), &[0; 16], &(), &input_share_1)
+                .unwrap();
+            let (prepare_state_2, prepare_share_2) = vdaf
+                .prepare_init(&[0; 32], 1, &(), &[0; 16], &(), &input_share_2)
+                .unwrap();
+            vdaf.prepare_shares_to_prepare_message(&(), [prepare_share_1, prepare_share_2])
+                .unwrap();
+            let transition_1 = vdaf.prepare_next(prepare_state_1, ()).unwrap();
+            let output_share_1 =
+                assert_matches!(transition_1, PrepareTransition::Finish(out) => out);
+            let transition_2 = vdaf.prepare_next(prepare_state_2, ()).unwrap();
+            let output_share_2 =
+                assert_matches!(transition_2, PrepareTransition::Finish(out) => out);
+            leader_output_shares.push(output_share_1);
+            helper_output_shares.push(output_share_2);
+        }
+
+        let leader_aggregate_share = vdaf.aggregate(&(), leader_output_shares).unwrap();
+        let helper_aggregate_share = vdaf.aggregate(&(), helper_output_shares).unwrap();
+        let aggregate_result = vdaf
+            .unshard(
+                &(),
+                [leader_aggregate_share, helper_aggregate_share],
+                test_vector.server_1_decrypted_shares.len(),
+            )
+            .unwrap();
+        let reconstructed = aggregate_result
+            .into_iter()
+            .map(FieldPrio2::from)
+            .collect::<Vec<_>>();
+
+        assert_eq!(reconstructed, test_vector.reference_sum);
+    }
+
+    #[test]
+    fn prepare_state_equality_test() {
+        equality_comparison_test(&[
+            Prio2PrepareState(Share::Leader(Vec::from([
+                FieldPrio2::from(0),
+                FieldPrio2::from(1),
+            ]))),
+            Prio2PrepareState(Share::Leader(Vec::from([
+                FieldPrio2::from(1),
+                FieldPrio2::from(0),
+            ]))),
+            Prio2PrepareState(Share::Helper(Seed(
+                (0..32).collect::<Vec<_>>().try_into().unwrap(),
+            ))),
+            Prio2PrepareState(Share::Helper(Seed(
+                (1..33).collect::<Vec<_>>().try_into().unwrap(),
+            ))),
+        ])
     }
 }

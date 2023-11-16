@@ -53,11 +53,13 @@ pub fn new_prio_u8(num_aggregators: u8, bits: u32) -> Result<Prio3Sum, VdafError
 }
 
 pub fn new_prio_vecu8(num_aggregators: u8, len: usize) -> Result<Prio3SumVec, VdafError> {
-    Prio3::new(num_aggregators, SumVec::new(8, len)?)
+    let chunk_length = prio::vdaf::prio3::optimal_chunk_length(8 * len);
+    Prio3::new(num_aggregators, SumVec::new(8, len, chunk_length)?)
 }
 
 pub fn new_prio_vecu16(num_aggregators: u8, len: usize) -> Result<Prio3SumVec, VdafError> {
-    Prio3::new(num_aggregators, SumVec::new(16, len)?)
+    let chunk_length = prio::vdaf::prio3::optimal_chunk_length(16 * len);
+    Prio3::new(num_aggregators, SumVec::new(16, len, chunk_length)?)
 }
 
 enum Role {
