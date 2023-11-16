@@ -67,6 +67,10 @@ shopping-message-bar-warning-product-not-available-reported =
 shopping-message-bar-analysis-in-progress-title2 = Checking review quality
 shopping-message-bar-analysis-in-progress-message2 = This could take about 60 seconds.
 
+# Variables:
+#  $percentage (Number) - The percentage complete that the analysis is, per our servers.
+shopping-message-bar-analysis-in-progress-with-amount = Checking review quality ({ $percentage }%)
+
 shopping-message-bar-page-not-supported =
   .heading = We can’t check these reviews
   .message = Unfortunately, we can’t check the review quality for certain types of products. For example, gift cards and streaming video, music, and games.
