@@ -9,6 +9,7 @@
 
 #include "mozilla/dom/PWebAuthnTransactionParent.h"
 #include "mozilla/dom/WebAuthnPromiseHolder.h"
+#include "nsIWebAuthnService.h"
 
 /*
  * Parent process IPC implementation for WebAuthn.
@@ -45,6 +46,10 @@ class WebAuthnTransactionParent final : public PWebAuthnTransactionParent {
  private:
   ~WebAuthnTransactionParent() = default;
 
+  void CompleteTransaction();
+  void DisconnectTransaction();
+
+  nsCOMPtr<nsIWebAuthnService> mWebAuthnService;
   Maybe<uint64_t> mTransactionId;
   MozPromiseRequestHolder<WebAuthnRegisterPromise> mRegisterPromiseRequest;
   MozPromiseRequestHolder<WebAuthnSignPromise> mSignPromiseRequest;
