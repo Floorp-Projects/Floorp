@@ -18,6 +18,12 @@
 
 ## These strings are used in the urlbar panel.
 
+# A label shown above the Shortcuts aka Top Sites group in the urlbar results
+# if there's another result before that group. This should be consistent with
+# addressbar-locbar-shortcuts-option.
+urlbar-group-shortcuts =
+  .label = Shortcuts
+
 # A label shown above the top pick group in the urlbar results.
 urlbar-group-best-match =
   .label = Top pick
