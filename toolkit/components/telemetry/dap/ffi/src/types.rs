@@ -7,8 +7,8 @@
 //!
 //! The current draft standard with the definition of these structs is available here:
 //! https://github.com/ietf-wg-ppm/draft-ietf-ppm-dap
-//! This code is based on version 07 of the standard available here:
-//! https://www.ietf.org/archive/id/draft-ietf-ppm-dap-07.html
+//! This code is based on version 02 of the standard available here:
+//! https://www.ietf.org/archive/id/draft-ietf-ppm-dap-04.html
 
 use prio::codec::{
     decode_u16_items, decode_u32_items, encode_u16_items, encode_u32_items, CodecError, Decode,
@@ -17,10 +17,10 @@ use prio::codec::{
 use std::io::{Cursor, Read};
 use std::time::{SystemTime, UNIX_EPOCH};
 
-use rand::{Rng, RngCore};
+use rand::Rng;
 
 /// opaque TaskId[32];
-/// https://www.ietf.org/archive/id/draft-ietf-ppm-dap-07.html#name-task-configuration
+/// https://www.ietf.org/archive/id/draft-ietf-ppm-dap-04.html#name-task-configuration
 #[derive(Debug, PartialEq, Eq)]
 pub struct TaskID(pub [u8; 32]);
 
@@ -41,7 +41,7 @@ impl Encode for TaskID {
 
 /// uint64 Time;
 /// seconds elapsed since start of UNIX epoch
-/// https://www.ietf.org/archive/id/draft-ietf-ppm-dap-07.html#name-protocol-definition
+/// https://www.ietf.org/archive/id/draft-ietf-ppm-dap-04.html#name-protocol-definition
 #[derive(Debug, PartialEq, Eq)]
 pub struct Time(pub u64);
 
@@ -73,7 +73,7 @@ impl Time {
 ///     ExtensionType extension_type;
 ///     opaque extension_data<0..2^16-1>;
 /// } Extension;
-/// https://www.ietf.org/archive/id/draft-ietf-ppm-dap-07.html#name-upload-extensions
+/// https://www.ietf.org/archive/id/draft-ietf-ppm-dap-04.html#name-upload-extensions
 #[derive(Debug, PartialEq)]
 pub struct Extension {
     extension_type: ExtensionType,
@@ -103,7 +103,7 @@ impl Encode for Extension {
 ///     TBD(0),
 ///     (65535)
 /// } ExtensionType;
-/// https://www.ietf.org/archive/id/draft-ietf-ppm-dap-07.html#name-upload-extensions
+/// https://www.ietf.org/archive/id/draft-ietf-ppm-dap-04.html#name-upload-extensions
 #[derive(Debug, PartialEq, Clone, Copy)]
 #[repr(u16)]
 enum ExtensionType {
@@ -123,8 +123,7 @@ impl ExtensionType {
 ///     Extension extensions<0..2^16-1>;
 ///     opaque payload<0..2^32-1>;
 /// } PlaintextInputShare;
-/// https://www.ietf.org/archive/id/draft-ietf-ppm-dap-07.html#section-4.4.2-9
-#[derive(Debug)]
+/// https://www.ietf.org/archive/id/draft-ietf-ppm-dap-04.html#section-4.3.2-9
 pub struct PlaintextInputShare {
     pub extensions: Vec<Extension>,
     pub payload: Vec<u8>,
@@ -139,7 +138,7 @@ impl Encode for PlaintextInputShare {
 
 /// Identifier for a server's HPKE configuration
 /// uint8 HpkeConfigId;
-/// https://www.ietf.org/archive/id/draft-ietf-ppm-dap-07.html#name-protocol-definition
+/// https://www.ietf.org/archive/id/draft-ietf-ppm-dap-04.html#name-protocol-definition
 #[derive(Debug, PartialEq, Eq, Copy, Clone)]
 pub struct HpkeConfigId(u8);
 
@@ -166,8 +165,8 @@ impl Encode for HpkeConfigId {
 /// uint16 HpkeAeadId; /* Defined in [HPKE] */
 /// uint16 HpkeKemId;  /* Defined in [HPKE] */
 /// uint16 HpkeKdfId;  /* Defined in [HPKE] */
-/// https://www.ietf.org/archive/id/draft-ietf-ppm-dap-07.html#name-hpke-configuration-request
-#[derive(Debug, Clone)]
+/// https://www.ietf.org/archive/id/draft-ietf-ppm-dap-04.html#name-hpke-configuration-request
+#[derive(Debug)]
 pub struct HpkeConfig {
     pub id: HpkeConfigId,
     pub kem_id: u16,
@@ -204,7 +203,7 @@ impl Encode for HpkeConfig {
 ///     opaque enc<1..2^16-1>;     /* encapsulated HPKE key */
 ///     opaque payload<1..2^32-1>; /* ciphertext */
 /// } HpkeCiphertext;
-/// https://www.ietf.org/archive/id/draft-ietf-ppm-dap-07.html#name-protocol-definition
+/// https://www.ietf.org/archive/id/draft-ietf-ppm-dap-04.html#name-protocol-definition
 #[derive(Debug, PartialEq, Eq)]
 pub struct HpkeCiphertext {
     pub config_id: HpkeConfigId,
@@ -235,7 +234,7 @@ impl Encode for HpkeCiphertext {
 }
 
 /// opaque ReportID[16];
-/// https://www.ietf.org/archive/id/draft-ietf-ppm-dap-07.html#name-protocol-definition
+/// https://www.ietf.org/archive/id/draft-ietf-ppm-dap-04.html#name-protocol-definition
 #[derive(Debug, PartialEq, Eq)]
 pub struct ReportID(pub [u8; 16]);
 
@@ -269,7 +268,7 @@ impl AsRef<[u8; 16]> for ReportID {
 ///     ReportID report_id;
 ///     Time time;
 /// } ReportMetadata;
-/// https://www.ietf.org/archive/id/draft-ietf-ppm-dap-07.html#name-upload-request
+/// https://www.ietf.org/archive/id/draft-ietf-ppm-dap-04.html#name-upload-request
 #[derive(Debug, PartialEq)]
 pub struct ReportMetadata {
     pub report_id: ReportID,
@@ -295,34 +294,26 @@ impl Encode for ReportMetadata {
 /// struct {
 ///     ReportMetadata metadata;
 ///     opaque public_share<0..2^32-1>;
-///     HpkeCiphertext leader_encrypted_input_share;
-///     HpkeCiphertext helper_encrypted_input_share;
+///     HpkeCiphertext encrypted_input_shares<1..2^32-1>;
 /// } Report;
-/// https://www.ietf.org/archive/id/draft-ietf-ppm-dap-07.html#name-upload-request
+/// https://www.ietf.org/archive/id/draft-ietf-ppm-dap-04.html#name-upload-request
 #[derive(Debug, PartialEq)]
 pub struct Report {
     pub metadata: ReportMetadata,
     pub public_share: Vec<u8>,
-    pub leader_encrypted_input_share: HpkeCiphertext,
-    pub helper_encrypted_input_share: HpkeCiphertext,
+    pub encrypted_input_shares: Vec<HpkeCiphertext>,
 }
-
 
 impl Report {
     /// Creates a minimal report for use in tests.
     pub fn new_dummy() -> Self {
-        let mut enc = [0u8; 32];
-        rand::thread_rng().fill_bytes(&mut enc);
-        let mut payload = [0u8; 200];
-        rand::thread_rng().fill_bytes(&mut payload);
         Report {
             metadata: ReportMetadata {
                 report_id: ReportID::generate(),
                 time: Time::generate(1),
             },
             public_share: vec![],
-            leader_encrypted_input_share: HpkeCiphertext { config_id: HpkeConfigId(5), enc: vec![1, 2, 3, 4, 5], payload: vec![6, 7, 8, 9, 10] },
-            helper_encrypted_input_share: HpkeCiphertext { config_id: HpkeConfigId(100), enc: enc.into(), payload: payload.into() },
+            encrypted_input_shares: vec![],
         }
     }
 }
@@ -331,16 +322,14 @@ impl Decode for Report {
     fn decode(bytes: &mut Cursor<&[u8]>) -> Result<Self, CodecError> {
         let metadata = ReportMetadata::decode(bytes)?;
         let public_share: Vec<u8> = decode_u32_items(&(), bytes)?;
-        let leader_encrypted_input_share: HpkeCiphertext = HpkeCiphertext::decode(bytes)?;
-        let helper_encrypted_input_share: HpkeCiphertext = HpkeCiphertext::decode(bytes)?;
+        let encrypted_input_shares: Vec<HpkeCiphertext> = decode_u32_items(&(), bytes)?;
 
         let remaining_bytes = bytes.get_ref().len() - (bytes.position() as usize);
         if remaining_bytes == 0 {
             Ok(Report {
                 metadata,
                 public_share,
-                leader_encrypted_input_share,
-                helper_encrypted_input_share,
+                encrypted_input_shares,
             })
         } else {
             Err(CodecError::BytesLeftOver(remaining_bytes))
@@ -352,7 +341,6 @@ impl Encode for Report {
     fn encode(&self, bytes: &mut Vec<u8>) {
         self.metadata.encode(bytes);
         encode_u32_items(bytes, &(), &self.public_share);
-        self.leader_encrypted_input_share.encode(bytes);
-        self.helper_encrypted_input_share.encode(bytes);
+        encode_u32_items(bytes, &(), &self.encrypted_input_shares);
     }
 }
