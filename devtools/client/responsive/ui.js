@@ -858,7 +858,7 @@ class ResponsiveUI {
       await this.networkFront.clearNetworkThrottling();
       return false;
     }
-    const data = throttlingProfiles.find(({ id }) => id == profile);
+    const data = throttlingProfiles.profiles.find(({ id }) => id == profile);
     const { download, upload, latency } = data;
     await this.networkFront.setNetworkThrottling({
       downloadThroughput: download,
