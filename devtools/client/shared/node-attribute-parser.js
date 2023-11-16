@@ -159,6 +159,7 @@ const ATTRIBUTE_TYPES = new Map([
       menuitem: { namespaceURI: HTML_NS, type: TYPE_URI },
     },
   ],
+  ["invoketarget", { WILDCARD: { namespaceURI: HTML_NS, type: TYPE_IDREF } }],
   ["list", { input: { namespaceURI: HTML_NS, type: TYPE_IDREF } }],
   [
     "longdesc",
