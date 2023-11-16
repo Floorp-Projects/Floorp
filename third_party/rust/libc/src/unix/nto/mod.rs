@@ -2557,6 +2557,7 @@ pub const RLIMIT_NPROC: ::c_int = 8;
 pub const RLIMIT_RSS: ::c_int = 6;
 pub const RLIMIT_STACK: ::c_int = 3;
 pub const RLIMIT_VMEM: ::c_int = 6;
+#[deprecated(since = "0.2.64", note = "Not stable across OS versions")]
 pub const RLIM_NLIMITS: ::c_int = 14;
 
 pub const SCHED_ADJTOHEAD: ::c_int = 5;
@@ -3092,6 +3093,7 @@ extern "C" {
         attr: *const ::pthread_attr_t,
         guardsize: *mut ::size_t,
     ) -> ::c_int;
+    pub fn pthread_attr_setguardsize(attr: *mut ::pthread_attr_t, guardsize: ::size_t) -> ::c_int;
     pub fn sethostname(name: *const ::c_char, len: ::size_t) -> ::c_int;
     pub fn sched_get_priority_min(policy: ::c_int) -> ::c_int;
     pub fn pthread_condattr_getpshared(

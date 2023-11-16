@@ -11,7 +11,7 @@
 
 [package]
 name = "libc"
-version = "0.2.148"
+version = "0.2.150"
 authors = ["The Rust Project Developers"]
 build = "build.rs"
 exclude = [
@@ -114,6 +114,7 @@ targets = [
     "riscv32imac-unknown-none-elf",
     "riscv32imc-unknown-none-elf",
     "riscv64gc-unknown-freebsd",
+    "riscv64gc-unknown-hermit",
     "riscv64gc-unknown-linux-gnu",
     "riscv64gc-unknown-linux-musl",
     "riscv64gc-unknown-none-elf",

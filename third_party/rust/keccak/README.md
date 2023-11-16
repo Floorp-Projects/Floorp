@@ -53,12 +53,12 @@ dual licensed as above, without any additional terms or conditions.
 [crate-link]: https://crates.io/crates/keccak
 [docs-image]: https://docs.rs/keccak/badge.svg
 [docs-link]: https://docs.rs/keccak/
+[build-image]: https://github.com/RustCrypto/sponges/actions/workflows/keccak.yml/badge.svg
+[build-link]: https://github.com/RustCrypto/sponges/actions/workflows/keccak.yml
 [license-image]: https://img.shields.io/badge/license-Apache2.0/MIT-blue.svg
 [rustc-image]: https://img.shields.io/badge/rustc-1.41+-blue.svg
 [chat-image]: https://img.shields.io/badge/zulip-join_chat-blue.svg
-[chat-link]: https://rustcrypto.zulipchat.com/#narrow/stream/260041-hashes
-[build-image]: https://github.com/RustCrypto/sponges/actions/workflows/keccak.yml/badge.svg
-[build-link]: https://github.com/RustCrypto/sponges/actions/workflows/keccak.yml
+[chat-link]: https://rustcrypto.zulipchat.com/#narrow/stream/369879-sponges
 
 [//]: # (general links)
 

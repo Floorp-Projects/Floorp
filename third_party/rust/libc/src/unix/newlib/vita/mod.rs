@@ -9,6 +9,16 @@ pub type c_ulong = u32;
 pub type sigset_t = ::c_ulong;
 
 s! {
+    pub struct msghdr {
+        pub msg_name: *mut ::c_void,
+        pub msg_namelen: ::socklen_t,
+        pub msg_iov: *mut ::iovec,
+        pub msg_iovlen: ::c_int,
+        pub msg_control: *mut ::c_void,
+        pub msg_controllen: ::socklen_t,
+        pub msg_flags: ::c_int,
+    }
+
     pub struct sockaddr {
         pub sa_len: u8,
         pub sa_family: ::sa_family_t,
@@ -35,6 +45,7 @@ s! {
     }
 
     pub struct sockaddr_un {
+        pub ss_len: u8,
         pub sun_family: ::sa_family_t,
         pub sun_path: [::c_char; 108usize],
     }
@@ -42,9 +53,9 @@ s! {
     pub struct sockaddr_storage {
         pub ss_len: u8,
         pub ss_family: ::sa_family_t,
-        pub __ss_pad1: [u8; 4],
+        pub __ss_pad1: [u8; 2],
         pub __ss_align: i64,
-        pub __ss_pad2: [u8; 4],
+        pub __ss_pad2: [u8; 116],
     }
 
     pub struct sched_param {
@@ -67,16 +78,31 @@ s! {
         pub st_blocks: ::blkcnt_t,
         pub st_spare4: [::c_long; 2usize],
     }
+
+    #[repr(align(8))]
+    pub struct dirent {
+        __offset: [u8; 88],
+        pub d_name: [::c_char; 256usize],
+        __pad: [u8; 8],
+    }
 }
 
 pub const AF_UNIX: ::c_int = 1;
 pub const AF_INET6: ::c_int = 24;
+
+pub const SOCK_RAW: ::c_int = 3;
+pub const SOCK_RDM: ::c_int = 4;
+pub const SOCK_SEQPACKET: ::c_int = 5;
 
 pub const FIONBIO: ::c_ulong = 1;
 
 pub const POLLIN: ::c_short = 0x0001;
 pub const POLLPRI: ::c_short = POLLIN;
 pub const POLLOUT: ::c_short = 0x0004;
+pub const POLLRDNORM: ::c_short = POLLIN;
+pub const POLLRDBAND: ::c_short = POLLIN;
+pub const POLLWRNORM: ::c_short = POLLOUT;
+pub const POLLWRBAND: ::c_short = POLLOUT;
 pub const POLLERR: ::c_short = 0x0008;
 pub const POLLHUP: ::c_short = 0x0010;
 pub const POLLNVAL: ::c_short = 0x0020;
@@ -141,10 +167,15 @@ pub const _SC_PAGESIZE: ::c_int = 8;
 pub const _SC_GETPW_R_SIZE_MAX: ::c_int = 51;
 pub const PTHREAD_STACK_MIN: ::size_t = 32 * 1024;
 
+pub const IP_HDRINCL: ::c_int = 2;
+
 extern "C" {
     pub fn futimens(fd: ::c_int, times: *const ::timespec) -> ::c_int;
     pub fn writev(fd: ::c_int, iov: *const ::iovec, iovcnt: ::c_int) -> ::ssize_t;
     pub fn readv(fd: ::c_int, iov: *const ::iovec, iovcnt: ::c_int) -> ::ssize_t;
+
+    pub fn sendmsg(s: ::c_int, msg: *const ::msghdr, flags: ::c_int) -> ::ssize_t;
+    pub fn recvmsg(s: ::c_int, msg: *mut ::msghdr, flags: ::c_int) -> ::ssize_t;
 
     pub fn pthread_create(
         native: *mut ::pthread_t,
@@ -198,4 +229,6 @@ extern "C" {
     pub fn pthread_getprocessorid_np() -> ::c_int;
 
     pub fn getentropy(buf: *mut ::c_void, buflen: ::size_t) -> ::c_int;
+
+    pub fn pipe2(fds: *mut ::c_int, flags: ::c_int) -> ::c_int;
 }

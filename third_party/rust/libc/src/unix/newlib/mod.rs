@@ -1,13 +1,7 @@
 pub type blkcnt_t = i32;
 pub type blksize_t = i32;
 
-cfg_if! {
-    if #[cfg(target_os = "vita")] {
-        pub type clockid_t = ::c_uint;
-    } else {
-        pub type clockid_t = ::c_ulong;
-    }
-}
+pub type clockid_t = ::c_ulong;
 
 cfg_if! {
     if #[cfg(any(target_os = "espidf"))] {
@@ -168,16 +162,6 @@ s! {
         pub sa_handler: extern fn(arg1: ::c_int),
         pub sa_mask: sigset_t,
         pub sa_flags: ::c_int,
-    }
-
-    pub struct dirent {
-        #[cfg(not(target_os = "vita"))]
-        pub d_ino: ino_t,
-        #[cfg(not(target_os = "vita"))]
-        pub d_type: ::c_uchar,
-        #[cfg(target_os = "vita")]
-        __offset: [u8; 88],
-        pub d_name: [::c_char; 256usize],
     }
 
     pub struct stack_t {
@@ -546,8 +530,16 @@ pub const IFF_LINK2: ::c_int = 0x4000; // per link layer defined bit
 pub const IFF_ALTPHYS: ::c_int = IFF_LINK2; // use alternate physical connection
 pub const IFF_MULTICAST: ::c_int = 0x8000; // supports multicast
 
-pub const TCP_NODELAY: ::c_int = 8193;
-pub const TCP_MAXSEG: ::c_int = 8194;
+cfg_if! {
+    if #[cfg(target_os = "vita")] {
+        pub const TCP_NODELAY: ::c_int = 1;
+        pub const TCP_MAXSEG: ::c_int = 2;
+    } else {
+        pub const TCP_NODELAY: ::c_int = 8193;
+        pub const TCP_MAXSEG: ::c_int = 8194;
+    }
+}
+
 pub const TCP_NOPUSH: ::c_int = 4;
 pub const TCP_NOOPT: ::c_int = 8;
 pub const TCP_KEEPIDLE: ::c_int = 256;
@@ -561,13 +553,25 @@ cfg_if! {
         pub const IP_TOS: ::c_int = 3;
     }
 }
-pub const IP_TTL: ::c_int = 8;
+cfg_if! {
+    if #[cfg(target_os = "vita")] {
+        pub const IP_TTL: ::c_int = 4;
+    } else {
+        pub const IP_TTL: ::c_int = 8;
+    }
+}
 pub const IP_MULTICAST_IF: ::c_int = 9;
 pub const IP_MULTICAST_TTL: ::c_int = 10;
 pub const IP_MULTICAST_LOOP: ::c_int = 11;
-pub const IP_ADD_MEMBERSHIP: ::c_int = 11;
-pub const IP_DROP_MEMBERSHIP: ::c_int = 12;
-
+cfg_if! {
+    if #[cfg(target_os = "vita")] {
+        pub const IP_ADD_MEMBERSHIP: ::c_int = 12;
+        pub const IP_DROP_MEMBERSHIP: ::c_int = 13;
+    } else {
+        pub const IP_ADD_MEMBERSHIP: ::c_int = 11;
+        pub const IP_DROP_MEMBERSHIP: ::c_int = 12;
+    }
+}
 pub const IPV6_UNICAST_HOPS: ::c_int = 4;
 pub const IPV6_MULTICAST_IF: ::c_int = 9;
 pub const IPV6_MULTICAST_HOPS: ::c_int = 10;
@@ -598,10 +602,15 @@ pub const NI_NAMEREQD: ::c_int = 4;
 pub const NI_NUMERICSERV: ::c_int = 0;
 pub const NI_DGRAM: ::c_int = 0;
 
-pub const EAI_FAMILY: ::c_int = -303;
-pub const EAI_MEMORY: ::c_int = -304;
-pub const EAI_NONAME: ::c_int = -305;
-pub const EAI_SOCKTYPE: ::c_int = -307;
+cfg_if! {
+    // Defined in vita/mod.rs for "vita"
+    if #[cfg(not(target_os = "vita"))] {
+        pub const EAI_FAMILY: ::c_int = -303;
+        pub const EAI_MEMORY: ::c_int = -304;
+        pub const EAI_NONAME: ::c_int = -305;
+        pub const EAI_SOCKTYPE: ::c_int = -307;
+    }
+}
 
 pub const EXIT_SUCCESS: ::c_int = 0;
 pub const EXIT_FAILURE: ::c_int = 1;

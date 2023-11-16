@@ -33,7 +33,7 @@ const ALLOWED_CFGS: &'static [&'static str] = &[
 
 // Extra values to allow for check-cfg.
 const CHECK_CFG_EXTRA: &'static [(&'static str, &'static [&'static str])] = &[
-    ("target_os", &["switch", "aix", "ohos"]),
+    ("target_os", &["switch", "aix", "ohos", "hurd"]),
     ("target_env", &["illumos", "wasi", "aix", "ohos"]),
     (
         "target_arch",
@@ -167,11 +167,19 @@ fn main() {
     // https://doc.rust-lang.org/nightly/cargo/reference/unstable.html#check-cfg
     if libc_check_cfg {
         for cfg in ALLOWED_CFGS {
-            println!("cargo:rustc-check-cfg=values({})", cfg);
+            if rustc_minor_ver >= 75 {
+                println!("cargo:rustc-check-cfg=cfg({})", cfg);
+            } else {
+                println!("cargo:rustc-check-cfg=values({})", cfg);
+            }
         }
         for &(name, values) in CHECK_CFG_EXTRA {
             let values = values.join("\",\"");
-            println!("cargo:rustc-check-cfg=values({},\"{}\")", name, values);
+            if rustc_minor_ver >= 75 {
+                println!("cargo:rustc-check-cfg=cfg({},values(\"{}\"))", name, values);
+            } else {
+                println!("cargo:rustc-check-cfg=values({},\"{}\")", name, values);
+            }
         }
     }
 }

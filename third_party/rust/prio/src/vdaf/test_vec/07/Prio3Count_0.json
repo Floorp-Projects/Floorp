@@ -1,0 +1,39 @@
+{
+    "agg_param": null,
+    "agg_result": 1,
+    "agg_shares": [
+        "afead111dacc0c7e",
+        "53152eee2433f381"
+    ],
+    "prep": [
+        {
+            "input_shares": [
+                "afead111dacc0c7ec08c411babd6e2404df512ddfa0a81736b7607f4ccb3f39e414fdb4bc89a63569702c92aed6a6a96",
+                "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
+            ],
+            "measurement": 1,
+            "nonce": "000102030405060708090a0b0c0d0e0f",
+            "out_shares": [
+                [
+                    "afead111dacc0c7e"
+                ],
+                [
+                    "53152eee2433f381"
+                ]
+            ],
+            "prep_messages": [
+                ""
+            ],
+            "prep_shares": [
+                [
+                    "123f23c117b7ed6099be9e6a31a42a9caa60882a3b4aa50303f8b588c9efe60b",
+                    "efc0dc3ee748129f2da661f47a625a57d64a5b62ab38647c34bb161c7576d721"
+                ]
+            ],
+            "public_share": "",
+            "rand": "000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f202122232425262728292a2b2c2d2e2f"
+        }
+    ],
+    "shares": 2,
+    "verify_key": "000102030405060708090a0b0c0d0e0f"
+}
