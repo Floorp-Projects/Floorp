@@ -44,9 +44,9 @@ define(function (require, exports, module) {
      */
     shouldComponentUpdate(nextProps, nextState) {
       return (
-        this.props.value != nextProps.value ||
+        this.props.value !== nextProps.value ||
         this.state !== nextState ||
-        this.props.member.open != nextProps.member.open
+        this.props.member.open !== nextProps.member.open
       );
     }
 
