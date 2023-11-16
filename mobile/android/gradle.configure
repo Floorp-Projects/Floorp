@@ -500,6 +500,55 @@ set_config(
 
 
 @depends(gradle_android_build_config)
+def gradle_android_compile_all_tasks(build_config):
+    """Gradle tasks run by |mach android compile-all|."""
+
+    def capitalize(s):
+        # str.capitalize lower cases trailing letters.
+        if s:
+            return s[0].upper() + s[1:]
+        else:
+            return s
+
+    buildType = capitalize(build_config.geckoview.variant.buildType)
+
+    tasks = [
+        f"compileJava",
+        f"compileTestJava",
+        f"compile{buildType}Sources",
+        f"compile{buildType}UnitTestSources",
+        f"geckoview:compile{build_config.geckoview.variant.name}Sources",
+        f"geckoview:compile{build_config.geckoview.variant.name}UnitTestSources",
+        f"test_runner:compile{build_config.geckoview.variant.name}Sources",
+        f"test_runner:compile{build_config.geckoview.variant.name}UnitTestSources",
+        f"messaging_example:compile{build_config.geckoview.variant.name}Sources",
+        f"messaging_example:compile{build_config.geckoview.variant.name}UnitTestSources",
+        f"port_messaging_example:compile{build_config.geckoview.variant.name}Sources",
+        f"port_messaging_example:compile{build_config.geckoview.variant.name}UnitTestSources",
+        f"geckoview_example:compile{build_config.geckoview_example.variant.name}Sources",
+        f"geckoview_example:compile{build_config.geckoview_example.variant.name}UnitTestSources",
+    ]
+
+    if buildType == "Debug":
+        tasks += [
+            f"compile{buildType}AndroidTestSources",
+            f"geckoview:compile{build_config.geckoview.variant.name}AndroidTestSources",
+            f"test_runner:compile{build_config.geckoview.variant.name}AndroidTestSources",
+            f"messaging_example:compile{build_config.geckoview.variant.name}AndroidTestSources",
+            f"port_messaging_example:compile{build_config.geckoview.variant.name}AndroidTestSources",
+            f"geckoview_example:compile{build_config.geckoview_example.variant.name}AndroidTestSources",
+        ]
+
+    return tasks
+
+
+set_config(
+    "GRADLE_ANDROID_COMPILE_ALL_TASKS",
+    gradle_android_compile_all_tasks,
+)
+
+
+@depends(gradle_android_build_config)
 def gradle_android_install_geckoview_test_runner_tasks(build_config):
     """Gradle tasks run by |mach android install-geckoview-test_runner|."""
     return [
@@ -602,6 +651,17 @@ set_config(
     "ALLOW_INSECURE_GRADLE_REPOSITORIES",
     True,
     when="--allow-insecure-gradle-repositories",
+)
+
+option(
+    "--download-all-gradle-dependencies",
+    help="Download all dependencies, even those that are conditionally used.",
+)
+
+set_config(
+    "DOWNLOAD_ALL_GRADLE_DEPENDENCIES",
+    True,
+    when="--download-all-gradle-dependencies",
 )
 
 

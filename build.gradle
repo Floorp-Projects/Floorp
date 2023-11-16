@@ -70,6 +70,40 @@ allprojects {
         }
     }
 
+    // Use the semanticdb-javac and semanticdb-kotlinc plugins to generate semanticdb files for Searchfox
+    if (mozconfig.substs.ENABLE_MOZSEARCH_PLUGIN || mozconfig.substs.DOWNLOAD_ALL_GRADLE_DEPENDENCIES) {
+        def targetRoot = new File(topobjdir, "mozsearch_java_index")
+        def semanticdbJavacVersion = "com.sourcegraph:semanticdb-javac:0.9.6"
+        def semanticdbKotlincVersion = "com.sourcegraph:semanticdb-kotlinc:0.3.2"
+
+        afterEvaluate {
+            def addDependencyToConfigurationIfExists = { configurationName, dependency ->
+                def configuration = configurations.findByName(configurationName)
+                if (configuration != null) {
+                    dependencies.add(configurationName, dependency)
+                }
+            }
+
+            addDependencyToConfigurationIfExists("compileOnly", semanticdbJavacVersion)
+            addDependencyToConfigurationIfExists("testCompileOnly", semanticdbJavacVersion)
+            addDependencyToConfigurationIfExists("androidTestCompileOnly", semanticdbJavacVersion)
+            addDependencyToConfigurationIfExists("kotlinCompilerPluginClasspath", semanticdbKotlincVersion)
+        }
+
+        tasks.withType(JavaCompile) {
+            options.compilerArgs += [
+                "-Xplugin:semanticdb -sourceroot:${topsrcdir} -targetroot:${targetRoot}",
+            ]
+        }
+
+        tasks.withType(org.jetbrains.kotlin.gradle.tasks.KotlinCompile) {
+            compilerOptions.freeCompilerArgs.addAll([
+                "-P", "plugin:semanticdb-kotlinc:sourceroot=${topsrcdir}",
+                "-P", "plugin:semanticdb-kotlinc:targetroot=${targetRoot}",
+            ])
+        }
+    }
+
     task downloadDependencies() {
         description 'Download all dependencies to the Gradle cache'
         doLast {

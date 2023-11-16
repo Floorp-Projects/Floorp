@@ -92,6 +92,7 @@ CODE_COVERAGE_ARCHIVE_BASENAME = $(PKG_BASENAME).code-coverage-gcno
 MOZSEARCH_ARCHIVE_BASENAME = $(PKG_BASENAME).mozsearch-index
 MOZSEARCH_INCLUDEMAP_BASENAME = $(PKG_BASENAME).mozsearch-distinclude
 MOZSEARCH_SCIP_INDEX_BASENAME = $(PKG_BASENAME).mozsearch-scip-index
+MOZSEARCH_JAVA_INDEX_BASENAME = $(PKG_BASENAME).mozsearch-java-index
 
 # Mozharness naming
 MOZHARNESS_PACKAGE = mozharness.zip
