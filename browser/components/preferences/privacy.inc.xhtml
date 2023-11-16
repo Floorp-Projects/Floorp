@@ -729,18 +729,20 @@
     />
   </hbox>
   <vbox id="firefoxSuggestContainer" hidden="true">
-    <vbox class="firefoxSuggestOptionBox">
-      <html:moz-toggle id="firefoxSuggestNonsponsoredToggle"
-                       preference="browser.urlbar.suggest.quicksuggest.nonsponsored"
-                       data-l10n-id="addressbar-firefox-suggest-nonsponsored"
-                       data-l10n-attrs="label, description" />
-    </vbox>
-    <vbox class="firefoxSuggestOptionBox">
-      <html:moz-toggle id="firefoxSuggestSponsoredToggle"
-                       preference="browser.urlbar.suggest.quicksuggest.sponsored"
-                       data-l10n-id="addressbar-firefox-suggest-sponsored"
-                       data-l10n-attrs="label, description" />
-    </vbox>
+    <checkbox id="firefoxSuggestNonsponsored"
+              data-l10n-id="addressbar-firefox-suggest-nonsponsored"
+              preference="browser.urlbar.suggest.quicksuggest.nonsponsored"
+    />
+    <description class="indent tip-caption"
+                  data-l10n-id="addressbar-firefox-suggest-nonsponsored-desc"
+    />
+    <checkbox id="firefoxSuggestSponsored"
+              data-l10n-id="addressbar-firefox-suggest-sponsored"
+              preference="browser.urlbar.suggest.quicksuggest.sponsored"
+    />
+    <description class="indent tip-caption"
+                  data-l10n-id="addressbar-firefox-suggest-sponsored-desc"
+    />
     <vbox class="firefoxSuggestOptionBox">
       <html:moz-toggle id="firefoxSuggestDataCollectionToggle"
                        preference="browser.urlbar.quicksuggest.dataCollection.enabled"
