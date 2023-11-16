@@ -172,30 +172,25 @@ static void BuildCapabilitiesArray(
 }
 
 static HRESULT BuildCDMAccessConfig(const MFCDMInitParamsIPDL& aParams,
-                                    ComPtr<IPropertyStore>& aConfig,
-                                    const bool aIsWidevine) {
+                                    ComPtr<IPropertyStore>& aConfig) {
   ComPtr<IPropertyStore> mksc;  // EME MediaKeySystemConfiguration
   MFCDM_RETURN_IF_FAILED(PSCreateMemoryPropertyStore(IID_PPV_ARGS(&mksc)));
 
-  if (!IsWin11OrLater() || aIsWidevine) {
-    // Init type. If we don't set `MF_EME_INITDATATYPES` then we won't be able
-    // to create CDM module on Windows 10, which is not documented officially.
-    // However, PlayReady on Windows 11 doesn't need that, but Widevine seems
-    // always requiring this attribute.
-    BSTR* initDataTypeArray =
-        (BSTR*)CoTaskMemAlloc(sizeof(BSTR) * aParams.initDataTypes().Length());
-    for (size_t i = 0; i < aParams.initDataTypes().Length(); i++) {
-      initDataTypeArray[i] =
-          SysAllocString(InitDataTypeToString(aParams.initDataTypes()[i]));
-    }
-    AutoPropVar initDataTypes;
-    PROPVARIANT* var = initDataTypes.Receive();
-    var->vt = VT_VECTOR | VT_BSTR;
-    var->cabstr.cElems = static_cast<ULONG>(aParams.initDataTypes().Length());
-    var->cabstr.pElems = initDataTypeArray;
-    MFCDM_RETURN_IF_FAILED(
-        mksc->SetValue(MF_EME_INITDATATYPES, initDataTypes.get()));
+  // Init type. If we don't set `MF_EME_INITDATATYPES` then we won't be able
+  // to create CDM module on Windows 10, which is not documented officially.
+  BSTR* initDataTypeArray =
+      (BSTR*)CoTaskMemAlloc(sizeof(BSTR) * aParams.initDataTypes().Length());
+  for (size_t i = 0; i < aParams.initDataTypes().Length(); i++) {
+    initDataTypeArray[i] =
+        SysAllocString(InitDataTypeToString(aParams.initDataTypes()[i]));
   }
+  AutoPropVar initDataTypes;
+  PROPVARIANT* var = initDataTypes.Receive();
+  var->vt = VT_VECTOR | VT_BSTR;
+  var->cabstr.cElems = static_cast<ULONG>(aParams.initDataTypes().Length());
+  var->cabstr.pElems = initDataTypeArray;
+  MFCDM_RETURN_IF_FAILED(
+      mksc->SetValue(MF_EME_INITDATATYPES, initDataTypes.get()));
 
   // Audio capabilities
   AutoPropVar audioCapabilities;
@@ -276,10 +271,7 @@ static HRESULT CreateContentDecryptionModule(
     ComPtr<IMFContentDecryptionModule>& aCDMOut) {
   // Get access object to CDM.
   ComPtr<IPropertyStore> accessConfig;
-  const bool isWidevine =
-      IsWidevineExperimentKeySystemAndSupported(aKeySystem) ||
-      IsWidevineKeySystem(aKeySystem);
-  RETURN_IF_FAILED(BuildCDMAccessConfig(aParams, accessConfig, isWidevine));
+  RETURN_IF_FAILED(BuildCDMAccessConfig(aParams, accessConfig));
 
   AutoTArray<IPropertyStore*, 1> configs = {accessConfig.Get()};
   ComPtr<IMFContentDecryptionModuleAccess> cdmAccess;
