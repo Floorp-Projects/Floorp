@@ -508,6 +508,7 @@ impl<A: Debug, B: Debug> Debug for Either<A, B> {
 #[derive(
     Clone,
     Debug,
+    Default,
     Eq,
     Hash,
     MallocSizeOf,
