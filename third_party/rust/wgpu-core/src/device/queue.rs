@@ -697,7 +697,7 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
         let block_size = dst
             .desc
             .format
-            .block_size(Some(destination.aspect))
+            .block_copy_size(Some(destination.aspect))
             .unwrap();
         let bytes_per_row_alignment =
             get_lowest_common_denom(device.alignments.buffer_copy_pitch.get() as u32, block_size);
@@ -1110,13 +1110,12 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
                         // it, so make sure to set_size on it.
                         used_surface_textures.set_size(texture_guard.len());
 
+                        // TODO: ideally we would use `get_and_mark_destroyed` but the code here
+                        // wants to consume the command buffer.
                         #[allow(unused_mut)]
-                        let mut cmdbuf = match hub
-                            .command_buffers
-                            .unregister_locked(cmb_id, &mut *command_buffer_guard)
-                        {
-                            Some(cmdbuf) => cmdbuf,
-                            None => continue,
+                        let mut cmdbuf = match command_buffer_guard.replace_with_error(cmb_id) {
+                            Ok(cmdbuf) => cmdbuf,
+                            Err(_) => continue,
                         };
 
                         if cmdbuf.device_id.value.0 != queue_id {
@@ -1140,13 +1139,16 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
 
                         // update submission IDs
                         for id in cmdbuf.trackers.buffers.used() {
-                            let buffer = &mut buffer_guard[id];
-                            let raw_buf = match buffer.raw {
-                                Some(ref raw) => raw,
-                                None => {
+                            let buffer = match buffer_guard.get(id.0) {
+                                Ok(buf) => buf,
+                                Err(..) => {
                                     return Err(QueueSubmitError::DestroyedBuffer(id.0));
                                 }
                             };
+                            // get fails if the buffer is invalid or destroyed so we can assume
+                            // the raw buffer is not None.
+                            let raw_buf = buffer.raw.as_ref().unwrap();
+
                             if !buffer.life_guard.use_at(submit_index) {
                                 if let BufferMapState::Active { .. } = buffer.map_state {
                                     log::warn!("Dropped buffer has a pending mapping.");
@@ -1162,10 +1164,16 @@ impl<G: GlobalIdentityHandlerFactory> Global<G> {
                             }
                         }
                         for id in cmdbuf.trackers.textures.used() {
-                            let texture = &mut texture_guard[id];
+                            let texture = match texture_guard.get_mut(id.0) {
+                                Ok(tex) => tex,
+                                Err(..) => {
+                                    return Err(QueueSubmitError::DestroyedTexture(id.0));
+                                }
+                            };
+
                             let should_extend = match texture.inner {
                                 TextureInner::Native { raw: None } => {
-                                    return Err(QueueSubmitError::DestroyedTexture(id.0));
+                                    unreachable!();
                                 }
                                 TextureInner::Native { raw: Some(_) } => false,
                                 TextureInner::Surface {
