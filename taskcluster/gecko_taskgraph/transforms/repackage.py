@@ -281,6 +281,8 @@ PACKAGE_FORMATS = {
             "{build_number}",
             "--templates",
             "browser/installer/linux/langpack/debian",
+            "--release-product",
+            "{release_product}",
         ],
         "inputs": {
             "input-xpi-file": "target.langpack.xpi",
