@@ -28,6 +28,9 @@ import mozilla.components.concept.engine.UnsupportedSettingException
 import mozilla.components.concept.engine.content.blocking.TrackerLog
 import mozilla.components.concept.engine.mediaquery.PreferredColorScheme
 import mozilla.components.concept.engine.serviceworker.ServiceWorkerDelegate
+import mozilla.components.concept.engine.translate.ModelManagementOptions
+import mozilla.components.concept.engine.translate.ModelOperation
+import mozilla.components.concept.engine.translate.OperationLevel
 import mozilla.components.concept.engine.utils.EngineReleaseChannel
 import mozilla.components.concept.engine.webextension.Action
 import mozilla.components.concept.engine.webextension.WebExtension
@@ -55,6 +58,7 @@ import org.junit.runner.RunWith
 import org.mockito.ArgumentMatchers.anyBoolean
 import org.mockito.ArgumentMatchers.anyFloat
 import org.mockito.ArgumentMatchers.anyInt
+import org.mockito.Mockito
 import org.mockito.Mockito.doReturn
 import org.mockito.Mockito.never
 import org.mockito.Mockito.reset
@@ -72,6 +76,15 @@ import org.mozilla.geckoview.GeckoSession
 import org.mozilla.geckoview.GeckoWebExecutor
 import org.mozilla.geckoview.OrientationController
 import org.mozilla.geckoview.StorageController
+import org.mozilla.geckoview.TranslationsController
+import org.mozilla.geckoview.TranslationsController.Language
+import org.mozilla.geckoview.TranslationsController.RuntimeTranslation.LanguageModel
+import org.mozilla.geckoview.TranslationsController.RuntimeTranslation.checkPairDownloadSize
+import org.mozilla.geckoview.TranslationsController.RuntimeTranslation.isTranslationsEngineSupported
+import org.mozilla.geckoview.TranslationsController.RuntimeTranslation.listModelDownloadStates
+import org.mozilla.geckoview.TranslationsController.RuntimeTranslation.listSupportedLanguages
+import org.mozilla.geckoview.TranslationsController.RuntimeTranslation.manageLanguageModel
+import org.mozilla.geckoview.TranslationsController.RuntimeTranslation.preferredLanguages
 import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_BLOCKLISTED
 import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_CORRUPT_FILE
 import org.mozilla.geckoview.WebExtension.InstallException.ErrorCodes.ERROR_FILE_ACCESS
@@ -2578,6 +2591,372 @@ class GeckoEngineTest {
         verify(extension).tabDelegate = any()
     }
 
+    @Test
+    fun `WHEN isTranslationsEngineSupported is called successfully THEN onSuccess is called`() {
+        val runtime: GeckoRuntime = mock()
+        val engine = GeckoEngine(testContext, runtime = runtime)
+
+        var onSuccessCalled = false
+        var onErrorCalled = false
+
+        val geckoResult = GeckoResult<Boolean>()
+
+        Mockito.mockStatic(TranslationsController.RuntimeTranslation::class.java, Mockito.CALLS_REAL_METHODS).use {
+                mocked ->
+            mocked.`when`<GeckoResult<Boolean>> { isTranslationsEngineSupported() }
+                .thenReturn(geckoResult)
+
+            engine.isTranslationsEngineSupported(
+                onSuccess = { onSuccessCalled = true },
+                onError = { onErrorCalled = true },
+            )
+
+            geckoResult.complete(true)
+            shadowOf(getMainLooper()).idle()
+
+            assert(onSuccessCalled) { "Should successfully determine translation engine status." }
+            assert(!onErrorCalled) { "An error should not have occurred." }
+        }
+    }
+
+    @Test
+    fun `WHEN isTranslationsEngineSupported is called AND excepts THEN onError is called`() {
+        val runtime: GeckoRuntime = mock()
+        val engine = GeckoEngine(testContext, runtime = runtime)
+
+        var onSuccessCalled = false
+        var onErrorCalled = false
+
+        val geckoResult = GeckoResult<Boolean>()
+
+        Mockito.mockStatic(TranslationsController.RuntimeTranslation::class.java, Mockito.CALLS_REAL_METHODS).use {
+                mocked ->
+            mocked.`when`<GeckoResult<Boolean>> { isTranslationsEngineSupported() }
+                .thenReturn(geckoResult)
+
+            engine.isTranslationsEngineSupported(
+                onSuccess = { onSuccessCalled = true },
+                onError = { onErrorCalled = true },
+            )
+
+            geckoResult.completeExceptionally(Exception())
+            shadowOf(getMainLooper()).idle()
+
+            assert(!onSuccessCalled) { "Should not have successfully determine translation engine status." }
+            assert(onErrorCalled) { "Should have had an exception." }
+        }
+    }
+
+    @Test
+    fun `WHEN getTranslationsPairDownloadSize is called successfully THEN onSuccess is called`() {
+        val runtime: GeckoRuntime = mock()
+        val engine = GeckoEngine(testContext, runtime = runtime)
+
+        var onSuccessCalled = false
+        var onErrorCalled = false
+
+        val geckoResult = GeckoResult<Long>()
+
+        Mockito.mockStatic(TranslationsController.RuntimeTranslation::class.java, Mockito.CALLS_REAL_METHODS).use {
+                mocked ->
+            mocked.`when`<GeckoResult<Long>> { checkPairDownloadSize(any(), any()) }
+                .thenReturn(geckoResult)
+
+            engine.getTranslationsPairDownloadSize(
+                fromLanguage = "es",
+                toLanguage = "en",
+                onSuccess = { onSuccessCalled = true },
+                onError = { onErrorCalled = true },
+            )
+
+            geckoResult.complete(12345)
+            shadowOf(getMainLooper()).idle()
+
+            assert(onSuccessCalled) { "Should successfully determine pair size." }
+            assert(!onErrorCalled) { "An error should not have occurred." }
+        }
+    }
+
+    @Test
+    fun `WHEN getTranslationsPairDownloadSize is called AND excepts THEN onError is called`() {
+        val runtime: GeckoRuntime = mock()
+        val engine = GeckoEngine(testContext, runtime = runtime)
+
+        var onSuccessCalled = false
+        var onErrorCalled = false
+
+        val geckoResult = GeckoResult<Long>()
+
+        Mockito.mockStatic(TranslationsController.RuntimeTranslation::class.java, Mockito.CALLS_REAL_METHODS).use {
+                mocked ->
+            mocked.`when`<GeckoResult<Long>> { checkPairDownloadSize(any(), any()) }
+                .thenReturn(geckoResult)
+
+            engine.getTranslationsPairDownloadSize(
+                fromLanguage = "es",
+                toLanguage = "en",
+                onSuccess = { onSuccessCalled = true },
+                onError = { onErrorCalled = true },
+            )
+
+            geckoResult.completeExceptionally(Exception())
+            shadowOf(getMainLooper()).idle()
+
+            assert(!onSuccessCalled) { "Should not have successfully determine pair size." }
+            assert(onErrorCalled) { "An error should have occurred." }
+        }
+    }
+
+    @Test
+    fun `WHEN getTranslationsModelDownloadStates is called successfully THEN onSuccess is called AND the LanguageModel maps as expected`() {
+        val runtime: GeckoRuntime = mock()
+        val engine = GeckoEngine(testContext, runtime = runtime)
+
+        var onSuccessCalled = false
+        var onErrorCalled = false
+
+        var code = "es"
+        var localizedDisplayName = "Spanish"
+        var isDownloaded = true
+        var size: Long = 1234
+        var geckoLanguage = TranslationsController.Language(code, localizedDisplayName)
+        var geckoLanguageModel = LanguageModel(geckoLanguage, isDownloaded, size)
+        var geckoResultValue: List<LanguageModel> = mutableListOf(geckoLanguageModel)
+        val geckoResult = GeckoResult<List<LanguageModel>>()
+
+        Mockito.mockStatic(TranslationsController.RuntimeTranslation::class.java, Mockito.CALLS_REAL_METHODS).use {
+                mocked ->
+            mocked.`when`<GeckoResult<List<LanguageModel>>> { listModelDownloadStates() }
+                .thenReturn(geckoResult)
+
+            engine.getTranslationsModelDownloadStates(
+                onSuccess = {
+                    onSuccessCalled = true
+                    assertTrue(it[0].language!!.code == code)
+                    assertTrue(it[0].language!!.localizedDisplayName == localizedDisplayName)
+                    assertTrue(it[0].isDownloaded == isDownloaded)
+                    assertTrue(it[0].size == size)
+                },
+                onError = { onErrorCalled = true },
+            )
+
+            geckoResult.complete(geckoResultValue)
+            shadowOf(getMainLooper()).idle()
+
+            assert(onSuccessCalled) { "Should have successfully listed model download state." }
+            assert(!onErrorCalled) { "An error should not have occurred." }
+        }
+    }
+
+    @Test
+    fun `WHEN getTranslationsModelDownloadStates is called AND excepts THEN onError is called`() {
+        val runtime: GeckoRuntime = mock()
+        val engine = GeckoEngine(testContext, runtime = runtime)
+
+        var onSuccessCalled = false
+        var onErrorCalled = false
+
+        val geckoResult = GeckoResult<List<LanguageModel>>()
+
+        Mockito.mockStatic(TranslationsController.RuntimeTranslation::class.java, Mockito.CALLS_REAL_METHODS).use {
+                mocked ->
+            mocked.`when`<GeckoResult<List<LanguageModel>>> { listModelDownloadStates() }
+                .thenReturn(geckoResult)
+
+            engine.getTranslationsModelDownloadStates(
+                onSuccess = { onSuccessCalled = true },
+                onError = { onErrorCalled = true },
+            )
+
+            geckoResult.completeExceptionally(Exception())
+            shadowOf(getMainLooper()).idle()
+
+            assert(!onSuccessCalled) { "Should not have successfully listed model download state." }
+            assert(onErrorCalled) { "An error should have have occurred." }
+        }
+    }
+
+    @Test
+    fun `WHEN getSupportedTranslationLanguages is called successfully THEN onSuccess is called`() {
+        val runtime: GeckoRuntime = mock()
+        val engine = GeckoEngine(testContext, runtime = runtime)
+
+        var onSuccessCalled = false
+        var onErrorCalled = false
+
+        val geckoResult = GeckoResult<TranslationsController.RuntimeTranslation.TranslationSupport>()
+        val toLanguage = Language("de", "German")
+        val fromLanguage = Language("es", "Spanish")
+        val geckoResultValue = TranslationsController.RuntimeTranslation.TranslationSupport(listOf<Language>(fromLanguage), listOf<Language>(toLanguage))
+        Mockito.mockStatic(TranslationsController.RuntimeTranslation::class.java, Mockito.CALLS_REAL_METHODS).use {
+                mocked ->
+            mocked.`when`<GeckoResult<TranslationsController.RuntimeTranslation.TranslationSupport>> { listSupportedLanguages() }
+                .thenReturn(geckoResult)
+
+            engine.getSupportedTranslationLanguages(
+                onSuccess = {
+                    onSuccessCalled = true
+                    assertTrue(it.fromLanguages!![0].code == fromLanguage.code)
+                    assertTrue(it.toLanguages!![0].code == toLanguage.code)
+                },
+                onError = { onErrorCalled = true },
+            )
+
+            geckoResult.complete(geckoResultValue)
+            shadowOf(getMainLooper()).idle()
+
+            assert(onSuccessCalled) { "Successfully retrieved list of supported languages." }
+            assert(!onErrorCalled) { "An error should not have occurred." }
+        }
+    }
+
+    @Test
+    fun `WHEN getSupportedTranslationLanguages is called AND excepts THEN onError is called`() {
+        val runtime: GeckoRuntime = mock()
+        val engine = GeckoEngine(testContext, runtime = runtime)
+
+        var onSuccessCalled = false
+        var onErrorCalled = false
+
+        val geckoResult = GeckoResult<TranslationsController.RuntimeTranslation.TranslationSupport>()
+
+        Mockito.mockStatic(TranslationsController.RuntimeTranslation::class.java, Mockito.CALLS_REAL_METHODS).use {
+                mocked ->
+            mocked.`when`<GeckoResult<TranslationsController.RuntimeTranslation.TranslationSupport>> { listSupportedLanguages() }
+                .thenReturn(geckoResult)
+
+            engine.getSupportedTranslationLanguages(
+                onSuccess = { onSuccessCalled = true },
+                onError = { onErrorCalled = true },
+            )
+
+            geckoResult.completeExceptionally(Exception())
+            shadowOf(getMainLooper()).idle()
+
+            assert(!onSuccessCalled) { "Should not have retrieved list of supported languages." }
+            assert(onErrorCalled) { "An error should have occurred." }
+        }
+    }
+
+    @Test
+    fun `WHEN manageTranslationsLanguageModel is called successfully THEN onSuccess is called`() {
+        val runtime: GeckoRuntime = mock()
+        val engine = GeckoEngine(testContext, runtime = runtime)
+
+        var onSuccessCalled = false
+        var onErrorCalled = false
+
+        var options = ModelManagementOptions(null, ModelOperation.DOWNLOAD, OperationLevel.ALL)
+        val geckoResult = GeckoResult<Void>()
+
+        Mockito.mockStatic(TranslationsController.RuntimeTranslation::class.java, Mockito.CALLS_REAL_METHODS).use {
+                mocked ->
+            mocked.`when`<GeckoResult<Void>> { manageLanguageModel(any()) }
+                .thenReturn(geckoResult)
+
+            engine.manageTranslationsLanguageModel(
+                options = options,
+                onSuccess = { onSuccessCalled = true },
+                onError = { onErrorCalled = true },
+            )
+
+            geckoResult.complete(null)
+            shadowOf(getMainLooper()).idle()
+
+            assert(onSuccessCalled) { "Should successfully manage language models." }
+            assert(!onErrorCalled) { "An error should not have occurred." }
+        }
+    }
+
+    @Test
+    fun `WHEN manageTranslationsLanguageModel is called AND excepts THEN onError is called`() {
+        val runtime: GeckoRuntime = mock()
+        val engine = GeckoEngine(testContext, runtime = runtime)
+
+        var onSuccessCalled = false
+        var onErrorCalled = false
+
+        var options = ModelManagementOptions(null, ModelOperation.DOWNLOAD, OperationLevel.ALL)
+        val geckoResult = GeckoResult<Void>()
+
+        Mockito.mockStatic(TranslationsController.RuntimeTranslation::class.java, Mockito.CALLS_REAL_METHODS).use {
+                mocked ->
+            mocked.`when`<GeckoResult<Void>> { manageLanguageModel(any()) }
+                .thenReturn(geckoResult)
+
+            engine.manageTranslationsLanguageModel(
+                options = options,
+                onSuccess = { onSuccessCalled = true },
+                onError = { onErrorCalled = true },
+            )
+
+            geckoResult.completeExceptionally(Exception())
+            shadowOf(getMainLooper()).idle()
+
+            assert(!onSuccessCalled) { "Should not successfully manage language models." }
+            assert(onErrorCalled) { "An error should have occurred." }
+        }
+    }
+
+    @Test
+    fun `WHEN getUserPreferredLanguages is called successfully THEN onSuccess is called `() {
+        val runtime: GeckoRuntime = mock()
+        val engine = GeckoEngine(testContext, runtime = runtime)
+
+        var onSuccessCalled = false
+        var onErrorCalled = false
+
+        val geckoResult = GeckoResult<List<String>>()
+        val geckoResultValue = listOf<String>("en", "es", "de")
+
+        Mockito.mockStatic(TranslationsController.RuntimeTranslation::class.java, Mockito.CALLS_REAL_METHODS).use {
+                mocked ->
+            mocked.`when`<GeckoResult<List<String>>> { preferredLanguages() }
+                .thenReturn(geckoResult)
+
+            engine.getUserPreferredLanguages(
+                onSuccess = {
+                    onSuccessCalled = true
+                    assertTrue(it[0] == "en")
+                },
+                onError = { onErrorCalled = true },
+            )
+
+            geckoResult.complete(geckoResultValue)
+            shadowOf(getMainLooper()).idle()
+
+            assert(onSuccessCalled) { "Should successfully list user languages." }
+            assert(!onErrorCalled) { "An error should not have occurred." }
+        }
+    }
+
+    @Test
+    fun `WHEN getUserPreferredLanguages is called AND excepts THEN onError is called `() {
+        val runtime: GeckoRuntime = mock()
+        val engine = GeckoEngine(testContext, runtime = runtime)
+
+        var onSuccessCalled = false
+        var onErrorCalled = false
+
+        val geckoResult = GeckoResult<List<String>>()
+
+        Mockito.mockStatic(TranslationsController.RuntimeTranslation::class.java, Mockito.CALLS_REAL_METHODS).use {
+                mocked ->
+            mocked.`when`<GeckoResult<List<String>>> { preferredLanguages() }
+                .thenReturn(geckoResult)
+
+            engine.getUserPreferredLanguages(
+                onSuccess = { onSuccessCalled = true },
+                onError = { onErrorCalled = true },
+            )
+
+            geckoResult.completeExceptionally(Exception())
+            shadowOf(getMainLooper()).idle()
+
+            assert(!onSuccessCalled) { "Should not successfully list user languages." }
+            assert(onErrorCalled) { "An error should have occurred." }
+        }
+    }
     private fun createSocialTrackersLogEntryList(): List<ContentBlockingController.LogEntry> {
         val blockedLogEntry = object : ContentBlockingController.LogEntry() {}
 
