@@ -2376,6 +2376,12 @@ def repackage_deb(
     required=True,
     help="Location of the templates used to generate the debian/ directory files",
 )
+@CommandArgument(
+    "--release-product",
+    type=str,
+    required=True,
+    help="The product being shipped. Used to disambiguate beta/devedition etc.",
+)
 def repackage_deb_l10n(
     command_context,
     input_xpi_file,
@@ -2384,6 +2390,7 @@ def repackage_deb_l10n(
     version,
     build_number,
     templates,
+    release_product,
 ):
     for input_file in (input_xpi_file, input_tar_file):
         if not os.path.exists(input_file):
@@ -2398,7 +2405,13 @@ def repackage_deb_l10n(
     from mozbuild.repackaging.deb import repackage_deb_l10n
 
     repackage_deb_l10n(
-        input_xpi_file, input_tar_file, output, template_dir, version, build_number
+        input_xpi_file,
+        input_tar_file,
+        output,
+        template_dir,
+        version,
+        build_number,
+        release_product,
     )
 
 

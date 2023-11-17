@@ -73,87 +73,220 @@ def test_extract_application_ini_data_from_directory():
 
 
 @pytest.mark.parametrize(
-    "version, build_number, package_name_suffix, description_suffix, expected",
+    "version, build_number, package_name_suffix, description_suffix, release_product, application_ini_data, expected, raises",
     (
         (
             "112.0a1",
             1,
             "",
             "",
+            "firefox",
+            {
+                "name": "Firefox",
+                "display_name": "Firefox",
+                "vendor": "Mozilla",
+                "remoting_name": "firefox-nightly-try",
+                "build_id": "20230222000000",
+            },
             {
                 "DEB_DESCRIPTION": "Mozilla Firefox",
                 "DEB_PKG_INSTALL_PATH": "usr/lib/firefox-nightly-try",
                 "DEB_PKG_NAME": "firefox-nightly-try",
                 "DEB_PKG_VERSION": "112.0a1~20230222000000",
             },
+            does_not_raise(),
         ),
         (
             "112.0a1",
             1,
             "-l10n-fr",
             " - Language pack for Firefox Nightly for fr",
+            "firefox",
+            {
+                "name": "Firefox",
+                "display_name": "Firefox",
+                "vendor": "Mozilla",
+                "remoting_name": "firefox-nightly-try",
+                "build_id": "20230222000000",
+            },
             {
                 "DEB_DESCRIPTION": "Mozilla Firefox - Language pack for Firefox Nightly for fr",
                 "DEB_PKG_INSTALL_PATH": "usr/lib/firefox-nightly-try",
                 "DEB_PKG_NAME": "firefox-nightly-try-l10n-fr",
                 "DEB_PKG_VERSION": "112.0a1~20230222000000",
             },
+            does_not_raise(),
         ),
         (
             "112.0b1",
             1,
             "",
             "",
+            "firefox",
+            {
+                "name": "Firefox",
+                "display_name": "Firefox",
+                "vendor": "Mozilla",
+                "remoting_name": "firefox-nightly-try",
+                "build_id": "20230222000000",
+            },
             {
                 "DEB_DESCRIPTION": "Mozilla Firefox",
                 "DEB_PKG_INSTALL_PATH": "usr/lib/firefox-nightly-try",
                 "DEB_PKG_NAME": "firefox-nightly-try",
                 "DEB_PKG_VERSION": "112.0b1~build1",
             },
+            does_not_raise(),
         ),
         (
             "112.0",
             2,
             "",
             "",
+            "firefox",
+            {
+                "name": "Firefox",
+                "display_name": "Firefox",
+                "vendor": "Mozilla",
+                "remoting_name": "firefox-nightly-try",
+                "build_id": "20230222000000",
+            },
             {
                 "DEB_DESCRIPTION": "Mozilla Firefox",
                 "DEB_PKG_INSTALL_PATH": "usr/lib/firefox-nightly-try",
                 "DEB_PKG_NAME": "firefox-nightly-try",
                 "DEB_PKG_VERSION": "112.0~build2",
             },
+            does_not_raise(),
+        ),
+        (
+            "120.0b9",
+            1,
+            "",
+            "",
+            "devedition",
+            {
+                "name": "Firefox",
+                "display_name": "Firefox Developer Edition",
+                "vendor": "Mozilla",
+                "remoting_name": "firefox-aurora",
+                "build_id": "20230222000000",
+            },
+            {
+                "DEB_DESCRIPTION": "Mozilla Firefox Developer Edition",
+                "DEB_PKG_INSTALL_PATH": "usr/lib/firefox-devedition",
+                "DEB_PKG_NAME": "firefox-devedition",
+                "DEB_PKG_VERSION": "120.0b9~build1",
+            },
+            does_not_raise(),
+        ),
+        (
+            "120.0b9",
+            1,
+            "-l10n-ach",
+            " - Firefox Developer Edition Language Pack for Acholi (ach) – Acoli",
+            "devedition",
+            {
+                "name": "Firefox",
+                "display_name": "Firefox Developer Edition",
+                "vendor": "Mozilla",
+                "remoting_name": "firefox-aurora",
+                "build_id": "20230222000000",
+            },
+            {
+                "DEB_DESCRIPTION": "Mozilla Firefox Developer Edition - Firefox Developer Edition Language Pack for Acholi (ach) – Acoli",
+                "DEB_PKG_INSTALL_PATH": "usr/lib/firefox-devedition",
+                "DEB_PKG_NAME": "firefox-devedition-l10n-ach",
+                "DEB_PKG_VERSION": "120.0b9~build1",
+            },
+            does_not_raise(),
+        ),
+        (
+            "120.0b9",
+            1,
+            "-l10n-ach",
+            " - Firefox Developer Edition Language Pack for Acholi (ach) – Acoli",
+            "devedition",
+            {
+                "name": "Firefox",
+                "display_name": "Firefox Developer Edition",
+                "vendor": "Mozilla",
+                "remoting_name": "firefox-aurora",
+                "build_id": "20230222000000",
+            },
+            {
+                "DEB_DESCRIPTION": "Mozilla Firefox Developer Edition - Firefox Developer Edition Language Pack for Acholi (ach) – Acoli",
+                "DEB_PKG_INSTALL_PATH": "usr/lib/firefox-devedition",
+                "DEB_PKG_NAME": "firefox-devedition-l10n-ach",
+                "DEB_PKG_VERSION": "120.0b9~build1",
+            },
+            does_not_raise(),
+        ),
+        (
+            "120.0b9",
+            1,
+            "-l10n-ach",
+            " - Firefox Developer Edition Language Pack for Acholi (ach) – Acoli",
+            "devedition",
+            {
+                "name": "Firefox",
+                "display_name": "Firefox Developer Edition",
+                "vendor": "Mozilla",
+                "remoting_name": "firefox-aurora",
+                "build_id": "20230222000000",
+            },
+            {
+                "DEB_DESCRIPTION": "Mozilla Firefox Developer Edition - Firefox Developer Edition Language Pack for Acholi (ach) – Acoli",
+                "DEB_PKG_INSTALL_PATH": "usr/lib/firefox-aurora",
+                "DEB_PKG_NAME": "firefox-aurora-l10n-ach",
+                "DEB_PKG_VERSION": "120.0b9~build1",
+            },
+            pytest.raises(AssertionError),
         ),
     ),
 )
 def test_get_build_variables(
-    version, build_number, package_name_suffix, description_suffix, expected
+    version,
+    build_number,
+    package_name_suffix,
+    description_suffix,
+    release_product,
+    application_ini_data,
+    expected,
+    raises,
 ):
     application_ini_data = deb._parse_application_ini_data(
-        {
-            "name": "Firefox",
-            "display_name": "Firefox",
-            "vendor": "Mozilla",
-            "remoting_name": "firefox-nightly-try",
-            "build_id": "20230222000000",
-        },
+        application_ini_data,
         version,
         build_number,
     )
+    with raises:
+        if not package_name_suffix:
+            depends = "${shlibs:Depends},"
+        elif release_product == "devedition":
+            depends = (
+                f"firefox-devedition (= {application_ini_data['deb_pkg_version']})"
+            )
+        else:
+            depends = f"{application_ini_data['remoting_name']} (= {application_ini_data['deb_pkg_version']})"
 
-    assert deb._get_build_variables(
-        application_ini_data,
-        "x86",
-        depends="${shlibs:Depends},",
-        package_name_suffix=package_name_suffix,
-        description_suffix=description_suffix,
-    ) == {
-        **{
-            "DEB_CHANGELOG_DATE": "Wed, 22 Feb 2023 00:00:00 -0000",
-            "DEB_ARCH_NAME": "i386",
-            "DEB_DEPENDS": "${shlibs:Depends},",
-        },
-        **expected,
-    }
+        build_variables = deb._get_build_variables(
+            application_ini_data,
+            "x86",
+            depends=depends,
+            package_name_suffix=package_name_suffix,
+            description_suffix=description_suffix,
+            release_product=release_product,
+        )
+
+        assert build_variables == {
+            **{
+                "DEB_CHANGELOG_DATE": "Wed, 22 Feb 2023 00:00:00 -0000",
+                "DEB_ARCH_NAME": "i386",
+                "DEB_DEPENDS": depends,
+            },
+            **expected,
+        }
 
 
 def test_copy_plain_deb_config(monkeypatch):

@@ -79,6 +79,7 @@ def repackage_deb(
             application_ini_data,
             arch,
             depends="${shlibs:Depends},",
+            release_product=release_product,
         )
 
         _copy_plain_deb_config(template_dir, source_dir)
@@ -119,7 +120,13 @@ def repackage_deb(
 
 
 def repackage_deb_l10n(
-    input_xpi_file, input_tar_file, output, template_dir, version, build_number
+    input_xpi_file,
+    input_tar_file,
+    output,
+    template_dir,
+    version,
+    build_number,
+    release_product,
 ):
     arch = "all"
 
@@ -132,13 +139,20 @@ def repackage_deb_l10n(
             input_tar_file, version, build_number
         )
         langpack_id = langpack_metadata["langpack_id"]
+        if release_product == "devedition":
+            depends = (
+                f"firefox-devedition (= {application_ini_data['deb_pkg_version']})"
+            )
+        else:
+            depends = f"{application_ini_data['remoting_name']} (= {application_ini_data['deb_pkg_version']})"
         build_variables = _get_build_variables(
             application_ini_data,
             arch,
-            depends=f"{application_ini_data['remoting_name']} (= {application_ini_data['deb_pkg_version']})",
+            depends=depends,
             # Debian package names are only lowercase
             package_name_suffix=f"-l10n-{langpack_id.lower()}",
             description_suffix=f" - {langpack_metadata['description']}",
+            release_product=release_product,
         )
         _copy_plain_deb_config(template_dir, source_dir)
         _render_deb_templates(template_dir, source_dir, build_variables)
@@ -248,12 +262,19 @@ def _get_build_variables(
     depends,
     package_name_suffix="",
     description_suffix="",
+    release_product="",
 ):
+    if release_product == "devedition":
+        deb_pkg_install_path = "usr/lib/firefox-devedition"
+        deb_pkg_name = f"firefox-devedition{package_name_suffix}"
+    else:
+        deb_pkg_install_path = f"usr/lib/{application_ini_data['remoting_name']}"
+        deb_pkg_name = f"{application_ini_data['remoting_name']}{package_name_suffix}"
     return {
         "DEB_DESCRIPTION": f"{application_ini_data['vendor']} {application_ini_data['display_name']}"
         f"{description_suffix}",
-        "DEB_PKG_INSTALL_PATH": f"usr/lib/{application_ini_data['remoting_name']}",
-        "DEB_PKG_NAME": f"{application_ini_data['remoting_name']}{package_name_suffix}",
+        "DEB_PKG_INSTALL_PATH": deb_pkg_install_path,
+        "DEB_PKG_NAME": deb_pkg_name,
         "DEB_PKG_VERSION": application_ini_data["deb_pkg_version"],
         "DEB_CHANGELOG_DATE": format_datetime(application_ini_data["timestamp"]),
         "DEB_ARCH_NAME": _DEB_ARCH[arch],
