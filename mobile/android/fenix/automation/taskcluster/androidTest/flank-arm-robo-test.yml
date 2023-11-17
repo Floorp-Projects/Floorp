@@ -21,7 +21,7 @@ gcloud:
       version: 27
       locale: en_US
     - model: redfin
-      version: 28
+      version: 30
       locale: en_US
     - model: oriole
       version: 31
