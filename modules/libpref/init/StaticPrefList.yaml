@@ -4571,15 +4571,6 @@
   mirror: always
   rust: true
 
-# Whether to pass labels to the hardware abstraction layer. This is only useful when
-# inspecting a WebGPU workload in a GPU debugging tool like renderdoc. Enabling it
-# exposes poorly tested driver API surfaces so it should not be enabled by default.
-- name: dom.webgpu.hal-labels
-  type: bool
-  value: false
-  mirror: once
-  rust: true
-
 # Is support for HTMLInputElement.webkitEntries enabled?
 - name: dom.webkitBlink.filesystem.enabled
   type: bool
