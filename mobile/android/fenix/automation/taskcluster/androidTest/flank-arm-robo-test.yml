@@ -20,7 +20,7 @@ gcloud:
     - model: Pixel2.arm
       version: 27
       locale: en_US
-    - model: dreamlte
+    - model: redfin
       version: 28
       locale: en_US
     - model: oriole
