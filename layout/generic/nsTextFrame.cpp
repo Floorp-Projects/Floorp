@@ -3613,14 +3613,17 @@ void nsTextFrame::PropertyProvider::GetSpacing(Range aRange,
 
 static bool CanAddSpacingAfter(const gfxTextRun* aTextRun, uint32_t aOffset,
                                bool aNewlineIsSignificant) {
+  const auto* g = aTextRun->GetCharacterGlyphs();
+  MOZ_ASSERT(aOffset < aTextRun->GetLength());
+  if (aNewlineIsSignificant && g[aOffset].CharIsNewline()) {
+    return false;
+  }
   if (aOffset + 1 >= aTextRun->GetLength()) {
     return true;
   }
-  const auto* g = aTextRun->GetCharacterGlyphs();
   return g[aOffset + 1].IsClusterStart() &&
          g[aOffset + 1].IsLigatureGroupStart() &&
-         !g[aOffset].CharIsFormattingControl() && !g[aOffset].CharIsTab() &&
-         !(aNewlineIsSignificant && g[aOffset].CharIsNewline());
+         !g[aOffset].CharIsFormattingControl() && !g[aOffset].CharIsTab();
 }
 
 static gfxFloat ComputeTabWidthAppUnits(const nsIFrame* aFrame) {
