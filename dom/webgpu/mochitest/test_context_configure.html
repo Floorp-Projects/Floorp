@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <script src="/tests/SimpleTest/SimpleTest.js"></script>
+    <link rel="stylesheet" href="/tests/SimpleTest/test.css" />
+  </head>
+  <body>
+    <script>
+      ok(
+        SpecialPowers.getBoolPref("dom.webgpu.enabled"),
+        "Pref should be enabled."
+      );
+
+      async function testBody() {
+        const adapter = await navigator.gpu.requestAdapter({});
+        const device = await adapter.requestDevice({});
+        const canvas = document.createElement("canvas");
+        const context = canvas.getContext("webgpu");
+        const format = navigator.gpu.getPreferredCanvasFormat(adapter);
+
+        // Attempt to configure with a too-large canvas, which should
+        // fail due to device texture limits.
+        canvas.width = 1970696937;
+        let expectedError;
+        try {
+          context.configure({
+            device,
+            format,
+          });
+        } catch (error) {
+          expectedError = error;
+        }
+        // Bug 1864904: This should become an "is".
+        todo_is(
+          typeof expectedError,
+          "TypeError",
+          "Failed configure should generate a TypeError."
+        );
+      }
+
+      SimpleTest.waitForExplicitFinish();
+      testBody()
+        .catch(e => ok(false, "Unhandled exception " + e))
+        .finally(() => SimpleTest.finish());
+    </script>
+  </body>
+</html>
