@@ -248,10 +248,4 @@ WebAuthnSignArgs::GetTimeoutMS(uint32_t* aTimeoutMS) {
   return NS_OK;
 }
 
-NS_IMETHODIMP
-WebAuthnSignArgs::GetConditionallyMediated(bool* aConditionallyMediated) {
-  *aConditionallyMediated = mInfo.ConditionallyMediated();
-  return NS_OK;
-}
-
 }  // namespace mozilla::dom
