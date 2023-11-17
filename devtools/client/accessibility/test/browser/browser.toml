@@ -45,6 +45,7 @@ skip-if = ["true"] # bug 1674060
 ["browser_accessibility_sidebar.js"]
 
 ["browser_accessibility_sidebar_checks.js"]
+skip-if = ["os == 'linux' && !debug"]  # Bug 1767748
 
 ["browser_accessibility_sidebar_dom_nodes.js"]
 
