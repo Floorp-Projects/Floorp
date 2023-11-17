@@ -96,10 +96,14 @@ export class UrlbarSearchOneOffs extends SearchOneOffs {
   }
 
   #quickSuggestOptInContainer;
-  #buildQuickSuggestOptIn(queryContext) {
-    let provider = lazy.UrlbarProvidersManager.getProvider(
+  get #quickSuggestOptInProvider() {
+    return lazy.UrlbarProvidersManager.getProvider(
       "UrlbarProviderQuickSuggestContextualOptIn"
     );
+  }
+
+  #buildQuickSuggestOptIn(queryContext) {
+    let provider = this.#quickSuggestOptInProvider;
     if (
       !provider.shouldDisplayContextualOptIn(queryContext) ||
       provider.isActive(queryContext)
@@ -132,7 +136,7 @@ export class UrlbarSearchOneOffs extends SearchOneOffs {
         <span class="urlbarView-dynamic-quickSuggestContextualOptIn-text-container">
           <strong class="urlbarView-dynamic-quickSuggestContextualOptIn-title urlbarView-title"></strong>
           <span class="urlbarView-dynamic-quickSuggestContextualOptIn-description">
-            <a class="urlbarView-dynamic-quickSuggestContextualOptIn-learn-more" data-l10n-name="learn-more-link" selectable="" name="learn-more" id="urlbarView-footer-quickSuggestContextualOptIn-learn-more">Learn more</a>
+            <a class="urlbarView-dynamic-quickSuggestContextualOptIn-learn_more" data-l10n-name="learn-more-link" selectable="" name="learn_more" id="urlbarView-footer-quickSuggestContextualOptIn-learn_more"></a>
           </span>
         </span>
       </span>
@@ -149,7 +153,7 @@ export class UrlbarSearchOneOffs extends SearchOneOffs {
       true
     );
 
-    // DOMParser normalizes attributes to lowercase, so need to set this one after the fact.
+    // DOMParser normalizes attribute names to lowercase, so need to set this one after the fact.
     this.#quickSuggestOptInContainer.firstElementChild.setAttribute(
       "dynamicType",
       "quickSuggestContextualOptIn"
@@ -180,6 +184,8 @@ export class UrlbarSearchOneOffs extends SearchOneOffs {
         ? "urlbar-firefox-suggest-contextual-opt-in-description-2"
         : "urlbar-firefox-suggest-contextual-opt-in-description-1"
     );
+
+    this.#quickSuggestOptInProvider._recordGlean("impression");
   }
 
   #handleQuickSuggestOptInCommand(element) {
@@ -188,11 +194,9 @@ export class UrlbarSearchOneOffs extends SearchOneOffs {
       element.compareDocumentPosition(this.#quickSuggestOptInContainer) &
         Node.DOCUMENT_POSITION_CONTAINS
     ) {
-      let provider = lazy.UrlbarProvidersManager.getProvider(
-        "UrlbarProviderQuickSuggestContextualOptIn"
-      );
-      provider.handleCommand(
+      this.#quickSuggestOptInProvider.handleCommand(
         element,
+        this.queryContext,
         this.view.controller,
         null,
         this.#quickSuggestOptInContainer
