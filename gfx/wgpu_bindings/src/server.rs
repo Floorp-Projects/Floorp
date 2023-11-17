@@ -49,6 +49,12 @@ fn restrict_limits(limits: wgt::Limits) -> wgt::Limits {
         max_texture_dimension_1d: limits.max_texture_dimension_1d.min(MAX_TEXTURE_EXTENT),
         max_texture_dimension_2d: limits.max_texture_dimension_2d.min(MAX_TEXTURE_EXTENT),
         max_texture_dimension_3d: limits.max_texture_dimension_3d.min(MAX_TEXTURE_EXTENT),
+        max_sampled_textures_per_shader_stage: limits.max_texture_dimension_3d.min(256),
+        max_samplers_per_shader_stage: limits.max_samplers_per_shader_stage.min(256),
+        max_storage_textures_per_shader_stage: limits.max_storage_textures_per_shader_stage.min(256),
+        max_uniform_buffers_per_shader_stage: limits.max_uniform_buffers_per_shader_stage.min(256),
+        max_uniform_buffer_binding_size: limits.max_uniform_buffer_binding_size.min(MAX_BUFFER_SIZE),
+        max_storage_buffer_binding_size: limits.max_storage_buffer_binding_size.min(MAX_BUFFER_SIZE),
         max_non_sampler_bindings: 10_000,
         .. limits
     }
