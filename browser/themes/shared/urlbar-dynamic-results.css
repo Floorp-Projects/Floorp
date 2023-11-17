@@ -56,7 +56,7 @@
   font-size: var(--urlbarView-small-font-size);
 }
 
-.urlbarView-dynamic-quickSuggestContextualOptIn-learn-more {
+.urlbarView-dynamic-quickSuggestContextualOptIn-learn_more {
   white-space: nowrap;
 
   &[selected] {
