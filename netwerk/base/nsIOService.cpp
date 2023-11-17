@@ -1017,10 +1017,8 @@ nsIOService::NewFileURI(nsIFile* file, nsIURI** result) {
 already_AddRefed<nsIURI> nsIOService::CreateExposableURI(nsIURI* aURI) {
   MOZ_ASSERT(aURI, "Must have a URI");
   nsCOMPtr<nsIURI> uri = aURI;
-
-  nsAutoCString userPass;
-  uri->GetUserPass(userPass);
-  if (!userPass.IsEmpty()) {
+  bool hasUserPass;
+  if (NS_SUCCEEDED(aURI->GetHasUserPass(&hasUserPass)) && hasUserPass) {
     DebugOnly<nsresult> rv = NS_MutateURI(uri).SetUserPass(""_ns).Finalize(uri);
     MOZ_ASSERT(NS_SUCCEEDED(rv) && uri, "Mutating URI should never fail");
   }

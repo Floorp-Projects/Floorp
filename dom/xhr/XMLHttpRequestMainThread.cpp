@@ -3796,23 +3796,8 @@ bool XMLHttpRequestMainThread::ShouldBlockAuthPrompt() {
   }
 
   // Also skip if a username and/or password is provided in the URI.
-  nsCString username;
-  rv = uri->GetUsername(username);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
-  }
-
-  nsCString password;
-  rv = uri->GetPassword(password);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return false;
-  }
-
-  if (!username.IsEmpty() || !password.IsEmpty()) {
-    return true;
-  }
-
-  return false;
+  bool hasUserPass;
+  return NS_SUCCEEDED(uri->GetHasUserPass(&hasUserPass)) && hasUserPass;
 }
 
 void XMLHttpRequestMainThread::TruncateResponseText() {
