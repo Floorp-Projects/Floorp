@@ -43,4 +43,4 @@ pref(layout.css.backdrop-filter.enabled,true) == 1765862.html 1765862-ref.html
 skip-if(!cocoaWidget) != 1806140.html 1806140-notref.html
 fuzzy(0-1,0-240) == 1812341.html 1812341-ref.html
 random-if(gtkWidget) fuzzy-if(Android,0-125,0-106) == 1845828-1.html 1845828-1-ref.html # Result on Linux depends on font configuration/hinting/etc, affecting whether subpixel positioning is used
-fuzzy(0-1,0-4) == 1853216-1.html 1853216-1-ref.html
+fuzzy-if(!winWidget,0-1,0-4) fuzzy-if(winWidget,20-20,199-199) == 1853216-1.html 1853216-1-ref.html
