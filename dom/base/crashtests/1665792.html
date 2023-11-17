@@ -1,13 +1,30 @@
 <html class="reftest-wait">
 <script>
+let pp;
+window.addEventListener("MozReftestInvalidate", finish);
 window.onload = () => {
   window[0].stop()
   window[0].onpagehide = document.createElement("frameset").onload
   a.src = ""
   setTimeout(function() {
-    SpecialPowers.wrap(window).printPreview()?.close()
-    document.documentElement.className = "";
+    pp = SpecialPowers.wrap(window).printPreview();
+    pp?.close();
+    setTimeout(finish, 0);
   }, 0);
 }
+
+let num = 0;
+function finish() {
+  num++;
+  if (num < 2) {
+  	return;
+  }
+  setTimeout(function () {
+  	try { pp.close(); } catch (e) {}
+  	document.documentElement.className = "";
+  }, 0);
+}
+
+
 </script>
 <iframe id="a"></iframe>

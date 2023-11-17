@@ -1,9 +1,25 @@
+<html class="reftest-wait">
 <script>
+let pp;
+window.addEventListener("MozReftestInvalidate", finish);
 document.addEventListener('DOMContentLoaded', () => {
   let a = document.documentElement
-  SpecialPowers.wrap(self).printPreview().document.adoptNode(a)
+  pp = SpecialPowers.wrap(self).printPreview();
+  pp.document.adoptNode(a)
   let b = document.createElementNS('http://www.w3.org/1999/xhtml', 'optgroup')
   a.appendChild(b)
   b.focus({ })
-})
+});
+function finish() {
+  setTimeout(function () {
+  	try { pp.close(); } catch (e) { }
+  	document.documentElement.className = "";
+  }, 0);
+}
+// we don't get a MozReftestInvalidate event because the reftest-wait class
+// on the document element can't be seen by the reftest harness because the
+// documentElement gets removed from the document, so we use onbeforeunload to
+// close the window.
+onbeforeunload = finish;
 </script>
+</html>
