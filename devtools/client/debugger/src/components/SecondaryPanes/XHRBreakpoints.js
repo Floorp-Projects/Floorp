@@ -317,7 +317,7 @@ class XHRBreakpoints extends Component {
     const { shouldPauseOnAny, togglePauseOnAny } = this.props;
     return div(
       {
-        className: classnames("breakpoints-exceptions-options", {
+        className: classnames("breakpoints-options", {
           empty: explicitXhrBreakpoints.length === 0,
         }),
       },

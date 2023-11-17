@@ -49,6 +49,13 @@ async function syncXHRBreakpoints() {
   );
 }
 
+function setPauseOnDebuggerStatement() {
+  const { pauseOnDebuggerStatement } = prefs;
+  return firefox.clientCommands.pauseOnDebuggerStatement(
+    pauseOnDebuggerStatement
+  );
+}
+
 function setPauseOnExceptions() {
   const { pauseOnExceptions, pauseOnCaughtException } = prefs;
   return firefox.clientCommands.pauseOnExceptions(
@@ -68,7 +75,10 @@ async function loadInitialState(commands, toolbox) {
   const breakpoints = initialBreakpointsState(xhrBreakpoints);
   const sourceBlackBox = initialSourceBlackBoxState({ blackboxedRanges });
   const sources = initialSourcesState();
-  const ui = initialUIState();
+  const rootTraits = commands.client.mainRoot.traits;
+  const ui = initialUIState({
+    supportsDebuggerStatementIgnore: rootTraits.supportsDebuggerStatementIgnore,
+  });
 
   return {
     pendingBreakpoints,
@@ -113,6 +123,7 @@ export async function bootstrap({
 
   await syncBreakpoints();
   await syncXHRBreakpoints();
+  await setPauseOnDebuggerStatement();
   await setPauseOnExceptions();
 
   setupHelper({

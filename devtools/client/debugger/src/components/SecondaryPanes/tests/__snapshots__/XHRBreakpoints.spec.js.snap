@@ -24,7 +24,7 @@ exports[`XHR Breakpoints should render with 0 expressions passed from props 1`] 
   }
 >
   <div
-    className="breakpoints-exceptions-options empty"
+    className="breakpoints-options empty"
   >
     <ExceptionOption
       className="breakpoints-exceptions"
@@ -34,7 +34,6 @@ exports[`XHR Breakpoints should render with 0 expressions passed from props 1`] 
     >
       <label
         className="breakpoints-exceptions"
-        onClick={[Function]}
       >
         <input
           checked={false}
@@ -220,7 +219,7 @@ exports[`XHR Breakpoints should render with 8 expressions passed from props 1`] 
   }
 >
   <div
-    className="breakpoints-exceptions-options"
+    className="breakpoints-options"
   >
     <ExceptionOption
       className="breakpoints-exceptions"
@@ -230,7 +229,6 @@ exports[`XHR Breakpoints should render with 8 expressions passed from props 1`] 
     >
       <label
         className="breakpoints-exceptions"
-        onClick={[Function]}
       >
         <input
           checked={false}

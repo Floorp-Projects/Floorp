@@ -135,6 +135,9 @@ class RootActor extends Actor {
             "dom.worker.console.dispatch_events_to_main_thread"
           )
         : true,
+      // @backward-compat { version 121 } The thread actor now supports ignoring
+      // debugger statements via a thread configuration.
+      supportsDebuggerStatementIgnore: true,
     };
   }
 

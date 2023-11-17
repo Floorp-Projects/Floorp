@@ -92,6 +92,10 @@ export function getIsWaitingOnBreak(state, thread) {
   return getThreadPauseState(state.pause, thread).isWaitingOnBreak;
 }
 
+export function getShouldPauseOnDebuggerStatement(state) {
+  return state.pause.shouldPauseOnDebuggerStatement;
+}
+
 export function getShouldPauseOnExceptions(state) {
   return state.pause.shouldPauseOnExceptions;
 }

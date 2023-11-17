@@ -16,7 +16,7 @@
 add_task(async function () {
   const dbg = await initDebugger("doc-debugger-statements.html");
 
-  const onReloaded = reload(dbg, "doc-debugger-statements.html");
+  let onReloaded = reload(dbg, "doc-debugger-statements.html");
   await waitForPaused(dbg);
   assertPausedAtSourceAndLine(
     dbg,
@@ -68,6 +68,33 @@ add_task(async function () {
   await resume(dbg);
 
   info("Wait for reload to complete after resume");
+  await onReloaded;
+
+  info("Toggle debugger statement off");
+  const toggleCheckbox = findElementWithSelector(
+    dbg,
+    ".breakpoints-debugger-statement input"
+  );
+  toggleCheckbox.click();
+  await waitFor(() => !toggleCheckbox.checked);
+
+  await reload(dbg, "doc-debugger-statements.html");
+  assertNotPaused(dbg);
+
+  info("Re-enable debugger statement");
+  toggleCheckbox.click();
+  await waitFor(() => toggleCheckbox.checked);
+
+  onReloaded = reload(dbg, "doc-debugger-statements.html");
+  await waitForPaused(dbg);
+  assertPausedAtSourceAndLine(
+    dbg,
+    findSource(dbg, "doc-debugger-statements.html").id,
+    11
+  );
+  await resume(dbg);
+  await waitForPaused(dbg);
+  await resume(dbg);
   await onReloaded;
 });
 

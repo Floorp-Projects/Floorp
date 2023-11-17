@@ -13,12 +13,11 @@ export default function ExceptionOption({
   return label(
     {
       className,
-      onClick: onChange,
     },
     input({
       type: "checkbox",
       checked: isChecked,
-      onChange: e => e.stopPropagation() && onChange(),
+      onChange: onChange,
     }),
     div(
       {

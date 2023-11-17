@@ -365,6 +365,12 @@ async function getFrameScopes(frame) {
   return frameFront.getEnvironment();
 }
 
+async function pauseOnDebuggerStatement(shouldPauseOnDebuggerStatement) {
+  await commands.threadConfigurationCommand.updateConfiguration({
+    shouldPauseOnDebuggerStatement,
+  });
+}
+
 async function pauseOnExceptions(
   shouldPauseOnExceptions,
   shouldPauseOnCaughtExceptions
@@ -522,6 +528,7 @@ const clientCommands = {
   getProperties,
   getFrameScopes,
   getFrames,
+  pauseOnDebuggerStatement,
   pauseOnExceptions,
   toggleEventLogging,
   getMainThread,

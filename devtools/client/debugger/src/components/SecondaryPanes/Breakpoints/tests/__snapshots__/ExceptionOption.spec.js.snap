@@ -3,7 +3,6 @@
 exports[`ExceptionOption renders with values 1`] = `
 <label
   className="testClassName"
-  onClick={[Function]}
 >
   <input
     checked={true}
