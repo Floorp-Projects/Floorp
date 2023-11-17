@@ -9,8 +9,10 @@
 use crate::applicable_declarations::CascadePriority;
 use crate::media_queries::Device;
 use crate::properties::{CSSWideKeyword, CustomDeclaration, CustomDeclarationValue};
-use crate::properties_and_values::registry::PropertyRegistration;
-use crate::properties_and_values::value::SpecifiedValue as SpecifiedRegisteredValue;
+use crate::properties_and_values::{
+    registry::PropertyRegistration,
+    value::{AllowComputationallyDependent, SpecifiedValue as SpecifiedRegisteredValue},
+};
 use crate::selector_map::{PrecomputedHashMap, PrecomputedHashSet, PrecomputedHasher};
 use crate::stylesheets::UrlExtraData;
 use crate::stylist::Stylist;
@@ -914,6 +916,7 @@ impl<'a, 'b: 'a> CustomPropertiesBuilder<'a, 'b> {
                             &mut input,
                             registration,
                             self.computed_context,
+                            AllowComputationallyDependent::Yes,
                         ) {
                             map.insert(custom_registration, name.clone(), value);
                         } else {
@@ -1472,9 +1475,12 @@ fn substitute_references_in_value_and_apply(
             false
         } else {
             if let Some(registration) = custom_registration {
-                if let Ok(value) =
-                    SpecifiedRegisteredValue::compute(&mut input, registration, computed_context)
-                {
+                if let Ok(value) = SpecifiedRegisteredValue::compute(
+                    &mut input,
+                    registration,
+                    computed_context,
+                    AllowComputationallyDependent::Yes,
+                ) {
                     custom_properties.insert(custom_registration, name.clone(), value);
                 } else {
                     handle_invalid_at_computed_value_time(
@@ -1595,6 +1601,7 @@ fn substitute_block<'i>(
                                     &mut fallback_input,
                                     registration,
                                     computed_context,
+                                    AllowComputationallyDependent::Yes,
                                 ) {
                                     return Err(input
                                         .new_custom_error(StyleParseErrorKind::UnspecifiedError));
@@ -1625,6 +1632,7 @@ fn substitute_block<'i>(
                                 &mut fallback_input,
                                 registration,
                                 computed_context,
+                                AllowComputationallyDependent::Yes,
                             ) {
                                 partial_computed_value.push_variable(input, &fallback)?;
                             } else {
