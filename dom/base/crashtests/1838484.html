@@ -1,9 +1,23 @@
 <html class="reftest-wait">
   <script>
-    window.requestIdleCallback(() => {
-      window.print();
+  let pp;
+  let num = 0;
+  window.addEventListener("MozReftestInvalidate", finish);
+  window.requestIdleCallback(() => {
+    pp = SpecialPowers.wrap(self).printPreview();
+    pp?.print();
+    finish();
+  });
+  function finish() {
+    num++;
+    if (num < 2) {
+      return;
+    }
+    setTimeout(function() {
+      pp.close();
       document.documentElement.className = "";
-    });
+    }, 0);
+  }
   </script>
   <template></template>
 </html>

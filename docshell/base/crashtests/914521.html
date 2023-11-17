@@ -17,12 +17,18 @@ function f()
     window.addEventListener("popstate", spin);
     window.close();
     window.location = "#c";
+    setTimeout(finish,0);
+}
+
+var win;
+function finish() {
+    win.close();
     document.documentElement.removeAttribute("class");
 }
 
 function start()
 {
-    var win = window.open("javascript:'<html><body>dummy</body></html>';", null, "width=300,height=300");
+    win = window.open("javascript:'<html><body>dummy</body></html>';", null, "width=300,height=300");
     win.onload = f;
 }
 

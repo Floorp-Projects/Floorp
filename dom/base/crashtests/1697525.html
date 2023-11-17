@@ -1,6 +1,17 @@
 <!DOCTYPE html>
+<html class="reftest-wait">
 <script>
+  let pp;
+  window.addEventListener("MozReftestInvalidate", finish);
   window.addEventListener('load', () => {
-    SpecialPowers.wrap(self).printPreview()?.print()
-  })
+    pp = SpecialPowers.wrap(self).printPreview();
+    pp?.print();
+  });
+  function finish() {
+    setTimeout(function() {
+      pp.close();
+      document.documentElement.className = "";
+    }, 0);
+  }
 </script>
+</html>

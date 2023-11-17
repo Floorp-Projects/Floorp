@@ -1,8 +1,19 @@
 <!DOCTYPE html>
+<html class="reftest-wait">
 <script>
+let pp;
+window.addEventListener("MozReftestInvalidate", finish);
 document.addEventListener('DOMContentLoaded', () => {
-  window.print();
+  pp = SpecialPowers.wrap(self).printPreview();
+  pp?.print();
   setTimeout(window.close, 250);
-})
+});
+function finish() {
+  setTimeout(function() {
+    pp.close();
+    document.documentElement.className = "";
+  }, 0);
+}
 </script>
 <img srcset="#"></img>
+</html>
