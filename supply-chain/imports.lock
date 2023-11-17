@@ -538,6 +538,13 @@ user-id = 189
 user-login = "BurntSushi"
 user-name = "Andrew Gallant"
 
+[[publisher.termcolor]]
+version = "1.4.0"
+when = "2023-11-14"
+user-id = 189
+user-login = "BurntSushi"
+user-name = "Andrew Gallant"
+
 [[publisher.threadbound]]
 version = "0.1.5"
 when = "2022-12-17"
