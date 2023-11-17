@@ -53,7 +53,7 @@ fn restrict_limits(limits: wgt::Limits) -> wgt::Limits {
         max_samplers_per_shader_stage: limits.max_samplers_per_shader_stage.min(256),
         max_storage_textures_per_shader_stage: limits.max_storage_textures_per_shader_stage.min(256),
         max_uniform_buffers_per_shader_stage: limits.max_uniform_buffers_per_shader_stage.min(256),
-        max_uniform_buffer_binding_size: limtis.max_uniform_buffer_binding_size.min(MAX_BUFFER_SIZE),
+        max_uniform_buffer_binding_size: limits.max_uniform_buffer_binding_size.min(MAX_BUFFER_SIZE),
         max_storage_buffer_binding_size: limits.max_storage_buffer_binding_size.min(MAX_BUFFER_SIZE),
         max_non_sampler_bindings: 10_000,
         .. limits
