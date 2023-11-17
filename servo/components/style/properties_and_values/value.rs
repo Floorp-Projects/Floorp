@@ -386,12 +386,13 @@ impl SpecifiedValue {
         input: &mut CSSParser<'i, 't>,
         registration: &PropertyRegistration,
         context: &computed::Context,
+        allow_computationally_dependent: AllowComputationallyDependent,
     ) -> Result<Arc<ComputedPropertyValue>, ()> {
         let Ok(value) = Self::parse(
             input,
             &registration.syntax,
             &registration.url_data,
-            AllowComputationallyDependent::Yes,
+            allow_computationally_dependent,
         ) else {
             return Err(());
         };
