@@ -2980,6 +2980,12 @@ nsStandardURL::GetHasRef(bool* result) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsStandardURL::GetHasUserPass(bool* result) {
+  *result = (mUsername.mLen >= 0) || (mPassword.mLen >= 0);
+  return NS_OK;
+}
+
 // result may contain unescaped UTF-8 characters
 NS_IMETHODIMP
 nsStandardURL::GetDirectory(nsACString& result) {

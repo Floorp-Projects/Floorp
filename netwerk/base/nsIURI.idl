@@ -250,6 +250,11 @@ interface nsIURI : nsISupports
      */
     readonly attribute boolean hasRef;
 
+    /**
+     * Returns if there is user and pass in the URI.
+     */
+    readonly attribute boolean hasUserPass;
+
     /************************************************************************
      * Additional attributes added for .query support:
      */
