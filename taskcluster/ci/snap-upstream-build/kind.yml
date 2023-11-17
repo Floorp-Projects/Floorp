@@ -33,14 +33,14 @@ job-defaults:
             MACH_BUILD_PYTHON_NATIVE_PACKAGE_SOURCE: system
 
 jobs:
-    nightly/opt:
+    amd64-nightly/opt:
         description: Build Firefox Nightly as a Snap using upstream definition
         attributes:
             build_platform: linux64-snap-upstream-nightly
             build_type: opt
         index:
             product: firefox
-            job-name: nightly
+            job-name: amd64-nightly
             type: generic
         worker:
             max-run-time: 9000
@@ -49,16 +49,16 @@ jobs:
             command: >-
               ./run.sh nightly
         treeherder:
-            platform: linux64-snap-nightly/opt
+            platform: linux64-snap-amd64-nightly/opt
 
-    nightly/debug:
+    amd64-nightly/debug:
         description: Build Firefox Nightly (debug) as a Snap using upstream definition
         attributes:
             build_platform: linux64-snap-upstream-nightly
             build_type: debug
         index:
             product: firefox
-            job-name: nightly-debug
+            job-name: amd64-nightly-debug
             type: generic
         worker:
             max-run-time: 7200
@@ -67,16 +67,16 @@ jobs:
             command: >-
               ./run.sh nightly 1
         treeherder:
-            platform: linux64-snap-nightly/debug
+            platform: linux64-snap-amd64-nightly/debug
 
-    beta/opt:
+    amd64-beta/opt:
         description: Build Firefox Beta as a Snap using upstream definition
         attributes:
             build_platform: linux64-snap-upstream-beta
             build_type: opt
         index:
             product: firefox
-            job-name: beta
+            job-name: amd64-beta
             type: generic
         worker:
             max-run-time: 9000
@@ -85,16 +85,16 @@ jobs:
             command: >-
               ./run.sh beta
         treeherder:
-            platform: linux64-snap-beta/opt
+            platform: linux64-snap-amd64-beta/opt
 
-    beta/debug:
+    amd64-beta/debug:
         description: Build Firefox Beta (debug) as a Snap using upstream definition
         attributes:
             build_platform: linux64-snap-upstream-beta
             build_type: debug
         index:
             product: firefox
-            job-name: beta-debug
+            job-name: amd64-beta-debug
             type: generic
         worker:
             max-run-time: 7200
@@ -103,16 +103,16 @@ jobs:
             command: >-
               ./run.sh beta 1
         treeherder:
-            platform: linux64-snap-beta/debug
+            platform: linux64-snap-amd64-beta/debug
 
-    stable/opt:
+    amd64-stable/opt:
         description: Build Firefox Stable as a Snap using upstream definition
         attributes:
             build_platform: linux64-snap-upstream-stable
             build_type: opt
         index:
             product: firefox
-            job-name: stable
+            job-name: amd64-stable
             type: generic
         worker:
             max-run-time: 9000
@@ -121,16 +121,16 @@ jobs:
             command: >-
               ./run.sh stable
         treeherder:
-            platform: linux64-snap-stable/opt
+            platform: linux64-snap-amd64-stable/opt
 
-    stable/debug:
+    amd64-stable/debug:
         description: Build Firefox Stable (debug) as a Snap using upstream definition
         attributes:
             build_platform: linux64-snap-upstream-stable
             build_type: debug
         index:
             product: firefox
-            job-name: stable-debug
+            job-name: amd64-stable-debug
             type: generic
         worker:
             max-run-time: 7200
@@ -139,16 +139,16 @@ jobs:
             command: >-
               ./run.sh stable 1
         treeherder:
-            platform: linux64-snap-stable/debug
+            platform: linux64-snap-amd64-stable/debug
 
-    esr/opt:
+    amd64-esr/opt:
         description: Build Firefox ESR as a Snap using upstream definition
         attributes:
             build_platform: linux64-snap-upstream-esr
             build_type: opt
         index:
             product: firefox
-            job-name: esr
+            job-name: amd64-esr
             type: generic
         worker:
             max-run-time: 9000
@@ -157,16 +157,16 @@ jobs:
             command: >-
               ./run.sh esr
         treeherder:
-            platform: linux64-snap-esr/opt
+            platform: linux64-snap-amd64-esr/opt
 
-    esr/debug:
+    amd64-esr/debug:
         description: Build Firefox ESR (debug) as a Snap using upstream definition
         attributes:
             build_platform: linux64-snap-upstream-esr
             build_type: debug
         index:
             product: firefox
-            job-name: esr-debug
+            job-name: amd64-esr-debug
             type: generic
         worker:
             max-run-time: 7200
@@ -175,16 +175,16 @@ jobs:
             command: >-
               ./run.sh esr 1
         treeherder:
-            platform: linux64-snap-esr/debug
+            platform: linux64-snap-amd64-esr/debug
 
-    try/opt:
+    amd64-try/opt:
         description: Build Firefox Nightly as a Snap using upstream definition and try repo
         attributes:
             build_platform: linux64-snap-upstream-try
             build_type: opt
         index:
             product: firefox
-            job-name: try
+            job-name: amd64-try
             type: generic
         worker:
             max-run-time: 9000
@@ -193,16 +193,16 @@ jobs:
             command: >-
               ./run.sh try
         treeherder:
-            platform: linux64-snap-try/opt
+            platform: linux64-snap-amd64-try/opt
 
-    try/debug:
+    amd64-try/debug:
         description: Build Firefox Nightly (debug) as a Snap using upstream definition and try repo
         attributes:
             build_platform: linux64-snap-upstream-try
             build_type: debug
         index:
             product: firefox
-            job-name: try-debug
+            job-name: amd64-try-debug
             type: generic
         worker:
             max-run-time: 7200
@@ -211,4 +211,4 @@ jobs:
             command: >-
               ./run.sh try 1
         treeherder:
-            platform: linux64-snap-try/debug
+            platform: linux64-snap-amd64-try/debug
