@@ -102,7 +102,7 @@ RefPtr<GenericNonExclusivePromise> MFMediaEngineChild::Init(
           },
           [self, this](nsresult aResult) {
             CLOG("SendInitMediaEngine Failed");
-            self->mInitPromiseHolder.Reject(NS_ERROR_FAILURE, __func__);
+            self->mInitPromiseHolder.RejectIfExists(NS_ERROR_FAILURE, __func__);
           });
   return mInitPromiseHolder.Ensure(__func__);
 }
