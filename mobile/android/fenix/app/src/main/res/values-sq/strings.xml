@@ -334,7 +334,7 @@
     <string name="juno_onboarding_default_browser_title_nimbus_2">Duam fort t’ju mbajmë të parrezik</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. Nimbus experiments do not support string placeholders.
         Note: The word "Firefox" should NOT be translated -->
-    <string name="juno_onboarding_default_browser_description_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Firefox-i vë njerëzit mbi fitimet dhe mbron privatësinë tuaj duke bllokuar gjurmues nga sajti në sajt.\n\nMësoni më tepër te shënimi ynë mbi privatësinë.</string>
+    <string name="juno_onboarding_default_browser_description_nimbus" moz:removedIn="120" tools:ignore="UnusedResources">Firefox-i vë njerëzit mbi fitimet dhe mbron privatësinë tuaj duke bllokuar gjurmues “nga sajti në sajt”.\n\nMësoni më tepër te shënimi ynë mbi privatësinë.</string>
     <!-- Description for set firefox as default browser screen used by Nimbus experiments. -->
     <string name="juno_onboarding_default_browser_description_nimbus_2">Shfletuesi ynë, me entin jofitimprurës nga pas, ndihmon të ndalen shoqëri t’ju ndjekin fshehtazi nëpër internet.\n\nMësoni më tepër te shënimi ynë mbi privatësinë.</string>
     <!-- Text for the link to the privacy notice webpage for set as firefox default browser screen.
@@ -1196,7 +1196,7 @@
     <!-- Preference for altering the persistent storage access for all websites -->
     <string name="preference_phone_feature_persistent_storage">Depozitë e Qëndrueshme</string>
     <!-- Preference for altering the storage access setting for all websites -->
-    <string name="preference_phone_feature_cross_origin_storage_access">Cookies nga sajti në sajt</string>
+    <string name="preference_phone_feature_cross_origin_storage_access">“Cookies” palësh të treta</string>
     <!-- Preference for altering the EME access for all websites -->
     <string name="preference_phone_feature_media_key_system_access">Lëndë nën DRM</string>
     <!-- Label that indicates that a permission must be asked always -->
@@ -1554,7 +1554,7 @@
     <!-- Preference title for enhanced tracking protection settings -->
     <string name="preference_enhanced_tracking_protection">Mbrojtje e Thelluar Nga Gjurmimi</string>
     <!-- Preference summary for enhanced tracking protection settings on/off switch -->
-    <string name="preference_enhanced_tracking_protection_summary">Tashmë me Mbrojtje Totale Nga Cookie-t, barriera jonë më e fuqishme deri më sot kundër gjurmuesve nga sajti në sajt.</string>
+    <string name="preference_enhanced_tracking_protection_summary">Tashmë me Mbrojtje Tërësore Nga Cookie-t, barriera jonë më e fuqishme deri më sot kundër gjurmuesve nga sajti në sajt.</string>
     <!-- Description of enhanced tracking protection. The parameter is the name of the application (For example: Firefox Fenix) -->
     <string name="preference_enhanced_tracking_protection_explanation_2">%s ju mbron nga shumë prej gjurmuesve më të rëndomtë që ndjekin ç’bëni në internet.</string>
     <!-- Text displayed that links to website about enhanced tracking protection -->
@@ -1589,7 +1589,7 @@
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
     <string name="preference_enhanced_tracking_protection_custom_cookies_4">Krejt cookie-t (do të shkaktojë mosfunksionim sajtesh)</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for cookies-->
-    <string name="preference_enhanced_tracking_protection_custom_cookies_5">Izoloni cookies nga sajti në sajt</string>
+    <string name="preference_enhanced_tracking_protection_custom_cookies_5">Izoloni “cookies” palësh të treta</string>
     <!-- Preference for enhanced tracking protection for the custom protection settings for tracking content -->
     <string name="preference_enhanced_tracking_protection_custom_tracking_content">Lëndë gjurmimi</string>
     <!-- Option for enhanced tracking protection for the custom protection settings for tracking content-->
@@ -1613,7 +1613,7 @@
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_title">&lt;em&gt;Cookies&lt;/em&gt; Gjurmimi Nga Sajte Në Sajte</string>
     <!-- Category of trackers (cross-site tracking cookies) that can be blocked by Enhanced Tracking Protection -->
-    <string name="etp_cookies_title_2">Cookies Nga Sajti Në Sajt</string>
+    <string name="etp_cookies_title_2">“Cookies” Nga Palë të Treta</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->
     <string name="etp_cookies_description">Bllokon &lt;em&gt;cookies&lt;/em&gt; të cilat rrjete reklamash dhe shoqëri analizimesh i përdorin për të përpiluar të dhëna tuajat të shfletimit nëpër mjaft sajte.</string>
     <!-- Description of cross-site tracking cookies that can be blocked by Enhanced Tracking Protection -->

@@ -302,7 +302,7 @@
     <string name="preference_privacy_should_block_cookies_third_party_tracker_cookies_option">Blloko vetëm cookie-t nga palë gjurmuese të treta</string>
     <string name="preference_privacy_should_block_cookies_third_party_only_option">Blloko vetëm cookie-t nga palë të treta</string>
 
-    <string name="preference_privacy_should_block_cookies_cross_site_option">Blloko cookies nga sajti në sajt</string>
+    <string name="preference_privacy_should_block_cookies_cross_site_option">Blloko “cookies” palësh të treta</string>
     <string name="preference_privacy_should_block_cookies_yes_option2">Po, ju lutem</string>
 
     <!-- Preference Title: Biometrics can be used to unlock Focus if the previous session's data was not erased by the user. -->

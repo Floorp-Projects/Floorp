@@ -2304,7 +2304,7 @@
     <!-- Description for review quality check contextual onboarding card. The first and last two parameters are for retailer names (e.g. Amazon, Walmart). The second parameter is for the name of the application (e.g. Firefox). -->
     <string name="review_quality_check_contextual_onboarding_description">გადაამოწმეთ შეძენამდე, თუ რამდენად სანდოა გასაყიდი ნაწარმის მიმოხილვები საიტზე %1$s. მიმოხილვის შემმოწმებელი საცდელი შესაძლებლობაა %2$s-სგან და პირდაპირ ბრაუზერშივეა ჩაშენებული. მხარდაჭერილია %3$s და აგრეთვე %4$s.</string>
     <!-- Paragraph presenting review quality check feature. First parameter is the Fakespot product name. Second parameter is for clickable text defined in review_quality_check_contextual_onboarding_learn_more_link. In the phrase "Fakespot by Mozilla", "by" can be localized. Does not need to stay by. -->
-    <string name="review_quality_check_contextual_onboarding_learn_more">Mozilla-ს %1$s-ის ძლევამოსილებით ჩვენ დაგეხმარებით მიკერძოებული და ყალბი მიმოხილვების თავიდან აცილებაში. ჩვენი AI-მოდელი მუდმივად იხვეწება საყიდლების შეძენისას თქვენს დასაცავად. %2$s</string>
+    <string name="review_quality_check_contextual_onboarding_learn_more">Mozilla-ს %1$s-ის ძლევამოსილებით ჩვენ დაგეხმარებით მიკერძოებული და ყალბი მიმოხილვების თავიდან აცილებაში. ჩვენი AI-მოდელი მუდმივად იხვეწება თქვენს დასაცავად საყიდლების შეძენისას. %2$s</string>
     <!-- Clickable text from the contextual onboarding card that links to review quality check support article. -->
     <string name="review_quality_check_contextual_onboarding_learn_more_link">ვრცლად</string>
 
