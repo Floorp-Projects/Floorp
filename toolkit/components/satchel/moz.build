@@ -35,7 +35,6 @@ EXTRA_JS_MODULES += [
     "integrations/FirefoxRelay.sys.mjs",
     "integrations/FirefoxRelayTelemetry.mjs",
     "integrations/FirefoxRelayUtils.sys.mjs",
-    "integrations/WebAuthnFeature.sys.mjs",
     "SignUpFormRuleset.sys.mjs",
 ]
 

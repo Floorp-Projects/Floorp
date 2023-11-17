@@ -206,27 +206,19 @@ function promiseWebAuthnGetAssertion(tab, key_handle = null, extensions = {}) {
   );
 }
 
-function promiseWebAuthnGetAssertionDiscoverable(
-  tab,
-  mediation = "optional",
-  extensions = {}
-) {
-  return ContentTask.spawn(
-    tab.linkedBrowser,
-    [extensions, mediation],
-    ([extensions, mediation]) => {
-      let challenge = content.crypto.getRandomValues(new Uint8Array(16));
+function promiseWebAuthnGetAssertionDiscoverable(tab, extensions = {}) {
+  return ContentTask.spawn(tab.linkedBrowser, [extensions], ([extensions]) => {
+    let challenge = content.crypto.getRandomValues(new Uint8Array(16));
 
-      let publicKey = {
-        challenge,
-        extensions,
-        rpId: content.document.domain,
-        allowCredentials: [],
-      };
+    let publicKey = {
+      challenge,
+      extensions,
+      rpId: content.document.domain,
+      allowCredentials: [],
+    };
 
-      return content.navigator.credentials.get({ publicKey, mediation });
-    }
-  );
+    return content.navigator.credentials.get({ publicKey });
+  });
 }
 
 function checkRpIdHash(rpIdHash, hostname) {
