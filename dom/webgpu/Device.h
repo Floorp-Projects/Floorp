@@ -90,6 +90,9 @@ class Device final : public DOMEventTargetHelper, public SupportsWeakPtr {
   RefPtr<SupportedFeatures> mFeatures;
   RefPtr<SupportedLimits> mLimits;
 
+  static CheckedInt<uint32_t> BufferStrideWithMask(
+      const gfx::IntSize& aSize, const gfx::SurfaceFormat& aFormat);
+
   explicit Device(Adapter* const aParent, RawId aId, const ffi::WGPULimits&);
 
   RefPtr<WebGPUChild> GetBridge();

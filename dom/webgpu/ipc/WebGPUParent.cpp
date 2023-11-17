@@ -864,15 +864,14 @@ ipc::IPCResult WebGPUParent::RecvDeviceCreateSwapChain(
       return IPC_OK();
   }
 
-  constexpr uint32_t kBufferAlignmentMask = 0xff;
-  const auto bufferStrideWithMask = CheckedInt<uint32_t>(aDesc.size().width) *
-                                        gfx::BytesPerPixel(aDesc.format()) +
-                                    kBufferAlignmentMask;
+  const auto bufferStrideWithMask =
+      Device::BufferStrideWithMask(aDesc.size(), aDesc.format());
   if (!bufferStrideWithMask.isValid()) {
     MOZ_ASSERT_UNREACHABLE("Invalid width / buffer stride!");
     return IPC_OK();
   }
 
+  constexpr uint32_t kBufferAlignmentMask = 0xff;
   const uint32_t bufferStride =
       bufferStrideWithMask.value() & ~kBufferAlignmentMask;
 

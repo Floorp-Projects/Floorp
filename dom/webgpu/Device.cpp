@@ -43,6 +43,13 @@ GPU_IMPL_CYCLE_COLLECTION_WRAPPERCACHE_INHERITED(Device, DOMEventTargetHelper,
 NS_IMPL_ISUPPORTS_CYCLE_COLLECTION_INHERITED_0(Device, DOMEventTargetHelper)
 GPU_IMPL_JS_WRAP(Device)
 
+/* static */ CheckedInt<uint32_t> Device::BufferStrideWithMask(
+    const gfx::IntSize& aSize, const gfx::SurfaceFormat& aFormat) {
+  constexpr uint32_t kBufferAlignmentMask = 0xff;
+  return CheckedInt<uint32_t>(aSize.width) * gfx::BytesPerPixel(aFormat) +
+         kBufferAlignmentMask;
+}
+
 RefPtr<WebGPUChild> Device::GetBridge() { return mBridge; }
 
 Device::Device(Adapter* const aParent, RawId aId,
@@ -355,6 +362,13 @@ already_AddRefed<Texture> Device::InitSwapChain(
   MOZ_ASSERT(aConfig);
 
   if (!mBridge->CanSend()) {
+    return nullptr;
+  }
+
+  // Check that aCanvasSize and aFormat will generate a texture stride
+  // within limits.
+  const auto bufferStrideWithMask = BufferStrideWithMask(aCanvasSize, aFormat);
+  if (!bufferStrideWithMask.isValid()) {
     return nullptr;
   }
 
