@@ -70,9 +70,12 @@ class WebAuthnTransaction {
   // bits, as they are used in javascript. We use a random value if possible,
   // otherwise a counter.
   static uint64_t NextId() {
-    static uint64_t id = 0;
+    static uint64_t counter = 0;
     Maybe<uint64_t> rand = mozilla::RandomUint64();
-    return rand.valueOr(++id) & UINT64_C(0x1fffffffffffff);  // 2^53 - 1
+    uint64_t id =
+        rand.valueOr(++counter) & UINT64_C(0x1fffffffffffff);  // 2^53 - 1
+    // The transaction ID 0 is reserved.
+    return id ? id : 1;
   }
 };
 
