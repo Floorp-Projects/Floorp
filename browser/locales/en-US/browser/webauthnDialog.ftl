@@ -14,6 +14,9 @@ webauthn-pin-required-prompt = Please enter the PIN for your device.
 
 webauthn-select-sign-result-unknown-account = Unknown account
 
+webauthn-use-passkey-title = Sign in with another device
+webauthn-use-passkey-subtitle = Passkey for this website
+
 # Variables:
 #  $retriesLeft (Number): number of tries left
 webauthn-uv-invalid-long-prompt =
