@@ -492,6 +492,11 @@ abstract class EngineSession(
             MOZILLA_SOCIAL(1 shl 8),
 
             /**
+             * Blocks email trackers.
+             */
+            EMAIL(1 shl 9),
+
+            /**
              * Blocks content like scripts and sub-resources.
              */
             SCRIPTS_AND_SUB_RESOURCES(1 shl 31),
@@ -502,9 +507,9 @@ abstract class EngineSession(
             ),
 
             /**
-             * Combining the [RECOMMENDED] categories plus [SCRIPTS_AND_SUB_RESOURCES].
+             * Combining the [RECOMMENDED] categories plus [SCRIPTS_AND_SUB_RESOURCES] & getAntiTracking[EMAIL].
              */
-            STRICT(RECOMMENDED.id + SCRIPTS_AND_SUB_RESOURCES.id),
+            STRICT(RECOMMENDED.id + SCRIPTS_AND_SUB_RESOURCES.id + EMAIL.id),
         }
 
         companion object {

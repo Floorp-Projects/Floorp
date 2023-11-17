@@ -1728,6 +1728,7 @@ class GeckoEngineSessionTest {
         assertEquals(GeckoAntiTracking.CRYPTOMINING, TrackingCategory.CRYPTOMINING.id)
         assertEquals(GeckoAntiTracking.FINGERPRINTING, TrackingCategory.FINGERPRINTING.id)
         assertEquals(GeckoAntiTracking.STP, TrackingCategory.MOZILLA_SOCIAL.id)
+        assertEquals(GeckoAntiTracking.EMAIL, TrackingCategory.EMAIL.id)
 
         assertEquals(GeckoCookieBehavior.ACCEPT_ALL, CookiePolicy.ACCEPT_ALL.id)
         assertEquals(
