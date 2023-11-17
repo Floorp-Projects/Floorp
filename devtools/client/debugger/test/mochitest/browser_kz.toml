@@ -309,8 +309,8 @@ skip-if = ["!serviceworker_e10s"] # parent intercept mode required.
 ["browser_dbg-windowless-service-workers.js"]
 skip-if = [
   "!serviceworker_e10s", # parent intercept mode is needed bug 1588154. Bug 1613543, the test consistently timeouts on Linux coverage builds and WR debug builds.
-  "os == 'linux' && (ccov || (!swgl && debug))",
-  "os == 'linux' && bits == 64 && debug", # Bug 1732486
+  "os == 'linux'", # Bug 1732486, # Bug 1767717
+  "win11_2009 && !debug", # Bug 1767717
 ]
 
 ["browser_dbg-windowless-workers-early-breakpoint.js"]
