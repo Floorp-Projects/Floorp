@@ -149,3 +149,7 @@ protections-panel-cookie-banner-view-turn-off-label =
   .label = Turn Off
 protections-panel-cookie-banner-view-turn-on-label =
   .label = Turn On
+
+protections-panel-report-broken-site =
+  .label = Report broken site
+  .title = Report broken site
