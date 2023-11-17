@@ -26,7 +26,7 @@ void BindGroup::Cleanup() {
     mValid = false;
     auto bridge = mParent->GetBridge();
     if (bridge && bridge->IsOpen()) {
-      bridge->SendBindGroupDestroy(mId);
+      bridge->SendBindGroupDrop(mId);
     }
   }
 }

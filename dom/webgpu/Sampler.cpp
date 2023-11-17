@@ -26,7 +26,7 @@ void Sampler::Cleanup() {
     mValid = false;
     auto bridge = mParent->GetBridge();
     if (bridge && bridge->IsOpen()) {
-      bridge->SendSamplerDestroy(mId);
+      bridge->SendSamplerDrop(mId);
     }
   }
 }

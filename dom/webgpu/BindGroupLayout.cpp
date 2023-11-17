@@ -26,7 +26,7 @@ void BindGroupLayout::Cleanup() {
     mValid = false;
     auto bridge = mParent->GetBridge();
     if (mOwning && bridge && bridge->IsOpen()) {
-      bridge->SendBindGroupLayoutDestroy(mId);
+      bridge->SendBindGroupLayoutDrop(mId);
     }
   }
 }

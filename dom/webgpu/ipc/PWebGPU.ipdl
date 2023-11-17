@@ -48,37 +48,37 @@ parent:
 
   async InstanceRequestAdapter(GPURequestAdapterOptions options, RawId[] ids) returns (ByteBuf byteBuf);
   async AdapterRequestDevice(RawId selfId, ByteBuf buf, RawId newId) returns (bool success);
-  async AdapterDestroy(RawId selfId);
+  async AdapterDrop(RawId selfId);
   // TODO: We want to return an array of compilation messages.
   async DeviceCreateShaderModule(RawId selfId, RawId bufferId, nsString label, nsCString code) returns (WebGPUCompilationMessage[] messages);
   async BufferMap(RawId selfId, uint32_t aMode, uint64_t offset, uint64_t size) returns (BufferMapResult result);
   async BufferUnmap(RawId deviceId, RawId bufferId, bool flush);
   async BufferDestroy(RawId selfId);
   async BufferDrop(RawId selfId);
-  async TextureDestroy(RawId selfId);
-  async TextureViewDestroy(RawId selfId);
-  async SamplerDestroy(RawId selfId);
+  async TextureDrop(RawId selfId);
+  async TextureViewDrop(RawId selfId);
+  async SamplerDrop(RawId selfId);
   async DeviceDestroy(RawId selfId);
   async DeviceDrop(RawId selfId);
 
   async CommandEncoderFinish(RawId selfId, RawId deviceId, GPUCommandBufferDescriptor desc);
-  async CommandEncoderDestroy(RawId selfId);
-  async CommandBufferDestroy(RawId selfId);
-  async RenderBundleDestroy(RawId selfId);
+  async CommandEncoderDrop(RawId selfId);
+  async CommandBufferDrop(RawId selfId);
+  async RenderBundleDrop(RawId selfId);
   async QueueSubmit(RawId selfId, RawId aDeviceId, RawId[] commandBuffers);
   async QueueOnSubmittedWorkDone(RawId selfId) returns (void_t ok);
   async QueueWriteAction(RawId selfId, RawId aDeviceId, ByteBuf buf, UnsafeSharedMemoryHandle shmem);
 
-  async BindGroupLayoutDestroy(RawId selfId);
-  async PipelineLayoutDestroy(RawId selfId);
-  async BindGroupDestroy(RawId selfId);
-  async ShaderModuleDestroy(RawId selfId);
-  async ComputePipelineDestroy(RawId selfId);
-  async RenderPipelineDestroy(RawId selfId);
-  async ImplicitLayoutDestroy(RawId implicitPlId, RawId[] implicitBglIds);
+  async BindGroupLayoutDrop(RawId selfId);
+  async PipelineLayoutDrop(RawId selfId);
+  async BindGroupDrop(RawId selfId);
+  async ShaderModuleDrop(RawId selfId);
+  async ComputePipelineDrop(RawId selfId);
+  async RenderPipelineDrop(RawId selfId);
+  async ImplicitLayoutDrop(RawId implicitPlId, RawId[] implicitBglIds);
   async DeviceCreateSwapChain(RawId selfId, RawId queueId, RGBDescriptor desc, RawId[] bufferIds, RemoteTextureOwnerId ownerId, bool useExternalTextureInSwapChain);
   async SwapChainPresent(RawId textureId, RawId commandEncoderId, RemoteTextureId remoteTextureId, RemoteTextureOwnerId remoteTextureOwnerId);
-  async SwapChainDestroy(RemoteTextureOwnerId ownerId);
+  async SwapChainDrop(RemoteTextureOwnerId ownerId);
 
   async DevicePushErrorScope(RawId selfId, GPUErrorFilter aFilter);
   async DevicePopErrorScope(RawId selfId) returns (PopErrorScopeResult result);

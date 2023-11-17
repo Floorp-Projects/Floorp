@@ -440,7 +440,7 @@ ipc::IPCResult WebGPUParent::RecvAdapterRequestDevice(
   return IPC_OK();
 }
 
-ipc::IPCResult WebGPUParent::RecvAdapterDestroy(RawId aAdapterId) {
+ipc::IPCResult WebGPUParent::RecvAdapterDrop(RawId aAdapterId) {
   ffi::wgpu_server_adapter_drop(mContext.get(), aAdapterId);
   return IPC_OK();
 }
@@ -708,7 +708,7 @@ ipc::IPCResult WebGPUParent::RecvBufferDestroy(RawId aBufferId) {
   return IPC_OK();
 }
 
-ipc::IPCResult WebGPUParent::RecvTextureDestroy(RawId aTextureId) {
+ipc::IPCResult WebGPUParent::RecvTextureDrop(RawId aTextureId) {
   ffi::wgpu_server_texture_drop(mContext.get(), aTextureId);
 
   auto it = mExternalTextures.find(aTextureId);
@@ -718,12 +718,12 @@ ipc::IPCResult WebGPUParent::RecvTextureDestroy(RawId aTextureId) {
   return IPC_OK();
 }
 
-ipc::IPCResult WebGPUParent::RecvTextureViewDestroy(RawId aTextureViewId) {
+ipc::IPCResult WebGPUParent::RecvTextureViewDrop(RawId aTextureViewId) {
   ffi::wgpu_server_texture_view_drop(mContext.get(), aTextureViewId);
   return IPC_OK();
 }
 
-ipc::IPCResult WebGPUParent::RecvSamplerDestroy(RawId aSamplerId) {
+ipc::IPCResult WebGPUParent::RecvSamplerDrop(RawId aSamplerId) {
   ffi::wgpu_server_sampler_drop(mContext.get(), aSamplerId);
   return IPC_OK();
 }
@@ -745,17 +745,17 @@ ipc::IPCResult WebGPUParent::RecvCommandEncoderFinish(
   return IPC_OK();
 }
 
-ipc::IPCResult WebGPUParent::RecvCommandEncoderDestroy(RawId aEncoderId) {
+ipc::IPCResult WebGPUParent::RecvCommandEncoderDrop(RawId aEncoderId) {
   ffi::wgpu_server_encoder_drop(mContext.get(), aEncoderId);
   return IPC_OK();
 }
 
-ipc::IPCResult WebGPUParent::RecvCommandBufferDestroy(RawId aCommandBufferId) {
+ipc::IPCResult WebGPUParent::RecvCommandBufferDrop(RawId aCommandBufferId) {
   ffi::wgpu_server_command_buffer_drop(mContext.get(), aCommandBufferId);
   return IPC_OK();
 }
 
-ipc::IPCResult WebGPUParent::RecvRenderBundleDestroy(RawId aBundleId) {
+ipc::IPCResult WebGPUParent::RecvRenderBundleDrop(RawId aBundleId) {
   ffi::wgpu_server_render_bundle_drop(mContext.get(), aBundleId);
   return IPC_OK();
 }
@@ -809,37 +809,37 @@ ipc::IPCResult WebGPUParent::RecvQueueWriteAction(
   return IPC_OK();
 }
 
-ipc::IPCResult WebGPUParent::RecvBindGroupLayoutDestroy(RawId aBindGroupId) {
+ipc::IPCResult WebGPUParent::RecvBindGroupLayoutDrop(RawId aBindGroupId) {
   ffi::wgpu_server_bind_group_layout_drop(mContext.get(), aBindGroupId);
   return IPC_OK();
 }
 
-ipc::IPCResult WebGPUParent::RecvPipelineLayoutDestroy(RawId aLayoutId) {
+ipc::IPCResult WebGPUParent::RecvPipelineLayoutDrop(RawId aLayoutId) {
   ffi::wgpu_server_pipeline_layout_drop(mContext.get(), aLayoutId);
   return IPC_OK();
 }
 
-ipc::IPCResult WebGPUParent::RecvBindGroupDestroy(RawId aBindGroupId) {
+ipc::IPCResult WebGPUParent::RecvBindGroupDrop(RawId aBindGroupId) {
   ffi::wgpu_server_bind_group_drop(mContext.get(), aBindGroupId);
   return IPC_OK();
 }
 
-ipc::IPCResult WebGPUParent::RecvShaderModuleDestroy(RawId aModuleId) {
+ipc::IPCResult WebGPUParent::RecvShaderModuleDrop(RawId aModuleId) {
   ffi::wgpu_server_shader_module_drop(mContext.get(), aModuleId);
   return IPC_OK();
 }
 
-ipc::IPCResult WebGPUParent::RecvComputePipelineDestroy(RawId aPipelineId) {
+ipc::IPCResult WebGPUParent::RecvComputePipelineDrop(RawId aPipelineId) {
   ffi::wgpu_server_compute_pipeline_drop(mContext.get(), aPipelineId);
   return IPC_OK();
 }
 
-ipc::IPCResult WebGPUParent::RecvRenderPipelineDestroy(RawId aPipelineId) {
+ipc::IPCResult WebGPUParent::RecvRenderPipelineDrop(RawId aPipelineId) {
   ffi::wgpu_server_render_pipeline_drop(mContext.get(), aPipelineId);
   return IPC_OK();
 }
 
-ipc::IPCResult WebGPUParent::RecvImplicitLayoutDestroy(
+ipc::IPCResult WebGPUParent::RecvImplicitLayoutDrop(
     RawId aImplicitPlId, const nsTArray<RawId>& aImplicitBglIds) {
   ffi::wgpu_server_pipeline_layout_drop(mContext.get(), aImplicitPlId);
   for (const auto& id : aImplicitBglIds) {
@@ -1210,7 +1210,7 @@ ipc::IPCResult WebGPUParent::RecvSwapChainPresent(
   return IPC_OK();
 }
 
-ipc::IPCResult WebGPUParent::RecvSwapChainDestroy(
+ipc::IPCResult WebGPUParent::RecvSwapChainDrop(
     const layers::RemoteTextureOwnerId& aOwnerId) {
   if (mRemoteTextureOwner) {
     mRemoteTextureOwner->UnregisterTextureOwner(aOwnerId);

@@ -139,7 +139,7 @@ void CanvasContext::Configure(const dom::GPUCanvasConfiguration& aConfig) {
 
 void CanvasContext::Unconfigure() {
   if (mBridge && mBridge->IsOpen() && mRemoteTextureOwnerId.isSome()) {
-    mBridge->SendSwapChainDestroy(*mRemoteTextureOwnerId);
+    mBridge->SendSwapChainDrop(*mRemoteTextureOwnerId);
   }
   mRemoteTextureOwnerId = Nothing();
   mBridge = nullptr;

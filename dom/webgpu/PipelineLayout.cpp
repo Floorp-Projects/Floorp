@@ -26,7 +26,7 @@ void PipelineLayout::Cleanup() {
     mValid = false;
     auto bridge = mParent->GetBridge();
     if (bridge && bridge->IsOpen()) {
-      bridge->SendPipelineLayoutDestroy(mId);
+      bridge->SendPipelineLayoutDrop(mId);
     }
   }
 }

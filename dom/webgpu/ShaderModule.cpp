@@ -29,7 +29,7 @@ void ShaderModule::Cleanup() {
     mValid = false;
     auto bridge = mParent->GetBridge();
     if (bridge && bridge->IsOpen()) {
-      bridge->SendShaderModuleDestroy(mId);
+      bridge->SendShaderModuleDrop(mId);
     }
   }
 }
