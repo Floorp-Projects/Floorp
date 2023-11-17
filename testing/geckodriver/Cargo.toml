@@ -1,5 +1,5 @@
 [package]
-edition = "2018"
+edition = "2021"
 name = "geckodriver"
 version = "0.33.0"
 authors = ["Mozilla"]
