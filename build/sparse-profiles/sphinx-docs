@@ -17,6 +17,7 @@ glob:**/*.md
 glob:**/*.mjs
 glob:**/*.js
 glob:**/*.jsm
+glob:**/*.json
 
 # Potential included images. We don't glob all paths in order to avoid importing
 # images unrelated to documentation (like branding or test images)
@@ -35,7 +36,12 @@ glob:testing/perfdocs/generated/**
 # Python API docs.
 glob:**/*.py
 # Referenced by some python files.
-glob:taskcluster/ci/docker-image/kind.yml
+path:taskcluster/ci/docker-image/kind.yml
+
+# Included in ipc docs
+path:ipc/ipdl/test/ipdl/ok/PMyManaged.ipdl
+path:ipc/ipdl/test/ipdl/ok/PMyManager.ipdl
+path:ipc/ipdl/test/ipdl/ok/MyTypes.ipdlh
 
 # moz.build files are read to discover location of docs.
 glob:**/moz.build
