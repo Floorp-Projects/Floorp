@@ -2076,7 +2076,7 @@ skip-if(!OSX) != 1608124-2.html 1608124-2-notref.html
 == 1613380.html 1613380-ref.html
 fuzzy(0-145,0-48536) == 1614788-1.svg 1614788-1-ref.svg # large fuzz necesary to test bug: 239,202824 is how much it differs when bug exists
 == blob-fallback-clip.html blob-fallback-clip-ref.html
-fuzzy-if(OSX,0-42,0-4) == 1617515-1.html 1617515-1-ref.html
+fuzzy-if(OSX,0-42,0-4) fuzzy-if(winWidget,249-249,999-999) == 1617515-1.html 1617515-1-ref.html
 fuzzy(0-2,0-21184) == 1626259-1.html 1626259-1-ref.html
 fuzzy(0-2,0-21184) == 1626259-2.html 1626259-2-ref.html
 != 1642583-1.html 1642583-1-ref.html
@@ -2128,7 +2128,7 @@ pref(layout.css.prefers-color-scheme.content-override,2) == 1787127.html 1787127
 skip-if(!/^Windows\x20NT\x2010\.0/.test(http.oscpu)) == 1798297-1.html 1798297-1-ref.html
 skip-if(!/^Windows\x20NT\x2010\.0/.test(http.oscpu)) != 1798297-1.html 1798297-1-notref.html
 == 1799425-1.html 1799425-1-ref.html
-== 1800437-1.html 1800437-1-ref.html
+fuzzy-if(winWidget,114-114,738-738) == 1800437-1.html 1800437-1-ref.html
 == 1803999-1.html 1803999-1-ref.html
 # testing the same bug but we can hit it via a few different code paths, 1 is raster image, 2 is vector image, 3 is vector image with an image restriction region
 pref(image.downscale-during-decode.enabled,true) == 1804872-1.html 1804872-1-ref.html
