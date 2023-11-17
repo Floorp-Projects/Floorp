@@ -89,12 +89,18 @@ pub extern "C" fn wgpu_server_new(
         );
         wgc::instance::parse_backends_from_comma_list(&backends_pref)
     };
+
+    let mut instance_flags = wgt::InstanceFlags::from_build_config().with_env();
+    if !static_prefs::pref!("dom.webgpu.hal-labels") {
+        instance_flags.insert(wgt::InstanceFlags::DISCARD_HAL_LABELS);
+    }
+
     let global = wgc::global::Global::new(
         "wgpu",
         factory,
         wgt::InstanceDescriptor {
             backends,
-            flags: wgt::InstanceFlags::from_build_config().with_env(),
+            flags: instance_flags,
             dx12_shader_compiler: wgt::Dx12Compiler::Fxc,
             gles_minor_version: wgt::Gles3MinorVersion::Automatic,
         },
