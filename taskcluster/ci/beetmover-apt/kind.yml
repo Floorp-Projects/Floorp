@@ -25,3 +25,4 @@ jobs:
             group-by: single-with-filters
         run-on-releases:
             - nightly
+            - beta
