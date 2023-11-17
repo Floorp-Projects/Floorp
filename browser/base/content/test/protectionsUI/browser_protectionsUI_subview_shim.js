@@ -10,6 +10,8 @@
  * "urlclassifier-before-block-channel" event.
  */
 
+requestLongerTimeout(2);
+
 // Choose origin so that all tracking origins used are third-parties.
 const TRACKING_PAGE =
   // eslint-disable-next-line @microsoft/sdl/no-insecure-url
