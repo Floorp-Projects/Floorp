@@ -100,6 +100,8 @@ void CanvasContext::GetCanvas(
 void CanvasContext::Configure(const dom::GPUCanvasConfiguration& aConfig) {
   Unconfigure();
 
+  // Bug 1864904: Failures in validation should throw a TypeError, per spec.
+
   // these formats are guaranteed by the spec
   switch (aConfig.mFormat) {
     case dom::GPUTextureFormat::Rgba8unorm:
