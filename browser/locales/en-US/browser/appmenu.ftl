@@ -290,5 +290,3 @@ appmenu-customizetoolbar =
 appmenu-developer-tools-subheader = Browser tools
 appmenu-developer-tools-extensions =
     .label = Extensions for developers
-appmenuitem-report-broken-site =
-  .label = Report broken site

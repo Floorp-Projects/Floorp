@@ -472,23 +472,6 @@ let JSWINDOWACTORS = {
     allFrames: true,
   },
 
-  ReportBrokenSite: {
-    parent: {
-      esModuleURI: "resource://gre/actors/ReportBrokenSiteParent.sys.mjs",
-    },
-    child: {
-      esModuleURI: "resource://gre/actors/ReportBrokenSiteChild.sys.mjs",
-    },
-    matches: [
-      "http://*/*",
-      "https://*/*",
-      "about:certerror?*",
-      "about:neterror?*",
-    ],
-    messageManagerGroups: ["browsers"],
-    allFrames: true,
-  },
-
   // This actor is available for all pages that one can
   // view the source of, however it won't be created until a
   // request to view the source is made via the message

@@ -1929,30 +1929,6 @@ backgroundThreads:
       type: boolean
       setPref: threads.lower_mainthread_priority_in_background.enabled
 
-reportBrokenSite:
-  description: the Report Broken Site feature
-  hasExposure: false
-  isEarlyStartup: true
-  variables:
-    enabled:
-      type: boolean
-      setPref: ui.new-webcompat-reporter.enabled
-      description: >-
-        Whether Report Broken Site is enabled
-    sendMoreInfo:
-      type: boolean
-      setPref: ui.new-webcompat-reporter.send-more-info-link
-      description: >-
-        Whether Report Broken Site shows the send more info link directing
-        users to webcompat.com (defaults to true for prerelease channels)
-    reasonDropdown:
-      type: int
-      setPref: ui.new-webcompat-reporter.reason-dropdown
-      description: >-
-        0 = do not show the "reason" dropdown
-        1 = show an optional "reason" dropdown
-        2 = show a required "reason" dropdown
-
 feltPrivacy:
   description: Prefs for Felt Privacy v1 experiments
   owner: cmeador@mozilla.com
