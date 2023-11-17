@@ -31,9 +31,10 @@ if CONFIG['ENABLE_TESTS']:
         '/toolkit/library/gtest/rust',
     ]
 
-DIRS += [
-    '/toolkit/library/rust',
-]
+if not CONFIG['MOZ_OVERRIDE_GKRUST']:
+    DIRS += [
+        '/toolkit/library/rust',
+    ]
 
 if CONFIG['MOZ_SANDBOX']:
     DIRS += ['/security/sandbox']
