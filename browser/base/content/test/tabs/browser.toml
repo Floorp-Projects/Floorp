@@ -23,6 +23,9 @@ prefs = [
 
 ["browser_audioTabIcon.js"]
 tags = "audiochannel"
+skip-if = [
+  "apple_silicon && !debug" # Bug 1862716
+]
 
 ["browser_bfcache_exemption_about_pages.js"]
 skip-if = ["!fission"]
