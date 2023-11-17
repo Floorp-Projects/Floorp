@@ -12,7 +12,7 @@
 import { prefs, features } from "../utils/prefs";
 import { searchKeys } from "../constants";
 
-export const initialUIState = () => ({
+export const initialUIState = ({ supportsDebuggerStatementIgnore } = {}) => ({
   selectedPrimaryPaneTab: "sources",
   activeSearch: null,
   startPanelCollapsed: prefs.startPanelCollapsed,
@@ -59,6 +59,8 @@ export const initialUIState = () => ({
   projectSearchQuery: "",
   hideIgnoredSources: prefs.hideIgnoredSources,
   sourceMapIgnoreListEnabled: prefs.sourceMapIgnoreListEnabled,
+  // A server side trait to know if ignoring debugger statement is supported
+  supportsDebuggerStatementIgnore,
 });
 
 function update(state = initialUIState(), action) {

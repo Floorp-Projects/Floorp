@@ -19,6 +19,9 @@ exports.asyncStore = asyncStore;
 
 exports.getThreadOptions = async function () {
   return {
+    shouldPauseOnDebuggerStatement: Services.prefs.getBoolPref(
+      "devtools.debugger.pause-on-debugger-statement"
+    ),
     pauseOnExceptions: Services.prefs.getBoolPref(
       "devtools.debugger.pause-on-exceptions"
     ),

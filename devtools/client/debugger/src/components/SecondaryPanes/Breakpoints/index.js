@@ -18,7 +18,14 @@ import { createHeadlessEditor } from "../../../utils/editor/create-editor";
 
 import { makeBreakpointId } from "../../../utils/breakpoint";
 
-import { getSelectedSource, getBreakpointSources } from "../../../selectors";
+import {
+  getSelectedSource,
+  getBreakpointSources,
+  getShouldPauseOnDebuggerStatement,
+  getShouldPauseOnExceptions,
+  getShouldPauseOnCaughtExceptions,
+  supportsDebuggerStatementIgnore,
+} from "../../../selectors";
 
 const classnames = require("devtools/client/shared/classnames.js");
 
@@ -30,6 +37,7 @@ class Breakpoints extends Component {
       breakpointSources: PropTypes.array.isRequired,
       pauseOnExceptions: PropTypes.func.isRequired,
       selectedSource: PropTypes.object,
+      shouldPauseOnDebuggerStatement: PropTypes.bool.isRequired,
       shouldPauseOnCaughtExceptions: PropTypes.bool.isRequired,
       shouldPauseOnExceptions: PropTypes.bool.isRequired,
     };
@@ -54,6 +62,12 @@ class Breakpoints extends Component {
     this.headlessEditor = null;
   }
 
+  togglePauseOnDebuggerStatement = () => {
+    this.props.pauseOnDebuggerStatement(
+      !this.props.shouldPauseOnDebuggerStatement
+    );
+  };
+
   togglePauseOnException = () => {
     this.props.pauseOnExceptions(!this.props.shouldPauseOnExceptions, false);
   };
@@ -68,6 +82,7 @@ class Breakpoints extends Component {
   renderExceptionsOptions() {
     const {
       breakpointSources,
+      shouldPauseOnDebuggerStatement,
       shouldPauseOnExceptions,
       shouldPauseOnCaughtExceptions,
     } = this.props;
@@ -75,10 +90,18 @@ class Breakpoints extends Component {
     const isEmpty = !breakpointSources.length;
     return div(
       {
-        className: classnames("breakpoints-exceptions-options", {
+        className: classnames("breakpoints-options", {
           empty: isEmpty,
         }),
       },
+      this.props.supportsDebuggerStatementIgnore
+        ? React.createElement(ExceptionOption, {
+            className: "breakpoints-debugger-statement",
+            label: L10N.getStr("pauseOnDebuggerStatement"),
+            isChecked: shouldPauseOnDebuggerStatement,
+            onChange: this.togglePauseOnDebuggerStatement,
+          })
+        : null,
       React.createElement(ExceptionOption, {
         className: "breakpoints-exceptions",
         label: L10N.getStr("pauseOnExceptionsItem2"),
@@ -143,8 +166,13 @@ class Breakpoints extends Component {
 const mapStateToProps = state => ({
   breakpointSources: getBreakpointSources(state),
   selectedSource: getSelectedSource(state),
+  shouldPauseOnDebuggerStatement: getShouldPauseOnDebuggerStatement(state),
+  shouldPauseOnExceptions: getShouldPauseOnExceptions(state),
+  shouldPauseOnCaughtExceptions: getShouldPauseOnCaughtExceptions(state),
+  supportsDebuggerStatementIgnore: supportsDebuggerStatementIgnore(state),
 });
 
 export default connect(mapStateToProps, {
+  pauseOnDebuggerStatement: actions.pauseOnDebuggerStatement,
   pauseOnExceptions: actions.pauseOnExceptions,
 })(Breakpoints);

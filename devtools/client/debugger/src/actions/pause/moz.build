@@ -17,6 +17,7 @@ CompiledModules(
     "mapFrames.js",
     "mapScopes.js",
     "paused.js",
+    "pauseOnDebuggerStatement.js",
     "pauseOnExceptions.js",
     "resetBreakpointsPaneState.js",
     "resumed.js",

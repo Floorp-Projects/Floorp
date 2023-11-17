@@ -6,7 +6,7 @@
   overflow-x: auto;
 }
 
-.breakpoints-exceptions-options *,
+.breakpoints-options *,
 .breakpoints-list * {
   user-select: none;
 }
@@ -45,8 +45,7 @@
 
 .breakpoints-list .breakpoint-heading,
 .breakpoints-list .breakpoint,
-.breakpoints-exceptions,
-.breakpoints-exceptions-caught {
+.breakpoints-options > * {
   display: flex;
   align-items: center;
   overflow: hidden;
@@ -56,33 +55,26 @@
   padding-inline-end: 12px;
 }
 
-.breakpoints-exceptions {
-  padding-bottom: 3px;
-  padding-top: 3px;
-  user-select: none;
-}
-
 .breakpoints-exceptions-caught {
   padding-bottom: 3px;
   padding-top: 3px;
   padding-inline-start: 36px;
 }
 
-.breakpoints-exceptions-options {
+.breakpoints-options {
   padding-top: 4px;
   padding-bottom: 4px;
 }
 
-.xhr-breakpoints-pane .breakpoints-exceptions-options {
+.xhr-breakpoints-pane .breakpoints-options {
   border-bottom: 1px solid var(--theme-splitter-color);
 }
 
-.breakpoints-exceptions-options:not(.empty) {
+.breakpoints-options:not(.empty) {
   border-bottom: 1px solid var(--theme-splitter-color);
 }
 
-.breakpoints-exceptions input,
-.breakpoints-exceptions-caught input {
+.breakpoints-options input {
   padding-inline-start: 2px;
   margin-top: 0px;
   margin-bottom: 0px;
@@ -99,16 +91,10 @@
   text-overflow: ellipsis;
 }
 
-html[dir="rtl"] .breakpoints-list .breakpoint,
-html[dir="rtl"] .breakpoints-list .breakpoint-heading,
-html[dir="rtl"] .breakpoints-exceptions {
-  border-right: 4px solid transparent;
-}
-
-html:not([dir="rtl"]) .breakpoints-list .breakpoint,
-html:not([dir="rtl"]) .breakpoints-list .breakpoint-heading,
-html:not([dir="rtl"]) .breakpoints-exceptions {
-  border-left: 4px solid transparent;
+.breakpoints-list .breakpoint,
+.breakpoints-list .breakpoint-heading,
+.breakpoints-options {
+  border-inline-start: 4px solid transparent
 }
 
 html .breakpoints-list .breakpoint.is-conditional {

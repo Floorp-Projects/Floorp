@@ -32,6 +32,7 @@ export function initialPauseState(thread = "UnknownThread") {
     threads: {},
     skipPausing: prefs.skipPausing,
     mapScopes: prefs.mapScopes,
+    shouldPauseOnDebuggerStatement: prefs.pauseOnDebuggerStatement,
     shouldPauseOnExceptions: prefs.pauseOnExceptions,
     shouldPauseOnCaughtExceptions: prefs.pauseOnCaughtExceptions,
   };
@@ -290,6 +291,17 @@ function update(state = initialPauseState(), action) {
 
     case "SELECT_FRAME":
       return updateThreadState({ selectedFrameId: action.frame.id });
+
+    case "PAUSE_ON_DEBUGGER_STATEMENT": {
+      const { shouldPauseOnDebuggerStatement } = action;
+
+      prefs.pauseOnDebuggerStatement = shouldPauseOnDebuggerStatement;
+
+      return {
+        ...state,
+        shouldPauseOnDebuggerStatement,
+      };
+    }
 
     case "PAUSE_ON_EXCEPTIONS": {
       const { shouldPauseOnExceptions, shouldPauseOnCaughtExceptions } = action;

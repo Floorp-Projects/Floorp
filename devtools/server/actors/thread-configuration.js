@@ -18,6 +18,9 @@ const {
 
 // List of options supported by this thread configuration actor.
 const SUPPORTED_OPTIONS = {
+  // Controls pausing on debugger statement.
+  // (This is enabled by default if omitted)
+  shouldPauseOnDebuggerStatement: true,
   // Enable pausing on exceptions.
   pauseOnExceptions: true,
   // Disable pausing on caught exceptions.

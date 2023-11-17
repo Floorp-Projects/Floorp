@@ -823,6 +823,12 @@ class ThreadActor extends Actor {
       this.setActiveEventBreakpoints(options.eventBreakpoints);
     }
 
+    // Only consider this options if an explicit boolean value is passed.
+    if (typeof this._options.shouldPauseOnDebuggerStatement == "boolean") {
+      this.setPauseOnDebuggerStatement(
+        this._options.shouldPauseOnDebuggerStatement
+      );
+    }
     this.setPauseOnExceptions(this._options.pauseOnExceptions);
   }
 
@@ -1361,6 +1367,21 @@ class ThreadActor extends Actor {
     } else {
       this.dbg.onExceptionUnwind = undefined;
     }
+  }
+
+  /**
+   * Set the debugging hook to pause on debugger statement if configured to do so.
+   *
+   * Note that the thread actor will pause on exception by default.
+   * This method has to be called with a falsy value to disable it.
+   *
+   * @param {Boolean} doPause
+   *        Controls whether we should or should not pause on debugger statement.
+   */
+  setPauseOnDebuggerStatement(doPause) {
+    this.dbg.onDebuggerStatement = doPause
+      ? this.onDebuggerStatement
+      : undefined;
   }
 
   isPauseOnExceptionsEnabled() {

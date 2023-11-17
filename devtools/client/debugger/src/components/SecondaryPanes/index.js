@@ -17,8 +17,6 @@ import {
   isMapScopesEnabled,
   getSelectedFrame,
   getSelectedSource,
-  getShouldPauseOnExceptions,
-  getShouldPauseOnCaughtExceptions,
   getThreads,
   getCurrentThread,
   getPauseReason,
@@ -84,14 +82,11 @@ class SecondaryPanes extends Component {
       horizontal: PropTypes.bool.isRequired,
       logEventBreakpoints: PropTypes.bool.isRequired,
       mapScopesEnabled: PropTypes.bool.isRequired,
-      pauseOnExceptions: PropTypes.func.isRequired,
       pauseReason: PropTypes.string.isRequired,
       shouldBreakpointsPaneOpenOnPause: PropTypes.bool.isRequired,
       thread: PropTypes.string.isRequired,
       renderWhyPauseDelay: PropTypes.number.isRequired,
       selectedFrame: PropTypes.object,
-      shouldPauseOnCaughtExceptions: PropTypes.bool.isRequired,
-      shouldPauseOnExceptions: PropTypes.bool.isRequired,
       skipPausing: PropTypes.bool.isRequired,
       source: PropTypes.object,
       toggleEventLogging: PropTypes.func.isRequired,
@@ -327,25 +322,15 @@ class SecondaryPanes extends Component {
   }
 
   getBreakpointsItem() {
-    const {
-      shouldPauseOnExceptions,
-      shouldPauseOnCaughtExceptions,
-      pauseOnExceptions,
-      pauseReason,
-      shouldBreakpointsPaneOpenOnPause,
-      thread,
-    } = this.props;
+    const { pauseReason, shouldBreakpointsPaneOpenOnPause, thread } =
+      this.props;
 
     return {
       header: L10N.getStr("breakpoints.header"),
       id: "breakpoints-pane",
       className: "breakpoints-pane",
       buttons: this.breakpointsHeaderButtons(),
-      component: React.createElement(Breakpoints, {
-        shouldPauseOnExceptions: shouldPauseOnExceptions,
-        shouldPauseOnCaughtExceptions: shouldPauseOnCaughtExceptions,
-        pauseOnExceptions: pauseOnExceptions,
-      }),
+      component: React.createElement(Breakpoints),
       opened:
         prefs.breakpointsVisible ||
         (pauseReason === "breakpoint" && shouldBreakpointsPaneOpenOnPause),
@@ -537,8 +522,6 @@ const mapStateToProps = state => {
     renderWhyPauseDelay: getRenderWhyPauseDelay(state, thread),
     selectedFrame,
     mapScopesEnabled: isMapScopesEnabled(state),
-    shouldPauseOnExceptions: getShouldPauseOnExceptions(state),
-    shouldPauseOnCaughtExceptions: getShouldPauseOnCaughtExceptions(state),
     threads: getThreads(state),
     skipPausing: getSkipPausing(state),
     logEventBreakpoints: shouldLogEventBreakpoints(state),
@@ -552,7 +535,6 @@ const mapStateToProps = state => {
 export default connect(mapStateToProps, {
   evaluateExpressionsForCurrentContext:
     actions.evaluateExpressionsForCurrentContext,
-  pauseOnExceptions: actions.pauseOnExceptions,
   toggleMapScopes: actions.toggleMapScopes,
   breakOnNext: actions.breakOnNext,
   toggleEventLogging: actions.toggleEventLogging,
