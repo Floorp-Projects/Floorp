@@ -103,6 +103,10 @@ import:
               NOTIFICATION:
                 priority: 50
                 max-display-count: 1
+            $$surfaces:
+              - homescreen
+              - notification
+              - survey
             messages:
               default-browser:
                 text: default_browser_experiment_card_text

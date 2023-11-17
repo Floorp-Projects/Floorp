@@ -10,14 +10,16 @@ features:
           A collection of out the box conditional expressions to be
           used in determining whether a card should show or not.
           Each entry maps to a valid JEXL expression.
-        type: Map<String, String>
+        type: Map<ConditionName, String>
+        string-alias: ConditionName
         default: {
           ALWAYS: "true",
           NEVER: "false"
         }
       cards:
         description: Collection of user facing onboarding cards.
-        type: Map<String, OnboardingCardData>
+        type: Map<OnboardingCardKey, OnboardingCardData>
+        string-alias: OnboardingCardKey
         default:
             default-browser:
               card-type: default-browser
@@ -109,7 +111,7 @@ objects:
         # This should never be defaulted.
         default: ""
       prerequisites:
-        type: List<String>
+        type: List<ConditionName>
         description: >
           A list of strings corresponding to targeting expressions.
           The card will be shown if all expressions are `true` and if
@@ -117,7 +119,7 @@ objects:
           if the `disqualifiers` table is empty.
         default: [ ALWAYS ]
       disqualifiers:
-        type: List<String>
+        type: List<ConditionName>
         description: >
           A list of strings corresponding to targeting expressions.
           The card will not be shown if any expression is `true`.
