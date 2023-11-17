@@ -31,15 +31,15 @@ void ComputePipeline::Cleanup() {
     mValid = false;
     auto bridge = mParent->GetBridge();
     if (bridge && bridge->IsOpen()) {
-      bridge->SendComputePipelineDestroy(mId);
+      bridge->SendComputePipelineDrop(mId);
       if (mImplicitPipelineLayoutId) {
         // Bug 1862759: wgpu does not yet guarantee that the implicit pipeline
         // layout was actually created, and requesting its destruction in such
         // a case will crash the parent process. Until this is fixed, we leak
         // all implicit pipeline layouts and bind group layouts.
         /*
-        bridge->SendImplicitLayoutDestroy(mImplicitPipelineLayoutId,
-                                          mImplicitBindGroupLayoutIds);
+        bridge->SendImplicitLayoutDrop(mImplicitPipelineLayoutId,
+                                       mImplicitBindGroupLayoutIds);
         */
       }
     }

@@ -215,7 +215,7 @@ Adapter::~Adapter() { Cleanup(); }
 void Adapter::Cleanup() {
   if (mValid && mBridge && mBridge->CanSend()) {
     mValid = false;
-    mBridge->SendAdapterDestroy(mId);
+    mBridge->SendAdapterDrop(mId);
   }
 }
 

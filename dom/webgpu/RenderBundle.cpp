@@ -27,7 +27,7 @@ void RenderBundle::Cleanup() {
     mValid = false;
     auto bridge = mParent->GetBridge();
     if (bridge && bridge->IsOpen()) {
-      bridge->SendRenderBundleDestroy(mId);
+      bridge->SendRenderBundleDrop(mId);
     }
   }
 }

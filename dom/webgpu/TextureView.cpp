@@ -31,7 +31,7 @@ void TextureView::Cleanup() {
     mValid = false;
     auto bridge = mParent->GetParentDevice()->GetBridge();
     if (bridge && bridge->IsOpen()) {
-      bridge->SendTextureViewDestroy(mId);
+      bridge->SendTextureViewDrop(mId);
     }
   }
 }

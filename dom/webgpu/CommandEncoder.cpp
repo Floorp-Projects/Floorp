@@ -83,7 +83,7 @@ void CommandEncoder::Cleanup() {
   if (mValid) {
     mValid = false;
     if (mBridge->IsOpen()) {
-      mBridge->SendCommandEncoderDestroy(mId);
+      mBridge->SendCommandEncoderDrop(mId);
     }
   }
 }
