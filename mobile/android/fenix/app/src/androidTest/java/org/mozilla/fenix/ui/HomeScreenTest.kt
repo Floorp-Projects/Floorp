@@ -156,6 +156,7 @@ class HomeScreenTest {
         }.enterURLAndEnterToBrowser(defaultWebPage.url) {
         }.goToHomescreen {
         }.openCustomizeHomepage {
+            clickShortcutsButton()
             clickJumpBackInButton()
             clickRecentBookmarksButton()
             clickRecentSearchesButton()
@@ -164,7 +165,7 @@ class HomeScreenTest {
             verifyCustomizeHomepageButton(false)
         }.openThreeDotMenu {
         }.openCustomizeHome {
-            clickJumpBackInButton()
+            clickShortcutsButton()
         }.goBackToHomeScreen {
             verifyCustomizeHomepageButton(true)
         }

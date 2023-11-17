@@ -55,6 +55,7 @@ internal fun normalModeAdapterItems(
     }
 
     if (settings.showTopSitesFeature && topSites.isNotEmpty()) {
+        shouldShowCustomizeHome = true
         if (settings.enableComposeTopSites) {
             items.add(AdapterItem.TopSites)
         } else {
