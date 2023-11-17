@@ -16,7 +16,7 @@ only-for-build-types:
     - fenix-nightly-simulation
 
 only-for-abis:
-    - armeabi-v7a
+    - arm64-v8a
 
 task-defaults:
     attributes:
@@ -42,10 +42,10 @@ task-defaults:
         tier: 2
         platform:
             by-abi:
-                armeabi-v7a: android-hw-a51-11-0-aarch64-shippable-qr/opt
+                arm64-v8a: android-hw-a51-11-0-aarch64-shippable-qr/opt
     worker-type:
         by-abi:
-            armeabi-v7a: t-bitbar-gw-perf-a51
+            arm64-v8a: t-bitbar-gw-perf-a51
     worker:
         max-run-time: 3600
         env:
