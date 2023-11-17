@@ -48,7 +48,7 @@ const VIEW_TEMPLATE = {
               tag: "span",
               children: [
                 {
-                  name: "learn_more",
+                  name: "learn-more",
                   tag: "a",
                   attributes: {
                     "data-l10n-name": "learn-more-link",
@@ -176,40 +176,37 @@ class ProviderQuickSuggestContextualOptIn extends UrlbarProvider {
     if (result?.providerName != this.name) {
       return;
     }
-    this.handleCommand(details.element, queryContext, controller, result);
+    this.handleCommand(details.element, controller, result);
   }
 
-  handleCommand(element, queryContext, controller, result, container) {
-    let commandName = element?.getAttribute("name");
-    switch (commandName) {
-      case "learn_more":
+  handleCommand(element, controller, result, container) {
+    switch (element?.getAttribute("name")) {
+      case "learn-more":
         controller.browserWindow.openHelpLink("firefox-suggest");
         break;
       case "allow":
         lazy.UrlbarPrefs.set("quicksuggest.dataCollection.enabled", true);
+        if (result) {
+          controller.removeResult(result);
+        } else {
+          // This is for when the UI is outside of standard results, after
+          // one-off search buttons.
+          container.hidden = true;
+        }
         break;
       case "dismiss":
         lazy.UrlbarPrefs.set(
           "quicksuggest.contextualOptIn.lastDismissed",
           new Date().toISOString()
         );
+        if (result) {
+          controller.removeResult(result);
+        } else {
+          // This is for when the UI is outside of standard results, after
+          // one-off search buttons.
+          container.hidden = true;
+        }
         break;
-      default:
-        return;
-    }
-
-    this._recordGlean(commandName);
-
-    // Remove the result if it shouldn't be active anymore due to above
-    // actions.
-    if (!this.isActive(queryContext)) {
-      if (result) {
-        controller.removeResult(result);
-      } else {
-        // This is for when the UI is outside of standard results, after
-        // one-off search buttons.
-        container.hidden = true;
-      }
     }
   }
 
@@ -244,19 +241,8 @@ class ProviderQuickSuggestContextualOptIn extends UrlbarProvider {
       }
     );
     result.suggestedIndex = 0;
+
     addCallback(this, result);
-
-    this._recordGlean("impression");
-  }
-
-  _recordGlean(type) {
-    Glean.urlbar.quickSuggestContextualOptIn.record({
-      type,
-      top_position: lazy.UrlbarPrefs.get(
-        "quicksuggest.contextualOptIn.topPosition"
-      ),
-      say_hello: lazy.UrlbarPrefs.get("quicksuggest.contextualOptIn.sayHello"),
-    });
   }
 }
 
