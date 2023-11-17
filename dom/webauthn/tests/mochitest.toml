@@ -13,6 +13,7 @@ prefs = [
   "security.webauth.webauthn_enable_softtoken=true",
   "security.webauth.webauthn_enable_usbtoken=false",
   "security.webauthn.ctap2=true",
+  "security.webauthn.enable_conditional_mediation=true",
 ]
 
 ["test_webauthn_abort_signal.html"]

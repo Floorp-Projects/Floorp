@@ -810,6 +810,30 @@ MacOSWebAuthnService::Cancel(uint64_t aTransactionId) {
 }
 
 NS_IMETHODIMP
+MacOSWebAuthnService::HasPendingConditionalGet(uint64_t aBrowsingContextId,
+                                               const nsAString& aOrigin,
+                                               uint64_t* aRv) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+MacOSWebAuthnService::GetAutoFillEntries(
+    uint64_t aTransactionId, nsTArray<RefPtr<nsIWebAuthnAutoFillEntry>>& aRv) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+MacOSWebAuthnService::SelectAutoFillEntry(
+    uint64_t aTransactionId, const nsTArray<uint8_t>& aCredentialId) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+MacOSWebAuthnService::ResumeConditionalGet(uint64_t aTransactionId) {
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
 MacOSWebAuthnService::PinCallback(uint64_t aTransactionId,
                                   const nsACString& aPin) {
   return NS_ERROR_NOT_IMPLEMENTED;

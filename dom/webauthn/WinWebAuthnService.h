@@ -22,15 +22,25 @@ class WinWebAuthnService final : public nsIWebAuthnService {
   static bool AreWebAuthNApisAvailable();
   static nsresult EnsureWinWebAuthnModuleLoaded();
 
-  WinWebAuthnService() = default;
+  WinWebAuthnService()
+      : mTransactionState(Nothing(), "WinWebAuthnService::mTransactionState"){};
 
  private:
   ~WinWebAuthnService();
 
   uint32_t GetWebAuthNApiVersion();
 
-  Maybe<uint64_t> mTransactionId;
-  GUID mCancellationId;
+  struct TransactionState {
+    uint64_t transactionId;
+    uint64_t browsingContextId;
+    Maybe<RefPtr<nsIWebAuthnSignArgs>> pendingSignArgs;
+    Maybe<RefPtr<nsIWebAuthnSignPromise>> pendingSignPromise;
+    GUID cancellationId;
+  };
+
+  using TransactionStateMutex = DataMutex<Maybe<TransactionState>>;
+  TransactionStateMutex mTransactionState;
+  void DoGetAssertion(const TransactionStateMutex::AutoLock& aProofOfLock);
 };
 
 }  // namespace mozilla::dom
