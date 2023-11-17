@@ -76,6 +76,18 @@ class HomeMenuView(
                 ThemeManager.resolveAttribute(R.attr.textPrimary, context),
             ),
         )
+
+        menuButton.get()?.register(
+            object : mozilla.components.concept.menu.MenuButton.Observer {
+                override fun onShow() {
+                    // MenuButton used in [HomeMenuView] doesn't emit toolbar facts.
+                    // A wrapper is responsible for that, but we are using the button
+                    // directly, hence recording the event directly.
+                    // Should investigate further: https://bugzilla.mozilla.org/show_bug.cgi?id=1868207
+                    Events.toolbarMenuVisible.record(NoExtras())
+                }
+            },
+        )
     }
 
     /**

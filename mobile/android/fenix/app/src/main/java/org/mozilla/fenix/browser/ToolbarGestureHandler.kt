@@ -25,6 +25,8 @@ import mozilla.components.feature.tabs.TabsUseCases
 import mozilla.components.support.ktx.android.view.getRectWithViewLocation
 import mozilla.components.support.utils.ext.bottom
 import mozilla.components.support.utils.ext.mandatorySystemGestureInsets
+import mozilla.telemetry.glean.private.NoExtras
+import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.R
 import org.mozilla.fenix.ext.getRectWithScreenLocation
 import org.mozilla.fenix.ext.getWindowInsets
@@ -260,6 +262,7 @@ class ToolbarGestureHandler(
                         object : AnimatorListenerAdapter() {
                             override fun onAnimationEnd(animation: Animator) {
                                 tabPreview.isVisible = false
+                                Events.toolbarTabSwipe.record(NoExtras())
                             }
                         },
                     )

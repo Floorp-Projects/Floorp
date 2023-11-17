@@ -74,6 +74,7 @@ import mozilla.components.ui.autocomplete.InlineAutocompleteEditText
 import mozilla.components.ui.widgets.withCenterAlignedButtons
 import org.mozilla.fenix.BrowserDirection
 import org.mozilla.fenix.GleanMetrics.Awesomebar
+import org.mozilla.fenix.GleanMetrics.Events
 import org.mozilla.fenix.GleanMetrics.VoiceSearch
 import org.mozilla.fenix.HomeActivity
 import org.mozilla.fenix.R
@@ -862,6 +863,8 @@ class SearchDialogFragment : AppCompatDialogFragment(), UserInteractionHandler {
         if (!requireContext().hasCamera()) {
             return
         }
+
+        Events.browserToolbarQrScanTapped.record(NoExtras())
 
         view?.hideKeyboard()
         toolbarView.view.clearFocus()
