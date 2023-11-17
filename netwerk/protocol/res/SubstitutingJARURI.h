@@ -122,6 +122,10 @@ class SubstitutingJARURI : public nsIJARURI,
   NS_IMETHOD GetHasRef(bool* aHasRef) override {
     return !mSource ? NS_ERROR_NULL_POINTER : mSource->GetHasRef(aHasRef);
   }
+  NS_IMETHOD GetHasUserPass(bool* aHasUserPass) override {
+    return !mSource ? NS_ERROR_NULL_POINTER
+                    : mSource->GetHasUserPass(aHasUserPass);
+  }
   NS_IMETHOD GetHasQuery(bool* aHasQuery) override {
     return !mSource ? NS_ERROR_NULL_POINTER : mSource->GetHasQuery(aHasQuery);
   }

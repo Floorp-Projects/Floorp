@@ -17,6 +17,7 @@ add_task(function test_getters() {
   equal(uri.userPass, "user:password");
   equal(uri.username, "user");
   equal(uri.password, "password");
+  equal(uri.hasUserPass, true);
   equal(uri.hostPort, "hostname:123");
   equal(uri.host, "hostname");
   equal(uri.port, 123);

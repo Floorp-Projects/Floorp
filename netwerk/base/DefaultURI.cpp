@@ -228,6 +228,11 @@ NS_IMETHODIMP DefaultURI::GetHasRef(bool* aHasRef) {
   return NS_OK;
 }
 
+NS_IMETHODIMP DefaultURI::GetHasUserPass(bool* aHasUserPass) {
+  *aHasUserPass = !mURL->Username().IsEmpty() || !mURL->Password().IsEmpty();
+  return NS_OK;
+}
+
 NS_IMETHODIMP DefaultURI::GetFilePath(nsACString& aFilePath) {
   aFilePath = mURL->FilePath();
   return NS_OK;

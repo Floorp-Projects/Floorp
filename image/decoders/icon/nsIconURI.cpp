@@ -145,6 +145,12 @@ nsMozIconURI::GetHasRef(bool* result) {
 }
 
 NS_IMETHODIMP
+nsMozIconURI::GetHasUserPass(bool* result) {
+  *result = false;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsMozIconURI::GetHasQuery(bool* result) {
   *result = false;
   return NS_OK;

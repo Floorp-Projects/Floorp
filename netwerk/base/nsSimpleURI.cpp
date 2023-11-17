@@ -264,6 +264,12 @@ nsSimpleURI::GetHasRef(bool* result) {
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsSimpleURI::GetHasUserPass(bool* result) {
+  *result = false;
+  return NS_OK;
+}
+
 nsresult nsSimpleURI::SetSpecInternal(const nsACString& aSpec,
                                       bool aStripWhitespace) {
   if (StaticPrefs::network_url_max_length() &&
