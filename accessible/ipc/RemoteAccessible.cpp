@@ -377,12 +377,14 @@ bool RemoteAccessible::ContainsPoint(int32_t aX, int32_t aY) {
     return false;
   }
   if (!IsTextLeaf()) {
-    if (RefPtr{DisplayStyle()} != nsGkAtoms::inlinevalue) {
-      // This isn't an inline element, so we don't need to walk lines. It's
-      // enough that our rect contains the point.
+    if (IsImage() || IsImageMap() || !HasChildren() ||
+        RefPtr{DisplayStyle()} != nsGkAtoms::inlinevalue) {
+      // This isn't an inline element that might contain text, so we don't need
+      // to walk lines. It's enough that our rect contains the point.
       return true;
     }
-    // Inline elements can wrap across lines just like text leaves; see below.
+    // Non-image inline elements with children can wrap across lines just like
+    // text leaves; see below.
     // Walk the children, which will walk the lines of text in any text leaves.
     uint32_t count = ChildCount();
     for (uint32_t c = 0; c < count; ++c) {
