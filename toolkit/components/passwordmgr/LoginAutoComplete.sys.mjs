@@ -673,6 +673,7 @@ export class LoginAutoComplete {
         isProbablyANewPasswordField,
         scenarioName: scenario?.constructor.name,
         inputMaxLength: inputElement.maxLength,
+        isWebAuthn: this.#isWebAuthnCredentials(autocompleteInfo),
       }
     );
 
@@ -702,6 +703,15 @@ export class LoginAutoComplete {
     score = results.get(inputElement).scoreFor(type);
     this.#cachedNewPasswordScore.set(inputElement, score);
     return score >= threshold;
+  }
+
+  /**
+   * First draft of checking for the non-autofill credential type (https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#non-autofill-credential-type)
+   * @param {string} autocompleteInfo
+   * @returns whether the input field autocomplete value contains the "webauthn" token, which indicates that the website supports the usage of WebAuthn credentials
+   */
+  #isWebAuthnCredentials(autocompleteInfo) {
+    return autocompleteInfo.fieldName.includes("webauthn");
   }
 }
 
