@@ -1,5 +1,5 @@
 [package]
-edition = "2018"
+edition = "2021"
 name = "mozrunner"
 version = "0.15.1"
 authors = ["Mozilla"]
