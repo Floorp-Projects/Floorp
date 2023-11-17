@@ -533,6 +533,7 @@ def die(msg, exit_code=1):
 
 
 def dieWithTestFailure(msg, exit_code=1):
-    msg = "TEST-UNEXPECTED-FAILURE | %s %s | %s" % (sys.argv[0], sys.argv[1], msg)
-    print(msg, file=sys.stderr)
+    for m in msg.split("\n"):
+        msg = "TEST-UNEXPECTED-FAILURE | %s %s | %s" % (sys.argv[0], sys.argv[1], m)
+        print(msg, file=sys.stderr)
     return exit_code
