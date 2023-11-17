@@ -1,5 +1,5 @@
 [package]
-edition = "2018"
+edition = "2021"
 name = "mozdevice"
 version = "0.5.1"
 authors = ["Mozilla"]
