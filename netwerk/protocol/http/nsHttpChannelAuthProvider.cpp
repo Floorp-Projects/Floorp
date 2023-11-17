@@ -1210,32 +1210,38 @@ void nsHttpChannelAuthProvider::GetIdentityFromURI(uint32_t authFlags,
   LOG(("nsHttpChannelAuthProvider::GetIdentityFromURI [this=%p channel=%p]\n",
        this, mAuthChannel));
 
+  bool hasUserPass;
+  if (NS_FAILED(mURI->GetHasUserPass(&hasUserPass)) || !hasUserPass) {
+    return;
+  }
+
   nsAutoString userBuf;
   nsAutoString passBuf;
 
   // XXX i18n
   nsAutoCString buf;
-  mURI->GetUsername(buf);
-  if (!buf.IsEmpty()) {
-    NS_UnescapeURL(buf);
-    CopyUTF8toUTF16(buf, userBuf);
-    mURI->GetPassword(buf);
-    if (!buf.IsEmpty()) {
-      NS_UnescapeURL(buf);
-      CopyUTF8toUTF16(buf, passBuf);
-    }
+  nsresult rv = mURI->GetUsername(buf);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+  NS_UnescapeURL(buf);
+  CopyUTF8toUTF16(buf, userBuf);
+
+  rv = mURI->GetPassword(buf);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+  NS_UnescapeURL(buf);
+  CopyUTF8toUTF16(buf, passBuf);
+
+  nsDependentSubstring user(userBuf, 0);
+  nsDependentSubstring domain(u""_ns, 0);
+
+  if (authFlags & nsIHttpAuthenticator::IDENTITY_INCLUDES_DOMAIN) {
+    ParseUserDomain(userBuf, user, domain);
   }
 
-  if (!userBuf.IsEmpty()) {
-    nsDependentSubstring user(userBuf, 0);
-    nsDependentSubstring domain(u""_ns, 0);
-
-    if (authFlags & nsIHttpAuthenticator::IDENTITY_INCLUDES_DOMAIN) {
-      ParseUserDomain(userBuf, user, domain);
-    }
-
-    ident = nsHttpAuthIdentity(domain, user, passBuf);
-  }
+  ident = nsHttpAuthIdentity(domain, user, passBuf);
 }
 
 void nsHttpChannelAuthProvider::ParseRealm(const nsACString& aChallenge,
