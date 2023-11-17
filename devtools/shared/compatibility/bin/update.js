@@ -144,30 +144,35 @@ function removeUnusedData(compatNode) {
 
     const compatTable = getCompatTable(compatNode, [term]);
 
-    // source_file references the name of the file in the MDN compat data repo where the
-    // property is handled. We don't make use of it so we can remove it.
-    delete compatTable.source_file;
-    // Not used at the moment. Doesn't seem to have much information anyway
-    delete compatTable.description;
+    // A term may only have a `_aliasOf` property (e.g. for word-wrap), so we don't have
+    // compat data in it directly.
+    if (compatTable) {
+      // source_file references the name of the file in the MDN compat data repo where the
+      // property is handled. We don't make use of it so we can remove it.
+      delete compatTable.source_file;
 
-    if (compatTable?.support) {
-      for (const [browserId, supportItem] of Object.entries(
-        compatTable.support
-      )) {
-        // Remove any browser we won't handle
-        if (!TARGET_BROWSER_ID.includes(browserId)) {
-          delete compatTable.support[browserId];
-          continue;
-        }
+      // Not used at the moment. Doesn't seem to have much information anyway
+      delete compatTable.description;
 
-        // Remove `version_added` and `version_removed`, that are parsed in `replaceVersionsInBrowserSupport`
-        // and which we don't need anymore.
-        for (const item of supportItem) {
-          delete item.version_added;
-          delete item.version_removed;
-          // Those might be interesting, but we're not using them at the moment, so let's
-          // remove them as they can be quite lengthy
-          delete item.notes;
+      if (compatTable?.support) {
+        for (const [browserId, supportItem] of Object.entries(
+          compatTable.support
+        )) {
+          // Remove any browser we won't handle
+          if (!TARGET_BROWSER_ID.includes(browserId)) {
+            delete compatTable.support[browserId];
+            continue;
+          }
+
+          // Remove `version_added` and `version_removed`, that are parsed in `replaceVersionsInBrowserSupport`
+          // and which we don't need anymore.
+          for (const item of supportItem) {
+            delete item.version_added;
+            delete item.version_removed;
+            // Those might be interesting, but we're not using them at the moment, so let's
+            // remove them as they can be quite lengthy
+            delete item.notes;
+          }
         }
       }
     }
