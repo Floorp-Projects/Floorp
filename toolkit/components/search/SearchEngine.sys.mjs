@@ -721,8 +721,8 @@ export class SearchEngine {
    * icon's data through getIcons() and getIconURIBySize() APIs.
    *
    * @param {string} iconURL
-   *   A URI string pointing to the engine's icon. Must have a http[s],
-   *   ftp, or data scheme. Icons with HTTP[S] or FTP schemes will be
+   *   A URI string pointing to the engine's icon. Must have a http[s]
+   *   or data scheme. Icons with HTTP[S] schemes will be
    *   downloaded and converted to data URIs for storage in the engine
    *   XML files, if the engine is not built-in.
    * @param {boolean} isPreferred
@@ -747,7 +747,7 @@ export class SearchEngine {
       "to",
       limitURILength(uri.spec)
     );
-    // Only accept remote icons from http[s] or ftp
+    // Only accept remote icons from http[s]
     switch (uri.scheme) {
       // Fall through to the data case
       case "moz-extension":
@@ -764,7 +764,6 @@ export class SearchEngine {
         break;
       case "http":
       case "https":
-      case "ftp":
         let iconLoadCallback = function (byteArray, contentType) {
           // This callback may run after we've already set a preferred icon,
           // so check again.
