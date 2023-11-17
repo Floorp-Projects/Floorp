@@ -13,6 +13,7 @@ import mozilla.components.support.test.libstate.ext.waitUntilIdle
 import mozilla.components.support.test.middleware.CaptureActionsMiddleware
 import mozilla.components.support.test.rule.MainCoroutineRule
 import org.junit.Assert.assertFalse
+import org.junit.Ignore
 import org.junit.Rule
 import org.junit.Test
 import org.mozilla.fenix.components.AppStore
@@ -253,6 +254,7 @@ class ReviewQualityCheckStoreTest {
             assertEquals(expected, tested.state)
         }
 
+    @Ignore("Flaky: https://bugzilla.mozilla.org/show_bug.cgi?id=1865318")
     @Test
     fun `GIVEN the user has opted in the feature WHEN the user expands settings THEN state should reflect that`() =
         runTest {
@@ -286,6 +288,7 @@ class ReviewQualityCheckStoreTest {
             }
         }
 
+    @Ignore("Flaky: https://bugzilla.mozilla.org/show_bug.cgi?id=1865318")
     @Test
     fun `GIVEN the user has opted in the feature WHEN the user collapses settings THEN state should reflect that`() =
         runTest {
@@ -328,6 +331,7 @@ class ReviewQualityCheckStoreTest {
             }
         }
 
+    @Ignore("Flaky: https://bugzilla.mozilla.org/show_bug.cgi?id=1865318")
     @Test
     fun `GIVEN the user has opted in the feature WHEN the user expands info card THEN state should reflect that`() =
         runTest {
@@ -361,6 +365,7 @@ class ReviewQualityCheckStoreTest {
             }
         }
 
+    @Ignore("Flaky: https://bugzilla.mozilla.org/show_bug.cgi?id=1865318")
     @Test
     fun `GIVEN the user has opted in the feature WHEN the user collapses info card THEN state should reflect that`() =
         runTest {
@@ -403,6 +408,7 @@ class ReviewQualityCheckStoreTest {
             }
         }
 
+    @Ignore("Flaky: https://bugzilla.mozilla.org/show_bug.cgi?id=1865318")
     @Test
     fun `GIVEN the user has opted in the feature WHEN the user expands highlights card THEN state should reflect that`() =
         runTest {
@@ -438,6 +444,7 @@ class ReviewQualityCheckStoreTest {
             }
         }
 
+    @Ignore("Flaky: https://bugzilla.mozilla.org/show_bug.cgi?id=1865318")
     @Test
     fun `GIVEN the user has opted in the feature WHEN the user collapses highlights card THEN state should reflect that`() =
         runTest {
