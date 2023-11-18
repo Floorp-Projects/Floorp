@@ -706,9 +706,9 @@ class TenuredChunk : public TenuredChunkBase {
   Arena* fetchNextFreeArena(GCRuntime* gc);
 
 #ifdef DEBUG
-  void verify();
+  void verify() const;
 #else
-  void verify() {}
+  void verify() const {}
 #endif
 
  private:
