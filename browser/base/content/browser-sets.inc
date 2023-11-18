@@ -115,11 +115,6 @@
 #include ../../components/places/content/placesCommands.inc.xhtml
 
   <keyset id="mainKeyset">
-    <key keycode="VK_F2"
-         oncommand="bmsController.controllFunctions.changeVisibleWenpanel();"/>
-    <key id="restmode"
-        keycode="VK_F9"
-        oncommand="enableRestMode();"/>
     <key id="key_newNavigator"
          data-l10n-id="window-new-shortcut"
          command="cmd_newNavigator"
