@@ -991,10 +991,10 @@ void nsMenuPopupFrame::ShowPopup(bool aIsContextMenu) {
       menu->PopupOpened();
     }
 
-    // do we need an actual reflow here?
-    // is SetPopupPosition all that is needed?
-    PresShell()->FrameNeedsReflow(this, IntrinsicDirty::FrameAndAncestors,
-                                  NS_FRAME_IS_DIRTY);
+    // We skip laying out children if we're closed, so make sure that we do a
+    // full dirty reflow when opening to pick up any potential change.
+    PresShell()->FrameNeedsReflow(
+        this, IntrinsicDirty::FrameAncestorsAndDescendants, NS_FRAME_IS_DIRTY);
 
     if (mPopupType == PopupType::Menu) {
       nsCOMPtr<nsISound> sound(do_GetService("@mozilla.org/sound;1"));
