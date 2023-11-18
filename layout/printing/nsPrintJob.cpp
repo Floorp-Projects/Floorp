@@ -1788,17 +1788,10 @@ bool nsPrintJob::PrePrintSheet() {
   return done;
 }
 
-bool nsPrintJob::PrintSheet(nsPrintObject* aPO, bool& aInRange) {
+bool nsPrintJob::PrintSheet(nsPrintObject* aPO) {
   NS_ASSERTION(aPO, "aPO is null!");
   NS_ASSERTION(mPageSeqFrame.IsAlive(), "mPageSeqFrame is not alive!");
   NS_ASSERTION(mPrt, "mPrt is null!");
-
-  // XXXdholbert Nowadays, this function doesn't need to concern itself with
-  // page ranges -- page-range handling is now handled when we reflow our
-  // PrintedSheetFrames, and all PrintedSheetFrames are "in-range" and should
-  // be printed. So this outparam is unconditionally true. Bug 1669815 is filed
-  // on removing it entirely.
-  aInRange = true;
 
   // Although these should NEVER be nullptr
   // This is added insurance, to make sure we don't crash in optimized builds
