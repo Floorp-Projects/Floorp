@@ -2208,6 +2208,7 @@ dependencies = [
  "oblivious_http",
  "origin-trials-ffi",
  "oxilangtag",
+ "oxilangtag-ffi",
  "prefs_parser",
  "processtools",
  "profiler_helper",
@@ -4138,6 +4139,14 @@ name = "oxilangtag"
 version = "0.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8d91edf4fbb970279443471345a4e8c491bf05bb283b3e6c88e4e606fd8c181b"
+
+[[package]]
+name = "oxilangtag-ffi"
+version = "0.1.0"
+dependencies = [
+ "nsstring",
+ "oxilangtag",
+]
 
 [[package]]
 name = "packed_simd"

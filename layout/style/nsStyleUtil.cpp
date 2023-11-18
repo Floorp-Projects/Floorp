@@ -10,6 +10,7 @@
 #include "mozilla/dom/Document.h"
 #include "mozilla/ExpandedPrincipal.h"
 #include "mozilla/intl/MozLocaleBindings.h"
+#include "mozilla/intl/oxilangtag_ffi_generated.h"
 #include "mozilla/TextUtils.h"
 #include "nsIContent.h"
 #include "nsCSSProps.h"
@@ -55,109 +56,73 @@ bool nsStyleUtil::DashMatchCompare(const nsAString& aAttributeValue,
 
 bool nsStyleUtil::LangTagCompare(const nsACString& aAttributeValue,
                                  const nsACString& aSelectorValue) {
-  class AutoLangId {
-   public:
-    AutoLangId() = delete;
-    AutoLangId(const AutoLangId& aOther) = delete;
-    explicit AutoLangId(const nsACString& aLangTag) : mIsValid(false) {
-      mLangId = intl::ffi::unic_langid_new(&aLangTag, &mIsValid);
-    }
-
-    ~AutoLangId() { intl::ffi::unic_langid_destroy(mLangId); }
-
-    operator intl::ffi::LanguageIdentifier*() const { return mLangId; }
-    bool IsValid() const { return mIsValid; }
-
-    void Reset(const nsACString& aLangTag) {
-      intl::ffi::unic_langid_destroy(mLangId);
-      mLangId = intl::ffi::unic_langid_new(&aLangTag, &mIsValid);
-    }
-
-   private:
-    intl::ffi::LanguageIdentifier* mLangId;
-    bool mIsValid;
-  };
-
   if (aAttributeValue.IsEmpty() || aSelectorValue.IsEmpty()) {
     return false;
   }
 
-  int32_t attrPriv = -1;
-  AutoLangId attrLangId(aAttributeValue);
-  if (!attrLangId.IsValid()) {
-    // If it was invalid due to private subtags, try stripping them and
-    // re-parsing what remains.
-    attrPriv = aAttributeValue.LowerCaseFindASCII("-x-");
-    if (attrPriv >= 0) {
-      nsAutoCString temp(aAttributeValue);
-      temp.Truncate(attrPriv);
-      attrLangId.Reset(temp);
-      if (!attrLangId.IsValid()) {
-        return false;
+  class MOZ_RAII AutoLangTag final {
+   public:
+    AutoLangTag() = delete;
+    AutoLangTag(const AutoLangTag& aOther) = delete;
+    explicit AutoLangTag(const nsACString& aLangTag) {
+      mLangTag = intl::ffi::lang_tag_new(&aLangTag);
+    }
+
+    ~AutoLangTag() {
+      if (mLangTag) {
+        intl::ffi::lang_tag_destroy(mLangTag);
       }
-    } else {
-      return false;
+    }
+
+    bool IsValid() const { return mLangTag; }
+    operator intl::ffi::LangTag*() const { return mLangTag; }
+
+    void Reset(const nsACString& aLangTag) {
+      if (mLangTag) {
+        intl::ffi::lang_tag_destroy(mLangTag);
+      }
+      mLangTag = intl::ffi::lang_tag_new(&aLangTag);
+    }
+
+   private:
+    intl::ffi::LangTag* mLangTag = nullptr;
+  };
+
+  AutoLangTag langAttr(aAttributeValue);
+
+  // Non-BCP47 extension: recognize '_' as an alternative subtag delimiter.
+  nsAutoCString attrTemp;
+  if (!langAttr.IsValid()) {
+    if (aAttributeValue.Contains('_')) {
+      attrTemp = aAttributeValue;
+      attrTemp.ReplaceChar('_', '-');
+      langAttr.Reset(attrTemp);
     }
   }
 
-  int32_t selPriv = -1;
-  AutoLangId selectorId(aSelectorValue);
-  if (!selectorId.IsValid()) {
-    // If it was "invalid" because of a wildcard language subtag, replace that
-    // with 'und' and try again.
-    // XXX Should unic_langid_new handle the wildcard internally?
-    bool wildcard = false;
-    if (aSelectorValue[0] == '*') {
-      wildcard = true;
-      nsAutoCString temp(aSelectorValue);
-      temp.Replace(0, 1, "und");
-      selectorId.Reset(temp);
-      if (selectorId.IsValid()) {
-        intl::ffi::unic_langid_clear_language(selectorId);
-      }
-    }
-    // If it was invalid due to private subtags, try stripping them.
-    if (!selectorId.IsValid()) {
-      selPriv = aSelectorValue.LowerCaseFindASCII("-x-");
-      if (selPriv >= 0) {
-        nsAutoCString temp(aSelectorValue);
-        temp.Truncate(selPriv);
-        // Also do the wildcard replacement if necessary.
-        if (wildcard) {
-          temp.Replace(0, 1, "und");
-        }
-        selectorId.Reset(temp);
-        if (!selectorId.IsValid()) {
-          return false;
-        }
-        if (wildcard) {
-          intl::ffi::unic_langid_clear_language(selectorId);
-        }
-      } else {
-        return false;
-      }
-    }
-  }
-
-  if (!intl::ffi::unic_langid_matches(attrLangId, selectorId,
-                                      /* match addrLangId as range */ false,
-                                      /* match selectorId as range */ true)) {
+  if (!langAttr.IsValid()) {
     return false;
   }
 
-  // If the selector included private subtags, we also require them to match.
-  // However, if the attribute has private subtags but the selector doesn't,
-  // they are ignored; the selector still matches the (non-private) subtags in
-  // the attribute.
-  if (selPriv >= 0) {
-    if (attrPriv < 0) {
-      return false;
+  AutoLangTag selector(aSelectorValue);
+
+  // If `selector` was invalid because of a wildcard language subtag (and/or
+  // an underscore), replace wildcard with 'und' (and underscore with hyphen)
+  // and try again.
+  nsAutoCString selectorTemp;
+  if (!selector.IsValid()) {
+    bool wildcard = aSelectorValue[0] == '*';
+    if (wildcard || aSelectorValue.Contains('_')) {
+      selectorTemp = aSelectorValue;
+      selectorTemp.ReplaceChar('_', '-');
+      if (wildcard) {
+        selectorTemp.Replace(0, 1, "und");
+      }
+      selector.Reset(selectorTemp);
     }
-    return Substring(aAttributeValue, attrPriv)
-        .EqualsIgnoreCase(Substring(aSelectorValue, selPriv));
   }
 
-  return true;
+  return selector.IsValid() && intl::ffi::lang_tag_matches(langAttr, selector);
 }
 
 bool nsStyleUtil::ValueIncludes(const nsAString& aValueList,
