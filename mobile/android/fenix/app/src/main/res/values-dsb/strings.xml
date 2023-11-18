@@ -520,6 +520,11 @@
     <!-- Change setting text button, for the cookie banner re-engagement dialog -->
     <string name="reduce_cookie_banner_dialog_change_setting_button" moz:RemovedIn="121" tools:ignore="UnusedResources">Dowóliś</string>
 
+    <!--Title for the cookie banner re-engagement CFR, the placeholder is replaced with app name -->
+    <string name="cookie_banner_cfr_title">%1$s jo rowno wótpokazał cookieje za was</string>
+    <!--Message for the cookie banner re-engagement CFR -->
+    <string name="cookie_banner_cfr_message">Mjenjej wótchylenjow, mjenjej cookiejow, kótarež was na sedle pśeslěduju.</string>
+
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Wopytujo z pomocu koděrowańskego protokola HTTPS za pówušonu wěstotu awtomatiski ze sedłami zwězaś.</string>
     <!-- Summary of https only preference if https only is set to off -->

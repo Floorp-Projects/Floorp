@@ -1701,7 +1701,7 @@
     <!-- About page link text to list of past crashes (like about:crashes on desktop) -->
     <string name="about_crashes">程式錯誤</string>
     <!-- About page link text to open privacy notice link -->
-    <string name="about_privacy_notice">隱私權保護政策</string>
+    <string name="about_privacy_notice">隱私權公告</string>
     <!-- About page link text to open know your rights link -->
     <string name="about_know_your_rights">了解您的權利</string>
     <!-- About page link text to open licensing information link -->
