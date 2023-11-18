@@ -174,7 +174,6 @@ flatpak build-finish build                                      \
         --talk-name=org.gnome.SessionManager                    \
         --talk-name=org.freedesktop.ScreenSaver                 \
         --talk-name="org.gtk.vfs.*"                             \
-        --talk-name=org.freedesktop.Notifications               \
         --own-name="org.mpris.MediaPlayer2.firefox.*"           \
         --own-name="org.mozilla.firefox.*"                      \
         --own-name="org.mozilla.firefox_beta.*"                 \
