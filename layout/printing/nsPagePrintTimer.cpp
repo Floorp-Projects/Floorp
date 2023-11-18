@@ -83,14 +83,11 @@ void nsPagePrintTimer::StopWatchDogTimer() {
 NS_IMETHODIMP
 nsPagePrintTimer::Run() {
   bool initNewTimer = true;
-  // Check to see if we are done
-  // inRange will be true if a sheet is actually printed
-  bool inRange;
   bool donePrinting;
 
   // donePrinting will be true if it completed successfully or
   // if the printing was cancelled
-  donePrinting = !mPrintJob || mPrintJob->PrintSheet(mPrintObj, inRange);
+  donePrinting = !mPrintJob || mPrintJob->PrintSheet(mPrintObj);
   if (donePrinting) {
     if (mWaitingForRemotePrint ||
         // If we are not waiting for the remote printing, it is the time to
@@ -107,7 +104,7 @@ nsPagePrintTimer::Run() {
   Stop();
   if (initNewTimer) {
     ++mFiringCount;
-    nsresult result = StartTimer(inRange);
+    nsresult result = StartTimer(/*aUseDelay*/ true);
     if (NS_FAILED(result)) {
       mDone = true;  // had a failure.. we are finished..
       if (mPrintJob) {

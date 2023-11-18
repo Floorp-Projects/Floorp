@@ -142,7 +142,7 @@ class nsPrintJob final : public nsIWebProgressListener,
   std::tuple<nsPageSequenceFrame*, int32_t> GetSeqFrameAndCountSheets() const;
 
   bool PrePrintSheet();
-  bool PrintSheet(nsPrintObject* aPOect, bool& aInRange);
+  bool PrintSheet(nsPrintObject* aPOect);
   bool DonePrintingSheets(nsPrintObject* aPO, nsresult aResult);
 
   nsresult CleanupOnFailure(nsresult aResult, bool aIsPrinting);
