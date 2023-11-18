@@ -5845,7 +5845,10 @@ void ClientWebGLContext::ProvokingVertex(const GLenum rawMode) const {
   if (IsContextLost()) return;
 
   const auto mode = webgl::AsEnumCase<webgl::ProvokingVertex>(rawMode);
-  if (!mode) return;
+  if (!mode) {
+    EnqueueError_ArgEnum("mode", rawMode);
+    return;
+  }
 
   Run<RPROC(ProvokingVertex)>(*mode);
 
