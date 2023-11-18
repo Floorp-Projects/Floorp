@@ -2,17 +2,39 @@
 <html class="reftest-wait">
 <meta charset="utf-8">
 <script>
+let pp;
+window.addEventListener("MozReftestInvalidate", finish);
 function go() {
     let c = document.createElement("frameset");
     document.documentElement.appendChild(c);
 
     document.onscroll = () => {
-      SpecialPowers.wrap(window).printPreview()?.close();
+      try {
+        pp = SpecialPowers.wrap(window).printPreview();
+        pp?.close();
+      } catch (e) {}
+
+      setTimeout(finish,0);
     };
     window.scrollBy(0, 10);
-    document.documentElement.removeAttribute("class");
 }
 
 window.addEventListener("load", go);
+
+let num = 0;
+function finish() {
+    num++;
+    if (num < 2) {
+        return;
+    }
+
+    setTimeout(function() {
+        try {
+            pp?.close();
+        } catch (e) {}
+
+        document.documentElement.removeAttribute("class");
+    }, 0);
+}
 </script>
 </html>
