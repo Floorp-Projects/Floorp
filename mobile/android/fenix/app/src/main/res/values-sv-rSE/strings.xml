@@ -528,6 +528,11 @@
     <!-- Change setting text button, for the cookie banner re-engagement dialog -->
     <string name="reduce_cookie_banner_dialog_change_setting_button" moz:RemovedIn="121" tools:ignore="UnusedResources">Tillåt</string>
 
+    <!--Title for the cookie banner re-engagement CFR, the placeholder is replaced with app name -->
+    <string name="cookie_banner_cfr_title">%1$s har precis avvisat kakor åt dig</string>
+    <!--Message for the cookie banner re-engagement CFR -->
+    <string name="cookie_banner_cfr_message">Mindre distraktioner, färre kakor som spårar dig på den här webbplatsen.</string>
+
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Försöker automatiskt ansluta till webbplatser med HTTPS-krypteringsprotokollet för ökad säkerhet.</string>
     <!-- Summary of https only preference if https only is set to off -->

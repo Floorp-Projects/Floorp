@@ -522,6 +522,11 @@
     <!-- Change setting text button, for the cookie banner re-engagement dialog -->
     <string name="reduce_cookie_banner_dialog_change_setting_button" moz:RemovedIn="121" tools:ignore="UnusedResources">Leyfa</string>
 
+    <!--Title for the cookie banner re-engagement CFR, the placeholder is replaced with app name -->
+    <string name="cookie_banner_cfr_title">%1$s var að hafna vefkökum fyrir þína hönd</string>
+    <!--Message for the cookie banner re-engagement CFR -->
+    <string name="cookie_banner_cfr_message">Minni truflanir, færri vefkökur sem rekja ferðir þínar á þessu vefsvæði.</string>
+
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Reynir sjálfkrafa að tengjast vefsvæðum með HTTPS dulritunareglum til að auka öryggi.</string>
     <!-- Summary of https only preference if https only is set to off -->

@@ -129,7 +129,7 @@
     <!-- Federated Credential Management prompts -->
     <!--Content description for the Account picture in the Select Account FedCM prompt -->
     <string name="mozac_feature_prompts_account_picture">Kontobild</string>
-    <!-- Title of the Identity Credential provider dialog choose. -->
+    <!-- Title of the Identity Credential provider dialog chooser. -->
     <string name="mozac_feature_prompts_identity_credentials_choose_provider">Välj en inloggningsleverantör</string>
     <!-- Title of an account picker dialog for identity credentials. -->
     <string name="mozac_feature_prompts_identity_credentials_choose_account" moz:removedIn="119" tools:ignore="UnusedResources">Välj ett konto</string>
@@ -139,6 +139,8 @@
     <string name="mozac_feature_prompts_identity_credentials_privacy_policy_title">Använd %1$s som inloggningsleverantör</string>
     <!-- Title of the Identity Credential privacy policy dialog description. The %1$s will be replaced with the name of the provider, %2$s will be replaced with the account, %3$s will be replaced with the privacy policy url and  %4$s will be replaced with the terms of service. -->
     <string name="mozac_feature_prompts_identity_credentials_privacy_policy_description"><![CDATA[ Att logga in på %1$s med ett %2$s-konto omfattas av deras <a href="%3$s">sekretesspolicy</a> och <a href="%4$s">användarvillkor </a>]]></string>
-    <!-- Title of the Identity Credential provider dialog choose. -->
+    <!-- Text for the positive button of the Identity Credential dialogs. -->
     <string name="mozac_feature_prompts_identity_credentials_continue">Fortsätt</string>
+    <!-- Text for the cancel button of the Identity Credential dialogs. -->
+    <string name="mozac_feature_prompts_identity_credentials_cancel">Avbryt</string>
 </resources>

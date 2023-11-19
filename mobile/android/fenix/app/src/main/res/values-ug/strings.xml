@@ -487,6 +487,9 @@
     <!-- Change setting text button, for the cookie banner re-engagement dialog -->
     <string name="reduce_cookie_banner_dialog_change_setting_button" moz:RemovedIn="121" tools:ignore="UnusedResources">يول قوي</string>
 
+    <!--Title for the cookie banner re-engagement CFR, the placeholder is replaced with app name -->
+    <string name="cookie_banner_cfr_title">%1$s سىز ئۈچۈن ساقلانمىنى رەت قىلدى</string>
+
     <!-- Summary of https only preference if https only is set to off -->
     <string name="preferences_https_only_off">تاقاق</string>
     <!-- Summary of https only preference if https only is set to on in all tabs -->
@@ -2136,6 +2139,8 @@
     <string name="review_quality_check_settings_recommended_products_learn_more" tools:ignore="UnusedResources">تەپسىلاتى</string>
     <!-- Text for turning sidebar off button from review quality check settings section. -->
     <string name="review_quality_check_settings_turn_off">باھالاش تەكشۈرگۈچنى تاقا</string>
+    <!-- Text for title of recommended product section. This is displayed above a product image, suggested as an alternative to the product reviewed. -->
+    <string name="review_quality_check_ad_title" tools:ignore="UnusedResources">تېخىمۇ كۆپ مەھسۇلاتلار</string>
     <!-- Caption for recommended product section indicating this is an ad by Fakespot. First parameter is the Fakespot product name. -->
     <string name="review_quality_check_ad_caption" tools:ignore="UnusedResources">ئېلان بەرگۈچى %s</string>
     <!-- Caption for review quality check panel. First parameter is for clickable text defined in review_quality_check_powered_by_link. -->

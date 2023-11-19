@@ -132,7 +132,7 @@
     <!-- Federated Credential Management prompts -->
     <!--Content description for the Account picture in the Select Account FedCM prompt -->
     <string name="mozac_feature_prompts_account_picture">ھېسابات رەسىمى</string>
-    <!-- Title of the Identity Credential provider dialog choose. -->
+    <!-- Title of the Identity Credential provider dialog chooser. -->
     <string name="mozac_feature_prompts_identity_credentials_choose_provider">تىزىمغا كىرىشنى تەمىنلىگۈچى تاللىنىدۇ</string>
     <!-- Title of an account picker dialog for identity credentials. -->
     <string name="mozac_feature_prompts_identity_credentials_choose_account" moz:removedIn="119" tools:ignore="UnusedResources">ھېسابات تاللىنىدۇ</string>
@@ -142,6 +142,8 @@
     <string name="mozac_feature_prompts_identity_credentials_privacy_policy_title">تىزىمغا كىرىشنى تەمىنلىگۈچىگە %1$s نى ئىشلىتىدۇ</string>
     <!-- Title of the Identity Credential privacy policy dialog description. The %1$s will be replaced with the name of the provider, %2$s will be replaced with the account, %3$s will be replaced with the privacy policy url and  %4$s will be replaced with the terms of service. -->
     <string name="mozac_feature_prompts_identity_credentials_privacy_policy_description"><![CDATA[بىر %2$s ھېساباتىدا %1$s غا تىزىمغا كىرىشتە ئۇلارنىڭ <a href="%3$s">شەخسىيەت تۈزۈمى</a> ۋە <a href="%4$s">مۇلازىمەت ماددىلىرى</a>غا بويسۇنىدۇ]]></string>
-    <!-- Title of the Identity Credential provider dialog choose. -->
+    <!-- Text for the positive button of the Identity Credential dialogs. -->
     <string name="mozac_feature_prompts_identity_credentials_continue">داۋاملاشتۇر</string>
+    <!-- Text for the cancel button of the Identity Credential dialogs. -->
+    <string name="mozac_feature_prompts_identity_credentials_cancel">ۋاز كەچ</string>
 </resources>
