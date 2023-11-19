@@ -1,0 +1,18 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+---
+$schema: moz://mozilla.org/schemas/glean/pings/2-0-0
+
+broken-site-report:
+  description: |
+    A ping containing the data for a user-initiated report for a broken site.
+    Does not contain a `client_id`. All report data is self-contained.
+  include_client_id: false
+  bugs:
+    - https://bugzilla.mozilla.org/show_bug.cgi?id=1852340
+  data_reviews:
+    - https://bugzilla.mozilla.org/show_bug.cgi?id=1852340#c16
+  notification_emails:
+    - twisniewski@mozilla.com
