@@ -62,7 +62,6 @@ DIRS += [
     "remotebrowserutils",
     "reflect",
     "reputationservice",
-    "reportbrokensite",
     "resistfingerprinting",
     "search",
     "sessionstore",
