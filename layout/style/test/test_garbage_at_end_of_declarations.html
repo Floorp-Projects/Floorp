@@ -83,8 +83,12 @@ var gAllowsExtraUnusual = {
   "font-family": { "inherit": true, "initial": true, "unset": true }
 };
 
-gAllowsExtraUnusual["-moz-transition"] = gAllowsExtraUnusual["transition"];
-gAllowsExtraUnusual["-moz-animation"] = gAllowsExtraUnusual["animation"];
+if (IsCSSPropertyPrefEnabled("layout.css.prefixes.transitions")) {
+  gAllowsExtraUnusual["-moz-transition"] = gAllowsExtraUnusual["transition"];
+}
+if (IsCSSPropertyPrefEnabled("layout.css.prefixes.animations")) {
+  gAllowsExtraUnusual["-moz-animation"] = gAllowsExtraUnusual["animation"];
+}
 
 function test_property(property)
 {
