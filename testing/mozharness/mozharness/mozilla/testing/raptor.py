@@ -1105,6 +1105,7 @@ class Raptor(
         # Use in-tree wptserve for Python 3.10 compatibility
         extract_dirs = [
             "tools/wptserve/*",
+            "tools/wpt_third_party/h2/*",
             "tools/wpt_third_party/pywebsocket3/*",
         ]
         return super(Raptor, self).download_and_extract(
