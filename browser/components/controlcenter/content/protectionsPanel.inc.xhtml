@@ -9,7 +9,7 @@
        role="alertdialog"
        noautofocus="true"
        aria-labelledby="protections-popup-main-header-label"
-       onpopupshown="gProtectionsHandler.onPopupShown(event);ReportBrokenSite.updateParentMenu(event)"
+       onpopupshown="gProtectionsHandler.onPopupShown(event);"
        onpopuphidden="gProtectionsHandler.onPopupHidden(event);"
        orient="vertical">
 
@@ -62,13 +62,6 @@
             </toolbarbutton>
           </hbox>
         </vbox>
-
-        <toolbarseparator observes="cmd_reportBrokenSite"></toolbarseparator>
-        <toolbarbutton id="protections-popup-report-broken-site-button"
-                     command="cmd_reportBrokenSite"
-                     class="subviewbutton subviewbutton-nav"
-                     data-l10n-id="protections-panel-report-broken-site"
-                     closemenu="none"/>
 
         <!-- Tracking Protection Section -->
         <toolbarseparator></toolbarseparator>
