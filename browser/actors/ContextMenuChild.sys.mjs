@@ -649,7 +649,7 @@ export class ContextMenuChild extends JSWindowActorChild {
     // determine what was context-clicked on. Then, update the state of the
     // commands on the context menu.
     this.docShell.contentViewer
-      .QueryInterface(Ci.nsIContentViewerEdit)
+      .QueryInterface(Ci.nsIDocumentViewerEdit)
       .setCommandNode(aEvent.composedTarget);
     aEvent.composedTarget.ownerGlobal.updateCommands("contentcontextmenu");
 

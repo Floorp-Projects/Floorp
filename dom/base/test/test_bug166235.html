@@ -32,7 +32,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=816298
   var docShell = SpecialPowers.wrap(window).docShell;
 
   var documentViewer = docShell.contentViewer
-                               .QueryInterface(SpecialPowers.Ci.nsIContentViewerEdit);
+                               .QueryInterface(SpecialPowers.Ci.nsIDocumentViewerEdit);
 
   var clipboard = Cc["@mozilla.org/widget/clipboard;1"]
                     .getService(SpecialPowers.Ci.nsIClipboard);

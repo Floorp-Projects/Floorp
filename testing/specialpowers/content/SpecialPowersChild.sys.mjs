@@ -2192,11 +2192,11 @@ export class SpecialPowersChild extends JSWindowActorChild {
   }
 
   /**
-   * See \ref nsIContentViewerEdit.setCommandNode(in Node).
+   * See \ref nsIDocumentViewerEdit.setCommandNode(in Node).
    */
   setCommandNode(window, node) {
     return window.docShell.contentViewer
-      .QueryInterface(Ci.nsIContentViewerEdit)
+      .QueryInterface(Ci.nsIDocumentViewerEdit)
       .setCommandNode(node);
   }
 
