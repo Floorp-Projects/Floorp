@@ -198,6 +198,11 @@ export var ReportBrokenSite = new (class ReportBrokenSite {
   static REPORTER_ENABLED_PREF = "ui.new-webcompat-reporter.enabled";
 
   static REASON_PREF = "ui.new-webcompat-reporter.reason-dropdown";
+  static REASON_PREF_VALUES = {
+    0: "disabled",
+    1: "optional",
+    2: "required",
+  };
   static SEND_MORE_INFO_PREF = "ui.new-webcompat-reporter.send-more-info-link";
   static NEW_REPORT_ENDPOINT_PREF =
     "ui.new-webcompat-reporter.new-report-endpoint";
@@ -244,6 +249,10 @@ export var ReportBrokenSite = new (class ReportBrokenSite {
 
   canReportURI(uri) {
     return uri && (uri.schemeIs("http") || uri.schemeIs("https"));
+  }
+
+  #recordGleanEvent(name, extra) {
+    Glean.webcompatreporting[name].record(extra);
   }
 
   updateParentMenu(event) {
@@ -348,6 +357,10 @@ export var ReportBrokenSite = new (class ReportBrokenSite {
 
     this.#reasonEnabled = this.reasonPref == 1 || this.reasonPref == 2;
     this.#reasonIsOptional = this.reasonPref == 1;
+    if (!whichChanged || whichChanged == ReportBrokenSite.REASON_PREF) {
+      const setting = ReportBrokenSite.REASON_PREF_VALUES[this.reasonPref];
+      this.#recordGleanEvent("reasonDropdown", { setting });
+    }
 
     this.#sendMoreInfoEnabled = this.sendMoreInfoPref;
     this.#newReportEndpoint = this.newReportEndpointPref;
@@ -356,6 +369,8 @@ export var ReportBrokenSite = new (class ReportBrokenSite {
   #initMainView(state) {
     state.sendButton.addEventListener("command", async ({ target }) => {
       const multiview = target.closest("panelmultiview");
+      this.#recordGleanEvent("send");
+      await this.#sendReportAsGleanPing(state);
       state.reportSentView.hidden = false;
       multiview.showSubView("report-broken-site-popup-reportSentView");
       state.reset();
@@ -371,6 +386,7 @@ export var ReportBrokenSite = new (class ReportBrokenSite {
       event.preventDefault();
       const tabbrowser = event.view.ownerGlobal.gBrowser;
       const multiview = event.target.closest("panelmultiview");
+      this.#recordGleanEvent("sendMoreInfo");
       event.view.ownerGlobal.PanelMultiView.forNode(multiview).hidePopup();
       await this.#openWebCompatTab(tabbrowser);
       state.reset();
@@ -467,6 +483,8 @@ export var ReportBrokenSite = new (class ReportBrokenSite {
       this.#descriptionIsOptional
     );
 
+    this.#recordGleanEvent("opened", { source });
+
     if (didReset || !state.currentTabWebcompatDetailsPromise) {
       state.currentTabWebcompatDetailsPromise = this.#queryActor(
         "GetWebCompatInfo",
@@ -529,6 +547,101 @@ export var ReportBrokenSite = new (class ReportBrokenSite {
     ).catch(err => {
       console.error("Report Broken Site: unexpected error", err);
     });
+  }
+
+  async #sendReportAsGleanPing({
+    currentTabWebcompatDetailsPromise,
+    description,
+    reason,
+    url,
+  }) {
+    const gBase = Glean.brokenSiteReport;
+    const gTabInfo = Glean.brokenSiteReportTabInfo;
+    const gAntitracking = Glean.brokenSiteReportTabInfoAntitracking;
+    const gFrameworks = Glean.brokenSiteReportTabInfoFrameworks;
+    const gApp = Glean.brokenSiteReportBrowserInfoApp;
+    const gGraphics = Glean.brokenSiteReportBrowserInfoGraphics;
+    const gPrefs = Glean.brokenSiteReportBrowserInfoPrefs;
+    const gSystem = Glean.brokenSiteReportBrowserInfoSystem;
+
+    if (reason) {
+      gBase.breakageCategory.set(reason);
+    }
+
+    gBase.description.set(description);
+    gBase.url.set(url);
+
+    const details = await currentTabWebcompatDetailsPromise;
+
+    if (!details) {
+      GleanPings.brokenSiteReport.submit();
+      return;
+    }
+
+    const {
+      antitracking,
+      browser,
+      devicePixelRatio,
+      frameworks,
+      languages,
+      userAgent,
+    } = details;
+
+    gTabInfo.languages.set(languages);
+    gTabInfo.useragentString.set(userAgent);
+    gGraphics.devicePixelRatio.set(devicePixelRatio);
+
+    for (const [name, value] of Object.entries(antitracking)) {
+      gAntitracking[name].set(value);
+    }
+
+    for (const [name, value] of Object.entries(frameworks)) {
+      gFrameworks[name].set(value);
+    }
+
+    const { app, graphics, locales, platform, prefs, security } = browser;
+
+    gApp.defaultLocales.set(locales);
+    gApp.defaultUseragentString.set(app.defaultUserAgent);
+
+    const { fissionEnabled, isTablet, memoryMB } = platform;
+    gApp.fissionEnabled.set(fissionEnabled);
+    gSystem.isTablet.set(isTablet ?? false);
+    gSystem.memory.set(memoryMB);
+
+    gPrefs.cookieBehavior.set(prefs["network.cookie.cookieBehavior"]);
+    gPrefs.forcedAcceleratedLayers.set(
+      prefs["layers.acceleration.force-enabled"]
+    );
+    gPrefs.globalPrivacyControlEnabled.set(
+      prefs["privacy.globalprivacycontrol.enabled"]
+    );
+    gPrefs.installtriggerEnabled.set(
+      prefs["extensions.InstallTrigger.enabled"]
+    );
+    gPrefs.opaqueResponseBlocking.set(prefs["browser.opaqueResponseBlocking"]);
+    gPrefs.resistFingerprintingEnabled.set(
+      prefs["privacy.resistFingerprinting"]
+    );
+    gPrefs.softwareWebrender.set(prefs["gfx.webrender.software"]);
+
+    if (security) {
+      for (const [name, value] of Object.entries(security)) {
+        if (value?.length) {
+          Glean.brokenSiteReportBrowserInfoSecurity[name].set(value);
+        }
+      }
+    }
+
+    const { devices, drivers, features, hasTouchScreen, monitors } = graphics;
+
+    gGraphics.devicesJson.set(JSON.stringify(devices));
+    gGraphics.driversJson.set(JSON.stringify(drivers));
+    gGraphics.featuresJson.set(JSON.stringify(features));
+    gGraphics.hasTouchScreen.set(hasTouchScreen);
+    gGraphics.monitorsJson.set(JSON.stringify(monitors));
+
+    GleanPings.brokenSiteReport.submit();
   }
 
   open(event) {
