@@ -8,8 +8,8 @@
 
 webidl Node;
 
-[scriptable, uuid(35BE2D7E-F29B-48EC-BF7E-80A30A724DE3)]
-interface nsIContentViewerEdit : nsISupports
+[scriptable, uuid(e39a0c2a-5b31-4d57-a971-66ba07fab614)]
+interface nsIDocumentViewerEdit : nsISupports
 {
   void clearSelection();
   void selectAll();

@@ -30,11 +30,11 @@ with Files("nsIScrollObserver.*"):
 
 XPIDL_SOURCES += [
     "nsIContentViewer.idl",
-    "nsIContentViewerEdit.idl",
     "nsIDocShell.idl",
     "nsIDocShellTreeItem.idl",
     "nsIDocShellTreeOwner.idl",
     "nsIDocumentLoaderFactory.idl",
+    "nsIDocumentViewerEdit.idl",
     "nsILoadContext.idl",
     "nsILoadURIDelegate.idl",
     "nsIPrivacyTransitionObserver.idl",

@@ -1023,7 +1023,7 @@
         ]
       }
     ],
-    "name": "nsIContentViewerEdit",
+    "name": "nsIDocumentViewerEdit",
     "parent": "nsISupports",
     "uuid": "35be2d7e-f29b-48ec-bf7e-80a30a724de3"
   },
