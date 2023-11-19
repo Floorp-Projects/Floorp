@@ -37,10 +37,6 @@ on:
       buildjet:
         type: boolean
         default: false
-      lightning-build:
-        description: enable lightning build
-        type: boolean
-        default: false
       #? buildjet cache also is, but idk how to use on sccache
       MOZ_BUILD_DATE:
         type: string
@@ -119,7 +115,6 @@ jobs:
         disable_updater = os.environ["GHA_disable_updater"] == "true"
         aarch64 = os.environ["GHA_aarch64"] == "true"
         beta= os.environ["GHA_beta"] == "true"
-        lightning_build = os.environ["GHA_lightning_build"] == "true"
         MOZ_BUILD_DATE= os.environ["GHA_MOZ_BUILD_DATE"]
 
         os.system("sudo apt update")
@@ -134,13 +129,8 @@ jobs:
 
         if beta:
           mozconfig.append('ac_add_options --with-branding=browser/branding/beta')
-        elif lightning_build:
-          mozconfig.append('ac_add_options --with-branding=browser/branding/lightning')
         else:
           mozconfig.append('ac_add_options --with-branding=browser/branding/official')
-
-        if lightning_build:
-          mozconfig.append('ac_add_options --enable-lightning-build')
 
         if disable_updater:
           mozconfig.append('ac_add_options --disable-updater')
@@ -175,7 +165,6 @@ jobs:
         GHA_disable_updater: ${{inputs.disable-updater}}
         GHA_aarch64: ${{inputs.aarch64}}
         GHA_beta: ${{inputs.beta}}
-        GHA_lightning_build: ${{inputs.lightning-build}}
         GHA_MOZ_BUILD_DATE: ${{inputs.MOZ_BUILD_DATE}}
       shell: python3 {0}
 
@@ -184,11 +173,6 @@ jobs:
       run: |
         sed -i 's|https://@MOZ_APPUPDATE_HOST@/browser/%DISPLAY_VERSION%/%OS%/%ARCH%/update.xml|https://@MOZ_APPUPDATE_HOST@/${{ github.repository }}/releases/download/beta/LINUX-x86_64.xml |g' ./build/application.ini.in
         sed -i 's/floorp-update.ablaze.one/github.com/g' ./build/moz.build
-
-    - name: Change update url if lightning
-      if: inputs.lightning-build
-      run: |
-        sed -i 's|https://@MOZ_APPUPDATE_HOST@/browser/%DISPLAY_VERSION%/%OS%/%ARCH%/update.xml|https://@MOZ_APPUPDATE_HOST@/lightning/%DISPLAY_VERSION%/%OS%/%ARCH%/update.xml |g' ./build/application.ini.in
 
     #On Package, if not copies, error occur
     - name: Copy l10n files if beta
@@ -199,16 +183,6 @@ jobs:
             cp ./browser/branding/beta/locales/en-US/brand.dtd $PWD/floorp/browser/locales/l10n-central/$dir/browser/branding/beta/brand.dtd
             cp ./browser/branding/beta/locales/en-US/brand.ftl $PWD/floorp/browser/locales/l10n-central/$dir/browser/branding/beta/brand.ftl
             cp ./browser/branding/beta/locales/en-US/brand.properties $PWD/floorp/browser/locales/l10n-central/$dir/browser/branding/beta/brand.properties
-          done
-          
-    - name: Copy l10n files if lightning
-      if: inputs.lightning-build
-      run: |
-          for dir in $(ls -l $PWD/floorp/browser/locales/l10n-central | grep ^d | awk '{print $9}'); do
-            mkdir -p $PWD/floorp/browser/locales/l10n-central/$dir/browser/branding/lightning
-            cp ./browser/branding/lightning/locales/en-US/brand.dtd $PWD/floorp/browser/locales/l10n-central/$dir/browser/branding/lightning/brand.dtd
-            cp ./browser/branding/lightning/locales/en-US/brand.ftl $PWD/floorp/browser/locales/l10n-central/$dir/browser/branding/lightning/brand.ftl
-            cp ./browser/branding/lightning/locales/en-US/brand.properties $PWD/floorp/browser/locales/l10n-central/$dir/browser/branding/lightning/brand.properties
           done
 
     - name: Change Release Note for Japanese
@@ -222,7 +196,6 @@ jobs:
       run: |
         sed -i 's|https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/|${{inputs.release-note-url}}|g' ./browser/branding/official/pref/firefox-branding.js
         echo "$(cat ./browser/branding/official/pref/firefox-branding.js)"
-        cp -f ./browser/branding/official/pref/firefox-branding.js ./browser/branding/lightning/pref/firefox-branding.js
 
     - name: Build 🔨
       continue-on-error: true

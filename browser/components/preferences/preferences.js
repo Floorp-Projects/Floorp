@@ -222,12 +222,9 @@ function init_all() {
     "resource:///modules/FloorpAppConstants.sys.mjs"
   );
 
-  if (!FloorpAppConstants.FLOORP_LIGHTNING_BUILD) {
-    register_module("paneDesign", gDesign);
-    register_module("paneLepton", gLeptonPane);
-    register_module("paneCSK", gCSKPane)
-  }
-
+  register_module("paneDesign", gDesign);
+  register_module("paneLepton", gLeptonPane);
+  register_module("paneCSK", gCSKPane)
   register_module("paneNotes", gNotesPane);
   register_module("paneBSB", gBSBPane);
   register_module("paneDownloads", gDownloads);

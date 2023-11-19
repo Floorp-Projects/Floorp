@@ -15,9 +15,6 @@ on:
       beta:
         type: boolean
         default: false
-      lightning:
-        type: boolean
-        default: false
       mar:
         type: boolean
         default: false
@@ -143,9 +140,7 @@ jobs:
             
         - name: Integration 🗃
           run: |
-            if [ ${{ inputs.lightning }} == 'true' ]; then
-              export APP_NAME="Floorp Lightning"
-            elif [ ${{ inputs.beta }} == 'true' ]; then
+            if [ ${{ inputs.beta }} == 'true' ]; then
               export APP_NAME="Floorp Daylight"
             else
               export APP_NAME="Floorp"
@@ -161,9 +156,7 @@ jobs:
 
         - name: Sign to .app 🖋️
           run: |
-            if [ ${{ inputs.lightning }} == true ]; then
-              export APP_NAME="Floorp Lightning.app"
-            elif [ ${{ inputs.beta }} == true ]; then
+            if [ ${{ inputs.beta }} == true ]; then
               export APP_NAME="Floorp Daylight.app"
             else
               export APP_NAME="Floorp.app"
@@ -177,14 +170,10 @@ jobs:
               -p "./floorp/build/codesign/mac/plugin-container.developer.entitlements.xml"
           env: 
             GHA_beta: ${{ inputs.beta }}
-            GHA_lightning: ${{ inputs.lightning }}
 
         - name: Create DMG 📦
           run: |
-            if [ ${{ inputs.lightning }} == true ]; then
-              export APP_NAME="Floorp Lightning"
-              export INSTALLER_NAME="Floorp-Lightning"
-            elif [ ${{ inputs.beta }} == true ]; then
+            if [ ${{ inputs.beta }} == true ]; then
               export APP_NAME="Floorp Daylight"
               export INSTALLER_NAME="Floorp-Daylight"
             else
@@ -202,13 +191,10 @@ jobs:
             hdiutil convert ./base.dmg -format UDZO -imagekey zlib-level=9 -o floorp-macOS-universal.dmg 
           env: 
             GHA_beta: ${{ inputs.beta }}
-            GHA_lightning: ${{ inputs.lightning }}
 
         - name: Sign to .dmg 🖋️
           run: |
-            if [ ${{ inputs.lightning }} == true ]; then
-              export INSTALLER_NAME="floorp-lightning"
-            elif [ ${{ inputs.beta }} == true ]; then
+            if [ ${{ inputs.beta }} == true ]; then
               export INSTALLER_NAME="floorp-daylight"
             else
               export INSTALLER_NAME="floorp"
@@ -227,9 +213,7 @@ jobs:
 
         - name: Create MAR artifact 📦
           run: |
-           if [ ${{ inputs.lightning }} == true ]; then
-             export APP_NAME="Floorp Lightning.app"
-           elif [ ${{ inputs.beta }} == true ]; then
+           if [ ${{ inputs.beta }} == true ]; then
              export APP_NAME="Floorp Daylight.app"
            else
              export APP_NAME="Floorp.app"
@@ -245,7 +229,6 @@ jobs:
            echo "MACOS_MAR_SIZE=$MACOS_MAR_SIZE" >> $GITHUB_ENV
           env: 
             GHA_beta: ${{ inputs.beta }}
-            GHA_lightning: ${{ inputs.lightning }}
  
         - name: Create Update XML for "BETA" Build 🚩
           if : ${{ inputs.beta }} == 'true'

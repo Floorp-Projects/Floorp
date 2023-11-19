@@ -24,10 +24,6 @@ on:
         description: enable 32bit build
         type: boolean
         default: false
-      lightning-build:
-        description: enable lightning build
-        type: boolean
-        default: false
       aarch64:
         description: enable aarch64 build
         type: boolean
@@ -167,14 +163,8 @@ jobs:
 
         if [[ $GHA_beta == 'true' ]];then
           echo 'ac_add_options --with-branding=browser/branding/beta' >> mozconfig
-        elif [[ $GHA_lightning_build == 'true' ]];then
-          echo 'ac_add_options --with-branding=browser/branding/lightning' >> mozconfig
         else
           echo 'ac_add_options --with-branding=browser/branding/official' >> mozconfig
-        fi
-
-        if [[ $GHA_lightning_build == 'true' ]];then
-          echo 'ac_add_options --enable-lightning-build' >> mozconfig
         fi
 
         echo 'ac_add_options --with-l10n-base=$PWD/floorp/browser/locales/l10n-central' >> mozconfig
@@ -217,7 +207,6 @@ jobs:
         GHA_aarch64: ${{inputs.aarch64}}
         GHA_32bit: ${{inputs.build32bit}}
         GHA_beta: ${{inputs.beta}}
-        GHA_lightning_build: ${{inputs.lightning-build}}
         GHA_profdata_jarlog_artifact_name : ${{inputs.profdata_jarlog_artifact_name}}
         GHA_MOZ_BUILD_DATE: ${{inputs.MOZ_BUILD_DATE}}
 
@@ -243,11 +232,6 @@ jobs:
         sed -i 's|https://@MOZ_APPUPDATE_HOST@/browser/%DISPLAY_VERSION%/%OS%/%ARCH%/update.xml|https://@MOZ_APPUPDATE_HOST@/${{github.repository}}/releases/download/beta/WINNT-x86_64.xml |g' ./build/application.ini.in
         sed -i 's/floorp-update.ablaze.one/github.com/g' ./build/moz.build
 
-    - name: Change update url if lightning
-      if: inputs.lightning-build
-      run: |
-        sed -i 's|https://@MOZ_APPUPDATE_HOST@/browser/%DISPLAY_VERSION%/%OS%/%ARCH%/update.xml|https://@MOZ_APPUPDATE_HOST@/lightning/%DISPLAY_VERSION%/%OS%/%ARCH%/update.xml |g' ./build/application.ini.in
-
     #On Package, if not copies, error occur
     - name: Copy l10n files if beta
       if: inputs.beta
@@ -257,16 +241,6 @@ jobs:
             cp ./browser/branding/beta/locales/en-US/brand.dtd $PWD/floorp/browser/locales/l10n-central/$dir/browser/branding/beta/brand.dtd
             cp ./browser/branding/beta/locales/en-US/brand.ftl $PWD/floorp/browser/locales/l10n-central/$dir/browser/branding/beta/brand.ftl
             cp ./browser/branding/beta/locales/en-US/brand.properties $PWD/floorp/browser/locales/l10n-central/$dir/browser/branding/beta/brand.properties
-          done
-      
-    - name: Copy l10n files if lightning
-      if: inputs.lightning-build
-      run: |
-          for dir in $(ls -l $PWD/floorp/browser/locales/l10n-central | grep ^d | awk '{print $9}'); do
-            mkdir -p $PWD/floorp/browser/locales/l10n-central/$dir/browser/branding/lightning
-            cp ./browser/branding/lightning/locales/en-US/brand.dtd $PWD/floorp/browser/locales/l10n-central/$dir/browser/branding/lightning/brand.dtd
-            cp ./browser/branding/lightning/locales/en-US/brand.ftl $PWD/floorp/browser/locales/l10n-central/$dir/browser/branding/lightning/brand.ftl
-            cp ./browser/branding/lightning/locales/en-US/brand.properties $PWD/floorp/browser/locales/l10n-central/$dir/browser/branding/lightning/brand.properties
           done
 
     - name: Change Release Note for Japanese
@@ -280,7 +254,6 @@ jobs:
       run: |
         sed -i 's|https://blog.ablaze.one/category/ablaze/ablaze-project/floorp/|${{inputs.release-note-url}}|g' ./browser/branding/official/pref/firefox-branding.js
         echo "$(cat ./browser/branding/official/pref/firefox-branding.js)"
-        cp -f ./browser/branding/official/pref/firefox-branding.js ./browser/branding/lightning/pref/firefox-branding.js
 
     - name: Build 🔨
       continue-on-error: true
