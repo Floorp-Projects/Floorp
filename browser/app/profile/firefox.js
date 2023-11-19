@@ -2900,21 +2900,6 @@ pref("cookiebanners.ui.desktop.cfrVariant", 0);
   pref("dom.security.credentialmanagement.identity.enabled", true);
 #endif
 
-#if defined(NIGHTLY_BUILD)
-pref("ui.new-webcompat-reporter.enabled", true);
-#else
-pref("ui.new-webcompat-reporter.enabled", false);
-#endif
-
-#if defined(EARLY_BETA_OR_EARLIER)
-pref("ui.new-webcompat-reporter.send-more-info-link", true);
-#else
-pref("ui.new-webcompat-reporter.send-more-info-link", false);
-#endif
-
-# 0 = disabled, 1 = reason optional, 2 = reason required.
-pref("ui.new-webcompat-reporter.reason-dropdown", 0);
-
 // Reset Private Browsing Session feature
 #if defined(NIGHTLY_BUILD)
   pref("browser.privatebrowsing.resetPBM.enabled", true);
