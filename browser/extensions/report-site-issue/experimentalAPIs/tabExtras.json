@@ -15,6 +15,22 @@
           }
         ],
         "async": true
+      },
+      {
+        "name": "sendWebcompatInfo",
+        "type": "function",
+        "description": "Sends the given webcompat info to the given tab",
+        "parameters": [
+          {
+            "type": "integer",
+            "name": "tabId",
+            "minimum": 0
+          },
+          {
+            "type": "any"
+          }
+        ],
+        "async": true
       }
     ]
   }
