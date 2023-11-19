@@ -23,6 +23,7 @@
       rgba(207, 207, 216, .40)
     );
     --button-color: light-dark(rgb(21, 20, 26), rgb(251, 251, 254));
+    --button-color-inverted: light-dark(rgb(251, 251, 254), rgb(21, 20, 26));
 
     --focus-outline-color: var(--button-primary-bgcolor);
 
