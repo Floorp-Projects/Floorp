@@ -2431,6 +2431,8 @@ var gBrowserInit = {
 
         try {
           SiteSpecificBrowserIdUtils.runSsbById(id);
+          // hide window
+          window.minimize();
           Services.prefs.clearUserPref(SsbPrefName);
         } catch (e) {
           console.error(e);
