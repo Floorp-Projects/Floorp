@@ -6,7 +6,7 @@
        SMIL animation effects are first applied. -->
   <script xlink:href="smil-util.js" type="text/javascript"/>
   <rect width="100%" height="100%"
-        style="fill: red; -moz-transition: 200s fill">
+        style="fill: red; transition: 200s fill">
     <set attributeName="fill" to="lime" begin="1s" dur="indefinite"/>
   </rect>
 </svg>

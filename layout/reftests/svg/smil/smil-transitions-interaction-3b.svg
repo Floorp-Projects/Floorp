@@ -8,7 +8,7 @@
        SMIL animation effects are removed. -->
   <script xlink:href="smil-util.js" type="text/javascript"/>
   <rect width="100%" height="100%" fill="lime"
-        style="-moz-transition: 200s fill">
+        style="transition: 200s fill">
     <set attributeName="fill" attributeType="XML"
          to="red" begin="1s" dur="1s"/>
   </rect>
