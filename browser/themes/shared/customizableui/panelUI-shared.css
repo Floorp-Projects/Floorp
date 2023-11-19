@@ -2012,3 +2012,147 @@ panelview:not([mainview]) #PanelUI-whatsNew-title {
 #reset-pbm-panel-checkbox {
   margin-inline: 0 8px;
 }
+
+/* Report Broken Site panels */
+
+.report-broken-site-view .panel-subview-body * {
+  font: menu;
+}
+
+.report-broken-site-view button {
+  font-weight: var(--font-weight-bold);
+}
+
+.report-broken-site-view p {
+  line-height: 1.5em;
+}
+
+.report-broken-site-view.main-view p {
+  margin-block-end: 0;
+}
+
+.report-broken-site-view .deemphasized,
+.report-broken-site-view .missing {
+  color: inherit;
+  font-size: 96%;
+}
+
+#report-broken-site-popup-reason,
+#report-broken-site-popup-description {
+  margin-block-start: 0;
+}
+
+.report-broken-site-view p.missing {
+  font-style: italic;
+}
+
+.report-broken-site-view p.missing {
+  margin-top: 0;
+}
+
+.report-broken-site-view menulist {
+  padding-inline-start: 0.25em;
+}
+
+.report-broken-site-view input,
+.report-broken-site-view textarea {
+  border: 1px solid var(--panel-separator-color);
+  background-color: var(--button-color-inverted);
+  margin: 0;
+  padding: 0.25em;
+}
+
+.report-broken-site-view menulist {
+  padding: 0.5em 1em;
+}
+
+.report-broken-site-view input:disabled {
+  color: inherit;
+}
+
+.report-broken-site-view.main-view #report-broken-site-panel-container > label {
+  margin-block: 1.5em 0.5em;
+  margin-inline: 0;
+}
+
+#report-broken-site-panel-container > hbox,
+#report-broken-site-panel-container > a {
+  margin-block: 1.5em;
+}
+
+.report-broken-site-view p + a {
+  margin-block: 0;
+}
+
+.report-broken-site-view {
+  max-width: 26em;
+}
+
+#report-broken-site-popup-url-label {
+  margin-block-start: 1em;
+}
+
+.report-broken-site-view button[disabled="true"] {
+  opacity: 0.5;
+}
+
+#report-broken-site-panel-container {
+  margin: var(--arrowpanel-menuitem-margin);
+  padding: var(--arrowpanel-menuitem-padding);
+}
+
+#report-broken-site-panel-container > p,
+#report-broken-site-panel-container > label,
+#report-broken-site-panel-container > input,
+#report-broken-site-panel-container > textarea,
+#report-broken-site-panel-container > option {
+  color: var(--panel-color);
+  background: var(--panel-background);
+}
+
+.report-broken-site-view.sent-view .panel-header {
+  -moz-context-properties: fill;
+  fill: #2ac3a2;
+  background-image: url("chrome://global/skin/icons/check-filled.svg");
+  background-repeat: no-repeat;
+  background-position: calc(var(--panel-separator-margin-horizontal) +
+                            var(--arrowpanel-menuitem-padding-inline)) center;
+}
+
+.report-broken-site-view.sent-view .subviewbutton-back {
+  visibility: hidden;
+}
+
+.report-broken-site-view.sent-view {
+  background-color: var(--color-background-success);
+}
+
+.report-broken-site-view moz-button-group.panel-footer {
+  margin-inline-end: 0;
+}
+
+.report-broken-site-view moz-button-group > button {
+  background-color: var(--button-bgcolor);
+  color: var(--button-color);
+}
+
+.report-broken-site-view moz-button-group > button:hover {
+  background-color: var(--button-hover-bgcolor);
+}
+
+.report-broken-site-view moz-button-group > button:active {
+  background-color: var(--button-active-bgcolor);
+}
+
+.report-broken-site-view moz-button-group > button.primary {
+  background-color: var(--button-primary-bgcolor);
+  color: var(--button-primary-color);
+}
+
+.report-broken-site-view moz-button-group > button.primary:hover {
+  background-color: var(--button-primary-hover-bgcolor);
+}
+
+.report-broken-site-view moz-button-group > button.primary:active {
+  background-color: var(--button-primary-active-bgcolor);
+}
