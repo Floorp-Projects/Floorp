@@ -3,6 +3,7 @@ mozrunner ~= 7.0
 mozprofile ~= 2.1
 manifestparser >= 1.1
 ../tools/wptserve
+../tools/wpt_third_party/h2
 ../tools/wpt_third_party/pywebsocket3
 mozdevice >= 4.0.0
 mozpower >= 1.0.0

@@ -5,6 +5,7 @@ mozrunner ~= 7.0
 mozprofile ~= 2.1
 manifestparser >= 1.1
 ../web-platform/tests/tools/wptserve
+../web-platform/tests/tools/third_party/h2
 ../web-platform/tests/tools/third_party/pywebsocket3
 mozdevice >= 4.0.0
 mozpower >= 1.0.0

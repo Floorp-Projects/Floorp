@@ -1,7 +1,7 @@
-vendored:testing/web-platform/tests/tools/third_party/h2
-vendored:testing/web-platform/tests/tools/third_party/hpack
+vendored:testing/web-platform/tests/tools/third_party/h2/src
+vendored:testing/web-platform/tests/tools/third_party/hpack/src
 vendored:testing/web-platform/tests/tools/third_party/html5lib
-vendored:testing/web-platform/tests/tools/third_party/hyperframe
+vendored:testing/web-platform/tests/tools/third_party/hyperframe/src
 vendored:testing/web-platform/tests/tools/third_party/pywebsocket3
 vendored:testing/web-platform/tests/tools/third_party/webencodings
 vendored:testing/web-platform/tests/tools/wptrunner
