@@ -207,15 +207,15 @@ open class FenixApplication : LocaleAwareApplication(), Provider {
             enableEventTimestamps = FxNimbus.features.glean.value().enableEventTimestamps,
         )
 
+        // Set the metric configuration from Nimbus.
+        Glean.setMetricsEnabledConfig(FxNimbus.features.glean.value().metricsEnabled)
+
         Glean.initialize(
             applicationContext = this,
             configuration = configuration.setCustomEndpointIfAvailable(customEndpoint),
             uploadEnabled = telemetryEnabled,
             buildInfo = GleanBuildInfo.buildInfo,
         )
-
-        // Set the metric configuration from Nimbus.
-        Glean.setMetricsEnabledConfig(FxNimbus.features.glean.value().metricsEnabled)
 
         // We avoid blocking the main thread on startup by setting startup metrics on the background thread.
         val store = components.core.store
