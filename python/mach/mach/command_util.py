@@ -341,6 +341,13 @@ class DetermineCommandVenvAction(argparse.Action):
             return
 
         command = values[0]
+
+        aliases = namespace.mach_command_aliases
+
+        if command in aliases:
+            alias = aliases[command]
+            command = alias
+
         setattr(namespace, "command_name", command)
 
         # the "help" command does not have a module file, it's handled
