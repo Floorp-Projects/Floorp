@@ -2,12 +2,18 @@
 <head>
   <title>A top-level page with delayed cookie banner</title>
   <script>
+    function hideBanner() {
+      document.getElementById("banner").style.display = "none";
+    }
+
     function clickOptOut() {
       document.getElementById("result").textContent = "OptOut";
+      hideBanner();
     }
 
     function clickOptIn() {
       document.getElementById("result").textContent = "OptIn";
+      hideBanner();
     }
 
     function generateBanner() {

@@ -75,7 +75,6 @@ export class CookieBannerChild extends JSWindowActorChild {
   #isEnabledCached = null;
   #isTopLevel;
   #clickRules;
-  #originalBannerDisplay = null;
   #observerCleanUp;
   #observerCleanUpTimer;
   // Indicates whether the page "load" event occurred.
@@ -257,7 +256,7 @@ export class CookieBannerChild extends JSWindowActorChild {
         Glean.cookieBannersClick.handleDuration.start();
     }
 
-    let { bannerHandled, bannerDetected, matchedRule } =
+    let { bannerHandled, bannerDetected, matchedRules } =
       await this.handleCookieBanner();
 
     // Send a message to mark that the cookie banner handling has been executed.
@@ -289,7 +288,7 @@ export class CookieBannerChild extends JSWindowActorChild {
     if (bannerHandled) {
       lazy.logConsole.info("Handled cookie banner.", {
         url: this.document?.location.href,
-        rule: matchedRule,
+        matchedRules,
       });
 
       // Stop the timer to record how long it took to handle the banner.
@@ -518,19 +517,8 @@ export class CookieBannerChild extends JSWindowActorChild {
       return { bannerHandled: false, bannerDetected: true };
     }
 
-    // Hide the banner.
-    let matchedRule = this.#hideBanner(rules);
-
     let successClick = false;
-    try {
-      successClick = await this.#clickTarget(rules);
-    } finally {
-      if (!successClick) {
-        // We cannot successfully click the target button. Show the banner on
-        // the page so that user can interact with the banner.
-        this.#showBanner(matchedRule);
-      }
-    }
+    successClick = await this.#clickTarget(rules);
 
     if (successClick) {
       // For telemetry, Keep track of in which stage we successfully handled the banner.
@@ -541,7 +529,11 @@ export class CookieBannerChild extends JSWindowActorChild {
     }
     this.#telemetryStatus.success = successClick;
 
-    return { bannerHandled: successClick, bannerDetected: true, matchedRule };
+    return {
+      bannerHandled: successClick,
+      bannerDetected: true,
+      matchedRules: rules,
+    };
   }
 
   /**
@@ -760,70 +752,6 @@ export class CookieBannerChild extends JSWindowActorChild {
     return element.checkVisibility({
       checkOpacity: true,
       checkVisibilityCSS: true,
-    });
-  }
-
-  // The helper function to hide the banner. It will store the original display
-  // value of the banner, so it can be used to show the banner later if needed.
-  #hideBanner(rules) {
-    if (this.#originalBannerDisplay) {
-      // We've already hidden the banner.
-      return null;
-    }
-
-    let banner;
-    let rule;
-    for (let r of rules) {
-      banner = this.#querySelector(r.hide);
-      if (banner) {
-        rule = r;
-        break;
-      }
-    }
-    // Failed to find banner el to hide.
-    if (!banner) {
-      lazy.logConsole.debug(
-        "Failed to find banner element to hide from rules.",
-        rules
-      );
-      return null;
-    }
-
-    lazy.logConsole.debug("Found banner element to hide from rules.", rules);
-
-    this.#originalBannerDisplay = banner.style.display;
-
-    // Change the display of the banner right before the style flush occurs to
-    // avoid the unnecessary sync reflow.
-    banner.ownerGlobal.requestAnimationFrame(() => {
-      banner.style.display = "none";
-    });
-
-    return rule;
-  }
-
-  // The helper function to show the banner by reverting the display of the
-  // banner to the original value.
-  #showBanner({ hide }) {
-    if (this.#originalBannerDisplay === null) {
-      // We've never hidden the banner.
-      return;
-    }
-    let banner = this.#querySelector(hide);
-
-    // Banner no longer present or destroyed or content window has been
-    // destroyed.
-    if (!banner || Cu.isDeadWrapper(banner) || !banner.ownerGlobal) {
-      return;
-    }
-
-    let originalDisplay = this.#originalBannerDisplay;
-    this.#originalBannerDisplay = null;
-
-    // Change the display of the banner right before the style flush occurs to
-    // avoid the unnecessary sync reflow.
-    banner.ownerGlobal.requestAnimationFrame(() => {
-      banner.style.display = originalDisplay;
     });
   }
 
