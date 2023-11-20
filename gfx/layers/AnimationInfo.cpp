@@ -397,8 +397,7 @@ void AnimationInfo::AddAnimationForProperty(
     Send aSendFlag) {
   MOZ_ASSERT(aAnimation->GetEffect(),
              "Should not be adding an animation without an effect");
-  MOZ_ASSERT(!aAnimation->GetCurrentOrPendingStartTime().IsNull() ||
-                 !aAnimation->IsPlaying() ||
+  MOZ_ASSERT(!aAnimation->GetStartTime().IsNull() || !aAnimation->IsPlaying() ||
                  (aAnimation->GetTimeline() &&
                   aAnimation->GetTimeline()->TracksWallclockTime()),
              "If the animation has an unresolved start time it should either"
@@ -435,8 +434,7 @@ void AnimationInfo::AddAnimationForProperty(
           ? TimeStamp()
           : aAnimation->GetTimeline()->ToTimeStamp(TimeDuration());
 
-  dom::Nullable<TimeDuration> startTime =
-      aAnimation->GetCurrentOrPendingStartTime();
+  dom::Nullable<TimeDuration> startTime = aAnimation->GetStartTime();
   if (startTime.IsNull()) {
     animation->startTime() = Nothing();
   } else {

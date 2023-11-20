@@ -105,7 +105,7 @@ class CSSAnimation final : public Animation {
     mOwningElement = OwningElementRef();
   }
 
-  void Tick() override;
+  void Tick(TickState&) override;
   void QueueEvents(
       const StickyTimeDuration& aActiveTime = StickyTimeDuration());
 

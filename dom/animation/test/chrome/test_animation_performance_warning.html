@@ -44,6 +44,7 @@ SpecialPowers.pushPrefEnv({ "set": [
                             // regardless of platform DPIs.
                             ["layout.css.devPixelsPerPx", 1],
                             ["layout.animation.prerender.partial", false],
+                            ["dom.animations.mainthread-synchronization-with-geometric-animations", true],
                           ] },
                           start);
 
@@ -381,7 +382,7 @@ function testSetOfGeometricProperties() {
           {
             property: 'transform',
             runningOnCompositor: false,
-            warning: 'CompositorAnimationWarningTransformWithSyncGeometricAnimations'
+            warning: 'CompositorAnimationWarningTransformWithGeometricProperties'
           }
         ]);
     }, `${property} is treated as a geometric property`);
@@ -1136,6 +1137,7 @@ function testSynchronizedAnimations() {
     const animB = elemB.animate({ marginLeft: [ '0px', '100px' ] },
                                 100 * MS_PER_SEC);
 
+    await Promise.all([animA.ready, animB.ready]);
     await waitForPaints();
 
     assert_animation_property_state_equals(
@@ -1160,6 +1162,7 @@ function testSynchronizedAnimations() {
     const animC = elemC.animate({ marginLeft: [ '0px', '100px' ] },
                                 100 * MS_PER_SEC);
 
+    await Promise.all([animA.ready, animB.ready, animC.ready]);
     await waitForPaints();
 
     assert_animation_property_state_equals(
@@ -1192,6 +1195,7 @@ function testSynchronizedAnimations() {
     const animC = elemC.animate({ translate: [ '0px', '100px' ] },
                                 100 * MS_PER_SEC);
 
+    await Promise.all([animA.ready, animB.ready, animC.ready]);
     await waitForPaints();
 
     assert_animation_property_state_equals(
@@ -1252,8 +1256,7 @@ function testSynchronizedAnimations() {
     assert_animation_property_state_equals(
       transitionA.effect.getProperties(),
       [ { property: 'transform',
-          runningOnCompositor: false,
-          warning: 'CompositorAnimationWarningTransformWithSyncGeometricAnimations'
+          runningOnCompositor: true,
       } ]);
   }, 'Transitions created before and after a tick are synchronized');
 
@@ -1268,6 +1271,7 @@ function testSynchronizedAnimations() {
     const animB = elemB.animate({ marginLeft: [ '0px', '100px' ] },
                                 100 * MS_PER_SEC);
 
+    await Promise.all([animA.ready, animB.ready]);
     await waitForPaints();
 
     assert_animation_property_state_equals(
@@ -1301,6 +1305,7 @@ function testSynchronizedAnimations() {
     const cssAnimation = animationElem.getAnimations()[0];
 
     await Promise.all([cssTransition.ready, cssAnimation.ready]);
+    await waitForPaints();
 
     assert_animation_property_state_equals(cssAnimation.effect.getProperties(),
       [{ property: 'transform',
@@ -1313,12 +1318,14 @@ function testSynchronizedAnimations() {
 
     const animA = elemA.animate({ marginLeft: [ '0px', '100px' ] },
                                 100 * MS_PER_SEC);
+    await animA.ready;
     await waitForPaints();
 
     let animB = elemB.animate({ transform: [ 'translate(0px)',
                                              'translate(100px)' ] },
                               100 * MS_PER_SEC);
     await animB.ready;
+    await waitForPaints();
 
     assert_animation_property_state_equals(
       animB.effect.getProperties(),
@@ -1334,11 +1341,13 @@ function testSynchronizedAnimations() {
     const animA = elemA.animate({ transform: [ 'translate(0px)',
                                                'translate(100px)' ] },
                                 100 * MS_PER_SEC);
+    await animA.ready;
     await waitForPaints();
 
     let animB = elemB.animate({ marginLeft: [ '0px', '100px' ] },
                               100 * MS_PER_SEC);
     await animB.ready;
+    await waitForPaints();
 
     assert_animation_property_state_equals(
       animA.effect.getProperties(),
@@ -1358,6 +1367,7 @@ function testSynchronizedAnimations() {
                                 100 * MS_PER_SEC);
     animB.pause();
 
+    await animA.ready;
     await waitForPaints();
 
     assert_animation_property_state_equals(
@@ -1378,6 +1388,7 @@ function testSynchronizedAnimations() {
     // Seek one of the animations so that their start times will differ
     animA.currentTime = 5000;
 
+    await Promise.all([animA.ready, animB.ready]);
     await waitForPaints();
 
     assert_not_equals(animA.startTime, animB.startTime,
@@ -1401,6 +1412,7 @@ function testSynchronizedAnimations() {
     const animB = elemB.animate({ marginLeft: [ '0px', '100px' ] },
                                 100 * MS_PER_SEC);
 
+    await Promise.all([animA.ready, animB.ready]);
     await waitForPaints();
 
     assert_animation_property_state_equals(
@@ -1411,6 +1423,7 @@ function testSynchronizedAnimations() {
     animA.pause();
     animA.play();
     await animA.ready;
+    await waitForPaints();
 
     assert_animation_property_state_equals(
       animA.effect.getProperties(),
@@ -1431,6 +1444,7 @@ function testSynchronizedAnimations() {
     // Clear target effect
     animB.effect.target = null;
 
+    await Promise.all([animA.ready, animB.ready]);
     await waitForPaints();
 
     assert_animation_property_state_equals(

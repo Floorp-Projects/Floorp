@@ -59,6 +59,8 @@ class DocumentTimeline final : public AnimationTimeline,
   void NotifyAnimationContentVisibilityChanged(Animation* aAnimation,
                                                bool aIsVisible) override;
 
+  void TriggerAllPendingAnimationsNow();
+
   // nsARefreshObserver methods
   void WillRefresh(TimeStamp aTime) override;
   // nsATimerAdjustmentObserver methods
@@ -69,7 +71,7 @@ class DocumentTimeline final : public AnimationTimeline,
 
   Document* GetDocument() const override { return mDocument; }
 
-  void UpdateLastRefreshDriverTime();
+  void UpdateLastRefreshDriverTime(TimeStamp aKnownTime = {});
 
   bool IsMonotonicallyIncreasing() const override { return true; }
 

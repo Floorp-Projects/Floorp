@@ -54,7 +54,6 @@
 #include "jsapi.h"
 #include "nsContentUtils.h"
 #include "nsTextFrame.h"
-#include "mozilla/PendingAnimationTracker.h"
 #include "mozilla/PendingFullscreenEvent.h"
 #include "mozilla/dom/PerformanceMainThread.h"
 #include "mozilla/Preferences.h"
@@ -2134,16 +2133,6 @@ struct DocumentFrameCallbacks {
   nsTArray<FrameRequest> mCallbacks;
 };
 
-static bool HasPendingAnimations(PresShell* aPresShell) {
-  Document* doc = aPresShell->GetDocument();
-  if (!doc) {
-    return false;
-  }
-
-  PendingAnimationTracker* tracker = doc->GetPendingAnimationTracker();
-  return tracker && tracker->HasPendingAnimations();
-}
-
 static void TakeFrameRequestCallbacksFrom(
     Document* aDocument, nsTArray<DocumentFrameCallbacks>& aTarget) {
   aTarget.AppendElement(aDocument);
@@ -2502,10 +2491,7 @@ bool nsRefreshDriver::TickObserverArray(uint32_t aIdx, TimeStamp aNowTime) {
       RefPtr<PresShell> presShell = rawPresShell;
       presShell->mObservingLayoutFlushes = false;
       presShell->mWasLastReflowInterrupted = false;
-      const auto flushType = HasPendingAnimations(presShell)
-                                 ? FlushType::Layout
-                                 : FlushType::InterruptibleLayout;
-      const ChangesToFlush ctf(flushType, false);
+      const ChangesToFlush ctf(FlushType::InterruptibleLayout, false);
       presShell->FlushPendingNotifications(ctf);
       if (presShell->FixUpFocus()) {
         presShell->FlushPendingNotifications(ctf);

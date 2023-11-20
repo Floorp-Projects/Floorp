@@ -1,0 +1,31 @@
+<!doctype html>
+<script src=/resources/testharness.js></script>
+<script src=/resources/testharnessreport.js></script>
+<title>Test that a pending animation doesn't keep vsync running forever</title>
+<body>
+<script>
+function ensureVsyncDisabled() {
+  let wu = SpecialPowers.wrap(window).windowUtils;
+  return new Promise(resolve => {
+    function check() {
+      if (wu.refreshDriverHasPendingTick) {
+        requestIdleCallback(check, {timeout:300});
+      } else {
+        resolve();
+      }
+    }
+    check();
+  })
+}
+
+promise_test(async function() {
+  await ensureVsyncDisabled();
+  let doc = new DOMParser().parseFromString("<div>", "text/html");
+  let anim = doc.querySelector("div").animate(null);
+  assert_true(anim.pending, "Animation should be pending");
+  anim.timeline = document.timeline;
+
+  await ensureVsyncDisabled();
+  assert_true(true, "Vsync should be disabled");
+});
+</script>
