@@ -59,12 +59,12 @@ class JS_PUBLIC_API SliceBudget {
   bool extended = false;
 
  private:
-  static const intptr_t UnlimitedCounter = INTPTR_MAX;
+  static constexpr int64_t UnlimitedCounter = INT64_MAX;
 
   // Most calls to isOverBudget will only check the counter value. Every N
   // steps, do a more "expensive" check -- look at the current time and/or
   // check the atomic interrupt flag.
-  static constexpr intptr_t StepsPerExpensiveCheck = 1000;
+  static constexpr int64_t StepsPerExpensiveCheck = 1000;
 
   // Configuration
 
@@ -115,8 +115,10 @@ class JS_PUBLIC_API SliceBudget {
   // the next call to isOverBudget. Useful when switching between major phases
   // of an operation like a cycle collection.
   void stepAndForceCheck() {
-    if (!isUnlimited()) {
+    if (isTimeBudget()) {
       counter = 0;
+    } else {
+      counter--;
     }
   }
 
