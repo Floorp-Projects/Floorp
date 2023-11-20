@@ -725,6 +725,10 @@ Tester.prototype = {
 
       Services.obs.notifyObservers(null, "test-complete");
 
+      // Ensure to reset the clipboard in case the test has modified it,
+      // so it won't affect the next tests.
+      window.SpecialPowers.clipboardCopyString("");
+
       if (
         this.currentTest.passCount === 0 &&
         this.currentTest.failCount === 0 &&
