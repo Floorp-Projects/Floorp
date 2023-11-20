@@ -244,8 +244,8 @@ SET TIMEOUT: service-workers/service-worker/resources/resource-timing-worker.js
 SET TIMEOUT: shadow-dom/Document-prototype-currentScript.html
 SET TIMEOUT: shadow-dom/scroll-to-the-fragment-in-shadow-tree.html
 SET TIMEOUT: shadow-dom/slotchange-event.html
-SET TIMEOUT: trusted-types/block-string-assignment-to-DOMWindowTimers-setTimeout-setInterval.tentative.html
-SET TIMEOUT: trusted-types/DOMWindowTimers-setTimeout-setInterval.tentative.html
+SET TIMEOUT: trusted-types/block-string-assignment-to-DOMWindowTimers-setTimeout-setInterval.html
+SET TIMEOUT: trusted-types/DOMWindowTimers-setTimeout-setInterval.html
 SET TIMEOUT: pending-beacon/resources/pending_beacon-helper.js
 SET TIMEOUT: user-timing/*
 SET TIMEOUT: web-animations/crashtests/reparent-animating-element-002.html
@@ -722,4 +722,4 @@ HTML INVALID SYNTAX: domparsing/DOMParser-parseFromString-xml-parsererror.html
 HTML INVALID SYNTAX: domparsing/XMLSerializer-serializeToString.html
 HTML INVALID SYNTAX: html/canvas/element/manual/unclosed-canvas-4.htm
 HTML INVALID SYNTAX: quirks/percentage-height-calculation.html
-HTML INVALID SYNTAX: trusted-types/TrustedTypePolicyFactory-getAttributeType-namespace.tentative.html
+HTML INVALID SYNTAX: trusted-types/TrustedTypePolicyFactory-getAttributeType-namespace.html
