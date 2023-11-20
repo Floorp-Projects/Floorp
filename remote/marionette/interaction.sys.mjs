@@ -236,7 +236,9 @@ async function webdriverClickElement(el, a11y) {
 }
 
 async function chromeClick(el, a11y) {
-  if (!lazy.atom.isElementEnabled(el)) {
+  const win = getWindow(el);
+
+  if (!(await lazy.atom.isElementEnabled(el, win))) {
     throw new lazy.error.InvalidElementStateError("Element is not enabled");
   }
 
@@ -260,11 +262,11 @@ async function seleniumClickElement(el, a11y) {
     visibilityCheckEl = lazy.dom.getContainer(el);
   }
 
-  if (!lazy.dom.isVisible(visibilityCheckEl)) {
+  if (!(await lazy.dom.isVisible(visibilityCheckEl))) {
     throw new lazy.error.ElementNotInteractableError();
   }
 
-  if (!lazy.atom.isElementEnabled(el)) {
+  if (!(await lazy.atom.isElementEnabled(el, win))) {
     throw new lazy.error.InvalidElementStateError("Element is not enabled");
   }
 
@@ -708,7 +710,7 @@ async function legacySendKeysToElement(el, value, a11y) {
       visibilityCheckEl = lazy.dom.getContainer(el);
     }
 
-    if (!lazy.dom.isVisible(visibilityCheckEl)) {
+    if (!(await lazy.dom.isVisible(visibilityCheckEl))) {
       throw new lazy.error.ElementNotInteractableError(
         "Element is not visible"
       );
@@ -734,9 +736,9 @@ async function legacySendKeysToElement(el, value, a11y) {
  * @returns {boolean}
  *     True if element is displayed, false otherwise.
  */
-interaction.isElementDisplayed = function (el, strict = false) {
+interaction.isElementDisplayed = async function (el, strict = false) {
   let win = getWindow(el);
-  let displayed = lazy.atom.isElementDisplayed(el, win);
+  let displayed = await lazy.atom.isElementDisplayed(el, win);
 
   let a11y = lazy.accessibility.get(strict);
   return a11y.assertAccessible(el).then(acc => {
@@ -754,7 +756,7 @@ interaction.isElementDisplayed = function (el, strict = false) {
  * @returns {boolean}
  *     True if enabled, false otherwise.
  */
-interaction.isElementEnabled = function (el, strict = false) {
+interaction.isElementEnabled = async function (el, strict = false) {
   let enabled = true;
   let win = getWindow(el);
 
@@ -773,7 +775,7 @@ interaction.isElementEnabled = function (el, strict = false) {
   ) {
     enabled = false;
   } else {
-    enabled = lazy.atom.isElementEnabled(el, { frame: win });
+    enabled = await lazy.atom.isElementEnabled(el, win);
   }
 
   let a11y = lazy.accessibility.get(strict);

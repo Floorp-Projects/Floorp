@@ -8,7 +8,6 @@ ChromeUtils.defineESModuleGetters(lazy, {
   Addon: "chrome://remote/content/marionette/addon.sys.mjs",
   AppInfo: "chrome://remote/content/shared/AppInfo.sys.mjs",
   assert: "chrome://remote/content/shared/webdriver/Assert.sys.mjs",
-  atom: "chrome://remote/content/marionette/atom.sys.mjs",
   browser: "chrome://remote/content/marionette/browser.sys.mjs",
   capture: "chrome://remote/content/shared/Capture.sys.mjs",
   Context: "chrome://remote/content/marionette/browser.sys.mjs",
@@ -341,31 +340,6 @@ GeckoDriver.prototype.addBrowser = function (win) {
 
   this.browsers[winId] = context;
   this.curBrowser = this.browsers[winId];
-};
-
-/**
- * Recursively get all labeled text.
- *
- * @param {Element} el
- *     The parent element.
- * @param {Array.<string>} lines
- *      Array that holds the text lines.
- */
-GeckoDriver.prototype.getVisibleText = function (el, lines) {
-  try {
-    if (lazy.atom.isElementDisplayed(el, this.getCurrentWindow())) {
-      if (el.value) {
-        lines.push(el.value);
-      }
-      for (let child in el.childNodes) {
-        this.getVisibleText(el.childNodes[child], lines);
-      }
-    }
-  } catch (e) {
-    if (el.nodeName == "#text") {
-      lines.push(el.textContent);
-    }
-  }
 };
 
 /**
