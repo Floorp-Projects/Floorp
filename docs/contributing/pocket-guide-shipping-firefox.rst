@@ -162,7 +162,8 @@ Beta release notes draft                    Nightly W4       Wednesday
 Nightly features Go/No-Go decisions         Nightly W4       Wednesday
 Feature Complete Milestone                  Nightly W4       Wednesday         Last day to land risky patches and/or enable new features
 Nightly soft code freeze start              Nightly W4       Thursday          Stabilization period in preparation to merge to Beta
-String freeze                               Nightly W4       Thursday          Modification or deletion of strings exposed to the end-users is not allowed
+QA Test Plan approval due                   Nightly W4       Friday            Last day to provide QA with feature Test Plan sign-offs
+String freeze                               Nightly W4       Friday            Modification or deletion of strings exposed to the end-users is not allowed
 QA pre-merge regression testing completed   Nightly W4       Friday
 Merge Day                                   Beta W1          Monday            Day 1 of the new Beta cycle
 Pre-release sign off                        Beta W3          Friday            Final round of QA testing prior to Release
