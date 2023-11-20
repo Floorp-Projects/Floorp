@@ -9,7 +9,7 @@
  * separators.  Multiple bookmarks for the same URL are allowed.
  *
  * Note that if you are handling bookmarks operations in the UI, you should
- * not use this API directly, but rather use PlacesTransactions.jsm, so that
+ * not use this API directly, but rather use PlacesTransactions, so that
  * any operation is undo/redo-able.
  *
  * Each bookmark-item is represented by an object having the following
