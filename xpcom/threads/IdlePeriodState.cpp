@@ -8,9 +8,9 @@
 #include "mozilla/IdlePeriodState.h"
 #include "mozilla/StaticPrefs_idle_period.h"
 #include "mozilla/ipc/IdleSchedulerChild.h"
+#include "mozilla/dom/ContentChild.h"
 #include "nsIIdlePeriod.h"
 #include "nsThreadManager.h"
-#include "nsThreadUtils.h"
 #include "nsXPCOM.h"
 #include "nsXULAppAPI.h"
 
@@ -150,6 +150,9 @@ TimeStamp IdlePeriodState::GetIdleToken(TimeStamp aLocalIdlePeriodHint,
              "Why are we touching idle state off the main thread?");
 
   if (!ShouldGetIdleToken()) {
+    // If the process was in background, it may have an idle token, but it can
+    // be cleared now.
+    ClearIdleToken();
     return aLocalIdlePeriodHint;
   }
 
@@ -170,15 +173,12 @@ void IdlePeriodState::RequestIdleToken(TimeStamp aLocalIdlePeriodHint) {
              "Why are we touching idle state off the main thread?");
   MOZ_ASSERT(!mActive);
 
-  if (!mIdleSchedulerInitialized) {
-    mIdleSchedulerInitialized = true;
-    if (ShouldGetIdleToken()) {
-      // For now cross-process idle scheduler is supported only on the main
-      // threads of the child processes.
-      mIdleScheduler = ipc::IdleSchedulerChild::GetMainThreadIdleScheduler();
-      if (mIdleScheduler) {
-        mIdleScheduler->Init(this);
-      }
+  if (!mIdleScheduler && ShouldGetIdleToken()) {
+    // For now cross-process idle scheduler is supported only on the main
+    // threads of the child processes.
+    mIdleScheduler = ipc::IdleSchedulerChild::GetMainThreadIdleScheduler();
+    if (mIdleScheduler) {
+      mIdleScheduler->Init(this);
     }
   }
 
@@ -250,6 +250,8 @@ void IdlePeriodState::ClearIdleToken() {
 
 bool IdlePeriodState::ShouldGetIdleToken() {
   return StaticPrefs::idle_period_cross_process_scheduling() &&
-         XRE_IsContentProcess();
+         dom::ContentChild::GetSingleton() &&
+         dom::ContentChild::GetSingleton()->GetProcessPriority() <
+             hal::ProcessPriority::PROCESS_PRIORITY_FOREGROUND;
 }
 }  // namespace mozilla
