@@ -50,7 +50,9 @@ def generate(output, idlFilename, dataFile):
             # a function instead of checking the pref directly.
             if p.method == "BackdropFilter":
                 extendedAttrs.append('Func="nsCSSProps::IsBackdropFilterAvailable"')
-            else:
+            # MozTransform accessor is generated regardless, for compatibility,
+            # see bug 1861828, 1865332, 1860424, 1864970, 1865332.
+            elif p.method != "MozTransform":
                 extendedAttrs.append('Pref="%s"' % p.pref)
 
         def add_extra_accessors(p):
