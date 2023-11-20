@@ -179,6 +179,7 @@ if info["os"] == "win" and version == "10.0.22621":
 
 info["version"] = version
 info["os_version"] = StringVersion(os_version)
+info["is_ubuntu"] = "Ubuntu" in version
 
 
 # processor type and bits
@@ -195,6 +196,9 @@ elif processor.upper() == "ARM64":
     processor = "aarch64"
 elif processor == "Power Macintosh":
     processor = "ppc"
+elif processor == "arm" and bits == "64bit":
+    processor = "aarch64"
+
 bits = re.search("(\d+)bit", bits).group(1)
 info.update(
     {
@@ -202,6 +206,10 @@ info.update(
         "bits": int(bits),
     }
 )
+
+# we want to transition to this instead of using `!debug`, etc.
+info["arch"] = info["processor"]
+
 
 if info["os"] == "linux":
     import ctypes
