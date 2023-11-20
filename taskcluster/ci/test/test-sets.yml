@@ -98,6 +98,7 @@ browsertime:
     - browsertime-upload
     - browsertime-speculative
     - browsertime-throttled
+    - browsertime-pageload-benchmark
 
 browsertime-clang:
     - browsertime-tp6

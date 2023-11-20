@@ -758,6 +758,19 @@ browsertime-upload:
         fetch:
             - upload-speed-test-file
 
+browsertime-pageload-benchmark:
+    raptor:
+        apps: [firefox]
+        subtests: [tp6-bench]
+    description: Raptor (browsertime) TP6 pageload benchmark test
+    max-run-time: 4500
+    mozharness:
+        extra-options:
+            - --browser-cycles=5
+    run-on-projects: []
+    tier: 2
+    treeherder-symbol: Btime(tp6-bench)
+
 browsertime-speculative:
     raptor:
         apps: [firefox]
