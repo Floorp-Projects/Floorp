@@ -1,14 +1,14 @@
 {
   "hashFunction": "sha512",
-  "name": "Widevine-L1-1.0.2512.1",
+  "name": "Widevine-L1-1.0.2738.0",
   "schema_version": 1000,
   "vendors": {
     "gmp-widevinecdm-l1": {
       "platforms": {
         "WINNT_x86_64-msvc": {
-          "fileUrl": "https://dl.google.com/release2/chrome_component/acaa5khuklrahrby256zitbxd5wq_1.0.2512.1/neifaoindggfcjicffkgpmnlppeffabd_1.0.2512.1_win64_cobsb2ojiixoq4iznzfyxzov4i.crx3",
-          "filesize": 2409080,
-          "hashValue": "a7d385f667190961b707bee8fb881e6a6cfb123038cd571fb6d9372590c169d2340add9cec624d52c6b81edc947b70ae63385cbed5a9eecd720af728b5ae479c"
+          "fileUrl": "https://redirector.gvt1.com/edgedl/release2/chrome_component/imoffpf67hel7kbknqflao2oo4_1.0.2738.0/neifaoindggfcjicffkgpmnlppeffabd_1.0.2738.0_win64_kj4dp5kifwxbdodqls7e5nzhtm.crx3",
+          "filesize": 1181927,
+          "hashValue": "4fd27594c459fb1cd94a857be10f7d1d6216dbf202cd43e8a3fa395a268c72fc5f5c456c9cb314f2220d766af741db469c8bb106acbed419149a44a3b87619f1"
         },
         "WINNT_x86_64-msvc-x64": {
           "alias": "WINNT_x86_64-msvc"
@@ -17,7 +17,7 @@
           "alias": "WINNT_x86_64-msvc"
         }
       },
-      "version": "1.0.2512.1"
+      "version": "1.0.2738.0"
     }
   }
 }
