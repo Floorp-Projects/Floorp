@@ -1494,7 +1494,11 @@ class XPCShellTests(object):
         options["profilePath"] = dbPath
         options["isMochitest"] = False
         options["isWin"] = sys.platform == "win32"
-        self.http3Server = Http3Server(options, self.env, self.log)
+        serverEnv = self.env.copy()
+        serverLog = self.env.get("MOZHTTP3_SERVER_LOG")
+        if serverLog is not None:
+            serverEnv["RUST_LOG"] = serverLog
+        self.http3Server = Http3Server(options, serverEnv, self.log)
         self.http3Server.start()
         for key, value in self.http3Server.ports().items():
             self.env[key] = value
