@@ -20,6 +20,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/mscom/COMWrappers.h"
 #include "mozilla/mscom/Utils.h"
+#include "mozilla/widget/WinRegistry.h"
 #include "mozilla/Logging.h"
 #include "mozilla/Services.h"
 #include "mozilla/WidgetUtils.h"
@@ -36,7 +37,6 @@
 #include "prenv.h"
 #include "ToastNotificationHandler.h"
 #include "ToastNotificationHeaderOnlyUtils.h"
-#include "WinUtils.h"
 
 namespace mozilla {
 namespace widget {
@@ -154,7 +154,7 @@ bool ToastNotification::AssignIfNsisAumid(nsAutoString& aInstallHash,
   nsAutoString nsisAumidName =
       u""_ns MOZ_TOAST_APP_NAME u"Toast-"_ns + aInstallHash;
   nsAutoString nsisAumidPath = u"AppUserModelId\\"_ns + nsisAumidName;
-  if (!WinUtils::HasRegistryKey(HKEY_CLASSES_ROOT, nsisAumidPath.get())) {
+  if (!WinRegistry::HasKey(HKEY_CLASSES_ROOT, nsisAumidPath)) {
     MOZ_LOG(sWASLog, LogLevel::Debug,
             ("No CustomActivator value from installer in key 'HKCR\\%s'",
              NS_ConvertUTF16toUTF8(nsisAumidPath).get()));

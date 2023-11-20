@@ -7,13 +7,11 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/AutoRestore.h"
-#include "mozilla/DebugOnly.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/MiscEvents.h"
-#include "mozilla/Preferences.h"
 #include "mozilla/TextEvents.h"
+#include "mozilla/widget/WinRegistry.h"
 
-#include "nsAlgorithm.h"
 #include "nsExceptionHandler.h"
 #include "nsGkAtoms.h"
 #include "nsIUserIdleServiceInternal.h"
@@ -22,7 +20,6 @@
 #include "nsQuickSort.h"
 #include "nsReadableUtils.h"
 #include "nsServiceManagerUtils.h"
-#include "nsToolkit.h"
 #include "nsUnicharUtils.h"
 #include "nsWindowDbg.h"
 
@@ -4272,8 +4269,8 @@ static bool IsValidKeyboardLayoutsChild(const nsAString& aChildName) {
 }
 
 nsCString KeyboardLayout::GetLayoutName(HKL aLayout) const {
-  const wchar_t kKeyboardLayouts[] =
-      L"SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts\\";
+  constexpr auto kKeyboardLayouts =
+      u"SYSTEM\\CurrentControlSet\\Control\\Keyboard Layouts\\"_ns;
   uint16_t language = reinterpret_cast<uintptr_t>(aLayout) & 0xFFFF;
   uint16_t layout = (reinterpret_cast<uintptr_t>(aLayout) >> 16) & 0xFFFF;
   // If the layout is less than 0xA000XXXX (normal keyboard layout for the
@@ -4284,8 +4281,9 @@ nsCString KeyboardLayout::GetLayoutName(HKL aLayout) const {
                                         ? layout
                                         : reinterpret_cast<uintptr_t>(aLayout));
     wchar_t buf[256];
-    if (NS_WARN_IF(!WinUtils::GetRegistryKey(
-            HKEY_LOCAL_MACHINE, key.get(), L"Layout Text", buf, sizeof(buf)))) {
+    if (NS_WARN_IF(!WinRegistry::GetString(
+            HKEY_LOCAL_MACHINE, key, u"Layout Text"_ns, buf,
+            WinRegistry::kLegacyWinUtilsStringFlags))) {
       return "No name or too long name"_ns;
     }
     return NS_ConvertUTF16toUTF8(buf);
@@ -4299,28 +4297,22 @@ nsCString KeyboardLayout::GetLayoutName(HKL aLayout) const {
   }
 
   // Otherwise, we need to walk the registry under "Keyboard Layouts".
-  nsCOMPtr<nsIWindowsRegKey> regKey =
-      do_CreateInstance("@mozilla.org/windows-registry-key;1");
+  WinRegistry::Key regKey(HKEY_LOCAL_MACHINE, kKeyboardLayouts,
+                          WinRegistry::KeyMode::Read);
   if (NS_WARN_IF(!regKey)) {
     return ""_ns;
   }
-  nsresult rv =
-      regKey->Open(nsIWindowsRegKey::ROOT_KEY_LOCAL_MACHINE,
-                   nsString(kKeyboardLayouts), nsIWindowsRegKey::ACCESS_READ);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return ""_ns;
-  }
-  uint32_t childCount = 0;
-  if (NS_WARN_IF(NS_FAILED(regKey->GetChildCount(&childCount))) ||
-      NS_WARN_IF(!childCount)) {
+  uint32_t childCount = regKey.GetChildCount();
+  if (NS_WARN_IF(!childCount)) {
     return ""_ns;
   }
   for (uint32_t i = 0; i < childCount; i++) {
     nsAutoString childName;
-    if (NS_WARN_IF(NS_FAILED(regKey->GetChildName(i, childName))) ||
+    if (NS_WARN_IF(!regKey.GetChildName(i, childName)) ||
         !IsValidKeyboardLayoutsChild(childName)) {
       continue;
     }
+    nsresult rv = NS_OK;
     uint32_t childNum = static_cast<uint32_t>(childName.ToInteger64(&rv, 16));
     if (NS_WARN_IF(NS_FAILED(rv))) {
       continue;
@@ -4337,17 +4329,22 @@ nsCString KeyboardLayout::GetLayoutName(HKL aLayout) const {
     // Then, the child should have "Layout Id" which is "YYY" of 0xFYYYXXXX.
     nsAutoString key(kKeyboardLayouts);
     key += childName;
+    WinRegistry::Key regKey(HKEY_LOCAL_MACHINE, key,
+                            WinRegistry::KeyMode::QueryValue);
+    if (NS_WARN_IF(!regKey)) {
+      continue;
+    }
     wchar_t buf[256];
-    if (NS_WARN_IF(!WinUtils::GetRegistryKey(HKEY_LOCAL_MACHINE, key.get(),
-                                             L"Layout Id", buf, sizeof(buf)))) {
+    if (NS_WARN_IF(!regKey.GetValueAsString(
+            u"Layout Id"_ns, buf, WinRegistry::kLegacyWinUtilsStringFlags))) {
       continue;
     }
     uint16_t layoutId = wcstol(buf, nullptr, 16);
     if (layoutId != (layout & 0x0FFF)) {
       continue;
     }
-    if (NS_WARN_IF(!WinUtils::GetRegistryKey(
-            HKEY_LOCAL_MACHINE, key.get(), L"Layout Text", buf, sizeof(buf)))) {
+    if (NS_WARN_IF(!regKey.GetValueAsString(
+            u"Layout Text"_ns, buf, WinRegistry::kLegacyWinUtilsStringFlags))) {
       continue;
     }
     return NS_ConvertUTF16toUTF8(buf);

@@ -79,19 +79,6 @@ interface nsIWindowsRegKey : nsISupports
   const unsigned long TYPE_INT64  = 11; // REG_QWORD
 
   /**
-   * This attribute exposes the native HKEY and is available to provide C++
-   * consumers with the flexibility of making other Windows registry API calls
-   * that are not exposed via this interface.
-   *
-   * It is possible to initialize this object by setting an HKEY on it.  In
-   * that case, it is the responsibility of the consumer setting the HKEY to
-   * ensure that it is a valid HKEY.
-   *
-   * WARNING: Setting the key does not close the old key.
-   */
-  [noscript] attribute HKEY key;
-
-  /**
    * This method closes the key.  If the key is already closed, then this
    * method does nothing.
    */

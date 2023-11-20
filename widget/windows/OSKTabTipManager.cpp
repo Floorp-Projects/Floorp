@@ -7,7 +7,7 @@
 
 #include "mozilla/Preferences.h"
 #include "nsDebug.h"
-#include "WinUtils.h"
+#include "mozilla/widget/WinRegistry.h"
 
 #include <shellapi.h>
 #include <shlobj.h>
@@ -43,11 +43,10 @@ void OSKTabTipManager::ShowOnScreenKeyboard() {
     wchar_t path[MAX_PATH];
     // The path to TabTip.exe is defined at the following registry key.
     // This is pulled out of the 64-bit registry hive directly.
-    const wchar_t kRegKeyName[] =
-        L"Software\\Classes\\CLSID\\"
-        L"{054AAE20-4BEA-4347-8A35-64A533254A9D}\\LocalServer32";
-    if (!WinUtils::GetRegistryKey(HKEY_LOCAL_MACHINE, kRegKeyName, nullptr,
-                                  path, sizeof path)) {
+    constexpr auto kRegKeyName =
+        u"Software\\Classes\\CLSID\\{054AAE20-4BEA-4347-8A35-64A533254A9D}\\LocalServer32"_ns;
+    if (!WinRegistry::GetString(HKEY_LOCAL_MACHINE, kRegKeyName, u""_ns, path,
+                                WinRegistry::kLegacyWinUtilsStringFlags)) {
       return;
     }
 
