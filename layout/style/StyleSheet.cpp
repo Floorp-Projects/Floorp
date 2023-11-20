@@ -36,7 +36,6 @@ using namespace dom;
 StyleSheet::StyleSheet(css::SheetParsingMode aParsingMode, CORSMode aCORSMode,
                        const dom::SRIMetadata& aIntegrity)
     : mParentSheet(nullptr),
-      mRelevantGlobal(nullptr),
       mConstructorDocument(nullptr),
       mDocumentOrShadowRoot(nullptr),
       mParsingMode(aParsingMode),
@@ -49,7 +48,6 @@ StyleSheet::StyleSheet(const StyleSheet& aCopy, StyleSheet* aParentSheetToUse,
                        dom::DocumentOrShadowRoot* aDocOrShadowRootToUse,
                        dom::Document* aConstructorDocToUse)
     : mParentSheet(aParentSheetToUse),
-      mRelevantGlobal(nullptr),
       mConstructorDocument(aConstructorDocToUse),
       mTitle(aCopy.mTitle),
       mDocumentOrShadowRoot(aDocOrShadowRootToUse),
@@ -127,9 +125,7 @@ already_AddRefed<StyleSheet> StyleSheet::Constructor(
   auto referrerInfo = MakeRefPtr<ReferrerInfo>(*constructorDocument);
   sheet->SetReferrerInfo(referrerInfo);
   sheet->mConstructorDocument = constructorDocument;
-  if (constructorDocument) {
-    sheet->mRelevantGlobal = constructorDocument->GetParentObject();
-  }
+  sheet->mRelevantGlobal = constructorDocument->GetParentObject();
 
   // 2. Set the sheet's media according to aOptions.
   if (aOptions.mMedia.IsUTF8String()) {
@@ -294,6 +290,12 @@ void StyleSheet::SetComplete() {
              "Can't complete a sheet that's already been forced unique.");
   MOZ_ASSERT(!IsComplete(), "Already complete?");
   mState |= State::Complete;
+
+  if (Document* doc = GetAssociatedDocument()) {
+    MOZ_ASSERT(!mRelevantGlobal);
+    mRelevantGlobal = doc->GetScopeObject();
+  }
+
   if (!Disabled()) {
     ApplicableStateChanged(true);
   }
@@ -966,11 +968,6 @@ void StyleSheet::SetAssociatedDocumentOrShadowRoot(
 
   // not ref counted
   mDocumentOrShadowRoot = aDocOrShadowRoot;
-
-  if (Document* doc = GetAssociatedDocument()) {
-    MOZ_ASSERT(!mRelevantGlobal);
-    mRelevantGlobal = doc->GetScopeObject();
-  }
 }
 
 void StyleSheet::AppendStyleSheet(StyleSheet& aSheet) {
