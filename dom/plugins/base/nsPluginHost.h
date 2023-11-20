@@ -16,10 +16,10 @@
 
 class nsPluginHost final : public nsSupportsWeakReference {
   friend class nsFakePluginTag;
-  virtual ~nsPluginHost();
+  virtual ~nsPluginHost() = default;
 
  public:
-  nsPluginHost();
+  nsPluginHost() = default;
 
   static already_AddRefed<nsPluginHost> GetInst();
 
