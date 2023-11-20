@@ -265,28 +265,8 @@ impl WritingMode {
     }
 
     #[inline]
-    fn physical_sides_to_corner(
-        block_side: PhysicalSide,
-        inline_side: PhysicalSide,
-    ) -> PhysicalCorner {
-        match (block_side, inline_side) {
-            (PhysicalSide::Top, PhysicalSide::Left) | (PhysicalSide::Left, PhysicalSide::Top) => {
-                PhysicalCorner::TopLeft
-            },
-            (PhysicalSide::Top, PhysicalSide::Right) | (PhysicalSide::Right, PhysicalSide::Top) => {
-                PhysicalCorner::TopRight
-            },
-            (PhysicalSide::Bottom, PhysicalSide::Right) |
-            (PhysicalSide::Right, PhysicalSide::Bottom) => PhysicalCorner::BottomRight,
-            (PhysicalSide::Bottom, PhysicalSide::Left) |
-            (PhysicalSide::Left, PhysicalSide::Bottom) => PhysicalCorner::BottomLeft,
-            _ => unreachable!("block and inline sides must be orthogonal"),
-        }
-    }
-
-    #[inline]
     pub fn start_start_physical_corner(&self) -> PhysicalCorner {
-        WritingMode::physical_sides_to_corner(
+        PhysicalCorner::from_sides(
             self.block_start_physical_side(),
             self.inline_start_physical_side(),
         )
@@ -294,7 +274,7 @@ impl WritingMode {
 
     #[inline]
     pub fn start_end_physical_corner(&self) -> PhysicalCorner {
-        WritingMode::physical_sides_to_corner(
+        PhysicalCorner::from_sides(
             self.block_start_physical_side(),
             self.inline_end_physical_side(),
         )
@@ -302,7 +282,7 @@ impl WritingMode {
 
     #[inline]
     pub fn end_start_physical_corner(&self) -> PhysicalCorner {
-        WritingMode::physical_sides_to_corner(
+        PhysicalCorner::from_sides(
             self.block_end_physical_side(),
             self.inline_start_physical_side(),
         )
@@ -310,7 +290,7 @@ impl WritingMode {
 
     #[inline]
     pub fn end_end_physical_corner(&self) -> PhysicalCorner {
-        WritingMode::physical_sides_to_corner(
+        PhysicalCorner::from_sides(
             self.block_end_physical_side(),
             self.inline_end_physical_side(),
         )
@@ -1463,17 +1443,166 @@ impl<T: Copy + Add<T, Output = T> + Sub<T, Output = T>> Sub<LogicalMargin<T>> fo
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
+#[repr(u8)]
+pub enum LogicalAxis {
+    Block = 0,
+    Inline,
+}
+
+impl LogicalAxis {
+    #[inline]
+    pub fn to_physical(self, wm: WritingMode) -> PhysicalAxis {
+        if wm.is_horizontal() == (self == Self::Inline) {
+            PhysicalAxis::Horizontal
+        } else {
+            PhysicalAxis::Vertical
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+#[repr(u8)]
+pub enum LogicalSide {
+    BlockStart = 0,
+    BlockEnd,
+    InlineStart,
+    InlineEnd,
+}
+
+impl LogicalSide {
+    fn is_block(self) -> bool {
+        matches!(self, Self::BlockStart | Self::BlockEnd)
+    }
+
+    #[inline]
+    pub fn to_physical(self, wm: WritingMode) -> PhysicalSide {
+        // Block mapping depends only on vertical+vertical-lr
+        static BLOCK_MAPPING: [[PhysicalSide; 2]; 4] = [
+            [PhysicalSide::Top, PhysicalSide::Bottom],  // horizontal-tb
+            [PhysicalSide::Right, PhysicalSide::Left],  // vertical-rl
+            [PhysicalSide::Bottom, PhysicalSide::Top],  // (horizontal-bt)
+            [PhysicalSide::Left, PhysicalSide::Right],  // vertical-lr
+        ];
+
+        if self.is_block() {
+            let vertical = wm.is_vertical();
+            let lr = wm.is_vertical_lr();
+            let index = (vertical as usize) | ((lr as usize) << 1);
+            return BLOCK_MAPPING[index][self as usize];
+        }
+
+        // start = 0, end = 1
+        let edge = self as usize - 2;
+        // Inline axis sides depend on all three of writing-mode, text-orientation and direction,
+        // which are encoded in the VERTICAL, INLINE_REVERSED, VERTICAL_LR and LINE_INVERTED bits.
+        //
+        //   bit 0 = the VERTICAL value
+        //   bit 1 = the INLINE_REVERSED value
+        //   bit 2 = the VERTICAL_LR value
+        //   bit 3 = the LINE_INVERTED value
+        //
+        // Note that not all of these combinations can actually be specified via CSS: there is no
+        // horizontal-bt writing-mode, and no text-orientation value that produces "inverted"
+        // text. (The former 'sideways-left' value, no longer in the spec, would have produced
+        // this in vertical-rl mode.)
+        static INLINE_MAPPING: [[PhysicalSide; 2]; 16] = [
+            [PhysicalSide::Left, PhysicalSide::Right],  // horizontal-tb               ltr
+            [PhysicalSide::Top, PhysicalSide::Bottom],  // vertical-rl                 ltr
+            [PhysicalSide::Right, PhysicalSide::Left],  // horizontal-tb               rtl
+            [PhysicalSide::Bottom, PhysicalSide::Top],  // vertical-rl                 rtl
+            [PhysicalSide::Right, PhysicalSide::Left],  // (horizontal-bt)  (inverted) ltr
+            [PhysicalSide::Top, PhysicalSide::Bottom],  // sideways-lr                 rtl
+            [PhysicalSide::Left, PhysicalSide::Right],  // (horizontal-bt)  (inverted) rtl
+            [PhysicalSide::Bottom, PhysicalSide::Top],  // sideways-lr                 ltr
+            [PhysicalSide::Left, PhysicalSide::Right],  // horizontal-tb    (inverted) rtl
+            [PhysicalSide::Top, PhysicalSide::Bottom],  // vertical-rl      (inverted) rtl
+            [PhysicalSide::Right, PhysicalSide::Left],  // horizontal-tb    (inverted) ltr
+            [PhysicalSide::Bottom, PhysicalSide::Top],  // vertical-rl      (inverted) ltr
+            [PhysicalSide::Left, PhysicalSide::Right],  // (horizontal-bt)             ltr
+            [PhysicalSide::Top, PhysicalSide::Bottom],  // vertical-lr                 ltr
+            [PhysicalSide::Right, PhysicalSide::Left],  // (horizontal-bt)             rtl
+            [PhysicalSide::Bottom, PhysicalSide::Top],  // vertical-lr                 rtl
+        ];
+
+        debug_assert!(WritingMode::VERTICAL.bits() == 0x01 &&
+                       WritingMode::INLINE_REVERSED.bits() == 0x02 &&
+                       WritingMode::VERTICAL_LR.bits() == 0x04 &&
+                       WritingMode::LINE_INVERTED.bits() == 0x08);
+        let index = (wm.bits() & 0xF) as usize;
+        INLINE_MAPPING[index][edge]
+    }
+}
+
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+#[repr(u8)]
+pub enum LogicalCorner {
+    StartStart = 0,
+    StartEnd,
+    EndStart,
+    EndEnd,
+}
+
+impl LogicalCorner {
+    #[inline]
+    pub fn to_physical(self, wm: WritingMode) -> PhysicalCorner {
+        static CORNER_TO_SIDES: [[LogicalSide; 2]; 4] = [
+            [LogicalSide::BlockStart, LogicalSide::InlineStart],
+            [LogicalSide::BlockStart, LogicalSide::InlineEnd],
+            [LogicalSide::BlockEnd, LogicalSide::InlineStart],
+            [LogicalSide::BlockEnd, LogicalSide::InlineEnd],
+        ];
+
+        let [block, inline] = CORNER_TO_SIDES[self as usize];
+        let block = block.to_physical(wm);
+        let inline = inline.to_physical(wm);
+        PhysicalCorner::from_sides(block, inline)
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+#[repr(u8)]
+pub enum PhysicalAxis {
+    Vertical = 0,
+    Horizontal,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq)]
+#[repr(u8)]
 pub enum PhysicalSide {
-    Top,
+    Top = 0,
     Right,
     Bottom,
     Left,
 }
 
+impl PhysicalSide {
+    fn orthogonal_to(self, other: Self) -> bool {
+        matches!(self, Self::Top | Self::Bottom) != matches!(other, Self::Top | Self::Bottom)
+    }
+}
+
 #[derive(Clone, Copy, Debug, PartialEq)]
+#[repr(u8)]
 pub enum PhysicalCorner {
-    TopLeft,
+    TopLeft = 0,
     TopRight,
     BottomRight,
     BottomLeft,
+}
+
+impl PhysicalCorner {
+    fn from_sides(a: PhysicalSide, b: PhysicalSide) -> Self {
+        debug_assert!(a.orthogonal_to(b), "Sides should be orthogonal");
+        // Only some of these are possible, since we expect only orthogonal values. If the two
+        // sides were to be parallel, we fall back to returning TopLeft.
+        const IMPOSSIBLE: PhysicalCorner = PhysicalCorner::TopLeft;
+        static SIDES_TO_CORNER: [[PhysicalCorner; 4]; 4] = [
+            [IMPOSSIBLE, PhysicalCorner::TopRight, IMPOSSIBLE, PhysicalCorner::TopLeft ],
+            [PhysicalCorner::TopRight, IMPOSSIBLE, PhysicalCorner::BottomRight, IMPOSSIBLE ],
+            [IMPOSSIBLE, PhysicalCorner::BottomRight, IMPOSSIBLE, PhysicalCorner::BottomLeft ],
+            [PhysicalCorner::TopLeft, IMPOSSIBLE, PhysicalCorner::BottomLeft, IMPOSSIBLE ],
+        ];
+        SIDES_TO_CORNER[a as usize][b as usize]
+    }
 }

@@ -427,15 +427,27 @@
         use crate::Atom;
         ${caller.body()}
         #[allow(unused_variables)]
-        pub fn cascade_property(
+        pub unsafe fn cascade_property(
             declaration: &PropertyDeclaration,
             context: &mut computed::Context,
         ) {
+            % if property.logical:
+            declaration.debug_crash("Should physicalize before entering here");
+            % else:
             context.for_non_inherited_property = ${"false" if property.style_struct.inherited else "true"};
+            % if property.logical_group:
+            debug_assert_eq!(
+                declaration.id().as_longhand().unwrap().logical_group(),
+                LonghandId::${property.camel_case}.logical_group(),
+            );
+            % else:
+            debug_assert_eq!(
+                declaration.id().as_longhand().unwrap(),
+                LonghandId::${property.camel_case},
+            );
+            % endif
             let specified_value = match *declaration {
-                PropertyDeclaration::${property.camel_case}(ref value) => value,
                 PropertyDeclaration::CSSWideKeyword(ref wk) => {
-                    debug_assert_eq!(wk.id, LonghandId::${property.camel_case});
                     match wk.keyword {
                         % if not property.style_struct.inherited:
                         CSSWideKeyword::Unset |
@@ -465,25 +477,20 @@
                     }
                     return;
                 },
+                #[cfg(debug_assertions)]
                 PropertyDeclaration::WithVariables(..) => {
                     declaration.debug_crash("Found variables not substituted");
                     return;
                 },
-                _ => {
-                    declaration.debug_crash("Entered the wrong cascade_property implementation");
-                    return;
+                _ => unsafe {
+                    declaration.unchecked_value_as::<${property.specified_type()}>()
                 },
             };
 
             % if property.ident in SYSTEM_FONT_LONGHANDS and engine == "gecko":
-                if let Some(sf) = specified_value.get_system() {
-                    longhands::system_font::resolve_system_font(sf, context);
-                }
-            % endif
-
-            % if not property.style_struct.inherited and property.logical:
-                context.rule_cache_conditions.borrow_mut()
-                    .set_writing_mode_dependency(context.builder.writing_mode);
+            if let Some(sf) = specified_value.get_system() {
+                longhands::system_font::resolve_system_font(sf, context);
+            }
             % endif
 
             % if property.is_vector and not property.simple_vector_bindings and engine == "gecko":
@@ -509,6 +516,7 @@
                 let computed = specified_value.to_computed_value(context);
                 % endif
                 context.builder.set_${property.ident}(computed)
+            % endif
             % endif
         }
 
@@ -915,117 +923,4 @@
             }
         }
     </%call>
-</%def>
-
-<%def name="logical_setter_helper(name)">
-    <%
-        side = None
-        size = None
-        corner = None
-        axis = None
-        maybe_side = [s for s in LOGICAL_SIDES if s in name]
-        maybe_size = [s for s in LOGICAL_SIZES if s in name]
-        maybe_corner = [s for s in LOGICAL_CORNERS if s in name]
-        maybe_axis = [s for s in LOGICAL_AXES if name.endswith(s)]
-        if len(maybe_side) == 1:
-            side = maybe_side[0]
-        elif len(maybe_size) == 1:
-            size = maybe_size[0]
-        elif len(maybe_corner) == 1:
-            corner = maybe_corner[0]
-        elif len(maybe_axis) == 1:
-            axis = maybe_axis[0]
-        def phys_ident(side, phy_side):
-            return to_rust_ident(to_phys(name, side, phy_side))
-    %>
-    % if side is not None:
-        use crate::logical_geometry::PhysicalSide;
-        match wm.${to_rust_ident(side)}_physical_side() {
-            % for phy_side in PHYSICAL_SIDES:
-                PhysicalSide::${phy_side.title()} => {
-                    ${caller.inner(physical_ident=phys_ident(side, phy_side))}
-                }
-            % endfor
-        }
-    % elif corner is not None:
-        use crate::logical_geometry::PhysicalCorner;
-        match wm.${to_rust_ident(corner)}_physical_corner() {
-            % for phy_corner in PHYSICAL_CORNERS:
-                PhysicalCorner::${to_camel_case(phy_corner)} => {
-                    ${caller.inner(physical_ident=phys_ident(corner, phy_corner))}
-                }
-            % endfor
-        }
-    % elif size is not None:
-        <%
-            # (horizontal, vertical)
-            physical_size = ("height", "width")
-            if size == "inline-size":
-                physical_size = ("width", "height")
-        %>
-        if wm.is_vertical() {
-            ${caller.inner(physical_ident=phys_ident(size, physical_size[1]))}
-        } else {
-            ${caller.inner(physical_ident=phys_ident(size, physical_size[0]))}
-        }
-    % elif axis is not None:
-        <%
-            if axis == "inline":
-                me, other = "x", "y"
-            else:
-                assert(axis == "block")
-                me, other = "y", "x"
-        %>
-        if wm.is_vertical() {
-            ${caller.inner(physical_ident=phys_ident(axis, other))}
-        } else {
-            ${caller.inner(physical_ident=phys_ident(axis, me))}
-        }
-    % else:
-        <% raise Exception("Don't know what to do with logical property %s" % name) %>
-    % endif
-</%def>
-
-<%def name="logical_setter(name)">
-    /// Set the appropriate physical property for ${name} given a writing mode.
-    pub fn set_${to_rust_ident(name)}(&mut self,
-                                      v: longhands::${to_rust_ident(name)}::computed_value::T,
-                                      wm: WritingMode) {
-        <%self:logical_setter_helper name="${name}">
-            <%def name="inner(physical_ident)">
-                self.set_${physical_ident}(v)
-            </%def>
-        </%self:logical_setter_helper>
-    }
-
-    /// Copy the appropriate physical property from another struct for ${name}
-    /// given a writing mode.
-    pub fn copy_${to_rust_ident(name)}_from(&mut self,
-                                            other: &Self,
-                                            wm: WritingMode) {
-        <%self:logical_setter_helper name="${name}">
-            <%def name="inner(physical_ident)">
-                self.copy_${physical_ident}_from(other)
-            </%def>
-        </%self:logical_setter_helper>
-    }
-
-    /// Copy the appropriate physical property from another struct for ${name}
-    /// given a writing mode.
-    pub fn reset_${to_rust_ident(name)}(&mut self,
-                                        other: &Self,
-                                        wm: WritingMode) {
-        self.copy_${to_rust_ident(name)}_from(other, wm)
-    }
-
-    /// Get the computed value for the appropriate physical property for
-    /// ${name} given a writing mode.
-    pub fn clone_${to_rust_ident(name)}(&self, wm: WritingMode)
-        -> longhands::${to_rust_ident(name)}::computed_value::T {
-    <%self:logical_setter_helper name="${name}">
-        <%def name="inner(physical_ident)">
-            self.clone_${physical_ident}()
-        </%def>
-    </%self:logical_setter_helper>
-    }
 </%def>
