@@ -218,8 +218,6 @@ user_pref("toolkit.telemetry.test.pref1", true);
 user_pref("toolkit.telemetry.test.pref2", false);
 // Disable the caret blinking so we get stable snapshot
 user_pref("ui.caretBlinkTime", -1);
-// Disable scrollbar animations.
-user_pref("ui.scrollbarFadeDuration", 0);
 user_pref("webextensions.tests", true);
 // Disable intermittent telemetry collection
 user_pref("toolkit.telemetry.initDelay", 99999999);
