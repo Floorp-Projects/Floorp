@@ -24,6 +24,7 @@
 #include "nsIOService.h"
 #include "nsIPermissionManager.h"
 #include "nsPluginHost.h"
+#include "nsPluginTags.h"
 #include "nsIHttpChannel.h"
 #include "nsINestedURI.h"
 #include "nsScriptSecurityManager.h"
