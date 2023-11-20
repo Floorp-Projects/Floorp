@@ -486,8 +486,7 @@ export const ContentAnalysis = {
         content: this._getResourceNameFromNameOrL10NId(aResourceNameOrL10NId),
       }),
       Ci.nsIPromptService.BUTTON_POS_0 *
-        Ci.nsIPromptService.BUTTON_TITLE_CANCEL +
-        Ci.nsIPromptService.SHOW_SPINNER,
+        Ci.nsIPromptService.BUTTON_TITLE_CANCEL,
       null,
       null,
       null,
