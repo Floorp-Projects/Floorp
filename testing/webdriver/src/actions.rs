@@ -102,19 +102,16 @@ where
     })?
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum PointerType {
+    #[default]
     Mouse,
     Pen,
     Touch,
 }
 
-impl Default for PointerType {
-    fn default() -> PointerType {
-        PointerType::Mouse
-    }
-}
+
 
 #[derive(Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct PointerActionParameters {
@@ -328,7 +325,7 @@ pub struct PointerUpAction {
     pub azimuthAngle: Option<f64>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize)]
 pub enum PointerOrigin {
     #[serde(
         rename = "element-6066-11e4-a52e-4f735466cecf",
@@ -338,14 +335,11 @@ pub enum PointerOrigin {
     #[serde(rename = "pointer")]
     Pointer,
     #[serde(rename = "viewport")]
+    #[default]
     Viewport,
 }
 
-impl Default for PointerOrigin {
-    fn default() -> PointerOrigin {
-        PointerOrigin::Viewport
-    }
-}
+
 
 // TODO: The custom deserializer can be removed once the support of the legacy
 // ELEMENT key has been removed from Selenium bindings

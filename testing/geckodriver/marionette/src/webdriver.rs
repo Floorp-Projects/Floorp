@@ -89,18 +89,15 @@ impl Default for PrintParameters {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum PrintOrientation {
     Landscape,
+    #[default]
     Portrait,
 }
 
-impl Default for PrintOrientation {
-    fn default() -> Self {
-        PrintOrientation::Portrait
-    }
-}
+
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct PrintPage {
