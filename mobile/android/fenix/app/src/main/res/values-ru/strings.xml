@@ -532,6 +532,11 @@
     <!-- Change setting text button, for the cookie banner re-engagement dialog -->
     <string name="reduce_cookie_banner_dialog_change_setting_button" moz:RemovedIn="121" tools:ignore="UnusedResources">Разрешить</string>
 
+    <!--Title for the cookie banner re-engagement CFR, the placeholder is replaced with app name -->
+    <string name="cookie_banner_cfr_title">%1$s только что отказался от куки для вас</string>
+    <!--Message for the cookie banner re-engagement CFR -->
+    <string name="cookie_banner_cfr_message">Меньше отвлекающих факторов, меньше куки, отслеживающих вас на этом сайте.</string>
+
     <!-- Description of the preference to enable "HTTPS-Only" mode. -->
     <string name="preferences_https_only_summary">Автоматически пытаться подключиться к сайтам через протокол шифрования HTTPS для повышения безопасности.</string>
     <!-- Summary of https only preference if https only is set to off -->

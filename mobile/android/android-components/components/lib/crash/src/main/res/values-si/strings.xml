@@ -2,7 +2,7 @@
 <resources>
 
     <!-- Title of the crash reporter dialog. %1$s will be replaced with the name of the app (e.g. Firefox Focus). -->
-    <string name="mozac_lib_crash_dialog_title">සමාවන්න. %1$s හි ගැටළුවක් මතු වී බිඳ වැටුණි.</string>
+    <string name="mozac_lib_crash_dialog_title">කණගාටුයි. %1$s හි ගැටලුවක් මතු වී බිඳ වැටුණි.</string>
 
     <!-- Label of the checkbox for sending crash reports in the crash reporter dialog. %1$s will be replaced with the name of the organization (e.g. Mozilla). -->
     <string name="mozac_lib_crash_dialog_checkbox">බිඳ වැටීමේ වාර්තාව %1$s වෙත යවන්න</string>
@@ -17,7 +17,7 @@
     <string name="mozac_lib_crash_channel">බිඳ වැටීම්</string>
 
     <!-- Title of the crash reporter notification for background process crashes. %1$s will be replaced with the name of the app (e.g. Firefox Focus). -->
-    <string name="mozac_lib_crash_background_process_notification_title">සමාවන්න. %1$s හි ගැටළුවක් සිදු විය.</string>
+    <string name="mozac_lib_crash_background_process_notification_title">කණගාටුයි. %1$s හි ගැටලුවක් මතු විය.</string>
 
     <!-- Label of a notification action/button that will send the crash report to Mozilla. -->
     <string name="mozac_lib_crash_notification_action_report">වාර්තාව</string>

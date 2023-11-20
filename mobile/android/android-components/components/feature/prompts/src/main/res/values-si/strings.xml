@@ -131,7 +131,7 @@
     <!-- Federated Credential Management prompts -->
     <!--Content description for the Account picture in the Select Account FedCM prompt -->
     <string name="mozac_feature_prompts_account_picture">ගිණුමේ ඡායාරූපය</string>
-    <!-- Title of the Identity Credential provider dialog choose. -->
+    <!-- Title of the Identity Credential provider dialog chooser. -->
     <string name="mozac_feature_prompts_identity_credentials_choose_provider">පිවිසුම් ප්‍රතිපාදකයක් තෝරන්න</string>
     <!-- Title of an account picker dialog for identity credentials. -->
     <string name="mozac_feature_prompts_identity_credentials_choose_account" moz:removedIn="119" tools:ignore="UnusedResources">ගිණුමක් තෝරන්න</string>
@@ -141,6 +141,8 @@
     <string name="mozac_feature_prompts_identity_credentials_privacy_policy_title">පිවිසුම් ප්‍රතිපාදකයක් ලෙස %1$s යොදාගන්න</string>
     <!-- Title of the Identity Credential privacy policy dialog description. The %1$s will be replaced with the name of the provider, %2$s will be replaced with the account, %3$s will be replaced with the privacy policy url and  %4$s will be replaced with the terms of service. -->
     <string name="mozac_feature_prompts_identity_credentials_privacy_policy_description"><![CDATA[ %2$s ගිණුමක් සමඟින් %1$s වෙත පිවිසීමෙන් ඔවුන්ගේ <a href="%4$s">සේවාවේ නියම</a> සහ <a href="%3$s">රහස්‍යතා ප්‍රතිපත්තියට</a> යටත් වේ]]></string>
-    <!-- Title of the Identity Credential provider dialog choose. -->
+    <!-- Text for the positive button of the Identity Credential dialogs. -->
     <string name="mozac_feature_prompts_identity_credentials_continue">ඉදිරියට</string>
+    <!-- Text for the cancel button of the Identity Credential dialogs. -->
+    <string name="mozac_feature_prompts_identity_credentials_cancel">අවලංගු</string>
 </resources>

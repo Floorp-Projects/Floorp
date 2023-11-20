@@ -129,7 +129,7 @@
     <!-- Federated Credential Management prompts -->
     <!--Content description for the Account picture in the Select Account FedCM prompt -->
     <string name="mozac_feature_prompts_account_picture">Tugna n umiḍan</string>
-    <!-- Title of the Identity Credential provider dialog choose. -->
+    <!-- Title of the Identity Credential provider dialog chooser. -->
     <string name="mozac_feature_prompts_identity_credentials_choose_provider">Fren asaǧǧăw n unekcum</string>
     <!-- Title of an account picker dialog for identity credentials. -->
     <string name="mozac_feature_prompts_identity_credentials_choose_account" moz:removedIn="119" tools:ignore="UnusedResources">Fren amiḍan</string>
@@ -139,6 +139,8 @@
     <string name="mozac_feature_prompts_identity_credentials_privacy_policy_title">Seqdec %1$s am usaǧǧaw n tuqqna</string>
     <!-- Title of the Identity Credential privacy policy dialog description. The %1$s will be replaced with the name of the provider, %2$s will be replaced with the account, %3$s will be replaced with the privacy policy url and  %4$s will be replaced with the terms of service. -->
     <string name="mozac_feature_prompts_identity_credentials_privacy_policy_description"><![CDATA[Tuqqna ɣer %1$s s umiḍan %2$s ad yili ddaw <a href="%3$s">Tsertit tabaḍnit</a> d <a href="%4$s">Tewtilin n useqdec</a>]]></string>
-    <!-- Title of the Identity Credential provider dialog choose. -->
+    <!-- Text for the positive button of the Identity Credential dialogs. -->
     <string name="mozac_feature_prompts_identity_credentials_continue">Kemmel</string>
+    <!-- Text for the cancel button of the Identity Credential dialogs. -->
+    <string name="mozac_feature_prompts_identity_credentials_cancel">Sefsex</string>
 </resources>

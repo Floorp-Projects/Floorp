@@ -942,7 +942,7 @@
     <!-- Title for the tab crash report screen-->
     <string name="tab_crash_report_title">පටිත්ත බිඳ වැටුණි</string>
     <!-- Headline for the tab crash report screen -->
-    <string name="tab_crash_report_headline">සමාවන්න. මෙම පටිත්ත සමඟ ගැටළුවක් තිබේ.</string>
+    <string name="tab_crash_report_headline">කණගාටුයි. මෙම පටිත්ත සමඟ ගැටලුවක් තිබේ.</string>
     <!-- Subtitle for the tab crash report screen -->
     <string name="tab_crash_report_description">පෞද්. අතිරික්සුවක් බැවින් සුරැකීමට හෝ මෙම පටිත්ත ප්‍රත්‍යර්පණය කළ නොහැකිය.</string>
     <!-- Label for button to close the tab-->
@@ -1019,8 +1019,8 @@
 
      <!-- The error message shown when a website has an invalid or expired SSL certificate. -->
     <string name="mozac_browser_errorpages_security_bad_cert_message"><![CDATA[
- මෙය සේවාදායකයේ වින්‍යාසයෙහි ගැටළුවක් විය හැකිය, හෝ යමෙක් සේවාදායකය ලෙස වංචනිකව පෙනී සිටීමට තැත් කරනවා විය හැකිය. <br/><br/>
- ඔබ පෙර දී මෙම සේවාදායකයට සාර්ථකව සම්බන්ධ වී ඇත්නම්, මෙය තාවකාලික දෝෂයක් විය හැකිය.
+ මෙය සේවාදායකයේ වින්‍යාසයෙහි ගැටලුවක් විය හැකිය, හෝ යමෙක් සේවාදායකය ලෙස වංචනිකව පෙනී සිටීමට තැත් කරනවා විය හැකිය. <br/><br/>
+ ඔබ කලින් මෙම සේවාදායකයට සාර්ථකව සම්බන්‍ධ වී ඇත්නම්, මෙය තාවකාලික දෝෂයක් විය හැකිය.
  ]]></string>
 
     <!-- The advanced certificate information shown when a website has an invalid SSL certificate. The %1$s will be replaced by the app name and %2$s will be replaced by website URL. It's only shown when a website has an invalid SSL certificate. -->
