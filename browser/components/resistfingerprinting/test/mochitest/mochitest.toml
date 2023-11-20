@@ -22,7 +22,6 @@ support-files = ["decode_error.mp4"]
 
 ["test_geolocation.html"]
 scheme = "https"
-fail-if = ["xorigin"]
 
 ["test_hide_gamepad_info.html"]
 scheme = "https"
