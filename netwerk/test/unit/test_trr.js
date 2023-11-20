@@ -7,12 +7,14 @@ const gDefaultPref = Services.prefs.getDefaultBranch("");
 SetParentalControlEnabled(false);
 
 function setup() {
+  Services.prefs.setBoolPref("network.dns.get-ttl", false);
   h2Port = trr_test_setup();
 }
 
 setup();
 registerCleanupFunction(async () => {
   trr_clear_prefs();
+  Services.prefs.clearUserPref("network.dns.get-ttl");
 });
 
 async function waitForConfirmation(expectedResponseIP, confirmationShouldFail) {
