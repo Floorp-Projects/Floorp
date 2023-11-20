@@ -40,7 +40,6 @@
 #include "nsIRemoteTab.h"
 #include "nsNetUtil.h"
 #include "nsQueryObject.h"
-#include "nsPluginHost.h"
 #include "nsThreadUtils.h"
 
 #include "base/task.h"

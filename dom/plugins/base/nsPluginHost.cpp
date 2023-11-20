@@ -14,7 +14,6 @@
 #include "nsPluginLogging.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ProfilerLabels.h"
-#include "nsIBlocklistService.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "nsXULAppAPI.h"
 
@@ -26,7 +25,7 @@ LazyLogModule nsPluginLogging::gPluginLog(PLUGIN_LOG_NAME);
 
 StaticRefPtr<nsPluginHost> nsPluginHost::sInst;
 
-nsPluginHost::nsPluginHost() : mPluginEpoch(0) {
+nsPluginHost::nsPluginHost() {
 #ifdef PLUGIN_LOGGING
   MOZ_LOG(nsPluginLogging::gNPNLog, PLUGIN_LOG_ALWAYS,
           ("NPN Logging Active!\n"));
@@ -38,14 +37,6 @@ nsPluginHost::nsPluginHost() : mPluginEpoch(0) {
   PLUGIN_LOG(PLUGIN_LOG_ALWAYS, ("nsPluginHost::ctor\n"));
   PR_LogFlush();
 #endif
-
-  // Load plugins on creation, as there's a good chance we'll need to send them
-  // to content processes directly after creation.
-  if (XRE_IsParentProcess()) {
-    // Always increment the chrome epoch when we bring up the nsPluginHost in
-    // the parent process.
-    IncrementChromeEpoch();
-  }
 }
 
 nsPluginHost::~nsPluginHost() {
@@ -101,29 +92,6 @@ nsPluginHost::GetPluginTagForType(const nsACString& aMimeType,
   return NS_ERROR_NOT_AVAILABLE;
 }
 
-NS_IMETHODIMP
-nsPluginHost::GetPermissionStringForTag(nsIPluginTag* aTag,
-                                        uint32_t aExcludeFlags,
-                                        nsACString& aPermissionString) {
-  NS_ENSURE_TRUE(aTag, NS_ERROR_FAILURE);
-
-  aPermissionString.Truncate();
-  uint32_t blocklistState;
-  nsresult rv = aTag->GetBlocklistState(&blocklistState);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  aPermissionString.AssignLiteral("plugin:");
-
-  nsCString niceName;
-  rv = aTag->GetNiceName(niceName);
-  NS_ENSURE_SUCCESS(rv, rv);
-  NS_ENSURE_TRUE(!niceName.IsEmpty(), NS_ERROR_FAILURE);
-
-  aPermissionString.Append(niceName);
-
-  return NS_OK;
-}
-
 nsFakePluginTag* nsPluginHost::FindFakePluginForType(
     const nsACString& aMimeType, bool aCheckEnabled) {
   int32_t numFakePlugins = mFakePlugins.Length();
@@ -140,27 +108,6 @@ nsFakePluginTag* nsPluginHost::FindFakePluginForType(
   return nullptr;
 }
 
-static bool MimeTypeIsAllowedForFakePlugin(const nsString& aMimeType) {
-  static const char* const allowedFakePlugins[] = {
-      // PDF
-      "application/pdf",
-      "application/vnd.adobe.pdf",
-      "application/vnd.adobe.pdfxml",
-      "application/vnd.adobe.x-mars",
-      "application/vnd.adobe.xdp+xml",
-      "application/vnd.adobe.xfdf",
-      "application/vnd.adobe.xfd+xml",
-      "application/vnd.fdf",
-  };
-
-  for (const auto allowed : allowedFakePlugins) {
-    if (aMimeType.EqualsASCII(allowed)) {
-      return true;
-    }
-  }
-  return false;
-}
-
 nsPluginHost::SpecialType nsPluginHost::GetSpecialType(
     const nsACString& aMIMEType) {
   if (aMIMEType.LowerCaseEqualsASCII("application/x-test")) {
@@ -174,50 +121,4 @@ nsPluginHost::SpecialType nsPluginHost::GetSpecialType(
   }
 
   return eSpecialType_None;
-}
-
-// Check whether or not a tag is a live, valid tag, and that it's loaded.
-bool nsPluginHost::IsLiveTag(nsIPluginTag* aPluginTag) {
-  nsCOMPtr<nsIInternalPluginTag> internalTag(do_QueryInterface(aPluginTag));
-  uint32_t fakeCount = mFakePlugins.Length();
-  for (uint32_t i = 0; i < fakeCount; i++) {
-    if (mFakePlugins[i] == internalTag) {
-      return true;
-    }
-  }
-  return false;
-}
-
-void nsPluginHost::IncrementChromeEpoch() {
-  MOZ_ASSERT(XRE_IsParentProcess());
-  mPluginEpoch++;
-}
-
-uint32_t nsPluginHost::ChromeEpoch() {
-  MOZ_ASSERT(XRE_IsParentProcess());
-  return mPluginEpoch;
-}
-
-uint32_t nsPluginHost::ChromeEpochForContent() {
-  MOZ_ASSERT(XRE_IsContentProcess());
-  return mPluginEpoch;
-}
-
-void nsPluginHost::SetChromeEpochForContent(uint32_t aEpoch) {
-  MOZ_ASSERT(XRE_IsContentProcess());
-  mPluginEpoch = aEpoch;
-}
-
-/* static */
-bool nsPluginHost::CanUsePluginForMIMEType(const nsACString& aMIMEType) {
-  // We "support" these in the sense that we show a special transparent
-  // fallback element in their place.
-  if (nsPluginHost::GetSpecialType(aMIMEType) ==
-          nsPluginHost::eSpecialType_Flash ||
-      MimeTypeIsAllowedForFakePlugin(NS_ConvertUTF8toUTF16(aMIMEType)) ||
-      aMIMEType.LowerCaseEqualsLiteral("application/x-test")) {
-    return true;
-  }
-
-  return false;
 }
