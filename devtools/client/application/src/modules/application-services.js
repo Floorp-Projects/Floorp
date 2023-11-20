@@ -34,7 +34,7 @@ class ApplicationServices {
 
   async openWorkerInDebugger(workerDescriptorFront) {
     const debuggerPanel = await this.selectTool("jsdebugger");
-    debuggerPanel.selectServiceWorker(workerDescriptorFront);
+    debuggerPanel.selectWorker(workerDescriptorFront);
   }
 
   async viewWorkerSource(workerDescriptorFront) {

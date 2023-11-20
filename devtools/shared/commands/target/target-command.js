@@ -115,6 +115,7 @@ class TargetCommand extends EventEmitter {
       this.rootFront.traits.workerConsoleApiMessagesDispatchedToMainThread ===
       false;
     this.listenForServiceWorkers = false;
+    this.destroyServiceWorkersOnNavigation = false;
 
     // Tells us if we received the first top level target.
     // If target switching is done on:
@@ -270,8 +271,12 @@ class TargetCommand extends EventEmitter {
 
       // Never destroy the popup targets when the top level target is destroyed
       // as the popup follow a different lifecycle.
-      // Also avoid destroying service worker targets for similar reason.
-      if (!isPopup && !isServiceWorker) {
+      // Also avoid destroying service worker targets for similar reason,
+      // unless this.destroyServiceWorkersOnNavigation is true.
+      if (
+        !isPopup &&
+        (!isServiceWorker || this.destroyServiceWorkersOnNavigation)
+      ) {
         this._onTargetDestroyed(target, {
           isTargetSwitching: isDestroyedTargetSwitching,
           // Do not destroy service worker front as we may want to keep using it.
@@ -286,7 +291,8 @@ class TargetCommand extends EventEmitter {
     this.stopListening({ isTargetSwitching: true });
 
     // Remove destroyed target from the cached target list. We don't simply clear the
-    // Map as SW targets might not have been destroyed.
+    // Map as SW targets might not have been destroyed (i.e. when destroyServiceWorkersOnNavigation
+    // is set to false).
     for (const target of destroyedTargets) {
       this._targets.delete(target);
     }

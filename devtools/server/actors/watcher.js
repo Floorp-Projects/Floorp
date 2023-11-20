@@ -25,9 +25,6 @@ const Targets = require("resource://devtools/server/actors/targets/index.js");
 const { getAllBrowsingContextsForContext } = ChromeUtils.importESModule(
   "resource://devtools/server/actors/watcher/browsing-context-helpers.sys.mjs"
 );
-const {
-  SESSION_TYPES,
-} = require("resource://devtools/server/actors/watcher/session-context.js");
 
 const TARGET_HELPERS = {};
 loader.lazyRequireGetter(
@@ -39,11 +36,6 @@ loader.lazyRequireGetter(
   TARGET_HELPERS,
   Targets.TYPES.PROCESS,
   "resource://devtools/server/actors/watcher/target-helpers/process-helper.js"
-);
-loader.lazyRequireGetter(
-  TARGET_HELPERS,
-  Targets.TYPES.SERVICE_WORKER,
-  "devtools/server/actors/watcher/target-helpers/service-worker-helper"
 );
 loader.lazyRequireGetter(
   TARGET_HELPERS,
@@ -109,7 +101,7 @@ exports.WatcherActor = class WatcherActor extends Actor {
   constructor(conn, sessionContext) {
     super(conn, watcherSpec);
     this._sessionContext = sessionContext;
-    if (sessionContext.type == SESSION_TYPES.BROWSER_ELEMENT) {
+    if (sessionContext.type == "browser-element") {
       // Retrieve the <browser> element for the given browser ID
       const browsingContext = BrowsingContext.getCurrentTopByBrowserId(
         sessionContext.browserId
@@ -302,10 +294,6 @@ exports.WatcherActor = class WatcherActor extends Actor {
       this.emit("target-available-form", actor);
       // Flush any existing early iframe targets
       this._flushIframeTargets(actor.innerWindowId);
-
-      if (this.sessionContext.type == SESSION_TYPES.BROWSER_ELEMENT) {
-        this.updateDomainSessionDataForServiceWorkers(actor.url);
-      }
     } else if (this._currentWindowGlobalTargets.has(actor.topInnerWindowId)) {
       // Emit the event immediately if the top-level target is already available
       this.emit("target-available-form", actor);
@@ -813,52 +801,5 @@ exports.WatcherActor = class WatcherActor extends Actor {
    */
   getSessionDataForType(type) {
     return this.sessionData?.[type];
-  }
-
-  /**
-   * Special code dedicated to Service Worker debugging.
-   * This will notify the Service Worker JS Process Actors about the new top level page domain.
-   * So that we start tracking that domain's workers.
-   *
-   * @param {String} newTargetUrl
-   */
-  async updateDomainSessionDataForServiceWorkers(newTargetUrl) {
-    let host = "";
-    // Accessing `host` can throw on some URLs with no valid host like about:home.
-    // In such scenario, reset the host to an empty string.
-    try {
-      host = new URL(newTargetUrl).host;
-    } catch (e) {}
-
-    WatcherRegistry.addOrSetSessionDataEntry(
-      this,
-      "browser-element-host",
-      [host],
-      "set"
-    );
-
-    // This SessionData attribute is only used when debugging service workers.
-    // Avoid instantiating the JS Process Actors if we aren't watching for SW,
-    // or if we aren't watching for them just yet.
-    // But still update the WatcherRegistry, so that when we start watching
-    // and instantiate the target, the host will be set to the right value.
-    //
-    // Note that it is very important to avoid calling Service worker target helper's
-    // addOrSetSessionDataEntry. Otherwise, when we aren't watching for SW at all,
-    // we won't call destroyTargets on watcher actor destruction,
-    // and as a consequence never unregister the js process actor.
-    if (
-      !WatcherRegistry.isWatchingTargets(this, Targets.TYPES.SERVICE_WORKER)
-    ) {
-      return;
-    }
-
-    const targetHelperModule = TARGET_HELPERS[Targets.TYPES.SERVICE_WORKER];
-    await targetHelperModule.addOrSetSessionDataEntry({
-      watcher: this,
-      type: "browser-element-host",
-      entries: [host],
-      updateType: "set",
-    });
   }
 };

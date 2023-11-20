@@ -57,7 +57,6 @@ if (typeof module == "object") {
 const SUPPORTED_DATA = {
   BLACKBOXING: "blackboxing",
   BREAKPOINTS: "breakpoints",
-  BROWSER_ELEMENT_HOST: "browser-element-host",
   XHR_BREAKPOINTS: "xhr-breakpoints",
   EVENT_BREAKPOINTS: "event-breakpoints",
   RESOURCES: "resources",

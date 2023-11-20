@@ -6,7 +6,6 @@
 
 DIRS += [
     "js-window-actor",
-    "process-actor",
 ]
 
 DevToolsModules(
