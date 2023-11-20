@@ -14,7 +14,7 @@
   <rect width="100%" height="100%" style="fill: lime"/>
   <rect width="30" height="30" style="fill: red"/>
   <rect width="20" height="20"
-        style="fill: lime; stroke: lime; -moz-transition: 200s stroke-width">
+        style="fill: lime; stroke: lime; transition: 200s stroke-width">
     <animate attributeName="stroke-width" attributeType="XML"
              from="10px" to="30px" begin="1s" dur="1s" fill="freeze"/>
   </rect>
