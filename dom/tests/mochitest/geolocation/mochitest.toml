@@ -32,7 +32,6 @@ prefs = [
 
 ["test_crossorigin_iframe.html"]
 support-files = ["crossorigin_iframe.html"]
-fail-if = ["xorigin"]
 
 ["test_enableHighAccuracy.html"]
 

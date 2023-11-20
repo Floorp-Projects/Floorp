@@ -44,7 +44,7 @@ async function nextTest() {
 
   let geolocationPromise = checkGeolocationResult(test);
   iframe.src =
-    "https://example.org/tests/dom/tests/mochitest/geolocation/crossorigin_iframe.html";
+    "https://example.net/tests/dom/tests/mochitest/geolocation/crossorigin_iframe.html";
   document.body.appendChild(iframe);
   await geolocationPromise;
 
