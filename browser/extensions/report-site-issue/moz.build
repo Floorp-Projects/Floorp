@@ -15,21 +15,11 @@ FINAL_TARGET_FILES.features["webcompat-reporter@mozilla.org"] += [
 ]
 
 FINAL_TARGET_FILES.features["webcompat-reporter@mozilla.org"].experimentalAPIs += [
-    "experimentalAPIs/aboutConfigPrefs.js",
-    "experimentalAPIs/aboutConfigPrefs.json",
-    "experimentalAPIs/browserInfo.js",
-    "experimentalAPIs/browserInfo.json",
     "experimentalAPIs/helpMenu.js",
     "experimentalAPIs/helpMenu.json",
-    "experimentalAPIs/l10n.js",
-    "experimentalAPIs/l10n.json",
     "experimentalAPIs/tabExtras.js",
     "experimentalAPIs/tabExtras.json",
 ]
-
-FINAL_TARGET_FILES.features[
-    "webcompat-reporter@mozilla.org"
-].experimentalAPIs.actors += ["experimentalAPIs/actors/tabExtrasActor.jsm"]
 
 FINAL_TARGET_FILES.features["webcompat-reporter@mozilla.org"].icons += [
     "../../../toolkit/themes/shared/icons/lightbulb.svg"
