@@ -17,7 +17,7 @@ use super::{CSSFloat, CSSInteger};
 use crate::context::QuirksMode;
 use crate::parser::{Parse, ParserContext};
 use crate::values::specified::calc::CalcNode;
-use crate::values::{AtomString, serialize_atom_identifier, serialize_number};
+use crate::values::{serialize_atom_identifier, serialize_number, AtomString};
 use crate::{Atom, Namespace, One, Prefix, Zero};
 use cssparser::{Parser, Token};
 use std::fmt::{self, Write};
@@ -39,11 +39,11 @@ pub use self::border::{
     BorderImageWidth, BorderRadius, BorderSideWidth, BorderSpacing, BorderStyle, LineWidth,
 };
 pub use self::box_::{
-    Appearance, BreakBetween, BaselineSource, BreakWithin, Contain, ContainerName, ContainerType,
-    Clear, ContainIntrinsicSize, ContentVisibility, Display, Float, LineClamp, Overflow,
-    OverflowAnchor, OverflowClipBox, OverscrollBehavior, Perspective, Resize, ScrollbarGutter,
-    ScrollSnapAlign, ScrollSnapAxis, ScrollSnapStop, ScrollSnapStrictness, ScrollSnapType,
-    TouchAction, VerticalAlign, WillChange, Zoom
+    Appearance, BaselineSource, BreakBetween, BreakWithin, Clear, Contain, ContainIntrinsicSize,
+    ContainerName, ContainerType, ContentVisibility, Display, Float, LineClamp, Overflow,
+    OverflowAnchor, OverflowClipBox, OverscrollBehavior, Perspective, Resize, ScrollSnapAlign,
+    ScrollSnapAxis, ScrollSnapStop, ScrollSnapStrictness, ScrollSnapType, ScrollbarGutter,
+    TouchAction, VerticalAlign, WillChange, Zoom,
 };
 pub use self::color::{
     Color, ColorOrAuto, ColorPropertyValue, ColorScheme, ForcedColorAdjust, PrintColorAdjust,
@@ -55,7 +55,9 @@ pub use self::effects::{BoxShadow, Filter, SimpleShadow};
 pub use self::flex::FlexBasis;
 pub use self::font::{FontFamily, FontLanguageOverride, FontPalette, FontStyle};
 pub use self::font::{FontFeatureSettings, FontVariantLigatures, FontVariantNumeric};
-pub use self::font::{FontSize, FontSizeAdjust, FontSizeAdjustFactor, FontSizeKeyword, FontStretch, FontSynthesis};
+pub use self::font::{
+    FontSize, FontSizeAdjust, FontSizeAdjustFactor, FontSizeKeyword, FontStretch, FontSynthesis,
+};
 pub use self::font::{FontVariantAlternates, FontWeight};
 pub use self::font::{FontVariantEastAsian, FontVariationSettings, LineHeight};
 pub use self::font::{MathDepth, MozScriptMinSize, MozScriptSizeMultiplier, XLang, XTextScale};
@@ -878,7 +880,7 @@ pub struct Attr {
     /// Attribute name
     pub attribute: Atom,
     /// Fallback value
-    pub fallback: AtomString
+    pub fallback: AtomString,
 }
 
 impl Parse for Attr {
@@ -897,7 +899,10 @@ fn get_namespace_for_prefix(prefix: &Prefix, context: &ParserContext) -> Option<
 }
 
 /// Try to parse a namespace and return it if parsed, or none if there was not one present
-fn parse_namespace<'i, 't>(context: &ParserContext, input: &mut Parser<'i, 't>) -> Result<(Prefix, Namespace), ParseError<'i>> {
+fn parse_namespace<'i, 't>(
+    context: &ParserContext,
+    input: &mut Parser<'i, 't>,
+) -> Result<(Prefix, Namespace), ParseError<'i>> {
     let ns_prefix = match input.next()? {
         Token::Ident(ref prefix) => Some(Prefix::from(prefix.as_ref())),
         Token::Delim('|') => None,
@@ -927,7 +932,9 @@ impl Attr {
         input: &mut Parser<'i, 't>,
     ) -> Result<Attr, ParseError<'i>> {
         // Syntax is `[namespace? '|']? ident [',' fallback]?`
-        let namespace = input.try_parse(|input| parse_namespace(context, input)).ok();
+        let namespace = input
+            .try_parse(|input| parse_namespace(context, input))
+            .ok();
         let namespace_is_some = namespace.is_some();
         let (namespace_prefix, namespace_url) = namespace.unwrap_or_default();
 
@@ -944,10 +951,12 @@ impl Attr {
 
         // Fallback will always be a string value for now as we do not support
         // attr() types yet.
-        let fallback = input.try_parse(|input| -> Result<AtomString, ParseError<'i>> {
-            input.expect_comma()?;
-            Ok(input.expect_string()?.as_ref().into())
-        }).unwrap_or_default();
+        let fallback = input
+            .try_parse(|input| -> Result<AtomString, ParseError<'i>> {
+                input.expect_comma()?;
+                Ok(input.expect_string()?.as_ref().into())
+            })
+            .unwrap_or_default();
 
         Ok(Attr {
             namespace_prefix,

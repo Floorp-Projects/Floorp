@@ -119,7 +119,9 @@ impl<T> ArcSlice<T> {
     #[allow(unsafe_code)]
     pub fn forget(self) -> ForgottenArcSlicePtr<T> {
         let ret = unsafe {
-            ForgottenArcSlicePtr(NonNull::new_unchecked(self.0.raw_ptr() as *const _ as *mut _))
+            ForgottenArcSlicePtr(NonNull::new_unchecked(
+                self.0.raw_ptr() as *const _ as *mut _
+            ))
         };
         mem::forget(self);
         ret

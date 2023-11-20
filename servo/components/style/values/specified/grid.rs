@@ -433,9 +433,9 @@ impl Parse for LineNameList<Integer> {
             line_names.push(value);
         }
 
-        Ok(LineNameList{
-          expanded_line_names_length,
-          line_names : line_names.into(),
+        Ok(LineNameList {
+            expanded_line_names_length,
+            line_names: line_names.into(),
         })
     }
 }

@@ -654,10 +654,7 @@ impl QueryFeatureExpression {
                 return evaluator(context, computed);
             },
             Evaluator::String(evaluator) => {
-                let string = self
-                    .kind
-                    .non_ranged_value()
-                    .map(|v| expect!(String, v));
+                let string = self.kind.non_ranged_value().map(|v| expect!(String, v));
                 return evaluator(context, string);
             },
             Evaluator::BoolInteger(eval) => {

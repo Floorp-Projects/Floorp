@@ -14,13 +14,13 @@ use crate::values::generics::border::BorderSpacing as GenericBorderSpacing;
 use crate::values::generics::rect::Rect;
 use crate::values::generics::size::Size2D;
 use crate::values::specified::length::{Length, NonNegativeLength, NonNegativeLengthPercentage};
-use crate::values::specified::{AllowQuirks, NonNegativeNumber, NonNegativeNumberOrPercentage};
 use crate::values::specified::Color;
+use crate::values::specified::{AllowQuirks, NonNegativeNumber, NonNegativeNumberOrPercentage};
 use crate::Zero;
 use app_units::Au;
 use cssparser::Parser;
 use std::fmt::{self, Write};
-use style_traits::{CssWriter, ParseError, ToCss, values::SequenceWriter};
+use style_traits::{values::SequenceWriter, CssWriter, ParseError, ToCss};
 
 /// A specified value for a single side of a `border-style` property.
 ///
@@ -382,7 +382,7 @@ where
     let has_color = *color != Color::CurrentColor;
     let has_width = *width != BorderSideWidth::medium();
     if !has_style && !has_color && !has_width {
-        return width.to_css(dest)
+        return width.to_css(dest);
     }
     let mut writer = SequenceWriter::new(dest, " ");
     if has_width {

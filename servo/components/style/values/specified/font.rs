@@ -16,7 +16,10 @@ use crate::values::generics::font::{
 use crate::values::generics::NonNegative;
 use crate::values::specified::length::{FontBaseSize, LineHeightBase, PX_PER_PT};
 use crate::values::specified::{AllowQuirks, Angle, Integer, LengthPercentage};
-use crate::values::specified::{FontRelativeLength, NoCalcLength, NonNegativeNumber, NonNegativePercentage, NonNegativeLengthPercentage, Number};
+use crate::values::specified::{
+    FontRelativeLength, NoCalcLength, NonNegativeLengthPercentage, NonNegativeNumber,
+    NonNegativePercentage, Number,
+};
 use crate::values::{serialize_atom_identifier, CustomIdent, SelectorParseErrorKind};
 use crate::Atom;
 use cssparser::{Parser, Token};

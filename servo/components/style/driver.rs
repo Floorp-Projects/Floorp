@@ -54,9 +54,8 @@ fn with_pool_in_place_scope<'scope, R>(
     if work_unit_max == 0 || pool.is_none() {
         closure(None)
     } else {
-        pool.unwrap().in_place_scope_fifo(|scope| {
-            closure(Some(scope))
-        })
+        pool.unwrap()
+            .in_place_scope_fifo(|scope| closure(Some(scope)))
     }
 }
 
@@ -116,7 +115,11 @@ where
             thread_local: &mut tlc,
         };
 
-        debug_assert_eq!(scoped_tls.current_thread_index(), 0, "Main thread should be the first thread");
+        debug_assert_eq!(
+            scoped_tls.current_thread_index(),
+            0,
+            "Main thread should be the first thread"
+        );
 
         let mut discovered = VecDeque::with_capacity(work_unit_max * 2);
         discovered.push_back(unsafe { SendNode::new(root.as_node()) });
@@ -125,7 +128,9 @@ where
             discovered,
             root.as_node().opaque(),
             work_unit_max,
-            PerLevelTraversalData { current_dom_depth: root.depth() },
+            PerLevelTraversalData {
+                current_dom_depth: root.depth(),
+            },
             maybe_scope,
             traversal,
             &scoped_tls,

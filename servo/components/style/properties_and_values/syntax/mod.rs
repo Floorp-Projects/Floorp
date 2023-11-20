@@ -55,7 +55,11 @@ impl Descriptor {
             return Err(ParseError::EmptyInput);
         }
 
-        let specified = if save_specified { Some(Box::from(css)) } else { None };
+        let specified = if save_specified {
+            Some(Box::from(css))
+        } else {
+            None
+        };
 
         // 3. If string's length is 1, and the only code point in string is U+002A
         //    ASTERISK (*), return the universal syntax descriptor.
@@ -113,7 +117,10 @@ impl ToCss for Descriptor {
 
 impl Parse for Descriptor {
     /// Parse a syntax descriptor.
-    fn parse<'i>( _: &ParserContext, parser: &mut CSSParser<'i, '_>,) -> Result<Self, StyleParseError<'i>> {
+    fn parse<'i>(
+        _: &ParserContext,
+        parser: &mut CSSParser<'i, '_>,
+    ) -> Result<Self, StyleParseError<'i>> {
         let input = parser.expect_string()?;
         Descriptor::from_str(input.as_ref(), /* save_specified = */ true)
             .map_err(|err| parser.new_custom_error(StyleParseErrorKind::PropertySyntaxField(err)))
@@ -134,12 +141,10 @@ impl ToCss for Multiplier {
     where
         W: Write,
     {
-        dest.write_char(
-            match *self {
-                Multiplier::Space => '+',
-                Multiplier::Comma => '#',
-            }
-        )
+        dest.write_char(match *self {
+            Multiplier::Space => '+',
+            Multiplier::Comma => '#',
+        })
     }
 }
 

@@ -17,7 +17,7 @@ use crate::selector_parser::{PseudoElement, SelectorImpl};
 use crate::stylist::RuleInclusion;
 use log::Level::Trace;
 use selectors::matching::{
-    MatchingForInvalidation, MatchingContext, MatchingMode, NeedsSelectorFlags,
+    MatchingContext, MatchingForInvalidation, MatchingMode, NeedsSelectorFlags,
     RelativeSelectorMatchingState, VisitedHandlingMode,
 };
 use servo_arc::Arc;

@@ -90,25 +90,23 @@ impl ToCss for DataType {
         W: Write,
     {
         dest.write_char('<')?;
-        dest.write_str(
-            match *self {
-                DataType::Length => "length",
-                DataType::Number => "number",
-                DataType::Percentage => "percentage",
-                DataType::LengthPercentage => "length-percentage",
-                DataType::Color => "color",
-                DataType::Image => "image",
-                DataType::Url => "url",
-                DataType::Integer => "integer",
-                DataType::Angle => "angle",
-                DataType::Time => "time",
-                DataType::Resolution => "resolution",
-                DataType::TransformFunction => "transform-function",
-                DataType::CustomIdent => "custom-ident",
-                DataType::TransformList => "transform-list",
-                DataType::String => "string",
-            }
-        )?;
+        dest.write_str(match *self {
+            DataType::Length => "length",
+            DataType::Number => "number",
+            DataType::Percentage => "percentage",
+            DataType::LengthPercentage => "length-percentage",
+            DataType::Color => "color",
+            DataType::Image => "image",
+            DataType::Url => "url",
+            DataType::Integer => "integer",
+            DataType::Angle => "angle",
+            DataType::Time => "time",
+            DataType::Resolution => "resolution",
+            DataType::TransformFunction => "transform-function",
+            DataType::CustomIdent => "custom-ident",
+            DataType::TransformList => "transform-list",
+            DataType::String => "string",
+        })?;
         dest.write_char('>')
     }
 }

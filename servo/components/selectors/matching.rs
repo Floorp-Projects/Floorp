@@ -508,11 +508,7 @@ fn relative_selector_match_early<E: Element>(
     if context
         .selector_caches
         .relative_selector_filter_map
-        .fast_reject(
-            element,
-            selector,
-            context.quirks_mode(),
-        )
+        .fast_reject(element, selector, context.quirks_mode())
     {
         // Alright, add as unmatched to cache.
         context.selector_caches.relative_selector.add(
@@ -691,7 +687,9 @@ fn assigned_slot<E>(element: &E, context: &MatchingContext<E::Impl>) -> Option<E
 where
     E: Element,
 {
-    debug_assert!(element.assigned_slot().map_or(true, |s| s.is_html_slot_element()));
+    debug_assert!(element
+        .assigned_slot()
+        .map_or(true, |s| s.is_html_slot_element()));
     let scope = context.current_host?;
     let mut current_slot = element.assigned_slot()?;
     while current_slot.containing_shadow_host().unwrap().opaque() != scope {

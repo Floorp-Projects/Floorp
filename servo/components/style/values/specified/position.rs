@@ -372,7 +372,18 @@ impl Side for VerticalPositionKeyword {
 
 /// Controls how the auto-placement algorithm works specifying exactly how auto-placed items
 /// get flowed into the grid.
-#[derive(Clone, Copy, Debug, Eq, MallocSizeOf, PartialEq, SpecifiedValueInfo, ToComputedValue, ToResolvedValue, ToShmem)]
+#[derive(
+    Clone,
+    Copy,
+    Debug,
+    Eq,
+    MallocSizeOf,
+    PartialEq,
+    SpecifiedValueInfo,
+    ToComputedValue,
+    ToResolvedValue,
+    ToShmem,
+)]
 #[value_info(other_values = "row,column,dense")]
 #[repr(C)]
 pub struct GridAutoFlow(u8);
@@ -632,7 +643,10 @@ pub struct TemplateAreasParser {
 
 impl TemplateAreasParser {
     /// Parse a single string.
-    pub fn try_parse_string<'i>(&mut self, input: &mut Parser<'i, '_>) -> Result<(), ParseError<'i>> {
+    pub fn try_parse_string<'i>(
+        &mut self,
+        input: &mut Parser<'i, '_>,
+    ) -> Result<(), ParseError<'i>> {
         input.try_parse(|input| {
             self.parse_string(input.expect_string()?)
                 .map_err(|()| input.new_custom_error(StyleParseErrorKind::UnspecifiedError))
@@ -676,12 +690,14 @@ impl TemplateAreasParser {
             match self.area_indices.entry(name) {
                 Entry::Occupied(ref e) => {
                     let index = *e.get();
-                    if self.areas[index].columns.start != column || self.areas[index].rows.end != self.row {
+                    if self.areas[index].columns.start != column ||
+                        self.areas[index].rows.end != self.row
+                    {
                         return Err(());
                     }
                     self.areas[index].rows.end += 1;
                     current_area_index = Some(index);
-                }
+                },
                 Entry::Vacant(v) => {
                     let index = self.areas.len();
                     let name = v.key().clone();
@@ -698,7 +714,7 @@ impl TemplateAreasParser {
                         },
                     });
                     current_area_index = Some(index);
-                }
+                },
             }
         }
         if column == 0 {
@@ -725,7 +741,7 @@ impl TemplateAreasParser {
     /// Return the parsed template areas.
     pub fn finish(self) -> Result<TemplateAreas, ()> {
         if self.strings.is_empty() {
-            return Err(())
+            return Err(());
         }
         Ok(TemplateAreas {
             areas: self.areas.into(),
@@ -744,7 +760,10 @@ impl TemplateAreas {
 }
 
 impl Parse for TemplateAreas {
-    fn parse<'i, 't>(_: &ParserContext, input: &mut Parser<'i, 't>,) -> Result<Self, ParseError<'i>> {
+    fn parse<'i, 't>(
+        _: &ParserContext,
+        input: &mut Parser<'i, 't>,
+    ) -> Result<Self, ParseError<'i>> {
         Self::parse_internal(input)
             .map_err(|()| input.new_custom_error(StyleParseErrorKind::UnspecifiedError))
     }

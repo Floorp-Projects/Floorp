@@ -14,7 +14,7 @@ use crate::invalidation::element::state_and_attributes;
 use crate::stylist::CascadeData;
 use dom::DocumentState;
 use selectors::matching::{
-    MatchingForInvalidation, MatchingContext, MatchingMode, NeedsSelectorFlags, QuirksMode,
+    MatchingContext, MatchingForInvalidation, MatchingMode, NeedsSelectorFlags, QuirksMode,
     SelectorCaches, VisitedHandlingMode,
 };
 

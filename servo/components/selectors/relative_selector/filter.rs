@@ -7,9 +7,7 @@ use fxhash::FxHashMap;
 
 use crate::bloom::BloomFilter;
 use crate::context::QuirksMode;
-use crate::parser::{
-    collect_selector_hashes, RelativeSelector, RelativeSelectorMatchHint,
-};
+use crate::parser::{collect_selector_hashes, RelativeSelector, RelativeSelectorMatchHint};
 use crate::tree::{Element, OpaqueElement};
 use crate::SelectorImpl;
 
@@ -121,7 +119,10 @@ impl RelativeSelectorFilterMap {
         selector: &RelativeSelector<Impl>,
         quirks_mode: QuirksMode,
     ) -> bool {
-        if matches!(selector.match_hint, RelativeSelectorMatchHint::InNextSibling) {
+        if matches!(
+            selector.match_hint,
+            RelativeSelectorMatchHint::InNextSibling
+        ) {
             // Don't bother.
             return false;
         }

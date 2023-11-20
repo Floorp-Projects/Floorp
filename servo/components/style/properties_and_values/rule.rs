@@ -7,8 +7,8 @@
 //! https://drafts.css-houdini.org/css-properties-values-api-1/#at-property-rule
 
 use super::{
-    syntax::Descriptor,
     registry::PropertyRegistration,
+    syntax::Descriptor,
     value::{AllowComputationallyDependent, SpecifiedValue as SpecifiedRegisteredValue},
 };
 use crate::custom_properties::{Name as CustomPropertyName, SpecifiedValue};
@@ -71,15 +71,21 @@ pub fn parse_property_block<'i, 't>(
     //
     //     The syntax descriptor is required for the @property rule to be valid; if it’s
     //     missing, the @property rule is invalid.
-    let Some(syntax) = descriptors.syntax else { return Err(input.new_error(BasicParseErrorKind::AtRuleBodyInvalid)) };
+    let Some(syntax) = descriptors.syntax else {
+        return Err(input.new_error(BasicParseErrorKind::AtRuleBodyInvalid));
+    };
 
     // https://drafts.css-houdini.org/css-properties-values-api-1/#inherits-descriptor:
     //
     //     The inherits descriptor is required for the @property rule to be valid; if it’s
     //     missing, the @property rule is invalid.
-    let Some(inherits) = descriptors.inherits else { return Err(input.new_error(BasicParseErrorKind::AtRuleBodyInvalid)) };
+    let Some(inherits) = descriptors.inherits else {
+        return Err(input.new_error(BasicParseErrorKind::AtRuleBodyInvalid));
+    };
 
-    if PropertyRegistration::validate_initial_value(&syntax, descriptors.initial_value.as_ref()).is_err() {
+    if PropertyRegistration::validate_initial_value(&syntax, descriptors.initial_value.as_ref())
+        .is_err()
+    {
         return Err(input.new_error(BasicParseErrorKind::AtRuleBodyInvalid));
     }
 
@@ -239,7 +245,7 @@ impl PropertyRegistration {
         // initial-value descriptor is optional. If omitted, the initial value of the property is
         // the guaranteed-invalid value.
         if syntax.is_universal() && initial_value.is_none() {
-            return Ok(())
+            return Ok(());
         }
 
         // Otherwise, if the value of the syntax descriptor is not the universal syntax definition,
@@ -247,7 +253,7 @@ impl PropertyRegistration {
 
         // The initial-value descriptor must be present.
         let Some(initial) = initial_value else {
-            return Err(PropertyRegistrationError::NoInitialValue)
+            return Err(PropertyRegistrationError::NoInitialValue);
         };
 
         // A value that references the environment or other variables is not computationally

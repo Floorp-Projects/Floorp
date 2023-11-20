@@ -13,7 +13,9 @@ use crate::selector_parser::{AttrValue, SnapshotMap};
 use crate::string_cache::WeakAtom;
 use crate::values::AtomIdent;
 use crate::{Atom, CaseSensitivityExt, LocalName, Namespace};
-use selectors::attr::{CaseSensitivity, NamespaceConstraint, AttrSelectorOperation, AttrSelectorOperator};
+use selectors::attr::{
+    AttrSelectorOperation, AttrSelectorOperator, CaseSensitivity, NamespaceConstraint,
+};
 use smallvec::SmallVec;
 
 /// A function that, given an element of type `T`, allows you to get a single
@@ -291,36 +293,24 @@ fn attr_matches_checked_name(
     let value = value.as_ptr();
     unsafe {
         match operator {
-            AttrSelectorOperator::Equal => bindings::Gecko_AttrEquals(
-                &attr.mValue,
-                value,
-                ignore_case,
-            ),
-            AttrSelectorOperator::Includes => bindings::Gecko_AttrIncludes(
-                &attr.mValue,
-                value,
-                ignore_case,
-            ),
-            AttrSelectorOperator::DashMatch => bindings::Gecko_AttrDashEquals(
-                &attr.mValue,
-                value,
-                ignore_case,
-            ),
-            AttrSelectorOperator::Prefix => bindings::Gecko_AttrHasPrefix(
-                &attr.mValue,
-                value,
-                ignore_case,
-            ),
-            AttrSelectorOperator::Suffix => bindings::Gecko_AttrHasSuffix(
-                &attr.mValue,
-                value,
-                ignore_case,
-            ),
-            AttrSelectorOperator::Substring => bindings::Gecko_AttrHasSubstring(
-                &attr.mValue,
-                value,
-                ignore_case,
-            ),
+            AttrSelectorOperator::Equal => {
+                bindings::Gecko_AttrEquals(&attr.mValue, value, ignore_case)
+            },
+            AttrSelectorOperator::Includes => {
+                bindings::Gecko_AttrIncludes(&attr.mValue, value, ignore_case)
+            },
+            AttrSelectorOperator::DashMatch => {
+                bindings::Gecko_AttrDashEquals(&attr.mValue, value, ignore_case)
+            },
+            AttrSelectorOperator::Prefix => {
+                bindings::Gecko_AttrHasPrefix(&attr.mValue, value, ignore_case)
+            },
+            AttrSelectorOperator::Suffix => {
+                bindings::Gecko_AttrHasSuffix(&attr.mValue, value, ignore_case)
+            },
+            AttrSelectorOperator::Substring => {
+                bindings::Gecko_AttrHasSubstring(&attr.mValue, value, ignore_case)
+            },
         }
     }
 }

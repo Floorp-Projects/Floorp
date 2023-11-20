@@ -14,8 +14,6 @@ use selectors::matching::{ElementSelectorFlags, MatchingForInvalidation, Selecto
 use selectors::{Element, OpaqueElement};
 use servo_arc::{Arc, ArcBorrow};
 use smallvec::SmallVec;
-use style::invalidation::element::element_wrapper::{ElementWrapper, ElementSnapshot};
-use style::values::generics::color::ColorMixFlags;
 use std::collections::BTreeSet;
 use std::fmt::Write;
 use std::iter;
@@ -45,7 +43,9 @@ use style::gecko::selector_parser::{NonTSPseudoClass, PseudoElement};
 use style::gecko::snapshot_helpers::classes_changed;
 use style::gecko::traversal::RecalcStyleOnly;
 use style::gecko::url;
-use style::gecko::wrapper::{GeckoElement, GeckoNode, slow_selector_flags_from_node_selector_flags};
+use style::gecko::wrapper::{
+    slow_selector_flags_from_node_selector_flags, GeckoElement, GeckoNode,
+};
 use style::gecko_bindings::bindings;
 use style::gecko_bindings::bindings::nsACString;
 use style::gecko_bindings::bindings::nsAString;
@@ -58,7 +58,6 @@ use style::gecko_bindings::bindings::Gecko_GetOrCreateInitialKeyframe;
 use style::gecko_bindings::bindings::Gecko_GetOrCreateKeyframeAtStart;
 use style::gecko_bindings::bindings::Gecko_HaveSeenPtr;
 use style::gecko_bindings::structs;
-use style::gecko_bindings::structs::GeckoFontMetrics;
 use style::gecko_bindings::structs::gfx::FontPaletteValueSet;
 use style::gecko_bindings::structs::gfxFontFeatureValueSet;
 use style::gecko_bindings::structs::ipc::ByteBuf;
@@ -74,6 +73,7 @@ use style::gecko_bindings::structs::nsresult;
 use style::gecko_bindings::structs::CallerType;
 use style::gecko_bindings::structs::CompositeOperation;
 use style::gecko_bindings::structs::DeclarationBlockMutationClosure;
+use style::gecko_bindings::structs::GeckoFontMetrics;
 use style::gecko_bindings::structs::IterationCompositeOperation;
 use style::gecko_bindings::structs::Loader;
 use style::gecko_bindings::structs::LoaderReusableStyleSheets;
@@ -97,7 +97,10 @@ use style::gecko_bindings::sugar::refptr::RefPtr;
 use style::global_style_data::{
     GlobalStyleData, PlatformThreadHandle, StyleThreadPool, GLOBAL_STYLE_DATA, STYLE_THREAD_POOL,
 };
-use style::invalidation::element::invalidation_map::{RelativeSelectorInvalidationMap, TSStateForInvalidation};
+use style::invalidation::element::element_wrapper::{ElementSnapshot, ElementWrapper};
+use style::invalidation::element::invalidation_map::{
+    RelativeSelectorInvalidationMap, TSStateForInvalidation,
+};
 use style::invalidation::element::invalidator::{InvalidationResult, SiblingTraversalMap};
 use style::invalidation::element::relative_selector::{
     DomMutationOperation, RelativeSelectorDependencyCollector, RelativeSelectorInvalidator,
@@ -131,8 +134,8 @@ use style::stylesheets::{
     CssRules, CssRulesHelpers, DocumentRule, FontFaceRule, FontFeatureValuesRule,
     FontPaletteValuesRule, ImportRule, KeyframesRule, LayerBlockRule, LayerStatementRule,
     MediaRule, NamespaceRule, Origin, OriginSet, PagePseudoClassFlags, PageRule, PropertyRule,
-    SanitizationData, SanitizationKind, StyleRule, StylesheetContents, StylesheetLoader as
-    StyleStylesheetLoader, SupportsRule, UrlExtraData,
+    SanitizationData, SanitizationKind, StyleRule, StylesheetContents,
+    StylesheetLoader as StyleStylesheetLoader, SupportsRule, UrlExtraData,
 };
 use style::stylist::{add_size_of_ua_cache, AuthorStylesEnabled, RuleInclusion, Stylist};
 use style::thread_state;
@@ -148,6 +151,7 @@ use style::values::computed::font::{
 };
 use style::values::computed::{self, Context, ToComputedValue};
 use style::values::distance::ComputeSquaredDistance;
+use style::values::generics::color::ColorMixFlags;
 use style::values::generics::easing::BeforeFlag;
 use style::values::specified::gecko::IntersectionObserverRootMargin;
 use style::values::specified::source_size_list::SourceSizeList;
@@ -876,9 +880,7 @@ pub unsafe extern "C" fn Servo_AnimationValue_GetOffsetPosition(
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Servo_AnimationValue_IsOffsetPathUrl(
-    value: &AnimationValue,
-) -> bool {
+pub unsafe extern "C" fn Servo_AnimationValue_IsOffsetPathUrl(value: &AnimationValue) -> bool {
     use style::values::generics::motion::{GenericOffsetPath, GenericOffsetPathFunction};
     if let AnimationValue::OffsetPath(ref op) = value {
         if let GenericOffsetPath::OffsetPath { path, coord_box: _ } = op {
@@ -1196,22 +1198,28 @@ pub extern "C" fn Servo_ComputedValues_ShouldTransition(
     start: &mut structs::RefPtr<AnimationValue>,
     end: &mut structs::RefPtr<AnimationValue>,
 ) -> ShouldTransitionResult {
-    let Ok(prop) = LonghandId::from_nscsspropertyid(prop) else { return Default::default() };
+    let Ok(prop) = LonghandId::from_nscsspropertyid(prop) else {
+        return Default::default();
+    };
     if prop.is_discrete_animatable() && prop != LonghandId::Visibility {
         return Default::default();
     }
-    let Some(new_value) = AnimationValue::from_computed_values(prop, new) else { return Default::default() };
+    let Some(new_value) = AnimationValue::from_computed_values(prop, new) else {
+        return Default::default();
+    };
 
     if let Some(old_transition_value) = old_transition_value {
         if *old_transition_value == new_value {
             return ShouldTransitionResult {
                 should_animate: false,
                 old_transition_value_matches: true,
-            }
+            };
         }
     }
 
-    let Some(old_value) = AnimationValue::from_computed_values(prop, old) else { return Default::default() };
+    let Some(old_value) = AnimationValue::from_computed_values(prop, old) else {
+        return Default::default();
+    };
     if old_value == new_value || !old_value.interpolable_with(&new_value) {
         return Default::default();
     }
@@ -1231,11 +1239,15 @@ pub extern "C" fn Servo_ComputedValues_TransitionValueMatches(
     prop: nsCSSPropertyID,
     transition_value: &AnimationValue,
 ) -> bool {
-    let Ok(prop) = LonghandId::from_nscsspropertyid(prop) else { return false };
+    let Ok(prop) = LonghandId::from_nscsspropertyid(prop) else {
+        return false;
+    };
     if prop.is_discrete_animatable() && prop != LonghandId::Visibility {
         return false;
     }
-    let Some(value) = AnimationValue::from_computed_values(prop, style) else { return false };
+    let Some(value) = AnimationValue::from_computed_values(prop, style) else {
+        return false;
+    };
     value == *transition_value
 }
 
@@ -1631,7 +1643,9 @@ pub unsafe extern "C" fn Servo_ShutdownThreadPool() {
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn Servo_ThreadPool_GetThreadHandles(handles: &mut ThinVec<PlatformThreadHandle>) {
+pub unsafe extern "C" fn Servo_ThreadPool_GetThreadHandles(
+    handles: &mut ThinVec<PlatformThreadHandle>,
+) {
     StyleThreadPool::get_thread_handles(handles);
 }
 
@@ -2291,7 +2305,10 @@ impl_basic_rule_funcs! { (Style, StyleRule, Locked<StyleRule>),
 }
 
 #[no_mangle]
-pub extern "C" fn Servo_StyleRule_EnsureRules(rule: &LockedStyleRule, read_only: bool) -> Strong<LockedCssRules> {
+pub extern "C" fn Servo_StyleRule_EnsureRules(
+    rule: &LockedStyleRule,
+    read_only: bool,
+) -> Strong<LockedCssRules> {
     let global_style_data = &*GLOBAL_STYLE_DATA;
     let lock = &global_style_data.shared_lock;
     if read_only {
@@ -2465,7 +2482,9 @@ pub extern "C" fn Servo_StyleRule_GetSelectorDataAtIndex(
     specificity: Option<&mut u64>,
 ) {
     let selectors = desugared_selector_list(rules);
-    let Some(selector) = selectors.slice().get(index as usize) else { return };
+    let Some(selector) = selectors.slice().get(index as usize) else {
+        return;
+    };
     if let Some(text) = text {
         selector.to_css(text).unwrap();
     }
@@ -2492,7 +2511,9 @@ pub extern "C" fn Servo_StyleRule_SelectorMatchesElement(
         matches_selector, MatchingContext, MatchingMode, NeedsSelectorFlags, VisitedHandlingMode,
     };
     let selectors = desugared_selector_list(rules);
-    let Some(selector) = selectors.slice().get(index as usize) else { return false };
+    let Some(selector) = selectors.slice().get(index as usize) else {
+        return false;
+    };
     let mut matching_mode = MatchingMode::Normal;
     match PseudoElement::from_pseudo_type(pseudo_type, None) {
         Some(pseudo) => {
@@ -2548,8 +2569,8 @@ pub extern "C" fn Servo_StyleRule_SetSelectorText(
     let value_str = unsafe { text.as_str_unchecked() };
 
     write_locked_arc(rule, |rule: &mut StyleRule| {
-        use style::selector_parser::SelectorParser;
         use selectors::parser::ParseRelative;
+        use style::selector_parser::SelectorParser;
 
         let namespaces = contents.namespaces.read();
         let url_data = contents.url_data.read();
@@ -2563,7 +2584,11 @@ pub extern "C" fn Servo_StyleRule_SetSelectorText(
         // TODO: Maybe allow setting relative selectors from the OM, if we're in a nested style
         // rule?
         let mut parser_input = ParserInput::new(&value_str);
-        match SelectorList::parse(&parser, &mut Parser::new(&mut parser_input), ParseRelative::No) {
+        match SelectorList::parse(
+            &parser,
+            &mut Parser::new(&mut parser_input),
+            ParseRelative::No,
+        ) {
             Ok(selectors) => {
                 rule.selectors = selectors;
                 true
@@ -4024,7 +4049,12 @@ pub extern "C" fn Servo_ResolvePseudoStyle(
         inherited_style,
         &doc_data.stylist,
         is_probe,
-        /* matching_func = */ if pseudo_element.is_highlight() {Some(&matching_fn)} else {None},
+        /* matching_func = */
+        if pseudo_element.is_highlight() {
+            Some(&matching_fn)
+        } else {
+            None
+        },
     );
 
     match style {
@@ -4198,8 +4228,13 @@ fn get_pseudo_style(
     }
 
     Some(style.unwrap_or_else(|| {
-        StyleBuilder::for_inheritance(stylist.device(), Some(stylist), Some(styles.primary()), Some(pseudo))
-            .build()
+        StyleBuilder::for_inheritance(
+            stylist.device(),
+            Some(stylist),
+            Some(styles.primary()),
+            Some(pseudo),
+        )
+        .build()
     }))
 }
 
@@ -4216,8 +4251,12 @@ pub unsafe extern "C" fn Servo_ComputedValues_Inherit(
     let pseudo = PseudoElement::from_pseudo_type(pseudo, None).unwrap();
     debug_assert!(pseudo.is_anon_box());
 
-    let mut style =
-        StyleBuilder::for_inheritance(data.stylist.device(), Some(&data.stylist), parent_style_context, Some(&pseudo));
+    let mut style = StyleBuilder::for_inheritance(
+        data.stylist.device(),
+        Some(&data.stylist),
+        parent_style_context,
+        Some(&pseudo),
+    );
 
     if for_text {
         StyleAdjuster::new(&mut style).adjust_for_text();
@@ -5207,7 +5246,8 @@ pub extern "C" fn Servo_DeclarationBlock_SetKeywordValue(
     use style::values::generics::box_::{VerticalAlign, VerticalAlignKeyword};
     use style::values::generics::font::FontStyle;
     use style::values::specified::{
-        table::CaptionSide, BorderStyle, Clear, Display, Float, TextAlign, TextEmphasisPosition, TextTransform
+        table::CaptionSide, BorderStyle, Clear, Display, Float, TextAlign, TextEmphasisPosition,
+        TextTransform,
     };
 
     fn get_from_computed<T>(value: u32) -> T
@@ -5407,7 +5447,9 @@ pub extern "C" fn Servo_DeclarationBlock_SetLengthValue(
     use style::properties::PropertyDeclaration;
     use style::values::generics::length::{LengthPercentageOrAuto, Size};
     use style::values::generics::NonNegative;
-    use style::values::specified::length::{FontRelativeLength, LengthPercentage, ViewportPercentageLength};
+    use style::values::specified::length::{
+        FontRelativeLength, LengthPercentage, ViewportPercentageLength,
+    };
     use style::values::specified::FontSize;
 
     let long = get_longhand_from_id!(property);
@@ -6018,7 +6060,12 @@ fn create_context_for_animation<'a>(
     container_size_query: ContainerSizeQuery<'a>,
 ) -> Context<'a> {
     Context::new_for_animation(
-        StyleBuilder::for_animation(per_doc_data.stylist.device(), Some(&per_doc_data.stylist), style, parent_style),
+        StyleBuilder::for_animation(
+            per_doc_data.stylist.device(),
+            Some(&per_doc_data.stylist),
+            style,
+            parent_style,
+        ),
         for_smil_animation,
         per_doc_data.stylist.quirks_mode(),
         rule_cache_conditions,
@@ -6196,7 +6243,7 @@ pub extern "C" fn Servo_GetComputedKeyframeValues(
                     None
                 } else {
                     Some(&custom_properties)
-                }
+                },
             );
 
             for value in iter {
@@ -6224,7 +6271,8 @@ pub extern "C" fn Servo_GetAnimationValues(
         .map(|d| d.styles.primary())
         .map(|x| &**x);
 
-    let container_size_query = ContainerSizeQuery::for_element(element, None, /* is_pseudo = */ false);
+    let container_size_query =
+        ContainerSizeQuery::for_element(element, None, /* is_pseudo = */ false);
     let mut conditions = Default::default();
     let mut context = create_context_for_animation(
         &data,
@@ -6270,7 +6318,8 @@ pub extern "C" fn Servo_AnimationValue_Compute(
         .map(|d| d.styles.primary())
         .map(|x| &**x);
 
-    let container_size_query = ContainerSizeQuery::for_element(element, None, /* is_pseudo = */ false);
+    let container_size_query =
+        ContainerSizeQuery::for_element(element, None, /* is_pseudo = */ false);
     let mut conditions = Default::default();
     let mut context = create_context_for_animation(
         &data,
@@ -6930,7 +6979,7 @@ pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorIDDependency(
                 scope,
                 quirks_mode,
                 &invalidation_map,
-                collector
+                collector,
             );
             add_relative_selector_attribute_dependency(
                 element,
@@ -6972,7 +7021,7 @@ pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorClassDependency(
                 scope,
                 quirks_mode,
                 invalidation_map,
-                collector
+                collector,
             );
             add_relative_selector_attribute_dependency(
                 element,
@@ -7185,11 +7234,7 @@ pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorNthDependencyFro
     // Short of doing the actual matching, any of the siblings can match the selector, so we
     // have to try invalidating against all of them.
     while let Some(sibling) = element {
-        invalidate_relative_selector_ts_dependency(
-            raw_data,
-            sibling,
-            TSStateForInvalidation::NTH,
-        );
+        invalidate_relative_selector_ts_dependency(raw_data, sibling, TSStateForInvalidation::NTH);
         element = sibling.next_sibling_element();
     }
 }
@@ -7219,13 +7264,18 @@ pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorForInsertion(
     // Note that the previous sibling may be the anchor, and not part of the invalidation chain.
     // Either way, there must be siblings to both sides of the element being inserted
     // to consider it.
-    match (element.prev_sibling_element(), element.next_sibling_element()) {
+    match (
+        element.prev_sibling_element(),
+        element.next_sibling_element(),
+    ) {
         (Some(prev_sibling), Some(next_sibling)) => 'sibling: {
             // If the prev sibling is not on the sibling search path, skip.
             if prev_sibling
                 .relative_selector_search_direction()
                 .map_or(true, |direction| {
-                    !direction.intersects(ElementSelectorFlags::RELATIVE_SELECTOR_SEARCH_DIRECTION_SIBLING)
+                    !direction.intersects(
+                        ElementSelectorFlags::RELATIVE_SELECTOR_SEARCH_DIRECTION_SIBLING,
+                    )
                 })
             {
                 break 'sibling;
@@ -7256,7 +7306,6 @@ pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorForInsertion(
         },
         _ => (),
     };
-
 
     let invalidator = RelativeSelectorInvalidator {
         element,
@@ -7338,7 +7387,7 @@ pub extern "C" fn Servo_StyleSet_MaybeInvalidateRelativeSelectorForRemoval(
                 prev_sibling,
                 quirks_mode,
                 SiblingTraversalMap::default(),
-                &data.stylist
+                &data.stylist,
             );
             invalidate_relative_selector_next_sibling_side_effect(
                 next_sibling,
@@ -7481,9 +7530,17 @@ pub unsafe extern "C" fn Servo_GetCustomPropertyValue(
     let stylist = &doc_data.stylist;
     let custom_registration = stylist.get_custom_property_registration(&name);
     let computed_value = if custom_registration.map_or(true, |r| r.inherits()) {
-        computed_values.custom_properties.inherited.as_ref().and_then(|m| m.get(&name))
+        computed_values
+            .custom_properties
+            .inherited
+            .as_ref()
+            .and_then(|m| m.get(&name))
     } else {
-        computed_values.custom_properties.non_inherited.as_ref().and_then(|m| m.get(&name))
+        computed_values
+            .custom_properties
+            .non_inherited
+            .as_ref()
+            .and_then(|m| m.get(&name))
     };
 
     if let Some(v) = computed_value {
@@ -7508,7 +7565,10 @@ pub extern "C" fn Servo_GetCustomPropertyNameAt(
     computed_values: &ComputedValues,
     index: u32,
 ) -> *mut nsAtom {
-    match &computed_values.custom_properties.property_at(index as usize) {
+    match &computed_values
+        .custom_properties
+        .property_at(index as usize)
+    {
         Some((name, _value)) => name.as_ptr(),
         None => ptr::null_mut(),
     }
@@ -7528,8 +7588,10 @@ fn relative_selector_dependencies_for_id<'a>(
     invalidation_map: &'a RelativeSelectorInvalidationMap,
     collector: &mut RelativeSelectorDependencyCollector<'a, GeckoElement<'a>>,
 ) {
-    [old_id, new_id].iter().filter(|id| !id.is_null()).for_each(|id| {
-        unsafe {
+    [old_id, new_id]
+        .iter()
+        .filter(|id| !id.is_null())
+        .for_each(|id| unsafe {
             AtomIdent::with(*id, |atom| {
                 match invalidation_map.map.id_to_selector.get(atom, quirks_mode) {
                     Some(v) => {
@@ -7540,8 +7602,7 @@ fn relative_selector_dependencies_for_id<'a>(
                     None => (),
                 };
             })
-        }
-    });
+        });
 }
 
 fn relative_selector_dependencies_for_class<'a>(
@@ -7594,12 +7655,20 @@ fn process_relative_selector_invalidations(
         &data.stylist,
         |element, scope, data, quirks_mode, collector| {
             let invalidation_map = data.relative_selector_invalidation_map();
-            let states = *states.get_or_insert_with(|| ElementWrapper::new(*element, snapshot_table).state_changes());
+            let states = *states.get_or_insert_with(|| {
+                ElementWrapper::new(*element, snapshot_table).state_changes()
+            });
             let classes = classes.get_or_insert_with(|| classes_changed(element, snapshot_table));
             if snapshot.id_changed() {
                 relative_selector_dependencies_for_id(
-                    element.id().map(|id| id.as_ptr().cast_const()).unwrap_or(ptr::null()),
-                    snapshot.id_attr().map(|id| id.as_ptr().cast_const()).unwrap_or(ptr::null()),
+                    element
+                        .id()
+                        .map(|id| id.as_ptr().cast_const())
+                        .unwrap_or(ptr::null()),
+                    snapshot
+                        .id_attr()
+                        .map(|id| id.as_ptr().cast_const())
+                        .unwrap_or(ptr::null()),
                     element,
                     scope,
                     quirks_mode,
@@ -7607,8 +7676,23 @@ fn process_relative_selector_invalidations(
                     collector,
                 );
             }
-            relative_selector_dependencies_for_class(&classes, element, scope, quirks_mode, invalidation_map, collector);
-            snapshot.each_attr_changed(|attr| add_relative_selector_attribute_dependency(element, &scope, invalidation_map, attr, collector));
+            relative_selector_dependencies_for_class(
+                &classes,
+                element,
+                scope,
+                quirks_mode,
+                invalidation_map,
+                collector,
+            );
+            snapshot.each_attr_changed(|attr| {
+                add_relative_selector_attribute_dependency(
+                    element,
+                    &scope,
+                    invalidation_map,
+                    attr,
+                    collector,
+                )
+            });
             invalidation_map
                 .map
                 .state_affecting_selectors
@@ -7960,7 +8044,10 @@ pub extern "C" fn Servo_ParseFilters(
 
     let mut filters = vec![];
 
-    if parser.try_parse(|i| i.expect_ident_matching("none")).is_ok() {
+    if parser
+        .try_parse(|i| i.expect_ident_matching("none"))
+        .is_ok()
+    {
         return parser.expect_exhausted().is_ok();
     }
 
@@ -8070,9 +8157,9 @@ pub unsafe extern "C" fn Servo_ParseFontShorthandForMatching(
             },
             specified::FontSize::Keyword(info) => {
                 let keyword = if info.kw != specified::FontSizeKeyword::Math {
-                  info.kw
+                    info.kw
                 } else {
-                  specified::FontSizeKeyword::Medium
+                    specified::FontSizeKeyword::Medium
                 };
                 // Map absolute-size keywords to sizes.
                 // TODO: Maybe get a meaningful quirks / base size from the caller?
@@ -8533,12 +8620,10 @@ pub extern "C" fn Servo_ParseLengthWithoutStyleContext(
     len: &nsACString,
     out: &mut f32,
     get_font_metrics: Option<unsafe extern "C" fn(*mut c_void) -> GeckoFontMetrics>,
-    getter_context: *mut c_void
+    getter_context: *mut c_void,
 ) -> bool {
     let metrics_getter = if let Some(getter) = get_font_metrics {
-        Some(move || -> GeckoFontMetrics {
-            unsafe { getter(getter_context) }
-        })
+        Some(move || -> GeckoFontMetrics { unsafe { getter(getter_context) } })
     } else {
         None
     };
@@ -8574,7 +8659,13 @@ pub extern "C" fn Servo_SlowRgbToColorName(r: u8, g: u8, b: u8, result: &mut nsA
 pub extern "C" fn Servo_ColorNameToRgb(name: &nsACString, out: &mut structs::nscolor) -> bool {
     match cssparser::color::parse_named_color(unsafe { name.as_str_unchecked() }) {
         Ok((r, g, b)) => {
-            *out = style::gecko::values::convert_absolute_color_to_nscolor(&AbsoluteColor::new(ColorSpace::Srgb, r, g, b, 1.0));
+            *out = style::gecko::values::convert_absolute_color_to_nscolor(&AbsoluteColor::new(
+                ColorSpace::Srgb,
+                r,
+                g,
+                b,
+                1.0,
+            ));
             true
         },
         _ => false,
@@ -8621,25 +8712,34 @@ pub extern "C" fn Servo_RegisterCustomProperty(
 
     // If property set already contains an entry with name as its property name (compared
     // codepoint-wise), throw an InvalidModificationError and exit this algorithm.
-    if per_doc_data.stylist.custom_property_script_registry().get(&name).is_some() {
-        return AlreadyRegistered
+    if per_doc_data
+        .stylist
+        .custom_property_script_registry()
+        .get(&name)
+        .is_some()
+    {
+        return AlreadyRegistered;
     }
     // Attempt to consume a syntax definition from syntax. If it returns failure, throw a
     // SyntaxError. Otherwise, let syntax definition be the returned syntax definition.
-    let Ok(syntax) = Descriptor::from_str(syntax, /* preserve_specified = */ false) else { return InvalidSyntax };
+    let Ok(syntax) = Descriptor::from_str(syntax, /* preserve_specified = */ false) else {
+        return InvalidSyntax;
+    };
 
     let initial_value = match initial_value {
         Some(v) => {
             let mut input = ParserInput::new(v);
-            let parsed = Parser::new(&mut input).parse_entirely(|input| {
-                input.skip_whitespace();
-                SpecifiedValue::parse(input, url_data)
-            }).ok();
+            let parsed = Parser::new(&mut input)
+                .parse_entirely(|input| {
+                    input.skip_whitespace();
+                    SpecifiedValue::parse(input, url_data)
+                })
+                .ok();
             if parsed.is_none() {
-                return InvalidInitialValue
+                return InvalidInitialValue;
             }
             parsed
-        }
+        },
         None => None,
     };
 
@@ -8647,27 +8747,33 @@ pub extern "C" fn Servo_RegisterCustomProperty(
         PropertyRegistration::validate_initial_value(&syntax, initial_value.as_ref())
     {
         return match error {
-            PropertyRegistrationError::InitialValueNotComputationallyIndependent => InitialValueNotComputationallyIndependent,
+            PropertyRegistrationError::InitialValueNotComputationallyIndependent => {
+                InitialValueNotComputationallyIndependent
+            },
             PropertyRegistrationError::InvalidInitialValue => InvalidInitialValue,
-            PropertyRegistrationError::NoInitialValue=> NoInitialValue,
-        }
+            PropertyRegistrationError::NoInitialValue => NoInitialValue,
+        };
     }
 
     per_doc_data
         .stylist
         .custom_property_script_registry_mut()
-        .register(
-            PropertyRegistration {
-                name: PropertyRuleName(name),
-                syntax,
-                inherits: if inherits { PropertyInherits::True } else { PropertyInherits::False },
-                initial_value,
-                url_data: url_data.clone(),
-                source_location: SourceLocation { line: 0, column: 0 },
+        .register(PropertyRegistration {
+            name: PropertyRuleName(name),
+            syntax,
+            inherits: if inherits {
+                PropertyInherits::True
+            } else {
+                PropertyInherits::False
             },
-        );
+            initial_value,
+            url_data: url_data.clone(),
+            source_location: SourceLocation { line: 0, column: 0 },
+        });
 
-    per_doc_data.stylist.rebuild_initial_values_for_custom_properties();
+    per_doc_data
+        .stylist
+        .rebuild_initial_values_for_custom_properties();
 
     SuccessfullyRegistered
 }
@@ -8686,21 +8792,19 @@ pub struct PropDef {
     pub from_js: bool,
 }
 
-
 impl PropDef {
     /// Creates a PropDef from a name and a PropertyRegistration.
-    pub fn new(
-        name: Atom,
-        property_registration: &PropertyRegistration,
-        from_js: bool
-    ) -> Self {
+    pub fn new(name: Atom, property_registration: &PropertyRegistration, from_js: bool) -> Self {
         let mut syntax = nsCString::new();
         if let Some(spec) = property_registration.syntax.specified_string() {
             syntax.assign(spec);
         } else {
             // FIXME: Descriptor::to_css should behave consistently (probably this shouldn't use
             // the ToCss trait).
-            property_registration.syntax.to_css(&mut CssWriter::new(&mut syntax)).unwrap();
+            property_registration
+                .syntax
+                .to_css(&mut CssWriter::new(&mut syntax))
+                .unwrap();
         };
         let initial_value = property_registration.initial_value.to_css_nscstring();
 
@@ -8710,7 +8814,7 @@ impl PropDef {
             inherits: property_registration.inherits(),
             has_initial_value: property_registration.initial_value.is_some(),
             initial_value,
-            from_js
+            from_js,
         }
     }
 }
@@ -8727,31 +8831,23 @@ pub extern "C" fn Servo_GetRegisteredCustomProperties(
             .custom_property_script_registry()
             .get_all()
             .iter()
-            .map(|(name, property_registration)|
+            .map(|(name, property_registration)| {
+                PropDef::new(name.clone(), property_registration, /* from_js */ true)
+            }),
+    );
+
+    for (cascade_data, _origin) in stylist.iter_origins() {
+        custom_properties.extend(cascade_data.custom_property_registrations().iter().map(
+            |(name, value)| {
+                let property_registration = &value.last().unwrap().0;
                 PropDef::new(
                     name.clone(),
                     property_registration,
                     /* from_js */
-                    true
+                    false,
                 )
-            )
-    );
-
-    for (cascade_data, _origin) in stylist.iter_origins() {
-        custom_properties.extend(
-            cascade_data
-                .custom_property_registrations()
-                .iter()
-                .map(|(name, value)| {
-                    let property_registration = &value.last().unwrap().0;
-                    PropDef::new(
-                        name.clone(),
-                        property_registration,
-                        /* from_js */
-                        false
-                    )
-                })
-        )
+            },
+        ))
     }
 }
 
@@ -8768,14 +8864,11 @@ pub extern "C" fn Servo_GetSelectorWarnings(
     rule: &LockedStyleRule,
     warnings: &mut ThinVec<SelectorWarningData>,
 ) {
-    read_locked_arc(rule, |r|
+    read_locked_arc(rule, |r| {
         for (i, selector) in r.selectors.slice().iter().enumerate() {
             for k in SelectorWarningKind::from_selector(selector) {
-                warnings.push(SelectorWarningData {
-                    index: i,
-                    kind: k,
-                });
+                warnings.push(SelectorWarningData { index: i, kind: k });
             }
         }
-    );
+    });
 }

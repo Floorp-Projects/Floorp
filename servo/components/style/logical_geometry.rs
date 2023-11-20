@@ -1478,10 +1478,10 @@ impl LogicalSide {
     pub fn to_physical(self, wm: WritingMode) -> PhysicalSide {
         // Block mapping depends only on vertical+vertical-lr
         static BLOCK_MAPPING: [[PhysicalSide; 2]; 4] = [
-            [PhysicalSide::Top, PhysicalSide::Bottom],  // horizontal-tb
-            [PhysicalSide::Right, PhysicalSide::Left],  // vertical-rl
-            [PhysicalSide::Bottom, PhysicalSide::Top],  // (horizontal-bt)
-            [PhysicalSide::Left, PhysicalSide::Right],  // vertical-lr
+            [PhysicalSide::Top, PhysicalSide::Bottom], // horizontal-tb
+            [PhysicalSide::Right, PhysicalSide::Left], // vertical-rl
+            [PhysicalSide::Bottom, PhysicalSide::Top], // (horizontal-bt)
+            [PhysicalSide::Left, PhysicalSide::Right], // vertical-lr
         ];
 
         if self.is_block() {
@@ -1506,33 +1506,34 @@ impl LogicalSide {
         // text. (The former 'sideways-left' value, no longer in the spec, would have produced
         // this in vertical-rl mode.)
         static INLINE_MAPPING: [[PhysicalSide; 2]; 16] = [
-            [PhysicalSide::Left, PhysicalSide::Right],  // horizontal-tb               ltr
-            [PhysicalSide::Top, PhysicalSide::Bottom],  // vertical-rl                 ltr
-            [PhysicalSide::Right, PhysicalSide::Left],  // horizontal-tb               rtl
-            [PhysicalSide::Bottom, PhysicalSide::Top],  // vertical-rl                 rtl
-            [PhysicalSide::Right, PhysicalSide::Left],  // (horizontal-bt)  (inverted) ltr
-            [PhysicalSide::Top, PhysicalSide::Bottom],  // sideways-lr                 rtl
-            [PhysicalSide::Left, PhysicalSide::Right],  // (horizontal-bt)  (inverted) rtl
-            [PhysicalSide::Bottom, PhysicalSide::Top],  // sideways-lr                 ltr
-            [PhysicalSide::Left, PhysicalSide::Right],  // horizontal-tb    (inverted) rtl
-            [PhysicalSide::Top, PhysicalSide::Bottom],  // vertical-rl      (inverted) rtl
-            [PhysicalSide::Right, PhysicalSide::Left],  // horizontal-tb    (inverted) ltr
-            [PhysicalSide::Bottom, PhysicalSide::Top],  // vertical-rl      (inverted) ltr
-            [PhysicalSide::Left, PhysicalSide::Right],  // (horizontal-bt)             ltr
-            [PhysicalSide::Top, PhysicalSide::Bottom],  // vertical-lr                 ltr
-            [PhysicalSide::Right, PhysicalSide::Left],  // (horizontal-bt)             rtl
-            [PhysicalSide::Bottom, PhysicalSide::Top],  // vertical-lr                 rtl
+            [PhysicalSide::Left, PhysicalSide::Right], // horizontal-tb               ltr
+            [PhysicalSide::Top, PhysicalSide::Bottom], // vertical-rl                 ltr
+            [PhysicalSide::Right, PhysicalSide::Left], // horizontal-tb               rtl
+            [PhysicalSide::Bottom, PhysicalSide::Top], // vertical-rl                 rtl
+            [PhysicalSide::Right, PhysicalSide::Left], // (horizontal-bt)  (inverted) ltr
+            [PhysicalSide::Top, PhysicalSide::Bottom], // sideways-lr                 rtl
+            [PhysicalSide::Left, PhysicalSide::Right], // (horizontal-bt)  (inverted) rtl
+            [PhysicalSide::Bottom, PhysicalSide::Top], // sideways-lr                 ltr
+            [PhysicalSide::Left, PhysicalSide::Right], // horizontal-tb    (inverted) rtl
+            [PhysicalSide::Top, PhysicalSide::Bottom], // vertical-rl      (inverted) rtl
+            [PhysicalSide::Right, PhysicalSide::Left], // horizontal-tb    (inverted) ltr
+            [PhysicalSide::Bottom, PhysicalSide::Top], // vertical-rl      (inverted) ltr
+            [PhysicalSide::Left, PhysicalSide::Right], // (horizontal-bt)             ltr
+            [PhysicalSide::Top, PhysicalSide::Bottom], // vertical-lr                 ltr
+            [PhysicalSide::Right, PhysicalSide::Left], // (horizontal-bt)             rtl
+            [PhysicalSide::Bottom, PhysicalSide::Top], // vertical-lr                 rtl
         ];
 
-        debug_assert!(WritingMode::VERTICAL.bits() == 0x01 &&
-                       WritingMode::INLINE_REVERSED.bits() == 0x02 &&
-                       WritingMode::VERTICAL_LR.bits() == 0x04 &&
-                       WritingMode::LINE_INVERTED.bits() == 0x08);
+        debug_assert!(
+            WritingMode::VERTICAL.bits() == 0x01 &&
+                WritingMode::INLINE_REVERSED.bits() == 0x02 &&
+                WritingMode::VERTICAL_LR.bits() == 0x04 &&
+                WritingMode::LINE_INVERTED.bits() == 0x08
+        );
         let index = (wm.bits() & 0xF) as usize;
         INLINE_MAPPING[index][edge]
     }
 }
-
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 #[repr(u8)]
@@ -1598,10 +1599,30 @@ impl PhysicalCorner {
         // sides were to be parallel, we fall back to returning TopLeft.
         const IMPOSSIBLE: PhysicalCorner = PhysicalCorner::TopLeft;
         static SIDES_TO_CORNER: [[PhysicalCorner; 4]; 4] = [
-            [IMPOSSIBLE, PhysicalCorner::TopRight, IMPOSSIBLE, PhysicalCorner::TopLeft ],
-            [PhysicalCorner::TopRight, IMPOSSIBLE, PhysicalCorner::BottomRight, IMPOSSIBLE ],
-            [IMPOSSIBLE, PhysicalCorner::BottomRight, IMPOSSIBLE, PhysicalCorner::BottomLeft ],
-            [PhysicalCorner::TopLeft, IMPOSSIBLE, PhysicalCorner::BottomLeft, IMPOSSIBLE ],
+            [
+                IMPOSSIBLE,
+                PhysicalCorner::TopRight,
+                IMPOSSIBLE,
+                PhysicalCorner::TopLeft,
+            ],
+            [
+                PhysicalCorner::TopRight,
+                IMPOSSIBLE,
+                PhysicalCorner::BottomRight,
+                IMPOSSIBLE,
+            ],
+            [
+                IMPOSSIBLE,
+                PhysicalCorner::BottomRight,
+                IMPOSSIBLE,
+                PhysicalCorner::BottomLeft,
+            ],
+            [
+                PhysicalCorner::TopLeft,
+                IMPOSSIBLE,
+                PhysicalCorner::BottomLeft,
+                IMPOSSIBLE,
+            ],
         ];
         SIDES_TO_CORNER[a as usize][b as usize]
     }

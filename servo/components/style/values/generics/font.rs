@@ -5,8 +5,8 @@
 //! Generic types for font stuff.
 
 use crate::parser::{Parse, ParserContext};
-use crate::One;
 use crate::values::animated::ToAnimatedZero;
+use crate::One;
 use byteorder::{BigEndian, ReadBytesExt};
 use cssparser::Parser;
 use std::fmt::{self, Write};

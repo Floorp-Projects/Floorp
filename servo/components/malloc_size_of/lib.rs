@@ -714,7 +714,8 @@ impl MallocSizeOf for selectors::parser::AncestorHashes {
     }
 }
 
-impl<Impl: selectors::parser::SelectorImpl> MallocUnconditionalSizeOf for selectors::parser::Selector<Impl>
+impl<Impl: selectors::parser::SelectorImpl> MallocUnconditionalSizeOf
+    for selectors::parser::Selector<Impl>
 where
     Impl::NonTSPseudoClass: MallocSizeOf,
     Impl::PseudoElement: MallocSizeOf,
@@ -734,7 +735,8 @@ where
     }
 }
 
-impl<Impl: selectors::parser::SelectorImpl> MallocUnconditionalSizeOf for selectors::parser::SelectorList<Impl>
+impl<Impl: selectors::parser::SelectorImpl> MallocUnconditionalSizeOf
+    for selectors::parser::SelectorList<Impl>
 where
     Impl::NonTSPseudoClass: MallocSizeOf,
     Impl::PseudoElement: MallocSizeOf,
@@ -754,7 +756,8 @@ where
     }
 }
 
-impl<Impl: selectors::parser::SelectorImpl> MallocUnconditionalSizeOf for selectors::parser::Component<Impl>
+impl<Impl: selectors::parser::SelectorImpl> MallocUnconditionalSizeOf
+    for selectors::parser::Component<Impl>
 where
     Impl::NonTSPseudoClass: MallocSizeOf,
     Impl::PseudoElement: MallocSizeOf,

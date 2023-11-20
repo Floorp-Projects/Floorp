@@ -54,7 +54,7 @@ pub const STACK_SAFETY_MARGIN_KB: usize = 168;
 /// out of line so we don't allocate stack space for the entire struct
 /// in the caller.
 #[inline(never)]
-pub (crate) fn create_thread_local_context<'scope, E>(slot: &mut Option<ThreadLocalStyleContext<E>>)
+pub(crate) fn create_thread_local_context<'scope, E>(slot: &mut Option<ThreadLocalStyleContext<E>>)
 where
     E: TElement + 'scope,
 {

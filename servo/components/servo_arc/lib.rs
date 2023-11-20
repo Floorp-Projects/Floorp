@@ -892,11 +892,7 @@ impl<H, T> UniqueArc<HeaderSlice<H, T>> {
     }
 
     #[inline]
-    pub fn from_header_and_iter_with_size<I>(
-        header: H,
-        items: I,
-        num_items: usize,
-    ) -> Self
+    pub fn from_header_and_iter_with_size<I>(header: H, items: I, num_items: usize) -> Self
     where
         I: Iterator<Item = T>,
     {

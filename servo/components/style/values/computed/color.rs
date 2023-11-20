@@ -4,13 +4,13 @@
 
 //! Computed color values.
 
+use crate::color::parsing::Color as CSSParserColor;
 use crate::color::AbsoluteColor;
 use crate::values::animated::ToAnimatedZero;
 use crate::values::computed::percentage::Percentage;
 use crate::values::generics::color::{
     GenericCaretColor, GenericColor, GenericColorMix, GenericColorOrAuto,
 };
-use crate::color::parsing::Color as CSSParserColor;
 use std::fmt;
 use style_traits::{CssWriter, ToCss};
 
