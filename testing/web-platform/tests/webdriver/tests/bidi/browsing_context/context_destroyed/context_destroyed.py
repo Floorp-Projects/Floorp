@@ -63,7 +63,7 @@ async def test_navigate(bidi_session, subscribe_events, new_tab, inline, domain)
 
     remove_listener = bidi_session.add_event_listener(CONTEXT_DESTROYED_EVENT, on_event)
 
-    url = inline(f"<div>test</div>", domain=domain)
+    url = inline("<div>test</div>", domain=domain)
     await bidi_session.browsing_context.navigate(
         url=url, context=new_tab["context"], wait="complete"
     )
