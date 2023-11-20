@@ -362,9 +362,9 @@ export class MarionetteCommandsChild extends JSWindowActorChild {
     const { elem } = options;
 
     try {
-      return lazy.atom.getElementText(elem, this.document.defaultView);
+      return await lazy.atom.getVisibleText(elem, this.document.defaultView);
     } catch (e) {
-      lazy.logger.warn(`Atom getElementText failed: "${e.message}"`);
+      lazy.logger.warn(`Atom getVisibleText failed: "${e.message}"`);
 
       // Fallback in case the atom implementation is broken.
       // As known so far this only happens for XML documents (bug 1794099).

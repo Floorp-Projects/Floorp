@@ -74,14 +74,16 @@ each atom to be updated the steps as laid out below have to be performed:
 1. Open the Javascript file of the exported atom. See above for
    its location.
 
-2. Remove the contained license header, which can be found somewhere
-   in the middle of the file.
+2. Add the related function name and `element` as parameters to the wrapper
+   function, which can be found at the very beginning of the file so that it
+   is equal to the parameters in `atom.sys.mjs`.
 
-3. Update the parameters of the wrapper function (at the very top)
-   so that those are equal with the used parameters in `atom.sys.mjs`.
+3. Copy and paste the whole contents of the file into the left textarea on
+   <https://jsonformatter.org/json-stringify-online> to get a stringified
+   version of all the required functions.
 
-4. Copy the whole content of the file, and replace the existing
-   code for the atom in `atom.sys.mjs`.
+4. Copy and paste the whole contents of the right textarea, and replace the
+   existing code for the atom in `atom.sys.mjs`.
 
 ### Test the changes
 
