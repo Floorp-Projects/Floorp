@@ -128,7 +128,7 @@ async def test_add_preload_script_with_error(
     bidi_session, add_preload_script, subscribe_events, inline, new_tab, wait_for_event, wait_for_future_safe
 ):
     await add_preload_script(
-        function_declaration=f"() => {{ throw Error('error in preload script') }}"
+        function_declaration="() => {{ throw Error('error in preload script') }}"
     )
 
     await subscribe_events(events=["browsingContext.load", "log.entryAdded"])

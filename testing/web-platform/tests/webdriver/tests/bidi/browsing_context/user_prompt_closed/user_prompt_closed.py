@@ -188,7 +188,7 @@ async def test_subscribe_to_one_context(
     # Open a prompt in the different context.
     await bidi_session.browsing_context.navigate(
         context=another_new_context["context"],
-        url=inline(f"<script>window.alert('second tab')</script>"),
+        url=inline("<script>window.alert('second tab')</script>"),
     )
 
     await wait_for_future_safe(on_prompt_opened)
@@ -208,7 +208,7 @@ async def test_subscribe_to_one_context(
     # Open a prompt in the subscribed context.
     await bidi_session.browsing_context.navigate(
         context=new_context["context"],
-        url=inline(f"<script>window.alert('first tab')</script>"),
+        url=inline("<script>window.alert('first tab')</script>"),
     )
 
     await wait_for_future_safe(on_prompt_opened)
