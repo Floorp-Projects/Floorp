@@ -125,7 +125,6 @@ already_AddRefed<StyleSheet> StyleSheet::Constructor(
   auto referrerInfo = MakeRefPtr<ReferrerInfo>(*constructorDocument);
   sheet->SetReferrerInfo(referrerInfo);
   sheet->mConstructorDocument = constructorDocument;
-  sheet->mRelevantGlobal = constructorDocument->GetParentObject();
 
   // 2. Set the sheet's media according to aOptions.
   if (aOptions.mMedia.IsUTF8String()) {
