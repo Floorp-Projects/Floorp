@@ -48,6 +48,11 @@ skip-if = [
 ]
 
 ["browser_target_command_service_workers_navigation.js"]
+skip-if = [
+  "os == 'linux' && bits == 64", # Bug 1726270
+  "os == 'win' && bits == 64", # Bug 1726270
+  "os == 'mac' && fission", # Bug 1726270
+]
 
 ["browser_target_command_switchToTarget.js"]
 

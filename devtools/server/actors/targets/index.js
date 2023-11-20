@@ -8,7 +8,5 @@ const TYPES = {
   FRAME: "frame",
   PROCESS: "process",
   WORKER: "worker",
-  SERVICE_WORKER: "service_worker",
-  SHARED_WORKER: "shared_worker",
 };
 exports.TYPES = TYPES;

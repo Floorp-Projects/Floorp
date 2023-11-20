@@ -215,9 +215,13 @@ class LegacyWorkersWatcher {
         const listener = this.targetsListeners.get(targetFront);
         targetFront.off("workerListChanged", listener);
 
-        // When unlisten is called from a target switch or when we observe service workers targets
-        // we don't want to remove the targets from targetsByProcess
-        if (!isTargetSwitching || !this._isServiceWorkerWatcher) {
+        // When unlisten is called from a target switch and service workers targets are not
+        // destroyed on navigation, we don't want to remove the targets from targetsByProcess
+        if (
+          !isTargetSwitching ||
+          !this._isServiceWorkerWatcher ||
+          this.targetCommand.destroyServiceWorkersOnNavigation
+        ) {
           this.targetsByProcess.delete(targetFront);
         }
         this.targetsListeners.delete(targetFront);
