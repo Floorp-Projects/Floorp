@@ -5,7 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "FontFaceSetDocumentImpl.h"
-#include "FontPreloader.h"
+#include "mozilla/FontLoaderUtils.h"
 #include "mozilla/LoadInfo.h"
 #include "mozilla/PresShell.h"
 #include "mozilla/PresShellInlines.h"
@@ -282,7 +282,7 @@ nsresult FontFaceSetDocumentImpl::StartLoad(gfxUserFontEntry* aUserFontEntry,
   nsCOMPtr<nsILoadGroup> loadGroup(mDocument->GetDocumentLoadGroup());
   if (NS_FAILED(rv)) {
     nsCOMPtr<nsIChannel> channel;
-    rv = FontPreloader::BuildChannel(
+    rv = FontLoaderUtils::BuildChannel(
         getter_AddRefs(channel), src.mURI->get(), CORS_ANONYMOUS,
         dom::ReferrerPolicy::_empty /* not used */, aUserFontEntry, &src,
         mDocument, loadGroup, nullptr, false);
