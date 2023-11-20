@@ -209,8 +209,8 @@ class TransactionsHistoryArray extends Array {
    */
   proxifyTransaction(rawTransaction) {
     let proxy = Object.freeze({
-      transact() {
-        return TransactionsManager.transact(this);
+      transact(inBatch, batchIndex) {
+        return TransactionsManager.transact(this, inBatch, batchIndex);
       },
       toString() {
         return rawTransaction.toString();
@@ -336,7 +336,9 @@ export var PlacesTransactions = {
           if (typeof txn == "function") {
             txn = txn(accumulatedResults);
           }
-          accumulatedResults.push(await txn.transact());
+          accumulatedResults.push(
+            await txn.transact(true, accumulatedResults.length)
+          );
         } catch (ex) {
           // TODO Bug 1865631: handle these errors better, currently we just
           // continue, that works for non-dependent transactions, but will
@@ -550,21 +552,20 @@ var TransactionsManager = {
   _mainEnqueuer: new Enqueuer("MainEnqueuer"),
   _transactEnqueuer: new Enqueuer("TransactEnqueuer"),
 
-  // Is a batch in progress? set when we enter a batch function and unset when
-  // it's execution is done.
-  _batching: false,
-
-  // If a batch started, this indicates if we've already created an entry in the
-  // transactions history for the batch (i.e. if at least one transaction was
-  // executed successfully).
-  _createdBatchEntry: false,
-
   // Transactions object should never be recycled (that is, |execute| should
   // only be called once (or not at all) after they're constructed.
   // This keeps track of all transactions which were executed.
   _executedTransactions: new WeakSet(),
 
-  transact(txnProxy) {
+  /**
+   * Execute a proxified transaction.
+   *
+   * @param {object} txnProxy The proxified transaction to execute.
+   * @param {boolean} [inBatch] Whether the transaction is part of a batch.
+   * @param {integer} [batchIndex] The index of the transaction in the batch array.
+   * @returns {Promise} resolved to the transaction return value once complete.
+   */
+  transact(txnProxy, inBatch = false, batchIndex = undefined) {
     let rawTxn = lazy.TransactionsHistory.getRawTransaction(txnProxy);
     if (!rawTxn) {
       throw new Error("|transact| was called with an unexpected object");
@@ -586,11 +587,8 @@ var TransactionsManager = {
       // transaction to the undo stack.
       let retval = await rawTxn.execute();
 
-      let forceNewEntry = !this._batching || !this._createdBatchEntry;
+      let forceNewEntry = !inBatch || batchIndex === 0;
       lazy.TransactionsHistory.add(txnProxy, forceNewEntry);
-      if (this._batching) {
-        this._createdBatchEntry = true;
-      }
 
       this._updateCommandsOnActiveWindow();
       return retval;
@@ -600,22 +598,7 @@ var TransactionsManager = {
   },
 
   batch(task) {
-    return this._mainEnqueuer.enqueue(async () => {
-      this._batching = true;
-      this._createdBatchEntry = false;
-      let rv;
-      try {
-        rv = await task();
-      } finally {
-        // We must enqueue clearing batching mode to ensure that any existing
-        // transactions have completed before we clear the batching mode.
-        this._mainEnqueuer.enqueue(() => {
-          this._batching = false;
-          this._createdBatchEntry = false;
-        });
-      }
-      return rv;
-    });
+    return this._mainEnqueuer.enqueue(task);
   },
 
   /**
