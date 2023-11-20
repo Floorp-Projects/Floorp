@@ -294,7 +294,7 @@ void nsPrintSettingsWin::CopyFromNative(HDC aHdc, DEVMODEW* aDevMode) {
     // we've got a pages-per-sheet value with orthogonal pages/sheets, in which
     // case it's reversed.
     const bool arePagesPortraitMode =
-        (areSheetsOfPaperPortraitMode != HasOrthogonalSheetsAndPages());
+        (areSheetsOfPaperPortraitMode != HasOrthogonalPagesPerSheet());
 
     // Record the orientation of the pages (determined above) in mOrientation:
     mOrientation = int32_t(arePagesPortraitMode ? kPortraitOrientation

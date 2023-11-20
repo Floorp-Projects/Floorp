@@ -1307,7 +1307,7 @@ nsresult nsPrintJob::ReflowPrintObject(const UniquePtr<nsPrintObject>& aPO) {
   // scenario). For some pages-per-sheet values, the pages are orthogonal to
   // the sheet; we adjust for that here by swapping the width with the height.
   nsSize pageSize = adjSize;
-  if (mPrintSettings->HasOrthogonalSheetsAndPages()) {
+  if (mPrintSettings->HasOrthogonalPagesPerSheet()) {
     std::swap(pageSize.width, pageSize.height);
   }
   // XXXalaskanemily: Is this actually necessary? We set it again before the
