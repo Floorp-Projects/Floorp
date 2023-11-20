@@ -20,37 +20,26 @@ const ORG_WORKER_URL = URL_ROOT_ORG_SSL + "test_sw_page_worker.js";
  * The steps will be:
  * - navigate to .com page
  * - create target list
+ *   -> onAvailable should be called for the .com worker
  * - navigate to .org page
+ *   -> onAvailable should be called for the .org worker
  * - reload .org page
+ *   -> nothing should happen
  * - unregister .org worker
+ *   -> onDestroyed should be called for the .org worker
  * - navigate back to .com page
+ *   -> nothing should happen
  * - unregister .com worker
- *
- * First we test this with destroyServiceWorkersOnNavigation = false.
- * In this case we expect the following calls:
- * - navigate to .com page
- * - create target list
- *   - onAvailable should be called for the .com worker
- * - navigate to .org page
- *   - onAvailable should be called for the .org worker
- * - reload .org page
- *   - nothing should happen
- * - unregister .org worker
- *   - onDestroyed should be called for the .org worker
- * - navigate back to .com page
- *   - nothing should happen
- * - unregister .com worker
- *   - onDestroyed should be called for the .com worker
+ *   -> onDestroyed should be called for the .com worker
  */
 add_task(async function test_NavigationBetweenTwoDomains_NoDestroy() {
   await setupServiceWorkerNavigationTest();
 
   const tab = await addTab(COM_PAGE_URL);
 
-  const { hooks, commands, targetCommand } = await watchServiceWorkerTargets({
-    tab,
-    destroyServiceWorkersOnNavigation: false,
-  });
+  const { hooks, commands, targetCommand } = await watchServiceWorkerTargets(
+    tab
+  );
 
   // We expect onAvailable to have been called one time, for the only service
   // worker target available in the test page.
@@ -115,90 +104,6 @@ add_task(async function test_NavigationBetweenTwoDomains_NoDestroy() {
 });
 
 /**
- * Same scenario as test_NavigationBetweenTwoDomains_NoDestroy, but this time
- * with destroyServiceWorkersOnNavigation set to true.
- *
- * In this case we expect the following calls:
- * - navigate to .com page
- * - create target list
- *   - onAvailable should be called for the .com worker
- * - navigate to .org page
- *   - onDestroyed should be called for the .com worker
- *   - onAvailable should be called for the .org worker
- * - reload .org page
- *   - onDestroyed & onAvailable should be called for the .org worker
- * - unregister .org worker
- *   - onDestroyed should be called for the .org worker
- * - navigate back to .com page
- *   - onAvailable should be called for the .com worker
- * - unregister .com worker
- *   - onDestroyed should be called for the .com worker
- */
-add_task(async function test_NavigationBetweenTwoDomains_WithDestroy() {
-  await setupServiceWorkerNavigationTest();
-
-  const tab = await addTab(COM_PAGE_URL);
-
-  const { hooks, commands, targetCommand } = await watchServiceWorkerTargets({
-    tab,
-    destroyServiceWorkersOnNavigation: true,
-  });
-
-  // We expect onAvailable to have been called one time, for the only service
-  // worker target available in the test page.
-  await checkHooks(hooks, {
-    available: 1,
-    destroyed: 0,
-    targets: [COM_WORKER_URL],
-  });
-
-  info("Go to .org page, wait for onAvailable to be called");
-  BrowserTestUtils.startLoadingURIString(
-    gBrowser.selectedBrowser,
-    ORG_PAGE_URL
-  );
-  await checkHooks(hooks, {
-    available: 2,
-    destroyed: 1,
-    targets: [ORG_WORKER_URL],
-  });
-
-  info("Reload .org page, onAvailable and onDestroyed should be called");
-  gBrowser.reloadTab(gBrowser.selectedTab);
-  await checkHooks(hooks, {
-    available: 3,
-    destroyed: 2,
-    targets: [ORG_WORKER_URL],
-  });
-
-  info("Unregister .org service worker and wait until onDestroyed is called.");
-  await unregisterServiceWorker(tab, ORG_PAGE_URL);
-  await checkHooks(hooks, { available: 3, destroyed: 3, targets: [] });
-
-  info("Go back to page 1, wait for onDestroyed and onAvailable to be called");
-  BrowserTestUtils.startLoadingURIString(
-    gBrowser.selectedBrowser,
-    COM_PAGE_URL
-  );
-  await checkHooks(hooks, {
-    available: 4,
-    destroyed: 3,
-    targets: [COM_WORKER_URL],
-  });
-
-  info("Unregister .com service worker and wait until onDestroyed is called.");
-  await unregisterServiceWorker(tab, COM_PAGE_URL);
-  await checkHooks(hooks, { available: 4, destroyed: 4, targets: [] });
-
-  // Stop listening to avoid worker related requests
-  targetCommand.destroy();
-
-  await commands.waitForRequestsToSettle();
-  await commands.destroy();
-  await removeTab(tab);
-});
-
-/**
  * In this test we load a service worker in a page prior to starting the
  * TargetCommand. We start the target list on another page, and then we go back to
  * the first page. We want to check that we are correctly notified about the
@@ -208,40 +113,15 @@ add_task(async function test_NavigationBetweenTwoDomains_WithDestroy() {
  * - navigate to .com page
  * - navigate to .org page
  * - create target list
+ *   -> onAvailable is called for the .org worker
  * - unregister .org worker
+ *   -> onDestroyed is called for the .org worker
  * - navigate back to .com page
+ *   -> onAvailable is called for the .com worker
  * - unregister .com worker
- *
- * The expected calls are the same whether destroyServiceWorkersOnNavigation is
- * true or false.
- *
- * Expected calls:
- * - navigate to .com page
- * - navigate to .org page
- * - create target list
- *   - onAvailable is called for the .org worker
- * - unregister .org worker
- *   - onDestroyed is called for the .org worker
- * - navigate back to .com page
- *   - onAvailable is called for the .com worker
- * - unregister .com worker
- *   - onDestroyed is called for the .com worker
+ *   -> onDestroyed is called for the .com worker
  */
-add_task(async function test_NavigationToPageWithExistingWorker_NoDestroy() {
-  await testNavigationToPageWithExistingWorker({
-    destroyServiceWorkersOnNavigation: false,
-  });
-});
-
-add_task(async function test_NavigationToPageWithExistingWorker_WithDestroy() {
-  await testNavigationToPageWithExistingWorker({
-    destroyServiceWorkersOnNavigation: true,
-  });
-});
-
-async function testNavigationToPageWithExistingWorker({
-  destroyServiceWorkersOnNavigation,
-}) {
+add_task(async function test_NavigationToPageWithExistingWorker() {
   await setupServiceWorkerNavigationTest();
 
   const tab = await addTab(COM_PAGE_URL);
@@ -266,10 +146,9 @@ async function testNavigationToPageWithExistingWorker({
   await onBrowserLoaded;
   await waitForRegistrationReady(tab, ORG_PAGE_URL);
 
-  const { hooks, commands, targetCommand } = await watchServiceWorkerTargets({
-    tab,
-    destroyServiceWorkersOnNavigation,
-  });
+  const { hooks, commands, targetCommand } = await watchServiceWorkerTargets(
+    tab
+  );
 
   // We expect onAvailable to have been called one time, for the only service
   // worker target available in the test page.
@@ -307,7 +186,7 @@ async function testNavigationToPageWithExistingWorker({
   await commands.waitForRequestsToSettle();
   await commands.destroy();
   await removeTab(tab);
-}
+});
 
 async function setupServiceWorkerNavigationTest() {
   // Disable the preloaded process as it creates processes intermittently
@@ -320,22 +199,13 @@ async function setupServiceWorkerNavigationTest() {
   await pushPref("dom.serviceWorkers.idle_timeout", 3000);
 }
 
-async function watchServiceWorkerTargets({
-  destroyServiceWorkersOnNavigation,
-  tab,
-}) {
+async function watchServiceWorkerTargets(tab) {
   info("Create a target list for a tab target");
   const commands = await CommandsFactory.forTab(tab);
   const targetCommand = commands.targetCommand;
 
   // Enable Service Worker listening.
   targetCommand.listenForServiceWorkers = true;
-  info(
-    "Set targetCommand.destroyServiceWorkersOnNavigation to " +
-      destroyServiceWorkersOnNavigation
-  );
-  targetCommand.destroyServiceWorkersOnNavigation =
-    destroyServiceWorkersOnNavigation;
   await targetCommand.startListening();
 
   // Setup onAvailable & onDestroyed callbacks so that we can check how many
