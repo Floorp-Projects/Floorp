@@ -708,8 +708,7 @@ impl Http3ProxyServer {
                 }
             }
             Err(e) => {
-                eprintln!("error is {:?}, stream will be reset", e);
-                let _ = stream.stream_reset_send(Error::HttpRequestCancelled.code());
+                eprintln!("error is {:?}", e);
             }
         }
     }
