@@ -295,6 +295,10 @@ quickactions-cmd-plugins = plugins
 quickactions-print2 = Print page
 quickactions-cmd-print = print
 
+# Opens the print dialog at the save to PDF option
+quickactions-savepdf = Save page as PDF
+quickactions-cmd-savepdf = pdf
+
 # Opens a new private browsing window
 quickactions-private2 = Open private window
 quickactions-cmd-private = private browsing

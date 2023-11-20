@@ -176,6 +176,26 @@ const DEFAULT_ACTIONS = {
     label: "quickactions-restart",
     onPick: restartBrowser,
   },
+  savepdf: {
+    l10nCommands: ["quickactions-cmd-savepdf"],
+    label: "quickactions-savepdf",
+    icon: "chrome://global/skin/icons/print.svg",
+    onPick: () => {
+      // This writes over the users last used printer which we
+      // should not do. Refactor to launch the print preview with
+      // custom settings.
+      let win = lazy.BrowserWindowTracker.getTopWindow();
+      Cc["@mozilla.org/gfx/printsettings-service;1"]
+        .getService(Ci.nsIPrintSettingsService)
+        .maybeSaveLastUsedPrinterNameToPrefs(
+          win.PrintUtils.SAVE_TO_PDF_PRINTER
+        );
+      win.PrintUtils.startPrintWindow(
+        win.gBrowser.selectedBrowser.browsingContext,
+        {}
+      );
+    },
+  },
   screenshot: {
     l10nCommands: ["quickactions-cmd-screenshot", "quickactions-screenshot3"],
     label: "quickactions-screenshot3",
