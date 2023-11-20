@@ -189,8 +189,8 @@ void CSSTransition::QueueEvents(const StickyTimeDuration& aActiveTime) {
   }
 }
 
-void CSSTransition::Tick() {
-  Animation::Tick();
+void CSSTransition::Tick(TickState& aState) {
+  Animation::Tick(aState);
   QueueEvents();
 }
 

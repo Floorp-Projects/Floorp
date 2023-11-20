@@ -39,7 +39,7 @@ class TimeScale {
       let zeroPositionTime = 0;
 
       // To shift the zero position time is the following two patterns.
-      //  * Animation has negative current time which is smaller than negative dleay.
+      //  * Animation has negative current time which is smaller than negative delay.
       //  * Animation has negative delay.
       // Furthermore, we should override the zero position time if we will need to
       // expand the duration due to this negative current time or negative delay of

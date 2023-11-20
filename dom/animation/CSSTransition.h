@@ -70,7 +70,7 @@ class CSSTransition final : public Animation {
 
   void SetEffectFromStyle(KeyframeEffect*);
 
-  void Tick() override;
+  void Tick(TickState&) override;
 
   nsCSSPropertyID TransitionProperty() const;
   AnimationValue ToValue() const;

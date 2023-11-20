@@ -69,16 +69,11 @@ const closeAnimationInspector = async function () {
  * yet including parts of the Web Animations API.
  */
 const enableAnimationFeatures = function () {
-  return new Promise(resolve => {
-    SpecialPowers.pushPrefEnv(
-      {
-        set: [
-          ["dom.animations-api.getAnimations.enabled", true],
-          ["dom.animations-api.timelines.enabled", true],
-        ],
-      },
-      resolve
-    );
+  return SpecialPowers.pushPrefEnv({
+    set: [
+      ["dom.animations-api.getAnimations.enabled", true],
+      ["dom.animations-api.timelines.enabled", true],
+    ],
   });
 };
 
@@ -673,7 +668,7 @@ const setStyles = async function (animationInspector, selector, properties) {
 };
 
 /**
- * Wait until curren time of animations will be changed to give currrent time.
+ * Wait until current time of animations will be changed to given current time.
  *
  * @param {AnimationInspector} animationInspector
  * @param {Number} currentTime
@@ -684,9 +679,9 @@ const waitUntilCurrentTimeChangedAt = async function (
 ) {
   info(`Wait until current time will be change to ${currentTime}`);
   await waitUntil(() =>
-    animationInspector.state.animations.every(
-      a => a.state.currentTime === currentTime
-    )
+    animationInspector.state.animations.every(a => {
+      return a.state.currentTime === currentTime;
+    })
   );
 };
 

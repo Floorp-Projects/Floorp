@@ -29,7 +29,7 @@ void ScrollTimelineAnimationTracker::TriggerPendingAnimations() {
     // them immediately until the frames are ready. Using TriggerOnNextTick()
     // for scroll-driven animations may have issues because we don't tick if
     // no one does scroll.
-    if (!animation->TryTriggerNowForFiniteTimeline()) {
+    if (!animation->TryTriggerNow()) {
       // Note: We keep this animation pending even if its timeline is always
       // inactive. It's pretty hard to tell its future status, for example, it's
       // possible that the scroll container is in display:none subtree but the
