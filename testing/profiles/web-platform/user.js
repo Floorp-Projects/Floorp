@@ -59,12 +59,16 @@ user_pref("media.block-autoplay-until-in-foreground", false);
 // Disable dark scrollbars as it can be semi-transparent that many reftests
 // don't expect.
 user_pref("widget.disable-dark-scrollbar", true);
+// Disable scrollbar animations. Otherwise reftests that use overlay scrollbars
+// (only Android right now), might get a snapshot at different times during the
+// animation.
+user_pref("ui.scrollbarFadeDuration", 0);
 // Don't enable paint suppression when the background is unknown. While paint
 // is suppressed, synthetic click events and co. go to the old page, which can
 // be confusing for tests that send click events before the first paint.
 user_pref("nglayout.initialpaint.unsuppress_with_no_background", true);
 user_pref("media.block-autoplay-until-in-foreground", false);
-// Force a light color scheme unless explicitly overriden by pref.
+// Force a light color scheme unless explicitly overridden by pref.
 user_pref("layout.css.prefers-color-scheme.content-override", 1);
 // Force OffscreenCanvas support
 user_pref("gfx.offscreencanvas.enabled", true);
