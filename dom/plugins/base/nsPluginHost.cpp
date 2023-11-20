@@ -9,10 +9,6 @@
 
 #include "nsTString.h"
 
-using namespace mozilla;
-
-NS_IMPL_ISUPPORTS(nsPluginHost, nsISupportsWeakReference)
-
 nsPluginHost::SpecialType nsPluginHost::GetSpecialType(
     const nsACString& aMIMEType) {
   if (aMIMEType.LowerCaseEqualsASCII("application/x-test")) {
