@@ -95,11 +95,6 @@ class CompositableClient {
       TextureFlags aTextureFlags,
       TextureAllocationFlags aAllocFlags = ALLOC_DEFAULT);
 
-  already_AddRefed<TextureClient> CreateTextureClientFromSurface(
-      gfx::SourceSurface* aSurface, BackendSelector aSelector,
-      TextureFlags aTextureFlags,
-      TextureAllocationFlags aAllocFlags = ALLOC_DEFAULT);
-
   /**
    * Establishes the connection with compositor side through IPDL
    */
