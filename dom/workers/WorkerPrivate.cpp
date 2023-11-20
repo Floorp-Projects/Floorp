@@ -4334,7 +4334,13 @@ bool WorkerPrivate::IsEligibleForCC() {
     return true;
   }
 
-  bool HasShutdownTasks = !mShutdownTasks.IsEmpty();
+  bool hasShutdownTasks = !mShutdownTasks.IsEmpty();
+  bool hasPendingEvents = false;
+  if (mThread) {
+    hasPendingEvents =
+        NS_SUCCEEDED(mThread->HasPendingEvents(&hasPendingEvents)) &&
+        hasPendingEvents;
+  }
 
   LOGV(("mMainThreadEventTarget: %s",
         mMainThreadEventTarget->IsEmpty() ? "empty" : "non-empty"));
@@ -4343,12 +4349,13 @@ bool WorkerPrivate::IsEligibleForCC() {
   LOGV(("mMainThreadDebuggerEventTarget: %s",
         mMainThreadDebuggeeEventTarget->IsEmpty() ? "empty" : "non-empty"));
   LOGV(("mCCFlagSaysEligible: %s", mCCFlagSaysEligible ? "true" : "false"));
-  LOGV(("HasShutdownTasks: %s", HasShutdownTasks ? "true" : "false"));
+  LOGV(("hasShutdownTasks: %s", hasShutdownTasks ? "true" : "false"));
+  LOGV(("hasPendingEvents: %s", hasPendingEvents ? "true" : "false"));
 
   return mMainThreadEventTarget->IsEmpty() &&
          mMainThreadEventTargetForMessaging->IsEmpty() &&
          mMainThreadDebuggeeEventTarget->IsEmpty() && mCCFlagSaysEligible &&
-         !HasShutdownTasks;
+         !hasShutdownTasks && !hasPendingEvents;
 }
 
 void WorkerPrivate::CancelAllTimeouts() {
