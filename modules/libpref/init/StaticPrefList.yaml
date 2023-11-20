@@ -10114,11 +10114,6 @@
     value: 8
     mirror: always
 
--   name: media.wmf.dxva.d3d9.amd-pre-uvd4.disabled
-    type: RelaxedAtomicBool
-    value: true
-    mirror: always
-
 -   name: media.wmf.use-nv12-format
     type: RelaxedAtomicBool
     value: true

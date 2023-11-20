@@ -692,9 +692,6 @@ void DXGIYCbCrTextureData::GetSubDescriptor(
 }
 
 void DXGIYCbCrTextureData::Deallocate(LayersIPCChannel*) {
-  mD3D9Textures[0] = nullptr;
-  mD3D9Textures[1] = nullptr;
-  mD3D9Textures[2] = nullptr;
   mD3D11Textures[0] = nullptr;
   mD3D11Textures[1] = nullptr;
   mD3D11Textures[2] = nullptr;

@@ -13,7 +13,6 @@
 #include "mozilla/layers/CompositableForwarder.h"
 #include "mozilla/layers/D3D11YCbCrImage.h"
 #include "mozilla/layers/TextureClient.h"
-#include "d3d9.h"
 
 namespace mozilla {
 namespace layers {

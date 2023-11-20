@@ -22,18 +22,14 @@ class KnowsCompositor;
 
 class DXVA2Manager {
  public:
-  // Creates and initializes a DXVA2Manager. We can use DXVA2 via either
-  // D3D9Ex or D3D11.
-  static DXVA2Manager* CreateD3D9DXVA(layers::KnowsCompositor* aKnowsCompositor,
-                                      nsACString& aFailureReason);
+  // Creates and initializes a DXVA2Manager. We can use DXVA2 via D3D11.
   static DXVA2Manager* CreateD3D11DXVA(
       layers::KnowsCompositor* aKnowsCompositor, nsACString& aFailureReason,
       ID3D11Device* aDevice = nullptr);
 
   // Returns a pointer to the D3D device manager responsible for managing the
-  // device we're using for hardware accelerated video decoding. If we're using
-  // D3D9Ex, this is an IDirect3DDeviceManager9. For D3D11 this is an
-  // IMFDXGIDeviceManager. It is safe to call this on any thread.
+  // device we're using for hardware accelerated video decoding. For D3D11 this
+  // is an IMFDXGIDeviceManager. It is safe to call this on any thread.
   virtual IUnknown* GetDXVADeviceManager() = 0;
 
   // Creates an Image for the video frame stored in aVideoSample.

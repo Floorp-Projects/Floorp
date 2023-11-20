@@ -196,7 +196,6 @@ class DXGIYCbCrTextureData : public TextureData {
 
  protected:
   RefPtr<ID3D11Texture2D> mD3D11Textures[3];
-  RefPtr<IDirect3DTexture9> mD3D9Textures[3];
   HANDLE mHandles[3];
   gfx::IntSize mSize;
   gfx::IntSize mSizeY;
