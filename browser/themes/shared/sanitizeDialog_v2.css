@@ -1,0 +1,73 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* Sanitize everything warnings */
+
+#sanitizeEverythingWarning,
+#sanitizeEverythingUndoWarning {
+  white-space: pre-wrap;
+}
+
+/* Hide the duration dropdown suffix label if it's empty.  Otherwise it
+   takes up a little space, causing the end of the dropdown to not be aligned
+   with the warning box. */
+#sanitizeDurationSuffixLabel[value=""] {
+  display: none;
+}
+
+#sanitizeDurationLabel[value=""] + #sanitizeDurationChoice {
+  margin-inline-start: 0;
+}
+
+/* Sanitize everything warning box */
+#sanitizeEverythingWarningBox {
+  /* Fallback colors are used when the dialog is open outside of in-content prefs */
+  background-color: var(--in-content-box-background, Window);
+  border: 1px solid var(--in-content-box-border-color, ThreeDDarkShadow);
+  border-radius: 5px;
+  padding: 16px;
+  margin-block: 6px;
+}
+
+#sanitizeEverythingWarningIcon {
+  padding: 0;
+  margin: 0;
+}
+
+#sanitizeEverythingWarningDescBox {
+  padding: 0 16px;
+  margin: 0;
+}
+
+#titleText {
+  margin-block-start: 0;
+  margin-inline: 4px;
+}
+
+dialog:not([inbrowserwindow]) #titleText {
+  display: none;
+}
+
+dialog[inbrowserwindow] {
+  --grid-padding: 16px;
+  padding: var(--grid-padding) calc(var(--grid-padding) - 4px);
+}
+
+dialog[inbrowserwindow] groupbox,
+dialog[inbrowserwindow] #sanitizeEverythingWarningBox,
+dialog[inbrowserwindow] #SanitizeDurationBox {
+  margin-inline: 4px;
+}
+
+dialog[inbrowserwindow] #sanitizeDurationLabel {
+  margin-inline-start: 0;
+}
+
+dialog[inbrowserwindow] #sanitizeDurationSuffixLabel {
+  margin-inline-end: 0;
+}
+
+dialog[inbrowserwindow] groupbox:last-child {
+  margin-block-end: 16px;
+}
