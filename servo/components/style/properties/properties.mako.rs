@@ -3165,7 +3165,8 @@ impl ComputedValues {
     ) -> fmt::Result {
         use crate::values::resolved::ToResolvedValue;
         let mut dest = CssWriter::new(dest);
-        match property_id.to_physical(self.writing_mode) {
+        let property_id = property_id.to_physical(self.writing_mode);
+        match property_id {
             % for specified_type, props in groupby(data.longhands, key=lambda x: x.specified_type()):
             <% props = list(props) %>
             ${" |\n".join("LonghandId::{}".format(p.camel_case) for p in props)} => {
@@ -3195,11 +3196,12 @@ impl ComputedValues {
     ) -> PropertyDeclaration {
         use crate::values::resolved::ToResolvedValue;
         use crate::values::computed::ToComputedValue;
-        match property_id.to_physical(self.writing_mode) {
+        let physical_property_id = property_id.to_physical(self.writing_mode);
+        match physical_property_id {
             % for specified_type, props in groupby(data.longhands, key=lambda x: x.specified_type()):
             <% props = list(props) %>
             ${" |\n".join("LonghandId::{}".format(p.camel_case) for p in props)} => {
-                let mut computed_value = match property_id {
+                let mut computed_value = match physical_property_id {
                     % for prop in props:
                     % if not prop.logical:
                     LonghandId::${prop.camel_case} => self.clone_${prop.ident}(),
