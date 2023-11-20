@@ -616,7 +616,8 @@ static void HexEncode(const Span<const uint8_t>& aBytes, nsACString& aEncoded) {
 // This is left as a void because we might fail to set the permission for some
 // reason and yet the LPAC permission is already granted. So returning success
 // or failure isn't really that useful.
-static void EnsureLpacPermsissionsOnBinDir() {
+/* static */
+void SandboxBroker::EnsureLpacPermsissionsOnDir(const nsString& aDir) {
   // For MSIX packages we get access through the packageContents capability and
   // we probably won't have access to add the permission either way.
   if (widget::WinUtils::HasPackageIdentity()) {
@@ -632,28 +633,28 @@ static void EnsureLpacPermsissionsOnBinDir() {
     return;
   }
 
-  HANDLE hBinDir =
-      ::CreateFileW(sBinDir->get(), WRITE_DAC | READ_CONTROL, 0, NULL,
-                    OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
-  if (hBinDir == INVALID_HANDLE_VALUE) {
-    LOG_W("Unable to get binary directory handle.");
+  HANDLE hDir = ::CreateFileW(aDir.get(), WRITE_DAC | READ_CONTROL, 0, NULL,
+                              OPEN_EXISTING, FILE_FLAG_BACKUP_SEMANTICS, NULL);
+  if (hDir == INVALID_HANDLE_VALUE) {
+    LOG_W("Unable to get directory handle for %s",
+          NS_ConvertUTF16toUTF8(aDir).get());
     return;
   }
 
-  UniquePtr<HANDLE, CloseHandleDeleter> autoHandleCloser(hBinDir);
+  UniquePtr<HANDLE, CloseHandleDeleter> autoHandleCloser(hDir);
   PACL pBinDirAcl = nullptr;
   PSECURITY_DESCRIPTOR pSD = nullptr;
   DWORD result =
-      ::GetSecurityInfo(hBinDir, SE_FILE_OBJECT, DACL_SECURITY_INFORMATION,
+      ::GetSecurityInfo(hDir, SE_FILE_OBJECT, DACL_SECURITY_INFORMATION,
                         nullptr, nullptr, &pBinDirAcl, nullptr, &pSD);
   if (result != ERROR_SUCCESS) {
-    LOG_E("Failed to get DACL for binary directory.");
+    LOG_E("Failed to get DACL for %s", NS_ConvertUTF16toUTF8(aDir).get());
     return;
   }
 
   UniquePtr<VOID, LocalFreeDeleter> autoFreeSecDesc(pSD);
   if (!pBinDirAcl) {
-    LOG_E("DACL for binary directory was null.");
+    LOG_E("DACL was null for %s", NS_ConvertUTF16toUTF8(aDir).get());
     return;
   }
 
@@ -672,7 +673,8 @@ static void EnsureLpacPermsissionsOnBinDir() {
 
     PSID aceSID = reinterpret_cast<PSID>(&(pAllowedAce->SidStart));
     if (::EqualSid(aceSID, lpacFirefoxInstallFilesSid)) {
-      LOG_D("Firefox install files permission found on binary directory.");
+      LOG_D("Firefox install files permission found on %s",
+            NS_ConvertUTF16toUTF8(aDir).get());
       return;
     }
   }
@@ -690,13 +692,14 @@ static void EnsureLpacPermsissionsOnBinDir() {
   }
 
   UniquePtr<ACL, LocalFreeDeleter> autoFreeAcl(newDacl);
-  if (ERROR_SUCCESS != ::SetSecurityInfo(hBinDir, SE_FILE_OBJECT,
+  if (ERROR_SUCCESS != ::SetSecurityInfo(hDir, SE_FILE_OBJECT,
                                          DACL_SECURITY_INFORMATION, nullptr,
                                          nullptr, newDacl, nullptr)) {
-    LOG_E("Failed to set new DACL on binary directory.");
+    LOG_E("Failed to set new DACL on %s", NS_ConvertUTF16toUTF8(aDir).get());
   }
 
-  LOG_D("Firefox install files permission granted on binary directory.");
+  LOG_D("Firefox install files permission granted on %s",
+        NS_ConvertUTF16toUTF8(aDir).get());
 }
 
 static bool IsLowPrivilegedAppContainerSupported() {
@@ -731,7 +734,7 @@ static sandbox::ResultCode AddAndConfigureAppContainerProfile(
     ::LoadLibraryW(L"userenv.dll");
 
     // Done during the package string initialization so we only do it once.
-    EnsureLpacPermsissionsOnBinDir();
+    SandboxBroker::EnsureLpacPermsissionsOnDir(*sBinDir.get());
 
     // This mirrors Edge's use of the exe path for the SHA1 hash to give a
     // machine unique name per install.

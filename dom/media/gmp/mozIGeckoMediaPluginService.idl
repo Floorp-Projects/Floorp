@@ -6,6 +6,8 @@
 #include "nsISupports.idl"
 #include "nsIThread.idl"
 
+interface nsIFile;
+
 %{C++
 #include "mozilla/UniquePtr.h"
 #include "nsTArray.h"
@@ -76,6 +78,13 @@ interface mozIGeckoMediaPluginService : nsISupports
    */
   [noscript]
   boolean hasPluginForAPI(in ACString api, in ConstTagArrayRef tags);
+
+  /**
+   * Get the plugin directory for a plugin that supports the specified tags.
+   * Callable on any thread
+   */
+  [noscript]
+  nsIFile findPluginDirectoryForAPI(in ACString api, in ConstTagArrayRef tags);
 
   /**
    * Get a video decoder that supports the specified tags.

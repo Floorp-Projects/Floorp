@@ -28,6 +28,15 @@
 #  include "mozilla/WinDllServices.h"
 #endif  // defined(XP_WIN)
 
+#if defined(MOZ_WMF_CDM) && defined(MOZ_SANDBOX)
+#  include "GMPServiceParent.h"
+#  include "mozilla/dom/KeySystemNames.h"
+#  include "mozilla/MFMediaEngineUtils.h"
+#  include "mozilla/StaticPrefs_media.h"
+#  include "nsIFile.h"
+#  include "sandboxBroker.h"
+#endif
+
 #include "ProfilerParent.h"
 #include "mozilla/PProfilerChild.h"
 
@@ -35,6 +44,12 @@ namespace mozilla::ipc {
 
 LazyLogModule gUtilityProcessLog("utilityproc");
 #define LOGD(...) MOZ_LOG(gUtilityProcessLog, LogLevel::Debug, (__VA_ARGS__))
+
+#if defined(MOZ_WMF_CDM) && defined(MOZ_SANDBOX)
+#  define WMF_LOG(msg, ...)                     \
+    MOZ_LOG(gMFMediaEngineLog, LogLevel::Debug, \
+            ("UtilityProcessHost=%p, " msg, this, ##__VA_ARGS__))
+#endif
 
 #if defined(XP_MACOSX) && defined(MOZ_SANDBOX)
 bool UtilityProcessHost::sLaunchWithMacSandbox = false;
@@ -89,6 +104,10 @@ bool UtilityProcessHost::Launch(StringVector aExtraOpts) {
 
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
   mSandboxLevel = Preferences::GetInt("security.sandbox.utility.level");
+#endif
+
+#if defined(MOZ_WMF_CDM) && defined(MOZ_SANDBOX)
+  EnsureWidevineL1PathForSandbox();
 #endif
 
   mLaunchPhase = LaunchPhase::Waiting;
@@ -334,6 +353,56 @@ bool UtilityProcessHost::FillMacSandboxInfo(MacSandboxInfo& aInfo) {
 MacSandboxType UtilityProcessHost::GetMacSandboxType() {
   return MacSandboxType_Utility;
 }
+#endif
+
+#if defined(MOZ_WMF_CDM) && defined(MOZ_SANDBOX)
+void UtilityProcessHost::EnsureWidevineL1PathForSandbox() {
+  if (mSandbox != SandboxingKind::MF_MEDIA_ENGINE_CDM) {
+    return;
+  }
+
+  RefPtr<mozilla::gmp::GeckoMediaPluginServiceParent> gmps =
+      mozilla::gmp::GeckoMediaPluginServiceParent::GetSingleton();
+  if (NS_WARN_IF(!gmps)) {
+    WMF_LOG("Failed to get GeckoMediaPluginServiceParent!");
+    return;
+  }
+
+  if (!StaticPrefs::media_eme_widevine_experiment_enabled()) {
+    return;
+  }
+
+  static nsString sWidevineL1Path;
+  if (sWidevineL1Path.IsEmpty()) {
+    // TODO : install L1 if it's not downloaded yet in bug 1863800.
+    nsCOMPtr<nsIFile> pluginFile;
+    if (NS_WARN_IF(NS_FAILED(gmps->FindPluginDirectoryForAPI(
+            nsCString(kWidevineExperimentAPIName),
+            {nsCString(kWidevineExperimentKeySystemName)},
+            getter_AddRefs(pluginFile))))) {
+      WMF_LOG("Widevine L1 is not installed yet");
+      return;
+    }
+
+    if (!pluginFile) {
+      WMF_LOG("No plugin file found!");
+      return;
+    }
+
+    if (NS_WARN_IF(NS_FAILED(pluginFile->GetTarget(sWidevineL1Path)))) {
+      WMF_LOG("Failed to get L1 path!");
+      return;
+    }
+
+    MOZ_ASSERT(!sWidevineL1Path.IsEmpty());
+    WMF_LOG("Store Widevine L1 path=%s",
+            NS_ConvertUTF16toUTF8(sWidevineL1Path).get());
+  }
+  SandboxBroker::EnsureLpacPermsissionsOnDir(sWidevineL1Path);
+}
+
+#  undef WMF_LOG
+
 #endif
 
 }  // namespace mozilla::ipc
