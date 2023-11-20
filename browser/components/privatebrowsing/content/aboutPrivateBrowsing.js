@@ -55,6 +55,9 @@ function renderInfo({
   }
 
   if (feltPrivacyEnabled) {
+    // Record exposure event for Felt Privacy experiment
+    window.FeltPrivacyExposureTelemetry();
+
     infoTitleEnabled = true;
     infoTitle = "fluent:about-private-browsing-felt-privacy-v1-info-header";
     infoBody = "fluent:about-private-browsing-felt-privacy-v1-info-body";
@@ -204,7 +207,7 @@ function recordOnceVisible(message) {
         data: message,
       });
       // Similar telemetry, but for Nimbus experiments
-      window.PrivateBrowsingExposureTelemetry();
+      window.PrivateBrowsingPromoExposureTelemetry();
       document.removeEventListener("visibilitychange", recordImpression);
     }
   };
@@ -215,7 +218,7 @@ function recordOnceVisible(message) {
       data: message,
     });
     // Similar telemetry, but for Nimbus experiments
-    window.PrivateBrowsingExposureTelemetry();
+    window.PrivateBrowsingPromoExposureTelemetry();
   } else {
     document.addEventListener("visibilitychange", recordImpression);
   }

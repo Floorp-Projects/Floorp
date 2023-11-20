@@ -28,10 +28,13 @@ export class AboutPrivateBrowsingChild extends RemotePageChild {
       }
     );
     Cu.exportFunction(
-      this.PrivateBrowsingExposureTelemetry.bind(this),
+      this.PrivateBrowsingPromoExposureTelemetry.bind(this),
       window,
-      { defineAs: "PrivateBrowsingExposureTelemetry" }
+      { defineAs: "PrivateBrowsingPromoExposureTelemetry" }
     );
+    Cu.exportFunction(this.FeltPrivacyExposureTelemetry.bind(this), window, {
+      defineAs: "FeltPrivacyExposureTelemetry",
+    });
   }
 
   PrivateBrowsingRecordClick(source) {
@@ -49,7 +52,11 @@ export class AboutPrivateBrowsingChild extends RemotePageChild {
     return config?.content?.hideDefault;
   }
 
-  PrivateBrowsingExposureTelemetry() {
+  PrivateBrowsingPromoExposureTelemetry() {
     lazy.NimbusFeatures.pbNewtab.recordExposureEvent({ once: false });
+  }
+
+  FeltPrivacyExposureTelemetry() {
+    lazy.NimbusFeatures.feltPrivacy.recordExposureEvent({ once: true });
   }
 }
