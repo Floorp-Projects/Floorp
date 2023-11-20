@@ -22,6 +22,10 @@
 #  include "mozilla/SandboxSettings.h"
 #endif
 
+#if defined(MOZ_WMF_CDM) && defined(MOZ_SANDBOX)
+#  include "mozilla/MFCDMParent.h"
+#endif
+
 namespace mozilla::ipc {
 
 UtilityProcessImpl::~UtilityProcessImpl() = default;
@@ -105,6 +109,15 @@ bool UtilityProcessImpl::Init(int aArgc, char* aArgv[]) {
   if (*sandboxingKind != SandboxingKind::GENERIC_UTILITY) {
     StartOpenBSDSandbox(GeckoProcessType_Utility,
                         (SandboxingKind)*sandboxingKind);
+  }
+#endif
+
+#if defined(MOZ_WMF_CDM) && defined(MOZ_SANDBOX)
+  Maybe<const char*> pluginPath = geckoargs::sPluginPath.Get(aArgc, aArgv);
+  if (pluginPath) {
+    MFCDMParent::SetWidevineL1Path(*pluginPath);
+  } else {
+    NS_WARNING("No Widevine L1 plugin for the utility process!");
   }
 #endif
 
