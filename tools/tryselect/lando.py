@@ -28,6 +28,7 @@ from typing import (
 
 import requests
 from mach.util import get_state_dir
+from mozbuild.base import MozbuildObject
 from mozversioncontrol import (
     GitRepository,
     HgRepository,
@@ -43,6 +44,9 @@ TOKEN_FILE = (
 
 # The supported variants of `Repository` for this workflow.
 SupportedVcsRepository = Union[GitRepository, HgRepository]
+
+here = os.path.abspath(os.path.dirname(__file__))
+build = MozbuildObject.from_environment(cwd=here)
 
 
 def convert_bytes_patch_to_base64(patch_bytes: bytes) -> str:
@@ -227,6 +231,9 @@ class Auth0Config:
         )
         print("2. Enter the following code:", device_code_data["user_code"])
 
+        auth_msg = f"Auth0 token validation required at: {device_code_data['verification_uri_complete']}"
+        build.notify(auth_msg)
+
         device_code_lifetime_s = device_code_data["expires_in"]
 
         # Print successive periods on the same line to avoid moving the link
@@ -410,8 +417,10 @@ def push_to_lando_try(vcs: SupportedVcsRepository, commit_message: str):
         try:
             base_commit, patches = get_stack_info(vcs)
         except ValueError as exc:
-            print("abort: error gathering patches for submission.")
+            error_msg = "abort: error gathering patches for submission."
+            print(error_msg)
             print(str(exc))
+            build.notify(error_msg)
             return
 
         try:
@@ -420,14 +429,18 @@ def push_to_lando_try(vcs: SupportedVcsRepository, commit_message: str):
                 patches, patch_format, base_commit
             )
         except LandoAPIException as exc:
-            print("abort: error submitting patches to Lando.")
+            error_msg = "abort: error submitting patches to Lando."
+            print(error_msg)
             print(str(exc))
+            build.notify(error_msg)
             return
 
     duration = round(time.perf_counter() - push_start_time, ndigits=2)
 
     job_id = response_json["id"]
-    print(
+    success_msg = (
         f"Lando try submission success, took {duration} seconds. "
         f"Landing job id: {job_id}."
     )
+    print(success_msg)
+    build.notify(success_msg)
