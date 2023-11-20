@@ -3,7 +3,11 @@ use super::conv;
 use ash::{extensions::khr, vk};
 use parking_lot::Mutex;
 
-use std::{collections::BTreeMap, ffi::CStr, sync::Arc};
+use std::{
+    collections::BTreeMap,
+    ffi::CStr,
+    sync::{atomic::AtomicIsize, Arc},
+};
 
 fn depth_stencil_required_flags() -> vk::FormatFeatureFlags {
     vk::FormatFeatureFlags::SAMPLED_IMAGE | vk::FormatFeatureFlags::DEPTH_STENCIL_ATTACHMENT
@@ -986,6 +990,15 @@ impl super::Instance {
             );
         };
 
+        if let Some(driver) = phd_capabilities.driver {
+            if driver.conformance_version.major == 0 {
+                log::warn!(
+                    "Adapter is not Vulkan compliant, hiding adapter: {}",
+                    info.name
+                );
+                return None;
+            }
+        }
         if phd_capabilities.device_api_version == vk::API_VERSION_1_0
             && !phd_capabilities.supports_extension(vk::KhrStorageBufferStorageClassFn::name())
         {
@@ -1351,7 +1364,7 @@ impl super::Adapter {
             device: Arc::clone(&shared),
             family_index,
             relay_semaphores,
-            relay_index: None,
+            relay_index: AtomicIsize::new(-1),
         };
 
         let mem_allocator = {
