@@ -31,6 +31,7 @@ gecko_metrics = [
     "toolkit/components/passwordmgr/metrics.yaml",
     "toolkit/components/pdfjs/metrics.yaml",
     "toolkit/components/processtools/metrics.yaml",
+    "toolkit/components/reportbrokensite/metrics.yaml",
     "toolkit/components/resistfingerprinting/metrics.yaml",
     "toolkit/components/translations/metrics.yaml",
     "toolkit/mozapps/extensions/metrics.yaml",
@@ -103,6 +104,7 @@ metrics_yamls = sorted(
 gecko_pings = [
     "dom/pings.yaml",
     "toolkit/components/glean/pings.yaml",
+    "toolkit/components/reportbrokensite/pings.yaml",
 ]
 
 # Pings that are sent by Firefox Desktop.
