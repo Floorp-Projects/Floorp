@@ -818,7 +818,7 @@ class nsDocShell final : public nsDocLoader,
   static void InternalAddURIVisit(
       nsIURI* aURI, nsIURI* aPreviousURI, uint32_t aChannelRedirectFlags,
       uint32_t aResponseStatus, mozilla::dom::BrowsingContext* aBrowsingContext,
-      nsIWidget* aWidget, uint32_t aLoadType);
+      nsIWidget* aWidget, uint32_t aLoadType, bool aWasUpgraded);
 
   static already_AddRefed<nsIURIFixupInfo> KeywordToURI(
       const nsACString& aKeyword, bool aIsPrivateContext);

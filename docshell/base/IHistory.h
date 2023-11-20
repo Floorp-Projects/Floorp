@@ -127,7 +127,13 @@ class IHistory : public nsISupports {
      * Note this differs from REDIRECT_PERMANENT because that one refers to how
      * we reached the URI, while this is used when the URI itself redirects.
      */
-    REDIRECT_SOURCE_PERMANENT = 1 << 5
+    REDIRECT_SOURCE_PERMANENT = 1 << 5,
+    /**
+     * If REDIRECT_SOURCE is set, this indicates that this is a special redirect
+     * caused by HSTS or HTTPS-Only/First upgrading to the HTTPS version of the
+     * URI.
+     */
+    REDIRECT_SOURCE_UPGRADED = 1 << 6
   };
 
   /**
