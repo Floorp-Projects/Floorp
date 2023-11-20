@@ -183,7 +183,7 @@ fn idle_send_packet1() {
 
     now += Duration::from_secs(10);
     let dgram = send_and_receive(&mut client, &mut server, now);
-    assert!(dgram.is_none());
+    assert!(dgram.is_some()); // the server will want to ACK, we can drop that.
 
     // Still connected after 39 seconds because idle timer reset by the
     // outgoing packet.
@@ -237,11 +237,13 @@ fn idle_send_packet2() {
 
 #[test]
 fn idle_recv_packet() {
+    const FUDGE: Duration = Duration::from_millis(10);
+
     let mut client = default_client();
     let mut server = default_server();
     connect_force_idle(&mut client, &mut server);
 
-    let now = now();
+    let mut now = now();
 
     let res = client.process(None, now);
     assert_eq!(res, Output::Callback(default_timeout()));
@@ -250,23 +252,25 @@ fn idle_recv_packet() {
     assert_eq!(stream, 0);
     assert_eq!(client.stream_send(stream, b"hello").unwrap(), 5);
 
-    // Respond with another packet
-    let out = client.process(None, now + Duration::from_secs(10));
-    server.process_input(out.dgram().unwrap(), now + Duration::from_secs(10));
+    // Respond with another packet.
+    // Note that it is important that this not result in the RTT increasing above 0.
+    // Otherwise, the eventual timeout will be extended (and we're not testing that).
+    now += Duration::from_secs(10);
+    let out = client.process(None, now);
+    server.process_input(out.dgram().unwrap(), now);
     assert_eq!(server.stream_send(stream, b"world").unwrap(), 5);
-    let out = server.process_output(now + Duration::from_secs(10));
+    let out = server.process_output(now);
     assert_ne!(out.as_dgram_ref(), None);
-
-    mem::drop(client.process(out.dgram(), now + Duration::from_secs(20)));
+    mem::drop(client.process(out.dgram(), now));
     assert!(matches!(client.state(), State::Confirmed));
 
-    // Still connected after 49 seconds because idle timer reset by received
-    // packet
-    mem::drop(client.process(None, now + default_timeout() + Duration::from_secs(19)));
+    // Add a little less than the idle timeout and we're still connected.
+    now += default_timeout() - FUDGE;
+    mem::drop(client.process(None, now));
     assert!(matches!(client.state(), State::Confirmed));
 
-    // Not connected after 50 seconds.
-    mem::drop(client.process(None, now + default_timeout() + Duration::from_secs(20)));
+    now += FUDGE;
+    mem::drop(client.process(None, now));
 
     assert!(matches!(client.state(), State::Closed(_)));
 }
