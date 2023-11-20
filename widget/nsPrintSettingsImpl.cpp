@@ -61,7 +61,7 @@ void nsPrintSettings::InitWithInitializer(
   const bool areSheetsOfPaperPortraitMode =
       (aSettings.mSheetOrientation == kPortraitOrientation);
   const bool arePagesPortraitMode =
-      (areSheetsOfPaperPortraitMode != HasOrthogonalSheetsAndPages());
+      (areSheetsOfPaperPortraitMode != HasOrthogonalPagesPerSheet());
   SetOrientation(arePagesPortraitMode ? kPortraitOrientation
                                       : kLandscapeOrientation);
 
@@ -654,7 +654,7 @@ nsPrintSettings::GetEffectivePageSize(double* aWidth, double* aHeight) {
   return NS_OK;
 }
 
-bool nsPrintSettings::HasOrthogonalSheetsAndPages() {
+bool nsPrintSettings::HasOrthogonalPagesPerSheet() {
   return mNumPagesPerSheet == 2 || mNumPagesPerSheet == 6;
 }
 
@@ -664,13 +664,13 @@ void nsPrintSettings::GetEffectiveSheetSize(double* aWidth, double* aHeight) {
   // Our GetEffectivePageSize impls only return NS_OK, so this should hold:
   MOZ_ASSERT(NS_SUCCEEDED(rv), "Uh oh, GetEffectivePageSize failed");
 
-  if (HasOrthogonalSheetsAndPages()) {
+  if (HasOrthogonalPagesPerSheet()) {
     std::swap(*aWidth, *aHeight);
   }
 }
 
 int32_t nsPrintSettings::GetSheetOrientation() {
-  if (HasOrthogonalSheetsAndPages()) {
+  if (HasOrthogonalPagesPerSheet()) {
     // Sheet orientation is rotated with respect to the page orientation.
     return kLandscapeOrientation == mOrientation ? kPortraitOrientation
                                                  : kLandscapeOrientation;

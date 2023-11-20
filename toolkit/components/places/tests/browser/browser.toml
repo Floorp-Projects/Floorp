@@ -86,6 +86,8 @@ support-files = [
   "title2.html",
 ]
 
+["browser_upgrade.js"]
+
 ["browser_visited_notfound.js"]
 
 ["browser_visituri.js"]

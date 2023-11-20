@@ -12310,7 +12310,7 @@ void nsDocShell::SaveLastVisit(nsIChannel* aChannel, nsIURI* aURI,
 /* static */ void nsDocShell::InternalAddURIVisit(
     nsIURI* aURI, nsIURI* aPreviousURI, uint32_t aChannelRedirectFlags,
     uint32_t aResponseStatus, BrowsingContext* aBrowsingContext,
-    nsIWidget* aWidget, uint32_t aLoadType) {
+    nsIWidget* aWidget, uint32_t aLoadType, bool aWasUpgraded) {
   MOZ_ASSERT(aURI, "Visited URI is null!");
   MOZ_ASSERT(aLoadType != LOAD_ERROR_PAGE && aLoadType != LOAD_BYPASS_HISTORY,
              "Do not add error or bypass pages to global history");
@@ -12361,6 +12361,11 @@ void nsDocShell::SaveLastVisit(nsIChannel* aChannel, nsIURI* aURI,
       visitURIFlags |= IHistory::UNRECOVERABLE_ERROR;
     }
 
+    if (aWasUpgraded) {
+      visitURIFlags |=
+          IHistory::REDIRECT_SOURCE | IHistory::REDIRECT_SOURCE_UPGRADED;
+    }
+
     mozilla::Unused << history->VisitURI(aWidget, aURI, aPreviousURI,
                                          visitURIFlags,
                                          aBrowsingContext->BrowserId());
@@ -12374,7 +12379,8 @@ void nsDocShell::AddURIVisit(nsIURI* aURI, nsIURI* aPreviousURI,
   nsCOMPtr<nsIWidget> widget = widget::WidgetUtils::DOMWindowToWidget(outer);
 
   InternalAddURIVisit(aURI, aPreviousURI, aChannelRedirectFlags,
-                      aResponseStatus, mBrowsingContext, widget, mLoadType);
+                      aResponseStatus, mBrowsingContext, widget, mLoadType,
+                      false);
 }
 
 //*****************************************************************************

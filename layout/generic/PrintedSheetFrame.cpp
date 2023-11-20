@@ -268,7 +268,7 @@ nsSize PrintedSheetFrame::ComputeSheetSize(const nsPresContext* aPresContext) {
   }
 
   if (!StaticPrefs::layout_css_page_orientation_enabled()) {
-    if (mPD->mPrintSettings->HasOrthogonalSheetsAndPages()) {
+    if (mPD->mPrintSettings->HasOrthogonalPagesPerSheet()) {
       std::swap(sheetSize.width, sheetSize.height);
     }
     return sheetSize;
@@ -314,7 +314,7 @@ nsSize PrintedSheetFrame::ComputeSheetSize(const nsPresContext* aPresContext) {
   // orthogonal sheet layout, but not if both are true since then we'd
   // actually need to double switch.
   if ((sheetIsPortrait != pageIsPortrait) !=
-      mPD->mPrintSettings->HasOrthogonalSheetsAndPages()) {
+      mPD->mPrintSettings->HasOrthogonalPagesPerSheet()) {
     std::swap(sheetSize.width, sheetSize.height);
   }
 
@@ -337,7 +337,7 @@ void PrintedSheetFrame::ComputePagesPerSheetGridMetrics(
 
   // XXXjwatt Once we support heterogeneous sheet orientations, we'll also need
   // to rotate uwm if this sheet is not the primary orientation.
-  if (mPD->mPrintSettings->HasOrthogonalSheetsAndPages()) {
+  if (mPD->mPrintSettings->HasOrthogonalPagesPerSheet()) {
     // aSheetSize already takes account of the switch of *sheet* orientation
     // that we do in this case (the orientation implied by the page size
     // dimensions in the nsIPrintSettings applies to *pages*). That is not the

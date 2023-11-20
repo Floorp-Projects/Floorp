@@ -105,7 +105,7 @@ impl PrefFile {
     where
         K: Into<String> + Clone,
     {
-        for &(ref name, ref value) in preferences.iter() {
+        for (name, value) in preferences.iter() {
             self.insert((*name).clone(), (*value).clone());
         }
     }
