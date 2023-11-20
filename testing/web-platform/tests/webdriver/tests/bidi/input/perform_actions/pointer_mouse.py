@@ -252,6 +252,7 @@ async def test_click_navigation(
     inline,
     subscribe_events,
     wait_for_event,
+    wait_for_future_safe,
     get_element,
 ):
     await subscribe_events(events=["browsingContext.load"])
@@ -281,7 +282,7 @@ async def test_click_navigation(
 
         on_entry = wait_for_event("browsingContext.load")
         await click_link()
-        event = await on_entry
+        event = await wait_for_future_safe(on_entry)
         assert event["url"] == destination
 
 
