@@ -395,7 +395,7 @@ jobs:
               "mar-url": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.get-display-version.outputs.display-version }}/LINUX-aarch64.mar",
               "os": "Linux",
               "arch": "aarch64",
-              "release-note-url": "${{ inputs.release-note-url }}",
+              "release-note-url": "${{ inputs.release-note-url }}"
             }
           }'
 
@@ -415,7 +415,7 @@ jobs:
               "arch": "x86_64",
               "display-version": "${{ needs.get-display-version.outputs.display-version }}",
               "firefox-version": "${{ needs.get-inside-version.outputs.inside-version }}",
-              "release-note-url": "${{ inputs.release-note-url }}",
+              "release-note-url": "${{ inputs.release-note-url }}"
             }
           }'
 
@@ -436,7 +436,7 @@ jobs:
               "buildid": "${{ needs.get-buildid.outputs.buildids }}",
               "display-version": "${{ needs.get-display-version.outputs.display-version }}",
               "firefox-version": "${{ needs.get-inside-version.outputs.inside-version }}",
-              "release-note-url": "${{ inputs.release-note-url }}",
+              "release-note-url": "${{ inputs.release-note-url }}"
             }
           }'
 
@@ -454,7 +454,7 @@ jobs:
               "mar-url": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.get-display-version.outputs.display-version }}/WINNT-x86_64.mar",
               "os": "WINNT",
               "arch": "x86_64",
-              "release-note-url": "${{ inputs.release-note-url }}",
+              "release-note-url": "${{ inputs.release-note-url }}"
             }
           }'
 
@@ -472,7 +472,7 @@ jobs:
               "mar-url": "https://github.com/${{ github.repository }}/releases/download/v${{ needs.get-display-version.outputs.display-version }}/WINNT-x86.mar",
               "os": "WINNT",
               "arch": "x86",
-              "release-note-url": "${{ inputs.release-note-url }}",
+              "release-note-url": "${{ inputs.release-note-url }}"
             }
           }'
 
