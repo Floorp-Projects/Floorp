@@ -10,7 +10,7 @@ use std::error::Error;
 use std::fmt;
 use std::io::{self, Write};
 use std::iter::Iterator;
-use std::mem;
+
 use std::str;
 
 impl PrefReaderError {
@@ -842,7 +842,7 @@ where
 fn escape_quote(data: &str) -> Cow<str> {
     // Not very efficient…
     if data.contains('"') || data.contains('\\') {
-        Cow::Owned(data.replace('\\', r#"\\"#).replace('"', r#"\""#))
+        Cow::Owned(data.replace('\\', r"\\").replace('"', r#"\""#))
     } else {
         Cow::Borrowed(data)
     }
@@ -999,8 +999,8 @@ pub fn parse_tokens(tokenizer: &mut PrefTokenizer<'_>) -> Result<Preferences, Pr
                         ))
                     }
                 }
-                let key = mem::replace(&mut current_pref.key, None);
-                let value = mem::replace(&mut current_pref.value, None);
+                let key = current_pref.key.take();
+                let value = current_pref.value.take();
                 let pref = if current_pref.sticky {
                     Pref::new_sticky(value.unwrap())
                 } else {

@@ -390,18 +390,15 @@ impl AndroidOptions {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Default, PartialEq)]
 pub enum ProfileType {
     Path(Profile),
     Named,
+    #[default]
     Temporary,
 }
 
-impl Default for ProfileType {
-    fn default() -> Self {
-        ProfileType::Temporary
-    }
-}
+
 
 /// Rust representation of `moz:firefoxOptions`.
 ///
@@ -703,7 +700,7 @@ impl FirefoxOptions {
 
             // https://developer.android.com/studio/build/application-id
             let package_regexp =
-                Regex::new(r#"^([a-zA-Z][a-zA-Z0-9_]*\.){1,}([a-zA-Z][a-zA-Z0-9_]*)$"#).unwrap();
+                Regex::new(r"^([a-zA-Z][a-zA-Z0-9_]*\.){1,}([a-zA-Z][a-zA-Z0-9_]*)$").unwrap();
             if !package_regexp.is_match(package.as_bytes()) {
                 return Err(WebDriverError::new(
                     ErrorStatus::InvalidArgument,
