@@ -33,45 +33,94 @@ pub extern "C" fn lang_tag_destroy(lang: *mut LangTag) {
     let _ = unsafe { Box::from_raw(lang as *mut LanguageTag<&str>) };
 }
 
-/// Matches an HTML language attribute against a CSS :lang() selector.
-/// The attribute is a normal language tag; the selector is a language range,
-/// with `und` representing a "wildcard" primary language.
-/// (Based on LanguageTag::matches from the rust-language-tags crate,
-/// adapted to this specific use case.)
+/// Matches an HTML language attribute against a CSS :lang() selector using the
+/// "extended filtering" algorithm.
+/// The attribute is a BCP47 language tag that was successfully parsed by oxilangtag;
+/// the selector is a string that is treated as a language range per RFC 4647.
 #[no_mangle]
-pub extern "C" fn lang_tag_matches(attribute: *const LangTag, selector: *const LangTag) -> bool {
+pub extern "C" fn lang_tag_matches(attribute: *const LangTag, selector: &nsACString) -> bool {
+    // This should only be called with a pointer that we got from lang_tag_new().
     let lang = unsafe { *(attribute as *const LanguageTag<&str>) };
-    let range = unsafe { *(selector as *const LanguageTag<&str>) };
 
-    fn matches_option(a: Option<&str>, b: Option<&str>) -> bool {
-        match (a, b) {
-            (Some(a), Some(b)) => a.eq_ignore_ascii_case(b),
-            (_, None) => true,
-            (None, _) => false,
-        }
+    // Our callers guarantee that the selector string is valid UTF-8.
+    let range_str = unsafe { selector.as_str_unchecked() };
+
+    if lang.is_empty() || range_str.is_empty() {
+        return false;
     }
 
-    fn matches_iter<'a>(
-        a: impl Iterator<Item = &'a str>,
-        b: impl Iterator<Item = &'a str>,
-    ) -> bool {
-        a.zip(b).all(|(x, y)| x.eq_ignore_ascii_case(y))
-    }
+    // RFC 4647 Extended Filtering:
+    // https://datatracker.ietf.org/doc/html/rfc4647#section-3.3.2
 
-    if !(lang
-        .primary_language()
-        .eq_ignore_ascii_case(range.primary_language())
-        || range.primary_language().eq_ignore_ascii_case("und"))
+    // 1.  Split both the extended language range and the language tag being
+    // compared into a list of subtags by dividing on the hyphen (%x2D)
+    // character.  Two subtags match if either they are the same when
+    // compared case-insensitively or the language range's subtag is the
+    // wildcard '*'.
+
+    let mut range_subtags = range_str.split('-');
+    let mut lang_subtags = lang.as_str().split('-');
+
+    // 2.  Begin with the first subtag in each list.  If the first subtag in
+    // the range does not match the first subtag in the tag, the overall
+    // match fails.  Otherwise, move to the next subtag in both the
+    // range and the tag.
+
+    let mut range_subtag = range_subtags.next();
+    let mut lang_subtag = lang_subtags.next();
+    // Cannot be None, because we checked that both args were non-empty.
+    assert!(range_subtag.is_some() && lang_subtag.is_some());
+    if !(range_subtag.unwrap() == "*"
+        || range_subtag
+            .unwrap()
+            .eq_ignore_ascii_case(lang_subtag.unwrap()))
     {
         return false;
     }
 
-    matches_option(lang.script(), range.script())
-        && matches_option(lang.region(), range.region())
-        && matches_iter(lang.variant_subtags(), range.variant_subtags())
-        && matches_iter(
-            lang.extended_language_subtags(),
-            range.extended_language_subtags(),
-        )
-        && matches_option(lang.private_use(), range.private_use())
+    range_subtag = range_subtags.next();
+    lang_subtag = lang_subtags.next();
+
+    // 3.  While there are more subtags left in the language range's list:
+    loop {
+        // 4.  When the language range's list has no more subtags, the match
+        // succeeds.
+        let Some(range_subtag_str) = range_subtag else {
+            return true;
+        };
+
+        // A.  If the subtag currently being examined in the range is the
+        //     wildcard ('*'), move to the next subtag in the range and
+        //     continue with the loop.
+        if range_subtag_str == "*" {
+            range_subtag = range_subtags.next();
+            continue;
+        }
+
+        // B.  Else, if there are no more subtags in the language tag's
+        //     list, the match fails.
+        let Some(lang_subtag_str) = lang_subtag else {
+            return false;
+        };
+
+        // C.  Else, if the current subtag in the range's list matches the
+        //     current subtag in the language tag's list, move to the next
+        //     subtag in both lists and continue with the loop.
+        if range_subtag_str.eq_ignore_ascii_case(lang_subtag_str) {
+            range_subtag = range_subtags.next();
+            lang_subtag = lang_subtags.next();
+            continue;
+        }
+
+        // D.  Else, if the language tag's subtag is a "singleton" (a single
+        //     letter or digit, which includes the private-use subtag 'x')
+        //     the match fails.
+        if lang_subtag_str.len() == 1 {
+            return false;
+        }
+
+        // E.  Else, move to the next subtag in the language tag's list and
+        //     continue with the loop.
+        lang_subtag = lang_subtags.next();
+    }
 }
