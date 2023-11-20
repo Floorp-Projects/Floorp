@@ -120,7 +120,9 @@ where
 {
     use crate::serde::de::Error;
     // Return Err() so the IPC will catch it and assert this as a fetal error.
-    Err(<D as Deserializer>::Error::custom("we don't support the deserializing for url"))
+    Err(<D as Deserializer>::Error::custom(
+        "we don't support the deserializing for url",
+    ))
 }
 
 /// The <offset-path> value.

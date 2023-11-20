@@ -197,8 +197,8 @@ impl Parse for OffsetPath {
                     .ok();
             }
 
-            if static_prefs::pref!("layout.css.motion-path-coord-box.enabled")
-                && coord_box.is_none()
+            if static_prefs::pref!("layout.css.motion-path-coord-box.enabled") &&
+                coord_box.is_none()
             {
                 coord_box = input.try_parse(CoordBox::parse).ok();
                 if coord_box.is_some() {

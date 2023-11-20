@@ -13,11 +13,11 @@ use crate::thread_state;
 use gecko_profiler;
 use parking_lot::{Mutex, RwLock, RwLockReadGuard};
 use rayon;
-use std::{io, thread};
 #[cfg(unix)]
 use std::os::unix::thread::{JoinHandleExt, RawPthread};
 #[cfg(windows)]
 use std::os::windows::{io::AsRawHandle, prelude::RawHandle};
+use std::{io, thread};
 use thin_vec::ThinVec;
 
 /// Platform-specific handle to a thread.

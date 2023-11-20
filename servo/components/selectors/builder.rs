@@ -168,7 +168,7 @@ fn split_from_end<T>(s: &[T], at: usize) -> (&[T], &[T]) {
 
 /// Flags that indicate at which point of parsing a selector are we.
 #[derive(Clone, Copy, Debug, Default, Eq, PartialEq, ToShmem)]
-pub (crate) struct SelectorFlags(u8);
+pub(crate) struct SelectorFlags(u8);
 
 bitflags! {
     impl SelectorFlags: u8 {
@@ -188,7 +188,7 @@ impl SelectorFlags {
     ///
     /// It is not supposed to work, because :is(::before) is invalid. We can't propagate the
     /// pseudo-flags from inner to outer selectors, to avoid breaking our invariants.
-    pub (crate) fn for_nesting() -> Self {
+    pub(crate) fn for_nesting() -> Self {
         Self::all() - (Self::HAS_PSEUDO | Self::HAS_SLOTTED | Self::HAS_PART)
     }
 }
@@ -268,7 +268,9 @@ where
                 specificity.element_selectors += 1
             },
             Component::Slotted(ref selector) => {
-                flags.insert(SelectorFlags::HAS_SLOTTED | SelectorFlags::HAS_NON_FEATURELESS_COMPONENT);
+                flags.insert(
+                    SelectorFlags::HAS_SLOTTED | SelectorFlags::HAS_NON_FEATURELESS_COMPONENT,
+                );
                 specificity.element_selectors += 1;
                 // Note that due to the way ::slotted works we only compete with
                 // other ::slotted rules, so the above rule doesn't really

@@ -6,6 +6,7 @@
 //!
 //! [calc]: https://drafts.csswg.org/css-values/#calc-notation
 
+use crate::color::parsing::{AngleOrNumber, NumberOrPercentage};
 use crate::parser::ParserContext;
 use crate::values::generics::calc::{
     self as generic, CalcNodeLeaf, CalcUnits, MinMaxOp, ModRemOp, PositivePercentageBasis,
@@ -16,7 +17,6 @@ use crate::values::specified::length::{ContainerRelativeLength, ViewportPercenta
 use crate::values::specified::{self, Angle, Resolution, Time};
 use crate::values::{serialize_number, serialize_percentage, CSSFloat, CSSInteger};
 use cssparser::{CowRcStr, Parser, Token};
-use crate::color::parsing::{AngleOrNumber, NumberOrPercentage};
 use smallvec::SmallVec;
 use std::cmp;
 use std::fmt::{self, Write};
@@ -188,11 +188,9 @@ impl generic::CalcNodeLeaf for Leaf {
         }
 
         match (self, other) {
-            (&Percentage(ref one), &Percentage(ref other)) => {
-                match basis {
-                    PositivePercentageBasis::Yes => one.partial_cmp(other),
-                    PositivePercentageBasis::Unknown => None,
-                }
+            (&Percentage(ref one), &Percentage(ref other)) => match basis {
+                PositivePercentageBasis::Yes => one.partial_cmp(other),
+                PositivePercentageBasis::Unknown => None,
             },
             (&Length(ref one), &Length(ref other)) => one.partial_cmp(other),
             (&Angle(ref one), &Angle(ref other)) => one.degrees().partial_cmp(&other.degrees()),

@@ -11,7 +11,7 @@ use crate::values::serialize_atom_identifier;
 use crate::Atom;
 use cssparser::{Parser as CssParser, ParserInput};
 use dom::ElementState;
-use selectors::parser::{SelectorList, ParseRelative};
+use selectors::parser::{ParseRelative, SelectorList};
 use std::fmt::{self, Debug, Write};
 use style_traits::{CssWriter, ParseError, ToCss};
 

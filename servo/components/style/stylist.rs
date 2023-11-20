@@ -8,7 +8,7 @@ use crate::applicable_declarations::{
     ApplicableDeclarationBlock, ApplicableDeclarationList, CascadePriority,
 };
 use crate::context::{CascadeInputs, QuirksMode};
-use crate::custom_properties::{CustomPropertiesMap, ComputedCustomProperties};
+use crate::custom_properties::{ComputedCustomProperties, CustomPropertiesMap};
 use crate::dom::TElement;
 #[cfg(feature = "gecko")]
 use crate::gecko_bindings::structs::{ServoStyleSetSizes, StyleRuleInclusion};
@@ -22,7 +22,9 @@ use crate::invalidation::stylesheets::RuleChangeKind;
 use crate::media_queries::Device;
 use crate::properties::{self, CascadeMode, ComputedValues, FirstLineReparenting};
 use crate::properties::{AnimationDeclarations, PropertyDeclarationBlock};
-use crate::properties_and_values::registry::{ScriptRegistry as CustomPropertyScriptRegistry, PropertyRegistration};
+use crate::properties_and_values::registry::{
+    PropertyRegistration, ScriptRegistry as CustomPropertyScriptRegistry,
+};
 use crate::rule_cache::{RuleCache, RuleCacheConditions};
 use crate::rule_collector::RuleCollector;
 use crate::rule_tree::{CascadeLevel, RuleTree, StrongRuleNode, StyleSource};
@@ -40,8 +42,8 @@ use crate::stylesheets::{
     CounterStyleRule, FontFaceRule, FontFeatureValuesRule, FontPaletteValuesRule,
 };
 use crate::stylesheets::{
-    CssRule, EffectiveRulesIterator, Origin, OriginSet, PerOrigin, PerOriginIter,
-    PagePseudoClassFlags, PageRule,
+    CssRule, EffectiveRulesIterator, Origin, OriginSet, PagePseudoClassFlags, PageRule, PerOrigin,
+    PerOriginIter,
 };
 use crate::stylesheets::{StyleRule, StylesheetContents, StylesheetInDocument};
 use crate::values::computed;
@@ -1428,11 +1430,12 @@ impl Stylist {
         // [1]: https://github.com/w3c/csswg-drafts/issues/1995
         // [2]: https://bugzil.la/1458189
         let mut animation = None;
-        let doc_rules_apply = element.each_applicable_non_document_style_rule_data(|data, _host| {
-            if animation.is_none() {
-                animation = data.animations.get(name);
-            }
-        });
+        let doc_rules_apply =
+            element.each_applicable_non_document_style_rule_data(|data, _host| {
+                if animation.is_none() {
+                    animation = data.animations.get(name);
+                }
+            });
 
         if animation.is_some() {
             return animation;
@@ -1743,16 +1746,22 @@ impl PageRuleMap {
         let cascade_data = cascade_data.borrow_for_origin(origin);
         let start = matched_rules.len();
 
-        self.match_and_add_rules(matched_rules, level, guards, cascade_data, &atom!(""), pseudos);
+        self.match_and_add_rules(
+            matched_rules,
+            level,
+            guards,
+            cascade_data,
+            &atom!(""),
+            pseudos,
+        );
         if let Some(name) = name {
             self.match_and_add_rules(matched_rules, level, guards, cascade_data, name, pseudos);
         }
 
         // Because page-rules do not have source location information stored,
         // use stable sort to ensure source locations are preserved.
-        matched_rules[start..].sort_by_key(|block| {
-            (block.layer_order(), block.specificity, block.source_order())
-        });
+        matched_rules[start..]
+            .sort_by_key(|block| (block.layer_order(), block.specificity, block.source_order()));
     }
 
     fn match_and_add_rules(
@@ -1856,7 +1865,10 @@ impl ExtraStyleData {
         let page_rule = rule.read_with(guard);
         let mut add_rule = |name| {
             let vec = self.pages.rules.entry(name).or_default();
-            vec.push(PageRuleData{layer, rule: rule.clone()});
+            vec.push(PageRuleData {
+                layer,
+                rule: rule.clone(),
+            });
         };
         if page_rule.selectors.0.is_empty() {
             add_rule(atom!(""));
@@ -2047,7 +2059,7 @@ impl<'a> StylistSelectorVisitor<'a> {
     fn visit_nested_selector(
         &mut self,
         in_selector_list_of: SelectorListKind,
-        selector: &Selector<SelectorImpl>
+        selector: &Selector<SelectorImpl>,
     ) {
         let old_passed_rightmost_selector = self.passed_rightmost_selector;
         let old_in_selector_list_of = self.in_selector_list_of;
@@ -2777,9 +2789,11 @@ impl CascadeData {
                     self.num_declarations += style_rule.block.read_with(&guard).len();
 
                     let has_nested_rules = style_rule.rules.is_some();
-                    let mut ancestor_selectors = containing_rule_state.ancestor_selector_lists.last_mut();
+                    let mut ancestor_selectors =
+                        containing_rule_state.ancestor_selector_lists.last_mut();
                     let mut replaced_selectors = SmallVec::<[Selector<SelectorImpl>; 4]>::new();
-                    let collect_replaced_selectors = has_nested_rules && ancestor_selectors.is_some();
+                    let collect_replaced_selectors =
+                        has_nested_rules && ancestor_selectors.is_some();
 
                     for selector in style_rule.selectors.slice() {
                         self.num_selectors += 1;

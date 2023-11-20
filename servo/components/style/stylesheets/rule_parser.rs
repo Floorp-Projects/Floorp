@@ -542,7 +542,8 @@ impl<'a, 'i> NestedRuleParser<'a, 'i> {
             }
             let declarations = if parse_declarations {
                 let top = &mut **parser;
-                top.declaration_parser_state.report_errors_if_needed(&top.context, &top.error_reporting_state);
+                top.declaration_parser_state
+                    .report_errors_if_needed(&top.context, &top.error_reporting_state);
                 parser.declaration_parser_state.take_declarations()
             } else {
                 PropertyDeclarationBlock::default()
@@ -586,7 +587,9 @@ impl<'a, 'i> NestedRuleParser<'a, 'i> {
                     if found_host && found_non_host {
                         self.context.log_css_error(
                             start.source_location(),
-                            ContextualParseError::NeverMatchingHostSelector(selector.to_css_string()),
+                            ContextualParseError::NeverMatchingHostSelector(
+                                selector.to_css_string(),
+                            ),
                         );
                         continue 'selector_loop;
                     }
@@ -774,11 +777,8 @@ impl<'a, 'i> AtRuleParser<'i> for NestedRuleParser<'a, 'i> {
                 })))
             },
             AtRulePrelude::Property(name) => self.nest_for_rule(CssRuleType::Property, |p| {
-                let rule_data = parse_property_block(
-                    &p.context,
-                    input,
-                    name,
-                    start.source_location())?;
+                let rule_data =
+                    parse_property_block(&p.context, input, name, start.source_location())?;
                 Ok::<CssRule, ParseError<'i>>(CssRule::Property(Arc::new(rule_data)))
             })?,
             AtRulePrelude::Document(condition) => {
@@ -922,7 +922,9 @@ impl<'a, 'i> DeclarationParser<'i> for NestedRuleParser<'a, 'i> {
 }
 
 impl<'a, 'i> RuleBodyItemParser<'i, (), StyleParseErrorKind<'i>> for NestedRuleParser<'a, 'i> {
-    fn parse_qualified(&self) -> bool { true }
+    fn parse_qualified(&self) -> bool {
+        true
+    }
 
     /// If nesting is disabled, we can't get there for a non-style-rule. If it's enabled, we parse
     /// raw declarations there.

@@ -26,8 +26,7 @@ pub use specified::ImageRendering;
 
 /// Computed values for an image according to CSS-IMAGES.
 /// <https://drafts.csswg.org/css-images/#image-values>
-pub type Image =
-    generic::GenericImage<Gradient, ComputedImageUrl, Color, Percentage, Resolution>;
+pub type Image = generic::GenericImage<Gradient, ComputedImageUrl, Color, Percentage, Resolution>;
 
 // Images should remain small, see https://github.com/servo/servo/pull/18430
 size_of_test!(Image, 16);
@@ -87,7 +86,10 @@ impl ToComputedValue for specified::ImageSet {
             }
 
             let candidate_resolution = item.resolution.dppx();
-            debug_assert!(candidate_resolution >= 0.0, "Resolutions should be non-negative");
+            debug_assert!(
+                candidate_resolution >= 0.0,
+                "Resolutions should be non-negative"
+            );
             if candidate_resolution == 0.0 {
                 // If the resolution is 0, we also treat it as an invalid image.
                 continue;

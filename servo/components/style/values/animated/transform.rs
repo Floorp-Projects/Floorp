@@ -352,7 +352,11 @@ impl Quaternion {
         // direction: [-360, 0]. And quaternions between the range [720*k, 720*(k+1)] will be
         // treated as rotations [0, 720]. So it does not make sense to use quaternions to rotate
         // the element more than ±360deg. Therefore, we have to make sure its range is (-360, 360).
-        let half_angle = angle.abs().rem_euclid(std::f64::consts::TAU).copysign(angle) / 2.;
+        let half_angle = angle
+            .abs()
+            .rem_euclid(std::f64::consts::TAU)
+            .copysign(angle) /
+            2.;
 
         // Reference:
         // https://en.wikipedia.org/wiki/Quaternions_and_spatial_rotation
@@ -393,7 +397,12 @@ impl Add for Quaternion {
     type Output = Self;
 
     fn add(self, other: Self) -> Self {
-        Self(self.0 + other.0, self.1 + other.1, self.2 + other.2, self.3 + other.3)
+        Self(
+            self.0 + other.0,
+            self.1 + other.1,
+            self.2 + other.2,
+            self.3 + other.3,
+        )
     }
 }
 

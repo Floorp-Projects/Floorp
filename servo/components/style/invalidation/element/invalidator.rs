@@ -8,7 +8,8 @@
 use crate::context::StackLimitChecker;
 use crate::dom::{TElement, TNode, TShadowRoot};
 use crate::invalidation::element::invalidation_map::{
-    Dependency, NormalDependencyInvalidationKind, DependencyInvalidationKind, RelativeDependencyInvalidationKind
+    Dependency, DependencyInvalidationKind, NormalDependencyInvalidationKind,
+    RelativeDependencyInvalidationKind,
 };
 use selectors::matching::matches_compound_selector_from;
 use selectors::matching::{CompoundSelectorMatchingResult, MatchingContext};
@@ -272,7 +273,8 @@ impl<'a> Invalidation<'a> {
     pub fn new(dependency: &'a Dependency, scope: Option<OpaqueElement>) -> Self {
         debug_assert!(
             dependency.selector_offset == dependency.selector.len() + 1 ||
-                dependency.normal_invalidation_kind() != NormalDependencyInvalidationKind::Element,
+                dependency.normal_invalidation_kind() !=
+                    NormalDependencyInvalidationKind::Element,
             "No point to this, if the dependency matched the element we should just invalidate it"
         );
         Self {
@@ -936,8 +938,11 @@ where
                             match invalidation_kind {
                                 DependencyInvalidationKind::Normal(_) => &**p,
                                 DependencyInvalidationKind::Relative(kind) => {
-                                    self.processor
-                                        .found_relative_selector_invalidation(self.element, kind, &**p);
+                                    self.processor.found_relative_selector_invalidation(
+                                        self.element,
+                                        kind,
+                                        &**p,
+                                    );
                                     return SingleInvalidationResult {
                                         invalidated_self: false,
                                         matched: true,
@@ -962,7 +967,9 @@ where
                         };
                     }
 
-                    if cur_dependency.normal_invalidation_kind() == NormalDependencyInvalidationKind::Element {
+                    if cur_dependency.normal_invalidation_kind() ==
+                        NormalDependencyInvalidationKind::Element
+                    {
                         continue;
                     }
 

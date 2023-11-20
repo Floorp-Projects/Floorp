@@ -297,7 +297,8 @@ where
     let mut shorthand_cache = ShorthandsWithPropertyReferencesCache::default();
     let properties_to_apply = match cascade_mode {
         CascadeMode::Visited { unvisited_context } => {
-            cascade.context.builder.custom_properties = unvisited_context.builder.custom_properties.clone();
+            cascade.context.builder.custom_properties =
+                unvisited_context.builder.custom_properties.clone();
             cascade.context.builder.writing_mode = unvisited_context.builder.writing_mode;
             // We never insert visited styles into the cache so we don't need to try looking it up.
             // It also wouldn't be super-profitable, only a handful :visited properties are
@@ -340,7 +341,11 @@ where
         },
     };
 
-    cascade.apply_non_prioritary_properties(&declarations.longhand_declarations, &mut shorthand_cache, &properties_to_apply);
+    cascade.apply_non_prioritary_properties(
+        &declarations.longhand_declarations,
+        &mut shorthand_cache,
+        &properties_to_apply,
+    );
 
     cascade.finished_applying_properties();
 
@@ -690,12 +695,7 @@ impl<'a, 'b: 'a> Cascade<'a, 'b> {
         );
         loop {
             let decl = decls.longhand_declarations[index as usize];
-            self.apply_one_longhand(
-                longhand_id,
-                decl.decl,
-                decl.priority,
-                cache,
-            );
+            self.apply_one_longhand(longhand_id, decl.decl, decl.priority, cache);
             if self.seen.contains(longhand_id) {
                 return true; // Common case, we're done.
             }
@@ -717,15 +717,23 @@ impl<'a, 'b: 'a> Cascade<'a, 'b> {
         false
     }
 
-    fn apply_prioritary_properties(&mut self, decls: &Declarations, cache: &mut ShorthandsWithPropertyReferencesCache) {
+    fn apply_prioritary_properties(
+        &mut self,
+        decls: &Declarations,
+        cache: &mut ShorthandsWithPropertyReferencesCache,
+    ) {
         if !decls.has_prioritary_properties {
             return;
         }
 
-        let has_writing_mode = self
-            .apply_one_prioritary_property(decls, cache, PrioritaryPropertyId::WritingMode) |
-            self.apply_one_prioritary_property(decls, cache, PrioritaryPropertyId::Direction) |
-            self.apply_one_prioritary_property(decls, cache, PrioritaryPropertyId::TextOrientation);
+        let has_writing_mode =
+            self.apply_one_prioritary_property(decls, cache, PrioritaryPropertyId::WritingMode) |
+                self.apply_one_prioritary_property(decls, cache, PrioritaryPropertyId::Direction) |
+                self.apply_one_prioritary_property(
+                    decls,
+                    cache,
+                    PrioritaryPropertyId::TextOrientation,
+                );
         if has_writing_mode {
             self.compute_writing_mode();
         }
@@ -737,7 +745,8 @@ impl<'a, 'b: 'a> Cascade<'a, 'b> {
         // Compute font-family.
         let has_font_family =
             self.apply_one_prioritary_property(decls, cache, PrioritaryPropertyId::FontFamily);
-        let has_lang = self.apply_one_prioritary_property(decls, cache, PrioritaryPropertyId::XLang);
+        let has_lang =
+            self.apply_one_prioritary_property(decls, cache, PrioritaryPropertyId::XLang);
         if has_lang {
             self.recompute_initial_font_family_if_needed();
         }
@@ -753,8 +762,11 @@ impl<'a, 'b: 'a> Cascade<'a, 'b> {
             self.apply_one_prioritary_property(decls, cache, PrioritaryPropertyId::FontSize);
         let has_math_depth =
             self.apply_one_prioritary_property(decls, cache, PrioritaryPropertyId::MathDepth);
-        let has_min_font_size_ratio =
-            self.apply_one_prioritary_property(decls, cache, PrioritaryPropertyId::MozMinFontSizeRatio);
+        let has_min_font_size_ratio = self.apply_one_prioritary_property(
+            decls,
+            cache,
+            PrioritaryPropertyId::MozMinFontSizeRatio,
+        );
 
         if has_math_depth && has_font_size {
             self.recompute_math_font_size_if_needed();
@@ -796,7 +808,10 @@ impl<'a, 'b: 'a> Cascade<'a, 'b> {
             let is_logical = longhand_id.is_logical();
             if is_logical {
                 let wm = self.context.builder.writing_mode;
-                self.context.rule_cache_conditions.borrow_mut().set_writing_mode_dependency(wm);
+                self.context
+                    .rule_cache_conditions
+                    .borrow_mut()
+                    .set_writing_mode_dependency(wm);
                 longhand_id = longhand_id.to_physical(wm);
             }
             self.apply_one_longhand(
@@ -834,9 +849,7 @@ impl<'a, 'b: 'a> Cascade<'a, 'b> {
         }
 
         if self.reverted_set.contains(longhand_id) {
-            if let Some(&(reverted_priority, is_origin_revert)) =
-                self.reverted.get(&longhand_id)
-            {
+            if let Some(&(reverted_priority, is_origin_revert)) = self.reverted.get(&longhand_id) {
                 if !reverted_priority.allows_when_reverted(&priority, is_origin_revert) {
                     return;
                 }
@@ -864,8 +877,7 @@ impl<'a, 'b: 'a> Cascade<'a, 'b> {
                     // We intentionally don't want to insert it into `self.seen`, `reverted` takes
                     // care of rejecting other declarations as needed.
                     self.reverted_set.insert(longhand_id);
-                    self.reverted
-                        .insert(longhand_id, (priority, origin_revert));
+                    self.reverted.insert(longhand_id, (priority, origin_revert));
                     return;
                 },
                 CSSWideKeyword::Unset => true,
@@ -884,13 +896,15 @@ impl<'a, 'b: 'a> Cascade<'a, 'b> {
             return;
         }
 
-        unsafe {
-            self.do_apply_declaration(longhand_id, &declaration)
-        }
+        unsafe { self.do_apply_declaration(longhand_id, &declaration) }
     }
 
     #[inline]
-    unsafe fn do_apply_declaration(&mut self, longhand_id: LonghandId, declaration: &PropertyDeclaration) {
+    unsafe fn do_apply_declaration(
+        &mut self,
+        longhand_id: LonghandId,
+        declaration: &PropertyDeclaration,
+    ) {
         debug_assert!(!longhand_id.is_logical());
         // We could (and used to) use a pattern match here, but that bloats this
         // function to over 100K of compiled code!
@@ -945,7 +959,9 @@ impl<'a, 'b: 'a> Cascade<'a, 'b> {
             visited_parent!(parent_style),
             visited_parent!(layout_parent_style),
             self.first_line_reparenting,
-            CascadeMode::Visited { unvisited_context: &*self.context },
+            CascadeMode::Visited {
+                unvisited_context: &*self.context,
+            },
             // Cascade input flags don't matter for the visited style, they are
             // in the main (unvisited) style.
             Default::default(),

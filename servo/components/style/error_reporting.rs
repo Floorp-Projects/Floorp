@@ -19,11 +19,7 @@ use style_traits::ParseError;
 #[derive(Debug)]
 pub enum ContextualParseError<'a> {
     /// A property declaration was not recognized.
-    UnsupportedPropertyDeclaration(
-        &'a str,
-        ParseError<'a>,
-        &'a [SelectorList<SelectorImpl>],
-    ),
+    UnsupportedPropertyDeclaration(&'a str, ParseError<'a>, &'a [SelectorList<SelectorImpl>]),
     /// A property descriptor was not recognized.
     UnsupportedPropertyDescriptor(&'a str, ParseError<'a>),
     /// A font face descriptor was not recognized.

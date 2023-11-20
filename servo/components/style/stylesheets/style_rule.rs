@@ -13,7 +13,9 @@ use crate::str::CssStringWriter;
 use crate::stylesheets::CssRules;
 use cssparser::SourceLocation;
 #[cfg(feature = "gecko")]
-use malloc_size_of::{MallocUnconditionalShallowSizeOf, MallocUnconditionalSizeOf, MallocSizeOf, MallocSizeOfOps};
+use malloc_size_of::{
+    MallocSizeOf, MallocSizeOfOps, MallocUnconditionalShallowSizeOf, MallocUnconditionalSizeOf,
+};
 use selectors::SelectorList;
 use servo_arc::Arc;
 use std::fmt::{self, Write};

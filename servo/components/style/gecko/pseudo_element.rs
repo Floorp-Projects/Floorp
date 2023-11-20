@@ -168,10 +168,12 @@ impl PseudoElement {
     pub fn enabled_in_content(&self) -> bool {
         match *self {
             Self::Highlight(..) => pref!("dom.customHighlightAPI.enabled"),
-            Self::SliderFill | Self::SliderTrack | Self::SliderThumb => pref!("layout.css.modern-range-pseudos.enabled"),
+            Self::SliderFill | Self::SliderTrack | Self::SliderThumb => {
+                pref!("layout.css.modern-range-pseudos.enabled")
+            },
             // If it's not explicitly enabled in UA sheets or chrome, then we're enabled for
             // content.
-            _ => (self.flags() & structs::CSS_PSEUDO_ELEMENT_ENABLED_IN_UA_SHEETS_AND_CHROME) == 0
+            _ => (self.flags() & structs::CSS_PSEUDO_ELEMENT_ENABLED_IN_UA_SHEETS_AND_CHROME) == 0,
         }
     }
 

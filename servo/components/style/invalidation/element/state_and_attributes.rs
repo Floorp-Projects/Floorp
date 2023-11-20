@@ -22,8 +22,8 @@ use crate::{Atom, WeakAtom};
 use dom::ElementState;
 use selectors::attr::CaseSensitivity;
 use selectors::matching::{
-    matches_selector, MatchingForInvalidation, MatchingContext, MatchingMode,
-    NeedsSelectorFlags, SelectorCaches, VisitedHandlingMode,
+    matches_selector, MatchingContext, MatchingForInvalidation, MatchingMode, NeedsSelectorFlags,
+    SelectorCaches, VisitedHandlingMode,
 };
 use smallvec::SmallVec;
 
@@ -239,7 +239,9 @@ where
         let wrapper = ElementWrapper::new(element, &*self.shared_context.snapshot_map);
 
         let state_changes = wrapper.state_changes();
-        let Some(snapshot) = wrapper.snapshot() else { return false };
+        let Some(snapshot) = wrapper.snapshot() else {
+            return false;
+        };
 
         if !snapshot.has_attrs() && state_changes.is_empty() {
             return false;
@@ -485,8 +487,12 @@ where
 
     fn scan_dependency(&mut self, dependency: &'selectors Dependency) {
         debug_assert!(
-            matches!(dependency.invalidation_kind(), DependencyInvalidationKind::Normal(_)),
-            "Found relative selector dependency");
+            matches!(
+                dependency.invalidation_kind(),
+                DependencyInvalidationKind::Normal(_)
+            ),
+            "Found relative selector dependency"
+        );
         debug!(
             "TreeStyleInvalidator::scan_dependency({:?}, {:?})",
             self.element, dependency
@@ -535,7 +541,9 @@ where
     fn dependency_may_be_relevant(&self, dependency: &Dependency) -> bool {
         match dependency.normal_invalidation_kind() {
             NormalDependencyInvalidationKind::Element => !self.invalidates_self,
-            NormalDependencyInvalidationKind::SlottedElements => self.element.is_html_slot_element(),
+            NormalDependencyInvalidationKind::SlottedElements => {
+                self.element.is_html_slot_element()
+            },
             NormalDependencyInvalidationKind::Parts => self.element.shadow_root().is_some(),
             NormalDependencyInvalidationKind::ElementAndDescendants |
             NormalDependencyInvalidationKind::Siblings |

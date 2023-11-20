@@ -66,11 +66,7 @@ impl<AttrValue> AttrSelectorOperation<AttrValue> {
                 operator,
                 case_sensitivity,
                 ref value,
-            } => operator.eval_str(
-                element_attr_value,
-                value.as_ref(),
-                case_sensitivity,
-            ),
+            } => operator.eval_str(element_attr_value, value.as_ref(), case_sensitivity),
         }
     }
 }

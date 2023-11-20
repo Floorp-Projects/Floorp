@@ -8,9 +8,9 @@ use crate::gecko_bindings::bindings;
 use crate::gecko_bindings::structs;
 use crate::gecko_bindings::structs::ScreenColorGamut;
 use crate::media_queries::{Device, MediaType};
+use crate::queries::condition::KleeneValue;
 use crate::queries::feature::{AllowsRanges, Evaluator, FeatureFlags, QueryFeatureDescription};
 use crate::queries::values::Orientation;
-use crate::queries::condition::KleeneValue;
 use crate::values::computed::{CSSPixelLength, Context, Ratio, Resolution};
 use crate::values::AtomString;
 use app_units::Au;
@@ -615,10 +615,10 @@ fn eval_moz_overlay_scrollbars(context: &Context) -> bool {
 }
 
 fn eval_moz_bool_pref(_: &Context, pref: Option<&AtomString>) -> KleeneValue {
-    let Some(pref) = pref else { return KleeneValue::False };
-    KleeneValue::from(unsafe {
-        bindings::Gecko_ComputeBoolPrefMediaQuery(pref.as_ptr())
-    })
+    let Some(pref) = pref else {
+        return KleeneValue::False;
+    };
+    KleeneValue::from(unsafe { bindings::Gecko_ComputeBoolPrefMediaQuery(pref.as_ptr()) })
 }
 
 fn get_lnf_int(int_id: i32) -> i32 {

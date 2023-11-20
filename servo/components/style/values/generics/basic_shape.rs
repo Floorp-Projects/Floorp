@@ -60,8 +60,8 @@ impl Default for ShapeGeometryBox {
 fn is_default_box_for_clip_path(b: &ShapeGeometryBox) -> bool {
     // Note: for clip-path, ElementDependent is always border-box, so we have to check both of them
     // for serialization.
-    matches!(b, ShapeGeometryBox::ElementDependent)
-        || matches!(b, ShapeGeometryBox::ShapeBox(ShapeBox::BorderBox))
+    matches!(b, ShapeGeometryBox::ElementDependent) ||
+        matches!(b, ShapeGeometryBox::ShapeBox(ShapeBox::BorderBox))
 }
 
 /// https://drafts.csswg.org/css-shapes-1/#typedef-shape-box
