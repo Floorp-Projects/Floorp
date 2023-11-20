@@ -36,8 +36,12 @@
 //!
 //! assert_eq!(utf8_percent_encode("foo <bar>", FRAGMENT).to_string(), "foo%20%3Cbar%3E");
 //! ```
-
 #![no_std]
+
+// For forwards compatibility
+#[cfg(feature = "std")]
+extern crate std as _;
+
 #[cfg(feature = "alloc")]
 extern crate alloc;
 
@@ -180,9 +184,9 @@ pub const NON_ALPHANUMERIC: &AsciiSet = &CONTROLS
 /// assert_eq!("foo bar".bytes().map(percent_encode_byte).collect::<String>(),
 ///            "%66%6F%6F%20%62%61%72");
 /// ```
+#[inline]
 pub fn percent_encode_byte(byte: u8) -> &'static str {
-    let index = usize::from(byte) * 3;
-    &"\
+    static ENC_TABLE: &[u8; 768] = b"\
       %00%01%02%03%04%05%06%07%08%09%0A%0B%0C%0D%0E%0F\
       %10%11%12%13%14%15%16%17%18%19%1A%1B%1C%1D%1E%1F\
       %20%21%22%23%24%25%26%27%28%29%2A%2B%2C%2D%2E%2F\
@@ -199,7 +203,12 @@ pub fn percent_encode_byte(byte: u8) -> &'static str {
       %D0%D1%D2%D3%D4%D5%D6%D7%D8%D9%DA%DB%DC%DD%DE%DF\
       %E0%E1%E2%E3%E4%E5%E6%E7%E8%E9%EA%EB%EC%ED%EE%EF\
       %F0%F1%F2%F3%F4%F5%F6%F7%F8%F9%FA%FB%FC%FD%FE%FF\
-      "[index..index + 3]
+      ";
+
+    let index = usize::from(byte) * 3;
+    // SAFETY: ENC_TABLE is ascii-only, so any subset if it should be
+    // ascii-only too, which is valid utf8.
+    unsafe { str::from_utf8_unchecked(&ENC_TABLE[index..index + 3]) }
 }
 
 /// Percent-encode the given bytes with the given set.

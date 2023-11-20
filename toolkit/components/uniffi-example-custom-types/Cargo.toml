@@ -15,7 +15,7 @@ anyhow = "1"
 bytes = "1.0"
 serde_json = "1"
 uniffi = { workspace = true }
-url = "2.1"
+url = "2.4"
 
 [build-dependencies]
 uniffi = { workspace = true, features = ["build"] }

@@ -6,14 +6,15 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use idna;
-use parser::{ParseError, ParseResult};
-use percent_encoding::{percent_decode, utf8_percent_encode, CONTROLS};
-#[cfg(feature = "serde")]
-use serde::{Deserialize, Serialize};
 use std::cmp;
 use std::fmt::{self, Formatter};
 use std::net::{Ipv4Addr, Ipv6Addr};
+
+use percent_encoding::{percent_decode, utf8_percent_encode, CONTROLS};
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
+use crate::parser::{ParseError, ParseResult};
 
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 #[derive(Copy, Clone, Debug, Eq, PartialEq)]
@@ -24,9 +25,10 @@ pub(crate) enum HostInternal {
     Ipv6(Ipv6Addr),
 }
 
-impl<S> From<Host<S>> for HostInternal {
-    fn from(host: Host<S>) -> HostInternal {
+impl From<Host<String>> for HostInternal {
+    fn from(host: Host<String>) -> HostInternal {
         match host {
+            Host::Domain(ref s) if s.is_empty() => HostInternal::None,
             Host::Domain(_) => HostInternal::Domain,
             Host::Ipv4(address) => HostInternal::Ipv4(address),
             Host::Ipv6(address) => HostInternal::Ipv6(address),
@@ -36,7 +38,7 @@ impl<S> From<Host<S>> for HostInternal {
 
 /// The host name of an URL.
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
-#[derive(Clone, Debug, Eq, PartialEq, Ord, PartialOrd, Hash)]
+#[derive(Clone, Debug, Eq, Ord, PartialOrd, Hash)]
 pub enum Host<S = String> {
     /// A DNS domain name, as '.' dot-separated labels.
     /// Non-ASCII labels are encoded in punycode per IDNA if this is the host of
@@ -80,34 +82,42 @@ impl Host<String> {
             return parse_ipv6addr(&input[1..input.len() - 1]).map(Host::Ipv6);
         }
         let domain = percent_decode(input.as_bytes()).decode_utf8_lossy();
-        let domain = idna::domain_to_ascii(&domain)?;
-        if domain
-            .find(|c| {
-                matches!(
-                    c,
-                    '\0' | '\t'
-                        | '\n'
-                        | '\r'
-                        | ' '
-                        | '#'
-                        | '%'
-                        | '/'
-                        | ':'
-                        | '?'
-                        | '@'
-                        | '['
-                        | '\\'
-                        | ']'
-                )
-            })
-            .is_some()
-        {
-            return Err(ParseError::InvalidDomainCharacter);
+
+        let domain = Self::domain_to_ascii(&domain)?;
+
+        if domain.is_empty() {
+            return Err(ParseError::EmptyHost);
         }
-        if let Some(address) = parse_ipv4addr(&domain)? {
+
+        let is_invalid_domain_char = |c| {
+            matches!(
+                c,
+                '\0'..='\u{001F}'
+                    | ' '
+                    | '#'
+                    | '%'
+                    | '/'
+                    | ':'
+                    | '<'
+                    | '>'
+                    | '?'
+                    | '@'
+                    | '['
+                    | '\\'
+                    | ']'
+                    | '^'
+                    | '\u{007F}'
+                    | '|'
+            )
+        };
+
+        if domain.find(is_invalid_domain_char).is_some() {
+            Err(ParseError::InvalidDomainCharacter)
+        } else if ends_in_a_number(&domain) {
+            let address = parse_ipv4addr(&domain)?;
             Ok(Host::Ipv4(address))
         } else {
-            Ok(Host::Domain(domain.into()))
+            Ok(Host::Domain(domain))
         }
     }
 
@@ -119,35 +129,46 @@ impl Host<String> {
             }
             return parse_ipv6addr(&input[1..input.len() - 1]).map(Host::Ipv6);
         }
-        if input
-            .find(|c| {
-                matches!(
-                    c,
-                    '\0' | '\t'
-                        | '\n'
-                        | '\r'
-                        | ' '
-                        | '#'
-                        | '/'
-                        | ':'
-                        | '?'
-                        | '@'
-                        | '['
-                        | '\\'
-                        | ']'
-                )
-            })
-            .is_some()
-        {
-            return Err(ParseError::InvalidDomainCharacter);
+
+        let is_invalid_host_char = |c| {
+            matches!(
+                c,
+                '\0' | '\t'
+                    | '\n'
+                    | '\r'
+                    | ' '
+                    | '#'
+                    | '/'
+                    | ':'
+                    | '<'
+                    | '>'
+                    | '?'
+                    | '@'
+                    | '['
+                    | '\\'
+                    | ']'
+                    | '^'
+                    | '|'
+            )
+        };
+
+        if input.find(is_invalid_host_char).is_some() {
+            Err(ParseError::InvalidDomainCharacter)
+        } else {
+            Ok(Host::Domain(
+                utf8_percent_encode(input, CONTROLS).to_string(),
+            ))
         }
-        let s = utf8_percent_encode(input, CONTROLS).to_string();
-        Ok(Host::Domain(s))
+    }
+
+    /// convert domain with idna
+    fn domain_to_ascii(domain: &str) -> Result<String, ParseError> {
+        idna::domain_to_ascii(domain).map_err(Into::into)
     }
 }
 
 impl<S: AsRef<str>> fmt::Display for Host<S> {
-    fn fmt(&self, f: &mut Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         match *self {
             Host::Domain(ref domain) => domain.as_ref().fmt(f),
             Host::Ipv4(ref addr) => addr.fmt(f),
@@ -160,7 +181,21 @@ impl<S: AsRef<str>> fmt::Display for Host<S> {
     }
 }
 
-fn write_ipv6(addr: &Ipv6Addr, f: &mut Formatter) -> fmt::Result {
+impl<S, T> PartialEq<Host<T>> for Host<S>
+where
+    S: PartialEq<T>,
+{
+    fn eq(&self, other: &Host<T>) -> bool {
+        match (self, other) {
+            (Host::Domain(a), Host::Domain(b)) => a == b,
+            (Host::Ipv4(a), Host::Ipv4(b)) => a == b,
+            (Host::Ipv6(a), Host::Ipv6(b)) => a == b,
+            (_, _) => false,
+        }
+    }
+}
+
+fn write_ipv6(addr: &Ipv6Addr, f: &mut Formatter<'_>) -> fmt::Result {
     let segments = addr.segments();
     let (compress_start, compress_end) = longest_zero_sequence(&segments);
     let mut i = 0;
@@ -221,8 +256,33 @@ fn longest_zero_sequence(pieces: &[u16; 8]) -> (isize, isize) {
     }
 }
 
+/// <https://url.spec.whatwg.org/#ends-in-a-number-checker>
+fn ends_in_a_number(input: &str) -> bool {
+    let mut parts = input.rsplit('.');
+    let last = parts.next().unwrap();
+    let last = if last.is_empty() {
+        if let Some(last) = parts.next() {
+            last
+        } else {
+            return false;
+        }
+    } else {
+        last
+    };
+    if !last.is_empty() && last.as_bytes().iter().all(|c| c.is_ascii_digit()) {
+        return true;
+    }
+
+    parse_ipv4number(last).is_ok()
+}
+
 /// <https://url.spec.whatwg.org/#ipv4-number-parser>
+/// Ok(None) means the input is a valid number, but it overflows a `u32`.
 fn parse_ipv4number(mut input: &str) -> Result<Option<u32>, ()> {
+    if input.is_empty() {
+        return Err(());
+    }
+
     let mut r = 10;
     if input.starts_with("0x") || input.starts_with("0X") {
         input = &input[2..];
@@ -232,61 +292,43 @@ fn parse_ipv4number(mut input: &str) -> Result<Option<u32>, ()> {
         r = 8;
     }
 
-    // At the moment we can't know the reason why from_str_radix fails
-    // https://github.com/rust-lang/rust/issues/22639
-    // So instead we check if the input looks like a real number and only return
-    // an error when it's an overflow.
-    let valid_number = match r {
-        8 => input.chars().all(|c| c >= '0' && c <= '7'),
-        10 => input.chars().all(|c| c >= '0' && c <= '9'),
-        16 => input
-            .chars()
-            .all(|c| (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')),
-        _ => false,
-    };
-
-    if !valid_number {
-        return Ok(None);
-    }
-
     if input.is_empty() {
         return Ok(Some(0));
     }
-    if input.starts_with('+') {
-        return Ok(None);
+
+    let valid_number = match r {
+        8 => input.as_bytes().iter().all(|c| (b'0'..=b'7').contains(c)),
+        10 => input.as_bytes().iter().all(|c| c.is_ascii_digit()),
+        16 => input.as_bytes().iter().all(|c| c.is_ascii_hexdigit()),
+        _ => false,
+    };
+    if !valid_number {
+        return Err(());
     }
+
     match u32::from_str_radix(input, r) {
-        Ok(number) => Ok(Some(number)),
-        Err(_) => Err(()),
+        Ok(num) => Ok(Some(num)),
+        Err(_) => Ok(None), // The only possible error kind here is an integer overflow.
+                            // The validity of the chars in the input is checked above.
     }
 }
 
 /// <https://url.spec.whatwg.org/#concept-ipv4-parser>
-fn parse_ipv4addr(input: &str) -> ParseResult<Option<Ipv4Addr>> {
-    if input.is_empty() {
-        return Ok(None);
-    }
+fn parse_ipv4addr(input: &str) -> ParseResult<Ipv4Addr> {
     let mut parts: Vec<&str> = input.split('.').collect();
     if parts.last() == Some(&"") {
         parts.pop();
     }
     if parts.len() > 4 {
-        return Ok(None);
+        return Err(ParseError::InvalidIpv4Address);
     }
     let mut numbers: Vec<u32> = Vec::new();
-    let mut overflow = false;
     for part in parts {
-        if part == "" {
-            return Ok(None);
-        }
         match parse_ipv4number(part) {
             Ok(Some(n)) => numbers.push(n),
-            Ok(None) => return Ok(None),
-            Err(()) => overflow = true,
+            Ok(None) => return Err(ParseError::InvalidIpv4Address), // u32 overflow
+            Err(()) => return Err(ParseError::InvalidIpv4Address),
         };
-    }
-    if overflow {
-        return Err(ParseError::InvalidIpv4Address);
     }
     let mut ipv4 = numbers.pop().expect("a non-empty list of numbers");
     // Equivalent to: ipv4 >= 256 ** (4 − numbers.len())
@@ -299,7 +341,7 @@ fn parse_ipv4addr(input: &str) -> ParseResult<Option<Ipv4Addr>> {
     for (counter, n) in numbers.iter().enumerate() {
         ipv4 += n << (8 * (3 - counter as u32))
     }
-    Ok(Some(Ipv4Addr::from(ipv4)))
+    Ok(Ipv4Addr::from(ipv4))
 }
 
 /// <https://url.spec.whatwg.org/#concept-ipv6-parser>

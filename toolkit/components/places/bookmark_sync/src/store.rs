@@ -213,7 +213,7 @@ impl<'s> Store<'s> {
                         let title = String::from_utf16(&*raw_title)?;
                         url.map(|url| Content::Bookmark {
                             title,
-                            url_href: url.into_string(),
+                            url_href: url.into(),
                         })
                     }
                     Kind::Folder | Kind::Livemark => {
