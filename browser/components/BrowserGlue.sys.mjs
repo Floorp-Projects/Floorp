@@ -162,6 +162,9 @@ const PREF_PRIVATE_BROWSING_SHORTCUT_CREATED =
 // Whether this launch was initiated by the OS.  A launch-on-login will contain
 // the "os-autostart" flag in the initial launch command line.
 let gThisInstanceIsLaunchOnLogin = false;
+// Whether this launch was initiated by a taskbar tab shortcut. A launch from
+// a taskbar tab shortcut will contain the "taskbar-tab" flag.
+let gThisInstanceIsTaskbarTab = false;
 
 /**
  * Fission-compatible JSProcess implementations.
@@ -1223,6 +1226,7 @@ BrowserGlue.prototype = {
         break;
       case "app-startup":
         this._earlyBlankFirstPaint(subject);
+        gThisInstanceIsTaskbarTab = subject.handleFlag("taskbar-tab", false);
         gThisInstanceIsLaunchOnLogin = subject.handleFlag(
           "os-autostart",
           false
@@ -2601,7 +2605,11 @@ BrowserGlue.prototype = {
               classification = "Other";
             }
           }
-
+          // Because of how taskbar tabs work, it may be classifed as a taskbar
+          // shortcut, in which case we want to overwrite it.
+          if (gThisInstanceIsTaskbarTab) {
+            classification = "TaskbarTab";
+          }
           Services.telemetry.scalarSet(
             "os.environment.launch_method",
             classification

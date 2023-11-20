@@ -127,6 +127,46 @@ interface nsIWindowsShellService : nsISupports
   Promise isCurrentAppPinnedToTaskbarAsync(in AString aumid);
 
   /*
+   * Similar to createShortcut except it removes most of the checking in that
+   * function that ensures we are pinning a Firefox executable instead allowing
+   * any shortcut to be pinned.
+   *
+   * This function should not be called unless it is certain that it's
+   * necessary given how few checks there are within.
+   * @param  aShortcutPath
+   *         A path to the .lnk file that should be pinned to the taskbar.
+   * @throws NS_ERROR_FAILURE
+   *         If the COM service could not be initialized
+   * @throws NS_ERROR_FILE_NOT_FOUND
+   *         If aShortcutPath cannot be found
+   * @throws NS_ERROR_NOT_AVAILABLE
+   *         If the taskbar pinning service cannot be initialized
+   * @throws NS_ERROR_FILE_ACCESS_DENIED
+   *         If the taskbar pins cannot be modified
+   */
+  void pinShortcutToTaskbar(in AString aShortcutPath);
+
+  /*
+   * This function is a counterpart to pinShortcutToTaskbar and allows
+   * the unpinning of any shortcut, including non-Firefox executables,
+   * without the checks of createShortcut.
+   *
+   * This function should not be called unless it is certain that it's
+   * necessary given how few checks there are within.
+   * @param  aShortcutPath
+   *         A path to the .lnk file that should be pinned to the taskbar.
+   * @throws NS_ERROR_FAILURE
+   *         If the COM service could not be initialized
+   * @throws NS_ERROR_FILE_NOT_FOUND
+   *         If aShortcutPath cannot be found
+   * @throws NS_ERROR_NOT_AVAILABLE
+   *         If the taskbar pinning service cannot be initialized
+   * @throws NS_ERROR_FILE_ACCESS_DENIED
+   *         If the taskbar pins cannot be modified
+   */
+  void unpinShortcutFromTaskbar(in AString aShortcutPath);
+
+  /*
    * Determine where a given shortcut likely appears in the shell.
    *
    * Returns one of:

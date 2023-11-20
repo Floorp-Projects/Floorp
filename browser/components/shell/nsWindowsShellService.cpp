@@ -1278,9 +1278,8 @@ static bool IsCurrentAppPinnedToTaskbarSync(const nsAString& aumid) {
   return isPinned;
 }
 
-static nsresult PinCurrentAppToTaskbarWin10(bool aCheckOnly,
-                                            const nsAString& aAppUserModelId,
-                                            nsAutoString aShortcutPath) {
+static nsresult ManageShortcutTaskbarPins(bool aCheckOnly, bool aPinType,
+                                          const nsAString& aShortcutPath) {
   // This enum is likely only used for Windows telemetry, INT_MAX is chosen to
   // avoid confusion with existing uses.
   enum PINNEDLISTMODIFYCALLER { PLMC_INT_MAX = INT_MAX };
@@ -1325,36 +1324,65 @@ static nsresult PinCurrentAppToTaskbarWin10(bool aCheckOnly,
     }
   };
 
-  mozilla::UniquePtr<__unaligned ITEMIDLIST, ILFreeDeleter> path(
-      ILCreateFromPathW(aShortcutPath.get()));
-  if (NS_WARN_IF(!path)) {
+  HRESULT hr = CoInitialize(nullptr);
+  if (FAILED(hr)) {
     return NS_ERROR_FAILURE;
+  }
+  const struct ComUninitializer {
+    ~ComUninitializer() { CoUninitialize(); }
+  } kCUi;
+
+  mozilla::UniquePtr<__unaligned ITEMIDLIST, ILFreeDeleter> path(
+      ILCreateFromPathW(nsString(aShortcutPath).get()));
+  if (NS_WARN_IF(!path)) {
+    return NS_ERROR_FILE_NOT_FOUND;
   }
 
   IPinnedList3* pinnedList = nullptr;
-  HRESULT hr =
-      CoCreateInstance(CLSID_TaskbandPin, nullptr, CLSCTX_INPROC_SERVER,
-                       IID_IPinnedList3, (void**)&pinnedList);
+  hr = CoCreateInstance(CLSID_TaskbandPin, NULL, CLSCTX_INPROC_SERVER,
+                        IID_IPinnedList3, (void**)&pinnedList);
   if (FAILED(hr) || !pinnedList) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
   if (!aCheckOnly) {
-    bool isPinned = false;
-    isPinned = IsCurrentAppPinnedToTaskbarSync(aAppUserModelId);
-    if (!isPinned) {
-      hr = pinnedList->vtbl->Modify(pinnedList, nullptr, path.get(),
-                                    PLMC_INT_MAX);
-    }
+    hr = pinnedList->vtbl->Modify(pinnedList, aPinType ? NULL : path.get(),
+                                  aPinType ? path.get() : NULL, PLMC_INT_MAX);
   }
 
   pinnedList->vtbl->Release(pinnedList);
 
   if (FAILED(hr)) {
-    return NS_ERROR_FAILURE;
-  } else {
-    return NS_OK;
+    return NS_ERROR_FILE_ACCESS_DENIED;
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsWindowsShellService::PinShortcutToTaskbar(const nsAString& aShortcutPath) {
+  const bool pinType = true;  // true means pin
+  const bool runInTestMode = false;
+  return ManageShortcutTaskbarPins(runInTestMode, pinType, aShortcutPath);
+}
+
+NS_IMETHODIMP
+nsWindowsShellService::UnpinShortcutFromTaskbar(
+    const nsAString& aShortcutPath) {
+  const bool pinType = false;  // false means unpin
+  const bool runInTestMode = false;
+  return ManageShortcutTaskbarPins(runInTestMode, pinType, aShortcutPath);
+}
+
+static nsresult PinCurrentAppToTaskbarWin10(bool aCheckOnly,
+                                            const nsAString& aAppUserModelId,
+                                            nsAutoString aShortcutPath) {
+  // The behavior here is identical if we're only checking or if we try to pin
+  // but the app is already pinned so we update the variable accordingly.
+  if (!aCheckOnly) {
+    aCheckOnly = !IsCurrentAppPinnedToTaskbarSync(aAppUserModelId);
+  }
+  const bool pinType = true;  // true means pin
+  return ManageShortcutTaskbarPins(aCheckOnly, pinType, aShortcutPath);
 }
 
 static nsresult PinCurrentAppToTaskbarImpl(
