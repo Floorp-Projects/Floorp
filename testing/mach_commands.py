@@ -903,6 +903,7 @@ def test_info_tests(
     help="Do not categorize by bugzilla component.",
 )
 @CommandArgument("--output-file", help="Path to report file.")
+@CommandArgument("--runcounts-input-file", help="Optional path to report file.")
 @CommandArgument("--verbose", action="store_true", help="Enable debug logging.")
 @CommandArgument(
     "--start",
@@ -930,6 +931,7 @@ def test_report(
     start,
     end,
     show_testruns,
+    runcounts_input_file,
 ):
     import testinfo
     from mozbuild import build_commands
@@ -957,6 +959,7 @@ def test_report(
         start,
         end,
         show_testruns,
+        runcounts_input_file,
     )
 
 
