@@ -484,7 +484,12 @@ function testListing(metadata, response) {
           DIV({ class: "clear" }),
           DIV(
             { class: "frameholder" },
-            IFRAME({ scrolling: "no", id: "testframe", allowfullscreen: true })
+            IFRAME({
+              scrolling: "no",
+              id: "testframe",
+              allow: "geolocation 'src'",
+              allowfullscreen: true,
+            })
           ),
           DIV({ class: "clear" }),
           DIV(
