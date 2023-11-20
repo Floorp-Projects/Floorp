@@ -4,11 +4,17 @@ title: Changelog
 permalink: /changelog/
 ---
 
-# 121.0 (In Development)
-* [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v120..main)
+# 122.0 (In Development)
+* [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v121..main)
 * [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt)
 * [Gecko](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/plugins/dependencies/src/main/java/Gecko.kt)
 * [Configuration](https://github.com/mozilla-mobile/firefox-android/blob/main/android-components/.config.yml)
+
+# 121.0
+* [Commits](https://github.com/mozilla-mobile/firefox-android/compare/releases_v120..releases_v121)
+* [Dependencies](https://github.com/mozilla-mobile/firefox-android/blob/releases_v121/android-components/plugins/dependencies/src/main/java/DependenciesPlugin.kt)
+* [Gecko](https://github.com/mozilla-mobile/firefox-android/blob/releases_v121/android-components/plugins/dependencies/src/main/java/Gecko.kt)
+* [Configuration](https://github.com/mozilla-mobile/firefox-android/blob/releases_v121/android-components/.config.yml)
 
 * **browser-state**:
   * Added `TranslationsState` to track translation and translation restoration status. [Bug 1844523](https://bugzilla.mozilla.org/show_bug.cgi?id=1844523)
