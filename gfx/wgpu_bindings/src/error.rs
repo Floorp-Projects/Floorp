@@ -438,9 +438,11 @@ mod foreign {
         fn error_type(&self) -> ErrorBufferType {
             match self {
                 DeviceError::Invalid | DeviceError::WrongDevice => ErrorBufferType::Validation,
+                DeviceError::InvalidQueueId => ErrorBufferType::Validation,
                 DeviceError::Lost => ErrorBufferType::DeviceLost,
                 DeviceError::OutOfMemory => ErrorBufferType::OutOfMemory,
                 DeviceError::ResourceCreationFailed => ErrorBufferType::Internal,
+                _ => ErrorBufferType::Internal,
             }
         }
     }

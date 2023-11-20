@@ -51,7 +51,9 @@ fn restrict_limits(limits: wgt::Limits) -> wgt::Limits {
         max_texture_dimension_1d: limits.max_texture_dimension_1d.min(MAX_TEXTURE_EXTENT),
         max_texture_dimension_2d: limits.max_texture_dimension_2d.min(MAX_TEXTURE_EXTENT),
         max_texture_dimension_3d: limits.max_texture_dimension_3d.min(MAX_TEXTURE_EXTENT),
-        max_sampled_textures_per_shader_stage: limits.max_sampled_textures_per_shader_stage.min(256),
+        max_sampled_textures_per_shader_stage: limits
+            .max_sampled_textures_per_shader_stage
+            .min(256),
         max_samplers_per_shader_stage: limits.max_samplers_per_shader_stage.min(256),
         max_storage_textures_per_shader_stage: limits
             .max_storage_textures_per_shader_stage
@@ -90,10 +92,12 @@ pub extern "C" fn wgpu_server_new(
     log::info!("Initializing WGPU server");
     let backends_pref = static_prefs::pref!("dom.webgpu.wgpu-backend").to_string();
     let backends = if backends_pref.is_empty() {
-        #[cfg(windows)] {
+        #[cfg(windows)]
+        {
             wgt::Backends::DX12
         }
-        #[cfg(not(windows))] {
+        #[cfg(not(windows))]
+        {
             wgt::Backends::PRIMARY
         }
     } else {
@@ -234,7 +238,11 @@ pub unsafe extern "C" fn wgpu_server_adapter_pack_info(
                     wgt::DeviceType::IntegratedGpu | wgt::DeviceType::DiscreteGpu => true,
                     _ => false,
                 };
-                assert!(is_hardware, "Expected a hardware gpu adapter, got {:?}", device_type);
+                assert!(
+                    is_hardware,
+                    "Expected a hardware gpu adapter, got {:?}",
+                    device_type
+                );
             }
 
             let info = AdapterInformation {
@@ -282,8 +290,10 @@ pub unsafe extern "C" fn wgpu_server_adapter_request_device(
     let trace_path = trace_string
         .as_ref()
         .map(|string| std::path::Path::new(string.as_str()));
-    let (_, error) =
-        gfx_select!(self_id => global.adapter_request_device(self_id, &desc, trace_path, new_id));
+    // TODO: in https://github.com/gfx-rs/wgpu/pull/3626/files#diff-033343814319f5a6bd781494692ea626f06f6c3acc0753a12c867b53a646c34eR97
+    // which introduced the queue id parameter, the queue id is also the device id. I don't know how applicable this is to
+    // other situations (this one in particular).
+    let (_, _, error) = gfx_select!(self_id => global.adapter_request_device(self_id, &desc, trace_path, new_id, new_id));
     if let Some(err) = error {
         error_buf.init(err);
     }
@@ -439,7 +449,7 @@ pub unsafe extern "C" fn wgpu_server_buffer_map(
     let callback = wgc::resource::BufferMapCallback::from_c(callback);
     let operation = wgc::resource::BufferMapOperation {
         host: map_mode,
-        callback,
+        callback: Some(callback),
     };
     // All errors are also exposed to the mapping callback, so we handle them there and ignore
     // the returned value of buffer_map_async.
@@ -668,13 +678,15 @@ impl Global {
                 }
             }
             DeviceAction::RenderPipelineGetBindGroupLayout(pipeline_id, index, bgl_id) => {
-                let (_, error) = self.render_pipeline_get_bind_group_layout::<A>(pipeline_id, index, bgl_id);
+                let (_, error) =
+                    self.render_pipeline_get_bind_group_layout::<A>(pipeline_id, index, bgl_id);
                 if let Some(err) = error {
                     error_buf.init(err);
                 }
             }
             DeviceAction::ComputePipelineGetBindGroupLayout(pipeline_id, index, bgl_id) => {
-                let (_, error) = self.compute_pipeline_get_bind_group_layout::<A>(pipeline_id, index, bgl_id);
+                let (_, error) =
+                    self.compute_pipeline_get_bind_group_layout::<A>(pipeline_id, index, bgl_id);
                 if let Some(err) = error {
                     error_buf.init(err);
                 }
