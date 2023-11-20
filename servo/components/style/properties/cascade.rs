@@ -692,7 +692,6 @@ impl<'a, 'b: 'a> Cascade<'a, 'b> {
             let decl = decls.longhand_declarations[index as usize];
             self.apply_one_longhand(
                 longhand_id,
-                longhand_id,
                 decl.decl,
                 decl.priority,
                 cache,
@@ -789,15 +788,19 @@ impl<'a, 'b: 'a> Cascade<'a, 'b> {
         debug_assert!(!properties_to_apply.contains_any(LonghandIdSet::prioritary_properties()));
         debug_assert!(self.declarations_to_apply_unless_overridden.is_empty());
         for declaration in &*longhand_declarations {
-            let longhand_id = declaration.decl.id().as_longhand().unwrap();
+            let mut longhand_id = declaration.decl.id().as_longhand().unwrap();
             if !properties_to_apply.contains(longhand_id) {
                 continue;
             }
             debug_assert!(PrioritaryPropertyId::from_longhand(longhand_id).is_none());
-            let physical_longhand_id = longhand_id.to_physical(self.context.builder.writing_mode);
+            let is_logical = longhand_id.is_logical();
+            if is_logical {
+                let wm = self.context.builder.writing_mode;
+                self.context.rule_cache_conditions.borrow_mut().set_writing_mode_dependency(wm);
+                longhand_id = longhand_id.to_physical(wm);
+            }
             self.apply_one_longhand(
                 longhand_id,
-                physical_longhand_id,
                 declaration.decl,
                 declaration.priority,
                 shorthand_cache,
@@ -809,7 +812,9 @@ impl<'a, 'b: 'a> Cascade<'a, 'b> {
                 let longhand_id = declaration.id().as_longhand().unwrap();
                 debug_assert!(!longhand_id.is_logical());
                 if !self.seen.contains(longhand_id) {
-                    self.do_apply_declaration(longhand_id, &declaration);
+                    unsafe {
+                        self.do_apply_declaration(longhand_id, &declaration);
+                    }
                 }
             }
         }
@@ -818,20 +823,19 @@ impl<'a, 'b: 'a> Cascade<'a, 'b> {
     fn apply_one_longhand(
         &mut self,
         longhand_id: LonghandId,
-        physical_longhand_id: LonghandId,
         declaration: &PropertyDeclaration,
         priority: CascadePriority,
         cache: &mut ShorthandsWithPropertyReferencesCache,
     ) {
-        debug_assert!(!physical_longhand_id.is_logical());
+        debug_assert!(!longhand_id.is_logical());
         let origin = priority.cascade_level().origin();
-        if self.seen.contains(physical_longhand_id) {
+        if self.seen.contains(longhand_id) {
             return;
         }
 
-        if self.reverted_set.contains(physical_longhand_id) {
+        if self.reverted_set.contains(longhand_id) {
             if let Some(&(reverted_priority, is_origin_revert)) =
-                self.reverted.get(&physical_longhand_id)
+                self.reverted.get(&longhand_id)
             {
                 if !reverted_priority.allows_when_reverted(&priority, is_origin_revert) {
                     return;
@@ -846,7 +850,7 @@ impl<'a, 'b: 'a> Cascade<'a, 'b> {
         if self.ignore_colors {
             tweak_when_ignoring_colors(
                 &self.context,
-                physical_longhand_id,
+                longhand_id,
                 origin,
                 &mut declaration,
                 &mut self.declarations_to_apply_unless_overridden,
@@ -859,32 +863,35 @@ impl<'a, 'b: 'a> Cascade<'a, 'b> {
                     let origin_revert = keyword == CSSWideKeyword::Revert;
                     // We intentionally don't want to insert it into `self.seen`, `reverted` takes
                     // care of rejecting other declarations as needed.
-                    self.reverted_set.insert(physical_longhand_id);
+                    self.reverted_set.insert(longhand_id);
                     self.reverted
-                        .insert(physical_longhand_id, (priority, origin_revert));
+                        .insert(longhand_id, (priority, origin_revert));
                     return;
                 },
                 CSSWideKeyword::Unset => true,
-                CSSWideKeyword::Inherit => physical_longhand_id.inherited(),
-                CSSWideKeyword::Initial => !physical_longhand_id.inherited(),
+                CSSWideKeyword::Inherit => longhand_id.inherited(),
+                CSSWideKeyword::Initial => !longhand_id.inherited(),
             },
             None => false,
         };
 
-        self.seen.insert(physical_longhand_id);
+        self.seen.insert(longhand_id);
         if origin == Origin::Author {
-            self.author_specified.insert(physical_longhand_id);
+            self.author_specified.insert(longhand_id);
         }
 
         if is_unset {
             return;
         }
 
-        self.do_apply_declaration(longhand_id, &declaration)
+        unsafe {
+            self.do_apply_declaration(longhand_id, &declaration)
+        }
     }
 
     #[inline]
-    fn do_apply_declaration(&mut self, longhand_id: LonghandId, declaration: &PropertyDeclaration) {
+    unsafe fn do_apply_declaration(&mut self, longhand_id: LonghandId, declaration: &PropertyDeclaration) {
+        debug_assert!(!longhand_id.is_logical());
         // We could (and used to) use a pattern match here, but that bloats this
         // function to over 100K of compiled code!
         //

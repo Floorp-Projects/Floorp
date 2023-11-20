@@ -494,10 +494,6 @@ def set_gecko_property(ffi_name, expr):
     }
 </%def>
 
-<%def name="impl_logical(name, **kwargs)">
-    ${helpers.logical_setter(name)}
-</%def>
-
 <%def name="impl_style_struct(style_struct)">
 /// A wrapper for ${style_struct.gecko_ffi_name}, to be able to manually construct / destruct /
 /// clone it.
@@ -629,11 +625,10 @@ impl Clone for ${style_struct.gecko_struct_name} {
     def longhand_method(longhand):
         args = dict(ident=longhand.ident, gecko_ffi_name=longhand.gecko_ffi_name)
 
-        # get the method and pass additional keyword or type-specific arguments
         if longhand.logical:
-            method = impl_logical
-            args.update(name=longhand.name)
-        elif longhand.keyword:
+            return
+        # get the method and pass additional keyword or type-specific arguments
+        if longhand.keyword:
             method = impl_keyword
             args.update(keyword=longhand.keyword)
             if "font" in longhand.ident:

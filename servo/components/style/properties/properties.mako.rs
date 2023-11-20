@@ -36,6 +36,7 @@ use style_traits::{CssWriter, KeywordsCollectFn, ParseError, ParsingMode};
 use style_traits::{SpecifiedValueInfo, StyleParseErrorKind, ToCss};
 use to_shmem::impl_trivial_to_shmem;
 use crate::stylesheets::{CssRuleType, CssRuleTypes, Origin, UrlExtraData};
+use crate::logical_geometry::{LogicalAxis, LogicalCorner, LogicalSide};
 use crate::use_counters::UseCounters;
 use crate::values::generics::font::LineHeight;
 use crate::values::specified::length::LineHeightBase;
@@ -362,6 +363,13 @@ impl MallocSizeOf for PropertyDeclaration {
 
 
 impl PropertyDeclaration {
+    /// Returns the given value for this declaration as a particular type.
+    /// It's the caller's responsibility to guarantee that the longhand id has the right specified
+    /// value representation.
+    pub(crate) unsafe fn unchecked_value_as<T>(&self) -> &T {
+        &(*(self as *const _ as *const PropertyDeclarationVariantRepr<T>)).value
+    }
+
     /// Dumps the property declaration before crashing.
     #[cold]
     #[cfg(debug_assertions)]
@@ -795,17 +803,35 @@ static ${name}: LonghandIdSet = LonghandIdSet {
 
 %>
 
-/// A group for properties which may override each other
-/// via logical resolution.
-#[derive(Clone, Copy, Eq, Hash, PartialEq)]
+/// A group for properties which may override each other via logical resolution.
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
 #[repr(u8)]
-pub enum LogicalGroup {
+pub enum LogicalGroupId {
     % for i, group in enumerate(logical_groups.keys()):
     /// ${group}
     ${to_camel_case(group)} = ${i},
     % endfor
 }
 
+impl LogicalGroupId {
+    /// Return the list of physical mapped properties for a given logical group.
+    fn physical_properties(self) -> &'static [LonghandId] {
+        static PROPS: [[LonghandId; 4]; ${len(logical_groups)}] = [
+        % for group, props in logical_groups.items():
+        [
+            <% physical_props = [p for p in props if p.logical][0].all_physical_mapped_properties(data) %>
+            % for phys in physical_props:
+            LonghandId::${phys.camel_case},
+            % endfor
+            % for i in range(len(physical_props), 4):
+            LonghandId::${physical_props[0].camel_case},
+            % endfor
+        ],
+        % endfor
+        ];
+        &PROPS[self as usize]
+    }
+}
 
 /// A set of logical groups.
 #[derive(Clone, Copy, Debug, Default, MallocSizeOf, PartialEq)]
@@ -823,14 +849,14 @@ impl LogicalGroupSet {
 
     /// Return whether the given group is in the set
     #[inline]
-    pub fn contains(&self, g: LogicalGroup) -> bool {
+    pub fn contains(&self, g: LogicalGroupId) -> bool {
         let bit = g as usize;
         (self.storage[bit / 32] & (1 << (bit % 32))) != 0
     }
 
     /// Insert a group the set.
     #[inline]
-    pub fn insert(&mut self, g: LogicalGroup) {
+    pub fn insert(&mut self, g: LogicalGroupId) {
         let bit = g as usize;
         self.storage[bit / 32] |= 1 << (bit % 32);
     }
@@ -1267,6 +1293,28 @@ impl fmt::Debug for LonghandId {
     }
 }
 
+enum LogicalMappingKind {
+    Side(LogicalSide),
+    Corner(LogicalCorner),
+    Axis(LogicalAxis),
+}
+
+struct LogicalMappingData {
+    group: LogicalGroupId,
+    kind: LogicalMappingKind,
+}
+
+impl LogicalMappingData {
+    fn to_physical(&self, wm: WritingMode) -> LonghandId {
+        let index = match self.kind {
+            LogicalMappingKind::Side(s) => s.to_physical(wm) as usize,
+            LogicalMappingKind::Corner(c) => c.to_physical(wm) as usize,
+            LogicalMappingKind::Axis(a) => a.to_physical(wm) as usize,
+        };
+        self.group.physical_properties()[index]
+    }
+}
+
 impl LonghandId {
     /// Get the name of this longhand property.
     #[inline]
@@ -1337,7 +1385,7 @@ impl LonghandId {
     }
 
     fn parse_value<'i, 't>(
-        &self,
+        self,
         context: &ParserContext,
         input: &mut Parser<'i, 't>,
     ) -> Result<PropertyDeclaration, ParseError<'i>> {
@@ -1350,7 +1398,7 @@ impl LonghandId {
             longhands::${property.ident}::parse_declared,
         % endfor
         ];
-        (PARSE_PROPERTY[*self as usize])(context, input)
+        (PARSE_PROPERTY[self as usize])(context, input)
     }
 
     /// Returns whether this property is animatable.
@@ -1390,45 +1438,42 @@ impl LonghandId {
     }
 
     /// If this is a logical property, return the corresponding physical one in
-    /// the given writing mode.
-    ///
-    /// Otherwise, return unchanged.
+    /// the given writing mode. Otherwise, return unchanged.
     #[inline]
-    pub fn to_physical(&self, wm: WritingMode) -> Self {
-        match *self {
-            % for property in data.longhands:
-            % if property.logical:
-                <% logical_group = property.logical_group %>
-                LonghandId::${property.camel_case} => {
-                    <%helpers:logical_setter_helper name="${property.name}">
-                    <%def name="inner(physical_ident)">
-                        <%
-                            physical_name = physical_ident.replace("_", "-")
-                            physical_property = data.longhands_by_name[physical_name]
-                            assert logical_group == physical_property.logical_group
-                        %>
-                        LonghandId::${to_camel_case(physical_ident)}
-                    </%def>
-                    </%helpers:logical_setter_helper>
-                }
-            % endif
-            % endfor
-            _ => *self
-        }
+    pub fn to_physical(self, wm: WritingMode) -> Self {
+        let Some(data) = self.logical_mapping_data() else { return self };
+        data.to_physical(wm)
     }
 
-    /// Return the logical group of this longhand property.
-    pub fn logical_group(&self) -> Option<LogicalGroup> {
-        const LOGICAL_GROUPS: [Option<LogicalGroup>; ${len(data.longhands)}] = [
+    /// Return the relevant data to map a particular logical property into physical.
+    fn logical_mapping_data(self) -> Option<<&'static LogicalMappingData> {
+        const LOGICAL_MAPPING_DATA: [Option<LogicalMappingData>; ${len(data.longhands)}] = [
             % for prop in data.longhands:
-            % if prop.logical_group:
-            Some(LogicalGroup::${to_camel_case(prop.logical_group)}),
+            % if prop.logical:
+            Some(LogicalMappingData {
+                group: LogicalGroupId::${to_camel_case(prop.logical_group)},
+                kind: ${prop.logical_mapping_kind(data)}
+            }),
             % else:
             None,
             % endif
             % endfor
         ];
-        LOGICAL_GROUPS[*self as usize]
+        LOGICAL_MAPPING_DATA[self as usize].as_ref()
+    }
+
+    /// Return the logical group of this longhand property.
+    pub fn logical_group(self) -> Option<LogicalGroupId> {
+        const LOGICAL_GROUP_IDS: [Option<LogicalGroupId>; ${len(data.longhands)}] = [
+            % for prop in data.longhands:
+            % if prop.logical_group:
+            Some(LogicalGroupId::${to_camel_case(prop.logical_group)}),
+            % else:
+            None,
+            % endif
+            % endfor
+        ];
+        LOGICAL_GROUP_IDS[self as usize]
     }
 
     /// Returns PropertyFlags for given longhand property.
@@ -2751,9 +2796,7 @@ pub mod style_structs {
 
         impl ${style_struct.name} {
             % for longhand in style_struct.longhands:
-                % if longhand.logical:
-                    ${helpers.logical_setter(name=longhand.name)}
-                % else:
+                % if not longhand.logical:
                     % if longhand.ident == "display":
                         /// Set `display`.
                         ///
@@ -3098,19 +3141,16 @@ impl ComputedValues {
     }
 
 % for prop in data.longhands:
+% if not prop.logical:
     /// Gets the computed value of a given property.
     #[inline(always)]
     #[allow(non_snake_case)]
     pub fn clone_${prop.ident}(
         &self,
     ) -> longhands::${prop.ident}::computed_value::T {
-        self.get_${prop.style_struct.ident.strip("_")}()
-        % if prop.logical:
-            .clone_${prop.ident}(self.writing_mode)
-        % else:
-            .clone_${prop.ident}()
-        % endif
+        self.get_${prop.style_struct.ident.strip("_")}().clone_${prop.ident}()
     }
+% endif
 % endfor
 
     /// Writes the (resolved or computed) value of the given longhand as a string in `dest`.
@@ -3125,13 +3165,15 @@ impl ComputedValues {
     ) -> fmt::Result {
         use crate::values::resolved::ToResolvedValue;
         let mut dest = CssWriter::new(dest);
-        match property_id {
+        match property_id.to_physical(self.writing_mode) {
             % for specified_type, props in groupby(data.longhands, key=lambda x: x.specified_type()):
             <% props = list(props) %>
             ${" |\n".join("LonghandId::{}".format(p.camel_case) for p in props)} => {
                 let value = match property_id {
                     % for prop in props:
+                    % if not prop.logical:
                     LonghandId::${prop.camel_case} => self.clone_${prop.ident}(),
+                    % endif
                     % endfor
                     _ => unsafe { debug_unreachable!() },
                 };
@@ -3153,13 +3195,15 @@ impl ComputedValues {
     ) -> PropertyDeclaration {
         use crate::values::resolved::ToResolvedValue;
         use crate::values::computed::ToComputedValue;
-        match property_id {
+        match property_id.to_physical(self.writing_mode) {
             % for specified_type, props in groupby(data.longhands, key=lambda x: x.specified_type()):
             <% props = list(props) %>
             ${" |\n".join("LonghandId::{}".format(p.camel_case) for p in props)} => {
                 let mut computed_value = match property_id {
                     % for prop in props:
+                    % if not prop.logical:
                     LonghandId::${prop.camel_case} => self.clone_${prop.ident}(),
+                    % endif
                     % endfor
                     _ => unsafe { debug_unreachable!() },
                 };
@@ -3211,9 +3255,11 @@ impl ComputedValues {
     pub fn differing_properties(&self, other: &ComputedValues) -> LonghandIdSet {
         let mut set = LonghandIdSet::new();
         % for prop in data.longhands:
+        % if not prop.logical:
         if self.clone_${prop.ident}() != other.clone_${prop.ident}() {
             set.insert(LonghandId::${prop.camel_case});
         }
+        % endif
         % endfor
         set
     }
@@ -3767,6 +3813,7 @@ impl<'a> StyleBuilder<'a> {
     }
 
     % for property in data.longhands:
+    % if not property.logical:
     % if not property.style_struct.inherited:
     /// Inherit `${property.ident}` from our parent style.
     #[allow(non_snake_case)]
@@ -3790,12 +3837,7 @@ impl<'a> StyleBuilder<'a> {
         }
 
         self.${property.style_struct.ident}.mutate()
-            .copy_${property.ident}_from(
-                inherited_struct,
-                % if property.logical:
-                self.writing_mode,
-                % endif
-            );
+            .copy_${property.ident}_from(inherited_struct);
     }
     % else:
     /// Reset `${property.ident}` to the initial value.
@@ -3809,12 +3851,7 @@ impl<'a> StyleBuilder<'a> {
         }
 
         self.${property.style_struct.ident}.mutate()
-            .reset_${property.ident}(
-                reset_struct,
-                % if property.logical:
-                self.writing_mode,
-                % endif
-            );
+            .reset_${property.ident}(reset_struct);
     }
     % endif
 
@@ -3837,6 +3874,7 @@ impl<'a> StyleBuilder<'a> {
                 % endif
             );
     }
+    % endif
     % endif
     % endfor
     <% del property %>
@@ -4135,7 +4173,7 @@ mod lazy_static_module {
 
 /// A per-longhand function that performs the CSS cascade for that longhand.
 pub type CascadePropertyFn =
-    extern "Rust" fn(
+    unsafe extern "Rust" fn(
         declaration: &PropertyDeclaration,
         context: &mut computed::Context,
     );
@@ -4147,7 +4185,6 @@ pub static CASCADE_PROPERTY: [CascadePropertyFn; ${len(data.longhands)}] = [
         longhands::${property.ident}::cascade_property,
     % endfor
 ];
-
 
 /// See StyleAdjuster::adjust_for_border_width.
 pub fn adjust_border_width(style: &mut StyleBuilder) {
