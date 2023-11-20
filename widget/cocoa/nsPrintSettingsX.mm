@@ -249,7 +249,7 @@ void nsPrintSettingsX::SetFromPrintInfo(NSPrintInfo* aPrintInfo,
   // got a pages-per-sheet value with orthogonal pages/sheets, in which case
   // it's reversed.
   const bool arePagesPortraitMode =
-      (areSheetsOfPaperPortraitMode != HasOrthogonalSheetsAndPages());
+      (areSheetsOfPaperPortraitMode != HasOrthogonalPagesPerSheet());
 
   if (arePagesPortraitMode) {
     mOrientation = nsIPrintSettings::kPortraitOrientation;
