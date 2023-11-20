@@ -464,7 +464,7 @@ const PREF_URLBAR_DEFAULTS = new Map([
   ["richSuggestions.featureGate", false],
 
   // Feature gate pref for clipboard suggestions in the urlbar.
-  ["clipboard.featureGate", false],
+  ["clipboard.featureGate", true],
 
   // Feature gate pref for recent searches being shown in the urlbar.
   ["recentsearches.featureGate", false],
