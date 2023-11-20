@@ -1896,7 +1896,10 @@ class BrowsertimeOutput(PerftestOutput):
                 subtest["replicates"] = replicates
                 return subtest
 
-            if test["type"] in ["pageload", "scenario", "power"]:
+            if test.get("support_class"):
+                test.get("support_class").summarize_test(test, suite)
+
+            elif test["type"] in ["pageload", "scenario", "power"]:
                 for measurement_name, replicates in test["measurements"].items():
                     new_subtest = _process_measurements(measurement_name, replicates)
                     if measurement_name not in suite["subtests"]:
@@ -1964,7 +1967,9 @@ class BrowsertimeOutput(PerftestOutput):
 
         # convert suites to list
         suites = [
-            s if "benchmark" in s["type"] else _process_suite(s)
+            s
+            if ("benchmark" in s["type"] or test.get("support_class"))
+            else _process_suite(s)
             for s in suites.values()
         ]
 
