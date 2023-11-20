@@ -220,6 +220,7 @@ class KeyWatcher final {
   ~KeyWatcher();
 
  private:
+  static void CALLBACK WatchCallback(void* aContext, BOOLEAN);
   bool Register();
 
   Key mKey;

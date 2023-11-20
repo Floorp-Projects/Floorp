@@ -284,15 +284,15 @@ KeyWatcher::KeyWatcher(Key&& aKey,
 
   // The callback only dispatches to the relevant event target, so we can use
   // WT_EXECUTEINWAITTHREAD.
-  RegisterWaitForSingleObject(
-      &mWaitObject, mEvent,
-      [](void* aContext, BOOLEAN) {
-        auto* watcher = static_cast<KeyWatcher*>(aContext);
-        watcher->Register();
-        watcher->mEventTarget->Dispatch(
-            NS_NewRunnableFunction("KeyWatcher callback", watcher->mCallback));
-      },
-      this, INFINITE, WT_EXECUTEINWAITTHREAD);
+  RegisterWaitForSingleObject(&mWaitObject, mEvent, WatchCallback, this,
+                              INFINITE, WT_EXECUTEINWAITTHREAD);
+}
+
+void KeyWatcher::WatchCallback(void* aContext, BOOLEAN) {
+  auto* watcher = static_cast<KeyWatcher*>(aContext);
+  watcher->Register();
+  watcher->mEventTarget->Dispatch(
+      NS_NewRunnableFunction("KeyWatcher callback", watcher->mCallback));
 }
 
 // As per the documentation in:
