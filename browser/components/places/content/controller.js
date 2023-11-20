@@ -913,7 +913,10 @@ PlacesController.prototype = {
         this._view.result,
         totalItems,
         async () => {
-          await PlacesTransactions.batch(transactions);
+          await PlacesTransactions.batch(
+            transactions,
+            "PlacesController::removeRowsFromBookmarks"
+          );
         }
       );
     }

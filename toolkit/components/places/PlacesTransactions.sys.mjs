@@ -163,6 +163,17 @@ function setTimeout(callback, ms) {
   timer.initWithCallback(callback, ms, timer.TYPE_ONE_SHOT);
 }
 
+const lazy = {};
+ChromeUtils.defineLazyGetter(lazy, "logger", function () {
+  return console.createInstance({
+    prefix: "PlacesTransactions",
+    maxLogLevel: Services.prefs.getCharPref(
+      "places.transactions.logLevel",
+      "Error"
+    ),
+  });
+});
+
 class TransactionsHistoryArray extends Array {
   constructor() {
     super();
@@ -200,6 +211,9 @@ class TransactionsHistoryArray extends Array {
     let proxy = Object.freeze({
       transact() {
         return TransactionsManager.transact(this);
+      },
+      toString() {
+        return rawTransaction.toString();
       },
     });
     this.proxifiedToRaw.set(proxy, rawTransaction);
@@ -247,8 +261,10 @@ class TransactionsHistoryArray extends Array {
 
     if (!this.length || forceNewEntry) {
       this.clearRedoEntries();
+      lazy.logger.debug(`Adding transaction: ${proxifiedTransaction}`);
       this.unshift([proxifiedTransaction]);
     } else {
+      lazy.logger.debug(`Adding transaction: ${proxifiedTransaction}`);
       this[this.undoPosition].unshift(proxifiedTransaction);
     }
   }
@@ -257,6 +273,7 @@ class TransactionsHistoryArray extends Array {
    * Clear all undo entries.
    */
   clearUndoEntries() {
+    lazy.logger.debug("Clearing undo entries");
     if (this.undoPosition < this.length) {
       this.splice(this.undoPosition);
     }
@@ -266,6 +283,7 @@ class TransactionsHistoryArray extends Array {
    * Clear all redo entries.
    */
   clearRedoEntries() {
+    lazy.logger.debug("Clearing redo entries");
     if (this.undoPosition > 0) {
       this.splice(0, this.undoPosition);
       this._undoPosition = 0;
@@ -276,14 +294,13 @@ class TransactionsHistoryArray extends Array {
    * Clear all entries.
    */
   clearAllEntries() {
+    lazy.logger.debug("Clearing all entries");
     if (this.length) {
       this.splice(0);
       this._undoPosition = 0;
     }
   }
 }
-
-const lazy = {};
 
 ChromeUtils.defineLazyGetter(
   lazy,
@@ -295,7 +312,7 @@ export var PlacesTransactions = {
   /**
    * @see Batches in the module documentation.
    */
-  batch(transactionsToBatch) {
+  batch(transactionsToBatch, batchName) {
     if (!Array.isArray(transactionsToBatch) || !transactionsToBatch.length) {
       throw new Error("Must pass a non-empty array");
     }
@@ -308,8 +325,11 @@ export var PlacesTransactions = {
     ) {
       throw new Error("Must pass only transactions or functions");
     }
-
+    lazy.logger.debug(
+      `Batch ${batchName}: ${transactionsToBatch.length} transactions`
+    );
     return TransactionsManager.batch(async function () {
+      lazy.logger.debug(`Batch ${batchName}: executing transactions`);
       let accumulatedResults = [];
       for (let txn of transactionsToBatch) {
         try {
@@ -340,6 +360,7 @@ export var PlacesTransactions = {
    * history may change by the time your request is fulfilled.
    */
   undo() {
+    lazy.logger.debug("undo() was invoked");
     return TransactionsManager.undo();
   },
 
@@ -353,6 +374,7 @@ export var PlacesTransactions = {
    * history may change by the time your request is fulfilled.
    */
   redo() {
+    lazy.logger.debug("redo() was invoked");
     return TransactionsManager.redo();
   },
 
@@ -371,6 +393,7 @@ export var PlacesTransactions = {
    * history may change by the time your request is fulfilled.
    */
   clearTransactionsHistory(undoEntries = true, redoEntries = true) {
+    lazy.logger.debug("clearTransactionsHistory() was invoked");
     return TransactionsManager.clearTransactionsHistory(
       undoEntries,
       redoEntries
@@ -438,8 +461,9 @@ export var PlacesTransactions = {
  * In other words: Enqueuer.enqueue(aFunc1); Enqueuer.enqueue(aFunc2) is roughly
  * the same as Task.spawn(aFunc1).then(Task.spawn(aFunc2)).
  */
-function Enqueuer() {
+function Enqueuer(name) {
   this._promise = Promise.resolve();
+  this._name = name;
 }
 Enqueuer.prototype = {
   /**
@@ -452,6 +476,7 @@ Enqueuer.prototype = {
    *          "mirrors" the promise returned by aFunc.
    */
   enqueue(func) {
+    lazy.logger.debug(`${this._name} enqueing`);
     // If a transaction awaits on a never resolved promise, or is mistakenly
     // nested, it could hang the transactions queue forever.  Thus we timeout
     // the execution after a meaningful amount of time, to ensure in any case
@@ -472,7 +497,7 @@ Enqueuer.prototype = {
     );
 
     // Propagate exceptions to the caller, but dismiss them internally.
-    this._promise = promise.catch(console.error);
+    this._promise = promise.catch(lazy.logger.error);
     return promise;
   },
 
@@ -481,10 +506,13 @@ Enqueuer.prototype = {
    * This is useful, for example, for serializing transact calls with undo calls,
    * even though transact has its own Enqueuer.
    *
-   * @param otherPromise
+   * @param {Promise} otherPromise
    *        any promise.
+   * @param {string} source
+   *        source for logging purposes
    */
-  alsoWaitFor(otherPromise) {
+  alsoWaitFor(otherPromise, source) {
+    lazy.logger.debug(`${this._name} alsoWaitFor: ${source}`);
     // We don't care if aPromise resolves or rejects, but just that is not
     // pending anymore.
     // If a transaction awaits on a never resolved promise, or is mistakenly
@@ -519,8 +547,8 @@ Enqueuer.prototype = {
 var TransactionsManager = {
   // See the documentation at the top of this file. |transact| calls are not
   // serialized with |batch| calls.
-  _mainEnqueuer: new Enqueuer(),
-  _transactEnqueuer: new Enqueuer(),
+  _mainEnqueuer: new Enqueuer("MainEnqueuer"),
+  _transactEnqueuer: new Enqueuer("TransactEnqueuer"),
 
   // Is a batch in progress? set when we enter a batch function and unset when
   // it's execution is done.
@@ -546,11 +574,14 @@ var TransactionsManager = {
       throw new Error("Transactions objects may not be recycled.");
     }
 
+    lazy.logger.debug(`transact() enqueue: ${txnProxy}`);
+
     // Add it in advance so one doesn't accidentally do
     // sameTxn.transact(); sameTxn.transact();
     this._executedTransactions.add(rawTxn);
 
     let promise = this._transactEnqueuer.enqueue(async () => {
+      lazy.logger.debug(`transact execute(): ${txnProxy}`);
       // Don't try to catch exceptions. If execute fails, we better not add the
       // transaction to the undo stack.
       let retval = await rawTxn.execute();
@@ -564,7 +595,7 @@ var TransactionsManager = {
       this._updateCommandsOnActiveWindow();
       return retval;
     });
-    this._mainEnqueuer.alsoWaitFor(promise);
+    this._mainEnqueuer.alsoWaitFor(promise, "transact");
     return promise;
   },
 
@@ -592,6 +623,7 @@ var TransactionsManager = {
    */
   undo() {
     let promise = this._mainEnqueuer.enqueue(async () => {
+      lazy.logger.debug("Undo execute");
       let entry = lazy.TransactionsHistory.topUndoEntry;
       if (!entry) {
         return;
@@ -611,7 +643,7 @@ var TransactionsManager = {
       lazy.TransactionsHistory._undoPosition++;
       this._updateCommandsOnActiveWindow();
     });
-    this._transactEnqueuer.alsoWaitFor(promise);
+    this._transactEnqueuer.alsoWaitFor(promise, "undo");
     return promise;
   },
 
@@ -620,6 +652,7 @@ var TransactionsManager = {
    */
   redo() {
     let promise = this._mainEnqueuer.enqueue(async () => {
+      lazy.logger.debug("Redo execute");
       let entry = lazy.TransactionsHistory.topRedoEntry;
       if (!entry) {
         return;
@@ -645,12 +678,13 @@ var TransactionsManager = {
       this._updateCommandsOnActiveWindow();
     });
 
-    this._transactEnqueuer.alsoWaitFor(promise);
+    this._transactEnqueuer.alsoWaitFor(promise, "redo");
     return promise;
   },
 
   clearTransactionsHistory(undoEntries, redoEntries) {
     let promise = this._mainEnqueuer.enqueue(function () {
+      lazy.logger.debug(`ClearTransactionsHistory execute`);
       if (undoEntries && redoEntries) {
         lazy.TransactionsHistory.clearAllEntries();
       } else if (undoEntries) {
@@ -662,7 +696,7 @@ var TransactionsManager = {
       }
     });
 
-    this._transactEnqueuer.alsoWaitFor(promise);
+    this._transactEnqueuer.alsoWaitFor(promise, "clearTransactionsHistory");
     return promise;
   },
 
@@ -1109,6 +1143,9 @@ PT.NewBookmark.prototype = Object.seal({
     };
     return info.guid;
   },
+  toString() {
+    return "NewBookmark";
+  },
 });
 
 /**
@@ -1174,6 +1211,9 @@ PT.NewFolder.prototype = Object.seal({
     };
     return folderGuid;
   },
+  toString() {
+    return "NewFolder";
+  },
 });
 
 /**
@@ -1193,6 +1233,9 @@ PT.NewSeparator.prototype = Object.seal({
     this.undo = PlacesUtils.bookmarks.remove.bind(PlacesUtils.bookmarks, info);
     this.redo = PlacesUtils.bookmarks.insert.bind(PlacesUtils.bookmarks, info);
     return info.guid;
+  },
+  toString() {
+    return "NewSeparator";
   },
 });
 
@@ -1237,6 +1280,9 @@ PT.Move.prototype = Object.seal({
     );
     return guids;
   },
+  toString() {
+    return "Move";
+  },
 });
 
 /**
@@ -1263,6 +1309,9 @@ PT.EditTitle.prototype = Object.seal({
       PlacesUtils.bookmarks,
       updateInfo
     );
+  },
+  toString() {
+    return "EditTitle";
   },
 });
 
@@ -1327,6 +1376,9 @@ PT.EditUrl.prototype = Object.seal({
       updatedInfo = await updateItem();
     };
   },
+  toString() {
+    return "EditUrl";
+  },
 });
 
 /**
@@ -1368,6 +1420,9 @@ PT.EditKeyword.prototype = Object.seal({
         await PlacesUtils.keywords.insert(oldKeywordEntry);
       }
     };
+  },
+  toString() {
+    return "EditKeyword";
   },
 });
 
@@ -1429,6 +1484,9 @@ PT.SortByName.prototype = {
       await PlacesUtils.bookmarks.reorder(guid, newOrderGuids);
     };
   },
+  toString() {
+    return "SortByName";
+  },
 };
 
 /**
@@ -1476,6 +1534,9 @@ PT.Remove.prototype = {
       }
     };
     this.redo = removeThem;
+  },
+  toString() {
+    return "Remove";
   },
 };
 
@@ -1528,6 +1589,9 @@ PT.Tag.prototype = {
       }
     };
   },
+  toString() {
+    return "Tag";
+  },
 };
 
 /**
@@ -1576,6 +1640,9 @@ PT.Untag.prototype = {
         await f();
       }
     };
+  },
+  toString() {
+    return "Untag";
   },
 };
 
@@ -1680,6 +1747,9 @@ PT.RenameTag.prototype = {
       }
     };
   },
+  toString() {
+    return "RenameTag";
+  },
 };
 
 /**
@@ -1718,5 +1788,8 @@ PT.Copy.prototype = {
     };
 
     return newItemGuid;
+  },
+  toString() {
+    return "Copy";
   },
 };

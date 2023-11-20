@@ -394,7 +394,10 @@ class BookmarkState {
         })
       );
     }
-    let results = await lazy.PlacesTransactions.batch(transactions);
+    let results = await lazy.PlacesTransactions.batch(
+      transactions,
+      "BookmarkState::createBookmark"
+    );
     this._guid = results?.[0];
     return this._guid;
   }
@@ -509,7 +512,7 @@ class BookmarkState {
       }
     }
     if (transactions.length) {
-      await lazy.PlacesTransactions.batch(transactions);
+      await lazy.PlacesTransactions.batch(transactions, "BookmarkState::save");
     }
 
     this._originalState = { ...this._originalState, ...this._newState };
@@ -1351,7 +1354,8 @@ export var PlacesUIUtils = {
     let guidsToSelect = await this.batchUpdatesForNode(
       getResultForBatching(view),
       itemsCount,
-      async () => lazy.PlacesTransactions.batch(transactions)
+      async () =>
+        lazy.PlacesTransactions.batch(transactions, "handleTransferItems")
     );
 
     // If we're inserting into a tag, we don't get the resulting guids.
