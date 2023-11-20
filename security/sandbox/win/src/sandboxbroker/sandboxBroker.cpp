@@ -1466,6 +1466,7 @@ struct UtilityMfMediaEngineCdmSandboxProps : public UtilitySandboxProps {
     mUseAlternateWindowStation = false;
     mLockdownDefaultDacl = false;
     mAddRestrictingRandomSid = false;
+    mUseCig = false;
 
     // When we have an LPAC we can't set an integrity level and the process will
     // default to low integrity anyway. Without an LPAC using low integrity
