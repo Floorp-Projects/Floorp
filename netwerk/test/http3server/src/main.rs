@@ -13,7 +13,7 @@ use neqo_http3::{
     Error, Http3OrWebTransportStream, Http3Parameters, Http3Server, Http3ServerEvent,
     WebTransportRequest, WebTransportServerEvent, WebTransportSessionAcceptAction,
 };
-use neqo_transport::server::{Server, ActiveConnectionRef};
+use neqo_transport::server::{ActiveConnectionRef, Server};
 use neqo_transport::{
     ConnectionEvent, ConnectionParameters, Output, RandomConnectionIdGenerator, StreamId,
     StreamType,
@@ -84,6 +84,7 @@ struct Http3TestServer {
     webtransport_bidi_stream: HashSet<Http3OrWebTransportStream>,
     wt_unidi_conn_to_stream: HashMap<ActiveConnectionRef, Http3OrWebTransportStream>,
     wt_unidi_echo_back: HashMap<Http3OrWebTransportStream, Http3OrWebTransportStream>,
+    received_datagram: Option<Vec<u8>>,
 }
 
 impl ::std::fmt::Display for Http3TestServer {
@@ -104,6 +105,7 @@ impl Http3TestServer {
             webtransport_bidi_stream: HashSet::new(),
             wt_unidi_conn_to_stream: HashMap::new(),
             wt_unidi_echo_back: HashMap::new(),
+            received_datagram: None,
         }
     }
 
@@ -172,7 +174,8 @@ impl Http3TestServer {
                 // relaying Http3ServerEvent::Data to uni streams
                 // slows down netwerk/test/unit/test_webtransport_simple.js
                 // to the point of failure. Only do so when necessary.
-                self.wt_unidi_conn_to_stream.insert(wt_server_stream.conn.clone(), wt_server_stream);
+                self.wt_unidi_conn_to_stream
+                    .insert(wt_server_stream.conn.clone(), wt_server_stream);
             }
         } else {
             if tuple.2 {
@@ -365,6 +368,28 @@ impl HttpServer for Http3TestServer {
                                     ])
                                     .unwrap();
                                 stream.stream_close_send().unwrap();
+                            } else if path == "/get_webtransport_datagram" {
+                                if let Some(vec_ref) = self.received_datagram.as_ref() {
+                                    stream
+                                        .send_headers(&[
+                                            Header::new(":status", "200"),
+                                            Header::new(
+                                                "content-length",
+                                                vec_ref.len().to_string(),
+                                            ),
+                                        ])
+                                        .unwrap();
+                                    self.new_response(stream, vec_ref.to_vec());
+                                    self.received_datagram = None;
+                                } else {
+                                    stream
+                                        .send_headers(&[
+                                            Header::new(":status", "404"),
+                                            Header::new("cache-control", "no-cache"),
+                                        ])
+                                        .unwrap();
+                                    stream.stream_close_send().unwrap();
+                                }
                             } else {
                                 match path.trim_matches(|p| p == '/').parse::<usize>() {
                                     Ok(v) => {
@@ -584,7 +609,7 @@ impl HttpServer for Http3TestServer {
                     }
                 }
                 Http3ServerEvent::WebTransport(WebTransportServerEvent::Datagram {
-                    mut session,
+                    session,
                     datagram,
                 }) => {
                     qdebug!(
@@ -592,7 +617,7 @@ impl HttpServer for Http3TestServer {
                         session,
                         datagram
                     );
-                    session.send_datagram(datagram.as_ref(), None).unwrap();
+                    self.received_datagram = Some(datagram);
                 }
             }
         }

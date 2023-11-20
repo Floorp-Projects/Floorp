@@ -16,24 +16,48 @@ var { setTimeout } = ChromeUtils.importESModule(
 registerCleanupFunction(async () => {
   Services.prefs.clearUserPref("network.dns.localDomains");
   Services.prefs.clearUserPref("network.webtransport.datagrams.enabled");
+  Services.prefs.clearUserPref(
+    "network.http.http3.alt-svc-mapping-for-testing"
+  );
 });
 
 add_task(async function setup() {
-  Services.prefs.setCharPref("network.dns.localDomains", "foo.example.com");
+  await http3_setup_tests("h3");
+
   Services.prefs.setBoolPref("network.webtransport.datagrams.enabled", true);
 
   h3Port = Services.env.get("MOZHTTP3_PORT");
   Assert.notEqual(h3Port, null);
   Assert.notEqual(h3Port, "");
   host = "foo.example.com:" + h3Port;
-  do_get_profile();
-
-  let certdb = Cc["@mozilla.org/security/x509certdb;1"].getService(
-    Ci.nsIX509CertDB
-  );
-  // `../unit/` so that unit_ipc tests can use as well
-  addCertFromFile(certdb, "../unit/http2-ca.pem", "CTu,u,u");
 });
+
+function makeChan(url) {
+  let chan = NetUtil.newChannel({
+    uri: url,
+    loadUsingSystemPrincipal: true,
+    contentPolicyType: Ci.nsIContentPolicy.TYPE_DOCUMENT,
+  }).QueryInterface(Ci.nsIHttpChannel);
+  chan.loadFlags = Ci.nsIChannel.LOAD_INITIAL_DOCUMENT_URI;
+  return chan;
+}
+
+function channelOpenPromise(chan, flags) {
+  // eslint-disable-next-line no-async-promise-executor
+  return new Promise(async resolve => {
+    function finish(req, buffer) {
+      resolve([req, buffer]);
+    }
+    let internal = chan.QueryInterface(Ci.nsIHttpChannelInternal);
+    internal.setWaitForHTTPSSVCRecord();
+
+    chan.asyncOpen(new ChannelListener(finish, null, flags));
+  });
+}
+
+function bytesFromString(str) {
+  return new TextEncoder().encode(str);
+}
 
 add_task(async function test_wt_datagram() {
   let webTransport = NetUtil.newWebTransport();
@@ -43,9 +67,6 @@ add_task(async function test_wt_datagram() {
 
   let pReady = new Promise(resolve => {
     listener.ready = resolve;
-  });
-  let pData = new Promise(resolve => {
-    listener.onDatagram = resolve;
   });
   let pSize = new Promise(resolve => {
     listener.onMaxDatagramSize = resolve;
@@ -75,8 +96,11 @@ add_task(async function test_wt_datagram() {
   Assert.equal(id, 1);
   Assert.equal(outcome, Ci.WebTransportSessionEventListener.SENT);
 
-  let received = await pData;
-  Assert.deepEqual(received, rawData);
+  let chan = makeChan(`https://${host}/get_webtransport_datagram`);
+  let [req, buffer] = await channelOpenPromise(chan);
+  Assert.equal(req.protocolVersion, "h3");
+
+  Assert.deepEqual(bytesFromString(buffer), rawData);
 
   webTransport.getMaxDatagramSize();
   size = await pSize;
