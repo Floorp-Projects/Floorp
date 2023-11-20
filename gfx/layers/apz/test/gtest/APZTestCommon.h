@@ -456,6 +456,10 @@ class TestAsyncPanZoomController : public AsyncPanZoomController {
     return mState == PanZoomState::OVERSCROLL_ANIMATION;
   }
 
+  bool IsWheelScrollAnimationRunning() const {
+    return mState == PanZoomState::WHEEL_SCROLL;
+  }
+
  private:
   bool mWaitForMainThread;
   MockContentControllerDelayed* mcc;
