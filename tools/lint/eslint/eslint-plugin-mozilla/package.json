@@ -1,6 +1,6 @@
 {
   "name": "eslint-plugin-mozilla",
-  "version": "3.3.1",
+  "version": "3.3.2",
   "description": "A collection of rules that help enforce JavaScript coding standard in the Mozilla project.",
   "keywords": [
     "eslint",
@@ -34,7 +34,7 @@
     "mocha": "10.2.0"
   },
   "peerDependencies": {
-    "@microsoft/eslint-plugin-sdl": "github:mozfreddyb/eslint-plugin-sdl#17b22cd527682108af7a1a4edacf69cb7a9b4a06",
+    "@microsoft/eslint-plugin-sdl": "^0.2.2",
     "eslint": "^7.23.0 || ^8.0.0",
     "eslint-config-prettier": "^8.0.0",
     "eslint-plugin-fetch-options": "^0.0.5",
