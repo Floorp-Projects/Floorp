@@ -129,7 +129,6 @@ run_infos = {
         "bits": 64,
         "has_sandbox": True,
         "automation": True,
-        "service_pack": "",
         "apple_silicon": False,
         "appname": "firefox",
         "artifact": False,

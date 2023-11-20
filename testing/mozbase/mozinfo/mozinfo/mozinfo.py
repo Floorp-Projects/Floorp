@@ -61,8 +61,7 @@ if system in ["Microsoft", "Windows"]:
     else:
         processor = os.environ.get("PROCESSOR_ARCHITECTURE", processor)
     system = os.environ.get("OS", system).replace("_", " ")
-    (major, minor, build_number, _, service_pack) = os.sys.getwindowsversion()
-    info["service_pack"] = service_pack
+    (major, minor, build_number, _, _) = os.sys.getwindowsversion()
     version = "%d.%d.%d" % (major, minor, build_number)
     if major == 10 and minor == 0 and build_number >= 22000:
         major = 11
