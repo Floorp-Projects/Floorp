@@ -186,7 +186,10 @@ class ICState {
     //                        \-> MonomorphicInlined
     //
     // This ensures we perform trial inlining at most once per IC site.
-    if (state != TrialInliningState::Failure) {
+    // Note: One exception to this rule is MonomorphicInlined, which can
+    //       be directly set if an inline hint is present through JitHints.
+    if (state != TrialInliningState::Failure &&
+        state != TrialInliningState::MonomorphicInlined) {
       switch (trialInliningState()) {
         case TrialInliningState::Initial:
           MOZ_ASSERT(state == TrialInliningState::Candidate);
