@@ -156,6 +156,16 @@
 
 const TRANSACTIONS_QUEUE_TIMEOUT_MS = 240000; // 4 Mins.
 
+import { XPCOMUtils } from "resource://gre/modules/XPCOMUtils.sys.mjs";
+
+const prefs = {};
+XPCOMUtils.defineLazyPreferenceGetter(
+  prefs,
+  "USE_SINGLE_QUEUE",
+  "places.experimental.useSingleQueueTransactionManager",
+  false
+);
+
 import { PlacesUtils } from "resource://gre/modules/PlacesUtils.sys.mjs";
 
 function setTimeout(callback, ms) {
@@ -581,7 +591,7 @@ var TransactionsManager = {
     // sameTxn.transact(); sameTxn.transact();
     this._executedTransactions.add(rawTxn);
 
-    let promise = this._transactEnqueuer.enqueue(async () => {
+    let task = async () => {
       lazy.logger.debug(`transact execute(): ${txnProxy}`);
       // Don't try to catch exceptions. If execute fails, we better not add the
       // transaction to the undo stack.
@@ -592,7 +602,13 @@ var TransactionsManager = {
 
       this._updateCommandsOnActiveWindow();
       return retval;
-    });
+    };
+
+    if (prefs.USE_SINGLE_QUEUE) {
+      return task();
+    }
+
+    let promise = this._transactEnqueuer.enqueue(task);
     this._mainEnqueuer.alsoWaitFor(promise, "transact");
     return promise;
   },
@@ -626,7 +642,9 @@ var TransactionsManager = {
       lazy.TransactionsHistory._undoPosition++;
       this._updateCommandsOnActiveWindow();
     });
-    this._transactEnqueuer.alsoWaitFor(promise, "undo");
+    if (!prefs.USE_SINGLE_QUEUE) {
+      this._transactEnqueuer.alsoWaitFor(promise, "undo");
+    }
     return promise;
   },
 
@@ -660,8 +678,9 @@ var TransactionsManager = {
       lazy.TransactionsHistory._undoPosition--;
       this._updateCommandsOnActiveWindow();
     });
-
-    this._transactEnqueuer.alsoWaitFor(promise, "redo");
+    if (!prefs.USE_SINGLE_QUEUE) {
+      this._transactEnqueuer.alsoWaitFor(promise, "redo");
+    }
     return promise;
   },
 
@@ -679,7 +698,9 @@ var TransactionsManager = {
       }
     });
 
-    this._transactEnqueuer.alsoWaitFor(promise, "clearTransactionsHistory");
+    if (!prefs.USE_SINGLE_QUEUE) {
+      this._transactEnqueuer.alsoWaitFor(promise, "clearTransactionsHistory");
+    }
     return promise;
   },
 
