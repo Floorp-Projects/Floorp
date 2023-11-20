@@ -82,6 +82,7 @@ if CONFIG["OS_TARGET"] == "Darwin":
 
     UNIFIED_SOURCES += [
         "/third_party/libwebrtc/modules/desktop_capture/mac/desktop_configuration_monitor.cc",
+        "/third_party/libwebrtc/modules/desktop_capture/mac/desktop_frame_utils.cc",
         "/third_party/libwebrtc/modules/desktop_capture/mac/full_screen_mac_application_handler.cc",
         "/third_party/libwebrtc/modules/desktop_capture/mac/window_list_utils.cc"
     ]
