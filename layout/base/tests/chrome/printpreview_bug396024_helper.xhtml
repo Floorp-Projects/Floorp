@@ -22,25 +22,9 @@ var SimpleTest = window.arguments[0].SimpleTest;
 var gWbp;
 function printpreview() {
   gWbp = frameElts[1].contentWindow.docShell.initOrReusePrintPreviewViewer();
-  var listener = {
-    onLocationChange: function(webProgress, request, location, flags) { },
-    onProgressChange: function(webProgress, request, curSelfProgress, 
-                               maxSelfProgress, curTotalProgress,
-                               maxTotalProgress) { },
-    onSecurityChange: function(webProgress, request, state) { },
-    onStateChange: function(webProgress, request, stateFlags, status) { },
-    onStatusChange: function(webProgress, request, status, message) { },
-    onContentBlockingEvent: function(webProgress, request, event) { },
-    QueryInterface: function(iid) {
-      if (iid.equals(Ci.nsIWebProgressListener) ||
-          iid.equals(Ci.nsISupportsWeakReference))
-            return this;
-      throw Components.Exception("", Cr.NS_NOINTERFACE);
-    }
-  }
   let settings = Cc["@mozilla.org/gfx/printsettings-service;1"]
                        .getService(Ci.nsIPrintSettingsService).createNewPrintSettings();
-  gWbp.printPreview(settings, frameElts[0].contentWindow, listener);
+  gWbp.printPreview(settings, frameElts[0].contentWindow);
 }
 
 function exitprintpreview() {

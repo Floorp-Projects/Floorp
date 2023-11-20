@@ -1972,7 +1972,8 @@ History::VisitURI(nsIWidget* aWidget, nsIURI* aURI, nsIURI* aLastVisitedURI,
   bool isRedirect = aFlags & IHistory::REDIRECT_SOURCE;
   if (isRedirect) {
     place.useFrecencyRedirectBonus =
-        (aFlags & IHistory::REDIRECT_SOURCE_PERMANENT) ||
+        (aFlags & (IHistory::REDIRECT_SOURCE_PERMANENT |
+                   IHistory::REDIRECT_SOURCE_UPGRADED)) ||
         transitionType != nsINavHistoryService::TRANSITION_TYPED;
   }
   place.hidden = GetHiddenState(isRedirect, place.transitionType);

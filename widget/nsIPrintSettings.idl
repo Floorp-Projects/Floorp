@@ -198,11 +198,12 @@ interface nsIPrintSettings : nsISupports
   [noscript, notxpcom, nostdcall] long GetSheetOrientation();
 
   /**
-   * Convenience getter, which returns true IFF the sheet orientation and the
-   * page orientation are orthogonal. (In other words, returns true IFF we
-   * are printing with 2 or 6 pages-per-sheet.)
+   * Convenience getter, which returns true IFF the value of `numPagesPerSheet`
+   * would require us to orient the pages orthogonally to the sheet in order
+   * to make best use of the space on the sheet. Specifically, this returns
+   * true IFF `numPagesPerSheet` is set to 2 or 6 pages-per-sheet.
    */
-  [noscript, notxpcom, nostdcall] bool HasOrthogonalSheetsAndPages();
+  [noscript, notxpcom, nostdcall] bool HasOrthogonalPagesPerSheet();
 
   /**
    * Makes a new copy
