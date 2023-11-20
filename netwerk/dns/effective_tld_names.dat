@@ -6710,7 +6710,7 @@ org.zw
 
 // newGTLDs
 
-// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2023-11-03T15:13:18Z
+// List of new gTLDs imported from https://www.icann.org/resources/registries/gtlds/v2/gtlds.json on 2023-11-18T15:11:52Z
 // This list is auto-generated, don't edit it manually.
 // aaa : American Automobile Association, Inc.
 // https://www.iana.org/domains/root/db/aaa.html
@@ -7927,10 +7927,6 @@ esq
 // estate : Binky Moon, LLC
 // https://www.iana.org/domains/root/db/estate.html
 estate
-
-// etisalat : Emirates Telecommunications Corporation (trading as Etisalat)
-// https://www.iana.org/domains/root/db/etisalat.html
-etisalat
 
 // eurovision : European Broadcasting Union (EBU)
 // https://www.iana.org/domains/root/db/eurovision.html
@@ -11011,10 +11007,6 @@ xin
 // xn--mgba7c0bbn0a : Competrol (Luxembourg) Sarl
 // https://www.iana.org/domains/root/db/xn--mgba7c0bbn0a.html
 العليان
-
-// xn--mgbaakc7dvf : Emirates Telecommunications Corporation (trading as Etisalat)
-// https://www.iana.org/domains/root/db/xn--mgbaakc7dvf.html
-اتصالات
 
 // xn--mgbab2bd : CORE Association
 // https://www.iana.org/domains/root/db/xn--mgbab2bd.html
