@@ -314,27 +314,52 @@ nsresult nsSHEntryShared::RemoveFromBFCacheAsync() {
   return NS_OK;
 }
 
+// Don't evict a page from bfcache for attribute mutations on NAC subtrees like
+// scrollbars.
+static bool IgnoreMutationForBfCache(const nsINode& aNode) {
+  for (const nsINode* node = &aNode; node; node = node->GetParentNode()) {
+    if (!node->ChromeOnlyAccess()) {
+      break;
+    }
+    // Make sure we find a scrollbar in the ancestor chain, to be safe.
+    if (node->IsXULElement(nsGkAtoms::scrollbar)) {
+      return true;
+    }
+  }
+  return false;
+}
+
 void nsSHEntryShared::CharacterDataChanged(nsIContent* aContent,
                                            const CharacterDataChangeInfo&) {
-  RemoveFromBFCacheAsync();
+  if (!IgnoreMutationForBfCache(*aContent)) {
+    RemoveFromBFCacheAsync();
+  }
 }
 
 void nsSHEntryShared::AttributeChanged(dom::Element* aElement,
                                        int32_t aNameSpaceID, nsAtom* aAttribute,
                                        int32_t aModType,
                                        const nsAttrValue* aOldValue) {
-  RemoveFromBFCacheAsync();
+  if (!IgnoreMutationForBfCache(*aElement)) {
+    RemoveFromBFCacheAsync();
+  }
 }
 
 void nsSHEntryShared::ContentAppended(nsIContent* aFirstNewContent) {
-  RemoveFromBFCacheAsync();
+  if (!IgnoreMutationForBfCache(*aFirstNewContent)) {
+    RemoveFromBFCacheAsync();
+  }
 }
 
 void nsSHEntryShared::ContentInserted(nsIContent* aChild) {
-  RemoveFromBFCacheAsync();
+  if (!IgnoreMutationForBfCache(*aChild)) {
+    RemoveFromBFCacheAsync();
+  }
 }
 
 void nsSHEntryShared::ContentRemoved(nsIContent* aChild,
                                      nsIContent* aPreviousSibling) {
-  RemoveFromBFCacheAsync();
+  if (!IgnoreMutationForBfCache(*aChild)) {
+    RemoveFromBFCacheAsync();
+  }
 }
