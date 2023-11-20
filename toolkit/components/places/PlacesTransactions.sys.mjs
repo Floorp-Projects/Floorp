@@ -88,43 +88,39 @@
  * Sometimes it is useful to "batch" or "merge" transactions.  For example,
  * something like "Bookmark All Tabs" may be implemented as one NewFolder
  * transaction followed by numerous NewBookmark transactions - all to be undone
- * or redone in a single undo or redo command.  Use |PlacesTransactions.batch|
- * in such cases.  It can take either an array of transactions which will be
- * executed in the given order and later be treated a a single entry in the
- * transactions history, or a generator function that is passed to Task.spawn,
- * that is to "contain" the batch: once the generator function is called a batch
- * starts, and it lasts until the asynchronous generator iteration is complete
- * All transactions executed by |transact| during this time are to be treated as
- * a single entry in the transactions history.
+ * or redone in a single undo or redo command.  Use `PlacesTransactions.batch()`
+ * in such cases.
+ * It takes an array of transactions which will be executed in the given order
+ * and later be treated as a single entry in the transactions history.
+ * If a transaction depends on the results from a previous one, it can be
+ * replaced by a function that will be invoked with an array of results
+ * accumulated from the previous transactions, indexed in the same positions.
+ * The function should return the transaction to execute. For example:
  *
- * In both modes, |PlacesTransactions.batch| returns a promise that is to be
- * resolved when the batch ends.  In the array-input mode, there's no resolution
- * value.  In the generator mode, the resolution value is whatever the generator
- * function returned (the semantics are the same as in Task.spawn, basically).
+ *  let transactions = [
+ *    // Returns the GUID of the new bookmark.
+ *    PlacesTransactions.NewBookmark({
+ *      parentGuid: "someGUID",
+ *      title: "someTitle",
+ *      url: "https://www.mozilla.org/""
+ *    }),
+ *    previousResults => PlacesTransactions.EditKeyword({
+ *      // Get the GUID from the result of transactions[0].
+ *      guid: previousResults[0],
+ *      keyword: "someKeyword",
+ *    },
+ *  ];
  *
- * The array-input mode of |PlacesTransactions.batch| is useful for implementing
- * a batch of mostly-independent transaction (for example, |paste| into a folder
- * can be implemented as a batch of multiple NewBookmark transactions).
- * The generator mode is useful when the resolution value of executing one
- * transaction is the input of one more subsequent transaction.
+ * `PlacesTransactions.batch()` returns a promise resolved when the batch ends.
+ * The resolution value is an array with all the transaction return values
+ * indexed like the original transactions. So, for example, if a transaction
+ * returns an array of GUIDs, to get a list of all the created GUIDs for all the
+ * transactions one could use .flat() to flatten the array.
  *
- * In the array-input mode, if any transactions fails to execute, the batch
- * continues (exceptions are logged).  Only transactions that were executed
- * successfully are added to the transactions history.
- *
- * WARNING: "nested" batches are not supported, if you call batch while another
- * batch is still running, the new batch is enqueued with all other PTM work
- * and thus not run until the running batch ends. The same goes for undo, redo
- * and clearTransactionsHistory (note batches cannot be done partially, meaning
- * undo and redo calls that during a batch are just enqueued).
- *
- * *****************************************************************************
- * IT'S PARTICULARLY IMPORTANT NOT TO await ANY PROMISE RETURNED BY ANY OF
- * THESE METHODS (undo, redo, clearTransactionsHistory) FROM A BATCH FUNCTION.
- * UNTIL WE FIND A WAY TO THROW IN THAT CASE (SEE BUG 1091446) DOING SO WILL
- * COMPLETELY BREAK PTM UNTIL SHUTDOWN, NOT ALLOWING THE EXECUTION OF ANY
- * TRANSACTION!
- * *****************************************************************************
+ * If any transactions fails to execute, the batch continues (exceptions are
+ * logged) and the result of that transactions will be set to undefined.
+ * Only transactions that were executed successfully are added to the
+ * transactions history as part of the batch.
  *
  * Serialization
  * -------------
@@ -300,33 +296,38 @@ export var PlacesTransactions = {
    * @see Batches in the module documentation.
    */
   batch(transactionsToBatch) {
-    if (Array.isArray(transactionsToBatch)) {
-      if (!transactionsToBatch.length) {
-        throw new Error("Must pass a non-empty array");
-      }
+    if (!Array.isArray(transactionsToBatch) || !transactionsToBatch.length) {
+      throw new Error("Must pass a non-empty array");
+    }
+    if (
+      transactionsToBatch.some(
+        o =>
+          !lazy.TransactionsHistory.isProxifiedTransactionObject(o) &&
+          typeof o != "function"
+      )
+    ) {
+      throw new Error("Must pass only transactions or functions");
+    }
 
-      if (
-        transactionsToBatch.some(
-          o => !lazy.TransactionsHistory.isProxifiedTransactionObject(o)
-        )
-      ) {
-        throw new Error("Must pass only transaction entries");
-      }
-      return TransactionsManager.batch(async function () {
-        for (let txn of transactionsToBatch) {
-          try {
-            await txn.transact();
-          } catch (ex) {
-            console.error(ex);
+    return TransactionsManager.batch(async function () {
+      let accumulatedResults = [];
+      for (let txn of transactionsToBatch) {
+        try {
+          if (typeof txn == "function") {
+            txn = txn(accumulatedResults);
           }
+          accumulatedResults.push(await txn.transact());
+        } catch (ex) {
+          // TODO Bug 1865631: handle these errors better, currently we just
+          // continue, that works for non-dependent transactions, but will
+          // skip most of the work for functions depending on previous results.
+          // Moreover in both cases we should notify the user about the problem.
+          accumulatedResults.push(undefined);
+          console.error(ex);
         }
-      });
-    }
-    if (typeof transactionsToBatch == "function") {
-      return TransactionsManager.batch(transactionsToBatch);
-    }
-
-    throw new Error("Must pass either a function or a transactions array");
+      }
+      return accumulatedResults;
+    });
   },
 
   /**

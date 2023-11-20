@@ -376,22 +376,26 @@ class BookmarkState {
    * @returns {string} The bookmark's GUID.
    */
   async _createBookmark() {
-    await lazy.PlacesTransactions.batch(async () => {
-      this._guid = await lazy.PlacesTransactions.NewBookmark({
+    let transactions = [
+      lazy.PlacesTransactions.NewBookmark({
         parentGuid: this.parentGuid,
         tags: this._newState.tags,
         title: this._newState.title ?? this._originalState.title,
         url: this._newState.uri ?? this._originalState.uri,
         index: this._originalState.index,
-      }).transact();
-      if (this._newState.keyword) {
-        await lazy.PlacesTransactions.EditKeyword({
-          guid: this._guid,
+      }),
+    ];
+    if (this._newState.keyword) {
+      transactions.push(previousResults =>
+        lazy.PlacesTransactions.EditKeyword({
+          guid: previousResults[0],
           keyword: this._newState.keyword,
           postData: this._postData,
-        }).transact();
-      }
-    });
+        })
+      );
+    }
+    let results = await lazy.PlacesTransactions.batch(transactions);
+    this._guid = results?.[0];
     return this._guid;
   }
 
@@ -1286,11 +1290,11 @@ export var PlacesUIUtils = {
    *                                    count is lower than a threshold, then
    *                                    batching won't be set.
    * @param {Function} functionToWrap The function to
+   * @returns {object} forwards the functionToWrap return value.
    */
   async batchUpdatesForNode(resultNode, itemsBeingChanged, functionToWrap) {
     if (!resultNode) {
-      await functionToWrap();
-      return;
+      return functionToWrap();
     }
 
     if (itemsBeingChanged > ITEM_CHANGED_BATCH_NOTIFICATION_THRESHOLD) {
@@ -1298,7 +1302,7 @@ export var PlacesUIUtils = {
     }
 
     try {
-      await functionToWrap();
+      return await functionToWrap();
     } finally {
       if (itemsBeingChanged > ITEM_CHANGED_BATCH_NOTIFICATION_THRESHOLD) {
         resultNode.onEndUpdateBatch();
@@ -1344,27 +1348,14 @@ export var PlacesUIUtils = {
       return [];
     }
 
-    let guidsToSelect = [];
-    let resultForBatching = getResultForBatching(view);
+    let guidsToSelect = await this.batchUpdatesForNode(
+      getResultForBatching(view),
+      itemsCount,
+      async () => lazy.PlacesTransactions.batch(transactions)
+    );
 
-    // If we're inserting into a tag, we don't get the guid, so we'll just
-    // pass the transactions direct to the batch function.
-    let batchingItem = transactions;
-    if (!insertionPoint.isTag) {
-      // If we're not a tag, then we need to get the ids of the items to select.
-      batchingItem = async () => {
-        for (let transaction of transactions) {
-          let result = await transaction.transact();
-          guidsToSelect = guidsToSelect.concat(result);
-        }
-      };
-    }
-
-    await this.batchUpdatesForNode(resultForBatching, itemsCount, async () => {
-      await lazy.PlacesTransactions.batch(batchingItem);
-    });
-
-    return guidsToSelect;
+    // If we're inserting into a tag, we don't get the resulting guids.
+    return insertionPoint.isTag ? [] : guidsToSelect.flat();
   },
 
   onSidebarTreeClick(event) {
