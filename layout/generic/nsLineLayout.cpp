@@ -1760,21 +1760,6 @@ static float GetInflationForBlockDirAlignment(nsIFrame* aFrame,
   return nsLayoutUtils::FontSizeInflationInner(aFrame, aInflationMinFontSize);
 }
 
-bool nsLineLayout::ShouldApplyLineHeightInPreserveWhiteSpace(
-    const PerSpanData* psd) {
-  if (psd->mFrame->mFrame->Style()->IsAnonBox()) {
-    // e.g. An empty `input[type=button]` should still be line-height sized.
-    return true;
-  }
-
-  for (PerFrameData* pfd = psd->mFirstFrame; pfd; pfd = pfd->mNext) {
-    if (!pfd->mIsEmpty) {
-      return true;
-    }
-  }
-  return false;
-}
-
 #define BLOCKDIR_ALIGN_FRAMES_NO_MINIMUM nscoord_MAX
 #define BLOCKDIR_ALIGN_FRAMES_NO_MAXIMUM nscoord_MIN
 
@@ -2309,9 +2294,7 @@ void nsLineLayout::VerticalAlignFrames(PerSpanData* psd) {
       }
     }
     if (applyMinLH) {
-      if (psd->mHasNonemptyContent ||
-          (preMode && ShouldApplyLineHeightInPreserveWhiteSpace(psd)) ||
-          mHasMarker) {
+      if (psd->mHasNonemptyContent || preMode || mHasMarker) {
 #ifdef NOISY_BLOCKDIR_ALIGN
         printf("  [span]==> adjusting min/maxBCoord: currentValues: %d,%d",
                minBCoord, maxBCoord);
