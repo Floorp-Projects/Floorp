@@ -1395,11 +1395,7 @@ class MochitestDesktop(object):
         serverOptions["isWin"] = mozinfo.isWin
         serverOptions["proxyPort"] = options.http3ServerPort
         env = test_environment(xrePath=options.xrePath, log=self.log)
-        serverEnv = env.copy()
-        serverLog = env.get("MOZHTTP3_SERVER_LOG")
-        if serverLog is not None:
-            serverEnv["RUST_LOG"] = serverLog
-        self.http3Server = Http3Server(serverOptions, serverEnv, self.log)
+        self.http3Server = Http3Server(serverOptions, env, self.log)
         self.http3Server.start()
 
         port = self.http3Server.ports().get("MOZHTTP3_PORT_PROXY")
