@@ -33,8 +33,6 @@
 #include "FlacDecoder.h"
 #include "FlacDemuxer.h"
 
-#include "nsPluginHost.h"
-
 namespace mozilla {
 
 /* static */
@@ -198,17 +196,6 @@ bool DecoderTraits::ShouldHandleMediaType(
     // Furthermore people can play Wave files on most platforms by other
     // means.
     return false;
-  }
-
-  // If an external plugin which can handle quicktime video is available
-  // (and not disabled), prefer it over native playback as there several
-  // codecs found in the wild that we do not handle.
-  if (containerType->Type() == MEDIAMIMETYPE("video/quicktime")) {
-    RefPtr<nsPluginHost> pluginHost = nsPluginHost::GetInst();
-    if (pluginHost &&
-        pluginHost->HavePluginForType(containerType->Type().AsString())) {
-      return false;
-    }
   }
 
   return CanHandleMediaType(*containerType, aDiagnostics) != CANPLAY_NO;
