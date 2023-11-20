@@ -213,4 +213,5 @@ module.exports = {
   createWebExtensionSessionContext,
   createContentProcessSessionContext,
   createWorkerSessionContext,
+  SESSION_TYPES,
 };

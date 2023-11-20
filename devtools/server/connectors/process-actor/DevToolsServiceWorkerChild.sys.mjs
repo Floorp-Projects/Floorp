@@ -70,7 +70,7 @@ export class DevToolsServiceWorkerChild extends JSProcessActorChild {
       watcherActorID,
       { connection, forwardingPrefix, sessionData },
     ] of this._connections) {
-      if (this._shouldHandleWorker(sessionData.sessionContext, dbg)) {
+      if (this._shouldHandleWorker(sessionData, dbg)) {
         this._createWorkerTargetActor({
           dbg,
           connection,
@@ -176,7 +176,6 @@ export class DevToolsServiceWorkerChild extends JSProcessActorChild {
     switch (message.name) {
       case "DevToolsServiceWorkerParent:instantiate-already-available": {
         const { watcherActorID, connectionPrefix, sessionData } = message.data;
-
         return this._watchWorkerTargets({
           watcherActorID,
           parentConnectionPrefix: connectionPrefix,
@@ -302,7 +301,7 @@ export class DevToolsServiceWorkerChild extends JSProcessActorChild {
 
     const promises = [];
     for (const dbg of lazy.wdm.getWorkerDebuggerEnumerator()) {
-      if (!this._shouldHandleWorker(sessionData.sessionContext, dbg)) {
+      if (!this._shouldHandleWorker(sessionData, dbg)) {
         continue;
       }
       promises.push(
@@ -350,19 +349,34 @@ export class DevToolsServiceWorkerChild extends JSProcessActorChild {
   }
 
   /**
-   * Indicates whether or not we should handle the worker debugger
+   * Indicates whether or not we should handle the worker debugger for a given
+   * watcher's session data.
    *
-   * @param {WorkerDebugger} dbg: The worker debugger we want to check.
+   * @param {Object} sessionData
+   *        The session data for a given watcher, which includes metadata
+   *        about the debugged context.
+   * @param {WorkerDebugger} dbg
+   *        The worker debugger we want to check.
+   *
    * @returns {Boolean}
    */
-  _shouldHandleWorker(sessionContext, dbg) {
+  _shouldHandleWorker(sessionData, dbg) {
+    if (dbg.type !== Ci.nsIWorkerDebugger.TYPE_SERVICE) {
+      return false;
+    }
     // We only want to create targets for non-closed service worker
     if (!lazy.DevToolsUtils.isWorkerDebuggerAlive(dbg)) {
       return false;
     }
 
-    // TODO: filter out to only include SW matching the browser-element's current domain
-    return dbg.type === Ci.nsIWorkerDebugger.TYPE_SERVICE;
+    // Accessing `nsIPrincipal.host` may easily throw on non-http URLs.
+    // Ignore all non-HTTP as they most likely don't have any valid host name.
+    if (!dbg.principal.scheme.startsWith("http")) {
+      return false;
+    }
+
+    const workerHost = dbg.principal.host;
+    return workerHost == sessionData["browser-element-host"][0];
   }
 
   async _createWorkerTargetActor({
@@ -545,6 +559,13 @@ export class DevToolsServiceWorkerChild extends JSProcessActorChild {
       updateType
     );
 
+    // This type is really specific to Service Workers and doesn't need to be transferred to the worker threads.
+    // We only need to instantiate and destroy the target actors based on this new host.
+    if (type == "browser-element-host") {
+      this.updateBrowserElementHost(watcherActorID, watcherConnectionData);
+      return;
+    }
+
     const promises = [];
     for (const {
       dbg,
@@ -561,6 +582,43 @@ export class DevToolsServiceWorkerChild extends JSProcessActorChild {
       );
     }
     await Promise.all(promises);
+  }
+
+  /**
+   * Called whenever the debugged browser element navigates to a new page
+   * and the URL's host changes.
+   * This is used to maintain the list of active Service Worker targets
+   * based on that host name.
+   *
+   * @param {String} watcherActorID
+   *        Watcher actor ID for which we should unregister this service worker.
+   * @param {Object} watcherConnectionData
+   *        The metadata object for a given watcher, stored in the _connections Map.
+   */
+  async updateBrowserElementHost(watcherActorID, watcherConnectionData) {
+    const { sessionData, connection, forwardingPrefix } = watcherConnectionData;
+
+    // Create target actor matching this new host.
+    // Note that we may be navigating to the same host name and the target will already exist.
+    const dbgToInstantiate = [];
+    for (const dbg of lazy.wdm.getWorkerDebuggerEnumerator()) {
+      const alreadyCreated = watcherConnectionData.workers.some(
+        info => info.dbg === dbg
+      );
+      if (this._shouldHandleWorker(sessionData, dbg) && !alreadyCreated) {
+        dbgToInstantiate.push(dbg);
+      }
+    }
+    await Promise.all(
+      dbgToInstantiate.map(dbg => {
+        return this._createWorkerTargetActor({
+          dbg,
+          connection,
+          forwardingPrefix,
+          watcherActorID,
+        });
+      })
+    );
   }
 
   /**

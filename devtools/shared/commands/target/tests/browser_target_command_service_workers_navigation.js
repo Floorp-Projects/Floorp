@@ -69,7 +69,7 @@ add_task(async function test_NavigationBetweenTwoDomains_NoDestroy() {
   });
 
   info("Unregister .org service worker and wait until onDestroyed is called.");
-  await unregisterServiceWorker(tab, ORG_PAGE_URL);
+  await unregisterServiceWorker(ORG_WORKER_URL);
   await checkHooks(hooks, {
     available: 2,
     destroyed: 1,
@@ -92,8 +92,12 @@ add_task(async function test_NavigationBetweenTwoDomains_NoDestroy() {
   });
 
   info("Unregister .com service worker and wait until onDestroyed is called.");
-  await unregisterServiceWorker(tab, COM_PAGE_URL);
-  await checkHooks(hooks, { available: 2, destroyed: 2, targets: [] });
+  await unregisterServiceWorker(COM_WORKER_URL);
+  await checkHooks(hooks, {
+    available: 2,
+    destroyed: 2,
+    targets: [],
+  });
 
   // Stop listening to avoid worker related requests
   targetCommand.destroy();
@@ -159,8 +163,12 @@ add_task(async function test_NavigationToPageWithExistingWorker() {
   });
 
   info("Unregister .org service worker and wait until onDestroyed is called.");
-  await unregisterServiceWorker(tab, ORG_PAGE_URL);
-  await checkHooks(hooks, { available: 1, destroyed: 1, targets: [] });
+  await unregisterServiceWorker(ORG_WORKER_URL);
+  await checkHooks(hooks, {
+    available: 1,
+    destroyed: 1,
+    targets: [],
+  });
 
   info("Go back .com page, wait for onAvailable to be called");
   onBrowserLoaded = BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
@@ -177,8 +185,12 @@ add_task(async function test_NavigationToPageWithExistingWorker() {
   });
 
   info("Unregister .com service worker and wait until onDestroyed is called.");
-  await unregisterServiceWorker(tab, COM_PAGE_URL);
-  await checkHooks(hooks, { available: 2, destroyed: 2, targets: [] });
+  await unregisterServiceWorker(COM_WORKER_URL);
+  await checkHooks(hooks, {
+    available: 2,
+    destroyed: 2,
+    targets: [],
+  });
 
   // Stop listening to avoid worker related requests
   targetCommand.destroy();
@@ -192,11 +204,6 @@ async function setupServiceWorkerNavigationTest() {
   // Disable the preloaded process as it creates processes intermittently
   // which forces the emission of RDP requests we aren't correctly waiting for.
   await pushPref("dom.ipc.processPrelaunch.enabled", false);
-
-  // Speed up the destruction of the worker once the registration has been removed
-  // (There is a delay between calling registration's `unregister` method
-  // and the actually destruction of the worker thread)
-  await pushPref("dom.serviceWorkers.idle_timeout", 3000);
 }
 
 async function watchServiceWorkerTargets(tab) {
@@ -217,11 +224,13 @@ async function watchServiceWorkerTargets(tab) {
   };
 
   const onAvailable = async ({ targetFront }) => {
+    info(` + Service worker target available for ${targetFront.url}\n`);
     hooks.availableCount++;
     hooks.targets.push(targetFront);
   };
 
   const onDestroyed = ({ targetFront }) => {
+    info(` - Service worker target destroy for ${targetFront.url}\n`);
     hooks.destroyedCount++;
     hooks.targets.splice(hooks.targets.indexOf(targetFront), 1);
   };
@@ -233,15 +242,6 @@ async function watchServiceWorkerTargets(tab) {
   });
 
   return { hooks, commands, targetCommand };
-}
-
-async function unregisterServiceWorker(tab, expectedPageUrl) {
-  await waitForRegistrationReady(tab, expectedPageUrl);
-  await SpecialPowers.spawn(tab.linkedBrowser, [], async () => {
-    // registrationPromise is set by the test page.
-    const registration = await content.wrappedJSObject.registrationPromise;
-    registration.unregister();
-  });
 }
 
 /**
@@ -268,7 +268,6 @@ async function waitForRegistrationReady(tab, expectedPageUrl) {
  * expected number of times, with the expected targets.
  */
 async function checkHooks(hooks, { available, destroyed, targets }) {
-  info(`Wait for availableCount=${available} and destroyedCount=${destroyed}`);
   await waitUntil(
     () => hooks.availableCount == available && hooks.destroyedCount == destroyed
   );
