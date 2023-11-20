@@ -514,6 +514,68 @@ class APZCSmoothScrollTester : public APZCBasicTester {
     float yEnd = apzc->GetFrameMetrics().GetVisualScrollOffset().y;
     ASSERT_EQ(yEnd, 1100);
   }
+
+  // Test that a content shift does not cause a smooth scroll animation to
+  // overshoot its (updated) destination.
+  void TestContentShiftDoesNotCauseOvershoot() {
+    // Follow the same steps as in TestContentShiftThenUpdateDelta(),
+    // except use a content shift of y=1000.
+    ScrollMetadata metadata;
+    FrameMetrics& metrics = metadata.GetMetrics();
+    metrics.SetScrollableRect(CSSRect(0, 0, 1000, 10000));
+    metrics.SetLayoutViewport(CSSRect(0, 0, 1000, 1000));
+    metrics.SetZoom(CSSToParentLayerScale(1.0));
+    metrics.SetCompositionBounds(ParentLayerRect(0, 0, 1000, 1000));
+    metrics.SetVisualScrollOffset(CSSPoint(0, 0));
+    metrics.SetIsRootContent(true);
+    metadata.SetLineScrollAmount({100, 100});
+    metadata.SetPageScrollAmount({1000, 1000});
+    apzc->SetScrollMetadata(metadata);
+
+    // First wheel event, smooth scroll destination is y=500.
+    SmoothWheel(apzc, ScreenIntPoint(50, 50), ScreenPoint(0, 5), mcc->Time());
+    apzc->AssertStateIsWheelScroll();
+
+    // Sample until we get past y=200.
+    float y = 0;
+    while (y < 200) {
+      SampleAnimationOneFrame();
+      y = apzc->GetFrameMetrics().GetVisualScrollOffset().y;
+    }
+
+    // Apply a content shift of y=1000. The current scroll position is now
+    // y>1200, and the updated destination is y=1500.
+    nsTArray<ScrollPositionUpdate> scrollUpdates;
+    scrollUpdates.AppendElement(ScrollPositionUpdate::NewRelativeScroll(
+        CSSPoint::ToAppUnits(CSSPoint(0, 200)),
+        CSSPoint::ToAppUnits(CSSPoint(0, 1200))));
+    metadata.SetScrollUpdates(scrollUpdates);
+    metrics.SetScrollGeneration(scrollUpdates.LastElement().GetGeneration());
+    apzc->NotifyLayersUpdated(metadata, false, true);
+    float y2 = apzc->GetFrameMetrics().GetVisualScrollOffset().y;
+    ASSERT_EQ(y2, y + 1000);
+    apzc->AssertStateIsWheelScroll();
+
+    // Sample until we get past y=1300.
+    while (y < 1300) {
+      SampleAnimationOneFrame();
+      y = apzc->GetFrameMetrics().GetVisualScrollOffset().y;
+    }
+
+    // Second wheel event, destination is now y=2000.
+    // MSD physics has a bug where the UpdateDelta() causes the content shift
+    // to be applied in duplicate on the next sample, causing the scroll
+    // position to be y>2000!
+    SmoothWheel(apzc, ScreenIntPoint(50, 50), ScreenPoint(0, 5), mcc->Time());
+
+    // Check that the scroll position remains <= 2000 until the end of the
+    // animation.
+    while (apzc->IsWheelScrollAnimationRunning()) {
+      SampleAnimationOneFrame();
+      ASSERT_LE(apzc->GetFrameMetrics().GetVisualScrollOffset().y, 2000);
+    }
+    ASSERT_EQ(2000, apzc->GetFrameMetrics().GetVisualScrollOffset().y);
+  }
 };
 
 TEST_F(APZCSmoothScrollTester, ContentShiftBezier) {
@@ -538,6 +600,18 @@ TEST_F(APZCSmoothScrollTester, ContentShiftThenUpdateDeltaMsd) {
   SCOPED_GFX_PREF_BOOL("general.smoothScroll", true);
   SCOPED_GFX_PREF_BOOL("general.smoothScroll.msdPhysics.enabled", true);
   TestContentShiftThenUpdateDelta();
+}
+
+TEST_F(APZCSmoothScrollTester, ContentShiftDoesNotCauseOvershootBezier) {
+  SCOPED_GFX_PREF_BOOL("general.smoothScroll", true);
+  SCOPED_GFX_PREF_BOOL("general.smoothScroll.msdPhysics.enabled", false);
+  TestContentShiftDoesNotCauseOvershoot();
+}
+
+TEST_F(APZCSmoothScrollTester, ContentShiftDoesNotCauseOvershootMsd) {
+  SCOPED_GFX_PREF_BOOL("general.smoothScroll", true);
+  SCOPED_GFX_PREF_BOOL("general.smoothScroll.msdPhysics.enabled", true);
+  TestContentShiftDoesNotCauseOvershoot();
 }
 
 TEST_F(APZCBasicTester, ZoomAndScrollableRectChangeAfterZoomChange) {
