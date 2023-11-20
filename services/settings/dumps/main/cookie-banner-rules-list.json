@@ -1,47 +1,185 @@
 {
   "data": [
     {
-      "schema": 1699660804881,
+      "click": {
+        "optIn": "#onetrust-accept-btn-handler",
+        "presence": "div#onetrust-consent-sdk"
+      },
+      "schema": 1700130283852,
+      "cookies": {},
+      "domains": [
+        "gitlab.com",
+        "speedtest.net",
+        "name.com",
+        "mlb.com",
+        "qualtrics.com",
+        "tim.it",
+        "frontiersin.org",
+        "espn.com",
+        "thawte.com",
+        "digicert.com",
+        "hotnews.ro",
+        "mashable.com",
+        "pcmag.com",
+        "barnesandnoble.com",
+        "politico.com",
+        "quillbot.com",
+        "newyorker.com",
+        "upwork.com",
+        "mediafax.ro",
+        "elisa.fi",
+        "blick.ch",
+        "dn.no",
+        "soundcloud.com",
+        "tvn24.pl",
+        "olx.pl",
+        "olx.bg",
+        "gsp.ro",
+        "fastly.com",
+        "spotify.com",
+        "20min.ch",
+        "olx.ro",
+        "olx.pt",
+        "sportal.bg",
+        "gazeta.pl",
+        "instructure.com",
+        "romaniatv.net",
+        "teamviewer.com",
+        "ted.com",
+        "tripadvisor.com",
+        "webmd.com",
+        "cambridge.org",
+        "investing.com",
+        "businesswire.com",
+        "istockphoto.com",
+        "iso.org",
+        "quizlet.com",
+        "genius.com",
+        "jstor.org",
+        "trendmicro.com",
+        "duolingo.com",
+        "sophos.com",
+        "rte.ie",
+        "euro.com.pl",
+        "wired.com",
+        "arstechnica.com",
+        "gartner.com",
+        "thelancet.com",
+        "weebly.com",
+        "irishtimes.com",
+        "libertatea.ro",
+        "otomoto.pl",
+        "sport.pl",
+        "novini.bg",
+        "stiripesurse.ro",
+        "ziare.com",
+        "irishexaminer.com",
+        "tripadvisor.it",
+        "thejournal.ie",
+        "superbet.ro",
+        "g4media.ro",
+        "wyborcza.pl",
+        "nachrichten.at",
+        "tt.com",
+        "three.ie",
+        "tripadvisor.co.uk",
+        "dcnews.ro",
+        "vol.at",
+        "plotek.pl",
+        "howstuffworks.com",
+        "tripadvisor.de"
+      ],
+      "id": "256259D5-28AA-44C4-A837-8A30424005BB",
+      "last_modified": 1700313506971
+    },
+    {
+      "schema": 1700130283852,
+      "domains": [
+        "tumblr.com",
+        "paypal.com",
+        "amazon.se",
+        "amazon.fr",
+        "amazon.nl",
+        "amazon.es",
+        "amazon.co.uk",
+        "amazon.de",
+        "amazon.it"
+      ],
+      "id": "disabled",
+      "last_modified": 1700313506967
+    },
+    {
+      "click": {
+        "optOut": ".CookiesAlert_cookiesAlert__3qSl1 .Button_button__3Me73",
+        "presence": ".CookiesAlert_cookiesAlert__3qSl1"
+      },
+      "schema": 1700130283852,
+      "domains": [
+        "traderjoes.com"
+      ],
+      "id": "87cbcbb6-b531-4c9c-889a-aaa5678c06c5",
+      "last_modified": 1700313506964
+    },
+    {
+      "click": {
+        "hide": "section[aria-label=\"GDPR\"]",
+        "optOut": "#cancel",
+        "presence": "#gdpr"
+      },
+      "schema": 1700130283852,
       "cookies": {
         "optOut": [
           {
-            "name": "js-cookie-opt-in__consent",
-            "value": "needed"
+            "name": "cookies_ok",
+            "value": "false"
           }
         ]
       },
       "domains": [
-        "netcup.de"
+        "project529.com"
       ],
-      "id": "dea34d82-9c05-4c08-9262-18a7f62be91e",
-      "last_modified": 1700130283637
+      "id": "a029bf7e-3274-4877-967e-e7517457ac18",
+      "last_modified": 1700313506961
     },
     {
-      "schema": 1699660804881,
+      "click": {
+        "optIn": ".cookielaw-banner .btn-default",
+        "presence": ".cookielaw-banner"
+      },
+      "schema": 1700130283852,
       "cookies": {
-        "optOut": [
+        "optIn": [
           {
-            "name": "CookieConsentDeclined",
+            "name": "cookielaw",
             "value": "1"
           }
         ]
       },
       "domains": [
-        "hetzner.com"
+        "openwrt.org"
       ],
-      "id": "a8222cf2-8f6c-48df-8215-05a15d4ac592",
-      "last_modified": 1700130283634
+      "id": "14ea41fa-68ac-4c12-b906-7d2a259d5fb7",
+      "last_modified": 1700313506957
     },
     {
       "click": {
-        "optIn": ".banner-actions-container > #onetrust-accept-btn-handler, #onetrust-button-group > #onetrust-accept-btn-handler, .onetrust-banner-options > #onetrust-accept-btn-handler",
-        "optOut": ".banner-actions-container > #onetrust-reject-all-handler, #onetrust-button-group > #onetrust-reject-all-handler, .onetrust-banner-options > #onetrust-reject-all-handler",
-        "presence": "#onetrust-consent-sdk"
+        "optIn": "div[data-name=\"comp-banner\"] button[aria-label=\"Dismiss\"]",
+        "presence": "div[data-name=\"comp-banner\"]"
       },
-      "schema": 1699660804881,
-      "domains": [],
-      "id": "onetrust",
-      "last_modified": 1700130283629
+      "schema": 1700130283852,
+      "cookies": {
+        "optIn": [
+          {
+            "name": "cookieNotification",
+            "value": "true"
+          }
+        ]
+      },
+      "domains": [
+        "vegetology.com"
+      ],
+      "id": "f7633fd9-05a0-4c21-b9e7-acfcd5df5234",
+      "last_modified": 1700313506954
     },
     {
       "click": {
@@ -49,31 +187,14 @@
         "optOut": ".ot-pc-refuse-all-handler, #onetrust-reject-all-handler",
         "presence": "div#onetrust-consent-sdk"
       },
-      "schema": 1699660804881,
-      "cookies": {
-        "optOut": [
-          {
-            "name": "OptanonAlertBoxClosed",
-            "value": "2030-01-01T00:00:00.000Z"
-          }
-        ]
-      },
+      "schema": 1700130283852,
+      "cookies": {},
       "domains": [
         "espncricinfo.com",
-        "speedtest.net",
-        "name.com",
         "blackboard.com",
         "roche.com",
-        "mlb.com",
         "apnews.com",
-        "qualtrics.com",
-        "tim.it",
         "nationalgeographic.com",
-        "gofundme.com",
-        "frontiersin.org",
-        "espn.com",
-        "thawte.com",
-        "digicert.com",
         "hotjar.com",
         "marriott.com",
         "hootsuite.com",
@@ -92,7 +213,6 @@
         "hp.com",
         "ceskatelevize.cz",
         "telenet.be",
-        "quora.com",
         "adobe.com",
         "rottentomatoes.com",
         "dhl.com",
@@ -103,7 +223,6 @@
         "indeed.com",
         "discord.com",
         "sport.ro",
-        "hotnews.ro",
         "ricardo.ch",
         "stirileprotv.ro",
         "1177.se",
@@ -165,132 +284,108 @@
         "coursera.org",
         "msn.com",
         "allaboutcookies.org",
-        "mashable.com",
         "chegg.com",
-        "pcmag.com",
         "variety.com",
         "cnn.com",
-        "barnesandnoble.com",
-        "politico.com",
-        "quillbot.com",
-        "newyorker.com",
-        "upwork.com",
         "slack.com",
-        "mediafax.ro",
         "proximus.be",
-        "dn.no",
-        "elisa.fi",
-        "blick.ch",
-        "soundcloud.com",
         "adevarul.ro",
-        "tvn24.pl",
         "cnbc.com",
         "oe24.at",
-        "olx.pl",
-        "gsp.ro",
-        "fastly.com",
-        "spotify.com",
         "salesforce.com",
         "reuters.com",
         "booking.com",
-        "20min.ch",
-        "olx.ro",
-        "olx.pt",
-        "sportal.bg",
         "bluewin.ch",
-        "gazeta.pl",
         "viaplay.dk",
         "aib.ie",
         "hbomax.com",
         "rtlnieuws.nl",
         "buienradar.be",
         "viaplay.se",
-        "met.ie",
-        "instructure.com",
         "antena3.ro",
-        "romaniatv.net",
-        "zdf.de",
-        "teamviewer.com",
-        "ted.com",
-        "tripadvisor.com",
-        "webmd.com",
         "statista.com",
         "pixabay.com",
-        "cambridge.org",
         "prnewswire.com",
-        "investing.com",
-        "businesswire.com",
-        "istockphoto.com",
-        "iso.org",
-        "quizlet.com",
-        "gitlab.com",
         "constantcontact.com",
         "atlassian.com",
         "bmj.com",
         "trendyol.com",
-        "genius.com",
         "meetup.com",
-        "jstor.org",
         "vmware.com",
-        "trendmicro.com",
-        "duolingo.com",
         "bitbucket.org",
-        "sophos.com",
-        "rte.ie",
         "viaplay.no",
-        "euro.com.pl",
         "fiverr.com",
-        "wired.com",
         "asana.com",
         "glassdoor.com",
         "freepik.com",
-        "arstechnica.com",
-        "gartner.com",
-        "elsevier.com",
-        "thelancet.com",
-        "weebly.com",
-        "olx.bg",
         "heute.at",
         "mtvuutiset.fi",
         "buienradar.nl",
-        "irishtimes.com",
-        "libertatea.ro",
-        "funda.nl",
-        "otomoto.pl",
-        "sport.pl",
-        "novini.bg",
         "suomi24.fi",
-        "playtech.ro",
         "sbb.ch",
-        "stiripesurse.ro",
         "atg.se",
-        "voetbalzone.nl",
-        "ziare.com",
-        "rts.ch",
-        "irishexaminer.com",
-        "tripadvisor.it",
-        "thejournal.ie",
-        "superbet.ro",
-        "g4media.ro",
-        "wyborcza.pl",
-        "nachrichten.at",
-        "tt.com",
-        "three.ie",
-        "tripadvisor.co.uk",
-        "dcnews.ro",
-        "vol.at",
-        "plotek.pl",
         "nypost.com",
-        "howstuffworks.com",
         "otto.de",
         "kaufland.de",
         "lidl.de",
-        "tripadvisor.de",
         "panasonic.com",
         "safeway.com"
       ],
       "id": "6c7366a0-4762-47b9-8eeb-04e86cc7a0cc",
-      "last_modified": 1700130283624
+      "last_modified": 1700313506949
+    },
+    {
+      "click": {
+        "optIn": "button#didomi-notice-agree-button",
+        "presence": "div#didomi-host"
+      },
+      "schema": 1700130283852,
+      "domains": [],
+      "id": "didomi",
+      "last_modified": 1700313506945
+    },
+    {
+      "schema": 1699660804881,
+      "cookies": {
+        "optOut": [
+          {
+            "name": "js-cookie-opt-in__consent",
+            "value": "needed"
+          }
+        ]
+      },
+      "domains": [
+        "netcup.de"
+      ],
+      "id": "dea34d82-9c05-4c08-9262-18a7f62be91e",
+      "last_modified": 1700130283637
+    },
+    {
+      "schema": 1699660804881,
+      "cookies": {
+        "optOut": [
+          {
+            "name": "CookieConsentDeclined",
+            "value": "1"
+          }
+        ]
+      },
+      "domains": [
+        "hetzner.com"
+      ],
+      "id": "a8222cf2-8f6c-48df-8215-05a15d4ac592",
+      "last_modified": 1700130283634
+    },
+    {
+      "click": {
+        "optIn": ".banner-actions-container > #onetrust-accept-btn-handler, #onetrust-button-group > #onetrust-accept-btn-handler, .onetrust-banner-options > #onetrust-accept-btn-handler",
+        "optOut": ".banner-actions-container > #onetrust-reject-all-handler, #onetrust-button-group > #onetrust-reject-all-handler, .onetrust-banner-options > #onetrust-reject-all-handler",
+        "presence": "#onetrust-consent-sdk"
+      },
+      "schema": 1699660804881,
+      "domains": [],
+      "id": "onetrust",
+      "last_modified": 1700130283629
     },
     {
       "click": {},
@@ -1075,17 +1170,6 @@
       "domains": [],
       "id": "complianz",
       "last_modified": 1678276263351
-    },
-    {
-      "click": {
-        "optIn": "button#didomi-notice-agree-button",
-        "optOut": "button#didomi-notice-disagree-button",
-        "presence": "div#didomi-host"
-      },
-      "schema": 1678092903414,
-      "domains": [],
-      "id": "didomi",
-      "last_modified": 1678276263339
     },
     {
       "click": {
@@ -3579,26 +3663,6 @@
     },
     {
       "click": {
-        "optIn": "span.a-button-inner",
-        "optOut": "a#sp-cc-rejectall-link",
-        "presence": "form#sp-cc"
-      },
-      "schema": 1676900248923,
-      "cookies": {},
-      "domains": [
-        "amazon.se",
-        "amazon.fr",
-        "amazon.nl",
-        "amazon.es",
-        "amazon.co.uk",
-        "amazon.de",
-        "amazon.it"
-      ],
-      "id": "1653780d-92d7-4677-acb0-6427a7bbdeba",
-      "last_modified": 1676903764965
-    },
-    {
-      "click": {
         "optIn": "button.css-k8o10q",
         "presence": "div#qc-cmp2-container"
       },
@@ -4668,27 +4732,6 @@
       ],
       "id": "37319f5d-9484-4da8-aee1-570a78688da3",
       "last_modified": 1674560738073
-    },
-    {
-      "click": {
-        "optIn": "button#acceptAllButton",
-        "optOut": "button#bannerDeclineButton",
-        "presence": "div#gdprCookieBanner"
-      },
-      "schema": 1674521303759,
-      "cookies": {
-        "optOut": [
-          {
-            "name": "cookie_prefs",
-            "value": "T%3D0%2CP%3D0%2CF%3D0%2Ctype%3Dexplicit_banner"
-          }
-        ]
-      },
-      "domains": [
-        "paypal.com"
-      ],
-      "id": "3f1e21e7-327f-42de-ac40-25da7f4fa7c9",
-      "last_modified": 1674560738069
     },
     {
       "click": {
@@ -6134,27 +6177,6 @@
       ],
       "id": "709f87b8-b010-4d32-b32d-3f265963c6a5",
       "last_modified": 1670498157264
-    },
-    {
-      "click": {},
-      "schema": 1670460528099,
-      "cookies": {
-        "optOut": [
-          {
-            "name": "euconsent-v2",
-            "value": "1"
-          },
-          {
-            "name": "euconsent-v2-noniab",
-            "value": "AAYA"
-          }
-        ]
-      },
-      "domains": [
-        "tumblr.com"
-      ],
-      "id": "e8f941e6-ac56-4dec-b682-a75e8bd52aae",
-      "last_modified": 1670498157250
     },
     {
       "click": {},
@@ -8019,5 +8041,5 @@
       "last_modified": 1670498155641
     }
   ],
-  "timestamp": 1700130283637
+  "timestamp": 1700313506971
 }
