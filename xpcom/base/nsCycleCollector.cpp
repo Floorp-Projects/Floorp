@@ -3506,7 +3506,7 @@ bool nsCycleCollector::Collect(CCReason aReason, ccIsManual aIsManual,
         break;
     }
     if (continueSlice) {
-      aBudget.stepAndForceCheck();
+      aBudget.forceCheck();
       continueSlice = !aBudget.isOverBudget();
     }
   } while (continueSlice);

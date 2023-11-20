@@ -112,14 +112,12 @@ class JS_PUBLIC_API SliceBudget {
     counter -= steps;
   }
 
-  // Do enough steps to force an "expensive" (time) check on the next call to
-  // isOverBudget. Useful when switching between major phases of an operation
-  // like a cycle collection.
-  void stepAndForceCheck() {
+  // Force an "expensive" (time) check on the next call to isOverBudget. Useful
+  // when switching between major phases of an operation like a cycle
+  // collection.
+  void forceCheck() {
     if (isTimeBudget()) {
       counter = 0;
-    } else {
-      counter--;
     }
   }
 

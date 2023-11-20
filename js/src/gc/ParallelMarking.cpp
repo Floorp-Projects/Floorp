@@ -221,7 +221,7 @@ bool ParallelMarkTask::requestWork(AutoLockGC& lock) {
     return false;  // All other tasks are empty. We're finished.
   }
 
-  budget.stepAndForceCheck();
+  budget.forceCheck();
   if (budget.isOverBudget()) {
     return false;  // Over budget or interrupted.
   }

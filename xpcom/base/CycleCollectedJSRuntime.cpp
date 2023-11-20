@@ -1397,7 +1397,7 @@ bool CycleCollectedJSRuntime::TraceNativeGrayRoots(
     TraceAdditionalNativeGrayRoots(aTracer);
 
     mHolderIter.emplace(mJSHolders, aWhich);
-    aBudget.stepAndForceCheck();
+    aBudget.forceCheck();
   } else {
     // Holders may have been removed between slices, so we may need to update
     // the iterator.

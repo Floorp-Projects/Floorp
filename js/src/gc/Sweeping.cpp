@@ -2326,9 +2326,15 @@ IncrementalProgress GCRuntime::performSweepActions(SliceBudget& budget) {
   }
 #endif
 
-  if (initialState == State::Sweep &&
-      markDuringSweeping(gcx, budget) == NotFinished) {
-    return NotFinished;
+  if (initialState == State::Sweep) {
+    if (markDuringSweeping(gcx, budget) == NotFinished) {
+      return NotFinished;
+    }
+  } else {
+    budget.forceCheck();
+    if (budget.isOverBudget()) {
+      return NotFinished;
+    }
   }
 
   // Then continue running sweep actions.
