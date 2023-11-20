@@ -296,34 +296,6 @@ class WinUtils {
   static void WaitForMessage(DWORD aTimeoutMs = INFINITE);
 
   /**
-   * Gets the value of a string-typed registry value.
-   *
-   * @param aRoot The registry root to search in.
-   * @param aKeyName The name of the registry key to open.
-   * @param aValueName The name of the registry value in the specified key whose
-   *   value is to be retrieved.  Can be null, to retrieve the key's unnamed/
-   *   default value.
-   * @param aBuffer The buffer into which to store the string value.  Can be
-   *   null, in which case the return value indicates just whether the value
-   *   exists.
-   * @param aBufferLength The size of aBuffer, in bytes.
-   * @return Whether the value exists and is a string.
-   */
-  static bool GetRegistryKey(HKEY aRoot, char16ptr_t aKeyName,
-                             char16ptr_t aValueName, wchar_t* aBuffer,
-                             DWORD aBufferLength);
-
-  /**
-   * Checks whether the registry key exists in either 32bit or 64bit branch on
-   * the environment.
-   *
-   * @param aRoot The registry root of aName.
-   * @param aKeyName The name of the registry key to check.
-   * @return TRUE if it exists and is readable.  Otherwise, FALSE.
-   */
-  static bool HasRegistryKey(HKEY aRoot, char16ptr_t aKeyName);
-
-  /**
    * GetTopLevelHWND() returns a window handle of the top level window which
    * aWnd belongs to.  Note that the result may not be our window, i.e., it
    * may not be managed by nsWindow.

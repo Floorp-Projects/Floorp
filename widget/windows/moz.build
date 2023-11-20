@@ -60,6 +60,7 @@ EXPORTS.mozilla.widget += [
     "WinEventObserver.h",
     "WinMessages.h",
     "WinModifierKeyState.h",
+    "WinRegistry.h",
     "WinTaskbar.h",
     "WinWindowOcclusionTracker.h",
 ]
@@ -110,6 +111,7 @@ UNIFIED_SOURCES += [
     "WinEventObserver.cpp",
     "WinIMEHandler.cpp",
     "WinPointerEvents.cpp",
+    "WinRegistry.cpp",
     "WinTaskbar.cpp",
     "WinTextEventDispatcherListener.cpp",
     "WinUtils.cpp",

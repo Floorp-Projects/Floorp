@@ -8,7 +8,7 @@
 #include "nsIWinTaskbar.h"
 #include "WinTaskbar.h"
 #include "TaskbarPreview.h"
-#include <nsITaskbarPreviewController.h>
+#include "nsITaskbarPreviewController.h"
 
 #include "mozilla/RefPtr.h"
 #include <nsError.h>
@@ -30,6 +30,7 @@
 #include "mozilla/Preferences.h"
 #include "nsAppRunner.h"
 #include "nsXREDirProvider.h"
+#include "mozilla/widget/WinRegistry.h"
 #include <io.h>
 #include <propvarutil.h>
 #include <propkey.h>
@@ -208,8 +209,7 @@ bool WinTaskbar::GenerateAppUserModelID(nsAString& aAppUserModelId,
                                         bool aPrivateBrowsing) {
   // If marked as such in prefs, use a hash of the profile path for the id
   // instead of the install path hash setup by the installer.
-  bool useProfile = Preferences::GetBool("taskbar.grouping.useprofile", false);
-  if (useProfile) {
+  if (Preferences::GetBool("taskbar.grouping.useprofile", false)) {
     nsCOMPtr<nsIFile> profileDir;
     NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
                            getter_AddRefs(profileDir));
@@ -247,15 +247,12 @@ bool WinTaskbar::GenerateAppUserModelID(nsAString& aAppUserModelId,
       if (!slash) return false;
       *slash = '\0';  // no trailing slash
 
-      // The hash is short, but users may customize this, so use a respectable
-      // string buffer.
-      wchar_t buf[256];
-      if (WinUtils::GetRegistryKey(HKEY_LOCAL_MACHINE, regKey.get(), path, buf,
-                                   sizeof buf)) {
-        aAppUserModelId.Assign(buf);
-      } else if (WinUtils::GetRegistryKey(HKEY_CURRENT_USER, regKey.get(), path,
-                                          buf, sizeof buf)) {
-        aAppUserModelId.Assign(buf);
+      nsDependentString pathStr(path);
+      for (auto* rootKey : {HKEY_LOCAL_MACHINE, HKEY_CURRENT_USER}) {
+        if (auto aumid = WinRegistry::GetString(rootKey, regKey, pathStr)) {
+          aAppUserModelId = std::move(*aumid);
+          break;
+        }
       }
     }
   }

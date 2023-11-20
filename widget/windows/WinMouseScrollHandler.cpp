@@ -21,6 +21,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/WheelEventBinding.h"
 #include "mozilla/StaticPrefs_mousewheel.h"
+#include "mozilla/widget/WinRegistry.h"
 
 #include <psapi.h>
 
@@ -1127,10 +1128,9 @@ void MouseScrollHandler::Device::SynTP::Init() {
   sMinorVersion = -1;
 
   wchar_t buf[40];
-  bool foundKey = WinUtils::GetRegistryKey(
-      HKEY_LOCAL_MACHINE, L"Software\\Synaptics\\SynTP\\Install",
-      L"DriverVersion", buf, sizeof buf);
-  if (!foundKey) {
+  if (!WinRegistry::GetString(
+          HKEY_LOCAL_MACHINE, u"Software\\Synaptics\\SynTP\\Install"_ns,
+          u"DriverVersion"_ns, buf, WinRegistry::kLegacyWinUtilsStringFlags)) {
     MOZ_LOG(gMouseScrollLog, LogLevel::Info,
             ("MouseScroll::Device::SynTP::Init(): "
              "SynTP driver is not found"));
@@ -1174,16 +1174,12 @@ void MouseScrollHandler::Device::Elantech::Init() {
 int32_t MouseScrollHandler::Device::Elantech::GetDriverMajorVersion() {
   wchar_t buf[40];
   // The driver version is found in one of these two registry keys.
-  bool foundKey = WinUtils::GetRegistryKey(HKEY_CURRENT_USER,
-                                           L"Software\\Elantech\\MainOption",
-                                           L"DriverVersion", buf, sizeof buf);
-  if (!foundKey) {
-    foundKey =
-        WinUtils::GetRegistryKey(HKEY_CURRENT_USER, L"Software\\Elantech",
-                                 L"DriverVersion", buf, sizeof buf);
-  }
-
-  if (!foundKey) {
+  if (!WinRegistry::GetString(
+          HKEY_CURRENT_USER, u"Software\\Elantech\\MainOption"_ns,
+          u"DriverVersion"_ns, buf, WinRegistry::kLegacyWinUtilsStringFlags) &&
+      !WinRegistry::GetString(HKEY_CURRENT_USER, u"Software\\Elantech"_ns,
+                              u"DriverVersion"_ns, buf,
+                              WinRegistry::kLegacyWinUtilsStringFlags)) {
     return 0;
   }
 
@@ -1369,10 +1365,9 @@ void MouseScrollHandler::Device::Apoint::Init() {
   sMinorVersion = -1;
 
   wchar_t buf[40];
-  bool foundKey =
-      WinUtils::GetRegistryKey(HKEY_LOCAL_MACHINE, L"Software\\Alps\\Apoint",
-                               L"ProductVer", buf, sizeof buf);
-  if (!foundKey) {
+  if (!WinRegistry::GetString(HKEY_LOCAL_MACHINE, u"Software\\Alps\\Apoint"_ns,
+                              u"ProductVer"_ns, buf,
+                              WinRegistry::kLegacyWinUtilsStringFlags)) {
     MOZ_LOG(gMouseScrollLog, LogLevel::Info,
             ("MouseScroll::Device::Apoint::Init(): "
              "Apoint driver is not found"));
@@ -1399,19 +1394,20 @@ void MouseScrollHandler::Device::Apoint::Init() {
 
 /* static */
 bool MouseScrollHandler::Device::TrackPoint::IsDriverInstalled() {
-  if (WinUtils::HasRegistryKey(HKEY_CURRENT_USER,
-                               L"Software\\Lenovo\\TrackPoint")) {
+  if (WinRegistry::HasKey(HKEY_CURRENT_USER,
+                          u"Software\\Lenovo\\TrackPoint"_ns)) {
     MOZ_LOG(gMouseScrollLog, LogLevel::Info,
             ("MouseScroll::Device::TrackPoint::IsDriverInstalled(): "
              "Lenovo's TrackPoint driver is found"));
     return true;
   }
 
-  if (WinUtils::HasRegistryKey(HKEY_CURRENT_USER,
-                               L"Software\\Alps\\Apoint\\TrackPoint")) {
+  if (WinRegistry::HasKey(HKEY_CURRENT_USER,
+                          u"Software\\Alps\\Apoint\\TrackPoint"_ns)) {
     MOZ_LOG(gMouseScrollLog, LogLevel::Info,
             ("MouseScroll::Device::TrackPoint::IsDriverInstalled(): "
              "Alps's TrackPoint driver is found"));
+    // FIXME(emilio): Missing return true here??
   }
 
   return false;
@@ -1425,8 +1421,8 @@ bool MouseScrollHandler::Device::TrackPoint::IsDriverInstalled() {
 
 /* static */
 bool MouseScrollHandler::Device::UltraNav::IsObsoleteDriverInstalled() {
-  if (WinUtils::HasRegistryKey(HKEY_CURRENT_USER,
-                               L"Software\\Lenovo\\UltraNav")) {
+  if (WinRegistry::HasKey(HKEY_CURRENT_USER,
+                          u"Software\\Lenovo\\UltraNav"_ns)) {
     MOZ_LOG(gMouseScrollLog, LogLevel::Info,
             ("MouseScroll::Device::UltraNav::IsObsoleteDriverInstalled(): "
              "Lenovo's UltraNav driver is found"));
@@ -1434,15 +1430,15 @@ bool MouseScrollHandler::Device::UltraNav::IsObsoleteDriverInstalled() {
   }
 
   bool installed = false;
-  if (WinUtils::HasRegistryKey(HKEY_CURRENT_USER,
-                               L"Software\\Synaptics\\SynTPEnh\\UltraNavUSB")) {
+  if (WinRegistry::HasKey(HKEY_CURRENT_USER,
+                          u"Software\\Synaptics\\SynTPEnh\\UltraNavUSB"_ns)) {
     MOZ_LOG(gMouseScrollLog, LogLevel::Info,
             ("MouseScroll::Device::UltraNav::IsObsoleteDriverInstalled(): "
              "Synaptics's UltraNav (USB) driver is found"));
     installed = true;
-  } else if (WinUtils::HasRegistryKey(
+  } else if (WinRegistry::HasKey(
                  HKEY_CURRENT_USER,
-                 L"Software\\Synaptics\\SynTPEnh\\UltraNavPS2")) {
+                 u"Software\\Synaptics\\SynTPEnh\\UltraNavPS2"_ns)) {
     MOZ_LOG(gMouseScrollLog, LogLevel::Info,
             ("MouseScroll::Device::UltraNav::IsObsoleteDriverInstalled(): "
              "Synaptics's UltraNav (PS/2) driver is found"));

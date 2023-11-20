@@ -19,13 +19,13 @@
 #include "WinUtils.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/Logging.h"
-#include "mozilla/Preferences.h"
 #include "mozilla/StaticPrefs_intl.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/TextEventDispatcher.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/ToString.h"
 #include "mozilla/WindowsVersion.h"
+#include "mozilla/widget/WinRegistry.h"
 #include "nsWindow.h"
 #include "nsPrintfCString.h"
 
@@ -334,8 +334,8 @@ static nsCString GetRIIDNameStr(REFIID aRIID) {
 
   nsCString result;
   wchar_t buf[256];
-  if (WinUtils::GetRegistryKey(HKEY_CLASSES_ROOT, key.get(), nullptr, buf,
-                               sizeof(buf))) {
+  if (WinRegistry::GetString(HKEY_CLASSES_ROOT, key, u""_ns, buf,
+                             WinRegistry::kLegacyWinUtilsStringFlags)) {
     result = NS_ConvertUTF16toUTF8(buf);
   } else {
     result = NS_ConvertUTF16toUTF8(str);

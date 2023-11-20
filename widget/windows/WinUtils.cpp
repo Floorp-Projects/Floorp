@@ -492,54 +492,6 @@ void WinUtils::WaitForMessage(DWORD aTimeoutMs) {
 }
 
 /* static */
-bool WinUtils::GetRegistryKey(HKEY aRoot, char16ptr_t aKeyName,
-                              char16ptr_t aValueName, wchar_t* aBuffer,
-                              DWORD aBufferLength) {
-  MOZ_ASSERT(aKeyName, "The key name is NULL");
-
-  HKEY key;
-  LONG result =
-      ::RegOpenKeyExW(aRoot, aKeyName, 0, KEY_READ | KEY_WOW64_32KEY, &key);
-  if (result != ERROR_SUCCESS) {
-    result =
-        ::RegOpenKeyExW(aRoot, aKeyName, 0, KEY_READ | KEY_WOW64_64KEY, &key);
-    if (result != ERROR_SUCCESS) {
-      return false;
-    }
-  }
-
-  DWORD type;
-  result = ::RegQueryValueExW(key, aValueName, nullptr, &type, (BYTE*)aBuffer,
-                              &aBufferLength);
-  ::RegCloseKey(key);
-  if (result != ERROR_SUCCESS || (type != REG_SZ && type != REG_EXPAND_SZ)) {
-    return false;
-  }
-  if (aBuffer) {
-    aBuffer[aBufferLength / sizeof(*aBuffer) - 1] = 0;
-  }
-  return true;
-}
-
-/* static */
-bool WinUtils::HasRegistryKey(HKEY aRoot, char16ptr_t aKeyName) {
-  MOZ_ASSERT(aRoot, "aRoot must not be NULL");
-  MOZ_ASSERT(aKeyName, "aKeyName must not be NULL");
-  HKEY key;
-  LONG result =
-      ::RegOpenKeyExW(aRoot, aKeyName, 0, KEY_READ | KEY_WOW64_32KEY, &key);
-  if (result != ERROR_SUCCESS) {
-    result =
-        ::RegOpenKeyExW(aRoot, aKeyName, 0, KEY_READ | KEY_WOW64_64KEY, &key);
-    if (result != ERROR_SUCCESS) {
-      return false;
-    }
-  }
-  ::RegCloseKey(key);
-  return true;
-}
-
-/* static */
 HWND WinUtils::GetTopLevelHWND(HWND aWnd, bool aStopIfNotChild,
                                bool aStopIfNotPopup) {
   HWND curWnd = aWnd;
