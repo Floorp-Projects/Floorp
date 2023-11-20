@@ -106,15 +106,6 @@ CompositableClient::CreateTextureClientForDrawing(
       aAllocFlags);
 }
 
-already_AddRefed<TextureClient>
-CompositableClient::CreateTextureClientFromSurface(
-    gfx::SourceSurface* aSurface, BackendSelector aSelector,
-    TextureFlags aTextureFlags, TextureAllocationFlags aAllocFlags) {
-  return TextureClient::CreateFromSurface(GetForwarder(), aSurface, aSelector,
-                                          aTextureFlags | mTextureFlags,
-                                          aAllocFlags);
-}
-
 bool CompositableClient::AddTextureClient(TextureClient* aClient) {
   if (!aClient) {
     return false;
