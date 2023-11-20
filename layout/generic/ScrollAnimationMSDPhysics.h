@@ -48,7 +48,6 @@ class ScrollAnimationMSDPhysics final : public ScrollAnimationPhysics {
 
   nsPoint mStartPos;
   nsPoint mDestination;
-  nsPoint mContentShift;
   TimeStamp mLastSimulatedTime;
   AxisPhysicsMSDModel mModelX;
   AxisPhysicsMSDModel mModelY;
