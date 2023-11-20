@@ -692,9 +692,6 @@ class nsLineLayout {
 #ifdef DEBUG
   void DumpPerSpanData(PerSpanData* psd, int32_t aIndent);
 #endif
-
- private:
-  static bool ShouldApplyLineHeightInPreserveWhiteSpace(const PerSpanData* psd);
 };
 
 #endif /* nsLineLayout_h___ */
