@@ -4,7 +4,6 @@
 
 package org.mozilla.fenix.shopping.ui
 
-import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
@@ -143,74 +142,69 @@ private fun ProductReview(
     onRecommendedProductClick: (aid: String, url: String) -> Unit,
     onProductRecommendationImpression: (aid: String) -> Unit,
 ) {
-    Crossfade(
-        targetState = state.productReviewState,
-        label = "ProductReview-Crossfade",
-    ) { productReviewState ->
-        when (productReviewState) {
-            is AnalysisPresent -> {
-                ProductAnalysis(
-                    productRecommendationsEnabled = state.productRecommendationsPreference,
-                    productAnalysis = productReviewState,
-                    productVendor = state.productVendor,
-                    isSettingsExpanded = state.isSettingsExpanded,
-                    isInfoExpanded = state.isInfoExpanded,
-                    isHighlightsExpanded = state.isHighlightsExpanded,
-                    onOptOutClick = onOptOutClick,
-                    onReanalyzeClick = onReanalyzeClick,
-                    onProductRecommendationsEnabledStateChange = onProductRecommendationsEnabledStateChange,
-                    onHighlightsExpandToggleClick = onHighlightsExpandToggleClick,
-                    onSettingsExpandToggleClick = onSettingsExpandToggleClick,
-                    onInfoExpandToggleClick = onInfoExpandToggleClick,
-                    onReviewGradeLearnMoreClick = onReviewGradeLearnMoreClick,
-                    onFooterLinkClick = onFooterLinkClick,
-                    onRecommendedProductClick = onRecommendedProductClick,
-                    onRecommendedProductImpression = onProductRecommendationImpression,
-                )
+    when (val productReviewState = state.productReviewState) {
+        is AnalysisPresent -> {
+            ProductAnalysis(
+                productRecommendationsEnabled = state.productRecommendationsPreference,
+                productAnalysis = productReviewState,
+                productVendor = state.productVendor,
+                isSettingsExpanded = state.isSettingsExpanded,
+                isInfoExpanded = state.isInfoExpanded,
+                isHighlightsExpanded = state.isHighlightsExpanded,
+                onOptOutClick = onOptOutClick,
+                onReanalyzeClick = onReanalyzeClick,
+                onProductRecommendationsEnabledStateChange = onProductRecommendationsEnabledStateChange,
+                onHighlightsExpandToggleClick = onHighlightsExpandToggleClick,
+                onSettingsExpandToggleClick = onSettingsExpandToggleClick,
+                onInfoExpandToggleClick = onInfoExpandToggleClick,
+                onReviewGradeLearnMoreClick = onReviewGradeLearnMoreClick,
+                onFooterLinkClick = onFooterLinkClick,
+                onRecommendedProductClick = onRecommendedProductClick,
+                onRecommendedProductImpression = onProductRecommendationImpression,
+            )
+        }
+
+        is ReviewQualityCheckState.OptedIn.ProductReviewState.Error -> {
+            ProductAnalysisError(
+                error = productReviewState,
+                productRecommendationsEnabled = state.productRecommendationsPreference,
+                productVendor = state.productVendor,
+                isSettingsExpanded = state.isSettingsExpanded,
+                isInfoExpanded = state.isInfoExpanded,
+                onReviewGradeLearnMoreClick = onReviewGradeLearnMoreClick,
+                onOptOutClick = onOptOutClick,
+                onProductRecommendationsEnabledStateChange = onProductRecommendationsEnabledStateChange,
+                onFooterLinkClick = onFooterLinkClick,
+                onSettingsExpandToggleClick = onSettingsExpandToggleClick,
+                onInfoExpandToggleClick = onInfoExpandToggleClick,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+
+        is ReviewQualityCheckState.OptedIn.ProductReviewState.Loading -> {
+            ProductReviewLoading()
+        }
+
+        is ReviewQualityCheckState.OptedIn.ProductReviewState.NoAnalysisPresent -> {
+            LaunchedEffect(Unit) {
+                onNoAnalysisPresent()
             }
 
-            is ReviewQualityCheckState.OptedIn.ProductReviewState.Error -> {
-                ProductAnalysisError(
-                    error = productReviewState,
-                    productRecommendationsEnabled = state.productRecommendationsPreference,
-                    productVendor = state.productVendor,
-                    isSettingsExpanded = state.isSettingsExpanded,
-                    isInfoExpanded = state.isInfoExpanded,
-                    onReviewGradeLearnMoreClick = onReviewGradeLearnMoreClick,
-                    onOptOutClick = onOptOutClick,
-                    onProductRecommendationsEnabledStateChange = onProductRecommendationsEnabledStateChange,
-                    onFooterLinkClick = onFooterLinkClick,
-                    onSettingsExpandToggleClick = onSettingsExpandToggleClick,
-                    onInfoExpandToggleClick = onInfoExpandToggleClick,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
-
-            is ReviewQualityCheckState.OptedIn.ProductReviewState.Loading -> {
-                ProductReviewLoading()
-            }
-
-            is ReviewQualityCheckState.OptedIn.ProductReviewState.NoAnalysisPresent -> {
-                LaunchedEffect(Unit) {
-                    onNoAnalysisPresent()
-                }
-
-                NoAnalysis(
-                    isAnalyzing = productReviewState.isReanalyzing,
-                    onAnalyzeClick = onAnalyzeClick,
-                    productRecommendationsEnabled = state.productRecommendationsPreference,
-                    productVendor = state.productVendor,
-                    isSettingsExpanded = state.isSettingsExpanded,
-                    isInfoExpanded = state.isInfoExpanded,
-                    onReviewGradeLearnMoreClick = onReviewGradeLearnMoreClick,
-                    onOptOutClick = onOptOutClick,
-                    onProductRecommendationsEnabledStateChange = onProductRecommendationsEnabledStateChange,
-                    onSettingsExpandToggleClick = onSettingsExpandToggleClick,
-                    onInfoExpandToggleClick = onInfoExpandToggleClick,
-                    onFooterLinkClick = onFooterLinkClick,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-            }
+            NoAnalysis(
+                isAnalyzing = productReviewState.isReanalyzing,
+                onAnalyzeClick = onAnalyzeClick,
+                productRecommendationsEnabled = state.productRecommendationsPreference,
+                productVendor = state.productVendor,
+                isSettingsExpanded = state.isSettingsExpanded,
+                isInfoExpanded = state.isInfoExpanded,
+                onReviewGradeLearnMoreClick = onReviewGradeLearnMoreClick,
+                onOptOutClick = onOptOutClick,
+                onProductRecommendationsEnabledStateChange = onProductRecommendationsEnabledStateChange,
+                onSettingsExpandToggleClick = onSettingsExpandToggleClick,
+                onInfoExpandToggleClick = onInfoExpandToggleClick,
+                onFooterLinkClick = onFooterLinkClick,
+                modifier = Modifier.fillMaxWidth(),
+            )
         }
     }
 }
