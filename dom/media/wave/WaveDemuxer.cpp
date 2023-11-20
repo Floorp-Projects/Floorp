@@ -10,7 +10,6 @@
 #include <algorithm>
 
 #include "mozilla/Assertions.h"
-#include "mozilla/EndianUtils.h"
 #include "mozilla/Utf8.h"
 #include "BufferReader.h"
 #include "VideoUtils.h"
@@ -166,6 +165,19 @@ bool WAVTrackDemuxer::Init() {
   mInfo->mDuration = Duration();
   mInfo->mChannelMap = mFmtChunk.ChannelMap();
 
+  if (AudioConfig::ChannelLayout::Channels(mInfo->mChannelMap) !=
+      mInfo->mChannels) {
+    AudioConfig::ChannelLayout::ChannelMap defaultForChannelCount =
+        AudioConfig::ChannelLayout(mInfo->mChannels).Map();
+    LOG(("Channel count of %" PRIu32
+         " and channel layout disagree, overriding channel map from %s to %s",
+         mInfo->mChannels,
+         AudioConfig::ChannelLayout::ChannelMapToString(mInfo->mChannelMap)
+             .get(),
+         AudioConfig::ChannelLayout::ChannelMapToString(defaultForChannelCount)
+             .get()));
+    mInfo->mChannelMap = defaultForChannelCount;
+  }
   LOG(("WavDemuxer initialized: %s", mInfo->ToString().get()));
 
   return mInfo->mDuration.IsPositive();
@@ -270,6 +282,8 @@ bool WAVTrackDemuxer::ListChunkParserInit(uint32_t aChunkSize) {
       case 0x494e414d:  // INAM
         mInfo->mTags.AppendElement(MetadataTag("name"_ns, val));
         break;
+      default:
+        LOG(("Metadata key %08x not handled", id));
     }
 
     mHeaderParser.Reset();

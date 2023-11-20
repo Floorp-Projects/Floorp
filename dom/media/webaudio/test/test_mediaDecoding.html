@@ -247,6 +247,16 @@
       sampleRate: 44100,
       frames: 472,
       duration: 0.01
+    },
+    {
+      // A wav file that has 8 channel, but has a channel mask that doesn't
+      // match the channel count.
+      url: "waveformatextensiblebadmask.wav",
+      valid: true,
+      numberOfChannels: 8,
+      sampleRate: 8000,
+      frames: 80,
+      duration: 0.01
     }
   ];
 
@@ -290,7 +300,7 @@
       is(buffer.numberOfChannels, test.numberOfChannels, "Correct number of channels");
       return;
     }
-    ok(Math.abs(buffer.duration - test.duration) < 1e-3, "Correct duration");
+    ok(Math.abs(buffer.duration - test.duration) < 1e-3, `Correct duration expected ${test.duration} got ${buffer.duration}`);
     if (Math.abs(buffer.duration - test.duration) >= 1e-3) {
       ok(false, "got: " + buffer.duration + ", expected: " + test.duration);
     }
