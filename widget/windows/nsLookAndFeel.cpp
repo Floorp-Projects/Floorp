@@ -15,9 +15,6 @@
 #include "WindowsUIUtils.h"
 #include "mozilla/FontPropertyTypes.h"
 #include "mozilla/Telemetry.h"
-#include "gfxFontConstants.h"
-#include "gfxWindowsPlatform.h"
-#include "mozilla/StaticPrefs_widget.h"
 #include "mozilla/widget/WinRegistry.h"
 
 using namespace mozilla;
@@ -57,15 +54,12 @@ static bool SystemWantsDarkTheme() {
   return !light;
 }
 
-static uint32_t SystemColorFilter() {
-  WinRegistry::Key key(
-      HKEY_CURRENT_USER,
-      u"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Accessibility\\ATConfig\\colorfiltering"_ns,
-      WinRegistry::KeyMode::QueryValue);
-  if (NS_WARN_IF(!key)) {
+uint32_t nsLookAndFeel::SystemColorFilter() {
+  if (NS_WARN_IF(!mColorFilterWatcher)) {
     return 0;
   }
 
+  const auto& key = mColorFilterWatcher->GetKey();
   if (!key.GetValueAsDword(u"Active"_ns).valueOr(0)) {
     return 0;
   }
@@ -545,11 +539,10 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       break;
     }
     case IntID::InvertedColors: {
-      uint32_t colorFilter = SystemColorFilter();
       // Color filter values
       // 1: Inverted
       // 2: Grayscale inverted
-      aResult = colorFilter == 1 || colorFilter == 2 ? 1 : 0;
+      aResult = mCurrentColorFilter == 1 || mCurrentColorFilter == 2;
       break;
     }
     case IntID::PrimaryPointerCapabilities: {
@@ -563,7 +556,7 @@ nsresult nsLookAndFeel::NativeGetInt(IntID aID, int32_t& aResult) {
       break;
     }
     case IntID::TouchDeviceSupportPresent:
-      aResult = WinUtils::IsTouchDeviceSupportPresent() ? 1 : 0;
+      aResult = !!WinUtils::IsTouchDeviceSupportPresent();
       break;
     case IntID::PanelAnimations:
       aResult = 1;
@@ -903,5 +896,23 @@ void nsLookAndFeel::EnsureInit() {
     return NS_RGB(0, 120, 215);
   }();
   mColorAccentText = GetAccentColorText(mColorAccent);
+
+  if (!mColorFilterWatcher) {
+    WinRegistry::Key key(
+        HKEY_CURRENT_USER, u"Software\\Microsoft\\ColorFiltering"_ns,
+        WinRegistry::KeyMode::QueryValue | WinRegistry::KeyMode::Notify);
+    if (key) {
+      mColorFilterWatcher = MakeUnique<WinRegistry::KeyWatcher>(
+          std::move(key), GetCurrentSerialEventTarget(), [this] {
+            MOZ_DIAGNOSTIC_ASSERT(NS_IsMainThread());
+            if (mCurrentColorFilter != SystemColorFilter()) {
+              LookAndFeel::NotifyChangedAllWindows(
+                  widget::ThemeChangeKind::MediaQueriesOnly);
+            }
+          });
+    }
+  }
+  mCurrentColorFilter = SystemColorFilter();
+
   RecordTelemetry();
 }

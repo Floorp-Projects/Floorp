@@ -6,13 +6,10 @@
 #ifndef __nsLookAndFeel
 #define __nsLookAndFeel
 
-#include <bitset>
 #include <windows.h>
 
 #include "nsXPLookAndFeel.h"
 #include "gfxFont.h"
-#include "mozilla/RangedArray.h"
-#include "nsIWindowsRegKey.h"
 
 /*
  * Gesture System Metrics
@@ -42,6 +39,10 @@
 #define SYS_COLOR_MIN 0
 #define SYS_COLOR_MAX 30
 #define SYS_COLOR_COUNT (SYS_COLOR_MAX - SYS_COLOR_MIN + 1)
+
+namespace mozilla::widget::WinRegistry {
+class KeyWatcher;
+}
 
 class nsLookAndFeel final : public nsXPLookAndFeel {
  public:
@@ -95,6 +96,8 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
   LookAndFeelFont GetLookAndFeelFontInternal(const LOGFONTW& aLogFont,
                                              bool aUseShellDlg);
 
+  uint32_t SystemColorFilter();
+
   LookAndFeelFont GetLookAndFeelFont(LookAndFeel::FontID anID);
 
   // Cached colors and flags indicating success in their retrieval.
@@ -110,8 +113,11 @@ class nsLookAndFeel final : public nsXPLookAndFeel {
 
   nscolor mSysColorTable[SYS_COLOR_COUNT];
 
-  bool mInitialized = false;
+  mozilla::UniquePtr<mozilla::widget::WinRegistry::KeyWatcher>
+      mColorFilterWatcher;
+  uint32_t mCurrentColorFilter = 0;
 
+  bool mInitialized = false;
   void EnsureInit();
 };
 
