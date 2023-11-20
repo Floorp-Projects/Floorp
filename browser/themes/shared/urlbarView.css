@@ -325,6 +325,13 @@
   -moz-context-properties: fill, fill-opacity;
   border-radius: 100%;
 
+  &:not(:hover, [selected], [primary], [open]) {
+    @media (prefers-contrast) {
+      outline: 1px solid currentColor;
+      outline-offset: -1px;
+    }
+  }
+
   &[selected] {
     outline: var(--focus-outline);
     outline-color: var(--urlbarView-highlight-color);
@@ -381,37 +388,35 @@
 
 /* Button with label, e.g. tip button */
 
-.urlbarView-button:not(:empty) {
-  &:not(.urlbarView-button-menu) {
-    border-radius: var(--toolbarbutton-border-radius);
-    padding: .5em 1em;
-    margin-inline-end: 1.4em;
-    font-size: 0.93em;
-    font-weight: var(--font-weight-bold);
-    background-clip: padding-box;
-    min-height: 16px;
-    min-width: 6em;
-    text-align: center;
-    flex-basis: initial;
-    flex-shrink: 0;
+.urlbarView-button:not(:empty):not(.urlbarView-button-menu) {
+  border-radius: var(--toolbarbutton-border-radius);
+  padding: .5em 1em;
+  margin-inline-end: 1.4em;
+  font-size: 0.93em;
+  font-weight: var(--font-weight-bold);
+  background-clip: padding-box;
+  min-height: 16px;
+  min-width: 6em;
+  text-align: center;
+  flex-basis: initial;
+  flex-shrink: 0;
 
-    &:not(:hover) {
-      background-color: var(--button-bgcolor);
+  &:not(:hover) {
+    background-color: var(--button-bgcolor);
+  }
+
+  &:is([selected], [primary]) {
+    color: var(--button-primary-color);
+    background-color: var(--button-primary-bgcolor);
+    outline-color: var(--button-primary-bgcolor);
+    outline-offset: var(--focus-outline-offset);
+
+    &:hover {
+      background-color: var(--button-primary-hover-bgcolor);
     }
 
-    &:is([selected], [primary]) {
-      color: var(--button-primary-color);
-      background-color: var(--button-primary-bgcolor);
-      outline-color: var(--button-primary-bgcolor);
-      outline-offset: var(--focus-outline-offset);
-
-      &:hover {
-        background-color: var(--button-primary-hover-bgcolor);
-      }
-
-      &:hover:active {
-        background-color: var(--button-primary-active-bgcolor);
-      }
+    &:hover:active {
+      background-color: var(--button-primary-active-bgcolor);
     }
   }
 }
