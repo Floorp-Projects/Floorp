@@ -131,12 +131,12 @@ function do_test() {
   ok(testValues(values, expected), "property font-style's values.");
 
   // Test property with "cubic-bezier" and "step".
-  var prop = "-moz-transition";
+  var prop = "transition";
   var values = InspectorUtils.getCSSValuesForProperty(prop);
   var expected = [ "initial", "all", "unset", "cubic-bezier", "ease", "ease-in", "ease-in-out",
                    "ease-out", "inherit", "revert", "revert-layer", "linear", "none", "step-end", "step-start",
                    "steps" ];
-  ok(testValues(values, expected), "property -moz-transition's values.");
+  ok(testValues(values, expected), "property transition's values.");
 
   // test invalid property
   var prop = "invalidProperty";
