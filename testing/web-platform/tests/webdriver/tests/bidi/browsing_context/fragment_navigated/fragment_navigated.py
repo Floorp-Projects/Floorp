@@ -4,7 +4,7 @@ from tests.support.sync import AsyncPoll
 from webdriver.bidi.modules.script import ContextTarget
 from webdriver.error import TimeoutException
 
-from ... import any_int, any_string, recursive_compare, int_interval
+from ... import any_int, recursive_compare, int_interval
 from .. import assert_navigation_info
 
 pytestmark = pytest.mark.asyncio
@@ -90,7 +90,7 @@ async def test_navigation_id(
 
     on_frame_navigated = wait_for_event(FRAGMENT_NAVIGATED_EVENT)
 
-    target_url = url(EMPTY_PAGE + '#foo');
+    target_url = url(EMPTY_PAGE + '#foo')
     result = await bidi_session.browsing_context.navigate(
         context=new_tab["context"], url=target_url, wait="complete")
 
@@ -113,7 +113,7 @@ async def test_url_with_base_tag(bidi_session, subscribe_events, inline, new_tab
 
     on_frame_navigated = wait_for_event(FRAGMENT_NAVIGATED_EVENT)
 
-    target_url = url + '#foo';
+    target_url = url + '#foo'
     await bidi_session.browsing_context.navigate(context=new_tab["context"], url=target_url, wait="complete")
 
     recursive_compare(
