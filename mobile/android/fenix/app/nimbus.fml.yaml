@@ -276,8 +276,8 @@ features:
             "feature-setting-value": 0,
             "feature-setting-value-pbm": 0,
             "feature-setting-detect-only": 0,
-            "feature-setting-global-rules": 0,
-            "feature-setting-global-rules-sub-frames": 0,
+            "feature-setting-global-rules": 1,
+            "feature-setting-global-rules-sub-frames": 1,
           }
     defaults:
       - channel: developer
@@ -287,8 +287,8 @@ features:
             "feature-setting-value": 0,
             "feature-setting-value-pbm": 1,
             "feature-setting-detect-only": 0,
-            "feature-setting-global-rules": 0,
-            "feature-setting-global-rules-sub-frames": 0,
+            "feature-setting-global-rules": 1,
+            "feature-setting-global-rules-sub-frames": 1,
           }
         }
       - channel: nightly
@@ -298,8 +298,8 @@ features:
             "feature-setting-value": 0,
             "feature-setting-value-pbm": 1,
             "feature-setting-detect-only": 0,
-            "feature-setting-global-rules": 0,
-            "feature-setting-global-rules-sub-frames": 0,
+            "feature-setting-global-rules": 1,
+            "feature-setting-global-rules-sub-frames": 1,
           }
         }
       - channel: beta
@@ -309,8 +309,8 @@ features:
             "feature-setting-value": 0,
             "feature-setting-value-pbm": 1,
             "feature-setting-detect-only": 0,
-            "feature-setting-global-rules": 0,
-            "feature-setting-global-rules-sub-frames": 0,
+            "feature-setting-global-rules": 1,
+            "feature-setting-global-rules-sub-frames": 1,
           }
         }
   unified-search:
