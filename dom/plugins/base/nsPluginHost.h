@@ -7,25 +7,19 @@
 #define nsPluginHost_h_
 
 #include "nsStringFwd.h"
-#include "nsWeakReference.h"
 
-class nsPluginHost final : public nsSupportsWeakReference {
-  virtual ~nsPluginHost() = default;
+namespace nsPluginHost {
 
- public:
-  nsPluginHost() = default;
-
-  NS_DECL_ISUPPORTS
-
-  // checks whether aType is a type we recognize for potential special handling
-  enum SpecialType {
-    eSpecialType_None,
-    // Needed to whitelist for async init support
-    eSpecialType_Test,
-    // Informs some decisions about OOP and quirks
-    eSpecialType_Flash
-  };
-  static SpecialType GetSpecialType(const nsACString& aMIMEType);
+// checks whether aType is a type we recognize for potential special handling
+enum SpecialType {
+  eSpecialType_None,
+  // Needed to whitelist for async init support
+  eSpecialType_Test,
+  // Informs some decisions about OOP and quirks
+  eSpecialType_Flash
 };
+SpecialType GetSpecialType(const nsACString& aMIMEType);
+
+}  // namespace nsPluginHost
 
 #endif  // nsPluginHost_h_
