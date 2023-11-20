@@ -113,6 +113,7 @@ bool GenericScrollAnimation::HandleScrollOffsetUpdate(
     const Maybe<CSSPoint>& aRelativeDelta) {
   if (aRelativeDelta) {
     mAnimationPhysics->ApplyContentShift(*aRelativeDelta);
+    mFinalDestination += CSSPoint::ToAppUnits(*aRelativeDelta);
     return true;
   }
   return false;
