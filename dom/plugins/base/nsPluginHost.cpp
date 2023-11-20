@@ -31,13 +31,6 @@ already_AddRefed<nsPluginHost> nsPluginHost::GetInst() {
   return do_AddRef(sInst);
 }
 
-bool nsPluginHost::HavePluginForType(const nsACString& aMimeType,
-                                     PluginFilter aFilter) {
-  bool checkEnabled = aFilter & eExcludeDisabled;
-  bool allowFake = !(aFilter & eExcludeFake);
-  return FindPluginForType(aMimeType, allowFake, checkEnabled);
-}
-
 nsIInternalPluginTag* nsPluginHost::FindPluginForType(
     const nsACString& aMimeType, bool aIncludeFake, bool aCheckEnabled) {
   if (aIncludeFake) {

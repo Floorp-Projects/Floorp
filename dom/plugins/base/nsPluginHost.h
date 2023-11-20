@@ -32,10 +32,6 @@ class nsPluginHost final : public nsSupportsWeakReference {
                                  uint32_t aExcludeFlags,
                                  nsIPluginTag** aResult);
 
-  // FIXME-jsplugins comment about fake
-  bool HavePluginForType(const nsACString& aMimeType,
-                         PluginFilter aFilter = eExcludeDisabled);
-
   // checks whether aType is a type we recognize for potential special handling
   enum SpecialType {
     eSpecialType_None,

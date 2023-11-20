@@ -20,7 +20,6 @@
 #include "nsIObserverService.h"
 #include "nsIScriptError.h"
 #include "nsITimer.h"
-#include "nsPluginHost.h"
 #include "nsPrintfCString.h"
 
 #if defined(MOZ_FFMPEG)
