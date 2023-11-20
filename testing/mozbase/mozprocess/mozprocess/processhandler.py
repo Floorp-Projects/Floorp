@@ -947,11 +947,11 @@ falling back to not using job objects for managing child processes""",
         if self.reader.thread and self.reader.thread is not threading.current_thread():
             count = 0
             while self.reader.is_alive():
-                self.reader.join(timeout=1)
-                count += 1
                 if timeout is not None and count > timeout:
                     self.debug("wait timeout for reader thread")
                     return None
+                self.reader.join(timeout=1)
+                count += 1
 
         self.returncode = self.proc.wait(timeout)
         return self.returncode
