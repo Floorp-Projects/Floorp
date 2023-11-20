@@ -140,7 +140,7 @@ nsresult FontLoaderUtils::BuildChannel(
     const dom::ReferrerPolicy& aReferrerPolicy,
     gfxUserFontEntry* aUserFontEntry, const gfxFontFaceSrc* aFontFaceSrc,
     dom::WorkerPrivate* aWorkerPrivate, nsILoadGroup* aLoadGroup,
-    nsIInterfaceRequestor* aCallbacks, bool aIsPreload) {
+    nsIInterfaceRequestor* aCallbacks) {
   nsresult rv;
 
   nsIPrincipal* principal =
@@ -152,7 +152,7 @@ nsresult FontLoaderUtils::BuildChannel(
   nsContentSecurityManager::CORSSecurityMapping corsMapping;
   nsSecurityFlags securityFlags;
   nsContentPolicyType contentPolicyType;
-  BuildChannelFlags(aURI, aIsPreload, corsMapping, securityFlags,
+  BuildChannelFlags(aURI, /* aIsPreload */ false, corsMapping, securityFlags,
                     contentPolicyType);
 
   nsCOMPtr<nsIChannel> channel;
