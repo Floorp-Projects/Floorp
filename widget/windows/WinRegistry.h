@@ -7,10 +7,14 @@
 #define mozilla_widget_WinRegistry_h__
 
 #include <windows.h>
+#include <functional>
+#include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsTArray.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Span.h"
+
+class nsISerialEventTarget;
 
 namespace mozilla::widget::WinRegistry {
 
@@ -192,6 +196,38 @@ inline Maybe<nsString> GetString(HKEY aRootKey, const nsString& aKeyName,
   }
   return k.GetValueAsString(aValueName, aFlags);
 }
+
+class KeyWatcher final {
+ public:
+  using Callback = std::function<void()>;
+
+  KeyWatcher(const KeyWatcher&) = delete;
+
+  const Key& GetKey() const { return mKey; }
+
+  // Start watching a key. The watching is recursive (the whole key subtree is
+  // watched), and the callback is executed every time the key or any of its
+  // descendants change until the watcher is destroyed.
+  //
+  // @param aKey the key to watch. Must have been opened with the
+  //             KeyMode::Notify flag.
+  // @param aTargetSerialEventTarget the target event target to dispatch the
+  //        callback to.
+  // @param aCallback the closure to run every time that registry key changes.
+  KeyWatcher(Key&& aKey, nsISerialEventTarget* aTargetSerialEventTarget,
+             Callback&& aCallback);
+
+  ~KeyWatcher();
+
+ private:
+  bool Register();
+
+  Key mKey;
+  nsCOMPtr<nsISerialEventTarget> mEventTarget;
+  Callback mCallback;
+  HANDLE mEvent = nullptr;
+  HANDLE mWaitObject = nullptr;
+};
 
 }  // namespace mozilla::widget::WinRegistry
 

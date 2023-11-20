@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "WinRegistry.h"
+#include "nsThreadUtils.h"
 
 namespace mozilla::widget::WinRegistry {
 
@@ -260,6 +261,65 @@ Maybe<uint32_t> Key::GetValueAsString(const nsString& aName,
   uint32_t len = size ? size / sizeof(char16_t) - 1 : 0;
   aBuffer[len] = 0;
   return Some(len);
+}
+
+KeyWatcher::KeyWatcher(Key&& aKey,
+                       nsISerialEventTarget* aTargetSerialEventTarget,
+                       Callback&& aCallback)
+    : mKey(std::move(aKey)),
+      mEventTarget(aTargetSerialEventTarget),
+      mCallback(std::move(aCallback)) {
+  MOZ_ASSERT(mKey);
+  MOZ_ASSERT(mEventTarget);
+  MOZ_ASSERT(mCallback);
+  mEvent = CreateEvent(nullptr, /* bManualReset = */ FALSE,
+                       /* bInitialState = */ FALSE, nullptr);
+  if (NS_WARN_IF(!mEvent)) {
+    return;
+  }
+
+  if (NS_WARN_IF(!Register())) {
+    return;
+  }
+
+  // The callback only dispatches to the relevant event target, so we can use
+  // WT_EXECUTEINWAITTHREAD.
+  RegisterWaitForSingleObject(
+      &mWaitObject, mEvent,
+      [](void* aContext, BOOLEAN) {
+        auto* watcher = static_cast<KeyWatcher*>(aContext);
+        watcher->Register();
+        watcher->mEventTarget->Dispatch(
+            NS_NewRunnableFunction("KeyWatcher callback", watcher->mCallback));
+      },
+      this, INFINITE, WT_EXECUTEINWAITTHREAD);
+}
+
+// As per the documentation in:
+// https://learn.microsoft.com/en-us/windows/win32/api/winreg/nf-winreg-regnotifychangekeyvalue
+//
+// This function detects a single change. After the caller receives a
+// notification event, it should call the function again to receive the next
+// notification.
+bool KeyWatcher::Register() {
+  MOZ_ASSERT(mEvent);
+  DWORD flags = REG_NOTIFY_CHANGE_NAME | REG_NOTIFY_CHANGE_ATTRIBUTES |
+                REG_NOTIFY_CHANGE_LAST_SET | REG_NOTIFY_CHANGE_SECURITY |
+                REG_NOTIFY_THREAD_AGNOSTIC;
+  HRESULT rv =
+      RegNotifyChangeKeyValue(mKey.RawKey(), /* bWatchSubtree = */ TRUE, flags,
+                              mEvent, /* fAsynchronous = */ TRUE);
+  return !NS_WARN_IF(FAILED(rv));
+}
+
+KeyWatcher::~KeyWatcher() {
+  if (mWaitObject) {
+    UnregisterWait(mWaitObject);
+    CloseHandle(mWaitObject);
+  }
+  if (mEvent) {
+    CloseHandle(mEvent);
+  }
 }
 
 }  // namespace mozilla::widget::WinRegistry
