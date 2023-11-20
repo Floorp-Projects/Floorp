@@ -271,9 +271,8 @@ pref("formhelper.autozoom", true);
 pref("geckoview.console.enabled", false);
 
 #ifdef NIGHTLY_BUILD
-  // Testing flag for geckoview shopping product. When true, sendAttributionEvent
-  // will return "TEST_AID_RESPONSE" for products with "TEST_AID" id.
-  pref("geckoview.shopping.test_response", false);
+  // Used for mocking data for GeckoView shopping tests, should use in addition with an automation check.
+  pref("geckoview.shopping.mock_test_response", false);
 #endif
 
 pref("image.cache.size", 1048576); // bytes
