@@ -10430,22 +10430,6 @@ static bool HtmlObjectContentSupportsDocument(const nsCString& aMimeType) {
 }
 
 /* static */
-already_AddRefed<nsIPluginTag> nsContentUtils::PluginTagForType(
-    const nsCString& aMIMEType, bool aNoFakePlugin) {
-  RefPtr<nsPluginHost> pluginHost = nsPluginHost::GetInst();
-  nsCOMPtr<nsIPluginTag> tag;
-  NS_ENSURE_TRUE(pluginHost, nullptr);
-
-  // ShouldPlay will handle the case where the plugin is disabled
-  pluginHost->GetPluginTagForType(
-      aMIMEType,
-      aNoFakePlugin ? nsPluginHost::eExcludeFake : nsPluginHost::eExcludeNone,
-      getter_AddRefs(tag));
-
-  return tag.forget();
-}
-
-/* static */
 uint32_t nsContentUtils::HtmlObjectContentTypeForMIMEType(
     const nsCString& aMIMEType, bool aNoFakePlugin) {
   if (aMIMEType.IsEmpty()) {
