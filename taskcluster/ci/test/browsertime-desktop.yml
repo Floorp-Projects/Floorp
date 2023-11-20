@@ -370,7 +370,6 @@ browsertime-benchmark:
                         by-test-platform:
                             linux1804-64-clang-trunk-qr/opt: 2
                             default: 1
-                    unity-webgl: 3
                     default:
                         by-test-platform:
                             windows10-64-ccov.*/.*: 3
@@ -428,7 +427,7 @@ browsertime-benchmark:
             motionmark-htmlsuite: 1500
             motionmark-htmlsuite-ramp: 3000
             motionmark-animometer-ramp: 2100
-            unity-webgl: 1500
+            unity-webgl: 2400
             speedometer3:
                 by-test-platform:
                     macosx1300.*shippable.*: 4200

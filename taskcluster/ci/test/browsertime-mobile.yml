@@ -374,6 +374,10 @@ browsertime-benchmark-unity-webgl-mobile:
     run-without-variant: false
     raptor:
         apps: [geckoview, refbrow, fenix, chrome-m]
+    tier:
+        by-app:
+            geckoview: 2
+            default: 3
     treeherder-symbol: Btime(ugl)
     run-on-projects:
         by-app:
