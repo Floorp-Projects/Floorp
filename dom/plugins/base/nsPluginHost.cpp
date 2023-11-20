@@ -11,7 +11,6 @@
 
 #include <cstdlib>
 #include <stdio.h>
-#include "nsPluginLogging.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/ProfilerLabels.h"
 #include "mozilla/ClearOnShutdown.h"
@@ -19,29 +18,7 @@
 
 using namespace mozilla;
 
-LazyLogModule nsPluginLogging::gNPNLog(NPN_LOG_NAME);
-LazyLogModule nsPluginLogging::gNPPLog(NPP_LOG_NAME);
-LazyLogModule nsPluginLogging::gPluginLog(PLUGIN_LOG_NAME);
-
 StaticRefPtr<nsPluginHost> nsPluginHost::sInst;
-
-nsPluginHost::nsPluginHost() {
-#ifdef PLUGIN_LOGGING
-  MOZ_LOG(nsPluginLogging::gNPNLog, PLUGIN_LOG_ALWAYS,
-          ("NPN Logging Active!\n"));
-  MOZ_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_ALWAYS,
-          ("General Plugin Logging Active! (nsPluginHost::ctor)\n"));
-  MOZ_LOG(nsPluginLogging::gNPPLog, PLUGIN_LOG_ALWAYS,
-          ("NPP Logging Active!\n"));
-
-  PLUGIN_LOG(PLUGIN_LOG_ALWAYS, ("nsPluginHost::ctor\n"));
-  PR_LogFlush();
-#endif
-}
-
-nsPluginHost::~nsPluginHost() {
-  PLUGIN_LOG(PLUGIN_LOG_ALWAYS, ("nsPluginHost::dtor\n"));
-}
 
 NS_IMPL_ISUPPORTS(nsPluginHost, nsISupportsWeakReference)
 
