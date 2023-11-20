@@ -8,37 +8,12 @@
 #define FontPreloader_h_
 
 #include "mozilla/FetchPreloader.h"
-#include "nsContentSecurityManager.h"
-#include "nsIContentPolicy.h"
-#include "nsILoadInfo.h"
-
-class gfxUserFontEntry;
-struct gfxFontFaceSrc;
-class nsIHttpChannel;
-class nsIReferrerInfo;
 
 namespace mozilla {
-namespace dom {
-class WorkerPrivate;
-}
 
 class FontPreloader final : public FetchPreloader {
  public:
   FontPreloader();
-
-  static nsresult BuildChannel(
-      nsIChannel** aChannel, nsIURI* aURI, const CORSMode aCORSMode,
-      const dom::ReferrerPolicy& aReferrerPolicy,
-      gfxUserFontEntry* aUserFontEntry, const gfxFontFaceSrc* aFontFaceSrc,
-      dom::Document* aDocument, nsILoadGroup* aLoadGroup,
-      nsIInterfaceRequestor* aCallbacks, bool aIsPreload);
-
-  static nsresult BuildChannel(
-      nsIChannel** aChannel, nsIURI* aURI, const CORSMode aCORSMode,
-      const dom::ReferrerPolicy& aReferrerPolicy,
-      gfxUserFontEntry* aUserFontEntry, const gfxFontFaceSrc* aFontFaceSrc,
-      dom::WorkerPrivate* aWorkerPrivate, nsILoadGroup* aLoadGroup,
-      nsIInterfaceRequestor* aCallbacks, bool aIsPreload);
 
  protected:
   nsresult CreateChannel(nsIChannel** aChannel, nsIURI* aURI,
@@ -47,16 +22,6 @@ class FontPreloader final : public FetchPreloader {
                          dom::Document* aDocument, nsILoadGroup* aLoadGroup,
                          nsIInterfaceRequestor* aCallbacks,
                          uint64_t aEarlyHintPreloaderId) override;
-
-  static void BuildChannelFlags(
-      nsIURI* aURI, bool aIsPreload,
-      nsContentSecurityManager::CORSSecurityMapping& aCorsMapping,
-      nsSecurityFlags& aSecurityFlags, nsContentPolicyType& aContentPolicyType);
-
-  static nsresult BuildChannelSetup(nsIChannel* aChannel,
-                                    nsIHttpChannel* aHttpChannel,
-                                    nsIReferrerInfo* aReferrerInfo,
-                                    const gfxFontFaceSrc* aFontFaceSrc);
 };
 
 }  // namespace mozilla
