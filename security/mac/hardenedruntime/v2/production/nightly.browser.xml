@@ -29,7 +29,7 @@
 
     <!-- Required for com.apple.developer.web-browser.public-key-credential -->
     <key>com.apple.application-identifier</key>
-    <string>43AQ936H96.org.mozilla.*</string>
+    <string>43AQ936H96.org.mozilla.nightly</string>
 
     <!-- For platform passkey (webauthn) support -->
     <key>com.apple.developer.web-browser.public-key-credential</key><true/>
