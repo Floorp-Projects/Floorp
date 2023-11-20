@@ -3000,6 +3000,13 @@ IncrementalProgress GCRuntime::markUntilBudgetExhausted(
 
   AutoMajorGCProfilerEntry s(this);
 
+  if (initialState != State::Mark) {
+    sliceBudget.forceCheck();
+    if (sliceBudget.isOverBudget()) {
+      return NotFinished;
+    }
+  }
+
   if (processTestMarkQueue() == QueueYielded) {
     return NotFinished;
   }
