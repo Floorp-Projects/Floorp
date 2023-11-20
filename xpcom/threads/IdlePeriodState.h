@@ -186,11 +186,6 @@ class IdlePeriodState {
   // not holding any locks, but may do the latter while holding locks.
   TimeStamp mCachedIdleDeadline;
 
-  // mIdleSchedulerInitialized is true if our mIdleScheduler has been
-  // initialized.  It may be null even after initialiazation, in various
-  // situations.
-  bool mIdleSchedulerInitialized = false;
-
   // mActive is true when the PrioritizedEventQueue or TaskController we are
   // associated with is running tasks.
   bool mActive = true;
