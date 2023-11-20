@@ -44,12 +44,22 @@ def generic_parser():
 class TryConfig:
     @classmethod
     def config_settings(cls):
-        from mach.registrar import Registrar
-
         desc = (
             "The default selector to use when running `mach try` without a subcommand."
         )
-        choices = Registrar.command_handlers["try"].subcommand_handlers.keys()
+        choices = [
+            "fuzzy",
+            "chooser",
+            "auto",
+            "again",
+            "empty",
+            "syntax",
+            "coverage",
+            "release",
+            "scriptworker",
+            "compare",
+            "perf",
+        ]
 
         return [
             ("try.default", "string", desc, "auto", {"choices": choices}),
