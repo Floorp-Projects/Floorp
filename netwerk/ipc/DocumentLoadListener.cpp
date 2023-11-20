@@ -453,9 +453,25 @@ void DocumentLoadListener::AddURIVisit(nsIChannel* aChannel,
   nsCOMPtr<nsIWidget> widget =
       browsingContext->GetParentProcessWidgetContaining();
 
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->LoadInfo();
+
+  // Check if the URI has a http scheme and if either HSTS is enabled for this
+  // host, or if we were upgraded by HTTPS-Only/First. If this is the case, we
+  // want to mark this URI specially, as it will be followed shortly by an
+  // almost identical https history entry. That way the global history
+  // implementation can handle the visit appropriately (e.g. by marking it as
+  // `hidden`, so only the https url appears in default history views).
+  bool wasUpgraded =
+      uri->SchemeIs("http") &&
+      (loadInfo->GetHstsStatus() ||
+       (loadInfo->GetHttpsOnlyStatus() &
+        (nsILoadInfo::HTTPS_ONLY_UPGRADED_HTTPS_FIRST |
+         nsILoadInfo::HTTPS_ONLY_UPGRADED_LISTENER_NOT_REGISTERED |
+         nsILoadInfo::HTTPS_ONLY_UPGRADED_LISTENER_REGISTERED)));
+
   nsDocShell::InternalAddURIVisit(uri, previousURI, previousFlags,
                                   responseStatus, browsingContext, widget,
-                                  mLoadStateLoadType);
+                                  mLoadStateLoadType, wasUpgraded);
 }
 
 CanonicalBrowsingContext* DocumentLoadListener::GetLoadingBrowsingContext()
