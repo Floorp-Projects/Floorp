@@ -205,6 +205,11 @@ jobs:
           name: floorp-mac-${{ env.ARCH_TYPE }}-build-with-profgen 
           path: ~/downloads/artifacts
 
+      - uses: actions/setup-python@v4
+        if: ${{ env.ARCH_TYPE == 'x86_64' }}
+        with:
+          python-version: '3.10' 
+
       - name: setup environment 🌲
         run: |
           echo -e "ac_add_options --enable-bootstrap" >> mozconfig
