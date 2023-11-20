@@ -1619,14 +1619,14 @@ JS_PUBLIC_API void JS::SetCreateGCSliceBudgetCallback(
 void TimeBudget::setDeadlineFromNow() { deadline = TimeStamp::Now() + budget; }
 
 SliceBudget::SliceBudget(TimeBudget time, InterruptRequestFlag* interrupt)
-    : budget(TimeBudget(time)),
+    : counter(StepsPerExpensiveCheck),
       interruptRequested(interrupt),
-      counter(StepsPerExpensiveCheck) {
+      budget(TimeBudget(time)) {
   budget.as<TimeBudget>().setDeadlineFromNow();
 }
 
 SliceBudget::SliceBudget(WorkBudget work)
-    : budget(work), interruptRequested(nullptr), counter(work.budget) {}
+    : counter(work.budget), interruptRequested(nullptr), budget(work) {}
 
 int SliceBudget::describe(char* buffer, size_t maxlen) const {
   if (isUnlimited()) {
