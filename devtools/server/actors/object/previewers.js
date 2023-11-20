@@ -415,6 +415,10 @@ const previewers = {
 
   Headers: [
     function(objectActor, grip) {
+      // Bug 1863776: Headers can't be yet previewed from workers
+      if (isWorker) {
+        return false;
+      }
       const enumEntries = PropertyIterators.enumHeadersEntries(objectActor);
 
       grip.preview = {

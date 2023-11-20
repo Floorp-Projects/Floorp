@@ -38,7 +38,6 @@ export async function onConnect(_commands, _resourceCommand, _actions, store) {
     targetCommand.listenForWorkers = true;
     if (descriptorFront.isLocalTab && features.windowlessServiceWorkers) {
       targetCommand.listenForServiceWorkers = true;
-      targetCommand.destroyServiceWorkersOnNavigation = true;
     }
     await targetCommand.startListening();
   }

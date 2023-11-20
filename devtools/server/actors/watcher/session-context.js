@@ -162,6 +162,7 @@ function getWatcherSupportedTargets(type) {
     [Targets.TYPES.WORKER]:
       type == SESSION_TYPES.BROWSER_ELEMENT ||
       type == SESSION_TYPES.WEBEXTENSION,
+    [Targets.TYPES.SERVICE_WORKER]: type == SESSION_TYPES.BROWSER_ELEMENT,
   };
 }
 
