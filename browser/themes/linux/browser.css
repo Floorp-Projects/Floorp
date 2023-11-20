@@ -40,43 +40,43 @@
   #toolbar-menubar[autohide="true"] {
     height: calc(var(--tab-min-height) + 2 * var(--tab-block-margin));
   }
-}
 
-:root[tabsintitlebar][sizemode="normal"]:not([gtktiledwindow="true"]) {
-  /* This takes care of drawing our window decorations on X11 */
-  -moz-default-appearance: -moz-window-decorations;
-  appearance: auto;
+  &[sizemode="normal"]:not([gtktiledwindow="true"]) {
+    /* This takes care of drawing our window decorations on X11 */
+    -moz-default-appearance: -moz-window-decorations;
+    appearance: auto;
 
-  #navigator-toolbox,
-  dialog::backdrop {
-    border-top-left-radius: env(-moz-gtk-csd-titlebar-radius);
-    border-top-right-radius: env(-moz-gtk-csd-titlebar-radius);
-  }
-
-  /* stylelint-disable-next-line media-query-no-invalid */
-  @media (-moz-bool-pref: "widget.gtk.rounded-bottom-corners.enabled") {
-    #navigator-toolbox {
-      /* The body clip below covers this. */
-      border-radius: 0;
+    #navigator-toolbox,
+    dialog::backdrop {
+      border-top-left-radius: env(-moz-gtk-csd-titlebar-radius);
+      border-top-right-radius: env(-moz-gtk-csd-titlebar-radius);
     }
 
-    body,
-    dialog::backdrop {
-      /* Use an uniform clip to allow WebRender to optimize it better */
-      border-radius: env(-moz-gtk-csd-titlebar-radius);
+    /* stylelint-disable-next-line media-query-no-invalid */
+    @media (-moz-bool-pref: "widget.gtk.rounded-bottom-corners.enabled") {
+      #navigator-toolbox {
+        /* The body clip below covers this. */
+        border-radius: 0;
+      }
+
+      body,
+      dialog::backdrop {
+        /* Use an uniform clip to allow WebRender to optimize it better */
+        border-radius: env(-moz-gtk-csd-titlebar-radius);
+      }
     }
   }
 }
 
 .browser-toolbar {
   padding: 0;
-}
 
-.browser-toolbar:not(.titlebar-color) {
-  background-color: var(--toolbar-bgcolor);
-  color: var(--toolbar-color);
-  appearance: none;
-  border-style: none;
+  &:not(.titlebar-color) {
+    background-color: var(--toolbar-bgcolor);
+    color: var(--toolbar-color);
+    appearance: none;
+    border-style: none;
+  }
 }
 
 #nav-bar:not([tabs-hidden="true"]) {
@@ -86,30 +86,33 @@
 }
 
 /* Bookmark menus */
-menu.bookmark-item,
-menuitem.bookmark-item {
-  min-width: 0;
-  max-width: 32em;
-}
+.bookmark-item {
+  &:is(menu, menuitem) {
+    min-width: 0;
+    max-width: 32em;
+  }
 
-.bookmark-item:not(.subviewbutton) > .menu-iconic-left {
-  margin-block: 0;
-}
+  &:not(.subviewbutton) > .menu-iconic-left {
+    margin-block: 0;
+  }
 
-/* Bookmark drag and drop styles */
-.bookmark-item[dragover-into="true"] {
-  background: SelectedItem !important;
-  color: SelectedItemText !important;
-}
+  /* Bookmark drag and drop styles */
+  &[dragover-into="true"] {
+    background: SelectedItem !important;
+    color: SelectedItemText !important;
+  }
 
-.bookmark-item[cutting] > .toolbarbutton-icon,
-.bookmark-item[cutting] > .menu-iconic-left > .menu-iconic-icon {
-  opacity: 0.5;
-}
+  &[cutting] {
+    > .toolbarbutton-icon,
+    > .menu-iconic-left > .menu-iconic-icon {
+      opacity: 0.5;
+    }
 
-.bookmark-item[cutting] > .toolbarbutton-text,
-.bookmark-item[cutting] > .menu-iconic-left > .menu-iconic-text {
-  opacity: 0.7;
+    > .toolbarbutton-text,
+    > .menu-iconic-left > .menu-iconic-text {
+      opacity: 0.7;
+    }
+  }
 }
 
 /* Address bar */
@@ -198,26 +201,24 @@ menuitem.bookmark-item {
   color: -moz-dialogText;
   text-shadow: none;
   color-scheme: light;
-}
 
-@media (-moz-content-prefers-color-scheme: dark) {
-  #statuspanel-label {
+  @media (-moz-content-prefers-color-scheme: dark) {
     color-scheme: dark;
   }
-}
 
-#statuspanel:not([mirror]) > #statuspanel-label:-moz-locale-dir(ltr),
-#statuspanel[mirror] > #statuspanel-label:-moz-locale-dir(rtl) {
-  border-right-style: solid;
-  border-top-right-radius: .3em;
-  margin-right: 1em;
-}
+  #statuspanel:not([mirror]) > &:-moz-locale-dir(ltr),
+  #statuspanel[mirror] > &:-moz-locale-dir(rtl) {
+    border-right-style: solid;
+    border-top-right-radius: .3em;
+    margin-right: 1em;
+  }
 
-#statuspanel:not([mirror]) > #statuspanel-label:-moz-locale-dir(rtl),
-#statuspanel[mirror] > #statuspanel-label:-moz-locale-dir(ltr) {
-  border-left-style: solid;
-  border-top-left-radius: .3em;
-  margin-left: 1em;
+  #statuspanel:not([mirror]) > &:-moz-locale-dir(rtl),
+  #statuspanel[mirror] > &:-moz-locale-dir(ltr) {
+    border-left-style: solid;
+    border-top-left-radius: .3em;
+    margin-left: 1em;
+  }
 }
 
 
@@ -259,84 +260,104 @@ menuitem.bookmark-item {
   align-items: center;
 }
 
-/* Render titlebar command buttons according to system config.
- * Use full scale icons here as the Gtk+ does. */
-.titlebar-min {
-  appearance: auto;
-  -moz-default-appearance: -moz-window-button-minimize;
-  order: env(-moz-gtk-csd-minimize-button-position);
-}
-.titlebar-max {
-  appearance: auto;
-  -moz-default-appearance: -moz-window-button-maximize;
-  order: env(-moz-gtk-csd-maximize-button-position);
-}
-.titlebar-restore {
-  appearance: auto;
-  -moz-default-appearance: -moz-window-button-restore;
-  order: env(-moz-gtk-csd-maximize-button-position);
-}
-.titlebar-close {
-  appearance: auto;
-  -moz-default-appearance: -moz-window-button-close;
-  order: env(-moz-gtk-csd-close-button-position);
-}
-
 /* When using lightweight themes, use our own buttons since native ones might
  * assume a native background in order to be visible. */
 .titlebar-button:-moz-lwtheme {
   appearance: none;
   border-radius: 100%;
 
+  &:hover {
+    background-color: color-mix(in srgb, currentColor 12%, transparent);
+  }
+
+  &:hover:active {
+    background-color: color-mix(in srgb, currentColor 20%, transparent);
+  }
+
   &:focus-visible {
     outline: var(--focus-outline);
     outline-offset: var(--focus-outline-inset);
   }
+
+  > .toolbarbutton-icon {
+    padding: 6px;
+    -moz-context-properties: stroke;
+    stroke: currentColor;
+  }
 }
-.titlebar-button > .toolbarbutton-icon:-moz-lwtheme {
-  padding: 6px;
-  -moz-context-properties: stroke;
-  stroke: currentColor;
+
+/* Render titlebar command buttons according to system config.
+ * Use full scale icons here as the Gtk+ does. */
+.titlebar-max {
+  appearance: auto;
+  -moz-default-appearance: -moz-window-button-maximize;
+  order: env(-moz-gtk-csd-maximize-button-position);
+
+  &:-moz-lwtheme {
+    list-style-image: url(chrome://browser/skin/window-controls/maximize.svg);
+  }
 }
-.titlebar-min:-moz-lwtheme {
-  list-style-image: url(chrome://browser/skin/window-controls/minimize.svg);
-}
-.titlebar-max:-moz-lwtheme {
-  list-style-image: url(chrome://browser/skin/window-controls/maximize.svg);
-}
-.titlebar-restore:-moz-lwtheme {
-  list-style-image: url(chrome://browser/skin/window-controls/restore.svg);
-}
-.titlebar-close:-moz-lwtheme {
-  list-style-image: url(chrome://browser/skin/window-controls/close.svg);
-}
-.titlebar-button:-moz-lwtheme:hover {
-  background-color: color-mix(in srgb, currentColor 12%, transparent);
-}
-.titlebar-button:-moz-lwtheme:hover:active {
-  background-color: color-mix(in srgb, currentColor 20%, transparent);
-}
-.titlebar-close:-moz-lwtheme:hover {
-  background-color: #d70022;
-  color: white;
-}
-.titlebar-close:-moz-lwtheme:hover:active {
-  background-color: #ff0039;
+
+.titlebar-restore {
+  appearance: auto;
+  -moz-default-appearance: -moz-window-button-restore;
+  order: env(-moz-gtk-csd-maximize-button-position);
+
+  &:-moz-lwtheme {
+    list-style-image: url(chrome://browser/skin/window-controls/restore.svg);
+  }
 }
 
 @media not (-moz-gtk-csd-minimize-button) {
   .titlebar-min {
     display: none;
+
+    &:-moz-lwtheme {
+      list-style-image: url(chrome://browser/skin/window-controls/restore.svg);
+    }
   }
 }
+
 @media not (-moz-gtk-csd-maximize-button) {
   .titlebar-restore,
   .titlebar-max {
     display: none;
   }
 }
-@media not (-moz-gtk-csd-close-button) {
-  .titlebar-close {
+
+.titlebar-close {
+  appearance: auto;
+  -moz-default-appearance: -moz-window-button-close;
+  order: env(-moz-gtk-csd-close-button-position);
+
+  &:-moz-lwtheme {
+    list-style-image: url(chrome://browser/skin/window-controls/close.svg);
+
+    &:hover {
+      background-color: #d70022;
+      color: white;
+    }
+
+    &:hover:active {
+      background-color: #ff0039;
+    }
+  }
+
+  @media not (-moz-gtk-csd-close-button) {
+    display: none;
+  }
+}
+
+.titlebar-min {
+  appearance: auto;
+  -moz-default-appearance: -moz-window-button-minimize;
+  order: env(-moz-gtk-csd-minimize-button-position);
+
+  &:-moz-lwtheme {
+    list-style-image: url(chrome://browser/skin/window-controls/minimize.svg);
+  }
+
+  @media not (-moz-gtk-csd-minimize-button) {
     display: none;
   }
 }
