@@ -8,19 +8,113 @@
 
 //! Unit tests
 
-extern crate percent_encoding;
-extern crate url;
-
 use std::borrow::Cow;
 use std::cell::{Cell, RefCell};
 use std::net::{Ipv4Addr, Ipv6Addr};
 use std::path::{Path, PathBuf};
-use url::{form_urlencoded, Host, Url};
+use url::{form_urlencoded, Host, Origin, Url};
 
 #[test]
 fn size() {
     use std::mem::size_of;
     assert_eq!(size_of::<Url>(), size_of::<Option<Url>>());
+}
+
+#[test]
+fn test_relative() {
+    let base: Url = "sc://%C3%B1".parse().unwrap();
+    let url = base.join("/resources/testharness.js").unwrap();
+    assert_eq!(url.as_str(), "sc://%C3%B1/resources/testharness.js");
+}
+
+#[test]
+fn test_relative_empty() {
+    let base: Url = "sc://%C3%B1".parse().unwrap();
+    let url = base.join("").unwrap();
+    assert_eq!(url.as_str(), "sc://%C3%B1");
+}
+
+#[test]
+fn test_strip_trailing_spaces_from_opaque_path() {
+    let mut url: Url = "data:space   ?query".parse().unwrap();
+    url.set_query(None);
+    assert_eq!(url.as_str(), "data:space");
+
+    let mut url: Url = "data:space   #hash".parse().unwrap();
+    url.set_fragment(None);
+    assert_eq!(url.as_str(), "data:space");
+}
+
+#[test]
+fn test_set_empty_host() {
+    let mut base: Url = "moz://foo:bar@servo/baz".parse().unwrap();
+    base.set_username("").unwrap();
+    assert_eq!(base.as_str(), "moz://:bar@servo/baz");
+    base.set_host(None).unwrap();
+    assert_eq!(base.as_str(), "moz:/baz");
+    base.set_host(Some("servo")).unwrap();
+    assert_eq!(base.as_str(), "moz://servo/baz");
+
+    let mut base: Url = "file://server/share/foo/bar".parse().unwrap();
+    base.set_host(None).unwrap();
+    assert_eq!(base.as_str(), "file:///share/foo/bar");
+
+    let mut base: Url = "file://server/share/foo/bar".parse().unwrap();
+    base.set_host(Some("foo")).unwrap();
+    assert_eq!(base.as_str(), "file://foo/share/foo/bar");
+}
+
+#[test]
+fn test_set_empty_username_and_password() {
+    let mut base: Url = "moz://foo:bar@servo/baz".parse().unwrap();
+    base.set_username("").unwrap();
+    assert_eq!(base.as_str(), "moz://:bar@servo/baz");
+
+    base.set_password(Some("")).unwrap();
+    assert_eq!(base.as_str(), "moz://servo/baz");
+
+    base.set_password(None).unwrap();
+    assert_eq!(base.as_str(), "moz://servo/baz");
+}
+
+#[test]
+fn test_set_empty_password() {
+    let mut base: Url = "moz://foo:bar@servo/baz".parse().unwrap();
+
+    base.set_password(Some("")).unwrap();
+    assert_eq!(base.as_str(), "moz://foo@servo/baz");
+
+    base.set_password(None).unwrap();
+    assert_eq!(base.as_str(), "moz://foo@servo/baz");
+}
+
+#[test]
+fn test_set_empty_hostname() {
+    use url::quirks;
+    let mut base: Url = "moz://foo@servo/baz".parse().unwrap();
+    assert!(
+        quirks::set_hostname(&mut base, "").is_err(),
+        "setting an empty hostname to a url with a username should fail"
+    );
+    base = "moz://:pass@servo/baz".parse().unwrap();
+    assert!(
+        quirks::set_hostname(&mut base, "").is_err(),
+        "setting an empty hostname to a url with a password should fail"
+    );
+    base = "moz://servo/baz".parse().unwrap();
+    quirks::set_hostname(&mut base, "").unwrap();
+    assert_eq!(base.as_str(), "moz:///baz");
+}
+
+#[test]
+fn test_set_empty_query() {
+    let mut base: Url = "moz://example.com/path?query".parse().unwrap();
+
+    base.set_query(Some(""));
+    assert_eq!(base.as_str(), "moz://example.com/path?");
+
+    base.set_query(None);
+    assert_eq!(base.as_str(), "moz://example.com/path");
 }
 
 macro_rules! assert_from_file_path {
@@ -216,7 +310,6 @@ fn host() {
             0x2001, 0x0db8, 0x85a3, 0x08d3, 0x1319, 0x8a2e, 0x0370, 0x7344,
         )),
     );
-    assert_host("http://1.35.+33.49", Host::Domain("1.35.+33.49"));
     assert_host(
         "http://[::]",
         Host::Ipv6(Ipv6Addr::new(0, 0, 0, 0, 0, 0, 0, 0)),
@@ -231,9 +324,13 @@ fn host() {
     );
     assert_host("http://0x1232131", Host::Ipv4(Ipv4Addr::new(1, 35, 33, 49)));
     assert_host("http://111", Host::Ipv4(Ipv4Addr::new(0, 0, 0, 111)));
-    assert_host("http://2..2.3", Host::Domain("2..2.3"));
+    assert!(Url::parse("http://1.35.+33.49").is_err());
+    assert!(Url::parse("http://2..2.3").is_err());
     assert!(Url::parse("http://42.0x1232131").is_err());
     assert!(Url::parse("http://192.168.0.257").is_err());
+
+    assert_eq!(Host::Domain("foo"), Host::Domain("foo").to_owned());
+    assert_ne!(Host::Domain("foo"), Host::Domain("bar").to_owned());
 }
 
 #[test]
@@ -294,7 +391,7 @@ fn test_serialization() {
 
 #[test]
 fn test_form_urlencoded() {
-    let pairs: &[(Cow<str>, Cow<str>)] = &[
+    let pairs: &[(Cow<'_, str>, Cow<'_, str>)] = &[
         ("foo".into(), "é&".into()),
         ("bar".into(), "".into()),
         ("foo".into(), "#".into()),
@@ -315,8 +412,9 @@ fn test_form_serialize() {
         .append_pair("foo", "é&")
         .append_pair("bar", "")
         .append_pair("foo", "#")
+        .append_key_only("json")
         .finish();
-    assert_eq!(encoded, "foo=%C3%A9%26&bar=&foo=%23");
+    assert_eq!(encoded, "foo=%C3%A9%26&bar=&foo=%23&json");
 }
 
 #[test]
@@ -324,8 +422,9 @@ fn form_urlencoded_encoding_override() {
     let encoded = form_urlencoded::Serializer::new(String::new())
         .encoding_override(Some(&|s| s.as_bytes().to_ascii_uppercase().into()))
         .append_pair("foo", "bar")
+        .append_key_only("xml")
         .finish();
-    assert_eq!(encoded, "FOO=BAR");
+    assert_eq!(encoded, "FOO=BAR&XML");
 }
 
 #[test]
@@ -373,7 +472,7 @@ fn append_trailing_slash() {
 fn extend_query_pairs_then_mutate() {
     let mut url: Url = "http://localhost:6767/foo/bar".parse().unwrap();
     url.query_pairs_mut()
-        .extend_pairs(vec![("auth", "my-token")].into_iter());
+        .extend_pairs(vec![("auth", "my-token")]);
     url.check_invariants().unwrap();
     assert_eq!(
         url.to_string(),
@@ -413,9 +512,9 @@ fn test_set_host() {
     assert_eq!(url.as_str(), "foobar:/hello");
 
     let mut url = Url::parse("foo://ș").unwrap();
-    assert_eq!(url.as_str(), "foo://%C8%99/");
+    assert_eq!(url.as_str(), "foo://%C8%99");
     url.set_host(Some("goșu.ro")).unwrap();
-    assert_eq!(url.as_str(), "foo://go%C8%99u.ro/");
+    assert_eq!(url.as_str(), "foo://go%C8%99u.ro");
 }
 
 #[test]
@@ -470,6 +569,237 @@ fn test_origin_hash() {
 
     assert_ne!(hash(&opaque_origin), hash(&same_opaque_origin));
     assert_ne!(hash(&opaque_origin), hash(&other_opaque_origin));
+}
+
+#[test]
+fn test_origin_blob_equality() {
+    let origin = &Url::parse("http://example.net/").unwrap().origin();
+    let blob_origin = &Url::parse("blob:http://example.net/").unwrap().origin();
+
+    assert_eq!(origin, blob_origin);
+}
+
+#[test]
+fn test_origin_opaque() {
+    assert!(!Origin::new_opaque().is_tuple());
+    assert!(!&Url::parse("blob:malformed//").unwrap().origin().is_tuple())
+}
+
+#[test]
+fn test_origin_unicode_serialization() {
+    let data = [
+        ("http://😅.com", "http://😅.com"),
+        ("ftp://😅:🙂@🙂.com", "ftp://🙂.com"),
+        ("https://user@😅.com", "https://😅.com"),
+        ("http://😅.🙂:40", "http://😅.🙂:40"),
+    ];
+    for &(unicode_url, expected_serialization) in &data {
+        let origin = Url::parse(unicode_url).unwrap().origin();
+        assert_eq!(origin.unicode_serialization(), *expected_serialization);
+    }
+
+    let ascii_origins = [
+        Url::parse("http://example.net/").unwrap().origin(),
+        Url::parse("http://example.net:80/").unwrap().origin(),
+        Url::parse("http://example.net:81/").unwrap().origin(),
+        Url::parse("http://example.net").unwrap().origin(),
+        Url::parse("http://example.net/hello").unwrap().origin(),
+        Url::parse("https://example.net").unwrap().origin(),
+        Url::parse("ftp://example.net").unwrap().origin(),
+        Url::parse("file://example.net").unwrap().origin(),
+        Url::parse("http://user@example.net/").unwrap().origin(),
+        Url::parse("http://user:pass@example.net/")
+            .unwrap()
+            .origin(),
+        Url::parse("http://127.0.0.1").unwrap().origin(),
+    ];
+    for ascii_origin in &ascii_origins {
+        assert_eq!(
+            ascii_origin.ascii_serialization(),
+            ascii_origin.unicode_serialization()
+        );
+    }
+}
+
+#[test]
+fn test_socket_addrs() {
+    use std::net::ToSocketAddrs;
+
+    let data = [
+        ("https://127.0.0.1/", "127.0.0.1", 443),
+        ("https://127.0.0.1:9742/", "127.0.0.1", 9742),
+        ("custom-protocol://127.0.0.1:9742/", "127.0.0.1", 9742),
+        ("custom-protocol://127.0.0.1/", "127.0.0.1", 9743),
+        ("https://[::1]/", "::1", 443),
+        ("https://[::1]:9742/", "::1", 9742),
+        ("custom-protocol://[::1]:9742/", "::1", 9742),
+        ("custom-protocol://[::1]/", "::1", 9743),
+        ("https://localhost/", "localhost", 443),
+        ("https://localhost:9742/", "localhost", 9742),
+        ("custom-protocol://localhost:9742/", "localhost", 9742),
+        ("custom-protocol://localhost/", "localhost", 9743),
+    ];
+
+    for (url_string, host, port) in &data {
+        let url = url::Url::parse(url_string).unwrap();
+        let addrs = url
+            .socket_addrs(|| match url.scheme() {
+                "custom-protocol" => Some(9743),
+                _ => None,
+            })
+            .unwrap();
+        assert_eq!(
+            Some(addrs[0]),
+            (*host, *port).to_socket_addrs().unwrap().next()
+        );
+    }
+}
+
+#[test]
+fn test_no_base_url() {
+    let mut no_base_url = Url::parse("mailto:test@example.net").unwrap();
+
+    assert!(no_base_url.cannot_be_a_base());
+    assert!(no_base_url.path_segments().is_none());
+    assert!(no_base_url.path_segments_mut().is_err());
+    assert!(no_base_url.set_host(Some("foo")).is_err());
+    assert!(no_base_url
+        .set_ip_host("127.0.0.1".parse().unwrap())
+        .is_err());
+
+    no_base_url.set_path("/foo");
+    assert_eq!(no_base_url.path(), "%2Ffoo");
+}
+
+#[test]
+fn test_domain() {
+    let url = Url::parse("https://127.0.0.1/").unwrap();
+    assert_eq!(url.domain(), None);
+
+    let url = Url::parse("mailto:test@example.net").unwrap();
+    assert_eq!(url.domain(), None);
+
+    let url = Url::parse("https://example.com/").unwrap();
+    assert_eq!(url.domain(), Some("example.com"));
+}
+
+#[test]
+fn test_query() {
+    let url = Url::parse("https://example.com/products?page=2#fragment").unwrap();
+    assert_eq!(url.query(), Some("page=2"));
+    assert_eq!(
+        url.query_pairs().next(),
+        Some((Cow::Borrowed("page"), Cow::Borrowed("2")))
+    );
+
+    let url = Url::parse("https://example.com/products").unwrap();
+    assert!(url.query().is_none());
+    assert_eq!(url.query_pairs().count(), 0);
+
+    let url = Url::parse("https://example.com/?country=español").unwrap();
+    assert_eq!(url.query(), Some("country=espa%C3%B1ol"));
+    assert_eq!(
+        url.query_pairs().next(),
+        Some((Cow::Borrowed("country"), Cow::Borrowed("español")))
+    );
+
+    let url = Url::parse("https://example.com/products?page=2&sort=desc").unwrap();
+    assert_eq!(url.query(), Some("page=2&sort=desc"));
+    let mut pairs = url.query_pairs();
+    assert_eq!(pairs.count(), 2);
+    assert_eq!(
+        pairs.next(),
+        Some((Cow::Borrowed("page"), Cow::Borrowed("2")))
+    );
+    assert_eq!(
+        pairs.next(),
+        Some((Cow::Borrowed("sort"), Cow::Borrowed("desc")))
+    );
+}
+
+#[test]
+fn test_fragment() {
+    let url = Url::parse("https://example.com/#fragment").unwrap();
+    assert_eq!(url.fragment(), Some("fragment"));
+
+    let url = Url::parse("https://example.com/").unwrap();
+    assert_eq!(url.fragment(), None);
+}
+
+#[test]
+fn test_set_ip_host() {
+    let mut url = Url::parse("http://example.com").unwrap();
+
+    url.set_ip_host("127.0.0.1".parse().unwrap()).unwrap();
+    assert_eq!(url.host_str(), Some("127.0.0.1"));
+
+    url.set_ip_host("::1".parse().unwrap()).unwrap();
+    assert_eq!(url.host_str(), Some("[::1]"));
+}
+
+#[test]
+fn test_set_href() {
+    use url::quirks::set_href;
+
+    let mut url = Url::parse("https://existing.url").unwrap();
+
+    assert!(set_href(&mut url, "mal//formed").is_err());
+
+    assert!(set_href(
+        &mut url,
+        "https://user:pass@domain.com:9742/path/file.ext?key=val&key2=val2#fragment"
+    )
+    .is_ok());
+    assert_eq!(
+        url,
+        Url::parse("https://user:pass@domain.com:9742/path/file.ext?key=val&key2=val2#fragment")
+            .unwrap()
+    );
+}
+
+#[test]
+fn test_domain_encoding_quirks() {
+    use url::quirks::{domain_to_ascii, domain_to_unicode};
+
+    let data = [
+        ("http://example.com", "", ""),
+        ("😅.🙂", "xn--j28h.xn--938h", "😅.🙂"),
+        ("example.com", "example.com", "example.com"),
+        ("mailto:test@example.net", "", ""),
+    ];
+
+    for url in &data {
+        assert_eq!(domain_to_ascii(url.0), url.1);
+        assert_eq!(domain_to_unicode(url.0), url.2);
+    }
+}
+
+#[cfg(feature = "expose_internals")]
+#[test]
+fn test_expose_internals() {
+    use url::quirks::internal_components;
+    use url::quirks::InternalComponents;
+
+    let url = Url::parse("https://example.com/path/file.ext?key=val&key2=val2#fragment").unwrap();
+    let InternalComponents {
+        scheme_end,
+        username_end,
+        host_start,
+        host_end,
+        port,
+        path_start,
+        query_start,
+        fragment_start,
+    } = internal_components(&url);
+
+    assert_eq!(scheme_end, 5);
+    assert_eq!(username_end, 8);
+    assert_eq!(host_start, 8);
+    assert_eq!(host_end, 19);
+    assert_eq!(port, None);
+    assert_eq!(path_start, 19);
+    assert_eq!(query_start, Some(33));
+    assert_eq!(fragment_start, Some(51));
 }
 
 #[test]
@@ -537,6 +867,38 @@ fn test_syntax_violation_callback_lifetimes() {
 }
 
 #[test]
+fn test_syntax_violation_callback_types() {
+    use url::SyntaxViolation::*;
+
+    let data = [
+        ("http://mozilla.org/\\foo", Backslash, "backslash"),
+        (" http://mozilla.org", C0SpaceIgnored, "leading or trailing control or space character are ignored in URLs"),
+        ("http://user:pass@mozilla.org", EmbeddedCredentials, "embedding authentication information (username or password) in an URL is not recommended"),
+        ("http:///mozilla.org", ExpectedDoubleSlash, "expected //"),
+        ("file:/foo.txt", ExpectedFileDoubleSlash, "expected // after file:"),
+        ("file://mozilla.org/c:/file.txt", FileWithHostAndWindowsDrive, "file: with host and Windows drive letter"),
+        ("http://mozilla.org/^", NonUrlCodePoint, "non-URL code point"),
+        ("http://mozilla.org/#\x000", NullInFragment, "NULL characters are ignored in URL fragment identifiers"),
+        ("http://mozilla.org/%1", PercentDecode, "expected 2 hex digits after %"),
+        ("http://mozilla.org\t/foo", TabOrNewlineIgnored, "tabs or newlines are ignored in URLs"),
+        ("http://user@:pass@mozilla.org", UnencodedAtSign, "unencoded @ sign in username or password")
+    ];
+
+    for test_case in &data {
+        let violation = Cell::new(None);
+        Url::options()
+            .syntax_violation_callback(Some(&|v| violation.set(Some(v))))
+            .parse(test_case.0)
+            .unwrap();
+
+        let v = violation.take();
+        assert_eq!(v, Some(test_case.1));
+        assert_eq!(v.unwrap().description(), test_case.2);
+        assert_eq!(v.unwrap().to_string(), test_case.2);
+    }
+}
+
+#[test]
 fn test_options_reuse() {
     use url::SyntaxViolation::*;
     let violations = RefCell::new(Vec::new());
@@ -549,4 +911,398 @@ fn test_options_reuse() {
     let url = options.parse("/sub\\path").unwrap();
     assert_eq!(url.as_str(), "http://mozilla.org/sub/path");
     assert_eq!(*violations.borrow(), vec!(ExpectedDoubleSlash, Backslash));
+}
+
+/// https://github.com/servo/rust-url/issues/505
+#[cfg(windows)]
+#[test]
+fn test_url_from_file_path() {
+    use std::path::PathBuf;
+    use url::Url;
+
+    let p = PathBuf::from("c:///");
+    let u = Url::from_file_path(p).unwrap();
+    let path = u.to_file_path().unwrap();
+    assert_eq!("C:\\", path.to_str().unwrap());
+}
+
+/// https://github.com/servo/rust-url/issues/505
+#[cfg(not(windows))]
+#[test]
+fn test_url_from_file_path() {
+    use std::path::PathBuf;
+    use url::Url;
+
+    let p = PathBuf::from("/c:/");
+    let u = Url::from_file_path(p).unwrap();
+    let path = u.to_file_path().unwrap();
+    assert_eq!("/c:/", path.to_str().unwrap());
+}
+
+#[test]
+fn test_non_special_path() {
+    let mut db_url = url::Url::parse("postgres://postgres@localhost/").unwrap();
+    assert_eq!(db_url.as_str(), "postgres://postgres@localhost/");
+    db_url.set_path("diesel_foo");
+    assert_eq!(db_url.as_str(), "postgres://postgres@localhost/diesel_foo");
+    assert_eq!(db_url.path(), "/diesel_foo");
+}
+
+#[test]
+fn test_non_special_path2() {
+    let mut db_url = url::Url::parse("postgres://postgres@localhost/").unwrap();
+    assert_eq!(db_url.as_str(), "postgres://postgres@localhost/");
+    db_url.set_path("");
+    assert_eq!(db_url.path(), "");
+    assert_eq!(db_url.as_str(), "postgres://postgres@localhost");
+    db_url.set_path("foo");
+    assert_eq!(db_url.path(), "/foo");
+    assert_eq!(db_url.as_str(), "postgres://postgres@localhost/foo");
+    db_url.set_path("/bar");
+    assert_eq!(db_url.path(), "/bar");
+    assert_eq!(db_url.as_str(), "postgres://postgres@localhost/bar");
+}
+
+#[test]
+fn test_non_special_path3() {
+    let mut db_url = url::Url::parse("postgres://postgres@localhost/").unwrap();
+    assert_eq!(db_url.as_str(), "postgres://postgres@localhost/");
+    db_url.set_path("/");
+    assert_eq!(db_url.as_str(), "postgres://postgres@localhost/");
+    assert_eq!(db_url.path(), "/");
+    db_url.set_path("/foo");
+    assert_eq!(db_url.as_str(), "postgres://postgres@localhost/foo");
+    assert_eq!(db_url.path(), "/foo");
+}
+
+#[test]
+fn test_set_scheme_to_file_with_host() {
+    let mut url: Url = "http://localhost:6767/foo/bar".parse().unwrap();
+    let result = url.set_scheme("file");
+    assert_eq!(url.to_string(), "http://localhost:6767/foo/bar");
+    assert_eq!(result, Err(()));
+}
+
+#[test]
+fn no_panic() {
+    let mut url = Url::parse("arhttpsps:/.//eom/dae.com/\\\\t\\:").unwrap();
+    url::quirks::set_hostname(&mut url, "//eom/datcom/\\\\t\\://eom/data.cs").unwrap();
+}
+
+#[test]
+fn test_null_host_with_leading_empty_path_segment() {
+    // since Note in item 3 of URL serializing in the URL Standard
+    // https://url.spec.whatwg.org/#url-serializing
+    let url = Url::parse("m:/.//\\").unwrap();
+    let encoded = url.as_str();
+    let reparsed = Url::parse(encoded).unwrap();
+    assert_eq!(reparsed, url);
+}
+
+#[test]
+fn pop_if_empty_in_bounds() {
+    let mut url = Url::parse("m://").unwrap();
+    let mut segments = url.path_segments_mut().unwrap();
+    segments.pop_if_empty();
+    segments.pop();
+}
+
+#[test]
+fn test_slicing() {
+    use url::Position::*;
+
+    #[derive(Default)]
+    struct ExpectedSlices<'a> {
+        full: &'a str,
+        scheme: &'a str,
+        username: &'a str,
+        password: &'a str,
+        host: &'a str,
+        port: &'a str,
+        path: &'a str,
+        query: &'a str,
+        fragment: &'a str,
+    }
+
+    let data = [
+        ExpectedSlices {
+            full: "https://user:pass@domain.com:9742/path/file.ext?key=val&key2=val2#fragment",
+            scheme: "https",
+            username: "user",
+            password: "pass",
+            host: "domain.com",
+            port: "9742",
+            path: "/path/file.ext",
+            query: "key=val&key2=val2",
+            fragment: "fragment",
+        },
+        ExpectedSlices {
+            full: "https://domain.com:9742/path/file.ext#fragment",
+            scheme: "https",
+            host: "domain.com",
+            port: "9742",
+            path: "/path/file.ext",
+            fragment: "fragment",
+            ..Default::default()
+        },
+        ExpectedSlices {
+            full: "https://domain.com:9742/path/file.ext",
+            scheme: "https",
+            host: "domain.com",
+            port: "9742",
+            path: "/path/file.ext",
+            ..Default::default()
+        },
+        ExpectedSlices {
+            full: "blob:blob-info",
+            scheme: "blob",
+            path: "blob-info",
+            ..Default::default()
+        },
+    ];
+
+    for expected_slices in &data {
+        let url = Url::parse(expected_slices.full).unwrap();
+        assert_eq!(&url[..], expected_slices.full);
+        assert_eq!(&url[BeforeScheme..AfterScheme], expected_slices.scheme);
+        assert_eq!(
+            &url[BeforeUsername..AfterUsername],
+            expected_slices.username
+        );
+        assert_eq!(
+            &url[BeforePassword..AfterPassword],
+            expected_slices.password
+        );
+        assert_eq!(&url[BeforeHost..AfterHost], expected_slices.host);
+        assert_eq!(&url[BeforePort..AfterPort], expected_slices.port);
+        assert_eq!(&url[BeforePath..AfterPath], expected_slices.path);
+        assert_eq!(&url[BeforeQuery..AfterQuery], expected_slices.query);
+        assert_eq!(
+            &url[BeforeFragment..AfterFragment],
+            expected_slices.fragment
+        );
+        assert_eq!(&url[..AfterFragment], expected_slices.full);
+    }
+}
+
+#[test]
+fn test_make_relative() {
+    let tests = [
+        (
+            "http://127.0.0.1:8080/test",
+            "http://127.0.0.1:8080/test",
+            "",
+        ),
+        (
+            "http://127.0.0.1:8080/test",
+            "http://127.0.0.1:8080/test/",
+            "test/",
+        ),
+        (
+            "http://127.0.0.1:8080/test/",
+            "http://127.0.0.1:8080/test",
+            "../test",
+        ),
+        (
+            "http://127.0.0.1:8080/",
+            "http://127.0.0.1:8080/?foo=bar#123",
+            "?foo=bar#123",
+        ),
+        (
+            "http://127.0.0.1:8080/",
+            "http://127.0.0.1:8080/test/video",
+            "test/video",
+        ),
+        (
+            "http://127.0.0.1:8080/test",
+            "http://127.0.0.1:8080/test/video",
+            "test/video",
+        ),
+        (
+            "http://127.0.0.1:8080/test/",
+            "http://127.0.0.1:8080/test/video",
+            "video",
+        ),
+        (
+            "http://127.0.0.1:8080/test",
+            "http://127.0.0.1:8080/test2/video",
+            "test2/video",
+        ),
+        (
+            "http://127.0.0.1:8080/test/",
+            "http://127.0.0.1:8080/test2/video",
+            "../test2/video",
+        ),
+        (
+            "http://127.0.0.1:8080/test/bla",
+            "http://127.0.0.1:8080/test2/video",
+            "../test2/video",
+        ),
+        (
+            "http://127.0.0.1:8080/test/bla/",
+            "http://127.0.0.1:8080/test2/video",
+            "../../test2/video",
+        ),
+        (
+            "http://127.0.0.1:8080/test/?foo=bar#123",
+            "http://127.0.0.1:8080/test/video",
+            "video",
+        ),
+        (
+            "http://127.0.0.1:8080/test/",
+            "http://127.0.0.1:8080/test/video?baz=meh#456",
+            "video?baz=meh#456",
+        ),
+        (
+            "http://127.0.0.1:8080/test",
+            "http://127.0.0.1:8080/test?baz=meh#456",
+            "?baz=meh#456",
+        ),
+        (
+            "http://127.0.0.1:8080/test/",
+            "http://127.0.0.1:8080/test?baz=meh#456",
+            "../test?baz=meh#456",
+        ),
+        (
+            "http://127.0.0.1:8080/test/",
+            "http://127.0.0.1:8080/test/?baz=meh#456",
+            "?baz=meh#456",
+        ),
+        (
+            "http://127.0.0.1:8080/test/?foo=bar#123",
+            "http://127.0.0.1:8080/test/video?baz=meh#456",
+            "video?baz=meh#456",
+        ),
+        (
+            "http://127.0.0.1:8080/file.txt",
+            "http://127.0.0.1:8080/test/file.txt",
+            "test/file.txt",
+        ),
+        (
+            "http://127.0.0.1:8080/not_equal.txt",
+            "http://127.0.0.1:8080/test/file.txt",
+            "test/file.txt",
+        ),
+    ];
+
+    for (base, uri, relative) in &tests {
+        let base_uri = url::Url::parse(base).unwrap();
+        let relative_uri = url::Url::parse(uri).unwrap();
+        let make_relative = base_uri.make_relative(&relative_uri).unwrap();
+        assert_eq!(
+            make_relative, *relative,
+            "base: {}, uri: {}, relative: {}",
+            base, uri, relative
+        );
+        assert_eq!(
+            base_uri.join(relative).unwrap().as_str(),
+            *uri,
+            "base: {}, uri: {}, relative: {}",
+            base,
+            uri,
+            relative
+        );
+    }
+
+    let error_tests = [
+        ("http://127.0.0.1:8080/", "https://127.0.0.1:8080/test/"),
+        ("http://127.0.0.1:8080/", "http://127.0.0.1:8081/test/"),
+        ("http://127.0.0.1:8080/", "http://127.0.0.2:8080/test/"),
+        ("mailto:a@example.com", "mailto:b@example.com"),
+    ];
+
+    for (base, uri) in &error_tests {
+        let base_uri = url::Url::parse(base).unwrap();
+        let relative_uri = url::Url::parse(uri).unwrap();
+        let make_relative = base_uri.make_relative(&relative_uri);
+        assert_eq!(make_relative, None, "base: {}, uri: {}", base, uri);
+    }
+}
+
+#[test]
+fn test_has_authority() {
+    let url = Url::parse("mailto:joe@example.com").unwrap();
+    assert!(!url.has_authority());
+    let url = Url::parse("unix:/run/foo.socket").unwrap();
+    assert!(!url.has_authority());
+    let url = Url::parse("file:///tmp/foo").unwrap();
+    assert!(url.has_authority());
+    let url = Url::parse("http://example.com/tmp/foo").unwrap();
+    assert!(url.has_authority());
+}
+
+#[test]
+fn test_authority() {
+    let url = Url::parse("mailto:joe@example.com").unwrap();
+    assert_eq!(url.authority(), "");
+    let url = Url::parse("unix:/run/foo.socket").unwrap();
+    assert_eq!(url.authority(), "");
+    let url = Url::parse("file:///tmp/foo").unwrap();
+    assert_eq!(url.authority(), "");
+    let url = Url::parse("http://example.com/tmp/foo").unwrap();
+    assert_eq!(url.authority(), "example.com");
+    let url = Url::parse("ftp://127.0.0.1:21/").unwrap();
+    assert_eq!(url.authority(), "127.0.0.1");
+    let url = Url::parse("ftp://user@127.0.0.1:2121/").unwrap();
+    assert_eq!(url.authority(), "user@127.0.0.1:2121");
+    let url = Url::parse("https://:@example.com/").unwrap();
+    assert_eq!(url.authority(), "example.com");
+    let url = Url::parse("https://:password@[::1]:8080/").unwrap();
+    assert_eq!(url.authority(), ":password@[::1]:8080");
+    let url = Url::parse("gopher://user:@àlex.example.com:70").unwrap();
+    assert_eq!(url.authority(), "user@%C3%A0lex.example.com:70");
+    let url = Url::parse("irc://àlex:àlex@àlex.рф.example.com:6667/foo").unwrap();
+    assert_eq!(
+        url.authority(),
+        "%C3%A0lex:%C3%A0lex@%C3%A0lex.%D1%80%D1%84.example.com:6667"
+    );
+    let url = Url::parse("https://àlex:àlex@àlex.рф.example.com:443/foo").unwrap();
+    assert_eq!(
+        url.authority(),
+        "%C3%A0lex:%C3%A0lex@xn--lex-8ka.xn--p1ai.example.com"
+    );
+}
+
+#[test]
+/// https://github.com/servo/rust-url/issues/838
+fn test_file_with_drive() {
+    let s1 = "fIlE:p:?../";
+    let url = url::Url::parse(s1).unwrap();
+    assert_eq!(url.to_string(), "file:///p:?../");
+    assert_eq!(url.path(), "/p:");
+
+    let testcases = [
+        ("a", "file:///p:/a"),
+        ("", "file:///p:?../"),
+        ("?x", "file:///p:?x"),
+        (".", "file:///p:/"),
+        ("..", "file:///p:/"),
+        ("../", "file:///p:/"),
+    ];
+
+    for case in &testcases {
+        let url2 = url::Url::join(&url, case.0).unwrap();
+        assert_eq!(url2.to_string(), case.1);
+    }
+}
+
+#[test]
+/// Similar to test_file_with_drive, but with a path
+/// that could be confused for a drive.
+fn test_file_with_drive_and_path() {
+    let s1 = "fIlE:p:/x|?../";
+    let url = url::Url::parse(s1).unwrap();
+    assert_eq!(url.to_string(), "file:///p:/x|?../");
+    assert_eq!(url.path(), "/p:/x|");
+    let s2 = "a";
+    let url2 = url::Url::join(&url, s2).unwrap();
+    assert_eq!(url2.to_string(), "file:///p:/a");
+}
+
+#[test]
+fn issue_864() {
+    let mut url = url::Url::parse("file://").unwrap();
+    dbg!(&url);
+    url.set_path("x");
+    dbg!(&url);
 }

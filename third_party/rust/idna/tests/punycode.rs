@@ -41,7 +41,7 @@ fn one_test(decoded: &str, encoded: &str) {
 
 fn get_string<'a>(map: &'a Map<String, Value>, key: &str) -> &'a str {
     match map.get(&key.to_string()) {
-        Some(&Value::String(ref s)) => s,
+        Some(Value::String(s)) => s,
         None => "",
         _ => panic!(),
     }
@@ -63,9 +63,9 @@ pub fn collect_tests<F: FnMut(String, TestFn)>(add_test: &mut F) {
                         };
                         add_test(
                             test_name,
-                            TestFn::dyn_test_fn(move || {
+                            TestFn::DynTestFn(Box::new(move || {
                                 one_test(get_string(&o, "decoded"), get_string(&o, "encoded"))
-                            }),
+                            })),
                         )
                     }
                     _ => panic!(),

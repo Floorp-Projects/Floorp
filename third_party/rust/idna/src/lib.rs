@@ -31,9 +31,22 @@
 //! > This document specifies a mechanism
 //! > that minimizes the impact of this transition for client software,
 //! > allowing client software to access domains that are valid under either system.
+#![no_std]
 
+// For forwards compatibility
+#[cfg(feature = "std")]
+extern crate std;
+
+extern crate alloc;
+
+#[cfg(not(feature = "alloc"))]
+compile_error!("the `alloc` feature must be enabled");
+
+#[cfg(test)]
 #[macro_use]
-extern crate matches;
+extern crate assert_matches;
+
+use alloc::string::String;
 
 pub mod punycode;
 mod uts46;

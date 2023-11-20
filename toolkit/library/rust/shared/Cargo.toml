@@ -100,8 +100,7 @@ qcms = { path = "../../../../gfx/qcms", features = ["c_bindings", "neon"], defau
 wpf-gpu-raster = { git = "https://github.com/FirefoxGraphics/wpf-gpu-raster", rev = "99979da091fd58fba8477e7fcdf5ec0727102916" }
 aa-stroke = { git = "https://github.com/FirefoxGraphics/aa-stroke", rev = "ed4206ea11703580cd1d4fc63371a527b29d8252" }
 
-# Force url to stay at 2.1.0. See bug 1734538.
-url = "=2.1.0"
+url = "2.4.1"
 
 # Since we're building with at least rustc 1.63, enable rust 1.57 features (use of try_reserve methods).
 fallible_collections = { version = "0.4", features = ["rust_1_57"] }
