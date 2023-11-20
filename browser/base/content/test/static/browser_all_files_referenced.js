@@ -286,9 +286,6 @@ var allowlist = [
   { file: "chrome://browser/content/screenshots/copy.svg" },
   { file: "chrome://browser/content/screenshots/download.svg" },
   { file: "chrome://browser/content/screenshots/download-white.svg" },
-
-  // Bug 1852340: adding strings early for new broken website reporting component
-  { file: "resource://app/localization/en-US/browser/reportBrokenSite.ftl" },
 ];
 
 if (AppConstants.NIGHTLY_BUILD && AppConstants.platform != "win") {
