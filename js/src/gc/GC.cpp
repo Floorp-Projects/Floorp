@@ -1658,7 +1658,6 @@ bool SliceBudget::checkOverBudget() {
   }
 
   if (interruptRequested && *interruptRequested) {
-    *interruptRequested = false;
     interrupted = true;
   }
 

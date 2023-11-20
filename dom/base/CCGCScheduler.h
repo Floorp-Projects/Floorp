@@ -177,6 +177,7 @@ class CCGCScheduler {
 
   js::SliceBudget CreateGCSliceBudget(mozilla::TimeDuration aDuration,
                                       bool isIdle, bool isExtended) {
+    mInterruptRequested = false;
     auto budget = js::SliceBudget(aDuration, &mInterruptRequested);
     budget.idle = isIdle;
     budget.extended = isExtended;
