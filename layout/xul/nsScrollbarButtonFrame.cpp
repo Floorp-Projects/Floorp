@@ -122,16 +122,10 @@ bool nsScrollbarButtonFrame::HandleButtonPress(nsPresContext* aPresContext,
     return false;
 
   bool repeat = pressedButtonAction != 2;
-  // set this attribute so we can style it later
-  AutoWeakFrame weakFrame(this);
-  mContent->AsElement()->SetAttr(kNameSpaceID_None, nsGkAtoms::active,
-                                 u"true"_ns, true);
 
   PresShell::SetCapturingContent(mContent, CaptureFlags::IgnoreAllowedState);
 
-  if (!weakFrame.IsAlive()) {
-    return false;
-  }
+  AutoWeakFrame weakFrame(this);
 
   if (nsScrollbarFrame* sb = do_QueryFrame(scrollbar)) {
     nsIScrollbarMediator* m = sb->GetScrollbarMediator();
@@ -184,8 +178,6 @@ nsScrollbarButtonFrame::HandleRelease(nsPresContext* aPresContext,
                                       WidgetGUIEvent* aEvent,
                                       nsEventStatus* aEventStatus) {
   PresShell::ReleaseCapturingContent();
-  // we're not active anymore
-  mContent->AsElement()->UnsetAttr(kNameSpaceID_None, nsGkAtoms::active, true);
   StopRepeat();
   nsIFrame* scrollbar;
   GetParentWithTag(nsGkAtoms::scrollbar, this, scrollbar);
