@@ -391,8 +391,9 @@ TEST_F(APZCBasicTester, MultipleSmoothScrollsSmooth) {
 class APZCSmoothScrollTester : public APZCBasicTester {
  public:
   // Test that a smooth scroll animation correctly handles its destination
-  // being updated by a relative scroll delta.
-  void TestSmoothScrollDestinationUpdate() {
+  // being updated by a relative scroll delta from the main thread (a "content
+  // shift").
+  void TestContentShift() {
     // Set up scroll frame. Starting scroll position is (0, 0).
     ScrollMetadata metadata;
     FrameMetrics& metrics = metadata.GetMetrics();
@@ -448,18 +449,95 @@ class APZCSmoothScrollTester : public APZCBasicTester {
     float y4 = apzc->GetFrameMetrics().GetVisualScrollOffset().y;
     ASSERT_EQ(y4, 600);  // 1000 (initial destination) - 400 (relative scroll)
   }
+
+  // Test that a smooth scroll animation correctly handles a content
+  // shift, followed by an UpdateDelta due to a new input event.
+  void TestContentShiftThenUpdateDelta() {
+    // Set up scroll frame. Starting position is (0, 0).
+    ScrollMetadata metadata;
+    FrameMetrics& metrics = metadata.GetMetrics();
+    metrics.SetScrollableRect(CSSRect(0, 0, 1000, 10000));
+    metrics.SetLayoutViewport(CSSRect(0, 0, 1000, 1000));
+    metrics.SetZoom(CSSToParentLayerScale(1.0));
+    metrics.SetCompositionBounds(ParentLayerRect(0, 0, 1000, 1000));
+    metrics.SetVisualScrollOffset(CSSPoint(0, 0));
+    metrics.SetIsRootContent(true);
+    // Set the line scroll amount to 100 pixels. Note that SmoothWheel() takes
+    // a delta denominated in lines.
+    metadata.SetLineScrollAmount({100, 100});
+    // The page scroll amount also needs to be set, otherwise the wheel handling
+    // code will get confused by things like the "don't scroll more than one
+    // page" check.
+    metadata.SetPageScrollAmount({1000, 1000});
+    apzc->SetScrollMetadata(metadata);
+
+    // Send a wheel event to trigger smooth scrolling by 5 lines (= 500 pixels).
+    SmoothWheel(apzc, ScreenIntPoint(50, 50), ScreenPoint(0, 5), mcc->Time());
+    apzc->AssertStateIsWheelScroll();
+
+    // Sample the wheel scroll animation until we get past y=200.
+    float y = 0;
+    while (y < 200) {
+      SampleAnimationOneFrame();
+      y = apzc->GetFrameMetrics().GetVisualScrollOffset().y;
+    }
+
+    // Apply a content shift of y=100.
+    nsTArray<ScrollPositionUpdate> scrollUpdates;
+    scrollUpdates.AppendElement(ScrollPositionUpdate::NewRelativeScroll(
+        CSSPoint::ToAppUnits(CSSPoint(0, 200)),
+        CSSPoint::ToAppUnits(CSSPoint(0, 300))));
+    metadata.SetScrollUpdates(scrollUpdates);
+    metrics.SetScrollGeneration(scrollUpdates.LastElement().GetGeneration());
+    apzc->NotifyLayersUpdated(metadata, false, true);
+
+    // Check that the content shift was applied but didn't cancel the animation.
+    // At this point, the animation's internal state should be targeting a
+    // destination of y=600.
+    float y2 = apzc->GetFrameMetrics().GetVisualScrollOffset().y;
+    ASSERT_EQ(y2, y + 100);
+    apzc->AssertStateIsWheelScroll();
+
+    // Sample the animation until we get past y=400.
+    while (y < 400) {
+      SampleAnimationOneFrame();
+      y = apzc->GetFrameMetrics().GetVisualScrollOffset().y;
+    }
+
+    // Send another wheel event to trigger smooth scrolling by another 5 lines
+    // (=500 pixels). This should update the animation to target a destination
+    // of y=1100.
+    SmoothWheel(apzc, ScreenIntPoint(50, 50), ScreenPoint(0, 5), mcc->Time());
+
+    // Continue the animation until done and check that it ended up at y=1100.
+    apzc->AdvanceAnimationsUntilEnd();
+    float yEnd = apzc->GetFrameMetrics().GetVisualScrollOffset().y;
+    ASSERT_EQ(yEnd, 1100);
+  }
 };
 
-TEST_F(APZCSmoothScrollTester, SmoothScrollDestinationUpdateBezier) {
+TEST_F(APZCSmoothScrollTester, ContentShiftBezier) {
   SCOPED_GFX_PREF_BOOL("general.smoothScroll", true);
   SCOPED_GFX_PREF_BOOL("general.smoothScroll.msdPhysics.enabled", false);
-  TestSmoothScrollDestinationUpdate();
+  TestContentShift();
 }
 
-TEST_F(APZCSmoothScrollTester, SmoothScrollDestinationUpdateMsd) {
+TEST_F(APZCSmoothScrollTester, ContentShiftMsd) {
   SCOPED_GFX_PREF_BOOL("general.smoothScroll", true);
   SCOPED_GFX_PREF_BOOL("general.smoothScroll.msdPhysics.enabled", true);
-  TestSmoothScrollDestinationUpdate();
+  TestContentShift();
+}
+
+TEST_F(APZCSmoothScrollTester, ContentShiftThenUpdateDeltaBezier) {
+  SCOPED_GFX_PREF_BOOL("general.smoothScroll", true);
+  SCOPED_GFX_PREF_BOOL("general.smoothScroll.msdPhysics.enabled", false);
+  TestContentShiftThenUpdateDelta();
+}
+
+TEST_F(APZCSmoothScrollTester, ContentShiftThenUpdateDeltaMsd) {
+  SCOPED_GFX_PREF_BOOL("general.smoothScroll", true);
+  SCOPED_GFX_PREF_BOOL("general.smoothScroll.msdPhysics.enabled", true);
+  TestContentShiftThenUpdateDelta();
 }
 
 TEST_F(APZCBasicTester, ZoomAndScrollableRectChangeAfterZoomChange) {
