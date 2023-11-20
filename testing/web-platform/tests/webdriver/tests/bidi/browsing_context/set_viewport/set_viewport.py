@@ -44,14 +44,16 @@ async def test_set_viewport_reset(bidi_session, new_tab):
     assert await get_viewport_dimensions(bidi_session, new_tab) != test_viewport
 
     await bidi_session.browsing_context.set_viewport(
-      context=new_tab["context"],
-      viewport=test_viewport)
+        context=new_tab["context"],
+        viewport=test_viewport
+    )
 
     assert await get_viewport_dimensions(bidi_session, new_tab) == test_viewport
 
     await bidi_session.browsing_context.set_viewport(
-      context=new_tab["context"],
-      viewport=None)
+        context=new_tab["context"],
+        viewport=None
+    )
     assert await get_viewport_dimensions(bidi_session, new_tab) == original_viewport
 
 
@@ -64,8 +66,9 @@ async def test_set_viewport_affects_specific_context(bidi_session, top_context, 
     assert await get_viewport_dimensions(bidi_session, new_tab) != test_viewport
 
     await bidi_session.browsing_context.set_viewport(
-      context=new_tab["context"],
-      viewport=test_viewport)
+        context=new_tab["context"],
+        viewport=test_viewport
+    )
 
     assert await get_viewport_dimensions(bidi_session, new_tab) == test_viewport
     assert await get_viewport_dimensions(bidi_session, top_context) == original_viewport
