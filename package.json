@@ -8,7 +8,7 @@
     "@babel/eslint-parser": "7.21.3",
     "@babel/eslint-plugin": "7.19.1",
     "@babel/plugin-syntax-jsx": "7.21.4",
-    "@microsoft/eslint-plugin-sdl": "github:mozfreddyb/eslint-plugin-sdl#17b22cd527682108af7a1a4edacf69cb7a9b4a06",
+    "@microsoft/eslint-plugin-sdl": "0.2.2",
     "eslint": "8.38.0",
     "eslint-config-prettier": "8.8.0",
     "eslint-plugin-eslint-plugin": "5.0.8",
