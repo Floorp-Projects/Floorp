@@ -3070,7 +3070,6 @@ async function selectBlackBoxContextMenuItem(dbg, itemName) {
 
 // Test empty panel when source has not function or class symbols
 // Test that anonymous functions do not show in the outline panel
-
 function assertOutlineItems(dbg, expectedItems) {
   const outlineItems = Array.from(
     findAllElementsWithSelector(
@@ -3083,4 +3082,15 @@ function assertOutlineItems(dbg, expectedItems) {
     expectedItems,
     "The expected items are displayed in the outline panel"
   );
+}
+
+async function checkAdditionalThreadCount(dbg, count) {
+  await waitForState(
+    dbg,
+    state => {
+      return dbg.selectors.getThreads().length == count;
+    },
+    "Have the expected number of additional threads"
+  );
+  ok(true, `Have ${count} threads`);
 }
