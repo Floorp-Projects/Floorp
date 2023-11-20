@@ -947,7 +947,7 @@ add_task(async function testDisabledDimming() {
       card.firstElementChild,
       "transitionend",
       /* capture = */ false,
-      e => e.propertyName === "opacity" && e.target.classList.contains("card"),
+      e => e.propertyName === "opacity" && e.target.classList.contains("card")
     );
 
   let card = getCardByAddonId(doc, id);
