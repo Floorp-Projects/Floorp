@@ -134,7 +134,7 @@ class UtilityProcessHost final : public mozilla::ipc::GeckoChildProcessHost {
   void ResolvePromise();
 
 #if defined(MOZ_WMF_CDM) && defined(MOZ_SANDBOX)
-  void EnsureWidevineL1PathForSandbox();
+  void EnsureWidevineL1PathForSandbox(StringVector& aExtraOpts);
 #endif
 
   // Set to true on construction and to false just prior deletion.
