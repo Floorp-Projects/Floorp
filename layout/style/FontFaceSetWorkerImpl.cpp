@@ -258,7 +258,7 @@ nsresult FontFaceSetWorkerImpl::StartLoad(gfxUserFontEntry* aUserFontEntry,
   rv = FontLoaderUtils::BuildChannel(
       getter_AddRefs(channel), src.mURI->get(), CORS_ANONYMOUS,
       dom::ReferrerPolicy::_empty /* not used */, aUserFontEntry, &src,
-      mWorkerRef->Private(), loadGroup, nullptr, false);
+      mWorkerRef->Private(), loadGroup, nullptr);
   NS_ENSURE_SUCCESS(rv, rv);
 
   RefPtr<nsFontFaceLoader> fontLoader =
