@@ -290,9 +290,11 @@ void StyleSheet::SetComplete() {
   MOZ_ASSERT(!IsComplete(), "Already complete?");
   mState |= State::Complete;
 
-  if (Document* doc = GetAssociatedDocument()) {
-    MOZ_ASSERT(!mRelevantGlobal);
-    mRelevantGlobal = doc->GetScopeObject();
+  if (!mRelevantGlobal) {
+    // Constructable sheets can be set to complete multiple times.
+    if (Document* doc = GetAssociatedDocument()) {
+      mRelevantGlobal = doc->GetScopeObject();
+    }
   }
 
   if (!Disabled()) {
