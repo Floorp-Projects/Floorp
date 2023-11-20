@@ -11,6 +11,7 @@ use super::{
 };
 use crate::{
     cid::LOCAL_ACTIVE_CID_LIMIT,
+    connection::tests::send_something_paced,
     frame::FRAME_TYPE_NEW_CONNECTION_ID,
     packet::PacketBuilder,
     path::{PATH_MTU_V4, PATH_MTU_V6},
@@ -177,7 +178,7 @@ fn migrate_immediate() {
     let mut client = default_client();
     let mut server = default_server();
     connect_force_idle(&mut client, &mut server);
-    let mut now = now();
+    let now = now();
 
     client
         .migrate(Some(addr_v4()), Some(addr_v4()), true, now)
@@ -206,8 +207,9 @@ fn migrate_immediate() {
 
     // Receiving a packet sent by the server before migration doesn't change path.
     client.process_input(server_delayed, now);
-    now = skip_pacing(&mut client, now);
-    let client3 = send_something(&mut client, now);
+    // The client has sent two unpaced packets and this new path has no RTT estimate
+    // so this might be paced.
+    let (client3, _t) = send_something_paced(&mut client, now, true);
     assert_v4_path(&client3, false);
 }
 

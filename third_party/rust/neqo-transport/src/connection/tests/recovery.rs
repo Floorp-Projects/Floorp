@@ -4,27 +4,29 @@
 // option. This file may not be copied, modified, or distributed
 // except according to those terms.
 
-use super::super::{Connection, ConnectionParameters, Output, State};
 use super::{
+    super::{Connection, ConnectionParameters, Output, State},
     assert_full_cwnd, connect, connect_force_idle, connect_rtt_idle, connect_with_rtt, cwnd,
     default_client, default_server, fill_cwnd, maybe_authenticate, new_client, send_and_receive,
     send_something, AT_LEAST_PTO, DEFAULT_RTT, DEFAULT_STREAM_DATA, POST_HANDSHAKE_CWND,
 };
-use crate::cc::CWND_MIN;
-use crate::path::PATH_MTU_V6;
-use crate::recovery::{
-    FAST_PTO_SCALE, MAX_OUTSTANDING_UNACK, MIN_OUTSTANDING_UNACK, PTO_PACKET_COUNT,
+use crate::{
+    cc::CWND_MIN,
+    path::PATH_MTU_V6,
+    recovery::{FAST_PTO_SCALE, MAX_OUTSTANDING_UNACK, MIN_OUTSTANDING_UNACK, PTO_PACKET_COUNT},
+    rtt::GRANULARITY,
+    stats::MAX_PTO_COUNTS,
+    tparams::TransportParameter,
+    tracking::DEFAULT_ACK_DELAY,
+    StreamType,
 };
-use crate::rtt::GRANULARITY;
-use crate::stats::MAX_PTO_COUNTS;
-use crate::tparams::TransportParameter;
-use crate::tracking::DEFAULT_ACK_DELAY;
-use crate::StreamType;
 
 use neqo_common::qdebug;
 use neqo_crypto::AuthenticationStatus;
-use std::mem;
-use std::time::{Duration, Instant};
+use std::{
+    mem,
+    time::{Duration, Instant},
+};
 use test_fixture::{self, now, split_datagram};
 
 #[test]
@@ -96,15 +98,7 @@ fn pto_works_ping() {
     let mut client = default_client();
     let mut server = default_server();
     connect_force_idle(&mut client, &mut server);
-    let mut now = now();
-
-    let res = client.process(None, now);
-    assert_eq!(
-        res,
-        Output::Callback(ConnectionParameters::default().get_idle_timeout())
-    );
-
-    now += Duration::from_secs(10);
+    let mut now = now() + Duration::from_secs(10);
 
     // Send a few packets from the client.
     let pkt0 = send_something(&mut client, now);
@@ -125,22 +119,22 @@ fn pto_works_ping() {
 
     now += Duration::from_millis(20);
 
-    // process pkt2 (no ack yet)
+    // process pkt2 (immediate ack because last ack was more than an RTT ago; RTT=0)
     let srv1 = server.process(Some(pkt2), now).dgram();
-    assert!(srv1.is_none());
+    assert!(srv1.is_some()); // this is now dropped
 
-    // process pkt3 (acked)
+    now += Duration::from_millis(20);
+    // process pkt3 (acked for same reason)
     let srv2 = server.process(Some(pkt3), now).dgram();
     // ack client pkt 2 & 3
     assert!(srv2.is_some());
 
-    now += Duration::from_millis(20);
     // client processes ack
     let pkt4 = client.process(srv2, now).dgram();
     // client resends data from pkt0
     assert!(pkt4.is_some());
 
-    // server sees ooo pkt0 and generates ack
+    // server sees ooo pkt0 and generates immediate ack
     let srv3 = server.process(Some(pkt0), now).dgram();
     assert!(srv3.is_some());
 

@@ -501,16 +501,37 @@ fn assert_full_cwnd(packets: &[Datagram], cwnd: usize) {
     assert_eq!(last.len(), last_packet(cwnd));
 }
 
-/// Send something on a stream from `sender` to `receiver`.
-/// Return the resulting datagram.
+/// Send something on a stream from `sender` to `receiver`, maybe allowing for pacing.
+/// Return the resulting datagram and the new time.
 #[must_use]
-fn send_something(sender: &mut Connection, now: Instant) -> Datagram {
+fn send_something_paced(
+    sender: &mut Connection,
+    mut now: Instant,
+    allow_pacing: bool,
+) -> (Datagram, Instant) {
     let stream_id = sender.stream_create(StreamType::UniDi).unwrap();
     assert!(sender.stream_send(stream_id, DEFAULT_STREAM_DATA).is_ok());
     assert!(sender.stream_close_send(stream_id).is_ok());
     qdebug!([sender], "send_something on {}", stream_id);
-    let dgram = sender.process(None, now).dgram();
-    dgram.expect("should have something to send")
+    let dgram = match sender.process_output(now) {
+        Output::Callback(t) => {
+            assert!(allow_pacing, "send_something: unexpected delay");
+            now += t;
+            sender
+                .process_output(now)
+                .dgram()
+                .expect("send_something: should have something to send")
+        }
+        Output::Datagram(d) => d,
+        Output::None => panic!("send_something: got Output::None"),
+    };
+    (dgram, now)
+}
+
+/// Send something on a stream from `sender` to `receiver`.
+/// Return the resulting datagram.
+fn send_something(sender: &mut Connection, now: Instant) -> Datagram {
+    send_something_paced(sender, now, false).0
 }
 
 /// Send something on a stream from `sender` to `receiver`.

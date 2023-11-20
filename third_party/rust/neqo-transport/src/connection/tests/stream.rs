@@ -11,12 +11,16 @@ use super::{
 use crate::{
     events::ConnectionEvent,
     recv_stream::RECV_BUFFER_SIZE,
-    send_stream::OrderGroup,
-    send_stream::{SendStreamState, SEND_BUFFER_SIZE},
+    send_stream::{OrderGroup, SendStreamState, SEND_BUFFER_SIZE},
     streams::{SendOrder, StreamOrder},
     tparams::{self, TransportParameter},
-    tracking::DEFAULT_ACK_PACKET_TOLERANCE,
-    Connection, ConnectionError, ConnectionParameters, Error, StreamId, StreamType,
+    // tracking::DEFAULT_ACK_PACKET_TOLERANCE,
+    Connection,
+    ConnectionError,
+    ConnectionParameters,
+    Error,
+    StreamId,
+    StreamType,
 };
 use std::collections::HashMap;
 
@@ -81,12 +85,10 @@ fn transfer() {
     assert_eq!(*client.state(), State::Confirmed);
 
     qdebug!("---- server receives");
-    for (d_num, d) in datagrams.into_iter().enumerate() {
+    for d in datagrams {
         let out = server.process(Some(d), now());
-        assert_eq!(
-            out.as_dgram_ref().is_some(),
-            (d_num + 1) % usize::try_from(DEFAULT_ACK_PACKET_TOLERANCE + 1).unwrap() == 0
-        );
+        // With an RTT of zero, the server will acknowledge every packet immediately.
+        assert!(out.as_dgram_ref().is_some());
         qdebug!("Output={:0x?}", out.as_dgram_ref());
     }
     assert_eq!(*server.state(), State::Confirmed);
