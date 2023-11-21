@@ -11,12 +11,8 @@
 #include "mozilla/SMILAnimationController.h"
 #include "mozilla/SMILAnimationFunction.h"
 #include "mozilla/SMILTimeContainer.h"
-#include "mozilla/SVGObserverUtils.h"
 #include "nsContentUtils.h"
 #include "nsIContentInlines.h"
-#include "nsIReferrerInfo.h"
-#include "nsIURI.h"
-#include "prtime.h"
 
 namespace mozilla::dom {
 
@@ -347,15 +343,12 @@ bool SVGAnimationElement::IsEventAttributeNameInternal(nsAtom* aName) {
 }
 
 void SVGAnimationElement::UpdateHrefTarget(const nsAString& aHrefStr) {
-  nsCOMPtr<nsIURI> baseURI = GetBaseURI();
   if (nsContentUtils::IsLocalRefURL(aHrefStr)) {
-    baseURI = SVGObserverUtils::GetBaseURLForLocalRef(this, baseURI);
+    RefPtr<nsAtom> idAtom = NS_AtomizeMainThread(Substring(aHrefStr, 1));
+    mHrefTarget.ResetWithID(*this, idAtom);
+  } else {
+    mHrefTarget.Unlink();
   }
-  nsCOMPtr<nsIURI> targetURI;
-  nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(targetURI), aHrefStr,
-                                            OwnerDoc(), baseURI);
-  mHrefTarget.ResetToURIFragmentID(
-      this, targetURI, OwnerDoc()->ReferrerInfoForInternalCSSAndSVGResources());
   AnimationTargetChanged();
 }
 
