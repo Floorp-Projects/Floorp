@@ -300,6 +300,32 @@ uint32_t WorkerThread::RecursionDepth(
   return mNestedEventLoopDepth;
 }
 
+NS_IMETHODIMP
+WorkerThread::HasPendingEvents(bool* aResult) {
+  MOZ_ASSERT(aResult);
+  const bool onWorkerThread = PR_GetCurrentThread() == mThread;
+  // If is on the worker thread, call nsThread::HasPendingEvents directly.
+  if (onWorkerThread) {
+    return nsThread::HasPendingEvents(aResult);
+  }
+  // Checking if is on the parent thread, otherwise, returns unexpected error.
+  {
+    MutexAutoLock lock(mLock);
+    // return directly if the mWorkerPrivate has not yet set or had already
+    // unset
+    if (!mWorkerPrivate) {
+      *aResult = false;
+      return NS_OK;
+    }
+    if (!mWorkerPrivate->IsOnParentThread()) {
+      *aResult = false;
+      return NS_ERROR_UNEXPECTED;
+    }
+  }
+  *aResult = mEvents->HasPendingEvent();
+  return NS_OK;
+}
+
 NS_IMPL_ISUPPORTS(WorkerThread::Observer, nsIThreadObserver)
 
 NS_IMETHODIMP
