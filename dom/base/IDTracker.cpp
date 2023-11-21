@@ -131,6 +131,12 @@ void IDTracker::ResetToURIFragmentID(nsIContent* aFromContent, nsIURI* aURI,
 void IDTracker::ResetWithID(Element& aFrom, nsAtom* aID, bool aWatch) {
   MOZ_ASSERT(aID);
 
+  Unlink();
+
+  if (aID->IsEmpty()) {
+    return;
+  }
+
   if (aWatch) {
     mWatchID = aID;
   }
