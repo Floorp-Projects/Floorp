@@ -77,6 +77,8 @@ class SandboxBroker : public AbstractSandboxBroker {
 
   static void Initialize(sandbox::BrokerServices* aBrokerServices);
 
+  static void EnsureLpacPermsissionsOnDir(const nsString& aDir);
+
   void Shutdown() override {}
 
   /**

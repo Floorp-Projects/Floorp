@@ -904,6 +904,33 @@ GeckoMediaPluginServiceParent::HasPluginForAPI(const nsACString& aAPI,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+GeckoMediaPluginServiceParent::FindPluginDirectoryForAPI(
+    const nsACString& aAPI, const nsTArray<nsCString>& aTags,
+    nsIFile** aDirectory) {
+  NS_ENSURE_ARG(!aTags.IsEmpty());
+  NS_ENSURE_ARG(aDirectory);
+
+  nsresult rv = EnsurePluginsOnDiskScanned();
+  if (NS_FAILED(rv)) {
+    NS_WARNING("Failed to load GMPs from disk.");
+    return rv;
+  }
+
+  {
+    MutexAutoLock lock(mMutex);
+    nsCString api(aAPI);
+    size_t index = 0;
+    RefPtr<GMPParent> gmp = FindPluginForAPIFrom(index, api, aTags, &index);
+    if (gmp) {
+      nsCOMPtr<nsIFile> dir = gmp->GetDirectory();
+      dir.forget(aDirectory);
+    }
+  }
+
+  return NS_OK;
+}
+
 nsresult GeckoMediaPluginServiceParent::EnsurePluginsOnDiskScanned() {
   const char* env = nullptr;
   if (!mScannedPluginOnDisk && (env = PR_GetEnv("MOZ_GMP_PATH")) && *env) {
