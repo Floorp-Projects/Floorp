@@ -618,8 +618,11 @@ class GCRuntime {
   void startTask(GCParallelTask& task, AutoLockHelperThreadState& lock);
   void joinTask(GCParallelTask& task, AutoLockHelperThreadState& lock);
   void updateHelperThreadCount();
-  bool updateMarkersVector();
   size_t parallelWorkerCount() const;
+
+  // Parallel marking.
+  bool initOrDisableParallelMarking();
+  [[nodiscard]] bool updateMarkersVector();
   size_t markingWorkerCount() const;
 
   // WeakRefs
