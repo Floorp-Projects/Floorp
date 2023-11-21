@@ -25,20 +25,29 @@ class PerformanceChangeDetected(Exception):
 def run_side_by_side(artifacts, kwargs):
     from mozperftest_tools.side_by_side import SideBySide
 
+    output_specified = None
     if "output" in kwargs:
-        kwargs.pop("output")
+        output_specified = kwargs.pop("output")
 
-    tempdir = tempfile.mkdtemp()
-    s = SideBySide(str(tempdir))
-    s.run(**kwargs)
-
-    try:
-        for file in os.listdir(tempdir):
-            if file.startswith("cold-") or file.startswith("warm-"):
-                print(f"Copying from {tempdir}/{file} to {artifacts}")
-                shutil.copy(Path(tempdir, file), artifacts)
-    finally:
-        shutil.rmtree(tempdir)
+    if output_specified:
+        s = SideBySide(str(output_specified))
+        s.run(**kwargs)
+        print(f"Results can be found in {output_specified}")
+    else:
+        tempdir = tempfile.mkdtemp()
+        s = SideBySide(str(tempdir))
+        s.run(**kwargs)
+        try:
+            for file in os.listdir(tempdir):
+                if (
+                    file.endswith(".mp4")
+                    or file.endswith(".gif")
+                    or file.endswith(".json")
+                ):
+                    print(f"Copying from {tempdir}/{file} to {artifacts}")
+                    shutil.copy(Path(tempdir, file), artifacts)
+        finally:
+            shutil.rmtree(tempdir)
 
 
 def _gather_task_names(kwargs):

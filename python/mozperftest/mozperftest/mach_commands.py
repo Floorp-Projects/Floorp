@@ -279,7 +279,6 @@ def run_tools(command_context, **kwargs):
     "comparing  the task `test-linux64-shippable-qr/opt-browsertime-tp6-firefox-linkedin-e10s` "
     "between two revisions, then use `browsertime-tp6-firefox-linkedin-e10s` as the suite name "
     "and `test-linux64-shippable-qr/opt` as the platform.",
-    virtualenv_name="perftest-side-by-side",
     parser=get_perftest_tools_parser("side-by-side"),
 )
 def run_side_by_side(command_context, **kwargs):
@@ -295,7 +294,6 @@ def run_side_by_side(command_context, **kwargs):
     description="This tool can be used to determine if there are differences between two "
     "revisions. It can do either direct comparisons, or searching for regressions in between "
     "two revisions (with a maximum or autocomputed depth).",
-    virtualenv_name="perftest-side-by-side",
     parser=get_perftest_tools_parser("change-detector"),
 )
 def run_change_detector(command_context, **kwargs):
