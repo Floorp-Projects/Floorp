@@ -1444,11 +1444,18 @@
                 app:popUpTo="@id/translationSettingsFragment"
                 app:popUpToInclusive="true" />
             <action
-                android:id="@+id/action_translationSettingsFragment_to_neverTranslateSitePreferenceFragment"
-                app:destination="@id/neverTranslateSitePreferenceFragment" />
+                android:id="@+id/action_translationSettingsFragment_to_downloadLanguagesPreferenceFragment"
+                app:destination="@id/downloadLanguagesPreferenceFragment" />
             <action
                 android:id="@+id/action_translationSettingsFragment_to_automaticTranslationPreferenceFragment"
                 app:destination="@id/automaticTranslationPreferenceFragment" />
+            <action
+                android:id="@+id/action_translationSettingsFragment_to_neverTranslateSitePreferenceFragment"
+                app:destination="@id/neverTranslateSitePreferenceFragment" />
+        </fragment>
+        <fragment
+            android:id="@+id/downloadLanguagesPreferenceFragment"
+            android:name="org.mozilla.fenix.translations.preferences.downloadlanguages.DownloadLanguagesPreferenceFragment">
         </fragment>
         <fragment
             android:id="@+id/automaticTranslationPreferenceFragment"

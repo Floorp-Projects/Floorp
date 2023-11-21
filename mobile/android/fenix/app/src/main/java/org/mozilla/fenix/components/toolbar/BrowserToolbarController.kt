@@ -28,6 +28,7 @@ import org.mozilla.fenix.browser.readermode.ReaderModeController
 import org.mozilla.fenix.components.toolbar.interactor.BrowserToolbarInteractor
 import org.mozilla.fenix.ext.components
 import org.mozilla.fenix.ext.nav
+import org.mozilla.fenix.ext.navigateSafe
 import org.mozilla.fenix.ext.settings
 import org.mozilla.fenix.home.HomeFragment
 import org.mozilla.fenix.home.HomeScreenViewModel
@@ -221,9 +222,9 @@ class DefaultBrowserToolbarController(
     }
 
     override fun handleTranslationsButtonClick() {
-        navController.navigate(
-            BrowserFragmentDirections.actionBrowserFragmentToTranslationsDialogFragment(),
-        )
+        val directions =
+            BrowserFragmentDirections.actionBrowserFragmentToTranslationsDialogFragment()
+        navController.navigateSafe(R.id.browserFragment, directions)
     }
 
     companion object {
