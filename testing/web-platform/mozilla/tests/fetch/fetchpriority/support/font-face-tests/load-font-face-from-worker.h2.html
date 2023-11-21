@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>fetchpriority</title>
+</head>
+<body>
+<script>
+  onload = function() {
+    const worker = new Worker("font-face-worker.js");
+    worker.addEventListener("message", (m) => {
+      if (m.data == "Font loaded") {
+        opener.postMessage("ChildLoaded", "*");
+      }
+    });
+  }
+</script>
+</body>
+</html>
