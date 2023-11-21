@@ -17,6 +17,7 @@
 #include "prsystem.h"
 #include <time.h>
 #include <math.h>
+#include "nsIUserIdleService.h"
 
 namespace mozilla::net {
 
@@ -60,6 +61,7 @@ nsresult CacheObserver::Init() {
   obs->AddObserver(sSelf, "last-pb-context-exited", true);
   obs->AddObserver(sSelf, "memory-pressure", true);
   obs->AddObserver(sSelf, "browser-delayed-startup-finished", true);
+  obs->AddObserver(sSelf, OBSERVER_TOPIC_IDLE_DAILY, true);
 
   return NS_OK;
 }
@@ -244,6 +246,11 @@ CacheObserver::Observe(nsISupports* aSubject, const char* aTopic,
 
   if (!strcmp(aTopic, "browser-delayed-startup-finished")) {
     CacheFileIOManager::OnDelayedStartupFinished();
+    return NS_OK;
+  }
+
+  if (!strcmp(aTopic, OBSERVER_TOPIC_IDLE_DAILY)) {
+    CacheFileIOManager::OnIdleDaily();
     return NS_OK;
   }
 

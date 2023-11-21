@@ -161,6 +161,8 @@ skip-if = ["socketprocess_networking"] # Bug 1772209
 
 ["browser_post_file.js"]
 
+["browser_purgeCache_idle_daily.js"]
+
 ["browser_resource_navigation.js"]
 
 ["browser_speculative_connection_link_header.js"]

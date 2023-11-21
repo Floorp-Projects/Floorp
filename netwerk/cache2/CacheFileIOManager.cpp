@@ -1421,6 +1421,59 @@ nsresult CacheFileIOManager::OnDelayedStartupFinished() {
 }
 
 // static
+nsresult CacheFileIOManager::OnIdleDaily() {
+  // In case the background task process fails for some reason (bug 1848542)
+  // We will remove the directories in the main process on a daily idle.
+  if (!CacheObserver::ClearCacheOnShutdown()) {
+    return NS_OK;
+  }
+  if (!StaticPrefs::network_cache_shutdown_purge_in_background_task()) {
+    return NS_OK;
+  }
+
+  RefPtr<CacheFileIOManager> ioMan = gInstance;
+  nsCOMPtr<nsIFile> parentDir;
+  nsresult rv = ioMan->mCacheDirectory->GetParent(getter_AddRefs(parentDir));
+  if (NS_FAILED(rv) || !parentDir) {
+    return NS_OK;
+  }
+
+  NS_DispatchBackgroundTask(
+      NS_NewRunnableFunction(
+          "CacheFileIOManager::CheckLeftoverFolders",
+          [dir = std::move(parentDir)] {
+            nsCOMPtr<nsIDirectoryEnumerator> directories;
+            nsresult rv = dir->GetDirectoryEntries(getter_AddRefs(directories));
+            if (NS_FAILED(rv)) {
+              return;
+            }
+            bool hasMoreElements = false;
+            while (
+                NS_SUCCEEDED(directories->HasMoreElements(&hasMoreElements)) &&
+                hasMoreElements) {
+              nsCOMPtr<nsIFile> subdir;
+              rv = directories->GetNextFile(getter_AddRefs(subdir));
+              if (NS_FAILED(rv) || !subdir) {
+                break;
+              }
+              nsAutoCString leafName;
+              rv = subdir->GetNativeLeafName(leafName);
+              if (NS_FAILED(rv)) {
+                continue;
+              }
+              if (leafName.Find(kPurgeExtension) != kNotFound) {
+                subdir->Remove(true);
+              }
+            }
+
+            return;
+          }),
+      NS_DISPATCH_EVENT_MAY_BLOCK);
+
+  return NS_OK;
+}
+
+// static
 already_AddRefed<nsIEventTarget> CacheFileIOManager::IOTarget() {
   nsCOMPtr<nsIEventTarget> target;
   if (gInstance && gInstance->mIOThread) {
