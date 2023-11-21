@@ -572,7 +572,6 @@ skip-if = [
 ]
 
 ["browser_urlbarSearchMode.js"]
-fail-if = ["a11y_checks"] # Bug 1854529 clicked urlbar-engine-one-off-item-history button may not be focusable
 
 ["browser_userTyped_restored_after_discard.js"]
 
