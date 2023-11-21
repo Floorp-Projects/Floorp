@@ -8,7 +8,7 @@ DIRS += [
     'util'
 ]
 
-XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell/xpcshell.ini']
+XPCSHELL_TESTS_MANIFESTS += ['tests/xpcshell/xpcshell.toml']
 
 DevToolsModules(
     'validator.js',

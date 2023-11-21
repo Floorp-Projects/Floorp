@@ -1,0 +1,16 @@
+[DEFAULT]
+head = ""
+
+["test_ipv6_host_literal.js"]
+
+["test_oa_partitionKey_pattern.js"]
+
+["test_origin.js"]
+
+["test_precursor_principal.js"]
+firefox-appdir = "browser"
+skip-if = ["os == 'android'"]
+
+["test_site_origin.js"]
+
+["test_uri_escaping.js"]

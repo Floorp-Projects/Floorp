@@ -14,5 +14,5 @@ DevToolsModules(
     "index.js",
 )
 
-XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.toml"]
 MOCHITEST_CHROME_MANIFESTS += ["tests/chrome/chrome.toml"]

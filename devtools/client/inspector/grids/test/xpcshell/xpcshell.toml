@@ -1,0 +1,6 @@
+[DEFAULT]
+tags = "devtools"
+firefox-appdir = "browser"
+head = "head.js"
+
+["test_compare_fragments_geometry.js"]

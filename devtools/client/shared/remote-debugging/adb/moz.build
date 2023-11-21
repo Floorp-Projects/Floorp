@@ -21,4 +21,4 @@ DevToolsModules(
 with Files("**"):
     BUG_COMPONENT = ("DevTools", "about:debugging")
 
-XPCSHELL_TESTS_MANIFESTS += ["xpcshell/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["xpcshell/xpcshell.toml"]

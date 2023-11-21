@@ -1,0 +1,10 @@
+[DEFAULT]
+head = ""
+skip-if = ["os == 'android'"]
+support-files = [
+  "!/chrome/test/unit/data/**",
+  "!/chrome/test/unit/test_resolve_uris.js",
+  "!/chrome/test/unit/head_crtestutils.js",
+]
+
+["test_resolve_uris_ipc.js"]
