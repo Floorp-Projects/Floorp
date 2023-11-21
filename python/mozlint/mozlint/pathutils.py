@@ -152,7 +152,6 @@ def filterpaths(root, paths, include, exclude=None, extensions=None):
     :returns: A tuple containing a list of file paths to lint and a list of
               paths to exclude.
     """
-
     def normalize(path):
         if "*" not in path and not os.path.isabs(path):
             path = os.path.join(root, path)
@@ -180,6 +179,9 @@ def filterpaths(root, paths, include, exclude=None, extensions=None):
         # First handle include/exclude directives
         # that exist (i.e don't have globs)
         for inc in include:
+            if inc.isfile:
+                keep.add(inc)
+
             # Only excludes that are subdirectories of the include
             # path matter.
             excs = [e for e in excludepaths if inc.contains(e)]
