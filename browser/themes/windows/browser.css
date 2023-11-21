@@ -388,47 +388,6 @@
   font-weight: bold;
 }
 
-/* Status panel */
-
-#statuspanel-label {
-  margin: 0;
-  padding: 2px 4px;
-  background-color: -moz-dialog;
-  border: 1px none ThreeDLightShadow;
-  border-top-style: solid;
-  color: -moz-dialogText;
-  text-shadow: none;
-
-  @media not (prefers-contrast) {
-    background-color: #f9f9fa;
-    color: #444;
-  }
-
-  @media (-moz-content-prefers-color-scheme: dark) {
-    background-color: hsl(240, 1%, 20%);
-    border-color: hsl(240, 1%, 40%);
-    color: rgb(249, 249, 250);
-  }
-
-  #statuspanel:not([mirror]) > &:-moz-locale-dir(ltr),
-  #statuspanel[mirror] > &:-moz-locale-dir(rtl) {
-    border-right-style: solid;
-    /* disabled for triggering grayscale AA (bug 659213)
-    border-top-right-radius: .3em;
-    */
-    margin-right: 1em;
-  }
-
-  #statuspanel:not([mirror]) > &:-moz-locale-dir(rtl),
-  #statuspanel[mirror] > &:-moz-locale-dir(ltr) {
-    border-left-style: solid;
-    /* disabled for triggering grayscale AA (bug 659213)
-    border-top-left-radius: .3em;
-    */
-    margin-left: 1em;
-  }
-}
-
 #UITourTooltipButtons {
   /**
    * Override the --arrowpanel-padding so the background extends

@@ -280,38 +280,6 @@ moz-input-box > menupopup .context-menu-add-engine > .menu-iconic-left {
   color: SelectedItemText !important;
 }
 
-/* Status panel */
-
-#statuspanel-label {
-  margin: 0;
-  padding: 2px 4px;
-  background-color: #f9f9fa;
-  border: 1px none #ddd;
-  border-top-style: solid;
-  color: #444;
-  text-shadow: none;
-
-  @media (-moz-content-prefers-color-scheme: dark) {
-    background-color: hsl(240, 1%, 20%);
-    border-color: hsl(240, 1%, 40%);
-    color: rgb(249, 249, 250);
-  }
-
-  #statuspanel:not([mirror]) > &:-moz-locale-dir(ltr),
-  #statuspanel[mirror] > &:-moz-locale-dir(rtl) {
-    border-right-style: solid;
-    border-top-right-radius: .3em;
-    margin-right: 1em;
-  }
-
-  #statuspanel:not([mirror]) > &:-moz-locale-dir(rtl),
-  #statuspanel[mirror] > &:-moz-locale-dir(ltr) {
-    border-left-style: solid;
-    border-top-left-radius: .3em;
-    margin-left: 1em;
-  }
-}
-
 #UITourTooltipDescription {
   font-size: 1.18rem;
   line-height: 2rem;
