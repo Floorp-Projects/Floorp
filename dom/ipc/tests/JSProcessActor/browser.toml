@@ -1,6 +1,8 @@
 [DEFAULT]
 support-files = ["head.js"]
 
+["browser_devtools_loader.js"]
+
 ["browser_getActor.js"]
 
 ["browser_getActor_filter.js"]

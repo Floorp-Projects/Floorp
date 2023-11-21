@@ -64,6 +64,8 @@ JSProcessActorProtocol::FromWebIDLOptions(const nsACString& aName,
 
   proto->mIncludeParent = aOptions.mIncludeParent;
 
+  proto->mLoadInDevToolsLoader = aOptions.mLoadInDevToolsLoader;
+
   return proto.forget();
 }
 

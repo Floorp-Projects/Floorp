@@ -26,6 +26,8 @@ class JSActorProtocolUtils {
       aProto->mChild.mModuleURI = aInfo.url();
     }
 
+    aProto->mLoadInDevToolsLoader = aInfo.loadInDevToolsLoader();
+
     aProto->mChild.mObservers = aInfo.observers().Clone();
   }
 
@@ -42,6 +44,8 @@ class JSActorProtocolUtils {
       aInfo.url() = aProto->mChild.mESModuleURI;
       aInfo.isESModule() = true;
     }
+
+    aInfo.loadInDevToolsLoader() = aProto->mLoadInDevToolsLoader;
 
     aInfo.observers() = aProto->mChild.mObservers.Clone();
   }
