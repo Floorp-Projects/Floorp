@@ -28,6 +28,11 @@
 #endif
 
 #ifdef MOZ_ENABLE_DBUS
+#  define FREEDESKTOP_PORTAL_DESKTOP_TARGET "org.freedesktop.portal.Desktop"
+#  define FREEDESKTOP_PORTAL_DESKTOP_OBJECT "/org/freedesktop/portal/desktop"
+#  define FREEDESKTOP_PORTAL_DESKTOP_INTERFACE "org.freedesktop.portal.Inhibit"
+#  define FREEDESKTOP_PORTAL_DESKTOP_INHIBIT_IDLE_FLAG 8
+
 #  define FREEDESKTOP_SCREENSAVER_TARGET "org.freedesktop.ScreenSaver"
 #  define FREEDESKTOP_SCREENSAVER_OBJECT "/ScreenSaver"
 #  define FREEDESKTOP_SCREENSAVER_INTERFACE "org.freedesktop.ScreenSaver"
@@ -60,15 +65,16 @@ enum WakeLockType {
 #if defined(MOZ_ENABLE_DBUS)
   FreeDesktopScreensaver = 1,
   FreeDesktopPower = 2,
-  GNOME = 3,
+  FreeDesktopPortal = 3,
+  GNOME = 4,
 #endif
 #if defined(MOZ_X11)
-  XScreenSaver = 4,
+  XScreenSaver = 5,
 #endif
 #if defined(MOZ_WAYLAND)
-  WaylandIdleInhibit = 5,
+  WaylandIdleInhibit = 6,
 #endif
-  Unsupported = 6,
+  Unsupported = 7,
 };
 
 #if defined(MOZ_ENABLE_DBUS)
@@ -77,6 +83,7 @@ bool IsDBusWakeLock(int aWakeLockType) {
     case FreeDesktopScreensaver:
     case FreeDesktopPower:
     case GNOME:
+    case FreeDesktopPortal:
       return true;
     default:
       return false;
@@ -135,10 +142,12 @@ class WakeLockTopic {
   void DBusUninhibitScreensaver(const char* aName, const char* aPath,
                                 const char* aCall, const char* aMethod);
 
+  void InhibitFreeDesktopPortal();
   void InhibitFreeDesktopScreensaver();
   void InhibitFreeDesktopPower();
   void InhibitGNOME();
 
+  void UninhibitFreeDesktopPortal();
   void UninhibitFreeDesktopScreensaver();
   void UninhibitFreeDesktopPower();
   void UninhibitGNOME();
@@ -147,6 +156,7 @@ class WakeLockTopic {
   void DBusInhibitFailed(bool aFatal);
   void DBusUninhibitSucceeded();
   void DBusUninhibitFailed();
+  void ClearDBusInhibitToken();
 #endif
   ~WakeLockTopic() {
     WAKE_LOCK_LOG("WakeLockTopic::~WakeLockTopic() state %d", mInhibited);
@@ -180,6 +190,8 @@ class WakeLockTopic {
   uint32_t mInhibitRequestID = 0;
 
   RefPtr<GCancellable> mCancellable;
+  // Used to uninhibit org.freedesktop.portal.Inhibit request
+  nsCString mRequestObjectPath;
 #endif
 
   static int sWakeLockType;
@@ -209,7 +221,7 @@ void WakeLockTopic::DBusInhibitFailed(bool aFatal) {
   WAKE_LOCK_LOG("WakeLockTopic::DBusInhibitFailed(%d)", aFatal);
 
   mWaitingForDBusInhibit = false;
-  mInhibitRequestID = 0;
+  ClearDBusInhibitToken();
 
   // Non-recoverable DBus error. Switch to another wake lock type.
   if (aFatal && SwitchToNextWakeLockType()) {
@@ -222,8 +234,8 @@ void WakeLockTopic::DBusUninhibitSucceeded() {
                 mShouldInhibit);
 
   mWaitingForDBusUninhibit = false;
-  mInhibitRequestID = 0;
   mInhibited = false;
+  ClearDBusInhibitToken();
 
   // Inhibit was requested before uninhibit request was finished.
   // So ask for it now.
@@ -235,6 +247,11 @@ void WakeLockTopic::DBusUninhibitSucceeded() {
 void WakeLockTopic::DBusUninhibitFailed() {
   WAKE_LOCK_LOG("WakeLockTopic::DBusUninhibitFailed()");
   mWaitingForDBusUninhibit = false;
+  mInhibitRequestID = 0;
+}
+
+void WakeLockTopic::ClearDBusInhibitToken() {
+  mRequestObjectPath.Truncate();
   mInhibitRequestID = 0;
 }
 
@@ -384,6 +401,81 @@ void WakeLockTopic::DBusUninhibitScreensaver(const char* aName,
           });
 }
 
+void WakeLockTopic::InhibitFreeDesktopPortal() {
+  WAKE_LOCK_LOG(
+      "WakeLockTopic::InhibitFreeDesktopPortal() mWaitingForDBusInhibit %d "
+      "mWaitingForDBusUninhibit %d",
+      mWaitingForDBusInhibit, mWaitingForDBusUninhibit);
+  if (mWaitingForDBusInhibit) {
+    WAKE_LOCK_LOG("  already waiting to inihibit, return");
+    return;
+  }
+  if (mWaitingForDBusUninhibit) {
+    WAKE_LOCK_LOG("  cancel un-inihibit request");
+    g_cancellable_cancel(mCancellable);
+    mWaitingForDBusUninhibit = false;
+  }
+  mWaitingForDBusInhibit = true;
+
+  CreateDBusProxyForBus(
+      G_BUS_TYPE_SESSION,
+      GDBusProxyFlags(G_DBUS_PROXY_FLAGS_DO_NOT_CONNECT_SIGNALS |
+                      G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES),
+      nullptr, FREEDESKTOP_PORTAL_DESKTOP_TARGET,
+      FREEDESKTOP_PORTAL_DESKTOP_OBJECT, FREEDESKTOP_PORTAL_DESKTOP_INTERFACE,
+      mCancellable)
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [self = RefPtr{this}, this](RefPtr<GDBusProxy>&& aProxy) {
+            GVariantBuilder b;
+            g_variant_builder_init(&b, G_VARIANT_TYPE_VARDICT);
+            g_variant_builder_add(&b, "{sv}", "reason",
+                                  g_variant_new_string(self->mTopic.get()));
+
+            // From
+            // https://flatpak.github.io/xdg-desktop-portal/docs/#gdbus-org.freedesktop.portal.Inhibit
+            DBusProxyCall(
+                aProxy.get(), "Inhibit",
+                g_variant_new("(sua{sv})", g_get_prgname(),
+                              FREEDESKTOP_PORTAL_DESKTOP_INHIBIT_IDLE_FLAG, &b),
+                G_DBUS_CALL_FLAGS_NONE, DBUS_TIMEOUT, mCancellable)
+                ->Then(
+                    GetCurrentSerialEventTarget(), __func__,
+                    [s = RefPtr{this}, this](RefPtr<GVariant>&& aResult) {
+                      gchar* requestObjectPath = nullptr;
+                      g_variant_get(aResult, "(o)", &requestObjectPath);
+                      if (!requestObjectPath) {
+                        WAKE_LOCK_LOG(
+                            "WakeLockTopic::InhibitFreeDesktopPortal(): Unable "
+                            "to get requestObjectPath\n");
+                        DBusInhibitFailed(/* aFatal */ true);
+                        return;
+                      }
+                      WAKE_LOCK_LOG(
+                          "WakeLockTopic::InhibitFreeDesktopPortal(): "
+                          "inhibited, objpath to unihibit: %s\n",
+                          requestObjectPath);
+                      mRequestObjectPath.Adopt(requestObjectPath);
+                      DBusInhibitSucceeded(0);
+                    },
+                    [s = RefPtr{this}, this](GUniquePtr<GError>&& aError) {
+                      DBusInhibitFailed(
+                          /* aFatal */ !IsCancelledGError(aError.get()));
+                      WAKE_LOCK_LOG(
+                          "Failed to create DBus proxy for "
+                          "org.freedesktop.portal.Desktop: %s\n",
+                          aError->message);
+                    });
+          },
+          [self = RefPtr{this}, this](GUniquePtr<GError>&& aError) {
+            WAKE_LOCK_LOG(
+                "Failed to create DBus proxy for "
+                "org.freedesktop.portal.Desktop: %s\n",
+                aError->message);
+            DBusInhibitFailed(/* aFatal */ !IsCancelledGError(aError.get()));
+          });
+}
+
 void WakeLockTopic::InhibitFreeDesktopScreensaver() {
   WAKE_LOCK_LOG("InhibitFreeDesktopScreensaver()");
   DBusInhibitScreensaver(FREEDESKTOP_SCREENSAVER_TARGET,
@@ -410,6 +502,65 @@ void WakeLockTopic::InhibitGNOME() {
       "Inhibit",
       dont_AddRef(g_variant_ref_sink(
           g_variant_new("(susu)", g_get_prgname(), xid, mTopic.get(), flags))));
+}
+
+void WakeLockTopic::UninhibitFreeDesktopPortal() {
+  WAKE_LOCK_LOG(
+      "WakeLockTopic::UninhibitFreeDesktopPortal() mWaitingForDBusInhibit %d "
+      "mWaitingForDBusUninhibit %d object path: %s",
+      mWaitingForDBusInhibit, mWaitingForDBusUninhibit,
+      mRequestObjectPath.get());
+
+  if (mWaitingForDBusUninhibit) {
+    WAKE_LOCK_LOG("  already waiting to uninihibit, return");
+    return;
+  }
+
+  if (mWaitingForDBusInhibit) {
+    WAKE_LOCK_LOG("  cancel inihibit request");
+    g_cancellable_cancel(mCancellable);
+    mWaitingForDBusInhibit = false;
+  }
+  if (mRequestObjectPath.IsEmpty()) {
+    WAKE_LOCK_LOG("UninhibitFreeDesktopPortal() failed: unknown object path\n");
+    return;
+  }
+  mWaitingForDBusUninhibit = true;
+
+  CreateDBusProxyForBus(
+      G_BUS_TYPE_SESSION,
+      GDBusProxyFlags(G_DBUS_PROXY_FLAGS_DO_NOT_CONNECT_SIGNALS |
+                      G_DBUS_PROXY_FLAGS_DO_NOT_LOAD_PROPERTIES),
+      nullptr, FREEDESKTOP_PORTAL_DESKTOP_TARGET, mRequestObjectPath.get(),
+      "org.freedesktop.portal.Request", mCancellable)
+      ->Then(
+          GetCurrentSerialEventTarget(), __func__,
+          [self = RefPtr{this}, this](RefPtr<GDBusProxy>&& aProxy) {
+            DBusProxyCall(aProxy.get(), "Close", nullptr,
+                          G_DBUS_CALL_FLAGS_NONE, DBUS_TIMEOUT, mCancellable)
+                ->Then(
+                    GetCurrentSerialEventTarget(), __func__,
+                    [s = RefPtr{this}, this](RefPtr<GVariant>&& aResult) {
+                      DBusUninhibitSucceeded();
+                      WAKE_LOCK_LOG(
+                          "WakeLockTopic::UninhibitFreeDesktopPortal() Inhibit "
+                          "removed\n");
+                    },
+                    [s = RefPtr{this}, this](GUniquePtr<GError>&& aError) {
+                      DBusUninhibitFailed();
+                      WAKE_LOCK_LOG(
+                          "WakeLockTopic::UninhibitFreeDesktopPortal() "
+                          "Removing inhibit failed: %s\n",
+                          aError->message);
+                    });
+          },
+          [self = RefPtr{this}, this](GUniquePtr<GError>&& aError) {
+            WAKE_LOCK_LOG(
+                "WakeLockTopic::UninhibitFreeDesktopPortal() Proxy creation "
+                "failed: %s\n",
+                aError->message);
+            DBusUninhibitFailed();
+          });
 }
 
 void WakeLockTopic::UninhibitFreeDesktopScreensaver() {
@@ -561,6 +712,9 @@ bool WakeLockTopic::SendInhibit() {
 
   switch (sWakeLockType) {
 #if defined(MOZ_ENABLE_DBUS)
+    case FreeDesktopPortal:
+      InhibitFreeDesktopPortal();
+      break;
     case FreeDesktopScreensaver:
       InhibitFreeDesktopScreensaver();
       break;
@@ -591,6 +745,9 @@ bool WakeLockTopic::SendUninhibit() {
   MOZ_ASSERT(sWakeLockType != Initial);
   switch (sWakeLockType) {
 #if defined(MOZ_ENABLE_DBUS)
+    case FreeDesktopPortal:
+      UninhibitFreeDesktopPortal();
+      break;
     case FreeDesktopScreensaver:
       UninhibitFreeDesktopScreensaver();
       break;
@@ -650,6 +807,7 @@ nsresult WakeLockTopic::UninhibitScreensaver() {
 bool WakeLockTopic::IsWakeLockTypeAvailable(int aWakeLockType) {
   switch (aWakeLockType) {
 #if defined(MOZ_ENABLE_DBUS)
+    case FreeDesktopPortal:
     case FreeDesktopScreensaver:
     case FreeDesktopPower:
     case GNOME:
@@ -702,8 +860,8 @@ bool WakeLockTopic::SwitchToNextWakeLockType() {
     // We're switching out of DBus wakelock - clear our recent DBus states.
     mWaitingForDBusInhibit = false;
     mWaitingForDBusUninhibit = false;
-    mInhibitRequestID = 0;
     mInhibited = false;
+    ClearDBusInhibitToken();
   }
 #endif
 
