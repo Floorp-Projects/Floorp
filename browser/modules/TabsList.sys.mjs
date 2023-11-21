@@ -6,8 +6,6 @@ const lazy = {};
 
 ChromeUtils.defineESModuleGetters(lazy, {
   PanelMultiView: "resource:///modules/PanelMultiView.sys.mjs",
-  ContextualIdentityService:
-    "resource://gre/modules/ContextualIdentityService.sys.mjs",
 });
 
 const TAB_DROP_TYPE = "application/x-moz-tabbrowser-tab";
@@ -318,13 +316,12 @@ export class TabsPanel extends TabsListBase {
     button.tab = tab;
 
     if (tab.userContextId) {
-      let identityColor =
-        "identity-color-" +
-        lazy.ContextualIdentityService.getPublicIdentityFromId(
-          tab.userContextId
-        ).color;
-      button.classList.add(identityColor);
-      button.classList.add("all-tabs-container-indicator");
+      tab.classList.forEach(property => {
+        if (property.startsWith("identity-color")) {
+          button.classList.add(property);
+          button.classList.add("all-tabs-container-indicator");
+        }
+      });
     }
 
     row.appendChild(button);
