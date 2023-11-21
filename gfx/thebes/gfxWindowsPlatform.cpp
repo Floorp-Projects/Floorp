@@ -373,9 +373,6 @@ void gfxWindowsPlatform::InitAcceleration() {
 
   DeviceManagerDx::Init();
 
-  // Content processes should have received content device data from parent.
-  MOZ_ASSERT_IF(XRE_IsContentProcess(), GetInitContentDeviceData());
-
   InitializeConfig();
   InitGPUProcessSupport();
   // Ensure devices initialization. SharedSurfaceANGLE and
@@ -986,21 +983,20 @@ void gfxWindowsPlatform::CheckForContentOnlyDeviceReset() {
 
 nsTArray<uint8_t> gfxWindowsPlatform::GetPlatformCMSOutputProfileData() {
   if (XRE_IsContentProcess()) {
-    auto& cmsOutputProfileData = GetCMSOutputProfileData();
-    // We should have set our profile data when we received our initial
-    // ContentDeviceData.
-    MOZ_ASSERT(cmsOutputProfileData.isSome(),
-               "Should have created output profile data when we received "
-               "initial content device data.");
-
-    // If we have data, it should not be empty.
-    MOZ_ASSERT_IF(cmsOutputProfileData.isSome(),
-                  !cmsOutputProfileData->IsEmpty());
-
-    if (cmsOutputProfileData.isSome()) {
-      return cmsOutputProfileData.ref().Clone();
+    // This will be passed in during InitChild so we can avoid sending a
+    // sync message back to the parent during init.
+    const mozilla::gfx::ContentDeviceData* contentDeviceData =
+        GetInitContentDeviceData();
+    if (contentDeviceData) {
+      MOZ_ASSERT(!contentDeviceData->cmsOutputProfileData().IsEmpty());
+      return contentDeviceData->cmsOutputProfileData().Clone();
     }
-    return nsTArray<uint8_t>();
+
+    // Otherwise we need to ask the parent for the updated color profile
+    mozilla::dom::ContentChild* cc = mozilla::dom::ContentChild::GetSingleton();
+    nsTArray<uint8_t> result;
+    Unused << cc->SendGetOutputColorProfileData(&result);
+    return result;
   }
 
   return GetPlatformCMSOutputProfileData_Impl();
@@ -1202,7 +1198,7 @@ void gfxWindowsPlatform::InitializeConfig() {
     InitializeANGLEConfig();
     InitializeD2DConfig();
   } else {
-    ImportCachedContentDeviceData();
+    FetchAndImportContentDeviceData();
     InitializeANGLEConfig();
   }
 }
@@ -1785,6 +1781,9 @@ void gfxWindowsPlatform::ImportContentDeviceData(
     DeviceManagerDx* dm = DeviceManagerDx::Get();
     dm->ImportDeviceInfo(aData.d3d11());
   }
+
+  // aData->cmsOutputProfileData() will be read during color profile init,
+  // not as part of this import function
 }
 
 void gfxWindowsPlatform::BuildContentDeviceData(ContentDeviceData* aOut) {
