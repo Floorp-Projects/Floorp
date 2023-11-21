@@ -185,6 +185,10 @@ firefoxview-search-text-box-clear-button =
 firefoxview-search-text-box-history =
   .placeholder = Search history
 
+# Placeholder for the input field to search in recently closed tabs ("search" is a verb).
+firefoxview-search-text-box-recentlyclosed =
+  .placeholder = Search recently closed tabs
+
 # "Search" is a noun (as in "Results of the search for")
 # Variables:
 #   $query (String) - The search query used for searching through browser history.

@@ -7,6 +7,7 @@ import {
   ifDefined,
   when,
 } from "chrome://global/content/vendor/lit.all.mjs";
+import { isSearchEnabled } from "./helpers.mjs";
 import { ViewPage } from "./viewpage.mjs";
 // eslint-disable-next-line import/no-unassigned-import
 import "chrome://browser/content/migration/migration-wizard.mjs";
@@ -26,11 +27,6 @@ let XPCOMUtils = ChromeUtils.importESModule(
   "resource://gre/modules/XPCOMUtils.sys.mjs"
 ).XPCOMUtils;
 
-XPCOMUtils.defineLazyPreferenceGetter(
-  lazy,
-  "searchEnabledPref",
-  "browser.firefox-view.search.enabled"
-);
 XPCOMUtils.defineLazyPreferenceGetter(
   lazy,
   "maxRowsPref",
@@ -544,7 +540,7 @@ class HistoryInView extends ViewPage {
         ></h2>
         <div class="history-sort-options">
           ${when(
-            lazy.searchEnabledPref,
+            isSearchEnabled(),
             () => html` <div class="history-sort-option">
               <fxview-search-textbox
                 .query=${this.searchQuery}

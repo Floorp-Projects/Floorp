@@ -5,6 +5,7 @@
 .search-container {
   border: 1px solid var(--fxview-border);
   color: var(--fxview-text-primary-color);
+  display: inline-flex;
   position: relative;
 }
 
