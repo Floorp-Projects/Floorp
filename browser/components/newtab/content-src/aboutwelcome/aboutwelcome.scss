@@ -782,6 +782,15 @@ html {
         margin-block: -20px auto;
         align-items: initial;
 
+        .colorway-text {
+          text-align: initial;
+          transition: var(--transition);
+          font-size: 13px;
+          line-height: 1.5;
+          min-height: 4.5em;
+          margin-block: 10px 20px;
+        }
+
         .theme {
           min-width: 38px;
         }
@@ -934,6 +943,11 @@ html {
             .secondary {
               min-width: 240px;
               margin-inline: 0;
+            }
+
+            .colorway-text {
+              text-align: center;
+              margin-inline: 30px;
             }
 
             .steps {
@@ -1211,10 +1225,20 @@ html {
       cursor: pointer;
       z-index: 0;
 
+      &.colorway {
+        width: auto;
+      }
+
       &:focus,
       &:active {
         outline: initial;
         outline-offset: initial;
+      }
+
+      .icon.colorway,
+      .label.colorway {
+        width: 20px;
+        height: 20px;
       }
 
       .icon {
@@ -1252,6 +1276,34 @@ html {
         &.default,
         &.automatic {
           background-image: url('resource://default-theme/icon.svg');
+
+          &.colorway {
+            background-image: url('chrome://activity-stream/content/data/content/assets/default.svg');
+          }
+        }
+
+        &.playmaker {
+          background-image: url('resource://builtin-themes/colorways/2022playmaker/balanced/icon.svg');
+        }
+
+        &.expressionist {
+          background-image: url('resource://builtin-themes/colorways/2022expressionist/balanced/icon.svg');
+        }
+
+        &.visionary {
+          background-image: url('resource://builtin-themes/colorways/2022visionary/balanced/icon.svg');
+        }
+
+        &.dreamer {
+          background-image: url('resource://builtin-themes/colorways/2022dreamer/balanced/icon.svg');
+        }
+
+        &.innovator {
+          background-image: url('resource://builtin-themes/colorways/2022innovator/balanced/icon.svg');
+        }
+
+        &.activist {
+          background-image: url('resource://builtin-themes/colorways/2022activist/balanced/icon.svg');
         }
       }
 
@@ -1662,8 +1714,8 @@ html {
   // Delays for transitioning-in of intermediate screens
   .screen:not(.dialog-initial) {
     .tiles-theme-section,
-    .multi-select-container
-    {
+    .multi-select-container,
+    .colorway-text {
       transition-delay: 0.2s;
     }
 
@@ -1738,6 +1790,7 @@ html {
       .welcome-text,
       .multi-select-container,
       .tiles-theme-section,
+      .colorway-text,
       .primary,
       .checkbox-container:not(.multi-select-item),
       .secondary,
@@ -1779,6 +1832,7 @@ html {
       // content that is nested between inner main content and navigation CTAs
       // requires an additional 0.1s transition to avoid overlap
       .tiles-theme-section,
+      .colorway-text,
       migration-wizard {
         opacity: 0;
         translate: 0 var(--translate);

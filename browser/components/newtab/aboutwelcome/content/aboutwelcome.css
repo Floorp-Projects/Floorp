@@ -1526,6 +1526,14 @@ html {
   margin-block: -20px auto;
   align-items: initial;
 }
+.onboardingContainer .screen[pos=split] .tiles-theme-container .colorway-text {
+  text-align: initial;
+  transition: var(--transition);
+  font-size: 13px;
+  line-height: 1.5;
+  min-height: 4.5em;
+  margin-block: 10px 20px;
+}
 .onboardingContainer .screen[pos=split] .tiles-theme-container .theme {
   min-width: 38px;
 }
@@ -1646,6 +1654,10 @@ html {
 .onboardingContainer .screen[pos=split] .section-main .main-content .secondary {
     min-width: 240px;
     margin-inline: 0;
+  }
+  .onboardingContainer .screen[pos=split] .section-main .main-content .colorway-text {
+    text-align: center;
+    margin-inline: 30px;
   }
   .onboardingContainer .screen[pos=split] .section-main .main-content .steps {
     padding-block: 0;
@@ -1875,9 +1887,17 @@ html {
   cursor: pointer;
   z-index: 0;
 }
+.onboardingContainer .tiles-theme-section .theme.colorway {
+  width: auto;
+}
 .onboardingContainer .tiles-theme-section .theme:focus, .onboardingContainer .tiles-theme-section .theme:active {
   outline: initial;
   outline-offset: initial;
+}
+.onboardingContainer .tiles-theme-section .theme .icon.colorway,
+.onboardingContainer .tiles-theme-section .theme .label.colorway {
+  width: 20px;
+  height: 20px;
 }
 .onboardingContainer .tiles-theme-section .theme .icon {
   background-size: cover;
@@ -1906,6 +1926,27 @@ html {
 }
 .onboardingContainer .tiles-theme-section .theme .icon.default, .onboardingContainer .tiles-theme-section .theme .icon.automatic {
   background-image: url("resource://default-theme/icon.svg");
+}
+.onboardingContainer .tiles-theme-section .theme .icon.default.colorway, .onboardingContainer .tiles-theme-section .theme .icon.automatic.colorway {
+  background-image: url("chrome://activity-stream/content/data/content/assets/default.svg");
+}
+.onboardingContainer .tiles-theme-section .theme .icon.playmaker {
+  background-image: url("resource://builtin-themes/colorways/2022playmaker/balanced/icon.svg");
+}
+.onboardingContainer .tiles-theme-section .theme .icon.expressionist {
+  background-image: url("resource://builtin-themes/colorways/2022expressionist/balanced/icon.svg");
+}
+.onboardingContainer .tiles-theme-section .theme .icon.visionary {
+  background-image: url("resource://builtin-themes/colorways/2022visionary/balanced/icon.svg");
+}
+.onboardingContainer .tiles-theme-section .theme .icon.dreamer {
+  background-image: url("resource://builtin-themes/colorways/2022dreamer/balanced/icon.svg");
+}
+.onboardingContainer .tiles-theme-section .theme .icon.innovator {
+  background-image: url("resource://builtin-themes/colorways/2022innovator/balanced/icon.svg");
+}
+.onboardingContainer .tiles-theme-section .theme .icon.activist {
+  background-image: url("resource://builtin-themes/colorways/2022activist/balanced/icon.svg");
 }
 .onboardingContainer .tiles-theme-section .theme .text {
   display: flex;
@@ -2252,7 +2293,8 @@ html {
   transition-delay: 1s;
 }
 .onboardingContainer .screen:not(.dialog-initial) .tiles-theme-section,
-.onboardingContainer .screen:not(.dialog-initial) .multi-select-container {
+.onboardingContainer .screen:not(.dialog-initial) .multi-select-container,
+.onboardingContainer .screen:not(.dialog-initial) .colorway-text {
   transition-delay: 0.2s;
 }
 .onboardingContainer .screen:not(.dialog-initial) .primary,
@@ -2309,6 +2351,7 @@ html {
 .onboardingContainer.transition-in .screen .welcome-text,
 .onboardingContainer.transition-in .screen .multi-select-container,
 .onboardingContainer.transition-in .screen .tiles-theme-section,
+.onboardingContainer.transition-in .screen .colorway-text,
 .onboardingContainer.transition-in .screen .primary,
 .onboardingContainer.transition-in .screen .checkbox-container:not(.multi-select-item),
 .onboardingContainer.transition-in .screen .secondary,
@@ -2337,6 +2380,7 @@ html {
   transition-delay: 0.1s;
 }
 .onboardingContainer.transition-out .screen:not(.dialog-last) .tiles-theme-section,
+.onboardingContainer.transition-out .screen:not(.dialog-last) .colorway-text,
 .onboardingContainer.transition-out .screen:not(.dialog-last) migration-wizard {
   opacity: 0;
   translate: 0 var(--translate);
