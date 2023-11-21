@@ -18,7 +18,12 @@ from run_operations import get_last_line, run_git, run_hg, run_shell
 
 
 def restore_patch_stack(
-    github_path, github_branch, patch_directory, state_directory, tar_name
+    github_path,
+    github_branch,
+    patch_directory,
+    state_directory,
+    tar_name,
+    clone_protocol,
 ):
     # make sure the repo is clean before beginning
     stdout_lines = run_hg("hg status third_party/libwebrtc")
@@ -30,7 +35,9 @@ def restore_patch_stack(
 
     # first, refetch the repo (hopefully utilizing the tarfile for speed) so
     # the patches apply cleanly
-    fetch_repo(github_path, True, os.path.join(state_directory, tar_name))
+    fetch_repo(
+        github_path, clone_protocol, True, os.path.join(state_directory, tar_name)
+    )
 
     # remove any stale no-op-cherry-pick-msg files in state_directory
     run_shell("rm {}/*.no-op-cherry-pick-msg || true".format(state_directory))
@@ -96,6 +103,12 @@ if __name__ == "__main__":
         default=default_state_dir,
         help="path to state directory (defaults to {})".format(default_state_dir),
     )
+    parser.add_argument(
+        "--clone-protocol",
+        choices=["https", "ssh"],
+        default="https",
+        help="Use either https or ssh to clone the git repo (ignored if tar file exists)",
+    )
     args = parser.parse_args()
 
     restore_patch_stack(
@@ -104,4 +117,5 @@ if __name__ == "__main__":
         os.path.abspath(args.patch_path),
         args.state_path,
         args.tar_name,
+        args.clone_protocol,
     )
