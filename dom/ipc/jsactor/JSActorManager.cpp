@@ -59,13 +59,17 @@ already_AddRefed<JSActor> JSActorManager::GetActor(JSContext* aCx,
                    ? protocol->Parent()
                    : protocol->Child();
 
-  // We're about to construct the actor, so make sure we're in the JSM realm
-  // while importing etc.
-  JSAutoRealm ar(aCx, xpc::PrivilegedJunkScope());
-
   // Load the module using mozJSModuleLoader.
-  RefPtr loader = mozJSModuleLoader::Get();
+  // If the JSActor uses `loadInDevToolsLoader`, force loading in the DevTools
+  // specific's loader.
+  RefPtr loader = protocol->mLoadInDevToolsLoader
+                      ? mozJSModuleLoader::GetOrCreateDevToolsLoader()
+                      : mozJSModuleLoader::Get();
   MOZ_ASSERT(loader);
+
+  // We're about to construct the actor, so make sure we're in the loader realm
+  // while importing etc.
+  JSAutoRealm ar(aCx, loader->GetSharedGlobal(aCx));
 
   // If a module URI was provided, use it to construct an instance of the actor.
   JS::Rooted<JSObject*> actorObj(aCx);

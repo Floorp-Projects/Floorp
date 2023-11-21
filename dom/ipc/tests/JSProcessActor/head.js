@@ -46,7 +46,13 @@ function declTest(name, cfg) {
 }
 
 function declTestWithOptions(name, cfg, fileExt) {
-  let { url = "about:blank", includeParent = false, remoteTypes, test } = cfg;
+  let {
+    url = "about:blank",
+    includeParent = false,
+    remoteTypes,
+    loadInDevToolsLoader = false,
+    test,
+  } = cfg;
 
   // Build the actor options object which will be used to register & unregister
   // our process actor.
@@ -57,6 +63,9 @@ function declTestWithOptions(name, cfg, fileExt) {
   actorOptions.includeParent = includeParent;
   if (remoteTypes !== undefined) {
     actorOptions.remoteTypes = remoteTypes;
+  }
+  if (loadInDevToolsLoader) {
+    actorOptions.loadInDevToolsLoader = true;
   }
 
   // Add a new task for the actor test declared here.

@@ -301,6 +301,10 @@ struct JSWindowActorInfo
   // False if `url` is for JSM or nothing.
   bool isESModule;
 
+  // This is to align with JSProcessActorInfo.
+  // This attribute isn't used for JSWindow Actors.
+  bool loadInDevToolsLoader;
+
   // The module of the url.
   nsCString? url;
 
@@ -321,6 +325,9 @@ struct JSProcessActorInfo
     // True if `url` is for ESM.
     // False if `url` is for JSM or nothing.
     bool isESModule;
+
+    // True if the actor should be loaded in the distinct loader dedicated to DevTools.
+    bool loadInDevToolsLoader;
 
     // The module of the url.
     nsCString? url;

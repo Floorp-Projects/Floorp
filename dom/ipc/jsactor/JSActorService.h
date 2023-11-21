@@ -92,7 +92,7 @@ class JSActorService final {
 };
 
 /**
- * Base clsas for both `JSWindowActorProtocol` and `JSProcessActorProtocol`
+ * Base class for both `JSWindowActorProtocol` and `JSProcessActorProtocol`
  * which can be used by generic code.
  */
 class JSActorProtocol : public nsISupports {
@@ -104,6 +104,7 @@ class JSActorProtocol : public nsISupports {
 
   virtual const Sided& Parent() const = 0;
   virtual const Sided& Child() const = 0;
+  bool mLoadInDevToolsLoader = false;
 };
 
 }  // namespace dom

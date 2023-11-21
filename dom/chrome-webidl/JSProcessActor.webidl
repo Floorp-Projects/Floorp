@@ -54,6 +54,13 @@ dictionary ProcessActorOptions {
    */
   boolean includeParent = false;
 
+  /**
+   * If true, the actor will be loaded in the loader dedicated to DevTools.
+   *
+   * This ultimately prevents DevTools to debug itself.
+   */
+  boolean loadInDevToolsLoader = false;
+
   /** This fields are used for configuring individual sides of the actor. */
   ProcessActorSidedOptions parent;
   ProcessActorChildOptions child;

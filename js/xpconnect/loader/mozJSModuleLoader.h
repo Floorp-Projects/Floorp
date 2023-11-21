@@ -65,6 +65,8 @@ class mozJSModuleLoader final : public nsIMemoryReporter {
     return sSelf;
   }
 
+  JSObject* GetSharedGlobal(JSContext* aCx);
+
   static mozJSModuleLoader* GetDevToolsLoader() { return sDevToolsLoader; }
   static mozJSModuleLoader* GetOrCreateDevToolsLoader();
 
@@ -145,8 +147,6 @@ class mozJSModuleLoader final : public nsIMemoryReporter {
                                   JS::MutableHandleObject aGlobal);
 
   bool CreateJSServices(JSContext* aCx);
-
-  JSObject* GetSharedGlobal(JSContext* aCx);
 
   static nsresult GetSourceFile(nsIURI* aResolvedURI, nsIFile** aSourceFileOut);
 
