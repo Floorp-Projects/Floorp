@@ -72,7 +72,7 @@ def vendor_puppeteer(command_context, repository, commitish, install):
     # Preserve our custom mocha reporter
     shutil.move(
         os.path.join(puppeteer_dir, "json-mocha-reporter.js"),
-        remotedir(command_context),
+        os.path.join(remotedir(command_context), "json-mocha-reporter.js"),
     )
     shutil.rmtree(puppeteer_dir, ignore_errors=True)
     os.makedirs(puppeteer_dir)
@@ -133,7 +133,12 @@ def vendor_puppeteer(command_context, repository, commitish, install):
         )
 
     if install:
-        env = {"HUSKY": "0", "PUPPETEER_SKIP_DOWNLOAD": "1"}
+        env = {
+            "CI": "1",  # Force the quiet logger of wireit
+            "HUSKY": "0",  # Disable any hook checks
+            "PUPPETEER_SKIP_DOWNLOAD": "1",  # Don't download any build
+        }
+
         run_npm(
             "install",
             cwd=os.path.join(command_context.topsrcdir, puppeteer_dir),
@@ -704,7 +709,11 @@ def puppeteer_test(
 
 def install_puppeteer(command_context, product, ci):
     setup()
-    env = {"HUSKY": "0"}
+
+    env = {
+        "CI": "1",  # Force the quiet logger of wireit
+        "HUSKY": "0",  # Disable any hook checks
+    }
 
     puppeteer_dir = os.path.join("remote", "test", "puppeteer")
     puppeteer_dir_full_path = os.path.join(command_context.topsrcdir, puppeteer_dir)
@@ -726,8 +735,8 @@ def install_puppeteer(command_context, product, ci):
             exit_on_fail=False,
         )
 
-    command = "ci" if ci else "install"
-    run_npm(command, cwd=puppeteer_dir_full_path, env=env)
+    # Always use the `ci` command to not get updated sub-dependencies installed.
+    run_npm("ci", cwd=puppeteer_dir_full_path, env=env)
     run_npm(
         "run",
         "build",
