@@ -6,36 +6,53 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
 <body>
-<p id="display"></p>
-<div id="content" style="display: none;">
-
-</div>
-
-<div id="editable1" contenteditable="true">
-<table id="table1">
-<tr id="tr1"><td>ABCDEFG</td><td>HIJKLMN</td></tr>
-<tr id="tr2"><td>ABCDEFG</td><td>HIJKLMN</td></tr>
-<tr id="tr3"><td>ABCDEFG</td><td>HIJKLMN</td></tr>
-</table>
-</div>
+<div contenteditable></div>
 <pre id="test">
 
 <script class="testbody" type="application/javascript">
 SimpleTest.waitForExplicitFinish();
 SimpleTest.waitForFocus(function() {
+  const editableInnerHTML =
+`<table>
+  <tr><td>ABCDEFG</td><td>HIJKLMN</td></tr>
+  <tr><td>ABCDEFG</td><td>HIJKLMN</td></tr>
+  <tr><td>ABCDEFG</td><td>HIJKLMN</td></tr>
+</table>`;
+
   document.execCommand("enableObjectResizing", false, "false");
   document.execCommand("enableInlineTableEditing", false, "true");
 
-  let tableNode = document.getElementById("table1");
-  synthesizeMouseAtCenter(tableNode, {});
-  isnot(tableNode.getAttribute("_moz_resizing"), "true",
-         "_moz_resizing attribute shouldn't be true without object resizing");
+  function doTest(aDescription, aTable) {
+    synthesizeMouseAtCenter(aTable, {});
+    isnot(
+      aTable.getAttribute("_moz_resizing"),
+      "true",
+      `${aDescription}: _moz_resizing attribute shouldn't be true without object resizing`
+    );
 
-  let tr2 = document.getElementById("tr2");
-  ok(tr2, "id=tr2 should exist");
-  synthesizeMouse(tr2, 0, tr2.clientHeight / 2, {});
-  ok(!document.getElementById("tr2"),
-     "id=tr2 should be removed by a click in the row");
+    const tr2 = aTable.querySelector("tr + tr");
+    synthesizeMouse(tr2, 0, tr2.clientHeight / 2, {});
+    ok(
+      !tr2.isConnected,
+      `${aDescription}: The second <tr> element should've been removed by a click`
+    );
+  }
+
+  const editingHost = document.querySelector("div[contenteditable]");
+  editingHost.innerHTML = editableInnerHTML;
+  doTest("Testing in Light DOM", editingHost.querySelector("table"));
+
+  editingHost.remove();
+
+  const shadowHost = document.createElement("div");
+  document.body.insertBefore(shadowHost, document.body.firstChild);
+  const shadowRoot = shadowHost.attachShadow({mode: "open"});
+  shadowRoot.appendChild(document.createElement("div"));
+  shadowRoot.firstChild.setAttribute("contenteditable", "");
+  shadowRoot.firstChild.innerHTML = editableInnerHTML;
+  doTest("Testing in Shadow DOM", shadowRoot.firstChild.querySelector("table"));
+
+  shadowHost.remove();
 
   SimpleTest.finish();
 });

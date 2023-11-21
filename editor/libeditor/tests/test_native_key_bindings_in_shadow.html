@@ -1,0 +1,50 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Check whether native key bindings work in shadow DOM in editor</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/EventUtils.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+<script>
+"use strict";
+
+const kIsMac = navigator.platform.includes("Mac");
+
+SimpleTest.waitForExplicitFinish();
+SimpleTest.waitForFocus(() => {
+  const shadowHost = document.querySelector("div");
+  const shadowRoot = shadowHost.attachShadow({mode: "open"});
+  shadowRoot.innerHTML = "<div contenteditable>abc def</div>";
+  const editingHost = shadowRoot.querySelector("div[contenteditable]");
+  editingHost.focus();
+  getSelection().collapse(editingHost.firstChild, "abc ".length);
+  if (kIsMac) {
+    synthesizeKey("KEY_ArrowLeft", {metaKey: true});
+  } else {
+    synthesizeKey("KEY_Home");
+  }
+  synthesizeKey("X", {shiftKey: true});
+  is(
+    editingHost.textContent,
+    "Xabc def",
+    "X should've insert start of the editing host after typing \"Home\""
+  );
+  if (kIsMac) {
+    synthesizeKey("KEY_ArrowRight", {metaKey: true});
+  } else {
+    synthesizeKey("KEY_End");
+  }
+  synthesizeKey("Y", {shiftKey: true});
+  is(
+    editingHost.textContent,
+    "Xabc defY",
+    "Y should've been inserted end of the editing host after typing \"End\""
+  );
+
+  SimpleTest.finish();
+});
+</script>
+</head>
+<body><div></div></body>
+</html>

@@ -357,7 +357,7 @@ nsresult HTMLEditor::RefreshEditingUI() {
   }
 
   // If we're not in a document, don't try to add resizers
-  if (!selectionContainerElement->IsInUncomposedDoc()) {
+  if (!selectionContainerElement->IsInComposedDoc()) {
     return NS_OK;
   }
 
