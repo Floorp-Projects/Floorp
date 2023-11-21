@@ -760,11 +760,6 @@ ipc::IPCResult WebGPUParent::RecvCommandEncoderDrop(RawId aEncoderId) {
   return IPC_OK();
 }
 
-ipc::IPCResult WebGPUParent::RecvCommandBufferDrop(RawId aCommandBufferId) {
-  ffi::wgpu_server_command_buffer_drop(mContext.get(), aCommandBufferId);
-  return IPC_OK();
-}
-
 ipc::IPCResult WebGPUParent::RecvRenderBundleDrop(RawId aBundleId) {
   ffi::wgpu_server_render_bundle_drop(mContext.get(), aBundleId);
   return IPC_OK();
