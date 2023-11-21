@@ -70,8 +70,19 @@ static void PopulateTopLevelInfoFromURI(const bool aIsTopLevelDocument,
   nsAString& topLevelInfo = aOriginAttributes.*aTarget;
 
   nsAutoCString scheme;
-  rv = aURI->GetScheme(scheme);
-  NS_ENSURE_SUCCESS_VOID(rv);
+  nsCOMPtr<nsIURI> uri = aURI;
+  // The URI could be nested (for example view-source:http://example.com), in
+  // that case we want to get the innermost URI (http://example.com).
+  nsCOMPtr<nsINestedURI> nestedURI;
+  do {
+    NS_ENSURE_SUCCESS_VOID(uri->GetScheme(scheme));
+    nestedURI = do_QueryInterface(uri);
+    // We can't just use GetInnermostURI on the nested URI, since that would
+    // also unwrap some about: URIs to hidden moz-safe-about: URIs, which we do
+    // not want. Thus we loop through with GetInnerURI until the URI isn't
+    // nested anymore or we encounter a about: scheme.
+  } while (nestedURI && !scheme.EqualsLiteral("about") &&
+           NS_SUCCEEDED(nestedURI->GetInnerURI(getter_AddRefs(uri))));
 
   if (scheme.EqualsLiteral("about")) {
     MakeTopLevelInfo(scheme, nsLiteralCString(ABOUT_URI_FIRST_PARTY_DOMAIN),
@@ -84,7 +95,7 @@ static void PopulateTopLevelInfoFromURI(const bool aIsTopLevelDocument,
   if (scheme.EqualsLiteral("moz-nullprincipal")) {
     // Get the UUID portion of the URI, ignoring the precursor principal.
     nsAutoCString filePath;
-    rv = aURI->GetFilePath(filePath);
+    rv = uri->GetFilePath(filePath);
     MOZ_ASSERT(NS_SUCCEEDED(rv));
     // Remove the `{}` characters from both ends.
     filePath.Mid(filePath, 1, filePath.Length() - 2);
@@ -103,7 +114,7 @@ static void PopulateTopLevelInfoFromURI(const bool aIsTopLevelDocument,
 
   nsCOMPtr<nsIPrincipal> blobPrincipal;
   if (dom::BlobURLProtocolHandler::GetBlobURLPrincipal(
-          aURI, getter_AddRefs(blobPrincipal))) {
+          uri, getter_AddRefs(blobPrincipal))) {
     MOZ_ASSERT(blobPrincipal);
     topLevelInfo = blobPrincipal->OriginAttributesRef().*aTarget;
     return;
@@ -115,7 +126,7 @@ static void PopulateTopLevelInfoFromURI(const bool aIsTopLevelDocument,
   NS_ENSURE_TRUE_VOID(tldService);
 
   nsAutoCString baseDomain;
-  rv = tldService->GetBaseDomain(aURI, 0, baseDomain);
+  rv = tldService->GetBaseDomain(uri, 0, baseDomain);
   if (NS_SUCCEEDED(rv)) {
     MakeTopLevelInfo(scheme, baseDomain, aUseSite, topLevelInfo);
     return;
@@ -126,11 +137,11 @@ static void PopulateTopLevelInfoFromURI(const bool aIsTopLevelDocument,
   bool isInsufficientDomainLevels = (rv == NS_ERROR_INSUFFICIENT_DOMAIN_LEVELS);
 
   int32_t port;
-  rv = aURI->GetPort(&port);
+  rv = uri->GetPort(&port);
   NS_ENSURE_SUCCESS_VOID(rv);
 
   nsAutoCString host;
-  rv = aURI->GetHost(host);
+  rv = uri->GetHost(host);
   NS_ENSURE_SUCCESS_VOID(rv);
 
   if (isIpAddress) {
@@ -160,7 +171,7 @@ static void PopulateTopLevelInfoFromURI(const bool aIsTopLevelDocument,
 
   if (isInsufficientDomainLevels) {
     nsAutoCString publicSuffix;
-    rv = tldService->GetPublicSuffix(aURI, publicSuffix);
+    rv = tldService->GetPublicSuffix(uri, publicSuffix);
     if (NS_SUCCEEDED(rv)) {
       MakeTopLevelInfo(scheme, publicSuffix, port, aUseSite, topLevelInfo);
       return;
