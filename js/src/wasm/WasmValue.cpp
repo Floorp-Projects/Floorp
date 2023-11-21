@@ -356,6 +356,8 @@ template bool wasm::ToJSValue<DebugCodegenVal>(JSContext* cx, const void* src,
                                                FieldType type,
                                                MutableHandleValue dst,
                                                CoercionLevel level);
+template bool wasm::ToJSValueMayGC<NoDebug>(FieldType type);
+template bool wasm::ToJSValueMayGC<DebugCodegenVal>(FieldType type);
 
 template bool wasm::ToWebAssemblyValue<NoDebug>(JSContext* cx, HandleValue val,
                                                 ValType type, void* loc,
@@ -373,6 +375,8 @@ template bool wasm::ToJSValue<DebugCodegenVal>(JSContext* cx, const void* src,
                                                ValType type,
                                                MutableHandleValue dst,
                                                CoercionLevel level);
+template bool wasm::ToJSValueMayGC<NoDebug>(ValType type);
+template bool wasm::ToJSValueMayGC<DebugCodegenVal>(ValType type);
 
 template <typename Debug = NoDebug>
 bool ToWebAssemblyValue_i8(JSContext* cx, HandleValue val, int8_t* loc) {
@@ -852,9 +856,19 @@ bool wasm::ToJSValue(JSContext* cx, const void* src, FieldType type,
 }
 
 template <typename Debug>
+bool wasm::ToJSValueMayGC(FieldType type) {
+  return type.kind() == FieldType::I64;
+}
+
+template <typename Debug>
 bool wasm::ToJSValue(JSContext* cx, const void* src, ValType type,
                      MutableHandleValue dst, CoercionLevel level) {
   return wasm::ToJSValue(cx, src, FieldType(type.packed()), dst, level);
+}
+
+template <typename Debug>
+bool wasm::ToJSValueMayGC(ValType type) {
+  return wasm::ToJSValueMayGC(FieldType(type.packed()));
 }
 
 /* static */
