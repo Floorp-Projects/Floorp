@@ -441,22 +441,13 @@ RawId WebGPUChild::DeviceCreateCommandEncoder(
 RawId WebGPUChild::CommandEncoderFinish(
     RawId aSelfId, RawId aDeviceId,
     const dom::GPUCommandBufferDescriptor& aDesc) {
+  if (!SendCommandEncoderFinish(aSelfId, aDeviceId, aDesc)) {
+    MOZ_CRASH("IPC failure");
+  }
   // We rely on knowledge that `CommandEncoderId` == `CommandBufferId`
   // TODO: refactor this to truly behave as if the encoder is being finished,
   // and a new command buffer ID is being created from it. Resolve the ID
   // type aliasing at the place that introduces it: `wgpu-core`.
-
-  if (!IsOpen()) {
-    // The GPU process went down. This will be handled elsewhere so pretend
-    // the message was sent successfully. There is nothing we can do with
-    // the produced handle so all we need is to make sure it isn't invalid
-    // (it must not be zero).
-    return aSelfId;
-  }
-
-  if (!SendCommandEncoderFinish(aSelfId, aDeviceId, aDesc)) {
-    MOZ_CRASH("IPC failure");
-  }
   return aSelfId;
 }
 
