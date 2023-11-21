@@ -5023,7 +5023,7 @@ nsresult nsIFrame::PeekBackwardAndForward(nsSelectionAmount aAmountBack,
   int32_t baseOffset = aStartPos;
   nsresult rv;
 
-  PeekOffsetOptions peekOffsetOptions{PeekOffsetOption::ScrollViewStop};
+  PeekOffsetOptions peekOffsetOptions{PeekOffsetOption::StopAtScroller};
   if (aJumpLines) {
     peekOffsetOptions += PeekOffsetOption::JumpLines;
   }
@@ -8652,7 +8652,7 @@ static nsresult GetNextPrevLineFromBlockFrame(PeekOffsetStruct* aPos,
       result = NS_NewFrameTraversal(
           getter_AddRefs(frameTraversal), pc, resultFrame, ePostOrder,
           false,  // aVisual
-          aPos->mOptions.contains(PeekOffsetOption::ScrollViewStop),
+          aPos->mOptions.contains(PeekOffsetOption::StopAtScroller),
           false,  // aFollowOOFs
           false   // aSkipPopupChecks
       );
@@ -8728,7 +8728,7 @@ static nsresult GetNextPrevLineFromBlockFrame(PeekOffsetStruct* aPos,
         result = NS_NewFrameTraversal(
             getter_AddRefs(frameTraversal), pc, resultFrame, eLeaf,
             false,  // aVisual
-            aPos->mOptions.contains(PeekOffsetOption::ScrollViewStop),
+            aPos->mOptions.contains(PeekOffsetOption::StopAtScroller),
             false,  // aFollowOOFs
             false   // aSkipPopupChecks
         );
@@ -9159,7 +9159,7 @@ nsresult nsIFrame::PeekOffsetForLine(PeekOffsetStruct* aPos) {
   AutoAssertNoDomMutations guard;
   while (NS_FAILED(result)) {
     auto [newBlock, lineFrame] = blockFrame->GetContainingBlockForLine(
-        aPos->mOptions.contains(PeekOffsetOption::ScrollViewStop));
+        aPos->mOptions.contains(PeekOffsetOption::StopAtScroller));
     if (!newBlock) {
       return NS_ERROR_FAILURE;
     }
@@ -9254,7 +9254,7 @@ nsresult nsIFrame::PeekOffsetForLineEdge(PeekOffsetStruct* aPos) {
   Element* editingHost = frame->GetContent()->GetEditingHost();
 
   auto [blockFrame, lineFrame] = frame->GetContainingBlockForLine(
-      aPos->mOptions.contains(PeekOffsetOption::ScrollViewStop));
+      aPos->mOptions.contains(PeekOffsetOption::StopAtScroller));
   if (!blockFrame) {
     return NS_ERROR_FAILURE;
   }
@@ -9619,7 +9619,7 @@ nsIFrame::SelectablePeekReport nsIFrame::GetFrameFromDirection(
   nsCOMPtr<nsIFrameEnumerator> frameTraversal;
   MOZ_TRY(NS_NewFrameTraversal(
       getter_AddRefs(frameTraversal), presContext, this, eLeaf,
-      needsVisualTraversal, aOptions.contains(PeekOffsetOption::ScrollViewStop),
+      needsVisualTraversal, aOptions.contains(PeekOffsetOption::StopAtScroller),
       followOofs,
       false  // aSkipPopupChecks
       ));
@@ -9632,7 +9632,7 @@ nsIFrame::SelectablePeekReport nsIFrame::GetFrameFromDirection(
       GetClosestNativeAnonymousSubtreeRoot();
   while (!selectable) {
     auto [blockFrame, lineFrame] = traversedFrame->GetContainingBlockForLine(
-        aOptions.contains(PeekOffsetOption::ScrollViewStop));
+        aOptions.contains(PeekOffsetOption::StopAtScroller));
     if (!blockFrame) {
       return result;
     }

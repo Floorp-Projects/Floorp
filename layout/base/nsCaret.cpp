@@ -780,7 +780,7 @@ nsIFrame* nsCaret::GetCaretFrameForNodeOffset(nsFrameSelection* aFrameSelection,
                 if (baseLevel != levelAfter) {
                   PeekOffsetStruct pos(eSelectBeginLine, eDirPrevious, 0,
                                        nsPoint(0, 0),
-                                       {PeekOffsetOption::ScrollViewStop,
+                                       {PeekOffsetOption::StopAtScroller,
                                         PeekOffsetOption::Visual});
                   if (NS_SUCCEEDED(frameAfter->PeekOffset(&pos))) {
                     theFrame = pos.mResultFrame;
@@ -812,7 +812,7 @@ nsIFrame* nsCaret::GetCaretFrameForNodeOffset(nsFrameSelection* aFrameSelection,
                 if (baseLevel != levelBefore) {
                   PeekOffsetStruct pos(eSelectEndLine, eDirNext, 0,
                                        nsPoint(0, 0),
-                                       {PeekOffsetOption::ScrollViewStop,
+                                       {PeekOffsetOption::StopAtScroller,
                                         PeekOffsetOption::Visual});
                   if (NS_SUCCEEDED(frameBefore->PeekOffset(&pos))) {
                     theFrame = pos.mResultFrame;
