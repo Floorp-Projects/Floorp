@@ -34,6 +34,7 @@
 #include "mozilla/IntegerPrintfMacros.h"
 #include "mozilla/Preferences.h"
 #include "nsNetUtil.h"
+#include "mozilla/glean/GleanMetrics.h"
 
 #ifdef MOZ_BACKGROUNDTASKS
 #  include "mozilla/BackgroundTasksRunner.h"
@@ -1462,7 +1463,17 @@ nsresult CacheFileIOManager::OnIdleDaily() {
                 continue;
               }
               if (leafName.Find(kPurgeExtension) != kNotFound) {
-                subdir->Remove(true);
+                mozilla::glean::networking::residual_cache_folder_count.Add(1);
+                rv = subdir->Remove(true);
+                if (NS_SUCCEEDED(rv)) {
+                  mozilla::glean::networking::residual_cache_folder_removal
+                      .Get("success"_ns)
+                      .Add(1);
+                } else {
+                  mozilla::glean::networking::residual_cache_folder_removal
+                      .Get("failure"_ns)
+                      .Add(1);
+                }
               }
             }
 
