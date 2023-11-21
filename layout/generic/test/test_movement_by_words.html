@@ -14,81 +14,127 @@
 <p id="catch">Catch-all
 <pre id="test"><script class="testbody" type="text/javascript">
 
-/** Tests for bugs 384147, 981281, 1066756 **/
+/** Tests for bugs 384147, 981281, 1066756, 1820290 **/
 
 const kIsMac = navigator.platform.includes("Mac");
 
 SimpleTest.waitForExplicitFinish();
 
-SimpleTest.waitForFocus(function(){setTimeout(focusing, 0)});
-
-function focusing() {
-  document.getElementById("editor").focus();
+SimpleTest.waitForFocus(async () => {
+  const editor = document.getElementById("editor");
+  const waitForFocusEditor = new Promise(resolve =>
+    editor.addEventListener("focus", resolve, {once: true})
+  );
+  editor.focus();
   // This seems to be necessary because the selection is not set up properly otherwise
-  setTimeout(test, 0);
-}
+  await waitForFocusEditor;
+
+  await test1();
+  await test2();
+  await test3();
+  await test4();
+
+  SimpleTest.finish();
+});
 
 var eatSpace;
 var stopAtPunctuation;
 var sel = window.getSelection();
 var editor = document.getElementById("editor");
 
-function setPrefs(eat_space, stop_at_punctuation, callback) {
+function setPrefs(eat_space, stop_at_punctuation) {
   eatSpace = eat_space;
   stopAtPunctuation = stop_at_punctuation;
-  SpecialPowers.pushPrefEnv({
+  return SpecialPowers.pushPrefEnv({
     "set": [["layout.word_select.eat_space_to_next_word", eat_space],
 	    ["layout.word_select.stop_at_punctuation", stop_at_punctuation],
 	    ["intl.icu4x.segmenter.enabled", true]]
-  }, callback);
+  });
 }
 
-function errString(dir) {
-  return dir + " movement broken with eatSpace=" + eatSpace +
-    ", stopAtPunctuation=" + stopAtPunctuation + " in \"" + editor.innerHTML +
-    "\"; sel.anchorNode.parentNode=" + sel.anchorNode.parentNode;
+function currentStateDescription() {
+  return `eatSpace=${eatSpace}, stopAtPunctuation=${stopAtPunctuation}, testing="${editor.outerHTML}"`;
 }
 
-function testRight(node, offset) {
+function getNodeDescription(aNode) {
+  if (aNode === undefined) {
+    return "undefined";
+  }
+  if (aNode === null) {
+    return "null";
+  }
+  switch (aNode.nodeType) {
+    case Node.TEXT_NODE:
+      return `"${
+        aNode.data.replace(/\n/g, "\\n")
+      }" in ${getNodeDescription(aNode.parentNode)}`;
+    case Node.ELEMENT_NODE:
+      return `<${aNode.tagName.toLowerCase()}${
+        aNode.getAttribute("id") !== null
+          ? ` id="${aNode.getAttribute("id")}"`
+          : ""
+      }${
+        aNode.getAttribute("dir") !== null
+          ? ` dir="${aNode.getAttribute("dir")}"`
+          : ""
+      }>`;
+  }
+  return aNode.nodeName;
+}
+
+function testRight(node, offset, knownFailure) {
   if (!kIsMac) {
     synthesizeKey("KEY_ArrowRight", { ctrlKey: true });
   } else {
     // macOS does not have default shortcut key to move caret per word.
     SpecialPowers.doCommand(window, "cmd_wordNext");
   }
-  is(sel.anchorNode, node, errString("Right"));
-  is(sel.anchorOffset, offset, errString("Right"));
+  (knownFailure ? todo_is : is)(
+    `{${getNodeDescription(sel.anchorNode)} - ${sel.anchorOffset}}`,
+    `{${getNodeDescription(node)} - ${offset}}`,
+    `testRight(${currentStateDescription()})`
+  );
+  if (knownFailure) {
+    getSelection().collapse(node, offset);
+  }
 }
 
-function testLeft(node, offset) {
+function testLeft(node, offset, knownFailure) {
   if (!kIsMac) {
     synthesizeKey("KEY_ArrowLeft", { ctrlKey: true });
   } else {
     // macOS does not have default shortcut key to move caret per word.
     SpecialPowers.doCommand(window, "cmd_wordPrevious");
   }
-  is(sel.anchorNode, node, errString("Left"));
-  is(sel.anchorOffset, offset, errString("Left"));
+  (knownFailure ? todo_is : is)(
+    `{${getNodeDescription(sel.anchorNode)} - ${sel.anchorOffset}}`,
+    `{${getNodeDescription(node)} - ${offset}}`,
+    `testLeft(${currentStateDescription()})`
+  );
+  if (knownFailure) {
+    getSelection().collapse(node, offset);
+  }
 }
 
-var afterEditorNode = document.getElementById("catch").firstChild;
+const afterEditorNode = document.getElementById("catch").firstChild;
 
-var ChineseChars = "&#x6F22;&#x5B57;";
-var HiraganaChars = "&#x3072;&#x3089;&#x304C;&#x306A;";
-var KatakanaChars = "&#x30AB;&#x30BF;&#x30AB;&#x30CA;";
-var JapaneseFullStop = "&#x3002;";
-var JapaneseComma = "&#x3001;";
-var ModifierColon = "&#xA789;";
-var Symbol = "&#x26C5;"; // "sun behind cloud" (weather symbol)
-var Emoji = "&#x1f400;"; // rat emoji
-var DeseretChars = "&#x10440;&#x10441;";
-var ChineseCharsPlane2 = "&#x2000B;&#x2003F;";
+const ChineseChars = "&#x6F22;&#x5B57;";
+const HiraganaChars = "&#x3072;&#x3089;&#x304C;&#x306A;";
+const KatakanaChars = "&#x30AB;&#x30BF;&#x30AB;&#x30CA;";
+const JapaneseFullStop = "&#x3002;";
+const JapaneseComma = "&#x3001;";
+const ModifierColon = "&#xA789;";
+const Symbol = "&#x26C5;"; // "sun behind cloud" (weather symbol)
+const Emoji = "&#x1f400;"; // rat emoji
+const DeseretChars = "&#x10440;&#x10441;";
+const ChineseCharsPlane2 = "&#x2000B;&#x2003F;";
+const ArabicOne = "\u0648\u0627\u062D\u062F";
+const ArabicTwo = "\u0627\u062B\u0646\u064A\u0646";
+const ArabicThree = "\u062B\u0644\u0627\u062B\u0629";
 
-function test() {
-  setPrefs(false, true, test1);
-}
+async function test1() {
+  await setPrefs(false, true);
 
-function test1() {
   editor.innerHTML = "Hello Kitty";
   sel.collapse(editor.firstChild, 0);
   testRight(editor.firstChild, 5);
@@ -296,11 +342,78 @@ function test1() {
   testLeft(editor.firstChild, 4);
   testLeft(editor.firstChild, 0);
 
-  // test basic word movement with eat_space_next_to_word true.
-  setPrefs(true, true, test2);
+  // Out-of-flow frames around line edges should be treated as independent lines.
+  for (const floatValue of ["left", "right"]) {
+    editor.innerHTML = `<b>One</b> <i>Two</i><span style=float:${floatValue}>Three</span>`;
+    sel.collapse(editor.querySelector("i").firstChild, 0);
+    testRight(editor.querySelector("i").firstChild, "Two".length);
+    testRight(editor.querySelector("span").firstChild, "Three".length);
+    testLeft(editor.querySelector("span").firstChild, 0);
+    testLeft(editor.querySelector("i").previousSibling, " ".length); // FIXME: Should stop at start of "Two"
+    editor.innerHTML = `<span style=float:${floatValue}>One</span><b>Two</b> <i>Three</i>`;
+    sel.collapse(editor.querySelector("b").firstChild, "Two".length);
+    testLeft(editor.querySelector("b").firstChild, 0);
+    testLeft(editor.querySelector("span").firstChild, 0);
+    testRight(editor.querySelector("span").firstChild, "One".length);
+    testRight(editor.querySelector("b").nextSibling, 0); // FIXME: Should stop at end of "Two"
+  }
+
+  // And also visually connected words which are split by an out-of-flow content
+  // shouldn't be treated as a word.
+  editor.innerHTML = 'One<span style=float:right>Two</span>Three';
+  sel.collapse(editor.firstChild, 0);
+  testRight(editor.firstChild, "One".length);
+  testRight(editor.querySelector("span").firstChild, "Two".length);
+  testRight(editor.lastChild, "Three".length);
+  testLeft(editor.lastChild, 0);
+  testLeft(editor.querySelector("span").firstChild, 0);
+  testLeft(editor.firstChild, 0);
+
+  // Simple RTL cases of above.
+  editor.setAttribute("dir", "rtl");
+  for (const floatValue of ["left", "right"]) {
+    editor.innerHTML = `<b>${ArabicOne}</b> <i>${ArabicTwo}</i><span style=float:${floatValue}>${ArabicThree}</span>`;
+    sel.collapse(editor.querySelector("i").firstChild, 0);
+    testLeft(editor.querySelector("i").firstChild, ArabicTwo.length);
+    testLeft(editor.querySelector("span").firstChild, ArabicThree.length);
+    testRight(editor.querySelector("span").firstChild, 0);
+    testRight(editor.querySelector("i").previousSibling, " ".length); // FIXME: Should stop at start of ArabicTwo.
+    editor.innerHTML = `<span style=float:${floatValue}>${ArabicOne}</span><b>${ArabicTwo}</b> <i>${ArabicThree}</i>`;
+    sel.collapse(editor.querySelector("b").firstChild, ArabicTwo.length);
+    testRight(editor.querySelector("b").firstChild, 0);
+    testRight(editor.querySelector("span").firstChild, 0);
+    testLeft(editor.querySelector("span").firstChild, ArabicOne.length);
+    testLeft(editor.querySelector("b").nextSibling, 0); // FIXME: Should stop at end of ArabicTwo.
+  }
+
+  // And also the bidi cases which LRT frames are at line edge if ignoring the
+  // out-of-flow things.
+  // XXX Although these tests are behave as expected if I test them manually.
+  //     I don't know the reason why the behavior changes in this test file.
+  for (const floatValue of ["left", "right"]) {
+    editor.innerHTML = `<div><b>${ArabicOne}</b> <i dir="ltr">Two</i><span style=float:${floatValue}>${ArabicThree}</span></div>`;
+    sel.collapse(editor.querySelector("i").firstChild, "Two".length);
+    testLeft(editor.querySelector("i").firstChild, 0, true);
+    testLeft(editor.querySelector("span").firstChild, 0, true);
+    testLeft(editor.querySelector("span").firstChild, ArabicThree.length);
+    testRight(editor.querySelector("span").firstChild, 0);
+    testRight(editor.querySelector("i").previousSibling, " ".length); // FIXME: Should stop at end of "Two"
+    editor.innerHTML = `<div><span style=float:${floatValue}>${ArabicOne}</span><b dir="ltr">Two</b> <i>${ArabicThree}</i></div>`;
+    sel.collapse(editor.querySelector("b").firstChild, 0);
+    testRight(editor.querySelector("b").firstChild, "Two".length, true);
+    testRight(editor.querySelector("span").firstChild, ArabicOne.length, true);
+    testRight(editor.querySelector("span").firstChild, 0);
+    testLeft(editor.querySelector("span").firstChild, ArabicOne.length);
+    testLeft(editor.querySelector("b").nextSibling, 0); // FIXME: Should stop at start of "Two".
+  }
+
+  editor.removeAttribute("dir");
 }
 
-function test2() {
+async function test2() {
+  // test basic word movement with eat_space_next_to_word true.
+  await setPrefs(true, true);
+
   editor.innerHTML = "Hello Kitty";
   sel.collapse(editor.firstChild, 0);
   testRight(editor.firstChild, 6);
@@ -430,12 +543,12 @@ function test2() {
   testRight(editor.firstChild, 13);
   testLeft(editor.firstChild, 7);
   testLeft(editor.firstChild, 0);
-
-  // Test basic word movement with stop_at_punctuation false (bug 981281).
-  setPrefs(false, false, test3);
 }
 
-function test3() {
+async function test3() {
+  // Test basic word movement with stop_at_punctuation false (bug 981281).
+  await setPrefs(false, false);
+
   editor.innerHTML = "Hello Kitty";
   sel.collapse(editor.firstChild, 0);
   testRight(editor.firstChild, 5);
@@ -545,12 +658,12 @@ function test3() {
   testRight(editor.firstChild, 13);
   testLeft(editor.firstChild, 7);
   testLeft(editor.firstChild, 0);
-
-  // And again with eat_space_next_to_word true.
-  setPrefs(true, false, test4);
 }
 
-function test4() {
+async function test4() {
+  // And again with eat_space_next_to_word true.
+  await setPrefs(true, false);
+
   editor.innerHTML = "Hello Kitty";
   sel.collapse(editor.firstChild, 0);
   testRight(editor.firstChild, 6);
@@ -660,8 +773,6 @@ function test4() {
   testRight(editor.firstChild, 13);
   testLeft(editor.firstChild, 7);
   testLeft(editor.firstChild, 0);
-
-  SimpleTest.finish();
 }
 
 
