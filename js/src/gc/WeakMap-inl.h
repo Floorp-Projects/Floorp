@@ -245,6 +245,8 @@ void WeakMap<K, V>::trace(JSTracer* trc) {
 
 bool WeakMapBase::addImplicitEdges(gc::Cell* key, gc::Cell* delegate,
                                    gc::TenuredCell* value) {
+  gc::MarkColor mapColor = AsMarkColor(this->mapColor);
+
   if (delegate) {
     auto& edgeTable = delegate->zone()->gcEphemeronEdges(delegate);
     auto* p = edgeTable.get(delegate);
@@ -254,14 +256,12 @@ bool WeakMapBase::addImplicitEdges(gc::Cell* key, gc::Cell* delegate,
 
     // Add a <weakmap, delegate> -> key edge: the key must be preserved for
     // future lookups until either the weakmap or the delegate dies.
-    gc::EphemeronEdge keyEdge{mapColor, key};
-    if (!edges.append(keyEdge)) {
+    if (!edges.emplaceBack(mapColor, key)) {
       return false;
     }
 
     if (value) {
-      gc::EphemeronEdge valueEdge{mapColor, value};
-      if (!edges.append(valueEdge)) {
+      if (!edges.emplaceBack(mapColor, value)) {
         return false;
       }
     }
@@ -281,13 +281,12 @@ bool WeakMapBase::addImplicitEdges(gc::Cell* key, gc::Cell* delegate,
 
   auto& edgeTable = key->zone()->gcEphemeronEdges(key);
   auto* p = edgeTable.get(key);
-  gc::EphemeronEdge valueEdge{mapColor, value};
   if (p) {
-    return p->value.append(valueEdge);
+    return p->value.emplaceBack(mapColor, value);
   }
 
   gc::EphemeronEdgeVector edges;
-  MOZ_ALWAYS_TRUE(edges.append(valueEdge));
+  MOZ_ALWAYS_TRUE(edges.emplaceBack(mapColor, value));
   return edgeTable.put(key, std::move(edges));
 }
 
