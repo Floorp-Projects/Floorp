@@ -217,6 +217,20 @@ function init_all() {
   register_module("paneSearch", gSearchPane);
   register_module("panePrivacy", gPrivacyPane);
   register_module("paneContainers", gContainersPane);
+
+  var { FloorpAppConstants } = ChromeUtils.importESModule(
+    "resource:///modules/FloorpAppConstants.sys.mjs"
+  );
+
+  register_module("paneDesign", gDesign);
+  register_module("paneLepton", gLeptonPane);
+  register_module("paneCSK", gCSKPane)
+  register_module("paneNotes", gNotesPane);
+  register_module("paneBSB", gBSBPane);
+  register_module("paneDownloads", gDownloads);
+  register_module("paneWorkspaces", gWorkspacesPane);
+  register_module("paneUserjs", gUserjsPane);
+
   if (Services.prefs.getBoolPref("browser.preferences.experimental")) {
     // Set hidden based on previous load's hidden value.
     document.getElementById("category-experimental").hidden =
@@ -550,7 +564,9 @@ async function confirmRestartPrompt(
     restartLaterButtonText,
   ] = await document.l10n.formatValues([
     {
-      id: aRestartToEnable
+      id: aRestartToEnable === null
+        ? "feature-requires-restart"
+        : aRestartToEnable
         ? "feature-enable-requires-restart"
         : "feature-disable-requires-restart",
     },
