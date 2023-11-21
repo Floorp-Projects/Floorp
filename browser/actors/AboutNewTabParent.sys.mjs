@@ -58,15 +58,14 @@ export class AboutNewTabParent extends JSWindowActorParent {
         break;
 
       case "Init": {
-        let actor = message.target;
-        let browsingContext = actor.browsingContext;
+        let browsingContext = this.browsingContext;
         let browser = browsingContext.top.embedderElement;
         if (!browser) {
           return;
         }
 
         let tabDetails = {
-          actor,
+          actor: this,
           browser,
           browsingContext,
           portID: message.data.portID,
@@ -89,10 +88,8 @@ export class AboutNewTabParent extends JSWindowActorParent {
         let tabDetails = this.getTabDetails();
         if (!tabDetails) {
           // When closing a tab, the embedderElement can already be disconnected, so
-          // an a backup, look up the tab details by browsing context.
-          tabDetails = this.getByBrowsingContext(
-            message.target.browsingContext
-          );
+          // as a backup, look up the tab details by browsing context.
+          tabDetails = this.getByBrowsingContext(this.browsingContext);
         }
 
         if (!tabDetails) {
@@ -127,7 +124,7 @@ export class AboutNewTabParent extends JSWindowActorParent {
     }
 
     let messageToSend = {
-      target: message.target,
+      target: this,
       data: message.data || {},
     };
 
