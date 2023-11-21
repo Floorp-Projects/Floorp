@@ -55,6 +55,13 @@ class nsILineIterator {
     nsRect mLineBounds;
     /** Whether the line is wrapped at the end */
     bool mIsWrapped = false;
+
+    /**
+     * Return last frame of the line if there is no enough siblings of
+     * mFirstFrameOnLine.
+     * Otherwise, nullptr including in the unexpected error cases.
+     */
+    nsIFrame* GetLastFrameOnLine() const;
   };
 
   // Return miscellaneous information about a line.

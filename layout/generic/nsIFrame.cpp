@@ -28,6 +28,7 @@
 #include "mozilla/dom/Selection.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/PathHelpers.h"
+#include "mozilla/IntegerRange.h"
 #include "mozilla/intl/BidiEmbeddingLevel.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/PresShell.h"
@@ -153,6 +154,21 @@ using namespace mozilla::layers;
 using namespace mozilla::layout;
 typedef nsAbsoluteContainingBlock::AbsPosReflowFlags AbsPosReflowFlags;
 using nsStyleTransformMatrix::TransformReferenceBox;
+
+nsIFrame* nsILineIterator::LineInfo::GetLastFrameOnLine() const {
+  if (!mNumFramesOnLine) {
+    return nullptr;  // empty line, not illegal
+  }
+  MOZ_ASSERT(mFirstFrameOnLine);
+  nsIFrame* maybeLastFrame = mFirstFrameOnLine;
+  for ([[maybe_unused]] int32_t i : IntegerRange(mNumFramesOnLine - 1)) {
+    maybeLastFrame = maybeLastFrame->GetNextSibling();
+    if (NS_WARN_IF(!maybeLastFrame)) {
+      return nullptr;
+    }
+  }
+  return maybeLastFrame;
+}
 
 const mozilla::LayoutFrameType nsIFrame::sLayoutFrameTypes[
 #define FRAME_ID(...) 1 +
@@ -9039,7 +9055,15 @@ nsresult nsIFrame::PeekOffsetForWord(PeekOffsetStruct* aPos, int32_t aOffset) {
       break;
     }
 
-    SelectablePeekReport next = current.mFrame->GetFrameFromDirection(*aPos);
+    SelectablePeekReport next = [&]() {
+      PeekOffsetOptions options = aPos->mOptions;
+      if (state.mSawInlineCharacter) {
+        // If we've already found a character, we don't want to stop at
+        // placeholder frame boundary if there is in the word.
+        options += PeekOffsetOption::StopAtPlaceholder;
+      }
+      return current.mFrame->GetFrameFromDirection(aPos->mDirection, options);
+    }();
     if (next.Failed()) {
       // If we've crossed the line boundary, check to make sure that we
       // have not consumed a trailing newline as whitespace if it's
@@ -9053,7 +9077,8 @@ nsresult nsIFrame::PeekOffsetForWord(PeekOffsetStruct* aPos, int32_t aOffset) {
       break;
     }
 
-    if (next.mJumpedLine && !wordSelectEatSpace && state.mSawBeforeType) {
+    if ((next.mJumpedLine || next.mFoundPlaceholder) && !wordSelectEatSpace &&
+        state.mSawBeforeType) {
       // We can't jump lines if we're looking for whitespace following
       // non-whitespace, and we already encountered non-whitespace.
       break;
@@ -9468,52 +9493,118 @@ std::pair<nsIFrame*, nsIFrame*> nsIFrame::GetContainingBlockForLine(
 
 Result<bool, nsresult> nsIFrame::IsVisuallyAtLineEdge(
     nsILineIterator* aLineIterator, int32_t aLine, nsDirection aDirection) {
-  nsIFrame* firstFrame;
-  nsIFrame* lastFrame;
+  auto line = aLineIterator->GetLine(aLine).unwrap();
 
   const bool lineIsRTL = aLineIterator->IsLineIteratorFlowRTL();
-  bool isReordered;
 
+  nsIFrame *firstFrame = nullptr, *lastFrame = nullptr;
+  bool isReordered = false;
   MOZ_TRY(aLineIterator->CheckLineOrder(aLine, &isReordered, &firstFrame,
                                         &lastFrame));
-
-  nsIFrame** framePtr = aDirection == eDirPrevious ? &firstFrame : &lastFrame;
-  if (!*framePtr) {
-    return true;
+  if (!firstFrame || !lastFrame) {
+    return true;  // XXX: Why true?  We check whether `this` is at the edge...
   }
 
-  bool frameIsRTL = (nsBidiPresUtils::FrameDirection(*framePtr) ==
-                     mozilla::intl::BidiDirection::RTL);
-  if ((frameIsRTL == lineIsRTL) == (aDirection == eDirPrevious)) {
-    nsIFrame::GetFirstLeaf(framePtr);
-  } else {
-    nsIFrame::GetLastLeaf(framePtr);
+  nsIFrame* leftmostFrame = lineIsRTL ? lastFrame : firstFrame;
+  nsIFrame* rightmostFrame = lineIsRTL ? firstFrame : lastFrame;
+  auto FrameIsRTL = [](nsIFrame* aFrame) {
+    return nsBidiPresUtils::FrameDirection(aFrame) ==
+           mozilla::intl::BidiDirection::RTL;
+  };
+  if (!lineIsRTL == (aDirection == eDirPrevious)) {
+    nsIFrame* maybeLeftmostFrame = leftmostFrame;
+    for ([[maybe_unused]] int32_t i : IntegerRange(line.mNumFramesOnLine)) {
+      if (maybeLeftmostFrame == this) {
+        return true;
+      }
+      // If left edge of the line starts with placeholder frames, we can ignore
+      // them and should keep checking the following frames.
+      if (!maybeLeftmostFrame->IsPlaceholderFrame()) {
+        if ((FrameIsRTL(maybeLeftmostFrame) == lineIsRTL) ==
+            (aDirection == eDirPrevious)) {
+          nsIFrame::GetFirstLeaf(&maybeLeftmostFrame);
+        } else {
+          nsIFrame::GetLastLeaf(&maybeLeftmostFrame);
+        }
+        return maybeLeftmostFrame == this;
+      }
+      maybeLeftmostFrame = nsBidiPresUtils::GetFrameToRightOf(
+          maybeLeftmostFrame, line.mFirstFrameOnLine, line.mNumFramesOnLine);
+      if (!maybeLeftmostFrame) {
+        return false;
+      }
+    }
+    return false;
   }
-  return *framePtr == this;
+
+  nsIFrame* maybeRightmostFrame = rightmostFrame;
+  for ([[maybe_unused]] int32_t i : IntegerRange(line.mNumFramesOnLine)) {
+    if (maybeRightmostFrame == this) {
+      return true;
+    }
+    // If the line ends with placehlder frames, we can ignore them and should
+    // keep checking the preceding frames.
+    if (!maybeRightmostFrame->IsPlaceholderFrame()) {
+      if ((FrameIsRTL(maybeRightmostFrame) == lineIsRTL) ==
+          (aDirection == eDirPrevious)) {
+        nsIFrame::GetFirstLeaf(&maybeRightmostFrame);
+      } else {
+        nsIFrame::GetLastLeaf(&maybeRightmostFrame);
+      }
+      return maybeRightmostFrame == this;
+    }
+    maybeRightmostFrame = nsBidiPresUtils::GetFrameToLeftOf(
+        maybeRightmostFrame, line.mFirstFrameOnLine, line.mNumFramesOnLine);
+    if (!maybeRightmostFrame) {
+      return false;
+    }
+  }
+  return false;
 }
 
 Result<bool, nsresult> nsIFrame::IsLogicallyAtLineEdge(
     nsILineIterator* aLineIterator, int32_t aLine, nsDirection aDirection) {
   auto line = aLineIterator->GetLine(aLine).unwrap();
+  if (!line.mNumFramesOnLine) {
+    return false;
+  }
+  MOZ_ASSERT(line.mFirstFrameOnLine);
 
   if (aDirection == eDirPrevious) {
-    nsIFrame* firstFrame = line.mFirstFrameOnLine;
-    nsIFrame::GetFirstLeaf(&firstFrame);
-    return firstFrame == this;
+    nsIFrame* maybeFirstFrame = line.mFirstFrameOnLine;
+    for ([[maybe_unused]] int32_t i : IntegerRange(line.mNumFramesOnLine)) {
+      if (maybeFirstFrame == this) {
+        return true;
+      }
+      // If the line starts with placeholder frames, we can ignore them and
+      // should keep checking the following frames.
+      if (!maybeFirstFrame->IsPlaceholderFrame()) {
+        nsIFrame::GetFirstLeaf(&maybeFirstFrame);
+        return maybeFirstFrame == this;
+      }
+      maybeFirstFrame = maybeFirstFrame->GetNextSibling();
+      if (!maybeFirstFrame) {
+        return false;
+      }
+    }
+    return false;
   }
 
   // eDirNext
-  nsIFrame* lastFrame = line.mFirstFrameOnLine;
-  for (int32_t lineFrameCount = line.mNumFramesOnLine; lineFrameCount > 1;
-       lineFrameCount--) {
-    lastFrame = lastFrame->GetNextSibling();
-    if (!lastFrame) {
-      NS_ERROR("should not be reached nsIFrame");
-      return Err(NS_ERROR_FAILURE);
+  nsIFrame* maybeLastFrame = line.GetLastFrameOnLine();
+  for ([[maybe_unused]] int32_t i : IntegerRange(line.mNumFramesOnLine)) {
+    if (maybeLastFrame == this) {
+      return true;
     }
+    // If the line ends with placehlder frames, we can ignore them and should
+    // keep checking the preceding frames.
+    if (!maybeLastFrame->IsPlaceholderFrame()) {
+      nsIFrame::GetLastLeaf(&maybeLastFrame);
+      return maybeLastFrame == this;
+    }
+    maybeLastFrame = maybeLastFrame->GetPrevSibling();
   }
-  nsIFrame::GetLastLeaf(&lastFrame);
-  return lastFrame == this;
+  return false;
 }
 
 nsIFrame::SelectablePeekReport nsIFrame::GetFrameFromDirection(
@@ -9523,11 +9614,13 @@ nsIFrame::SelectablePeekReport nsIFrame::GetFrameFromDirection(
   nsPresContext* presContext = PresContext();
   const bool needsVisualTraversal =
       aOptions.contains(PeekOffsetOption::Visual) && presContext->BidiEnabled();
+  const bool followOofs =
+      !aOptions.contains(PeekOffsetOption::StopAtPlaceholder);
   nsCOMPtr<nsIFrameEnumerator> frameTraversal;
   MOZ_TRY(NS_NewFrameTraversal(
       getter_AddRefs(frameTraversal), presContext, this, eLeaf,
       needsVisualTraversal, aOptions.contains(PeekOffsetOption::ScrollViewStop),
-      true,  // aFollowOOFs
+      followOofs,
       false  // aSkipPopupChecks
       ));
 
@@ -9571,6 +9664,19 @@ nsIFrame::SelectablePeekReport nsIFrame::GetFrameFromDirection(
 
     traversedFrame = frameTraversal->Traverse(aDirection == eDirNext);
     if (!traversedFrame) {
+      return result;
+    }
+
+    if (aOptions.contains(PeekOffsetOption::StopAtPlaceholder) &&
+        traversedFrame->IsPlaceholderFrame()) {
+      // XXX If the placeholder frame does not have meaningful content, the user
+      // may want to select as a word around the out-of-flow cotent.  However,
+      // non-text frame resets context in nsIFrame::PeekOffsetWord(). Therefore,
+      // next text frame considers the new word starts from its edge. So, it's
+      // not enough to implement such behavior with adding a check here whether
+      // the real frame may change the word with its contents if it were not
+      // out-of-flow.
+      result.mFoundPlaceholder = true;
       return result;
     }
 

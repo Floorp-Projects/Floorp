@@ -73,7 +73,7 @@ class PresShell;
 
 namespace mozilla {
 
-enum class PeekOffsetOption : uint8_t {
+enum class PeekOffsetOption : uint16_t {
   // Whether to allow jumping across line boundaries.
   //
   // Used with: eSelectCharacter, eSelectWord.
@@ -86,6 +86,9 @@ enum class PeekOffsetOption : uint8_t {
   //
   // Used with: eSelectCharacter, eSelectWord, eSelectLine.
   ScrollViewStop,
+
+  // Whether to stop when reaching a placeholder frame.
+  StopAtPlaceholder,
 
   // Whether the peeking is done in response to a keyboard action.
   //
