@@ -414,6 +414,7 @@ nsWindow::nsWindow()
       mIsTransparent(false),
       mHasReceivedSizeAllocate(false),
       mWidgetCursorLocked(false),
+      mUndecorated(false),
       mPopupTrackInHierarchy(false),
       mPopupTrackInHierarchyConfigured(false),
       mHiddenPopupPositioned(false),
@@ -889,7 +890,7 @@ bool nsWindow::DrawsToCSDTitlebar() const {
 }
 
 void nsWindow::AddCSDDecorationSize(int* aWidth, int* aHeight) {
-  if (mSizeMode != nsSizeMode_Normal ||
+  if (mUndecorated || mSizeMode != nsSizeMode_Normal ||
       mGtkWindowDecoration != GTK_DECORATION_CLIENT) {
     return;
   }
@@ -6212,7 +6213,8 @@ nsresult nsWindow::Create(nsIWidget* aParent, nsNativeWidget aNativeParent,
 
   // It is important that this happens before the realize() call below, so that
   // we don't get bogus CSD margins on Wayland, see bug 1794577.
-  if (IsAlwaysUndecoratedWindow()) {
+  mUndecorated = IsAlwaysUndecoratedWindow();
+  if (mUndecorated) {
     LOG("    Is undecorated Window\n");
     gtk_window_set_titlebar(GTK_WINDOW(mShell), gtk_fixed_new());
     gtk_window_set_decorated(GTK_WINDOW(mShell), false);
@@ -8969,7 +8971,7 @@ void nsWindow::SetDrawsInTitlebar(bool aState) {
     return;
   }
 
-  if (IsAlwaysUndecoratedWindow()) {
+  if (mUndecorated) {
     MOZ_ASSERT(aState, "Unexpected decoration request");
     MOZ_ASSERT(!gtk_window_get_decorated(GTK_WINDOW(mShell)));
     return;
