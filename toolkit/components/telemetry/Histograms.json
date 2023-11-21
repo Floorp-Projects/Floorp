@@ -9307,17 +9307,6 @@
     "n_values": 50,
     "description": "Session restore: Number of tabs restored eagerly in the session that has just been restored."
   },
-  "FX_SESSION_RESTORE_CLOSED_TABS_NOT_SAVED": {
-    "record_in_processes": ["main", "content"],
-    "products": ["firefox"],
-    "expires_in_version": "127",
-    "alert_emails": ["firefox-view-engineers@mozilla.com"],
-    "releaseChannelCollection": "opt-out",
-    "bug_numbers": [1848459],
-    "kind": "enumerated",
-    "n_values": 25,
-    "description": "Session restore: Number of closed tabs that are NOT saved due to lack of open tabs worth saving on window close."
-  },
   "FX_TABLETMODE_PAGE_LOAD": {
     "record_in_processes": ["main", "content"],
     "products": ["firefox", "fennec"],
