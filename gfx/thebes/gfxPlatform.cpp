@@ -174,6 +174,7 @@ gfxPlatform* gPlatform = nullptr;
 static bool gEverInitialized = false;
 
 const ContentDeviceData* gContentDeviceInitData = nullptr;
+Maybe<nsTArray<uint8_t>> gCMSOutputProfileData;
 
 Atomic<bool, MemoryOrdering::ReleaseAcquire> gfxPlatform::gCMSInitialized;
 CMSMode gfxPlatform::gCMSMode = CMSMode::Off;
@@ -2060,6 +2061,10 @@ const mozilla::gfx::ContentDeviceData* gfxPlatform::GetInitContentDeviceData() {
   return gContentDeviceInitData;
 }
 
+Maybe<nsTArray<uint8_t>>& gfxPlatform::GetCMSOutputProfileData() {
+  return gCMSOutputProfileData;
+}
+
 CMSMode GfxColorManagementMode() {
   const auto mode = StaticPrefs::gfx_color_management_mode();
   if (mode >= 0 && mode < UnderlyingValue(CMSMode::AllCount)) {
@@ -3888,6 +3893,8 @@ void gfxPlatform::ImportContentDeviceData(
   const DevicePrefs& prefs = aData.prefs();
   gfxConfig::Inherit(Feature::HW_COMPOSITING, prefs.hwCompositing());
   gfxConfig::Inherit(Feature::OPENGL_COMPOSITING, prefs.oglCompositing());
+
+  gCMSOutputProfileData = Some(aData.cmsOutputProfileData().Clone());
 }
 
 void gfxPlatform::BuildContentDeviceData(
