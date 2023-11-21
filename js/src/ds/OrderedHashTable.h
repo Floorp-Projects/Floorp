@@ -42,6 +42,7 @@
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/TemplateLib.h"
 
+#include <tuple>
 #include <utility>
 
 #include "gc/Barrier.h"
@@ -203,22 +204,33 @@ class OrderedHashTable {
       return true;
     }
 
-    if (dataLength == dataCapacity) {
-      // If the hashTable is more than 1/4 deleted data, simply rehash in
-      // place to free up some space. Otherwise, grow the table.
-      uint32_t newHashShift =
-          liveCount >= dataCapacity * 0.75 ? hashShift - 1 : hashShift;
-      if (!rehash(newHashShift)) {
-        return false;
-      }
+    if (dataLength == dataCapacity && !rehashOnFull()) {
+      return false;
     }
 
-    h >>= hashShift;
-    liveCount++;
-    Data* e = &data[dataLength++];
-    new (e) Data(std::forward<ElementInput>(element), hashTable[h]);
-    hashTable[h] = e;
+    auto [entry, chain] = addEntry(h);
+    new (entry) Data(std::forward<ElementInput>(element), chain);
     return true;
+  }
+
+  /*
+   * If the table contains an entry that matches |element| then return a pointer
+   * to it, otherwise add a new entry.
+   */
+  template <typename ElementInput>
+  [[nodiscard]] T* getOrAdd(ElementInput&& element) {
+    HashNumber h = prepareHash(Ops::getKey(element));
+    if (Data* e = lookup(Ops::getKey(element), h)) {
+      return &e->element;
+    }
+
+    if (dataLength == dataCapacity && !rehashOnFull()) {
+      return nullptr;
+    }
+
+    auto [entry, chain] = addEntry(h);
+    new (entry) Data(std::forward<ElementInput>(element), chain);
+    return &entry->element;
   }
 
   /*
@@ -695,6 +707,16 @@ class OrderedHashTable {
     return const_cast<OrderedHashTable*>(this)->lookup(l, prepareHash(l));
   }
 
+  std::tuple<Data*, Data*> addEntry(HashNumber hash) {
+    MOZ_ASSERT(dataLength < dataCapacity);
+    hash >>= hashShift;
+    liveCount++;
+    Data* entry = &data[dataLength++];
+    Data* chain = hashTable[hash];
+    hashTable[hash] = entry;
+    return std::make_tuple(entry, chain);
+  }
+
   /* This is called after rehashing the table. */
   void compacted() {
     // If we had any empty entries, compacting may have moved live entries
@@ -727,6 +749,16 @@ class OrderedHashTable {
     }
     dataLength = liveCount;
     compacted();
+  }
+
+  [[nodiscard]] bool rehashOnFull() {
+    MOZ_ASSERT(dataLength == dataCapacity);
+
+    // If the hashTable is more than 1/4 deleted data, simply rehash in
+    // place to free up some space. Otherwise, grow the table.
+    uint32_t newHashShift =
+        liveCount >= dataCapacity * 0.75 ? hashShift - 1 : hashShift;
+    return rehash(newHashShift);
   }
 
   /*
@@ -859,6 +891,7 @@ class OrderedHashMap {
 
    public:
     Entry() : key(), value() {}
+    explicit Entry(const Key& k) : key(k), value() {}
     template <typename V>
     Entry(const Key& k, V&& v) : key(k), value(std::forward<V>(v)) {}
     Entry(Entry&& rhs) : key(std::move(rhs.key)), value(std::move(rhs.value)) {}
@@ -916,6 +949,11 @@ class OrderedHashMap {
   template <typename K, typename V>
   [[nodiscard]] bool put(K&& key, V&& value) {
     return impl.put(Entry(std::forward<K>(key), std::forward<V>(value)));
+  }
+
+  template <typename K>
+  [[nodiscard]] Entry* getOrAdd(K&& key) {
+    return impl.getOrAdd(Entry(std::forward<K>(key)));
   }
 
   HashNumber hash(const Lookup& key) const { return impl.prepareHash(key); }

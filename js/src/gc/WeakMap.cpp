@@ -52,13 +52,14 @@ bool WeakMapBase::addImplicitEdges(Cell* key, Cell* delegate,
 
   if (delegate) {
     auto& edgeTable = delegate->zone()->gcEphemeronEdges(delegate);
-    auto* p = edgeTable.get(delegate);
-
-    EphemeronEdgeVector newVector;
-    EphemeronEdgeVector& edges = p ? p->value : newVector;
+    auto* ptr = edgeTable.getOrAdd(delegate);
+    if (!ptr) {
+      return false;
+    }
 
     // Add a <weakmap, delegate> -> key edge: the key must be preserved for
     // future lookups until either the weakmap or the delegate dies.
+    EphemeronEdgeVector& edges = ptr->value;
     if (!edges.emplaceBack(mapColor, key)) {
       return false;
     }
@@ -67,10 +68,6 @@ bool WeakMapBase::addImplicitEdges(Cell* key, Cell* delegate,
       if (!edges.emplaceBack(mapColor, value)) {
         return false;
       }
-    }
-
-    if (!p) {
-      return edgeTable.put(delegate, std::move(newVector));
     }
 
     return true;
@@ -83,14 +80,12 @@ bool WeakMapBase::addImplicitEdges(Cell* key, Cell* delegate,
   }
 
   auto& edgeTable = key->zone()->gcEphemeronEdges(key);
-  auto* p = edgeTable.get(key);
-  if (p) {
-    return p->value.emplaceBack(mapColor, value);
+  auto* ptr = edgeTable.getOrAdd(key);
+  if (!ptr) {
+    return false;
   }
 
-  EphemeronEdgeVector edges;
-  MOZ_ALWAYS_TRUE(edges.emplaceBack(mapColor, value));
-  return edgeTable.put(key, std::move(edges));
+  return ptr->value.emplaceBack(mapColor, value);
 }
 
 #if defined(JS_GC_ZEAL) || defined(DEBUG)
