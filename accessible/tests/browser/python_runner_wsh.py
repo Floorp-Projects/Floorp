@@ -30,8 +30,7 @@ def web_socket_transfer_data(request):
     if sys.platform == "win32":
         testDir = "windows"
     elif sys.platform == "linux":
-        # XXX ATK code goes here.
-        pass
+        testDir = "atk"
     if testDir:
         sys.path.append(
             os.path.join(

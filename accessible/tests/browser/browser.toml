@@ -4,6 +4,7 @@ subsuite = "a11y"
 support-files = [
   "!/accessible/tests/mochitest/*.js",
   "*.sys.mjs",
+  "atk/a11y_setup.py",
   "head.js",
   "python_runner_wsh.py",
   "shared-head.js",
