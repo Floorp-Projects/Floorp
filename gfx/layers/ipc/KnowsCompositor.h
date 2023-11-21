@@ -120,10 +120,15 @@ class KnowsCompositor {
 
   bool SupportsD3D11() const {
     auto lock = mData.Lock();
-    return lock.ref().mTextureFactoryIdentifier.mParentBackend ==
+    return SupportsD3D11(lock.ref().mTextureFactoryIdentifier);
+  }
+
+  static bool SupportsD3D11(
+      const TextureFactoryIdentifier aTextureFactoryIdentifier) {
+    return aTextureFactoryIdentifier.mParentBackend ==
                layers::LayersBackend::LAYERS_WR &&
-           (lock.ref().mTextureFactoryIdentifier.mCompositorUseANGLE ||
-            lock.ref().mTextureFactoryIdentifier.mWebRenderCompositor ==
+           (aTextureFactoryIdentifier.mCompositorUseANGLE ||
+            aTextureFactoryIdentifier.mWebRenderCompositor ==
                 layers::WebRenderCompositor::D3D11);
   }
 

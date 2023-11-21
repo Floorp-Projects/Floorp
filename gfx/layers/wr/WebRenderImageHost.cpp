@@ -13,6 +13,7 @@
 #include "mozilla/layers/AsyncImagePipelineManager.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/CompositorVsyncScheduler.h"  // for CompositorVsyncScheduler
+#include "mozilla/layers/KnowsCompositor.h"
 #include "mozilla/layers/RemoteTextureHostWrapper.h"
 #include "mozilla/layers/RemoteTextureMap.h"
 #include "mozilla/layers/WebRenderBridgeParent.h"
@@ -349,7 +350,8 @@ TextureHost* WebRenderImageHost::GetAsTextureHostForComposite(
     auto identifier = aAsyncImageManager->GetTextureFactoryIdentifier();
     const bool convertToNV12 =
         StaticPrefs::gfx_video_convert_yuv_to_nv12_image_host_win() &&
-        identifier.mCompositorUseDComp &&
+        identifier.mSupportsD3D11NV12 &&
+        KnowsCompositor::SupportsD3D11(identifier) &&
         texture->GetFormat() == gfx::SurfaceFormat::YUV;
     if (convertToNV12) {
       if (!mTextureAllocator) {
