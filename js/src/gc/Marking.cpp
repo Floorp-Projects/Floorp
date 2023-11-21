@@ -761,7 +761,7 @@ void GCMarker::markEphemeronEdges(EphemeronEdgeVector& edges,
   // delegate zone to get marked later, look up an edge in this table, and
   // then try to mark something in a Zone that is no longer marking.
   if (srcColor == MarkColor::Black && markColor() == MarkColor::Black) {
-    edges.eraseIf([](auto& edge) { return edge.color == CellColor::Black; });
+    edges.eraseIf([](auto& edge) { return edge.color == MarkColor::Black; });
   }
 }
 
