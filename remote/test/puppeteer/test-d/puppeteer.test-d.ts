@@ -1,10 +1,11 @@
-import puppeteer, {
-  connect,
-  defaultArgs,
-  executablePath,
-  launch,
-} from 'puppeteer';
 import {expectType} from 'tsd';
+
+import puppeteer, {
+  type connect,
+  type defaultArgs,
+  type executablePath,
+  type launch,
+} from 'puppeteer';
 
 expectType<typeof launch>(puppeteer.launch);
 expectType<typeof connect>(puppeteer.connect);

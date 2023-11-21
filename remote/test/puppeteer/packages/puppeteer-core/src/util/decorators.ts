@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-import {Symbol} from '../../third_party/disposablestack/disposablestack.js';
-import {Disposed, Moveable} from '../common/types.js';
+import type {Disposed, Moveable} from '../common/types.js';
+
+import {asyncDisposeSymbol, disposeSymbol} from './disposable.js';
+import {Mutex} from './Mutex.js';
 
 const instances = new WeakSet<object>();
 
@@ -23,9 +25,9 @@ export function moveable<
   Class extends abstract new (...args: never[]) => Moveable,
 >(Class: Class, _: ClassDecoratorContext<Class>): Class {
   let hasDispose = false;
-  if (Class.prototype[Symbol.dispose]) {
-    const dispose = Class.prototype[Symbol.dispose];
-    Class.prototype[Symbol.dispose] = function (this: InstanceType<Class>) {
+  if (Class.prototype[disposeSymbol]) {
+    const dispose = Class.prototype[disposeSymbol];
+    Class.prototype[disposeSymbol] = function (this: InstanceType<Class>) {
       if (instances.has(this)) {
         instances.delete(this);
         return;
@@ -34,11 +36,9 @@ export function moveable<
     };
     hasDispose = true;
   }
-  if (Class.prototype[Symbol.asyncDispose]) {
-    const asyncDispose = Class.prototype[Symbol.asyncDispose];
-    Class.prototype[Symbol.asyncDispose] = function (
-      this: InstanceType<Class>
-    ) {
+  if (Class.prototype[asyncDisposeSymbol]) {
+    const asyncDispose = Class.prototype[asyncDisposeSymbol];
+    Class.prototype[asyncDisposeSymbol] = function (this: InstanceType<Class>) {
       if (instances.has(this)) {
         instances.delete(this);
         return;
@@ -111,5 +111,28 @@ export function invokeAtMostOnceForArguments(
       return;
     }
     return target.call(this, ...args);
+  };
+}
+
+export function guarded<T extends object>(
+  getKey = function (this: T): object {
+    return this;
+  }
+) {
+  return (
+    target: (this: T, ...args: any[]) => Promise<any>,
+    _: ClassMethodDecoratorContext<T>
+  ): typeof target => {
+    const mutexes = new WeakMap<object, Mutex>();
+    return async function (...args) {
+      const key = getKey.call(this);
+      let mutex = mutexes.get(key);
+      if (!mutex) {
+        mutex = new Mutex();
+        mutexes.set(key, mutex);
+      }
+      await using _ = await mutex.acquire();
+      return await target.call(this, ...args);
+    };
   };
 }

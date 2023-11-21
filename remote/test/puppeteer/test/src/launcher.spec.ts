@@ -13,24 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import assert from 'assert';
 import fs from 'fs';
 import {mkdtemp, readFile, writeFile} from 'fs/promises';
 import os from 'os';
 import path from 'path';
-import {TLSSocket} from 'tls';
+import type {TLSSocket} from 'tls';
 
 import expect from 'expect';
 import {TimeoutError} from 'puppeteer';
-import {Page} from 'puppeteer-core/internal/api/Page.js';
+import type {Page} from 'puppeteer-core/internal/api/Page.js';
 import {rmSync} from 'puppeteer-core/internal/node/util/fs.js';
 import sinon from 'sinon';
 
-import {
-  getTestState,
-  itOnlyRegularInstall,
-  launch,
-  isHeadless,
-} from './mocha-utils.js';
+import {getTestState, isHeadless, launch} from './mocha-utils.js';
 import {dumpFrames, waitEvent} from './utils.js';
 
 const TMP_FOLDER = path.join(os.tmpdir(), 'pptr_tmp_folder-');
@@ -47,6 +43,7 @@ describe('Launcher specs', function () {
         try {
           const remote = await puppeteer.connect({
             browserWSEndpoint: browser.wsEndpoint(),
+            protocol: browser.protocol,
           });
           const page = await remote.newPage();
           const navigationPromise = page
@@ -73,6 +70,7 @@ describe('Launcher specs', function () {
         try {
           const remote = await puppeteer.connect({
             browserWSEndpoint: browser.wsEndpoint(),
+            protocol: browser.protocol,
           });
           const page = await remote.newPage();
           const watchdog = page
@@ -94,6 +92,7 @@ describe('Launcher specs', function () {
         try {
           const remote = await puppeteer.connect({
             browserWSEndpoint: browser.wsEndpoint(),
+            protocol: browser.protocol,
           });
           const newPage = await remote.newPage();
           const results = await Promise.all([
@@ -600,7 +599,7 @@ describe('Launcher specs', function () {
     });
 
     describe('Puppeteer.launch', function () {
-      itOnlyRegularInstall('should be able to launch Chrome', async () => {
+      it('should be able to launch Chrome', async () => {
         const {browser, close} = await launch({product: 'chrome'});
         try {
           const userAgent = await browser.userAgent();
@@ -628,6 +627,7 @@ describe('Launcher specs', function () {
         try {
           const otherBrowser = await puppeteer.connect({
             browserWSEndpoint: browser.wsEndpoint(),
+            protocol: browser.protocol,
           });
           const page = await otherBrowser.newPage();
           expect(
@@ -652,6 +652,7 @@ describe('Launcher specs', function () {
         try {
           const remoteBrowser = await puppeteer.connect({
             browserWSEndpoint: browser.wsEndpoint(),
+            protocol: browser.protocol,
           });
           await Promise.all([
             waitEvent(browser, 'disconnected'),
@@ -673,6 +674,7 @@ describe('Launcher specs', function () {
           );
           const remoteBrowser = await puppeteer.connect({
             browserWSEndpoint: browser.wsEndpoint(),
+            protocol: browser.protocol,
           });
           await Promise.all([
             waitEvent(browser, 'disconnected'),
@@ -695,22 +697,19 @@ describe('Launcher specs', function () {
           const remoteBrowser = await puppeteer.connect({
             browserWSEndpoint,
             ignoreHTTPSErrors: true,
+            protocol: browser.protocol,
           });
           const page = await remoteBrowser.newPage();
-          let error!: Error;
           const [serverRequest, response] = await Promise.all([
             httpsServer.waitForRequest('/empty.html'),
-            page.goto(httpsServer.EMPTY_PAGE).catch(error_ => {
-              return (error = error_);
-            }),
+            page.goto(httpsServer.EMPTY_PAGE),
           ]);
-          expect(error).toBeUndefined();
-          expect(response.ok()).toBe(true);
-          expect(response.securityDetails()).toBeTruthy();
+          expect(response!.ok()).toBe(true);
+          expect(response!.securityDetails()).toBeTruthy();
           const protocol = (serverRequest.socket as TLSSocket)
             .getProtocol()!
             .replace('v', ' ');
-          expect(response.securityDetails().protocol()).toBe(protocol);
+          expect(response!.securityDetails()!.protocol()).toBe(protocol);
           await page.close();
           await remoteBrowser.close();
         } finally {
@@ -762,6 +761,7 @@ describe('Launcher specs', function () {
             targetFilter: target => {
               return !target.url().includes('should-be-ignored');
             },
+            protocol: browser.protocol,
           });
 
           const pages = await remoteBrowser.pages();
@@ -790,7 +790,10 @@ describe('Launcher specs', function () {
           await page.goto(server.PREFIX + '/frames/nested-frames.html');
           browser.disconnect();
 
-          const remoteBrowser = await puppeteer.connect({browserWSEndpoint});
+          const remoteBrowser = await puppeteer.connect({
+            browserWSEndpoint,
+            protocol: browser.protocol,
+          });
           const pages = await remoteBrowser.pages();
           const restoredPage = pages.find(page => {
             return page.url() === server.PREFIX + '/frames/nested-frames.html';
@@ -819,15 +822,17 @@ describe('Launcher specs', function () {
         try {
           const browserTwo = await puppeteer.connect({
             browserWSEndpoint: browserOne.wsEndpoint(),
+            protocol: browserOne.protocol,
           });
           const [page1, page2] = await Promise.all([
-            new Promise<Page>(x => {
+            new Promise<Page | null>(x => {
               return browserOne.once('targetcreated', target => {
-                return x(target.page());
+                x(target.page());
               });
             }),
             browserTwo.newPage(),
           ]);
+          assert(page1);
           expect(
             await page1.evaluate(() => {
               return 7 * 8;
@@ -857,6 +862,7 @@ describe('Launcher specs', function () {
 
           const browserTwo = await puppeteer.connect({
             browserWSEndpoint,
+            protocol: browserOne.protocol,
           });
           const pages = await browserTwo.pages();
           const pageTwo = pages.find(page => {
@@ -873,7 +879,7 @@ describe('Launcher specs', function () {
       });
     });
     describe('Puppeteer.executablePath', function () {
-      itOnlyRegularInstall('should work', async () => {
+      it('should work', async () => {
         const {puppeteer} = await getTestState({
           skipLaunch: true,
         });
@@ -929,13 +935,13 @@ describe('Launcher specs', function () {
       try {
         const events: string[] = [];
         browser.on('targetcreated', () => {
-          return events.push('CREATED');
+          events.push('CREATED');
         });
         browser.on('targetchanged', () => {
-          return events.push('CHANGED');
+          events.push('CHANGED');
         });
         browser.on('targetdestroyed', () => {
-          return events.push('DESTROYED');
+          events.push('DESTROYED');
         });
         const page = await browser.newPage();
         await page.goto(server.EMPTY_PAGE);
@@ -954,22 +960,24 @@ describe('Launcher specs', function () {
         const browserWSEndpoint = browser.wsEndpoint();
         const remoteBrowser1 = await puppeteer.connect({
           browserWSEndpoint,
+          protocol: browser.protocol,
         });
         const remoteBrowser2 = await puppeteer.connect({
           browserWSEndpoint,
+          protocol: browser.protocol,
         });
 
         let disconnectedOriginal = 0;
         let disconnectedRemote1 = 0;
         let disconnectedRemote2 = 0;
         browser.on('disconnected', () => {
-          return ++disconnectedOriginal;
+          ++disconnectedOriginal;
         });
         remoteBrowser1.on('disconnected', () => {
-          return ++disconnectedRemote1;
+          ++disconnectedRemote1;
         });
         remoteBrowser2.on('disconnected', () => {
-          return ++disconnectedRemote2;
+          ++disconnectedRemote2;
         });
 
         await Promise.all([

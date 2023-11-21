@@ -14,21 +14,23 @@
  * limitations under the License.
  */
 
-import {ClickOptions, ElementHandle} from '../api/ElementHandle.js';
-import {HTTPResponse} from '../api/HTTPResponse.js';
-import {Page, WaitTimeoutOptions} from '../api/Page.js';
-import {CDPSession} from '../common/Connection.js';
-import {DeviceRequestPrompt} from '../common/DeviceRequestPrompt.js';
-import {EventEmitter} from '../common/EventEmitter.js';
+import type Protocol from 'devtools-protocol';
+
+import type {ClickOptions, ElementHandle} from '../api/ElementHandle.js';
+import type {HTTPResponse} from '../api/HTTPResponse.js';
+import type {
+  Page,
+  WaitForSelectorOptions,
+  WaitTimeoutOptions,
+} from '../api/Page.js';
+import type {DeviceRequestPrompt} from '../cdp/DeviceRequestPrompt.js';
+import type {IsolatedWorldChart} from '../cdp/IsolatedWorld.js';
+import type {PuppeteerLifeCycleEvent} from '../cdp/LifecycleWatcher.js';
+import {EventEmitter, type EventType} from '../common/EventEmitter.js';
 import {getQueryHandlerAndSelector} from '../common/GetQueryHandler.js';
 import {transposeIterableHandle} from '../common/HandleIterator.js';
-import {
-  IsolatedWorldChart,
-  WaitForSelectorOptions,
-} from '../common/IsolatedWorld.js';
 import {LazyArg} from '../common/LazyArg.js';
-import {PuppeteerLifeCycleEvent} from '../common/LifecycleWatcher.js';
-import {
+import type {
   Awaitable,
   EvaluateFunc,
   EvaluateFuncWith,
@@ -43,9 +45,53 @@ import {
 import {assert} from '../util/assert.js';
 import {throwIfDisposed} from '../util/decorators.js';
 
-import {KeyboardTypeOptions} from './Input.js';
-import {FunctionLocator, Locator, NodeLocator} from './locators/locators.js';
-import {Realm} from './Realm.js';
+import type {CDPSession} from './CDPSession.js';
+import type {KeyboardTypeOptions} from './Input.js';
+import {
+  FunctionLocator,
+  type Locator,
+  NodeLocator,
+} from './locators/locators.js';
+import type {Realm} from './Realm.js';
+
+/**
+ * @public
+ */
+export interface WaitForOptions {
+  /**
+   * Maximum wait time in milliseconds. Pass 0 to disable the timeout.
+   *
+   * The default value can be changed by using the
+   * {@link Page.setDefaultTimeout} or {@link Page.setDefaultNavigationTimeout}
+   * methods.
+   *
+   * @defaultValue `30000`
+   */
+  timeout?: number;
+  /**
+   * When to consider waiting succeeds. Given an array of event strings, waiting
+   * is considered to be successful after all events have been fired.
+   *
+   * @defaultValue `'load'`
+   */
+  waitUntil?: PuppeteerLifeCycleEvent | PuppeteerLifeCycleEvent[];
+}
+
+/**
+ * @public
+ */
+export interface GoToOptions extends WaitForOptions {
+  /**
+   * If provided, it will take preference over the referer header value set by
+   * {@link Page.setExtraHTTPHeaders | page.setExtraHTTPHeaders()}.
+   */
+  referer?: string;
+  /**
+   * If provided, it will take preference over the referer-policy header value
+   * set by {@link Page.setExtraHTTPHeaders | page.setExtraHTTPHeaders()}.
+   */
+  referrerPolicy?: string;
+}
 
 /**
  * @public
@@ -128,6 +174,44 @@ export interface FrameAddStyleTagOptions {
 }
 
 /**
+ * @public
+ */
+export interface FrameEvents extends Record<EventType, unknown> {
+  /** @internal */
+  [FrameEvent.FrameNavigated]: Protocol.Page.NavigationType;
+  /** @internal */
+  [FrameEvent.FrameSwapped]: undefined;
+  /** @internal */
+  [FrameEvent.LifecycleEvent]: undefined;
+  /** @internal */
+  [FrameEvent.FrameNavigatedWithinDocument]: undefined;
+  /** @internal */
+  [FrameEvent.FrameDetached]: Frame;
+  /** @internal */
+  [FrameEvent.FrameSwappedByActivation]: undefined;
+}
+
+/**
+ * We use symbols to prevent external parties listening to these events.
+ * They are internal to Puppeteer.
+ *
+ * @internal
+ */
+// eslint-disable-next-line @typescript-eslint/no-namespace
+export namespace FrameEvent {
+  export const FrameNavigated = Symbol('Frame.FrameNavigated');
+  export const FrameSwapped = Symbol('Frame.FrameSwapped');
+  export const LifecycleEvent = Symbol('Frame.LifecycleEvent');
+  export const FrameNavigatedWithinDocument = Symbol(
+    'Frame.FrameNavigatedWithinDocument'
+  );
+  export const FrameDetached = Symbol('Frame.FrameDetached');
+  export const FrameSwappedByActivation = Symbol(
+    'Frame.FrameSwappedByActivation'
+  );
+}
+
+/**
  * @internal
  */
 export const throwIfDetached = throwIfDisposed<Frame>(frame => {
@@ -181,13 +265,13 @@ export const throwIfDetached = throwIfDisposed<Frame>(frame => {
  * Frame lifecycles are controlled by three events that are all dispatched on
  * the parent {@link Frame.page | page}:
  *
- * - {@link PageEmittedEvents.FrameAttached}
- * - {@link PageEmittedEvents.FrameNavigated}
- * - {@link PageEmittedEvents.FrameDetached}
+ * - {@link PageEvent.FrameAttached}
+ * - {@link PageEvent.FrameNavigated}
+ * - {@link PageEvent.FrameDetached}
  *
  * @public
  */
-export abstract class Frame extends EventEmitter {
+export abstract class Frame extends EventEmitter<FrameEvents> {
   /**
    * @internal
    */
@@ -228,12 +312,10 @@ export abstract class Frame extends EventEmitter {
    * Is `true` if the frame is an out-of-process (OOP) frame. Otherwise,
    * `false`.
    */
-  isOOPFrame(): boolean {
-    throw new Error('Not implemented');
-  }
+  abstract isOOPFrame(): boolean;
 
   /**
-   * Navigates a frame to the given url.
+   * Navigates the frame to the given `url`.
    *
    * @remarks
    * Navigation to `about:blank` or navigation to the same URL with a different
@@ -247,20 +329,17 @@ export abstract class Frame extends EventEmitter {
    *
    * :::
    *
-   * @param url - the URL to navigate the frame to. This should include the
-   * scheme, e.g. `https://`.
-   * @param options - navigation options. `waitUntil` is useful to define when
-   * the navigation should be considered successful - see the docs for
-   * {@link PuppeteerLifeCycleEvent} for more details.
-   *
+   * @param url - URL to navigate the frame to. The URL should include scheme,
+   * e.g. `https://`
+   * @param options - Options to configure waiting behavior.
    * @returns A promise which resolves to the main resource response. In case of
    * multiple redirects, the navigation will resolve with the response of the
    * last redirect.
-   * @throws This method will throw an error if:
+   * @throws If:
    *
    * - there's an SSL error (e.g. in case of self-signed certificates).
    * - target URL is invalid.
-   * - the `timeout` is exceeded during navigation.
+   * - the timeout is exceeded during navigation.
    * - the remote server does not respond or is unreachable.
    * - the main resource failed to load.
    *
@@ -298,14 +377,12 @@ export abstract class Frame extends EventEmitter {
    * ]);
    * ```
    *
-   * @param options - options to configure when the navigation is consided
-   * finished.
-   * @returns a promise that resolves when the frame navigates to a new URL.
+   * @param options - Options to configure waiting behavior.
+   * @returns A promise which resolves to the main resource response.
    */
-  abstract waitForNavigation(options?: {
-    timeout?: number;
-    waitUntil?: PuppeteerLifeCycleEvent | PuppeteerLifeCycleEvent[];
-  }): Promise<HTTPResponse | null>;
+  abstract waitForNavigation(
+    options?: WaitForOptions
+  ): Promise<HTTPResponse | null>;
 
   /**
    * @internal
@@ -527,7 +604,7 @@ export abstract class Frame extends EventEmitter {
    *
    * @example
    *
-   * ```js
+   * ```ts
    * const divsCounts = await frame.$$eval('div', divs => divs.length);
    * ```
    *
@@ -1118,26 +1195,10 @@ export abstract class Frame extends EventEmitter {
    *   await devicePrompt.waitForDevice(({name}) => name.includes('My Device'))
    * );
    * ```
+   *
+   * @internal
    */
-  waitForDevicePrompt(
+  abstract waitForDevicePrompt(
     options?: WaitTimeoutOptions
   ): Promise<DeviceRequestPrompt>;
-
-  /**
-   * @internal
-   */
-  waitForDevicePrompt(): Promise<DeviceRequestPrompt> {
-    throw new Error('Not implemented');
-  }
-
-  /**
-   * @internal
-   */
-  exposeFunction<Args extends unknown[], Ret>(
-    name: string,
-    fn: (...args: Args) => Awaitable<Ret>
-  ): Promise<void>;
-  exposeFunction(): Promise<void> {
-    throw new Error('Not implemented');
-  }
 }

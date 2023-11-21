@@ -14,27 +14,33 @@
  * limitations under the License.
  */
 
+import type FS from 'fs/promises';
 import type {Readable} from 'stream';
 
 import type {Protocol} from 'devtools-protocol';
 
-import {map, NEVER, Observable, timer} from '../../third_party/rxjs/rxjs.js';
-import type {ElementHandle} from '../api/ElementHandle.js';
-import type {JSHandle} from '../api/JSHandle.js';
-import {Page} from '../api/Page.js';
+import {
+  map,
+  NEVER,
+  timer,
+  type Observable,
+  firstValueFrom,
+  fromEvent,
+  filterAsync,
+  from,
+  raceWith,
+} from '../../third_party/rxjs/rxjs.js';
+import type {CDPSession} from '../api/CDPSession.js';
+import type {Page} from '../api/Page.js';
 import {isNode} from '../environment.js';
 import {assert} from '../util/assert.js';
-import {Deferred} from '../util/Deferred.js';
+import type {Deferred} from '../util/Deferred.js';
 import {isErrorLike} from '../util/ErrorLike.js';
 
-import type {CDPSession} from './Connection.js';
 import {debug} from './Debug.js';
-import {CDPElementHandle} from './ElementHandle.js';
 import {TimeoutError} from './Errors.js';
-import type {CommonEventEmitter} from './EventEmitter.js';
-import {IsolatedWorld} from './IsolatedWorld.js';
-import {CDPJSHandle} from './JSHandle.js';
-import {Awaitable} from './types.js';
+import type {EventEmitter, EventType} from './EventEmitter.js';
+import type {NetworkManagerEvents} from './NetworkManagerEvents.js';
 
 /**
  * @internal
@@ -107,7 +113,7 @@ export function createEvaluationError(
  */
 export function createClientError(
   details: Protocol.Runtime.ExceptionDetails
-): unknown {
+): Error {
   let name: string;
   let message: string;
   if (!details.exception) {
@@ -124,18 +130,20 @@ export function createClientError(
     name = detail.name;
     message = detail.message;
   }
-  const messageHeight = message.split('\n').length;
   const error = new Error(message);
   error.name = name;
 
-  const stackLines = [];
+  const messageHeight = error.message.split('\n').length;
   const messageLines = error.stack!.split('\n').splice(0, messageHeight);
-  if (details.stackTrace && stackLines.length < Error.stackTraceLimit) {
-    for (const frame of details.stackTrace.callFrames.reverse()) {
+
+  const stackLines = [];
+  if (details.stackTrace) {
+    for (const frame of details.stackTrace.callFrames) {
+      // Note we need to add `1` because the values are 0-indexed.
       stackLines.push(
         `    at ${frame.functionName || '<anonymous>'} (${frame.url}:${
-          frame.lineNumber
-        }:${frame.columnNumber})`
+          frame.lineNumber + 1
+        }:${frame.columnNumber + 1})`
       );
       if (stackLines.length >= Error.stackTraceLimit) {
         break;
@@ -231,8 +239,9 @@ export const withSourcePuppeteerURLIfNone = <T extends NonNullable<unknown>>(
   }
   const original = Error.prepareStackTrace;
   Error.prepareStackTrace = (_, stack) => {
-    // First element is the function. Second element is the caller of this
-    // function. Third element is the caller of the caller of this function
+    // First element is the function.
+    // Second element is the caller of this function.
+    // Third element is the caller of the caller of this function
     // which is precisely what we want.
     return stack[2];
   };
@@ -290,62 +299,6 @@ export function valueFromRemoteObject(
 /**
  * @internal
  */
-export async function releaseObject(
-  client: CDPSession,
-  remoteObject: Protocol.Runtime.RemoteObject
-): Promise<void> {
-  if (!remoteObject.objectId) {
-    return;
-  }
-  await client
-    .send('Runtime.releaseObject', {objectId: remoteObject.objectId})
-    .catch(error => {
-      // Exceptions might happen in case of a page been navigated or closed.
-      // Swallow these since they are harmless and we don't leak anything in this case.
-      debugError(error);
-    });
-}
-
-/**
- * @internal
- */
-export interface PuppeteerEventListener {
-  emitter: CommonEventEmitter;
-  eventName: string | symbol;
-  handler: (...args: any[]) => void;
-}
-
-/**
- * @internal
- */
-export function addEventListener(
-  emitter: CommonEventEmitter,
-  eventName: string | symbol,
-  handler: (...args: any[]) => void
-): PuppeteerEventListener {
-  emitter.on(eventName, handler);
-  return {emitter, eventName, handler};
-}
-
-/**
- * @internal
- */
-export function removeEventListeners(
-  listeners: Array<{
-    emitter: CommonEventEmitter;
-    eventName: string | symbol;
-    handler: (...args: any[]) => void;
-  }>
-): void {
-  for (const listener of listeners) {
-    listener.emitter.removeListener(listener.eventName, listener.handler);
-  }
-  listeners.length = 0;
-}
-
-/**
- * @internal
- */
 export const isString = (obj: unknown): obj is string => {
   return typeof obj === 'string' || obj instanceof String;
 };
@@ -381,53 +334,6 @@ export const isDate = (obj: unknown): obj is Date => {
 /**
  * @internal
  */
-export async function waitForEvent<T>(
-  emitter: CommonEventEmitter,
-  eventName: string | symbol,
-  predicate: (event: T) => Awaitable<boolean>,
-  timeout: number,
-  abortPromise: Promise<Error> | Deferred<Error>
-): Promise<T> {
-  const deferred = Deferred.create<T>({
-    message: `Timeout exceeded while waiting for event ${String(eventName)}`,
-    timeout,
-  });
-  const listener = addEventListener(emitter, eventName, async event => {
-    if (await predicate(event)) {
-      deferred.resolve(event);
-    }
-  });
-
-  try {
-    const response = await Deferred.race<T | Error>([deferred, abortPromise]);
-    if (isErrorLike(response)) {
-      throw response;
-    }
-
-    return response;
-  } catch (error) {
-    throw error;
-  } finally {
-    removeEventListeners([listener]);
-  }
-}
-
-/**
- * @internal
- */
-export function createCdpHandle(
-  realm: IsolatedWorld,
-  remoteObject: Protocol.Runtime.RemoteObject
-): JSHandle | ElementHandle<Node> {
-  if (remoteObject.subtype === 'node') {
-    return new CDPElementHandle(realm, remoteObject);
-  }
-  return new CDPJSHandle(realm, remoteObject);
-}
-
-/**
- * @internal
- */
 export function evaluationString(
   fun: Function | string,
   ...args: unknown[]
@@ -453,7 +359,7 @@ export function evaluationString(
 export function addPageBinding(type: string, name: string): void {
   // This is the CDP binding.
   // @ts-expect-error: In a different context.
-  const callCDP = globalThis[name];
+  const callCdp = globalThis[name];
 
   // We replace the CDP binding with a Puppeteer binding.
   Object.assign(globalThis, {
@@ -468,7 +374,7 @@ export function addPageBinding(type: string, name: string): void {
       callPuppeteer.lastSeq = seq;
       callPuppeteer.args.set(seq, args);
 
-      callCDP(
+      callCdp(
         JSON.stringify({
           type,
           name,
@@ -506,29 +412,11 @@ export function pageBindingInitString(type: string, name: string): string {
 /**
  * @internal
  */
-export async function waitWithTimeout<T>(
-  promise: Promise<T>,
-  taskName: string,
-  timeout: number
-): Promise<T> {
-  const deferred = Deferred.create<never>({
-    message: `waiting for ${taskName} failed: timeout ${timeout}ms exceeded`,
-    timeout,
-  });
-
-  return await Deferred.race([promise, deferred]);
-}
-
+let fs: typeof FS | null = null;
 /**
  * @internal
  */
-let fs: typeof import('fs/promises') | null = null;
-/**
- * @internal
- */
-export async function importFSPromises(): Promise<
-  typeof import('fs/promises')
-> {
+export async function importFSPromises(): Promise<typeof FS> {
   if (!fs) {
     try {
       fs = await import('fs/promises');
@@ -675,45 +563,6 @@ export function validateDialogType(
 /**
  * @internal
  */
-export class Mutex {
-  static Guard = class Guard {
-    #mutex: Mutex;
-    constructor(mutex: Mutex) {
-      this.#mutex = mutex;
-    }
-    [Symbol.dispose](): void {
-      return this.#mutex.release();
-    }
-  };
-
-  #locked = false;
-  #acquirers: Array<() => void> = [];
-
-  // This is FIFO.
-  async acquire(): Promise<InstanceType<typeof Mutex.Guard>> {
-    if (!this.#locked) {
-      this.#locked = true;
-      return new Mutex.Guard(this);
-    }
-    const deferred = Deferred.create<void>();
-    this.#acquirers.push(deferred.resolve.bind(deferred));
-    await deferred.valueOrThrow();
-    return new Mutex.Guard(this);
-  }
-
-  release(): void {
-    const resolve = this.#acquirers.shift();
-    if (!resolve) {
-      this.#locked = false;
-      return;
-    }
-    resolve();
-  }
-}
-
-/**
- * @internal
- */
 export function timeout(ms: number): Observable<never> {
   return ms === 0
     ? NEVER
@@ -723,3 +572,53 @@ export function timeout(ms: number): Observable<never> {
         })
       );
 }
+
+/**
+ * @internal
+ */
+export const UTILITY_WORLD_NAME = '__puppeteer_utility_world__';
+
+/**
+ * @internal
+ */
+export const SOURCE_URL_REGEX = /^[\040\t]*\/\/[@#] sourceURL=\s*(\S*?)\s*$/m;
+/**
+ * @internal
+ */
+export function getSourceUrlComment(url: string): string {
+  return `//# sourceURL=${url}`;
+}
+
+/**
+ * @internal
+ */
+export async function waitForHTTP<T extends {url(): string}>(
+  networkManager: EventEmitter<NetworkManagerEvents>,
+  eventName: EventType,
+  urlOrPredicate: string | ((res: T) => boolean | Promise<boolean>),
+  /** Time after the function will timeout */
+  ms: number,
+  cancelation: Deferred<never>
+): Promise<T> {
+  return await firstValueFrom(
+    (
+      fromEvent(networkManager, eventName as unknown as string) as Observable<T>
+    ).pipe(
+      filterAsync(async http => {
+        if (isString(urlOrPredicate)) {
+          return urlOrPredicate === http.url();
+        }
+        if (typeof urlOrPredicate === 'function') {
+          return !!(await urlOrPredicate(http));
+        }
+        return false;
+      }),
+      raceWith(timeout(ms), from(cancelation.valueOrThrow()))
+    )
+  );
+}
+
+/**
+ * @internal
+ */
+export const NETWORK_IDLE_TIME = 500;

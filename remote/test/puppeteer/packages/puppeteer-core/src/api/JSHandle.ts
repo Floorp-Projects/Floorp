@@ -14,20 +14,15 @@
  * limitations under the License.
  */
 
-import Protocol from 'devtools-protocol';
+import type Protocol from 'devtools-protocol';
 
-import {Symbol} from '../../third_party/disposablestack/disposablestack.js';
-import {
-  EvaluateFuncWith,
-  HandleFor,
-  HandleOr,
-  Moveable,
-} from '../common/types.js';
+import type {EvaluateFuncWith, HandleFor, HandleOr} from '../common/types.js';
 import {debugError, withSourcePuppeteerURLIfNone} from '../common/util.js';
-import {moveable} from '../util/decorators.js';
+import {moveable, throwIfDisposed} from '../util/decorators.js';
+import {disposeSymbol, asyncDisposeSymbol} from '../util/disposable.js';
 
-import {ElementHandle} from './ElementHandle.js';
-import {Realm} from './Realm.js';
+import type {ElementHandle} from './ElementHandle.js';
+import type {Realm} from './Realm.js';
 
 /**
  * Represents a reference to a JavaScript object. Instances can be created using
@@ -51,9 +46,7 @@ import {Realm} from './Realm.js';
  * @public
  */
 @moveable
-export abstract class JSHandle<T = unknown>
-  implements Disposable, AsyncDisposable, Moveable
-{
+export abstract class JSHandle<T = unknown> {
   declare move: () => this;
 
   /**
@@ -74,9 +67,7 @@ export abstract class JSHandle<T = unknown>
   /**
    * @internal
    */
-  get disposed(): boolean {
-    throw new Error('Not implemented');
-  }
+  abstract get disposed(): boolean;
 
   /**
    * Evaluates the given function with the current handle as its first argument.
@@ -124,6 +115,7 @@ export abstract class JSHandle<T = unknown>
   /**
    * @internal
    */
+  @throwIfDisposed()
   async getProperty<K extends keyof T>(
     propertyName: HandleOr<K>
   ): Promise<HandleFor<T[K]>> {
@@ -150,6 +142,7 @@ export abstract class JSHandle<T = unknown>
    * children; // holds elementHandles to all children of document.body
    * ```
    */
+  @throwIfDisposed()
   async getProperties(): Promise<Map<string, JSHandle>> {
     const propertyNames = await this.evaluate(object => {
       const enumerableProperties = [];
@@ -217,11 +210,13 @@ export abstract class JSHandle<T = unknown>
    */
   abstract remoteObject(): Protocol.Runtime.RemoteObject;
 
-  [Symbol.dispose](): void {
+  /** @internal */
+  [disposeSymbol](): void {
     return void this.dispose().catch(debugError);
   }
 
-  [Symbol.asyncDispose](): Promise<void> {
+  /** @internal */
+  [asyncDisposeSymbol](): Promise<void> {
     return this.dispose();
   }
 }

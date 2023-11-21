@@ -14,13 +14,18 @@
  * limitations under the License.
  */
 
-import {TimeoutSettings} from '../common/TimeoutSettings.js';
-import {EvaluateFunc, HandleFor, InnerLazyParams} from '../common/types.js';
+import type {TimeoutSettings} from '../common/TimeoutSettings.js';
+import type {
+  EvaluateFunc,
+  HandleFor,
+  InnerLazyParams,
+} from '../common/types.js';
 import {TaskManager, WaitTask} from '../common/WaitTask.js';
+import {disposeSymbol} from '../util/disposable.js';
 
-import {ElementHandle} from './ElementHandle.js';
-import {Environment} from './Environment.js';
-import {JSHandle} from './JSHandle.js';
+import type {ElementHandle} from './ElementHandle.js';
+import type {Environment} from './Environment.js';
+import type {JSHandle} from './JSHandle.js';
 
 /**
  * @internal
@@ -92,12 +97,15 @@ export abstract class Realm implements Disposable {
     return await waitTask.result;
   }
 
+  abstract adoptBackendNode(backendNodeId?: number): Promise<JSHandle<Node>>;
+
   get disposed(): boolean {
     return this.#disposed;
   }
 
   #disposed = false;
-  [Symbol.dispose](): void {
+  /** @internal */
+  [disposeSymbol](): void {
     this.#disposed = true;
     this.taskManager.terminateAll(
       new Error('waitForFunction failed: frame got detached.')

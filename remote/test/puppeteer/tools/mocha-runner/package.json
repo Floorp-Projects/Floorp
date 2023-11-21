@@ -1,0 +1,42 @@
+{
+  "name": "@puppeteer/mocha-runner",
+  "version": "0.1.0",
+  "type": "commonjs",
+  "private": true,
+  "bin": "./bin/mocha-runner.js",
+  "description": "Mocha runner for Puppeteer",
+  "license": "Apache-2.0",
+  "scripts": {
+    "build": "wireit",
+    "test": "wireit",
+    "clean": "../clean.js"
+  },
+  "wireit": {
+    "build": {
+      "command": "tsc -b && chmod +x ./bin/mocha-runner.js",
+      "clean": "if-file-deleted",
+      "files": [
+        "src/**"
+      ],
+      "output": [
+        "bin/**",
+        "tsconfig.tsbuildinfo"
+      ],
+      "dependencies": [
+        "../../packages/puppeteer-core:build"
+      ]
+    },
+    "test": {
+      "command": "c8 node ./bin/test.js",
+      "dependencies": [
+        "build"
+      ]
+    }
+  },
+  "dependencies": {
+    "c8": "8.0.1",
+    "glob": "10.3.10",
+    "puppeteer-core": "file:../../packages/puppeteer-core",
+    "zod": "3.22.4"
+  }
+}

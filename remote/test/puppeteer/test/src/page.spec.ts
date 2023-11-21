@@ -13,16 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import assert from 'assert';
 import fs from 'fs';
-import {ServerResponse} from 'http';
+import type {ServerResponse} from 'http';
 import path from 'path';
 
 import expect from 'expect';
 import {KnownDevices, TimeoutError} from 'puppeteer';
-import {Metrics, Page} from 'puppeteer-core/internal/api/Page.js';
-import {CDPSession} from 'puppeteer-core/internal/common/Connection.js';
-import {ConsoleMessage} from 'puppeteer-core/internal/common/ConsoleMessage.js';
-import {CDPPage} from 'puppeteer-core/internal/common/Page.js';
+import {CDPSession} from 'puppeteer-core/internal/api/CDPSession.js';
+import type {Metrics, Page} from 'puppeteer-core/internal/api/Page.js';
+import type {CdpPage} from 'puppeteer-core/internal/cdp/Page.js';
+import type {ConsoleMessage} from 'puppeteer-core/internal/common/ConsoleMessage.js';
 import sinon from 'sinon';
 
 import {getTestState, setupTestBrowserHooks} from './mocha-utils.js';
@@ -522,104 +523,6 @@ describe('Page', function () {
           return window.navigator.onLine;
         })
       ).toBe(true);
-    });
-  });
-
-  describe('ExecutionContext.queryObjects', function () {
-    it('should work', async () => {
-      const {page} = await getTestState();
-
-      // Create a custom class
-      using classHandle = await page.evaluateHandle(() => {
-        return class CustomClass {};
-      });
-
-      // Create an instance.
-      await page.evaluate(CustomClass => {
-        // @ts-expect-error: Different context.
-        self.customClass = new CustomClass();
-      }, classHandle);
-
-      // Validate only one has been added.
-      using prototypeHandle = await page.evaluateHandle(CustomClass => {
-        return CustomClass.prototype;
-      }, classHandle);
-      using objectsHandle = await page.queryObjects(prototypeHandle);
-      await expect(
-        page.evaluate(objects => {
-          return objects.length;
-        }, objectsHandle)
-      ).resolves.toBe(1);
-
-      // Check that instances.
-      await expect(
-        page.evaluate(objects => {
-          // @ts-expect-error: Different context.
-          return objects[0] === self.customClass;
-        }, objectsHandle)
-      ).resolves.toBeTruthy();
-    });
-    it('should work for non-trivial page', async () => {
-      const {page, server} = await getTestState();
-      await page.goto(server.EMPTY_PAGE);
-
-      // Create a custom class
-      using classHandle = await page.evaluateHandle(() => {
-        return class CustomClass {};
-      });
-
-      // Create an instance.
-      await page.evaluate(CustomClass => {
-        // @ts-expect-error: Different context.
-        self.customClass = new CustomClass();
-      }, classHandle);
-
-      // Validate only one has been added.
-      using prototypeHandle = await page.evaluateHandle(CustomClass => {
-        return CustomClass.prototype;
-      }, classHandle);
-      using objectsHandle = await page.queryObjects(prototypeHandle);
-      await expect(
-        page.evaluate(objects => {
-          return objects.length;
-        }, objectsHandle)
-      ).resolves.toBe(1);
-
-      // Check that instances.
-      await expect(
-        page.evaluate(objects => {
-          // @ts-expect-error: Different context.
-          return objects[0] === self.customClass;
-        }, objectsHandle)
-      ).resolves.toBeTruthy();
-    });
-    it('should fail for disposed handles', async () => {
-      const {page} = await getTestState();
-
-      using prototypeHandle = await page.evaluateHandle(() => {
-        return HTMLBodyElement.prototype;
-      });
-      // We want to dispose early.
-      await prototypeHandle.dispose();
-      let error!: Error;
-      await page.queryObjects(prototypeHandle).catch(error_ => {
-        return (error = error_);
-      });
-      expect(error.message).toBe('Prototype JSHandle is disposed!');
-    });
-    it('should fail primitive values as prototypes', async () => {
-      const {page} = await getTestState();
-
-      using prototypeHandle = await page.evaluateHandle(() => {
-        return 42;
-      });
-      let error!: Error;
-      await page.queryObjects(prototypeHandle).catch(error_ => {
-        return (error = error_);
-      });
-      expect(error.message).toBe(
-        'Prototype JSHandle must not be referencing primitive value'
-      );
     });
   });
 
@@ -1370,6 +1273,7 @@ describe('Page', function () {
         page.goto(server.PREFIX + '/error.html'),
       ]);
       expect(error.message).toContain('Fancy');
+      expect(error.stack?.split('\n')[1]).toContain('error.html:13');
     });
   });
 
@@ -2085,8 +1989,30 @@ describe('Page', function () {
       const outputFile = __dirname + '/../assets/output.pdf';
       await page.goto(server.PREFIX + '/pdf.html');
       await page.pdf({path: outputFile});
-      expect(fs.readFileSync(outputFile).byteLength).toBeGreaterThan(0);
-      fs.unlinkSync(outputFile);
+      try {
+        expect(fs.readFileSync(outputFile).byteLength).toBeGreaterThan(0);
+      } finally {
+        fs.unlinkSync(outputFile);
+      }
+    });
+
+    it('can print to PDF with accessible', async () => {
+      const {page, server} = await getTestState();
+
+      const outputFile = __dirname + '/../assets/output.pdf';
+      const outputFileAccessible =
+        __dirname + '/../assets/output-accessible.pdf';
+      await page.goto(server.PREFIX + '/pdf.html');
+      await page.pdf({path: outputFile});
+      await page.pdf({path: outputFileAccessible, tagged: true});
+      try {
+        expect(
+          fs.readFileSync(outputFileAccessible).byteLength
+        ).toBeGreaterThan(fs.readFileSync(outputFile).byteLength);
+      } finally {
+        fs.unlinkSync(outputFileAccessible);
+        fs.unlinkSync(outputFile);
+      }
     });
 
     it('can print to PDF and stream the result', async () => {
@@ -2105,9 +2031,8 @@ describe('Page', function () {
 
       await page.goto(server.PREFIX + '/pdf.html');
 
-      let error!: Error;
-      await page.pdf({timeout: 1}).catch(_error => {
-        return (error = _error);
+      const error = await page.pdf({timeout: 1}).catch(err => {
+        return err;
       });
       expect(error).toBeInstanceOf(TimeoutError);
     });
@@ -2331,15 +2256,17 @@ describe('Page', function () {
     it('should work with window.close', async () => {
       const {page, context} = await getTestState();
 
-      const newPagePromise = new Promise<Page>(fulfill => {
+      const newPagePromise = new Promise<Page | null>(fulfill => {
         return context.once('targetcreated', target => {
           return fulfill(target.page());
         });
       });
+      assert(page);
       await page.evaluate(() => {
         return ((window as any)['newPage'] = window.open('about:blank'));
       });
       const newPage = await newPagePromise;
+      assert(newPage);
       const closedPromise = waitEvent(newPage, 'close');
       await page.evaluate(() => {
         return (window as any)['newPage'].close();
@@ -2375,7 +2302,7 @@ describe('Page', function () {
   describe('Page.client', function () {
     it('should return the client instance', async () => {
       const {page} = await getTestState();
-      expect((page as CDPPage)._client()).toBeInstanceOf(CDPSession);
+      expect((page as CdpPage)._client()).toBeInstanceOf(CDPSession);
     });
   });
 });

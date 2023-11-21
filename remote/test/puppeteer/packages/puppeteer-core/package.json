@@ -1,6 +1,6 @@
 {
   "name": "puppeteer-core",
-  "version": "21.2.0",
+  "version": "21.5.2",
   "description": "A high-level API to control headless Chrome over the DevTools Protocol",
   "keywords": [
     "puppeteer",
@@ -31,13 +31,13 @@
     "url": "https://github.com/puppeteer/puppeteer/tree/main/packages/puppeteer-core"
   },
   "engines": {
-    "node": ">=16.3.0"
+    "node": ">=16.13.2"
   },
   "scripts": {
     "build:docs": "wireit",
     "build": "wireit",
     "check": "tsx tools/ensure-correct-devtools-protocol-package",
-    "clean": "git clean -Xdf -e '!node_modules' .",
+    "clean": "../../tools/clean.js",
     "prepack": "wireit",
     "unit": "wireit"
   },
@@ -57,27 +57,6 @@
         "build:types"
       ]
     },
-    "generate:sources": {
-      "command": "tsx tools/generate_sources.ts",
-      "clean": "if-file-deleted",
-      "files": [
-        "../../versions.js",
-        "src/{injected,templates}/**",
-        "tools/generate_sources.ts"
-      ],
-      "output": [
-        "src/generated/*.ts"
-      ]
-    },
-    "generate:package-json": {
-      "command": "tsx ../../tools/generate_module_package_json.ts lib/esm/package.json",
-      "files": [
-        "../../tools/generate_module_package_json.ts"
-      ],
-      "output": [
-        "lib/esm/package.json"
-      ]
-    },
     "build:docs": {
       "command": "api-extractor run --local --config \"./api-extractor.docs.json\"",
       "files": [
@@ -90,20 +69,18 @@
       ]
     },
     "build:tsc": {
-      "command": "tsc -b && rollup --config rollup.third_party.config.mjs",
+      "command": "hereby build",
       "clean": "if-file-deleted",
       "dependencies": [
-        "generate:package-json",
-        "generate:sources",
         "../browsers:build"
       ],
       "files": [
-        "{compat,src,third_party}/**",
-        "rollup.third_party.config.mjs"
+        "{src,third_party}/**",
+        "../../versions.js",
+        "!src/generated"
       ],
       "output": [
-        "lib/{cjs,esm}/**",
-        "!lib/esm/package.json"
+        "lib/{cjs,esm}/**"
       ]
     },
     "build:types": {
@@ -131,6 +108,7 @@
   "files": [
     "lib",
     "src",
+    "!*.test.ts",
     "!*.test.js",
     "!*.test.d.ts",
     "!*.test.js.map",
@@ -140,15 +118,17 @@
   "author": "The Chromium Authors",
   "license": "Apache-2.0",
   "dependencies": {
-    "@puppeteer/browsers": "1.7.0",
-    "chromium-bidi": "0.4.26",
+    "@puppeteer/browsers": "1.8.0",
+    "chromium-bidi": "0.4.33",
     "cross-fetch": "4.0.0",
     "debug": "4.3.4",
-    "devtools-protocol": "0.0.1159816",
-    "ws": "8.14.0"
+    "devtools-protocol": "0.0.1203626",
+    "ws": "8.14.2"
   },
   "devDependencies": {
-    "disposablestack": "1.1.1",
+    "@types/debug": "4.1.12",
+    "@types/node": "18.17.15",
+    "@types/ws": "8.5.9",
     "mitt": "3.0.1",
     "parsel-js": "1.1.2",
     "rxjs": "7.8.1"

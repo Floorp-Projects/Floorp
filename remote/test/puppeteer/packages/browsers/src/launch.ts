@@ -17,15 +17,13 @@
 import childProcess from 'child_process';
 import {accessSync} from 'fs';
 import os from 'os';
-import path from 'path';
 import readline from 'readline';
 
 import {
-  Browser,
-  BrowserPlatform,
-  executablePathByBrowser,
+  type Browser,
+  type BrowserPlatform,
   resolveSystemExecutablePath,
-  ChromeReleaseChannel,
+  type ChromeReleaseChannel,
 } from './browser-data/browser-data.js';
 import {Cache} from './Cache.js';
 import {debug} from './debug.js';
@@ -64,21 +62,7 @@ export interface ComputeExecutablePathOptions {
 export function computeExecutablePath(
   options: ComputeExecutablePathOptions
 ): string {
-  options.platform ??= detectBrowserPlatform();
-  if (!options.platform) {
-    throw new Error(
-      `Cannot download a binary for the provided platform: ${os.platform()} (${os.arch()})`
-    );
-  }
-  const installationDir = new Cache(options.cacheDir).installationDir(
-    options.browser,
-    options.platform,
-    options.buildId
-  );
-  return path.join(
-    installationDir,
-    executablePathByBrowser[options.browser](options.platform, options.buildId)
-  );
+  return new Cache(options.cacheDir).computeExecutablePath(options);
 }
 
 /**
@@ -196,9 +180,19 @@ export class Process {
       dumpio: opts.dumpio,
     });
 
+    const env = opts.env || {};
+
     debugLaunch(`Launching ${this.#executablePath} ${this.#args.join(' ')}`, {
       detached: opts.detached,
-      env: opts.env,
+      env: Object.keys(env).reduce<Record<string, string | undefined>>(
+        (res, key) => {
+          if (key.toLowerCase().startsWith('puppeteer_')) {
+            res[key] = env[key];
+          }
+          return res;
+        },
+        {}
+      ),
       stdio,
     });
 
@@ -207,7 +201,7 @@ export class Process {
       this.#args,
       {
         detached: opts.detached,
-        env: opts.env,
+        env,
         stdio,
       }
     );

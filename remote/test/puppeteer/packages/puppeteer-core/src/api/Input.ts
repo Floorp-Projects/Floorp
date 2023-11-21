@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import {Protocol} from 'devtools-protocol';
+import type {Protocol} from 'devtools-protocol';
 
-import {KeyInput} from '../common/USKeyboardLayout.js';
+import type {KeyInput} from '../common/USKeyboardLayout.js';
 
-import {Point} from './ElementHandle.js';
+import type {Point} from './ElementHandle.js';
 
 /**
  * @public
@@ -87,7 +87,7 @@ export type KeyPressOptions = KeyDownOptions & KeyboardTypeOptions;
  *
  * @public
  */
-export class Keyboard {
+export abstract class Keyboard {
   /**
    * @internal
    */
@@ -120,10 +120,10 @@ export class Keyboard {
    * is the commands of keyboard shortcuts,
    * see {@link https://source.chromium.org/chromium/chromium/src/+/main:third_party/blink/renderer/core/editing/commands/editor_command_names.h | Chromium Source Code} for valid command names.
    */
-  async down(key: KeyInput, options?: Readonly<KeyDownOptions>): Promise<void>;
-  async down(): Promise<void> {
-    throw new Error('Not implemented');
-  }
+  abstract down(
+    key: KeyInput,
+    options?: Readonly<KeyDownOptions>
+  ): Promise<void>;
 
   /**
    * Dispatches a `keyup` event.
@@ -132,10 +132,7 @@ export class Keyboard {
    * See {@link KeyInput | KeyInput}
    * for a list of all key names.
    */
-  async up(key: KeyInput): Promise<void>;
-  async up(): Promise<void> {
-    throw new Error('Not implemented');
-  }
+  abstract up(key: KeyInput): Promise<void>;
 
   /**
    * Dispatches a `keypress` and `input` event.
@@ -153,10 +150,7 @@ export class Keyboard {
    *
    * @param char - Character to send into the page.
    */
-  async sendCharacter(char: string): Promise<void>;
-  async sendCharacter(): Promise<void> {
-    throw new Error('Not implemented');
-  }
+  abstract sendCharacter(char: string): Promise<void>;
 
   /**
    * Sends a `keydown`, `keypress`/`input`,
@@ -181,13 +175,10 @@ export class Keyboard {
    * if specified, is the time to wait between `keydown` and `keyup` in milliseconds.
    * Defaults to 0.
    */
-  async type(
+  abstract type(
     text: string,
     options?: Readonly<KeyboardTypeOptions>
   ): Promise<void>;
-  async type(): Promise<void> {
-    throw new Error('Not implemented');
-  }
 
   /**
    * Shortcut for {@link Keyboard.down}
@@ -211,13 +202,10 @@ export class Keyboard {
    * is the commands of keyboard shortcuts,
    * see {@link https://source.chromium.org/chromium/chromium/src/+/main:third_party/blink/renderer/core/editing/commands/editor_command_names.h | Chromium Source Code} for valid command names.
    */
-  async press(
+  abstract press(
     key: KeyInput,
     options?: Readonly<KeyPressOptions>
   ): Promise<void>;
-  async press(): Promise<void> {
-    throw new Error('Not implemented');
-  }
 }
 
 /**
@@ -367,7 +355,7 @@ export type MouseButton = (typeof MouseButton)[keyof typeof MouseButton];
  *
  * @public
  */
-export class Mouse {
+export abstract class Mouse {
   /**
    * @internal
    */
@@ -377,9 +365,7 @@ export class Mouse {
    * Resets the mouse to the default state: No buttons pressed; position at
    * (0,0).
    */
-  async reset(): Promise<void> {
-    throw new Error('Not implemented');
-  }
+  abstract reset(): Promise<void>;
 
   /**
    * Moves the mouse to the given coordinate.
@@ -388,34 +374,25 @@ export class Mouse {
    * @param y - Vertical position of the mouse.
    * @param options - Options to configure behavior.
    */
-  async move(
+  abstract move(
     x: number,
     y: number,
     options?: Readonly<MouseMoveOptions>
   ): Promise<void>;
-  async move(): Promise<void> {
-    throw new Error('Not implemented');
-  }
 
   /**
    * Presses the mouse.
    *
    * @param options - Options to configure behavior.
    */
-  async down(options?: Readonly<MouseOptions>): Promise<void>;
-  async down(): Promise<void> {
-    throw new Error('Not implemented');
-  }
+  abstract down(options?: Readonly<MouseOptions>): Promise<void>;
 
   /**
    * Releases the mouse.
    *
    * @param options - Options to configure behavior.
    */
-  async up(options?: Readonly<MouseOptions>): Promise<void>;
-  async up(): Promise<void> {
-    throw new Error('Not implemented');
-  }
+  abstract up(options?: Readonly<MouseOptions>): Promise<void>;
 
   /**
    * Shortcut for `mouse.move`, `mouse.down` and `mouse.up`.
@@ -424,14 +401,11 @@ export class Mouse {
    * @param y - Vertical position of the mouse.
    * @param options - Options to configure behavior.
    */
-  async click(
+  abstract click(
     x: number,
     y: number,
     options?: Readonly<MouseClickOptions>
   ): Promise<void>;
-  async click(): Promise<void> {
-    throw new Error('Not implemented');
-  }
 
   /**
    * Dispatches a `mousewheel` event.
@@ -455,50 +429,41 @@ export class Mouse {
    * await page.mouse.wheel({deltaY: -100});
    * ```
    */
-  async wheel(options?: Readonly<MouseWheelOptions>): Promise<void>;
-  async wheel(): Promise<void> {
-    throw new Error('Not implemented');
-  }
+  abstract wheel(options?: Readonly<MouseWheelOptions>): Promise<void>;
 
   /**
    * Dispatches a `drag` event.
    * @param start - starting point for drag
    * @param target - point to drag to
    */
-  async drag(start: Point, target: Point): Promise<Protocol.Input.DragData>;
-  async drag(): Promise<Protocol.Input.DragData> {
-    throw new Error('Not implemented');
-  }
+  abstract drag(start: Point, target: Point): Promise<Protocol.Input.DragData>;
 
   /**
    * Dispatches a `dragenter` event.
    * @param target - point for emitting `dragenter` event
    * @param data - drag data containing items and operations mask
    */
-  async dragEnter(target: Point, data: Protocol.Input.DragData): Promise<void>;
-  async dragEnter(): Promise<void> {
-    throw new Error('Not implemented');
-  }
+  abstract dragEnter(
+    target: Point,
+    data: Protocol.Input.DragData
+  ): Promise<void>;
 
   /**
    * Dispatches a `dragover` event.
    * @param target - point for emitting `dragover` event
    * @param data - drag data containing items and operations mask
    */
-  async dragOver(target: Point, data: Protocol.Input.DragData): Promise<void>;
-  async dragOver(): Promise<void> {
-    throw new Error('Not implemented');
-  }
+  abstract dragOver(
+    target: Point,
+    data: Protocol.Input.DragData
+  ): Promise<void>;
 
   /**
    * Performs a dragenter, dragover, and drop in sequence.
    * @param target - point to drop on
    * @param data - drag data containing items and operations mask
    */
-  async drop(target: Point, data: Protocol.Input.DragData): Promise<void>;
-  async drop(): Promise<void> {
-    throw new Error('Not implemented');
-  }
+  abstract drop(target: Point, data: Protocol.Input.DragData): Promise<void>;
 
   /**
    * Performs a drag, dragenter, dragover, and drop in sequence.
@@ -508,21 +473,18 @@ export class Mouse {
    * if specified, is the time to wait between `dragover` and `drop` in milliseconds.
    * Defaults to 0.
    */
-  async dragAndDrop(
+  abstract dragAndDrop(
     start: Point,
     target: Point,
     options?: {delay?: number}
   ): Promise<void>;
-  async dragAndDrop(): Promise<void> {
-    throw new Error('Not implemented');
-  }
 }
 
 /**
  * The Touchscreen class exposes touchscreen events.
  * @public
  */
-export class Touchscreen {
+export abstract class Touchscreen {
   /**
    * @internal
    */
@@ -533,9 +495,9 @@ export class Touchscreen {
    * @param x - Horizontal position of the tap.
    * @param y - Vertical position of the tap.
    */
-  async tap(x: number, y: number): Promise<void>;
-  async tap(): Promise<void> {
-    throw new Error('Not implemented');
+  async tap(x: number, y: number): Promise<void> {
+    await this.touchStart(x, y);
+    await this.touchEnd();
   }
 
   /**
@@ -543,10 +505,7 @@ export class Touchscreen {
    * @param x - Horizontal position of the tap.
    * @param y - Vertical position of the tap.
    */
-  async touchStart(x: number, y: number): Promise<void>;
-  async touchStart(): Promise<void> {
-    throw new Error('Not implemented');
-  }
+  abstract touchStart(x: number, y: number): Promise<void>;
 
   /**
    * Dispatches a `touchMove` event.
@@ -560,16 +519,10 @@ export class Touchscreen {
    * {@link https://developer.chrome.com/blog/a-more-compatible-smoother-touch/#chromes-new-model-the-throttled-async-touchmove-model | throttles}
    * touch move events.
    */
-  async touchMove(x: number, y: number): Promise<void>;
-  async touchMove(): Promise<void> {
-    throw new Error('Not implemented');
-  }
+  abstract touchMove(x: number, y: number): Promise<void>;
 
   /**
    * Dispatches a `touchend` event.
    */
-  async touchEnd(): Promise<void>;
-  async touchEnd(): Promise<void> {
-    throw new Error('Not implemented');
-  }
+  abstract touchEnd(): Promise<void>;
 }

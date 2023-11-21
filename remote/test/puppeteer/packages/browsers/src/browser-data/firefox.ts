@@ -19,7 +19,7 @@ import path from 'path';
 
 import {getJSON} from '../httpUtil.js';
 
-import {BrowserPlatform, ProfileOptions} from './types.js';
+import {BrowserPlatform, type ProfileOptions} from './types.js';
 
 function archive(platform: BrowserPlatform, buildId: string): string {
   switch (platform) {
@@ -130,6 +130,7 @@ function defaultProfilePreferences(
     'browser.safebrowsing.blockedURIs.enabled': false,
     'browser.safebrowsing.downloads.enabled': false,
     'browser.safebrowsing.malware.enabled': false,
+    'browser.safebrowsing.passwords.enabled': false,
     'browser.safebrowsing.phishing.enabled': false,
 
     // Disable updates to search engines.

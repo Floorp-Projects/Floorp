@@ -14,12 +14,14 @@
  * limitations under the License.
  */
 
+import {rm} from 'fs/promises';
+import {tmpdir} from 'os';
 import path from 'path';
 
 import expect from 'expect';
-import {Frame} from 'puppeteer-core/internal/api/Frame.js';
-import {Page} from 'puppeteer-core/internal/api/Page.js';
-import {EventEmitter} from 'puppeteer-core/internal/common/EventEmitter.js';
+import type {Frame} from 'puppeteer-core/internal/api/Frame.js';
+import type {Page} from 'puppeteer-core/internal/api/Page.js';
+import type {EventEmitter} from 'puppeteer-core/internal/common/EventEmitter.js';
 import {Deferred} from 'puppeteer-core/internal/util/Deferred.js';
 
 import {compare} from './golden-utils.js';
@@ -134,7 +136,7 @@ export const dumpFrames = (frame: Frame, indentation?: string): string[] => {
 };
 
 export const waitEvent = async <T = any>(
-  emitter: EventEmitter,
+  emitter: EventEmitter<any>,
   eventName: string,
   predicate: (event: T) => boolean = () => {
     return true;
@@ -157,3 +159,23 @@ export const waitEvent = async <T = any>(
     emitter.off(eventName, handler);
   }
 };
+
+export interface FilePlaceholder {
+  filename: `${string}.webm`;
+  [Symbol.dispose](): void;
+}
+
+export function getUniqueVideoFilePlaceholder(): FilePlaceholder {
+  return {
+    filename: `${tmpdir()}/test-video-${Math.round(
+      Math.random() * 10000
+    )}.webm`,
+    [Symbol.dispose]() {
+      void rmIfExists(this.filename);
+    },
+  };
+}
+
+export function rmIfExists(file: string): Promise<void> {
+  return rm(file).catch(() => {});
+}

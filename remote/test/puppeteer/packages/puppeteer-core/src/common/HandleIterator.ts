@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-import {JSHandle} from '../api/JSHandle.js';
+import type {JSHandle} from '../api/JSHandle.js';
+import {DisposableStack, disposeSymbol} from '../util/disposable.js';
 
-import {AwaitableIterable, HandleFor} from './types.js';
+import type {AwaitableIterable, HandleFor} from './types.js';
 
 const DEFAULT_BATCH_SIZE = 20;
 
@@ -47,7 +48,7 @@ async function* fastTransposeIteratorHandle<T>(
   using stack = new DisposableStack();
   stack.defer(() => {
     for (using handle of handles) {
-      handle[Symbol.dispose]();
+      handle[disposeSymbol]();
     }
   });
   yield* handles;

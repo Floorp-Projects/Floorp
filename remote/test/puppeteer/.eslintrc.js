@@ -1,5 +1,24 @@
+const {readdirSync} = require('fs');
+const {join} = require('path');
+
 const rulesDirPlugin = require('eslint-plugin-rulesdir');
+
 rulesDirPlugin.RULES_DIR = 'tools/eslint/lib';
+
+function getThirdPartyPackages() {
+  return readdirSync(join(__dirname, 'packages/puppeteer-core/third_party'), {
+    withFileTypes: true,
+  })
+    .filter(dirent => {
+      return dirent.isDirectory();
+    })
+    .map(({name}) => {
+      return {
+        name,
+        message: `Import \`${name}\` from the vendored location: third_party/${name}/index.js`,
+      };
+    });
+}
 
 module.exports = {
   root: true,
@@ -12,7 +31,13 @@ module.exports = {
 
   plugins: ['mocha', '@typescript-eslint', 'import'],
 
-  extends: ['plugin:prettier/recommended'],
+  extends: ['plugin:prettier/recommended', 'plugin:import/typescript'],
+
+  settings: {
+    'import/resolver': {
+      typescript: true,
+    },
+  },
 
   rules: {
     // Brackets keep code readable.
@@ -98,21 +123,6 @@ module.exports = {
     // ensure we don't have any it.only or describe.only in prod
     'mocha/no-exclusive-tests': 'error',
 
-    'no-restricted-imports': [
-      'error',
-      {
-        patterns: ['*Events', '*.test.js'],
-        paths: [
-          {
-            name: 'mitt',
-            message:
-              'Import `mitt` from the vendored location: third_party/mitt/index.js',
-          },
-        ],
-      },
-    ],
-    'import/extensions': ['error', 'ignorePackages'],
-
     'import/order': [
       'error',
       {
@@ -120,6 +130,8 @@ module.exports = {
         alphabetize: {order: 'asc', caseInsensitive: true},
       },
     ],
+
+    'import/no-cycle': ['error', {maxDepth: Infinity}],
 
     'no-restricted-syntax': [
       'error',
@@ -145,6 +157,8 @@ module.exports = {
         'rulesdir/prettier-comments': 'error',
         // Enforces clean up of used resources.
         'rulesdir/use-using': 'error',
+        // Enforces consistent file extension
+        'rulesdir/extensions': 'error',
         // Brackets keep code readable.
         curly: ['error', 'all'],
         // Brackets keep code readable and `return` intentions clear.
@@ -156,7 +170,7 @@ module.exports = {
         'no-unused-vars': 'off',
         '@typescript-eslint/no-unused-vars': [
           'error',
-          {argsIgnorePattern: '^_'},
+          {argsIgnorePattern: '^_', varsIgnorePattern: '^_'},
         ],
         'func-call-spacing': 'off',
         '@typescript-eslint/func-call-spacing': 'error',
@@ -220,12 +234,30 @@ module.exports = {
         '@typescript-eslint/prefer-ts-expect-error': 'error',
         // This is more performant; see https://v8.dev/blog/fast-async.
         '@typescript-eslint/return-await': ['error', 'always'],
+        // This optimizes the dependency tracking for type-only files.
+        '@typescript-eslint/consistent-type-imports': 'error',
+        // So type-only exports get elided.
+        '@typescript-eslint/consistent-type-exports': 'error',
+        // Don't want to trigger unintended side-effects.
+        '@typescript-eslint/no-import-type-side-effects': 'error',
       },
       overrides: [
         {
+          files: 'packages/puppeteer-core/src/**/*.ts',
+          rules: {
+            'no-restricted-imports': [
+              'error',
+              {
+                patterns: ['*Events', '*.test.js'],
+                paths: [...getThirdPartyPackages()],
+              },
+            ],
+          },
+        },
+        {
           files: [
             'packages/puppeteer-core/src/**/*.test.ts',
-            'tools/mochaRunner/src/test.ts',
+            'tools/mocha-runner/src/test.ts',
           ],
           rules: {
             // With the Node.js test runner, `describe` and `it` are technically

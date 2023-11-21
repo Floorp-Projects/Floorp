@@ -5,7 +5,7 @@
   "main": "lib/index.js",
   "scripts": {
     "build": "wireit",
-    "clean": "git clean -Xdf -e '!node_modules' ."
+    "clean": "../../tools/clean.js"
   },
   "wireit": {
     "build": {
@@ -28,6 +28,9 @@
   "license": "Apache-2.0",
   "dependencies": {
     "mime": "3.0.0",
-    "ws": "8.14.0"
+    "ws": "8.14.2"
+  },
+  "devDependencies": {
+    "@types/mime": "3.0.4"
   }
 }

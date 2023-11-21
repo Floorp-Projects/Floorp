@@ -20,6 +20,168 @@ All notable changes to this project will be documented in this file. See [standa
   * dependencies
     * @puppeteer/browsers bumped from 1.5.1 to 1.6.0
 
+## [21.5.2](https://github.com/puppeteer/puppeteer/compare/puppeteer-core-v21.5.1...puppeteer-core-v21.5.2) (2023-11-15)
+
+
+### Bug Fixes
+
+* add --disable-field-trial-config ([#11352](https://github.com/puppeteer/puppeteer/issues/11352)) ([cbc33be](https://github.com/puppeteer/puppeteer/commit/cbc33bea40b8801b8eeb3277fc15d04900715795))
+* add --disable-infobars ([#11377](https://github.com/puppeteer/puppeteer/issues/11377)) ([0a41f8d](https://github.com/puppeteer/puppeteer/commit/0a41f8d01e85ff732fdd2e50468bc746d7bc6475))
+* mitt types should not be exported ([#11371](https://github.com/puppeteer/puppeteer/issues/11371)) ([4bf2a09](https://github.com/puppeteer/puppeteer/commit/4bf2a09a13450c530b24288d65791fd5c4d4dce7))
+
+## [21.5.1](https://github.com/puppeteer/puppeteer/compare/puppeteer-core-v21.5.0...puppeteer-core-v21.5.1) (2023-11-09)
+
+
+### Bug Fixes
+
+* better debugging for WaitTask ([#11330](https://github.com/puppeteer/puppeteer/issues/11330)) ([d2480b0](https://github.com/puppeteer/puppeteer/commit/d2480b022d74b7071b515408a31c6e82448e3c9e))
+
+## [21.5.0](https://github.com/puppeteer/puppeteer/compare/puppeteer-core-v21.4.1...puppeteer-core-v21.5.0) (2023-11-02)
+
+
+### Features
+
+* roll to Chrome 119.0.6045.105 (r1204232) ([#11287](https://github.com/puppeteer/puppeteer/issues/11287)) ([325fa8b](https://github.com/puppeteer/puppeteer/commit/325fa8b1b16a9dafd5bb320e49984d24044fa3d7))
+
+
+### Bug Fixes
+
+* ignore unordered frames ([#11283](https://github.com/puppeteer/puppeteer/issues/11283)) ([ce4e485](https://github.com/puppeteer/puppeteer/commit/ce4e485d1b1e9d4e223890ee0fc2475a1ad71bc3))
+* Type for ElementHandle.screenshot  ([#11274](https://github.com/puppeteer/puppeteer/issues/11274)) ([22aeff1](https://github.com/puppeteer/puppeteer/commit/22aeff1eac9d22048330a16aa3c41293133911e4))
+
+## [21.4.1](https://github.com/puppeteer/puppeteer/compare/puppeteer-core-v21.4.0...puppeteer-core-v21.4.1) (2023-10-23)
+
+
+### Bug Fixes
+
+* do not pass --{enable,disable}-features twice when user-provided ([#11230](https://github.com/puppeteer/puppeteer/issues/11230)) ([edec7d5](https://github.com/puppeteer/puppeteer/commit/edec7d53f8190381ade7db145ad7e7d6dba2ee13))
+* remove circular import in IsolatedWorld ([#11228](https://github.com/puppeteer/puppeteer/issues/11228)) ([3edce3a](https://github.com/puppeteer/puppeteer/commit/3edce3aee9521654d7a285f4068a5e60bfb52245))
+* remove import cycle ([#11227](https://github.com/puppeteer/puppeteer/issues/11227)) ([525f13c](https://github.com/puppeteer/puppeteer/commit/525f13cd18b39cc951a84aa51b2d852758e6f0d2))
+* remove import cycle in connection ([#11225](https://github.com/puppeteer/puppeteer/issues/11225)) ([60f1b78](https://github.com/puppeteer/puppeteer/commit/60f1b788a6304504f504b0be9f02cb768e2803f8))
+* remove import cycle in query handlers ([#11234](https://github.com/puppeteer/puppeteer/issues/11234)) ([954c75f](https://github.com/puppeteer/puppeteer/commit/954c75f9a9879e2e68935c17d7eb777b1f9f808a))
+* remove more import cycles ([#11231](https://github.com/puppeteer/puppeteer/issues/11231)) ([b9ce89e](https://github.com/puppeteer/puppeteer/commit/b9ce89e460702ad85314685c600a4e5267f4db9b))
+* typo in screencast error message ([#11213](https://github.com/puppeteer/puppeteer/issues/11213)) ([25b90b2](https://github.com/puppeteer/puppeteer/commit/25b90b2b542c4693150b67dc0c690b99f4ccfc95))
+
+## [21.4.0](https://github.com/puppeteer/puppeteer/compare/puppeteer-core-v21.3.8...puppeteer-core-v21.4.0) (2023-10-20)
+
+
+### Features
+
+* added tagged (accessible) PDFs option ([#11182](https://github.com/puppeteer/puppeteer/issues/11182)) ([0316863](https://github.com/puppeteer/puppeteer/commit/031686339136873c555a19ffb871f7140a2c39d9))
+* enable tab targets ([#11099](https://github.com/puppeteer/puppeteer/issues/11099)) ([8324c16](https://github.com/puppeteer/puppeteer/commit/8324c1634883d97ed83f32a1e62acc9b5e64e0bd))
+* implement screencasting ([#11084](https://github.com/puppeteer/puppeteer/issues/11084)) ([f060d46](https://github.com/puppeteer/puppeteer/commit/f060d467c00457e6be6878e0789d0df2ac4aae50))
+* merge user-provided --{disable,enable}-features in args ([#11152](https://github.com/puppeteer/puppeteer/issues/11152)) ([2b578e4](https://github.com/puppeteer/puppeteer/commit/2b578e4a096aa94d792cc2da2da41fee061a77b8)), closes [#11072](https://github.com/puppeteer/puppeteer/issues/11072)
+* roll to Chrome 118.0.5993.70 (r1192594) ([#11123](https://github.com/puppeteer/puppeteer/issues/11123)) ([91d14c8](https://github.com/puppeteer/puppeteer/commit/91d14c8c86f5be48c8e0937fd209bea643d60b45))
+
+
+### Bug Fixes
+
+* `Page.waitForDevicePrompt` crash ([#11153](https://github.com/puppeteer/puppeteer/issues/11153)) ([257be15](https://github.com/puppeteer/puppeteer/commit/257be15d83a46038a65d47977d4d847c54506517))
+* add InlineTextBox as a non-element a11y role ([#11142](https://github.com/puppeteer/puppeteer/issues/11142)) ([8aa6cb3](https://github.com/puppeteer/puppeteer/commit/8aa6cb37d2443ff7fe2a1fd5d5adafdde4e9d165))
+* disable ProcessPerSiteUpToMainFrameThreshold in Chrome ([#11139](https://github.com/puppeteer/puppeteer/issues/11139)) ([9347aae](https://github.com/puppeteer/puppeteer/commit/9347aae12e996604cea871acc9d007cbf338542e))
+* make sure discovery happens before auto-attach ([#11100](https://github.com/puppeteer/puppeteer/issues/11100)) ([9ce204e](https://github.com/puppeteer/puppeteer/commit/9ce204e27ed091bde5aa5bc9f82da41c80534bde))
+* synchronize frame tree with the events processing ([#11112](https://github.com/puppeteer/puppeteer/issues/11112)) ([d63f0cf](https://github.com/puppeteer/puppeteer/commit/d63f0cfc61e8ba2233eee8b2f3b99d8619a0acaf))
+* update TextQuerySelector cache on subtree update ([#11200](https://github.com/puppeteer/puppeteer/issues/11200)) ([4206e76](https://github.com/puppeteer/puppeteer/commit/4206e76c3e4647ea6290f16127764d1a2f337dcf))
+* xpath queries should be atomic ([#11101](https://github.com/puppeteer/puppeteer/issues/11101)) ([6098bab](https://github.com/puppeteer/puppeteer/commit/6098bab2ba68276c85a974e17c9fe3bdac8c4c58))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @puppeteer/browsers bumped from 1.7.1 to 1.8.0
+
+## [21.3.8](https://github.com/puppeteer/puppeteer/compare/puppeteer-core-v21.3.7...puppeteer-core-v21.3.8) (2023-10-06)
+
+
+### Bug Fixes
+
+* avoid double subscription to frame manager in Page ([#11091](https://github.com/puppeteer/puppeteer/issues/11091)) ([5887649](https://github.com/puppeteer/puppeteer/commit/5887649891ea9cf1d7b3afbcf7196620ceb20ab2))
+* update file chooser events ([#11057](https://github.com/puppeteer/puppeteer/issues/11057)) ([317f820](https://github.com/puppeteer/puppeteer/commit/317f82055b2f4dd68db136a3d52c5712425fa339))
+
+## [21.3.7](https://github.com/puppeteer/puppeteer/compare/puppeteer-core-v21.3.6...puppeteer-core-v21.3.7) (2023-10-05)
+
+
+### Bug Fixes
+
+* roll to Chrome 117.0.5938.149 (r1181205) ([#11077](https://github.com/puppeteer/puppeteer/issues/11077)) ([0c0e516](https://github.com/puppeteer/puppeteer/commit/0c0e516d736665a27f7773f66a0f9c362daa73aa))
+
+## [21.3.6](https://github.com/puppeteer/puppeteer/compare/puppeteer-core-v21.3.5...puppeteer-core-v21.3.6) (2023-09-28)
+
+
+### Bug Fixes
+
+* remove the flag disabling bfcache ([#11047](https://github.com/puppeteer/puppeteer/issues/11047)) ([b0d7375](https://github.com/puppeteer/puppeteer/commit/b0d73755193e7c60deb70df120859b5db87e7817))
+
+## [21.3.5](https://github.com/puppeteer/puppeteer/compare/puppeteer-core-v21.3.4...puppeteer-core-v21.3.5) (2023-09-26)
+
+
+### Bug Fixes
+
+* set defaults in screenshot ([#11021](https://github.com/puppeteer/puppeteer/issues/11021)) ([ace1230](https://github.com/puppeteer/puppeteer/commit/ace1230e41aad6168dc85b9bc1f7c04d9dce5527))
+
+## [21.3.4](https://github.com/puppeteer/puppeteer/compare/puppeteer-core-v21.3.3...puppeteer-core-v21.3.4) (2023-09-22)
+
+
+### Bug Fixes
+
+* avoid structuredClone for Node 16 ([#11006](https://github.com/puppeteer/puppeteer/issues/11006)) ([25eca9a](https://github.com/puppeteer/puppeteer/commit/25eca9a747c122b3096b0f2d01b3323339d57dd9))
+
+## [21.3.3](https://github.com/puppeteer/puppeteer/compare/puppeteer-core-v21.3.2...puppeteer-core-v21.3.3) (2023-09-22)
+
+
+### Bug Fixes
+
+* do not export bidi and fix import from the entrypoint ([#10998](https://github.com/puppeteer/puppeteer/issues/10998)) ([88c78de](https://github.com/puppeteer/puppeteer/commit/88c78dea41eb7690d67343298c150194fe145763))
+
+## [21.3.2](https://github.com/puppeteer/puppeteer/compare/puppeteer-core-v21.3.1...puppeteer-core-v21.3.2) (2023-09-22)
+
+
+### Bug Fixes
+
+* handle missing detach events for restored bfcache targets ([#10967](https://github.com/puppeteer/puppeteer/issues/10967)) ([7bcdfcb](https://github.com/puppeteer/puppeteer/commit/7bcdfcb7e9e75feca0a8de692926ea25ca8fbed0))
+* roll to Chrome 117.0.5938.92 (r1181205) ([#10989](https://github.com/puppeteer/puppeteer/issues/10989)) ([d048cd9](https://github.com/puppeteer/puppeteer/commit/d048cd965f0707dd9b2a3276f02c563b69f6fac4))
+
+## [21.3.1](https://github.com/puppeteer/puppeteer/compare/puppeteer-core-v21.3.0...puppeteer-core-v21.3.1) (2023-09-19)
+
+
+### Bug Fixes
+
+* make `CDPSessionEvent.SessionAttached` public ([#10941](https://github.com/puppeteer/puppeteer/issues/10941)) ([cfed7b9](https://github.com/puppeteer/puppeteer/commit/cfed7b93ec23e92ec11632f1cd90f00dac754739))
+
+## [21.3.0](https://github.com/puppeteer/puppeteer/compare/puppeteer-core-v21.2.1...puppeteer-core-v21.3.0) (2023-09-19)
+
+
+### Features
+
+* implement `Browser.connected` ([#10927](https://github.com/puppeteer/puppeteer/issues/10927)) ([a4345a4](https://github.com/puppeteer/puppeteer/commit/a4345a477f58541f5d95da11ffee74abe24c12bf))
+* implement `BrowserContext.closed` ([#10928](https://github.com/puppeteer/puppeteer/issues/10928)) ([2292078](https://github.com/puppeteer/puppeteer/commit/2292078969fa46a27d5759989cd44a4d48beb310))
+* implement improved Drag n' Drop APIs ([#10651](https://github.com/puppeteer/puppeteer/issues/10651)) ([9342bac](https://github.com/puppeteer/puppeteer/commit/9342bac2639702090f39fc1e3a97d43a934f3f0b))
+* implement typed events ([#10889](https://github.com/puppeteer/puppeteer/issues/10889)) ([9b6f1de](https://github.com/puppeteer/puppeteer/commit/9b6f1de8b99445c661c5aebcf041fe90daf469b9))
+* roll to Chrome 117.0.5938.62 (r1181205) ([#10893](https://github.com/puppeteer/puppeteer/issues/10893)) ([4b8d20d](https://github.com/puppeteer/puppeteer/commit/4b8d20d0edeccaa3028e0c1c0b63c022cfabcee2))
+
+
+### Bug Fixes
+
+* fix line/column number in errors ([#10926](https://github.com/puppeteer/puppeteer/issues/10926)) ([a0e57f7](https://github.com/puppeteer/puppeteer/commit/a0e57f7eb230ba6a659c2d418da8d3f67add2d00))
+* handle frame manager init without unhandled rejection ([#10902](https://github.com/puppeteer/puppeteer/issues/10902)) ([ea14834](https://github.com/puppeteer/puppeteer/commit/ea14834fdf1c7c1afa45bdd1fb5339380f4631a2))
+* remove explicit resource management from types ([#10918](https://github.com/puppeteer/puppeteer/issues/10918)) ([a1b1bff](https://github.com/puppeteer/puppeteer/commit/a1b1bffb7258f1dec3b0a2e9ce068baf2cc3db19))
+* roll to Chrome 117.0.5938.88 (r1181205) ([#10920](https://github.com/puppeteer/puppeteer/issues/10920)) ([b7bcc9a](https://github.com/puppeteer/puppeteer/commit/b7bcc9a733a3ac376397a32c3f62eb68101bedf9))
+
+## [21.2.1](https://github.com/puppeteer/puppeteer/compare/puppeteer-core-v21.2.0...puppeteer-core-v21.2.1) (2023-09-13)
+
+
+### Bug Fixes
+
+* use supported node range for types ([#10896](https://github.com/puppeteer/puppeteer/issues/10896)) ([2d851c1](https://github.com/puppeteer/puppeteer/commit/2d851c1398e5efcdabdb5304dc78e68cbd3fadd2))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @puppeteer/browsers bumped from 1.7.0 to 1.7.1
+
 ## [21.2.0](https://github.com/puppeteer/puppeteer/compare/puppeteer-core-v21.1.1...puppeteer-core-v21.2.0) (2023-09-12)
 
 

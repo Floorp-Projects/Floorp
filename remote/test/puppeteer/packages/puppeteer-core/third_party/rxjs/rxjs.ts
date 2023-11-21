@@ -14,7 +14,9 @@
  * limitations under the License.
  */
 export {
+  bufferCount,
   catchError,
+  concatMap,
   defaultIfEmpty,
   defer,
   delay,
@@ -22,30 +24,33 @@ export {
   filter,
   first,
   firstValueFrom,
+  forkJoin,
   from,
   fromEvent,
   identity,
   ignoreElements,
+  lastValueFrom,
   map,
   merge,
   mergeMap,
   NEVER,
   noop,
-  Observable,
   of,
-  OperatorFunction,
   pipe,
   race,
   raceWith,
   retry,
   startWith,
   switchMap,
+  takeUntil,
   tap,
   throwIfEmpty,
   timer,
 } from 'rxjs';
 
-import {mergeMap, from, filter, map, type Observable} from 'rxjs';
+export type * from 'rxjs';
+
+import {filter, from, map, mergeMap, type Observable} from 'rxjs';
 
 export function filterAsync<T>(
   predicate: (value: T) => boolean | PromiseLike<boolean>
