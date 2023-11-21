@@ -10,18 +10,17 @@
 #if !defined(_XOPEN_SOURCE)
 #define _XOPEN_SOURCE 600
 #endif
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-#include <memory>
-#include <limits.h>
 #include "cubeb/cubeb.h"
 #include <atomic>
+#include <limits.h>
+#include <math.h>
+#include <memory>
+#include <stdio.h>
+#include <stdlib.h>
 
-//#define ENABLE_NORMAL_LOG
-//#define ENABLE_VERBOSE_LOG
+// #define ENABLE_NORMAL_LOG
+// #define ENABLE_VERBOSE_LOG
 #include "common.h"
-
 
 #define SAMPLE_FREQUENCY 48000
 #define STREAM_FORMAT CUBEB_SAMPLE_S16LE
@@ -31,10 +30,12 @@ struct cb_user_data {
   std::atomic<long> position;
 };
 
-long data_cb_tone(cubeb_stream *stream, void *user, const void* /*inputbuffer*/, void *outputbuffer, long nframes)
+long
+data_cb_tone(cubeb_stream * stream, void * user, const void * /*inputbuffer*/,
+             void * outputbuffer, long nframes)
 {
-  struct cb_user_data *u = (struct cb_user_data *)user;
-  short *b = (short *)outputbuffer;
+  struct cb_user_data * u = (struct cb_user_data *)user;
+  short * b = (short *)outputbuffer;
   float t1, t2;
   int i;
 
@@ -44,9 +45,9 @@ long data_cb_tone(cubeb_stream *stream, void *user, const void* /*inputbuffer*/,
   /* generate our test tone on the fly */
   for (i = 0; i < nframes; i++) {
     /* North American dial tone */
-    t1 = sin(2*M_PI*(i + u->position)*350/SAMPLE_FREQUENCY);
-    t2 = sin(2*M_PI*(i + u->position)*440/SAMPLE_FREQUENCY);
-    b[i]  = (SHRT_MAX / 2) * t1;
+    t1 = sin(2 * M_PI * (i + u->position) * 350 / SAMPLE_FREQUENCY);
+    t2 = sin(2 * M_PI * (i + u->position) * 440 / SAMPLE_FREQUENCY);
+    b[i] = (SHRT_MAX / 2) * t1;
     b[i] += (SHRT_MAX / 2) * t2;
     /* European dial tone */
     /*
@@ -61,20 +62,24 @@ long data_cb_tone(cubeb_stream *stream, void *user, const void* /*inputbuffer*/,
   return nframes;
 }
 
-void state_cb_tone(cubeb_stream *stream, void *user, cubeb_state state)
+void
+state_cb_tone(cubeb_stream * stream, void * user, cubeb_state state)
 {
-  struct cb_user_data *u = (struct cb_user_data *)user;
+  struct cb_user_data * u = (struct cb_user_data *)user;
 
   if (stream == NULL || u == NULL)
     return;
 
   switch (state) {
   case CUBEB_STATE_STARTED:
-    fprintf(stderr, "stream started\n"); break;
+    fprintf(stderr, "stream started\n");
+    break;
   case CUBEB_STATE_STOPPED:
-    fprintf(stderr, "stream stopped\n"); break;
+    fprintf(stderr, "stream stopped\n");
+    break;
   case CUBEB_STATE_DRAINED:
-    fprintf(stderr, "stream drained\n"); break;
+    fprintf(stderr, "stream drained\n");
+    break;
   default:
     fprintf(stderr, "unknown stream state %d\n", state);
   }
@@ -84,16 +89,16 @@ void state_cb_tone(cubeb_stream *stream, void *user, cubeb_state state)
 
 TEST(cubeb, tone)
 {
-  cubeb *ctx;
-  cubeb_stream *stream;
+  cubeb * ctx;
+  cubeb_stream * stream;
   cubeb_stream_params params;
   int r;
 
   r = common_init(&ctx, "Cubeb tone example");
   ASSERT_EQ(r, CUBEB_OK) << "Error initializing cubeb library";
 
-  std::unique_ptr<cubeb, decltype(&cubeb_destroy)>
-    cleanup_cubeb_at_exit(ctx, cubeb_destroy);
+  std::unique_ptr<cubeb, decltype(&cubeb_destroy)> cleanup_cubeb_at_exit(
+      ctx, cubeb_destroy);
 
   params.format = STREAM_FORMAT;
   params.rate = SAMPLE_FREQUENCY;
@@ -106,12 +111,13 @@ TEST(cubeb, tone)
 
   user_data->position = 0;
 
-  r = cubeb_stream_init(ctx, &stream, "Cubeb tone (mono)", NULL, NULL, NULL, &params,
-                        4096, data_cb_tone, state_cb_tone, user_data.get());
+  r = cubeb_stream_init(ctx, &stream, "Cubeb tone (mono)", NULL, NULL, NULL,
+                        &params, 4096, data_cb_tone, state_cb_tone,
+                        user_data.get());
   ASSERT_EQ(r, CUBEB_OK) << "Error initializing cubeb stream";
 
   std::unique_ptr<cubeb_stream, decltype(&cubeb_stream_destroy)>
-    cleanup_stream_at_exit(stream, cubeb_stream_destroy);
+      cleanup_stream_at_exit(stream, cubeb_stream_destroy);
 
   cubeb_stream_start(stream);
   delay(5000);

@@ -9,6 +9,7 @@
 #define CUBEB_RING_ARRAY_H
 
 #include "cubeb_utils.h"
+#include <CoreAudio/CoreAudioTypes.h>
 
 /** Ring array of pointers is used to hold buffers. In case that
     asynchronous producer/consumer callbacks do not arrive in a
