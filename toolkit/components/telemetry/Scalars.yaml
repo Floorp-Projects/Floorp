@@ -3563,7 +3563,7 @@ dom.event:
     keyed: true
     kind: uint
     notification_emails:
-      - mnakano@mozilla.com
+      - mnakano.birchill@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
@@ -3583,7 +3583,7 @@ dom.event:
     keyed: true
     kind: uint
     notification_emails:
-      - mnakano@mozilla.com
+      - mnakano.birchill@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
@@ -5087,11 +5087,28 @@ widget:
     expires: never
     kind: boolean
     notification_emails:
-      - mnakano@mozilla.com
+      - mnakano.birchill@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
       - 'fennec'
+    record_in_processes:
+      - 'main'
+
+  ime_name_on_windows_inserted_crlf:
+    bug_numbers:
+      - 1865256
+    description:
+      Same data as ime_name_on_windows, but only collecting IME names which
+      inserted CRLF to check whether the feature works.
+    keyed: true
+    expires: never
+    kind: boolean
+    notification_emails:
+      - mnakano.birchill@mozilla.com
+    release_channel_collection: opt-out
+    products:
+      - 'firefox'
     record_in_processes:
       - 'main'
 
@@ -5124,7 +5141,7 @@ widget:
     expires: never
     kind: boolean
     notification_emails:
-      - mnakano@mozilla.com
+      - mnakano.birchill@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'
@@ -5144,7 +5161,7 @@ widget:
     expires: never
     kind: boolean
     notification_emails:
-      - mnakano@mozilla.com
+      - mnakano.birchill@mozilla.com
     release_channel_collection: opt-out
     products:
       - 'firefox'

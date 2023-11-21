@@ -1033,6 +1033,40 @@ class TSFStaticSink final : public ITfInputProcessorProfileActivationSink {
     return sInstance->mActiveTIP;
   }
 
+  static bool GetActiveTIPNameForTelemetry(nsAString& aName) {
+    if (!sInstance || !sInstance->EnsureInitActiveTIPKeyboard()) {
+      return false;
+    }
+    if (sInstance->mActiveTIPGUID == GUID_NULL) {
+      aName.Truncate();
+      aName.AppendPrintf("0x%04X", sInstance->mLangID);
+      return true;
+    }
+    // key should be "LocaleID|Description".  Although GUID of the
+    // profile is unique key since description may be localized for system
+    // language, unfortunately, it's too long to record as key with its
+    // description.  Therefore, we should record only the description with
+    // LocaleID because Microsoft IME may not include language information.
+    // 72 is kMaximumKeyStringLength in TelemetryScalar.cpp
+    aName.Truncate();
+    aName.AppendPrintf("0x%04X|", sInstance->mLangID);
+    nsAutoString description;
+    description.Assign(sInstance->mActiveTIPKeyboardDescription);
+    static const uint32_t kMaxDescriptionLength = 72 - aName.Length();
+    if (description.Length() > kMaxDescriptionLength) {
+      if (NS_IS_LOW_SURROGATE(description[kMaxDescriptionLength - 1]) &&
+          NS_IS_HIGH_SURROGATE(description[kMaxDescriptionLength - 2])) {
+        description.Truncate(kMaxDescriptionLength - 2);
+      } else {
+        description.Truncate(kMaxDescriptionLength - 1);
+      }
+      // U+2026 is "..."
+      description.Append(char16_t(0x2026));
+    }
+    aName.Append(description);
+    return true;
+  }
+
   static bool IsMSChangJieOrMSQuickActive() {
     // ActiveTIP() is expensive if it hasn't computed active TIP yet.
     // For avoiding unnecessary computation, we should check if the language
@@ -1590,20 +1624,7 @@ TSFStaticSink::OnActivated(DWORD dwProfileType, LANGID langid, REFCLSID rclsid,
       // LocaleID because Microsoft IME may not include language information.
       // 72 is kMaximumKeyStringLength in TelemetryScalar.cpp
       nsAutoString key;
-      key.AppendPrintf("0x%04X|", mLangID);
-      nsAutoString description(mActiveTIPKeyboardDescription);
-      static const uint32_t kMaxDescriptionLength = 72 - key.Length();
-      if (description.Length() > kMaxDescriptionLength) {
-        if (NS_IS_LOW_SURROGATE(description[kMaxDescriptionLength - 1]) &&
-            NS_IS_HIGH_SURROGATE(description[kMaxDescriptionLength - 2])) {
-          description.Truncate(kMaxDescriptionLength - 2);
-        } else {
-          description.Truncate(kMaxDescriptionLength - 1);
-        }
-        // U+2026 is "..."
-        description.Append(char16_t(0x2026));
-      }
-      key.Append(description);
+      TSFStaticSink::GetActiveTIPNameForTelemetry(key);
       Telemetry::ScalarSet(Telemetry::ScalarID::WIDGET_IME_NAME_ON_WINDOWS, key,
                            true);
     }
@@ -5174,6 +5195,26 @@ bool TSFTextStore::InsertTextAtSelectionInternal(const nsAString& aInsertStr,
          "destroyed during dispatching a keyboard event",
          this));
     return false;
+  }
+
+  const auto numberOfCRLFs = [&]() -> uint32_t {
+    const auto* str = aInsertStr.BeginReading();
+    uint32_t num = 0;
+    for (uint32_t i = 0; i + 1 < aInsertStr.Length(); i++) {
+      if (str[i] == '\r' && str[i + 1] == '\n') {
+        num++;
+        i++;
+      }
+    }
+    return num;
+  }();
+  if (numberOfCRLFs) {
+    nsAutoString key;
+    if (TSFStaticSink::GetActiveTIPNameForTelemetry(key)) {
+      Telemetry::ScalarSet(
+          Telemetry::ScalarID::WIDGET_IME_NAME_ON_WINDOWS_INSERTED_CRLF, key,
+          true);
+    }
   }
 
   TS_SELECTION_ACP oldSelection = contentForTSF->Selection()->ACPRef();
