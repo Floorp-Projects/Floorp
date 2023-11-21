@@ -1,0 +1,6 @@
+[DEFAULT]
+tags = "devtools"
+head = ""
+firefox-appdir = "browser"
+
+["test_encode.js"]

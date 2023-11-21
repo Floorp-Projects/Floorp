@@ -1,0 +1,13 @@
+[DEFAULT]
+tags = "devtools"
+head = ""
+firefox-appdir = "browser"
+skip-if = ["os == 'android'"]
+
+["test_doc-utils.js"]
+
+["test_request-utils-fetchNetworkUpdatePacket.js"]
+
+["test_request-utils-js-getFormattedProtocol.js"]
+
+["test_request-utils-parseJSON.js"]

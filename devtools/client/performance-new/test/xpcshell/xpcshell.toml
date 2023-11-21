@@ -1,0 +1,10 @@
+[DEFAULT]
+tags = "devtools"
+head = "head.js"
+firefox-appdir = "browser"
+
+["test_popup_initial_state.js"]
+
+["test_remove_common_path_prefix.js"]
+
+["test_webchannel-urls.js"]

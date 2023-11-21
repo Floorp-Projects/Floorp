@@ -1,0 +1,22 @@
+[DEFAULT]
+tags = "devtools"
+head = "head_dbg.js"
+firefox-appdir = "browser"
+skip-if = ["os == 'android'"]
+support-files = ["testactors.js"]
+
+["test_bulk_error.js"]
+
+["test_client_server_bulk.js"]
+
+["test_dbgsocket.js"]
+
+["test_dbgsocket_connection_drop.js"]
+
+["test_delimited_read.js"]
+
+["test_packet.js"]
+
+["test_queue.js"]
+
+["test_transport_bulk.js"]

@@ -1,0 +1,9 @@
+[DEFAULT]
+tags = "devtools"
+head = "head_stringvalidator.js"
+firefox-appdir = "browser"
+skip-if = ["os == 'android'"]
+
+["test_sanitizers.js"]
+
+["test_validators.js"]

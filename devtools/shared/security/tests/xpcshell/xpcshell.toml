@@ -1,0 +1,8 @@
+[DEFAULT]
+tags = "devtools"
+head = "head_dbg.js"
+skip-if = ["os == 'android'"]
+firefox-appdir = "browser"
+support-files = ["testactors.js"]
+
+["test_devtools_socket_status.js"]

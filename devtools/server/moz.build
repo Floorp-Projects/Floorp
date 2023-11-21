@@ -19,7 +19,7 @@ if CONFIG["MOZ_BUILD_APP"] != "mobile/android":
     BROWSER_CHROME_MANIFESTS += ["tests/browser/browser.toml"]
 
 MOCHITEST_CHROME_MANIFESTS += ["tests/chrome/chrome.toml"]
-XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["tests/xpcshell/xpcshell.toml"]
 
 DevToolsModules(
     "devtools-server-connection.js",

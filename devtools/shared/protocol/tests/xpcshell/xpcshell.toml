@@ -1,0 +1,30 @@
+[DEFAULT]
+tags = "devtools"
+head = "head.js"
+firefox-appdir = "browser"
+skip-if = ["os == 'android'"]
+support-files = ""
+
+["test_protocol_abort.js"]
+
+["test_protocol_async.js"]
+
+["test_protocol_children.js"]
+
+["test_protocol_index.js"]
+
+["test_protocol_invalid_response.js"]
+
+["test_protocol_lifecycle.js"]
+
+["test_protocol_longstring.js"]
+
+["test_protocol_simple.js"]
+
+["test_protocol_stack.js"]
+
+["test_protocol_types.js"]
+
+["test_protocol_unregister.js"]
+
+["test_protocol_watchFronts.js"]

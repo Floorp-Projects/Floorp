@@ -1,0 +1,10 @@
+[DEFAULT]
+tags = "devtools"
+head = "head.js"
+firefox-appdir = "browser"
+skip-if = ["os == 'android'"]
+support-files = ""
+
+["test_analyze_input_string.js"]
+
+["test_js_property_provider.js"]

@@ -1,0 +1,11 @@
+[DEFAULT]
+tags = "devtools"
+head = "head.js"
+firefox-appdir = "browser"
+skip-if = ["os == 'android'"]
+
+["test_middleware-task-01.js"]
+
+["test_middleware-task-02.js"]
+
+["test_middleware-task-03.js"]

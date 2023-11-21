@@ -1,0 +1,22 @@
+[DEFAULT]
+tags = "devtools"
+head = "head.js"
+firefox-appdir = "browser"
+skip-if = ["os == 'android'"]
+support-files = ""
+
+["test_network_helper.js"]
+
+["test_security-info-certificate.js"]
+
+["test_security-info-parser.js"]
+
+["test_security-info-protocol-version.js"]
+
+["test_security-info-state.js"]
+
+["test_security-info-static-hpkp.js"]
+
+["test_security-info-weakness-reasons.js"]
+
+["test_throttle.js"]

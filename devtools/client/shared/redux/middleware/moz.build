@@ -15,4 +15,4 @@ DevToolsModules(
     "wait-service.js",
 )
 
-XPCSHELL_TESTS_MANIFESTS += ["xpcshell/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["xpcshell/xpcshell.toml"]
