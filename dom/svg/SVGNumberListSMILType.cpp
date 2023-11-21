@@ -42,9 +42,7 @@ SVGNumberListSMILType SVGNumberListSMILType::sSingleton;
 void SVGNumberListSMILType::Init(SMILValue& aValue) const {
   MOZ_ASSERT(aValue.IsNull(), "Unexpected value type");
 
-  SVGNumberListAndInfo* numberList = new SVGNumberListAndInfo();
-
-  aValue.mU.mPtr = numberList;
+  aValue.mU.mPtr = new SVGNumberListAndInfo();
   aValue.mType = this;
 }
 

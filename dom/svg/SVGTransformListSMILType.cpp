@@ -24,8 +24,7 @@ using TransformArray = FallibleTArray<SVGTransformSMILData>;
 void SVGTransformListSMILType::Init(SMILValue& aValue) const {
   MOZ_ASSERT(aValue.IsNull(), "Unexpected value type");
 
-  TransformArray* transforms = new TransformArray(1);
-  aValue.mU.mPtr = transforms;
+  aValue.mU.mPtr = new TransformArray(1);
   aValue.mType = this;
 }
 

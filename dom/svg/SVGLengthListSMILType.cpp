@@ -24,12 +24,7 @@ SVGLengthListSMILType SVGLengthListSMILType::sSingleton;
 void SVGLengthListSMILType::Init(SMILValue& aValue) const {
   MOZ_ASSERT(aValue.IsNull(), "Unexpected value type");
 
-  SVGLengthListAndInfo* lengthList = new SVGLengthListAndInfo();
-
-  // See the comment documenting Init() in our header file:
-  lengthList->SetCanZeroPadList(true);
-
-  aValue.mU.mPtr = lengthList;
+  aValue.mU.mPtr = new SVGLengthListAndInfo();
   aValue.mType = this;
 }
 
@@ -251,19 +246,28 @@ nsresult SVGLengthListSMILType::Interpolate(const SMILValue& aStartVal,
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
+  // If units differ, we use the unit of the nearest item.
+  // We leave it to the frame code to check that values are finite.
+  bool useEndUnits = (aUnitDistance > 0.5);
+
   uint32_t i = 0;
   for (; i < start.Length() && i < end.Length(); ++i) {
-    float s;
+    float s, e;
+    uint8_t unit;
     if (start[i].GetUnit() == end[i].GetUnit()) {
+      unit = start[i].GetUnit();
       s = start[i].GetValueInCurrentUnits();
+      e = end[i].GetValueInCurrentUnits();
+    } else if (useEndUnits) {
+      unit = end[i].GetUnit();
+      s = start[i].GetValueInSpecifiedUnit(unit, end.Element(), end.Axis());
+      e = end[i].GetValueInCurrentUnits();
     } else {
-      // If units differ, we use the unit of the item in 'end'.
-      // We leave it to the frame code to check that values are finite.
-      s = start[i].GetValueInSpecifiedUnit(end[i].GetUnit(), end.Element(),
-                                           end.Axis());
+      unit = start[i].GetUnit();
+      s = start[i].GetValueInCurrentUnits();
+      e = end[i].GetValueInSpecifiedUnit(unit, start.Element(), start.Axis());
     }
-    float e = end[i].GetValueInCurrentUnits();
-    result[i].SetValueAndUnit(s + (e - s) * aUnitDistance, end[i].GetUnit());
+    result[i].SetValueAndUnit(s + (e - s) * aUnitDistance, unit);
   }
 
   // In the case that start.Length() != end.Length(), one of the following
