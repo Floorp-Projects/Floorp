@@ -328,7 +328,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/fc01107426c3adebb
  .../rtp_rtcp/source/rtp_header_extensions.h   |  15 ++
  modules/rtp_rtcp/source/rtp_packet.cc         |   4 +
  .../rtp_rtcp/source/rtp_packet_unittest.cc    |  30 +++
- modules/rtp_rtcp/source/rtp_rtcp_config.h     |   2 +
+ modules/rtp_rtcp/source/rtp_rtcp_config.h     |   4 +
  modules/rtp_rtcp/source/rtp_sender.cc         |   4 +
  modules/video_capture/device_info_impl.cc     |   2 +-
  modules/video_capture/device_info_impl.h      |   1 +
@@ -346,7 +346,7 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/fc01107426c3adebb
  test/fuzzers/rtp_packet_fuzzer.cc             |   5 +
  test/vcm_capturer.cc                          |   2 +-
  webrtc.gni                                    |   2 +-
- 39 files changed, 572 insertions(+), 86 deletions(-)
+ 39 files changed, 574 insertions(+), 86 deletions(-)
 
 diff --git a/api/rtp_headers.cc b/api/rtp_headers.cc
 index 0573e54684..40d4690397 100644
@@ -774,10 +774,10 @@ index 3745e9cba5..f68cfb94c1 100644
        device_names->push_back(rtc::ToUtf8(device.DeviceName));
      }
 diff --git a/modules/rtp_rtcp/source/rtcp_sender.cc b/modules/rtp_rtcp/source/rtcp_sender.cc
-index e057005b16..c14332aca6 100644
+index 9ca092c0cf..971f49b949 100644
 --- a/modules/rtp_rtcp/source/rtcp_sender.cc
 +++ b/modules/rtp_rtcp/source/rtcp_sender.cc
-@@ -199,7 +199,7 @@ void RTCPSender::SetRTCPStatus(RtcpMode new_method) {
+@@ -200,7 +200,7 @@ void RTCPSender::SetRTCPStatus(RtcpMode new_method) {
      next_time_to_send_rtcp_ = absl::nullopt;
    } else if (method_ == RtcpMode::kOff) {
      // When switching on, reschedule the next packet
@@ -787,10 +787,10 @@ index e057005b16..c14332aca6 100644
    method_ = new_method;
  }
 diff --git a/modules/rtp_rtcp/source/rtp_header_extensions.cc b/modules/rtp_rtcp/source/rtp_header_extensions.cc
-index 75e3e3c412..88815b5601 100644
+index e42a84bd06..b86a7d775c 100644
 --- a/modules/rtp_rtcp/source/rtp_header_extensions.cc
 +++ b/modules/rtp_rtcp/source/rtp_header_extensions.cc
-@@ -446,6 +446,45 @@ bool PlayoutDelayLimits::Write(rtc::ArrayView<uint8_t> data,
+@@ -423,6 +423,45 @@ bool PlayoutDelayLimits::Write(rtc::ArrayView<uint8_t> data,
    return true;
  }
  
@@ -837,7 +837,7 @@ index 75e3e3c412..88815b5601 100644
  //
  // E.g. default video or screenshare.
 diff --git a/modules/rtp_rtcp/source/rtp_header_extensions.h b/modules/rtp_rtcp/source/rtp_header_extensions.h
-index 04b2cd63a6..e085f89c03 100644
+index 739d4765d0..fff7db0294 100644
 --- a/modules/rtp_rtcp/source/rtp_header_extensions.h
 +++ b/modules/rtp_rtcp/source/rtp_header_extensions.h
 @@ -298,6 +298,21 @@ class ColorSpaceExtension {
@@ -878,7 +878,7 @@ index 2a95a3a816..b152cdbd9e 100644
    }
  }
 diff --git a/modules/rtp_rtcp/source/rtp_packet_unittest.cc b/modules/rtp_rtcp/source/rtp_packet_unittest.cc
-index bf9f757647..09a1c87eb7 100644
+index a1d1c9d4df..b3a9452df9 100644
 --- a/modules/rtp_rtcp/source/rtp_packet_unittest.cc
 +++ b/modules/rtp_rtcp/source/rtp_packet_unittest.cc
 @@ -123,6 +123,18 @@ constexpr uint8_t kPacketWithMid[] = {
@@ -900,7 +900,7 @@ index bf9f757647..09a1c87eb7 100644
  constexpr uint32_t kCsrcs[] = {0x34567890, 0x32435465};
  constexpr uint8_t kPayload[] = {'p', 'a', 'y', 'l', 'o', 'a', 'd'};
  constexpr uint8_t kPacketPaddingSize = 8;
-@@ -395,6 +407,24 @@ TEST(RtpPacketTest, FailsToSetUnregisteredExtension) {
+@@ -397,6 +409,24 @@ TEST(RtpPacketTest, FailsToSetUnregisteredExtension) {
    EXPECT_EQ(packet.GetExtension<TransportSequenceNumber>(), absl::nullopt);
  }
  
@@ -926,20 +926,27 @@ index bf9f757647..09a1c87eb7 100644
    const size_t kPayloadSize = 4;
    RtpPacketToSend::ExtensionManager extensions;
 diff --git a/modules/rtp_rtcp/source/rtp_rtcp_config.h b/modules/rtp_rtcp/source/rtp_rtcp_config.h
-index 3e6aa3baae..9ac7696ce9 100644
+index 0b87d6d065..d69ae9420b 100644
 --- a/modules/rtp_rtcp/source/rtp_rtcp_config.h
 +++ b/modules/rtp_rtcp/source/rtp_rtcp_config.h
-@@ -18,6 +18,8 @@ namespace webrtc {
+@@ -11,11 +11,15 @@
+ #ifndef MODULES_RTP_RTCP_SOURCE_RTP_RTCP_CONFIG_H_
+ #define MODULES_RTP_RTCP_SOURCE_RTP_RTCP_CONFIG_H_
+ 
++#include "api/units/time_delta.h"
++
+ // Configuration file for RTP utilities (RTPSender, RTPReceiver ...)
+ namespace webrtc {
  constexpr int kDefaultMaxReorderingThreshold = 50;  // In sequence numbers.
  constexpr int kRtcpMaxNackFields = 253;
  
 +constexpr TimeDelta RTCP_INTERVAL_RAPID_SYNC_MS =
 +    TimeDelta::Millis(100); // RFX 6051
- constexpr TimeDelta RTCP_SEND_BEFORE_KEY_FRAME = TimeDelta::Millis(100);
  constexpr int RTCP_MAX_REPORT_BLOCKS = 31;  // RFC 3550 page 37
  }  // namespace webrtc
+ 
 diff --git a/modules/rtp_rtcp/source/rtp_sender.cc b/modules/rtp_rtcp/source/rtp_sender.cc
-index 967d38a8e0..f3d90e3c0b 100644
+index d899b4f44e..f4ba024444 100644
 --- a/modules/rtp_rtcp/source/rtp_sender.cc
 +++ b/modules/rtp_rtcp/source/rtp_sender.cc
 @@ -128,6 +128,10 @@ bool IsNonVolatile(RTPExtensionType type) {
@@ -1562,7 +1569,7 @@ index 0474e7bc17..1953923f81 100644
    std::unique_ptr<ScalableVideoController> svc_controller_;
    absl::optional<ScalabilityMode> scalability_mode_;
 diff --git a/rtc_base/BUILD.gn b/rtc_base/BUILD.gn
-index f3810fdd36..b8113bd4bc 100644
+index 80ab5a6fe9..d404e310fa 100644
 --- a/rtc_base/BUILD.gn
 +++ b/rtc_base/BUILD.gn
 @@ -458,6 +458,12 @@ rtc_library("logging") {
@@ -1681,7 +1688,7 @@ index 0a9226ef6f..620c1c02f3 100644
    vcm_ = nullptr;
  }
 diff --git a/webrtc.gni b/webrtc.gni
-index 097ad4a377..9c67f61aaa 100644
+index 5a1c43c888..f0729175f0 100644
 --- a/webrtc.gni
 +++ b/webrtc.gni
 @@ -126,7 +126,7 @@ declare_args() {

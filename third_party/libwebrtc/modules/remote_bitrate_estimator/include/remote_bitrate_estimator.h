@@ -55,8 +55,8 @@ class RemoteBitrateEstimator : public CallStatsObserver {
   virtual TimeDelta Process() = 0;
 
  protected:
-  static const int64_t kProcessIntervalMs = 500;
-  static const int64_t kStreamTimeOutMs = 2000;
+  static constexpr TimeDelta kProcessInterval = TimeDelta::Millis(500);
+  static constexpr TimeDelta kStreamTimeOut = TimeDelta::Seconds(2);
 };
 
 }  // namespace webrtc

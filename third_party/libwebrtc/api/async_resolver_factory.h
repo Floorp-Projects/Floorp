@@ -18,6 +18,7 @@ namespace webrtc {
 // An abstract factory for creating AsyncResolverInterfaces. This allows
 // client applications to provide WebRTC with their own mechanism for
 // performing DNS resolution.
+// TODO(bugs.webrtc.org/12598): Deprecate and remove.
 class AsyncResolverFactory {
  public:
   AsyncResolverFactory() = default;

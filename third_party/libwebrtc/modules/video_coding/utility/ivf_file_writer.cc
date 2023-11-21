@@ -163,8 +163,8 @@ bool IvfFileWriter::WriteFrame(const EncodedImage& encoded_image,
   int64_t timestamp = using_capture_timestamps_
                           ? encoded_image.capture_time_ms_
                           : wrap_handler_.Unwrap(encoded_image.Timestamp());
-  if (last_timestamp_ != -1 && timestamp <= last_timestamp_) {
-    RTC_LOG(LS_WARNING) << "Timestamp no increasing: " << last_timestamp_
+  if (last_timestamp_ != -1 && timestamp < last_timestamp_) {
+    RTC_LOG(LS_WARNING) << "Timestamp not increasing: " << last_timestamp_
                         << " -> " << timestamp;
   }
   last_timestamp_ = timestamp;

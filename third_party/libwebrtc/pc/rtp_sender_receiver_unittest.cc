@@ -176,7 +176,7 @@ class RtpSenderReceiverTest
     const cricket::AudioCodec kTelephoneEventCodec =
         cricket::CreateAudioCodec(106, "telephone-event", 8000, 1);
     params.codecs.push_back(kTelephoneEventCodec);
-    voice_media_send_channel()->SetSendParameters(params);
+    voice_media_send_channel()->SetSenderParameters(params);
   }
 
   void AddVideoTrack() { AddVideoTrack(false); }

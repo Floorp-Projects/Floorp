@@ -30,8 +30,8 @@
 #include "modules/remote_bitrate_estimator/inter_arrival.h"
 #include "modules/remote_bitrate_estimator/overuse_detector.h"
 #include "modules/remote_bitrate_estimator/overuse_estimator.h"
+#include "rtc_base/bitrate_tracker.h"
 #include "rtc_base/checks.h"
-#include "rtc_base/rate_statistics.h"
 #include "system_wrappers/include/clock.h"
 
 namespace webrtc {
@@ -104,7 +104,7 @@ class RemoteBitrateEstimatorAbsSendTime : public RemoteBitrateEstimator {
   std::unique_ptr<InterArrival> inter_arrival_;
   std::unique_ptr<OveruseEstimator> estimator_;
   OveruseDetector detector_;
-  RateStatistics incoming_bitrate_{kBitrateWindowMs, 8000};
+  BitrateTracker incoming_bitrate_{kBitrateWindow};
   bool incoming_bitrate_initialized_ = false;
   std::list<Probe> probes_;
   size_t total_probes_received_ = 0;

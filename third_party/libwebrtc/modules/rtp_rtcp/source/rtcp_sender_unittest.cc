@@ -54,13 +54,12 @@ class TestTransport : public Transport {
  public:
   TestTransport() {}
 
-  bool SendRtp(const uint8_t* /*data*/,
-               size_t /*len*/,
+  bool SendRtp(rtc::ArrayView<const uint8_t> /*data*/,
                const PacketOptions& options) override {
     return false;
   }
-  bool SendRtcp(const uint8_t* data, size_t len) override {
-    parser_.Parse(data, len);
+  bool SendRtcp(rtc::ArrayView<const uint8_t> data) override {
+    parser_.Parse(data);
     return true;
   }
   test::RtcpPacketParser parser_;
@@ -665,10 +664,10 @@ TEST_F(RtcpSenderTest, SendsTmmbnIfSetAndEmpty) {
 // of a RTCP compound packet.
 TEST_F(RtcpSenderTest, ByeMustBeLast) {
   MockTransport mock_transport;
-  EXPECT_CALL(mock_transport, SendRtcp(_, _))
-      .WillOnce(Invoke([](const uint8_t* data, size_t len) {
-        const uint8_t* next_packet = data;
-        const uint8_t* const packet_end = data + len;
+  EXPECT_CALL(mock_transport, SendRtcp(_))
+      .WillOnce(Invoke([](rtc::ArrayView<const uint8_t> data) {
+        const uint8_t* next_packet = data.data();
+        const uint8_t* const packet_end = data.data() + data.size();
         rtcp::CommonHeader packet;
         while (next_packet < packet_end) {
           EXPECT_TRUE(packet.Parse(next_packet, packet_end - next_packet));

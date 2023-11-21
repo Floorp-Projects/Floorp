@@ -74,8 +74,8 @@ fi
 CONFIRM_SHA=`cd $MOZ_LIBWEBRTC_SRC ; \
 git show --format='%h' --no-patch $CONFIRM_SHA`
 
-if [ $MOZ_LIBWEBRTC_REVERT_SHA != $CONFIRM_SHA ]; then
-  echo "revert sha ($MOZ_LIBWEBRTC_REVERT_SHA) does not match commit listed in commit summary ($CONFIRM_SHA)"
+if [ $MOZ_LIBWEBRTC_NEXT_BASE != $CONFIRM_SHA ]; then
+  echo "revert sha ($MOZ_LIBWEBRTC_NEXT_BASE) does not match commit listed in commit summary ($CONFIRM_SHA)"
   exit
 fi
 

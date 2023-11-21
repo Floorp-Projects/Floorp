@@ -12,10 +12,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/6ac6592a04a839a61
  1 file changed, 2 deletions(-)
 
 diff --git a/audio/channel_send.cc b/audio/channel_send.cc
-index 5ee97f290e..f784b8eebc 100644
+index f32f4a061b..f814864fbd 100644
 --- a/audio/channel_send.cc
 +++ b/audio/channel_send.cc
-@@ -457,8 +457,6 @@ ChannelSend::ChannelSend(
+@@ -460,8 +460,6 @@ ChannelSend::ChannelSend(
  
    int error = audio_coding_->RegisterTransportCallback(this);
    RTC_DCHECK_EQ(0, error);

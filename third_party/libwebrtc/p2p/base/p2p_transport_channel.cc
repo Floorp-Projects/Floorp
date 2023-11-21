@@ -43,7 +43,6 @@
 #include "rtc_base/network.h"
 #include "rtc_base/network_constants.h"
 #include "rtc_base/string_encode.h"
-#include "rtc_base/third_party/sigslot/sigslot.h"
 #include "rtc_base/time_utils.h"
 #include "rtc_base/trace_event.h"
 #include "system_wrappers/include/metrics.h"
@@ -118,6 +117,10 @@ std::unique_ptr<P2PTransportChannel> P2PTransportChannel::Create(
     absl::string_view transport_name,
     int component,
     webrtc::IceTransportInit init) {
+  // TODO(bugs.webrtc.org/12598): Remove pragma and fallback once
+  // async_resolver_factory is gone
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
   if (init.async_resolver_factory()) {
     return absl::WrapUnique(new P2PTransportChannel(
         transport_name, component, init.port_allocator(), nullptr,
@@ -125,6 +128,7 @@ std::unique_ptr<P2PTransportChannel> P2PTransportChannel::Create(
             init.async_resolver_factory()),
         init.event_log(), init.ice_controller_factory(),
         init.active_ice_controller_factory(), init.field_trials()));
+#pragma clang diagnostic pop
   } else {
     return absl::WrapUnique(new P2PTransportChannel(
         transport_name, component, init.port_allocator(),

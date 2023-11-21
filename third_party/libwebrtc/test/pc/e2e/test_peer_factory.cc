@@ -261,9 +261,9 @@ PeerConnectionDependencies CreatePCDependencies(
 
   pc_deps.allocator = std::move(port_allocator);
 
-  if (pc_dependencies->async_resolver_factory != nullptr) {
-    pc_deps.async_resolver_factory =
-        std::move(pc_dependencies->async_resolver_factory);
+  if (pc_dependencies->async_dns_resolver_factory != nullptr) {
+    pc_deps.async_dns_resolver_factory =
+        std::move(pc_dependencies->async_dns_resolver_factory);
   }
   if (pc_dependencies->cert_generator != nullptr) {
     pc_deps.cert_generator = std::move(pc_dependencies->cert_generator);

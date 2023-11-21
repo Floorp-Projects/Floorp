@@ -296,7 +296,7 @@ TEST(RtcpTransceiverTest, SendsCombinedRtcpPacketOnTaskQueue) {
       .WillOnce([&](rtc::ArrayView<const uint8_t> buffer) {
         EXPECT_TRUE(queue.IsCurrent());
         RtcpPacketParser rtcp_parser;
-        rtcp_parser.Parse(buffer.data(), buffer.size());
+        rtcp_parser.Parse(buffer);
         EXPECT_EQ(rtcp_parser.transport_feedback()->num_packets(), 1);
         EXPECT_EQ(rtcp_parser.transport_feedback()->sender_ssrc(), kSenderSsrc);
         EXPECT_EQ(rtcp_parser.app()->num_packets(), 1);
@@ -336,7 +336,7 @@ TEST(RtcpTransceiverTest, SendFrameIntraRequestDefaultsToNewRequest) {
       .WillOnce([&](rtc::ArrayView<const uint8_t> buffer) {
         EXPECT_TRUE(queue.IsCurrent());
         RtcpPacketParser rtcp_parser;
-        rtcp_parser.Parse(buffer.data(), buffer.size());
+        rtcp_parser.Parse(buffer);
         EXPECT_EQ(rtcp_parser.fir()->requests()[0].ssrc, kSenderSsrc);
         first_seq_nr = rtcp_parser.fir()->requests()[0].seq_nr;
         return true;
@@ -344,7 +344,7 @@ TEST(RtcpTransceiverTest, SendFrameIntraRequestDefaultsToNewRequest) {
       .WillOnce([&](rtc::ArrayView<const uint8_t> buffer) {
         EXPECT_TRUE(queue.IsCurrent());
         RtcpPacketParser rtcp_parser;
-        rtcp_parser.Parse(buffer.data(), buffer.size());
+        rtcp_parser.Parse(buffer);
         EXPECT_EQ(rtcp_parser.fir()->requests()[0].ssrc, kSenderSsrc);
         EXPECT_EQ(rtcp_parser.fir()->requests()[0].seq_nr, first_seq_nr + 1);
         return true;

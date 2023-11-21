@@ -242,7 +242,7 @@ void RtpSenderEgress::CompleteSendPacket(const Packet& compound_packet,
                                          bool last_in_batch) {
   RTC_DCHECK_RUN_ON(worker_queue_);
   auto& [packet, pacing_info, now] = compound_packet;
-
+  RTC_CHECK(packet);
   const bool is_media = packet->packet_type() == RtpPacketMediaType::kAudio ||
                         packet->packet_type() == RtpPacketMediaType::kVideo;
 

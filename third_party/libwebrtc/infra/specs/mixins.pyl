@@ -64,10 +64,10 @@
       'has_native_resultdb_integration': True
     }
   },
-  'ios-device-15.7': {
+  'ios-device-16.6': {
     'swarming': {
       'dimensions': {
-        'os': 'iOS-15.7',
+        'os': 'iOS-16.6',
         'pool': 'chrome.tests'
       }
     }
@@ -305,6 +305,15 @@
     'swarming': {
       'named_caches': [{
         'name': 'xcode_ios_14c18',
+        'path': 'Xcode.app'
+      }]
+    }
+  },
+  'xcode_15_main': {
+    'args': ['--xcode-build-version', '15a5229h'],
+    'swarming': {
+      'named_caches': [{
+        'name': 'xcode_ios_15a5229h',
         'path': 'Xcode.app'
       }]
     }

@@ -65,6 +65,7 @@ rtc_library("media_quality_test_params") {
 
   deps = [
     ":media_configuration",
+    "../..:async_dns_resolver",
     "../../../api:callfactory_api",
     "../../../api:fec_controller_api",
     "../../../api:field_trials_view",
@@ -94,6 +95,7 @@ rtc_library("peer_configurer") {
   deps = [
     ":media_configuration",
     ":media_quality_test_params",
+    "../..:async_dns_resolver",
     "../../../api:callfactory_api",
     "../../../api:create_peer_connection_quality_test_frame_generator",
     "../../../api:fec_controller_api",

@@ -26,6 +26,24 @@ class BasicAsyncResolverFactory final : public AsyncResolverFactory {
   rtc::AsyncResolverInterface* Create() override;
 };
 
+// A factory that vends AsyncDnsResolver instances.
+class BasicAsyncDnsResolverFactory final
+    : public AsyncDnsResolverFactoryInterface {
+ public:
+  BasicAsyncDnsResolverFactory() = default;
+
+  std::unique_ptr<webrtc::AsyncDnsResolverInterface> CreateAndResolve(
+      const rtc::SocketAddress& addr,
+      absl::AnyInvocable<void()> callback) override;
+
+  std::unique_ptr<webrtc::AsyncDnsResolverInterface> CreateAndResolve(
+      const rtc::SocketAddress& addr,
+      int family,
+      absl::AnyInvocable<void()> callback) override;
+
+  std::unique_ptr<webrtc::AsyncDnsResolverInterface> Create() override;
+};
+
 // This class wraps a factory using the older webrtc::AsyncResolverFactory API,
 // and produces webrtc::AsyncDnsResolver objects that contain an
 // rtc::AsyncResolver object.
@@ -43,12 +61,12 @@ class WrappingAsyncDnsResolverFactory final
 
   std::unique_ptr<webrtc::AsyncDnsResolverInterface> CreateAndResolve(
       const rtc::SocketAddress& addr,
-      std::function<void()> callback) override;
+      absl::AnyInvocable<void()> callback) override;
 
   std::unique_ptr<webrtc::AsyncDnsResolverInterface> CreateAndResolve(
       const rtc::SocketAddress& addr,
       int family,
-      std::function<void()> callback) override;
+      absl::AnyInvocable<void()> callback) override;
 
   std::unique_ptr<webrtc::AsyncDnsResolverInterface> Create() override;
 

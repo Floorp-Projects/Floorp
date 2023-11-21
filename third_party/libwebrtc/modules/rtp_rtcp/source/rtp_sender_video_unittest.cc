@@ -113,14 +113,13 @@ class LoopbackTransportTest : public webrtc::Transport {
         kVideoLayersAllocationExtensionId);
   }
 
-  bool SendRtp(const uint8_t* data,
-               size_t len,
+  bool SendRtp(rtc::ArrayView<const uint8_t> data,
                const PacketOptions& options) override {
     sent_packets_.push_back(RtpPacketReceived(&receivers_extensions_));
-    EXPECT_TRUE(sent_packets_.back().Parse(data, len));
+    EXPECT_TRUE(sent_packets_.back().Parse(data));
     return true;
   }
-  bool SendRtcp(const uint8_t* data, size_t len) override { return false; }
+  bool SendRtcp(rtc::ArrayView<const uint8_t> data) override { return false; }
   const RtpPacketReceived& last_sent_packet() { return sent_packets_.back(); }
   int packets_sent() { return sent_packets_.size(); }
   const std::vector<RtpPacketReceived>& sent_packets() const {
@@ -1334,7 +1333,8 @@ TEST_F(RtpSenderVideoTest, PopulatesPlayoutDelay) {
   uint8_t kFrame[kPacketSize];
   rtp_module_->RegisterRtpHeaderExtension(PlayoutDelayLimits::Uri(),
                                           kPlayoutDelayExtensionId);
-  const VideoPlayoutDelay kExpectedDelay = {10, 20};
+  const VideoPlayoutDelay kExpectedDelay(TimeDelta::Millis(10),
+                                         TimeDelta::Millis(20));
 
   // Send initial key-frame without playout delay.
   RTPVideoHeader hdr;
@@ -1363,7 +1363,7 @@ TEST_F(RtpSenderVideoTest, PopulatesPlayoutDelay) {
 
   // Set playout delay on a non-discardable frame, the extension should still
   // be populated since dilvery wasn't guaranteed on the last one.
-  hdr.playout_delay = VideoPlayoutDelay();  // Indicates "no change".
+  hdr.playout_delay = absl::nullopt;  // Indicates "no change".
   vp8_header.temporalIdx = 0;
   rtp_sender_video_->SendVideo(
       kPayload, kType, kTimestamp, fake_clock_.CurrentTime(), kFrame,

@@ -57,7 +57,6 @@ namespace {
 constexpr size_t kFrameSize = 10;
 constexpr uint32_t kFps30Rtp = 90000 / 30;
 constexpr TimeDelta kFps30Delay = 1 / Frequency::Hertz(30);
-const VideoPlayoutDelay kZeroPlayoutDelay = {0, 0};
 constexpr Timestamp kClockStart = Timestamp::Millis(1000);
 
 auto TimedOut() {
@@ -824,17 +823,25 @@ TEST_P(LowLatencyVideoStreamBufferControllerTest,
   StartNextDecodeForceKeyframe();
   timing_.set_min_playout_delay(TimeDelta::Zero());
   timing_.set_max_playout_delay(TimeDelta::Millis(10));
-  auto frame = test::FakeFrameBuilder().Id(0).Time(0).AsLast().Build();
   // Playout delay of 0 implies low-latency rendering.
-  frame->SetPlayoutDelay({0, 10});
+  auto frame = test::FakeFrameBuilder()
+                   .Id(0)
+                   .Time(0)
+                   .PlayoutDelay({TimeDelta::Zero(), TimeDelta::Millis(10)})
+                   .AsLast()
+                   .Build();
   buffer_->InsertFrame(std::move(frame));
   EXPECT_THAT(WaitForFrameOrTimeout(TimeDelta::Zero()), Frame(test::WithId(0)));
 
   // Delta frame would normally wait here, but should decode at the pacing rate
   // in low-latency mode.
   StartNextDecode();
-  frame = test::FakeFrameBuilder().Id(1).Time(kFps30Rtp).AsLast().Build();
-  frame->SetPlayoutDelay({0, 10});
+  frame = test::FakeFrameBuilder()
+              .Id(1)
+              .Time(kFps30Rtp)
+              .PlayoutDelay({TimeDelta::Zero(), TimeDelta::Millis(10)})
+              .AsLast()
+              .Build();
   buffer_->InsertFrame(std::move(frame));
   // Pacing is set to 16ms in the field trial so we should not decode yet.
   EXPECT_THAT(WaitForFrameOrTimeout(TimeDelta::Zero()), Eq(absl::nullopt));
@@ -847,17 +854,24 @@ TEST_P(LowLatencyVideoStreamBufferControllerTest, ZeroPlayoutDelayFullQueue) {
   StartNextDecodeForceKeyframe();
   timing_.set_min_playout_delay(TimeDelta::Zero());
   timing_.set_max_playout_delay(TimeDelta::Millis(10));
-  auto frame = test::FakeFrameBuilder().Id(0).Time(0).AsLast().Build();
+  auto frame = test::FakeFrameBuilder()
+                   .Id(0)
+                   .Time(0)
+                   .PlayoutDelay({TimeDelta::Zero(), TimeDelta::Millis(10)})
+                   .AsLast()
+                   .Build();
   // Playout delay of 0 implies low-latency rendering.
-  frame->SetPlayoutDelay({0, 10});
   buffer_->InsertFrame(std::move(frame));
   EXPECT_THAT(WaitForFrameOrTimeout(TimeDelta::Zero()), Frame(test::WithId(0)));
 
   // Queue up 5 frames (configured max queue size for 0-playout delay pacing).
   for (int id = 1; id <= 6; ++id) {
-    frame =
-        test::FakeFrameBuilder().Id(id).Time(kFps30Rtp * id).AsLast().Build();
-    frame->SetPlayoutDelay({0, 10});
+    frame = test::FakeFrameBuilder()
+                .Id(id)
+                .Time(kFps30Rtp * id)
+                .PlayoutDelay({TimeDelta::Zero(), TimeDelta::Millis(10)})
+                .AsLast()
+                .Build();
     buffer_->InsertFrame(std::move(frame));
   }
 
@@ -873,17 +887,25 @@ TEST_P(LowLatencyVideoStreamBufferControllerTest,
   StartNextDecodeForceKeyframe();
   timing_.set_min_playout_delay(TimeDelta::Zero());
   timing_.set_max_playout_delay(TimeDelta::Zero());
-  auto frame = test::FakeFrameBuilder().Id(0).Time(0).AsLast().Build();
   // Playout delay of 0 implies low-latency rendering.
-  frame->SetPlayoutDelay({0, 0});
+  auto frame = test::FakeFrameBuilder()
+                   .Id(0)
+                   .Time(0)
+                   .PlayoutDelay(VideoPlayoutDelay::Minimal())
+                   .AsLast()
+                   .Build();
   buffer_->InsertFrame(std::move(frame));
   EXPECT_THAT(WaitForFrameOrTimeout(TimeDelta::Zero()), Frame(test::WithId(0)));
 
   // Delta frame would normally wait here, but should decode at the pacing rate
   // in low-latency mode.
   StartNextDecode();
-  frame = test::FakeFrameBuilder().Id(1).Time(kFps30Rtp).AsLast().Build();
-  frame->SetPlayoutDelay({0, 0});
+  frame = test::FakeFrameBuilder()
+              .Id(1)
+              .Time(kFps30Rtp)
+              .PlayoutDelay(VideoPlayoutDelay::Minimal())
+              .AsLast()
+              .Build();
   buffer_->InsertFrame(std::move(frame));
   // The min/max=0 version of low-latency rendering will result in a large
   // negative decode wait time, so the frame should be ready right away.

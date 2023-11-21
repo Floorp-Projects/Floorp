@@ -55,6 +55,7 @@
 #include "api/task_queue/default_task_queue_factory.h"
 #include "api/task_queue/pending_task_safety_flag.h"
 #include "api/task_queue/task_queue_factory.h"
+#include "api/test/mock_async_dns_resolver.h"
 #include "api/transport/field_trial_based_config.h"
 #include "api/uma_metrics.h"
 #include "api/units/time_delta.h"
@@ -134,6 +135,7 @@ using ::testing::Combine;
 using ::testing::Contains;
 using ::testing::DoAll;
 using ::testing::ElementsAre;
+using ::testing::InvokeArgument;
 using ::testing::NiceMock;
 using ::testing::Return;
 using ::testing::SetArgPointee;
@@ -279,8 +281,8 @@ class PeerConnectionIntegrationWrapper : public webrtc::PeerConnectionObserver,
     remote_offer_handler_ = std::move(handler);
   }
 
-  void SetRemoteAsyncResolver(rtc::MockAsyncResolver* resolver) {
-    remote_async_resolver_ = resolver;
+  void SetRemoteAsyncResolver(MockAsyncDnsResolver* resolver) {
+    remote_async_dns_resolver_ = resolver;
   }
 
   // Every ICE connection state in order that has been seen by the observer.
@@ -755,10 +757,11 @@ class PeerConnectionIntegrationWrapper : public webrtc::PeerConnectionObserver,
     fake_network_manager_.reset(new rtc::FakeNetworkManager());
     fake_network_manager_->AddInterface(kDefaultLocalAddress);
 
+    socket_factory_.reset(new rtc::BasicPacketSocketFactory(socket_server));
+
     std::unique_ptr<cricket::PortAllocator> port_allocator(
-        new cricket::BasicPortAllocator(
-            fake_network_manager_.get(),
-            std::make_unique<rtc::BasicPacketSocketFactory>(socket_server)));
+        new cricket::BasicPortAllocator(fake_network_manager_.get(),
+                                        socket_factory_.get()));
     port_allocator_ = port_allocator.get();
     fake_audio_capture_module_ = FakeAudioCaptureModule::Create();
     if (!fake_audio_capture_module_) {
@@ -1120,18 +1123,23 @@ class PeerConnectionIntegrationWrapper : public webrtc::PeerConnectionObserver,
   void OnIceCandidate(const webrtc::IceCandidateInterface* candidate) override {
     RTC_LOG(LS_INFO) << debug_name_ << ": OnIceCandidate";
 
-    if (remote_async_resolver_) {
+    if (remote_async_dns_resolver_) {
       const auto& local_candidate = candidate->candidate();
       if (local_candidate.address().IsUnresolvedIP()) {
         RTC_DCHECK(local_candidate.type() == cricket::LOCAL_PORT_TYPE);
-        rtc::SocketAddress resolved_addr(local_candidate.address());
         const auto resolved_ip = mdns_responder_->GetMappedAddressForName(
             local_candidate.address().hostname());
         RTC_DCHECK(!resolved_ip.IsNil());
-        resolved_addr.SetResolvedIP(resolved_ip);
-        EXPECT_CALL(*remote_async_resolver_, GetResolvedAddress(_, _))
-            .WillOnce(DoAll(SetArgPointee<1>(resolved_addr), Return(true)));
-        EXPECT_CALL(*remote_async_resolver_, Destroy(_));
+        remote_async_dns_resolved_addr_ = local_candidate.address();
+        remote_async_dns_resolved_addr_.SetResolvedIP(resolved_ip);
+        EXPECT_CALL(*remote_async_dns_resolver_, Start(_, _))
+            .WillOnce([](const rtc::SocketAddress& addr,
+                         absl::AnyInvocable<void()> callback) { callback(); });
+        EXPECT_CALL(*remote_async_dns_resolver_, result())
+            .WillOnce(ReturnRef(remote_async_dns_resolver_result_));
+        EXPECT_CALL(remote_async_dns_resolver_result_, GetResolvedAddress(_, _))
+            .WillOnce(DoAll(SetArgPointee<1>(remote_async_dns_resolved_addr_),
+                            Return(true)));
       }
     }
 
@@ -1166,6 +1174,7 @@ class PeerConnectionIntegrationWrapper : public webrtc::PeerConnectionObserver,
   std::string debug_name_;
 
   std::unique_ptr<rtc::FakeNetworkManager> fake_network_manager_;
+  std::unique_ptr<rtc::BasicPacketSocketFactory> socket_factory_;
   // Reference to the mDNS responder owned by `fake_network_manager_` after set.
   webrtc::FakeMdnsResponder* mdns_responder_ = nullptr;
 
@@ -1202,7 +1211,11 @@ class PeerConnectionIntegrationWrapper : public webrtc::PeerConnectionObserver,
   std::function<void(cricket::SessionDescription*)> received_sdp_munger_;
   std::function<void(cricket::SessionDescription*)> generated_sdp_munger_;
   std::function<void()> remote_offer_handler_;
-  rtc::MockAsyncResolver* remote_async_resolver_ = nullptr;
+  MockAsyncDnsResolver* remote_async_dns_resolver_ = nullptr;
+  // Result variables for the mock DNS resolver
+  NiceMock<MockAsyncDnsResolverResult> remote_async_dns_resolver_result_;
+  rtc::SocketAddress remote_async_dns_resolved_addr_;
+
   // All data channels either created or observed on this peerconnection
   std::vector<rtc::scoped_refptr<DataChannelInterface>> data_channels_;
   std::vector<std::unique_ptr<MockDataChannelObserver>> data_observers_;

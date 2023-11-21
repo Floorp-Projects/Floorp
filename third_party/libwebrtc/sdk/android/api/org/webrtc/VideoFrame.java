@@ -146,6 +146,22 @@ public class VideoFrame implements RefCounted {
         Matrix transformMatrix, int newWidth, int newHeight) {
       throw new UnsupportedOperationException("Not implemented");
     }
+
+    /**
+     * Returns the width of the texture in memory. This should only be used for downscaling, and you
+     * should still respect the width from getWidth().
+     */
+    default public int getUnscaledWidth() {
+      return getWidth();
+    }
+
+    /**
+     * Returns the height of the texture in memory. This should only be used for downscaling, and
+     * you should still respect the height from getHeight().
+     */
+    default public int getUnscaledHeight() {
+      return getHeight();
+    }
   }
 
   private final Buffer buffer;

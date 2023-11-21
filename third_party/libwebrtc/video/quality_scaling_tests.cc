@@ -157,7 +157,7 @@ class ScalingObserver : public test::SendTest {
                        test_params_.size());
   }
 
-  Action OnSendRtp(const uint8_t* packet, size_t length) override {
+  Action OnSendRtp(rtc::ArrayView<const uint8_t> packet) override {
     // The tests are expected to send at the configured start bitrate. Do not
     // send any packets to avoid receiving REMB and possibly go down in target
     // bitrate. A low bitrate estimate could result in downgrading due to other

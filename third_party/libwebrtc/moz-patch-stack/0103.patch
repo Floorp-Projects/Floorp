@@ -18728,7 +18728,7 @@ index 0000000000..3bfe2a79d5
 +    sys.exit(main(sys.argv[1:]))
 diff --git a/tools/grit/grit/testdata/GoogleDesktop.adm b/tools/grit/grit/testdata/GoogleDesktop.adm
 new file mode 100644
-index 0000000000..758fb8ee0c
+index 0000000000..082f56bb1a
 --- /dev/null
 +++ b/tools/grit/grit/testdata/GoogleDesktop.adm
 @@ -0,0 +1,945 @@

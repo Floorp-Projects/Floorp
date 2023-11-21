@@ -16,7 +16,7 @@
 #include <vector>
 
 #include "absl/strings/string_view.h"
-#include "api/async_resolver_factory.h"
+#include "api/async_dns_resolver.h"
 #include "api/audio/audio_mixer.h"
 #include "api/call/call_factory_interface.h"
 #include "api/fec_controller.h"
@@ -88,8 +88,9 @@ class PeerConfigurer {
   // The parameters of the following 4 methods will be passed to the
   // PeerConnectionInterface implementation that will be created for this
   // peer.
-  PeerConfigurer* SetAsyncResolverFactory(
-      std::unique_ptr<webrtc::AsyncResolverFactory> async_resolver_factory);
+  PeerConfigurer* SetAsyncDnsResolverFactory(
+      std::unique_ptr<webrtc::AsyncDnsResolverFactoryInterface>
+          async_resolver_factory);
   PeerConfigurer* SetRTCCertificateGenerator(
       std::unique_ptr<rtc::RTCCertificateGeneratorInterface> cert_generator);
   PeerConfigurer* SetSSLCertificateVerifier(

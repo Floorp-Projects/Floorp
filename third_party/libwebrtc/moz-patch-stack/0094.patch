@@ -11,10 +11,10 @@ Mercurial Revision: https://hg.mozilla.org/mozilla-central/rev/0ec1b33b95dbb2d39
  2 files changed, 7 insertions(+)
 
 diff --git a/modules/desktop_capture/BUILD.gn b/modules/desktop_capture/BUILD.gn
-index c184e2fbbc..bcea427de7 100644
+index dcc1b3c6ac..0634e0e9c4 100644
 --- a/modules/desktop_capture/BUILD.gn
 +++ b/modules/desktop_capture/BUILD.gn
-@@ -382,6 +382,9 @@ rtc_library("desktop_capture") {
+@@ -384,6 +384,9 @@ rtc_library("desktop_capture") {
        "Xrandr",
        "Xtst",
      ]

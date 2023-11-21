@@ -240,7 +240,6 @@ class DecoderBitstreamFileWriter : public test::FakeDecoder {
   ~DecoderBitstreamFileWriter() override { fclose(file_); }
 
   int32_t Decode(const EncodedImage& encoded_frame,
-                 bool /* missing_frames */,
                  int64_t /* render_time_ms */) override {
     if (fwrite(encoded_frame.data(), 1, encoded_frame.size(), file_) <
         encoded_frame.size()) {
@@ -276,7 +275,6 @@ class DecoderIvfFileWriter : public test::FakeDecoder {
   ~DecoderIvfFileWriter() override { file_writer_->Close(); }
 
   int32_t Decode(const EncodedImage& encoded_frame,
-                 bool /* missing_frames */,
                  int64_t render_time_ms) override {
     if (!file_writer_->WriteFrame(encoded_frame, video_codec_type_)) {
       return WEBRTC_VIDEO_CODEC_ERROR;

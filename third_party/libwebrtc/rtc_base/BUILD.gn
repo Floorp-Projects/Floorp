@@ -940,6 +940,34 @@ rtc_library("async_resolver_interface") {
   ]
 }
 
+rtc_library("async_dns_resolver") {
+  sources = [
+    "async_dns_resolver.cc",
+    "async_dns_resolver.h",
+  ]
+  deps = [
+    ":logging",
+    ":macromagic",
+    ":platform_thread",
+    ":refcount",
+    "../api:async_dns_resolver",
+    "../api:make_ref_counted",
+    "../api:sequence_checker",
+    "../api/task_queue:pending_task_safety_flag",
+  ]
+}
+
+rtc_library("async_dns_resolver_unittests") {
+  testonly = true
+  sources = [ "async_dns_resolver_unittest.cc" ]
+  deps = [
+    ":async_dns_resolver",
+    ":gunit_helpers",
+    "../test:run_loop",
+    "../test:test_support",
+  ]
+}
+
 rtc_library("ip_address") {
   visibility = [ "*" ]
   sources = [
@@ -1326,7 +1354,6 @@ if (!build_with_mozilla) {
     ":timeutils",
     "../api:array_view",
     "network:sent_packet",
-    "third_party/sigslot",
   ]
 }
 }
@@ -1350,7 +1377,7 @@ if (!build_with_mozilla) {
     "../api:sequence_checker",
     "../system_wrappers:field_trial",
     "network:sent_packet",
-    "third_party/sigslot",
+    "system:no_unique_address",
   ]
   absl_deps = [ "//third_party/abseil-cpp/absl/types:optional" ]
 }
@@ -1556,6 +1583,7 @@ if (!build_with_mozilla) {
   absl_deps = [
     "//third_party/abseil-cpp/absl/algorithm:container",
     "//third_party/abseil-cpp/absl/base:core_headers",
+    "//third_party/abseil-cpp/absl/functional:any_invocable",
     "//third_party/abseil-cpp/absl/memory",
     "//third_party/abseil-cpp/absl/strings",
     "//third_party/abseil-cpp/absl/types:optional",

@@ -157,6 +157,7 @@ class BasicPortAllocatorTestBase : public ::testing::Test,
   BasicPortAllocatorTestBase()
       : vss_(new rtc::VirtualSocketServer()),
         fss_(new rtc::FirewallSocketServer(vss_.get())),
+        socket_factory_(fss_.get()),
         thread_(fss_.get()),
         // Note that the NAT is not used by default. ResetWithStunServerAndNat
         // must be called.
@@ -172,9 +173,7 @@ class BasicPortAllocatorTestBase : public ::testing::Test,
     stun_servers.insert(kStunAddr);
 
     allocator_ = std::make_unique<BasicPortAllocator>(
-        &network_manager_,
-        std::make_unique<rtc::BasicPacketSocketFactory>(fss_.get()),
-        stun_servers, &field_trials_);
+        &network_manager_, &socket_factory_, stun_servers, &field_trials_);
     allocator_->Initialize();
     allocator_->set_step_delay(kMinimumStepDelay);
     allocator_->SetIceTiebreaker(kTiebreakerDefault);
@@ -212,9 +211,8 @@ class BasicPortAllocatorTestBase : public ::testing::Test,
   }
   // Endpoint is on the public network. No STUN or TURN.
   void ResetWithNoServersOrNat() {
-    allocator_.reset(new BasicPortAllocator(
-        &network_manager_,
-        std::make_unique<rtc::BasicPacketSocketFactory>(fss_.get())));
+    allocator_.reset(
+        new BasicPortAllocator(&network_manager_, &socket_factory_));
     allocator_->Initialize();
     allocator_->SetIceTiebreaker(kTiebreakerDefault);
     allocator_->set_step_delay(kMinimumStepDelay);
@@ -518,6 +516,7 @@ class BasicPortAllocatorTestBase : public ::testing::Test,
 
   std::unique_ptr<rtc::VirtualSocketServer> vss_;
   std::unique_ptr<rtc::FirewallSocketServer> fss_;
+  rtc::BasicPacketSocketFactory socket_factory_;
   rtc::AutoSocketServerThread thread_;
   std::unique_ptr<rtc::NATServer> nat_server_;
   rtc::NATSocketFactory nat_factory_;
@@ -608,9 +607,8 @@ class BasicPortAllocatorTest : public FakeClockBase,
     // Add two IP addresses on the same interface.
     AddInterface(kClientAddr, "net1");
     AddInterface(kClientIPv6Addr, "net1");
-    allocator_.reset(new BasicPortAllocator(
-        &network_manager_,
-        std::make_unique<rtc::BasicPacketSocketFactory>(fss_.get())));
+    allocator_.reset(
+        new BasicPortAllocator(&network_manager_, &socket_factory_));
     allocator_->Initialize();
     allocator_->SetConfiguration(allocator_->stun_servers(),
                                  allocator_->turn_servers(), 0,
@@ -651,9 +649,8 @@ class BasicPortAllocatorTest : public FakeClockBase,
       bool tcp_pruned) {
     turn_server_.AddInternalSocket(kTurnTcpIntAddr, PROTO_TCP);
     AddInterface(kClientAddr);
-    allocator_.reset(new BasicPortAllocator(
-        &network_manager_,
-        std::make_unique<rtc::BasicPacketSocketFactory>(fss_.get())));
+    allocator_.reset(
+        new BasicPortAllocator(&network_manager_, &socket_factory_));
     allocator_->Initialize();
     allocator_->SetConfiguration(allocator_->stun_servers(),
                                  allocator_->turn_servers(), 0, prune_policy);
@@ -705,9 +702,8 @@ class BasicPortAllocatorTest : public FakeClockBase,
     AddInterface(kClientIPv6Addr, "net1", rtc::ADAPTER_TYPE_WIFI);
     AddInterface(kClientAddr2, "net2", rtc::ADAPTER_TYPE_CELLULAR);
     AddInterface(kClientIPv6Addr2, "net2", rtc::ADAPTER_TYPE_CELLULAR);
-    allocator_.reset(new BasicPortAllocator(
-        &network_manager_,
-        std::make_unique<rtc::BasicPacketSocketFactory>(fss_.get())));
+    allocator_.reset(
+        new BasicPortAllocator(&network_manager_, &socket_factory_));
     allocator_->Initialize();
     allocator_->SetConfiguration(allocator_->stun_servers(),
                                  allocator_->turn_servers(), 0,
@@ -1673,9 +1669,7 @@ TEST_F(BasicPortAllocatorTest, TestSharedSocketWithNat) {
 TEST_F(BasicPortAllocatorTest, TestSharedSocketWithoutNatUsingTurn) {
   turn_server_.AddInternalSocket(kTurnTcpIntAddr, PROTO_TCP);
   AddInterface(kClientAddr);
-  allocator_.reset(new BasicPortAllocator(
-      &network_manager_,
-      std::make_unique<rtc::BasicPacketSocketFactory>(fss_.get())));
+  allocator_.reset(new BasicPortAllocator(&network_manager_, &socket_factory_));
   allocator_->Initialize();
 
   AddTurnServers(kTurnUdpIntAddr, kTurnTcpIntAddr);
@@ -1810,9 +1804,7 @@ TEST_F(BasicPortAllocatorTestWithRealClock,
   turn_server_.AddInternalSocket(rtc::SocketAddress("127.0.0.1", 3478),
                                  PROTO_UDP);
   AddInterface(kClientAddr);
-  allocator_.reset(new BasicPortAllocator(
-      &network_manager_,
-      std::make_unique<rtc::BasicPacketSocketFactory>(fss_.get())));
+  allocator_.reset(new BasicPortAllocator(&network_manager_, &socket_factory_));
   allocator_->Initialize();
   RelayServerConfig turn_server;
   RelayCredentials credentials(kTurnUsername, kTurnPassword);

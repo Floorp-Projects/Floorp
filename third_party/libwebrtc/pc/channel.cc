@@ -166,14 +166,17 @@ bool BaseChannel::ConnectToRtpTransport_n() {
   if (!rtp_transport_->RegisterRtpDemuxerSink(demuxer_criteria_, this)) {
     return false;
   }
-  rtp_transport_->SignalReadyToSend.connect(
-      this, &BaseChannel::OnTransportReadyToSend);
-  rtp_transport_->SignalNetworkRouteChanged.connect(
-      this, &BaseChannel::OnNetworkRouteChanged);
-  rtp_transport_->SignalWritableState.connect(this,
-                                              &BaseChannel::OnWritableState);
-  rtp_transport_->SignalSentPacket.connect(this,
-                                           &BaseChannel::SignalSentPacket_n);
+  rtp_transport_->SubscribeReadyToSend(
+      this, [this](bool ready) { OnTransportReadyToSend(ready); });
+  rtp_transport_->SubscribeNetworkRouteChanged(
+      this, [this](absl::optional<rtc::NetworkRoute> route) {
+        OnNetworkRouteChanged(route);
+      });
+  rtp_transport_->SubscribeWritableState(
+      this, [this](bool state) { OnWritableState(state); });
+  rtp_transport_->SubscribeSentPacket(
+      this,
+      [this](const rtc::SentPacket& packet) { SignalSentPacket_n(packet); });
   return true;
 }
 
@@ -181,10 +184,10 @@ void BaseChannel::DisconnectFromRtpTransport_n() {
   RTC_DCHECK(rtp_transport_);
   RTC_DCHECK(media_send_channel());
   rtp_transport_->UnregisterRtpDemuxerSink(this);
-  rtp_transport_->SignalReadyToSend.disconnect(this);
-  rtp_transport_->SignalNetworkRouteChanged.disconnect(this);
-  rtp_transport_->SignalWritableState.disconnect(this);
-  rtp_transport_->SignalSentPacket.disconnect(this);
+  rtp_transport_->UnsubscribeReadyToSend(this);
+  rtp_transport_->UnsubscribeNetworkRouteChanged(this);
+  rtp_transport_->UnsubscribeWritableState(this);
+  rtp_transport_->UnsubscribeSentPacket(this);
   rtp_transport_ = nullptr;
   media_send_channel()->SetInterface(nullptr);
   media_receive_channel()->SetInterface(nullptr);
@@ -888,7 +891,7 @@ bool VoiceChannel::SetLocalContent_w(const MediaContentDescription* content,
       webrtc::RtpTransceiverDirectionHasRecv(content->direction()),
       &recv_params);
 
-  if (!media_receive_channel()->SetRecvParameters(recv_params)) {
+  if (!media_receive_channel()->SetReceiverParameters(recv_params)) {
     error_desc = StringFormat(
         "Failed to set local audio description recv parameters for m-section "
         "with mid='%s'.",
@@ -941,7 +944,7 @@ bool VoiceChannel::SetRemoteContent_w(const MediaContentDescription* content,
   send_params.mid = mid();
 
   bool parameters_applied =
-      media_send_channel()->SetSendParameters(send_params);
+      media_send_channel()->SetSenderParameters(send_params);
   if (!parameters_applied) {
     error_desc = StringFormat(
         "Failed to set remote audio description send parameters for m-section "
@@ -1050,7 +1053,7 @@ bool VideoChannel::SetLocalContent_w(const MediaContentDescription* content,
     }
   }
 
-  if (!media_receive_channel()->SetRecvParameters(recv_params)) {
+  if (!media_receive_channel()->SetReceiverParameters(recv_params)) {
     error_desc = StringFormat(
         "Failed to set local video description recv parameters for m-section "
         "with mid='%s'.",
@@ -1069,7 +1072,7 @@ bool VideoChannel::SetLocalContent_w(const MediaContentDescription* content,
   last_recv_params_ = recv_params;
 
   if (needs_send_params_update) {
-    if (!media_send_channel()->SetSendParameters(send_params)) {
+    if (!media_send_channel()->SetSenderParameters(send_params)) {
       error_desc = StringFormat(
           "Failed to set send parameters for m-section with mid='%s'.",
           mid().c_str());
@@ -1135,7 +1138,7 @@ bool VideoChannel::SetRemoteContent_w(const MediaContentDescription* content,
     }
   }
 
-  if (!media_send_channel()->SetSendParameters(send_params)) {
+  if (!media_send_channel()->SetSenderParameters(send_params)) {
     error_desc = StringFormat(
         "Failed to set remote video description send parameters for m-section "
         "with mid='%s'.",
@@ -1151,7 +1154,7 @@ bool VideoChannel::SetRemoteContent_w(const MediaContentDescription* content,
   last_send_params_ = send_params;
 
   if (needs_recv_params_update) {
-    if (!media_receive_channel()->SetRecvParameters(recv_params)) {
+    if (!media_receive_channel()->SetReceiverParameters(recv_params)) {
       error_desc = StringFormat(
           "Failed to set recv parameters for m-section with mid='%s'.",
           mid().c_str());

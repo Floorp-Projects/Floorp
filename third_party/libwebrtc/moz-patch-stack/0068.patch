@@ -187,10 +187,10 @@ index 53e08c95a1..47b2ffe199 100644
  
    void ForceSpsPpsIdrIsH264Keyframe();
 diff --git a/video/receive_statistics_proxy.cc b/video/receive_statistics_proxy.cc
-index 5bb30041e3..abf9ef9b5e 100644
+index 75512a2465..8ef4d553ad 100644
 --- a/video/receive_statistics_proxy.cc
 +++ b/video/receive_statistics_proxy.cc
-@@ -798,6 +798,11 @@ void ReceiveStatisticsProxy::OnDroppedFrames(uint32_t frames_dropped) {
+@@ -799,6 +799,11 @@ void ReceiveStatisticsProxy::OnDroppedFrames(uint32_t frames_dropped) {
        }));
  }
  
@@ -203,10 +203,10 @@ index 5bb30041e3..abf9ef9b5e 100644
    RTC_DCHECK_RUN_ON(&main_thread_);
    last_codec_type_ = codec_type;
 diff --git a/video/receive_statistics_proxy.h b/video/receive_statistics_proxy.h
-index d8da3064fd..2fd89eedd0 100644
+index 8e4941f961..7bcfc7c057 100644
 --- a/video/receive_statistics_proxy.h
 +++ b/video/receive_statistics_proxy.h
-@@ -92,6 +92,7 @@ class ReceiveStatisticsProxy : public VideoStreamBufferControllerStatsObserver,
+@@ -94,6 +94,7 @@ class ReceiveStatisticsProxy : public VideoStreamBufferControllerStatsObserver,
    void OnDecodableFrame(TimeDelta jitter_buffer_delay,
                          TimeDelta target_delay,
                          TimeDelta minimum_delay) override;
@@ -215,7 +215,7 @@ index d8da3064fd..2fd89eedd0 100644
                                     int current_delay_ms,
                                     int target_delay_ms,
 diff --git a/video/rtp_video_stream_receiver2.cc b/video/rtp_video_stream_receiver2.cc
-index 2670b7fe58..98acbb1a51 100644
+index ebfdf2b695..0c4f5e30af 100644
 --- a/video/rtp_video_stream_receiver2.cc
 +++ b/video/rtp_video_stream_receiver2.cc
 @@ -244,6 +244,7 @@ RtpVideoStreamReceiver2::RtpVideoStreamReceiver2(
@@ -234,7 +234,7 @@ index 2670b7fe58..98acbb1a51 100644
        packet_buffer_(kPacketBufferStartSize,
                       PacketBufferMaxSize(field_trials_)),
        reference_finder_(std::make_unique<RtpFrameReferenceFinder>()),
-@@ -1210,7 +1212,8 @@ void RtpVideoStreamReceiver2::FrameDecoded(int64_t picture_id) {
+@@ -1213,7 +1215,8 @@ void RtpVideoStreamReceiver2::FrameDecoded(int64_t picture_id) {
      int64_t unwrapped_rtp_seq_num = rtp_seq_num_unwrapper_.Unwrap(seq_num);
      packet_infos_.erase(packet_infos_.begin(),
                          packet_infos_.upper_bound(unwrapped_rtp_seq_num));
@@ -273,10 +273,10 @@ index 0e96d7f2cd..10329005ba 100644
        RTC_GUARDED_BY(packet_sequence_checker_);
    UniqueTimestampCounter frame_counter_
 diff --git a/video/video_receive_stream2.cc b/video/video_receive_stream2.cc
-index 0f42fa50b7..808cb932fe 100644
+index 2067f255f7..85cc0aa0dc 100644
 --- a/video/video_receive_stream2.cc
 +++ b/video/video_receive_stream2.cc
-@@ -211,6 +211,7 @@ VideoReceiveStream2::VideoReceiveStream2(
+@@ -210,6 +210,7 @@ VideoReceiveStream2::VideoReceiveStream2(
                                   &stats_proxy_,
                                   &stats_proxy_,
                                   nack_periodic_processor,
@@ -315,10 +315,10 @@ index 455f064b01..20588fbcad 100644
      Timestamp min_receive_time,
      Timestamp now) {
 diff --git a/video/video_stream_buffer_controller.h b/video/video_stream_buffer_controller.h
-index bb67304d06..b6d7bd46ae 100644
+index f8793851dd..e89977d1ed 100644
 --- a/video/video_stream_buffer_controller.h
 +++ b/video/video_stream_buffer_controller.h
-@@ -52,6 +52,8 @@ class VideoStreamBufferControllerStatsObserver {
+@@ -53,6 +53,8 @@ class VideoStreamBufferControllerStatsObserver {
                                  TimeDelta target_delay,
                                  TimeDelta minimum_delay) = 0;
  
@@ -327,7 +327,7 @@ index bb67304d06..b6d7bd46ae 100644
    // Various jitter buffer delays determined by VCMTiming.
    virtual void OnFrameBufferTimingsUpdated(int estimated_max_decode_time_ms,
                                             int current_delay_ms,
-@@ -94,6 +96,7 @@ class VideoStreamBufferController {
+@@ -95,6 +97,7 @@ class VideoStreamBufferController {
    void OnTimeout(TimeDelta delay);
    void FrameReadyForDecode(uint32_t rtp_timestamp, Timestamp render_time);
    void UpdateDroppedFrames() RTC_RUN_ON(&worker_sequence_checker_);
@@ -335,7 +335,7 @@ index bb67304d06..b6d7bd46ae 100644
    void UpdateFrameBufferTimings(Timestamp min_receive_time, Timestamp now);
    void UpdateTimingFrameInfo();
    bool IsTooManyFramesQueued() const RTC_RUN_ON(&worker_sequence_checker_);
-@@ -122,6 +125,8 @@ class VideoStreamBufferController {
+@@ -123,6 +126,8 @@ class VideoStreamBufferController {
        RTC_GUARDED_BY(&worker_sequence_checker_);
    int frames_dropped_before_last_new_frame_
        RTC_GUARDED_BY(&worker_sequence_checker_) = 0;

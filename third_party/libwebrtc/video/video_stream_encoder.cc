@@ -43,7 +43,6 @@
 #include "rtc_base/arraysize.h"
 #include "rtc_base/checks.h"
 #include "rtc_base/event.h"
-#include "rtc_base/experiments/alr_experiment.h"
 #include "rtc_base/experiments/encoder_info_settings.h"
 #include "rtc_base/experiments/rate_control_settings.h"
 #include "rtc_base/logging.h"
@@ -56,6 +55,7 @@
 #include "video/alignment_adjuster.h"
 #include "video/config/encoder_stream_factory.h"
 #include "video/frame_cadence_adapter.h"
+#include "video/frame_dumping_encoder.h"
 
 namespace webrtc {
 
@@ -186,26 +186,6 @@ bool RequiresEncoderReset(const VideoCodec& prev_send_codec,
   }
 
   return false;
-}
-
-std::array<uint8_t, 2> GetExperimentGroups() {
-  std::array<uint8_t, 2> experiment_groups;
-  absl::optional<AlrExperimentSettings> experiment_settings =
-      AlrExperimentSettings::CreateFromFieldTrial(
-          AlrExperimentSettings::kStrictPacingAndProbingExperimentName);
-  if (experiment_settings) {
-    experiment_groups[0] = experiment_settings->group_id + 1;
-  } else {
-    experiment_groups[0] = 0;
-  }
-  experiment_settings = AlrExperimentSettings::CreateFromFieldTrial(
-      AlrExperimentSettings::kScreenshareProbingBweExperimentName);
-  if (experiment_settings) {
-    experiment_groups[1] = experiment_settings->group_id + 1;
-  } else {
-    experiment_groups[1] = 0;
-  }
-  return experiment_groups;
 }
 
 // Limit allocation across TLs in bitrate allocation according to number of TLs
@@ -711,7 +691,6 @@ VideoStreamEncoder::VideoStreamEncoder(
       cwnd_frame_counter_(0),
       next_frame_types_(1, VideoFrameType::kVideoFrameDelta),
       frame_encode_metadata_writer_(this),
-      experiment_groups_(GetExperimentGroups()),
       automatic_animation_detection_experiment_(
           ParseAutomatincAnimationDetectionFieldTrial()),
       input_state_provider_(encoder_stats_observer),
@@ -972,8 +951,10 @@ void VideoStreamEncoder::ReconfigureEncoder() {
     // supports only single instance of encoder of given type.
     encoder_.reset();
 
-    encoder_ = settings_.encoder_factory->CreateVideoEncoder(
-        encoder_config_.video_format);
+    encoder_ = MaybeCreateFrameDumpingEncoderWrapper(
+        settings_.encoder_factory->CreateVideoEncoder(
+            encoder_config_.video_format),
+        field_trials_);
     if (!encoder_) {
       RTC_LOG(LS_ERROR) << "CreateVideoEncoder failed, failing encoder format: "
                         << encoder_config_.video_format.ToString();
@@ -1312,11 +1293,13 @@ void VideoStreamEncoder::ReconfigureEncoder() {
     VideoEncoder::Settings settings = VideoEncoder::Settings(
         settings_.capabilities, number_of_cores_, max_data_payload_length);
     settings.encoder_thread_limit = experimental_encoder_thread_limit_;
-    if (encoder_->InitEncode(&send_codec_, settings) != 0) {
+    int error = encoder_->InitEncode(&send_codec_, settings);
+    if (error != 0) {
       RTC_LOG(LS_ERROR) << "Failed to initialize the encoder associated with "
                            "codec type: "
                         << CodecTypeToPayloadString(send_codec_.codecType)
-                        << " (" << send_codec_.codecType << ")";
+                        << " (" << send_codec_.codecType
+                        << "). Error: " << error;
       ReleaseEncoder();
     } else {
       encoder_initialized_ = true;
@@ -2365,25 +2348,15 @@ void VideoStreamEncoder::OnBitrateUpdated(DataRate target_bitrate,
   }
 }
 
-bool VideoStreamEncoder::DropDueToSize(uint32_t pixel_count) const {
+bool VideoStreamEncoder::DropDueToSize(uint32_t source_pixel_count) const {
   if (!encoder_ || !stream_resource_manager_.DropInitialFrames() ||
-      !encoder_target_bitrate_bps_.has_value()) {
+      !encoder_target_bitrate_bps_ ||
+      !stream_resource_manager_.SingleActiveStreamPixels()) {
     return false;
   }
 
-  bool simulcast_or_svc =
-      (send_codec_.codecType == VideoCodecType::kVideoCodecVP9 &&
-       send_codec_.VP9().numberOfSpatialLayers > 1) ||
-      (send_codec_.numberOfSimulcastStreams > 1 ||
-       encoder_config_.simulcast_layers.size() > 1);
-
-  if (simulcast_or_svc) {
-    if (stream_resource_manager_.SingleActiveStreamPixels()) {
-      pixel_count = stream_resource_manager_.SingleActiveStreamPixels().value();
-    } else {
-      return false;
-    }
-  }
+  int pixel_count = std::min(
+      source_pixel_count, *stream_resource_manager_.SingleActiveStreamPixels());
 
   uint32_t bitrate_bps =
       stream_resource_manager_.UseBandwidthAllocationBps().value_or(

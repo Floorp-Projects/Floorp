@@ -107,7 +107,8 @@ ConnectionContext::ConnectionContext(
       sctp_factory_(
           MaybeCreateSctpFactory(std::move(dependencies->sctp_factory),
                                  network_thread(),
-                                 *trials_.get())) {
+                                 *trials_.get())),
+      use_rtx_(true) {
   RTC_DCHECK_RUN_ON(signaling_thread_);
   RTC_DCHECK(!(default_network_manager_ && network_monitor_factory_))
       << "You can't set both network_manager and network_monitor_factory.";

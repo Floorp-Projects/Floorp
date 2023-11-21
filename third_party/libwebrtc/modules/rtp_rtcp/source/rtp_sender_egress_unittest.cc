@@ -94,17 +94,17 @@ class TestTransport : public Transport {
   explicit TestTransport(RtpHeaderExtensionMap* extensions)
       : total_data_sent_(DataSize::Zero()), extensions_(extensions) {}
   MOCK_METHOD(void, SentRtp, (const PacketOptions& options), ());
-  bool SendRtp(const uint8_t* packet,
-               size_t length,
+  bool SendRtp(rtc::ArrayView<const uint8_t> packet,
                const PacketOptions& options) override {
-    total_data_sent_ += DataSize::Bytes(length);
-    last_packet_.emplace(rtc::MakeArrayView(packet, length), options,
-                         extensions_);
+    total_data_sent_ += DataSize::Bytes(packet.size());
+    last_packet_.emplace(packet, options, extensions_);
     SentRtp(options);
     return true;
   }
 
-  bool SendRtcp(const uint8_t*, size_t) override { RTC_CHECK_NOTREACHED(); }
+  bool SendRtcp(rtc::ArrayView<const uint8_t>) override {
+    RTC_CHECK_NOTREACHED();
+  }
 
   absl::optional<TransmittedPacket> last_packet() { return last_packet_; }
 

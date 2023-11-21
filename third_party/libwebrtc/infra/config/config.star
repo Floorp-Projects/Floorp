@@ -830,7 +830,6 @@ lkgr_config = {
     "status_url": "https://webrtc-status.appspot.com",
     "allowed_lag": 9,  # hours (up to 10x during low commit volume periods)
     "allowed_gap": 150,  # commits behind
-    "error_recipients": WEBRTC_TROOPER_EMAIL,
     "buckets": {
         "webrtc/ci": {
             # bucket alias: luci.webrtc.ci

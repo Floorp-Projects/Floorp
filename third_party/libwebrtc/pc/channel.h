@@ -45,7 +45,6 @@
 #include "rtc_base/network/sent_packet.h"
 #include "rtc_base/network_route.h"
 #include "rtc_base/socket.h"
-#include "rtc_base/third_party/sigslot/sigslot.h"
 #include "rtc_base/thread.h"
 #include "rtc_base/thread_annotations.h"
 #include "rtc_base/unique_id_generator.h"
@@ -69,8 +68,6 @@ class VideoChannel;
 class VoiceChannel;
 
 class BaseChannel : public ChannelInterface,
-                    // TODO(tommi): Remove has_slots inheritance.
-                    public sigslot::has_slots<>,
                     // TODO(tommi): Consider implementing these interfaces
                     // via composition.
                     public MediaChannelNetworkInterface,
@@ -430,10 +427,10 @@ class VoiceChannel : public BaseChannel {
       RTC_RUN_ON(worker_thread()) override;
 
   // Last AudioSenderParameter sent down to the media_channel() via
-  // SetSendParameters.
+  // SetSenderParameters.
   AudioSenderParameter last_send_params_ RTC_GUARDED_BY(worker_thread());
   // Last AudioReceiverParameters sent down to the media_channel() via
-  // SetRecvParameters.
+  // SetReceiverParameters.
   AudioReceiverParameters last_recv_params_ RTC_GUARDED_BY(worker_thread());
 };
 
@@ -499,10 +496,10 @@ class VideoChannel : public BaseChannel {
       RTC_RUN_ON(worker_thread()) override;
 
   // Last VideoSenderParameters sent down to the media_channel() via
-  // SetSendParameters.
+  // SetSenderParameters.
   VideoSenderParameters last_send_params_ RTC_GUARDED_BY(worker_thread());
   // Last VideoReceiverParameters sent down to the media_channel() via
-  // SetRecvParameters.
+  // SetReceiverParameters.
   VideoReceiverParameters last_recv_params_ RTC_GUARDED_BY(worker_thread());
 };
 

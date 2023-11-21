@@ -138,6 +138,14 @@ class RTC_EXPORT EncodedImage {
     color_space_ = color_space;
   }
 
+  absl::optional<VideoPlayoutDelay> PlayoutDelay() const {
+    return playout_delay_;
+  }
+
+  void SetPlayoutDelay(absl::optional<VideoPlayoutDelay> playout_delay) {
+    playout_delay_ = playout_delay;
+  }
+
   // These methods along with the private member video_frame_tracking_id_ are
   // meant for media quality testing purpose only.
   absl::optional<uint16_t> VideoFrameTrackingId() const {
@@ -193,6 +201,14 @@ class RTC_EXPORT EncodedImage {
     at_target_quality_ = at_target_quality;
   }
 
+  webrtc::VideoFrameType FrameType() const { return _frameType; }
+
+  void SetFrameType(webrtc::VideoFrameType frame_type) {
+    _frameType = frame_type;
+  }
+  VideoContentType contentType() const { return content_type_; }
+  VideoRotation rotation() const { return rotation_; }
+
   uint32_t _encodedWidth = 0;
   uint32_t _encodedHeight = 0;
   // NTP time of the capture time in local timebase in milliseconds.
@@ -203,11 +219,6 @@ class RTC_EXPORT EncodedImage {
   VideoRotation rotation_ = kVideoRotation_0;
   VideoContentType content_type_ = VideoContentType::UNSPECIFIED;
   int qp_ = -1;  // Quantizer value.
-
-  // When an application indicates non-zero values here, it is taken as an
-  // indication that all future frames will be constrained with those limits
-  // until the application indicates a change again.
-  VideoPlayoutDelay playout_delay_;
 
   struct Timing {
     uint8_t flags = VideoSendTiming::kInvalid;
@@ -220,9 +231,15 @@ class RTC_EXPORT EncodedImage {
     int64_t receive_start_ms = 0;
     int64_t receive_finish_ms = 0;
   } timing_;
+  EncodedImage::Timing video_timing() const { return timing_; }
+  EncodedImage::Timing* video_timing_mutable() { return &timing_; }
 
  private:
   size_t capacity() const { return encoded_data_ ? encoded_data_->size() : 0; }
+
+  // When set, indicates that all future frames will be constrained with those
+  // limits until the application indicates a change again.
+  absl::optional<VideoPlayoutDelay> playout_delay_;
 
   rtc::scoped_refptr<EncodedImageBufferInterface> encoded_data_;
   size_t size_ = 0;  // Size of encoded frame data.

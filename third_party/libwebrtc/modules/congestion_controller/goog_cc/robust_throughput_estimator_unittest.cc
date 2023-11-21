@@ -63,6 +63,19 @@ class FeedbackGenerator {
   uint16_t sequence_number_ = 100;
 };
 
+TEST(RobustThroughputEstimatorTest, DefaultEnabled) {
+  RobustThroughputEstimatorSettings settings =
+      CreateRobustThroughputEstimatorSettings("");
+  EXPECT_TRUE(settings.enabled);
+}
+
+TEST(RobustThroughputEstimatorTest, CanDisable) {
+  RobustThroughputEstimatorSettings settings =
+      CreateRobustThroughputEstimatorSettings(
+          "WebRTC-Bwe-RobustThroughputEstimatorSettings/enabled:false/");
+  EXPECT_FALSE(settings.enabled);
+}
+
 TEST(RobustThroughputEstimatorTest, InitialEstimate) {
   FeedbackGenerator feedback_generator;
   RobustThroughputEstimator throughput_estimator(
@@ -380,6 +393,29 @@ TEST(RobustThroughputEstimatorTest, DeepReordering) {
                 send_rate.bytes_per_sec<double>(),
                 0.05 * send_rate.bytes_per_sec<double>());  // Allow 5% error
   }
+}
+TEST(RobustThroughputEstimatorTest, ResetsIfReceiveClockChangeBackwards) {
+  FeedbackGenerator feedback_generator;
+  RobustThroughputEstimator throughput_estimator(
+      CreateRobustThroughputEstimatorSettings(
+          "WebRTC-Bwe-RobustThroughputEstimatorSettings/"
+          "enabled:true/"));
+  DataRate send_rate(DataRate::BytesPerSec(100000));
+  DataRate recv_rate(DataRate::BytesPerSec(100000));
+
+  std::vector<PacketResult> packet_feedback =
+      feedback_generator.CreateFeedbackVector(20, DataSize::Bytes(1000),
+                                              send_rate, recv_rate);
+  throughput_estimator.IncomingPacketFeedbackVector(packet_feedback);
+  EXPECT_EQ(throughput_estimator.bitrate(), send_rate);
+
+  feedback_generator.AdvanceReceiveClock(TimeDelta::Seconds(-2));
+  send_rate = DataRate::BytesPerSec(200000);
+  recv_rate = DataRate::BytesPerSec(200000);
+  packet_feedback = feedback_generator.CreateFeedbackVector(
+      20, DataSize::Bytes(1000), send_rate, recv_rate);
+  throughput_estimator.IncomingPacketFeedbackVector(packet_feedback);
+  EXPECT_EQ(throughput_estimator.bitrate(), send_rate);
 }
 
 TEST(RobustThroughputEstimatorTest, StreamPausedAndResumed) {
