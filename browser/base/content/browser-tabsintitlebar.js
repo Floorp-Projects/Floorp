@@ -62,14 +62,10 @@ var TabsInTitlebar = {
     if (!this._initialized) {
       return;
     }
-    
-    // Floorp Injection
-    let floorpSBBWindow = document.documentElement.getAttribute("FloorpEnableSSBWindow");
 
     let allowed =
       this.systemSupported &&
-      !window.fullScreen ||
-      floorpSBBWindow == "true" &&
+      !window.fullScreen &&
       !Object.keys(this._disallowed).length;
     if (allowed) {
       document.documentElement.setAttribute("tabsintitlebar", "true");
