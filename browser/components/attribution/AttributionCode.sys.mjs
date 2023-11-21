@@ -16,7 +16,7 @@ import { AppConstants } from "resource://gre/modules/AppConstants.sys.mjs";
 const lazy = {};
 ChromeUtils.defineESModuleGetters(lazy, {
   MacAttribution: "resource:///modules/MacAttribution.sys.mjs",
-  UpdateUtils: "resource://gre/modules/UpdateUtils.sys.mjs",
+  NimbusFeatures: "resource://nimbus/ExperimentAPI.sys.mjs",
 });
 ChromeUtils.defineLazyGetter(lazy, "log", () => {
   let { ConsoleAPI } = ChromeUtils.importESModule(
@@ -107,13 +107,7 @@ export var AttributionCode = {
           throw ex;
         }
       }
-      // Note: this file is in a location that includes the absolute path
-      // to the running install, and the filename includes the update channel.
-      // For example:
-      // ~/Library/Caches/Mozilla/updates/Applications/Firefox/macAttributionDataCache-release
-      // This is done to ensure that attribution data is preserved through a
-      // pave over install of an install on the same channel.
-      file.append("macAttributionDataCache-" + lazy.UpdateUtils.UpdateChannel);
+      file.append("macAttributionData");
       return file;
     }
 
@@ -237,13 +231,13 @@ export var AttributionCode = {
       return gCachedAttrData;
     }
 
-    // This is a temporary block until we're ready to enable macOS reporting by default.
+    // This is a temporary block while we rollout macOS attribution.
     if (
       AppConstants.platform == "macosx" &&
-      !Services.prefs.getBoolPref("browser.attribution.macos.enabled")
+      !lazy.NimbusFeatures.attribution.getVariable("macosEnabled")
     ) {
       lazy.log.debug(
-        "getAttrDataSync: macOS attribution disabled by pref; skipping"
+        "getAttrDataSync: macOS attribution disabled by nimbus; skipping"
       );
       return {};
     }
