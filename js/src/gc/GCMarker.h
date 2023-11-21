@@ -492,7 +492,7 @@ class GCMarker {
   // entities (eg a WeakMap and one of its keys), and push the target onto the
   // mark stack.
   void markEphemeronEdges(gc::EphemeronEdgeVector& edges,
-                          gc::CellColor srcColor);
+                          gc::MarkColor srcColor);
   friend class JS::Zone;
 
 #ifdef DEBUG
