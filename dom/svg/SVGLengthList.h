@@ -174,8 +174,7 @@ class SVGLengthList {
  */
 class SVGLengthListAndInfo : public SVGLengthList {
  public:
-  SVGLengthListAndInfo()
-      : mElement(nullptr), mAxis(0), mCanZeroPadList(false) {}
+  SVGLengthListAndInfo() : mElement(nullptr), mAxis(0), mCanZeroPadList(true) {}
 
   SVGLengthListAndInfo(dom::SVGElement* aElement, uint8_t aAxis,
                        bool aCanZeroPadList)

@@ -56,6 +56,15 @@ bool SVGOrientSMILType::IsEqual(const SMILValue& aLeft,
          aLeft.mU.mOrient.mOrientType == aRight.mU.mOrient.mOrientType;
 }
 
+static float ValueInDegrees(const SMILValue& aValue) {
+  MOZ_ASSERT(aValue.mU.mOrient.mOrientType == SVG_MARKER_ORIENT_ANGLE);
+
+  return aValue.mU.mOrient.mAngle == 0.0f
+             ? 0.0f
+             : aValue.mU.mOrient.mAngle * SVGAnimatedOrient::GetDegreesPerUnit(
+                                              aValue.mU.mOrient.mUnit);
+}
+
 nsresult SVGOrientSMILType::Add(SMILValue& aDest, const SMILValue& aValueToAdd,
                                 uint32_t aCount) const {
   MOZ_ASSERT(aValueToAdd.mType == aDest.mType, "Trying to add invalid types");
@@ -69,13 +78,8 @@ nsresult SVGOrientSMILType::Add(SMILValue& aDest, const SMILValue& aValueToAdd,
 
   // We may be dealing with two different angle units, so we normalize to
   // degrees for the add:
-  float currentAngle =
-      aDest.mU.mOrient.mAngle *
-      SVGAnimatedOrient::GetDegreesPerUnit(aDest.mU.mOrient.mUnit);
-  float angleToAdd =
-      aValueToAdd.mU.mOrient.mAngle *
-      SVGAnimatedOrient::GetDegreesPerUnit(aValueToAdd.mU.mOrient.mUnit) *
-      aCount;
+  float currentAngle = ValueInDegrees(aDest);
+  float angleToAdd = ValueInDegrees(aValueToAdd) * aCount;
 
   // And then we give the resulting animated value the same units as the value
   // that we're animating to/by (i.e. the same as aValueToAdd):
@@ -100,12 +104,7 @@ nsresult SVGOrientSMILType::ComputeDistance(const SMILValue& aFrom,
   }
 
   // Normalize both to degrees in case they're different angle units:
-  double from = aFrom.mU.mOrient.mAngle *
-                SVGAnimatedOrient::GetDegreesPerUnit(aFrom.mU.mOrient.mUnit);
-  double to = aTo.mU.mOrient.mAngle *
-              SVGAnimatedOrient::GetDegreesPerUnit(aTo.mU.mOrient.mUnit);
-
-  aDistance = fabs(to - from);
+  aDistance = fabs(ValueInDegrees(aTo) - ValueInDegrees(aFrom));
 
   return NS_OK;
 }
@@ -125,17 +124,20 @@ nsresult SVGOrientSMILType::Interpolate(const SMILValue& aStartVal,
     return NS_ERROR_FAILURE;
   }
 
-  float start =
-      aStartVal.mU.mOrient.mAngle *
-      SVGAnimatedOrient::GetDegreesPerUnit(aStartVal.mU.mOrient.mUnit);
-  float end = aEndVal.mU.mOrient.mAngle *
-              SVGAnimatedOrient::GetDegreesPerUnit(aEndVal.mU.mOrient.mUnit);
+  float start = ValueInDegrees(aStartVal);
+  float end = ValueInDegrees(aEndVal);
   float result = (start + (end - start) * aUnitDistance);
 
-  // Again, we use the unit of the to/by value for the result:
-  aResult.mU.mOrient.mAngle =
-      result / SVGAnimatedOrient::GetDegreesPerUnit(aEndVal.mU.mOrient.mUnit);
-  aResult.mU.mOrient.mUnit = aEndVal.mU.mOrient.mUnit;
+  // we use the unit of the nearest value for the result:
+  if (aUnitDistance > 0.5) {
+    aResult.mU.mOrient.mAngle =
+        result / SVGAnimatedOrient::GetDegreesPerUnit(aEndVal.mU.mOrient.mUnit);
+    aResult.mU.mOrient.mUnit = aEndVal.mU.mOrient.mUnit;
+  } else {
+    aResult.mU.mOrient.mAngle = result / SVGAnimatedOrient::GetDegreesPerUnit(
+                                             aStartVal.mU.mOrient.mUnit);
+    aResult.mU.mOrient.mUnit = aStartVal.mU.mOrient.mUnit;
+  }
 
   return NS_OK;
 }
