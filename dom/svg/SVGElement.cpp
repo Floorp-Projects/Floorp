@@ -1073,11 +1073,14 @@ bool SVGElement::UpdateDeclarationBlockFromLength(
     StyleLockedDeclarationBlock& aBlock, nsCSSPropertyID aPropId,
     const SVGAnimatedLength& aLength, ValToUse aValToUse) {
   float value;
+  uint8_t units;
   if (aValToUse == ValToUse::Anim) {
     value = aLength.GetAnimValInSpecifiedUnits();
+    units = aLength.GetAnimUnitType();
   } else {
     MOZ_ASSERT(aValToUse == ValToUse::Base);
     value = aLength.GetBaseValInSpecifiedUnits();
+    units = aLength.GetBaseUnitType();
   }
 
   // SVG parser doesn't check non-negativity of some parsed value, we should not
@@ -1087,8 +1090,7 @@ bool SVGElement::UpdateDeclarationBlockFromLength(
     return false;
   }
 
-  nsCSSUnit cssUnit =
-      SVGLength::SpecifiedUnitTypeToCSSUnit(aLength.GetSpecifiedUnitType());
+  nsCSSUnit cssUnit = SVGLength::SpecifiedUnitTypeToCSSUnit(units);
 
   if (cssUnit == eCSSUnit_Percent) {
     Servo_DeclarationBlock_SetPercentValue(&aBlock, aPropId, value / 100.f);

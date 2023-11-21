@@ -116,9 +116,13 @@ DOMSVGLength* DOMSVGLength::Copy() {
   float value;
   if (nsCOMPtr<SVGElement> svg = do_QueryInterface(mOwner)) {
     SVGAnimatedLength* length = svg->GetAnimatedLength(mAttrEnum);
-    unit = length->GetSpecifiedUnitType();
-    value = mIsAnimValItem ? length->GetAnimValInSpecifiedUnits()
-                           : length->GetBaseValInSpecifiedUnits();
+    if (mIsAnimValItem) {
+      unit = length->GetAnimUnitType();
+      value = length->GetAnimValInSpecifiedUnits();
+    } else {
+      unit = length->GetBaseUnitType();
+      value = length->GetBaseValInSpecifiedUnits();
+    }
   } else {
     const SVGLength& length = InternalItem();
     unit = length.GetUnit();
@@ -134,7 +138,9 @@ uint16_t DOMSVGLength::UnitType() {
   }
   uint16_t unitType;
   if (nsCOMPtr<SVGElement> svg = do_QueryInterface(mOwner)) {
-    unitType = svg->GetAnimatedLength(mAttrEnum)->GetSpecifiedUnitType();
+    unitType = mIsAnimValItem
+                   ? svg->GetAnimatedLength(mAttrEnum)->GetAnimUnitType()
+                   : svg->GetAnimatedLength(mAttrEnum)->GetBaseUnitType();
   } else {
     unitType = HasOwner() ? InternalItem().GetUnit() : mUnit;
   }
@@ -415,9 +421,12 @@ void DOMSVGLength::RemovingFromList() {
 SVGLength DOMSVGLength::ToSVGLength() {
   if (nsCOMPtr<SVGElement> svg = do_QueryInterface(mOwner)) {
     SVGAnimatedLength* length = svg->GetAnimatedLength(mAttrEnum);
-    return SVGLength(mIsAnimValItem ? length->GetAnimValInSpecifiedUnits()
-                                    : length->GetBaseValInSpecifiedUnits(),
-                     length->GetSpecifiedUnitType());
+    if (mIsAnimValItem) {
+      return SVGLength(length->GetAnimValInSpecifiedUnits(),
+                       length->GetAnimUnitType());
+    }
+    return SVGLength(length->GetBaseValInSpecifiedUnits(),
+                     length->GetBaseUnitType());
   }
   return HasOwner() ? InternalItem() : SVGLength(mValue, mUnit);
 }
@@ -462,7 +471,11 @@ void DOMSVGLength::FlushIfNeeded() {
   };
 
   if (nsCOMPtr<SVGElement> svg = do_QueryInterface(mOwner)) {
-    MaybeFlush(svg->GetAnimatedLength(mAttrEnum)->GetSpecifiedUnitType(), svg);
+    if (mIsAnimValItem) {
+      MaybeFlush(svg->GetAnimatedLength(mAttrEnum)->GetAnimUnitType(), svg);
+    } else {
+      MaybeFlush(svg->GetAnimatedLength(mAttrEnum)->GetBaseUnitType(), svg);
+    }
   }
   if (nsCOMPtr<DOMSVGLengthList> lengthList = do_QueryInterface(mOwner)) {
     MaybeFlush(InternalItem().GetUnit(), lengthList->Element());

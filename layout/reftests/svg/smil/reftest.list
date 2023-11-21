@@ -237,8 +237,6 @@ skip == anim-text-x-y-dx-dy-01.svg anim-text-x-y-dx-dy-01-ref.svg # bug 579588
 # Test we don't rely on HasAttr to see if an attribute has been set
 == anim-rect-rxry-1.svg anim-rect-rxry-1-ref.svg
 fuzzy(0-1,0-350) == anim-pattern-attr-presence-01.svg anim-pattern-attr-presence-01-ref.svg
-fails == anim-pattern-attr-presence-02.svg anim-pattern-attr-presence-02-ref.svg
-# ^ bug 621651
 fuzzy-if(cocoaWidget&&layersGPUAccelerated,0-1,0-2) == anim-gradient-attr-presence-01.svg anim-gradient-attr-presence-01-ref.svg
 
 == api-sanity-1.svg lime.svg
