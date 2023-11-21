@@ -28,7 +28,7 @@ crate-type = [
 [dependencies]
 atomic = "0.4"
 audio-mixer = "0.1"
-bitflags = "1.0"
+bitflags = "2"
 cubeb-backend = "0.10.3"
 float-cmp = "0.6"
 lazy_static = "1.2"
@@ -39,3 +39,6 @@ triple_buffer = "5.0.5"
 
 [dependencies.coreaudio-sys-utils]
 path = "coreaudio-sys-utils"
+
+[dev-dependencies]
+itertools = "0.11"
