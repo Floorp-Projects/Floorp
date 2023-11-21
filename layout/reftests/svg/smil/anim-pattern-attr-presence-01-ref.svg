@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg"
-  xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 200 600">
+  xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 200 800">
   <!-- 1. patternUnits -->
   <defs>
     <pattern id="patternUnits" width="80" height="80"
@@ -96,6 +96,36 @@
     <rect width="100" height="100" stroke="black" fill="url(#xlink)"/>
     <g transform="translate(100)">
       <rect width="100" height="100" stroke="black" fill="url(#xlink)"/>
+    </g>
+  </g>
+  <!-- 6. x, y -->
+  <defs>
+    <pattern id="xy" width="1" height="1" x="0.1" y="-0.1">
+      <rect width="50" height="50" fill="blue"/>
+      <rect x="50" width="50" height="50" fill="red"/>
+      <rect y="50" width="50" height="50" fill="red"/>
+      <rect x="50" y="50" width="50" height="50" fill="blue"/>
+    </pattern>
+  </defs>
+  <g transform="translate(0 600)">
+    <rect width="100" height="100" stroke="black" fill="url(#xy)"/>
+    <g transform="translate(100)">
+      <rect width="100" height="100" stroke="black" fill="url(#xy)"/>
+    </g>
+  </g>
+  <!-- 7. width, height -->
+  <defs>
+    <pattern id="widthHeight" width="1" height="1">
+      <rect width="50" height="50" fill="blue"/>
+      <rect x="50" width="50" height="50" fill="red"/>
+      <rect y="50" width="50" height="50" fill="red"/>
+      <rect x="50" y="50" width="50" height="50" fill="blue"/>
+    </pattern>
+  </defs>
+  <g transform="translate(0 700)">
+    <rect width="100" height="100" stroke="black" fill="url(#widthHeight)"/>
+    <g transform="translate(100)">
+      <rect width="100" height="100" stroke="black" fill="url(#widthHeight)"/>
     </g>
   </g>
   <!-- If adding more tests here, be sure to update the viewBox on the root svg

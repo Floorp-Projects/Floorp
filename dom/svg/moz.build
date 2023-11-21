@@ -199,6 +199,7 @@ UNIFIED_SOURCES += [
     "SVGLength.cpp",
     "SVGLengthList.cpp",
     "SVGLengthListSMILType.cpp",
+    "SVGLengthSMILType.cpp",
     "SVGLineElement.cpp",
     "SVGMarkerElement.cpp",
     "SVGMaskElement.cpp",

@@ -116,7 +116,7 @@ class SVGAnimatedLength {
             float aValue = 0,
             uint8_t aUnitType = dom::SVGLength_Binding::SVG_LENGTHTYPE_NUMBER) {
     mAnimVal = mBaseVal = aValue;
-    mSpecifiedUnitType = aUnitType;
+    mBaseUnitType = mAnimUnitType = aUnitType;
     mAttrEnum = aAttrEnum;
     mCtxType = aCtxType;
     mIsAnimated = false;
@@ -126,7 +126,8 @@ class SVGAnimatedLength {
   SVGAnimatedLength& operator=(const SVGAnimatedLength& aLength) {
     mBaseVal = aLength.mBaseVal;
     mAnimVal = aLength.mAnimVal;
-    mSpecifiedUnitType = aLength.mSpecifiedUnitType;
+    mBaseUnitType = aLength.mBaseUnitType;
+    mAnimUnitType = aLength.mAnimUnitType;
     mIsAnimated = aLength.mIsAnimated;
     mIsBaseSet = aLength.mIsBaseSet;
     return *this;
@@ -138,27 +139,27 @@ class SVGAnimatedLength {
   void GetAnimValueString(nsAString& aValue) const;
 
   float GetBaseValue(const SVGElement* aSVGElement) const {
-    return mBaseVal * GetPixelsPerUnit(aSVGElement, mSpecifiedUnitType);
+    return mBaseVal * GetPixelsPerUnit(aSVGElement, mBaseUnitType);
   }
 
   float GetAnimValue(const SVGElement* aSVGElement) const {
-    return mAnimVal * GetPixelsPerUnit(aSVGElement, mSpecifiedUnitType);
+    return mAnimVal * GetPixelsPerUnit(aSVGElement, mAnimUnitType);
   }
   float GetAnimValue(nsIFrame* aFrame) const {
-    return mAnimVal * GetPixelsPerUnit(aFrame, mSpecifiedUnitType);
+    return mAnimVal * GetPixelsPerUnit(aFrame, mAnimUnitType);
   }
   float GetAnimValue(const SVGViewportElement* aCtx) const {
-    return mAnimVal * GetPixelsPerUnit(aCtx, mSpecifiedUnitType);
+    return mAnimVal * GetPixelsPerUnit(aCtx, mAnimUnitType);
   }
   float GetAnimValue(const UserSpaceMetrics& aMetrics) const {
-    return mAnimVal * GetPixelsPerUnit(aMetrics, mSpecifiedUnitType);
+    return mAnimVal * GetPixelsPerUnit(aMetrics, mAnimUnitType);
   }
 
   uint8_t GetCtxType() const { return mCtxType; }
-  uint8_t GetSpecifiedUnitType() const { return mSpecifiedUnitType; }
+  uint8_t GetBaseUnitType() const { return mBaseUnitType; }
+  uint8_t GetAnimUnitType() const { return mAnimUnitType; }
   bool IsPercentage() const {
-    return mSpecifiedUnitType ==
-           dom::SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE;
+    return mAnimUnitType == dom::SVGLength_Binding::SVG_LENGTHTYPE_PERCENTAGE;
   }
   float GetAnimValInSpecifiedUnits() const { return mAnimVal; }
   float GetBaseValInSpecifiedUnits() const { return mBaseVal; }
@@ -181,9 +182,10 @@ class SVGAnimatedLength {
  private:
   float mAnimVal;
   float mBaseVal;
-  uint8_t mSpecifiedUnitType;
-  uint8_t mAttrEnum;  // element specified tracking for attribute
-  uint8_t mCtxType;   // X, Y or Unspecified
+  uint8_t mBaseUnitType;
+  uint8_t mAnimUnitType;
+  uint8_t mAttrEnum : 6;  // element specified tracking for attribute
+  uint8_t mCtxType : 2;   // X, Y or Unspecified
   bool mIsAnimated : 1;
   bool mIsBaseSet : 1;
 
@@ -205,7 +207,7 @@ class SVGAnimatedLength {
   nsresult SetBaseValue(float aValue, SVGElement* aSVGElement, bool aDoSetAttr);
   void SetBaseValueInSpecifiedUnits(float aValue, SVGElement* aSVGElement,
                                     bool aDoSetAttr);
-  nsresult SetAnimValue(float aValue, SVGElement* aSVGElement);
+  void SetAnimValue(float aValue, uint16_t aUnitType, SVGElement* aSVGElement);
   void SetAnimValueInSpecifiedUnits(float aValue, SVGElement* aSVGElement);
   nsresult NewValueSpecifiedUnits(uint16_t aUnitType,
                                   float aValueInSpecifiedUnits,
@@ -235,6 +237,83 @@ class SVGAnimatedLength {
     void ClearAnimValue() override;
     nsresult SetAnimValue(const SMILValue& aValue) override;
   };
+};
+
+/**
+ * This class is used by the SMIL code when a length is to be stored in a
+ * SMILValue instance. Since SMILValue objects may be cached, it is necessary
+ * for us to hold a strong reference to our element so that it doesn't
+ * disappear out from under us if, say, the element is removed from the DOM
+ * tree.
+ */
+class SVGLengthAndInfo {
+ public:
+  SVGLengthAndInfo() = default;
+
+  explicit SVGLengthAndInfo(dom::SVGElement* aElement)
+      : mElement(do_GetWeakReference(aElement->AsNode())) {}
+
+  void SetInfo(dom::SVGElement* aElement) {
+    mElement = do_GetWeakReference(aElement->AsNode());
+  }
+
+  dom::SVGElement* Element() const {
+    nsCOMPtr<nsIContent> e = do_QueryReferent(mElement);
+    return static_cast<dom::SVGElement*>(e.get());
+  }
+
+  bool operator==(const SVGLengthAndInfo& rhs) const {
+    return mValue == rhs.mValue && mUnitType == rhs.mUnitType &&
+           mCtxType == rhs.mCtxType;
+  }
+
+  float Value() const { return mValue; }
+
+  uint8_t UnitType() const { return mUnitType; }
+
+  void CopyFrom(const SVGLengthAndInfo& rhs) {
+    mElement = rhs.mElement;
+    mValue = rhs.mValue;
+    mUnitType = rhs.mUnitType;
+    mCtxType = rhs.mCtxType;
+  }
+
+  float ConvertUnits(const SVGLengthAndInfo& aTo) const;
+
+  float ValueInPixels(const dom::UserSpaceMetrics& aMetrics) const;
+
+  void Add(const SVGLengthAndInfo& aValueToAdd, uint32_t aCount);
+
+  static void Interpolate(const SVGLengthAndInfo& aStart,
+                          const SVGLengthAndInfo& aEnd, double aUnitDistance,
+                          SVGLengthAndInfo& aResult);
+
+  /**
+   * Enables SVGAnimatedLength values to be copied into SVGLengthAndInfo
+   * objects. Note that callers should also call SetInfo() when using this
+   * method!
+   */
+  void CopyBaseFrom(const SVGAnimatedLength& rhs) {
+    mValue = rhs.GetBaseValInSpecifiedUnits();
+    mUnitType = rhs.GetBaseUnitType();
+    mCtxType = rhs.GetCtxType();
+  }
+
+  void Set(float aValue, uint8_t aUnitType, uint8_t aCtxType) {
+    mValue = aValue;
+    mUnitType = aUnitType;
+    mCtxType = aCtxType;
+  }
+
+ private:
+  // We must keep a weak reference to our element because we may belong to a
+  // cached baseVal SMILValue. See the comments starting at:
+  // https://bugzilla.mozilla.org/show_bug.cgi?id=515116#c15
+  // See also https://bugzilla.mozilla.org/show_bug.cgi?id=653497
+  nsWeakPtr mElement;
+  float mValue = 0.0f;
+  uint8_t mUnitType = dom::SVGLength_Binding::SVG_LENGTHTYPE_NUMBER;
+  uint8_t mCtxType = SVGContentUtils::XY;
 };
 
 }  // namespace mozilla
