@@ -697,13 +697,17 @@ this.AccessibilityUtils = (function () {
       gEnv = { ...DEFAULT_ENV };
     },
 
-    reset(a11yChecks = false) {
+    reset(a11yChecks = false, testPath = "") {
       gA11YChecks = a11yChecks;
 
       const { Services } = SpecialPowers;
       // Disable accessibility service if it is running and if a11y checks are
-      // disabled.
-      if (!gA11YChecks && Services.appinfo.accessibilityEnabled) {
+      // disabled. However, don't do this for accessibility engine tests.
+      if (
+        !gA11YChecks &&
+        Services.appinfo.accessibilityEnabled &&
+        !testPath.startsWith("chrome://mochitests/content/browser/accessible/")
+      ) {
         Services.prefs.setIntPref(FORCE_DISABLE_ACCESSIBILITY_PREF, 1);
         Services.prefs.clearUserPref(FORCE_DISABLE_ACCESSIBILITY_PREF);
       }

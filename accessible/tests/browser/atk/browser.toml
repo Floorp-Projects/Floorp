@@ -1,0 +1,15 @@
+[DEFAULT]
+subsuite = "a11y"
+skip-if = [
+  "os != 'linux'",
+  "headless",
+]
+support-files = ["head.js"]
+prefs = [
+  # Enabling the a11y service from XPCOM doesn't seem to be enough to get ATK
+  # working correctly. Force enable it before the test starts.
+  "accessibility.force_disabled=-1",
+  "javascript.options.asyncstack_capture_debuggee_only=false",
+]
+
+["browser_role.js"]
