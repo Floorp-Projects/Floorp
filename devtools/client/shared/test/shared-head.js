@@ -2228,3 +2228,65 @@ function getClientCssProperties() {
     normalizeCssData({ properties: generateCssProperties() })
   );
 }
+
+/**
+ * Helper method to unregister a Service Worker promptly.
+ *
+ * @param {String} workerUrl
+ *        Absolute Worker URL to unregister.
+ */
+async function unregisterServiceWorker(workerUrl) {
+  info(`Unregistering Service Worker: ${workerUrl}\n`);
+  // Help the SW to be immediately destroyed after unregistering it.
+  Services.prefs.setIntPref("dom.serviceWorkers.idle_timeout", 0);
+
+  const swm = Cc["@mozilla.org/serviceworkers/manager;1"].getService(
+    Ci.nsIServiceWorkerManager
+  );
+  // Unfortunately we can't use swm.getRegistrationByPrincipal, as it requires a "scope", which doesn't seem to be the worker URL.
+  // So let's use getAllRegistrations to find the nsIServiceWorkerInfo in order to:
+  // - retrieve its active worker,
+  // - call attach+detachDebugger,
+  // - reset the idle timeout.
+  // This way, the unregister instruction is immediate, thanks to the 0 dom.serviceWorkers.idle_timeout we set at the beginning of the function
+  const registrations = swm.getAllRegistrations();
+  let matchedInfo;
+  for (let i = 0; i < registrations.length; i++) {
+    const info = registrations.queryElementAt(
+      i,
+      Ci.nsIServiceWorkerRegistrationInfo
+    );
+    // Lookup for an exact URL match.
+    if (info.scriptSpec === workerUrl) {
+      matchedInfo = info;
+      break;
+    }
+  }
+  ok(!!matchedInfo, "Found the service worker info");
+
+  info("Wait for the worker to be active");
+  await waitFor(() => matchedInfo.activeWorker, "Wait for the SW to be active");
+
+  // We need to attach+detach the debugger in order to reset the idle timeout.
+  // Otherwise the worker would still be waiting for a previously registered timeout
+  // which would be the 0ms one we set by tweaking the preference.
+  matchedInfo.activeWorker.attachDebugger();
+  matchedInfo.activeWorker.detachDebugger();
+
+  // Now call unregister on that worker so that it can be destroyed immediately
+  const unregisterSuccess = await new Promise(resolve => {
+    swm.unregister(
+      matchedInfo.principal,
+      {
+        unregisterSucceeded(success) {
+          resolve(success);
+        },
+      },
+      matchedInfo.scope
+    );
+  });
+  ok(unregisterSuccess, "Service worker successfully unregistered");
+
+  // Reset this preference in order to ensure other SW are not immediately destroyed.
+  Services.prefs.clearUserPref("dom.serviceWorkers.idle_timeout");
+}
