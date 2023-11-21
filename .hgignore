@@ -143,7 +143,8 @@ _OPT\.OBJ/
 ^remote/test/puppeteer/test/output-firefox
 ^remote/test/puppeteer/test/output-chromium
 ^remote/test/puppeteer/testserver/lib/
-^remote/test/puppeteer/utils/mochaRunner/lib/
+^remote/test/puppeteer/tools/internal/
+`remote/test/puppeteer/tools/mocha-runner/bin/
 ^remote/test/puppeteer/website
 
 ^third_party/js/PKI.js/node_modules/

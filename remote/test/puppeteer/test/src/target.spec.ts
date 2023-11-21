@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-import {ServerResponse} from 'http';
+import type {ServerResponse} from 'http';
 
 import expect from 'expect';
-import {TimeoutError, Target} from 'puppeteer';
-import {Page} from 'puppeteer-core/internal/api/Page.js';
+import {type Target, TimeoutError} from 'puppeteer';
+import type {Page} from 'puppeteer-core/internal/api/Page.js';
 
 import {getTestState, setupTestBrowserHooks} from './mocha-utils.js';
 import {waitEvent} from './utils.js';
@@ -99,7 +99,7 @@ describe('Target', function () {
     expect(otherPage!.url()).toEqual(
       server.CROSS_PROCESS_PREFIX + '/empty.html'
     );
-    expect(page).not.toEqual(otherPage);
+    expect(page).not.toBe(otherPage);
   });
   it('should report when a new page is created and closed', async () => {
     const {page, server, context} = await getTestState();
@@ -226,7 +226,7 @@ describe('Target', function () {
 
     let targetChanged = false;
     const listener = () => {
-      return (targetChanged = true);
+      targetChanged = true;
     };
     context.on('targetchanged', listener);
     const targetPromise = waitEvent<Target>(context, 'targetcreated');
@@ -246,6 +246,7 @@ describe('Target', function () {
     expect(targetChanged).toBe(false);
     context.off('targetchanged', listener);
   });
+
   it('should not crash while redirecting if original request was missed', async () => {
     const {page, server, context} = await getTestState();
 
@@ -268,11 +269,12 @@ describe('Target', function () {
       {timeout: 3000}
     );
     const newPage = (await target.page())!;
+    const loadEvent = waitEvent(newPage, 'load');
     // Issue a redirect.
     serverResponse.writeHead(302, {location: '/injectedstyle.css'});
     serverResponse.end();
     // Wait for the new page to load.
-    await waitEvent(newPage, 'load');
+    await loadEvent;
     // Cleanup.
     await newPage.close();
   });

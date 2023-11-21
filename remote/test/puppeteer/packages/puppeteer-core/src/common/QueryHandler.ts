@@ -14,14 +14,15 @@
  * limitations under the License.
  */
 
-import {ElementHandle} from '../api/ElementHandle.js';
+import type {ElementHandle} from '../api/ElementHandle.js';
+import {_isElementHandle} from '../api/ElementHandleSymbol.js';
 import type {Frame} from '../api/Frame.js';
+import type {WaitForSelectorOptions} from '../api/Page.js';
 import type PuppeteerUtil from '../injected/injected.js';
 import {isErrorLike} from '../util/ErrorLike.js';
 import {interpolateFunction, stringifyFunction} from '../util/Function.js';
 
 import {transposeIterableHandle} from './HandleIterator.js';
-import type {WaitForSelectorOptions} from './IsolatedWorld.js';
 import {LazyArg} from './LazyArg.js';
 import type {Awaitable, AwaitableIterable} from './types.js';
 
@@ -132,7 +133,7 @@ export class QueryHandler {
         return context.puppeteerUtil;
       })
     );
-    if (!(result instanceof ElementHandle)) {
+    if (!(_isElementHandle in result)) {
       return null;
     }
     return result.move();
@@ -152,7 +153,7 @@ export class QueryHandler {
   ): Promise<ElementHandle<Node> | null> {
     let frame!: Frame;
     using element = await (async () => {
-      if (!(elementOrFrame instanceof ElementHandle)) {
+      if (!(_isElementHandle in elementOrFrame)) {
         frame = elementOrFrame;
         return;
       }
@@ -196,7 +197,7 @@ export class QueryHandler {
         throw signal.reason;
       }
 
-      if (!(handle instanceof ElementHandle)) {
+      if (!(_isElementHandle in handle)) {
         return null;
       }
       return await frame.mainRealm().transferHandle(handle);

@@ -23,18 +23,17 @@ import {
   ChromeReleaseChannel as BrowsersChromeReleaseChannel,
 } from '@puppeteer/browsers';
 
-import {Browser} from '../api/Browser.js';
+import type {Browser} from '../api/Browser.js';
 import {debugError} from '../common/util.js';
-import {USE_TAB_TARGET} from '../environment.js';
 import {assert} from '../util/assert.js';
 
-import {
+import type {
   BrowserLaunchArgumentOptions,
   ChromeReleaseChannel,
   PuppeteerNodeLaunchOptions,
 } from './LaunchOptions.js';
-import {ProductLauncher, ResolvedLaunchArgs} from './ProductLauncher.js';
-import {PuppeteerNode} from './PuppeteerNode.js';
+import {ProductLauncher, type ResolvedLaunchArgs} from './ProductLauncher.js';
+import type {PuppeteerNode} from './PuppeteerNode.js';
 import {rm} from './util/fs.js';
 
 /**
@@ -167,18 +166,36 @@ export class ChromeLauncher extends ProductLauncher {
   override defaultArgs(options: BrowserLaunchArgumentOptions = {}): string[] {
     // See https://github.com/GoogleChrome/chrome-launcher/blob/main/docs/chrome-flags-for-tools.md
 
+    const userDisabledFeatures = getFeatures(
+      '--disable-features',
+      options.args
+    );
+    if (options.args && userDisabledFeatures.length > 0) {
+      removeMatchingFlags(options.args, '--disable-features');
+    }
+
+    // Merge default disabled features with user-provided ones, if any.
     const disabledFeatures = [
       'Translate',
       // AcceptCHFrame disabled because of crbug.com/1348106.
       'AcceptCHFrame',
       'MediaRouter',
       'OptimizationHints',
+      // https://crbug.com/1492053
+      'ProcessPerSiteUpToMainFrameThreshold',
+      ...userDisabledFeatures,
     ];
 
-    if (!USE_TAB_TARGET) {
-      disabledFeatures.push('Prerender2');
-      disabledFeatures.push('BackForwardCache');
+    const userEnabledFeatures = getFeatures('--enable-features', options.args);
+    if (options.args && userEnabledFeatures.length > 0) {
+      removeMatchingFlags(options.args, '--enable-features');
     }
+
+    // Merge default enabled features with user-provided ones, if any.
+    const enabledFeatures = [
+      'NetworkServiceInProcess2',
+      ...userEnabledFeatures,
+    ];
 
     const chromeArguments = [
       '--allow-pre-commit-input',
@@ -192,8 +209,9 @@ export class ChromeLauncher extends ProductLauncher {
       '--disable-default-apps',
       '--disable-dev-shm-usage',
       '--disable-extensions',
-      `--disable-features=${disabledFeatures.join(',')}`,
+      '--disable-field-trial-config', // https://source.chromium.org/chromium/chromium/src/+/main:testing/variations/README.md
       '--disable-hang-monitor',
+      '--disable-infobars',
       '--disable-ipc-flooding-protection',
       '--disable-popup-blocking',
       '--disable-prompt-on-repost',
@@ -201,16 +219,14 @@ export class ChromeLauncher extends ProductLauncher {
       '--disable-search-engine-choice-screen',
       '--disable-sync',
       '--enable-automation',
-      // TODO(sadym): remove '--enable-blink-features=IdleDetection' once
-      // IdleDetection is turned on by default.
-      '--enable-blink-features=IdleDetection',
-      '--enable-features=NetworkServiceInProcess2',
       '--export-tagged-pdf',
       '--force-color-profile=srgb',
       '--metrics-recording-only',
       '--no-first-run',
       '--password-store=basic',
       '--use-mock-keychain',
+      `--disable-features=${disabledFeatures.join(',')}`,
+      `--enable-features=${enabledFeatures.join(',')}`,
     ];
     const {
       devtools = false,
@@ -267,4 +283,48 @@ function convertPuppeteerChannelToBrowsersChannel(
     case 'chrome-canary':
       return BrowsersChromeReleaseChannel.CANARY;
   }
+}
+
+/**
+ * Extracts all features from the given command-line flag
+ * (e.g. `--enable-features`, `--enable-features=`).
+ *
+ * Example input:
+ * ["--enable-features=NetworkService,NetworkServiceInProcess", "--enable-features=Foo"]
+ *
+ * Example output:
+ * ["NetworkService", "NetworkServiceInProcess", "Foo"]
+ *
+ * @internal
+ */
+export function getFeatures(flag: string, options: string[] = []): string[] {
+  return options
+    .filter(s => {
+      return s.startsWith(flag.endsWith('=') ? flag : `${flag}=`);
+    })
+    .map(s => {
+      return s.split(new RegExp(`${flag}` + '=\\s*'))[1]?.trim();
+    })
+    .filter(s => {
+      return s;
+    }) as string[];
+}
+
+/**
+ * Removes all elements in-place from the given string array
+ * that match the given command-line flag.
+ *
+ * @internal
+ */
+export function removeMatchingFlags(array: string[], flag: string): string[] {
+  const regex = new RegExp(`^${flag}=.*`);
+  let i = 0;
+  while (i < array.length) {
+    if (regex.test(array[i]!)) {
+      array.splice(i, 1);
+    } else {
+      i++;
+    }
+  }
+  return array;
 }

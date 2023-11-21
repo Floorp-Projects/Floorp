@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-import {ARIAQueryHandler} from './AriaQueryHandler.js';
+import {ARIAQueryHandler} from '../cdp/AriaQueryHandler.js';
+
 import {customQueryHandlers} from './CustomQueryHandler.js';
 import {PierceQueryHandler} from './PierceQueryHandler.js';
 import {PQueryHandler} from './PQueryHandler.js';
@@ -22,26 +23,14 @@ import type {QueryHandler} from './QueryHandler.js';
 import {TextQueryHandler} from './TextQueryHandler.js';
 import {XPathQueryHandler} from './XPathQueryHandler.js';
 
-export const BUILTIN_QUERY_HANDLERS = Object.freeze({
+const BUILTIN_QUERY_HANDLERS = {
   aria: ARIAQueryHandler,
   pierce: PierceQueryHandler,
   xpath: XPathQueryHandler,
   text: TextQueryHandler,
-});
+} as const;
 
 const QUERY_SEPARATORS = ['=', '/'];
-
-/**
- * @internal
- */
-export function getQueryHandlerByName(
-  name: string
-): typeof QueryHandler | undefined {
-  if (name in BUILTIN_QUERY_HANDLERS) {
-    return BUILTIN_QUERY_HANDLERS[name as 'aria'];
-  }
-  return customQueryHandlers.get(name);
-}
 
 /**
  * @internal

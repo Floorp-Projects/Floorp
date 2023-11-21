@@ -17,7 +17,7 @@
 import assert from 'assert';
 
 import expect from 'expect';
-import {SerializedAXNode} from 'puppeteer-core/internal/common/Accessibility.js';
+import type {SerializedAXNode} from 'puppeteer-core/internal/cdp/Accessibility.js';
 
 import {getTestState, setupTestBrowserHooks} from './mocha-utils.js';
 
@@ -114,7 +114,7 @@ describe('Accessibility', function () {
             },
           ],
         };
-    expect(await page.accessibility.snapshot()).toEqual(golden);
+    expect(await page.accessibility.snapshot()).toMatchObject(golden);
   });
   it('should report uninteresting nodes', async () => {
     const {page, isFirefox} = await getTestState();
@@ -158,7 +158,7 @@ describe('Accessibility', function () {
       findFocusedNode(
         await page.accessibility.snapshot({interestingOnly: false})
       )
-    ).toEqual(golden);
+    ).toMatchObject(golden);
   });
   it('get snapshots while the tree is re-calculated', async () => {
     // see https://github.com/puppeteer/puppeteer/issues/9404
@@ -338,7 +338,7 @@ describe('Accessibility', function () {
                 name: 'Edit this image: ',
               },
               {
-                role: 'img',
+                role: 'image',
                 name: 'my fake image',
               },
             ],
@@ -346,7 +346,7 @@ describe('Accessibility', function () {
       const snapshot = await page.accessibility.snapshot();
       assert(snapshot);
       assert(snapshot.children);
-      expect(snapshot.children[0]).toEqual(golden);
+      expect(snapshot.children[0]).toMatchObject(golden);
     });
     it('rich text editable fields with role should have children', async () => {
       const {page, isFirefox} = await getTestState();
@@ -383,7 +383,7 @@ describe('Accessibility', function () {
       const snapshot = await page.accessibility.snapshot();
       assert(snapshot);
       assert(snapshot.children);
-      expect(snapshot.children[0]).toEqual(golden);
+      expect(snapshot.children[0]).toMatchObject(golden);
     });
 
     // Firefox does not support contenteditable="plaintext-only".
@@ -545,7 +545,7 @@ describe('Accessibility', function () {
             root: div,
             interestingOnly: false,
           })
-        ).toEqual({
+        ).toMatchObject({
           role: 'generic',
           name: '',
           children: [

@@ -22,10 +22,14 @@ module.exports = {
   reporter: 'dot',
   logLevel: 'debug',
   require: ['./test/build/mocha-utils.js', 'source-map-support/register'],
-  spec: 'test/build/**/*.spec.js',
   exit: !!process.env.CI,
   retries: process.env.CI ? 3 : 0,
   parallel: !!process.env.PARALLEL,
   timeout: timeout,
   reporter: process.env.CI ? 'spec' : 'dot',
+  // This should make mocha crash on uncaught errors.
+  // See https://github.com/mochajs/mocha/blob/master/docs/index.md#--allow-uncaught.
+  allowUncaught: true,
+  // See https://github.com/mochajs/mocha/blob/master/docs/index.md#--async-only--a.
+  asyncOnly: true,
 };

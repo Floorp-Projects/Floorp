@@ -14,31 +14,32 @@
  * limitations under the License.
  */
 
-import {Protocol} from 'devtools-protocol';
+import type {Protocol} from 'devtools-protocol';
 
-import {Frame} from '../api/Frame.js';
+import type {Frame} from '../api/Frame.js';
 import {getQueryHandlerAndSelector} from '../common/GetQueryHandler.js';
-import {WaitForSelectorOptions} from '../common/IsolatedWorld.js';
 import {LazyArg} from '../common/LazyArg.js';
-import {
+import type {
   ElementFor,
   EvaluateFuncWith,
   HandleFor,
   HandleOr,
   NodeFor,
 } from '../common/types.js';
-import {KeyInput} from '../common/USKeyboardLayout.js';
+import type {KeyInput} from '../common/USKeyboardLayout.js';
 import {isString, withSourcePuppeteerURLIfNone} from '../common/util.js';
 import {assert} from '../util/assert.js';
 import {AsyncIterableUtil} from '../util/AsyncIterableUtil.js';
+import {throwIfDisposed} from '../util/decorators.js';
 
-import {
+import {_isElementHandle} from './ElementHandleSymbol.js';
+import type {
   KeyboardTypeOptions,
   KeyPressOptions,
   MouseClickOptions,
 } from './Input.js';
 import {JSHandle} from './JSHandle.js';
-import {ScreenshotOptions} from './Page.js';
+import type {ScreenshotOptions, WaitForSelectorOptions} from './Page.js';
 
 /**
  * @public
@@ -104,6 +105,16 @@ export interface Point {
 }
 
 /**
+ * @public
+ */
+export interface ElementScreenshotOptions extends ScreenshotOptions {
+  /**
+   * @defaultValue true
+   */
+  scrollIntoView?: boolean;
+}
+
+/**
  * ElementHandle represents an in-page DOM element.
  *
  * @remarks
@@ -139,6 +150,11 @@ export interface Point {
 export abstract class ElementHandle<
   ElementType extends Node = Element,
 > extends JSHandle<ElementType> {
+  /**
+   * @internal
+   */
+  declare [_isElementHandle]: boolean;
+
   /**
    * A given method will have it's `this` replaced with an isolated version of
    * `this` when decorated with this decorator.
@@ -202,6 +218,7 @@ export abstract class ElementHandle<
   constructor(handle: JSHandle<ElementType>) {
     super();
     this.handle = handle;
+    this[_isElementHandle] = true;
   }
 
   /**
@@ -221,16 +238,7 @@ export abstract class ElementHandle<
   /**
    * @internal
    */
-  override async getProperty<K extends keyof ElementType>(
-    propertyName: HandleOr<K>
-  ): Promise<HandleFor<ElementType[K]>>;
-  /**
-   * @internal
-   */
-  override async getProperty(propertyName: string): Promise<JSHandle<unknown>>;
-  /**
-   * @internal
-   */
+  @throwIfDisposed()
   @ElementHandle.bindIsolatedHandle
   override async getProperty<K extends keyof ElementType>(
     propertyName: HandleOr<K>
@@ -241,6 +249,7 @@ export abstract class ElementHandle<
   /**
    * @internal
    */
+  @throwIfDisposed()
   @ElementHandle.bindIsolatedHandle
   override async getProperties(): Promise<Map<string, JSHandle>> {
     return await this.handle.getProperties();
@@ -259,6 +268,10 @@ export abstract class ElementHandle<
     pageFunction: Func | string,
     ...args: Params
   ): Promise<Awaited<ReturnType<Func>>> {
+    pageFunction = withSourcePuppeteerURLIfNone(
+      this.evaluate.name,
+      pageFunction
+    );
     return await this.handle.evaluate(pageFunction, ...args);
   }
 
@@ -275,12 +288,17 @@ export abstract class ElementHandle<
     pageFunction: Func | string,
     ...args: Params
   ): Promise<HandleFor<Awaited<ReturnType<Func>>>> {
+    pageFunction = withSourcePuppeteerURLIfNone(
+      this.evaluateHandle.name,
+      pageFunction
+    );
     return await this.handle.evaluateHandle(pageFunction, ...args);
   }
 
   /**
    * @internal
    */
+  @throwIfDisposed()
   @ElementHandle.bindIsolatedHandle
   override async jsonValue(): Promise<ElementType> {
     return await this.handle.jsonValue();
@@ -326,6 +344,7 @@ export abstract class ElementHandle<
    * @returns A {@link ElementHandle | element handle} to the first element
    * matching the given selector. Otherwise, `null`.
    */
+  @throwIfDisposed()
   @ElementHandle.bindIsolatedHandle
   async $<Selector extends string>(
     selector: Selector
@@ -345,6 +364,7 @@ export abstract class ElementHandle<
    * @returns An array of {@link ElementHandle | element handles} that point to
    * elements matching the given selector.
    */
+  @throwIfDisposed()
   @ElementHandle.bindIsolatedHandle
   async $$<Selector extends string>(
     selector: Selector
@@ -423,7 +443,7 @@ export abstract class ElementHandle<
    *
    * JavaScript:
    *
-   * ```js
+   * ```ts
    * const feedHandle = await page.$('.feed');
    * expect(
    *   await feedHandle.$$eval('.tweet', nodes => nodes.map(n => n.innerText))
@@ -478,6 +498,7 @@ export abstract class ElementHandle<
    * If there are no such elements, the method will resolve to an empty array.
    * @param expression - Expression to {@link https://developer.mozilla.org/en-US/docs/Web/API/Document/evaluate | evaluate}
    */
+  @throwIfDisposed()
   @ElementHandle.bindIsolatedHandle
   async $x(expression: string): Promise<Array<ElementHandle<Node>>> {
     if (expression.startsWith('//')) {
@@ -523,6 +544,7 @@ export abstract class ElementHandle<
    * @returns An element matching the given selector.
    * @throws Throws if an element matching the given selector doesn't appear.
    */
+  @throwIfDisposed()
   @ElementHandle.bindIsolatedHandle
   async waitForSelector<Selector extends string>(
     selector: Selector,
@@ -553,6 +575,7 @@ export abstract class ElementHandle<
    * Checks if an element is visible using the same mechanism as
    * {@link ElementHandle.waitForSelector}.
    */
+  @throwIfDisposed()
   @ElementHandle.bindIsolatedHandle
   async isVisible(): Promise<boolean> {
     return await this.#checkVisibility(true);
@@ -562,6 +585,7 @@ export abstract class ElementHandle<
    * Checks if an element is hidden using the same mechanism as
    * {@link ElementHandle.waitForSelector}.
    */
+  @throwIfDisposed()
   @ElementHandle.bindIsolatedHandle
   async isHidden(): Promise<boolean> {
     return await this.#checkVisibility(false);
@@ -629,6 +653,7 @@ export abstract class ElementHandle<
    *   default value can be changed by using the {@link Page.setDefaultTimeout}
    *   method.
    */
+  @throwIfDisposed()
   @ElementHandle.bindIsolatedHandle
   async waitForXPath(
     xpath: string,
@@ -662,6 +687,7 @@ export abstract class ElementHandle<
    * @throws An error if the handle does not match. **The handle will not be
    * automatically disposed.**
    */
+  @throwIfDisposed()
   @ElementHandle.bindIsolatedHandle
   async toElement<
     K extends keyof HTMLElementTagNameMap | keyof SVGElementTagNameMap,
@@ -685,6 +711,7 @@ export abstract class ElementHandle<
   /**
    * Returns the middle point within an element unless a specific offset is provided.
    */
+  @throwIfDisposed()
   @ElementHandle.bindIsolatedHandle
   async clickablePoint(offset?: Offset): Promise<Point> {
     const box = await this.#clickableBox();
@@ -708,6 +735,7 @@ export abstract class ElementHandle<
    * uses {@link Page} to hover over the center of the element.
    * If the element is detached from DOM, the method throws an error.
    */
+  @throwIfDisposed()
   @ElementHandle.bindIsolatedHandle
   async hover(this: ElementHandle<Element>): Promise<void> {
     await this.scrollIntoViewIfNeeded();
@@ -720,6 +748,7 @@ export abstract class ElementHandle<
    * uses {@link Page | Page.mouse} to click in the center of the element.
    * If the element is detached from DOM, the method throws an error.
    */
+  @throwIfDisposed()
   @ElementHandle.bindIsolatedHandle
   async click(
     this: ElementHandle<Element>,
@@ -731,59 +760,134 @@ export abstract class ElementHandle<
   }
 
   /**
-   * This method creates and captures a dragevent from the element.
+   * Drags an element over the given element or point.
+   *
+   * @returns DEPRECATED. When drag interception is enabled, the drag payload is
+   * returned.
    */
+  @throwIfDisposed()
+  @ElementHandle.bindIsolatedHandle
   async drag(
     this: ElementHandle<Element>,
-    target: Point
-  ): Promise<Protocol.Input.DragData>;
-  async drag(this: ElementHandle<Element>): Promise<Protocol.Input.DragData> {
-    throw new Error('Not implemented');
+    target: Point | ElementHandle<Element>
+  ): Promise<Protocol.Input.DragData | void> {
+    await this.scrollIntoViewIfNeeded();
+    const page = this.frame.page();
+    if (page.isDragInterceptionEnabled()) {
+      const source = await this.clickablePoint();
+      if (target instanceof ElementHandle) {
+        target = await target.clickablePoint();
+      }
+      return await page.mouse.drag(source, target);
+    }
+    try {
+      if (!page._isDragging) {
+        page._isDragging = true;
+        await this.hover();
+        await page.mouse.down();
+      }
+      if (target instanceof ElementHandle) {
+        await target.hover();
+      } else {
+        await page.mouse.move(target.x, target.y);
+      }
+    } catch (error) {
+      page._isDragging = false;
+      throw error;
+    }
   }
 
   /**
-   * This method creates a `dragenter` event on the element.
+   * @deprecated Do not use. `dragenter` will automatically be performed during dragging.
    */
+  @throwIfDisposed()
+  @ElementHandle.bindIsolatedHandle
   async dragEnter(
     this: ElementHandle<Element>,
-    data?: Protocol.Input.DragData
-  ): Promise<void>;
-  async dragEnter(this: ElementHandle<Element>): Promise<void> {
-    throw new Error('Not implemented');
+    data: Protocol.Input.DragData = {items: [], dragOperationsMask: 1}
+  ): Promise<void> {
+    const page = this.frame.page();
+    await this.scrollIntoViewIfNeeded();
+    const target = await this.clickablePoint();
+    await page.mouse.dragEnter(target, data);
   }
 
   /**
-   * This method creates a `dragover` event on the element.
+   * @deprecated Do not use. `dragover` will automatically be performed during dragging.
    */
+  @throwIfDisposed()
+  @ElementHandle.bindIsolatedHandle
   async dragOver(
     this: ElementHandle<Element>,
-    data?: Protocol.Input.DragData
-  ): Promise<void>;
-  async dragOver(this: ElementHandle<Element>): Promise<void> {
-    throw new Error('Not implemented');
+    data: Protocol.Input.DragData = {items: [], dragOperationsMask: 1}
+  ): Promise<void> {
+    const page = this.frame.page();
+    await this.scrollIntoViewIfNeeded();
+    const target = await this.clickablePoint();
+    await page.mouse.dragOver(target, data);
   }
 
   /**
-   * This method triggers a drop on the element.
+   * Drops the given element onto the current one.
+   */
+  async drop(
+    this: ElementHandle<Element>,
+    element: ElementHandle<Element>
+  ): Promise<void>;
+
+  /**
+   * @deprecated No longer supported.
    */
   async drop(
     this: ElementHandle<Element>,
     data?: Protocol.Input.DragData
   ): Promise<void>;
-  async drop(this: ElementHandle<Element>): Promise<void> {
-    throw new Error('Not implemented');
+
+  /**
+   * @internal
+   */
+  @throwIfDisposed()
+  @ElementHandle.bindIsolatedHandle
+  async drop(
+    this: ElementHandle<Element>,
+    dataOrElement: ElementHandle<Element> | Protocol.Input.DragData = {
+      items: [],
+      dragOperationsMask: 1,
+    }
+  ): Promise<void> {
+    const page = this.frame.page();
+    if ('items' in dataOrElement) {
+      await this.scrollIntoViewIfNeeded();
+      const destination = await this.clickablePoint();
+      await page.mouse.drop(destination, dataOrElement);
+    } else {
+      // Note if the rest errors, we still want dragging off because the errors
+      // is most likely something implying the mouse is no longer dragging.
+      await dataOrElement.drag(this);
+      page._isDragging = false;
+      await page.mouse.up();
+    }
   }
 
   /**
-   * This method triggers a dragenter, dragover, and drop on the element.
+   * @deprecated Use `ElementHandle.drop` instead.
    */
+  @throwIfDisposed()
+  @ElementHandle.bindIsolatedHandle
   async dragAndDrop(
     this: ElementHandle<Element>,
     target: ElementHandle<Node>,
     options?: {delay: number}
-  ): Promise<void>;
-  async dragAndDrop(this: ElementHandle<Element>): Promise<void> {
-    throw new Error('Not implemented');
+  ): Promise<void> {
+    const page = this.frame.page();
+    assert(
+      page.isDragInterceptionEnabled(),
+      'Drag Interception is not enabled!'
+    );
+    await this.scrollIntoViewIfNeeded();
+    const startPoint = await this.clickablePoint();
+    const targetPoint = await target.clickablePoint();
+    await page.mouse.dragAndDrop(startPoint, targetPoint, options);
   }
 
   /**
@@ -802,6 +906,7 @@ export abstract class ElementHandle<
    * `multiple` attribute, all values are considered, otherwise only the first
    * one is taken into account.
    */
+  @throwIfDisposed()
   @ElementHandle.bindIsolatedHandle
   async select(...values: string[]): Promise<string[]> {
     for (const value of values) {
@@ -857,28 +962,27 @@ export abstract class ElementHandle<
    * {@link https://nodejs.org/api/process.html#process_process_cwd | current working directory}.
    * For locals script connecting to remote chrome environments, paths must be
    * absolute.
+   *
    */
-  async uploadFile(
+  abstract uploadFile(
     this: ElementHandle<HTMLInputElement>,
     ...paths: string[]
   ): Promise<void>;
-  async uploadFile(this: ElementHandle<HTMLInputElement>): Promise<void> {
-    throw new Error('Not implemented');
-  }
 
   /**
    * This method scrolls element into view if needed, and then uses
    * {@link Touchscreen.tap} to tap in the center of the element.
    * If the element is detached from DOM, the method throws an error.
    */
+  @throwIfDisposed()
   @ElementHandle.bindIsolatedHandle
   async tap(this: ElementHandle<Element>): Promise<void> {
     await this.scrollIntoViewIfNeeded();
     const {x, y} = await this.clickablePoint();
-    await this.frame.page().touchscreen.touchStart(x, y);
-    await this.frame.page().touchscreen.touchEnd();
+    await this.frame.page().touchscreen.tap(x, y);
   }
 
+  @throwIfDisposed()
   @ElementHandle.bindIsolatedHandle
   async touchStart(this: ElementHandle<Element>): Promise<void> {
     await this.scrollIntoViewIfNeeded();
@@ -886,6 +990,7 @@ export abstract class ElementHandle<
     await this.frame.page().touchscreen.touchStart(x, y);
   }
 
+  @throwIfDisposed()
   @ElementHandle.bindIsolatedHandle
   async touchMove(this: ElementHandle<Element>): Promise<void> {
     await this.scrollIntoViewIfNeeded();
@@ -893,6 +998,7 @@ export abstract class ElementHandle<
     await this.frame.page().touchscreen.touchMove(x, y);
   }
 
+  @throwIfDisposed()
   @ElementHandle.bindIsolatedHandle
   async touchEnd(this: ElementHandle<Element>): Promise<void> {
     await this.scrollIntoViewIfNeeded();
@@ -902,6 +1008,7 @@ export abstract class ElementHandle<
   /**
    * Calls {@link https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/focus | focus} on the element.
    */
+  @throwIfDisposed()
   @ElementHandle.bindIsolatedHandle
   async focus(): Promise<void> {
     await this.evaluate(element => {
@@ -937,6 +1044,7 @@ export abstract class ElementHandle<
    *
    * @param options - Delay in milliseconds. Defaults to 0.
    */
+  @throwIfDisposed()
   @ElementHandle.bindIsolatedHandle
   async type(
     text: string,
@@ -960,6 +1068,7 @@ export abstract class ElementHandle<
    * @param key - Name of key to press, such as `ArrowLeft`.
    * See {@link KeyInput} for a list of all key names.
    */
+  @throwIfDisposed()
   @ElementHandle.bindIsolatedHandle
   async press(
     key: KeyInput,
@@ -1047,8 +1156,10 @@ export abstract class ElementHandle<
 
   /**
    * This method returns the bounding box of the element (relative to the main frame),
-   * or `null` if the element is not visible.
+   * or `null` if the element is {@link https://drafts.csswg.org/css-display-4/#box-generation | not part of the layout}
+   * (example: `display: none`).
    */
+  @throwIfDisposed()
   @ElementHandle.bindIsolatedHandle
   async boundingBox(): Promise<BoundingBox | null> {
     const box = await this.evaluate(element => {
@@ -1078,13 +1189,16 @@ export abstract class ElementHandle<
   }
 
   /**
-   * This method returns boxes of the element, or `null` if the element is not visible.
+   * This method returns boxes of the element,
+   * or `null` if the element is {@link https://drafts.csswg.org/css-display-4/#box-generation | not part of the layout}
+   * (example: `display: none`).
    *
    * @remarks
    *
    * Boxes are represented as an array of points;
    * Each Point is an object `{x, y}`. Box points are sorted clock-wise.
    */
+  @throwIfDisposed()
   @ElementHandle.bindIsolatedHandle
   async boxModel(): Promise<BoxModel | null> {
     const model = await this.evaluate(element => {
@@ -1219,15 +1333,67 @@ export abstract class ElementHandle<
 
   /**
    * This method scrolls element into view if needed, and then uses
-   * {@link Page.(screenshot:3) } to take a screenshot of the element.
+   * {@link Page.(screenshot:2) } to take a screenshot of the element.
    * If the element is detached from DOM, the method throws an error.
    */
   async screenshot(
+    options: Readonly<ScreenshotOptions> & {encoding: 'base64'}
+  ): Promise<string>;
+  async screenshot(options?: Readonly<ScreenshotOptions>): Promise<Buffer>;
+  @throwIfDisposed()
+  @ElementHandle.bindIsolatedHandle
+  async screenshot(
     this: ElementHandle<Element>,
-    options?: ScreenshotOptions
-  ): Promise<string | Buffer>;
-  async screenshot(this: ElementHandle<Element>): Promise<string | Buffer> {
-    throw new Error('Not implemented');
+    options: Readonly<ElementScreenshotOptions> = {}
+  ): Promise<string | Buffer> {
+    const {
+      scrollIntoView = true,
+      captureBeyondViewport = true,
+      allowViewportExpansion = captureBeyondViewport,
+    } = options;
+
+    let clip = await this.#nonEmptyVisibleBoundingBox();
+
+    const page = this.frame.page();
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    await using _ =
+      allowViewportExpansion && clip
+        ? await page._createTemporaryViewportContainingBox(clip)
+        : null;
+
+    if (scrollIntoView) {
+      await this.scrollIntoViewIfNeeded();
+
+      // We measure again just in case.
+      clip = await this.#nonEmptyVisibleBoundingBox();
+    }
+
+    const [pageLeft, pageTop] = await this.evaluate(() => {
+      if (!window.visualViewport) {
+        throw new Error('window.visualViewport is not supported.');
+      }
+      return [
+        window.visualViewport.pageLeft,
+        window.visualViewport.pageTop,
+      ] as const;
+    });
+    clip.x += pageLeft;
+    clip.y += pageTop;
+
+    return await page.screenshot({
+      ...options,
+      captureBeyondViewport: false,
+      clip,
+    });
+  }
+
+  async #nonEmptyVisibleBoundingBox() {
+    const box = await this.boundingBox();
+    assert(box, 'Node is either not visible or not an HTMLElement');
+    assert(box.width !== 0, 'Node has 0 width.');
+    assert(box.height !== 0, 'Node has 0 height.');
+    return box;
   }
 
   /**
@@ -1273,6 +1439,7 @@ export abstract class ElementHandle<
    * @param options - Threshold for the intersection between 0 (no intersection) and 1
    * (full intersection). Defaults to 1.
    */
+  @throwIfDisposed()
   @ElementHandle.bindIsolatedHandle
   async isIntersectingViewport(
     this: ElementHandle<Element>,
@@ -1303,6 +1470,7 @@ export abstract class ElementHandle<
    * Scrolls the element into view using either the automation protocol client
    * or by calling element.scrollIntoView.
    */
+  @throwIfDisposed()
   @ElementHandle.bindIsolatedHandle
   async scrollIntoView(this: ElementHandle<Element>): Promise<void> {
     await this.assertConnectedElement();

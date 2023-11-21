@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-/* eslint-disable @typescript-eslint/no-var-requires */
-
+import {spawn, execSync} from 'child_process';
 import path from 'path';
 
 import expect from 'expect';
@@ -29,13 +28,12 @@ describe('Fixtures', function () {
   it('dumpio option should work with pipe option', async () => {
     const {defaultBrowserOptions, puppeteerPath, headless} =
       await getTestState();
-    if (headless === 'new') {
+    if (headless !== 'true') {
       // This test only works in the old headless mode.
       return;
     }
 
     let dumpioData = '';
-    const {spawn} = await import('child_process');
     const options = Object.assign({}, defaultBrowserOptions, {
       pipe: true,
       dumpio: true,
@@ -46,7 +44,7 @@ describe('Fixtures', function () {
       JSON.stringify(options),
     ]);
     res.stderr.on('data', data => {
-      return (dumpioData += data.toString('utf8'));
+      dumpioData += data.toString('utf8');
     });
     await new Promise(resolve => {
       return res.on('close', resolve);
@@ -57,7 +55,6 @@ describe('Fixtures', function () {
     const {defaultBrowserOptions, puppeteerPath} = await getTestState();
 
     let dumpioData = '';
-    const {spawn} = await import('child_process');
     const options = Object.assign({}, defaultBrowserOptions, {dumpio: true});
     const res = spawn('node', [
       path.join(__dirname, '../fixtures', 'dumpio.js'),
@@ -65,7 +62,7 @@ describe('Fixtures', function () {
       JSON.stringify(options),
     ]);
     res.stderr.on('data', data => {
-      return (dumpioData += data.toString('utf8'));
+      dumpioData += data.toString('utf8');
     });
     await new Promise(resolve => {
       return res.on('close', resolve);
@@ -76,7 +73,6 @@ describe('Fixtures', function () {
     const {defaultBrowserOptions, puppeteerPath, puppeteer} =
       await getTestState();
 
-    const {spawn, execSync} = await import('child_process');
     const options = Object.assign({}, defaultBrowserOptions, {
       // Disable DUMPIO to cleanly read stdout.
       dumpio: false,
@@ -86,31 +82,43 @@ describe('Fixtures', function () {
       puppeteerPath,
       JSON.stringify(options),
     ]);
-    let wsEndPointCallback: (value: string) => void;
-    const wsEndPointPromise = new Promise<string>(x => {
-      return (wsEndPointCallback = x);
-    });
-    let output = '';
-    res.stdout.on('data', data => {
-      output += data;
-      if (output.indexOf('\n')) {
-        wsEndPointCallback(output.substring(0, output.indexOf('\n')));
+    let killed = false;
+    function killProcess() {
+      if (killed) {
+        return;
       }
-    });
-    const browser = await puppeteer.connect({
-      browserWSEndpoint: await wsEndPointPromise,
-    });
-    const promises = [
-      waitEvent(browser, 'disconnected'),
-      new Promise(resolve => {
-        return res.on('close', resolve);
-      }),
-    ];
-    if (process.platform === 'win32') {
-      execSync(`taskkill /pid ${res.pid} /T /F`);
-    } else {
-      process.kill(res.pid!);
+      if (process.platform === 'win32') {
+        execSync(`taskkill /pid ${res.pid} /T /F`);
+      } else {
+        process.kill(res.pid!);
+      }
+      killed = true;
     }
-    await Promise.all(promises);
+    try {
+      let wsEndPointCallback: (value: string) => void;
+      const wsEndPointPromise = new Promise<string>(x => {
+        wsEndPointCallback = x;
+      });
+      let output = '';
+      res.stdout.on('data', data => {
+        output += data;
+        if (output.indexOf('\n')) {
+          wsEndPointCallback(output.substring(0, output.indexOf('\n')));
+        }
+      });
+      const browser = await puppeteer.connect({
+        browserWSEndpoint: await wsEndPointPromise,
+      });
+      const promises = [
+        waitEvent(browser, 'disconnected'),
+        new Promise(resolve => {
+          res.on('close', resolve);
+        }),
+      ];
+      killProcess();
+      await Promise.all(promises);
+    } finally {
+      killProcess();
+    }
   });
 });
