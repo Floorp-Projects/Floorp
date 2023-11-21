@@ -49,8 +49,8 @@ static gboolean GetPositionCB(AtkTableCell* aCell, gint* aRow, gint* aCol) {
   return true;
 }
 
-static gboolean GetColumnRowSpanCB(AtkTableCell* aCell, gint* aCol, gint* aRow,
-                                   gint* aColExtent, gint* aRowExtent) {
+static gboolean GetRowColumnSpanCB(AtkTableCell* aCell, gint* aRow, gint* aCol,
+                                   gint* aRowExtent, gint* aColExtent) {
   Accessible* acc = GetInternalObj(ATK_OBJECT(aCell));
   if (!acc) {
     return false;
@@ -62,7 +62,7 @@ static gboolean GetColumnRowSpanCB(AtkTableCell* aCell, gint* aCol, gint* aRow,
   *aCol = static_cast<gint>(cellAcc->ColIdx());
   *aRow = static_cast<gint>(cellAcc->RowIdx());
   *aColExtent = static_cast<gint>(cellAcc->ColExtent());
-  *aRowExtent = static_cast<gint>(cellAcc->ColExtent());
+  *aRowExtent = static_cast<gint>(cellAcc->RowExtent());
   return true;
 }
 
@@ -143,6 +143,6 @@ void tableCellInterfaceInitCB(AtkTableCellIface* aIface) {
   aIface->get_position = GetPositionCB;
   aIface->get_row_span = GetRowSpanCB;
   aIface->get_row_header_cells = GetRowHeaderCellsCB;
-  aIface->get_row_column_span = GetColumnRowSpanCB;
+  aIface->get_row_column_span = GetRowColumnSpanCB;
   aIface->get_table = GetTableCB;
 }
