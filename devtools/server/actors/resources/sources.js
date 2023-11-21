@@ -49,17 +49,20 @@ class SourceWatcher {
 
     threadActor.sourcesManager.on("newSource", this.onNewSource);
 
-    // If the thread actors isn't bootstraped yet,
-    // (this might be the case when this watcher is created on target creation)
-    // attach the thread actor automatically.
-    // Otherwise it would not notify about future sources.
-    // However, do not attach the thread actor for Workers. They use a codepath
-    // which releases the worker on `attach`. For them, the client will call `attach`. (bug 1691986)
-    // Content process targets don't have attach method or sequence.
-    // Instead their thread actor is instantiated immediately, when generating their
-    // form. Which is called immediately when we notify the target actor to the TargetList.
+    // For WindowGlobal, Content process and Service Worker targets,
+    // the thread actor is fully managed by the server codebase.
+    // For these targets, the actor should be "attached" (initialized) right away in order
+    // to start observing the sources.
+    //
+    // For regular and shared Workers, the thread actor is still managed by the client.
+    // The client will call `attach` (bug 1691986) later, which will also resume worker execution.
     const isTargetCreation = threadActor.state == THREAD_STATES.DETACHED;
-    if (isTargetCreation && !targetActor.targetType.endsWith("worker")) {
+    const { targetType } = targetActor;
+    if (
+      isTargetCreation &&
+      targetType != Targets.TYPES.WORKER &&
+      targetType != Targets.TYPES.SHARED_WORKER
+    ) {
       await threadActor.attach({});
     }
 

@@ -39,6 +39,11 @@ loader.lazyRequireGetter(
 );
 loader.lazyRequireGetter(
   TARGET_HELPERS,
+  Targets.TYPES.SERVICE_WORKER,
+  "devtools/server/actors/watcher/target-helpers/service-worker-helper"
+);
+loader.lazyRequireGetter(
+  TARGET_HELPERS,
   Targets.TYPES.WORKER,
   "resource://devtools/server/actors/watcher/target-helpers/worker-helper.js"
 );

@@ -313,6 +313,11 @@ async function setupServiceWorkerNavigationTest() {
   // Disable the preloaded process as it creates processes intermittently
   // which forces the emission of RDP requests we aren't correctly waiting for.
   await pushPref("dom.ipc.processPrelaunch.enabled", false);
+
+  // Speed up the destruction of the worker once the registration has been removed
+  // (There is a delay between calling registration's `unregister` method
+  // and the actually destruction of the worker thread)
+  await pushPref("dom.serviceWorkers.idle_timeout", 3000);
 }
 
 async function watchServiceWorkerTargets({

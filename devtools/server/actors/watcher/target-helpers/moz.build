@@ -7,5 +7,7 @@
 DevToolsModules(
     "frame-helper.js",
     "process-helper.js",
+    "service-worker-helper.js",
+    "service-worker-jsprocessactor-startup.js",
     "worker-helper.js",
 )
