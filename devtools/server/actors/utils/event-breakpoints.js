@@ -203,9 +203,8 @@ const AVAILABLE_BREAKPOINTS = [
     name: "Load",
     items: [
       globalEvent("load", "load"),
-      // TODO: Disabled pending fixes for bug 1569775.
-      // globalEvent("load", "beforeunload"),
-      // globalEvent("load", "unload"),
+      globalEvent("load", "beforeunload"),
+      globalEvent("load", "unload"),
       globalEvent("load", "abort"),
       globalEvent("load", "error"),
       globalEvent("load", "hashchange"),

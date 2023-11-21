@@ -72,3 +72,13 @@ document.getElementById("invokee").addEventListener("invoke", onInvoke);
 function onInvoke(event) {
   console.log(event);
 }
+
+window.addEventListener("beforeunload", onBeforeUnload);
+function onBeforeUnload() {
+  console.log("before unload");
+}
+
+window.addEventListener("unload", onUnload);
+function onUnload() {
+  console.log("unload");
+}
