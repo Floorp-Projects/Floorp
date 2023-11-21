@@ -1620,6 +1620,12 @@
     "expectations": ["FAIL", "PASS"]
   },
   {
+    "testIdPattern": "[defaultbrowsercontext.spec] DefaultBrowserContext page.cookies() should work",
+    "platforms": ["darwin", "linux", "win32"],
+    "parameters": ["cdp", "firefox"],
+    "expectations": ["FAIL"]
+  },
+  {
     "testIdPattern": "[defaultbrowsercontext.spec] DefaultBrowserContext page.deleteCookie() should work",
     "platforms": ["darwin", "linux", "win32"],
     "parameters": ["cdp", "firefox"],
@@ -2631,7 +2637,7 @@
     "testIdPattern": "[network.spec] network Request.frame should work for subframe navigation request",
     "platforms": ["darwin", "linux", "win32"],
     "parameters": ["firefox", "webDriverBiDi"],
-    "expectations": ["FAIL"]
+    "expectations": ["TIMEOUT", "FAIL"]
   },
   {
     "testIdPattern": "[network.spec] network Request.headers should define Firefox as user agent header",
@@ -3333,6 +3339,12 @@
     "testIdPattern": "[requestinterception.spec] request interception Page.setRequestInterception should navigate to URL with hash and fire requests without hash",
     "platforms": ["darwin", "linux", "win32"],
     "parameters": ["cdp", "chrome"],
+    "expectations": ["FAIL", "PASS"]
+  },
+  {
+    "testIdPattern": "[screenshot.spec] Screenshots ElementHandle.screenshot should capture full element when larger than viewport",
+    "platforms": ["darwin", "linux", "win32"],
+    "parameters": ["firefox", "cdp"],
     "expectations": ["FAIL", "PASS"]
   },
   {
