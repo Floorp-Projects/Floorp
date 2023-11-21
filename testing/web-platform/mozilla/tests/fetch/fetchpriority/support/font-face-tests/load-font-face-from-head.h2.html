@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>fetchpriority</title>
+  <style>
+    @font-face {
+        font-family: "dummy-font";
+        src: url("dummy.font");
+    }
+    body {
+        font-family: "dummy-font";
+    }
+  </style>
+</head>
+<body>
+asdf
+<script>
+  onload = function() {
+    opener.postMessage("ChildLoaded", "*");
+  }
+</script>
+</body>
+</html>
