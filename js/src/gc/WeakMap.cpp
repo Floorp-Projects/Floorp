@@ -53,7 +53,7 @@ bool WeakMapBase::checkMarkingForZone(JS::Zone* zone) {
 
   bool ok = true;
   for (WeakMapBase* m : zone->gcWeakMapList()) {
-    if (m->mapColor && !m->checkMarking()) {
+    if (IsMarked(m->mapColor) && !m->checkMarking()) {
       ok = false;
     }
   }
@@ -65,7 +65,7 @@ bool WeakMapBase::checkMarkingForZone(JS::Zone* zone) {
 bool WeakMapBase::markZoneIteratively(JS::Zone* zone, GCMarker* marker) {
   bool markedAny = false;
   for (WeakMapBase* m : zone->gcWeakMapList()) {
-    if (m->mapColor && m->markEntries(marker)) {
+    if (IsMarked(m->mapColor) && m->markEntries(marker)) {
       markedAny = true;
     }
   }
@@ -84,7 +84,7 @@ bool WeakMapBase::findSweepGroupEdgesForZone(JS::Zone* zone) {
 void Zone::sweepWeakMaps(JSTracer* trc) {
   for (WeakMapBase* m = gcWeakMapList().getFirst(); m;) {
     WeakMapBase* next = m->getNext();
-    if (m->mapColor) {
+    if (IsMarked(m->mapColor)) {
       m->traceWeakEdges(trc);
     } else {
       m->clearAndCompact();
@@ -95,7 +95,7 @@ void Zone::sweepWeakMaps(JSTracer* trc) {
 
 #ifdef DEBUG
   for (WeakMapBase* m : gcWeakMapList()) {
-    MOZ_ASSERT(m->isInList() && m->mapColor);
+    MOZ_ASSERT(m->isInList() && IsMarked(m->mapColor));
   }
 #endif
 }
@@ -114,7 +114,7 @@ void WeakMapBase::traceAllMappings(WeakMapTracer* tracer) {
 bool WeakMapBase::saveZoneMarkedWeakMaps(JS::Zone* zone,
                                          WeakMapColors& markedWeakMaps) {
   for (WeakMapBase* m : zone->gcWeakMapList()) {
-    if (m->mapColor && !markedWeakMaps.put(m, m->mapColor)) {
+    if (IsMarked(m->mapColor) && !markedWeakMaps.put(m, m->mapColor)) {
       return false;
     }
   }

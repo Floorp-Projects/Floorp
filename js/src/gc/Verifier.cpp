@@ -720,7 +720,8 @@ void js::gc::MarkingValidator::validate() {
         if (bitmap->isMarkedAny(cell)) {
           if (!incBitmap->isMarkedAny(cell)) {
             ok = false;
-            const char* color = TenuredCell::getColor(bitmap, cell).name();
+            const char* color =
+                CellColorName(TenuredCell::getColor(bitmap, cell));
             fprintf(stderr,
                     "%p: cell not marked, but would be marked %s by "
                     "non-incremental marking\n",
@@ -740,7 +741,8 @@ void js::gc::MarkingValidator::validate() {
         if (!bitmap->isMarkedGray(cell)) {
           if (incBitmap->isMarkedGray(cell)) {
             ok = false;
-            const char* color = TenuredCell::getColor(bitmap, cell).name();
+            const char* color =
+                CellColorName(TenuredCell::getColor(bitmap, cell));
             fprintf(stderr,
                     "%p: cell marked gray, but would be marked %s by "
                     "non-incremental marking\n",
@@ -884,7 +886,8 @@ void HeapCheckTracerBase::dumpCellInfo(Cell* cell) {
   JSObject* obj =
       kind == JS::TraceKind::Object ? static_cast<JSObject*>(cell) : nullptr;
 
-  fprintf(stderr, "%s %s", cell->color().name(), GCTraceKindToAscii(kind));
+  fprintf(stderr, "%s %s", CellColorName(cell->color()),
+          GCTraceKindToAscii(kind));
   if (obj) {
     fprintf(stderr, " %s", obj->getClass()->name);
   }
@@ -1057,7 +1060,8 @@ bool js::gc::CheckWeakMapEntryMarking(const WeakMapBase* map, Cell* key,
   if (object && object->color() != map->mapColor) {
     fprintf(stderr, "WeakMap object is marked differently to the map\n");
     fprintf(stderr, "(map %p is %s, object %p is %s)\n", map,
-            map->mapColor.name(), object, object->color().name());
+            CellColorName(map->mapColor), object,
+            CellColorName(object->color()));
     ok = false;
   }
 
@@ -1080,8 +1084,8 @@ bool js::gc::CheckWeakMapEntryMarking(const WeakMapBase* map, Cell* key,
   if (valueColor < std::min(map->mapColor, keyColor)) {
     fprintf(stderr, "WeakMap value is less marked than map and key\n");
     fprintf(stderr, "(map %p is %s, key %p is %s, value %p is %s)\n", map,
-            map->mapColor.name(), key, keyColor.name(), value,
-            valueColor.name());
+            CellColorName(map->mapColor), key, CellColorName(keyColor), value,
+            CellColorName(valueColor));
 #  ifdef DEBUG
     fprintf(stderr, "Key:\n");
     key->dump();
@@ -1105,8 +1109,8 @@ bool js::gc::CheckWeakMapEntryMarking(const WeakMapBase* map, Cell* key,
   if (keyColor < std::min(map->mapColor, delegateColor)) {
     fprintf(stderr, "WeakMap key is less marked than map or delegate\n");
     fprintf(stderr, "(map %p is %s, delegate %p is %s, key %p is %s)\n", map,
-            map->mapColor.name(), delegate, delegateColor.name(), key,
-            keyColor.name());
+            CellColorName(map->mapColor), delegate,
+            CellColorName(delegateColor), key, CellColorName(keyColor));
     ok = false;
   }
 
