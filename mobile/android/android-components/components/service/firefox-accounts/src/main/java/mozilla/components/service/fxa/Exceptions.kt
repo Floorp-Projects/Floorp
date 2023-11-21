@@ -25,6 +25,11 @@ typealias FxaPanicException = mozilla.appservices.fxaclient.FxaException.Panic
 typealias FxaUnauthorizedException = mozilla.appservices.fxaclient.FxaException.Authentication
 
 /**
+ * Thrown when we try opening paring link from a Firefox configured to use a different content server
+ */
+typealias FxaOriginMismatchException = mozilla.appservices.fxaclient.FxaException.OriginMismatch
+
+/**
  * Thrown when the Rust library hits an unexpected error that isn't a panic.
  * This may indicate library misuse, network errors, etc.
  */
@@ -38,7 +43,11 @@ fun FxaException.shouldPropagate(): Boolean {
         // Throw on panics
         is FxaPanicException -> true
         // Don't throw for recoverable errors.
-        is FxaNetworkException, is FxaUnauthorizedException, is FxaUnspecifiedException -> false
+        is FxaNetworkException,
+        is FxaUnauthorizedException,
+        is FxaUnspecifiedException,
+        is FxaOriginMismatchException,
+        -> false
         // Throw on newly encountered exceptions.
         // If they're actually recoverable and you see them in crash reports, update this check.
         else -> true
