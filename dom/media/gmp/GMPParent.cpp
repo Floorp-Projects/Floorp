@@ -1106,8 +1106,8 @@ RefPtr<GenericPromise> GMPParent::ParseChromiumManifest(
     mAdapter = u"chromium"_ns;
 #ifdef MOZ_WMF_CDM
   } else if (mPluginType == GMPPluginType::WidevineL1) {
-    video.mAPIName = nsCString(kWidevineExperimentAPIName);
-    mAdapter = NS_ConvertUTF8toUTF16(kWidevineExperimentAPIName);
+    video.mAPIName = "windows-mf-cdm"_ns;
+    mAdapter = u"windows-mf-cdm"_ns;
 #endif
   } else {
     GMP_PARENT_LOG_DEBUG("%s: CDM API not supported, failing.", __FUNCTION__);
@@ -1232,7 +1232,7 @@ void GMPParent::UpdatePluginType() {
   if (mDisplayName.EqualsLiteral("WidevineCdm")) {
     mPluginType = GMPPluginType::Widevine;
 #ifdef MOZ_WMF_CDM
-  } else if (mDisplayName.EqualsLiteral(kWidevineExperimentAPIName)) {
+  } else if (mDisplayName.EqualsLiteral("windows-mf-cdm")) {
     mPluginType = GMPPluginType::WidevineL1;
 #endif
   } else if (mDisplayName.EqualsLiteral("gmpopenh264")) {

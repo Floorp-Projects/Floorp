@@ -133,10 +133,6 @@ class UtilityProcessHost final : public mozilla::ipc::GeckoChildProcessHost {
   void RejectPromise();
   void ResolvePromise();
 
-#if defined(MOZ_WMF_CDM) && defined(MOZ_SANDBOX)
-  void EnsureWidevineL1PathForSandbox(StringVector& aExtraOpts);
-#endif
-
   // Set to true on construction and to false just prior deletion.
   // The UtilityProcessHost isn't refcounted; so we can capture this by value in
   // lambdas along with a strong reference to mLiveToken and check if that value
