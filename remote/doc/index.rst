@@ -6,11 +6,8 @@ Firefox supports several remote protocols, which allow to inspect and control
 the browser, usually for automation purposes:
 
 * :ref:`marionette-header`
-
 * :ref:`remote-protocol-cdp-header`
-
 * :ref:`webdriver-bidi-header`
-
 
 Common documentation
 ====================
@@ -26,6 +23,7 @@ The following documentation pages apply to all remote protocols
   Testing.md
   CodeStyle.md
   Security.md
+  PuppeteerVendor.md
 
 Protocols
 =========
