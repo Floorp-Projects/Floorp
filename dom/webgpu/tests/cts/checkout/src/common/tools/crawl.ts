@@ -7,7 +7,7 @@ import * as path from 'path';
 
 import { loadMetadataForSuite } from '../framework/metadata.js';
 import { SpecFile } from '../internal/file_loader.js';
-import { TestQueryMultiCase } from '../internal/query/query.js';
+import { TestQueryMultiCase, TestQueryMultiFile } from '../internal/query/query.js';
 import { validQueryPart } from '../internal/query/validQueryPart.js';
 import { TestSuiteListingEntry, TestSuiteListing } from '../internal/test_suite_listing.js';
 import { assert, unreachable } from '../util/util.js';
@@ -82,6 +82,8 @@ export async function crawl(suiteDir: string, validate: boolean): Promise<TestSu
         const mod = (await import(filename)) as SpecFile;
         assert(mod.description !== undefined, 'Test spec file missing description: ' + filename);
         assert(mod.g !== undefined, 'Test spec file missing TestGroup definition: ' + filename);
+
+        mod.g.validate(new TestQueryMultiFile(suite, pathSegments));
 
         for (const { testPath } of mod.g.collectNonEmptyTests()) {
           const testQuery = new TestQueryMultiCase(suite, pathSegments, testPath, {}).toString();

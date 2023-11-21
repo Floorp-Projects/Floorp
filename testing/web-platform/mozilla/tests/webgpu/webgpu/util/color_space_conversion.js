@@ -1,7 +1,6 @@
 /**
- * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
- **/ import { assert, unreachable } from '../../common/util/util.js';
-import { multiplyMatrices } from './math.js';
+* AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
+**/import { assert, unreachable } from '../../common/util/util.js';import { multiplyMatrices } from './math.js';
 
 // These color space conversion function definitions are copied directly from
 // CSS Color Module Level 4 Sample Code: https://drafts.csswg.org/css-color/#color-conversion-code
@@ -27,7 +26,7 @@ import { multiplyMatrices } from './math.js';
  * then reflected power function is used.
  */
 function lin_sRGB(RGB) {
-  return RGB.map(val => {
+  return RGB.map((val) => {
     const sign = val < 0 ? -1 : 1;
     const abs = Math.abs(val);
 
@@ -48,7 +47,7 @@ function lin_sRGB(RGB) {
  * of axis, then uses reflected pow below that
  */
 function gam_sRGB(RGB) {
-  return RGB.map(val => {
+  return RGB.map((val) => {
     const sign = val < 0 ? -1 : 1;
     const abs = Math.abs(val);
 
@@ -65,11 +64,11 @@ function gam_sRGB(RGB) {
  * using sRGB's own white, D65 (no chromatic adaptation)
  */
 function lin_sRGB_to_XYZ(rgb) {
+
   const M = [
-    [506752 / 1228815, 87881 / 245763, 12673 / 70218],
-    [87098 / 409605, 175762 / 245763, 12673 / 175545],
-    [7918 / 409605, 87881 / 737289, 1001167 / 1053270],
-  ];
+  [506752 / 1228815, 87881 / 245763, 12673 / 70218],
+  [87098 / 409605, 175762 / 245763, 12673 / 175545],
+  [7918 / 409605, 87881 / 737289, 1001167 / 1053270]];
 
   return multiplyMatrices(M, rgb);
 }
@@ -79,11 +78,12 @@ function lin_sRGB_to_XYZ(rgb) {
  * using sRGB's own white, D65 (no chromatic adaptation)
  */
 function XYZ_to_lin_sRGB(XYZ) {
+
   const M = [
-    [12831 / 3959, -329 / 214, -1974 / 3959],
-    [-851781 / 878810, 1648619 / 878810, 36519 / 878810],
-    [705 / 12673, -2585 / 12673, 705 / 667],
-  ];
+  [12831 / 3959, -329 / 214, -1974 / 3959],
+  [-851781 / 878810, 1648619 / 878810, 36519 / 878810],
+  [705 / 12673, -2585 / 12673, 705 / 667]];
+
 
   return multiplyMatrices(M, XYZ);
 }
@@ -111,11 +111,12 @@ function gam_P3(RGB) {
  * using display-p3's D65 (no chromatic adaptation)
  */
 function lin_P3_to_XYZ(rgb) {
+
   const M = [
-    [608311 / 1250200, 189793 / 714400, 198249 / 1000160],
-    [35783 / 156275, 247089 / 357200, 198249 / 2500400],
-    [0 / 1, 32229 / 714400, 5220557 / 5000800],
-  ];
+  [608311 / 1250200, 189793 / 714400, 198249 / 1000160],
+  [35783 / 156275, 247089 / 357200, 198249 / 2500400],
+  [0 / 1, 32229 / 714400, 5220557 / 5000800]];
+
 
   return multiplyMatrices(M, rgb);
 }
@@ -125,11 +126,12 @@ function lin_P3_to_XYZ(rgb) {
  * using display-p3's own white, D65 (no chromatic adaptation)
  */
 function XYZ_to_lin_P3(XYZ) {
+
   const M = [
-    [446124 / 178915, -333277 / 357830, -72051 / 178915],
-    [-14852 / 17905, 63121 / 35810, 423 / 17905],
-    [11844 / 330415, -50337 / 660830, 316169 / 330415],
-  ];
+  [446124 / 178915, -333277 / 357830, -72051 / 178915],
+  [-14852 / 17905, 63121 / 35810, 423 / 17905],
+  [11844 / 330415, -50337 / 660830, 316169 / 330415]];
+
 
   return multiplyMatrices(M, XYZ);
 }
@@ -141,7 +143,12 @@ function XYZ_to_lin_P3(XYZ) {
  * https://drafts.csswg.org/css-color/#predefined-to-predefined
  * display-p3 and sRGB share the same white points.
  */
-export function displayP3ToSrgb(pixel) {
+export function displayP3ToSrgb(pixel)
+
+
+
+
+{
   assert(
     pixel.R !== undefined && pixel.G !== undefined && pixel.B !== undefined,
     'color space conversion requires all of R, G and B components'
@@ -167,7 +174,12 @@ export function displayP3ToSrgb(pixel) {
  * https://drafts.csswg.org/css-color/#predefined-to-predefined
  * display-p3 and sRGB share the same white points.
  */
-export function srgbToDisplayP3(pixel) {
+export function srgbToDisplayP3(pixel)
+
+
+
+
+{
   assert(
     pixel.R !== undefined && pixel.G !== undefined && pixel.B !== undefined,
     'color space conversion requires all of R, G and B components'
@@ -187,6 +199,13 @@ export function srgbToDisplayP3(pixel) {
   return pixel;
 }
 
+
+
+
+
+
+
+
 /**
  * Returns a function which applies the specified colorspace/premultiplication conversion.
  * Does not clamp, so may return values outside of the `dstColorSpace` gamut, due to either
@@ -196,15 +215,20 @@ export function makeInPlaceColorConversion({
   srcPremultiplied,
   dstPremultiplied,
   srcColorSpace = 'srgb',
-  dstColorSpace = 'srgb',
+  dstColorSpace = 'srgb'
+
+
+
+
+
 }) {
   const requireColorSpaceConversion = srcColorSpace !== dstColorSpace;
   const requireUnpremultiplyAlpha =
-    srcPremultiplied && (requireColorSpaceConversion || srcPremultiplied !== dstPremultiplied);
+  srcPremultiplied && (requireColorSpaceConversion || srcPremultiplied !== dstPremultiplied);
   const requirePremultiplyAlpha =
-    dstPremultiplied && (requireColorSpaceConversion || srcPremultiplied !== dstPremultiplied);
+  dstPremultiplied && (requireColorSpaceConversion || srcPremultiplied !== dstPremultiplied);
 
-  return rgba => {
+  return (rgba) => {
     assert(rgba.A >= 0.0 && rgba.A <= 1.0, 'rgba.A out of bounds');
 
     if (requireUnpremultiplyAlpha) {

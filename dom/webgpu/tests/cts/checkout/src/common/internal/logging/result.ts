@@ -3,7 +3,7 @@ import { LogMessageWithStack } from './log_message.js';
 // MAINTENANCE_TODO: Add warn expectations
 export type Expectation = 'pass' | 'skip' | 'fail';
 
-export type Status = 'running' | 'warn' | Expectation;
+export type Status = 'notrun' | 'running' | 'warn' | Expectation;
 
 export interface TestCaseResult {
   status: Status;

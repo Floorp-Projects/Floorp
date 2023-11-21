@@ -1,20 +1,19 @@
+import { ROArrayArray, ROArrayArrayArray } from '../../common/util/types.js';
 import { assert } from '../../common/util/util.js';
 import {
   Float16Array,
   getFloat16,
+  hfround,
   setFloat16,
 } from '../../external/petamoriken/float16/float16.js';
 
 import { kBit, kValue } from './constants.js';
 import {
-  f32,
-  f16,
-  floatBitsToNumber,
-  i32,
-  kFloat16Format,
-  kFloat32Format,
-  u32,
-} from './conversion.js';
+  reinterpretF64AsU64,
+  reinterpretU64AsF64,
+  reinterpretU32AsF32,
+  reinterpretU16AsF16,
+} from './reinterpret.js';
 
 /**
  * A multiple of 8 guaranteed to be way too large to allocate (just under 8 pebibytes).
@@ -122,11 +121,11 @@ export function nextAfterF64(val: number, dir: NextDirection, mode: FlushMode): 
   }
 
   if (val === Number.POSITIVE_INFINITY) {
-    return kValue.f64.infinity.positive;
+    return kValue.f64.positive.infinity;
   }
 
   if (val === Number.NEGATIVE_INFINITY) {
-    return kValue.f64.infinity.negative;
+    return kValue.f64.negative.infinity;
   }
 
   assert(
@@ -139,9 +138,9 @@ export function nextAfterF64(val: number, dir: NextDirection, mode: FlushMode): 
   // -/+0 === 0 returns true
   if (val === 0) {
     if (dir === 'positive') {
-      return mode === 'flush' ? kValue.f64.positive.min : kValue.f64.subnormal.positive.min;
+      return mode === 'flush' ? kValue.f64.positive.min : kValue.f64.positive.subnormal.min;
     } else {
-      return mode === 'flush' ? kValue.f64.negative.max : kValue.f64.subnormal.negative.max;
+      return mode === 'flush' ? kValue.f64.negative.max : kValue.f64.negative.subnormal.max;
     }
   }
 
@@ -156,9 +155,9 @@ export function nextAfterF64(val: number, dir: NextDirection, mode: FlushMode): 
   // Checking for overflow
   if ((nextAfterF64Int[0] & 0x7ff0_0000_0000_0000n) === 0x7ff0_0000_0000_0000n) {
     if (dir === 'positive') {
-      return kValue.f64.infinity.positive;
+      return kValue.f64.positive.infinity;
     } else {
-      return kValue.f64.infinity.negative;
+      return kValue.f64.negative.infinity;
     }
   }
 
@@ -195,11 +194,11 @@ export function nextAfterF32(val: number, dir: NextDirection, mode: FlushMode): 
   }
 
   if (val === Number.POSITIVE_INFINITY) {
-    return kValue.f32.infinity.positive;
+    return kValue.f32.positive.infinity;
   }
 
   if (val === Number.NEGATIVE_INFINITY) {
-    return kValue.f32.infinity.negative;
+    return kValue.f32.negative.infinity;
   }
 
   assert(
@@ -212,9 +211,9 @@ export function nextAfterF32(val: number, dir: NextDirection, mode: FlushMode): 
   // -/+0 === 0 returns true
   if (val === 0) {
     if (dir === 'positive') {
-      return mode === 'flush' ? kValue.f32.positive.min : kValue.f32.subnormal.positive.min;
+      return mode === 'flush' ? kValue.f32.positive.min : kValue.f32.positive.subnormal.min;
     } else {
-      return mode === 'flush' ? kValue.f32.negative.max : kValue.f32.subnormal.negative.max;
+      return mode === 'flush' ? kValue.f32.negative.max : kValue.f32.negative.subnormal.max;
     }
   }
 
@@ -237,9 +236,9 @@ export function nextAfterF32(val: number, dir: NextDirection, mode: FlushMode): 
   // Checking for overflow
   if ((nextAfterF32Int[0] & 0x7f800000) === 0x7f800000) {
     if (dir === 'positive') {
-      return kValue.f32.infinity.positive;
+      return kValue.f32.positive.infinity;
     } else {
-      return kValue.f32.infinity.negative;
+      return kValue.f32.negative.infinity;
     }
   }
 
@@ -276,11 +275,11 @@ export function nextAfterF16(val: number, dir: NextDirection, mode: FlushMode): 
   }
 
   if (val === Number.POSITIVE_INFINITY) {
-    return kValue.f16.infinity.positive;
+    return kValue.f16.positive.infinity;
   }
 
   if (val === Number.NEGATIVE_INFINITY) {
-    return kValue.f16.infinity.negative;
+    return kValue.f16.negative.infinity;
   }
 
   assert(
@@ -293,9 +292,9 @@ export function nextAfterF16(val: number, dir: NextDirection, mode: FlushMode): 
   // -/+0 === 0 returns true
   if (val === 0) {
     if (dir === 'positive') {
-      return mode === 'flush' ? kValue.f16.positive.min : kValue.f16.subnormal.positive.min;
+      return mode === 'flush' ? kValue.f16.positive.min : kValue.f16.positive.subnormal.min;
     } else {
-      return mode === 'flush' ? kValue.f16.negative.max : kValue.f16.subnormal.negative.max;
+      return mode === 'flush' ? kValue.f16.negative.max : kValue.f16.negative.subnormal.max;
     }
   }
 
@@ -318,9 +317,9 @@ export function nextAfterF16(val: number, dir: NextDirection, mode: FlushMode): 
   // Checking for overflow
   if ((nextAfterF16Hex[0] & 0x7c00) === 0x7c00) {
     if (dir === 'positive') {
-      return kValue.f16.infinity.positive;
+      return kValue.f16.positive.infinity;
     } else {
-      return kValue.f16.infinity.negative;
+      return kValue.f16.negative.infinity;
     }
   }
 
@@ -472,7 +471,7 @@ export function oneULPF16(target: number, mode: FlushMode = 'flush'): number {
  * @returns all of the acceptable roundings for quantizing to 64-bits in
  *          ascending order.
  */
-export function correctlyRoundedF64(n: number): number[] {
+export function correctlyRoundedF64(n: number): readonly number[] {
   assert(!Number.isNaN(n), `correctlyRoundedF32 not defined for NaN`);
   // Above f64 range
   if (n === Number.POSITIVE_INFINITY) {
@@ -512,7 +511,7 @@ export function correctlyRoundedF64(n: number): number[] {
  * @returns all of the acceptable roundings for quantizing to 32-bits in
  *          ascending order.
  */
-export function correctlyRoundedF32(n: number): number[] {
+export function correctlyRoundedF32(n: number): readonly number[] {
   if (Number.isNaN(n)) {
     return [n];
   }
@@ -529,21 +528,20 @@ export function correctlyRoundedF32(n: number): number[] {
 
   // f32 finite
   if (n <= kValue.f32.positive.max && n >= kValue.f32.negative.min) {
-    const n_32 = new Float32Array([n])[0];
-    const converted: number = n_32;
-    if (n === converted) {
+    const n_32 = quantizeToF32(n);
+    if (n === n_32) {
       // n is precisely expressible as a f32, so should not be rounded
       return [n];
     }
 
-    if (converted > n) {
+    if (n_32 > n) {
       // n_32 rounded towards +inf, so is after n
       const other = nextAfterF32(n_32, 'negative', 'no-flush');
-      return [other, converted];
+      return [other, n_32];
     } else {
       // n_32 rounded towards -inf, so is before n
       const other = nextAfterF32(n_32, 'positive', 'no-flush');
-      return [converted, other];
+      return [n_32, other];
     }
   }
 
@@ -581,7 +579,7 @@ export function correctlyRoundedF32(n: number): number[] {
  * @returns all of the acceptable roundings for quantizing to 16-bits in
  *          ascending order.
  */
-export function correctlyRoundedF16(n: number): number[] {
+export function correctlyRoundedF16(n: number): readonly number[] {
   if (Number.isNaN(n)) {
     return [n];
   }
@@ -598,21 +596,20 @@ export function correctlyRoundedF16(n: number): number[] {
 
   // f16 finite
   if (n <= kValue.f16.positive.max && n >= kValue.f16.negative.min) {
-    const n_16 = new Float16Array([n])[0];
-    const converted: number = n_16;
-    if (n === converted) {
+    const n_16 = quantizeToF16(n);
+    if (n === n_16) {
       // n is precisely expressible as a f16, so should not be rounded
       return [n];
     }
 
-    if (converted > n) {
+    if (n_16 > n) {
       // n_16 rounded towards +inf, so is after n
       const other = nextAfterF16(n_16, 'negative', 'no-flush');
-      return [other, converted];
+      return [other, n_16];
     } else {
       // n_16 rounded towards -inf, so is before n
       const other = nextAfterF16(n_16, 'positive', 'no-flush');
-      return [converted, other];
+      return [n_16, other];
     }
   }
 
@@ -828,7 +825,7 @@ export function lerpBigInt(a: bigint, b: bigint, idx: number, steps: number): bi
 }
 
 /** @returns a linear increasing range of numbers. */
-export function linearRange(a: number, b: number, num_steps: number): number[] {
+export function linearRange(a: number, b: number, num_steps: number): readonly number[] {
   if (num_steps <= 0) {
     return [];
   }
@@ -869,7 +866,7 @@ export function linearRangeBigInt(a: bigint, b: bigint, num_steps: number): Arra
  * This biased range is then scaled to the desired range using lerp.
  * Different curves could be generated by changing c, where greater values of c will bias more towards 0.
  */
-export function biasedRange(a: number, b: number, num_steps: number): number[] {
+export function biasedRange(a: number, b: number, num_steps: number): readonly number[] {
   const c = 2;
   if (num_steps <= 0) {
     return [];
@@ -916,14 +913,17 @@ export function fullF32Range(
   const bit_fields = [
     ...linearRange(kBit.f32.negative.min, kBit.f32.negative.max, counts.neg_norm),
     ...linearRange(
-      kBit.f32.subnormal.negative.min,
-      kBit.f32.subnormal.negative.max,
+      kBit.f32.negative.subnormal.min,
+      kBit.f32.negative.subnormal.max,
       counts.neg_sub
     ),
+    // -0.0
+    0x80000000,
+    // +0.0
     0,
     ...linearRange(
-      kBit.f32.subnormal.positive.min,
-      kBit.f32.subnormal.positive.max,
+      kBit.f32.positive.subnormal.min,
+      kBit.f32.positive.subnormal.max,
       counts.pos_sub
     ),
     ...linearRange(kBit.f32.positive.min, kBit.f32.positive.max, counts.pos_norm),
@@ -980,14 +980,17 @@ export function fullF16Range(
   const bit_fields = [
     ...linearRange(kBit.f16.negative.min, kBit.f16.negative.max, counts.neg_norm),
     ...linearRange(
-      kBit.f16.subnormal.negative.min,
-      kBit.f16.subnormal.negative.max,
+      kBit.f16.negative.subnormal.min,
+      kBit.f16.negative.subnormal.max,
       counts.neg_sub
     ),
+    // -0.0
+    0x8000,
+    // +0.0
     0,
     ...linearRange(
-      kBit.f16.subnormal.positive.min,
-      kBit.f16.subnormal.positive.max,
+      kBit.f16.positive.subnormal.min,
+      kBit.f16.positive.subnormal.max,
       counts.pos_sub
     ),
     ...linearRange(kBit.f16.positive.min, kBit.f16.positive.max, counts.pos_norm),
@@ -1028,14 +1031,17 @@ export function fullF64Range(
   const bit_fields = [
     ...linearRangeBigInt(kBit.f64.negative.min, kBit.f64.negative.max, counts.neg_norm),
     ...linearRangeBigInt(
-      kBit.f64.subnormal.negative.min,
-      kBit.f64.subnormal.negative.max,
+      kBit.f64.negative.subnormal.min,
+      kBit.f64.negative.subnormal.max,
       counts.neg_sub
     ),
+    // -0.0
+    0x8000_0000_0000_0000n,
+    // +0.0
     0n,
     ...linearRangeBigInt(
-      kBit.f64.subnormal.positive.min,
-      kBit.f64.subnormal.positive.max,
+      kBit.f64.positive.subnormal.min,
+      kBit.f64.positive.subnormal.max,
       counts.pos_sub
     ),
     ...linearRangeBigInt(kBit.f64.positive.min, kBit.f64.positive.max, counts.pos_norm),
@@ -1084,14 +1090,17 @@ export function filteredF64Range(
   const bit_fields = [
     ...linearRangeBigInt(u64_begin, kBit.f64.negative.max, counts.neg_norm),
     ...linearRangeBigInt(
-      kBit.f64.subnormal.negative.min,
-      kBit.f64.subnormal.negative.max,
+      kBit.f64.negative.subnormal.min,
+      kBit.f64.negative.subnormal.max,
       counts.neg_sub
     ),
+    // -0.0
+    0x8000_0000_0000_0000n,
+    // +0.0
     0n,
     ...linearRangeBigInt(
-      kBit.f64.subnormal.positive.min,
-      kBit.f64.subnormal.positive.max,
+      kBit.f64.positive.subnormal.min,
+      kBit.f64.positive.subnormal.max,
       counts.pos_sub
     ),
     ...linearRangeBigInt(kBit.f64.positive.min, u64_end, counts.pos_norm),
@@ -1100,7 +1109,7 @@ export function filteredF64Range(
 }
 
 /** Short list of i32 values of interest to test against */
-const kInterestingI32Values: number[] = [
+const kInterestingI32Values: readonly number[] = [
   kValue.i32.negative.max,
   Math.trunc(kValue.i32.negative.max / 2),
   -256,
@@ -1120,7 +1129,7 @@ const kInterestingI32Values: number[] = [
  * generated is a super linear function of the length of i32 values which is
  * leading to time outs.
  */
-export function sparseI32Range(): number[] {
+export function sparseI32Range(): readonly number[] {
   return kInterestingI32Values;
 }
 
@@ -1164,7 +1173,7 @@ const kVectorI32Values = {
  * vector to get a spread of testing over the entire range. This reduces the
  * number of cases being run substantially, but maintains coverage.
  */
-export function vectorI32Range(dim: number): number[][] {
+export function vectorI32Range(dim: number): ROArrayArray<number> {
   assert(dim === 2 || dim === 3 || dim === 4, 'vectorI32Range only accepts dimensions 2, 3, and 4');
   return kVectorI32Values[dim];
 }
@@ -1192,7 +1201,7 @@ export function fullI32Range(
 }
 
 /** Short list of u32 values of interest to test against */
-const kInterestingU32Values: number[] = [
+const kInterestingU32Values: readonly number[] = [
   0,
   1,
   10,
@@ -1207,7 +1216,7 @@ const kInterestingU32Values: number[] = [
  * generated is a super linear function of the length of u32 values which is
  * leading to time outs.
  */
-export function sparseU32Range(): number[] {
+export function sparseU32Range(): readonly number[] {
   return kInterestingU32Values;
 }
 
@@ -1242,7 +1251,7 @@ const kVectorU32Values = {
  * vector to get a spread of testing over the entire range. This reduces the
  * number of cases being run substantially, but maintains coverage.
  */
-export function vectorU32Range(dim: number): number[][] {
+export function vectorU32Range(dim: number): ROArrayArray<number> {
   assert(dim === 2 || dim === 3 || dim === 4, 'vectorU32Range only accepts dimensions 2, 3, and 4');
   return kVectorU32Values[dim];
 }
@@ -1259,18 +1268,18 @@ export function fullU32Range(count: number = 50): Array<number> {
 }
 
 /** Short list of f32 values of interest to test against */
-const kInterestingF32Values: number[] = [
+const kInterestingF32Values: readonly number[] = [
   kValue.f32.negative.min,
   -10.0,
   -1.0,
   -0.125,
   kValue.f32.negative.max,
-  kValue.f32.subnormal.negative.min,
-  kValue.f32.subnormal.negative.max,
+  kValue.f32.negative.subnormal.min,
+  kValue.f32.negative.subnormal.max,
   -0.0,
   0.0,
-  kValue.f32.subnormal.positive.min,
-  kValue.f32.subnormal.positive.max,
+  kValue.f32.positive.subnormal.min,
+  kValue.f32.positive.subnormal.max,
   kValue.f32.positive.min,
   0.125,
   1.0,
@@ -1290,7 +1299,7 @@ const kInterestingF32Values: number[] = [
  * specific values of interest. If there are known values of interest they
  * should be appended to this list in the test generation code.
  */
-export function sparseF32Range(): number[] {
+export function sparseF32Range(): readonly number[] {
   return kInterestingF32Values;
 }
 
@@ -1334,7 +1343,7 @@ const kVectorF32Values = {
  * vector to get a spread of testing over the entire range. This reduces the
  * number of cases being run substantially, but maintains coverage.
  */
-export function vectorF32Range(dim: number): number[][] {
+export function vectorF32Range(dim: number): ROArrayArray<number> {
   assert(dim === 2 || dim === 3 || dim === 4, 'vectorF32Range only accepts dimensions 2, 3, and 4');
   return kVectorF32Values[dim];
 }
@@ -1363,7 +1372,7 @@ const kSparseVectorF32Values = {
  * All of the interesting floats from sparseF32 are guaranteed to be tested, but
  * not in every position.
  */
-export function sparseVectorF32Range(dim: number): number[][] {
+export function sparseVectorF32Range(dim: number): ROArrayArray<number> {
   assert(
     dim === 2 || dim === 3 || dim === 4,
     'sparseVectorF32Range only accepts dimensions 2, 3, and 4'
@@ -1482,7 +1491,7 @@ const kSparseMatrixF32Values = {
  * All of the interesting floats from sparseF32 are guaranteed to be tested, but
  * not in every position.
  */
-export function sparseMatrixF32Range(c: number, r: number): number[][][] {
+export function sparseMatrixF32Range(c: number, r: number): ROArrayArrayArray<number> {
   assert(
     c === 2 || c === 3 || c === 4,
     'sparseMatrixF32Range only accepts column counts of 2, 3, and 4'
@@ -1495,18 +1504,18 @@ export function sparseMatrixF32Range(c: number, r: number): number[][][] {
 }
 
 /** Short list of f16 values of interest to test against */
-const kInterestingF16Values: number[] = [
+const kInterestingF16Values: readonly number[] = [
   kValue.f16.negative.min,
   -10.0,
   -1.0,
   -0.125,
   kValue.f16.negative.max,
-  kValue.f16.subnormal.negative.min,
-  kValue.f16.subnormal.negative.max,
+  kValue.f16.negative.subnormal.min,
+  kValue.f16.negative.subnormal.max,
   -0.0,
   0.0,
-  kValue.f16.subnormal.positive.min,
-  kValue.f16.subnormal.positive.max,
+  kValue.f16.positive.subnormal.min,
+  kValue.f16.positive.subnormal.max,
   kValue.f16.positive.min,
   0.125,
   1.0,
@@ -1526,7 +1535,7 @@ const kInterestingF16Values: number[] = [
  * specific values of interest. If there are known values of interest they
  * should be appended to this list in the test generation code.
  */
-export function sparseF16Range(): number[] {
+export function sparseF16Range(): readonly number[] {
   return kInterestingF16Values;
 }
 
@@ -1570,7 +1579,7 @@ const kVectorF16Values = {
  * vector to get a spread of testing over the entire range. This reduces the
  * number of cases being run substantially, but maintains coverage.
  */
-export function vectorF16Range(dim: number): number[][] {
+export function vectorF16Range(dim: number): ROArrayArray<number> {
   assert(dim === 2 || dim === 3 || dim === 4, 'vectorF16Range only accepts dimensions 2, 3, and 4');
   return kVectorF16Values[dim];
 }
@@ -1599,7 +1608,7 @@ const kSparseVectorF16Values = {
  * All of the interesting floats from sparseF16 are guaranteed to be tested, but
  * not in every position.
  */
-export function sparseVectorF16Range(dim: number): number[][] {
+export function sparseVectorF16Range(dim: number): ROArrayArray<number> {
   assert(
     dim === 2 || dim === 3 || dim === 4,
     'sparseVectorF16Range only accepts dimensions 2, 3, and 4'
@@ -1718,7 +1727,7 @@ const kSparseMatrixF16Values = {
  * All of the interesting floats from sparseF16 are guaranteed to be tested, but
  * not in every position.
  */
-export function sparseMatrixF16Range(c: number, r: number): number[][][] {
+export function sparseMatrixF16Range(c: number, r: number): ROArrayArray<number>[] {
   assert(
     c === 2 || c === 3 || c === 4,
     'sparseMatrixF16Range only accepts column counts of 2, 3, and 4'
@@ -1731,18 +1740,18 @@ export function sparseMatrixF16Range(c: number, r: number): number[][][] {
 }
 
 /** Short list of f64 values of interest to test against */
-const kInterestingF64Values: number[] = [
+const kInterestingF64Values: readonly number[] = [
   kValue.f64.negative.min,
   -10.0,
   -1.0,
   -0.125,
   kValue.f64.negative.max,
-  kValue.f64.subnormal.negative.min,
-  kValue.f64.subnormal.negative.max,
+  kValue.f64.negative.subnormal.min,
+  kValue.f64.negative.subnormal.max,
   -0.0,
   0.0,
-  kValue.f64.subnormal.positive.min,
-  kValue.f64.subnormal.positive.max,
+  kValue.f64.positive.subnormal.min,
+  kValue.f64.positive.subnormal.max,
   kValue.f64.positive.min,
   0.125,
   1.0,
@@ -1762,7 +1771,7 @@ const kInterestingF64Values: number[] = [
  * specific values of interest. If there are known values of interest they
  * should be appended to this list in the test generation code.
  */
-export function sparseF64Range(): number[] {
+export function sparseF64Range(): readonly number[] {
   return kInterestingF64Values;
 }
 
@@ -1806,7 +1815,7 @@ const kVectorF64Values = {
  * vector to get a spread of testing over the entire range. This reduces the
  * number of cases being run substantially, but maintains coverage.
  */
-export function vectorF64Range(dim: number): number[][] {
+export function vectorF64Range(dim: number): ROArrayArray<number> {
   assert(dim === 2 || dim === 3 || dim === 4, 'vectorF64Range only accepts dimensions 2, 3, and 4');
   return kVectorF64Values[dim];
 }
@@ -1835,7 +1844,7 @@ const kSparseVectorF64Values = {
  * All the interesting floats from sparseF64 are guaranteed to be tested, but
  * not in every position.
  */
-export function sparseVectorF64Range(dim: number): number[][] {
+export function sparseVectorF64Range(dim: number): ROArrayArray<number> {
   assert(
     dim === 2 || dim === 3 || dim === 4,
     'sparseVectorF64Range only accepts dimensions 2, 3, and 4'
@@ -1954,7 +1963,7 @@ const kSparseMatrixF64Values = {
  * All the interesting floats from sparseF64 are guaranteed to be tested, but
  * not in every position.
  */
-export function sparseMatrixF64Range(c: number, r: number): number[][][] {
+export function sparseMatrixF64Range(c: number, r: number): ROArrayArray<number>[] {
   assert(
     c === 2 || c === 3 || c === 4,
     'sparseMatrixF64Range only accepts column counts of 2, 3, and 4'
@@ -2006,22 +2015,40 @@ export interface QuantizeFunc {
 
 /** @returns the closest 32-bit floating point value to the input */
 export function quantizeToF32(num: number): number {
-  return f32(num).value as number;
+  return Math.fround(num);
 }
 
 /** @returns the closest 16-bit floating point value to the input */
 export function quantizeToF16(num: number): number {
-  return f16(num).value as number;
+  return hfround(num);
 }
 
-/** @returns the closest 32-bit signed integer value to the input */
+/**
+ * @returns the closest 32-bit signed integer value to the input, rounding
+ * towards 0, if not already an integer
+ */
 export function quantizeToI32(num: number): number {
-  return i32(num).value as number;
+  if (num >= kValue.i32.positive.max) {
+    return kValue.i32.positive.max;
+  }
+  if (num <= kValue.i32.negative.min) {
+    return kValue.i32.negative.min;
+  }
+  return Math.trunc(num);
 }
 
-/** @returns the closest 32-bit signed integer value to the input */
+/**
+ * @returns the closest 32-bit unsigned integer value to the input, rounding
+ * towards 0, if not already an integer
+ */
 export function quantizeToU32(num: number): number {
-  return u32(num).value as number;
+  if (num >= kValue.u32.max) {
+    return kValue.u32.max;
+  }
+  if (num <= 0) {
+    return 0;
+  }
+  return Math.trunc(num);
 }
 
 /** @returns whether the number is an integer and a power of two */
@@ -2051,38 +2078,6 @@ export function lcm(a: number, b: number): number {
   return (a * b) / gcd(a, b);
 }
 
-/**
- * @returns the bit representation as a 64-integer, via interpreting the input
- * as a 64-bit float value
- */
-export function reinterpretF64AsU64(input: number): bigint {
-  return new BigUint64Array(new Float64Array([input]).buffer)[0];
-}
-
-/**
- * @returns a 64-bit float value via interpreting the input as the bit
- * representation as a 64-bit integer
- */
-export function reinterpretU64AsF64(input: bigint): number {
-  return new Float64Array(new BigUint64Array([input]).buffer)[0];
-}
-
-/**
- * @returns a 32-bit float value via interpreting the input as the bit
- * representation as a 32-bit integer
- */
-export function reinterpretU32AsF32(input: number): number {
-  return floatBitsToNumber(input, kFloat32Format);
-}
-
-/**
- * @returns a 16-bit float value via interpreting the input as the bit
- * representation as a 16-bit integer
- */
-export function reinterpretU16AsF16(hex: number): number {
-  return floatBitsToNumber(hex, kFloat16Format);
-}
-
 /** @returns the cross of an array with the intermediate result of cartesianProduct
  *
  * @param elements array of values to cross with the intermediate result of
@@ -2090,11 +2085,14 @@ export function reinterpretU16AsF16(hex: number): number {
  * @param intermediate arrays of values representing the partial result of
  *                     cartesianProduct
  */
-function cartesianProductImpl<T>(elements: T[], intermediate: T[][]): T[][] {
+function cartesianProductImpl<T>(
+  elements: readonly T[],
+  intermediate: ROArrayArray<T>
+): ROArrayArray<T> {
   const result: T[][] = [];
   elements.forEach((e: T) => {
     if (intermediate.length > 0) {
-      intermediate.forEach((i: T[]) => {
+      intermediate.forEach((i: readonly T[]) => {
         result.push([...i, e]);
       });
     } else {
@@ -2114,9 +2112,9 @@ function cartesianProductImpl<T>(elements: T[], intermediate: T[][]): T[][] {
  *
  * @param inputs arrays of numbers to calculate cartesian product over
  */
-export function cartesianProduct<T>(...inputs: T[][]): T[][] {
-  let result: T[][] = [];
-  inputs.forEach((i: T[]) => {
+export function cartesianProduct<T>(...inputs: ROArrayArray<T>): ROArrayArray<T> {
+  let result: ROArrayArray<T> = [];
+  inputs.forEach((i: readonly T[]) => {
     result = cartesianProductImpl<T>(i, result);
   });
 
@@ -2138,7 +2136,7 @@ export function cartesianProduct<T>(...inputs: T[][]): T[][] {
  *
  * @param input the array to get permutations of
  */
-export function calculatePermutations<T>(input: T[]): T[][] {
+export function calculatePermutations<T>(input: readonly T[]): ROArrayArray<T> {
   if (input.length === 0) {
     return [];
   }
@@ -2171,7 +2169,7 @@ export function calculatePermutations<T>(input: T[]): T[][] {
  *
  * @param m Matrix to convert
  */
-export function flatten2DArray<T>(m: T[][]): T[] {
+export function flatten2DArray<T>(m: ROArrayArray<T>): T[] {
   const c = m.length;
   const r = m[0].length;
   assert(
@@ -2193,7 +2191,7 @@ export function flatten2DArray<T>(m: T[][]): T[] {
  * @param c number of elements in the array containing arrays
  * @param r number of elements in the arrays that are contained
  */
-export function unflatten2DArray<T>(n: T[], c: number, r: number): T[][] {
+export function unflatten2DArray<T>(n: readonly T[], c: number, r: number): ROArrayArray<T> {
   assert(
     c > 0 && Number.isInteger(c) && r > 0 && Number.isInteger(r),
     `columns (${c}) and rows (${r}) need to be positive integers`
@@ -2216,7 +2214,7 @@ export function unflatten2DArray<T>(n: T[], c: number, r: number): T[][] {
  * @param op operation that converts an element of type T to one of type S
  * @returns a matrix with elements of type S that are calculated by applying op element by element
  */
-export function map2DArray<T, S>(m: T[][], op: (input: T) => S): S[][] {
+export function map2DArray<T, S>(m: ROArrayArray<T>, op: (input: T) => S): ROArrayArray<S> {
   const c = m.length;
   const r = m[0].length;
   assert(
@@ -2230,4 +2228,20 @@ export function map2DArray<T, S>(m: T[][], op: (input: T) => S): S[][] {
     }
   }
   return result;
+}
+
+/**
+ * Performs a .every over a matrix and return the result
+ *
+ * @param m input matrix of type T
+ * @param op operation that performs a test on an element
+ * @returns a boolean indicating if the test passed for every element
+ */
+export function every2DArray<T>(m: ROArrayArray<T>, op: (input: T) => boolean): boolean {
+  const r = m[0].length;
+  assert(
+    m.every(c => c.length === r),
+    `Unexpectedly received jagged array to map`
+  );
+  return m.every(col => col.every(el => op(el)));
 }

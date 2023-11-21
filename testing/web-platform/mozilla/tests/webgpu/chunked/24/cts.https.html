@@ -33,6 +33,16 @@
 </script>
 <script type=module src=/_mozilla/webgpu/common/runtime/wpt.js></script>
 
+<meta name=variant content='?q=webgpu:api,validation,image_copy,buffer_related:usage:*'>
+<meta name=variant content='?q=webgpu:api,validation,image_copy,buffer_related:bytes_per_row_alignment:*'>
+<meta name=variant content='?q=webgpu:api,validation,image_copy,buffer_texture_copies:depth_stencil_format,copy_usage_and_aspect:*'>
+<meta name=variant content='?q=webgpu:api,validation,image_copy,buffer_texture_copies:depth_stencil_format,copy_buffer_size:*'>
+<meta name=variant content='?q=webgpu:api,validation,image_copy,buffer_texture_copies:depth_stencil_format,copy_buffer_offset:*'>
+<meta name=variant content='?q=webgpu:api,validation,image_copy,buffer_texture_copies:sample_count:*'>
+<meta name=variant content='?q=webgpu:api,validation,image_copy,buffer_texture_copies:texture_buffer_usages:*'>
+<meta name=variant content='?q=webgpu:api,validation,image_copy,buffer_texture_copies:device_mismatch:*'>
+<meta name=variant content='?q=webgpu:api,validation,image_copy,layout_related:bound_on_rows_per_image:*'>
+<meta name=variant content='?q=webgpu:api,validation,image_copy,layout_related:copy_end_overflows_u64:*'>
 <meta name=variant content='?q=webgpu:api,validation,image_copy,layout_related:required_bytes_in_copy:*'>
 <meta name=variant content='?q=webgpu:api,validation,image_copy,layout_related:rows_per_image_alignment:*'>
 <meta name=variant content='?q=webgpu:api,validation,image_copy,layout_related:offset_alignment:*'>
@@ -48,13 +58,3 @@
 <meta name=variant content='?q=webgpu:api,validation,image_copy,texture_related:size_alignment:*'>
 <meta name=variant content='?q=webgpu:api,validation,image_copy,texture_related:copy_rectangle:*'>
 <meta name=variant content='?q=webgpu:api,validation,query_set,create:count:*'>
-<meta name=variant content='?q=webgpu:api,validation,query_set,destroy:twice:*'>
-<meta name=variant content='?q=webgpu:api,validation,query_set,destroy:invalid_queryset:*'>
-<meta name=variant content='?q=webgpu:api,validation,queue,buffer_mapped:writeBuffer:*'>
-<meta name=variant content='?q=webgpu:api,validation,queue,buffer_mapped:copyBufferToBuffer:*'>
-<meta name=variant content='?q=webgpu:api,validation,queue,buffer_mapped:copyBufferToTexture:*'>
-<meta name=variant content='?q=webgpu:api,validation,queue,buffer_mapped:copyTextureToBuffer:*'>
-<meta name=variant content='?q=webgpu:api,validation,queue,buffer_mapped:map_command_recording_order:*'>
-<meta name=variant content='?q=webgpu:api,validation,queue,copyToTexture,CopyExternalImageToTexture:source_image,crossOrigin:*'>
-<meta name=variant content='?q=webgpu:api,validation,queue,copyToTexture,CopyExternalImageToTexture:source_imageBitmap,state:*'>
-<meta name=variant content='?q=webgpu:api,validation,queue,copyToTexture,CopyExternalImageToTexture:source_canvas,state:*'>

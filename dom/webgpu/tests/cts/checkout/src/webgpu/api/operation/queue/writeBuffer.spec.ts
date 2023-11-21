@@ -19,7 +19,7 @@ const kTypedArrays = [
 type WriteBufferSignature = {
   bufferOffset: number;
   data: readonly number[];
-  arrayType: typeof kTypedArrays[number];
+  arrayType: (typeof kTypedArrays)[number];
   useArrayBuffer: boolean;
   dataOffset?: number; // In elements when useArrayBuffer === false, bytes otherwise
   dataSize?: number; // In elements when useArrayBuffer === false, bytes otherwise

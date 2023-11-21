@@ -158,7 +158,7 @@ g.test('usage')
     u //
       .combine('canvasType', kAllCanvasTypes)
       .beginSubcases()
-      .expand('usage', p => {
+      .expand('usage', () => {
         const usageSet = new Set<number>();
         for (const usage0 of kTextureUsages) {
           for (const usage1 of kTextureUsages) {

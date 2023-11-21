@@ -9,10 +9,10 @@ export const kAllWriteOps = [
   'attachment-store',
   'attachment-resolve',
 ] as const;
-export type WriteOp = typeof kAllWriteOps[number];
+export type WriteOp = (typeof kAllWriteOps)[number];
 
 export const kAllReadOps = ['t2b-copy', 't2t-copy', 'sample'] as const;
-export type ReadOp = typeof kAllReadOps[number];
+export type ReadOp = (typeof kAllReadOps)[number];
 
 export type Op = ReadOp | WriteOp;
 
@@ -28,44 +28,44 @@ interface OpInfo {
  */
 export const kOpInfo: {
   readonly [k in Op]: OpInfo;
-} = /* prettier-ignore */ {
+} = {
   'write-texture': {
-    contexts: [ 'queue' ],
+    contexts: ['queue'],
     readUsage: 0,
     writeUsage: GPUConst.TextureUsage.COPY_DST,
   },
   'b2t-copy': {
-    contexts: [ 'command-encoder' ],
+    contexts: ['command-encoder'],
     readUsage: 0,
     writeUsage: GPUConst.TextureUsage.COPY_DST,
   },
   't2t-copy': {
-    contexts: [ 'command-encoder' ],
+    contexts: ['command-encoder'],
     readUsage: GPUConst.TextureUsage.COPY_SRC,
     writeUsage: GPUConst.TextureUsage.COPY_DST,
   },
   't2b-copy': {
-    contexts: [ 'command-encoder' ],
+    contexts: ['command-encoder'],
     readUsage: GPUConst.TextureUsage.COPY_SRC,
     writeUsage: 0,
   },
-  'storage': {
-    contexts: [ 'compute-pass-encoder', 'render-pass-encoder', 'render-bundle-encoder' ],
+  storage: {
+    contexts: ['compute-pass-encoder', 'render-pass-encoder', 'render-bundle-encoder'],
     readUsage: 0,
     writeUsage: GPUConst.TextureUsage.STORAGE,
   },
-  'sample': {
-    contexts: [ 'compute-pass-encoder', 'render-pass-encoder', 'render-bundle-encoder' ],
+  sample: {
+    contexts: ['compute-pass-encoder', 'render-pass-encoder', 'render-bundle-encoder'],
     readUsage: GPUConst.TextureUsage.SAMPLED,
     writeUsage: 0,
   },
   'attachment-store': {
-    contexts: [ 'command-encoder' ],
+    contexts: ['command-encoder'],
     readUsage: 0,
     writeUsage: GPUConst.TextureUsage.RENDER_ATTACHMENT,
   },
   'attachment-resolve': {
-    contexts: [ 'command-encoder' ],
+    contexts: ['command-encoder'],
     readUsage: 0,
     writeUsage: GPUConst.TextureUsage.RENDER_ATTACHMENT,
   },

@@ -25,14 +25,6 @@ import { GPUTest } from '../../../../../gpu_test.js';
 import { Comparator, alwaysPass, anyOf } from '../../../../../util/compare.js';
 import { kBit, kValue } from '../../../../../util/constants.js';
 import {
-  reinterpretI32AsF32,
-  reinterpretI32AsU32,
-  reinterpretF32AsI32,
-  reinterpretF32AsU32,
-  reinterpretU32AsF32,
-  reinterpretU32AsI32,
-  reinterpretU16AsF16,
-  reinterpretF16AsU16,
   f32,
   i32,
   u32,
@@ -59,6 +51,16 @@ import {
   isFiniteF32,
   isFiniteF16,
 } from '../../../../../util/math.js';
+import {
+  reinterpretI32AsF32,
+  reinterpretI32AsU32,
+  reinterpretF32AsI32,
+  reinterpretF32AsU32,
+  reinterpretU32AsF32,
+  reinterpretU32AsI32,
+  reinterpretU16AsF16,
+  reinterpretF16AsU16,
+} from '../../../../../util/reinterpret.js';
 import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, run, ShaderBuilder } from '../../expression.js';
 
@@ -72,13 +74,13 @@ const f32InfAndNaNInU32: number[] = [
   // The positive NaN with the lowest integer representation is the integer
   // for infinity, plus one.
   // The positive NaN with the highest integer representation is i32.max (!)
-  ...linearRange(kBit.f32.infinity.positive + 1, kBit.i32.positive.max, numNaNs),
+  ...linearRange(kBit.f32.positive.infinity + 1, kBit.i32.positive.max, numNaNs),
   // The negative NaN with the lowest integer representation is the integer
   // for negative infinity, plus one.
   // The negative NaN with the highest integer representation is u32.max (!)
-  ...linearRange(kBit.f32.infinity.negative + 1, kBit.u32.max, numNaNs),
-  kBit.f32.infinity.positive,
-  kBit.f32.infinity.negative,
+  ...linearRange(kBit.f32.negative.infinity + 1, kBit.u32.max, numNaNs),
+  kBit.f32.positive.infinity,
+  kBit.f32.negative.infinity,
 ];
 const f32InfAndNaNInF32 = f32InfAndNaNInU32.map(u => reinterpretU32AsF32(u));
 const f32InfAndNaNInI32 = f32InfAndNaNInU32.map(u => reinterpretU32AsI32(u));
@@ -102,13 +104,13 @@ const f16InfAndNaNInU16: number[] = [
   // The positive NaN with the lowest integer representation is the integer
   // for infinity, plus one.
   // The positive NaN with the highest integer representation is u16 0x7fff i.e. 32767.
-  ...linearRange(kBit.f16.infinity.positive + 1, 32767, numNaNs).map(v => Math.ceil(v)),
+  ...linearRange(kBit.f16.positive.infinity + 1, 32767, numNaNs).map(v => Math.ceil(v)),
   // The negative NaN with the lowest integer representation is the integer
   // for negative infinity, plus one.
   // The negative NaN with the highest integer representation is u16 0xffff i.e. 65535
-  ...linearRange(kBit.f16.infinity.negative + 1, 65535, numNaNs).map(v => Math.floor(v)),
-  kBit.f16.infinity.positive,
-  kBit.f16.infinity.negative,
+  ...linearRange(kBit.f16.negative.infinity + 1, 65535, numNaNs).map(v => Math.floor(v)),
+  kBit.f16.positive.infinity,
+  kBit.f16.negative.infinity,
 ];
 const f16InfAndNaNInF16 = f16InfAndNaNInU16.map(u => reinterpretU16AsF16(u));
 
@@ -121,7 +123,7 @@ const f16ZerosInterval: FPInterval = new FPInterval('f16', -0.0, 0.0);
  * @returns an u32 whose lower and higher 16bits are the two elements of the
  * given array of two u16 respectively, in little-endian.
  */
-function u16x2ToU32(u16x2: number[]): number {
+function u16x2ToU32(u16x2: readonly number[]): number {
   assert(u16x2.length === 2);
   // Create a DataView with 4 bytes buffer.
   const buffer = new ArrayBuffer(4);
@@ -529,7 +531,7 @@ function possible32BitScalarIntervalsFromF16x2(
   }
   const possibleU16Bits = f16x2InU16x2.map(possibleBitsInU16FromFiniteF16InU16);
   const possibleExpectations = cartesianProduct(...possibleU16Bits).flatMap<Scalar | FPInterval>(
-    (possibleBitsU16x2: number[]) => {
+    (possibleBitsU16x2: readonly number[]) => {
       assert(possibleBitsU16x2.length === 2);
       return expectationsForValue(reinterpretFromU32(u16x2ToU32(possibleBitsU16x2)));
     }

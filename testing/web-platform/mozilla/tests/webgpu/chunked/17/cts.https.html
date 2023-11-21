@@ -33,6 +33,16 @@
 </script>
 <script type=module src=/_mozilla/webgpu/common/runtime/wpt.js></script>
 
+<meta name=variant content='?q=webgpu:api,validation,createTexture:mipLevelCount,bound_check:*'>
+<meta name=variant content='?q=webgpu:api,validation,createTexture:mipLevelCount,bound_check,bigger_than_integer_bit_width:*'>
+<meta name=variant content='?q=webgpu:api,validation,createTexture:sampleCount,various_sampleCount_with_all_formats:*'>
+<meta name=variant content='?q=webgpu:api,validation,createTexture:sampleCount,valid_sampleCount_with_other_parameter_varies:*'>
+<meta name=variant content='?q=webgpu:api,validation,createTexture:sample_count,1d_2d_array_3d:*'>
+<meta name=variant content='?q=webgpu:api,validation,createTexture:texture_size,default_value_and_smallest_size,uncompressed_format:*'>
+<meta name=variant content='?q=webgpu:api,validation,createTexture:texture_size,default_value_and_smallest_size,compressed_format:*'>
+<meta name=variant content='?q=webgpu:api,validation,createTexture:texture_size,1d_texture:*'>
+<meta name=variant content='?q=webgpu:api,validation,createTexture:texture_size,2d_texture,uncompressed_format:*'>
+<meta name=variant content='?q=webgpu:api,validation,createTexture:texture_size,2d_texture,compressed_format:*'>
 <meta name=variant content='?q=webgpu:api,validation,createTexture:texture_size,3d_texture,uncompressed_format:*'>
 <meta name=variant content='?q=webgpu:api,validation,createTexture:texture_size,3d_texture,compressed_format:*'>
 <meta name=variant content='?q=webgpu:api,validation,createTexture:texture_usage:*'>
@@ -48,13 +58,3 @@
 <meta name=variant content='?q=webgpu:api,validation,debugMarker:push_pop_call_count_unbalance,render_compute_pass:*'>
 <meta name=variant content='?q=webgpu:api,validation,encoding,beginComputePass:timestampWrites,query_set_type:*'>
 <meta name=variant content='?q=webgpu:api,validation,encoding,beginComputePass:timestampWrites,invalid_query_set:*'>
-<meta name=variant content='?q=webgpu:api,validation,encoding,beginComputePass:timestampWrites,query_index:*'>
-<meta name=variant content='?q=webgpu:api,validation,encoding,beginComputePass:timestamp_query_set,device_mismatch:*'>
-<meta name=variant content='?q=webgpu:api,validation,encoding,beginRenderPass:color_attachments,device_mismatch:*'>
-<meta name=variant content='?q=webgpu:api,validation,encoding,beginRenderPass:depth_stencil_attachment,device_mismatch:*'>
-<meta name=variant content='?q=webgpu:api,validation,encoding,beginRenderPass:occlusion_query_set,device_mismatch:*'>
-<meta name=variant content='?q=webgpu:api,validation,encoding,beginRenderPass:timestamp_query_set,device_mismatch:*'>
-<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,clearBuffer:buffer_state:*'>
-<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,clearBuffer:buffer,device_mismatch:*'>
-<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,clearBuffer:default_args:*'>
-<meta name=variant content='?q=webgpu:api,validation,encoding,cmds,clearBuffer:buffer_usage:*'>

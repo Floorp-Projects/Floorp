@@ -19,7 +19,7 @@ g.test('createPipelineLayout,at_over')
       limitTest,
       testValueName,
       async ({ device, testValue, shouldError }) => {
-        const bindGroupLayouts = range(testValue, (i: number) =>
+        const bindGroupLayouts = range(testValue, _i =>
           device.createBindGroupLayout({
             entries: [
               {
@@ -84,4 +84,12 @@ g.test('setBindGroup,at_over')
         );
       }
     );
+  });
+
+g.test('validate,maxBindGroupsPlusVertexBuffers')
+  .desc(`Test that ${limit} <= maxBindGroupsPlusVertexBuffers`)
+  .fn(t => {
+    const { adapter, defaultLimit, adapterLimit } = t;
+    t.expect(defaultLimit <= t.getDefaultLimit('maxBindGroupsPlusVertexBuffers'));
+    t.expect(adapterLimit <= adapter.limits.maxBindGroupsPlusVertexBuffers);
   });

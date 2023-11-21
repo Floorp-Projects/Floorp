@@ -33,6 +33,18 @@
 </script>
 <script type=module src=/_mozilla/webgpu/common/runtime/wpt.js></script>
 
+<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:command,copyTextureToTexture:*'>
+<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:command,clearBuffer:*'>
+<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:command,writeTimestamp:*'>
+<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:command,resolveQuerySet:*'>
+<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:command,computePass,dispatch:*'>
+<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:command,renderPass,draw:*'>
+<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:command,renderPass,renderBundle:*'>
+<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:queue,writeBuffer:*'>
+<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:queue,writeTexture,2d,uncompressed_format:*'>
+<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:queue,writeTexture,2d,compressed_format:*'>
+<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:queue,copyExternalImageToTexture,canvas:*'>
+<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:queue,copyExternalImageToTexture,imageBitmap:*'>
 <meta name=variant content='?q=webgpu:api,validation,texture,bgra8unorm_storage:create_texture:*'>
 <meta name=variant content='?q=webgpu:api,validation,texture,bgra8unorm_storage:create_bind_group_layout:*'>
 <meta name=variant content='?q=webgpu:api,validation,texture,bgra8unorm_storage:create_shader_module_with_bgra8unorm_storage:*'>
@@ -46,15 +58,3 @@
 <meta name=variant content='?q=webgpu:api,validation,texture,float32_filterable:create_bind_group:*'>
 <meta name=variant content='?q=webgpu:api,validation,texture,rg11b10ufloat_renderable:create_texture:*'>
 <meta name=variant content='?q=webgpu:api,validation,texture,rg11b10ufloat_renderable:begin_render_pass_single_sampled:*'>
-<meta name=variant content='?q=webgpu:api,validation,texture,rg11b10ufloat_renderable:begin_render_pass_msaa_and_resolve:*'>
-<meta name=variant content='?q=webgpu:api,validation,texture,rg11b10ufloat_renderable:begin_render_bundle_encoder:*'>
-<meta name=variant content='?q=webgpu:api,validation,texture,rg11b10ufloat_renderable:create_render_pipeline:*'>
-<meta name=variant content='?q=webgpu:compat,api,validation,encoding,cmds,copyTextureToBuffer:compressed:*'>
-<meta name=variant content='?q=webgpu:compat,api,validation,encoding,programmable,pipeline_bind_group_compat:twoDifferentTextureViews,render_pass,used:*'>
-<meta name=variant content='?q=webgpu:compat,api,validation,encoding,programmable,pipeline_bind_group_compat:twoDifferentTextureViews,render_pass,unused:*'>
-<meta name=variant content='?q=webgpu:compat,api,validation,encoding,programmable,pipeline_bind_group_compat:twoDifferentTextureViews,compute_pass,used:*'>
-<meta name=variant content='?q=webgpu:compat,api,validation,encoding,programmable,pipeline_bind_group_compat:twoDifferentTextureViews,compute_pass,unused:*'>
-<meta name=variant content='?q=webgpu:compat,api,validation,render_pipeline,fragment_state:colorState:*'>
-<meta name=variant content='?q=webgpu:compat,api,validation,render_pipeline,shader_module:sample_mask:*'>
-<meta name=variant content='?q=webgpu:compat,api,validation,render_pipeline,vertex_state:maxVertexAttributesVertexIndexInstanceIndex:*'>
-<meta name=variant content='?q=webgpu:compat,api,validation,texture,createTexture:unsupportedTextureFormats:*'>

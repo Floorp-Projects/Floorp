@@ -48,7 +48,7 @@ function reifyMapRange(bufferSize: number, range: readonly [number?, number?]): 
 }
 
 const mapRegionBoundModes = ['default-expand', 'explicit-expand', 'minimal'] as const;
-type MapRegionBoundMode = typeof mapRegionBoundModes[number];
+type MapRegionBoundMode = (typeof mapRegionBoundModes)[number];
 
 function getRegionForMap(
   bufferSize: number,
@@ -422,14 +422,8 @@ g.test('mapAsync,mapState')
       .combine('afterDestroy', [false, true])
   )
   .fn(async t => {
-    const {
-      usageType,
-      mapModeType,
-      beforeUnmap,
-      beforeDestroy,
-      afterUnmap,
-      afterDestroy,
-    } = t.params;
+    const { usageType, mapModeType, beforeUnmap, beforeDestroy, afterUnmap, afterDestroy } =
+      t.params;
     const size = 8;
     const range = [0, 8];
     const usage =

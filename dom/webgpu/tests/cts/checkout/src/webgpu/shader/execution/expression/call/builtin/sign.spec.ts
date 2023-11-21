@@ -9,13 +9,24 @@ Returns the sign of e. Component-wise when T is a vector.
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../../gpu_test.js';
-import { i32, TypeF32, TypeF16, TypeI32 } from '../../../../../util/conversion.js';
+import {
+  i32,
+  TypeF32,
+  TypeF16,
+  TypeI32,
+  TypeAbstractFloat,
+} from '../../../../../util/conversion.js';
 import { FP } from '../../../../../util/floating_point.js';
-import { fullF32Range, fullF16Range, fullI32Range } from '../../../../../util/math.js';
+import {
+  fullF32Range,
+  fullF16Range,
+  fullI32Range,
+  fullF64Range,
+} from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
-import { allInputSources, run } from '../../expression.js';
+import { allInputSources, onlyConstInputSource, run } from '../../expression.js';
 
-import { builtin } from './builtin.js';
+import { abstractBuiltin, builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
@@ -25,6 +36,13 @@ export const d = makeCaseCache('sign', {
   },
   f16: () => {
     return FP.f16.generateScalarToIntervalCases(fullF16Range(), 'unfiltered', FP.f16.signInterval);
+  },
+  abstract_float: () => {
+    return FP.abstract.generateScalarToIntervalCases(
+      fullF64Range(),
+      'unfiltered',
+      FP.abstract.signInterval
+    );
   },
   i32: () =>
     fullI32Range().map(i => {
@@ -37,13 +55,18 @@ g.test('abstract_float')
   .specURL('https://www.w3.org/TR/WGSL/#sign-builtin')
   .desc(`abstract float tests`)
   .params(u =>
-    u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4] as const)
+    u
+      .combine('inputSource', onlyConstInputSource)
+      .combine('vectorize', [undefined, 2, 3, 4] as const)
   )
-  .unimplemented();
+  .fn(async t => {
+    const cases = await d.get('abstract_float');
+    await run(t, abstractBuiltin('sign'), [TypeAbstractFloat], TypeAbstractFloat, t.params, cases);
+  });
 
 g.test('abstract_int')
   .specURL('https://www.w3.org/TR/WGSL/#sign-builtin')
-  .desc(`abstract float tests`)
+  .desc(`abstract int tests`)
   .params(u =>
     u.combine('inputSource', allInputSources).combine('vectorize', [undefined, 2, 3, 4] as const)
   )

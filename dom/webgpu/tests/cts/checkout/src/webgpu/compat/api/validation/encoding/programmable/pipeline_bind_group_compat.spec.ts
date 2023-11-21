@@ -8,7 +8,7 @@ import { kRenderEncodeTypes } from '../../../../../util/command_buffer_maker.js'
 import { CompatibilityTest } from '../../../../compatibility_test.js';
 
 const kTextureTypes = ['regular', 'storage'];
-type TextureType = typeof kTextureTypes[number];
+type TextureType = (typeof kTextureTypes)[number];
 
 function getTextureTypeWGSL(textureType: TextureType) {
   return textureType === 'storage' ? 'texture_storage_2d<rgba8unorm, write>' : 'texture_2d<f32>';
@@ -195,7 +195,7 @@ const kBindCaseNames = keysOf(kBindCases);
 const kDrawUseCases: {
   [key: string]: (t: CompatibilityTest, encoder: GPURenderCommandsMixin) => void;
 } = {
-  draw: (t: CompatibilityTest, encoder: GPURenderCommandsMixin) => {
+  draw: (_t: CompatibilityTest, encoder: GPURenderCommandsMixin) => {
     encoder.draw(3);
   },
   drawIndexed: (t: CompatibilityTest, encoder: GPURenderCommandsMixin) => {
@@ -225,7 +225,7 @@ const kDrawCaseNames = keysOf(kDrawUseCases);
 const kDispatchUseCases: {
   [key: string]: (t: CompatibilityTest, encoder: GPUComputePassEncoder) => void;
 } = {
-  dispatchWorkgroups(t: CompatibilityTest, encoder: GPUComputePassEncoder) {
+  dispatchWorkgroups(_t: CompatibilityTest, encoder: GPUComputePassEncoder) {
     encoder.dispatchWorkgroups(1);
   },
   dispatchWorkgroupsIndirect(t: CompatibilityTest, encoder: GPUComputePassEncoder) {

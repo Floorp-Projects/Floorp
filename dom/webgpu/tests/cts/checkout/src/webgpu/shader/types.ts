@@ -11,7 +11,8 @@ export type ScalarType = 'i32' | 'u32' | 'f32' | 'bool';
 export const HostSharableTypes = ['i32', 'u32', 'f32'] as const;
 
 /** Info for each plain scalar type. */
-export const kScalarTypeInfo = /* prettier-ignore */ {
+export const kScalarTypeInfo =
+  /* prettier-ignore */ {
   'i32':    { layout: { alignment:  4, size:  4 }, supportsAtomics:  true, arrayLength: 1, innerLength: 0 },
   'u32':    { layout: { alignment:  4, size:  4 }, supportsAtomics:  true, arrayLength: 1, innerLength: 0 },
   'f32':    { layout: { alignment:  4, size:  4 }, supportsAtomics: false, arrayLength: 1, innerLength: 0 },
@@ -21,7 +22,8 @@ export const kScalarTypeInfo = /* prettier-ignore */ {
 export const kScalarTypes = keysOf(kScalarTypeInfo);
 
 /** Info for each vecN<> container type. */
-export const kVectorContainerTypeInfo = /* prettier-ignore */ {
+export const kVectorContainerTypeInfo =
+  /* prettier-ignore */ {
   'vec2':   { layout: { alignment:  8, size:  8 }, arrayLength: 2 , innerLength: 0 },
   'vec3':   { layout: { alignment: 16, size: 12 }, arrayLength: 3 , innerLength: 0 },
   'vec4':   { layout: { alignment: 16, size: 16 }, arrayLength: 4 , innerLength: 0 },
@@ -30,7 +32,8 @@ export const kVectorContainerTypeInfo = /* prettier-ignore */ {
 export const kVectorContainerTypes = keysOf(kVectorContainerTypeInfo);
 
 /** Info for each matNxN<> container type. */
-export const kMatrixContainerTypeInfo = /* prettier-ignore */ {
+export const kMatrixContainerTypeInfo =
+  /* prettier-ignore */ {
   'mat2x2': { layout: { alignment:  8, size: 16 }, arrayLength: 2, innerLength: 2 },
   'mat3x2': { layout: { alignment:  8, size: 24 }, arrayLength: 3, innerLength: 2 },
   'mat4x2': { layout: { alignment:  8, size: 32 }, arrayLength: 4, innerLength: 2 },

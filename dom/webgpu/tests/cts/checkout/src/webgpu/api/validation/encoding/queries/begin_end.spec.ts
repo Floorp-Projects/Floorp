@@ -1,18 +1,5 @@
 export const description = `
 Validation for encoding begin/endable queries.
-
-TODO: pipeline statistics queries are removed from core; consider moving tests to another suite.
-TODO: tests for pipeline statistics queries:
-- balance: {
-    - begin 0, end 1
-    - begin 1, end 0
-    - begin 1, end 1
-    - begin 2, end 2
-    - }
-    - x= {
-        - render pass + pipeline statistics
-        - compute pass + pipeline statistics
-        - }
 `;
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
@@ -119,44 +106,12 @@ g.test('nesting')
   .desc(
     `
 Tests that whether it's allowed to nest various types of queries:
-- call {occlusion, pipeline-statistics, timestamp} query in same type or other type.
+- call {occlusion, timestamp} query in same type or other type.
   `
   )
   .paramsSubcasesOnly([
     { begin: 'occlusion', nest: 'timestamp', end: 'occlusion', _valid: true },
     { begin: 'occlusion', nest: 'occlusion', end: 'occlusion', _valid: false },
-    { begin: 'occlusion', nest: 'pipeline-statistics', end: 'occlusion', _valid: true },
-    {
-      begin: 'occlusion',
-      nest: 'pipeline-statistics',
-      end: 'pipeline-statistics',
-      _valid: true,
-    },
-    {
-      begin: 'pipeline-statistics',
-      nest: 'timestamp',
-      end: 'pipeline-statistics',
-      _valid: true,
-    },
-    {
-      begin: 'pipeline-statistics',
-      nest: 'pipeline-statistics',
-      end: 'pipeline-statistics',
-      _valid: false,
-    },
-    {
-      begin: 'pipeline-statistics',
-      nest: 'occlusion',
-      end: 'pipeline-statistics',
-      _valid: true,
-    },
-    { begin: 'pipeline-statistics', nest: 'occlusion', end: 'occlusion', _valid: true },
     { begin: 'timestamp', nest: 'occlusion', end: 'occlusion', _valid: true },
-    {
-      begin: 'timestamp',
-      nest: 'pipeline-statistics',
-      end: 'pipeline-statistics',
-      _valid: true,
-    },
   ] as const)
   .unimplemented();

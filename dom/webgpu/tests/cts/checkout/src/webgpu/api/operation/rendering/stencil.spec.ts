@@ -213,7 +213,7 @@ class StencilTest extends TextureTestMixin(GPUTest) {
       B: expectedColor[2],
       A: expectedColor[3],
     };
-    const expTexelView = TexelView.fromTexelsAsColors(renderTargetFormat, coords => expColor);
+    const expTexelView = TexelView.fromTexelsAsColors(renderTargetFormat, _coords => expColor);
     this.expectTexelViewComparisonIsOkInTexture({ texture: renderTarget }, expTexelView, [1, 1]);
   }
 

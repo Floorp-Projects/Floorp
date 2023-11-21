@@ -4,7 +4,7 @@ runRefTest(t => {
   function draw(canvasId: string, format: GPUTextureFormat) {
     const canvas = document.getElementById(canvasId) as HTMLCanvasElement;
 
-    const ctx = (canvas.getContext('webgpu') as unknown) as GPUCanvasContext;
+    const ctx = canvas.getContext('webgpu') as unknown as GPUCanvasContext;
     ctx.configure({
       device: t.device,
       format,

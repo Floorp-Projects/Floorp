@@ -503,15 +503,8 @@ g.test('subresources,depth_stencil_texture_in_bind_groups')
       .combine('inSamePass', [true, false])
   )
   .fn(t => {
-    const {
-      view0Levels,
-      view0Layers,
-      view1Levels,
-      view1Layers,
-      aspect0,
-      aspect1,
-      inSamePass,
-    } = t.params;
+    const { view0Levels, view0Layers, view1Levels, view1Layers, aspect0, aspect1, inSamePass } =
+      t.params;
 
     const texture = t.device.createTexture({
       format: 'depth24plus-stencil8',

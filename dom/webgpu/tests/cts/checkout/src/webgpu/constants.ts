@@ -1,7 +1,7 @@
 // Note: Types ensure every field is specified.
 
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
-function checkType<T>(x: T) {}
+function checkType<T>(_: T) {}
 
 const BufferUsage = {
   MAP_READ: 0x0001,

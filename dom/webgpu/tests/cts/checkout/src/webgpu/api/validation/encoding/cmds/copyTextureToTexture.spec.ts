@@ -363,10 +363,12 @@ Test the formats of textures in copyTextureToTexture must be copy-compatible.
   })
   .fn(t => {
     const { srcFormat, dstFormat } = t.params;
-    const srcFormatInfo = kTextureFormatInfo[srcFormat];
-    const dstFormatInfo = kTextureFormatInfo[dstFormat];
 
     t.skipIfTextureFormatNotSupported(srcFormat, dstFormat);
+    t.skipIfCopyTextureToTextureNotSupportedForFormat(srcFormat, dstFormat);
+
+    const srcFormatInfo = kTextureFormatInfo[srcFormat];
+    const dstFormatInfo = kTextureFormatInfo[dstFormat];
 
     const textureSize = {
       width: lcm(srcFormatInfo.blockWidth, dstFormatInfo.blockWidth),
@@ -440,14 +442,8 @@ Note: this is only tested for 2D textures as it is the only dimension compatible
     t.selectDeviceOrSkipTestCase(kTextureFormatInfo[format].feature);
   })
   .fn(t => {
-    const {
-      format,
-      copyBoxOffsets,
-      srcTextureSize,
-      dstTextureSize,
-      srcCopyLevel,
-      dstCopyLevel,
-    } = t.params;
+    const { format, copyBoxOffsets, srcTextureSize, dstTextureSize, srcCopyLevel, dstCopyLevel } =
+      t.params;
     const kMipLevelCount = 3;
 
     const srcTexture = t.device.createTexture({
@@ -779,6 +775,7 @@ TODO: Express the offsets in "block size" so as to be able to test non-4x4 compr
   .beforeAllSubcases(t => {
     const { format } = t.params;
     t.selectDeviceOrSkipTestCase(kTextureFormatInfo[format].feature);
+    t.skipIfCopyTextureToTextureNotSupportedForFormat(format);
   })
   .fn(t => {
     const { format, dimension, copyBoxOffsets, srcCopyLevel, dstCopyLevel } = t.params;

@@ -56,19 +56,19 @@ function expBuilder(): ShaderBuilder {
 }
 
 /* @returns a fract Case for a given scalar or vector input */
-function makeVectorCaseFract(v: number | number[], trait: 'f32' | 'f16'): Case {
+function makeVectorCaseFract(v: number | readonly number[], trait: 'f32' | 'f16'): Case {
   const fp = FP[trait];
-  let toInput: (n: number[]) => Scalar | Vector;
-  let toOutput: (n: number[]) => Scalar | Vector;
+  let toInput: (n: readonly number[]) => Scalar | Vector;
+  let toOutput: (n: readonly number[]) => Scalar | Vector;
   if (v instanceof Array) {
     // Input is vector
-    toInput = (n: number[]) => toVector(n, fp.scalarBuilder);
-    toOutput = (n: number[]) => toVector(n, fp.scalarBuilder);
+    toInput = (n: readonly number[]) => toVector(n, fp.scalarBuilder);
+    toOutput = (n: readonly number[]) => toVector(n, fp.scalarBuilder);
   } else {
     // Input is scalar, also wrap it in an array.
     v = [v];
-    toInput = (n: number[]) => fp.scalarBuilder(n[0]);
-    toOutput = (n: number[]) => fp.scalarBuilder(n[0]);
+    toInput = (n: readonly number[]) => fp.scalarBuilder(n[0]);
+    toOutput = (n: readonly number[]) => fp.scalarBuilder(n[0]);
   }
 
   v = v.map(fp.quantize);
@@ -84,19 +84,19 @@ function makeVectorCaseFract(v: number | number[], trait: 'f32' | 'f16'): Case {
 }
 
 /* @returns an exp Case for a given scalar or vector input */
-function makeVectorCaseExp(v: number | number[], trait: 'f32' | 'f16'): Case {
+function makeVectorCaseExp(v: number | readonly number[], trait: 'f32' | 'f16'): Case {
   const fp = FP[trait];
-  let toInput: (n: number[]) => Scalar | Vector;
-  let toOutput: (n: number[]) => Scalar | Vector;
+  let toInput: (n: readonly number[]) => Scalar | Vector;
+  let toOutput: (n: readonly number[]) => Scalar | Vector;
   if (v instanceof Array) {
     // Input is vector
-    toInput = (n: number[]) => toVector(n, fp.scalarBuilder);
-    toOutput = (n: number[]) => toVector(n, i32);
+    toInput = (n: readonly number[]) => toVector(n, fp.scalarBuilder);
+    toOutput = (n: readonly number[]) => toVector(n, i32);
   } else {
     // Input is scalar, also wrap it in an array.
     v = [v];
-    toInput = (n: number[]) => fp.scalarBuilder(n[0]);
-    toOutput = (n: number[]) => i32(n[0]);
+    toInput = (n: readonly number[]) => fp.scalarBuilder(n[0]);
+    toOutput = (n: readonly number[]) => i32(n[0]);
   }
 
   v = v.map(fp.quantize);

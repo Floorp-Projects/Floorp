@@ -11,7 +11,7 @@ export const g = makeTestGroup(CompatibilityTest);
 type ThreeColorTargets = [GPUColorTargetState, GPUColorTargetState | null, GPUColorTargetState];
 
 const cases = {
-  default(targets: ThreeColorTargets) {
+  default(_targets: ThreeColorTargets) {
     return true;
   },
   noBlendTarget0(targets: ThreeColorTargets) {

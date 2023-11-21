@@ -11,6 +11,7 @@ For each suite in SUITE_DIRS, validate some properties about the file:
   - Has a test function (or is marked unimplemented)
   - Has no duplicate cases
   - Configures batching correctly, if used
+- That each case query is not too long
 
 Example:
   tools/validate src/unittests/ src/webgpu/

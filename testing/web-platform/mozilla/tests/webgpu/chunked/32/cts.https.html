@@ -33,6 +33,18 @@
 </script>
 <script type=module src=/_mozilla/webgpu/common/runtime/wpt.js></script>
 
+<meta name=variant content='?q=webgpu:api,validation,shader_module,entry_point:vertex:*'>
+<meta name=variant content='?q=webgpu:api,validation,shader_module,entry_point:fragment:*'>
+<meta name=variant content='?q=webgpu:api,validation,shader_module,overrides:id_conflict:*'>
+<meta name=variant content='?q=webgpu:api,validation,shader_module,overrides:name_conflict:*'>
+<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:createBuffer:*'>
+<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:createTexture,2d,uncompressed_format:*'>
+<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:createTexture,2d,compressed_format:*'>
+<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:createView,2d,uncompressed_format:*'>
+<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:createView,2d,compressed_format:*'>
+<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:createSampler:*'>
+<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:createBindGroupLayout:*'>
+<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:createBindGroup:*'>
 <meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:createPipelineLayout:*'>
 <meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:createShaderModule:*'>
 <meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:createComputePipeline:*'>
@@ -46,15 +58,3 @@
 <meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:command,copyBufferToBuffer:*'>
 <meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:command,copyBufferToTexture:*'>
 <meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:command,copyTextureToBuffer:*'>
-<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:command,copyTextureToTexture:*'>
-<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:command,clearBuffer:*'>
-<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:command,writeTimestamp:*'>
-<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:command,resolveQuerySet:*'>
-<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:command,computePass,dispatch:*'>
-<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:command,renderPass,draw:*'>
-<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:command,renderPass,renderBundle:*'>
-<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:queue,writeBuffer:*'>
-<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:queue,writeTexture,2d,uncompressed_format:*'>
-<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:queue,writeTexture,2d,compressed_format:*'>
-<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:queue,copyExternalImageToTexture,canvas:*'>
-<meta name=variant content='?q=webgpu:api,validation,state,device_lost,destroy:queue,copyExternalImageToTexture,imageBitmap:*'>

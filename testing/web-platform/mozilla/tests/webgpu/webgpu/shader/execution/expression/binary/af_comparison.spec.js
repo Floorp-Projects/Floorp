@@ -1,12 +1,17 @@
 /**
- * AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
- **/ export const description = `
+* AUTO-GENERATED - DO NOT EDIT. Source: https://github.com/gpuweb/cts
+**/export const description = `
 Execution Tests for the AbstractFloat comparison operations
-`;
-import { makeTestGroup } from '../../../../../common/framework/test_group.js';
+`;import { makeTestGroup } from '../../../../../common/framework/test_group.js';
 import { GPUTest } from '../../../../gpu_test.js';
 import { anyOf } from '../../../../util/compare.js';
-import { abstractFloat, bool, TypeAbstractFloat, TypeBool } from '../../../../util/conversion.js';
+import {
+  abstractFloat,
+  bool,
+
+  TypeAbstractFloat,
+  TypeBool } from
+'../../../../util/conversion.js';
 import { flushSubnormalNumberF64, vectorF64Range } from '../../../../util/math.js';
 import { makeCaseCache } from '../case_cache.js';
 import { allInputSources, run } from '../expression.js';
@@ -19,7 +24,11 @@ export const g = makeTestGroup(GPUTest);
  * @returns a test case for the provided left hand & right hand values and truth function.
  * Handles quantization and subnormals.
  */
-function makeCase(lhs, rhs, truthFunc) {
+function makeCase(
+lhs,
+rhs,
+truthFunc)
+{
   // Subnormal float values may be flushed at any time.
   // https://www.w3.org/TR/WGSL/#floating-point-evaluation
   const af_lhs = abstractFloat(lhs);
@@ -27,8 +36,8 @@ function makeCase(lhs, rhs, truthFunc) {
   const lhs_options = new Set([af_lhs, abstractFloat(flushSubnormalNumberF64(lhs))]);
   const rhs_options = new Set([af_rhs, abstractFloat(flushSubnormalNumberF64(rhs))]);
   const expected = [];
-  lhs_options.forEach(l => {
-    rhs_options.forEach(r => {
+  lhs_options.forEach((l) => {
+    rhs_options.forEach((r) => {
       const result = bool(truthFunc(l, r));
       if (!expected.includes(result)) {
         expected.push(result);
@@ -45,7 +54,7 @@ export const d = makeCaseCache('binary/af_logical', {
       return lhs.value === rhs.value;
     };
 
-    return vectorF64Range(2).map(v => {
+    return vectorF64Range(2).map((v) => {
       return makeCase(v[0], v[1], truthFunc);
     });
   },
@@ -54,7 +63,7 @@ export const d = makeCaseCache('binary/af_logical', {
       return lhs.value !== rhs.value;
     };
 
-    return vectorF64Range(2).map(v => {
+    return vectorF64Range(2).map((v) => {
       return makeCase(v[0], v[1], truthFunc);
     });
   },
@@ -63,7 +72,7 @@ export const d = makeCaseCache('binary/af_logical', {
       return lhs.value < rhs.value;
     };
 
-    return vectorF64Range(2).map(v => {
+    return vectorF64Range(2).map((v) => {
       return makeCase(v[0], v[1], truthFunc);
     });
   },
@@ -72,7 +81,7 @@ export const d = makeCaseCache('binary/af_logical', {
       return lhs.value <= rhs.value;
     };
 
-    return vectorF64Range(2).map(v => {
+    return vectorF64Range(2).map((v) => {
       return makeCase(v[0], v[1], truthFunc);
     });
   },
@@ -81,7 +90,7 @@ export const d = makeCaseCache('binary/af_logical', {
       return lhs.value > rhs.value;
     };
 
-    return vectorF64Range(2).map(v => {
+    return vectorF64Range(2).map((v) => {
       return makeCase(v[0], v[1], truthFunc);
     });
   },
@@ -90,116 +99,116 @@ export const d = makeCaseCache('binary/af_logical', {
       return lhs.value >= rhs.value;
     };
 
-    return vectorF64Range(2).map(v => {
+    return vectorF64Range(2).map((v) => {
       return makeCase(v[0], v[1], truthFunc);
     });
-  },
+  }
 });
 
-g.test('equals')
-  .specURL('https://www.w3.org/TR/WGSL/#comparison-expr')
-  .desc(
-    `
+g.test('equals').
+specURL('https://www.w3.org/TR/WGSL/#comparison-expr').
+desc(
+  `
 Expression: x == y
 Accuracy: Correct result
 `
-  )
-  .params(u =>
-    u
-      .combine('inputSource', [allInputSources[0]] /* const */)
-      .combine('vectorize', [undefined, 2, 3, 4])
-  )
-  .fn(async t => {
-    const cases = await d.get('equals');
-    await run(t, binary('=='), [TypeAbstractFloat, TypeAbstractFloat], TypeBool, t.params, cases);
-  });
+).
+params((u) =>
+u.
+combine('inputSource', [allInputSources[0]] /* const */).
+combine('vectorize', [undefined, 2, 3, 4])
+).
+fn(async (t) => {
+  const cases = await d.get('equals');
+  await run(t, binary('=='), [TypeAbstractFloat, TypeAbstractFloat], TypeBool, t.params, cases);
+});
 
-g.test('not_equals')
-  .specURL('https://www.w3.org/TR/WGSL/#comparison-expr')
-  .desc(
-    `
+g.test('not_equals').
+specURL('https://www.w3.org/TR/WGSL/#comparison-expr').
+desc(
+  `
 Expression: x != y
 Accuracy: Correct result
 `
-  )
-  .params(u =>
-    u
-      .combine('inputSource', [allInputSources[0]] /* const */)
-      .combine('vectorize', [undefined, 2, 3, 4])
-  )
-  .fn(async t => {
-    const cases = await d.get('not_equals');
-    await run(t, binary('!='), [TypeAbstractFloat, TypeAbstractFloat], TypeBool, t.params, cases);
-  });
+).
+params((u) =>
+u.
+combine('inputSource', [allInputSources[0]] /* const */).
+combine('vectorize', [undefined, 2, 3, 4])
+).
+fn(async (t) => {
+  const cases = await d.get('not_equals');
+  await run(t, binary('!='), [TypeAbstractFloat, TypeAbstractFloat], TypeBool, t.params, cases);
+});
 
-g.test('less_than')
-  .specURL('https://www.w3.org/TR/WGSL/#comparison-expr')
-  .desc(
-    `
+g.test('less_than').
+specURL('https://www.w3.org/TR/WGSL/#comparison-expr').
+desc(
+  `
 Expression: x < y
 Accuracy: Correct result
 `
-  )
-  .params(u =>
-    u
-      .combine('inputSource', [allInputSources[0]] /* const */)
-      .combine('vectorize', [undefined, 2, 3, 4])
-  )
-  .fn(async t => {
-    const cases = await d.get('less_than');
-    await run(t, binary('<'), [TypeAbstractFloat, TypeAbstractFloat], TypeBool, t.params, cases);
-  });
+).
+params((u) =>
+u.
+combine('inputSource', [allInputSources[0]] /* const */).
+combine('vectorize', [undefined, 2, 3, 4])
+).
+fn(async (t) => {
+  const cases = await d.get('less_than');
+  await run(t, binary('<'), [TypeAbstractFloat, TypeAbstractFloat], TypeBool, t.params, cases);
+});
 
-g.test('less_equals')
-  .specURL('https://www.w3.org/TR/WGSL/#comparison-expr')
-  .desc(
-    `
+g.test('less_equals').
+specURL('https://www.w3.org/TR/WGSL/#comparison-expr').
+desc(
+  `
 Expression: x <= y
 Accuracy: Correct result
 `
-  )
-  .params(u =>
-    u
-      .combine('inputSource', [allInputSources[0]] /* const */)
-      .combine('vectorize', [undefined, 2, 3, 4])
-  )
-  .fn(async t => {
-    const cases = await d.get('less_equals');
-    await run(t, binary('<='), [TypeAbstractFloat, TypeAbstractFloat], TypeBool, t.params, cases);
-  });
+).
+params((u) =>
+u.
+combine('inputSource', [allInputSources[0]] /* const */).
+combine('vectorize', [undefined, 2, 3, 4])
+).
+fn(async (t) => {
+  const cases = await d.get('less_equals');
+  await run(t, binary('<='), [TypeAbstractFloat, TypeAbstractFloat], TypeBool, t.params, cases);
+});
 
-g.test('greater_than')
-  .specURL('https://www.w3.org/TR/WGSL/#comparison-expr')
-  .desc(
-    `
+g.test('greater_than').
+specURL('https://www.w3.org/TR/WGSL/#comparison-expr').
+desc(
+  `
 Expression: x > y
 Accuracy: Correct result
 `
-  )
-  .params(u =>
-    u
-      .combine('inputSource', [allInputSources[0]] /* const */)
-      .combine('vectorize', [undefined, 2, 3, 4])
-  )
-  .fn(async t => {
-    const cases = await d.get('greater_than');
-    await run(t, binary('>'), [TypeAbstractFloat, TypeAbstractFloat], TypeBool, t.params, cases);
-  });
+).
+params((u) =>
+u.
+combine('inputSource', [allInputSources[0]] /* const */).
+combine('vectorize', [undefined, 2, 3, 4])
+).
+fn(async (t) => {
+  const cases = await d.get('greater_than');
+  await run(t, binary('>'), [TypeAbstractFloat, TypeAbstractFloat], TypeBool, t.params, cases);
+});
 
-g.test('greater_equals')
-  .specURL('https://www.w3.org/TR/WGSL/#comparison-expr')
-  .desc(
-    `
+g.test('greater_equals').
+specURL('https://www.w3.org/TR/WGSL/#comparison-expr').
+desc(
+  `
 Expression: x >= y
 Accuracy: Correct result
 `
-  )
-  .params(u =>
-    u
-      .combine('inputSource', [allInputSources[0]] /* const */)
-      .combine('vectorize', [undefined, 2, 3, 4])
-  )
-  .fn(async t => {
-    const cases = await d.get('greater_equals');
-    await run(t, binary('>='), [TypeAbstractFloat, TypeAbstractFloat], TypeBool, t.params, cases);
-  });
+).
+params((u) =>
+u.
+combine('inputSource', [allInputSources[0]] /* const */).
+combine('vectorize', [undefined, 2, 3, 4])
+).
+fn(async (t) => {
+  const cases = await d.get('greater_equals');
+  await run(t, binary('>='), [TypeAbstractFloat, TypeAbstractFloat], TypeBool, t.params, cases);
+});

@@ -6,9 +6,10 @@ TODO: review for completeness
 
 import { makeTestGroup } from '../../../../common/framework/test_group.js';
 import { range } from '../../../../common/util/util.js';
-import { kMaxColorAttachments, kQueryTypes } from '../../../capability_info.js';
+import { kMaxColorAttachmentsToTest, kQueryTypes } from '../../../capability_info.js';
 import { GPUConst } from '../../../constants.js';
 import {
+  computeBytesPerSampleFromFormats,
   kDepthStencilFormats,
   kRenderableColorTextureFormats,
   kTextureFormatInfo,
@@ -122,7 +123,7 @@ g.test('color_attachments,empty')
   )
   .paramsSubcasesOnly(u =>
     u
-      .combine('colorAttachments', [
+      .combine('unclampedColorAttachments', [
         [],
         [undefined],
         [undefined, undefined],
@@ -132,7 +133,11 @@ g.test('color_attachments,empty')
       .combine('hasDepthStencilAttachment', [false, true])
   )
   .fn(t => {
-    const { colorAttachments, hasDepthStencilAttachment } = t.params;
+    const { unclampedColorAttachments, hasDepthStencilAttachment } = t.params;
+    const colorAttachments = unclampedColorAttachments.slice(
+      0,
+      t.device.limits.maxColorAttachments
+    );
 
     let isEmptyColorTargets = true;
     for (let i = 0; i < colorAttachments.length; i++) {
@@ -160,11 +165,15 @@ g.test('color_attachments,limits,maxColorAttachments')
   `
   )
   .paramsSimple([
-    { colorAttachmentsCount: 8, _success: true }, // Control case
-    { colorAttachmentsCount: 9, _success: false }, // Out of bounds
+    { colorAttachmentsCountVariant: { mult: 1, add: 0 }, _success: true }, // Control case
+    { colorAttachmentsCountVariant: { mult: 1, add: 1 }, _success: false }, // Out of bounds
   ])
   .fn(t => {
-    const { colorAttachmentsCount, _success } = t.params;
+    const { colorAttachmentsCountVariant, _success } = t.params;
+    const colorAttachmentsCount = t.makeLimitVariant(
+      'maxColorAttachments',
+      colorAttachmentsCountVariant
+    );
 
     const colorAttachments = [];
     for (let i = 0; i < colorAttachmentsCount; i++) {
@@ -188,7 +197,7 @@ g.test('color_attachments,limits,maxColorAttachmentBytesPerSample,aligned')
       .beginSubcases()
       .combine(
         'attachmentCount',
-        range(kMaxColorAttachments, i => i + 1)
+        range(kMaxColorAttachmentsToTest, i => i + 1)
       )
   )
   .beforeAllSubcases(t => {
@@ -198,6 +207,11 @@ g.test('color_attachments,limits,maxColorAttachmentBytesPerSample,aligned')
     const { format, attachmentCount } = t.params;
     const info = kTextureFormatInfo[format];
 
+    t.skipIf(
+      attachmentCount > t.device.limits.maxColorAttachments,
+      `attachmentCount: ${attachmentCount} > maxColorAttachments: ${t.device.limits.maxColorAttachments}`
+    );
+
     const colorAttachments = [];
     for (let i = 0; i < attachmentCount; i++) {
       const colorTexture = t.createTexture({ format });
@@ -205,7 +219,7 @@ g.test('color_attachments,limits,maxColorAttachmentBytesPerSample,aligned')
     }
     const shouldError =
       info.colorRender === undefined ||
-      info.colorRender.byteCost * attachmentCount >
+      computeBytesPerSampleFromFormats(range(attachmentCount, () => format)) >
         t.device.limits.maxColorAttachmentBytesPerSample;
 
     t.tryRenderPass(!shouldError, { colorAttachments });
@@ -232,7 +246,6 @@ g.test('color_attachments,limits,maxColorAttachmentBytesPerSample,unaligned')
           'rgba32float',
           'r8unorm',
         ] as GPUTextureFormat[],
-        _success: false,
       },
       {
         formats: [
@@ -242,19 +255,27 @@ g.test('color_attachments,limits,maxColorAttachmentBytesPerSample,unaligned')
           'r8unorm',
           'r8unorm',
         ] as GPUTextureFormat[],
-        _success: true,
       },
     ])
   )
   .fn(t => {
-    const { formats, _success } = t.params;
+    const { formats } = t.params;
+
+    t.skipIf(
+      formats.length > t.device.limits.maxColorAttachments,
+      `numColorAttachments: ${formats.length} > maxColorAttachments: ${t.device.limits.maxColorAttachments}`
+    );
 
     const colorAttachments = [];
     for (const format of formats) {
       const colorTexture = t.createTexture({ format });
       colorAttachments.push(t.getColorAttachment(colorTexture));
     }
-    t.tryRenderPass(_success, { colorAttachments });
+
+    const success =
+      computeBytesPerSampleFromFormats(formats) <= t.device.limits.maxColorAttachmentBytesPerSample;
+
+    t.tryRenderPass(success, { colorAttachments });
   });
 
 g.test('attachments,same_size')

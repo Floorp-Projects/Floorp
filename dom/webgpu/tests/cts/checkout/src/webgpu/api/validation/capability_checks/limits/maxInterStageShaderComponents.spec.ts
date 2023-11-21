@@ -1,6 +1,6 @@
-import { assert, range } from '../../../../../common/util/util.js';
+import { range } from '../../../../../common/util/util.js';
 
-import { kMaximumLimitBaseParams, makeLimitTestGroup } from './limit_utils.js';
+import { kMaximumLimitBaseParams, LimitsRequest, makeLimitTestGroup } from './limit_utils.js';
 
 function getTypeForNumComponents(numComponents: number) {
   return numComponents > 1 ? `vec${numComponents}f` : 'f32';
@@ -21,7 +21,6 @@ function getPipelineDescriptor(
 
   const maxInterStageVariables = device.limits.maxInterStageShaderVariables;
   const numComponents = Math.min(maxVertexShaderOutputComponents, maxFragmentShaderInputComponents);
-  assert(Math.ceil(numComponents / 4) <= maxInterStageVariables);
 
   const num4ComponentVaryings = Math.floor(numComponents / 4);
   const lastVaryingNumComponents = numComponents % 4;
@@ -42,8 +41,8 @@ function getPipelineDescriptor(
     // maxInterStageShaderComponents     : ${device.limits.maxInterStageShaderComponents}
     // num components in vertex shader   : ${numComponents}${pointList ? ' + point-list' : ''}
     // num components in fragment shader : ${numComponents}${frontFacing ? ' + front-facing' : ''}${
-    sampleIndex ? ' + sample_index' : ''
-  }${sampleMaskIn ? ' + sample_mask' : ''}
+      sampleIndex ? ' + sample_index' : ''
+    }${sampleMaskIn ? ' + sample_mask' : ''}
     // maxVertexShaderOutputComponents   : ${maxVertexShaderOutputComponents}
     // maxFragmentShaderInputComponents  : ${maxFragmentShaderInputComponents}
     // maxInterStageVariables:           : ${maxInterStageVariables}
@@ -127,6 +126,10 @@ g.test('createRenderPipeline,at_over')
       sampleMaskIn,
       sampleMaskOut,
     } = t.params;
+    // Request the largest value of maxInterStageShaderVariables to allow the test using as many
+    // inter-stage shader components as possible without being limited by
+    // maxInterStageShaderVariables.
+    const extraLimits: LimitsRequest = { maxInterStageShaderVariables: 'adapterLimit' };
     await t.testDeviceWithRequestedMaximumLimits(
       limitTest,
       testValueName,
@@ -142,6 +145,7 @@ g.test('createRenderPipeline,at_over')
         );
 
         await t.testCreateRenderPipeline(pipelineDescriptor, async, shouldError, code);
-      }
+      },
+      extraLimits
     );
   });

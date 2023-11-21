@@ -7,11 +7,16 @@ Returns e1 if dot(e2,e3) is negative, and -e1 otherwise.
 `;
 
 import { makeTestGroup } from '../../../../../../common/framework/test_group.js';
+import { ROArrayArray } from '../../../../../../common/util/types.js';
 import { GPUTest } from '../../../../../gpu_test.js';
 import { anyOf } from '../../../../../util/compare.js';
-import { toVector, TypeF32, TypeVec } from '../../../../../util/conversion.js';
+import { toVector, TypeF32, TypeF16, TypeVec } from '../../../../../util/conversion.js';
 import { FP, FPKind, FPVector } from '../../../../../util/floating_point.js';
-import { cartesianProduct, sparseVectorF32Range } from '../../../../../util/math.js';
+import {
+  cartesianProduct,
+  sparseVectorF32Range,
+  sparseVectorF16Range,
+} from '../../../../../util/math.js';
 import { makeCaseCache } from '../../case_cache.js';
 import { allInputSources, Case, IntervalFilter, run } from '../../expression.js';
 
@@ -37,9 +42,9 @@ export const g = makeTestGroup(GPUTest);
  * */
 function makeCase(
   kind: FPKind,
-  x: number[],
-  y: number[],
-  z: number[],
+  x: readonly number[],
+  y: readonly number[],
+  z: readonly number[],
   check: IntervalFilter
 ): Case | undefined {
   const fp = FP[kind];
@@ -47,7 +52,7 @@ function makeCase(
   y = y.map(fp.quantize);
   z = z.map(fp.quantize);
 
-  const results = FP.f32.faceForwardIntervals(x, y, z);
+  const results = FP[kind].faceForwardIntervals(x, y, z);
   if (check === 'finite' && results.some(r => r === undefined)) {
     return undefined;
   }
@@ -77,72 +82,54 @@ function makeCase(
  */
 function generateCases(
   kind: FPKind,
-  xs: number[][],
-  ys: number[][],
-  zs: number[][],
+  xs: ROArrayArray<number>,
+  ys: ROArrayArray<number>,
+  zs: ROArrayArray<number>,
   check: IntervalFilter
 ): Case[] {
   // Cannot use `cartesianProduct` here due to heterogeneous param types
   return cartesianProduct(xs, ys, zs)
-    .map(e => makeCase('f32', e[0], e[1], e[2], check))
+    .map(e => makeCase(kind, e[0], e[1], e[2], check))
     .filter((c): c is Case => c !== undefined);
 }
 
+// Cases: f32_vecN_[non_]const
+const f32_vec_cases = ([2, 3, 4] as const)
+  .flatMap(n =>
+    ([true, false] as const).map(nonConst => ({
+      [`f32_vec${n}_${nonConst ? 'non_const' : 'const'}`]: () => {
+        return generateCases(
+          'f32',
+          sparseVectorF32Range(n),
+          sparseVectorF32Range(n),
+          sparseVectorF32Range(n),
+          nonConst ? 'unfiltered' : 'finite'
+        );
+      },
+    }))
+  )
+  .reduce((a, b) => ({ ...a, ...b }), {});
+
+// Cases: f16_vecN_[non_]const
+const f16_vec_cases = ([2, 3, 4] as const)
+  .flatMap(n =>
+    ([true, false] as const).map(nonConst => ({
+      [`f16_vec${n}_${nonConst ? 'non_const' : 'const'}`]: () => {
+        return generateCases(
+          'f16',
+          sparseVectorF16Range(n),
+          sparseVectorF16Range(n),
+          sparseVectorF16Range(n),
+          nonConst ? 'unfiltered' : 'finite'
+        );
+      },
+    }))
+  )
+  .reduce((a, b) => ({ ...a, ...b }), {});
+
 export const d = makeCaseCache('faceForward', {
-  f32_vec2_const: () => {
-    return generateCases(
-      'f32',
-      sparseVectorF32Range(2),
-      sparseVectorF32Range(2),
-      sparseVectorF32Range(2),
-      'finite'
-    );
-  },
-  f32_vec2_non_const: () => {
-    return generateCases(
-      'f32',
-      sparseVectorF32Range(2),
-      sparseVectorF32Range(2),
-      sparseVectorF32Range(2),
-      'unfiltered'
-    );
-  },
-  f32_vec3_const: () => {
-    return generateCases(
-      'f32',
-      sparseVectorF32Range(3),
-      sparseVectorF32Range(3),
-      sparseVectorF32Range(3),
-      'finite'
-    );
-  },
-  f32_vec3_non_const: () => {
-    return generateCases(
-      'f32',
-      sparseVectorF32Range(3),
-      sparseVectorF32Range(3),
-      sparseVectorF32Range(3),
-      'unfiltered'
-    );
-  },
-  f32_vec4_const: () => {
-    return generateCases(
-      'f32',
-      sparseVectorF32Range(4),
-      sparseVectorF32Range(4),
-      sparseVectorF32Range(4),
-      'finite'
-    );
-  },
-  f32_vec4_non_const: () => {
-    return generateCases(
-      'f32',
-      sparseVectorF32Range(4),
-      sparseVectorF32Range(4),
-      sparseVectorF32Range(4),
-      'unfiltered'
-    );
-  },
+  ...f32_vec_cases,
+  ...f16_vec_cases,
 });
 
 g.test('abstract_float')
@@ -205,8 +192,65 @@ g.test('f32_vec4')
     );
   });
 
-g.test('f16')
-  .specURL('https://www.w3.org/TR/WGSL/#float-builtin-functions')
-  .desc(`f16 tests`)
-  .params(u => u.combine('inputSource', allInputSources).combine('vectorize', [2, 3, 4] as const))
-  .unimplemented();
+g.test('f16_vec2')
+  .specURL('https://www.w3.org/TR/WGSL/#numeric-builtin-functions')
+  .desc(`f16 tests using vec2s`)
+  .params(u => u.combine('inputSource', allInputSources))
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase('shader-f16');
+  })
+  .fn(async t => {
+    const cases = await d.get(
+      t.params.inputSource === 'const' ? 'f16_vec2_const' : 'f16_vec2_non_const'
+    );
+    await run(
+      t,
+      builtin('faceForward'),
+      [TypeVec(2, TypeF16), TypeVec(2, TypeF16), TypeVec(2, TypeF16)],
+      TypeVec(2, TypeF16),
+      t.params,
+      cases
+    );
+  });
+
+g.test('f16_vec3')
+  .specURL('https://www.w3.org/TR/WGSL/#numeric-builtin-functions')
+  .desc(`f16 tests using vec3s`)
+  .params(u => u.combine('inputSource', allInputSources))
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase('shader-f16');
+  })
+  .fn(async t => {
+    const cases = await d.get(
+      t.params.inputSource === 'const' ? 'f16_vec3_const' : 'f16_vec3_non_const'
+    );
+    await run(
+      t,
+      builtin('faceForward'),
+      [TypeVec(3, TypeF16), TypeVec(3, TypeF16), TypeVec(3, TypeF16)],
+      TypeVec(3, TypeF16),
+      t.params,
+      cases
+    );
+  });
+
+g.test('f16_vec4')
+  .specURL('https://www.w3.org/TR/WGSL/#numeric-builtin-functions')
+  .desc(`f16 tests using vec4s`)
+  .params(u => u.combine('inputSource', allInputSources))
+  .beforeAllSubcases(t => {
+    t.selectDeviceOrSkipTestCase('shader-f16');
+  })
+  .fn(async t => {
+    const cases = await d.get(
+      t.params.inputSource === 'const' ? 'f16_vec4_const' : 'f16_vec4_non_const'
+    );
+    await run(
+      t,
+      builtin('faceForward'),
+      [TypeVec(4, TypeF16), TypeVec(4, TypeF16), TypeVec(4, TypeF16)],
+      TypeVec(4, TypeF16),
+      t.params,
+      cases
+    );
+  });

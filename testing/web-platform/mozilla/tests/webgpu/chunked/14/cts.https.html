@@ -33,6 +33,16 @@
 </script>
 <script type=module src=/_mozilla/webgpu/common/runtime/wpt.js></script>
 
+<meta name=variant content='?q=webgpu:api,validation,capability_checks,limits,maxUniformBufferBindingSize:validate,maxBufferSize:*'>
+<meta name=variant content='?q=webgpu:api,validation,capability_checks,limits,maxUniformBuffersPerShaderStage:createBindGroupLayout,at_over:*'>
+<meta name=variant content='?q=webgpu:api,validation,capability_checks,limits,maxUniformBuffersPerShaderStage:createPipelineLayout,at_over:*'>
+<meta name=variant content='?q=webgpu:api,validation,capability_checks,limits,maxUniformBuffersPerShaderStage:createPipeline,at_over:*'>
+<meta name=variant content='?q=webgpu:api,validation,capability_checks,limits,maxVertexAttributes:createRenderPipeline,at_over:*'>
+<meta name=variant content='?q=webgpu:api,validation,capability_checks,limits,maxVertexBufferArrayStride:createRenderPipeline,at_over:*'>
+<meta name=variant content='?q=webgpu:api,validation,capability_checks,limits,maxVertexBufferArrayStride:validate:*'>
+<meta name=variant content='?q=webgpu:api,validation,capability_checks,limits,maxVertexBuffers:createRenderPipeline,at_over:*'>
+<meta name=variant content='?q=webgpu:api,validation,capability_checks,limits,maxVertexBuffers:setVertexBuffer,at_over:*'>
+<meta name=variant content='?q=webgpu:api,validation,capability_checks,limits,maxVertexBuffers:validate,maxBindGroupsPlusVertexBuffers:*'>
 <meta name=variant content='?q=webgpu:api,validation,capability_checks,limits,minStorageBufferOffsetAlignment:createBindGroup,at_over:*'>
 <meta name=variant content='?q=webgpu:api,validation,capability_checks,limits,minStorageBufferOffsetAlignment:setBindGroup,at_over:*'>
 <meta name=variant content='?q=webgpu:api,validation,capability_checks,limits,minStorageBufferOffsetAlignment:validate,powerOf2:*'>
@@ -48,13 +58,3 @@
 <meta name=variant content='?q=webgpu:api,validation,compute_pipeline:pipeline_layout,device_mismatch:*'>
 <meta name=variant content='?q=webgpu:api,validation,compute_pipeline:limits,workgroup_storage_size:*'>
 <meta name=variant content='?q=webgpu:api,validation,compute_pipeline:limits,invocations_per_workgroup:*'>
-<meta name=variant content='?q=webgpu:api,validation,compute_pipeline:limits,invocations_per_workgroup,each_component:*'>
-<meta name=variant content='?q=webgpu:api,validation,compute_pipeline:overrides,identifier:*'>
-<meta name=variant content='?q=webgpu:api,validation,compute_pipeline:overrides,uninitialized:*'>
-<meta name=variant content='?q=webgpu:api,validation,compute_pipeline:overrides,value,type_error:*'>
-<meta name=variant content='?q=webgpu:api,validation,compute_pipeline:overrides,value,validation_error:*'>
-<meta name=variant content='?q=webgpu:api,validation,compute_pipeline:overrides,value,validation_error,f16:*'>
-<meta name=variant content='?q=webgpu:api,validation,compute_pipeline:overrides,workgroup_size:*'>
-<meta name=variant content='?q=webgpu:api,validation,compute_pipeline:overrides,workgroup_size,limits:*'>
-<meta name=variant content='?q=webgpu:api,validation,compute_pipeline:overrides,workgroup_size,limits,workgroup_storage_size:*'>
-<meta name=variant content='?q=webgpu:api,validation,createBindGroup:binding_count_mismatch:*'>

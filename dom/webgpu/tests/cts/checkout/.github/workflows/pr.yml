@@ -8,21 +8,18 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2.3.1
+      - uses: actions/checkout@v3
         with:
           persist-credentials: false
-      - run: |
-          git fetch origin ${{ github.event.pull_request.head.sha }}
-          git checkout ${{ github.event.pull_request.head.sha }}
-      - uses: actions/setup-node@v2-beta
+      - uses: actions/setup-node@v3
         with:
           node-version: "16.x"
       - run: npm ci
       - run: npm test
-      - run: |
-          mkdir deploy-build/
-          cp -r README.md src standalone out docs deploy-build/
-      - uses: actions/upload-artifact@v2
-        with:
-          name: pr-artifact
-          path: deploy-build/
+      - name: copy out-wpt to wpt tree
+        run: |
+          git clone --depth 2 https://github.com/web-platform-tests/wpt.git
+          rsync -av  out-wpt/ wpt/webgpu
+      - name: test wpt lint
+        run: ./wpt lint
+        working-directory: ./wpt

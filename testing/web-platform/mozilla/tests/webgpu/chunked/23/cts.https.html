@@ -33,6 +33,16 @@
 </script>
 <script type=module src=/_mozilla/webgpu/common/runtime/wpt.js></script>
 
+<meta name=variant content='?q=webgpu:api,validation,encoding,queries,resolveQuerySet:query_set_buffer,device_mismatch:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,render_bundle:empty_bundle_list:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,render_bundle:device_mismatch:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,render_bundle:color_formats_mismatch:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,render_bundle:depth_stencil_formats_mismatch:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,render_bundle:depth_stencil_readonly_mismatch:*'>
+<meta name=variant content='?q=webgpu:api,validation,encoding,render_bundle:sample_count_mismatch:*'>
+<meta name=variant content='?q=webgpu:api,validation,error_scope:simple:*'>
+<meta name=variant content='?q=webgpu:api,validation,error_scope:empty:*'>
+<meta name=variant content='?q=webgpu:api,validation,error_scope:parent_scope:*'>
 <meta name=variant content='?q=webgpu:api,validation,error_scope:current_scope:*'>
 <meta name=variant content='?q=webgpu:api,validation,error_scope:balanced_siblings:*'>
 <meta name=variant content='?q=webgpu:api,validation,error_scope:balanced_nesting:*'>
@@ -48,13 +58,3 @@
 <meta name=variant content='?q=webgpu:api,validation,gpu_external_texture_expiration:import_from_different_video_frame:*'>
 <meta name=variant content='?q=webgpu:api,validation,image_copy,buffer_related:buffer_state:*'>
 <meta name=variant content='?q=webgpu:api,validation,image_copy,buffer_related:buffer,device_mismatch:*'>
-<meta name=variant content='?q=webgpu:api,validation,image_copy,buffer_related:usage:*'>
-<meta name=variant content='?q=webgpu:api,validation,image_copy,buffer_related:bytes_per_row_alignment:*'>
-<meta name=variant content='?q=webgpu:api,validation,image_copy,buffer_texture_copies:depth_stencil_format,copy_usage_and_aspect:*'>
-<meta name=variant content='?q=webgpu:api,validation,image_copy,buffer_texture_copies:depth_stencil_format,copy_buffer_size:*'>
-<meta name=variant content='?q=webgpu:api,validation,image_copy,buffer_texture_copies:depth_stencil_format,copy_buffer_offset:*'>
-<meta name=variant content='?q=webgpu:api,validation,image_copy,buffer_texture_copies:sample_count:*'>
-<meta name=variant content='?q=webgpu:api,validation,image_copy,buffer_texture_copies:texture_buffer_usages:*'>
-<meta name=variant content='?q=webgpu:api,validation,image_copy,buffer_texture_copies:device_mismatch:*'>
-<meta name=variant content='?q=webgpu:api,validation,image_copy,layout_related:bound_on_rows_per_image:*'>
-<meta name=variant content='?q=webgpu:api,validation,image_copy,layout_related:copy_end_overflows_u64:*'>

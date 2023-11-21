@@ -4,13 +4,12 @@ import {
   kMaximumLimitBaseParams,
   makeLimitTestGroup,
   LimitMode,
-  getDefaultLimit,
   MaximumLimitValueTest,
   MaximumTestValue,
 } from './limit_utils.js';
 
 const kBufferParts = ['wholeBuffer', 'biggerBufferWithOffset'] as const;
-type BufferPart = typeof kBufferParts[number];
+type BufferPart = (typeof kBufferParts)[number];
 
 function getSizeAndOffsetForBufferPart(device: GPUDevice, bufferPart: BufferPart, size: number) {
   const align = device.limits.minUniformBufferOffsetAlignment;
@@ -145,10 +144,18 @@ g.test('createBindGroup,at_over')
     );
   });
 
+g.test('validate')
+  .desc(`Test that ${limit} is a multiple of 4 bytes`)
+  .fn(t => {
+    const { defaultLimit, adapterLimit } = t;
+    t.expect(defaultLimit % 4 === 0);
+    t.expect(adapterLimit % 4 === 0);
+  });
+
 g.test('validate,maxBufferSize')
   .desc(`Test that ${limit} <= maxBufferSize`)
   .fn(t => {
     const { adapter, defaultLimit, adapterLimit } = t;
-    t.expect(defaultLimit <= getDefaultLimit('maxBufferSize'));
+    t.expect(defaultLimit <= t.getDefaultLimit('maxBufferSize'));
     t.expect(adapterLimit <= adapter.limits.maxBufferSize);
   });

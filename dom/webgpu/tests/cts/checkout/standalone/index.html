@@ -148,7 +148,7 @@
         width: 100%;
         left: 0;
         top: 0;
-        background-color: #000;
+        background-color: #068;
         color: #fff;
         align-items: center;
       }
@@ -168,6 +168,13 @@
 
       #resultsVis {
         border-right: 1px solid var(--results-fg-color);
+      }
+
+      /* PS: this does not disable using the keyboard to click */
+      #resultsVis.disable-run button.leafrun,
+      #resultsVis.disable-run button.subtreerun {
+         pointer-events: none;
+         opacity: 25%;
       }
 
       /* tree nodes */

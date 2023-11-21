@@ -7,12 +7,8 @@ import { GPUTest } from '../../../../gpu_test.js';
 import { kValue } from '../../../../util/constants.js';
 import { abstractFloat, TypeAbstractFloat, TypeF16, TypeF32 } from '../../../../util/conversion.js';
 import { FP } from '../../../../util/floating_point.js';
-import {
-  filteredF64Range,
-  fullF64Range,
-  isSubnormalNumberF64,
-  reinterpretU64AsF64,
-} from '../../../../util/math.js';
+import { filteredF64Range, fullF64Range, isSubnormalNumberF64 } from '../../../../util/math.js';
+import { reinterpretU64AsF64 } from '../../../../util/reinterpret.js';
 import { makeCaseCache } from '../case_cache.js';
 import {
   abstractFloatShaderBuilder,

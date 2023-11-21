@@ -69,7 +69,7 @@ export type FlattenUnionOfInterfaces<T> = {
 };
 
 /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
-function typeAssert<T extends 'pass'>() {}
+function typeAssert<_ extends 'pass'>() {}
 {
   type Test<T, U> = [T] extends [U]
     ? [U] extends [T]

@@ -12,7 +12,6 @@ import {
   kAllFloatScalarsAndVectors,
   kAllIntegerScalarsAndVectors,
 } from '../../../../../util/conversion.js';
-import { fpTraitsFor } from '../../../../../util/floating_point.js';
 import { ShaderValidationTest } from '../../../shader_validation_test.js';
 
 import {
@@ -49,8 +48,7 @@ Validates that constant evaluation and override evaluation of ${builtin}() rejec
   })
   .fn(t => {
     const type = kValuesTypes[t.params.type];
-    const smallestPositive = fpTraitsFor(elementType(type)).constants().positive.min;
-    const expectedResult = Math.abs(Math.cos(t.params.value)) > smallestPositive;
+    const expectedResult = true;
     validateConstOrOverrideBuiltinEval(
       t,
       builtin,

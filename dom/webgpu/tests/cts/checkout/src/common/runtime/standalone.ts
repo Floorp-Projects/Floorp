@@ -11,7 +11,7 @@ import { parseQuery } from '../internal/query/parseQuery.js';
 import { TestQueryLevel } from '../internal/query/query.js';
 import { TestTreeNode, TestSubtree, TestTreeLeaf, TestTree } from '../internal/tree.js';
 import { setDefaultRequestAdapterOptions } from '../util/navigator_gpu.js';
-import { assert, ErrorWithExtra, unreachable } from '../util/util.js';
+import { ErrorWithExtra, unreachable } from '../util/util.js';
 
 import {
   kCTSOptionsInfo,
@@ -84,7 +84,7 @@ dataCache.setStore({
     if (!response.ok) {
       return Promise.reject(response.statusText);
     }
-    return await response.text();
+    return new Uint8Array(await response.arrayBuffer());
   },
 });
 
@@ -427,11 +427,20 @@ function makeTreeNodeHeaderHTML(
     .attr('alt', runtext)
     .attr('title', runtext)
     .on('click', async () => {
+      if (runDepth > 0) {
+        showInfo('tests are already running');
+        return;
+      }
+      showInfo('');
       console.log(`Starting run for ${n.query}`);
+      // turn off all run buttons
+      $('#resultsVis').addClass('disable-run');
       const startTime = performance.now();
       await runSubtree();
       const dt = performance.now() - startTime;
       const dtMinutes = dt / 1000 / 60;
+      // turn on all run buttons
+      $('#resultsVis').removeClass('disable-run');
       console.log(`Finished run: ${dt.toFixed(1)} ms = ${dtMinutes.toFixed(1)} min`);
     })
     .appendTo(header);
@@ -528,7 +537,7 @@ function prepareParams(params: Record<string, ParamValue>): string {
 
 // This is just a cast in one place.
 export function optionsToRecord(options: CTSOptions) {
-  return (options as unknown) as Record<string, boolean | string>;
+  return options as unknown as Record<string, boolean | string>;
 }
 
 /**
@@ -541,6 +550,14 @@ function createSearchQuery(queries: string[], params?: string) {
   params = params === undefined ? prepareParams(optionsToRecord(options)) : params;
   // Add in q separately to avoid escaping punctuation marks.
   return `?${params}${params ? '&' : ''}${queries.map(q => 'q=' + q).join('&')}`;
+}
+
+/**
+ * Show an info message on the page.
+ * @param msg Message to show
+ */
+function showInfo(msg: string) {
+  $('#info')[0].textContent = msg;
 }
 
 void (async () => {
@@ -609,26 +626,37 @@ void (async () => {
   };
   addOptionsToPage(options, kStandaloneOptionsInfos);
 
-  assert(qs.length === 1, 'currently, there must be exactly one ?q=');
-  const rootQuery = parseQuery(qs[0]);
+  if (qs.length !== 1) {
+    showInfo('currently, there must be exactly one ?q=');
+    return;
+  }
+
+  let rootQuery;
+  try {
+    rootQuery = parseQuery(qs[0]);
+  } catch (e) {
+    showInfo((e as Error).toString());
+    return;
+  }
+
   if (rootQuery.level > lastQueryLevelToExpand) {
     lastQueryLevelToExpand = rootQuery.level;
   }
   loader.addEventListener('import', ev => {
-    $('#info')[0].textContent = `loading: ${ev.data.url}`;
+    showInfo(`loading: ${ev.data.url}`);
   });
   loader.addEventListener('imported', ev => {
-    $('#info')[0].textContent = `imported: ${ev.data.url}`;
+    showInfo(`imported: ${ev.data.url}`);
   });
   loader.addEventListener('finish', () => {
-    $('#info')[0].textContent = '';
+    showInfo('');
   });
 
   let tree;
   try {
     tree = await loader.loadTree(rootQuery);
   } catch (err) {
-    $('#info')[0].textContent = (err as Error).toString();
+    showInfo((err as Error).toString());
     return;
   }
 

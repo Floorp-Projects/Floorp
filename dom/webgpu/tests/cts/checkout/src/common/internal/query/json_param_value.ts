@@ -33,7 +33,7 @@ const fromStringMagicValue = new Map<string, unknown>([
   [jsNegativeZeroMagicValue, -0],
 ]);
 
-function stringifyFilter(k: string, v: unknown): unknown {
+function stringifyFilter(_k: string, v: unknown): unknown {
   // Make sure no one actually uses a magic value as a parameter.
   if (typeof v === 'string') {
     assert(
@@ -93,7 +93,7 @@ export function stringifyParamValueUniquely(value: JSONWithUndefined): string {
 
 // 'any' is part of the JSON.parse reviver interface, so cannot be avoided.
 // eslint-disable-next-line  @typescript-eslint/no-explicit-any
-function parseParamValueReviver(k: string, v: any): any {
+function parseParamValueReviver(_k: string, v: any): any {
   if (fromStringMagicValue.has(v)) {
     return fromStringMagicValue.get(v);
   }

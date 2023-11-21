@@ -130,4 +130,15 @@ g.test('unordered').fn(t => {
     new TestQuerySingleCase('suite1', ['bar', 'buzz', 'buzz'], ['zap'], {}),
     new TestQueryMultiTest('suite1', ['bar'], [])
   );
+  // Expect that 0.0 and -0.0 are treated as different queries
+  t.expectUnordered(
+    new TestQueryMultiCase('suite', ['a', 'b'], ['c', 'd'], { x: 0.0 }),
+    new TestQueryMultiCase('suite', ['a', 'b'], ['c', 'd'], { x: -0.0 })
+  );
+  t.expectUnordered(
+    new TestQuerySingleCase('suite', ['a', 'b'], ['c', 'd'], { x: 0.0, y: 0.0 }),
+    new TestQuerySingleCase('suite', ['a', 'b'], ['c', 'd'], { x: 0.0, y: -0.0 }),
+    new TestQuerySingleCase('suite', ['a', 'b'], ['c', 'd'], { x: -0.0, y: 0.0 }),
+    new TestQuerySingleCase('suite', ['a', 'b'], ['c', 'd'], { x: -0.0, y: -0.0 })
+  );
 });

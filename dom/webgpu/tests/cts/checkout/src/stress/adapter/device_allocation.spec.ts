@@ -8,14 +8,15 @@ import { attemptGarbageCollection } from '../../common/util/collect_garbage.js';
 import { keysOf } from '../../common/util/data_tables.js';
 import { getGPU } from '../../common/util/navigator_gpu.js';
 import { assert, iterRange } from '../../common/util/util.js';
-import { kLimitInfo } from '../../webgpu/capability_info.js';
+import { getDefaultLimitsForAdapter } from '../../webgpu/capability_info.js';
 
 export const g = makeTestGroup(Fixture);
 
 /** Adapter preference identifier to option. */
 const kAdapterTypeOptions: {
   readonly [k in GPUPowerPreference | 'fallback']: GPURequestAdapterOptions;
-} = /* prettier-ignore */ {
+} =
+  /* prettier-ignore */ {
   'low-power':        { powerPreference:        'low-power', forceFallbackAdapter: false },
   'high-performance': { powerPreference: 'high-performance', forceFallbackAdapter: false },
   'fallback':         { powerPreference:          undefined, forceFallbackAdapter:  true },
@@ -33,10 +34,11 @@ async function createDeviceAndComputeCommands(adapter: GPUAdapter) {
   // Constants are computed such that per run, this function should allocate roughly 2G
   // worth of data. This should be sufficient as we run these creation functions many
   // times. If the data backing the created objects is not recycled we should OOM.
+  const limitInfo = getDefaultLimitsForAdapter(adapter);
   const kNumPipelines = 64;
   const kNumBindgroups = 128;
   const kNumBufferElements =
-    kLimitInfo.maxComputeWorkgroupSizeX.default * kLimitInfo.maxComputeWorkgroupSizeY.default;
+    limitInfo.maxComputeWorkgroupSizeX.default * limitInfo.maxComputeWorkgroupSizeY.default;
   const kBufferSize = kNumBufferElements * 4;
   const kBufferData = new Uint32Array([...iterRange(kNumBufferElements, x => x)]);
 
@@ -54,8 +56,8 @@ async function createDeviceAndComputeCommands(adapter: GPUAdapter) {
               @group(0) @binding(0) var<storage, read_write> buffer: Buffer;
               @compute @workgroup_size(1) fn main(
                   @builtin(global_invocation_id) id: vec3<u32>) {
-                buffer.data[id.x * ${kLimitInfo.maxComputeWorkgroupSizeX.default}u + id.y] =
-                  buffer.data[id.x * ${kLimitInfo.maxComputeWorkgroupSizeX.default}u + id.y] +
+                buffer.data[id.x * ${limitInfo.maxComputeWorkgroupSizeX.default}u + id.y] =
+                  buffer.data[id.x * ${limitInfo.maxComputeWorkgroupSizeX.default}u + id.y] +
                     ${pipelineIndex}u;
               }
             `,
@@ -79,8 +81,8 @@ async function createDeviceAndComputeCommands(adapter: GPUAdapter) {
       pass.setPipeline(pipeline);
       pass.setBindGroup(0, bindgroup);
       pass.dispatchWorkgroups(
-        kLimitInfo.maxComputeWorkgroupSizeX.default,
-        kLimitInfo.maxComputeWorkgroupSizeY.default
+        limitInfo.maxComputeWorkgroupSizeX.default,
+        limitInfo.maxComputeWorkgroupSizeY.default
       );
       pass.end();
       commands.push(encoder.finish());

@@ -25,9 +25,6 @@ import {
   fullF16Range,
   fullF32Range,
   fullI32Range,
-  reinterpretU16AsF16,
-  reinterpretU32AsF32,
-  reinterpretU64AsF64,
   lerp,
   linearRange,
   nextAfterF16,
@@ -40,6 +37,11 @@ import {
   lerpBigInt,
   linearRangeBigInt,
 } from '../webgpu/util/math.js';
+import {
+  reinterpretU16AsF16,
+  reinterpretU32AsF32,
+  reinterpretU64AsF64,
+} from '../webgpu/util/reinterpret.js';
 
 import { UnitTest } from './unit_test.js';
 
@@ -70,8 +72,8 @@ function withinOneULPF32(got: number, expected: number, mode: FlushMode): boolea
  *              FTZ occur during comparison
  **/
 function compareArrayOfNumbersF32(
-  got: Array<number>,
-  expect: Array<number>,
+  got: readonly number[],
+  expect: readonly number[],
   mode: FlushMode = 'flush'
 ): boolean {
   return (
@@ -108,10 +110,10 @@ g.test('nextAfterF64FlushToZero')
       // Edge Cases
       { val: Number.NaN, dir: 'positive', result: Number.NaN },
       { val: Number.NaN, dir: 'negative', result: Number.NaN },
-      { val: Number.POSITIVE_INFINITY, dir: 'positive', result: kValue.f64.infinity.positive },
-      { val: Number.POSITIVE_INFINITY, dir: 'negative', result: kValue.f64.infinity.positive },
-      { val: Number.NEGATIVE_INFINITY, dir: 'positive', result: kValue.f64.infinity.negative },
-      { val: Number.NEGATIVE_INFINITY, dir: 'negative', result: kValue.f64.infinity.negative },
+      { val: Number.POSITIVE_INFINITY, dir: 'positive', result: kValue.f64.positive.infinity },
+      { val: Number.POSITIVE_INFINITY, dir: 'negative', result: kValue.f64.positive.infinity },
+      { val: Number.NEGATIVE_INFINITY, dir: 'positive', result: kValue.f64.negative.infinity },
+      { val: Number.NEGATIVE_INFINITY, dir: 'negative', result: kValue.f64.negative.infinity },
 
       // Zeroes
       { val: +0, dir: 'positive', result: kValue.f64.positive.min },
@@ -120,24 +122,24 @@ g.test('nextAfterF64FlushToZero')
       { val: -0, dir: 'negative', result: kValue.f64.negative.max },
 
       // Subnormals
-      { val: kValue.f64.subnormal.positive.min, dir: 'positive', result: kValue.f64.positive.min },
-      { val: kValue.f64.subnormal.positive.min, dir: 'negative', result: kValue.f64.negative.max },
-      { val: kValue.f64.subnormal.positive.max, dir: 'positive', result: kValue.f64.positive.min },
-      { val: kValue.f64.subnormal.positive.max, dir: 'negative', result: kValue.f64.negative.max },
-      { val: kValue.f64.subnormal.negative.min, dir: 'positive', result: kValue.f64.positive.min },
-      { val: kValue.f64.subnormal.negative.min, dir: 'negative', result: kValue.f64.negative.max },
-      { val: kValue.f64.subnormal.negative.max, dir: 'positive', result: kValue.f64.positive.min },
-      { val: kValue.f64.subnormal.negative.max, dir: 'negative', result: kValue.f64.negative.max },
+      { val: kValue.f64.positive.subnormal.min, dir: 'positive', result: kValue.f64.positive.min },
+      { val: kValue.f64.positive.subnormal.min, dir: 'negative', result: kValue.f64.negative.max },
+      { val: kValue.f64.positive.subnormal.max, dir: 'positive', result: kValue.f64.positive.min },
+      { val: kValue.f64.positive.subnormal.max, dir: 'negative', result: kValue.f64.negative.max },
+      { val: kValue.f64.negative.subnormal.min, dir: 'positive', result: kValue.f64.positive.min },
+      { val: kValue.f64.negative.subnormal.min, dir: 'negative', result: kValue.f64.negative.max },
+      { val: kValue.f64.negative.subnormal.max, dir: 'positive', result: kValue.f64.positive.min },
+      { val: kValue.f64.negative.subnormal.max, dir: 'negative', result: kValue.f64.negative.max },
 
       // Normals
-      { val: kValue.f64.positive.max, dir: 'positive', result: kValue.f64.infinity.positive },
+      { val: kValue.f64.positive.max, dir: 'positive', result: kValue.f64.positive.infinity },
       { val: kValue.f64.positive.max, dir: 'negative', result: kValue.f64.positive.nearest_max },
       { val: kValue.f64.positive.min, dir: 'positive', result: reinterpretU64AsF64(0x0010_0000_0000_0001n ) },
       { val: kValue.f64.positive.min, dir: 'negative', result: 0 },
       { val: kValue.f64.negative.max, dir: 'positive', result: 0 },
       { val: kValue.f64.negative.max, dir: 'negative', result: reinterpretU64AsF64(0x8010_0000_0000_0001n) },
       { val: kValue.f64.negative.min, dir: 'positive', result: kValue.f64.negative.nearest_min },
-      { val: kValue.f64.negative.min, dir: 'negative', result: kValue.f64.infinity.negative },
+      { val: kValue.f64.negative.min, dir: 'negative', result: kValue.f64.negative.infinity },
       { val: reinterpretU64AsF64(0x0380_0000_0000_0000n), dir: 'positive', result: reinterpretU64AsF64(0x0380_0000_0000_0001n) },
       { val: reinterpretU64AsF64(0x0380_0000_0000_0000n), dir: 'negative', result: reinterpretU64AsF64(0x037f_ffff_ffff_ffffn) },
       { val: reinterpretU64AsF64(0x8380_0000_0000_0000n), dir: 'positive', result: reinterpretU64AsF64(0x837f_ffff_ffff_ffffn) },
@@ -162,36 +164,36 @@ g.test('nextAfterF64NoFlush')
       // Edge Cases
       { val: Number.NaN, dir: 'positive', result: Number.NaN },
       { val: Number.NaN, dir: 'negative', result: Number.NaN },
-      { val: Number.POSITIVE_INFINITY, dir: 'positive', result: kValue.f64.infinity.positive },
-      { val: Number.POSITIVE_INFINITY, dir: 'negative', result: kValue.f64.infinity.positive },
-      { val: Number.NEGATIVE_INFINITY, dir: 'positive', result: kValue.f64.infinity.negative },
-      { val: Number.NEGATIVE_INFINITY, dir: 'negative', result: kValue.f64.infinity.negative },
+      { val: Number.POSITIVE_INFINITY, dir: 'positive', result: kValue.f64.positive.infinity },
+      { val: Number.POSITIVE_INFINITY, dir: 'negative', result: kValue.f64.positive.infinity },
+      { val: Number.NEGATIVE_INFINITY, dir: 'positive', result: kValue.f64.negative.infinity },
+      { val: Number.NEGATIVE_INFINITY, dir: 'negative', result: kValue.f64.negative.infinity },
 
       // Zeroes
-      { val: +0, dir: 'positive', result: kValue.f64.subnormal.positive.min },
-      { val: +0, dir: 'negative', result: kValue.f64.subnormal.negative.max },
-      { val: -0, dir: 'positive', result: kValue.f64.subnormal.positive.min },
-      { val: -0, dir: 'negative', result: kValue.f64.subnormal.negative.max },
+      { val: +0, dir: 'positive', result: kValue.f64.positive.subnormal.min },
+      { val: +0, dir: 'negative', result: kValue.f64.negative.subnormal.max },
+      { val: -0, dir: 'positive', result: kValue.f64.positive.subnormal.min },
+      { val: -0, dir: 'negative', result: kValue.f64.negative.subnormal.max },
 
       // Subnormals
-      { val: kValue.f64.subnormal.positive.min, dir: 'positive', result: reinterpretU64AsF64(0x0000_0000_0000_0002n) },
-      { val: kValue.f64.subnormal.positive.min, dir: 'negative', result: 0 },
-      { val: kValue.f64.subnormal.positive.max, dir: 'positive', result: kValue.f64.positive.min },
-      { val: kValue.f64.subnormal.positive.max, dir: 'negative', result: reinterpretU64AsF64(0x000f_ffff_ffff_fffen) },
-      { val: kValue.f64.subnormal.negative.min, dir: 'positive', result: reinterpretU64AsF64(0x800f_ffff_ffff_fffen) },
-      { val: kValue.f64.subnormal.negative.min, dir: 'negative', result: kValue.f64.negative.max },
-      { val: kValue.f64.subnormal.negative.max, dir: 'positive', result: 0 },
-      { val: kValue.f64.subnormal.negative.max, dir: 'negative', result: reinterpretU64AsF64(0x8000_0000_0000_0002n) },
+      { val: kValue.f64.positive.subnormal.min, dir: 'positive', result: reinterpretU64AsF64(0x0000_0000_0000_0002n) },
+      { val: kValue.f64.positive.subnormal.min, dir: 'negative', result: 0 },
+      { val: kValue.f64.positive.subnormal.max, dir: 'positive', result: kValue.f64.positive.min },
+      { val: kValue.f64.positive.subnormal.max, dir: 'negative', result: reinterpretU64AsF64(0x000f_ffff_ffff_fffen) },
+      { val: kValue.f64.negative.subnormal.min, dir: 'positive', result: reinterpretU64AsF64(0x800f_ffff_ffff_fffen) },
+      { val: kValue.f64.negative.subnormal.min, dir: 'negative', result: kValue.f64.negative.max },
+      { val: kValue.f64.negative.subnormal.max, dir: 'positive', result: 0 },
+      { val: kValue.f64.negative.subnormal.max, dir: 'negative', result: reinterpretU64AsF64(0x8000_0000_0000_0002n) },
 
       // Normals
-      { val: kValue.f64.positive.max, dir: 'positive', result: kValue.f64.infinity.positive },
+      { val: kValue.f64.positive.max, dir: 'positive', result: kValue.f64.positive.infinity },
       { val: kValue.f64.positive.max, dir: 'negative', result: kValue.f64.positive.nearest_max },
       { val: kValue.f64.positive.min, dir: 'positive', result: reinterpretU64AsF64(0x0010_0000_0000_0001n ) },
       { val: kValue.f64.positive.min, dir: 'negative', result: reinterpretU64AsF64(0x000f_ffff_ffff_ffffn) },
       { val: kValue.f64.negative.max, dir: 'positive', result: reinterpretU64AsF64(0x800f_ffff_ffff_ffffn) },
       { val: kValue.f64.negative.max, dir: 'negative', result: reinterpretU64AsF64(0x8010_0000_0000_0001n) },
       { val: kValue.f64.negative.min, dir: 'positive', result: kValue.f64.negative.nearest_min },
-      { val: kValue.f64.negative.min, dir: 'negative', result: kValue.f64.infinity.negative },
+      { val: kValue.f64.negative.min, dir: 'negative', result: kValue.f64.negative.infinity },
       { val: reinterpretU64AsF64(0x0380_0000_0000_0000n), dir: 'positive', result: reinterpretU64AsF64(0x0380_0000_0000_0001n) },
       { val: reinterpretU64AsF64(0x0380_0000_0000_0000n), dir: 'negative', result: reinterpretU64AsF64(0x037f_ffff_ffff_ffffn) },
       { val: reinterpretU64AsF64(0x8380_0000_0000_0000n), dir: 'positive', result: reinterpretU64AsF64(0x837f_ffff_ffff_ffffn) },
@@ -218,10 +220,10 @@ g.test('nextAfterF32FlushToZero')
     // Edge Cases
     { val: Number.NaN, dir: 'positive', result: Number.NaN },
     { val: Number.NaN, dir: 'negative', result: Number.NaN },
-    { val: Number.POSITIVE_INFINITY, dir: 'positive', result: kValue.f32.infinity.positive },
-    { val: Number.POSITIVE_INFINITY, dir: 'negative', result: kValue.f32.infinity.positive },
-    { val: Number.NEGATIVE_INFINITY, dir: 'positive', result: kValue.f32.infinity.negative },
-    { val: Number.NEGATIVE_INFINITY, dir: 'negative', result: kValue.f32.infinity.negative },
+    { val: Number.POSITIVE_INFINITY, dir: 'positive', result: kValue.f32.positive.infinity },
+    { val: Number.POSITIVE_INFINITY, dir: 'negative', result: kValue.f32.positive.infinity },
+    { val: Number.NEGATIVE_INFINITY, dir: 'positive', result: kValue.f32.negative.infinity },
+    { val: Number.NEGATIVE_INFINITY, dir: 'negative', result: kValue.f32.negative.infinity },
 
     // Zeroes
     { val: +0, dir: 'positive', result: kValue.f32.positive.min },
@@ -230,24 +232,24 @@ g.test('nextAfterF32FlushToZero')
     { val: -0, dir: 'negative', result: kValue.f32.negative.max },
 
     // Subnormals
-    { val: kValue.f32.subnormal.positive.min, dir: 'positive', result: kValue.f32.positive.min },
-    { val: kValue.f32.subnormal.positive.min, dir: 'negative', result: kValue.f32.negative.max },
-    { val: kValue.f32.subnormal.positive.max, dir: 'positive', result: kValue.f32.positive.min },
-    { val: kValue.f32.subnormal.positive.max, dir: 'negative', result: kValue.f32.negative.max },
-    { val: kValue.f32.subnormal.negative.min, dir: 'positive', result: kValue.f32.positive.min },
-    { val: kValue.f32.subnormal.negative.min, dir: 'negative', result: kValue.f32.negative.max },
-    { val: kValue.f32.subnormal.negative.max, dir: 'positive', result: kValue.f32.positive.min },
-    { val: kValue.f32.subnormal.negative.max, dir: 'negative', result: kValue.f32.negative.max },
+    { val: kValue.f32.positive.subnormal.min, dir: 'positive', result: kValue.f32.positive.min },
+    { val: kValue.f32.positive.subnormal.min, dir: 'negative', result: kValue.f32.negative.max },
+    { val: kValue.f32.positive.subnormal.max, dir: 'positive', result: kValue.f32.positive.min },
+    { val: kValue.f32.positive.subnormal.max, dir: 'negative', result: kValue.f32.negative.max },
+    { val: kValue.f32.negative.subnormal.min, dir: 'positive', result: kValue.f32.positive.min },
+    { val: kValue.f32.negative.subnormal.min, dir: 'negative', result: kValue.f32.negative.max },
+    { val: kValue.f32.negative.subnormal.max, dir: 'positive', result: kValue.f32.positive.min },
+    { val: kValue.f32.negative.subnormal.max, dir: 'negative', result: kValue.f32.negative.max },
 
     // Normals
-    { val: kValue.f32.positive.max, dir: 'positive', result: kValue.f32.infinity.positive },
+    { val: kValue.f32.positive.max, dir: 'positive', result: kValue.f32.positive.infinity },
     { val: kValue.f32.positive.max, dir: 'negative', result: kValue.f32.positive.nearest_max },
     { val: kValue.f32.positive.min, dir: 'positive', result: reinterpretU32AsF32(0x00800001) },
     { val: kValue.f32.positive.min, dir: 'negative', result: 0 },
     { val: kValue.f32.negative.max, dir: 'positive', result: 0 },
     { val: kValue.f32.negative.max, dir: 'negative', result: reinterpretU32AsF32(0x80800001) },
     { val: kValue.f32.negative.min, dir: 'positive', result: reinterpretU32AsF32(0xff7ffffe) },
-    { val: kValue.f32.negative.min, dir: 'negative', result: kValue.f32.infinity.negative },
+    { val: kValue.f32.negative.min, dir: 'negative', result: kValue.f32.negative.infinity },
     { val: reinterpretU32AsF32(0x03800000), dir: 'positive', result: reinterpretU32AsF32(0x03800001) },
     { val: reinterpretU32AsF32(0x03800000), dir: 'negative', result: reinterpretU32AsF32(0x037fffff) },
     { val: reinterpretU32AsF32(0x83800000), dir: 'positive', result: reinterpretU32AsF32(0x837fffff) },
@@ -282,36 +284,36 @@ g.test('nextAfterF32NoFlush')
     // Edge Cases
     { val: Number.NaN, dir: 'positive', result: Number.NaN },
     { val: Number.NaN, dir: 'negative', result: Number.NaN },
-    { val: Number.POSITIVE_INFINITY, dir: 'positive', result: kValue.f32.infinity.positive },
-    { val: Number.POSITIVE_INFINITY, dir: 'negative', result: kValue.f32.infinity.positive },
-    { val: Number.NEGATIVE_INFINITY, dir: 'positive', result: kValue.f32.infinity.negative },
-    { val: Number.NEGATIVE_INFINITY, dir: 'negative', result: kValue.f32.infinity.negative },
+    { val: Number.POSITIVE_INFINITY, dir: 'positive', result: kValue.f32.positive.infinity },
+    { val: Number.POSITIVE_INFINITY, dir: 'negative', result: kValue.f32.positive.infinity },
+    { val: Number.NEGATIVE_INFINITY, dir: 'positive', result: kValue.f32.negative.infinity },
+    { val: Number.NEGATIVE_INFINITY, dir: 'negative', result: kValue.f32.negative.infinity },
 
     // Zeroes
-    { val: +0, dir: 'positive', result: kValue.f32.subnormal.positive.min },
-    { val: +0, dir: 'negative', result: kValue.f32.subnormal.negative.max },
-    { val: -0, dir: 'positive', result: kValue.f32.subnormal.positive.min },
-    { val: -0, dir: 'negative', result: kValue.f32.subnormal.negative.max },
+    { val: +0, dir: 'positive', result: kValue.f32.positive.subnormal.min },
+    { val: +0, dir: 'negative', result: kValue.f32.negative.subnormal.max },
+    { val: -0, dir: 'positive', result: kValue.f32.positive.subnormal.min },
+    { val: -0, dir: 'negative', result: kValue.f32.negative.subnormal.max },
 
     // Subnormals
-    { val:kValue.f32.subnormal.positive.min, dir: 'positive', result: reinterpretU32AsF32(0x00000002) },
-    { val:kValue.f32.subnormal.positive.min, dir: 'negative', result: 0 },
-    { val:kValue.f32.subnormal.positive.max, dir: 'positive', result: kValue.f32.positive.min },
-    { val:kValue.f32.subnormal.positive.max, dir: 'negative', result: reinterpretU32AsF32(0x007ffffe) },
-    { val:kValue.f32.subnormal.negative.min, dir: 'positive', result: reinterpretU32AsF32(0x807ffffe) },
-    { val:kValue.f32.subnormal.negative.min, dir: 'negative', result: kValue.f32.negative.max },
-    { val:kValue.f32.subnormal.negative.max, dir: 'positive', result: 0 },
-    { val:kValue.f32.subnormal.negative.max, dir: 'negative', result: reinterpretU32AsF32(0x80000002) },
+    { val:kValue.f32.positive.subnormal.min, dir: 'positive', result: reinterpretU32AsF32(0x00000002) },
+    { val:kValue.f32.positive.subnormal.min, dir: 'negative', result: 0 },
+    { val:kValue.f32.positive.subnormal.max, dir: 'positive', result: kValue.f32.positive.min },
+    { val:kValue.f32.positive.subnormal.max, dir: 'negative', result: reinterpretU32AsF32(0x007ffffe) },
+    { val:kValue.f32.negative.subnormal.min, dir: 'positive', result: reinterpretU32AsF32(0x807ffffe) },
+    { val:kValue.f32.negative.subnormal.min, dir: 'negative', result: kValue.f32.negative.max },
+    { val:kValue.f32.negative.subnormal.max, dir: 'positive', result: 0 },
+    { val:kValue.f32.negative.subnormal.max, dir: 'negative', result: reinterpretU32AsF32(0x80000002) },
 
     // Normals
-    { val: kValue.f32.positive.max, dir: 'positive', result: kValue.f32.infinity.positive },
+    { val: kValue.f32.positive.max, dir: 'positive', result: kValue.f32.positive.infinity },
     { val: kValue.f32.positive.max, dir: 'negative', result: kValue.f32.positive.nearest_max },
     { val: kValue.f32.positive.min, dir: 'positive', result: reinterpretU32AsF32(0x00800001) },
-    { val: kValue.f32.positive.min, dir: 'negative', result: kValue.f32.subnormal.positive.max },
-    { val: kValue.f32.negative.max, dir: 'positive', result: kValue.f32.subnormal.negative.min },
+    { val: kValue.f32.positive.min, dir: 'negative', result: kValue.f32.positive.subnormal.max },
+    { val: kValue.f32.negative.max, dir: 'positive', result: kValue.f32.negative.subnormal.min },
     { val: kValue.f32.negative.max, dir: 'negative', result: reinterpretU32AsF32(0x80800001) },
     { val: kValue.f32.negative.min, dir: 'positive', result: kValue.f32.negative.nearest_min },
-    { val: kValue.f32.negative.min, dir: 'negative', result: kValue.f32.infinity.negative },
+    { val: kValue.f32.negative.min, dir: 'negative', result: kValue.f32.negative.infinity },
     { val: reinterpretU32AsF32(0x03800000), dir: 'positive', result: reinterpretU32AsF32(0x03800001) },
     { val: reinterpretU32AsF32(0x03800000), dir: 'negative', result: reinterpretU32AsF32(0x037fffff) },
     { val: reinterpretU32AsF32(0x83800000), dir: 'positive', result: reinterpretU32AsF32(0x837fffff) },
@@ -348,10 +350,10 @@ g.test('nextAfterF16FlushToZero')
       // Edge Cases
       { val: Number.NaN, dir: 'positive', result: Number.NaN },
       { val: Number.NaN, dir: 'negative', result: Number.NaN },
-      { val: Number.POSITIVE_INFINITY, dir: 'positive', result: kValue.f16.infinity.positive },
-      { val: Number.POSITIVE_INFINITY, dir: 'negative', result: kValue.f16.infinity.positive },
-      { val: Number.NEGATIVE_INFINITY, dir: 'positive', result: kValue.f16.infinity.negative },
-      { val: Number.NEGATIVE_INFINITY, dir: 'negative', result: kValue.f16.infinity.negative },
+      { val: Number.POSITIVE_INFINITY, dir: 'positive', result: kValue.f16.positive.infinity },
+      { val: Number.POSITIVE_INFINITY, dir: 'negative', result: kValue.f16.positive.infinity },
+      { val: Number.NEGATIVE_INFINITY, dir: 'positive', result: kValue.f16.negative.infinity },
+      { val: Number.NEGATIVE_INFINITY, dir: 'negative', result: kValue.f16.negative.infinity },
 
       // Zeroes
       { val: +0, dir: 'positive', result: kValue.f16.positive.min },
@@ -360,24 +362,24 @@ g.test('nextAfterF16FlushToZero')
       { val: -0, dir: 'negative', result: kValue.f16.negative.max },
 
       // Subnormals
-      { val: kValue.f16.subnormal.positive.min, dir: 'positive', result: kValue.f16.positive.min },
-      { val: kValue.f16.subnormal.positive.min, dir: 'negative', result: kValue.f16.negative.max },
-      { val: kValue.f16.subnormal.positive.max, dir: 'positive', result: kValue.f16.positive.min },
-      { val: kValue.f16.subnormal.positive.max, dir: 'negative', result: kValue.f16.negative.max },
-      { val: kValue.f16.subnormal.negative.min, dir: 'positive', result: kValue.f16.positive.min },
-      { val: kValue.f16.subnormal.negative.min, dir: 'negative', result: kValue.f16.negative.max },
-      { val: kValue.f16.subnormal.negative.max, dir: 'positive', result: kValue.f16.positive.min },
-      { val: kValue.f16.subnormal.negative.max, dir: 'negative', result: kValue.f16.negative.max },
+      { val: kValue.f16.positive.subnormal.min, dir: 'positive', result: kValue.f16.positive.min },
+      { val: kValue.f16.positive.subnormal.min, dir: 'negative', result: kValue.f16.negative.max },
+      { val: kValue.f16.positive.subnormal.max, dir: 'positive', result: kValue.f16.positive.min },
+      { val: kValue.f16.positive.subnormal.max, dir: 'negative', result: kValue.f16.negative.max },
+      { val: kValue.f16.negative.subnormal.min, dir: 'positive', result: kValue.f16.positive.min },
+      { val: kValue.f16.negative.subnormal.min, dir: 'negative', result: kValue.f16.negative.max },
+      { val: kValue.f16.negative.subnormal.max, dir: 'positive', result: kValue.f16.positive.min },
+      { val: kValue.f16.negative.subnormal.max, dir: 'negative', result: kValue.f16.negative.max },
 
       // Normals
-      { val: kValue.f16.positive.max, dir: 'positive', result: kValue.f16.infinity.positive },
+      { val: kValue.f16.positive.max, dir: 'positive', result: kValue.f16.positive.infinity },
       { val: kValue.f16.positive.max, dir: 'negative', result: reinterpretU16AsF16(0x7bfe) },
       { val: kValue.f16.positive.min, dir: 'positive', result: reinterpretU16AsF16(0x0401) },
       { val: kValue.f16.positive.min, dir: 'negative', result: 0 },
       { val: kValue.f16.negative.max, dir: 'positive', result: 0 },
       { val: kValue.f16.negative.max, dir: 'negative', result: reinterpretU16AsF16(0x8401) },
       { val: kValue.f16.negative.min, dir: 'positive', result: reinterpretU16AsF16(0xfbfe) },
-      { val: kValue.f16.negative.min, dir: 'negative', result: kValue.f16.infinity.negative },
+      { val: kValue.f16.negative.min, dir: 'negative', result: kValue.f16.negative.infinity },
       { val: reinterpretU16AsF16(0x1380), dir: 'positive', result: reinterpretU16AsF16(0x1381) },
       { val: reinterpretU16AsF16(0x1380), dir: 'negative', result: reinterpretU16AsF16(0x137f) },
       { val: reinterpretU16AsF16(0x9380), dir: 'positive', result: reinterpretU16AsF16(0x937f) },
@@ -412,36 +414,36 @@ g.test('nextAfterF16NoFlush')
       // Edge Cases
       { val: Number.NaN, dir: 'positive', result: Number.NaN },
       { val: Number.NaN, dir: 'negative', result: Number.NaN },
-      { val: Number.POSITIVE_INFINITY, dir: 'positive', result: kValue.f16.infinity.positive },
-      { val: Number.POSITIVE_INFINITY, dir: 'negative', result: kValue.f16.infinity.positive },
-      { val: Number.NEGATIVE_INFINITY, dir: 'positive', result: kValue.f16.infinity.negative },
-      { val: Number.NEGATIVE_INFINITY, dir: 'negative', result: kValue.f16.infinity.negative },
+      { val: Number.POSITIVE_INFINITY, dir: 'positive', result: kValue.f16.positive.infinity },
+      { val: Number.POSITIVE_INFINITY, dir: 'negative', result: kValue.f16.positive.infinity },
+      { val: Number.NEGATIVE_INFINITY, dir: 'positive', result: kValue.f16.negative.infinity },
+      { val: Number.NEGATIVE_INFINITY, dir: 'negative', result: kValue.f16.negative.infinity },
 
       // Zeroes
-      { val: +0, dir: 'positive', result: kValue.f16.subnormal.positive.min },
-      { val: +0, dir: 'negative', result: kValue.f16.subnormal.negative.max },
-      { val: -0, dir: 'positive', result: kValue.f16.subnormal.positive.min },
-      { val: -0, dir: 'negative', result: kValue.f16.subnormal.negative.max },
+      { val: +0, dir: 'positive', result: kValue.f16.positive.subnormal.min },
+      { val: +0, dir: 'negative', result: kValue.f16.negative.subnormal.max },
+      { val: -0, dir: 'positive', result: kValue.f16.positive.subnormal.min },
+      { val: -0, dir: 'negative', result: kValue.f16.negative.subnormal.max },
 
       // Subnormals
-      { val: kValue.f16.subnormal.positive.min, dir: 'positive', result: reinterpretU16AsF16(0x0002) },
-      { val: kValue.f16.subnormal.positive.min, dir: 'negative', result: 0 },
-      { val: kValue.f16.subnormal.positive.max, dir: 'positive', result: kValue.f16.positive.min },
-      { val: kValue.f16.subnormal.positive.max, dir: 'negative', result: reinterpretU16AsF16(0x03fe) },
-      { val: kValue.f16.subnormal.negative.min, dir: 'positive', result: reinterpretU16AsF16(0x83fe) },
-      { val: kValue.f16.subnormal.negative.min, dir: 'negative', result: kValue.f16.negative.max },
-      { val: kValue.f16.subnormal.negative.max, dir: 'positive', result: 0 },
-      { val: kValue.f16.subnormal.negative.max, dir: 'negative', result: reinterpretU16AsF16(0x8002) },
+      { val: kValue.f16.positive.subnormal.min, dir: 'positive', result: reinterpretU16AsF16(0x0002) },
+      { val: kValue.f16.positive.subnormal.min, dir: 'negative', result: 0 },
+      { val: kValue.f16.positive.subnormal.max, dir: 'positive', result: kValue.f16.positive.min },
+      { val: kValue.f16.positive.subnormal.max, dir: 'negative', result: reinterpretU16AsF16(0x03fe) },
+      { val: kValue.f16.negative.subnormal.min, dir: 'positive', result: reinterpretU16AsF16(0x83fe) },
+      { val: kValue.f16.negative.subnormal.min, dir: 'negative', result: kValue.f16.negative.max },
+      { val: kValue.f16.negative.subnormal.max, dir: 'positive', result: 0 },
+      { val: kValue.f16.negative.subnormal.max, dir: 'negative', result: reinterpretU16AsF16(0x8002) },
 
       // Normals
-      { val: kValue.f16.positive.max, dir: 'positive', result: kValue.f16.infinity.positive },
+      { val: kValue.f16.positive.max, dir: 'positive', result: kValue.f16.positive.infinity },
       { val: kValue.f16.positive.max, dir: 'negative', result: reinterpretU16AsF16(0x7bfe) },
       { val: kValue.f16.positive.min, dir: 'positive', result: reinterpretU16AsF16(0x0401) },
-      { val: kValue.f16.positive.min, dir: 'negative', result: kValue.f16.subnormal.positive.max },
-      { val: kValue.f16.negative.max, dir: 'positive', result: kValue.f16.subnormal.negative.min },
+      { val: kValue.f16.positive.min, dir: 'negative', result: kValue.f16.positive.subnormal.max },
+      { val: kValue.f16.negative.max, dir: 'positive', result: kValue.f16.negative.subnormal.min },
       { val: kValue.f16.negative.max, dir: 'negative', result: reinterpretU16AsF16(0x8401) },
       { val: kValue.f16.negative.min, dir: 'positive', result: reinterpretU16AsF16(0xfbfe) },
-      { val: kValue.f16.negative.min, dir: 'negative', result: kValue.f16.infinity.negative },
+      { val: kValue.f16.negative.min, dir: 'negative', result: kValue.f16.negative.infinity },
       { val: reinterpretU16AsF16(0x1380), dir: 'positive', result: reinterpretU16AsF16(0x1381) },
       { val: reinterpretU16AsF16(0x1380), dir: 'negative', result: reinterpretU16AsF16(0x137f) },
       { val: reinterpretU16AsF16(0x9380), dir: 'positive', result: reinterpretU16AsF16(0x937f) },
@@ -452,10 +454,10 @@ g.test('nextAfterF16NoFlush')
       { val: 0.01, dir: 'negative', result: reinterpretU16AsF16(0x211e) }, // positive normal
       { val: -0.01, dir: 'positive', result: reinterpretU16AsF16(0xa11e) }, // negative normal
       { val: -0.01, dir: 'negative', result: reinterpretU16AsF16(0xa11f) }, // negative normal
-      { val: 2.82E-40, dir: 'positive', result: kValue.f16.subnormal.positive.min }, // positive subnormal
+      { val: 2.82E-40, dir: 'positive', result: kValue.f16.positive.subnormal.min }, // positive subnormal
       { val: 2.82E-40, dir: 'negative', result: 0 }, // positive subnormal
       { val: -2.82E-40, dir: 'positive', result: 0 }, // negative subnormal
-      { val: -2.82E-40, dir: 'negative', result: kValue.f16.subnormal.negative.max }, // negative subnormal
+      { val: -2.82E-40, dir: 'negative', result: kValue.f16.negative.subnormal.max }, // negative subnormal
     ]
   )
   .fn(t => {
@@ -489,19 +491,19 @@ g.test('oneULPF64FlushToZero')
 
     // Subnormals
     {
-      target: kValue.f64.subnormal.positive.min,
+      target: kValue.f64.positive.subnormal.min,
       expect: reinterpretU64AsF64(0x0010_0000_0000_0000n),
     },
     {
-      target: kValue.f64.subnormal.positive.max,
+      target: kValue.f64.positive.subnormal.max,
       expect: reinterpretU64AsF64(0x0010_0000_0000_0000n),
     },
     {
-      target: kValue.f64.subnormal.negative.min,
+      target: kValue.f64.negative.subnormal.min,
       expect: reinterpretU64AsF64(0x0010_0000_0000_0000n),
     },
     {
-      target: kValue.f64.subnormal.negative.max,
+      target: kValue.f64.negative.subnormal.max,
       expect: reinterpretU64AsF64(0x0010_0000_0000_0000n),
     },
 
@@ -542,19 +544,19 @@ g.test('oneULPF64NoFlush')
 
     // Subnormals
     {
-      target: kValue.f64.subnormal.positive.min,
+      target: kValue.f64.positive.subnormal.min,
       expect: reinterpretU64AsF64(0x0000_0000_0000_0001n),
     },
     {
-      target: kValue.f64.subnormal.positive.max,
+      target: kValue.f64.positive.subnormal.max,
       expect: reinterpretU64AsF64(0x0000_0000_0000_0001n),
     },
     {
-      target: kValue.f64.subnormal.negative.min,
+      target: kValue.f64.negative.subnormal.min,
       expect: reinterpretU64AsF64(0x0000_0000_0000_0001n),
     },
     {
-      target: kValue.f64.subnormal.negative.max,
+      target: kValue.f64.negative.subnormal.max,
       expect: reinterpretU64AsF64(0x0000_0000_0000_0001n),
     },
 
@@ -595,19 +597,19 @@ g.test('oneULPF64')
 
     // Subnormals
     {
-      target: kValue.f64.subnormal.positive.min,
+      target: kValue.f64.positive.subnormal.min,
       expect: reinterpretU64AsF64(0x0010_0000_0000_0000n),
     },
     {
-      target: kValue.f64.subnormal.positive.max,
+      target: kValue.f64.positive.subnormal.max,
       expect: reinterpretU64AsF64(0x0010_0000_0000_0000n),
     },
     {
-      target: kValue.f64.subnormal.negative.min,
+      target: kValue.f64.negative.subnormal.min,
       expect: reinterpretU64AsF64(0x0010_0000_0000_0000n),
     },
     {
-      target: kValue.f64.subnormal.negative.max,
+      target: kValue.f64.negative.subnormal.max,
       expect: reinterpretU64AsF64(0x0010_0000_0000_0000n),
     },
 
@@ -647,12 +649,12 @@ g.test('oneULPF32FlushToZero')
     { target: -0, expect: reinterpretU32AsF32(0x00800000) },
 
     // Subnormals
-    { target: kValue.f32.subnormal.positive.min, expect: reinterpretU32AsF32(0x00800000) },
+    { target: kValue.f32.positive.subnormal.min, expect: reinterpretU32AsF32(0x00800000) },
     { target: 2.82e-40, expect: reinterpretU32AsF32(0x00800000) }, // positive subnormal
-    { target: kValue.f32.subnormal.positive.max, expect: reinterpretU32AsF32(0x00800000) },
-    { target: kValue.f32.subnormal.negative.min, expect: reinterpretU32AsF32(0x00800000) },
+    { target: kValue.f32.positive.subnormal.max, expect: reinterpretU32AsF32(0x00800000) },
+    { target: kValue.f32.negative.subnormal.min, expect: reinterpretU32AsF32(0x00800000) },
     { target: -2.82e-40, expect: reinterpretU32AsF32(0x00800000) }, // negative subnormal
-    { target: kValue.f32.subnormal.negative.max, expect: reinterpretU32AsF32(0x00800000) },
+    { target: kValue.f32.negative.subnormal.max, expect: reinterpretU32AsF32(0x00800000) },
 
     // Normals
     { target: kValue.f32.positive.min, expect: reinterpretU32AsF32(0x00000001) },
@@ -696,12 +698,12 @@ g.test('oneULPF32NoFlush')
     { target: -0, expect: reinterpretU32AsF32(0x00000001) },
 
     // Subnormals
-    { target: kValue.f32.subnormal.positive.min, expect: reinterpretU32AsF32(0x00000001) },
+    { target: kValue.f32.positive.subnormal.min, expect: reinterpretU32AsF32(0x00000001) },
     { target: -2.82e-40, expect: reinterpretU32AsF32(0x00000001) }, // negative subnormal
-    { target: kValue.f32.subnormal.positive.max, expect: reinterpretU32AsF32(0x00000001) },
-    { target: kValue.f32.subnormal.negative.min, expect: reinterpretU32AsF32(0x00000001) },
+    { target: kValue.f32.positive.subnormal.max, expect: reinterpretU32AsF32(0x00000001) },
+    { target: kValue.f32.negative.subnormal.min, expect: reinterpretU32AsF32(0x00000001) },
     { target: 2.82e-40, expect: reinterpretU32AsF32(0x00000001) }, // positive subnormal
-    { target: kValue.f32.subnormal.negative.max, expect: reinterpretU32AsF32(0x00000001) },
+    { target: kValue.f32.negative.subnormal.max, expect: reinterpretU32AsF32(0x00000001) },
 
     // Normals
     { target: kValue.f32.positive.min, expect: reinterpretU32AsF32(0x00000001) },
@@ -745,12 +747,12 @@ g.test('oneULPF32')
     { target: -0, expect: reinterpretU32AsF32(0x00800000) },
 
     // Subnormals
-    { target: kValue.f32.subnormal.negative.max, expect: reinterpretU32AsF32(0x00800000) },
+    { target: kValue.f32.negative.subnormal.max, expect: reinterpretU32AsF32(0x00800000) },
     { target: -2.82e-40, expect: reinterpretU32AsF32(0x00800000) },
-    { target: kValue.f32.subnormal.negative.min, expect: reinterpretU32AsF32(0x00800000) },
-    { target: kValue.f32.subnormal.positive.max, expect: reinterpretU32AsF32(0x00800000) },
+    { target: kValue.f32.negative.subnormal.min, expect: reinterpretU32AsF32(0x00800000) },
+    { target: kValue.f32.positive.subnormal.max, expect: reinterpretU32AsF32(0x00800000) },
     { target: 2.82e-40, expect: reinterpretU32AsF32(0x00800000) },
-    { target: kValue.f32.subnormal.positive.min, expect: reinterpretU32AsF32(0x00800000) },
+    { target: kValue.f32.positive.subnormal.min, expect: reinterpretU32AsF32(0x00800000) },
 
     // Normals
     { target: kValue.f32.positive.min, expect: reinterpretU32AsF32(0x00000001) },
@@ -794,12 +796,12 @@ g.test('oneULPF16FlushToZero')
     { target: -0, expect: reinterpretU16AsF16(0x0400) },
 
     // Subnormals
-    { target: kValue.f16.subnormal.positive.min, expect: reinterpretU16AsF16(0x0400) },
+    { target: kValue.f16.positive.subnormal.min, expect: reinterpretU16AsF16(0x0400) },
     { target: 1.91e-6, expect: reinterpretU16AsF16(0x0400) }, // positive subnormal
-    { target: kValue.f16.subnormal.positive.max, expect: reinterpretU16AsF16(0x0400) },
-    { target: kValue.f16.subnormal.negative.min, expect: reinterpretU16AsF16(0x0400) },
+    { target: kValue.f16.positive.subnormal.max, expect: reinterpretU16AsF16(0x0400) },
+    { target: kValue.f16.negative.subnormal.min, expect: reinterpretU16AsF16(0x0400) },
     { target: -1.91e-6, expect: reinterpretU16AsF16(0x0400) }, // negative subnormal
-    { target: kValue.f16.subnormal.negative.max, expect: reinterpretU16AsF16(0x0400) },
+    { target: kValue.f16.negative.subnormal.max, expect: reinterpretU16AsF16(0x0400) },
 
     // Normals
     { target: kValue.f16.positive.min, expect: reinterpretU16AsF16(0x0001) },
@@ -843,12 +845,12 @@ g.test('oneULPF16NoFlush')
     { target: -0, expect: reinterpretU16AsF16(0x0001) },
 
     // Subnormals
-    { target: kValue.f16.subnormal.positive.min, expect: reinterpretU16AsF16(0x0001) },
+    { target: kValue.f16.positive.subnormal.min, expect: reinterpretU16AsF16(0x0001) },
     { target: 1.91e-6, expect: reinterpretU16AsF16(0x0001) }, // positive subnormal
-    { target: kValue.f16.subnormal.positive.max, expect: reinterpretU16AsF16(0x0001) },
-    { target: kValue.f16.subnormal.negative.min, expect: reinterpretU16AsF16(0x0001) },
+    { target: kValue.f16.positive.subnormal.max, expect: reinterpretU16AsF16(0x0001) },
+    { target: kValue.f16.negative.subnormal.min, expect: reinterpretU16AsF16(0x0001) },
     { target: -1.91e-6, expect: reinterpretU16AsF16(0x0001) }, // negative subnormal
-    { target: kValue.f16.subnormal.negative.max, expect: reinterpretU16AsF16(0x0001) },
+    { target: kValue.f16.negative.subnormal.max, expect: reinterpretU16AsF16(0x0001) },
 
     // Normals
     { target: kValue.f16.positive.min, expect: reinterpretU16AsF16(0x0001) },
@@ -892,12 +894,12 @@ g.test('oneULPF16')
     { target: -0, expect: reinterpretU16AsF16(0x0400) },
 
     // Subnormals
-    { target: kValue.f16.subnormal.positive.min, expect: reinterpretU16AsF16(0x0400) },
+    { target: kValue.f16.positive.subnormal.min, expect: reinterpretU16AsF16(0x0400) },
     { target: 1.91e-6, expect: reinterpretU16AsF16(0x0400) }, // positive subnormal
-    { target: kValue.f16.subnormal.positive.max, expect: reinterpretU16AsF16(0x0400) },
-    { target: kValue.f16.subnormal.negative.min, expect: reinterpretU16AsF16(0x0400) },
+    { target: kValue.f16.positive.subnormal.max, expect: reinterpretU16AsF16(0x0400) },
+    { target: kValue.f16.negative.subnormal.min, expect: reinterpretU16AsF16(0x0400) },
     { target: -1.91e-6, expect: reinterpretU16AsF16(0x0400) }, // negative subnormal
-    { target: kValue.f16.subnormal.negative.max, expect: reinterpretU16AsF16(0x0400) },
+    { target: kValue.f16.negative.subnormal.max, expect: reinterpretU16AsF16(0x0400) },
 
     // Normals
     { target: kValue.f16.positive.min, expect: reinterpretU16AsF16(0x0001) },
@@ -947,20 +949,20 @@ g.test('correctlyRoundedF32')
       { value: -(2 ** (kValue.f32.emax + 1)) + oneULPF64(kValue.f32.positive.max), expected: [Number.NEGATIVE_INFINITY, kValue.f32.negative.min] },
       { value: 2 ** (kValue.f32.emax + 1), expected: [Number.POSITIVE_INFINITY] },
       { value: -(2 ** (kValue.f32.emax + 1)), expected: [Number.NEGATIVE_INFINITY] },
-      { value: kValue.f32.infinity.positive, expected: [Number.POSITIVE_INFINITY] },
-      { value: kValue.f32.infinity.negative, expected: [Number.NEGATIVE_INFINITY] },
+      { value: kValue.f32.positive.infinity, expected: [Number.POSITIVE_INFINITY] },
+      { value: kValue.f32.negative.infinity, expected: [Number.NEGATIVE_INFINITY] },
 
       // 32-bit subnormals
-      { value: kValue.f32.subnormal.positive.min, expected: [kValue.f32.subnormal.positive.min] },
-      { value: kValue.f32.subnormal.positive.max, expected: [kValue.f32.subnormal.positive.max] },
-      { value: kValue.f32.subnormal.negative.min, expected: [kValue.f32.subnormal.negative.min] },
-      { value: kValue.f32.subnormal.negative.max, expected: [kValue.f32.subnormal.negative.max] },
+      { value: kValue.f32.positive.subnormal.min, expected: [kValue.f32.positive.subnormal.min] },
+      { value: kValue.f32.positive.subnormal.max, expected: [kValue.f32.positive.subnormal.max] },
+      { value: kValue.f32.negative.subnormal.min, expected: [kValue.f32.negative.subnormal.min] },
+      { value: kValue.f32.negative.subnormal.max, expected: [kValue.f32.negative.subnormal.max] },
 
       // 64-bit subnormals
-      { value: reinterpretU64AsF64(0x0000_0000_0000_0001n), expected: [0, kValue.f32.subnormal.positive.min] },
-      { value: reinterpretU64AsF64(0x0000_0000_0000_0002n), expected: [0, kValue.f32.subnormal.positive.min] },
-      { value: reinterpretU64AsF64(0x800f_ffff_ffff_ffffn), expected: [kValue.f32.subnormal.negative.max, 0] },
-      { value: reinterpretU64AsF64(0x800f_ffff_ffff_fffen), expected: [kValue.f32.subnormal.negative.max, 0] },
+      { value: reinterpretU64AsF64(0x0000_0000_0000_0001n), expected: [0, kValue.f32.positive.subnormal.min] },
+      { value: reinterpretU64AsF64(0x0000_0000_0000_0002n), expected: [0, kValue.f32.positive.subnormal.min] },
+      { value: reinterpretU64AsF64(0x800f_ffff_ffff_ffffn), expected: [kValue.f32.negative.subnormal.max, 0] },
+      { value: reinterpretU64AsF64(0x800f_ffff_ffff_fffen), expected: [kValue.f32.negative.subnormal.max, 0] },
 
       // 32-bit normals
       { value: 0, expected: [0] },
@@ -1008,20 +1010,20 @@ g.test('correctlyRoundedF16')
       { value: -(2 ** (kValue.f16.emax + 1)) + oneULPF64(kValue.f16.positive.max), expected: [Number.NEGATIVE_INFINITY, kValue.f16.negative.min] },
       { value: 2 ** (kValue.f16.emax + 1), expected: [Number.POSITIVE_INFINITY] },
       { value: -(2 ** (kValue.f16.emax + 1)), expected: [Number.NEGATIVE_INFINITY] },
-      { value: kValue.f16.infinity.positive, expected: [Number.POSITIVE_INFINITY] },
-      { value: kValue.f16.infinity.negative, expected: [Number.NEGATIVE_INFINITY] },
+      { value: kValue.f16.positive.infinity, expected: [Number.POSITIVE_INFINITY] },
+      { value: kValue.f16.negative.infinity, expected: [Number.NEGATIVE_INFINITY] },
 
       // 16-bit subnormals
-      { value: kValue.f16.subnormal.positive.min, expected: [kValue.f16.subnormal.positive.min] },
-      { value: kValue.f16.subnormal.positive.max, expected: [kValue.f16.subnormal.positive.max] },
-      { value: kValue.f16.subnormal.negative.min, expected: [kValue.f16.subnormal.negative.min] },
-      { value: kValue.f16.subnormal.negative.max, expected: [kValue.f16.subnormal.negative.max] },
+      { value: kValue.f16.positive.subnormal.min, expected: [kValue.f16.positive.subnormal.min] },
+      { value: kValue.f16.positive.subnormal.max, expected: [kValue.f16.positive.subnormal.max] },
+      { value: kValue.f16.negative.subnormal.min, expected: [kValue.f16.negative.subnormal.min] },
+      { value: kValue.f16.negative.subnormal.max, expected: [kValue.f16.negative.subnormal.max] },
 
       // 32-bit subnormals
-      { value: kValue.f32.subnormal.positive.min, expected: [0, kValue.f16.subnormal.positive.min] },
-      { value: kValue.f32.subnormal.positive.max, expected: [0, kValue.f16.subnormal.positive.min] },
-      { value: kValue.f32.subnormal.negative.max, expected: [kValue.f16.subnormal.negative.max, 0] },
-      { value: kValue.f32.subnormal.negative.min, expected: [kValue.f16.subnormal.negative.max, 0] },
+      { value: kValue.f32.positive.subnormal.min, expected: [0, kValue.f16.positive.subnormal.min] },
+      { value: kValue.f32.positive.subnormal.max, expected: [0, kValue.f16.positive.subnormal.min] },
+      { value: kValue.f32.negative.subnormal.max, expected: [kValue.f16.negative.subnormal.max, 0] },
+      { value: kValue.f32.negative.subnormal.min, expected: [kValue.f16.negative.subnormal.max, 0] },
 
       // 16-bit normals
       { value: 0, expected: [0] },
@@ -1065,30 +1067,30 @@ const kFrexpCases = {
     { input: kValue.f32.positive.min, fract: 0.5, exp: -125 },
     { input: kValue.f32.negative.max, fract: -0.5, exp: -125 },
     { input: kValue.f32.negative.min, fract: -0.9999999403953552, exp: 128 },
-    { input: kValue.f32.subnormal.positive.max, fract: 0.9999998807907104, exp: -126 },
-    { input: kValue.f32.subnormal.positive.min, fract: 0.5, exp: -148 },
-    { input: kValue.f32.subnormal.negative.max, fract: -0.5, exp: -148 },
-    { input: kValue.f32.subnormal.negative.min, fract: -0.9999998807907104, exp: -126 },
+    { input: kValue.f32.positive.subnormal.max, fract: 0.9999998807907104, exp: -126 },
+    { input: kValue.f32.positive.subnormal.min, fract: 0.5, exp: -148 },
+    { input: kValue.f32.negative.subnormal.max, fract: -0.5, exp: -148 },
+    { input: kValue.f32.negative.subnormal.min, fract: -0.9999998807907104, exp: -126 },
   ] as frexpCase[],
   f16: [
     { input: kValue.f16.positive.max, fract: 0.99951171875, exp: 16 },
     { input: kValue.f16.positive.min, fract: 0.5, exp: -13 },
     { input: kValue.f16.negative.max, fract: -0.5, exp: -13 },
     { input: kValue.f16.negative.min, fract: -0.99951171875, exp: 16 },
-    { input: kValue.f16.subnormal.positive.max, fract: 0.9990234375, exp: -14 },
-    { input: kValue.f16.subnormal.positive.min, fract: 0.5, exp: -23 },
-    { input: kValue.f16.subnormal.negative.max, fract: -0.5, exp: -23 },
-    { input: kValue.f16.subnormal.negative.min, fract: -0.9990234375, exp: -14 },
+    { input: kValue.f16.positive.subnormal.max, fract: 0.9990234375, exp: -14 },
+    { input: kValue.f16.positive.subnormal.min, fract: 0.5, exp: -23 },
+    { input: kValue.f16.negative.subnormal.max, fract: -0.5, exp: -23 },
+    { input: kValue.f16.negative.subnormal.min, fract: -0.9990234375, exp: -14 },
   ] as frexpCase[],
   f64: [
     { input: kValue.f64.positive.max, fract: reinterpretU64AsF64(0x3fef_ffff_ffff_ffffn) /* ~0.9999999999999999 */, exp: 1024 },
     { input: kValue.f64.positive.min, fract: 0.5, exp: -1021 },
     { input: kValue.f64.negative.max, fract: -0.5, exp: -1021 },
     { input: kValue.f64.negative.min, fract: reinterpretU64AsF64(0xbfef_ffff_ffff_ffffn) /* ~-0.9999999999999999 */, exp: 1024 },
-    { input: kValue.f64.subnormal.positive.max, fract: reinterpretU64AsF64(0x3fef_ffff_ffff_fffen) /* ~0.9999999999999998 */, exp: -1022 },
-    { input: kValue.f64.subnormal.positive.min, fract: 0.5, exp: -1073 },
-    { input: kValue.f64.subnormal.negative.max, fract: -0.5, exp: -1073 },
-    { input: kValue.f64.subnormal.negative.min, fract: reinterpretU64AsF64(0xbfef_ffff_ffff_fffen) /* ~-0.9999999999999998 */, exp: -1022 },
+    { input: kValue.f64.positive.subnormal.max, fract: reinterpretU64AsF64(0x3fef_ffff_ffff_fffen) /* ~0.9999999999999998 */, exp: -1022 },
+    { input: kValue.f64.positive.subnormal.min, fract: 0.5, exp: -1073 },
+    { input: kValue.f64.negative.subnormal.max, fract: -0.5, exp: -1073 },
+    { input: kValue.f64.negative.subnormal.min, fract: reinterpretU64AsF64(0xbfef_ffff_ffff_fffen) /* ~-0.9999999999999998 */, exp: -1022 },
   ] as frexpCase[],
 } as const;
 
@@ -1535,19 +1537,19 @@ g.test('fullF32Range')
   .paramsSimple<fullF32RangeCase>(
     // prettier-ignore
     [
-        { neg_norm: 0, neg_sub: 0, pos_sub: 0, pos_norm: 0, expect: [ 0.0 ] },
-        { neg_norm: 1, neg_sub: 0, pos_sub: 0, pos_norm: 0, expect: [ kValue.f32.negative.min, 0.0] },
-        { neg_norm: 2, neg_sub: 0, pos_sub: 0, pos_norm: 0, expect: [ kValue.f32.negative.min, kValue.f32.negative.max, 0.0 ] },
-        { neg_norm: 3, neg_sub: 0, pos_sub: 0, pos_norm: 0, expect: [ kValue.f32.negative.min, -1.9999998807907104, kValue.f32.negative.max, 0.0 ] },
-        { neg_norm: 0, neg_sub: 1, pos_sub: 0, pos_norm: 0, expect: [ kValue.f32.subnormal.negative.min, 0.0 ] },
-        { neg_norm: 0, neg_sub: 2, pos_sub: 0, pos_norm: 0, expect: [ kValue.f32.subnormal.negative.min, kValue.f32.subnormal.negative.max, 0.0 ] },
-        { neg_norm: 0, neg_sub: 0, pos_sub: 1, pos_norm: 0, expect: [ 0.0, kValue.f32.subnormal.positive.min ] },
-        { neg_norm: 0, neg_sub: 0, pos_sub: 2, pos_norm: 0, expect: [ 0.0, kValue.f32.subnormal.positive.min, kValue.f32.subnormal.positive.max ] },
-        { neg_norm: 0, neg_sub: 0, pos_sub: 0, pos_norm: 1, expect: [ 0.0, kValue.f32.positive.min ] },
-        { neg_norm: 0, neg_sub: 0, pos_sub: 0, pos_norm: 2, expect: [ 0.0, kValue.f32.positive.min, kValue.f32.positive.max ] },
-        { neg_norm: 0, neg_sub: 0, pos_sub: 0, pos_norm: 3, expect: [ 0.0, kValue.f32.positive.min, 1.9999998807907104, kValue.f32.positive.max ] },
-        { neg_norm: 1, neg_sub: 1, pos_sub: 1, pos_norm: 1, expect: [ kValue.f32.negative.min, kValue.f32.subnormal.negative.min, 0.0, kValue.f32.subnormal.positive.min, kValue.f32.positive.min ] },
-        { neg_norm: 2, neg_sub: 2, pos_sub: 2, pos_norm: 2, expect: [ kValue.f32.negative.min, kValue.f32.negative.max, kValue.f32.subnormal.negative.min, kValue.f32.subnormal.negative.max, 0.0, kValue.f32.subnormal.positive.min, kValue.f32.subnormal.positive.max, kValue.f32.positive.min, kValue.f32.positive.max ] },
+      { neg_norm: 0, neg_sub: 0, pos_sub: 0, pos_norm: 0, expect: [ -0.0, 0.0 ] },
+      { neg_norm: 1, neg_sub: 0, pos_sub: 0, pos_norm: 0, expect: [ kValue.f32.negative.min, -0.0, 0.0] },
+      { neg_norm: 2, neg_sub: 0, pos_sub: 0, pos_norm: 0, expect: [ kValue.f32.negative.min, kValue.f32.negative.max, -0.0, 0.0 ] },
+      { neg_norm: 3, neg_sub: 0, pos_sub: 0, pos_norm: 0, expect: [ kValue.f32.negative.min, -1.9999998807907104, kValue.f32.negative.max, -0.0, 0.0 ] },
+      { neg_norm: 0, neg_sub: 1, pos_sub: 0, pos_norm: 0, expect: [ kValue.f32.negative.subnormal.min, -0.0, 0.0 ] },
+      { neg_norm: 0, neg_sub: 2, pos_sub: 0, pos_norm: 0, expect: [ kValue.f32.negative.subnormal.min, kValue.f32.negative.subnormal.max, -0.0, 0.0 ] },
+      { neg_norm: 0, neg_sub: 0, pos_sub: 1, pos_norm: 0, expect: [ -0.0, 0.0, kValue.f32.positive.subnormal.min ] },
+      { neg_norm: 0, neg_sub: 0, pos_sub: 2, pos_norm: 0, expect: [ -0.0, 0.0, kValue.f32.positive.subnormal.min, kValue.f32.positive.subnormal.max ] },
+      { neg_norm: 0, neg_sub: 0, pos_sub: 0, pos_norm: 1, expect: [ -0.0, 0.0, kValue.f32.positive.min ] },
+      { neg_norm: 0, neg_sub: 0, pos_sub: 0, pos_norm: 2, expect: [ -0.0, 0.0, kValue.f32.positive.min, kValue.f32.positive.max ] },
+      { neg_norm: 0, neg_sub: 0, pos_sub: 0, pos_norm: 3, expect: [ -0.0, 0.0, kValue.f32.positive.min, 1.9999998807907104, kValue.f32.positive.max ] },
+      { neg_norm: 1, neg_sub: 1, pos_sub: 1, pos_norm: 1, expect: [ kValue.f32.negative.min, kValue.f32.negative.subnormal.min, -0.0, 0.0, kValue.f32.positive.subnormal.min, kValue.f32.positive.min ] },
+      { neg_norm: 2, neg_sub: 2, pos_sub: 2, pos_norm: 2, expect: [ kValue.f32.negative.min, kValue.f32.negative.max, kValue.f32.negative.subnormal.min, kValue.f32.negative.subnormal.max, -0.0, 0.0, kValue.f32.positive.subnormal.min, kValue.f32.positive.subnormal.max, kValue.f32.positive.min, kValue.f32.positive.max ] },
     ]
   )
   .fn(test => {
@@ -1576,20 +1578,20 @@ g.test('fullF16Range')
   .paramsSimple<fullF16RangeCase>(
     // prettier-ignore
     [
-          { neg_norm: 0, neg_sub: 0, pos_sub: 0, pos_norm: 0, expect: [ 0.0 ] },
-          { neg_norm: 1, neg_sub: 0, pos_sub: 0, pos_norm: 0, expect: [ kValue.f16.negative.min, 0.0] },
-          { neg_norm: 2, neg_sub: 0, pos_sub: 0, pos_norm: 0, expect: [ kValue.f16.negative.min, kValue.f16.negative.max, 0.0 ] },
-          { neg_norm: 3, neg_sub: 0, pos_sub: 0, pos_norm: 0, expect: [ kValue.f16.negative.min, -1.9990234375, kValue.f16.negative.max, 0.0 ] },
-          { neg_norm: 0, neg_sub: 1, pos_sub: 0, pos_norm: 0, expect: [ kValue.f16.subnormal.negative.min, 0.0 ] },
-          { neg_norm: 0, neg_sub: 2, pos_sub: 0, pos_norm: 0, expect: [ kValue.f16.subnormal.negative.min, kValue.f16.subnormal.negative.max, 0.0 ] },
-          { neg_norm: 0, neg_sub: 0, pos_sub: 1, pos_norm: 0, expect: [ 0.0, kValue.f16.subnormal.positive.min ] },
-          { neg_norm: 0, neg_sub: 0, pos_sub: 2, pos_norm: 0, expect: [ 0.0, kValue.f16.subnormal.positive.min, kValue.f16.subnormal.positive.max ] },
-          { neg_norm: 0, neg_sub: 0, pos_sub: 0, pos_norm: 1, expect: [ 0.0, kValue.f16.positive.min ] },
-          { neg_norm: 0, neg_sub: 0, pos_sub: 0, pos_norm: 2, expect: [ 0.0, kValue.f16.positive.min, kValue.f16.positive.max ] },
-          { neg_norm: 0, neg_sub: 0, pos_sub: 0, pos_norm: 3, expect: [ 0.0, kValue.f16.positive.min, 1.9990234375, kValue.f16.positive.max ] },
-          { neg_norm: 1, neg_sub: 1, pos_sub: 1, pos_norm: 1, expect: [ kValue.f16.negative.min, kValue.f16.subnormal.negative.min, 0.0, kValue.f16.subnormal.positive.min, kValue.f16.positive.min ] },
-          { neg_norm: 2, neg_sub: 2, pos_sub: 2, pos_norm: 2, expect: [ kValue.f16.negative.min, kValue.f16.negative.max, kValue.f16.subnormal.negative.min, kValue.f16.subnormal.negative.max, 0.0, kValue.f16.subnormal.positive.min, kValue.f16.subnormal.positive.max, kValue.f16.positive.min, kValue.f16.positive.max ] },
-      ]
+      { neg_norm: 0, neg_sub: 0, pos_sub: 0, pos_norm: 0, expect: [ -0.0, 0.0 ] },
+      { neg_norm: 1, neg_sub: 0, pos_sub: 0, pos_norm: 0, expect: [ kValue.f16.negative.min, -0.0, 0.0] },
+      { neg_norm: 2, neg_sub: 0, pos_sub: 0, pos_norm: 0, expect: [ kValue.f16.negative.min, kValue.f16.negative.max, -0.0, 0.0 ] },
+      { neg_norm: 3, neg_sub: 0, pos_sub: 0, pos_norm: 0, expect: [ kValue.f16.negative.min, -1.9990234375, kValue.f16.negative.max, -0.0, 0.0 ] },
+      { neg_norm: 0, neg_sub: 1, pos_sub: 0, pos_norm: 0, expect: [ kValue.f16.negative.subnormal.min, -0.0, 0.0 ] },
+      { neg_norm: 0, neg_sub: 2, pos_sub: 0, pos_norm: 0, expect: [ kValue.f16.negative.subnormal.min, kValue.f16.negative.subnormal.max, -0.0, 0.0 ] },
+      { neg_norm: 0, neg_sub: 0, pos_sub: 1, pos_norm: 0, expect: [ -0.0, 0.0, kValue.f16.positive.subnormal.min ] },
+      { neg_norm: 0, neg_sub: 0, pos_sub: 2, pos_norm: 0, expect: [ -0.0, 0.0, kValue.f16.positive.subnormal.min, kValue.f16.positive.subnormal.max ] },
+      { neg_norm: 0, neg_sub: 0, pos_sub: 0, pos_norm: 1, expect: [ -0.0, 0.0, kValue.f16.positive.min ] },
+      { neg_norm: 0, neg_sub: 0, pos_sub: 0, pos_norm: 2, expect: [ -0.0, 0.0, kValue.f16.positive.min, kValue.f16.positive.max ] },
+      { neg_norm: 0, neg_sub: 0, pos_sub: 0, pos_norm: 3, expect: [ -0.0, 0.0, kValue.f16.positive.min, 1.9990234375, kValue.f16.positive.max ] },
+      { neg_norm: 1, neg_sub: 1, pos_sub: 1, pos_norm: 1, expect: [ kValue.f16.negative.min, kValue.f16.negative.subnormal.min, -0.0, 0.0, kValue.f16.positive.subnormal.min, kValue.f16.positive.min ] },
+      { neg_norm: 2, neg_sub: 2, pos_sub: 2, pos_norm: 2, expect: [ kValue.f16.negative.min, kValue.f16.negative.max, kValue.f16.negative.subnormal.min, kValue.f16.negative.subnormal.max, -0.0, 0.0, kValue.f16.positive.subnormal.min, kValue.f16.positive.subnormal.max, kValue.f16.positive.min, kValue.f16.positive.max ] },
+    ]
   )
   .fn(test => {
     const neg_norm = test.params.neg_norm;
@@ -1667,12 +1669,12 @@ g.test('f64LimitsEquivalency')
     { bits: kBit.f64.negative.pi.third, value: kValue.f64.negative.pi.third },
     { bits: kBit.f64.negative.pi.quarter, value: kValue.f64.negative.pi.quarter },
     { bits: kBit.f64.negative.pi.sixth, value: kValue.f64.negative.pi.sixth },
-    { bits: kBit.f64.subnormal.positive.max, value: kValue.f64.subnormal.positive.max },
-    { bits: kBit.f64.subnormal.positive.min, value: kValue.f64.subnormal.positive.min },
-    { bits: kBit.f64.subnormal.negative.max, value: kValue.f64.subnormal.negative.max },
-    { bits: kBit.f64.subnormal.negative.min, value: kValue.f64.subnormal.negative.min },
-    { bits: kBit.f64.infinity.positive, value: kValue.f64.infinity.positive },
-    { bits: kBit.f64.infinity.negative, value: kValue.f64.infinity.negative },
+    { bits: kBit.f64.positive.subnormal.max, value: kValue.f64.positive.subnormal.max },
+    { bits: kBit.f64.positive.subnormal.min, value: kValue.f64.positive.subnormal.min },
+    { bits: kBit.f64.negative.subnormal.max, value: kValue.f64.negative.subnormal.max },
+    { bits: kBit.f64.negative.subnormal.min, value: kValue.f64.negative.subnormal.min },
+    { bits: kBit.f64.positive.infinity, value: kValue.f64.positive.infinity },
+    { bits: kBit.f64.negative.infinity, value: kValue.f64.negative.infinity },
   ])
   .fn(test => {
     const bits = test.params.bits;
@@ -1715,12 +1717,12 @@ g.test('f32LimitsEquivalency')
     { bits: kBit.f32.negative.pi.third, value: kValue.f32.negative.pi.third },
     { bits: kBit.f32.negative.pi.quarter, value: kValue.f32.negative.pi.quarter },
     { bits: kBit.f32.negative.pi.sixth, value: kValue.f32.negative.pi.sixth },
-    { bits: kBit.f32.subnormal.positive.max, value: kValue.f32.subnormal.positive.max },
-    { bits: kBit.f32.subnormal.positive.min, value: kValue.f32.subnormal.positive.min },
-    { bits: kBit.f32.subnormal.negative.max, value: kValue.f32.subnormal.negative.max },
-    { bits: kBit.f32.subnormal.negative.min, value: kValue.f32.subnormal.negative.min },
-    { bits: kBit.f32.infinity.positive, value: kValue.f32.infinity.positive },
-    { bits: kBit.f32.infinity.negative, value: kValue.f32.infinity.negative },
+    { bits: kBit.f32.positive.subnormal.max, value: kValue.f32.positive.subnormal.max },
+    { bits: kBit.f32.positive.subnormal.min, value: kValue.f32.positive.subnormal.min },
+    { bits: kBit.f32.negative.subnormal.max, value: kValue.f32.negative.subnormal.max },
+    { bits: kBit.f32.negative.subnormal.min, value: kValue.f32.negative.subnormal.min },
+    { bits: kBit.f32.positive.infinity, value: kValue.f32.positive.infinity },
+    { bits: kBit.f32.negative.infinity, value: kValue.f32.negative.infinity },
   ])
   .fn(test => {
     const bits = test.params.bits;
@@ -1758,12 +1760,12 @@ g.test('f16LimitsEquivalency')
     { bits: kBit.f16.negative.pi.third, value: kValue.f16.negative.pi.third },
     { bits: kBit.f16.negative.pi.quarter, value: kValue.f16.negative.pi.quarter },
     { bits: kBit.f16.negative.pi.sixth, value: kValue.f16.negative.pi.sixth },
-    { bits: kBit.f16.subnormal.positive.max, value: kValue.f16.subnormal.positive.max },
-    { bits: kBit.f16.subnormal.positive.min, value: kValue.f16.subnormal.positive.min },
-    { bits: kBit.f16.subnormal.negative.max, value: kValue.f16.subnormal.negative.max },
-    { bits: kBit.f16.subnormal.negative.min, value: kValue.f16.subnormal.negative.min },
-    { bits: kBit.f16.infinity.positive, value: kValue.f16.infinity.positive },
-    { bits: kBit.f16.infinity.negative, value: kValue.f16.infinity.negative },
+    { bits: kBit.f16.positive.subnormal.max, value: kValue.f16.positive.subnormal.max },
+    { bits: kBit.f16.positive.subnormal.min, value: kValue.f16.positive.subnormal.min },
+    { bits: kBit.f16.negative.subnormal.max, value: kValue.f16.negative.subnormal.max },
+    { bits: kBit.f16.negative.subnormal.min, value: kValue.f16.negative.subnormal.min },
+    { bits: kBit.f16.positive.infinity, value: kValue.f16.positive.infinity },
+    { bits: kBit.f16.negative.infinity, value: kValue.f16.negative.infinity },
   ])
   .fn(test => {
     const bits = test.params.bits;

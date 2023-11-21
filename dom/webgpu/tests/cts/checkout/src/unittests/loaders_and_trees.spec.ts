@@ -124,7 +124,7 @@ class LoadingTest extends UnitTest {
     if (!this.isListenersAdded) {
       this.isListenersAdded = true;
       this.loader.addEventListener('import', ev => this.events.push(ev.data.url));
-      this.loader.addEventListener('finish', ev => this.events.push(null));
+      this.loader.addEventListener('finish', _ev => this.events.push(null));
     }
   }
 
@@ -703,7 +703,10 @@ async function testIterateCollapsed(
     subqueriesToExpand: expectations,
   });
   if (expectedResult === 'throws') {
-    t.shouldReject('Error', treePromise, 'loadTree should have thrown Error');
+    t.shouldReject('Error', treePromise, {
+      // Some errors here use StacklessError to print nicer command line outputs.
+      allowMissingStack: true,
+    });
     return;
   }
   const tree = await treePromise;

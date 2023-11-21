@@ -14,8 +14,8 @@ export const onlyWorkgroupSizes = [1, 2, 4, 8, 16, 32, 64, 128, 256];
 
 export const kMapId = {
   passthrough: {
-    f: (id: number, max: number) => id,
-    wgsl: (max: number, scalarType = 'u32') =>
+    f: (id: number, _max: number) => id,
+    wgsl: (_max: number, scalarType = 'u32') =>
       `fn map_id(id: ${scalarType}) -> ${scalarType} { return id; }`,
   },
   remap: {

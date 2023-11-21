@@ -22,7 +22,7 @@ import { GPUTest } from './gpu_test.js';
 export const g = makeTestGroup(GPUTest);
 
 // Note: spaces aren't allowed in test names; use underscores.
-g.test('test_name').fn(t => {});
+g.test('test_name').fn(_t => {});
 
 g.test('not_implemented_yet,without_plan').unimplemented();
 g.test('not_implemented_yet,with_plan')
@@ -47,7 +47,7 @@ g.test('basic').fn(t => {
       throw new TypeError();
     },
     // Log message.
-    'function should throw Error'
+    { message: 'function should throw Error' }
   );
 });
 
@@ -59,17 +59,17 @@ g.test('basic,async').fn(t => {
     // Promise expected to reject.
     Promise.reject(new TypeError()),
     // Log message.
-    'Promise.reject should reject'
+    { message: 'Promise.reject should reject' }
   );
 
-  // Promise can also be an IIFE.
+  // Promise can also be an IIFE (immediately-invoked function expression).
   t.shouldReject(
     'TypeError',
     // eslint-disable-next-line @typescript-eslint/require-await
     (async () => {
       throw new TypeError();
     })(),
-    'Promise.reject should reject'
+    { message: 'Promise.reject should reject' }
   );
 });
 

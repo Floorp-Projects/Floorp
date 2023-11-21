@@ -35,10 +35,10 @@ const kBytesPerQuery = 8;
 const kTextureSize = [4, 4];
 
 const kRenderModes = ['direct', 'render-bundle'] as const;
-type RenderMode = typeof kRenderModes[number];
+type RenderMode = (typeof kRenderModes)[number];
 
 const kBufferOffsets = ['zero', 'non-zero'] as const;
-type BufferOffset = typeof kBufferOffsets[number];
+type BufferOffset = (typeof kBufferOffsets)[number];
 
 type SetupParams = {
   numQueries: number;
@@ -212,7 +212,9 @@ class QueryStarterRenderBundle implements QueryStarter {
   ) {
     this._device = device;
     this._pass = pass;
-    const colorAttachment = (renderPassDescriptor.colorAttachments as GPURenderPassColorAttachment[])[0];
+    const colorAttachment = (
+      renderPassDescriptor.colorAttachments as GPURenderPassColorAttachment[]
+    )[0];
     this._renderBundleEncoderDescriptor = {
       colorFormats: ['rgba8unorm'],
       depthStencilFormat: renderPassDescriptor.depthStencilAttachment?.depthLoadOp

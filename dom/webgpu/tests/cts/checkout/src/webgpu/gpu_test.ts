@@ -11,14 +11,16 @@ import {
 import { globalTestConfig } from '../common/framework/test_config.js';
 import {
   assert,
+  makeValueTestVariant,
   memcpy,
   range,
+  ValueTestVariant,
   TypedArrayBufferView,
   TypedArrayBufferViewConstructor,
   unreachable,
 } from '../common/util/util.js';
 
-import { kQueryTypeInfo } from './capability_info.js';
+import { getDefaultLimits, kLimits, kQueryTypeInfo } from './capability_info.js';
 import {
   kTextureFormatInfo,
   kEncodableTextureFormats,
@@ -34,7 +36,6 @@ import { CommandBufferMaker, EncoderType } from './util/command_buffer_maker.js'
 import { ScalarType } from './util/conversion.js';
 import { DevicePool, DeviceProvider, UncanonicalizedDeviceDescriptor } from './util/device_pool.js';
 import { align, roundDown } from './util/math.js';
-import { createTextureFromTexelView, createTextureFromTexelViews } from './util/texture.js';
 import { physicalMipSizeFromTexture, virtualMipSize } from './util/texture/base.js';
 import {
   bytesInACompleteRow,
@@ -50,6 +51,7 @@ import {
   TexelCompareOptions,
   textureContentIsOKByT2B,
 } from './util/texture/texture_ok.js';
+import { createTextureFromTexelView, createTextureFromTexelViews } from './util/texture.js';
 import { reifyOrigin3D } from './util/unions.js';
 
 const devicePool = new DevicePool();
@@ -59,7 +61,7 @@ const devicePool = new DevicePool();
 const mismatchedDevicePool = new DevicePool();
 
 const kResourceStateValues = ['valid', 'invalid', 'destroyed'] as const;
-export type ResourceState = typeof kResourceStateValues[number];
+export type ResourceState = (typeof kResourceStateValues)[number];
 export const kResourceStates: readonly ResourceState[] = kResourceStateValues;
 
 /** Various "convenient" shorthands for GPUDeviceDescriptors for selectDevice functions. */
@@ -89,12 +91,12 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
   /** Provider for mismatched device. */
   private mismatchedProvider: Promise<DeviceProvider> | undefined;
 
-  async postInit(): Promise<void> {
+  override async postInit(): Promise<void> {
     // Skip all subcases if there's no device.
     await this.acquireProvider();
   }
 
-  async finalize(): Promise<void> {
+  override async finalize(): Promise<void> {
     await super.finalize();
 
     // Ensure devicePool.release is called for both providers even if one rejects.
@@ -115,6 +117,10 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
 
   get isCompatibility() {
     return globalTestConfig.compatibility;
+  }
+
+  getDefaultLimits() {
+    return getDefaultLimits(this.isCompatibility ? 'compatibility' : 'core');
   }
 
   /**
@@ -200,6 +206,13 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
     throw new SkipTestCase(msg);
   }
 
+  /** Throws an exception making the subcase as skipped if condition is true */
+  skipIf(cond: boolean, msg: string | (() => string) = '') {
+    if (cond) {
+      this.skip(typeof msg === 'function' ? msg() : msg);
+    }
+  }
+
   /**
    * Skips test if any format is not supported.
    */
@@ -241,7 +254,7 @@ export class GPUTestSubcaseBatchState extends SubcaseBatchState {
  * as well as helpers that use that device.
  */
 export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
-  public static MakeSharedState(
+  public static override MakeSharedState(
     recorder: TestCaseRecorder,
     params: TestParams
   ): GPUTestSubcaseBatchState {
@@ -251,7 +264,7 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
   // This must be overridden in derived classes
   get device(): GPUDevice {
     unreachable();
-    return (null as unknown) as GPUDevice;
+    return null as unknown as GPUDevice;
   }
 
   /** GPUQueue for the test to use. (Same as `t.device.queue`.) */
@@ -261,6 +274,18 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
 
   get isCompatibility() {
     return globalTestConfig.compatibility;
+  }
+
+  getDefaultLimits() {
+    return getDefaultLimits(this.isCompatibility ? 'compatibility' : 'core');
+  }
+
+  getDefaultLimit(limit: (typeof kLimits)[number]) {
+    return this.getDefaultLimits()[limit].default;
+  }
+
+  makeLimitVariant(limit: (typeof kLimits)[number], variant: ValueTestVariant) {
+    return makeValueTestVariant(this.device.limits[limit], variant);
   }
 
   canCallCopyTextureToBufferWithTextureFormat(format: GPUTextureFormat) {
@@ -380,6 +405,16 @@ export class GPUTestBase extends Fixture<GPUTestSubcaseBatchState> {
       for (const dimension of dimensions) {
         if (dimension === 'cube-array') {
           this.skip(`texture view dimension '${dimension}' is not supported`);
+        }
+      }
+    }
+  }
+
+  skipIfCopyTextureToTextureNotSupportedForFormat(...formats: (GPUTextureFormat | undefined)[]) {
+    if (this.isCompatibility) {
+      for (const format of formats) {
+        if (format && isCompressedTextureFormat(format)) {
+          this.skip(`copyTextureToTexture with ${format} is not supported`);
         }
       }
     }
@@ -1039,7 +1074,7 @@ export class GPUTest extends GPUTestBase {
   private provider: DeviceProvider | undefined;
   private mismatchedProvider: DeviceProvider | undefined;
 
-  async init() {
+  override async init() {
     await super.init();
 
     this.provider = await this.sharedState.acquireProvider();
@@ -1049,7 +1084,7 @@ export class GPUTest extends GPUTestBase {
   /**
    * GPUDevice for the test to use.
    */
-  get device(): GPUDevice {
+  override get device(): GPUDevice {
     assert(this.provider !== undefined, 'internal error: GPUDevice missing?');
     return this.provider.device;
   }
@@ -1276,7 +1311,8 @@ export function TextureTestMixin<F extends FixtureClass<GPUTest>>(
 ): FixtureClassWithMixin<F, TextureTestMixinType> {
   class TextureExpectations
     extends (Base as FixtureClassInterface<GPUTest>)
-    implements TextureTestMixinType {
+    implements TextureTestMixinType
+  {
     createTextureFromTexelView(
       texelView: TexelView,
       desc: Omit<GPUTextureDescriptor, 'format'>
@@ -1641,5 +1677,5 @@ export function TextureTestMixin<F extends FixtureClass<GPUTest>>(
     }
   }
 
-  return (TextureExpectations as unknown) as FixtureClassWithMixin<F, TextureTestMixinType>;
+  return TextureExpectations as unknown as FixtureClassWithMixin<F, TextureTestMixinType>;
 }

@@ -41,7 +41,7 @@ import {
 import { ValidationTest } from '../../validation_test.js';
 
 const kCommandValidationStages = ['finish', 'submit'];
-type CommandValidationStage = typeof kCommandValidationStages[number];
+type CommandValidationStage = (typeof kCommandValidationStages)[number];
 
 class DeviceDestroyTests extends ValidationTest {
   /**
@@ -1124,7 +1124,7 @@ Tests copyExternalImageToTexture from canvas on queue on destroyed device.
       usage: GPUTextureUsage.COPY_DST,
     });
 
-    const ctx = ((canvas as unknown) as HTMLCanvasElement).getContext(contextType);
+    const ctx = (canvas as unknown as HTMLCanvasElement).getContext(contextType);
     if (ctx === null) {
       t.skip('Failed to get context for canvas element');
       return;

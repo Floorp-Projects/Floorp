@@ -1,12 +1,7 @@
-import {
-  LimitMode,
-  getDefaultLimit,
-  kMaximumLimitBaseParams,
-  makeLimitTestGroup,
-} from './limit_utils.js';
+import { LimitMode, kMaximumLimitBaseParams, makeLimitTestGroup } from './limit_utils.js';
 
 const kBufferParts = ['wholeBuffer', 'biggerBufferWithOffset'] as const;
-type BufferPart = typeof kBufferParts[number];
+type BufferPart = (typeof kBufferParts)[number];
 
 function getSizeAndOffsetForBufferPart(device: GPUDevice, bufferPart: BufferPart, size: number) {
   const align = device.limits.minUniformBufferOffsetAlignment;
@@ -90,6 +85,6 @@ g.test('validate,maxBufferSize')
   .desc(`Test that ${limit} <= maxBufferSize`)
   .fn(t => {
     const { adapter, defaultLimit, adapterLimit } = t;
-    t.expect(defaultLimit <= getDefaultLimit('maxBufferSize'));
+    t.expect(defaultLimit <= t.getDefaultLimit('maxBufferSize'));
     t.expect(adapterLimit <= adapter.limits.maxBufferSize);
   });

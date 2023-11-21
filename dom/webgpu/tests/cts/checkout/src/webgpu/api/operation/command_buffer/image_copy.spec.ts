@@ -1088,16 +1088,19 @@ class ImageCopyTest extends TextureTestMixin(GPUTest) {
 
       // Check the valid data in outputStagingBuffer once per row.
       for (let y = 0; y < copyFromOutputTextureLayout.mipSize[1]; ++y) {
+        const dataStart =
+          expectedStencilTextureDataOffset +
+          expectedStencilTextureDataBytesPerRow *
+            expectedStencilTextureDataRowsPerImage *
+            stencilTextureLayer +
+          expectedStencilTextureDataBytesPerRow * y;
         this.expectGPUBufferValuesEqual(
           outputStagingBuffer,
           expectedStencilTextureData.slice(
-            expectedStencilTextureDataOffset +
-              expectedStencilTextureDataBytesPerRow *
-                expectedStencilTextureDataRowsPerImage *
-                stencilTextureLayer +
-              expectedStencilTextureDataBytesPerRow * y,
-            copyFromOutputTextureLayout.mipSize[0]
-          )
+            dataStart,
+            dataStart + copyFromOutputTextureLayout.mipSize[0]
+          ),
+          copyFromOutputTextureLayout.bytesPerRow * y
         );
       }
     }
@@ -2048,15 +2051,8 @@ copyTextureToBuffer() with depth aspect.
     t.selectDeviceOrSkipTestCase(info.feature);
   })
   .fn(t => {
-    const {
-      format,
-      copyMethod,
-      aspect,
-      offsetInBlocks,
-      dataPaddingInBytes,
-      copyDepth,
-      mipLevel,
-    } = t.params;
+    const { format, copyMethod, aspect, offsetInBlocks, dataPaddingInBytes, copyDepth, mipLevel } =
+      t.params;
     const bytesPerBlock = depthStencilFormatAspectSize(format, aspect);
     const initialDataOffset = offsetInBlocks * bytesPerBlock;
     const copySize = [3, 3, copyDepth] as const;

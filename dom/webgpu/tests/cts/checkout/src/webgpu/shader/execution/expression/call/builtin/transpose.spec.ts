@@ -22,322 +22,59 @@ import { abstractBuiltin, builtin } from './builtin.js';
 
 export const g = makeTestGroup(GPUTest);
 
+// Cases: f32_matCxR_[non_]const
+const f32_cases = ([2, 3, 4] as const)
+  .flatMap(cols =>
+    ([2, 3, 4] as const).flatMap(rows =>
+      ([true, false] as const).map(nonConst => ({
+        [`f32_mat${cols}x${rows}_${nonConst ? 'non_const' : 'const'}`]: () => {
+          return FP.f32.generateMatrixToMatrixCases(
+            sparseMatrixF32Range(cols, rows),
+            nonConst ? 'unfiltered' : 'finite',
+            FP.f32.transposeInterval
+          );
+        },
+      }))
+    )
+  )
+  .reduce((a, b) => ({ ...a, ...b }), {});
+
+// Cases: f16_matCxR_[non_]const
+const f16_cases = ([2, 3, 4] as const)
+  .flatMap(cols =>
+    ([2, 3, 4] as const).flatMap(rows =>
+      ([true, false] as const).map(nonConst => ({
+        [`f16_mat${cols}x${rows}_${nonConst ? 'non_const' : 'const'}`]: () => {
+          return FP.f16.generateMatrixToMatrixCases(
+            sparseMatrixF16Range(cols, rows),
+            nonConst ? 'unfiltered' : 'finite',
+            FP.f16.transposeInterval
+          );
+        },
+      }))
+    )
+  )
+  .reduce((a, b) => ({ ...a, ...b }), {});
+
+// Cases: abstract_matCxR
+const abstract_cases = ([2, 3, 4] as const)
+  .flatMap(cols =>
+    ([2, 3, 4] as const).map(rows => ({
+      [`abstract_mat${cols}x${rows}`]: () => {
+        return FP.abstract.generateMatrixToMatrixCases(
+          sparseMatrixF64Range(cols, rows),
+          'finite',
+          FP.abstract.transposeInterval
+        );
+      },
+    }))
+  )
+  .reduce((a, b) => ({ ...a, ...b }), {});
+
 export const d = makeCaseCache('transpose', {
-  abstract_mat2x2: () => {
-    return FP.abstract.generateMatrixToMatrixCases(
-      sparseMatrixF64Range(2, 2),
-      'finite',
-      FP.abstract.transposeInterval
-    );
-  },
-  abstract_mat2x3: () => {
-    return FP.abstract.generateMatrixToMatrixCases(
-      sparseMatrixF64Range(2, 3),
-      'finite',
-      FP.abstract.transposeInterval
-    );
-  },
-  abstract_mat2x4: () => {
-    return FP.abstract.generateMatrixToMatrixCases(
-      sparseMatrixF64Range(2, 4),
-      'finite',
-      FP.abstract.transposeInterval
-    );
-  },
-  abstract_mat3x2: () => {
-    return FP.abstract.generateMatrixToMatrixCases(
-      sparseMatrixF64Range(3, 2),
-      'finite',
-      FP.abstract.transposeInterval
-    );
-  },
-  abstract_mat3x3: () => {
-    return FP.abstract.generateMatrixToMatrixCases(
-      sparseMatrixF64Range(3, 3),
-      'finite',
-      FP.abstract.transposeInterval
-    );
-  },
-  abstract_mat3x4: () => {
-    return FP.abstract.generateMatrixToMatrixCases(
-      sparseMatrixF64Range(3, 4),
-      'finite',
-      FP.abstract.transposeInterval
-    );
-  },
-  abstract_mat4x2: () => {
-    return FP.abstract.generateMatrixToMatrixCases(
-      sparseMatrixF64Range(4, 2),
-      'finite',
-      FP.abstract.transposeInterval
-    );
-  },
-  abstract_mat4x3: () => {
-    return FP.abstract.generateMatrixToMatrixCases(
-      sparseMatrixF64Range(4, 3),
-      'finite',
-      FP.abstract.transposeInterval
-    );
-  },
-  abstract_mat4x4: () => {
-    return FP.abstract.generateMatrixToMatrixCases(
-      sparseMatrixF64Range(4, 4),
-      'finite',
-      FP.abstract.transposeInterval
-    );
-  },
-  f32_mat2x2_const: () => {
-    return FP.f32.generateMatrixToMatrixCases(
-      sparseMatrixF32Range(2, 2),
-      'finite',
-      FP.f32.transposeInterval
-    );
-  },
-  f32_mat2x2_non_const: () => {
-    return FP.f32.generateMatrixToMatrixCases(
-      sparseMatrixF32Range(2, 2),
-      'unfiltered',
-      FP.f32.transposeInterval
-    );
-  },
-  f32_mat2x3_const: () => {
-    return FP.f32.generateMatrixToMatrixCases(
-      sparseMatrixF32Range(2, 3),
-      'finite',
-      FP.f32.transposeInterval
-    );
-  },
-  f32_mat2x3_non_const: () => {
-    return FP.f32.generateMatrixToMatrixCases(
-      sparseMatrixF32Range(2, 3),
-      'unfiltered',
-      FP.f32.transposeInterval
-    );
-  },
-  f32_mat2x4_const: () => {
-    return FP.f32.generateMatrixToMatrixCases(
-      sparseMatrixF32Range(2, 4),
-      'finite',
-      FP.f32.transposeInterval
-    );
-  },
-  f32_mat2x4_non_const: () => {
-    return FP.f32.generateMatrixToMatrixCases(
-      sparseMatrixF32Range(2, 4),
-      'unfiltered',
-      FP.f32.transposeInterval
-    );
-  },
-  f32_mat3x2_const: () => {
-    return FP.f32.generateMatrixToMatrixCases(
-      sparseMatrixF32Range(3, 2),
-      'finite',
-      FP.f32.transposeInterval
-    );
-  },
-  f32_mat3x2_non_const: () => {
-    return FP.f32.generateMatrixToMatrixCases(
-      sparseMatrixF32Range(3, 2),
-      'unfiltered',
-      FP.f32.transposeInterval
-    );
-  },
-  f32_mat3x3_const: () => {
-    return FP.f32.generateMatrixToMatrixCases(
-      sparseMatrixF32Range(3, 3),
-      'finite',
-      FP.f32.transposeInterval
-    );
-  },
-  f32_mat3x3_non_const: () => {
-    return FP.f32.generateMatrixToMatrixCases(
-      sparseMatrixF32Range(3, 3),
-      'unfiltered',
-      FP.f32.transposeInterval
-    );
-  },
-  f32_mat3x4_const: () => {
-    return FP.f32.generateMatrixToMatrixCases(
-      sparseMatrixF32Range(3, 4),
-      'finite',
-      FP.f32.transposeInterval
-    );
-  },
-  f32_mat3x4_non_const: () => {
-    return FP.f32.generateMatrixToMatrixCases(
-      sparseMatrixF32Range(3, 4),
-      'unfiltered',
-      FP.f32.transposeInterval
-    );
-  },
-  f32_mat4x2_const: () => {
-    return FP.f32.generateMatrixToMatrixCases(
-      sparseMatrixF32Range(4, 2),
-      'finite',
-      FP.f32.transposeInterval
-    );
-  },
-  f32_mat4x2_non_const: () => {
-    return FP.f32.generateMatrixToMatrixCases(
-      sparseMatrixF32Range(4, 2),
-      'unfiltered',
-      FP.f32.transposeInterval
-    );
-  },
-  f32_mat4x3_const: () => {
-    return FP.f32.generateMatrixToMatrixCases(
-      sparseMatrixF32Range(4, 3),
-      'finite',
-      FP.f32.transposeInterval
-    );
-  },
-  f32_mat4x3_non_const: () => {
-    return FP.f32.generateMatrixToMatrixCases(
-      sparseMatrixF32Range(4, 3),
-      'unfiltered',
-      FP.f32.transposeInterval
-    );
-  },
-  f32_mat4x4_const: () => {
-    return FP.f32.generateMatrixToMatrixCases(
-      sparseMatrixF32Range(4, 4),
-      'finite',
-      FP.f32.transposeInterval
-    );
-  },
-  f32_mat4x4_non_const: () => {
-    return FP.f32.generateMatrixToMatrixCases(
-      sparseMatrixF32Range(4, 4),
-      'unfiltered',
-      FP.f32.transposeInterval
-    );
-  },
-  f16_mat2x2_const: () => {
-    return FP.f16.generateMatrixToMatrixCases(
-      sparseMatrixF16Range(2, 2),
-      'finite',
-      FP.f16.transposeInterval
-    );
-  },
-  f16_mat2x2_non_const: () => {
-    return FP.f16.generateMatrixToMatrixCases(
-      sparseMatrixF16Range(2, 2),
-      'unfiltered',
-      FP.f16.transposeInterval
-    );
-  },
-  f16_mat2x3_const: () => {
-    return FP.f16.generateMatrixToMatrixCases(
-      sparseMatrixF16Range(2, 3),
-      'finite',
-      FP.f16.transposeInterval
-    );
-  },
-  f16_mat2x3_non_const: () => {
-    return FP.f16.generateMatrixToMatrixCases(
-      sparseMatrixF16Range(2, 3),
-      'unfiltered',
-      FP.f16.transposeInterval
-    );
-  },
-  f16_mat2x4_const: () => {
-    return FP.f16.generateMatrixToMatrixCases(
-      sparseMatrixF16Range(2, 4),
-      'finite',
-      FP.f16.transposeInterval
-    );
-  },
-  f16_mat2x4_non_const: () => {
-    return FP.f16.generateMatrixToMatrixCases(
-      sparseMatrixF16Range(2, 4),
-      'unfiltered',
-      FP.f16.transposeInterval
-    );
-  },
-  f16_mat3x2_const: () => {
-    return FP.f16.generateMatrixToMatrixCases(
-      sparseMatrixF16Range(3, 2),
-      'finite',
-      FP.f16.transposeInterval
-    );
-  },
-  f16_mat3x2_non_const: () => {
-    return FP.f16.generateMatrixToMatrixCases(
-      sparseMatrixF16Range(3, 2),
-      'unfiltered',
-      FP.f16.transposeInterval
-    );
-  },
-  f16_mat3x3_const: () => {
-    return FP.f16.generateMatrixToMatrixCases(
-      sparseMatrixF16Range(3, 3),
-      'finite',
-      FP.f16.transposeInterval
-    );
-  },
-  f16_mat3x3_non_const: () => {
-    return FP.f16.generateMatrixToMatrixCases(
-      sparseMatrixF16Range(3, 3),
-      'unfiltered',
-      FP.f16.transposeInterval
-    );
-  },
-  f16_mat3x4_const: () => {
-    return FP.f16.generateMatrixToMatrixCases(
-      sparseMatrixF16Range(3, 4),
-      'finite',
-      FP.f16.transposeInterval
-    );
-  },
-  f16_mat3x4_non_const: () => {
-    return FP.f16.generateMatrixToMatrixCases(
-      sparseMatrixF16Range(3, 4),
-      'unfiltered',
-      FP.f16.transposeInterval
-    );
-  },
-  f16_mat4x2_const: () => {
-    return FP.f16.generateMatrixToMatrixCases(
-      sparseMatrixF16Range(4, 2),
-      'finite',
-      FP.f16.transposeInterval
-    );
-  },
-  f16_mat4x2_non_const: () => {
-    return FP.f16.generateMatrixToMatrixCases(
-      sparseMatrixF16Range(4, 2),
-      'unfiltered',
-      FP.f16.transposeInterval
-    );
-  },
-  f16_mat4x3_const: () => {
-    return FP.f16.generateMatrixToMatrixCases(
-      sparseMatrixF16Range(4, 3),
-      'finite',
-      FP.f16.transposeInterval
-    );
-  },
-  f16_mat4x3_non_const: () => {
-    return FP.f16.generateMatrixToMatrixCases(
-      sparseMatrixF16Range(4, 3),
-      'unfiltered',
-      FP.f16.transposeInterval
-    );
-  },
-  f16_mat4x4_const: () => {
-    return FP.f16.generateMatrixToMatrixCases(
-      sparseMatrixF16Range(4, 4),
-      'finite',
-      FP.f16.transposeInterval
-    );
-  },
-  f16_mat4x4_non_const: () => {
-    return FP.f16.generateMatrixToMatrixCases(
-      sparseMatrixF16Range(4, 4),
-      'unfiltered',
-      FP.f16.transposeInterval
-    );
-  },
+  ...f32_cases,
+  ...f16_cases,
+  ...abstract_cases,
 });
 
 g.test('abstract_float')

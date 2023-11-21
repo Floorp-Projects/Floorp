@@ -123,7 +123,7 @@ Test that it is invalid to configure a GPUCanvasContext to 'GPUStorageBinding' u
     u
       .combine('canvasType', kAllCanvasTypes)
       .beginSubcases()
-      .expand('usage', p => {
+      .expand('usage', () => {
         const usageSet = new Set<number>();
         for (const usage0 of kTextureUsages) {
           for (const usage1 of kTextureUsages) {
@@ -163,7 +163,7 @@ with 'bgra8unorm-storage' enabled.
     u
       .combine('canvasType', kAllCanvasTypes)
       .beginSubcases()
-      .expand('usage', p => {
+      .expand('usage', () => {
         const usageSet = new Set<number>();
         for (const usage of kTextureUsages) {
           usageSet.add(usage | GPUConst.TextureUsage.STORAGE_BINDING);

@@ -1,10 +1,5 @@
 export const description = `
-TODO: pipeline statistics queries are removed from core; consider moving tests to another suite.
-TODO:
-- Start a pipeline statistics query in all possible encoders:
-    - queryIndex {in, out of} range for GPUQuerySet
-    - GPUQuerySet {valid, invalid, device mismatched}
-    - x ={render pass, compute pass} encoder
+Validation for encoding queries.
 `;
 
 import { makeTestGroup } from '../../../../../common/framework/test_group.js';
@@ -19,7 +14,7 @@ g.test('occlusion_query,query_type')
   .desc(
     `
 Tests that set occlusion query set with all types in render pass descriptor:
-- type {occlusion (control case), pipeline statistics, timestamp}
+- type {occlusion (control case), timestamp}
 - {undefined} for occlusion query set in render pass descriptor
   `
   )
@@ -77,7 +72,7 @@ g.test('timestamp_query,query_type_and_index')
   .desc(
     `
 Tests that write timestamp to all types of query set on all possible encoders:
-- type {occlusion, pipeline statistics, timestamp}
+- type {occlusion, timestamp}
 - queryIndex {in, out of} range for GPUQuerySet
 - x= {non-pass} encoder
   `

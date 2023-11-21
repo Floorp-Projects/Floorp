@@ -10,3 +10,11 @@ g.test('createComputePipeline,at_over')
     const { limitTest, testValueName, async } = t.params;
     await t.testMaxComputeWorkgroupSize(limitTest, testValueName, async, 'X');
   });
+
+g.test('validate,maxComputeInvocationsPerWorkgroup')
+  .desc(`Test that ${limit} <= maxComputeInvocationsPerWorkgroup`)
+  .fn(t => {
+    const { adapter, defaultLimit, adapterLimit } = t;
+    t.expect(defaultLimit <= t.getDefaultLimit('maxComputeInvocationsPerWorkgroup'));
+    t.expect(adapterLimit <= adapter.limits.maxComputeInvocationsPerWorkgroup);
+  });

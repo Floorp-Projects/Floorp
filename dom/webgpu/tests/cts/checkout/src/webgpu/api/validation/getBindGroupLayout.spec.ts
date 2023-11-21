@@ -143,9 +143,9 @@ g.test('unique_js_object,auto_layout')
     });
 
     const kIndex = 0;
-    const bgl1 = (pipeline.getBindGroupLayout(kIndex) as unknown) as Record<string, number>;
+    const bgl1 = pipeline.getBindGroupLayout(kIndex) as unknown as Record<string, number>;
     bgl1.extra = 42;
-    const bgl2 = (pipeline.getBindGroupLayout(kIndex) as unknown) as Record<string, number>;
+    const bgl2 = pipeline.getBindGroupLayout(kIndex) as unknown as Record<string, number>;
 
     assert(bgl1 !== bgl2, 'objects are not the same object');
     assert(bgl2.extra === undefined, 'objects do not retain expando properties');
@@ -192,9 +192,9 @@ g.test('unique_js_object,explicit_layout')
     });
 
     const kIndex = 0;
-    const bgl1 = (pipeline.getBindGroupLayout(kIndex) as unknown) as Record<string, number>;
+    const bgl1 = pipeline.getBindGroupLayout(kIndex) as unknown as Record<string, number>;
     bgl1.extra = 42;
-    const bgl2 = (pipeline.getBindGroupLayout(kIndex) as unknown) as Record<string, number>;
+    const bgl2 = pipeline.getBindGroupLayout(kIndex) as unknown as Record<string, number>;
 
     assert(bgl1 !== bgl2, 'objects are not the same object');
     assert(bgl2.extra === undefined, 'objects do not retain expando properties');

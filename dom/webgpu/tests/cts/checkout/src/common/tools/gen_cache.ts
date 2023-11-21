@@ -14,33 +14,68 @@ DataCache will load this instead of building the expensive data at CTS runtime.
 Options:
   --help          Print this message and exit.
   --list          Print the list of output files without writing them.
+  --nth i/n       Only process every file where (file_index % n == i)
+  --validate      Check that cache should build (Tests for collisions).
   --verbose       Print each action taken.
 `);
   process.exit(rc);
 }
 
-let mode: 'emit' | 'list' = 'emit';
+let mode: 'emit' | 'list' | 'validate' = 'emit';
+let nth = { i: 0, n: 1 };
 let verbose = false;
 
 const nonFlagsArgs: string[] = [];
-for (const a of process.argv) {
-  if (a.startsWith('-')) {
-    switch (a) {
-      case '--list':
+
+for (let i = 0; i < process.argv.length; i++) {
+  const arg = process.argv[i];
+  if (arg.startsWith('-')) {
+    switch (arg) {
+      case '--list': {
         mode = 'list';
         break;
-      case '--help':
+      }
+      case '--help': {
         usage(0);
         break;
-      case '--verbose':
+      }
+      case '--verbose': {
         verbose = true;
         break;
-      default:
-        console.log('unrecognized flag: ', a);
+      }
+      case '--validate': {
+        mode = 'validate';
+        break;
+      }
+      case '--nth': {
+        const err = () => {
+          console.error(
+            `--nth requires a value of the form 'i/n', where i and n are positive integers and i < n`
+          );
+          process.exit(1);
+        };
+        i++;
+        if (i >= process.argv.length) {
+          err();
+        }
+        const value = process.argv[i];
+        const parts = value.split('/');
+        if (parts.length !== 2) {
+          err();
+        }
+        nth = { i: parseInt(parts[0]), n: parseInt(parts[1]) };
+        if (nth.i < 0 || nth.n < 1 || nth.i > nth.n) {
+          err();
+        }
+        break;
+      }
+      default: {
+        console.log('unrecognized flag: ', arg);
         usage(1);
+      }
     }
   } else {
-    nonFlagsArgs.push(a);
+    nonFlagsArgs.push(arg);
   }
 }
 
@@ -52,8 +87,8 @@ const outRootDir = nonFlagsArgs[2];
 
 dataCache.setStore({
   load: (path: string) => {
-    return new Promise<string>((resolve, reject) => {
-      fs.readFile(`data/${path}`, 'utf8', (err, data) => {
+    return new Promise<Uint8Array>((resolve, reject) => {
+      fs.readFile(`data/${path}`, (err, data) => {
         if (err !== null) {
           reject(err.message);
         } else {
@@ -105,34 +140,38 @@ async function build(suiteDir: string) {
   }
 
   // Crawl files and convert paths to be POSIX-style, relative to suiteDir.
-  const filesToEnumerate = (await crawlFilesRecursively(suiteDir)).sort();
+  let filesToEnumerate = (await crawlFilesRecursively(suiteDir)).sort();
+
+  // Filter out non-spec files
+  filesToEnumerate = filesToEnumerate.filter(f => f.endsWith(specFileSuffix));
 
   const cacheablePathToTS = new Map<string, string>();
 
+  let fileIndex = 0;
   for (const file of filesToEnumerate) {
-    if (file.endsWith(specFileSuffix)) {
-      const pathWithoutExtension = file.substring(0, file.length - specFileSuffix.length);
-      const mod = await import(`../../../${pathWithoutExtension}.spec.js`);
-      if (mod.d?.serialize !== undefined) {
-        const cacheable = mod.d as Cacheable<unknown>;
+    const pathWithoutExtension = file.substring(0, file.length - specFileSuffix.length);
+    const mod = await import(`../../../${pathWithoutExtension}.spec.js`);
+    if (mod.d?.serialize !== undefined) {
+      const cacheable = mod.d as Cacheable<unknown>;
 
-        {
-          // Check for collisions
-          const existing = cacheablePathToTS.get(cacheable.path);
-          if (existing !== undefined) {
-            console.error(
-              `error: Cacheable '${cacheable.path}' is emitted by both:
+      {
+        // Check for collisions
+        const existing = cacheablePathToTS.get(cacheable.path);
+        if (existing !== undefined) {
+          console.error(
+            `error: Cacheable '${cacheable.path}' is emitted by both:
     '${existing}'
 and
     '${file}'`
-            );
-            process.exit(1);
-          }
-          cacheablePathToTS.set(cacheable.path, file);
+          );
+          process.exit(1);
         }
+        cacheablePathToTS.set(cacheable.path, file);
+      }
 
-        const outPath = `${outRootDir}/data/${cacheable.path}`;
+      const outPath = `${outRootDir}/data/${cacheable.path}`;
 
+      if (fileIndex++ % nth.n === nth.i) {
         switch (mode) {
           case 'emit': {
             if (verbose) {
@@ -141,11 +180,15 @@ and
             const data = await cacheable.build();
             const serialized = cacheable.serialize(data);
             fs.mkdirSync(path.dirname(outPath), { recursive: true });
-            fs.writeFileSync(outPath, serialized);
+            fs.writeFileSync(outPath, serialized, 'binary');
             break;
           }
           case 'list': {
             console.log(outPath);
+            break;
+          }
+          case 'validate': {
+            // Only check currently performed is the collision detection above
             break;
           }
         }

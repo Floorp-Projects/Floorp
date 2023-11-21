@@ -6,19 +6,26 @@ import { makeTestGroup } from '../common/framework/test_group.js';
 import { objectEquals, unreachable } from '../common/util/util.js';
 import { kValue } from '../webgpu/util/constants.js';
 import { FP, FPInterval, FPIntervalParam, IntervalBounds } from '../webgpu/util/floating_point.js';
+import { map2DArray, oneULPF32, oneULPF16, oneULPF64 } from '../webgpu/util/math.js';
 import {
   reinterpretU16AsF16,
   reinterpretU32AsF32,
   reinterpretU64AsF64,
-  map2DArray,
-  oneULPF32,
-  oneULPF16,
-  oneULPF64,
-} from '../webgpu/util/math.js';
+} from '../webgpu/util/reinterpret.js';
 
 import { UnitTest } from './unit_test.js';
 
 export const g = makeTestGroup(UnitTest);
+
+/**
+ * For ULP purposes, abstract float behaves like f32, so need to swizzle it in
+ * for expectations.
+ */
+const kFPTraitForULP = {
+  abstract: 'f32',
+  f32: 'f32',
+  f16: 'f16',
+} as const;
 
 /** Bounds indicating an expectation of unbounded error */
 const kUnboundedBounds: IntervalBounds = [Number.NEGATIVE_INFINITY, Number.POSITIVE_INFINITY];
@@ -2079,15 +2086,16 @@ const kULPErrorValue = {
 g.test('ulpInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16'] as const)
+      .combine('trait', ['abstract', 'f32', 'f16'] as const)
       .beginSubcases()
       .expandWithParams<ULPCase>(p => {
-        const constants = FP[p.trait].constants();
-        const ULPValue = kULPErrorValue[p.trait];
-        const plusOneULP = kPlusOneULPFunctions[p.trait];
-        const plusNULP = kPlusNULPFunctions[p.trait];
-        const minusOneULP = kMinusOneULPFunctions[p.trait];
-        const minusNULP = kMinusNULPFunctions[p.trait];
+        const trait = kFPTraitForULP[p.trait];
+        const constants = FP[trait].constants();
+        const ULPValue = kULPErrorValue[trait];
+        const plusOneULP = kPlusOneULPFunctions[trait];
+        const plusNULP = kPlusNULPFunctions[trait];
+        const minusOneULP = kMinusOneULPFunctions[trait];
+        const minusNULP = kMinusNULPFunctions[trait];
         // prettier-ignore
         return [
           // Edge Cases
@@ -2156,30 +2164,45 @@ g.test('ulpInterval')
   });
 
 // API - Acceptance Intervals
+// List of frequently used JS number in test cases, which are not exactly representable in f32 or f16.
+type ConstantNumberFrequentlyUsedInCases = '0.1' | '-0.1' | '1.9' | '-1.9';
+
+// Correctly rounded expectation of frequently used JS Number value in test cases
+const kConstantCorrectlyRoundedExpectation = {
+  f32: {
+    // 0.1 falls between f32 0x3DCCCCCC and 0x3DCCCCCD
+    '0.1': [reinterpretU32AsF32(0x3dcccccc), reinterpretU32AsF32(0x3dcccccd)],
+    // -0.1 falls between f32 0xBDCCCCCD and 0xBDCCCCCC
+    '-0.1': [reinterpretU32AsF32(0xbdcccccd), reinterpretU32AsF32(0xbdcccccc)],
+    // 1.9 falls between f32 0x3FF33333 and 0x3FF33334
+    '1.9': [reinterpretU32AsF32(0x3ff33333), reinterpretU32AsF32(0x3ff33334)],
+    // -1.9 falls between f32 0xBFF33334 and 0xBFF33333
+    '-1.9': [reinterpretU32AsF32(0xbff33334), reinterpretU32AsF32(0xbff33333)],
+  } as { [value in ConstantNumberFrequentlyUsedInCases]: IntervalBounds },
+  f16: {
+    // 0.1 falls between f16 0x2E66 and 0x2E67
+    '0.1': [reinterpretU16AsF16(0x2e66), reinterpretU16AsF16(0x2e67)],
+    // -0.1 falls between f16 0xAE67 and 0xAE66
+    '-0.1': [reinterpretU16AsF16(0xae67), reinterpretU16AsF16(0xae66)],
+    // 1.9 falls between f16 0x3F99 and 0x3F9A
+    '1.9': [reinterpretU16AsF16(0x3f99), reinterpretU16AsF16(0x3f9a)],
+    // 1.9 falls between f16 0xBF9A and 0xBF99
+    '-1.9': [reinterpretU16AsF16(0xbf9a), reinterpretU16AsF16(0xbf99)],
+  } as { [value in ConstantNumberFrequentlyUsedInCases]: IntervalBounds },
+  // Since abstract is actually f64 and JS number is also f64, the JS number value will map to
+  // identical abstracty value without rounded.
+  abstract: {
+    '0.1': 0.1,
+    '-0.1': -0.1,
+    '1.9': 1.9,
+    '-1.9': -1.9,
+  } as { [value in ConstantNumberFrequentlyUsedInCases]: number },
+} as const;
 
 interface ScalarToIntervalCase {
   input: number;
   expected: number | IntervalBounds;
 }
-
-const kAbsIntervalCases = [
-  {
-    input: 0.1,
-    expected: {
-      f32: [reinterpretU32AsF32(0x3dcccccc), reinterpretU32AsF32(0x3dcccccd)],
-      f16: [reinterpretU16AsF16(0x2e66), reinterpretU16AsF16(0x2e67)],
-      abstract: 0.1,
-    },
-  },
-  {
-    input: -0.1,
-    expected: {
-      f32: [reinterpretU32AsF32(0x3dcccccc), reinterpretU32AsF32(0x3dcccccd)],
-      f16: [reinterpretU16AsF16(0x2e66), reinterpretU16AsF16(0x2e67)],
-      abstract: 0.1,
-    },
-  },
-] as const;
 
 g.test('absInterval')
   .params(u =>
@@ -2193,7 +2216,12 @@ g.test('absInterval')
           // Common usages
           { input: 1, expected: 1 },
           { input: -1, expected: 1 },
-          ...kAbsIntervalCases.map(t => {return {input: t.input, expected: t.expected[p.trait]} as ScalarToIntervalCase}),
+          // abs(+/-0.1) is correctly rounded interval of 0.1
+          { input: 0.1, expected: kConstantCorrectlyRoundedExpectation[p.trait]['0.1']},
+          { input: -0.1, expected: kConstantCorrectlyRoundedExpectation[p.trait]['0.1']},
+          // abs(+/-1.9) is correctly rounded interval of 1.9
+          { input: 1.9, expected: kConstantCorrectlyRoundedExpectation[p.trait]['1.9']},
+          { input: -1.9, expected: kConstantCorrectlyRoundedExpectation[p.trait]['1.9']},
 
           // Edge cases
           { input: constants.positive.infinity, expected: kUnboundedBounds },
@@ -2292,57 +2320,95 @@ g.test('acosInterval')
     );
   });
 
-g.test('acoshAlternativeInterval_f32')
-  .paramsSubcasesOnly<ScalarToIntervalCase>(
-    // prettier-ignore
-    [
-      // Some of these are hard coded, since the error intervals are difficult
-      // to express in a closed human-readable form due to the inherited nature
-      // of the errors.
-      { input: kValue.f32.infinity.negative, expected: kUnboundedBounds },
-      { input: kValue.f32.negative.min, expected: kUnboundedBounds },
-      { input: -1, expected: kUnboundedBounds },
-      { input: 0, expected: kUnboundedBounds },
-      { input: 1, expected: kUnboundedBounds },  // 1/0 occurs in inverseSqrt in this formulation
-      { input: 1.1, expected: [reinterpretU64AsF64(0x3fdc_6368_8000_0000n), reinterpretU64AsF64(0x3fdc_636f_2000_0000n)] },  // ~0.443..., differs from the primary in the later digits
-      { input: 10, expected: [reinterpretU64AsF64(0x4007_f21e_4000_0000n), reinterpretU64AsF64(0x4007_f21f_6000_0000n)] },  // ~2.993...
-      { input: kValue.f32.positive.max, expected: kUnboundedBounds },
-      { input: kValue.f32.infinity.positive, expected: kUnboundedBounds },
-    ]
+// Some of these are hard coded, since the error intervals are difficult to express in a closed
+// human-readable form due to the inherited nature of the errors.
+// prettier-ignore
+const kAcoshAlternativeIntervalCases = {
+  f32: [
+    { input: 1.1, expected: [reinterpretU64AsF64(0x3fdc_6368_8000_0000n), reinterpretU64AsF64(0x3fdc_636f_2000_0000n)] },  // ~0.443..., differs from the primary in the later digits
+    { input: 10, expected: [reinterpretU64AsF64(0x4007_f21e_4000_0000n), reinterpretU64AsF64(0x4007_f21f_6000_0000n)] },  // ~2.993...
+  ] as ScalarToIntervalCase[],
+  f16: [
+    { input: 1.1, expected: [reinterpretU64AsF64(0x3fdb_bc00_0000_0000n), reinterpretU64AsF64(0x3fdd_1000_0000_0000n)] },  // ~0.443..., differs from the primary in the later digits
+    { input: 10, expected: [reinterpretU64AsF64(0x4007_e000_0000_0000n), reinterpretU64AsF64(0x4008_0400_0000_0000n)] },  // ~2.993...
+  ] as ScalarToIntervalCase[],
+} as const;
+
+g.test('acoshAlternativeInterval')
+  .params(u =>
+    u
+      .combine('trait', ['f32', 'f16'] as const)
+      .beginSubcases()
+      .expandWithParams<ScalarToIntervalCase>(p => {
+        const trait = FP[p.trait];
+        const constants = trait.constants();
+        // prettier-ignore
+        return [
+          ...kAcoshAlternativeIntervalCases[p.trait],
+
+          { input: constants.negative.infinity, expected: kUnboundedBounds },
+          { input: constants.negative.min, expected: kUnboundedBounds },
+          { input: -1, expected: kUnboundedBounds },
+          { input: 0, expected: kUnboundedBounds },
+          { input: 1, expected: kUnboundedBounds },  // 1/0 occurs in inverseSqrt in this formulation
+          { input: constants.positive.max, expected: kUnboundedBounds },
+          { input: constants.positive.infinity, expected: kUnboundedBounds },
+        ];
+      })
   )
   .fn(t => {
-    const expected = FP.f32.toInterval(t.params.expected);
-    const got = FP.f32.acoshAlternativeInterval(t.params.input);
+    const trait = FP[t.params.trait];
+    const expected = trait.toInterval(t.params.expected);
+    const got = trait.acoshAlternativeInterval(t.params.input);
     t.expect(
       objectEquals(expected, got),
-      `f32.acoshInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+      `${t.params.trait}.acoshAlternativeInterval(${t.params.input}) returned ${got}. Expected ${expected}`
     );
   });
 
-g.test('acoshPrimaryInterval_f32')
-  .paramsSubcasesOnly<ScalarToIntervalCase>(
-    // prettier-ignore
-    [
-      // Some of these are hard coded, since the error intervals are difficult
-      // to express in a closed human-readable form due to the inherited nature
-      // of the errors.
-      { input: kValue.f32.infinity.negative, expected: kUnboundedBounds },
-      { input: kValue.f32.negative.min, expected: kUnboundedBounds },
-      { input: -1, expected: kUnboundedBounds },
-      { input: 0, expected: kUnboundedBounds },
-      { input: 1, expected: kUnboundedBounds },  // 1/0 occurs in inverseSqrt in this formulation
-      { input: 1.1, expected: [reinterpretU64AsF64(0x3fdc_6368_2000_0000n), reinterpretU64AsF64(0x3fdc_636f_8000_0000n)] }, // ~0.443..., differs from the alternative in the later digits
-      { input: 10, expected: [reinterpretU64AsF64(0x4007_f21e_4000_0000n), reinterpretU64AsF64(0x4007_f21f_6000_0000n)] },  // ~2.993...
-      { input: kValue.f32.positive.max, expected: kUnboundedBounds },
-      { input: kValue.f32.infinity.positive, expected: kUnboundedBounds },
-    ]
+// Some of these are hard coded, since the error intervals are difficult to express in a closed
+// human-readable form due to the inherited nature of the errors.
+// prettier-ignore
+const kAcoshPrimaryIntervalCases = {
+  f32: [
+    { input: 1.1, expected: [reinterpretU64AsF64(0x3fdc_6368_2000_0000n), reinterpretU64AsF64(0x3fdc_636f_8000_0000n)] }, // ~0.443..., differs from the alternative in the later digits
+    { input: 10, expected: [reinterpretU64AsF64(0x4007_f21e_4000_0000n), reinterpretU64AsF64(0x4007_f21f_6000_0000n)] },  // ~2.993...
+  ] as ScalarToIntervalCase[],
+  f16: [
+    { input: 1.1, expected: [reinterpretU64AsF64(0x3fdb_bc00_0000_0000n), reinterpretU64AsF64(0x3fdd_1c00_0000_0000n)] },  // ~0.443..., differs from the primary in the later digits
+    { input: 10, expected: [reinterpretU64AsF64(0x4007_e000_0000_0000n), reinterpretU64AsF64(0x4008_0400_0000_0000n)] },  // ~2.993...
+  ] as ScalarToIntervalCase[],
+} as const;
+
+g.test('acoshPrimaryInterval')
+  .params(u =>
+    u
+      .combine('trait', ['f32', 'f16'] as const)
+      .beginSubcases()
+      .expandWithParams<ScalarToIntervalCase>(p => {
+        const trait = FP[p.trait];
+        const constants = trait.constants();
+        // prettier-ignore
+        return [
+          ...kAcoshPrimaryIntervalCases[p.trait],
+
+          { input: constants.negative.infinity, expected: kUnboundedBounds },
+          { input: constants.negative.min, expected: kUnboundedBounds },
+          { input: -1, expected: kUnboundedBounds },
+          { input: 0, expected: kUnboundedBounds },
+          { input: 1, expected: kUnboundedBounds },  // 1/0 occurs in inverseSqrt in this formulation
+          { input: constants.positive.max, expected: kUnboundedBounds },
+          { input: constants.positive.infinity, expected: kUnboundedBounds },
+        ];
+      })
   )
   .fn(t => {
-    const expected = FP.f32.toInterval(t.params.expected);
-    const got = FP.f32.acoshPrimaryInterval(t.params.input);
+    const trait = FP[t.params.trait];
+    const expected = trait.toInterval(t.params.expected);
+    const got = trait.acoshPrimaryInterval(t.params.input);
     t.expect(
       objectEquals(expected, got),
-      `f32.acoshInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+      `${t.params.trait}.acoshPrimaryInterval(${t.params.input}) returned ${got}. Expected ${expected}`
     );
   });
 
@@ -2406,28 +2472,48 @@ g.test('asinInterval')
     );
   });
 
-g.test('asinhInterval_f32')
-  .paramsSubcasesOnly<ScalarToIntervalCase>(
-    // prettier-ignore
-    [
-      // Some of these are hard coded, since the error intervals are difficult
-      // to express in a closed human-readable form due to the inherited nature
-      // of the errors.
-      { input: kValue.f32.infinity.negative, expected: kUnboundedBounds },
-      { input: kValue.f32.negative.min, expected: kUnboundedBounds },
-      { input: -1, expected: [reinterpretU64AsF64(0xbfec_343a_8000_0000n), reinterpretU64AsF64(0xbfec_3432_8000_0000n)] },  // ~-0.88137...
-      { input: 0, expected: [reinterpretU64AsF64(0xbeaa_0000_2000_0000n), reinterpretU64AsF64(0x3eb1_ffff_d000_0000n)] },  // ~0
-      { input: 1, expected: [reinterpretU64AsF64(0x3fec_3435_4000_0000n), reinterpretU64AsF64(0x3fec_3437_8000_0000n)] },  // ~0.88137...
-      { input: kValue.f32.positive.max, expected: kUnboundedBounds },
-      { input: kValue.f32.infinity.positive, expected: kUnboundedBounds },
-    ]
+// Some of these are hard coded, since the error intervals are difficult to express in a closed
+// human-readable form due to the inherited nature of the errors.
+// prettier-ignore
+const kAsinhIntervalCases = {
+  f32: [
+    { input: -1, expected: [reinterpretU64AsF64(0xbfec_343a_8000_0000n), reinterpretU64AsF64(0xbfec_3432_8000_0000n)] },  // ~-0.88137...
+    { input: 0, expected: [reinterpretU64AsF64(0xbeaa_0000_2000_0000n), reinterpretU64AsF64(0x3eb1_ffff_d000_0000n)] },  // ~0
+    { input: 1, expected: [reinterpretU64AsF64(0x3fec_3435_4000_0000n), reinterpretU64AsF64(0x3fec_3437_8000_0000n)] },  // ~0.88137...
+  ] as ScalarToIntervalCase[],
+  f16: [
+    { input: -1, expected: [reinterpretU64AsF64(0xbfec_b800_0000_0000n), reinterpretU64AsF64(0xbfeb_b800_0000_0000n)] },  // ~-0.88137...
+    { input: 0, expected: [reinterpretU64AsF64(0xbf85_0200_0000_0000n), reinterpretU64AsF64(0x3f89_fa00_0000_0000n)] },  // ~0
+    { input: 1, expected: [reinterpretU64AsF64(0x3fec_1000_0000_0000n), reinterpretU64AsF64(0x3fec_5400_0000_0000n)] },  // ~0.88137...
+  ] as ScalarToIntervalCase[],
+} as const;
+
+g.test('asinhInterval')
+  .params(u =>
+    u
+      .combine('trait', ['f32', 'f16'] as const)
+      .beginSubcases()
+      .expandWithParams<ScalarToIntervalCase>(p => {
+        const trait = FP[p.trait];
+        const constants = trait.constants();
+        // prettier-ignore
+        return [
+          ...kAsinhIntervalCases[p.trait],
+
+          { input: constants.negative.infinity, expected: kUnboundedBounds },
+          { input: constants.negative.min, expected: kUnboundedBounds },
+          { input: constants.positive.max, expected: kUnboundedBounds },
+          { input: constants.positive.infinity, expected: kUnboundedBounds },
+        ];
+      })
   )
   .fn(t => {
-    const expected = FP.f32.toInterval(t.params.expected);
-    const got = FP.f32.asinhInterval(t.params.input);
+    const trait = FP[t.params.trait];
+    const expected = trait.toInterval(t.params.expected);
+    const got = trait.asinhInterval(t.params.input);
     t.expect(
       objectEquals(expected, got),
-      `f32.asinhInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+      `${t.params.trait}.asinhInterval(${t.params.input}) returned ${got}. Expected ${expected}`
     );
   });
 
@@ -2496,8 +2582,7 @@ g.test('atanInterval')
       return ulp_error * trait.oneULP(n);
     };
 
-    t.params.expected = applyError(t.params.expected, error);
-    const expected = trait.toInterval(t.params.expected);
+    const expected = trait.toInterval(applyError(t.params.expected, error));
 
     const got = trait.atanInterval(t.params.input);
     t.expect(
@@ -2506,29 +2591,50 @@ g.test('atanInterval')
     );
   });
 
-g.test('atanhInterval_f32')
-  .paramsSubcasesOnly<ScalarToIntervalCase>(
-    // prettier-ignore
-    [
-      // Some of these are hard coded, since the error intervals are difficult
-      // to express in a closed human-readable form due to the inherited nature of the errors.
-      { input: kValue.f32.infinity.negative, expected: kUnboundedBounds },
-      { input: kValue.f32.negative.min, expected: kUnboundedBounds },
-      { input: -1, expected: kUnboundedBounds },
-      { input: -0.1, expected: [reinterpretU64AsF64(0xbfb9_af9a_6000_0000n), reinterpretU64AsF64(0xbfb9_af8c_c000_0000n)] },  // ~-0.1003...
-      { input: 0, expected: [reinterpretU64AsF64(0xbe96_0000_2000_0000n), reinterpretU64AsF64(0x3e98_0000_0000_0000n)] },  // ~0
-      { input: 0.1, expected: [reinterpretU64AsF64(0x3fb9_af8b_8000_0000n), reinterpretU64AsF64(0x3fb9_af9b_0000_0000n)] },  // ~0.1003...
-      { input: 1, expected: kUnboundedBounds },
-      { input: kValue.f32.positive.max, expected: kUnboundedBounds },
-      { input: kValue.f32.infinity.positive, expected: kUnboundedBounds },
-    ]
+// Some of these are hard coded, since the error intervals are difficult to express in a closed
+// human-readable form due to the inherited nature of the errors.
+// prettier-ignore
+const kAtanhIntervalCases = {
+  f32: [
+    { input: -0.1, expected: [reinterpretU64AsF64(0xbfb9_af9a_6000_0000n), reinterpretU64AsF64(0xbfb9_af8c_c000_0000n)] },  // ~-0.1003...
+    { input: 0, expected: [reinterpretU64AsF64(0xbe96_0000_2000_0000n), reinterpretU64AsF64(0x3e98_0000_0000_0000n)] },  // ~0
+    { input: 0.1, expected: [reinterpretU64AsF64(0x3fb9_af8b_8000_0000n), reinterpretU64AsF64(0x3fb9_af9b_0000_0000n)] },  // ~0.1003...
+  ] as ScalarToIntervalCase[],
+  f16: [
+    { input: -0.1, expected: [reinterpretU64AsF64(0xbfbb_0c00_0000_0000n), reinterpretU64AsF64(0xbfb8_5800_0000_0000n)] },  // ~-0.1003...
+    { input: 0, expected: [reinterpretU64AsF64(0xbf73_0400_0000_0000n), reinterpretU64AsF64(0x3f74_0000_0000_0000n)] },  // ~0
+    { input: 0.1, expected: [reinterpretU64AsF64(0x3fb8_3800_0000_0000n), reinterpretU64AsF64(0x3fbb_2400_0000_0000n)] },  // ~0.1003...
+  ] as ScalarToIntervalCase[],
+} as const;
+
+g.test('atanhInterval')
+  .params(u =>
+    u
+      .combine('trait', ['f32', 'f16'] as const)
+      .beginSubcases()
+      .expandWithParams<ScalarToIntervalCase>(p => {
+        const trait = FP[p.trait];
+        const constants = trait.constants();
+        // prettier-ignore
+        return [
+          ...kAtanhIntervalCases[p.trait],
+
+          { input: constants.negative.infinity, expected: kUnboundedBounds },
+          { input: constants.negative.min, expected: kUnboundedBounds },
+          { input: -1, expected: kUnboundedBounds },
+          { input: 1, expected: kUnboundedBounds },
+          { input: constants.positive.max, expected: kUnboundedBounds },
+          { input: constants.positive.infinity, expected: kUnboundedBounds },
+        ];
+      })
   )
   .fn(t => {
-    const expected = FP.f32.toInterval(t.params.expected);
-    const got = FP.f32.atanhInterval(t.params.input);
+    const trait = FP[t.params.trait];
+    const expected = trait.toInterval(t.params.expected);
+    const got = trait.atanhInterval(t.params.input);
     t.expect(
       objectEquals(expected, got),
-      `f32.atanhInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+      `${t.params.trait}.atanhInterval(${t.params.input}) returned ${got}. Expected ${expected}`
     );
   });
 
@@ -2653,8 +2759,7 @@ g.test('cosInterval')
       return t.params.trait === 'f32' ? 2 ** -11 : 2 ** -7;
     };
 
-    t.params.expected = applyError(t.params.expected, error);
-    const expected = trait.toInterval(t.params.expected);
+    const expected = trait.toInterval(applyError(t.params.expected, error));
 
     const got = trait.cosInterval(t.params.input);
     t.expect(
@@ -2663,29 +2768,48 @@ g.test('cosInterval')
     );
   });
 
-g.test('coshInterval_f32')
-  .paramsSubcasesOnly<ScalarToIntervalCase>(
-    // prettier-ignore
-    [
-      // Some of these are hard coded, since the error intervals are difficult
-      // to express in a closed human-readable form due to the inherited nature
-      // of the errors.
-      { input: kValue.f32.infinity.negative, expected: kUnboundedBounds },
-      { input: kValue.f32.negative.min, expected: kUnboundedBounds },
-      { input: -1, expected: [ reinterpretU32AsF32(0x3fc583a4), reinterpretU32AsF32(0x3fc583b1)] },  // ~1.1543...
-      { input: 0, expected: [reinterpretU32AsF32(0x3f7ffffd), reinterpretU32AsF32(0x3f800002)] },  // ~1
-      { input: 1, expected: [ reinterpretU32AsF32(0x3fc583a4), reinterpretU32AsF32(0x3fc583b1)] },  // ~1.1543...
-      { input: kValue.f32.positive.max, expected: kUnboundedBounds },
-      { input: kValue.f32.infinity.positive, expected: kUnboundedBounds },
-    ]
+// Some of these are hard coded, since the error intervals are difficult to express in a closed
+// human-readable form due to the inherited nature of the errors.
+// prettier-ignore
+const kCoshIntervalCases = {
+  f32: [
+    { input: -1, expected: [reinterpretU32AsF32(0x3fc583a4), reinterpretU32AsF32(0x3fc583b1)] },  // ~1.1543...
+    { input: 0, expected: [reinterpretU32AsF32(0x3f7ffffd), reinterpretU32AsF32(0x3f800002)] },  // ~1
+    { input: 1, expected: [reinterpretU32AsF32(0x3fc583a4), reinterpretU32AsF32(0x3fc583b1)] },  // ~1.1543...
+  ] as ScalarToIntervalCase[],
+  f16: [
+    { input: -1, expected: [reinterpretU16AsF16(0x3e27), reinterpretU16AsF16(0x3e30)] },  // ~1.1543...
+    { input: 0, expected: [reinterpretU16AsF16(0x3bff), reinterpretU16AsF16(0x3c01)] },  // ~1
+    { input: 1, expected: [reinterpretU16AsF16(0x3e27), reinterpretU16AsF16(0x3e30)] },  // ~1.1543...
+  ] as ScalarToIntervalCase[],
+} as const;
+
+g.test('coshInterval')
+  .params(u =>
+    u
+      .combine('trait', ['f32', 'f16'] as const)
+      .beginSubcases()
+      .expandWithParams<ScalarToIntervalCase>(p => {
+        const trait = FP[p.trait];
+        const constants = trait.constants();
+        // prettier-ignore
+        return [
+          ...kCoshIntervalCases[p.trait],
+
+          { input: constants.negative.infinity, expected: kUnboundedBounds },
+          { input: constants.negative.min, expected: kUnboundedBounds },
+          { input: constants.positive.max, expected: kUnboundedBounds },
+          { input: constants.positive.infinity, expected: kUnboundedBounds },
+        ];
+      })
   )
   .fn(t => {
-    const expected = FP.f32.toInterval(t.params.expected);
-
-    const got = FP.f32.coshInterval(t.params.input);
+    const trait = FP[t.params.trait];
+    const expected = trait.toInterval(t.params.expected);
+    const got = trait.coshInterval(t.params.input);
     t.expect(
       objectEquals(expected, got),
-      `f32.coshInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+      `${t.params.trait}.coshInterval(${t.params.input}) returned ${got}. Expected ${expected}`
     );
   });
 
@@ -2764,55 +2888,122 @@ g.test('degreesInterval')
     );
   });
 
-g.test('expInterval_f32')
-  .paramsSubcasesOnly<ScalarToIntervalCase>(
-    // prettier-ignore
-    [
-      { input: kValue.f32.infinity.negative, expected: kUnboundedBounds },
-      { input: 0, expected: 1 },
-      { input: 1, expected: [kValue.f32.positive.e, kPlusOneULPFunctions['f32'](kValue.f32.positive.e)] },
-      { input: 89, expected: kUnboundedBounds },
-    ]
+// prettier-ignore
+const kExpIntervalCases = {
+  f32: [
+    { input: 1, expected: [kValue.f32.positive.e, kPlusOneULPFunctions['f32'](kValue.f32.positive.e)] },
+    // exp(88) = 1.6516362549940018555283297962649e+38 = 0x7ef882b6/7.
+    { input: 88, expected: [reinterpretU32AsF32(0x7ef882b6), reinterpretU32AsF32(0x7ef882b7)] },
+    // exp(89) overflow f32.
+    { input: 89, expected: kUnboundedBounds },
+  ] as ScalarToIntervalCase[],
+  f16: [
+    { input: 1, expected: [kValue.f16.positive.e, kPlusOneULPFunctions['f16'](kValue.f16.positive.e)] },
+    // exp(11) = 59874.141715197818455326485792258 = 0x7b4f/0x7b50.
+    { input: 11, expected: [reinterpretU16AsF16(0x7b4f), reinterpretU16AsF16(0x7b50)] },
+    // exp(12) = 162754.79141900392080800520489849 overflow f16.
+    { input: 12, expected: kUnboundedBounds },
+  ] as ScalarToIntervalCase[],
+} as const;
+
+g.test('expInterval')
+  .params(u =>
+    u
+      .combine('trait', ['f32', 'f16'] as const)
+      .beginSubcases()
+      .expandWithParams<ScalarToIntervalCase>(p => {
+        const trait = p.trait;
+        const constants = FP[trait].constants();
+        // prettier-ignore
+        return [
+          { input: constants.negative.infinity, expected: kUnboundedBounds },
+          { input: 0, expected: 1 },
+          ...kExpIntervalCases[trait],
+        ];
+      })
   )
   .fn(t => {
+    const trait = FP[t.params.trait];
     const error = (x: number): number => {
-      const n = 3 + 2 * Math.abs(t.params.input);
-      return n * oneULPF32(x);
+      let ulp_error;
+      switch (t.params.trait) {
+        case 'f32': {
+          ulp_error = 3 + 2 * Math.abs(t.params.input);
+          break;
+        }
+        case 'f16': {
+          ulp_error = 1 + 2 * Math.abs(t.params.input);
+          break;
+        }
+      }
+      return ulp_error * trait.oneULP(x);
     };
 
-    t.params.expected = applyError(t.params.expected, error);
-    const expected = FP.f32.toInterval(t.params.expected);
+    const expected = trait.toInterval(applyError(t.params.expected, error));
+    const got = trait.expInterval(t.params.input);
 
-    const got = FP.f32.expInterval(t.params.input);
     t.expect(
       objectEquals(expected, got),
-      `f32.expInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+      `${t.params.trait}.expInterval(${t.params.input}) returned ${got}. Expected ${expected}`
     );
   });
 
-g.test('exp2Interval_f32')
-  .paramsSubcasesOnly<ScalarToIntervalCase>(
-    // prettier-ignore
-    [
-      { input: kValue.f32.infinity.negative, expected: kUnboundedBounds },
-      { input: 0, expected: 1 },
-      { input: 1, expected: 2 },
-      { input: 128, expected: kUnboundedBounds },
-    ]
+// prettier-ignore
+const kExp2IntervalCases = {
+  f32: [
+    // exp2(127) = 1.7014118346046923173168730371588e+38 = 0x7f000000, 3 + 2 * 127 = 258 ulps.
+    { input: 127, expected: reinterpretU32AsF32(0x7f000000) },
+    // exp2(128) overflow f32.
+    { input: 128, expected: kUnboundedBounds },
+  ] as ScalarToIntervalCase[],
+  f16: [
+    // exp2(15) = 32768 = 0x7800, 1 + 2 * 15 = 31 ulps
+    { input: 15, expected: reinterpretU16AsF16(0x7800) },
+    // exp2(16) = 65536 overflow f16.
+    { input: 16, expected: kUnboundedBounds },
+  ] as ScalarToIntervalCase[],
+} as const;
+
+g.test('exp2Interval')
+  .params(u =>
+    u
+      .combine('trait', ['f32', 'f16'] as const)
+      .beginSubcases()
+      .expandWithParams<ScalarToIntervalCase>(p => {
+        const trait = p.trait;
+        const constants = FP[trait].constants();
+        // prettier-ignore
+        return [
+          { input: constants.negative.infinity, expected: kUnboundedBounds },
+          { input: 0, expected: 1 },
+          { input: 1, expected: 2 },
+          ...kExp2IntervalCases[trait],
+        ];
+      })
   )
   .fn(t => {
+    const trait = FP[t.params.trait];
     const error = (x: number): number => {
-      const n = 3 + 2 * Math.abs(t.params.input);
-      return n * oneULPF32(x);
+      let ulp_error;
+      switch (t.params.trait) {
+        case 'f32': {
+          ulp_error = 3 + 2 * Math.abs(t.params.input);
+          break;
+        }
+        case 'f16': {
+          ulp_error = 1 + 2 * Math.abs(t.params.input);
+          break;
+        }
+      }
+      return ulp_error * trait.oneULP(x);
     };
 
-    t.params.expected = applyError(t.params.expected, error);
-    const expected = FP.f32.toInterval(t.params.expected);
+    const expected = trait.toInterval(applyError(t.params.expected, error));
 
-    const got = FP.f32.exp2Interval(t.params.input);
+    const got = trait.exp2Interval(t.params.input);
     t.expect(
       objectEquals(expected, got),
-      `f32.exp2Interval(${t.params.input}) returned ${got}. Expected ${expected}`
+      `${t.params.trait}.exp2Interval(${t.params.input}) returned ${got}. Expected ${expected}`
     );
   });
 
@@ -2828,12 +3019,20 @@ const kFloorIntervalCases = {
     { input: -(2 ** 14), expected: -(2 ** 14) },
     { input: 0x8000, expected: 0x8000 }, // https://github.com/gpuweb/cts/issues/2766
   ],
+  abstract: [
+    { input: 2 ** 62, expected: 2 ** 62 },
+    { input: -(2 ** 62), expected: -(2 ** 62) },
+    {
+      input: 0x8000_0000_0000_0000,
+      expected: 0x8000_0000_0000_0000,
+    }, // https://github.com/gpuweb/cts/issues/2766
+  ],
 } as const;
 
 g.test('floorInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract'] as const)
       .beginSubcases()
       .expandWithParams<ScalarToIntervalCase>(p => {
         const constants = FP[p.trait].constants();
@@ -2860,7 +3059,7 @@ g.test('floorInterval')
           { input: constants.negative.max, expected: -1 },
           ...kFloorIntervalCases[p.trait],
 
-          // 32-bit subnormals
+          // Subnormals
           { input: constants.positive.subnormal.max, expected: 0 },
           { input: constants.positive.subnormal.min, expected: 0 },
           { input: constants.negative.subnormal.min, expected: [-1, 0] },
@@ -2878,38 +3077,62 @@ g.test('floorInterval')
     );
   });
 
-g.test('fractInterval_f32')
-  .paramsSubcasesOnly<ScalarToIntervalCase>(
-    // prettier-ignore
-    [
-      { input: 0, expected: 0 },
-      { input: 0.1, expected: [kMinusOneULPFunctions['f32'](reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] }, // ~0.1
-      { input: 0.9, expected: [reinterpretU32AsF32(0x3f666666), kPlusOneULPFunctions['f32'](reinterpretU32AsF32(0x3f666666))] },  // ~0.9
-      { input: 1.0, expected: 0 },
-      { input: 1.1, expected: [reinterpretU64AsF64(0x3fb9_9998_0000_0000n), reinterpretU64AsF64(0x3fb9_999a_0000_0000n)] }, // ~0.1
-      { input: -0.1, expected: [reinterpretU32AsF32(0x3f666666), kPlusOneULPFunctions['f32'](reinterpretU32AsF32(0x3f666666))] },  // ~0.9
-      { input: -0.9, expected: [reinterpretU64AsF64(0x3fb9_9999_0000_0000n), reinterpretU64AsF64(0x3fb9_999a_0000_0000n)] }, // ~0.1
-      { input: -1.0, expected: 0 },
-      { input: -1.1, expected: [reinterpretU64AsF64(0x3fec_cccc_c000_0000n), reinterpretU64AsF64(0x3fec_cccd_0000_0000n), ] }, // ~0.9
+// prettier-ignore
+const kFractIntervalCases = {
+  f32: [
+    { input: 0.1, expected: [kMinusOneULPFunctions['f32'](reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] }, // ~0.1
+    { input: 0.9, expected: [reinterpretU32AsF32(0x3f666666), kPlusOneULPFunctions['f32'](reinterpretU32AsF32(0x3f666666))] },  // ~0.9
+    { input: 1.1, expected: [reinterpretU32AsF32(0x3dccccc0), reinterpretU32AsF32(0x3dccccd0)] }, // ~0.1
+    { input: -0.1, expected: [reinterpretU32AsF32(0x3f666666), kPlusOneULPFunctions['f32'](reinterpretU32AsF32(0x3f666666))] },  // ~0.9
+    { input: -0.9, expected: [reinterpretU32AsF32(0x3dccccc8), reinterpretU32AsF32(0x3dccccd0)] }, // ~0.1
+    { input: -1.1, expected: [reinterpretU32AsF32(0x3f666666), reinterpretU32AsF32(0x3f666668)] }, // ~0.9
 
-      // Edge cases
-      { input: kValue.f32.infinity.positive, expected: kUnboundedBounds },
-      { input: kValue.f32.infinity.negative, expected: kUnboundedBounds },
-      { input: kValue.f32.positive.max, expected: 0 },
-      { input: kValue.f32.positive.min, expected: [kValue.f32.positive.min, kValue.f32.positive.min] },
-      { input: kValue.f32.negative.min, expected: 0 },
-      { input: kValue.f32.negative.max, expected: [kValue.f32.positive.less_than_one, 1.0] },
+    // https://github.com/gpuweb/cts/issues/2766
+    { input: 0x80000000, expected: 0 },
+  ] as ScalarToIntervalCase[],
+  f16: [
+    { input: 0.1, expected: [reinterpretU16AsF16(0x2e66), reinterpretU16AsF16(0x2e67)] }, // ~0.1
+    { input: 0.9, expected: [reinterpretU16AsF16(0x3b33), reinterpretU16AsF16(0x3b34)] },  // ~0.9
+    { input: 1.1, expected: [reinterpretU16AsF16(0x2e60), reinterpretU16AsF16(0x2e70)] }, // ~0.1
+    { input: -0.1, expected: [reinterpretU16AsF16(0x3b33), reinterpretU16AsF16(0x3b34)] },  // ~0.9
+    { input: -0.9, expected: [reinterpretU16AsF16(0x2e60), reinterpretU16AsF16(0x2e68)] }, // ~0.1
+    { input: -1.1, expected: [reinterpretU16AsF16(0x3b32), reinterpretU16AsF16(0x3b34)] }, // ~0.9
+    { input: 658.5, expected: 0.5 },
+  ] as ScalarToIntervalCase[],
+} as const;
 
-      // https://github.com/gpuweb/cts/issues/2766
-      { input: 0x80000000, expected: 0 },
-]
+g.test('fractInterval')
+  .params(u =>
+    u
+      .combine('trait', ['f32', 'f16'] as const)
+      .beginSubcases()
+      .expandWithParams<ScalarToIntervalCase>(p => {
+        const constants = FP[p.trait].constants();
+        // prettier-ignore
+        return [
+          { input: 0, expected: 0 },
+          { input: 1.0, expected: 0 },
+          { input: -1.0, expected: 0 },
+
+          ...kFractIntervalCases[p.trait],
+
+          // Edge cases
+          { input: constants.positive.infinity, expected: kUnboundedBounds },
+          { input: constants.negative.infinity, expected: kUnboundedBounds },
+          { input: constants.positive.max, expected: 0 },
+          { input: constants.positive.min, expected: constants.positive.min },
+          { input: constants.negative.min, expected: 0 },
+          { input: constants.negative.max, expected: [constants.positive.less_than_one, 1.0] },
+        ];
+      })
   )
   .fn(t => {
-    const expected = FP.f32.toInterval(t.params.expected);
-    const got = FP.f32.fractInterval(t.params.input);
+    const trait = FP[t.params.trait];
+    const expected = trait.toInterval(t.params.expected);
+    const got = trait.fractInterval(t.params.input);
     t.expect(
       objectEquals(expected, got),
-      `f32.fractInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+      `${t.params.trait}.fractInterval(${t.params.input}) returned ${got}. Expected ${expected}`
     );
   });
 
@@ -2920,8 +3143,6 @@ const kInverseSqrtIntervalCases = {
     // 1/sqrt(0x3D23D70B)=4.9999998230487200185270893769213 rounded to f32 0x409FFFFF or 0x40A00000,
     // 1/sqrt(0x3D23D70A)=5.0000000558793553117506910583908 rounded to f32 0x40A00000 or 0x40A00001.
     { input: 0.04, expected: [reinterpretU32AsF32(0x409FFFFF), reinterpretU32AsF32(0x40A00001)] },  // ~5.0
-    // 1/sqrt(100.0)=0.1 rounded to f32 0x3DCCCCCC or 0x3DCCCCCD
-    { input: 100, expected: [reinterpretU32AsF32(0x3dcccccc), reinterpretU32AsF32(0x3dcccccd)] },  // ~0.1
     // Maximium f32 0x7F7FFFFF = 3.4028234663852886e+38,
     // 1/sqrt(0x7F7FFFFF)=5.4210110239862427800382690921791e-20 rounded to f32 0x1F800000 or 0x1F800001
     { input: kValue.f32.positive.max, expected: [reinterpretU32AsF32(0x1f800000), reinterpretU32AsF32(0x1f800001)] },  // ~5.421...e-20
@@ -2931,8 +3152,6 @@ const kInverseSqrtIntervalCases = {
     // 1/sqrt(0x291F)=4.9994660279328446295684795818427 rounded to f16 0x44FF or 0x4500,
     // 1/sqrt(0x291E)=5.001373857053206453045376503367 rounded to f16 0x4500 or 0x4501.
     { input: 0.04, expected: [reinterpretU16AsF16(0x44FF), reinterpretU16AsF16(0x4501)] },  // ~5.0
-    // 1/sqrt(100.0)=0.1 rounded to f16 0x2E66 or 0x2E67
-    { input: 100, expected: [reinterpretU16AsF16(0x2e66), reinterpretU16AsF16(0x2e67)] },  // ~0.1
     // Maximium f16 0x7BFF = 65504,
     // 1/sqrt(0x7BFF)=0.00390720402370454101997160826062 rounded to f16 0x1C00 or 0x1C01
     { input: kValue.f16.positive.max, expected: [reinterpretU16AsF16(0x1c00), reinterpretU16AsF16(0x1c01)] },  // ~3.9072...e-3
@@ -2947,6 +3166,7 @@ g.test('inverseSqrtInterval')
       .expandWithParams<ScalarToIntervalCase>(p => {
         const trait = FP[p.trait];
         const constants = trait.constants();
+        // Note that the 2 ULP error is not included here.
         // prettier-ignore
         return [
           // Exactly representable cases
@@ -2956,6 +3176,8 @@ g.test('inverseSqrtInterval')
 
           // Cases that input and/or result not exactly representable
           ...kInverseSqrtIntervalCases[p.trait],
+          // 1/sqrt(100.0)=0.1, rounded to corresponding trait
+          { input: 100, expected: kConstantCorrectlyRoundedExpectation[p.trait]['0.1'] },  // ~0.1
 
           // Out of definition domain
           { input: -1, expected: kUnboundedBounds },
@@ -2971,8 +3193,7 @@ g.test('inverseSqrtInterval')
       return 2 * trait.oneULP(n);
     };
 
-    t.params.expected = applyError(t.params.expected, error);
-    const expected = trait.toInterval(t.params.expected);
+    const expected = trait.toInterval(applyError(t.params.expected, error));
 
     const got = trait.inverseSqrtInterval(t.params.input);
     t.expect(
@@ -2981,44 +3202,73 @@ g.test('inverseSqrtInterval')
     );
   });
 
-g.test('lengthIntervalScalar_f32')
-  .paramsSubcasesOnly<ScalarToIntervalCase>(
-    // prettier-ignore
-    [
-      // Some of these are hard coded, since the error intervals are difficult
-      // to express in a closed human-readable form due to the inherited nature
-      // of the errors.
-      //
-      // length(0) = kUnboundedBounds, because length uses sqrt, which is defined as 1/inversesqrt
-      {input: 0, expected: kUnboundedBounds },
-      {input: 1.0, expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      {input: -1.0, expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      {input: 0.1, expected: [reinterpretU64AsF64(0x3fb9_9998_9000_0000n), reinterpretU64AsF64(0x3fb9_999a_7000_0000n)] },  // ~0.1
-      {input: -0.1, expected: [reinterpretU64AsF64(0x3fb9_9998_9000_0000n), reinterpretU64AsF64(0x3fb9_999a_7000_0000n)] },  // ~0.1
-      {input: 10.0, expected: [reinterpretU64AsF64(0x4023_ffff_7000_0000n), reinterpretU64AsF64(0x4024_0000_b000_0000n)] },  // ~10
-      {input: -10.0, expected: [reinterpretU64AsF64(0x4023_ffff_7000_0000n), reinterpretU64AsF64(0x4024_0000_b000_0000n)] },  // ~10
+// Expectation interval of 1/inverseSqrt(sum(x[i]^2)) on some special values array x for certain
+// float traits, used as expectation for `length` and `distance`.
+// These cases are hard coded, since the error intervals are difficult to express in a closed
+// human-readable form due to the inherited nature of the errors.
+// prettier-ignore
+const kRootSumSquareExpectionInterval = {
+  f32: {
+    '[0.1]': [reinterpretU64AsF64(0x3fb9_9998_9000_0000n), reinterpretU64AsF64(0x3fb9_999a_7000_0000n)],  // ~0.1
+    '[1.0]' : [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)],  // ~1.0
+    '[10]' : [reinterpretU64AsF64(0x4023_ffff_7000_0000n), reinterpretU64AsF64(0x4024_0000_b000_0000n)],  // ~10
+    '[1.0, 1.0]' : [reinterpretU64AsF64(0x3ff6_a09d_b000_0000n), reinterpretU64AsF64(0x3ff6_a09f_1000_0000n)],  // ~√2
+    '[1.0, 1.0, 1.0]' : [reinterpretU64AsF64(0x3ffb_b67a_1000_0000n), reinterpretU64AsF64(0x3ffb_b67b_b000_0000n)],  // ~√3
+    '[1.0, 1.0, 1.0, 1.0]' : [reinterpretU64AsF64(0x3fff_ffff_7000_0000n), reinterpretU64AsF64(0x4000_0000_9000_0000n)],  // ~2
+  } as {[s: string]: IntervalBounds},
+  f16: {
+    '[0.1]': [reinterpretU64AsF64(0x3fb9_7e00_0000_0000n), reinterpretU64AsF64(0x3fb9_b600_0000_0000n)],  // ~0.1
+    '[1.0]' : [reinterpretU64AsF64(0x3fef_ee00_0000_0000n), reinterpretU64AsF64(0x3ff0_1200_0000_0000n)],  // ~1.0
+    '[10]' : [reinterpretU64AsF64(0x4023_ea00_0000_0000n), reinterpretU64AsF64(0x4024_1200_0000_0000n)],  // ~10
+    '[1.0, 1.0]' : [reinterpretU64AsF64(0x3ff6_8a00_0000_0000n), reinterpretU64AsF64(0x3ff6_b600_0000_0000n)],  // ~√2
+    '[1.0, 1.0, 1.0]' : [reinterpretU64AsF64(0x3ffb_9a00_0000_0000n), reinterpretU64AsF64(0x3ffb_d200_0000_0000n)],  // ~√3
+    '[1.0, 1.0, 1.0, 1.0]' : [reinterpretU64AsF64(0x3fff_ee00_0000_0000n), reinterpretU64AsF64(0x4000_1200_0000_0000n)],  // ~2
+  } as {[s: string]: IntervalBounds},
+} as const;
 
-      // Subnormal Cases
-      { input: kValue.f32.subnormal.negative.min, expected: kUnboundedBounds },
-      { input: kValue.f32.subnormal.negative.max, expected: kUnboundedBounds },
-      { input: kValue.f32.subnormal.positive.min, expected: kUnboundedBounds },
-      { input: kValue.f32.subnormal.positive.max, expected: kUnboundedBounds },
+g.test('lengthIntervalScalar')
+  .params(u =>
+    u
+      .combine('trait', ['f32', 'f16'] as const)
+      .beginSubcases()
+      .expandWithParams<ScalarToIntervalCase>(p => {
+        const trait = FP[p.trait];
+        const constants = trait.constants();
+        // prettier-ignore
+        return [
+          {input: 1.0, expected: kRootSumSquareExpectionInterval[p.trait]['[1.0]'] },  // ~1
+          {input: -1.0, expected: kRootSumSquareExpectionInterval[p.trait]['[1.0]'] },  // ~1
+          {input: 0.1, expected: kRootSumSquareExpectionInterval[p.trait]['[0.1]'] },  // ~0.1
+          {input: -0.1, expected: kRootSumSquareExpectionInterval[p.trait]['[0.1]'] },  // ~0.1
+          {input: 10.0, expected: kRootSumSquareExpectionInterval[p.trait]['[10]'] },  // ~10
+          {input: -10.0, expected: kRootSumSquareExpectionInterval[p.trait]['[10]'] },  // ~10
 
-      // Edge cases
-      { input: kValue.f32.infinity.positive, expected: kUnboundedBounds },
-      { input: kValue.f32.infinity.negative, expected: kUnboundedBounds },
-      { input: kValue.f32.negative.min, expected: kUnboundedBounds },
-      { input: kValue.f32.negative.max, expected: kUnboundedBounds },
-      { input: kValue.f32.positive.min, expected: kUnboundedBounds },
-      { input: kValue.f32.positive.max, expected: kUnboundedBounds },
-    ]
+          // length(0) = kUnboundedBounds, because length uses sqrt, which is defined as 1/inversesqrt
+          {input: 0, expected: kUnboundedBounds },
+
+          // Subnormal Cases
+          { input: constants.negative.subnormal.min, expected: kUnboundedBounds },
+          { input: constants.negative.subnormal.max, expected: kUnboundedBounds },
+          { input: constants.positive.subnormal.min, expected: kUnboundedBounds },
+          { input: constants.positive.subnormal.max, expected: kUnboundedBounds },
+
+          // Edge cases
+          { input: constants.positive.infinity, expected: kUnboundedBounds },
+          { input: constants.negative.infinity, expected: kUnboundedBounds },
+          { input: constants.negative.min, expected: kUnboundedBounds },
+          { input: constants.negative.max, expected: kUnboundedBounds },
+          { input: constants.positive.min, expected: kUnboundedBounds },
+          { input: constants.positive.max, expected: kUnboundedBounds },
+        ];
+      })
   )
   .fn(t => {
-    const expected = FP.f32.toInterval(t.params.expected);
-    const got = FP.f32.lengthInterval(t.params.input);
+    const trait = FP[t.params.trait];
+    const expected = trait.toInterval(t.params.expected);
+    const got = trait.lengthInterval(t.params.input);
     t.expect(
       objectEquals(expected, got),
-      `f32.lengthInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+      `${t.params.trait}.lengthInterval(${t.params.input}) returned ${got}. Expected ${expected}`
     );
   });
 
@@ -3067,8 +3317,7 @@ g.test('logInterval')
       return 3 * trait.oneULP(n);
     };
 
-    t.params.expected = applyError(t.params.expected, error);
-    const expected = trait.toInterval(t.params.expected);
+    const expected = trait.toInterval(applyError(t.params.expected, error));
 
     const got = trait.logInterval(t.params.input);
     t.expect(
@@ -3118,8 +3367,7 @@ g.test('log2Interval')
       return 3 * trait.oneULP(n);
     };
 
-    t.params.expected = applyError(t.params.expected, error);
-    const expected = trait.toInterval(t.params.expected);
+    const expected = trait.toInterval(applyError(t.params.expected, error));
 
     const got = trait.log2Interval(t.params.input);
     t.expect(
@@ -3128,85 +3376,38 @@ g.test('log2Interval')
     );
   });
 
-// prettier-ignore
-const kNegationIntervalCases = {
-  f32: [
-    // Edge cases
-    { input: kValue.f32.infinity.positive, expected: kUnboundedBounds },
-    { input: kValue.f32.infinity.negative, expected: kUnboundedBounds },
-    { input: kValue.f32.positive.max, expected: kValue.f32.negative.min },
-    { input: kValue.f32.positive.min, expected: kValue.f32.negative.max },
-    { input: kValue.f32.negative.min, expected: kValue.f32.positive.max },
-    { input: kValue.f32.negative.max, expected: kValue.f32.positive.min },
-
-    // Normals
-    { input: 0.1, expected: [reinterpretU32AsF32(0xbdcccccd), kPlusOneULPFunctions['f32'](reinterpretU32AsF32(0xbdcccccd))] }, // ~-0.1
-    { input: 1.9, expected: [reinterpretU32AsF32(0xbff33334), kPlusOneULPFunctions['f32'](reinterpretU32AsF32(0xbff33334))] },  // ~-1.9
-    { input: -0.1, expected: [kMinusOneULPFunctions['f32'](reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] }, // ~0.1
-    { input: -1.9, expected: [kMinusOneULPFunctions['f32'](reinterpretU32AsF32(0x3ff33334)), reinterpretU32AsF32(0x3ff33334)] },  // ~1.9
-
-    // Subnormals
-    { input: kValue.f32.subnormal.positive.max, expected: [kValue.f32.subnormal.negative.min, 0] },
-    { input: kValue.f32.subnormal.positive.min, expected: [kValue.f32.subnormal.negative.max, 0] },
-    { input: kValue.f32.subnormal.negative.min, expected: [0, kValue.f32.subnormal.positive.max] },
-    { input: kValue.f32.subnormal.negative.max, expected: [0, kValue.f32.subnormal.positive.min] },
-  ] as ScalarToIntervalCase[],
-  f16: [
-    // Edge cases
-    { input: kValue.f16.infinity.positive, expected: kUnboundedBounds },
-    { input: kValue.f16.infinity.negative, expected: kUnboundedBounds },
-    { input: kValue.f16.positive.max, expected: kValue.f16.negative.min },
-    { input: kValue.f16.positive.min, expected: kValue.f16.negative.max },
-    { input: kValue.f16.negative.min, expected: kValue.f16.positive.max },
-    { input: kValue.f16.negative.max, expected: kValue.f16.positive.min },
-
-    // Normals
-    { input: 0.1, expected: [kMinusOneULPFunctions['f16'](reinterpretU16AsF16(0xae66)), reinterpretU16AsF16(0xae66)] }, // ~-0.1
-    { input: 1.9, expected: [reinterpretU16AsF16(0xbf9a), kPlusOneULPFunctions['f16'](reinterpretU16AsF16(0xbf9a))] },  // ~-1.9
-    { input: -0.1, expected: [reinterpretU16AsF16(0x2e66), kPlusOneULPFunctions['f16'](reinterpretU16AsF16(0x2e66))] }, // ~0.1
-    { input: -1.9, expected: [kMinusOneULPFunctions['f16'](reinterpretU16AsF16(0x3f9a)), reinterpretU16AsF16(0x3f9a)] },  // ~1.9
-
-    // Subnormals
-    { input: kValue.f16.subnormal.positive.max, expected: [kValue.f16.subnormal.negative.min, 0] },
-    { input: kValue.f16.subnormal.positive.min, expected: [kValue.f16.subnormal.negative.max, 0] },
-    { input: kValue.f16.subnormal.negative.min, expected: [0, kValue.f16.subnormal.positive.max] },
-    { input: kValue.f16.subnormal.negative.max, expected: [0, kValue.f16.subnormal.positive.min] },
-  ] as ScalarToIntervalCase[],
-  abstract: [
-    // Edge cases
-    { input: kValue.f64.infinity.positive, expected: kUnboundedBounds },
-    { input: kValue.f64.infinity.negative, expected: kUnboundedBounds },
-    { input: kValue.f64.positive.max, expected: kValue.f64.negative.min },
-    { input: kValue.f64.positive.min, expected: kValue.f64.negative.max },
-    { input: kValue.f64.negative.min, expected: kValue.f64.positive.max },
-    { input: kValue.f64.negative.max, expected: kValue.f64.positive.min },
-
-    // Normals
-    { input: 0.1, expected: -0.1 },
-    { input: 1.9, expected: -1.9 },
-    { input: -0.1, expected: 0.1 },
-    { input: -1.9, expected: 1.9 },
-
-    // Subnormals
-    { input: kValue.f64.subnormal.positive.max, expected: [kValue.f64.subnormal.negative.min, 0] },
-    { input: kValue.f64.subnormal.positive.min, expected: [kValue.f64.subnormal.negative.max, 0] },
-    { input: kValue.f64.subnormal.negative.min, expected: [0, kValue.f64.subnormal.positive.max] },
-    { input: kValue.f64.subnormal.negative.max, expected: [0, kValue.f64.subnormal.positive.min] },
-  ] as ScalarToIntervalCase[],
-} as const;
-
 g.test('negationInterval')
   .params(u =>
     u
       .combine('trait', ['f32', 'f16', 'abstract'] as const)
       .beginSubcases()
       .expandWithParams<ScalarToIntervalCase>(p => {
+        const trait = FP[p.trait];
+        const constants = trait.constants();
         // prettier-ignore
         return [
+          // Edge cases
+          { input: constants.positive.infinity, expected: kUnboundedBounds },
+          { input: constants.negative.infinity, expected: kUnboundedBounds },
+          { input: constants.positive.max, expected: constants.negative.min },
+          { input: constants.positive.min, expected: constants.negative.max },
+          { input: constants.negative.min, expected: constants.positive.max },
+          { input: constants.negative.max, expected: constants.positive.min },
+
+          // Normals
           { input: 0, expected: 0 },
           { input: 1.0, expected: -1.0 },
           { input: -1.0, expected: 1 },
-          ...kNegationIntervalCases[p.trait],
+          { input: 0.1, expected: kConstantCorrectlyRoundedExpectation[p.trait]['-0.1'] }, // ~-0.1
+          { input: 1.9, expected: kConstantCorrectlyRoundedExpectation[p.trait]['-1.9'] },  // ~-1.9
+          { input: -0.1, expected: kConstantCorrectlyRoundedExpectation[p.trait]['0.1'] }, // ~0.1
+          { input: -1.9, expected: kConstantCorrectlyRoundedExpectation[p.trait]['1.9'] },  // ~1.9
+
+          // Subnormals
+          { input: constants.positive.subnormal.max, expected: [constants.negative.subnormal.min, 0] },
+          { input: constants.positive.subnormal.min, expected: [constants.negative.subnormal.max, 0] },
+          { input: constants.negative.subnormal.min, expected: [0, constants.positive.subnormal.max] },
+          { input: constants.negative.subnormal.max, expected: [0, constants.positive.subnormal.min] },
         ];
       })
   )
@@ -3220,29 +3421,31 @@ g.test('negationInterval')
     );
   });
 
-g.test('quantizeToF16Interval_f32')
+g.test('quantizeToF16Interval')
   .paramsSubcasesOnly<ScalarToIntervalCase>(
     // prettier-ignore
     [
-      { input: kValue.f32.infinity.negative, expected: kUnboundedBounds },
+      { input: kValue.f32.negative.infinity, expected: kUnboundedBounds },
       { input: kValue.f32.negative.min, expected: kUnboundedBounds },
       { input: kValue.f16.negative.min, expected: kValue.f16.negative.min },
+      { input: -1.9, expected: kConstantCorrectlyRoundedExpectation['f16']['-1.9'] },  // ~-1.9
       { input: -1, expected: -1 },
-      { input: -0.1, expected: [reinterpretU32AsF32(0xbdcce000), reinterpretU32AsF32(0xbdccc000)] },  // ~-0.1
+      { input: -0.1, expected: kConstantCorrectlyRoundedExpectation['f16']['-0.1'] },  // ~-0.1
       { input: kValue.f16.negative.max, expected: kValue.f16.negative.max },
-      { input: kValue.f16.subnormal.negative.min, expected: [kValue.f16.subnormal.negative.min, 0] },
-      { input: kValue.f16.subnormal.negative.max, expected: [kValue.f16.subnormal.negative.max, 0] },
-      { input: kValue.f32.subnormal.negative.max, expected: [kValue.f16.subnormal.negative.max, 0] },
+      { input: kValue.f16.negative.subnormal.min, expected: [kValue.f16.negative.subnormal.min, 0] },
+      { input: kValue.f16.negative.subnormal.max, expected: [kValue.f16.negative.subnormal.max, 0] },
+      { input: kValue.f32.negative.subnormal.max, expected: [kValue.f16.negative.subnormal.max, 0] },
       { input: 0, expected: 0 },
-      { input: kValue.f32.subnormal.positive.min, expected: [0, kValue.f16.subnormal.positive.min] },
-      { input: kValue.f16.subnormal.positive.min, expected: [0, kValue.f16.subnormal.positive.min] },
-      { input: kValue.f16.subnormal.positive.max, expected: [0, kValue.f16.subnormal.positive.max] },
+      { input: kValue.f32.positive.subnormal.min, expected: [0, kValue.f16.positive.subnormal.min] },
+      { input: kValue.f16.positive.subnormal.min, expected: [0, kValue.f16.positive.subnormal.min] },
+      { input: kValue.f16.positive.subnormal.max, expected: [0, kValue.f16.positive.subnormal.max] },
       { input: kValue.f16.positive.min, expected: kValue.f16.positive.min },
-      { input: 0.1, expected: [reinterpretU32AsF32(0x3dccc000), reinterpretU32AsF32(0x3dcce000)] },  // ~0.1
+      { input: 0.1, expected: kConstantCorrectlyRoundedExpectation['f16']['0.1'] },  // ~0.1
       { input: 1, expected: 1 },
+      { input: 1.9, expected: kConstantCorrectlyRoundedExpectation['f16']['1.9'] },  // ~1.9
       { input: kValue.f16.positive.max, expected: kValue.f16.positive.max },
       { input: kValue.f32.positive.max, expected: kUnboundedBounds },
-      { input: kValue.f32.infinity.positive, expected: kUnboundedBounds },
+      { input: kValue.f32.positive.infinity, expected: kUnboundedBounds },
     ]
   )
   .fn(t => {
@@ -3394,48 +3597,55 @@ g.test('roundInterval')
     );
   });
 
-g.test('saturateInterval_f32')
-  .paramsSubcasesOnly<ScalarToIntervalCase>(
-    // prettier-ignore
-    [
-      // Normals
-      { input: 0, expected: 0 },
-      { input: 1, expected: 1.0 },
-      { input: -0.1, expected: 0 },
-      { input: -1, expected: 0 },
-      { input: -10, expected: 0 },
-      { input: 0.1, expected: [kMinusOneULPFunctions['f32'](reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] },  // ~0.1
-      { input: 10, expected: 1.0 },
-      { input: 11.1, expected: 1.0 },
-      { input: kValue.f32.positive.max, expected: 1.0 },
-      { input: kValue.f32.positive.min, expected: kValue.f32.positive.min },
-      { input: kValue.f32.negative.max, expected: 0.0 },
-      { input: kValue.f32.negative.min, expected: 0.0 },
+g.test('saturateInterval')
+  .params(u =>
+    u
+      .combine('trait', ['f32', 'f16', 'abstract'] as const)
+      .beginSubcases()
+      .expandWithParams<ScalarToIntervalCase>(p => {
+        const constants = FP[p.trait].constants();
+        // prettier-ignore
+        return [
+          // Normals
+          { input: 0, expected: 0 },
+          { input: 0.1, expected: kConstantCorrectlyRoundedExpectation[p.trait]['0.1'] },
+          { input: 1, expected: 1.0 },
+          { input: -0.1, expected: 0 },
+          { input: -1, expected: 0 },
+          { input: -10, expected: 0 },
+          { input: 10, expected: 1.0 },
+          { input: 11.1, expected: 1.0 },
+          { input: constants.positive.max, expected: 1.0 },
+          { input: constants.positive.min, expected: constants.positive.min },
+          { input: constants.negative.max, expected: 0.0 },
+          { input: constants.negative.min, expected: 0.0 },
 
-      // Subnormals
-      { input: kValue.f32.subnormal.positive.max, expected: [0.0, kValue.f32.subnormal.positive.max] },
-      { input: kValue.f32.subnormal.positive.min, expected: [0.0, kValue.f32.subnormal.positive.min] },
-      { input: kValue.f32.subnormal.negative.min, expected: [kValue.f32.subnormal.negative.min, 0.0] },
-      { input: kValue.f32.subnormal.negative.max, expected: [kValue.f32.subnormal.negative.max, 0.0] },
+          // Subnormals
+          { input: constants.positive.subnormal.max, expected: [0.0, constants.positive.subnormal.max] },
+          { input: constants.positive.subnormal.min, expected: [0.0, constants.positive.subnormal.min] },
+          { input: constants.negative.subnormal.min, expected: [constants.negative.subnormal.min, 0.0] },
+          { input: constants.negative.subnormal.max, expected: [constants.negative.subnormal.max, 0.0] },
 
-      // Infinities
-      { input: kValue.f32.infinity.positive, expected: kUnboundedBounds },
-      { input: kValue.f32.infinity.negative, expected: kUnboundedBounds },
-    ]
+          // Infinities
+          { input: constants.positive.infinity, expected: kUnboundedBounds },
+          { input: constants.negative.infinity, expected: kUnboundedBounds },
+        ];
+      })
   )
   .fn(t => {
-    const expected = FP.f32.toInterval(t.params.expected);
-    const got = FP.f32.saturateInterval(t.params.input);
+    const trait = FP[t.params.trait];
+    const expected = trait.toInterval(t.params.expected);
+    const got = trait.saturateInterval(t.params.input);
     t.expect(
       objectEquals(expected, got),
-      `f32.saturationInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+      `${t.params.trait}.saturationInterval(${t.params.input}) returned ${got}. Expected ${expected}`
     );
   });
 
 g.test('signInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract'] as const)
       .beginSubcases()
       .expandWithParams<ScalarToIntervalCase>(p => {
         const constants = FP[p.trait].constants();
@@ -3503,8 +3713,7 @@ g.test('sinInterval')
       return t.params.trait === 'f32' ? 2 ** -11 : 2 ** -7;
     };
 
-    t.params.expected = applyError(t.params.expected, error);
-    const expected = trait.toInterval(t.params.expected);
+    const expected = trait.toInterval(applyError(t.params.expected, error));
 
     const got = trait.sinInterval(t.params.input);
     t.expect(
@@ -3513,28 +3722,48 @@ g.test('sinInterval')
     );
   });
 
-g.test('sinhInterval_f32')
-  .paramsSubcasesOnly<ScalarToIntervalCase>(
-    // prettier-ignore
-    [
-      // Some of these are hard coded, since the error intervals are difficult
-      // to express in a closed human-readable form due to the inherited nature
-      // of the errors.
-      { input: kValue.f32.infinity.negative, expected: kUnboundedBounds },
-      { input: kValue.f32.negative.min, expected: kUnboundedBounds },
-      { input: -1, expected: [ reinterpretU32AsF32(0xbf966d05), reinterpretU32AsF32(0xbf966cf8)] },  // ~-1.175...
-      { input: 0, expected: [reinterpretU32AsF32(0xb4600000), reinterpretU32AsF32(0x34600000)] },  // ~0
-      { input: 1, expected: [ reinterpretU32AsF32(0x3f966cf8), reinterpretU32AsF32(0x3f966d05)] },  // ~1.175...
-      { input: kValue.f32.positive.max, expected: kUnboundedBounds },
-      { input: kValue.f32.infinity.positive, expected: kUnboundedBounds },
-    ]
+// Some of these are hard coded, since the error intervals are difficult to express in a closed
+// human-readable form due to the inherited nature of the errors.
+// prettier-ignore
+const kSinhIntervalCases = {
+  f32: [
+    { input: -1, expected: [reinterpretU32AsF32(0xbf966d05), reinterpretU32AsF32(0xbf966cf8)] },  // ~-1.175...
+    { input: 0, expected: [reinterpretU32AsF32(0xb4600000), reinterpretU32AsF32(0x34600000)] },  // ~0
+    { input: 1, expected: [reinterpretU32AsF32(0x3f966cf8), reinterpretU32AsF32(0x3f966d05)] },  // ~1.175...
+  ] as ScalarToIntervalCase[],
+  f16: [
+    { input: -1, expected: [reinterpretU16AsF16(0xbcb8), reinterpretU16AsF16(0xbcaf)] },  // ~-1.175...
+    { input: 0, expected: [reinterpretU16AsF16(0x9200), reinterpretU16AsF16(0x1200)] },  // ~0
+    { input: 1, expected: [reinterpretU16AsF16(0x3caf), reinterpretU16AsF16(0x3cb8)] },  // ~1.175...
+  ] as ScalarToIntervalCase[],
+} as const;
+
+g.test('sinhInterval')
+  .params(u =>
+    u
+      .combine('trait', ['f32', 'f16'] as const)
+      .beginSubcases()
+      .expandWithParams<ScalarToIntervalCase>(p => {
+        const trait = FP[p.trait];
+        const constants = trait.constants();
+        // prettier-ignore
+        return [
+          ...kSinhIntervalCases[p.trait],
+
+          { input: constants.negative.infinity, expected: kUnboundedBounds },
+          { input: constants.negative.min, expected: kUnboundedBounds },
+          { input: constants.positive.max, expected: kUnboundedBounds },
+          { input: constants.positive.infinity, expected: kUnboundedBounds },
+        ];
+      })
   )
   .fn(t => {
-    const expected = FP.f32.toInterval(t.params.expected);
-    const got = FP.f32.sinhInterval(t.params.input);
+    const trait = FP[t.params.trait];
+    const expected = trait.toInterval(t.params.expected);
+    const got = trait.sinhInterval(t.params.input);
     t.expect(
       objectEquals(expected, got),
-      `f32.sinhInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+      `${t.params.trait}.sinhInterval(${t.params.input}) returned ${got}. Expected ${expected}`
     );
   });
 
@@ -3618,8 +3847,7 @@ g.test('sqrtInterval')
       return 2.5 * trait.oneULP(n);
     };
 
-    t.params.expected = applyError(t.params.expected, error);
-    const expected = trait.toInterval(t.params.expected);
+    const expected = trait.toInterval(applyError(t.params.expected, error));
 
     const got = trait.sqrtInterval(t.params.input);
     t.expect(
@@ -3628,69 +3856,124 @@ g.test('sqrtInterval')
     );
   });
 
-g.test('tanInterval_f32')
-  .paramsSubcasesOnly<ScalarToIntervalCase>(
-    // prettier-ignore
-    [
-      // All of these are hard coded, since the error intervals are difficult to
-      // express in a closed human--readable form.
-      // Some easy looking cases like f(x = -π|π) = 0 are actually quite
-      // difficult. This is because the interval is calculated from the results
-      // of sin(x)/cos(x), which becomes very messy at x = -π|π, since π is
-      // irrational, thus does not have an exact representation as a f32.
-      //
-      // Even at 0, which has a precise f32 value, there is still the problem
-      // that result of sin(0) and cos(0) will be intervals due to the inherited
-      // nature of errors, so the proper interval will be an interval calculated
-      // from dividing an interval by another interval and applying an error
-      // function to that.
-      //
-      // This complexity is why the entire interval framework was developed.
-      //
-      // The examples here have been manually traced to confirm the expectation
-      // values are correct.
-      { input: kValue.f32.infinity.negative, expected: kUnboundedBounds },
-      { input: kValue.f32.negative.min, expected: kUnboundedBounds },
-      { input: kValue.f32.negative.pi.whole, expected: [reinterpretU64AsF64(0xbf40_02bc_9000_0000n), reinterpretU64AsF64(0x3f40_0144_f000_0000n)] },  // ~0.0
-      { input: kValue.f32.negative.pi.half, expected: kUnboundedBounds },
-      { input: 0, expected: [reinterpretU64AsF64(0xbf40_0200_b000_0000n), reinterpretU64AsF64(0x3f40_0200_b000_0000n)] },  // ~0.0
-      { input: kValue.f32.positive.pi.half, expected: kUnboundedBounds },
-      { input: kValue.f32.positive.pi.whole, expected: [reinterpretU64AsF64(0xbf40_0144_f000_0000n), reinterpretU64AsF64(0x3f40_02bc_9000_0000n)] },  // ~0.0
-      { input: kValue.f32.positive.max, expected: kUnboundedBounds },
-      { input: kValue.f32.infinity.positive, expected: kUnboundedBounds },
-    ]
+// All of these are hard coded, since the error intervals are difficult to express in a closed
+// human-readable form.
+// Some easy looking cases like f(x = -π|π) = 0 are actually quite difficult. This is because the
+// interval is calculated from the results of sin(x)/cos(x), which becomes very messy at x = -π|π,
+// since π is irrational, thus does not have an exact representation as a float.
+//
+// Even at 0, which has a precise f32/f16 value, there is still the problem that result of sin(0)
+// and cos(0) will be intervals due to the inherited nature of errors, so the proper interval will
+// be an interval calculated from dividing an interval by another interval and applying an error
+// function to that.
+//
+// This complexity is why the entire interval framework was developed.
+//
+// The examples here have been manually traced to confirm the expectation values are correct.
+// prettier-ignore
+const kTanIntervalCases = {
+  f32: [
+    { input: kValue.f32.negative.pi.whole, expected: [reinterpretU64AsF64(0xbf40_02bc_9000_0000n), reinterpretU64AsF64(0x3f40_0144_f000_0000n)] },  // ~0.0
+    { input: kValue.f32.negative.pi.three_quarters, expected: [reinterpretU64AsF64(0x3fef_f4b1_3000_0000n), reinterpretU64AsF64(0x3ff0_05a9_9000_0000n)] },  // ~1.0
+    { input: kValue.f32.negative.pi.third, expected: [reinterpretU64AsF64(0xbffb_c16b_d000_0000n), reinterpretU64AsF64(0xbffb_ab8f_9000_0000n)] },  // ~-√3
+    { input: kValue.f32.negative.pi.quarter, expected: [reinterpretU64AsF64(0xbff0_05a9_b000_0000n), reinterpretU64AsF64(0xbfef_f4b1_5000_0000n)] },  // ~-1.0
+    { input: kValue.f32.negative.pi.sixth, expected: [reinterpretU64AsF64(0xbfe2_80f1_f000_0000n), reinterpretU64AsF64(0xbfe2_725e_d000_0000n)] },  // ~-1/√3
+    { input: 0, expected: [reinterpretU64AsF64(0xbf40_0200_b000_0000n), reinterpretU64AsF64(0x3f40_0200_b000_0000n)] },  // ~0.0
+    { input: kValue.f32.positive.pi.sixth, expected: [reinterpretU64AsF64(0x3fe2_725e_d000_0000n), reinterpretU64AsF64(0x3fe2_80f1_f000_0000n)] },  // ~1/√3
+    { input: kValue.f32.positive.pi.quarter, expected: [reinterpretU64AsF64(0x3fef_f4b1_5000_0000n), reinterpretU64AsF64(0x3ff0_05a9_b000_0000n)] },  // ~1.0
+    { input: kValue.f32.positive.pi.third, expected: [reinterpretU64AsF64(0x3ffb_ab8f_9000_0000n), reinterpretU64AsF64(0x3ffb_c16b_d000_0000n)] },  // ~√3
+    { input: kValue.f32.positive.pi.three_quarters, expected: [reinterpretU64AsF64(0xbff0_05a9_9000_0000n), reinterpretU64AsF64(0xbfef_f4b1_3000_0000n)] },  // ~-1.0
+    { input: kValue.f32.positive.pi.whole, expected: [reinterpretU64AsF64(0xbf40_0144_f000_0000n), reinterpretU64AsF64(0x3f40_02bc_9000_0000n)] },  // ~0.0
+  ] as ScalarToIntervalCase[],
+  f16: [
+    { input: kValue.f16.negative.pi.whole, expected: [reinterpretU64AsF64(0xbf7c_5600_0000_0000n), reinterpretU64AsF64(0x3f82_2e00_0000_0000n)] },  // ~0.0
+    { input: kValue.f16.negative.pi.three_quarters, expected: [reinterpretU64AsF64(0x3fef_4600_0000_0000n), reinterpretU64AsF64(0x3ff0_7200_0000_0000n)] },  // ~1.0
+    { input: kValue.f16.negative.pi.third, expected: [reinterpretU64AsF64(0xbffc_7600_0000_0000n), reinterpretU64AsF64(0xbffa_f600_0000_0000n)] },  // ~-√3
+    { input: kValue.f16.negative.pi.quarter, expected: [reinterpretU64AsF64(0xbff0_6600_0000_0000n), reinterpretU64AsF64(0xbfef_3600_0000_0000n)] },  // ~-1.0
+    { input: kValue.f16.negative.pi.sixth, expected: [reinterpretU64AsF64(0xbfe2_fe00_0000_0000n), reinterpretU64AsF64(0xbfe1_f600_0000_0000n)] },  // ~-1/√3
+    { input: 0, expected: [reinterpretU64AsF64(0xbf80_2e00_0000_0000n), reinterpretU64AsF64(0x3f80_2e00_0000_0000n)] },  // ~0.0
+    { input: kValue.f16.positive.pi.sixth, expected: [reinterpretU64AsF64(0x3fe1_f600_0000_0000n), reinterpretU64AsF64(0x3fe2_fe00_0000_0000n)] },  // ~1/√3
+    { input: kValue.f16.positive.pi.quarter, expected: [reinterpretU64AsF64(0x3fef_3600_0000_0000n), reinterpretU64AsF64(0x3ff0_6600_0000_0000n)] },  // ~1.0
+    { input: kValue.f16.positive.pi.third, expected: [reinterpretU64AsF64(0x3ffa_f600_0000_0000n), reinterpretU64AsF64(0x3ffc_7600_0000_0000n)] },  // ~√3
+    { input: kValue.f16.positive.pi.three_quarters, expected: [reinterpretU64AsF64(0xbff0_7200_0000_0000n), reinterpretU64AsF64(0xbfef_4600_0000_0000n)] },  // ~-1.0
+    { input: kValue.f16.positive.pi.whole, expected: [reinterpretU64AsF64(0xbf82_2e00_0000_0000n), reinterpretU64AsF64(0x3f7c_5600_0000_0000n)] },  // ~0.0
+  ] as ScalarToIntervalCase[],
+} as const;
+
+g.test('tanInterval')
+  .params(u =>
+    u
+      .combine('trait', ['f32', 'f16'] as const)
+      .beginSubcases()
+      .expandWithParams<ScalarToIntervalCase>(p => {
+        const trait = FP[p.trait];
+        const constants = trait.constants();
+        // prettier-ignore
+        return [
+          ...kTanIntervalCases[p.trait],
+
+          // Cases that result in unbounded interval.
+          { input: constants.negative.infinity, expected: kUnboundedBounds },
+          { input: constants.negative.min, expected: kUnboundedBounds },
+          { input: constants.negative.pi.half, expected: kUnboundedBounds },
+          { input: constants.positive.pi.half, expected: kUnboundedBounds },
+          { input: constants.positive.max, expected: kUnboundedBounds },
+          { input: constants.positive.infinity, expected: kUnboundedBounds },
+        ];
+      })
   )
   .fn(t => {
-    const expected = FP.f32.toInterval(t.params.expected);
-    const got = FP.f32.tanInterval(t.params.input);
+    const trait = FP[t.params.trait];
+    const expected = trait.toInterval(t.params.expected);
+    const got = trait.tanInterval(t.params.input);
     t.expect(
       objectEquals(expected, got),
-      `f32.tanInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+      `${t.params.trait}.tanInterval(${t.params.input}) returned ${got}. Expected ${expected}`
     );
   });
 
-g.test('tanhInterval_f32')
-  .paramsSubcasesOnly<ScalarToIntervalCase>(
-    // prettier-ignore
-    [
-      // Some of these are hard coded, since the error intervals are difficult
-      // to express in a closed human-readable form due to the inherited nature
-      // of the errors.
-      { input: kValue.f32.infinity.negative, expected: kUnboundedBounds },
-      { input: kValue.f32.negative.min, expected: kUnboundedBounds },
-      { input: -1, expected: [reinterpretU64AsF64(0xbfe8_5efd_1000_0000n), reinterpretU64AsF64(0xbfe8_5ef8_9000_0000n)] },  // ~-0.7615...
-      { input: 0, expected: [reinterpretU64AsF64(0xbe8c_0000_b000_0000n), reinterpretU64AsF64(0x3e8c_0000_b000_0000n)] },  // ~0
-      { input: 1, expected: [reinterpretU64AsF64(0x3fe8_5ef8_9000_0000n), reinterpretU64AsF64(0x3fe8_5efd_1000_0000n)] },  // ~0.7615...
-      { input: kValue.f32.positive.max, expected: kUnboundedBounds },
-      { input: kValue.f32.infinity.positive, expected: kUnboundedBounds },
-    ]
+// Some of these are hard coded, since the error intervals are difficult to express in a closed
+// human-readable form due to the inherited nature of the errors.
+// prettier-ignore
+const kTanhIntervalCases = {
+  f32: [
+    { input: -1, expected: [reinterpretU64AsF64(0xbfe8_5efd_1000_0000n), reinterpretU64AsF64(0xbfe8_5ef8_9000_0000n)] },  // ~-0.7615...
+    { input: 0, expected: [reinterpretU64AsF64(0xbe8c_0000_b000_0000n), reinterpretU64AsF64(0x3e8c_0000_b000_0000n)] },  // ~0
+    { input: 1, expected: [reinterpretU64AsF64(0x3fe8_5ef8_9000_0000n), reinterpretU64AsF64(0x3fe8_5efd_1000_0000n)] },  // ~0.7615...
+  ] as ScalarToIntervalCase[],
+  f16: [
+    { input: -1, expected: [reinterpretU64AsF64(0xbfe8_9600_0000_0000n), reinterpretU64AsF64(0xbfe8_2e00_0000_0000n)] },  // ~-0.7615...
+    { input: 0, expected: [reinterpretU64AsF64(0xbf48_0e00_0000_0000n), reinterpretU64AsF64(0x3f48_0e00_0000_0000n)] },  // ~0
+    { input: 1, expected: [reinterpretU64AsF64(0x3fe8_2e00_0000_0000n), reinterpretU64AsF64(0x3fe8_9600_0000_0000n)] },  // ~0.7615...
+  ] as ScalarToIntervalCase[],
+} as const;
+
+g.test('tanhInterval')
+  .params(u =>
+    u
+      .combine('trait', ['f32', 'f16'] as const)
+      .beginSubcases()
+      .expandWithParams<ScalarToIntervalCase>(p => {
+        const trait = FP[p.trait];
+        const constants = trait.constants();
+        // prettier-ignore
+        return [
+          ...kTanhIntervalCases[p.trait],
+
+          { input: constants.negative.infinity, expected: kUnboundedBounds },
+          { input: constants.negative.min, expected: kUnboundedBounds },
+          { input: constants.positive.max, expected: kUnboundedBounds },
+          { input: constants.positive.infinity, expected: kUnboundedBounds },
+        ];
+      })
   )
   .fn(t => {
-    const expected = FP.f32.toInterval(t.params.expected);
-    const got = FP.f32.tanhInterval(t.params.input);
+    const trait = FP[t.params.trait];
+    const expected = trait.toInterval(t.params.expected);
+    const got = trait.tanhInterval(t.params.input);
     t.expect(
       objectEquals(expected, got),
-      `f32.tanhInterval(${t.params.input}) returned ${got}. Expected ${expected}`
+      `${t.params.trait}.tanhInterval(${t.params.input}) returned ${got}. Expected ${expected}`
     );
   });
 
@@ -3753,12 +4036,7 @@ interface ScalarPairToIntervalCase {
 // prettier-ignore
 const kAdditionInterval64BitsNormalCases = {
   f32: [
-    // 0.1 falls between f32 0x3DCCCCCC and 0x3DCCCCCD
-    { input: [0.1, 0], expected: [reinterpretU32AsF32(0x3dcccccc), reinterpretU32AsF32(0x3dcccccd)] },
-    { input: [0, 0.1], expected: [reinterpretU32AsF32(0x3dcccccc), reinterpretU32AsF32(0x3dcccccd)] },
-    // -0.1 falls between f32 0xBDCCCCCD and 0xBDCCCCCC
-    { input: [-0.1, 0], expected: [reinterpretU32AsF32(0xbdcccccd), reinterpretU32AsF32(0xbdcccccc)] },
-    { input: [0, -0.1], expected: [reinterpretU32AsF32(0xbdcccccd), reinterpretU32AsF32(0xbdcccccc)] },
+    // 0.1 falls between f32 0x3DCCCCCC and 0x3DCCCCCD, -0.1 falls between f32 0xBDCCCCCD and 0xBDCCCCCC
     // f32 0x3DCCCCCC+0x3DCCCCCC=0x3E4CCCCC, 0x3DCCCCCD+0x3DCCCCCD=0x3E4CCCCD
     { input: [0.1, 0.1], expected: [reinterpretU32AsF32(0x3e4ccccc), reinterpretU32AsF32(0x3e4ccccd)] },  // ~0.2
     // f32 0xBDCCCCCD+0xBDCCCCCD=0xBE4CCCCD, 0xBDCCCCCC+0xBDCCCCCC=0xBE4CCCCD
@@ -3769,12 +4047,7 @@ const kAdditionInterval64BitsNormalCases = {
     { input: [-0.1, 0.1], expected: [reinterpretU32AsF32(0xbdcccccd)+reinterpretU32AsF32(0x3dcccccc), reinterpretU32AsF32(0xbdcccccc)+reinterpretU32AsF32(0x3dcccccd)] },  // ~0.0
   ] as ScalarPairToIntervalCase[],
   f16: [
-    // 0.1 falls between f16 0x2E66 and 0x2E67
-    { input: [0.1, 0], expected: [reinterpretU16AsF16(0x2e66), reinterpretU16AsF16(0x2e67)] },
-    { input: [0, 0.1], expected: [reinterpretU16AsF16(0x2e66), reinterpretU16AsF16(0x2e67)] },
-    // -0.1 falls between f16 0xAE67 and 0xAE66
-    { input: [-0.1, 0], expected: [reinterpretU16AsF16(0xae67), reinterpretU16AsF16(0xae66)] },
-    { input: [0, -0.1], expected: [reinterpretU16AsF16(0xae67), reinterpretU16AsF16(0xae66)] },
+    // 0.1 falls between f16 0x2E66 and 0x2E67, -0.1 falls between f16 0xAE67 and 0xAE66
     // f16 0x2E66+0x2E66=0x3266, 0x2E67+0x2E67=0x3267
     { input: [0.1, 0.1], expected: [reinterpretU16AsF16(0x3266), reinterpretU16AsF16(0x3267)] },  // ~0.2
     // f16 0xAE67+0xAE67=0xB267, 0xAE66+0xAE66=0xB266
@@ -3788,10 +4061,6 @@ const kAdditionInterval64BitsNormalCases = {
     // 0.1 isn't exactly representable in f64, but will be quantized to an
     // exact value when storing to a 'number' (0x3FB999999999999A).
     // This is why below the expectations are not intervals.
-    { input: [0.1, 0], expected: 0.1 },
-    { input: [0, 0.1], expected: 0.1 },
-    { input: [-0.1, 0], expected: -0.1 },
-    { input: [0, -0.1], expected: -0.1 },
     // f64 0x3FB999999999999A+0x3FB999999999999A = 0x3FC999999999999A
     { input: [0.1, 0.1], expected: reinterpretU64AsF64(0x3FC999999999999An) },  // ~0.2
     // f64 0xBFB999999999999A+0xBFB999999999999A = 0xBFC999999999999A
@@ -3821,6 +4090,13 @@ g.test('additionInterval')
           { input: [1, -1], expected: 0 },
           { input: [-1, 1], expected: 0 },
           { input: [-1, -1], expected: -2 },
+
+          // 0.1 should be correctly rounded
+          { input: [0.1, 0], expected: kConstantCorrectlyRoundedExpectation[p.trait]['0.1'] },
+          { input: [0, 0.1], expected: kConstantCorrectlyRoundedExpectation[p.trait]['0.1'] },
+          // -0.1 should be correctly rounded
+          { input: [-0.1, 0], expected: kConstantCorrectlyRoundedExpectation[p.trait]['-0.1'] },
+          { input: [0, -0.1], expected: kConstantCorrectlyRoundedExpectation[p.trait]['-0.1'] },
 
           // 64-bit normals that can not be exactly represented
           ...kAdditionInterval64BitsNormalCases[p.trait],
@@ -3991,53 +4267,58 @@ g.test('atan2Interval')
     );
   });
 
-g.test('distanceIntervalScalar_f32')
-  .paramsSubcasesOnly<ScalarPairToIntervalCase>(
-    // prettier-ignore
-    [
-      // Some of these are hard coded, since the error intervals are difficult
-      // to express in a closed human-readable  form due to the inherited nature
-      // of the errors.
-      //
-      // distance(x, y), where x - y = 0 has an acceptance interval of kUnboundedBounds,
-      // because distance(x, y) = length(x - y), and length(0) = kUnboundedBounds
-      { input: [0, 0], expected: kUnboundedBounds },
-      { input: [1.0, 0], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      { input: [0.0, 1.0], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      { input: [1.0, 1.0], expected: kUnboundedBounds },
-      { input: [-0.0, -1.0], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      { input: [0.0, -1.0], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      { input: [-1.0, -1.0], expected: kUnboundedBounds },
-      { input: [0.1, 0], expected: [reinterpretU64AsF64(0x3fb9_9998_9000_0000n), reinterpretU64AsF64(0x3fb9_999a_7000_0000n)] },  // ~0.1
-      { input: [0, 0.1], expected: [reinterpretU64AsF64(0x3fb9_9998_9000_0000n), reinterpretU64AsF64(0x3fb9_999a_7000_0000n)] },  // ~0.1
-      { input: [-0.1, 0], expected: [reinterpretU64AsF64(0x3fb9_9998_9000_0000n), reinterpretU64AsF64(0x3fb9_999a_7000_0000n)] },  // ~0.1
-      { input: [0, -0.1], expected: [reinterpretU64AsF64(0x3fb9_9998_9000_0000n), reinterpretU64AsF64(0x3fb9_999a_7000_0000n)] },  // ~0.1
-      { input: [10.0, 0], expected: [reinterpretU64AsF64(0x4023_ffff_7000_0000n), reinterpretU64AsF64(0x4024_0000_b000_0000n)] },  // ~10
-      { input: [0, 10.0], expected: [reinterpretU64AsF64(0x4023_ffff_7000_0000n), reinterpretU64AsF64(0x4024_0000_b000_0000n)] },  // ~10
-      { input: [-10.0, 0], expected: [reinterpretU64AsF64(0x4023_ffff_7000_0000n), reinterpretU64AsF64(0x4024_0000_b000_0000n)] },  // ~10
-      { input: [0, -10.0], expected: [reinterpretU64AsF64(0x4023_ffff_7000_0000n), reinterpretU64AsF64(0x4024_0000_b000_0000n)] },  // ~10
+g.test('distanceIntervalScalar')
+  .params(u =>
+    u
+      .combine('trait', ['f32', 'f16'] as const)
+      .beginSubcases()
+      .expandWithParams<ScalarPairToIntervalCase>(p => {
+        const trait = FP[p.trait];
+        const constants = trait.constants();
+        // prettier-ignore
+        return [
+          { input: [1.0, 0], expected: kRootSumSquareExpectionInterval[p.trait]['[1.0]'] },  // ~1
+          { input: [0.0, 1.0], expected: kRootSumSquareExpectionInterval[p.trait]['[1.0]'] },  // ~1
+          { input: [-0.0, -1.0], expected: kRootSumSquareExpectionInterval[p.trait]['[1.0]'] },  // ~1
+          { input: [0.0, -1.0], expected: kRootSumSquareExpectionInterval[p.trait]['[1.0]'] },  // ~1
+          { input: [0.1, 0], expected: kRootSumSquareExpectionInterval[p.trait]['[0.1]'] },  // ~0.1
+          { input: [0, 0.1], expected: kRootSumSquareExpectionInterval[p.trait]['[0.1]'] },  // ~0.1
+          { input: [-0.1, 0], expected: kRootSumSquareExpectionInterval[p.trait]['[0.1]'] },  // ~0.1
+          { input: [0, -0.1], expected: kRootSumSquareExpectionInterval[p.trait]['[0.1]'] },  // ~0.1
+          { input: [10.0, 0], expected: kRootSumSquareExpectionInterval[p.trait]['[10]'] },  // ~10
+          { input: [0, 10.0], expected: kRootSumSquareExpectionInterval[p.trait]['[10]'] },  // ~10
+          { input: [-10.0, 0], expected: kRootSumSquareExpectionInterval[p.trait]['[10]'] },  // ~10
+          { input: [0, -10.0], expected: kRootSumSquareExpectionInterval[p.trait]['[10]'] },  // ~10
 
-      // Subnormal Cases
-      { input: [kValue.f32.subnormal.negative.min, 0], expected: kUnboundedBounds },
-      { input: [kValue.f32.subnormal.negative.max, 0], expected: kUnboundedBounds },
-      { input: [kValue.f32.subnormal.positive.min, 0], expected: kUnboundedBounds },
-      { input: [kValue.f32.subnormal.positive.max, 0], expected: kUnboundedBounds },
+          // distance(x, y), where x - y = 0 has an acceptance interval of kUnboundedBounds,
+          // because distance(x, y) = length(x - y), and length(0) = kUnboundedBounds
+          { input: [0, 0], expected: kUnboundedBounds },
+          { input: [1.0, 1.0], expected: kUnboundedBounds },
+          { input: [-1.0, -1.0], expected: kUnboundedBounds },
 
-      // Edge cases
-      { input: [kValue.f32.infinity.positive, 0], expected: kUnboundedBounds },
-      { input: [kValue.f32.infinity.negative, 0], expected: kUnboundedBounds },
-      { input: [kValue.f32.negative.min, 0], expected: kUnboundedBounds },
-      { input: [kValue.f32.negative.max, 0], expected: kUnboundedBounds },
-      { input: [kValue.f32.positive.min, 0], expected: kUnboundedBounds },
-      { input: [kValue.f32.positive.max, 0], expected: kUnboundedBounds },
-    ]
+          // Subnormal Cases
+          { input: [constants.negative.subnormal.min, 0], expected: kUnboundedBounds },
+          { input: [constants.negative.subnormal.max, 0], expected: kUnboundedBounds },
+          { input: [constants.positive.subnormal.min, 0], expected: kUnboundedBounds },
+          { input: [constants.positive.subnormal.max, 0], expected: kUnboundedBounds },
+
+          // Edge cases
+          { input: [constants.positive.infinity, 0], expected: kUnboundedBounds },
+          { input: [constants.negative.infinity, 0], expected: kUnboundedBounds },
+          { input: [constants.negative.min, 0], expected: kUnboundedBounds },
+          { input: [constants.negative.max, 0], expected: kUnboundedBounds },
+          { input: [constants.positive.min, 0], expected: kUnboundedBounds },
+          { input: [constants.positive.max, 0], expected: kUnboundedBounds },
+        ];
+      })
   )
   .fn(t => {
-    const expected = FP.f32.toInterval(t.params.expected);
-    const got = FP.f32.distanceInterval(...t.params.input);
+    const trait = FP[t.params.trait];
+    const expected = trait.toInterval(t.params.expected);
+    const got = trait.distanceInterval(...t.params.input);
     t.expect(
       objectEquals(expected, got),
-      `f32.distanceInterval(${t.params.input[0]}, ${t.params.input[1]}) returned ${got}. Expected ${expected}`
+      `${t.params.trait}.distanceInterval(${t.params.input[0]}, ${t.params.input[1]}) returned ${got}. Expected ${expected}`
     );
   });
 
@@ -4090,11 +4371,14 @@ const kDivisionInterval64BitsNormalCases = {
 g.test('divisionInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16'] as const)
+      .combine('trait', ['abstract', 'f32', 'f16'] as const)
       .beginSubcases()
       .expandWithParams<ScalarPairToIntervalCase>(p => {
-        const trait = FP[p.trait];
-        const constants = trait.constants();
+        // This is a ULP based interval, so abstract should behave like f32, so
+        // swizzling the trait as needed.
+        const trait = p.trait === 'abstract' ? 'f32' : p.trait;
+        const fp = FP[trait];
+        const constants = fp.constants();
         // prettier-ignore
         return [
           // Representable normals
@@ -4110,7 +4394,7 @@ g.test('divisionInterval')
           { input: [-4, -2], expected: 2 },
 
           // 64-bit normals that can not be exactly represented
-          ...kDivisionInterval64BitsNormalCases[p.trait],
+          ...kDivisionInterval64BitsNormalCases[trait],
 
           // Denominator out of range
           { input: [1, constants.positive.infinity], expected: kUnboundedBounds },
@@ -4126,97 +4410,128 @@ g.test('divisionInterval')
       })
   )
   .fn(t => {
-    const trait = FP[t.params.trait];
+    // This is a ULP based interval, so abstract should behave like f32, so
+    // swizzling the trait as needed for calculating the expected result.
+    const trait = t.params.trait === 'abstract' ? 'f32' : t.params.trait;
+    const fp = FP[trait];
 
     const error = (n: number): number => {
-      return 2.5 * trait.oneULP(n);
+      return 2.5 * fp.oneULP(n);
     };
 
     const [x, y] = t.params.input;
-    t.params.expected = applyError(t.params.expected, error);
-    const expected = trait.toInterval(t.params.expected);
 
-    const got = trait.divisionInterval(x, y);
+    // Do not swizzle here, so the correct implementation under test is called.
+    const expected = FP[t.params.trait].toInterval(applyError(t.params.expected, error));
+    const got = FP[t.params.trait].divisionInterval(x, y);
     t.expect(
       objectEquals(expected, got),
       `${t.params.trait}.divisionInterval(${x}, ${y}) returned ${got}. Expected ${expected}`
     );
   });
 
-g.test('ldexpInterval_f32')
-  .paramsSubcasesOnly<ScalarPairToIntervalCase>(
-    // prettier-ignore
-    [
-      // 32-bit normals
-      { input: [0, 0], expected: 0 },
-      { input: [0, 1], expected: 0 },
-      { input: [0, -1], expected: 0 },
-      { input: [1, 1], expected: 2 },
-      { input: [1, -1], expected: 0.5 },
-      { input: [-1, 1], expected: -2 },
-      { input: [-1, -1], expected: -0.5 },
+const kLdexpIntervalCases = {
+  f32: [
+    // 64-bit normals
+    { input: [1.0000000001, 1], expected: [2, kPlusNULPFunctions['f32'](2, 2)] }, // ~2, additional ULP error due to first param not being f32 precise
+    { input: [-1.0000000001, 1], expected: [kMinusNULPFunctions['f32'](-2, 2), -2] }, // ~-2, additional ULP error due to first param not being f32 precise
+    // Edge Cases
+    // f32 0b0_01111111_11111111111111111111111 = 1.9999998807907104,
+    // 1.9999998807907104 * 2 ** 127 = f32.positive.max
+    { input: [1.9999998807907104, 127], expected: kValue.f32.positive.max },
+    // f32.positive.min = 1 * 2 ** -126
+    { input: [1, -126], expected: kValue.f32.positive.min },
+    // f32.positive.subnormal.max = 0.9999998807907104 * 2 ** -126
+    { input: [0.9999998807907104, -126], expected: [0, kValue.f32.positive.subnormal.max] },
+    // f32.positive.subnormal.min = 1.1920928955078125e-07 * 2 ** -126
+    { input: [1.1920928955078125e-7, -126], expected: [0, kValue.f32.positive.subnormal.min] },
+    { input: [-1.1920928955078125e-7, -126], expected: [kValue.f32.negative.subnormal.max, 0] },
+    { input: [-0.9999998807907104, -126], expected: [kValue.f32.negative.subnormal.min, 0] },
+    { input: [-1, -126], expected: kValue.f32.negative.max },
+    { input: [-1.9999998807907104, 127], expected: kValue.f32.negative.min },
+    // e2 + bias <= 0, expect correctly rounded intervals.
+    { input: [2 ** 120, -130], expected: 2 ** -10 },
+    // Out of Bounds
+    { input: [1, 128], expected: kUnboundedBounds },
+    { input: [-1, 128], expected: kUnboundedBounds },
+    { input: [100, 126], expected: kUnboundedBounds },
+    { input: [-100, 126], expected: kUnboundedBounds },
+    { input: [2 ** 100, 100], expected: kUnboundedBounds },
+  ] as ScalarPairToIntervalCase[],
+  f16: [
+    // 64-bit normals
+    { input: [1.0000000001, 1], expected: [2, kPlusNULPFunctions['f16'](2, 2)] }, // ~2, additional ULP error due to first param not being f16 precise
+    { input: [-1.0000000001, 1], expected: [kMinusNULPFunctions['f16'](-2, 2), -2] }, // ~-2, additional ULP error due to first param not being f16 precise
+    // Edge Cases
+    // f16 0b0_01111_1111111111 = 1.9990234375, 1.9990234375 * 2 ** 15 = f16.positive.max
+    { input: [1.9990234375, 15], expected: kValue.f16.positive.max },
+    // f16.positive.min = 1 * 2 ** -14
+    { input: [1, -14], expected: kValue.f16.positive.min },
+    // f16.positive.subnormal.max = 0.9990234375 * 2 ** -14
+    { input: [0.9990234375, -14], expected: [0, kValue.f16.positive.subnormal.max] },
+    // f16.positive.subnormal.min = 1 * 2 ** -10 * 2 ** -14 = 0.0009765625 * 2 ** -14
+    { input: [0.0009765625, -14], expected: [0, kValue.f16.positive.subnormal.min] },
+    { input: [-0.0009765625, -14], expected: [kValue.f16.negative.subnormal.max, 0] },
+    { input: [-0.9990234375, -14], expected: [kValue.f16.negative.subnormal.min, 0] },
+    { input: [-1, -14], expected: kValue.f16.negative.max },
+    { input: [-1.9990234375, 15], expected: kValue.f16.negative.min },
+    // e2 + bias <= 0, expect correctly rounded intervals.
+    { input: [2 ** 12, -18], expected: 2 ** -6 },
+    // Out of Bounds
+    { input: [1, 16], expected: kUnboundedBounds },
+    { input: [-1, 16], expected: kUnboundedBounds },
+    { input: [100, 14], expected: kUnboundedBounds },
+    { input: [-100, 14], expected: kUnboundedBounds },
+    { input: [2 ** 10, 10], expected: kUnboundedBounds },
+  ] as ScalarPairToIntervalCase[],
+} as const;
 
-      // 64-bit normals
-      { input: [0, 0.1], expected: 0 },
-      { input: [0, -0.1], expected: 0 },
-      { input: [1.0000000001, 1], expected: [2, kPlusNULPFunctions['f32'](2, 2)] },  // ~2, additional ULP error due to first param not being f32 precise
-      { input: [-1.0000000001, 1], expected: [kMinusNULPFunctions['f32'](-2, 2), -2] },  // ~-2, additional ULP error due to first param not being f32 precise
+g.test('ldexpInterval')
+  .params(u =>
+    u
+      .combine('trait', ['f32', 'f16'] as const)
+      .beginSubcases()
+      .expandWithParams<ScalarPairToIntervalCase>(p => {
+        const trait = FP[p.trait];
+        const constants = trait.constants();
+        // prettier-ignore
+        return [
+          // always exactly represeantable cases
+          { input: [0, 0], expected: 0 },
+          { input: [0, 1], expected: 0 },
+          { input: [0, -1], expected: 0 },
+          { input: [1, 1], expected: 2 },
+          { input: [1, -1], expected: 0.5 },
+          { input: [-1, 1], expected: -2 },
+          { input: [-1, -1], expected: -0.5 },
 
-      // Edge Cases
-      { input: [1.9999998807907104, 127], expected: kValue.f32.positive.max },
-      { input: [1, -126], expected: kValue.f32.positive.min },
-      { input: [0.9999998807907104, -126], expected: [0, kValue.f32.subnormal.positive.max] },
-      { input: [1.1920928955078125e-07, -126], expected: [0, kValue.f32.subnormal.positive.min] },
-      { input: [-1.1920928955078125e-07, -126], expected: [kValue.f32.subnormal.negative.max, 0] },
-      { input: [-0.9999998807907104, -126], expected: [kValue.f32.subnormal.negative.min, 0] },
-      { input: [-1, -126], expected: kValue.f32.negative.max },
-      { input: [-1.9999998807907104, 127], expected: kValue.f32.negative.min },
+          ...kLdexpIntervalCases[p.trait],
 
-      // Out of Bounds
-      { input: [1, 128], expected: kUnboundedBounds },
-      { input: [-1, 128], expected: kUnboundedBounds },
-      { input: [100, 126], expected: kUnboundedBounds },
-      { input: [-100, 126], expected: kUnboundedBounds },
-      { input: [kValue.f32.positive.max, kValue.i32.positive.max], expected: kUnboundedBounds },
-      { input: [kValue.f32.negative.min, kValue.i32.positive.max], expected: kUnboundedBounds },
-    ]
+          // Extremely negative e2, any float value should be scale to 0.0 as the ground truth
+          // f64 e1 * 2 ** e2 would be 0.0 for e2 = -2147483648.
+          { input: [constants.positive.max, kValue.i32.negative.min], expected: 0 },
+          { input: [constants.negative.min, kValue.i32.negative.min], expected: 0 },
+          // Out of Bounds
+          { input: [constants.positive.max, kValue.i32.positive.max], expected: kUnboundedBounds },
+          { input: [constants.negative.min, kValue.i32.positive.max], expected: kUnboundedBounds },
+        ];
+      })
   )
   .fn(t => {
     const [x, y] = t.params.input;
-    const expected = FP.f32.toInterval(t.params.expected);
-    const got = FP.f32.ldexpInterval(x, y);
+    const trait = FP[t.params.trait];
+    const expected = trait.toInterval(t.params.expected);
+    const got = trait.ldexpInterval(x, y);
     t.expect(
       objectEquals(expected, got),
-      `f32.ldexpInterval(${x}, ${y}) returned ${got}. Expected ${expected}`
+      `${t.params.trait}.ldexpInterval(${x}, ${y}) returned ${got}. Expected ${expected}`
     );
   });
-
-// prettier-ignore
-const kMaxInterval64BitsCases = {
-  f32: [
-    // 0.1 rounded to f32 0x3DCCCCCC or 0x3DCCCCCD, -0.1 rounded to f32 0xBDCCCCCD or 0xBDCCCCCC
-    { input: [0.1, 0], expected: [kMinusOneULPFunctions['f32'](reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] },  // ~0.1
-    { input: [0, 0.1], expected: [kMinusOneULPFunctions['f32'](reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] },  // ~0.1
-    { input: [0.1, 0.1], expected: [kMinusOneULPFunctions['f32'](reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] },  // ~0.1
-    { input: [0.1, -0.1], expected: [kMinusOneULPFunctions['f32'](reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] },  // ~0.1
-    { input: [-0.1, 0.1], expected: [kMinusOneULPFunctions['f32'](reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] },  // ~0.1
-    { input: [-0.1, -0.1], expected: [reinterpretU32AsF32(0xbdcccccd), kPlusOneULPFunctions['f32'](reinterpretU32AsF32(0xbdcccccd))] },  // ~-0.1
-  ] as ScalarPairToIntervalCase[],
-  f16: [
-    // 0.1 rounded to f16 0x2E66 or 0x2E67, -0.1 rounded to f16 0xAE67 or 0xAE66
-    { input: [0.1, 0], expected: [reinterpretU16AsF16(0x2e66), kPlusOneULPFunctions['f16'](reinterpretU16AsF16(0x2e66))] },  // ~0.1
-    { input: [0, 0.1], expected: [reinterpretU16AsF16(0x2e66), kPlusOneULPFunctions['f16'](reinterpretU16AsF16(0x2e66))] },  // ~0.1
-    { input: [0.1, 0.1], expected: [reinterpretU16AsF16(0x2e66), kPlusOneULPFunctions['f16'](reinterpretU16AsF16(0x2e66))] },  // ~0.1
-    { input: [0.1, -0.1], expected: [reinterpretU16AsF16(0x2e66), kPlusOneULPFunctions['f16'](reinterpretU16AsF16(0x2e66))] },  // ~0.1
-    { input: [-0.1, 0.1], expected: [reinterpretU16AsF16(0x2e66), kPlusOneULPFunctions['f16'](reinterpretU16AsF16(0x2e66))] },  // ~0.1
-    { input: [-0.1, -0.1], expected: [reinterpretU16AsF16(0xae67), kPlusOneULPFunctions['f16'](reinterpretU16AsF16(0xae67))] },  // ~-0.1
-  ] as ScalarPairToIntervalCase[],
-} as const;
 
 g.test('maxInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract'] as const)
       .beginSubcases()
       .expandWithParams<ScalarPairToIntervalCase>(p => {
         const trait = FP[p.trait];
@@ -4234,10 +4549,15 @@ g.test('maxInterval')
           { input: [-1, 1], expected: 1 },
           { input: [-1, -1], expected: -1 },
 
-          // 64-bit normals that not exactly representable
+          // 0.1 and -0.1 should be correctly rounded
           { input: [-0.1, 0], expected: 0 },
           { input: [0, -0.1], expected: 0 },
-          ...kMaxInterval64BitsCases[p.trait],
+          { input: [0.1, 0], expected: kConstantCorrectlyRoundedExpectation[p.trait]['0.1'] },  // ~0.1
+          { input: [0, 0.1], expected: kConstantCorrectlyRoundedExpectation[p.trait]['0.1'] },  // ~0.1
+          { input: [0.1, 0.1], expected: kConstantCorrectlyRoundedExpectation[p.trait]['0.1'] },  // ~0.1
+          { input: [0.1, -0.1], expected: kConstantCorrectlyRoundedExpectation[p.trait]['0.1'] },  // ~0.1
+          { input: [-0.1, 0.1], expected: kConstantCorrectlyRoundedExpectation[p.trait]['0.1'] },  // ~0.1
+          { input: [-0.1, -0.1], expected: kConstantCorrectlyRoundedExpectation[p.trait]['-0.1'] },  // ~-0.1
 
           // Representable subnormals
           { input: [constants.positive.subnormal.max, 0], expected: [0, constants.positive.subnormal.max] },
@@ -4274,32 +4594,10 @@ g.test('maxInterval')
     );
   });
 
-// prettier-ignore
-const kMinInterval64BitsCases = {
-  f32: [
-    // 0.1 rounded to f32 0x3DCCCCCC or 0x3DCCCCCD, -0.1 rounded to f32 0xBDCCCCCD or 0xBDCCCCCC
-    { input: [-0.1, 0], expected: [reinterpretU32AsF32(0xbdcccccd), kPlusOneULPFunctions['f32'](reinterpretU32AsF32(0xbdcccccd))] },  // ~-0.1
-    { input: [0, -0.1], expected: [reinterpretU32AsF32(0xbdcccccd), kPlusOneULPFunctions['f32'](reinterpretU32AsF32(0xbdcccccd))] },  // ~-0.1
-    { input: [0.1, 0.1], expected: [kMinusOneULPFunctions['f32'](reinterpretU32AsF32(0x3dcccccd)), reinterpretU32AsF32(0x3dcccccd)] },  // ~0.1
-    { input: [0.1, -0.1], expected: [reinterpretU32AsF32(0xbdcccccd), kPlusOneULPFunctions['f32'](reinterpretU32AsF32(0xbdcccccd))] },  // ~-0.1
-    { input: [-0.1, 0.1], expected: [reinterpretU32AsF32(0xbdcccccd), kPlusOneULPFunctions['f32'](reinterpretU32AsF32(0xbdcccccd))] },  // ~-0.1
-    { input: [-0.1, -0.1], expected: [reinterpretU32AsF32(0xbdcccccd), kPlusOneULPFunctions['f32'](reinterpretU32AsF32(0xbdcccccd))] },  // ~-0.1
-  ] as ScalarPairToIntervalCase[],
-  f16: [
-    // 0.1 rounded to f16 0x2E66 or 0x2E67, -0.1 rounded to f16 0xAE67 or 0xAE66
-    { input: [-0.1, 0], expected: [reinterpretU16AsF16(0xae67), kPlusOneULPFunctions['f16'](reinterpretU16AsF16(0xae67))] },  // ~-0.1
-    { input: [0, -0.1], expected: [reinterpretU16AsF16(0xae67), kPlusOneULPFunctions['f16'](reinterpretU16AsF16(0xae67))] },  // ~-0.1
-    { input: [0.1, 0.1], expected: [reinterpretU16AsF16(0x2e66), kPlusOneULPFunctions['f16'](reinterpretU16AsF16(0x2e66))] },  // ~0.1
-    { input: [0.1, -0.1], expected: [reinterpretU16AsF16(0xae67), kPlusOneULPFunctions['f16'](reinterpretU16AsF16(0xae67))] },  // ~-0.1
-    { input: [-0.1, 0.1], expected: [reinterpretU16AsF16(0xae67), kPlusOneULPFunctions['f16'](reinterpretU16AsF16(0xae67))] },  // ~-0.1
-    { input: [-0.1, -0.1], expected: [reinterpretU16AsF16(0xae67), kPlusOneULPFunctions['f16'](reinterpretU16AsF16(0xae67))] },  // ~-0.1
-  ] as ScalarPairToIntervalCase[],
-} as const;
-
 g.test('minInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract'] as const)
       .beginSubcases()
       .expandWithParams<ScalarPairToIntervalCase>(p => {
         const trait = FP[p.trait];
@@ -4320,7 +4618,12 @@ g.test('minInterval')
           // 64-bit normals that not exactly representable
           { input: [0.1, 0], expected: 0 },
           { input: [0, 0.1], expected: 0 },
-          ...kMinInterval64BitsCases[p.trait],
+          { input: [-0.1, 0], expected: kConstantCorrectlyRoundedExpectation[p.trait]['-0.1'] },  // ~-0.1
+          { input: [0, -0.1], expected: kConstantCorrectlyRoundedExpectation[p.trait]['-0.1'] },  // ~-0.1
+          { input: [0.1, 0.1], expected: kConstantCorrectlyRoundedExpectation[p.trait]['0.1'] },  // ~0.1
+          { input: [0.1, -0.1], expected: kConstantCorrectlyRoundedExpectation[p.trait]['-0.1'] },  // ~-0.1
+          { input: [-0.1, 0.1], expected: kConstantCorrectlyRoundedExpectation[p.trait]['-0.1'] },  // ~-0.1
+          { input: [-0.1, -0.1], expected: kConstantCorrectlyRoundedExpectation[p.trait]['-0.1'] },  // ~-0.1
 
           // Representable subnormals
           { input: [constants.positive.subnormal.max, 0], expected: [0, constants.positive.subnormal.max] },
@@ -4360,18 +4663,7 @@ g.test('minInterval')
 // prettier-ignore
 const kMultiplicationInterval64BitsNormalCases = {
   f32: [
-    // Finite values multiply zero result in zero
-    { input: [0.1, 0], expected: 0 },
-    { input: [0, 0.1], expected: 0 },
-    { input: [-0.1, 0], expected: 0 },
-    { input: [0, -0.1], expected: 0 },
-    // 0.1 falls between f32 0x3DCCCCCC and 0x3DCCCCCD
-    { input: [0.1, 1], expected: [reinterpretU32AsF32(0x3dcccccc), reinterpretU32AsF32(0x3dcccccd)] },
-    { input: [-1, -0.1], expected: [reinterpretU32AsF32(0x3dcccccc), reinterpretU32AsF32(0x3dcccccd)] },
-    // -0.1 falls between f32 0xBDCCCCCD and 0xBDCCCCCC
-    { input: [-0.1, 1], expected: [reinterpretU32AsF32(0xbdcccccd), reinterpretU32AsF32(0xbdcccccc)] },
-    { input: [-1, 0.1], expected: [reinterpretU32AsF32(0xbdcccccd), reinterpretU32AsF32(0xbdcccccc)] },
-    // 0.1*0.1,
+    // 0.1*0.1, 0.1 falls between f32 0x3DCCCCCC and 0x3DCCCCCD,
     // min result 0x3DCCCCCC*0x3DCCCCCC=0.00999999880790713952713681734167 rounded to f32 0x3C23D708 or 0x3C23D709,
     // max result 0x3DCCCCCD*0x3DCCCCCD=0.01000000029802322622044605108385 rounded to f32 0x3C23D70A or 0x3C23D70B.
     { input: [0.1, 0.1], expected: [reinterpretU32AsF32(0x3c23d708), reinterpretU32AsF32(0x3c23d70b)] },  // ~0.01
@@ -4382,18 +4674,7 @@ const kMultiplicationInterval64BitsNormalCases = {
     { input: [-0.1, 0.1], expected: [reinterpretU32AsF32(0xbc23d70b), reinterpretU32AsF32(0xbc23d708)] },  // ~-0.01
   ] as ScalarPairToIntervalCase[],
   f16: [
-    // Finite values multiply zero result in zero
-    { input: [0.1, 0], expected: 0 },
-    { input: [0, 0.1], expected: 0 },
-    { input: [-0.1, 0], expected: 0 },
-    { input: [0, -0.1], expected: 0 },
-    // 0.1 falls between f16 0x2E66 and 0x2E67
-    { input: [0.1, 1], expected: [reinterpretU16AsF16(0x2e66), reinterpretU16AsF16(0x2e67)] },
-    { input: [-1, -0.1], expected: [reinterpretU16AsF16(0x2e66), reinterpretU16AsF16(0x2e67)] },
-    // -0.1 falls between f16 0xAE67 and 0xAE66
-    { input: [-0.1, 1], expected: [reinterpretU16AsF16(0xae67), reinterpretU16AsF16(0xae66)] },
-    { input: [-1, 0.1], expected: [reinterpretU16AsF16(0xae67), reinterpretU16AsF16(0xae66)] },
-    // 0.1*0.1,
+    // 0.1*0.1, 0.1 falls between f16 0x2E66 and 0x2E67,
     // min result 0x2E66*0x2E66=0.00999511778354644775390625 rounded to f16 0x211E or 0x211F,
     // max result 0x2E67*0x2E67=0.0100073255598545074462890625 rounded to f16 0x211F or 0x2120.
     { input: [0.1, 0.1], expected: [reinterpretU16AsF16(0x211e), reinterpretU16AsF16(0x2120)] },  // ~0.01
@@ -4407,15 +4688,6 @@ const kMultiplicationInterval64BitsNormalCases = {
     // 0.1 isn't exactly representable in f64, but will be quantized to an
     // exact value when storing to a 'number' (0x3FB999999999999A).
     // This is why below the expectations are not intervals.
-    // Finite values multiply zero result in zero
-    { input: [0.1, 0], expected: 0 },
-    { input: [0, 0.1], expected: 0 },
-    { input: [-0.1, 0], expected: 0 },
-    { input: [0, -0.1], expected: 0 },
-    { input: [0.1, 1], expected: 0.1 },
-    { input: [-1, -0.1], expected: 0.1 },
-    { input: [-0.1, 1], expected: -0.1 },
-    { input: [-1, 0.1], expected: -0.1 },
     // f64 0.1 * 0.1 = 0x3f847ae147ae147c,
     { input: [0.1, 0.1], expected: reinterpretU64AsF64(0x3f847ae147ae147cn) },  // ~0.01
     { input: [-0.1, -0.1], expected: reinterpretU64AsF64(0x3f847ae147ae147cn) },  // ~0.01
@@ -4454,6 +4726,17 @@ g.test('multiplicationInterval')
           { input: [-2, -2], expected: 4 },
 
           // 64-bit normals that can not be exactly represented
+          // Finite values multiply zero result in zero
+          { input: [0.1, 0], expected: 0 },
+          { input: [0, 0.1], expected: 0 },
+          { input: [-0.1, 0], expected: 0 },
+          { input: [0, -0.1], expected: 0 },
+          // Finite value multiply +/-1.0
+          { input: [0.1, 1], expected: kConstantCorrectlyRoundedExpectation[p.trait]['0.1'] },
+          { input: [-1, -0.1], expected: kConstantCorrectlyRoundedExpectation[p.trait]['0.1'] },
+          { input: [-0.1, 1], expected: kConstantCorrectlyRoundedExpectation[p.trait]['-0.1'] },
+          { input: [-1, 0.1], expected: kConstantCorrectlyRoundedExpectation[p.trait]['-0.1'] },
+          // Other cases
           ...kMultiplicationInterval64BitsNormalCases[p.trait],
 
           // Infinities
@@ -4487,36 +4770,62 @@ g.test('multiplicationInterval')
     );
   });
 
-g.test('powInterval_f32')
-  .paramsSubcasesOnly<ScalarPairToIntervalCase>(
-    // prettier-ignore
-    [
-      // Some of these are hard coded, since the error intervals are difficult
-      // to express in a closed human-readable form due to the inherited nature
-      // of the errors.
-      { input: [-1, 0], expected: kUnboundedBounds },
-      { input: [0, 0], expected: kUnboundedBounds },
-      { input: [1, 0], expected: [kMinusNULPFunctions['f32'](1, 3), reinterpretU64AsF64(0x3ff0_0000_3000_0000n)] },  // ~1
-      { input: [2, 0], expected: [kMinusNULPFunctions['f32'](1, 3), reinterpretU64AsF64(0x3ff0_0000_3000_0000n)] },  // ~1
-      { input: [kValue.f32.positive.max, 0], expected: [kMinusNULPFunctions['f32'](1, 3), reinterpretU64AsF64(0x3ff0_0000_3000_0000n)] },  // ~1
-      { input: [0, 1], expected: kUnboundedBounds },
-      { input: [1, 1], expected: [reinterpretU64AsF64(0x3fef_fffe_dfff_fe00n), reinterpretU64AsF64(0x3ff0_0000_c000_0200n)] },  // ~1
-      { input: [1, 100], expected: [reinterpretU64AsF64(0x3fef_ffba_3fff_3800n), reinterpretU64AsF64(0x3ff0_0023_2000_c800n)] },  // ~1
-      { input: [1, kValue.f32.positive.max], expected: kUnboundedBounds },
-      { input: [2, 1], expected: [reinterpretU64AsF64(0x3fff_fffe_a000_0200n), reinterpretU64AsF64(0x4000_0001_0000_0200n)] },  // ~2
-      { input: [2, 2], expected: [reinterpretU64AsF64(0x400f_fffd_a000_0400n), reinterpretU64AsF64(0x4010_0001_a000_0400n)] },  // ~4
-      { input: [10, 10], expected: [reinterpretU64AsF64(0x4202_a04f_51f7_7000n), reinterpretU64AsF64(0x4202_a070_ee08_e000n)] },  // ~10000000000
-      { input: [10, 1], expected: [reinterpretU64AsF64(0x4023_fffe_0b65_8b00n), reinterpretU64AsF64(0x4024_0002_149a_7c00n)] },  // ~10
-      { input: [kValue.f32.positive.max, 1], expected: kUnboundedBounds },
-    ]
+// Some of these are hard coded, since the error intervals are difficult to express in a closed
+// human-readable form due to the inherited nature of the errors.
+// prettier-ignore
+const kPowIntervalCases = {
+  f32 : [
+    { input: [1, 0], expected: [kMinusNULPFunctions['f32'](1, 3), reinterpretU64AsF64(0x3ff0_0000_3000_0000n)] },  // ~1
+    { input: [2, 0], expected: [kMinusNULPFunctions['f32'](1, 3), reinterpretU64AsF64(0x3ff0_0000_3000_0000n)] },  // ~1
+    { input: [kValue.f32.positive.max, 0], expected: [kMinusNULPFunctions['f32'](1, 3), reinterpretU64AsF64(0x3ff0_0000_3000_0000n)] },  // ~1
+    { input: [1, 1], expected: [reinterpretU64AsF64(0x3fef_fffe_dfff_fe00n), reinterpretU64AsF64(0x3ff0_0000_c000_0200n)] },  // ~1
+    { input: [1, 100], expected: [reinterpretU64AsF64(0x3fef_ffba_3fff_3800n), reinterpretU64AsF64(0x3ff0_0023_2000_c800n)] },  // ~1
+    { input: [2, 1], expected: [reinterpretU64AsF64(0x3fff_fffe_a000_0200n), reinterpretU64AsF64(0x4000_0001_0000_0200n)] },  // ~2
+    { input: [2, 2], expected: [reinterpretU64AsF64(0x400f_fffd_a000_0400n), reinterpretU64AsF64(0x4010_0001_a000_0400n)] },  // ~4
+    { input: [10, 10], expected: [reinterpretU64AsF64(0x4202_a04f_51f7_7000n), reinterpretU64AsF64(0x4202_a070_ee08_e000n)] },  // ~10000000000
+    { input: [10, 1], expected: [reinterpretU64AsF64(0x4023_fffe_0b65_8b00n), reinterpretU64AsF64(0x4024_0002_149a_7c00n)] },  // ~10
+  ] as ScalarPairToIntervalCase[],
+  f16 : [
+    { input: [1, 0], expected: [reinterpretU64AsF64(0x3fef_fc00_0000_0000n), reinterpretU64AsF64(0x3ff0_0200_0000_0000n)] },  // ~1
+    { input: [2, 0], expected: [reinterpretU64AsF64(0x3fef_fc00_0000_0000n), reinterpretU64AsF64(0x3ff0_0200_0000_0000n)] },  // ~1
+    { input: [kValue.f16.positive.max, 0], expected: [reinterpretU64AsF64(0x3fef_fc00_0000_0000n), reinterpretU64AsF64(0x3ff0_0200_0000_0000n)] },  // ~1
+    { input: [1, 1], expected: [reinterpretU64AsF64(0x3fef_cbf0_0000_0000n), reinterpretU64AsF64(0x3ff0_1c10_0000_0000n)] },  // ~1
+    { input: [1, 100], expected: [reinterpretU64AsF64(0x3fe2_91c0_0000_0000n), reinterpretU64AsF64(0x3ffb_8a40_0000_0000n)] },  // ~1
+    { input: [2, 1], expected: [reinterpretU64AsF64(0x3fff_c410_0000_0000n), reinterpretU64AsF64(0x4000_2410_0000_0000n)] },  // ~2
+    { input: [2, 2], expected: [reinterpretU64AsF64(0x400f_9020_0000_0000n), reinterpretU64AsF64(0x4010_4420_0000_0000n)] },  // ~4
+    { input: [5, 5], expected: [reinterpretU64AsF64(0x40a7_5f70_0000_0000n), reinterpretU64AsF64(0x40a9_5520_0000_0000n)] },  // ~3125
+    { input: [10, 1], expected: [reinterpretU64AsF64(0x4023_c57c_0000_0000n), reinterpretU64AsF64(0x4024_36a0_0000_0000n)] },  // ~10
+  ] as ScalarPairToIntervalCase[],
+} as const;
+
+g.test('powInterval')
+  .params(u =>
+    u
+      .combine('trait', ['f32', 'f16'] as const)
+      .beginSubcases()
+      .expandWithParams<ScalarPairToIntervalCase>(p => {
+        const trait = FP[p.trait];
+        const constants = trait.constants();
+        // prettier-ignore
+        return [
+          { input: [-1, 0], expected: kUnboundedBounds },
+          { input: [0, 0], expected: kUnboundedBounds },
+          { input: [0, 1], expected: kUnboundedBounds },
+          { input: [1, constants.positive.max], expected: kUnboundedBounds },
+          { input: [constants.positive.max, 1], expected: kUnboundedBounds },
+
+          ...kPowIntervalCases[p.trait],
+        ];
+      })
   )
   .fn(t => {
     const [x, y] = t.params.input;
-    const expected = FP.f32.toInterval(t.params.expected);
-    const got = FP.f32.powInterval(x, y);
+    const trait = FP[t.params.trait];
+    const expected = trait.toInterval(t.params.expected);
+    const got = trait.powInterval(x, y);
     t.expect(
       objectEquals(expected, got),
-      `f32.powInterval(${x}, ${y}) returned ${got}. Expected ${expected}`
+      `${t.params.trait}.powInterval(${x}, ${y}) returned ${got}. Expected ${expected}`
     );
   });
 
@@ -4539,14 +4848,15 @@ const kRemainderCases = {
 g.test('remainderInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16'] as const)
+      .combine('trait', ['abstract', 'f32', 'f16'] as const)
       .beginSubcases()
       .expandWithParams<ScalarPairToIntervalCase>(p => {
-        const trait = FP[p.trait];
-        const constants = trait.constants();
+        const trait = kFPTraitForULP[p.trait];
+        const constants = FP[trait].constants();
+
         // prettier-ignore
         return [
-          ...kRemainderCases[p.trait],
+          ...kRemainderCases[trait],
           // Normals
           { input: [0, 1], expected: 0 },
           { input: [0, -1], expected: 0 },
@@ -4587,7 +4897,7 @@ g.test('remainderInterval')
     const got = trait.remainderInterval(x, y);
     t.expect(
       objectEquals(expected, got),
-      `FP.${t.params.trait}.remainderInterval(${x}, ${y}) returned ${got}. Expected ${expected}`
+      `${t.params.trait}.remainderInterval(${x}, ${y}) returned ${got}. Expected ${expected}`
     );
   });
 
@@ -4677,12 +4987,7 @@ g.test('stepInterval')
 // prettier-ignore
 const kSubtractionInterval64BitsNormalCases = {
   f32: [
-    // 0.1 falls between f32 0x3DCCCCCC and 0x3DCCCCCD
-    { input: [0.1, 0], expected: [reinterpretU32AsF32(0x3dcccccc), reinterpretU32AsF32(0x3dcccccd)] },
-    { input: [0, -0.1], expected: [reinterpretU32AsF32(0x3dcccccc), reinterpretU32AsF32(0x3dcccccd)] },
-    // -0.1 falls between f32 0xBDCCCCCD and 0xBDCCCCCC
-    { input: [-0.1, 0], expected: [reinterpretU32AsF32(0xbdcccccd), reinterpretU32AsF32(0xbdcccccc)] },
-    { input: [0, 0.1], expected: [reinterpretU32AsF32(0xbdcccccd), reinterpretU32AsF32(0xbdcccccc)] },
+    // 0.1 falls between f32 0x3DCCCCCC and 0x3DCCCCCD, -0.1 falls between f32 0xBDCCCCCD and 0xBDCCCCCC
     // Expect f32 interval [0x3DCCCCCC-0x3DCCCCCD, 0x3DCCCCCD-0x3DCCCCCC]
     { input: [0.1, 0.1], expected: [reinterpretU32AsF32(0x3dcccccc)-reinterpretU32AsF32(0x3dcccccd), reinterpretU32AsF32(0x3dcccccd)-reinterpretU32AsF32(0x3dcccccc)] },
     // Expect f32 interval [0xBDCCCCCD-0xBDCCCCCC, 0xBDCCCCCC-0xBDCCCCCD]
@@ -4693,12 +4998,7 @@ const kSubtractionInterval64BitsNormalCases = {
     { input: [-0.1, 0.1], expected: [reinterpretU32AsF32(0xbdcccccd)-reinterpretU32AsF32(0x3dcccccd), reinterpretU32AsF32(0xbdcccccc)-reinterpretU32AsF32(0x3dcccccc)] },
   ] as ScalarPairToIntervalCase[],
   f16: [
-    // 0.1 falls between f16 0x2E66 and 0x2E67
-    { input: [0.1, 0], expected: [reinterpretU16AsF16(0x2e66), reinterpretU16AsF16(0x2e67)] },
-    { input: [0, -0.1], expected: [reinterpretU16AsF16(0x2e66), reinterpretU16AsF16(0x2e67)] },
-    // -0.1 falls between f16 0xAE67 and 0xAE66
-    { input: [-0.1, 0], expected: [reinterpretU16AsF16(0xae67), reinterpretU16AsF16(0xae66)] },
-    { input: [0, 0.1], expected: [reinterpretU16AsF16(0xae67), reinterpretU16AsF16(0xae66)] },
+    // 0.1 falls between f16 0x2E66 and 0x2E67, -0.1 falls between f16 0xAE67 and 0xAE66
     // Expect f16 interval [0x2E66-0x2E67, 0x2E67-0x2E66]
     { input: [0.1, 0.1], expected: [reinterpretU16AsF16(0x2e66)-reinterpretU16AsF16(0x2e67), reinterpretU16AsF16(0x2e67)-reinterpretU16AsF16(0x2e66)] },
     // Expect f16 interval [0xAE67-0xAE66, 0xAE66-0xAE67]
@@ -4712,11 +5012,6 @@ const kSubtractionInterval64BitsNormalCases = {
     // 0.1 isn't exactly representable in f64, but will be quantized to an
     // exact value when storing to a 'number' (0x3FB999999999999A).
     // This is why below the expectations are not intervals.
-    { input: [0.1, 0], expected: 0.1 },
-    { input: [0, -0.1], expected: 0.1 },
-    { input: [-0.1, 0], expected: -0.1 },
-    { input: [0, 0.1], expected: -0.1 },
-
     { input: [0.1, 0.1], expected: 0 },
     { input: [-0.1, -0.1], expected: 0 },
     // f64 0x3FB999999999999A - 0xBFB999999999999A = 0x3FC999999999999A
@@ -4747,7 +5042,11 @@ g.test('subtractionInterval')
           { input: [-1, 1], expected: -2 },
           { input: [-1, -1], expected: 0 },
 
-          // 64-bit normals that can not be exactly represented
+          // 64-bit normals that can not be exactly represented in f32/f16
+          { input: [0.1, 0], expected: kConstantCorrectlyRoundedExpectation[p.trait]['0.1'] },
+          { input: [0, -0.1], expected: kConstantCorrectlyRoundedExpectation[p.trait]['0.1'] },
+          { input: [-0.1, 0], expected: kConstantCorrectlyRoundedExpectation[p.trait]['-0.1'] },
+          { input: [0, 0.1], expected: kConstantCorrectlyRoundedExpectation[p.trait]['-0.1'] },
           ...kSubtractionInterval64BitsNormalCases[p.trait],
 
           // Subnormals
@@ -4791,7 +5090,7 @@ interface ScalarTripleToIntervalCase {
 g.test('clampMedianInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract'] as const)
       .beginSubcases()
       .expandWithParams<ScalarTripleToIntervalCase>(p => {
         const trait = FP[p.trait];
@@ -4849,7 +5148,7 @@ g.test('clampMedianInterval')
 g.test('clampMinMaxInterval')
   .params(u =>
     u
-      .combine('trait', ['f32', 'f16'] as const)
+      .combine('trait', ['f32', 'f16', 'abstract'] as const)
       .beginSubcases()
       .expandWithParams<ScalarTripleToIntervalCase>(p => {
         const trait = FP[p.trait];
@@ -4904,265 +5203,448 @@ g.test('clampMinMaxInterval')
     );
   });
 
-g.test('fmaInterval_f32')
-  .paramsSubcasesOnly<ScalarTripleToIntervalCase>(
-    // prettier-ignore
-    [
-      // Normals
-      { input: [0, 0, 0], expected: 0 },
-      { input: [1, 0, 0], expected: 0 },
-      { input: [0, 1, 0], expected: 0 },
-      { input: [0, 0, 1], expected: 1 },
-      { input: [1, 0, 1], expected: 1 },
-      { input: [1, 1, 0], expected: 1 },
-      { input: [0, 1, 1], expected: 1 },
-      { input: [1, 1, 1], expected: 2 },
-      { input: [1, 10, 100], expected: 110 },
-      { input: [10, 1, 100], expected: 110 },
-      { input: [100, 1, 10], expected: 110 },
-      { input: [-10, 1, 100], expected: 90 },
-      { input: [10, 1, -100], expected: -90 },
-      { input: [-10, 1, -100], expected: -110 },
-      { input: [-10, -10, -10], expected: 90 },
+// prettier-ignore
+const kFmaIntervalCases = {
+  f32: [
+    // positive.subnormal.max * positive.subnormal.max is much smaller than positive.subnormal.min but larger than 0, rounded to [0, positive.subnormal.min]
+    { input: [kValue.f32.positive.subnormal.max, kValue.f32.positive.subnormal.max, 0], expected: [0, kValue.f32.positive.subnormal.min] },
+    // positive.subnormal.max * positive.subnormal.max rounded to 0 or positive.subnormal.min,
+    // 0 + constants.positive.subnormal.max rounded to [0, constants.positive.subnormal.max],
+    // positive.subnormal.min + constants.positive.subnormal.max = constants.positive.min.
+    { input: [kValue.f32.positive.subnormal.max, kValue.f32.positive.subnormal.max, kValue.f32.positive.subnormal.max], expected: [0, kValue.f32.positive.min] },
+    // positive.subnormal.max * positive.subnormal.max rounded to 0 or positive.subnormal.min,
+    // negative.subnormal.max may flushed to 0,
+    // minimum case: 0 + negative.subnormal.max rounded to [negative.subnormal.max, 0],
+    // maximum case: positive.subnormal.min + 0 rounded to [0, positive.subnormal.min].
+    { input: [kValue.f32.positive.subnormal.max, kValue.f32.positive.subnormal.min, kValue.f32.negative.subnormal.max], expected: [kValue.f32.negative.subnormal.max, kValue.f32.positive.subnormal.min] },
+    // positive.subnormal.max * negative.subnormal.min rounded to -0.0 or negative.subnormal.max = -1 * [subnormal ulp],
+    // negative.subnormal.max = -1 * [subnormal ulp] may flushed to -0.0,
+    // minimum case: -1 * [subnormal ulp] + -1 * [subnormal ulp] rounded to [-2 * [subnormal ulp], 0],
+    // maximum case: -0.0 + -0.0 = 0.
+    { input: [kValue.f32.positive.subnormal.max, kValue.f32.negative.subnormal.min, kValue.f32.negative.subnormal.max], expected: [-2 * FP['f32'].oneULP(0, 'no-flush'), 0] },
+  ] as ScalarTripleToIntervalCase[],
+  f16: [
+    // positive.subnormal.max * positive.subnormal.max is much smaller than positive.subnormal.min but larger than 0, rounded to [0, positive.subnormal.min]
+    { input: [kValue.f16.positive.subnormal.max, kValue.f16.positive.subnormal.max, 0], expected: [0, kValue.f16.positive.subnormal.min] },
+    // positive.subnormal.max * positive.subnormal.max rounded to 0 or positive.subnormal.min,
+    // 0 + constants.positive.subnormal.max rounded to [0, constants.positive.subnormal.max],
+    // positive.subnormal.min + constants.positive.subnormal.max = constants.positive.min.
+    { input: [kValue.f16.positive.subnormal.max, kValue.f16.positive.subnormal.max, kValue.f16.positive.subnormal.max], expected: [0, kValue.f16.positive.min] },
+    // positive.subnormal.max * positive.subnormal.max rounded to 0 or positive.subnormal.min,
+    // negative.subnormal.max may flushed to 0,
+    // minimum case: 0 + negative.subnormal.max rounded to [negative.subnormal.max, 0],
+    // maximum case: positive.subnormal.min + 0 rounded to [0, positive.subnormal.min].
+    { input: [kValue.f16.positive.subnormal.max, kValue.f16.positive.subnormal.min, kValue.f16.negative.subnormal.max], expected: [kValue.f16.negative.subnormal.max, kValue.f16.positive.subnormal.min] },
+    // positive.subnormal.max * negative.subnormal.min rounded to -0.0 or negative.subnormal.max = -1 * [subnormal ulp],
+    // negative.subnormal.max = -1 * [subnormal ulp] may flushed to -0.0,
+    // minimum case: -1 * [subnormal ulp] + -1 * [subnormal ulp] rounded to [-2 * [subnormal ulp], 0],
+    // maximum case: -0.0 + -0.0 = 0.
+    { input: [kValue.f16.positive.subnormal.max, kValue.f16.negative.subnormal.min, kValue.f16.negative.subnormal.max], expected: [-2 * FP['f16'].oneULP(0, 'no-flush'), 0] },  ] as ScalarTripleToIntervalCase[],
+  abstract: [
+    // These operations break down in the CTS, because `number` is a f64 under the hood, so precision is sometimes lost
+    // if intermediate results are  closer to 0 than the smallest subnormal will be precisely 0.
+    // See https://github.com/gpuweb/cts/issues/2993 for details
+    { input: [kValue.f64.positive.subnormal.max, kValue.f64.positive.subnormal.max, 0], expected: 0 },
+    { input: [kValue.f64.positive.subnormal.max, kValue.f64.positive.subnormal.max, kValue.f64.positive.subnormal.max], expected: [0, kValue.f64.positive.subnormal.max] },
+    { input: [kValue.f64.positive.subnormal.max, kValue.f64.positive.subnormal.min, kValue.f64.negative.subnormal.max], expected: [kValue.f64.negative.subnormal.max, 0] },
+    { input: [kValue.f64.positive.subnormal.max, kValue.f64.negative.subnormal.min, kValue.f64.negative.subnormal.max], expected: [kValue.f64.negative.subnormal.max, 0] },
+  ] as ScalarTripleToIntervalCase[],
+} as const;
 
-      // Subnormals
-      { input: [kValue.f32.subnormal.positive.max, 0, 0], expected: 0 },
-      { input: [0, kValue.f32.subnormal.positive.max, 0], expected: 0 },
-      { input: [0, 0, kValue.f32.subnormal.positive.max], expected: [0, kValue.f32.subnormal.positive.max] },
-      { input: [kValue.f32.subnormal.positive.max, 0, kValue.f32.subnormal.positive.max], expected: [0, kValue.f32.subnormal.positive.max] },
-      { input: [kValue.f32.subnormal.positive.max, kValue.f32.subnormal.positive.max, 0], expected: [0, kValue.f32.subnormal.positive.min] },
-      { input: [0, kValue.f32.subnormal.positive.max, kValue.f32.subnormal.positive.max], expected: [0, kValue.f32.subnormal.positive.max] },
-      { input: [kValue.f32.subnormal.positive.max, kValue.f32.subnormal.positive.max, kValue.f32.subnormal.positive.max], expected: [0, kValue.f32.positive.min] },
-      { input: [kValue.f32.subnormal.positive.max, kValue.f32.subnormal.positive.min, kValue.f32.subnormal.negative.max], expected: [kValue.f32.subnormal.negative.max, kValue.f32.subnormal.positive.min] },
-      { input: [kValue.f32.subnormal.positive.max, kValue.f32.subnormal.negative.min, kValue.f32.subnormal.negative.max], expected: [reinterpretU32AsF32(0x80000002), 0] },
+g.test('fmaInterval')
+  .params(u =>
+    u
+      .combine('trait', ['f32', 'f16', 'abstract'] as const)
+      .beginSubcases()
+      .expandWithParams<ScalarTripleToIntervalCase>(p => {
+        const trait = FP[p.trait];
+        const constants = trait.constants();
+        // prettier-ignore
+        return [
+          // Normals
+          { input: [0, 0, 0], expected: 0 },
+          { input: [1, 0, 0], expected: 0 },
+          { input: [0, 1, 0], expected: 0 },
+          { input: [0, 0, 1], expected: 1 },
+          { input: [1, 0, 1], expected: 1 },
+          { input: [1, 1, 0], expected: 1 },
+          { input: [0, 1, 1], expected: 1 },
+          { input: [1, 1, 1], expected: 2 },
+          { input: [1, 10, 100], expected: 110 },
+          { input: [10, 1, 100], expected: 110 },
+          { input: [100, 1, 10], expected: 110 },
+          { input: [-10, 1, 100], expected: 90 },
+          { input: [10, 1, -100], expected: -90 },
+          { input: [-10, 1, -100], expected: -110 },
+          { input: [-10, -10, -10], expected: 90 },
 
-      // Infinities
-      { input: [0, 1, kValue.f32.infinity.positive], expected: kUnboundedBounds },
-      { input: [0, kValue.f32.infinity.positive, kValue.f32.infinity.positive], expected: kUnboundedBounds },
-      { input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive, kValue.f32.infinity.positive], expected: kUnboundedBounds },
-      { input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive, kValue.f32.infinity.negative], expected: kUnboundedBounds },
-      { input: [kValue.f32.positive.max, kValue.f32.positive.max, kValue.f32.subnormal.positive.min], expected: kUnboundedBounds },
-    ]
+          // Subnormals
+          { input: [constants.positive.subnormal.max, 0, 0], expected: 0 },
+          { input: [0, constants.positive.subnormal.max, 0], expected: 0 },
+          { input: [0, 0, constants.positive.subnormal.max], expected: [0, constants.positive.subnormal.max] },
+          { input: [constants.positive.subnormal.max, 0, constants.positive.subnormal.max], expected: [0, constants.positive.subnormal.max] },
+          { input: [0, constants.positive.subnormal.max, constants.positive.subnormal.max], expected: [0, constants.positive.subnormal.max] },
+
+          // Infinities
+          { input: [0, 1, constants.positive.infinity], expected: kUnboundedBounds },
+          { input: [0, constants.positive.infinity, constants.positive.infinity], expected: kUnboundedBounds },
+          { input: [constants.negative.infinity, constants.positive.infinity, constants.positive.infinity], expected: kUnboundedBounds },
+          { input: [constants.negative.infinity, constants.positive.infinity, constants.negative.infinity], expected: kUnboundedBounds },
+          { input: [constants.positive.max, constants.positive.max, constants.positive.subnormal.min], expected: kUnboundedBounds },
+          ...kFmaIntervalCases[p.trait],
+        ];
+      })
   )
   .fn(t => {
-    const expected = FP.f32.toInterval(t.params.expected);
-    const got = FP.f32.fmaInterval(...t.params.input);
+    const trait = FP[t.params.trait];
+    const expected = trait.toInterval(t.params.expected);
+    const got = trait.fmaInterval(...t.params.input);
     t.expect(
       objectEquals(expected, got),
-      `f32.fmaInterval(${t.params.input.join(',')}) returned ${got}. Expected ${expected}`
+      `${t.params.trait}.fmaInterval(${t.params.input.join(
+        ','
+      )}) returned ${got}. Expected ${expected}`
     );
   });
 
-g.test('mixImpreciseInterval_f32')
-  .paramsSubcasesOnly<ScalarTripleToIntervalCase>(
-    // prettier-ignore
-    [
-      // Some of these are hard coded, since the error intervals are difficult
-      // to express in a closed human-readable form due to the inherited nature
-      // of the errors.
-
+// Some of these are hard coded, since the error intervals are difficult to express in a closed
+// human-readable form due to the inherited nature of the errors.
+// prettier-ignore
+const kMixImpreciseIntervalCases = {
+  f32: [
       // [0.0, 1.0] cases
-      { input: [0.0, 1.0, -1.0], expected: -1.0 },
-      { input: [0.0, 1.0, 0.0], expected: 0.0 },
       { input: [0.0, 1.0, 0.1], expected: [reinterpretU64AsF64(0x3fb9_9999_8000_0000n), reinterpretU64AsF64(0x3fb9_9999_a000_0000n)] },  // ~0.1
-      { input: [0.0, 1.0, 0.5], expected: 0.5 },
       { input: [0.0, 1.0, 0.9], expected: [reinterpretU64AsF64(0x3fec_cccc_c000_0000n), reinterpretU64AsF64(0x3fec_cccc_e000_0000n)] },  // ~0.9
-      { input: [0.0, 1.0, 1.0], expected: 1.0 },
-      { input: [0.0, 1.0, 2.0], expected: 2.0 },
-
       // [1.0, 0.0] cases
-      { input: [1.0, 0.0, -1.0], expected: 2.0 },
-      { input: [1.0, 0.0, 0.0], expected: 1.0 },
       { input: [1.0, 0.0, 0.1], expected: [reinterpretU64AsF64(0x3fec_cccc_c000_0000n), reinterpretU64AsF64(0x3fec_cccc_e000_0000n)] },  // ~0.9
-      { input: [1.0, 0.0, 0.5], expected: 0.5 },
       { input: [1.0, 0.0, 0.9], expected: [reinterpretU64AsF64(0x3fb9_9999_0000_0000n), reinterpretU64AsF64(0x3fb9_999a_0000_0000n)] },  // ~0.1
-      { input: [1.0, 0.0, 1.0], expected: 0.0 },
-      { input: [1.0, 0.0, 2.0], expected: -1.0 },
-
       // [0.0, 10.0] cases
-      { input: [0.0, 10.0, -1.0], expected: -10.0 },
-      { input: [0.0, 10.0, 0.0], expected: 0.0 },
       { input: [0.0, 10.0, 0.1], expected: [reinterpretU64AsF64(0x3fef_ffff_e000_0000n), reinterpretU64AsF64(0x3ff0_0000_2000_0000n)] },  // ~1
-      { input: [0.0, 10.0, 0.5], expected: 5.0 },
       { input: [0.0, 10.0, 0.9], expected: [reinterpretU64AsF64(0x4021_ffff_e000_0000n), reinterpretU64AsF64(0x4022_0000_2000_0000n)] },  // ~9
-      { input: [0.0, 10.0, 1.0], expected: 10.0 },
-      { input: [0.0, 10.0, 2.0], expected: 20.0 },
-
       // [2.0, 10.0] cases
-      { input: [2.0, 10.0, -1.0], expected: -6.0 },
-      { input: [2.0, 10.0, 0.0], expected: 2.0 },
       { input: [2.0, 10.0, 0.1], expected: [reinterpretU64AsF64(0x4006_6666_6000_0000n), reinterpretU64AsF64(0x4006_6666_8000_0000n)] },  // ~2.8
-      { input: [2.0, 10.0, 0.5], expected: 6.0 },
       { input: [2.0, 10.0, 0.9], expected: [reinterpretU64AsF64(0x4022_6666_6000_0000n), reinterpretU64AsF64(0x4022_6666_8000_0000n)] },  // ~9.2
-      { input: [2.0, 10.0, 1.0], expected: 10.0 },
-      { input: [2.0, 10.0, 2.0], expected: 18.0 },
-
       // [-1.0, 1.0] cases
-      { input: [-1.0, 1.0, -2.0], expected: -5.0 },
-      { input: [-1.0, 1.0, 0.0], expected: -1.0 },
       { input: [-1.0, 1.0, 0.1], expected: [reinterpretU64AsF64(0xbfe9_9999_a000_0000n), reinterpretU64AsF64(0xbfe9_9999_8000_0000n)] },  // ~-0.8
-      { input: [-1.0, 1.0, 0.5], expected: 0.0 },
       { input: [-1.0, 1.0, 0.9], expected: [reinterpretU64AsF64(0x3fe9_9999_8000_0000n), reinterpretU64AsF64(0x3fe9_9999_c000_0000n)] },  // ~0.8
-      { input: [-1.0, 1.0, 1.0], expected: 1.0 },
-      { input: [-1.0, 1.0, 2.0], expected: 3.0 },
-
-      // Infinities
-      { input: [0.0, kValue.f32.infinity.positive, 0.5], expected: kUnboundedBounds },
-      { input: [kValue.f32.infinity.positive, 0.0, 0.5], expected: kUnboundedBounds },
-      { input: [kValue.f32.infinity.negative, 1.0, 0.5], expected: kUnboundedBounds },
-      { input: [1.0, kValue.f32.infinity.negative, 0.5], expected: kUnboundedBounds },
-      { input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive, 0.5], expected: kUnboundedBounds },
-      { input: [kValue.f32.infinity.positive, kValue.f32.infinity.negative, 0.5], expected: kUnboundedBounds },
-      { input: [0.0, 1.0, kValue.f32.infinity.negative], expected: kUnboundedBounds },
-      { input: [1.0, 0.0, kValue.f32.infinity.negative], expected: kUnboundedBounds },
-      { input: [0.0, 1.0, kValue.f32.infinity.positive], expected: kUnboundedBounds },
-      { input: [1.0, 0.0, kValue.f32.infinity.positive], expected: kUnboundedBounds },
 
       // Showing how precise and imprecise versions diff
+      // Note that this expectation is 0 only in f32 as 10.0 is much smaller that f32.negative.min,
+      // So that 10 - f32.negative.min == f32.negative.min even in f64. But for f16, there is not
+      // a exactly-represenatble f16 value v that make v - f16.negative.min == f16.negative.min
+      // in f64, in fact that require v being smaller than 2**-37.
       { input: [kValue.f32.negative.min, 10.0, 1.0], expected: 0.0 },
-    ]
-  )
-  .fn(t => {
-    const [x, y, z] = t.params.input;
-    const expected = FP.f32.toInterval(t.params.expected);
-    const got = FP.f32.mixImpreciseInterval(x, y, z);
-    t.expect(
-      objectEquals(expected, got),
-      `f32.mixImpreciseInterval(${x}, ${y}, ${z}) returned ${got}. Expected ${expected}`
-    );
-  });
-
-g.test('mixPreciseInterval_f32')
-  .paramsSubcasesOnly<ScalarTripleToIntervalCase>(
-    // prettier-ignore
-    [
-      // Some of these are hard coded, since the error intervals are difficult
-      // to express in a closed human-readable form due to the inherited nature
-      // of the errors.
-
+      // -10.0 is the same, much smaller than f32.negative.min
+      { input: [kValue.f32.negative.min, -10.0, 1.0], expected: 0.0 },
+  ] as ScalarTripleToIntervalCase[],
+  f16: [
       // [0.0, 1.0] cases
-      { input: [0.0, 1.0, -1.0], expected: -1.0 },
-      { input: [0.0, 1.0, 0.0], expected: 0.0 },
-      { input: [0.0, 1.0, 0.1], expected: [reinterpretU64AsF64(0x3fb9_9999_8000_0000n), reinterpretU64AsF64(0x3fb9_9999_a000_0000n)] },  // ~0.1
-      { input: [0.0, 1.0, 0.5], expected: 0.5 },
-      { input: [0.0, 1.0, 0.9], expected: [reinterpretU64AsF64(0x3fec_cccc_c000_0000n), reinterpretU64AsF64(0x3fec_cccc_e000_0000n)] },  // ~0.9
-      { input: [0.0, 1.0, 1.0], expected: 1.0 },
-      { input: [0.0, 1.0, 2.0], expected: 2.0 },
-
+      { input: [0.0, 1.0, 0.1], expected: [reinterpretU64AsF64(0x3fb9_9800_0000_0000n), reinterpretU64AsF64(0x3fb9_9c00_0000_0000n)] },  // ~0.1
+      { input: [0.0, 1.0, 0.9], expected: [reinterpretU64AsF64(0x3fec_cc00_0000_0000n), reinterpretU64AsF64(0x3fec_d000_0000_0000n)] },  // ~0.9
       // [1.0, 0.0] cases
-      { input: [1.0, 0.0, -1.0], expected: 2.0 },
-      { input: [1.0, 0.0, 0.0], expected: 1.0 },
-      { input: [1.0, 0.0, 0.1], expected: [reinterpretU64AsF64(0x3fec_cccc_c000_0000n), reinterpretU64AsF64(0x3fec_cccc_e000_0000n)] },  // ~0.9
-      { input: [1.0, 0.0, 0.5], expected: 0.5 },
-      { input: [1.0, 0.0, 0.9], expected: [reinterpretU64AsF64(0x3fb9_9999_0000_0000n), reinterpretU64AsF64(0x3fb9_999a_0000_0000n)] },  // ~0.1
-      { input: [1.0, 0.0, 1.0], expected: 0.0 },
-      { input: [1.0, 0.0, 2.0], expected: -1.0 },
-
+      { input: [1.0, 0.0, 0.1], expected: [reinterpretU64AsF64(0x3fec_cc00_0000_0000n), reinterpretU64AsF64(0x3fec_d000_0000_0000n)] },  // ~0.9
+      { input: [1.0, 0.0, 0.9], expected: [reinterpretU64AsF64(0x3fb9_8000_0000_0000n), reinterpretU64AsF64(0x3fb9_a000_0000_0000n)] },  // ~0.1
       // [0.0, 10.0] cases
-      { input: [0.0, 10.0, -1.0], expected: -10.0 },
-      { input: [0.0, 10.0, 0.0], expected: 0.0 },
-      { input: [0.0, 10.0, 0.1], expected: [reinterpretU64AsF64(0x3fef_ffff_e000_0000n), reinterpretU64AsF64(0x3ff0_0000_2000_0000n)] },  // ~1
-      { input: [0.0, 10.0, 0.5], expected: 5.0 },
-      { input: [0.0, 10.0, 0.9], expected: [reinterpretU64AsF64(0x4021_ffff_e000_0000n), reinterpretU64AsF64(0x4022_0000_2000_0000n)] },  // ~9
-      { input: [0.0, 10.0, 1.0], expected: 10.0 },
-      { input: [0.0, 10.0, 2.0], expected: 20.0 },
-
+      { input: [0.0, 10.0, 0.1], expected: [reinterpretU64AsF64(0x3fef_fc00_0000_0000n), reinterpretU64AsF64(0x3ff0_0400_0000_0000n)] },  // ~1
+      { input: [0.0, 10.0, 0.9], expected: [reinterpretU64AsF64(0x4021_fc00_0000_0000n), reinterpretU64AsF64(0x4022_0400_0000_0000n)] },  // ~9
       // [2.0, 10.0] cases
-      { input: [2.0, 10.0, -1.0], expected: -6.0 },
-      { input: [2.0, 10.0, 0.0], expected: 2.0 },
-      { input: [2.0, 10.0, 0.1], expected: [reinterpretU64AsF64(0x4006_6666_4000_0000n), reinterpretU64AsF64(0x4006_6666_8000_0000n)] },  // ~2.8
-      { input: [2.0, 10.0, 0.5], expected: 6.0 },
-      { input: [2.0, 10.0, 0.9], expected: [reinterpretU64AsF64(0x4022_6666_4000_0000n), reinterpretU64AsF64(0x4022_6666_a000_0000n)] },  // ~9.2
-      { input: [2.0, 10.0, 1.0], expected: 10.0 },
-      { input: [2.0, 10.0, 2.0], expected: 18.0 },
-
+      { input: [2.0, 10.0, 0.1], expected: [reinterpretU64AsF64(0x4006_6400_0000_0000n), reinterpretU64AsF64(0x4006_6800_0000_0000n)] },  // ~2.8
+      { input: [2.0, 10.0, 0.9], expected: [reinterpretU64AsF64(0x4022_6400_0000_0000n), reinterpretU64AsF64(0x4022_6800_0000_0000n)] },  // ~9.2
       // [-1.0, 1.0] cases
-      { input: [-1.0, 1.0, -2.0], expected: -5.0 },
-      { input: [-1.0, 1.0, 0.0], expected: -1.0 },
-      { input: [-1.0, 1.0, 0.1], expected: [reinterpretU64AsF64(0xbfe9_9999_c000_0000n), reinterpretU64AsF64(0xbfe9_9999_8000_0000n)] },  // ~-0.8
-      { input: [-1.0, 1.0, 0.5], expected: 0.0 },
-      { input: [-1.0, 1.0, 0.9], expected: [reinterpretU64AsF64(0x3fe9_9999_8000_0000n), reinterpretU64AsF64(0x3fe9_9999_c000_0000n)] },  // ~0.8
-      { input: [-1.0, 1.0, 1.0], expected: 1.0 },
-      { input: [-1.0, 1.0, 2.0], expected: 3.0 },
-
-      // Infinities
-      { input: [0.0, kValue.f32.infinity.positive, 0.5], expected: kUnboundedBounds },
-      { input: [kValue.f32.infinity.positive, 0.0, 0.5], expected: kUnboundedBounds },
-      { input: [kValue.f32.infinity.negative, 1.0, 0.5], expected: kUnboundedBounds },
-      { input: [1.0, kValue.f32.infinity.negative, 0.5], expected: kUnboundedBounds },
-      { input: [kValue.f32.infinity.negative, kValue.f32.infinity.positive, 0.5], expected: kUnboundedBounds },
-      { input: [kValue.f32.infinity.positive, kValue.f32.infinity.negative, 0.5], expected: kUnboundedBounds },
-      { input: [0.0, 1.0, kValue.f32.infinity.negative], expected: kUnboundedBounds },
-      { input: [1.0, 0.0, kValue.f32.infinity.negative], expected: kUnboundedBounds },
-      { input: [0.0, 1.0, kValue.f32.infinity.positive], expected: kUnboundedBounds },
-      { input: [1.0, 0.0, kValue.f32.infinity.positive], expected: kUnboundedBounds },
+      { input: [-1.0, 1.0, 0.1], expected: [reinterpretU64AsF64(0xbfe9_9c00_0000_0000n), reinterpretU64AsF64(0xbfe9_9800_0000_0000n)] },  // ~-0.8
+      { input: [-1.0, 1.0, 0.9], expected: [reinterpretU64AsF64(0x3fe9_9800_0000_0000n), reinterpretU64AsF64(0x3fe9_a000_0000_0000n)] },  // ~0.8
 
       // Showing how precise and imprecise versions diff
-      { input: [kValue.f32.negative.min, 10.0, 1.0], expected: 10.0 },
-    ]
+      // In imprecise version, we compute (y - x), where y = 10 and x = -65504, the result is 65514
+      // and cause an overflow in f16.
+      { input: [kValue.f16.negative.min, 10.0, 1.0], expected: kUnboundedBounds },
+      // (y - x) * 1.0, where y = -10 and x = -65504, the result is 65494 rounded to 65472 or 65504.
+      // The result is -65504 + 65472 = -32 or -65504 + 65504 = 0.
+      { input: [kValue.f16.negative.min, -10.0, 1.0], expected: [-32, 0] },
+  ] as ScalarTripleToIntervalCase[],
+} as const;
+
+g.test('mixImpreciseInterval')
+  .params(u =>
+    u
+      .combine('trait', ['f32', 'f16'] as const)
+      .beginSubcases()
+      .expandWithParams<ScalarTripleToIntervalCase>(p => {
+        const trait = FP[p.trait];
+        const constants = trait.constants();
+        // prettier-ignore
+        return [
+          ...kMixImpreciseIntervalCases[p.trait],
+
+          // [0.0, 1.0] cases
+          { input: [0.0, 1.0, -1.0], expected: -1.0 },
+          { input: [0.0, 1.0, 0.0], expected: 0.0 },
+          { input: [0.0, 1.0, 0.5], expected: 0.5 },
+          { input: [0.0, 1.0, 1.0], expected: 1.0 },
+          { input: [0.0, 1.0, 2.0], expected: 2.0 },
+
+          // [1.0, 0.0] cases
+          { input: [1.0, 0.0, -1.0], expected: 2.0 },
+          { input: [1.0, 0.0, 0.0], expected: 1.0 },
+          { input: [1.0, 0.0, 0.5], expected: 0.5 },
+          { input: [1.0, 0.0, 1.0], expected: 0.0 },
+          { input: [1.0, 0.0, 2.0], expected: -1.0 },
+
+          // [0.0, 10.0] cases
+          { input: [0.0, 10.0, -1.0], expected: -10.0 },
+          { input: [0.0, 10.0, 0.0], expected: 0.0 },
+          { input: [0.0, 10.0, 0.5], expected: 5.0 },
+          { input: [0.0, 10.0, 1.0], expected: 10.0 },
+          { input: [0.0, 10.0, 2.0], expected: 20.0 },
+
+          // [2.0, 10.0] cases
+          { input: [2.0, 10.0, -1.0], expected: -6.0 },
+          { input: [2.0, 10.0, 0.0], expected: 2.0 },
+          { input: [2.0, 10.0, 0.5], expected: 6.0 },
+          { input: [2.0, 10.0, 1.0], expected: 10.0 },
+          { input: [2.0, 10.0, 2.0], expected: 18.0 },
+
+          // [-1.0, 1.0] cases
+          { input: [-1.0, 1.0, -2.0], expected: -5.0 },
+          { input: [-1.0, 1.0, 0.0], expected: -1.0 },
+          { input: [-1.0, 1.0, 0.5], expected: 0.0 },
+          { input: [-1.0, 1.0, 1.0], expected: 1.0 },
+          { input: [-1.0, 1.0, 2.0], expected: 3.0 },
+
+          // Infinities
+          { input: [0.0, constants.positive.infinity, 0.5], expected: kUnboundedBounds },
+          { input: [constants.positive.infinity, 0.0, 0.5], expected: kUnboundedBounds },
+          { input: [constants.negative.infinity, 1.0, 0.5], expected: kUnboundedBounds },
+          { input: [1.0, constants.negative.infinity, 0.5], expected: kUnboundedBounds },
+          { input: [constants.negative.infinity, constants.positive.infinity, 0.5], expected: kUnboundedBounds },
+          { input: [constants.positive.infinity, constants.negative.infinity, 0.5], expected: kUnboundedBounds },
+          { input: [0.0, 1.0, constants.negative.infinity], expected: kUnboundedBounds },
+          { input: [1.0, 0.0, constants.negative.infinity], expected: kUnboundedBounds },
+          { input: [0.0, 1.0, constants.positive.infinity], expected: kUnboundedBounds },
+          { input: [1.0, 0.0, constants.positive.infinity], expected: kUnboundedBounds },
+
+          // The [negative.min, +/-10.0, 1.0] cases has different result for different trait on
+          // imprecise version.
+        ];
+      })
   )
   .fn(t => {
     const [x, y, z] = t.params.input;
-    const expected = FP.f32.toInterval(t.params.expected);
-    const got = FP.f32.mixPreciseInterval(x, y, z);
+    const trait = FP[t.params.trait];
+    const expected = trait.toInterval(t.params.expected);
+    const got = trait.mixImpreciseInterval(x, y, z);
     t.expect(
       objectEquals(expected, got),
-      `f32.mixPreciseInterval(${x}, ${y}, ${z}) returned ${got}. Expected ${expected}`
+      `${t.params.trait}.mixImpreciseInterval(${x}, ${y}, ${z}) returned ${got}. Expected ${expected}`
     );
   });
 
-g.test('smoothStepInterval_f32')
-  .paramsSubcasesOnly<ScalarTripleToIntervalCase>(
-    // prettier-ignore
-    [
-      // Some of these are hard coded, since the error intervals are difficult
-      // to express in a closed human-readable form due to the inherited nature
-      // of the errors.
+// Some of these are hard coded, since the error intervals are difficult to express in a closed
+// human-readable form due to the inherited nature of the errors.
+// prettier-ignore
+const kMixPreciseIntervalCases = {
+  f32: [
+    // [0.0, 1.0] cases
+    { input: [0.0, 1.0, 0.1], expected: [reinterpretU64AsF64(0x3fb9_9999_8000_0000n), reinterpretU64AsF64(0x3fb9_9999_a000_0000n)] },  // ~0.1
+    { input: [0.0, 1.0, 0.9], expected: [reinterpretU64AsF64(0x3fec_cccc_c000_0000n), reinterpretU64AsF64(0x3fec_cccc_e000_0000n)] },  // ~0.9
+    // [1.0, 0.0] cases
+    { input: [1.0, 0.0, 0.1], expected: [reinterpretU64AsF64(0x3fec_cccc_c000_0000n), reinterpretU64AsF64(0x3fec_cccc_e000_0000n)] },  // ~0.9
+    { input: [1.0, 0.0, 0.9], expected: [reinterpretU64AsF64(0x3fb9_9999_0000_0000n), reinterpretU64AsF64(0x3fb9_999a_0000_0000n)] },  // ~0.1
+    // [0.0, 10.0] cases
+    { input: [0.0, 10.0, 0.1], expected: [reinterpretU64AsF64(0x3fef_ffff_e000_0000n), reinterpretU64AsF64(0x3ff0_0000_2000_0000n)] },  // ~1
+    { input: [0.0, 10.0, 0.9], expected: [reinterpretU64AsF64(0x4021_ffff_e000_0000n), reinterpretU64AsF64(0x4022_0000_2000_0000n)] },  // ~9
+    // [2.0, 10.0] cases
+    { input: [2.0, 10.0, 0.1], expected: [reinterpretU64AsF64(0x4006_6666_4000_0000n), reinterpretU64AsF64(0x4006_6666_8000_0000n)] },  // ~2.8
+    { input: [2.0, 10.0, 0.9], expected: [reinterpretU64AsF64(0x4022_6666_4000_0000n), reinterpretU64AsF64(0x4022_6666_a000_0000n)] },  // ~9.2
+    // [-1.0, 1.0] cases
+    { input: [-1.0, 1.0, 0.1], expected: [reinterpretU64AsF64(0xbfe9_9999_c000_0000n), reinterpretU64AsF64(0xbfe9_9999_8000_0000n)] },  // ~-0.8
+    { input: [-1.0, 1.0, 0.9], expected: [reinterpretU64AsF64(0x3fe9_9999_8000_0000n), reinterpretU64AsF64(0x3fe9_9999_c000_0000n)] },  // ~0.8
+  ] as ScalarTripleToIntervalCase[],
+  f16: [
+    // [0.0, 1.0] cases
+    { input: [0.0, 1.0, 0.1], expected: [reinterpretU64AsF64(0x3fb9_9800_0000_0000n), reinterpretU64AsF64(0x3fb9_9c00_0000_0000n)] },  // ~0.1
+    { input: [0.0, 1.0, 0.9], expected: [reinterpretU64AsF64(0x3fec_cc00_0000_0000n), reinterpretU64AsF64(0x3fec_d000_0000_0000n)] },  // ~0.9
+    // [1.0, 0.0] cases
+    { input: [1.0, 0.0, 0.1], expected: [reinterpretU64AsF64(0x3fec_cc00_0000_0000n), reinterpretU64AsF64(0x3fec_d000_0000_0000n)] },  // ~0.9
+    { input: [1.0, 0.0, 0.9], expected: [reinterpretU64AsF64(0x3fb9_8000_0000_0000n), reinterpretU64AsF64(0x3fb9_a000_0000_0000n)] },  // ~0.1
+    // [0.0, 10.0] cases
+    { input: [0.0, 10.0, 0.1], expected: [reinterpretU64AsF64(0x3fef_fc00_0000_0000n), reinterpretU64AsF64(0x3ff0_0400_0000_0000n)] },  // ~1
+    { input: [0.0, 10.0, 0.9], expected: [reinterpretU64AsF64(0x4021_fc00_0000_0000n), reinterpretU64AsF64(0x4022_0400_0000_0000n)] },  // ~9
+    // [2.0, 10.0] cases
+    { input: [2.0, 10.0, 0.1], expected: [reinterpretU64AsF64(0x4006_6400_0000_0000n), reinterpretU64AsF64(0x4006_6c00_0000_0000n)] },  // ~2.8
+    { input: [2.0, 10.0, 0.9], expected: [reinterpretU64AsF64(0x4022_6000_0000_0000n), reinterpretU64AsF64(0x4022_6c00_0000_0000n)] },  // ~9.2
+    // [-1.0, 1.0] cases
+    { input: [-1.0, 1.0, 0.1], expected: [reinterpretU64AsF64(0xbfe9_a000_0000_0000n), reinterpretU64AsF64(0xbfe9_9800_0000_0000n)] },  // ~-0.8
+    { input: [-1.0, 1.0, 0.9], expected: [reinterpretU64AsF64(0x3fe9_9800_0000_0000n), reinterpretU64AsF64(0x3fe9_a000_0000_0000n)] },  // ~0.8
+  ] as ScalarTripleToIntervalCase[],
+} as const;
 
-      // Normals
-      { input: [0, 1, 0], expected: [0, kValue.f32.subnormal.positive.min] },
-      { input: [0, 1, 1], expected: [reinterpretU32AsF32(0x3f7ffffa), reinterpretU32AsF32(0x3f800003)] },  // ~1
-      { input: [0, 1, 10], expected: 1 },
-      { input: [0, 1, -10], expected: 0 },
-      { input: [0, 2, 1], expected: [reinterpretU32AsF32(0x3efffff8), reinterpretU32AsF32(0x3f000007)] },  // ~0.5
-      { input: [0, 2, 0.5], expected: [reinterpretU32AsF32(0x3e1ffffb), reinterpretU32AsF32(0x3e200007)] },  // ~0.15625...
-      { input: [2, 0, 1], expected: [reinterpretU32AsF32(0x3efffff8), reinterpretU32AsF32(0x3f000007)] },  // ~0.5
-      { input: [2, 0, 1.5], expected: [reinterpretU32AsF32(0x3e1ffffb), reinterpretU32AsF32(0x3e200007)] },  // ~0.15625...
-      { input: [0, 100, 50], expected: [reinterpretU32AsF32(0x3efffff8), reinterpretU32AsF32(0x3f000007)] },  // ~0.5
-      { input: [0, 100, 25], expected: [reinterpretU32AsF32(0x3e1ffffb), reinterpretU32AsF32(0x3e200007)] },  // ~0.15625...
-      { input: [0, -2, -1], expected: [reinterpretU32AsF32(0x3efffff8), reinterpretU32AsF32(0x3f000007)] },  // ~0.5
-      { input: [0, -2, -0.5], expected: [reinterpretU32AsF32(0x3e1ffffb), reinterpretU32AsF32(0x3e200007)] },  // ~0.15625...
+g.test('mixPreciseInterval')
+  .params(u =>
+    u
+      .combine('trait', ['f32', 'f16'] as const)
+      .beginSubcases()
+      .expandWithParams<ScalarTripleToIntervalCase>(p => {
+        const trait = FP[p.trait];
+        const constants = trait.constants();
+        // prettier-ignore
+        return [
+          ...kMixPreciseIntervalCases[p.trait],
 
-      // Subnormals
-      { input: [0, 2, kValue.f32.subnormal.positive.max], expected: [0, kValue.f32.subnormal.positive.min] },
-      { input: [0, 2, kValue.f32.subnormal.positive.min], expected: [0, kValue.f32.subnormal.positive.min] },
-      { input: [0, 2, kValue.f32.subnormal.negative.max], expected: [0, kValue.f32.subnormal.positive.min] },
-      { input: [0, 2, kValue.f32.subnormal.negative.min], expected: [0, kValue.f32.subnormal.positive.min] },
-      { input: [kValue.f32.subnormal.positive.max, 2, 1], expected: [reinterpretU32AsF32(0x3efffff8), reinterpretU32AsF32(0x3f000007)] },  // ~0.5
-      { input: [kValue.f32.subnormal.positive.min, 2, 1], expected: [reinterpretU32AsF32(0x3efffff8), reinterpretU32AsF32(0x3f000007)] },  // ~0.5
-      { input: [kValue.f32.subnormal.negative.max, 2, 1], expected: [reinterpretU32AsF32(0x3efffff8), reinterpretU32AsF32(0x3f000007)] },  // ~0.5
-      { input: [kValue.f32.subnormal.negative.min, 2, 1], expected: [reinterpretU32AsF32(0x3efffff8), reinterpretU32AsF32(0x3f000007)] },  // ~0.5
-      { input: [0, kValue.f32.subnormal.positive.max, 1], expected: kUnboundedBounds },
-      { input: [0, kValue.f32.subnormal.positive.min, 1], expected: kUnboundedBounds },
-      { input: [0, kValue.f32.subnormal.negative.max, 1], expected: kUnboundedBounds },
-      { input: [0, kValue.f32.subnormal.negative.min, 1], expected: kUnboundedBounds },
+          // [0.0, 1.0] cases
+          { input: [0.0, 1.0, -1.0], expected: -1.0 },
+          { input: [0.0, 1.0, 0.0], expected: 0.0 },
+          { input: [0.0, 1.0, 0.5], expected: 0.5 },
+          { input: [0.0, 1.0, 1.0], expected: 1.0 },
+          { input: [0.0, 1.0, 2.0], expected: 2.0 },
 
-      // Infinities
-      { input: [0, 2, Number.POSITIVE_INFINITY], expected: kUnboundedBounds },
-      { input: [0, 2, Number.NEGATIVE_INFINITY], expected: kUnboundedBounds },
-      { input: [Number.POSITIVE_INFINITY, 2, 1], expected: kUnboundedBounds },
-      { input: [Number.NEGATIVE_INFINITY, 2, 1], expected: kUnboundedBounds },
-      { input: [0, Number.POSITIVE_INFINITY, 1], expected: kUnboundedBounds },
-      { input: [0, Number.NEGATIVE_INFINITY, 1], expected: kUnboundedBounds },
-    ]
+          // [1.0, 0.0] cases
+          { input: [1.0, 0.0, -1.0], expected: 2.0 },
+          { input: [1.0, 0.0, 0.0], expected: 1.0 },
+          { input: [1.0, 0.0, 0.5], expected: 0.5 },
+          { input: [1.0, 0.0, 1.0], expected: 0.0 },
+          { input: [1.0, 0.0, 2.0], expected: -1.0 },
+
+          // [0.0, 10.0] cases
+          { input: [0.0, 10.0, -1.0], expected: -10.0 },
+          { input: [0.0, 10.0, 0.0], expected: 0.0 },
+          { input: [0.0, 10.0, 0.5], expected: 5.0 },
+          { input: [0.0, 10.0, 1.0], expected: 10.0 },
+          { input: [0.0, 10.0, 2.0], expected: 20.0 },
+
+          // [2.0, 10.0] cases
+          { input: [2.0, 10.0, -1.0], expected: -6.0 },
+          { input: [2.0, 10.0, 0.0], expected: 2.0 },
+          { input: [2.0, 10.0, 0.5], expected: 6.0 },
+          { input: [2.0, 10.0, 1.0], expected: 10.0 },
+          { input: [2.0, 10.0, 2.0], expected: 18.0 },
+
+          // [-1.0, 1.0] cases
+          { input: [-1.0, 1.0, -2.0], expected: -5.0 },
+          { input: [-1.0, 1.0, 0.0], expected: -1.0 },
+          { input: [-1.0, 1.0, 0.5], expected: 0.0 },
+          { input: [-1.0, 1.0, 1.0], expected: 1.0 },
+          { input: [-1.0, 1.0, 2.0], expected: 3.0 },
+
+          // Infinities
+          { input: [0.0, constants.positive.infinity, 0.5], expected: kUnboundedBounds },
+          { input: [constants.positive.infinity, 0.0, 0.5], expected: kUnboundedBounds },
+          { input: [constants.negative.infinity, 1.0, 0.5], expected: kUnboundedBounds },
+          { input: [1.0, constants.negative.infinity, 0.5], expected: kUnboundedBounds },
+          { input: [constants.negative.infinity, constants.positive.infinity, 0.5], expected: kUnboundedBounds },
+          { input: [constants.positive.infinity, constants.negative.infinity, 0.5], expected: kUnboundedBounds },
+          { input: [0.0, 1.0, constants.negative.infinity], expected: kUnboundedBounds },
+          { input: [1.0, 0.0, constants.negative.infinity], expected: kUnboundedBounds },
+          { input: [0.0, 1.0, constants.positive.infinity], expected: kUnboundedBounds },
+          { input: [1.0, 0.0, constants.positive.infinity], expected: kUnboundedBounds },
+
+          // Showing how precise and imprecise versions diff
+          { input: [constants.negative.min, 10.0, 1.0], expected: 10.0 },
+          { input: [constants.negative.min, -10.0, 1.0], expected: -10.0 },
+        ];
+      })
+  )
+  .fn(t => {
+    const [x, y, z] = t.params.input;
+    const trait = FP[t.params.trait];
+    const expected = trait.toInterval(t.params.expected);
+    const got = trait.mixPreciseInterval(x, y, z);
+    t.expect(
+      objectEquals(expected, got),
+      `${t.params.trait}.mixPreciseInterval(${x}, ${y}, ${z}) returned ${got}. Expected ${expected}`
+    );
+  });
+
+// Some of these are hard coded, since the error intervals are difficult to express in a closed
+// human-readable form due to the inherited nature of the errors.
+// prettier-ignore
+const kSmoothStepIntervalCases = {
+  f32: [
+    // Normals
+    { input: [0, 1, 0], expected: [0, kValue.f32.positive.subnormal.min] },
+    { input: [0, 1, 1], expected: [reinterpretU32AsF32(0x3f7ffffa), reinterpretU32AsF32(0x3f800003)] },  // ~1
+    { input: [0, 2, 1], expected: [reinterpretU32AsF32(0x3efffff8), reinterpretU32AsF32(0x3f000007)] },  // ~0.5
+    { input: [0, 2, 0.5], expected: [reinterpretU32AsF32(0x3e1ffffb), reinterpretU32AsF32(0x3e200007)] },  // ~0.15625...
+    { input: [2, 0, 1], expected: [reinterpretU32AsF32(0x3efffff8), reinterpretU32AsF32(0x3f000007)] },  // ~0.5
+    { input: [2, 0, 1.5], expected: [reinterpretU32AsF32(0x3e1ffffb), reinterpretU32AsF32(0x3e200007)] },  // ~0.15625...
+    { input: [0, 100, 50], expected: [reinterpretU32AsF32(0x3efffff8), reinterpretU32AsF32(0x3f000007)] },  // ~0.5
+    { input: [0, 100, 25], expected: [reinterpretU32AsF32(0x3e1ffffb), reinterpretU32AsF32(0x3e200007)] },  // ~0.15625...
+    { input: [0, -2, -1], expected: [reinterpretU32AsF32(0x3efffff8), reinterpretU32AsF32(0x3f000007)] },  // ~0.5
+    { input: [0, -2, -0.5], expected: [reinterpretU32AsF32(0x3e1ffffb), reinterpretU32AsF32(0x3e200007)] },  // ~0.15625...
+    // Subnormals
+    { input: [kValue.f32.positive.subnormal.max, 2, 1], expected: [reinterpretU32AsF32(0x3efffff8), reinterpretU32AsF32(0x3f000007)] },  // ~0.5
+    { input: [kValue.f32.positive.subnormal.min, 2, 1], expected: [reinterpretU32AsF32(0x3efffff8), reinterpretU32AsF32(0x3f000007)] },  // ~0.5
+    { input: [kValue.f32.negative.subnormal.max, 2, 1], expected: [reinterpretU32AsF32(0x3efffff8), reinterpretU32AsF32(0x3f000007)] },  // ~0.5
+    { input: [kValue.f32.negative.subnormal.min, 2, 1], expected: [reinterpretU32AsF32(0x3efffff8), reinterpretU32AsF32(0x3f000007)] },  // ~0.5
+    { input: [0, 2, kValue.f32.positive.subnormal.max], expected: [0, kValue.f32.positive.subnormal.min] },
+    { input: [0, 2, kValue.f32.positive.subnormal.min], expected: [0, kValue.f32.positive.subnormal.min] },
+    { input: [0, 2, kValue.f32.negative.subnormal.max], expected: [0, kValue.f32.positive.subnormal.min] },
+    { input: [0, 2, kValue.f32.negative.subnormal.min], expected: [0, kValue.f32.positive.subnormal.min] },
+  ] as ScalarTripleToIntervalCase[],
+  f16: [
+    // Normals
+    { input: [0, 1, 0], expected: [0, reinterpretU16AsF16(0x0002)] },
+    { input: [0, 1, 1], expected: [reinterpretU16AsF16(0x3bfa), reinterpretU16AsF16(0x3c03)] },  // ~1
+    { input: [0, 2, 1], expected: [reinterpretU16AsF16(0x37f8), reinterpretU16AsF16(0x3807)] },  // ~0.5
+    { input: [0, 2, 0.5], expected: [reinterpretU16AsF16(0x30fb), reinterpretU16AsF16(0x3107)] },  // ~0.15625...
+    { input: [2, 0, 1], expected: [reinterpretU16AsF16(0x37f8), reinterpretU16AsF16(0x3807)] },  // ~0.5
+    { input: [2, 0, 1.5], expected: [reinterpretU16AsF16(0x30fb), reinterpretU16AsF16(0x3107)] },  // ~0.15625...
+    { input: [0, 100, 50], expected: [reinterpretU16AsF16(0x37f8), reinterpretU16AsF16(0x3807)] },  // ~0.5
+    { input: [0, 100, 25], expected: [reinterpretU16AsF16(0x30fb), reinterpretU16AsF16(0x3107)] },  // ~0.15625...
+    { input: [0, -2, -1], expected: [reinterpretU16AsF16(0x37f8), reinterpretU16AsF16(0x3807)] },  // ~0.5
+    { input: [0, -2, -0.5], expected: [reinterpretU16AsF16(0x30fb), reinterpretU16AsF16(0x3107)] },  // ~0.15625...
+    // Subnormals
+    { input: [kValue.f16.positive.subnormal.max, 2, 1], expected: [reinterpretU16AsF16(0x37f4), reinterpretU16AsF16(0x380b)] },  // ~0.5
+    { input: [kValue.f16.positive.subnormal.min, 2, 1], expected: [reinterpretU16AsF16(0x37f4), reinterpretU16AsF16(0x380b)] },  // ~0.5
+    { input: [kValue.f16.negative.subnormal.max, 2, 1], expected: [reinterpretU16AsF16(0x37f2), reinterpretU16AsF16(0x380c)] },  // ~0.5
+    { input: [kValue.f16.negative.subnormal.min, 2, 1], expected: [reinterpretU16AsF16(0x37f2), reinterpretU16AsF16(0x380c)] },  // ~0.5
+    { input: [0, 2, kValue.f16.positive.subnormal.max], expected: [0, reinterpretU16AsF16(0x0002)] },
+    { input: [0, 2, kValue.f16.positive.subnormal.min], expected: [0, reinterpretU16AsF16(0x0002)] },
+    { input: [0, 2, kValue.f32.negative.subnormal.max], expected: [0, reinterpretU16AsF16(0x0002)] },
+    { input: [0, 2, kValue.f32.negative.subnormal.min], expected: [0, reinterpretU16AsF16(0x0002)] },
+  ] as ScalarTripleToIntervalCase[],
+} as const;
+
+g.test('smoothStepInterval')
+  .params(u =>
+    u
+      .combine('trait', ['f32', 'f16'] as const)
+      .beginSubcases()
+      .expandWithParams<ScalarTripleToIntervalCase>(p => {
+        const trait = FP[p.trait];
+        const constants = trait.constants();
+        // prettier-ignore
+        return [
+          ...kSmoothStepIntervalCases[p.trait],
+
+          // Normals
+          { input: [0, 1, 10], expected: 1 },
+          { input: [0, 1, -10], expected: 0 },
+
+          // Subnormals
+          { input: [0, constants.positive.subnormal.max, 1], expected: kUnboundedBounds },
+          { input: [0, constants.positive.subnormal.min, 1], expected: kUnboundedBounds },
+          { input: [0, constants.negative.subnormal.max, 1], expected: kUnboundedBounds },
+          { input: [0, constants.negative.subnormal.min, 1], expected: kUnboundedBounds },
+
+          // Infinities
+          { input: [0, 2, constants.positive.infinity], expected: kUnboundedBounds },
+          { input: [0, 2, constants.negative.infinity], expected: kUnboundedBounds },
+          { input: [constants.positive.infinity, 2, 1], expected: kUnboundedBounds },
+          { input: [constants.negative.infinity, 2, 1], expected: kUnboundedBounds },
+          { input: [0, constants.positive.infinity, 1], expected: kUnboundedBounds },
+          { input: [0, constants.negative.infinity, 1], expected: kUnboundedBounds },
+        ];
+      })
   )
   .fn(t => {
     const [low, high, x] = t.params.input;
-    const expected = FP.f32.toInterval(t.params.expected);
-    const got = FP.f32.smoothStepInterval(low, high, x);
+    const trait = FP[t.params.trait];
+    const expected = trait.toInterval(t.params.expected);
+    const got = trait.smoothStepInterval(low, high, x);
     t.expect(
       objectEquals(expected, got),
-      `f32.smoothStepInterval(${low}, ${high}, ${x}) returned ${got}. Expected ${expected}`
+      `${t.params.trait}.smoothStepInterval(${low}, ${high}, ${x}) returned ${got}. Expected ${expected}`
     );
   });
 
@@ -5188,8 +5670,8 @@ g.test('unpack2x16floatInterval')
       { input: 0xc900c900, expected: [-10, -10] },
 
       // f16 subnormals
-      { input: 0x000003ff, expected: [[0, kValue.f16.subnormal.positive.max], 0] },
-      { input: 0x000083ff, expected: [[kValue.f16.subnormal.negative.min, 0], 0] },
+      { input: 0x000003ff, expected: [[0, kValue.f16.positive.subnormal.max], 0] },
+      { input: 0x000083ff, expected: [[kValue.f16.negative.subnormal.min, 0], 0] },
 
       // f16 out of bounds
       { input: 0x7c000000, expected: [kUnboundedBounds, kUnboundedBounds] },
@@ -5407,53 +5889,57 @@ interface VectorToIntervalCase {
   expected: number | IntervalBounds;
 }
 
-g.test('lengthIntervalVector_f32')
-  .paramsSubcasesOnly<VectorToIntervalCase>(
-    // prettier-ignore
-    [
-      // Some of these are hard coded, since the error intervals are difficult
-      // to express in a closed human-readable form due to the inherited nature
-      // of the errors.
+g.test('lengthIntervalVector')
+  .params(u =>
+    u
+      .combine('trait', ['f32', 'f16'] as const)
+      .beginSubcases()
+      .expandWithParams<VectorToIntervalCase>(p => {
+        const trait = FP[p.trait];
+        const constants = trait.constants();
+        // prettier-ignore
+        return [
+          // vec2
+          {input: [1.0, 0.0], expected: kRootSumSquareExpectionInterval[p.trait]['[1.0]'] },  // ~1
+          {input: [0.0, 1.0], expected: kRootSumSquareExpectionInterval[p.trait]['[1.0]'] },  // ~1
+          {input: [1.0, 1.0], expected: kRootSumSquareExpectionInterval[p.trait]['[1.0, 1.0]'] },  // ~√2
+          {input: [-1.0, -1.0], expected: kRootSumSquareExpectionInterval[p.trait]['[1.0, 1.0]'] },  // ~√2
+          {input: [-1.0, 1.0], expected: kRootSumSquareExpectionInterval[p.trait]['[1.0, 1.0]'] },  // ~√2
+          {input: [0.1, 0.0], expected: kRootSumSquareExpectionInterval[p.trait]['[0.1]'] },  // ~0.1
 
-      // vec2
-      {input: [1.0, 0.0], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      {input: [0.0, 1.0], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      {input: [1.0, 1.0], expected: [reinterpretU64AsF64(0x3ff6_a09d_b000_0000n), reinterpretU64AsF64(0x3ff6_a09f_1000_0000n)] },  // ~√2
-      {input: [-1.0, -1.0], expected: [reinterpretU64AsF64(0x3ff6_a09d_b000_0000n), reinterpretU64AsF64(0x3ff6_a09f_1000_0000n)] },  // ~√2
-      {input: [-1.0, 1.0], expected: [reinterpretU64AsF64(0x3ff6_a09d_b000_0000n), reinterpretU64AsF64(0x3ff6_a09f_1000_0000n)] },  // ~√2
-      {input: [0.1, 0.0], expected: [reinterpretU64AsF64(0x3fb9_9998_9000_0000n), reinterpretU64AsF64(0x3fb9_999a_7000_0000n)] },  // ~0.1
+          // vec3
+          {input: [1.0, 0.0, 0.0], expected: kRootSumSquareExpectionInterval[p.trait]['[1.0]'] },  // ~1
+          {input: [0.0, 1.0, 0.0], expected: kRootSumSquareExpectionInterval[p.trait]['[1.0]'] },  // ~1
+          {input: [0.0, 0.0, 1.0], expected: kRootSumSquareExpectionInterval[p.trait]['[1.0]'] },  // ~1
+          {input: [1.0, 1.0, 1.0], expected: kRootSumSquareExpectionInterval[p.trait]['[1.0, 1.0, 1.0]'] },  // ~√3
+          {input: [-1.0, -1.0, -1.0], expected: kRootSumSquareExpectionInterval[p.trait]['[1.0, 1.0, 1.0]'] },  // ~√3
+          {input: [1.0, -1.0, -1.0], expected: kRootSumSquareExpectionInterval[p.trait]['[1.0, 1.0, 1.0]'] },  // ~√3
+          {input: [0.1, 0.0, 0.0], expected: kRootSumSquareExpectionInterval[p.trait]['[0.1]'] },  // ~0.1
 
-      // vec3
-      {input: [1.0, 0.0, 0.0], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      {input: [0.0, 1.0, 0.0], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      {input: [0.0, 0.0, 1.0], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      {input: [1.0, 1.0, 1.0], expected: [reinterpretU64AsF64(0x3ffb_b67a_1000_0000n), reinterpretU64AsF64(0x3ffb_b67b_b000_0000n)] },  // ~√3
-      {input: [-1.0, -1.0, -1.0], expected: [reinterpretU64AsF64(0x3ffb_b67a_1000_0000n), reinterpretU64AsF64(0x3ffb_b67b_b000_0000n)] },  // ~√3
-      {input: [1.0, -1.0, -1.0], expected: [reinterpretU64AsF64(0x3ffb_b67a_1000_0000n), reinterpretU64AsF64(0x3ffb_b67b_b000_0000n)] },  // ~√3
-      {input: [0.1, 0.0, 0.0], expected: [reinterpretU64AsF64(0x3fb9_9998_9000_0000n), reinterpretU64AsF64(0x3fb9_999a_7000_0000n)] },  // ~0.1
+          // vec4
+          {input: [1.0, 0.0, 0.0, 0.0], expected: kRootSumSquareExpectionInterval[p.trait]['[1.0]'] },  // ~1
+          {input: [0.0, 1.0, 0.0, 0.0], expected: kRootSumSquareExpectionInterval[p.trait]['[1.0]'] },  // ~1
+          {input: [0.0, 0.0, 1.0, 0.0], expected: kRootSumSquareExpectionInterval[p.trait]['[1.0]'] },  // ~1
+          {input: [0.0, 0.0, 0.0, 1.0], expected: kRootSumSquareExpectionInterval[p.trait]['[1.0]'] },  // ~1
+          {input: [1.0, 1.0, 1.0, 1.0], expected: kRootSumSquareExpectionInterval[p.trait]['[1.0, 1.0, 1.0, 1.0]'] },  // ~2
+          {input: [-1.0, -1.0, -1.0, -1.0], expected: kRootSumSquareExpectionInterval[p.trait]['[1.0, 1.0, 1.0, 1.0]'] },  // ~2
+          {input: [-1.0, 1.0, -1.0, 1.0], expected: kRootSumSquareExpectionInterval[p.trait]['[1.0, 1.0, 1.0, 1.0]'] },  // ~2
+          {input: [0.1, 0.0, 0.0, 0.0], expected: kRootSumSquareExpectionInterval[p.trait]['[0.1]'] },  // ~0.1
 
-      // vec4
-      {input: [1.0, 0.0, 0.0, 0.0], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      {input: [0.0, 1.0, 0.0, 0.0], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      {input: [0.0, 0.0, 1.0, 0.0], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      {input: [0.0, 0.0, 0.0, 1.0], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      {input: [1.0, 1.0, 1.0, 1.0], expected: [reinterpretU64AsF64(0x3fff_ffff_7000_0000n), reinterpretU64AsF64(0x4000_0000_9000_0000n)] },  // ~2
-      {input: [-1.0, -1.0, -1.0, -1.0], expected: [reinterpretU64AsF64(0x3fff_ffff_7000_0000n), reinterpretU64AsF64(0x4000_0000_9000_0000n)] },  // ~2
-      {input: [-1.0, 1.0, -1.0, 1.0], expected: [reinterpretU64AsF64(0x3fff_ffff_7000_0000n), reinterpretU64AsF64(0x4000_0000_9000_0000n)] },  // ~2
-      {input: [0.1, 0.0, 0.0, 0.0], expected: [reinterpretU64AsF64(0x3fb9_9998_9000_0000n), reinterpretU64AsF64(0x3fb9_999a_7000_0000n)] },  // ~0.1
-
-      // Test that dot going OOB bounds in the intermediate calculations propagates
-      { input: [kValue.f32.positive.nearest_max, kValue.f32.positive.max, kValue.f32.negative.min], expected: kUnboundedBounds },
-      { input: [kValue.f32.positive.max, kValue.f32.positive.nearest_max, kValue.f32.negative.min], expected: kUnboundedBounds },
-      { input: [kValue.f32.negative.min, kValue.f32.positive.max, kValue.f32.positive.nearest_max], expected: kUnboundedBounds },
-    ]
+          // Test that dot going OOB bounds in the intermediate calculations propagates
+          { input: [constants.positive.nearest_max, constants.positive.max, constants.negative.min], expected: kUnboundedBounds },
+          { input: [constants.positive.max, constants.positive.nearest_max, constants.negative.min], expected: kUnboundedBounds },
+          { input: [constants.negative.min, constants.positive.max, constants.positive.nearest_max], expected: kUnboundedBounds },
+        ];
+      })
   )
   .fn(t => {
-    const expected = FP.f32.toInterval(t.params.expected);
-    const got = FP.f32.lengthInterval(t.params.input);
+    const trait = FP[t.params.trait];
+    const expected = trait.toInterval(t.params.expected);
+    const got = trait.lengthInterval(t.params.input);
     t.expect(
       objectEquals(expected, got),
-      `f32.lengthInterval([${t.params.input}]) returned ${got}. Expected ${expected}`
+      `${t.params.trait}.lengthInterval([${t.params.input}]) returned ${got}. Expected ${expected}`
     );
   });
 
@@ -5462,77 +5948,73 @@ interface VectorPairToIntervalCase {
   expected: number | IntervalBounds;
 }
 
-g.test('distanceIntervalVector_f32')
-  .paramsSubcasesOnly<VectorPairToIntervalCase>(
-    // prettier-ignore
-    [
-      // Some of these are hard coded, since the error intervals are difficult
-      // to express in a closed human-readable form due to the inherited nature
-      // of the errors.
-      //
-      // distance(x, y), where x - y = 0 has an acceptance interval of kUnboundedBounds,
-      // because distance(x, y) = length(x - y), and length(0) = kUnboundedBounds
+g.test('distanceIntervalVector')
+  .params(u =>
+    u
+      .combine('trait', ['f32', 'f16'] as const)
+      .beginSubcases()
+      .expandWithParams<VectorPairToIntervalCase>(p => {
+        // prettier-ignore
+        return [
+          // distance(x, y), where x - y = 0 has an acceptance interval of kUnboundedBounds,
+          // because distance(x, y) = length(x - y), and length(0) = kUnboundedBounds.
 
-      // vec2
-      { input: [[1.0, 0.0], [1.0, 0.0]], expected: kUnboundedBounds },
-      { input: [[1.0, 0.0], [0.0, 0.0]], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      { input: [[0.0, 0.0], [1.0, 0.0]], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      { input: [[-1.0, 0.0], [0.0, 0.0]], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      { input: [[0.0, 0.0], [-1.0, 0.0]], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      { input: [[0.0, 1.0], [-1.0, 0.0]], expected: [reinterpretU64AsF64(0x3ff6_a09d_b000_0000n), reinterpretU64AsF64(0x3ff6_a09f_1000_0000n)] },  // ~√2
-      { input: [[0.1, 0.0], [0.0, 0.0]], expected: [reinterpretU64AsF64(0x3fb9_9998_9000_0000n), reinterpretU64AsF64(0x3fb9_999a_7000_0000n)] },  // ~0.1
+          // vec2
+          { input: [[1.0, 0.0], [1.0, 0.0]], expected: kUnboundedBounds },
+          { input: [[1.0, 0.0], [0.0, 0.0]], expected: kRootSumSquareExpectionInterval[p.trait]['[1.0]'] },  // ~1
+          { input: [[0.0, 0.0], [1.0, 0.0]], expected: kRootSumSquareExpectionInterval[p.trait]['[1.0]'] },  // ~1
+          { input: [[-1.0, 0.0], [0.0, 0.0]], expected: kRootSumSquareExpectionInterval[p.trait]['[1.0]'] },  // ~1
+          { input: [[0.0, 0.0], [-1.0, 0.0]], expected: kRootSumSquareExpectionInterval[p.trait]['[1.0]'] },  // ~1
+          { input: [[0.0, 1.0], [-1.0, 0.0]], expected: kRootSumSquareExpectionInterval[p.trait]['[1.0, 1.0]'] },  // ~√2
+          { input: [[0.1, 0.0], [0.0, 0.0]], expected: kRootSumSquareExpectionInterval[p.trait]['[0.1]'] },  // ~0.1
 
-      // vec3
-      { input: [[1.0, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: kUnboundedBounds },
-      { input: [[1.0, 0.0, 0.0], [0.0, 0.0, 0.0]], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      { input: [[0.0, 1.0, 0.0], [0.0, 0.0, 0.0]], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      { input: [[0.0, 0.0, 1.0], [0.0, 0.0, 0.0]], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      { input: [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      { input: [[0.0, 0.0, 0.0], [0.0, 1.0, 0.0]], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      { input: [[0.0, 0.0, 0.0], [0.0, 0.0, 1.0]], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      { input: [[1.0, 1.0, 1.0], [0.0, 0.0, 0.0]], expected: [reinterpretU64AsF64(0x3ffb_b67a_1000_0000n), reinterpretU64AsF64(0x3ffb_b67b_b000_0000n)] },  // ~√3
-      { input: [[0.0, 0.0, 0.0], [1.0, 1.0, 1.0]], expected: [reinterpretU64AsF64(0x3ffb_b67a_1000_0000n), reinterpretU64AsF64(0x3ffb_b67b_b000_0000n)] },  // ~√3
-      { input: [[-1.0, -1.0, -1.0], [0.0, 0.0, 0.0]], expected: [reinterpretU64AsF64(0x3ffb_b67a_1000_0000n), reinterpretU64AsF64(0x3ffb_b67b_b000_0000n)] },  // ~√3
-      { input: [[0.0, 0.0, 0.0], [-1.0, -1.0, -1.0]], expected: [reinterpretU64AsF64(0x3ffb_b67a_1000_0000n), reinterpretU64AsF64(0x3ffb_b67b_b000_0000n)] },  // ~√3
-      { input: [[0.1, 0.0, 0.0], [0.0, 0.0, 0.0]], expected: [reinterpretU64AsF64(0x3fb9_9998_9000_0000n), reinterpretU64AsF64(0x3fb9_999a_7000_0000n)] },  // ~0.1
-      { input: [[0.0, 0.0, 0.0], [0.1, 0.0, 0.0]], expected: [reinterpretU64AsF64(0x3fb9_9998_9000_0000n), reinterpretU64AsF64(0x3fb9_999a_7000_0000n)] },  // ~0.1
+          // vec3
+          { input: [[1.0, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: kUnboundedBounds },
+          { input: [[1.0, 0.0, 0.0], [0.0, 0.0, 0.0]], expected: kRootSumSquareExpectionInterval[p.trait]['[1.0]'] },  // ~1
+          { input: [[0.0, 1.0, 0.0], [0.0, 0.0, 0.0]], expected: kRootSumSquareExpectionInterval[p.trait]['[1.0]'] },  // ~1
+          { input: [[0.0, 0.0, 1.0], [0.0, 0.0, 0.0]], expected: kRootSumSquareExpectionInterval[p.trait]['[1.0]'] },  // ~1
+          { input: [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: kRootSumSquareExpectionInterval[p.trait]['[1.0]'] },  // ~1
+          { input: [[0.0, 0.0, 0.0], [0.0, 1.0, 0.0]], expected: kRootSumSquareExpectionInterval[p.trait]['[1.0]'] },  // ~1
+          { input: [[0.0, 0.0, 0.0], [0.0, 0.0, 1.0]], expected: kRootSumSquareExpectionInterval[p.trait]['[1.0]'] },  // ~1
+          { input: [[1.0, 1.0, 1.0], [0.0, 0.0, 0.0]], expected: kRootSumSquareExpectionInterval[p.trait]['[1.0, 1.0, 1.0]'] },  // ~√3
+          { input: [[0.0, 0.0, 0.0], [1.0, 1.0, 1.0]], expected: kRootSumSquareExpectionInterval[p.trait]['[1.0, 1.0, 1.0]'] },  // ~√3
+          { input: [[-1.0, -1.0, -1.0], [0.0, 0.0, 0.0]], expected: kRootSumSquareExpectionInterval[p.trait]['[1.0, 1.0, 1.0]'] },  // ~√3
+          { input: [[0.0, 0.0, 0.0], [-1.0, -1.0, -1.0]], expected: kRootSumSquareExpectionInterval[p.trait]['[1.0, 1.0, 1.0]'] },  // ~√3
+          { input: [[0.1, 0.0, 0.0], [0.0, 0.0, 0.0]], expected: kRootSumSquareExpectionInterval[p.trait]['[0.1]'] },  // ~0.1
+          { input: [[0.0, 0.0, 0.0], [0.1, 0.0, 0.0]], expected: kRootSumSquareExpectionInterval[p.trait]['[0.1]'] },  // ~0.1
 
-      // vec4
-      { input: [[1.0, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: kUnboundedBounds },
-      { input: [[1.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      { input: [[0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      { input: [[0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 0.0]], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      { input: [[0.0, 0.0, 0.0, 1.0], [0.0, 0.0, 0.0, 0.0]], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      { input: [[0.0, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      { input: [[0.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0]], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      { input: [[0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0]], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      { input: [[0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0]], expected: [reinterpretU64AsF64(0x3fef_ffff_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_9000_0000n)] },  // ~1
-      { input: [[1.0, 1.0, 1.0, 1.0], [0.0, 0.0, 0.0, 0.0]], expected: [reinterpretU64AsF64(0x3fff_ffff_7000_0000n), reinterpretU64AsF64(0x4000_0000_9000_0000n)] },  // ~2
-      { input: [[0.0, 0.0, 0.0, 0.0], [1.0, 1.0, 1.0, 1.0]], expected: [reinterpretU64AsF64(0x3fff_ffff_7000_0000n), reinterpretU64AsF64(0x4000_0000_9000_0000n)] },  // ~2
-      { input: [[-1.0, 1.0, -1.0, 1.0], [0.0, 0.0, 0.0, 0.0]], expected: [reinterpretU64AsF64(0x3fff_ffff_7000_0000n), reinterpretU64AsF64(0x4000_0000_9000_0000n)] },  // ~2
-      { input: [[0.0, 0.0, 0.0, 0.0], [1.0, -1.0, 1.0, -1.0]], expected: [reinterpretU64AsF64(0x3fff_ffff_7000_0000n), reinterpretU64AsF64(0x4000_0000_9000_0000n)] },  // ~2
-      { input: [[0.1, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]], expected: [reinterpretU64AsF64(0x3fb9_9998_9000_0000n), reinterpretU64AsF64(0x3fb9_999a_7000_0000n)] },  // ~0.1
-      { input: [[0.0, 0.0, 0.0, 0.0], [0.1, 0.0, 0.0, 0.0]], expected: [reinterpretU64AsF64(0x3fb9_9998_9000_0000n), reinterpretU64AsF64(0x3fb9_999a_7000_0000n)] },  // ~0.1
-    ]
+          // vec4
+          { input: [[1.0, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: kUnboundedBounds },
+          { input: [[1.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]], expected: kRootSumSquareExpectionInterval[p.trait]['[1.0]'] },  // ~1
+          { input: [[0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]], expected: kRootSumSquareExpectionInterval[p.trait]['[1.0]'] },  // ~1
+          { input: [[0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 0.0]], expected: kRootSumSquareExpectionInterval[p.trait]['[1.0]'] },  // ~1
+          { input: [[0.0, 0.0, 0.0, 1.0], [0.0, 0.0, 0.0, 0.0]], expected: kRootSumSquareExpectionInterval[p.trait]['[1.0]'] },  // ~1
+          { input: [[0.0, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: kRootSumSquareExpectionInterval[p.trait]['[1.0]'] },  // ~1
+          { input: [[0.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0]], expected: kRootSumSquareExpectionInterval[p.trait]['[1.0]'] },  // ~1
+          { input: [[0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0]], expected: kRootSumSquareExpectionInterval[p.trait]['[1.0]'] },  // ~1
+          { input: [[0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0]], expected: kRootSumSquareExpectionInterval[p.trait]['[1.0]'] },  // ~1
+          { input: [[1.0, 1.0, 1.0, 1.0], [0.0, 0.0, 0.0, 0.0]], expected: kRootSumSquareExpectionInterval[p.trait]['[1.0, 1.0, 1.0, 1.0]'] },  // ~2
+          { input: [[0.0, 0.0, 0.0, 0.0], [1.0, 1.0, 1.0, 1.0]], expected: kRootSumSquareExpectionInterval[p.trait]['[1.0, 1.0, 1.0, 1.0]'] },  // ~2
+          { input: [[-1.0, 1.0, -1.0, 1.0], [0.0, 0.0, 0.0, 0.0]], expected: kRootSumSquareExpectionInterval[p.trait]['[1.0, 1.0, 1.0, 1.0]'] },  // ~2
+          { input: [[0.0, 0.0, 0.0, 0.0], [1.0, -1.0, 1.0, -1.0]], expected: kRootSumSquareExpectionInterval[p.trait]['[1.0, 1.0, 1.0, 1.0]'] },  // ~2
+          { input: [[0.1, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0]], expected: kRootSumSquareExpectionInterval[p.trait]['[0.1]'] },  // ~0.1
+          { input: [[0.0, 0.0, 0.0, 0.0], [0.1, 0.0, 0.0, 0.0]], expected: kRootSumSquareExpectionInterval[p.trait]['[0.1]'] },  // ~0.1
+        ];
+      })
   )
   .fn(t => {
-    const expected = FP.f32.toInterval(t.params.expected);
-    const got = FP.f32.distanceInterval(...t.params.input);
+    const trait = FP[t.params.trait];
+    const expected = trait.toInterval(t.params.expected);
+    const got = trait.distanceInterval(...t.params.input);
     t.expect(
       objectEquals(expected, got),
-      `f32.distanceInterval([${t.params.input[0]}, ${t.params.input[1]}]) returned ${got}. Expected ${expected}`
+      `${t.params.trait}.lengthInterval([${t.params.input[0]}, ${t.params.input[1]}]) returned ${got}. Expected ${expected}`
     );
   });
 
 // prettier-ignore
 const kDotIntervalCases = {
   f32: [
-    // vec2
-    { input: [[0.1, 0.0], [1.0, 0.0]], expected: [reinterpretU32AsF32(0x3dcccccc), reinterpretU32AsF32(0x3dcccccd)]},  // ~0.1
-    // vec3
-    { input: [[0.1, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [reinterpretU32AsF32(0x3dcccccc), reinterpretU32AsF32(0x3dcccccd)]},  // ~0.1
-    // vec4
-    { input: [[0.1, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: [reinterpretU32AsF32(0x3dcccccc), reinterpretU32AsF32(0x3dcccccd)]},  // ~0.1
     // Inputs with large values but cancel out to finite result. In these cases, 2.0*2.0 = 4.0 and
     // 3.0*3.0 = 9.0 is much smaller than kValue.f32.positive.max, as a result
     // kValue.f32.positive.max + 9.0 = kValue.f32.positive.max in f32 and even f64. So, if the
@@ -5543,12 +6025,6 @@ const kDotIntervalCases = {
     { input: [[kValue.f32.positive.max, 1.0, 2.0, 3.0], [1.0, kValue.f32.negative.min, 2.0, 3.0]], expected: [0, 13] },
   ] as VectorPairToIntervalCase[],
   f16: [
-    // vec2
-    { input: [[0.1, 0.0], [1.0, 0.0]], expected: [reinterpretU16AsF16(0x2e66), reinterpretU16AsF16(0x2e67)]},  // ~0.1
-    // vec3
-    { input: [[0.1, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [reinterpretU16AsF16(0x2e66), reinterpretU16AsF16(0x2e67)]},  // ~0.1
-    // vec4
-    { input: [[0.1, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: [reinterpretU16AsF16(0x2e66), reinterpretU16AsF16(0x2e67)]},  // ~0.1
     // Inputs with large values but cancel out to finite result. In these cases, 2.0*2.0 = 4.0 and
     // 3.0*3.0 = 9.0 is not small enough comparing to kValue.f16.positive.max = 65504, as a result
     // kValue.f16.positive.max + 9.0 = 65513 is exactly representable in f32 and f64. So, if the
@@ -5576,6 +6052,7 @@ g.test('dotInterval')
           { input: [[1.0, 1.0], [1.0, 1.0]], expected: 2.0 },
           { input: [[-1.0, -1.0], [-1.0, -1.0]], expected: 2.0 },
           { input: [[-1.0, 1.0], [1.0, -1.0]], expected: -2.0 },
+          { input: [[0.1, 0.0], [1.0, 0.0]], expected: kConstantCorrectlyRoundedExpectation[p.trait]['0.1']},  // correclt rounded of 0.1
 
           // vec3
           { input: [[1.0, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: 1.0 },
@@ -5584,6 +6061,7 @@ g.test('dotInterval')
           { input: [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]], expected: 3.0 },
           { input: [[-1.0, -1.0, -1.0], [-1.0, -1.0, -1.0]], expected: 3.0 },
           { input: [[1.0, -1.0, -1.0], [-1.0, 1.0, -1.0]], expected: -1.0 },
+          { input: [[0.1, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: kConstantCorrectlyRoundedExpectation[p.trait]['0.1']},  // correclt rounded of 0.1
 
           // vec4
           { input: [[1.0, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: 1.0 },
@@ -5593,6 +6071,7 @@ g.test('dotInterval')
           { input: [[1.0, 1.0, 1.0, 1.0], [1.0, 1.0, 1.0, 1.0]], expected: 4.0 },
           { input: [[-1.0, -1.0, -1.0, -1.0], [-1.0, -1.0, -1.0, -1.0]], expected: 4.0 },
           { input: [[-1.0, 1.0, -1.0, 1.0], [1.0, -1.0, 1.0, -1.0]], expected: -4.0 },
+          { input: [[0.1, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: kConstantCorrectlyRoundedExpectation[p.trait]['0.1']},  // correclt rounded of 0.1
 
           ...kDotIntervalCases[p.trait],
 
@@ -5622,39 +6101,69 @@ interface VectorToVectorCase {
   expected: (number | IntervalBounds)[];
 }
 
-g.test('normalizeInterval_f32')
-  .paramsSubcasesOnly<VectorToVectorCase>(
-    // prettier-ignore
-    [
-      // vec2
-      {input: [1.0, 0.0], expected: [[reinterpretU64AsF64(0x3fef_fffe_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_b000_0000n)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)]] },  // [ ~1.0, ~0.0]
-      {input: [0.0, 1.0], expected: [[reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU64AsF64(0x3fef_fffe_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_b000_0000n)]] },  // [ ~0.0, ~1.0]
-      {input: [-1.0, 0.0], expected: [[reinterpretU64AsF64(0xbff0_0000_b000_0000n), reinterpretU64AsF64(0xbfef_fffe_7000_0000n)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)]] },  // [ ~1.0, ~0.0]
-      {input: [1.0, 1.0], expected: [[reinterpretU64AsF64(0x3fe6_a09d_5000_0000n), reinterpretU64AsF64(0x3fe6_a09f_9000_0000n)], [reinterpretU64AsF64(0x3fe6_a09d_5000_0000n), reinterpretU64AsF64(0x3fe6_a09f_9000_0000n)]] },  // [ ~1/√2, ~1/√2]
+// prettier-ignore
+const kNormalizeIntervalCases = {
+  f32: [
+    // vec2
+    {input: [1.0, 0.0], expected: [[reinterpretU64AsF64(0x3fef_fffe_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_b000_0000n)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)]] },  // [ ~1.0, ~0.0]
+    {input: [0.0, 1.0], expected: [[reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU64AsF64(0x3fef_fffe_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_b000_0000n)]] },  // [ ~0.0, ~1.0]
+    {input: [-1.0, 0.0], expected: [[reinterpretU64AsF64(0xbff0_0000_b000_0000n), reinterpretU64AsF64(0xbfef_fffe_7000_0000n)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)]] },  // [ ~1.0, ~0.0]
+    {input: [1.0, 1.0], expected: [[reinterpretU64AsF64(0x3fe6_a09d_5000_0000n), reinterpretU64AsF64(0x3fe6_a09f_9000_0000n)], [reinterpretU64AsF64(0x3fe6_a09d_5000_0000n), reinterpretU64AsF64(0x3fe6_a09f_9000_0000n)]] },  // [ ~1/√2, ~1/√2]
 
-      // vec3
-      {input: [1.0, 0.0, 0.0], expected: [[reinterpretU64AsF64(0x3fef_fffe_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_b000_0000n)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)]] },  // [ ~1.0, ~0.0, ~0.0]
-      {input: [0.0, 1.0, 0.0], expected: [[reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU64AsF64(0x3fef_fffe_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_b000_0000n)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)]] },  // [ ~0.0, ~1.0, ~0.0]
-      {input: [0.0, 0.0, 1.0], expected: [[reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU64AsF64(0x3fef_fffe_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_b000_0000n)]] },  // [ ~0.0, ~0.0, ~1.0]
-      {input: [-1.0, 0.0, 0.0], expected: [[reinterpretU64AsF64(0xbff0_0000_b000_0000n), reinterpretU64AsF64(0xbfef_fffe_7000_0000n)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)]] },  // [ ~1.0, ~0.0, ~0.0]
-      {input: [1.0, 1.0, 1.0], expected: [[reinterpretU64AsF64(0x3fe2_79a6_5000_0000n), reinterpretU64AsF64(0x3fe2_79a8_5000_0000n)], [reinterpretU64AsF64(0x3fe2_79a6_5000_0000n), reinterpretU64AsF64(0x3fe2_79a8_5000_0000n)], [reinterpretU64AsF64(0x3fe2_79a6_5000_0000n), reinterpretU64AsF64(0x3fe2_79a8_5000_0000n)]] },  // [ ~1/√3, ~1/√3, ~1/√3]
+    // vec3
+    {input: [1.0, 0.0, 0.0], expected: [[reinterpretU64AsF64(0x3fef_fffe_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_b000_0000n)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)]] },  // [ ~1.0, ~0.0, ~0.0]
+    {input: [0.0, 1.0, 0.0], expected: [[reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU64AsF64(0x3fef_fffe_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_b000_0000n)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)]] },  // [ ~0.0, ~1.0, ~0.0]
+    {input: [0.0, 0.0, 1.0], expected: [[reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU64AsF64(0x3fef_fffe_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_b000_0000n)]] },  // [ ~0.0, ~0.0, ~1.0]
+    {input: [-1.0, 0.0, 0.0], expected: [[reinterpretU64AsF64(0xbff0_0000_b000_0000n), reinterpretU64AsF64(0xbfef_fffe_7000_0000n)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)]] },  // [ ~1.0, ~0.0, ~0.0]
+    {input: [1.0, 1.0, 1.0], expected: [[reinterpretU64AsF64(0x3fe2_79a6_5000_0000n), reinterpretU64AsF64(0x3fe2_79a8_5000_0000n)], [reinterpretU64AsF64(0x3fe2_79a6_5000_0000n), reinterpretU64AsF64(0x3fe2_79a8_5000_0000n)], [reinterpretU64AsF64(0x3fe2_79a6_5000_0000n), reinterpretU64AsF64(0x3fe2_79a8_5000_0000n)]] },  // [ ~1/√3, ~1/√3, ~1/√3]
 
-      // vec4
-      {input: [1.0, 0.0, 0.0, 0.0], expected: [[reinterpretU64AsF64(0x3fef_fffe_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_b000_0000n)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)]] },  // [ ~1.0, ~0.0, ~0.0, ~0.0]
-      {input: [0.0, 1.0, 0.0, 0.0], expected: [[reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU64AsF64(0x3fef_fffe_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_b000_0000n)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)]] },  // [ ~0.0, ~1.0, ~0.0, ~0.0]
-      {input: [0.0, 0.0, 1.0, 0.0], expected: [[reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU64AsF64(0x3fef_fffe_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_b000_0000n)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)]] },  // [ ~0.0, ~0.0, ~1.0, ~0.0]
-      {input: [0.0, 0.0, 0.0, 1.0], expected: [[reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU64AsF64(0x3fef_fffe_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_b000_0000n)]] },  // [ ~0.0, ~0.0, ~0.0, ~1.0]
-      {input: [-1.0, 0.0, 0.0, 0.0], expected: [[reinterpretU64AsF64(0xbff0_0000_b000_0000n), reinterpretU64AsF64(0xbfef_fffe_7000_0000n)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)]] },  // [ ~1.0, ~0.0, ~0.0, ~0.0]
-      {input: [1.0, 1.0, 1.0, 1.0], expected: [[reinterpretU64AsF64(0x3fdf_fffe_7000_0000n), reinterpretU64AsF64(0x3fe0_0000_b000_0000n)], [reinterpretU64AsF64(0x3fdf_fffe_7000_0000n), reinterpretU64AsF64(0x3fe0_0000_b000_0000n)], [reinterpretU64AsF64(0x3fdf_fffe_7000_0000n), reinterpretU64AsF64(0x3fe0_0000_b000_0000n)], [reinterpretU64AsF64(0x3fdf_fffe_7000_0000n), reinterpretU64AsF64(0x3fe0_0000_b000_0000n)]] },  // [ ~1/√4, ~1/√4, ~1/√4]
-    ]
+    // vec4
+    {input: [1.0, 0.0, 0.0, 0.0], expected: [[reinterpretU64AsF64(0x3fef_fffe_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_b000_0000n)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)]] },  // [ ~1.0, ~0.0, ~0.0, ~0.0]
+    {input: [0.0, 1.0, 0.0, 0.0], expected: [[reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU64AsF64(0x3fef_fffe_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_b000_0000n)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)]] },  // [ ~0.0, ~1.0, ~0.0, ~0.0]
+    {input: [0.0, 0.0, 1.0, 0.0], expected: [[reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU64AsF64(0x3fef_fffe_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_b000_0000n)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)]] },  // [ ~0.0, ~0.0, ~1.0, ~0.0]
+    {input: [0.0, 0.0, 0.0, 1.0], expected: [[reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU64AsF64(0x3fef_fffe_7000_0000n), reinterpretU64AsF64(0x3ff0_0000_b000_0000n)]] },  // [ ~0.0, ~0.0, ~0.0, ~1.0]
+    {input: [-1.0, 0.0, 0.0, 0.0], expected: [[reinterpretU64AsF64(0xbff0_0000_b000_0000n), reinterpretU64AsF64(0xbfef_fffe_7000_0000n)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)], [reinterpretU32AsF32(0x81200000), reinterpretU32AsF32(0x01200000)]] },  // [ ~1.0, ~0.0, ~0.0, ~0.0]
+    {input: [1.0, 1.0, 1.0, 1.0], expected: [[reinterpretU64AsF64(0x3fdf_fffe_7000_0000n), reinterpretU64AsF64(0x3fe0_0000_b000_0000n)], [reinterpretU64AsF64(0x3fdf_fffe_7000_0000n), reinterpretU64AsF64(0x3fe0_0000_b000_0000n)], [reinterpretU64AsF64(0x3fdf_fffe_7000_0000n), reinterpretU64AsF64(0x3fe0_0000_b000_0000n)], [reinterpretU64AsF64(0x3fdf_fffe_7000_0000n), reinterpretU64AsF64(0x3fe0_0000_b000_0000n)]] },  // [ ~1/√4, ~1/√4, ~1/√4]
+  ] as VectorToVectorCase[],
+  f16: [
+    // vec2
+    {input: [1.0, 0.0], expected: [[reinterpretU64AsF64(0x3fef_ce00_0000_0000n), reinterpretU64AsF64(0x3ff0_1600_0000_0000n)], [reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)]] },  // [ ~1.0, ~0.0]
+    {input: [0.0, 1.0], expected: [[reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)], [reinterpretU64AsF64(0x3fef_ce00_0000_0000n), reinterpretU64AsF64(0x3ff0_1600_0000_0000n)]] },  // [ ~0.0, ~1.0]
+    {input: [-1.0, 0.0], expected: [[reinterpretU64AsF64(0xbff0_1600_0000_0000n), reinterpretU64AsF64(0xbfef_ce00_0000_0000n)], [reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)]] },  // [ ~1.0, ~0.0]
+    {input: [1.0, 1.0], expected: [[reinterpretU64AsF64(0x3fe6_7e00_0000_0000n), reinterpretU64AsF64(0x3fe6_c600_0000_0000n)], [reinterpretU64AsF64(0x3fe6_7e00_0000_0000n), reinterpretU64AsF64(0x3fe6_c600_0000_0000n)]] },  // [ ~1/√2, ~1/√2]
+
+    // vec3
+    {input: [1.0, 0.0, 0.0], expected: [[reinterpretU64AsF64(0x3fef_ce00_0000_0000n), reinterpretU64AsF64(0x3ff0_1600_0000_0000n)], [reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)], [reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)]] },  // [ ~1.0, ~0.0, ~0.0]
+    {input: [0.0, 1.0, 0.0], expected: [[reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)], [reinterpretU64AsF64(0x3fef_ce00_0000_0000n), reinterpretU64AsF64(0x3ff0_1600_0000_0000n)], [reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)]] },  // [ ~0.0, ~1.0, ~0.0]
+    {input: [0.0, 0.0, 1.0], expected: [[reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)], [reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)], [reinterpretU64AsF64(0x3fef_ce00_0000_0000n), reinterpretU64AsF64(0x3ff0_1600_0000_0000n)]] },  // [ ~0.0, ~0.0, ~1.0]
+    {input: [-1.0, 0.0, 0.0], expected: [[reinterpretU64AsF64(0xbff0_1600_0000_0000n), reinterpretU64AsF64(0xbfef_ce00_0000_0000n)], [reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)], [reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)]] },  // [ ~1.0, ~0.0, ~0.0]
+    {input: [1.0, 1.0, 1.0], expected: [[reinterpretU64AsF64(0x3fe2_5a00_0000_0000n), reinterpretU64AsF64(0x3fe2_9a00_0000_0000n)], [reinterpretU64AsF64(0x3fe2_5a00_0000_0000n), reinterpretU64AsF64(0x3fe2_9a00_0000_0000n)], [reinterpretU64AsF64(0x3fe2_5a00_0000_0000n), reinterpretU64AsF64(0x3fe2_9a00_0000_0000n)]] },  // [ ~1/√3, ~1/√3, ~1/√3]
+
+    // vec4
+    {input: [1.0, 0.0, 0.0, 0.0], expected: [[reinterpretU64AsF64(0x3fef_ce00_0000_0000n), reinterpretU64AsF64(0x3ff0_1600_0000_0000n)], [reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)], [reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)], [reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)]] },  // [ ~1.0, ~0.0, ~0.0, ~0.0]
+    {input: [0.0, 1.0, 0.0, 0.0], expected: [[reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)], [reinterpretU64AsF64(0x3fef_ce00_0000_0000n), reinterpretU64AsF64(0x3ff0_1600_0000_0000n)], [reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)], [reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)]] },  // [ ~0.0, ~1.0, ~0.0, ~0.0]
+    {input: [0.0, 0.0, 1.0, 0.0], expected: [[reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)], [reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)], [reinterpretU64AsF64(0x3fef_ce00_0000_0000n), reinterpretU64AsF64(0x3ff0_1600_0000_0000n)], [reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)]] },  // [ ~0.0, ~0.0, ~1.0, ~0.0]
+    {input: [0.0, 0.0, 0.0, 1.0], expected: [[reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)], [reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)], [reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)], [reinterpretU64AsF64(0x3fef_ce00_0000_0000n), reinterpretU64AsF64(0x3ff0_1600_0000_0000n)]] },  // [ ~0.0, ~0.0, ~0.0, ~1.0]
+    {input: [-1.0, 0.0, 0.0, 0.0], expected: [[reinterpretU64AsF64(0xbff0_1600_0000_0000n), reinterpretU64AsF64(0xbfef_ce00_0000_0000n)], [reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)], [reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)], [reinterpretU64AsF64(0xbf24_0000_0000_0000n), reinterpretU64AsF64(0x3f24_0000_0000_0000n)]] },  // [ ~1.0, ~0.0, ~0.0, ~0.0]
+    {input: [1.0, 1.0, 1.0, 1.0], expected: [[reinterpretU64AsF64(0x3fdf_ce00_0000_0000n), reinterpretU64AsF64(0x3fe0_1600_0000_0000n)], [reinterpretU64AsF64(0x3fdf_ce00_0000_0000n), reinterpretU64AsF64(0x3fe0_1600_0000_0000n)], [reinterpretU64AsF64(0x3fdf_ce00_0000_0000n), reinterpretU64AsF64(0x3fe0_1600_0000_0000n)], [reinterpretU64AsF64(0x3fdf_ce00_0000_0000n), reinterpretU64AsF64(0x3fe0_1600_0000_0000n)]] },  // [ ~1/√4, ~1/√4, ~1/√4]
+  ] as VectorToVectorCase[],
+} as const;
+
+g.test('normalizeInterval')
+  .params(u =>
+    u
+      .combine('trait', ['f32', 'f16'] as const)
+      .beginSubcases()
+      .expandWithParams<VectorToVectorCase>(p => kNormalizeIntervalCases[p.trait])
   )
   .fn(t => {
     const x = t.params.input;
-    const expected = FP.f32.toVector(t.params.expected);
-    const got = FP.f32.normalizeInterval(x);
+    const trait = FP[t.params.trait];
+    const expected = trait.toVector(t.params.expected);
+    const got = trait.normalizeInterval(x);
     t.expect(
       objectEquals(expected, got),
-      `f32.normalizeInterval([${x}]) returned ${got}. Expected ${expected}`
+      `${t.params.trait}.normalizeInterval([${x}]) returned ${got}. Expected ${expected}`
     );
   });
 
@@ -5663,104 +6172,192 @@ interface VectorPairToVectorCase {
   expected: (number | IntervalBounds)[];
 }
 
-g.test('crossInterval_f32')
-  .paramsSubcasesOnly<VectorPairToVectorCase>(
-    // prettier-ignore
-    [
-      // parallel vectors, AXB == 0
-      { input: [[1.0, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [0.0, 0.0, 0.0] },
-      { input: [[0.0, 1.0, 0.0], [0.0, 1.0, 0.0]], expected: [0.0, 0.0, 0.0] },
-      { input: [[0.0, 0.0, 1.0], [0.0, 0.0, 1.0]], expected: [0.0, 0.0, 0.0] },
-      { input: [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]], expected: [0.0, 0.0, 0.0] },
-      { input: [[-1.0, -1.0, -1.0], [-1.0, -1.0, -1.0]], expected: [0.0, 0.0, 0.0] },
-      { input: [[0.1, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [0.0, 0.0, 0.0] },
-      { input: [[kValue.f32.subnormal.positive.max, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [0.0, 0.0, 0.0] },
+// prettier-ignore
+const kCrossIntervalCases = {
+  f32: [
+    { input: [
+        [kValue.f32.positive.subnormal.max, kValue.f32.negative.subnormal.max, kValue.f32.negative.subnormal.min],
+        [kValue.f32.negative.subnormal.min, kValue.f32.positive.subnormal.min, kValue.f32.negative.subnormal.max]
+      ],
+      expected: [
+        [0.0, reinterpretU32AsF32(0x00000002)], // ~0
+        [0.0, reinterpretU32AsF32(0x00000002)], // ~0
+        [kValue.f32.negative.subnormal.max, kValue.f32.positive.subnormal.min] // ~0
+      ]
+    },
+    { input: [
+        [0.1, -0.1, -0.1],
+        [-0.1, 0.1, -0.1]
+      ],
+      expected: [
+        [reinterpretU32AsF32(0x3ca3d708), reinterpretU32AsF32(0x3ca3d70b)], // ~0.02
+        [reinterpretU32AsF32(0x3ca3d708), reinterpretU32AsF32(0x3ca3d70b)], // ~0.02
+        [reinterpretU32AsF32(0xb1400000), reinterpretU32AsF32(0x31400000)], // ~0
+      ]
+    },
+  ] as VectorPairToVectorCase[],
+  f16: [
+    { input: [
+        [kValue.f16.positive.subnormal.max, kValue.f16.negative.subnormal.max, kValue.f16.negative.subnormal.min],
+        [kValue.f16.negative.subnormal.min, kValue.f16.positive.subnormal.min, kValue.f16.negative.subnormal.max]
+      ],
+      expected: [
+        [0.0, reinterpretU16AsF16(0x0002)], // ~0
+        [0.0, reinterpretU16AsF16(0x0002)], // ~0
+        [kValue.f16.negative.subnormal.max, kValue.f16.positive.subnormal.min] // ~0
+      ]
+    },
+    { input: [
+        [0.1, -0.1, -0.1],
+        [-0.1, 0.1, -0.1]
+      ],
+      expected: [
+        [reinterpretU16AsF16(0x251e), reinterpretU16AsF16(0x2520)], // ~0.02
+        [reinterpretU16AsF16(0x251e), reinterpretU16AsF16(0x2520)], // ~0.02
+        [reinterpretU16AsF16(0x8100), reinterpretU16AsF16(0x0100)] // ~0
+      ]
+    },
+  ] as VectorPairToVectorCase[],
+  abstract: [
+    { input: [
+        [kValue.f64.positive.subnormal.max, kValue.f64.negative.subnormal.max, kValue.f64.negative.subnormal.min],
+        [kValue.f64.negative.subnormal.min, kValue.f64.positive.subnormal.min, kValue.f64.negative.subnormal.max]
+      ],
+      expected: [0.0, 0.0, 0.0]
+    },
+    { input: [
+        [0.1, -0.1, -0.1],
+        [-0.1, 0.1, -0.1]
+      ],
+      expected: [
+        reinterpretU64AsF64(0x3f94_7ae1_47ae_147cn), // ~0.02
+        reinterpretU64AsF64(0x3f94_7ae1_47ae_147cn), // ~0.02
+        0.0
+      ]
+    },
+  ] as VectorPairToVectorCase[],
+} as const;
 
-      // non-parallel vectors, AXB != 0
-      // f32 normals
-      { input: [[1.0, -1.0, -1.0], [-1.0, 1.0, -1.0]], expected: [2.0, 2.0, 0.0] },
-      { input: [[1.0, 2, 3], [1.0, 5.0, 7.0]], expected: [-1, -4, 3] },
+g.test('crossInterval')
+  .params(u =>
+    u
+      .combine('trait', ['f32', 'f16', 'abstract'] as const)
+      .beginSubcases()
+      .expandWithParams<VectorPairToVectorCase>(p => {
+        const trait = FP[p.trait];
+        const constants = trait.constants();
+        // prettier-ignore
+        return [
+          // parallel vectors, AXB == 0
+          { input: [[1.0, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [0.0, 0.0, 0.0] },
+          { input: [[0.0, 1.0, 0.0], [0.0, 1.0, 0.0]], expected: [0.0, 0.0, 0.0] },
+          { input: [[0.0, 0.0, 1.0], [0.0, 0.0, 1.0]], expected: [0.0, 0.0, 0.0] },
+          { input: [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]], expected: [0.0, 0.0, 0.0] },
+          { input: [[-1.0, -1.0, -1.0], [-1.0, -1.0, -1.0]], expected: [0.0, 0.0, 0.0] },
+          { input: [[0.1, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [0.0, 0.0, 0.0] },
+          { input: [[constants.positive.subnormal.max, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [0.0, 0.0, 0.0] },
 
-      // f64 normals
-      { input: [[0.1, -0.1, -0.1], [-0.1, 0.1, -0.1]],
-        expected: [[reinterpretU32AsF32(0x3ca3d708), reinterpretU32AsF32(0x3ca3d70b)],  // ~0.02
-          [reinterpretU32AsF32(0x3ca3d708), reinterpretU32AsF32(0x3ca3d70b)],  // ~0.02
-          [reinterpretU32AsF32(0xb1400000), reinterpretU32AsF32(0x31400000)]] },  // ~0
-
-      // f32 subnormals
-      { input: [[kValue.f32.subnormal.positive.max, kValue.f32.subnormal.negative.max, kValue.f32.subnormal.negative.min],
-          [kValue.f32.subnormal.negative.min, kValue.f32.subnormal.positive.min, kValue.f32.subnormal.negative.max]],
-        expected: [[0.0, reinterpretU32AsF32(0x00000002)],  // ~0
-          [0.0, reinterpretU32AsF32(0x00000002)],  // ~0
-          [reinterpretU32AsF32(0x80000001), reinterpretU32AsF32(0x00000001)]] },  // ~0
-    ]
+          // non-parallel vectors, AXB != 0
+          { input: [[1.0, -1.0, -1.0], [-1.0, 1.0, -1.0]], expected: [2.0, 2.0, 0.0] },
+          { input: [[1.0, 2, 3], [1.0, 5.0, 7.0]], expected: [-1, -4, 3] },
+          ...kCrossIntervalCases[p.trait],
+        ];
+      })
   )
   .fn(t => {
     const [x, y] = t.params.input;
-    const expected = FP.f32.toVector(t.params.expected);
-    const got = FP.f32.crossInterval(x, y);
+    const trait = FP[t.params.trait];
+    const expected = trait.toVector(t.params.expected);
+    const got = trait.crossInterval(x, y);
     t.expect(
       objectEquals(expected, got),
-      `f32.crossInterval([${x}], [${y}]) returned ${got}. Expected ${expected}`
+      `${t.params.trait}.crossInterval([${x}], [${y}]) returned ${got}. Expected ${expected}`
     );
   });
 
-g.test('reflectInterval_f32')
-  .paramsSubcasesOnly<VectorPairToVectorCase>(
-    // prettier-ignore
-    [
-      // vec2s
-      { input: [[1.0, 0.0], [1.0, 0.0]], expected: [-1.0, 0.0] },
-      { input: [[1.0, 0.0], [0.0, 1.0]], expected: [1.0, 0.0] },
-      { input: [[0.0, 1.0], [0.0, 1.0]], expected: [0.0, -1.0] },
-      { input: [[0.0, 1.0], [1.0, 0.0]], expected: [0.0, 1.0] },
-      { input: [[1.0, 1.0], [1.0, 1.0]], expected: [-3.0, -3.0] },
-      { input: [[-1.0, -1.0], [1.0, 1.0]], expected: [3.0, 3.0] },
-      { input: [[0.1, 0.1], [1.0, 1.0]], expected: [[reinterpretU32AsF32(0xbe99999a), reinterpretU32AsF32(0xbe999998)], [reinterpretU32AsF32(0xbe99999a), reinterpretU32AsF32(0xbe999998)]] },  // [~-0.3, ~-0.3]
-      { input: [[kValue.f32.subnormal.positive.max, kValue.f32.subnormal.negative.max], [1.0, 1.0]], expected: [[reinterpretU32AsF32(0x80fffffe), reinterpretU32AsF32(0x00800001)], [reinterpretU32AsF32(0x80ffffff), reinterpretU32AsF32(0x00000002)]] },  // [~0.0, ~0.0]
+// prettier-ignore
+const kReflectIntervalCases = {
+  f32: [
+    // vec2s
+    { input: [[0.1, 0.1], [1.0, 1.0]], expected: [[reinterpretU32AsF32(0xbe99999a), reinterpretU32AsF32(0xbe999998)], [reinterpretU32AsF32(0xbe99999a), reinterpretU32AsF32(0xbe999998)]] },  // [~-0.3, ~-0.3]
+    { input: [[kValue.f32.positive.subnormal.max, kValue.f32.negative.subnormal.max], [1.0, 1.0]], expected: [[reinterpretU32AsF32(0x80fffffe), reinterpretU32AsF32(0x00800001)], [reinterpretU32AsF32(0x80ffffff), reinterpretU32AsF32(0x00000002)]] },  // [~0.0, ~0.0]
+    // vec3s
+    { input: [[0.1, 0.1, 0.1], [1.0, 1.0, 1.0]], expected: [[reinterpretU32AsF32(0xbf000001), reinterpretU32AsF32(0xbefffffe)], [reinterpretU32AsF32(0xbf000001), reinterpretU32AsF32(0xbefffffe)], [reinterpretU32AsF32(0xbf000001), reinterpretU32AsF32(0xbefffffe)]] },  // [~-0.5, ~-0.5, ~-0.5]
+    { input: [[kValue.f32.positive.subnormal.max, kValue.f32.negative.subnormal.max, 0.0], [1.0, 1.0, 1.0]], expected: [[reinterpretU32AsF32(0x80fffffe), reinterpretU32AsF32(0x00800001)], [reinterpretU32AsF32(0x80ffffff), reinterpretU32AsF32(0x00000002)], [reinterpretU32AsF32(0x80fffffe), reinterpretU32AsF32(0x00000002)]] },  // [~0.0, ~0.0, ~0.0]
+    // vec4s
+    { input: [[0.1, 0.1, 0.1, 0.1], [1.0, 1.0, 1.0, 1.0]], expected: [[reinterpretU32AsF32(0xbf333335), reinterpretU32AsF32(0xbf333332)], [reinterpretU32AsF32(0xbf333335), reinterpretU32AsF32(0xbf333332)], [reinterpretU32AsF32(0xbf333335), reinterpretU32AsF32(0xbf333332)], [reinterpretU32AsF32(0xbf333335), reinterpretU32AsF32(0xbf333332)]] },  // [~-0.7, ~-0.7, ~-0.7, ~-0.7]
+    { input: [[kValue.f32.positive.subnormal.max, kValue.f32.negative.subnormal.max, 0.0, 0.0], [1.0, 1.0, 1.0, 1.0]], expected: [[reinterpretU32AsF32(0x80fffffe), reinterpretU32AsF32(0x00800001)], [reinterpretU32AsF32(0x80ffffff), reinterpretU32AsF32(0x00000002)], [reinterpretU32AsF32(0x80fffffe), reinterpretU32AsF32(0x00000002)], [reinterpretU32AsF32(0x80fffffe), reinterpretU32AsF32(0x00000002)]] },  // [~0.0, ~0.0, ~0.0, ~0.0]
+  ] as VectorPairToVectorCase[],
+  f16: [
+    // vec2s
+    { input: [[0.1, 0.1], [1.0, 1.0]], expected: [[reinterpretU16AsF16(0xb4ce), reinterpretU16AsF16(0xb4cc)], [reinterpretU16AsF16(0xb4ce), reinterpretU16AsF16(0xb4cc)]] },  // [~-0.3, ~-0.3]
+    { input: [[kValue.f16.positive.subnormal.max, kValue.f16.negative.subnormal.max], [1.0, 1.0]], expected: [[reinterpretU16AsF16(0x87fe), reinterpretU16AsF16(0x0401)], [reinterpretU16AsF16(0x87ff), reinterpretU16AsF16(0x0002)]] },  // [~0.0, ~0.0]
+    // vec3s
+    { input: [[0.1, 0.1, 0.1], [1.0, 1.0, 1.0]], expected: [[reinterpretU16AsF16(0xb802), reinterpretU16AsF16(0xb7fe)], [reinterpretU16AsF16(0xb802), reinterpretU16AsF16(0xb7fe)], [reinterpretU16AsF16(0xb802), reinterpretU16AsF16(0xb7fe)]] },  // [~-0.5, ~-0.5, ~-0.5]
+    { input: [[kValue.f16.positive.subnormal.max, kValue.f16.negative.subnormal.max, 0.0], [1.0, 1.0, 1.0]], expected: [[reinterpretU16AsF16(0x87fe), reinterpretU16AsF16(0x0401)], [reinterpretU16AsF16(0x87ff), reinterpretU16AsF16(0x0002)], [reinterpretU16AsF16(0x87fe), reinterpretU16AsF16(0x0002)]] },  // [~0.0, ~0.0, ~0.0]
+    // vec4s
+    { input: [[0.1, 0.1, 0.1, 0.1], [1.0, 1.0, 1.0, 1.0]], expected: [[reinterpretU16AsF16(0xb99c), reinterpretU16AsF16(0xb998)], [reinterpretU16AsF16(0xb99c), reinterpretU16AsF16(0xb998)], [reinterpretU16AsF16(0xb99c), reinterpretU16AsF16(0xb998)], [reinterpretU16AsF16(0xb99c), reinterpretU16AsF16(0xb998)]] },  // [~-0.7, ~-0.7, ~-0.7, ~-0.7]
+    { input: [[kValue.f16.positive.subnormal.max, kValue.f16.negative.subnormal.max, 0.0, 0.0], [1.0, 1.0, 1.0, 1.0]], expected: [[reinterpretU16AsF16(0x87fe), reinterpretU16AsF16(0x0401)], [reinterpretU16AsF16(0x87ff), reinterpretU16AsF16(0x0002)], [reinterpretU16AsF16(0x87fe), reinterpretU16AsF16(0x0002)], [reinterpretU16AsF16(0x87fe), reinterpretU16AsF16(0x0002)]] },  // [~0.0, ~0.0, ~0.0, ~0.0]
+  ] as VectorPairToVectorCase[],
+} as const;
 
-      // vec3s
-      { input: [[1.0, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [-1.0, 0.0, 0.0] },
-      { input: [[0.0, 1.0, 0.0], [1.0, 0.0, 0.0]], expected: [0.0, 1.0, 0.0] },
-      { input: [[0.0, 0.0, 1.0], [1.0, 0.0, 0.0]], expected: [0.0, 0.0, 1.0] },
-      { input: [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0]], expected: [1.0, 0.0, 0.0] },
-      { input: [[1.0, 0.0, 0.0], [0.0, 0.0, 1.0]], expected: [1.0, 0.0, 0.0] },
-      { input: [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]], expected: [-5.0, -5.0, -5.0] },
-      { input: [[-1.0, -1.0, -1.0], [1.0, 1.0, 1.0]], expected: [5.0, 5.0, 5.0] },
-      { input: [[0.1, 0.1, 0.1], [1.0, 1.0, 1.0]], expected: [[reinterpretU32AsF32(0xbf000001), reinterpretU32AsF32(0xbefffffe)], [reinterpretU32AsF32(0xbf000001), reinterpretU32AsF32(0xbefffffe)], [reinterpretU32AsF32(0xbf000001), reinterpretU32AsF32(0xbefffffe)]] },  // [~-0.5, ~-0.5, ~-0.5]
-      { input: [[kValue.f32.subnormal.positive.max, kValue.f32.subnormal.negative.max, 0.0], [1.0, 1.0, 1.0]], expected: [[reinterpretU32AsF32(0x80fffffe), reinterpretU32AsF32(0x00800001)], [reinterpretU32AsF32(0x80ffffff), reinterpretU32AsF32(0x00000002)], [reinterpretU32AsF32(0x80fffffe), reinterpretU32AsF32(0x00000002)]] },  // [~0.0, ~0.0, ~0.0]
+g.test('reflectInterval')
+  .params(u =>
+    u
+      .combine('trait', ['f32', 'f16'] as const)
+      .beginSubcases()
+      .expandWithParams<VectorPairToVectorCase>(p => {
+        const trait = FP[p.trait];
+        const constants = trait.constants();
+        // prettier-ignore
+        return [
+          ...kReflectIntervalCases[p.trait],
 
-      // vec4s
-      { input: [[1.0, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: [-1.0, 0.0, 0.0, 0.0] },
-      { input: [[0.0, 1.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: [0.0, 1.0, 0.0, 0.0] },
-      { input: [[0.0, 0.0, 1.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: [0.0, 0.0, 1.0, 0.0] },
-      { input: [[0.0, 0.0, 0.0, 1.0], [1.0, 0.0, 0.0, 0.0]], expected: [0.0, 0.0, 0.0, 1.0] },
-      { input: [[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0]], expected: [1.0, 0.0, 0.0, 0.0] },
-      { input: [[1.0, 0.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0]], expected: [1.0, 0.0, 0.0, 0.0] },
-      { input: [[1.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0]], expected: [1.0, 0.0, 0.0, 0.0] },
-      { input: [[-1.0, -1.0, -1.0, -1.0], [1.0, 1.0, 1.0, 1.0]], expected: [7.0, 7.0, 7.0, 7.0] },
-      { input: [[0.1, 0.1, 0.1, 0.1], [1.0, 1.0, 1.0, 1.0]], expected: [[reinterpretU32AsF32(0xbf333335), reinterpretU32AsF32(0xbf333332)], [reinterpretU32AsF32(0xbf333335), reinterpretU32AsF32(0xbf333332)], [reinterpretU32AsF32(0xbf333335), reinterpretU32AsF32(0xbf333332)], [reinterpretU32AsF32(0xbf333335), reinterpretU32AsF32(0xbf333332)]] },  // [~-0.7, ~-0.7, ~-0.7, ~-0.7]
-      { input: [[kValue.f32.subnormal.positive.max, kValue.f32.subnormal.negative.max, 0.0, 0.0], [1.0, 1.0, 1.0, 1.0]], expected: [[reinterpretU32AsF32(0x80fffffe), reinterpretU32AsF32(0x00800001)], [reinterpretU32AsF32(0x80ffffff), reinterpretU32AsF32(0x00000002)], [reinterpretU32AsF32(0x80fffffe), reinterpretU32AsF32(0x00000002)], [reinterpretU32AsF32(0x80fffffe), reinterpretU32AsF32(0x00000002)]] },  // [~0.0, ~0.0, ~0.0, ~0.0]
+          // vec2s
+          { input: [[1.0, 0.0], [1.0, 0.0]], expected: [-1.0, 0.0] },
+          { input: [[1.0, 0.0], [0.0, 1.0]], expected: [1.0, 0.0] },
+          { input: [[0.0, 1.0], [0.0, 1.0]], expected: [0.0, -1.0] },
+          { input: [[0.0, 1.0], [1.0, 0.0]], expected: [0.0, 1.0] },
+          { input: [[1.0, 1.0], [1.0, 1.0]], expected: [-3.0, -3.0] },
+          { input: [[-1.0, -1.0], [1.0, 1.0]], expected: [3.0, 3.0] },
+          // vec3s
+          { input: [[1.0, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [-1.0, 0.0, 0.0] },
+          { input: [[0.0, 1.0, 0.0], [1.0, 0.0, 0.0]], expected: [0.0, 1.0, 0.0] },
+          { input: [[0.0, 0.0, 1.0], [1.0, 0.0, 0.0]], expected: [0.0, 0.0, 1.0] },
+          { input: [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0]], expected: [1.0, 0.0, 0.0] },
+          { input: [[1.0, 0.0, 0.0], [0.0, 0.0, 1.0]], expected: [1.0, 0.0, 0.0] },
+          { input: [[1.0, 1.0, 1.0], [1.0, 1.0, 1.0]], expected: [-5.0, -5.0, -5.0] },
+          { input: [[-1.0, -1.0, -1.0], [1.0, 1.0, 1.0]], expected: [5.0, 5.0, 5.0] },
+          // vec4s
+          { input: [[1.0, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: [-1.0, 0.0, 0.0, 0.0] },
+          { input: [[0.0, 1.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: [0.0, 1.0, 0.0, 0.0] },
+          { input: [[0.0, 0.0, 1.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: [0.0, 0.0, 1.0, 0.0] },
+          { input: [[0.0, 0.0, 0.0, 1.0], [1.0, 0.0, 0.0, 0.0]], expected: [0.0, 0.0, 0.0, 1.0] },
+          { input: [[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0]], expected: [1.0, 0.0, 0.0, 0.0] },
+          { input: [[1.0, 0.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0]], expected: [1.0, 0.0, 0.0, 0.0] },
+          { input: [[1.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 1.0]], expected: [1.0, 0.0, 0.0, 0.0] },
+          { input: [[-1.0, -1.0, -1.0, -1.0], [1.0, 1.0, 1.0, 1.0]], expected: [7.0, 7.0, 7.0, 7.0] },
+          // Test that dot going OOB bounds in the intermediate calculations propagates
+          { input: [[constants.positive.nearest_max, constants.positive.max, constants.negative.min], [1.0, 1.0, 1.0]], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
+          { input: [[constants.positive.nearest_max, constants.negative.min, constants.positive.max], [1.0, 1.0, 1.0]], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
+          { input: [[constants.positive.max, constants.positive.nearest_max, constants.negative.min], [1.0, 1.0, 1.0]], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
+          { input: [[constants.negative.min, constants.positive.nearest_max, constants.positive.max], [1.0, 1.0, 1.0]], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
+          { input: [[constants.positive.max, constants.negative.min, constants.positive.nearest_max], [1.0, 1.0, 1.0]], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
+          { input: [[constants.negative.min, constants.positive.max, constants.positive.nearest_max], [1.0, 1.0, 1.0]], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
 
-      // Test that dot going OOB bounds in the intermediate calculations propagates
-      { input: [[kValue.f32.positive.nearest_max, kValue.f32.positive.max, kValue.f32.negative.min], [1.0, 1.0, 1.0]], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
-      { input: [[kValue.f32.positive.nearest_max, kValue.f32.negative.min, kValue.f32.positive.max], [1.0, 1.0, 1.0]], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
-      { input: [[kValue.f32.positive.max, kValue.f32.positive.nearest_max, kValue.f32.negative.min], [1.0, 1.0, 1.0]], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
-      { input: [[kValue.f32.negative.min, kValue.f32.positive.nearest_max, kValue.f32.positive.max], [1.0, 1.0, 1.0]], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
-      { input: [[kValue.f32.positive.max, kValue.f32.negative.min, kValue.f32.positive.nearest_max], [1.0, 1.0, 1.0]], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
-      { input: [[kValue.f32.negative.min, kValue.f32.positive.max, kValue.f32.positive.nearest_max], [1.0, 1.0, 1.0]], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
-
-      // Test that post-dot going OOB propagates
-      { input: [[kValue.f32.positive.max, 1.0, 2.0, 3.0], [-1.0, kValue.f32.positive.max, -2.0, -3.0]], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
-    ]
+          // Test that post-dot going OOB propagates
+          { input: [[constants.positive.max, 1.0, 2.0, 3.0], [-1.0, constants.positive.max, -2.0, -3.0]], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
+        ];
+      })
   )
   .fn(t => {
     const [x, y] = t.params.input;
-    const expected = FP.f32.toVector(t.params.expected);
-    const got = FP.f32.reflectInterval(x, y);
+    const trait = FP[t.params.trait];
+    const expected = trait.toVector(t.params.expected);
+    const got = trait.reflectInterval(x, y);
     t.expect(
       objectEquals(expected, got),
-      `f32.reflectInterval([${x}], [${y}]) returned ${JSON.stringify(
+      `${t.params.trait}.reflectInterval([${x}], [${y}]) returned ${JSON.stringify(
         got
       )}. Expected ${JSON.stringify(expected)}`
     );
@@ -5771,113 +6368,113 @@ interface MatrixToScalarCase {
   expected: number | IntervalBounds;
 }
 
-g.test('determinantInterval_f32')
-  .paramsSubcasesOnly<MatrixToScalarCase>([
-    // Extreme values, i.e. subnormals, very large magnitudes, and those lead to
-    // non-precise products, are intentionally not tested, since the accuracy of
-    // determinant is restricted to well behaving inputs. Handling all cases
-    // requires ~23! options to be calculated in the 4x4 case, so is not
-    // feasible.
-    {
-      input: [
-        [1, 2],
-        [3, 4],
-      ],
-      expected: -2,
-    },
-    {
-      input: [
-        [-1, 2],
-        [-3, 4],
-      ],
-      expected: 2,
-    },
-    {
-      input: [
-        [11, 22],
-        [33, 44],
-      ],
-      expected: -242,
-    },
-    {
-      input: [
-        [5, 6],
-        [8, 9],
-      ],
-      expected: -3,
-    },
-    {
-      input: [
-        [4, 6],
-        [7, 9],
-      ],
-      expected: -6,
-    },
-    {
-      input: [
-        [4, 5],
-        [7, 8],
-      ],
-      expected: -3,
-    },
-    {
-      input: [
-        [1, 2, 3],
-        [4, 5, 6],
-        [7, 8, 9],
-      ],
-      expected: 0,
-    },
-    {
-      input: [
-        [-1, 2, 3],
-        [-4, 5, 6],
-        [-7, 8, 9],
-      ],
-      expected: 0,
-    },
-    {
-      input: [
-        [11, 22, 33],
-        [44, 55, 66],
-        [77, 88, 99],
-      ],
-      expected: 0,
-    },
-    {
-      input: [
-        [4, 1, -1],
-        [-3, 0, 5],
-        [5, 3, 2],
-      ],
-      expected: -20,
-    },
-    {
-      input: [
-        [1, 2, 3, 4],
-        [5, 6, 7, 8],
-        [9, 10, 11, 12],
-        [13, 14, 15, 16],
-      ],
-      expected: 0,
-    },
-    {
-      input: [
-        [4, 0, 0, 0],
-        [3, 1, -1, 3],
-        [2, -3, 3, 1],
-        [2, 3, 3, 1],
-      ],
-      expected: -240,
-    },
-  ])
+g.test('determinantInterval')
+  .params(u =>
+    u
+      .combine('trait', ['f32', 'f16'] as const)
+      .beginSubcases()
+      .combineWithParams<MatrixToScalarCase>([
+        // Extreme values, i.e. subnormals, very large magnitudes, and those lead to
+        // non-precise products, are intentionally not tested, since the accuracy of
+        // determinant is restricted to well behaving inputs. Handling all cases
+        // requires ~23! options to be calculated in the 4x4 case, so is not
+        // feasible.
+        {
+          input: [
+            [1, 2],
+            [3, 4],
+          ],
+          expected: -2,
+        },
+        {
+          input: [
+            [-1, 2],
+            [-3, 4],
+          ],
+          expected: 2,
+        },
+        {
+          input: [
+            [11, 22],
+            [33, 44],
+          ],
+          expected: -242,
+        },
+        {
+          input: [
+            [5, 6],
+            [8, 9],
+          ],
+          expected: -3,
+        },
+        {
+          input: [
+            [4, 6],
+            [7, 9],
+          ],
+          expected: -6,
+        },
+        {
+          input: [
+            [4, 5],
+            [7, 8],
+          ],
+          expected: -3,
+        },
+        {
+          input: [
+            [1, 2, 3],
+            [4, 5, 6],
+            [7, 8, 9],
+          ],
+          expected: 0,
+        },
+        {
+          input: [
+            [-1, 2, 3],
+            [-4, 5, 6],
+            [-7, 8, 9],
+          ],
+          expected: 0,
+        },
+        {
+          input: [
+            [4, 1, -1],
+            [-3, 0, 5],
+            [5, 3, 2],
+          ],
+          expected: -20,
+        },
+        {
+          input: [
+            [1, 2, 3, 4],
+            [5, 6, 7, 8],
+            [9, 10, 11, 12],
+            [13, 14, 15, 16],
+          ],
+          expected: 0,
+        },
+        {
+          input: [
+            [4, 0, 0, 0],
+            [3, 1, -1, 3],
+            [2, -3, 3, 1],
+            [2, 3, 3, 1],
+          ],
+          expected: -240,
+        },
+      ])
+  )
   .fn(t => {
     const input = t.params.input;
-    const expected = FP.f32.toInterval(t.params.expected);
-    const got = FP.f32.determinantInterval(input);
+    const trait = FP[t.params.trait];
+    const expected = trait.toInterval(t.params.expected);
+    const got = trait.determinantInterval(input);
     t.expect(
       objectEquals(expected, got),
-      `f32.determinantInterval([${JSON.stringify(input)}]) returned '${got}. Expected '${expected}'`
+      `${t.params.trait}.determinantInterval([${JSON.stringify(
+        input
+      )}]) returned '${got}. Expected '${expected}'`
     );
   });
 
@@ -6983,135 +7580,171 @@ interface MatrixScalarToMatrixCase {
   expected: (number | IntervalBounds)[][];
 }
 
+const kMultiplicationMatrixScalarIntervalCases = {
+  f32: [
+    // From https://github.com/gpuweb/cts/issues/3044
+    {
+      matrix: [
+        [kValue.f32.negative.min, 0],
+        [0, 0],
+      ],
+      scalar: kValue.f32.negative.subnormal.min,
+      expected: [
+        [[0, reinterpretU32AsF32(0x407ffffe)], 0], // [[0, 3.9999995...], 0],
+        [0, 0],
+      ],
+    },
+  ] as MatrixScalarToMatrixCase[],
+  f16: [
+    // From https://github.com/gpuweb/cts/issues/3044
+    {
+      matrix: [
+        [kValue.f16.negative.min, 0],
+        [0, 0],
+      ],
+      scalar: kValue.f16.negative.subnormal.min,
+      expected: [
+        [[0, reinterpretU16AsF16(0x43fe)], 0], // [[0, 3.99609375], 0]
+        [0, 0],
+      ],
+    },
+  ] as MatrixScalarToMatrixCase[],
+} as const;
+
 g.test('multiplicationMatrixScalarInterval')
   .params(u =>
     u
       .combine('trait', ['f32', 'f16'] as const)
       .beginSubcases()
-      .combineWithParams<MatrixScalarToMatrixCase>([
-        // Only testing that different shapes of matrices are handled correctly
-        // here, to reduce test duplication.
-        // multiplicationMatrixScalarInterval uses MultiplicationIntervalOp for calculating intervals,
-        // so the testing for multiplcationInterval covers the actual interval
+      .expandWithParams<MatrixScalarToMatrixCase>(p => {
+        // Primarily testing that different shapes of matrices are handled correctly
+        // here, to reduce test duplication. Additional testing for edge case
+        // discovered in https://github.com/gpuweb/cts/issues/3044.
+        //
+        // multiplicationMatrixScalarInterval uses for calculating intervals,
+        // so the testing for multiplicationInterval covers the actual interval
         // calculations.
-        {
-          matrix: [
-            [1, 2],
-            [3, 4],
-          ],
-          scalar: 10,
-          expected: [
-            [10, 20],
-            [30, 40],
-          ],
-        },
-        {
-          matrix: [
-            [1, 2],
-            [3, 4],
-            [5, 6],
-          ],
-          scalar: 10,
-          expected: [
-            [10, 20],
-            [30, 40],
-            [50, 60],
-          ],
-        },
-        {
-          matrix: [
-            [1, 2],
-            [3, 4],
-            [5, 6],
-            [7, 8],
-          ],
-          scalar: 10,
-          expected: [
-            [10, 20],
-            [30, 40],
-            [50, 60],
-            [70, 80],
-          ],
-        },
-        {
-          matrix: [
-            [1, 2, 3],
-            [4, 5, 6],
-          ],
-          scalar: 10,
-          expected: [
-            [10, 20, 30],
-            [40, 50, 60],
-          ],
-        },
-        {
-          matrix: [
-            [1, 2, 3],
-            [4, 5, 6],
-            [7, 8, 9],
-          ],
-          scalar: 10,
-          expected: [
-            [10, 20, 30],
-            [40, 50, 60],
-            [70, 80, 90],
-          ],
-        },
-        {
-          matrix: [
-            [1, 2, 3],
-            [4, 5, 6],
-            [7, 8, 9],
-            [10, 11, 12],
-          ],
-          scalar: 10,
-          expected: [
-            [10, 20, 30],
-            [40, 50, 60],
-            [70, 80, 90],
-            [100, 110, 120],
-          ],
-        },
-        {
-          matrix: [
-            [1, 2, 3, 4],
-            [5, 6, 7, 8],
-          ],
-          scalar: 10,
-          expected: [
-            [10, 20, 30, 40],
-            [50, 60, 70, 80],
-          ],
-        },
-        {
-          matrix: [
-            [1, 2, 3, 4],
-            [5, 6, 7, 8],
-            [9, 10, 11, 12],
-          ],
-          scalar: 10,
-          expected: [
-            [10, 20, 30, 40],
-            [50, 60, 70, 80],
-            [90, 100, 110, 120],
-          ],
-        },
-        {
-          matrix: [
-            [1, 2, 3, 4],
-            [5, 6, 7, 8],
-            [9, 10, 11, 12],
-            [13, 14, 15, 16],
-          ],
-          scalar: 10,
-          expected: [
-            [10, 20, 30, 40],
-            [50, 60, 70, 80],
-            [90, 100, 110, 120],
-            [130, 140, 150, 160],
-          ],
-        },
-      ])
+        return [
+          {
+            matrix: [
+              [1, 2],
+              [3, 4],
+            ],
+            scalar: 10,
+            expected: [
+              [10, 20],
+              [30, 40],
+            ],
+          },
+          {
+            matrix: [
+              [1, 2],
+              [3, 4],
+              [5, 6],
+            ],
+            scalar: 10,
+            expected: [
+              [10, 20],
+              [30, 40],
+              [50, 60],
+            ],
+          },
+          {
+            matrix: [
+              [1, 2],
+              [3, 4],
+              [5, 6],
+              [7, 8],
+            ],
+            scalar: 10,
+            expected: [
+              [10, 20],
+              [30, 40],
+              [50, 60],
+              [70, 80],
+            ],
+          },
+          {
+            matrix: [
+              [1, 2, 3],
+              [4, 5, 6],
+            ],
+            scalar: 10,
+            expected: [
+              [10, 20, 30],
+              [40, 50, 60],
+            ],
+          },
+          {
+            matrix: [
+              [1, 2, 3],
+              [4, 5, 6],
+              [7, 8, 9],
+            ],
+            scalar: 10,
+            expected: [
+              [10, 20, 30],
+              [40, 50, 60],
+              [70, 80, 90],
+            ],
+          },
+          {
+            matrix: [
+              [1, 2, 3],
+              [4, 5, 6],
+              [7, 8, 9],
+              [10, 11, 12],
+            ],
+            scalar: 10,
+            expected: [
+              [10, 20, 30],
+              [40, 50, 60],
+              [70, 80, 90],
+              [100, 110, 120],
+            ],
+          },
+          {
+            matrix: [
+              [1, 2, 3, 4],
+              [5, 6, 7, 8],
+            ],
+            scalar: 10,
+            expected: [
+              [10, 20, 30, 40],
+              [50, 60, 70, 80],
+            ],
+          },
+          {
+            matrix: [
+              [1, 2, 3, 4],
+              [5, 6, 7, 8],
+              [9, 10, 11, 12],
+            ],
+            scalar: 10,
+            expected: [
+              [10, 20, 30, 40],
+              [50, 60, 70, 80],
+              [90, 100, 110, 120],
+            ],
+          },
+          {
+            matrix: [
+              [1, 2, 3, 4],
+              [5, 6, 7, 8],
+              [9, 10, 11, 12],
+              [13, 14, 15, 16],
+            ],
+            scalar: 10,
+            expected: [
+              [10, 20, 30, 40],
+              [50, 60, 70, 80],
+              [90, 100, 110, 120],
+              [130, 140, 150, 160],
+            ],
+          },
+          ...kMultiplicationMatrixScalarIntervalCases[p.trait],
+        ];
+      })
   )
   .fn(t => {
     const matrix = t.params.matrix;
@@ -7253,7 +7886,7 @@ interface VectorMatrixToVectorCase {
   expected: (number | IntervalBounds)[];
 }
 
-g.test('multiplicationVectorMatrixInterval_f32')
+g.test('multiplicationVectorMatrixInterval')
   .params(u =>
     u
       .combine('trait', ['f32', 'f16'] as const)
@@ -7372,70 +8005,77 @@ interface FaceForwardCase {
   expected: ((number | IntervalBounds)[] | undefined)[];
 }
 
-g.test('faceForwardIntervals_f32')
-  .paramsSubcasesOnly<FaceForwardCase>(
-    // prettier-ignore
-    [
-      // vec2
-      { input: [[1.0, 0.0], [1.0, 0.0], [1.0, 0.0]], expected: [[-1.0, 0.0]] },
-      { input: [[-1.0, 0.0], [1.0, 0.0], [1.0, 0.0]], expected: [[1.0, 0.0]] },
-      { input: [[1.0, 0.0], [-1.0, 1.0], [1.0, -1.0]], expected: [[1.0, 0.0]] },
-      { input: [[-1.0, 0.0], [-1.0, 1.0], [1.0, -1.0]], expected: [[-1.0, 0.0]] },
-      { input: [[10.0, 0.0], [10.0, 0.0], [10.0, 0.0]], expected: [[-10.0, 0.0]] },
-      { input: [[-10.0, 0.0], [10.0, 0.0], [10.0, 0.0]], expected: [[10.0, 0.0]] },
-      { input: [[10.0, 0.0], [-10.0, 10.0], [10.0, -10.0]], expected: [[10.0, 0.0]] },
-      { input: [[-10.0, 0.0], [-10.0, 10.0], [10.0, -10.0]], expected: [[-10.0, 0.0]] },
-      { input: [[0.1, 0.0], [0.1, 0.0], [0.1, 0.0]], expected: [[[reinterpretU32AsF32(0xbdcccccd), reinterpretU32AsF32(0xbdcccccc)], 0.0]] },
-      { input: [[-0.1, 0.0], [0.1, 0.0], [0.1, 0.0]], expected: [[[reinterpretU32AsF32(0x3dcccccc), reinterpretU32AsF32(0x3dcccccd)], 0.0]] },
-      { input: [[0.1, 0.0], [-0.1, 0.1], [0.1, -0.1]], expected: [[[reinterpretU32AsF32(0x3dcccccc), reinterpretU32AsF32(0x3dcccccd)], 0.0]] },
-      { input: [[-0.1, 0.0], [-0.1, 0.1], [0.1, -0.1]], expected: [[[reinterpretU32AsF32(0xbdcccccd), reinterpretU32AsF32(0xbdcccccc)], 0.0]] },
+g.test('faceForwardIntervals')
+  .params(u =>
+    u
+      .combine('trait', ['f32', 'f16'] as const)
+      .beginSubcases()
+      .expandWithParams<FaceForwardCase>(p => {
+        const trait = FP[p.trait];
+        const constants = trait.constants();
+        // prettier-ignore
+        return [
+          // vec2
+          { input: [[1.0, 0.0], [1.0, 0.0], [1.0, 0.0]], expected: [[-1.0, 0.0]] },
+          { input: [[-1.0, 0.0], [1.0, 0.0], [1.0, 0.0]], expected: [[1.0, 0.0]] },
+          { input: [[1.0, 0.0], [-1.0, 1.0], [1.0, -1.0]], expected: [[1.0, 0.0]] },
+          { input: [[-1.0, 0.0], [-1.0, 1.0], [1.0, -1.0]], expected: [[-1.0, 0.0]] },
+          { input: [[10.0, 0.0], [10.0, 0.0], [10.0, 0.0]], expected: [[-10.0, 0.0]] },
+          { input: [[-10.0, 0.0], [10.0, 0.0], [10.0, 0.0]], expected: [[10.0, 0.0]] },
+          { input: [[10.0, 0.0], [-10.0, 10.0], [10.0, -10.0]], expected: [[10.0, 0.0]] },
+          { input: [[-10.0, 0.0], [-10.0, 10.0], [10.0, -10.0]], expected: [[-10.0, 0.0]] },
+          { input: [[0.1, 0.0], [0.1, 0.0], [0.1, 0.0]], expected: [[kConstantCorrectlyRoundedExpectation[p.trait]['-0.1'], 0.0]] },
+          { input: [[-0.1, 0.0], [0.1, 0.0], [0.1, 0.0]], expected: [[kConstantCorrectlyRoundedExpectation[p.trait]['0.1'], 0.0]] },
+          { input: [[0.1, 0.0], [-0.1, 0.1], [0.1, -0.1]], expected: [[kConstantCorrectlyRoundedExpectation[p.trait]['0.1'], 0.0]] },
+          { input: [[-0.1, 0.0], [-0.1, 0.1], [0.1, -0.1]], expected: [[kConstantCorrectlyRoundedExpectation[p.trait]['-0.1'], 0.0]] },
 
-      // vec3
-      { input: [[1.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [[-1.0, 0.0, 0.0]] },
-      { input: [[-1.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [[1.0, 0.0, 0.0]] },
-      { input: [[1.0, 0.0, 0.0], [-1.0, 1.0, 0.0], [1.0, -1.0, 0.0]], expected: [[1.0, 0.0, 0.0]] },
-      { input: [[-1.0, 0.0, 0.0], [-1.0, 1.0, 0.0], [1.0, -1.0, 0.0]], expected: [[-1.0, 0.0, 0.0]] },
-      { input: [[10.0, 0.0, 0.0], [10.0, 0.0, 0.0], [10.0, 0.0, 0.0]], expected: [[-10.0, 0.0, 0.0]] },
-      { input: [[-10.0, 0.0, 0.0], [10.0, 0.0, 0.0], [10.0, 0.0, 0.0]], expected: [[10.0, 0.0, 0.0]] },
-      { input: [[10.0, 0.0, 0.0], [-10.0, 10.0, 0.0], [10.0, -10.0, 0.0]], expected: [[10.0, 0.0, 0.0]] },
-      { input: [[-10.0, 0.0, 0.0], [-10.0, 10.0, 0.0], [10.0, -10.0, 0.0]], expected: [[-10.0, 0.0, 0.0]] },
-      { input: [[0.1, 0.0, 0.0], [0.1, 0.0, 0.0], [0.1, 0.0, 0.0]], expected: [[[reinterpretU32AsF32(0xbdcccccd), reinterpretU32AsF32(0xbdcccccc)], 0.0, 0.0]] },
-      { input: [[-0.1, 0.0, 0.0], [0.1, 0.0, 0.0], [0.1, 0.0, 0.0]], expected: [[[reinterpretU32AsF32(0x3dcccccc), reinterpretU32AsF32(0x3dcccccd)], 0.0, 0.0]] },
-      { input: [[0.1, 0.0, 0.0], [-0.1, 0.0, 0.0], [0.1, -0.0, 0.0]], expected: [[[reinterpretU32AsF32(0x3dcccccc), reinterpretU32AsF32(0x3dcccccd)], 0.0, 0.0]] },
-      { input: [[-0.1, 0.0, 0.0], [-0.1, 0.0, 0.0], [0.1, -0.0, 0.0]], expected: [[[reinterpretU32AsF32(0xbdcccccd), reinterpretU32AsF32(0xbdcccccc)], 0.0, 0.0]] },
+          // vec3
+          { input: [[1.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [[-1.0, 0.0, 0.0]] },
+          { input: [[-1.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 0.0, 0.0]], expected: [[1.0, 0.0, 0.0]] },
+          { input: [[1.0, 0.0, 0.0], [-1.0, 1.0, 0.0], [1.0, -1.0, 0.0]], expected: [[1.0, 0.0, 0.0]] },
+          { input: [[-1.0, 0.0, 0.0], [-1.0, 1.0, 0.0], [1.0, -1.0, 0.0]], expected: [[-1.0, 0.0, 0.0]] },
+          { input: [[10.0, 0.0, 0.0], [10.0, 0.0, 0.0], [10.0, 0.0, 0.0]], expected: [[-10.0, 0.0, 0.0]] },
+          { input: [[-10.0, 0.0, 0.0], [10.0, 0.0, 0.0], [10.0, 0.0, 0.0]], expected: [[10.0, 0.0, 0.0]] },
+          { input: [[10.0, 0.0, 0.0], [-10.0, 10.0, 0.0], [10.0, -10.0, 0.0]], expected: [[10.0, 0.0, 0.0]] },
+          { input: [[-10.0, 0.0, 0.0], [-10.0, 10.0, 0.0], [10.0, -10.0, 0.0]], expected: [[-10.0, 0.0, 0.0]] },
+          { input: [[0.1, 0.0, 0.0], [0.1, 0.0, 0.0], [0.1, 0.0, 0.0]], expected: [[kConstantCorrectlyRoundedExpectation[p.trait]['-0.1'], 0.0, 0.0]] },
+          { input: [[-0.1, 0.0, 0.0], [0.1, 0.0, 0.0], [0.1, 0.0, 0.0]], expected: [[kConstantCorrectlyRoundedExpectation[p.trait]['0.1'], 0.0, 0.0]] },
+          { input: [[0.1, 0.0, 0.0], [-0.1, 0.0, 0.0], [0.1, -0.0, 0.0]], expected: [[kConstantCorrectlyRoundedExpectation[p.trait]['0.1'], 0.0, 0.0]] },
+          { input: [[-0.1, 0.0, 0.0], [-0.1, 0.0, 0.0], [0.1, -0.0, 0.0]], expected: [[kConstantCorrectlyRoundedExpectation[p.trait]['-0.1'], 0.0, 0.0]] },
 
-      // vec4
-      { input: [[1.0, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: [[-1.0, 0.0, 0.0, 0.0]] },
-      { input: [[-1.0, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: [[1.0, 0.0, 0.0, 0.0]] },
-      { input: [[1.0, 0.0, 0.0, 0.0], [-1.0, 1.0, 0.0, 0.0], [1.0, -1.0, 0.0, 0.0]], expected: [[1.0, 0.0, 0.0, 0.0]] },
-      { input: [[-1.0, 0.0, 0.0, 0.0], [-1.0, 1.0, 0.0, 0.0], [1.0, -1.0, 0.0, 0.0]], expected: [[-1.0, 0.0, 0.0, 0.0]] },
-      { input: [[10.0, 0.0, 0.0, 0.0], [10.0, 0.0, 0.0, 0.0], [10.0, 0.0, 0.0, 0.0]], expected: [[-10.0, 0.0, 0.0, 0.0]] },
-      { input: [[-10.0, 0.0, 0.0, 0.0], [10.0, 0.0, 0.0, 0.0], [10.0, 0.0, 0.0, 0.0]], expected: [[10.0, 0.0, 0.0, 0.0]] },
-      { input: [[10.0, 0.0, 0.0, 0.0], [-10.0, 10.0, 0.0, 0.0], [10.0, -10.0, 0.0, 0.0]], expected: [[10.0, 0.0, 0.0, 0.0]] },
-      { input: [[-10.0, 0.0, 0.0, 0.0], [-10.0, 10.0, 0.0, 0.0], [10.0, -10.0, 0.0, 0.0]], expected: [[-10.0, 0.0, 0.0, 0.0]] },
-      { input: [[0.1, 0.0, 0.0, 0.0], [0.1, 0.0, 0.0, 0.0], [0.1, 0.0, 0.0, 0.0]], expected: [[[reinterpretU32AsF32(0xbdcccccd), reinterpretU32AsF32(0xbdcccccc)], 0.0, 0.0, 0.0]] },
-      { input: [[-0.1, 0.0, 0.0, 0.0], [0.1, 0.0, 0.0, 0.0], [0.1, 0.0, 0.0, 0.0]], expected: [[[reinterpretU32AsF32(0x3dcccccc), reinterpretU32AsF32(0x3dcccccd)], 0.0, 0.0, 0.0]] },
-      { input: [[0.1, 0.0, 0.0, 0.0], [-0.1, 0.0, 0.0, 0.0], [0.1, -0.0, 0.0, 0.0]], expected: [[[reinterpretU32AsF32(0x3dcccccc), reinterpretU32AsF32(0x3dcccccd)], 0.0, 0.0, 0.0]] },
-      { input: [[-0.1, 0.0, 0.0, 0.0], [-0.1, 0.0, 0.0, 0.0], [0.1, -0.0, 0.0, 0.0]], expected: [[[reinterpretU32AsF32(0xbdcccccd), reinterpretU32AsF32(0xbdcccccc)], 0.0, 0.0, 0.0]] },
+          // vec4
+          { input: [[1.0, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: [[-1.0, 0.0, 0.0, 0.0]] },
+          { input: [[-1.0, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0], [1.0, 0.0, 0.0, 0.0]], expected: [[1.0, 0.0, 0.0, 0.0]] },
+          { input: [[1.0, 0.0, 0.0, 0.0], [-1.0, 1.0, 0.0, 0.0], [1.0, -1.0, 0.0, 0.0]], expected: [[1.0, 0.0, 0.0, 0.0]] },
+          { input: [[-1.0, 0.0, 0.0, 0.0], [-1.0, 1.0, 0.0, 0.0], [1.0, -1.0, 0.0, 0.0]], expected: [[-1.0, 0.0, 0.0, 0.0]] },
+          { input: [[10.0, 0.0, 0.0, 0.0], [10.0, 0.0, 0.0, 0.0], [10.0, 0.0, 0.0, 0.0]], expected: [[-10.0, 0.0, 0.0, 0.0]] },
+          { input: [[-10.0, 0.0, 0.0, 0.0], [10.0, 0.0, 0.0, 0.0], [10.0, 0.0, 0.0, 0.0]], expected: [[10.0, 0.0, 0.0, 0.0]] },
+          { input: [[10.0, 0.0, 0.0, 0.0], [-10.0, 10.0, 0.0, 0.0], [10.0, -10.0, 0.0, 0.0]], expected: [[10.0, 0.0, 0.0, 0.0]] },
+          { input: [[-10.0, 0.0, 0.0, 0.0], [-10.0, 10.0, 0.0, 0.0], [10.0, -10.0, 0.0, 0.0]], expected: [[-10.0, 0.0, 0.0, 0.0]] },
+          { input: [[0.1, 0.0, 0.0, 0.0], [0.1, 0.0, 0.0, 0.0], [0.1, 0.0, 0.0, 0.0]], expected: [[kConstantCorrectlyRoundedExpectation[p.trait]['-0.1'], 0.0, 0.0, 0.0]] },
+          { input: [[-0.1, 0.0, 0.0, 0.0], [0.1, 0.0, 0.0, 0.0], [0.1, 0.0, 0.0, 0.0]], expected: [[kConstantCorrectlyRoundedExpectation[p.trait]['0.1'], 0.0, 0.0, 0.0]] },
+          { input: [[0.1, 0.0, 0.0, 0.0], [-0.1, 0.0, 0.0, 0.0], [0.1, -0.0, 0.0, 0.0]], expected: [[kConstantCorrectlyRoundedExpectation[p.trait]['0.1'], 0.0, 0.0, 0.0]] },
+          { input: [[-0.1, 0.0, 0.0, 0.0], [-0.1, 0.0, 0.0, 0.0], [0.1, -0.0, 0.0, 0.0]], expected: [[kConstantCorrectlyRoundedExpectation[p.trait]['-0.1'], 0.0, 0.0, 0.0]] },
 
-      // dot(y, z) === 0
-      { input: [[1.0, 1.0], [1.0, 0.0], [0.0, 1.0]], expected:  [[-1.0, -1.0]] },
+          // dot(y, z) === 0
+          { input: [[1.0, 1.0], [1.0, 0.0], [0.0, 1.0]], expected:  [[-1.0, -1.0]] },
 
-      // subnormals, also dot(y, z) spans 0
-      { input: [[kValue.f32.subnormal.positive.max, 0.0], [kValue.f32.subnormal.positive.min, 0.0], [kValue.f32.subnormal.negative.min, 0.0]], expected:  [[[0.0, kValue.f32.subnormal.positive.max], 0.0], [[kValue.f32.subnormal.negative.min, 0], 0.0]] },
+          // subnormals, also dot(y, z) spans 0
+          { input: [[constants.positive.subnormal.max, 0.0], [constants.positive.subnormal.min, 0.0], [constants.negative.subnormal.min, 0.0]], expected:  [[[0.0, constants.positive.subnormal.max], 0.0], [[constants.negative.subnormal.min, 0], 0.0]] },
 
-      // dot going OOB returns [undefined, x, -x]
-      { input: [[1.0, 1.0], [kValue.f32.positive.max, kValue.f32.positive.max], [kValue.f32.positive.max, kValue.f32.positive.max]], expected: [undefined, [1, 1], [-1, -1]] },
-
-    ]
+          // dot going OOB returns [undefined, x, -x]
+          { input: [[1.0, 1.0], [constants.positive.max, constants.positive.max], [constants.positive.max, constants.positive.max]], expected: [undefined, [1, 1], [-1, -1]] },
+        ];
+      })
   )
   .fn(t => {
     const [x, y, z] = t.params.input;
-    const expected = t.params.expected.map(e => (e !== undefined ? FP.f32.toVector(e) : undefined));
-    const got = FP.f32.faceForwardIntervals(x, y, z);
+    const trait = FP[t.params.trait];
+    const expected = t.params.expected.map(e => (e !== undefined ? trait.toVector(e) : undefined));
+    const got = trait.faceForwardIntervals(x, y, z);
     t.expect(
       objectEquals(expected, got),
-      `f32.faceForwardInterval([${x}], [${y}], [${z}]) returned [${got}]. Expected [${expected}]`
+      `${t.params.trait}.faceForwardInterval([${x}], [${y}], [${z}]) returned [${got}]. Expected [${expected}]`
     );
   });
 
@@ -7445,44 +8085,51 @@ interface ModfCase {
   whole: number | IntervalBounds;
 }
 
-g.test('modfInterval_f32')
-  .paramsSubcasesOnly<ModfCase>(
-    // prettier-ignore
-    [
-      // Normals
-      { input: 0, fract: 0, whole: 0 },
-      { input: 1, fract: 0, whole: 1 },
-      { input: -1, fract: 0, whole: -1 },
-      { input: 0.5, fract: 0.5, whole: 0 },
-      { input: -0.5, fract: -0.5, whole: 0 },
-      { input: 2.5, fract: 0.5, whole: 2 },
-      { input: -2.5, fract: -0.5, whole: -2 },
-      { input: 10.0, fract: 0, whole: 10 },
-      { input: -10.0, fract: 0, whole: -10 },
+g.test('modfInterval')
+  .params(u =>
+    u
+      .combine('trait', ['f32', 'f16', 'abstract'] as const)
+      .beginSubcases()
+      .expandWithParams<ModfCase>(p => {
+        const constants = FP[p.trait].constants();
+        // prettier-ignore
+        return [
+          // Normals
+          { input: 0, fract: 0, whole: 0 },
+          { input: 1, fract: 0, whole: 1 },
+          { input: -1, fract: 0, whole: -1 },
+          { input: 0.5, fract: 0.5, whole: 0 },
+          { input: -0.5, fract: -0.5, whole: 0 },
+          { input: 2.5, fract: 0.5, whole: 2 },
+          { input: -2.5, fract: -0.5, whole: -2 },
+          { input: 10.0, fract: 0, whole: 10 },
+          { input: -10.0, fract: 0, whole: -10 },
 
-      // Subnormals
-      { input: kValue.f32.subnormal.negative.min, fract: [kValue.f32.subnormal.negative.min, 0], whole: 0 },
-      { input: kValue.f32.subnormal.negative.max, fract: [kValue.f32.subnormal.negative.max, 0], whole: 0 },
-      { input: kValue.f32.subnormal.positive.min, fract: [0, kValue.f32.subnormal.positive.min], whole: 0 },
-      { input: kValue.f32.subnormal.positive.max, fract: [0, kValue.f32.subnormal.positive.max], whole: 0 },
+          // Subnormals
+          { input: constants.positive.subnormal.min, fract: [0, constants.positive.subnormal.min], whole: 0 },
+          { input: constants.positive.subnormal.max, fract: [0, constants.positive.subnormal.max], whole: 0 },
+          { input: constants.negative.subnormal.min, fract: [constants.negative.subnormal.min, 0], whole: 0 },
+          { input: constants.negative.subnormal.max, fract: [constants.negative.subnormal.max, 0], whole: 0 },
 
-      // Boundaries
-      { input: kValue.f32.negative.min, fract: 0, whole: kValue.f32.negative.min },
-      { input: kValue.f32.negative.max, fract: kValue.f32.negative.max, whole: 0 },
-      { input: kValue.f32.positive.min, fract: kValue.f32.positive.min, whole: 0 },
-      { input: kValue.f32.positive.max, fract: 0, whole: kValue.f32.positive.max },
-    ]
+          // Boundaries
+          { input: constants.negative.min, fract: 0, whole: constants.negative.min },
+          { input: constants.negative.max, fract: constants.negative.max, whole: 0 },
+          { input: constants.positive.min, fract: constants.positive.min, whole: 0 },
+          { input: constants.positive.max, fract: 0, whole: constants.positive.max },
+        ];
+      })
   )
   .fn(t => {
+    const trait = FP[t.params.trait];
     const expected = {
-      fract: FP.f32.toInterval(t.params.fract),
-      whole: FP.f32.toInterval(t.params.whole),
+      fract: trait.toInterval(t.params.fract),
+      whole: trait.toInterval(t.params.whole),
     };
 
-    const got = FP.f32.modfInterval(t.params.input);
+    const got = trait.modfInterval(t.params.input);
     t.expect(
       objectEquals(expected, got),
-      `f32.modfInterval([${t.params.input}) returned { fract: [${got.fract}], whole: [${got.whole}] }. Expected { fract: [${expected.fract}], whole: [${expected.whole}] }`
+      `${trait}.modfInterval([${t.params.input}) returned { fract: [${got.fract}], whole: [${got.whole}] }. Expected { fract: [${expected.fract}], whole: [${expected.whole}] }`
     );
   });
 
@@ -7494,60 +8141,98 @@ interface RefractCase {
 // Scope for refractInterval tests so that they can have constants for magic
 // numbers that don't pollute the global namespace or have unwieldy long names.
 {
-  const kNegativeOneBounds: IntervalBounds = [
-    reinterpretU64AsF64(0xbff0_0000_c000_0000n),
-    reinterpretU64AsF64(0xbfef_ffff_4000_0000n),
-  ];
+  const kNegativeOneBounds = {
+    f32: [
+      reinterpretU64AsF64(0xbff0_0000_c000_0000n),
+      reinterpretU64AsF64(0xbfef_ffff_4000_0000n),
+    ] as IntervalBounds,
+    f16: [reinterpretU16AsF16(0xbc06), reinterpretU16AsF16(0xbbfa)] as IntervalBounds,
+  } as const;
 
-  g.test('refractInterval_f32')
-    .paramsSubcasesOnly<RefractCase>(
-      // Some of these are hard coded, since the error intervals are difficult
-      // to express in a closed human-readable form due to the inherited nature
-      // of the errors.
+  // prettier-ignore
+  const kRefractIntervalCases = {
+    f32: [
+      // k > 0
+      // vec2
+      { input: [[1, -2], [3, 4], 5], expected: [[reinterpretU32AsF32(0x40ce87a4), reinterpretU32AsF32(0x40ce8840)],  // ~6.454...
+          [reinterpretU32AsF32(0xc100fae8), reinterpretU32AsF32(0xc100fa80)]] },  // ~-8.061...
+      // vec3
+      { input: [[1, -2, 3], [-4, 5, -6], 7], expected: [[reinterpretU32AsF32(0x40d24480), reinterpretU32AsF32(0x40d24c00)],  // ~6.571...
+          [reinterpretU32AsF32(0xc1576f80), reinterpretU32AsF32(0xc1576ad0)],  // ~-13.464...
+          [reinterpretU32AsF32(0x41a2d9b0), reinterpretU32AsF32(0x41a2dc80)]] },  // ~20.356...
+      // vec4
+      { input: [[1, -2, 3, -4], [-5, 6, -7, 8], 9], expected: [[reinterpretU32AsF32(0x410ae480), reinterpretU32AsF32(0x410af240)],  // ~8.680...
+          [reinterpretU32AsF32(0xc18cf7c0), reinterpretU32AsF32(0xc18cef80)],  // ~-17.620...
+          [reinterpretU32AsF32(0x41d46cc0), reinterpretU32AsF32(0x41d47660)],  // ~26.553...
+          [reinterpretU32AsF32(0xc20dfa80), reinterpretU32AsF32(0xc20df500)]] },  // ~-35.494...
+    ] as RefractCase[],
+    f16: [
+      // k > 0
+      // vec2
+      { input: [[1, -2], [3, 4], 5], expected: [[reinterpretU16AsF16(0x4620), reinterpretU16AsF16(0x46bc)],  // ~6.454...
+          [reinterpretU16AsF16(0xc840), reinterpretU16AsF16(0xc7b0)]] },  // ~-8.061...
+      // vec3
+      { input: [[1, -2, 3], [-4, 5, -6], 7], expected: [[reinterpretU16AsF16(0x4100), reinterpretU16AsF16(0x4940)],  // ~6.571...
+      [reinterpretU16AsF16(0xcc98), reinterpretU16AsF16(0xc830)],  // ~-13.464...
+      [reinterpretU16AsF16(0x4b20), reinterpretU16AsF16(0x4e90)]] },  // ~20.356...
+      // vec4
+      // x = [1, -2, 3, -4], y = [-5, 6, -7, 8], z = 9,
+      // dot(y, x) = -71, k = 1.0 - 9 * 9 * (1.0 - 71 * 71) = 408241 overflow f16.
+      { input: [[1, -2, 3, -4], [-5, 6, -7, 8], 9], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
+      // x = [1, -2, 3, -4], y = [-5, 4, -3, 2], z = 2.5,
+      // dot(y, x) = -30, k = 1.0 - 2.5 * 2.5 * (1.0 - 30 * 30) = 5619.75.
+      // a = z * dot(y, x) + sqrt(k) = ~-0.035, result is about z * x - a * y = [~2.325, ~-4.86, ~7.4025, ~-9.93]
+      { input: [[1, -2, 3, -4], [-5, 4, -3, 2], 2.5], expected: [[reinterpretU16AsF16(0x3900), reinterpretU16AsF16(0x4410)],  // ~2.325
+          [reinterpretU16AsF16(0xc640), reinterpretU16AsF16(0xc300)],  // ~-4.86
+          [reinterpretU16AsF16(0x4660), reinterpretU16AsF16(0x4838)],  // ~7.4025
+          [reinterpretU16AsF16(0xc950), reinterpretU16AsF16(0xc8a0)]] },  // ~-9.93
+    ] as RefractCase[],
+  } as const;
 
-      // prettier-ignore
-      [
-        // k < 0
-        { input: [[1, 1], [0.1, 0], 10], expected: [0, 0] },
+  g.test('refractInterval')
+    .params(u =>
+      u
+        .combine('trait', ['f32', 'f16'] as const)
+        .beginSubcases()
+        .expandWithParams<RefractCase>(p => {
+          const trait = FP[p.trait];
+          const constants = trait.constants();
+          // prettier-ignore
+          return [
+            ...kRefractIntervalCases[p.trait],
 
-        // k contains 0
-        { input: [[1, 1], [0.1, 0], 1.005038], expected: [kUnboundedBounds, kUnboundedBounds] },
+            // k < 0
+            { input: [[1, 1], [0.1, 0], 10], expected: [0, 0] },
 
-        // k > 0
-        // vec2
-        { input: [[1, 1], [1, 0], 1], expected: [kNegativeOneBounds, 1] },
-        { input: [[1, -2], [3, 4], 5], expected: [[reinterpretU32AsF32(0x40ce87a4), reinterpretU32AsF32(0x40ce8840)],  // ~6.454...
-            [reinterpretU32AsF32(0xc100fae8), reinterpretU32AsF32(0xc100fa80)]] },  // ~-8.061...
+            // k contains 0
+            { input: [[1, 1], [0.1, 0], 1.005038], expected: [kUnboundedBounds, kUnboundedBounds] },
 
-        // vec3
-        { input: [[1, 1, 1], [1, 0, 0], 1], expected: [kNegativeOneBounds, 1, 1] },
-        { input: [[1, -2, 3], [-4, 5, -6], 7], expected: [[reinterpretU32AsF32(0x40d24480), reinterpretU32AsF32(0x40d24c00)],  // ~6.571...
-            [reinterpretU32AsF32(0xc1576f80), reinterpretU32AsF32(0xc1576ad0)],  // ~-13.464...
-            [reinterpretU32AsF32(0x41a2d9b0), reinterpretU32AsF32(0x41a2dc80)]] },  // ~20.356...
+            // k > 0
+            // vec2
+            { input: [[1, 1], [1, 0], 1], expected: [kNegativeOneBounds[p.trait], 1] },
+            // vec3
+            { input: [[1, 1, 1], [1, 0, 0], 1], expected: [kNegativeOneBounds[p.trait], 1, 1] },
+            // vec4
+            { input: [[1, 1, 1, 1], [1, 0, 0, 0], 1], expected: [kNegativeOneBounds[p.trait], 1, 1, 1] },
 
-        // vec4
-        { input: [[1, 1, 1, 1], [1, 0, 0, 0], 1], expected: [kNegativeOneBounds, 1, 1, 1] },
-        { input: [[1, -2, 3,-4], [-5, 6, -7, 8], 9], expected: [[reinterpretU32AsF32(0x410ae480), reinterpretU32AsF32(0x410af240)],  // ~8.680...
-            [reinterpretU32AsF32(0xc18cf7c0), reinterpretU32AsF32(0xc18cef80)],  // ~-17.620...
-            [reinterpretU32AsF32(0x41d46cc0), reinterpretU32AsF32(0x41d47660)],  // ~26.553...
-            [reinterpretU32AsF32(0xc20dfa80), reinterpretU32AsF32(0xc20df500)]] },  // ~-35.494...
-
-        // Test that dot going OOB bounds in the intermediate calculations propagates
-        { input: [[kValue.f32.positive.nearest_max, kValue.f32.positive.max, kValue.f32.negative.min], [1.0, 1.0, 1.0], 1], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
-        { input: [[kValue.f32.positive.nearest_max, kValue.f32.negative.min, kValue.f32.positive.max], [1.0, 1.0, 1.0], 1], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
-        { input: [[kValue.f32.positive.max, kValue.f32.positive.nearest_max, kValue.f32.negative.min], [1.0, 1.0, 1.0], 1], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
-        { input: [[kValue.f32.negative.min, kValue.f32.positive.nearest_max, kValue.f32.positive.max], [1.0, 1.0, 1.0], 1], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
-        { input: [[kValue.f32.positive.max, kValue.f32.negative.min, kValue.f32.positive.nearest_max], [1.0, 1.0, 1.0], 1], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
-        { input: [[kValue.f32.negative.min, kValue.f32.positive.max, kValue.f32.positive.nearest_max], [1.0, 1.0, 1.0], 1], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
-      ]
+            // Test that dot going OOB bounds in the intermediate calculations propagates
+            { input: [[constants.positive.nearest_max, constants.positive.max, constants.negative.min], [1.0, 1.0, 1.0], 1], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
+            { input: [[constants.positive.nearest_max, constants.negative.min, constants.positive.max], [1.0, 1.0, 1.0], 1], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
+            { input: [[constants.positive.max, constants.positive.nearest_max, constants.negative.min], [1.0, 1.0, 1.0], 1], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
+            { input: [[constants.negative.min, constants.positive.nearest_max, constants.positive.max], [1.0, 1.0, 1.0], 1], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
+            { input: [[constants.positive.max, constants.negative.min, constants.positive.nearest_max], [1.0, 1.0, 1.0], 1], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
+            { input: [[constants.negative.min, constants.positive.max, constants.positive.nearest_max], [1.0, 1.0, 1.0], 1], expected: [kUnboundedBounds, kUnboundedBounds, kUnboundedBounds] },
+          ];
+        })
     )
     .fn(t => {
       const [i, s, r] = t.params.input;
-      const expected = FP.f32.toVector(t.params.expected);
-      const got = FP.f32.refractInterval(i, s, r);
+      const trait = FP[t.params.trait];
+      const expected = trait.toVector(t.params.expected);
+      const got = trait.refractInterval(i, s, r);
       t.expect(
         objectEquals(expected, got),
-        `refractIntervals([${i}], [${s}], ${r}) returned [${got}]. Expected [${expected}]`
+        `${t.params.trait}.refractIntervals([${i}], [${s}], ${r}) returned [${got}]. Expected [${expected}]`
       );
     });
 }
