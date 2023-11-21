@@ -1697,8 +1697,6 @@ class DiscoveryStreamFeed {
       case PREF_HARDCODED_BASIC_LAYOUT:
       case PREF_SPOCS_ENDPOINT:
       case PREF_SPOCS_ENDPOINT_QUERY:
-      case PREF_SPOCS_CLEAR_ENDPOINT:
-      case PREF_ENDPOINTS:
         // This is a config reset directly related to Discovery Stream pref.
         this.configReset();
         break;
