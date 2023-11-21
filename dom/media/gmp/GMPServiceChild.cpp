@@ -351,13 +351,6 @@ GeckoMediaPluginServiceChild::HasPluginForAPI(const nsACString& aAPI,
 }
 
 NS_IMETHODIMP
-GeckoMediaPluginServiceChild::FindPluginDirectoryForAPI(
-    const nsACString& aAPI, const nsTArray<nsCString>& aTags,
-    nsIFile** aDirectory) {
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 GeckoMediaPluginServiceChild::GetNodeId(
     const nsAString& aOrigin, const nsAString& aTopLevelOrigin,
     const nsAString& aGMPName, UniquePtr<GetNodeIdCallback>&& aCallback) {
