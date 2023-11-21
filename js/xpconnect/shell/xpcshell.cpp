@@ -44,6 +44,9 @@ int main(int argc, char** argv, char** envp) {
   // is not created here. Instead we set the command line args, which is a
   // fairly cheap operation.
   gtk_parse_args(&argc, &argv);
+
+  // Disable AppShell term signal handler as xpcshell doesn't use event loop.
+  setenv("MOZ_DISABLE_TERM_SIG_HANDLER", "1", true);
 #endif
 
 #ifdef XP_MACOSX
