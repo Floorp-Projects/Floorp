@@ -223,7 +223,7 @@ this.AccessibilityUtils = (function () {
 
   /**
    * Determine if an accessible is a keyboard focusable browser toolbar button.
-   * Browser toolbar buttons aren't keyboard focusable in the normal way.
+   * Browser toolbar buttons aren't keyboard focusable in the usual way.
    * Instead, focus is managed by JS code which sets tabindex on a single
    * button at a time. Thus, we need to special case the focusable check for
    * these buttons.
@@ -241,8 +241,27 @@ this.AccessibilityUtils = (function () {
   }
 
   /**
+   * Determine if an accessible is a keyboard focusable option within a listbox.
+   * We use it in the Url bar results - these controls are't keyboard focusable
+   * in the usual way. Instead, focus is managed by JS code which sets tabindex
+   * on a single option at a time. Thus, we need to special case the focusable
+   * check for these option items.
+   */
+  function isKeyboardFocusableOption(accessible) {
+    const node = accessible.DOMNode;
+    if (!node || !node.ownerGlobal) {
+      return false;
+    }
+    const urlbarListbox = node.closest(".urlbarView-results");
+    if (!urlbarListbox || urlbarListbox.getAttribute("role") != "listbox") {
+      return false;
+    }
+    return node.getAttribute("role") == "option";
+  }
+
+  /**
    * Determine if an accessible is a keyboard focusable PanelMultiView control.
-   * These controls aren't keyboard focusable in the normal way. Instead, focus
+   * These controls aren't keyboard focusable in the usual way. Instead, focus
    * is managed by JS code which sets tabindex dynamically. Thus, we need to
    * special case the focusable check for these controls.
    */
@@ -259,6 +278,28 @@ this.AccessibilityUtils = (function () {
       node.ownerGlobal.PanelView.forNode(panelview)._tabNavigableWalker.filter(
         node
       ) == NodeFilter.FILTER_ACCEPT
+    );
+  }
+
+  /**
+   * Determine if an accessible is a keyboard focusable button in the url bar.
+   * Url bar buttons aren't keyboard focusable in the usual way. Instead,
+   * focus is managed by JS code which sets tabindex on a single button at a
+   * time. Thus, we need to special case the focusable check for these buttons.
+   */
+  function isKeyboardFocusableUrlbarButton(accessible) {
+    const node = accessible.DOMNode;
+    if (!node || !node.ownerGlobal) {
+      return false;
+    }
+    const hbox = node.closest(".urlbarView > .search-one-offs");
+    if (!hbox || hbox.getAttribute("disabletab") != "true") {
+      return false;
+    }
+    return (
+      node.getAttribute("tabindex") == "-1" &&
+      node.tagName == "button" &&
+      node.classList.contains("searchbar-engine-one-off-item")
     );
   }
 
@@ -296,7 +337,9 @@ this.AccessibilityUtils = (function () {
   function isKeyboardFocusable(accessible) {
     if (
       isKeyboardFocusableBrowserToolbarButton(accessible) ||
+      isKeyboardFocusableOption(accessible) ||
       isKeyboardFocusablePanelMultiViewControl(accessible) ||
+      isKeyboardFocusableUrlbarButton(accessible) ||
       isKeyboardFocusableXULTab(accessible)
     ) {
       return true;
