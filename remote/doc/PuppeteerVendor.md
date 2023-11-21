@@ -28,7 +28,8 @@ Be sure to [run tests against both Chromium and Firefox] in the Puppeteer
 repo. You can specify your local Firefox build when you do so:
 
 ```shell
-% BINARY=<path-to-objdir-binary> npm run funit
+% BINARY=<path-to-objdir-binary> npm run test:firefox
+% BINARY=<path-to-objdir-binary> npm run test:firefox:bidi
 ```
 
 ## Prepare the Puppeteer Repository
@@ -50,7 +51,7 @@ just prepared. The mach command has flags to specify a local or remote
 repository as well as a commit:
 
 ```shell
-% ./mach remote vendor-puppeteer --commitish puppeteer-%version%
+% ./mach remote vendor-puppeteer --commitish puppeteer-%version% [--repository %path%]
 ```
 
 By default, this command also installs the newly-pulled Puppeteer package in
@@ -58,6 +59,10 @@ order to generate a new `package-lock.json` file for the purpose of pinning
 Puppeteer dependencies for our CI. There is a `--no-install` option if you want
 to skip this step; for example, if you want to run installation separately at
 a later point.
+
+Validate that newly created files and folders are required to be tracked by
+version control. If that is not the case then update both the top-level
+`.hgignore` and `remote/.gitignore` files for those paths.
 
 ### Validate that the new code works
 

@@ -23,5 +23,4 @@ To use Firefox remote protocol with Fission, CDP client authors should read the
 
   Usage.md
   Architecture.md
-  PuppeteerVendor.md
   RequiredPreferences.md
