@@ -3,7 +3,7 @@ Converts ranges of Unicode scalar values to equivalent ranges of UTF-8 bytes.
 
 This is sub-module is useful for constructing byte based automatons that need
 to embed UTF-8 decoding. The most common use of this module is in conjunction
-with the [`hir::ClassUnicodeRange`](crate::hir::ClassUnicodeRange) type.
+with the [`hir::ClassUnicodeRange`](../hir/struct.ClassUnicodeRange.html) type.
 
 See the documentation on the `Utf8Sequences` iterator for more details and
 an example.
@@ -80,9 +80,12 @@ I also got the idea from
 which uses it for executing automata on their term index.
 */
 
-use core::{char, fmt, iter::FusedIterator, slice};
+#![deny(missing_docs)]
 
-use alloc::{vec, vec::Vec};
+use std::char;
+use std::fmt;
+use std::iter::FusedIterator;
+use std::slice;
 
 const MAX_UTF8_BYTES: usize = 4;
 
@@ -303,7 +306,7 @@ impl Utf8Sequences {
     /// given.
     pub fn new(start: char, end: char) -> Self {
         let mut it = Utf8Sequences { range_stack: vec![] };
-        it.push(u32::from(start), u32::from(end));
+        it.push(start as u32, end as u32);
         it
     }
 
@@ -314,7 +317,7 @@ impl Utf8Sequences {
     #[doc(hidden)]
     pub fn reset(&mut self, start: char, end: char) {
         self.range_stack.clear();
-        self.push(u32::from(start), u32::from(end));
+        self.push(start as u32, end as u32);
     }
 
     fn push(&mut self, start: u32, end: u32) {
@@ -413,9 +416,7 @@ impl ScalarRange {
     /// values in this range can be encoded as a single byte.
     fn as_ascii(&self) -> Option<Utf8Range> {
         if self.is_ascii() {
-            let start = u8::try_from(self.start).unwrap();
-            let end = u8::try_from(self.end).unwrap();
-            Some(Utf8Range::new(start, end))
+            Some(Utf8Range::new(self.start as u8, self.end as u8))
         } else {
             None
         }
@@ -454,9 +455,7 @@ fn max_scalar_value(nbytes: usize) -> u32 {
 
 #[cfg(test)]
 mod tests {
-    use core::char;
-
-    use alloc::{vec, vec::Vec};
+    use std::char;
 
     use crate::utf8::{Utf8Range, Utf8Sequences};
 
@@ -473,11 +472,7 @@ mod tests {
                         "Sequence ({:X}, {:X}) contains range {:?}, \
                          which matches surrogate code point {:X} \
                          with encoded bytes {:?}",
-                        u32::from(start),
-                        u32::from(end),
-                        r,
-                        cp,
-                        buf,
+                        start as u32, end as u32, r, cp, buf,
                     );
                 }
             }
@@ -584,9 +579,9 @@ mod tests {
 
         assert!(0xD800 <= cp && cp < 0xE000);
         let mut dst = [0; 3];
-        dst[0] = u8::try_from(cp >> 12 & 0x0F).unwrap() | TAG_THREE_B;
-        dst[1] = u8::try_from(cp >> 6 & 0x3F).unwrap() | TAG_CONT;
-        dst[2] = u8::try_from(cp & 0x3F).unwrap() | TAG_CONT;
+        dst[0] = (cp >> 12 & 0x0F) as u8 | TAG_THREE_B;
+        dst[1] = (cp >> 6 & 0x3F) as u8 | TAG_CONT;
+        dst[2] = (cp & 0x3F) as u8 | TAG_CONT;
         dst
     }
 }

@@ -21,8 +21,12 @@ https://docs.rs/aho-corasick
 
 ### Usage
 
-Run `cargo add aho-corasick` to automatically add this crate as a dependency
-in your `Cargo.toml` file.
+Add this to your `Cargo.toml`:
+
+```toml
+[dependencies]
+aho-corasick = "0.7"
+```
 
 
 ### Example: basic searching
@@ -32,47 +36,46 @@ simultaneously. Each match includes the pattern that matched along with the
 byte offsets of the match.
 
 ```rust
-use aho_corasick::{AhoCorasick, PatternID};
+use aho_corasick::AhoCorasick;
 
 let patterns = &["apple", "maple", "Snapple"];
 let haystack = "Nobody likes maple in their apple flavored Snapple.";
 
-let ac = AhoCorasick::new(patterns).unwrap();
+let ac = AhoCorasick::new(patterns);
 let mut matches = vec![];
 for mat in ac.find_iter(haystack) {
     matches.push((mat.pattern(), mat.start(), mat.end()));
 }
 assert_eq!(matches, vec![
-    (PatternID::must(1), 13, 18),
-    (PatternID::must(0), 28, 33),
-    (PatternID::must(2), 43, 50),
+    (1, 13, 18),
+    (0, 28, 33),
+    (2, 43, 50),
 ]);
 ```
 
 
-### Example: ASCII case insensitivity
+### Example: case insensitivity
 
 This is like the previous example, but matches `Snapple` case insensitively
 using `AhoCorasickBuilder`:
 
 ```rust
-use aho_corasick::{AhoCorasick, PatternID};
+use aho_corasick::AhoCorasickBuilder;
 
 let patterns = &["apple", "maple", "snapple"];
 let haystack = "Nobody likes maple in their apple flavored Snapple.";
 
-let ac = AhoCorasick::builder()
+let ac = AhoCorasickBuilder::new()
     .ascii_case_insensitive(true)
-    .build(patterns)
-    .unwrap();
+    .build(patterns);
 let mut matches = vec![];
 for mat in ac.find_iter(haystack) {
     matches.push((mat.pattern(), mat.start(), mat.end()));
 }
 assert_eq!(matches, vec![
-    (PatternID::must(1), 13, 18),
-    (PatternID::must(0), 28, 33),
-    (PatternID::must(2), 43, 50),
+    (1, 13, 18),
+    (0, 28, 33),
+    (2, 43, 50),
 ]);
 ```
 
@@ -82,7 +85,7 @@ assert_eq!(matches, vec![
 This example shows how to execute a search and replace on a stream without
 loading the entire stream into memory first.
 
-```rust,ignore
+```rust
 use aho_corasick::AhoCorasick;
 
 let patterns = &["fox", "brown", "quick"];
@@ -93,7 +96,7 @@ let replace_with = &["sloth", "grey", "slow"];
 let rdr = "The quick brown fox.";
 let mut wtr = vec![];
 
-let ac = AhoCorasick::new(patterns).unwrap();
+let ac = AhoCorasick::new(patterns);
 ac.stream_replace_all(rdr.as_bytes(), &mut wtr, replace_with)
     .expect("stream_replace_all failed");
 assert_eq!(b"The slow grey sloth.".to_vec(), wtr);
@@ -125,7 +128,7 @@ use aho_corasick::AhoCorasick;
 let patterns = &["Samwise", "Sam"];
 let haystack = "Samwise";
 
-let ac = AhoCorasick::new(patterns).unwrap();
+let ac = AhoCorasick::new(patterns);
 let mat = ac.find(haystack).expect("should have a match");
 assert_eq!("Sam", &haystack[mat.start()..mat.end()]);
 ```
@@ -134,15 +137,14 @@ And now here's the leftmost-first version, which matches how a Perl-like
 regex will work:
 
 ```rust
-use aho_corasick::{AhoCorasick, MatchKind};
+use aho_corasick::{AhoCorasickBuilder, MatchKind};
 
 let patterns = &["Samwise", "Sam"];
 let haystack = "Samwise";
 
-let ac = AhoCorasick::builder()
+let ac = AhoCorasickBuilder::new()
     .match_kind(MatchKind::LeftmostFirst)
-    .build(patterns)
-    .unwrap();
+    .build(patterns);
 let mat = ac.find(haystack).expect("should have a match");
 assert_eq!("Samwise", &haystack[mat.start()..mat.end()]);
 ```
@@ -154,7 +156,7 @@ expression alternation. See `MatchKind` in the docs for more details.
 
 ### Minimum Rust version policy
 
-This crate's minimum supported `rustc` version is `1.60.0`.
+This crate's minimum supported `rustc` version is `1.41.1`.
 
 The current policy is that the minimum Rust version required to use this crate
 can be increased in minor version updates. For example, if `crate 1.0` requires
@@ -170,5 +172,16 @@ supported version of Rust.
 
 * [G-Research/ahocorasick_rs](https://github.com/G-Research/ahocorasick_rs/)
 is a Python wrapper for this library.
-* [tmikus/ahocorasick_rs](https://github.com/tmikus/ahocorasick_rs) is a Go
-    wrapper for this library.
+
+
+### Future work
+
+Here are some plans for the future:
+
+* Assuming the current API is sufficient, I'd like to commit to it and release
+  a `1.0` version of this crate some time in the next 6-12 months.
+* Support stream searching with leftmost match semantics. Currently, only
+  standard match semantics are supported. Getting this right seems possible,
+  but is tricky since the match state needs to be propagated through multiple
+  searches. (With standard semantics, as soon as a match is seen the search
+  ends.)
