@@ -41,6 +41,12 @@ support-files = [
 
 ["browser_translations_panel_engine_destroy_pending.js"]
 
+["browser_translations_panel_close_panel_never_translate_language_with_translations_active.js"]
+
+["browser_translations_panel_close_panel_never_translate_language_with_translations_inactive.js"]
+
+["browser_translations_panel_close_panel_never_translate_site.js"]
+
 ["browser_translations_panel_engine_unsupported.js"]
 
 ["browser_translations_panel_engine_unsupported_lang.js"]

@@ -24,6 +24,7 @@ const PageAction = Object.freeze({
   NO_CHANGE: "NO_CHANGE",
   RESTORE_PAGE: "RESTORE_PAGE",
   TRANSLATE_PAGE: "TRANSLATE_PAGE",
+  CLOSE_PANEL: "CLOSE_PANEL",
 });
 
 /**
@@ -152,6 +153,11 @@ class CheckboxPageAction {
       case CheckboxPageAction.#computeState(1, 0, 0, 1):
       case CheckboxPageAction.#computeState(1, 0, 0, 0):
         return PageAction.RESTORE_PAGE;
+      case CheckboxPageAction.#computeState(0, 1, 0, 0):
+      case CheckboxPageAction.#computeState(0, 0, 0, 1):
+      case CheckboxPageAction.#computeState(0, 1, 0, 1):
+      case CheckboxPageAction.#computeState(0, 0, 0, 0):
+        return PageAction.CLOSE_PANEL;
     }
     return PageAction.NO_CHANGE;
   }
@@ -170,6 +176,10 @@ class CheckboxPageAction {
         return PageAction.RESTORE_PAGE;
       case CheckboxPageAction.#computeState(0, 1, 0, 1):
         return PageAction.TRANSLATE_PAGE;
+      case CheckboxPageAction.#computeState(0, 0, 1, 0):
+      case CheckboxPageAction.#computeState(0, 1, 0, 0):
+      case CheckboxPageAction.#computeState(0, 0, 0, 0):
+        return PageAction.CLOSE_PANEL;
     }
     return PageAction.NO_CHANGE;
   }
@@ -1343,6 +1353,10 @@ var TranslationsPanel = new (class {
       }
       case PageAction.TRANSLATE_PAGE: {
         await this.onTranslate();
+        break;
+      }
+      case PageAction.CLOSE_PANEL: {
+        PanelMultiView.hidePopup(this.elements.panel);
         break;
       }
     }
