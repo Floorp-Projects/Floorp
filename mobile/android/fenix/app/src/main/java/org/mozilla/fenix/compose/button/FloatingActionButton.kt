@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.material.FloatingActionButton
+import androidx.compose.material.FloatingActionButtonDefaults
+import androidx.compose.material.FloatingActionButtonElevation
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -35,6 +37,8 @@ import org.mozilla.fenix.theme.FirefoxTheme
  * @param modifier [Modifier] to be applied to the action button.
  * @param contentDescription The content description to describe the icon.
  * @param label Text to be displayed next to the icon.
+ * @param elevation [FloatingActionButtonElevation] used to resolve the elevation for this FAB in different states.
+ * This controls the size of the shadow below the FAB.
  * @param onClick Invoked when the button is clicked.
  */
 @Composable
@@ -43,6 +47,7 @@ fun FloatingActionButton(
     modifier: Modifier = Modifier,
     contentDescription: String? = null,
     label: String? = null,
+    elevation: FloatingActionButtonElevation = FloatingActionButtonDefaults.elevation(defaultElevation = 5.dp),
     onClick: () -> Unit,
 ) {
     FloatingActionButton(
@@ -50,6 +55,7 @@ fun FloatingActionButton(
         modifier = modifier,
         backgroundColor = FirefoxTheme.colors.actionPrimary,
         contentColor = FirefoxTheme.colors.textActionPrimary,
+        elevation = elevation,
     ) {
         Row(
             modifier = Modifier
