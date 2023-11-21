@@ -833,9 +833,7 @@ bool GCRuntime::init(uint32_t maxbytes) {
   }
 #endif
 
-  if (!updateMarkersVector()) {
-    return false;
-  }
+  initOrDisableParallelMarking();
 
   {
     AutoLockGCBgAlloc lock(this);
@@ -1046,8 +1044,7 @@ bool GCRuntime::setParameter(JSGCParamKey key, uint32_t value,
     case JSGC_PARALLEL_MARKING_ENABLED:
       // Not supported on workers.
       parallelMarkingEnabled = rt->isMainRuntime() && value != 0;
-      updateMarkersVector();
-      break;
+      return initOrDisableParallelMarking();
     case JSGC_INCREMENTAL_WEAKMAP_ENABLED:
       for (auto& marker : markers) {
         marker->incrementalWeakMapMarkingEnabled = value != 0;
@@ -1101,7 +1098,7 @@ bool GCRuntime::setThreadParameter(JSGCParamKey key, uint32_t value,
   }
 
   updateHelperThreadCount();
-  updateMarkersVector();
+  initOrDisableParallelMarking();
 
   return true;
 }
@@ -1133,7 +1130,7 @@ void GCRuntime::resetParameter(JSGCParamKey key, AutoLockGC& lock) {
       break;
     case JSGC_PARALLEL_MARKING_ENABLED:
       parallelMarkingEnabled = TuningDefaults::ParallelMarkingEnabled;
-      updateMarkersVector();
+      initOrDisableParallelMarking();
       break;
     case JSGC_INCREMENTAL_WEAKMAP_ENABLED:
       for (auto& marker : markers) {
@@ -1178,7 +1175,7 @@ void GCRuntime::resetThreadParameter(JSGCParamKey key, AutoLockGC& lock) {
   }
 
   updateHelperThreadCount();
-  updateMarkersVector();
+  initOrDisableParallelMarking();
 }
 
 uint32_t GCRuntime::getParameter(JSGCParamKey key) {
@@ -1333,6 +1330,17 @@ void GCRuntime::assertNoMarkingWork() const {
   MOZ_ASSERT(!hasDelayedMarking());
 }
 #endif
+
+bool GCRuntime::initOrDisableParallelMarking() {
+  // Attempt to initialize parallel marking state or disable it on failure.
+
+  if (!updateMarkersVector()) {
+    parallelMarkingEnabled = false;
+    return false;
+  }
+
+  return true;
+}
 
 static size_t GetGCParallelThreadCount() {
   AutoLockHelperThreadState lock;
