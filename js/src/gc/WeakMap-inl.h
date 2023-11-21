@@ -243,53 +243,6 @@ void WeakMap<K, V>::trace(JSTracer* trc) {
   }
 }
 
-bool WeakMapBase::addImplicitEdges(gc::Cell* key, gc::Cell* delegate,
-                                   gc::TenuredCell* value) {
-  gc::MarkColor mapColor = AsMarkColor(this->mapColor);
-
-  if (delegate) {
-    auto& edgeTable = delegate->zone()->gcEphemeronEdges(delegate);
-    auto* p = edgeTable.get(delegate);
-
-    gc::EphemeronEdgeVector newVector;
-    gc::EphemeronEdgeVector& edges = p ? p->value : newVector;
-
-    // Add a <weakmap, delegate> -> key edge: the key must be preserved for
-    // future lookups until either the weakmap or the delegate dies.
-    if (!edges.emplaceBack(mapColor, key)) {
-      return false;
-    }
-
-    if (value) {
-      if (!edges.emplaceBack(mapColor, value)) {
-        return false;
-      }
-    }
-
-    if (!p) {
-      return edgeTable.put(delegate, std::move(newVector));
-    }
-
-    return true;
-  }
-
-  // No delegate. Insert just the key -> value edge.
-
-  if (!value) {
-    return true;
-  }
-
-  auto& edgeTable = key->zone()->gcEphemeronEdges(key);
-  auto* p = edgeTable.get(key);
-  if (p) {
-    return p->value.emplaceBack(mapColor, value);
-  }
-
-  gc::EphemeronEdgeVector edges;
-  MOZ_ALWAYS_TRUE(edges.emplaceBack(mapColor, value));
-  return edgeTable.put(key, std::move(edges));
-}
-
 template <class K, class V>
 bool WeakMap<K, V>::markEntries(GCMarker* marker) {
   // This method is called whenever the map's mark color changes. Mark values

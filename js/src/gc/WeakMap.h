@@ -151,8 +151,8 @@ class WeakMapBase : public mozilla::LinkedListElement<WeakMapBase> {
   // We have a key that, if it or its delegate is marked, may lead to a WeakMap
   // value getting marked. Insert it or its delegate (if any) into the
   // appropriate zone's gcEphemeronEdges or gcNurseryEphemeronEdges.
-  inline bool addImplicitEdges(gc::Cell* key, gc::Cell* delegate,
-                               gc::TenuredCell* value);
+  bool addImplicitEdges(gc::Cell* key, gc::Cell* delegate,
+                        gc::TenuredCell* value);
 
   virtual bool markEntries(GCMarker* marker) = 0;
 

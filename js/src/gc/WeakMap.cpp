@@ -46,6 +46,53 @@ void Zone::traceWeakMaps(JSTracer* trc) {
   }
 }
 
+bool WeakMapBase::addImplicitEdges(Cell* key, Cell* delegate,
+                                   TenuredCell* value) {
+  MarkColor mapColor = AsMarkColor(this->mapColor);
+
+  if (delegate) {
+    auto& edgeTable = delegate->zone()->gcEphemeronEdges(delegate);
+    auto* p = edgeTable.get(delegate);
+
+    EphemeronEdgeVector newVector;
+    EphemeronEdgeVector& edges = p ? p->value : newVector;
+
+    // Add a <weakmap, delegate> -> key edge: the key must be preserved for
+    // future lookups until either the weakmap or the delegate dies.
+    if (!edges.emplaceBack(mapColor, key)) {
+      return false;
+    }
+
+    if (value) {
+      if (!edges.emplaceBack(mapColor, value)) {
+        return false;
+      }
+    }
+
+    if (!p) {
+      return edgeTable.put(delegate, std::move(newVector));
+    }
+
+    return true;
+  }
+
+  // No delegate. Insert just the key -> value edge.
+
+  if (!value) {
+    return true;
+  }
+
+  auto& edgeTable = key->zone()->gcEphemeronEdges(key);
+  auto* p = edgeTable.get(key);
+  if (p) {
+    return p->value.emplaceBack(mapColor, value);
+  }
+
+  EphemeronEdgeVector edges;
+  MOZ_ALWAYS_TRUE(edges.emplaceBack(mapColor, value));
+  return edgeTable.put(key, std::move(edges));
+}
+
 #if defined(JS_GC_ZEAL) || defined(DEBUG)
 bool WeakMapBase::checkMarkingForZone(JS::Zone* zone) {
   // This is called at the end of marking.
