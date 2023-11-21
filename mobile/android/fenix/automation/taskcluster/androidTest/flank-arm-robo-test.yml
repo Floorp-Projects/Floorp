@@ -14,8 +14,8 @@ gcloud:
     clearPackageData: true
 
   device:
-    - model: Pixel2.arm
-      version: 26
+    - model: java
+      version: 30
       locale: en_US
     - model: Pixel2.arm
       version: 27
