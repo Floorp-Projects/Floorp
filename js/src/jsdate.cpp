@@ -1093,12 +1093,50 @@ bool IsPrefixOfKeyword(const CharT* s, size_t len, const char* keyword) {
   return len == 0;
 }
 
-static constexpr const char* const months_names[] = {
-    "january", "february", "march",     "april",   "may",      "june",
-    "july",    "august",   "september", "october", "november", "december",
+static constexpr const char* const month_prefixes[] = {
+    "jan", "feb", "mar", "apr", "may", "jun",
+    "jul", "aug", "sep", "oct", "nov", "dec",
 };
-// The shortest month is "may".
-static constexpr size_t ShortestMonthNameLength = 3;
+
+/**
+ * Given a string s of length >= 3, checks if it begins,
+ * case-insensitive, with the given lower case prefix.
+ */
+template <typename CharT>
+bool StartsWithMonthPrefix(const CharT* s, const char* prefix) {
+  MOZ_ASSERT(strlen(prefix) == 3);
+
+  for (size_t i = 0; i < 3; ++i) {
+    MOZ_ASSERT(IsAsciiAlpha(*s));
+    MOZ_ASSERT(IsAsciiLowercaseAlpha(*prefix));
+
+    if (unicode::ToLowerCase(static_cast<Latin1Char>(*s)) != *prefix) {
+      return false;
+    }
+
+    ++s, ++prefix;
+  }
+
+  return true;
+}
+
+template <typename CharT>
+bool IsMonthName(const CharT* s, size_t len, int* mon) {
+  // Month abbreviations < 3 chars are not accepted.
+  if (len < 3) {
+    return false;
+  }
+
+  for (size_t m = 0; m < std::size(month_prefixes); ++m) {
+    if (StartsWithMonthPrefix(s, month_prefixes[m])) {
+      // Use numeric value.
+      *mon = m + 1;
+      return true;
+    }
+  }
+
+  return false;
+}
 
 /*
  * Try to parse the following date formats:
@@ -1130,7 +1168,7 @@ static bool TryParseDashedDatePrefix(const CharT* s, size_t length,
   }
   ++i;
 
-  size_t mon = 0;
+  int mon = 0;
   if (*monOut == -1) {
     // If month wasn't already set by ParseDate, it must be in the middle of
     // this format, let's look for it
@@ -1141,20 +1179,7 @@ static bool TryParseDashedDatePrefix(const CharT* s, size_t length,
       }
     }
 
-    if (i - start < ShortestMonthNameLength) {
-      return false;
-    }
-
-    for (size_t m = 0; m < std::size(months_names); ++m) {
-      // If the field isn't a prefix of the month (an exact match is *not*
-      // required), try the next one.
-      if (IsPrefixOfKeyword(s + start, i - start, months_names[m])) {
-        // Use numeric value.
-        mon = m + 1;
-        break;
-      }
-    }
-    if (mon == 0) {
+    if (!IsMonthName(s + start, i - start, &mon)) {
       return false;
     }
 
@@ -1306,19 +1331,6 @@ static constexpr CharsAndAction keywords[] = {
   { "friday", 0 },
   { "saturday", 0 },
   { "sunday", 0 },
-  // Months.
-  { "january", 1 },
-  { "february", 2 },
-  { "march", 3 },
-  { "april", 4, },
-  { "may", 5 },
-  { "june", 6 },
-  { "july", 7 },
-  { "august", 8 },
-  { "september", 9 },
-  { "october", 10 },
-  { "november", 11 },
-  { "december", 12 },
   // Time zone abbreviations.
   { "gmt", 10000 + 0 },
   { "z", 10000 + 0 },
@@ -1380,20 +1392,8 @@ static bool ParseDate(DateTimeInfo::ForceUTC forceUTC, const CharT* s,
       }
     }
 
-    if (index - start < ShortestMonthNameLength) {
-      // If it's too short, it's definitely not a month name, ignore it
-      continue;
-    }
-
-    for (size_t m = 0; m < std::size(months_names); m++) {
-      // If the field isn't a prefix of the month (an exact match is *not*
-      // required), try the next one.
-      if (IsPrefixOfKeyword(s + start, index - start, months_names[m])) {
-        // Use numeric value.
-        mon = m + 1;
-        seenMonthName = true;
-        break;
-      }
+    if (IsMonthName(s + start, index - start, &mon)) {
+      seenMonthName = true;
     }
   }
 
@@ -1652,6 +1652,44 @@ static bool ParseDate(DateTimeInfo::ForceUTC forceUTC, const CharT* s,
 
       size_t k = std::size(keywords);
       while (k-- > 0) {
+        // Record a month if it is a month name. Note that some numbers are
+        // initially treated as months; if a numeric field has already been
+        // interpreted as a month, store that value to the actually appropriate
+        // date component and set the month here.
+        int tryMonth;
+        if (IsMonthName(s + start, index - start, &tryMonth)) {
+          if (seenMonthName) {
+            // Overwrite the previous month name
+            mon = tryMonth;
+            break;
+          }
+
+          seenMonthName = true;
+
+          if (mon < 0) {
+            mon = tryMonth;
+          } else if (mday < 0) {
+            mday = mon;
+            mon = tryMonth;
+          } else if (year < 0) {
+            if (mday > 0) {
+              // If the date is of the form f l month, then when month is
+              // reached we have f in mon and l in mday. In order to be
+              // consistent with the f month l and month f l forms, we need to
+              // swap so that f is in mday and l is in year.
+              year = mday;
+              mday = mon;
+            } else {
+              year = mon;
+            }
+            mon = tryMonth;
+          } else {
+            return false;
+          }
+
+          break;
+        }
+
         const CharsAndAction& keyword = keywords[k];
 
         // If the field isn't a prefix of the keyword (an exact match is *not*
@@ -1687,43 +1725,6 @@ static bool ParseDate(DateTimeInfo::ForceUTC forceUTC, const CharT* s,
             hour = 0;
           } else if (action == -2 && hour != 12) {
             hour += 12;
-          }
-
-          break;
-        }
-
-        // Record a month if none has been seen before.  (Note that some numbers
-        // are initially treated as months; if a numeric field has already been
-        // interpreted as a month, store that value to the actually appropriate
-        // date component and set the month here.
-        if (action <= 12) {
-          if (seenMonthName) {
-            // Overwrite the previous month name
-            mon = action;
-            break;
-          }
-
-          seenMonthName = true;
-
-          if (mon < 0) {
-            mon = action;
-          } else if (mday < 0) {
-            mday = mon;
-            mon = action;
-          } else if (year < 0) {
-            if (mday > 0) {
-              // If the date is of the form f l month, then when month is
-              // reached we have f in mon and l in mday. In order to be
-              // consistent with the f month l and month f l forms, we need to
-              // swap so that f is in mday and l is in year.
-              year = mday;
-              mday = mon;
-            } else {
-              year = mon;
-            }
-            mon = action;
-          } else {
-            return false;
           }
 
           break;
