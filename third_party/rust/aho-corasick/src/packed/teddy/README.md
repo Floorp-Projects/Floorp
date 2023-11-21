@@ -225,14 +225,14 @@ fingerprints in a haystack's 16 byte block, where `i` is the `ith` byte in that
 block.
 
 Once we have that, we can look for the position of the least significant bit
-in `C`. (Least significant because we only target `x86_64` here, which is
-always little endian. Thus, the least significant bytes correspond to bytes
-in our haystack at a lower address.) That position, modulo `8`, gives us
-the pattern that the fingerprint matches. That position, integer divided by
-`8`, also gives us the byte offset that the fingerprint occurs in inside the
-16 byte haystack block. Using those two pieces of information, we can run a
-verification procedure that tries to match all substrings containing that
-fingerprint at that position in the haystack.
+in `C`. (Least significant because we only target little endian here. Thus,
+the least significant bytes correspond to bytes in our haystack at a lower
+address.) That position, modulo `8`, gives us the pattern that the fingerprint
+matches. That position, integer divided by `8`, also gives us the byte offset
+that the fingerprint occurs in inside the 16 byte haystack block. Using those
+two pieces of information, we can run a verification procedure that tries
+to match all substrings containing that fingerprint at that position in the
+haystack.
 
 
 # Implementation notes
