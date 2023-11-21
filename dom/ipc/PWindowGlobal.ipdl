@@ -28,7 +28,7 @@ using mozilla::dom::JSActorMessageKind from "mozilla/dom/JSActor.h";
 using mozilla::gfx::IntRect from "mozilla/gfx/Rect.h";
 [MoveOnly] using mozilla::gfx::PaintFragment from "mozilla/gfx/CrossProcessPaint.h";
 using nscolor from "nsColor.h";
-using mozilla::dom::XPCOMPermitUnloadAction from "nsIContentViewer.h";
+using mozilla::dom::XPCOMPermitUnloadAction from "nsIDocumentViewer.h";
 using mozilla::dom::TabId from "mozilla/dom/ipc/IdType.h";
 using mozilla::layers::LayersId from "mozilla/layers/LayersTypes.h";
 [RefCounted] using class nsITransportSecurityInfo from "nsITransportSecurityInfo.h";
@@ -155,7 +155,7 @@ parent:
 
   // Checks whether any "beforeunload" event listener in the document subtree
   // wants to block unload, and prompts the user to allow if any does (depending
-  // on the action specified, using nsIContentViewer::PermitUnloadAction
+  // on the action specified, using nsIDocumentViewer::PermitUnloadAction
   // values). The sender is responsible for checking documents in its own
   // process, and passing true for `aHasInProcessBlocker` if any exist. Windows
   // hosted outside of the caller process will be checked automatically.

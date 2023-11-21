@@ -29,7 +29,7 @@ class nsIDocShell;
 class nsIDocShellTreeItem;
 class nsIFrame;
 class imgIContainer;
-class nsIContentViewer;
+class nsIDocumentViewer;
 class nsIScrollableFrame;
 class nsITimer;
 class nsPresContext;

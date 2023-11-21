@@ -19,7 +19,7 @@
 #include "nsString.h"
 #include "nsICategoryManager.h"
 #include "nsIDocumentLoaderFactory.h"
-#include "nsIContentViewer.h"
+#include "nsIDocumentViewer.h"
 #include "nsIStreamListener.h"
 #include "nsServiceManagerUtils.h"
 #include "nsNetUtil.h"
@@ -142,7 +142,7 @@ nsresult gfxSVGGlyphsDocument::SetupPresentation() {
       do_GetService(contractId.get());
   NS_ASSERTION(docLoaderFactory, "Couldn't get DocumentLoaderFactory");
 
-  nsCOMPtr<nsIContentViewer> viewer;
+  nsCOMPtr<nsIDocumentViewer> viewer;
   rv = docLoaderFactory->CreateInstanceForDocument(nullptr, mDocument, nullptr,
                                                    getter_AddRefs(viewer));
   NS_ENSURE_SUCCESS(rv, rv);

@@ -12,7 +12,7 @@
 
 class nsDocShell;
 class nsIChannel;
-class nsIContentViewer;
+class nsIDocumentViewer;
 class nsILoadGroup;
 class nsIStreamListener;
 
@@ -37,7 +37,7 @@ class nsContentDLF final : public nsIDocumentLoaderFactory {
                           nsILoadGroup* aLoadGroup, nsIDocShell* aContainer,
                           DocumentCreator aDocumentCreator,
                           nsIStreamListener** aDocListener,
-                          nsIContentViewer** aContentViewer);
+                          nsIDocumentViewer** aContentViewer);
 
   /**
    * Create a blank document using the given loadgroup and given

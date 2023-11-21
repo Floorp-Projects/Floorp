@@ -5,7 +5,7 @@
 
 #include "nsAppShellWindowEnumerator.h"
 
-#include "nsIContentViewer.h"
+#include "nsIDocumentViewer.h"
 #include "nsIDocShell.h"
 #include "mozilla/dom/Document.h"
 #include "nsIInterfaceRequestor.h"
@@ -27,10 +27,10 @@ static void GetAttribute(nsIAppWindow* inWindow, const nsAString& inAttribute,
 static void GetWindowType(nsIAppWindow* inWindow, nsString& outType);
 
 static Element* GetElementFromDocShell(nsIDocShell* aShell) {
-  nsCOMPtr<nsIContentViewer> cv;
-  aShell->GetContentViewer(getter_AddRefs(cv));
-  if (cv) {
-    RefPtr<Document> doc = cv->GetDocument();
+  nsCOMPtr<nsIDocumentViewer> viewer;
+  aShell->GetContentViewer(getter_AddRefs(viewer));
+  if (viewer) {
+    RefPtr<Document> doc = viewer->GetDocument();
     if (doc) {
       return doc->GetDocumentElement();
     }

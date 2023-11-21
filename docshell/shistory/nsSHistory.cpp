@@ -14,8 +14,8 @@
 #include "nsDocShell.h"
 #include "nsFrameLoaderOwner.h"
 #include "nsHashKeys.h"
-#include "nsIContentViewer.h"
 #include "nsIDocShell.h"
+#include "nsIDocumentViewer.h"
 #include "nsDocShellLoadState.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsILayoutHistoryState.h"
@@ -212,7 +212,7 @@ nsSHistoryObserver::Observe(nsISupports* aSubject, const char* aTopic,
 }
 
 void nsSHistory::EvictContentViewerForEntry(nsISHEntry* aEntry) {
-  nsCOMPtr<nsIContentViewer> viewer = aEntry->GetContentViewer();
+  nsCOMPtr<nsIDocumentViewer> viewer = aEntry->GetContentViewer();
   if (viewer) {
     LOG_SHENTRY_SPEC(("Evicting content viewer 0x%p for "
                       "owning SHEntry 0x%p at %s.",
@@ -1537,10 +1537,10 @@ void nsSHistory::EvictOutOfRangeWindowContentViewers(int32_t aIndex) {
   // The content viewers in range aIndex -/+ VIEWER_WINDOW will not be
   // evicted.  Collect a set of them so we don't accidentally evict one of them
   // if it appears outside this range.
-  nsCOMArray<nsIContentViewer> safeViewers;
+  nsCOMArray<nsIDocumentViewer> safeViewers;
   nsTArray<RefPtr<nsFrameLoader>> safeFrameLoaders;
   for (int32_t i = startSafeIndex; i <= endSafeIndex; i++) {
-    nsCOMPtr<nsIContentViewer> viewer = mEntries[i]->GetContentViewer();
+    nsCOMPtr<nsIDocumentViewer> viewer = mEntries[i]->GetContentViewer();
     if (viewer) {
       safeViewers.AppendObject(viewer);
     } else if (nsCOMPtr<SessionHistoryEntry> she =
@@ -1557,7 +1557,7 @@ void nsSHistory::EvictOutOfRangeWindowContentViewers(int32_t aIndex) {
   // copy of Length(), because the length might change between iterations.)
   for (int32_t i = 0; i < Length(); i++) {
     nsCOMPtr<nsISHEntry> entry = mEntries[i];
-    nsCOMPtr<nsIContentViewer> viewer = entry->GetContentViewer();
+    nsCOMPtr<nsIDocumentViewer> viewer = entry->GetContentViewer();
     if (viewer) {
       if (safeViewers.IndexOf(viewer) == -1) {
         EvictContentViewerForEntry(entry);
@@ -1611,7 +1611,7 @@ class EntryAndDistance {
 
   RefPtr<nsSHistory> mSHistory;
   nsCOMPtr<nsISHEntry> mEntry;
-  nsCOMPtr<nsIContentViewer> mViewer;
+  nsCOMPtr<nsIDocumentViewer> mViewer;
   RefPtr<nsFrameLoader> mFrameLoader;
   uint32_t mLastTouched;
   int32_t mDistance;
@@ -1650,7 +1650,7 @@ void nsSHistory::GloballyEvictContentViewers() {
     shist->WindowIndices(shist->mIndex, &startIndex, &endIndex);
     for (int32_t i = startIndex; i <= endIndex; i++) {
       nsCOMPtr<nsISHEntry> entry = shist->mEntries[i];
-      nsCOMPtr<nsIContentViewer> contentViewer = entry->GetContentViewer();
+      nsCOMPtr<nsIDocumentViewer> contentViewer = entry->GetContentViewer();
 
       bool found = false;
       bool hasContentViewerOrFrameLoader = false;

@@ -57,9 +57,9 @@ class DocumentLoadListener;
 }  // namespace net
 }  // namespace mozilla
 
-class nsIContentViewer;
 class nsIController;
 class nsIDocShellTreeOwner;
+class nsIDocumentViewer;
 class nsIHttpChannel;
 class nsIMutableArray;
 class nsIPrompt;
@@ -587,12 +587,12 @@ class nsDocShell final : public nsDocLoader,
   nsresult NewContentViewerObj(const nsACString& aContentType,
                                nsIRequest* aRequest, nsILoadGroup* aLoadGroup,
                                nsIStreamListener** aContentHandler,
-                               nsIContentViewer** aViewer);
+                               nsIDocumentViewer** aViewer);
 
   already_AddRefed<nsILoadURIDelegate> GetLoadURIDelegate();
 
   nsresult SetupNewViewer(
-      nsIContentViewer* aNewViewer,
+      nsIDocumentViewer* aNewViewer,
       mozilla::dom::WindowGlobalChild* aWindowActor = nullptr);
 
   //
@@ -985,7 +985,7 @@ class nsDocShell final : public nsDocLoader,
   nsresult EnsureCommandHandler();
   nsresult RefreshURIFromQueue();
   void RefreshURIToQueue();
-  nsresult Embed(nsIContentViewer* aContentViewer,
+  nsresult Embed(nsIDocumentViewer* aContentViewer,
                  mozilla::dom::WindowGlobalChild* aWindowActor,
                  bool aIsTransientAboutBlank, bool aPersist,
                  nsIRequest* aRequest, nsIURI* aPreviousURI);
@@ -1166,7 +1166,7 @@ class nsDocShell final : public nsDocLoader,
   // mBFCachedRefreshURIList.
   nsCOMPtr<nsIMutableArray> mBFCachedRefreshURIList;
   uint64_t mContentWindowID;
-  nsCOMPtr<nsIContentViewer> mContentViewer;
+  nsCOMPtr<nsIDocumentViewer> mContentViewer;
   nsCOMPtr<nsIWidget> mParentWidget;
   RefPtr<mozilla::dom::ChildSHistory> mSessionHistory;
   nsCOMPtr<nsIWebBrowserFind> mFind;

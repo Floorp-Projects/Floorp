@@ -14,7 +14,7 @@
 interface nsIContentSecurityPolicy;
 interface nsIMutableArray;
 interface nsILayoutHistoryState;
-interface nsIContentViewer;
+interface nsIDocumentViewer;
 interface nsIURI;
 interface nsIInputStream;
 interface nsIDocShellTreeItem;
@@ -113,7 +113,7 @@ interface nsISHEntry : nsISupports
     [infallible] attribute nsIReferrerInfo referrerInfo;
 
     /** Content viewer, for fast restoration of presentation */
-    [infallible] attribute nsIContentViewer contentViewer;
+    [infallible] attribute nsIDocumentViewer contentViewer;
 
     [infallible] readonly attribute boolean isInBFCache;
 

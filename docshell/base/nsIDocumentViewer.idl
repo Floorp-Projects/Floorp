@@ -42,8 +42,8 @@ class RemotePrintJobChild;
 [ptr] native RemotePrintJobChildPtr(mozilla::layout::RemotePrintJobChild);
 [ptr] native WindowGlobalChildPtr(mozilla::dom::WindowGlobalChild);
 
-[scriptable, builtinclass, uuid(2da17016-7851-4a45-a7a8-00b360e01595)]
-interface nsIContentViewer : nsISupports
+[scriptable, builtinclass, uuid(48118355-e9a5-4452-ab18-59cc426fb817)]
+interface nsIDocumentViewer : nsISupports
 {
   [noscript] void init(in nsIWidgetPtr aParentWidget,
                        [const] in nsIntRectRef aBounds,
@@ -100,7 +100,7 @@ interface nsIContentViewer : nsISupports
    * the document.
    * The result is returned.
    */
-  boolean permitUnload([optional] in nsIContentViewer_PermitUnloadAction aAction);
+  boolean permitUnload([optional] in nsIDocumentViewer_PermitUnloadAction aAction);
 
   /**
    * Exposes whether we're blocked in a call to permitUnload.
@@ -111,7 +111,7 @@ interface nsIContentViewer : nsISupports
    * Dispatches the "beforeunload" event and returns the result, as documented
    * in the `PermitUnloadResult` enum.
    */
-  [noscript,nostdcall,notxpcom] nsIContentViewer_PermitUnloadResult dispatchBeforeUnload();
+  [noscript,nostdcall,notxpcom] nsIDocumentViewer_PermitUnloadResult dispatchBeforeUnload();
 
   /**
    * Exposes whether we're in the process of firing the beforeunload event.
@@ -176,7 +176,7 @@ interface nsIContentViewer : nsISupports
    * The previous content viewer, which has been |close|d but not
    * |destroy|ed.
    */
-  [notxpcom,nostdcall] attribute nsIContentViewer previousViewer;
+  [notxpcom,nostdcall] attribute nsIDocumentViewer previousViewer;
 
   void move(in long aX, in long aY);
 
@@ -310,8 +310,8 @@ interface nsIContentViewer : nsISupports
 namespace mozilla {
 namespace dom {
 
-using XPCOMPermitUnloadAction = nsIContentViewer::PermitUnloadAction;
-using PermitUnloadResult = nsIContentViewer::PermitUnloadResult;
+using XPCOMPermitUnloadAction = nsIDocumentViewer::PermitUnloadAction;
+using PermitUnloadResult = nsIDocumentViewer::PermitUnloadResult;
 
 } // namespace dom
 } // namespace mozilla

@@ -22,7 +22,7 @@
 #include "nsISelectionController.h"
 #include "nsIWebNavigation.h"
 #include "nsIDocumentViewerEdit.h"
-#include "nsIContentViewer.h"
+#include "nsIDocumentViewer.h"
 #include "nsFocusManager.h"
 #include "nsCopySupport.h"
 #include "nsIClipboard.h"
@@ -685,7 +685,7 @@ nsresult nsSelectionCommand::GetContentViewerEditFromContext(
   nsIDocShell* docShell = window->GetDocShell();
   NS_ENSURE_TRUE(docShell, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIContentViewer> viewer;
+  nsCOMPtr<nsIDocumentViewer> viewer;
   docShell->GetContentViewer(getter_AddRefs(viewer));
   nsCOMPtr<nsIDocumentViewerEdit> edit(do_QueryInterface(viewer));
   NS_ENSURE_TRUE(edit, NS_ERROR_FAILURE);

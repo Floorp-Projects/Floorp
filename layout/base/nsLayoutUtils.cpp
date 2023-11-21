@@ -134,8 +134,8 @@
 #include "nsICanvasRenderingContextInternal.h"
 #include "nsIContent.h"
 #include "nsIContentInlines.h"
-#include "nsIContentViewer.h"
 #include "nsIDocShell.h"
+#include "nsIDocumentViewer.h"
 #include "nsIFrameInlines.h"
 #include "nsIImageLoadingContent.h"
 #include "nsIInterfaceRequestorUtils.h"
@@ -8329,14 +8329,14 @@ bool nsLayoutUtils::GetContentViewerSize(
     return false;
   }
 
-  nsCOMPtr<nsIContentViewer> cv;
-  docShell->GetContentViewer(getter_AddRefs(cv));
-  if (!cv) {
+  nsCOMPtr<nsIDocumentViewer> viewer;
+  docShell->GetContentViewer(getter_AddRefs(viewer));
+  if (!viewer) {
     return false;
   }
 
   nsIntRect bounds;
-  cv->GetBounds(bounds);
+  viewer->GetBounds(bounds);
 
   if (aPresContext->IsRootContentDocumentCrossProcess() &&
       aSubtractDynamicToolbar == SubtractDynamicToolbar::Yes &&

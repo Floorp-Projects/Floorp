@@ -53,7 +53,7 @@ interface WindowContext {
   [SetterThrows] attribute boolean allowJavascript;
 };
 
-// Keep this in sync with nsIContentViewer::PermitUnloadAction.
+// Keep this in sync with nsIDocumentViewer::PermitUnloadAction.
 enum PermitUnloadAction {
   "prompt",
   "dontUnload",

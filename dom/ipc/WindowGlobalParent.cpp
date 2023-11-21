@@ -767,7 +767,7 @@ class CheckPermitUnloadRequest final : public PromiseNativeHandler,
                                        public nsITimerCallback {
  public:
   CheckPermitUnloadRequest(WindowGlobalParent* aWGP, bool aHasInProcessBlocker,
-                           nsIContentViewer::PermitUnloadAction aAction,
+                           nsIDocumentViewer::PermitUnloadAction aAction,
                            std::function<void(bool)>&& aResolver)
       : mResolver(std::move(aResolver)),
         mWGP(aWGP),
@@ -853,10 +853,10 @@ class CheckPermitUnloadRequest final : public PromiseNativeHandler,
 
     auto action = mAction;
     if (StaticPrefs::dom_disable_beforeunload()) {
-      action = nsIContentViewer::eDontPromptAndUnload;
+      action = nsIDocumentViewer::eDontPromptAndUnload;
     }
-    if (action != nsIContentViewer::ePrompt) {
-      SendReply(action == nsIContentViewer::eDontPromptAndUnload);
+    if (action != nsIDocumentViewer::ePrompt) {
+      SendReply(action == nsIDocumentViewer::eDontPromptAndUnload);
       return;
     }
 
@@ -925,7 +925,7 @@ class CheckPermitUnloadRequest final : public PromiseNativeHandler,
 
   uint32_t mPendingRequests = 0;
 
-  nsIContentViewer::PermitUnloadAction mAction;
+  nsIDocumentViewer::PermitUnloadAction mAction;
 
   State mState = State::UNINITIALIZED;
 
@@ -961,7 +961,7 @@ already_AddRefed<Promise> WindowGlobalParent::PermitUnload(
 
   auto request = MakeRefPtr<CheckPermitUnloadRequest>(
       this, /* aHasInProcessBlocker */ false,
-      nsIContentViewer::PermitUnloadAction(aAction),
+      nsIDocumentViewer::PermitUnloadAction(aAction),
       [promise](bool aAllow) { promise->MaybeResolve(aAllow); });
   request->Run(/* aIgnoreProcess */ nullptr, aTimeout);
 
@@ -971,7 +971,7 @@ already_AddRefed<Promise> WindowGlobalParent::PermitUnload(
 void WindowGlobalParent::PermitUnload(std::function<void(bool)>&& aResolver) {
   RefPtr<CheckPermitUnloadRequest> request = new CheckPermitUnloadRequest(
       this, /* aHasInProcessBlocker */ false,
-      nsIContentViewer::PermitUnloadAction::ePrompt, std::move(aResolver));
+      nsIDocumentViewer::PermitUnloadAction::ePrompt, std::move(aResolver));
   request->Run();
 }
 

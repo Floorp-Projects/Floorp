@@ -20,7 +20,7 @@
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsIContent.h"
-#include "nsIContentViewer.h"
+#include "nsIDocumentViewer.h"
 #include "nsIDocumentViewerPrint.h"
 #include "nsIScreen.h"
 #include "mozilla/dom/AutoSuppressEventHandlingAndSuspend.h"
@@ -302,7 +302,7 @@ void BFCachePreventionObserver::MutationHappened() {
 using viewer_detail::BFCachePreventionObserver;
 
 //-------------------------------------------------------------
-class nsDocumentViewer final : public nsIContentViewer,
+class nsDocumentViewer final : public nsIDocumentViewer,
                                public nsIDocumentViewerEdit,
                                public nsIDocumentViewerPrint
 #ifdef NS_PRINTING
@@ -321,8 +321,8 @@ class nsDocumentViewer final : public nsIContentViewer,
   // nsISupports interface...
   NS_DECL_ISUPPORTS
 
-  // nsIContentViewer interface...
-  NS_DECL_NSICONTENTVIEWER
+  // nsIDocumentViewer interface...
+  NS_DECL_NSIDOCUMENTVIEWER
 
   // nsIDocumentViewerEdit
   NS_DECL_NSIDOCUMENTVIEWEREDIT
@@ -423,7 +423,7 @@ class nsDocumentViewer final : public nsIContentViewer,
   RefPtr<nsDocViewerSelectionListener> mSelectionListener;
   RefPtr<nsDocViewerFocusListener> mFocusListener;
 
-  nsCOMPtr<nsIContentViewer> mPreviousViewer;
+  nsCOMPtr<nsIDocumentViewer> mPreviousViewer;
   nsCOMPtr<nsISHEntry> mSHEntry;
   // Observer that will prevent bfcaching if it gets notified.  This
   // is non-null precisely when mSHEntry is non-null.
@@ -481,7 +481,7 @@ class nsDocumentShownDispatcher : public Runnable {
 //------------------------------------------------------------------
 
 //------------------------------------------------------------------
-already_AddRefed<nsIContentViewer> NS_NewContentViewer() {
+already_AddRefed<nsIDocumentViewer> NS_NewContentViewer() {
   RefPtr<nsDocumentViewer> viewer = new nsDocumentViewer();
   return viewer.forget();
 }
@@ -533,10 +533,10 @@ NS_IMPL_ADDREF(nsDocumentViewer)
 NS_IMPL_RELEASE(nsDocumentViewer)
 
 NS_INTERFACE_MAP_BEGIN(nsDocumentViewer)
-  NS_INTERFACE_MAP_ENTRY(nsIContentViewer)
+  NS_INTERFACE_MAP_ENTRY(nsIDocumentViewer)
   NS_INTERFACE_MAP_ENTRY(nsIDocumentViewerEdit)
   NS_INTERFACE_MAP_ENTRY(nsIDocumentViewerPrint)
-  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIContentViewer)
+  NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIDocumentViewer)
 #ifdef NS_PRINTING
   NS_INTERFACE_MAP_ENTRY(nsIWebBrowserPrint)
 #endif
@@ -557,7 +557,7 @@ nsDocumentViewer::~nsDocumentViewer() {
 
   MOZ_RELEASE_ASSERT(mDestroyBlockedCount == 0);
   NS_ASSERTION(!mPresShell && !mPresContext,
-               "User did not call nsIContentViewer::Destroy");
+               "User did not call nsIDocumentViewer::Destroy");
   if (mPresShell || mPresContext) {
     // Make sure we don't hand out a reference to the content viewer to
     // the SHEntry!
@@ -1216,7 +1216,7 @@ nsDocumentViewer::PermitUnload(PermitUnloadAction aAction,
         foundOOPListener = true;
       }
     } else if (aBC->GetDocShell()) {
-      nsCOMPtr<nsIContentViewer> contentViewer(
+      nsCOMPtr<nsIDocumentViewer> contentViewer(
           aBC->GetDocShell()->GetContentViewer());
       if (contentViewer &&
           contentViewer->DispatchBeforeUnload() == eRequestBlockNavigation) {
@@ -1434,7 +1434,7 @@ nsDocumentViewer::PageHide(bool aIsUnload) {
 }
 
 static void AttachContainerRecurse(nsIDocShell* aShell) {
-  nsCOMPtr<nsIContentViewer> viewer;
+  nsCOMPtr<nsIDocumentViewer> viewer;
   aShell->GetContentViewer(getter_AddRefs(viewer));
   if (viewer) {
     viewer->SetIsHidden(false);
@@ -1568,7 +1568,7 @@ nsDocumentViewer::Close(nsISHEntry* aSHEntry) {
 static void DetachContainerRecurse(nsIDocShell* aShell) {
   // Unhook this docshell's presentation
   aShell->SynchronizeLayoutHistoryState();
-  nsCOMPtr<nsIContentViewer> viewer;
+  nsCOMPtr<nsIDocumentViewer> viewer;
   aShell->GetContentViewer(getter_AddRefs(viewer));
   if (viewer) {
     if (Document* doc = viewer->GetDocument()) {
@@ -1922,11 +1922,11 @@ nsDocumentViewer::GetBounds(nsIntRect& aResult) {
   return NS_OK;
 }
 
-nsIContentViewer* nsDocumentViewer::GetPreviousViewer() {
+nsIDocumentViewer* nsDocumentViewer::GetPreviousViewer() {
   return mPreviousViewer;
 }
 
-void nsDocumentViewer::SetPreviousViewer(nsIContentViewer* aViewer) {
+void nsDocumentViewer::SetPreviousViewer(nsIDocumentViewer* aViewer) {
   // NOTE:  |Show| sets |mPreviousViewer| to null without calling this
   // function.
 
@@ -1947,7 +1947,7 @@ void nsDocumentViewer::SetPreviousViewer(nsIContentViewer* aViewer) {
     //
     // Make sure we hold a strong ref to prevViewer here, since we'll
     // tell aViewer to drop it.
-    nsCOMPtr<nsIContentViewer> prevViewer = aViewer->GetPreviousViewer();
+    nsCOMPtr<nsIDocumentViewer> prevViewer = aViewer->GetPreviousViewer();
     if (prevViewer) {
       aViewer->SetPreviousViewer(nullptr);
       aViewer->Destroy();
@@ -2004,7 +2004,7 @@ nsDocumentViewer::SetBoundsWithFlags(const nsIntRect& aBounds,
     }
 
     mViewManager->SetWindowDimensions(
-        width, height, !!(aFlags & nsIContentViewer::eDelayResize));
+        width, height, !!(aFlags & nsIDocumentViewer::eDelayResize));
   }
 
   // If there's a previous viewer, it's the one that's actually showing,
@@ -2015,7 +2015,7 @@ nsDocumentViewer::SetBoundsWithFlags(const nsIntRect& aBounds,
   // happens that Firefox does this a good bit with its infobar, and it
   // looks ugly if we don't do this.
   if (mPreviousViewer) {
-    nsCOMPtr<nsIContentViewer> previousViewer = mPreviousViewer;
+    nsCOMPtr<nsIDocumentViewer> previousViewer = mPreviousViewer;
     previousViewer->SetBounds(aBounds);
   }
 
@@ -2046,7 +2046,7 @@ nsDocumentViewer::Show() {
   if (mPreviousViewer) {
     // This little dance *may* only be to keep
     // PresShell::EndObservingDocument happy, but I'm not sure.
-    nsCOMPtr<nsIContentViewer> prevViewer(mPreviousViewer);
+    nsCOMPtr<nsIDocumentViewer> prevViewer(mPreviousViewer);
     mPreviousViewer = nullptr;
     prevViewer->Destroy();
 
@@ -2178,7 +2178,7 @@ nsDocumentViewer::Hide() {
   nsCOMPtr<nsIDocShell> docShell(mContainer);
   if (docShell) {
 #ifdef DEBUG
-    nsCOMPtr<nsIContentViewer> currentViewer;
+    nsCOMPtr<nsIDocumentViewer> currentViewer;
     docShell->GetContentViewer(getter_AddRefs(currentViewer));
     MOZ_ASSERT(currentViewer == this);
 #endif

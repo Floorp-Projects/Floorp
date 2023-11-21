@@ -14,7 +14,7 @@
 #include "base/compiler_specific.h"
 #include "DisplayItemClip.h"
 #include "nsCOMPtr.h"
-#include "nsIContentViewer.h"
+#include "nsIDocumentViewer.h"
 #include "nsPresContext.h"
 #include "nsView.h"
 #include "nsViewportInfo.h"
@@ -5315,11 +5315,11 @@ auto nsHTMLScrollFrame::GetPageLoadingState() -> LoadingState {
   bool loadCompleted = false, stopped = false;
   nsCOMPtr<nsIDocShell> ds = GetContent()->GetComposedDoc()->GetDocShell();
   if (ds) {
-    nsCOMPtr<nsIContentViewer> cv;
-    ds->GetContentViewer(getter_AddRefs(cv));
-    if (cv) {
-      loadCompleted = cv->GetLoadCompleted();
-      stopped = cv->GetIsStopped();
+    nsCOMPtr<nsIDocumentViewer> viewer;
+    ds->GetContentViewer(getter_AddRefs(viewer));
+    if (viewer) {
+      loadCompleted = viewer->GetLoadCompleted();
+      stopped = viewer->GetIsStopped();
     }
   }
   return loadCompleted

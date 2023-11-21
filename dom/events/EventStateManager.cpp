@@ -87,7 +87,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsPIWindowRoot.h"
 #include "nsIWebNavigation.h"
-#include "nsIContentViewer.h"
+#include "nsIDocumentViewer.h"
 #include "nsFrameManager.h"
 #include "nsIBrowserChild.h"
 #include "nsMenuPopupFrame.h"

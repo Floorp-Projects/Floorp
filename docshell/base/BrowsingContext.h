@@ -229,7 +229,7 @@ struct EmbedderColorSchemes {
    * and non-initial about:blank are not considered to be initial             \
    * documents. */                                                            \
   FIELD(HasLoadedNonInitialDocument, bool)                                    \
-  /* Default value for nsIContentViewer::authorStyleDisabled in any new       \
+  /* Default value for nsIDocumentViewer::authorStyleDisabled in any new      \
    * browsing contexts created as a descendant of this one.  Valid only for   \
    * top BCs. */                                                              \
   FIELD(AuthorStyleDisabledDefault, bool)                                     \

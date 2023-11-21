@@ -27,7 +27,7 @@
 #include "nsCSSFrameConstructor.h"
 #include "nsDocShell.h"
 #include "nsIConsoleService.h"
-#include "nsIContentViewer.h"
+#include "nsIDocumentViewer.h"
 #include "nsPIDOMWindow.h"
 #include "mozilla/ServoStyleSet.h"
 #include "mozilla/MediaFeatureChange.h"
@@ -2126,14 +2126,14 @@ bool nsPresContext::EnsureVisible() {
   if (!docShell) {
     return false;
   }
-  nsCOMPtr<nsIContentViewer> cv;
-  docShell->GetContentViewer(getter_AddRefs(cv));
+  nsCOMPtr<nsIDocumentViewer> viewer;
+  docShell->GetContentViewer(getter_AddRefs(viewer));
   // Make sure this is the content viewer we belong with
-  if (!cv || cv->GetPresContext() != this) {
+  if (!viewer || viewer->GetPresContext() != this) {
     return false;
   }
   // OK, this is us.  We want to call Show() on the content viewer.
-  nsresult result = cv->Show();
+  nsresult result = viewer->Show();
   return NS_SUCCEEDED(result);
 }
 

@@ -127,7 +127,7 @@ using mozilla::glean::perf::PageLoadExtra from "mozilla/glean/GleanMetrics.h";
 using mozilla::dom::MaybeDiscardedBrowsingContext from "mozilla/dom/BrowsingContext.h";
 using mozilla::dom::BrowsingContextTransaction from "mozilla/dom/BrowsingContext.h";
 using mozilla::dom::BrowsingContextInitializer from "mozilla/dom/BrowsingContext.h";
-using mozilla::dom::PermitUnloadResult from "nsIContentViewer.h";
+using mozilla::dom::PermitUnloadResult from "nsIDocumentViewer.h";
 using mozilla::dom::MaybeDiscardedWindowContext from "mozilla/dom/WindowContext.h";
 using mozilla::dom::WindowContextTransaction from "mozilla/dom/WindowContext.h";
 [MoveOnly] using base::SharedMemoryHandle from "base/shared_memory.h";

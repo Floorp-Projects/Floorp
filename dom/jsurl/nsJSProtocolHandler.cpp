@@ -28,7 +28,7 @@
 #include "nsEscape.h"
 #include "nsIWebNavigation.h"
 #include "nsIDocShell.h"
-#include "nsIContentViewer.h"
+#include "nsIDocumentViewer.h"
 #include "nsContentUtils.h"
 #include "nsJSUtils.h"
 #include "nsThreadUtils.h"
@@ -780,13 +780,13 @@ void nsJSChannel::EvaluateScript() {
     nsCOMPtr<nsIDocShell> docShell;
     NS_QueryNotificationCallbacks(mStreamChannel, docShell);
     if (docShell) {
-      nsCOMPtr<nsIContentViewer> cv;
-      docShell->GetContentViewer(getter_AddRefs(cv));
+      nsCOMPtr<nsIDocumentViewer> viewer;
+      docShell->GetContentViewer(getter_AddRefs(viewer));
 
-      if (cv) {
+      if (viewer) {
         bool okToUnload;
 
-        if (NS_SUCCEEDED(cv->PermitUnload(&okToUnload)) && !okToUnload) {
+        if (NS_SUCCEEDED(viewer->PermitUnload(&okToUnload)) && !okToUnload) {
           // The user didn't want to unload the current
           // page, translate this into an undefined
           // return from the javascript: URL...
