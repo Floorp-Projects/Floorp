@@ -1,0 +1,36 @@
+[DEFAULT]
+head =  '' # no value from INI
+firefox-appdir = "browser"
+skip-if = ["toolkit == 'android'"] # bug 1730213
+
+["test_E10SUtils_nested_URIs.js"]
+
+["test_HomePage.js"]
+
+["test_HomePage_ignore.js"]
+
+["test_InstallationTelemetry.js"]
+run-if = ["os == 'win'"] # Test of a Windows-specific feature
+
+["test_LaterRun.js"]
+
+["test_PartnerLinkAttribution.js"]
+
+["test_PingCentre.js"]
+
+["test_ProfileCounter.js"]
+run-if = ["os == 'win'"] # Test of a Windows-specific feature
+
+["test_Sanitizer_interrupted.js"]
+
+["test_SiteDataManager.js"]
+
+["test_SiteDataManagerContainers.js"]
+
+["test_SitePermissions.js"]
+
+["test_SitePermissions_temporary.js"]
+
+["test_TabUnloader.js"]
+
+["test_discovery.js"]

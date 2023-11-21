@@ -1,0 +1,7 @@
+[DEFAULT]
+skip-if = ["toolkit == 'android'"] # bug 1730213
+head =  '' # no value from INI
+# make the firefox services (eg newtab-service) available to xpcshell
+firefox-appdir = "browser"
+
+["test_getURIFlags.js"]

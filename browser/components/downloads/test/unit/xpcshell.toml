@@ -1,0 +1,12 @@
+[DEFAULT]
+head = "head.js"
+firefox-appdir = "browser"
+skip-if = ["toolkit == 'android'"] # bug 1730213
+
+["test_DownloadLastDir_basics.js"]
+
+["test_DownloadsCommon_getMimeInfo.js"]
+
+["test_DownloadsCommon_isFileOfType.js"]
+
+["test_DownloadsViewableInternally.js"]

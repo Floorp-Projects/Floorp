@@ -1,0 +1,55 @@
+[DEFAULT]
+skip-if = ["toolkit == 'android'"] # bug 1730213
+firefox-appdir = "browser"
+head = "head.js"
+support-files = ["policytest_v0.1.xpi"]
+
+["test_3rdparty.js"]
+
+["test_addon_update.js"]
+
+["test_appupdatepin.js"]
+
+["test_appupdateurl.js"]
+
+["test_bug1658259.js"]
+
+["test_cleanup.js"]
+
+["test_clear_blocked_cookies.js"]
+
+["test_containers.js"]
+
+["test_defaultbrowsercheck.js"]
+
+["test_empty_policy.js"]
+
+["test_exempt_domain_file_type_pairs_from_file_type_download_warnings.js"]
+
+["test_extensions.js"]
+
+["test_extensionsettings.js"]
+
+["test_macosparser_unflatten.js"]
+run-if = ["os == 'mac'"]
+
+["test_permissions.js"]
+
+["test_policy_search_engine.js"]
+
+["test_popups_cookies_addons.js"]
+support-files = ["config_popups_cookies_addons.json"]
+
+["test_preferences.js"]
+
+["test_proxy.js"]
+
+["test_requestedlocales.js"]
+
+["test_runOnce_helper.js"]
+
+["test_simple_pref_policies.js"]
+
+["test_sorted_alphabetically.js"]
+
+["test_telemetry.js"]

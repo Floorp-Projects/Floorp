@@ -33,5 +33,5 @@ BROWSER_CHROME_MANIFESTS += [
 
 MOCHITEST_MANIFESTS += ["test/mochitest/mochitest.toml"]
 XPCSHELL_TESTS_MANIFESTS += [
-    "test/xpcshell/xpcshell.ini",
+    "test/xpcshell/xpcshell.toml",
 ]

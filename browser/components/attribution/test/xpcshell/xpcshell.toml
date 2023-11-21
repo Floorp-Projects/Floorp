@@ -1,0 +1,15 @@
+[DEFAULT]
+firefox-appdir = "browser"
+run-if = [
+    "os == 'win'",
+    "os == 'mac'",
+]
+head = "head.js"
+prefs = ["browser.attribution.macos.enabled=true"]
+
+["test_AttributionCode.js"]
+
+["test_MacAttribution.js"]
+run-if = ["os == 'mac'"] # osx specific tests
+
+["test_attribution_parsing.js"]

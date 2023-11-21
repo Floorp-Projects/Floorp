@@ -118,7 +118,7 @@ BROWSER_CHROME_MANIFESTS += [
     "test/browser/browser.toml",
     "test/browser/formValidation/browser.toml",
 ]
-XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.ini"]
+XPCSHELL_TESTS_MANIFESTS += ["test/unit/xpcshell.toml"]
 
 EXTRA_JS_MODULES += [
     "AboutNewTab.sys.mjs",

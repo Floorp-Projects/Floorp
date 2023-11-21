@@ -87,8 +87,8 @@ BROWSER_CHROME_MANIFESTS += [
     "tests/quicksuggest/browser/browser.toml",
 ]
 XPCSHELL_TESTS_MANIFESTS += [
-    "tests/quicksuggest/unit/xpcshell.ini",
-    "tests/unit/xpcshell.ini",
+    "tests/quicksuggest/unit/xpcshell.toml",
+    "tests/unit/xpcshell.toml",
 ]
 
 SPHINX_TREES["/browser/urlbar"] = "docs"
