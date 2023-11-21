@@ -1,0 +1,26 @@
+# -*- Mode: python; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+NoVisibilityFlags()
+
+# We allow warnings for third-party code that can be updated from upstream.
+AllowCompilerWarnings()
+
+if CONFIG["MOZ_FOLD_LIBS"]:
+    # When folding libraries, sqlite is actually in the nss library.
+    FINAL_LIBRARY = "nss"
+else:
+    # The final library is in config/external/sqlite
+    FINAL_LIBRARY = "sqlite"
+
+SOURCES += [
+    "fts5.c",
+]
+
+if CONFIG["OS_TARGET"] == "Linux" or CONFIG["OS_TARGET"] == "Android":
+    OS_LIBS += [
+        "m",
+    ]
