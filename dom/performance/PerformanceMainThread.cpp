@@ -70,7 +70,6 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(PerformanceMainThread,
       mPendingEventTimingEntries, mEventCounts)
   tmp->mImageLCPEntryMap.Clear();
   tmp->mTextFrameUnions.Clear();
-  tmp->mImagesPendingRendering.Clear();
   mozilla::DropJSObjects(tmp);
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
@@ -79,8 +78,8 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(PerformanceMainThread,
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(
       mTiming, mNavigation, mDocEntry, mFCPTiming, mEventTimingEntries,
       mLargestContentfulPaintEntries, mFirstInputEvent, mPendingPointerDown,
-      mPendingEventTimingEntries, mEventCounts, mImagesPendingRendering,
-      mImageLCPEntryMap, mTextFrameUnions)
+      mPendingEventTimingEntries, mEventCounts, mImageLCPEntryMap,
+      mTextFrameUnions)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
