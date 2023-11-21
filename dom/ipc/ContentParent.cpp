@@ -3380,19 +3380,6 @@ int32_t ContentParent::Pid() const {
   return ReleaseAssertedCast<int32_t>(pid);
 }
 
-mozilla::ipc::IPCResult ContentParent::RecvGetGfxVars(
-    nsTArray<GfxVarUpdate>* aVars) {
-  // Ensure gfxVars is initialized (for xpcshell tests).
-  gfxVars::Initialize();
-
-  *aVars = gfxVars::FetchNonDefaultVars();
-
-  // Now that content has initialized gfxVars, we can start listening for
-  // updates.
-  gfxVars::AddReceiver(this);
-  return IPC_OK();
-}
-
 void ContentParent::OnCompositorUnexpectedShutdown() {
   GPUProcessManager* gpm = GPUProcessManager::Get();
 
