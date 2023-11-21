@@ -4339,7 +4339,7 @@ void MacroAssembler::widenInt32(Register r) {
 #ifdef ENABLE_WASM_TAIL_CALLS
 void MacroAssembler::wasmMarkSlowCall() { mv(ra, ra); }
 
-const int32_t SlowCallMarker = 0x3c93;  // addi ra, ra, 0
+const int32_t SlowCallMarker = 0x8093;  // addi ra, ra, 0
 
 void MacroAssembler::wasmCheckSlowCallsite(Register ra_, Label* notSlow,
                                            Register temp1, Register temp2) {
