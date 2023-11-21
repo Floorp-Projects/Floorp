@@ -709,17 +709,6 @@ add_task(async function preferences() {
       {},
       gBrowser.selectedBrowser.browsingContext
     );
-    await BrowserTestUtils.waitForCondition(() =>
-      gBrowser.selectedBrowser.contentDocument.getElementById(
-        "searchBarShownRadio"
-      )
-    );
-
-    await BrowserTestUtils.synthesizeMouseAtCenter(
-      "#searchBarShownRadio",
-      {},
-      gBrowser.selectedBrowser.browsingContext
-    );
 
     gBrowser.selectedBrowser.contentDocument
       .getElementById("openLocationBarPrivacyPreferences")
@@ -761,7 +750,6 @@ add_task(async function preferences() {
         contentBlockingLearnMore: 1,
       },
       preferences_paneSearch: {
-        searchBarShownRadio: 1,
         openLocationBarPrivacyPreferences: 1,
       },
     });

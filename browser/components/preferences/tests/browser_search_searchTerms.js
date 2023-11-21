@@ -15,7 +15,6 @@ ChromeUtils.defineLazyGetter(this, "QuickSuggestTestUtils", () => {
   return module;
 });
 
-const GROUP_ID = "searchbarGroup";
 const CHECKBOX_ID = "searchShowSearchTermCheckbox";
 const PREF_SEARCHTERMS = "browser.urlbar.showSearchTerms.enabled";
 const PREF_FEATUREGATE = "browser.urlbar.showSearchTerms.featureGate";
@@ -95,7 +94,6 @@ add_task(async function showSearchTerms_checkbox() {
   });
   await openPreferencesViaOpenPreferencesAPI("search", { leaveOpen: true });
   let doc = gBrowser.selectedBrowser.contentDocument;
-  doc.getElementById(GROUP_ID).scrollIntoView();
 
   let option = doc.getElementById(CHECKBOX_ID);
 

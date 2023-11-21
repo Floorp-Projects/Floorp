@@ -752,12 +752,6 @@ home-prefs-sections-rows-option =
 
 ## Search Section
 
-search-bar-header = Search Bar
-search-bar-hidden =
-    .label = Use the address bar for search and navigation
-search-bar-shown =
-    .label = Add search bar in toolbar
-
 search-engine-default-header = Default Search Engine
 search-engine-default-desc-2 = This is your default search engine in the address bar and search bar. You can switch it at any time.
 search-engine-default-private-desc-2 = Choose a different default search engine for Private Windows only
