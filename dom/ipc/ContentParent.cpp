@@ -5914,12 +5914,6 @@ mozilla::ipc::IPCResult ContentParent::RecvShutdownPerfStats(
   return IPC_OK();
 }
 
-mozilla::ipc::IPCResult ContentParent::RecvGetGraphicsDeviceInitData(
-    ContentDeviceData* aOut) {
-  gfxPlatform::GetPlatform()->BuildContentDeviceData(aOut);
-  return IPC_OK();
-}
-
 mozilla::ipc::IPCResult ContentParent::RecvGetOutputColorProfileData(
     nsTArray<uint8_t>* aOutputColorProfileData) {
   (*aOutputColorProfileData) =

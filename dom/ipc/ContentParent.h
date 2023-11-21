@@ -1133,9 +1133,6 @@ class ContentParent final : public PContentParent,
 
   mozilla::ipc::IPCResult RecvShutdownPerfStats(const nsACString& aPerfStats);
 
-  mozilla::ipc::IPCResult RecvGetGraphicsDeviceInitData(
-      ContentDeviceData* aOut);
-
   mozilla::ipc::IPCResult RecvGetOutputColorProfileData(
       nsTArray<uint8_t>* aOutputColorProfileData);
 

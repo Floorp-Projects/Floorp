@@ -1331,12 +1331,6 @@ parent:
     async ShutdownPerfStats(nsCString aPerfStats);
 
     /**
-     * Request graphics initialization information from the parent.
-     */
-    sync GetGraphicsDeviceInitData()
-        returns (ContentDeviceData aData);
-
-    /**
      * Request a buffer containing the contents of the output color profile.
      * If set, this is the file pointed to by
      * gfx.color_management.display_profile, otherwise it contains a
