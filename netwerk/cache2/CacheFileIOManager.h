@@ -267,6 +267,7 @@ class CacheFileIOManager final : public nsITimerCallback, public nsINamed {
   static nsresult Shutdown();
   static nsresult OnProfile();
   static nsresult OnDelayedStartupFinished();
+  static nsresult OnIdleDaily();
   static already_AddRefed<nsIEventTarget> IOTarget();
   static already_AddRefed<CacheIOThread> IOThread();
   static bool IsOnIOThread();
