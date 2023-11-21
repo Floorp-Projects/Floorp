@@ -287,7 +287,7 @@ function asyncClone(db, readOnly) {
   return new Promise((resolve, reject) => {
     db.asyncClone(readOnly, function (status, db2) {
       if (Components.isSuccessCode(status)) {
-        resolve(db2);
+        resolve(db2.QueryInterface(Ci.mozIStorageAsyncConnection));
       } else {
         reject(status);
       }
