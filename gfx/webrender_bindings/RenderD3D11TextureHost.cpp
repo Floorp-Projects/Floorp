@@ -164,21 +164,6 @@ bool RenderDXGITextureHost::EnsureD3D11Texture2DWithGL() {
     return true;
   }
 
-  if (mGpuProcessTextureId.isSome()) {
-    auto* textureMap = layers::GpuProcessD3D11TextureMap::Get();
-    if (textureMap) {
-      RefPtr<ID3D11Texture2D> texture;
-      textureMap->WaitTextureReady(mGpuProcessTextureId.ref());
-      mTexture = textureMap->GetTexture(mGpuProcessTextureId.ref());
-      if (mTexture) {
-        return true;
-      } else {
-        gfxCriticalNote << "GpuProcessTextureId is not valid";
-      }
-    }
-    return false;
-  }
-
   const auto& gle = gl::GLContextEGL::Cast(mGL);
   const auto& egl = gle->mEgl;
 
@@ -208,6 +193,21 @@ bool RenderDXGITextureHost::EnsureD3D11Texture2D(ID3D11Device* aDevice) {
       return false;
     }
     return true;
+  }
+
+  if (mGpuProcessTextureId.isSome()) {
+    auto* textureMap = layers::GpuProcessD3D11TextureMap::Get();
+    if (textureMap) {
+      RefPtr<ID3D11Texture2D> texture;
+      textureMap->WaitTextureReady(mGpuProcessTextureId.ref());
+      mTexture = textureMap->GetTexture(mGpuProcessTextureId.ref());
+      if (mTexture) {
+        return true;
+      } else {
+        gfxCriticalNote << "GpuProcessTextureId is not valid";
+      }
+    }
+    return false;
   }
 
   // Get the D3D11 texture from shared handle.
