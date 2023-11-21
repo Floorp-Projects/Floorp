@@ -136,6 +136,9 @@ support-files = ["searchTelemetryAd_shopping.html"]
 ["browser_search_telemetry_sources.js"]
 support-files = ["searchTelemetry.html", "searchTelemetryAd.html"]
 
+["browser_search_telemetry_sources_about.js"]
+support-files = ["searchTelemetry.html", "searchTelemetryAd.html"]
+
 ["browser_search_telemetry_sources_ads.js"]
 support-files = ["searchTelemetry.html", "searchTelemetryAd.html"]
 
@@ -160,4 +163,7 @@ support-files = [
 support-files = ["searchTelemetryAd_searchbox_with_content.html"]
 
 ["browser_search_telemetry_sources_navigation.js"]
+support-files = ["searchTelemetry.html", "searchTelemetryAd.html"]
+
+["browser_search_telemetry_sources_webextension.js"]
 support-files = ["searchTelemetry.html", "searchTelemetryAd.html"]
